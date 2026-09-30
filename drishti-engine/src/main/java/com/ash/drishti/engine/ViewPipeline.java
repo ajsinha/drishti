@@ -113,10 +113,21 @@ public final class ViewPipeline {
         return build(doc, t0, System.nanoTime(), Optional.of(sutra), false);
     }
 
+    /** A view of a document supplied by the caller (Studio sample JSON), with a given or matched Sutra. */
+    public ViewModel preview(Optional<Sutra> sutra, EntityDocument doc) {
+        long t0 = System.nanoTime();
+        return build(doc, t0, t0, sutra.isPresent() ? sutra : matcher.match(doc.ref().kind(), doc.data()), false);
+    }
+
     /** The layout inference alone would give {@code ref}, in Sutra form (Studio "start from inference"). */
     public Sutra inferred(EntityRef ref) {
         EntityDocument doc = fetch(ref);
         return merger.merge(Optional.empty(), doc.data(), ref.kind()).sutra();
+    }
+
+    /** The layout inference alone would give a supplied document. */
+    public Sutra inferred(EntityDocument doc) {
+        return merger.merge(Optional.empty(), doc.data(), doc.ref().kind()).sutra();
     }
 
     public ViewModel view(EntityRef ref) {

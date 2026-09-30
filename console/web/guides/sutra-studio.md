@@ -34,7 +34,18 @@ milliseconds and uses the same renderer as the terminal. Keys, fields and expres
 If something is wrong, the list under the editor shows each problem with its code and line (for
 example `DRS-2101 line 12: expression … does not compile`). Click a problem to jump to its line.
 
-## 4. Save
+## 4. See and paste the data
+
+The **Sample JSON** tab shows the document the Sutra works on:
+- **Load entity JSON** fills it with the chosen entity's document, exactly as the source sent it. The
+  Sutra's `$.…` paths address this document.
+- **Paste** any JSON object there and tick **Preview against this JSON**. The preview then renders
+  your document instead of fetching one. This is how to design a layout before a source is
+  connected. **Start from inference** uses the pasted document too.
+
+Sutras are YAML. The values of `bind`, `where`, `rows` and so on are Rachana-EL expressions.
+
+## 5. Save
 
 **Save** is available to users with the `author` or `admin` role, where saving is switched on
 (`DRISHTI_STUDIO_SAVE=true`). Views use the new version immediately.

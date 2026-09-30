@@ -37,9 +37,22 @@
     <textarea id="sutraSrc" class="studio-src mono" spellcheck="false" data-src aria-label="Sutra YAML">{{ source }}</textarea>
     <ul class="studio-problems" data-problems aria-live="polite"></ul>
   </section>
-  <section class="studio-right" aria-label="Preview">
+  <section class="studio-right" aria-label="Preview and sample data">
+    <div class="tab-heads studio-tabs" role="tablist">
+      <button type="button" role="tab" class="tab-head on" aria-selected="true" data-tab="preview">Preview</button>
+      <button type="button" role="tab" class="tab-head" aria-selected="false" data-tab="json">Sample JSON</button>
+    </div>
     <div class="studio-status mono" data-status>Ctrl+Enter previews. The Sutra is checked on every preview; nothing is saved until you press Save.</div>
-    <div class="studio-preview" data-out></div>
+    <div class="studio-preview" data-out data-pane="preview"></div>
+    <div class="studio-json" data-pane="json" hidden>
+      <div class="studio-bar">
+        <button type="button" class="btn-pill btn-ghost" data-load-json title="Show the chosen entity's document"><i class="bi bi-download" aria-hidden="true"></i> Load entity JSON</button>
+        <label class="chk"><input type="checkbox" data-use-json> Preview against this JSON</label>
+        <button type="button" class="btn-pill btn-ghost" data-format-json>Format</button>
+      </div>
+      <textarea class="studio-src mono" spellcheck="false" data-json aria-label="Sample JSON" placeholder='Paste a JSON document here, e.g. {"tradeId": "T-1", "notional": 5000000, ...}'></textarea>
+      <p class="text-muted-d studio-hint">The Sutra's <code>$.…</code> paths address this document. Tick <b>Preview against this JSON</b> to render your pasted document instead of the entity; <b>Start from inference</b> then uses it too.</p>
+    </div>
   </section>
 </div>
 {% endblock %}

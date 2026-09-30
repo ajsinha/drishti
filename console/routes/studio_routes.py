@@ -68,7 +68,8 @@ async def source(request: Request, name: str, version: int):
 async def preview(request: Request):
     body = json.loads(await request.body() or b"{}")
     try:
-        vm = await request.app.state.backend.preview(body.get("yaml", ""), body.get("kind", ""), body.get("id", ""), ident(request))
+        vm = await request.app.state.backend.preview(body.get("yaml", ""), body.get("kind", ""), body.get("id", ""), ident(request),
+                                                     body.get("document"))
     except BackendError as e:
         return _problem(e)
     html = request.app.state.templates.get_template("studio/_preview.html").render(vm=vm)
@@ -79,6 +80,16 @@ async def preview(request: Request):
 async def inferred(request: Request, kind: str, id_: str, name: str = ""):
     try:
         return PlainTextResponse(await request.app.state.backend.inferred(kind, id_, name, ident(request)))
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.post("/inferred")
+async def inferred_from_sample(request: Request):
+    body = json.loads(await request.body() or b"{}")
+    try:
+        return PlainTextResponse(await request.app.state.backend.inferred_from(
+            body.get("kind", ""), body.get("id", ""), body.get("name", ""), body.get("document"), ident(request)))
     except BackendError as e:
         return _problem(e)
 

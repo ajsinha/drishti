@@ -59,7 +59,14 @@ class FakeBackend:
     async def studio_settings(self, ident=None):
         return {"save": False}
 
-    async def preview(self, yaml_text, kind, id_, ident=None):
+    async def inferred_from(self, kind, id_, name, document, ident=None):
+        return f"sutra: {name}\nversion: 1\n# fields: {','.join(sorted(document))}\n"
+
+    async def preview(self, yaml_text, kind, id_, ident=None, document=None):
+        if document is not None:
+            v = await self.view("trade", "IRS-48213", ident)
+            v["title"]["id"] = document.get("tradeId", "SAMPLE")
+            return v
         if "BROKEN" in yaml_text:
             e = BackendError(422, "DRS-2002", "1 problem(s)")
             e.problems = [{"code": "DRS-2101", "message": "bad expression", "location": {"file": "studio.yaml", "line": 4, "column": 3}}]

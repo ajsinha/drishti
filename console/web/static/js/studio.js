@@ -40,11 +40,36 @@
     if (li && editor) { var l = Math.max(0, +li.dataset.line - 1); editor.focus(); editor.setCursor({ line: l, ch: 0 }); }
   });
 
+  // ---- sample JSON pane ---------------------------------------------------------------------------
+  var jsonTa = root.querySelector('[data-json]'), useJson = root.querySelector('[data-use-json]');
+  root.querySelectorAll('[data-tab]').forEach(function (t) {
+    t.addEventListener('click', function () {
+      root.querySelectorAll('[data-tab]').forEach(function (x) { x.classList.toggle('on', x === t); x.setAttribute('aria-selected', x === t ? 'true' : 'false'); });
+      root.querySelectorAll('[data-pane]').forEach(function (p) { p.hidden = p.getAttribute('data-pane') !== t.getAttribute('data-tab'); });
+    });
+  });
+  function pastedDocument() {
+    if (!useJson.checked) { return undefined; }
+    try { return JSON.parse(jsonTa.value); } catch (e) { say('Sample JSON is not valid: ' + e.message, true); throw e; }
+  }
+  root.querySelector('[data-load-json]').addEventListener('click', function () {
+    fetch('/api/raw/' + encodeURIComponent(kindIn.value.trim()) + '/' + encodeURIComponent(idIn.value.trim()))
+      .then(function (r) { return r.json(); })
+      .then(function (d) { jsonTa.value = JSON.stringify(d.data !== undefined ? d.data : d, null, 2); say('Loaded ' + idIn.value.trim() + ' (' + jsonTa.value.length + ' characters).'); })
+      .catch(function (e) { say('Could not load: ' + e, true); });
+  });
+  root.querySelector('[data-format-json]').addEventListener('click', function () {
+    try { jsonTa.value = JSON.stringify(JSON.parse(jsonTa.value), null, 2); } catch (e) { say('Sample JSON is not valid: ' + e.message, true); }
+  });
+  useJson.addEventListener('change', function () { preview(); });
+
   function preview() {
     say('Previewing…');
     var t0 = performance.now();
+    var doc;
+    try { doc = pastedDocument(); } catch (e) { return; }
     fetch('/studio/preview', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ yaml: text(), kind: kindIn.value.trim(), id: idIn.value.trim() }) })
+      body: JSON.stringify({ yaml: text(), kind: kindIn.value.trim(), id: idIn.value.trim(), document: doc }) })
       .then(function (r) {
         var html = (r.headers.get('content-type') || '').indexOf('text/html') >= 0;
         return (html ? r.text() : r.json()).then(function (b) { return { ok: r.ok, html: html, body: b }; });
@@ -66,7 +91,12 @@
   root.querySelector('[data-preview]').addEventListener('click', preview);
   root.querySelector('[data-infer]').addEventListener('click', function () {
     var name = (kindIn.value.trim() + '-' + idIn.value.trim()).toLowerCase().replace(/[^a-z0-9-]+/g, '-').slice(0, 60);
-    fetch('/studio/inferred/' + encodeURIComponent(kindIn.value.trim()) + '/' + encodeURIComponent(idIn.value.trim()) + '?name=' + encodeURIComponent(name))
+    var doc;
+    try { doc = pastedDocument(); } catch (e) { return; }
+    (doc !== undefined
+      ? fetch('/studio/inferred', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ kind: kindIn.value.trim(), id: idIn.value.trim(), name: name, document: doc }) })
+      : fetch('/studio/inferred/' + encodeURIComponent(kindIn.value.trim()) + '/' + encodeURIComponent(idIn.value.trim()) + '?name=' + encodeURIComponent(name)))
       .then(function (r) { return r.ok ? r.text() : r.json().then(function (b) { throw new Error(b.detail); }); })
       .then(function (t) { setText(t); preview(); })
       .catch(function (e) { say('Could not infer: ' + e.message, true); });

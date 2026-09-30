@@ -83,8 +83,14 @@ class BackendClient:
     async def sutra_source(self, name: str, version: int, ident=None) -> str:
         return await self._get(f"/sutras/{name}/{version}/source", ident)
 
-    async def preview(self, yaml_text: str, kind: str, id_: str, ident=None) -> dict:
-        return await self._send("POST", "/studio/preview", ident, json={"yaml": yaml_text, "kind": kind, "id": id_})
+    async def preview(self, yaml_text: str, kind: str, id_: str, ident=None, document=None) -> dict:
+        body = {"yaml": yaml_text, "kind": kind, "id": id_}
+        if document is not None:
+            body["document"] = document
+        return await self._send("POST", "/studio/preview", ident, json=body)
+
+    async def inferred_from(self, kind: str, id_: str, name: str, document, ident=None) -> str:
+        return await self._send("POST", "/studio/inferred", ident, json={"kind": kind, "id": id_, "name": name, "document": document})
 
     async def inferred(self, kind: str, id_: str, name: str, ident=None) -> str:
         return await self._get(f"/studio/inferred/{kind}/{id_}", ident, name=name)

@@ -15,6 +15,10 @@
 -->
 # Changelog
 
+## Unreleased
+- **Studio, sample JSON:** a *Sample JSON* tab shows the entity's document (**Load entity JSON**). You can paste any JSON object and tick **Preview against this JSON** to render it with the unsaved Sutra, with no source needed. **Start from inference** works on pasted JSON. Server: `POST /api/v1/studio/preview` accepts `document`; `POST /api/v1/studio/inferred` infers from a document.
+- **Risk pack, R1:** the taxonomy, a single machine-readable source (`packs/risk/tools/`) of 125 products in ten asset classes, 21 market-data kinds and 24 risk and reference kinds. Uniqueness of codes, kinds, mnemonics, ID prefixes and reference fields is checked (`python3 packs/risk/tools/taxonomy.py`).
+
 ## 1.8.0 — Wave 13c: packs per user (2026-09-30)
 - **Admins assign packs to users** (user dialog → *Packs*). Users with several packs choose which to see from a **pack switcher** in the top bar, and the choice is saved to their account (`GET/PUT /api/v1/me/packs`).
 - Each pack declares the `kinds` it owns, and a kind belongs to exactly one installed pack.

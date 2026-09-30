@@ -72,6 +72,25 @@ class StudioTest {
     }
 
     @Test
+    void previewAndInferAgainstPastedJson() throws Exception {
+        String yaml = "sutra: pasted\nversion: 1\nmatch: { kind: widget }\ntitle: { pill: Widget, id: $.code }\n"
+                + "strip:\n  - { label: Price, bind: $.price, fmt: amount2 }\npanels:\n  - { id: refs, kind: links, title: Links }\n";
+        String doc = "{\"code\":\"W-1\",\"price\":1234.5,\"parts\":[{\"name\":\"a\",\"qty\":2},{\"name\":\"b\",\"qty\":3}]}";
+        mvc.perform(post("/api/v1/studio/preview").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"yaml\":" + json.writeValueAsString(yaml) + ",\"kind\":\"widget\",\"id\":\"W-1\",\"document\":" + doc + "}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.strip[0].text").value("1,234.50"))
+                .andExpect(jsonPath("$.provenance.source").value("studio sample JSON"));
+        String inferred = mvc.perform(post("/api/v1/studio/inferred").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"kind\":\"widget\",\"id\":\"W-1\",\"name\":\"widget\",\"document\":" + doc + "}"))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        assertThat(inferred).contains("sutra: widget").contains("$.parts");
+        mvc.perform(post("/api/v1/studio/preview").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"yaml\":" + json.writeValueAsString(yaml) + ",\"kind\":\"widget\",\"document\":[1,2]}"))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
     void savingIsOffUnlessEnabled() throws Exception {
         mvc.perform(get("/api/v1/studio/settings")).andExpect(jsonPath("$.save").value(false));
         mvc.perform(post("/api/v1/sutras").contentType("text/yaml").content("sutra: x\nversion: 1\nmatch: { kind: trade }\n"))

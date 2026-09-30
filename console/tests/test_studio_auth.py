@@ -37,6 +37,15 @@ def test_studio_page_and_preview(client):
     assert client.get("/studio/inferred/trade/IRS-47102", params={"name": "irs-plain"}).text.startswith("sutra: irs-plain")
 
 
+def test_studio_previews_and_infers_from_pasted_json(client):
+    page = client.get("/studio").text
+    assert "Sample JSON" in page and "data-load-json" in page and "data-use-json" in page
+    r = client.post("/studio/preview", json={"yaml": "sutra: x", "kind": "trade", "id": "P-1", "document": {"tradeId": "P-1", "mtm": 5}})
+    assert r.status_code == 200 and "P-1" in r.text
+    y = client.post("/studio/inferred", json={"kind": "trade", "id": "P-1", "name": "pasted", "document": {"tradeId": "P-1", "mtm": 5}})
+    assert y.text.startswith("sutra: pasted") and "mtm,tradeId" in y.text
+
+
 def test_tokens_are_hs256_and_verifiable():
     import base64
     import hashlib

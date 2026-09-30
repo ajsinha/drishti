@@ -51,15 +51,35 @@ public class StudioController {
      * @param kind the entity kind to preview against
      * @param id the entity id
      */
-    public record PreviewRequest(String yaml, String kind, String id) {}
+    public record PreviewRequest(String yaml, String kind, String id, com.fasterxml.jackson.databind.JsonNode document) {}
+
+    /**
+     * @param kind entity kind the pasted document is
+     * @param id identifier to show
+     * @param document the pasted JSON
+     * @param name name for the new Sutra
+     */
+    public record InferRequest(String kind, String id, com.fasterxml.jackson.databind.JsonNode document, String name) {}
+
+    private com.ash.drishti.api.EntityDocument pasted(String kind, String id, com.fasterxml.jackson.databind.JsonNode json) {
+        if (json == null || !json.isObject()) {
+            throw new DrishtiException(ErrorCode.INVALID_JSON, "sample JSON must be an object");
+        }
+        var data = codec.read(json.toString());
+        return new com.ash.drishti.api.EntityDocument(EntityRef.of(kind, id == null || id.isBlank() ? "SAMPLE" : id), data,
+                new com.ash.drishti.api.Provenance("studio sample JSON", 0, java.time.Instant.now(), false));
+    }
 
     private final SutraRegistry sutras;
     private final ViewPipeline pipeline;
     private final RachanaProperties props;
     private final Entitlements entitlements;
     private final SutraWriter writer = new SutraWriter();
+    private final com.ash.drishti.common.JsonCodec codec;
 
-    public StudioController(SutraRegistry sutras, ViewPipeline pipeline, RachanaProperties props, Entitlements entitlements) {
+    public StudioController(SutraRegistry sutras, ViewPipeline pipeline, RachanaProperties props, Entitlements entitlements,
+            com.ash.drishti.common.JsonCodec codec) {
+        this.codec = codec;
         this.sutras = sutras;
         this.pipeline = pipeline;
         this.props = props;
@@ -76,6 +96,9 @@ public class StudioController {
     public ViewModel preview(@RequestBody PreviewRequest req, @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
         entitlements.requireOpen(principal, req.kind());
         Sutra s = sutras.check(req.yaml());
+        if (req.document() != null && !req.document().isNull()) {
+            return entitlements.restrict(principal, pipeline.preview(java.util.Optional.of(s), pasted(req.kind(), req.id(), req.document())));
+        }
         return entitlements.restrict(principal, pipeline.preview(s, EntityRef.of(req.kind(), req.id())));
     }
 
@@ -85,6 +108,13 @@ public class StudioController {
         entitlements.requireOpen(principal, kind);
         String n = name.isBlank() ? kind + "-custom" : name;
         return writer.write(pipeline.inferred(EntityRef.of(kind, id)), n, 1);
+    }
+
+    @PostMapping(path = "/studio/inferred", produces = "text/yaml")
+    public String inferredFromSample(@RequestBody InferRequest req, @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
+        entitlements.requireOpen(principal, req.kind());
+        String n = req.name() == null || req.name().isBlank() ? req.kind() + "-custom" : req.name();
+        return writer.write(pipeline.inferred(pasted(req.kind(), req.id(), req.document())), n, 1);
     }
 
     @GetMapping("/studio/settings")
