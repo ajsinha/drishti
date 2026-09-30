@@ -35,7 +35,8 @@ CSP = ("default-src 'self'; img-src 'self' data:; style-src 'self'; script-src '
        "font-src 'self'; connect-src 'self'; frame-src 'self'; frame-ancestors 'self'")
 
 
-PROTECTED = ("/t", "/v/", "/go", "/studio", "/api/", "/admin", "/account", "/w", "/m", "/alerts", "/impact")
+PROTECTED = ("/t", "/v/", "/go", "/studio", "/api/", "/admin", "/account", "/w", "/m", "/alerts", "/impact", "/s/", "/compare/", "/export/")
+EXACT = ("/t", "/s")                        # pages whose path is a prefix of public ones (/s of /static)
 
 
 class AuthGate(BaseHTTPMiddleware):
@@ -61,7 +62,7 @@ class AuthGate(BaseHTTPMiddleware):
                 request.state.pack_switcher = await request.app.state.packs.assigned(request.app.state.backend, request.state.identity)
             except Exception:  # noqa: BLE001 - the switcher is a convenience; never fail a page for it
                 request.state.pack_switcher = []
-        if request.state.identity is None and (path == "/t" or path.startswith(PROTECTED[1:])):
+        if request.state.identity is None and (path in EXACT or path.startswith(PROTECTED[1:])):
             if path.startswith("/api/"):
                 return JSONResponse({"code": "DRS-5010", "detail": "sign in first"}, status_code=401)
             return RedirectResponse(f"/login?next={quote(str(request.url.path))}", status_code=303)
@@ -113,6 +114,9 @@ def create_app(settings: Settings) -> FastAPI:
     templates.env.globals["known_local"] = to_local
     app.state.settings = settings
     app.state.auth = Auth(settings)
+    from core.oidc import Oidc
+
+    app.state.oidc = Oidc(settings, app.state.auth)
     console_dir = WEB.parent
     docs_dir = Path(settings.get("help.docs_dir", "../docs"))
     from core.packs import Packs

@@ -106,6 +106,17 @@ drishti:
       author:  { kinds: ["*"], raw: true, author: true }
       approver: { kinds: ["*"], raw: true, author: true, approve: true }   # reviews proposed Sutras (admins may too)
       admin:   { kinds: ["*"], raw: true, author: true, admin: true }
+    oidc:                              # single sign-on (W20): the console runs the flow, the server verifies the ID token
+      enabled: ${DRISHTI_OIDC_ENABLED:false}
+      issuer: ${DRISHTI_OIDC_ISSUER:}
+      client-id: ${DRISHTI_OIDC_CLIENT_ID:}
+      username-claim: preferred_username
+      display-claim: name
+      groups-claim: groups             # a dotted path works too: realm_access.roles
+      role-map: {}                     # provider group -> Drishti roles, e.g. { desk-rates: [trader], market-risk: [risk] }
+      default-roles: []                # roles when no group maps; empty refuses such users
+      roles-from-provider: true        # the provider's groups replace the roles at every sign-in
+      algorithms: [RS256, ES256]
     redact: [trader, counterpartyId, patientName]   # field names masked in raw JSON (F9) for roles without raw
   identity:
     # Users and the audit log; written atomically, owner-only permissions. Keep ./data out of version control.

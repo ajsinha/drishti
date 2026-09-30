@@ -38,6 +38,15 @@ auth:
   token_ttl_seconds: 300
   session_hours: 10
   secure_cookie: ${DRISHTI_SECURE_COOKIE:true}
+  oidc:                                       # single sign-on (W20); the server verifies the ID token (drishti.security.oidc)
+    enabled: ${DRISHTI_OIDC_ENABLED:false}
+    issuer: ${DRISHTI_OIDC_ISSUER:}           # e.g. https://login.bank.example/realms/staff
+    client_id: ${DRISHTI_OIDC_CLIENT_ID:}
+    client_secret: ${DRISHTI_OIDC_CLIENT_SECRET:}   # from the environment only; empty for a public client (PKCE alone)
+    token_auth: client_secret_basic           # or client_secret_post
+    scopes: openid profile email
+    label: Sign in with single sign-on
+    redirect_uri: ${DRISHTI_OIDC_REDIRECT_URI:}     # default: <console>/auth/oidc/callback
 studio:
   enabled: true
 help:

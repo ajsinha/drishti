@@ -180,6 +180,10 @@ class BackendClient:
     async def login(self, username: str, password: str, service) -> dict:
         return await self._send("POST", "/auth/login", service, json={"username": username, "password": password})
 
+    async def oidc_login(self, id_token: str, nonce: str, service) -> dict:
+        """The server verifies a provider's ID token and signs the user in (single sign-on)."""
+        return await self._send("POST", "/auth/oidc", service, json={"idToken": id_token, "nonce": nonce})
+
     async def me(self, ident) -> dict:
         return await self._get("/auth/me", ident)
 

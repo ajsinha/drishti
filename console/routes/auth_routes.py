@@ -18,11 +18,15 @@ from __future__ import annotations
 import json
 from urllib.parse import parse_qs
 
+import httpx
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from core.auth import COOKIE
 from core.backend import BackendError
+from core.oidc import COOKIE as OIDC_COOKIE
+from core.oidc import TTL as OIDC_TTL
+from core.oidc import OidcError
 from routes.common import ident, render
 
 router = APIRouter(include_in_schema=False)
@@ -51,6 +55,42 @@ async def login(request: Request):
             e.code, "Unknown user or wrong password." if e.status in (401, 404) else f"Sign-in unavailable: {e.detail}")
         return render(request, "auth/login.html", status_code=401 if e.status < 500 else 503, next=target, error=msg)
     r = RedirectResponse("/account?must=1" if profile.get("mustChangePassword") else target, status_code=303)
+    r.set_cookie(COOKIE, auth.session_for(profile), httponly=True, samesite="lax", secure=auth.secure_cookie, max_age=auth.session_ttl)
+    return r
+
+
+@router.get("/auth/oidc/login")
+async def oidc_login(request: Request, next: str = "/t"):
+    oidc = request.app.state.oidc
+    if not oidc.enabled:
+        return RedirectResponse("/login", status_code=303)
+    try:
+        url, sealed = await oidc.start(str(request.base_url), _safe_next(next))
+    except (OidcError, httpx.HTTPError) as e:
+        return render(request, "auth/login.html", status_code=503, next=_safe_next(next), error=f"Single sign-on is unavailable: {e}")
+    r = RedirectResponse(url, status_code=303)
+    r.set_cookie(OIDC_COOKIE, sealed, httponly=True, samesite="lax", secure=request.app.state.auth.secure_cookie, max_age=OIDC_TTL,
+                 path="/auth/oidc")
+    return r
+
+
+@router.get("/auth/oidc/callback")
+async def oidc_callback(request: Request, code: str = "", state: str = "", error: str = "", error_description: str = ""):
+    oidc, auth = request.app.state.oidc, request.app.state.auth
+    if error:
+        return render(request, "auth/login.html", status_code=401, next="/t", error=f"The sign-in provider said: {error_description or error}")
+    try:
+        id_token, nonce, target = await oidc.finish(str(request.base_url), request.cookies.get(OIDC_COOKIE), code, state)
+        profile = await request.app.state.backend.oidc_login(id_token, nonce, auth.service())
+    except OidcError as e:
+        return render(request, "auth/login.html", status_code=401, next="/t", error=str(e))
+    except httpx.HTTPError:
+        return render(request, "auth/login.html", status_code=503, next="/t", error="The sign-in provider is unavailable.")
+    except BackendError as e:
+        return render(request, "auth/login.html", status_code=401 if e.status < 500 else 503, next="/t",
+                      error=e.detail if e.status < 500 else f"Sign-in unavailable: {e.detail}")
+    r = RedirectResponse(_safe_next(target), status_code=303)
+    r.delete_cookie(OIDC_COOKIE, path="/auth/oidc")
     r.set_cookie(COOKIE, auth.session_for(profile), httponly=True, samesite="lax", secure=auth.secure_cookie, max_age=auth.session_ttl)
     return r
 

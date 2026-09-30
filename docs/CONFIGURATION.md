@@ -45,6 +45,11 @@ The local override is `./application.local.yaml`. Environment variables use Spri
 | `drishti.rachana.formats-file` | — | a site file that overrides or adds named formats |
 | `drishti.rachana.expression-cache-size` | `10000` | compiled expressions kept in memory |
 | `drishti.rachana.studio-save` | `false` (`DRISHTI_STUDIO_SAVE`) | let Studio write Sutra files (authors only) |
+| `drishti.security.oidc.enabled / issuer / client-id` | `false` / — / — (`DRISHTI_OIDC_*`) | single sign-on: accept ID tokens from this provider (ADR-014) |
+| `drishti.security.oidc.username-claim / display-claim / groups-claim` | `preferred_username` / `name` / `groups` | which claims name the user and list their groups (dotted paths allowed) |
+| `drishti.security.oidc.role-map / default-roles / roles-from-provider` | `{}` / `[]` / `true` | provider groups to Drishti roles |
+| `drishti.security.oidc.algorithms / clock-skew` | `[RS256, ES256]` / `60s` | accepted signature algorithms (RSA, RSA-PSS, ECDSA only) and time tolerance |
+| console `auth.oidc.enabled / issuer / client_id / client_secret / token_auth / scopes / label / redirect_uri` | off | the console's half: the browser flow with PKCE (`DRISHTI_OIDC_*`) |
 | `drishti.governance.enabled` | `true` (`DRISHTI_SUTRA_REVIEW`) | a Studio save is a proposal an approver must approve (ADR-013) |
 | `drishti.governance.four-eyes` | `true` (`DRISHTI_SUTRA_FOUR_EYES`) | nobody approves their own proposal (with security on) |
 | `drishti.governance.dir` | `./data/governance` (`DRISHTI_GOVERNANCE_DIR`) | where proposals are kept |

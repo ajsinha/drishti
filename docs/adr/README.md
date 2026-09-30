@@ -30,5 +30,6 @@
 | [011](011-sutras-are-markdown-documents.md) | Sutras are Markdown documents |
 | [012](012-business-dates-and-delta-lake.md) | Business dates and Delta Lake |
 | [013](013-sutras-go-live-through-review.md) | Sutras go live through review |
+| [014](014-single-sign-on-verified-by-the-server.md) | Single sign-on, verified by the server |
 
 ADRs are amended, never rewritten.

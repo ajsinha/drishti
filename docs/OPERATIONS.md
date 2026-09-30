@@ -97,6 +97,8 @@ being parsed, and a later view reads that one message back by its offset.
 
 - **Server:** `DRISHTI_SECURITY_ENABLED=true` and `DRISHTI_TOKEN_SECRET` (≥ 32 bytes), shared with the console.
 - **Console:** `DRISHTI_AUTH_ENABLED=true` and `DRISHTI_SESSION_SECRET` (≥ 32).
+- **Single sign-on (optional):** `DRISHTI_OIDC_ENABLED`, `_ISSUER`, `_CLIENT_ID` on both, `DRISHTI_OIDC_CLIENT_SECRET` on
+  the console, and the group-to-role map on the server (USER_MANAGEMENT.md). The issuer must be https.
 - **Users:** managed in the server (`/admin/users`). Change the seeded `drishti-dev-admin` password,
   or set `DRISHTI_SEED_ADMIN=false`. Back up `data/identity/` (users and audit).
 - **Roles:** set per desk in `drishti.security.roles`. Keep `redact` listing the fields traders must

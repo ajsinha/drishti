@@ -79,6 +79,47 @@ Nobody is forced to change a password unless it is configured:
 
 Both default to off.
 
+## Single sign-on (OpenID Connect)
+
+Staff can sign in through the bank's identity provider (Keycloak, Microsoft Entra ID, Okta, Ping, …). The login
+page then offers **Sign in with single sign-on** beside the password form. The server verifies every ID token itself
+(ADR-014); the console only runs the browser redirect.
+
+Register Drishti at the provider as a web application with the redirect URI `https://<console>/auth/oidc/callback`,
+scopes `openid profile email`, and a groups claim in the ID token. Then set, for both console and server:
+
+```bash
+DRISHTI_OIDC_ENABLED=true
+DRISHTI_OIDC_ISSUER=https://login.bank.example/realms/staff
+DRISHTI_OIDC_CLIENT_ID=drishti
+DRISHTI_OIDC_CLIENT_SECRET=…          # console only; omit for a public client (PKCE alone)
+```
+
+and map the provider's groups to Drishti roles in the server's configuration:
+
+```yaml
+drishti:
+  security:
+    oidc:
+      groups-claim: groups                 # Keycloak realm roles: realm_access.roles; Entra ID: groups or roles
+      username-claim: preferred_username   # or email, upn
+      role-map:
+        desk-rates: [trader]
+        market-risk: [risk]
+        sutra-authors: [author]
+        sutra-approvers: [approver]
+        drishti-admins: [admin]
+      default-roles: []                    # empty: users whose groups map to nothing are refused
+      roles-from-provider: true            # groups replace roles at each sign-in
+```
+
+- The first sign-in creates the user (no password); later sign-ins update name, email and roles.
+- Disabling a user here keeps them out, whatever the provider says. The last enabled admin is never demoted by
+  the provider.
+- Every sign-in, first-time creation and refusal is in the audit log (`login-sso`, `user-provisioned`,
+  `login-sso-refused`). Refusals say only that sign-on was refused; the reason is in the server log.
+- Password sign-in stays for accounts created here (keep one break-glass admin).
+
 ## Rules
 
 | Rule | Default | Setting |

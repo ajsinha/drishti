@@ -434,7 +434,9 @@ first paint and a JS renderer (`static/js/panels/<kind>.js`) that applies patche
 
 - Console sign-in against a users file (PBKDF2) with a signed, expiring session cookie; for every
   server call the console mints a short-lived HS256 token (algorithm pinned, constant-time check).
-  OIDC/SSO plugs in at the console later; the token boundary stays the same.
+  Single sign-on (OIDC, ADR-014): the console runs the authorization code flow with PKCE; the server verifies the
+  ID token itself against the provider's keys (JDK cryptography, no `none`/HMAC), maps groups to roles and
+  provisions the user. The token boundary is unchanged.
 - Entitlements per role and kind (`drishti.security.roles`); links to entities the user
   cannot see render as disabled with the reason (MAYA rule: *visible, not hidden*).
 - Raw JSON (F9) honours field-level redaction rules.

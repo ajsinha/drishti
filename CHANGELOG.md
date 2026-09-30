@@ -16,6 +16,11 @@
 # Changelog
 
 ## Unreleased
+- **W20 Single sign-on (OpenID Connect, ADR-014).**
+  - **Console:** runs the authorization code flow with PKCE, state and nonce, and offers "Sign in with single sign-on" on the login page.
+  - **Server:** verifies the ID token itself: signature against the provider's keys (JDK cryptography only; RSA, RSA-PSS or ECDSA; never `none` or an HMAC), issuer, audience, authorised party, expiry, not-before, issued-at and nonce.
+  - **Users:** provider groups map to Drishti roles, and users are created on first sign-in. A local disable always wins, and the provider can't demote the last admin; every step is audited.
+  - **Fix:** the console now sends users who aren't signed in to the login page for search, compare and export too.
 - **W19 Sutra governance (ADR-013).** With review on (the default), a Studio save is a proposal: validated, with the author's note and the live text it was written against.
   - **Review:** approvers (new role flag `approve`, or admins) read the diff under **Studio → Reviews**, then approve (published and hot-reloaded) or reject with a reason; authors may withdraw.
   - **Safeguards:** four eyes, so nobody approves their own proposal. Approval is refused if the live Sutra changed after the proposal (`DRS-2006`), and two approvers cannot both decide one proposal.

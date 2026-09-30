@@ -24,6 +24,10 @@
     <label for="lu">User</label><input id="lu" name="user" class="cmd-input" autocomplete="username" required autofocus>
     <label for="lp">Password</label><input id="lp" name="password" type="password" class="cmd-input" autocomplete="current-password" required>
     <button type="submit" class="btn-pill btn-accent">Sign in</button>
+    {% set sso = request.app.state.oidc %}{% if sso.enabled %}
+    <p class="login-or">or</p>
+    <a class="btn-pill btn-ghost login-sso" href="/auth/oidc/login?next={{ next | urlencode }}"><i class="bi bi-shield-lock" aria-hidden="true"></i> {{ sso.label }}</a>
+    {% endif %}
   </form>
 </div>
 {% endblock %}

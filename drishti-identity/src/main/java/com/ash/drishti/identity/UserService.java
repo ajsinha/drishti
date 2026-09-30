@@ -158,6 +158,55 @@ public final class UserService {
         return changed;
     }
 
+    /**
+     * A sign-in vouched for by a single sign-on provider (the server has verified its ID token). The user is created
+     * on first sign-in (with no usable password); afterwards the provider's name, email and, when
+     * {@code replaceRoles}, roles are applied. A user disabled here stays out whatever the provider says, and the
+     * provider can never demote the last enabled admin.
+     */
+    public User federated(String providerUser, String display, String email, Set<String> roles, boolean replaceRoles, String provider) {
+        String name = federatedName(providerUser);
+        return asAdmin(name, () -> {
+            Instant now = Instant.now();
+            User u = store.find(name).orElse(null);
+            if (u == null) {
+                User created = new User(name, blank(display, name), blank(email, ""), "", new LinkedHashSet<>(roles), true, false,
+                        hasher.hash(java.util.UUID.randomUUID() + ":" + System.nanoTime()), 0, null, now, now, null, now, null).withLogin(now);
+                store.put(created);
+                audit.record("system", "user-provisioned", name, "first single sign-on from " + provider + ", roles " + roles);
+                audit.record(name, "login-sso", name, provider);
+                return created;
+            }
+            if (!u.enabled()) {
+                audit.record(name, "login-refused", name, "disabled (single sign-on from " + provider + ")");
+                throw new DrishtiException(ErrorCode.BAD_CREDENTIALS, "this account is disabled");
+            }
+            User next = u.with(blank(display, u.displayName()), email == null || email.isBlank() ? u.email() : email, u.desk(),
+                    replaceRoles ? new LinkedHashSet<>(roles) : u.roles(), true, now);
+            try {
+                guardLastAdmin(u, next);
+            } catch (DrishtiException lastAdmin) {
+                next = u.with(next.displayName(), next.email(), u.desk(), u.roles(), true, now);   // keep the last admin an admin
+            }
+            User signedIn = next.withLogin(now);
+            store.put(signedIn);
+            audit.record(name, "login-sso", name, provider + (replaceRoles && !u.roles().equals(signedIn.roles()) ? ", roles now " + signedIn.roles() : ""));
+            return signedIn;
+        });
+    }
+
+    /** A provider's user name as a Drishti user name: lower case, anything outside a-z 0-9 . _ - becomes '-'. */
+    static String federatedName(String providerUser) {
+        String n = norm(providerUser).replaceAll("[^a-z0-9._-]", "-").replaceAll("^[^a-z0-9]+", "");
+        if (n.length() > 64) {
+            n = n.substring(0, 64);
+        }
+        if (!NAME.matcher(n).matches()) {
+            throw new DrishtiException(ErrorCode.BAD_CREDENTIALS, "the provider's user name cannot be used here");
+        }
+        return n;
+    }
+
     // ---- administration ------------------------------------------------------------------------
 
     public List<User> list(String query) {
