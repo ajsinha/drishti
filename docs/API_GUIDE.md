@@ -34,6 +34,10 @@ travel). Views carry `provenance.businessDate`, which is empty when the source i
 | `POST` | `/command` `{"text": "TRD IRS-48213 <GO>"}` | `{"ref": {"kind","id"}, "mnemonic"}`; `400 DRS-4001` if the command can't be read |
 | `GET` | `/command/suggest?q=TRD%20IRS-4&limit=10` | `[{"type","mnemonic","kind","id","title","subtitle","complete"}]` |
 | `GET` | `/business-date` | `{current, selected, live, knownAt, previous, earliest, calendar, zone, holidays}`: today's business date, the date this request resolves to, the zone "known at" times are read in, and the holidays for the picker |
+| `POST` | `/sutras?note=` (body: the Sutra) | with review on, `202 {"proposal": {id, name, version, status}}`; otherwise the saved Sutra |
+| `GET` | `/sutras/proposals?status=&name=` · `/sutras/proposals/{id}` | proposals (authors and approvers); one proposal with its text, the base text and the live text |
+| `POST` | `/sutras/proposals/{id}/approve` · `/reject` · `/withdraw` `{"comment"}` | decide: approve publishes the Sutra; reject needs a comment; the author withdraws |
+| `GET` | `/sutras/{name}/history` | every proposal for a Sutra, newest first |
 | `GET` | `/search?q=TRD where mtm > 1m order by mtm desc limit 20` | `{kind, mnemonic, condition, orderBy, columns, labels, rows: [{ref, title, values}], scanned, matched, partial, elapsedMs}`: entities of a kind by value. The condition runs on each document as the caller may see it; `403` if the caller may not open the kind; `400 DRS-4004` if the query cannot be read |
 | `GET` | `/history/{kind}/{id}/diff?from=&to=&fromKnownAt=&toKnownAt=` | `{from, to, changes: [{path, label, kind: added\|removed\|changed, before, after, delta}], added, removed, changed, truncated}`: what changed between two business dates or "known at" instants (ISO-8601). `to` defaults to the request's as-of, `from` to the business day before it; both sides are redacted for the caller; at most 2,000 changes |
 | `GET` | `/views/{kind}/{id}` | `ViewModel` (below); `404 DRS-1001`, `504 DRS-1004`. Each panel has `empty: true` when the document lacks what it asks for |
@@ -100,5 +104,8 @@ of the view is unaffected.
 | DRS-4001 | 400 | the command could not be read |
 | DRS-4003 | 400 | the business date is unreadable, in the future, or before the history window |
 | DRS-4004 | 400 | a structured search cannot be read (the detail says where) |
+| DRS-2005 | 404 | no such Sutra proposal |
+| DRS-2006 | 409 | the proposal was already decided, or the live Sutra changed after it was proposed |
+| DRS-2007 | 403 | four eyes: the author may not approve their own proposal |
 | DRS-5001 | 400 | bad request |
 | DRS-5004 | 404 | no cache by that name (admin cache purge) |

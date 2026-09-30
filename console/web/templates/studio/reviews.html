@@ -1,0 +1,44 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Sutra reviews · {{ PRODUCT }}{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm reviews">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/studio">← Sutra Studio</a></nav>
+  <h1>Sutra reviews</h1>
+  <p class="text-muted-d">A Sutra saved in Studio is a proposal until an approver approves it; then views use it. With four eyes on,
+    nobody approves their own.</p>
+  <nav class="tabs-inline" aria-label="Filter">
+    {% for s, label in [('pending', 'Waiting'), ('approved', 'Approved'), ('rejected', 'Rejected'), ('all', 'All')] %}
+    <a class="lnk{% if status == s %} on{% endif %}" href="/studio/reviews?status={{ s }}"{% if status == s %} aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}
+  </nav>
+  {% if error %}<p class="asof-banner" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ error.detail }} <span class="mono">({{ error.code }})</span></p>
+  {% elif not proposals %}<p class="text-muted-d">Nothing here.</p>
+  {% else %}
+  <section class="pnl"><div class="pnl-b"><div class="tbl-wrap"><table class="tbl">
+    <thead><tr><th>Proposal</th><th>Sutra</th><th>Note</th><th>By</th><th>When</th><th>Status</th></tr></thead>
+    <tbody>{% for p in proposals %}
+      <tr><td><a class="lnk mono" href="/studio/reviews/{{ p.id }}">{{ p.id }}</a></td>
+        <td class="mono">{{ p.name }} v{{ p.version }}{% if p.newVersion %} <span class="cmp-k added">new</span>{% endif %}</td>
+        <td>{{ p.note }}</td><td>{{ p.author }}</td><td class="mono">{{ (p.createdAt or '')[:16] | replace('T', ' ') }}</td>
+        <td><span class="cmp-k {{ 'added' if p.status == 'approved' else 'removed' if p.status in ('rejected', 'withdrawn') else 'changed' }}">{{ p.status }}</span>
+          {% if p.stale %}<span class="text-muted-d" title="The live Sutra changed after this was proposed">stale</span>{% endif %}</td></tr>
+    {% endfor %}</tbody></table></div></div></section>
+  {% endif %}
+</div>
+{% endblock %}

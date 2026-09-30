@@ -144,7 +144,7 @@ public final class PackLoader {
                 for (int i = 0; i < kinds.size(); i++) {
                     p.put("drishti.security.roles." + e.getKey() + ".kinds[" + i + "]", kinds.get(i));
                 }
-                for (String flag : new String[] {"raw", "author", "admin"}) {
+                for (String flag : new String[] {"raw", "author", "admin", "approve"}) {
                     if (r.get(flag) != null) {
                         p.put("drishti.security.roles." + e.getKey() + "." + flag, r.get(flag));
                     }

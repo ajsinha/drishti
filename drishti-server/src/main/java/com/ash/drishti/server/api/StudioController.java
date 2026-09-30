@@ -78,9 +78,11 @@ public class StudioController {
     private final Entitlements entitlements;
     private final SutraWriter writer = new SutraWriter();
     private final com.ash.drishti.common.JsonCodec codec;
+    private final com.ash.drishti.server.governance.SutraGovernance governance;
 
     public StudioController(SutraRegistry sutras, ViewPipeline pipeline, RachanaProperties props, Entitlements entitlements,
-            com.ash.drishti.common.JsonCodec codec) {
+            com.ash.drishti.common.JsonCodec codec, com.ash.drishti.server.governance.SutraGovernance governance) {
+        this.governance = governance;
         this.codec = codec;
         this.sutras = sutras;
         this.pipeline = pipeline;
@@ -123,20 +125,30 @@ public class StudioController {
 
     @GetMapping("/studio/settings")
     public Map<String, Object> settings(@RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
-        return Map.of("save", props.studioSave() && entitlements.mayAuthor(principal));
+        return Map.of("save", props.studioSave() && entitlements.mayAuthor(principal), "review", governance.enabled(),
+                "approve", entitlements.mayApprove(principal));
     }
 
+    /**
+     * Saves a Sutra from Studio. With governance on (the default) it becomes a proposal for review ({@code 202} with the
+     * proposal); otherwise it is written and goes live at once.
+     */
     @PostMapping(path = "/sutras", consumes = {"text/markdown", "text/yaml", MediaType.TEXT_PLAIN_VALUE})
-    public ApiDtos.SutraInfo save(@RequestBody String yaml, @RequestAttribute(Principal.ATTRIBUTE) Principal principal)
-            throws IOException {
+    public org.springframework.http.ResponseEntity<?> save(@RequestBody String yaml, @RequestParam(required = false) String note,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal principal) throws IOException {
         if (!props.studioSave()) {
             throw new DrishtiException(ErrorCode.FORBIDDEN, "saving from Studio is disabled (drishti.rachana.studio-save)");
         }
         if (!entitlements.mayAuthor(principal)) {
             throw new DrishtiException(ErrorCode.FORBIDDEN, principal.user() + " is not a Sutra author");
         }
+        if (governance.enabled()) {
+            var pr = governance.propose(yaml, note, principal);
+            return org.springframework.http.ResponseEntity.accepted().body(Map.of("proposal", Map.of("id", pr.id(), "name", pr.name(),
+                    "version", pr.version(), "status", pr.status())));
+        }
         Sutra s = sutras.save(yaml);
-        return new ApiDtos.SutraInfo(s.name(), s.version(), sutras.versions(s.name()), s.domain(), s.match().kind(),
-                s.match().where(), s.match().priority());
+        return org.springframework.http.ResponseEntity.ok(new ApiDtos.SutraInfo(s.name(), s.version(), sutras.versions(s.name()), s.domain(),
+                s.match().kind(), s.match().where(), s.match().priority()));
     }
 }

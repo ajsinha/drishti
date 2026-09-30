@@ -45,6 +45,9 @@ The local override is `./application.local.yaml`. Environment variables use Spri
 | `drishti.rachana.formats-file` | — | a site file that overrides or adds named formats |
 | `drishti.rachana.expression-cache-size` | `10000` | compiled expressions kept in memory |
 | `drishti.rachana.studio-save` | `false` (`DRISHTI_STUDIO_SAVE`) | let Studio write Sutra files (authors only) |
+| `drishti.governance.enabled` | `true` (`DRISHTI_SUTRA_REVIEW`) | a Studio save is a proposal an approver must approve (ADR-013) |
+| `drishti.governance.four-eyes` | `true` (`DRISHTI_SUTRA_FOUR_EYES`) | nobody approves their own proposal (with security on) |
+| `drishti.governance.dir` | `./data/governance` (`DRISHTI_GOVERNANCE_DIR`) | where proposals are kept |
 | `drishti.security.enabled` / `secret` | `false` / — (`DRISHTI_TOKEN_SECRET`) | require HS256 bearer tokens; the secret is shared with the console |
 | `drishti.security.roles.<role>` | viewer, author, admin + packs' (finance: trader, risk; logistics: ops) | `{kinds, raw, author, admin}` |
 | `drishti.identity.users-file` / `audit-file` | `./data/identity/users.json` / `audit.jsonl` | user store and audit log |

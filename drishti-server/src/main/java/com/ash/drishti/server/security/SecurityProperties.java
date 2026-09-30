@@ -43,15 +43,17 @@ public record SecurityProperties(Boolean enabled, String secret, Duration clockS
     /**
      * @param kinds entity kinds the role may open; {@code *} for all
      * @param raw may see unredacted raw JSON
-     * @param author may save Sutras from Studio
-     * @param admin may manage users and read the audit log
+     * @param author may save Sutras from Studio (with governance on, a save is a proposal for review)
+     * @param admin may manage users and read the audit log; also approves Sutras
+     * @param approve may approve or reject proposed Sutras (never their own, with four-eyes on)
      */
-    public record Role(List<String> kinds, Boolean raw, Boolean author, Boolean admin) {
+    public record Role(List<String> kinds, Boolean raw, Boolean author, Boolean admin, Boolean approve) {
         public Role {
             kinds = kinds == null ? List.of() : List.copyOf(kinds);
             raw = raw != null && raw;
             author = author != null && author;
             admin = admin != null && admin;
+            approve = approve != null && approve;
         }
     }
 }

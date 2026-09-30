@@ -32,7 +32,10 @@
       <label for="refId" class="visually-hidden">Id</label><input id="refId" class="studio-in mono" value="{{ ref_id }}" data-id aria-label="Entity id">
       <button type="button" class="btn-pill btn-accent" data-preview title="Ctrl+Enter"><i class="bi bi-play" aria-hidden="true"></i> Preview</button>
       <button type="button" class="btn-pill btn-ghost" data-infer title="Load what inference makes of this entity as a new Sutra"><i class="bi bi-stars" aria-hidden="true"></i> Start from inference</button>
-      <button type="button" class="btn-pill btn-ghost" data-save {% if not can_save %}disabled title="Saving is off here, or you are not an author"{% endif %}><i class="bi bi-save" aria-hidden="true"></i> Save</button>
+      {% if review and can_save %}<label for="saveNote" class="visually-hidden">What changed</label>
+      <input id="saveNote" class="studio-in" data-note placeholder="What changed? (for the reviewer)" maxlength="300">{% endif %}
+      <button type="button" class="btn-pill btn-ghost" data-save {% if not can_save %}disabled title="Saving is off here, or you are not an author"{% elif review %}title="Submit for review: an approver makes it live"{% endif %}><i class="bi bi-{{ 'send' if review else 'save' }}" aria-hidden="true"></i> {{ 'Submit for review' if review else 'Save' }}</button>
+      {% if review %}<a class="btn-pill btn-ghost" href="/studio/reviews" title="Sutras waiting for review"><i class="bi bi-check2-square" aria-hidden="true"></i> Reviews{% if pending %} <span class="bell-count">{{ pending }}</span>{% endif %}</a>{% endif %}
     </header>
     <div class="md-bar" role="toolbar" aria-label="Markdown">
       <button type="button" class="md-btn" data-md="h2" title="Heading"><i class="bi bi-type-h2" aria-hidden="true"></i><span class="visually-hidden">Heading</span></button>

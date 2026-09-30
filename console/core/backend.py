@@ -109,8 +109,19 @@ class BackendClient:
     async def studio_settings(self, ident=None) -> dict:
         return await self._get("/studio/settings", ident)
 
-    async def save_sutra(self, yaml_text: str, ident=None) -> dict:
-        return await self._send("POST", "/sutras", ident, content=yaml_text.encode(), headers={"Content-Type": "text/markdown"})
+    async def save_sutra(self, yaml_text: str, ident=None, note: str = "") -> dict:
+        """Saves a Sutra; with review on, the answer is {"proposal": {...}} and the Sutra is not live yet."""
+        return await self._send("POST", "/sutras", ident, content=yaml_text.encode(), headers={"Content-Type": "text/markdown"},
+                                params={"note": note} if note else None)
+
+    async def proposals(self, ident=None, status: str = "", name: str = "") -> dict:
+        return await self._get("/sutras/proposals", ident, **{k: v for k, v in {"status": status, "name": name}.items() if v})
+
+    async def proposal(self, id_: str, ident=None) -> dict:
+        return await self._get(f"/sutras/proposals/{id_}", ident)
+
+    async def decide(self, id_: str, action: str, ident=None, comment: str = "") -> dict:
+        return await self._send("POST", f"/sutras/proposals/{id_}/{action}", ident, json={"comment": comment})
 
     async def impact(self, kind: str, id_: str, ident=None) -> dict:
         return await self._get(f"/impact/{kind}/{quote(id_)}", ident)

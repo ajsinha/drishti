@@ -96,6 +96,11 @@ public final class Entitlements {
         return has(p, SecurityProperties.Role::author);
     }
 
+    /** Approvers review proposed Sutras: roles with {@code approve}, and admins. */
+    public boolean mayApprove(Principal p) {
+        return has(p, SecurityProperties.Role::approve) || has(p, SecurityProperties.Role::admin);
+    }
+
     public DataNode redact(Principal p, DataNode data) {
         return has(p, SecurityProperties.Role::raw) || props.redact().isEmpty() ? data : mask(data);
     }

@@ -61,6 +61,8 @@
             <drishti.packs.dir>${project.basedir}/../packs</drishti.packs.dir>
             <drishti.rachana.dirs>${project.build.directory}/no-site-sutras</drishti.rachana.dirs>
             <drishti.identity.preferences-dir>${project.build.directory}/identity/preferences</drishti.identity.preferences-dir>
+            <drishti.governance.dir>${project.build.directory}/governance</drishti.governance.dir>
+            <DRISHTI_CACHE_ROOT>${project.build.directory}/cache</DRISHTI_CACHE_ROOT>
           </systemPropertyVariables>
         </configuration>
       </plugin>

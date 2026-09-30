@@ -63,11 +63,18 @@ The **Sample JSON** tab shows the document the Sutra works on:
 Inside the `sutra` block the syntax is YAML. The values of `bind`, `where`, `rows` and so on are
 Rachana-EL expressions. Line numbers in problems are the Markdown file's.
 
-## 6. Save
+## 6. Submit for review
 
-**Save** is available to users with the `author` or `admin` role, where saving is switched on
-(`DRISHTI_STUDIO_SAVE=true`). A Markdown Sutra is saved as `<domain>/<name>.v<N>.sutra.md`. Views use the
-new version immediately.
+Where saving is switched on (`DRISHTI_STUDIO_SAVE=true`), authors (`author` or `admin` role) see **Submit for
+review**. Write a short note for the reviewer (*What changed?*) and submit: Studio checks the Sutra and records it
+as a proposal. Nobody sees it yet.
+
+An approver (a role with `approve`, or an admin) opens **Reviews**, reads the change as a diff against the live
+Sutra, and either **approves** it, which publishes it (`<domain>/<name>.v<N>.sutra.md`) so views use it at once,
+or **rejects** it with a reason. Nobody approves their own proposal. If the live Sutra changed after you proposed,
+approval is refused: propose again from the live version. You can **withdraw** your own proposal while it waits.
+
+Sites that do not want review switch it off (`DRISHTI_SUTRA_REVIEW=false`); **Save** then publishes directly.
 
 !!! note "In production"
     Most teams keep saving off and move Sutras through version control. Studio is then a safe place to

@@ -1,0 +1,49 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}{{ p.id }} · Sutra review · {{ PRODUCT }}{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm review">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/studio/reviews">← Reviews</a></nav>
+  <h1><span class="mono">{{ p.id }}</span> · {{ p.name }} v{{ p.version }}</h1>
+  <p>Proposed by <b>{{ p.author }}</b> on <span class="mono">{{ (p.createdAt or '')[:16] | replace('T', ' ') }}</span>{% if p.note %}: “{{ p.note }}”{% endif %}.
+    <span class="cmp-k {{ 'added' if p.status == 'approved' else 'removed' if p.status in ('rejected', 'withdrawn') else 'changed' }}">{{ p.status }}</span>
+    {% if p.reviewer %} by <b>{{ p.reviewer }}</b>{% if p.comment %}: “{{ p.comment }}”{% endif %}{% endif %}</p>
+  {% if error %}<p class="asof-banner" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ error.detail }} <span class="mono">({{ error.code }})</span></p>{% endif %}
+  {% if p.stale %}<p class="asof-banner" role="status"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> The live Sutra changed after this was proposed.
+    It cannot be approved: reject it and propose again from the live version.</p>{% endif %}
+  <h2 class="ws-h">{{ 'New version: the whole Sutra' if p.newVersion else 'Changes against the live Sutra' }}</h2>
+  <section class="pnl"><div class="pnl-b"><pre class="diff mono" aria-label="Differences">{% for kind, line in diff %}<span class="d-{{ kind }}">{{ line }}</span>
+{% endfor %}{% if not diff %}<span class="d-ctx">No differences.</span>{% endif %}</pre></div></section>
+  <p><a class="lnk" href="/studio?sutra={{ p.name }}@{{ p.version }}">Open the live version in Studio</a></p>
+  {% if p.status == 'pending' %}
+  <div class="review-actions">
+    {% if p.mayApprove %}
+    <form method="post" action="/studio/reviews/{{ p.id }}/approve"><label for="okC" class="visually-hidden">Comment</label>
+      <input id="okC" name="comment" placeholder="Comment (optional)" maxlength="500"><button type="submit" class="btn-pill btn-accent"><i class="bi bi-check2" aria-hidden="true"></i> Approve and publish</button></form>
+    <form method="post" action="/studio/reviews/{{ p.id }}/reject"><label for="noC" class="visually-hidden">Reason</label>
+      <input id="noC" name="comment" placeholder="Why not (required)" maxlength="500" required><button type="submit" class="btn-pill btn-ghost"><i class="bi bi-x" aria-hidden="true"></i> Reject</button></form>
+    {% endif %}
+    {% if p.mayWithdraw %}
+    <form method="post" action="/studio/reviews/{{ p.id }}/withdraw"><button type="submit" class="btn-pill btn-ghost"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Withdraw</button></form>
+    {% endif %}
+    {% if not p.mayApprove and not p.mayWithdraw %}<p class="text-muted-d">Waiting for an approver{% if me and p.author == me.user %} other than you{% endif %}.</p>{% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

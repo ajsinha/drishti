@@ -487,3 +487,15 @@ button.tbar-link { background: none; border: 0; padding: 0 .35rem; font: inherit
   .pnl { break-inside: avoid; box-shadow: none !important; border-color: #c9ced6 !important; }
   a { color: inherit !important; text-decoration: none !important; }
 }
+
+/* ---- Sutra governance (W19) ---- */
+.tabs-inline { display: flex; gap: 1rem; margin: .4rem 0 .8rem; }
+.tabs-inline .on { font-weight: 700; text-decoration: underline; text-underline-offset: 4px; }
+.diff { margin: 0; white-space: pre-wrap; font-size: .8rem; line-height: 1.45; max-height: 60vh; overflow: auto; }
+.diff span { display: block; padding: 0 .4rem; }
+.diff .d-add { background: color-mix(in srgb, var(--d-link) 16%, transparent); }
+.diff .d-del { background: color-mix(in srgb, var(--d-neg) 16%, transparent); }
+.diff .d-hunk { color: var(--d-muted); }
+.review-actions { display: flex; flex-wrap: wrap; gap: .8rem 1.5rem; align-items: center; margin-top: .8rem; }
+.review-actions form { display: flex; gap: .4rem; align-items: center; }
+.review-actions input { background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 5px; padding: .25rem .5rem; width: 16rem; }

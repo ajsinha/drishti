@@ -29,5 +29,6 @@
 | [010](010-industries-are-domain-packs.md) | Industries are domain packs |
 | [011](011-sutras-are-markdown-documents.md) | Sutras are Markdown documents |
 | [012](012-business-dates-and-delta-lake.md) | Business dates and Delta Lake |
+| [013](013-sutras-go-live-through-review.md) | Sutras go live through review |
 
 ADRs are amended, never rewritten.

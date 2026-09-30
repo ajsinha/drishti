@@ -16,10 +16,12 @@
 document, start from inference, save (authors)."""
 from __future__ import annotations
 
+import difflib
 import json
+from urllib.parse import parse_qs
 
 from fastapi import APIRouter, Request
-from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse
 
 from core.backend import BackendError
 from core import sutra_doc
@@ -65,8 +67,57 @@ async def studio(request: Request, sutra: str = "irs-vanilla@3", kind: str = "tr
         except (BackendError, ValueError):
             pass
     settings = await backend.studio_settings(me)
+    pending = 0
+    if settings.get("review"):
+        try:
+            pending = len((await backend.proposals(me, status="pending")).get("proposals", []))
+        except BackendError:
+            pending = 0
     return render(request, "studio/studio.html", sutras=sutras, source=source, picked=picked, ref_kind=kind, ref_id=id,
-                  can_save=bool(settings.get("save")))
+                  can_save=bool(settings.get("save")), review=bool(settings.get("review")), pending=pending)
+
+
+@router.get("/reviews")
+async def reviews(request: Request, status: str = "pending"):
+    """Sutra governance (W19): proposals waiting for review, or all of them."""
+    try:
+        data = await request.app.state.backend.proposals(ident(request), status="" if status == "all" else status)
+    except BackendError as e:
+        return render(request, "studio/reviews.html", status_code=e.status, proposals=[], status=status, error=e)
+    return render(request, "studio/reviews.html", proposals=data.get("proposals", []), status=status, error=None)
+
+
+@router.get("/reviews/{id_}")
+async def review(request: Request, id_: str):
+    try:
+        p = await request.app.state.backend.proposal(id_, ident(request))
+    except BackendError as e:
+        return render(request, "studio/reviews.html", status_code=e.status, proposals=[], status="pending", error=e)
+    return render(request, "studio/review.html", p=p, diff=_diff(p.get("liveText") or "", p.get("text") or ""), error=None)
+
+
+@router.post("/reviews/{id_}/{action}")
+async def decide(request: Request, id_: str, action: str):
+    if action not in ("approve", "reject", "withdraw"):
+        return RedirectResponse(f"/studio/reviews/{id_}", status_code=303)
+    form = parse_qs((await request.body()).decode("utf-8", "replace"))
+    try:
+        await request.app.state.backend.decide(id_, action, ident(request), comment=form.get("comment", [""])[0][:500])
+    except BackendError as e:
+        p = await request.app.state.backend.proposal(id_, ident(request))
+        return render(request, "studio/review.html", status_code=e.status, p=p, diff=_diff(p.get("liveText") or "", p.get("text") or ""), error=e)
+    return RedirectResponse(f"/studio/reviews/{id_}", status_code=303)
+
+
+def _diff(live: str, proposed: str) -> list[tuple[str, str]]:
+    """A unified diff of the live Sutra and the proposal, as (kind, line) with kind add, del, hunk or ctx."""
+    out = []
+    for line in difflib.unified_diff(live.splitlines(), proposed.splitlines(), "live", "proposed", n=3, lineterm=""):
+        if line.startswith(("---", "+++")):
+            continue
+        kind = "hunk" if line.startswith("@@") else "add" if line.startswith("+") else "del" if line.startswith("-") else "ctx"
+        out.append((kind, line))
+    return out
 
 
 @router.get("/source/{name}/{version}")
@@ -118,6 +169,6 @@ async def inferred_from_sample(request: Request):
 async def save(request: Request):
     body = json.loads(await request.body() or b"{}")
     try:
-        return await request.app.state.backend.save_sutra(body.get("yaml", ""), ident(request))
+        return await request.app.state.backend.save_sutra(body.get("yaml", ""), ident(request), note=str(body.get("note", ""))[:300])
     except BackendError as e:
         return _problem(e)

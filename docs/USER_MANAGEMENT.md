@@ -35,12 +35,16 @@ admins, or change the seeded password on first sign-in.
 
 A user can hold any role defined in `drishti.security.roles`:
 
-| Role | May open | Raw JSON | Save Sutras | Manage users |
-|---|---|---|---|---|
-| `trader` | trades, curves, spot, index, book, contract specs, clearing accounts, counterparties | redacted | — | — |
-| `risk` | everything | full | — | — |
-| `author` | everything | full | yes (where Studio saving is on) | — |
-| `admin` | everything | full | yes | **yes** |
+| Role | May open | Raw JSON | Propose Sutras | Approve Sutras | Manage users |
+|---|---|---|---|---|---|
+| `trader` | trades, curves, spot, index, book, contract specs, clearing accounts, counterparties | redacted | — | — | — |
+| `risk` | everything | full | — | — | — |
+| `author` | everything | full | yes (where Studio saving is on) | — | — |
+| `approver` | everything | full | yes | **yes**, never their own | — |
+| `admin` | everything | full | yes | yes | **yes** |
+
+A role flag `approve: true` makes any role an approver. Proposals, approvals, rejections and withdrawals are in the
+audit log (`sutra-proposed`, `sutra-approved`, `sutra-rejected`, `sutra-withdrawn`).
 
 There is always at least one enabled admin. The last one cannot be disabled, demoted or deleted,
 and nobody can disable or delete their own account.

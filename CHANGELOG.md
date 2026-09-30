@@ -16,6 +16,12 @@
 # Changelog
 
 ## Unreleased
+- **W19 Sutra governance (ADR-013).** With review on (the default), a Studio save is a proposal: validated, with the author's note and the live text it was written against.
+  - **Review:** approvers (new role flag `approve`, or admins) read the diff under **Studio → Reviews**, then approve (published and hot-reloaded) or reject with a reason; authors may withdraw.
+  - **Safeguards:** four eyes, so nobody approves their own proposal. Approval is refused if the live Sutra changed after the proposal (`DRS-2006`), and two approvers cannot both decide one proposal.
+  - **Record:** proposals are stored as JSON, and every step is audited.
+  - **API:** `/api/v1/sutras/proposals…` and `/api/v1/sutras/{name}/history`.
+  - **Settings:** `DRISHTI_SUTRA_REVIEW=false` restores direct saving.
 - **W18 Export and share.**
   - **CSV:** any table-like panel downloads as CSV (shown numbers become plain numbers, UTF-8 with BOM), as do search results and comparisons.
   - **JSON:** the document downloads as JSON, redacted for the role.

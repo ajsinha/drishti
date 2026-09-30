@@ -104,6 +104,7 @@ drishti:
     roles:
       viewer:  { kinds: ["*"] }        # packs add domain roles (finance: trader, risk)
       author:  { kinds: ["*"], raw: true, author: true }
+      approver: { kinds: ["*"], raw: true, author: true, approve: true }   # reviews proposed Sutras (admins may too)
       admin:   { kinds: ["*"], raw: true, author: true, admin: true }
     redact: [trader, counterpartyId, patientName]   # field names masked in raw JSON (F9) for roles without raw
   identity:
@@ -131,6 +132,11 @@ drishti:
     reload-debounce: 250ms
     # Let Sutra Studio save files (authors only). Off by default; turn on in authoring environments.
     studio-save: ${DRISHTI_STUDIO_SAVE:false}
+  governance:
+    # With review on, a Studio save is a proposal; an approver (role flag approve, or an admin) makes it live.
+    enabled: ${DRISHTI_SUTRA_REVIEW:true}
+    four-eyes: ${DRISHTI_SUTRA_FOUR_EYES:true}   # nobody approves their own proposal (when security is on)
+    dir: ${DRISHTI_GOVERNANCE_DIR:./data/governance}
   engine:
     layout-cache-size: 10000        # effective layouts, one per (Sutra version, kind, data shape)
     fingerprint-cache-size: 100000  # one per (entity, generation)

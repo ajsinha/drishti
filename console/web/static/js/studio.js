@@ -132,10 +132,17 @@
   });
   var saveBtn = root.querySelector('[data-save]');
   saveBtn.addEventListener('click', function () {
-    fetch('/studio/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ yaml: text() }) })
+    var note = root.querySelector('[data-note]');
+    fetch('/studio/save', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ yaml: text(), note: note ? note.value : '' }) })
       .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); })
       .then(function (res) {
-        if (res.ok) { say('Saved ' + res.body.name + ' v' + res.body.latest + '. Views use it now.'); problems([]); }
+        if (res.ok && res.body.proposal) {
+          say('Submitted ' + res.body.proposal.name + ' v' + res.body.proposal.version + ' for review as ' + res.body.proposal.id +
+            '. It goes live when an approver approves it (Reviews).'); problems([]);
+          if (note) { note.value = ''; }
+        }
+        else if (res.ok) { say('Saved ' + res.body.name + ' v' + res.body.latest + '. Views use it now.'); problems([]); }
         else { problems(res.body.problems); say((res.body.code || 'Error') + ': ' + res.body.detail, true); }
       });
   });

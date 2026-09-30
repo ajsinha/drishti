@@ -414,7 +414,8 @@ A Sutra says what matters; inference fills the rest.
 2. Edit; **Ctrl+Enter** previews against the entity, or against JSON you paste in *Sample JSON*.
 3. **Insert…** adds any panel kind already shaped; **Jump to…** moves around long documents.
 4. Problems are listed with their line; click one to go there.
-5. **Save** (authors, where saving is on), or commit the file to the pack's `sutras/` directory.
+5. **Submit for review** (authors, where saving is on): an approver approves it and it goes live; or commit the file
+   to the pack's `sutras/` directory through version control.
 
 ## 12. Checklist
 
