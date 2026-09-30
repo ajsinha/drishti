@@ -1,0 +1,42 @@
+{
+ "billId": "BILL-VAL-2026-013",
+ "title": "Digital Services Tax Act",
+ "sponsorName": "Hugo Holm",
+ "stage": "Committee",
+ "introduced": "2025-10-11",
+ "costM": -1800,
+ "stages": [
+  {
+   "date": "2025-10-11",
+   "stage": "First reading",
+   "for": null,
+   "against": null,
+   "outcome": "Passed"
+  },
+  {
+   "date": "2025-11-06",
+   "stage": "Second reading",
+   "for": 121,
+   "against": 114,
+   "outcome": "Passed"
+  },
+  {
+   "date": "2025-11-20",
+   "stage": "Committee",
+   "for": 126,
+   "against": 113,
+   "outcome": "Passed"
+  }
+ ],
+ "summary": {
+  "policyArea": "Digital Services Tax",
+  "type": "Private member's bill",
+  "impactAssessment": "Published"
+ },
+ "sponsor": "CAND-VAL-005",
+ "jurisdiction": "JUR-VAL",
+ "_meta": {
+  "source": "elections-office",
+  "generation": 1
+ }
+}

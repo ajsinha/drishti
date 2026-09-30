@@ -1,0 +1,98 @@
+{
+ "partyId": "PARTY-KES-ISL",
+ "name": "Isles First",
+ "position": "Regionalist",
+ "leaderName": "Hugo Holm",
+ "seats": 0,
+ "polling": 0.077,
+ "members": 67000,
+ "trend": [
+  {
+   "month": "2026-01-12",
+   "share": 0.08
+  },
+  {
+   "month": "2026-01-26",
+   "share": 0.087
+  },
+  {
+   "month": "2026-02-09",
+   "share": 0.09
+  },
+  {
+   "month": "2026-02-23",
+   "share": 0.08
+  },
+  {
+   "month": "2026-03-09",
+   "share": 0.07
+  },
+  {
+   "month": "2026-03-23",
+   "share": 0.08
+  },
+  {
+   "month": "2026-04-06",
+   "share": 0.091
+  },
+  {
+   "month": "2026-04-20",
+   "share": 0.082
+  },
+  {
+   "month": "2026-05-04",
+   "share": 0.083
+  },
+  {
+   "month": "2026-05-18",
+   "share": 0.093
+  },
+  {
+   "month": "2026-06-01",
+   "share": 0.089
+  },
+  {
+   "month": "2026-06-15",
+   "share": 0.078
+  },
+  {
+   "month": "2026-06-29",
+   "share": 0.088
+  },
+  {
+   "month": "2026-07-13",
+   "share": 0.1
+  },
+  {
+   "month": "2026-07-27",
+   "share": 0.097
+  },
+  {
+   "month": "2026-08-10",
+   "share": 0.098
+  },
+  {
+   "month": "2026-08-24",
+   "share": 0.082
+  },
+  {
+   "month": "2026-09-07",
+   "share": 0.086
+  },
+  {
+   "month": "2026-09-21",
+   "share": 0.077
+  }
+ ],
+ "platform": {
+  "economy": "Green industrial strategy",
+  "founded": 1993,
+  "europeanGroup": "S&D"
+ },
+ "jurisdiction": "JUR-KES",
+ "leader": "CAND-KES-005",
+ "_meta": {
+  "source": "elections-office",
+  "generation": 1
+ }
+}

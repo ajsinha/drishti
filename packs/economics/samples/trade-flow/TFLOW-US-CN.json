@@ -1,0 +1,80 @@
+{
+ "flowId": "TFLOW-US-CN",
+ "reporterName": "United States",
+ "partnerName": "China",
+ "exports": 740,
+ "imports": 863,
+ "balance": -123,
+ "tariff": 0.0244,
+ "products": [
+  {
+   "product": "Agricultural products",
+   "value": 207
+  },
+  {
+   "product": "Pharmaceuticals",
+   "value": 148
+  },
+  {
+   "product": "Vehicles",
+   "value": 104
+  },
+  {
+   "product": "Machinery",
+   "value": 74
+  },
+  {
+   "product": "Metals",
+   "value": 52
+  }
+ ],
+ "balanceHistory": [
+  {
+   "year": "2016",
+   "balance": -94
+  },
+  {
+   "year": "2017",
+   "balance": -126
+  },
+  {
+   "year": "2018",
+   "balance": -94
+  },
+  {
+   "year": "2019",
+   "balance": -106
+  },
+  {
+   "year": "2020",
+   "balance": -124
+  },
+  {
+   "year": "2021",
+   "balance": -106
+  },
+  {
+   "year": "2022",
+   "balance": -134
+  },
+  {
+   "year": "2023",
+   "balance": -86
+  },
+  {
+   "year": "2024",
+   "balance": -128
+  },
+  {
+   "year": "2025",
+   "balance": -117
+  }
+ ],
+ "economy": "ECON-US",
+ "partner": "ECON-CN",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

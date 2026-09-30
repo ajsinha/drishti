@@ -1,0 +1,35 @@
+{
+ "billId": "BILL-VAL-2026-012",
+ "title": "Affordable Housing Act",
+ "sponsorName": "Nadia Ribeiro",
+ "stage": "Second reading",
+ "introduced": "2025-11-11",
+ "costM": 2600,
+ "stages": [
+  {
+   "date": "2025-11-11",
+   "stage": "First reading",
+   "for": null,
+   "against": null,
+   "outcome": "Passed"
+  },
+  {
+   "date": "2026-01-06",
+   "stage": "Second reading",
+   "for": 173,
+   "against": 57,
+   "outcome": "Passed"
+  }
+ ],
+ "summary": {
+  "policyArea": "Affordable Housing",
+  "type": "Private member's bill",
+  "impactAssessment": "Published"
+ },
+ "sponsor": "CAND-VAL-004",
+ "jurisdiction": "JUR-VAL",
+ "_meta": {
+  "source": "elections-office",
+  "generation": 1
+ }
+}

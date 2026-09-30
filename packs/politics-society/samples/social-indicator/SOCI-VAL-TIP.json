@@ -1,0 +1,93 @@
+{
+ "indicatorId": "SOCI-VAL-TIP",
+ "name": "Trust in parliament",
+ "latest": 42.01,
+ "unit": "% who trust",
+ "change5y": -1.41,
+ "sourceName": "National statistics office (fictional)",
+ "series": [
+  {
+   "year": "2012",
+   "value": 41.98
+  },
+  {
+   "year": "2013",
+   "value": 42.91
+  },
+  {
+   "year": "2014",
+   "value": 42.57
+  },
+  {
+   "year": "2015",
+   "value": 43.29
+  },
+  {
+   "year": "2016",
+   "value": 44.15
+  },
+  {
+   "year": "2017",
+   "value": 44.04
+  },
+  {
+   "year": "2018",
+   "value": 43.78
+  },
+  {
+   "year": "2019",
+   "value": 44.07
+  },
+  {
+   "year": "2020",
+   "value": 43.42
+  },
+  {
+   "year": "2021",
+   "value": 43.4
+  },
+  {
+   "year": "2022",
+   "value": 44.04
+  },
+  {
+   "year": "2023",
+   "value": 44.02
+  },
+  {
+   "year": "2024",
+   "value": 43.53
+  },
+  {
+   "year": "2025",
+   "value": 42.01
+  }
+ ],
+ "byRegion": [
+  {
+   "region": "North Coast",
+   "value": 36.52
+  },
+  {
+   "region": "Central Plains",
+   "value": 47.57
+  },
+  {
+   "region": "Capital District",
+   "value": 32.88
+  },
+  {
+   "region": "Southern Hills",
+   "value": 33.48
+  },
+  {
+   "region": "Eastern Lakes",
+   "value": 35.64
+  }
+ ],
+ "jurisdiction": "JUR-VAL",
+ "_meta": {
+  "source": "statistics-office",
+  "generation": 1
+ }
+}

@@ -1,0 +1,42 @@
+{
+ "billId": "BILL-KES-2026-012",
+ "title": "Affordable Housing Act",
+ "sponsorName": "Nadia Ribeiro",
+ "stage": "Committee",
+ "introduced": "2026-04-14",
+ "costM": 2600,
+ "stages": [
+  {
+   "date": "2026-04-14",
+   "stage": "First reading",
+   "for": null,
+   "against": null,
+   "outcome": "Passed"
+  },
+  {
+   "date": "2026-05-15",
+   "stage": "Second reading",
+   "for": 98,
+   "against": 80,
+   "outcome": "Passed"
+  },
+  {
+   "date": "2026-06-10",
+   "stage": "Committee",
+   "for": 156,
+   "against": 17,
+   "outcome": "Passed"
+  }
+ ],
+ "summary": {
+  "policyArea": "Affordable Housing",
+  "type": "Government bill",
+  "impactAssessment": "Published"
+ },
+ "sponsor": "CAND-KES-004",
+ "jurisdiction": "JUR-KES",
+ "_meta": {
+  "source": "elections-office",
+  "generation": 1
+ }
+}

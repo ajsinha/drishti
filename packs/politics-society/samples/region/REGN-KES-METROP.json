@@ -1,0 +1,77 @@
+{
+ "regionId": "REGN-KES-METROP",
+ "name": "Metropolitan",
+ "populationM": 4.13,
+ "medianIncome": 43400.0,
+ "unemployment": 0.1074,
+ "lifeExpectancy": 79.9,
+ "vote": [
+  {
+   "party": "Kestrian Labour",
+   "share": 0.433
+  },
+  {
+   "party": "Constitutional Party",
+   "share": 0.298
+  },
+  {
+   "party": "Isles First",
+   "share": 0.115
+  },
+  {
+   "party": "Democratic Reform",
+   "share": 0.1
+  },
+  {
+   "party": "Others",
+   "share": 0.054
+  }
+ ],
+ "unemploymentTrend": [
+  {
+   "year": "2016",
+   "rate": 0.0614
+  },
+  {
+   "year": "2017",
+   "rate": 0.082
+  },
+  {
+   "year": "2018",
+   "rate": 0.0717
+  },
+  {
+   "year": "2019",
+   "rate": 0.0931
+  },
+  {
+   "year": "2020",
+   "rate": 0.1087
+  },
+  {
+   "year": "2021",
+   "rate": 0.0788
+  },
+  {
+   "year": "2022",
+   "rate": 0.0978
+  },
+  {
+   "year": "2023",
+   "rate": 0.1017
+  },
+  {
+   "year": "2024",
+   "rate": 0.0514
+  },
+  {
+   "year": "2025",
+   "rate": 0.0451
+  }
+ ],
+ "jurisdiction": "JUR-KES",
+ "_meta": {
+  "source": "elections-office",
+  "generation": 1
+ }
+}

@@ -1,0 +1,89 @@
+{
+ "indicatorId": "SOCI-KES-TEA",
+ "name": "Tertiary education attainment",
+ "latest": 42.5,
+ "unit": "% of 25-34 year-olds",
+ "change5y": -0.46,
+ "sourceName": "National statistics office (fictional)",
+ "series": [
+  {
+   "year": "2012",
+   "value": 42.15
+  },
+  {
+   "year": "2013",
+   "value": 41.57
+  },
+  {
+   "year": "2014",
+   "value": 40.94
+  },
+  {
+   "year": "2015",
+   "value": 41.47
+  },
+  {
+   "year": "2016",
+   "value": 41.79
+  },
+  {
+   "year": "2017",
+   "value": 42.33
+  },
+  {
+   "year": "2018",
+   "value": 42.3
+  },
+  {
+   "year": "2019",
+   "value": 42.85
+  },
+  {
+   "year": "2020",
+   "value": 42.96
+  },
+  {
+   "year": "2021",
+   "value": 42.24
+  },
+  {
+   "year": "2022",
+   "value": 43.43
+  },
+  {
+   "year": "2023",
+   "value": 42.15
+  },
+  {
+   "year": "2024",
+   "value": 42.62
+  },
+  {
+   "year": "2025",
+   "value": 42.5
+  }
+ ],
+ "byRegion": [
+  {
+   "region": "Highlands",
+   "value": 41.95
+  },
+  {
+   "region": "Riverlands",
+   "value": 37.76
+  },
+  {
+   "region": "Metropolitan",
+   "value": 41.04
+  },
+  {
+   "region": "Isles",
+   "value": 51.87
+  }
+ ],
+ "jurisdiction": "JUR-KES",
+ "_meta": {
+  "source": "statistics-office",
+  "generation": 1
+ }
+}

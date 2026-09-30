@@ -1,0 +1,109 @@
+{
+ "economyId": "ECON-EA",
+ "name": "Euro area",
+ "currency": "EUR",
+ "gdpUsdTn": 17.4,
+ "growth": 0.011,
+ "inflation": 0.021,
+ "unemployment": 0.063,
+ "policyRate": 0.02,
+ "debtToGdp": 0.88,
+ "growthPath": [
+  {
+   "quarter": "2022Q4",
+   "growth": 0.0211
+  },
+  {
+   "quarter": "2023Q1",
+   "growth": 0.0151
+  },
+  {
+   "quarter": "2023Q2",
+   "growth": 0.0181
+  },
+  {
+   "quarter": "2023Q3",
+   "growth": 0.0099
+  },
+  {
+   "quarter": "2023Q4",
+   "growth": 0.0029
+  },
+  {
+   "quarter": "2024Q1",
+   "growth": 0.0061
+  },
+  {
+   "quarter": "2024Q2",
+   "growth": 0.0148
+  },
+  {
+   "quarter": "2024Q3",
+   "growth": 0.0116
+  },
+  {
+   "quarter": "2024Q4",
+   "growth": 0.0155
+  },
+  {
+   "quarter": "2025Q1",
+   "growth": 0.0163
+  },
+  {
+   "quarter": "2025Q2",
+   "growth": 0.0123
+  },
+  {
+   "quarter": "2025Q3",
+   "growth": 0.012
+  },
+  {
+   "quarter": "2025Q4",
+   "growth": 0.0182
+  },
+  {
+   "quarter": "2026Q1",
+   "growth": 0.0152
+  },
+  {
+   "quarter": "2026Q2",
+   "growth": 0.0014
+  },
+  {
+   "quarter": "2026Q3",
+   "growth": 0.0186
+  }
+ ],
+ "sectors": [
+  {
+   "sector": "Services",
+   "share": 0.538
+  },
+  {
+   "sector": "Industry",
+   "share": 0.21
+  },
+  {
+   "sector": "Construction",
+   "share": 0.061
+  },
+  {
+   "sector": "Agriculture",
+   "share": 0.045
+  },
+  {
+   "sector": "Government",
+   "share": 0.065
+  }
+ ],
+ "centralBank": "CBD-ECB-2026-09",
+ "labour": "LABR-EA",
+ "fiscal": "FISC-EA",
+ "basket": "CPIB-EA",
+ "outlook": "FCST-EA-2026Q3",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

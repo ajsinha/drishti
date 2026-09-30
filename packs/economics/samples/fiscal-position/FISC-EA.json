@@ -1,0 +1,87 @@
+{
+ "fiscalId": "FISC-EA",
+ "economyName": "Euro area",
+ "revenue": 0.4112,
+ "spending": 0.4321,
+ "balance": -0.021,
+ "debt": 0.88,
+ "interestBurden": 0.0351,
+ "functions": [
+  {
+   "function": "Social protection",
+   "share": 0.142
+  },
+  {
+   "function": "Health",
+   "share": 0.0835
+  },
+  {
+   "function": "Education",
+   "share": 0.0501
+  },
+  {
+   "function": "Defence",
+   "share": 0.0209
+  },
+  {
+   "function": "Interest",
+   "share": 0.0144
+  },
+  {
+   "function": "Other",
+   "share": 0.1211
+  }
+ ],
+ "debtPath": [
+  {
+   "year": "2016",
+   "debt": 0.765
+  },
+  {
+   "year": "2017",
+   "debt": 0.799
+  },
+  {
+   "year": "2018",
+   "debt": 0.789
+  },
+  {
+   "year": "2019",
+   "debt": 0.794
+  },
+  {
+   "year": "2020",
+   "debt": 0.808
+  },
+  {
+   "year": "2021",
+   "debt": 0.817
+  },
+  {
+   "year": "2022",
+   "debt": 0.838
+  },
+  {
+   "year": "2023",
+   "debt": 0.846
+  },
+  {
+   "year": "2024",
+   "debt": 0.86
+  },
+  {
+   "year": "2025",
+   "debt": 0.872
+  },
+  {
+   "year": "2026",
+   "debt": 0.88
+  }
+ ],
+ "economy": "ECON-EA",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

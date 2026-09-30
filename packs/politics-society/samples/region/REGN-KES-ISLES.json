@@ -1,0 +1,77 @@
+{
+ "regionId": "REGN-KES-ISLES",
+ "name": "Isles",
+ "populationM": 4.02,
+ "medianIncome": 44700.0,
+ "unemployment": 0.0532,
+ "lifeExpectancy": 80.3,
+ "vote": [
+  {
+   "party": "Kestrian Labour",
+   "share": 0.43
+  },
+  {
+   "party": "Constitutional Party",
+   "share": 0.344
+  },
+  {
+   "party": "Democratic Reform",
+   "share": 0.12
+  },
+  {
+   "party": "Others",
+   "share": 0.06
+  },
+  {
+   "party": "Isles First",
+   "share": 0.047
+  }
+ ],
+ "unemploymentTrend": [
+  {
+   "year": "2016",
+   "rate": 0.1031
+  },
+  {
+   "year": "2017",
+   "rate": 0.0854
+  },
+  {
+   "year": "2018",
+   "rate": 0.0685
+  },
+  {
+   "year": "2019",
+   "rate": 0.0792
+  },
+  {
+   "year": "2020",
+   "rate": 0.1028
+  },
+  {
+   "year": "2021",
+   "rate": 0.0607
+  },
+  {
+   "year": "2022",
+   "rate": 0.0728
+  },
+  {
+   "year": "2023",
+   "rate": 0.1034
+  },
+  {
+   "year": "2024",
+   "rate": 0.1008
+  },
+  {
+   "year": "2025",
+   "rate": 0.0771
+  }
+ ],
+ "jurisdiction": "JUR-KES",
+ "_meta": {
+  "source": "elections-office",
+  "generation": 1
+ }
+}

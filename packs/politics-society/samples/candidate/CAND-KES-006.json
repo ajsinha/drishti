@@ -1,0 +1,41 @@
+{
+ "candidateId": "CAND-KES-006",
+ "name": "Elena Moreau",
+ "partyName": "Isles First",
+ "constituency": "Isles West",
+ "role": "Shadow minister",
+ "voteShare": 0.116,
+ "since": "2016-10-01",
+ "record": [
+  {
+   "bill": "Clean Energy Transition Act",
+   "vote": "For",
+   "date": "2025-10-08"
+  },
+  {
+   "bill": "Affordable Housing Act",
+   "vote": "Against",
+   "date": "2026-05-15"
+  },
+  {
+   "bill": "Digital Services Tax Act",
+   "vote": "For",
+   "date": "2025-12-01"
+  },
+  {
+   "bill": "Public Health Workforce Act",
+   "vote": "For",
+   "date": "2026-01-23"
+  }
+ ],
+ "profile": {
+  "born": 1976,
+  "profession": "Engineer",
+  "committees": "Justice"
+ },
+ "party": "PARTY-KES-ISL",
+ "_meta": {
+  "source": "elections-office",
+  "generation": 1
+ }
+}

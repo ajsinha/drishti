@@ -1,0 +1,156 @@
+{
+ "indicatorId": "MACRO-JP-UNEMP",
+ "name": "Japan · Unemployment rate",
+ "latest": 2.33,
+ "unit": "%",
+ "previous": 2.5,
+ "nextRelease": "2026-10-15",
+ "history": [
+  {
+   "period": "2024-09",
+   "value": 2.39
+  },
+  {
+   "period": "2024-10",
+   "value": 2.36
+  },
+  {
+   "period": "2024-11",
+   "value": 2.51
+  },
+  {
+   "period": "2024-12",
+   "value": 2.49
+  },
+  {
+   "period": "2025-01",
+   "value": 2.49
+  },
+  {
+   "period": "2025-02",
+   "value": 2.4
+  },
+  {
+   "period": "2025-03",
+   "value": 2.58
+  },
+  {
+   "period": "2025-04",
+   "value": 2.67
+  },
+  {
+   "period": "2025-05",
+   "value": 2.7
+  },
+  {
+   "period": "2025-06",
+   "value": 2.45
+  },
+  {
+   "period": "2025-07",
+   "value": 2.31
+  },
+  {
+   "period": "2025-08",
+   "value": 2.4
+  },
+  {
+   "period": "2025-09",
+   "value": 2.47
+  },
+  {
+   "period": "2025-10",
+   "value": 2.45
+  },
+  {
+   "period": "2025-11",
+   "value": 2.49
+  },
+  {
+   "period": "2025-12",
+   "value": 2.42
+  },
+  {
+   "period": "2026-01",
+   "value": 2.5
+  },
+  {
+   "period": "2026-02",
+   "value": 2.45
+  },
+  {
+   "period": "2026-03",
+   "value": 2.34
+  },
+  {
+   "period": "2026-04",
+   "value": 2.42
+  },
+  {
+   "period": "2026-05",
+   "value": 2.37
+  },
+  {
+   "period": "2026-06",
+   "value": 2.41
+  },
+  {
+   "period": "2026-07",
+   "value": 2.5
+  },
+  {
+   "period": "2026-08",
+   "value": 2.33
+  }
+ ],
+ "releases": [
+  {
+   "date": "2026-09-14",
+   "period": "2026-08",
+   "actual": 2.33,
+   "consensus": 2.34,
+   "surprise": -0.01
+  },
+  {
+   "date": "2026-08-14",
+   "period": "2026-07",
+   "actual": 2.5,
+   "consensus": 2.5,
+   "surprise": 0.0
+  },
+  {
+   "date": "2026-07-14",
+   "period": "2026-06",
+   "actual": 2.41,
+   "consensus": 2.4,
+   "surprise": 0.01
+  },
+  {
+   "date": "2026-06-14",
+   "period": "2026-05",
+   "actual": 2.37,
+   "consensus": 2.39,
+   "surprise": -0.02
+  },
+  {
+   "date": "2026-05-14",
+   "period": "2026-04",
+   "actual": 2.42,
+   "consensus": 2.45,
+   "surprise": -0.03
+  },
+  {
+   "date": "2026-04-14",
+   "period": "2026-03",
+   "actual": 2.34,
+   "consensus": 2.37,
+   "surprise": -0.03
+  }
+ ],
+ "economy": "ECON-JP",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

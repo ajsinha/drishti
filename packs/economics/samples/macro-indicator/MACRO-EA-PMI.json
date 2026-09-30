@@ -1,0 +1,156 @@
+{
+ "indicatorId": "MACRO-EA-PMI",
+ "name": "Euro area · Manufacturing PMI",
+ "latest": 48.41,
+ "unit": "index",
+ "previous": 48.09,
+ "nextRelease": "2026-10-15",
+ "history": [
+  {
+   "period": "2024-09",
+   "value": 48.06
+  },
+  {
+   "period": "2024-10",
+   "value": 48.26
+  },
+  {
+   "period": "2024-11",
+   "value": 50.89
+  },
+  {
+   "period": "2024-12",
+   "value": 50.73
+  },
+  {
+   "period": "2025-01",
+   "value": 50.15
+  },
+  {
+   "period": "2025-02",
+   "value": 51.95
+  },
+  {
+   "period": "2025-03",
+   "value": 50.85
+  },
+  {
+   "period": "2025-04",
+   "value": 49.8
+  },
+  {
+   "period": "2025-05",
+   "value": 50.1
+  },
+  {
+   "period": "2025-06",
+   "value": 50.14
+  },
+  {
+   "period": "2025-07",
+   "value": 49.82
+  },
+  {
+   "period": "2025-08",
+   "value": 51.23
+  },
+  {
+   "period": "2025-09",
+   "value": 50.08
+  },
+  {
+   "period": "2025-10",
+   "value": 48.67
+  },
+  {
+   "period": "2025-11",
+   "value": 48.95
+  },
+  {
+   "period": "2025-12",
+   "value": 48.42
+  },
+  {
+   "period": "2026-01",
+   "value": 48.65
+  },
+  {
+   "period": "2026-02",
+   "value": 50.02
+  },
+  {
+   "period": "2026-03",
+   "value": 49.54
+  },
+  {
+   "period": "2026-04",
+   "value": 48.87
+  },
+  {
+   "period": "2026-05",
+   "value": 48.68
+  },
+  {
+   "period": "2026-06",
+   "value": 48.32
+  },
+  {
+   "period": "2026-07",
+   "value": 48.09
+  },
+  {
+   "period": "2026-08",
+   "value": 48.41
+  }
+ ],
+ "releases": [
+  {
+   "date": "2026-09-14",
+   "period": "2026-08",
+   "actual": 48.41,
+   "consensus": 48.63,
+   "surprise": -0.22
+  },
+  {
+   "date": "2026-08-14",
+   "period": "2026-07",
+   "actual": 48.09,
+   "consensus": 48.34,
+   "surprise": -0.25
+  },
+  {
+   "date": "2026-07-14",
+   "period": "2026-06",
+   "actual": 48.32,
+   "consensus": 48.11,
+   "surprise": 0.21
+  },
+  {
+   "date": "2026-06-14",
+   "period": "2026-05",
+   "actual": 48.68,
+   "consensus": 49.13,
+   "surprise": -0.45
+  },
+  {
+   "date": "2026-05-14",
+   "period": "2026-04",
+   "actual": 48.87,
+   "consensus": 48.65,
+   "surprise": 0.22
+  },
+  {
+   "date": "2026-04-14",
+   "period": "2026-03",
+   "actual": 49.54,
+   "consensus": 50.11,
+   "surprise": -0.57
+  }
+ ],
+ "economy": "ECON-EA",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

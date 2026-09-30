@@ -1,0 +1,66 @@
+{
+ "forecastId": "FCST-CN-2026Q3",
+ "economyName": "China",
+ "vintage": "2026 Q3",
+ "growth2027": 0.047,
+ "inflation2027": 0.002,
+ "recessionProbability": 0.13,
+ "scenarios": [
+  {
+   "scenario": "Baseline",
+   "weight": 0.6,
+   "growth2026": 0.046,
+   "growth2027": 0.047,
+   "inflation2027": 0.002,
+   "unemployment2027": 0.051
+  },
+  {
+   "scenario": "Upside: productivity boom",
+   "weight": 0.15,
+   "growth2026": 0.05,
+   "growth2027": 0.055,
+   "inflation2027": -0.001,
+   "unemployment2027": 0.047
+  },
+  {
+   "scenario": "Downside: tariff escalation",
+   "weight": 0.25,
+   "growth2026": 0.038,
+   "growth2027": 0.031,
+   "inflation2027": 0.009,
+   "unemployment2027": 0.062
+  }
+ ],
+ "path": [
+  {
+   "quarter": "2026Q4",
+   "growth": 0.0478
+  },
+  {
+   "quarter": "2027Q1",
+   "growth": 0.0474
+  },
+  {
+   "quarter": "2027Q2",
+   "growth": 0.0492
+  },
+  {
+   "quarter": "2027Q3",
+   "growth": 0.0473
+  },
+  {
+   "quarter": "2027Q4",
+   "growth": 0.0457
+  },
+  {
+   "quarter": "2028Q1",
+   "growth": 0.0482
+  }
+ ],
+ "economy": "ECON-CN",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

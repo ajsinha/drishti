@@ -1,0 +1,66 @@
+{
+ "forecastId": "FCST-EA-2026Q3",
+ "economyName": "Euro area",
+ "vintage": "2026 Q3",
+ "growth2027": 0.012,
+ "inflation2027": 0.019,
+ "recessionProbability": 0.16,
+ "scenarios": [
+  {
+   "scenario": "Baseline",
+   "weight": 0.6,
+   "growth2026": 0.011,
+   "growth2027": 0.012,
+   "inflation2027": 0.019,
+   "unemployment2027": 0.063
+  },
+  {
+   "scenario": "Upside: productivity boom",
+   "weight": 0.15,
+   "growth2026": 0.015,
+   "growth2027": 0.02,
+   "inflation2027": 0.016,
+   "unemployment2027": 0.059
+  },
+  {
+   "scenario": "Downside: tariff escalation",
+   "weight": 0.25,
+   "growth2026": 0.003,
+   "growth2027": -0.004,
+   "inflation2027": 0.026,
+   "unemployment2027": 0.074
+  }
+ ],
+ "path": [
+  {
+   "quarter": "2026Q4",
+   "growth": 0.0112
+  },
+  {
+   "quarter": "2027Q1",
+   "growth": 0.0125
+  },
+  {
+   "quarter": "2027Q2",
+   "growth": 0.0118
+  },
+  {
+   "quarter": "2027Q3",
+   "growth": 0.0096
+  },
+  {
+   "quarter": "2027Q4",
+   "growth": 0.0107
+  },
+  {
+   "quarter": "2028Q1",
+   "growth": 0.0155
+  }
+ ],
+ "economy": "ECON-EA",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

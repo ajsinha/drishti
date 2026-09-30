@@ -1,0 +1,70 @@
+{
+ "basketId": "CPIB-IN",
+ "economyName": "India",
+ "headline": 0.0467,
+ "core": 0.05,
+ "services": 0.0536,
+ "goods": 0.0318,
+ "components": [
+  {
+   "component": "Housing and utilities",
+   "weight": 0.24,
+   "inflation": 0.0616,
+   "contribution": 1.48
+  },
+  {
+   "component": "Food",
+   "weight": 0.14,
+   "inflation": 0.0463,
+   "contribution": 0.65
+  },
+  {
+   "component": "Transport",
+   "weight": 0.15,
+   "inflation": 0.0411,
+   "contribution": 0.62
+  },
+  {
+   "component": "Recreation",
+   "weight": 0.09,
+   "inflation": 0.0293,
+   "contribution": 0.26
+  },
+  {
+   "component": "Health",
+   "weight": 0.07,
+   "inflation": 0.0632,
+   "contribution": 0.44
+  },
+  {
+   "component": "Clothing",
+   "weight": 0.05,
+   "inflation": 0.0507,
+   "contribution": 0.25
+  },
+  {
+   "component": "Communication",
+   "weight": 0.04,
+   "inflation": 0.0332,
+   "contribution": 0.13
+  },
+  {
+   "component": "Restaurants and hotels",
+   "weight": 0.09,
+   "inflation": 0.0373,
+   "contribution": 0.34
+  },
+  {
+   "component": "Other goods and services",
+   "weight": 0.13,
+   "inflation": 0.0387,
+   "contribution": 0.5
+  }
+ ],
+ "economy": "ECON-IN",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

@@ -1,0 +1,156 @@
+{
+ "indicatorId": "MACRO-UK-PMI",
+ "name": "United Kingdom · Manufacturing PMI",
+ "latest": 55.12,
+ "unit": "index",
+ "previous": 55.39,
+ "nextRelease": "2026-10-15",
+ "history": [
+  {
+   "period": "2024-09",
+   "value": 53.72
+  },
+  {
+   "period": "2024-10",
+   "value": 53.71
+  },
+  {
+   "period": "2024-11",
+   "value": 51.56
+  },
+  {
+   "period": "2024-12",
+   "value": 51.73
+  },
+  {
+   "period": "2025-01",
+   "value": 52.68
+  },
+  {
+   "period": "2025-02",
+   "value": 52.5
+  },
+  {
+   "period": "2025-03",
+   "value": 52.01
+  },
+  {
+   "period": "2025-04",
+   "value": 52.01
+  },
+  {
+   "period": "2025-05",
+   "value": 52.82
+  },
+  {
+   "period": "2025-06",
+   "value": 53.48
+  },
+  {
+   "period": "2025-07",
+   "value": 54.0
+  },
+  {
+   "period": "2025-08",
+   "value": 53.78
+  },
+  {
+   "period": "2025-09",
+   "value": 55.74
+  },
+  {
+   "period": "2025-10",
+   "value": 56.17
+  },
+  {
+   "period": "2025-11",
+   "value": 56.05
+  },
+  {
+   "period": "2025-12",
+   "value": 55.55
+  },
+  {
+   "period": "2026-01",
+   "value": 54.61
+  },
+  {
+   "period": "2026-02",
+   "value": 54.51
+  },
+  {
+   "period": "2026-03",
+   "value": 54.16
+  },
+  {
+   "period": "2026-04",
+   "value": 53.01
+  },
+  {
+   "period": "2026-05",
+   "value": 53.36
+  },
+  {
+   "period": "2026-06",
+   "value": 54.4
+  },
+  {
+   "period": "2026-07",
+   "value": 55.39
+  },
+  {
+   "period": "2026-08",
+   "value": 55.12
+  }
+ ],
+ "releases": [
+  {
+   "date": "2026-09-14",
+   "period": "2026-08",
+   "actual": 55.12,
+   "consensus": 54.78,
+   "surprise": 0.34
+  },
+  {
+   "date": "2026-08-14",
+   "period": "2026-07",
+   "actual": 55.39,
+   "consensus": 55.58,
+   "surprise": -0.19
+  },
+  {
+   "date": "2026-07-14",
+   "period": "2026-06",
+   "actual": 54.4,
+   "consensus": 54.84,
+   "surprise": -0.44
+  },
+  {
+   "date": "2026-06-14",
+   "period": "2026-05",
+   "actual": 53.36,
+   "consensus": 53.31,
+   "surprise": 0.05
+  },
+  {
+   "date": "2026-05-14",
+   "period": "2026-04",
+   "actual": 53.01,
+   "consensus": 52.32,
+   "surprise": 0.69
+  },
+  {
+   "date": "2026-04-14",
+   "period": "2026-03",
+   "actual": 54.16,
+   "consensus": 54.06,
+   "surprise": 0.1
+  }
+ ],
+ "economy": "ECON-UK",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

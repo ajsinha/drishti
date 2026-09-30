@@ -1,0 +1,89 @@
+{
+ "indicatorId": "SOCI-KES-RPR",
+ "name": "Relative poverty rate",
+ "latest": 14.74,
+ "unit": "% of households",
+ "change5y": -0.3,
+ "sourceName": "National statistics office (fictional)",
+ "series": [
+  {
+   "year": "2012",
+   "value": 12.34
+  },
+  {
+   "year": "2013",
+   "value": 13.2
+  },
+  {
+   "year": "2014",
+   "value": 14.1
+  },
+  {
+   "year": "2015",
+   "value": 15.0
+  },
+  {
+   "year": "2016",
+   "value": 14.05
+  },
+  {
+   "year": "2017",
+   "value": 14.5
+  },
+  {
+   "year": "2018",
+   "value": 14.67
+  },
+  {
+   "year": "2019",
+   "value": 14.52
+  },
+  {
+   "year": "2020",
+   "value": 15.04
+  },
+  {
+   "year": "2021",
+   "value": 14.27
+  },
+  {
+   "year": "2022",
+   "value": 14.49
+  },
+  {
+   "year": "2023",
+   "value": 15.03
+  },
+  {
+   "year": "2024",
+   "value": 15.58
+  },
+  {
+   "year": "2025",
+   "value": 14.74
+  }
+ ],
+ "byRegion": [
+  {
+   "region": "Highlands",
+   "value": 16.9
+  },
+  {
+   "region": "Riverlands",
+   "value": 13.74
+  },
+  {
+   "region": "Metropolitan",
+   "value": 15.98
+  },
+  {
+   "region": "Isles",
+   "value": 12.09
+  }
+ ],
+ "jurisdiction": "JUR-KES",
+ "_meta": {
+  "source": "statistics-office",
+  "generation": 1
+ }
+}

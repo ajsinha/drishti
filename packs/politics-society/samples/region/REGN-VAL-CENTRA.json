@@ -1,0 +1,81 @@
+{
+ "regionId": "REGN-VAL-CENTRA",
+ "name": "Central Plains",
+ "populationM": 8.46,
+ "medianIncome": 27700.0,
+ "unemployment": 0.0827,
+ "lifeExpectancy": 83.7,
+ "vote": [
+  {
+   "party": "People's Progressive Alliance",
+   "share": 0.392
+  },
+  {
+   "party": "Civic Union",
+   "share": 0.207
+  },
+  {
+   "party": "Green Future",
+   "share": 0.141
+  },
+  {
+   "party": "Liberal Forum",
+   "share": 0.102
+  },
+  {
+   "party": "National Revival",
+   "share": 0.097
+  },
+  {
+   "party": "Others",
+   "share": 0.062
+  }
+ ],
+ "unemploymentTrend": [
+  {
+   "year": "2016",
+   "rate": 0.0786
+  },
+  {
+   "year": "2017",
+   "rate": 0.0476
+  },
+  {
+   "year": "2018",
+   "rate": 0.0972
+  },
+  {
+   "year": "2019",
+   "rate": 0.0365
+  },
+  {
+   "year": "2020",
+   "rate": 0.0764
+  },
+  {
+   "year": "2021",
+   "rate": 0.087
+  },
+  {
+   "year": "2022",
+   "rate": 0.0423
+  },
+  {
+   "year": "2023",
+   "rate": 0.0658
+  },
+  {
+   "year": "2024",
+   "rate": 0.1079
+  },
+  {
+   "year": "2025",
+   "rate": 0.078
+  }
+ ],
+ "jurisdiction": "JUR-VAL",
+ "_meta": {
+  "source": "elections-office",
+  "generation": 1
+ }
+}

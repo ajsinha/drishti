@@ -1,0 +1,156 @@
+{
+ "indicatorId": "MACRO-IN-CPI",
+ "name": "India · Consumer price inflation",
+ "latest": 4.01,
+ "unit": "% y/y",
+ "previous": 3.89,
+ "nextRelease": "2026-10-15",
+ "history": [
+  {
+   "period": "2024-09",
+   "value": 4.55
+  },
+  {
+   "period": "2024-10",
+   "value": 4.8
+  },
+  {
+   "period": "2024-11",
+   "value": 4.8
+  },
+  {
+   "period": "2024-12",
+   "value": 4.54
+  },
+  {
+   "period": "2025-01",
+   "value": 4.63
+  },
+  {
+   "period": "2025-02",
+   "value": 4.51
+  },
+  {
+   "period": "2025-03",
+   "value": 4.32
+  },
+  {
+   "period": "2025-04",
+   "value": 4.32
+  },
+  {
+   "period": "2025-05",
+   "value": 4.49
+  },
+  {
+   "period": "2025-06",
+   "value": 4.32
+  },
+  {
+   "period": "2025-07",
+   "value": 4.2
+  },
+  {
+   "period": "2025-08",
+   "value": 4.28
+  },
+  {
+   "period": "2025-09",
+   "value": 4.42
+  },
+  {
+   "period": "2025-10",
+   "value": 4.48
+  },
+  {
+   "period": "2025-11",
+   "value": 4.38
+  },
+  {
+   "period": "2025-12",
+   "value": 4.46
+  },
+  {
+   "period": "2026-01",
+   "value": 4.62
+  },
+  {
+   "period": "2026-02",
+   "value": 4.55
+  },
+  {
+   "period": "2026-03",
+   "value": 4.49
+  },
+  {
+   "period": "2026-04",
+   "value": 4.12
+  },
+  {
+   "period": "2026-05",
+   "value": 4.19
+  },
+  {
+   "period": "2026-06",
+   "value": 4.13
+  },
+  {
+   "period": "2026-07",
+   "value": 3.89
+  },
+  {
+   "period": "2026-08",
+   "value": 4.01
+  }
+ ],
+ "releases": [
+  {
+   "date": "2026-09-14",
+   "period": "2026-08",
+   "actual": 4.01,
+   "consensus": 3.96,
+   "surprise": 0.05
+  },
+  {
+   "date": "2026-08-14",
+   "period": "2026-07",
+   "actual": 3.89,
+   "consensus": 3.84,
+   "surprise": 0.05
+  },
+  {
+   "date": "2026-07-14",
+   "period": "2026-06",
+   "actual": 4.13,
+   "consensus": 4.12,
+   "surprise": 0.01
+  },
+  {
+   "date": "2026-06-14",
+   "period": "2026-05",
+   "actual": 4.19,
+   "consensus": 4.13,
+   "surprise": 0.06
+  },
+  {
+   "date": "2026-05-14",
+   "period": "2026-04",
+   "actual": 4.12,
+   "consensus": 4.14,
+   "surprise": -0.02
+  },
+  {
+   "date": "2026-04-14",
+   "period": "2026-03",
+   "actual": 4.49,
+   "consensus": 4.47,
+   "surprise": 0.02
+  }
+ ],
+ "economy": "ECON-IN",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

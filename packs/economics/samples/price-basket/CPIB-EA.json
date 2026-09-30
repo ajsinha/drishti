@@ -1,0 +1,70 @@
+{
+ "basketId": "CPIB-EA",
+ "economyName": "Euro area",
+ "headline": 0.0231,
+ "core": 0.0256,
+ "services": 0.0295,
+ "goods": 0.0159,
+ "components": [
+  {
+   "component": "Housing and utilities",
+   "weight": 0.24,
+   "inflation": 0.0432,
+   "contribution": 1.04
+  },
+  {
+   "component": "Food",
+   "weight": 0.14,
+   "inflation": 0.0069,
+   "contribution": 0.1
+  },
+  {
+   "component": "Transport",
+   "weight": 0.15,
+   "inflation": 0.0142,
+   "contribution": 0.21
+  },
+  {
+   "component": "Recreation",
+   "weight": 0.09,
+   "inflation": 0.0322,
+   "contribution": 0.29
+  },
+  {
+   "component": "Health",
+   "weight": 0.07,
+   "inflation": -0.0018,
+   "contribution": -0.01
+  },
+  {
+   "component": "Clothing",
+   "weight": 0.05,
+   "inflation": 0.0248,
+   "contribution": 0.12
+  },
+  {
+   "component": "Communication",
+   "weight": 0.04,
+   "inflation": 0.0247,
+   "contribution": 0.1
+  },
+  {
+   "component": "Restaurants and hotels",
+   "weight": 0.09,
+   "inflation": 0.0149,
+   "contribution": 0.13
+  },
+  {
+   "component": "Other goods and services",
+   "weight": 0.13,
+   "inflation": 0.0252,
+   "contribution": 0.33
+  }
+ ],
+ "economy": "ECON-EA",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

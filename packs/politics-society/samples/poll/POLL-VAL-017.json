@@ -1,0 +1,58 @@
+{
+ "pollId": "POLL-VAL-017",
+ "pollster": "Civica Polling",
+ "fieldwork": "2026-08-21 to 2026-08-24",
+ "sample": 2400,
+ "method": "Telephone (mixed mode)",
+ "lead": "People's Progressive Alliance +0",
+ "moe": 0.02,
+ "shares": [
+  {
+   "party": "People's Progressive Alliance",
+   "share": 0.298,
+   "low": 0.28,
+   "high": 0.317,
+   "change": -0.0117
+  },
+  {
+   "party": "Civic Union",
+   "share": 0.296,
+   "low": 0.278,
+   "high": 0.314,
+   "change": 0.0162
+  },
+  {
+   "party": "National Revival",
+   "share": 0.162,
+   "low": 0.147,
+   "high": 0.177,
+   "change": 0.022
+  },
+  {
+   "party": "Green Future",
+   "share": 0.124,
+   "low": 0.111,
+   "high": 0.137,
+   "change": 0.0041
+  },
+  {
+   "party": "Others",
+   "share": 0.067,
+   "low": 0.057,
+   "high": 0.077,
+   "change": 0.0067
+  },
+  {
+   "party": "Liberal Forum",
+   "share": 0.053,
+   "low": 0.044,
+   "high": 0.062,
+   "change": -0.0373
+  }
+ ],
+ "jurisdiction": "JUR-VAL",
+ "_meta": {
+  "source": "poll-aggregator",
+  "generation": 1
+ }
+}

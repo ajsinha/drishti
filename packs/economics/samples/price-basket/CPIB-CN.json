@@ -1,0 +1,70 @@
+{
+ "basketId": "CPIB-CN",
+ "economyName": "China",
+ "headline": 0.007,
+ "core": 0.0105,
+ "services": 0.0179,
+ "goods": -0.0002,
+ "components": [
+  {
+   "component": "Housing and utilities",
+   "weight": 0.24,
+   "inflation": 0.0094,
+   "contribution": 0.23
+  },
+  {
+   "component": "Food",
+   "weight": 0.14,
+   "inflation": 0.0017,
+   "contribution": 0.02
+  },
+  {
+   "component": "Transport",
+   "weight": 0.15,
+   "inflation": 0.0125,
+   "contribution": 0.19
+  },
+  {
+   "component": "Recreation",
+   "weight": 0.09,
+   "inflation": 0.028,
+   "contribution": 0.25
+  },
+  {
+   "component": "Health",
+   "weight": 0.07,
+   "inflation": -0.003,
+   "contribution": -0.02
+  },
+  {
+   "component": "Clothing",
+   "weight": 0.05,
+   "inflation": -0.0197,
+   "contribution": -0.1
+  },
+  {
+   "component": "Communication",
+   "weight": 0.04,
+   "inflation": 0.0022,
+   "contribution": 0.01
+  },
+  {
+   "component": "Restaurants and hotels",
+   "weight": 0.09,
+   "inflation": 0.0262,
+   "contribution": 0.24
+  },
+  {
+   "component": "Other goods and services",
+   "weight": 0.13,
+   "inflation": -0.009,
+   "contribution": -0.12
+  }
+ ],
+ "economy": "ECON-CN",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

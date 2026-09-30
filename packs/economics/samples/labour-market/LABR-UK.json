@@ -1,0 +1,139 @@
+{
+ "labourId": "LABR-UK",
+ "economyName": "United Kingdom",
+ "unemployment": 0.047,
+ "participation": 0.6104,
+ "wageGrowth": 0.0373,
+ "vacancyRatio": 0.63,
+ "unemploymentPath": [
+  {
+   "month": "2024-09",
+   "rate": 0.0445
+  },
+  {
+   "month": "2024-10",
+   "rate": 0.0445
+  },
+  {
+   "month": "2024-11",
+   "rate": 0.0451
+  },
+  {
+   "month": "2024-12",
+   "rate": 0.0465
+  },
+  {
+   "month": "2025-01",
+   "rate": 0.0455
+  },
+  {
+   "month": "2025-02",
+   "rate": 0.0451
+  },
+  {
+   "month": "2025-03",
+   "rate": 0.0453
+  },
+  {
+   "month": "2025-04",
+   "rate": 0.0468
+  },
+  {
+   "month": "2025-05",
+   "rate": 0.0459
+  },
+  {
+   "month": "2025-06",
+   "rate": 0.0463
+  },
+  {
+   "month": "2025-07",
+   "rate": 0.0484
+  },
+  {
+   "month": "2025-08",
+   "rate": 0.0462
+  },
+  {
+   "month": "2025-09",
+   "rate": 0.0487
+  },
+  {
+   "month": "2025-10",
+   "rate": 0.0474
+  },
+  {
+   "month": "2025-11",
+   "rate": 0.0469
+  },
+  {
+   "month": "2025-12",
+   "rate": 0.0462
+  },
+  {
+   "month": "2026-01",
+   "rate": 0.0456
+  },
+  {
+   "month": "2026-02",
+   "rate": 0.0464
+  },
+  {
+   "month": "2026-03",
+   "rate": 0.0484
+  },
+  {
+   "month": "2026-04",
+   "rate": 0.0491
+  },
+  {
+   "month": "2026-05",
+   "rate": 0.048
+  },
+  {
+   "month": "2026-06",
+   "rate": 0.0467
+  },
+  {
+   "month": "2026-07",
+   "rate": 0.0507
+  },
+  {
+   "month": "2026-08",
+   "rate": 0.0481
+  }
+ ],
+ "bySector": [
+  {
+   "sector": "Services",
+   "jobsM": 12.96,
+   "change": 0.0094
+  },
+  {
+   "sector": "Industry",
+   "jobsM": 4.6,
+   "change": 0.0094
+  },
+  {
+   "sector": "Construction",
+   "jobsM": 1.25,
+   "change": 0.0226
+  },
+  {
+   "sector": "Agriculture",
+   "jobsM": 0.84,
+   "change": 0.0304
+  },
+  {
+   "sector": "Government",
+   "jobsM": 1.25,
+   "change": 0.0197
+  }
+ ],
+ "economy": "ECON-UK",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

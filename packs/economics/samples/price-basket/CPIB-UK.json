@@ -1,0 +1,70 @@
+{
+ "basketId": "CPIB-UK",
+ "economyName": "United Kingdom",
+ "headline": 0.0464,
+ "core": 0.0443,
+ "services": 0.0556,
+ "goods": 0.0395,
+ "components": [
+  {
+   "component": "Housing and utilities",
+   "weight": 0.24,
+   "inflation": 0.0633,
+   "contribution": 1.52
+  },
+  {
+   "component": "Food",
+   "weight": 0.14,
+   "inflation": 0.0308,
+   "contribution": 0.43
+  },
+  {
+   "component": "Transport",
+   "weight": 0.15,
+   "inflation": 0.0532,
+   "contribution": 0.8
+  },
+  {
+   "component": "Recreation",
+   "weight": 0.09,
+   "inflation": 0.0323,
+   "contribution": 0.29
+  },
+  {
+   "component": "Health",
+   "weight": 0.07,
+   "inflation": 0.0473,
+   "contribution": 0.33
+  },
+  {
+   "component": "Clothing",
+   "weight": 0.05,
+   "inflation": 0.0462,
+   "contribution": 0.23
+  },
+  {
+   "component": "Communication",
+   "weight": 0.04,
+   "inflation": 0.0224,
+   "contribution": 0.09
+  },
+  {
+   "component": "Restaurants and hotels",
+   "weight": 0.09,
+   "inflation": 0.0527,
+   "contribution": 0.47
+  },
+  {
+   "component": "Other goods and services",
+   "weight": 0.13,
+   "inflation": 0.0372,
+   "contribution": 0.48
+  }
+ ],
+ "economy": "ECON-UK",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

@@ -1,0 +1,57 @@
+{
+ "decisionId": "CBD-ECB-2026-09",
+ "bank": "European Central Bank",
+ "date": "2026-09-16",
+ "decision": "Cut 25 bp",
+ "rate": 0.02,
+ "vote": "8-1",
+ "path": [
+  {
+   "date": "2026-09-16",
+   "decision": "Cut 25 bp",
+   "rate": 0.02
+  },
+  {
+   "date": "2026-07-29",
+   "decision": "Cut 25 bp",
+   "rate": 0.0275
+  },
+  {
+   "date": "2026-06-17",
+   "decision": "Hold",
+   "rate": 0.03
+  },
+  {
+   "date": "2026-04-29",
+   "decision": "Hold",
+   "rate": 0.03
+  },
+  {
+   "date": "2026-03-18",
+   "decision": "Hold",
+   "rate": 0.03
+  },
+  {
+   "date": "2026-01-28",
+   "decision": "Cut 25 bp",
+   "rate": 0.03
+  },
+  {
+   "date": "2025-12-10",
+   "decision": "Hold",
+   "rate": 0.0325
+  }
+ ],
+ "statement": {
+  "guidance": "Gradual and careful approach to further cuts",
+  "balanceSheet": "Run-off slowed",
+  "inflationTarget": "2%",
+  "nextMeeting": "2026-10-29"
+ },
+ "economy": "ECON-EA",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

@@ -1,0 +1,578 @@
+[
+ {
+  "kind": "jurisdiction",
+  "id": "JUR-KES",
+  "title": "JUR-KES",
+  "subtitle": "Jurisdiction · Kingdom of Kestria"
+ },
+ {
+  "kind": "jurisdiction",
+  "id": "JUR-VAL",
+  "title": "JUR-VAL",
+  "subtitle": "Jurisdiction · Republic of Valdoria"
+ },
+ {
+  "kind": "party",
+  "id": "PARTY-KES-CON",
+  "title": "PARTY-KES-CON",
+  "subtitle": "Party · Constitutional Party"
+ },
+ {
+  "kind": "party",
+  "id": "PARTY-KES-DEM",
+  "title": "PARTY-KES-DEM",
+  "subtitle": "Party · Democratic Reform"
+ },
+ {
+  "kind": "party",
+  "id": "PARTY-KES-ISL",
+  "title": "PARTY-KES-ISL",
+  "subtitle": "Party · Isles First"
+ },
+ {
+  "kind": "party",
+  "id": "PARTY-KES-LAB",
+  "title": "PARTY-KES-LAB",
+  "subtitle": "Party · Kestrian Labour"
+ },
+ {
+  "kind": "party",
+  "id": "PARTY-VAL-CUN",
+  "title": "PARTY-VAL-CUN",
+  "subtitle": "Party · Civic Union"
+ },
+ {
+  "kind": "party",
+  "id": "PARTY-VAL-GRN",
+  "title": "PARTY-VAL-GRN",
+  "subtitle": "Party · Green Future"
+ },
+ {
+  "kind": "party",
+  "id": "PARTY-VAL-LIB",
+  "title": "PARTY-VAL-LIB",
+  "subtitle": "Party · Liberal Forum"
+ },
+ {
+  "kind": "party",
+  "id": "PARTY-VAL-NRV",
+  "title": "PARTY-VAL-NRV",
+  "subtitle": "Party · National Revival"
+ },
+ {
+  "kind": "party",
+  "id": "PARTY-VAL-PPA",
+  "title": "PARTY-VAL-PPA",
+  "subtitle": "Party · People's Progressive Alliance"
+ },
+ {
+  "kind": "candidate",
+  "id": "CAND-KES-001",
+  "title": "CAND-KES-001",
+  "subtitle": "Candidate · Victor Petrov"
+ },
+ {
+  "kind": "candidate",
+  "id": "CAND-KES-002",
+  "title": "CAND-KES-002",
+  "subtitle": "Candidate · Lucia Varga"
+ },
+ {
+  "kind": "candidate",
+  "id": "CAND-KES-003",
+  "title": "CAND-KES-003",
+  "subtitle": "Candidate · Oskar Sorensen"
+ },
+ {
+  "kind": "candidate",
+  "id": "CAND-KES-004",
+  "title": "CAND-KES-004",
+  "subtitle": "Candidate · Nadia Ribeiro"
+ },
+ {
+  "kind": "candidate",
+  "id": "CAND-KES-005",
+  "title": "CAND-KES-005",
+  "subtitle": "Candidate · Hugo Holm"
+ },
+ {
+  "kind": "candidate",
+  "id": "CAND-KES-006",
+  "title": "CAND-KES-006",
+  "subtitle": "Candidate · Elena Moreau"
+ },
+ {
+  "kind": "candidate",
+  "id": "CAND-KES-007",
+  "title": "CAND-KES-007",
+  "subtitle": "Candidate · Marcus Adeyemi"
+ },
+ {
+  "kind": "candidate",
+  "id": "CAND-KES-008",
+  "title": "CAND-KES-008",
+  "subtitle": "Candidate · Ines Duarte"
+ },
+ {
+  "kind": "candidate",
+  "id": "CAND-VAL-001",
+  "title": "CAND-VAL-001",
+  "subtitle": "Candidate · Victor Petrov"
+ },
+ {
+  "kind": "candidate",
+  "id": "CAND-VAL-002",
+  "title": "CAND-VAL-002",
+  "subtitle": "Candidate · Lucia Varga"
+ },
+ {
+  "kind": "candidate",
+  "id": "CAND-VAL-003",
+  "title": "CAND-VAL-003",
+  "subtitle": "Candidate · Oskar Sorensen"
+ },
+ {
+  "kind": "candidate",
+  "id": "CAND-VAL-004",
+  "title": "CAND-VAL-004",
+  "subtitle": "Candidate · Nadia Ribeiro"
+ },
+ {
+  "kind": "candidate",
+  "id": "CAND-VAL-005",
+  "title": "CAND-VAL-005",
+  "subtitle": "Candidate · Hugo Holm"
+ },
+ {
+  "kind": "candidate",
+  "id": "CAND-VAL-006",
+  "title": "CAND-VAL-006",
+  "subtitle": "Candidate · Elena Moreau"
+ },
+ {
+  "kind": "candidate",
+  "id": "CAND-VAL-007",
+  "title": "CAND-VAL-007",
+  "subtitle": "Candidate · Marcus Adeyemi"
+ },
+ {
+  "kind": "candidate",
+  "id": "CAND-VAL-008",
+  "title": "CAND-VAL-008",
+  "subtitle": "Candidate · Ines Duarte"
+ },
+ {
+  "kind": "candidate",
+  "id": "CAND-VAL-009",
+  "title": "CAND-VAL-009",
+  "subtitle": "Candidate · Tobias Petrov"
+ },
+ {
+  "kind": "candidate",
+  "id": "CAND-VAL-010",
+  "title": "CAND-VAL-010",
+  "subtitle": "Candidate · Amara Varga"
+ },
+ {
+  "kind": "election",
+  "id": "ELEC-KES-2025",
+  "title": "ELEC-KES-2025",
+  "subtitle": "Election"
+ },
+ {
+  "kind": "election",
+  "id": "ELEC-VAL-2025",
+  "title": "ELEC-VAL-2025",
+  "subtitle": "Election"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-KES-001",
+  "title": "POLL-KES-001",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-KES-002",
+  "title": "POLL-KES-002",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-KES-003",
+  "title": "POLL-KES-003",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-KES-004",
+  "title": "POLL-KES-004",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-KES-005",
+  "title": "POLL-KES-005",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-KES-006",
+  "title": "POLL-KES-006",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-KES-007",
+  "title": "POLL-KES-007",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-KES-008",
+  "title": "POLL-KES-008",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-KES-009",
+  "title": "POLL-KES-009",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-KES-010",
+  "title": "POLL-KES-010",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-KES-011",
+  "title": "POLL-KES-011",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-KES-012",
+  "title": "POLL-KES-012",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-KES-013",
+  "title": "POLL-KES-013",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-KES-014",
+  "title": "POLL-KES-014",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-KES-015",
+  "title": "POLL-KES-015",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-KES-016",
+  "title": "POLL-KES-016",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-KES-017",
+  "title": "POLL-KES-017",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-KES-018",
+  "title": "POLL-KES-018",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-KES-019",
+  "title": "POLL-KES-019",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-VAL-001",
+  "title": "POLL-VAL-001",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-VAL-002",
+  "title": "POLL-VAL-002",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-VAL-003",
+  "title": "POLL-VAL-003",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-VAL-004",
+  "title": "POLL-VAL-004",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-VAL-005",
+  "title": "POLL-VAL-005",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-VAL-006",
+  "title": "POLL-VAL-006",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-VAL-007",
+  "title": "POLL-VAL-007",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-VAL-008",
+  "title": "POLL-VAL-008",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-VAL-009",
+  "title": "POLL-VAL-009",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-VAL-010",
+  "title": "POLL-VAL-010",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-VAL-011",
+  "title": "POLL-VAL-011",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-VAL-012",
+  "title": "POLL-VAL-012",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-VAL-013",
+  "title": "POLL-VAL-013",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-VAL-014",
+  "title": "POLL-VAL-014",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-VAL-015",
+  "title": "POLL-VAL-015",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-VAL-016",
+  "title": "POLL-VAL-016",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-VAL-017",
+  "title": "POLL-VAL-017",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-VAL-018",
+  "title": "POLL-VAL-018",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "poll",
+  "id": "POLL-VAL-019",
+  "title": "POLL-VAL-019",
+  "subtitle": "Opinion poll"
+ },
+ {
+  "kind": "bill",
+  "id": "BILL-KES-2026-011",
+  "title": "BILL-KES-2026-011",
+  "subtitle": "Bill"
+ },
+ {
+  "kind": "bill",
+  "id": "BILL-KES-2026-012",
+  "title": "BILL-KES-2026-012",
+  "subtitle": "Bill"
+ },
+ {
+  "kind": "bill",
+  "id": "BILL-KES-2026-013",
+  "title": "BILL-KES-2026-013",
+  "subtitle": "Bill"
+ },
+ {
+  "kind": "bill",
+  "id": "BILL-KES-2026-014",
+  "title": "BILL-KES-2026-014",
+  "subtitle": "Bill"
+ },
+ {
+  "kind": "bill",
+  "id": "BILL-KES-2026-015",
+  "title": "BILL-KES-2026-015",
+  "subtitle": "Bill"
+ },
+ {
+  "kind": "bill",
+  "id": "BILL-VAL-2026-011",
+  "title": "BILL-VAL-2026-011",
+  "subtitle": "Bill"
+ },
+ {
+  "kind": "bill",
+  "id": "BILL-VAL-2026-012",
+  "title": "BILL-VAL-2026-012",
+  "subtitle": "Bill"
+ },
+ {
+  "kind": "bill",
+  "id": "BILL-VAL-2026-013",
+  "title": "BILL-VAL-2026-013",
+  "subtitle": "Bill"
+ },
+ {
+  "kind": "bill",
+  "id": "BILL-VAL-2026-014",
+  "title": "BILL-VAL-2026-014",
+  "subtitle": "Bill"
+ },
+ {
+  "kind": "bill",
+  "id": "BILL-VAL-2026-015",
+  "title": "BILL-VAL-2026-015",
+  "subtitle": "Bill"
+ },
+ {
+  "kind": "region",
+  "id": "REGN-KES-HIGHLA",
+  "title": "REGN-KES-HIGHLA",
+  "subtitle": "Region · Highlands"
+ },
+ {
+  "kind": "region",
+  "id": "REGN-KES-ISLES",
+  "title": "REGN-KES-ISLES",
+  "subtitle": "Region · Isles"
+ },
+ {
+  "kind": "region",
+  "id": "REGN-KES-METROP",
+  "title": "REGN-KES-METROP",
+  "subtitle": "Region · Metropolitan"
+ },
+ {
+  "kind": "region",
+  "id": "REGN-KES-RIVERL",
+  "title": "REGN-KES-RIVERL",
+  "subtitle": "Region · Riverlands"
+ },
+ {
+  "kind": "region",
+  "id": "REGN-VAL-CAPITA",
+  "title": "REGN-VAL-CAPITA",
+  "subtitle": "Region · Capital District"
+ },
+ {
+  "kind": "region",
+  "id": "REGN-VAL-CENTRA",
+  "title": "REGN-VAL-CENTRA",
+  "subtitle": "Region · Central Plains"
+ },
+ {
+  "kind": "region",
+  "id": "REGN-VAL-EASTER",
+  "title": "REGN-VAL-EASTER",
+  "subtitle": "Region · Eastern Lakes"
+ },
+ {
+  "kind": "region",
+  "id": "REGN-VAL-NORTHC",
+  "title": "REGN-VAL-NORTHC",
+  "subtitle": "Region · North Coast"
+ },
+ {
+  "kind": "region",
+  "id": "REGN-VAL-SOUTHE",
+  "title": "REGN-VAL-SOUTHE",
+  "subtitle": "Region · Southern Hills"
+ },
+ {
+  "kind": "social-indicator",
+  "id": "SOCI-KES-HCO",
+  "title": "SOCI-KES-HCO",
+  "subtitle": "Social indicator · Housing cost overburden"
+ },
+ {
+  "kind": "social-indicator",
+  "id": "SOCI-KES-RPR",
+  "title": "SOCI-KES-RPR",
+  "subtitle": "Social indicator · Relative poverty rate"
+ },
+ {
+  "kind": "social-indicator",
+  "id": "SOCI-KES-TEA",
+  "title": "SOCI-KES-TEA",
+  "subtitle": "Social indicator · Tertiary education attainment"
+ },
+ {
+  "kind": "social-indicator",
+  "id": "SOCI-KES-TIP",
+  "title": "SOCI-KES-TIP",
+  "subtitle": "Social indicator · Trust in parliament"
+ },
+ {
+  "kind": "social-indicator",
+  "id": "SOCI-VAL-HCO",
+  "title": "SOCI-VAL-HCO",
+  "subtitle": "Social indicator · Housing cost overburden"
+ },
+ {
+  "kind": "social-indicator",
+  "id": "SOCI-VAL-RPR",
+  "title": "SOCI-VAL-RPR",
+  "subtitle": "Social indicator · Relative poverty rate"
+ },
+ {
+  "kind": "social-indicator",
+  "id": "SOCI-VAL-TEA",
+  "title": "SOCI-VAL-TEA",
+  "subtitle": "Social indicator · Tertiary education attainment"
+ },
+ {
+  "kind": "social-indicator",
+  "id": "SOCI-VAL-TIP",
+  "title": "SOCI-VAL-TIP",
+  "subtitle": "Social indicator · Trust in parliament"
+ }
+]

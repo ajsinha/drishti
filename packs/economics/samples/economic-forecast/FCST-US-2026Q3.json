@@ -1,0 +1,66 @@
+{
+ "forecastId": "FCST-US-2026Q3",
+ "economyName": "United States",
+ "vintage": "2026 Q3",
+ "growth2027": 0.02,
+ "inflation2027": 0.026,
+ "recessionProbability": 0.34,
+ "scenarios": [
+  {
+   "scenario": "Baseline",
+   "weight": 0.6,
+   "growth2026": 0.019,
+   "growth2027": 0.02,
+   "inflation2027": 0.026,
+   "unemployment2027": 0.043
+  },
+  {
+   "scenario": "Upside: productivity boom",
+   "weight": 0.15,
+   "growth2026": 0.023,
+   "growth2027": 0.028,
+   "inflation2027": 0.023,
+   "unemployment2027": 0.039
+  },
+  {
+   "scenario": "Downside: tariff escalation",
+   "weight": 0.25,
+   "growth2026": 0.011,
+   "growth2027": 0.004,
+   "inflation2027": 0.033,
+   "unemployment2027": 0.054
+  }
+ ],
+ "path": [
+  {
+   "quarter": "2026Q4",
+   "growth": 0.0217
+  },
+  {
+   "quarter": "2027Q1",
+   "growth": 0.0179
+  },
+  {
+   "quarter": "2027Q2",
+   "growth": 0.0214
+  },
+  {
+   "quarter": "2027Q3",
+   "growth": 0.0204
+  },
+  {
+   "quarter": "2027Q4",
+   "growth": 0.0197
+  },
+  {
+   "quarter": "2028Q1",
+   "growth": 0.0212
+  }
+ ],
+ "economy": "ECON-US",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

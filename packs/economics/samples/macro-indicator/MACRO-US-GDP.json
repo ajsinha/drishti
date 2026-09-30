@@ -1,0 +1,108 @@
+{
+ "indicatorId": "MACRO-US-GDP",
+ "name": "United States · Real GDP growth",
+ "latest": 2.11,
+ "unit": "% y/y",
+ "previous": 1.76,
+ "nextRelease": "2026-10-30",
+ "history": [
+  {
+   "period": "2023Q4",
+   "value": 0.45
+  },
+  {
+   "period": "2024Q1",
+   "value": -0.05
+  },
+  {
+   "period": "2024Q2",
+   "value": 0.21
+  },
+  {
+   "period": "2024Q3",
+   "value": 0.81
+  },
+  {
+   "period": "2024Q4",
+   "value": 0.65
+  },
+  {
+   "period": "2025Q1",
+   "value": 1.01
+  },
+  {
+   "period": "2025Q2",
+   "value": 1.5
+  },
+  {
+   "period": "2025Q3",
+   "value": 1.52
+  },
+  {
+   "period": "2025Q4",
+   "value": 1.47
+  },
+  {
+   "period": "2026Q1",
+   "value": 1.86
+  },
+  {
+   "period": "2026Q2",
+   "value": 1.76
+  },
+  {
+   "period": "2026Q3",
+   "value": 2.11
+  }
+ ],
+ "releases": [
+  {
+   "date": "2026-10-28",
+   "period": "2026Q3",
+   "actual": 2.11,
+   "consensus": 2.07,
+   "surprise": 0.04
+  },
+  {
+   "date": "2026-07-28",
+   "period": "2026Q2",
+   "actual": 1.76,
+   "consensus": 1.6,
+   "surprise": 0.16
+  },
+  {
+   "date": "2026-04-28",
+   "period": "2026Q1",
+   "actual": 1.86,
+   "consensus": 2.24,
+   "surprise": -0.38
+  },
+  {
+   "date": "2026-01-28",
+   "period": "2025Q4",
+   "actual": 1.47,
+   "consensus": 1.74,
+   "surprise": -0.27
+  },
+  {
+   "date": "2025-10-28",
+   "period": "2025Q3",
+   "actual": 1.52,
+   "consensus": 1.6,
+   "surprise": -0.08
+  },
+  {
+   "date": "2025-07-28",
+   "period": "2025Q2",
+   "actual": 1.5,
+   "consensus": 1.48,
+   "surprise": 0.02
+  }
+ ],
+ "economy": "ECON-US",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

@@ -1,0 +1,77 @@
+{
+ "regionId": "REGN-KES-RIVERL",
+ "name": "Riverlands",
+ "populationM": 2.92,
+ "medianIncome": 26200.0,
+ "unemployment": 0.1063,
+ "lifeExpectancy": 82.3,
+ "vote": [
+  {
+   "party": "Constitutional Party",
+   "share": 0.383
+  },
+  {
+   "party": "Kestrian Labour",
+   "share": 0.351
+  },
+  {
+   "party": "Democratic Reform",
+   "share": 0.157
+  },
+  {
+   "party": "Isles First",
+   "share": 0.075
+  },
+  {
+   "party": "Others",
+   "share": 0.033
+  }
+ ],
+ "unemploymentTrend": [
+  {
+   "year": "2016",
+   "rate": 0.0927
+  },
+  {
+   "year": "2017",
+   "rate": 0.0725
+  },
+  {
+   "year": "2018",
+   "rate": 0.0688
+  },
+  {
+   "year": "2019",
+   "rate": 0.0658
+  },
+  {
+   "year": "2020",
+   "rate": 0.0823
+  },
+  {
+   "year": "2021",
+   "rate": 0.0918
+  },
+  {
+   "year": "2022",
+   "rate": 0.0404
+  },
+  {
+   "year": "2023",
+   "rate": 0.0619
+  },
+  {
+   "year": "2024",
+   "rate": 0.0925
+  },
+  {
+   "year": "2025",
+   "rate": 0.0545
+  }
+ ],
+ "jurisdiction": "JUR-KES",
+ "_meta": {
+  "source": "elections-office",
+  "generation": 1
+ }
+}

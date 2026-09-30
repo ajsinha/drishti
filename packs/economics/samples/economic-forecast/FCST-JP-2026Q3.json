@@ -1,0 +1,66 @@
+{
+ "forecastId": "FCST-JP-2026Q3",
+ "economyName": "Japan",
+ "vintage": "2026 Q3",
+ "growth2027": 0.008,
+ "inflation2027": 0.022,
+ "recessionProbability": 0.27,
+ "scenarios": [
+  {
+   "scenario": "Baseline",
+   "weight": 0.6,
+   "growth2026": 0.007,
+   "growth2027": 0.008,
+   "inflation2027": 0.022,
+   "unemployment2027": 0.025
+  },
+  {
+   "scenario": "Upside: productivity boom",
+   "weight": 0.15,
+   "growth2026": 0.011,
+   "growth2027": 0.016,
+   "inflation2027": 0.019,
+   "unemployment2027": 0.021
+  },
+  {
+   "scenario": "Downside: tariff escalation",
+   "weight": 0.25,
+   "growth2026": -0.001,
+   "growth2027": -0.008,
+   "inflation2027": 0.029,
+   "unemployment2027": 0.036
+  }
+ ],
+ "path": [
+  {
+   "quarter": "2026Q4",
+   "growth": 0.0049
+  },
+  {
+   "quarter": "2027Q1",
+   "growth": 0.007
+  },
+  {
+   "quarter": "2027Q2",
+   "growth": 0.0074
+  },
+  {
+   "quarter": "2027Q3",
+   "growth": 0.0101
+  },
+  {
+   "quarter": "2027Q4",
+   "growth": 0.0096
+  },
+  {
+   "quarter": "2028Q1",
+   "growth": 0.0087
+  }
+ ],
+ "economy": "ECON-JP",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

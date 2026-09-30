@@ -1,0 +1,41 @@
+{
+ "candidateId": "CAND-KES-004",
+ "name": "Nadia Ribeiro",
+ "partyName": "Constitutional Party",
+ "constituency": "Metropolitan West",
+ "role": "Member of parliament",
+ "voteShare": 0.651,
+ "since": "2024-06-01",
+ "record": [
+  {
+   "bill": "Clean Energy Transition Act",
+   "vote": "Abstain",
+   "date": "2025-10-08"
+  },
+  {
+   "bill": "Affordable Housing Act",
+   "vote": "Abstain",
+   "date": "2026-05-15"
+  },
+  {
+   "bill": "Digital Services Tax Act",
+   "vote": "Against",
+   "date": "2025-12-01"
+  },
+  {
+   "bill": "Public Health Workforce Act",
+   "vote": "For",
+   "date": "2026-01-23"
+  }
+ ],
+ "profile": {
+  "born": 1983,
+  "profession": "Doctor",
+  "committees": "Justice"
+ },
+ "party": "PARTY-KES-CON",
+ "_meta": {
+  "source": "elections-office",
+  "generation": 1
+ }
+}

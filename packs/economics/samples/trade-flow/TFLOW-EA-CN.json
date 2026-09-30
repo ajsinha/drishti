@@ -1,0 +1,80 @@
+{
+ "flowId": "TFLOW-EA-CN",
+ "reporterName": "Euro area",
+ "partnerName": "China",
+ "exports": 447,
+ "imports": 960,
+ "balance": -513,
+ "tariff": 0.0135,
+ "products": [
+  {
+   "product": "Energy",
+   "value": 125
+  },
+  {
+   "product": "Vehicles",
+   "value": 89
+  },
+  {
+   "product": "Machinery",
+   "value": 63
+  },
+  {
+   "product": "Metals",
+   "value": 45
+  },
+  {
+   "product": "Electronics",
+   "value": 31
+  }
+ ],
+ "balanceHistory": [
+  {
+   "year": "2016",
+   "balance": -527
+  },
+  {
+   "year": "2017",
+   "balance": -451
+  },
+  {
+   "year": "2018",
+   "balance": -523
+  },
+  {
+   "year": "2019",
+   "balance": -437
+  },
+  {
+   "year": "2020",
+   "balance": -419
+  },
+  {
+   "year": "2021",
+   "balance": -529
+  },
+  {
+   "year": "2022",
+   "balance": -587
+  },
+  {
+   "year": "2023",
+   "balance": -510
+  },
+  {
+   "year": "2024",
+   "balance": -471
+  },
+  {
+   "year": "2025",
+   "balance": -610
+  }
+ ],
+ "economy": "ECON-EA",
+ "partner": "ECON-CN",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

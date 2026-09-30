@@ -1,0 +1,41 @@
+{
+ "candidateId": "CAND-VAL-007",
+ "name": "Marcus Adeyemi",
+ "partyName": "National Revival",
+ "constituency": "Southern Hills East",
+ "role": "Party leader",
+ "voteShare": 0.155,
+ "since": "2017-11-01",
+ "record": [
+  {
+   "bill": "Clean Energy Transition Act",
+   "vote": "For",
+   "date": "2026-06-12"
+  },
+  {
+   "bill": "Affordable Housing Act",
+   "vote": "Abstain",
+   "date": "2026-01-06"
+  },
+  {
+   "bill": "Digital Services Tax Act",
+   "vote": "Abstain",
+   "date": "2025-11-06"
+  },
+  {
+   "bill": "Public Health Workforce Act",
+   "vote": "For",
+   "date": "2026-05-25"
+  }
+ ],
+ "profile": {
+  "born": 1967,
+  "profession": "Lawyer",
+  "committees": "Health"
+ },
+ "party": "PARTY-VAL-NRV",
+ "_meta": {
+  "source": "elections-office",
+  "generation": 1
+ }
+}

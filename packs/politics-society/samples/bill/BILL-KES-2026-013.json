@@ -1,0 +1,42 @@
+{
+ "billId": "BILL-KES-2026-013",
+ "title": "Digital Services Tax Act",
+ "sponsorName": "Hugo Holm",
+ "stage": "Committee",
+ "introduced": "2025-11-04",
+ "costM": -1800,
+ "stages": [
+  {
+   "date": "2025-11-04",
+   "stage": "First reading",
+   "for": null,
+   "against": null,
+   "outcome": "Passed"
+  },
+  {
+   "date": "2025-12-01",
+   "stage": "Second reading",
+   "for": 153,
+   "against": 21,
+   "outcome": "Passed"
+  },
+  {
+   "date": "2026-01-29",
+   "stage": "Committee",
+   "for": 129,
+   "against": 49,
+   "outcome": "Passed"
+  }
+ ],
+ "summary": {
+  "policyArea": "Digital Services Tax",
+  "type": "Private member's bill",
+  "impactAssessment": "Published"
+ },
+ "sponsor": "CAND-KES-005",
+ "jurisdiction": "JUR-KES",
+ "_meta": {
+  "source": "elections-office",
+  "generation": 1
+ }
+}

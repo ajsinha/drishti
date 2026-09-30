@@ -1,0 +1,81 @@
+{
+ "regionId": "REGN-VAL-NORTHC",
+ "name": "North Coast",
+ "populationM": 6.5,
+ "medianIncome": 31700.0,
+ "unemployment": 0.0705,
+ "lifeExpectancy": 79.5,
+ "vote": [
+  {
+   "party": "Civic Union",
+   "share": 0.299
+  },
+  {
+   "party": "People's Progressive Alliance",
+   "share": 0.273
+  },
+  {
+   "party": "National Revival",
+   "share": 0.155
+  },
+  {
+   "party": "Green Future",
+   "share": 0.116
+  },
+  {
+   "party": "Liberal Forum",
+   "share": 0.081
+  },
+  {
+   "party": "Others",
+   "share": 0.077
+  }
+ ],
+ "unemploymentTrend": [
+  {
+   "year": "2016",
+   "rate": 0.0513
+  },
+  {
+   "year": "2017",
+   "rate": 0.0795
+  },
+  {
+   "year": "2018",
+   "rate": 0.0968
+  },
+  {
+   "year": "2019",
+   "rate": 0.0845
+  },
+  {
+   "year": "2020",
+   "rate": 0.0607
+  },
+  {
+   "year": "2021",
+   "rate": 0.0517
+  },
+  {
+   "year": "2022",
+   "rate": 0.0758
+  },
+  {
+   "year": "2023",
+   "rate": 0.0451
+  },
+  {
+   "year": "2024",
+   "rate": 0.0922
+  },
+  {
+   "year": "2025",
+   "rate": 0.0679
+  }
+ ],
+ "jurisdiction": "JUR-VAL",
+ "_meta": {
+  "source": "elections-office",
+  "generation": 1
+ }
+}

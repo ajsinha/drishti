@@ -1,0 +1,464 @@
+[
+ {
+  "kind": "economy",
+  "id": "ECON-BR",
+  "title": "ECON-BR",
+  "subtitle": "Economy · Brazil"
+ },
+ {
+  "kind": "economy",
+  "id": "ECON-CN",
+  "title": "ECON-CN",
+  "subtitle": "Economy · China"
+ },
+ {
+  "kind": "economy",
+  "id": "ECON-EA",
+  "title": "ECON-EA",
+  "subtitle": "Economy · Euro area"
+ },
+ {
+  "kind": "economy",
+  "id": "ECON-IN",
+  "title": "ECON-IN",
+  "subtitle": "Economy · India"
+ },
+ {
+  "kind": "economy",
+  "id": "ECON-JP",
+  "title": "ECON-JP",
+  "subtitle": "Economy · Japan"
+ },
+ {
+  "kind": "economy",
+  "id": "ECON-UK",
+  "title": "ECON-UK",
+  "subtitle": "Economy · United Kingdom"
+ },
+ {
+  "kind": "economy",
+  "id": "ECON-US",
+  "title": "ECON-US",
+  "subtitle": "Economy · United States"
+ },
+ {
+  "kind": "macro-indicator",
+  "id": "MACRO-BR-CPI",
+  "title": "MACRO-BR-CPI",
+  "subtitle": "Macro indicator · Brazil · Consumer price inflation"
+ },
+ {
+  "kind": "macro-indicator",
+  "id": "MACRO-BR-GDP",
+  "title": "MACRO-BR-GDP",
+  "subtitle": "Macro indicator · Brazil · Real GDP growth"
+ },
+ {
+  "kind": "macro-indicator",
+  "id": "MACRO-BR-PMI",
+  "title": "MACRO-BR-PMI",
+  "subtitle": "Macro indicator · Brazil · Manufacturing PMI"
+ },
+ {
+  "kind": "macro-indicator",
+  "id": "MACRO-BR-UNEMP",
+  "title": "MACRO-BR-UNEMP",
+  "subtitle": "Macro indicator · Brazil · Unemployment rate"
+ },
+ {
+  "kind": "macro-indicator",
+  "id": "MACRO-CN-CPI",
+  "title": "MACRO-CN-CPI",
+  "subtitle": "Macro indicator · China · Consumer price inflation"
+ },
+ {
+  "kind": "macro-indicator",
+  "id": "MACRO-CN-GDP",
+  "title": "MACRO-CN-GDP",
+  "subtitle": "Macro indicator · China · Real GDP growth"
+ },
+ {
+  "kind": "macro-indicator",
+  "id": "MACRO-CN-PMI",
+  "title": "MACRO-CN-PMI",
+  "subtitle": "Macro indicator · China · Manufacturing PMI"
+ },
+ {
+  "kind": "macro-indicator",
+  "id": "MACRO-CN-UNEMP",
+  "title": "MACRO-CN-UNEMP",
+  "subtitle": "Macro indicator · China · Unemployment rate"
+ },
+ {
+  "kind": "macro-indicator",
+  "id": "MACRO-EA-CPI",
+  "title": "MACRO-EA-CPI",
+  "subtitle": "Macro indicator · Euro area · Consumer price inflation"
+ },
+ {
+  "kind": "macro-indicator",
+  "id": "MACRO-EA-GDP",
+  "title": "MACRO-EA-GDP",
+  "subtitle": "Macro indicator · Euro area · Real GDP growth"
+ },
+ {
+  "kind": "macro-indicator",
+  "id": "MACRO-EA-PMI",
+  "title": "MACRO-EA-PMI",
+  "subtitle": "Macro indicator · Euro area · Manufacturing PMI"
+ },
+ {
+  "kind": "macro-indicator",
+  "id": "MACRO-EA-UNEMP",
+  "title": "MACRO-EA-UNEMP",
+  "subtitle": "Macro indicator · Euro area · Unemployment rate"
+ },
+ {
+  "kind": "macro-indicator",
+  "id": "MACRO-IN-CPI",
+  "title": "MACRO-IN-CPI",
+  "subtitle": "Macro indicator · India · Consumer price inflation"
+ },
+ {
+  "kind": "macro-indicator",
+  "id": "MACRO-IN-GDP",
+  "title": "MACRO-IN-GDP",
+  "subtitle": "Macro indicator · India · Real GDP growth"
+ },
+ {
+  "kind": "macro-indicator",
+  "id": "MACRO-IN-PMI",
+  "title": "MACRO-IN-PMI",
+  "subtitle": "Macro indicator · India · Manufacturing PMI"
+ },
+ {
+  "kind": "macro-indicator",
+  "id": "MACRO-IN-UNEMP",
+  "title": "MACRO-IN-UNEMP",
+  "subtitle": "Macro indicator · India · Unemployment rate"
+ },
+ {
+  "kind": "macro-indicator",
+  "id": "MACRO-JP-CPI",
+  "title": "MACRO-JP-CPI",
+  "subtitle": "Macro indicator · Japan · Consumer price inflation"
+ },
+ {
+  "kind": "macro-indicator",
+  "id": "MACRO-JP-GDP",
+  "title": "MACRO-JP-GDP",
+  "subtitle": "Macro indicator · Japan · Real GDP growth"
+ },
+ {
+  "kind": "macro-indicator",
+  "id": "MACRO-JP-PMI",
+  "title": "MACRO-JP-PMI",
+  "subtitle": "Macro indicator · Japan · Manufacturing PMI"
+ },
+ {
+  "kind": "macro-indicator",
+  "id": "MACRO-JP-UNEMP",
+  "title": "MACRO-JP-UNEMP",
+  "subtitle": "Macro indicator · Japan · Unemployment rate"
+ },
+ {
+  "kind": "macro-indicator",
+  "id": "MACRO-UK-CPI",
+  "title": "MACRO-UK-CPI",
+  "subtitle": "Macro indicator · United Kingdom · Consumer price inflation"
+ },
+ {
+  "kind": "macro-indicator",
+  "id": "MACRO-UK-GDP",
+  "title": "MACRO-UK-GDP",
+  "subtitle": "Macro indicator · United Kingdom · Real GDP growth"
+ },
+ {
+  "kind": "macro-indicator",
+  "id": "MACRO-UK-PMI",
+  "title": "MACRO-UK-PMI",
+  "subtitle": "Macro indicator · United Kingdom · Manufacturing PMI"
+ },
+ {
+  "kind": "macro-indicator",
+  "id": "MACRO-UK-UNEMP",
+  "title": "MACRO-UK-UNEMP",
+  "subtitle": "Macro indicator · United Kingdom · Unemployment rate"
+ },
+ {
+  "kind": "macro-indicator",
+  "id": "MACRO-US-CPI",
+  "title": "MACRO-US-CPI",
+  "subtitle": "Macro indicator · United States · Consumer price inflation"
+ },
+ {
+  "kind": "macro-indicator",
+  "id": "MACRO-US-GDP",
+  "title": "MACRO-US-GDP",
+  "subtitle": "Macro indicator · United States · Real GDP growth"
+ },
+ {
+  "kind": "macro-indicator",
+  "id": "MACRO-US-PMI",
+  "title": "MACRO-US-PMI",
+  "subtitle": "Macro indicator · United States · Manufacturing PMI"
+ },
+ {
+  "kind": "macro-indicator",
+  "id": "MACRO-US-UNEMP",
+  "title": "MACRO-US-UNEMP",
+  "subtitle": "Macro indicator · United States · Unemployment rate"
+ },
+ {
+  "kind": "central-bank-decision",
+  "id": "CBD-BCB-2026-09",
+  "title": "CBD-BCB-2026-09",
+  "subtitle": "Central-bank decision"
+ },
+ {
+  "kind": "central-bank-decision",
+  "id": "CBD-BOE-2026-09",
+  "title": "CBD-BOE-2026-09",
+  "subtitle": "Central-bank decision"
+ },
+ {
+  "kind": "central-bank-decision",
+  "id": "CBD-BOJ-2026-09",
+  "title": "CBD-BOJ-2026-09",
+  "subtitle": "Central-bank decision"
+ },
+ {
+  "kind": "central-bank-decision",
+  "id": "CBD-ECB-2026-09",
+  "title": "CBD-ECB-2026-09",
+  "subtitle": "Central-bank decision"
+ },
+ {
+  "kind": "central-bank-decision",
+  "id": "CBD-FED-2026-09",
+  "title": "CBD-FED-2026-09",
+  "subtitle": "Central-bank decision"
+ },
+ {
+  "kind": "central-bank-decision",
+  "id": "CBD-PBOC-2026-09",
+  "title": "CBD-PBOC-2026-09",
+  "subtitle": "Central-bank decision"
+ },
+ {
+  "kind": "central-bank-decision",
+  "id": "CBD-RBI-2026-09",
+  "title": "CBD-RBI-2026-09",
+  "subtitle": "Central-bank decision"
+ },
+ {
+  "kind": "economic-forecast",
+  "id": "FCST-BR-2026Q3",
+  "title": "FCST-BR-2026Q3",
+  "subtitle": "Economic forecast"
+ },
+ {
+  "kind": "economic-forecast",
+  "id": "FCST-CN-2026Q3",
+  "title": "FCST-CN-2026Q3",
+  "subtitle": "Economic forecast"
+ },
+ {
+  "kind": "economic-forecast",
+  "id": "FCST-EA-2026Q3",
+  "title": "FCST-EA-2026Q3",
+  "subtitle": "Economic forecast"
+ },
+ {
+  "kind": "economic-forecast",
+  "id": "FCST-IN-2026Q3",
+  "title": "FCST-IN-2026Q3",
+  "subtitle": "Economic forecast"
+ },
+ {
+  "kind": "economic-forecast",
+  "id": "FCST-JP-2026Q3",
+  "title": "FCST-JP-2026Q3",
+  "subtitle": "Economic forecast"
+ },
+ {
+  "kind": "economic-forecast",
+  "id": "FCST-UK-2026Q3",
+  "title": "FCST-UK-2026Q3",
+  "subtitle": "Economic forecast"
+ },
+ {
+  "kind": "economic-forecast",
+  "id": "FCST-US-2026Q3",
+  "title": "FCST-US-2026Q3",
+  "subtitle": "Economic forecast"
+ },
+ {
+  "kind": "trade-flow",
+  "id": "TFLOW-BR-CN",
+  "title": "TFLOW-BR-CN",
+  "subtitle": "Trade flow"
+ },
+ {
+  "kind": "trade-flow",
+  "id": "TFLOW-EA-CN",
+  "title": "TFLOW-EA-CN",
+  "subtitle": "Trade flow"
+ },
+ {
+  "kind": "trade-flow",
+  "id": "TFLOW-IN-US",
+  "title": "TFLOW-IN-US",
+  "subtitle": "Trade flow"
+ },
+ {
+  "kind": "trade-flow",
+  "id": "TFLOW-JP-CN",
+  "title": "TFLOW-JP-CN",
+  "subtitle": "Trade flow"
+ },
+ {
+  "kind": "trade-flow",
+  "id": "TFLOW-UK-EA",
+  "title": "TFLOW-UK-EA",
+  "subtitle": "Trade flow"
+ },
+ {
+  "kind": "trade-flow",
+  "id": "TFLOW-US-CN",
+  "title": "TFLOW-US-CN",
+  "subtitle": "Trade flow"
+ },
+ {
+  "kind": "trade-flow",
+  "id": "TFLOW-US-EA",
+  "title": "TFLOW-US-EA",
+  "subtitle": "Trade flow"
+ },
+ {
+  "kind": "labour-market",
+  "id": "LABR-BR",
+  "title": "LABR-BR",
+  "subtitle": "Labour market"
+ },
+ {
+  "kind": "labour-market",
+  "id": "LABR-CN",
+  "title": "LABR-CN",
+  "subtitle": "Labour market"
+ },
+ {
+  "kind": "labour-market",
+  "id": "LABR-EA",
+  "title": "LABR-EA",
+  "subtitle": "Labour market"
+ },
+ {
+  "kind": "labour-market",
+  "id": "LABR-IN",
+  "title": "LABR-IN",
+  "subtitle": "Labour market"
+ },
+ {
+  "kind": "labour-market",
+  "id": "LABR-JP",
+  "title": "LABR-JP",
+  "subtitle": "Labour market"
+ },
+ {
+  "kind": "labour-market",
+  "id": "LABR-UK",
+  "title": "LABR-UK",
+  "subtitle": "Labour market"
+ },
+ {
+  "kind": "labour-market",
+  "id": "LABR-US",
+  "title": "LABR-US",
+  "subtitle": "Labour market"
+ },
+ {
+  "kind": "fiscal-position",
+  "id": "FISC-BR",
+  "title": "FISC-BR",
+  "subtitle": "Fiscal position"
+ },
+ {
+  "kind": "fiscal-position",
+  "id": "FISC-CN",
+  "title": "FISC-CN",
+  "subtitle": "Fiscal position"
+ },
+ {
+  "kind": "fiscal-position",
+  "id": "FISC-EA",
+  "title": "FISC-EA",
+  "subtitle": "Fiscal position"
+ },
+ {
+  "kind": "fiscal-position",
+  "id": "FISC-IN",
+  "title": "FISC-IN",
+  "subtitle": "Fiscal position"
+ },
+ {
+  "kind": "fiscal-position",
+  "id": "FISC-JP",
+  "title": "FISC-JP",
+  "subtitle": "Fiscal position"
+ },
+ {
+  "kind": "fiscal-position",
+  "id": "FISC-UK",
+  "title": "FISC-UK",
+  "subtitle": "Fiscal position"
+ },
+ {
+  "kind": "fiscal-position",
+  "id": "FISC-US",
+  "title": "FISC-US",
+  "subtitle": "Fiscal position"
+ },
+ {
+  "kind": "price-basket",
+  "id": "CPIB-BR",
+  "title": "CPIB-BR",
+  "subtitle": "Consumer-price basket"
+ },
+ {
+  "kind": "price-basket",
+  "id": "CPIB-CN",
+  "title": "CPIB-CN",
+  "subtitle": "Consumer-price basket"
+ },
+ {
+  "kind": "price-basket",
+  "id": "CPIB-EA",
+  "title": "CPIB-EA",
+  "subtitle": "Consumer-price basket"
+ },
+ {
+  "kind": "price-basket",
+  "id": "CPIB-IN",
+  "title": "CPIB-IN",
+  "subtitle": "Consumer-price basket"
+ },
+ {
+  "kind": "price-basket",
+  "id": "CPIB-JP",
+  "title": "CPIB-JP",
+  "subtitle": "Consumer-price basket"
+ },
+ {
+  "kind": "price-basket",
+  "id": "CPIB-UK",
+  "title": "CPIB-UK",
+  "subtitle": "Consumer-price basket"
+ },
+ {
+  "kind": "price-basket",
+  "id": "CPIB-US",
+  "title": "CPIB-US",
+  "subtitle": "Consumer-price basket"
+ }
+]

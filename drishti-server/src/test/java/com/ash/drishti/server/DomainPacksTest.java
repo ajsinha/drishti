@@ -33,7 +33,7 @@ import org.springframework.boot.test.context.SpringBootTest;
  * The generated domain packs load with the packs they require, and every example command they advertise opens a
  * view built by the pack's Sutra with every panel filled.
  */
-@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=liquidity-risk,climate-risk,operational-risk,retail-banking,genomics"})
+@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=liquidity-risk,climate-risk,operational-risk,retail-banking,genomics,politics-society,economics"})
 class DomainPacksTest {
 
     @Autowired ViewPipeline pipeline;
@@ -41,7 +41,7 @@ class DomainPacksTest {
 
     @Test
     void everyAdvertisedExampleOpensAFullView() throws Exception {
-        for (String pack : new String[] {"liquidity-risk", "climate-risk", "operational-risk", "retail-banking", "genomics"}) {
+        for (String pack : new String[] {"liquidity-risk", "climate-risk", "operational-risk", "retail-banking", "genomics", "politics-society", "economics"}) {
             JsonNode manifest = new ObjectMapper(new com.fasterxml.jackson.dataformat.yaml.YAMLFactory()).readTree(
                     Files.readString(Path.of("../packs", pack, "pack.yaml")));
             for (JsonNode ex : manifest.path("console").path("examples")) {

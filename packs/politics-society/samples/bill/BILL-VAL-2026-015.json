@@ -1,0 +1,49 @@
+{
+ "billId": "BILL-VAL-2026-015",
+ "title": "Criminal Justice Reform Act",
+ "sponsorName": "Oskar Sorensen",
+ "stage": "Third reading",
+ "introduced": "2026-04-09",
+ "costM": 300,
+ "stages": [
+  {
+   "date": "2026-04-09",
+   "stage": "First reading",
+   "for": null,
+   "against": null,
+   "outcome": "Passed"
+  },
+  {
+   "date": "2026-06-18",
+   "stage": "Second reading",
+   "for": 152,
+   "against": 83,
+   "outcome": "Passed"
+  },
+  {
+   "date": "2026-07-17",
+   "stage": "Committee",
+   "for": 220,
+   "against": 13,
+   "outcome": "Passed"
+  },
+  {
+   "date": "2026-08-11",
+   "stage": "Third reading",
+   "for": 146,
+   "against": 87,
+   "outcome": "Passed"
+  }
+ ],
+ "summary": {
+  "policyArea": "Criminal Justice Reform",
+  "type": "Private member's bill",
+  "impactAssessment": "Published"
+ },
+ "sponsor": "CAND-VAL-003",
+ "jurisdiction": "JUR-VAL",
+ "_meta": {
+  "source": "elections-office",
+  "generation": 1
+ }
+}

@@ -1,0 +1,41 @@
+{
+ "candidateId": "CAND-KES-008",
+ "name": "Ines Duarte",
+ "partyName": "Democratic Reform",
+ "constituency": "Highlands East",
+ "role": "Shadow minister",
+ "voteShare": 0.181,
+ "since": "2019-01-01",
+ "record": [
+  {
+   "bill": "Clean Energy Transition Act",
+   "vote": "Abstain",
+   "date": "2025-10-08"
+  },
+  {
+   "bill": "Affordable Housing Act",
+   "vote": "For",
+   "date": "2026-05-15"
+  },
+  {
+   "bill": "Digital Services Tax Act",
+   "vote": "For",
+   "date": "2025-12-01"
+  },
+  {
+   "bill": "Public Health Workforce Act",
+   "vote": "Abstain",
+   "date": "2026-01-23"
+  }
+ ],
+ "profile": {
+  "born": 1979,
+  "profession": "Doctor",
+  "committees": "Health"
+ },
+ "party": "PARTY-KES-DEM",
+ "_meta": {
+  "source": "elections-office",
+  "generation": 1
+ }
+}

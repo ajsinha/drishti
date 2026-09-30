@@ -1,0 +1,109 @@
+{
+ "economyId": "ECON-US",
+ "name": "United States",
+ "currency": "USD",
+ "gdpUsdTn": 30.1,
+ "growth": 0.019,
+ "inflation": 0.028,
+ "unemployment": 0.043,
+ "policyRate": 0.04,
+ "debtToGdp": 1.22,
+ "growthPath": [
+  {
+   "quarter": "2022Q4",
+   "growth": 0.0142
+  },
+  {
+   "quarter": "2023Q1",
+   "growth": 0.0105
+  },
+  {
+   "quarter": "2023Q2",
+   "growth": 0.0185
+  },
+  {
+   "quarter": "2023Q3",
+   "growth": 0.0234
+  },
+  {
+   "quarter": "2023Q4",
+   "growth": 0.0313
+  },
+  {
+   "quarter": "2024Q1",
+   "growth": 0.0165
+  },
+  {
+   "quarter": "2024Q2",
+   "growth": 0.0206
+  },
+  {
+   "quarter": "2024Q3",
+   "growth": 0.0073
+  },
+  {
+   "quarter": "2024Q4",
+   "growth": 0.0099
+  },
+  {
+   "quarter": "2025Q1",
+   "growth": 0.0272
+  },
+  {
+   "quarter": "2025Q2",
+   "growth": 0.0183
+  },
+  {
+   "quarter": "2025Q3",
+   "growth": 0.0261
+  },
+  {
+   "quarter": "2025Q4",
+   "growth": 0.0244
+  },
+  {
+   "quarter": "2026Q1",
+   "growth": 0.01
+  },
+  {
+   "quarter": "2026Q2",
+   "growth": 0.0225
+  },
+  {
+   "quarter": "2026Q3",
+   "growth": 0.0379
+  }
+ ],
+ "sectors": [
+  {
+   "sector": "Services",
+   "share": 0.617
+  },
+  {
+   "sector": "Industry",
+   "share": 0.195
+  },
+  {
+   "sector": "Construction",
+   "share": 0.064
+  },
+  {
+   "sector": "Agriculture",
+   "share": 0.044
+  },
+  {
+   "sector": "Government",
+   "share": 0.062
+  }
+ ],
+ "centralBank": "CBD-FED-2026-09",
+ "labour": "LABR-US",
+ "fiscal": "FISC-US",
+ "basket": "CPIB-US",
+ "outlook": "FCST-US-2026Q3",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

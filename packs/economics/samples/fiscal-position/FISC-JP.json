@@ -1,0 +1,87 @@
+{
+ "fiscalId": "FISC-JP",
+ "economyName": "Japan",
+ "revenue": 0.334,
+ "spending": 0.3597,
+ "balance": -0.0258,
+ "debt": 2.35,
+ "interestBurden": 0.1228,
+ "functions": [
+  {
+   "function": "Social protection",
+   "share": 0.1084
+  },
+  {
+   "function": "Health",
+   "share": 0.0637
+  },
+  {
+   "function": "Education",
+   "share": 0.0382
+  },
+  {
+   "function": "Defence",
+   "share": 0.0159
+  },
+  {
+   "function": "Interest",
+   "share": 0.041
+  },
+  {
+   "function": "Other",
+   "share": 0.0924
+  }
+ ],
+ "debtPath": [
+  {
+   "year": "2016",
+   "debt": 2.194
+  },
+  {
+   "year": "2017",
+   "debt": 2.241
+  },
+  {
+   "year": "2018",
+   "debt": 2.255
+  },
+  {
+   "year": "2019",
+   "debt": 2.283
+  },
+  {
+   "year": "2020",
+   "debt": 2.238
+  },
+  {
+   "year": "2021",
+   "debt": 2.26
+  },
+  {
+   "year": "2022",
+   "debt": 2.292
+  },
+  {
+   "year": "2023",
+   "debt": 2.319
+  },
+  {
+   "year": "2024",
+   "debt": 2.313
+  },
+  {
+   "year": "2025",
+   "debt": 2.34
+  },
+  {
+   "year": "2026",
+   "debt": 2.35
+  }
+ ],
+ "economy": "ECON-JP",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

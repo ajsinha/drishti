@@ -1,0 +1,41 @@
+{
+ "candidateId": "CAND-VAL-004",
+ "name": "Nadia Ribeiro",
+ "partyName": "Civic Union",
+ "constituency": "Capital District East",
+ "role": "Committee chair",
+ "voteShare": 0.484,
+ "since": "2020-06-01",
+ "record": [
+  {
+   "bill": "Clean Energy Transition Act",
+   "vote": "Against",
+   "date": "2026-06-12"
+  },
+  {
+   "bill": "Affordable Housing Act",
+   "vote": "For",
+   "date": "2026-01-06"
+  },
+  {
+   "bill": "Digital Services Tax Act",
+   "vote": "Against",
+   "date": "2025-11-06"
+  },
+  {
+   "bill": "Public Health Workforce Act",
+   "vote": "Abstain",
+   "date": "2026-05-25"
+  }
+ ],
+ "profile": {
+  "born": 1984,
+  "profession": "Lawyer",
+  "committees": "Finance"
+ },
+ "party": "PARTY-VAL-CUN",
+ "_meta": {
+  "source": "elections-office",
+  "generation": 1
+ }
+}

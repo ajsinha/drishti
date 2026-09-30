@@ -1,0 +1,156 @@
+{
+ "indicatorId": "MACRO-EA-UNEMP",
+ "name": "Euro area · Unemployment rate",
+ "latest": 6.42,
+ "unit": "%",
+ "previous": 6.43,
+ "nextRelease": "2026-10-15",
+ "history": [
+  {
+   "period": "2024-09",
+   "value": 6.02
+  },
+  {
+   "period": "2024-10",
+   "value": 6.05
+  },
+  {
+   "period": "2024-11",
+   "value": 6.11
+  },
+  {
+   "period": "2024-12",
+   "value": 6.14
+  },
+  {
+   "period": "2025-01",
+   "value": 6.05
+  },
+  {
+   "period": "2025-02",
+   "value": 6.02
+  },
+  {
+   "period": "2025-03",
+   "value": 6.07
+  },
+  {
+   "period": "2025-04",
+   "value": 6.2
+  },
+  {
+   "period": "2025-05",
+   "value": 6.35
+  },
+  {
+   "period": "2025-06",
+   "value": 6.26
+  },
+  {
+   "period": "2025-07",
+   "value": 6.26
+  },
+  {
+   "period": "2025-08",
+   "value": 6.23
+  },
+  {
+   "period": "2025-09",
+   "value": 6.2
+  },
+  {
+   "period": "2025-10",
+   "value": 6.24
+  },
+  {
+   "period": "2025-11",
+   "value": 6.41
+  },
+  {
+   "period": "2025-12",
+   "value": 6.39
+  },
+  {
+   "period": "2026-01",
+   "value": 6.43
+  },
+  {
+   "period": "2026-02",
+   "value": 6.4
+  },
+  {
+   "period": "2026-03",
+   "value": 6.51
+  },
+  {
+   "period": "2026-04",
+   "value": 6.52
+  },
+  {
+   "period": "2026-05",
+   "value": 6.52
+  },
+  {
+   "period": "2026-06",
+   "value": 6.49
+  },
+  {
+   "period": "2026-07",
+   "value": 6.43
+  },
+  {
+   "period": "2026-08",
+   "value": 6.42
+  }
+ ],
+ "releases": [
+  {
+   "date": "2026-09-14",
+   "period": "2026-08",
+   "actual": 6.42,
+   "consensus": 6.36,
+   "surprise": 0.06
+  },
+  {
+   "date": "2026-08-14",
+   "period": "2026-07",
+   "actual": 6.43,
+   "consensus": 6.37,
+   "surprise": 0.06
+  },
+  {
+   "date": "2026-07-14",
+   "period": "2026-06",
+   "actual": 6.49,
+   "consensus": 6.47,
+   "surprise": 0.02
+  },
+  {
+   "date": "2026-06-14",
+   "period": "2026-05",
+   "actual": 6.52,
+   "consensus": 6.44,
+   "surprise": 0.08
+  },
+  {
+   "date": "2026-05-14",
+   "period": "2026-04",
+   "actual": 6.52,
+   "consensus": 6.44,
+   "surprise": 0.08
+  },
+  {
+   "date": "2026-04-14",
+   "period": "2026-03",
+   "actual": 6.51,
+   "consensus": 6.48,
+   "surprise": 0.03
+  }
+ ],
+ "economy": "ECON-EA",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

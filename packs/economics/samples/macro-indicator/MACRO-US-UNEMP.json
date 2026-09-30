@@ -1,0 +1,156 @@
+{
+ "indicatorId": "MACRO-US-UNEMP",
+ "name": "United States · Unemployment rate",
+ "latest": 4.28,
+ "unit": "%",
+ "previous": 4.21,
+ "nextRelease": "2026-10-15",
+ "history": [
+  {
+   "period": "2024-09",
+   "value": 4.36
+  },
+  {
+   "period": "2024-10",
+   "value": 4.36
+  },
+  {
+   "period": "2024-11",
+   "value": 4.22
+  },
+  {
+   "period": "2024-12",
+   "value": 4.24
+  },
+  {
+   "period": "2025-01",
+   "value": 4.14
+  },
+  {
+   "period": "2025-02",
+   "value": 4.09
+  },
+  {
+   "period": "2025-03",
+   "value": 4.21
+  },
+  {
+   "period": "2025-04",
+   "value": 4.18
+  },
+  {
+   "period": "2025-05",
+   "value": 4.2
+  },
+  {
+   "period": "2025-06",
+   "value": 4.24
+  },
+  {
+   "period": "2025-07",
+   "value": 4.24
+  },
+  {
+   "period": "2025-08",
+   "value": 4.4
+  },
+  {
+   "period": "2025-09",
+   "value": 4.36
+  },
+  {
+   "period": "2025-10",
+   "value": 4.26
+  },
+  {
+   "period": "2025-11",
+   "value": 4.33
+  },
+  {
+   "period": "2025-12",
+   "value": 4.34
+  },
+  {
+   "period": "2026-01",
+   "value": 4.36
+  },
+  {
+   "period": "2026-02",
+   "value": 4.39
+  },
+  {
+   "period": "2026-03",
+   "value": 4.12
+  },
+  {
+   "period": "2026-04",
+   "value": 4.16
+  },
+  {
+   "period": "2026-05",
+   "value": 4.23
+  },
+  {
+   "period": "2026-06",
+   "value": 4.16
+  },
+  {
+   "period": "2026-07",
+   "value": 4.21
+  },
+  {
+   "period": "2026-08",
+   "value": 4.28
+  }
+ ],
+ "releases": [
+  {
+   "date": "2026-09-14",
+   "period": "2026-08",
+   "actual": 4.28,
+   "consensus": 4.28,
+   "surprise": 0.0
+  },
+  {
+   "date": "2026-08-14",
+   "period": "2026-07",
+   "actual": 4.21,
+   "consensus": 4.2,
+   "surprise": 0.01
+  },
+  {
+   "date": "2026-07-14",
+   "period": "2026-06",
+   "actual": 4.16,
+   "consensus": 4.18,
+   "surprise": -0.02
+  },
+  {
+   "date": "2026-06-14",
+   "period": "2026-05",
+   "actual": 4.23,
+   "consensus": 4.32,
+   "surprise": -0.09
+  },
+  {
+   "date": "2026-05-14",
+   "period": "2026-04",
+   "actual": 4.16,
+   "consensus": 4.12,
+   "surprise": 0.04
+  },
+  {
+   "date": "2026-04-14",
+   "period": "2026-03",
+   "actual": 4.12,
+   "consensus": 4.1,
+   "surprise": 0.02
+  }
+ ],
+ "economy": "ECON-US",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

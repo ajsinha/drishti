@@ -1,0 +1,156 @@
+{
+ "indicatorId": "MACRO-BR-UNEMP",
+ "name": "Brazil · Unemployment rate",
+ "latest": 6.2,
+ "unit": "%",
+ "previous": 6.22,
+ "nextRelease": "2026-10-15",
+ "history": [
+  {
+   "period": "2024-09",
+   "value": 6.57
+  },
+  {
+   "period": "2024-10",
+   "value": 6.49
+  },
+  {
+   "period": "2024-11",
+   "value": 6.37
+  },
+  {
+   "period": "2024-12",
+   "value": 6.42
+  },
+  {
+   "period": "2025-01",
+   "value": 6.44
+  },
+  {
+   "period": "2025-02",
+   "value": 6.48
+  },
+  {
+   "period": "2025-03",
+   "value": 6.43
+  },
+  {
+   "period": "2025-04",
+   "value": 6.45
+  },
+  {
+   "period": "2025-05",
+   "value": 6.4
+  },
+  {
+   "period": "2025-06",
+   "value": 6.39
+  },
+  {
+   "period": "2025-07",
+   "value": 6.15
+  },
+  {
+   "period": "2025-08",
+   "value": 6.18
+  },
+  {
+   "period": "2025-09",
+   "value": 6.19
+  },
+  {
+   "period": "2025-10",
+   "value": 6.26
+  },
+  {
+   "period": "2025-11",
+   "value": 6.21
+  },
+  {
+   "period": "2025-12",
+   "value": 6.14
+  },
+  {
+   "period": "2026-01",
+   "value": 6.24
+  },
+  {
+   "period": "2026-02",
+   "value": 6.31
+  },
+  {
+   "period": "2026-03",
+   "value": 6.39
+  },
+  {
+   "period": "2026-04",
+   "value": 6.21
+  },
+  {
+   "period": "2026-05",
+   "value": 6.33
+  },
+  {
+   "period": "2026-06",
+   "value": 6.32
+  },
+  {
+   "period": "2026-07",
+   "value": 6.22
+  },
+  {
+   "period": "2026-08",
+   "value": 6.2
+  }
+ ],
+ "releases": [
+  {
+   "date": "2026-09-14",
+   "period": "2026-08",
+   "actual": 6.2,
+   "consensus": 6.15,
+   "surprise": 0.05
+  },
+  {
+   "date": "2026-08-14",
+   "period": "2026-07",
+   "actual": 6.22,
+   "consensus": 6.16,
+   "surprise": 0.06
+  },
+  {
+   "date": "2026-07-14",
+   "period": "2026-06",
+   "actual": 6.32,
+   "consensus": 6.3,
+   "surprise": 0.02
+  },
+  {
+   "date": "2026-06-14",
+   "period": "2026-05",
+   "actual": 6.33,
+   "consensus": 6.29,
+   "surprise": 0.04
+  },
+  {
+   "date": "2026-05-14",
+   "period": "2026-04",
+   "actual": 6.21,
+   "consensus": 6.22,
+   "surprise": -0.01
+  },
+  {
+   "date": "2026-04-14",
+   "period": "2026-03",
+   "actual": 6.39,
+   "consensus": 6.46,
+   "surprise": -0.07
+  }
+ ],
+ "economy": "ECON-BR",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

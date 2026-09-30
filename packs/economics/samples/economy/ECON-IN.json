@@ -1,0 +1,109 @@
+{
+ "economyId": "ECON-IN",
+ "name": "India",
+ "currency": "INR",
+ "gdpUsdTn": 4.4,
+ "growth": 0.064,
+ "inflation": 0.041,
+ "unemployment": 0.078,
+ "policyRate": 0.055,
+ "debtToGdp": 0.82,
+ "growthPath": [
+  {
+   "quarter": "2022Q4",
+   "growth": 0.0637
+  },
+  {
+   "quarter": "2023Q1",
+   "growth": 0.0658
+  },
+  {
+   "quarter": "2023Q2",
+   "growth": 0.054
+  },
+  {
+   "quarter": "2023Q3",
+   "growth": 0.0622
+  },
+  {
+   "quarter": "2023Q4",
+   "growth": 0.0596
+  },
+  {
+   "quarter": "2024Q1",
+   "growth": 0.0579
+  },
+  {
+   "quarter": "2024Q2",
+   "growth": 0.0609
+  },
+  {
+   "quarter": "2024Q3",
+   "growth": 0.0684
+  },
+  {
+   "quarter": "2024Q4",
+   "growth": 0.0644
+  },
+  {
+   "quarter": "2025Q1",
+   "growth": 0.0568
+  },
+  {
+   "quarter": "2025Q2",
+   "growth": 0.0714
+  },
+  {
+   "quarter": "2025Q3",
+   "growth": 0.0657
+  },
+  {
+   "quarter": "2025Q4",
+   "growth": 0.0606
+  },
+  {
+   "quarter": "2026Q1",
+   "growth": 0.0549
+  },
+  {
+   "quarter": "2026Q2",
+   "growth": 0.0593
+  },
+  {
+   "quarter": "2026Q3",
+   "growth": 0.0677
+  }
+ ],
+ "sectors": [
+  {
+   "sector": "Services",
+   "share": 0.545
+  },
+  {
+   "sector": "Industry",
+   "share": 0.222
+  },
+  {
+   "sector": "Construction",
+   "share": 0.055
+  },
+  {
+   "sector": "Agriculture",
+   "share": 0.045
+  },
+  {
+   "sector": "Government",
+   "share": 0.066
+  }
+ ],
+ "centralBank": "CBD-RBI-2026-09",
+ "labour": "LABR-IN",
+ "fiscal": "FISC-IN",
+ "basket": "CPIB-IN",
+ "outlook": "FCST-IN-2026Q3",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

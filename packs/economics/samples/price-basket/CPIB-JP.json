@@ -1,0 +1,70 @@
+{
+ "basketId": "CPIB-JP",
+ "economyName": "Japan",
+ "headline": 0.0239,
+ "core": 0.0262,
+ "services": 0.0344,
+ "goods": 0.0175,
+ "components": [
+  {
+   "component": "Housing and utilities",
+   "weight": 0.24,
+   "inflation": 0.0322,
+   "contribution": 0.77
+  },
+  {
+   "component": "Food",
+   "weight": 0.14,
+   "inflation": 0.0361,
+   "contribution": 0.51
+  },
+  {
+   "component": "Transport",
+   "weight": 0.15,
+   "inflation": 0.0092,
+   "contribution": 0.14
+  },
+  {
+   "component": "Recreation",
+   "weight": 0.09,
+   "inflation": 0.0048,
+   "contribution": 0.04
+  },
+  {
+   "component": "Health",
+   "weight": 0.07,
+   "inflation": 0.0526,
+   "contribution": 0.37
+  },
+  {
+   "component": "Clothing",
+   "weight": 0.05,
+   "inflation": 0.0112,
+   "contribution": 0.06
+  },
+  {
+   "component": "Communication",
+   "weight": 0.04,
+   "inflation": 0.0171,
+   "contribution": 0.07
+  },
+  {
+   "component": "Restaurants and hotels",
+   "weight": 0.09,
+   "inflation": 0.0508,
+   "contribution": 0.46
+  },
+  {
+   "component": "Other goods and services",
+   "weight": 0.13,
+   "inflation": -0.0022,
+   "contribution": -0.03
+  }
+ ],
+ "economy": "ECON-JP",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

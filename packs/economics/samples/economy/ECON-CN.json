@@ -1,0 +1,109 @@
+{
+ "economyId": "ECON-CN",
+ "name": "China",
+ "currency": "CNY",
+ "gdpUsdTn": 19.6,
+ "growth": 0.046,
+ "inflation": 0.004,
+ "unemployment": 0.051,
+ "policyRate": 0.03,
+ "debtToGdp": 0.92,
+ "growthPath": [
+  {
+   "quarter": "2022Q4",
+   "growth": 0.0568
+  },
+  {
+   "quarter": "2023Q1",
+   "growth": 0.0461
+  },
+  {
+   "quarter": "2023Q2",
+   "growth": 0.0486
+  },
+  {
+   "quarter": "2023Q3",
+   "growth": 0.0557
+  },
+  {
+   "quarter": "2023Q4",
+   "growth": 0.0341
+  },
+  {
+   "quarter": "2024Q1",
+   "growth": 0.0521
+  },
+  {
+   "quarter": "2024Q2",
+   "growth": 0.0432
+  },
+  {
+   "quarter": "2024Q3",
+   "growth": 0.0456
+  },
+  {
+   "quarter": "2024Q4",
+   "growth": 0.0377
+  },
+  {
+   "quarter": "2025Q1",
+   "growth": 0.0418
+  },
+  {
+   "quarter": "2025Q2",
+   "growth": 0.0554
+  },
+  {
+   "quarter": "2025Q3",
+   "growth": 0.0471
+  },
+  {
+   "quarter": "2025Q4",
+   "growth": 0.0465
+  },
+  {
+   "quarter": "2026Q1",
+   "growth": 0.0511
+  },
+  {
+   "quarter": "2026Q2",
+   "growth": 0.0421
+  },
+  {
+   "quarter": "2026Q3",
+   "growth": 0.053
+  }
+ ],
+ "sectors": [
+  {
+   "sector": "Services",
+   "share": 0.584
+  },
+  {
+   "sector": "Industry",
+   "share": 0.199
+  },
+  {
+   "sector": "Construction",
+   "share": 0.069
+  },
+  {
+   "sector": "Agriculture",
+   "share": 0.036
+  },
+  {
+   "sector": "Government",
+   "share": 0.068
+  }
+ ],
+ "centralBank": "CBD-PBOC-2026-09",
+ "labour": "LABR-CN",
+ "fiscal": "FISC-CN",
+ "basket": "CPIB-CN",
+ "outlook": "FCST-CN-2026Q3",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

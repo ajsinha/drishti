@@ -1,0 +1,51 @@
+{
+ "pollId": "POLL-KES-009",
+ "pollster": "Meridian Research",
+ "fieldwork": "2026-05-01 to 2026-05-04",
+ "sample": 1000,
+ "method": "Telephone (mixed mode)",
+ "lead": "Constitutional Party +3",
+ "moe": 0.031,
+ "shares": [
+  {
+   "party": "Constitutional Party",
+   "share": 0.357,
+   "low": 0.327,
+   "high": 0.386,
+   "change": -0.0233
+  },
+  {
+   "party": "Kestrian Labour",
+   "share": 0.326,
+   "low": 0.297,
+   "high": 0.355,
+   "change": -0.0339
+  },
+  {
+   "party": "Democratic Reform",
+   "share": 0.144,
+   "low": 0.122,
+   "high": 0.166,
+   "change": 0.0143
+  },
+  {
+   "party": "Others",
+   "share": 0.09,
+   "low": 0.072,
+   "high": 0.108,
+   "change": 0.0298
+  },
+  {
+   "party": "Isles First",
+   "share": 0.083,
+   "low": 0.066,
+   "high": 0.1,
+   "change": 0.0131
+  }
+ ],
+ "jurisdiction": "JUR-KES",
+ "_meta": {
+  "source": "poll-aggregator",
+  "generation": 1
+ }
+}

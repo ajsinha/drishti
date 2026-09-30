@@ -1,0 +1,57 @@
+{
+ "decisionId": "CBD-BOE-2026-09",
+ "bank": "Bank of England",
+ "date": "2026-09-16",
+ "decision": "Cut 25 bp",
+ "rate": 0.0375,
+ "vote": "8-1",
+ "path": [
+  {
+   "date": "2026-09-16",
+   "decision": "Cut 25 bp",
+   "rate": 0.0375
+  },
+  {
+   "date": "2026-07-29",
+   "decision": "Hold",
+   "rate": 0.045
+  },
+  {
+   "date": "2026-06-17",
+   "decision": "Hold",
+   "rate": 0.045
+  },
+  {
+   "date": "2026-04-29",
+   "decision": "Hold",
+   "rate": 0.045
+  },
+  {
+   "date": "2026-03-18",
+   "decision": "Hold",
+   "rate": 0.045
+  },
+  {
+   "date": "2026-01-28",
+   "decision": "Cut 25 bp",
+   "rate": 0.045
+  },
+  {
+   "date": "2025-12-10",
+   "decision": "Cut 25 bp",
+   "rate": 0.0475
+  }
+ ],
+ "statement": {
+  "guidance": "Gradual and careful approach to further cuts",
+  "balanceSheet": "Run-off slowed",
+  "inflationTarget": "2%",
+  "nextMeeting": "2026-10-29"
+ },
+ "economy": "ECON-UK",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

@@ -1,0 +1,156 @@
+{
+ "indicatorId": "MACRO-JP-PMI",
+ "name": "Japan · Manufacturing PMI",
+ "latest": 48.69,
+ "unit": "index",
+ "previous": 48.1,
+ "nextRelease": "2026-10-15",
+ "history": [
+  {
+   "period": "2024-09",
+   "value": 46.31
+  },
+  {
+   "period": "2024-10",
+   "value": 45.86
+  },
+  {
+   "period": "2024-11",
+   "value": 45.39
+  },
+  {
+   "period": "2024-12",
+   "value": 45.4
+  },
+  {
+   "period": "2025-01",
+   "value": 45.85
+  },
+  {
+   "period": "2025-02",
+   "value": 45.6
+  },
+  {
+   "period": "2025-03",
+   "value": 45.14
+  },
+  {
+   "period": "2025-04",
+   "value": 45.5
+  },
+  {
+   "period": "2025-05",
+   "value": 45.83
+  },
+  {
+   "period": "2025-06",
+   "value": 46.17
+  },
+  {
+   "period": "2025-07",
+   "value": 45.74
+  },
+  {
+   "period": "2025-08",
+   "value": 46.64
+  },
+  {
+   "period": "2025-09",
+   "value": 46.63
+  },
+  {
+   "period": "2025-10",
+   "value": 46.11
+  },
+  {
+   "period": "2025-11",
+   "value": 47.08
+  },
+  {
+   "period": "2025-12",
+   "value": 46.48
+  },
+  {
+   "period": "2026-01",
+   "value": 45.1
+  },
+  {
+   "period": "2026-02",
+   "value": 46.37
+  },
+  {
+   "period": "2026-03",
+   "value": 46.59
+  },
+  {
+   "period": "2026-04",
+   "value": 47.05
+  },
+  {
+   "period": "2026-05",
+   "value": 47.34
+  },
+  {
+   "period": "2026-06",
+   "value": 49.02
+  },
+  {
+   "period": "2026-07",
+   "value": 48.1
+  },
+  {
+   "period": "2026-08",
+   "value": 48.69
+  }
+ ],
+ "releases": [
+  {
+   "date": "2026-09-14",
+   "period": "2026-08",
+   "actual": 48.69,
+   "consensus": 49.04,
+   "surprise": -0.35
+  },
+  {
+   "date": "2026-08-14",
+   "period": "2026-07",
+   "actual": 48.1,
+   "consensus": 47.59,
+   "surprise": 0.51
+  },
+  {
+   "date": "2026-07-14",
+   "period": "2026-06",
+   "actual": 49.02,
+   "consensus": 48.75,
+   "surprise": 0.27
+  },
+  {
+   "date": "2026-06-14",
+   "period": "2026-05",
+   "actual": 47.34,
+   "consensus": 46.78,
+   "surprise": 0.56
+  },
+  {
+   "date": "2026-05-14",
+   "period": "2026-04",
+   "actual": 47.05,
+   "consensus": 46.11,
+   "surprise": 0.94
+  },
+  {
+   "date": "2026-04-14",
+   "period": "2026-03",
+   "actual": 46.59,
+   "consensus": 46.53,
+   "surprise": 0.06
+  }
+ ],
+ "economy": "ECON-JP",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

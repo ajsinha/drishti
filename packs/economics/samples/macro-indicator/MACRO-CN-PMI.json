@@ -1,0 +1,156 @@
+{
+ "indicatorId": "MACRO-CN-PMI",
+ "name": "China · Manufacturing PMI",
+ "latest": 49.22,
+ "unit": "index",
+ "previous": 48.33,
+ "nextRelease": "2026-10-15",
+ "history": [
+  {
+   "period": "2024-09",
+   "value": 50.41
+  },
+  {
+   "period": "2024-10",
+   "value": 49.96
+  },
+  {
+   "period": "2024-11",
+   "value": 48.95
+  },
+  {
+   "period": "2024-12",
+   "value": 49.53
+  },
+  {
+   "period": "2025-01",
+   "value": 49.35
+  },
+  {
+   "period": "2025-02",
+   "value": 49.5
+  },
+  {
+   "period": "2025-03",
+   "value": 48.02
+  },
+  {
+   "period": "2025-04",
+   "value": 47.81
+  },
+  {
+   "period": "2025-05",
+   "value": 48.63
+  },
+  {
+   "period": "2025-06",
+   "value": 50.43
+  },
+  {
+   "period": "2025-07",
+   "value": 50.26
+  },
+  {
+   "period": "2025-08",
+   "value": 49.26
+  },
+  {
+   "period": "2025-09",
+   "value": 48.93
+  },
+  {
+   "period": "2025-10",
+   "value": 47.88
+  },
+  {
+   "period": "2025-11",
+   "value": 47.85
+  },
+  {
+   "period": "2025-12",
+   "value": 47.78
+  },
+  {
+   "period": "2026-01",
+   "value": 48.49
+  },
+  {
+   "period": "2026-02",
+   "value": 48.72
+  },
+  {
+   "period": "2026-03",
+   "value": 47.85
+  },
+  {
+   "period": "2026-04",
+   "value": 47.83
+  },
+  {
+   "period": "2026-05",
+   "value": 47.73
+  },
+  {
+   "period": "2026-06",
+   "value": 48.02
+  },
+  {
+   "period": "2026-07",
+   "value": 48.33
+  },
+  {
+   "period": "2026-08",
+   "value": 49.22
+  }
+ ],
+ "releases": [
+  {
+   "date": "2026-09-14",
+   "period": "2026-08",
+   "actual": 49.22,
+   "consensus": 49.32,
+   "surprise": -0.1
+  },
+  {
+   "date": "2026-08-14",
+   "period": "2026-07",
+   "actual": 48.33,
+   "consensus": 48.79,
+   "surprise": -0.46
+  },
+  {
+   "date": "2026-07-14",
+   "period": "2026-06",
+   "actual": 48.02,
+   "consensus": 48.31,
+   "surprise": -0.29
+  },
+  {
+   "date": "2026-06-14",
+   "period": "2026-05",
+   "actual": 47.73,
+   "consensus": 47.17,
+   "surprise": 0.56
+  },
+  {
+   "date": "2026-05-14",
+   "period": "2026-04",
+   "actual": 47.83,
+   "consensus": 47.69,
+   "surprise": 0.14
+  },
+  {
+   "date": "2026-04-14",
+   "period": "2026-03",
+   "actual": 47.85,
+   "consensus": 47.1,
+   "surprise": 0.75
+  }
+ ],
+ "economy": "ECON-CN",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

@@ -1,0 +1,109 @@
+{
+ "economyId": "ECON-BR",
+ "name": "Brazil",
+ "currency": "BRL",
+ "gdpUsdTn": 2.3,
+ "growth": 0.021,
+ "inflation": 0.049,
+ "unemployment": 0.062,
+ "policyRate": 0.145,
+ "debtToGdp": 0.78,
+ "growthPath": [
+  {
+   "quarter": "2022Q4",
+   "growth": 0.0167
+  },
+  {
+   "quarter": "2023Q1",
+   "growth": 0.0257
+  },
+  {
+   "quarter": "2023Q2",
+   "growth": 0.021
+  },
+  {
+   "quarter": "2023Q3",
+   "growth": 0.0274
+  },
+  {
+   "quarter": "2023Q4",
+   "growth": 0.0228
+  },
+  {
+   "quarter": "2024Q1",
+   "growth": 0.0214
+  },
+  {
+   "quarter": "2024Q2",
+   "growth": 0.0205
+  },
+  {
+   "quarter": "2024Q3",
+   "growth": 0.0236
+  },
+  {
+   "quarter": "2024Q4",
+   "growth": 0.0245
+  },
+  {
+   "quarter": "2025Q1",
+   "growth": 0.0213
+  },
+  {
+   "quarter": "2025Q2",
+   "growth": 0.0157
+  },
+  {
+   "quarter": "2025Q3",
+   "growth": 0.0096
+  },
+  {
+   "quarter": "2025Q4",
+   "growth": 0.0119
+  },
+  {
+   "quarter": "2026Q1",
+   "growth": 0.0167
+  },
+  {
+   "quarter": "2026Q2",
+   "growth": 0.017
+  },
+  {
+   "quarter": "2026Q3",
+   "growth": 0.0173
+  }
+ ],
+ "sectors": [
+  {
+   "sector": "Services",
+   "share": 0.634
+  },
+  {
+   "sector": "Industry",
+   "share": 0.21
+  },
+  {
+   "sector": "Construction",
+   "share": 0.052
+  },
+  {
+   "sector": "Agriculture",
+   "share": 0.043
+  },
+  {
+   "sector": "Government",
+   "share": 0.055
+  }
+ ],
+ "centralBank": "CBD-BCB-2026-09",
+ "labour": "LABR-BR",
+ "fiscal": "FISC-BR",
+ "basket": "CPIB-BR",
+ "outlook": "FCST-BR-2026Q3",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

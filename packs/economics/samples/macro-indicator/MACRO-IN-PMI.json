@@ -1,0 +1,156 @@
+{
+ "indicatorId": "MACRO-IN-PMI",
+ "name": "India · Manufacturing PMI",
+ "latest": 50.42,
+ "unit": "index",
+ "previous": 50.36,
+ "nextRelease": "2026-10-15",
+ "history": [
+  {
+   "period": "2024-09",
+   "value": 48.84
+  },
+  {
+   "period": "2024-10",
+   "value": 49.55
+  },
+  {
+   "period": "2024-11",
+   "value": 50.15
+  },
+  {
+   "period": "2024-12",
+   "value": 50.06
+  },
+  {
+   "period": "2025-01",
+   "value": 49.43
+  },
+  {
+   "period": "2025-02",
+   "value": 50.16
+  },
+  {
+   "period": "2025-03",
+   "value": 49.97
+  },
+  {
+   "period": "2025-04",
+   "value": 51.22
+  },
+  {
+   "period": "2025-05",
+   "value": 52.23
+  },
+  {
+   "period": "2025-06",
+   "value": 51.88
+  },
+  {
+   "period": "2025-07",
+   "value": 51.22
+  },
+  {
+   "period": "2025-08",
+   "value": 50.13
+  },
+  {
+   "period": "2025-09",
+   "value": 50.22
+  },
+  {
+   "period": "2025-10",
+   "value": 51.2
+  },
+  {
+   "period": "2025-11",
+   "value": 51.46
+  },
+  {
+   "period": "2025-12",
+   "value": 51.04
+  },
+  {
+   "period": "2026-01",
+   "value": 51.64
+  },
+  {
+   "period": "2026-02",
+   "value": 51.43
+  },
+  {
+   "period": "2026-03",
+   "value": 51.66
+  },
+  {
+   "period": "2026-04",
+   "value": 52.16
+  },
+  {
+   "period": "2026-05",
+   "value": 51.29
+  },
+  {
+   "period": "2026-06",
+   "value": 50.72
+  },
+  {
+   "period": "2026-07",
+   "value": 50.36
+  },
+  {
+   "period": "2026-08",
+   "value": 50.42
+  }
+ ],
+ "releases": [
+  {
+   "date": "2026-09-14",
+   "period": "2026-08",
+   "actual": 50.42,
+   "consensus": 50.68,
+   "surprise": -0.26
+  },
+  {
+   "date": "2026-08-14",
+   "period": "2026-07",
+   "actual": 50.36,
+   "consensus": 51.09,
+   "surprise": -0.73
+  },
+  {
+   "date": "2026-07-14",
+   "period": "2026-06",
+   "actual": 50.72,
+   "consensus": 50.55,
+   "surprise": 0.17
+  },
+  {
+   "date": "2026-06-14",
+   "period": "2026-05",
+   "actual": 51.29,
+   "consensus": 51.26,
+   "surprise": 0.03
+  },
+  {
+   "date": "2026-05-14",
+   "period": "2026-04",
+   "actual": 52.16,
+   "consensus": 51.13,
+   "surprise": 1.03
+  },
+  {
+   "date": "2026-04-14",
+   "period": "2026-03",
+   "actual": 51.66,
+   "consensus": 51.56,
+   "surprise": 0.1
+  }
+ ],
+ "economy": "ECON-IN",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

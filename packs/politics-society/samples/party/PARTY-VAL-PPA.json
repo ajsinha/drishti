@@ -1,0 +1,98 @@
+{
+ "partyId": "PARTY-VAL-PPA",
+ "name": "People's Progressive Alliance",
+ "position": "Centre-left",
+ "leaderName": "Victor Petrov",
+ "seats": 79,
+ "polling": 0.307,
+ "members": 35000,
+ "trend": [
+  {
+   "month": "2026-01-12",
+   "share": 0.311
+  },
+  {
+   "month": "2026-01-26",
+   "share": 0.321
+  },
+  {
+   "month": "2026-02-09",
+   "share": 0.331
+  },
+  {
+   "month": "2026-02-23",
+   "share": 0.344
+  },
+  {
+   "month": "2026-03-09",
+   "share": 0.353
+  },
+  {
+   "month": "2026-03-23",
+   "share": 0.361
+  },
+  {
+   "month": "2026-04-06",
+   "share": 0.346
+  },
+  {
+   "month": "2026-04-20",
+   "share": 0.336
+  },
+  {
+   "month": "2026-05-04",
+   "share": 0.335
+  },
+  {
+   "month": "2026-05-18",
+   "share": 0.322
+  },
+  {
+   "month": "2026-06-01",
+   "share": 0.315
+  },
+  {
+   "month": "2026-06-15",
+   "share": 0.31
+  },
+  {
+   "month": "2026-06-29",
+   "share": 0.301
+  },
+  {
+   "month": "2026-07-13",
+   "share": 0.296
+  },
+  {
+   "month": "2026-07-27",
+   "share": 0.305
+  },
+  {
+   "month": "2026-08-10",
+   "share": 0.288
+  },
+  {
+   "month": "2026-08-24",
+   "share": 0.298
+  },
+  {
+   "month": "2026-09-07",
+   "share": 0.303
+  },
+  {
+   "month": "2026-09-21",
+   "share": 0.307
+  }
+ ],
+ "platform": {
+  "economy": "Deregulation",
+  "founded": 1996,
+  "europeanGroup": "EPP"
+ },
+ "jurisdiction": "JUR-VAL",
+ "leader": "CAND-VAL-001",
+ "_meta": {
+  "source": "elections-office",
+  "generation": 1
+ }
+}

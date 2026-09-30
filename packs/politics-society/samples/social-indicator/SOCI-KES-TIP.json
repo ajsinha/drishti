@@ -1,0 +1,89 @@
+{
+ "indicatorId": "SOCI-KES-TIP",
+ "name": "Trust in parliament",
+ "latest": 37.0,
+ "unit": "% who trust",
+ "change5y": -0.33,
+ "sourceName": "National statistics office (fictional)",
+ "series": [
+  {
+   "year": "2012",
+   "value": 38.25
+  },
+  {
+   "year": "2013",
+   "value": 37.34
+  },
+  {
+   "year": "2014",
+   "value": 37.26
+  },
+  {
+   "year": "2015",
+   "value": 37.33
+  },
+  {
+   "year": "2016",
+   "value": 37.94
+  },
+  {
+   "year": "2017",
+   "value": 38.88
+  },
+  {
+   "year": "2018",
+   "value": 38.48
+  },
+  {
+   "year": "2019",
+   "value": 38.04
+  },
+  {
+   "year": "2020",
+   "value": 37.33
+  },
+  {
+   "year": "2021",
+   "value": 37.6
+  },
+  {
+   "year": "2022",
+   "value": 37.23
+  },
+  {
+   "year": "2023",
+   "value": 37.27
+  },
+  {
+   "year": "2024",
+   "value": 37.22
+  },
+  {
+   "year": "2025",
+   "value": 37.0
+  }
+ ],
+ "byRegion": [
+  {
+   "region": "Highlands",
+   "value": 33.85
+  },
+  {
+   "region": "Riverlands",
+   "value": 45.61
+  },
+  {
+   "region": "Metropolitan",
+   "value": 37.81
+  },
+  {
+   "region": "Isles",
+   "value": 40.58
+  }
+ ],
+ "jurisdiction": "JUR-KES",
+ "_meta": {
+  "source": "statistics-office",
+  "generation": 1
+ }
+}

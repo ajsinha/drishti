@@ -1,0 +1,81 @@
+{
+ "regionId": "REGN-VAL-EASTER",
+ "name": "Eastern Lakes",
+ "populationM": 9.45,
+ "medianIncome": 50900.0,
+ "unemployment": 0.0547,
+ "lifeExpectancy": 80.0,
+ "vote": [
+  {
+   "party": "People's Progressive Alliance",
+   "share": 0.376
+  },
+  {
+   "party": "Civic Union",
+   "share": 0.244
+  },
+  {
+   "party": "National Revival",
+   "share": 0.132
+  },
+  {
+   "party": "Green Future",
+   "share": 0.091
+  },
+  {
+   "party": "Others",
+   "share": 0.084
+  },
+  {
+   "party": "Liberal Forum",
+   "share": 0.072
+  }
+ ],
+ "unemploymentTrend": [
+  {
+   "year": "2016",
+   "rate": 0.0539
+  },
+  {
+   "year": "2017",
+   "rate": 0.0569
+  },
+  {
+   "year": "2018",
+   "rate": 0.038
+  },
+  {
+   "year": "2019",
+   "rate": 0.0528
+  },
+  {
+   "year": "2020",
+   "rate": 0.0804
+  },
+  {
+   "year": "2021",
+   "rate": 0.0371
+  },
+  {
+   "year": "2022",
+   "rate": 0.069
+  },
+  {
+   "year": "2023",
+   "rate": 0.0368
+  },
+  {
+   "year": "2024",
+   "rate": 0.0636
+  },
+  {
+   "year": "2025",
+   "rate": 0.0954
+  }
+ ],
+ "jurisdiction": "JUR-VAL",
+ "_meta": {
+  "source": "elections-office",
+  "generation": 1
+ }
+}

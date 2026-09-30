@@ -1,0 +1,156 @@
+{
+ "indicatorId": "MACRO-JP-CPI",
+ "name": "Japan · Consumer price inflation",
+ "latest": 1.97,
+ "unit": "% y/y",
+ "previous": 1.98,
+ "nextRelease": "2026-10-15",
+ "history": [
+  {
+   "period": "2024-09",
+   "value": 2.17
+  },
+  {
+   "period": "2024-10",
+   "value": 2.16
+  },
+  {
+   "period": "2024-11",
+   "value": 2.01
+  },
+  {
+   "period": "2024-12",
+   "value": 2.06
+  },
+  {
+   "period": "2025-01",
+   "value": 2.29
+  },
+  {
+   "period": "2025-02",
+   "value": 2.08
+  },
+  {
+   "period": "2025-03",
+   "value": 1.83
+  },
+  {
+   "period": "2025-04",
+   "value": 1.76
+  },
+  {
+   "period": "2025-05",
+   "value": 1.93
+  },
+  {
+   "period": "2025-06",
+   "value": 1.95
+  },
+  {
+   "period": "2025-07",
+   "value": 2.04
+  },
+  {
+   "period": "2025-08",
+   "value": 1.94
+  },
+  {
+   "period": "2025-09",
+   "value": 1.66
+  },
+  {
+   "period": "2025-10",
+   "value": 1.76
+  },
+  {
+   "period": "2025-11",
+   "value": 1.77
+  },
+  {
+   "period": "2025-12",
+   "value": 1.66
+  },
+  {
+   "period": "2026-01",
+   "value": 1.91
+  },
+  {
+   "period": "2026-02",
+   "value": 2.17
+  },
+  {
+   "period": "2026-03",
+   "value": 1.76
+  },
+  {
+   "period": "2026-04",
+   "value": 1.8
+  },
+  {
+   "period": "2026-05",
+   "value": 1.79
+  },
+  {
+   "period": "2026-06",
+   "value": 2.11
+  },
+  {
+   "period": "2026-07",
+   "value": 1.98
+  },
+  {
+   "period": "2026-08",
+   "value": 1.97
+  }
+ ],
+ "releases": [
+  {
+   "date": "2026-09-14",
+   "period": "2026-08",
+   "actual": 1.97,
+   "consensus": 1.91,
+   "surprise": 0.06
+  },
+  {
+   "date": "2026-08-14",
+   "period": "2026-07",
+   "actual": 1.98,
+   "consensus": 2.14,
+   "surprise": -0.16
+  },
+  {
+   "date": "2026-07-14",
+   "period": "2026-06",
+   "actual": 2.11,
+   "consensus": 1.97,
+   "surprise": 0.14
+  },
+  {
+   "date": "2026-06-14",
+   "period": "2026-05",
+   "actual": 1.79,
+   "consensus": 1.85,
+   "surprise": -0.06
+  },
+  {
+   "date": "2026-05-14",
+   "period": "2026-04",
+   "actual": 1.8,
+   "consensus": 1.84,
+   "surprise": -0.04
+  },
+  {
+   "date": "2026-04-14",
+   "period": "2026-03",
+   "actual": 1.76,
+   "consensus": 1.75,
+   "surprise": 0.01
+  }
+ ],
+ "economy": "ECON-JP",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

@@ -1,0 +1,109 @@
+{
+ "economyId": "ECON-UK",
+ "name": "United Kingdom",
+ "currency": "GBP",
+ "gdpUsdTn": 3.8,
+ "growth": 0.012,
+ "inflation": 0.034,
+ "unemployment": 0.047,
+ "policyRate": 0.0375,
+ "debtToGdp": 1.01,
+ "growthPath": [
+  {
+   "quarter": "2022Q4",
+   "growth": 0.01
+  },
+  {
+   "quarter": "2023Q1",
+   "growth": 0.0199
+  },
+  {
+   "quarter": "2023Q2",
+   "growth": 0.0195
+  },
+  {
+   "quarter": "2023Q3",
+   "growth": 0.0022
+  },
+  {
+   "quarter": "2023Q4",
+   "growth": 0.0301
+  },
+  {
+   "quarter": "2024Q1",
+   "growth": 0.0233
+  },
+  {
+   "quarter": "2024Q2",
+   "growth": 0.0192
+  },
+  {
+   "quarter": "2024Q3",
+   "growth": 0.0181
+  },
+  {
+   "quarter": "2024Q4",
+   "growth": 0.021
+  },
+  {
+   "quarter": "2025Q1",
+   "growth": 0.0108
+  },
+  {
+   "quarter": "2025Q2",
+   "growth": 0.0104
+  },
+  {
+   "quarter": "2025Q3",
+   "growth": 0.0086
+  },
+  {
+   "quarter": "2025Q4",
+   "growth": 0.0203
+  },
+  {
+   "quarter": "2026Q1",
+   "growth": 0.0148
+  },
+  {
+   "quarter": "2026Q2",
+   "growth": 0.0031
+  },
+  {
+   "quarter": "2026Q3",
+   "growth": 0.0088
+  }
+ ],
+ "sectors": [
+  {
+   "sector": "Services",
+   "share": 0.606
+  },
+  {
+   "sector": "Industry",
+   "share": 0.234
+  },
+  {
+   "sector": "Construction",
+   "share": 0.055
+  },
+  {
+   "sector": "Agriculture",
+   "share": 0.035
+  },
+  {
+   "sector": "Government",
+   "share": 0.068
+  }
+ ],
+ "centralBank": "CBD-BOE-2026-09",
+ "labour": "LABR-UK",
+ "fiscal": "FISC-UK",
+ "basket": "CPIB-UK",
+ "outlook": "FCST-UK-2026Q3",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

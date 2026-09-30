@@ -1,0 +1,87 @@
+{
+ "fiscalId": "FISC-CN",
+ "economyName": "China",
+ "revenue": 0.289,
+ "spending": 0.339,
+ "balance": -0.05,
+ "debt": 0.92,
+ "interestBurden": 0.0794,
+ "functions": [
+  {
+   "function": "Social protection",
+   "share": 0.1075
+  },
+  {
+   "function": "Health",
+   "share": 0.0632
+  },
+  {
+   "function": "Education",
+   "share": 0.0379
+  },
+  {
+   "function": "Defence",
+   "share": 0.0158
+  },
+  {
+   "function": "Interest",
+   "share": 0.0229
+  },
+  {
+   "function": "Other",
+   "share": 0.0917
+  }
+ ],
+ "debtPath": [
+  {
+   "year": "2016",
+   "debt": 0.599
+  },
+  {
+   "year": "2017",
+   "debt": 0.617
+  },
+  {
+   "year": "2018",
+   "debt": 0.674
+  },
+  {
+   "year": "2019",
+   "debt": 0.681
+  },
+  {
+   "year": "2020",
+   "debt": 0.681
+  },
+  {
+   "year": "2021",
+   "debt": 0.697
+  },
+  {
+   "year": "2022",
+   "debt": 0.802
+  },
+  {
+   "year": "2023",
+   "debt": 0.845
+  },
+  {
+   "year": "2024",
+   "debt": 0.868
+  },
+  {
+   "year": "2025",
+   "debt": 0.875
+  },
+  {
+   "year": "2026",
+   "debt": 0.92
+  }
+ ],
+ "economy": "ECON-CN",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

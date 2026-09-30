@@ -1,0 +1,139 @@
+{
+ "labourId": "LABR-CN",
+ "economyName": "China",
+ "unemployment": 0.051,
+ "participation": 0.5904,
+ "wageGrowth": 0.0144,
+ "vacancyRatio": 0.67,
+ "unemploymentPath": [
+  {
+   "month": "2024-09",
+   "rate": 0.0501
+  },
+  {
+   "month": "2024-10",
+   "rate": 0.047
+  },
+  {
+   "month": "2024-11",
+   "rate": 0.0496
+  },
+  {
+   "month": "2024-12",
+   "rate": 0.0474
+  },
+  {
+   "month": "2025-01",
+   "rate": 0.0499
+  },
+  {
+   "month": "2025-02",
+   "rate": 0.0498
+  },
+  {
+   "month": "2025-03",
+   "rate": 0.0489
+  },
+  {
+   "month": "2025-04",
+   "rate": 0.05
+  },
+  {
+   "month": "2025-05",
+   "rate": 0.0501
+  },
+  {
+   "month": "2025-06",
+   "rate": 0.0502
+  },
+  {
+   "month": "2025-07",
+   "rate": 0.0495
+  },
+  {
+   "month": "2025-08",
+   "rate": 0.0516
+  },
+  {
+   "month": "2025-09",
+   "rate": 0.0513
+  },
+  {
+   "month": "2025-10",
+   "rate": 0.0517
+  },
+  {
+   "month": "2025-11",
+   "rate": 0.0505
+  },
+  {
+   "month": "2025-12",
+   "rate": 0.052
+  },
+  {
+   "month": "2026-01",
+   "rate": 0.0515
+  },
+  {
+   "month": "2026-02",
+   "rate": 0.0515
+  },
+  {
+   "month": "2026-03",
+   "rate": 0.0528
+  },
+  {
+   "month": "2026-04",
+   "rate": 0.0523
+  },
+  {
+   "month": "2026-05",
+   "rate": 0.0531
+  },
+  {
+   "month": "2026-06",
+   "rate": 0.0542
+  },
+  {
+   "month": "2026-07",
+   "rate": 0.0522
+  },
+  {
+   "month": "2026-08",
+   "rate": 0.0537
+  }
+ ],
+ "bySector": [
+  {
+   "sector": "Services",
+   "jobsM": 458.8,
+   "change": -0.0048
+  },
+  {
+   "sector": "Industry",
+   "jobsM": 162.8,
+   "change": 0.005
+  },
+  {
+   "sector": "Construction",
+   "jobsM": 44.4,
+   "change": 0.0071
+  },
+  {
+   "sector": "Agriculture",
+   "jobsM": 29.6,
+   "change": 0.0071
+  },
+  {
+   "sector": "Government",
+   "jobsM": 44.4,
+   "change": -0.0046
+  }
+ ],
+ "economy": "ECON-CN",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

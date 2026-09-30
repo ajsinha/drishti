@@ -1,0 +1,58 @@
+{
+ "pollId": "POLL-VAL-003",
+ "pollster": "Northstar Insight",
+ "fieldwork": "2026-02-06 to 2026-02-09",
+ "sample": 2400,
+ "method": "Telephone (mixed mode)",
+ "lead": "People's Progressive Alliance +4",
+ "moe": 0.02,
+ "shares": [
+  {
+   "party": "People's Progressive Alliance",
+   "share": 0.331,
+   "low": 0.312,
+   "high": 0.35,
+   "change": 0.0213
+  },
+  {
+   "party": "Civic Union",
+   "share": 0.291,
+   "low": 0.273,
+   "high": 0.309,
+   "change": 0.0113
+  },
+  {
+   "party": "National Revival",
+   "share": 0.148,
+   "low": 0.134,
+   "high": 0.162,
+   "change": 0.0081
+  },
+  {
+   "party": "Green Future",
+   "share": 0.107,
+   "low": 0.095,
+   "high": 0.119,
+   "change": -0.0129
+  },
+  {
+   "party": "Liberal Forum",
+   "share": 0.076,
+   "low": 0.065,
+   "high": 0.086,
+   "change": -0.0142
+  },
+  {
+   "party": "Others",
+   "share": 0.046,
+   "low": 0.038,
+   "high": 0.055,
+   "change": -0.0136
+  }
+ ],
+ "jurisdiction": "JUR-VAL",
+ "_meta": {
+  "source": "poll-aggregator",
+  "generation": 1
+ }
+}

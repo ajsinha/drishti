@@ -1,0 +1,87 @@
+{
+ "fiscalId": "FISC-UK",
+ "economyName": "United Kingdom",
+ "revenue": 0.3187,
+ "spending": 0.379,
+ "balance": -0.0603,
+ "debt": 1.01,
+ "interestBurden": 0.0531,
+ "functions": [
+  {
+   "function": "Social protection",
+   "share": 0.1231
+  },
+  {
+   "function": "Health",
+   "share": 0.0724
+  },
+  {
+   "function": "Education",
+   "share": 0.0434
+  },
+  {
+   "function": "Defence",
+   "share": 0.0181
+  },
+  {
+   "function": "Interest",
+   "share": 0.0169
+  },
+  {
+   "function": "Other",
+   "share": 0.105
+  }
+ ],
+ "debtPath": [
+  {
+   "year": "2016",
+   "debt": 0.571
+  },
+  {
+   "year": "2017",
+   "debt": 0.551
+  },
+  {
+   "year": "2018",
+   "debt": 0.687
+  },
+  {
+   "year": "2019",
+   "debt": 0.784
+  },
+  {
+   "year": "2020",
+   "debt": 0.76
+  },
+  {
+   "year": "2021",
+   "debt": 0.784
+  },
+  {
+   "year": "2022",
+   "debt": 0.815
+  },
+  {
+   "year": "2023",
+   "debt": 0.863
+  },
+  {
+   "year": "2024",
+   "debt": 0.943
+  },
+  {
+   "year": "2025",
+   "debt": 0.977
+  },
+  {
+   "year": "2026",
+   "debt": 1.01
+  }
+ ],
+ "economy": "ECON-UK",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

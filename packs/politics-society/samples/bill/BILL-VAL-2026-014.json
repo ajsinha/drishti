@@ -1,0 +1,35 @@
+{
+ "billId": "BILL-VAL-2026-014",
+ "title": "Public Health Workforce Act",
+ "sponsorName": "Lucia Varga",
+ "stage": "Second reading",
+ "introduced": "2026-03-29",
+ "costM": 1500,
+ "stages": [
+  {
+   "date": "2026-03-29",
+   "stage": "First reading",
+   "for": null,
+   "against": null,
+   "outcome": "Passed"
+  },
+  {
+   "date": "2026-05-25",
+   "stage": "Second reading",
+   "for": 183,
+   "against": 57,
+   "outcome": "Passed"
+  }
+ ],
+ "summary": {
+  "policyArea": "Public Health Workforce",
+  "type": "Government bill",
+  "impactAssessment": "Published"
+ },
+ "sponsor": "CAND-VAL-002",
+ "jurisdiction": "JUR-VAL",
+ "_meta": {
+  "source": "elections-office",
+  "generation": 1
+ }
+}

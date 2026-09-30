@@ -1,0 +1,108 @@
+{
+ "indicatorId": "MACRO-CN-GDP",
+ "name": "China · Real GDP growth",
+ "latest": 5.6,
+ "unit": "% y/y",
+ "previous": 5.88,
+ "nextRelease": "2026-10-30",
+ "history": [
+  {
+   "period": "2023Q4",
+   "value": 4.75
+  },
+  {
+   "period": "2024Q1",
+   "value": 5.17
+  },
+  {
+   "period": "2024Q2",
+   "value": 4.89
+  },
+  {
+   "period": "2024Q3",
+   "value": 4.99
+  },
+  {
+   "period": "2024Q4",
+   "value": 5.18
+  },
+  {
+   "period": "2025Q1",
+   "value": 4.88
+  },
+  {
+   "period": "2025Q2",
+   "value": 4.99
+  },
+  {
+   "period": "2025Q3",
+   "value": 5.18
+  },
+  {
+   "period": "2025Q4",
+   "value": 5.65
+  },
+  {
+   "period": "2026Q1",
+   "value": 5.48
+  },
+  {
+   "period": "2026Q2",
+   "value": 5.88
+  },
+  {
+   "period": "2026Q3",
+   "value": 5.6
+  }
+ ],
+ "releases": [
+  {
+   "date": "2026-10-28",
+   "period": "2026Q3",
+   "actual": 5.6,
+   "consensus": 5.48,
+   "surprise": 0.12
+  },
+  {
+   "date": "2026-07-28",
+   "period": "2026Q2",
+   "actual": 5.88,
+   "consensus": 5.78,
+   "surprise": 0.1
+  },
+  {
+   "date": "2026-04-28",
+   "period": "2026Q1",
+   "actual": 5.48,
+   "consensus": 5.51,
+   "surprise": -0.03
+  },
+  {
+   "date": "2026-01-28",
+   "period": "2025Q4",
+   "actual": 5.65,
+   "consensus": 5.7,
+   "surprise": -0.05
+  },
+  {
+   "date": "2025-10-28",
+   "period": "2025Q3",
+   "actual": 5.18,
+   "consensus": 5.18,
+   "surprise": 0.0
+  },
+  {
+   "date": "2025-07-28",
+   "period": "2025Q2",
+   "actual": 4.99,
+   "consensus": 5.31,
+   "surprise": -0.32
+  }
+ ],
+ "economy": "ECON-CN",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

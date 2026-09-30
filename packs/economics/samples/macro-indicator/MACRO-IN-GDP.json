@@ -1,0 +1,108 @@
+{
+ "indicatorId": "MACRO-IN-GDP",
+ "name": "India · Real GDP growth",
+ "latest": 6.73,
+ "unit": "% y/y",
+ "previous": 6.93,
+ "nextRelease": "2026-10-30",
+ "history": [
+  {
+   "period": "2023Q4",
+   "value": 5.3
+  },
+  {
+   "period": "2024Q1",
+   "value": 5.83
+  },
+  {
+   "period": "2024Q2",
+   "value": 6.13
+  },
+  {
+   "period": "2024Q3",
+   "value": 6.18
+  },
+  {
+   "period": "2024Q4",
+   "value": 6.24
+  },
+  {
+   "period": "2025Q1",
+   "value": 5.95
+  },
+  {
+   "period": "2025Q2",
+   "value": 5.73
+  },
+  {
+   "period": "2025Q3",
+   "value": 6.14
+  },
+  {
+   "period": "2025Q4",
+   "value": 6.93
+  },
+  {
+   "period": "2026Q1",
+   "value": 7.07
+  },
+  {
+   "period": "2026Q2",
+   "value": 6.93
+  },
+  {
+   "period": "2026Q3",
+   "value": 6.73
+  }
+ ],
+ "releases": [
+  {
+   "date": "2026-10-28",
+   "period": "2026Q3",
+   "actual": 6.73,
+   "consensus": 6.8,
+   "surprise": -0.07
+  },
+  {
+   "date": "2026-07-28",
+   "period": "2026Q2",
+   "actual": 6.93,
+   "consensus": 6.96,
+   "surprise": -0.03
+  },
+  {
+   "date": "2026-04-28",
+   "period": "2026Q1",
+   "actual": 7.07,
+   "consensus": 7.08,
+   "surprise": -0.01
+  },
+  {
+   "date": "2026-01-28",
+   "period": "2025Q4",
+   "actual": 6.93,
+   "consensus": 6.73,
+   "surprise": 0.2
+  },
+  {
+   "date": "2025-10-28",
+   "period": "2025Q3",
+   "actual": 6.14,
+   "consensus": 5.76,
+   "surprise": 0.38
+  },
+  {
+   "date": "2025-07-28",
+   "period": "2025Q2",
+   "actual": 5.73,
+   "consensus": 5.66,
+   "surprise": 0.07
+  }
+ ],
+ "economy": "ECON-IN",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

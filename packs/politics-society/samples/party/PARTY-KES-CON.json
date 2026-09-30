@@ -1,0 +1,98 @@
+{
+ "partyId": "PARTY-KES-CON",
+ "name": "Constitutional Party",
+ "position": "Centre-right",
+ "leaderName": "Oskar Sorensen",
+ "seats": 102,
+ "polling": 0.391,
+ "members": 41000,
+ "trend": [
+  {
+   "month": "2026-01-12",
+   "share": 0.372
+  },
+  {
+   "month": "2026-01-26",
+   "share": 0.359
+  },
+  {
+   "month": "2026-02-09",
+   "share": 0.353
+  },
+  {
+   "month": "2026-02-23",
+   "share": 0.363
+  },
+  {
+   "month": "2026-03-09",
+   "share": 0.364
+  },
+  {
+   "month": "2026-03-23",
+   "share": 0.354
+  },
+  {
+   "month": "2026-04-06",
+   "share": 0.36
+  },
+  {
+   "month": "2026-04-20",
+   "share": 0.36
+  },
+  {
+   "month": "2026-05-04",
+   "share": 0.357
+  },
+  {
+   "month": "2026-05-18",
+   "share": 0.36
+  },
+  {
+   "month": "2026-06-01",
+   "share": 0.368
+  },
+  {
+   "month": "2026-06-15",
+   "share": 0.378
+  },
+  {
+   "month": "2026-06-29",
+   "share": 0.369
+  },
+  {
+   "month": "2026-07-13",
+   "share": 0.366
+  },
+  {
+   "month": "2026-07-27",
+   "share": 0.37
+  },
+  {
+   "month": "2026-08-10",
+   "share": 0.363
+  },
+  {
+   "month": "2026-08-24",
+   "share": 0.377
+  },
+  {
+   "month": "2026-09-07",
+   "share": 0.383
+  },
+  {
+   "month": "2026-09-21",
+   "share": 0.391
+  }
+ ],
+ "platform": {
+  "economy": "Higher public investment",
+  "founded": 1999,
+  "europeanGroup": "Greens/EFA"
+ },
+ "jurisdiction": "JUR-KES",
+ "leader": "CAND-KES-003",
+ "_meta": {
+  "source": "elections-office",
+  "generation": 1
+ }
+}

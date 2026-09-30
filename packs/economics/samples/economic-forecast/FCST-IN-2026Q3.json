@@ -1,0 +1,66 @@
+{
+ "forecastId": "FCST-IN-2026Q3",
+ "economyName": "India",
+ "vintage": "2026 Q3",
+ "growth2027": 0.065,
+ "inflation2027": 0.039,
+ "recessionProbability": 0.19,
+ "scenarios": [
+  {
+   "scenario": "Baseline",
+   "weight": 0.6,
+   "growth2026": 0.064,
+   "growth2027": 0.065,
+   "inflation2027": 0.039,
+   "unemployment2027": 0.078
+  },
+  {
+   "scenario": "Upside: productivity boom",
+   "weight": 0.15,
+   "growth2026": 0.068,
+   "growth2027": 0.073,
+   "inflation2027": 0.036,
+   "unemployment2027": 0.074
+  },
+  {
+   "scenario": "Downside: tariff escalation",
+   "weight": 0.25,
+   "growth2026": 0.056,
+   "growth2027": 0.049,
+   "inflation2027": 0.046,
+   "unemployment2027": 0.089
+  }
+ ],
+ "path": [
+  {
+   "quarter": "2026Q4",
+   "growth": 0.0638
+  },
+  {
+   "quarter": "2027Q1",
+   "growth": 0.0657
+  },
+  {
+   "quarter": "2027Q2",
+   "growth": 0.0639
+  },
+  {
+   "quarter": "2027Q3",
+   "growth": 0.0628
+  },
+  {
+   "quarter": "2027Q4",
+   "growth": 0.0661
+  },
+  {
+   "quarter": "2028Q1",
+   "growth": 0.0642
+  }
+ ],
+ "economy": "ECON-IN",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

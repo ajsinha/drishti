@@ -1,0 +1,156 @@
+{
+ "indicatorId": "MACRO-US-PMI",
+ "name": "United States · Manufacturing PMI",
+ "latest": 50.59,
+ "unit": "index",
+ "previous": 51.6,
+ "nextRelease": "2026-10-15",
+ "history": [
+  {
+   "period": "2024-09",
+   "value": 47.49
+  },
+  {
+   "period": "2024-10",
+   "value": 48.19
+  },
+  {
+   "period": "2024-11",
+   "value": 49.37
+  },
+  {
+   "period": "2024-12",
+   "value": 47.68
+  },
+  {
+   "period": "2025-01",
+   "value": 48.22
+  },
+  {
+   "period": "2025-02",
+   "value": 48.26
+  },
+  {
+   "period": "2025-03",
+   "value": 47.65
+  },
+  {
+   "period": "2025-04",
+   "value": 47.83
+  },
+  {
+   "period": "2025-05",
+   "value": 47.64
+  },
+  {
+   "period": "2025-06",
+   "value": 46.57
+  },
+  {
+   "period": "2025-07",
+   "value": 47.42
+  },
+  {
+   "period": "2025-08",
+   "value": 48.93
+  },
+  {
+   "period": "2025-09",
+   "value": 48.99
+  },
+  {
+   "period": "2025-10",
+   "value": 49.1
+  },
+  {
+   "period": "2025-11",
+   "value": 50.53
+  },
+  {
+   "period": "2025-12",
+   "value": 51.17
+  },
+  {
+   "period": "2026-01",
+   "value": 51.1
+  },
+  {
+   "period": "2026-02",
+   "value": 51.46
+  },
+  {
+   "period": "2026-03",
+   "value": 51.0
+  },
+  {
+   "period": "2026-04",
+   "value": 50.82
+  },
+  {
+   "period": "2026-05",
+   "value": 51.18
+  },
+  {
+   "period": "2026-06",
+   "value": 51.87
+  },
+  {
+   "period": "2026-07",
+   "value": 51.6
+  },
+  {
+   "period": "2026-08",
+   "value": 50.59
+  }
+ ],
+ "releases": [
+  {
+   "date": "2026-09-14",
+   "period": "2026-08",
+   "actual": 50.59,
+   "consensus": 49.94,
+   "surprise": 0.65
+  },
+  {
+   "date": "2026-08-14",
+   "period": "2026-07",
+   "actual": 51.6,
+   "consensus": 52.64,
+   "surprise": -1.04
+  },
+  {
+   "date": "2026-07-14",
+   "period": "2026-06",
+   "actual": 51.87,
+   "consensus": 51.86,
+   "surprise": 0.01
+  },
+  {
+   "date": "2026-06-14",
+   "period": "2026-05",
+   "actual": 51.18,
+   "consensus": 51.87,
+   "surprise": -0.69
+  },
+  {
+   "date": "2026-05-14",
+   "period": "2026-04",
+   "actual": 50.82,
+   "consensus": 51.21,
+   "surprise": -0.39
+  },
+  {
+   "date": "2026-04-14",
+   "period": "2026-03",
+   "actual": 51.0,
+   "consensus": 51.05,
+   "surprise": -0.05
+  }
+ ],
+ "economy": "ECON-US",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

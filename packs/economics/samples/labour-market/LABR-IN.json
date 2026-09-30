@@ -1,0 +1,139 @@
+{
+ "labourId": "LABR-IN",
+ "economyName": "India",
+ "unemployment": 0.078,
+ "participation": 0.6052,
+ "wageGrowth": 0.0548,
+ "vacancyRatio": 0.69,
+ "unemploymentPath": [
+  {
+   "month": "2024-09",
+   "rate": 0.0762
+  },
+  {
+   "month": "2024-10",
+   "rate": 0.0753
+  },
+  {
+   "month": "2024-11",
+   "rate": 0.0769
+  },
+  {
+   "month": "2024-12",
+   "rate": 0.0761
+  },
+  {
+   "month": "2025-01",
+   "rate": 0.0756
+  },
+  {
+   "month": "2025-02",
+   "rate": 0.0766
+  },
+  {
+   "month": "2025-03",
+   "rate": 0.0785
+  },
+  {
+   "month": "2025-04",
+   "rate": 0.0776
+  },
+  {
+   "month": "2025-05",
+   "rate": 0.0772
+  },
+  {
+   "month": "2025-06",
+   "rate": 0.0768
+  },
+  {
+   "month": "2025-07",
+   "rate": 0.0758
+  },
+  {
+   "month": "2025-08",
+   "rate": 0.0779
+  },
+  {
+   "month": "2025-09",
+   "rate": 0.0797
+  },
+  {
+   "month": "2025-10",
+   "rate": 0.0784
+  },
+  {
+   "month": "2025-11",
+   "rate": 0.0796
+  },
+  {
+   "month": "2025-12",
+   "rate": 0.0784
+  },
+  {
+   "month": "2026-01",
+   "rate": 0.0772
+  },
+  {
+   "month": "2026-02",
+   "rate": 0.0791
+  },
+  {
+   "month": "2026-03",
+   "rate": 0.0792
+  },
+  {
+   "month": "2026-04",
+   "rate": 0.0806
+  },
+  {
+   "month": "2026-05",
+   "rate": 0.0816
+  },
+  {
+   "month": "2026-06",
+   "rate": 0.078
+  },
+  {
+   "month": "2026-07",
+   "rate": 0.0798
+  },
+  {
+   "month": "2026-08",
+   "rate": 0.0809
+  }
+ ],
+ "bySector": [
+  {
+   "sector": "Services",
+   "jobsM": 322.4,
+   "change": 0.0082
+  },
+  {
+   "sector": "Industry",
+   "jobsM": 114.4,
+   "change": 0.0045
+  },
+  {
+   "sector": "Construction",
+   "jobsM": 31.2,
+   "change": 0.0158
+  },
+  {
+   "sector": "Agriculture",
+   "jobsM": 20.8,
+   "change": 0.0281
+  },
+  {
+   "sector": "Government",
+   "jobsM": 31.2,
+   "change": 0.012
+  }
+ ],
+ "economy": "ECON-IN",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

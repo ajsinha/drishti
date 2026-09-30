@@ -1,0 +1,93 @@
+{
+ "indicatorId": "SOCI-VAL-RPR",
+ "name": "Relative poverty rate",
+ "latest": 10.34,
+ "unit": "% of households",
+ "change5y": 1.27,
+ "sourceName": "National statistics office (fictional)",
+ "series": [
+  {
+   "year": "2012",
+   "value": 9.73
+  },
+  {
+   "year": "2013",
+   "value": 10.54
+  },
+  {
+   "year": "2014",
+   "value": 10.16
+  },
+  {
+   "year": "2015",
+   "value": 9.58
+  },
+  {
+   "year": "2016",
+   "value": 9.28
+  },
+  {
+   "year": "2017",
+   "value": 8.59
+  },
+  {
+   "year": "2018",
+   "value": 8.06
+  },
+  {
+   "year": "2019",
+   "value": 8.19
+  },
+  {
+   "year": "2020",
+   "value": 9.07
+  },
+  {
+   "year": "2021",
+   "value": 10.04
+  },
+  {
+   "year": "2022",
+   "value": 11.01
+  },
+  {
+   "year": "2023",
+   "value": 11.53
+  },
+  {
+   "year": "2024",
+   "value": 10.29
+  },
+  {
+   "year": "2025",
+   "value": 10.34
+  }
+ ],
+ "byRegion": [
+  {
+   "region": "North Coast",
+   "value": 8.97
+  },
+  {
+   "region": "Central Plains",
+   "value": 8.62
+  },
+  {
+   "region": "Capital District",
+   "value": 11.71
+  },
+  {
+   "region": "Southern Hills",
+   "value": 10.35
+  },
+  {
+   "region": "Eastern Lakes",
+   "value": 10.37
+  }
+ ],
+ "jurisdiction": "JUR-VAL",
+ "_meta": {
+  "source": "statistics-office",
+  "generation": 1
+ }
+}

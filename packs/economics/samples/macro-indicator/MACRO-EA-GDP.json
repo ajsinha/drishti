@@ -1,0 +1,108 @@
+{
+ "indicatorId": "MACRO-EA-GDP",
+ "name": "Euro area · Real GDP growth",
+ "latest": 1.74,
+ "unit": "% y/y",
+ "previous": 1.84,
+ "nextRelease": "2026-10-30",
+ "history": [
+  {
+   "period": "2023Q4",
+   "value": 1.8
+  },
+  {
+   "period": "2024Q1",
+   "value": 1.59
+  },
+  {
+   "period": "2024Q2",
+   "value": 1.48
+  },
+  {
+   "period": "2024Q3",
+   "value": 1.71
+  },
+  {
+   "period": "2024Q4",
+   "value": 1.41
+  },
+  {
+   "period": "2025Q1",
+   "value": 1.19
+  },
+  {
+   "period": "2025Q2",
+   "value": 1.83
+  },
+  {
+   "period": "2025Q3",
+   "value": 1.48
+  },
+  {
+   "period": "2025Q4",
+   "value": 1.44
+  },
+  {
+   "period": "2026Q1",
+   "value": 1.38
+  },
+  {
+   "period": "2026Q2",
+   "value": 1.84
+  },
+  {
+   "period": "2026Q3",
+   "value": 1.74
+  }
+ ],
+ "releases": [
+  {
+   "date": "2026-10-28",
+   "period": "2026Q3",
+   "actual": 1.74,
+   "consensus": 1.7,
+   "surprise": 0.04
+  },
+  {
+   "date": "2026-07-28",
+   "period": "2026Q2",
+   "actual": 1.84,
+   "consensus": 1.7,
+   "surprise": 0.14
+  },
+  {
+   "date": "2026-04-28",
+   "period": "2026Q1",
+   "actual": 1.38,
+   "consensus": 1.33,
+   "surprise": 0.05
+  },
+  {
+   "date": "2026-01-28",
+   "period": "2025Q4",
+   "actual": 1.44,
+   "consensus": 1.28,
+   "surprise": 0.16
+  },
+  {
+   "date": "2025-10-28",
+   "period": "2025Q3",
+   "actual": 1.48,
+   "consensus": 1.73,
+   "surprise": -0.25
+  },
+  {
+   "date": "2025-07-28",
+   "period": "2025Q2",
+   "actual": 1.83,
+   "consensus": 1.86,
+   "surprise": -0.03
+  }
+ ],
+ "economy": "ECON-EA",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

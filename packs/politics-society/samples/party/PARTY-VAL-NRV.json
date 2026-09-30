@@ -1,0 +1,98 @@
+{
+ "partyId": "PARTY-VAL-NRV",
+ "name": "National Revival",
+ "position": "Right",
+ "leaderName": "Marcus Adeyemi",
+ "seats": 36,
+ "polling": 0.154,
+ "members": 49000,
+ "trend": [
+  {
+   "month": "2026-01-12",
+   "share": 0.146
+  },
+  {
+   "month": "2026-01-26",
+   "share": 0.146
+  },
+  {
+   "month": "2026-02-09",
+   "share": 0.148
+  },
+  {
+   "month": "2026-02-23",
+   "share": 0.144
+  },
+  {
+   "month": "2026-03-09",
+   "share": 0.131
+  },
+  {
+   "month": "2026-03-23",
+   "share": 0.113
+  },
+  {
+   "month": "2026-04-06",
+   "share": 0.128
+  },
+  {
+   "month": "2026-04-20",
+   "share": 0.143
+  },
+  {
+   "month": "2026-05-04",
+   "share": 0.14
+  },
+  {
+   "month": "2026-05-18",
+   "share": 0.137
+  },
+  {
+   "month": "2026-06-01",
+   "share": 0.143
+  },
+  {
+   "month": "2026-06-15",
+   "share": 0.145
+  },
+  {
+   "month": "2026-06-29",
+   "share": 0.148
+  },
+  {
+   "month": "2026-07-13",
+   "share": 0.15
+  },
+  {
+   "month": "2026-07-27",
+   "share": 0.145
+  },
+  {
+   "month": "2026-08-10",
+   "share": 0.161
+  },
+  {
+   "month": "2026-08-24",
+   "share": 0.162
+  },
+  {
+   "month": "2026-09-07",
+   "share": 0.161
+  },
+  {
+   "month": "2026-09-21",
+   "share": 0.154
+  }
+ ],
+ "platform": {
+  "economy": "Deregulation",
+  "founded": 1935,
+  "europeanGroup": "EPP"
+ },
+ "jurisdiction": "JUR-VAL",
+ "leader": "CAND-VAL-007",
+ "_meta": {
+  "source": "elections-office",
+  "generation": 1
+ }
+}

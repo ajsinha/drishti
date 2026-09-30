@@ -1,0 +1,41 @@
+{
+ "candidateId": "CAND-KES-007",
+ "name": "Marcus Adeyemi",
+ "partyName": "Democratic Reform",
+ "constituency": "Isles Central",
+ "role": "Party leader",
+ "voteShare": 0.221,
+ "since": "2015-09-01",
+ "record": [
+  {
+   "bill": "Clean Energy Transition Act",
+   "vote": "Abstain",
+   "date": "2025-10-08"
+  },
+  {
+   "bill": "Affordable Housing Act",
+   "vote": "Abstain",
+   "date": "2026-05-15"
+  },
+  {
+   "bill": "Digital Services Tax Act",
+   "vote": "For",
+   "date": "2025-12-01"
+  },
+  {
+   "bill": "Public Health Workforce Act",
+   "vote": "Abstain",
+   "date": "2026-01-23"
+  }
+ ],
+ "profile": {
+  "born": 1968,
+  "profession": "Lawyer",
+  "committees": "Environment"
+ },
+ "party": "PARTY-KES-DEM",
+ "_meta": {
+  "source": "elections-office",
+  "generation": 1
+ }
+}

@@ -1,0 +1,80 @@
+{
+ "flowId": "TFLOW-UK-EA",
+ "reporterName": "United Kingdom",
+ "partnerName": "Euro area",
+ "exports": 185,
+ "imports": 219,
+ "balance": -34,
+ "tariff": 0.0368,
+ "products": [
+  {
+   "product": "Machinery",
+   "value": 52
+  },
+  {
+   "product": "Pharmaceuticals",
+   "value": 37
+  },
+  {
+   "product": "Vehicles",
+   "value": 26
+  },
+  {
+   "product": "Electronics",
+   "value": 18
+  },
+  {
+   "product": "Energy",
+   "value": 13
+  }
+ ],
+ "balanceHistory": [
+  {
+   "year": "2016",
+   "balance": -35
+  },
+  {
+   "year": "2017",
+   "balance": -27
+  },
+  {
+   "year": "2018",
+   "balance": -26
+  },
+  {
+   "year": "2019",
+   "balance": -35
+  },
+  {
+   "year": "2020",
+   "balance": -38
+  },
+  {
+   "year": "2021",
+   "balance": -30
+  },
+  {
+   "year": "2022",
+   "balance": -30
+  },
+  {
+   "year": "2023",
+   "balance": -34
+  },
+  {
+   "year": "2024",
+   "balance": -30
+  },
+  {
+   "year": "2025",
+   "balance": -27
+  }
+ ],
+ "economy": "ECON-UK",
+ "partner": "ECON-EA",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

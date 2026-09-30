@@ -1,0 +1,56 @@
+{
+ "billId": "BILL-KES-2026-014",
+ "title": "Public Health Workforce Act",
+ "sponsorName": "Lucia Varga",
+ "stage": "Royal assent",
+ "introduced": "2025-12-08",
+ "costM": 1500,
+ "stages": [
+  {
+   "date": "2025-12-08",
+   "stage": "First reading",
+   "for": null,
+   "against": null,
+   "outcome": "Passed"
+  },
+  {
+   "date": "2026-01-23",
+   "stage": "Second reading",
+   "for": 149,
+   "against": 22,
+   "outcome": "Passed"
+  },
+  {
+   "date": "2026-03-01",
+   "stage": "Committee",
+   "for": 132,
+   "against": 38,
+   "outcome": "Passed"
+  },
+  {
+   "date": "2026-03-18",
+   "stage": "Third reading",
+   "for": 111,
+   "against": 62,
+   "outcome": "Passed"
+  },
+  {
+   "date": "2026-04-03",
+   "stage": "Royal assent",
+   "for": 155,
+   "against": 15,
+   "outcome": "Passed"
+  }
+ ],
+ "summary": {
+  "policyArea": "Public Health Workforce",
+  "type": "Private member's bill",
+  "impactAssessment": "Published"
+ },
+ "sponsor": "CAND-KES-002",
+ "jurisdiction": "JUR-KES",
+ "_meta": {
+  "source": "elections-office",
+  "generation": 1
+ }
+}

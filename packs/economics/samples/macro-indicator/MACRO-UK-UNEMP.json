@@ -1,0 +1,156 @@
+{
+ "indicatorId": "MACRO-UK-UNEMP",
+ "name": "United Kingdom · Unemployment rate",
+ "latest": 4.78,
+ "unit": "%",
+ "previous": 4.87,
+ "nextRelease": "2026-10-15",
+ "history": [
+  {
+   "period": "2024-09",
+   "value": 4.77
+  },
+  {
+   "period": "2024-10",
+   "value": 4.76
+  },
+  {
+   "period": "2024-11",
+   "value": 4.75
+  },
+  {
+   "period": "2024-12",
+   "value": 4.66
+  },
+  {
+   "period": "2025-01",
+   "value": 4.86
+  },
+  {
+   "period": "2025-02",
+   "value": 4.83
+  },
+  {
+   "period": "2025-03",
+   "value": 4.82
+  },
+  {
+   "period": "2025-04",
+   "value": 4.77
+  },
+  {
+   "period": "2025-05",
+   "value": 4.79
+  },
+  {
+   "period": "2025-06",
+   "value": 4.72
+  },
+  {
+   "period": "2025-07",
+   "value": 4.62
+  },
+  {
+   "period": "2025-08",
+   "value": 4.68
+  },
+  {
+   "period": "2025-09",
+   "value": 4.71
+  },
+  {
+   "period": "2025-10",
+   "value": 4.81
+  },
+  {
+   "period": "2025-11",
+   "value": 4.87
+  },
+  {
+   "period": "2025-12",
+   "value": 4.86
+  },
+  {
+   "period": "2026-01",
+   "value": 4.92
+  },
+  {
+   "period": "2026-02",
+   "value": 4.83
+  },
+  {
+   "period": "2026-03",
+   "value": 4.79
+  },
+  {
+   "period": "2026-04",
+   "value": 4.91
+  },
+  {
+   "period": "2026-05",
+   "value": 4.87
+  },
+  {
+   "period": "2026-06",
+   "value": 4.78
+  },
+  {
+   "period": "2026-07",
+   "value": 4.87
+  },
+  {
+   "period": "2026-08",
+   "value": 4.78
+  }
+ ],
+ "releases": [
+  {
+   "date": "2026-09-14",
+   "period": "2026-08",
+   "actual": 4.78,
+   "consensus": 4.72,
+   "surprise": 0.06
+  },
+  {
+   "date": "2026-08-14",
+   "period": "2026-07",
+   "actual": 4.87,
+   "consensus": 4.82,
+   "surprise": 0.05
+  },
+  {
+   "date": "2026-07-14",
+   "period": "2026-06",
+   "actual": 4.78,
+   "consensus": 4.81,
+   "surprise": -0.03
+  },
+  {
+   "date": "2026-06-14",
+   "period": "2026-05",
+   "actual": 4.87,
+   "consensus": 4.89,
+   "surprise": -0.02
+  },
+  {
+   "date": "2026-05-14",
+   "period": "2026-04",
+   "actual": 4.91,
+   "consensus": 4.95,
+   "surprise": -0.04
+  },
+  {
+   "date": "2026-04-14",
+   "period": "2026-03",
+   "actual": 4.79,
+   "consensus": 4.89,
+   "surprise": -0.1
+  }
+ ],
+ "economy": "ECON-UK",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

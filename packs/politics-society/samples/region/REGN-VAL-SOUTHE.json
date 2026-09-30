@@ -1,0 +1,81 @@
+{
+ "regionId": "REGN-VAL-SOUTHE",
+ "name": "Southern Hills",
+ "populationM": 10.38,
+ "medianIncome": 37500.0,
+ "unemployment": 0.0385,
+ "lifeExpectancy": 82.0,
+ "vote": [
+  {
+   "party": "Civic Union",
+   "share": 0.313
+  },
+  {
+   "party": "People's Progressive Alliance",
+   "share": 0.28
+  },
+  {
+   "party": "National Revival",
+   "share": 0.131
+  },
+  {
+   "party": "Green Future",
+   "share": 0.106
+  },
+  {
+   "party": "Liberal Forum",
+   "share": 0.106
+  },
+  {
+   "party": "Others",
+   "share": 0.065
+  }
+ ],
+ "unemploymentTrend": [
+  {
+   "year": "2016",
+   "rate": 0.0457
+  },
+  {
+   "year": "2017",
+   "rate": 0.0579
+  },
+  {
+   "year": "2018",
+   "rate": 0.0811
+  },
+  {
+   "year": "2019",
+   "rate": 0.04
+  },
+  {
+   "year": "2020",
+   "rate": 0.0979
+  },
+  {
+   "year": "2021",
+   "rate": 0.0854
+  },
+  {
+   "year": "2022",
+   "rate": 0.0955
+  },
+  {
+   "year": "2023",
+   "rate": 0.1011
+  },
+  {
+   "year": "2024",
+   "rate": 0.0787
+  },
+  {
+   "year": "2025",
+   "rate": 0.0706
+  }
+ ],
+ "jurisdiction": "JUR-VAL",
+ "_meta": {
+  "source": "elections-office",
+  "generation": 1
+ }
+}

@@ -1,0 +1,28 @@
+{
+ "billId": "BILL-KES-2026-015",
+ "title": "Criminal Justice Reform Act",
+ "sponsorName": "Oskar Sorensen",
+ "stage": "First reading",
+ "introduced": "2025-12-19",
+ "costM": 300,
+ "stages": [
+  {
+   "date": "2025-12-19",
+   "stage": "First reading",
+   "for": null,
+   "against": null,
+   "outcome": "Passed"
+  }
+ ],
+ "summary": {
+  "policyArea": "Criminal Justice Reform",
+  "type": "Government bill",
+  "impactAssessment": "Published"
+ },
+ "sponsor": "CAND-KES-003",
+ "jurisdiction": "JUR-KES",
+ "_meta": {
+  "source": "elections-office",
+  "generation": 1
+ }
+}

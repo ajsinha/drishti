@@ -1,0 +1,87 @@
+{
+ "fiscalId": "FISC-IN",
+ "economyName": "India",
+ "revenue": 0.3443,
+ "spending": 0.3847,
+ "balance": -0.0404,
+ "debt": 0.82,
+ "interestBurden": 0.0646,
+ "functions": [
+  {
+   "function": "Social protection",
+   "share": 0.1232
+  },
+  {
+   "function": "Health",
+   "share": 0.0725
+  },
+  {
+   "function": "Education",
+   "share": 0.0435
+  },
+  {
+   "function": "Defence",
+   "share": 0.0181
+  },
+  {
+   "function": "Interest",
+   "share": 0.0222
+  },
+  {
+   "function": "Other",
+   "share": 0.1051
+  }
+ ],
+ "debtPath": [
+  {
+   "year": "2016",
+   "debt": 0.577
+  },
+  {
+   "year": "2017",
+   "debt": 0.579
+  },
+  {
+   "year": "2018",
+   "debt": 0.564
+  },
+  {
+   "year": "2019",
+   "debt": 0.573
+  },
+  {
+   "year": "2020",
+   "debt": 0.684
+  },
+  {
+   "year": "2021",
+   "debt": 0.687
+  },
+  {
+   "year": "2022",
+   "debt": 0.699
+  },
+  {
+   "year": "2023",
+   "debt": 0.748
+  },
+  {
+   "year": "2024",
+   "debt": 0.763
+  },
+  {
+   "year": "2025",
+   "debt": 0.797
+  },
+  {
+   "year": "2026",
+   "debt": 0.82
+  }
+ ],
+ "economy": "ECON-IN",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

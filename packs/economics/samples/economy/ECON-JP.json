@@ -1,0 +1,109 @@
+{
+ "economyId": "ECON-JP",
+ "name": "Japan",
+ "currency": "JPY",
+ "gdpUsdTn": 4.2,
+ "growth": 0.007,
+ "inflation": 0.024,
+ "unemployment": 0.025,
+ "policyRate": 0.0075,
+ "debtToGdp": 2.35,
+ "growthPath": [
+  {
+   "quarter": "2022Q4",
+   "growth": 0.0039
+  },
+  {
+   "quarter": "2023Q1",
+   "growth": -0.0019
+  },
+  {
+   "quarter": "2023Q2",
+   "growth": -0.0008
+  },
+  {
+   "quarter": "2023Q3",
+   "growth": 0.005
+  },
+  {
+   "quarter": "2023Q4",
+   "growth": 0.0006
+  },
+  {
+   "quarter": "2024Q1",
+   "growth": 0.0103
+  },
+  {
+   "quarter": "2024Q2",
+   "growth": 0.0061
+  },
+  {
+   "quarter": "2024Q3",
+   "growth": 0.0108
+  },
+  {
+   "quarter": "2024Q4",
+   "growth": 0.0127
+  },
+  {
+   "quarter": "2025Q1",
+   "growth": 0.0079
+  },
+  {
+   "quarter": "2025Q2",
+   "growth": 0.0096
+  },
+  {
+   "quarter": "2025Q3",
+   "growth": 0.012
+  },
+  {
+   "quarter": "2025Q4",
+   "growth": -0.002
+  },
+  {
+   "quarter": "2026Q1",
+   "growth": 0.0141
+  },
+  {
+   "quarter": "2026Q2",
+   "growth": 0.0092
+  },
+  {
+   "quarter": "2026Q3",
+   "growth": 0.0123
+  }
+ ],
+ "sectors": [
+  {
+   "sector": "Services",
+   "share": 0.533
+  },
+  {
+   "sector": "Industry",
+   "share": 0.187
+  },
+  {
+   "sector": "Construction",
+   "share": 0.064
+  },
+  {
+   "sector": "Agriculture",
+   "share": 0.045
+  },
+  {
+   "sector": "Government",
+   "share": 0.068
+  }
+ ],
+ "centralBank": "CBD-BOJ-2026-09",
+ "labour": "LABR-JP",
+ "fiscal": "FISC-JP",
+ "basket": "CPIB-JP",
+ "outlook": "FCST-JP-2026Q3",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

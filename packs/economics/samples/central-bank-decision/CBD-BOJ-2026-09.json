@@ -1,0 +1,57 @@
+{
+ "decisionId": "CBD-BOJ-2026-09",
+ "bank": "Bank of Japan",
+ "date": "2026-09-16",
+ "decision": "Cut 25 bp",
+ "rate": 0.0075,
+ "vote": "9-0",
+ "path": [
+  {
+   "date": "2026-09-16",
+   "decision": "Cut 25 bp",
+   "rate": 0.0075
+  },
+  {
+   "date": "2026-07-29",
+   "decision": "Hold",
+   "rate": 0.01
+  },
+  {
+   "date": "2026-06-17",
+   "decision": "Cut 25 bp",
+   "rate": 0.01
+  },
+  {
+   "date": "2026-04-29",
+   "decision": "Cut 25 bp",
+   "rate": 0.0125
+  },
+  {
+   "date": "2026-03-18",
+   "decision": "Cut 25 bp",
+   "rate": 0.015
+  },
+  {
+   "date": "2026-01-28",
+   "decision": "Hold",
+   "rate": 0.0175
+  },
+  {
+   "date": "2025-12-10",
+   "decision": "Cut 25 bp",
+   "rate": 0.0175
+  }
+ ],
+ "statement": {
+  "guidance": "Policy is well positioned; no pre-set path",
+  "balanceSheet": "Unchanged",
+  "inflationTarget": "2%",
+  "nextMeeting": "2026-10-29"
+ },
+ "economy": "ECON-JP",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

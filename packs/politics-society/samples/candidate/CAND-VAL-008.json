@@ -1,0 +1,41 @@
+{
+ "candidateId": "CAND-VAL-008",
+ "name": "Ines Duarte",
+ "partyName": "National Revival",
+ "constituency": "Eastern Lakes West",
+ "role": "Shadow minister",
+ "voteShare": 0.165,
+ "since": "2015-03-01",
+ "record": [
+  {
+   "bill": "Clean Energy Transition Act",
+   "vote": "For",
+   "date": "2026-06-12"
+  },
+  {
+   "bill": "Affordable Housing Act",
+   "vote": "For",
+   "date": "2026-01-06"
+  },
+  {
+   "bill": "Digital Services Tax Act",
+   "vote": "For",
+   "date": "2025-11-06"
+  },
+  {
+   "bill": "Public Health Workforce Act",
+   "vote": "For",
+   "date": "2026-05-25"
+  }
+ ],
+ "profile": {
+  "born": 1961,
+  "profession": "Engineer",
+  "committees": "Finance"
+ },
+ "party": "PARTY-VAL-NRV",
+ "_meta": {
+  "source": "elections-office",
+  "generation": 1
+ }
+}

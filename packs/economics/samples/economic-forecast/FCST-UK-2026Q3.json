@@ -1,0 +1,66 @@
+{
+ "forecastId": "FCST-UK-2026Q3",
+ "economyName": "United Kingdom",
+ "vintage": "2026 Q3",
+ "growth2027": 0.013,
+ "inflation2027": 0.032,
+ "recessionProbability": 0.26,
+ "scenarios": [
+  {
+   "scenario": "Baseline",
+   "weight": 0.6,
+   "growth2026": 0.012,
+   "growth2027": 0.013,
+   "inflation2027": 0.032,
+   "unemployment2027": 0.047
+  },
+  {
+   "scenario": "Upside: productivity boom",
+   "weight": 0.15,
+   "growth2026": 0.016,
+   "growth2027": 0.021,
+   "inflation2027": 0.029,
+   "unemployment2027": 0.043
+  },
+  {
+   "scenario": "Downside: tariff escalation",
+   "weight": 0.25,
+   "growth2026": 0.004,
+   "growth2027": -0.003,
+   "inflation2027": 0.039,
+   "unemployment2027": 0.058
+  }
+ ],
+ "path": [
+  {
+   "quarter": "2026Q4",
+   "growth": 0.0181
+  },
+  {
+   "quarter": "2027Q1",
+   "growth": 0.0115
+  },
+  {
+   "quarter": "2027Q2",
+   "growth": 0.0133
+  },
+  {
+   "quarter": "2027Q3",
+   "growth": 0.0133
+  },
+  {
+   "quarter": "2027Q4",
+   "growth": 0.0126
+  },
+  {
+   "quarter": "2028Q1",
+   "growth": 0.0131
+  }
+ ],
+ "economy": "ECON-UK",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

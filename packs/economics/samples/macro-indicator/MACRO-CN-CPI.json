@@ -1,0 +1,156 @@
+{
+ "indicatorId": "MACRO-CN-CPI",
+ "name": "China · Consumer price inflation",
+ "latest": 0.47,
+ "unit": "% y/y",
+ "previous": 0.17,
+ "nextRelease": "2026-10-15",
+ "history": [
+  {
+   "period": "2024-09",
+   "value": 1.59
+  },
+  {
+   "period": "2024-10",
+   "value": 1.58
+  },
+  {
+   "period": "2024-11",
+   "value": 1.47
+  },
+  {
+   "period": "2024-12",
+   "value": 1.26
+  },
+  {
+   "period": "2025-01",
+   "value": 1.34
+  },
+  {
+   "period": "2025-02",
+   "value": 0.9
+  },
+  {
+   "period": "2025-03",
+   "value": 0.45
+  },
+  {
+   "period": "2025-04",
+   "value": 0.38
+  },
+  {
+   "period": "2025-05",
+   "value": 0.3
+  },
+  {
+   "period": "2025-06",
+   "value": 0.48
+  },
+  {
+   "period": "2025-07",
+   "value": 0.51
+  },
+  {
+   "period": "2025-08",
+   "value": 0.68
+  },
+  {
+   "period": "2025-09",
+   "value": 0.4
+  },
+  {
+   "period": "2025-10",
+   "value": 0.59
+  },
+  {
+   "period": "2025-11",
+   "value": 0.39
+  },
+  {
+   "period": "2025-12",
+   "value": 0.42
+  },
+  {
+   "period": "2026-01",
+   "value": 0.41
+  },
+  {
+   "period": "2026-02",
+   "value": 0.28
+  },
+  {
+   "period": "2026-03",
+   "value": 0.33
+  },
+  {
+   "period": "2026-04",
+   "value": 0.17
+  },
+  {
+   "period": "2026-05",
+   "value": -0.13
+  },
+  {
+   "period": "2026-06",
+   "value": -0.01
+  },
+  {
+   "period": "2026-07",
+   "value": 0.17
+  },
+  {
+   "period": "2026-08",
+   "value": 0.47
+  }
+ ],
+ "releases": [
+  {
+   "date": "2026-09-14",
+   "period": "2026-08",
+   "actual": 0.47,
+   "consensus": 0.38,
+   "surprise": 0.09
+  },
+  {
+   "date": "2026-08-14",
+   "period": "2026-07",
+   "actual": 0.17,
+   "consensus": 0.01,
+   "surprise": 0.16
+  },
+  {
+   "date": "2026-07-14",
+   "period": "2026-06",
+   "actual": -0.01,
+   "consensus": 0.18,
+   "surprise": -0.19
+  },
+  {
+   "date": "2026-06-14",
+   "period": "2026-05",
+   "actual": -0.13,
+   "consensus": -0.03,
+   "surprise": -0.1
+  },
+  {
+   "date": "2026-05-14",
+   "period": "2026-04",
+   "actual": 0.17,
+   "consensus": 0.18,
+   "surprise": -0.01
+  },
+  {
+   "date": "2026-04-14",
+   "period": "2026-03",
+   "actual": 0.33,
+   "consensus": 0.43,
+   "surprise": -0.1
+  }
+ ],
+ "economy": "ECON-CN",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

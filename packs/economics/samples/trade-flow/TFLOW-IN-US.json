@@ -1,0 +1,80 @@
+{
+ "flowId": "TFLOW-IN-US",
+ "reporterName": "India",
+ "partnerName": "United States",
+ "exports": 311,
+ "imports": 377,
+ "balance": -66,
+ "tariff": 0.0354,
+ "products": [
+  {
+   "product": "Pharmaceuticals",
+   "value": 87
+  },
+  {
+   "product": "Vehicles",
+   "value": 62
+  },
+  {
+   "product": "Metals",
+   "value": 44
+  },
+  {
+   "product": "Agricultural products",
+   "value": 31
+  },
+  {
+   "product": "Energy",
+   "value": 22
+  }
+ ],
+ "balanceHistory": [
+  {
+   "year": "2016",
+   "balance": -72
+  },
+  {
+   "year": "2017",
+   "balance": -74
+  },
+  {
+   "year": "2018",
+   "balance": -53
+  },
+  {
+   "year": "2019",
+   "balance": -73
+  },
+  {
+   "year": "2020",
+   "balance": -55
+  },
+  {
+   "year": "2021",
+   "balance": -72
+  },
+  {
+   "year": "2022",
+   "balance": -60
+  },
+  {
+   "year": "2023",
+   "balance": -76
+  },
+  {
+   "year": "2024",
+   "balance": -59
+  },
+  {
+   "year": "2025",
+   "balance": -58
+  }
+ ],
+ "economy": "ECON-IN",
+ "partner": "ECON-US",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

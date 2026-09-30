@@ -1,0 +1,139 @@
+{
+ "labourId": "LABR-EA",
+ "economyName": "Euro area",
+ "unemployment": 0.063,
+ "participation": 0.6392,
+ "wageGrowth": 0.0249,
+ "vacancyRatio": 0.65,
+ "unemploymentPath": [
+  {
+   "month": "2024-09",
+   "rate": 0.0594
+  },
+  {
+   "month": "2024-10",
+   "rate": 0.0593
+  },
+  {
+   "month": "2024-11",
+   "rate": 0.0613
+  },
+  {
+   "month": "2024-12",
+   "rate": 0.0612
+  },
+  {
+   "month": "2025-01",
+   "rate": 0.0617
+  },
+  {
+   "month": "2025-02",
+   "rate": 0.0617
+  },
+  {
+   "month": "2025-03",
+   "rate": 0.0613
+  },
+  {
+   "month": "2025-04",
+   "rate": 0.0617
+  },
+  {
+   "month": "2025-05",
+   "rate": 0.0611
+  },
+  {
+   "month": "2025-06",
+   "rate": 0.0636
+  },
+  {
+   "month": "2025-07",
+   "rate": 0.0626
+  },
+  {
+   "month": "2025-08",
+   "rate": 0.062
+  },
+  {
+   "month": "2025-09",
+   "rate": 0.0627
+  },
+  {
+   "month": "2025-10",
+   "rate": 0.0646
+  },
+  {
+   "month": "2025-11",
+   "rate": 0.0633
+  },
+  {
+   "month": "2025-12",
+   "rate": 0.0641
+  },
+  {
+   "month": "2026-01",
+   "rate": 0.0651
+  },
+  {
+   "month": "2026-02",
+   "rate": 0.0639
+  },
+  {
+   "month": "2026-03",
+   "rate": 0.0637
+  },
+  {
+   "month": "2026-04",
+   "rate": 0.0637
+  },
+  {
+   "month": "2026-05",
+   "rate": 0.0626
+  },
+  {
+   "month": "2026-06",
+   "rate": 0.064
+  },
+  {
+   "month": "2026-07",
+   "rate": 0.0638
+  },
+  {
+   "month": "2026-08",
+   "rate": 0.0667
+  }
+ ],
+ "bySector": [
+  {
+   "sector": "Services",
+   "jobsM": 59.33,
+   "change": -0.0111
+  },
+  {
+   "sector": "Industry",
+   "jobsM": 21.05,
+   "change": -0.0138
+  },
+  {
+   "sector": "Construction",
+   "jobsM": 5.74,
+   "change": 0.0204
+  },
+  {
+   "sector": "Agriculture",
+   "jobsM": 3.83,
+   "change": 0.0029
+  },
+  {
+   "sector": "Government",
+   "jobsM": 5.74,
+   "change": 0.0096
+  }
+ ],
+ "economy": "ECON-EA",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}
