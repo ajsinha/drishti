@@ -23,7 +23,7 @@ NSET NS-NORTH-01 <GO>     →  exposure profile, member trades, CSA, collateral
 
 ## Status — read this first
 
-This repository is at **design stage (Wave 1 pending)**. The architecture and plan are
+This repository is being built in waves. **Waves 1–2 are done** (build foundation; console shell and landing page). The architecture and plan are
 written; code arrives wave by wave on `develop` and is merged to `main` as each wave
 closes. Nothing below "What it will do" is built yet.
 
@@ -74,7 +74,9 @@ drishti/
 
 ```bash
 ./mvnw -q verify                       # engine, server, plugins, tests
-python console/run_drishti_web.py      # console on http://localhost:17480
+uv venv console/.venv && uv pip install --python console/.venv/bin/python -r console/requirements.txt
+console/.venv/bin/python console/run_drishti_web.py   # http://localhost:17480
+console/.venv/bin/python -m pytest -q console/tests
 ```
 
 ## Contributing rules

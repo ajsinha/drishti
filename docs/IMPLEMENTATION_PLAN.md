@@ -24,7 +24,7 @@ Ten waves. Each holds a small set of closely related items and ends with a demo-
 | Wave | Theme | Exit gate |
 |---|---|---|
 | W1 | Build foundation | `mvnw verify` green with licence-header, file-size and architecture gates; CI runs |
-| W2 | Console shell & landing | Console serves the landing page with the hero animation, 4 themes and the public nav |
+| W2 | Console shell & landing | Console serves the landing page with the hero animation, 5 themes and the public nav |
 | W3 | Data model & sources | `demo` and `file` plugins serve the 4 reference entities with provenance and fingerprints |
 | W4 | Sutra grammar | Sutra YAML parses, validates against the schema with line-accurate errors, and hot-reloads |
 | W5 | Sutra-EL & reference Sutras | Expressions compile; formats resolve; the 4 reference Sutras produce golden layouts |
@@ -46,7 +46,7 @@ Ten waves. Each holds a small set of closely related items and ends with a demo-
 ## W2 — Console shell & landing
 - `console/run_drishti_web.py`, `console/config/application.yaml`, properties configurator (YAML → local → env → CLI).
 - `web/templates/{base,landing}.html`, `_nav_public.html`, `_theme_menu.html`, `_footer.html` (copyright), `_macros/ui.html`.
-- `static/css/{tokens,theme}.css`: `terminal` (default), `light`, `blue`, `green`.
+- `static/css/{tokens,theme}.css`: `terminal` (default), `light`, `wallstreet` (Bloomberg colour scheme), `blue`, `green`.
 - `static/js/{app,theme,landing}.js`: the JSON → `{◉}` → panels hero canvas, reduced-motion, replay.
 - Brand assets in `static/img/`; vendored Bootstrap and Bootstrap Icons.
 - Tests: file sizes, licence headers, no inline script, colour contrast.

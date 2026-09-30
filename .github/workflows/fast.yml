@@ -25,3 +25,10 @@ jobs:
         with: { distribution: temurin, java-version: '21', cache: maven }
       - run: ./mvnw -B -q verify
       - run: python3 tools/license_headers.py
+  console:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.13' }
+      - run: pip install -r console/requirements.txt && python -m pytest -q console/tests

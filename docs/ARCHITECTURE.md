@@ -316,10 +316,11 @@ Python 3.12, FastAPI + Jinja2, laid out as MAYA's web layer: `routes/<area>.py`,
 libraries **vendored** (Bootstrap 5, Bootstrap Icons, ECharts, htmx-free vanilla JS);
 no CDN, no inline script (strict CSP).
 
-**Themes** — tokens only in `static/css/tokens.css`; four themes selected by
+**Themes** — tokens only in `static/css/tokens.css`; five themes selected by
 `data-theme` on `<html>`, persisted in `localStorage['drishti.theme']`:
-`terminal` (default, the navy/amber of the mockups), `light` (parchment), `blue`,
-`green`. Contrast is computed in CI (≥ 4.5:1 text, ≥ 3:1 non-text).
+`terminal` (default, the navy/amber of the mockups), `light` (parchment),
+`wallstreet` (Bloomberg Terminal colour scheme: black ground, amber data, yellow
+commands, green/red ticks, blue highlight — colours only, not fonts), `blue`, `green`. Contrast is computed in CI (≥ 4.5:1 text, ≥ 3:1 non-text).
 
 **Pages**
 

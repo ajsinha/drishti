@@ -1,0 +1,148 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* Drishti components and Bootstrap overrides. Uses tokens.css variables only. */
+html, body { background: var(--d-bg); color: var(--d-ink); font-family: var(--d-font-sans); }
+body { min-height: 100vh; display: flex; flex-direction: column; }
+main { flex: 1; }
+a { color: var(--d-link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.mono, code, pre, kbd { font-family: var(--d-font-mono); }
+.text-muted-d { color: var(--d-muted) !important; }
+.text-accent { color: var(--d-accent) !important; }
+.skip-link { position: absolute; left: -999px; top: 0; }
+.skip-link:focus { left: 8px; top: 8px; z-index: 2000; background: var(--d-accent); color: #111; padding: 6px 10px; }
+:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 2px; }
+
+/* ---- Bootstrap bridge ---- */
+:root, [data-bs-theme] {
+  --bs-body-bg: var(--d-bg); --bs-body-color: var(--d-ink); --bs-border-color: var(--d-border);
+  --bs-link-color: var(--d-link); --bs-secondary-color: var(--d-muted);
+  --bs-dropdown-bg: var(--d-surface); --bs-dropdown-color: var(--d-ink);
+}
+.dropdown-menu { background: var(--d-surface); border-color: var(--d-border); box-shadow: var(--d-shadow); }
+.dropdown-item { color: var(--d-ink); }
+.dropdown-item:hover, .dropdown-item:focus { background: var(--d-highlight); color: var(--d-ink); }
+.dropdown-item.active { background: var(--d-accent-tint); color: var(--d-accent); }
+
+/* ---- Brand ---- */
+.brand { display: inline-flex; align-items: center; gap: .55rem; font-weight: 700; color: var(--d-ink); font-size: 1.15rem; }
+.brand:hover { text-decoration: none; }
+.brand-mark { width: 38px; height: 23px; color: var(--d-accent); }
+.brand-mark .eye { stroke: var(--d-ink); }
+
+/* ---- Public nav ---- */
+.nav-public { position: sticky; top: 0; z-index: 1030; background: var(--d-nav); backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--d-border); }
+.nav-public .inner { display: flex; align-items: center; gap: 1.5rem; padding: .7rem 1.25rem; max-width: 1240px; margin: 0 auto; }
+.nav-public .links { display: flex; gap: 1.25rem; margin-left: auto; align-items: center; }
+.nav-public .links a { color: var(--d-muted); font-size: .92rem; }
+.nav-public .links a:hover { color: var(--d-ink); text-decoration: none; }
+.theme-btn { background: transparent; border: 1px solid var(--d-border); color: var(--d-muted); border-radius: 999px; padding: .25rem .7rem; }
+.theme-btn:hover { color: var(--d-ink); border-color: var(--d-accent); }
+.swatch { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: .5rem; vertical-align: -1px; border: 1px solid rgba(128,128,128,.4); }
+.swatch-terminal { background: linear-gradient(135deg, #0e1628 50%, #e8a33a 50%); }
+.swatch-light { background: linear-gradient(135deg, #f7f5f0 50%, #b86e0c 50%); }
+.swatch-blue { background: linear-gradient(135deg, #0a1830 50%, #5cc8ff 50%); }
+.swatch-wallstreet { background: linear-gradient(135deg, #000 50%, #fb8b1e 50%); }
+.swatch-green { background: linear-gradient(135deg, #0b1a17 50%, #4fd6a0 50%); }
+
+/* ---- Buttons ---- */
+.btn-pill { border-radius: 999px; padding: .6rem 1.35rem; font-weight: 600; border: 1px solid transparent; }
+.btn-accent { background: var(--d-accent); color: #14100a; }
+.btn-accent:hover { background: var(--d-accent-strong); color: #14100a; text-decoration: none; }
+.btn-ghost { border-color: var(--d-border); color: var(--d-ink); background: transparent; }
+.btn-ghost:hover { border-color: var(--d-accent); color: var(--d-ink); text-decoration: none; }
+
+/* ---- Landing ---- */
+.lp-wrap { max-width: 1240px; margin: 0 auto; padding: 0 1.25rem; }
+.lp-hero { position: relative; overflow: hidden; padding: 4.5rem 0 2.5rem; text-align: center;
+  background: radial-gradient(1200px 500px at 50% -10%, var(--d-accent-tint), transparent 70%); }
+.lp-badge { display: inline-flex; gap: .5rem; align-items: center; border: 1px solid var(--d-accent); color: var(--d-accent);
+  border-radius: 999px; padding: .25rem .8rem; font-size: .82rem; }
+.lp-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--d-ok); box-shadow: 0 0 10px var(--d-ok); animation: pulse 1.8s infinite; }
+@keyframes pulse { 50% { opacity: .35; } }
+.lp-title { font-size: clamp(2.2rem, 5.5vw, 4.2rem); font-weight: 800; letter-spacing: -.02em; line-height: 1.06; margin: 1.1rem auto .9rem; max-width: 22ch; }
+.lp-grad { background: linear-gradient(90deg, var(--d-grad-from), var(--d-grad-to)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.lp-sub { color: var(--d-muted); font-size: 1.15rem; max-width: 62ch; margin: 0 auto 1.6rem; }
+.lp-cta { display: flex; gap: .8rem; justify-content: center; flex-wrap: wrap; }
+.lp-stage { position: relative; margin: 2.6rem auto 0; max-width: 1180px; border: 1px solid var(--d-border); border-radius: 16px;
+  background: linear-gradient(180deg, var(--d-bg-2), var(--d-bg)); box-shadow: var(--d-shadow); }
+.lp-stage canvas { display: block; width: 100%; height: 420px; }
+.lp-replay { margin-left: 1rem; background: none; border: 0; color: var(--d-accent); font: inherit; cursor: pointer; }
+.lp-stage-caption { display: flex; justify-content: space-between; padding: .55rem 1rem; border-top: 1px solid var(--d-border);
+  color: var(--d-muted); font-size: .8rem; font-family: var(--d-font-mono); }
+
+.lp-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--d-border);
+  border: 1px solid var(--d-border); border-radius: 14px; overflow: hidden; margin: 3rem auto; }
+.lp-stats div { background: var(--d-surface); padding: 1.3rem 1rem; text-align: center; }
+.lp-stats b { display: block; font-size: 1.9rem; font-family: var(--d-font-mono); color: var(--d-accent); }
+.lp-stats span { color: var(--d-muted); font-size: .88rem; }
+
+.lp-section { padding: 3.5rem 0; border-top: 1px solid var(--d-border); }
+.lp-kicker { color: var(--d-accent); font-family: var(--d-font-mono); font-size: .82rem; letter-spacing: .08em; text-transform: uppercase; }
+.lp-h2 { font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 750; margin: .4rem 0 .8rem; }
+.lp-lead { color: var(--d-muted); max-width: 64ch; }
+.lp-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: center; }
+
+.code-panel { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 12px; overflow: hidden; }
+.code-panel .bar { display: flex; gap: .4rem; align-items: center; padding: .5rem .8rem; border-bottom: 1px solid var(--d-border);
+  color: var(--d-muted); font-size: .78rem; font-family: var(--d-font-mono); }
+.code-panel .bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--d-border); display: inline-block; }
+.code-panel pre { margin: 0; overflow-x: auto; padding: 1rem 1.1rem; font-size: .8rem; line-height: 1.55; color: var(--d-ink); }
+.tok-k { color: var(--d-accent); } .tok-s { color: var(--d-link); } .tok-c { color: var(--d-faint); }
+
+.lp-pipe { width: 100%; height: auto; }
+.lp-pipe .node rect { fill: var(--d-surface); stroke: var(--d-border); }
+.lp-pipe .node text { fill: var(--d-ink); font: 600 13px var(--d-font-sans); }
+.lp-pipe .node .sub { fill: var(--d-muted); font: 11px var(--d-font-mono); }
+.lp-pipe .wire { stroke: var(--d-border); stroke-width: 2; stroke-dasharray: 5 6; animation: dash 1.2s linear infinite; }
+.lp-pipe .pulse { fill: var(--d-accent); filter: drop-shadow(0 0 6px var(--d-glow)); animation: travel 5.6s cubic-bezier(.6,.05,.3,.95) infinite; }
+@keyframes dash { to { stroke-dashoffset: -22; } }
+@keyframes travel { 0% { transform: translateX(0); opacity: 0; } 5% { opacity: 1; } 95% { opacity: 1; } 100% { transform: translateX(1080px); opacity: 0; } }
+
+.lp-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1.6rem; }
+.lp-card { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 14px; padding: 1.3rem;
+  transition: transform .2s, border-color .2s; }
+.lp-card:hover { transform: translateY(-3px); border-color: var(--d-accent); }
+.lp-card .bi { font-size: 1.5rem; color: var(--d-accent); }
+.lp-card h3 { font-size: 1.05rem; font-weight: 700; margin: .7rem 0 .35rem; }
+.lp-card p { color: var(--d-muted); font-size: .92rem; margin: 0; }
+
+.lp-shots { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.2rem; margin-top: 1.6rem; }
+.lp-shot { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 14px; overflow: hidden; }
+.lp-shot img { width: 100%; display: block; border-bottom: 1px solid var(--d-border); }
+.lp-shot .meta { display: flex; justify-content: space-between; padding: .7rem 1rem; font-size: .88rem; }
+.lp-shot .cmd { font-family: var(--d-font-mono); color: var(--d-accent); }
+
+.lp-close { text-align: center; padding: 4rem 0; border-top: 1px solid var(--d-border);
+  background: radial-gradient(800px 300px at 50% 120%, var(--d-accent-tint), transparent 70%); }
+
+/* ---- Footer ---- */
+.site-footer { border-top: 1px solid var(--d-border); color: var(--d-faint); font-size: .8rem; padding: 1.2rem 1.25rem; }
+.site-footer .inner { max-width: 1240px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: .6rem 1.5rem; justify-content: space-between; }
+
+@media (max-width: 900px) {
+  .lp-grid2, .lp-shots { grid-template-columns: 1fr; }
+  .lp-cards { grid-template-columns: 1fr 1fr; }
+  .lp-stats { grid-template-columns: 1fr 1fr; }
+  .lp-stage canvas { height: 300px; }
+  .nav-public .links a.hide-sm { display: none; }
+}
+@media (max-width: 560px) { .lp-cards { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .lp-pipe .pulse { display: none; }
+}

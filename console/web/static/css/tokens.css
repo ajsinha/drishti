@@ -1,0 +1,162 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* Drishti design tokens. Colours are defined here and nowhere else.
+   Themes: terminal (default, navy + amber as in the reference mockups), light (parchment), blue, green.
+   Selected by data-theme on <html>; "terminal" also answers prefers-color-scheme: dark. */
+:root,
+:root[data-theme="terminal"] {
+  --d-bg: #0e1628;
+  --d-bg-2: #121c33;
+  --d-surface: #16213a;
+  --d-surface-2: #1b2744;
+  --d-border: #26345a;
+  --d-ink: #e7ecf5;
+  --d-muted: #93a0b8;
+  --d-faint: #5d6a85;
+  --d-accent: #e8a33a;          /* amber: brand, commands, emphasis */
+  --d-accent-strong: #f2b453;
+  --d-accent-tint: rgba(232, 163, 58, .14);
+  --d-link: #7fb2ff;            /* blue: links, positive values */
+  --d-pos: #7fb2ff;
+  --d-neg: #f2955a;
+  --d-ok: #5fd39a;
+  --d-warn: #f2c14e;
+  --d-bad: #ff7a7a;
+  --d-highlight: rgba(127, 178, 255, .08);
+  --d-emph-bg: rgba(232, 163, 58, .28);
+  --d-glow: rgba(232, 163, 58, .35);
+  --d-grad-from: #e8a33a;
+  --d-grad-to: #7fb2ff;
+  --d-nav: rgba(14, 22, 40, .86);
+  --d-shadow: 0 10px 40px rgba(0, 0, 0, .35);
+  --d-font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --d-font-mono: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, Consolas, monospace;
+  --d-radius: 10px;
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --d-bg: #f7f5f0;
+  --d-bg-2: #efebe3;
+  --d-surface: #ffffff;
+  --d-surface-2: #faf8f4;
+  --d-border: #e2dcd0;
+  --d-ink: #172440;
+  --d-muted: #55607a;
+  --d-faint: #8a93a6;
+  --d-accent: #b86e0c;
+  --d-accent-strong: #945605;
+  --d-accent-tint: rgba(184, 110, 12, .10);
+  --d-link: #1f5fc4;
+  --d-pos: #1f5fc4;
+  --d-neg: #b4491a;
+  --d-ok: #1c7c4f;
+  --d-warn: #8a6100;
+  --d-bad: #b42323;
+  --d-highlight: rgba(31, 95, 196, .06);
+  --d-emph-bg: rgba(184, 110, 12, .16);
+  --d-glow: rgba(184, 110, 12, .22);
+  --d-grad-from: #b86e0c;
+  --d-grad-to: #1f5fc4;
+  --d-nav: rgba(247, 245, 240, .9);
+  --d-shadow: 0 10px 30px rgba(23, 36, 64, .10);
+  color-scheme: light;
+}
+
+:root[data-theme="blue"] {
+  --d-bg: #0a1830;
+  --d-bg-2: #0d1f3d;
+  --d-surface: #11264a;
+  --d-surface-2: #152d57;
+  --d-border: #23407a;
+  --d-ink: #e8f0ff;
+  --d-muted: #9db1d6;
+  --d-faint: #6177a3;
+  --d-accent: #5cc8ff;
+  --d-accent-strong: #8ad8ff;
+  --d-accent-tint: rgba(92, 200, 255, .14);
+  --d-link: #9fc2ff;
+  --d-pos: #9fc2ff;
+  --d-neg: #ff9d6b;
+  --d-emph-bg: rgba(92, 200, 255, .22);
+  --d-glow: rgba(92, 200, 255, .35);
+  --d-grad-from: #5cc8ff;
+  --d-grad-to: #b59cff;
+  --d-nav: rgba(10, 24, 48, .86);
+  color-scheme: dark;
+}
+
+:root[data-theme="green"] {
+  --d-bg: #0b1a17;
+  --d-bg-2: #0f221e;
+  --d-surface: #132a25;
+  --d-surface-2: #17332d;
+  --d-border: #24483f;
+  --d-ink: #e6f4ef;
+  --d-muted: #9dbdb3;
+  --d-faint: #5f8579;
+  --d-accent: #4fd6a0;
+  --d-accent-strong: #7be6bb;
+  --d-accent-tint: rgba(79, 214, 160, .14);
+  --d-link: #8cc9ff;
+  --d-pos: #8cc9ff;
+  --d-neg: #ffa36b;
+  --d-emph-bg: rgba(79, 214, 160, .22);
+  --d-glow: rgba(79, 214, 160, .35);
+  --d-grad-from: #4fd6a0;
+  --d-grad-to: #8cc9ff;
+  --d-nav: rgba(11, 26, 23, .86);
+  color-scheme: dark;
+}
+
+/* Wall Street: colour scheme after the Bloomberg Terminal — black ground, amber data, yellow
+   commands, green/red ticks, blue links. Colours only; fonts stay Drishti's. */
+:root[data-theme="wallstreet"] {
+  --d-bg: #000000;
+  --d-bg-2: #050505;
+  --d-surface: #0b0b0b;
+  --d-surface-2: #141414;
+  --d-border: #3a3a3a;
+  --d-ink: #fb8b1e;             /* amber data text */
+  --d-muted: #c9c9c9;           /* white-grey labels */
+  --d-faint: #7a7a7a;
+  --d-accent: #ffd400;          /* yellow: command line, function keys */
+  --d-accent-strong: #ffe14d;
+  --d-accent-tint: rgba(255, 212, 0, .12);
+  --d-link: #4aa3ff;
+  --d-pos: #4af6c3;             /* up-tick green */
+  --d-neg: #ff433d;             /* down-tick red */
+  --d-ok: #4af6c3;
+  --d-warn: #ffd400;
+  --d-bad: #ff433d;
+  --d-highlight: rgba(251, 139, 30, .08);
+  --d-emph-bg: rgba(0, 104, 255, .45);   /* Bloomberg blue highlight bar */
+  --d-glow: rgba(255, 212, 0, .35);
+  --d-grad-from: #fb8b1e;
+  --d-grad-to: #ffd400;
+  --d-nav: rgba(0, 0, 0, .9);
+  --d-shadow: 0 10px 40px rgba(0, 0, 0, .6);
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    --d-bg: #f7f5f0; --d-bg-2: #efebe3; --d-surface: #ffffff; --d-surface-2: #faf8f4; --d-border: #e2dcd0;
+    --d-ink: #172440; --d-muted: #55607a; --d-faint: #8a93a6; --d-accent: #b86e0c; --d-link: #1f5fc4;
+    --d-pos: #1f5fc4; --d-neg: #b4491a; --d-nav: rgba(247, 245, 240, .9);
+    color-scheme: light;
+  }
+}

@@ -1,0 +1,135 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% from "_macros/ui.html" import card %}
+{% block title %}{{ PRODUCT }} — {{ TAGLINE }}{% endblock %}
+{% block content %}
+<section class="lp-hero">
+  <div class="lp-wrap">
+    <span class="lp-badge"><span class="dot" aria-hidden="true"></span>A live entity terminal</span>
+    <h1 class="lp-title">Any data. Any domain. <span class="lp-grad">One grammar.</span></h1>
+    <p class="lp-sub">Drishti turns any record from any system — a swap, an FX trade, a futures position,
+      a netting set — into a dense, linked, ticking view. No hand-built screens: a layout grammar
+      called <b>Sutra</b> describes the view, and inference fills whatever it leaves out.</p>
+    <div class="lp-cta">
+      <a class="btn-pill btn-accent" href="#views"><i class="bi bi-terminal" aria-hidden="true"></i> See the views</a>
+      <a class="btn-pill btn-ghost" href="#grammar">How the grammar works</a>
+    </div>
+    <div class="lp-stage">
+      <canvas id="lpHero" aria-label="Raw JSON records flow into the Drishti eye and come out as live terminal panels" role="img"></canvas>
+      <div class="lp-stage-caption"><span>raw JSON → fingerprint → Sutra ⊕ inference → view</span>
+        <span><span id="lpHeroClock">TRD IRS-48213 &lt;GO&gt;</span>
+        <button type="button" class="lp-replay" data-replay="lpHero"><i class="bi bi-arrow-repeat" aria-hidden="true"></i> Replay</button></span></div>
+    </div>
+  </div>
+</section>
+
+<div class="lp-wrap">
+  <div class="lp-stats" role="list">
+    <div role="listitem"><b>0</b><span>hand-built screens</span></div>
+    <div role="listitem"><b>7</b><span>pipeline stages</span></div>
+    <div role="listitem"><b>&lt;50ms</b><span>warm view p99 target</span></div>
+    <div role="listitem"><b>12</b><span>panel kinds in the grammar</span></div>
+  </div>
+</div>
+
+<section class="lp-section" id="grammar">
+  <div class="lp-wrap lp-grid2">
+    <div>
+      <div class="lp-kicker">Sutra · the layout grammar</div>
+      <h2 class="lp-h2">A screen is a paragraph, not a project.</h2>
+      <p class="lp-lead">A Sutra is a short, versioned YAML file. It names the key figures, the panels, the
+        bindings and the function keys. It holds no code and no pixels. Wherever it says
+        <code>infer: true</code>, the inference engine reads the shape of the data and completes the layout.</p>
+      <p class="lp-lead">If a product has no Sutra at all, it still renders on day one: inference turns arrays into
+        tables, term structures into curves and identifiers into links.</p>
+    </div>
+    <div class="code-panel" aria-label="Example Sutra">
+      <div class="bar"><i></i><i></i><i></i>&nbsp; sutras/rates/irs-vanilla.v3.yaml</div>
+<pre><span class="tok-k">sutra</span>: irs-vanilla
+<span class="tok-k">version</span>: 3
+<span class="tok-k">match</span>: { kind: trade, where: <span class="tok-s">"productType == 'IRS'"</span> }
+<span class="tok-k">strip</span>:
+  - { label: Notional (USD), bind: $.notional, fmt: amount0 }
+  - { label: MTM (USD), bind: $.mtm, emphasis: true }
+<span class="tok-k">panels</span>:
+  - { id: legs, key: F2, kind: tabs, infer: true }
+  - { id: flows, key: F3, kind: table, rows: $.cashflows }
+  - { id: curve, key: F4, kind: line, source: link($.curve) }
+  - { id: refs, kind: links }       <span class="tok-c"># every id becomes a door</span></pre>
+    </div>
+  </div>
+</section>
+
+<section class="lp-section" id="pipeline">
+  <div class="lp-wrap">
+    <div class="lp-kicker">The view pipeline</div>
+    <h2 class="lp-h2">Seven stages. Every view. Every tick.</h2>
+    <p class="lp-lead">Every request goes through the same stages. Layouts are cached by the <em>shape</em> of the data,
+      so the cost of inference is paid once per shape; warm requests only bind values.</p>
+    <svg class="lp-pipe" viewBox="0 0 1160 130" role="img" aria-label="Command, fetch, classify, fingerprint, layout, bind, link">
+      <line class="wire" x1="60" y1="65" x2="1100" y2="65"/>
+      {% set stages = [("Command","parse"),("Fetch","virtual threads"),("Classify","product key"),("Fingerprint","shape hash"),("Layout","Sutra ⊕ infer"),("Bind","parallel"),("Link","time-boxed")] %}
+      {% for name, sub in stages %}
+      <g class="node" transform="translate({{ 10 + loop.index0 * 162 }},30)">
+        <rect width="138" height="70" rx="10"/>
+        <text x="69" y="32" text-anchor="middle">{{ name }}</text>
+        <text class="sub" x="69" y="52" text-anchor="middle">{{ sub }}</text>
+      </g>
+      {% endfor %}
+      <circle class="pulse" cx="40" cy="65" r="6"/>
+    </svg>
+  </div>
+</section>
+
+<section class="lp-section" id="capabilities">
+  <div class="lp-wrap">
+    <div class="lp-kicker">What you get</div>
+    <h2 class="lp-h2">Built for people who read numbers for a living.</h2>
+    <div class="lp-cards">
+      {{ card("keyboard", "Keyboard first", "TRD IRS-48213 <GO>. Function keys per view, Alt+← to go back, F9 for the raw JSON — always.") }}
+      {{ card("diagram-3", "Linked", "Every identifier opens another view: netting set, CSA, agreement, curve. A breadcrumb trail shows how you got there.") }}
+      {{ card("activity", "Live", "Views tick over server-sent events. Only the changed cells repaint, and the top bar shows the measured p99 latency.") }}
+      {{ card("plug", "Any source", "Live caches, REST, JDBC, feed files and Kafka, each plugged in through a small Java interface with a generation counter.") }}
+      {{ card("fingerprint", "Provenance", "Each view says how it was built: Sutra and version, data fingerprint, source and generation.") }}
+      {{ card("stars", "Inference", "Scored, explainable rules turn data shapes into panels. Studio lets you promote an inferred panel into the Sutra.") }}
+    </div>
+  </div>
+</section>
+
+<section class="lp-section" id="views">
+  <div class="lp-wrap">
+    <div class="lp-kicker">Four products · one grammar</div>
+    <h2 class="lp-h2">Different data. The same eye.</h2>
+    <div class="lp-shots">
+      {% for s in showcase %}
+      <figure class="lp-shot">
+        <img src="/static/img/shot-{{ s.slug }}.png" alt="{{ s.title }} view" loading="lazy">
+        <figcaption class="meta"><span class="cmd">{{ s.cmd }} &lt;GO&gt;</span><span class="text-muted-d">{{ s.title }} · Sutra {{ s.sutra }}</span></figcaption>
+      </figure>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="lp-close">
+  <div class="lp-wrap">
+    <h2 class="lp-h2">See your data the way it wants to be seen.</h2>
+    <p class="lp-lead mx-auto">Drishti (दृष्टि) means <em>sight</em>.</p>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}<script src="/static/js/landing.js?v={{ ASSET_V }}"></script>{% endblock %}
