@@ -55,7 +55,8 @@ terminal does.
 | P2–P3 | Packs: **liquidity risk** (LCR, NSFR, ladders, HQLA, funding, stress, intraday) and **climate risk** (profiles, PCAF, NGFS, stress, physical risk, GAR), on a common pack builder | ✅ done |
 | P4 | Pack: **operational and non-financial risk** (losses, RCSA, KRIs, issues, scenarios, vendors, cyber, SMA capital) | ✅ done |
 | P5 | Pack: **retail banking** (customers, deposits, mortgages, cards, loans, branches, collections, IFRS 9) | ✅ done |
-| P6–P8 | Packs: genomics and biology, politics and society, economics | ◻️ next |
+| P6 | Pack: **genomics and biology** (genes on GRCh38, variants, proteins, pathways, samples, runs, expression, trials) | ✅ done |
+| P7–P8 | Packs: politics and society, economics | ◻️ next |
 | 22 | Business dates: Live or a picked date (static) on the USNY calendar; Delta Lake connector with time travel; named connectors; imperfect documents render as "No data available" | ✅ done |
 | 16 | History: diffs between dates, a "known at" control | ◻️ after the risk pack |
 | 20a | Kafka live source: the trading pack's trades stream and tick from a topic (`DRISHTI_STREAM_TRADING=true`) | ✅ done |

@@ -1,0 +1,65 @@
+{
+ "geneId": "GENE-BRAF",
+ "symbol": "BRAF",
+ "name": "B-Raf proto-oncogene, serine/threonine kinase",
+ "location": "chr7:140,719,327-140,924,929",
+ "chromosome": "7",
+ "start": 140719327,
+ "end": 140924929,
+ "length": 205603,
+ "strand": "-",
+ "transcripts": 12,
+ "expression": [
+  {
+   "tissue": "Brain",
+   "tpm": 1.92
+  },
+  {
+   "tissue": "Lung",
+   "tpm": 15.35
+  },
+  {
+   "tissue": "Liver",
+   "tpm": 11.07
+  },
+  {
+   "tissue": "Colon",
+   "tpm": 113.92
+  },
+  {
+   "tissue": "Breast",
+   "tpm": 37.31
+  },
+  {
+   "tissue": "Skin",
+   "tpm": 2.85
+  },
+  {
+   "tissue": "Blood",
+   "tpm": 14.61
+  },
+  {
+   "tissue": "Pancreas",
+   "tpm": 5.77
+  }
+ ],
+ "variants": [
+  {
+   "id": "VRNT-BRAF-V600E",
+   "protein": "p.Val600Glu",
+   "significance": "Pathogenic (somatic)"
+  }
+ ],
+ "identifiers": {
+  "assembly": "GRCh38.p14",
+  "hgncSymbol": "BRAF",
+  "uniprot": "P15056",
+  "biotype": "protein coding"
+ },
+ "protein": "PROT-P15056",
+ "pathway": "PWY-MAPK",
+ "_meta": {
+  "source": "reference-genome",
+  "generation": 1
+ }
+}

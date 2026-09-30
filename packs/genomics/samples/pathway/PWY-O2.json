@@ -1,0 +1,17 @@
+{
+ "pathwayId": "PWY-O2",
+ "name": "Oxygen transport (haemoglobin)",
+ "category": "Transport",
+ "geneCount": 1,
+ "members": [
+  {
+   "symbol": "HBB",
+   "role": "Oxygen carrier",
+   "location": "chr11:5,225,464-5,229,395"
+  }
+ ],
+ "_meta": {
+  "source": "reference-genome",
+  "generation": 1
+ }
+}

@@ -1,0 +1,35 @@
+{
+ "proteinId": "PROT-P15056",
+ "name": "Serine/threonine-protein kinase B-raf",
+ "accession": "P15056",
+ "length": 766,
+ "massKda": 84.3,
+ "subcellular": "Cytoplasm",
+ "domains": [
+  {
+   "name": "RAS-binding",
+   "start": 155,
+   "end": 227
+  },
+  {
+   "name": "Phorbol-ester/DAG-type zinc finger",
+   "start": 234,
+   "end": 280
+  },
+  {
+   "name": "Protein kinase",
+   "start": 457,
+   "end": 717
+  }
+ ],
+ "function": {
+  "summary": "Serine/threonine-protein kinase B-raf (UniProt P15056)",
+  "gene": "BRAF",
+  "reviewed": "Swiss-Prot"
+ },
+ "gene": "GENE-BRAF",
+ "_meta": {
+  "source": "reference-genome",
+  "generation": 1
+ }
+}

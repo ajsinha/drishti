@@ -1,0 +1,35 @@
+{
+ "proteinId": "PROT-P04637",
+ "name": "Cellular tumor antigen p53",
+ "accession": "P04637",
+ "length": 393,
+ "massKda": 43.2,
+ "subcellular": "Nucleus",
+ "domains": [
+  {
+   "name": "Transactivation",
+   "start": 1,
+   "end": 61
+  },
+  {
+   "name": "DNA-binding",
+   "start": 94,
+   "end": 292
+  },
+  {
+   "name": "Tetramerisation",
+   "start": 318,
+   "end": 358
+  }
+ ],
+ "function": {
+  "summary": "Cellular tumor antigen p53 (UniProt P04637)",
+  "gene": "TP53",
+  "reviewed": "Swiss-Prot"
+ },
+ "gene": "GENE-TP53",
+ "_meta": {
+  "source": "reference-genome",
+  "generation": 1
+ }
+}

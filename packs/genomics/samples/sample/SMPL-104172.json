@@ -1,0 +1,37 @@
+{
+ "sampleId": "SMPL-104172",
+ "tissue": "Breast",
+ "diagnosis": "Breast carcinoma",
+ "purity": 0.66,
+ "variantCount": 2,
+ "meanCoverage": 229,
+ "collected": "2026-07-12",
+ "calls": [
+  {
+   "variant": "VRNT-BRCA1-185DELAG",
+   "gene": "BRCA1",
+   "vaf": 0.217,
+   "depth": 207,
+   "filter": "PASS"
+  },
+  {
+   "variant": "VRNT-APOE-E4",
+   "gene": "APOE",
+   "vaf": 0.5,
+   "depth": 92,
+   "filter": "Germline"
+  }
+ ],
+ "qc": {
+  "readsMillions": 79.0,
+  "duplicationRate": "16.2%",
+  "onTarget": "84.2%",
+  "contamination": "0.95%",
+  "panel": "Solid tumour 523-gene panel"
+ },
+ "sequencingRun": "SEQ-2026-0903-A",
+ "_meta": {
+  "source": "lims",
+  "generation": 1
+ }
+}

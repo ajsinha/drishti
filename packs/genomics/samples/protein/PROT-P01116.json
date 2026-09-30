@@ -1,0 +1,30 @@
+{
+ "proteinId": "PROT-P01116",
+ "name": "GTPase KRas",
+ "accession": "P01116",
+ "length": 189,
+ "massKda": 20.8,
+ "subcellular": "Cell membrane (inner)",
+ "domains": [
+  {
+   "name": "G domain (GTPase)",
+   "start": 1,
+   "end": 166
+  },
+  {
+   "name": "Hypervariable region",
+   "start": 167,
+   "end": 189
+  }
+ ],
+ "function": {
+  "summary": "GTPase KRas (UniProt P01116)",
+  "gene": "KRAS",
+  "reviewed": "Swiss-Prot"
+ },
+ "gene": "GENE-KRAS",
+ "_meta": {
+  "source": "reference-genome",
+  "generation": 1
+ }
+}

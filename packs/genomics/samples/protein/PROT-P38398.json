@@ -1,0 +1,40 @@
+{
+ "proteinId": "PROT-P38398",
+ "name": "Breast cancer type 1 susceptibility protein",
+ "accession": "P38398",
+ "length": 1863,
+ "massKda": 204.9,
+ "subcellular": "Nucleus",
+ "domains": [
+  {
+   "name": "RING finger",
+   "start": 24,
+   "end": 64
+  },
+  {
+   "name": "Coiled coil",
+   "start": 1364,
+   "end": 1437
+  },
+  {
+   "name": "BRCT 1",
+   "start": 1642,
+   "end": 1736
+  },
+  {
+   "name": "BRCT 2",
+   "start": 1756,
+   "end": 1855
+  }
+ ],
+ "function": {
+  "summary": "Breast cancer type 1 susceptibility protein (UniProt P38398)",
+  "gene": "BRCA1",
+  "reviewed": "Swiss-Prot"
+ },
+ "gene": "GENE-BRCA1",
+ "_meta": {
+  "source": "reference-genome",
+  "generation": 1
+ }
+}

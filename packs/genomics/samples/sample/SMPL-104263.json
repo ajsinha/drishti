@@ -1,0 +1,31 @@
+{
+ "sampleId": "SMPL-104263",
+ "tissue": "Blood",
+ "diagnosis": "Sickle cell disease",
+ "purity": 1.0,
+ "variantCount": 1,
+ "meanCoverage": 47,
+ "collected": "2026-06-11",
+ "calls": [
+  {
+   "variant": "VRNT-HBB-E6V",
+   "gene": "HBB",
+   "vaf": 0.5,
+   "depth": 47,
+   "filter": "PASS"
+  }
+ ],
+ "qc": {
+  "readsMillions": 16.2,
+  "duplicationRate": "10.5%",
+  "onTarget": "78.0%",
+  "contamination": "0.25%",
+  "panel": "Whole exome"
+ },
+ "sequencingRun": "SEQ-2026-0924-A",
+ "_meta": {
+  "source": "lims",
+  "generation": 1
+ },
+ "trial": "TRIAL-GEN-045"
+}

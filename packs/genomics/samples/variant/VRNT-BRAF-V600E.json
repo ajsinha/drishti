@@ -1,0 +1,57 @@
+{
+ "variantId": "VRNT-BRAF-V600E",
+ "geneSymbol": "BRAF",
+ "proteinChange": "p.Val600Glu",
+ "hgvsC": "c.1799T>A",
+ "genomic": "chr7:140753336 A>T",
+ "consequence": "Missense",
+ "significance": "Pathogenic (somatic)",
+ "rsid": "rs113488022",
+ "condition": "Melanoma, colorectal and thyroid cancer",
+ "frequencies": [
+  {
+   "population": "African",
+   "af": 0.000126
+  },
+  {
+   "population": "East Asian",
+   "af": 0.000222
+  },
+  {
+   "population": "European (non-Finnish)",
+   "af": 5.4e-05
+  },
+  {
+   "population": "Latino/Admixed American",
+   "af": 0.000379
+  },
+  {
+   "population": "South Asian",
+   "af": 0.000375
+  }
+ ],
+ "evidence": [
+  {
+   "source": "ClinVar",
+   "assertion": "Pathogenic (somatic)",
+   "stars": 3,
+   "date": "2026-04-07"
+  },
+  {
+   "source": "CIViC",
+   "assertion": "Pathogenic (somatic)",
+   "stars": 4,
+   "date": "2024-07-23"
+  }
+ ],
+ "annotation": {
+  "genomicGrch38": "chr7:140753336 A>T",
+  "condition": "Melanoma, colorectal and thyroid cancer",
+  "origin": "Somatic"
+ },
+ "gene": "GENE-BRAF",
+ "_meta": {
+  "source": "reference-genome",
+  "generation": 1
+ }
+}

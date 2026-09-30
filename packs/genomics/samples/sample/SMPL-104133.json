@@ -1,0 +1,45 @@
+{
+ "sampleId": "SMPL-104133",
+ "tissue": "Lung",
+ "diagnosis": "Lung adenocarcinoma",
+ "purity": 0.47,
+ "variantCount": 3,
+ "meanCoverage": 621,
+ "collected": "2026-06-30",
+ "calls": [
+  {
+   "variant": "VRNT-EGFR-L858R",
+   "gene": "EGFR",
+   "vaf": 0.289,
+   "depth": 533,
+   "filter": "PASS"
+  },
+  {
+   "variant": "VRNT-TP53-R175H",
+   "gene": "TP53",
+   "vaf": 0.361,
+   "depth": 503,
+   "filter": "PASS"
+  },
+  {
+   "variant": "VRNT-APOE-E4",
+   "gene": "APOE",
+   "vaf": 0.5,
+   "depth": 248,
+   "filter": "Germline"
+  }
+ ],
+ "qc": {
+  "readsMillions": 228.2,
+  "duplicationRate": "5.8%",
+  "onTarget": "74.7%",
+  "contamination": "0.91%",
+  "panel": "Solid tumour 523-gene panel"
+ },
+ "sequencingRun": "SEQ-2026-0910-A",
+ "_meta": {
+  "source": "lims",
+  "generation": 1
+ },
+ "trial": "TRIAL-ONC-214"
+}

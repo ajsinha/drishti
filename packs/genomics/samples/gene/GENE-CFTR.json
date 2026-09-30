@@ -1,0 +1,65 @@
+{
+ "geneId": "GENE-CFTR",
+ "symbol": "CFTR",
+ "name": "CF transmembrane conductance regulator",
+ "location": "chr7:117,480,025-117,668,665",
+ "chromosome": "7",
+ "start": 117480025,
+ "end": 117668665,
+ "length": 188641,
+ "strand": "+",
+ "transcripts": 11,
+ "expression": [
+  {
+   "tissue": "Brain",
+   "tpm": 14.25
+  },
+  {
+   "tissue": "Lung",
+   "tpm": 3.41
+  },
+  {
+   "tissue": "Liver",
+   "tpm": 5.33
+  },
+  {
+   "tissue": "Colon",
+   "tpm": 4.82
+  },
+  {
+   "tissue": "Breast",
+   "tpm": 1.61
+  },
+  {
+   "tissue": "Skin",
+   "tpm": 26.14
+  },
+  {
+   "tissue": "Blood",
+   "tpm": 4.05
+  },
+  {
+   "tissue": "Pancreas",
+   "tpm": 0.58
+  }
+ ],
+ "variants": [
+  {
+   "id": "VRNT-CFTR-F508DEL",
+   "protein": "p.Phe508del",
+   "significance": "Pathogenic"
+  }
+ ],
+ "identifiers": {
+  "assembly": "GRCh38.p14",
+  "hgncSymbol": "CFTR",
+  "uniprot": "P13569",
+  "biotype": "protein coding"
+ },
+ "protein": "PROT-P13569",
+ "pathway": "PWY-ION",
+ "_meta": {
+  "source": "reference-genome",
+  "generation": 1
+ }
+}

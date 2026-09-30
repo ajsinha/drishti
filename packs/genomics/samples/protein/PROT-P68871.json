@@ -1,0 +1,25 @@
+{
+ "proteinId": "PROT-P68871",
+ "name": "Hemoglobin subunit beta",
+ "accession": "P68871",
+ "length": 147,
+ "massKda": 16.2,
+ "subcellular": "Cytoplasm (red cells)",
+ "domains": [
+  {
+   "name": "Globin",
+   "start": 2,
+   "end": 146
+  }
+ ],
+ "function": {
+  "summary": "Hemoglobin subunit beta (UniProt P68871)",
+  "gene": "HBB",
+  "reviewed": "Swiss-Prot"
+ },
+ "gene": "GENE-HBB",
+ "_meta": {
+  "source": "reference-genome",
+  "generation": 1
+ }
+}

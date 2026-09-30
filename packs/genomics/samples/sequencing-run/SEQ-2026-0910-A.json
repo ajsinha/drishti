@@ -1,0 +1,106 @@
+{
+ "runId": "SEQ-2026-0910-A",
+ "instrument": "NovaSeq X Plus",
+ "flowcell": "236853LT3",
+ "yieldGb": 1968.0,
+ "q30": 0.9493,
+ "clustersPf": 0.7729,
+ "status": "Completed",
+ "qualityByCycle": [
+  {
+   "cycle": "1",
+   "q": 36.47
+  },
+  {
+   "cycle": "11",
+   "q": 36.38
+  },
+  {
+   "cycle": "21",
+   "q": 36.25
+  },
+  {
+   "cycle": "31",
+   "q": 36.43
+  },
+  {
+   "cycle": "41",
+   "q": 35.64
+  },
+  {
+   "cycle": "51",
+   "q": 36.09
+  },
+  {
+   "cycle": "61",
+   "q": 35.95
+  },
+  {
+   "cycle": "71",
+   "q": 35.78
+  },
+  {
+   "cycle": "81",
+   "q": 34.9
+  },
+  {
+   "cycle": "91",
+   "q": 35.36
+  },
+  {
+   "cycle": "101",
+   "q": 35.52
+  },
+  {
+   "cycle": "111",
+   "q": 35.07
+  },
+  {
+   "cycle": "121",
+   "q": 35.02
+  },
+  {
+   "cycle": "131",
+   "q": 34.83
+  },
+  {
+   "cycle": "141",
+   "q": 34.5
+  },
+  {
+   "cycle": "151",
+   "q": 33.88
+  }
+ ],
+ "samples": [
+  {
+   "sample": "SMPL-104133",
+   "readsM": 228.2,
+   "coverage": 621
+  },
+  {
+   "sample": "SMPL-104185",
+   "readsM": 18.0,
+   "coverage": 57
+  },
+  {
+   "sample": "SMPL-104237",
+   "readsM": 246.8,
+   "coverage": 679
+  },
+  {
+   "sample": "SMPL-104289",
+   "readsM": 156.7,
+   "coverage": 471
+  },
+  {
+   "sample": "SMPL-104341",
+   "readsM": 16.3,
+   "coverage": 50
+  }
+ ],
+ "_meta": {
+  "source": "lims",
+  "generation": 1
+ }
+}

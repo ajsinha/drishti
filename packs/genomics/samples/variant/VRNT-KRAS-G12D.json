@@ -1,0 +1,57 @@
+{
+ "variantId": "VRNT-KRAS-G12D",
+ "geneSymbol": "KRAS",
+ "proteinChange": "p.Gly12Asp",
+ "hgvsC": "c.35G>A",
+ "genomic": "chr12:25245350 C>T",
+ "consequence": "Missense",
+ "significance": "Pathogenic (somatic)",
+ "rsid": "rs121913529",
+ "condition": "Pancreatic, colorectal and lung cancer",
+ "frequencies": [
+  {
+   "population": "African",
+   "af": 0.000195
+  },
+  {
+   "population": "East Asian",
+   "af": 0.00033
+  },
+  {
+   "population": "European (non-Finnish)",
+   "af": 0.000342
+  },
+  {
+   "population": "Latino/Admixed American",
+   "af": 0.000187
+  },
+  {
+   "population": "South Asian",
+   "af": 2.4e-05
+  }
+ ],
+ "evidence": [
+  {
+   "source": "ClinVar",
+   "assertion": "Pathogenic (somatic)",
+   "stars": 2,
+   "date": "2025-07-28"
+  },
+  {
+   "source": "CIViC",
+   "assertion": "Pathogenic (somatic)",
+   "stars": 3,
+   "date": "2023-02-26"
+  }
+ ],
+ "annotation": {
+  "genomicGrch38": "chr12:25245350 C>T",
+  "condition": "Pancreatic, colorectal and lung cancer",
+  "origin": "Somatic"
+ },
+ "gene": "GENE-KRAS",
+ "_meta": {
+  "source": "reference-genome",
+  "generation": 1
+ }
+}

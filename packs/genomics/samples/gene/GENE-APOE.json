@@ -1,0 +1,65 @@
+{
+ "geneId": "GENE-APOE",
+ "symbol": "APOE",
+ "name": "apolipoprotein E",
+ "location": "chr19:44,905,796-44,909,393",
+ "chromosome": "19",
+ "start": 44905796,
+ "end": 44909393,
+ "length": 3598,
+ "strand": "+",
+ "transcripts": 5,
+ "expression": [
+  {
+   "tissue": "Brain",
+   "tpm": 31.17
+  },
+  {
+   "tissue": "Lung",
+   "tpm": 7.23
+  },
+  {
+   "tissue": "Liver",
+   "tpm": 27.9
+  },
+  {
+   "tissue": "Colon",
+   "tpm": 18.73
+  },
+  {
+   "tissue": "Breast",
+   "tpm": 41.96
+  },
+  {
+   "tissue": "Skin",
+   "tpm": 5.75
+  },
+  {
+   "tissue": "Blood",
+   "tpm": 34.35
+  },
+  {
+   "tissue": "Pancreas",
+   "tpm": 2.81
+  }
+ ],
+ "variants": [
+  {
+   "id": "VRNT-APOE-E4",
+   "protein": "p.Cys130Arg",
+   "significance": "Risk factor"
+  }
+ ],
+ "identifiers": {
+  "assembly": "GRCh38.p14",
+  "hgncSymbol": "APOE",
+  "uniprot": "P02649",
+  "biotype": "protein coding"
+ },
+ "protein": "PROT-P02649",
+ "pathway": "PWY-LIPID",
+ "_meta": {
+  "source": "reference-genome",
+  "generation": 1
+ }
+}

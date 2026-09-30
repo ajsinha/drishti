@@ -1,0 +1,57 @@
+{
+ "variantId": "VRNT-BRCA1-185DELAG",
+ "geneSymbol": "BRCA1",
+ "proteinChange": "p.Glu23fs",
+ "hgvsC": "c.68_69del",
+ "genomic": "chr17:43124027 ACT>A",
+ "consequence": "Frameshift",
+ "significance": "Pathogenic",
+ "rsid": "rs80357914",
+ "condition": "Hereditary breast and ovarian cancer",
+ "frequencies": [
+  {
+   "population": "African",
+   "af": 0.000207
+  },
+  {
+   "population": "East Asian",
+   "af": 4.6e-05
+  },
+  {
+   "population": "European (non-Finnish)",
+   "af": 0.000367
+  },
+  {
+   "population": "Latino/Admixed American",
+   "af": 7.4e-05
+  },
+  {
+   "population": "South Asian",
+   "af": 0.00013
+  }
+ ],
+ "evidence": [
+  {
+   "source": "ClinVar",
+   "assertion": "Pathogenic",
+   "stars": 2,
+   "date": "2025-07-14"
+  },
+  {
+   "source": "ClinGen",
+   "assertion": "Pathogenic",
+   "stars": 3,
+   "date": "2023-04-21"
+  }
+ ],
+ "annotation": {
+  "genomicGrch38": "chr17:43124027 ACT>A",
+  "condition": "Hereditary breast and ovarian cancer",
+  "origin": "Germline"
+ },
+ "gene": "GENE-BRCA1",
+ "_meta": {
+  "source": "reference-genome",
+  "generation": 1
+ }
+}

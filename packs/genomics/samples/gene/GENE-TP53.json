@@ -1,0 +1,65 @@
+{
+ "geneId": "GENE-TP53",
+ "symbol": "TP53",
+ "name": "tumor protein p53",
+ "location": "chr17:7,668,402-7,687,550",
+ "chromosome": "17",
+ "start": 7668402,
+ "end": 7687550,
+ "length": 19149,
+ "strand": "-",
+ "transcripts": 27,
+ "expression": [
+  {
+   "tissue": "Brain",
+   "tpm": 9.22
+  },
+  {
+   "tissue": "Lung",
+   "tpm": 16.95
+  },
+  {
+   "tissue": "Liver",
+   "tpm": 3.98
+  },
+  {
+   "tissue": "Colon",
+   "tpm": 0.58
+  },
+  {
+   "tissue": "Breast",
+   "tpm": 24.66
+  },
+  {
+   "tissue": "Skin",
+   "tpm": 127.98
+  },
+  {
+   "tissue": "Blood",
+   "tpm": 22.01
+  },
+  {
+   "tissue": "Pancreas",
+   "tpm": 0.5
+  }
+ ],
+ "variants": [
+  {
+   "id": "VRNT-TP53-R175H",
+   "protein": "p.Arg175His",
+   "significance": "Pathogenic"
+  }
+ ],
+ "identifiers": {
+  "assembly": "GRCh38.p14",
+  "hgncSymbol": "TP53",
+  "uniprot": "P04637",
+  "biotype": "protein coding"
+ },
+ "protein": "PROT-P04637",
+ "pathway": "PWY-HR",
+ "_meta": {
+  "source": "reference-genome",
+  "generation": 1
+ }
+}

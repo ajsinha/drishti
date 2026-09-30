@@ -1,0 +1,30 @@
+{
+ "proteinId": "PROT-P02649",
+ "name": "Apolipoprotein E",
+ "accession": "P02649",
+ "length": 317,
+ "massKda": 34.9,
+ "subcellular": "Secreted",
+ "domains": [
+  {
+   "name": "LDL receptor binding",
+   "start": 158,
+   "end": 168
+  },
+  {
+   "name": "Lipid binding",
+   "start": 244,
+   "end": 272
+  }
+ ],
+ "function": {
+  "summary": "Apolipoprotein E (UniProt P02649)",
+  "gene": "APOE",
+  "reviewed": "Swiss-Prot"
+ },
+ "gene": "GENE-APOE",
+ "_meta": {
+  "source": "reference-genome",
+  "generation": 1
+ }
+}

@@ -1,0 +1,57 @@
+{
+ "variantId": "VRNT-CFTR-F508DEL",
+ "geneSymbol": "CFTR",
+ "proteinChange": "p.Phe508del",
+ "hgvsC": "c.1521_1523del",
+ "genomic": "chr7:117559590 ATCT>A",
+ "consequence": "In-frame deletion",
+ "significance": "Pathogenic",
+ "rsid": "rs113993960",
+ "condition": "Cystic fibrosis",
+ "frequencies": [
+  {
+   "population": "African",
+   "af": 0.000177
+  },
+  {
+   "population": "East Asian",
+   "af": 0.000349
+  },
+  {
+   "population": "European (non-Finnish)",
+   "af": 0.00016
+  },
+  {
+   "population": "Latino/Admixed American",
+   "af": 0.000117
+  },
+  {
+   "population": "South Asian",
+   "af": 0.000129
+  }
+ ],
+ "evidence": [
+  {
+   "source": "ClinVar",
+   "assertion": "Pathogenic",
+   "stars": 2,
+   "date": "2025-03-15"
+  },
+  {
+   "source": "ClinGen",
+   "assertion": "Pathogenic",
+   "stars": 4,
+   "date": "2026-03-12"
+  }
+ ],
+ "annotation": {
+  "genomicGrch38": "chr7:117559590 ATCT>A",
+  "condition": "Cystic fibrosis",
+  "origin": "Germline"
+ },
+ "gene": "GENE-CFTR",
+ "_meta": {
+  "source": "reference-genome",
+  "generation": 1
+ }
+}

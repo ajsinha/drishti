@@ -1,0 +1,65 @@
+{
+ "geneId": "GENE-KRAS",
+ "symbol": "KRAS",
+ "name": "KRAS proto-oncogene, GTPase",
+ "location": "chr12:25,205,246-25,250,936",
+ "chromosome": "12",
+ "start": 25205246,
+ "end": 25250936,
+ "length": 45691,
+ "strand": "-",
+ "transcripts": 6,
+ "expression": [
+  {
+   "tissue": "Brain",
+   "tpm": 52.5
+  },
+  {
+   "tissue": "Lung",
+   "tpm": 10.02
+  },
+  {
+   "tissue": "Liver",
+   "tpm": 23.18
+  },
+  {
+   "tissue": "Colon",
+   "tpm": 23.86
+  },
+  {
+   "tissue": "Breast",
+   "tpm": 3.46
+  },
+  {
+   "tissue": "Skin",
+   "tpm": 26.28
+  },
+  {
+   "tissue": "Blood",
+   "tpm": 15.36
+  },
+  {
+   "tissue": "Pancreas",
+   "tpm": 2.0
+  }
+ ],
+ "variants": [
+  {
+   "id": "VRNT-KRAS-G12D",
+   "protein": "p.Gly12Asp",
+   "significance": "Pathogenic (somatic)"
+  }
+ ],
+ "identifiers": {
+  "assembly": "GRCh38.p14",
+  "hgncSymbol": "KRAS",
+  "uniprot": "P01116",
+  "biotype": "protein coding"
+ },
+ "protein": "PROT-P01116",
+ "pathway": "PWY-MAPK",
+ "_meta": {
+  "source": "reference-genome",
+  "generation": 1
+ }
+}

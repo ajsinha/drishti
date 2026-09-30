@@ -1,0 +1,61 @@
+{
+ "studyId": "EXPR-001",
+ "title": "KRAS-mutant vs wild-type colorectal tumours",
+ "comparison": "KRAS G12D vs WT",
+ "sampleCount": 12,
+ "significant": 1968,
+ "results": [
+  {
+   "gene": "KRT20",
+   "log2fc": 4.67,
+   "baseMean": 117,
+   "padj": "1.7e-33"
+  },
+  {
+   "gene": "DUSP6",
+   "log2fc": 4.26,
+   "baseMean": 1129,
+   "padj": "8.0e-28"
+  },
+  {
+   "gene": "CDX2",
+   "log2fc": 3.27,
+   "baseMean": 257,
+   "padj": "7.4e-8"
+  },
+  {
+   "gene": "PHLDA1",
+   "log2fc": 2.15,
+   "baseMean": 576,
+   "padj": "4.2e-5"
+  },
+  {
+   "gene": "MUC2",
+   "log2fc": 0.71,
+   "baseMean": 1158,
+   "padj": "5.6e-28"
+  },
+  {
+   "gene": "SPRY4",
+   "log2fc": 0.25,
+   "baseMean": 537,
+   "padj": "4.9e-39"
+  },
+  {
+   "gene": "LGR5",
+   "log2fc": -1.46,
+   "baseMean": 1384,
+   "padj": "7.7e-10"
+  },
+  {
+   "gene": "ETV5",
+   "log2fc": -3.64,
+   "baseMean": 376,
+   "padj": "4.3e-18"
+  }
+ ],
+ "_meta": {
+  "source": "analysis-pipeline",
+  "generation": 1
+ }
+}

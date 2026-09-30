@@ -1,0 +1,127 @@
+{
+ "trialId": "TRIAL-ONC-101",
+ "title": "BRAF V600E melanoma: BRAF plus MEK inhibition",
+ "phase": "Phase III",
+ "status": "Recruiting",
+ "enrolled": 280,
+ "target": 540,
+ "biomarkerName": "BRAF p.Val600Glu",
+ "enrolment": [
+  {
+   "month": "2024-10",
+   "patients": 3
+  },
+  {
+   "month": "2024-11",
+   "patients": 9
+  },
+  {
+   "month": "2024-12",
+   "patients": 15
+  },
+  {
+   "month": "2025-01",
+   "patients": 23
+  },
+  {
+   "month": "2025-02",
+   "patients": 31
+  },
+  {
+   "month": "2025-03",
+   "patients": 40
+  },
+  {
+   "month": "2025-04",
+   "patients": 50
+  },
+  {
+   "month": "2025-05",
+   "patients": 60
+  },
+  {
+   "month": "2025-06",
+   "patients": 71
+  },
+  {
+   "month": "2025-07",
+   "patients": 82
+  },
+  {
+   "month": "2025-08",
+   "patients": 94
+  },
+  {
+   "month": "2025-09",
+   "patients": 106
+  },
+  {
+   "month": "2025-10",
+   "patients": 119
+  },
+  {
+   "month": "2025-11",
+   "patients": 132
+  },
+  {
+   "month": "2025-12",
+   "patients": 145
+  },
+  {
+   "month": "2026-01",
+   "patients": 159
+  },
+  {
+   "month": "2026-02",
+   "patients": 173
+  },
+  {
+   "month": "2026-03",
+   "patients": 187
+  },
+  {
+   "month": "2026-04",
+   "patients": 202
+  },
+  {
+   "month": "2026-05",
+   "patients": 217
+  },
+  {
+   "month": "2026-06",
+   "patients": 232
+  },
+  {
+   "month": "2026-07",
+   "patients": 248
+  },
+  {
+   "month": "2026-08",
+   "patients": 264
+  },
+  {
+   "month": "2026-09",
+   "patients": 280
+  }
+ ],
+ "arms": [
+  {
+   "arm": "Experimental",
+   "intervention": "DRS-4471 + MEK inhibitor",
+   "patients": 140,
+   "orr": 0.43
+  },
+  {
+   "arm": "Control",
+   "intervention": "Standard of care",
+   "patients": 140,
+   "orr": 0.28
+  }
+ ],
+ "gene": "GENE-BRAF",
+ "biomarker": "VRNT-BRAF-V600E",
+ "_meta": {
+  "source": "trial-registry",
+  "generation": 1
+ }
+}

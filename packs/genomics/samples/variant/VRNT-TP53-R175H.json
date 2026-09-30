@@ -1,0 +1,57 @@
+{
+ "variantId": "VRNT-TP53-R175H",
+ "geneSymbol": "TP53",
+ "proteinChange": "p.Arg175His",
+ "hgvsC": "c.524G>A",
+ "genomic": "chr17:7675088 C>T",
+ "consequence": "Missense",
+ "significance": "Pathogenic",
+ "rsid": "rs28934578",
+ "condition": "Li-Fraumeni syndrome; many cancers",
+ "frequencies": [
+  {
+   "population": "African",
+   "af": 0.000386
+  },
+  {
+   "population": "East Asian",
+   "af": 0.000117
+  },
+  {
+   "population": "European (non-Finnish)",
+   "af": 4.9e-05
+  },
+  {
+   "population": "Latino/Admixed American",
+   "af": 0.000362
+  },
+  {
+   "population": "South Asian",
+   "af": 5.3e-05
+  }
+ ],
+ "evidence": [
+  {
+   "source": "ClinVar",
+   "assertion": "Pathogenic",
+   "stars": 2,
+   "date": "2026-06-27"
+  },
+  {
+   "source": "ClinGen",
+   "assertion": "Pathogenic",
+   "stars": 3,
+   "date": "2022-09-18"
+  }
+ ],
+ "annotation": {
+  "genomicGrch38": "chr17:7675088 C>T",
+  "condition": "Li-Fraumeni syndrome; many cancers",
+  "origin": "Germline"
+ },
+ "gene": "GENE-TP53",
+ "_meta": {
+  "source": "reference-genome",
+  "generation": 1
+ }
+}

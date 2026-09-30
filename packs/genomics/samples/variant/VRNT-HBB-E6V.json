@@ -1,0 +1,57 @@
+{
+ "variantId": "VRNT-HBB-E6V",
+ "geneSymbol": "HBB",
+ "proteinChange": "p.Glu7Val",
+ "hgvsC": "c.20A>T",
+ "genomic": "chr11:5227002 T>A",
+ "consequence": "Missense",
+ "significance": "Pathogenic",
+ "rsid": "rs334",
+ "condition": "Sickle cell disease",
+ "frequencies": [
+  {
+   "population": "African",
+   "af": 0.010626
+  },
+  {
+   "population": "East Asian",
+   "af": 0.018823
+  },
+  {
+   "population": "European (non-Finnish)",
+   "af": 0.092908
+  },
+  {
+   "population": "Latino/Admixed American",
+   "af": 0.019278
+  },
+  {
+   "population": "South Asian",
+   "af": 0.136002
+  }
+ ],
+ "evidence": [
+  {
+   "source": "ClinVar",
+   "assertion": "Pathogenic",
+   "stars": 3,
+   "date": "2024-06-12"
+  },
+  {
+   "source": "ClinGen",
+   "assertion": "Pathogenic",
+   "stars": 3,
+   "date": "2024-03-20"
+  }
+ ],
+ "annotation": {
+  "genomicGrch38": "chr11:5227002 T>A",
+  "condition": "Sickle cell disease",
+  "origin": "Germline"
+ },
+ "gene": "GENE-HBB",
+ "_meta": {
+  "source": "reference-genome",
+  "generation": 1
+ }
+}

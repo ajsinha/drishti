@@ -1,0 +1,37 @@
+{
+ "sampleId": "SMPL-104315",
+ "tissue": "Colon",
+ "diagnosis": "Colorectal adenocarcinoma",
+ "purity": 0.9,
+ "variantCount": 2,
+ "meanCoverage": 803,
+ "collected": "2026-06-24",
+ "calls": [
+  {
+   "variant": "VRNT-KRAS-G12D",
+   "gene": "KRAS",
+   "vaf": 0.362,
+   "depth": 675,
+   "filter": "PASS"
+  },
+  {
+   "variant": "VRNT-TP53-R175H",
+   "gene": "TP53",
+   "vaf": 0.248,
+   "depth": 817,
+   "filter": "PASS"
+  }
+ ],
+ "qc": {
+  "readsMillions": 273.5,
+  "duplicationRate": "11.7%",
+  "onTarget": "85.5%",
+  "contamination": "0.18%",
+  "panel": "Solid tumour 523-gene panel"
+ },
+ "sequencingRun": "SEQ-2026-0924-A",
+ "_meta": {
+  "source": "lims",
+  "generation": 1
+ }
+}

@@ -1,0 +1,17 @@
+{
+ "pathwayId": "PWY-LIPID",
+ "name": "Lipoprotein metabolism",
+ "category": "Metabolism",
+ "geneCount": 1,
+ "members": [
+  {
+   "symbol": "APOE",
+   "role": "Lipid transport",
+   "location": "chr19:44,905,796-44,909,393"
+  }
+ ],
+ "_meta": {
+  "source": "reference-genome",
+  "generation": 1
+ }
+}

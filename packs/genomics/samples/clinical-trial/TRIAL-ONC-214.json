@@ -1,0 +1,127 @@
+{
+ "trialId": "TRIAL-ONC-214",
+ "title": "EGFR-mutant NSCLC: third-generation TKI first line",
+ "phase": "Phase III",
+ "status": "Recruiting",
+ "enrolled": 444,
+ "target": 620,
+ "biomarkerName": "EGFR p.Leu858Arg",
+ "enrolment": [
+  {
+   "month": "2024-10",
+   "patients": 5
+  },
+  {
+   "month": "2024-11",
+   "patients": 14
+  },
+  {
+   "month": "2024-12",
+   "patients": 24
+  },
+  {
+   "month": "2025-01",
+   "patients": 36
+  },
+  {
+   "month": "2025-02",
+   "patients": 49
+  },
+  {
+   "month": "2025-03",
+   "patients": 64
+  },
+  {
+   "month": "2025-04",
+   "patients": 79
+  },
+  {
+   "month": "2025-05",
+   "patients": 95
+  },
+  {
+   "month": "2025-06",
+   "patients": 112
+  },
+  {
+   "month": "2025-07",
+   "patients": 130
+  },
+  {
+   "month": "2025-08",
+   "patients": 149
+  },
+  {
+   "month": "2025-09",
+   "patients": 168
+  },
+  {
+   "month": "2025-10",
+   "patients": 188
+  },
+  {
+   "month": "2025-11",
+   "patients": 209
+  },
+  {
+   "month": "2025-12",
+   "patients": 230
+  },
+  {
+   "month": "2026-01",
+   "patients": 252
+  },
+  {
+   "month": "2026-02",
+   "patients": 274
+  },
+  {
+   "month": "2026-03",
+   "patients": 297
+  },
+  {
+   "month": "2026-04",
+   "patients": 320
+  },
+  {
+   "month": "2026-05",
+   "patients": 344
+  },
+  {
+   "month": "2026-06",
+   "patients": 368
+  },
+  {
+   "month": "2026-07",
+   "patients": 393
+  },
+  {
+   "month": "2026-08",
+   "patients": 418
+  },
+  {
+   "month": "2026-09",
+   "patients": 444
+  }
+ ],
+ "arms": [
+  {
+   "arm": "Experimental",
+   "intervention": "DRS-6630",
+   "patients": 222,
+   "orr": 0.4
+  },
+  {
+   "arm": "Control",
+   "intervention": "Standard of care",
+   "patients": 222,
+   "orr": 0.19
+  }
+ ],
+ "gene": "GENE-EGFR",
+ "biomarker": "VRNT-EGFR-L858R",
+ "_meta": {
+  "source": "trial-registry",
+  "generation": 1
+ }
+}

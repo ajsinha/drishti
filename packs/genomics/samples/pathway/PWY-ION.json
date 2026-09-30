@@ -1,0 +1,17 @@
+{
+ "pathwayId": "PWY-ION",
+ "name": "Epithelial ion transport",
+ "category": "Transport",
+ "geneCount": 1,
+ "members": [
+  {
+   "symbol": "CFTR",
+   "role": "Chloride channel",
+   "location": "chr7:117,480,025-117,668,665"
+  }
+ ],
+ "_meta": {
+  "source": "reference-genome",
+  "generation": 1
+ }
+}

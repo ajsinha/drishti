@@ -1,0 +1,38 @@
+{
+ "sampleId": "SMPL-104224",
+ "tissue": "Pancreas",
+ "diagnosis": "Pancreatic adenocarcinoma",
+ "purity": 0.66,
+ "variantCount": 2,
+ "meanCoverage": 852,
+ "collected": "2026-06-16",
+ "calls": [
+  {
+   "variant": "VRNT-KRAS-G12D",
+   "gene": "KRAS",
+   "vaf": 0.296,
+   "depth": 916,
+   "filter": "PASS"
+  },
+  {
+   "variant": "VRNT-TP53-R175H",
+   "gene": "TP53",
+   "vaf": 0.061,
+   "depth": 801,
+   "filter": "PASS"
+  }
+ ],
+ "qc": {
+  "readsMillions": 296.2,
+  "duplicationRate": "15.1%",
+  "onTarget": "78.2%",
+  "contamination": "0.98%",
+  "panel": "Solid tumour 523-gene panel"
+ },
+ "sequencingRun": "SEQ-2026-0903-A",
+ "_meta": {
+  "source": "lims",
+  "generation": 1
+ },
+ "trial": "TRIAL-ONC-322"
+}

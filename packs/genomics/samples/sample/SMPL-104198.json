@@ -1,0 +1,31 @@
+{
+ "sampleId": "SMPL-104198",
+ "tissue": "Skin",
+ "diagnosis": "Melanoma",
+ "purity": 0.46,
+ "variantCount": 1,
+ "meanCoverage": 451,
+ "collected": "2026-09-10",
+ "calls": [
+  {
+   "variant": "VRNT-BRAF-V600E",
+   "gene": "BRAF",
+   "vaf": 0.298,
+   "depth": 430,
+   "filter": "PASS"
+  }
+ ],
+ "qc": {
+  "readsMillions": 164.3,
+  "duplicationRate": "11.6%",
+  "onTarget": "75.1%",
+  "contamination": "1.15%",
+  "panel": "Solid tumour 523-gene panel"
+ },
+ "sequencingRun": "SEQ-2026-0917-B",
+ "_meta": {
+  "source": "lims",
+  "generation": 1
+ },
+ "trial": "TRIAL-ONC-101"
+}

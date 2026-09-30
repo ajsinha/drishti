@@ -1,0 +1,350 @@
+[
+ {
+  "kind": "gene",
+  "id": "GENE-APOE",
+  "title": "GENE-APOE",
+  "subtitle": "Gene · apolipoprotein E"
+ },
+ {
+  "kind": "gene",
+  "id": "GENE-BRAF",
+  "title": "GENE-BRAF",
+  "subtitle": "Gene · B-Raf proto-oncogene, serine/threonine kinase"
+ },
+ {
+  "kind": "gene",
+  "id": "GENE-BRCA1",
+  "title": "GENE-BRCA1",
+  "subtitle": "Gene · BRCA1 DNA repair associated"
+ },
+ {
+  "kind": "gene",
+  "id": "GENE-CFTR",
+  "title": "GENE-CFTR",
+  "subtitle": "Gene · CF transmembrane conductance regulator"
+ },
+ {
+  "kind": "gene",
+  "id": "GENE-EGFR",
+  "title": "GENE-EGFR",
+  "subtitle": "Gene · epidermal growth factor receptor"
+ },
+ {
+  "kind": "gene",
+  "id": "GENE-HBB",
+  "title": "GENE-HBB",
+  "subtitle": "Gene · hemoglobin subunit beta"
+ },
+ {
+  "kind": "gene",
+  "id": "GENE-KRAS",
+  "title": "GENE-KRAS",
+  "subtitle": "Gene · KRAS proto-oncogene, GTPase"
+ },
+ {
+  "kind": "gene",
+  "id": "GENE-TP53",
+  "title": "GENE-TP53",
+  "subtitle": "Gene · tumor protein p53"
+ },
+ {
+  "kind": "variant",
+  "id": "VRNT-APOE-E4",
+  "title": "VRNT-APOE-E4",
+  "subtitle": "Variant"
+ },
+ {
+  "kind": "variant",
+  "id": "VRNT-BRAF-V600E",
+  "title": "VRNT-BRAF-V600E",
+  "subtitle": "Variant"
+ },
+ {
+  "kind": "variant",
+  "id": "VRNT-BRCA1-185DELAG",
+  "title": "VRNT-BRCA1-185DELAG",
+  "subtitle": "Variant"
+ },
+ {
+  "kind": "variant",
+  "id": "VRNT-CFTR-F508DEL",
+  "title": "VRNT-CFTR-F508DEL",
+  "subtitle": "Variant"
+ },
+ {
+  "kind": "variant",
+  "id": "VRNT-EGFR-L858R",
+  "title": "VRNT-EGFR-L858R",
+  "subtitle": "Variant"
+ },
+ {
+  "kind": "variant",
+  "id": "VRNT-HBB-E6V",
+  "title": "VRNT-HBB-E6V",
+  "subtitle": "Variant"
+ },
+ {
+  "kind": "variant",
+  "id": "VRNT-KRAS-G12D",
+  "title": "VRNT-KRAS-G12D",
+  "subtitle": "Variant"
+ },
+ {
+  "kind": "variant",
+  "id": "VRNT-TP53-R175H",
+  "title": "VRNT-TP53-R175H",
+  "subtitle": "Variant"
+ },
+ {
+  "kind": "protein",
+  "id": "PROT-P00533",
+  "title": "PROT-P00533",
+  "subtitle": "Protein · Epidermal growth factor receptor"
+ },
+ {
+  "kind": "protein",
+  "id": "PROT-P01116",
+  "title": "PROT-P01116",
+  "subtitle": "Protein · GTPase KRas"
+ },
+ {
+  "kind": "protein",
+  "id": "PROT-P02649",
+  "title": "PROT-P02649",
+  "subtitle": "Protein · Apolipoprotein E"
+ },
+ {
+  "kind": "protein",
+  "id": "PROT-P04637",
+  "title": "PROT-P04637",
+  "subtitle": "Protein · Cellular tumor antigen p53"
+ },
+ {
+  "kind": "protein",
+  "id": "PROT-P13569",
+  "title": "PROT-P13569",
+  "subtitle": "Protein · Cystic fibrosis transmembrane conductance regulator"
+ },
+ {
+  "kind": "protein",
+  "id": "PROT-P15056",
+  "title": "PROT-P15056",
+  "subtitle": "Protein · Serine/threonine-protein kinase B-raf"
+ },
+ {
+  "kind": "protein",
+  "id": "PROT-P38398",
+  "title": "PROT-P38398",
+  "subtitle": "Protein · Breast cancer type 1 susceptibility protein"
+ },
+ {
+  "kind": "protein",
+  "id": "PROT-P68871",
+  "title": "PROT-P68871",
+  "subtitle": "Protein · Hemoglobin subunit beta"
+ },
+ {
+  "kind": "pathway",
+  "id": "PWY-HR",
+  "title": "PWY-HR",
+  "subtitle": "Pathway · Homologous recombination repair"
+ },
+ {
+  "kind": "pathway",
+  "id": "PWY-ION",
+  "title": "PWY-ION",
+  "subtitle": "Pathway · Epithelial ion transport"
+ },
+ {
+  "kind": "pathway",
+  "id": "PWY-LIPID",
+  "title": "PWY-LIPID",
+  "subtitle": "Pathway · Lipoprotein metabolism"
+ },
+ {
+  "kind": "pathway",
+  "id": "PWY-MAPK",
+  "title": "PWY-MAPK",
+  "subtitle": "Pathway · MAPK signalling (RAS-RAF-MEK-ERK)"
+ },
+ {
+  "kind": "pathway",
+  "id": "PWY-O2",
+  "title": "PWY-O2",
+  "subtitle": "Pathway · Oxygen transport (haemoglobin)"
+ },
+ {
+  "kind": "pathway",
+  "id": "PWY-P53",
+  "title": "PWY-P53",
+  "subtitle": "Pathway · p53 signalling and DNA damage response"
+ },
+ {
+  "kind": "sample",
+  "id": "SMPL-104120",
+  "title": "SMPL-104120",
+  "subtitle": "Sample"
+ },
+ {
+  "kind": "sample",
+  "id": "SMPL-104133",
+  "title": "SMPL-104133",
+  "subtitle": "Sample"
+ },
+ {
+  "kind": "sample",
+  "id": "SMPL-104146",
+  "title": "SMPL-104146",
+  "subtitle": "Sample"
+ },
+ {
+  "kind": "sample",
+  "id": "SMPL-104159",
+  "title": "SMPL-104159",
+  "subtitle": "Sample"
+ },
+ {
+  "kind": "sample",
+  "id": "SMPL-104172",
+  "title": "SMPL-104172",
+  "subtitle": "Sample"
+ },
+ {
+  "kind": "sample",
+  "id": "SMPL-104185",
+  "title": "SMPL-104185",
+  "subtitle": "Sample"
+ },
+ {
+  "kind": "sample",
+  "id": "SMPL-104198",
+  "title": "SMPL-104198",
+  "subtitle": "Sample"
+ },
+ {
+  "kind": "sample",
+  "id": "SMPL-104211",
+  "title": "SMPL-104211",
+  "subtitle": "Sample"
+ },
+ {
+  "kind": "sample",
+  "id": "SMPL-104224",
+  "title": "SMPL-104224",
+  "subtitle": "Sample"
+ },
+ {
+  "kind": "sample",
+  "id": "SMPL-104237",
+  "title": "SMPL-104237",
+  "subtitle": "Sample"
+ },
+ {
+  "kind": "sample",
+  "id": "SMPL-104250",
+  "title": "SMPL-104250",
+  "subtitle": "Sample"
+ },
+ {
+  "kind": "sample",
+  "id": "SMPL-104263",
+  "title": "SMPL-104263",
+  "subtitle": "Sample"
+ },
+ {
+  "kind": "sample",
+  "id": "SMPL-104276",
+  "title": "SMPL-104276",
+  "subtitle": "Sample"
+ },
+ {
+  "kind": "sample",
+  "id": "SMPL-104289",
+  "title": "SMPL-104289",
+  "subtitle": "Sample"
+ },
+ {
+  "kind": "sample",
+  "id": "SMPL-104302",
+  "title": "SMPL-104302",
+  "subtitle": "Sample"
+ },
+ {
+  "kind": "sample",
+  "id": "SMPL-104315",
+  "title": "SMPL-104315",
+  "subtitle": "Sample"
+ },
+ {
+  "kind": "sample",
+  "id": "SMPL-104328",
+  "title": "SMPL-104328",
+  "subtitle": "Sample"
+ },
+ {
+  "kind": "sample",
+  "id": "SMPL-104341",
+  "title": "SMPL-104341",
+  "subtitle": "Sample"
+ },
+ {
+  "kind": "sequencing-run",
+  "id": "SEQ-2026-0903-A",
+  "title": "SEQ-2026-0903-A",
+  "subtitle": "Sequencing run"
+ },
+ {
+  "kind": "sequencing-run",
+  "id": "SEQ-2026-0910-A",
+  "title": "SEQ-2026-0910-A",
+  "subtitle": "Sequencing run"
+ },
+ {
+  "kind": "sequencing-run",
+  "id": "SEQ-2026-0917-B",
+  "title": "SEQ-2026-0917-B",
+  "subtitle": "Sequencing run"
+ },
+ {
+  "kind": "sequencing-run",
+  "id": "SEQ-2026-0924-A",
+  "title": "SEQ-2026-0924-A",
+  "subtitle": "Sequencing run"
+ },
+ {
+  "kind": "expression-study",
+  "id": "EXPR-001",
+  "title": "EXPR-001",
+  "subtitle": "Expression study"
+ },
+ {
+  "kind": "expression-study",
+  "id": "EXPR-002",
+  "title": "EXPR-002",
+  "subtitle": "Expression study"
+ },
+ {
+  "kind": "clinical-trial",
+  "id": "TRIAL-GEN-045",
+  "title": "TRIAL-GEN-045",
+  "subtitle": "Clinical trial"
+ },
+ {
+  "kind": "clinical-trial",
+  "id": "TRIAL-ONC-101",
+  "title": "TRIAL-ONC-101",
+  "subtitle": "Clinical trial"
+ },
+ {
+  "kind": "clinical-trial",
+  "id": "TRIAL-ONC-214",
+  "title": "TRIAL-ONC-214",
+  "subtitle": "Clinical trial"
+ },
+ {
+  "kind": "clinical-trial",
+  "id": "TRIAL-ONC-322",
+  "title": "TRIAL-ONC-322",
+  "subtitle": "Clinical trial"
+ }
+]

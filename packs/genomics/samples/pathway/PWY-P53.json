@@ -1,0 +1,22 @@
+{
+ "pathwayId": "PWY-P53",
+ "name": "p53 signalling and DNA damage response",
+ "category": "Cell cycle and apoptosis",
+ "geneCount": 2,
+ "members": [
+  {
+   "symbol": "TP53",
+   "role": "Transcription factor",
+   "location": "chr17:7,668,402-7,687,550"
+  },
+  {
+   "symbol": "BRCA1",
+   "role": "E3 ligase / repair scaffold",
+   "location": "chr17:43,044,295-43,125,483"
+  }
+ ],
+ "_meta": {
+  "source": "reference-genome",
+  "generation": 1
+ }
+}

@@ -1,0 +1,27 @@
+{
+ "pathwayId": "PWY-MAPK",
+ "name": "MAPK signalling (RAS-RAF-MEK-ERK)",
+ "category": "Signal transduction",
+ "geneCount": 3,
+ "members": [
+  {
+   "symbol": "EGFR",
+   "role": "Receptor tyrosine kinase",
+   "location": "chr7:55,019,017-55,211,628"
+  },
+  {
+   "symbol": "KRAS",
+   "role": "Small GTPase",
+   "location": "chr12:25,205,246-25,250,936"
+  },
+  {
+   "symbol": "BRAF",
+   "role": "MAP3 kinase",
+   "location": "chr7:140,719,327-140,924,929"
+  }
+ ],
+ "_meta": {
+  "source": "reference-genome",
+  "generation": 1
+ }
+}

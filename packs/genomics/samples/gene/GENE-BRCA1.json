@@ -1,0 +1,65 @@
+{
+ "geneId": "GENE-BRCA1",
+ "symbol": "BRCA1",
+ "name": "BRCA1 DNA repair associated",
+ "location": "chr17:43,044,295-43,125,483",
+ "chromosome": "17",
+ "start": 43044295,
+ "end": 43125483,
+ "length": 81189,
+ "strand": "-",
+ "transcripts": 38,
+ "expression": [
+  {
+   "tissue": "Brain",
+   "tpm": 14.34
+  },
+  {
+   "tissue": "Lung",
+   "tpm": 2.64
+  },
+  {
+   "tissue": "Liver",
+   "tpm": 29.34
+  },
+  {
+   "tissue": "Colon",
+   "tpm": 45.92
+  },
+  {
+   "tissue": "Breast",
+   "tpm": 18.48
+  },
+  {
+   "tissue": "Skin",
+   "tpm": 2.3
+  },
+  {
+   "tissue": "Blood",
+   "tpm": 1.23
+  },
+  {
+   "tissue": "Pancreas",
+   "tpm": 15.39
+  }
+ ],
+ "variants": [
+  {
+   "id": "VRNT-BRCA1-185DELAG",
+   "protein": "p.Glu23fs",
+   "significance": "Pathogenic"
+  }
+ ],
+ "identifiers": {
+  "assembly": "GRCh38.p14",
+  "hgncSymbol": "BRCA1",
+  "uniprot": "P38398",
+  "biotype": "protein coding"
+ },
+ "protein": "PROT-P38398",
+ "pathway": "PWY-HR",
+ "_meta": {
+  "source": "reference-genome",
+  "generation": 1
+ }
+}

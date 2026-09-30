@@ -1,0 +1,65 @@
+{
+ "geneId": "GENE-HBB",
+ "symbol": "HBB",
+ "name": "hemoglobin subunit beta",
+ "location": "chr11:5,225,464-5,229,395",
+ "chromosome": "11",
+ "start": 5225464,
+ "end": 5229395,
+ "length": 3932,
+ "strand": "-",
+ "transcripts": 4,
+ "expression": [
+  {
+   "tissue": "Brain",
+   "tpm": 8.7
+  },
+  {
+   "tissue": "Lung",
+   "tpm": 30.23
+  },
+  {
+   "tissue": "Liver",
+   "tpm": 1.59
+  },
+  {
+   "tissue": "Colon",
+   "tpm": 2.02
+  },
+  {
+   "tissue": "Breast",
+   "tpm": 71.3
+  },
+  {
+   "tissue": "Skin",
+   "tpm": 4.63
+  },
+  {
+   "tissue": "Blood",
+   "tpm": 104.25
+  },
+  {
+   "tissue": "Pancreas",
+   "tpm": 14.13
+  }
+ ],
+ "variants": [
+  {
+   "id": "VRNT-HBB-E6V",
+   "protein": "p.Glu7Val",
+   "significance": "Pathogenic"
+  }
+ ],
+ "identifiers": {
+  "assembly": "GRCh38.p14",
+  "hgncSymbol": "HBB",
+  "uniprot": "P68871",
+  "biotype": "protein coding"
+ },
+ "protein": "PROT-P68871",
+ "pathway": "PWY-O2",
+ "_meta": {
+  "source": "reference-genome",
+  "generation": 1
+ }
+}
