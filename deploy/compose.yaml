@@ -1,0 +1,41 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Drishti: server + console. Secrets come from the environment or an .env file that is never committed:
+#   DRISHTI_TOKEN_SECRET, DRISHTI_SESSION_SECRET (>= 32 characters each)
+#   docker compose -f deploy/compose.yaml up
+services:
+  server:
+    image: drishti-server:1.0.0
+    build: { context: .., dockerfile: deploy/server.Dockerfile }
+    environment:
+      DRISHTI_SECURITY_ENABLED: "true"
+      DRISHTI_TOKEN_SECRET: ${DRISHTI_TOKEN_SECRET:?set DRISHTI_TOKEN_SECRET}
+      DRISHTI_SUTRAS: /opt/drishti/sutras
+    volumes:
+      - ../sutras:/opt/drishti/sutras:ro
+      - ../data/feeds:/opt/drishti/data/feeds:ro
+    ports: ["18480:18480"]
+  console:
+    image: drishti-console:1.0.0
+    build: { context: .., dockerfile: deploy/console.Dockerfile }
+    depends_on: [server]
+    environment:
+      DRISHTI_BACKEND_URL: http://server:18480
+      DRISHTI_AUTH_ENABLED: "true"
+      DRISHTI_TOKEN_SECRET: ${DRISHTI_TOKEN_SECRET:?set DRISHTI_TOKEN_SECRET}
+      DRISHTI_SESSION_SECRET: ${DRISHTI_SESSION_SECRET:?set DRISHTI_SESSION_SECRET}
+    volumes:
+      - ./users.yaml:/opt/drishti/console/config/users.yaml:ro
+    ports: ["17480:17480"]

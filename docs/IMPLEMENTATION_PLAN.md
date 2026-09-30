@@ -105,8 +105,8 @@ Ten waves. Each holds a small set of closely related items and ends with a demo-
 
 ## W10 — Studio, security, ops & release
 - Sutra Studio (`/studio`): vendored CodeMirror, schema completion, live preview, "promote inferred panel".
-- Security: OIDC login, JWT to the server, `config/entitlements.yaml`, links disabled with the reason, F9 redaction, CSP.
-- Plugins `rest` and `jdbc`; an `aero` stub against a documented interface.
+- Security: console sign-in (users file, PBKDF2, signed cookies), HS256 tokens to the server, per-role kinds (`drishti.security.roles`), links disabled with the reason, F9 redaction, CSP. *(OIDC deferred.)*
+- Plugins `rest` and `jdbc`. *(The `aero` plugin is deferred.)*
 - Ops: Dockerfiles, `deploy/compose.yaml`, Grafana dashboard, `OPERATIONS.md`, `runbooks/`, `TROUBLESHOOTING.md`.
 - Release: `RELEASE_NOTES.md`, tag `v1.0.0`, merge to `main`.
 

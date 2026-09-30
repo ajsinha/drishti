@@ -15,7 +15,22 @@
 -->
 # Changelog
 
-## Unreleased — Wave 9: live updates
+## 1.0.0 — Wave 10: Studio, security, operations, release (2026-09-30)
+- **Sutra Studio** (`/studio`):
+  - a Rachana editor (vendored CodeMirror with a Drishti YAML mode);
+  - Ctrl+Enter live preview of unsaved Sutras against any entity (about 45 ms), with problems listed by line;
+  - "start from inference" (`SutraWriter` turns an inferred layout into an editable Sutra);
+  - saving for authors when `drishti.rachana.studio-save` is on.
+- **Security:**
+  - console sign-in (PBKDF2 users file, signed expiring cookies, safe `next` redirects);
+  - HS256 tokens to the server (algorithm pinned, constant-time signature, expiry);
+  - per-role kinds, with denied links shown disabled with the reason;
+  - suggestion filtering and raw JSON redaction.
+- **Plugins:** `rest` (HTTP/JSON with headers and a generation from ETag) and `jdbc` (per-kind query, pooled connections, JSON column support).
+- **Operations:** live Micrometer gauges; Grafana dashboard; Dockerfiles and compose; `OPERATIONS.md`, runbooks, `TROUBLESHOOTING.md`; `RELEASE_NOTES.md`.
+- **Version:** 1.0.0.
+
+## Wave 9: live updates
 - The `demo` source ticks live entities with consistent random walks while someone watches (MTM, DV01, curves, spot, exposure; futures keep MTM, settlement and VM consistent).
 - Engine:
   - `TopicHub`: one source subscription per entity, latest-wins, leading-edge 50 ms frames, single writer.
@@ -28,7 +43,7 @@
 - Measured: p50 2.4 ms, p99 11 ms from tick to frame; 10,000 listeners on one topic all see the latest tick. Verified in real Chrome over the DevTools protocol.
 - Docs: `LIVE.md`; `PERFORMANCE.md` updated.
 
-## Unreleased — Wave 8: REST API and console entity views
+## Wave 8: REST API and console entity views
 - Server REST API under `/api/v1`: command, suggest, views, raw entities, sources and Sutras. RFC 7807 errors with `DRS` codes, springdoc at `/api/docs`, and a Micrometer `drishti.view` timer.
 - Console terminal:
   - `/t` home;
@@ -39,12 +54,12 @@
 - The CSP now also forbids inline `style` attributes (bar widths come from `data-w`), enforced by a test.
 - Docs: `API_GUIDE.md`, `USER_GUIDE.md` (with the keyboard), `CONFIGURATION.md`.
 
-## Unreleased — naming: Rachana and Sutra (ADR-008)
+## naming: Rachana and Sutra (ADR-008)
 - **Rachana** (रचना) is the declarative screen grammar. **Sutra** is one layout written in it.
 - The module `drishti-sutra` is now `drishti-rachana` (packages `com.ash.drishti.rachana`). The configuration prefix is `drishti.rachana.*`, the expression language is **Rachana-EL**, and the reference is `RACHANA_REFERENCE.md`.
 - Sutra files, `Sutra`, `SutraRegistry` and the view label `Sutra irs-vanilla v3 + inference` keep their names.
 
-## Unreleased — Wave 7: view pipeline, entity graph, type-ahead
+## Wave 7: view pipeline, entity graph, type-ahead
 - `drishti-graph`: config-driven `ReferenceCatalog` (identifier patterns and reference fields) and `BadgeRenderer` (`EE 4.1m`, `threshold 0`, `live`).
 - `drishti-engine`:
   - `ViewPipeline` (fetch → match → fingerprint → cached layout → parallel link fetch within 40 ms → parallel panel binding);
@@ -55,14 +70,14 @@
 - Latency gate: warm p99 under 50 ms.
 - `drishti-benchmarks` (JMH). Docs: `PERFORMANCE.md` with measured numbers.
 
-## Unreleased — Wave 6: inference engine
+## Wave 6: inference engine
 - `drishti-inference`: config-driven `Semantics` (roles from field names and value classes, memoised), `ColumnInference`, six rules (legs → tabs, term structure → line/area, distribution → hbar, time series → ladder, arrays → table, nested objects → kv), and a packer with density limits.
 - `LayoutMerger`: Sutra ⊕ inference, where the Sutra always wins. It produces an `EffectiveLayout` with the provenance label (`Sutra irs-vanilla v3 + inference` / `inference only`) and a per-panel explanation.
 - Tests: an unknown product (equity option) renders; each reference entity stays usable without its Sutra; the gaps in the listed-future Sutra are filled.
 - README rewritten to show the real state of the project: a status table per wave, what works, how to run it. It is now updated with every wave.
 - Docs: `INFERENCE.md`.
 
-## Unreleased — Wave 5: Rachana-EL, formats & matching
+## Wave 5: Rachana-EL, formats & matching
 - Rachana-EL: lexer, recursive-descent parser (the EBNF is in `RACHANA_REFERENCE.md`), and immutable closure trees with cached compilation. Paths, filters, ternary, arithmetic, twelve pure functions, `link(...)`, and `${...}` templates.
 - Every expression reports the document paths it reads, ready for dependency-driven live updates.
 - Every expression in a Sutra is compiled at load; errors are reported against the file (`DRS-2101`).
@@ -70,14 +85,14 @@
 - `SutraMatcher`: highest-priority Sutra whose `where` holds; no match means inference only.
 - Golden test: the four reference Sutras reproduce the mockups' header strips exactly. jqwik property tests check the arithmetic and comparisons.
 
-## Unreleased — Wave 4: Sutra grammar
+## Wave 4: Sutra grammar
 - `drishti-rachana`: immutable model (`Sutra`, `Match`, `Title`, `StripItem`, `Panel`, `Column`, twelve `PanelKind`s with per-kind required and optional options).
 - A position-aware YAML reader and a validator that reports **every** problem with its line and column (`DRS-20xx`).
 - `SutraRegistry`: `name@version` lookup, per-kind matching by priority, lock-free snapshot reads, `WatchService` hot reload with debounce, last good version kept on error, change listeners.
 - `sutra.schema.json` for editors. The four reference Sutras for the mockups.
 - Docs: `RACHANA_REFERENCE.md`.
 
-## Unreleased — Wave 3: data model & sources
+## Wave 3: data model & sources
 - `drishti-api`: `DataNode` (immutable tree; navigation never throws), `EntityRef`, `EntityDocument`, `Provenance`, and the `SourcePlugin` SPI with `search` (for the type-ahead) and `reverse`. `HitIndex` provides in-memory search.
 - `drishti-common`: `DRS-nnnn` error codes, a streaming `JsonCodec`, and `ShapeFingerprinter` (canonical shape, FNV-1a 64; values and array lengths do not change it).
 - `drishti-engine`: `PluginDiscovery` (class path plus isolated plugin jars), `SourceRegistry` (parallel start on virtual threads, failures isolated), and `SourceRouter` (config-driven routes, deadlines, partial `fetchAll`, parallel `search` under a time budget).
@@ -85,14 +100,14 @@
 - The build is pinned to OpenJDK 21 by the enforcer.
 - Docs: `PLUGIN_GUIDE.md`; ARCHITECTURE §7a (command suggestions).
 
-## Unreleased — Wave 2: console shell & landing
+## Wave 2: console shell & landing
 - FastAPI + Jinja2 console (`console/`) with a layered config (YAML → local → env → CLI), a strict CSP and security headers.
 - Five themes, tokens only in `tokens.css`: terminal (default), parchment, **wallstreet** (Bloomberg Terminal colour scheme), blue, green.
 - Landing page: a canvas hero (JSON → `{◉}` → assembled, ticking panels) with replay, reduced motion and pause-when-hidden; stats strip; Sutra example; animated pipeline; capabilities; the four reference views.
 - Every front-end asset is vendored (Bootstrap, Bootstrap Icons, ECharts). Tests fail on any external URL, inline script or inline handler.
 - WCAG contrast is computed for every theme in tests.
 
-## Unreleased — Wave 1: build foundation
+## Wave 1: build foundation
 - Maven reactor on `spring-boot-starter-parent` 3.5.16, Java 21, wrapper included.
 - Modules: api, common, sutra, inference, graph, engine, two plugins (demo, file), server, testkit, it.
 - The `DrishtiApplication` Spring Boot skeleton runs on virtual threads, with actuator and Prometheus.

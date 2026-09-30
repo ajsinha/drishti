@@ -21,7 +21,7 @@
   <parent>
     <groupId>com.ash.drishti</groupId>
     <artifactId>drishti-parent</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
   <artifactId>drishti-benchmarks</artifactId>

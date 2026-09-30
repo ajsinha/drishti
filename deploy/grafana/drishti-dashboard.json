@@ -1,0 +1,148 @@
+{
+ "title": "Drishti",
+ "uid": "drishti",
+ "schemaVersion": 39,
+ "time": {
+  "from": "now-1h",
+  "to": "now"
+ },
+ "description": "Copyright (c) 2026 Ashutosh Sinha. All rights reserved. Proprietary and confidential.",
+ "panels": [
+  {
+   "id": 1,
+   "type": "timeseries",
+   "title": "View build p99",
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 0
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "s"
+    }
+   },
+   "targets": [
+    {
+     "expr": "drishti_view_seconds{quantile=\"0.99\"}",
+     "refId": "A"
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "type": "timeseries",
+   "title": "Views per second",
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 0
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "reqps"
+    }
+   },
+   "targets": [
+    {
+     "expr": "rate(drishti_view_seconds_count[1m])",
+     "refId": "A"
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "type": "timeseries",
+   "title": "Live tick \u2192 frame p99",
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "ms"
+    }
+   },
+   "targets": [
+    {
+     "expr": "drishti_live_latency_p99_milliseconds",
+     "refId": "A"
+    }
+   ]
+  },
+  {
+   "id": 4,
+   "type": "timeseries",
+   "title": "Live streams and topics",
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none"
+    }
+   },
+   "targets": [
+    {
+     "expr": "drishti_live_streams",
+     "refId": "A"
+    },
+    {
+     "expr": "drishti_live_topics",
+     "refId": "B"
+    }
+   ]
+  },
+  {
+   "id": 5,
+   "type": "timeseries",
+   "title": "Live frames per second",
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 16
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none"
+    }
+   },
+   "targets": [
+    {
+     "expr": "rate(drishti_live_frames_total[1m])",
+     "refId": "A"
+    }
+   ]
+  },
+  {
+   "id": 6,
+   "type": "timeseries",
+   "title": "JVM heap used",
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 16
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bytes"
+    }
+   },
+   "targets": [
+    {
+     "expr": "sum(jvm_memory_used_bytes{area=\"heap\"})",
+     "refId": "A"
+    }
+   ]
+  }
+ ]
+}

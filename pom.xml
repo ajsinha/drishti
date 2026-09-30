@@ -18,7 +18,7 @@
 
   <groupId>com.ash.drishti</groupId>
   <artifactId>drishti-parent</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>1.0.0</version>
   <packaging>pom</packaging>
   <name>Drishti</name>
   <description>Any data. Any domain. One grammar.</description>
@@ -44,6 +44,8 @@
     <module>drishti-engine</module>
     <module>plugins/drishti-plugin-demo</module>
     <module>plugins/drishti-plugin-file</module>
+    <module>plugins/drishti-plugin-rest</module>
+    <module>plugins/drishti-plugin-jdbc</module>
     <module>drishti-server</module>
     <module>drishti-testkit</module>
     <module>drishti-it</module>
@@ -73,6 +75,8 @@
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-engine</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-demo</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-file</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-rest</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-jdbc</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-server</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId><version>${caffeine.version}</version></dependency>

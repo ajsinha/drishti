@@ -34,6 +34,13 @@ The local override is `./application.local.yaml`. Environment variables use Spri
 | `drishti.rachana.hot-reload` / `reload-debounce` | `true` / `250ms` | reload Sutras when they are saved |
 | `drishti.rachana.formats-file` | — | a site file that overrides or adds named formats |
 | `drishti.rachana.expression-cache-size` | `10000` | compiled expressions kept in memory |
+| `drishti.rachana.studio-save` | `false` (`DRISHTI_STUDIO_SAVE`) | let Studio write Sutra files (authors only) |
+| `drishti.security.enabled` / `secret` | `false` / — (`DRISHTI_TOKEN_SECRET`) | require HS256 bearer tokens; the secret is shared with the console |
+| `drishti.security.roles.<role>` | trader, risk, author | `{kinds, raw, author}` |
+| `drishti.security.redact` | `[trader, counterpartyId]` | fields masked in raw JSON for roles without `raw` |
+| `drishti.live.frame / heartbeat / max-streams / window` | `50ms / 15s / 20000 / 30s` | live updates |
+| `drishti.sources.plugins.rest.settings.*` | | `base-url`, `path`, `kinds`, `header.<Name>`, `timeout-ms`, `generation-header` |
+| `drishti.sources.plugins.jdbc.settings.*` | | `url`, `user`, `password`, `pool-size`, `query.<kind>` |
 | `drishti.inference.semantics-file` | — | a site file that replaces the semantic hints |
 | `drishti.engine.layout-cache-size` | `10000` | effective layouts (one per Sutra version × shape) |
 | `drishti.engine.fingerprint-cache-size` | `100000` | fingerprints (one per entity × generation) |
@@ -60,3 +67,7 @@ The local override is `console/config/application.local.yaml`. Environment varia
 | `ui.default_theme` | `terminal` | `terminal`, `light`, `wallstreet`, `blue` or `green` |
 | `ui.user`, `ui.user_display`, `ui.desk` | `ash`, `Ash`, `Rates desk` | the acting user until sign-in (Wave 10) |
 | `ui.clock_tz` / `ui.clock_label` | `America/New_York` / `NY` | the top-bar clock |
+| `auth.enabled` | `false` (`DRISHTI_AUTH_ENABLED`) | require sign-in |
+| `auth.users_file` | `config/users.yaml` | users with PBKDF2 hashes (git-ignored; see `users.example.yaml`) |
+| `auth.session_secret` / `token_secret` | from the environment | cookie signing; server tokens (shared with the server) |
+| `auth.token_ttl_seconds` / `session_hours` / `secure_cookie` | `300` / `10` / `true` | token and session lifetimes |

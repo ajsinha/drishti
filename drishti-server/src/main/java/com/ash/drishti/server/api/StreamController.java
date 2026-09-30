@@ -62,8 +62,13 @@ public class StreamController {
     private final Entitlements entitlements;
 
     public StreamController(ViewPipeline pipeline, TopicHub hub, LiveMetrics metrics, LiveProperties props,
-            ExecutorService drishtiVirtualExecutor, Entitlements entitlements) {
+            ExecutorService drishtiVirtualExecutor, Entitlements entitlements, io.micrometer.core.instrument.MeterRegistry meters) {
         this.entitlements = entitlements;
+        io.micrometer.core.instrument.Gauge.builder("drishti.live.streams", open, AtomicInteger::get).register(meters);
+        io.micrometer.core.instrument.Gauge.builder("drishti.live.topics", hub, TopicHub::topicCount).register(meters);
+        io.micrometer.core.instrument.Gauge.builder("drishti.live.latency.p99", metrics, m -> m.percentile(99))
+                .baseUnit("milliseconds").register(meters);
+        io.micrometer.core.instrument.FunctionCounter.builder("drishti.live.frames", metrics, LiveMetrics::frames).register(meters);
         this.pipeline = pipeline;
         this.hub = hub;
         this.metrics = metrics;

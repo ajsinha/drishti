@@ -27,7 +27,7 @@ terminal does.
 
 ## Status
 
-Drishti is built in ten waves on `develop`. Each wave is merged to `main` when its build is green.
+**Drishti 1.0.0 is released** (see [RELEASE_NOTES.md](RELEASE_NOTES.md)). It was built in ten waves on `develop`, each merged to `main` when its build was green.
 
 | Wave | Theme | State |
 |---|---|---|
@@ -40,7 +40,7 @@ Drishti is built in ten waves on `develop`. Each wave is merged to `main` when i
 | 7 | View pipeline, entity links, command type-ahead service | ✅ done |
 | 8 | REST API and console entity views (the four mockups end to end) | ✅ done |
 | 9 | Live updates over SSE, measured p99 | ✅ done |
-| 10 | Sutra Studio, security, ops, v1.0.0 | ⏳ next |
+| 10 | Sutra Studio, security, ops, v1.0.0 | ✅ done |
 
 ## What works today
 
@@ -65,7 +65,13 @@ Drishti is built in ten waves on `develop`. Each wave is merged to `main` when i
   links open other entities, and breadcrumbs lead back. REST API under `/api/v1` (OpenAPI at `/api/docs`).
 - **Live.** Views of live entities tick over server-sent events: MTM, curves, exposure and settlements
   move in place, changed values flash, and the top bar shows the measured p99 (about 11 ms).
-- **Not yet:** Sutra Studio, sign-in and entitlements, and packaging (Wave 10).
+- **Sutra Studio.** At `/studio` you can edit a Sutra with highlighting, press Ctrl+Enter to preview it
+  against any entity, see problems by line, and start a new Sutra from what inference makes of an entity.
+- **Security.** Sign-in, per-role entitlements (denied links are shown disabled with the reason),
+  raw JSON redaction, and signed tokens between the console and the server. It is off by default for
+  local development.
+- **Operations.** Prometheus metrics, a Grafana dashboard, Dockerfiles and compose, and runbooks.
+- **Not built** (see the release notes): OIDC/SSO, the `aero` plugin, and F8 Impact.
 
 ## Try it
 
@@ -101,9 +107,10 @@ drishti/
 ├── drishti-benchmarks/          JMH hot-path benchmarks
 ├── drishti-server/              the Spring Boot application
 ├── drishti-testkit/ drishti-it/ fixtures; architecture, licence-header and file-size gates
-├── plugins/drishti-plugin-{demo,file}/
+├── plugins/drishti-plugin-{demo,file,rest,jdbc}/
 ├── console/                     FastAPI + Jinja2 web UI (routes/, core/, web/templates, web/static)
 ├── sutras/<domain>/<name>.v<N>.yaml
+├── deploy/                      Dockerfiles, compose, Grafana dashboard
 ├── tools/                       license_headers.py, drill.sh
 └── docs/                        architecture, plan, references, ADRs
 ```
@@ -123,7 +130,9 @@ drishti/
 | [LIVE.md](docs/LIVE.md) | **Live updates.** Topics, frames, patches, slow clients, reconnects. |
 | [PERFORMANCE.md](docs/PERFORMANCE.md) | **Measured numbers.** JMH hot paths and the end-to-end latency gate. |
 | [adr/](docs/adr/README.md) | Architecture decision records. |
-| [CHANGELOG.md](CHANGELOG.md) | What changed, wave by wave. |
+| [OPERATIONS.md](docs/OPERATIONS.md) | **Running it.** Deploy, security checklist, monitoring, runbooks. |
+| [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Symptoms, causes and fixes. |
+| [CHANGELOG.md](CHANGELOG.md) · [RELEASE_NOTES.md](RELEASE_NOTES.md) | What changed, wave by wave; what 1.0.0 is. |
 
 ## Contributing rules
 

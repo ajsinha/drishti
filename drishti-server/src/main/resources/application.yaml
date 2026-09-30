@@ -60,6 +60,21 @@ drishti:
           root: ${DRISHTI_FEEDS:./data/feeds}
           source-name: feed-file
           rescan-seconds: 30
+      rest:                         # an HTTP/JSON service; off until configured
+        enabled: ${DRISHTI_REST_ENABLED:false}
+        settings:
+          base-url: ${DRISHTI_REST_URL:http://localhost:9000/api}
+          path: /{kind}/{id}
+          source-name: rest
+          timeout-ms: 2000
+      jdbc:                         # a database; the driver jar goes on the class path or plugin-dir
+        enabled: ${DRISHTI_JDBC_ENABLED:false}
+        settings:
+          url: ${DRISHTI_JDBC_URL:}
+          user: ${DRISHTI_JDBC_USER:}
+          password: ${DRISHTI_JDBC_PASSWORD:}
+          source-name: jdbc
+          pool-size: 4
   security:
     # Off for local development. Production: enabled: true and DRISHTI_TOKEN_SECRET (>= 32 bytes, shared with the console).
     enabled: ${DRISHTI_SECURITY_ENABLED:false}

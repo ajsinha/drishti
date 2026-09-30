@@ -18,12 +18,14 @@ Suggested reading order:
 | [CONFIGURATION.md](CONFIGURATION.md) | **Every setting**, server and console, with defaults. |
 | [INFERENCE.md](INFERENCE.md) | **Layouts from shape.** Rules, packing, Sutra ⊕ inference merge, semantic hints. |
 | [LIVE.md](LIVE.md) | **Live updates.** Topics, leading-edge frames, patches, slow clients, reconnects. |
+| [OPERATIONS.md](OPERATIONS.md) | **Running it.** Deploy, security checklist, monitoring, capacity; [runbooks/](runbooks/). |
+| [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | Symptoms, likely causes and fixes. |
 | [PERFORMANCE.md](PERFORMANCE.md) | **Measured numbers.** JMH hot paths and the end-to-end latency gate. |
 | [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md) | **Bringing data in.** The source plugin SPI, routing and configuration, and the built-in plugins. |
 | [adr/](adr/README.md) | **Why things are the way they are.** Architecture decision records. |
 | [requirements/](requirements/) | **The target.** Four reference mockups (IRS, FX swap, commodity future, netting set) and the brand marks. |
 
-Documents added as the waves land: `OPERATIONS.md` and `runbooks/` (W10), plus `adr/`.
+All planned documents are in place for 1.0.0; decisions are recorded in [adr/](adr/README.md).
 
 ---
 

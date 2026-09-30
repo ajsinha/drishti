@@ -379,9 +379,11 @@ first paint and a JS renderer (`static/js/panels/<kind>.js`) that applies patche
 
 ## 14. Security
 
-- OIDC / form login at the console; server trusts a signed session token (JWT) from the console.
-- Entitlements per desk and per kind (`config/entitlements.yaml`); links to entities
-  the user cannot see render as disabled with the reason (MAYA rule: *visible, not hidden*).
+- Console sign-in against a users file (PBKDF2) with a signed, expiring session cookie; for every
+  server call the console mints a short-lived HS256 token (algorithm pinned, constant-time check).
+  OIDC/SSO plugs in at the console later; the token boundary stays the same.
+- Entitlements per role and kind (`drishti.security.roles`); links to entities the user
+  cannot see render as disabled with the reason (MAYA rule: *visible, not hidden*).
 - Raw JSON (F9) honours field-level redaction rules.
 - CSP without `unsafe-inline`; all assets same-origin.
 
