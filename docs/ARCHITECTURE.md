@@ -78,8 +78,14 @@ The four reference mockups (`docs/requirements/drishti-*.png`) define the target
      (live)          services        (Postgres)   (CSV/JSON/Parquet) (ticks)      (sample data)
 ```
 
-The split mirrors Pravaha: a **pure-Java engine with no Spring**, a thin Spring Boot
-server, and a separate **Python console** laid out the way MAYA's web layer is.
+**Deployment model — a departure from Pravaha.** The Drishti backend is always a
+**Spring Boot application**; it is never shipped as an embeddable library. The Maven
+modules are internal building blocks of that one application, each contributing its
+beans through a module `@Configuration` class and `@ConfigurationProperties` records.
+Domain classes (grammar, inference, pipeline) remain plain, constructor-injected Java
+objects so they unit-test without a Spring context, but Spring is a first-class,
+permitted dependency everywhere. The UI is a separate **Python console** laid out the
+way MAYA's web layer is.
 
 ---
 
@@ -233,19 +239,18 @@ and the rule name, surfaced in *How this view was built* and in Sutra Studio as
 Maven multi-module reactor, `groupId com.ash.drishti`, Java 21, packages
 `com.ash.drishti.<module>.<area>`, `package-info.java` everywhere.
 
-| Module | Responsibility | Spring? |
+| Module | Responsibility | Contributes |
 |---|---|---|
-| `drishti-bom` | Version alignment | – |
-| `drishti-api` | Public SPI: `SourcePlugin`, `DataNode`, `EntityRef`, `PanelKind`, `InferenceRule`, `Formatter` | no |
-| `drishti-common` | Config loading, error codes (`DRS-nnnn`), JSON, fingerprints, metrics facade | no |
-| `drishti-sutra` | Sutra model, YAML parser, JSON-Schema validation, Sutra-EL compiler, registry + hot reload | no |
-| `drishti-inference` | Shape analysis, semantic hints, rules, scorer, packer | no |
-| `drishti-graph` | Reference catalog, link resolution, reverse lookups | no |
-| `drishti-engine` | Pipeline, `LayoutResolver`, `Binder`, caches, `TopicHub`, `ViewMaintainer` | no |
-| `drishti-server` | Spring Boot: REST, SSE, security, actuator, OpenAPI | yes |
-| `drishti-spring-boot-starter` | Embed the engine in other Spring apps | yes |
-| `plugins/drishti-plugin-{demo,file,rest,jdbc,kafka,aero}` | Source plugins (ServiceLoader, isolated class loaders) | no |
-| `drishti-testkit` | Fixtures, golden ViewModel assertions | no |
+| `drishti-bom` | Version alignment (imports the Spring Boot BOM) | – |
+| `drishti-api` | Plugin SPI: `SourcePlugin`, `DataNode`, `EntityRef`, `PanelKind`, `InferenceRule`, `Formatter` (no Spring, so plugins stay light) | – |
+| `drishti-common` | Error codes (`DRS-nnnn`), JSON, fingerprints, config records | `CommonConfiguration` |
+| `drishti-sutra` | Sutra model, YAML parser, JSON-Schema validation, Sutra-EL compiler, registry + hot reload | `SutraConfiguration` |
+| `drishti-inference` | Shape analysis, semantic hints, rules, scorer, packer | `InferenceConfiguration` |
+| `drishti-graph` | Reference catalog, link resolution, reverse lookups | `GraphConfiguration` |
+| `drishti-engine` | Pipeline, `LayoutResolver`, `Binder`, caches, `TopicHub`, `ViewMaintainer`, plugin discovery | `EngineConfiguration` |
+| `drishti-server` | **The** Spring Boot application: `DrishtiApplication`, REST, SSE, security, actuator, OpenAPI | controllers, filters |
+| `plugins/drishti-plugin-{demo,file,rest,jdbc,kafka,aero}` | Source plugins (ServiceLoader, isolated class loaders) | – |
+| `drishti-testkit` | Fixtures, golden ViewModel assertions, `@DrishtiTest` slice | – |
 | `drishti-it` | Integration, architecture (ArchUnit), licence-header and file-size tests | – |
 | `drishti-benchmarks` | JMH benchmarks for fingerprint, bind, inference, patch | – |
 
@@ -361,7 +366,7 @@ SSE subscribers, dropped frames. Structured JSON logs with `viewId`, `ref`, `fin
 
 - **Every source file ≤ 1500 lines** (UX templates excepted) — enforced by `SourceFileSizeTest` and `console/tests/test_file_sizes.py`.
 - **Copyright header on every file** — enforced by `LicenseHeaderTest` and Spotless.
-- No Spring in engine modules; no unbounded collections; no `Serializable` — ArchUnit.
+- ArchUnit: controllers only in `drishti-server`; one-way module dependencies (api ← common ← sutra/inference/graph ← engine ← server); `drishti-api` free of Spring; no unbounded collections; no `Serializable`; no field injection.
 - Golden ViewModel tests for the four reference entities.
 - JaCoCo gates per module; JMH regression gates on the pipeline.
 
@@ -369,7 +374,7 @@ SSE subscribers, dropped frames. Structured JSON logs with `viewId`, `ref`, `fin
 
 | # | Decision | Why |
 |---|---|---|
-| D1 | Java engine + Spring Boot server, Python console | Pravaha's proven split; engine embeddable and testable without Spring |
+| D1 | Backend is one Spring Boot application (never an embedded library); Python console | Single deployable, Spring wiring/config/observability everywhere; domain objects still testable without a context |
 | D2 | Layout = Sutra ⊕ inference, cached by shape fingerprint | Unknown data renders immediately; cost paid once per shape |
 | D3 | YAML Sutra with a compiled, side-effect-free EL | Reviewable, diffable, safe; no scripting in layouts |
 | D4 | Server returns ViewModel, not HTML | Same model feeds console, API clients and golden tests |

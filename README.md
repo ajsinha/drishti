@@ -40,8 +40,7 @@ closes. Nothing below "What it will do" is built yet.
 
 | Layer | Technology |
 |---|---|
-| Engine | Java 21, pure (no Spring): Sutra, inference, graph, pipeline, live hub |
-| Server | Spring Boot 3.5, virtual threads, REST + SSE, springdoc, Micrometer |
+| Backend | One Spring Boot 3.5 application (Java 21, virtual threads) — never an embedded library. Modules: Sutra, inference, graph, pipeline, live hub; REST + SSE, springdoc, Micrometer |
 | Plugins | ServiceLoader SPI with isolated class loaders |
 | Console | Python 3.12, FastAPI + Jinja2, vendored Bootstrap / ECharts, no CDN |
 
@@ -54,7 +53,7 @@ drishti/
 ├── drishti-bom/ drishti-api/ drishti-common/     build + public SPI + shared utils
 ├── drishti-sutra/ drishti-inference/             grammar and inference
 ├── drishti-graph/ drishti-engine/                links and view pipeline
-├── drishti-server/ drishti-spring-boot-starter/  Spring Boot adapters
+├── drishti-server/                               the Spring Boot application
 ├── drishti-testkit/ drishti-it/ drishti-benchmarks/
 ├── plugins/drishti-plugin-{demo,file,rest,jdbc,kafka,aero}/
 ├── console/                                      FastAPI + Jinja2 web UI
@@ -83,7 +82,7 @@ python console/run_drishti_web.py      # console on http://localhost:17480
 - Work on `develop`; waves merge to `main`.
 - No source file over 1500 lines (UX templates excepted). This is enforced by tests.
 - Every file carries the copyright header. This is enforced by tests.
-- The engine modules must not use Spring and must not use unbounded collections. ArchUnit enforces this.
+- One-way module dependencies, controllers only in `drishti-server`, no unbounded collections. ArchUnit enforces this.
 
 ## Legal
 

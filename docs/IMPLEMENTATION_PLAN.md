@@ -40,7 +40,7 @@ Ten waves. Each holds a small set of closely related items and ends with a demo-
 - Maven reactor, `mvnw`, `drishti-bom`, Java 21 enforcer, `.editorconfig`.
 - Spotless (palantir) with `config/spotless/license-header.txt`; Error Prone + NullAway; JaCoCo.
 - Empty modules with `package-info.java`: `api, common, sutra, inference, graph, engine, server, testkit, it, benchmarks`.
-- `drishti-it`: `LicenseHeaderTest`, `SourceFileSizeTest` (1500), `ArchitectureRulesTest` (no Spring in engine, no `Serializable`).
+- `drishti-it`: `LicenseHeaderTest`, `SourceFileSizeTest` (1500), `ArchitectureRulesTest` (one-way module deps, Spring-free `drishti-api`, no `Serializable`, no field injection).
 - GitHub Actions `fast.yml`; `docs/adr/001..006` for decisions D1–D6; `CHANGELOG.md`.
 
 ## W2 — Console shell & landing
@@ -87,7 +87,7 @@ Ten waves. Each holds a small set of closely related items and ends with a demo-
 - Tests: golden ViewModels for the 4 entities; a slow link degrades to pending.
 
 ## W8 — REST API & console views
-- `drishti-server`: Spring Boot 3.5 on virtual threads; `Command`, `View`, `Entity`, `Sutra` and `Source` controllers; `ApiExceptionHandler` (problem+json); springdoc; actuator + Prometheus.
+- `drishti-server` (the single Spring Boot application, `DrishtiApplication`, wiring each module's `@Configuration`): virtual threads; `Command`, `View`, `Entity`, `Sutra` and `Source` controllers; `ApiExceptionHandler` (problem+json); springdoc; actuator + Prometheus.
 - Console: `core/api_client.py` (pooled httpx), `routes/{terminal,views,help}.py`, `templates/terminal/{home,view}.html`.
 - `_macros/panels.html` (one macro per panel kind), `_command_bar.html`, `_fkeys.html`, `_breadcrumb.html`, `_provenance.html`.
 - `static/js/{command,keys,view}.js`, `static/js/panels/<kind>.js`, vendored ECharts.
