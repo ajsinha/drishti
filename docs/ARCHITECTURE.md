@@ -163,7 +163,8 @@ keys:   { F7: link($.nettingSet), F8: impact, F9: raw }
 ```
 
 **Panel kinds (v1):** `kv`, `table`, `tabs`, `line`, `area`, `hbar`, `ladder`,
-`links`, `status`, `breadcrumb`, `provenance`, `markdown`. New kinds are added via
+`links`, `status`, `provenance`, `markdown`, `gauge`. The full grammar is in
+[SUTRA_REFERENCE.md](SUTRA_REFERENCE.md). New kinds are added via
 the `PanelKind` SPI on the Java side plus a Jinja macro + JS renderer on the console.
 
 **Formats** (`fmt`) are named, config driven (`config/formats.yaml`): `amount0`,

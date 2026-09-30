@@ -15,6 +15,13 @@
 -->
 # Changelog
 
+## Unreleased — Wave 4: Sutra grammar
+- `drishti-sutra`: immutable model (`Sutra`, `Match`, `Title`, `StripItem`, `Panel`, `Column`, twelve `PanelKind`s with per-kind required and optional options).
+- A position-aware YAML reader and a validator that reports **every** problem with its line and column (`DRS-20xx`).
+- `SutraRegistry`: `name@version` lookup, per-kind matching by priority, lock-free snapshot reads, `WatchService` hot reload with debounce, last good version kept on error, change listeners.
+- `sutra.schema.json` for editors. The four reference Sutras for the mockups.
+- Docs: `SUTRA_REFERENCE.md`.
+
 ## Unreleased — Wave 3: data model & sources
 - `drishti-api`: `DataNode` (immutable tree; navigation never throws), `EntityRef`, `EntityDocument`, `Provenance`, and the `SourcePlugin` SPI with `search` (for the type-ahead) and `reverse`. `HitIndex` provides in-memory search.
 - `drishti-common`: `DRS-nnnn` error codes, a streaming `JsonCodec`, and `ShapeFingerprinter` (canonical shape, FNV-1a 64; values and array lengths do not change it).

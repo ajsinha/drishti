@@ -60,3 +60,9 @@ drishti:
           root: ${DRISHTI_FEEDS:./data/feeds}
           source-name: feed-file
           rescan-seconds: 30
+  sutra:
+    # Directories scanned recursively for *.yaml layout files (see docs/SUTRA_REFERENCE.md).
+    dirs: ${DRISHTI_SUTRAS:./sutras}
+    # Edit a Sutra and the next view uses it; an invalid edit keeps the last good version.
+    hot-reload: true
+    reload-debounce: 250ms

@@ -20,20 +20,30 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.engine.source.SourceRegistry;
 import com.ash.drishti.engine.source.SourceRouter;
+import com.ash.drishti.sutra.SutraRegistry;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
+@SpringBootTest(properties = {"drishti.sutra.dirs=../sutras", "drishti.sutra.hot-reload=false"})
 class DrishtiApplicationTest {
 
     private final SourceRegistry registry;
     private final SourceRouter router;
+    private final SutraRegistry sutras;
 
     @Autowired
-    DrishtiApplicationTest(SourceRegistry registry, SourceRouter router) {
+    DrishtiApplicationTest(SourceRegistry registry, SourceRouter router, SutraRegistry sutras) {
         this.registry = registry;
         this.router = router;
+        this.sutras = sutras;
+    }
+
+    @Test
+    void loadsTheReferenceSutras() {
+        assertThat(sutras.all()).extracting(s -> s.id())
+                .containsExactlyInAnyOrder("fx-swap@2", "irs-vanilla@3", "listed-future@1", "netting-set@1");
+        assertThat(sutras.problems()).isEmpty();
     }
 
     @Test

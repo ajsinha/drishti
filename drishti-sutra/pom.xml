@@ -29,6 +29,7 @@
   <description>Sutra layout grammar, Sutra-EL, registry</description>
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId></dependency>
+    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot</artifactId></dependency>
     <dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId></dependency>
   </dependencies>
 </project>

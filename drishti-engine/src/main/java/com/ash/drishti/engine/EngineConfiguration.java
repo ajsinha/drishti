@@ -16,6 +16,7 @@
 package com.ash.drishti.engine;
 
 import com.ash.drishti.common.CommonConfiguration;
+import com.ash.drishti.sutra.SutraConfiguration;
 import com.ash.drishti.common.JsonCodec;
 import com.ash.drishti.engine.source.PluginDiscovery;
 import com.ash.drishti.engine.source.SourceRegistry;
@@ -30,7 +31,7 @@ import org.springframework.context.annotation.Import;
 
 /** Beans contributed by {@code drishti-engine}. */
 @Configuration(proxyBeanMethods = false)
-@Import(CommonConfiguration.class)
+@Import({CommonConfiguration.class, SutraConfiguration.class})
 @EnableConfigurationProperties(SourcesProperties.class)
 public class EngineConfiguration {
 
