@@ -329,10 +329,16 @@ Maven multi-module reactor on `spring-boot-starter-parent`, `groupId com.ash.dri
 |---|---|
 | Request I/O (fetch, links) | Virtual threads (`Executors.newVirtualThreadPerTaskExecutor`), structured fan-out with deadline |
 | CPU work (bind, inference) | Bounded `ForkJoinPool` sized to cores; panels bound in parallel |
-| Live state | Single writer per `EntityRef` topic; lock-free MPSC queues (JCTools); no shared mutable maps on hot path |
-| Caching | Caffeine: `shape(fingerprint)`, `layout(sutra@v,fp)`, `compiledEL(expr)`, `entity(ref,gen)` with size + TTL bounds |
+| Live state | One topic per `EntityRef`, one source subscription each (connected exactly once, even when subscribers arrive together); ticks land in a latest-wins atomic slot and a single flush per frame delivers them; one drainer per view stream (CAS handover), failed rebuilds retried with backoff |
+| Caching | Caffeine: `shape(fingerprint)`, `layout(Sutra identity, kind, fp)`, `compiledEL(expr)`; loads that do I/O (Delta log and partitions) use async caches loading on virtual threads, so no lock is held during I/O |
+| Locks | `ReentrantLock`, never `synchronized`, around anything that can block (file I/O, network, subscribes): on Java 21 a virtual thread blocked in `synchronized` pins its carrier. Read-modify-write of shared records happens under the record's lock on the *current* value (users: per-user lock plus one admin lock, always in that order) |
+| Publication | State readers need together is published in one volatile write of an immutable snapshot (Sutra registry, search index); readers never lock |
+| Native resources | RocksDB generations are reference counted: a call enters the current generation and leaves after, and a retired generation closes only when its last caller has left, so a nightly clear or a purge never frees memory under a running read |
+| Schedulers | The plugins' shared scheduler runs on virtual-thread workers, so a slow refresh or scan never delays another plugin's ticks or the nightly cache clearing |
+| Limits | Live streams take a slot atomically before any work (`drishti.live.max-streams`, shared by view and monitor streams) and release it exactly once |
 | Allocation | Immutable records; path strings interned; ViewModel JSON streamed with Jackson `JsonGenerator` |
-| Back-pressure | Bounded per-subscriber queues, latest-wins coalescing, never unbounded collections (ArchUnit rule) |
+| Back-pressure | One coalescing frame slot per live client (latest wins), bounded alert queues; a slow client costs one slot, never a growing queue |
+| Proof | Race tests reproduce each hazard with many threads and fail on the unsafe version: lockout under parallel guessing, admin changes against late sign-ins, the last-admin rule, simultaneous topic subscribers, index rebuilds during search, the stream cap, and RocksDB clear/close under 32 threads |
 | Targets | warm view p99 < 50 ms, cold (first fingerprint) p99 < 150 ms, tick → screen p99 < 40 ms, 10k concurrent SSE subscribers per node |
 
 ---

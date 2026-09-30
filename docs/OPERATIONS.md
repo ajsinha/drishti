@@ -82,6 +82,13 @@ Nothing grows with the day's data unbounded. Every cache has a size limit you ca
 | Engine | layouts, shape fingerprints, compiled expressions | `drishti.engine.layout-cache-size` (10,000), `fingerprint-cache-size` (100,000), `drishti.rachana.expression-cache-size` (10,000) |
 | Live views | the current document of each entity someone is watching | `drishti.live.max-streams` (20,000) |
 
+**Disk space in the disk cache.** A delete or an overwrite in RocksDB writes a small marker; the space comes back
+when the file holding the old value is dropped. The disk cache uses FIFO compaction, which never rewrites files, so
+space is reclaimed in three ways: the oldest files go once the store passes `disk-cache.max-gb`; the whole store is
+deleted at the nightly `reset-at`; and an admin purge does the same at once. In between, deleted and overwritten
+entries still take space, never beyond `max-gb`. Clearing and purging are safe under load: the new store takes
+over at once and the old one is closed only after its last reader has finished.
+
 An admin can purge any cache at any time from **Admin → Caches** (or `POST /api/v1/admin/caches/{name|all}/purge`);
 purges are audited. Documents of entities nobody is viewing are not held: Kafka messages for them are indexed from their key without
 being parsed, and a later view reads that one message back by its offset.

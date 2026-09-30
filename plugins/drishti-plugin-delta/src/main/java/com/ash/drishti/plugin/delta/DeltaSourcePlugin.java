@@ -26,7 +26,7 @@ import com.ash.drishti.api.Provenance;
 import com.ash.drishti.api.SourceCapabilities;
 import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
-import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.AsyncCache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import io.delta.kernel.defaults.engine.DefaultEngine;
 import io.delta.kernel.engine.Engine;
@@ -76,9 +76,13 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     private final Map<String, DeltaTable> tables = new LinkedHashMap<>();
     private final Map<String, String> modes = new HashMap<>();
     private final HitIndex index = new HitIndex();
-    private Cache<String, DeltaTable.Layout> latest;
-    private Cache<String, DeltaTable.Layout> travelled;
-    private Cache<PartKey, Part> parts;
+    // Async caches: a load (the Delta log, a Parquet partition) runs on a virtual thread, and callers wanting the same
+    // key wait on its future without holding any lock. A synchronous Caffeine load would run inside the map's
+    // compute and pin the carrier thread for the whole read. One read still serves every caller of a key.
+    private final java.util.concurrent.ExecutorService loaders = java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor();
+    private AsyncCache<String, DeltaTable.Layout> latest;
+    private AsyncCache<String, DeltaTable.Layout> travelled;
+    private AsyncCache<PartKey, Part> parts;
     private SourceContext context;
     private String sourceName;
     private int lookbackDays;
@@ -109,13 +113,13 @@ public final class DeltaSourcePlugin implements SourcePlugin {
             modes.put(kind, ctx.setting("mode." + kind, "snapshot"));
         }
         long refresh = Long.parseLong(ctx.setting("refresh-seconds", "10"));
-        this.latest = Caffeine.newBuilder().expireAfterWrite(Duration.ofSeconds(refresh)).build();
-        this.travelled = Caffeine.newBuilder().maximumSize(256).build();
+        this.latest = Caffeine.newBuilder().executor(loaders).expireAfterWrite(Duration.ofSeconds(refresh)).buildAsync();
+        this.travelled = Caffeine.newBuilder().executor(loaders).maximumSize(256).buildAsync();
         // bounded by memory, not by count: a partition weighs about its documents' text (two bytes a character)
-        this.parts = Caffeine.newBuilder().maximumWeight(Long.parseLong(ctx.setting("cache-mb", "512")) * 1024 * 1024)
+        this.parts = Caffeine.newBuilder().executor(loaders).maximumWeight(Long.parseLong(ctx.setting("cache-mb", "512")) * 1024 * 1024)
                 .weigher((PartKey k, Part v) -> (int) Math.min(Integer.MAX_VALUE,
                         64L + v.docs().values().stream().mapToLong(d -> 2L * d.length() + 64).sum() + 48L * v.refs().size()))
-                .build();
+                .buildAsync();
         reindex();
         ctx.scheduler().scheduleWithFixedDelay(this::reindex, refresh * 6, refresh * 6, TimeUnit.SECONDS);
     }
@@ -138,18 +142,33 @@ public final class DeltaSourcePlugin implements SourcePlugin {
             return Optional.empty();
         }
         if (knownAt == null) {
-            return Optional.ofNullable(latest.get(kind, k -> t.layout(null).orElse(null)));
+            return Optional.ofNullable(join(latest.get(kind, k -> t.layout(null).orElse(null))));
         }
-        return Optional.ofNullable(travelled.get(kind + "@" + knownAt.toEpochMilli(), k -> t.layout(knownAt).orElse(null)));
+        return Optional.ofNullable(join(travelled.get(kind + "@" + knownAt.toEpochMilli(), k -> t.layout(knownAt).orElse(null))));
     }
 
     private Part part(String kind, DeltaTable.Layout l, LocalDate date) {
-        return parts.get(new PartKey(kind, l.version(), date), k -> {
+        return join(parts.get(new PartKey(kind, l.version(), date), k -> {
             Map<String, String> docs = tables.get(kind).read(l, date);
             Map<String, Set<String>> refs = new HashMap<>();
             docs.forEach((id, json) -> ReferenceScanner.referencedIds(json).forEach(r -> refs.computeIfAbsent(r, x -> new HashSet<>()).add(id)));
-            return new Part(Collections.unmodifiableMap(docs), refs);
-        });
+            return new Part(Collections.unmodifiableMap(docs), Collections.unmodifiableMap(refs));
+        }));
+    }
+
+    /** Waits for a load, rethrowing what it threw (not wrapped). */
+    private static <T> T join(java.util.concurrent.CompletableFuture<T> f) {
+        try {
+            return f.join();
+        } catch (java.util.concurrent.CompletionException e) {
+            if (e.getCause() instanceof RuntimeException re) {
+                throw re;
+            }
+            if (e.getCause() instanceof Error err) {
+                throw err;
+            }
+            throw e;
+        }
     }
 
     /** Partitions to look in for {@code date}, newest first. */
@@ -236,14 +255,20 @@ public final class DeltaSourcePlugin implements SourcePlugin {
 
     @Override
     public Map<String, Object> cacheStats() {
-        return Map.of("partitions", parts.estimatedSize(), "tables", latest.estimatedSize(), "timeTravel", travelled.estimatedSize());
+        return Map.of("partitions", parts.synchronous().estimatedSize(), "tables", latest.synchronous().estimatedSize(),
+                "timeTravel", travelled.synchronous().estimatedSize());
     }
 
     @Override
     public void purgeCaches() {
-        parts.invalidateAll();
-        latest.invalidateAll();
-        travelled.invalidateAll();
+        parts.synchronous().invalidateAll();
+        latest.synchronous().invalidateAll();
+        travelled.synchronous().invalidateAll();
+    }
+
+    @Override
+    public void close() {
+        loaders.shutdownNow();               // loads in flight are abandoned; their callers get an error, not a hang
     }
 
     @Override

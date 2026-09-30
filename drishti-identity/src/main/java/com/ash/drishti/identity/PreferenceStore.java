@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 
 /**
@@ -46,7 +47,7 @@ public final class PreferenceStore {
     private final int maxDocBytes;
     private final int maxPerNamespace;
     private final ObjectMapper json = new ObjectMapper();
-    private final Map<String, Object> locks = new ConcurrentHashMap<>();
+    private final Map<String, ReentrantLock> locks = new ConcurrentHashMap<>();
 
     public PreferenceStore(Path dir, int maxDocBytes, int maxPerNamespace) {
         this.dir = dir.toAbsolutePath().normalize();
@@ -95,7 +96,9 @@ public final class PreferenceStore {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-        synchronized (locks.computeIfAbsent(user, u -> new Object())) {
+        ReentrantLock lock = lockOf(user);
+        lock.lock();
+        try {
             ObjectNode all = load(user);
             ObjectNode ns = all.has(namespace) ? (ObjectNode) all.get(namespace) : all.putObject(namespace);
             if (!ns.has(key) && ns.size() >= maxPerNamespace) {
@@ -103,11 +106,15 @@ public final class PreferenceStore {
             }
             ns.set(key, value);
             write(user, all);
+        } finally {
+            lock.unlock();
         }
     }
 
     public boolean delete(String user, String namespace, String key) {
-        synchronized (locks.computeIfAbsent(user, u -> new Object())) {
+        ReentrantLock lock = lockOf(user);
+        lock.lock();
+        try {
             ObjectNode all = load(user);
             JsonNode ns = all.get(namespace);
             if (ns == null || ns.get(key) == null) {
@@ -116,6 +123,8 @@ public final class PreferenceStore {
             ((ObjectNode) ns).remove(key);
             write(user, all);
             return true;
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -135,11 +144,20 @@ public final class PreferenceStore {
 
     /** Removes every document of a user (called when the user is deleted). */
     public void forget(String user) {
+        ReentrantLock lock = lockOf(user);    // the same lock as put, so a concurrent put cannot bring the file back
+        lock.lock();
         try {
             Files.deleteIfExists(file(user));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
+        } finally {
+            lock.unlock();
         }
+    }
+
+    /** Per-user lock; a ReentrantLock because the guarded work is file I/O, which would pin a virtual thread under synchronized. */
+    private ReentrantLock lockOf(String user) {
+        return locks.computeIfAbsent(user, u -> new ReentrantLock());
     }
 
     private void write(String user, ObjectNode all) {

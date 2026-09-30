@@ -24,7 +24,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -84,6 +86,9 @@ public final class ViewStream implements AutoCloseable {
         }
     }
 
+    /** Consecutive failed rebuilds; only the single drainer touches it (handed over through {@code running}). */
+    private int failures;
+
     private void drain() {
         try {
             while (!closed && dirty.getAndSet(false)) {
@@ -98,8 +103,16 @@ public final class ViewStream implements AutoCloseable {
                     sink.accept(new Frame(seq.incrementAndGet(), next.provenance().generation(), patches, latency, metrics.percentile(99)));
                 }
             }
+            failures = 0;
         } catch (RuntimeException e) {
-            dirty.set(true);
+            // Retry later, not at once: a source that is down or an entity that is gone would otherwise be rebuilt
+            // in a tight loop. The delay doubles from 0.5 s to 30 s; any new tick still retries immediately.
+            long delay = Math.min(30_000L, 500L << Math.min(failures++, 6));
+            CompletableFuture.delayedExecutor(delay, TimeUnit.MILLISECONDS, executor).execute(() -> {
+                if (!closed) {
+                    changed(tickAt);
+                }
+            });
         } finally {
             running.set(false);
             if (dirty.get() && !closed && running.compareAndSet(false, true)) {

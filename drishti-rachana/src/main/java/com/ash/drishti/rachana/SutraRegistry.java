@@ -59,16 +59,18 @@ public final class SutraRegistry implements AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(SutraRegistry.class);
 
     /** An immutable view of the registry at one moment. */
-    private record Snapshot(Map<String, NavigableMap<Integer, Sutra>> byName, Map<String, List<SutraProblem>> problems) {}
+    private record Snapshot(Map<String, NavigableMap<Integer, Sutra>> byName, Map<String, List<SutraProblem>> problems,
+            Map<String, String> sources, Map<String, Path> fileOf) {}
 
     private final SutraParser parser = new SutraParser();
     private final RachanaProperties props;
     private final SutraExpressions expressions;
     private final Map<Path, Sutra> lastGood = new HashMap<>();
-    private volatile Map<String, String> sources = Map.of();
-    private volatile Map<String, Path> fileOf = Map.of();
+    /** Serialises reloads and saves (never taken by readers). A ReentrantLock: both do file I/O, which would pin under synchronized. */
+    private final java.util.concurrent.locks.ReentrantLock writeLock = new java.util.concurrent.locks.ReentrantLock();
     private final List<Consumer<Set<String>>> listeners = new CopyOnWriteArrayList<>();
-    private volatile Snapshot snapshot = new Snapshot(Map.of(), Map.of());
+    /** Everything readers see, published in one write: a reader never pairs new Sutras with old sources. */
+    private volatile Snapshot snapshot = new Snapshot(Map.of(), Map.of(), Map.of(), Map.of());
     private volatile WatchService watcher;
     private Thread watchThread;
 
@@ -115,7 +117,7 @@ public final class SutraRegistry implements AutoCloseable {
 
     /** The text of a loaded Sutra (Markdown or YAML), as last read from its file. */
     public Optional<String> source(String name, int version) {
-        return Optional.ofNullable(sources.get(name + "@" + version));
+        return Optional.ofNullable(snapshot.sources().get(name + "@" + version));
     }
 
     /**
@@ -125,7 +127,16 @@ public final class SutraRegistry implements AutoCloseable {
      *
      * @return the written Sutra
      */
-    public synchronized Sutra save(String yaml) throws IOException {
+    public Sutra save(String yaml) throws IOException {
+        writeLock.lock();
+        try {
+            return save0(yaml);
+        } finally {
+            writeLock.unlock();
+        }
+    }
+
+    private Sutra save0(String yaml) throws IOException {
         Sutra s = parser.parse(yaml, "studio.yaml", "studio");
         List<SutraProblem> problems = expressions.check(s);
         if (!problems.isEmpty()) {
@@ -139,7 +150,7 @@ public final class SutraRegistry implements AutoCloseable {
         if (!target.startsWith(dir)) {
             throw new SutraException(List.of(new SutraProblem("DRS-2020", "bad domain or name", s.location())));
         }
-        Path existing = fileOf.get(s.id());
+        Path existing = snapshot.fileOf().get(s.id());
         if (existing != null && !existing.equals(target)) {
             throw new SutraException(List.of(new SutraProblem("DRS-2028", s.id() + " is already defined in " + existing, s.location())));
         }
@@ -169,8 +180,17 @@ public final class SutraRegistry implements AutoCloseable {
         listeners.add(listener);
     }
 
-    /** Rescans every directory. Synchronized: reloads are rare, reads never wait for them. */
-    public synchronized void reload() {
+    /** Rescans every directory. Reloads are serialised and rare; reads never wait for them. */
+    public void reload() {
+        writeLock.lock();
+        try {
+            reload0();
+        } finally {
+            writeLock.unlock();
+        }
+    }
+
+    private void reload0() {
         Snapshot before = snapshot;
         Map<String, NavigableMap<Integer, Sutra>> byName = new TreeMap<>();
         Map<String, List<SutraProblem>> problems = new LinkedHashMap<>();
@@ -213,9 +233,7 @@ public final class SutraRegistry implements AutoCloseable {
         }
         Map<String, NavigableMap<Integer, Sutra>> frozen = new TreeMap<>();
         byName.forEach((k, v) -> frozen.put(k, Collections.unmodifiableNavigableMap(v)));
-        snapshot = new Snapshot(Collections.unmodifiableMap(frozen), Collections.unmodifiableMap(problems));
-        sources = Map.copyOf(texts);
-        fileOf = Map.copyOf(origin);
+        snapshot = new Snapshot(Collections.unmodifiableMap(frozen), Collections.unmodifiableMap(problems), Map.copyOf(texts), Map.copyOf(origin));
         problems.forEach((f, ps) -> ps.forEach(p -> LOG.warn("sutra problem {}", p)));
         Set<String> changed = changedIds(before, snapshot);
         LOG.info("sutras loaded: {} names, {} problem file(s), {} changed", frozen.size(), problems.size(), changed.size());
@@ -293,7 +311,12 @@ public final class SutraRegistry implements AutoCloseable {
                     more.pollEvents();
                     more.reset();
                 }
-                reload();
+                try {
+                    reload();
+                } catch (RuntimeException e) {
+                    // keep watching: one bad reload (or a failing listener) must not end hot reload silently
+                    LOG.error("sutra reload failed; the last good Sutras stay live", e);
+                }
             }
         } catch (InterruptedException | ClosedWatchServiceException e) {
             Thread.currentThread().interrupt();

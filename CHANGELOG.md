@@ -16,6 +16,17 @@
 # Changelog
 
 ## Unreleased
+- **Concurrency hardening, audited module by module.** Fixed:
+  - **Disk cache:** RocksDB generations are reference counted. A nightly clear, a purge or a close never frees native memory under a running read (it could crash the JVM after a 30 s grace period); later calls miss instead of failing.
+  - **Sign-in and administration:** changes are applied to the current record under per-user and admin locks. Parallel wrong guesses can no longer dodge lockout, a sign-in finishing late can no longer undo an admin's disable or password reset, and two admins can no longer disable each other at once.
+  - **Live topics:** subscribers arriving together could leave a topic unconnected, so a live view never ticked. Topics now connect exactly once.
+  - **Kafka:** the cold-miss reader uses a `ReentrantLock` with a timeout (was `synchronized`, pinning carrier threads for up to 5 s); a fetch racing a newer record or a tombstone no longer caches the stale document; listener entries go with their last listener (also in the demo source); close is safe against a late read.
+  - **Delta:** partitions and logs load through async caches on virtual threads (no map lock held during Parquet reads).
+  - **Hot paths:** a failed live rebuild backs off (0.5 s to 30 s) instead of spinning; alert-rule saves are serialised so none is lost; the audit log, preferences and Sutra registry use `ReentrantLock` instead of `synchronized`; a preference delete can no longer race a write.
+  - **Snapshots:** the search index and the Sutra registry publish complete immutable snapshots (searches never see an empty index mid-rebuild), and hot reload survives an unexpected error.
+  - **Stream limits:** the stream cap is taken atomically and shared by monitor streams, which now release their subscriptions on failure.
+  - **Scheduler and shutdown:** the plugins' scheduler runs on virtual-thread workers; shutdown interrupts stream writers instead of waiting out a heartbeat.
+  - **Tests:** race tests reproduce each hazard and fail on the old code.
 - **Politics and society pack.** Two fictional polities, so nothing describes real parties or people, with real mechanics: seats by D'Hondt with a 5% threshold or by first past the post, fortnightly polls with 95% margins of error, bills through their readings with votes, regional results and social indicators.
 - **Economics pack.** Seven real economies with illustrative figures: growth paths and output by sector, macro indicators with release calendars and surprises, central-bank decisions and guidance, forecasts with weighted scenarios, bilateral trade flows, labour markets, fiscal positions and consumer-price contributions.
 - **Genomics and biology pack**, the first with no banking ties. Genes with GRCh38 locations, expression by tissue and known variants; variants (BRAF V600E, KRAS G12D, EGFR L858R, CFTR F508del, …) with HGVS names, dbSNP ids, significance and population frequencies; UniProt proteins with domains; pathways; tumour samples with variant calls; sequencing runs with quality by cycle; differential-expression studies; targeted-therapy trials. Reference facts are public; patient-level data is synthetic.

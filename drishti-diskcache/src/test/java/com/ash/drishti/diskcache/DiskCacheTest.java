@@ -24,7 +24,15 @@ import java.time.Clock;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -83,5 +91,104 @@ class DiskCacheTest {
         // across the autumn clock change the clearing stays at 02:00 local time
         ZonedDateTime beforeDst = ZonedDateTime.of(2026, 10, 31, 22, 0, 0, 0, NY);
         assertThat(DiskCache.nextReset(beforeDst, LocalTime.of(2, 0)).toLocalTime()).isEqualTo(LocalTime.of(2, 0));
+    }
+
+    /**
+     * Many threads read and write while another clears over and over and finally closes. Each retired generation is
+     * closed the moment its last caller leaves, so a caller left inside a closed RocksDB would crash the JVM here.
+     */
+    @Test
+    void readersAndWritersNeverTouchAClosedStore() throws Exception {
+        ScheduledExecutorService sched = Executors.newScheduledThreadPool(2);
+        ExecutorService workers = Executors.newFixedThreadPool(32);   // platform threads: the workers spin without blocking, which would starve virtual-thread carriers
+        DiskCache c = new DiskCache(dir, 64L * 1024 * 1024, null, NY, sched, Clock.systemUTC());
+        AtomicBoolean stop = new AtomicBoolean();
+        AtomicLong ops = new AtomicLong();
+        CountDownLatch started = new CountDownLatch(32);
+        List<Future<?>> running = new ArrayList<>();
+        try {
+            for (int t = 0; t < 32; t++) {
+                int id = t;
+                running.add(workers.submit(() -> {
+                    started.countDown();
+                    byte[] v = new byte[512];
+                    for (long n = 0; !stop.get(); n++) {
+                        String key = "k" + id + "-" + (n % 200);
+                        c.put(key, v);
+                        byte[] got = c.get(key);
+                        if (got != null && got.length != v.length) {
+                            throw new AssertionError("torn value");
+                        }
+                        if (n % 7 == 0) {
+                            c.delete(key);
+                        }
+                        c.sizeOnDisk();
+                        ops.incrementAndGet();
+                    }
+                    return null;
+                }));
+            }
+            started.await();
+            for (int i = 0; i < 150; i++) {
+                c.clear();
+            }
+            c.close();                        // while every worker is still running
+            Thread.sleep(50);
+            stop.set(true);
+            for (Future<?> f : running) {
+                f.get(30, TimeUnit.SECONDS);  // rethrows anything a worker hit
+            }
+            assertThat(ops.get()).isGreaterThan(1000);
+            assertThat(c.resets()).isEqualTo(150);
+            assertThat(c.get("k0-0")).isNull();           // closed: reads miss, writes are dropped
+            c.put("k0-0", new byte[] {1});
+            c.clear();                                    // no effect after close
+            assertThat(c.resets()).isEqualTo(150);
+        } finally {
+            stop.set(true);
+            workers.shutdown();
+            workers.awaitTermination(30, TimeUnit.SECONDS);
+            sched.shutdown();
+            sched.awaitTermination(30, TimeUnit.SECONDS);
+        }
+        try (Stream<Path> gens = Files.list(dir)) {
+            assertThat(gens.toList()).as("every generation closed and deleted").isEmpty();
+        }
+    }
+
+    @Test
+    void closeAndClearFromManyThreadsAtOnce() throws Exception {
+        ScheduledExecutorService sched = Executors.newScheduledThreadPool(2);
+        ExecutorService workers = Executors.newFixedThreadPool(32);   // platform threads: the workers spin without blocking, which would starve virtual-thread carriers
+        DiskCache c = new DiskCache(dir, 64L * 1024 * 1024, null, NY, sched, Clock.systemUTC());
+        CountDownLatch go = new CountDownLatch(1);
+        List<Future<?>> all = new ArrayList<>();
+        for (int t = 0; t < 16; t++) {
+            int id = t;
+            all.add(workers.submit(() -> {
+                go.await();
+                for (int i = 0; i < 20; i++) {
+                    if (id == 15 && i == 10) {
+                        c.close();
+                    } else {
+                        c.clear();
+                        c.put("k", new byte[] {1});
+                        c.get("k");
+                    }
+                }
+                return null;
+            }));
+        }
+        go.countDown();
+        for (Future<?> f : all) {
+            f.get(60, TimeUnit.SECONDS);
+        }
+        assertThat(c.isClosed()).isTrue();
+        workers.shutdown();
+        sched.shutdown();
+        sched.awaitTermination(30, TimeUnit.SECONDS);
+        try (Stream<Path> gens = Files.list(dir)) {
+            assertThat(gens.toList()).as("no generation leaked").isEmpty();
+        }
     }
 }

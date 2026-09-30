@@ -140,4 +140,34 @@ class TopicHubTest {
             assertThat((System.nanoTime() - t0) / 1e6).isLessThan(5_000);
         }
     }
+
+    /** Subscribers arriving together: the topic connects upstream exactly once, never zero times, and all get ticks. */
+    @Test
+    void simultaneousSubscribersConnectTheTopicExactlyOnce() throws Exception {
+        Manual m = new Manual();
+        int rounds = 200;
+        int threads = 8;
+        try (TopicHub hub = hub(m); var pool = Executors.newFixedThreadPool(threads)) {
+            for (int round = 0; round < rounds; round++) {
+                EntityRef ref = EntityRef.of("trade", "R" + round);
+                java.util.concurrent.CyclicBarrier together = new java.util.concurrent.CyclicBarrier(threads);
+                List<java.util.concurrent.Future<Subscription>> subs = new java.util.ArrayList<>();
+                for (int t = 0; t < threads; t++) {
+                    subs.add(pool.submit(() -> {
+                        together.await();
+                        return hub.subscribe(ref, d -> { });
+                    }));
+                }
+                for (var f : subs) {
+                    f.get(10, java.util.concurrent.TimeUnit.SECONDS);
+                }
+                assertThat(m.opened).as("round " + round).hasValue(round + 1);
+                for (var f : subs) {
+                    f.get().close();
+                }
+            }
+            assertThat(m.subs).as("every upstream subscription closed").isEmpty();
+            assertThat(hub.topicCount()).isZero();
+        }
+    }
 }

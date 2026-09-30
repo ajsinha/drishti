@@ -44,7 +44,10 @@ public final class SourceRegistry implements AutoCloseable {
     private final ScheduledExecutorService scheduler;
 
     public SourceRegistry(List<SourcePlugin> discovered, SourcesProperties props, JsonCodec codec) {
-        this.scheduler = Executors.newScheduledThreadPool(2, Thread.ofPlatform().daemon().name("drishti-source-sched-", 0).factory());
+        // Shared by every plugin for refreshes, rescans, ticks and nightly cache clearing, several of which block on
+        // I/O (a feed download, an Aerospike scan, a Delta reindex). Virtual-thread workers: a blocked task releases
+        // its carrier, and sixteen of them cost next to nothing, so one slow task never delays the others.
+        this.scheduler = Executors.newScheduledThreadPool(16, Thread.ofVirtual().name("drishti-source-sched-", 0).factory());
         Map<String, SourcePlugin> started = new LinkedHashMap<>();
         // a plugin used through named connectors runs as itself only if it is configured under plugins explicitly
         java.util.Set<String> viaConnectors = new java.util.HashSet<>();

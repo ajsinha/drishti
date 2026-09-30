@@ -59,13 +59,15 @@ public class StreamController {
     private final LiveMetrics metrics;
     private final LiveProperties props;
     private final ExecutorService executor;
-    private final AtomicInteger open = new AtomicInteger();
+    private final LiveStreamSlots slots;
     private final Entitlements entitlements;
 
     public StreamController(ViewPipeline pipeline, TopicHub hub, LiveMetrics metrics, LiveProperties props,
-            ExecutorService drishtiVirtualExecutor, Entitlements entitlements, io.micrometer.core.instrument.MeterRegistry meters) {
+            ExecutorService drishtiVirtualExecutor, Entitlements entitlements, io.micrometer.core.instrument.MeterRegistry meters,
+            LiveStreamSlots slots) {
         this.entitlements = entitlements;
-        io.micrometer.core.instrument.Gauge.builder("drishti.live.streams", open, AtomicInteger::get).register(meters);
+        this.slots = slots;
+        io.micrometer.core.instrument.Gauge.builder("drishti.live.streams", slots.counter(), AtomicInteger::get).register(meters);
         io.micrometer.core.instrument.Gauge.builder("drishti.live.topics", hub, TopicHub::topicCount).register(meters);
         io.micrometer.core.instrument.Gauge.builder("drishti.live.latency.p99", metrics, m -> m.percentile(99))
                 .baseUnit("milliseconds").register(meters);
@@ -81,14 +83,22 @@ public class StreamController {
     public SseEmitter stream(@PathVariable String kind, @PathVariable String id, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
         entitlements.requireOpen(principal, kind);
-        if (open.get() >= props.maxStreams()) {
+        LiveStreamSlots.Slot slot = slots.tryAcquire();   // taken first and atomically: concurrent requests cannot overshoot the cap
+        if (slot == null) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "too many live streams on this server");
         }
         EntityRef ref = EntityRef.of(kind, id);
-        ViewModel initial = pipeline.view(ref, asOf);
+        ViewModel initial;
+        try {
+            initial = pipeline.view(ref, asOf);
+        } catch (RuntimeException e) {
+            slot.release();
+            throw e;
+        }
         SseEmitter emitter = new SseEmitter(0L);
         if (!initial.provenance().live()) {
-            // a past business date, or a static source: one view, no ticks
+            // a past business date, or a static source: one view, no ticks, no slot held
+            slot.release();
             executor.execute(() -> {
                 try {
                     emitter.send(SseEmitter.event().name("view").id("0").data(initial, MediaType.APPLICATION_JSON));
@@ -100,11 +110,16 @@ public class StreamController {
             return emitter;
         }
         FrameMailbox box = new FrameMailbox();
-        ViewStream stream = new ViewStream(ref, initial, chartSources(initial), hub, pipeline, executor, metrics, box::offer);
-        open.incrementAndGet();
+        ViewStream stream;
+        try {
+            stream = new ViewStream(ref, initial, chartSources(initial), hub, pipeline, executor, metrics, box::offer);
+        } catch (RuntimeException e) {
+            slot.release();
+            throw e;
+        }
         Runnable closeAll = () -> {
             stream.close();
-            open.decrementAndGet();
+            slot.release();
         };
         executor.execute(() -> write(emitter, initial, box, closeAll));
         return emitter;
@@ -146,7 +161,7 @@ public class StreamController {
     @GetMapping("/health/live")
     public Map<String, Object> live() {
         Map<String, Object> m = new LinkedHashMap<>();
-        m.put("streams", open.get());
+        m.put("streams", slots.open());
         m.put("topics", hub.topicCount());
         m.put("frames", metrics.frames());
         m.put("p50Ms", metrics.percentile(50));
@@ -155,7 +170,7 @@ public class StreamController {
     }
 
     int openStreams() {
-        return open.get();
+        return slots.open();
     }
 
 }

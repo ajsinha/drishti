@@ -22,6 +22,9 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +33,12 @@ import org.slf4j.LoggerFactory;
  * User management: sign-in with lockout, self-service password change, and administration (create,
  * update, enable/disable, reset password, delete). Every change is audited. There is always at least one
  * enabled admin: the last one cannot be disabled, demoted or deleted.
+ *
+ * <p>Concurrency: every change is a read-modify-write of the <em>current</em> record under that user's lock, so a
+ * sign-in finishing late can never write back a stale copy over an admin's change, and parallel wrong guesses are
+ * all counted (lockout cannot be raced). Administrative changes also hold one admin lock, so the last-admin rule is
+ * checked and applied atomically. Lock order is always admin, then user. Locks are {@link ReentrantLock}s, which
+ * do not pin virtual threads.
  */
 public final class UserService {
 
@@ -60,6 +69,8 @@ public final class UserService {
     private final IdentityProperties props;
     private final Set<String> knownRoles;
     private final String dummyHash;
+    private final ReentrantLock adminLock = new ReentrantLock();
+    private final ConcurrentHashMap<String, ReentrantLock> userLocks = new ConcurrentHashMap<>();
 
     public UserService(UserStore store, PasswordHasher hasher, AuditLog audit, IdentityProperties props, Set<String> knownRoles) {
         this.store = store;
@@ -92,11 +103,18 @@ public final class UserService {
 
     public User authenticate(String username, String password) {
         String name = norm(username);
-        Instant now = Instant.now();
-        User u = store.find(name).orElse(null);
-        if (u == null) {
+        if (store.find(name).isEmpty()) {
             hasher.verify(password == null ? "" : password, dummyHash);
             audit.record(name, "login-failed", name, "unknown user");
+            throw new DrishtiException(ErrorCode.BAD_CREDENTIALS, "unknown user or wrong password");
+        }
+        return asUser(name, () -> signIn(name, password));
+    }
+
+    private User signIn(String name, String password) {
+        Instant now = Instant.now();
+        User u = store.find(name).orElse(null);    // re-read under the lock: the current record, not a stale copy
+        if (u == null) {
             throw new DrishtiException(ErrorCode.BAD_CREDENTIALS, "unknown user or wrong password");
         }
         if (u.locked(now)) {
@@ -121,6 +139,10 @@ public final class UserService {
     }
 
     public User changeOwnPassword(String username, String current, String next) {
+        return asUser(norm(username), () -> changePassword(username, current, next));
+    }
+
+    private User changePassword(String username, String current, String next) {
         User u = require(username);
         if (!hasher.verify(current == null ? "" : current, u.passwordHash())) {
             audit.record(username, "password-change-failed", username, "wrong current password");
@@ -160,6 +182,10 @@ public final class UserService {
     }
 
     public User create(String actor, String username, Profile p, String password, boolean mustChange) {
+        return asAdmin(norm(username), () -> create0(actor, username, p, password, mustChange));
+    }
+
+    private User create0(String actor, String username, Profile p, String password, boolean mustChange) {
         String name = norm(username);
         if (!NAME.matcher(name).matches()) {
             throw new DrishtiException(ErrorCode.INVALID_USER, "user name must be 3-64 of a-z 0-9 . _ - and start with a letter or digit");
@@ -178,6 +204,10 @@ public final class UserService {
     }
 
     public User update(String actor, String username, Profile p) {
+        return asAdmin(norm(username), () -> update0(actor, username, p));
+    }
+
+    private User update0(String actor, String username, Profile p) {
         User u = require(username);
         validate(p);
         boolean enabled = p.enabled() == null ? u.enabled() : p.enabled();
@@ -193,6 +223,10 @@ public final class UserService {
     }
 
     public User setEnabled(String actor, String username, boolean enabled) {
+        return asAdmin(norm(username), () -> setEnabled0(actor, username, enabled));
+    }
+
+    private User setEnabled0(String actor, String username, boolean enabled) {
         User u = require(username);
         if (!enabled && u.username().equals(actor)) {
             throw new DrishtiException(ErrorCode.INVALID_USER, "you cannot disable your own account");
@@ -209,6 +243,10 @@ public final class UserService {
      * sign-in only when {@code force-password-change-on-reset} is configured.
      */
     public User resetPassword(String actor, String username, String password) {
+        return asAdmin(norm(username), () -> resetPassword0(actor, username, password));
+    }
+
+    private User resetPassword0(String actor, String username, String password) {
         User u = require(username);
         checkPassword(password, u.username());
         boolean mustChange = props.forcePasswordChangeOnReset() && !u.username().equals(actor);
@@ -219,6 +257,14 @@ public final class UserService {
     }
 
     public void delete(String actor, String username) {
+        asAdmin(norm(username), () -> {
+            delete0(actor, username);
+            return null;
+        });
+        userLocks.remove(norm(username));
+    }
+
+    private void delete0(String actor, String username) {
         User u = require(username);
         if (u.username().equals(actor)) {
             throw new DrishtiException(ErrorCode.INVALID_USER, "you cannot delete your own account");
@@ -239,6 +285,27 @@ public final class UserService {
 
     public Set<String> knownRoles() {
         return knownRoles;
+    }
+
+    // ---- locking -------------------------------------------------------------------------------
+
+    private <T> T asUser(String name, Supplier<T> body) {
+        ReentrantLock lock = userLocks.computeIfAbsent(name, n -> new ReentrantLock());
+        lock.lock();
+        try {
+            return body.get();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private <T> T asAdmin(String name, Supplier<T> body) {
+        adminLock.lock();
+        try {
+            return asUser(name, body);
+        } finally {
+            adminLock.unlock();
+        }
     }
 
     // ---- rules ---------------------------------------------------------------------------------

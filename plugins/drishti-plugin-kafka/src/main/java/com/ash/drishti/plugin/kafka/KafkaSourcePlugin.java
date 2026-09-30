@@ -88,7 +88,8 @@ public final class KafkaSourcePlugin implements SourcePlugin {
     private final Map<EntityRef, Pos> positions = new ConcurrentHashMap<>();
     private com.github.benmanes.caffeine.cache.Cache<EntityRef, EntityDocument> cache;
     private KafkaConsumer<String, String> reader;
-    private final Object readerLock = new Object();
+    /** Guards the cold-miss reader (a KafkaConsumer is single-threaded). A ReentrantLock: the guarded poll is network I/O. */
+    private final java.util.concurrent.locks.ReentrantLock readerLock = new java.util.concurrent.locks.ReentrantLock();
     private boolean ticksOnly;
     private com.ash.drishti.diskcache.DiskCache disk;
     private boolean searchable;
@@ -104,6 +105,7 @@ public final class KafkaSourcePlugin implements SourcePlugin {
     private String sourceName;
     private volatile boolean caughtUp;
     private volatile boolean running = true;
+    private volatile boolean closed;
     private String defaultKind;
     private String defaultIdField = "id";
 
@@ -214,8 +216,10 @@ public final class KafkaSourcePlugin implements SourcePlugin {
         String mapped = kindOfTopic.getOrDefault(r.topic(), defaultKind);
         if (mapped != null && r.key() != null) {
             EntityRef ref = EntityRef.of(mapped, r.key());
-            boolean wanted = listeners.containsKey(ref) || cache.getIfPresent(ref) != null;
             track(ref, r);
+            // after track: a fetch that cached an older document either sees the new position and drops it, or
+            // finished before track, in which case this check sees its entry and replaces it
+            boolean wanted = listeners.containsKey(ref) || cache.getIfPresent(ref) != null;
             if (!wanted || r.value() == null) {
                 if (r.value() == null) {
                     cache.invalidate(ref);
@@ -339,7 +343,7 @@ public final class KafkaSourcePlugin implements SourcePlugin {
                     DataNode data = context.parseJson(new ByteArrayInputStream(bytes));
                     EntityDocument d = new EntityDocument(ref, data, new Provenance(sourceName, pos.offset(), Instant.now(), true));
                     weights.put(ref, bytes.length);
-                    cache.put(ref, d);
+                    cacheIfCurrent(ref, pos, d);
                     return Optional.of(d);
                 } catch (java.io.IOException e) {
                     disk.delete(diskKey(ref));
@@ -359,7 +363,7 @@ public final class KafkaSourcePlugin implements SourcePlugin {
                 DataNode data = context.parseJson(new ByteArrayInputStream(JSON.writeValueAsBytes(body)));
                 EntityDocument d = new EntityDocument(ref, data, new Provenance(sourceName, r.offset(), Instant.ofEpochMilli(r.timestamp()), true));
                 weights.put(ref, r.value().length());
-                cache.put(ref, d);
+                cacheIfCurrent(ref, pos, d);
                 return Optional.of(d);
             } catch (Exception e) {
                 return Optional.empty();
@@ -367,9 +371,34 @@ public final class KafkaSourcePlugin implements SourcePlugin {
         }
     }
 
-    /** Reads the one record at {@code pos} (a cache miss); a single reader, so reads are serialised. */
+    /**
+     * Caches a document read at {@code pos} unless the entity moved on meanwhile (a newer record or a tombstone was
+     * applied while this fetch was reading): then the entry is dropped, so a stale or deleted document never sticks.
+     */
+    private void cacheIfCurrent(EntityRef ref, Pos pos, EntityDocument d) {
+        cache.put(ref, d);
+        if (!pos.equals(positions.get(ref))) {
+            cache.invalidate(ref);
+        }
+    }
+
+    /**
+     * Reads the one record at {@code pos} (a cache miss); a single reader, so reads are serialised. Waits at most
+     * the read budget for the reader, and gives up (a miss) once the plugin is closing.
+     */
     private ConsumerRecord<String, String> readAt(Pos pos) {
-        synchronized (readerLock) {
+        try {
+            if (closed || !readerLock.tryLock(5, java.util.concurrent.TimeUnit.SECONDS)) {
+                return null;
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return null;
+        }
+        try {
+            if (closed) {
+                return null;
+            }
             TopicPartition tp = new TopicPartition(pos.topic(), pos.partition());
             reader.assign(List.of(tp));
             reader.seek(tp, pos.offset());
@@ -385,14 +414,25 @@ public final class KafkaSourcePlugin implements SourcePlugin {
                 }
             }
             return null;
+        } catch (org.apache.kafka.common.KafkaException | IllegalStateException e) {
+            return null;                      // broker trouble or closing: a miss, not an error for the viewer
+        } finally {
+            readerLock.unlock();
         }
     }
 
     @Override
     public Subscription subscribe(EntityRef ref, Consumer<EntityDocument> listener) {
-        List<Consumer<EntityDocument>> subs = listeners.computeIfAbsent(ref, r -> new CopyOnWriteArrayList<>());
-        subs.add(listener);
-        return () -> subs.remove(listener);
+        listeners.compute(ref, (r, subs) -> {
+            List<Consumer<EntityDocument>> l = subs == null ? new CopyOnWriteArrayList<>() : subs;
+            l.add(listener);
+            return l;
+        });
+        // the entry goes when its last listener does, so an entity nobody watches is no longer parsed on every update
+        return () -> listeners.computeIfPresent(ref, (r, subs) -> {
+            subs.remove(listener);
+            return subs.isEmpty() ? null : subs;
+        });
     }
 
     @Override
@@ -439,24 +479,28 @@ public final class KafkaSourcePlugin implements SourcePlugin {
 
     @Override
     public void close() {
+        closed = true;
         running = false;
         if (consumer != null) {
             consumer.wakeup();
         }
         if (loop != null) {
             try {
-                loop.join(3000);
+                loop.join(10_000);           // the loop ends at the wakeup; its consumer.close is bounded to 2 s
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         }
         if (reader != null) {
-            synchronized (readerLock) {
+            readerLock.lock();                // after any read in flight; later reads see closed and miss
+            try {
                 reader.close(Duration.ofSeconds(1));
+            } finally {
+                readerLock.unlock();
             }
         }
         if (disk != null) {
-            disk.close();                 // last: the loop has stopped writing
+            disk.close();                     // safe even if the loop still writes: the disk cache drops late calls
         }
     }
 }

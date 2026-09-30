@@ -25,10 +25,13 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Comparator;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Stream;
 import org.rocksdb.CompactionOptionsFIFO;
 import org.rocksdb.CompactionStyle;
@@ -44,8 +47,13 @@ import org.slf4j.LoggerFactory;
  * A disk-backed cache for live data: RocksDB on local disk, between a connector's in-memory cache and its source.
  * Bounded by size (FIFO compaction drops the oldest files once {@code maxBytes} is reached), written without a
  * write-ahead log (it is a cache: after a crash the connector refills it), and cleared every day at a configured
- * time in a configured zone. Clearing swaps in a fresh, empty store and deletes the old one a little later, so
- * readers never wait. Thread-safe.
+ * time in a configured zone. Clearing swaps in a fresh, empty store, so readers never wait.
+ *
+ * <p>Thread safety: any number of threads may read and write at once (RocksDB handles are thread-safe). Each store
+ * generation is reference counted: a call enters the current generation before touching it and leaves after, and
+ * a retired generation is closed only when its last caller has left. So a clear or a close never frees native
+ * memory under a running call, however long that call is delayed. Clearing and closing are serialised by a lock
+ * (never held during reads or writes). After {@link #close()} reads miss and writes are dropped.
  */
 public final class DiskCache implements AutoCloseable {
 
@@ -55,14 +63,56 @@ public final class DiskCache implements AutoCloseable {
         RocksDB.loadLibrary();
     }
 
-    /** One generation of the store: its directory and handle. */
-    private record Store(Path dir, RocksDB db, Options options) {}
+    /**
+     * One generation of the store. {@code users} counts the callers inside it plus one for the cache's own
+     * reference; it reaches zero only after the generation is retired and every caller has left.
+     */
+    private static final class Store {
+        final Path dir;
+        final RocksDB db;
+        final Options options;
+        final CompactionOptionsFIFO fifo;
+        final WriteOptions write = new WriteOptions().setDisableWAL(true);
+        final AtomicInteger users = new AtomicInteger(1);
+
+        Store(Path dir, RocksDB db, Options options, CompactionOptionsFIFO fifo) {
+            this.dir = dir;
+            this.db = db;
+            this.options = options;
+            this.fifo = fifo;
+        }
+
+        /** Enters unless the generation is already being closed. */
+        boolean enter() {
+            for (int n = users.get(); n > 0; n = users.get()) {
+                if (users.compareAndSet(n, n + 1)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /** @return true when this was the last user: the caller must dispose of the generation */
+        boolean leave() {
+            return users.decrementAndGet() == 0;
+        }
+
+        void dispose() {
+            write.close();
+            db.close();
+            options.close();
+            fifo.close();
+            deleteTree(dir);
+        }
+    }
 
     private final Path root;
     private final long maxBytes;
-    private final WriteOptions write = new WriteOptions().setDisableWAL(true);
     private final AtomicReference<Store> store = new AtomicReference<>();
+    private final ReentrantLock lifecycle = new ReentrantLock();   // clear and close; not synchronized, so virtual threads never pin
+    private volatile boolean closed;
     private final ScheduledExecutorService scheduler;
+    private final AtomicLong generation = new AtomicLong();
     private final AtomicLong hits = new AtomicLong();
     private final AtomicLong misses = new AtomicLong();
     private final AtomicLong resets = new AtomicLong();
@@ -72,14 +122,14 @@ public final class DiskCache implements AutoCloseable {
      * @param maxBytes disk budget; the oldest data goes first beyond it
      * @param resetAt daily clearing time, or {@code null} for never
      * @param zone the zone of {@code resetAt}
-     * @param scheduler runs the nightly clearing and deletes old generations
+     * @param scheduler runs the nightly clearing and disposes of retired generations
      */
     public DiskCache(Path root, long maxBytes, LocalTime resetAt, ZoneId zone, ScheduledExecutorService scheduler, Clock clock) throws IOException {
         this.root = root.toAbsolutePath().normalize();
         this.maxBytes = maxBytes;
         this.scheduler = scheduler;
         Files.createDirectories(this.root);
-        deleteGenerations(null);              // whatever a previous run left is stale by definition
+        deleteGenerations();                  // whatever a previous run left is stale by definition
         store.set(open());
         if (resetAt != null) {
             scheduleReset(resetAt, zone, clock);
@@ -87,15 +137,16 @@ public final class DiskCache implements AutoCloseable {
     }
 
     private Store open() throws IOException {
-        Path dir = root.resolve("gen-" + System.currentTimeMillis() + "-" + resets.get());
+        Path dir = root.resolve("gen-" + System.currentTimeMillis() + "-" + generation.incrementAndGet());
         Files.createDirectories(dir);
+        CompactionOptionsFIFO fifo = new CompactionOptionsFIFO().setMaxTableFilesSize(maxBytes);
         Options o = new Options().setCreateIfMissing(true).setCompressionType(CompressionType.LZ4_COMPRESSION)
-                .setCompactionStyle(CompactionStyle.FIFO).setWriteBufferSize(32L * 1024 * 1024)
-                .setCompactionOptionsFIFO(new CompactionOptionsFIFO().setMaxTableFilesSize(maxBytes));
+                .setCompactionStyle(CompactionStyle.FIFO).setWriteBufferSize(32L * 1024 * 1024).setCompactionOptionsFIFO(fifo);
         try {
-            return new Store(dir, RocksDB.open(o, dir.toString()), o);
+            return new Store(dir, RocksDB.open(o, dir.toString()), o, fifo);
         } catch (RocksDBException e) {
             o.close();
+            fifo.close();
             throw new IOException("cannot open disk cache at " + dir + ": " + e.getMessage(), e);
         }
     }
@@ -109,61 +160,114 @@ public final class DiskCache implements AutoCloseable {
     private void scheduleReset(LocalTime at, ZoneId zone, Clock clock) {
         ZonedDateTime now = ZonedDateTime.now(clock.withZone(zone));
         long delay = Duration.between(now, nextReset(now, at)).toMillis();
-        scheduler.schedule(() -> {
-            clear();
-            scheduleReset(at, zone, clock);   // recomputed each day, so daylight saving changes are honoured
-        }, delay, TimeUnit.MILLISECONDS);
+        try {
+            scheduler.schedule(() -> {
+                if (!closed) {
+                    clear();
+                    scheduleReset(at, zone, clock);   // recomputed each day, so daylight saving changes are honoured
+                }
+            }, delay, TimeUnit.MILLISECONDS);
+        } catch (RejectedExecutionException e) {
+            LOG.debug("disk cache {}: scheduler stopped, no further clearing", root);
+        }
+    }
+
+    /** The current generation, entered; {@code null} once closed. The caller must {@link #leave} it. */
+    private Store enter() {
+        while (true) {
+            Store s = store.get();
+            if (s == null) {
+                return null;
+            }
+            if (s.enter()) {
+                return s;
+            }
+            // retired between the read and the enter: the reference already points at its successor, so retry
+        }
+    }
+
+    private void leave(Store s) {
+        if (s.leave()) {
+            dispose(s);
+        }
     }
 
     public byte[] get(String key) {
+        Store s = enter();
+        if (s == null) {
+            misses.incrementAndGet();
+            return null;
+        }
         try {
-            byte[] v = store.get().db().get(key.getBytes(StandardCharsets.UTF_8));
+            byte[] v = s.db.get(key.getBytes(StandardCharsets.UTF_8));
             (v == null ? misses : hits).incrementAndGet();
             return v;
         } catch (RocksDBException e) {
             misses.incrementAndGet();
             return null;
+        } finally {
+            leave(s);
         }
     }
 
     public void put(String key, byte[] value) {
+        Store s = enter();
+        if (s == null) {
+            return;
+        }
         try {
-            store.get().db().put(write, key.getBytes(StandardCharsets.UTF_8), value);
+            s.db.put(s.write, key.getBytes(StandardCharsets.UTF_8), value);
         } catch (RocksDBException e) {
             LOG.debug("disk cache write skipped: {}", e.getMessage());
+        } finally {
+            leave(s);
         }
     }
 
     public void delete(String key) {
+        Store s = enter();
+        if (s == null) {
+            return;
+        }
         try {
-            store.get().db().delete(write, key.getBytes(StandardCharsets.UTF_8));
+            s.db.delete(s.write, key.getBytes(StandardCharsets.UTF_8));
         } catch (RocksDBException e) {
             LOG.debug("disk cache delete skipped: {}", e.getMessage());
+        } finally {
+            leave(s);
         }
     }
 
-    /** Empties the cache now: a fresh store takes over at once; the old one is closed and deleted shortly after. */
+    /** Empties the cache now: a fresh store takes over at once; the old one closes when its last caller leaves. */
     public void clear() {
+        lifecycle.lock();
         try {
+            if (closed) {
+                return;
+            }
+            Store old = store.getAndSet(open());
             resets.incrementAndGet();
-            Store fresh = open();
-            Store old = store.getAndSet(fresh);
-            scheduler.schedule(() -> dispose(old), 30, TimeUnit.SECONDS);
+            leave(old);                       // drop the cache's own reference
             LOG.info("disk cache {} cleared", root);
         } catch (IOException e) {
             LOG.warn("disk cache {} could not be cleared: {}", root, e.getMessage());
+        } finally {
+            lifecycle.unlock();
         }
     }
 
-    private static void dispose(Store s) {
-        s.db().close();
-        s.options().close();
-        deleteTree(s.dir());
+    /** Closes and deletes a generation off the caller's thread when the scheduler still runs. */
+    private void dispose(Store s) {
+        try {
+            scheduler.execute(s::dispose);
+        } catch (RejectedExecutionException e) {
+            s.dispose();
+        }
     }
 
-    private void deleteGenerations(Path keep) throws IOException {
+    private void deleteGenerations() throws IOException {
         try (Stream<Path> gens = Files.list(root)) {
-            gens.filter(p -> p.getFileName().toString().startsWith("gen-") && !p.equals(keep)).forEach(DiskCache::deleteTree);
+            gens.filter(p -> p.getFileName().toString().startsWith("gen-")).forEach(DiskCache::deleteTree);
         }
     }
 
@@ -175,13 +279,25 @@ public final class DiskCache implements AutoCloseable {
         }
     }
 
-    /** Bytes on disk, as RocksDB reports its table files. */
+    /** Bytes on disk, as RocksDB reports its table files; -1 once closed. */
     public long sizeOnDisk() {
-        try {
-            return store.get().db().getLongProperty("rocksdb.total-sst-files-size");
-        } catch (RocksDBException e) {
+        Store s = enter();
+        if (s == null) {
             return -1;
         }
+        try {
+            return s.db.getLongProperty("rocksdb.total-sst-files-size");
+        } catch (RocksDBException e) {
+            return -1;
+        } finally {
+            leave(s);
+        }
+    }
+
+    /** Callers inside the current generation, for tests and diagnostics (excludes the cache's own reference). */
+    int activeCallers() {
+        Store s = store.get();
+        return s == null ? 0 : Math.max(0, s.users.get() - 1);
     }
 
     public long hits() {
@@ -196,12 +312,25 @@ public final class DiskCache implements AutoCloseable {
         return resets.get();
     }
 
+    public boolean isClosed() {
+        return closed;
+    }
+
+    /** Stops the cache: later calls miss or are dropped; the store closes once calls in flight have left. */
     @Override
     public void close() {
-        Store s = store.getAndSet(null);
-        if (s != null) {
-            dispose(s);
+        lifecycle.lock();
+        try {
+            if (closed) {
+                return;
+            }
+            closed = true;
+            Store s = store.getAndSet(null);
+            if (s != null && s.leave()) {
+                s.dispose();                  // nobody inside: close here, so the files are gone when close returns
+            }
+        } finally {
+            lifecycle.unlock();
         }
-        write.close();
     }
 }

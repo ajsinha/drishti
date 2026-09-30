@@ -58,8 +58,12 @@ import org.springframework.context.annotation.Import;
         com.ash.drishti.engine.time.BusinessDateProperties.class})
 public class EngineConfiguration {
 
-    /** One virtual thread per task: fetches, link fan-out and searches block cheaply here. */
-    @Bean(destroyMethod = "close")
+    /**
+     * One virtual thread per task: fetches, link fan-out and searches block cheaply here. Shut down with
+     * {@code shutdownNow}: long-lived tasks (live stream writers waiting for their next frame) are interrupted,
+     * so shutdown does not wait out a heartbeat.
+     */
+    @Bean(destroyMethod = "shutdownNow")
     public ExecutorService drishtiVirtualExecutor() {
         return Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("drishti-vt-", 0).factory());
     }

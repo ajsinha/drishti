@@ -35,7 +35,7 @@ final class FrameMailbox {
     private final ReentrantLock lock = new ReentrantLock();
     private final Condition ready = lock.newCondition();
     private Frame pending;
-    private long merged;
+    private volatile long merged;   // written under the lock, read without it (statistics)
 
     void offer(Frame f) {
         lock.lock();

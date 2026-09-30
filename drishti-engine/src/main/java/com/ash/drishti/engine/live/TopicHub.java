@@ -26,6 +26,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
 /**
@@ -38,11 +39,15 @@ import java.util.function.Consumer;
  */
 public final class TopicHub implements AutoCloseable {
 
+    /** A topic that has been disconnected; never connected again (a new subscriber gets a new topic). */
+    private static final Subscription CLOSED = () -> {};
+
     private final class Topic {
         final EntityRef ref;
         final CopyOnWriteArrayList<Consumer<EntityDocument>> listeners = new CopyOnWriteArrayList<>();
         final AtomicReference<EntityDocument> latest = new AtomicReference<>();
         final AtomicBoolean scheduled = new AtomicBoolean();
+        final ReentrantLock lock = new ReentrantLock();   // guards connecting and disconnecting the source
         volatile Subscription source = Subscription.NONE;
         volatile long lastFlush;
 
@@ -93,9 +98,16 @@ public final class TopicHub implements AutoCloseable {
             topic.listeners.add(listener);
             return topic;
         });
-        synchronized (t) {
-            if (t.source == Subscription.NONE && t.listeners.size() == 1) {
-                t.source = router.subscribe(ref, t::onTick);
+        // Subscribe upstream once per topic, whoever gets here first. Not "when I am the only listener": two
+        // subscribers arriving together both see two listeners, and the topic would then never be fed.
+        if (t.source == Subscription.NONE) {
+            t.lock.lock();                    // a ReentrantLock: the upstream subscribe may do I/O, and synchronized would pin
+            try {
+                if (t.source == Subscription.NONE && topics.get(ref) == t) {
+                    t.source = router.subscribe(ref, t::onTick);
+                }
+            } finally {
+                t.lock.unlock();
             }
         }
         return () -> release(ref, listener);
@@ -105,7 +117,13 @@ public final class TopicHub implements AutoCloseable {
         topics.computeIfPresent(ref, (r, t) -> {
             t.listeners.remove(listener);
             if (t.listeners.isEmpty()) {
-                t.source.close();
+                t.lock.lock();                // not while a subscriber is still connecting it upstream
+                try {
+                    t.source.close();
+                    t.source = CLOSED;
+                } finally {
+                    t.lock.unlock();
+                }
                 return null;
             }
             return t;

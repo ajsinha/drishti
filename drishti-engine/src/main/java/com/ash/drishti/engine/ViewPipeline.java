@@ -71,7 +71,24 @@ import java.util.concurrent.ExecutorService;
 public final class ViewPipeline {
 
     /** Cache key for effective layouts. */
-    record LayoutKey(String sutra, String kind, Fingerprint fingerprint) {}
+    record LayoutKey(Object sutra, String kind, Fingerprint fingerprint) {}
+
+    /**
+     * A Sutra compared by identity: each (re)load parses a new object, so a layout computed from an older parse can
+     * never be served for a newer one, even when a build that started before a same-version edit finishes after it.
+     * Identity, not the record's deep equality, so the key stays cheap to hash.
+     */
+    private record SutraIdentity(Sutra sutra) {
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof SutraIdentity other && other.sutra == sutra;
+        }
+
+        @Override
+        public int hashCode() {
+            return System.identityHashCode(sutra);
+        }
+    }
 
     record GenKey(EntityRef ref, long generation, java.time.LocalDate businessDate) {}
 
@@ -164,7 +181,7 @@ public final class ViewPipeline {
         Fingerprint fp = fingerprints.get(new GenKey(ref, doc.provenance().generation(), doc.provenance().businessDate()),
                 k -> fingerprinter.fingerprint(doc.data()));
         EffectiveLayout layout = cached
-                ? layouts.get(new LayoutKey(sutra.map(Sutra::id).orElse("-"), ref.kind(), fp), k -> merger.merge(sutra, doc.data(), ref.kind()))
+                ? layouts.get(new LayoutKey(sutra.<Object>map(SutraIdentity::new).orElse("-"), ref.kind(), fp), k -> merger.merge(sutra, doc.data(), ref.kind()))
                 : merger.merge(sutra, doc.data(), ref.kind());
         long tLayout = System.nanoTime();
 

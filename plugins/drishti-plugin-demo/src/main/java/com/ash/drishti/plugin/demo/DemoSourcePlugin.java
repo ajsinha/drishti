@@ -119,9 +119,16 @@ public final class DemoSourcePlugin implements SourcePlugin {
         if (d == null || !d.provenance().live()) {
             return Subscription.NONE;
         }
-        List<Consumer<EntityDocument>> subs = listeners.computeIfAbsent(ref, r -> new CopyOnWriteArrayList<>());
-        subs.add(listener);
-        return () -> subs.remove(listener);
+        listeners.compute(ref, (r, subs) -> {
+            List<Consumer<EntityDocument>> l = subs == null ? new CopyOnWriteArrayList<>() : subs;
+            l.add(listener);
+            return l;
+        });
+        // the entry goes with its last listener, so the ticker stops walking entities nobody watches
+        return () -> listeners.computeIfPresent(ref, (r, subs) -> {
+            subs.remove(listener);
+            return subs.isEmpty() ? null : subs;
+        });
     }
 
     @Override

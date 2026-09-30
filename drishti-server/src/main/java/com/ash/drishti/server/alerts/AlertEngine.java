@@ -68,6 +68,8 @@ public final class AlertEngine implements AutoCloseable {
     private final Map<String, List<AlertRule>> rulesByUser = new ConcurrentHashMap<>();
     private final Map<EntityRef, Subscription> subscriptions = new ConcurrentHashMap<>();
     private final Map<String, Boolean> state = new ConcurrentHashMap<>();
+    /** Serialises rule changes: store write, re-read, publish, resubscribe. A ReentrantLock: it spans file I/O and subscribes. */
+    private final java.util.concurrent.locks.ReentrantLock rules = new java.util.concurrent.locks.ReentrantLock();
     private final Map<String, Deque<AlertEvent>> events = new ConcurrentHashMap<>();
     private final Map<String, List<Consumer<AlertEvent>>> listeners = new ConcurrentHashMap<>();
 
@@ -105,19 +107,29 @@ public final class AlertEngine implements AutoCloseable {
         n.putObject("ref").put("kind", rule.ref().kind()).put("id", rule.ref().id());
         n.put("when", rule.when()).put("severity", rule.severity()).put("message", rule.message() == null ? "" : rule.message())
                 .put("enabled", rule.enabled());
-        store.put(user, NS, rule.name(), n);
-        state.remove(user + "\u0000" + rule.name());
-        rulesByUser.put(user, read(user));
-        resubscribe();
+        rules.lock();                         // write, re-read and publish as one step, so concurrent saves never lose a rule
+        try {
+            store.put(user, NS, rule.name(), n);
+            state.remove(user + "\u0000" + rule.name());
+            rulesByUser.put(user, read(user));
+            resubscribe();
+        } finally {
+            rules.unlock();
+        }
         router.fetch(rule.ref()).thenAccept(this::evaluate);
         return rule;
     }
 
     public boolean delete(String user, String name) {
-        boolean removed = store.delete(user, NS, name);
-        rulesByUser.put(user, read(user));
-        resubscribe();
-        return removed;
+        rules.lock();
+        try {
+            boolean removed = store.delete(user, NS, name);
+            rulesByUser.put(user, read(user));
+            resubscribe();
+            return removed;
+        } finally {
+            rules.unlock();
+        }
     }
 
     private List<AlertRule> read(String user) {
@@ -131,7 +143,8 @@ public final class AlertEngine implements AutoCloseable {
     }
 
     /** Subscribes to every entity some enabled rule watches, and drops subscriptions nobody needs. */
-    private synchronized void resubscribe() {
+    /** Called with {@link #rules} held (or during construction). */
+    private void resubscribe() {
         Set<EntityRef> wanted = ConcurrentHashMap.newKeySet();
         rulesByUser.values().forEach(rs -> rs.stream().filter(AlertRule::enabled).forEach(r -> wanted.add(r.ref())));
         subscriptions.keySet().removeIf(ref -> {

@@ -28,6 +28,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,30 +53,47 @@ public final class AuditLog {
     private final ObjectMapper json = new ObjectMapper().registerModule(new JavaTimeModule())
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     private final Deque<Event> recent = new ArrayDeque<>();
+    private final ReentrantLock lock = new ReentrantLock();   // not synchronized: the append is file I/O, which would pin a virtual thread
 
     public AuditLog(Path file) {
         this.file = file.toAbsolutePath().normalize();
     }
 
-    public synchronized void record(String actor, String action, String subject, String detail) {
+    public void record(String actor, String action, String subject, String detail) {
         Event e = new Event(Instant.now(), actor, action, subject, detail);
-        recent.addFirst(e);
-        while (recent.size() > KEEP) {
-            recent.removeLast();
-        }
+        String line;
         try {
+            line = json.writeValueAsString(e) + "\n";
+        } catch (IOException ex) {
+            LOG.error("audit event for {} {} could not be written", action, subject, ex);
+            return;
+        }
+        lock.lock();                          // one lock for memory and file, so both keep the same order
+        try {
+            recent.addFirst(e);
+            while (recent.size() > KEEP) {
+                recent.removeLast();
+            }
             Files.createDirectories(file.getParent());
-            Files.writeString(file, json.writeValueAsString(e) + "\n", StandardCharsets.UTF_8, StandardOpenOption.CREATE,
-                    StandardOpenOption.APPEND);
+            Files.writeString(file, line, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
         } catch (IOException ex) {
             LOG.error("audit write failed for {} {}", action, subject, ex);
+        } finally {
+            lock.unlock();
         }
     }
 
     /** Newest first, at most {@code limit}, optionally only events about {@code subject}. */
-    public synchronized List<Event> recent(int limit, String subject) {
+    public List<Event> recent(int limit, String subject) {
+        List<Event> snapshot;
+        lock.lock();
+        try {
+            snapshot = new ArrayList<>(recent);
+        } finally {
+            lock.unlock();
+        }
         List<Event> out = new ArrayList<>();
-        for (Event e : recent) {
+        for (Event e : snapshot) {
             if (subject == null || subject.isBlank() || subject.equals(e.subject()) || subject.equals(e.actor())) {
                 out.add(e);
                 if (out.size() >= limit) {

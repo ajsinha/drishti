@@ -67,8 +67,11 @@ public class MonitorController {
     private final ExecutorService executor;
     private final ObjectMapper json = new ObjectMapper();
 
+    private final LiveStreamSlots slots;
+
     public MonitorController(PreferenceStore store, Entitlements entitlements, ViewPipeline pipeline, TopicHub hub, LiveMetrics metrics,
-            ExecutorService drishtiVirtualExecutor) {
+            ExecutorService drishtiVirtualExecutor, LiveStreamSlots slots) {
+        this.slots = slots;
         this.store = store;
         this.entitlements = entitlements;
         this.pipeline = pipeline;
@@ -143,28 +146,20 @@ public class MonitorController {
     @GetMapping(path = "/{name}/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter stream(@PathVariable String name, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         List<EntityRef> refs = refs(p.user(), name);
+        LiveStreamSlots.Slot slot = slots.tryAcquire();   // a monitor is one connection against the same server-wide cap
+        if (slot == null) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "too many live streams on this server");
+        }
         SseEmitter emitter = new SseEmitter(0L);
         Map<EntityRef, FrameMailbox> boxes = new LinkedHashMap<>();
         java.util.concurrent.Semaphore signal = new java.util.concurrent.Semaphore(0);
         List<ViewStream> streams = new ArrayList<>();
-        for (EntityRef r : refs) {
-            if (!entitlements.mayOpen(p, r.kind())) {
-                continue;
-            }
-            FrameMailbox box = new FrameMailbox();
-            boxes.put(r, box);
-            try {
-                ViewModel first = pipeline.view(r, asOf);
-                if (!first.provenance().live()) {
-                    continue;
-                }
-                streams.add(new ViewStream(r, first, List.of(), hub, pipeline, executor, metrics, f -> {
-                    box.offer(f);
-                    signal.release();
-                }));
-            } catch (DrishtiException ignored) {
-                // a missing entity simply does not tick
-            }
+        try {
+            openRows(refs, p, asOf, boxes, signal, streams);
+        } catch (RuntimeException e) {
+            streams.forEach(ViewStream::close);   // nothing leaks when one row fails unexpectedly
+            slot.release();
+            throw e;
         }
         executor.execute(() -> {
             try {
@@ -190,8 +185,33 @@ public class MonitorController {
                 Thread.currentThread().interrupt();
             } finally {
                 streams.forEach(ViewStream::close);
+                slot.release();
             }
         });
         return emitter;
+    }
+
+    /** Opens a live stream per row the user may see; rows that are missing or not live simply do not tick. */
+    private void openRows(List<EntityRef> refs, Principal p, AsOf asOf, Map<EntityRef, FrameMailbox> boxes,
+            java.util.concurrent.Semaphore signal, List<ViewStream> streams) {
+        for (EntityRef r : refs) {
+            if (!entitlements.mayOpen(p, r.kind())) {
+                continue;
+            }
+            FrameMailbox box = new FrameMailbox();
+            boxes.put(r, box);
+            try {
+                ViewModel first = pipeline.view(r, asOf);
+                if (!first.provenance().live()) {
+                    continue;
+                }
+                streams.add(new ViewStream(r, first, List.of(), hub, pipeline, executor, metrics, f -> {
+                    box.offer(f);
+                    signal.release();
+                }));
+            } catch (DrishtiException ignored) {
+                // a missing entity simply does not tick
+            }
+        }
     }
 }

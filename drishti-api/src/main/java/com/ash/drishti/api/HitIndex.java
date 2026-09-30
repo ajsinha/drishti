@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * A small in-memory search index for {@link SourcePlugin#search}. Read-mostly and lock-free on reads.
@@ -29,11 +29,20 @@ public final class HitIndex {
 
     private record Entry(EntityHit hit, String id, String text) {}
 
-    private final CopyOnWriteArrayList<Entry> entries = new CopyOnWriteArrayList<>();
+    /**
+     * An immutable list, swapped whole: a search always sees one complete version (never the empty moment in the
+     * middle of a rebuild), and additions never lose each other (copy-and-swap in a CAS loop).
+     */
+    private final AtomicReference<List<Entry>> entries = new AtomicReference<>(List.of());
 
     public void add(EntityHit hit) {
-        entries.add(new Entry(hit, hit.ref().id().toLowerCase(Locale.ROOT),
-                (hit.title() + " " + hit.subtitle()).toLowerCase(Locale.ROOT)));
+        Entry e = new Entry(hit, hit.ref().id().toLowerCase(Locale.ROOT), (hit.title() + " " + hit.subtitle()).toLowerCase(Locale.ROOT));
+        entries.updateAndGet(old -> {
+            List<Entry> next = new ArrayList<>(old.size() + 1);
+            next.addAll(old);
+            next.add(e);
+            return List.copyOf(next);
+        });
     }
 
     public void replaceAll(List<EntityHit> hits) {
@@ -42,12 +51,11 @@ public final class HitIndex {
             fresh.add(new Entry(h, h.ref().id().toLowerCase(Locale.ROOT),
                     (h.title() + " " + h.subtitle()).toLowerCase(Locale.ROOT)));
         }
-        entries.clear();
-        entries.addAll(fresh);
+        entries.set(List.copyOf(fresh));
     }
 
     public int size() {
-        return entries.size();
+        return entries.get().size();
     }
 
     /** Hits of {@code kind} (null or blank for any kind) matching {@code text}; blank text matches all. */
@@ -55,7 +63,7 @@ public final class HitIndex {
         String q = text == null ? "" : text.trim().toLowerCase(Locale.ROOT);
         boolean anyKind = kind == null || kind.isBlank();
         List<Entry> matched = new ArrayList<>();
-        for (Entry e : entries) {
+        for (Entry e : entries.get()) {
             if ((anyKind || e.hit.ref().kind().equals(kind)) && (q.isEmpty() || e.text.contains(q) || e.id.contains(q))) {
                 matched.add(e);
             }
