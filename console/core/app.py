@@ -30,12 +30,12 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from core.config import Settings
 
 WEB = Path(__file__).resolve().parent.parent / "web"
-ASSET_VERSION = "1.3.0"
+ASSET_VERSION = "1.4.0"
 CSP = ("default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; "
-       "font-src 'self'; connect-src 'self'; frame-ancestors 'none'")
+       "font-src 'self'; connect-src 'self'; frame-src 'self'; frame-ancestors 'self'")
 
 
-PROTECTED = ("/t", "/v/", "/go", "/studio", "/api/", "/admin", "/account")
+PROTECTED = ("/t", "/v/", "/go", "/studio", "/api/", "/admin", "/account", "/w")
 
 
 class AuthGate(BaseHTTPMiddleware):
@@ -60,6 +60,7 @@ class SecurityHeaders(BaseHTTPMiddleware):
         response.headers.setdefault("Content-Security-Policy", CSP)
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("Referrer-Policy", "same-origin")
+        response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
         return response
 
 
@@ -67,7 +68,8 @@ def create_app(settings: Settings) -> FastAPI:
     from core.backend import BackendClient
     from core.auth import Auth
     from core.guides import Library
-    from routes import admin_routes, api_routes, auth_routes, help_routes, home_routes, studio_routes, terminal_routes
+    from routes import (admin_routes, api_routes, auth_routes, help_routes, home_routes, studio_routes, terminal_routes,
+                        workspace_routes)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -110,4 +112,5 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(studio_routes.router)
     app.include_router(admin_routes.router)
     app.include_router(help_routes.router)
+    app.include_router(workspace_routes.router)
     return app

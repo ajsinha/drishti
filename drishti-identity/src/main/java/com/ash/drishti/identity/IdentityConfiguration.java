@@ -33,6 +33,11 @@ public class IdentityConfiguration {
     }
 
     @Bean
+    public PreferenceStore preferenceStore(IdentityProperties props) {
+        return new PreferenceStore(Path.of(props.preferencesDir()), 64 * 1024, 50);
+    }
+
+    @Bean
     public UserService userService(UserStore store, IdentityProperties props, @Qualifier("drishtiRoleNames") Set<String> roles) {
         UserService s = new UserService(store, new PasswordHasher(props.iterations()), new AuditLog(Path.of(props.auditFile())), props, roles);
         s.seedIfEmpty();

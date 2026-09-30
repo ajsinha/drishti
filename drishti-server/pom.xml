@@ -21,7 +21,7 @@
   <parent>
     <groupId>com.ash.drishti</groupId>
     <artifactId>drishti-parent</artifactId>
-    <version>1.3.0</version>
+    <version>1.4.0</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
   <artifactId>drishti-server</artifactId>
@@ -51,6 +51,7 @@
             <drishti.identity.users-file>${project.build.directory}/identity/users.json</drishti.identity.users-file>
             <drishti.identity.audit-file>${project.build.directory}/identity/audit.jsonl</drishti.identity.audit-file>
             <drishti.identity.iterations>1000</drishti.identity.iterations>
+            <drishti.identity.preferences-dir>${project.build.directory}/identity/preferences</drishti.identity.preferences-dir>
           </systemPropertyVariables>
         </configuration>
       </plugin>

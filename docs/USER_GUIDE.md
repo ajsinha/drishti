@@ -68,6 +68,12 @@ Matched characters are highlighted.
 - **How this view was built:** the Sutra and version (or *inference only*), the data fingerprint,
   and the source with its generation.
 
+## Workspaces
+
+**Workspaces** in the top bar (`/w`) puts several live views on one screen. A pane can follow
+another: pick a trade in the netting-set pane and the next pane opens it. Start from *Credit desk*,
+*Rates* or *Cross-asset*, change it, and **Save** it to your account. See the Workspaces guide in help.
+
 ## Help
 
 **Help** in the top bar (or `F1`) opens the help centre: three tutorials, guides and every reference,

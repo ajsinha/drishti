@@ -1,0 +1,38 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Workspaces · {{ PRODUCT }}{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm">
+  <h1>Workspaces</h1>
+  <p class="text-muted-d">Several live views on one screen. A pane can <b>follow</b> another: pick a trade in the netting-set pane and the next pane opens it.</p>
+  {% if missing %}<p class="pnl-err" role="alert">There is no workspace called “{{ missing }}”.</p>{% endif %}
+  <h2 class="ws-h">Yours</h2>
+  {% if mine %}<ul class="ws-list">{% for n in mine %}<li><a href="/w/{{ n | urlencode }}"><i class="bi bi-grid-1x2" aria-hidden="true"></i> {{ n }}</a></li>{% endfor %}</ul>
+  {% else %}<p class="text-muted-d">None saved yet. Open a starter below, change it, and save it under your own name.</p>{% endif %}
+  <h2 class="ws-h">Starters</h2>
+  <div class="help-cards">
+    {% for n, t in templates.items() %}
+    <a class="help-card" href="/w/{{ n | urlencode }}?template={{ n | urlencode }}">
+      <div class="hc-title"><span class="hc-ico"><i class="bi bi-grid-1x2" aria-hidden="true"></i></span><span>{{ n }} <span class="badge-kind">{{ t.layout }}</span></span></div>
+      <p>{{ t.description }}</p><span class="more">Open <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script>{% endblock %}

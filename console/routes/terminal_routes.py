@@ -50,12 +50,12 @@ async def go(request: Request, q: str = ""):
 
 
 @router.get("/v/{kind}/{id_}")
-async def view(request: Request, kind: str, id_: str):
+async def view(request: Request, kind: str, id_: str, embed: int = 0):
     try:
         vm = await request.app.state.backend.view(kind, id_, ident(request))
     except BackendError as e:
         return render(request, "terminal/missing.html", status_code=e.status if e.status < 500 else 502,
-                      kind=kind, id=id_, error=e)
+                      kind=kind, id=id_, error=e, embed=bool(embed))
     main = [p for p in vm["panels"] if p.get("area") != "right"]
     right = [p for p in vm["panels"] if p.get("area") == "right"]
-    return render(request, "terminal/view.html", vm=vm, main=main, right=right)
+    return render(request, "terminal/view.html", vm=vm, main=main, right=right, embed=bool(embed))

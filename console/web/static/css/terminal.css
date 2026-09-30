@@ -289,3 +289,34 @@ kbd { background: var(--d-surface-2); color: var(--d-ink); border: 1px solid var
   .lp-card:hover, .help-card:hover { transform: none; }
   a, button { -webkit-tap-highlight-color: transparent; }
 }
+
+/* ---- workspaces ---- */
+body.embed .view { min-height: 100vh; }
+body.embed .vhead { padding: .6rem .8rem; }
+.ws-h { font-size: 1rem; font-weight: 700; margin: 1.2rem 0 .5rem; color: var(--d-muted); text-transform: uppercase; letter-spacing: .06em; }
+.ws-list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: .5rem; }
+.ws-list a { display: inline-flex; gap: .4rem; border: 1px solid var(--d-border); border-radius: 6px; padding: .45rem .8rem; color: var(--d-ink); background: var(--d-surface); }
+.ws { display: flex; flex-direction: column; height: calc(100vh - 58px); }
+.ws-bar { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; padding: .45rem .8rem; border-bottom: 1px solid var(--d-border); }
+.ws-bar .btn-pill { padding: .25rem .75rem; font-size: .82rem; }
+.ws-name { font-size: 1rem; margin-right: .4rem; }
+.ws-grid { flex: 1; display: grid; gap: .5rem; padding: .5rem; min-height: 0; }
+.ws-2col { grid-template-columns: 1fr 1fr; } .ws-3col { grid-template-columns: repeat(3, 1fr); }
+.ws-2x2 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+.ws-1p2 { grid-template-columns: 3fr 2fr; grid-template-rows: 1fr 1fr; }
+.ws-1p2 > .ws-pane:first-child { grid-row: span 2; }
+.ws-pane { display: flex; flex-direction: column; min-height: 0; min-width: 0; border: 1px solid var(--d-border); border-radius: 6px; background: var(--d-surface); overflow: hidden; }
+.ws-pane:focus-within { border-color: var(--d-accent); }
+.ws-pane-h { display: flex; gap: .45rem; align-items: center; padding: .3rem .5rem; border-bottom: 1px solid var(--d-border); font-size: .8rem; }
+.ws-num { color: var(--d-accent); font-weight: 700; }
+.ws-cmd { flex: 1; min-width: 0; } .ws-cmd .studio-in { width: 100%; padding: .15rem .45rem; }
+.ws-follow { color: var(--d-muted); display: inline-flex; gap: .3rem; align-items: center; white-space: nowrap; }
+.ws-follow .studio-select { padding: .1rem .3rem; font-size: .78rem; }
+.ws-x { background: none; border: 0; font-size: 1.1rem; line-height: 1; }
+.ws-frame { flex: 1; width: 100%; border: 0; background: var(--d-bg); min-height: 240px; }
+@media (max-width: 900px) {
+  .ws { height: auto; }
+  .ws-grid, .ws-2col, .ws-3col, .ws-2x2, .ws-1p2 { grid-template-columns: 1fr; grid-template-rows: none; }
+  .ws-1p2 > .ws-pane:first-child { grid-row: auto; }
+  .ws-frame { height: 75vh; }
+}

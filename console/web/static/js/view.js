@@ -141,6 +141,17 @@
   }
   if (raw) { raw.querySelector('[data-raw-close]').addEventListener('click', toggleRaw); }
 
+  // ---- embedded in a workspace pane: entity links become selections the workspace routes ------------
+  if (view && view.hasAttribute('data-embed') && window.parent !== window) {
+    document.addEventListener('click', function (e) {
+      var a = e.target.closest('a[href^="/v/"]');
+      if (!a) { return; }
+      var parts = a.getAttribute('href').split('?')[0].split('/');
+      e.preventDefault();
+      window.parent.postMessage({ type: 'drishti:select', kind: decodeURIComponent(parts[2]), id: decodeURIComponent(parts[3]) }, location.origin);
+    });
+  }
+
   // ---- function keys --------------------------------------------------------------------------
   function run(btn) {
     var action = btn.getAttribute('data-action');
@@ -162,8 +173,8 @@
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && raw && !raw.hidden) { raw.hidden = true; } });
 
-  // ---- breadcrumbs: the path of views followed in this browser tab ------------------------------
-  if (view) {
+  // ---- breadcrumbs: the path of views followed in this browser tab (not inside workspace panes) ---
+  if (view && !view.hasAttribute('data-embed')) {
     var here = { label: view.dataset.label, url: location.pathname };
     var trail = [];
     try { trail = JSON.parse(sessionStorage.getItem('drishti.trail') || '[]'); } catch (e) { trail = []; }

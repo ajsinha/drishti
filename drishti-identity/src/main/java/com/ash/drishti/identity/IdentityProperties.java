@@ -35,12 +35,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param forcePasswordChangeOnCreate new users must change their password at first sign-in, unless the admin
  *     says otherwise for that user (default false)
  * @param forcePasswordChangeOnReset users must change a password an admin reset for them (default false)
+ * @param preferencesDir per-user documents (workspaces, settings)
  */
 @ConfigurationProperties("drishti.identity")
 public record IdentityProperties(
         String usersFile, String auditFile, Integer iterations, Integer minPasswordLength, Integer maxFailedAttempts,
         Duration lockout, Boolean seedAdmin, String seedUsername, String seedPassword, List<String> seedRoles,
-        Boolean forcePasswordChangeOnCreate, Boolean forcePasswordChangeOnReset) {
+        Boolean forcePasswordChangeOnCreate, Boolean forcePasswordChangeOnReset, String preferencesDir) {
 
     public IdentityProperties {
         usersFile = usersFile == null ? "./data/identity/users.json" : usersFile;
@@ -55,5 +56,6 @@ public record IdentityProperties(
         seedRoles = seedRoles == null ? List.of("admin") : List.copyOf(seedRoles);
         forcePasswordChangeOnCreate = forcePasswordChangeOnCreate != null && forcePasswordChangeOnCreate;
         forcePasswordChangeOnReset = forcePasswordChangeOnReset != null && forcePasswordChangeOnReset;
+        preferencesDir = preferencesDir == null ? "./data/identity/preferences" : preferencesDir;
     }
 }

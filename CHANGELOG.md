@@ -15,6 +15,15 @@
 -->
 # Changelog
 
+## 1.4.0 — Wave 13: workspaces (2026-09-30)
+- **Workspaces** (`/w`): 2–4 live views on one screen, in layouts of two or three columns, two by two, or one large with two stacked.
+  - Each pane is a same-origin embedded view with its own live stream and keys.
+  - A pane can **follow** another: a link clicked in the followed pane opens there (postMessage, origin-checked). `Alt+1…4` moves between panes.
+  - Starters (*Credit desk*, *Rates*, *Cross-asset*) are config (`console/config/workspaces.yaml`).
+- **Saved per user** on the server: `GET/PUT/DELETE /api/v1/me/workspaces[/{name}]`, validated (known layout, 1–4 panes, entitled entities, no follow cycles). They are stored in a new per-user `PreferenceStore` (atomic JSON, 64 KB per document, 50 per namespace), which is removed with the user.
+- Views have an embed mode (`?embed=1`: no chrome, no breadcrumbs). The CSP allows same-origin frames only (`frame-ancestors 'self'`, `X-Frame-Options: SAMEORIGIN`).
+- Docs: a Workspaces guide in help; updated user guide, API guide and architecture.
+
 ## 1.3.0 — Wave 12b: competitive landscape and mobile (2026-09-30)
 - **Competitive landscape** (`/about/competitive`), in Maya's form. It compares categories, not vendors (market data terminals, trading and risk platform screens, low-code tools, BI), with a Yes/Partial/No matrix over twelve capabilities and, for each, the problem and how Drishti does it. It says plainly where Drishti is weaker (no market data content or analytics, no ecosystem or support). The rows are config (`console/config/competitive.yaml`).
 - **Mobile.** Every page works on iPhone (~390 px) and Android (~412 px): stacked layouts; a swipeable F-key bar of tap targets; 16 px inputs (no iOS zoom on focus); safe-area insets; tables that scroll inside their panel; Studio hidden on phones. A web-app manifest and touch icon allow *Add to Home Screen*, which opens at the terminal. Checked with CDP mobile emulation: no page scrolls sideways at 390 px.

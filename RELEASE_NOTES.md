@@ -13,6 +13,16 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 1.4.0 — release notes
+
+*2026-09-30.* This release adds **workspaces**:
+- several live views on one screen, where a pane can follow another's selection (pick a trade in the
+  netting set, and the next pane opens it);
+- three starters;
+- saved per user on the server.
+
+---
+
 # Drishti 1.3.0 — release notes
 
 *2026-09-30.* This release adds:

@@ -73,10 +73,12 @@ public class IdentityController {
 
     private final UserService users;
     private final Entitlements entitlements;
+    private final com.ash.drishti.identity.PreferenceStore preferences;
 
-    public IdentityController(UserService users, Entitlements entitlements) {
+    public IdentityController(UserService users, Entitlements entitlements, com.ash.drishti.identity.PreferenceStore preferences) {
         this.users = users;
         this.entitlements = entitlements;
+        this.preferences = preferences;
     }
 
     private static UserView view(User u) {
@@ -147,6 +149,7 @@ public class IdentityController {
     public void delete(@PathVariable String username, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
         users.delete(p.user(), username);
+        preferences.forget(username);
     }
 
     @GetMapping("/admin/audit")

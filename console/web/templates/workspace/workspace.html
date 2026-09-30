@@ -1,0 +1,53 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}{{ name }} · Workspace · {{ PRODUCT }}{% endblock %}
+{% block body_class %}terminal ws-page{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="ws" data-ws data-name="{{ name }}" data-saved="{{ 'true' if saved else 'false' }}" data-json="{{ ws | tojson | forceescape }}">
+  <header class="ws-bar">
+    <a href="/w" class="tbar-link"><i class="bi bi-grid-1x2" aria-hidden="true"></i> Workspaces</a>
+    <strong class="ws-name">{{ name }}</strong>
+    <label class="visually-hidden" for="wsLayout">Layout</label>
+    <select id="wsLayout" class="studio-select" data-layout>
+      <option value="2col">Two columns</option><option value="3col">Three columns</option>
+      <option value="2x2">Two by two</option><option value="1+2">One large, two stacked</option>
+    </select>
+    <button type="button" class="btn-pill btn-ghost" data-add><i class="bi bi-plus-lg" aria-hidden="true"></i> Pane</button>
+    <button type="button" class="btn-pill btn-accent" data-save><i class="bi bi-save" aria-hidden="true"></i> Save</button>
+    <button type="button" class="btn-pill btn-ghost" data-saveas>Save as…</button>
+    <button type="button" class="btn-pill btn-ghost" data-delete{% if not saved %} hidden{% endif %}>Delete</button>
+    <span class="adm-msg" data-msg role="status" aria-live="polite"></span>
+  </header>
+  <div class="ws-grid" data-grid></div>
+</div>
+<template id="paneTpl">
+  <section class="ws-pane" tabindex="-1">
+    <header class="ws-pane-h">
+      <span class="ws-num mono"></span>
+      <form class="ws-cmd" data-pane-cmd><label class="visually-hidden">Entity for this pane</label>
+        <input class="studio-in mono" placeholder="TRD IRS-48213" data-pane-input></form>
+      <label class="ws-follow">follows <select class="studio-select" data-follows><option value="">—</option></select></label>
+      <a class="tbar-link" data-open title="Open full screen"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>
+      <button type="button" class="tbar-link ws-x" data-remove title="Remove pane" aria-label="Remove pane">×</button>
+    </header>
+    <iframe class="ws-frame" title="Pane" loading="lazy"></iframe>
+  </section>
+</template>
+{% endblock %}
+{% block footer %}{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/workspace.js?v={{ ASSET_V }}"></script>{% endblock %}

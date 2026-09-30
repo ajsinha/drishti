@@ -103,6 +103,25 @@ class FakeBackend:
             return {**body, "enabled": True}
         return {"ok": True}
 
+    saved_workspaces = {}
+
+    async def workspaces(self, ident):
+        return sorted(self.saved_workspaces)
+
+    async def workspace(self, name, ident):
+        if name not in self.saved_workspaces:
+            raise BackendError(404, "DRS-1001", "no workspace")
+        return self.saved_workspaces[name]
+
+    async def save_workspace(self, name, body, ident):
+        if not body.get("panes"):
+            raise BackendError(400, "DRS-5001", "a workspace has 1 to 4 panes")
+        self.saved_workspaces[name] = body
+        return body
+
+    async def delete_workspace(self, name, ident):
+        self.saved_workspaces.pop(name, None)
+
     async def about(self, ident=None):
         return {"product": "Drishti", "version": "1.2.0", "built": "2026-09-30T12:00:00Z", "java": "21.0.12 (Ubuntu)",
                 "uptimeSeconds": 3725, "sutras": ["irs-vanilla v3"], "securityEnabled": False,

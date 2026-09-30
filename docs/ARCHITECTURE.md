@@ -363,6 +363,7 @@ commands, green/red ticks, blue highlight — colours only, not fonts), `blue`, 
 | `/v/{mnemonic}/{id}` | Entity view (server-rendered first paint, then SSE patches) |
 | `/studio` | Sutra Studio: YAML editor + live preview against any entity |
 | `/help`, `/help/{guide}`, `/help/search` | Help centre: tutorials, guides and the repository's own docs rendered in-app (no second copy to rot); F1 opens help for the current screen; every panel links to its kind's help |
+| `/w`, `/w/{name}` | Workspaces: 2–4 same-origin embedded views with follow-the-selection between panes (postMessage), saved per user on the server |
 | `/about` | Version and build, Java, uptime, loaded Sutras, source health, licence and notices |
 | `/account`, `/admin/users`, `/admin/audit` | Own profile and password; user administration and the audit log |
 

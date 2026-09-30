@@ -30,6 +30,8 @@ admin endpoints are in USER_MANAGEMENT.md; live streaming is in LIVE.md.
 | `GET` | `/entities/{kind}/{id}/raw` | `{"ref","provenance","data"}`: the document as the source produced it |
 | `GET` | `/sources` | the plugins, their capabilities and health, and any start failures |
 | `GET` | `/sutras` · `/sutras/{name}/{version}` · `/sutras/problems` | the Sutra catalogue, one Sutra, and the load problems |
+| `GET` | `/about` | version, build, Java, uptime, loaded Sutras, sources, security mode |
+| `GET` / `PUT` / `DELETE` | `/me/workspaces[/{name}]` | the caller's workspaces: `{layout, panes: [{ref, follows, title}]}`; validated (known layout, 1–4 panes, entities the caller may open, no follow cycles) |
 
 ```bash
 curl -s localhost:18480/api/v1/views/trade/IRS-48213 | jq '.strip[] | "\(.label): \(.text)"'

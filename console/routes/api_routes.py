@@ -38,6 +38,18 @@ async def suggest(request: Request, q: str = "", limit: int = 10):
         return _problem(e)
 
 
+@router.post("/resolve")
+async def resolve(request: Request):
+    """A command's entity, for pickers that accept typed commands (workspaces)."""
+    import json as _json
+
+    body = _json.loads(await request.body() or b"{}")
+    try:
+        return await request.app.state.backend.command(body.get("text", ""), ident(request))
+    except BackendError as e:
+        return _problem(e)
+
+
 @router.get("/raw/{kind}/{id_}")
 async def raw(request: Request, kind: str, id_: str):
     try:

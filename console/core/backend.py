@@ -17,6 +17,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from urllib.parse import quote
+
 import httpx
 
 
@@ -95,6 +97,19 @@ class BackendClient:
 
     async def about(self, ident=None) -> dict:
         return await self._get("/about", ident)
+
+    # -- workspaces -------------------------------------------------------------------------------
+    async def workspaces(self, ident) -> list:
+        return await self._get("/me/workspaces", ident)
+
+    async def workspace(self, name: str, ident) -> dict:
+        return await self._get(f"/me/workspaces/{quote(name)}", ident)
+
+    async def save_workspace(self, name: str, body: dict, ident) -> dict:
+        return await self._send("PUT", f"/me/workspaces/{quote(name)}", ident, json=body)
+
+    async def delete_workspace(self, name: str, ident) -> None:
+        return await self._send("DELETE", f"/me/workspaces/{quote(name)}", ident)
 
     # -- identity ---------------------------------------------------------------------------------
     async def login(self, username: str, password: str, service) -> dict:

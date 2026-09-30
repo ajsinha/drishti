@@ -27,7 +27,7 @@ terminal does.
 
 ## Status
 
-**Drishti 1.3.0 is released** (see [RELEASE_NOTES.md](RELEASE_NOTES.md)). It is built in waves on `develop`, each merged to `main` when its build was green.
+**Drishti 1.4.0 is released** (see [RELEASE_NOTES.md](RELEASE_NOTES.md)). It is built in waves on `develop`, each merged to `main` when its build was green.
 
 | Wave | Theme | State |
 |---|---|---|
@@ -44,8 +44,9 @@ terminal does.
 | 11 | User management: users, roles, passwords, lockout, audit; seeded dev admin; v1.1.0 | ✅ done |
 | 12 | Help centre and About | ✅ done |
 | 12b | Competitive landscape; mobile (iPhone and Android, add to home screen) | ✅ done |
-| 13 | Workspaces | ⏳ next |
-| 14–21 | Workspaces · monitors and alerts · F8 impact · history · structured search · export and share · Sutra governance · Kafka/aero/OIDC · personal settings | ◻️ planned |
+| 13 | Workspaces | ✅ done |
+| 14 | Monitors and alerts | ⏳ next |
+| 15–21 | F8 impact · history · structured search · export and share · Sutra governance · Kafka/aero/OIDC · personal settings | ◻️ planned |
 
 ## What works today
 
@@ -82,6 +83,8 @@ terminal does.
 - **Help.** An in-app help centre (`/help`) with tutorials, guides and every reference, plus search.
   `F1` gives help for the current screen, each panel has a **?**, `/about` shows the version and
   what is loaded, and `/about/competitive` compares Drishti with the categories it sits among.
+- **Workspaces.** Several live views on one screen (`/w`); a pane can follow another's selection.
+  Workspaces are saved to your account.
 - **Mobile.** It works on iPhone and Android browsers and can be added to the home screen. F-keys
   become a swipeable button row.
 - **Operations.** Prometheus metrics, a Grafana dashboard, Dockerfiles and compose, and runbooks.
