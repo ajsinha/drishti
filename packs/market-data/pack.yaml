@@ -238,7 +238,7 @@ graph:
     rate-fixing: fmt($.latest, 'pct2')
     bond: fmt($.price, 'price2')
 connectors:
-  market-lake:
+  market-store:
     plugin: delta
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds:
@@ -266,26 +266,26 @@ connectors:
       root: ${DRISHTI_DELTA_ROOT:./data/delta}
       domain: market
 routes:
-  ir-curve: market-lake
-  repo-curve: market-lake
-  fx-spot: market-lake
-  fx-forward-curve: market-lake
-  fx-vol-surface: market-lake
-  ir-vol-cube: market-lake
-  cap-vol-surface: market-lake
-  equity: market-lake
-  equity-index: market-lake
-  dividend-curve: market-lake
-  equity-vol-surface: market-lake
-  credit-curve: market-lake
-  inflation-index: market-lake
-  inflation-curve: market-lake
-  commodity: market-lake
-  commodity-curve: market-lake
-  commodity-vol-surface: market-lake
-  rate-fixing: market-lake
-  bond: market-lake
-  correlation-matrix: market-lake
+  ir-curve: market-store
+  repo-curve: market-store
+  fx-spot: market-store
+  fx-forward-curve: market-store
+  fx-vol-surface: market-store
+  ir-vol-cube: market-store
+  cap-vol-surface: market-store
+  equity: market-store
+  equity-index: market-store
+  dividend-curve: market-store
+  equity-vol-surface: market-store
+  credit-curve: market-store
+  inflation-index: market-store
+  inflation-curve: market-store
+  commodity: market-store
+  commodity-curve: market-store
+  commodity-vol-surface: market-store
+  rate-fixing: market-store
+  bond: market-store
+  correlation-matrix: market-store
 console:
   examples:
   - - CRV CRV-USD-OIS

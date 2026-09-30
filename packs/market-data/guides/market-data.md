@@ -38,7 +38,7 @@ Each kind is read from the Delta Lake folder of its **data domain** (`data/delta
 
 | Connector | Folder | Domain | Tables | Kinds |
 |---|---|---|---|---|
-| `market-lake` | `data/delta/market/` | Market data: curves, surfaces, prices, fixings | snapshot (every business date) | `ir-curve`, `repo-curve`, `fx-spot`, `fx-forward-curve`, `fx-vol-surface`, `ir-vol-cube`, `cap-vol-surface`, `equity`, `equity-index`, `dividend-curve`, `equity-vol-surface`, `credit-curve`, `inflation-index`, `inflation-curve`, `commodity`, `commodity-curve`, `commodity-vol-surface`, `rate-fixing`, `bond`, `correlation-matrix` |
+| `market-store` | `data/delta/market/` | Market data: curves, surfaces, prices, fixings | snapshot (every business date) | `ir-curve`, `repo-curve`, `fx-spot`, `fx-forward-curve`, `fx-vol-surface`, `ir-vol-cube`, `cap-vol-surface`, `equity`, `equity-index`, `dividend-curve`, `equity-vol-surface`, `credit-curve`, `inflation-index`, `inflation-curve`, `commodity`, `commodity-curve`, `commodity-vol-surface`, `rate-fixing`, `bond`, `correlation-matrix` |
 
 Build the lake with `uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta`. Point a domain at a database instead by overriding its connector in the site configuration.
 

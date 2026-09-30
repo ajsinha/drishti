@@ -110,7 +110,7 @@ graph:
       netting-set: signed0
       credit-limit: compact
 connectors:
-  credit-lake:
+  credit-store:
     plugin: delta
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds:
@@ -122,7 +122,7 @@ connectors:
     settings:
       root: ${DRISHTI_DELTA_ROOT:./data/delta}
       domain: credit
-  collateral-lake:
+  collateral-store:
     plugin: delta
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds:
@@ -133,14 +133,14 @@ connectors:
       root: ${DRISHTI_DELTA_ROOT:./data/delta}
       domain: collateral
 routes:
-  netting-set: credit-lake
-  credit-limit: credit-lake
-  exposure-profile: credit-lake
-  cva: credit-lake
-  sa-ccr: credit-lake
-  collateral-balance: collateral-lake
-  margin-call: collateral-lake
-  simm: collateral-lake
+  netting-set: credit-store
+  credit-limit: credit-store
+  exposure-profile: credit-store
+  cva: credit-store
+  sa-ccr: credit-store
+  collateral-balance: collateral-store
+  margin-call: collateral-store
+  simm: collateral-store
 console:
   examples:
   - - NSET NS-SUMMIT-NY

@@ -41,7 +41,7 @@ graph:
     formats:
       trade: signed0
 connectors:
-  trading-lake:
+  trading-store:
     plugin: delta
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds:
@@ -50,7 +50,7 @@ connectors:
       root: ${DRISHTI_DELTA_ROOT:./data/delta}
       domain: trading
 routes:
-  trade: trading-lake
+  trade: trading-store
 console:
   examples:
   - - TRD T-10001

@@ -75,7 +75,7 @@ def overview(name: str, docs: dict) -> str:
     rows = []
     for d, ks in p["kinds"].items():
         mode = "effective (a row when an entity changes)" if d in make_packs.EFFECTIVE_DOMAINS else "snapshot (every business date)"
-        rows.append([f"`{d}-lake`", f"`data/delta/{d}/`", layout.DOMAINS[d], mode, ", ".join(f"`{k}`" for k in ks)])
+        rows.append([f"`{d}-store`", f"`data/delta/{d}/`", layout.DOMAINS[d], mode, ", ".join(f"`{k}`" for k in ks)])
     lines += table(["Connector", "Folder", "Domain", "Tables", "Kinds"], rows)
     lines += ["Build the lake with `uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta`. "
               "Point a domain at a database instead by overriding its connector in the site configuration.", ""]

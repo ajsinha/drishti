@@ -141,7 +141,7 @@ graph:
     csa: '''threshold '' + fmt($.thresholdThem, ''compact'')'
     clearing-account: '''IM '' + fmt($.im, ''compact'')'
 connectors:
-  reference-lake:
+  reference-store:
     plugin: delta
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds:
@@ -173,18 +173,18 @@ connectors:
       mode.csa: effective
       mode.clearing-account: effective
 routes:
-  counterparty: reference-lake
-  counterparty-group: reference-lake
-  issuer: reference-lake
-  agreement: reference-lake
-  ccp: reference-lake
-  legal-entity: reference-lake
-  book: reference-lake
-  desk: reference-lake
-  trader: reference-lake
-  calendar: reference-lake
-  csa: reference-lake
-  clearing-account: reference-lake
+  counterparty: reference-store
+  counterparty-group: reference-store
+  issuer: reference-store
+  agreement: reference-store
+  ccp: reference-store
+  legal-entity: reference-store
+  book: reference-store
+  desk: reference-store
+  trader: reference-store
+  calendar: reference-store
+  csa: reference-store
+  clearing-account: reference-store
 console:
   examples:
   - - CPTY CP-NORTHBRIDGE

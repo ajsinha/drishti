@@ -37,8 +37,8 @@ Each kind is read from the Delta Lake folder of its **data domain** (`data/delta
 
 | Connector | Folder | Domain | Tables | Kinds |
 |---|---|---|---|---|
-| `credit-lake` | `data/delta/credit/` | Counterparty-credit results: exposure, CVA, SA-CCR, limits | snapshot (every business date) | `netting-set`, `credit-limit`, `exposure-profile`, `cva`, `sa-ccr` |
-| `collateral-lake` | `data/delta/collateral/` | Collateral and margin: balances, calls, SIMM | snapshot (every business date) | `collateral-balance`, `margin-call`, `simm` |
+| `credit-store` | `data/delta/credit/` | Counterparty-credit results: exposure, CVA, SA-CCR, limits | snapshot (every business date) | `netting-set`, `credit-limit`, `exposure-profile`, `cva`, `sa-ccr` |
+| `collateral-store` | `data/delta/collateral/` | Collateral and margin: balances, calls, SIMM | snapshot (every business date) | `collateral-balance`, `margin-call`, `simm` |
 
 Build the lake with `uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta`. Point a domain at a database instead by overriding its connector in the site configuration.
 

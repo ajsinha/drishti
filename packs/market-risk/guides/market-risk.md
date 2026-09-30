@@ -37,7 +37,7 @@ Each kind is read from the Delta Lake folder of its **data domain** (`data/delta
 
 | Connector | Folder | Domain | Tables | Kinds |
 |---|---|---|---|---|
-| `risk-lake` | `data/delta/risk/` | Market-risk results: VaR, stress, FRTB, P&L explain | snapshot (every business date) | `var`, `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain` |
+| `risk-store` | `data/delta/risk/` | Market-risk results: VaR, stress, FRTB, P&L explain | snapshot (every business date) | `var`, `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain` |
 
 Build the lake with `uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta`. Point a domain at a database instead by overriding its connector in the site configuration.
 

@@ -24,17 +24,17 @@
     <version>1.9.0</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
-  <artifactId>drishti-plugin-jdbc</artifactId>
-  <name>drishti-plugin-jdbc</name>
-  <description>JDBC source (driver supplied by the site)</description>
+  <artifactId>drishti-plugin-aerospike</artifactId>
+  <name>drishti-plugin-aerospike</name>
+  <description>Aerospike source: a record per entity per data domain, a bin per business date</description>
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
+    <dependency><groupId>com.aerospike</groupId><artifactId>aerospike-client-jdk21</artifactId><version>${aerospike.version}</version></dependency>
+    <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-core</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId><scope>test</scope></dependency>
-    <dependency><groupId>com.h2database</groupId><artifactId>h2</artifactId><version>2.3.232</version><scope>test</scope></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><scope>test</scope></dependency>
-    <!-- PostgreSQL in Docker for the contract test; it is skipped where Docker is not reachable -->
-    <dependency><groupId>org.testcontainers</groupId><artifactId>testcontainers-postgresql</artifactId><version>${testcontainers.version}</version><scope>test</scope></dependency>
+    <!-- Aerospike in Docker for the contract test; skipped where Docker is not reachable -->
+    <dependency><groupId>org.testcontainers</groupId><artifactId>testcontainers</artifactId><version>${testcontainers.version}</version><scope>test</scope></dependency>
     <dependency><groupId>org.testcontainers</groupId><artifactId>testcontainers-junit-jupiter</artifactId><version>${testcontainers.version}</version><scope>test</scope></dependency>
-    <dependency><groupId>org.postgresql</groupId><artifactId>postgresql</artifactId><scope>test</scope></dependency>
   </dependencies>
 </project>

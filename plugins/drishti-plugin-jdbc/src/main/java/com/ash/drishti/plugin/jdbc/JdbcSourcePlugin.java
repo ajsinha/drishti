@@ -53,11 +53,17 @@ import java.util.concurrent.TimeUnit;
  * except a column named {@code json}, whose JSON text is used as the whole document. A column named
  * {@code generation}, if present, is the version; {@code business_date}, if present, is the date the row is for.
  * Connections are pooled in a small bounded queue.
+ *
+ * <p><b>Table mode</b> ({@code table: reference.entities}): every kind of a data domain in one PostgreSQL table of
+ * {@code (kind, id, business_date, doc jsonb)} rows, dated, with search and reverse lookups; {@code mode.<kind>}
+ * is {@code snapshot} (default) or {@code effective}. See {@link EntityTable} and {@code tools/samplegen/pgload.py}.
  */
 public final class JdbcSourcePlugin implements SourcePlugin {
 
     private static final java.util.regex.Pattern NAMED = java.util.regex.Pattern.compile(":(id|asOf)\\b");
     private final Map<String, String> queries = new LinkedHashMap<>();
+    private EntityTable table;
+    private java.util.List<String> tableKinds = java.util.List.of();
     private final Map<String, java.util.List<String>> params = new LinkedHashMap<>();
     private BlockingQueue<Connection> pool;
     private SourceContext context;
@@ -68,8 +74,67 @@ public final class JdbcSourcePlugin implements SourcePlugin {
 
     @Override
     public PluginManifest manifest() {
+        if (table != null) {
+            return new PluginManifest("jdbc", "1.0", new java.util.HashSet<>(tableKinds), new SourceCapabilities(false, true, true, true));
+        }
         boolean dated = params.values().stream().anyMatch(l -> l.contains("asOf"));
         return new PluginManifest("jdbc", "1.0", queries.keySet(), new SourceCapabilities(false, false, false, dated));
+    }
+
+    /** Runs {@code work} on a pooled connection, replacing it if it went stale. */
+    private <T> T withConnection(SqlWork<T> work) throws Exception {
+        Connection c = pool.poll(5, TimeUnit.SECONDS);
+        if (c == null) {
+            throw new SQLException("no free connection in " + sourceName + " pool");
+        }
+        try {
+            if (!c.isValid(1)) {
+                c.close();
+                c = DriverManager.getConnection(url, user, password);
+            }
+            return work.run(c);
+        } finally {
+            pool.offer(c);
+        }
+    }
+
+    @FunctionalInterface
+    private interface SqlWork<T> {
+        T run(Connection c) throws Exception;
+    }
+
+    @Override
+    public java.util.List<com.ash.drishti.api.EntityRef> reverse(EntityRef target, String kind) {
+        return reverse(target, kind, com.ash.drishti.api.AsOf.LATEST);
+    }
+
+    @Override
+    public java.util.List<com.ash.drishti.api.EntityRef> reverse(EntityRef target, String kind, com.ash.drishti.api.AsOf asOf) {
+        if (table == null) {
+            return java.util.List.of();
+        }
+        try {
+            java.util.List<EntityRef> out = new java.util.ArrayList<>();
+            for (String k : kind == null ? tableKinds : java.util.List.of(kind)) {
+                withConnection(c -> table.reverse(c, k, target.id(), asOf.businessDate())).forEach(i -> out.add(EntityRef.of(k, i)));
+            }
+            return out;
+        } catch (Exception e) {
+            return java.util.List.of();
+        }
+    }
+
+    @Override
+    public java.util.List<com.ash.drishti.api.EntityHit> search(String kind, String text, int limit) {
+        if (table == null) {
+            return java.util.List.of();
+        }
+        try {
+            return withConnection(c -> table.search(c, kind, text, limit)).stream()
+                    .map(r -> new com.ash.drishti.api.EntityHit(EntityRef.of(r[0], r[1]), r[1], r[0] + " · " + sourceName)).toList();
+        } catch (Exception e) {
+            return java.util.List.of();
+        }
     }
 
     @Override
@@ -98,6 +163,25 @@ public final class JdbcSourcePlugin implements SourcePlugin {
         for (int i = 0; i < size; i++) {
             pool.add(DriverManager.getConnection(url, user, password));
         }
+        String t = ctx.setting("table", "");
+        if (!t.isBlank()) {
+            Map<String, String> modes = new LinkedHashMap<>();
+            ctx.settings().forEach((k, v) -> {
+                if (k.startsWith("mode.")) {
+                    modes.put(k.substring(5), v);
+                }
+            });
+            table = new EntityTable(t, ctx.setting("kind-column", "kind"), ctx.setting("id-column", "id"),
+                    ctx.setting("date-column", "business_date"), ctx.setting("doc-column", "doc"), modes,
+                    Integer.parseInt(ctx.setting("lookback-days", "10")));
+            String configured = ctx.setting("kinds", "");
+            try {
+                tableKinds = configured.isBlank() ? withConnection(table::kinds)
+                        : java.util.Arrays.stream(configured.split(",")).map(String::trim).filter(x -> !x.isEmpty()).toList();
+            } catch (Exception e) {
+                throw new SQLException("cannot list kinds in " + t + ": " + e.getMessage(), e);
+            }
+        }
     }
 
     @Override
@@ -107,6 +191,18 @@ public final class JdbcSourcePlugin implements SourcePlugin {
 
     @Override
     public Optional<EntityDocument> fetch(EntityRef ref, com.ash.drishti.api.AsOf asOf) throws Exception {
+        if (table != null) {
+            if (!tableKinds.contains(ref.kind())) {
+                return Optional.empty();
+            }
+            Optional<EntityTable.Hit> hit = withConnection(c -> table.fetch(c, ref.kind(), ref.id(), asOf.businessDate()));
+            if (hit.isEmpty()) {
+                return Optional.empty();
+            }
+            DataNode d = context.parseJson(new ByteArrayInputStream(hit.get().json().getBytes(StandardCharsets.UTF_8)));
+            return Optional.of(new EntityDocument(ref, d, new Provenance(sourceName, hit.get().date().toEpochDay(), Instant.now(), false,
+                    hit.get().date())));
+        }
         String sql = queries.get(ref.kind());
         if (sql == null) {
             return Optional.empty();
@@ -198,7 +294,7 @@ public final class JdbcSourcePlugin implements SourcePlugin {
 
     @Override
     public String health() {
-        return pool == null ? "DOWN: not started" : "UP (" + pool.size() + " idle connections)";
+        return pool == null ? "DOWN: not started" : "UP";
     }
 
     @Override

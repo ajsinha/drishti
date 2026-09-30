@@ -18,6 +18,9 @@
     python3 tools/packgen/banking/make_data.py --check         verify the data is consistent and the files are current
     uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta [--days 10]
                                                                 also write data/delta/<domain>/<kind>/ with business-day history
+    uv run --with "psycopg[binary]" python tools/packgen/banking/make_data.py --postgres postgresql://drishti:drishti@localhost:5432/drishti
+                                                                also load each domain into PostgreSQL (<domain>.entities)
+    python3 tools/packgen/banking/make_data.py --jsonl data/banking.jsonl   rows for tools/load-aerospike.sh
 
 The samples are what the demo source serves live; the lake is the history (a table per kind, partitioned by
 business date, in the data domain that owns the kind, see layout.py). Everything is deterministic.
@@ -145,6 +148,31 @@ def main() -> None:
         if not f.exists() or f.read_text(encoding="utf-8") != t:
             f.write_text(t, encoding="utf-8")
     print(f"wrote {sum(len(v) for v in docs.values())} documents into {len(layout.PACKS)} packs' samples")
+    if "--jsonl" in sys.argv:
+        from samplegen.dates import Calendar
+        from samplegen.lake import history_rows
+
+        out = Path(sys.argv[sys.argv.index("--jsonl") + 1])
+        days = int(sys.argv[sys.argv.index("--days") + 1]) if "--days" in sys.argv else 10
+        n = 0
+        with out.open("w", encoding="utf-8") as f:
+            for domain in layout.DOMAINS:
+                kinds = {k: docs.get(k, {}) for k in (x for p in layout.PACKS.values() for d, ks in p["kinds"].items() if d == domain for x in ks)}
+                for kind, id_, d, body in history_rows(kinds, N.AS_OF, days, Calendar.of("USNY")):
+                    f.write(json.dumps({"domain": domain, "kind": kind, "id": id_, "date": d.isoformat(), "doc": body}, ensure_ascii=False) + "\n")
+                    n += 1
+        print(f"jsonl: {n} rows in {out} (load into Aerospike with tools/load-aerospike.sh)")
+    if "--postgres" in sys.argv:
+        from samplegen.dates import Calendar
+        from samplegen.pgload import write_domain
+
+        url = sys.argv[sys.argv.index("--postgres") + 1]
+        days = int(sys.argv[sys.argv.index("--days") + 1]) if "--days" in sys.argv else 10
+        rows = 0
+        for domain in layout.DOMAINS:
+            kinds = {k: docs.get(k, {}) for k in (x for p in layout.PACKS.values() for d, ks in p["kinds"].items() if d == domain for x in ks)}
+            rows += write_domain(url, domain, kinds, N.AS_OF, days, Calendar.of("USNY"))
+        print(f"postgres: {rows} rows in schemas {', '.join(layout.DOMAINS)}")
     if "--lake" in sys.argv:
         from samplegen.dates import Calendar
         from samplegen.lake import write_tables

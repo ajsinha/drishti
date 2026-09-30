@@ -37,7 +37,7 @@ Each kind is read from the Delta Lake folder of its **data domain** (`data/delta
 
 | Connector | Folder | Domain | Tables | Kinds |
 |---|---|---|---|---|
-| `reference-lake` | `data/delta/reference/` | Reference data: parties, organisation, legal agreements, calendars | effective (a row when an entity changes) | `counterparty`, `counterparty-group`, `issuer`, `agreement`, `ccp`, `legal-entity`, `book`, `desk`, `trader`, `calendar`, `csa`, `clearing-account` |
+| `reference-store` | `data/delta/reference/` | Reference data: parties, organisation, legal agreements, calendars | effective (a row when an entity changes) | `counterparty`, `counterparty-group`, `issuer`, `agreement`, `ccp`, `legal-entity`, `book`, `desk`, `trader`, `calendar`, `csa`, `clearing-account` |
 
 Build the lake with `uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta`. Point a domain at a database instead by overriding its connector in the site configuration.
 

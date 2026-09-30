@@ -38,7 +38,7 @@ Each kind is read from the Delta Lake folder of its **data domain** (`data/delta
 
 | Connector | Folder | Domain | Tables | Kinds |
 |---|---|---|---|---|
-| `trading-lake` | `data/delta/trading/` | Trades in every product | snapshot (every business date) | `trade` |
+| `trading-store` | `data/delta/trading/` | Trades in every product | snapshot (every business date) | `trade` |
 
 Build the lake with `uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta`. Point a domain at a database instead by overriding its connector in the site configuration.
 

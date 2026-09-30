@@ -1,0 +1,25 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+# Profile `aerospike` (SPRING_PROFILES_ACTIVE=aerospike): the banking packs' data domains are read from Aerospike
+# (a set per domain in namespace `test`, loaded by tools/load-aerospike.sh) instead of Delta Lake. The packs still
+# decide the kinds, routes and modes of each <domain>-store connector; the set is the connector's domain.
+drishti:
+  sources:
+    connectors:
+      reference-store:  { plugin: aerospike, settings: { hosts: "${DRISHTI_AEROSPIKE_HOSTS:localhost:3000}", namespace: "${DRISHTI_AEROSPIKE_NAMESPACE:test}" } }
+      market-store:     { plugin: aerospike, settings: { hosts: "${DRISHTI_AEROSPIKE_HOSTS:localhost:3000}", namespace: "${DRISHTI_AEROSPIKE_NAMESPACE:test}" } }
+      trading-store:    { plugin: aerospike, settings: { hosts: "${DRISHTI_AEROSPIKE_HOSTS:localhost:3000}", namespace: "${DRISHTI_AEROSPIKE_NAMESPACE:test}" } }
+      risk-store:       { plugin: aerospike, settings: { hosts: "${DRISHTI_AEROSPIKE_HOSTS:localhost:3000}", namespace: "${DRISHTI_AEROSPIKE_NAMESPACE:test}" } }
+      credit-store:     { plugin: aerospike, settings: { hosts: "${DRISHTI_AEROSPIKE_HOSTS:localhost:3000}", namespace: "${DRISHTI_AEROSPIKE_NAMESPACE:test}" } }
+      collateral-store: { plugin: aerospike, settings: { hosts: "${DRISHTI_AEROSPIKE_HOSTS:localhost:3000}", namespace: "${DRISHTI_AEROSPIKE_NAMESPACE:test}" } }

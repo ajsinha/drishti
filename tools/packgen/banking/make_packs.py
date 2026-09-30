@@ -88,8 +88,8 @@ def manifest(name: str) -> dict:
          "graph": {"id-patterns": [{"pattern": "^" + specs[k].prefix, "kind": k} for k in kinds],
                    "fields": dict(sorted(fields.items())),
                    "badges": {k: specs[k].badge for k in kinds if specs[k].badge}},
-         "connectors": {f"{d}-lake": connector(d) for d in p["kinds"]},
-         "routes": {k: f"{d}-lake" for d, ks in p["kinds"].items() for k in ks}}
+         "connectors": {f"{d}-store": connector(d) for d in p["kinds"]},
+         "routes": {k: f"{d}-store" for d, ks in p["kinds"].items() for k in ks}}
     m["console"] = {"examples": [list(e) for e in EXAMPLES[name]], "help": "config/help.yaml"}
     if name in IMPACT:
         m["graph"]["impact"] = IMPACT[name]

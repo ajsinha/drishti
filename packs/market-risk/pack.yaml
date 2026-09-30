@@ -66,7 +66,7 @@ graph:
   badges:
     var: fmt($.var99, 'compact')
 connectors:
-  risk-lake:
+  risk-store:
     plugin: delta
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds:
@@ -79,11 +79,11 @@ connectors:
       root: ${DRISHTI_DELTA_ROOT:./data/delta}
       domain: risk
 routes:
-  var: risk-lake
-  stress-scenario: risk-lake
-  stress-result: risk-lake
-  frtb-sensitivity: risk-lake
-  pnl-explain: risk-lake
+  var: risk-store
+  stress-scenario: risk-store
+  stress-result: risk-store
+  frtb-sensitivity: risk-store
+  pnl-explain: risk-store
 console:
   examples:
   - - VAR VAR-RATES

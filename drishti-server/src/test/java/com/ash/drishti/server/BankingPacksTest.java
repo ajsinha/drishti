@@ -40,8 +40,8 @@ class BankingPacksTest {
         mvc.perform(get("/api/v1/packs")).andExpect(status().isOk())
                 .andExpect(jsonPath("$[*].name").value(containsInAnyOrder("banking-core", "market-data", "trading", "market-risk", "counterparty-risk")));
         mvc.perform(get("/api/v1/sources"))
-                .andExpect(jsonPath("$.sources[*].name").value(hasItems("reference-lake", "market-lake", "trading-lake", "risk-lake",
-                        "credit-lake", "collateral-lake")));
+                .andExpect(jsonPath("$.sources[*].name").value(hasItems("reference-store", "market-store", "trading-store", "risk-store",
+                        "credit-store", "collateral-store")));
         mvc.perform(get("/api/v1/sutras")).andExpect(jsonPath("$.length()").value(170))
                 .andExpect(jsonPath("$[*].name").value(hasItems("irs-fixfloat", "netting-set", "var", "ir-curve", "counterparty")));
         mvc.perform(get("/api/v1/command/suggest").param("q", "NSE"))

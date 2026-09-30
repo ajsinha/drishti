@@ -73,18 +73,11 @@ def business_days(end: date, n: int, cal: Calendar) -> list[date]:
     return sorted(out)
 
 
-def write_tables(out: pathlib.Path, kinds: dict[str, dict[str, dict]], end: date, days: int, cal: Calendar) -> int:
-    """Writes one Delta table per kind under `out`, with `days` business days of history ending at `end` and a
-    restatement of the newest date's first document. Returns the number of rows written."""
-    import pyarrow as pa
-    from deltalake import write_deltalake
-
+def history_rows(kinds: dict[str, dict[str, dict]], end: date, days: int, cal: Calendar):
+    """(kind, id, business_date, json) for `days` business days ending at `end`: past dates walk the market-sensitive
+    numbers back deterministically. The same history goes to every store (Delta Lake, PostgreSQL, Aerospike)."""
     dates = business_days(end, days, cal)
-    total = 0
     for kind, docs in sorted(kinds.items()):
-        if not docs:
-            continue
-        ids, bodies, days_col = [], [], []
         for i, d in enumerate(dates):
             steps = len(dates) - 1 - i
             for id_, doc in docs.items():
@@ -92,9 +85,21 @@ def write_tables(out: pathlib.Path, kinds: dict[str, dict[str, dict]], end: date
                 body = walk(doc, id_, steps, rnd) if steps else copy.deepcopy(doc)
                 body.pop("_meta", None)
                 body["businessDate"] = d.isoformat()
-                ids.append(id_)
-                bodies.append(json.dumps(body, ensure_ascii=False))
-                days_col.append(d)
+                yield kind, id_, d, json.dumps(body, ensure_ascii=False)
+
+
+def write_tables(out: pathlib.Path, kinds: dict[str, dict[str, dict]], end: date, days: int, cal: Calendar) -> int:
+    """Writes one Delta table per kind under `out` (see history_rows), plus a restatement of the newest date's first
+    document, so time travel has something to show. Returns the number of rows written."""
+    import pyarrow as pa
+    from deltalake import write_deltalake
+
+    total = 0
+    for kind, docs in sorted(kinds.items()):
+        if not docs:
+            continue
+        rows = [r for r in history_rows({kind: docs}, end, days, cal)]
+        ids, days_col, bodies = [r[1] for r in rows], [r[2] for r in rows], [r[3] for r in rows]
         path = out / kind
         write_deltalake(str(path), pa.table({"id": pa.array(ids, pa.string()), "doc": pa.array(bodies, pa.string()),
                                              "business_date": pa.array(days_col, pa.date32())}), mode="overwrite", partition_by=["business_date"])
@@ -108,7 +113,7 @@ def write_tables(out: pathlib.Path, kinds: dict[str, dict[str, dict]], end: date
                                              "business_date": pa.array([end] * len(keep), pa.date32())}),
                         mode="overwrite", partition_by=["business_date"], predicate=f"business_date = '{end.isoformat()}'")
         total += len(ids)
-        print(f"{path}: {len(docs)} entities x {len(dates)} business days")
+        print(f"{path}: {len(docs)} entities x {days} business days")
     return total
 
 

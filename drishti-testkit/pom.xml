@@ -26,9 +26,11 @@
   </parent>
   <artifactId>drishti-testkit</artifactId>
   <name>drishti-testkit</name>
-  <description>Fixtures and golden assertions</description>
+  <description>Fixtures and contract tests every source plugin must pass</description>
   <dependencies>
-    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-engine</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId></dependency>
     <dependency><groupId>org.assertj</groupId><artifactId>assertj-core</artifactId><scope>compile</scope></dependency>
+    <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter-api</artifactId><scope>compile</scope></dependency>
   </dependencies>
 </project>

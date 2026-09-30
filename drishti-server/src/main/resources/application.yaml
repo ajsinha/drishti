@@ -78,7 +78,9 @@ drishti:
           # Named parameters :id and :asOf (the business date) make it dated, e.g.
           # query.trade: SELECT json FROM trades WHERE trade_id = :id AND business_date = (SELECT MAX(business_date)
           #              FROM trades WHERE trade_id = :id AND business_date <= :asOf)
-      delta:                        # the Delta Lake plugin; runs as named connectors below, one per domain
+      delta:                        # the Delta Lake plugin; runs as named connectors (packs declare them per data domain)
+        enabled: false
+      aerospike:                    # the Aerospike plugin; runs as named connectors (profile `aerospike`)
         enabled: false
     # Named connectors: several instances of a plugin, each with its own settings and, optionally, kinds.
     # A pack keeps its data in its own domain folder of the lake: <root>/<domain>/<kind>/business_date=…/

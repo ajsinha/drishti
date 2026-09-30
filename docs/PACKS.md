@@ -102,11 +102,11 @@ A pack can build on others and says where its data comes from:
 # packs/counterparty-risk/pack.yaml (abridged)
 requires: [trading]                 # loads trading first, and what trading requires (market-data, banking-core)
 connectors:                         # one per data domain it reads; declared identically by every pack that uses it
-  credit-lake:     { plugin: delta, kinds: [netting-set, credit-limit, …], settings: { root: "${DRISHTI_DELTA_ROOT:./data/delta}", domain: credit } }
-  collateral-lake: { plugin: delta, kinds: [collateral-balance, margin-call, simm], settings: { domain: collateral } }
+  credit-store:     { plugin: delta, kinds: [netting-set, credit-limit, …], settings: { root: "${DRISHTI_DELTA_ROOT:./data/delta}", domain: credit } }
+  collateral-store: { plugin: delta, kinds: [collateral-balance, margin-call, simm], settings: { domain: collateral } }
 routes:                             # which connector answers each of the pack's kinds
-  netting-set: credit-lake
-  margin-call: collateral-lake
+  netting-set: credit-store
+  margin-call: collateral-store
 ```
 
 - **`requires`**: enabling a pack enables what it requires, dependencies first. A user who may see
