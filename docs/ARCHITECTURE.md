@@ -1,5 +1,5 @@
 <!--
-  Project Drishti -- Any data. Any domain. One grammar.
+  Project Drishti · Any data. Any domain. One grammar.
   Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
   PROPRIETARY AND CONFIDENTIAL. See the LICENSE file in the root of this repository.
 -->
@@ -236,12 +236,11 @@ and the rule name, surfaced in *How this view was built* and in Sutra Studio as
 
 ## 9. Module layout (Java)
 
-Maven multi-module reactor, `groupId com.ash.drishti`, Java 21, packages
+Maven multi-module reactor on `spring-boot-starter-parent`, `groupId com.ash.drishti`, Java 21, packages
 `com.ash.drishti.<module>.<area>`, `package-info.java` everywhere.
 
 | Module | Responsibility | Contributes |
 |---|---|---|
-| `drishti-bom` | Version alignment (imports the Spring Boot BOM) | – |
 | `drishti-api` | Plugin SPI: `SourcePlugin`, `DataNode`, `EntityRef`, `PanelKind`, `InferenceRule`, `Formatter` (no Spring, so plugins stay light) | – |
 | `drishti-common` | Error codes (`DRS-nnnn`), JSON, fingerprints, config records | `CommonConfiguration` |
 | `drishti-sutra` | Sutra model, YAML parser, JSON-Schema validation, Sutra-EL compiler, registry + hot reload | `SutraConfiguration` |

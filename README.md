@@ -1,5 +1,5 @@
 <!--
-  Project Drishti -- Any data. Any domain. One grammar.
+  Project Drishti · Any data. Any domain. One grammar.
   Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
   PROPRIETARY AND CONFIDENTIAL. See the LICENSE file in the root of this repository.
 -->
@@ -50,7 +50,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full design.
 
 ```
 drishti/
-├── drishti-bom/ drishti-api/ drishti-common/     build + public SPI + shared utils
+├── drishti-api/ drishti-common/                  plugin SPI + shared utils
 ├── drishti-sutra/ drishti-inference/             grammar and inference
 ├── drishti-graph/ drishti-engine/                links and view pipeline
 ├── drishti-server/                               the Spring Boot application

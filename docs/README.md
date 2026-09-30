@@ -1,5 +1,5 @@
 <!--
-  Project Drishti -- Any data. Any domain. One grammar.
+  Project Drishti · Any data. Any domain. One grammar.
   Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
   PROPRIETARY AND CONFIDENTIAL. See the LICENSE file in the root of this repository.
 -->

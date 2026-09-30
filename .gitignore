@@ -1,0 +1,14 @@
+# Project Drishti -- Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
+target/
+*.class
+*.log
+.idea/
+*.iml
+.vscode/
+.DS_Store
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+application.local.yaml
+hs_err_pid*

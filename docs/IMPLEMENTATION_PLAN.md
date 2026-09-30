@@ -1,5 +1,5 @@
 <!--
-  Project Drishti -- Any data. Any domain. One grammar.
+  Project Drishti · Any data. Any domain. One grammar.
   Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
   PROPRIETARY AND CONFIDENTIAL. See the LICENSE file in the root of this repository.
 -->
@@ -37,11 +37,11 @@ Ten waves. Each holds a small set of closely related items and ends with a demo-
 ---
 
 ## W1 — Build foundation
-- Maven reactor, `mvnw`, `drishti-bom`, Java 21 enforcer, `.editorconfig`.
-- Spotless (palantir) with `config/spotless/license-header.txt`; Error Prone + NullAway; JaCoCo.
+- Maven reactor on `spring-boot-starter-parent` (it aligns versions, so there is no BOM module), `mvnw`, Java 21 enforcer, `.editorconfig`.
+- `config/license-header.txt` and `tools/license_headers.py --fix`; Spotless and Error Prone deferred (ADR-007).
 - Empty modules with `package-info.java`: `api, common, sutra, inference, graph, engine, server, testkit, it, benchmarks`.
 - `drishti-it`: `LicenseHeaderTest`, `SourceFileSizeTest` (1500), `ArchitectureRulesTest` (one-way module deps, Spring-free `drishti-api`, no `Serializable`, no field injection).
-- GitHub Actions `fast.yml`; `docs/adr/001..006` for decisions D1–D6; `CHANGELOG.md`.
+- GitHub Actions `fast.yml`; `docs/adr/001..007`; `CHANGELOG.md`.
 
 ## W2 — Console shell & landing
 - `console/run_drishti_web.py`, `console/config/application.yaml`, properties configurator (YAML → local → env → CLI).
