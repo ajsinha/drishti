@@ -16,7 +16,7 @@
 from __future__ import annotations
 
 import re
-from urllib.parse import quote
+from urllib.parse import parse_qs, quote
 
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import RedirectResponse
@@ -102,8 +102,9 @@ async def search(request: Request, q: str = ""):
 @router.post("/s/watch")
 async def watch_search(request: Request):
     """Saves a search's first 50 results as a monitor: the results, watched live."""
-    form = await request.form()
-    q, name = str(form.get("q", "")), re.sub(r"[^A-Za-z0-9 ._-]", "", str(form.get("name", "")))[:64].strip() or "Search results"
+    form = parse_qs((await request.body()).decode("utf-8", "replace"))   # a plain form post: no multipart dependency
+    q = form.get("q", [""])[0]
+    name = re.sub(r"[^A-Za-z0-9 ._-]", "", form.get("name", [""])[0])[:64].strip() or "Search results"
     backend = request.app.state.backend
     try:
         data = await backend.search(q, ident(request))
