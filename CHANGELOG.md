@@ -15,6 +15,14 @@
 -->
 # Changelog
 
+## Unreleased — Wave 5: Sutra-EL, formats & matching
+- Sutra-EL: lexer, recursive-descent parser (the EBNF is in `SUTRA_REFERENCE.md`), and immutable closure trees with cached compilation. Paths, filters, ternary, arithmetic, twelve pure functions, `link(...)`, and `${...}` templates.
+- Every expression reports the document paths it reads, ready for dependency-driven live updates.
+- Every expression in a Sutra is compiled at load; errors are reported against the file (`DRS-2101`).
+- `Formats` (bundled `formats.yaml` plus a site override; true minus sign, grouping, percent, compact `4.1m`, dates) and `Tones`.
+- `SutraMatcher`: highest-priority Sutra whose `where` holds; no match means inference only.
+- Golden test: the four reference Sutras reproduce the mockups' header strips exactly. jqwik property tests check the arithmetic and comparisons.
+
 ## Unreleased — Wave 4: Sutra grammar
 - `drishti-sutra`: immutable model (`Sutra`, `Match`, `Title`, `StripItem`, `Panel`, `Column`, twelve `PanelKind`s with per-kind required and optional options).
 - A position-aware YAML reader and a validator that reports **every** problem with its line and column (`DRS-20xx`).

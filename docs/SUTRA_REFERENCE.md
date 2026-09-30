@@ -60,7 +60,7 @@ panels and `keys`), `code` (short tag at the header's right, e.g. `CRV`), `area`
 
 ## Formats and tones
 
-`fmt` names a format from `config/formats.yaml` (Wave 5): `amount0`, `amount2`, `signed0`,
+`fmt` names a format from the bundled `formats.yaml` (in `drishti-sutra`); a site can override or add formats with `drishti.sutra.formats-file`: `amount0`, `amount2`, `signed0`,
 `signed2`, `pct0`, `pct4`, `rate5`, `pips1`, `price2`, `df4`, `date`, `compact` (4.1m).
 
 `tone` colours through theme tokens only, and always together with a sign or glyph:
@@ -81,7 +81,40 @@ Bindings are Sutra-EL expressions. It is closed and side-effect free:
 | Literals | `'text'`, numbers, `true`, `false`, `null` |
 | Functions | `link(id, kind?, label?)`, `size(x)`, `sum(rows, 'field')`, `fmt(x, 'format')`, `coalesce(a, b)`, `first(x)`, `last(x)`, `abs`, `min`, `max`, `upper`, `lower` |
 
-The full grammar (EBNF) and evaluation rules land with the compiler in Wave 5.
+### Grammar
+
+```ebnf
+expr     = or [ "?" expr ":" expr ] ;
+or       = and { "||" and } ;
+and      = equality { "&&" equality } ;
+equality = compare { ("==" | "!=") compare } ;
+compare  = sum { ("<" | "<=" | ">" | ">=") sum } ;
+sum      = product { ("+" | "-") product } ;
+product  = unary { ("*" | "/" | "%") unary } ;
+unary    = ("!" | "-") unary | postfix ;
+postfix  = primary { "." ident | "[" expr "]" | "[?" expr "]" } ;
+primary  = number | string | "true" | "false" | "null" | "$" | "@" | "#index"
+         | ident "(" [ expr { "," expr } ] ")" | ident | "(" expr ")" ;
+```
+
+### Evaluation rules
+
+- **Missing never throws.** A missing path evaluates to null. Null is falsy and formats as empty text.
+- **Bare identifiers.** A bare identifier (`amount`) is a field of the current row when there is one, otherwise of the document.
+- **`+` and text.** `+` adds two numbers; if either side is not a number, it concatenates text.
+- **Division.** Dividing by zero gives null.
+- **Whole numbers.** A whole-number result prints without decimals (`1 + 1` → `2`).
+- **Equality.** `==` compares numbers numerically and everything else as text.
+- **`link(id, kind?, label?)`** returns a link value, which the engine resolves into a navigable entity.
+- **Compiled once.** Expressions are compiled once, cached by source text (`drishti.sutra.expression-cache-size`), and shared across threads.
+- **Checked at load.** Every expression in a Sutra is compiled when the file loads, so a typo is reported against the file (`DRS-2101`), not at view time.
+- **Dependency paths.** Each compiled expression reports the document paths it reads. Live updates (Wave 9) use this to re-evaluate only the parts of a view that a change affects.
+
+### Choosing a Sutra
+
+`SutraMatcher` takes the Sutras for the entity's kind, highest `priority` first, and picks the first
+one whose `where` holds for the document. If none matches, the view is built by inference alone.
+There is no separate classifier file: `match` is the classifier.
 
 ## Problem codes
 
@@ -100,6 +133,7 @@ The full grammar (EBNF) and evaluation rules land with the compiler in Wave 5.
 | DRS-2026 | strip longer than 8 |
 | DRS-2027 | bad area |
 | DRS-2028 | `name@version` defined twice |
+| DRS-2101 | expression or template does not compile |
 
 ## The reference Sutras
 

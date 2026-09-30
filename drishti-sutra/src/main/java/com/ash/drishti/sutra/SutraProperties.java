@@ -25,13 +25,21 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param dirs directories scanned recursively for {@code *.yaml} Sutra files
  * @param hotReload watch the directories and reload changed files
  * @param reloadDebounce quiet period before a burst of file events triggers one reload
+ * @param formatsFile optional site file overriding or adding named formats
+ * @param expressionCacheSize compiled Sutra-EL expressions kept in memory
  */
 @ConfigurationProperties("drishti.sutra")
-public record SutraProperties(List<String> dirs, Boolean hotReload, Duration reloadDebounce) {
+public record SutraProperties(
+        List<String> dirs, Boolean hotReload, Duration reloadDebounce, String formatsFile, Long expressionCacheSize) {
 
     public SutraProperties {
         dirs = dirs == null || dirs.isEmpty() ? List.of("./sutras") : List.copyOf(dirs);
         hotReload = hotReload == null ? Boolean.TRUE : hotReload;
         reloadDebounce = reloadDebounce == null ? Duration.ofMillis(250) : reloadDebounce;
+        expressionCacheSize = expressionCacheSize == null ? 10_000L : expressionCacheSize;
+    }
+
+    public SutraProperties(List<String> dirs, Boolean hotReload, Duration reloadDebounce) {
+        this(dirs, hotReload, reloadDebounce, null, null);
     }
 }

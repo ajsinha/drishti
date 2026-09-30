@@ -117,7 +117,7 @@ over immutable inputs so they are safe to run concurrently and cache aggressivel
         │
  ① Command    CommandParser → EntityRef(kind=trade, id=IRS-48213)            ~µs
  ② Fetch      SourceRouter  → DataNode + Provenance(source, generation)     I/O, virtual thread
- ③ Classify   Classifier    → product key ("irs-vanilla") via config rules  ~µs
+ ③ Classify   SutraMatcher  → Sutra whose match.kind/where holds (or none) ~µs
  ④ Shape      Fingerprinter → shape hash (cached per generation)            ~µs–ms
  ⑤ Layout     LayoutResolver: cache[(sutra@v, fp)] else Sutra ⊕ Inference   cold ms, warm µs
  ⑥ Bind       Binder        → panels bound in parallel (ForkJoin/VT)        ~ms
@@ -312,9 +312,8 @@ in tracked files.
 |---|---|
 | `drishti-server/src/main/resources/application.yaml` | server, `drishti.engine.*` (budgets, pools, cache sizes), `drishti.sources.*` |
 | `config/mnemonics.yaml` | `TRD → trade`, `NSET → netting-set`, … |
-| `config/classifiers.yaml` | kind + predicate → product key → default Sutra |
 | `config/references.yaml` | id patterns and field names → kinds |
-| `config/formats.yaml` | named number/date formats |
+| `drishti-sutra/.../formats.yaml` (+ `drishti.sutra.formats-file`) | named number/date formats |
 | `config/inference/*.yaml` | rule weights, semantic hints, density limits |
 | `sutras/**` | layout grammar files |
 | `console/config/application.yaml` | console port, server URL, theme default, feature flags |

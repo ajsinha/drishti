@@ -23,7 +23,7 @@ NSET NS-NORTH-01 <GO>     →  exposure profile, member trades, CSA, collateral
 
 ## Status — read this first
 
-This repository is being built in waves. **Waves 1–4 are done** (build foundation; console shell and landing page; data model and sources; Sutra grammar). The architecture and plan are
+This repository is being built in waves. **Waves 1–5 are done** (build foundation; console shell and landing page; data model and sources; Sutra grammar; Sutra-EL and formats). The architecture and plan are
 written; code arrives wave by wave on `develop` and is merged to `main` as each wave
 closes. Nothing below "What it will do" is built yet.
 

@@ -69,7 +69,7 @@ Ten waves. Each holds a small set of closely related items and ends with a demo-
 
 ## W5 — Sutra-EL & reference Sutras
 - Sutra-EL: lexer → parser → AST → compiled closures (paths, `[?x]` filters, ternary, `link()`, `size()`, arithmetic, concat); EBNF in the reference doc.
-- `FormatRegistry` (`config/formats.yaml`) and tones; `Classifier` (`config/classifiers.yaml`).
+- `Formats` (bundled `formats.yaml`, site override file) and `Tones`; `SutraMatcher` (the Sutra `match` block is the classifier).
 - `sutras/rates/irs-vanilla.v3.yaml`, `sutras/fx/fx-swap.v2.yaml`, `sutras/commodities/listed-future.v1.yaml`, `sutras/credit/netting-set.v1.yaml`.
 - Tests: jqwik property tests for EL; golden `Layout` JSON per reference Sutra.
 

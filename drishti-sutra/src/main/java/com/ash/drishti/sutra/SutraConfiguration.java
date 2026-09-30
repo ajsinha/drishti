@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.sutra;
 
+import com.ash.drishti.sutra.el.ElCompiler;
+import com.ash.drishti.sutra.format.Formats;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,8 +26,23 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties(SutraProperties.class)
 public class SutraConfiguration {
 
+    @Bean
+    public ElCompiler elCompiler(SutraProperties props) {
+        return new ElCompiler(props.expressionCacheSize());
+    }
+
+    @Bean
+    public Formats formats(SutraProperties props) {
+        return Formats.load(props.formatsFile());
+    }
+
     @Bean(destroyMethod = "close")
-    public SutraRegistry sutraRegistry(SutraProperties props) {
-        return new SutraRegistry(props);
+    public SutraRegistry sutraRegistry(SutraProperties props, ElCompiler elCompiler) {
+        return new SutraRegistry(props, elCompiler);
+    }
+
+    @Bean
+    public SutraMatcher sutraMatcher(SutraRegistry registry, ElCompiler elCompiler, Formats formats) {
+        return new SutraMatcher(registry, elCompiler, formats);
     }
 }

@@ -17,6 +17,7 @@ package com.ash.drishti.sutra;
 
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.sutra.el.ElCompiler;
 import com.ash.drishti.sutra.model.SourceLocation;
 import com.ash.drishti.sutra.model.Sutra;
 import com.ash.drishti.sutra.parse.SutraParser;
@@ -61,14 +62,16 @@ public final class SutraRegistry implements AutoCloseable {
 
     private final SutraParser parser = new SutraParser();
     private final SutraProperties props;
+    private final SutraExpressions expressions;
     private final Map<Path, Sutra> lastGood = new HashMap<>();
     private final List<Consumer<Set<String>>> listeners = new CopyOnWriteArrayList<>();
     private volatile Snapshot snapshot = new Snapshot(Map.of(), Map.of());
     private volatile WatchService watcher;
     private Thread watchThread;
 
-    public SutraRegistry(SutraProperties props) {
+    public SutraRegistry(SutraProperties props, ElCompiler compiler) {
         this.props = props;
+        this.expressions = new SutraExpressions(compiler);
         reload();
         if (props.hotReload()) {
             startWatching();
@@ -130,6 +133,10 @@ public final class SutraRegistry implements AutoCloseable {
             try {
                 String domain = f.getParent() == null ? "" : f.getParent().getFileName().toString();
                 s = parser.parse(Files.readString(f, StandardCharsets.UTF_8), f.getFileName().toString(), domain);
+                List<SutraProblem> exprProblems = expressions.check(s);
+                if (!exprProblems.isEmpty()) {
+                    throw new SutraException(exprProblems);
+                }
                 lastGood.put(f, s);
             } catch (SutraException e) {
                 problems.put(f.toString(), e.problems());
