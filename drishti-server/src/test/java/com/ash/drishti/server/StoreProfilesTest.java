@@ -25,7 +25,8 @@ import org.springframework.test.context.ActiveProfiles;
 
 /**
  * The `postgres` profile turns each banking data domain's store into a JDBC table connector. With no database at
- * the configured URL the connectors fail to start, are reported, and the server still runs.
+ * the configured URL the connectors still start (they reconnect once it is up), report themselves down, and the
+ * server runs.
  */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=market-risk,counterparty-risk",
         "DRISHTI_PG_URL=jdbc:postgresql://127.0.0.1:1/nowhere"})
@@ -36,7 +37,12 @@ class StoreProfilesTest {
 
     @Test
     void eachDomainStoreBecomesATableConnector() {
-        assertThat(registry.failures()).containsKeys("reference-store", "market-store", "trading-store", "risk-store", "credit-store", "collateral-store");
+        for (String store : new String[] {"reference-store", "market-store", "trading-store", "risk-store", "credit-store", "collateral-store"}) {
+            assertThat(registry.failures()).doesNotContainKey(store);
+            assertThat(registry.plugin(store)).as(store).isPresent();
+            // table kinds are listed in the background once the database answers; reads meanwhile fail and health says so
+            assertThat(registry.plugin(store).orElseThrow().health()).as(store).startsWith("DOWN");
+        }
         assertThat(registry.plugin("demo")).isPresent();
     }
 }
