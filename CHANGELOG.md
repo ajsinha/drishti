@@ -15,6 +15,13 @@
 -->
 # Changelog
 
+## 1.8.0 — Wave 13c: packs per user (2026-09-30)
+- **Admins assign packs to users** (user dialog → *Packs*). Users with several packs choose which to see from a **pack switcher** in the top bar, and the choice is saved to their account (`GET/PUT /api/v1/me/packs`).
+- Each pack declares the `kinds` it owns, and a kind belongs to exactly one installed pack.
+- **Enforcement is on the server:** kinds of packs that are not active for the user cannot be opened, and their mnemonics, suggestions, examples, starters, guides and alert suggestions disappear with them.
+- `drishti.packs.default-for-users` sets what new users get.
+- The plan records the pack roadmap: risk (R1–R5), then liquidity, climate, operational and non-financial risk, retail banking, genomics and biology, politics and society, and economics.
+
 ## 1.7.0 — Wave 15: F8 Impact (2026-09-30)
 - **F8 Impact** (`/impact/{kind}/{id}`, `GET /api/v1/impact/{kind}/{id}`) answers "what depends on this?":
   - level 1: every entity that references it (reverse lookups across all known kinds, in parallel);

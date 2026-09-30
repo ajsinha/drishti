@@ -35,12 +35,19 @@ public final class Entitlements {
 
     public static final String DENIED = "no access";
     private final SecurityProperties props;
+    private final PackAccess packs;
 
-    public Entitlements(SecurityProperties props) {
+    public Entitlements(SecurityProperties props, PackAccess packs) {
         this.props = props;
+        this.packs = packs;
     }
 
+    /** The user's roles allow the kind, and the kind's pack is active for the user. */
     public boolean mayOpen(Principal p, String kind) {
+        return packs.kindAllowed(p.user(), kind) && roleAllows(p, kind);
+    }
+
+    private boolean roleAllows(Principal p, String kind) {
         if (!props.enabled() || p.roles().contains("*")) {
             return true;
         }
@@ -111,9 +118,6 @@ public final class Entitlements {
 
     /** Disables links the principal may not follow: linked-entity rows, cell links and link keys. */
     public ViewModel restrict(Principal p, ViewModel v) {
-        if (!props.enabled() || p.roles().contains("*")) {
-            return v;
-        }
         List<ViewModel.PanelView> panels = new ArrayList<>();
         for (ViewModel.PanelView pv : v.panels()) {
             if (pv.data() instanceof PanelData.Links l) {

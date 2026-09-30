@@ -102,6 +102,11 @@ full-screen at the terminal.
 - **Live values** keep ticking. The top bar still shows the p99.
 - **Studio** (authoring) is left out on phones. Everything else, including help and administration, works.
 
+## Domain packs
+
+If your administrator has given you more than one pack (say *Finance* and *Logistics*), the box icon in
+the top bar lets you choose which to see. Commands, suggestions, examples and help follow your choice.
+
 ## Themes
 
 The palette menu offers five themes:

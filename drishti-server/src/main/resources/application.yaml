@@ -119,6 +119,8 @@ drishti:
     # Site settings below always override what a pack contributes.
     dir: ${DRISHTI_PACKS_DIR:./packs}
     enabled: ${DRISHTI_PACKS:finance}
+    # Packs new users get until an admin says otherwise (empty: every installed pack).
+    default-for-users: ${DRISHTI_DEFAULT_PACKS:}
   commands:
     # Mnemonics come from the enabled packs; add or override site mnemonics under `mnemonics:`.
     suggest-limit: 10

@@ -27,7 +27,7 @@ terminal does.
 
 ## Status
 
-**Drishti 1.7.0 is released** (see [RELEASE_NOTES.md](RELEASE_NOTES.md)). It is built in waves on `develop`, each merged to `main` when its build was green.
+**Drishti 1.8.0 is released** (see [RELEASE_NOTES.md](RELEASE_NOTES.md)). It is built in waves on `develop`, each merged to `main` when its build was green.
 
 | Wave | Theme | State |
 |---|---|---|
@@ -48,7 +48,10 @@ terminal does.
 | 13b | Domain packs: neutral core; finance and logistics packs | ✅ done |
 | 14 | Monitors and alerts | ✅ done |
 | 15 | F8 impact | ✅ done |
-| 16 | History | ⏳ next |
+| 13c | Packs per user: admins assign, users choose, enforced by the server | ✅ done |
+| R1–R5 | Risk pack (market and counterparty credit risk): ~110 products, market data, risk data, `datafiles` connector, Aerospike and PostgreSQL | ⏳ next |
+| P2–P8 | Packs: liquidity, climate, operational/non-financial, retail banking, genomics and biology, politics and society, economics | ◻️ planned |
+| 16 | History | ◻️ after the risk pack |
 | 17–21 | Structured search · export and share · Sutra governance · Kafka/aero/OIDC · personal settings | ◻️ planned |
 
 ## What works today
@@ -88,7 +91,7 @@ terminal does.
   what is loaded, and `/about/competitive` compares Drishti with the categories it sits among.
 - **Domain packs.** The core carries no industry. `finance` (the mockups) and `logistics` (shipments,
   containers, vessels, ports) are packs you enable with `DRISHTI_PACKS=finance,logistics`, and a new
-  industry is configuration only. See [PACKS.md](docs/PACKS.md).
+  industry is configuration only. Admins assign packs to users, and users choose which to see. See [PACKS.md](docs/PACKS.md).
 - **Impact (F8).** What depends on an entity, what that rolls into, and the amount at stake.
 - **Monitors and alerts.** Live watchlists (`/m`), and rules the server checks on every tick
   (`$.utilisation > 0.8`), with a bell and toasts when they fire.

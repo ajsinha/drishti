@@ -24,6 +24,7 @@ from fastapi import Request
 def render(request: Request, template: str, status_code: int = 200, **context: Any):
     templates = request.app.state.templates
     context.setdefault("me", getattr(request.state, "identity", None))
+    context.setdefault("pack_switcher", getattr(request.state, "pack_switcher", []))
     context.setdefault("AUTH_ENABLED", request.app.state.auth.enabled)
     return templates.TemplateResponse(request, template, context, status_code=status_code)
 

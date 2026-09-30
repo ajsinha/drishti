@@ -137,6 +137,22 @@ Ten waves (plus W11, user management, after 1.0.0). Each holds a small set of cl
 | W20 | More connections | Kafka live source; `aero` plugin; OIDC single sign-on |
 | W21 | Personal settings | command history, aliases, per-user theme and default workspace |
 
+### Domain-pack roadmap (agreed 2026-09-30)
+
+| Wave | Pack | Scope |
+|---|---|---|
+| W13c | Per-user packs | admins assign packs to users; users choose active packs; kinds owned by one pack; enforced server-side |
+| R1–R5 | **risk** (market risk and counterparty credit risk) | taxonomy of ~110 products, market data and risk/reference kinds; generated Sutras, data and documentation; `datafiles` connector; the same data in Aerospike and PostgreSQL |
+| P2 | liquidity risk | |
+| P3 | climate risk | |
+| P4 | operational and non-financial risk | |
+| P5 | retail banking | |
+| P6 | genomics and biology | |
+| P7 | politics and society | |
+| P8 | economics | |
+
+Waves 16–21 resume after the risk pack.
+
 Every wave also fixes documentation rot: the README status table, "what works", this plan, the changelog, and any guide the wave touches.
 
 ## Risks

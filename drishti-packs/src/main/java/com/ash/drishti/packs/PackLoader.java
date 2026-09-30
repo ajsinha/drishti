@@ -76,6 +76,11 @@ public final class PackLoader {
         List<String> samples = new ArrayList<>();
         for (Pack pack : packs) {
             Map<String, Object> m = pack.manifest();
+            List<Object> owned = (List<Object>) m.getOrDefault("kinds", List.of());
+            for (int i = 0; i < owned.size(); i++) {
+                claim(owner, "kind " + owned.get(i), pack.name());
+                p.put("drishti.packs.kinds." + pack.name() + "[" + i + "]", owned.get(i));
+            }
             for (Map.Entry<String, Object> e : map(m.get("mnemonics")).entrySet()) {
                 claim(owner, "mnemonic " + e.getKey(), pack.name());
                 Map<String, Object> def = map(e.getValue());

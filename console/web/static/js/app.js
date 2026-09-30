@@ -30,6 +30,17 @@
     document.dispatchEvent(new CustomEvent('drishti:theme', { detail: theme }));
   }
 
+  // Pack switcher: choose which of your packs to see.
+  document.addEventListener('submit', function (e) {
+    var f = e.target.closest('[data-packs]');
+    if (!f) { return; }
+    e.preventDefault();
+    var active = [].map.call(f.querySelectorAll('input[name="pack"]:checked'), function (i) { return i.value; });
+    if (!active.length) { return; }
+    fetch('/api/packs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ active: active }) })
+      .then(function (r) { if (r.ok) { location.reload(); } });
+  });
+
   // F1: help for the screen you are on.
   document.addEventListener('keydown', function (e) {
     if (e.key === 'F1') {

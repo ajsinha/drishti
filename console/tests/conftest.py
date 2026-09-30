@@ -154,7 +154,16 @@ class FakeBackend:
             yield "row", json.dumps({"kind": "trade", "id": "IRS-48213", "patches": [], "p99Ms": 3})
 
     async def packs(self, ident=None):
-        return [{"name": n, "version": "1.0.0", "title": n.title(), "description": "", "console": {}} for n in self.enabled_packs]
+        return [{"name": n, "version": "1.0.0", "title": n.title(), "description": "", "console": {}, "assigned": True,
+                 "active": n in self.enabled_packs} for n in ["finance", "logistics"] if n in self.enabled_packs or self.enabled_packs]
+
+    chosen = None
+
+    async def choose_packs(self, active, ident):
+        if not active:
+            raise BackendError(403, "DRS-5002", "choose one or more")
+        self.enabled_packs = active
+        return {"assigned": ["finance", "logistics"], "active": active}
 
     saved_workspaces = {}
 

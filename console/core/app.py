@@ -30,7 +30,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from core.config import Settings
 
 WEB = Path(__file__).resolve().parent.parent / "web"
-ASSET_VERSION = "1.7.0"
+ASSET_VERSION = "1.8.0"
 CSP = ("default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; "
        "font-src 'self'; connect-src 'self'; frame-src 'self'; frame-ancestors 'self'")
 
@@ -46,7 +46,13 @@ class AuthGate(BaseHTTPMiddleware):
 
         auth = request.app.state.auth
         request.state.identity = auth.identity(request.cookies.get(COOKIE))
+        request.state.pack_switcher = []
         path = request.url.path
+        if request.state.identity is not None and not path.startswith(("/static/", "/api/", "/healthz")):
+            try:
+                request.state.pack_switcher = await request.app.state.packs.assigned(request.app.state.backend, request.state.identity)
+            except Exception:  # noqa: BLE001 - the switcher is a convenience; never fail a page for it
+                request.state.pack_switcher = []
         if request.state.identity is None and (path == "/t" or path.startswith(PROTECTED[1:])):
             if path.startswith("/api/"):
                 return JSONResponse({"code": "DRS-5010", "detail": "sign in first"}, status_code=401)

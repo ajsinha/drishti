@@ -38,6 +38,20 @@ async def suggest(request: Request, q: str = "", limit: int = 10):
         return _problem(e)
 
 
+@router.post("/packs")
+async def choose_packs(request: Request):
+    """The user chooses which of their packs to see."""
+    import json as _json
+
+    body = _json.loads(await request.body() or b"{}")
+    try:
+        out = await request.app.state.backend.choose_packs(body.get("active", []), ident(request))
+    except BackendError as e:
+        return _problem(e)
+    request.app.state.packs.forget(ident(request))
+    return out
+
+
 @router.post("/resolve")
 async def resolve(request: Request):
     """A command's entity, for pickers that accept typed commands (workspaces)."""

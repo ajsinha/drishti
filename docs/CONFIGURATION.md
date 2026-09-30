@@ -30,6 +30,7 @@ The local override is `./application.local.yaml`. Environment variables use Spri
 | `drishti.sources.default-route` / `routes.<kind>` | `demo` | which plugin serves a kind (see PLUGIN_GUIDE) |
 | `drishti.sources.plugin-dir` | — | extra plugin jars, each in its own class loader |
 | `drishti.sources.plugins.<name>.enabled / settings` | | plugin switch and settings |
+| `drishti.packs.default-for-users` | every installed pack (`DRISHTI_DEFAULT_PACKS`) | the packs a user gets until an admin assigns them |
 | `drishti.packs.dir` / `enabled` | `./packs` / `finance` (`DRISHTI_PACKS_DIR`, `DRISHTI_PACKS`) | domain packs to load, in order (see PACKS.md) |
 | `drishti.rachana.dirs` | `./sutras` (`DRISHTI_SUTRAS`) | site Sutra directories, in addition to the packs' |
 | `drishti.rachana.hot-reload` / `reload-debounce` | `true` / `250ms` | reload Sutras when they are saved |

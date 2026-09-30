@@ -19,6 +19,7 @@ title: Logistics · ocean freight
 description: >-
   Shipments, reefer containers, vessels and ports, with a shipment Sutra, logistics vocabulary for inference
   (weights, temperatures, delays, knots, TEU) and live sample data.
+kinds: [shipment, container, vessel, port]
 mnemonics:
   SHP:  { kind: shipment, label: Shipment }
   CTR:  { kind: container, label: Container }

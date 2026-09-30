@@ -36,6 +36,7 @@ import java.util.Set;
  * @param updatedAt last changed
  * @param lastLoginAt last successful sign-in, or null
  * @param passwordChangedAt last password change
+ * @param packs domain packs an admin has made available to this user (null means the configured default)
  */
 public record User(
         String username,
@@ -51,32 +52,39 @@ public record User(
         Instant createdAt,
         Instant updatedAt,
         Instant lastLoginAt,
-        Instant passwordChangedAt) {
+        Instant passwordChangedAt,
+        Set<String> packs) {
 
     public User {
         roles = roles == null ? Set.of() : Set.copyOf(roles);
+        packs = packs == null ? null : Set.copyOf(packs);
     }
 
     public boolean locked(Instant now) {
         return lockedUntil != null && now.isBefore(lockedUntil);
     }
 
+    User withPacks(Set<String> packs, Instant now) {
+        return new User(username, displayName, email, desk, roles, enabled, mustChangePassword, passwordHash, failedAttempts,
+                lockedUntil, createdAt, now, lastLoginAt, passwordChangedAt, packs);
+    }
+
     User with(String displayName, String email, String desk, Set<String> roles, boolean enabled, Instant now) {
         return new User(username, displayName, email, desk, roles, enabled, mustChangePassword, passwordHash, failedAttempts,
-                lockedUntil, createdAt, now, lastLoginAt, passwordChangedAt);
+                lockedUntil, createdAt, now, lastLoginAt, passwordChangedAt, packs);
     }
 
     User withPassword(String hash, boolean mustChange, Instant now) {
-        return new User(username, displayName, email, desk, roles, enabled, mustChange, hash, 0, null, createdAt, now, lastLoginAt, now);
+        return new User(username, displayName, email, desk, roles, enabled, mustChange, hash, 0, null, createdAt, now, lastLoginAt, now, packs);
     }
 
     User withLogin(Instant now) {
         return new User(username, displayName, email, desk, roles, enabled, mustChangePassword, passwordHash, 0, null, createdAt,
-                updatedAt, now, passwordChangedAt);
+                updatedAt, now, passwordChangedAt, packs);
     }
 
     User withFailure(int attempts, Instant lockUntil) {
         return new User(username, displayName, email, desk, roles, enabled, mustChangePassword, passwordHash, attempts, lockUntil,
-                createdAt, updatedAt, lastLoginAt, passwordChangedAt);
+                createdAt, updatedAt, lastLoginAt, passwordChangedAt, packs);
     }
 }

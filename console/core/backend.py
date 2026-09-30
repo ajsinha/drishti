@@ -101,6 +101,9 @@ class BackendClient:
     async def packs(self, ident=None) -> list:
         return await self._get("/packs", ident)
 
+    async def choose_packs(self, active: list, ident) -> dict:
+        return await self._send("PUT", "/me/packs", ident, json={"active": active})
+
     async def about(self, ident=None) -> dict:
         return await self._get("/about", ident)
 

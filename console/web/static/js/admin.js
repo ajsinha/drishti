@@ -59,6 +59,7 @@
       form.elements.email.value = user.email || '';
       form.elements.enabled.checked = !!user.enabled;
       form.querySelectorAll('[name="roles"]').forEach(function (c) { c.checked = user.roles.indexOf(c.value) >= 0; });
+      form.querySelectorAll('[name="packs"]').forEach(function (c) { c.checked = !user.packs || user.packs.indexOf(c.value) >= 0; });
     }
     dlg.showModal();
     (user ? form.elements.displayName : form.elements.username).focus();
@@ -71,6 +72,8 @@
     var f = form.elements, roles = [];
     form.querySelectorAll('[name="roles"]:checked').forEach(function (c) { roles.push(c.value); });
     var body = { displayName: f.displayName.value, desk: f.desk.value, email: f.email.value, roles: roles, enabled: f.enabled.checked };
+    var packs = [].map.call(form.querySelectorAll('[name="packs"]:checked'), function (c) { return c.value; });
+    if (form.querySelector('[name="packs"]')) { body.packs = packs; }
     var call = editing ? api(editing.username, 'update', body)
       : post('/admin/api/users', Object.assign(body, { username: f.username.value.trim(), password: f.password.value, mustChangePassword: f.mustChangePassword.checked }));
     call.then(function (res) {

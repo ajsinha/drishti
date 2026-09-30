@@ -36,6 +36,19 @@ configuration, so anything the site sets in `application.yaml` overrides a pack.
 claim the same mnemonic, reference field, badge or role, the server refuses to start, and names both
 packs. `GET /api/v1/packs` and the About page list the active packs.
 
+## Who sees which pack
+
+- **Installed** packs (`DRISHTI_PACKS`) are what the server runs. Each pack lists the entity `kinds` it
+  owns. A kind belongs to exactly one installed pack, which is why `finance` and `risk` cannot be
+  installed together.
+- **Assigned** packs are those an administrator gives a user (*Admin → Users → Edit → Packs*). A user
+  without an assignment gets `drishti.packs.default-for-users` (default: every installed pack).
+- **Active** packs are what the user chose to see, using the pack switcher in the top bar (shown when
+  more than one pack is assigned). The choice is saved to their account.
+- **Enforcement is on the server.** A kind owned by a pack that is not active for the user cannot be
+  opened (`DRS-5002`). Its mnemonics, suggestions, examples, starters, guides and alert suggestions
+  disappear with it. Kinds that no pack owns are unaffected.
+
 ## What a pack contains
 
 ```text

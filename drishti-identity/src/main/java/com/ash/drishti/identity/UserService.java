@@ -47,7 +47,12 @@ public final class UserService {
      * @param roles roles
      * @param enabled may sign in
      */
-    public record Profile(String displayName, String email, String desk, Set<String> roles, Boolean enabled) {}
+    public record Profile(String displayName, String email, String desk, Set<String> roles, Boolean enabled, Set<String> packs) {
+
+        public Profile(String displayName, String email, String desk, Set<String> roles, Boolean enabled) {
+            this(displayName, email, desk, roles, enabled, null);
+        }
+    }
 
     private final UserStore store;
     private final PasswordHasher hasher;
@@ -72,7 +77,7 @@ public final class UserService {
         }
         Instant now = Instant.now();
         store.put(new User(props.seedUsername(), "Drishti dev admin", "", "Administration", new LinkedHashSet<>(props.seedRoles()),
-                true, false, hasher.hash(props.seedPassword()), 0, null, now, now, null, now));
+                true, false, hasher.hash(props.seedPassword()), 0, null, now, now, null, now, null));
         audit.record("system", "user-seeded", props.seedUsername(), "development admin created because the user store was empty");
         LOG.warn("Created development admin '{}' with the default password. Change it before any shared use.", props.seedUsername());
         return true;
@@ -141,6 +146,10 @@ public final class UserService {
                 || u.roles().contains(q)).toList();
     }
 
+    public java.util.Optional<User> find(String username) {
+        return store.find(norm(username));
+    }
+
     public User require(String username) {
         return store.find(norm(username)).orElseThrow(() -> new DrishtiException(ErrorCode.USER_NOT_FOUND, "no user '" + username + "'"));
     }
@@ -162,7 +171,7 @@ public final class UserService {
         checkPassword(password, name);
         Instant now = Instant.now();
         User u = new User(name, blank(p.displayName(), name), blank(p.email(), ""), blank(p.desk(), ""), p.roles(),
-                p.enabled() == null || p.enabled(), mustChange, hasher.hash(password), 0, null, now, now, null, now);
+                p.enabled() == null || p.enabled(), mustChange, hasher.hash(password), 0, null, now, now, null, now, p.packs());
         store.put(u);
         audit.record(actor, "user-created", name, "roles " + u.roles());
         return u;
@@ -174,6 +183,9 @@ public final class UserService {
         boolean enabled = p.enabled() == null ? u.enabled() : p.enabled();
         User next = u.with(blank(p.displayName(), u.displayName()), p.email() == null ? u.email() : p.email().trim(),
                 p.desk() == null ? u.desk() : p.desk().trim(), p.roles() == null ? u.roles() : p.roles(), enabled, Instant.now());
+        if (p.packs() != null) {
+            next = next.withPacks(p.packs(), Instant.now());
+        }
         guardLastAdmin(u, next);
         store.put(next);
         audit.record(actor, "user-updated", u.username(), "roles " + next.roles() + ", enabled " + next.enabled());

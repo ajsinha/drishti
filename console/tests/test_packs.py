@@ -30,7 +30,7 @@ def test_without_packs_the_console_stays_neutral(client, backend):
     saved = backend.enabled_packs
     try:
         backend.enabled_packs = []
-        client.app.state.packs._cache = None
+        client.app.state.packs._cache = {}
         home = client.get("/t").text
         assert "No domain pack is enabled" in home and "TRD IRS-48213" not in home
         assert "Credit desk" not in client.get("/w").text
@@ -38,4 +38,19 @@ def test_without_packs_the_console_stays_neutral(client, backend):
         assert client.get("/help/context/terminal", follow_redirects=False).headers["location"] == "/help/using-the-terminal"
     finally:
         backend.enabled_packs = saved
-        client.app.state.packs._cache = None
+        client.app.state.packs._cache = {}
+
+
+def test_pack_switcher_chooses_active_packs(client, backend):
+    saved = backend.enabled_packs
+    try:
+        client.app.state.packs._cache = {}
+        home = client.get("/t").text
+        assert "data-packs" in home and 'value="logistics" checked' in home
+        assert client.post("/api/packs", json={"active": ["logistics"]}).json()["active"] == ["logistics"]
+        home = client.get("/t").text
+        assert "SHP SHP-10042" in home and "TRD IRS-48213" not in home
+        assert client.post("/api/packs", json={"active": []}).status_code == 403
+    finally:
+        backend.enabled_packs = saved
+        client.app.state.packs._cache = {}

@@ -20,6 +20,7 @@ description: >-
   Trades (interest rate swaps, FX swaps, listed futures and more), netting sets, CSAs, master agreements,
   curves, credit limits, clearing accounts and books, with the four reference Sutras, finance vocabulary for
   inference, and live sample data behind the mockups.
+kinds: [trade, netting-set, csa, agreement, curve, counterparty, credit-limit, clearing-account, contract-spec, index, fx-spot, book, fixing]
 sutras: sutras
 formats: config/formats.yaml
 semantics: config/semantics.yaml

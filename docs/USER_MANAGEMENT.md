@@ -55,6 +55,11 @@ and nobody can disable or delete their own account.
 - Read the **audit log** (`/admin/audit`): sign-ins, failures, lockouts and every change, with the
   actor. It is append-only JSON lines on disk, never contains passwords, and can be filtered by user.
 
+## Packs per user
+
+In the user dialog, **Packs** sets which installed domain packs the user may use. Users with more than
+one pack choose which to see from the pack switcher in the top bar. See PACKS.md.
+
 ## What every user can do (`/account`)
 
 - See their profile and roles.

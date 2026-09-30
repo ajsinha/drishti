@@ -28,19 +28,35 @@ class Packs:
         d = Path(settings.get("packs.dir", "../packs"))
         self.dir = d if d.is_absolute() else (console_dir / d).resolve()
         self.fallback = [p.strip() for p in str(settings.get("packs.enabled", "finance")).split(",") if p.strip()]
-        self._cache: tuple[float, list] | None = None
+        self._cache: dict[str, tuple[float, list, list]] = {}
 
     async def current(self, backend, ident=None) -> list[dict]:
+        """The user's active packs."""
+        return (await self._fetch(backend, ident))[0]
+
+    async def assigned(self, backend, ident=None) -> list[dict]:
+        """Every pack assigned to the user, each with an ``active`` flag (for the switcher)."""
+        return (await self._fetch(backend, ident))[1]
+
+    def forget(self, ident=None) -> None:
+        self._cache.pop(getattr(ident, "user", ""), None)
+
+    async def _fetch(self, backend, ident):
+        key = getattr(ident, "user", "")
         now = time.monotonic()
-        if self._cache and now - self._cache[0] < 60:
-            return self._cache[1]
+        hit = self._cache.get(key)
+        if hit and now - hit[0] < 60:
+            return hit[1], hit[2]
         try:
-            names = [p["name"] for p in await backend.packs(ident)]
+            rows = await backend.packs(ident)
+            active = [r["name"] for r in rows if r.get("active", True)]
+            assigned = [(r["name"], bool(r.get("active", True))) for r in rows if r.get("assigned", True)]
         except Exception:  # noqa: BLE001 - any backend failure means "use the configured list"
-            names = self.fallback
-        packs = [p for p in (self._load(n) for n in names) if p]
-        self._cache = (now, packs)
-        return packs
+            active, assigned = self.fallback, [(n, True) for n in self.fallback]
+        packs = [p for p in (self._load(n) for n in active) if p]
+        switcher = [{**p, "active": a} for p, a in ((self._load(n), a) for n, a in assigned) if p]
+        self._cache[key] = (now, packs, switcher)
+        return packs, switcher
 
     def _load(self, name: str) -> dict | None:
         pdir = (self.dir / name).resolve()

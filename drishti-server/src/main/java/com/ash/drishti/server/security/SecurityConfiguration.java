@@ -51,7 +51,15 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public Entitlements entitlements(SecurityProperties props) {
-        return new Entitlements(props);
+    public PackAccess packAccess(com.ash.drishti.packs.PackRegistry registry, com.ash.drishti.identity.UserService users,
+            com.ash.drishti.identity.PreferenceStore prefs, org.springframework.core.env.Environment env) {
+        String defaults = env.getProperty("drishti.packs.default-for-users", "");
+        return new PackAccess(registry, users, prefs, java.util.Arrays.stream(defaults.split(",")).map(String::trim)
+                .filter(s -> !s.isEmpty()).toList());
+    }
+
+    @Bean
+    public Entitlements entitlements(SecurityProperties props, PackAccess packAccess) {
+        return new Entitlements(props, packAccess);
     }
 }

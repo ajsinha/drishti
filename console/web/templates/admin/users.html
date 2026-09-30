@@ -34,7 +34,8 @@
     {% for u in users %}
       <tr data-user="{{ u.username }}" data-json="{{ u | tojson | forceescape }}">
         <td class="mono">{{ u.username }}</td><td>{{ u.displayName }}</td><td>{{ u.desk }}</td><td>{{ u.email }}</td>
-        <td>{% for r in u.roles | sort %}<span class="role">{{ r }}</span>{% endfor %}</td>
+        <td>{% for r in u.roles | sort %}<span class="role">{{ r }}</span>{% endfor %}
+          <div class="text-muted-d adm-packs">{{ (u.packs | sort | join(', ')) if u.packs is not none else 'default packs' }}</div></td>
         <td>{% if not u.enabled %}<span class="st st-bad">disabled</span>{% elif u.locked %}<span class="st st-warn">locked</span>{% else %}<span class="st st-ok">active</span>{% endif %}
             {% if u.mustChangePassword %}<span class="st st-warn">must change password</span>{% endif %}</td>
         <td class="mono">{{ (u.lastLoginAt or '—')[:16] | replace('T', ' ') }}</td>
@@ -58,6 +59,8 @@
       <label>Email<input name="email" type="email" class="studio-in"></label>
       <fieldset><legend>Roles</legend>
         {% for r in roles %}<label class="chk"><input type="checkbox" name="roles" value="{{ r }}"> {{ r }}</label>{% endfor %}</fieldset>
+      {% if status and status.installedPacks %}<fieldset><legend>Packs</legend>
+        {% for p in status.installedPacks %}<label class="chk"><input type="checkbox" name="packs" value="{{ p }}" checked> {{ p }}</label>{% endfor %}</fieldset>{% endif %}
       <label class="chk"><input type="checkbox" name="enabled" checked> Enabled</label>
       <label data-pw>Initial password<input name="password" type="password" class="studio-in" autocomplete="new-password"></label>
       <label class="chk" data-pw><input type="checkbox" name="mustChangePassword"{% if status and status.forceChangeOnCreate %} checked{% endif %}> Must change at first sign-in</label>

@@ -13,6 +13,13 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 1.8.0 — release notes
+
+*2026-09-30.* **Packs per user.** Admins assign domain packs to each user. Users with several packs
+choose which to see, and the server enforces it.
+
+---
+
 # Drishti 1.7.0 — release notes
 
 *2026-09-30.* **F8 Impact** is built. It is the known limit listed since 1.0.0, and it now shows what

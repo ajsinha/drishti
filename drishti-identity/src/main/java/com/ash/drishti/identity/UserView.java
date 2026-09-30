@@ -33,13 +33,14 @@ import java.util.Set;
  * @param updatedAt updated
  * @param lastLoginAt last sign-in
  * @param passwordChangedAt last password change
+ * @param packs packs available to the user (null: the configured default)
  */
 public record UserView(String username, String displayName, String email, String desk, Set<String> roles, boolean enabled,
         boolean mustChangePassword, boolean locked, Instant createdAt, Instant updatedAt, Instant lastLoginAt,
-        Instant passwordChangedAt) {
+        Instant passwordChangedAt, Set<String> packs) {
 
     public static UserView of(User u, Instant now) {
         return new UserView(u.username(), u.displayName(), u.email(), u.desk(), u.roles(), u.enabled(), u.mustChangePassword(),
-                u.locked(now), u.createdAt(), u.updatedAt(), u.lastLoginAt(), u.passwordChangedAt());
+                u.locked(now), u.createdAt(), u.updatedAt(), u.lastLoginAt(), u.passwordChangedAt(), u.packs());
     }
 }

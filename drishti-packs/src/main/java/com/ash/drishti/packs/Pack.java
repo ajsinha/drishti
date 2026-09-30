@@ -30,6 +30,13 @@ import java.util.Map;
  */
 public record Pack(String name, String version, String title, String description, Path dir, Map<String, Object> manifest) {
 
+    /** The entity kinds this pack owns. */
+    @SuppressWarnings("unchecked")
+    public java.util.List<String> kinds() {
+        Object k = manifest.get("kinds");
+        return k instanceof java.util.List<?> l ? l.stream().map(String::valueOf).toList() : java.util.List.of();
+    }
+
     public Path resolve(String relative) {
         return dir.resolve(relative).normalize();
     }

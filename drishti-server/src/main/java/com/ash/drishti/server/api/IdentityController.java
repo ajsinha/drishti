@@ -69,13 +69,16 @@ public class IdentityController {
      * @param mustChangePassword ask the user to change it at first sign-in (default: {@code force-password-change-on-create})
      */
     public record NewUser(String username, String displayName, String email, String desk, Set<String> roles, Boolean enabled,
-            String password, Boolean mustChangePassword) {}
+            String password, Boolean mustChangePassword, Set<String> packs) {}
 
     private final UserService users;
     private final Entitlements entitlements;
     private final com.ash.drishti.identity.PreferenceStore preferences;
+    private final com.ash.drishti.server.security.PackAccess packAccess;
 
-    public IdentityController(UserService users, Entitlements entitlements, com.ash.drishti.identity.PreferenceStore preferences) {
+    public IdentityController(UserService users, Entitlements entitlements, com.ash.drishti.identity.PreferenceStore preferences,
+            com.ash.drishti.server.security.PackAccess packAccess) {
+        this.packAccess = packAccess;
         this.users = users;
         this.entitlements = entitlements;
         this.preferences = preferences;
@@ -115,8 +118,9 @@ public class IdentityController {
     @ResponseStatus(HttpStatus.CREATED)
     public UserView create(@RequestBody NewUser n, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
+        packAccess.validate(n.packs());
         return view(users.create(p.user(), n.username(), new UserService.Profile(n.displayName(), n.email(), n.desk(),
-                n.roles() == null ? Set.of() : n.roles(), n.enabled()), n.password(), n.mustChangePassword() == null ? users.forceChangeOnCreate() : n.mustChangePassword()));
+                n.roles() == null ? Set.of() : n.roles(), n.enabled(), n.packs()), n.password(), n.mustChangePassword() == null ? users.forceChangeOnCreate() : n.mustChangePassword()));
     }
 
     @GetMapping("/admin/users/{username}")
@@ -129,6 +133,7 @@ public class IdentityController {
     public UserView update(@PathVariable String username, @RequestBody UserService.Profile profile,
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
+        packAccess.validate(profile.packs());
         return view(users.update(p.user(), username, profile));
     }
 
@@ -169,6 +174,6 @@ public class IdentityController {
     public Map<String, Object> status(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
         return Map.of("defaultAdminPasswordInUse", users.defaultAdminPasswordInUse(), "users", users.list("").size(),
-                "forceChangeOnCreate", users.forceChangeOnCreate());
+                "forceChangeOnCreate", users.forceChangeOnCreate(), "installedPacks", packAccess.installed());
     }
 }

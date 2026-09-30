@@ -50,10 +50,13 @@ public class CatalogController {
     private final java.util.Optional<org.springframework.boot.info.BuildProperties> build;
     private final com.ash.drishti.server.security.SecurityProperties security;
     private final com.ash.drishti.packs.PackRegistry packRegistry;
+    private final com.ash.drishti.server.security.PackAccess packAccess;
 
     public CatalogController(SourceRouter router, SourceRegistry sources, SutraRegistry sutras, Entitlements entitlements,
             org.springframework.beans.factory.ObjectProvider<org.springframework.boot.info.BuildProperties> build,
-            com.ash.drishti.server.security.SecurityProperties security, com.ash.drishti.packs.PackRegistry packRegistry) {
+            com.ash.drishti.server.security.SecurityProperties security, com.ash.drishti.packs.PackRegistry packRegistry,
+            com.ash.drishti.server.security.PackAccess packAccess) {
+        this.packAccess = packAccess;
         this.packRegistry = packRegistry;
         this.entitlements = entitlements;
         this.build = java.util.Optional.ofNullable(build.getIfAvailable());
@@ -87,14 +90,16 @@ public class CatalogController {
         m.put("sutras", sutras.all().stream().map(s -> s.name() + " v" + s.version()).sorted().toList());
         m.put("sources", sources().sources());
         m.put("securityEnabled", security.enabled());
-        m.put("packs", packs());
+        m.put("packs", packs(null));
         m.put("copyright", "Copyright (c) 2026 Ashutosh Sinha. All rights reserved. Proprietary and confidential.");
         return m;
     }
 
     /** The enabled domain packs, with what the console needs from each (examples, workspaces, help). */
     @GetMapping("/packs")
-    public List<Map<String, Object>> packs() {
+    public List<Map<String, Object>> packs(@RequestAttribute(value = Principal.ATTRIBUTE, required = false) Principal who) {
+        List<String> assigned = who == null ? packAccess.installed() : packAccess.assigned(who.user());
+        List<String> active = who == null ? packAccess.installed() : packAccess.active(who.user());
         return packRegistry.packs().stream().map(p -> {
             Map<String, Object> m = new java.util.LinkedHashMap<>();
             m.put("name", p.name());
@@ -102,8 +107,24 @@ public class CatalogController {
             m.put("title", p.title());
             m.put("description", p.description());
             m.put("console", p.manifest().getOrDefault("console", Map.of()));
+            m.put("kinds", p.kinds());
+            m.put("assigned", assigned.contains(p.name()));
+            m.put("active", active.contains(p.name()));
             return m;
         }).toList();
+    }
+
+    /** The caller's active packs; {@code PUT} chooses among the packs assigned to them. */
+    @GetMapping("/me/packs")
+    public Map<String, Object> myPacks(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return Map.of("assigned", packAccess.assigned(p.user()), "active", packAccess.active(p.user()));
+    }
+
+    @org.springframework.web.bind.annotation.PutMapping("/me/packs")
+    public Map<String, Object> choosePacks(@org.springframework.web.bind.annotation.RequestBody Map<String, List<String>> body,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        packAccess.choose(p.user(), body.get("active"));
+        return myPacks(p);
     }
 
     @GetMapping("/sources")
