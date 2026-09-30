@@ -6,6 +6,8 @@
 
 # Drishti documentation
 
+These documents are also the console's in-app help (`/help`): they are rendered there as-is, so fixing a file here fixes the help.
+
 Suggested reading order:
 
 | Document | What it is |

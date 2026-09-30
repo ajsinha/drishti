@@ -27,7 +27,7 @@ terminal does.
 
 ## Status
 
-**Drishti 1.1.0 is released** (see [RELEASE_NOTES.md](RELEASE_NOTES.md)). It was built in eleven waves on `develop`, each merged to `main` when its build was green.
+**Drishti 1.2.0 is released** (see [RELEASE_NOTES.md](RELEASE_NOTES.md)). It is built in waves on `develop`, each merged to `main` when its build was green.
 
 | Wave | Theme | State |
 |---|---|---|
@@ -42,8 +42,9 @@ terminal does.
 | 9 | Live updates over SSE, measured p99 | ✅ done |
 | 10 | Sutra Studio, security, ops, v1.0.0 | ✅ done |
 | 11 | User management: users, roles, passwords, lockout, audit; seeded dev admin; v1.1.0 | ✅ done |
-| 12 | Help centre and About | ⏳ next |
-| 13–21 | Workspaces · monitors and alerts · F8 impact · history · structured search · export and share · Sutra governance · Kafka/aero/OIDC · personal settings | ◻️ planned |
+| 12 | Help centre and About | ✅ done |
+| 13 | Workspaces | ⏳ next |
+| 14–21 | Workspaces · monitors and alerts · F8 impact · history · structured search · export and share · Sutra governance · Kafka/aero/OIDC · personal settings | ◻️ planned |
 
 ## What works today
 
@@ -77,6 +78,9 @@ terminal does.
   can change their own password at `/account`. The server seeds a development admin on an empty store:
   **`drishti-dev-admin` / `drishti-dev-admin123`**. Change that password (the UI warns until you do),
   or set `DRISHTI_SEED_ADMIN=false` in production.
+- **Help.** An in-app help centre (`/help`) with tutorials, guides and every reference, plus search.
+  `F1` gives help for the current screen, each panel has a **?**, and `/about` shows the version and
+  what is loaded.
 - **Operations.** Prometheus metrics, a Grafana dashboard, Dockerfiles and compose, and runbooks.
 - **Not built** (see the release notes): OIDC/SSO, the `aero` plugin, and F8 Impact.
 

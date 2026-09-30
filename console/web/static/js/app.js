@@ -30,6 +30,14 @@
     document.dispatchEvent(new CustomEvent('drishti:theme', { detail: theme }));
   }
 
+  // F1: help for the screen you are on.
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'F1') {
+      e.preventDefault();
+      window.location.href = '/help/context/' + encodeURIComponent(document.body.getAttribute('data-screen') || 'landing');
+    }
+  });
+
   document.addEventListener('click', function (e) {
     var b = e.target.closest('[data-theme-choice]');
     if (b) { apply(b.getAttribute('data-theme-choice')); }

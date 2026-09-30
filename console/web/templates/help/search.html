@@ -1,0 +1,33 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Search help · {{ PRODUCT }}{% endblock %}
+{% block body_class %}terminal help-page{% endblock %}
+{% block nav %}{% include "help/_nav.html" %}{% endblock %}
+{% block content %}
+<div class="help-wrap">
+  <nav class="crumbs help-crumbs" aria-label="Breadcrumb"><a href="/help">Help</a><span class="sep">/</span><span>Search</span></nav>
+  {% if missing %}<p class="pnl-err" role="status">There is no guide called “{{ missing }}”. Here is what matches instead.</p>{% endif %}
+  <form class="help-search" action="/help/search" method="get" role="search"><i class="bi bi-search" aria-hidden="true"></i>
+    <label class="visually-hidden" for="sq">Search help</label><input id="sq" name="q" type="search" value="{{ q }}" autofocus></form>
+  <p class="text-muted-d">{{ hits | length }} guide{{ '' if hits | length == 1 else 's' }} mention “{{ q }}”.</p>
+  <ol class="help-results">
+    {% for h in hits %}<li><a href="/help/{{ h.guide.slug }}"><b>{{ h.guide.title }}</b> <span class="badge-kind">{{ h.guide.kind }}</span></a>
+      <p>…{{ h.snippet }}…</p></li>{% endfor %}
+  </ol>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/help.js?v={{ ASSET_V }}"></script>{% endblock %}

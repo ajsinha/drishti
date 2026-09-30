@@ -1,0 +1,40 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}{{ guide.title }} · Help · {{ PRODUCT }}{% endblock %}
+{% block body_class %}terminal help-page{% endblock %}
+{% block nav %}{% include "help/_nav.html" %}{% endblock %}
+{% block content %}
+<div class="help-wrap help-guide">
+  <nav class="crumbs help-crumbs" aria-label="Breadcrumb"><a href="/help">Help</a><span class="sep">/</span>
+    <a href="/help#cat-{{ category.id }}">{{ category.name }}</a><span class="sep">/</span><span>{{ guide.title }}</span></nav>
+  <div class="help-layout">
+    <aside class="help-toc" aria-label="On this page">
+      <form class="help-search small" action="/help/search" method="get" role="search"><i class="bi bi-search" aria-hidden="true"></i>
+        <label class="visually-hidden" for="hs">Search help</label><input id="hs" name="q" type="search" placeholder="Search help"></form>
+      {% if page.toc %}<h2>On this page</h2><ol>{% for t in page.toc %}<li><a href="#{{ t.id }}">{{ t.name }}</a>
+        {% if t.children %}<ol>{% for c in t.children %}<li><a href="#{{ c.id }}">{{ c.name }}</a></li>{% endfor %}</ol>{% endif %}</li>{% endfor %}</ol>{% endif %}
+      <h2>In {{ category.name }}</h2><ul>{% for g in category.guides %}<li{% if g.slug == guide.slug %} aria-current="page"{% endif %}><a href="/help/{{ g.slug }}">{{ g.title }}</a></li>{% endfor %}</ul>
+    </aside>
+    <article class="help-article">
+      <header><span class="badge-kind">{{ guide.kind }}</span><h1>{{ guide.title }}</h1><p class="lead">{{ guide.summary }}</p></header>
+      {{ page.html | safe }}
+      <footer class="help-foot">Found something out of date? The source is <span class="mono">{{ guide.path.name }}</span>; the in-app help renders the repository's documents, so fixing the file fixes this page.</footer>
+    </article>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/help.js?v={{ ASSET_V }}"></script>{% endblock %}

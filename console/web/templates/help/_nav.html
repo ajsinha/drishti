@@ -13,9 +13,4 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-<footer class="site-footer">
-  <div class="inner">
-    <span>{{ COPYRIGHT }} · <a href="/help">Help</a> · <a href="/about">About</a></span>
-    <span>{{ PRODUCT }} · {{ TAGLINE }} · Unauthorised copying, use or distribution is prohibited.</span>
-  </div>
-</footer>
+{% if me %}{% include "terminal/_topbar.html" %}{% else %}{% include "_nav_public.html" %}{% endif %}

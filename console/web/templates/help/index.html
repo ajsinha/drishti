@@ -1,0 +1,63 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Help · {{ PRODUCT }}{% endblock %}
+{% block body_class %}terminal help-page{% endblock %}
+{% block nav %}{% include "help/_nav.html" %}{% endblock %}
+{% block content %}
+<section class="help-hero">
+  <i class="bi bi-book hero-ico" aria-hidden="true"></i>
+  <h1>Help &amp; documentation</h1>
+  <p>Everything about {{ PRODUCT }}, with worked examples: {{ count }} guides, tutorials, references and runbooks.
+     Press <kbd>F1</kbd> anywhere for help on the screen you are on.</p>
+  <div class="help-cta">
+    <a class="btn-pill btn-accent" href="/help/getting-started"><i class="bi bi-flag" aria-hidden="true"></i> Getting started</a>
+    <a class="btn-pill btn-ghost" href="/about"><i class="bi bi-info-circle" aria-hidden="true"></i> About {{ PRODUCT }}</a>
+    <a class="btn-pill btn-ghost" href="/help/api"><i class="bi bi-code-square" aria-hidden="true"></i> API guide</a>
+  </div>
+</section>
+<div class="help-wrap">
+  <div class="help-toolbar">
+    <form class="help-search" action="/help/search" method="get" role="search">
+      <i class="bi bi-search" aria-hidden="true"></i>
+      <label class="visually-hidden" for="help-q">Search help</label>
+      <input id="help-q" name="q" type="search" autocomplete="off" data-help-filter
+             placeholder="Search help, e.g. sutra, keyboard, lockout, inference, SSE…">
+    </form>
+    <div class="cat-chips">
+      {% for c in categories %}<a class="chip" href="#cat-{{ c.id }}"><i class="bi bi-{{ c.icon }}" aria-hidden="true"></i> {{ c.name }} <span>{{ c.guides | length }}</span></a>{% endfor %}
+    </div>
+  </div>
+  {% for c in categories %}
+  <details class="help-cat" id="cat-{{ c.id }}" open>
+    <summary><span class="cat-name"><span class="cat-ico"><i class="bi bi-{{ c.icon }}" aria-hidden="true"></i></span> {{ c.name }}</span>
+      <span class="cat-count">{{ c.guides | length }}</span></summary>
+    <p class="cat-blurb">{{ c.blurb }}</p>
+    <div class="help-cards">
+      {% for g in c.guides %}
+      <a class="help-card" href="/help/{{ g.slug }}" data-search="{{ (g.title ~ ' ' ~ g.summary ~ ' ' ~ c.name) | lower }}">
+        <div class="hc-title"><span class="hc-ico"><i class="bi bi-{{ g.icon }}" aria-hidden="true"></i></span>
+          <span>{{ g.title }} <span class="badge-kind">{{ g.kind }}</span></span></div>
+        <p>{{ g.summary }}</p><span class="more">Read <i class="bi bi-arrow-right" aria-hidden="true"></i></span>
+      </a>
+      {% endfor %}
+    </div>
+  </details>
+  {% endfor %}
+  <p class="help-none" data-help-none hidden>No guide titles match. <a href="#" data-help-fulltext>Search inside every guide</a>.</p>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/help.js?v={{ ASSET_V }}"></script>{% endblock %}

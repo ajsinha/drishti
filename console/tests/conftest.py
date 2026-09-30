@@ -103,6 +103,11 @@ class FakeBackend:
             return {**body, "enabled": True}
         return {"ok": True}
 
+    async def about(self, ident=None):
+        return {"product": "Drishti", "version": "1.2.0", "built": "2026-09-30T12:00:00Z", "java": "21.0.12 (Ubuntu)",
+                "uptimeSeconds": 3725, "sutras": ["irs-vanilla v3"], "securityEnabled": False,
+                "sources": [{"name": "demo", "version": "1.0", "kinds": [], "live": True, "search": True, "reverseLookup": True, "health": "UP"}]}
+
     async def command(self, text, ident=None):
         if "IRS-48213" in text.upper():
             return {"ref": {"kind": "trade", "id": "IRS-48213"}, "mnemonic": "TRD"}

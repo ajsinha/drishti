@@ -40,3 +40,5 @@ auth:
   secure_cookie: ${DRISHTI_SECURE_COOKIE:true}
 studio:
   enabled: true
+help:
+  docs_dir: ../docs          # the repository docs rendered as the help centre's reference section

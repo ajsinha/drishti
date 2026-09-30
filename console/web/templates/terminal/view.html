@@ -16,6 +16,7 @@
 {% extends "base.html" %}
 {% from "_macros/panels.html" import panel, cell_text, tone %}
 {% block title %}{{ vm.title.id }} · {{ PRODUCT }}{% endblock %}
+{% block screen %}view{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% with command_text=(vm.mnemonic ~ ' ' ~ vm.ref.id ~ ' <GO>') if vm.mnemonic else vm.ref.id, live=vm.provenance.live, built_ms=vm.timings.total %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}

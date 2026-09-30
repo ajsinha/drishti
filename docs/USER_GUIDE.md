@@ -43,6 +43,7 @@ Matched characters are highlighted.
 
 | Key | Does |
 |---|---|
+| `F1` | help for the screen you are on |
 | `/` | focus the command line from anywhere |
 | `↑` `↓` | move through suggestions |
 | `Tab` | complete the highlighted suggestion |
@@ -66,6 +67,12 @@ Matched characters are highlighted.
 - **Breadcrumbs:** `← IRS-48213 / NS-NORTH-01` shows the path you followed in this browser tab.
 - **How this view was built:** the Sutra and version (or *inference only*), the data fingerprint,
   and the source with its generation.
+
+## Help
+
+**Help** in the top bar (or `F1`) opens the help centre: three tutorials, guides and every reference,
+with search. The **?** in each panel header explains that panel kind. **About** shows the version, the
+loaded Sutras and the health of each source.
 
 ## Themes
 

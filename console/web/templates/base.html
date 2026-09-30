@@ -28,9 +28,10 @@
   <link rel="stylesheet" href="/static/css/tokens.css?v={{ ASSET_V }}">
   <link rel="stylesheet" href="/static/css/theme.css?v={{ ASSET_V }}">
   <link rel="stylesheet" href="/static/css/terminal.css?v={{ ASSET_V }}">
+  <link rel="stylesheet" href="/static/css/help.css?v={{ ASSET_V }}">
   {% block head %}{% endblock %}
 </head>
-<body class="{% block body_class %}{% endblock %}">
+<body class="{% block body_class %}{% endblock %}" data-screen="{% block screen %}{{ screen | default('landing') }}{% endblock %}">
   <a class="skip-link" href="#main">Skip to content</a>
   {% block nav %}{% include "_nav_public.html" %}{% endblock %}
   <main id="main">{% block content %}{% endblock %}</main>

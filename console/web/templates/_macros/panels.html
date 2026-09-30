@@ -99,7 +99,8 @@
 <section class="pnl" id="p-{{ p.id }}" data-panel="{{ p.id }}" data-kind="{{ p.kind }}"{% if p.key %} data-key="{{ p.key }}"{% endif %} tabindex="-1" aria-labelledby="h-{{ p.id }}">
   <header class="pnl-h"><h3 id="h-{{ p.id }}">{{ p.title or '' }}</h3>
     <span class="pnl-code">{% if p.code %}{{ p.code }}{% endif %}{% if p.code and p.key %} · {% endif %}{% if p.key %}{{ p.key }}{% endif %}
-      {% if p.inferred %}<span class="inf" title="{{ p.explanation or 'completed by inference' }}">inferred</span>{% endif %}</span></header>
+      {% if p.inferred %}<span class="inf" title="{{ p.explanation or 'completed by inference' }}">inferred</span>{% endif %}
+      <a class="pnl-help" href="/help/panel-kinds#{{ p.kind }}" title="What a {{ p.kind }} panel shows" aria-label="Help on {{ p.kind }} panels"><i class="bi bi-question-circle" aria-hidden="true"></i></a></span></header>
   <div class="pnl-b">
   {% if p.error %}<p class="pnl-err" role="status"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ p.error }}</p>
   {% elif p.kind in ['kv', 'status'] %}{{ fields(p.data.fields, 4 if p.area == 'main' else 2) }}

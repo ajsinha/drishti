@@ -13,6 +13,17 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 1.2.0 — release notes
+
+*2026-09-30.* This release adds the **in-app help centre and About page**:
+- tutorials, guides and every reference document, with search;
+- `F1` for help on the current screen, and a **?** on every panel;
+- `/about` showing the version, what is loaded, source health and the legal notices.
+
+The help renders the repository's own docs, so the two cannot drift apart.
+
+---
+
 # Drishti 1.1.0 — release notes
 
 *2026-09-30.* This release adds **user management**:

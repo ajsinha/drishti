@@ -15,6 +15,17 @@
 -->
 # Changelog
 
+## 1.2.0 — Wave 12: help centre and About (2026-09-30)
+- **Help centre** (`/help`), in Maya's help language:
+  - a searchable catalogue of 25 guides in six categories;
+  - three tutorials (your first view, your first Sutra, Sutra Studio) and a panel-kind guide;
+  - captioned, copyable examples; tip/warning/note boxes; a table of contents; full-text search.
+- The help centre renders the **repository's own docs** (Rachana reference, inference, API, configuration, operations, runbooks, ADRs, plan, release notes, changelog, notices), and links between them open in-app. There is one source of truth, so the help cannot rot separately from the docs.
+- **Contextual help:** `F1` opens help for the current screen; every panel header has a **?** linking to its kind.
+- **About** (`/about`): server and console versions, build time, Java, uptime, security mode, loaded Sutras, source health, licence and notices. The server gains `GET /api/v1/about` with Spring Boot build info.
+- The console image ships the docs. A sample feed file (`data/feeds/fixing/SOFR-HISTORY.csv`) means the `file` source starts UP (`FIX SOFR-HISTORY <GO>`).
+- **Doc rot fixed:** stale "arrives in Wave N" promises removed from the API guide, plugin guide, Rachana reference and configuration.
+
 ## 1.1.0 — Wave 11: user management (2026-09-30)
 - New module `drishti-identity`:
   - users with profiles, roles and enabled flags;

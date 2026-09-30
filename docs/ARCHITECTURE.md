@@ -362,8 +362,9 @@ commands, green/red ticks, blue highlight — colours only, not fonts), `blue`, 
 | `/t` | Terminal home: command line, recent entities, watch list |
 | `/v/{mnemonic}/{id}` | Entity view (server-rendered first paint, then SSE patches) |
 | `/studio` | Sutra Studio: YAML editor + live preview against any entity |
-| `/sources` | Source plugins, health, generations |
-| `/help/*` | Markdown guides (Sutra reference, keyboard, inference rules) |
+| `/help`, `/help/{guide}`, `/help/search` | Help centre: tutorials, guides and the repository's own docs rendered in-app (no second copy to rot); F1 opens help for the current screen; every panel links to its kind's help |
+| `/about` | Version and build, Java, uptime, loaded Sutras, source health, licence and notices |
+| `/account`, `/admin/users`, `/admin/audit` | Own profile and password; user administration and the audit log |
 
 **Hero animation** (`static/js/landing.js`, canvas 2D, no library): raw JSON fragments
 drift in from the left, are drawn into the `{ ◉ }` eye, and emerge on the right as

@@ -93,6 +93,9 @@ class BackendClient:
     async def save_sutra(self, yaml_text: str, ident=None) -> dict:
         return await self._send("POST", "/sutras", ident, content=yaml_text.encode(), headers={"Content-Type": "text/yaml"})
 
+    async def about(self, ident=None) -> dict:
+        return await self._get("/about", ident)
+
     # -- identity ---------------------------------------------------------------------------------
     async def login(self, username: str, password: str, service) -> dict:
         return await self._send("POST", "/auth/login", service, json={"username": username, "password": password})

@@ -132,6 +132,7 @@ drishti:
       IDX:  { kind: index, label: Rate index }
       FXS:  { kind: fx-spot, label: FX spot }
       BOOK: { kind: book, label: Book }
+      FIX:  { kind: fixing, label: Rate fixings (feed file) }
   live:
     frame: 50ms                     # ticks within one frame coalesce (latest wins)
     heartbeat: 15s                  # SSE keep-alive comment

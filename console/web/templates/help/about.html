@@ -1,0 +1,64 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% from "_macros/ui.html" import brand_mark %}
+{% block title %}About · {{ PRODUCT }}{% endblock %}
+{% block body_class %}terminal help-page{% endblock %}
+{% block nav %}{% include "help/_nav.html" %}{% endblock %}
+{% block content %}
+<section class="help-hero about-hero">
+  {{ brand_mark("about-mark") }}
+  <h1>{{ PRODUCT }} <span class="lp-grad">दृष्टि</span></h1>
+  <p class="about-tag">{{ TAGLINE }}</p>
+  <p>Drishti (<em>sight</em>) is a live, keyboard-driven terminal. It renders any entity from any system as a
+     dense, linked, ticking view without a coded screen per product: <b>Rachana</b>, a declarative screen grammar,
+     describes views; each product family gets a <b>Sutra</b> written in it; <b>inference</b> fills whatever a Sutra leaves out.</p>
+</section>
+<div class="help-wrap about">
+  <div class="about-grid">
+    <section class="pnl"><header class="pnl-h"><h3>This installation</h3><span class="pnl-code">ABOUT</span></header>
+      <div class="pnl-b"><dl class="prov">
+        {% if info.error %}<div><dt>Server</dt><dd class="t-warn">{{ info.error }}</dd></div>{% else %}
+        <div><dt>Server version</dt><dd class="mono">{{ info.version }}</dd></div>
+        <div><dt>Built</dt><dd class="mono">{{ (info.built or '')[:19] | replace('T', ' ') }}</dd></div>
+        <div><dt>Java</dt><dd class="mono">{{ info.java }}</dd></div>
+        <div><dt>Up for</dt><dd class="mono">{{ (info.uptimeSeconds // 3600) }}h {{ (info.uptimeSeconds % 3600) // 60 }}m</dd></div>
+        <div><dt>Security</dt><dd>{{ 'on' if info.securityEnabled else 'off (development)' }}</dd></div>{% endif %}
+        <div><dt>Console version</dt><dd class="mono">{{ ASSET_V }}</dd></div>
+      </dl></div></section>
+    <section class="pnl"><header class="pnl-h"><h3>Sources</h3><span class="pnl-code">SRC</span></header>
+      <div class="pnl-b"><ul class="links">{% for s in info.sources or [] %}<li><span class="lk-label">{{ s.name }} <span class="text-muted-d">v{{ s.version }}</span></span>
+        <span class="lk-target"><span class="{{ 't-ok' if s.health.startswith('UP') else 't-bad' }}">{{ s.health }}</span>
+        <span class="lk-badge">{{ ('live ' if s.live else '') ~ ('search ' if s.search else '') }}</span></span></li>{% endfor %}</ul></div></section>
+    <section class="pnl"><header class="pnl-h"><h3>Sutras loaded</h3><span class="pnl-code">RACHANA</span></header>
+      <div class="pnl-b"><ul class="about-list mono">{% for s in info.sutras or [] %}<li>{{ s }}</li>{% endfor %}</ul>
+        <p class="text-muted-d">Entities without a matching Sutra are laid out by inference.</p></div></section>
+    <section class="pnl"><header class="pnl-h"><h3>How it is built</h3><span class="pnl-code">ARCH</span></header>
+      <div class="pnl-b"><ul class="about-list">
+        <li>One Spring Boot application on OpenJDK 21 and virtual threads: grammar, inference, entity graph, view pipeline, live hub, identity.</li>
+        <li>A FastAPI console with every asset vendored: it works air-gapped under a strict CSP.</li>
+        <li>Layouts are cached per data shape; live views receive only what changed.</li>
+      </ul><p><a href="/help/architecture">Architecture</a> · <a href="/help/decisions">Decision records</a> · <a href="/help/performance">Measured performance</a></p></div></section>
+  </div>
+  <section class="pnl about-legal"><header class="pnl-h"><h3>Legal</h3><span class="pnl-code">LICENCE</span></header>
+    <div class="pnl-b"><p><b>{{ COPYRIGHT }}</b></p>
+      <pre class="mono about-licence">{{ licence_intro }}</pre>
+      <p>This software is proprietary and confidential. Copying, use, modification, distribution or disclosure without the express prior written
+         permission of the copyright holder is prohibited. {% if notices %}Third-party components and their licences: <a href="/help/notices">notices</a>.{% endif %}
+         <a href="/help/release-notes">Release notes</a> · <a href="/help/changelog">Changelog</a></p></div></section>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script>{% endblock %}

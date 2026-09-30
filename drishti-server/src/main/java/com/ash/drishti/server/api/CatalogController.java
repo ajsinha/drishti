@@ -47,9 +47,15 @@ public class CatalogController {
     private final SourceRegistry sources;
     private final SutraRegistry sutras;
     private final Entitlements entitlements;
+    private final java.util.Optional<org.springframework.boot.info.BuildProperties> build;
+    private final com.ash.drishti.server.security.SecurityProperties security;
 
-    public CatalogController(SourceRouter router, SourceRegistry sources, SutraRegistry sutras, Entitlements entitlements) {
+    public CatalogController(SourceRouter router, SourceRegistry sources, SutraRegistry sutras, Entitlements entitlements,
+            org.springframework.beans.factory.ObjectProvider<org.springframework.boot.info.BuildProperties> build,
+            com.ash.drishti.server.security.SecurityProperties security) {
         this.entitlements = entitlements;
+        this.build = java.util.Optional.ofNullable(build.getIfAvailable());
+        this.security = security;
         this.router = router;
         this.sources = sources;
         this.sutras = sutras;
@@ -65,6 +71,22 @@ public class CatalogController {
         } catch (CompletionException e) {
             throw e.getCause() instanceof DrishtiException de ? de : new DrishtiException(ErrorCode.SOURCE_FAILED, e.getMessage());
         }
+    }
+
+    /** Version, build and what is loaded: the About page. */
+    @GetMapping("/about")
+    public Map<String, Object> about() {
+        Map<String, Object> m = new java.util.LinkedHashMap<>();
+        m.put("product", "Drishti");
+        m.put("version", build.map(b -> b.getVersion()).orElse("dev"));
+        m.put("built", build.map(b -> String.valueOf(b.getTime())).orElse(""));
+        m.put("java", System.getProperty("java.version") + " (" + System.getProperty("java.vendor") + ")");
+        m.put("uptimeSeconds", java.lang.management.ManagementFactory.getRuntimeMXBean().getUptime() / 1000);
+        m.put("sutras", sutras.all().stream().map(s -> s.name() + " v" + s.version()).sorted().toList());
+        m.put("sources", sources().sources());
+        m.put("securityEnabled", security.enabled());
+        m.put("copyright", "Copyright (c) 2026 Ashutosh Sinha. All rights reserved. Proprietary and confidential.");
+        return m;
     }
 
     @GetMapping("/sources")
