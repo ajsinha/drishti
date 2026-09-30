@@ -57,7 +57,8 @@ import java.util.concurrent.TimeUnit;
  * reverse lookups) are learned by scanning the set at start and every {@code refresh-seconds}.
  *
  * <p>Settings: {@code hosts} ({@code localhost:3000}), {@code namespace} ({@code test}), {@code set} (the data
- * domain, e.g. {@code trading}), {@code kinds} (default: what the scan finds), {@code mode.<kind>}, {@code lookback-days}
+ * domain, e.g. {@code trading}), {@code kinds} (default: what the scan finds), {@code mode.<kind>}, {@code reverse-index}
+ * (true; the reference index grows with entities × dates × references, so large sets turn it off), {@code lookback-days}
  * (10), {@code refresh-seconds} (60), {@code source-name} ({@code aerospike}), {@code user}/{@code password} (optional).
  */
 public final class AerospikeSourcePlugin implements SourcePlugin {
@@ -76,11 +77,12 @@ public final class AerospikeSourcePlugin implements SourcePlugin {
     private String sourceName;
     private int lookbackDays;
     private List<String> configuredKinds = List.of();
+    private boolean reverseIndex = true;
 
     @Override
     public PluginManifest manifest() {
         Set<String> kinds = configuredKinds.isEmpty() ? catalog.dates().keySet() : new HashSet<>(configuredKinds);
-        return new PluginManifest(sourceName == null ? "aerospike" : sourceName, "1.0", kinds, new SourceCapabilities(false, true, true, true));
+        return new PluginManifest(sourceName == null ? "aerospike" : sourceName, "1.0", kinds, new SourceCapabilities(false, reverseIndex, true, true));
     }
 
     @Override
@@ -90,6 +92,7 @@ public final class AerospikeSourcePlugin implements SourcePlugin {
         this.namespace = ctx.setting("namespace", "test");
         this.set = ctx.setting("set", ctx.setting("domain", "drishti"));
         this.lookbackDays = Integer.parseInt(ctx.setting("lookback-days", "10"));
+        this.reverseIndex = Boolean.parseBoolean(ctx.setting("reverse-index", "true"));
         String kinds = ctx.setting("kinds", "");
         this.configuredKinds = kinds.isBlank() ? List.of() : java.util.Arrays.stream(kinds.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList();
         ctx.settings().forEach((k, v) -> {
@@ -128,7 +131,7 @@ public final class AerospikeSourcePlugin implements SourcePlugin {
                         dates.computeIfAbsent(kind, k -> new TreeSet<>()).add(d);
                         ids.computeIfAbsent(kind, k -> new java.util.TreeMap<>()).computeIfAbsent(d, k -> new HashSet<>()).add(id);
                         Map<String, Set<String>> byTarget = refs.computeIfAbsent(kind, k -> new HashMap<>()).computeIfAbsent(d, k -> new HashMap<>());
-                        for (String target : ReferenceScanner.referencedIds(json)) {
+                        for (String target : reverseIndex ? ReferenceScanner.referencedIds(json) : java.util.Set.<String>of()) {
                             byTarget.computeIfAbsent(target, t -> new TreeSet<>()).add(id);
                         }
                     }

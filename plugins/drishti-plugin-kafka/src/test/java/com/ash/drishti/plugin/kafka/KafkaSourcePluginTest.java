@@ -111,8 +111,40 @@ class KafkaSourcePluginTest {
     }
 
     @Test
-    void reverseLookupAndSearchCoverTheStream() {
-        assertThat(plugin.reverse(EntityRef.of("netting-set", "NS-1"), "trade")).containsExactly(EntityRef.of("trade", "T-1"));
+    void searchCoversTheStreamAndReverseLookupsAreLeftToTheStores() {
         assertThat(plugin.search("trade", "t-1", 5)).extracting(h -> h.ref().id()).contains("T-1");
+        assertThat(plugin.manifest().capabilities().reverseLookup()).isFalse();
+    }
+
+    @Test
+    void withNoCacheEveryReadGoesBackToTheLogByOffset() throws Exception {
+        KafkaSourcePlugin lean = new KafkaSourcePlugin();
+        lean.start(DatedSourceContract.context(Map.of("bootstrap-servers", broker.getBrokersAsString(), "topics", "trades",
+                "kind", "trade", "id-field", "tradeId", "cache-mb", "0", "source-name", "lean")));
+        try {
+            waitFor(() -> "UP".equals(lean.health()), 30);
+            assertThat(lean.fetch(EntityRef.of("trade", "T-1")).orElseThrow().data().get("tradeId").asText()).isEqualTo("T-1");
+            assertThat(lean.fetch(EntityRef.of("trade", "T-2"))).isEmpty();                 // deleted by its tombstone
+        } finally {
+            lean.close();
+        }
+    }
+
+    @Test
+    void ticksModeKeepsNothingButStillPushes() throws Exception {
+        KafkaSourcePlugin ticks = new KafkaSourcePlugin();
+        ticks.start(DatedSourceContract.context(Map.of("bootstrap-servers", broker.getBrokersAsString(), "topics", "trades",
+                "kind", "trade", "id-field", "tradeId", "mode", "ticks", "source-name", "ticks")));
+        try {
+            waitFor(() -> "UP".equals(ticks.health()), 30);
+            assertThat(ticks.fetch(EntityRef.of("trade", "T-1"))).isEmpty();                 // the store serves the entity
+            CompletableFuture<EntityDocument> pushed = new CompletableFuture<>();
+            try (var sub = ticks.subscribe(EntityRef.of("trade", "T-9"), pushed::complete)) {
+                send("trades", "T-9", "{\"tradeId\":\"T-9\",\"mtm\":42}");
+                assertThat(pushed.get(15, TimeUnit.SECONDS).data().get("mtm").asDouble()).isEqualTo(42);
+            }
+        } finally {
+            ticks.close();
+        }
     }
 }

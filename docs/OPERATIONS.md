@@ -68,6 +68,22 @@ SPRING_PROFILES_ACTIVE=postgres DRISHTI_PACKS=market-risk,counterparty-risk DRIS
 Each connector's health is on `/api/v1/sources`: a database that is down, or a feed that failed, shows there and
 in *About*, and the rest of Drishti keeps working. A feed keeps its last good data until the next refresh.
 
+## Memory
+
+Nothing grows with the day's data unbounded. Every cache has a size limit you can set:
+
+| Where | Holds | Limit (setting) |
+|---|---|---|
+| Kafka connector | the index of where each entity's latest message is (tens of bytes each) and recently read documents | `cache-mb` (256); `mode: ticks` keeps nothing (a store serves entities, the stream only ticks); `search: false` drops the identifier index |
+| Delta Lake connector | table partitions read recently | `cache-mb` (512) |
+| Aerospike connector | dates, identifiers and (optionally) references learned by scanning | `reverse-index: false` for large sets |
+| PostgreSQL (JDBC table mode) | nothing: every read is a query | `pool-size` connections |
+| Engine | layouts, shape fingerprints, compiled expressions | `drishti.engine.layout-cache-size` (10,000), `fingerprint-cache-size` (100,000), `drishti.rachana.expression-cache-size` (10,000) |
+| Live views | the current document of each entity someone is watching | `drishti.live.max-streams` (20,000) |
+
+Documents of entities nobody is viewing are not held: Kafka messages for them are indexed from their key without
+being parsed, and a later view reads that one message back by its offset.
+
 ## Security checklist
 
 - **Server:** `DRISHTI_SECURITY_ENABLED=true` and `DRISHTI_TOKEN_SECRET` (≥ 32 bytes), shared with the console.

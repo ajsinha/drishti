@@ -53,9 +53,15 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 
 /**
  * A live source over Kafka: each topic carries entity documents, and the latest message per entity is the entity
- * (compacted-topic semantics). At start the plugin reads every partition from the beginning to rebuild that state,
- * then keeps consuming: each new message replaces the entity and is pushed to every open view of it, so views tick
- * from the stream. No consumer group commits are made, so every server rebuilds the same state independently.
+ * (compacted-topic semantics). At start the plugin reads every partition from the beginning, then keeps consuming;
+ * each new message is pushed to every open view of its entity, so views tick from the stream. No consumer group
+ * commits are made, so every server builds the same state independently.
+ *
+ * <p><b>Memory stays bounded.</b> In {@code state} mode (default) the plugin keeps an index of where each entity's
+ * latest message is (partition and offset, tens of bytes per entity) and a cache of recently read documents limited
+ * by size ({@code cache-mb}, 256): a miss reads that one record back from Kafka by its offset. Messages for entities
+ * nobody is viewing are not even parsed. In {@code ticks} mode it keeps nothing: a store (Delta Lake, a database)
+ * serves the entities and the stream only drives the ticks of open views. Reverse lookups are left to the stores.
  *
  * <p>Two message shapes. <b>Envelope</b> (default): {@code {"kind": "trade", "id": "T-1", "doc": {...}}}.
  * <b>Mapped</b>: {@code kind.<topic>: trade} and {@code id-field.<topic>: tradeId} (or {@code kind} and {@code id-field} for
@@ -63,13 +69,22 @@ import org.apache.kafka.common.serialization.StringDeserializer;
  * A message whose value is null (a tombstone) deletes the entity.
  *
  * <p>Settings: {@code bootstrap-servers}, {@code topics} (comma list), {@code kind.<topic>}, {@code id-field.<topic>},
- * {@code poll-ms} (200), {@code source-name} ({@code kafka}), {@code client.<property>} (any Kafka consumer property,
+ * {@code mode} ({@code state} or {@code ticks}), {@code cache-mb} (256), {@code search} (true: keep identifiers for
+ * type-ahead), {@code poll-ms} (200), {@code source-name} ({@code kafka}), {@code client.<property>} (any Kafka consumer property,
  * e.g. {@code client.security.protocol}).
  */
 public final class KafkaSourcePlugin implements SourcePlugin {
 
     private static final ObjectMapper JSON = new ObjectMapper();
-    private final Map<EntityRef, EntityDocument> documents = new ConcurrentHashMap<>();
+    /** Where an entity's latest message is. */
+    private record Pos(int partition, long offset, String topic) {}
+
+    private final Map<EntityRef, Pos> positions = new ConcurrentHashMap<>();
+    private com.github.benmanes.caffeine.cache.Cache<EntityRef, EntityDocument> cache;
+    private KafkaConsumer<String, String> reader;
+    private final Object readerLock = new Object();
+    private boolean ticksOnly;
+    private boolean searchable;
     private final Map<EntityRef, List<Consumer<EntityDocument>>> listeners = new ConcurrentHashMap<>();
     private final Set<String> kinds = ConcurrentHashMap.newKeySet();
     private final HitIndex index = new HitIndex();
@@ -92,7 +107,7 @@ public final class KafkaSourcePlugin implements SourcePlugin {
         if (defaultKind != null) {
             k.add(defaultKind);
         }
-        return new PluginManifest(sourceName == null ? "kafka" : sourceName, "1.0", k, new SourceCapabilities(true, true, true, false));
+        return new PluginManifest(sourceName == null ? "kafka" : sourceName, "1.0", k, new SourceCapabilities(true, false, searchable, false));
     }
 
     @Override
@@ -124,6 +139,18 @@ public final class KafkaSourcePlugin implements SourcePlugin {
             }
         });
         consumer = new KafkaConsumer<>(p);
+        this.ticksOnly = "ticks".equals(ctx.setting("mode", "state"));
+        this.searchable = !ticksOnly && Boolean.parseBoolean(ctx.setting("search", "true"));
+        long cacheBytes = Long.parseLong(ctx.setting("cache-mb", "256")) * 1024 * 1024;
+        this.cache = com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumWeight(cacheBytes)
+                .weigher((EntityRef ref, EntityDocument d) -> weights.getOrDefault(ref, 4096)).build();
+        if (!ticksOnly) {
+            Properties rp = new Properties();
+            rp.putAll(p);
+            rp.put(ConsumerConfig.CLIENT_ID_CONFIG, "drishti-" + sourceName + "-reader");
+            rp.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "1");
+            reader = new KafkaConsumer<>(rp);
+        }
         long pollMs = Long.parseLong(ctx.setting("poll-ms", "200"));
         loop = Thread.ofVirtual().name("drishti-kafka-" + sourceName).start(() -> run(topics, pollMs));
     }
@@ -157,8 +184,46 @@ public final class KafkaSourcePlugin implements SourcePlugin {
         }
     }
 
-    /** One message: parse, replace (or delete) the entity, and push it to open views. */
+    /** Approximate size of each cached document (its message length), for the cache's weigher. */
+    private final Map<EntityRef, Integer> weights = new ConcurrentHashMap<>();
+
+    /**
+     * One message. Mapped messages are indexed from their key without parsing unless someone is viewing the entity
+     * or it is cached; envelopes need their kind and id, so they are parsed.
+     */
     void apply(ConsumerRecord<String, String> r) {
+        String mapped = kindOfTopic.getOrDefault(r.topic(), defaultKind);
+        if (mapped != null && r.key() != null) {
+            EntityRef ref = EntityRef.of(mapped, r.key());
+            boolean wanted = listeners.containsKey(ref) || cache.getIfPresent(ref) != null;
+            track(ref, r);
+            if (!wanted || r.value() == null) {
+                if (r.value() == null) {
+                    cache.invalidate(ref);
+                }
+                return;
+            }
+        }
+        parseAndPush(r);
+    }
+
+    private void track(EntityRef ref, ConsumerRecord<String, String> r) {
+        if (ticksOnly) {
+            return;
+        }
+        if (r.value() == null) {
+            positions.remove(ref);
+            weights.remove(ref);
+            return;
+        }
+        boolean isNew = positions.put(ref, new Pos(r.partition(), r.offset(), r.topic())) == null;
+        kinds.add(ref.kind());
+        if (isNew && caughtUp && searchable) {
+            index.add(new EntityHit(ref, ref.id(), ref.kind() + " · " + sourceName));
+        }
+    }
+
+    private void parseAndPush(ConsumerRecord<String, String> r) {
         try {
             String kind;
             String id;
@@ -195,15 +260,18 @@ public final class KafkaSourcePlugin implements SourcePlugin {
             }
             EntityRef ref = EntityRef.of(kind, id);
             if (doc == null || doc.isNull()) {
-                documents.remove(ref);
+                positions.remove(ref);
+                cache.invalidate(ref);
                 return;
             }
-            kinds.add(kind);
+            if (!ref.id().equals(r.key())) {
+                track(ref, r);
+            }
             DataNode data = context.parseJson(new ByteArrayInputStream(JSON.writeValueAsBytes(doc)));
             EntityDocument d = new EntityDocument(ref, data, new Provenance(sourceName, r.offset(), Instant.ofEpochMilli(r.timestamp()), true));
-            boolean isNew = documents.put(ref, d) == null;
-            if (isNew && caughtUp) {
-                index.add(new EntityHit(ref, id, kind + " · " + sourceName));
+            if (!ticksOnly && (cache.getIfPresent(ref) != null || listeners.containsKey(ref))) {
+                weights.put(ref, r.value() == null ? 64 : r.value().length());
+                cache.put(ref, d);
             }
             List<Consumer<EntityDocument>> subs = listeners.get(ref);
             if (subs != null) {
@@ -215,14 +283,67 @@ public final class KafkaSourcePlugin implements SourcePlugin {
     }
 
     private void rebuildIndex() {
+        if (!searchable) {
+            return;
+        }
         List<EntityHit> hits = new ArrayList<>();
-        documents.keySet().forEach(ref -> hits.add(new EntityHit(ref, ref.id(), ref.kind() + " · " + sourceName)));
+        positions.keySet().forEach(ref -> hits.add(new EntityHit(ref, ref.id(), ref.kind() + " · " + sourceName)));
         index.replaceAll(hits);
     }
 
     @Override
     public Optional<EntityDocument> fetch(EntityRef ref) {
-        return Optional.ofNullable(documents.get(ref));
+        if (ticksOnly) {
+            return Optional.empty();
+        }
+        EntityDocument hit = cache.getIfPresent(ref);
+        if (hit != null) {
+            return Optional.of(hit);
+        }
+        Pos pos = positions.get(ref);
+        if (pos == null) {
+            return Optional.empty();
+        }
+        ConsumerRecord<String, String> r = readAt(pos);
+        if (r == null) {
+            return Optional.empty();
+        }
+        {
+            // a cache miss: parse the record once for this caller and keep it (within the cache's size limit)
+            try {
+                String mapped = kindOfTopic.getOrDefault(r.topic(), defaultKind);
+                JsonNode doc = JSON.readTree(r.value());
+                JsonNode body = mapped != null ? doc : doc.get("doc");
+                DataNode data = context.parseJson(new ByteArrayInputStream(JSON.writeValueAsBytes(body)));
+                EntityDocument d = new EntityDocument(ref, data, new Provenance(sourceName, r.offset(), Instant.ofEpochMilli(r.timestamp()), true));
+                weights.put(ref, r.value().length());
+                cache.put(ref, d);
+                return Optional.of(d);
+            } catch (Exception e) {
+                return Optional.empty();
+            }
+        }
+    }
+
+    /** Reads the one record at {@code pos} (a cache miss); a single reader, so reads are serialised. */
+    private ConsumerRecord<String, String> readAt(Pos pos) {
+        synchronized (readerLock) {
+            TopicPartition tp = new TopicPartition(pos.topic(), pos.partition());
+            reader.assign(List.of(tp));
+            reader.seek(tp, pos.offset());
+            long until = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(5);
+            while (System.nanoTime() < until) {
+                for (ConsumerRecord<String, String> r : reader.poll(Duration.ofMillis(200))) {
+                    if (r.offset() == pos.offset()) {
+                        return r;
+                    }
+                    if (r.offset() > pos.offset()) {
+                        return null;
+                    }
+                }
+            }
+            return null;
+        }
     }
 
     @Override
@@ -230,29 +351,6 @@ public final class KafkaSourcePlugin implements SourcePlugin {
         List<Consumer<EntityDocument>> subs = listeners.computeIfAbsent(ref, r -> new CopyOnWriteArrayList<>());
         subs.add(listener);
         return () -> subs.remove(listener);
-    }
-
-    @Override
-    public List<EntityRef> reverse(EntityRef target, String kind) {
-        List<EntityRef> out = new ArrayList<>();
-        documents.forEach((ref, d) -> {
-            if ((kind == null || ref.kind().equals(kind)) && refersTo(d.data(), target.id())) {
-                out.add(ref);
-            }
-        });
-        out.sort((a, b) -> a.id().compareTo(b.id()));
-        return out;
-    }
-
-    private static boolean refersTo(DataNode node, String id) {
-        if (node instanceof DataNode.Obj o) {
-            for (DataNode v : o.fields().values()) {
-                if (v instanceof DataNode.Val val && id.equals(val.asText()) || v instanceof DataNode.Obj && refersTo(v, id)) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     @Override
@@ -270,6 +368,11 @@ public final class KafkaSourcePlugin implements SourcePlugin {
         running = false;
         if (consumer != null) {
             consumer.wakeup();
+        }
+        if (reader != null) {
+            synchronized (readerLock) {
+                reader.close(Duration.ofSeconds(1));
+            }
         }
         if (loop != null) {
             try {

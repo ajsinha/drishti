@@ -64,7 +64,7 @@ import org.apache.hadoop.conf.Configuration;
  * {@code kinds} (comma list; default: every table found), {@code mode.<kind>} ({@code snapshot}|{@code effective}),
  * {@code lookback-days} (10), {@code id-column} ({@code id}), {@code doc-column} ({@code doc}), {@code date-column}
  * ({@code business_date}), {@code refresh-seconds} (10: how often a table's latest version is checked),
- * {@code cache-partitions} (256), {@code source-name} ({@code delta}).
+ * {@code cache-mb} (512: partitions kept in memory, by size), {@code source-name} ({@code delta}).
  */
 public final class DeltaSourcePlugin implements SourcePlugin {
 
@@ -111,7 +111,11 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         long refresh = Long.parseLong(ctx.setting("refresh-seconds", "10"));
         this.latest = Caffeine.newBuilder().expireAfterWrite(Duration.ofSeconds(refresh)).build();
         this.travelled = Caffeine.newBuilder().maximumSize(256).build();
-        this.parts = Caffeine.newBuilder().maximumSize(Long.parseLong(ctx.setting("cache-partitions", "256"))).build();
+        // bounded by memory, not by count: a partition weighs about its documents' text (two bytes a character)
+        this.parts = Caffeine.newBuilder().maximumWeight(Long.parseLong(ctx.setting("cache-mb", "512")) * 1024 * 1024)
+                .weigher((PartKey k, Part v) -> (int) Math.min(Integer.MAX_VALUE,
+                        64L + v.docs().values().stream().mapToLong(d -> 2L * d.length() + 64).sum() + 48L * v.refs().size()))
+                .build();
         reindex();
         ctx.scheduler().scheduleWithFixedDelay(this::reindex, refresh * 6, refresh * 6, TimeUnit.SECONDS);
     }
