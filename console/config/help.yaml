@@ -40,9 +40,15 @@ categories:
     icon: activity
     blurb: Where entities come from, how they tick, and how fast.
     guides:
-      - { slug: plugins, doc: PLUGIN_GUIDE.md, title: Sources and plugins, icon: plug, summary: "The source SPI, routing, and the demo, file, REST and JDBC plugins." }
+      - { slug: plugins, doc: PLUGIN_GUIDE.md, title: Sources and plugins, icon: plug, summary: "The source SPI, business dates, named connectors, routing, and the demo, file, REST, JDBC and Delta Lake plugins." }
       - { slug: live, doc: LIVE.md, title: Live updates, icon: broadcast, summary: "Topics, frames, patches, slow clients and reconnects." }
       - { slug: performance, doc: PERFORMANCE.md, title: Performance, icon: speedometer2, summary: "Measured numbers and why the pipeline is fast." }
+  - id: packs
+    name: Domain packs
+    icon: box-seam
+    blurb: The industries plugged in, what each pack holds, its data model and its example commands.
+    guides:
+      - { slug: packs, doc: PACKS.md, title: Domain packs, icon: box-seam, summary: "How industries plug in: what a pack contains, dependencies, connectors and routes, enabling packs, and writing your own." }
   - id: admin
     name: Administration
     icon: shield-lock
@@ -61,7 +67,6 @@ categories:
     icon: code-square
     blurb: The API, the design, and why it is the way it is.
     guides:
-      - { slug: packs, doc: PACKS.md, title: Domain packs, icon: box-seam, summary: "How industries plug in: what a pack contains, enabling packs, and writing your own." }
       - { slug: api, doc: API_GUIDE.md, title: API guide, icon: braces-asterisk, summary: "REST endpoints, the ViewModel contract and error codes." }
       - { slug: architecture, doc: ARCHITECTURE.md, title: Architecture, icon: diagram-2, summary: "The pipeline, grammar, inference, live updates, modules and UX." }
       - { slug: decisions, doc: adr/README.md, title: Decision records, icon: signpost-split, summary: "The architecture decisions, each with its context and consequences." }

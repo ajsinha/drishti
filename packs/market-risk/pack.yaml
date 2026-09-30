@@ -94,6 +94,7 @@ console:
     - P&L explain
   - - FRTB FRTB-RATES-1
     - FRTB sensitivities and charges
+  help: config/help.yaml
 roles:
   market-risk:
     kinds:

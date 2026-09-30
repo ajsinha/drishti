@@ -298,3 +298,4 @@ console:
     - Credit curve · spreads, hazard rates
   - - CMDC CMDC-WTI
     - WTI futures curve · backwardation
+  help: config/help.yaml

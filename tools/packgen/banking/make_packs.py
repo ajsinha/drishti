@@ -59,7 +59,9 @@ EXAMPLES = {  # command, what it shows (ids from make_data.py's deterministic da
     "counterparty-risk": [("NSET NS-SUMMIT-NY", "Netting set · 108 trades, exposure, CVA"), ("LIM LIM-SUMMIT", "Credit limit · utilisation by tenor"),
                           ("CVA CVA-SUMMIT-NY", "CVA / XVA"), ("SACCR SACCR-SUMMIT-NY", "SA-CCR exposure at default")],
 }
-ROLES = {"trading": {"trader": {"kinds": ["trade"]}}, "market-risk": {"market-risk": {"kinds": ["*"], "raw": True}},
+TRADER_KINDS = ["trade", *layout.PACKS["market-data"]["kinds"]["market"], "counterparty", "counterparty-group", "issuer", "book", "desk",
+                "trader", "legal-entity", "calendar", "agreement", "csa", "ccp", "clearing-account"]
+ROLES = {"trading": {"trader": {"kinds": TRADER_KINDS}}, "market-risk": {"market-risk": {"kinds": ["*"], "raw": True}},
          "counterparty-risk": {"credit-risk": {"kinds": ["*"], "raw": True}}}
 
 
@@ -88,7 +90,7 @@ def manifest(name: str) -> dict:
                    "badges": {k: specs[k].badge for k in kinds if specs[k].badge}},
          "connectors": {f"{d}-lake": connector(d) for d in p["kinds"]},
          "routes": {k: f"{d}-lake" for d, ks in p["kinds"].items() for k in ks}}
-    m["console"] = {"examples": [list(e) for e in EXAMPLES[name]]}
+    m["console"] = {"examples": [list(e) for e in EXAMPLES[name]], "help": "config/help.yaml"}
     if name in IMPACT:
         m["graph"]["impact"] = IMPACT[name]
     if name in ROLES:

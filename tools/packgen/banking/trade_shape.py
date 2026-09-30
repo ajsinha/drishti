@@ -22,7 +22,10 @@ make_data.py (which produces it). Every product shares the common fields; produc
     <market-data reference fields, e.g. discountCurve>,
     terms {<product terms>}, risk {<measure>: value}, sensitivities [{bucket, <measure>...}],
     legs [{leg, label, payReceive, rateType, index, rate, spread, frequency, dayCount, currency, notional}],
-    schedule [...], nextIndex, pnlHistory [{date, pnl}]
+    schedule [...], nextIndex, pnlHistory [{date, pnl}],
+    execution {venue, venueMic, executionTimestamp, trader, orderId}, lifecycle {status, version, events [...]},
+    confirmation {status, method, matched}, clearing {status, ccp?}, regulatory {uti, upi, reportingRegimes [...]},
+    settlementInstructions {method, ourAgentBic, theirAgentBic, ssiId}, valuation {model, curves [...], npv}
 """
 from __future__ import annotations
 
