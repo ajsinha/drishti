@@ -53,7 +53,8 @@ class ImpactTest {
     void aNettingSetShowsItsMemberTradesAndTradersSeeHiddenCounts() throws Exception {
         String risk = "Bearer " + tokens.mint("rita", List.of("risk"), 300);
         mvc.perform(get("/api/v1/impact/netting-set/NS-NORTH-01").header("Authorization", risk))
-                .andExpect(jsonPath("$.groups[0].items.length()").value(14));
+                .andExpect(jsonPath("$.groups[?(@.kind=='trade')].items.length()").value(hasItem(14)))
+                .andExpect(jsonPath("$.groups[?(@.kind=='agreement')].items[*].ref.id").value(hasItem("ISDA-2002-0417")));
         String ops = "Bearer " + tokens.mint("oli", List.of("ops"), 300);
         mvc.perform(get("/api/v1/impact/port/PORT-NLRTM").header("Authorization", ops))
                 .andExpect(jsonPath("$.groups[0].kind").value("shipment"))

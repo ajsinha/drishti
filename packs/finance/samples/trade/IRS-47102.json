@@ -4,18 +4,621 @@
  "product": "Interest rate swap",
  "counterparty": {
   "id": "CP-NORTHBRIDGE",
-  "name": "Northbridge Capital LLP"
+  "name": "Northbridge Capital LLP",
+  "lei": "549300XC29H3SPO07Z24"
  },
  "notional": 80000000,
  "currency": "USD",
+ "effectiveDate": "2023-03-15",
  "maturityDate": "2033-03-15",
  "mtm": 1106420,
+ "dv01": 46649,
  "book": "RATES-NY-3",
  "nettingSet": "NS-NORTH-01",
+ "agreement": "ISDA-2002-0417",
  "csa": "CSA-VM-0417",
+ "swapStream": [
+  {
+   "payerPartyReference": "PARTY-A",
+   "receiverPartyReference": "PARTY-B",
+   "calculationPeriodDates": {
+    "effectiveDate": "2023-03-15",
+    "terminationDate": "2033-03-15",
+    "frequency": "Semi-annual",
+    "businessDayConvention": "MODFOLLOWING",
+    "businessCenters": [
+     "USNY"
+    ]
+   },
+   "calculation": {
+    "notional": 80000000,
+    "currency": "USD",
+    "dayCountFraction": "ACT/360",
+    "fixedRate": 0.033856
+   },
+   "paymentSchedule": [
+    {
+     "adjustedPaymentDate": "2023-09-19",
+     "periodStart": "2023-03-15",
+     "periodEnd": "2023-09-15",
+     "rate": 0.033856,
+     "amount": -1384333.92,
+     "presentValue": 0.0,
+     "state": "Settled"
+    },
+    {
+     "adjustedPaymentDate": "2024-03-19",
+     "periodStart": "2023-09-15",
+     "periodEnd": "2024-03-15",
+     "rate": 0.033856,
+     "amount": -1369288.31,
+     "presentValue": 0.0,
+     "state": "Settled"
+    },
+    {
+     "adjustedPaymentDate": "2024-09-18",
+     "periodStart": "2024-03-15",
+     "periodEnd": "2024-09-16",
+     "rate": 0.033856,
+     "amount": -1391858.08,
+     "presentValue": 0.0,
+     "state": "Settled"
+    },
+    {
+     "adjustedPaymentDate": "2025-03-19",
+     "periodStart": "2024-09-16",
+     "periodEnd": "2025-03-17",
+     "rate": 0.033856,
+     "amount": -1369288.31,
+     "presentValue": 0.0,
+     "state": "Settled"
+    },
+    {
+     "adjustedPaymentDate": "2025-09-17",
+     "periodStart": "2025-03-17",
+     "periodEnd": "2025-09-15",
+     "rate": 0.033856,
+     "amount": -1369288.31,
+     "presentValue": 0.0,
+     "state": "Settled"
+    },
+    {
+     "adjustedPaymentDate": "2026-03-18",
+     "periodStart": "2025-09-15",
+     "periodEnd": "2026-03-16",
+     "rate": 0.033856,
+     "amount": -1369288.31,
+     "presentValue": 0.0,
+     "state": "Settled"
+    },
+    {
+     "adjustedPaymentDate": "2026-09-17",
+     "periodStart": "2026-03-16",
+     "periodEnd": "2026-09-15",
+     "rate": 0.033856,
+     "amount": -1376809.76,
+     "presentValue": 0.0,
+     "state": "Settled"
+    },
+    {
+     "adjustedPaymentDate": "2027-03-17",
+     "periodStart": "2026-09-15",
+     "periodEnd": "2027-03-15",
+     "rate": 0.033856,
+     "amount": -1361764.16,
+     "presentValue": -1338074.91,
+     "state": "Fixed"
+    },
+    {
+     "adjustedPaymentDate": "2027-09-17",
+     "periodStart": "2027-03-15",
+     "periodEnd": "2027-09-15",
+     "rate": 0.033856,
+     "amount": -1384333.92,
+     "presentValue": -1335717.5,
+     "state": "Projected"
+    },
+    {
+     "adjustedPaymentDate": "2028-03-17",
+     "periodStart": "2027-09-15",
+     "periodEnd": "2028-03-15",
+     "rate": 0.033856,
+     "amount": -1369288.31,
+     "presentValue": -1298192.12,
+     "state": "Projected"
+    },
+    {
+     "adjustedPaymentDate": "2028-09-19",
+     "periodStart": "2028-03-15",
+     "periodEnd": "2028-09-15",
+     "rate": 0.033856,
+     "amount": -1384333.92,
+     "presentValue": -1289861.44,
+     "state": "Projected"
+    },
+    {
+     "adjustedPaymentDate": "2029-03-19",
+     "periodStart": "2028-09-15",
+     "periodEnd": "2029-03-15",
+     "rate": 0.033856,
+     "amount": -1361764.16,
+     "presentValue": -1247163.54,
+     "state": "Projected"
+    },
+    {
+     "adjustedPaymentDate": "2029-09-19",
+     "periodStart": "2029-03-15",
+     "periodEnd": "2029-09-17",
+     "rate": 0.033856,
+     "amount": -1399382.24,
+     "presentValue": -1259567.16,
+     "state": "Projected"
+    },
+    {
+     "adjustedPaymentDate": "2030-03-19",
+     "periodStart": "2029-09-17",
+     "periodEnd": "2030-03-15",
+     "rate": 0.033856,
+     "amount": -1346715.84,
+     "presentValue": -1190527.78,
+     "state": "Projected"
+    },
+    {
+     "adjustedPaymentDate": "2030-09-18",
+     "periodStart": "2030-03-15",
+     "periodEnd": "2030-09-16",
+     "rate": 0.033856,
+     "amount": -1391858.08,
+     "presentValue": -1207982.49,
+     "state": "Projected"
+    },
+    {
+     "adjustedPaymentDate": "2031-03-19",
+     "periodStart": "2030-09-16",
+     "periodEnd": "2031-03-17",
+     "rate": 0.033856,
+     "amount": -1369288.31,
+     "presentValue": -1166651.44,
+     "state": "Projected"
+    },
+    {
+     "adjustedPaymentDate": "2031-09-17",
+     "periodStart": "2031-03-17",
+     "periodEnd": "2031-09-15",
+     "rate": 0.033856,
+     "amount": -1369288.31,
+     "presentValue": -1145135.81,
+     "state": "Projected"
+    },
+    {
+     "adjustedPaymentDate": "2032-03-17",
+     "periodStart": "2031-09-15",
+     "periodEnd": "2032-03-15",
+     "rate": 0.033856,
+     "amount": -1369288.31,
+     "presentValue": -1123850.23,
+     "state": "Projected"
+    },
+    {
+     "adjustedPaymentDate": "2032-09-17",
+     "periodStart": "2032-03-15",
+     "periodEnd": "2032-09-15",
+     "rate": 0.033856,
+     "amount": -1384333.92,
+     "presentValue": -1114679.52,
+     "state": "Projected"
+    },
+    {
+     "adjustedPaymentDate": "2033-03-17",
+     "periodStart": "2032-09-15",
+     "periodEnd": "2033-03-15",
+     "rate": 0.033856,
+     "amount": -1361764.16,
+     "presentValue": -1075914.88,
+     "state": "Projected"
+    }
+   ]
+  },
+  {
+   "payerPartyReference": "PARTY-B",
+   "receiverPartyReference": "PARTY-A",
+   "calculationPeriodDates": {
+    "effectiveDate": "2023-03-15",
+    "terminationDate": "2033-03-15",
+    "frequency": "Semi-annual",
+    "businessDayConvention": "MODFOLLOWING",
+    "businessCenters": [
+     "USNY"
+    ]
+   },
+   "calculation": {
+    "notional": 80000000,
+    "currency": "USD",
+    "dayCountFraction": "ACT/360",
+    "floatingRateIndex": "USD-SOFR-OIS Compound",
+    "spread": 0.0,
+    "lookbackDays": 2
+   },
+   "paymentSchedule": [
+    {
+     "adjustedPaymentDate": "2023-09-19",
+     "periodStart": "2023-03-15",
+     "periodEnd": "2023-09-15",
+     "rate": 0.053215,
+     "amount": 2175902.22,
+     "presentValue": 0.0,
+     "state": "Settled"
+    },
+    {
+     "adjustedPaymentDate": "2024-03-19",
+     "periodStart": "2023-09-15",
+     "periodEnd": "2024-03-15",
+     "rate": 0.052722,
+     "amount": 2132312.0,
+     "presentValue": 0.0,
+     "state": "Settled"
+    },
+    {
+     "adjustedPaymentDate": "2024-09-18",
+     "periodStart": "2024-03-15",
+     "periodEnd": "2024-09-16",
+     "rate": 0.051837,
+     "amount": 2131076.67,
+     "presentValue": 0.0,
+     "state": "Settled"
+    },
+    {
+     "adjustedPaymentDate": "2025-03-19",
+     "periodStart": "2024-09-16",
+     "periodEnd": "2025-03-17",
+     "rate": 0.049252,
+     "amount": 1991969.78,
+     "presentValue": 0.0,
+     "state": "Settled"
+    },
+    {
+     "adjustedPaymentDate": "2025-09-17",
+     "periodStart": "2025-03-17",
+     "periodEnd": "2025-09-15",
+     "rate": 0.046285,
+     "amount": 1871971.11,
+     "presentValue": 0.0,
+     "state": "Settled"
+    },
+    {
+     "adjustedPaymentDate": "2026-03-18",
+     "periodStart": "2025-09-15",
+     "periodEnd": "2026-03-16",
+     "rate": 0.042737,
+     "amount": 1728474.22,
+     "presentValue": 0.0,
+     "state": "Settled"
+    },
+    {
+     "adjustedPaymentDate": "2026-09-17",
+     "periodStart": "2026-03-16",
+     "periodEnd": "2026-09-15",
+     "rate": 0.039327,
+     "amount": 1599298.0,
+     "presentValue": 0.0,
+     "state": "Settled"
+    },
+    {
+     "adjustedPaymentDate": "2027-03-17",
+     "periodStart": "2026-09-15",
+     "periodEnd": "2027-03-15",
+     "rate": 0.03795,
+     "amount": 1526447.7,
+     "presentValue": 1499893.87,
+     "state": "Projected"
+    },
+    {
+     "adjustedPaymentDate": "2027-09-17",
+     "periodStart": "2027-03-15",
+     "periodEnd": "2027-09-15",
+     "rate": 0.035955,
+     "amount": 1470168.25,
+     "presentValue": 1418536.87,
+     "state": "Projected"
+    },
+    {
+     "adjustedPaymentDate": "2028-03-17",
+     "periodStart": "2027-09-15",
+     "periodEnd": "2028-03-15",
+     "rate": 0.035061,
+     "amount": 1418041.58,
+     "presentValue": 1344413.85,
+     "state": "Projected"
+    },
+    {
+     "adjustedPaymentDate": "2028-09-19",
+     "periodStart": "2028-03-15",
+     "periodEnd": "2028-09-15",
+     "rate": 0.033921,
+     "amount": 1386975.37,
+     "presentValue": 1292322.97,
+     "state": "Projected"
+    },
+    {
+     "adjustedPaymentDate": "2029-03-19",
+     "periodStart": "2028-09-15",
+     "periodEnd": "2029-03-15",
+     "rate": 0.034532,
+     "amount": 1388945.54,
+     "presentValue": 1272057.14,
+     "state": "Projected"
+    },
+    {
+     "adjustedPaymentDate": "2029-09-19",
+     "periodStart": "2029-03-15",
+     "periodEnd": "2029-09-17",
+     "rate": 0.034258,
+     "amount": 1416003.36,
+     "presentValue": 1274527.67,
+     "state": "Projected"
+    },
+    {
+     "adjustedPaymentDate": "2030-03-19",
+     "periodStart": "2029-09-17",
+     "periodEnd": "2030-03-15",
+     "rate": 0.036111,
+     "amount": 1436432.37,
+     "presentValue": 1269839.32,
+     "state": "Projected"
+    },
+    {
+     "adjustedPaymentDate": "2030-09-18",
+     "periodStart": "2030-03-15",
+     "periodEnd": "2030-09-16",
+     "rate": 0.036563,
+     "amount": 1503134.06,
+     "presentValue": 1304557.74,
+     "state": "Projected"
+    },
+    {
+     "adjustedPaymentDate": "2031-03-19",
+     "periodStart": "2030-09-16",
+     "periodEnd": "2031-03-17",
+     "rate": 0.03686,
+     "amount": 1490791.06,
+     "presentValue": 1270173.68,
+     "state": "Projected"
+    },
+    {
+     "adjustedPaymentDate": "2031-09-17",
+     "periodStart": "2031-03-17",
+     "periodEnd": "2031-09-15",
+     "rate": 0.037161,
+     "amount": 1502948.69,
+     "presentValue": 1256916.53,
+     "state": "Projected"
+    },
+    {
+     "adjustedPaymentDate": "2032-03-17",
+     "periodStart": "2031-09-15",
+     "periodEnd": "2032-03-15",
+     "rate": 0.037461,
+     "amount": 1515108.15,
+     "presentValue": 1243532.34,
+     "state": "Projected"
+    },
+    {
+     "adjustedPaymentDate": "2032-09-17",
+     "periodStart": "2032-03-15",
+     "periodEnd": "2032-09-15",
+     "rate": 0.037768,
+     "amount": 1544281.12,
+     "presentValue": 1243470.74,
+     "state": "Projected"
+    },
+    {
+     "adjustedPaymentDate": "2033-03-17",
+     "periodStart": "2032-09-15",
+     "periodEnd": "2033-03-15",
+     "rate": 0.038063,
+     "amount": 1530993.35,
+     "presentValue": 1209620.27,
+     "state": "Projected"
+    }
+   ]
+  }
+ ],
+ "partyReferences": {
+  "PARTY-A": {
+   "lei": "549300O1N13GO2II2096",
+   "name": "Drishti Bank Securities Inc."
+  },
+  "PARTY-B": {
+   "lei": "549300XC29H3SPO07Z24",
+   "name": "Northbridge Capital LLP"
+  }
+ },
+ "desk": "USD Rates · Swaps",
+ "portfolio": "RATES-NY-3/CLIENT",
+ "productTaxonomy": {
+  "isda": "InterestRate:IRSwap:FixedFloat",
+  "cfi": "SRCCSP",
+  "fpml": "swap"
+ },
+ "risk": {
+  "dv01": 46649,
+  "gamma": -88.6,
+  "vega": 0,
+  "theta": -443
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1106420,
+  "cleanPv": 1106420.0,
+  "accrued": 0.0,
+  "legPvs": [
+   -15793318.82,
+   16899862.99
+  ],
+  "model": "Multi-curve OIS discounting",
+  "curves": [
+   "USD-SOFR"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 13614
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -26387
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -61760
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -11427
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -5540
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -49148
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -28819
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 71695
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 67704
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -4381
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 16695
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -8399
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 44964
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -23173
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -18076
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -26096
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -70201
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -9925
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 7650
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -29743
+  }
+ ],
+ "tradeDate": "2023-03-13",
+ "legalEntity": {
+  "name": "Drishti Bank Securities Inc.",
+  "lei": "549300O1N13GO2II2096",
+  "country": "US",
+  "regulators": "CFTC / SEC"
+ },
+ "execution": {
+  "tradeDate": "2023-03-13",
+  "executionTimestamp": "2023-03-13T16:02:40.967Z",
+  "venue": "Bloomberg SEF",
+  "venueMic": "BSEF",
+  "executionType": "Electronic",
+  "trader": "M. Okafor",
+  "salesperson": null,
+  "orderId": "ORD-9376221CEA"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2023-03-13T12:11:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2023-03-13T12:11:00Z",
+  "lastModifiedAt": "2023-03-13T12:11:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA936705865",
+  "matched": "2023-03-13 12:00",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20969376221CEAD3CD33C02F",
+  "upi": "QZQZ5792ZSEU",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "NORTUS33XXX",
+  "ssiId": "SSI-USD-A0C7C2",
+  "netting": "Payment netting by currency and value date"
+ },
+ "trader": "M. Okafor",
+ "sourceFormat": "FpML 5.12 confirmation view",
  "_meta": {
-  "source": "aero-risk",
-  "generation": 1742,
+  "source": "feed-file",
+  "generation": 311,
   "live": false
  }
 }

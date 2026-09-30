@@ -1,6 +1,19 @@
 {
  "book": "FX-LDN-2",
- "desk": "FX \u00b7 London",
+ "desk": "FX · London",
+ "legalEntity": {
+  "name": "Drishti Bank plc",
+  "lei": "549300Z8F6KKOGHS7Q83",
+  "country": "GB",
+  "regulators": "PRA / FCA"
+ },
+ "headTrader": "L. Moreau",
+ "pnlCurrency": "USD",
+ "accountingTreatment": "Fair value (FVTPL)",
+ "regulatoryBook": "Trading book",
+ "volcker": "Market making",
+ "status": "Open",
+ "costCentre": "CC-FX-L-2",
  "_meta": {
   "source": "aero-risk",
   "generation": 1742,

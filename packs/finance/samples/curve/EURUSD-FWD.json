@@ -38,6 +38,60 @@
    "points": 222.0
   }
  ],
+ "outrights": [
+  {
+   "tenor": "ON",
+   "valueDate": "2026-10-05",
+   "points": 0.6,
+   "outright": 1.17406
+  },
+  {
+   "tenor": "1W",
+   "valueDate": "2026-10-09",
+   "points": 3.9,
+   "outright": 1.17439
+  },
+  {
+   "tenor": "1M",
+   "valueDate": "2026-11-02",
+   "points": 17.1,
+   "outright": 1.17571
+  },
+  {
+   "tenor": "2M",
+   "valueDate": "2026-12-02",
+   "points": 36.3,
+   "outright": 1.17763
+  },
+  {
+   "tenor": "3M",
+   "valueDate": "2027-01-04",
+   "points": 55.8,
+   "outright": 1.17958
+  },
+  {
+   "tenor": "6M",
+   "valueDate": "2027-04-02",
+   "points": 110.2,
+   "outright": 1.18502
+  },
+  {
+   "tenor": "9M",
+   "valueDate": "2027-07-02",
+   "points": 163.5,
+   "outright": 1.19035
+  },
+  {
+   "tenor": "1Y",
+   "valueDate": "2027-10-04",
+   "points": 222.0,
+   "outright": 1.1962
+  }
+ ],
+ "spotDate": "2026-10-02",
+ "asOf": "2026-09-30",
+ "source": "Composite of 360T and FXall mid",
+ "pipFactor": 10000,
  "_meta": {
   "source": "aero-fx",
   "generation": 88,

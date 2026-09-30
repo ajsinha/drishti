@@ -24,6 +24,7 @@ export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-21-openjdk-amd64}"
 
 python3 tools/license_headers.py
 for gen in $(grep -l -- "--check" packs/*/tools/make_*.py); do python3 "$gen" --check; done   # generated pack content is current
+python3 -m unittest -q tools/samplegen/test_samplegen.py
 ./mvnw -q -o verify
 console/.venv/bin/python -m pytest -q console/tests
 

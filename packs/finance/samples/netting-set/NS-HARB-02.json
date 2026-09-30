@@ -2,12 +2,35 @@
  "nettingSetId": "NS-HARB-02",
  "counterparty": {
   "id": "CP-HARBOR-POINT",
-  "name": "Harbor Point Bank"
+  "name": "Harbor Point Bank",
+  "lei": "5493007NJYHPUYJ8PB72"
  },
+ "agreement": "ISDA-2002-0288",
  "csa": "CSA-VM-0288",
  "trades": 1,
  "netMtm": 18420,
  "eePeak": 900000,
+ "pfe95Peak": 2100000,
+ "limit": 25000000,
+ "utilisation": 0.08,
+ "collateralPosted": 0,
+ "exposure": [
+  {
+   "tenor": "0",
+   "ee": 20000.0,
+   "pfe95": 60000.0
+  },
+  {
+   "tenor": "1M",
+   "ee": 310000.0,
+   "pfe95": 1200000.0
+  },
+  {
+   "tenor": "3M",
+   "ee": 900000.0,
+   "pfe95": 2100000.0
+  }
+ ],
  "memberTrades": [
   {
    "trade": "FXS-20931",
@@ -18,6 +41,13 @@
    "mtm": 18420
   }
  ],
+ "legalEntity": {
+  "name": "Drishti Bank plc",
+  "lei": "549300Z8F6KKOGHS7Q83",
+  "country": "GB",
+  "regulators": "PRA / FCA"
+ },
+ "nettingEnforceable": true,
  "_meta": {
   "source": "aero-risk",
   "generation": 1742,

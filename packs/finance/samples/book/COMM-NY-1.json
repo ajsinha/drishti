@@ -1,6 +1,19 @@
 {
  "book": "COMM-NY-1",
- "desk": "Commodities \u00b7 New York",
+ "desk": "Commodities · New York",
+ "legalEntity": {
+  "name": "Drishti Bank Securities Inc.",
+  "lei": "549300O1N13GO2II2096",
+  "country": "US",
+  "regulators": "CFTC / SEC"
+ },
+ "headTrader": "T. Brennan",
+ "pnlCurrency": "USD",
+ "accountingTreatment": "Fair value (FVTPL)",
+ "regulatoryBook": "Trading book",
+ "volcker": "Market making",
+ "status": "Open",
+ "costCentre": "CC-COMM-1",
  "_meta": {
   "source": "aero-risk",
   "generation": 1742,

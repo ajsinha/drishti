@@ -35,7 +35,7 @@ public final class ColumnInference {
         this.semantics = semantics;
     }
 
-    /** Columns for rows: fields present in at least 60% of rows, scalar only, capped by {@code tableMaxColumns}. */
+    /** Columns for rows: fields present in at least 60% of rows, scalar only, the strongest {@code tableMaxColumns}. */
     public List<Column> forRows(DataNode rows) {
         Map<String, DataNode> samples = new LinkedHashMap<>();
         Map<String, Integer> counts = new LinkedHashMap<>();
@@ -52,14 +52,33 @@ public final class ColumnInference {
         }
         int max = semantics.limit("tableMaxColumns", 9);
         List<Column> out = new ArrayList<>();
+        List<Integer> weights = new ArrayList<>();
         for (Map.Entry<String, DataNode> e : samples.entrySet()) {
-            if (counts.get(e.getKey()) * 10 < n * 6 || out.size() >= max) {
+            if (counts.get(e.getKey()) * 10 < n * 6) {
                 continue;
             }
             Role r = semantics.role(e.getKey(), e.getValue());
             boolean total = "signed-money".equals(r.name()) || ("money".equals(r.name()) && e.getKey().toLowerCase().contains("amount"));
             out.add(new Column(Semantics.humanize(e.getKey()), "@." + e.getKey(), r.fmt(), r.tone(), total, false));
+            weights.add(r.weight());
         }
+        return out.size() <= max ? out : strongest(out, weights, max);
+    }
+
+    /**
+     * Real rows carry more fields than a table can show. Keep the first column (it usually identifies the row)
+     * and the columns whose semantic role weighs most, in their original order.
+     */
+    static List<Column> strongest(List<Column> cols, List<Integer> weights, int max) {
+        List<Integer> order = new ArrayList<>();
+        for (int i = 1; i < cols.size(); i++) {
+            order.add(i);
+        }
+        order.sort((a, b) -> Integer.compare(weights.get(b), weights.get(a)));
+        java.util.TreeSet<Integer> keep = new java.util.TreeSet<>(order.subList(0, Math.max(0, max - 1)));
+        keep.add(0);
+        List<Column> out = new ArrayList<>(keep.size());
+        keep.forEach(i -> out.add(cols.get(i)));
         return out;
     }
 

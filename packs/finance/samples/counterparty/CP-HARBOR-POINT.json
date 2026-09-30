@@ -1,7 +1,41 @@
 {
  "counterpartyId": "CP-HARBOR-POINT",
  "name": "Harbor Point Bank",
- "type": "Bank \u00b7 Boston",
+ "type": "Bank · Boston",
+ "legalName": "Harbor Point Bank",
+ "lei": "5493007NJYHPUYJ8PB72",
+ "entityType": "Credit institution",
+ "country": "US",
+ "nace": "64.19",
+ "parent": {
+  "name": "Harbor Point Financial Corp.",
+  "lei": "5493003MTGJNFFCT5609"
+ },
+ "ratings": {
+  "sp": "A",
+  "moodys": "A2",
+  "internal": "A",
+  "pd1y": 0.0006
+ },
+ "kyc": {
+  "status": "Approved",
+  "riskRating": "Standard",
+  "lastReview": "2026-02-11",
+  "nextReview": "2027-02-11"
+ },
+ "regulatoryClassification": {
+  "emir": "FC",
+  "doddFrank": "Financial entity",
+  "mifid": "Professional client"
+ },
+ "relationshipManager": "S. Iyer",
+ "onboarded": "2019-03-01",
+ "status": "Active",
+ "addresses": {
+  "registered": {
+   "country": "US"
+  }
+ },
  "_meta": {
   "source": "aero-risk",
   "generation": 1742,

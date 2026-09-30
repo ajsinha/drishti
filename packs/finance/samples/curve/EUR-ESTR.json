@@ -34,6 +34,90 @@
    "rate": 2.51
   }
  ],
+ "purpose": "EUR discounting (€STR OIS)",
+ "asOf": "2026-09-30",
+ "builtAt": "2026-09-30T17:31:05Z",
+ "interpolation": "Log-linear on discount factors",
+ "dayCount": "ACT/365F",
+ "calendar": "EUTA",
+ "pillars": [
+  {
+   "tenor": "1M",
+   "maturity": "2026-10-30",
+   "instrument": "€STR OIS",
+   "quote": 0.020183,
+   "zeroRate": 2.02,
+   "df": 0.998318
+  },
+  {
+   "tenor": "3M",
+   "maturity": "2026-12-30",
+   "instrument": "€STR OIS",
+   "quote": 0.01995,
+   "zeroRate": 2.0,
+   "df": 0.995012
+  },
+  {
+   "tenor": "6M",
+   "maturity": "2027-03-30",
+   "instrument": "Future",
+   "quote": 0.019603,
+   "zeroRate": 1.97,
+   "df": 0.990198
+  },
+  {
+   "tenor": "1Y",
+   "maturity": "2027-09-30",
+   "instrument": "Future",
+   "quote": 0.019311,
+   "zeroRate": 1.95,
+   "df": 0.980689
+  },
+  {
+   "tenor": "2Y",
+   "maturity": "2028-09-30",
+   "instrument": "Swap",
+   "quote": 0.019701,
+   "zeroRate": 2.01,
+   "df": 0.960597
+  },
+  {
+   "tenor": "5Y",
+   "maturity": "2031-09-30",
+   "instrument": "Swap",
+   "quote": 0.021012,
+   "zeroRate": 2.22,
+   "df": 0.894939
+  },
+  {
+   "tenor": "10Y",
+   "maturity": "2036-09-30",
+   "instrument": "Swap",
+   "quote": 0.022198,
+   "zeroRate": 2.51,
+   "df": 0.778022
+  },
+  {
+   "tenor": "20Y",
+   "maturity": "2046-09-30",
+   "instrument": "Swap",
+   "quote": 0.020746,
+   "zeroRate": 2.68,
+   "df": 0.585084
+  },
+  {
+   "tenor": "30Y",
+   "maturity": "2056-09-30",
+   "instrument": "Swap",
+   "quote": 0.018235,
+   "zeroRate": 2.64,
+   "df": 0.452938
+  }
+ ],
+ "sources": [
+  "Eurex €STR OIS",
+  "Broker composite"
+ ],
  "_meta": {
   "source": "aero-fx",
   "generation": 88,

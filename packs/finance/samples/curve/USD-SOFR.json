@@ -42,6 +42,121 @@
    "rate": 3.8
   }
  ],
+ "purpose": "Discounting and projection (single-curve OIS)",
+ "asOf": "2026-09-30",
+ "builtAt": "2026-09-30T18:02:41Z",
+ "interpolation": "Log-linear on discount factors",
+ "extrapolation": "Flat forward",
+ "dayCount": "ACT/365F",
+ "calendar": "USNY",
+ "pillars": [
+  {
+   "tenor": "1M",
+   "maturity": "2026-10-30",
+   "instrument": "SOFR OIS",
+   "quote": 0.039236,
+   "zeroRate": 3.93,
+   "df": 0.99673
+  },
+  {
+   "tenor": "3M",
+   "maturity": "2026-12-30",
+   "instrument": "SR3 future",
+   "quote": 0.038612,
+   "zeroRate": 3.88,
+   "df": 0.990347
+  },
+  {
+   "tenor": "6M",
+   "maturity": "2027-03-30",
+   "instrument": "SR3 future",
+   "quote": 0.037641,
+   "zeroRate": 3.8,
+   "df": 0.981179
+  },
+  {
+   "tenor": "1Y",
+   "maturity": "2027-09-30",
+   "instrument": "SOFR OIS",
+   "quote": 0.036324,
+   "zeroRate": 3.7,
+   "df": 0.963676
+  },
+  {
+   "tenor": "2Y",
+   "maturity": "2028-09-30",
+   "instrument": "Swap",
+   "quote": 0.034548,
+   "zeroRate": 3.58,
+   "df": 0.930903
+  },
+  {
+   "tenor": "3Y",
+   "maturity": "2029-09-30",
+   "instrument": "Swap",
+   "quote": 0.033585,
+   "zeroRate": 3.54,
+   "df": 0.899245
+  },
+  {
+   "tenor": "5Y",
+   "maturity": "2031-09-30",
+   "instrument": "Swap",
+   "quote": 0.032946,
+   "zeroRate": 3.6,
+   "df": 0.83527
+  },
+  {
+   "tenor": "7Y",
+   "maturity": "2033-09-30",
+   "instrument": "Swap",
+   "quote": 0.032288,
+   "zeroRate": 3.66,
+   "df": 0.773987
+  },
+  {
+   "tenor": "10Y",
+   "maturity": "2036-09-30",
+   "instrument": "Swap",
+   "quote": 0.031614,
+   "zeroRate": 3.8,
+   "df": 0.683861
+  },
+  {
+   "tenor": "15Y",
+   "maturity": "2041-09-30",
+   "instrument": "Swap",
+   "quote": 0.029638,
+   "zeroRate": 3.92,
+   "df": 0.555437
+  },
+  {
+   "tenor": "20Y",
+   "maturity": "2046-09-30",
+   "instrument": "Swap",
+   "quote": 0.027398,
+   "zeroRate": 3.97,
+   "df": 0.452033
+  },
+  {
+   "tenor": "30Y",
+   "maturity": "2056-09-30",
+   "instrument": "Swap",
+   "quote": 0.023142,
+   "zeroRate": 3.95,
+   "df": 0.305746
+  }
+ ],
+ "sources": [
+  "CME SR3 settlements",
+  "Tradeweb SOFR OIS composite"
+ ],
+ "fixingIndex": "SOFR",
+ "quality": {
+  "stale": 0,
+  "outliers": 0,
+  "repricingErrorBp": 0.02
+ },
  "_meta": {
   "source": "aero-risk",
   "generation": 1742,

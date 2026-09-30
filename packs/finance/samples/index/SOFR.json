@@ -3,6 +3,154 @@
  "name": "Secured Overnight Financing Rate",
  "fixing": 3.94,
  "administrator": "FRBNY",
+ "currency": "USD",
+ "tenor": "ON",
+ "dayCount": "ACT/360",
+ "publication": "08:00 New York, next business day",
+ "fixings": [
+  {
+   "date": "2026-09-30",
+   "rate": 3.9655,
+   "volumeBn": 2310,
+   "p1": 3.94,
+   "p99": 4.03
+  },
+  {
+   "date": "2026-09-29",
+   "rate": 3.9637,
+   "volumeBn": 2273,
+   "p1": 3.93,
+   "p99": 4.02
+  },
+  {
+   "date": "2026-09-28",
+   "rate": 3.9615,
+   "volumeBn": 2236,
+   "p1": 3.93,
+   "p99": 4.02
+  },
+  {
+   "date": "2026-09-25",
+   "rate": 3.9539,
+   "volumeBn": 2315,
+   "p1": 3.92,
+   "p99": 4.01
+  },
+  {
+   "date": "2026-09-24",
+   "rate": 3.9512,
+   "volumeBn": 2278,
+   "p1": 3.92,
+   "p99": 4.01
+  },
+  {
+   "date": "2026-09-23",
+   "rate": 3.9485,
+   "volumeBn": 2241,
+   "p1": 3.92,
+   "p99": 4.01
+  },
+  {
+   "date": "2026-09-22",
+   "rate": 3.9458,
+   "volumeBn": 2204,
+   "p1": 3.92,
+   "p99": 4.01
+  },
+  {
+   "date": "2026-09-21",
+   "rate": 3.9432,
+   "volumeBn": 2167,
+   "p1": 3.91,
+   "p99": 4.0
+  },
+  {
+   "date": "2026-09-18",
+   "rate": 3.9365,
+   "volumeBn": 2246,
+   "p1": 3.91,
+   "p99": 4.0
+  },
+  {
+   "date": "2026-09-17",
+   "rate": 3.9348,
+   "volumeBn": 2209,
+   "p1": 3.9,
+   "p99": 3.99
+  },
+  {
+   "date": "2026-09-16",
+   "rate": 3.9334,
+   "volumeBn": 2172,
+   "p1": 3.9,
+   "p99": 3.99
+  },
+  {
+   "date": "2026-09-15",
+   "rate": 3.9324,
+   "volumeBn": 2325,
+   "p1": 3.9,
+   "p99": 3.99
+  },
+  {
+   "date": "2026-09-14",
+   "rate": 3.9318,
+   "volumeBn": 2288,
+   "p1": 3.9,
+   "p99": 3.99
+  },
+  {
+   "date": "2026-09-11",
+   "rate": 3.9327,
+   "volumeBn": 2177,
+   "p1": 3.9,
+   "p99": 3.99
+  },
+  {
+   "date": "2026-09-10",
+   "rate": 3.934,
+   "volumeBn": 2330,
+   "p1": 3.9,
+   "p99": 3.99
+  },
+  {
+   "date": "2026-09-09",
+   "rate": 3.9358,
+   "volumeBn": 2293,
+   "p1": 3.91,
+   "p99": 4.0
+  },
+  {
+   "date": "2026-09-08",
+   "rate": 3.938,
+   "volumeBn": 2256,
+   "p1": 3.91,
+   "p99": 4.0
+  },
+  {
+   "date": "2026-09-04",
+   "rate": 3.9517,
+   "volumeBn": 2298,
+   "p1": 3.92,
+   "p99": 4.01
+  },
+  {
+   "date": "2026-09-03",
+   "rate": 3.9562,
+   "volumeBn": 2261,
+   "p1": 3.93,
+   "p99": 4.02
+  },
+  {
+   "date": "2026-09-02",
+   "rate": 3.9611,
+   "volumeBn": 2224,
+   "p1": 3.93,
+   "p99": 4.02
+  }
+ ],
+ "methodology": "Volume-weighted median of overnight Treasury repo (tri-party, GCF, DVP)",
+ "fallbackFor": "USD LIBOR (ISDA 2020 IBOR Fallbacks Protocol)",
  "_meta": {
   "source": "aero-risk",
   "generation": 1742,

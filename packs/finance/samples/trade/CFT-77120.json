@@ -4,7 +4,8 @@
  "product": "Commodity future",
  "counterparty": {
   "id": "CP-SUMMIT",
-  "name": "Summit Clearing LLC"
+  "name": "Summit Clearing LLC",
+  "lei": "5493007J20IL6214KN31"
  },
  "contract": "NYMEX CL Z6",
  "contractSpec": "CL-Z6",
@@ -69,11 +70,161 @@
   }
  ],
  "margin": {
-  "initialMargin": "[IM PER LOT] \u00d7 150",
+  "initialMargin": "[IM PER LOT] × 150",
   "variationMarginToday": 79500,
   "deltaBbl": 150000,
   "usdPerDollarMove": 150000
  },
+ "instrument": {
+  "exchangeCode": "CLZ6",
+  "bloombergTicker": "CLZ6 Comdty",
+  "isin": "USCLZ6202605",
+  "cfi": "FCECPX",
+  "firstNotice": "2026-11-23",
+  "lastTradingDay": "2026-11-20",
+  "deliveryLocation": "Cushing, Oklahoma"
+ },
+ "fills": [
+  {
+   "fillId": "F1",
+   "time": "2026-09-23T14:02:11.215Z",
+   "lots": 60,
+   "price": 68.39,
+   "venue": "CME Globex",
+   "mic": "XNYM"
+  },
+  {
+   "fillId": "F2",
+   "time": "2026-09-23T14:02:11.418Z",
+   "lots": 50,
+   "price": 68.42,
+   "venue": "CME Globex",
+   "mic": "XNYM"
+  },
+  {
+   "fillId": "F3",
+   "time": "2026-09-23T14:05:37.004Z",
+   "lots": 40,
+   "price": 68.46,
+   "venue": "CME Globex",
+   "mic": "XNYM"
+  }
+ ],
+ "averagePrice": 68.42,
+ "positionLimitUsage": {
+  "limit": 6000,
+  "used": 150,
+  "regime": "CFTC spot-month (Part 150)"
+ },
+ "risk": {
+  "delta": 150000,
+  "deltaUnit": "bbl",
+  "dv01": 0,
+  "commodityDelta": 150000
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 409500,
+  "cleanPv": 409500.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Exchange settlement price",
+  "curves": [
+   "WTI-NYMEX"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "pnlHistory": [
+  {
+   "date": "2026-09-24",
+   "pnl": 102000
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 112500
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 82500
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 33000
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 79500
+  }
+ ],
+ "desk": "Energy · Crude futures",
+ "tradeDate": "2026-09-23",
+ "legalEntity": {
+  "name": "Drishti Bank Securities Inc.",
+  "lei": "549300O1N13GO2II2096",
+  "country": "US",
+  "regulators": "CFTC"
+ },
+ "execution": {
+  "tradeDate": "2026-09-23",
+  "executionTimestamp": "2026-09-23T09:24:07.057Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "T. Brennan",
+  "salesperson": null,
+  "orderId": "ORD-4FE7B3254B"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-09-23T09:27:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2026-09-23T09:27:00Z",
+  "lastModifiedAt": "2026-09-23T09:27:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "CME Clearing",
+  "clearingBroker": "Summit Clearing LLC",
+  "account": "CLR-NY-07",
+  "ccpTradeId": "CME3E3992221",
+  "origin": "House"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20964FE7B3254B83E3992221",
+  "upi": "QZO2OWVII5DF",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMUS33XXX",
+  "ssiId": "SSI-USD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "trader": "T. Brennan",
  "_meta": {
   "source": "eod-futures",
   "generation": 20260930,

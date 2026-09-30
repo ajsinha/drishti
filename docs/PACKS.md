@@ -106,6 +106,24 @@ random-walks those fields, so a pack needs no code for live samples.
 
 No Java or Python changes are needed. A pack is configuration and content only.
 
+## Realistic sample data
+
+Samples should look like what the real system would hold, not like a test fixture. `tools/samplegen` is a small,
+standard-library-only toolkit that packs use to generate them:
+
+| Module | What it gives |
+|---|---|
+| `ids` | LEI (ISO 17442 check digits), ISIN (Luhn), CUSIP, UTI, UPI, BIC |
+| `dates` | business-day calendars (USNY, GBLO, EUTA, JPTO and joint calendars), tenors, schedules with stubs, day counts (ACT/360, ACT/365F, 30/360, 30E/360, ACT/ACT) |
+| `curves` | zero curves with log-linear discount factors, forwards and the published pillar table |
+| `legs` | fixed and floating legs with every calculation period: fixing dates, year fractions, fixings or projected rates, amounts, DFs, PVs and status; repricing helpers |
+| `blocks` | execution, lifecycle and audit, confirmation, clearing, regulatory reporting, settlement instructions, valuation and P&L history |
+
+Generators keep values the mockups show and derive everything else consistently. For example, a thin swap's
+fixed rate is solved so its cashflows reprice to its MTM. `tools/samplegen/test_samplegen.py` checks the
+library against known values (a real ISIN and CUSIP, the mockup's cashflows) and the finance samples against
+themselves. Drill runs it.
+
 ## What stays in the core
 
 - The engine: sources, pipeline, Rachana and Rachana-EL, inference, the entity graph, live updates, identity.

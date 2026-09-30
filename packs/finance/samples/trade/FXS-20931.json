@@ -4,7 +4,8 @@
  "product": "FX swap",
  "counterparty": {
   "id": "CP-HARBOR-POINT",
-  "name": "Harbor Point Bank"
+  "name": "Harbor Point Bank",
+  "lei": "5493007NJYHPUYJ8PB72"
  },
  "pair": "EUR/USD",
  "nearValue": "2026-10-02",
@@ -16,12 +17,14 @@
  "book": "FX-LDN-2",
  "nettingSet": "NS-HARB-02",
  "csa": "CSA-VM-0288",
+ "agreement": "ISDA-2002-0288",
  "spot": "EURUSD",
  "discountCurves": [
   "EUR-ESTR",
   "USD-SOFR"
  ],
  "forwardCurve": "EURUSD-FWD",
+ "direction": "Buy/sell EUR",
  "legs": [
   {
    "leg": "Near",
@@ -94,7 +97,10 @@
   "status": "Confirmed",
   "matched": "2026-09-30 13:41",
   "clsEligible": true,
-  "trader": "L. Moreau"
+  "trader": "L. Moreau",
+  "method": "SWIFT MT300",
+  "platformId": "MT300-C3D91FDF21",
+  "breaks": []
  },
  "risk": [
   {
@@ -106,10 +112,184 @@
    "usd": 730
   },
   {
-   "factor": "FX \u0394",
+   "factor": "FX Δ",
    "usd": 2150
   }
  ],
+ "spotRateAtTrade": 1.17385,
+ "swapPointsMid": 55.6,
+ "salesMargin": {
+  "pips": 0.2,
+  "usd": 500
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 18420,
+  "cleanPv": 18420.0,
+  "accrued": 0.0,
+  "legPvs": [
+   2930,
+   15490
+  ],
+  "model": "FX forward: discounted cashflows (CSA USD)",
+  "curves": [
+   "EUR-ESTR",
+   "USD-SOFR",
+   "EURUSD-FWD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 304
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 3729
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 2761
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -1067
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -3624
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 1961
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 946
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 605
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -1666
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 2448
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -2029
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -62
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 4486
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -1135
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -2542
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -2105
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -873
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 466
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -832
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -5809
+  }
+ ],
+ "desk": "G10 FX · Swaps",
+ "strategy": "Client funding roll",
+ "tradeDate": "2026-09-30",
+ "legalEntity": {
+  "name": "Drishti Bank plc",
+  "lei": "549300Z8F6KKOGHS7Q83",
+  "country": "GB",
+  "regulators": "PRA / FCA"
+ },
+ "execution": {
+  "tradeDate": "2026-09-30",
+  "executionTimestamp": "2026-09-30T13:39:59.562Z",
+  "venue": "FXall",
+  "venueMic": "FXAL",
+  "executionType": "Electronic",
+  "trader": "L. Moreau",
+  "salesperson": "C. Dubois",
+  "orderId": "ORD-A5114E1DD0"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-09-30T09:04:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2026-09-30T09:04:00Z",
+  "lastModifiedAt": "2026-09-30T09:04:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83A5114E1DD0C3D91FDF21",
+  "upi": "QZ0JJW1CJYE7",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Foreign exchange"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "HARBGB33XXX",
+  "ssiId": "SSI-EUR-99A301",
+  "netting": "Payment netting by currency and value date",
+  "clsMember": true,
+  "settlementSession": "CLS 07:00-09:00 CET"
+ },
+ "trader": "L. Moreau",
  "_meta": {
   "source": "aero-fx",
   "generation": 88,

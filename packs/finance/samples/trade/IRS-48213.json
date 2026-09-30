@@ -4,7 +4,8 @@
  "product": "Interest rate swap",
  "counterparty": {
   "id": "CP-NORTHBRIDGE",
-  "name": "Northbridge Capital LLP"
+  "name": "Northbridge Capital LLP",
+  "lei": "549300XC29H3SPO07Z24"
  },
  "notional": 50000000,
  "currency": "USD",
@@ -35,6 +36,8 @@
    "businessDay": "Mod. following",
    "calendar": "USNY",
    "paymentLag": "2 business days",
+   "rollConvention": "2",
+   "stub": "None",
    "cashflows": [
     {
      "n": 1,
@@ -43,9 +46,11 @@
      "payDate": "2027-10-06",
      "notional": 50000000,
      "rate": 0.0385,
+     "yearFraction": 1.019444,
      "amount": -1962430.56,
      "df": 0.9632,
-     "pv": -1890213.11
+     "pv": -1890213.11,
+     "status": "Projected"
     },
     {
      "n": 2,
@@ -54,9 +59,11 @@
      "payDate": "2028-10-04",
      "notional": 50000000,
      "rate": 0.0385,
+     "yearFraction": 1.011111,
      "amount": -1946388.89,
      "df": 0.928,
-     "pv": -1806248.89
+     "pv": -1806248.89,
+     "status": "Projected"
     },
     {
      "n": 3,
@@ -65,9 +72,11 @@
      "payDate": "2029-10-04",
      "notional": 50000000,
      "rate": 0.0385,
+     "yearFraction": 1.013889,
      "amount": -1951736.11,
      "df": 0.8943,
-     "pv": -1745437.6
+     "pv": -1745437.6,
+     "status": "Projected"
     },
     {
      "n": 4,
@@ -76,9 +85,11 @@
      "payDate": "2030-10-04",
      "notional": 50000000,
      "rate": 0.0385,
+     "yearFraction": 1.013889,
      "amount": -1951736.11,
      "df": 0.862,
-     "pv": -1682396.53
+     "pv": -1682396.53,
+     "status": "Projected"
     },
     {
      "n": 5,
@@ -87,11 +98,15 @@
      "payDate": "2031-10-06",
      "notional": 50000000,
      "rate": 0.0385,
+     "yearFraction": 1.013889,
      "amount": -1951736.11,
      "df": 0.831,
-     "pv": -1621892.71
+     "pv": -1621892.71,
+     "status": "Projected"
     }
-   ]
+   ],
+   "pv": -8746188.84,
+   "accrued": 0.0
   },
   {
    "leg": 2,
@@ -102,8 +117,97 @@
    "notional": 50000000,
    "index": "SOFR",
    "spread": 0.0,
+   "dayCount": "ACT/360",
+   "frequency": "Annual",
+   "businessDay": "Mod. following",
+   "calendar": "USNY",
+   "paymentLag": "2 business days",
+   "compounding": "Compounded in arrears",
+   "observation": "Lookback 2 business days, no observation shift",
    "nextReset": "2026-10-02",
    "projectedFlows": 5,
+   "cashflows": [
+    {
+     "n": 1,
+     "accrualStart": "2026-10-02",
+     "accrualEnd": "2027-10-04",
+     "fixingDate": "2027-09-30",
+     "payDate": "2027-10-06",
+     "notional": 50000000,
+     "index": "SOFR",
+     "rate": 0.037591,
+     "spread": 0.0,
+     "yearFraction": 1.019444,
+     "amount": 1916124.86,
+     "df": 0.963109,
+     "pv": 1845438.05,
+     "status": "Projected"
+    },
+    {
+     "n": 2,
+     "accrualStart": "2027-10-04",
+     "accrualEnd": "2028-10-02",
+     "fixingDate": "2028-09-28",
+     "payDate": "2028-10-04",
+     "notional": 50000000,
+     "index": "SOFR",
+     "rate": 0.035121,
+     "spread": 0.0,
+     "yearFraction": 1.011111,
+     "amount": 1775527.94,
+     "df": 0.930457,
+     "pv": 1652052.47,
+     "status": "Projected"
+    },
+    {
+     "n": 3,
+     "accrualStart": "2028-10-02",
+     "accrualEnd": "2029-10-02",
+     "fixingDate": "2029-09-28",
+     "payDate": "2029-10-04",
+     "notional": 50000000,
+     "index": "SOFR",
+     "rate": 0.035143,
+     "spread": 0.0,
+     "yearFraction": 1.013889,
+     "amount": 1781564.44,
+     "df": 0.898798,
+     "pv": 1601265.99,
+     "status": "Projected"
+    },
+    {
+     "n": 4,
+     "accrualStart": "2029-10-02",
+     "accrualEnd": "2030-10-02",
+     "fixingDate": "2030-09-30",
+     "payDate": "2030-10-04",
+     "notional": 50000000,
+     "index": "SOFR",
+     "rate": 0.037205,
+     "spread": 0.0,
+     "yearFraction": 1.013889,
+     "amount": 1886105.38,
+     "df": 0.866489,
+     "pv": 1634290.1,
+     "status": "Projected"
+    },
+    {
+     "n": 5,
+     "accrualStart": "2030-10-02",
+     "accrualEnd": "2031-10-02",
+     "fixingDate": "2031-09-30",
+     "payDate": "2031-10-06",
+     "notional": 50000000,
+     "index": "SOFR",
+     "rate": 0.037826,
+     "spread": 0.0,
+     "yearFraction": 1.013889,
+     "amount": 1917599.7,
+     "df": 0.83467,
+     "pv": 1600562.23,
+     "status": "Projected"
+    }
+   ],
    "pv": 8333608.84
   }
  ],
@@ -129,6 +233,223 @@
    "dv01": 7030
   }
  ],
+ "desk": "USD Rates · Swaps",
+ "strategy": "Client hedge: fixed-rate funding swap",
+ "portfolio": "RATES-NY-3/CLIENT",
+ "productTaxonomy": {
+  "isda": "InterestRate:IRSwap:FixedFloat",
+  "cfi": "SRCCSP",
+  "fpml": "swap"
+ },
+ "fees": [
+  {
+   "type": "Execution fee",
+   "payer": "Us",
+   "amount": 1250.0,
+   "currency": "USD",
+   "date": "2026-10-02"
+  }
+ ],
+ "risk": {
+  "dv01": 22310,
+  "gamma": -41.2,
+  "vega": 0,
+  "theta": -312,
+  "pv01Discount": 1830,
+  "pv01Projection": 20480
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -412580,
+  "cleanPv": -412580.0,
+  "accrued": 0.0,
+  "legPvs": [
+   -8746188.84,
+   8333608.84
+  ],
+  "model": "Multi-curve OIS discounting",
+  "curves": [
+   "USD-SOFR"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "pnl": {
+  "today": -18240,
+  "mtd": 61300,
+  "ytd": -412580,
+  "explain": [
+   {
+    "factor": "Rates (curve shift)",
+    "usd": -21510
+   },
+   {
+    "factor": "Carry and roll-down",
+    "usd": 3120
+   },
+   {
+    "factor": "New trades / amendments",
+    "usd": 0
+   },
+   {
+    "factor": "Unexplained",
+    "usd": 150
+   }
+  ]
+ },
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -34542
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -33121
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 12012
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 1620
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -12463
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -11774
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -8619
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 3954
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 9749
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -4353
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 4874
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 6053
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -5328
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 14290
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -2682
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 10342
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -1573
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 15343
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -11857
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -12397
+  }
+ ],
+ "tradeDate": "2026-09-28",
+ "legalEntity": {
+  "name": "Drishti Bank Securities Inc.",
+  "lei": "549300O1N13GO2II2096",
+  "country": "US",
+  "regulators": "CFTC / SEC"
+ },
+ "execution": {
+  "tradeDate": "2026-09-28",
+  "executionTimestamp": "2026-09-28T11:03:41.719Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "A. Shah",
+  "salesperson": "R. Patel",
+  "orderId": "ORD-0DF72DB890"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-09-28T12:55:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2026-09-28T12:55:00Z",
+  "lastModifiedAt": "2026-09-28T12:55:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA985184521",
+  "matched": "2026-09-28 11:30",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20960DF72DB890CFC740742A",
+  "upi": "QZQZ5792ZSEU",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "NORTUS33XXX",
+  "ssiId": "SSI-USD-A0C7C2",
+  "netting": "Payment netting by currency and value date"
+ },
+ "trader": "A. Shah",
  "_meta": {
   "source": "aero-risk",
   "generation": 1742,

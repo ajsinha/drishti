@@ -2,7 +2,8 @@
  "nettingSetId": "NS-NORTH-01",
  "counterparty": {
   "id": "CP-NORTHBRIDGE",
-  "name": "Northbridge Capital LLP"
+  "name": "Northbridge Capital LLP",
+  "lei": "549300XC29H3SPO07Z24"
  },
  "agreement": "ISDA-2002-0417",
  "csa": "CSA-VM-0417",
@@ -191,6 +192,53 @@
   "callToday": "none",
   "disputes": "none",
   "lastMovement": "2026-09-29"
+ },
+ "legalEntity": {
+  "name": "Drishti Bank Securities Inc.",
+  "lei": "549300O1N13GO2II2096",
+  "country": "US",
+  "regulators": "CFTC / SEC"
+ },
+ "nettingEnforceable": true,
+ "nettingOpinion": "ISDA netting opinion, England and Wales (2025)",
+ "metrics": {
+  "epe": 2900000.0,
+  "eepe": 3400000.0,
+  "ead": 7140000,
+  "cva": -38400,
+  "saccr": {
+   "replacementCost": 0,
+   "pfeAddOn": 5100000.0,
+   "multiplier": 1.0,
+   "alpha": 1.4
+  }
+ },
+ "marginCalls": [
+  {
+   "date": "2026-09-29",
+   "direction": "We call",
+   "amount": 410000,
+   "status": "Settled"
+  },
+  {
+   "date": "2026-09-24",
+   "direction": "They call",
+   "amount": 260000,
+   "status": "Settled"
+  },
+  {
+   "date": "2026-09-18",
+   "direction": "We call",
+   "amount": 530000,
+   "status": "Settled"
+  }
+ ],
+ "simulation": {
+  "model": "Hull-White 1F + GBM FX",
+  "paths": 5000,
+  "timeSteps": 120,
+  "runId": "PFE-20260930-02",
+  "confidence": 0.95
  },
  "_meta": {
   "source": "aero-risk",

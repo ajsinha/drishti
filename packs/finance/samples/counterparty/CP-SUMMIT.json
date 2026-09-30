@@ -1,7 +1,41 @@
 {
  "counterpartyId": "CP-SUMMIT",
  "name": "Summit Clearing LLC",
- "type": "Clearing broker \u00b7 Chicago",
+ "type": "Clearing broker · Chicago",
+ "legalName": "Summit Clearing LLC",
+ "lei": "5493007J20IL6214KN31",
+ "entityType": "Futures commission merchant",
+ "country": "US",
+ "nace": "66.12",
+ "parent": {
+  "name": "Summit Holdings Inc.",
+  "lei": "549300AH2GJAZVVATW49"
+ },
+ "ratings": {
+  "sp": "A-",
+  "moodys": "A3",
+  "internal": "A-",
+  "pd1y": 0.0008
+ },
+ "kyc": {
+  "status": "Approved",
+  "riskRating": "Standard",
+  "lastReview": "2026-02-11",
+  "nextReview": "2027-02-11"
+ },
+ "regulatoryClassification": {
+  "emir": "NFC-",
+  "doddFrank": "Financial entity",
+  "mifid": "Professional client"
+ },
+ "relationshipManager": "S. Iyer",
+ "onboarded": "2019-03-01",
+ "status": "Active",
+ "addresses": {
+  "registered": {
+   "country": "US"
+  }
+ },
  "_meta": {
   "source": "aero-risk",
   "generation": 1742,

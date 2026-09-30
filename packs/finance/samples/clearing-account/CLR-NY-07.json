@@ -2,9 +2,17 @@
  "accountId": "CLR-NY-07",
  "broker": {
   "id": "CP-SUMMIT",
-  "name": "Summit Clearing LLC"
+  "name": "Summit Clearing LLC",
+  "lei": "5493007J20IL6214KN31"
  },
  "imLimit": 0.6,
+ "ccp": "CME Clearing",
+ "origin": "House",
+ "initialMargin": 1215000,
+ "imLimitAmount": 2025000,
+ "excessCollateral": 385000,
+ "currency": "USD",
+ "segregation": "US futures (4d)",
  "_meta": {
   "source": "eod-futures",
   "generation": 20260930,

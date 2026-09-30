@@ -54,6 +54,83 @@
    "price": 68.58
   }
  ],
+ "contracts": [
+  {
+   "code": "CLX6",
+   "settle": 71.62,
+   "openInterest": 180000,
+   "volume": 240000
+  },
+  {
+   "code": "CLZ6",
+   "settle": 71.15,
+   "openInterest": 169000,
+   "volume": 120000
+  },
+  {
+   "code": "CLF7",
+   "settle": 70.78,
+   "openInterest": 158000,
+   "volume": 80000
+  },
+  {
+   "code": "CLG7",
+   "settle": 70.45,
+   "openInterest": 147000,
+   "volume": 60000
+  },
+  {
+   "code": "CLH7",
+   "settle": 70.1,
+   "openInterest": 136000,
+   "volume": 48000
+  },
+  {
+   "code": "CLJ7",
+   "settle": 69.82,
+   "openInterest": 125000,
+   "volume": 40000
+  },
+  {
+   "code": "CLK7",
+   "settle": 69.55,
+   "openInterest": 114000,
+   "volume": 34285
+  },
+  {
+   "code": "CLM7",
+   "settle": 69.3,
+   "openInterest": 103000,
+   "volume": 30000
+  },
+  {
+   "code": "CLN7",
+   "settle": 69.08,
+   "openInterest": 92000,
+   "volume": 26666
+  },
+  {
+   "code": "CLQ7",
+   "settle": 68.9,
+   "openInterest": 81000,
+   "volume": 24000
+  },
+  {
+   "code": "CLU7",
+   "settle": 68.74,
+   "openInterest": 70000,
+   "volume": 21818
+  },
+  {
+   "code": "CLV7",
+   "settle": 68.58,
+   "openInterest": 59000,
+   "volume": 20000
+  }
+ ],
+ "asOf": "2026-09-30",
+ "source": "NYMEX settlement prices",
+ "settlementTime": "14:30 ET",
  "_meta": {
   "source": "eod-futures",
   "generation": 20260930,

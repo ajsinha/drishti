@@ -2,11 +2,46 @@
  "limitId": "LIM-NORTH",
  "counterparty": {
   "id": "CP-NORTHBRIDGE",
-  "name": "Northbridge Capital LLP"
+  "name": "Northbridge Capital LLP",
+  "lei": "549300XC29H3SPO07Z24"
  },
  "limit": 15000000,
  "measure": "PFE95 peak",
  "utilisation": 0.65,
+ "used": 9800000,
+ "available": 5200000,
+ "status": "Within limit",
+ "approvedBy": "Credit Risk Committee",
+ "approvedOn": "2026-03-12",
+ "reviewDue": "2027-03-12",
+ "buckets": [
+  {
+   "bucket": "0-1Y",
+   "limit": 15000000.0,
+   "used": 8800000.0,
+   "utilisation": 0.59
+  },
+  {
+   "bucket": "1-3Y",
+   "limit": 15000000.0,
+   "used": 9800000.0,
+   "utilisation": 0.65
+  },
+  {
+   "bucket": "3-5Y",
+   "limit": 12000000.0,
+   "used": 6400000.0,
+   "utilisation": 0.53
+  },
+  {
+   "bucket": "5-10Y",
+   "limit": 8000000.0,
+   "used": 3000000.0,
+   "utilisation": 0.38
+  }
+ ],
+ "earlyWarning": 0.8,
+ "breachHistory": [],
  "_meta": {
   "source": "aero-risk",
   "generation": 1742,

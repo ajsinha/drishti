@@ -1,7 +1,41 @@
 {
  "counterpartyId": "CP-NORTHBRIDGE",
  "name": "Northbridge Capital LLP",
- "type": "Hedge fund \u00b7 London",
+ "type": "Hedge fund · London",
+ "legalName": "Northbridge Capital LLP",
+ "lei": "549300XC29H3SPO07Z24",
+ "entityType": "Asset manager (AIF)",
+ "country": "GB",
+ "nace": "64.30",
+ "parent": {
+  "name": "Northbridge Capital Holdings Ltd",
+  "lei": "549300F0LIBXNF806282"
+ },
+ "ratings": {
+  "sp": "NR",
+  "moodys": "NR",
+  "internal": "BB+",
+  "pd1y": 0.0042
+ },
+ "kyc": {
+  "status": "Approved",
+  "riskRating": "Standard",
+  "lastReview": "2026-02-11",
+  "nextReview": "2027-02-11"
+ },
+ "regulatoryClassification": {
+  "emir": "FC",
+  "doddFrank": "Financial entity",
+  "mifid": "Professional client"
+ },
+ "relationshipManager": "S. Iyer",
+ "onboarded": "2019-03-01",
+ "status": "Active",
+ "addresses": {
+  "registered": {
+   "country": "GB"
+  }
+ },
  "_meta": {
   "source": "aero-risk",
   "generation": 1742,

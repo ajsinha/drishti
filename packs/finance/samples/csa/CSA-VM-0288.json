@@ -2,12 +2,35 @@
  "csaId": "CSA-VM-0288",
  "counterparty": {
   "id": "CP-HARBOR-POINT",
-  "name": "Harbor Point Bank"
+  "name": "Harbor Point Bank",
+  "lei": "5493007NJYHPUYJ8PB72"
  },
+ "agreement": "ISDA-2002-0288",
  "marginType": "VM",
  "threshold": 0,
  "minTransfer": 500000,
  "currency": "USD",
+ "independentAmount": 0,
+ "rounding": 10000,
+ "valuationAgent": "Us",
+ "valuationTime": "17:00 London",
+ "notificationTime": "13:00 London",
+ "settlementLag": "T+1",
+ "interestRate": "USD: SOFR flat, paid monthly",
+ "eligible": [
+  {
+   "asset": "USD cash",
+   "haircut": 0.0
+  },
+  {
+   "asset": "US Treasuries < 1Y",
+   "haircut": 0.005
+  }
+ ],
+ "disputeResolution": "ISDA 2016 VM CSA paragraph 12",
+ "mpor": "10 business days",
+ "form": "2016 ISDA Credit Support Annex for Variation Margin (New York law)",
+ "signed": "2017-11-02",
  "_meta": {
   "source": "aero-fx",
   "generation": 88,

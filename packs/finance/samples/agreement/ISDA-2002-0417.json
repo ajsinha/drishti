@@ -3,10 +3,38 @@
  "type": "ISDA 2002 Master",
  "counterparty": {
   "id": "CP-NORTHBRIDGE",
-  "name": "Northbridge Capital LLP"
+  "name": "Northbridge Capital LLP",
+  "lei": "549300XC29H3SPO07Z24"
  },
  "governingLaw": "English",
  "signed": "2019-04-17",
+ "legalEntity": {
+  "name": "Drishti Bank Securities Inc.",
+  "lei": "549300O1N13GO2II2096",
+  "country": "US",
+  "regulators": "CFTC / SEC"
+ },
+ "elections": {
+  "closeOutNetting": true,
+  "automaticEarlyTermination": false,
+  "crossDefault": "3% of shareholders' equity",
+  "additionalTerminationEvents": [
+   "NAV decline 25% in 12 months",
+   "Key person"
+  ],
+  "setOff": true,
+  "terminationCurrency": "USD",
+  "creditSupport": "CSA-VM-0417"
+ },
+ "protocols": [
+  "ISDA 2020 IBOR Fallbacks",
+  "ISDA 2018 US Resolution Stay"
+ ],
+ "nettingSets": [
+  "NS-NORTH-01"
+ ],
+ "status": "Active",
+ "documentStore": "DOC-ISDA-0417.pdf",
  "_meta": {
   "source": "aero-risk",
   "generation": 1742,

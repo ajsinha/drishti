@@ -82,7 +82,8 @@ body.terminal { font-size: 14px; }
 .kv-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .kv-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .kv dt { color: var(--d-muted); font-weight: 400; font-size: .8rem; }
-.kv dd { margin: 0; color: var(--d-ink); }
+.kv dd { margin: 0; color: var(--d-ink); overflow-wrap: anywhere; }
+.kv-item { min-width: 0; }
 
 .tbl-wrap { overflow-x: auto; }
 .tbl { width: 100%; border-collapse: collapse; font-size: .86rem; }

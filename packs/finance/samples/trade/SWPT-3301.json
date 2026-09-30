@@ -4,15 +4,231 @@
  "product": "Swaption",
  "counterparty": {
   "id": "CP-NORTHBRIDGE",
-  "name": "Northbridge Capital LLP"
+  "name": "Northbridge Capital LLP",
+  "lei": "549300XC29H3SPO07Z24"
  },
  "notional": 25000000,
  "currency": "USD",
+ "direction": "BUY",
+ "optionType": "Payer",
+ "exerciseStyle": "European",
+ "expiryDate": "2027-09-30",
  "maturityDate": "2027-09-30",
+ "strike": 0.0375,
+ "settlement": "Physical",
+ "underlying": {
+  "effectiveDate": "2027-10-04",
+  "terminationDate": "2032-10-04",
+  "tenor": "5Y",
+  "fixedRate": 0.0375,
+  "fixedFrequency": "Annual",
+  "fixedDayCount": "ACT/360",
+  "floatIndex": "SOFR",
+  "floatFrequency": "Annual",
+  "forwardSwapRate": 0.03627,
+  "annuity": 109951222.68
+ },
+ "premium": {
+  "amount": 412500.0,
+  "currency": "USD",
+  "paymentDate": "2026-09-29",
+  "status": "Settled"
+ },
+ "volatility": {
+  "type": "Normal",
+  "value": 96.5,
+  "unit": "bp",
+  "surface": "USD-SWPT-NVOL",
+  "point": "1Y x 5Y"
+ },
  "mtm": 340760,
  "book": "RATES-NY-3",
  "nettingSet": "NS-NORTH-01",
+ "agreement": "ISDA-2002-0417",
  "csa": "CSA-VM-0417",
+ "discountCurve": "USD-SOFR",
+ "exerciseSchedule": [
+  {
+   "date": "2027-09-30",
+   "noticeDeadline": "2027-09-30 11:00 New York",
+   "status": "Pending"
+  }
+ ],
+ "risk": {
+  "delta": 5058,
+  "dv01": 5058,
+  "vega": 4386,
+  "gamma": 3.8,
+  "theta": -742
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 340760,
+  "cleanPv": 340760.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Bachelier (normal) on the forward swap rate",
+  "curves": [
+   "USD-SOFR",
+   "USD-SWPT-NVOL"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 10193
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -3303
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -9785
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 7876
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -5679
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -13111
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 13059
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -622
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -3400
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -10738
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 3046
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -455
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 9714
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -20863
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 10962
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 1248
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 11414
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -3012
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 12150
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 2680
+  }
+ ],
+ "desk": "USD Rates · Options",
+ "tradeDate": "2026-09-25",
+ "legalEntity": {
+  "name": "Drishti Bank Securities Inc.",
+  "lei": "549300O1N13GO2II2096",
+  "country": "US",
+  "regulators": "CFTC / SEC"
+ },
+ "execution": {
+  "tradeDate": "2026-09-25",
+  "executionTimestamp": "2026-09-25T13:00:36.536Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "E. Novak",
+  "salesperson": null,
+  "orderId": "ORD-FC711297C0"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-09-25T09:36:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2026-09-25T09:36:00Z",
+  "lastModifiedAt": "2026-09-25T09:36:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA705145980",
+  "matched": "2026-09-25 11:48",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096FC711297C0E5A3982AD2",
+  "upi": "QZY02OQHANW5",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "NORTUS33XXX",
+  "ssiId": "SSI-USD-A0C7C2",
+  "netting": "Payment netting by currency and value date"
+ },
+ "trader": "E. Novak",
  "_meta": {
   "source": "aero-risk",
   "generation": 1742,
