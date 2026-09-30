@@ -1,0 +1,75 @@
+{
+ "cardId": "CARD-100336",
+ "holderName": "Noah O'Brien",
+ "product": "Travel Platinum",
+ "balance": 962.82,
+ "limit": 2500,
+ "utilisation": 0.385,
+ "apr": 0.2015,
+ "status": "Active",
+ "spend": [
+  {
+   "category": "Groceries",
+   "amount": 160.77
+  },
+  {
+   "category": "Travel",
+   "amount": 59.02
+  },
+  {
+   "category": "Dining",
+   "amount": 84.5
+  },
+  {
+   "category": "Fuel",
+   "amount": 160.08
+  },
+  {
+   "category": "Online retail",
+   "amount": 61.26
+  },
+  {
+   "category": "Utilities",
+   "amount": 168.2
+  },
+  {
+   "category": "Entertainment",
+   "amount": 71.31
+  }
+ ],
+ "statements": [
+  {
+   "closing": "2026-08-16",
+   "balance": 1016.96,
+   "minimum": 28.88,
+   "paid": 481.41
+  },
+  {
+   "closing": "2026-07-17",
+   "balance": 985.36,
+   "minimum": 28.88,
+   "paid": 481.41
+  },
+  {
+   "closing": "2026-06-17",
+   "balance": 1105.66,
+   "minimum": 28.88,
+   "paid": 28.88
+  },
+  {
+   "closing": "2026-05-18",
+   "balance": 1000.75,
+   "minimum": 28.88,
+   "paid": 962.82
+  }
+ ],
+ "customer": "CUST-100336",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 12.0
+  }
+ }
+}

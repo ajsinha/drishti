@@ -1,0 +1,37 @@
+{
+ "caseId": "COLC-2604",
+ "customerName": "Mateo Walker",
+ "arrears": 870.3,
+ "daysPastDue": 64,
+ "stage": "Mid (60-89)",
+ "strategy": "Self-cure SMS",
+ "status": "Open",
+ "contacts": [
+  {
+   "date": "2026-07-28",
+   "channel": "SMS",
+   "outcome": "Delivered"
+  },
+  {
+   "date": "2026-08-02",
+   "channel": "Call",
+   "outcome": "No answer"
+  },
+  {
+   "date": "2026-08-07",
+   "channel": "Call",
+   "outcome": "Promise to pay"
+  },
+  {
+   "date": "2026-08-12",
+   "channel": "Letter",
+   "outcome": "Sent"
+  }
+ ],
+ "customer": "CUST-100322",
+ "loan": "PLN-100322",
+ "_meta": {
+  "source": "collections",
+  "generation": 1
+ }
+}

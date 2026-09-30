@@ -1,0 +1,130 @@
+{
+ "accountId": "ACCT-100350-SAV",
+ "type": "Savings",
+ "holderName": "James Kowalski",
+ "balance": 4619572.59,
+ "currency": "JPY",
+ "rate": 0.032,
+ "status": "Active",
+ "transactions": [
+  {
+   "date": "2026-09-30",
+   "description": "Salary",
+   "amount": 402438.7,
+   "balance": 4619572.59
+  },
+  {
+   "date": "2026-09-27",
+   "description": "ATM withdrawal",
+   "amount": -27637.04,
+   "balance": 4217133.89
+  },
+  {
+   "date": "2026-09-24",
+   "description": "Salary",
+   "amount": 312365.03,
+   "balance": 4244770.93
+  },
+  {
+   "date": "2026-09-23",
+   "description": "Transfer to savings",
+   "amount": -51662.85,
+   "balance": 3932405.9
+  },
+  {
+   "date": "2026-09-20",
+   "description": "ATM withdrawal",
+   "amount": -58852.2,
+   "balance": 3984068.75
+  },
+  {
+   "date": "2026-09-18",
+   "description": "Salary",
+   "amount": 833607.07,
+   "balance": 4042920.95
+  },
+  {
+   "date": "2026-09-15",
+   "description": "Standing order · rent",
+   "amount": -7131.82,
+   "balance": 3209313.88
+  },
+  {
+   "date": "2026-09-12",
+   "description": "Salary",
+   "amount": 822187.53,
+   "balance": 3216445.7
+  },
+  {
+   "date": "2026-09-09",
+   "description": "ATM withdrawal",
+   "amount": -2878.72,
+   "balance": 2394258.17
+  },
+  {
+   "date": "2026-09-08",
+   "description": "Card payment · grocer",
+   "amount": -3828.65,
+   "balance": 2397136.89
+  }
+ ],
+ "history": [
+  {
+   "month": "2025-10",
+   "balance": 4315905.11
+  },
+  {
+   "month": "2025-11",
+   "balance": 5309015.98
+  },
+  {
+   "month": "2025-12",
+   "balance": 3638836.17
+  },
+  {
+   "month": "2026-01",
+   "balance": 3591947.52
+  },
+  {
+   "month": "2026-02",
+   "balance": 3596014.17
+  },
+  {
+   "month": "2026-03",
+   "balance": 3953786.81
+  },
+  {
+   "month": "2026-04",
+   "balance": 3915959.81
+  },
+  {
+   "month": "2026-05",
+   "balance": 4069523.75
+  },
+  {
+   "month": "2026-06",
+   "balance": 3695858.9
+  },
+  {
+   "month": "2026-07",
+   "balance": 4302304.64
+  },
+  {
+   "month": "2026-08",
+   "balance": 5143151.12
+  },
+  {
+   "month": "2026-09",
+   "balance": 4170030.12
+  }
+ ],
+ "customer": "CUST-100350",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 25.0
+  }
+ }
+}

@@ -1,0 +1,37 @@
+{
+ "caseId": "COLC-2603",
+ "customerName": "Daniel Tanaka",
+ "arrears": 1391.16,
+ "daysPastDue": 64,
+ "stage": "Mid (60-89)",
+ "strategy": "Agent call",
+ "status": "Open",
+ "contacts": [
+  {
+   "date": "2026-07-28",
+   "channel": "SMS",
+   "outcome": "Delivered"
+  },
+  {
+   "date": "2026-08-02",
+   "channel": "Call",
+   "outcome": "No answer"
+  },
+  {
+   "date": "2026-08-07",
+   "channel": "Call",
+   "outcome": "Promise to pay"
+  },
+  {
+   "date": "2026-08-12",
+   "channel": "Letter",
+   "outcome": "Sent"
+  }
+ ],
+ "customer": "CUST-100266",
+ "loan": "PLN-100266",
+ "_meta": {
+  "source": "collections",
+  "generation": 1
+ }
+}

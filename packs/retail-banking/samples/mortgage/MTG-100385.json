@@ -1,0 +1,115 @@
+{
+ "loanId": "MTG-100385",
+ "borrowerName": "Aisha Patel",
+ "balance": 680782.02,
+ "rate": 0.0579,
+ "ltv": 0.454,
+ "remainingYears": 13,
+ "daysPastDue": 0,
+ "originalAmount": 985000.0,
+ "monthlyPayment": 6220.53,
+ "amortisation": [
+  {
+   "year": "2014",
+   "balance": 985000
+  },
+  {
+   "year": "2016",
+   "balance": 947745
+  },
+  {
+   "year": "2018",
+   "balance": 905927
+  },
+  {
+   "year": "2020",
+   "balance": 858988
+  },
+  {
+   "year": "2022",
+   "balance": 806301
+  },
+  {
+   "year": "2024",
+   "balance": 747163
+  },
+  {
+   "year": "2026",
+   "balance": 680782
+  },
+  {
+   "year": "2028",
+   "balance": 606272
+  },
+  {
+   "year": "2030",
+   "balance": 522638
+  },
+  {
+   "year": "2032",
+   "balance": 428763
+  },
+  {
+   "year": "2034",
+   "balance": 323391
+  },
+  {
+   "year": "2036",
+   "balance": 205116
+  },
+  {
+   "year": "2038",
+   "balance": 72357
+  }
+ ],
+ "property": {
+  "type": "Detached house",
+  "city": "Frankfurt",
+  "valuation": 1498000.0,
+  "valuedOn": "2025-07-18",
+  "rateType": "2y fixed"
+ },
+ "payments": [
+  {
+   "due": "2026-09-01",
+   "amount": 6220.53,
+   "paid": "2026-09-02",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-08-02",
+   "amount": 6220.53,
+   "paid": "2026-08-03",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-07-03",
+   "amount": 6220.53,
+   "paid": "2026-07-04",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-06-03",
+   "amount": 6220.53,
+   "paid": "2026-06-04",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-05-04",
+   "amount": 6220.53,
+   "paid": "2026-05-05",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-04-04",
+   "amount": 6220.53,
+   "paid": "2026-04-05",
+   "status": "Paid"
+  }
+ ],
+ "customer": "CUST-100385",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

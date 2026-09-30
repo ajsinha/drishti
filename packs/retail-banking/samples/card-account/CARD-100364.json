@@ -1,0 +1,75 @@
+{
+ "cardId": "CARD-100364",
+ "holderName": "Oluwaseun Evans",
+ "product": "Cashback Mastercard",
+ "balance": 6265.32,
+ "limit": 15000,
+ "utilisation": 0.418,
+ "apr": 0.2045,
+ "status": "Active",
+ "spend": [
+  {
+   "category": "Groceries",
+   "amount": 975.95
+  },
+  {
+   "category": "Travel",
+   "amount": 306.56
+  },
+  {
+   "category": "Dining",
+   "amount": 916.74
+  },
+  {
+   "category": "Fuel",
+   "amount": 553.78
+  },
+  {
+   "category": "Online retail",
+   "amount": 420.41
+  },
+  {
+   "category": "Utilities",
+   "amount": 381.36
+  },
+  {
+   "category": "Entertainment",
+   "amount": 681.03
+  }
+ ],
+ "statements": [
+  {
+   "closing": "2026-08-16",
+   "balance": 4345.72,
+   "minimum": 187.96,
+   "paid": 187.96
+  },
+  {
+   "closing": "2026-07-17",
+   "balance": 6247.7,
+   "minimum": 187.96,
+   "paid": 3132.66
+  },
+  {
+   "closing": "2026-06-17",
+   "balance": 5630.65,
+   "minimum": 187.96,
+   "paid": 3132.66
+  },
+  {
+   "closing": "2026-05-18",
+   "balance": 6729.14,
+   "minimum": 187.96,
+   "paid": 187.96
+  }
+ ],
+ "customer": "CUST-100364",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 12.0
+  }
+ }
+}

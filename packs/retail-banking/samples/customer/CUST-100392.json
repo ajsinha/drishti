@@ -1,0 +1,34 @@
+{
+ "customerId": "CUST-100392",
+ "name": "Tomás Adeyemi",
+ "segment": "Mass market",
+ "totalDeposits": 10149979.83,
+ "totalLending": 0,
+ "kycRisk": "Low",
+ "since": "2010-10-21",
+ "products": [
+  {
+   "product": "Current account",
+   "id": "ACCT-100392-CUR",
+   "balance": 1565463.88
+  },
+  {
+   "product": "Savings",
+   "id": "ACCT-100392-SAV",
+   "balance": 8584515.95
+  }
+ ],
+ "profile": {
+  "city": "Tokyo",
+  "age": 78,
+  "employment": "Self-employed",
+  "channel": "Online",
+  "creditScore": 750,
+  "bookingEntity": "LE-TKY"
+ },
+ "branch": "BRN-TKY-MRN",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

@@ -1,0 +1,115 @@
+{
+ "loanId": "MTG-100245",
+ "borrowerName": "Mei Haddad",
+ "balance": 651900.95,
+ "rate": 0.0555,
+ "ltv": 0.522,
+ "remainingYears": 15,
+ "daysPastDue": 0,
+ "originalAmount": 866000.0,
+ "monthlyPayment": 5343.89,
+ "amortisation": [
+  {
+   "year": "2016",
+   "balance": 866000
+  },
+  {
+   "year": "2018",
+   "balance": 832105
+  },
+  {
+   "year": "2020",
+   "balance": 794240
+  },
+  {
+   "year": "2022",
+   "balance": 751940
+  },
+  {
+   "year": "2024",
+   "balance": 704688
+  },
+  {
+   "year": "2026",
+   "balance": 651901
+  },
+  {
+   "year": "2028",
+   "balance": 592933
+  },
+  {
+   "year": "2030",
+   "balance": 527058
+  },
+  {
+   "year": "2032",
+   "balance": 453470
+  },
+  {
+   "year": "2034",
+   "balance": 371263
+  },
+  {
+   "year": "2036",
+   "balance": 279430
+  },
+  {
+   "year": "2038",
+   "balance": 176842
+  },
+  {
+   "year": "2040",
+   "balance": 62240
+  }
+ ],
+ "property": {
+  "type": "Detached house",
+  "city": "London",
+  "valuation": 1249000.0,
+  "valuedOn": "2025-01-03",
+  "rateType": "5y fixed"
+ },
+ "payments": [
+  {
+   "due": "2026-09-01",
+   "amount": 5343.89,
+   "paid": "2026-09-02",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-08-02",
+   "amount": 5343.89,
+   "paid": "2026-08-03",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-07-03",
+   "amount": 5343.89,
+   "paid": "2026-07-04",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-06-03",
+   "amount": 5343.89,
+   "paid": "2026-06-04",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-05-04",
+   "amount": 5343.89,
+   "paid": "2026-05-05",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-04-04",
+   "amount": 5343.89,
+   "paid": "2026-04-05",
+   "status": "Paid"
+  }
+ ],
+ "customer": "CUST-100245",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

@@ -1,0 +1,884 @@
+[
+ {
+  "kind": "customer",
+  "id": "CUST-100231",
+  "title": "CUST-100231",
+  "subtitle": "Customer · Priya Sharma"
+ },
+ {
+  "kind": "customer",
+  "id": "CUST-100238",
+  "title": "CUST-100238",
+  "subtitle": "Customer · James Kowalski"
+ },
+ {
+  "kind": "customer",
+  "id": "CUST-100245",
+  "title": "CUST-100245",
+  "subtitle": "Customer · Mei Haddad"
+ },
+ {
+  "kind": "customer",
+  "id": "CUST-100252",
+  "title": "CUST-100252",
+  "subtitle": "Customer · Oluwaseun Evans"
+ },
+ {
+  "kind": "customer",
+  "id": "CUST-100259",
+  "title": "CUST-100259",
+  "subtitle": "Customer · Sofia Rossi"
+ },
+ {
+  "kind": "customer",
+  "id": "CUST-100266",
+  "title": "CUST-100266",
+  "subtitle": "Customer · Daniel Tanaka"
+ },
+ {
+  "kind": "customer",
+  "id": "CUST-100273",
+  "title": "CUST-100273",
+  "subtitle": "Customer · Aisha Patel"
+ },
+ {
+  "kind": "customer",
+  "id": "CUST-100280",
+  "title": "CUST-100280",
+  "subtitle": "Customer · Tomás Adeyemi"
+ },
+ {
+  "kind": "customer",
+  "id": "CUST-100287",
+  "title": "CUST-100287",
+  "subtitle": "Customer · Hannah Müller"
+ },
+ {
+  "kind": "customer",
+  "id": "CUST-100294",
+  "title": "CUST-100294",
+  "subtitle": "Customer · Kenji Silva"
+ },
+ {
+  "kind": "customer",
+  "id": "CUST-100301",
+  "title": "CUST-100301",
+  "subtitle": "Customer · Fatima Chen"
+ },
+ {
+  "kind": "customer",
+  "id": "CUST-100308",
+  "title": "CUST-100308",
+  "subtitle": "Customer · Liam García"
+ },
+ {
+  "kind": "customer",
+  "id": "CUST-100315",
+  "title": "CUST-100315",
+  "subtitle": "Customer · Grace Nguyen"
+ },
+ {
+  "kind": "customer",
+  "id": "CUST-100322",
+  "title": "CUST-100322",
+  "subtitle": "Customer · Mateo Walker"
+ },
+ {
+  "kind": "customer",
+  "id": "CUST-100329",
+  "title": "CUST-100329",
+  "subtitle": "Customer · Zara Rahman"
+ },
+ {
+  "kind": "customer",
+  "id": "CUST-100336",
+  "title": "CUST-100336",
+  "subtitle": "Customer · Noah O'Brien"
+ },
+ {
+  "kind": "customer",
+  "id": "CUST-100343",
+  "title": "CUST-100343",
+  "subtitle": "Customer · Priya Sharma"
+ },
+ {
+  "kind": "customer",
+  "id": "CUST-100350",
+  "title": "CUST-100350",
+  "subtitle": "Customer · James Kowalski"
+ },
+ {
+  "kind": "customer",
+  "id": "CUST-100357",
+  "title": "CUST-100357",
+  "subtitle": "Customer · Mei Haddad"
+ },
+ {
+  "kind": "customer",
+  "id": "CUST-100364",
+  "title": "CUST-100364",
+  "subtitle": "Customer · Oluwaseun Evans"
+ },
+ {
+  "kind": "customer",
+  "id": "CUST-100371",
+  "title": "CUST-100371",
+  "subtitle": "Customer · Sofia Rossi"
+ },
+ {
+  "kind": "customer",
+  "id": "CUST-100378",
+  "title": "CUST-100378",
+  "subtitle": "Customer · Daniel Tanaka"
+ },
+ {
+  "kind": "customer",
+  "id": "CUST-100385",
+  "title": "CUST-100385",
+  "subtitle": "Customer · Aisha Patel"
+ },
+ {
+  "kind": "customer",
+  "id": "CUST-100392",
+  "title": "CUST-100392",
+  "subtitle": "Customer · Tomás Adeyemi"
+ },
+ {
+  "kind": "customer",
+  "id": "CUST-100399",
+  "title": "CUST-100399",
+  "subtitle": "Customer · Hannah Müller"
+ },
+ {
+  "kind": "customer",
+  "id": "CUST-100406",
+  "title": "CUST-100406",
+  "subtitle": "Customer · Kenji Silva"
+ },
+ {
+  "kind": "customer",
+  "id": "CUST-100413",
+  "title": "CUST-100413",
+  "subtitle": "Customer · Fatima Chen"
+ },
+ {
+  "kind": "customer",
+  "id": "CUST-100420",
+  "title": "CUST-100420",
+  "subtitle": "Customer · Liam García"
+ },
+ {
+  "kind": "customer",
+  "id": "CUST-100427",
+  "title": "CUST-100427",
+  "subtitle": "Customer · Grace Nguyen"
+ },
+ {
+  "kind": "customer",
+  "id": "CUST-100434",
+  "title": "CUST-100434",
+  "subtitle": "Customer · Mateo Walker"
+ },
+ {
+  "kind": "customer",
+  "id": "CUST-100441",
+  "title": "CUST-100441",
+  "subtitle": "Customer · Zara Rahman"
+ },
+ {
+  "kind": "customer",
+  "id": "CUST-100448",
+  "title": "CUST-100448",
+  "subtitle": "Customer · Noah O'Brien"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100231-CUR",
+  "title": "ACCT-100231-CUR",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100238-CUR",
+  "title": "ACCT-100238-CUR",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100238-SAV",
+  "title": "ACCT-100238-SAV",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100245-CUR",
+  "title": "ACCT-100245-CUR",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100245-SAV",
+  "title": "ACCT-100245-SAV",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100252-CUR",
+  "title": "ACCT-100252-CUR",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100259-CUR",
+  "title": "ACCT-100259-CUR",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100259-SAV",
+  "title": "ACCT-100259-SAV",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100266-CUR",
+  "title": "ACCT-100266-CUR",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100266-SAV",
+  "title": "ACCT-100266-SAV",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100273-CUR",
+  "title": "ACCT-100273-CUR",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100280-CUR",
+  "title": "ACCT-100280-CUR",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100280-SAV",
+  "title": "ACCT-100280-SAV",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100287-CUR",
+  "title": "ACCT-100287-CUR",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100287-SAV",
+  "title": "ACCT-100287-SAV",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100294-CUR",
+  "title": "ACCT-100294-CUR",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100301-CUR",
+  "title": "ACCT-100301-CUR",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100301-SAV",
+  "title": "ACCT-100301-SAV",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100308-CUR",
+  "title": "ACCT-100308-CUR",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100308-SAV",
+  "title": "ACCT-100308-SAV",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100315-CUR",
+  "title": "ACCT-100315-CUR",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100322-CUR",
+  "title": "ACCT-100322-CUR",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100322-SAV",
+  "title": "ACCT-100322-SAV",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100329-CUR",
+  "title": "ACCT-100329-CUR",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100329-SAV",
+  "title": "ACCT-100329-SAV",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100336-CUR",
+  "title": "ACCT-100336-CUR",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100343-CUR",
+  "title": "ACCT-100343-CUR",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100343-SAV",
+  "title": "ACCT-100343-SAV",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100350-CUR",
+  "title": "ACCT-100350-CUR",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100350-SAV",
+  "title": "ACCT-100350-SAV",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100357-CUR",
+  "title": "ACCT-100357-CUR",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100364-CUR",
+  "title": "ACCT-100364-CUR",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100364-SAV",
+  "title": "ACCT-100364-SAV",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100371-CUR",
+  "title": "ACCT-100371-CUR",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100371-SAV",
+  "title": "ACCT-100371-SAV",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100378-CUR",
+  "title": "ACCT-100378-CUR",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100385-CUR",
+  "title": "ACCT-100385-CUR",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100385-SAV",
+  "title": "ACCT-100385-SAV",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100392-CUR",
+  "title": "ACCT-100392-CUR",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100392-SAV",
+  "title": "ACCT-100392-SAV",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100399-CUR",
+  "title": "ACCT-100399-CUR",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100406-CUR",
+  "title": "ACCT-100406-CUR",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100406-SAV",
+  "title": "ACCT-100406-SAV",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100413-CUR",
+  "title": "ACCT-100413-CUR",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100413-SAV",
+  "title": "ACCT-100413-SAV",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100420-CUR",
+  "title": "ACCT-100420-CUR",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100427-CUR",
+  "title": "ACCT-100427-CUR",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100427-SAV",
+  "title": "ACCT-100427-SAV",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100434-CUR",
+  "title": "ACCT-100434-CUR",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100434-SAV",
+  "title": "ACCT-100434-SAV",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100441-CUR",
+  "title": "ACCT-100441-CUR",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100448-CUR",
+  "title": "ACCT-100448-CUR",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "deposit-account",
+  "id": "ACCT-100448-SAV",
+  "title": "ACCT-100448-SAV",
+  "subtitle": "Deposit account"
+ },
+ {
+  "kind": "mortgage",
+  "id": "MTG-100231",
+  "title": "MTG-100231",
+  "subtitle": "Mortgage"
+ },
+ {
+  "kind": "mortgage",
+  "id": "MTG-100245",
+  "title": "MTG-100245",
+  "subtitle": "Mortgage"
+ },
+ {
+  "kind": "mortgage",
+  "id": "MTG-100259",
+  "title": "MTG-100259",
+  "subtitle": "Mortgage"
+ },
+ {
+  "kind": "mortgage",
+  "id": "MTG-100273",
+  "title": "MTG-100273",
+  "subtitle": "Mortgage"
+ },
+ {
+  "kind": "mortgage",
+  "id": "MTG-100287",
+  "title": "MTG-100287",
+  "subtitle": "Mortgage"
+ },
+ {
+  "kind": "mortgage",
+  "id": "MTG-100301",
+  "title": "MTG-100301",
+  "subtitle": "Mortgage"
+ },
+ {
+  "kind": "mortgage",
+  "id": "MTG-100315",
+  "title": "MTG-100315",
+  "subtitle": "Mortgage"
+ },
+ {
+  "kind": "mortgage",
+  "id": "MTG-100329",
+  "title": "MTG-100329",
+  "subtitle": "Mortgage"
+ },
+ {
+  "kind": "mortgage",
+  "id": "MTG-100343",
+  "title": "MTG-100343",
+  "subtitle": "Mortgage"
+ },
+ {
+  "kind": "mortgage",
+  "id": "MTG-100357",
+  "title": "MTG-100357",
+  "subtitle": "Mortgage"
+ },
+ {
+  "kind": "mortgage",
+  "id": "MTG-100371",
+  "title": "MTG-100371",
+  "subtitle": "Mortgage"
+ },
+ {
+  "kind": "mortgage",
+  "id": "MTG-100385",
+  "title": "MTG-100385",
+  "subtitle": "Mortgage"
+ },
+ {
+  "kind": "mortgage",
+  "id": "MTG-100399",
+  "title": "MTG-100399",
+  "subtitle": "Mortgage"
+ },
+ {
+  "kind": "mortgage",
+  "id": "MTG-100413",
+  "title": "MTG-100413",
+  "subtitle": "Mortgage"
+ },
+ {
+  "kind": "mortgage",
+  "id": "MTG-100427",
+  "title": "MTG-100427",
+  "subtitle": "Mortgage"
+ },
+ {
+  "kind": "mortgage",
+  "id": "MTG-100441",
+  "title": "MTG-100441",
+  "subtitle": "Mortgage"
+ },
+ {
+  "kind": "card-account",
+  "id": "CARD-100231",
+  "title": "CARD-100231",
+  "subtitle": "Card account"
+ },
+ {
+  "kind": "card-account",
+  "id": "CARD-100238",
+  "title": "CARD-100238",
+  "subtitle": "Card account"
+ },
+ {
+  "kind": "card-account",
+  "id": "CARD-100252",
+  "title": "CARD-100252",
+  "subtitle": "Card account"
+ },
+ {
+  "kind": "card-account",
+  "id": "CARD-100259",
+  "title": "CARD-100259",
+  "subtitle": "Card account"
+ },
+ {
+  "kind": "card-account",
+  "id": "CARD-100273",
+  "title": "CARD-100273",
+  "subtitle": "Card account"
+ },
+ {
+  "kind": "card-account",
+  "id": "CARD-100280",
+  "title": "CARD-100280",
+  "subtitle": "Card account"
+ },
+ {
+  "kind": "card-account",
+  "id": "CARD-100294",
+  "title": "CARD-100294",
+  "subtitle": "Card account"
+ },
+ {
+  "kind": "card-account",
+  "id": "CARD-100301",
+  "title": "CARD-100301",
+  "subtitle": "Card account"
+ },
+ {
+  "kind": "card-account",
+  "id": "CARD-100315",
+  "title": "CARD-100315",
+  "subtitle": "Card account"
+ },
+ {
+  "kind": "card-account",
+  "id": "CARD-100322",
+  "title": "CARD-100322",
+  "subtitle": "Card account"
+ },
+ {
+  "kind": "card-account",
+  "id": "CARD-100336",
+  "title": "CARD-100336",
+  "subtitle": "Card account"
+ },
+ {
+  "kind": "card-account",
+  "id": "CARD-100343",
+  "title": "CARD-100343",
+  "subtitle": "Card account"
+ },
+ {
+  "kind": "card-account",
+  "id": "CARD-100357",
+  "title": "CARD-100357",
+  "subtitle": "Card account"
+ },
+ {
+  "kind": "card-account",
+  "id": "CARD-100364",
+  "title": "CARD-100364",
+  "subtitle": "Card account"
+ },
+ {
+  "kind": "card-account",
+  "id": "CARD-100378",
+  "title": "CARD-100378",
+  "subtitle": "Card account"
+ },
+ {
+  "kind": "card-account",
+  "id": "CARD-100385",
+  "title": "CARD-100385",
+  "subtitle": "Card account"
+ },
+ {
+  "kind": "card-account",
+  "id": "CARD-100399",
+  "title": "CARD-100399",
+  "subtitle": "Card account"
+ },
+ {
+  "kind": "card-account",
+  "id": "CARD-100406",
+  "title": "CARD-100406",
+  "subtitle": "Card account"
+ },
+ {
+  "kind": "card-account",
+  "id": "CARD-100420",
+  "title": "CARD-100420",
+  "subtitle": "Card account"
+ },
+ {
+  "kind": "card-account",
+  "id": "CARD-100427",
+  "title": "CARD-100427",
+  "subtitle": "Card account"
+ },
+ {
+  "kind": "card-account",
+  "id": "CARD-100441",
+  "title": "CARD-100441",
+  "subtitle": "Card account"
+ },
+ {
+  "kind": "card-account",
+  "id": "CARD-100448",
+  "title": "CARD-100448",
+  "subtitle": "Card account"
+ },
+ {
+  "kind": "personal-loan",
+  "id": "PLN-100238",
+  "title": "PLN-100238",
+  "subtitle": "Personal loan"
+ },
+ {
+  "kind": "personal-loan",
+  "id": "PLN-100266",
+  "title": "PLN-100266",
+  "subtitle": "Personal loan"
+ },
+ {
+  "kind": "personal-loan",
+  "id": "PLN-100294",
+  "title": "PLN-100294",
+  "subtitle": "Personal loan"
+ },
+ {
+  "kind": "personal-loan",
+  "id": "PLN-100322",
+  "title": "PLN-100322",
+  "subtitle": "Personal loan"
+ },
+ {
+  "kind": "personal-loan",
+  "id": "PLN-100350",
+  "title": "PLN-100350",
+  "subtitle": "Personal loan"
+ },
+ {
+  "kind": "personal-loan",
+  "id": "PLN-100378",
+  "title": "PLN-100378",
+  "subtitle": "Personal loan"
+ },
+ {
+  "kind": "personal-loan",
+  "id": "PLN-100406",
+  "title": "PLN-100406",
+  "subtitle": "Personal loan"
+ },
+ {
+  "kind": "personal-loan",
+  "id": "PLN-100434",
+  "title": "PLN-100434",
+  "subtitle": "Personal loan"
+ },
+ {
+  "kind": "branch",
+  "id": "BRN-FRA-MAIN",
+  "title": "BRN-FRA-MAIN",
+  "subtitle": "Branch · Frankfurt Main"
+ },
+ {
+  "kind": "branch",
+  "id": "BRN-LDN-CAMD",
+  "title": "BRN-LDN-CAMD",
+  "subtitle": "Branch · Camden"
+ },
+ {
+  "kind": "branch",
+  "id": "BRN-LDN-CITY",
+  "title": "BRN-LDN-CITY",
+  "subtitle": "Branch · City of London"
+ },
+ {
+  "kind": "branch",
+  "id": "BRN-NY-5AVE",
+  "title": "BRN-NY-5AVE",
+  "subtitle": "Branch · Fifth Avenue"
+ },
+ {
+  "kind": "branch",
+  "id": "BRN-NY-BKLN",
+  "title": "BRN-NY-BKLN",
+  "subtitle": "Branch · Brooklyn Heights"
+ },
+ {
+  "kind": "branch",
+  "id": "BRN-TKY-MRN",
+  "title": "BRN-TKY-MRN",
+  "subtitle": "Branch · Marunouchi"
+ },
+ {
+  "kind": "collections-case",
+  "id": "COLC-2601",
+  "title": "COLC-2601",
+  "subtitle": "Collections case"
+ },
+ {
+  "kind": "collections-case",
+  "id": "COLC-2602",
+  "title": "COLC-2602",
+  "subtitle": "Collections case"
+ },
+ {
+  "kind": "collections-case",
+  "id": "COLC-2603",
+  "title": "COLC-2603",
+  "subtitle": "Collections case"
+ },
+ {
+  "kind": "collections-case",
+  "id": "COLC-2604",
+  "title": "COLC-2604",
+  "subtitle": "Collections case"
+ },
+ {
+  "kind": "collections-case",
+  "id": "COLC-2605",
+  "title": "COLC-2605",
+  "subtitle": "Collections case"
+ },
+ {
+  "kind": "collections-case",
+  "id": "COLC-2606",
+  "title": "COLC-2606",
+  "subtitle": "Collections case"
+ },
+ {
+  "kind": "retail-portfolio",
+  "id": "RPF-UK-MORT",
+  "title": "RPF-UK-MORT",
+  "subtitle": "Retail portfolio (IFRS 9) · UK residential mortgages"
+ },
+ {
+  "kind": "retail-portfolio",
+  "id": "RPF-UK-UPL",
+  "title": "RPF-UK-UPL",
+  "subtitle": "Retail portfolio (IFRS 9) · UK unsecured personal loans"
+ },
+ {
+  "kind": "retail-portfolio",
+  "id": "RPF-US-CARD",
+  "title": "RPF-US-CARD",
+  "subtitle": "Retail portfolio (IFRS 9) · US credit cards"
+ },
+ {
+  "kind": "retail-portfolio",
+  "id": "RPF-US-MORT",
+  "title": "RPF-US-MORT",
+  "subtitle": "Retail portfolio (IFRS 9) · US residential mortgages"
+ }
+]

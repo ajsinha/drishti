@@ -54,7 +54,7 @@ panels:
     fmt: compact
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.scenario, 'climate-scenario')", F8: impact, F9: raw }
+keys: { F7: "link($.climateScenario, 'climate-scenario')", F8: impact, F9: raw }
 ```
 
 ## Header fields
@@ -80,5 +80,5 @@ Reference fields that open other entities (and feed F8 impact).
 
 | Field | Opens |
 |---|---|
-| `scenario` | Scenario (`climate-scenario`) |
+| `climateScenario` | Scenario (`climate-scenario`) |
 | `desk` | Desk (`desk`) |

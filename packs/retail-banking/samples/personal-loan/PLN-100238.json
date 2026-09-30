@@ -1,0 +1,52 @@
+{
+ "loanId": "PLN-100238",
+ "borrowerName": "James Kowalski",
+ "purpose": "Car",
+ "balance": 7127.96,
+ "instalment": 198.84,
+ "rate": 0.1027,
+ "daysPastDue": 0,
+ "schedule": [
+  {
+   "due": "2026-10-06",
+   "principal": 137.83,
+   "interest": 61.0,
+   "balance": 6990.13
+  },
+  {
+   "due": "2026-11-06",
+   "principal": 139.01,
+   "interest": 59.82,
+   "balance": 6851.12
+  },
+  {
+   "due": "2026-12-07",
+   "principal": 140.2,
+   "interest": 58.63,
+   "balance": 6710.92
+  },
+  {
+   "due": "2027-01-07",
+   "principal": 141.4,
+   "interest": 57.43,
+   "balance": 6569.52
+  },
+  {
+   "due": "2027-02-07",
+   "principal": 142.61,
+   "interest": 56.22,
+   "balance": 6426.9
+  },
+  {
+   "due": "2027-03-10",
+   "principal": 143.83,
+   "interest": 55.0,
+   "balance": 6283.07
+  }
+ ],
+ "customer": "CUST-100238",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

@@ -1,0 +1,130 @@
+{
+ "accountId": "ACCT-100280-SAV",
+ "type": "Savings",
+ "holderName": "Tomás Adeyemi",
+ "balance": 45848.59,
+ "currency": "USD",
+ "rate": 0.032,
+ "status": "Active",
+ "transactions": [
+  {
+   "date": "2026-09-30",
+   "description": "Salary",
+   "amount": 3901.93,
+   "balance": 45848.59
+  },
+  {
+   "date": "2026-09-27",
+   "description": "Salary",
+   "amount": 3159.65,
+   "balance": 41946.66
+  },
+  {
+   "date": "2026-09-25",
+   "description": "Salary",
+   "amount": 3204.35,
+   "balance": 38787.01
+  },
+  {
+   "date": "2026-09-22",
+   "description": "Transfer to savings",
+   "amount": -278.58,
+   "balance": 35582.66
+  },
+  {
+   "date": "2026-09-20",
+   "description": "Transfer to savings",
+   "amount": -372.37,
+   "balance": 35861.24
+  },
+  {
+   "date": "2026-09-18",
+   "description": "Salary",
+   "amount": 4294.48,
+   "balance": 36233.61
+  },
+  {
+   "date": "2026-09-17",
+   "description": "Standing order · rent",
+   "amount": -69.84,
+   "balance": 31939.13
+  },
+  {
+   "date": "2026-09-15",
+   "description": "Standing order · rent",
+   "amount": -275.99,
+   "balance": 32008.97
+  },
+  {
+   "date": "2026-09-13",
+   "description": "Direct debit · utilities",
+   "amount": -395.6,
+   "balance": 32284.96
+  },
+  {
+   "date": "2026-09-10",
+   "description": "Card payment · online retail",
+   "amount": -26.22,
+   "balance": 32680.56
+  }
+ ],
+ "history": [
+  {
+   "month": "2025-10",
+   "balance": 32132.86
+  },
+  {
+   "month": "2025-11",
+   "balance": 34906.69
+  },
+  {
+   "month": "2025-12",
+   "balance": 42213.14
+  },
+  {
+   "month": "2026-01",
+   "balance": 48611.57
+  },
+  {
+   "month": "2026-02",
+   "balance": 45633.74
+  },
+  {
+   "month": "2026-03",
+   "balance": 40061.91
+  },
+  {
+   "month": "2026-04",
+   "balance": 50969.59
+  },
+  {
+   "month": "2026-05",
+   "balance": 37946.02
+  },
+  {
+   "month": "2026-06",
+   "balance": 39121.3
+  },
+  {
+   "month": "2026-07",
+   "balance": 37931.35
+  },
+  {
+   "month": "2026-08",
+   "balance": 49825.97
+  },
+  {
+   "month": "2026-09",
+   "balance": 38941.54
+  }
+ ],
+ "customer": "CUST-100280",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 25.0
+  }
+ }
+}

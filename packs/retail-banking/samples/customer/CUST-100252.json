@@ -1,0 +1,34 @@
+{
+ "customerId": "CUST-100252",
+ "name": "Oluwaseun Evans",
+ "segment": "Mass market",
+ "totalDeposits": 6798.25,
+ "totalLending": 5839.76,
+ "kycRisk": "Low",
+ "since": "2017-05-02",
+ "products": [
+  {
+   "product": "Current account",
+   "id": "ACCT-100252-CUR",
+   "balance": 6798.25
+  },
+  {
+   "product": "Credit card",
+   "id": "CARD-100252",
+   "balance": -5839.76
+  }
+ ],
+ "profile": {
+  "city": "London",
+  "age": 61,
+  "employment": "Student",
+  "channel": "Mobile",
+  "creditScore": 566,
+  "bookingEntity": "LE-LDN"
+ },
+ "branch": "BRN-LDN-CAMD",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

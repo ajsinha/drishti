@@ -1,0 +1,39 @@
+{
+ "customerId": "CUST-100441",
+ "name": "Zara Rahman",
+ "segment": "Private",
+ "totalDeposits": 9588.63,
+ "totalLending": 551186.97,
+ "kycRisk": "High",
+ "since": "2013-11-01",
+ "products": [
+  {
+   "product": "Current account",
+   "id": "ACCT-100441-CUR",
+   "balance": 9588.63
+  },
+  {
+   "product": "Mortgage",
+   "id": "MTG-100441",
+   "balance": -549678.04
+  },
+  {
+   "product": "Credit card",
+   "id": "CARD-100441",
+   "balance": -1508.93
+  }
+ ],
+ "profile": {
+  "city": "New York",
+  "age": 69,
+  "employment": "Employed",
+  "channel": "Mobile",
+  "creditScore": 699,
+  "bookingEntity": "LE-NY"
+ },
+ "branch": "BRN-NY-5AVE",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

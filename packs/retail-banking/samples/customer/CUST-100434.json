@@ -1,0 +1,39 @@
+{
+ "customerId": "CUST-100434",
+ "name": "Mateo Walker",
+ "segment": "Mass affluent",
+ "totalDeposits": 3189237.18,
+ "totalLending": 22169.96,
+ "kycRisk": "Medium",
+ "since": "2019-12-19",
+ "products": [
+  {
+   "product": "Current account",
+   "id": "ACCT-100434-CUR",
+   "balance": 1738777.18
+  },
+  {
+   "product": "Savings",
+   "id": "ACCT-100434-SAV",
+   "balance": 1450460.0
+  },
+  {
+   "product": "Personal loan",
+   "id": "PLN-100434",
+   "balance": -22169.96
+  }
+ ],
+ "profile": {
+  "city": "Tokyo",
+  "age": 44,
+  "employment": "Self-employed",
+  "channel": "Branch",
+  "creditScore": 795,
+  "bookingEntity": "LE-TKY"
+ },
+ "branch": "BRN-TKY-MRN",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

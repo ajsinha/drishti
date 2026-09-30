@@ -1,0 +1,75 @@
+{
+ "cardId": "CARD-100420",
+ "holderName": "Liam García",
+ "product": "Travel Platinum",
+ "balance": 14518.85,
+ "limit": 25000,
+ "utilisation": 0.581,
+ "apr": 0.1905,
+ "status": "Active",
+ "spend": [
+  {
+   "category": "Groceries",
+   "amount": 1403.17
+  },
+  {
+   "category": "Travel",
+   "amount": 1531.51
+  },
+  {
+   "category": "Dining",
+   "amount": 307.49
+  },
+  {
+   "category": "Fuel",
+   "amount": 98.92
+  },
+  {
+   "category": "Online retail",
+   "amount": 1126.04
+  },
+  {
+   "category": "Utilities",
+   "amount": 385.03
+  },
+  {
+   "category": "Entertainment",
+   "amount": 1492.49
+  }
+ ],
+ "statements": [
+  {
+   "closing": "2026-08-16",
+   "balance": 14662.73,
+   "minimum": 435.57,
+   "paid": 14518.85
+  },
+  {
+   "closing": "2026-07-17",
+   "balance": 11550.5,
+   "minimum": 435.57,
+   "paid": 435.57
+  },
+  {
+   "closing": "2026-06-17",
+   "balance": 11037.35,
+   "minimum": 435.57,
+   "paid": 7259.43
+  },
+  {
+   "closing": "2026-05-18",
+   "balance": 15169.73,
+   "minimum": 435.57,
+   "paid": 7259.43
+  }
+ ],
+ "customer": "CUST-100420",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 12.0
+  }
+ }
+}

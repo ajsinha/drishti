@@ -72,7 +72,7 @@ KINDS = [
           ("Loss (2050)", "$.loss2050", "signed0", "sign", False), ("Share of capital", "$.capitalShare", "pct2", None, False)],
          [P("hbar", "bySector", "Loss by sector (2030)", "$.bySector", label="sector", value="loss", fmt="signed0", tone="sign", key="F2"),
           P("line", "horizon", "Loss by horizon", "$.byHorizon", x="year", y="loss", fmt="compact", area="right")],
-         links={"scenario": ("climate-scenario", "Scenario"), "desk": ("desk", "Desk")}),
+         links={"climateScenario": ("climate-scenario", "Scenario"), "desk": ("desk", "Desk")}),
     Kind("physical-asset", "PHY", "PHY-", "Physical-risk asset", G, "A counterparty's physical asset and its exposure to floods, heat, storms and wildfire.", "assetId",
          [("Asset", "$.name", None, None, False), ("Owner", "$.counterpartyName", None, None, False), ("Country", "$.country", None, None, False),
           ("Value", "$.value", "compact", None, False), ("Worst hazard", "$.worstHazard", None, None, True), ("Insured", "$.insured", "pct0", None, False)],
@@ -153,7 +153,7 @@ def build(bank: dict) -> dict[str, dict[str, dict]]:
             docs["climate-stress"][cid] = {
                 "resultId": cid, "scenarioName": name, "deskName": desk["name"], "loss2030": l30, "loss2050": l50, "capitalShare": round(-l30 / 4e9, 5),
                 "bySector": by_sector, "byHorizon": [{"year": "2030", "loss": -l30}, {"year": "2040", "loss": -round((l30 + l50) / 2)}, {"year": "2050", "loss": -l50}],
-                "scenario": sid, "desk": desk["deskId"], "_meta": {"source": "climate-stress", "generation": 1}}
+                "climateScenario": sid, "desk": desk["deskId"], "_meta": {"source": "climate-stress", "generation": 1}}
     places = [("Rotterdam port terminal", "NL", 51.95, 4.14), ("Houston refinery", "US", 29.72, -95.2), ("Mumbai logistics hub", "IN", 19.0, 72.85),
               ("Queensland farm estate", "AU", -27.5, 153.0), ("Piraeus shipyard", "GR", 37.94, 23.64), ("Phoenix data centre", "US", 33.45, -112.07),
               ("São Paulo processing plant", "BR", -23.55, -46.63), ("Osaka assembly plant", "JP", 34.69, 135.5)]

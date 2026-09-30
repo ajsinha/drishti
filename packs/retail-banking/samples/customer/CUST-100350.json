@@ -1,0 +1,39 @@
+{
+ "customerId": "CUST-100350",
+ "name": "James Kowalski",
+ "segment": "Mass affluent",
+ "totalDeposits": 5188450.32,
+ "totalLending": 3815.86,
+ "kycRisk": "High",
+ "since": "2007-08-23",
+ "products": [
+  {
+   "product": "Current account",
+   "id": "ACCT-100350-CUR",
+   "balance": 568877.73
+  },
+  {
+   "product": "Savings",
+   "id": "ACCT-100350-SAV",
+   "balance": 4619572.59
+  },
+  {
+   "product": "Personal loan",
+   "id": "PLN-100350",
+   "balance": -3815.86
+  }
+ ],
+ "profile": {
+  "city": "Tokyo",
+  "age": 27,
+  "employment": "Self-employed",
+  "channel": "Branch",
+  "creditScore": 641,
+  "bookingEntity": "LE-TKY"
+ },
+ "branch": "BRN-TKY-MRN",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

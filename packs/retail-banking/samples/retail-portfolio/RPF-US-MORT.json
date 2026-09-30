@@ -1,0 +1,110 @@
+{
+ "portfolioId": "RPF-US-MORT",
+ "name": "US residential mortgages",
+ "exposure": 43239100000.0,
+ "ecl": 292068000.0,
+ "coverage": 0.0068,
+ "dpd30": 0.0048,
+ "stages": [
+  {
+   "stage": "Stage 1",
+   "exposure": 39089500000.0,
+   "pd": 0.006,
+   "lgd": 0.18,
+   "ecl": 42217000.0
+  },
+  {
+   "stage": "Stage 2",
+   "exposure": 3226100000.0,
+   "pd": 0.036,
+   "lgd": 0.18,
+   "ecl": 83621000.0
+  },
+  {
+   "stage": "Stage 3",
+   "exposure": 923500000.0,
+   "pd": 1.0,
+   "lgd": 0.18,
+   "ecl": 166230000.0
+  }
+ ],
+ "delinquency": [
+  {
+   "month": "2025-04",
+   "rate": 0.0068
+  },
+  {
+   "month": "2025-05",
+   "rate": 0.0044
+  },
+  {
+   "month": "2025-06",
+   "rate": 0.0054
+  },
+  {
+   "month": "2025-07",
+   "rate": 0.0045
+  },
+  {
+   "month": "2025-08",
+   "rate": 0.0047
+  },
+  {
+   "month": "2025-09",
+   "rate": 0.0054
+  },
+  {
+   "month": "2025-10",
+   "rate": 0.0061
+  },
+  {
+   "month": "2025-11",
+   "rate": 0.0045
+  },
+  {
+   "month": "2025-12",
+   "rate": 0.0043
+  },
+  {
+   "month": "2026-01",
+   "rate": 0.0049
+  },
+  {
+   "month": "2026-02",
+   "rate": 0.0064
+  },
+  {
+   "month": "2026-03",
+   "rate": 0.0044
+  },
+  {
+   "month": "2026-04",
+   "rate": 0.0045
+  },
+  {
+   "month": "2026-05",
+   "rate": 0.0055
+  },
+  {
+   "month": "2026-06",
+   "rate": 0.0047
+  },
+  {
+   "month": "2026-07",
+   "rate": 0.0061
+  },
+  {
+   "month": "2026-08",
+   "rate": 0.0067
+  },
+  {
+   "month": "2026-09",
+   "rate": 0.0048
+  }
+ ],
+ "legalEntity": "LE-NY",
+ "_meta": {
+  "source": "impairment-engine",
+  "generation": 1
+ }
+}

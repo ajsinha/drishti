@@ -1,0 +1,115 @@
+{
+ "loanId": "MTG-100273",
+ "borrowerName": "Aisha Patel",
+ "balance": 632601.97,
+ "rate": 0.0348,
+ "ltv": 0.538,
+ "remainingYears": 21,
+ "daysPastDue": 0,
+ "originalAmount": 709000.0,
+ "monthlyPayment": 3541.82,
+ "amortisation": [
+  {
+   "year": "2022",
+   "balance": 709000
+  },
+  {
+   "year": "2024",
+   "balance": 672128
+  },
+  {
+   "year": "2026",
+   "balance": 632602
+  },
+  {
+   "year": "2028",
+   "balance": 590231
+  },
+  {
+   "year": "2030",
+   "balance": 544811
+  },
+  {
+   "year": "2032",
+   "balance": 496122
+  },
+  {
+   "year": "2034",
+   "balance": 443929
+  },
+  {
+   "year": "2036",
+   "balance": 387979
+  },
+  {
+   "year": "2038",
+   "balance": 328003
+  },
+  {
+   "year": "2040",
+   "balance": 263710
+  },
+  {
+   "year": "2042",
+   "balance": 194790
+  },
+  {
+   "year": "2044",
+   "balance": 120909
+  },
+  {
+   "year": "2046",
+   "balance": 41711
+  }
+ ],
+ "property": {
+  "type": "Detached house",
+  "city": "New York",
+  "valuation": 1176000.0,
+  "valuedOn": "2026-03-12",
+  "rateType": "2y fixed"
+ },
+ "payments": [
+  {
+   "due": "2026-09-01",
+   "amount": 3541.82,
+   "paid": "2026-09-02",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-08-02",
+   "amount": 3541.82,
+   "paid": "2026-08-03",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-07-03",
+   "amount": 3541.82,
+   "paid": "2026-07-04",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-06-03",
+   "amount": 3541.82,
+   "paid": "2026-06-04",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-05-04",
+   "amount": 3541.82,
+   "paid": "2026-05-05",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-04-04",
+   "amount": 3541.82,
+   "paid": "2026-04-05",
+   "status": "Paid"
+  }
+ ],
+ "customer": "CUST-100273",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

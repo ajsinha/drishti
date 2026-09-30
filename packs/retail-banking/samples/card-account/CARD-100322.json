@@ -1,0 +1,75 @@
+{
+ "cardId": "CARD-100322",
+ "holderName": "Mateo Walker",
+ "product": "Rewards Visa",
+ "balance": 10856.49,
+ "limit": 25000,
+ "utilisation": 0.434,
+ "apr": 0.1898,
+ "status": "Active",
+ "spend": [
+  {
+   "category": "Groceries",
+   "amount": 266.19
+  },
+  {
+   "category": "Travel",
+   "amount": 660.16
+  },
+  {
+   "category": "Dining",
+   "amount": 1323.86
+  },
+  {
+   "category": "Fuel",
+   "amount": 1120.11
+  },
+  {
+   "category": "Online retail",
+   "amount": 435.82
+  },
+  {
+   "category": "Utilities",
+   "amount": 1559.01
+  },
+  {
+   "category": "Entertainment",
+   "amount": 517.61
+  }
+ ],
+ "statements": [
+  {
+   "closing": "2026-08-16",
+   "balance": 12689.47,
+   "minimum": 325.69,
+   "paid": 325.69
+  },
+  {
+   "closing": "2026-07-17",
+   "balance": 6548.53,
+   "minimum": 325.69,
+   "paid": 325.69
+  },
+  {
+   "closing": "2026-06-17",
+   "balance": 10028.81,
+   "minimum": 325.69,
+   "paid": 10856.49
+  },
+  {
+   "closing": "2026-05-18",
+   "balance": 7617.51,
+   "minimum": 325.69,
+   "paid": 10856.49
+  }
+ ],
+ "customer": "CUST-100322",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 12.0
+  }
+ }
+}

@@ -1,0 +1,39 @@
+{
+ "customerId": "CUST-100266",
+ "name": "Daniel Tanaka",
+ "segment": "Mass affluent",
+ "totalDeposits": 9634321.4,
+ "totalLending": 9984.13,
+ "kycRisk": "High",
+ "since": "2003-11-24",
+ "products": [
+  {
+   "product": "Current account",
+   "id": "ACCT-100266-CUR",
+   "balance": 1892452.97
+  },
+  {
+   "product": "Savings",
+   "id": "ACCT-100266-SAV",
+   "balance": 7741868.43
+  },
+  {
+   "product": "Personal loan",
+   "id": "PLN-100266",
+   "balance": -9984.13
+  }
+ ],
+ "profile": {
+  "city": "Tokyo",
+  "age": 36,
+  "employment": "Student",
+  "channel": "Branch",
+  "creditScore": 655,
+  "bookingEntity": "LE-TKY"
+ },
+ "branch": "BRN-TKY-MRN",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

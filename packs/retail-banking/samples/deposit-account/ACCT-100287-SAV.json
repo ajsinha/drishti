@@ -1,0 +1,130 @@
+{
+ "accountId": "ACCT-100287-SAV",
+ "type": "Savings",
+ "holderName": "Hannah Müller",
+ "balance": 25894.7,
+ "currency": "GBP",
+ "rate": 0.032,
+ "status": "Active",
+ "transactions": [
+  {
+   "date": "2026-09-30",
+   "description": "Card payment · online retail",
+   "amount": -375.58,
+   "balance": 25894.7
+  },
+  {
+   "date": "2026-09-28",
+   "description": "Direct debit · utilities",
+   "amount": -37.96,
+   "balance": 26270.28
+  },
+  {
+   "date": "2026-09-25",
+   "description": "Salary",
+   "amount": 5498.64,
+   "balance": 26308.24
+  },
+  {
+   "date": "2026-09-24",
+   "description": "ATM withdrawal",
+   "amount": -260.99,
+   "balance": 20809.6
+  },
+  {
+   "date": "2026-09-23",
+   "description": "Transfer to savings",
+   "amount": -121.47,
+   "balance": 21070.59
+  },
+  {
+   "date": "2026-09-22",
+   "description": "Card payment · online retail",
+   "amount": -141.06,
+   "balance": 21192.06
+  },
+  {
+   "date": "2026-09-19",
+   "description": "Direct debit · utilities",
+   "amount": -196.75,
+   "balance": 21333.12
+  },
+  {
+   "date": "2026-09-17",
+   "description": "Salary",
+   "amount": 6300.07,
+   "balance": 21529.87
+  },
+  {
+   "date": "2026-09-14",
+   "description": "ATM withdrawal",
+   "amount": -380.78,
+   "balance": 15229.8
+  },
+  {
+   "date": "2026-09-11",
+   "description": "Salary",
+   "amount": 3034.48,
+   "balance": 15610.58
+  }
+ ],
+ "history": [
+  {
+   "month": "2025-10",
+   "balance": 19357.95
+  },
+  {
+   "month": "2025-11",
+   "balance": 21992.4
+  },
+  {
+   "month": "2025-12",
+   "balance": 28007.17
+  },
+  {
+   "month": "2026-01",
+   "balance": 18319.24
+  },
+  {
+   "month": "2026-02",
+   "balance": 22394.09
+  },
+  {
+   "month": "2026-03",
+   "balance": 26372.11
+  },
+  {
+   "month": "2026-04",
+   "balance": 22759.34
+  },
+  {
+   "month": "2026-05",
+   "balance": 19205.58
+  },
+  {
+   "month": "2026-06",
+   "balance": 22403.3
+  },
+  {
+   "month": "2026-07",
+   "balance": 26288.89
+  },
+  {
+   "month": "2026-08",
+   "balance": 26929.45
+  },
+  {
+   "month": "2026-09",
+   "balance": 23039.87
+  }
+ ],
+ "customer": "CUST-100287",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 25.0
+  }
+ }
+}

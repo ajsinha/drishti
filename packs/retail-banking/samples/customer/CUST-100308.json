@@ -1,0 +1,34 @@
+{
+ "customerId": "CUST-100308",
+ "name": "Liam García",
+ "segment": "Mass market",
+ "totalDeposits": 8316852.98,
+ "totalLending": 0,
+ "kycRisk": "High",
+ "since": "1998-05-23",
+ "products": [
+  {
+   "product": "Current account",
+   "id": "ACCT-100308-CUR",
+   "balance": 2290168.5
+  },
+  {
+   "product": "Savings",
+   "id": "ACCT-100308-SAV",
+   "balance": 6026684.48
+  }
+ ],
+ "profile": {
+  "city": "Tokyo",
+  "age": 42,
+  "employment": "Student",
+  "channel": "Branch",
+  "creditScore": 762,
+  "bookingEntity": "LE-TKY"
+ },
+ "branch": "BRN-TKY-MRN",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

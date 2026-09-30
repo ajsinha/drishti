@@ -1,0 +1,75 @@
+{
+ "cardId": "CARD-100385",
+ "holderName": "Aisha Patel",
+ "product": "Rewards Visa",
+ "balance": 1943.2,
+ "limit": 2500,
+ "utilisation": 0.777,
+ "apr": 0.182,
+ "status": "Delinquent",
+ "spend": [
+  {
+   "category": "Groceries",
+   "amount": 139.8
+  },
+  {
+   "category": "Travel",
+   "amount": 45.36
+  },
+  {
+   "category": "Dining",
+   "amount": 55.17
+  },
+  {
+   "category": "Fuel",
+   "amount": 156.7
+  },
+  {
+   "category": "Online retail",
+   "amount": 44.1
+  },
+  {
+   "category": "Utilities",
+   "amount": 178.26
+  },
+  {
+   "category": "Entertainment",
+   "amount": 172.2
+  }
+ ],
+ "statements": [
+  {
+   "closing": "2026-08-16",
+   "balance": 1293.53,
+   "minimum": 58.3,
+   "paid": 1943.2
+  },
+  {
+   "closing": "2026-07-17",
+   "balance": 2309.19,
+   "minimum": 58.3,
+   "paid": 58.3
+  },
+  {
+   "closing": "2026-06-17",
+   "balance": 2261.66,
+   "minimum": 58.3,
+   "paid": 971.6
+  },
+  {
+   "closing": "2026-05-18",
+   "balance": 2077.63,
+   "minimum": 58.3,
+   "paid": 971.6
+  }
+ ],
+ "customer": "CUST-100385",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 12.0
+  }
+ }
+}

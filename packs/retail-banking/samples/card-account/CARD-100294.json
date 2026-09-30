@@ -1,0 +1,75 @@
+{
+ "cardId": "CARD-100294",
+ "holderName": "Kenji Silva",
+ "product": "Travel Platinum",
+ "balance": 1995.37,
+ "limit": 2500,
+ "utilisation": 0.798,
+ "apr": 0.2181,
+ "status": "Active",
+ "spend": [
+  {
+   "category": "Groceries",
+   "amount": 73.52
+  },
+  {
+   "category": "Travel",
+   "amount": 146.15
+  },
+  {
+   "category": "Dining",
+   "amount": 152.97
+  },
+  {
+   "category": "Fuel",
+   "amount": 86.15
+  },
+  {
+   "category": "Online retail",
+   "amount": 132.78
+  },
+  {
+   "category": "Utilities",
+   "amount": 171.11
+  },
+  {
+   "category": "Entertainment",
+   "amount": 172.53
+  }
+ ],
+ "statements": [
+  {
+   "closing": "2026-08-16",
+   "balance": 1593.52,
+   "minimum": 59.86,
+   "paid": 1995.37
+  },
+  {
+   "closing": "2026-07-17",
+   "balance": 2095.23,
+   "minimum": 59.86,
+   "paid": 997.68
+  },
+  {
+   "closing": "2026-06-17",
+   "balance": 1318.14,
+   "minimum": 59.86,
+   "paid": 1995.37
+  },
+  {
+   "closing": "2026-05-18",
+   "balance": 2117.36,
+   "minimum": 59.86,
+   "paid": 59.86
+  }
+ ],
+ "customer": "CUST-100294",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 12.0
+  }
+ }
+}

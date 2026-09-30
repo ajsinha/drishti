@@ -1,0 +1,44 @@
+{
+ "customerId": "CUST-100301",
+ "name": "Fatima Chen",
+ "segment": "Private",
+ "totalDeposits": 391734.76,
+ "totalLending": 656438.78,
+ "kycRisk": "Medium",
+ "since": "2017-03-01",
+ "products": [
+  {
+   "product": "Current account",
+   "id": "ACCT-100301-CUR",
+   "balance": 9249.88
+  },
+  {
+   "product": "Savings",
+   "id": "ACCT-100301-SAV",
+   "balance": 382484.88
+  },
+  {
+   "product": "Mortgage",
+   "id": "MTG-100301",
+   "balance": -645671.57
+  },
+  {
+   "product": "Credit card",
+   "id": "CARD-100301",
+   "balance": -10767.21
+  }
+ ],
+ "profile": {
+  "city": "Frankfurt",
+  "age": 73,
+  "employment": "Student",
+  "channel": "Mobile",
+  "creditScore": 624,
+  "bookingEntity": "LE-FRA"
+ },
+ "branch": "BRN-FRA-MAIN",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

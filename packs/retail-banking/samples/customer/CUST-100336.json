@@ -1,0 +1,34 @@
+{
+ "customerId": "CUST-100336",
+ "name": "Noah O'Brien",
+ "segment": "Mass market",
+ "totalDeposits": 7795.7,
+ "totalLending": 962.82,
+ "kycRisk": "High",
+ "since": "2008-06-04",
+ "products": [
+  {
+   "product": "Current account",
+   "id": "ACCT-100336-CUR",
+   "balance": 7795.7
+  },
+  {
+   "product": "Credit card",
+   "id": "CARD-100336",
+   "balance": -962.82
+  }
+ ],
+ "profile": {
+  "city": "London",
+  "age": 27,
+  "employment": "Self-employed",
+  "channel": "Mobile",
+  "creditScore": 607,
+  "bookingEntity": "LE-LDN"
+ },
+ "branch": "BRN-LDN-CAMD",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

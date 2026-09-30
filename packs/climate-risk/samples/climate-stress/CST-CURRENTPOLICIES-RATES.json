@@ -41,7 +41,7 @@
    "loss": 18083589
   }
  ],
- "scenario": "NGFS-CURRENTPOLICIES",
+ "climateScenario": "NGFS-CURRENTPOLICIES",
  "desk": "DESK-RATES",
  "_meta": {
   "source": "climate-stress",

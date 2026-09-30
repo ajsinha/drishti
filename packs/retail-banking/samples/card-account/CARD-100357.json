@@ -1,0 +1,75 @@
+{
+ "cardId": "CARD-100357",
+ "holderName": "Mei Haddad",
+ "product": "Cashback Mastercard",
+ "balance": 13418.31,
+ "limit": 25000,
+ "utilisation": 0.537,
+ "apr": 0.2422,
+ "status": "Active",
+ "spend": [
+  {
+   "category": "Groceries",
+   "amount": 745.6
+  },
+  {
+   "category": "Travel",
+   "amount": 431.11
+  },
+  {
+   "category": "Dining",
+   "amount": 156.7
+  },
+  {
+   "category": "Fuel",
+   "amount": 1386.39
+  },
+  {
+   "category": "Online retail",
+   "amount": 1231.88
+  },
+  {
+   "category": "Utilities",
+   "amount": 1593.67
+  },
+  {
+   "category": "Entertainment",
+   "amount": 482.38
+  }
+ ],
+ "statements": [
+  {
+   "closing": "2026-08-16",
+   "balance": 11343.23,
+   "minimum": 402.55,
+   "paid": 13418.31
+  },
+  {
+   "closing": "2026-07-17",
+   "balance": 9923.13,
+   "minimum": 402.55,
+   "paid": 13418.31
+  },
+  {
+   "closing": "2026-06-17",
+   "balance": 11106.36,
+   "minimum": 402.55,
+   "paid": 6709.15
+  },
+  {
+   "closing": "2026-05-18",
+   "balance": 10982.44,
+   "minimum": 402.55,
+   "paid": 13418.31
+  }
+ ],
+ "customer": "CUST-100357",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 12.0
+  }
+ }
+}

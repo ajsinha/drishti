@@ -1,0 +1,130 @@
+{
+ "accountId": "ACCT-100413-SAV",
+ "type": "Savings",
+ "holderName": "Fatima Chen",
+ "balance": 407168.88,
+ "currency": "GBP",
+ "rate": 0.032,
+ "status": "Dormant",
+ "transactions": [
+  {
+   "date": "2026-09-30",
+   "description": "Direct debit · utilities",
+   "amount": -89.57,
+   "balance": 407168.88
+  },
+  {
+   "date": "2026-09-27",
+   "description": "Direct debit · utilities",
+   "amount": -230.41,
+   "balance": 407258.45
+  },
+  {
+   "date": "2026-09-24",
+   "description": "Standing order · rent",
+   "amount": -248.99,
+   "balance": 407488.86
+  },
+  {
+   "date": "2026-09-21",
+   "description": "Card payment · online retail",
+   "amount": -193.2,
+   "balance": 407737.85
+  },
+  {
+   "date": "2026-09-18",
+   "description": "Standing order · rent",
+   "amount": -53.95,
+   "balance": 407931.05
+  },
+  {
+   "date": "2026-09-17",
+   "description": "Card payment · grocer",
+   "amount": -130.99,
+   "balance": 407985.0
+  },
+  {
+   "date": "2026-09-14",
+   "description": "Salary",
+   "amount": 1501.06,
+   "balance": 408115.99
+  },
+  {
+   "date": "2026-09-13",
+   "description": "Direct debit · utilities",
+   "amount": -226.55,
+   "balance": 406614.93
+  },
+  {
+   "date": "2026-09-12",
+   "description": "Standing order · rent",
+   "amount": -221.71,
+   "balance": 406841.48
+  },
+  {
+   "date": "2026-09-09",
+   "description": "Standing order · rent",
+   "amount": -298.06,
+   "balance": 407063.19
+  }
+ ],
+ "history": [
+  {
+   "month": "2025-10",
+   "balance": 288825.16
+  },
+  {
+   "month": "2025-11",
+   "balance": 286968.54
+  },
+  {
+   "month": "2025-12",
+   "balance": 289271.53
+  },
+  {
+   "month": "2026-01",
+   "balance": 354551.85
+  },
+  {
+   "month": "2026-02",
+   "balance": 376555.37
+  },
+  {
+   "month": "2026-03",
+   "balance": 365898.0
+  },
+  {
+   "month": "2026-04",
+   "balance": 422197.59
+  },
+  {
+   "month": "2026-05",
+   "balance": 411874.16
+  },
+  {
+   "month": "2026-06",
+   "balance": 290135.18
+  },
+  {
+   "month": "2026-07",
+   "balance": 424496.31
+  },
+  {
+   "month": "2026-08",
+   "balance": 337859.45
+  },
+  {
+   "month": "2026-09",
+   "balance": 298600.8
+  }
+ ],
+ "customer": "CUST-100413",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 25.0
+  }
+ }
+}

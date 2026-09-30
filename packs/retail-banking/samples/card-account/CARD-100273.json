@@ -1,0 +1,75 @@
+{
+ "cardId": "CARD-100273",
+ "holderName": "Aisha Patel",
+ "product": "Travel Platinum",
+ "balance": 4799.49,
+ "limit": 8000,
+ "utilisation": 0.6,
+ "apr": 0.2573,
+ "status": "Active",
+ "spend": [
+  {
+   "category": "Groceries",
+   "amount": 598.04
+  },
+  {
+   "category": "Travel",
+   "amount": 336.27
+  },
+  {
+   "category": "Dining",
+   "amount": 574.53
+  },
+  {
+   "category": "Fuel",
+   "amount": 236.31
+  },
+  {
+   "category": "Online retail",
+   "amount": 258.81
+  },
+  {
+   "category": "Utilities",
+   "amount": 525.12
+  },
+  {
+   "category": "Entertainment",
+   "amount": 183.68
+  }
+ ],
+ "statements": [
+  {
+   "closing": "2026-08-16",
+   "balance": 5098.64,
+   "minimum": 143.98,
+   "paid": 4799.49
+  },
+  {
+   "closing": "2026-07-17",
+   "balance": 3286.78,
+   "minimum": 143.98,
+   "paid": 4799.49
+  },
+  {
+   "closing": "2026-06-17",
+   "balance": 4249.42,
+   "minimum": 143.98,
+   "paid": 143.98
+  },
+  {
+   "closing": "2026-05-18",
+   "balance": 3873.31,
+   "minimum": 143.98,
+   "paid": 2399.74
+  }
+ ],
+ "customer": "CUST-100273",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 12.0
+  }
+ }
+}

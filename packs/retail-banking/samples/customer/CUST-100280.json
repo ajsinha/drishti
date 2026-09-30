@@ -1,0 +1,39 @@
+{
+ "customerId": "CUST-100280",
+ "name": "Tomás Adeyemi",
+ "segment": "Mass market",
+ "totalDeposits": 55433.79,
+ "totalLending": 1984.19,
+ "kycRisk": "High",
+ "since": "2015-06-15",
+ "products": [
+  {
+   "product": "Current account",
+   "id": "ACCT-100280-CUR",
+   "balance": 9585.2
+  },
+  {
+   "product": "Savings",
+   "id": "ACCT-100280-SAV",
+   "balance": 45848.59
+  },
+  {
+   "product": "Credit card",
+   "id": "CARD-100280",
+   "balance": -1984.19
+  }
+ ],
+ "profile": {
+  "city": "New York",
+  "age": 75,
+  "employment": "Student",
+  "channel": "Online",
+  "creditScore": 753,
+  "bookingEntity": "LE-NY"
+ },
+ "branch": "BRN-NY-BKLN",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

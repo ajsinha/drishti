@@ -1,0 +1,130 @@
+{
+ "accountId": "ACCT-100420-CUR",
+ "type": "Current account",
+ "holderName": "Liam García",
+ "balance": 4894.67,
+ "currency": "GBP",
+ "rate": 0.001,
+ "status": "Active",
+ "transactions": [
+  {
+   "date": "2026-09-30",
+   "description": "Salary",
+   "amount": -369.85,
+   "balance": 4894.67
+  },
+  {
+   "date": "2026-09-29",
+   "description": "Direct debit · utilities",
+   "amount": -83.49,
+   "balance": 5264.52
+  },
+  {
+   "date": "2026-09-27",
+   "description": "ATM withdrawal",
+   "amount": -249.4,
+   "balance": 5348.01
+  },
+  {
+   "date": "2026-09-25",
+   "description": "Card payment · grocer",
+   "amount": -407.82,
+   "balance": 5597.41
+  },
+  {
+   "date": "2026-09-23",
+   "description": "Salary",
+   "amount": -390.63,
+   "balance": 6005.23
+  },
+  {
+   "date": "2026-09-21",
+   "description": "Salary",
+   "amount": 4497.85,
+   "balance": 6395.86
+  },
+  {
+   "date": "2026-09-19",
+   "description": "Direct debit · utilities",
+   "amount": -43.35,
+   "balance": 1898.01
+  },
+  {
+   "date": "2026-09-17",
+   "description": "Salary",
+   "amount": 5842.07,
+   "balance": 1941.36
+  },
+  {
+   "date": "2026-09-14",
+   "description": "Direct debit · utilities",
+   "amount": -135.72,
+   "balance": -3900.71
+  },
+  {
+   "date": "2026-09-11",
+   "description": "Transfer to savings",
+   "amount": -363.24,
+   "balance": -3764.99
+  }
+ ],
+ "history": [
+  {
+   "month": "2025-10",
+   "balance": 4737.16
+  },
+  {
+   "month": "2025-11",
+   "balance": 5280.72
+  },
+  {
+   "month": "2025-12",
+   "balance": 4944.06
+  },
+  {
+   "month": "2026-01",
+   "balance": 4442.71
+  },
+  {
+   "month": "2026-02",
+   "balance": 4087.27
+  },
+  {
+   "month": "2026-03",
+   "balance": 3843.51
+  },
+  {
+   "month": "2026-04",
+   "balance": 5148.56
+  },
+  {
+   "month": "2026-05",
+   "balance": 3967.86
+  },
+  {
+   "month": "2026-06",
+   "balance": 3930.11
+  },
+  {
+   "month": "2026-07",
+   "balance": 5621.86
+  },
+  {
+   "month": "2026-08",
+   "balance": 4051.8
+  },
+  {
+   "month": "2026-09",
+   "balance": 5229.4
+  }
+ ],
+ "customer": "CUST-100420",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 25.0
+  }
+ }
+}

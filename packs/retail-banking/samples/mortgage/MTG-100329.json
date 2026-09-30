@@ -1,0 +1,115 @@
+{
+ "loanId": "MTG-100329",
+ "borrowerName": "Zara Rahman",
+ "balance": 426799.87,
+ "rate": 0.0606,
+ "ltv": 0.504,
+ "remainingYears": 17,
+ "daysPastDue": 0,
+ "originalAmount": 518000.0,
+ "monthlyPayment": 3356.51,
+ "amortisation": [
+  {
+   "year": "2018",
+   "balance": 518000
+  },
+  {
+   "year": "2020",
+   "balance": 499154
+  },
+  {
+   "year": "2022",
+   "balance": 477886
+  },
+  {
+   "year": "2024",
+   "balance": 453885
+  },
+  {
+   "year": "2026",
+   "balance": 426800
+  },
+  {
+   "year": "2028",
+   "balance": 396234
+  },
+  {
+   "year": "2030",
+   "balance": 361740
+  },
+  {
+   "year": "2032",
+   "balance": 322814
+  },
+  {
+   "year": "2034",
+   "balance": 278885
+  },
+  {
+   "year": "2036",
+   "balance": 229311
+  },
+  {
+   "year": "2038",
+   "balance": 173367
+  },
+  {
+   "year": "2040",
+   "balance": 110233
+  },
+  {
+   "year": "2042",
+   "balance": 38987
+  }
+ ],
+ "property": {
+  "type": "Detached house",
+  "city": "London",
+  "valuation": 847000.0,
+  "valuedOn": "2025-01-04",
+  "rateType": "Tracker"
+ },
+ "payments": [
+  {
+   "due": "2026-09-01",
+   "amount": 3356.51,
+   "paid": "2026-09-02",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-08-02",
+   "amount": 3356.51,
+   "paid": "2026-08-03",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-07-03",
+   "amount": 3356.51,
+   "paid": "2026-07-04",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-06-03",
+   "amount": 3356.51,
+   "paid": "2026-06-04",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-05-04",
+   "amount": 3356.51,
+   "paid": "2026-05-05",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-04-04",
+   "amount": 3356.51,
+   "paid": "2026-04-05",
+   "status": "Paid"
+  }
+ ],
+ "customer": "CUST-100329",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

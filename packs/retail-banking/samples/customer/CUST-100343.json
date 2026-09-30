@@ -1,0 +1,44 @@
+{
+ "customerId": "CUST-100343",
+ "name": "Priya Sharma",
+ "segment": "Mass market",
+ "totalDeposits": 32902.48,
+ "totalLending": 464956.74,
+ "kycRisk": "Low",
+ "since": "2006-08-28",
+ "products": [
+  {
+   "product": "Current account",
+   "id": "ACCT-100343-CUR",
+   "balance": 11532.01
+  },
+  {
+   "product": "Savings",
+   "id": "ACCT-100343-SAV",
+   "balance": 21370.47
+  },
+  {
+   "product": "Mortgage",
+   "id": "MTG-100343",
+   "balance": -460611.98
+  },
+  {
+   "product": "Credit card",
+   "id": "CARD-100343",
+   "balance": -4344.76
+  }
+ ],
+ "profile": {
+  "city": "Frankfurt",
+  "age": 68,
+  "employment": "Employed",
+  "channel": "Branch",
+  "creditScore": 669,
+  "bookingEntity": "LE-FRA"
+ },
+ "branch": "BRN-FRA-MAIN",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

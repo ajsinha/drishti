@@ -1,0 +1,115 @@
+{
+ "loanId": "MTG-100399",
+ "borrowerName": "Hannah Müller",
+ "balance": 224000.64,
+ "rate": 0.0366,
+ "ltv": 0.441,
+ "remainingYears": 14,
+ "daysPastDue": 0,
+ "originalAmount": 335000.0,
+ "monthlyPayment": 1705.97,
+ "amortisation": [
+  {
+   "year": "2015",
+   "balance": 335000
+  },
+  {
+   "year": "2017",
+   "balance": 317990
+  },
+  {
+   "year": "2019",
+   "balance": 299689
+  },
+  {
+   "year": "2021",
+   "balance": 280001
+  },
+  {
+   "year": "2023",
+   "balance": 258821
+  },
+  {
+   "year": "2025",
+   "balance": 236034
+  },
+  {
+   "year": "2027",
+   "balance": 211519
+  },
+  {
+   "year": "2029",
+   "balance": 185146
+  },
+  {
+   "year": "2031",
+   "balance": 156773
+  },
+  {
+   "year": "2033",
+   "balance": 126248
+  },
+  {
+   "year": "2035",
+   "balance": 93409
+  },
+  {
+   "year": "2037",
+   "balance": 58080
+  },
+  {
+   "year": "2039",
+   "balance": 20072
+  }
+ ],
+ "property": {
+  "type": "Detached house",
+  "city": "New York",
+  "valuation": 508000.0,
+  "valuedOn": "2025-02-26",
+  "rateType": "2y fixed"
+ },
+ "payments": [
+  {
+   "due": "2026-09-01",
+   "amount": 1705.97,
+   "paid": "2026-09-02",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-08-02",
+   "amount": 1705.97,
+   "paid": "2026-08-03",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-07-03",
+   "amount": 1705.97,
+   "paid": "2026-07-04",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-06-03",
+   "amount": 1705.97,
+   "paid": "2026-06-04",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-05-04",
+   "amount": 1705.97,
+   "paid": "2026-05-05",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-04-04",
+   "amount": 1705.97,
+   "paid": "2026-04-05",
+   "status": "Paid"
+  }
+ ],
+ "customer": "CUST-100399",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

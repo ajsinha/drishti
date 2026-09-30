@@ -1,0 +1,130 @@
+{
+ "accountId": "ACCT-100294-CUR",
+ "type": "Current account",
+ "holderName": "Kenji Silva",
+ "balance": 8437.58,
+ "currency": "GBP",
+ "rate": 0.001,
+ "status": "Active",
+ "transactions": [
+  {
+   "date": "2026-09-30",
+   "description": "Salary",
+   "amount": 4116.5,
+   "balance": 8437.58
+  },
+  {
+   "date": "2026-09-27",
+   "description": "Standing order · rent",
+   "amount": -90.62,
+   "balance": 4321.08
+  },
+  {
+   "date": "2026-09-26",
+   "description": "Direct debit · utilities",
+   "amount": -243.35,
+   "balance": 4411.7
+  },
+  {
+   "date": "2026-09-23",
+   "description": "Salary",
+   "amount": 4409.81,
+   "balance": 4655.05
+  },
+  {
+   "date": "2026-09-21",
+   "description": "Salary",
+   "amount": 4192.2,
+   "balance": 245.24
+  },
+  {
+   "date": "2026-09-20",
+   "description": "Direct debit · utilities",
+   "amount": -329.02,
+   "balance": -3946.96
+  },
+  {
+   "date": "2026-09-18",
+   "description": "Direct debit · utilities",
+   "amount": -367.09,
+   "balance": -3617.94
+  },
+  {
+   "date": "2026-09-17",
+   "description": "Card payment · grocer",
+   "amount": -67.79,
+   "balance": -3250.85
+  },
+  {
+   "date": "2026-09-14",
+   "description": "Transfer to savings",
+   "amount": -75.87,
+   "balance": -3183.06
+  },
+  {
+   "date": "2026-09-11",
+   "description": "Salary",
+   "amount": 1556.68,
+   "balance": -3107.19
+  }
+ ],
+ "history": [
+  {
+   "month": "2025-10",
+   "balance": 7589.05
+  },
+  {
+   "month": "2025-11",
+   "balance": 6507.68
+  },
+  {
+   "month": "2025-12",
+   "balance": 6765.66
+  },
+  {
+   "month": "2026-01",
+   "balance": 7545.15
+  },
+  {
+   "month": "2026-02",
+   "balance": 8458.65
+  },
+  {
+   "month": "2026-03",
+   "balance": 8413.74
+  },
+  {
+   "month": "2026-04",
+   "balance": 9293.66
+  },
+  {
+   "month": "2026-05",
+   "balance": 6407.55
+  },
+  {
+   "month": "2026-06",
+   "balance": 7573.15
+  },
+  {
+   "month": "2026-07",
+   "balance": 8890.33
+  },
+  {
+   "month": "2026-08",
+   "balance": 7060.36
+  },
+  {
+   "month": "2026-09",
+   "balance": 8399.21
+  }
+ ],
+ "customer": "CUST-100294",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 25.0
+  }
+ }
+}

@@ -1,0 +1,52 @@
+{
+ "loanId": "PLN-100266",
+ "borrowerName": "Daniel Tanaka",
+ "purpose": "Home improvement",
+ "balance": 9984.13,
+ "instalment": 463.72,
+ "rate": 0.1065,
+ "daysPastDue": 64,
+ "schedule": [
+  {
+   "due": "2026-10-06",
+   "principal": 375.11,
+   "interest": 88.61,
+   "balance": 9609.02
+  },
+  {
+   "due": "2026-11-06",
+   "principal": 378.44,
+   "interest": 85.28,
+   "balance": 9230.58
+  },
+  {
+   "due": "2026-12-07",
+   "principal": 381.8,
+   "interest": 81.92,
+   "balance": 8848.79
+  },
+  {
+   "due": "2027-01-07",
+   "principal": 385.19,
+   "interest": 78.53,
+   "balance": 8463.6
+  },
+  {
+   "due": "2027-02-07",
+   "principal": 388.6,
+   "interest": 75.11,
+   "balance": 8075.0
+  },
+  {
+   "due": "2027-03-10",
+   "principal": 392.05,
+   "interest": 71.67,
+   "balance": 7682.95
+  }
+ ],
+ "customer": "CUST-100266",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

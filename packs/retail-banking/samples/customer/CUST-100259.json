@@ -1,0 +1,44 @@
+{
+ "customerId": "CUST-100259",
+ "name": "Sofia Rossi",
+ "segment": "Mass market",
+ "totalDeposits": 75940.4,
+ "totalLending": 197971.6,
+ "kycRisk": "Medium",
+ "since": "2003-05-08",
+ "products": [
+  {
+   "product": "Current account",
+   "id": "ACCT-100259-CUR",
+   "balance": 13273.32
+  },
+  {
+   "product": "Savings",
+   "id": "ACCT-100259-SAV",
+   "balance": 62667.08
+  },
+  {
+   "product": "Mortgage",
+   "id": "MTG-100259",
+   "balance": -196662.88
+  },
+  {
+   "product": "Credit card",
+   "id": "CARD-100259",
+   "balance": -1308.72
+  }
+ ],
+ "profile": {
+  "city": "Frankfurt",
+  "age": 57,
+  "employment": "Retired",
+  "channel": "Mobile",
+  "creditScore": 782,
+  "bookingEntity": "LE-FRA"
+ },
+ "branch": "BRN-FRA-MAIN",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

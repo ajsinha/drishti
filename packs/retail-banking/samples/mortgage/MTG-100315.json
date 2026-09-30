@@ -1,0 +1,115 @@
+{
+ "loanId": "MTG-100315",
+ "borrowerName": "Grace Nguyen",
+ "balance": 458429.62,
+ "rate": 0.0437,
+ "ltv": 0.44,
+ "remainingYears": 14,
+ "daysPastDue": 0,
+ "originalAmount": 666000.0,
+ "monthlyPayment": 3652.87,
+ "amortisation": [
+  {
+   "year": "2015",
+   "balance": 666000
+  },
+  {
+   "year": "2017",
+   "balance": 635272
+  },
+  {
+   "year": "2019",
+   "balance": 601743
+  },
+  {
+   "year": "2021",
+   "balance": 565157
+  },
+  {
+   "year": "2023",
+   "balance": 525237
+  },
+  {
+   "year": "2025",
+   "balance": 481677
+  },
+  {
+   "year": "2027",
+   "balance": 434146
+  },
+  {
+   "year": "2029",
+   "balance": 382282
+  },
+  {
+   "year": "2031",
+   "balance": 325691
+  },
+  {
+   "year": "2033",
+   "balance": 263940
+  },
+  {
+   "year": "2035",
+   "balance": 196560
+  },
+  {
+   "year": "2037",
+   "balance": 123039
+  },
+  {
+   "year": "2039",
+   "balance": 42814
+  }
+ ],
+ "property": {
+  "type": "Apartment",
+  "city": "New York",
+  "valuation": 1042000.0,
+  "valuedOn": "2024-09-09",
+  "rateType": "2y fixed"
+ },
+ "payments": [
+  {
+   "due": "2026-09-01",
+   "amount": 3652.87,
+   "paid": "2026-09-02",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-08-02",
+   "amount": 3652.87,
+   "paid": "2026-08-03",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-07-03",
+   "amount": 3652.87,
+   "paid": "2026-07-04",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-06-03",
+   "amount": 3652.87,
+   "paid": "2026-06-04",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-05-04",
+   "amount": 3652.87,
+   "paid": "2026-05-05",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-04-04",
+   "amount": 3652.87,
+   "paid": "2026-04-05",
+   "status": "Paid"
+  }
+ ],
+ "customer": "CUST-100315",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

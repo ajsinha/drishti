@@ -1,0 +1,115 @@
+{
+ "loanId": "MTG-100301",
+ "borrowerName": "Fatima Chen",
+ "balance": 645671.57,
+ "rate": 0.0301,
+ "ltv": 0.525,
+ "remainingYears": 19,
+ "daysPastDue": 0,
+ "originalAmount": 784000.0,
+ "monthlyPayment": 3721.9,
+ "amortisation": [
+  {
+   "year": "2020",
+   "balance": 784000
+  },
+  {
+   "year": "2022",
+   "balance": 740633
+  },
+  {
+   "year": "2024",
+   "balance": 694579
+  },
+  {
+   "year": "2026",
+   "balance": 645672
+  },
+  {
+   "year": "2028",
+   "balance": 593733
+  },
+  {
+   "year": "2030",
+   "balance": 538576
+  },
+  {
+   "year": "2032",
+   "balance": 480000
+  },
+  {
+   "year": "2034",
+   "balance": 417795
+  },
+  {
+   "year": "2036",
+   "balance": 351735
+  },
+  {
+   "year": "2038",
+   "balance": 281582
+  },
+  {
+   "year": "2040",
+   "balance": 207081
+  },
+  {
+   "year": "2042",
+   "balance": 127963
+  },
+  {
+   "year": "2044",
+   "balance": 43943
+  }
+ ],
+ "property": {
+  "type": "Terraced house",
+  "city": "Frankfurt",
+  "valuation": 1231000.0,
+  "valuedOn": "2026-03-17",
+  "rateType": "5y fixed"
+ },
+ "payments": [
+  {
+   "due": "2026-09-01",
+   "amount": 3721.9,
+   "paid": "2026-09-02",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-08-02",
+   "amount": 3721.9,
+   "paid": "2026-08-03",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-07-03",
+   "amount": 3721.9,
+   "paid": "2026-07-04",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-06-03",
+   "amount": 3721.9,
+   "paid": "2026-06-04",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-05-04",
+   "amount": 3721.9,
+   "paid": "2026-05-05",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-04-04",
+   "amount": 3721.9,
+   "paid": "2026-04-05",
+   "status": "Paid"
+  }
+ ],
+ "customer": "CUST-100301",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

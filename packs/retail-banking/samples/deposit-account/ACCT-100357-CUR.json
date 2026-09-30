@@ -1,0 +1,130 @@
+{
+ "accountId": "ACCT-100357-CUR",
+ "type": "Current account",
+ "holderName": "Mei Haddad",
+ "balance": 60601.53,
+ "currency": "USD",
+ "rate": 0.001,
+ "status": "Active",
+ "transactions": [
+  {
+   "date": "2026-09-30",
+   "description": "Card payment · online retail",
+   "amount": -70.64,
+   "balance": 60601.53
+  },
+  {
+   "date": "2026-09-28",
+   "description": "Salary",
+   "amount": -338.84,
+   "balance": 60672.17
+  },
+  {
+   "date": "2026-09-27",
+   "description": "Salary",
+   "amount": -368.23,
+   "balance": 61011.01
+  },
+  {
+   "date": "2026-09-24",
+   "description": "Standing order · rent",
+   "amount": -201.46,
+   "balance": 61379.24
+  },
+  {
+   "date": "2026-09-21",
+   "description": "Direct debit · utilities",
+   "amount": -51.95,
+   "balance": 61580.7
+  },
+  {
+   "date": "2026-09-19",
+   "description": "Standing order · rent",
+   "amount": -337.14,
+   "balance": 61632.65
+  },
+  {
+   "date": "2026-09-18",
+   "description": "ATM withdrawal",
+   "amount": -351.7,
+   "balance": 61969.79
+  },
+  {
+   "date": "2026-09-15",
+   "description": "Card payment · online retail",
+   "amount": -190.37,
+   "balance": 62321.49
+  },
+  {
+   "date": "2026-09-14",
+   "description": "Salary",
+   "amount": 5603.37,
+   "balance": 62511.86
+  },
+  {
+   "date": "2026-09-12",
+   "description": "Direct debit · utilities",
+   "amount": -242.85,
+   "balance": 56908.49
+  }
+ ],
+ "history": [
+  {
+   "month": "2025-10",
+   "balance": 69521.66
+  },
+  {
+   "month": "2025-11",
+   "balance": 63538.26
+  },
+  {
+   "month": "2025-12",
+   "balance": 56004.17
+  },
+  {
+   "month": "2026-01",
+   "balance": 66444.83
+  },
+  {
+   "month": "2026-02",
+   "balance": 62477.35
+  },
+  {
+   "month": "2026-03",
+   "balance": 64072.55
+  },
+  {
+   "month": "2026-04",
+   "balance": 42729.55
+  },
+  {
+   "month": "2026-05",
+   "balance": 50267.42
+  },
+  {
+   "month": "2026-06",
+   "balance": 59120.03
+  },
+  {
+   "month": "2026-07",
+   "balance": 61865.89
+  },
+  {
+   "month": "2026-08",
+   "balance": 42833.59
+  },
+  {
+   "month": "2026-09",
+   "balance": 52726.42
+  }
+ ],
+ "customer": "CUST-100357",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 25.0
+  }
+ }
+}

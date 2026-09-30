@@ -1,0 +1,39 @@
+{
+ "customerId": "CUST-100357",
+ "name": "Mei Haddad",
+ "segment": "Private",
+ "totalDeposits": 60601.53,
+ "totalLending": 251599.8,
+ "kycRisk": "High",
+ "since": "2009-12-19",
+ "products": [
+  {
+   "product": "Current account",
+   "id": "ACCT-100357-CUR",
+   "balance": 60601.53
+  },
+  {
+   "product": "Mortgage",
+   "id": "MTG-100357",
+   "balance": -238181.49
+  },
+  {
+   "product": "Credit card",
+   "id": "CARD-100357",
+   "balance": -13418.31
+  }
+ ],
+ "profile": {
+  "city": "New York",
+  "age": 75,
+  "employment": "Student",
+  "channel": "Mobile",
+  "creditScore": 610,
+  "bookingEntity": "LE-NY"
+ },
+ "branch": "BRN-NY-5AVE",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

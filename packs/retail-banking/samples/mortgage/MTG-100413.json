@@ -1,0 +1,115 @@
+{
+ "loanId": "MTG-100413",
+ "borrowerName": "Fatima Chen",
+ "balance": 398076.26,
+ "rate": 0.0302,
+ "ltv": 0.551,
+ "remainingYears": 14,
+ "daysPastDue": 0,
+ "originalAmount": 612000.0,
+ "monthlyPayment": 2908.54,
+ "amortisation": [
+  {
+   "year": "2015",
+   "balance": 612000
+  },
+  {
+   "year": "2017",
+   "balance": 578192
+  },
+  {
+   "year": "2019",
+   "balance": 542281
+  },
+  {
+   "year": "2021",
+   "balance": 504137
+  },
+  {
+   "year": "2023",
+   "balance": 463622
+  },
+  {
+   "year": "2025",
+   "balance": 420587
+  },
+  {
+   "year": "2027",
+   "balance": 374876
+  },
+  {
+   "year": "2029",
+   "balance": 326323
+  },
+  {
+   "year": "2031",
+   "balance": 274751
+  },
+  {
+   "year": "2033",
+   "balance": 219972
+  },
+  {
+   "year": "2035",
+   "balance": 161787
+  },
+  {
+   "year": "2037",
+   "balance": 99984
+  },
+  {
+   "year": "2039",
+   "balance": 34338
+  }
+ ],
+ "property": {
+  "type": "Apartment",
+  "city": "London",
+  "valuation": 722000.0,
+  "valuedOn": "2026-08-17",
+  "rateType": "Tracker"
+ },
+ "payments": [
+  {
+   "due": "2026-09-01",
+   "amount": 2908.54,
+   "paid": "2026-09-02",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-08-02",
+   "amount": 2908.54,
+   "paid": "2026-08-03",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-07-03",
+   "amount": 2908.54,
+   "paid": "2026-07-04",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-06-03",
+   "amount": 2908.54,
+   "paid": "2026-06-04",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-05-04",
+   "amount": 2908.54,
+   "paid": "2026-05-05",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-04-04",
+   "amount": 2908.54,
+   "paid": "2026-04-05",
+   "status": "Paid"
+  }
+ ],
+ "customer": "CUST-100413",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

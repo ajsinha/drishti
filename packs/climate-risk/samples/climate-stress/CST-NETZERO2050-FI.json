@@ -41,7 +41,7 @@
    "loss": 7268995
   }
  ],
- "scenario": "NGFS-NETZERO2050",
+ "climateScenario": "NGFS-NETZERO2050",
  "desk": "DESK-FI",
  "_meta": {
   "source": "climate-stress",

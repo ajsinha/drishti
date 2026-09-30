@@ -1,0 +1,115 @@
+{
+ "loanId": "MTG-100259",
+ "borrowerName": "Sofia Rossi",
+ "balance": 196662.88,
+ "rate": 0.0343,
+ "ltv": 0.401,
+ "remainingYears": 14,
+ "daysPastDue": 0,
+ "originalAmount": 297000.0,
+ "monthlyPayment": 1475.73,
+ "amortisation": [
+  {
+   "year": "2015",
+   "balance": 297000
+  },
+  {
+   "year": "2017",
+   "balance": 281452
+  },
+  {
+   "year": "2019",
+   "balance": 264801
+  },
+  {
+   "year": "2021",
+   "balance": 246970
+  },
+  {
+   "year": "2023",
+   "balance": 227874
+  },
+  {
+   "year": "2025",
+   "balance": 207425
+  },
+  {
+   "year": "2027",
+   "balance": 185526
+  },
+  {
+   "year": "2029",
+   "balance": 162074
+  },
+  {
+   "year": "2031",
+   "balance": 136959
+  },
+  {
+   "year": "2033",
+   "balance": 110063
+  },
+  {
+   "year": "2035",
+   "balance": 81261
+  },
+  {
+   "year": "2037",
+   "balance": 50416
+  },
+  {
+   "year": "2039",
+   "balance": 17384
+  }
+ ],
+ "property": {
+  "type": "Terraced house",
+  "city": "Frankfurt",
+  "valuation": 490000.0,
+  "valuedOn": "2025-07-24",
+  "rateType": "Tracker"
+ },
+ "payments": [
+  {
+   "due": "2026-09-01",
+   "amount": 1475.73,
+   "paid": "2026-09-02",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-08-02",
+   "amount": 1475.73,
+   "paid": "2026-08-03",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-07-03",
+   "amount": 1475.73,
+   "paid": "2026-07-04",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-06-03",
+   "amount": 1475.73,
+   "paid": "2026-06-04",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-05-04",
+   "amount": 1475.73,
+   "paid": "2026-05-05",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-04-04",
+   "amount": 1475.73,
+   "paid": "2026-04-05",
+   "status": "Paid"
+  }
+ ],
+ "customer": "CUST-100259",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

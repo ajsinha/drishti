@@ -1,0 +1,130 @@
+{
+ "accountId": "ACCT-100448-CUR",
+ "type": "Current account",
+ "holderName": "Noah O'Brien",
+ "balance": 12289.24,
+ "currency": "USD",
+ "rate": 0.001,
+ "status": "Active",
+ "transactions": [
+  {
+   "date": "2026-09-30",
+   "description": "ATM withdrawal",
+   "amount": -424.22,
+   "balance": 12289.24
+  },
+  {
+   "date": "2026-09-29",
+   "description": "Direct debit · utilities",
+   "amount": -223.7,
+   "balance": 12713.46
+  },
+  {
+   "date": "2026-09-28",
+   "description": "Direct debit · utilities",
+   "amount": -344.96,
+   "balance": 12937.16
+  },
+  {
+   "date": "2026-09-26",
+   "description": "ATM withdrawal",
+   "amount": -341.09,
+   "balance": 13282.12
+  },
+  {
+   "date": "2026-09-25",
+   "description": "Direct debit · utilities",
+   "amount": -413.28,
+   "balance": 13623.21
+  },
+  {
+   "date": "2026-09-23",
+   "description": "Transfer to savings",
+   "amount": -182.49,
+   "balance": 14036.49
+  },
+  {
+   "date": "2026-09-20",
+   "description": "Standing order · rent",
+   "amount": -70.2,
+   "balance": 14218.98
+  },
+  {
+   "date": "2026-09-17",
+   "description": "Card payment · online retail",
+   "amount": -170.98,
+   "balance": 14289.18
+  },
+  {
+   "date": "2026-09-14",
+   "description": "Salary",
+   "amount": 2260.23,
+   "balance": 14460.16
+  },
+  {
+   "date": "2026-09-12",
+   "description": "ATM withdrawal",
+   "amount": -439.85,
+   "balance": 12199.93
+  }
+ ],
+ "history": [
+  {
+   "month": "2025-10",
+   "balance": 9963.8
+  },
+  {
+   "month": "2025-11",
+   "balance": 11482.53
+  },
+  {
+   "month": "2025-12",
+   "balance": 12215.68
+  },
+  {
+   "month": "2026-01",
+   "balance": 10807.25
+  },
+  {
+   "month": "2026-02",
+   "balance": 9845.61
+  },
+  {
+   "month": "2026-03",
+   "balance": 8744.97
+  },
+  {
+   "month": "2026-04",
+   "balance": 10581.09
+  },
+  {
+   "month": "2026-05",
+   "balance": 9291.61
+  },
+  {
+   "month": "2026-06",
+   "balance": 11855.75
+  },
+  {
+   "month": "2026-07",
+   "balance": 10942.05
+  },
+  {
+   "month": "2026-08",
+   "balance": 10763.07
+  },
+  {
+   "month": "2026-09",
+   "balance": 10834.72
+  }
+ ],
+ "customer": "CUST-100448",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 25.0
+  }
+ }
+}

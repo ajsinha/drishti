@@ -1,0 +1,75 @@
+{
+ "cardId": "CARD-100427",
+ "holderName": "Grace Nguyen",
+ "product": "Travel Platinum",
+ "balance": 6670.75,
+ "limit": 15000,
+ "utilisation": 0.445,
+ "apr": 0.2887,
+ "status": "Active",
+ "spend": [
+  {
+   "category": "Groceries",
+   "amount": 217.71
+  },
+  {
+   "category": "Travel",
+   "amount": 25.77
+  },
+  {
+   "category": "Dining",
+   "amount": 961.67
+  },
+  {
+   "category": "Fuel",
+   "amount": 1116.42
+  },
+  {
+   "category": "Online retail",
+   "amount": 423.39
+  },
+  {
+   "category": "Utilities",
+   "amount": 275.48
+  },
+  {
+   "category": "Entertainment",
+   "amount": 758.99
+  }
+ ],
+ "statements": [
+  {
+   "closing": "2026-08-16",
+   "balance": 7677.04,
+   "minimum": 200.12,
+   "paid": 6670.75
+  },
+  {
+   "closing": "2026-07-17",
+   "balance": 7916.54,
+   "minimum": 200.12,
+   "paid": 3335.38
+  },
+  {
+   "closing": "2026-06-17",
+   "balance": 5958.29,
+   "minimum": 200.12,
+   "paid": 3335.38
+  },
+  {
+   "closing": "2026-05-18",
+   "balance": 7192.21,
+   "minimum": 200.12,
+   "paid": 6670.75
+  }
+ ],
+ "customer": "CUST-100427",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 12.0
+  }
+ }
+}

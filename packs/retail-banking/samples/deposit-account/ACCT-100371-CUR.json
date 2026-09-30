@@ -1,0 +1,130 @@
+{
+ "accountId": "ACCT-100371-CUR",
+ "type": "Current account",
+ "holderName": "Sofia Rossi",
+ "balance": 9757.9,
+ "currency": "GBP",
+ "rate": 0.001,
+ "status": "Active",
+ "transactions": [
+  {
+   "date": "2026-09-30",
+   "description": "Salary",
+   "amount": -130.78,
+   "balance": 9757.9
+  },
+  {
+   "date": "2026-09-29",
+   "description": "Salary",
+   "amount": -435.1,
+   "balance": 9888.68
+  },
+  {
+   "date": "2026-09-26",
+   "description": "ATM withdrawal",
+   "amount": -183.31,
+   "balance": 10323.78
+  },
+  {
+   "date": "2026-09-25",
+   "description": "Card payment · grocer",
+   "amount": -202.11,
+   "balance": 10507.09
+  },
+  {
+   "date": "2026-09-22",
+   "description": "Standing order · rent",
+   "amount": -415.9,
+   "balance": 10709.2
+  },
+  {
+   "date": "2026-09-21",
+   "description": "Transfer to savings",
+   "amount": -104.31,
+   "balance": 11125.1
+  },
+  {
+   "date": "2026-09-20",
+   "description": "Transfer to savings",
+   "amount": -424.53,
+   "balance": 11229.41
+  },
+  {
+   "date": "2026-09-17",
+   "description": "Transfer to savings",
+   "amount": -383.7,
+   "balance": 11653.94
+  },
+  {
+   "date": "2026-09-15",
+   "description": "Transfer to savings",
+   "amount": -175.89,
+   "balance": 12037.64
+  },
+  {
+   "date": "2026-09-13",
+   "description": "Transfer to savings",
+   "amount": -267.51,
+   "balance": 12213.53
+  }
+ ],
+ "history": [
+  {
+   "month": "2025-10",
+   "balance": 9322.67
+  },
+  {
+   "month": "2025-11",
+   "balance": 10781.66
+  },
+  {
+   "month": "2025-12",
+   "balance": 11141.71
+  },
+  {
+   "month": "2026-01",
+   "balance": 7207.53
+  },
+  {
+   "month": "2026-02",
+   "balance": 10678.71
+  },
+  {
+   "month": "2026-03",
+   "balance": 7871.12
+  },
+  {
+   "month": "2026-04",
+   "balance": 10848.08
+  },
+  {
+   "month": "2026-05",
+   "balance": 10568.15
+  },
+  {
+   "month": "2026-06",
+   "balance": 8574.16
+  },
+  {
+   "month": "2026-07",
+   "balance": 10750.85
+  },
+  {
+   "month": "2026-08",
+   "balance": 9790.16
+  },
+  {
+   "month": "2026-09",
+   "balance": 8914.8
+  }
+ ],
+ "customer": "CUST-100371",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 25.0
+  }
+ }
+}

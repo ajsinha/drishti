@@ -1,0 +1,39 @@
+{
+ "customerId": "CUST-100364",
+ "name": "Oluwaseun Evans",
+ "segment": "Mass market",
+ "totalDeposits": 26500.34,
+ "totalLending": 6265.32,
+ "kycRisk": "High",
+ "since": "2023-12-08",
+ "products": [
+  {
+   "product": "Current account",
+   "id": "ACCT-100364-CUR",
+   "balance": 8570.55
+  },
+  {
+   "product": "Savings",
+   "id": "ACCT-100364-SAV",
+   "balance": 17929.79
+  },
+  {
+   "product": "Credit card",
+   "id": "CARD-100364",
+   "balance": -6265.32
+  }
+ ],
+ "profile": {
+  "city": "New York",
+  "age": 35,
+  "employment": "Retired",
+  "channel": "Branch",
+  "creditScore": 779,
+  "bookingEntity": "LE-NY"
+ },
+ "branch": "BRN-NY-BKLN",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

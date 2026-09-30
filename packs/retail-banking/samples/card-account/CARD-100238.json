@@ -1,0 +1,75 @@
+{
+ "cardId": "CARD-100238",
+ "holderName": "James Kowalski",
+ "product": "Rewards Visa",
+ "balance": 12262.72,
+ "limit": 25000,
+ "utilisation": 0.491,
+ "apr": 0.1828,
+ "status": "Active",
+ "spend": [
+  {
+   "category": "Groceries",
+   "amount": 1443.48
+  },
+  {
+   "category": "Travel",
+   "amount": 86.62
+  },
+  {
+   "category": "Dining",
+   "amount": 928.06
+  },
+  {
+   "category": "Fuel",
+   "amount": 1197.32
+  },
+  {
+   "category": "Online retail",
+   "amount": 778.41
+  },
+  {
+   "category": "Utilities",
+   "amount": 1324.98
+  },
+  {
+   "category": "Entertainment",
+   "amount": 119.6
+  }
+ ],
+ "statements": [
+  {
+   "closing": "2026-08-16",
+   "balance": 14401.95,
+   "minimum": 367.88,
+   "paid": 367.88
+  },
+  {
+   "closing": "2026-07-17",
+   "balance": 10261.37,
+   "minimum": 367.88,
+   "paid": 6131.36
+  },
+  {
+   "closing": "2026-06-17",
+   "balance": 10739.64,
+   "minimum": 367.88,
+   "paid": 367.88
+  },
+  {
+   "closing": "2026-05-18",
+   "balance": 8669.79,
+   "minimum": 367.88,
+   "paid": 367.88
+  }
+ ],
+ "customer": "CUST-100238",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 12.0
+  }
+ }
+}

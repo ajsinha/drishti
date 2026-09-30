@@ -1,0 +1,115 @@
+{
+ "loanId": "MTG-100427",
+ "borrowerName": "Grace Nguyen",
+ "balance": 215098.86,
+ "rate": 0.0517,
+ "ltv": 0.569,
+ "remainingYears": 13,
+ "daysPastDue": 0,
+ "originalAmount": 319000.0,
+ "monthlyPayment": 1896.57,
+ "amortisation": [
+  {
+   "year": "2014",
+   "balance": 319000
+  },
+  {
+   "year": "2016",
+   "balance": 305826
+  },
+  {
+   "year": "2018",
+   "balance": 291220
+  },
+  {
+   "year": "2020",
+   "balance": 275026
+  },
+  {
+   "year": "2022",
+   "balance": 257072
+  },
+  {
+   "year": "2024",
+   "balance": 237167
+  },
+  {
+   "year": "2026",
+   "balance": 215099
+  },
+  {
+   "year": "2028",
+   "balance": 190632
+  },
+  {
+   "year": "2030",
+   "balance": 163505
+  },
+  {
+   "year": "2032",
+   "balance": 133431
+  },
+  {
+   "year": "2034",
+   "balance": 100087
+  },
+  {
+   "year": "2036",
+   "balance": 63120
+  },
+  {
+   "year": "2038",
+   "balance": 22134
+  }
+ ],
+ "property": {
+  "type": "Detached house",
+  "city": "Frankfurt",
+  "valuation": 378000.0,
+  "valuedOn": "2025-11-22",
+  "rateType": "Tracker"
+ },
+ "payments": [
+  {
+   "due": "2026-09-01",
+   "amount": 1896.57,
+   "paid": "2026-09-02",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-08-02",
+   "amount": 1896.57,
+   "paid": "2026-08-03",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-07-03",
+   "amount": 1896.57,
+   "paid": "2026-07-04",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-06-03",
+   "amount": 1896.57,
+   "paid": "2026-06-04",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-05-04",
+   "amount": 1896.57,
+   "paid": "2026-05-05",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-04-04",
+   "amount": 1896.57,
+   "paid": "2026-04-05",
+   "status": "Paid"
+  }
+ ],
+ "customer": "CUST-100427",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

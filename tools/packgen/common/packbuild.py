@@ -73,6 +73,9 @@ def manifest(spec: PackSpec, known_fields: dict[str, tuple[str, str]]) -> dict:
         for f, (target, label) in k.links.items():
             if f not in known_fields:
                 fields[f] = {"kind": target, "label": label}
+            elif known_fields[f][0] != target:   # the field already means another kind: its links would go astray
+                raise SystemExit(f"{spec.name}: link field '{f}' of {k.kind} points at {target}, but the banking packs map it to "
+                                 f"{known_fields[f][0]}; use another field name")
     m = {"pack": spec.name, "version": "1.0.0", "title": spec.title, "description": spec.description, "requires": spec.requires,
          "kinds": [k.kind for k in kinds], "sutras": "sutras",
          "mnemonics": {k.mnemonic: {"kind": k.kind, "label": k.label} for k in kinds},

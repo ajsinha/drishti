@@ -1,0 +1,130 @@
+{
+ "accountId": "ACCT-100329-CUR",
+ "type": "Current account",
+ "holderName": "Zara Rahman",
+ "balance": 24768.33,
+ "currency": "GBP",
+ "rate": 0.001,
+ "status": "Active",
+ "transactions": [
+  {
+   "date": "2026-09-30",
+   "description": "Salary",
+   "amount": 4946.08,
+   "balance": 24768.33
+  },
+  {
+   "date": "2026-09-28",
+   "description": "Transfer to savings",
+   "amount": -232.08,
+   "balance": 19822.25
+  },
+  {
+   "date": "2026-09-25",
+   "description": "Salary",
+   "amount": -122.46,
+   "balance": 20054.33
+  },
+  {
+   "date": "2026-09-24",
+   "description": "Direct debit · utilities",
+   "amount": -219.36,
+   "balance": 20176.79
+  },
+  {
+   "date": "2026-09-23",
+   "description": "Standing order · rent",
+   "amount": -13.57,
+   "balance": 20396.15
+  },
+  {
+   "date": "2026-09-20",
+   "description": "Card payment · online retail",
+   "amount": -261.56,
+   "balance": 20409.72
+  },
+  {
+   "date": "2026-09-17",
+   "description": "Direct debit · utilities",
+   "amount": -50.82,
+   "balance": 20671.28
+  },
+  {
+   "date": "2026-09-15",
+   "description": "Salary",
+   "amount": 6161.75,
+   "balance": 20722.1
+  },
+  {
+   "date": "2026-09-13",
+   "description": "Standing order · rent",
+   "amount": -14.98,
+   "balance": 14560.35
+  },
+  {
+   "date": "2026-09-12",
+   "description": "Direct debit · utilities",
+   "amount": -179.95,
+   "balance": 14575.33
+  }
+ ],
+ "history": [
+  {
+   "month": "2025-10",
+   "balance": 19008.85
+  },
+  {
+   "month": "2025-11",
+   "balance": 24365.55
+  },
+  {
+   "month": "2025-12",
+   "balance": 21325.65
+  },
+  {
+   "month": "2026-01",
+   "balance": 24119.64
+  },
+  {
+   "month": "2026-02",
+   "balance": 20041.33
+  },
+  {
+   "month": "2026-03",
+   "balance": 19729.17
+  },
+  {
+   "month": "2026-04",
+   "balance": 26143.89
+  },
+  {
+   "month": "2026-05",
+   "balance": 25221.73
+  },
+  {
+   "month": "2026-06",
+   "balance": 25881.69
+  },
+  {
+   "month": "2026-07",
+   "balance": 21391.07
+  },
+  {
+   "month": "2026-08",
+   "balance": 21114.02
+  },
+  {
+   "month": "2026-09",
+   "balance": 19628.43
+  }
+ ],
+ "customer": "CUST-100329",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 25.0
+  }
+ }
+}

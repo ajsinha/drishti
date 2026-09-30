@@ -1,0 +1,110 @@
+{
+ "portfolioId": "RPF-UK-UPL",
+ "name": "UK unsecured personal loans",
+ "exposure": 4033100000.0,
+ "ecl": 277555000.0,
+ "coverage": 0.0688,
+ "dpd30": 0.0257,
+ "stages": [
+  {
+   "stage": "Stage 1",
+   "exposure": 3636000000.0,
+   "pd": 0.028,
+   "lgd": 0.7,
+   "ecl": 71266000.0
+  },
+  {
+   "stage": "Stage 2",
+   "exposure": 312200000.0,
+   "pd": 0.168,
+   "lgd": 0.7,
+   "ecl": 146859000.0
+  },
+  {
+   "stage": "Stage 3",
+   "exposure": 84900000.0,
+   "pd": 1.0,
+   "lgd": 0.7,
+   "ecl": 59430000.0
+  }
+ ],
+ "delinquency": [
+  {
+   "month": "2025-04",
+   "rate": 0.0323
+  },
+  {
+   "month": "2025-05",
+   "rate": 0.0237
+  },
+  {
+   "month": "2025-06",
+   "rate": 0.0271
+  },
+  {
+   "month": "2025-07",
+   "rate": 0.0315
+  },
+  {
+   "month": "2025-08",
+   "rate": 0.0312
+  },
+  {
+   "month": "2025-09",
+   "rate": 0.0295
+  },
+  {
+   "month": "2025-10",
+   "rate": 0.0315
+  },
+  {
+   "month": "2025-11",
+   "rate": 0.0254
+  },
+  {
+   "month": "2025-12",
+   "rate": 0.0207
+  },
+  {
+   "month": "2026-01",
+   "rate": 0.0209
+  },
+  {
+   "month": "2026-02",
+   "rate": 0.0295
+  },
+  {
+   "month": "2026-03",
+   "rate": 0.0224
+  },
+  {
+   "month": "2026-04",
+   "rate": 0.0309
+  },
+  {
+   "month": "2026-05",
+   "rate": 0.0326
+  },
+  {
+   "month": "2026-06",
+   "rate": 0.0314
+  },
+  {
+   "month": "2026-07",
+   "rate": 0.0313
+  },
+  {
+   "month": "2026-08",
+   "rate": 0.0273
+  },
+  {
+   "month": "2026-09",
+   "rate": 0.0257
+  }
+ ],
+ "legalEntity": "LE-LDN",
+ "_meta": {
+  "source": "impairment-engine",
+  "generation": 1
+ }
+}

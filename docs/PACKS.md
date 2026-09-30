@@ -145,6 +145,7 @@ checking every id, link and Sutra path.
 | `liquidity-risk` | trading | LCR, NSFR, maturity ladders, HQLA holdings, funding sources, liquidity stress, intraday liquidity | `liquidity` |
 | `climate-risk` | trading | climate profiles, PCAF financed emissions, NGFS scenarios, climate stress, physical-risk assets, green asset ratio | `climate` |
 | `operational-risk` | banking-core | loss events, RCSA, key risk indicators, issues and actions, scenarios, third parties, cyber incidents, SMA capital | `oprisk` |
+| `retail-banking` | banking-core | customers, deposit accounts, mortgages, cards, personal loans, branches, collections cases, IFRS 9 portfolios | `retail` |
 
 The generated packs and `finance` (the small demo behind the mockups) both define trades and counterparties,
 so a site runs one family or the other.

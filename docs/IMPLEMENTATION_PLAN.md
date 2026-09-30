@@ -152,7 +152,7 @@ Ten waves (plus W11, user management, after 1.0.0). Each holds a small set of cl
 | P2 ✅ | liquidity risk | LCR, NSFR, maturity ladders, HQLA holdings, funding sources, liquidity stress, intraday liquidity |
 | P3 ✅ | climate risk | climate profiles, PCAF financed emissions, NGFS scenarios, climate stress, physical-risk assets, green asset ratio |
 | P4 ✅ | operational and non-financial risk | loss events, RCSA, key risk indicators, issues and actions, scenarios, third parties, cyber incidents, SMA capital |
-| P5 | retail banking | |
+| P5 ✅ | retail banking | customers, deposit accounts, mortgages, card accounts, personal loans, branches, collections cases, IFRS 9 portfolio segments |
 | P6 | genomics and biology | |
 | P7 | politics and society | |
 | P8 | economics | |

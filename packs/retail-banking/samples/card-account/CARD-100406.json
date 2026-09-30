@@ -1,0 +1,75 @@
+{
+ "cardId": "CARD-100406",
+ "holderName": "Kenji Silva",
+ "product": "Cashback Mastercard",
+ "balance": 2658.39,
+ "limit": 8000,
+ "utilisation": 0.332,
+ "apr": 0.247,
+ "status": "Active",
+ "spend": [
+  {
+   "category": "Groceries",
+   "amount": 160.39
+  },
+  {
+   "category": "Travel",
+   "amount": 613.14
+  },
+  {
+   "category": "Dining",
+   "amount": 90.07
+  },
+  {
+   "category": "Fuel",
+   "amount": 243.16
+  },
+  {
+   "category": "Online retail",
+   "amount": 280.66
+  },
+  {
+   "category": "Utilities",
+   "amount": 249.19
+  },
+  {
+   "category": "Entertainment",
+   "amount": 260.6
+  }
+ ],
+ "statements": [
+  {
+   "closing": "2026-08-16",
+   "balance": 2117.42,
+   "minimum": 79.75,
+   "paid": 2658.39
+  },
+  {
+   "closing": "2026-07-17",
+   "balance": 1751.38,
+   "minimum": 79.75,
+   "paid": 2658.39
+  },
+  {
+   "closing": "2026-06-17",
+   "balance": 1695.05,
+   "minimum": 79.75,
+   "paid": 79.75
+  },
+  {
+   "closing": "2026-05-18",
+   "balance": 2891.04,
+   "minimum": 79.75,
+   "paid": 2658.39
+  }
+ ],
+ "customer": "CUST-100406",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 12.0
+  }
+ }
+}

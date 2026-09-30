@@ -1,0 +1,75 @@
+{
+ "cardId": "CARD-100259",
+ "holderName": "Sofia Rossi",
+ "product": "Cashback Mastercard",
+ "balance": 1308.72,
+ "limit": 2500,
+ "utilisation": 0.523,
+ "apr": 0.2678,
+ "status": "Active",
+ "spend": [
+  {
+   "category": "Groceries",
+   "amount": 111.83
+  },
+  {
+   "category": "Travel",
+   "amount": 158.08
+  },
+  {
+   "category": "Dining",
+   "amount": 58.38
+  },
+  {
+   "category": "Fuel",
+   "amount": 181.57
+  },
+  {
+   "category": "Online retail",
+   "amount": 51.85
+  },
+  {
+   "category": "Utilities",
+   "amount": 130.22
+  },
+  {
+   "category": "Entertainment",
+   "amount": 33.5
+  }
+ ],
+ "statements": [
+  {
+   "closing": "2026-08-16",
+   "balance": 1385.51,
+   "minimum": 39.26,
+   "paid": 654.36
+  },
+  {
+   "closing": "2026-07-17",
+   "balance": 1067.4,
+   "minimum": 39.26,
+   "paid": 654.36
+  },
+  {
+   "closing": "2026-06-17",
+   "balance": 1524.39,
+   "minimum": 39.26,
+   "paid": 39.26
+  },
+  {
+   "closing": "2026-05-18",
+   "balance": 1215.47,
+   "minimum": 39.26,
+   "paid": 1308.72
+  }
+ ],
+ "customer": "CUST-100259",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 12.0
+  }
+ }
+}

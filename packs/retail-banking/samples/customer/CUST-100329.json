@@ -1,0 +1,39 @@
+{
+ "customerId": "CUST-100329",
+ "name": "Zara Rahman",
+ "segment": "Private",
+ "totalDeposits": 165209.38,
+ "totalLending": 426799.87,
+ "kycRisk": "Low",
+ "since": "1998-12-20",
+ "products": [
+  {
+   "product": "Current account",
+   "id": "ACCT-100329-CUR",
+   "balance": 24768.33
+  },
+  {
+   "product": "Savings",
+   "id": "ACCT-100329-SAV",
+   "balance": 140441.05
+  },
+  {
+   "product": "Mortgage",
+   "id": "MTG-100329",
+   "balance": -426799.87
+  }
+ ],
+ "profile": {
+  "city": "London",
+  "age": 67,
+  "employment": "Student",
+  "channel": "Online",
+  "creditScore": 617,
+  "bookingEntity": "LE-LDN"
+ },
+ "branch": "BRN-LDN-CITY",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

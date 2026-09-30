@@ -1,0 +1,52 @@
+{
+ "loanId": "PLN-100434",
+ "borrowerName": "Mateo Walker",
+ "purpose": "Car",
+ "balance": 22169.96,
+ "instalment": 856.95,
+ "rate": 0.118,
+ "daysPastDue": 64,
+ "schedule": [
+  {
+   "due": "2026-10-06",
+   "principal": 638.95,
+   "interest": 218.0,
+   "balance": 21531.01
+  },
+  {
+   "due": "2026-11-06",
+   "principal": 645.23,
+   "interest": 211.72,
+   "balance": 20885.78
+  },
+  {
+   "due": "2026-12-07",
+   "principal": 651.58,
+   "interest": 205.38,
+   "balance": 20234.2
+  },
+  {
+   "due": "2027-01-07",
+   "principal": 657.98,
+   "interest": 198.97,
+   "balance": 19576.22
+  },
+  {
+   "due": "2027-02-07",
+   "principal": 664.45,
+   "interest": 192.5,
+   "balance": 18911.76
+  },
+  {
+   "due": "2027-03-10",
+   "principal": 670.99,
+   "interest": 185.97,
+   "balance": 18240.78
+  }
+ ],
+ "customer": "CUST-100434",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

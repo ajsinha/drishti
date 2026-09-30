@@ -1,0 +1,44 @@
+{
+ "customerId": "CUST-100427",
+ "name": "Grace Nguyen",
+ "segment": "Mass market",
+ "totalDeposits": 104600.71,
+ "totalLending": 221769.61,
+ "kycRisk": "Medium",
+ "since": "2017-12-11",
+ "products": [
+  {
+   "product": "Current account",
+   "id": "ACCT-100427-CUR",
+   "balance": 9559.16
+  },
+  {
+   "product": "Savings",
+   "id": "ACCT-100427-SAV",
+   "balance": 95041.55
+  },
+  {
+   "product": "Mortgage",
+   "id": "MTG-100427",
+   "balance": -215098.86
+  },
+  {
+   "product": "Credit card",
+   "id": "CARD-100427",
+   "balance": -6670.75
+  }
+ ],
+ "profile": {
+  "city": "Frankfurt",
+  "age": 72,
+  "employment": "Employed",
+  "channel": "Branch",
+  "creditScore": 579,
+  "bookingEntity": "LE-FRA"
+ },
+ "branch": "BRN-FRA-MAIN",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

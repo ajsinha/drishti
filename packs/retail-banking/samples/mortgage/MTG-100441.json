@@ -1,0 +1,115 @@
+{
+ "loanId": "MTG-100441",
+ "borrowerName": "Zara Rahman",
+ "balance": 549678.04,
+ "rate": 0.0309,
+ "ltv": 0.605,
+ "remainingYears": 17,
+ "daysPastDue": 0,
+ "originalAmount": 724000.0,
+ "monthlyPayment": 3467.28,
+ "amortisation": [
+  {
+   "year": "2018",
+   "balance": 724000
+  },
+  {
+   "year": "2020",
+   "balance": 684368
+  },
+  {
+   "year": "2022",
+   "balance": 642212
+  },
+  {
+   "year": "2024",
+   "balance": 597372
+  },
+  {
+   "year": "2026",
+   "balance": 549678
+  },
+  {
+   "year": "2028",
+   "balance": 498947
+  },
+  {
+   "year": "2030",
+   "balance": 444987
+  },
+  {
+   "year": "2032",
+   "balance": 387591
+  },
+  {
+   "year": "2034",
+   "balance": 326541
+  },
+  {
+   "year": "2036",
+   "balance": 261604
+  },
+  {
+   "year": "2038",
+   "balance": 192533
+  },
+  {
+   "year": "2040",
+   "balance": 119065
+  },
+  {
+   "year": "2042",
+   "balance": 40919
+  }
+ ],
+ "property": {
+  "type": "Terraced house",
+  "city": "New York",
+  "valuation": 909000.0,
+  "valuedOn": "2026-02-22",
+  "rateType": "2y fixed"
+ },
+ "payments": [
+  {
+   "due": "2026-09-01",
+   "amount": 3467.28,
+   "paid": "2026-09-02",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-08-02",
+   "amount": 3467.28,
+   "paid": "2026-08-03",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-07-03",
+   "amount": 3467.28,
+   "paid": "2026-07-04",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-06-03",
+   "amount": 3467.28,
+   "paid": "2026-06-04",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-05-04",
+   "amount": 3467.28,
+   "paid": "2026-05-05",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-04-04",
+   "amount": 3467.28,
+   "paid": "2026-04-05",
+   "status": "Paid"
+  }
+ ],
+ "customer": "CUST-100441",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

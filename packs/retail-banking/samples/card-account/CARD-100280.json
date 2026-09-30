@@ -1,0 +1,75 @@
+{
+ "cardId": "CARD-100280",
+ "holderName": "Tomás Adeyemi",
+ "product": "Travel Platinum",
+ "balance": 1984.19,
+ "limit": 2500,
+ "utilisation": 0.794,
+ "apr": 0.186,
+ "status": "Active",
+ "spend": [
+  {
+   "category": "Groceries",
+   "amount": 80.52
+  },
+  {
+   "category": "Travel",
+   "amount": 129.24
+  },
+  {
+   "category": "Dining",
+   "amount": 76.29
+  },
+  {
+   "category": "Fuel",
+   "amount": 157.81
+  },
+  {
+   "category": "Online retail",
+   "amount": 145.79
+  },
+  {
+   "category": "Utilities",
+   "amount": 42.87
+  },
+  {
+   "category": "Entertainment",
+   "amount": 194.14
+  }
+ ],
+ "statements": [
+  {
+   "closing": "2026-08-16",
+   "balance": 1811.36,
+   "minimum": 59.53,
+   "paid": 992.1
+  },
+  {
+   "closing": "2026-07-17",
+   "balance": 1596.74,
+   "minimum": 59.53,
+   "paid": 992.1
+  },
+  {
+   "closing": "2026-06-17",
+   "balance": 1260.06,
+   "minimum": 59.53,
+   "paid": 1984.19
+  },
+  {
+   "closing": "2026-05-18",
+   "balance": 1790.75,
+   "minimum": 59.53,
+   "paid": 59.53
+  }
+ ],
+ "customer": "CUST-100280",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 12.0
+  }
+ }
+}

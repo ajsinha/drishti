@@ -1,0 +1,75 @@
+{
+ "cardId": "CARD-100252",
+ "holderName": "Oluwaseun Evans",
+ "product": "Travel Platinum",
+ "balance": 5839.76,
+ "limit": 8000,
+ "utilisation": 0.73,
+ "apr": 0.271,
+ "status": "Active",
+ "spend": [
+  {
+   "category": "Groceries",
+   "amount": 33.7
+  },
+  {
+   "category": "Travel",
+   "amount": 221.37
+  },
+  {
+   "category": "Dining",
+   "amount": 389.19
+  },
+  {
+   "category": "Fuel",
+   "amount": 388.98
+  },
+  {
+   "category": "Online retail",
+   "amount": 569.82
+  },
+  {
+   "category": "Utilities",
+   "amount": 243.64
+  },
+  {
+   "category": "Entertainment",
+   "amount": 543.59
+  }
+ ],
+ "statements": [
+  {
+   "closing": "2026-08-16",
+   "balance": 6471.31,
+   "minimum": 175.19,
+   "paid": 175.19
+  },
+  {
+   "closing": "2026-07-17",
+   "balance": 4066.08,
+   "minimum": 175.19,
+   "paid": 175.19
+  },
+  {
+   "closing": "2026-06-17",
+   "balance": 6772.02,
+   "minimum": 175.19,
+   "paid": 2919.88
+  },
+  {
+   "closing": "2026-05-18",
+   "balance": 6500.92,
+   "minimum": 175.19,
+   "paid": 175.19
+  }
+ ],
+ "customer": "CUST-100252",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 12.0
+  }
+ }
+}

@@ -1,0 +1,130 @@
+{
+ "accountId": "ACCT-100308-CUR",
+ "type": "Current account",
+ "holderName": "Liam García",
+ "balance": 2290168.5,
+ "currency": "JPY",
+ "rate": 0.001,
+ "status": "Active",
+ "transactions": [
+  {
+   "date": "2026-09-30",
+   "description": "ATM withdrawal",
+   "amount": -7990.41,
+   "balance": 2290168.5
+  },
+  {
+   "date": "2026-09-29",
+   "description": "Standing order · rent",
+   "amount": -4638.0,
+   "balance": 2298158.91
+  },
+  {
+   "date": "2026-09-26",
+   "description": "Salary",
+   "amount": 348710.06,
+   "balance": 2302796.91
+  },
+  {
+   "date": "2026-09-23",
+   "description": "ATM withdrawal",
+   "amount": -56829.92,
+   "balance": 1954086.85
+  },
+  {
+   "date": "2026-09-20",
+   "description": "Card payment · online retail",
+   "amount": -63819.21,
+   "balance": 2010916.77
+  },
+  {
+   "date": "2026-09-18",
+   "description": "Salary",
+   "amount": 365383.83,
+   "balance": 2074735.98
+  },
+  {
+   "date": "2026-09-16",
+   "description": "Salary",
+   "amount": -53037.78,
+   "balance": 1709352.15
+  },
+  {
+   "date": "2026-09-14",
+   "description": "Card payment · online retail",
+   "amount": -14839.8,
+   "balance": 1762389.93
+  },
+  {
+   "date": "2026-09-13",
+   "description": "Standing order · rent",
+   "amount": -25839.94,
+   "balance": 1777229.73
+  },
+  {
+   "date": "2026-09-12",
+   "description": "Direct debit · utilities",
+   "amount": -42170.76,
+   "balance": 1803069.67
+  }
+ ],
+ "history": [
+  {
+   "month": "2025-10",
+   "balance": 1651422.11
+  },
+  {
+   "month": "2025-11",
+   "balance": 1697908.26
+  },
+  {
+   "month": "2025-12",
+   "balance": 2340326.68
+  },
+  {
+   "month": "2026-01",
+   "balance": 2421373.32
+  },
+  {
+   "month": "2026-02",
+   "balance": 1611414.35
+  },
+  {
+   "month": "2026-03",
+   "balance": 1778593.91
+  },
+  {
+   "month": "2026-04",
+   "balance": 1722036.51
+  },
+  {
+   "month": "2026-05",
+   "balance": 2286273.41
+  },
+  {
+   "month": "2026-06",
+   "balance": 2593149.12
+  },
+  {
+   "month": "2026-07",
+   "balance": 1839937.67
+  },
+  {
+   "month": "2026-08",
+   "balance": 1984504.29
+  },
+  {
+   "month": "2026-09",
+   "balance": 1771145.11
+  }
+ ],
+ "customer": "CUST-100308",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 25.0
+  }
+ }
+}

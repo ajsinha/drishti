@@ -1,0 +1,39 @@
+{
+ "customerId": "CUST-100371",
+ "name": "Sofia Rossi",
+ "segment": "Mass market",
+ "totalDeposits": 61658.5,
+ "totalLending": 488949.2,
+ "kycRisk": "Low",
+ "since": "2006-01-09",
+ "products": [
+  {
+   "product": "Current account",
+   "id": "ACCT-100371-CUR",
+   "balance": 9757.9
+  },
+  {
+   "product": "Savings",
+   "id": "ACCT-100371-SAV",
+   "balance": 51900.6
+  },
+  {
+   "product": "Mortgage",
+   "id": "MTG-100371",
+   "balance": -488949.2
+  }
+ ],
+ "profile": {
+  "city": "London",
+  "age": 59,
+  "employment": "Retired",
+  "channel": "Branch",
+  "creditScore": 734,
+  "bookingEntity": "LE-LDN"
+ },
+ "branch": "BRN-LDN-CITY",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

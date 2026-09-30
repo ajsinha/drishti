@@ -86,7 +86,7 @@ Expected credit loss on a desk's portfolio under a climate scenario, by sector a
 
 **Fields its Sutra reads:** `scenarioName`, `deskName`, `loss2030`, `loss2050`, `capitalShare`, `bySector`, `byHorizon`.
 
-**Links:** `scenario` → Scenario (`climate-scenario`), `desk` → Desk (`desk`).
+**Links:** `climateScenario` → Scenario (`climate-scenario`), `desk` → Desk (`desk`).
 
 **Example:** `CST CST-CURRENTPOLICIES-COMM <GO>`
 

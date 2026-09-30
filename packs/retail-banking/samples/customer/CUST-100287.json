@@ -1,0 +1,39 @@
+{
+ "customerId": "CUST-100287",
+ "name": "Hannah Müller",
+ "segment": "Mass market",
+ "totalDeposits": 40477.23,
+ "totalLending": 214102.07,
+ "kycRisk": "High",
+ "since": "2022-08-19",
+ "products": [
+  {
+   "product": "Current account",
+   "id": "ACCT-100287-CUR",
+   "balance": 14582.53
+  },
+  {
+   "product": "Savings",
+   "id": "ACCT-100287-SAV",
+   "balance": 25894.7
+  },
+  {
+   "product": "Mortgage",
+   "id": "MTG-100287",
+   "balance": -214102.07
+  }
+ ],
+ "profile": {
+  "city": "London",
+  "age": 64,
+  "employment": "Retired",
+  "channel": "Branch",
+  "creditScore": 625,
+  "bookingEntity": "LE-LDN"
+ },
+ "branch": "BRN-LDN-CITY",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

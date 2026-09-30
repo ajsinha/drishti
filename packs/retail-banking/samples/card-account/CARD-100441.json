@@ -1,0 +1,75 @@
+{
+ "cardId": "CARD-100441",
+ "holderName": "Zara Rahman",
+ "product": "Rewards Visa",
+ "balance": 1508.93,
+ "limit": 2500,
+ "utilisation": 0.604,
+ "apr": 0.1907,
+ "status": "Active",
+ "spend": [
+  {
+   "category": "Groceries",
+   "amount": 176.39
+  },
+  {
+   "category": "Travel",
+   "amount": 152.81
+  },
+  {
+   "category": "Dining",
+   "amount": 59.51
+  },
+  {
+   "category": "Fuel",
+   "amount": 106.75
+  },
+  {
+   "category": "Online retail",
+   "amount": 189.13
+  },
+  {
+   "category": "Utilities",
+   "amount": 185.55
+  },
+  {
+   "category": "Entertainment",
+   "amount": 24.62
+  }
+ ],
+ "statements": [
+  {
+   "closing": "2026-08-16",
+   "balance": 978.65,
+   "minimum": 45.27,
+   "paid": 45.27
+  },
+  {
+   "closing": "2026-07-17",
+   "balance": 1679.67,
+   "minimum": 45.27,
+   "paid": 45.27
+  },
+  {
+   "closing": "2026-06-17",
+   "balance": 1217.54,
+   "minimum": 45.27,
+   "paid": 1508.93
+  },
+  {
+   "closing": "2026-05-18",
+   "balance": 1482.65,
+   "minimum": 45.27,
+   "paid": 754.47
+  }
+ ],
+ "customer": "CUST-100441",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 12.0
+  }
+ }
+}

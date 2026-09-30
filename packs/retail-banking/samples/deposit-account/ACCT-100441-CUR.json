@@ -1,0 +1,130 @@
+{
+ "accountId": "ACCT-100441-CUR",
+ "type": "Current account",
+ "holderName": "Zara Rahman",
+ "balance": 9588.63,
+ "currency": "USD",
+ "rate": 0.001,
+ "status": "Active",
+ "transactions": [
+  {
+   "date": "2026-09-30",
+   "description": "Card payment · grocer",
+   "amount": -90.16,
+   "balance": 9588.63
+  },
+  {
+   "date": "2026-09-28",
+   "description": "Card payment · online retail",
+   "amount": -82.54,
+   "balance": 9678.79
+  },
+  {
+   "date": "2026-09-25",
+   "description": "Salary",
+   "amount": 5193.6,
+   "balance": 9761.33
+  },
+  {
+   "date": "2026-09-22",
+   "description": "Card payment · online retail",
+   "amount": -426.08,
+   "balance": 4567.73
+  },
+  {
+   "date": "2026-09-19",
+   "description": "Card payment · online retail",
+   "amount": -377.86,
+   "balance": 4993.81
+  },
+  {
+   "date": "2026-09-16",
+   "description": "Card payment · grocer",
+   "amount": -316.76,
+   "balance": 5371.67
+  },
+  {
+   "date": "2026-09-14",
+   "description": "Transfer to savings",
+   "amount": -91.45,
+   "balance": 5688.43
+  },
+  {
+   "date": "2026-09-11",
+   "description": "Salary",
+   "amount": -194.25,
+   "balance": 5779.88
+  },
+  {
+   "date": "2026-09-08",
+   "description": "Salary",
+   "amount": -115.62,
+   "balance": 5974.13
+  },
+  {
+   "date": "2026-09-07",
+   "description": "Transfer to savings",
+   "amount": -392.2,
+   "balance": 6089.75
+  }
+ ],
+ "history": [
+  {
+   "month": "2025-10",
+   "balance": 6878.55
+  },
+  {
+   "month": "2025-11",
+   "balance": 9122.09
+  },
+  {
+   "month": "2025-12",
+   "balance": 10338.41
+  },
+  {
+   "month": "2026-01",
+   "balance": 9645.26
+  },
+  {
+   "month": "2026-02",
+   "balance": 7819.69
+  },
+  {
+   "month": "2026-03",
+   "balance": 8755.04
+  },
+  {
+   "month": "2026-04",
+   "balance": 7444.32
+  },
+  {
+   "month": "2026-05",
+   "balance": 10718.86
+  },
+  {
+   "month": "2026-06",
+   "balance": 9468.08
+  },
+  {
+   "month": "2026-07",
+   "balance": 8290.82
+  },
+  {
+   "month": "2026-08",
+   "balance": 7805.81
+  },
+  {
+   "month": "2026-09",
+   "balance": 7610.51
+  }
+ ],
+ "customer": "CUST-100441",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 25.0
+  }
+ }
+}

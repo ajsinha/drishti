@@ -1,0 +1,130 @@
+{
+ "accountId": "ACCT-100245-SAV",
+ "type": "Savings",
+ "holderName": "Mei Haddad",
+ "balance": 343503.77,
+ "currency": "GBP",
+ "rate": 0.032,
+ "status": "Active",
+ "transactions": [
+  {
+   "date": "2026-09-30",
+   "description": "ATM withdrawal",
+   "amount": -112.53,
+   "balance": 343503.77
+  },
+  {
+   "date": "2026-09-28",
+   "description": "Salary",
+   "amount": -272.09,
+   "balance": 343616.3
+  },
+  {
+   "date": "2026-09-26",
+   "description": "Card payment · online retail",
+   "amount": -383.24,
+   "balance": 343888.39
+  },
+  {
+   "date": "2026-09-25",
+   "description": "Salary",
+   "amount": -95.08,
+   "balance": 344271.63
+  },
+  {
+   "date": "2026-09-24",
+   "description": "Direct debit · utilities",
+   "amount": -221.76,
+   "balance": 344366.71
+  },
+  {
+   "date": "2026-09-22",
+   "description": "ATM withdrawal",
+   "amount": -344.13,
+   "balance": 344588.47
+  },
+  {
+   "date": "2026-09-19",
+   "description": "Card payment · grocer",
+   "amount": -169.91,
+   "balance": 344932.6
+  },
+  {
+   "date": "2026-09-16",
+   "description": "Salary",
+   "amount": 3303.22,
+   "balance": 345102.51
+  },
+  {
+   "date": "2026-09-13",
+   "description": "ATM withdrawal",
+   "amount": -272.93,
+   "balance": 341799.29
+  },
+  {
+   "date": "2026-09-11",
+   "description": "Salary",
+   "amount": 6336.3,
+   "balance": 342072.22
+  }
+ ],
+ "history": [
+  {
+   "month": "2025-10",
+   "balance": 318338.95
+  },
+  {
+   "month": "2025-11",
+   "balance": 374993.19
+  },
+  {
+   "month": "2025-12",
+   "balance": 241286.78
+  },
+  {
+   "month": "2026-01",
+   "balance": 394105.31
+  },
+  {
+   "month": "2026-02",
+   "balance": 352839.93
+  },
+  {
+   "month": "2026-03",
+   "balance": 370250.39
+  },
+  {
+   "month": "2026-04",
+   "balance": 311047.73
+  },
+  {
+   "month": "2026-05",
+   "balance": 372245.96
+  },
+  {
+   "month": "2026-06",
+   "balance": 276276.72
+  },
+  {
+   "month": "2026-07",
+   "balance": 255654.1
+  },
+  {
+   "month": "2026-08",
+   "balance": 392452.74
+  },
+  {
+   "month": "2026-09",
+   "balance": 255331.58
+  }
+ ],
+ "customer": "CUST-100245",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 25.0
+  }
+ }
+}

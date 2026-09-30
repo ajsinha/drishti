@@ -1,0 +1,130 @@
+{
+ "accountId": "ACCT-100322-CUR",
+ "type": "Current account",
+ "holderName": "Mateo Walker",
+ "balance": 8310.06,
+ "currency": "USD",
+ "rate": 0.001,
+ "status": "Active",
+ "transactions": [
+  {
+   "date": "2026-09-30",
+   "description": "ATM withdrawal",
+   "amount": -246.16,
+   "balance": 8310.06
+  },
+  {
+   "date": "2026-09-29",
+   "description": "Salary",
+   "amount": 1799.69,
+   "balance": 8556.22
+  },
+  {
+   "date": "2026-09-27",
+   "description": "ATM withdrawal",
+   "amount": -347.79,
+   "balance": 6756.53
+  },
+  {
+   "date": "2026-09-24",
+   "description": "Standing order · rent",
+   "amount": -147.24,
+   "balance": 7104.32
+  },
+  {
+   "date": "2026-09-21",
+   "description": "Salary",
+   "amount": 3316.7,
+   "balance": 7251.56
+  },
+  {
+   "date": "2026-09-20",
+   "description": "ATM withdrawal",
+   "amount": -113.31,
+   "balance": 3934.86
+  },
+  {
+   "date": "2026-09-19",
+   "description": "Direct debit · utilities",
+   "amount": -58.54,
+   "balance": 4048.17
+  },
+  {
+   "date": "2026-09-17",
+   "description": "Salary",
+   "amount": -251.58,
+   "balance": 4106.71
+  },
+  {
+   "date": "2026-09-14",
+   "description": "Salary",
+   "amount": 6408.21,
+   "balance": 4358.29
+  },
+  {
+   "date": "2026-09-11",
+   "description": "Salary",
+   "amount": 6341.42,
+   "balance": -2049.92
+  }
+ ],
+ "history": [
+  {
+   "month": "2025-10",
+   "balance": 9055.63
+  },
+  {
+   "month": "2025-11",
+   "balance": 8317.02
+  },
+  {
+   "month": "2025-12",
+   "balance": 7564.41
+  },
+  {
+   "month": "2026-01",
+   "balance": 6881.89
+  },
+  {
+   "month": "2026-02",
+   "balance": 9010.06
+  },
+  {
+   "month": "2026-03",
+   "balance": 8200.17
+  },
+  {
+   "month": "2026-04",
+   "balance": 6952.65
+  },
+  {
+   "month": "2026-05",
+   "balance": 9114.8
+  },
+  {
+   "month": "2026-06",
+   "balance": 7091.69
+  },
+  {
+   "month": "2026-07",
+   "balance": 7228.95
+  },
+  {
+   "month": "2026-08",
+   "balance": 6714.52
+  },
+  {
+   "month": "2026-09",
+   "balance": 9246.36
+  }
+ ],
+ "customer": "CUST-100322",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 25.0
+  }
+ }
+}

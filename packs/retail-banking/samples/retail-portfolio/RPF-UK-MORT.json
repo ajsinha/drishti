@@ -1,0 +1,110 @@
+{
+ "portfolioId": "RPF-UK-MORT",
+ "name": "UK residential mortgages",
+ "exposure": 33435400000.0,
+ "ecl": 163229000.0,
+ "coverage": 0.0049,
+ "dpd30": 0.0037,
+ "stages": [
+  {
+   "stage": "Stage 1",
+   "exposure": 30120400000.0,
+   "pd": 0.005,
+   "lgd": 0.15,
+   "ecl": 22590000.0
+  },
+  {
+   "stage": "Stage 2",
+   "exposure": 2701600000.0,
+   "pd": 0.03,
+   "lgd": 0.15,
+   "ecl": 48629000.0
+  },
+  {
+   "stage": "Stage 3",
+   "exposure": 613400000.0,
+   "pd": 1.0,
+   "lgd": 0.15,
+   "ecl": 92010000.0
+  }
+ ],
+ "delinquency": [
+  {
+   "month": "2025-04",
+   "rate": 0.0042
+  },
+  {
+   "month": "2025-05",
+   "rate": 0.0045
+  },
+  {
+   "month": "2025-06",
+   "rate": 0.0045
+  },
+  {
+   "month": "2025-07",
+   "rate": 0.0043
+  },
+  {
+   "month": "2025-08",
+   "rate": 0.0046
+  },
+  {
+   "month": "2025-09",
+   "rate": 0.0045
+  },
+  {
+   "month": "2025-10",
+   "rate": 0.0054
+  },
+  {
+   "month": "2025-11",
+   "rate": 0.0058
+  },
+  {
+   "month": "2025-12",
+   "rate": 0.004
+  },
+  {
+   "month": "2026-01",
+   "rate": 0.005
+  },
+  {
+   "month": "2026-02",
+   "rate": 0.005
+  },
+  {
+   "month": "2026-03",
+   "rate": 0.0057
+  },
+  {
+   "month": "2026-04",
+   "rate": 0.0042
+  },
+  {
+   "month": "2026-05",
+   "rate": 0.0043
+  },
+  {
+   "month": "2026-06",
+   "rate": 0.0048
+  },
+  {
+   "month": "2026-07",
+   "rate": 0.0044
+  },
+  {
+   "month": "2026-08",
+   "rate": 0.0046
+  },
+  {
+   "month": "2026-09",
+   "rate": 0.0037
+  }
+ ],
+ "legalEntity": "LE-LDN",
+ "_meta": {
+  "source": "impairment-engine",
+  "generation": 1
+ }
+}

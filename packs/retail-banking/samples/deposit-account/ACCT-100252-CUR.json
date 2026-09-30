@@ -1,0 +1,130 @@
+{
+ "accountId": "ACCT-100252-CUR",
+ "type": "Current account",
+ "holderName": "Oluwaseun Evans",
+ "balance": 6798.25,
+ "currency": "GBP",
+ "rate": 0.001,
+ "status": "Active",
+ "transactions": [
+  {
+   "date": "2026-09-30",
+   "description": "Salary",
+   "amount": 3567.89,
+   "balance": 6798.25
+  },
+  {
+   "date": "2026-09-28",
+   "description": "Card payment · online retail",
+   "amount": -389.54,
+   "balance": 3230.36
+  },
+  {
+   "date": "2026-09-25",
+   "description": "Card payment · online retail",
+   "amount": -285.05,
+   "balance": 3619.9
+  },
+  {
+   "date": "2026-09-22",
+   "description": "Standing order · rent",
+   "amount": -256.0,
+   "balance": 3904.95
+  },
+  {
+   "date": "2026-09-19",
+   "description": "Salary",
+   "amount": 4594.83,
+   "balance": 4160.95
+  },
+  {
+   "date": "2026-09-16",
+   "description": "Transfer to savings",
+   "amount": -394.85,
+   "balance": -433.88
+  },
+  {
+   "date": "2026-09-15",
+   "description": "Card payment · online retail",
+   "amount": -425.7,
+   "balance": -39.03
+  },
+  {
+   "date": "2026-09-12",
+   "description": "Salary",
+   "amount": 2755.01,
+   "balance": 386.67
+  },
+  {
+   "date": "2026-09-09",
+   "description": "Salary",
+   "amount": 5181.61,
+   "balance": -2368.34
+  },
+  {
+   "date": "2026-09-08",
+   "description": "Salary",
+   "amount": 4382.14,
+   "balance": -7549.95
+  }
+ ],
+ "history": [
+  {
+   "month": "2025-10",
+   "balance": 5367.66
+  },
+  {
+   "month": "2025-11",
+   "balance": 5841.59
+  },
+  {
+   "month": "2025-12",
+   "balance": 6066.51
+  },
+  {
+   "month": "2026-01",
+   "balance": 5082.08
+  },
+  {
+   "month": "2026-02",
+   "balance": 5369.79
+  },
+  {
+   "month": "2026-03",
+   "balance": 5989.42
+  },
+  {
+   "month": "2026-04",
+   "balance": 7097.97
+  },
+  {
+   "month": "2026-05",
+   "balance": 6660.18
+  },
+  {
+   "month": "2026-06",
+   "balance": 4793.2
+  },
+  {
+   "month": "2026-07",
+   "balance": 5295.56
+  },
+  {
+   "month": "2026-08",
+   "balance": 7081.73
+  },
+  {
+   "month": "2026-09",
+   "balance": 7744.3
+  }
+ ],
+ "customer": "CUST-100252",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 25.0
+  }
+ }
+}

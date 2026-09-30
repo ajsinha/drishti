@@ -1,0 +1,75 @@
+{
+ "cardId": "CARD-100378",
+ "holderName": "Daniel Tanaka",
+ "product": "Rewards Visa",
+ "balance": 6491.71,
+ "limit": 15000,
+ "utilisation": 0.433,
+ "apr": 0.2373,
+ "status": "Active",
+ "spend": [
+  {
+   "category": "Groceries",
+   "amount": 1005.29
+  },
+  {
+   "category": "Travel",
+   "amount": 708.47
+  },
+  {
+   "category": "Dining",
+   "amount": 738.96
+  },
+  {
+   "category": "Fuel",
+   "amount": 1166.58
+  },
+  {
+   "category": "Online retail",
+   "amount": 1136.76
+  },
+  {
+   "category": "Utilities",
+   "amount": 568.76
+  },
+  {
+   "category": "Entertainment",
+   "amount": 1114.66
+  }
+ ],
+ "statements": [
+  {
+   "closing": "2026-08-16",
+   "balance": 7590.13,
+   "minimum": 194.75,
+   "paid": 3245.86
+  },
+  {
+   "closing": "2026-07-17",
+   "balance": 5937.96,
+   "minimum": 194.75,
+   "paid": 6491.71
+  },
+  {
+   "closing": "2026-06-17",
+   "balance": 6841.82,
+   "minimum": 194.75,
+   "paid": 6491.71
+  },
+  {
+   "closing": "2026-05-18",
+   "balance": 5152.3,
+   "minimum": 194.75,
+   "paid": 3245.86
+  }
+ ],
+ "customer": "CUST-100378",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 12.0
+  }
+ }
+}

@@ -1,0 +1,52 @@
+{
+ "loanId": "PLN-100322",
+ "borrowerName": "Mateo Walker",
+ "purpose": "Debt consolidation",
+ "balance": 10322.23,
+ "instalment": 290.1,
+ "rate": 0.0832,
+ "daysPastDue": 64,
+ "schedule": [
+  {
+   "due": "2026-10-06",
+   "principal": 218.54,
+   "interest": 71.57,
+   "balance": 10103.69
+  },
+  {
+   "due": "2026-11-06",
+   "principal": 220.05,
+   "interest": 70.05,
+   "balance": 9883.64
+  },
+  {
+   "due": "2026-12-07",
+   "principal": 221.58,
+   "interest": 68.53,
+   "balance": 9662.06
+  },
+  {
+   "due": "2027-01-07",
+   "principal": 223.11,
+   "interest": 66.99,
+   "balance": 9438.95
+  },
+  {
+   "due": "2027-02-07",
+   "principal": 224.66,
+   "interest": 65.44,
+   "balance": 9214.29
+  },
+  {
+   "due": "2027-03-10",
+   "principal": 226.22,
+   "interest": 63.89,
+   "balance": 8988.07
+  }
+ ],
+ "customer": "CUST-100322",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

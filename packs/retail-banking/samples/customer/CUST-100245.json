@@ -1,0 +1,39 @@
+{
+ "customerId": "CUST-100245",
+ "name": "Mei Haddad",
+ "segment": "Private",
+ "totalDeposits": 361224.73,
+ "totalLending": 651900.95,
+ "kycRisk": "Low",
+ "since": "2021-02-16",
+ "products": [
+  {
+   "product": "Current account",
+   "id": "ACCT-100245-CUR",
+   "balance": 17720.96
+  },
+  {
+   "product": "Savings",
+   "id": "ACCT-100245-SAV",
+   "balance": 343503.77
+  },
+  {
+   "product": "Mortgage",
+   "id": "MTG-100245",
+   "balance": -651900.95
+  }
+ ],
+ "profile": {
+  "city": "London",
+  "age": 24,
+  "employment": "Self-employed",
+  "channel": "Online",
+  "creditScore": 761,
+  "bookingEntity": "LE-LDN"
+ },
+ "branch": "BRN-LDN-CITY",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

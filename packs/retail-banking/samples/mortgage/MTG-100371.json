@@ -1,0 +1,115 @@
+{
+ "loanId": "MTG-100371",
+ "borrowerName": "Sofia Rossi",
+ "balance": 488949.2,
+ "rate": 0.0596,
+ "ltv": 0.68,
+ "remainingYears": 20,
+ "daysPastDue": 0,
+ "originalAmount": 544000.0,
+ "monthlyPayment": 3491.71,
+ "amortisation": [
+  {
+   "year": "2021",
+   "balance": 544000
+  },
+  {
+   "year": "2023",
+   "balance": 523921
+  },
+  {
+   "year": "2025",
+   "balance": 501306
+  },
+  {
+   "year": "2027",
+   "balance": 475836
+  },
+  {
+   "year": "2029",
+   "balance": 447150
+  },
+  {
+   "year": "2031",
+   "balance": 414842
+  },
+  {
+   "year": "2033",
+   "balance": 378454
+  },
+  {
+   "year": "2035",
+   "balance": 337472
+  },
+  {
+   "year": "2037",
+   "balance": 291316
+  },
+  {
+   "year": "2039",
+   "balance": 239332
+  },
+  {
+   "year": "2041",
+   "balance": 180785
+  },
+  {
+   "year": "2043",
+   "balance": 114844
+  },
+  {
+   "year": "2045",
+   "balance": 40579
+  }
+ ],
+ "property": {
+  "type": "Terraced house",
+  "city": "London",
+  "valuation": 719000.0,
+  "valuedOn": "2024-09-09",
+  "rateType": "Tracker"
+ },
+ "payments": [
+  {
+   "due": "2026-09-01",
+   "amount": 3491.71,
+   "paid": "2026-09-02",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-08-02",
+   "amount": 3491.71,
+   "paid": "2026-08-03",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-07-03",
+   "amount": 3491.71,
+   "paid": "2026-07-04",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-06-03",
+   "amount": 3491.71,
+   "paid": "2026-06-04",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-05-04",
+   "amount": 3491.71,
+   "paid": "2026-05-05",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-04-04",
+   "amount": 3491.71,
+   "paid": "2026-04-05",
+   "status": "Paid"
+  }
+ ],
+ "customer": "CUST-100371",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

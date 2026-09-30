@@ -1,0 +1,52 @@
+{
+ "loanId": "PLN-100406",
+ "borrowerName": "Kenji Silva",
+ "purpose": "Wedding",
+ "balance": 30544.7,
+ "instalment": 746.78,
+ "rate": 0.0897,
+ "daysPastDue": 0,
+ "schedule": [
+  {
+   "due": "2026-10-06",
+   "principal": 518.46,
+   "interest": 228.32,
+   "balance": 30026.25
+  },
+  {
+   "due": "2026-11-06",
+   "principal": 522.33,
+   "interest": 224.45,
+   "balance": 29503.91
+  },
+  {
+   "due": "2026-12-07",
+   "principal": 526.23,
+   "interest": 220.54,
+   "balance": 28977.68
+  },
+  {
+   "due": "2027-01-07",
+   "principal": 530.17,
+   "interest": 216.61,
+   "balance": 28447.51
+  },
+  {
+   "due": "2027-02-07",
+   "principal": 534.13,
+   "interest": 212.65,
+   "balance": 27913.38
+  },
+  {
+   "due": "2027-03-10",
+   "principal": 538.12,
+   "interest": 208.65,
+   "balance": 27375.26
+  }
+ ],
+ "customer": "CUST-100406",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

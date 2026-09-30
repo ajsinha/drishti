@@ -1,0 +1,115 @@
+{
+ "loanId": "MTG-100357",
+ "borrowerName": "Mei Haddad",
+ "balance": 238181.49,
+ "rate": 0.049,
+ "ltv": 0.601,
+ "remainingYears": 22,
+ "daysPastDue": 0,
+ "originalAmount": 255000.0,
+ "monthlyPayment": 1475.89,
+ "amortisation": [
+  {
+   "year": "2023",
+   "balance": 255000
+  },
+  {
+   "year": "2025",
+   "balance": 244064
+  },
+  {
+   "year": "2027",
+   "balance": 232004
+  },
+  {
+   "year": "2029",
+   "balance": 218706
+  },
+  {
+   "year": "2031",
+   "balance": 204040
+  },
+  {
+   "year": "2033",
+   "balance": 187869
+  },
+  {
+   "year": "2035",
+   "balance": 170035
+  },
+  {
+   "year": "2037",
+   "balance": 150370
+  },
+  {
+   "year": "2039",
+   "balance": 128684
+  },
+  {
+   "year": "2041",
+   "balance": 104770
+  },
+  {
+   "year": "2043",
+   "balance": 78398
+  },
+  {
+   "year": "2045",
+   "balance": 49318
+  },
+  {
+   "year": "2047",
+   "balance": 17249
+  }
+ ],
+ "property": {
+  "type": "Terraced house",
+  "city": "New York",
+  "valuation": 396000.0,
+  "valuedOn": "2024-10-17",
+  "rateType": "Tracker"
+ },
+ "payments": [
+  {
+   "due": "2026-09-01",
+   "amount": 1475.89,
+   "paid": "2026-09-02",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-08-02",
+   "amount": 1475.89,
+   "paid": "2026-08-03",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-07-03",
+   "amount": 1475.89,
+   "paid": "2026-07-04",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-06-03",
+   "amount": 1475.89,
+   "paid": "2026-06-04",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-05-04",
+   "amount": 1475.89,
+   "paid": "2026-05-05",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-04-04",
+   "amount": 1475.89,
+   "paid": "2026-04-05",
+   "status": "Paid"
+  }
+ ],
+ "customer": "CUST-100357",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

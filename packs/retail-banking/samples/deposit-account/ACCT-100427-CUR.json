@@ -1,0 +1,130 @@
+{
+ "accountId": "ACCT-100427-CUR",
+ "type": "Current account",
+ "holderName": "Grace Nguyen",
+ "balance": 9559.16,
+ "currency": "EUR",
+ "rate": 0.001,
+ "status": "Active",
+ "transactions": [
+  {
+   "date": "2026-09-30",
+   "description": "Card payment · online retail",
+   "amount": -224.76,
+   "balance": 9559.16
+  },
+  {
+   "date": "2026-09-27",
+   "description": "Card payment · online retail",
+   "amount": -228.17,
+   "balance": 9783.92
+  },
+  {
+   "date": "2026-09-24",
+   "description": "Transfer to savings",
+   "amount": -170.26,
+   "balance": 10012.09
+  },
+  {
+   "date": "2026-09-22",
+   "description": "Salary",
+   "amount": 5588.64,
+   "balance": 10182.35
+  },
+  {
+   "date": "2026-09-19",
+   "description": "Salary",
+   "amount": 2388.16,
+   "balance": 4593.71
+  },
+  {
+   "date": "2026-09-18",
+   "description": "Salary",
+   "amount": 2331.98,
+   "balance": 2205.55
+  },
+  {
+   "date": "2026-09-17",
+   "description": "ATM withdrawal",
+   "amount": -169.63,
+   "balance": -126.43
+  },
+  {
+   "date": "2026-09-14",
+   "description": "Standing order · rent",
+   "amount": -333.57,
+   "balance": 43.2
+  },
+  {
+   "date": "2026-09-13",
+   "description": "Card payment · online retail",
+   "amount": -316.44,
+   "balance": 376.77
+  },
+  {
+   "date": "2026-09-11",
+   "description": "Salary",
+   "amount": 3799.81,
+   "balance": 693.21
+  }
+ ],
+ "history": [
+  {
+   "month": "2025-10",
+   "balance": 9661.83
+  },
+  {
+   "month": "2025-11",
+   "balance": 8397.67
+  },
+  {
+   "month": "2025-12",
+   "balance": 10372.53
+  },
+  {
+   "month": "2026-01",
+   "balance": 10872.49
+  },
+  {
+   "month": "2026-02",
+   "balance": 8493.87
+  },
+  {
+   "month": "2026-03",
+   "balance": 9588.19
+  },
+  {
+   "month": "2026-04",
+   "balance": 10784.26
+  },
+  {
+   "month": "2026-05",
+   "balance": 9152.61
+  },
+  {
+   "month": "2026-06",
+   "balance": 6805.46
+  },
+  {
+   "month": "2026-07",
+   "balance": 10302.52
+  },
+  {
+   "month": "2026-08",
+   "balance": 7013.09
+  },
+  {
+   "month": "2026-09",
+   "balance": 10384.72
+  }
+ ],
+ "customer": "CUST-100427",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 25.0
+  }
+ }
+}

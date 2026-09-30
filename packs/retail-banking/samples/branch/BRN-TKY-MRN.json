@@ -1,0 +1,78 @@
+{
+ "branchId": "BRN-TKY-MRN",
+ "name": "Marunouchi",
+ "city": "Tokyo",
+ "customers": 8195,
+ "deposits": 59786092000.0,
+ "lending": 58952000.0,
+ "nps": 19,
+ "productMix": [
+  {
+   "product": "Savings",
+   "balance": 46583337000.0
+  },
+  {
+   "product": "Current account",
+   "balance": 13202756000.0
+  },
+  {
+   "product": "Personal loan",
+   "balance": 58952000.0
+  }
+ ],
+ "npsHistory": [
+  {
+   "month": "2025-10",
+   "nps": 30
+  },
+  {
+   "month": "2025-11",
+   "nps": 58
+  },
+  {
+   "month": "2025-12",
+   "nps": 25
+  },
+  {
+   "month": "2026-01",
+   "nps": 52
+  },
+  {
+   "month": "2026-02",
+   "nps": 25
+  },
+  {
+   "month": "2026-03",
+   "nps": 57
+  },
+  {
+   "month": "2026-04",
+   "nps": 50
+  },
+  {
+   "month": "2026-05",
+   "nps": 59
+  },
+  {
+   "month": "2026-06",
+   "nps": 29
+  },
+  {
+   "month": "2026-07",
+   "nps": 43
+  },
+  {
+   "month": "2026-08",
+   "nps": 62
+  },
+  {
+   "month": "2026-09",
+   "nps": 54
+  }
+ ],
+ "legalEntity": "LE-TKY",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

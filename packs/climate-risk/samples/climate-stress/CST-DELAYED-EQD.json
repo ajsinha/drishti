@@ -41,7 +41,7 @@
    "loss": 15465728
   }
  ],
- "scenario": "NGFS-DELAYED",
+ "climateScenario": "NGFS-DELAYED",
  "desk": "DESK-EQD",
  "_meta": {
   "source": "climate-stress",

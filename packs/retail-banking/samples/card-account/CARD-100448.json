@@ -1,0 +1,75 @@
+{
+ "cardId": "CARD-100448",
+ "holderName": "Noah O'Brien",
+ "product": "Cashback Mastercard",
+ "balance": 1502.48,
+ "limit": 2500,
+ "utilisation": 0.601,
+ "apr": 0.2373,
+ "status": "Active",
+ "spend": [
+  {
+   "category": "Groceries",
+   "amount": 196.8
+  },
+  {
+   "category": "Travel",
+   "amount": 64.28
+  },
+  {
+   "category": "Dining",
+   "amount": 90.91
+  },
+  {
+   "category": "Fuel",
+   "amount": 113.05
+  },
+  {
+   "category": "Online retail",
+   "amount": 157.25
+  },
+  {
+   "category": "Utilities",
+   "amount": 97.24
+  },
+  {
+   "category": "Entertainment",
+   "amount": 99.02
+  }
+ ],
+ "statements": [
+  {
+   "closing": "2026-08-16",
+   "balance": 1504.29,
+   "minimum": 45.07,
+   "paid": 751.24
+  },
+  {
+   "closing": "2026-07-17",
+   "balance": 1303.23,
+   "minimum": 45.07,
+   "paid": 45.07
+  },
+  {
+   "closing": "2026-06-17",
+   "balance": 1159.77,
+   "minimum": 45.07,
+   "paid": 751.24
+  },
+  {
+   "closing": "2026-05-18",
+   "balance": 1622.25,
+   "minimum": 45.07,
+   "paid": 1502.48
+  }
+ ],
+ "customer": "CUST-100448",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 12.0
+  }
+ }
+}

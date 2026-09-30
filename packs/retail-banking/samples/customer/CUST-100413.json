@@ -1,0 +1,39 @@
+{
+ "customerId": "CUST-100413",
+ "name": "Fatima Chen",
+ "segment": "Private",
+ "totalDeposits": 440213.58,
+ "totalLending": 398076.26,
+ "kycRisk": "High",
+ "since": "2019-09-04",
+ "products": [
+  {
+   "product": "Current account",
+   "id": "ACCT-100413-CUR",
+   "balance": 33044.7
+  },
+  {
+   "product": "Savings",
+   "id": "ACCT-100413-SAV",
+   "balance": 407168.88
+  },
+  {
+   "product": "Mortgage",
+   "id": "MTG-100413",
+   "balance": -398076.26
+  }
+ ],
+ "profile": {
+  "city": "London",
+  "age": 54,
+  "employment": "Student",
+  "channel": "Mobile",
+  "creditScore": 585,
+  "bookingEntity": "LE-LDN"
+ },
+ "branch": "BRN-LDN-CITY",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

@@ -1,0 +1,75 @@
+{
+ "cardId": "CARD-100301",
+ "holderName": "Fatima Chen",
+ "product": "Travel Platinum",
+ "balance": 10767.21,
+ "limit": 15000,
+ "utilisation": 0.718,
+ "apr": 0.2762,
+ "status": "Active",
+ "spend": [
+  {
+   "category": "Groceries",
+   "amount": 122.51
+  },
+  {
+   "category": "Travel",
+   "amount": 316.43
+  },
+  {
+   "category": "Dining",
+   "amount": 1095.75
+  },
+  {
+   "category": "Fuel",
+   "amount": 961.23
+  },
+  {
+   "category": "Online retail",
+   "amount": 949.33
+  },
+  {
+   "category": "Utilities",
+   "amount": 671.7
+  },
+  {
+   "category": "Entertainment",
+   "amount": 1058.95
+  }
+ ],
+ "statements": [
+  {
+   "closing": "2026-08-16",
+   "balance": 9047.33,
+   "minimum": 323.02,
+   "paid": 10767.21
+  },
+  {
+   "closing": "2026-07-17",
+   "balance": 11667.94,
+   "minimum": 323.02,
+   "paid": 323.02
+  },
+  {
+   "closing": "2026-06-17",
+   "balance": 10788.48,
+   "minimum": 323.02,
+   "paid": 10767.21
+  },
+  {
+   "closing": "2026-05-18",
+   "balance": 10317.89,
+   "minimum": 323.02,
+   "paid": 5383.6
+  }
+ ],
+ "customer": "CUST-100301",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 12.0
+  }
+ }
+}

@@ -1,0 +1,75 @@
+{
+ "cardId": "CARD-100399",
+ "holderName": "Hannah Müller",
+ "product": "Rewards Visa",
+ "balance": 3256.38,
+ "limit": 8000,
+ "utilisation": 0.407,
+ "apr": 0.2165,
+ "status": "Active",
+ "spend": [
+  {
+   "category": "Groceries",
+   "amount": 262.46
+  },
+  {
+   "category": "Travel",
+   "amount": 43.97
+  },
+  {
+   "category": "Dining",
+   "amount": 156.85
+  },
+  {
+   "category": "Fuel",
+   "amount": 51.17
+  },
+  {
+   "category": "Online retail",
+   "amount": 218.8
+  },
+  {
+   "category": "Utilities",
+   "amount": 376.96
+  },
+  {
+   "category": "Entertainment",
+   "amount": 560.53
+  }
+ ],
+ "statements": [
+  {
+   "closing": "2026-08-16",
+   "balance": 2743.4,
+   "minimum": 97.69,
+   "paid": 1628.19
+  },
+  {
+   "closing": "2026-07-17",
+   "balance": 2912.81,
+   "minimum": 97.69,
+   "paid": 3256.38
+  },
+  {
+   "closing": "2026-06-17",
+   "balance": 2518.76,
+   "minimum": 97.69,
+   "paid": 3256.38
+  },
+  {
+   "closing": "2026-05-18",
+   "balance": 2564.91,
+   "minimum": 97.69,
+   "paid": 97.69
+  }
+ ],
+ "customer": "CUST-100399",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 12.0
+  }
+ }
+}

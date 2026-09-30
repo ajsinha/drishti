@@ -1,0 +1,130 @@
+{
+ "accountId": "ACCT-100364-CUR",
+ "type": "Current account",
+ "holderName": "Oluwaseun Evans",
+ "balance": 8570.55,
+ "currency": "USD",
+ "rate": 0.001,
+ "status": "Active",
+ "transactions": [
+  {
+   "date": "2026-09-30",
+   "description": "Transfer to savings",
+   "amount": -276.36,
+   "balance": 8570.55
+  },
+  {
+   "date": "2026-09-29",
+   "description": "Salary",
+   "amount": 5673.09,
+   "balance": 8846.91
+  },
+  {
+   "date": "2026-09-27",
+   "description": "Direct debit · utilities",
+   "amount": -269.67,
+   "balance": 3173.82
+  },
+  {
+   "date": "2026-09-25",
+   "description": "Card payment · grocer",
+   "amount": -12.92,
+   "balance": 3443.49
+  },
+  {
+   "date": "2026-09-24",
+   "description": "ATM withdrawal",
+   "amount": -387.61,
+   "balance": 3456.41
+  },
+  {
+   "date": "2026-09-22",
+   "description": "Salary",
+   "amount": -431.42,
+   "balance": 3844.02
+  },
+  {
+   "date": "2026-09-21",
+   "description": "Transfer to savings",
+   "amount": -198.25,
+   "balance": 4275.44
+  },
+  {
+   "date": "2026-09-20",
+   "description": "Salary",
+   "amount": -136.95,
+   "balance": 4473.69
+  },
+  {
+   "date": "2026-09-17",
+   "description": "Transfer to savings",
+   "amount": -67.01,
+   "balance": 4610.64
+  },
+  {
+   "date": "2026-09-14",
+   "description": "Salary",
+   "amount": 6154.87,
+   "balance": 4677.65
+  }
+ ],
+ "history": [
+  {
+   "month": "2025-10",
+   "balance": 6132.56
+  },
+  {
+   "month": "2025-11",
+   "balance": 7705.08
+  },
+  {
+   "month": "2025-12",
+   "balance": 6576.34
+  },
+  {
+   "month": "2026-01",
+   "balance": 6344.89
+  },
+  {
+   "month": "2026-02",
+   "balance": 6729.37
+  },
+  {
+   "month": "2026-03",
+   "balance": 9581.81
+  },
+  {
+   "month": "2026-04",
+   "balance": 9427.64
+  },
+  {
+   "month": "2026-05",
+   "balance": 6836.52
+  },
+  {
+   "month": "2026-06",
+   "balance": 6264.76
+  },
+  {
+   "month": "2026-07",
+   "balance": 8695.32
+  },
+  {
+   "month": "2026-08",
+   "balance": 8731.24
+  },
+  {
+   "month": "2026-09",
+   "balance": 6372.96
+  }
+ ],
+ "customer": "CUST-100364",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 25.0
+  }
+ }
+}

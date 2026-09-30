@@ -62,7 +62,10 @@ graph:
     kind: physical-asset
   - pattern: ^GAR-
     kind: taxonomy-alignment
-  fields: {}
+  fields:
+    climateScenario:
+      kind: climate-scenario
+      label: Scenario
   badges:
     climate-profile: '''transition '' + $.transitionScore'
 connectors:

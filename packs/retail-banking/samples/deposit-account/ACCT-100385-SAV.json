@@ -1,0 +1,130 @@
+{
+ "accountId": "ACCT-100385-SAV",
+ "type": "Savings",
+ "holderName": "Aisha Patel",
+ "balance": 29127.66,
+ "currency": "EUR",
+ "rate": 0.032,
+ "status": "Active",
+ "transactions": [
+  {
+   "date": "2026-09-30",
+   "description": "Direct debit · utilities",
+   "amount": -362.05,
+   "balance": 29127.66
+  },
+  {
+   "date": "2026-09-29",
+   "description": "Salary",
+   "amount": 2491.9,
+   "balance": 29489.71
+  },
+  {
+   "date": "2026-09-26",
+   "description": "Transfer to savings",
+   "amount": -137.0,
+   "balance": 26997.81
+  },
+  {
+   "date": "2026-09-23",
+   "description": "ATM withdrawal",
+   "amount": -137.64,
+   "balance": 27134.81
+  },
+  {
+   "date": "2026-09-22",
+   "description": "Salary",
+   "amount": 1736.37,
+   "balance": 27272.45
+  },
+  {
+   "date": "2026-09-21",
+   "description": "Transfer to savings",
+   "amount": -131.86,
+   "balance": 25536.08
+  },
+  {
+   "date": "2026-09-18",
+   "description": "Card payment · grocer",
+   "amount": -339.94,
+   "balance": 25667.94
+  },
+  {
+   "date": "2026-09-15",
+   "description": "Salary",
+   "amount": 5410.89,
+   "balance": 26007.88
+  },
+  {
+   "date": "2026-09-12",
+   "description": "Salary",
+   "amount": 5444.77,
+   "balance": 20596.99
+  },
+  {
+   "date": "2026-09-10",
+   "description": "Direct debit · utilities",
+   "amount": -75.95,
+   "balance": 15152.22
+  }
+ ],
+ "history": [
+  {
+   "month": "2025-10",
+   "balance": 22655.28
+  },
+  {
+   "month": "2025-11",
+   "balance": 25916.29
+  },
+  {
+   "month": "2025-12",
+   "balance": 23075.83
+  },
+  {
+   "month": "2026-01",
+   "balance": 30256.19
+  },
+  {
+   "month": "2026-02",
+   "balance": 27435.55
+  },
+  {
+   "month": "2026-03",
+   "balance": 22376.88
+  },
+  {
+   "month": "2026-04",
+   "balance": 31234.45
+  },
+  {
+   "month": "2026-05",
+   "balance": 31397.27
+  },
+  {
+   "month": "2026-06",
+   "balance": 24477.94
+  },
+  {
+   "month": "2026-07",
+   "balance": 32572.01
+  },
+  {
+   "month": "2026-08",
+   "balance": 21110.99
+  },
+  {
+   "month": "2026-09",
+   "balance": 24796.86
+  }
+ ],
+ "customer": "CUST-100385",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 25.0
+  }
+ }
+}

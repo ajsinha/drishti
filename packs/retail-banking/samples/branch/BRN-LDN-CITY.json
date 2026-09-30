@@ -1,0 +1,78 @@
+{
+ "branchId": "BRN-LDN-CITY",
+ "name": "City of London",
+ "city": "London",
+ "customers": 8712,
+ "deposits": 1862350000.0,
+ "lending": 3798340000.0,
+ "nps": 56,
+ "productMix": [
+  {
+   "product": "Mortgage",
+   "balance": 3798340000.0
+  },
+  {
+   "product": "Savings",
+   "balance": 1688319000.0
+  },
+  {
+   "product": "Current account",
+   "balance": 174031000.0
+  }
+ ],
+ "npsHistory": [
+  {
+   "month": "2025-10",
+   "nps": 43
+  },
+  {
+   "month": "2025-11",
+   "nps": 32
+  },
+  {
+   "month": "2025-12",
+   "nps": 41
+  },
+  {
+   "month": "2026-01",
+   "nps": 62
+  },
+  {
+   "month": "2026-02",
+   "nps": 26
+  },
+  {
+   "month": "2026-03",
+   "nps": 63
+  },
+  {
+   "month": "2026-04",
+   "nps": 38
+  },
+  {
+   "month": "2026-05",
+   "nps": 56
+  },
+  {
+   "month": "2026-06",
+   "nps": 56
+  },
+  {
+   "month": "2026-07",
+   "nps": 65
+  },
+  {
+   "month": "2026-08",
+   "nps": 39
+  },
+  {
+   "month": "2026-09",
+   "nps": 15
+  }
+ ],
+ "legalEntity": "LE-LDN",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

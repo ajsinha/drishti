@@ -1,0 +1,130 @@
+{
+ "accountId": "ACCT-100378-CUR",
+ "type": "Current account",
+ "holderName": "Daniel Tanaka",
+ "balance": 14086.82,
+ "currency": "GBP",
+ "rate": 0.001,
+ "status": "Active",
+ "transactions": [
+  {
+   "date": "2026-09-30",
+   "description": "Salary",
+   "amount": 5856.18,
+   "balance": 14086.82
+  },
+  {
+   "date": "2026-09-27",
+   "description": "Salary",
+   "amount": -398.98,
+   "balance": 8230.64
+  },
+  {
+   "date": "2026-09-25",
+   "description": "Card payment · online retail",
+   "amount": -220.93,
+   "balance": 8629.62
+  },
+  {
+   "date": "2026-09-23",
+   "description": "Direct debit · utilities",
+   "amount": -261.26,
+   "balance": 8850.55
+  },
+  {
+   "date": "2026-09-20",
+   "description": "Card payment · grocer",
+   "amount": -406.66,
+   "balance": 9111.81
+  },
+  {
+   "date": "2026-09-17",
+   "description": "Transfer to savings",
+   "amount": -418.01,
+   "balance": 9518.47
+  },
+  {
+   "date": "2026-09-15",
+   "description": "Transfer to savings",
+   "amount": -169.08,
+   "balance": 9936.48
+  },
+  {
+   "date": "2026-09-14",
+   "description": "Standing order · rent",
+   "amount": -271.85,
+   "balance": 10105.56
+  },
+  {
+   "date": "2026-09-13",
+   "description": "Card payment · online retail",
+   "amount": -119.55,
+   "balance": 10377.41
+  },
+  {
+   "date": "2026-09-11",
+   "description": "Card payment · grocer",
+   "amount": -163.52,
+   "balance": 10496.96
+  }
+ ],
+ "history": [
+  {
+   "month": "2025-10",
+   "balance": 13487.63
+  },
+  {
+   "month": "2025-11",
+   "balance": 11851.87
+  },
+  {
+   "month": "2025-12",
+   "balance": 10406.21
+  },
+  {
+   "month": "2026-01",
+   "balance": 13616.35
+  },
+  {
+   "month": "2026-02",
+   "balance": 14011.92
+  },
+  {
+   "month": "2026-03",
+   "balance": 12124.59
+  },
+  {
+   "month": "2026-04",
+   "balance": 10585.27
+  },
+  {
+   "month": "2026-05",
+   "balance": 10410.34
+  },
+  {
+   "month": "2026-06",
+   "balance": 11348.81
+  },
+  {
+   "month": "2026-07",
+   "balance": 15455.11
+  },
+  {
+   "month": "2026-08",
+   "balance": 15813.95
+  },
+  {
+   "month": "2026-09",
+   "balance": 15227.89
+  }
+ ],
+ "customer": "CUST-100378",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 25.0
+  }
+ }
+}

@@ -1,0 +1,115 @@
+{
+ "loanId": "MTG-100287",
+ "borrowerName": "Hannah Müller",
+ "balance": 214102.07,
+ "rate": 0.031,
+ "ltv": 0.496,
+ "remainingYears": 14,
+ "daysPastDue": 0,
+ "originalAmount": 328000.0,
+ "monthlyPayment": 1572.53,
+ "amortisation": [
+  {
+   "year": "2015",
+   "balance": 328000
+  },
+  {
+   "year": "2017",
+   "balance": 310068
+  },
+  {
+   "year": "2019",
+   "balance": 290991
+  },
+  {
+   "year": "2021",
+   "balance": 270696
+  },
+  {
+   "year": "2023",
+   "balance": 249104
+  },
+  {
+   "year": "2025",
+   "balance": 226132
+  },
+  {
+   "year": "2027",
+   "balance": 201694
+  },
+  {
+   "year": "2029",
+   "balance": 175694
+  },
+  {
+   "year": "2031",
+   "balance": 148033
+  },
+  {
+   "year": "2033",
+   "balance": 118606
+  },
+  {
+   "year": "2035",
+   "balance": 87299
+  },
+  {
+   "year": "2037",
+   "balance": 53992
+  },
+  {
+   "year": "2039",
+   "balance": 18557
+  }
+ ],
+ "property": {
+  "type": "Terraced house",
+  "city": "London",
+  "valuation": 432000.0,
+  "valuedOn": "2024-07-05",
+  "rateType": "Tracker"
+ },
+ "payments": [
+  {
+   "due": "2026-09-01",
+   "amount": 1572.53,
+   "paid": "2026-09-02",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-08-02",
+   "amount": 1572.53,
+   "paid": "2026-08-03",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-07-03",
+   "amount": 1572.53,
+   "paid": "2026-07-04",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-06-03",
+   "amount": 1572.53,
+   "paid": "2026-06-04",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-05-04",
+   "amount": 1572.53,
+   "paid": "2026-05-05",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-04-04",
+   "amount": 1572.53,
+   "paid": "2026-04-05",
+   "status": "Paid"
+  }
+ ],
+ "customer": "CUST-100287",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}
