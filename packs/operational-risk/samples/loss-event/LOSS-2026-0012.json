@@ -1,0 +1,40 @@
+{
+ "eventId": "LOSS-2026-0012",
+ "eventType": "Damage to physical assets",
+ "deskName": "G10 and EM FX",
+ "grossLoss": 35700.0,
+ "recoveries": 3600.0,
+ "netLoss": 32100.0,
+ "status": "Closed",
+ "occurred": "2025-11-22",
+ "details": {
+  "businessLine": "Trading and sales",
+  "rootCause": "Missed corporate action",
+  "boundaryWithCreditRisk": false,
+  "reportedToRegulator": false
+ },
+ "timeline": [
+  {
+   "date": "2025-11-22",
+   "step": "Occurred",
+   "by": "—"
+  },
+  {
+   "date": "2026-01-13",
+   "step": "Discovered",
+   "by": "A. Novak"
+  },
+  {
+   "date": "2026-01-20",
+   "step": "Booked to loss ledger",
+   "by": "Finance"
+  }
+ ],
+ "desk": "DESK-FX",
+ "legalEntity": "LE-LDN",
+ "rootCauseControl": "RCSA-FX-4",
+ "_meta": {
+  "source": "loss-database",
+  "generation": 1
+ }
+}

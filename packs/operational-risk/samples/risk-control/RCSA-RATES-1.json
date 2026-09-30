@@ -1,0 +1,37 @@
+{
+ "assessmentId": "RCSA-RATES-1",
+ "risk": "Trade capture error",
+ "deskName": "Rates · Swaps and options",
+ "inherent": "Medium",
+ "effectiveness": "Partially effective",
+ "residual": "Medium",
+ "nextReview": "2026-10-26",
+ "controls": [
+  {
+   "control": "Limit breach escalation",
+   "type": "Detective",
+   "frequency": "Real time",
+   "lastTest": "2026-07-26",
+   "result": "Passed"
+  },
+  {
+   "control": "Payment release dual approval",
+   "type": "Preventive",
+   "frequency": "Per payment",
+   "lastTest": "2026-07-26",
+   "result": "Passed"
+  },
+  {
+   "control": "Model validation",
+   "type": "Preventive",
+   "frequency": "Annual",
+   "lastTest": "2026-06-11",
+   "result": "Passed"
+  }
+ ],
+ "desk": "DESK-RATES",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1
+ }
+}

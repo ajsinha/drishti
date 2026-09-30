@@ -1,0 +1,34 @@
+{
+ "incidentId": "CYBER-006",
+ "title": "Phishing campaign against traders",
+ "severity": "Sev 2",
+ "detectHours": 56.1,
+ "containHours": 19.1,
+ "recordsAffected": 0,
+ "status": "Monitoring",
+ "timeline": [
+  {
+   "at": "2025-12-09 09:12",
+   "step": "First alert (SOC)"
+  },
+  {
+   "at": "2025-12-09 +56.1h",
+   "step": "Confirmed"
+  },
+  {
+   "at": "2025-12-09 +19.1h",
+   "step": "Contained"
+  }
+ ],
+ "systems": {
+  "affected": "Email gateway",
+  "ownerTeam": "Cyber defence",
+  "externalReported": true
+ },
+ "legalEntity": "LE-FRA",
+ "relatedLoss": "LOSS-2026-0022",
+ "_meta": {
+  "source": "soc",
+  "generation": 1
+ }
+}

@@ -1,0 +1,70 @@
+{
+ "calcId": "OPCAP-LDN",
+ "legalEntityName": "Drishti Bank plc",
+ "bi": 7653000000,
+ "bic": 1117950000,
+ "ilm": 0.955,
+ "capital": 1068077888,
+ "rwa": 13350973594,
+ "components": [
+  {
+   "component": "Interest, leases and dividends",
+   "amount": 2842000000.0
+  },
+  {
+   "component": "Services",
+   "amount": 2277000000.0
+  },
+  {
+   "component": "Financial (trading and banking book)",
+   "amount": 2534000000.0
+  }
+ ],
+ "annualLosses": [
+  {
+   "year": "2016",
+   "loss": 45800000.0
+  },
+  {
+   "year": "2017",
+   "loss": 81700000.0
+  },
+  {
+   "year": "2018",
+   "loss": 34500000.0
+  },
+  {
+   "year": "2019",
+   "loss": 53900000.0
+  },
+  {
+   "year": "2020",
+   "loss": 57700000.0
+  },
+  {
+   "year": "2021",
+   "loss": 49300000.0
+  },
+  {
+   "year": "2022",
+   "loss": 59700000.0
+  },
+  {
+   "year": "2023",
+   "loss": 23200000.0
+  },
+  {
+   "year": "2024",
+   "loss": 172700000.0
+  },
+  {
+   "year": "2025",
+   "loss": 58000000.0
+  }
+ ],
+ "legalEntity": "LE-LDN",
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

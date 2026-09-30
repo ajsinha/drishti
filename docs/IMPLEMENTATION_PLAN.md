@@ -151,7 +151,7 @@ Ten waves (plus W11, user management, after 1.0.0). Each holds a small set of cl
 | R5 ✅ | risk: databases and feeds | the same data in Aerospike and PostgreSQL with the same tests; public data feeds as separately switchable connectors, off by default |
 | P2 ✅ | liquidity risk | LCR, NSFR, maturity ladders, HQLA holdings, funding sources, liquidity stress, intraday liquidity |
 | P3 ✅ | climate risk | climate profiles, PCAF financed emissions, NGFS scenarios, climate stress, physical-risk assets, green asset ratio |
-| P4 | operational and non-financial risk | |
+| P4 ✅ | operational and non-financial risk | loss events, RCSA, key risk indicators, issues and actions, scenarios, third parties, cyber incidents, SMA capital |
 | P5 | retail banking | |
 | P6 | genomics and biology | |
 | P7 | politics and society | |

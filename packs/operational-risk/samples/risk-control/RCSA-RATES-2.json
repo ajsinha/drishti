@@ -1,0 +1,37 @@
+{
+ "assessmentId": "RCSA-RATES-2",
+ "risk": "Unauthorised trading",
+ "deskName": "Rates · Swaps and options",
+ "inherent": "Critical",
+ "effectiveness": "Ineffective",
+ "residual": "Critical",
+ "nextReview": "2026-12-15",
+ "controls": [
+  {
+   "control": "Limit breach escalation",
+   "type": "Detective",
+   "frequency": "Real time",
+   "lastTest": "2026-07-12",
+   "result": "Passed"
+  },
+  {
+   "control": "Access recertification",
+   "type": "Preventive",
+   "frequency": "Quarterly",
+   "lastTest": "2026-08-11",
+   "result": "Passed"
+  },
+  {
+   "control": "Model validation",
+   "type": "Preventive",
+   "frequency": "Annual",
+   "lastTest": "2026-07-01",
+   "result": "Exceptions noted"
+  }
+ ],
+ "desk": "DESK-RATES",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1
+ }
+}

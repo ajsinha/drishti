@@ -1,0 +1,37 @@
+{
+ "assessmentId": "RCSA-FX-4",
+ "risk": "Settlement failure",
+ "deskName": "G10 and EM FX",
+ "inherent": "High",
+ "effectiveness": "Ineffective",
+ "residual": "High",
+ "nextReview": "2027-02-11",
+ "controls": [
+  {
+   "control": "Limit breach escalation",
+   "type": "Detective",
+   "frequency": "Real time",
+   "lastTest": "2026-07-02",
+   "result": "Passed"
+  },
+  {
+   "control": "Access recertification",
+   "type": "Preventive",
+   "frequency": "Quarterly",
+   "lastTest": "2026-07-16",
+   "result": "Exceptions noted"
+  },
+  {
+   "control": "Daily P&L reconciliation",
+   "type": "Detective",
+   "frequency": "Daily",
+   "lastTest": "2026-06-10",
+   "result": "Passed"
+  }
+ ],
+ "desk": "DESK-FX",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1
+ }
+}

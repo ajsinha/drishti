@@ -1,0 +1,70 @@
+{
+ "calcId": "OPCAP-FRA",
+ "legalEntityName": "Drishti Bank Europe AG",
+ "bi": 9698000000,
+ "bic": 1424700000,
+ "ilm": 0.858,
+ "capital": 1222754145,
+ "rwa": 15284426817,
+ "components": [
+  {
+   "component": "Interest, leases and dividends",
+   "amount": 5547000000.0
+  },
+  {
+   "component": "Services",
+   "amount": 2689000000.0
+  },
+  {
+   "component": "Financial (trading and banking book)",
+   "amount": 1462000000.0
+  }
+ ],
+ "annualLosses": [
+  {
+   "year": "2016",
+   "loss": 110200000.0
+  },
+  {
+   "year": "2017",
+   "loss": 36700000.0
+  },
+  {
+   "year": "2018",
+   "loss": 65400000.0
+  },
+  {
+   "year": "2019",
+   "loss": 50000000.0
+  },
+  {
+   "year": "2020",
+   "loss": 33000000.0
+  },
+  {
+   "year": "2021",
+   "loss": 60100000.0
+  },
+  {
+   "year": "2022",
+   "loss": 32200000.0
+  },
+  {
+   "year": "2023",
+   "loss": 30800000.0
+  },
+  {
+   "year": "2024",
+   "loss": 22000000.0
+  },
+  {
+   "year": "2025",
+   "loss": 104100000.0
+  }
+ ],
+ "legalEntity": "LE-FRA",
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

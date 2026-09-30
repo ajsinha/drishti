@@ -1,0 +1,37 @@
+{
+ "scenarioId": "OPSCN-04",
+ "name": "Mis-selling of structured products",
+ "eventType": "Clients, products and business practices",
+ "returnPeriod": 10,
+ "p50": 33900000.0,
+ "p999": 703600000.0,
+ "percentiles": [
+  {
+   "percentile": "p50",
+   "loss": 33900000.0
+  },
+  {
+   "percentile": "p90",
+   "loss": 108500000.0
+  },
+  {
+   "percentile": "p99",
+   "loss": 254200000.0
+  },
+  {
+   "percentile": "p99.9",
+   "loss": 508500000.0
+  }
+ ],
+ "context": {
+  "narrative": "Mis-selling of structured products: estimated in a workshop with first-line experts, calibrated to external loss data.",
+  "workshop": "Operations",
+  "lastReviewed": "2026-04-05",
+  "externalData": "ORX consortium (illustrative)"
+ },
+ "legalEntity": "LE-TKY",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1
+ }
+}

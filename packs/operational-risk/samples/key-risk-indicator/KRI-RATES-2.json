@@ -1,0 +1,106 @@
+{
+ "kriId": "KRI-RATES-2",
+ "name": "Failed settlements",
+ "deskName": "Rates · Swaps and options",
+ "value": 11.94,
+ "amber": 12.5,
+ "red": 20.0,
+ "status": "Green",
+ "history": [
+  {
+   "date": "2026-09-03",
+   "value": 6.29
+  },
+  {
+   "date": "2026-09-04",
+   "value": 3.89
+  },
+  {
+   "date": "2026-09-07",
+   "value": 5.08
+  },
+  {
+   "date": "2026-09-08",
+   "value": 6.82
+  },
+  {
+   "date": "2026-09-09",
+   "value": 8.68
+  },
+  {
+   "date": "2026-09-10",
+   "value": 7.36
+  },
+  {
+   "date": "2026-09-11",
+   "value": 7.29
+  },
+  {
+   "date": "2026-09-14",
+   "value": 8.05
+  },
+  {
+   "date": "2026-09-15",
+   "value": 9.37
+  },
+  {
+   "date": "2026-09-16",
+   "value": 11.18
+  },
+  {
+   "date": "2026-09-17",
+   "value": 13.19
+  },
+  {
+   "date": "2026-09-18",
+   "value": 13.32
+  },
+  {
+   "date": "2026-09-21",
+   "value": 12.41
+  },
+  {
+   "date": "2026-09-22",
+   "value": 13.12
+  },
+  {
+   "date": "2026-09-23",
+   "value": 12.7
+  },
+  {
+   "date": "2026-09-24",
+   "value": 14.47
+  },
+  {
+   "date": "2026-09-25",
+   "value": 14.53
+  },
+  {
+   "date": "2026-09-28",
+   "value": 14.69
+  },
+  {
+   "date": "2026-09-29",
+   "value": 13.78
+  },
+  {
+   "date": "2026-09-30",
+   "value": 11.94
+  }
+ ],
+ "definition": {
+  "unit": "count",
+  "frequency": "Daily",
+  "owner": "A. Novak",
+  "source": "Operations data mart"
+ },
+ "desk": "DESK-RATES",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "value": 0.3
+  }
+ }
+}

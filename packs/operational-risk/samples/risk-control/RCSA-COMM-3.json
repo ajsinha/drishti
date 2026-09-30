@@ -1,0 +1,37 @@
+{
+ "assessmentId": "RCSA-COMM-3",
+ "risk": "Model risk",
+ "deskName": "Commodities",
+ "inherent": "Critical",
+ "effectiveness": "Effective",
+ "residual": "Low",
+ "nextReview": "2027-01-07",
+ "controls": [
+  {
+   "control": "Access recertification",
+   "type": "Preventive",
+   "frequency": "Quarterly",
+   "lastTest": "2026-06-21",
+   "result": "Exceptions noted"
+  },
+  {
+   "control": "Confirmation matching",
+   "type": "Detective",
+   "frequency": "Daily",
+   "lastTest": "2026-06-14",
+   "result": "Passed"
+  },
+  {
+   "control": "Payment release dual approval",
+   "type": "Preventive",
+   "frequency": "Per payment",
+   "lastTest": "2026-07-12",
+   "result": "Exceptions noted"
+  }
+ ],
+ "desk": "DESK-COMM",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1
+ }
+}

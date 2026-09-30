@@ -1,0 +1,52 @@
+{
+ "vendorId": "VEND-004",
+ "name": "Quill Document Services",
+ "criticality": "Standard",
+ "serviceCount": 5,
+ "annualSpend": 24060000.0,
+ "lastAssessed": "2026-05-13",
+ "slaBreaches": 7,
+ "services": [
+  {
+   "service": "Real-time prices",
+   "desk": "Equity derivatives",
+   "exitPlan": "Missing"
+  },
+  {
+   "service": "Document storage",
+   "desk": "Equity derivatives",
+   "exitPlan": "Missing"
+  },
+  {
+   "service": "Surveillance alerts",
+   "desk": "Bonds and securitised",
+   "exitPlan": "Missing"
+  }
+ ],
+ "incidents": [
+  {
+   "date": "2026-05-02",
+   "incident": "Late file delivery",
+   "impact": "Minor"
+  },
+  {
+   "date": "2025-12-24",
+   "incident": "Late file delivery",
+   "impact": "Moderate"
+  },
+  {
+   "date": "2025-11-16",
+   "incident": "Late file delivery",
+   "impact": "Minor"
+  },
+  {
+   "date": "2026-01-08",
+   "incident": "Latency above SLA",
+   "impact": "Major"
+  }
+ ],
+ "_meta": {
+  "source": "vendor-management",
+  "generation": 1
+ }
+}

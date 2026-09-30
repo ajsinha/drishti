@@ -1,0 +1,37 @@
+{
+ "assessmentId": "RCSA-FX-2",
+ "risk": "Unauthorised trading",
+ "deskName": "G10 and EM FX",
+ "inherent": "Critical",
+ "effectiveness": "Effective",
+ "residual": "Low",
+ "nextReview": "2026-11-24",
+ "controls": [
+  {
+   "control": "Limit breach escalation",
+   "type": "Detective",
+   "frequency": "Real time",
+   "lastTest": "2026-06-18",
+   "result": "Passed"
+  },
+  {
+   "control": "Access recertification",
+   "type": "Preventive",
+   "frequency": "Quarterly",
+   "lastTest": "2026-07-08",
+   "result": "Passed"
+  },
+  {
+   "control": "Daily P&L reconciliation",
+   "type": "Detective",
+   "frequency": "Daily",
+   "lastTest": "2026-09-25",
+   "result": "Passed"
+  }
+ ],
+ "desk": "DESK-FX",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1
+ }
+}

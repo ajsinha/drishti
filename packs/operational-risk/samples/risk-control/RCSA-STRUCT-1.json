@@ -1,0 +1,37 @@
+{
+ "assessmentId": "RCSA-STRUCT-1",
+ "risk": "Trade capture error",
+ "deskName": "Structured products",
+ "inherent": "Medium",
+ "effectiveness": "Ineffective",
+ "residual": "Medium",
+ "nextReview": "2027-03-27",
+ "controls": [
+  {
+   "control": "Model validation",
+   "type": "Preventive",
+   "frequency": "Annual",
+   "lastTest": "2026-07-05",
+   "result": "Exceptions noted"
+  },
+  {
+   "control": "Payment release dual approval",
+   "type": "Preventive",
+   "frequency": "Per payment",
+   "lastTest": "2026-07-18",
+   "result": "Exceptions noted"
+  },
+  {
+   "control": "Confirmation matching",
+   "type": "Detective",
+   "frequency": "Daily",
+   "lastTest": "2026-08-24",
+   "result": "Passed"
+  }
+ ],
+ "desk": "DESK-STRUCT",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1
+ }
+}

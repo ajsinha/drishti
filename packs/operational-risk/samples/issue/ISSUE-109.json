@@ -1,0 +1,32 @@
+{
+ "issueId": "ISSUE-109",
+ "title": "Incomplete trade surveillance coverage",
+ "source": "Regulator (PRA)",
+ "severity": "Low",
+ "owner": "K. Sato",
+ "due": "2026-11-27",
+ "status": "Open",
+ "actions": [
+  {
+   "due": "2026-09-28",
+   "action": "Implement and validate",
+   "status": "Done"
+  },
+  {
+   "due": "2026-10-28",
+   "action": "Remediation design",
+   "status": "Done"
+  },
+  {
+   "due": "2026-11-27",
+   "action": "Root-cause analysis",
+   "status": "Open"
+  }
+ ],
+ "desk": "DESK-MM",
+ "relatedLoss": "LOSS-2025-0001",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1
+ }
+}

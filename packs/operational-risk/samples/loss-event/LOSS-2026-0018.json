@@ -1,0 +1,40 @@
+{
+ "eventId": "LOSS-2026-0018",
+ "eventType": "Clients, products and business practices",
+ "deskName": "Repo and securities lending",
+ "grossLoss": 291000.0,
+ "recoveries": 0.0,
+ "netLoss": 291000.0,
+ "status": "Closed",
+ "occurred": "2026-03-19",
+ "details": {
+  "businessLine": "Agency services",
+  "rootCause": "Manual keying error",
+  "boundaryWithCreditRisk": false,
+  "reportedToRegulator": false
+ },
+ "timeline": [
+  {
+   "date": "2026-03-19",
+   "step": "Occurred",
+   "by": "—"
+  },
+  {
+   "date": "2026-03-29",
+   "step": "Discovered",
+   "by": "K. Sato"
+  },
+  {
+   "date": "2026-04-05",
+   "step": "Booked to loss ledger",
+   "by": "Finance"
+  }
+ ],
+ "desk": "DESK-SFT",
+ "legalEntity": "LE-FRA",
+ "rootCauseControl": "RCSA-SFT-1",
+ "_meta": {
+  "source": "loss-database",
+  "generation": 1
+ }
+}

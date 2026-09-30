@@ -1,0 +1,818 @@
+[
+ {
+  "kind": "loss-event",
+  "id": "LOSS-2025-0001",
+  "title": "LOSS-2025-0001",
+  "subtitle": "Operational loss event"
+ },
+ {
+  "kind": "loss-event",
+  "id": "LOSS-2025-0003",
+  "title": "LOSS-2025-0003",
+  "subtitle": "Operational loss event"
+ },
+ {
+  "kind": "loss-event",
+  "id": "LOSS-2025-0005",
+  "title": "LOSS-2025-0005",
+  "subtitle": "Operational loss event"
+ },
+ {
+  "kind": "loss-event",
+  "id": "LOSS-2025-0007",
+  "title": "LOSS-2025-0007",
+  "subtitle": "Operational loss event"
+ },
+ {
+  "kind": "loss-event",
+  "id": "LOSS-2025-0009",
+  "title": "LOSS-2025-0009",
+  "subtitle": "Operational loss event"
+ },
+ {
+  "kind": "loss-event",
+  "id": "LOSS-2025-0011",
+  "title": "LOSS-2025-0011",
+  "subtitle": "Operational loss event"
+ },
+ {
+  "kind": "loss-event",
+  "id": "LOSS-2025-0013",
+  "title": "LOSS-2025-0013",
+  "subtitle": "Operational loss event"
+ },
+ {
+  "kind": "loss-event",
+  "id": "LOSS-2025-0015",
+  "title": "LOSS-2025-0015",
+  "subtitle": "Operational loss event"
+ },
+ {
+  "kind": "loss-event",
+  "id": "LOSS-2025-0017",
+  "title": "LOSS-2025-0017",
+  "subtitle": "Operational loss event"
+ },
+ {
+  "kind": "loss-event",
+  "id": "LOSS-2025-0019",
+  "title": "LOSS-2025-0019",
+  "subtitle": "Operational loss event"
+ },
+ {
+  "kind": "loss-event",
+  "id": "LOSS-2025-0021",
+  "title": "LOSS-2025-0021",
+  "subtitle": "Operational loss event"
+ },
+ {
+  "kind": "loss-event",
+  "id": "LOSS-2025-0023",
+  "title": "LOSS-2025-0023",
+  "subtitle": "Operational loss event"
+ },
+ {
+  "kind": "loss-event",
+  "id": "LOSS-2026-0002",
+  "title": "LOSS-2026-0002",
+  "subtitle": "Operational loss event"
+ },
+ {
+  "kind": "loss-event",
+  "id": "LOSS-2026-0004",
+  "title": "LOSS-2026-0004",
+  "subtitle": "Operational loss event"
+ },
+ {
+  "kind": "loss-event",
+  "id": "LOSS-2026-0006",
+  "title": "LOSS-2026-0006",
+  "subtitle": "Operational loss event"
+ },
+ {
+  "kind": "loss-event",
+  "id": "LOSS-2026-0008",
+  "title": "LOSS-2026-0008",
+  "subtitle": "Operational loss event"
+ },
+ {
+  "kind": "loss-event",
+  "id": "LOSS-2026-0010",
+  "title": "LOSS-2026-0010",
+  "subtitle": "Operational loss event"
+ },
+ {
+  "kind": "loss-event",
+  "id": "LOSS-2026-0012",
+  "title": "LOSS-2026-0012",
+  "subtitle": "Operational loss event"
+ },
+ {
+  "kind": "loss-event",
+  "id": "LOSS-2026-0014",
+  "title": "LOSS-2026-0014",
+  "subtitle": "Operational loss event"
+ },
+ {
+  "kind": "loss-event",
+  "id": "LOSS-2026-0016",
+  "title": "LOSS-2026-0016",
+  "subtitle": "Operational loss event"
+ },
+ {
+  "kind": "loss-event",
+  "id": "LOSS-2026-0018",
+  "title": "LOSS-2026-0018",
+  "subtitle": "Operational loss event"
+ },
+ {
+  "kind": "loss-event",
+  "id": "LOSS-2026-0020",
+  "title": "LOSS-2026-0020",
+  "subtitle": "Operational loss event"
+ },
+ {
+  "kind": "loss-event",
+  "id": "LOSS-2026-0022",
+  "title": "LOSS-2026-0022",
+  "subtitle": "Operational loss event"
+ },
+ {
+  "kind": "loss-event",
+  "id": "LOSS-2026-0024",
+  "title": "LOSS-2026-0024",
+  "subtitle": "Operational loss event"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-COMM-1",
+  "title": "RCSA-COMM-1",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-COMM-2",
+  "title": "RCSA-COMM-2",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-COMM-3",
+  "title": "RCSA-COMM-3",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-COMM-4",
+  "title": "RCSA-COMM-4",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-CREDIT-1",
+  "title": "RCSA-CREDIT-1",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-CREDIT-2",
+  "title": "RCSA-CREDIT-2",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-CREDIT-3",
+  "title": "RCSA-CREDIT-3",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-CREDIT-4",
+  "title": "RCSA-CREDIT-4",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-EQD-1",
+  "title": "RCSA-EQD-1",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-EQD-2",
+  "title": "RCSA-EQD-2",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-EQD-3",
+  "title": "RCSA-EQD-3",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-EQD-4",
+  "title": "RCSA-EQD-4",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-FI-1",
+  "title": "RCSA-FI-1",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-FI-2",
+  "title": "RCSA-FI-2",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-FI-3",
+  "title": "RCSA-FI-3",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-FI-4",
+  "title": "RCSA-FI-4",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-FX-1",
+  "title": "RCSA-FX-1",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-FX-2",
+  "title": "RCSA-FX-2",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-FX-3",
+  "title": "RCSA-FX-3",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-FX-4",
+  "title": "RCSA-FX-4",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-INFL-1",
+  "title": "RCSA-INFL-1",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-INFL-2",
+  "title": "RCSA-INFL-2",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-INFL-3",
+  "title": "RCSA-INFL-3",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-INFL-4",
+  "title": "RCSA-INFL-4",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-MM-1",
+  "title": "RCSA-MM-1",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-MM-2",
+  "title": "RCSA-MM-2",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-MM-3",
+  "title": "RCSA-MM-3",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-MM-4",
+  "title": "RCSA-MM-4",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-RATES-1",
+  "title": "RCSA-RATES-1",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-RATES-2",
+  "title": "RCSA-RATES-2",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-RATES-3",
+  "title": "RCSA-RATES-3",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-RATES-4",
+  "title": "RCSA-RATES-4",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-SFT-1",
+  "title": "RCSA-SFT-1",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-SFT-2",
+  "title": "RCSA-SFT-2",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-SFT-3",
+  "title": "RCSA-SFT-3",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-SFT-4",
+  "title": "RCSA-SFT-4",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-STRUCT-1",
+  "title": "RCSA-STRUCT-1",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-STRUCT-2",
+  "title": "RCSA-STRUCT-2",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-STRUCT-3",
+  "title": "RCSA-STRUCT-3",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "risk-control",
+  "id": "RCSA-STRUCT-4",
+  "title": "RCSA-STRUCT-4",
+  "subtitle": "Risk and control assessment"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-COMM-1",
+  "title": "KRI-COMM-1",
+  "subtitle": "Key risk indicator · Trade breaks older than 2 days"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-COMM-2",
+  "title": "KRI-COMM-2",
+  "subtitle": "Key risk indicator · Failed settlements"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-COMM-3",
+  "title": "KRI-COMM-3",
+  "subtitle": "Key risk indicator · Manual price overrides"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-COMM-4",
+  "title": "KRI-COMM-4",
+  "subtitle": "Key risk indicator · Access exceptions"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-CREDIT-1",
+  "title": "KRI-CREDIT-1",
+  "subtitle": "Key risk indicator · Trade breaks older than 2 days"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-CREDIT-2",
+  "title": "KRI-CREDIT-2",
+  "subtitle": "Key risk indicator · Failed settlements"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-CREDIT-3",
+  "title": "KRI-CREDIT-3",
+  "subtitle": "Key risk indicator · Manual price overrides"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-CREDIT-4",
+  "title": "KRI-CREDIT-4",
+  "subtitle": "Key risk indicator · Access exceptions"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-EQD-1",
+  "title": "KRI-EQD-1",
+  "subtitle": "Key risk indicator · Trade breaks older than 2 days"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-EQD-2",
+  "title": "KRI-EQD-2",
+  "subtitle": "Key risk indicator · Failed settlements"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-EQD-3",
+  "title": "KRI-EQD-3",
+  "subtitle": "Key risk indicator · Manual price overrides"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-EQD-4",
+  "title": "KRI-EQD-4",
+  "subtitle": "Key risk indicator · Access exceptions"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-FI-1",
+  "title": "KRI-FI-1",
+  "subtitle": "Key risk indicator · Trade breaks older than 2 days"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-FI-2",
+  "title": "KRI-FI-2",
+  "subtitle": "Key risk indicator · Failed settlements"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-FI-3",
+  "title": "KRI-FI-3",
+  "subtitle": "Key risk indicator · Manual price overrides"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-FI-4",
+  "title": "KRI-FI-4",
+  "subtitle": "Key risk indicator · Access exceptions"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-FX-1",
+  "title": "KRI-FX-1",
+  "subtitle": "Key risk indicator · Trade breaks older than 2 days"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-FX-2",
+  "title": "KRI-FX-2",
+  "subtitle": "Key risk indicator · Failed settlements"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-FX-3",
+  "title": "KRI-FX-3",
+  "subtitle": "Key risk indicator · Manual price overrides"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-FX-4",
+  "title": "KRI-FX-4",
+  "subtitle": "Key risk indicator · Access exceptions"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-INFL-1",
+  "title": "KRI-INFL-1",
+  "subtitle": "Key risk indicator · Trade breaks older than 2 days"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-INFL-2",
+  "title": "KRI-INFL-2",
+  "subtitle": "Key risk indicator · Failed settlements"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-INFL-3",
+  "title": "KRI-INFL-3",
+  "subtitle": "Key risk indicator · Manual price overrides"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-INFL-4",
+  "title": "KRI-INFL-4",
+  "subtitle": "Key risk indicator · Access exceptions"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-MM-1",
+  "title": "KRI-MM-1",
+  "subtitle": "Key risk indicator · Trade breaks older than 2 days"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-MM-2",
+  "title": "KRI-MM-2",
+  "subtitle": "Key risk indicator · Failed settlements"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-MM-3",
+  "title": "KRI-MM-3",
+  "subtitle": "Key risk indicator · Manual price overrides"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-MM-4",
+  "title": "KRI-MM-4",
+  "subtitle": "Key risk indicator · Access exceptions"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-RATES-1",
+  "title": "KRI-RATES-1",
+  "subtitle": "Key risk indicator · Trade breaks older than 2 days"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-RATES-2",
+  "title": "KRI-RATES-2",
+  "subtitle": "Key risk indicator · Failed settlements"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-RATES-3",
+  "title": "KRI-RATES-3",
+  "subtitle": "Key risk indicator · Manual price overrides"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-RATES-4",
+  "title": "KRI-RATES-4",
+  "subtitle": "Key risk indicator · Access exceptions"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-SFT-1",
+  "title": "KRI-SFT-1",
+  "subtitle": "Key risk indicator · Trade breaks older than 2 days"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-SFT-2",
+  "title": "KRI-SFT-2",
+  "subtitle": "Key risk indicator · Failed settlements"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-SFT-3",
+  "title": "KRI-SFT-3",
+  "subtitle": "Key risk indicator · Manual price overrides"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-SFT-4",
+  "title": "KRI-SFT-4",
+  "subtitle": "Key risk indicator · Access exceptions"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-STRUCT-1",
+  "title": "KRI-STRUCT-1",
+  "subtitle": "Key risk indicator · Trade breaks older than 2 days"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-STRUCT-2",
+  "title": "KRI-STRUCT-2",
+  "subtitle": "Key risk indicator · Failed settlements"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-STRUCT-3",
+  "title": "KRI-STRUCT-3",
+  "subtitle": "Key risk indicator · Manual price overrides"
+ },
+ {
+  "kind": "key-risk-indicator",
+  "id": "KRI-STRUCT-4",
+  "title": "KRI-STRUCT-4",
+  "subtitle": "Key risk indicator · Access exceptions"
+ },
+ {
+  "kind": "issue",
+  "id": "ISSUE-101",
+  "title": "ISSUE-101",
+  "subtitle": "Issue and action"
+ },
+ {
+  "kind": "issue",
+  "id": "ISSUE-102",
+  "title": "ISSUE-102",
+  "subtitle": "Issue and action"
+ },
+ {
+  "kind": "issue",
+  "id": "ISSUE-103",
+  "title": "ISSUE-103",
+  "subtitle": "Issue and action"
+ },
+ {
+  "kind": "issue",
+  "id": "ISSUE-104",
+  "title": "ISSUE-104",
+  "subtitle": "Issue and action"
+ },
+ {
+  "kind": "issue",
+  "id": "ISSUE-105",
+  "title": "ISSUE-105",
+  "subtitle": "Issue and action"
+ },
+ {
+  "kind": "issue",
+  "id": "ISSUE-106",
+  "title": "ISSUE-106",
+  "subtitle": "Issue and action"
+ },
+ {
+  "kind": "issue",
+  "id": "ISSUE-107",
+  "title": "ISSUE-107",
+  "subtitle": "Issue and action"
+ },
+ {
+  "kind": "issue",
+  "id": "ISSUE-108",
+  "title": "ISSUE-108",
+  "subtitle": "Issue and action"
+ },
+ {
+  "kind": "issue",
+  "id": "ISSUE-109",
+  "title": "ISSUE-109",
+  "subtitle": "Issue and action"
+ },
+ {
+  "kind": "issue",
+  "id": "ISSUE-110",
+  "title": "ISSUE-110",
+  "subtitle": "Issue and action"
+ },
+ {
+  "kind": "issue",
+  "id": "ISSUE-111",
+  "title": "ISSUE-111",
+  "subtitle": "Issue and action"
+ },
+ {
+  "kind": "issue",
+  "id": "ISSUE-112",
+  "title": "ISSUE-112",
+  "subtitle": "Issue and action"
+ },
+ {
+  "kind": "oprisk-scenario",
+  "id": "OPSCN-01",
+  "title": "OPSCN-01",
+  "subtitle": "Operational-risk scenario · Rogue trading in a large book"
+ },
+ {
+  "kind": "oprisk-scenario",
+  "id": "OPSCN-02",
+  "title": "OPSCN-02",
+  "subtitle": "Operational-risk scenario · Prolonged outage of the core booking system"
+ },
+ {
+  "kind": "oprisk-scenario",
+  "id": "OPSCN-03",
+  "title": "OPSCN-03",
+  "subtitle": "Operational-risk scenario · Ransomware on the settlement platform"
+ },
+ {
+  "kind": "oprisk-scenario",
+  "id": "OPSCN-04",
+  "title": "OPSCN-04",
+  "subtitle": "Operational-risk scenario · Mis-selling of structured products"
+ },
+ {
+  "kind": "oprisk-scenario",
+  "id": "OPSCN-05",
+  "title": "OPSCN-05",
+  "subtitle": "Operational-risk scenario · Critical vendor failure (market data)"
+ },
+ {
+  "kind": "third-party",
+  "id": "VEND-001",
+  "title": "VEND-001",
+  "subtitle": "Third-party (vendor) · Northwind Market Data Ltd"
+ },
+ {
+  "kind": "third-party",
+  "id": "VEND-002",
+  "title": "VEND-002",
+  "subtitle": "Third-party (vendor) · Bluepeak Cloud Services"
+ },
+ {
+  "kind": "third-party",
+  "id": "VEND-003",
+  "title": "VEND-003",
+  "subtitle": "Third-party (vendor) · Harbour Payments Processing"
+ },
+ {
+  "kind": "third-party",
+  "id": "VEND-004",
+  "title": "VEND-004",
+  "subtitle": "Third-party (vendor) · Quill Document Services"
+ },
+ {
+  "kind": "third-party",
+  "id": "VEND-005",
+  "title": "VEND-005",
+  "subtitle": "Third-party (vendor) · Atlas Trade Surveillance"
+ },
+ {
+  "kind": "cyber-incident",
+  "id": "CYBER-001",
+  "title": "CYBER-001",
+  "subtitle": "Cyber incident"
+ },
+ {
+  "kind": "cyber-incident",
+  "id": "CYBER-002",
+  "title": "CYBER-002",
+  "subtitle": "Cyber incident"
+ },
+ {
+  "kind": "cyber-incident",
+  "id": "CYBER-003",
+  "title": "CYBER-003",
+  "subtitle": "Cyber incident"
+ },
+ {
+  "kind": "cyber-incident",
+  "id": "CYBER-004",
+  "title": "CYBER-004",
+  "subtitle": "Cyber incident"
+ },
+ {
+  "kind": "cyber-incident",
+  "id": "CYBER-005",
+  "title": "CYBER-005",
+  "subtitle": "Cyber incident"
+ },
+ {
+  "kind": "cyber-incident",
+  "id": "CYBER-006",
+  "title": "CYBER-006",
+  "subtitle": "Cyber incident"
+ },
+ {
+  "kind": "oprisk-capital",
+  "id": "OPCAP-FRA",
+  "title": "OPCAP-FRA",
+  "subtitle": "Operational-risk capital · Drishti Bank Europe AG"
+ },
+ {
+  "kind": "oprisk-capital",
+  "id": "OPCAP-LDN",
+  "title": "OPCAP-LDN",
+  "subtitle": "Operational-risk capital · Drishti Bank plc"
+ },
+ {
+  "kind": "oprisk-capital",
+  "id": "OPCAP-NY",
+  "title": "OPCAP-NY",
+  "subtitle": "Operational-risk capital · Drishti Bank Securities Inc."
+ },
+ {
+  "kind": "oprisk-capital",
+  "id": "OPCAP-TKY",
+  "title": "OPCAP-TKY",
+  "subtitle": "Operational-risk capital · Drishti Securities Japan K.K."
+ }
+]

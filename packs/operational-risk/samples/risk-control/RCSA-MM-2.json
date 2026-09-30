@@ -1,0 +1,37 @@
+{
+ "assessmentId": "RCSA-MM-2",
+ "risk": "Unauthorised trading",
+ "deskName": "Money markets",
+ "inherent": "Critical",
+ "effectiveness": "Effective",
+ "residual": "Low",
+ "nextReview": "2027-01-09",
+ "controls": [
+  {
+   "control": "Limit breach escalation",
+   "type": "Detective",
+   "frequency": "Real time",
+   "lastTest": "2026-07-18",
+   "result": "Passed"
+  },
+  {
+   "control": "Four-eyes check on trade capture",
+   "type": "Preventive",
+   "frequency": "Per trade",
+   "lastTest": "2026-07-01",
+   "result": "Passed"
+  },
+  {
+   "control": "Access recertification",
+   "type": "Preventive",
+   "frequency": "Quarterly",
+   "lastTest": "2026-07-01",
+   "result": "Passed"
+  }
+ ],
+ "desk": "DESK-MM",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1
+ }
+}

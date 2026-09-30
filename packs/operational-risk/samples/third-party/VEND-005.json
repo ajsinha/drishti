@@ -1,0 +1,52 @@
+{
+ "vendorId": "VEND-005",
+ "name": "Atlas Trade Surveillance",
+ "criticality": "Important",
+ "serviceCount": 1,
+ "annualSpend": 5720000.0,
+ "lastAssessed": "2026-08-16",
+ "slaBreaches": 9,
+ "services": [
+  {
+   "service": "Surveillance alerts",
+   "desk": "Rates · Swaps and options",
+   "exitPlan": "Tested"
+  },
+  {
+   "service": "Reference data",
+   "desk": "Commodities",
+   "exitPlan": "Documented"
+  },
+  {
+   "service": "Real-time prices",
+   "desk": "G10 and EM FX",
+   "exitPlan": "Documented"
+  }
+ ],
+ "incidents": [
+  {
+   "date": "2026-09-22",
+   "incident": "Late file delivery",
+   "impact": "Major"
+  },
+  {
+   "date": "2026-06-27",
+   "incident": "Late file delivery",
+   "impact": "Minor"
+  },
+  {
+   "date": "2025-11-30",
+   "incident": "Outage 45 min",
+   "impact": "Moderate"
+  },
+  {
+   "date": "2026-08-21",
+   "incident": "Late file delivery",
+   "impact": "Major"
+  }
+ ],
+ "_meta": {
+  "source": "vendor-management",
+  "generation": 1
+ }
+}

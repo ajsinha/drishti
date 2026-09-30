@@ -1,0 +1,37 @@
+{
+ "assessmentId": "RCSA-SFT-1",
+ "risk": "Trade capture error",
+ "deskName": "Repo and securities lending",
+ "inherent": "High",
+ "effectiveness": "Effective",
+ "residual": "Low",
+ "nextReview": "2026-10-27",
+ "controls": [
+  {
+   "control": "Payment release dual approval",
+   "type": "Preventive",
+   "frequency": "Per payment",
+   "lastTest": "2026-06-16",
+   "result": "Passed"
+  },
+  {
+   "control": "Daily P&L reconciliation",
+   "type": "Detective",
+   "frequency": "Daily",
+   "lastTest": "2026-09-06",
+   "result": "Passed"
+  },
+  {
+   "control": "Model validation",
+   "type": "Preventive",
+   "frequency": "Annual",
+   "lastTest": "2026-09-22",
+   "result": "Exceptions noted"
+  }
+ ],
+ "desk": "DESK-SFT",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1
+ }
+}

@@ -1,0 +1,42 @@
+{
+ "vendorId": "VEND-001",
+ "name": "Northwind Market Data Ltd",
+ "criticality": "Critical",
+ "serviceCount": 4,
+ "annualSpend": 25610000.0,
+ "lastAssessed": "2026-01-03",
+ "slaBreaches": 6,
+ "services": [
+  {
+   "service": "Hosting",
+   "desk": "Rates · Swaps and options",
+   "exitPlan": "Tested"
+  },
+  {
+   "service": "Surveillance alerts",
+   "desk": "G10 and EM FX",
+   "exitPlan": "Missing"
+  },
+  {
+   "service": "Document storage",
+   "desk": "Structured products",
+   "exitPlan": "Missing"
+  }
+ ],
+ "incidents": [
+  {
+   "date": "2026-02-19",
+   "incident": "Outage 45 min",
+   "impact": "Major"
+  },
+  {
+   "date": "2026-08-31",
+   "incident": "Outage 45 min",
+   "impact": "Minor"
+  }
+ ],
+ "_meta": {
+  "source": "vendor-management",
+  "generation": 1
+ }
+}

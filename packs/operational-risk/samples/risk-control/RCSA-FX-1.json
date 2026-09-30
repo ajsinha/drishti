@@ -1,0 +1,37 @@
+{
+ "assessmentId": "RCSA-FX-1",
+ "risk": "Trade capture error",
+ "deskName": "G10 and EM FX",
+ "inherent": "Medium",
+ "effectiveness": "Effective",
+ "residual": "Low",
+ "nextReview": "2027-02-24",
+ "controls": [
+  {
+   "control": "Confirmation matching",
+   "type": "Detective",
+   "frequency": "Daily",
+   "lastTest": "2026-07-18",
+   "result": "Exceptions noted"
+  },
+  {
+   "control": "Limit breach escalation",
+   "type": "Detective",
+   "frequency": "Real time",
+   "lastTest": "2026-09-25",
+   "result": "Exceptions noted"
+  },
+  {
+   "control": "Payment release dual approval",
+   "type": "Preventive",
+   "frequency": "Per payment",
+   "lastTest": "2026-09-06",
+   "result": "Passed"
+  }
+ ],
+ "desk": "DESK-FX",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1
+ }
+}

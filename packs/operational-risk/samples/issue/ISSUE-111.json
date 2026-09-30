@@ -1,0 +1,32 @@
+{
+ "issueId": "ISSUE-111",
+ "title": "Vendor exit plan missing",
+ "source": "Regulator (PRA)",
+ "severity": "Low",
+ "owner": "K. Sato",
+ "due": "2027-01-03",
+ "status": "In progress",
+ "actions": [
+  {
+   "due": "2026-11-04",
+   "action": "Implement and validate",
+   "status": "Done"
+  },
+  {
+   "due": "2026-12-04",
+   "action": "Remediation design",
+   "status": "Done"
+  },
+  {
+   "due": "2027-01-03",
+   "action": "Root-cause analysis",
+   "status": "Done"
+  }
+ ],
+ "desk": "DESK-RATES",
+ "relatedLoss": "LOSS-2026-0014",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1
+ }
+}

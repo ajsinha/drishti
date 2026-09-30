@@ -1,0 +1,37 @@
+{
+ "assessmentId": "RCSA-MM-4",
+ "risk": "Settlement failure",
+ "deskName": "Money markets",
+ "inherent": "High",
+ "effectiveness": "Effective",
+ "residual": "Low",
+ "nextReview": "2027-01-22",
+ "controls": [
+  {
+   "control": "Daily P&L reconciliation",
+   "type": "Detective",
+   "frequency": "Daily",
+   "lastTest": "2026-06-10",
+   "result": "Passed"
+  },
+  {
+   "control": "Access recertification",
+   "type": "Preventive",
+   "frequency": "Quarterly",
+   "lastTest": "2026-07-19",
+   "result": "Exceptions noted"
+  },
+  {
+   "control": "Payment release dual approval",
+   "type": "Preventive",
+   "frequency": "Per payment",
+   "lastTest": "2026-08-28",
+   "result": "Exceptions noted"
+  }
+ ],
+ "desk": "DESK-MM",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1
+ }
+}

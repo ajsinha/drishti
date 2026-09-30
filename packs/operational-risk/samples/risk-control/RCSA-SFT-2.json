@@ -1,0 +1,37 @@
+{
+ "assessmentId": "RCSA-SFT-2",
+ "risk": "Unauthorised trading",
+ "deskName": "Repo and securities lending",
+ "inherent": "Critical",
+ "effectiveness": "Effective",
+ "residual": "Low",
+ "nextReview": "2026-11-07",
+ "controls": [
+  {
+   "control": "Access recertification",
+   "type": "Preventive",
+   "frequency": "Quarterly",
+   "lastTest": "2026-08-29",
+   "result": "Passed"
+  },
+  {
+   "control": "Limit breach escalation",
+   "type": "Detective",
+   "frequency": "Real time",
+   "lastTest": "2026-07-08",
+   "result": "Passed"
+  },
+  {
+   "control": "Four-eyes check on trade capture",
+   "type": "Preventive",
+   "frequency": "Per trade",
+   "lastTest": "2026-07-12",
+   "result": "Passed"
+  }
+ ],
+ "desk": "DESK-SFT",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1
+ }
+}

@@ -17,7 +17,7 @@ stress results, physical-risk assets and the EU-taxonomy green asset ratio, gene
 
     python3 tools/packgen/climate/make.py            write packs/climate-risk
     python3 tools/packgen/climate/make.py --check    fail if the pack differs from what would be written
-    uv run --with deltalake --with pyarrow python tools/packgen/climate/make.py --lake data/delta
+    uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/climate/make.py --lake data/delta
 """
 from __future__ import annotations
 

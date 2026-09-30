@@ -1,0 +1,40 @@
+{
+ "eventId": "LOSS-2026-0020",
+ "eventType": "Business disruption and system failures",
+ "deskName": "Structured products",
+ "grossLoss": 121100.0,
+ "recoveries": 12100.0,
+ "netLoss": 109000.0,
+ "status": "Under review",
+ "occurred": "2025-07-26",
+ "details": {
+  "businessLine": "Trading and sales",
+  "rootCause": "Stale reference data",
+  "boundaryWithCreditRisk": false,
+  "reportedToRegulator": false
+ },
+ "timeline": [
+  {
+   "date": "2025-07-26",
+   "step": "Occurred",
+   "by": "—"
+  },
+  {
+   "date": "2025-08-02",
+   "step": "Discovered",
+   "by": "K. Sato"
+  },
+  {
+   "date": "2025-08-13",
+   "step": "Booked to loss ledger",
+   "by": "Finance"
+  }
+ ],
+ "desk": "DESK-STRUCT",
+ "legalEntity": "LE-TKY",
+ "rootCauseControl": "RCSA-STRUCT-4",
+ "_meta": {
+  "source": "loss-database",
+  "generation": 1
+ }
+}

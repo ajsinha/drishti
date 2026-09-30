@@ -1,0 +1,37 @@
+{
+ "assessmentId": "RCSA-COMM-2",
+ "risk": "Unauthorised trading",
+ "deskName": "Commodities",
+ "inherent": "High",
+ "effectiveness": "Partially effective",
+ "residual": "Medium",
+ "nextReview": "2027-01-10",
+ "controls": [
+  {
+   "control": "Model validation",
+   "type": "Preventive",
+   "frequency": "Annual",
+   "lastTest": "2026-08-03",
+   "result": "Passed"
+  },
+  {
+   "control": "Four-eyes check on trade capture",
+   "type": "Preventive",
+   "frequency": "Per trade",
+   "lastTest": "2026-08-14",
+   "result": "Passed"
+  },
+  {
+   "control": "Confirmation matching",
+   "type": "Detective",
+   "frequency": "Daily",
+   "lastTest": "2026-08-25",
+   "result": "Exceptions noted"
+  }
+ ],
+ "desk": "DESK-COMM",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1
+ }
+}

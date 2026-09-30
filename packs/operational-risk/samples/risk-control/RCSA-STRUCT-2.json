@@ -1,0 +1,37 @@
+{
+ "assessmentId": "RCSA-STRUCT-2",
+ "risk": "Unauthorised trading",
+ "deskName": "Structured products",
+ "inherent": "Critical",
+ "effectiveness": "Partially effective",
+ "residual": "Medium",
+ "nextReview": "2026-11-01",
+ "controls": [
+  {
+   "control": "Model validation",
+   "type": "Preventive",
+   "frequency": "Annual",
+   "lastTest": "2026-07-07",
+   "result": "Passed"
+  },
+  {
+   "control": "Access recertification",
+   "type": "Preventive",
+   "frequency": "Quarterly",
+   "lastTest": "2026-06-10",
+   "result": "Exceptions noted"
+  },
+  {
+   "control": "Payment release dual approval",
+   "type": "Preventive",
+   "frequency": "Per payment",
+   "lastTest": "2026-08-14",
+   "result": "Passed"
+  }
+ ],
+ "desk": "DESK-STRUCT",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1
+ }
+}

@@ -1,0 +1,40 @@
+{
+ "eventId": "LOSS-2026-0022",
+ "eventType": "Execution, delivery and process management",
+ "deskName": "G10 and EM FX",
+ "grossLoss": 66300.0,
+ "recoveries": 0.0,
+ "netLoss": 66300.0,
+ "status": "Under review",
+ "occurred": "2025-08-29",
+ "details": {
+  "businessLine": "Trading and sales",
+  "rootCause": "Stale reference data",
+  "boundaryWithCreditRisk": false,
+  "reportedToRegulator": false
+ },
+ "timeline": [
+  {
+   "date": "2025-08-29",
+   "step": "Occurred",
+   "by": "—"
+  },
+  {
+   "date": "2025-09-05",
+   "step": "Discovered",
+   "by": "C. Brandt"
+  },
+  {
+   "date": "2025-09-22",
+   "step": "Booked to loss ledger",
+   "by": "Finance"
+  }
+ ],
+ "desk": "DESK-FX",
+ "legalEntity": "LE-LDN",
+ "rootCauseControl": "RCSA-FX-1",
+ "_meta": {
+  "source": "loss-database",
+  "generation": 1
+ }
+}

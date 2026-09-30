@@ -1,0 +1,37 @@
+{
+ "assessmentId": "RCSA-EQD-3",
+ "risk": "Model risk",
+ "deskName": "Equity derivatives",
+ "inherent": "High",
+ "effectiveness": "Partially effective",
+ "residual": "Medium",
+ "nextReview": "2027-03-21",
+ "controls": [
+  {
+   "control": "Four-eyes check on trade capture",
+   "type": "Preventive",
+   "frequency": "Per trade",
+   "lastTest": "2026-07-23",
+   "result": "Exceptions noted"
+  },
+  {
+   "control": "Payment release dual approval",
+   "type": "Preventive",
+   "frequency": "Per payment",
+   "lastTest": "2026-08-09",
+   "result": "Passed"
+  },
+  {
+   "control": "Daily P&L reconciliation",
+   "type": "Detective",
+   "frequency": "Daily",
+   "lastTest": "2026-09-07",
+   "result": "Passed"
+  }
+ ],
+ "desk": "DESK-EQD",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1
+ }
+}

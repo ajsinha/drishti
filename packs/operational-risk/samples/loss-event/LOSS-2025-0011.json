@@ -1,0 +1,40 @@
+{
+ "eventId": "LOSS-2025-0011",
+ "eventType": "Clients, products and business practices",
+ "deskName": "Rates · Swaps and options",
+ "grossLoss": 650400.0,
+ "recoveries": 0.0,
+ "netLoss": 650400.0,
+ "status": "Closed",
+ "occurred": "2026-08-15",
+ "details": {
+  "businessLine": "Trading and sales",
+  "rootCause": "Vendor outage",
+  "boundaryWithCreditRisk": false,
+  "reportedToRegulator": false
+ },
+ "timeline": [
+  {
+   "date": "2026-08-15",
+   "step": "Occurred",
+   "by": "—"
+  },
+  {
+   "date": "2026-09-25",
+   "step": "Discovered",
+   "by": "K. Sato"
+  },
+  {
+   "date": "2026-10-10",
+   "step": "Booked to loss ledger",
+   "by": "Finance"
+  }
+ ],
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "rootCauseControl": "RCSA-RATES-4",
+ "_meta": {
+  "source": "loss-database",
+  "generation": 1
+ }
+}

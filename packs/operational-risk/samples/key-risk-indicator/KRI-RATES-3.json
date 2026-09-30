@@ -1,0 +1,106 @@
+{
+ "kriId": "KRI-RATES-3",
+ "name": "Manual price overrides",
+ "deskName": "Rates · Swaps and options",
+ "value": 17.48,
+ "amber": 30.0,
+ "red": 48.0,
+ "status": "Green",
+ "history": [
+  {
+   "date": "2026-09-03",
+   "value": 2.95
+  },
+  {
+   "date": "2026-09-04",
+   "value": 5.34
+  },
+  {
+   "date": "2026-09-07",
+   "value": 9.24
+  },
+  {
+   "date": "2026-09-08",
+   "value": 14.52
+  },
+  {
+   "date": "2026-09-09",
+   "value": 12.74
+  },
+  {
+   "date": "2026-09-10",
+   "value": 12.29
+  },
+  {
+   "date": "2026-09-11",
+   "value": 8.54
+  },
+  {
+   "date": "2026-09-14",
+   "value": 0
+  },
+  {
+   "date": "2026-09-15",
+   "value": 0
+  },
+  {
+   "date": "2026-09-16",
+   "value": 0
+  },
+  {
+   "date": "2026-09-17",
+   "value": 0
+  },
+  {
+   "date": "2026-09-18",
+   "value": 1.8
+  },
+  {
+   "date": "2026-09-21",
+   "value": 5.43
+  },
+  {
+   "date": "2026-09-22",
+   "value": 6.18
+  },
+  {
+   "date": "2026-09-23",
+   "value": 14.1
+  },
+  {
+   "date": "2026-09-24",
+   "value": 18.85
+  },
+  {
+   "date": "2026-09-25",
+   "value": 19.54
+  },
+  {
+   "date": "2026-09-28",
+   "value": 18.09
+  },
+  {
+   "date": "2026-09-29",
+   "value": 16.32
+  },
+  {
+   "date": "2026-09-30",
+   "value": 17.48
+  }
+ ],
+ "definition": {
+  "unit": "count",
+  "frequency": "Daily",
+  "owner": "S. Okafor",
+  "source": "Operations data mart"
+ },
+ "desk": "DESK-RATES",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "value": 0.3
+  }
+ }
+}

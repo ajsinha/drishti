@@ -1,0 +1,32 @@
+{
+ "issueId": "ISSUE-106",
+ "title": "Reconciliation breaks not escalated",
+ "source": "Regulator (Fed)",
+ "severity": "Medium",
+ "owner": "A. Novak",
+ "due": "2026-11-26",
+ "status": "In progress",
+ "actions": [
+  {
+   "due": "2026-09-27",
+   "action": "Implement and validate",
+   "status": "Open"
+  },
+  {
+   "due": "2026-10-27",
+   "action": "Remediation design",
+   "status": "Done"
+  },
+  {
+   "due": "2026-11-26",
+   "action": "Root-cause analysis",
+   "status": "Done"
+  }
+ ],
+ "desk": "DESK-INFL",
+ "relatedLoss": "LOSS-2025-0011",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1
+ }
+}

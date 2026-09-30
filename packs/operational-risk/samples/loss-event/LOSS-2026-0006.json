@@ -1,0 +1,40 @@
+{
+ "eventId": "LOSS-2026-0006",
+ "eventType": "Business disruption and system failures",
+ "deskName": "Inflation",
+ "grossLoss": 418000.0,
+ "recoveries": 334400.0,
+ "netLoss": 83600.0,
+ "status": "Closed",
+ "occurred": "2025-07-15",
+ "details": {
+  "businessLine": "Trading and sales",
+  "rootCause": "Manual keying error",
+  "boundaryWithCreditRisk": false,
+  "reportedToRegulator": false
+ },
+ "timeline": [
+  {
+   "date": "2025-07-15",
+   "step": "Occurred",
+   "by": "—"
+  },
+  {
+   "date": "2025-07-28",
+   "step": "Discovered",
+   "by": "M. Duarte"
+  },
+  {
+   "date": "2025-08-22",
+   "step": "Booked to loss ledger",
+   "by": "Finance"
+  }
+ ],
+ "desk": "DESK-INFL",
+ "legalEntity": "LE-LDN",
+ "rootCauseControl": "RCSA-INFL-4",
+ "_meta": {
+  "source": "loss-database",
+  "generation": 1
+ }
+}

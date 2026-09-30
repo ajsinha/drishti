@@ -1,0 +1,106 @@
+{
+ "kriId": "KRI-STRUCT-3",
+ "name": "Manual price overrides",
+ "deskName": "Structured products",
+ "value": 7.13,
+ "amber": 30.0,
+ "red": 48.0,
+ "status": "Green",
+ "history": [
+  {
+   "date": "2026-09-03",
+   "value": 20.62
+  },
+  {
+   "date": "2026-09-04",
+   "value": 21.26
+  },
+  {
+   "date": "2026-09-07",
+   "value": 21.16
+  },
+  {
+   "date": "2026-09-08",
+   "value": 15.27
+  },
+  {
+   "date": "2026-09-09",
+   "value": 10.31
+  },
+  {
+   "date": "2026-09-10",
+   "value": 14.07
+  },
+  {
+   "date": "2026-09-11",
+   "value": 8.79
+  },
+  {
+   "date": "2026-09-14",
+   "value": 8.5
+  },
+  {
+   "date": "2026-09-15",
+   "value": 14.73
+  },
+  {
+   "date": "2026-09-16",
+   "value": 12.49
+  },
+  {
+   "date": "2026-09-17",
+   "value": 15.83
+  },
+  {
+   "date": "2026-09-18",
+   "value": 16.81
+  },
+  {
+   "date": "2026-09-21",
+   "value": 19.64
+  },
+  {
+   "date": "2026-09-22",
+   "value": 11.0
+  },
+  {
+   "date": "2026-09-23",
+   "value": 11.55
+  },
+  {
+   "date": "2026-09-24",
+   "value": 12.82
+  },
+  {
+   "date": "2026-09-25",
+   "value": 13.38
+  },
+  {
+   "date": "2026-09-28",
+   "value": 9.07
+  },
+  {
+   "date": "2026-09-29",
+   "value": 7.33
+  },
+  {
+   "date": "2026-09-30",
+   "value": 7.13
+  }
+ ],
+ "definition": {
+  "unit": "count",
+  "frequency": "Daily",
+  "owner": "K. Sato",
+  "source": "Operations data mart"
+ },
+ "desk": "DESK-STRUCT",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "value": 0.3
+  }
+ }
+}

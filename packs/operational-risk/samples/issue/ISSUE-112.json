@@ -1,0 +1,32 @@
+{
+ "issueId": "ISSUE-112",
+ "title": "Reconciliation breaks not escalated",
+ "source": "Self-identified",
+ "severity": "Low",
+ "owner": "K. Sato",
+ "due": "2026-10-16",
+ "status": "Open",
+ "actions": [
+  {
+   "due": "2026-08-17",
+   "action": "Implement and validate",
+   "status": "Open"
+  },
+  {
+   "due": "2026-09-16",
+   "action": "Remediation design",
+   "status": "Open"
+  },
+  {
+   "due": "2026-10-16",
+   "action": "Root-cause analysis",
+   "status": "Open"
+  }
+ ],
+ "desk": "DESK-FX",
+ "relatedLoss": "LOSS-2025-0007",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1
+ }
+}

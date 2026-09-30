@@ -1,0 +1,32 @@
+{
+ "issueId": "ISSUE-105",
+ "title": "Incomplete trade surveillance coverage",
+ "source": "Internal audit",
+ "severity": "High",
+ "owner": "S. Okafor",
+ "due": "2026-11-19",
+ "status": "Open",
+ "actions": [
+  {
+   "due": "2026-09-20",
+   "action": "Implement and validate",
+   "status": "Open"
+  },
+  {
+   "due": "2026-10-20",
+   "action": "Remediation design",
+   "status": "Done"
+  },
+  {
+   "due": "2026-11-19",
+   "action": "Root-cause analysis",
+   "status": "Done"
+  }
+ ],
+ "desk": "DESK-COMM",
+ "relatedLoss": "LOSS-2025-0015",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1
+ }
+}

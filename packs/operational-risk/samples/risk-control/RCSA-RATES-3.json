@@ -1,0 +1,37 @@
+{
+ "assessmentId": "RCSA-RATES-3",
+ "risk": "Model risk",
+ "deskName": "Rates · Swaps and options",
+ "inherent": "High",
+ "effectiveness": "Ineffective",
+ "residual": "High",
+ "nextReview": "2027-01-16",
+ "controls": [
+  {
+   "control": "Payment release dual approval",
+   "type": "Preventive",
+   "frequency": "Per payment",
+   "lastTest": "2026-06-14",
+   "result": "Exceptions noted"
+  },
+  {
+   "control": "Model validation",
+   "type": "Preventive",
+   "frequency": "Annual",
+   "lastTest": "2026-07-14",
+   "result": "Exceptions noted"
+  },
+  {
+   "control": "Confirmation matching",
+   "type": "Detective",
+   "frequency": "Daily",
+   "lastTest": "2026-07-01",
+   "result": "Passed"
+  }
+ ],
+ "desk": "DESK-RATES",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1
+ }
+}

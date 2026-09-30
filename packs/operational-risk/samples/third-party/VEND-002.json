@@ -1,0 +1,42 @@
+{
+ "vendorId": "VEND-002",
+ "name": "Bluepeak Cloud Services",
+ "criticality": "Critical",
+ "serviceCount": 6,
+ "annualSpend": 23300000.0,
+ "lastAssessed": "2026-05-21",
+ "slaBreaches": 1,
+ "services": [
+  {
+   "service": "Reference data",
+   "desk": "Rates · Swaps and options",
+   "exitPlan": "Tested"
+  },
+  {
+   "service": "Surveillance alerts",
+   "desk": "Money markets",
+   "exitPlan": "Missing"
+  },
+  {
+   "service": "Document storage",
+   "desk": "Credit trading",
+   "exitPlan": "Documented"
+  }
+ ],
+ "incidents": [
+  {
+   "date": "2026-03-05",
+   "incident": "Outage 45 min",
+   "impact": "Major"
+  },
+  {
+   "date": "2026-04-12",
+   "incident": "Late file delivery",
+   "impact": "Major"
+  }
+ ],
+ "_meta": {
+  "source": "vendor-management",
+  "generation": 1
+ }
+}

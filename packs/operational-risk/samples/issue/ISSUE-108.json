@@ -1,0 +1,32 @@
+{
+ "issueId": "ISSUE-108",
+ "title": "Model inventory gaps",
+ "source": "Self-identified",
+ "severity": "High",
+ "owner": "M. Duarte",
+ "due": "2026-12-01",
+ "status": "Open",
+ "actions": [
+  {
+   "due": "2026-10-02",
+   "action": "Implement and validate",
+   "status": "Done"
+  },
+  {
+   "due": "2026-11-01",
+   "action": "Remediation design",
+   "status": "Done"
+  },
+  {
+   "due": "2026-12-01",
+   "action": "Root-cause analysis",
+   "status": "Open"
+  }
+ ],
+ "desk": "DESK-SFT",
+ "relatedLoss": "LOSS-2026-0012",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1
+ }
+}

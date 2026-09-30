@@ -1,0 +1,34 @@
+{
+ "incidentId": "CYBER-005",
+ "title": "Credential stuffing on client portal",
+ "severity": "Sev 3",
+ "detectHours": 6.7,
+ "containHours": 7.4,
+ "recordsAffected": 4500,
+ "status": "Closed",
+ "timeline": [
+  {
+   "at": "2026-02-12 09:12",
+   "step": "First alert (SOC)"
+  },
+  {
+   "at": "2026-02-12 +6.7h",
+   "step": "Confirmed"
+  },
+  {
+   "at": "2026-02-12 +7.4h",
+   "step": "Contained"
+  }
+ ],
+ "systems": {
+  "affected": "Client portal",
+  "ownerTeam": "Cyber defence",
+  "externalReported": false
+ },
+ "legalEntity": "LE-LDN",
+ "relatedLoss": "LOSS-2025-0003",
+ "_meta": {
+  "source": "soc",
+  "generation": 1
+ }
+}

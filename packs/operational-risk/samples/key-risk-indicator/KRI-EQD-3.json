@@ -1,0 +1,106 @@
+{
+ "kriId": "KRI-EQD-3",
+ "name": "Manual price overrides",
+ "deskName": "Equity derivatives",
+ "value": 19.43,
+ "amber": 30.0,
+ "red": 48.0,
+ "status": "Green",
+ "history": [
+  {
+   "date": "2026-09-03",
+   "value": 25.52
+  },
+  {
+   "date": "2026-09-04",
+   "value": 16.4
+  },
+  {
+   "date": "2026-09-07",
+   "value": 17.25
+  },
+  {
+   "date": "2026-09-08",
+   "value": 19.63
+  },
+  {
+   "date": "2026-09-09",
+   "value": 22.73
+  },
+  {
+   "date": "2026-09-10",
+   "value": 22.84
+  },
+  {
+   "date": "2026-09-11",
+   "value": 20.23
+  },
+  {
+   "date": "2026-09-14",
+   "value": 20.6
+  },
+  {
+   "date": "2026-09-15",
+   "value": 18.27
+  },
+  {
+   "date": "2026-09-16",
+   "value": 20.26
+  },
+  {
+   "date": "2026-09-17",
+   "value": 19.88
+  },
+  {
+   "date": "2026-09-18",
+   "value": 22.08
+  },
+  {
+   "date": "2026-09-21",
+   "value": 17.58
+  },
+  {
+   "date": "2026-09-22",
+   "value": 23.62
+  },
+  {
+   "date": "2026-09-23",
+   "value": 20.37
+  },
+  {
+   "date": "2026-09-24",
+   "value": 16.73
+  },
+  {
+   "date": "2026-09-25",
+   "value": 17.9
+  },
+  {
+   "date": "2026-09-28",
+   "value": 16.17
+  },
+  {
+   "date": "2026-09-29",
+   "value": 17.88
+  },
+  {
+   "date": "2026-09-30",
+   "value": 19.43
+  }
+ ],
+ "definition": {
+  "unit": "count",
+  "frequency": "Daily",
+  "owner": "R. Mehta",
+  "source": "Operations data mart"
+ },
+ "desk": "DESK-EQD",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "value": 0.3
+  }
+ }
+}

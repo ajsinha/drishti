@@ -1,0 +1,37 @@
+{
+ "assessmentId": "RCSA-INFL-4",
+ "risk": "Settlement failure",
+ "deskName": "Inflation",
+ "inherent": "High",
+ "effectiveness": "Effective",
+ "residual": "Low",
+ "nextReview": "2026-12-14",
+ "controls": [
+  {
+   "control": "Confirmation matching",
+   "type": "Detective",
+   "frequency": "Daily",
+   "lastTest": "2026-06-13",
+   "result": "Passed"
+  },
+  {
+   "control": "Access recertification",
+   "type": "Preventive",
+   "frequency": "Quarterly",
+   "lastTest": "2026-07-25",
+   "result": "Passed"
+  },
+  {
+   "control": "Payment release dual approval",
+   "type": "Preventive",
+   "frequency": "Per payment",
+   "lastTest": "2026-07-08",
+   "result": "Exceptions noted"
+  }
+ ],
+ "desk": "DESK-INFL",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1
+ }
+}

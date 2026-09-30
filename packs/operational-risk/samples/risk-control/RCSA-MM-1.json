@@ -1,0 +1,37 @@
+{
+ "assessmentId": "RCSA-MM-1",
+ "risk": "Trade capture error",
+ "deskName": "Money markets",
+ "inherent": "High",
+ "effectiveness": "Effective",
+ "residual": "Low",
+ "nextReview": "2026-11-10",
+ "controls": [
+  {
+   "control": "Daily P&L reconciliation",
+   "type": "Detective",
+   "frequency": "Daily",
+   "lastTest": "2026-07-19",
+   "result": "Passed"
+  },
+  {
+   "control": "Access recertification",
+   "type": "Preventive",
+   "frequency": "Quarterly",
+   "lastTest": "2026-07-19",
+   "result": "Passed"
+  },
+  {
+   "control": "Payment release dual approval",
+   "type": "Preventive",
+   "frequency": "Per payment",
+   "lastTest": "2026-08-17",
+   "result": "Exceptions noted"
+  }
+ ],
+ "desk": "DESK-MM",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1
+ }
+}

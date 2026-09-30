@@ -1,0 +1,37 @@
+{
+ "scenarioId": "OPSCN-02",
+ "name": "Prolonged outage of the core booking system",
+ "eventType": "Business disruption and system failures",
+ "returnPeriod": 100,
+ "p50": 22000000.0,
+ "p999": 476200000.0,
+ "percentiles": [
+  {
+   "percentile": "p50",
+   "loss": 22000000.0
+  },
+  {
+   "percentile": "p90",
+   "loss": 70400000.0
+  },
+  {
+   "percentile": "p99",
+   "loss": 165000000.0
+  },
+  {
+   "percentile": "p99.9",
+   "loss": 330000000.0
+  }
+ ],
+ "context": {
+  "narrative": "Prolonged outage of the core booking system: estimated in a workshop with first-line experts, calibrated to external loss data.",
+  "workshop": "Operations",
+  "lastReviewed": "2026-01-04",
+  "externalData": "ORX consortium (illustrative)"
+ },
+ "legalEntity": "LE-LDN",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1
+ }
+}

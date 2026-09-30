@@ -1,0 +1,106 @@
+{
+ "kriId": "KRI-STRUCT-1",
+ "name": "Trade breaks older than 2 days",
+ "deskName": "Structured products",
+ "value": 20.07,
+ "amber": 20.0,
+ "red": 32.0,
+ "status": "Amber",
+ "history": [
+  {
+   "date": "2026-09-03",
+   "value": 12.0
+  },
+  {
+   "date": "2026-09-04",
+   "value": 13.24
+  },
+  {
+   "date": "2026-09-07",
+   "value": 13.88
+  },
+  {
+   "date": "2026-09-08",
+   "value": 15.93
+  },
+  {
+   "date": "2026-09-09",
+   "value": 16.12
+  },
+  {
+   "date": "2026-09-10",
+   "value": 16.75
+  },
+  {
+   "date": "2026-09-11",
+   "value": 19.2
+  },
+  {
+   "date": "2026-09-14",
+   "value": 19.79
+  },
+  {
+   "date": "2026-09-15",
+   "value": 12.96
+  },
+  {
+   "date": "2026-09-16",
+   "value": 17.01
+  },
+  {
+   "date": "2026-09-17",
+   "value": 21.57
+  },
+  {
+   "date": "2026-09-18",
+   "value": 20.33
+  },
+  {
+   "date": "2026-09-21",
+   "value": 17.26
+  },
+  {
+   "date": "2026-09-22",
+   "value": 18.26
+  },
+  {
+   "date": "2026-09-23",
+   "value": 19.68
+  },
+  {
+   "date": "2026-09-24",
+   "value": 17.67
+  },
+  {
+   "date": "2026-09-25",
+   "value": 20.82
+  },
+  {
+   "date": "2026-09-28",
+   "value": 22.62
+  },
+  {
+   "date": "2026-09-29",
+   "value": 19.27
+  },
+  {
+   "date": "2026-09-30",
+   "value": 20.07
+  }
+ ],
+ "definition": {
+  "unit": "count",
+  "frequency": "Daily",
+  "owner": "R. Mehta",
+  "source": "Operations data mart"
+ },
+ "desk": "DESK-STRUCT",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "value": 0.3
+  }
+ }
+}

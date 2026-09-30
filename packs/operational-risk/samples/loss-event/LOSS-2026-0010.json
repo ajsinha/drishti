@@ -1,0 +1,40 @@
+{
+ "eventId": "LOSS-2026-0010",
+ "eventType": "Execution, delivery and process management",
+ "deskName": "Structured products",
+ "grossLoss": 620300.0,
+ "recoveries": 0.0,
+ "netLoss": 620300.0,
+ "status": "Under review",
+ "occurred": "2025-03-13",
+ "details": {
+  "businessLine": "Trading and sales",
+  "rootCause": "Missed corporate action",
+  "boundaryWithCreditRisk": false,
+  "reportedToRegulator": false
+ },
+ "timeline": [
+  {
+   "date": "2025-03-13",
+   "step": "Occurred",
+   "by": "—"
+  },
+  {
+   "date": "2025-04-08",
+   "step": "Discovered",
+   "by": "S. Okafor"
+  },
+  {
+   "date": "2025-04-23",
+   "step": "Booked to loss ledger",
+   "by": "Finance"
+  }
+ ],
+ "desk": "DESK-STRUCT",
+ "legalEntity": "LE-TKY",
+ "rootCauseControl": "RCSA-STRUCT-2",
+ "_meta": {
+  "source": "loss-database",
+  "generation": 1
+ }
+}

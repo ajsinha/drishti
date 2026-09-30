@@ -1,0 +1,40 @@
+{
+ "eventId": "LOSS-2025-0007",
+ "eventType": "Execution, delivery and process management",
+ "deskName": "Bonds and securitised",
+ "grossLoss": 684700.0,
+ "recoveries": 547800.0,
+ "netLoss": 136900.0,
+ "status": "Closed",
+ "occurred": "2025-02-24",
+ "details": {
+  "businessLine": "Trading and sales",
+  "rootCause": "Manual keying error",
+  "boundaryWithCreditRisk": false,
+  "reportedToRegulator": false
+ },
+ "timeline": [
+  {
+   "date": "2025-02-24",
+   "step": "Occurred",
+   "by": "—"
+  },
+  {
+   "date": "2025-03-22",
+   "step": "Discovered",
+   "by": "M. Duarte"
+  },
+  {
+   "date": "2025-04-03",
+   "step": "Booked to loss ledger",
+   "by": "Finance"
+  }
+ ],
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "rootCauseControl": "RCSA-FI-2",
+ "_meta": {
+  "source": "loss-database",
+  "generation": 1
+ }
+}

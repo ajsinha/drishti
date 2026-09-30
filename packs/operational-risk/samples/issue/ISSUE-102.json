@@ -1,0 +1,32 @@
+{
+ "issueId": "ISSUE-102",
+ "title": "Reconciliation breaks not escalated",
+ "source": "Internal audit",
+ "severity": "Low",
+ "owner": "J. Lin",
+ "due": "2026-09-10",
+ "status": "Overdue",
+ "actions": [
+  {
+   "due": "2026-07-12",
+   "action": "Implement and validate",
+   "status": "Done"
+  },
+  {
+   "due": "2026-08-11",
+   "action": "Remediation design",
+   "status": "Done"
+  },
+  {
+   "due": "2026-09-10",
+   "action": "Root-cause analysis",
+   "status": "Open"
+  }
+ ],
+ "desk": "DESK-FX",
+ "relatedLoss": "LOSS-2025-0007",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1
+ }
+}

@@ -1,0 +1,40 @@
+{
+ "eventId": "LOSS-2025-0019",
+ "eventType": "Execution, delivery and process management",
+ "deskName": "Money markets",
+ "grossLoss": 9900.0,
+ "recoveries": 0.0,
+ "netLoss": 9900.0,
+ "status": "Open",
+ "occurred": "2025-06-10",
+ "details": {
+  "businessLine": "Commercial banking",
+  "rootCause": "Missed corporate action",
+  "boundaryWithCreditRisk": false,
+  "reportedToRegulator": false
+ },
+ "timeline": [
+  {
+   "date": "2025-06-10",
+   "step": "Occurred",
+   "by": "—"
+  },
+  {
+   "date": "2025-07-16",
+   "step": "Discovered",
+   "by": "A. Novak"
+  },
+  {
+   "date": "2025-08-14",
+   "step": "Booked to loss ledger",
+   "by": "Finance"
+  }
+ ],
+ "desk": "DESK-MM",
+ "legalEntity": "LE-NY",
+ "rootCauseControl": "RCSA-MM-4",
+ "_meta": {
+  "source": "loss-database",
+  "generation": 1
+ }
+}

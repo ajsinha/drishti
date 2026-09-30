@@ -1,0 +1,70 @@
+{
+ "calcId": "OPCAP-TKY",
+ "legalEntityName": "Drishti Securities Japan K.K.",
+ "bi": 7417000000,
+ "bic": 1082550000,
+ "ilm": 0.877,
+ "capital": 949575334,
+ "rwa": 11869691675,
+ "components": [
+  {
+   "component": "Interest, leases and dividends",
+   "amount": 3475000000.0
+  },
+  {
+   "component": "Services",
+   "amount": 1238000000.0
+  },
+  {
+   "component": "Financial (trading and banking book)",
+   "amount": 2704000000.0
+  }
+ ],
+ "annualLosses": [
+  {
+   "year": "2016",
+   "loss": 21900000.0
+  },
+  {
+   "year": "2017",
+   "loss": 66700000.0
+  },
+  {
+   "year": "2018",
+   "loss": 83200000.0
+  },
+  {
+   "year": "2019",
+   "loss": 80500000.0
+  },
+  {
+   "year": "2020",
+   "loss": 20100000.0
+  },
+  {
+   "year": "2021",
+   "loss": 47200000.0
+  },
+  {
+   "year": "2022",
+   "loss": 59200000.0
+  },
+  {
+   "year": "2023",
+   "loss": 28600000.0
+  },
+  {
+   "year": "2024",
+   "loss": 13000000.0
+  },
+  {
+   "year": "2025",
+   "loss": 30000000.0
+  }
+ ],
+ "legalEntity": "LE-TKY",
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

@@ -1,0 +1,40 @@
+{
+ "eventId": "LOSS-2026-0016",
+ "eventType": "Execution, delivery and process management",
+ "deskName": "Inflation",
+ "grossLoss": 51300.0,
+ "recoveries": 0.0,
+ "netLoss": 51300.0,
+ "status": "Open",
+ "occurred": "2026-03-27",
+ "details": {
+  "businessLine": "Trading and sales",
+  "rootCause": "Missed corporate action",
+  "boundaryWithCreditRisk": false,
+  "reportedToRegulator": false
+ },
+ "timeline": [
+  {
+   "date": "2026-03-27",
+   "step": "Occurred",
+   "by": "—"
+  },
+  {
+   "date": "2026-05-03",
+   "step": "Discovered",
+   "by": "M. Duarte"
+  },
+  {
+   "date": "2026-05-25",
+   "step": "Booked to loss ledger",
+   "by": "Finance"
+  }
+ ],
+ "desk": "DESK-INFL",
+ "legalEntity": "LE-LDN",
+ "rootCauseControl": "RCSA-INFL-3",
+ "_meta": {
+  "source": "loss-database",
+  "generation": 1
+ }
+}

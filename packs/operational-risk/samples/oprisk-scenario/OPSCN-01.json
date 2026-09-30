@@ -1,0 +1,37 @@
+{
+ "scenarioId": "OPSCN-01",
+ "name": "Rogue trading in a large book",
+ "eventType": "Internal fraud",
+ "returnPeriod": 10,
+ "p50": 23300000.0,
+ "p999": 264100000.0,
+ "percentiles": [
+  {
+   "percentile": "p50",
+   "loss": 23300000.0
+  },
+  {
+   "percentile": "p90",
+   "loss": 74600000.0
+  },
+  {
+   "percentile": "p99",
+   "loss": 174800000.0
+  },
+  {
+   "percentile": "p99.9",
+   "loss": 349500000.0
+  }
+ ],
+ "context": {
+  "narrative": "Rogue trading in a large book: estimated in a workshop with first-line experts, calibrated to external loss data.",
+  "workshop": "Rates",
+  "lastReviewed": "2026-01-17",
+  "externalData": "ORX consortium (illustrative)"
+ },
+ "legalEntity": "LE-TKY",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1
+ }
+}

@@ -1,0 +1,40 @@
+{
+ "eventId": "LOSS-2025-0015",
+ "eventType": "Internal fraud",
+ "deskName": "Commodities",
+ "grossLoss": 116100.0,
+ "recoveries": 11600.0,
+ "netLoss": 104500.0,
+ "status": "Open",
+ "occurred": "2026-05-23",
+ "details": {
+  "businessLine": "Trading and sales",
+  "rootCause": "Vendor outage",
+  "boundaryWithCreditRisk": false,
+  "reportedToRegulator": false
+ },
+ "timeline": [
+  {
+   "date": "2026-05-23",
+   "step": "Occurred",
+   "by": "—"
+  },
+  {
+   "date": "2026-06-19",
+   "step": "Discovered",
+   "by": "K. Sato"
+  },
+  {
+   "date": "2026-07-18",
+   "step": "Booked to loss ledger",
+   "by": "Finance"
+  }
+ ],
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "rootCauseControl": "RCSA-COMM-1",
+ "_meta": {
+  "source": "loss-database",
+  "generation": 1
+ }
+}

@@ -1,0 +1,40 @@
+{
+ "eventId": "LOSS-2025-0017",
+ "eventType": "Employment practices and workplace safety",
+ "deskName": "Bonds and securitised",
+ "grossLoss": 214200.0,
+ "recoveries": 75000.0,
+ "netLoss": 139200.0,
+ "status": "Closed",
+ "occurred": "2025-02-11",
+ "details": {
+  "businessLine": "Trading and sales",
+  "rootCause": "Phishing",
+  "boundaryWithCreditRisk": false,
+  "reportedToRegulator": false
+ },
+ "timeline": [
+  {
+   "date": "2025-02-11",
+   "step": "Occurred",
+   "by": "—"
+  },
+  {
+   "date": "2025-02-15",
+   "step": "Discovered",
+   "by": "M. Duarte"
+  },
+  {
+   "date": "2025-03-17",
+   "step": "Booked to loss ledger",
+   "by": "Finance"
+  }
+ ],
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "rootCauseControl": "RCSA-FI-1",
+ "_meta": {
+  "source": "loss-database",
+  "generation": 1
+ }
+}

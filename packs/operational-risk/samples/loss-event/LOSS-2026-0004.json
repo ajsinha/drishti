@@ -1,0 +1,40 @@
+{
+ "eventId": "LOSS-2026-0004",
+ "eventType": "Execution, delivery and process management",
+ "deskName": "Equity derivatives",
+ "grossLoss": 189900.0,
+ "recoveries": 66500.0,
+ "netLoss": 123400.0,
+ "status": "Closed",
+ "occurred": "2026-09-03",
+ "details": {
+  "businessLine": "Trading and sales",
+  "rootCause": "Stale reference data",
+  "boundaryWithCreditRisk": false,
+  "reportedToRegulator": false
+ },
+ "timeline": [
+  {
+   "date": "2026-09-03",
+   "step": "Occurred",
+   "by": "—"
+  },
+  {
+   "date": "2026-10-05",
+   "step": "Discovered",
+   "by": "R. Mehta"
+  },
+  {
+   "date": "2026-10-26",
+   "step": "Booked to loss ledger",
+   "by": "Finance"
+  }
+ ],
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "rootCauseControl": "RCSA-EQD-1",
+ "_meta": {
+  "source": "loss-database",
+  "generation": 1
+ }
+}

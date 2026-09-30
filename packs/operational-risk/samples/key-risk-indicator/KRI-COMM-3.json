@@ -1,0 +1,106 @@
+{
+ "kriId": "KRI-COMM-3",
+ "name": "Manual price overrides",
+ "deskName": "Commodities",
+ "value": 13.75,
+ "amber": 30.0,
+ "red": 48.0,
+ "status": "Green",
+ "history": [
+  {
+   "date": "2026-09-03",
+   "value": 29.96
+  },
+  {
+   "date": "2026-09-04",
+   "value": 34.91
+  },
+  {
+   "date": "2026-09-07",
+   "value": 32.35
+  },
+  {
+   "date": "2026-09-08",
+   "value": 25.33
+  },
+  {
+   "date": "2026-09-09",
+   "value": 25.9
+  },
+  {
+   "date": "2026-09-10",
+   "value": 29.32
+  },
+  {
+   "date": "2026-09-11",
+   "value": 34.77
+  },
+  {
+   "date": "2026-09-14",
+   "value": 27.96
+  },
+  {
+   "date": "2026-09-15",
+   "value": 22.45
+  },
+  {
+   "date": "2026-09-16",
+   "value": 19.35
+  },
+  {
+   "date": "2026-09-17",
+   "value": 17.15
+  },
+  {
+   "date": "2026-09-18",
+   "value": 21.22
+  },
+  {
+   "date": "2026-09-21",
+   "value": 18.39
+  },
+  {
+   "date": "2026-09-22",
+   "value": 19.35
+  },
+  {
+   "date": "2026-09-23",
+   "value": 21.42
+  },
+  {
+   "date": "2026-09-24",
+   "value": 22.2
+  },
+  {
+   "date": "2026-09-25",
+   "value": 16.34
+  },
+  {
+   "date": "2026-09-28",
+   "value": 13.69
+  },
+  {
+   "date": "2026-09-29",
+   "value": 14.41
+  },
+  {
+   "date": "2026-09-30",
+   "value": 13.75
+  }
+ ],
+ "definition": {
+  "unit": "count",
+  "frequency": "Daily",
+  "owner": "S. Okafor",
+  "source": "Operations data mart"
+ },
+ "desk": "DESK-COMM",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "value": 0.3
+  }
+ }
+}

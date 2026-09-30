@@ -1,0 +1,40 @@
+{
+ "eventId": "LOSS-2025-0003",
+ "eventType": "Employment practices and workplace safety",
+ "deskName": "Credit trading",
+ "grossLoss": 284700.0,
+ "recoveries": 28500.0,
+ "netLoss": 256200.0,
+ "status": "Under review",
+ "occurred": "2025-11-02",
+ "details": {
+  "businessLine": "Trading and sales",
+  "rootCause": "Stale reference data",
+  "boundaryWithCreditRisk": false,
+  "reportedToRegulator": false
+ },
+ "timeline": [
+  {
+   "date": "2025-11-02",
+   "step": "Occurred",
+   "by": "—"
+  },
+  {
+   "date": "2025-11-06",
+   "step": "Discovered",
+   "by": "S. Okafor"
+  },
+  {
+   "date": "2025-11-23",
+   "step": "Booked to loss ledger",
+   "by": "Finance"
+  }
+ ],
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "rootCauseControl": "RCSA-CREDIT-1",
+ "_meta": {
+  "source": "loss-database",
+  "generation": 1
+ }
+}

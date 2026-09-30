@@ -1,0 +1,40 @@
+{
+ "eventId": "LOSS-2026-0014",
+ "eventType": "Execution, delivery and process management",
+ "deskName": "Equity derivatives",
+ "grossLoss": 2102900.0,
+ "recoveries": 736000.0,
+ "netLoss": 1366900.0,
+ "status": "Under review",
+ "occurred": "2026-05-19",
+ "details": {
+  "businessLine": "Trading and sales",
+  "rootCause": "Stale reference data",
+  "boundaryWithCreditRisk": false,
+  "reportedToRegulator": true
+ },
+ "timeline": [
+  {
+   "date": "2026-05-19",
+   "step": "Occurred",
+   "by": "—"
+  },
+  {
+   "date": "2026-05-19",
+   "step": "Discovered",
+   "by": "J. Lin"
+  },
+  {
+   "date": "2026-05-26",
+   "step": "Booked to loss ledger",
+   "by": "Finance"
+  }
+ ],
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "rootCauseControl": "RCSA-EQD-3",
+ "_meta": {
+  "source": "loss-database",
+  "generation": 1
+ }
+}

@@ -1,0 +1,40 @@
+{
+ "eventId": "LOSS-2026-0008",
+ "eventType": "Internal fraud",
+ "deskName": "Repo and securities lending",
+ "grossLoss": 311900.0,
+ "recoveries": 0.0,
+ "netLoss": 311900.0,
+ "status": "Under review",
+ "occurred": "2025-09-25",
+ "details": {
+  "businessLine": "Agency services",
+  "rootCause": "Stale reference data",
+  "boundaryWithCreditRisk": false,
+  "reportedToRegulator": false
+ },
+ "timeline": [
+  {
+   "date": "2025-09-25",
+   "step": "Occurred",
+   "by": "—"
+  },
+  {
+   "date": "2025-11-18",
+   "step": "Discovered",
+   "by": "K. Sato"
+  },
+  {
+   "date": "2025-12-01",
+   "step": "Booked to loss ledger",
+   "by": "Finance"
+  }
+ ],
+ "desk": "DESK-SFT",
+ "legalEntity": "LE-FRA",
+ "rootCauseControl": "RCSA-SFT-1",
+ "_meta": {
+  "source": "loss-database",
+  "generation": 1
+ }
+}

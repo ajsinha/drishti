@@ -1,0 +1,40 @@
+{
+ "eventId": "LOSS-2025-0023",
+ "eventType": "External fraud",
+ "deskName": "Credit trading",
+ "grossLoss": 253100.0,
+ "recoveries": 88600.0,
+ "netLoss": 164500.0,
+ "status": "Closed",
+ "occurred": "2025-11-19",
+ "details": {
+  "businessLine": "Trading and sales",
+  "rootCause": "Stale reference data",
+  "boundaryWithCreditRisk": false,
+  "reportedToRegulator": false
+ },
+ "timeline": [
+  {
+   "date": "2025-11-19",
+   "step": "Occurred",
+   "by": "—"
+  },
+  {
+   "date": "2025-11-25",
+   "step": "Discovered",
+   "by": "R. Mehta"
+  },
+  {
+   "date": "2025-12-14",
+   "step": "Booked to loss ledger",
+   "by": "Finance"
+  }
+ ],
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "rootCauseControl": "RCSA-CREDIT-3",
+ "_meta": {
+  "source": "loss-database",
+  "generation": 1
+ }
+}

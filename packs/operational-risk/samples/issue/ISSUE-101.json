@@ -1,0 +1,32 @@
+{
+ "issueId": "ISSUE-101",
+ "title": "Reconciliation breaks not escalated",
+ "source": "Regulator (PRA)",
+ "severity": "Medium",
+ "owner": "K. Sato",
+ "due": "2026-11-01",
+ "status": "Open",
+ "actions": [
+  {
+   "due": "2026-09-02",
+   "action": "Implement and validate",
+   "status": "Done"
+  },
+  {
+   "due": "2026-10-02",
+   "action": "Remediation design",
+   "status": "Done"
+  },
+  {
+   "due": "2026-11-01",
+   "action": "Root-cause analysis",
+   "status": "Open"
+  }
+ ],
+ "desk": "DESK-RATES",
+ "relatedLoss": "LOSS-2026-0024",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1
+ }
+}

@@ -1,0 +1,32 @@
+{
+ "issueId": "ISSUE-110",
+ "title": "Vendor exit plan missing",
+ "source": "Internal audit",
+ "severity": "Medium",
+ "owner": "S. Okafor",
+ "due": "2027-02-04",
+ "status": "In progress",
+ "actions": [
+  {
+   "due": "2026-12-06",
+   "action": "Implement and validate",
+   "status": "Done"
+  },
+  {
+   "due": "2027-01-05",
+   "action": "Remediation design",
+   "status": "Done"
+  },
+  {
+   "due": "2027-02-04",
+   "action": "Root-cause analysis",
+   "status": "Done"
+  }
+ ],
+ "desk": "DESK-STRUCT",
+ "relatedLoss": "LOSS-2026-0008",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1
+ }
+}

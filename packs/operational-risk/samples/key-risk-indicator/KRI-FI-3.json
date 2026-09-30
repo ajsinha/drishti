@@ -1,0 +1,106 @@
+{
+ "kriId": "KRI-FI-3",
+ "name": "Manual price overrides",
+ "deskName": "Bonds and securitised",
+ "value": 34.96,
+ "amber": 30.0,
+ "red": 48.0,
+ "status": "Amber",
+ "history": [
+  {
+   "date": "2026-09-03",
+   "value": 16.45
+  },
+  {
+   "date": "2026-09-04",
+   "value": 13.85
+  },
+  {
+   "date": "2026-09-07",
+   "value": 13.45
+  },
+  {
+   "date": "2026-09-08",
+   "value": 12.45
+  },
+  {
+   "date": "2026-09-09",
+   "value": 6.07
+  },
+  {
+   "date": "2026-09-10",
+   "value": 6.74
+  },
+  {
+   "date": "2026-09-11",
+   "value": 10.85
+  },
+  {
+   "date": "2026-09-14",
+   "value": 13.23
+  },
+  {
+   "date": "2026-09-15",
+   "value": 13.04
+  },
+  {
+   "date": "2026-09-16",
+   "value": 9.85
+  },
+  {
+   "date": "2026-09-17",
+   "value": 10.27
+  },
+  {
+   "date": "2026-09-18",
+   "value": 11.62
+  },
+  {
+   "date": "2026-09-21",
+   "value": 13.92
+  },
+  {
+   "date": "2026-09-22",
+   "value": 21.03
+  },
+  {
+   "date": "2026-09-23",
+   "value": 25.3
+  },
+  {
+   "date": "2026-09-24",
+   "value": 26.64
+  },
+  {
+   "date": "2026-09-25",
+   "value": 26.24
+  },
+  {
+   "date": "2026-09-28",
+   "value": 29.04
+  },
+  {
+   "date": "2026-09-29",
+   "value": 34.1
+  },
+  {
+   "date": "2026-09-30",
+   "value": 34.96
+  }
+ ],
+ "definition": {
+  "unit": "count",
+  "frequency": "Daily",
+  "owner": "A. Novak",
+  "source": "Operations data mart"
+ },
+ "desk": "DESK-FI",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "value": 0.3
+  }
+ }
+}

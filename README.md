@@ -53,7 +53,8 @@ terminal does.
 | R3–R4 | Banking packs: 1,791 consistent documents and a Delta Lake by data domain with business-day history; generated pack guides (overviews, 125-product catalogue, market-data catalogue, data model) under Help → Domain packs | ✅ done |
 | R5 | Banking packs in PostgreSQL (JDBC table mode) and Aerospike, behind one dated-source contract shared with Delta Lake; `postgres`/`aerospike` profiles; five public feeds (NY Fed SOFR, ECB €STR and FX, US Treasury, FRED), each switchable, off by default | ✅ done (database tests run in Docker) |
 | P2–P3 | Packs: **liquidity risk** (LCR, NSFR, ladders, HQLA, funding, stress, intraday) and **climate risk** (profiles, PCAF, NGFS, stress, physical risk, GAR), on a common pack builder | ✅ done |
-| P4–P8 | Packs: operational and non-financial risk, retail banking, genomics and biology, politics and society, economics | ◻️ next |
+| P4 | Pack: **operational and non-financial risk** (losses, RCSA, KRIs, issues, scenarios, vendors, cyber, SMA capital) | ✅ done |
+| P5–P8 | Packs: retail banking, genomics and biology, politics and society, economics | ◻️ next |
 | 22 | Business dates: Live or a picked date (static) on the USNY calendar; Delta Lake connector with time travel; named connectors; imperfect documents render as "No data available" | ✅ done |
 | 16 | History: diffs between dates, a "known at" control | ◻️ after the risk pack |
 | 20a | Kafka live source: the trading pack's trades stream and tick from a topic (`DRISHTI_STREAM_TRADING=true`) | ✅ done |

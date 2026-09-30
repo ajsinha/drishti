@@ -1,0 +1,37 @@
+{
+ "assessmentId": "RCSA-FI-3",
+ "risk": "Model risk",
+ "deskName": "Bonds and securitised",
+ "inherent": "Critical",
+ "effectiveness": "Partially effective",
+ "residual": "Medium",
+ "nextReview": "2026-12-21",
+ "controls": [
+  {
+   "control": "Limit breach escalation",
+   "type": "Detective",
+   "frequency": "Real time",
+   "lastTest": "2026-06-14",
+   "result": "Exceptions noted"
+  },
+  {
+   "control": "Model validation",
+   "type": "Preventive",
+   "frequency": "Annual",
+   "lastTest": "2026-06-12",
+   "result": "Exceptions noted"
+  },
+  {
+   "control": "Four-eyes check on trade capture",
+   "type": "Preventive",
+   "frequency": "Per trade",
+   "lastTest": "2026-06-28",
+   "result": "Passed"
+  }
+ ],
+ "desk": "DESK-FI",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1
+ }
+}
