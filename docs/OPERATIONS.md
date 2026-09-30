@@ -31,8 +31,8 @@ The console's sessions are signed cookies, so any console instance can serve any
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 ./mvnw -q package -DskipTests
-docker build -f deploy/server.Dockerfile  -t drishti-server:1.2.0 .
-docker build -f deploy/console.Dockerfile -t drishti-console:1.2.0 .
+docker build -f deploy/server.Dockerfile  -t drishti-server:1.3.0 .
+docker build -f deploy/console.Dockerfile -t drishti-console:1.3.0 .
 export DRISHTI_TOKEN_SECRET=$(openssl rand -hex 32) DRISHTI_SESSION_SECRET=$(openssl rand -hex 32)
 # first start seeds drishti-dev-admin / drishti-dev-admin123; sign in, change it, create real admins
 # (or DRISHTI_SEED_ADMIN=false and provision users through the admin API). See docs/USER_MANAGEMENT.md.

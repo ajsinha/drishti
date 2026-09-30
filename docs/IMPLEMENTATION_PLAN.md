@@ -125,6 +125,7 @@ Ten waves (plus W11, user management, after 1.0.0). Each holds a small set of cl
 | Wave | Theme | Exit gate |
 |---|---|---|
 | W12 ✅ | Help centre and About | `/help` guides and tutorials with search; per-panel help and F1; `/about` with version, Sutras, sources, licence |
+| W12b ✅ | Competitive landscape and mobile | `/about/competitive`; every page fits 390 px; add to home screen |
 | W13 | Workspaces | several views on one screen with linked selection, saved per user |
 | W14 | Monitors and alerts | watchlists with live columns; threshold alerts with notifications |
 | W15 | F8 Impact | what depends on an entity (reverse graph), navigable |

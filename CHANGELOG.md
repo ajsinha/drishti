@@ -15,8 +15,9 @@
 -->
 # Changelog
 
-## Unreleased — Wave 12b: competitive landscape and mobile
+## 1.3.0 — Wave 12b: competitive landscape and mobile (2026-09-30)
 - **Competitive landscape** (`/about/competitive`), in Maya's form. It compares categories, not vendors (market data terminals, trading and risk platform screens, low-code tools, BI), with a Yes/Partial/No matrix over twelve capabilities and, for each, the problem and how Drishti does it. It says plainly where Drishti is weaker (no market data content or analytics, no ecosystem or support). The rows are config (`console/config/competitive.yaml`).
+- **Mobile.** Every page works on iPhone (~390 px) and Android (~412 px): stacked layouts; a swipeable F-key bar of tap targets; 16 px inputs (no iOS zoom on focus); safe-area insets; tables that scroll inside their panel; Studio hidden on phones. A web-app manifest and touch icon allow *Add to Home Screen*, which opens at the terminal. Checked with CDP mobile emulation: no page scrolls sideways at 390 px.
 
 ## 1.2.0 — Wave 12: help centre and About (2026-09-30)
 - **Help centre** (`/help`), in Maya's help language:

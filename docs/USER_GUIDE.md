@@ -74,6 +74,20 @@ Matched characters are highlighted.
 with search. The **?** in each panel header explains that panel kind. **About** shows the version, the
 loaded Sutras and the health of each source.
 
+## On a phone
+
+Drishti works in Safari on iPhone and Chrome on Android, with no app to install. To put it on your home
+screen, use *Share → Add to Home Screen* (iPhone) or *⋮ → Add to Home screen* (Android). It then opens
+full-screen at the terminal.
+
+- **Function keys** become a swipeable row of buttons at the bottom of every view. Tap **F9 Raw JSON**,
+  **F7 Netting set**, **← Back**, and so on.
+- **Command line:** type a command, and tap a suggestion to open it.
+- **Layout:** panels stack in one column, the strip shows two figures per row, and wide tables scroll
+  sideways inside their panel.
+- **Live values** keep ticking. The top bar still shows the p99.
+- **Studio** (authoring) is left out on phones. Everything else, including help and administration, works.
+
 ## Themes
 
 The palette menu offers five themes:

@@ -74,3 +74,12 @@ def test_competitive_landscape(client):
                  "cmp cmp-yes", "cmp cmp-no", 'id="no-coded-screens"', "Market data content and analytics"):
         assert text in r.text, text
     assert "/about/competitive" in client.get("/about").text and "/about/competitive" in client.get("/help").text
+
+
+def test_mobile_ready(client):
+    html = client.get("/v/trade/IRS-48213").text
+    assert "viewport-fit=cover" in html and 'rel="manifest"' in html and "apple-touch-icon" in html
+    m = client.get("/static/manifest.webmanifest")
+    assert m.status_code == 200 and '"start_url": "/t"' in m.text
+    css = client.get("/static/css/terminal.css").text
+    assert "@media (max-width: 640px)" in css and "safe-area-inset-bottom" in css and "font-size: 16px" in css

@@ -13,6 +13,16 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 1.3.0 — release notes
+
+*2026-09-30.* This release adds:
+- **Mobile.** Drishti works in Safari on iPhone and Chrome on Android, and can be added to the home
+  screen. Views stack, and F-keys become a swipeable row of buttons.
+- **Competitive landscape** (`/about/competitive`). It compares categories rather than vendors, and is
+  candid about where Drishti is weaker.
+
+---
+
 # Drishti 1.2.0 — release notes
 
 *2026-09-30.* This release adds the **in-app help centre and About page**:

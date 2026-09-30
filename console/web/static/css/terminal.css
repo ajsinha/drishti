@@ -245,3 +245,47 @@ kbd { background: var(--d-surface-2); color: var(--d-ink); border: 1px solid var
 .adm-pw { width: 100%; max-width: 420px; }
 .adm-pw h2 { font-size: 1.1rem; margin: 0 0 .4rem; }
 .adm-hint { font-size: .8rem; margin: .2rem 0 0; }
+
+/* ---- phones and small tablets (iPhone ~390px, Android ~412px) ----
+   Phones have no F-keys, so the key bar becomes one swipeable row of tap targets; inputs are 16px so iOS
+   does not zoom on focus; the notch and home bar are respected via safe-area insets. */
+@media (max-width: 900px) {
+  .studio > section, .vmain, .vright, .adm { min-width: 0; }
+  .studio-bar .studio-in { width: auto; flex: 1 1 7rem; min-width: 0; }
+  .adm-bar { flex-wrap: wrap; } .adm-bar form { flex: 1 1 14rem; } .adm-bar .studio-in { width: 100%; }
+  .fkeys { padding: .35rem .6rem calc(.35rem + env(safe-area-inset-bottom)); }
+  .fkeys nav { flex-wrap: nowrap; overflow-x: auto; gap: .4rem; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .fkeys nav::-webkit-scrollbar { display: none; }
+  .fk { flex: 0 0 auto; border: 1px solid var(--d-border); border-radius: 999px; padding: .45rem .8rem; min-height: 40px; white-space: nowrap; }
+  .fk-note { display: none; }
+}
+@media (max-width: 640px) {
+  body.terminal { font-size: 15px; }
+  .tbar { padding: .5rem .75rem; padding-top: calc(.5rem + env(safe-area-inset-top)); gap: .5rem; }
+  .cmd { flex: 1 1 100%; min-width: 0; order: 3; }
+  .cmd-input, .studio-in, .help-search input, .login-box input { font-size: 16px; }
+  .tbar-right { gap: .65rem; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
+  .tbar-clock { font-size: .78rem; }
+  .tbar-link[href="/studio"] { display: none; }   /* authoring is a desktop task */
+  .theme-btn { padding: .2rem .5rem; }
+  .vhead { padding: .75rem; }
+  .vid { font-size: 1.25rem; }
+  .vgrid { padding: .6rem .6rem 1rem; gap: .6rem; }
+  .pnl-h { padding: .5rem .7rem; } .pnl-b { padding: .6rem .7rem; }
+  .kv-4, .kv-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tab-heads { gap: .8rem; overflow-x: auto; flex-wrap: nowrap; }
+  .tab-head { white-space: nowrap; }
+  .thome-list a { grid-template-columns: 1fr; gap: .2rem; }
+  .adm-actions { white-space: normal; } .adm-actions .fk { margin: .2rem .3rem .2rem 0; }
+  .raw { width: 100vw; }
+  .studio { padding: .6rem; gap: .6rem; }
+  .studio-left .CodeMirror { height: 45vh; }
+  .help-wrap { padding: .8rem .75rem 2rem; }
+  .help-hero { padding: 1.8rem .9rem 1.4rem; } .help-hero h1 { font-size: 1.6rem; }
+  .help-toolbar { top: 0; position: static; }
+  .cmp-tbl { font-size: .8rem; } .cmp { min-width: 3.2rem; font-size: .68rem; }
+}
+@media (hover: none) {
+  .lp-card:hover, .help-card:hover { transform: none; }
+  a, button { -webkit-tap-highlight-color: transparent; }
+}

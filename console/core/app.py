@@ -30,7 +30,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from core.config import Settings
 
 WEB = Path(__file__).resolve().parent.parent / "web"
-ASSET_VERSION = "1.2.0"
+ASSET_VERSION = "1.3.0"
 CSP = ("default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; "
        "font-src 'self'; connect-src 'self'; frame-ancestors 'none'")
 

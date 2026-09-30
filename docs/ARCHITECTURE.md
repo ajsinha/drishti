@@ -366,6 +366,16 @@ commands, green/red ticks, blue highlight — colours only, not fonts), `blue`, 
 | `/about` | Version and build, Java, uptime, loaded Sutras, source health, licence and notices |
 | `/account`, `/admin/users`, `/admin/audit` | Own profile and password; user administration and the audit log |
 
+**Phones and tablets.** The console is responsive down to 360 px, with no separate app:
+- views stack into one column, and the strip shows two figures per row;
+- tables scroll inside their panel;
+- F-keys become a swipeable row of tap targets;
+- inputs are 16 px so iOS does not zoom on focus;
+- safe-area insets respect the notch and home bar;
+- a web-app manifest lets people add Drishti to the home screen.
+
+A CDP-driven check at 390 px (iPhone) measures that no page scrolls sideways.
+
 **Hero animation** (`static/js/landing.js`, canvas 2D, no library): raw JSON fragments
 drift in from the left, are drawn into the `{ ◉ }` eye, and emerge on the right as
 assembled terminal panels — a table, a curve, a strip — that then tick live. Colours

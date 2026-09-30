@@ -17,7 +17,14 @@
 <html lang="en" data-theme="{{ DEFAULT_THEME }}" data-default-theme="{{ DEFAULT_THEME }}">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0e1628">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="{{ PRODUCT }}">
+  <link rel="manifest" href="/static/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/static/img/drishti-icon.png">
   <meta name="copyright" content="{{ COPYRIGHT }}">
   <meta name="description" content="{{ PRODUCT }} — {{ TAGLINE }}">
   <title>{% block title %}{{ PRODUCT }}{% endblock %}</title>
