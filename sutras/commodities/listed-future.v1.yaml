@@ -62,6 +62,7 @@ panels:
     rows: points
     x: tenor
     y: price
+    fmt: price2
     mark: "'Z6'"
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
   - id: changes

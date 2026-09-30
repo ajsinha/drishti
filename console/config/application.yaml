@@ -26,3 +26,8 @@ ui:
   default_theme: terminal        # terminal | light | wallstreet | blue | green
   product: Drishti
   tagline: Any data. Any domain. One grammar.
+  user: ${DRISHTI_USER:ash}          # acting user until sign-in lands (Wave 10)
+  user_display: Ash
+  desk: Rates desk
+  clock_tz: America/New_York
+  clock_label: NY

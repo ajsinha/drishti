@@ -27,13 +27,14 @@
   <link rel="stylesheet" href="/static/vendor/bootstrap-icons/bootstrap-icons.css?v={{ ASSET_V }}">
   <link rel="stylesheet" href="/static/css/tokens.css?v={{ ASSET_V }}">
   <link rel="stylesheet" href="/static/css/theme.css?v={{ ASSET_V }}">
+  <link rel="stylesheet" href="/static/css/terminal.css?v={{ ASSET_V }}">
   {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
   <a class="skip-link" href="#main">Skip to content</a>
   {% block nav %}{% include "_nav_public.html" %}{% endblock %}
   <main id="main">{% block content %}{% endblock %}</main>
-  {% include "_footer.html" %}
+  {% block footer %}{% include "_footer.html" %}{% endblock %}
   <script src="/static/vendor/bootstrap/js/bootstrap.bundle.min.js?v={{ ASSET_V }}"></script>
   <script src="/static/js/app.js?v={{ ASSET_V }}"></script>
   {% block scripts %}{% endblock %}

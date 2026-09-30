@@ -118,3 +118,9 @@ drishti:
       credit-limit: "fmt($.limit, 'compact')"
       clearing-account: "'IM limit ' + fmt($.imLimit, 'pct0')"
       contract-spec: "$.exchange"
+
+springdoc:
+  api-docs:
+    path: /api/docs
+  swagger-ui:
+    path: /api/docs/ui

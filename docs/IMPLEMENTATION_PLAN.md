@@ -93,7 +93,7 @@ Ten waves. Each holds a small set of closely related items and ends with a demo-
 - `_macros/panels.html` (one macro per panel kind), `_command_bar.html`, `_fkeys.html`, `_breadcrumb.html`, `_provenance.html`.
 - `static/js/command.js`: Bloomberg-style suggestion dropdown (debounced, abortable, ↑/↓/Tab/Enter/Esc, ARIA combobox); `static/js/{keys,view}.js`, `static/js/panels/<kind>.js`, vendored ECharts.
 - Tests: MockMvc, pytest routes, headless Chrome screenshots against the mockups.
-- Docs: `API_GUIDE.md`, `CONFIGURATION.md`, `USER_GUIDE.md`, `KEYBOARD.md`.
+- Docs: `API_GUIDE.md`, `CONFIGURATION.md`, `USER_GUIDE.md` (the keyboard reference is part of it).
 
 ## W9 — Live updates
 - `Subscription` in `demo` (random-walk ticker) and a `kafka` plugin.

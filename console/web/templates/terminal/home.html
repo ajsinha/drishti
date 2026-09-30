@@ -1,0 +1,31 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Terminal · {{ PRODUCT }}{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="thome">
+  <h1>Type a command, or start with one of these.</h1>
+  <p class="text-muted-d">Form: <span class="mono">&lt;MNEMONIC&gt; &lt;ID&gt; &lt;GO&gt;</span>. Suggestions appear as you type;
+    <kbd>↑</kbd>/<kbd>↓</kbd> choose, <kbd>Tab</kbd> completes, <kbd>Enter</kbd> opens, <kbd>/</kbd> focuses the command line.</p>
+  {% if error %}<p class="pnl-err" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ error }}</p>{% endif %}
+  <ul class="thome-list">
+    {% for cmd, what in examples %}<li><a href="/go?q={{ cmd | urlencode }}"><span class="mono cmdtxt">{{ cmd }} &lt;GO&gt;</span><span>{{ what }}</span></a></li>{% endfor %}
+  </ul>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/view.js?v={{ ASSET_V }}"></script>{% endblock %}

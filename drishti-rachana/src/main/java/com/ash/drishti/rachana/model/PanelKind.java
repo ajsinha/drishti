@@ -27,7 +27,7 @@ public enum PanelKind {
     KV(Set.of(), Set.of("rows", "columns", "fields")),
     TABLE(Set.of("rows"), Set.of("totalLabel", "limit", "moreLabel", "link")),
     TABS(Set.of("each"), Set.of("tabTitle", "layout")),
-    LINE(Set.of(), Set.of("rows", "source", "x", "y", "mark", "footer", "unit")),
+    LINE(Set.of(), Set.of("rows", "source", "x", "y", "mark", "footer", "unit", "fmt")),
     AREA(Set.of("rows"), Set.of("x", "series", "limit", "limitLabel", "unit")),
     HBAR(Set.of("rows"), Set.of("label", "value", "fmt", "tone")),
     LADDER(Set.of("rows"), Set.of("totalLabel", "highlight")),

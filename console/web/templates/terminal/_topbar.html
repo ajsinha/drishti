@@ -1,0 +1,35 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% from "_macros/ui.html" import brand_mark %}
+<header class="tbar" role="banner">
+  <a class="tbar-brand" href="/" aria-label="{{ PRODUCT }} home">{{ brand_mark("brand-mark") }}<span>{{ PRODUCT }}</span></a>
+  <form class="cmd" action="/go" method="get" role="search" autocomplete="off" data-command>
+    <label class="cmd-label" for="cmdInput">Command</label>
+    <div class="cmd-box">
+      <input id="cmdInput" name="q" class="cmd-input" type="text" spellcheck="false"
+             value="{{ command_text | default('') }}" placeholder="TRD IRS-48213 <GO>"
+             role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="cmdList">
+      <ul id="cmdList" class="cmd-list" role="listbox" aria-label="Suggestions" hidden></ul>
+    </div>
+  </form>
+  <div class="tbar-right">
+    <span class="tbar-desk">{{ DESK }} · {{ USER }}</span>
+    <span class="tbar-live" data-live-state="{{ 'live' if live else 'static' }}"><span class="dot" aria-hidden="true"></span>
+      <span data-live-text>{{ 'Live' if live else 'Static' }}{% if built_ms %}, built {{ built_ms }} ms{% endif %}</span></span>
+    <span class="tbar-clock mono" data-clock data-tz="{{ CLOCK_TZ }}" data-tz-label="{{ CLOCK_LABEL }}"></span>
+    {% include "_theme_menu.html" %}
+  </div>
+</header>

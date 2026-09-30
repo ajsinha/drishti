@@ -15,6 +15,17 @@
 -->
 # Changelog
 
+## Unreleased — Wave 8: REST API and console entity views
+- Server REST API under `/api/v1`: command, suggest, views, raw entities, sources and Sutras. RFC 7807 errors with `DRS` codes, springdoc at `/api/docs`, and a Micrometer `drishti.view` timer.
+- Console terminal:
+  - `/t` home;
+  - `/go` dispatch;
+  - `/v/{kind}/{id}` entity views that reproduce the four mockups: title line, strip, tabs and side-by-side legs, tables with totals, ladders, ECharts curves and exposure areas, bars, linked entities with badges, provenance.
+- Bloomberg-style type-ahead dropdown: debounced, stale requests aborted, ARIA combobox. ↑/↓ move, Tab completes, Enter opens, Esc closes, `/` focuses.
+- F-keys from the layout. F9 opens the raw JSON drawer, Alt+← goes back, and breadcrumbs follow the views opened in the browser tab.
+- The CSP now also forbids inline `style` attributes (bar widths come from `data-w`), enforced by a test.
+- Docs: `API_GUIDE.md`, `USER_GUIDE.md` (with the keyboard), `CONFIGURATION.md`.
+
 ## Unreleased — naming: Rachana and Sutra (ADR-008)
 - **Rachana** (रचना) is the declarative screen grammar. **Sutra** is one layout written in it.
 - The module `drishti-sutra` is now `drishti-rachana` (packages `com.ash.drishti.rachana`). The configuration prefix is `drishti.rachana.*`, the expression language is **Rachana-EL**, and the reference is `RACHANA_REFERENCE.md`.

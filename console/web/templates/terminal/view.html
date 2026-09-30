@@ -1,0 +1,58 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% from "_macros/panels.html" import panel, cell_text, tone %}
+{% block title %}{{ vm.title.id }} · {{ PRODUCT }}{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% with command_text=(vm.mnemonic ~ ' ' ~ vm.ref.id ~ ' <GO>') if vm.mnemonic else vm.ref.id, live=vm.provenance.live, built_ms=vm.timings.total %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
+{% block content %}
+<div class="view" data-view data-kind="{{ vm.ref.kind }}" data-id="{{ vm.ref.id }}" data-label="{{ vm.title.id }}">
+  <section class="vhead">
+    <nav class="crumbs" aria-label="Breadcrumb" data-crumbs hidden></nav>
+    <div class="vtitle">
+      {% if vm.title.pill %}<span class="pill">{{ vm.title.pill }}</span>{% endif %}
+      <h1 class="vid mono">{{ vm.title.id }}</h1>
+      {% if vm.title.with %}<span class="with">with</span> <span class="with-cp">{{ cell_text(vm.title.with) }}</span>{% endif %}
+    </div>
+    <dl class="strip">
+      {% for c in vm.strip %}<div class="strip-i"><dt>{{ c.label }}</dt>
+        <dd class="mono{{ tone(c) }}{% if c.emphasis %} emph{% endif %}"{% if c.path %} data-path="{{ c.path }}"{% endif %}>{{ cell_text(c) }}</dd></div>{% endfor %}
+    </dl>
+  </section>
+  <div class="vgrid">
+    <div class="vmain">{% for p in main %}{{ panel(p) }}{% endfor %}</div>
+    <aside class="vright" aria-label="Context">{% for p in right %}{{ panel(p) }}{% endfor %}</aside>
+  </div>
+</div>
+<aside class="raw" id="rawDrawer" aria-label="Raw JSON" hidden>
+  <header><strong>Raw JSON</strong> <span class="mono" data-raw-meta></span><button type="button" class="raw-x" data-raw-close aria-label="Close">×</button></header>
+  <pre class="mono" data-raw-body>Loading…</pre>
+</aside>
+{% endblock %}
+{% block footer %}
+<footer class="fkeys" aria-label="Function keys">
+  <nav>{% for k in vm['keys'] %}<button type="button" class="fk" data-fkey="{{ k.key }}" data-action="{{ k.action }}"
+      {% if k.panel %}data-target="{{ k.panel }}"{% endif %}{% if k.link %}data-href="/v/{{ k.link.kind }}/{{ k.link.id }}"{% endif %}>
+      <b>{{ k.key }}</b> {{ k.label }}</button>{% endfor %}
+    <button type="button" class="fk" data-fkey="Alt+ArrowLeft" data-action="back"><b>Alt+←</b> Back</button></nav>
+  <span class="fk-note">{{ vm.provenance.source }} · gen {{ vm.provenance.generation }} · {{ COPYRIGHT }}</span>
+</footer>
+{% endblock %}
+{% block scripts %}
+<script src="/static/vendor/echarts/echarts.common.min.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/command.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/view.js?v={{ ASSET_V }}"></script>
+{% endblock %}

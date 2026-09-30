@@ -21,6 +21,7 @@ CONSOLE = WEB.parent
 EXTERNAL = re.compile(r"""(src|href)\s*=\s*["']\s*(https?:)?//|@import\s+url\(\s*["']?(https?:)?//|url\(\s*["']?https?://""", re.I)
 INLINE_SCRIPT = re.compile(r"<script(?![^>]*\bsrc=)[^>]*>", re.I)
 INLINE_HANDLER = re.compile(r"\son[a-z]+\s*=", re.I)
+INLINE_STYLE = re.compile(r"\sstyle\s*=", re.I)
 
 
 def _files(*suffixes):
@@ -42,6 +43,7 @@ def test_no_inline_script_or_handlers():
         text = p.read_text(encoding="utf-8")
         assert not INLINE_SCRIPT.search(text), p
         assert not INLINE_HANDLER.search(text), p
+        assert not INLINE_STYLE.search(text), p  # style-src 'self' blocks style attributes
 
 
 def test_python_files_under_limit():

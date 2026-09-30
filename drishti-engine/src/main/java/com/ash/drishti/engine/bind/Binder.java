@@ -163,7 +163,7 @@ public final class Binder {
                 if (o instanceof Map<?, ?> m) {
                     String bind = String.valueOf(m.get("bind"));
                     Object v = eval(bind, c.eval());
-                    fields.add(cell(String.valueOf(m.get("label")), v, (String) m.get("fmt"), "status", false, pathOf(bind)));
+                    fields.add(cell(String.valueOf(m.get("label")), v, (String) m.get("fmt"), (String) m.get("tone"), false, pathOf(bind)));
                 }
             }
         }
@@ -276,7 +276,9 @@ public final class Binder {
         String markText = null;
         if (mark != null && xs.contains(mark)) {
             double v = ys.get(xs.indexOf(mark));
-            markText = mark + " " + formats.format(null, Values.normalise(v)) + (p.option("unit").map(u -> " " + u).orElse(""));
+            String unit = p.option("unit").orElse("");
+            markText = mark + " point " + formats.format(p.option("fmt").orElse(null), Values.normalise(v))
+                    + (unit.isEmpty() || unit.equals("%") ? unit : " " + unit);
         }
         return new PanelData.Chart(xs, List.of(new PanelData.Series(p.title(), ys, "link")), mark, markText, null, null, source,
                 p.option("unit").orElse(null));

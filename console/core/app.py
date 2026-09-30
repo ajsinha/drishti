@@ -17,6 +17,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -40,15 +42,31 @@ class SecurityHeaders(BaseHTTPMiddleware):
 
 
 def create_app(settings: Settings) -> FastAPI:
-    from routes import home_routes
+    from core.backend import BackendClient
+    from routes import api_routes, home_routes, terminal_routes
 
-    app = FastAPI(title="Drishti console", docs_url=None, redoc_url=None, openapi_url=None)
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        if getattr(app.state, "backend", None) is None:
+            app.state.backend = BackendClient(settings.get("backend.url"), float(settings.get("backend.timeout_seconds", 5)),
+                                              int(settings.get("backend.pool_size", 64)))
+        yield
+        close = getattr(app.state.backend, "aclose", None)
+        if close:
+            await close()
+
+    app = FastAPI(title="Drishti console", docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
+    app.state.backend = None
     templates = Jinja2Templates(directory=str(WEB / "templates"))
     templates.env.globals.update(
         ASSET_V=ASSET_VERSION,
         PRODUCT=settings.get("ui.product", "Drishti"),
         TAGLINE=settings.get("ui.tagline", ""),
         DEFAULT_THEME=settings.get("ui.default_theme", "terminal"),
+        DESK=settings.get("ui.desk", "Rates desk"),
+        USER=settings.get("ui.user_display", "Ash"),
+        CLOCK_TZ=settings.get("ui.clock_tz", "America/New_York"),
+        CLOCK_LABEL=settings.get("ui.clock_label", "NY"),
         COPYRIGHT="Copyright © 2026 Ashutosh Sinha. All rights reserved. Proprietary and confidential.",
     )
     app.state.settings = settings
@@ -56,4 +74,6 @@ def create_app(settings: Settings) -> FastAPI:
     app.add_middleware(SecurityHeaders)
     app.mount("/static", StaticFiles(directory=str(WEB / "static")), name="static")
     app.include_router(home_routes.router)
+    app.include_router(terminal_routes.router)
+    app.include_router(api_routes.router)
     return app

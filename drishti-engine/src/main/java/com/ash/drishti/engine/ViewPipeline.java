@@ -218,8 +218,15 @@ public final class ViewPipeline {
         if (t == null) {
             return "";
         }
-        int dot = t.indexOf(" · ");
-        return dot > 0 ? t.substring(0, dot) : t.length() > 18 ? t.substring(0, 18) : t;
+        String s = t;
+        for (String cut : new String[] {" · ", " ("}) {
+            int i = s.indexOf(cut);
+            if (i > 0) {
+                s = s.substring(0, i);
+            }
+        }
+        String[] words = s.split(" ");
+        return words.length > 2 ? words[0] + " " + words[1] : s;
     }
 
     private static String humanize(String kind) {

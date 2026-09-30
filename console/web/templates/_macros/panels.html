@@ -1,0 +1,117 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# One macro per panel kind. Each renders first paint; static/js/view.js enhances (tabs, charts, keys). #}
+
+{% macro cell_text(c) -%}
+{%- if c.link -%}<a class="lnk" href="/v/{{ c.link.kind }}/{{ c.link.id }}">{{ c.text }}</a>
+{%- else -%}{{ c.text }}{%- endif -%}
+{%- endmacro %}
+
+{% macro tone(c) -%}{% if c.tone %} t-{{ c.tone }}{% endif %}{%- endmacro %}
+
+{% macro fields(list, cols=4) -%}
+<dl class="kv kv-{{ cols }}">
+  {% for f in list %}<div class="kv-item"><dt>{{ f.label }}</dt><dd class="mono{{ tone(f) }}"{% if f.path %} data-path="{{ f.path }}"{% endif %}>{{ cell_text(f) }}</dd></div>{% endfor %}
+</dl>
+{%- endmacro %}
+
+{% macro table(d) -%}
+<div class="tbl-wrap"><table class="tbl">
+  <thead><tr>{% for h in d.columns %}<th{% if d.numeric[loop.index0] %} class="num"{% endif %}>{{ h }}</th>{% endfor %}</tr></thead>
+  <tbody>
+  {% for r in d.rows %}
+    <tr{% if r.highlight %} class="hl"{% endif %}{% if r.path %} data-path="{{ r.path }}"{% endif %}>
+      {% for c in r.cells %}<td class="mono{% if d.numeric[loop.index0] %} num{% endif %}{{ tone(c) }}">{{ cell_text(c) }}</td>{% endfor %}
+    </tr>
+  {% endfor %}
+  </tbody>
+  {% if d.total or d.more %}
+  <tfoot>
+    {% if d.total %}<tr class="total">{% for c in d.total.cells %}<td class="mono{% if d.numeric[loop.index0] %} num{% endif %}{{ tone(c) }}">{{ c.text }}</td>{% endfor %}</tr>{% endif %}
+    {% if d.more %}<tr class="more"><td colspan="{{ d.columns | length }}">{{ d.more }}</td></tr>{% endif %}
+  </tfoot>
+  {% endif %}
+</table></div>
+{%- endmacro %}
+
+{% macro tabs(p) -%}
+{% set d = p.data %}
+{% if d.layout == 'columns' %}
+<div class="cols">
+  {% for t in d.tabs %}<section class="col-box"><h4>{{ t.title }}</h4>
+    <dl class="rows">{% for f in t.fields %}<div><dt>{{ f.label }}</dt><dd class="mono{{ tone(f) }}">{{ cell_text(f) }}</dd></div>{% endfor %}</dl></section>{% endfor %}
+</div>
+{% else %}
+<div class="tabs" data-tabs>
+  <div class="tab-heads" role="tablist">
+    {% for t in d.tabs %}<button type="button" role="tab" id="{{ p.id }}-tab-{{ loop.index0 }}" aria-controls="{{ p.id }}-pane-{{ loop.index0 }}"
+      aria-selected="{{ 'true' if loop.first else 'false' }}" class="tab-head{% if loop.first %} on{% endif %}">{{ t.title }}</button>{% endfor %}
+  </div>
+  {% for t in d.tabs %}<div class="tab-pane" role="tabpanel" id="{{ p.id }}-pane-{{ loop.index0 }}" aria-labelledby="{{ p.id }}-tab-{{ loop.index0 }}"{% if not loop.first %} hidden{% endif %}>
+    {{ fields(t.fields) }}</div>{% endfor %}
+</div>
+{% endif %}
+{%- endmacro %}
+
+{% macro chart(p) -%}
+{% set d = p.data %}
+<div class="chart" data-chart="{{ d | tojson | forceescape }}" data-kind="{{ p.kind }}" role="img"
+     aria-label="{{ p.title }}: {{ d.x | join(', ') }}"></div>
+{% if d.series | length > 1 or d.limit %}
+<ul class="legend">{% for s in d.series %}<li><span class="sw sw-{{ s.tone or 'link' }}"></span>{{ s.label }}</li>{% endfor %}
+  {% if d.limit %}<li><span class="sw sw-limit"></span>{{ d.limitLabel or 'Limit' }}</li>{% endif %}</ul>
+{% endif %}
+{% if d.markText or d.source %}<div class="chart-foot"><span class="mono">{% if d.markText %}{{ d.markText }}{% endif %}</span>
+  {% if d.source %}<a class="lnk" href="/v/{{ d.source.kind }}/{{ d.source.id }}">{{ d.source.id }}</a>{% endif %}</div>{% endif %}
+{%- endmacro %}
+
+{% macro bars(d) -%}
+{% set mx = (d.bars | map(attribute='value') | map('abs') | max) or 1 %}
+<ul class="bars">
+  {% for b in d.bars %}<li><span class="bl mono">{{ b.label }}</span>
+    <span class="bt"><span class="bf bf-{{ b.tone or 'pos' }}" data-w="{{ ((b.value | abs) / mx * 100) | round(1) }}"></span></span>
+    <span class="bv mono t-{{ b.tone or 'pos' }}">{{ b.text }}</span></li>{% endfor %}
+</ul>
+{%- endmacro %}
+
+{% macro links(d) -%}
+<ul class="links">
+  {% for l in d.links %}<li class="lk-{{ l.status }}"><span class="lk-label">{{ l.label }}</span>
+    <span class="lk-target">{% if l.link %}<a class="lnk mono" href="/v/{{ l.link.kind }}/{{ l.link.id }}">{{ l.text }}</a>{% else %}<span class="mono">{{ l.text }}</span>{% endif %}
+    {% if l.badge %}<span class="lk-badge">{{ l.badge }}</span>{% elif l.status != 'resolved' %}<span class="lk-badge">{{ l.status }}</span>{% endif %}</span></li>{% endfor %}
+</ul>
+{%- endmacro %}
+
+{% macro panel(p) -%}
+<section class="pnl" id="p-{{ p.id }}" data-panel="{{ p.id }}" data-kind="{{ p.kind }}"{% if p.key %} data-key="{{ p.key }}"{% endif %} tabindex="-1" aria-labelledby="h-{{ p.id }}">
+  <header class="pnl-h"><h3 id="h-{{ p.id }}">{{ p.title or '' }}</h3>
+    <span class="pnl-code">{% if p.code %}{{ p.code }}{% endif %}{% if p.code and p.key %} · {% endif %}{% if p.key %}{{ p.key }}{% endif %}
+      {% if p.inferred %}<span class="inf" title="{{ p.explanation or 'completed by inference' }}">inferred</span>{% endif %}</span></header>
+  <div class="pnl-b">
+  {% if p.error %}<p class="pnl-err" role="status"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ p.error }}</p>
+  {% elif p.kind in ['kv', 'status'] %}{{ fields(p.data.fields, 4 if p.area == 'main' else 2) }}
+  {% elif p.kind == 'provenance' %}<dl class="prov">{% for f in p.data.fields %}<div><dt>{{ f.label }}</dt><dd class="mono">{{ f.text }}</dd></div>{% endfor %}</dl>
+  {% elif p.kind in ['table', 'ladder'] %}{{ table(p.data) }}
+  {% elif p.kind == 'tabs' %}{{ tabs(p) }}
+  {% elif p.kind in ['line', 'area'] %}{{ chart(p) }}
+  {% elif p.kind == 'hbar' %}{{ bars(p.data) }}
+  {% elif p.kind == 'links' %}{{ links(p.data) }}
+  {% elif p.kind == 'markdown' %}<p>{{ p.data.text }}</p>
+  {% elif p.kind == 'gauge' %}<div class="gauge"><span class="bf" data-w="{{ ((p.data.value / (p.data.max or 1)) * 100) | round(1) }}"></span><span class="mono">{{ p.data.text }}</span></div>
+  {% endif %}
+  </div>
+</section>
+{%- endmacro %}

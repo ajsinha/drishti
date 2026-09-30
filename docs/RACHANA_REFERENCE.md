@@ -54,7 +54,7 @@ panels and `keys`), `code` (short tag at the header's right, e.g. `CRV`), `area`
 | `kv` | — | `rows`, `columns`, `fields` | Label/value grid. With `rows: $.obj` and no columns, every field of the object is shown. |
 | `table` | `rows` | `totalLabel`, `limit`, `moreLabel`, `link` | A table. Columns with `total: true` are summed into the total row. `limit` with `moreLabel` shows "N more". |
 | `tabs` | `each` | `tabTitle`, `layout` (`tabs` \| `columns`) | One `body` panel per element of `each`, as tabs or side by side (FX near/far legs). |
-| `line` | — | `rows`, `source`, `x`, `y`, `mark`, `footer`, `unit` | A curve. `source: link(...)` reads the points from a linked entity; `mark` highlights one x. |
+| `line` | — | `rows`, `source`, `x`, `y`, `mark`, `footer`, `unit`, `fmt` | A curve. `source: link(...)` reads the points from a linked entity; `mark` highlights one x. |
 | `area` | `rows` | `x`, `series`, `limit`, `limitLabel`, `unit` | Stacked or banded areas (exposure profile) with a dashed limit line. |
 | `hbar` | `rows` | `label`, `value`, `fmt`, `tone` | Horizontal bars (DV01 by tenor, risk). |
 | `ladder` | `rows` | `totalLabel`, `highlight` | A dated table with a highlighted row (the intraday settlement). |

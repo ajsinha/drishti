@@ -61,7 +61,7 @@ panels:
     title: Confirmation and settlement
     code: OPS
     fields:
-      - { label: Status, bind: $.confirmation.status }
+      - { label: Status, bind: $.confirmation.status, tone: status }
       - { label: Matched, bind: $.confirmation.matched }
       - { label: CLS eligible, bind: "$.confirmation.clsEligible ? 'Yes' : 'No'" }
       - { label: Trader, bind: $.confirmation.trader }
@@ -76,6 +76,7 @@ panels:
     rows: points
     x: tenor
     y: points
+    fmt: pips1
     mark: "'3M'"
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
   - id: risk

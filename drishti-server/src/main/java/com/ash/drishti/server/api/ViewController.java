@@ -1,0 +1,57 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+package com.ash.drishti.server.api;
+
+import com.ash.drishti.api.EntityHit;
+import com.ash.drishti.api.EntityRef;
+import com.ash.drishti.engine.ViewPipeline;
+import com.ash.drishti.engine.command.RecentEntities;
+import com.ash.drishti.engine.view.ViewModel;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+/** Entity views. Opening a view also records it in the user's recent list for the type-ahead. */
+@RestController
+@RequestMapping("/api/v1/views")
+public class ViewController {
+
+    private final ViewPipeline pipeline;
+    private final RecentEntities recents;
+    private final Timer timer;
+
+    public ViewController(ViewPipeline pipeline, RecentEntities recents, MeterRegistry meters) {
+        this.pipeline = pipeline;
+        this.recents = recents;
+        this.timer = Timer.builder("drishti.view").description("Time to build an entity view")
+                .publishPercentiles(0.5, 0.99).register(meters);
+    }
+
+    @GetMapping("/{kind}/{id}")
+    public ViewModel view(@PathVariable String kind, @PathVariable String id,
+            @RequestHeader(value = CommandController.USER, defaultValue = "anonymous") String user) {
+        EntityRef ref = EntityRef.of(kind, id);
+        ViewModel v = timer.record(() -> pipeline.view(ref));
+        String subtitle = v.title().pill() == null ? kind : v.title().pill().replace("Trade · ", "")
+                + (v.title().with() == null ? "" : " · " + v.title().with().text());
+        recents.touch(user, new EntityHit(ref, v.title().id(), subtitle));
+        return v;
+    }
+}
