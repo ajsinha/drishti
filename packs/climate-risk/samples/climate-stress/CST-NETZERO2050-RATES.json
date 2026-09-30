@@ -1,0 +1,50 @@
+{
+ "resultId": "CST-NETZERO2050-RATES",
+ "scenarioName": "Net Zero 2050",
+ "deskName": "Rates · Swaps and options",
+ "loss2030": -10411286,
+ "loss2050": -12493543,
+ "capitalShare": 0.0026,
+ "bySector": [
+  {
+   "sector": "Utilities",
+   "loss": -2696546
+  },
+  {
+   "sector": "Airlines",
+   "loss": -2408070
+  },
+  {
+   "sector": "Shipping",
+   "loss": -1954469
+  },
+  {
+   "sector": "Materials",
+   "loss": -2357648
+  },
+  {
+   "sector": "Autos",
+   "loss": -994553
+  }
+ ],
+ "byHorizon": [
+  {
+   "year": "2030",
+   "loss": 10411286
+  },
+  {
+   "year": "2040",
+   "loss": 11452414
+  },
+  {
+   "year": "2050",
+   "loss": 12493543
+  }
+ ],
+ "scenario": "NGFS-NETZERO2050",
+ "desk": "DESK-RATES",
+ "_meta": {
+  "source": "climate-stress",
+  "generation": 1
+ }
+}

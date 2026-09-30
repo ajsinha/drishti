@@ -1,0 +1,69 @@
+{
+ "scenarioId": "NGFS-NETZERO2050",
+ "name": "Net Zero 2050",
+ "category": "Orderly",
+ "warming": 1.4,
+ "carbon2030": 250,
+ "carbon2050": 760,
+ "carbonPath": [
+  {
+   "year": "2025",
+   "price": 85
+  },
+  {
+   "year": "2030",
+   "price": 250
+  },
+  {
+   "year": "2035",
+   "price": 420
+  },
+  {
+   "year": "2040",
+   "price": 560
+  },
+  {
+   "year": "2050",
+   "price": 760
+  }
+ ],
+ "shocks": [
+  {
+   "sector": "Utilities",
+   "shock": -0.2269
+  },
+  {
+   "sector": "Airlines",
+   "shock": -0.1936
+  },
+  {
+   "sector": "Shipping",
+   "shock": -0.1592
+  },
+  {
+   "sector": "Materials",
+   "shock": -0.1375
+  },
+  {
+   "sector": "Autos",
+   "shock": -0.1534
+  },
+  {
+   "sector": "Agriculture",
+   "shock": -0.1281
+  },
+  {
+   "sector": "Technology",
+   "shock": -0.0367
+  },
+  {
+   "sector": "Banking",
+   "shock": -0.0761
+  }
+ ],
+ "source": "NGFS Phase V (illustrative calibration)",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

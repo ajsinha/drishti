@@ -1,0 +1,23 @@
+{
+ "holdingId": "HQLA-LDN-05",
+ "security": "Japan Ministry of Finance 1.880% 2031",
+ "level": "Level 1",
+ "marketValue": 1031400000.0,
+ "haircut": 0.0,
+ "liquidityValue": 0,
+ "encumbered": "Yes (pledged)",
+ "bond": "BND-JP0JGB019237",
+ "legalEntity": "LE-LDN",
+ "details": {
+  "isin": "JP0JGB019237",
+  "currency": "JPY",
+  "price": 104.872,
+  "custodian": "Fed",
+  "operationalRequirements": "Met",
+  "centralBankEligible": true
+ },
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

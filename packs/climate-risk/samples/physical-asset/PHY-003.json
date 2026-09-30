@@ -1,0 +1,46 @@
+{
+ "assetId": "PHY-003",
+ "name": "Mumbai logistics hub",
+ "counterpartyName": "Aldershot Pension Trust",
+ "country": "IN",
+ "value": 1034600000.0,
+ "worstHazard": "Coastal flood (49)",
+ "insured": 0.73,
+ "hazards": [
+  {
+   "hazard": "River flood",
+   "score": 41
+  },
+  {
+   "hazard": "Coastal flood",
+   "score": 49
+  },
+  {
+   "hazard": "Extreme heat",
+   "score": 47
+  },
+  {
+   "hazard": "Tropical storm",
+   "score": 14
+  },
+  {
+   "hazard": "Wildfire",
+   "score": 11
+  },
+  {
+   "hazard": "Drought",
+   "score": 48
+  }
+ ],
+ "location": {
+  "latitude": 19.0,
+  "longitude": 72.85,
+  "elevationM": 488,
+  "distanceToCoastKm": 244.9
+ },
+ "counterparty": "CP-ALDERSHOT",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

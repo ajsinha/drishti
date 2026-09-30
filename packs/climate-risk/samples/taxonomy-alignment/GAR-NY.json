@@ -1,0 +1,38 @@
+{
+ "reportId": "GAR-NY",
+ "legalEntityName": "Drishti Bank Securities Inc.",
+ "gar": 0.1386,
+ "eligible": 0.29,
+ "covered": 89416000000.0,
+ "objectives": [
+  {
+   "objective": "Climate change mitigation",
+   "aligned": 1287267644
+  },
+  {
+   "objective": "Climate change adaptation",
+   "aligned": 3434428387
+  },
+  {
+   "objective": "Water and marine",
+   "aligned": 1872008347
+  },
+  {
+   "objective": "Circular economy",
+   "aligned": 3450749467
+  },
+  {
+   "objective": "Pollution prevention",
+   "aligned": 1387316167
+  },
+  {
+   "objective": "Biodiversity",
+   "aligned": 965665927
+  }
+ ],
+ "legalEntity": "LE-NY",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

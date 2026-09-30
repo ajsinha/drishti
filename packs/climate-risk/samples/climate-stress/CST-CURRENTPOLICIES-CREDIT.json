@@ -1,0 +1,50 @@
+{
+ "resultId": "CST-CURRENTPOLICIES-CREDIT",
+ "scenarioName": "Current policies",
+ "deskName": "Credit trading",
+ "loss2030": -10290105,
+ "loss2050": -16464168,
+ "capitalShare": 0.00257,
+ "bySector": [
+  {
+   "sector": "Utilities",
+   "loss": -3037098
+  },
+  {
+   "sector": "Airlines",
+   "loss": -2600535
+  },
+  {
+   "sector": "Shipping",
+   "loss": -2207454
+  },
+  {
+   "sector": "Materials",
+   "loss": -736484
+  },
+  {
+   "sector": "Autos",
+   "loss": -1708534
+  }
+ ],
+ "byHorizon": [
+  {
+   "year": "2030",
+   "loss": 10290105
+  },
+  {
+   "year": "2040",
+   "loss": 13377136
+  },
+  {
+   "year": "2050",
+   "loss": 16464168
+  }
+ ],
+ "scenario": "NGFS-CURRENTPOLICIES",
+ "desk": "DESK-CREDIT",
+ "_meta": {
+  "source": "climate-stress",
+  "generation": 1
+ }
+}

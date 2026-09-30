@@ -1,0 +1,65 @@
+{
+ "profileId": "CLIM-PINNACLE",
+ "counterpartyName": "Pinnacle Credit Partners",
+ "sector": "Asset management",
+ "scope12": 61840,
+ "intensity": 5,
+ "transitionScore": 26,
+ "physicalScore": 18,
+ "netZeroTarget": "2050 (SBTi validated)",
+ "scopes": [
+  {
+   "scope": "Scope 1",
+   "tco2e": 43288
+  },
+  {
+   "scope": "Scope 2",
+   "tco2e": 18552
+  },
+  {
+   "scope": "Scope 3",
+   "tco2e": 530880
+  }
+ ],
+ "history": [
+  {
+   "year": "2019",
+   "tco2e": 72974
+  },
+  {
+   "year": "2020",
+   "tco2e": 74967
+  },
+  {
+   "year": "2021",
+   "tco2e": 69185
+  },
+  {
+   "year": "2022",
+   "tco2e": 67729
+  },
+  {
+   "year": "2023",
+   "tco2e": 66425
+  },
+  {
+   "year": "2024",
+   "tco2e": 66749
+  },
+  {
+   "year": "2025",
+   "tco2e": 64526
+  }
+ ],
+ "targets": {
+  "reduction2030": "42% vs 2019",
+  "disclosure": "CDP only",
+  "revenueUsdM": 12566,
+  "reportingYear": 2025
+ },
+ "counterparty": "CP-PINNACLE",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

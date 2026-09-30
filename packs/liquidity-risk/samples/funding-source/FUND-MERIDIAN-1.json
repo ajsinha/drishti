@@ -1,0 +1,21 @@
+{
+ "fundingId": "FUND-MERIDIAN-1",
+ "counterpartyName": "Meridian Life Assurance",
+ "type": "Operational deposit",
+ "amount": 97500000.0,
+ "currency": "JPY",
+ "maturity": "2027-08-03",
+ "runOffRate": 0.25,
+ "terms": {
+  "rate": 0.0527,
+  "startDate": "2026-09-22",
+  "collateral": "Unsecured",
+  "withdrawable": true
+ },
+ "counterparty": "CP-MERIDIAN",
+ "legalEntity": "LE-TKY",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

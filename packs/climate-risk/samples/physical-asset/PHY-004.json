@@ -1,0 +1,46 @@
+{
+ "assetId": "PHY-004",
+ "name": "Queensland farm estate",
+ "counterpartyName": "Kestrel Global Macro Fund",
+ "country": "AU",
+ "value": 1595000000.0,
+ "worstHazard": "Extreme heat (90)",
+ "insured": 0.57,
+ "hazards": [
+  {
+   "hazard": "River flood",
+   "score": 43
+  },
+  {
+   "hazard": "Coastal flood",
+   "score": 55
+  },
+  {
+   "hazard": "Extreme heat",
+   "score": 90
+  },
+  {
+   "hazard": "Tropical storm",
+   "score": 49
+  },
+  {
+   "hazard": "Wildfire",
+   "score": 29
+  },
+  {
+   "hazard": "Drought",
+   "score": 41
+  }
+ ],
+ "location": {
+  "latitude": -27.5,
+  "longitude": 153.0,
+  "elevationM": 890,
+  "distanceToCoastKm": 332.9
+ },
+ "counterparty": "CP-KESTREL",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

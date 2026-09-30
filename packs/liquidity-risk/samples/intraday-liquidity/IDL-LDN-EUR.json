@@ -1,0 +1,110 @@
+{
+ "reportId": "IDL-LDN-EUR",
+ "legalEntityName": "Drishti Bank plc",
+ "currency": "EUR",
+ "peakUsage": 1336000000.0,
+ "available": 4260000000.0,
+ "usagePct": 0.3136,
+ "usage": [
+  {
+   "time": "07:00",
+   "used": 330798987
+  },
+  {
+   "time": "08:00",
+   "used": 735888351
+  },
+  {
+   "time": "09:00",
+   "used": 1039807537
+  },
+  {
+   "time": "10:00",
+   "used": 1336000000
+  },
+  {
+   "time": "11:00",
+   "used": 1336000000
+  },
+  {
+   "time": "12:00",
+   "used": 1336000000
+  },
+  {
+   "time": "13:00",
+   "used": 1336000000
+  },
+  {
+   "time": "14:00",
+   "used": 1336000000
+  },
+  {
+   "time": "15:00",
+   "used": 1336000000
+  },
+  {
+   "time": "16:00",
+   "used": 1336000000
+  },
+  {
+   "time": "17:00",
+   "used": 1336000000
+  },
+  {
+   "time": "18:00",
+   "used": 1336000000
+  }
+ ],
+ "largePayments": [
+  {
+   "time": "08:29",
+   "counterparty": "Kestrel Global Macro Fund",
+   "amount": 126100000.0
+  },
+  {
+   "time": "09:02",
+   "counterparty": "Pinnacle Credit Partners",
+   "amount": 200300000.0
+  },
+  {
+   "time": "09:44",
+   "counterparty": "Halcyon Shipping plc",
+   "amount": 793200000.0
+  },
+  {
+   "time": "10:39",
+   "counterparty": "Verdant Agri Holdings",
+   "amount": 82400000.0
+  },
+  {
+   "time": "14:21",
+   "counterparty": "Kestrel Global Macro Fund",
+   "amount": -413400000.0
+  },
+  {
+   "time": "15:21",
+   "counterparty": "Meridian Life Assurance",
+   "amount": -213500000.0
+  },
+  {
+   "time": "15:40",
+   "counterparty": "Tokai Mutual Trust Bank",
+   "amount": 453300000.0
+  },
+  {
+   "time": "16:23",
+   "counterparty": "Lumen Semiconductor AG",
+   "amount": 826800000.0
+  }
+ ],
+ "paymentSystem": "TARGET2",
+ "legalEntity": "LE-LDN",
+ "_meta": {
+  "source": "payments-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "peakUsage": 250000
+  }
+ }
+}

@@ -23,7 +23,7 @@ export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-21-openjdk-amd64}"
 [[ -z "$(git status --porcelain)" ]] || { echo "drill: commit your changes first" >&2; exit 1; }
 
 python3 tools/license_headers.py
-for gen in $(grep -l -- "--check" packs/*/tools/make_*.py tools/packgen/*/make_*.py 2>/dev/null); do python3 "$gen" --check; done   # generated pack content is current
+for gen in $(grep -l -- "--check" packs/*/tools/make_*.py tools/packgen/*/make*.py 2>/dev/null); do python3 "$gen" --check; done   # generated pack content is current
 python3 -m unittest -q tools/samplegen/test_samplegen.py
 ./mvnw -q -o verify
 console/.venv/bin/python -m pytest -q console/tests

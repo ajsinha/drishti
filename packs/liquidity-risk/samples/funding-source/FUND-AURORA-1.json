@@ -1,0 +1,21 @@
+{
+ "fundingId": "FUND-AURORA-1",
+ "counterpartyName": "Aurora Sovereign Wealth Fund",
+ "type": "Repo funding",
+ "amount": 466700000.0,
+ "currency": "USD",
+ "maturity": "2027-01-09",
+ "runOffRate": 0.25,
+ "terms": {
+  "rate": 0.0388,
+  "startDate": "2026-02-23",
+  "collateral": "Government bonds",
+  "withdrawable": false
+ },
+ "counterparty": "CP-AURORA",
+ "legalEntity": "LE-NY",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

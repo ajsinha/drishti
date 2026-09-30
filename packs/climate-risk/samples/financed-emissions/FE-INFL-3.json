@@ -1,0 +1,90 @@
+{
+ "resultId": "FE-INFL-3",
+ "book": "BOOK-INFL-3",
+ "financed": 1500,
+ "exposure": 44700000,
+ "intensity": 34,
+ "dataQuality": 2.98,
+ "byCounterparty": [
+  {
+   "counterparty": "Pinnacle Credit Partners",
+   "exposure": 10650000,
+   "attribution": 0.000286,
+   "financed": 18,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Lumen Semiconductor AG",
+   "exposure": 10500000,
+   "attribution": 0.000225,
+   "financed": 108,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Meridian Reinsurance Ltd",
+   "exposure": 7250000,
+   "attribution": 0.00038,
+   "financed": 16,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Aldershot Pension Trust",
+   "exposure": 6550000,
+   "attribution": 0.000144,
+   "financed": 7,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Verdant Agri Holdings",
+   "exposure": 6200000,
+   "attribution": 0.00011,
+   "financed": 1345,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Harbor Point Bank",
+   "exposure": 3250000,
+   "attribution": 5.7e-05,
+   "financed": 5,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Northbridge Capital LLP",
+   "exposure": 300000,
+   "attribution": 1.2e-05,
+   "financed": 1,
+   "dataQuality": 3
+  }
+ ],
+ "bySector": [
+  {
+   "sector": "Agriculture",
+   "financed": 1345
+  },
+  {
+   "sector": "Technology",
+   "financed": 108
+  },
+  {
+   "sector": "Asset management",
+   "financed": 19
+  },
+  {
+   "sector": "Insurance",
+   "financed": 16
+  },
+  {
+   "sector": "Pensions",
+   "financed": 7
+  },
+  {
+   "sector": "Banking",
+   "financed": 5
+  }
+ ],
+ "methodology": "PCAF Global GHG Standard, attribution = exposure / EVIC",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

@@ -1,0 +1,50 @@
+{
+ "resultId": "CST-CURRENTPOLICIES-INFL",
+ "scenarioName": "Current policies",
+ "deskName": "Inflation",
+ "loss2030": -10389026,
+ "loss2050": -16622442,
+ "capitalShare": 0.0026,
+ "bySector": [
+  {
+   "sector": "Utilities",
+   "loss": -1972887
+  },
+  {
+   "sector": "Airlines",
+   "loss": -977353
+  },
+  {
+   "sector": "Shipping",
+   "loss": -3299721
+  },
+  {
+   "sector": "Materials",
+   "loss": -3121051
+  },
+  {
+   "sector": "Autos",
+   "loss": -1018014
+  }
+ ],
+ "byHorizon": [
+  {
+   "year": "2030",
+   "loss": 10389026
+  },
+  {
+   "year": "2040",
+   "loss": 13505734
+  },
+  {
+   "year": "2050",
+   "loss": 16622442
+  }
+ ],
+ "scenario": "NGFS-CURRENTPOLICIES",
+ "desk": "DESK-INFL",
+ "_meta": {
+  "source": "climate-stress",
+  "generation": 1
+ }
+}

@@ -1,0 +1,50 @@
+{
+ "resultId": "CST-DELAYED-EQD",
+ "scenarioName": "Delayed transition",
+ "deskName": "Equity derivatives",
+ "loss2030": -12888107,
+ "loss2050": -15465728,
+ "capitalShare": 0.00322,
+ "bySector": [
+  {
+   "sector": "Utilities",
+   "loss": -1143784
+  },
+  {
+   "sector": "Airlines",
+   "loss": -4132363
+  },
+  {
+   "sector": "Shipping",
+   "loss": -3841547
+  },
+  {
+   "sector": "Materials",
+   "loss": -2554177
+  },
+  {
+   "sector": "Autos",
+   "loss": -1216236
+  }
+ ],
+ "byHorizon": [
+  {
+   "year": "2030",
+   "loss": 12888107
+  },
+  {
+   "year": "2040",
+   "loss": 14176918
+  },
+  {
+   "year": "2050",
+   "loss": 15465728
+  }
+ ],
+ "scenario": "NGFS-DELAYED",
+ "desk": "DESK-EQD",
+ "_meta": {
+  "source": "climate-stress",
+  "generation": 1
+ }
+}

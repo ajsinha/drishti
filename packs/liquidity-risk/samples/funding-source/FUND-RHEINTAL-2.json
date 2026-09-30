@@ -1,0 +1,21 @@
+{
+ "fundingId": "FUND-RHEINTAL-2",
+ "counterpartyName": "Rheintal Landesbank",
+ "type": "Wholesale time deposit",
+ "amount": 866000000.0,
+ "currency": "USD",
+ "maturity": "2026-12-04",
+ "runOffRate": 0.4,
+ "terms": {
+  "rate": 0.024,
+  "startDate": "2026-05-16",
+  "collateral": "Unsecured",
+  "withdrawable": false
+ },
+ "counterparty": "CP-RHEINTAL",
+ "legalEntity": "LE-TKY",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

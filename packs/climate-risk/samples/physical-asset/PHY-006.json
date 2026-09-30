@@ -1,0 +1,46 @@
+{
+ "assetId": "PHY-006",
+ "name": "Phoenix data centre",
+ "counterpartyName": "Solaris Energy Corp.",
+ "country": "US",
+ "value": 2101000000.0,
+ "worstHazard": "Wildfire (80)",
+ "insured": 0.48,
+ "hazards": [
+  {
+   "hazard": "River flood",
+   "score": 17
+  },
+  {
+   "hazard": "Coastal flood",
+   "score": 51
+  },
+  {
+   "hazard": "Extreme heat",
+   "score": 18
+  },
+  {
+   "hazard": "Tropical storm",
+   "score": 21
+  },
+  {
+   "hazard": "Wildfire",
+   "score": 80
+  },
+  {
+   "hazard": "Drought",
+   "score": 71
+  }
+ ],
+ "location": {
+  "latitude": 33.45,
+  "longitude": -112.07,
+  "elevationM": 853,
+  "distanceToCoastKm": 3.5
+ },
+ "counterparty": "CP-SOLARIS",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

@@ -1,0 +1,21 @@
+{
+ "fundingId": "FUND-NORTHBRIDGE-2",
+ "counterpartyName": "Northbridge Capital LLP",
+ "type": "Operational deposit",
+ "amount": 291800000.0,
+ "currency": "USD",
+ "maturity": "2027-07-09",
+ "runOffRate": 0.25,
+ "terms": {
+  "rate": 0.046,
+  "startDate": "2026-07-09",
+  "collateral": "Unsecured",
+  "withdrawable": true
+ },
+ "counterparty": "CP-NORTHBRIDGE",
+ "legalEntity": "LE-NY",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

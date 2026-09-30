@@ -1,0 +1,50 @@
+{
+ "resultId": "CST-CURRENTPOLICIES-FX",
+ "scenarioName": "Current policies",
+ "deskName": "G10 and EM FX",
+ "loss2030": -7601921,
+ "loss2050": -12163074,
+ "capitalShare": 0.0019,
+ "bySector": [
+  {
+   "sector": "Utilities",
+   "loss": -1468555
+  },
+  {
+   "sector": "Airlines",
+   "loss": -1565566
+  },
+  {
+   "sector": "Shipping",
+   "loss": -2742029
+  },
+  {
+   "sector": "Materials",
+   "loss": -1011474
+  },
+  {
+   "sector": "Autos",
+   "loss": -814297
+  }
+ ],
+ "byHorizon": [
+  {
+   "year": "2030",
+   "loss": 7601921
+  },
+  {
+   "year": "2040",
+   "loss": 9882498
+  },
+  {
+   "year": "2050",
+   "loss": 12163074
+  }
+ ],
+ "scenario": "NGFS-CURRENTPOLICIES",
+ "desk": "DESK-FX",
+ "_meta": {
+  "source": "climate-stress",
+  "generation": 1
+ }
+}

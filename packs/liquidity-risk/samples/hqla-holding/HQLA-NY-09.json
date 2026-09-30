@@ -1,0 +1,23 @@
+{
+ "holdingId": "HQLA-NY-09",
+ "security": "Solaris Energy Corp. 4.960% 2036",
+ "level": "Level 2B",
+ "marketValue": 802600000.0,
+ "haircut": 0.5,
+ "liquidityValue": 401300000,
+ "encumbered": "No",
+ "bond": "BND-USSOLA119789",
+ "legalEntity": "LE-NY",
+ "details": {
+  "isin": "USSOLA119789",
+  "currency": "USD",
+  "price": 98.956,
+  "custodian": "Clearstream",
+  "operationalRequirements": "Met",
+  "centralBankEligible": false
+ },
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

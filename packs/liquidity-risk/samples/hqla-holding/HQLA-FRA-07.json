@@ -1,0 +1,23 @@
+{
+ "holdingId": "HQLA-FRA-07",
+ "security": "Orbital Telecom SA 5.240% 2036",
+ "level": "Level 2B",
+ "marketValue": 198600000.0,
+ "haircut": 0.5,
+ "liquidityValue": 99300000,
+ "encumbered": "No",
+ "bond": "BND-FRORBI162925",
+ "legalEntity": "LE-FRA",
+ "details": {
+  "isin": "FRORBI162925",
+  "currency": "EUR",
+  "price": 112.528,
+  "custodian": "Euroclear",
+  "operationalRequirements": "Met",
+  "centralBankEligible": false
+ },
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

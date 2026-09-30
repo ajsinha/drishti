@@ -1,0 +1,23 @@
+{
+ "holdingId": "HQLA-LDN-09",
+ "security": "Verdant Agri Holdings 5.790% 2031",
+ "level": "Level 2A",
+ "marketValue": 701100000.0,
+ "haircut": 0.15,
+ "liquidityValue": 595935000,
+ "encumbered": "No",
+ "bond": "BND-BRVERD054608",
+ "legalEntity": "LE-LDN",
+ "details": {
+  "isin": "BRVERD054608",
+  "currency": "USD",
+  "price": 94.302,
+  "custodian": "Fed",
+  "operationalRequirements": "Met",
+  "centralBankEligible": true
+ },
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

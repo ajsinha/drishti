@@ -1,0 +1,75 @@
+{
+ "resultId": "FE-SFT-3",
+ "book": "BOOK-SFT-3",
+ "financed": 2579,
+ "exposure": 79350000,
+ "intensity": 33,
+ "dataQuality": 3.07,
+ "byCounterparty": [
+  {
+   "counterparty": "Rheintal Landesbank",
+   "exposure": 20400000,
+   "attribution": 0.000662,
+   "financed": 50,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Tokai Mutual Trust Bank",
+   "exposure": 18400000,
+   "attribution": 0.000461,
+   "financed": 54,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Northbridge Capital LLP",
+   "exposure": 17150000,
+   "attribution": 0.000369,
+   "financed": 16,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Coral Bay Municipal Authority",
+   "exposure": 11500000,
+   "attribution": 0.000137,
+   "financed": 202,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Aurora Sovereign Wealth Fund",
+   "exposure": 7950000,
+   "attribution": 0.005328,
+   "financed": 311,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Cascadia Airlines Inc.",
+   "exposure": 3950000,
+   "attribution": 0.002088,
+   "financed": 1946,
+   "dataQuality": 2
+  }
+ ],
+ "bySector": [
+  {
+   "sector": "Airlines",
+   "financed": 1946
+  },
+  {
+   "sector": "Government",
+   "financed": 513
+  },
+  {
+   "sector": "Banking",
+   "financed": 104
+  },
+  {
+   "sector": "Asset management",
+   "financed": 16
+  }
+ ],
+ "methodology": "PCAF Global GHG Standard, attribution = exposure / EVIC",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

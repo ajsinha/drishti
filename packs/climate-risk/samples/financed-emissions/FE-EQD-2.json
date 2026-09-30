@@ -1,0 +1,133 @@
+{
+ "resultId": "FE-EQD-2",
+ "book": "BOOK-EQD-2",
+ "financed": 5634,
+ "exposure": 261700000,
+ "intensity": 22,
+ "dataQuality": 3.48,
+ "byCounterparty": [
+  {
+   "counterparty": "Summit Clearing LLC",
+   "exposure": 89900000,
+   "attribution": 0.002973,
+   "financed": 169,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Meridian Reinsurance Ltd",
+   "exposure": 38950000,
+   "attribution": 0.002546,
+   "financed": 104,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Northbridge Capital LLP",
+   "exposure": 33150000,
+   "attribution": 0.000776,
+   "financed": 34,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Cascadia Airlines Inc.",
+   "exposure": 15550000,
+   "attribution": 0.005057,
+   "financed": 4712,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Rheintal Landesbank",
+   "exposure": 15550000,
+   "attribution": 0.001084,
+   "financed": 81,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Aldershot Pension Trust",
+   "exposure": 15350000,
+   "attribution": 0.000203,
+   "financed": 10,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Aurora Sovereign Wealth Fund",
+   "exposure": 14700000,
+   "attribution": 0.005435,
+   "financed": 317,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Kestrel Global Macro Fund",
+   "exposure": 13800000,
+   "attribution": 0.000327,
+   "financed": 16,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Lumen Semiconductor AG",
+   "exposure": 10650000,
+   "attribution": 0.000227,
+   "financed": 109,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Meridian Life Assurance",
+   "exposure": 8400000,
+   "attribution": 0.004084,
+   "financed": 14,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Tokai Mutual Trust Bank",
+   "exposure": 3350000,
+   "attribution": 8.3e-05,
+   "financed": 10,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Coral Bay Municipal Authority",
+   "exposure": 2350000,
+   "attribution": 3.9e-05,
+   "financed": 58,
+   "dataQuality": 3
+  }
+ ],
+ "bySector": [
+  {
+   "sector": "Airlines",
+   "financed": 4712
+  },
+  {
+   "sector": "Government",
+   "financed": 375
+  },
+  {
+   "sector": "Financial services",
+   "financed": 169
+  },
+  {
+   "sector": "Insurance",
+   "financed": 118
+  },
+  {
+   "sector": "Technology",
+   "financed": 109
+  },
+  {
+   "sector": "Banking",
+   "financed": 91
+  },
+  {
+   "sector": "Asset management",
+   "financed": 50
+  },
+  {
+   "sector": "Pensions",
+   "financed": 10
+  }
+ ],
+ "methodology": "PCAF Global GHG Standard, attribution = exposure / EVIC",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

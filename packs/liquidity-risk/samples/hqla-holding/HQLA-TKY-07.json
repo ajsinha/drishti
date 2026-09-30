@@ -1,0 +1,23 @@
+{
+ "holdingId": "HQLA-TKY-07",
+ "security": "Helix Pharmaceuticals Inc. 4.720% 2036",
+ "level": "Level 2A",
+ "marketValue": 189500000.0,
+ "haircut": 0.15,
+ "liquidityValue": 161075000,
+ "encumbered": "No",
+ "bond": "BND-USHELI160541",
+ "legalEntity": "LE-TKY",
+ "details": {
+  "isin": "USHELI160541",
+  "currency": "USD",
+  "price": 100.348,
+  "custodian": "Euroclear",
+  "operationalRequirements": "Met",
+  "centralBankEligible": true
+ },
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

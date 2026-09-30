@@ -1,0 +1,65 @@
+{
+ "profileId": "CLIM-MERIDIAN",
+ "counterpartyName": "Meridian Life Assurance",
+ "sector": "Insurance",
+ "scope12": 3361,
+ "intensity": 6,
+ "transitionScore": 23,
+ "physicalScore": 56,
+ "netZeroTarget": "2040",
+ "scopes": [
+  {
+   "scope": "Scope 1",
+   "tco2e": 2353
+  },
+  {
+   "scope": "Scope 2",
+   "tco2e": 1008
+  },
+  {
+   "scope": "Scope 3",
+   "tco2e": 23557
+  }
+ ],
+ "history": [
+  {
+   "year": "2019",
+   "tco2e": 4264
+  },
+  {
+   "year": "2020",
+   "tco2e": 4039
+  },
+  {
+   "year": "2021",
+   "tco2e": 4054
+  },
+  {
+   "year": "2022",
+   "tco2e": 3833
+  },
+  {
+   "year": "2023",
+   "tco2e": 3584
+  },
+  {
+   "year": "2024",
+   "tco2e": 3635
+  },
+  {
+   "year": "2025",
+   "tco2e": 3408
+  }
+ ],
+ "targets": {
+  "reduction2030": "30% vs 2019",
+  "disclosure": "ISSB S2",
+  "revenueUsdM": 564,
+  "reportingYear": 2025
+ },
+ "counterparty": "CP-MERIDIAN",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

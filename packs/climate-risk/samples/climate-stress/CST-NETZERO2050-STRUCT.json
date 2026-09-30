@@ -1,0 +1,50 @@
+{
+ "resultId": "CST-NETZERO2050-STRUCT",
+ "scenarioName": "Net Zero 2050",
+ "deskName": "Structured products",
+ "loss2030": -7830671,
+ "loss2050": -9396805,
+ "capitalShare": 0.00196,
+ "bySector": [
+  {
+   "sector": "Utilities",
+   "loss": -1813264
+  },
+  {
+   "sector": "Airlines",
+   "loss": -1966673
+  },
+  {
+   "sector": "Shipping",
+   "loss": -1785124
+  },
+  {
+   "sector": "Materials",
+   "loss": -1291288
+  },
+  {
+   "sector": "Autos",
+   "loss": -974322
+  }
+ ],
+ "byHorizon": [
+  {
+   "year": "2030",
+   "loss": 7830671
+  },
+  {
+   "year": "2040",
+   "loss": 8613738
+  },
+  {
+   "year": "2050",
+   "loss": 9396805
+  }
+ ],
+ "scenario": "NGFS-NETZERO2050",
+ "desk": "DESK-STRUCT",
+ "_meta": {
+  "source": "climate-stress",
+  "generation": 1
+ }
+}

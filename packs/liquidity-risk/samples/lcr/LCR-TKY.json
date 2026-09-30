@@ -1,0 +1,221 @@
+{
+ "lcrId": "LCR-TKY",
+ "legalEntityName": "Drishti Securities Japan K.K.",
+ "lcr": 1.5085,
+ "hqla": 4806385000,
+ "netOutflows": 3186100000,
+ "minimum": 1.0,
+ "buffer": 1620285000,
+ "asOf": "2026-09-30",
+ "hqlaByLevel": [
+  {
+   "level": "Level 1",
+   "value": 3113700000
+  },
+  {
+   "level": "Level 1 (central bank reserves)",
+   "value": 1339000000.0
+  },
+  {
+   "level": "Level 2A",
+   "value": 353685000
+  },
+  {
+   "level": "Level 2B",
+   "value": 0
+  }
+ ],
+ "flows": [
+  {
+   "category": "Retail deposits, stable",
+   "balance": 7562000000.0,
+   "rate": 0.05,
+   "flow": -378100000
+  },
+  {
+   "category": "Retail deposits, less stable",
+   "balance": 2852000000.0,
+   "rate": 0.1,
+   "flow": -285200000
+  },
+  {
+   "category": "Operational deposits",
+   "balance": 4776000000.0,
+   "rate": 0.25,
+   "flow": -1194000000
+  },
+  {
+   "category": "Non-operational wholesale",
+   "balance": 3795000000.0,
+   "rate": 0.4,
+   "flow": -1518000000
+  },
+  {
+   "category": "Secured funding (non-level-1 collateral)",
+   "balance": 2516000000.0,
+   "rate": 0.25,
+   "flow": -629000000
+  },
+  {
+   "category": "Derivative outflows",
+   "balance": 631000000.0,
+   "rate": 1.0,
+   "flow": -631000000
+  },
+  {
+   "category": "Committed credit facilities",
+   "balance": 1878000000.0,
+   "rate": 0.1,
+   "flow": -187800000
+  },
+  {
+   "category": "Performing loans maturing",
+   "balance": 1282000000.0,
+   "rate": 0.5,
+   "flow": 641000000
+  },
+  {
+   "category": "Reverse repo (non-level-1)",
+   "balance": 998000000.0,
+   "rate": 0.5,
+   "flow": 499000000
+  },
+  {
+   "category": "Derivative inflows",
+   "balance": 497000000.0,
+   "rate": 1.0,
+   "flow": 497000000
+  }
+ ],
+ "trend": [
+  {
+   "date": "2026-08-20",
+   "lcr": 1.4211
+  },
+  {
+   "date": "2026-08-21",
+   "lcr": 1.4389
+  },
+  {
+   "date": "2026-08-24",
+   "lcr": 1.4551
+  },
+  {
+   "date": "2026-08-25",
+   "lcr": 1.4682
+  },
+  {
+   "date": "2026-08-26",
+   "lcr": 1.4771
+  },
+  {
+   "date": "2026-08-27",
+   "lcr": 1.4812
+  },
+  {
+   "date": "2026-08-28",
+   "lcr": 1.4803
+  },
+  {
+   "date": "2026-08-31",
+   "lcr": 1.4749
+  },
+  {
+   "date": "2026-09-01",
+   "lcr": 1.4659
+  },
+  {
+   "date": "2026-09-02",
+   "lcr": 1.4546
+  },
+  {
+   "date": "2026-09-03",
+   "lcr": 1.4426
+  },
+  {
+   "date": "2026-09-04",
+   "lcr": 1.4316
+  },
+  {
+   "date": "2026-09-07",
+   "lcr": 1.423
+  },
+  {
+   "date": "2026-09-08",
+   "lcr": 1.4182
+  },
+  {
+   "date": "2026-09-09",
+   "lcr": 1.4181
+  },
+  {
+   "date": "2026-09-10",
+   "lcr": 1.4229
+  },
+  {
+   "date": "2026-09-11",
+   "lcr": 1.4325
+  },
+  {
+   "date": "2026-09-14",
+   "lcr": 1.4462
+  },
+  {
+   "date": "2026-09-15",
+   "lcr": 1.4627
+  },
+  {
+   "date": "2026-09-16",
+   "lcr": 1.4806
+  },
+  {
+   "date": "2026-09-17",
+   "lcr": 1.4983
+  },
+  {
+   "date": "2026-09-18",
+   "lcr": 1.5141
+  },
+  {
+   "date": "2026-09-21",
+   "lcr": 1.5267
+  },
+  {
+   "date": "2026-09-22",
+   "lcr": 1.5349
+  },
+  {
+   "date": "2026-09-23",
+   "lcr": 1.5382
+  },
+  {
+   "date": "2026-09-24",
+   "lcr": 1.5366
+  },
+  {
+   "date": "2026-09-25",
+   "lcr": 1.5306
+  },
+  {
+   "date": "2026-09-28",
+   "lcr": 1.5212
+  },
+  {
+   "date": "2026-09-29",
+   "lcr": 1.5097
+  },
+  {
+   "date": "2026-09-30",
+   "lcr": 1.5085
+  }
+ ],
+ "legalEntity": "LE-TKY",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "lcr": 0.004
+  }
+ }
+}

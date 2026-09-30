@@ -1,0 +1,79 @@
+{
+ "resultId": "FE-FI-3",
+ "book": "BOOK-FI-3",
+ "financed": 6093,
+ "exposure": 147900000,
+ "intensity": 41,
+ "dataQuality": 2.97,
+ "byCounterparty": [
+  {
+   "counterparty": "Summit Clearing LLC",
+   "exposure": 108400000,
+   "attribution": 0.003692,
+   "financed": 210,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Northbridge Capital LLP",
+   "exposure": 10150000,
+   "attribution": 0.000477,
+   "financed": 21,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Cascadia Airlines Inc.",
+   "exposure": 10050000,
+   "attribution": 0.006195,
+   "financed": 5772,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Kestrel Global Macro Fund",
+   "exposure": 9050000,
+   "attribution": 0.000264,
+   "financed": 13,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Meridian Life Assurance",
+   "exposure": 6350000,
+   "attribution": 0.004144,
+   "financed": 14,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Aurora Sovereign Wealth Fund",
+   "exposure": 3900000,
+   "attribution": 0.001086,
+   "financed": 63,
+   "dataQuality": 2
+  }
+ ],
+ "bySector": [
+  {
+   "sector": "Airlines",
+   "financed": 5772
+  },
+  {
+   "sector": "Financial services",
+   "financed": 210
+  },
+  {
+   "sector": "Government",
+   "financed": 63
+  },
+  {
+   "sector": "Asset management",
+   "financed": 34
+  },
+  {
+   "sector": "Insurance",
+   "financed": 14
+  }
+ ],
+ "methodology": "PCAF Global GHG Standard, attribution = exposure / EVIC",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

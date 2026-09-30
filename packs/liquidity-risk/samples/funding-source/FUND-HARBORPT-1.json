@@ -1,0 +1,21 @@
+{
+ "fundingId": "FUND-HARBORPT-1",
+ "counterpartyName": "Harbor Point Bank",
+ "type": "Operational deposit",
+ "amount": 663900000.0,
+ "currency": "JPY",
+ "maturity": "2026-12-31",
+ "runOffRate": 0.25,
+ "terms": {
+  "rate": 0.0411,
+  "startDate": "2026-03-05",
+  "collateral": "Unsecured",
+  "withdrawable": true
+ },
+ "counterparty": "CP-HARBORPT",
+ "legalEntity": "LE-TKY",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

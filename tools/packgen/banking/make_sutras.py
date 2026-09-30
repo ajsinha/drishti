@@ -278,7 +278,8 @@ def kind_yaml(k: Kind) -> str:
     for p in k.panels:
         w.panel(p)
     a("  - { id: built, kind: provenance, title: How this view was built }")
-    a("  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }")
+    if k.links:   # a kind that refers to nothing gets no empty links panel
+        a("  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }")
     first_link = next(iter(k.links), None)
     keys = {"F8": "impact", "F9": "raw"}
     if first_link:

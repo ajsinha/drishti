@@ -1,0 +1,21 @@
+{
+ "fundingId": "FUND-ALDERSHOT-1",
+ "counterpartyName": "Aldershot Pension Trust",
+ "type": "Wholesale time deposit",
+ "amount": 565900000.0,
+ "currency": "USD",
+ "maturity": "2026-11-01",
+ "runOffRate": 0.4,
+ "terms": {
+  "rate": 0.0534,
+  "startDate": "2026-01-22",
+  "collateral": "Unsecured",
+  "withdrawable": false
+ },
+ "counterparty": "CP-ALDERSHOT",
+ "legalEntity": "LE-LDN",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

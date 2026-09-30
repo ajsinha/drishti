@@ -1,0 +1,65 @@
+{
+ "profileId": "CLIM-LUMEN",
+ "counterpartyName": "Lumen Semiconductor AG",
+ "sector": "Technology",
+ "scope12": 479307,
+ "intensity": 23,
+ "transitionScore": 25,
+ "physicalScore": 30,
+ "netZeroTarget": "2050",
+ "scopes": [
+  {
+   "scope": "Scope 1",
+   "tco2e": 335515
+  },
+  {
+   "scope": "Scope 2",
+   "tco2e": 143792
+  },
+  {
+   "scope": "Scope 3",
+   "tco2e": 2195908
+  }
+ ],
+ "history": [
+  {
+   "year": "2019",
+   "tco2e": 570089
+  },
+  {
+   "year": "2020",
+   "tco2e": 578228
+  },
+  {
+   "year": "2021",
+   "tco2e": 534736
+  },
+  {
+   "year": "2022",
+   "tco2e": 531294
+  },
+  {
+   "year": "2023",
+   "tco2e": 515294
+  },
+  {
+   "year": "2024",
+   "tco2e": 505651
+  },
+  {
+   "year": "2025",
+   "tco2e": 475745
+  }
+ ],
+ "targets": {
+  "reduction2030": "42% vs 2019",
+  "disclosure": "ISSB S2",
+  "revenueUsdM": 20518,
+  "reportingYear": 2025
+ },
+ "counterparty": "CP-LUMEN",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

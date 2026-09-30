@@ -1,0 +1,79 @@
+{
+ "resultId": "FE-FI-2",
+ "book": "BOOK-FI-2",
+ "financed": 4336,
+ "exposure": 177400000,
+ "intensity": 24,
+ "dataQuality": 2.92,
+ "byCounterparty": [
+  {
+   "counterparty": "Summit Clearing LLC",
+   "exposure": 114700000,
+   "attribution": 0.002613,
+   "financed": 148,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Meridian Life Assurance",
+   "exposure": 17700000,
+   "attribution": 0.018417,
+   "financed": 62,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Aldershot Pension Trust",
+   "exposure": 12300000,
+   "attribution": 0.00019,
+   "financed": 9,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Coral Bay Municipal Authority",
+   "exposure": 11400000,
+   "attribution": 0.000143,
+   "financed": 210,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Halcyon Shipping plc",
+   "exposure": 10700000,
+   "attribution": 0.000291,
+   "financed": 3878,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Meridian Reinsurance Ltd",
+   "exposure": 10600000,
+   "attribution": 0.000711,
+   "financed": 29,
+   "dataQuality": 2
+  }
+ ],
+ "bySector": [
+  {
+   "sector": "Shipping",
+   "financed": 3878
+  },
+  {
+   "sector": "Government",
+   "financed": 210
+  },
+  {
+   "sector": "Financial services",
+   "financed": 148
+  },
+  {
+   "sector": "Insurance",
+   "financed": 91
+  },
+  {
+   "sector": "Pensions",
+   "financed": 9
+  }
+ ],
+ "methodology": "PCAF Global GHG Standard, attribution = exposure / EVIC",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

@@ -43,7 +43,6 @@ panels:
       - { label: Account, bind: "@.id" }
       - { label: IM, bind: "@.im", fmt: compact, total: true }
   - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
 keys: { F8: impact, F9: raw }
 ```
 

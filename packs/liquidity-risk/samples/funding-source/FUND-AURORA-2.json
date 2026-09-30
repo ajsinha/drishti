@@ -1,0 +1,21 @@
+{
+ "fundingId": "FUND-AURORA-2",
+ "counterpartyName": "Aurora Sovereign Wealth Fund",
+ "type": "Wholesale time deposit",
+ "amount": 747300000.0,
+ "currency": "USD",
+ "maturity": "2026-12-03",
+ "runOffRate": 0.4,
+ "terms": {
+  "rate": 0.0413,
+  "startDate": "2026-07-20",
+  "collateral": "Unsecured",
+  "withdrawable": false
+ },
+ "counterparty": "CP-AURORA",
+ "legalEntity": "LE-LDN",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

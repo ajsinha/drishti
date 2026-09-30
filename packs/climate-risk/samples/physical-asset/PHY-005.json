@@ -1,0 +1,46 @@
+{
+ "assetId": "PHY-005",
+ "name": "Piraeus shipyard",
+ "counterpartyName": "Meridian Life Assurance",
+ "country": "GR",
+ "value": 2358900000.0,
+ "worstHazard": "Tropical storm (88)",
+ "insured": 0.32,
+ "hazards": [
+  {
+   "hazard": "River flood",
+   "score": 19
+  },
+  {
+   "hazard": "Coastal flood",
+   "score": 86
+  },
+  {
+   "hazard": "Extreme heat",
+   "score": 53
+  },
+  {
+   "hazard": "Tropical storm",
+   "score": 88
+  },
+  {
+   "hazard": "Wildfire",
+   "score": 10
+  },
+  {
+   "hazard": "Drought",
+   "score": 42
+  }
+ ],
+ "location": {
+  "latitude": 37.94,
+  "longitude": 23.64,
+  "elevationM": 514,
+  "distanceToCoastKm": 210.5
+ },
+ "counterparty": "CP-MERIDIAN",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

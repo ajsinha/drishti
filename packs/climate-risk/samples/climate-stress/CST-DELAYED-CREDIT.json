@@ -1,0 +1,50 @@
+{
+ "resultId": "CST-DELAYED-CREDIT",
+ "scenarioName": "Delayed transition",
+ "deskName": "Credit trading",
+ "loss2030": -8532416,
+ "loss2050": -10238899,
+ "capitalShare": 0.00213,
+ "bySector": [
+  {
+   "sector": "Utilities",
+   "loss": -1763673
+  },
+  {
+   "sector": "Airlines",
+   "loss": -2442634
+  },
+  {
+   "sector": "Shipping",
+   "loss": -1325338
+  },
+  {
+   "sector": "Materials",
+   "loss": -1844188
+  },
+  {
+   "sector": "Autos",
+   "loss": -1156583
+  }
+ ],
+ "byHorizon": [
+  {
+   "year": "2030",
+   "loss": 8532416
+  },
+  {
+   "year": "2040",
+   "loss": 9385658
+  },
+  {
+   "year": "2050",
+   "loss": 10238899
+  }
+ ],
+ "scenario": "NGFS-DELAYED",
+ "desk": "DESK-CREDIT",
+ "_meta": {
+  "source": "climate-stress",
+  "generation": 1
+ }
+}

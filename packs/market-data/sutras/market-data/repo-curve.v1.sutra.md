@@ -50,7 +50,6 @@ panels:
       - { label: Term, bind: "@.tenor" }
       - { label: Rate (%), bind: "@.rate", fmt: price2 }
   - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
 keys: { F8: impact, F9: raw }
 ```
 

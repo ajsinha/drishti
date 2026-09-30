@@ -1,0 +1,21 @@
+{
+ "fundingId": "FUND-SOLARIS-1",
+ "counterpartyName": "Solaris Energy Corp.",
+ "type": "Repo funding",
+ "amount": 548500000.0,
+ "currency": "JPY",
+ "maturity": "2027-05-07",
+ "runOffRate": 0.25,
+ "terms": {
+  "rate": 0.0248,
+  "startDate": "2026-07-17",
+  "collateral": "Government bonds",
+  "withdrawable": false
+ },
+ "counterparty": "CP-SOLARIS",
+ "legalEntity": "LE-TKY",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

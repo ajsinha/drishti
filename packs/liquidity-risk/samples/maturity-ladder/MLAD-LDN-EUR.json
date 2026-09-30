@@ -1,0 +1,70 @@
+{
+ "ladderId": "MLAD-LDN-EUR",
+ "legalEntityName": "Drishti Bank plc",
+ "currency": "EUR",
+ "gap1m": 597000000.0,
+ "survivalDays": 365,
+ "buckets": [
+  {
+   "bucket": "O/N",
+   "inflows": 960400000.0,
+   "outflows": 1093800000.0,
+   "net": -133400000.0,
+   "cumulative": -133400000.0
+  },
+  {
+   "bucket": "2D-1W",
+   "inflows": 1169200000.0,
+   "outflows": 1644000000.0,
+   "net": -474800000.0,
+   "cumulative": -608200000.0
+  },
+  {
+   "bucket": "1W-1M",
+   "inflows": 2144200000.0,
+   "outflows": 939000000.0,
+   "net": 1205200000.0,
+   "cumulative": 597000000.0
+  },
+  {
+   "bucket": "1M-3M",
+   "inflows": 736100000.0,
+   "outflows": 1048000000.0,
+   "net": -311900000.0,
+   "cumulative": 285100000.0
+  },
+  {
+   "bucket": "3M-6M",
+   "inflows": 1352400000.0,
+   "outflows": 3169000000.0,
+   "net": -1816600000.0,
+   "cumulative": -1531500000.0
+  },
+  {
+   "bucket": "6M-1Y",
+   "inflows": 1883300000.0,
+   "outflows": 1636600000.0,
+   "net": 246700000.0,
+   "cumulative": -1284800000.0
+  },
+  {
+   "bucket": "1Y-2Y",
+   "inflows": 3954000000.0,
+   "outflows": 3456900000.0,
+   "net": 497100000.0,
+   "cumulative": -787700000.0
+  },
+  {
+   "bucket": ">2Y",
+   "inflows": 1276400000.0,
+   "outflows": 1534100000.0,
+   "net": -257700000.0,
+   "cumulative": -1045400000.0
+  }
+ ],
+ "legalEntity": "LE-LDN",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

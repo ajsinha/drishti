@@ -1,0 +1,65 @@
+{
+ "profileId": "CLIM-RHEINTAL",
+ "counterpartyName": "Rheintal Landesbank",
+ "sector": "Banking",
+ "scope12": 74990,
+ "intensity": 9,
+ "transitionScore": 47,
+ "physicalScore": 30,
+ "netZeroTarget": "2050",
+ "scopes": [
+  {
+   "scope": "Scope 1",
+   "tco2e": 52493
+  },
+  {
+   "scope": "Scope 2",
+   "tco2e": 22497
+  },
+  {
+   "scope": "Scope 3",
+   "tco2e": 502384
+  }
+ ],
+ "history": [
+  {
+   "year": "2019",
+   "tco2e": 92716
+  },
+  {
+   "year": "2020",
+   "tco2e": 92788
+  },
+  {
+   "year": "2021",
+   "tco2e": 88512
+  },
+  {
+   "year": "2022",
+   "tco2e": 87416
+  },
+  {
+   "year": "2023",
+   "tco2e": 82147
+  },
+  {
+   "year": "2024",
+   "tco2e": 76242
+  },
+  {
+   "year": "2025",
+   "tco2e": 77725
+  }
+ ],
+ "targets": {
+  "reduction2030": "30% vs 2019",
+  "disclosure": "None",
+  "revenueUsdM": 8250,
+  "reportingYear": 2025
+ },
+ "counterparty": "CP-RHEINTAL",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

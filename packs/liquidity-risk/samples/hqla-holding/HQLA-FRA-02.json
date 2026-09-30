@@ -1,0 +1,23 @@
+{
+ "holdingId": "HQLA-FRA-02",
+ "security": "United States Treasury 3.820% 2031",
+ "level": "Level 1",
+ "marketValue": 1434000000.0,
+ "haircut": 0.0,
+ "liquidityValue": 0,
+ "encumbered": "Yes (pledged)",
+ "bond": "BND-US0UST030079",
+ "legalEntity": "LE-FRA",
+ "details": {
+  "isin": "US0UST030079",
+  "currency": "USD",
+  "price": 100.0,
+  "custodian": "Clearstream",
+  "operationalRequirements": "Met",
+  "centralBankEligible": true
+ },
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

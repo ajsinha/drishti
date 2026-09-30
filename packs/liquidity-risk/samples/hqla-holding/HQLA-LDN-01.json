@@ -1,0 +1,23 @@
+{
+ "holdingId": "HQLA-LDN-01",
+ "security": "Federal Republic of Germany 3.800% 2031",
+ "level": "Level 1",
+ "marketValue": 1185200000.0,
+ "haircut": 0.0,
+ "liquidityValue": 1185200000,
+ "encumbered": "No",
+ "bond": "BND-DEBUND064772",
+ "legalEntity": "LE-LDN",
+ "details": {
+  "isin": "DEBUND064772",
+  "currency": "EUR",
+  "price": 107.656,
+  "custodian": "Euroclear",
+  "operationalRequirements": "Met",
+  "centralBankEligible": true
+ },
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

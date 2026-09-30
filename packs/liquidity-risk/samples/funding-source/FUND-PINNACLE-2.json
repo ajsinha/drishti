@@ -1,0 +1,21 @@
+{
+ "fundingId": "FUND-PINNACLE-2",
+ "counterpartyName": "Pinnacle Credit Partners",
+ "type": "Operational deposit",
+ "amount": 438800000.0,
+ "currency": "GBP",
+ "maturity": "2026-12-19",
+ "runOffRate": 0.25,
+ "terms": {
+  "rate": 0.0385,
+  "startDate": "2026-09-24",
+  "collateral": "Unsecured",
+  "withdrawable": true
+ },
+ "counterparty": "CP-PINNACLE",
+ "legalEntity": "LE-LDN",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

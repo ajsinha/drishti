@@ -1,0 +1,221 @@
+{
+ "lcrId": "LCR-NY",
+ "legalEntityName": "Drishti Bank Securities Inc.",
+ "lcr": 2.8924,
+ "hqla": 18075825000,
+ "netOutflows": 6249450000,
+ "minimum": 1.0,
+ "buffer": 11826375000,
+ "asOf": "2026-09-30",
+ "hqlaByLevel": [
+  {
+   "level": "Level 1",
+   "value": 12322200000
+  },
+  {
+   "level": "Level 1 (central bank reserves)",
+   "value": 4080000000.0
+  },
+  {
+   "level": "Level 2A",
+   "value": 873375000
+  },
+  {
+   "level": "Level 2B",
+   "value": 800250000
+  }
+ ],
+ "flows": [
+  {
+   "category": "Retail deposits, stable",
+   "balance": 21988000000.0,
+   "rate": 0.05,
+   "flow": -1099400000
+  },
+  {
+   "category": "Retail deposits, less stable",
+   "balance": 9749000000.0,
+   "rate": 0.1,
+   "flow": -974900000
+  },
+  {
+   "category": "Operational deposits",
+   "balance": 12605000000.0,
+   "rate": 0.25,
+   "flow": -3151250000
+  },
+  {
+   "category": "Non-operational wholesale",
+   "balance": 9759000000.0,
+   "rate": 0.4,
+   "flow": -3903600000
+  },
+  {
+   "category": "Secured funding (non-level-1 collateral)",
+   "balance": 6006000000.0,
+   "rate": 0.25,
+   "flow": -1501500000
+  },
+  {
+   "category": "Derivative outflows",
+   "balance": 1689000000.0,
+   "rate": 1.0,
+   "flow": -1689000000
+  },
+  {
+   "category": "Committed credit facilities",
+   "balance": 5393000000.0,
+   "rate": 0.1,
+   "flow": -539300000
+  },
+  {
+   "category": "Performing loans maturing",
+   "balance": 5821000000.0,
+   "rate": 0.5,
+   "flow": 2910500000
+  },
+  {
+   "category": "Reverse repo (non-level-1)",
+   "balance": 4668000000.0,
+   "rate": 0.5,
+   "flow": 2334000000
+  },
+  {
+   "category": "Derivative inflows",
+   "balance": 1365000000.0,
+   "rate": 1.0,
+   "flow": 1365000000
+  }
+ ],
+ "trend": [
+  {
+   "date": "2026-08-20",
+   "lcr": 2.7246
+  },
+  {
+   "date": "2026-08-21",
+   "lcr": 2.7588
+  },
+  {
+   "date": "2026-08-24",
+   "lcr": 2.7899
+  },
+  {
+   "date": "2026-08-25",
+   "lcr": 2.815
+  },
+  {
+   "date": "2026-08-26",
+   "lcr": 2.8321
+  },
+  {
+   "date": "2026-08-27",
+   "lcr": 2.8399
+  },
+  {
+   "date": "2026-08-28",
+   "lcr": 2.8382
+  },
+  {
+   "date": "2026-08-31",
+   "lcr": 2.8279
+  },
+  {
+   "date": "2026-09-01",
+   "lcr": 2.8106
+  },
+  {
+   "date": "2026-09-02",
+   "lcr": 2.7889
+  },
+  {
+   "date": "2026-09-03",
+   "lcr": 2.7659
+  },
+  {
+   "date": "2026-09-04",
+   "lcr": 2.7448
+  },
+  {
+   "date": "2026-09-07",
+   "lcr": 2.7284
+  },
+  {
+   "date": "2026-09-08",
+   "lcr": 2.7192
+  },
+  {
+   "date": "2026-09-09",
+   "lcr": 2.7189
+  },
+  {
+   "date": "2026-09-10",
+   "lcr": 2.7282
+  },
+  {
+   "date": "2026-09-11",
+   "lcr": 2.7466
+  },
+  {
+   "date": "2026-09-14",
+   "lcr": 2.7728
+  },
+  {
+   "date": "2026-09-15",
+   "lcr": 2.8045
+  },
+  {
+   "date": "2026-09-16",
+   "lcr": 2.8389
+  },
+  {
+   "date": "2026-09-17",
+   "lcr": 2.8728
+  },
+  {
+   "date": "2026-09-18",
+   "lcr": 2.9031
+  },
+  {
+   "date": "2026-09-21",
+   "lcr": 2.9272
+  },
+  {
+   "date": "2026-09-22",
+   "lcr": 2.9429
+  },
+  {
+   "date": "2026-09-23",
+   "lcr": 2.9493
+  },
+  {
+   "date": "2026-09-24",
+   "lcr": 2.9462
+  },
+  {
+   "date": "2026-09-25",
+   "lcr": 2.9347
+  },
+  {
+   "date": "2026-09-28",
+   "lcr": 2.9166
+  },
+  {
+   "date": "2026-09-29",
+   "lcr": 2.8945
+  },
+  {
+   "date": "2026-09-30",
+   "lcr": 2.8924
+  }
+ ],
+ "legalEntity": "LE-NY",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "lcr": 0.004
+  }
+ }
+}

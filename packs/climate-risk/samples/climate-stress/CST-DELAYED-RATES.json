@@ -1,0 +1,50 @@
+{
+ "resultId": "CST-DELAYED-RATES",
+ "scenarioName": "Delayed transition",
+ "deskName": "Rates · Swaps and options",
+ "loss2030": -17426728,
+ "loss2050": -20912074,
+ "capitalShare": 0.00436,
+ "bySector": [
+  {
+   "sector": "Utilities",
+   "loss": -5069782
+  },
+  {
+   "sector": "Airlines",
+   "loss": -2175245
+  },
+  {
+   "sector": "Shipping",
+   "loss": -3346554
+  },
+  {
+   "sector": "Materials",
+   "loss": -4439124
+  },
+  {
+   "sector": "Autos",
+   "loss": -2396023
+  }
+ ],
+ "byHorizon": [
+  {
+   "year": "2030",
+   "loss": 17426728
+  },
+  {
+   "year": "2040",
+   "loss": 19169401
+  },
+  {
+   "year": "2050",
+   "loss": 20912074
+  }
+ ],
+ "scenario": "NGFS-DELAYED",
+ "desk": "DESK-RATES",
+ "_meta": {
+  "source": "climate-stress",
+  "generation": 1
+ }
+}

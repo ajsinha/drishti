@@ -1,0 +1,23 @@
+{
+ "holdingId": "HQLA-LDN-02",
+ "security": "United States Treasury 3.820% 2031",
+ "level": "Level 1",
+ "marketValue": 1268200000.0,
+ "haircut": 0.0,
+ "liquidityValue": 1268200000,
+ "encumbered": "No",
+ "bond": "BND-US0UST030079",
+ "legalEntity": "LE-LDN",
+ "details": {
+  "isin": "US0UST030079",
+  "currency": "USD",
+  "price": 100.0,
+  "custodian": "Euroclear",
+  "operationalRequirements": "Met",
+  "centralBankEligible": true
+ },
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

@@ -1,0 +1,397 @@
+{
+ "resultId": "LST-COMB-TKY",
+ "scenarioName": "Combined idiosyncratic and market-wide",
+ "legalEntityName": "Drishti Securities Japan K.K.",
+ "survivalDays": 90,
+ "minimumPosition": 193810977,
+ "appetiteDays": 60,
+ "path": [
+  {
+   "day": 0,
+   "position": 4600356810
+  },
+  {
+   "day": 1,
+   "position": 4413850003
+  },
+  {
+   "day": 2,
+   "position": 4256990911
+  },
+  {
+   "day": 3,
+   "position": 4065543353
+  },
+  {
+   "day": 4,
+   "position": 3920213643
+  },
+  {
+   "day": 5,
+   "position": 3788906450
+  },
+  {
+   "day": 6,
+   "position": 3647566887
+  },
+  {
+   "day": 7,
+   "position": 3515717004
+  },
+  {
+   "day": 8,
+   "position": 3366735146
+  },
+  {
+   "day": 9,
+   "position": 3250891704
+  },
+  {
+   "day": 10,
+   "position": 3123912597
+  },
+  {
+   "day": 11,
+   "position": 2981999045
+  },
+  {
+   "day": 12,
+   "position": 2856033297
+  },
+  {
+   "day": 13,
+   "position": 2732871873
+  },
+  {
+   "day": 14,
+   "position": 2642137682
+  },
+  {
+   "day": 15,
+   "position": 2544179831
+  },
+  {
+   "day": 16,
+   "position": 2434519446
+  },
+  {
+   "day": 17,
+   "position": 2351858006
+  },
+  {
+   "day": 18,
+   "position": 2261909074
+  },
+  {
+   "day": 19,
+   "position": 2175160050
+  },
+  {
+   "day": 20,
+   "position": 2098452730
+  },
+  {
+   "day": 21,
+   "position": 2026628117
+  },
+  {
+   "day": 22,
+   "position": 1948281985
+  },
+  {
+   "day": 23,
+   "position": 1887285527
+  },
+  {
+   "day": 24,
+   "position": 1803707885
+  },
+  {
+   "day": 25,
+   "position": 1740313064
+  },
+  {
+   "day": 26,
+   "position": 1662754241
+  },
+  {
+   "day": 27,
+   "position": 1590569735
+  },
+  {
+   "day": 28,
+   "position": 1540617806
+  },
+  {
+   "day": 29,
+   "position": 1491227397
+  },
+  {
+   "day": 30,
+   "position": 1435132970
+  },
+  {
+   "day": 31,
+   "position": 1388923971
+  },
+  {
+   "day": 32,
+   "position": 1340765300
+  },
+  {
+   "day": 33,
+   "position": 1297465890
+  },
+  {
+   "day": 34,
+   "position": 1258087044
+  },
+  {
+   "day": 35,
+   "position": 1211519442
+  },
+  {
+   "day": 36,
+   "position": 1159715088
+  },
+  {
+   "day": 37,
+   "position": 1121057084
+  },
+  {
+   "day": 38,
+   "position": 1078722051
+  },
+  {
+   "day": 39,
+   "position": 1038952440
+  },
+  {
+   "day": 40,
+   "position": 998899601
+  },
+  {
+   "day": 41,
+   "position": 964105771
+  },
+  {
+   "day": 42,
+   "position": 929509892
+  },
+  {
+   "day": 43,
+   "position": 891711963
+  },
+  {
+   "day": 44,
+   "position": 859352089
+  },
+  {
+   "day": 45,
+   "position": 828483630
+  },
+  {
+   "day": 46,
+   "position": 802445566
+  },
+  {
+   "day": 47,
+   "position": 777438894
+  },
+  {
+   "day": 48,
+   "position": 751007804
+  },
+  {
+   "day": 49,
+   "position": 719656828
+  },
+  {
+   "day": 50,
+   "position": 698803453
+  },
+  {
+   "day": 51,
+   "position": 675801962
+  },
+  {
+   "day": 52,
+   "position": 653008981
+  },
+  {
+   "day": 53,
+   "position": 628104025
+  },
+  {
+   "day": 54,
+   "position": 607908020
+  },
+  {
+   "day": 55,
+   "position": 586400236
+  },
+  {
+   "day": 56,
+   "position": 568957978
+  },
+  {
+   "day": 57,
+   "position": 548026038
+  },
+  {
+   "day": 58,
+   "position": 529300250
+  },
+  {
+   "day": 59,
+   "position": 514975392
+  },
+  {
+   "day": 60,
+   "position": 496654337
+  },
+  {
+   "day": 61,
+   "position": 478210140
+  },
+  {
+   "day": 62,
+   "position": 460464085
+  },
+  {
+   "day": 63,
+   "position": 444381219
+  },
+  {
+   "day": 64,
+   "position": 429471074
+  },
+  {
+   "day": 65,
+   "position": 413144796
+  },
+  {
+   "day": 66,
+   "position": 397564732
+  },
+  {
+   "day": 67,
+   "position": 382969196
+  },
+  {
+   "day": 68,
+   "position": 369241985
+  },
+  {
+   "day": 69,
+   "position": 357524860
+  },
+  {
+   "day": 70,
+   "position": 347763357
+  },
+  {
+   "day": 71,
+   "position": 335686441
+  },
+  {
+   "day": 72,
+   "position": 326689371
+  },
+  {
+   "day": 73,
+   "position": 314861593
+  },
+  {
+   "day": 74,
+   "position": 303526524
+  },
+  {
+   "day": 75,
+   "position": 295083303
+  },
+  {
+   "day": 76,
+   "position": 287069359
+  },
+  {
+   "day": 77,
+   "position": 279809842
+  },
+  {
+   "day": 78,
+   "position": 272139981
+  },
+  {
+   "day": 79,
+   "position": 262827433
+  },
+  {
+   "day": 80,
+   "position": 255076028
+  },
+  {
+   "day": 81,
+   "position": 248758637
+  },
+  {
+   "day": 82,
+   "position": 240703788
+  },
+  {
+   "day": 83,
+   "position": 235153854
+  },
+  {
+   "day": 84,
+   "position": 228718673
+  },
+  {
+   "day": 85,
+   "position": 223447574
+  },
+  {
+   "day": 86,
+   "position": 216393853
+  },
+  {
+   "day": 87,
+   "position": 211052089
+  },
+  {
+   "day": 88,
+   "position": 205974789
+  },
+  {
+   "day": 89,
+   "position": 199627108
+  },
+  {
+   "day": 90,
+   "position": 193810977
+  }
+ ],
+ "drivers": [
+  {
+   "driver": "Wholesale run-off",
+   "outflow": 2075658310
+  },
+  {
+   "driver": "Retail run-off",
+   "outflow": 922514805
+  },
+  {
+   "driver": "Collateral calls (downgrade)",
+   "outflow": 922514805
+  },
+  {
+   "driver": "Committed facility draws",
+   "outflow": 691886103
+  }
+ ],
+ "legalEntity": "LE-TKY",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

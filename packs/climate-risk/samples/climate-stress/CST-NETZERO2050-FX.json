@@ -1,0 +1,50 @@
+{
+ "resultId": "CST-NETZERO2050-FX",
+ "scenarioName": "Net Zero 2050",
+ "deskName": "G10 and EM FX",
+ "loss2030": -6268770,
+ "loss2050": -7522524,
+ "capitalShare": 0.00157,
+ "bySector": [
+  {
+   "sector": "Utilities",
+   "loss": -1138741
+  },
+  {
+   "sector": "Airlines",
+   "loss": -2123330
+  },
+  {
+   "sector": "Shipping",
+   "loss": -1418840
+  },
+  {
+   "sector": "Materials",
+   "loss": -1149004
+  },
+  {
+   "sector": "Autos",
+   "loss": -438855
+  }
+ ],
+ "byHorizon": [
+  {
+   "year": "2030",
+   "loss": 6268770
+  },
+  {
+   "year": "2040",
+   "loss": 6895647
+  },
+  {
+   "year": "2050",
+   "loss": 7522524
+  }
+ ],
+ "scenario": "NGFS-NETZERO2050",
+ "desk": "DESK-FX",
+ "_meta": {
+  "source": "climate-stress",
+  "generation": 1
+ }
+}

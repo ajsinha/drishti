@@ -1,0 +1,50 @@
+{
+ "resultId": "CST-DELAYED-SFT",
+ "scenarioName": "Delayed transition",
+ "deskName": "Repo and securities lending",
+ "loss2030": -14252085,
+ "loss2050": -17102502,
+ "capitalShare": 0.00356,
+ "bySector": [
+  {
+   "sector": "Utilities",
+   "loss": -3302922
+  },
+  {
+   "sector": "Airlines",
+   "loss": -4078407
+  },
+  {
+   "sector": "Shipping",
+   "loss": -2952388
+  },
+  {
+   "sector": "Materials",
+   "loss": -1154599
+  },
+  {
+   "sector": "Autos",
+   "loss": -2763769
+  }
+ ],
+ "byHorizon": [
+  {
+   "year": "2030",
+   "loss": 14252085
+  },
+  {
+   "year": "2040",
+   "loss": 15677294
+  },
+  {
+   "year": "2050",
+   "loss": 17102502
+  }
+ ],
+ "scenario": "NGFS-DELAYED",
+ "desk": "DESK-SFT",
+ "_meta": {
+  "source": "climate-stress",
+  "generation": 1
+ }
+}

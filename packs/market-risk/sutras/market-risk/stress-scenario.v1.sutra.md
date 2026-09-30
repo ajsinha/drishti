@@ -42,7 +42,6 @@ panels:
       - { label: Risk factor, bind: "@.factor" }
       - { label: Shock, bind: "@.shock" }
   - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
 keys: { F8: impact, F9: raw }
 ```
 

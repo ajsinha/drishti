@@ -1,0 +1,50 @@
+{
+ "resultId": "CST-DELAYED-FI",
+ "scenarioName": "Delayed transition",
+ "deskName": "Bonds and securitised",
+ "loss2030": -11796367,
+ "loss2050": -14155640,
+ "capitalShare": 0.00295,
+ "bySector": [
+  {
+   "sector": "Utilities",
+   "loss": -3363035
+  },
+  {
+   "sector": "Airlines",
+   "loss": -2274820
+  },
+  {
+   "sector": "Shipping",
+   "loss": -1605861
+  },
+  {
+   "sector": "Materials",
+   "loss": -2896109
+  },
+  {
+   "sector": "Autos",
+   "loss": -1656542
+  }
+ ],
+ "byHorizon": [
+  {
+   "year": "2030",
+   "loss": 11796367
+  },
+  {
+   "year": "2040",
+   "loss": 12976004
+  },
+  {
+   "year": "2050",
+   "loss": 14155640
+  }
+ ],
+ "scenario": "NGFS-DELAYED",
+ "desk": "DESK-FI",
+ "_meta": {
+  "source": "climate-stress",
+  "generation": 1
+ }
+}

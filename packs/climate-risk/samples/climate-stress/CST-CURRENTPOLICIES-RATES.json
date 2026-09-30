@@ -1,0 +1,50 @@
+{
+ "resultId": "CST-CURRENTPOLICIES-RATES",
+ "scenarioName": "Current policies",
+ "deskName": "Rates · Swaps and options",
+ "loss2030": -11302243,
+ "loss2050": -18083589,
+ "capitalShare": 0.00283,
+ "bySector": [
+  {
+   "sector": "Utilities",
+   "loss": -2773980
+  },
+  {
+   "sector": "Airlines",
+   "loss": -2974348
+  },
+  {
+   "sector": "Shipping",
+   "loss": -1979010
+  },
+  {
+   "sector": "Materials",
+   "loss": -2556302
+  },
+  {
+   "sector": "Autos",
+   "loss": -1018603
+  }
+ ],
+ "byHorizon": [
+  {
+   "year": "2030",
+   "loss": 11302243
+  },
+  {
+   "year": "2040",
+   "loss": 14692916
+  },
+  {
+   "year": "2050",
+   "loss": 18083589
+  }
+ ],
+ "scenario": "NGFS-CURRENTPOLICIES",
+ "desk": "DESK-RATES",
+ "_meta": {
+  "source": "climate-stress",
+  "generation": 1
+ }
+}

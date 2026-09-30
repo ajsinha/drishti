@@ -1,0 +1,101 @@
+{
+ "resultId": "FE-STRUCT-3",
+ "book": "BOOK-STRUCT-3",
+ "financed": 12406,
+ "exposure": 56600000,
+ "intensity": 219,
+ "dataQuality": 2.76,
+ "byCounterparty": [
+  {
+   "counterparty": "Solaris Energy Corp.",
+   "exposure": 16700000,
+   "attribution": 0.001085,
+   "financed": 8527,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Lumen Semiconductor AG",
+   "exposure": 7700000,
+   "attribution": 9.7e-05,
+   "financed": 47,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Halcyon Shipping plc",
+   "exposure": 7250000,
+   "attribution": 0.000267,
+   "financed": 3558,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Aldershot Pension Trust",
+   "exposure": 6950000,
+   "attribution": 0.000117,
+   "financed": 6,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Pinnacle Credit Partners",
+   "exposure": 6750000,
+   "attribution": 0.000241,
+   "financed": 15,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Coral Bay Municipal Authority",
+   "exposure": 6700000,
+   "attribution": 0.000162,
+   "financed": 238,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Rheintal Landesbank",
+   "exposure": 3200000,
+   "attribution": 0.000179,
+   "financed": 13,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Bramble Asset Management",
+   "exposure": 1350000,
+   "attribution": 2.9e-05,
+   "financed": 2,
+   "dataQuality": 2
+  }
+ ],
+ "bySector": [
+  {
+   "sector": "Utilities",
+   "financed": 8527
+  },
+  {
+   "sector": "Shipping",
+   "financed": 3558
+  },
+  {
+   "sector": "Government",
+   "financed": 238
+  },
+  {
+   "sector": "Technology",
+   "financed": 47
+  },
+  {
+   "sector": "Asset management",
+   "financed": 17
+  },
+  {
+   "sector": "Banking",
+   "financed": 13
+  },
+  {
+   "sector": "Pensions",
+   "financed": 6
+  }
+ ],
+ "methodology": "PCAF Global GHG Standard, attribution = exposure / EVIC",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

@@ -1,0 +1,50 @@
+{
+ "resultId": "CST-NETZERO2050-INFL",
+ "scenarioName": "Net Zero 2050",
+ "deskName": "Inflation",
+ "loss2030": -5029346,
+ "loss2050": -6035215,
+ "capitalShare": 0.00126,
+ "bySector": [
+  {
+   "sector": "Utilities",
+   "loss": -914205
+  },
+  {
+   "sector": "Airlines",
+   "loss": -944776
+  },
+  {
+   "sector": "Shipping",
+   "loss": -786449
+  },
+  {
+   "sector": "Materials",
+   "loss": -893718
+  },
+  {
+   "sector": "Autos",
+   "loss": -1490198
+  }
+ ],
+ "byHorizon": [
+  {
+   "year": "2030",
+   "loss": 5029346
+  },
+  {
+   "year": "2040",
+   "loss": 5532280
+  },
+  {
+   "year": "2050",
+   "loss": 6035215
+  }
+ ],
+ "scenario": "NGFS-NETZERO2050",
+ "desk": "DESK-INFL",
+ "_meta": {
+  "source": "climate-stress",
+  "generation": 1
+ }
+}

@@ -1,0 +1,46 @@
+{
+ "assetId": "PHY-002",
+ "name": "Houston refinery",
+ "counterpartyName": "Harbor Point Bank",
+ "country": "US",
+ "value": 1420200000.0,
+ "worstHazard": "Drought (88)",
+ "insured": 0.32,
+ "hazards": [
+  {
+   "hazard": "River flood",
+   "score": 26
+  },
+  {
+   "hazard": "Coastal flood",
+   "score": 50
+  },
+  {
+   "hazard": "Extreme heat",
+   "score": 73
+  },
+  {
+   "hazard": "Tropical storm",
+   "score": 85
+  },
+  {
+   "hazard": "Wildfire",
+   "score": 13
+  },
+  {
+   "hazard": "Drought",
+   "score": 88
+  }
+ ],
+ "location": {
+  "latitude": 29.72,
+  "longitude": -95.2,
+  "elevationM": 278,
+  "distanceToCoastKm": 241.6
+ },
+ "counterparty": "CP-HARBORPT",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

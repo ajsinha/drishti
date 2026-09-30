@@ -1,0 +1,108 @@
+{
+ "resultId": "FE-MM-1",
+ "book": "BOOK-MM-1",
+ "financed": 3284,
+ "exposure": 103100000,
+ "intensity": 32,
+ "dataQuality": 2.7,
+ "byCounterparty": [
+  {
+   "counterparty": "Summit Clearing LLC",
+   "exposure": 21950000,
+   "attribution": 0.000549,
+   "financed": 31,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Coral Bay Municipal Authority",
+   "exposure": 21900000,
+   "attribution": 0.000286,
+   "financed": 420,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Rheintal Landesbank",
+   "exposure": 17400000,
+   "attribution": 0.000945,
+   "financed": 71,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Harbor Point Bank",
+   "exposure": 14750000,
+   "attribution": 0.000493,
+   "financed": 45,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Aurora Sovereign Wealth Fund",
+   "exposure": 11450000,
+   "attribution": 0.003576,
+   "financed": 209,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Pinnacle Credit Partners",
+   "exposure": 5600000,
+   "attribution": 0.000128,
+   "financed": 8,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Halcyon Shipping plc",
+   "exposure": 4850000,
+   "attribution": 0.000166,
+   "financed": 2216,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Aldershot Pension Trust",
+   "exposure": 4600000,
+   "attribution": 9.4e-05,
+   "financed": 4,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Solaris Energy Corp.",
+   "exposure": 600000,
+   "attribution": 3.6e-05,
+   "financed": 280,
+   "dataQuality": 3
+  }
+ ],
+ "bySector": [
+  {
+   "sector": "Shipping",
+   "financed": 2216
+  },
+  {
+   "sector": "Government",
+   "financed": 629
+  },
+  {
+   "sector": "Utilities",
+   "financed": 280
+  },
+  {
+   "sector": "Banking",
+   "financed": 116
+  },
+  {
+   "sector": "Financial services",
+   "financed": 31
+  },
+  {
+   "sector": "Asset management",
+   "financed": 8
+  },
+  {
+   "sector": "Pensions",
+   "financed": 4
+  }
+ ],
+ "methodology": "PCAF Global GHG Standard, attribution = exposure / EVIC",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

@@ -1,0 +1,38 @@
+{
+ "reportId": "GAR-TKY",
+ "legalEntityName": "Drishti Securities Japan K.K.",
+ "gar": 0.1366,
+ "eligible": 0.46,
+ "covered": 34516000000.0,
+ "objectives": [
+  {
+   "objective": "Climate change mitigation",
+   "aligned": 876083098
+  },
+  {
+   "objective": "Climate change adaptation",
+   "aligned": 1211579735
+  },
+  {
+   "objective": "Water and marine",
+   "aligned": 483367187
+  },
+  {
+   "objective": "Circular economy",
+   "aligned": 1087637869
+  },
+  {
+   "objective": "Pollution prevention",
+   "aligned": 412567937
+  },
+  {
+   "objective": "Biodiversity",
+   "aligned": 642932907
+  }
+ ],
+ "legalEntity": "LE-TKY",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

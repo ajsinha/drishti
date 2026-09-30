@@ -1,0 +1,50 @@
+{
+ "resultId": "CST-NETZERO2050-CREDIT",
+ "scenarioName": "Net Zero 2050",
+ "deskName": "Credit trading",
+ "loss2030": -6286152,
+ "loss2050": -7543382,
+ "capitalShare": 0.00157,
+ "bySector": [
+  {
+   "sector": "Utilities",
+   "loss": -1005621
+  },
+  {
+   "sector": "Airlines",
+   "loss": -1956022
+  },
+  {
+   "sector": "Shipping",
+   "loss": -1400111
+  },
+  {
+   "sector": "Materials",
+   "loss": -779741
+  },
+  {
+   "sector": "Autos",
+   "loss": -1144657
+  }
+ ],
+ "byHorizon": [
+  {
+   "year": "2030",
+   "loss": 6286152
+  },
+  {
+   "year": "2040",
+   "loss": 6914767
+  },
+  {
+   "year": "2050",
+   "loss": 7543382
+  }
+ ],
+ "scenario": "NGFS-NETZERO2050",
+ "desk": "DESK-CREDIT",
+ "_meta": {
+  "source": "climate-stress",
+  "generation": 1
+ }
+}

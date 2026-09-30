@@ -1,0 +1,23 @@
+{
+ "holdingId": "HQLA-LDN-07",
+ "security": "Cascadia Airlines Inc. 6.020% 2036",
+ "level": "Level 2B",
+ "marketValue": 586000000.0,
+ "haircut": 0.5,
+ "liquidityValue": 293000000,
+ "encumbered": "No",
+ "bond": "BND-CACASC169344",
+ "legalEntity": "LE-LDN",
+ "details": {
+  "isin": "CACASC169344",
+  "currency": "CAD",
+  "price": 101.044,
+  "custodian": "Euroclear",
+  "operationalRequirements": "Met",
+  "centralBankEligible": false
+ },
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

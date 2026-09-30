@@ -1,0 +1,50 @@
+{
+ "resultId": "CST-CURRENTPOLICIES-EQD",
+ "scenarioName": "Current policies",
+ "deskName": "Equity derivatives",
+ "loss2030": -7404971,
+ "loss2050": -11847954,
+ "capitalShare": 0.00185,
+ "bySector": [
+  {
+   "sector": "Utilities",
+   "loss": -2103284
+  },
+  {
+   "sector": "Airlines",
+   "loss": -1051223
+  },
+  {
+   "sector": "Shipping",
+   "loss": -2085862
+  },
+  {
+   "sector": "Materials",
+   "loss": -759780
+  },
+  {
+   "sector": "Autos",
+   "loss": -1404822
+  }
+ ],
+ "byHorizon": [
+  {
+   "year": "2030",
+   "loss": 7404971
+  },
+  {
+   "year": "2040",
+   "loss": 9626462
+  },
+  {
+   "year": "2050",
+   "loss": 11847954
+  }
+ ],
+ "scenario": "NGFS-CURRENTPOLICIES",
+ "desk": "DESK-EQD",
+ "_meta": {
+  "source": "climate-stress",
+  "generation": 1
+ }
+}

@@ -1,0 +1,70 @@
+{
+ "ladderId": "MLAD-TKY-JPY",
+ "legalEntityName": "Drishti Securities Japan K.K.",
+ "currency": "JPY",
+ "gap1m": -1002700000.0,
+ "survivalDays": 730,
+ "buckets": [
+  {
+   "bucket": "O/N",
+   "inflows": 559000000.0,
+   "outflows": 438100000.0,
+   "net": 120900000.0,
+   "cumulative": 120900000.0
+  },
+  {
+   "bucket": "2D-1W",
+   "inflows": 212100000.0,
+   "outflows": 686500000.0,
+   "net": -474400000.0,
+   "cumulative": -353500000.0
+  },
+  {
+   "bucket": "1W-1M",
+   "inflows": 312800000.0,
+   "outflows": 962000000.0,
+   "net": -649200000.0,
+   "cumulative": -1002700000.0
+  },
+  {
+   "bucket": "1M-3M",
+   "inflows": 655200000.0,
+   "outflows": 371300000.0,
+   "net": 283900000.0,
+   "cumulative": -718800000.0
+  },
+  {
+   "bucket": "3M-6M",
+   "inflows": 753700000.0,
+   "outflows": 1257900000.0,
+   "net": -504200000.0,
+   "cumulative": -1223000000.0
+  },
+  {
+   "bucket": "6M-1Y",
+   "inflows": 560200000.0,
+   "outflows": 1141100000.0,
+   "net": -580900000.0,
+   "cumulative": -1803900000.0
+  },
+  {
+   "bucket": "1Y-2Y",
+   "inflows": 406600000.0,
+   "outflows": 1161000000.0,
+   "net": -754400000.0,
+   "cumulative": -2558300000.0
+  },
+  {
+   "bucket": ">2Y",
+   "inflows": 975700000.0,
+   "outflows": 1396000000.0,
+   "net": -420300000.0,
+   "cumulative": -2978600000.0
+  }
+ ],
+ "legalEntity": "LE-TKY",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

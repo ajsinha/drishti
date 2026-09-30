@@ -1,0 +1,137 @@
+{
+ "resultId": "FE-FX-1",
+ "book": "BOOK-FX-1",
+ "financed": 16346,
+ "exposure": 102000000,
+ "intensity": 160,
+ "dataQuality": 3.44,
+ "byCounterparty": [
+  {
+   "counterparty": "Solaris Energy Corp.",
+   "exposure": 25250000,
+   "attribution": 0.001841,
+   "financed": 14474,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Bramble Asset Management",
+   "exposure": 19900000,
+   "attribution": 0.000482,
+   "financed": 31,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Kestrel Global Macro Fund",
+   "exposure": 15450000,
+   "attribution": 0.000428,
+   "financed": 21,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Aldershot Pension Trust",
+   "exposure": 10850000,
+   "attribution": 0.000157,
+   "financed": 7,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Verdant Agri Holdings",
+   "exposure": 7300000,
+   "attribution": 8.6e-05,
+   "financed": 1054,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Pinnacle Credit Partners",
+   "exposure": 6750000,
+   "attribution": 0.000177,
+   "financed": 11,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Aurora Sovereign Wealth Fund",
+   "exposure": 5850000,
+   "attribution": 0.001698,
+   "financed": 99,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Meridian Life Assurance",
+   "exposure": 4600000,
+   "attribution": 0.002257,
+   "financed": 8,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Meridian Reinsurance Ltd",
+   "exposure": 2700000,
+   "attribution": 0.000125,
+   "financed": 5,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Halcyon Shipping plc",
+   "exposure": 2350000,
+   "attribution": 4.7e-05,
+   "financed": 630,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Lumen Semiconductor AG",
+   "exposure": 800000,
+   "attribution": 1e-05,
+   "financed": 5,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Rheintal Landesbank",
+   "exposure": 200000,
+   "attribution": 8e-06,
+   "financed": 1,
+   "dataQuality": 4
+  }
+ ],
+ "bySector": [
+  {
+   "sector": "Utilities",
+   "financed": 14474
+  },
+  {
+   "sector": "Agriculture",
+   "financed": 1054
+  },
+  {
+   "sector": "Shipping",
+   "financed": 630
+  },
+  {
+   "sector": "Government",
+   "financed": 99
+  },
+  {
+   "sector": "Asset management",
+   "financed": 63
+  },
+  {
+   "sector": "Insurance",
+   "financed": 13
+  },
+  {
+   "sector": "Pensions",
+   "financed": 7
+  },
+  {
+   "sector": "Technology",
+   "financed": 5
+  },
+  {
+   "sector": "Banking",
+   "financed": 1
+  }
+ ],
+ "methodology": "PCAF Global GHG Standard, attribution = exposure / EVIC",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

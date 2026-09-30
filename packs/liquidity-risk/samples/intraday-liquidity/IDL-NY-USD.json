@@ -1,0 +1,110 @@
+{
+ "reportId": "IDL-NY-USD",
+ "legalEntityName": "Drishti Bank Securities Inc.",
+ "currency": "USD",
+ "peakUsage": 3323000000.0,
+ "available": 8981000000.0,
+ "usagePct": 0.37,
+ "usage": [
+  {
+   "time": "07:00",
+   "used": 1014291729
+  },
+  {
+   "time": "08:00",
+   "used": 615265763
+  },
+  {
+   "time": "09:00",
+   "used": 1315725451
+  },
+  {
+   "time": "10:00",
+   "used": 2649515756
+  },
+  {
+   "time": "11:00",
+   "used": 2469880997
+  },
+  {
+   "time": "12:00",
+   "used": 2511343197
+  },
+  {
+   "time": "13:00",
+   "used": 2857681563
+  },
+  {
+   "time": "14:00",
+   "used": 3323000000
+  },
+  {
+   "time": "15:00",
+   "used": 3323000000
+  },
+  {
+   "time": "16:00",
+   "used": 3323000000
+  },
+  {
+   "time": "17:00",
+   "used": 3323000000
+  },
+  {
+   "time": "18:00",
+   "used": 3323000000
+  }
+ ],
+ "largePayments": [
+  {
+   "time": "08:22",
+   "counterparty": "Pinnacle Credit Partners",
+   "amount": 76200000.0
+  },
+  {
+   "time": "09:03",
+   "counterparty": "Tokai Mutual Trust Bank",
+   "amount": 624800000.0
+  },
+  {
+   "time": "09:07",
+   "counterparty": "Tokai Mutual Trust Bank",
+   "amount": 497200000.0
+  },
+  {
+   "time": "13:10",
+   "counterparty": "Harbor Point Bank",
+   "amount": 814100000.0
+  },
+  {
+   "time": "13:13",
+   "counterparty": "Lumen Semiconductor AG",
+   "amount": 372400000.0
+  },
+  {
+   "time": "13:22",
+   "counterparty": "Solaris Energy Corp.",
+   "amount": -50200000.0
+  },
+  {
+   "time": "15:37",
+   "counterparty": "Solaris Energy Corp.",
+   "amount": 127700000.0
+  },
+  {
+   "time": "15:48",
+   "counterparty": "Summit Clearing LLC",
+   "amount": -334100000.0
+  }
+ ],
+ "paymentSystem": "Fedwire",
+ "legalEntity": "LE-NY",
+ "_meta": {
+  "source": "payments-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "peakUsage": 250000
+  }
+ }
+}

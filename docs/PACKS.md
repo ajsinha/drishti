@@ -132,7 +132,18 @@ Five packs cover market risk and counterparty credit risk. They are generated fr
 | `market-risk` | trading | VaR, stress scenarios and results, FRTB sensitivities, P&L explain | `risk` |
 | `counterparty-risk` | trading | netting sets, credit limits, exposure profiles, CVA, SA-CCR, collateral balances, margin calls, SIMM | `credit`, `collateral` |
 
-Enable them with `DRISHTI_PACKS=market-risk,counterparty-risk` (the others come with them). They and
+Enable them with `DRISHTI_PACKS=market-risk,counterparty-risk` (the others come with them).
+
+### More generated packs
+
+Further packs describe themselves with a `PackSpec` (kinds, data domains, examples) and one data function, and
+`tools/packgen/common/packbuild.py` writes the manifest, the Sutras, the samples, the guide and the lake, after
+checking every id, link and Sutra path.
+
+| Pack | Requires | Kinds | Data domain |
+|---|---|---|---|
+| `liquidity-risk` | trading | LCR, NSFR, maturity ladders, HQLA holdings, funding sources, liquidity stress, intraday liquidity | `liquidity` |
+| `climate-risk` | trading | climate profiles, PCAF financed emissions, NGFS scenarios, climate stress, physical-risk assets, green asset ratio | `climate` | They and
 `finance` (the small demo behind the mockups) both define trades and counterparties, so a site runs one
 family or the other.
 

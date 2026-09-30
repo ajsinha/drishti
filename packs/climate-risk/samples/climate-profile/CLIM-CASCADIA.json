@@ -1,0 +1,65 @@
+{
+ "profileId": "CLIM-CASCADIA",
+ "counterpartyName": "Cascadia Airlines Inc.",
+ "sector": "Airlines",
+ "scope12": 931788,
+ "intensity": 1101,
+ "transitionScore": 89,
+ "physicalScore": 45,
+ "netZeroTarget": "None",
+ "scopes": [
+  {
+   "scope": "Scope 1",
+   "tco2e": 652252
+  },
+  {
+   "scope": "Scope 2",
+   "tco2e": 279536
+  },
+  {
+   "scope": "Scope 3",
+   "tco2e": 4725602
+  }
+ ],
+ "history": [
+  {
+   "year": "2019",
+   "tco2e": 1103137
+  },
+  {
+   "year": "2020",
+   "tco2e": 1142829
+  },
+  {
+   "year": "2021",
+   "tco2e": 1093997
+  },
+  {
+   "year": "2022",
+   "tco2e": 1080959
+  },
+  {
+   "year": "2023",
+   "tco2e": 1016089
+  },
+  {
+   "year": "2024",
+   "tco2e": 967527
+  },
+  {
+   "year": "2025",
+   "tco2e": 963409
+  }
+ ],
+ "targets": {
+  "reduction2030": "30% vs 2019",
+  "disclosure": "None",
+  "revenueUsdM": 846,
+  "reportingYear": 2025
+ },
+ "counterparty": "CP-CASCADIA",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

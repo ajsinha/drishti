@@ -1,0 +1,50 @@
+{
+ "resultId": "CST-DELAYED-MM",
+ "scenarioName": "Delayed transition",
+ "deskName": "Money markets",
+ "loss2030": -15839773,
+ "loss2050": -19007728,
+ "capitalShare": 0.00396,
+ "bySector": [
+  {
+   "sector": "Utilities",
+   "loss": -3315936
+  },
+  {
+   "sector": "Airlines",
+   "loss": -2741353
+  },
+  {
+   "sector": "Shipping",
+   "loss": -2836169
+  },
+  {
+   "sector": "Materials",
+   "loss": -3492272
+  },
+  {
+   "sector": "Autos",
+   "loss": -3454043
+  }
+ ],
+ "byHorizon": [
+  {
+   "year": "2030",
+   "loss": 15839773
+  },
+  {
+   "year": "2040",
+   "loss": 17423750
+  },
+  {
+   "year": "2050",
+   "loss": 19007728
+  }
+ ],
+ "scenario": "NGFS-DELAYED",
+ "desk": "DESK-MM",
+ "_meta": {
+  "source": "climate-stress",
+  "generation": 1
+ }
+}

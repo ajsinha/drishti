@@ -1,0 +1,23 @@
+{
+ "holdingId": "HQLA-FRA-05",
+ "security": "United States Treasury 4.320% 2036",
+ "level": "Level 1",
+ "marketValue": 1056200000.0,
+ "haircut": 0.0,
+ "liquidityValue": 1056200000,
+ "encumbered": "No",
+ "bond": "BND-US0UST151040",
+ "legalEntity": "LE-FRA",
+ "details": {
+  "isin": "US0UST151040",
+  "currency": "USD",
+  "price": 102.61,
+  "custodian": "Euroclear",
+  "operationalRequirements": "Met",
+  "centralBankEligible": true
+ },
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

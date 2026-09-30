@@ -1,0 +1,89 @@
+{
+ "nsfrId": "NSFR-TKY",
+ "legalEntityName": "Drishti Securities Japan K.K.",
+ "nsfr": 2.6261,
+ "asfTotal": 22650000000,
+ "rsfTotal": 8625000000,
+ "minimum": 1.0,
+ "asf": [
+  {
+   "category": "Regulatory capital",
+   "amount": 5400000000,
+   "factor": 1.0,
+   "weighted": 5400000000
+  },
+  {
+   "category": "Retail deposits, stable",
+   "amount": 6600000000,
+   "factor": 0.95,
+   "weighted": 6270000000
+  },
+  {
+   "category": "Retail deposits, less stable",
+   "amount": 2700000000,
+   "factor": 0.9,
+   "weighted": 2430000000
+  },
+  {
+   "category": "Wholesale funding > 1 year",
+   "amount": 4800000000,
+   "factor": 1.0,
+   "weighted": 4800000000
+  },
+  {
+   "category": "Operational deposits",
+   "amount": 4200000000,
+   "factor": 0.5,
+   "weighted": 2100000000
+  },
+  {
+   "category": "Wholesale funding < 1 year",
+   "amount": 3300000000,
+   "factor": 0.5,
+   "weighted": 1650000000
+  }
+ ],
+ "rsf": [
+  {
+   "category": "Level 1 assets",
+   "amount": 3600000000,
+   "factor": 0.0,
+   "weighted": 0
+  },
+  {
+   "category": "Level 2A assets",
+   "amount": 900000000,
+   "factor": 0.15,
+   "weighted": 135000000
+  },
+  {
+   "category": "Loans to non-financials > 1 year",
+   "amount": 9000000000,
+   "factor": 0.65,
+   "weighted": 5850000000
+  },
+  {
+   "category": "Loans to financials < 6 months",
+   "amount": 2400000000,
+   "factor": 0.1,
+   "weighted": 240000000
+  },
+  {
+   "category": "Derivative assets net",
+   "amount": 600000000,
+   "factor": 1.0,
+   "weighted": 600000000
+  },
+  {
+   "category": "Other assets",
+   "amount": 1800000000,
+   "factor": 1.0,
+   "weighted": 1800000000
+  }
+ ],
+ "legalEntity": "LE-TKY",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

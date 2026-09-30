@@ -1,0 +1,68 @@
+{
+ "resultId": "FE-FI-1",
+ "book": "BOOK-FI-1",
+ "financed": 545,
+ "exposure": 192000000,
+ "intensity": 3,
+ "dataQuality": 2.16,
+ "byCounterparty": [
+  {
+   "counterparty": "Summit Clearing LLC",
+   "exposure": 164200000,
+   "attribution": 0.004411,
+   "financed": 250,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Meridian Reinsurance Ltd",
+   "exposure": 10700000,
+   "attribution": 0.000413,
+   "financed": 17,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Rheintal Landesbank",
+   "exposure": 9100000,
+   "attribution": 0.0003,
+   "financed": 23,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Harbor Point Bank",
+   "exposure": 7500000,
+   "attribution": 0.000318,
+   "financed": 29,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Solaris Energy Corp.",
+   "exposure": 500000,
+   "attribution": 2.9e-05,
+   "financed": 226,
+   "dataQuality": 4
+  }
+ ],
+ "bySector": [
+  {
+   "sector": "Financial services",
+   "financed": 250
+  },
+  {
+   "sector": "Utilities",
+   "financed": 226
+  },
+  {
+   "sector": "Banking",
+   "financed": 52
+  },
+  {
+   "sector": "Insurance",
+   "financed": 17
+  }
+ ],
+ "methodology": "PCAF Global GHG Standard, attribution = exposure / EVIC",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

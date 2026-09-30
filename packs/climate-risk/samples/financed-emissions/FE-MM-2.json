@@ -1,0 +1,75 @@
+{
+ "resultId": "FE-MM-2",
+ "book": "BOOK-MM-2",
+ "financed": 11846,
+ "exposure": 48500000,
+ "intensity": 244,
+ "dataQuality": 2.79,
+ "byCounterparty": [
+  {
+   "counterparty": "Solaris Energy Corp.",
+   "exposure": 12050000,
+   "attribution": 0.001462,
+   "financed": 11489,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Summit Clearing LLC",
+   "exposure": 10750000,
+   "attribution": 0.00057,
+   "financed": 32,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Pinnacle Credit Partners",
+   "exposure": 9650000,
+   "attribution": 0.000402,
+   "financed": 25,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Bramble Asset Management",
+   "exposure": 8200000,
+   "attribution": 0.000272,
+   "financed": 17,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Kestrel Global Macro Fund",
+   "exposure": 6250000,
+   "attribution": 0.000181,
+   "financed": 9,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Verdant Agri Holdings",
+   "exposure": 1600000,
+   "attribution": 2.2e-05,
+   "financed": 274,
+   "dataQuality": 3
+  }
+ ],
+ "bySector": [
+  {
+   "sector": "Utilities",
+   "financed": 11489
+  },
+  {
+   "sector": "Agriculture",
+   "financed": 274
+  },
+  {
+   "sector": "Asset management",
+   "financed": 51
+  },
+  {
+   "sector": "Financial services",
+   "financed": 32
+  }
+ ],
+ "methodology": "PCAF Global GHG Standard, attribution = exposure / EVIC",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

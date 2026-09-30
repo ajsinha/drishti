@@ -1,0 +1,23 @@
+{
+ "holdingId": "HQLA-FRA-09",
+ "security": "Meridian Financial Group 4.180% 2031",
+ "level": "Level 2B",
+ "marketValue": 84000000.0,
+ "haircut": 0.5,
+ "liquidityValue": 42000000,
+ "encumbered": "No",
+ "bond": "BND-USMERI070218",
+ "legalEntity": "LE-FRA",
+ "details": {
+  "isin": "USMERI070218",
+  "currency": "USD",
+  "price": 98.956,
+  "custodian": "BoE",
+  "operationalRequirements": "Met",
+  "centralBankEligible": false
+ },
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

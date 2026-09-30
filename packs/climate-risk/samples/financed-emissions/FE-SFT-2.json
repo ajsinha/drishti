@@ -1,0 +1,126 @@
+{
+ "resultId": "FE-SFT-2",
+ "book": "BOOK-SFT-2",
+ "financed": 6933,
+ "exposure": 82850000,
+ "intensity": 84,
+ "dataQuality": 3.02,
+ "byCounterparty": [
+  {
+   "counterparty": "Verdant Agri Holdings",
+   "exposure": 16050000,
+   "attribution": 0.000409,
+   "financed": 5007,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Harbor Point Bank",
+   "exposure": 11950000,
+   "attribution": 0.000219,
+   "financed": 20,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Meridian Reinsurance Ltd",
+   "exposure": 9200000,
+   "attribution": 0.000364,
+   "financed": 15,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Kestrel Global Macro Fund",
+   "exposure": 9000000,
+   "attribution": 0.000333,
+   "financed": 17,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Aldershot Pension Trust",
+   "exposure": 8400000,
+   "attribution": 0.000227,
+   "financed": 11,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Coral Bay Municipal Authority",
+   "exposure": 7850000,
+   "attribution": 0.000133,
+   "financed": 195,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Lumen Semiconductor AG",
+   "exposure": 6800000,
+   "attribution": 0.000144,
+   "financed": 69,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Pinnacle Credit Partners",
+   "exposure": 5650000,
+   "attribution": 0.000248,
+   "financed": 15,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Meridian Life Assurance",
+   "exposure": 4250000,
+   "attribution": 0.001961,
+   "financed": 7,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Solaris Energy Corp.",
+   "exposure": 3000000,
+   "attribution": 0.000198,
+   "financed": 1555,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Aurora Sovereign Wealth Fund",
+   "exposure": 700000,
+   "attribution": 0.000383,
+   "financed": 22,
+   "dataQuality": 3
+  }
+ ],
+ "bySector": [
+  {
+   "sector": "Agriculture",
+   "financed": 5007
+  },
+  {
+   "sector": "Utilities",
+   "financed": 1555
+  },
+  {
+   "sector": "Government",
+   "financed": 217
+  },
+  {
+   "sector": "Technology",
+   "financed": 69
+  },
+  {
+   "sector": "Asset management",
+   "financed": 32
+  },
+  {
+   "sector": "Insurance",
+   "financed": 22
+  },
+  {
+   "sector": "Banking",
+   "financed": 20
+  },
+  {
+   "sector": "Pensions",
+   "financed": 11
+  }
+ ],
+ "methodology": "PCAF Global GHG Standard, attribution = exposure / EVIC",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

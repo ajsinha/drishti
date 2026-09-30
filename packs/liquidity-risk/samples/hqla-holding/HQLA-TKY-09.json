@@ -1,0 +1,23 @@
+{
+ "holdingId": "HQLA-TKY-09",
+ "security": "Kaizen Motors Corp. 2.170% 2031",
+ "level": "Level 2B",
+ "marketValue": 266300000.0,
+ "haircut": 0.5,
+ "liquidityValue": 0,
+ "encumbered": "Yes (pledged)",
+ "bond": "BND-JPKAIZ021595",
+ "legalEntity": "LE-TKY",
+ "details": {
+  "isin": "JPKAIZ021595",
+  "currency": "JPY",
+  "price": 104.002,
+  "custodian": "BoE",
+  "operationalRequirements": "Met",
+  "centralBankEligible": false
+ },
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

@@ -1,0 +1,23 @@
+{
+ "holdingId": "HQLA-FRA-08",
+ "security": "Novatek Devices Inc. 4.560% 2036",
+ "level": "Level 2A",
+ "marketValue": 350000000.0,
+ "haircut": 0.15,
+ "liquidityValue": 297500000,
+ "encumbered": "No",
+ "bond": "BND-USNOVA133999",
+ "legalEntity": "LE-FRA",
+ "details": {
+  "isin": "USNOVA133999",
+  "currency": "USD",
+  "price": 101.218,
+  "custodian": "BoE",
+  "operationalRequirements": "Met",
+  "centralBankEligible": true
+ },
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

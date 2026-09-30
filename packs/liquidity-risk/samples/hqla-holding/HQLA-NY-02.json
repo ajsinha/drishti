@@ -1,0 +1,23 @@
+{
+ "holdingId": "HQLA-NY-02",
+ "security": "United States Treasury 3.820% 2031",
+ "level": "Level 1",
+ "marketValue": 634400000.0,
+ "haircut": 0.0,
+ "liquidityValue": 634400000,
+ "encumbered": "No",
+ "bond": "BND-US0UST030079",
+ "legalEntity": "LE-NY",
+ "details": {
+  "isin": "US0UST030079",
+  "currency": "USD",
+  "price": 100.0,
+  "custodian": "Clearstream",
+  "operationalRequirements": "Met",
+  "centralBankEligible": true
+ },
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

@@ -1,0 +1,23 @@
+{
+ "holdingId": "HQLA-TKY-08",
+ "security": "Lumen Semiconductor AG 2.630% 2036",
+ "level": "Level 2A",
+ "marketValue": 226600000.0,
+ "haircut": 0.15,
+ "liquidityValue": 192610000,
+ "encumbered": "No",
+ "bond": "BND-CHLUME169114",
+ "legalEntity": "LE-TKY",
+ "details": {
+  "isin": "CHLUME169114",
+  "currency": "CHF",
+  "price": 112.963,
+  "custodian": "Euroclear",
+  "operationalRequirements": "Met",
+  "centralBankEligible": true
+ },
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

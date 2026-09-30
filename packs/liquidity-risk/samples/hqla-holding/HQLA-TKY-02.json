@@ -1,0 +1,23 @@
+{
+ "holdingId": "HQLA-TKY-02",
+ "security": "Federal Republic of Germany 4.300% 2036",
+ "level": "Level 1",
+ "marketValue": 262600000.0,
+ "haircut": 0.0,
+ "liquidityValue": 262600000,
+ "encumbered": "No",
+ "bond": "BND-DEBUND130144",
+ "legalEntity": "LE-TKY",
+ "details": {
+  "isin": "DEBUND130144",
+  "currency": "EUR",
+  "price": 117.922,
+  "custodian": "BoE",
+  "operationalRequirements": "Met",
+  "centralBankEligible": true
+ },
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

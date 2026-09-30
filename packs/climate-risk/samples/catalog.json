@@ -1,0 +1,560 @@
+[
+ {
+  "kind": "climate-profile",
+  "id": "CLIM-ALDERSHOT",
+  "title": "CLIM-ALDERSHOT",
+  "subtitle": "Climate profile · Aldershot Pension Trust"
+ },
+ {
+  "kind": "climate-profile",
+  "id": "CLIM-AURORA",
+  "title": "CLIM-AURORA",
+  "subtitle": "Climate profile · Aurora Sovereign Wealth Fund"
+ },
+ {
+  "kind": "climate-profile",
+  "id": "CLIM-BRAMBLE",
+  "title": "CLIM-BRAMBLE",
+  "subtitle": "Climate profile · Bramble Asset Management"
+ },
+ {
+  "kind": "climate-profile",
+  "id": "CLIM-CASCADIA",
+  "title": "CLIM-CASCADIA",
+  "subtitle": "Climate profile · Cascadia Airlines Inc."
+ },
+ {
+  "kind": "climate-profile",
+  "id": "CLIM-CORAL",
+  "title": "CLIM-CORAL",
+  "subtitle": "Climate profile · Coral Bay Municipal Authority"
+ },
+ {
+  "kind": "climate-profile",
+  "id": "CLIM-HALCYON",
+  "title": "CLIM-HALCYON",
+  "subtitle": "Climate profile · Halcyon Shipping plc"
+ },
+ {
+  "kind": "climate-profile",
+  "id": "CLIM-HARBORPT",
+  "title": "CLIM-HARBORPT",
+  "subtitle": "Climate profile · Harbor Point Bank"
+ },
+ {
+  "kind": "climate-profile",
+  "id": "CLIM-KESTREL",
+  "title": "CLIM-KESTREL",
+  "subtitle": "Climate profile · Kestrel Global Macro Fund"
+ },
+ {
+  "kind": "climate-profile",
+  "id": "CLIM-LUMEN",
+  "title": "CLIM-LUMEN",
+  "subtitle": "Climate profile · Lumen Semiconductor AG"
+ },
+ {
+  "kind": "climate-profile",
+  "id": "CLIM-MERIDIAN",
+  "title": "CLIM-MERIDIAN",
+  "subtitle": "Climate profile · Meridian Life Assurance"
+ },
+ {
+  "kind": "climate-profile",
+  "id": "CLIM-MERIDIAN-RE",
+  "title": "CLIM-MERIDIAN-RE",
+  "subtitle": "Climate profile · Meridian Reinsurance Ltd"
+ },
+ {
+  "kind": "climate-profile",
+  "id": "CLIM-NORTHBRIDGE",
+  "title": "CLIM-NORTHBRIDGE",
+  "subtitle": "Climate profile · Northbridge Capital LLP"
+ },
+ {
+  "kind": "climate-profile",
+  "id": "CLIM-PINNACLE",
+  "title": "CLIM-PINNACLE",
+  "subtitle": "Climate profile · Pinnacle Credit Partners"
+ },
+ {
+  "kind": "climate-profile",
+  "id": "CLIM-RHEINTAL",
+  "title": "CLIM-RHEINTAL",
+  "subtitle": "Climate profile · Rheintal Landesbank"
+ },
+ {
+  "kind": "climate-profile",
+  "id": "CLIM-SOLARIS",
+  "title": "CLIM-SOLARIS",
+  "subtitle": "Climate profile · Solaris Energy Corp."
+ },
+ {
+  "kind": "climate-profile",
+  "id": "CLIM-SUMMIT",
+  "title": "CLIM-SUMMIT",
+  "subtitle": "Climate profile · Summit Clearing LLC"
+ },
+ {
+  "kind": "climate-profile",
+  "id": "CLIM-TOKAI",
+  "title": "CLIM-TOKAI",
+  "subtitle": "Climate profile · Tokai Mutual Trust Bank"
+ },
+ {
+  "kind": "climate-profile",
+  "id": "CLIM-VERDANT",
+  "title": "CLIM-VERDANT",
+  "subtitle": "Climate profile · Verdant Agri Holdings"
+ },
+ {
+  "kind": "financed-emissions",
+  "id": "FE-COMM-1",
+  "title": "FE-COMM-1",
+  "subtitle": "Financed emissions"
+ },
+ {
+  "kind": "financed-emissions",
+  "id": "FE-COMM-2",
+  "title": "FE-COMM-2",
+  "subtitle": "Financed emissions"
+ },
+ {
+  "kind": "financed-emissions",
+  "id": "FE-COMM-3",
+  "title": "FE-COMM-3",
+  "subtitle": "Financed emissions"
+ },
+ {
+  "kind": "financed-emissions",
+  "id": "FE-CREDIT-1",
+  "title": "FE-CREDIT-1",
+  "subtitle": "Financed emissions"
+ },
+ {
+  "kind": "financed-emissions",
+  "id": "FE-CREDIT-2",
+  "title": "FE-CREDIT-2",
+  "subtitle": "Financed emissions"
+ },
+ {
+  "kind": "financed-emissions",
+  "id": "FE-CREDIT-3",
+  "title": "FE-CREDIT-3",
+  "subtitle": "Financed emissions"
+ },
+ {
+  "kind": "financed-emissions",
+  "id": "FE-EQD-1",
+  "title": "FE-EQD-1",
+  "subtitle": "Financed emissions"
+ },
+ {
+  "kind": "financed-emissions",
+  "id": "FE-EQD-2",
+  "title": "FE-EQD-2",
+  "subtitle": "Financed emissions"
+ },
+ {
+  "kind": "financed-emissions",
+  "id": "FE-EQD-3",
+  "title": "FE-EQD-3",
+  "subtitle": "Financed emissions"
+ },
+ {
+  "kind": "financed-emissions",
+  "id": "FE-FI-1",
+  "title": "FE-FI-1",
+  "subtitle": "Financed emissions"
+ },
+ {
+  "kind": "financed-emissions",
+  "id": "FE-FI-2",
+  "title": "FE-FI-2",
+  "subtitle": "Financed emissions"
+ },
+ {
+  "kind": "financed-emissions",
+  "id": "FE-FI-3",
+  "title": "FE-FI-3",
+  "subtitle": "Financed emissions"
+ },
+ {
+  "kind": "financed-emissions",
+  "id": "FE-FX-1",
+  "title": "FE-FX-1",
+  "subtitle": "Financed emissions"
+ },
+ {
+  "kind": "financed-emissions",
+  "id": "FE-FX-2",
+  "title": "FE-FX-2",
+  "subtitle": "Financed emissions"
+ },
+ {
+  "kind": "financed-emissions",
+  "id": "FE-FX-3",
+  "title": "FE-FX-3",
+  "subtitle": "Financed emissions"
+ },
+ {
+  "kind": "financed-emissions",
+  "id": "FE-INFL-1",
+  "title": "FE-INFL-1",
+  "subtitle": "Financed emissions"
+ },
+ {
+  "kind": "financed-emissions",
+  "id": "FE-INFL-2",
+  "title": "FE-INFL-2",
+  "subtitle": "Financed emissions"
+ },
+ {
+  "kind": "financed-emissions",
+  "id": "FE-INFL-3",
+  "title": "FE-INFL-3",
+  "subtitle": "Financed emissions"
+ },
+ {
+  "kind": "financed-emissions",
+  "id": "FE-MM-1",
+  "title": "FE-MM-1",
+  "subtitle": "Financed emissions"
+ },
+ {
+  "kind": "financed-emissions",
+  "id": "FE-MM-2",
+  "title": "FE-MM-2",
+  "subtitle": "Financed emissions"
+ },
+ {
+  "kind": "financed-emissions",
+  "id": "FE-MM-3",
+  "title": "FE-MM-3",
+  "subtitle": "Financed emissions"
+ },
+ {
+  "kind": "financed-emissions",
+  "id": "FE-RATES-1",
+  "title": "FE-RATES-1",
+  "subtitle": "Financed emissions"
+ },
+ {
+  "kind": "financed-emissions",
+  "id": "FE-RATES-2",
+  "title": "FE-RATES-2",
+  "subtitle": "Financed emissions"
+ },
+ {
+  "kind": "financed-emissions",
+  "id": "FE-RATES-3",
+  "title": "FE-RATES-3",
+  "subtitle": "Financed emissions"
+ },
+ {
+  "kind": "financed-emissions",
+  "id": "FE-SFT-1",
+  "title": "FE-SFT-1",
+  "subtitle": "Financed emissions"
+ },
+ {
+  "kind": "financed-emissions",
+  "id": "FE-SFT-2",
+  "title": "FE-SFT-2",
+  "subtitle": "Financed emissions"
+ },
+ {
+  "kind": "financed-emissions",
+  "id": "FE-SFT-3",
+  "title": "FE-SFT-3",
+  "subtitle": "Financed emissions"
+ },
+ {
+  "kind": "financed-emissions",
+  "id": "FE-STRUCT-1",
+  "title": "FE-STRUCT-1",
+  "subtitle": "Financed emissions"
+ },
+ {
+  "kind": "financed-emissions",
+  "id": "FE-STRUCT-2",
+  "title": "FE-STRUCT-2",
+  "subtitle": "Financed emissions"
+ },
+ {
+  "kind": "financed-emissions",
+  "id": "FE-STRUCT-3",
+  "title": "FE-STRUCT-3",
+  "subtitle": "Financed emissions"
+ },
+ {
+  "kind": "climate-scenario",
+  "id": "NGFS-CURRENTPOLICIES",
+  "title": "NGFS-CURRENTPOLICIES",
+  "subtitle": "Climate scenario · Current policies"
+ },
+ {
+  "kind": "climate-scenario",
+  "id": "NGFS-DELAYED",
+  "title": "NGFS-DELAYED",
+  "subtitle": "Climate scenario · Delayed transition"
+ },
+ {
+  "kind": "climate-scenario",
+  "id": "NGFS-NETZERO2050",
+  "title": "NGFS-NETZERO2050",
+  "subtitle": "Climate scenario · Net Zero 2050"
+ },
+ {
+  "kind": "climate-stress",
+  "id": "CST-CURRENTPOLICIES-COMM",
+  "title": "CST-CURRENTPOLICIES-COMM",
+  "subtitle": "Climate stress result · Current policies"
+ },
+ {
+  "kind": "climate-stress",
+  "id": "CST-CURRENTPOLICIES-CREDIT",
+  "title": "CST-CURRENTPOLICIES-CREDIT",
+  "subtitle": "Climate stress result · Current policies"
+ },
+ {
+  "kind": "climate-stress",
+  "id": "CST-CURRENTPOLICIES-EQD",
+  "title": "CST-CURRENTPOLICIES-EQD",
+  "subtitle": "Climate stress result · Current policies"
+ },
+ {
+  "kind": "climate-stress",
+  "id": "CST-CURRENTPOLICIES-FI",
+  "title": "CST-CURRENTPOLICIES-FI",
+  "subtitle": "Climate stress result · Current policies"
+ },
+ {
+  "kind": "climate-stress",
+  "id": "CST-CURRENTPOLICIES-FX",
+  "title": "CST-CURRENTPOLICIES-FX",
+  "subtitle": "Climate stress result · Current policies"
+ },
+ {
+  "kind": "climate-stress",
+  "id": "CST-CURRENTPOLICIES-INFL",
+  "title": "CST-CURRENTPOLICIES-INFL",
+  "subtitle": "Climate stress result · Current policies"
+ },
+ {
+  "kind": "climate-stress",
+  "id": "CST-CURRENTPOLICIES-MM",
+  "title": "CST-CURRENTPOLICIES-MM",
+  "subtitle": "Climate stress result · Current policies"
+ },
+ {
+  "kind": "climate-stress",
+  "id": "CST-CURRENTPOLICIES-RATES",
+  "title": "CST-CURRENTPOLICIES-RATES",
+  "subtitle": "Climate stress result · Current policies"
+ },
+ {
+  "kind": "climate-stress",
+  "id": "CST-CURRENTPOLICIES-SFT",
+  "title": "CST-CURRENTPOLICIES-SFT",
+  "subtitle": "Climate stress result · Current policies"
+ },
+ {
+  "kind": "climate-stress",
+  "id": "CST-CURRENTPOLICIES-STRUCT",
+  "title": "CST-CURRENTPOLICIES-STRUCT",
+  "subtitle": "Climate stress result · Current policies"
+ },
+ {
+  "kind": "climate-stress",
+  "id": "CST-DELAYED-COMM",
+  "title": "CST-DELAYED-COMM",
+  "subtitle": "Climate stress result · Delayed transition"
+ },
+ {
+  "kind": "climate-stress",
+  "id": "CST-DELAYED-CREDIT",
+  "title": "CST-DELAYED-CREDIT",
+  "subtitle": "Climate stress result · Delayed transition"
+ },
+ {
+  "kind": "climate-stress",
+  "id": "CST-DELAYED-EQD",
+  "title": "CST-DELAYED-EQD",
+  "subtitle": "Climate stress result · Delayed transition"
+ },
+ {
+  "kind": "climate-stress",
+  "id": "CST-DELAYED-FI",
+  "title": "CST-DELAYED-FI",
+  "subtitle": "Climate stress result · Delayed transition"
+ },
+ {
+  "kind": "climate-stress",
+  "id": "CST-DELAYED-FX",
+  "title": "CST-DELAYED-FX",
+  "subtitle": "Climate stress result · Delayed transition"
+ },
+ {
+  "kind": "climate-stress",
+  "id": "CST-DELAYED-INFL",
+  "title": "CST-DELAYED-INFL",
+  "subtitle": "Climate stress result · Delayed transition"
+ },
+ {
+  "kind": "climate-stress",
+  "id": "CST-DELAYED-MM",
+  "title": "CST-DELAYED-MM",
+  "subtitle": "Climate stress result · Delayed transition"
+ },
+ {
+  "kind": "climate-stress",
+  "id": "CST-DELAYED-RATES",
+  "title": "CST-DELAYED-RATES",
+  "subtitle": "Climate stress result · Delayed transition"
+ },
+ {
+  "kind": "climate-stress",
+  "id": "CST-DELAYED-SFT",
+  "title": "CST-DELAYED-SFT",
+  "subtitle": "Climate stress result · Delayed transition"
+ },
+ {
+  "kind": "climate-stress",
+  "id": "CST-DELAYED-STRUCT",
+  "title": "CST-DELAYED-STRUCT",
+  "subtitle": "Climate stress result · Delayed transition"
+ },
+ {
+  "kind": "climate-stress",
+  "id": "CST-NETZERO2050-COMM",
+  "title": "CST-NETZERO2050-COMM",
+  "subtitle": "Climate stress result · Net Zero 2050"
+ },
+ {
+  "kind": "climate-stress",
+  "id": "CST-NETZERO2050-CREDIT",
+  "title": "CST-NETZERO2050-CREDIT",
+  "subtitle": "Climate stress result · Net Zero 2050"
+ },
+ {
+  "kind": "climate-stress",
+  "id": "CST-NETZERO2050-EQD",
+  "title": "CST-NETZERO2050-EQD",
+  "subtitle": "Climate stress result · Net Zero 2050"
+ },
+ {
+  "kind": "climate-stress",
+  "id": "CST-NETZERO2050-FI",
+  "title": "CST-NETZERO2050-FI",
+  "subtitle": "Climate stress result · Net Zero 2050"
+ },
+ {
+  "kind": "climate-stress",
+  "id": "CST-NETZERO2050-FX",
+  "title": "CST-NETZERO2050-FX",
+  "subtitle": "Climate stress result · Net Zero 2050"
+ },
+ {
+  "kind": "climate-stress",
+  "id": "CST-NETZERO2050-INFL",
+  "title": "CST-NETZERO2050-INFL",
+  "subtitle": "Climate stress result · Net Zero 2050"
+ },
+ {
+  "kind": "climate-stress",
+  "id": "CST-NETZERO2050-MM",
+  "title": "CST-NETZERO2050-MM",
+  "subtitle": "Climate stress result · Net Zero 2050"
+ },
+ {
+  "kind": "climate-stress",
+  "id": "CST-NETZERO2050-RATES",
+  "title": "CST-NETZERO2050-RATES",
+  "subtitle": "Climate stress result · Net Zero 2050"
+ },
+ {
+  "kind": "climate-stress",
+  "id": "CST-NETZERO2050-SFT",
+  "title": "CST-NETZERO2050-SFT",
+  "subtitle": "Climate stress result · Net Zero 2050"
+ },
+ {
+  "kind": "climate-stress",
+  "id": "CST-NETZERO2050-STRUCT",
+  "title": "CST-NETZERO2050-STRUCT",
+  "subtitle": "Climate stress result · Net Zero 2050"
+ },
+ {
+  "kind": "physical-asset",
+  "id": "PHY-001",
+  "title": "PHY-001",
+  "subtitle": "Physical-risk asset · Rotterdam port terminal"
+ },
+ {
+  "kind": "physical-asset",
+  "id": "PHY-002",
+  "title": "PHY-002",
+  "subtitle": "Physical-risk asset · Houston refinery"
+ },
+ {
+  "kind": "physical-asset",
+  "id": "PHY-003",
+  "title": "PHY-003",
+  "subtitle": "Physical-risk asset · Mumbai logistics hub"
+ },
+ {
+  "kind": "physical-asset",
+  "id": "PHY-004",
+  "title": "PHY-004",
+  "subtitle": "Physical-risk asset · Queensland farm estate"
+ },
+ {
+  "kind": "physical-asset",
+  "id": "PHY-005",
+  "title": "PHY-005",
+  "subtitle": "Physical-risk asset · Piraeus shipyard"
+ },
+ {
+  "kind": "physical-asset",
+  "id": "PHY-006",
+  "title": "PHY-006",
+  "subtitle": "Physical-risk asset · Phoenix data centre"
+ },
+ {
+  "kind": "physical-asset",
+  "id": "PHY-007",
+  "title": "PHY-007",
+  "subtitle": "Physical-risk asset · São Paulo processing plant"
+ },
+ {
+  "kind": "physical-asset",
+  "id": "PHY-008",
+  "title": "PHY-008",
+  "subtitle": "Physical-risk asset · Osaka assembly plant"
+ },
+ {
+  "kind": "taxonomy-alignment",
+  "id": "GAR-FRA",
+  "title": "GAR-FRA",
+  "subtitle": "Green asset ratio · Drishti Bank Europe AG"
+ },
+ {
+  "kind": "taxonomy-alignment",
+  "id": "GAR-LDN",
+  "title": "GAR-LDN",
+  "subtitle": "Green asset ratio · Drishti Bank plc"
+ },
+ {
+  "kind": "taxonomy-alignment",
+  "id": "GAR-NY",
+  "title": "GAR-NY",
+  "subtitle": "Green asset ratio · Drishti Bank Securities Inc."
+ },
+ {
+  "kind": "taxonomy-alignment",
+  "id": "GAR-TKY",
+  "title": "GAR-TKY",
+  "subtitle": "Green asset ratio · Drishti Securities Japan K.K."
+ }
+]

@@ -1,0 +1,65 @@
+{
+ "profileId": "CLIM-NORTHBRIDGE",
+ "counterpartyName": "Northbridge Capital LLP",
+ "sector": "Asset management",
+ "scope12": 43415,
+ "intensity": 3,
+ "transitionScore": 8,
+ "physicalScore": 8,
+ "netZeroTarget": "2050",
+ "scopes": [
+  {
+   "scope": "Scope 1",
+   "tco2e": 30390
+  },
+  {
+   "scope": "Scope 2",
+   "tco2e": 13024
+  },
+  {
+   "scope": "Scope 3",
+   "tco2e": 97280
+  }
+ ],
+ "history": [
+  {
+   "year": "2019",
+   "tco2e": 51386
+  },
+  {
+   "year": "2020",
+   "tco2e": 53236
+  },
+  {
+   "year": "2021",
+   "tco2e": 52059
+  },
+  {
+   "year": "2022",
+   "tco2e": 47759
+  },
+  {
+   "year": "2023",
+   "tco2e": 45326
+  },
+  {
+   "year": "2024",
+   "tco2e": 43119
+  },
+  {
+   "year": "2025",
+   "tco2e": 42850
+  }
+ ],
+ "targets": {
+  "reduction2030": "50% vs 2019",
+  "disclosure": "CSRD",
+  "revenueUsdM": 13009,
+  "reportingYear": 2025
+ },
+ "counterparty": "CP-NORTHBRIDGE",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

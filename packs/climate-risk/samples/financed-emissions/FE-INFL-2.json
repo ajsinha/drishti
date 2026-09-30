@@ -1,0 +1,100 @@
+{
+ "resultId": "FE-INFL-2",
+ "book": "BOOK-INFL-2",
+ "financed": 2016,
+ "exposure": 102650000,
+ "intensity": 20,
+ "dataQuality": 2.51,
+ "byCounterparty": [
+  {
+   "counterparty": "Coral Bay Municipal Authority",
+   "exposure": 27150000,
+   "attribution": 0.000353,
+   "financed": 519,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Pinnacle Credit Partners",
+   "exposure": 18250000,
+   "attribution": 0.000365,
+   "financed": 23,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Northbridge Capital LLP",
+   "exposure": 15750000,
+   "attribution": 0.000326,
+   "financed": 14,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Kestrel Global Macro Fund",
+   "exposure": 12150000,
+   "attribution": 0.000355,
+   "financed": 18,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Meridian Life Assurance",
+   "exposure": 10300000,
+   "attribution": 0.012061,
+   "financed": 41,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Bramble Asset Management",
+   "exposure": 8550000,
+   "attribution": 0.000218,
+   "financed": 14,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Aurora Sovereign Wealth Fund",
+   "exposure": 5850000,
+   "attribution": 0.001654,
+   "financed": 97,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Verdant Agri Holdings",
+   "exposure": 2350000,
+   "attribution": 4.6e-05,
+   "financed": 568,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Cascadia Airlines Inc.",
+   "exposure": 2300000,
+   "attribution": 0.000775,
+   "financed": 722,
+   "dataQuality": 3
+  }
+ ],
+ "bySector": [
+  {
+   "sector": "Airlines",
+   "financed": 722
+  },
+  {
+   "sector": "Government",
+   "financed": 616
+  },
+  {
+   "sector": "Agriculture",
+   "financed": 568
+  },
+  {
+   "sector": "Asset management",
+   "financed": 69
+  },
+  {
+   "sector": "Insurance",
+   "financed": 41
+  }
+ ],
+ "methodology": "PCAF Global GHG Standard, attribution = exposure / EVIC",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

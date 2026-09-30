@@ -1,0 +1,21 @@
+{
+ "fundingId": "FUND-HALCYON-1",
+ "counterpartyName": "Halcyon Shipping plc",
+ "type": "Wholesale time deposit",
+ "amount": 809100000.0,
+ "currency": "GBP",
+ "maturity": "2026-11-23",
+ "runOffRate": 0.4,
+ "terms": {
+  "rate": 0.0498,
+  "startDate": "2026-02-21",
+  "collateral": "Unsecured",
+  "withdrawable": false
+ },
+ "counterparty": "CP-HALCYON",
+ "legalEntity": "LE-LDN",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

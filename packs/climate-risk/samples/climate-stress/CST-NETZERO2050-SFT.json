@@ -1,0 +1,50 @@
+{
+ "resultId": "CST-NETZERO2050-SFT",
+ "scenarioName": "Net Zero 2050",
+ "deskName": "Repo and securities lending",
+ "loss2030": -6112297,
+ "loss2050": -7334756,
+ "capitalShare": 0.00153,
+ "bySector": [
+  {
+   "sector": "Utilities",
+   "loss": -817457
+  },
+  {
+   "sector": "Airlines",
+   "loss": -1583863
+  },
+  {
+   "sector": "Shipping",
+   "loss": -1802671
+  },
+  {
+   "sector": "Materials",
+   "loss": -1322663
+  },
+  {
+   "sector": "Autos",
+   "loss": -585643
+  }
+ ],
+ "byHorizon": [
+  {
+   "year": "2030",
+   "loss": 6112297
+  },
+  {
+   "year": "2040",
+   "loss": 6723526
+  },
+  {
+   "year": "2050",
+   "loss": 7334756
+  }
+ ],
+ "scenario": "NGFS-NETZERO2050",
+ "desk": "DESK-SFT",
+ "_meta": {
+  "source": "climate-stress",
+  "generation": 1
+ }
+}

@@ -1,0 +1,50 @@
+{
+ "resultId": "CST-DELAYED-INFL",
+ "scenarioName": "Delayed transition",
+ "deskName": "Inflation",
+ "loss2030": -12324796,
+ "loss2050": -14789755,
+ "capitalShare": 0.00308,
+ "bySector": [
+  {
+   "sector": "Utilities",
+   "loss": -3292823
+  },
+  {
+   "sector": "Airlines",
+   "loss": -3801435
+  },
+  {
+   "sector": "Shipping",
+   "loss": -1330768
+  },
+  {
+   "sector": "Materials",
+   "loss": -2099931
+  },
+  {
+   "sector": "Autos",
+   "loss": -1799839
+  }
+ ],
+ "byHorizon": [
+  {
+   "year": "2030",
+   "loss": 12324796
+  },
+  {
+   "year": "2040",
+   "loss": 13557276
+  },
+  {
+   "year": "2050",
+   "loss": 14789755
+  }
+ ],
+ "scenario": "NGFS-DELAYED",
+ "desk": "DESK-INFL",
+ "_meta": {
+  "source": "climate-stress",
+  "generation": 1
+ }
+}

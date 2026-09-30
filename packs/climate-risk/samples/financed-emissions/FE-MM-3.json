@@ -1,0 +1,57 @@
+{
+ "resultId": "FE-MM-3",
+ "book": "BOOK-MM-3",
+ "financed": 259,
+ "exposure": 21750000,
+ "intensity": 12,
+ "dataQuality": 3.25,
+ "byCounterparty": [
+  {
+   "counterparty": "Coral Bay Municipal Authority",
+   "exposure": 10700000,
+   "attribution": 0.000131,
+   "financed": 193,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Meridian Reinsurance Ltd",
+   "exposure": 5850000,
+   "attribution": 0.000373,
+   "financed": 15,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Tokai Mutual Trust Bank",
+   "exposure": 3700000,
+   "attribution": 8.1e-05,
+   "financed": 10,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Aurora Sovereign Wealth Fund",
+   "exposure": 1500000,
+   "attribution": 0.000707,
+   "financed": 41,
+   "dataQuality": 2
+  }
+ ],
+ "bySector": [
+  {
+   "sector": "Government",
+   "financed": 234
+  },
+  {
+   "sector": "Insurance",
+   "financed": 15
+  },
+  {
+   "sector": "Banking",
+   "financed": 10
+  }
+ ],
+ "methodology": "PCAF Global GHG Standard, attribution = exposure / EVIC",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

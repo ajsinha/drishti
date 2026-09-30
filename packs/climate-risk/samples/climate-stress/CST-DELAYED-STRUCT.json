@@ -1,0 +1,50 @@
+{
+ "resultId": "CST-DELAYED-STRUCT",
+ "scenarioName": "Delayed transition",
+ "deskName": "Structured products",
+ "loss2030": -14434174,
+ "loss2050": -17321009,
+ "capitalShare": 0.00361,
+ "bySector": [
+  {
+   "sector": "Utilities",
+   "loss": -3680118
+  },
+  {
+   "sector": "Airlines",
+   "loss": -4248706
+  },
+  {
+   "sector": "Shipping",
+   "loss": -3524785
+  },
+  {
+   "sector": "Materials",
+   "loss": -1142525
+  },
+  {
+   "sector": "Autos",
+   "loss": -1838040
+  }
+ ],
+ "byHorizon": [
+  {
+   "year": "2030",
+   "loss": 14434174
+  },
+  {
+   "year": "2040",
+   "loss": 15877592
+  },
+  {
+   "year": "2050",
+   "loss": 17321009
+  }
+ ],
+ "scenario": "NGFS-DELAYED",
+ "desk": "DESK-STRUCT",
+ "_meta": {
+  "source": "climate-stress",
+  "generation": 1
+ }
+}

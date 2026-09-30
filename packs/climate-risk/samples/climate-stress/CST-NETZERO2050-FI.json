@@ -1,0 +1,50 @@
+{
+ "resultId": "CST-NETZERO2050-FI",
+ "scenarioName": "Net Zero 2050",
+ "deskName": "Bonds and securitised",
+ "loss2030": -6057496,
+ "loss2050": -7268995,
+ "capitalShare": 0.00151,
+ "bySector": [
+  {
+   "sector": "Utilities",
+   "loss": -647226
+  },
+  {
+   "sector": "Airlines",
+   "loss": -1273683
+  },
+  {
+   "sector": "Shipping",
+   "loss": -1170620
+  },
+  {
+   "sector": "Materials",
+   "loss": -1384067
+  },
+  {
+   "sector": "Autos",
+   "loss": -1581900
+  }
+ ],
+ "byHorizon": [
+  {
+   "year": "2030",
+   "loss": 6057496
+  },
+  {
+   "year": "2040",
+   "loss": 6663246
+  },
+  {
+   "year": "2050",
+   "loss": 7268995
+  }
+ ],
+ "scenario": "NGFS-NETZERO2050",
+ "desk": "DESK-FI",
+ "_meta": {
+  "source": "climate-stress",
+  "generation": 1
+ }
+}

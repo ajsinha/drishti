@@ -1,0 +1,50 @@
+{
+ "resultId": "CST-CURRENTPOLICIES-SFT",
+ "scenarioName": "Current policies",
+ "deskName": "Repo and securities lending",
+ "loss2030": -9089214,
+ "loss2050": -14542742,
+ "capitalShare": 0.00227,
+ "bySector": [
+  {
+   "sector": "Utilities",
+   "loss": -2351552
+  },
+  {
+   "sector": "Airlines",
+   "loss": -1918257
+  },
+  {
+   "sector": "Shipping",
+   "loss": -1364513
+  },
+  {
+   "sector": "Materials",
+   "loss": -2088004
+  },
+  {
+   "sector": "Autos",
+   "loss": -1366888
+  }
+ ],
+ "byHorizon": [
+  {
+   "year": "2030",
+   "loss": 9089214
+  },
+  {
+   "year": "2040",
+   "loss": 11815978
+  },
+  {
+   "year": "2050",
+   "loss": 14542742
+  }
+ ],
+ "scenario": "NGFS-CURRENTPOLICIES",
+ "desk": "DESK-SFT",
+ "_meta": {
+  "source": "climate-stress",
+  "generation": 1
+ }
+}

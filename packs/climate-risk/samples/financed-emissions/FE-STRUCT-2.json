@@ -1,0 +1,90 @@
+{
+ "resultId": "FE-STRUCT-2",
+ "book": "BOOK-STRUCT-2",
+ "financed": 3578,
+ "exposure": 56650000,
+ "intensity": 63,
+ "dataQuality": 2.7,
+ "byCounterparty": [
+  {
+   "counterparty": "Pinnacle Credit Partners",
+   "exposure": 11100000,
+   "attribution": 0.000443,
+   "financed": 27,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Northbridge Capital LLP",
+   "exposure": 9000000,
+   "attribution": 0.00023,
+   "financed": 10,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Meridian Life Assurance",
+   "exposure": 8850000,
+   "attribution": 0.004205,
+   "financed": 14,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Lumen Semiconductor AG",
+   "exposure": 7750000,
+   "attribution": 0.000135,
+   "financed": 64,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Coral Bay Municipal Authority",
+   "exposure": 7550000,
+   "attribution": 9.2e-05,
+   "financed": 136,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Harbor Point Bank",
+   "exposure": 7000000,
+   "attribution": 0.000176,
+   "financed": 16,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Cascadia Airlines Inc.",
+   "exposure": 5400000,
+   "attribution": 0.003553,
+   "financed": 3311,
+   "dataQuality": 2
+  }
+ ],
+ "bySector": [
+  {
+   "sector": "Airlines",
+   "financed": 3311
+  },
+  {
+   "sector": "Government",
+   "financed": 136
+  },
+  {
+   "sector": "Technology",
+   "financed": 64
+  },
+  {
+   "sector": "Asset management",
+   "financed": 37
+  },
+  {
+   "sector": "Banking",
+   "financed": 16
+  },
+  {
+   "sector": "Insurance",
+   "financed": 14
+  }
+ ],
+ "methodology": "PCAF Global GHG Standard, attribution = exposure / EVIC",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

@@ -1,0 +1,23 @@
+{
+ "holdingId": "HQLA-NY-07",
+ "security": "Rheintal Landesbank 4.280% 2031",
+ "level": "Level 2B",
+ "marketValue": 797900000.0,
+ "haircut": 0.5,
+ "liquidityValue": 398950000,
+ "encumbered": "No",
+ "bond": "BND-DERHEI090723",
+ "legalEntity": "LE-NY",
+ "details": {
+  "isin": "DERHEI090723",
+  "currency": "EUR",
+  "price": 106.308,
+  "custodian": "Euroclear",
+  "operationalRequirements": "Met",
+  "centralBankEligible": false
+ },
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

@@ -1,0 +1,50 @@
+{
+ "resultId": "CST-CURRENTPOLICIES-STRUCT",
+ "scenarioName": "Current policies",
+ "deskName": "Structured products",
+ "loss2030": -8713298,
+ "loss2050": -13941277,
+ "capitalShare": 0.00218,
+ "bySector": [
+  {
+   "sector": "Utilities",
+   "loss": -2755008
+  },
+  {
+   "sector": "Airlines",
+   "loss": -2810969
+  },
+  {
+   "sector": "Shipping",
+   "loss": -1370599
+  },
+  {
+   "sector": "Materials",
+   "loss": -859209
+  },
+  {
+   "sector": "Autos",
+   "loss": -917513
+  }
+ ],
+ "byHorizon": [
+  {
+   "year": "2030",
+   "loss": 8713298
+  },
+  {
+   "year": "2040",
+   "loss": 11327288
+  },
+  {
+   "year": "2050",
+   "loss": 13941277
+  }
+ ],
+ "scenario": "NGFS-CURRENTPOLICIES",
+ "desk": "DESK-STRUCT",
+ "_meta": {
+  "source": "climate-stress",
+  "generation": 1
+ }
+}

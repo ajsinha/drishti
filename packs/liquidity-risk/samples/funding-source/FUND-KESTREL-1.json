@@ -1,0 +1,21 @@
+{
+ "fundingId": "FUND-KESTREL-1",
+ "counterpartyName": "Kestrel Global Macro Fund",
+ "type": "Repo funding",
+ "amount": 452800000.0,
+ "currency": "USD",
+ "maturity": "2027-09-11",
+ "runOffRate": 0.25,
+ "terms": {
+  "rate": 0.0468,
+  "startDate": "2025-12-25",
+  "collateral": "Government bonds",
+  "withdrawable": false
+ },
+ "counterparty": "CP-KESTREL",
+ "legalEntity": "LE-FRA",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

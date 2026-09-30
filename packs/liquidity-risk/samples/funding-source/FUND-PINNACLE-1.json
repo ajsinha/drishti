@@ -1,0 +1,21 @@
+{
+ "fundingId": "FUND-PINNACLE-1",
+ "counterpartyName": "Pinnacle Credit Partners",
+ "type": "Commercial paper",
+ "amount": 852800000.0,
+ "currency": "GBP",
+ "maturity": "2027-10-28",
+ "runOffRate": 1.0,
+ "terms": {
+  "rate": 0.0527,
+  "startDate": "2026-05-08",
+  "collateral": "Unsecured",
+  "withdrawable": false
+ },
+ "counterparty": "CP-PINNACLE",
+ "legalEntity": "LE-LDN",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

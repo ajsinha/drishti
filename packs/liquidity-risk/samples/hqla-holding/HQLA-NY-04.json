@@ -1,0 +1,23 @@
+{
+ "holdingId": "HQLA-NY-04",
+ "security": "United States Treasury 4.320% 2036",
+ "level": "Level 1",
+ "marketValue": 1669500000.0,
+ "haircut": 0.0,
+ "liquidityValue": 1669500000,
+ "encumbered": "No",
+ "bond": "BND-US0UST151040",
+ "legalEntity": "LE-NY",
+ "details": {
+  "isin": "US0UST151040",
+  "currency": "USD",
+  "price": 102.61,
+  "custodian": "Euroclear",
+  "operationalRequirements": "Met",
+  "centralBankEligible": true
+ },
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

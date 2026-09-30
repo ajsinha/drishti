@@ -1,0 +1,21 @@
+{
+ "fundingId": "FUND-BRAMBLE-2",
+ "counterpartyName": "Bramble Asset Management",
+ "type": "Commercial paper",
+ "amount": 389300000.0,
+ "currency": "USD",
+ "maturity": "2026-10-06",
+ "runOffRate": 1.0,
+ "terms": {
+  "rate": 0.0376,
+  "startDate": "2026-09-21",
+  "collateral": "Unsecured",
+  "withdrawable": false
+ },
+ "counterparty": "CP-BRAMBLE",
+ "legalEntity": "LE-NY",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

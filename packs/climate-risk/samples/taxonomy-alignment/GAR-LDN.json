@@ -1,0 +1,38 @@
+{
+ "reportId": "GAR-LDN",
+ "legalEntityName": "Drishti Bank plc",
+ "gar": 0.1254,
+ "eligible": 0.36,
+ "covered": 45854000000.0,
+ "objectives": [
+  {
+   "objective": "Climate change mitigation",
+   "aligned": 597816922
+  },
+  {
+   "objective": "Climate change adaptation",
+   "aligned": 1463365338
+  },
+  {
+   "objective": "Water and marine",
+   "aligned": 437340398
+  },
+  {
+   "objective": "Circular economy",
+   "aligned": 187956128
+  },
+  {
+   "objective": "Pollution prevention",
+   "aligned": 1483551851
+  },
+  {
+   "objective": "Biodiversity",
+   "aligned": 1578059447
+  }
+ ],
+ "legalEntity": "LE-LDN",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

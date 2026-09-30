@@ -1,0 +1,50 @@
+{
+ "resultId": "CST-NETZERO2050-EQD",
+ "scenarioName": "Net Zero 2050",
+ "deskName": "Equity derivatives",
+ "loss2030": -8137451,
+ "loss2050": -9764941,
+ "capitalShare": 0.00203,
+ "bySector": [
+  {
+   "sector": "Utilities",
+   "loss": -1825182
+  },
+  {
+   "sector": "Airlines",
+   "loss": -1789339
+  },
+  {
+   "sector": "Shipping",
+   "loss": -1902148
+  },
+  {
+   "sector": "Materials",
+   "loss": -1368551
+  },
+  {
+   "sector": "Autos",
+   "loss": -1252231
+  }
+ ],
+ "byHorizon": [
+  {
+   "year": "2030",
+   "loss": 8137451
+  },
+  {
+   "year": "2040",
+   "loss": 8951196
+  },
+  {
+   "year": "2050",
+   "loss": 9764941
+  }
+ ],
+ "scenario": "NGFS-NETZERO2050",
+ "desk": "DESK-EQD",
+ "_meta": {
+  "source": "climate-stress",
+  "generation": 1
+ }
+}

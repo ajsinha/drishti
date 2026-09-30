@@ -1,0 +1,21 @@
+{
+ "fundingId": "FUND-MERIDIAN-RE-1",
+ "counterpartyName": "Meridian Reinsurance Ltd",
+ "type": "Operational deposit",
+ "amount": 284000000.0,
+ "currency": "EUR",
+ "maturity": "2027-07-19",
+ "runOffRate": 0.25,
+ "terms": {
+  "rate": 0.0477,
+  "startDate": "2026-05-31",
+  "collateral": "Unsecured",
+  "withdrawable": true
+ },
+ "counterparty": "CP-MERIDIAN-RE",
+ "legalEntity": "LE-FRA",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

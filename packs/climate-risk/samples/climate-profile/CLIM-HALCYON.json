@@ -1,0 +1,65 @@
+{
+ "profileId": "CLIM-HALCYON",
+ "counterpartyName": "Halcyon Shipping plc",
+ "sector": "Shipping",
+ "scope12": 13312006,
+ "intensity": 828,
+ "transitionScore": 82,
+ "physicalScore": 50,
+ "netZeroTarget": "2050",
+ "scopes": [
+  {
+   "scope": "Scope 1",
+   "tco2e": 9318404
+  },
+  {
+   "scope": "Scope 2",
+   "tco2e": 3993602
+  },
+  {
+   "scope": "Scope 3",
+   "tco2e": 96259671
+  }
+ ],
+ "history": [
+  {
+   "year": "2019",
+   "tco2e": 17330186
+  },
+  {
+   "year": "2020",
+   "tco2e": 15198185
+  },
+  {
+   "year": "2021",
+   "tco2e": 14943340
+  },
+  {
+   "year": "2022",
+   "tco2e": 14206314
+  },
+  {
+   "year": "2023",
+   "tco2e": 14571714
+  },
+  {
+   "year": "2024",
+   "tco2e": 14105151
+  },
+  {
+   "year": "2025",
+   "tco2e": 12890729
+  }
+ ],
+ "targets": {
+  "reduction2030": "30% vs 2019",
+  "disclosure": "ISSB S2",
+  "revenueUsdM": 16076,
+  "reportingYear": 2025
+ },
+ "counterparty": "CP-HALCYON",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

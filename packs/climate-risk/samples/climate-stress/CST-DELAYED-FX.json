@@ -1,0 +1,50 @@
+{
+ "resultId": "CST-DELAYED-FX",
+ "scenarioName": "Delayed transition",
+ "deskName": "G10 and EM FX",
+ "loss2030": -15495706,
+ "loss2050": -18594847,
+ "capitalShare": 0.00387,
+ "bySector": [
+  {
+   "sector": "Utilities",
+   "loss": -3308684
+  },
+  {
+   "sector": "Airlines",
+   "loss": -4394971
+  },
+  {
+   "sector": "Shipping",
+   "loss": -2709113
+  },
+  {
+   "sector": "Materials",
+   "loss": -2104941
+  },
+  {
+   "sector": "Autos",
+   "loss": -2977997
+  }
+ ],
+ "byHorizon": [
+  {
+   "year": "2030",
+   "loss": 15495706
+  },
+  {
+   "year": "2040",
+   "loss": 17045276
+  },
+  {
+   "year": "2050",
+   "loss": 18594847
+  }
+ ],
+ "scenario": "NGFS-DELAYED",
+ "desk": "DESK-FX",
+ "_meta": {
+  "source": "climate-stress",
+  "generation": 1
+ }
+}

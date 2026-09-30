@@ -1,0 +1,21 @@
+{
+ "fundingId": "FUND-ALDERSHOT-2",
+ "counterpartyName": "Aldershot Pension Trust",
+ "type": "Commercial paper",
+ "amount": 694200000.0,
+ "currency": "EUR",
+ "maturity": "2026-10-07",
+ "runOffRate": 1.0,
+ "terms": {
+  "rate": 0.033,
+  "startDate": "2026-07-11",
+  "collateral": "Unsecured",
+  "withdrawable": false
+ },
+ "counterparty": "CP-ALDERSHOT",
+ "legalEntity": "LE-FRA",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

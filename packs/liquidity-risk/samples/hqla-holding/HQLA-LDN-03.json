@@ -1,0 +1,23 @@
+{
+ "holdingId": "HQLA-LDN-03",
+ "security": "United Kingdom Debt Management Office 3.860% 2031",
+ "level": "Level 1",
+ "marketValue": 1984000000.0,
+ "haircut": 0.0,
+ "liquidityValue": 0,
+ "encumbered": "Yes (pledged)",
+ "bond": "BND-GBGILT065113",
+ "legalEntity": "LE-LDN",
+ "details": {
+  "isin": "GBGILT065113",
+  "currency": "GBP",
+  "price": 99.26,
+  "custodian": "Clearstream",
+  "operationalRequirements": "Met",
+  "centralBankEligible": true
+ },
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

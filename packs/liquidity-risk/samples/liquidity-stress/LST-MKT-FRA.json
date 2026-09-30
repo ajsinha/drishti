@@ -1,0 +1,397 @@
+{
+ "resultId": "LST-MKT-FRA",
+ "scenarioName": "Market-wide (funding markets close)",
+ "legalEntityName": "Drishti Bank Europe AG",
+ "survivalDays": 90,
+ "minimumPosition": 2965458807,
+ "appetiteDays": 60,
+ "path": [
+  {
+   "day": 0,
+   "position": 6490945413
+  },
+  {
+   "day": 1,
+   "position": 6369288321
+  },
+  {
+   "day": 2,
+   "position": 6207463429
+  },
+  {
+   "day": 3,
+   "position": 6094965112
+  },
+  {
+   "day": 4,
+   "position": 5949855689
+  },
+  {
+   "day": 5,
+   "position": 5836104595
+  },
+  {
+   "day": 6,
+   "position": 5727739866
+  },
+  {
+   "day": 7,
+   "position": 5629352765
+  },
+  {
+   "day": 8,
+   "position": 5514637569
+  },
+  {
+   "day": 9,
+   "position": 5411680547
+  },
+  {
+   "day": 10,
+   "position": 5309156479
+  },
+  {
+   "day": 11,
+   "position": 5203325740
+  },
+  {
+   "day": 12,
+   "position": 5118146458
+  },
+  {
+   "day": 13,
+   "position": 5036058388
+  },
+  {
+   "day": 14,
+   "position": 4937472477
+  },
+  {
+   "day": 15,
+   "position": 4862635347
+  },
+  {
+   "day": 16,
+   "position": 4796919307
+  },
+  {
+   "day": 17,
+   "position": 4716823796
+  },
+  {
+   "day": 18,
+   "position": 4643617911
+  },
+  {
+   "day": 19,
+   "position": 4588046603
+  },
+  {
+   "day": 20,
+   "position": 4523011206
+  },
+  {
+   "day": 21,
+   "position": 4464932228
+  },
+  {
+   "day": 22,
+   "position": 4398368970
+  },
+  {
+   "day": 23,
+   "position": 4327570483
+  },
+  {
+   "day": 24,
+   "position": 4260654482
+  },
+  {
+   "day": 25,
+   "position": 4207047160
+  },
+  {
+   "day": 26,
+   "position": 4150305643
+  },
+  {
+   "day": 27,
+   "position": 4093729828
+  },
+  {
+   "day": 28,
+   "position": 4037863197
+  },
+  {
+   "day": 29,
+   "position": 3994376732
+  },
+  {
+   "day": 30,
+   "position": 3944594505
+  },
+  {
+   "day": 31,
+   "position": 3901808333
+  },
+  {
+   "day": 32,
+   "position": 3857746291
+  },
+  {
+   "day": 33,
+   "position": 3817935753
+  },
+  {
+   "day": 34,
+   "position": 3774968966
+  },
+  {
+   "day": 35,
+   "position": 3738080399
+  },
+  {
+   "day": 36,
+   "position": 3705954875
+  },
+  {
+   "day": 37,
+   "position": 3678454489
+  },
+  {
+   "day": 38,
+   "position": 3641962004
+  },
+  {
+   "day": 39,
+   "position": 3615483626
+  },
+  {
+   "day": 40,
+   "position": 3583927023
+  },
+  {
+   "day": 41,
+   "position": 3551649802
+  },
+  {
+   "day": 42,
+   "position": 3529059223
+  },
+  {
+   "day": 43,
+   "position": 3501800016
+  },
+  {
+   "day": 44,
+   "position": 3480932538
+  },
+  {
+   "day": 45,
+   "position": 3458504851
+  },
+  {
+   "day": 46,
+   "position": 3438216999
+  },
+  {
+   "day": 47,
+   "position": 3418714956
+  },
+  {
+   "day": 48,
+   "position": 3401133285
+  },
+  {
+   "day": 49,
+   "position": 3380098995
+  },
+  {
+   "day": 50,
+   "position": 3356500287
+  },
+  {
+   "day": 51,
+   "position": 3333458890
+  },
+  {
+   "day": 52,
+   "position": 3312893935
+  },
+  {
+   "day": 53,
+   "position": 3293447161
+  },
+  {
+   "day": 54,
+   "position": 3279751035
+  },
+  {
+   "day": 55,
+   "position": 3264216451
+  },
+  {
+   "day": 56,
+   "position": 3245959848
+  },
+  {
+   "day": 57,
+   "position": 3230753025
+  },
+  {
+   "day": 58,
+   "position": 3217517711
+  },
+  {
+   "day": 59,
+   "position": 3204778343
+  },
+  {
+   "day": 60,
+   "position": 3192260422
+  },
+  {
+   "day": 61,
+   "position": 3177058193
+  },
+  {
+   "day": 62,
+   "position": 3164661874
+  },
+  {
+   "day": 63,
+   "position": 3153988214
+  },
+  {
+   "day": 64,
+   "position": 3141541259
+  },
+  {
+   "day": 65,
+   "position": 3129936072
+  },
+  {
+   "day": 66,
+   "position": 3120297560
+  },
+  {
+   "day": 67,
+   "position": 3109274553
+  },
+  {
+   "day": 68,
+   "position": 3099169411
+  },
+  {
+   "day": 69,
+   "position": 3088533283
+  },
+  {
+   "day": 70,
+   "position": 3079620742
+  },
+  {
+   "day": 71,
+   "position": 3071825876
+  },
+  {
+   "day": 72,
+   "position": 3063836810
+  },
+  {
+   "day": 73,
+   "position": 3056148006
+  },
+  {
+   "day": 74,
+   "position": 3048817738
+  },
+  {
+   "day": 75,
+   "position": 3042472393
+  },
+  {
+   "day": 76,
+   "position": 3036060120
+  },
+  {
+   "day": 77,
+   "position": 3029454704
+  },
+  {
+   "day": 78,
+   "position": 3023934060
+  },
+  {
+   "day": 79,
+   "position": 3018382771
+  },
+  {
+   "day": 80,
+   "position": 3013441301
+  },
+  {
+   "day": 81,
+   "position": 3007088667
+  },
+  {
+   "day": 82,
+   "position": 3000828584
+  },
+  {
+   "day": 83,
+   "position": 2995549196
+  },
+  {
+   "day": 84,
+   "position": 2990951791
+  },
+  {
+   "day": 85,
+   "position": 2986440867
+  },
+  {
+   "day": 86,
+   "position": 2982257046
+  },
+  {
+   "day": 87,
+   "position": 2977511093
+  },
+  {
+   "day": 88,
+   "position": 2973593814
+  },
+  {
+   "day": 89,
+   "position": 2970183004
+  },
+  {
+   "day": 90,
+   "position": 2965458807
+  }
+ ],
+ "drivers": [
+  {
+   "driver": "Wholesale run-off",
+   "outflow": 1645900287
+  },
+  {
+   "driver": "Retail run-off",
+   "outflow": 731511239
+  },
+  {
+   "driver": "Collateral calls (downgrade)",
+   "outflow": 731511239
+  },
+  {
+   "driver": "Committed facility draws",
+   "outflow": 548633429
+  }
+ ],
+ "legalEntity": "LE-FRA",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

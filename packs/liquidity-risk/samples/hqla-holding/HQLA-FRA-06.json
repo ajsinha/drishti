@@ -1,0 +1,23 @@
+{
+ "holdingId": "HQLA-FRA-06",
+ "security": "Rheintal Landesbank 4.280% 2031",
+ "level": "Level 2A",
+ "marketValue": 157900000.0,
+ "haircut": 0.15,
+ "liquidityValue": 134215000,
+ "encumbered": "No",
+ "bond": "BND-DERHEI090723",
+ "legalEntity": "LE-FRA",
+ "details": {
+  "isin": "DERHEI090723",
+  "currency": "EUR",
+  "price": 106.308,
+  "custodian": "Fed",
+  "operationalRequirements": "Met",
+  "centralBankEligible": true
+ },
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

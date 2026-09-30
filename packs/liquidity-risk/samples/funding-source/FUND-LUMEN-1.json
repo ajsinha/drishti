@@ -1,0 +1,21 @@
+{
+ "fundingId": "FUND-LUMEN-1",
+ "counterpartyName": "Lumen Semiconductor AG",
+ "type": "Commercial paper",
+ "amount": 734200000.0,
+ "currency": "USD",
+ "maturity": "2026-12-20",
+ "runOffRate": 1.0,
+ "terms": {
+  "rate": 0.031,
+  "startDate": "2026-06-28",
+  "collateral": "Unsecured",
+  "withdrawable": false
+ },
+ "counterparty": "CP-LUMEN",
+ "legalEntity": "LE-TKY",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

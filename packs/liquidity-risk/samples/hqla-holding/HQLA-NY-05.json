@@ -1,0 +1,23 @@
+{
+ "holdingId": "HQLA-NY-05",
+ "security": "United Kingdom Debt Management Office 3.860% 2031",
+ "level": "Level 1",
+ "marketValue": 3148500000.0,
+ "haircut": 0.0,
+ "liquidityValue": 3148500000,
+ "encumbered": "No",
+ "bond": "BND-GBGILT065113",
+ "legalEntity": "LE-NY",
+ "details": {
+  "isin": "GBGILT065113",
+  "currency": "GBP",
+  "price": 99.26,
+  "custodian": "BoE",
+  "operationalRequirements": "Met",
+  "centralBankEligible": true
+ },
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

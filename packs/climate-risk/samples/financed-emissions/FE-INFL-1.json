@@ -1,0 +1,111 @@
+{
+ "resultId": "FE-INFL-1",
+ "book": "BOOK-INFL-1",
+ "financed": 3112,
+ "exposure": 88700000,
+ "intensity": 35,
+ "dataQuality": 3.07,
+ "byCounterparty": [
+  {
+   "counterparty": "Tokai Mutual Trust Bank",
+   "exposure": 14600000,
+   "attribution": 0.000617,
+   "financed": 72,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Kestrel Global Macro Fund",
+   "exposure": 12150000,
+   "attribution": 0.000535,
+   "financed": 27,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Bramble Asset Management",
+   "exposure": 10850000,
+   "attribution": 0.000396,
+   "financed": 25,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Halcyon Shipping plc",
+   "exposure": 9650000,
+   "attribution": 0.000207,
+   "financed": 2750,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Pinnacle Credit Partners",
+   "exposure": 9000000,
+   "attribution": 0.000342,
+   "financed": 21,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Coral Bay Municipal Authority",
+   "exposure": 8550000,
+   "attribution": 0.000116,
+   "financed": 170,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Meridian Reinsurance Ltd",
+   "exposure": 7650000,
+   "attribution": 0.000269,
+   "financed": 11,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Aldershot Pension Trust",
+   "exposure": 7500000,
+   "attribution": 0.000196,
+   "financed": 9,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Harbor Point Bank",
+   "exposure": 6050000,
+   "attribution": 0.000193,
+   "financed": 18,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Rheintal Landesbank",
+   "exposure": 2700000,
+   "attribution": 0.000114,
+   "financed": 9,
+   "dataQuality": 4
+  }
+ ],
+ "bySector": [
+  {
+   "sector": "Shipping",
+   "financed": 2750
+  },
+  {
+   "sector": "Government",
+   "financed": 170
+  },
+  {
+   "sector": "Banking",
+   "financed": 99
+  },
+  {
+   "sector": "Asset management",
+   "financed": 73
+  },
+  {
+   "sector": "Insurance",
+   "financed": 11
+  },
+  {
+   "sector": "Pensions",
+   "financed": 9
+  }
+ ],
+ "methodology": "PCAF Global GHG Standard, attribution = exposure / EVIC",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

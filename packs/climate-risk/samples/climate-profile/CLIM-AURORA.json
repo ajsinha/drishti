@@ -1,0 +1,65 @@
+{
+ "profileId": "CLIM-AURORA",
+ "counterpartyName": "Aurora Sovereign Wealth Fund",
+ "sector": "Government",
+ "scope12": 58414,
+ "intensity": 64,
+ "transitionScore": 42,
+ "physicalScore": 50,
+ "netZeroTarget": "2050",
+ "scopes": [
+  {
+   "scope": "Scope 1",
+   "tco2e": 40890
+  },
+  {
+   "scope": "Scope 2",
+   "tco2e": 17524
+  },
+  {
+   "scope": "Scope 3",
+   "tco2e": 204215
+  }
+ ],
+ "history": [
+  {
+   "year": "2019",
+   "tco2e": 73636
+  },
+  {
+   "year": "2020",
+   "tco2e": 71932
+  },
+  {
+   "year": "2021",
+   "tco2e": 65150
+  },
+  {
+   "year": "2022",
+   "tco2e": 67757
+  },
+  {
+   "year": "2023",
+   "tco2e": 60578
+  },
+  {
+   "year": "2024",
+   "tco2e": 58343
+  },
+  {
+   "year": "2025",
+   "tco2e": 60219
+  }
+ ],
+ "targets": {
+  "reduction2030": "25% vs 2019",
+  "disclosure": "CDP only",
+  "revenueUsdM": 913,
+  "reportingYear": 2025
+ },
+ "counterparty": "CP-AURORA",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

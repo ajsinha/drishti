@@ -1,0 +1,23 @@
+{
+ "holdingId": "HQLA-FRA-01",
+ "security": "United Kingdom Debt Management Office 3.860% 2031",
+ "level": "Level 1",
+ "marketValue": 583600000.0,
+ "haircut": 0.0,
+ "liquidityValue": 583600000,
+ "encumbered": "No",
+ "bond": "BND-GBGILT065113",
+ "legalEntity": "LE-FRA",
+ "details": {
+  "isin": "GBGILT065113",
+  "currency": "GBP",
+  "price": 99.26,
+  "custodian": "Euroclear",
+  "operationalRequirements": "Met",
+  "centralBankEligible": true
+ },
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

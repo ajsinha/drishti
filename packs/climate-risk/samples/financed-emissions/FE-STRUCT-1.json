@@ -1,0 +1,112 @@
+{
+ "resultId": "FE-STRUCT-1",
+ "book": "BOOK-STRUCT-1",
+ "financed": 11987,
+ "exposure": 83500000,
+ "intensity": 144,
+ "dataQuality": 2.77,
+ "byCounterparty": [
+  {
+   "counterparty": "Tokai Mutual Trust Bank",
+   "exposure": 18150000,
+   "attribution": 0.000654,
+   "financed": 77,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Pinnacle Credit Partners",
+   "exposure": 18150000,
+   "attribution": 0.000896,
+   "financed": 55,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Meridian Life Assurance",
+   "exposure": 10350000,
+   "attribution": 0.009625,
+   "financed": 32,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Halcyon Shipping plc",
+   "exposure": 9300000,
+   "attribution": 0.000331,
+   "financed": 4406,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Verdant Agri Holdings",
+   "exposure": 9000000,
+   "attribution": 0.000137,
+   "financed": 1675,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Solaris Energy Corp.",
+   "exposure": 7650000,
+   "attribution": 0.000569,
+   "financed": 4474,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Bramble Asset Management",
+   "exposure": 5900000,
+   "attribution": 0.000219,
+   "financed": 14,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Cascadia Airlines Inc.",
+   "exposure": 4250000,
+   "attribution": 0.001327,
+   "financed": 1237,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Coral Bay Municipal Authority",
+   "exposure": 750000,
+   "attribution": 1.1e-05,
+   "financed": 17,
+   "dataQuality": 2
+  }
+ ],
+ "bySector": [
+  {
+   "sector": "Utilities",
+   "financed": 4474
+  },
+  {
+   "sector": "Shipping",
+   "financed": 4406
+  },
+  {
+   "sector": "Agriculture",
+   "financed": 1675
+  },
+  {
+   "sector": "Airlines",
+   "financed": 1237
+  },
+  {
+   "sector": "Banking",
+   "financed": 77
+  },
+  {
+   "sector": "Asset management",
+   "financed": 69
+  },
+  {
+   "sector": "Insurance",
+   "financed": 32
+  },
+  {
+   "sector": "Government",
+   "financed": 17
+  }
+ ],
+ "methodology": "PCAF Global GHG Standard, attribution = exposure / EVIC",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

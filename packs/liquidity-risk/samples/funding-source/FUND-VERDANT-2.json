@@ -1,0 +1,21 @@
+{
+ "fundingId": "FUND-VERDANT-2",
+ "counterpartyName": "Verdant Agri Holdings",
+ "type": "Repo funding",
+ "amount": 592200000.0,
+ "currency": "USD",
+ "maturity": "2027-03-26",
+ "runOffRate": 0.25,
+ "terms": {
+  "rate": 0.033,
+  "startDate": "2026-02-21",
+  "collateral": "Government bonds",
+  "withdrawable": false
+ },
+ "counterparty": "CP-VERDANT",
+ "legalEntity": "LE-FRA",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

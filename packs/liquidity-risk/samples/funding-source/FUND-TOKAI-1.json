@@ -1,0 +1,21 @@
+{
+ "fundingId": "FUND-TOKAI-1",
+ "counterpartyName": "Tokai Mutual Trust Bank",
+ "type": "Wholesale time deposit",
+ "amount": 490500000.0,
+ "currency": "USD",
+ "maturity": "2027-07-15",
+ "runOffRate": 0.4,
+ "terms": {
+  "rate": 0.0275,
+  "startDate": "2026-07-27",
+  "collateral": "Unsecured",
+  "withdrawable": false
+ },
+ "counterparty": "CP-TOKAI",
+ "legalEntity": "LE-NY",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

@@ -1,0 +1,23 @@
+{
+ "holdingId": "HQLA-NY-08",
+ "security": "Novatek Devices Inc. 4.060% 2031",
+ "level": "Level 2A",
+ "marketValue": 174100000.0,
+ "haircut": 0.15,
+ "liquidityValue": 147985000,
+ "encumbered": "No",
+ "bond": "BND-USNOVA065142",
+ "legalEntity": "LE-NY",
+ "details": {
+  "isin": "USNOVA065142",
+  "currency": "USD",
+  "price": 99.304,
+  "custodian": "Clearstream",
+  "operationalRequirements": "Met",
+  "centralBankEligible": true
+ },
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

@@ -1,0 +1,65 @@
+{
+ "profileId": "CLIM-SOLARIS",
+ "counterpartyName": "Solaris Energy Corp.",
+ "sector": "Utilities",
+ "scope12": 7861033,
+ "intensity": 1707,
+ "transitionScore": 86,
+ "physicalScore": 44,
+ "netZeroTarget": "2050",
+ "scopes": [
+  {
+   "scope": "Scope 1",
+   "tco2e": 5502723
+  },
+  {
+   "scope": "Scope 2",
+   "tco2e": 2358310
+  },
+  {
+   "scope": "Scope 3",
+   "tco2e": 62070277
+  }
+ ],
+ "history": [
+  {
+   "year": "2019",
+   "tco2e": 9895881
+  },
+  {
+   "year": "2020",
+   "tco2e": 9111174
+  },
+  {
+   "year": "2021",
+   "tco2e": 9249227
+  },
+  {
+   "year": "2022",
+   "tco2e": 9178963
+  },
+  {
+   "year": "2023",
+   "tco2e": 8285702
+  },
+  {
+   "year": "2024",
+   "tco2e": 7909622
+  },
+  {
+   "year": "2025",
+   "tco2e": 8065958
+  }
+ ],
+ "targets": {
+  "reduction2030": "50% vs 2019",
+  "disclosure": "CDP only",
+  "revenueUsdM": 4606,
+  "reportingYear": 2025
+ },
+ "counterparty": "CP-SOLARIS",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

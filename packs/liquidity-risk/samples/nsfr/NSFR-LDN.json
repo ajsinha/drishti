@@ -1,0 +1,89 @@
+{
+ "nsfrId": "NSFR-LDN",
+ "legalEntityName": "Drishti Bank plc",
+ "nsfr": 2.6261,
+ "asfTotal": 60400000000,
+ "rsfTotal": 23000000000,
+ "minimum": 1.0,
+ "asf": [
+  {
+   "category": "Regulatory capital",
+   "amount": 14400000000,
+   "factor": 1.0,
+   "weighted": 14400000000
+  },
+  {
+   "category": "Retail deposits, stable",
+   "amount": 17600000000,
+   "factor": 0.95,
+   "weighted": 16720000000
+  },
+  {
+   "category": "Retail deposits, less stable",
+   "amount": 7200000000,
+   "factor": 0.9,
+   "weighted": 6480000000
+  },
+  {
+   "category": "Wholesale funding > 1 year",
+   "amount": 12800000000,
+   "factor": 1.0,
+   "weighted": 12800000000
+  },
+  {
+   "category": "Operational deposits",
+   "amount": 11200000000,
+   "factor": 0.5,
+   "weighted": 5600000000
+  },
+  {
+   "category": "Wholesale funding < 1 year",
+   "amount": 8800000000,
+   "factor": 0.5,
+   "weighted": 4400000000
+  }
+ ],
+ "rsf": [
+  {
+   "category": "Level 1 assets",
+   "amount": 9600000000,
+   "factor": 0.0,
+   "weighted": 0
+  },
+  {
+   "category": "Level 2A assets",
+   "amount": 2400000000,
+   "factor": 0.15,
+   "weighted": 360000000
+  },
+  {
+   "category": "Loans to non-financials > 1 year",
+   "amount": 24000000000,
+   "factor": 0.65,
+   "weighted": 15600000000
+  },
+  {
+   "category": "Loans to financials < 6 months",
+   "amount": 6400000000,
+   "factor": 0.1,
+   "weighted": 640000000
+  },
+  {
+   "category": "Derivative assets net",
+   "amount": 1600000000,
+   "factor": 1.0,
+   "weighted": 1600000000
+  },
+  {
+   "category": "Other assets",
+   "amount": 4800000000,
+   "factor": 1.0,
+   "weighted": 4800000000
+  }
+ ],
+ "legalEntity": "LE-LDN",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

@@ -1,0 +1,70 @@
+{
+ "ladderId": "MLAD-FRA-USD",
+ "legalEntityName": "Drishti Bank Europe AG",
+ "currency": "USD",
+ "gap1m": -549300000.0,
+ "survivalDays": 365,
+ "buckets": [
+  {
+   "bucket": "O/N",
+   "inflows": 370200000.0,
+   "outflows": 858300000.0,
+   "net": -488100000.0,
+   "cumulative": -488100000.0
+  },
+  {
+   "bucket": "2D-1W",
+   "inflows": 339800000.0,
+   "outflows": 812500000.0,
+   "net": -472700000.0,
+   "cumulative": -960800000.0
+  },
+  {
+   "bucket": "1W-1M",
+   "inflows": 1228900000.0,
+   "outflows": 817400000.0,
+   "net": 411500000.0,
+   "cumulative": -549300000.0
+  },
+  {
+   "bucket": "1M-3M",
+   "inflows": 558500000.0,
+   "outflows": 767600000.0,
+   "net": -209100000.0,
+   "cumulative": -758400000.0
+  },
+  {
+   "bucket": "3M-6M",
+   "inflows": 890400000.0,
+   "outflows": 1625600000.0,
+   "net": -735200000.0,
+   "cumulative": -1493600000.0
+  },
+  {
+   "bucket": "6M-1Y",
+   "inflows": 1369300000.0,
+   "outflows": 2393200000.0,
+   "net": -1023900000.0,
+   "cumulative": -2517500000.0
+  },
+  {
+   "bucket": "1Y-2Y",
+   "inflows": 1970600000.0,
+   "outflows": 1455800000.0,
+   "net": 514800000.0,
+   "cumulative": -2002700000.0
+  },
+  {
+   "bucket": ">2Y",
+   "inflows": 1711600000.0,
+   "outflows": 1282900000.0,
+   "net": 428700000.0,
+   "cumulative": -1574000000.0
+  }
+ ],
+ "legalEntity": "LE-FRA",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

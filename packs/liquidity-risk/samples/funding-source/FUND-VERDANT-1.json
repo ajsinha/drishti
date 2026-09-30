@@ -1,0 +1,21 @@
+{
+ "fundingId": "FUND-VERDANT-1",
+ "counterpartyName": "Verdant Agri Holdings",
+ "type": "Operational deposit",
+ "amount": 609700000.0,
+ "currency": "EUR",
+ "maturity": "2026-10-18",
+ "runOffRate": 0.25,
+ "terms": {
+  "rate": 0.051,
+  "startDate": "2026-08-29",
+  "collateral": "Unsecured",
+  "withdrawable": true
+ },
+ "counterparty": "CP-VERDANT",
+ "legalEntity": "LE-LDN",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

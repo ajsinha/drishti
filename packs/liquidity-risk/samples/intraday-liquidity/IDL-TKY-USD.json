@@ -1,0 +1,110 @@
+{
+ "reportId": "IDL-TKY-USD",
+ "legalEntityName": "Drishti Securities Japan K.K.",
+ "currency": "USD",
+ "peakUsage": 446000000.0,
+ "available": 1109000000.0,
+ "usagePct": 0.4022,
+ "usage": [
+  {
+   "time": "07:00",
+   "used": 0
+  },
+  {
+   "time": "08:00",
+   "used": 0
+  },
+  {
+   "time": "09:00",
+   "used": 87424369
+  },
+  {
+   "time": "10:00",
+   "used": 156912920
+  },
+  {
+   "time": "11:00",
+   "used": 311118537
+  },
+  {
+   "time": "12:00",
+   "used": 418707012
+  },
+  {
+   "time": "13:00",
+   "used": 401130142
+  },
+  {
+   "time": "14:00",
+   "used": 446000000
+  },
+  {
+   "time": "15:00",
+   "used": 446000000
+  },
+  {
+   "time": "16:00",
+   "used": 446000000
+  },
+  {
+   "time": "17:00",
+   "used": 446000000
+  },
+  {
+   "time": "18:00",
+   "used": 446000000
+  }
+ ],
+ "largePayments": [
+  {
+   "time": "07:48",
+   "counterparty": "Solaris Energy Corp.",
+   "amount": -267900000.0
+  },
+  {
+   "time": "08:27",
+   "counterparty": "Pinnacle Credit Partners",
+   "amount": -449300000.0
+  },
+  {
+   "time": "08:44",
+   "counterparty": "Halcyon Shipping plc",
+   "amount": -79800000.0
+  },
+  {
+   "time": "08:46",
+   "counterparty": "Pinnacle Credit Partners",
+   "amount": 888100000.0
+  },
+  {
+   "time": "09:33",
+   "counterparty": "Lumen Semiconductor AG",
+   "amount": 377900000.0
+  },
+  {
+   "time": "12:02",
+   "counterparty": "Meridian Reinsurance Ltd",
+   "amount": -118200000.0
+  },
+  {
+   "time": "17:36",
+   "counterparty": "Harbor Point Bank",
+   "amount": 705100000.0
+  },
+  {
+   "time": "18:27",
+   "counterparty": "Bramble Asset Management",
+   "amount": -429300000.0
+  }
+ ],
+ "paymentSystem": "Fedwire",
+ "legalEntity": "LE-TKY",
+ "_meta": {
+  "source": "payments-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "peakUsage": 250000
+  }
+ }
+}

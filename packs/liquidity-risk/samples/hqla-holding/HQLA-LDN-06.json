@@ -1,0 +1,23 @@
+{
+ "holdingId": "HQLA-LDN-06",
+ "security": "Novatek Devices Inc. 4.060% 2031",
+ "level": "Level 2A",
+ "marketValue": 155600000.0,
+ "haircut": 0.15,
+ "liquidityValue": 0,
+ "encumbered": "Yes (pledged)",
+ "bond": "BND-USNOVA065142",
+ "legalEntity": "LE-LDN",
+ "details": {
+  "isin": "USNOVA065142",
+  "currency": "USD",
+  "price": 99.304,
+  "custodian": "BoE",
+  "operationalRequirements": "Met",
+  "centralBankEligible": true
+ },
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

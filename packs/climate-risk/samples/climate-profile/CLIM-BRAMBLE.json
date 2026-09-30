@@ -1,0 +1,65 @@
+{
+ "profileId": "CLIM-BRAMBLE",
+ "counterpartyName": "Bramble Asset Management",
+ "sector": "Asset management",
+ "scope12": 64193,
+ "intensity": 4,
+ "transitionScore": 31,
+ "physicalScore": 18,
+ "netZeroTarget": "2050",
+ "scopes": [
+  {
+   "scope": "Scope 1",
+   "tco2e": 44935
+  },
+  {
+   "scope": "Scope 2",
+   "tco2e": 19258
+  },
+  {
+   "scope": "Scope 3",
+   "tco2e": 247942
+  }
+ ],
+ "history": [
+  {
+   "year": "2019",
+   "tco2e": 76003
+  },
+  {
+   "year": "2020",
+   "tco2e": 74319
+  },
+  {
+   "year": "2021",
+   "tco2e": 73533
+  },
+  {
+   "year": "2022",
+   "tco2e": 71652
+  },
+  {
+   "year": "2023",
+   "tco2e": 71328
+  },
+  {
+   "year": "2024",
+   "tco2e": 67219
+  },
+  {
+   "year": "2025",
+   "tco2e": 65416
+  }
+ ],
+ "targets": {
+  "reduction2030": "42% vs 2019",
+  "disclosure": "CSRD",
+  "revenueUsdM": 15726,
+  "reportingYear": 2025
+ },
+ "counterparty": "CP-BRAMBLE",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

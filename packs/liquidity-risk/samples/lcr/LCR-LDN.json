@@ -1,0 +1,221 @@
+{
+ "lcrId": "LCR-LDN",
+ "legalEntityName": "Drishti Bank plc",
+ "lcr": 1.2721,
+ "hqla": 8568455000,
+ "netOutflows": 6735700000,
+ "minimum": 1.0,
+ "buffer": 1832755000,
+ "asOf": "2026-09-30",
+ "hqlaByLevel": [
+  {
+   "level": "Level 1",
+   "value": 3374400000
+  },
+  {
+   "level": "Level 1 (central bank reserves)",
+   "value": 3653000000.0
+  },
+  {
+   "level": "Level 2A",
+   "value": 1248055000
+  },
+  {
+   "level": "Level 2B",
+   "value": 293000000
+  }
+ ],
+ "flows": [
+  {
+   "category": "Retail deposits, stable",
+   "balance": 17638000000.0,
+   "rate": 0.05,
+   "flow": -881900000
+  },
+  {
+   "category": "Retail deposits, less stable",
+   "balance": 6182000000.0,
+   "rate": 0.1,
+   "flow": -618200000
+  },
+  {
+   "category": "Operational deposits",
+   "balance": 11407000000.0,
+   "rate": 0.25,
+   "flow": -2851750000
+  },
+  {
+   "category": "Non-operational wholesale",
+   "balance": 8460000000.0,
+   "rate": 0.4,
+   "flow": -3384000000
+  },
+  {
+   "category": "Secured funding (non-level-1 collateral)",
+   "balance": 6021000000.0,
+   "rate": 0.25,
+   "flow": -1505250000
+  },
+  {
+   "category": "Derivative outflows",
+   "balance": 1611000000.0,
+   "rate": 1.0,
+   "flow": -1611000000
+  },
+  {
+   "category": "Committed credit facilities",
+   "balance": 4841000000.0,
+   "rate": 0.1,
+   "flow": -484100000
+  },
+  {
+   "category": "Performing loans maturing",
+   "balance": 3900000000.0,
+   "rate": 0.5,
+   "flow": 1950000000
+  },
+  {
+   "category": "Reverse repo (non-level-1)",
+   "balance": 3043000000.0,
+   "rate": 0.5,
+   "flow": 1521500000
+  },
+  {
+   "category": "Derivative inflows",
+   "balance": 1129000000.0,
+   "rate": 1.0,
+   "flow": 1129000000
+  }
+ ],
+ "trend": [
+  {
+   "date": "2026-08-20",
+   "lcr": 1.1983
+  },
+  {
+   "date": "2026-08-21",
+   "lcr": 1.2133
+  },
+  {
+   "date": "2026-08-24",
+   "lcr": 1.227
+  },
+  {
+   "date": "2026-08-25",
+   "lcr": 1.2381
+  },
+  {
+   "date": "2026-08-26",
+   "lcr": 1.2456
+  },
+  {
+   "date": "2026-08-27",
+   "lcr": 1.249
+  },
+  {
+   "date": "2026-08-28",
+   "lcr": 1.2483
+  },
+  {
+   "date": "2026-08-31",
+   "lcr": 1.2437
+  },
+  {
+   "date": "2026-09-01",
+   "lcr": 1.2361
+  },
+  {
+   "date": "2026-09-02",
+   "lcr": 1.2266
+  },
+  {
+   "date": "2026-09-03",
+   "lcr": 1.2165
+  },
+  {
+   "date": "2026-09-04",
+   "lcr": 1.2072
+  },
+  {
+   "date": "2026-09-07",
+   "lcr": 1.2
+  },
+  {
+   "date": "2026-09-08",
+   "lcr": 1.1959
+  },
+  {
+   "date": "2026-09-09",
+   "lcr": 1.1958
+  },
+  {
+   "date": "2026-09-10",
+   "lcr": 1.1999
+  },
+  {
+   "date": "2026-09-11",
+   "lcr": 1.208
+  },
+  {
+   "date": "2026-09-14",
+   "lcr": 1.2195
+  },
+  {
+   "date": "2026-09-15",
+   "lcr": 1.2334
+  },
+  {
+   "date": "2026-09-16",
+   "lcr": 1.2486
+  },
+  {
+   "date": "2026-09-17",
+   "lcr": 1.2635
+  },
+  {
+   "date": "2026-09-18",
+   "lcr": 1.2768
+  },
+  {
+   "date": "2026-09-21",
+   "lcr": 1.2874
+  },
+  {
+   "date": "2026-09-22",
+   "lcr": 1.2943
+  },
+  {
+   "date": "2026-09-23",
+   "lcr": 1.2971
+  },
+  {
+   "date": "2026-09-24",
+   "lcr": 1.2958
+  },
+  {
+   "date": "2026-09-25",
+   "lcr": 1.2907
+  },
+  {
+   "date": "2026-09-28",
+   "lcr": 1.2827
+  },
+  {
+   "date": "2026-09-29",
+   "lcr": 1.273
+  },
+  {
+   "date": "2026-09-30",
+   "lcr": 1.2721
+  }
+ ],
+ "legalEntity": "LE-LDN",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "lcr": 0.004
+  }
+ }
+}

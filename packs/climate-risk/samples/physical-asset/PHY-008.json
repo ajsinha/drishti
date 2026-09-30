@@ -1,0 +1,46 @@
+{
+ "assetId": "PHY-008",
+ "name": "Osaka assembly plant",
+ "counterpartyName": "Bramble Asset Management",
+ "country": "JP",
+ "value": 641500000.0,
+ "worstHazard": "Extreme heat (90)",
+ "insured": 0.46,
+ "hazards": [
+  {
+   "hazard": "River flood",
+   "score": 26
+  },
+  {
+   "hazard": "Coastal flood",
+   "score": 64
+  },
+  {
+   "hazard": "Extreme heat",
+   "score": 90
+  },
+  {
+   "hazard": "Tropical storm",
+   "score": 71
+  },
+  {
+   "hazard": "Wildfire",
+   "score": 63
+  },
+  {
+   "hazard": "Drought",
+   "score": 84
+  }
+ ],
+ "location": {
+  "latitude": 34.69,
+  "longitude": 135.5,
+  "elevationM": 168,
+  "distanceToCoastKm": 17.5
+ },
+ "counterparty": "CP-BRAMBLE",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

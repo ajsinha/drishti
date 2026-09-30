@@ -1,0 +1,626 @@
+[
+ {
+  "kind": "lcr",
+  "id": "LCR-FRA",
+  "title": "LCR-FRA",
+  "subtitle": "Liquidity coverage ratio · Drishti Bank Europe AG"
+ },
+ {
+  "kind": "lcr",
+  "id": "LCR-LDN",
+  "title": "LCR-LDN",
+  "subtitle": "Liquidity coverage ratio · Drishti Bank plc"
+ },
+ {
+  "kind": "lcr",
+  "id": "LCR-NY",
+  "title": "LCR-NY",
+  "subtitle": "Liquidity coverage ratio · Drishti Bank Securities Inc."
+ },
+ {
+  "kind": "lcr",
+  "id": "LCR-TKY",
+  "title": "LCR-TKY",
+  "subtitle": "Liquidity coverage ratio · Drishti Securities Japan K.K."
+ },
+ {
+  "kind": "nsfr",
+  "id": "NSFR-FRA",
+  "title": "NSFR-FRA",
+  "subtitle": "Net stable funding ratio · Drishti Bank Europe AG"
+ },
+ {
+  "kind": "nsfr",
+  "id": "NSFR-LDN",
+  "title": "NSFR-LDN",
+  "subtitle": "Net stable funding ratio · Drishti Bank plc"
+ },
+ {
+  "kind": "nsfr",
+  "id": "NSFR-NY",
+  "title": "NSFR-NY",
+  "subtitle": "Net stable funding ratio · Drishti Bank Securities Inc."
+ },
+ {
+  "kind": "nsfr",
+  "id": "NSFR-TKY",
+  "title": "NSFR-TKY",
+  "subtitle": "Net stable funding ratio · Drishti Securities Japan K.K."
+ },
+ {
+  "kind": "maturity-ladder",
+  "id": "MLAD-FRA-EUR",
+  "title": "MLAD-FRA-EUR",
+  "subtitle": "Maturity ladder · Drishti Bank Europe AG"
+ },
+ {
+  "kind": "maturity-ladder",
+  "id": "MLAD-FRA-USD",
+  "title": "MLAD-FRA-USD",
+  "subtitle": "Maturity ladder · Drishti Bank Europe AG"
+ },
+ {
+  "kind": "maturity-ladder",
+  "id": "MLAD-LDN-EUR",
+  "title": "MLAD-LDN-EUR",
+  "subtitle": "Maturity ladder · Drishti Bank plc"
+ },
+ {
+  "kind": "maturity-ladder",
+  "id": "MLAD-LDN-GBP",
+  "title": "MLAD-LDN-GBP",
+  "subtitle": "Maturity ladder · Drishti Bank plc"
+ },
+ {
+  "kind": "maturity-ladder",
+  "id": "MLAD-LDN-USD",
+  "title": "MLAD-LDN-USD",
+  "subtitle": "Maturity ladder · Drishti Bank plc"
+ },
+ {
+  "kind": "maturity-ladder",
+  "id": "MLAD-NY-USD",
+  "title": "MLAD-NY-USD",
+  "subtitle": "Maturity ladder · Drishti Bank Securities Inc."
+ },
+ {
+  "kind": "maturity-ladder",
+  "id": "MLAD-TKY-JPY",
+  "title": "MLAD-TKY-JPY",
+  "subtitle": "Maturity ladder · Drishti Securities Japan K.K."
+ },
+ {
+  "kind": "maturity-ladder",
+  "id": "MLAD-TKY-USD",
+  "title": "MLAD-TKY-USD",
+  "subtitle": "Maturity ladder · Drishti Securities Japan K.K."
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-FRA-01",
+  "title": "HQLA-FRA-01",
+  "subtitle": "HQLA holding · United Kingdom Debt Management Office 3.860% 2031"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-FRA-02",
+  "title": "HQLA-FRA-02",
+  "subtitle": "HQLA holding · United States Treasury 3.820% 2031"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-FRA-03",
+  "title": "HQLA-FRA-03",
+  "subtitle": "HQLA holding · Japan Ministry of Finance 2.380% 2036"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-FRA-04",
+  "title": "HQLA-FRA-04",
+  "subtitle": "HQLA holding · United Kingdom Debt Management Office 4.360% 2036"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-FRA-05",
+  "title": "HQLA-FRA-05",
+  "subtitle": "HQLA holding · United States Treasury 4.320% 2036"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-FRA-06",
+  "title": "HQLA-FRA-06",
+  "subtitle": "HQLA holding · Rheintal Landesbank 4.280% 2031"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-FRA-07",
+  "title": "HQLA-FRA-07",
+  "subtitle": "HQLA holding · Orbital Telecom SA 5.240% 2036"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-FRA-08",
+  "title": "HQLA-FRA-08",
+  "subtitle": "HQLA holding · Novatek Devices Inc. 4.560% 2036"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-FRA-09",
+  "title": "HQLA-FRA-09",
+  "subtitle": "HQLA holding · Meridian Financial Group 4.180% 2031"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-LDN-01",
+  "title": "HQLA-LDN-01",
+  "subtitle": "HQLA holding · Federal Republic of Germany 3.800% 2031"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-LDN-02",
+  "title": "HQLA-LDN-02",
+  "subtitle": "HQLA holding · United States Treasury 3.820% 2031"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-LDN-03",
+  "title": "HQLA-LDN-03",
+  "subtitle": "HQLA holding · United Kingdom Debt Management Office 3.860% 2031"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-LDN-04",
+  "title": "HQLA-LDN-04",
+  "subtitle": "HQLA holding · Federal Republic of Germany 4.300% 2036"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-LDN-05",
+  "title": "HQLA-LDN-05",
+  "subtitle": "HQLA holding · Japan Ministry of Finance 1.880% 2031"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-LDN-06",
+  "title": "HQLA-LDN-06",
+  "subtitle": "HQLA holding · Novatek Devices Inc. 4.060% 2031"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-LDN-07",
+  "title": "HQLA-LDN-07",
+  "subtitle": "HQLA holding · Cascadia Airlines Inc. 6.020% 2036"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-LDN-08",
+  "title": "HQLA-LDN-08",
+  "subtitle": "HQLA holding · Meridian Financial Group 4.680% 2036"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-LDN-09",
+  "title": "HQLA-LDN-09",
+  "subtitle": "HQLA holding · Verdant Agri Holdings 5.790% 2031"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-NY-01",
+  "title": "HQLA-NY-01",
+  "subtitle": "HQLA holding · United Kingdom Debt Management Office 4.360% 2036"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-NY-02",
+  "title": "HQLA-NY-02",
+  "subtitle": "HQLA holding · United States Treasury 3.820% 2031"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-NY-03",
+  "title": "HQLA-NY-03",
+  "subtitle": "HQLA holding · Federal Republic of Germany 3.800% 2031"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-NY-04",
+  "title": "HQLA-NY-04",
+  "subtitle": "HQLA holding · United States Treasury 4.320% 2036"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-NY-05",
+  "title": "HQLA-NY-05",
+  "subtitle": "HQLA holding · United Kingdom Debt Management Office 3.860% 2031"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-NY-06",
+  "title": "HQLA-NY-06",
+  "subtitle": "HQLA holding · Lumen Semiconductor AG 2.630% 2036"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-NY-07",
+  "title": "HQLA-NY-07",
+  "subtitle": "HQLA holding · Rheintal Landesbank 4.280% 2031"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-NY-08",
+  "title": "HQLA-NY-08",
+  "subtitle": "HQLA holding · Novatek Devices Inc. 4.060% 2031"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-NY-09",
+  "title": "HQLA-NY-09",
+  "subtitle": "HQLA holding · Solaris Energy Corp. 4.960% 2036"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-TKY-01",
+  "title": "HQLA-TKY-01",
+  "subtitle": "HQLA holding · United Kingdom Debt Management Office 4.360% 2036"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-TKY-02",
+  "title": "HQLA-TKY-02",
+  "subtitle": "HQLA holding · Federal Republic of Germany 4.300% 2036"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-TKY-03",
+  "title": "HQLA-TKY-03",
+  "subtitle": "HQLA holding · Japan Ministry of Finance 2.380% 2036"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-TKY-04",
+  "title": "HQLA-TKY-04",
+  "subtitle": "HQLA holding · Federal Republic of Germany 3.800% 2031"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-TKY-05",
+  "title": "HQLA-TKY-05",
+  "subtitle": "HQLA holding · United States Treasury 3.820% 2031"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-TKY-06",
+  "title": "HQLA-TKY-06",
+  "subtitle": "HQLA holding · Orbital Telecom SA 4.740% 2031"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-TKY-07",
+  "title": "HQLA-TKY-07",
+  "subtitle": "HQLA holding · Helix Pharmaceuticals Inc. 4.720% 2036"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-TKY-08",
+  "title": "HQLA-TKY-08",
+  "subtitle": "HQLA holding · Lumen Semiconductor AG 2.630% 2036"
+ },
+ {
+  "kind": "hqla-holding",
+  "id": "HQLA-TKY-09",
+  "title": "HQLA-TKY-09",
+  "subtitle": "HQLA holding · Kaizen Motors Corp. 2.170% 2031"
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-ALDERSHOT-1",
+  "title": "FUND-ALDERSHOT-1",
+  "subtitle": "Funding source · Aldershot Pension Trust"
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-ALDERSHOT-2",
+  "title": "FUND-ALDERSHOT-2",
+  "subtitle": "Funding source · Aldershot Pension Trust"
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-AURORA-1",
+  "title": "FUND-AURORA-1",
+  "subtitle": "Funding source · Aurora Sovereign Wealth Fund"
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-AURORA-2",
+  "title": "FUND-AURORA-2",
+  "subtitle": "Funding source · Aurora Sovereign Wealth Fund"
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-BRAMBLE-1",
+  "title": "FUND-BRAMBLE-1",
+  "subtitle": "Funding source · Bramble Asset Management"
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-BRAMBLE-2",
+  "title": "FUND-BRAMBLE-2",
+  "subtitle": "Funding source · Bramble Asset Management"
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-CASCADIA-1",
+  "title": "FUND-CASCADIA-1",
+  "subtitle": "Funding source · Cascadia Airlines Inc."
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-CASCADIA-2",
+  "title": "FUND-CASCADIA-2",
+  "subtitle": "Funding source · Cascadia Airlines Inc."
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-CORAL-1",
+  "title": "FUND-CORAL-1",
+  "subtitle": "Funding source · Coral Bay Municipal Authority"
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-CORAL-2",
+  "title": "FUND-CORAL-2",
+  "subtitle": "Funding source · Coral Bay Municipal Authority"
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-HALCYON-1",
+  "title": "FUND-HALCYON-1",
+  "subtitle": "Funding source · Halcyon Shipping plc"
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-HALCYON-2",
+  "title": "FUND-HALCYON-2",
+  "subtitle": "Funding source · Halcyon Shipping plc"
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-HARBORPT-1",
+  "title": "FUND-HARBORPT-1",
+  "subtitle": "Funding source · Harbor Point Bank"
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-HARBORPT-2",
+  "title": "FUND-HARBORPT-2",
+  "subtitle": "Funding source · Harbor Point Bank"
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-KESTREL-1",
+  "title": "FUND-KESTREL-1",
+  "subtitle": "Funding source · Kestrel Global Macro Fund"
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-KESTREL-2",
+  "title": "FUND-KESTREL-2",
+  "subtitle": "Funding source · Kestrel Global Macro Fund"
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-LUMEN-1",
+  "title": "FUND-LUMEN-1",
+  "subtitle": "Funding source · Lumen Semiconductor AG"
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-LUMEN-2",
+  "title": "FUND-LUMEN-2",
+  "subtitle": "Funding source · Lumen Semiconductor AG"
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-MERIDIAN-1",
+  "title": "FUND-MERIDIAN-1",
+  "subtitle": "Funding source · Meridian Life Assurance"
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-MERIDIAN-2",
+  "title": "FUND-MERIDIAN-2",
+  "subtitle": "Funding source · Meridian Life Assurance"
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-MERIDIAN-RE-1",
+  "title": "FUND-MERIDIAN-RE-1",
+  "subtitle": "Funding source · Meridian Reinsurance Ltd"
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-MERIDIAN-RE-2",
+  "title": "FUND-MERIDIAN-RE-2",
+  "subtitle": "Funding source · Meridian Reinsurance Ltd"
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-NORTHBRIDGE-1",
+  "title": "FUND-NORTHBRIDGE-1",
+  "subtitle": "Funding source · Northbridge Capital LLP"
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-NORTHBRIDGE-2",
+  "title": "FUND-NORTHBRIDGE-2",
+  "subtitle": "Funding source · Northbridge Capital LLP"
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-PINNACLE-1",
+  "title": "FUND-PINNACLE-1",
+  "subtitle": "Funding source · Pinnacle Credit Partners"
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-PINNACLE-2",
+  "title": "FUND-PINNACLE-2",
+  "subtitle": "Funding source · Pinnacle Credit Partners"
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-RHEINTAL-1",
+  "title": "FUND-RHEINTAL-1",
+  "subtitle": "Funding source · Rheintal Landesbank"
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-RHEINTAL-2",
+  "title": "FUND-RHEINTAL-2",
+  "subtitle": "Funding source · Rheintal Landesbank"
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-SOLARIS-1",
+  "title": "FUND-SOLARIS-1",
+  "subtitle": "Funding source · Solaris Energy Corp."
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-SOLARIS-2",
+  "title": "FUND-SOLARIS-2",
+  "subtitle": "Funding source · Solaris Energy Corp."
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-TOKAI-1",
+  "title": "FUND-TOKAI-1",
+  "subtitle": "Funding source · Tokai Mutual Trust Bank"
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-TOKAI-2",
+  "title": "FUND-TOKAI-2",
+  "subtitle": "Funding source · Tokai Mutual Trust Bank"
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-VERDANT-1",
+  "title": "FUND-VERDANT-1",
+  "subtitle": "Funding source · Verdant Agri Holdings"
+ },
+ {
+  "kind": "funding-source",
+  "id": "FUND-VERDANT-2",
+  "title": "FUND-VERDANT-2",
+  "subtitle": "Funding source · Verdant Agri Holdings"
+ },
+ {
+  "kind": "liquidity-stress",
+  "id": "LST-COMB-FRA",
+  "title": "LST-COMB-FRA",
+  "subtitle": "Liquidity stress result · Drishti Bank Europe AG"
+ },
+ {
+  "kind": "liquidity-stress",
+  "id": "LST-COMB-LDN",
+  "title": "LST-COMB-LDN",
+  "subtitle": "Liquidity stress result · Drishti Bank plc"
+ },
+ {
+  "kind": "liquidity-stress",
+  "id": "LST-COMB-NY",
+  "title": "LST-COMB-NY",
+  "subtitle": "Liquidity stress result · Drishti Bank Securities Inc."
+ },
+ {
+  "kind": "liquidity-stress",
+  "id": "LST-COMB-TKY",
+  "title": "LST-COMB-TKY",
+  "subtitle": "Liquidity stress result · Drishti Securities Japan K.K."
+ },
+ {
+  "kind": "liquidity-stress",
+  "id": "LST-IDIO-FRA",
+  "title": "LST-IDIO-FRA",
+  "subtitle": "Liquidity stress result · Drishti Bank Europe AG"
+ },
+ {
+  "kind": "liquidity-stress",
+  "id": "LST-IDIO-LDN",
+  "title": "LST-IDIO-LDN",
+  "subtitle": "Liquidity stress result · Drishti Bank plc"
+ },
+ {
+  "kind": "liquidity-stress",
+  "id": "LST-IDIO-NY",
+  "title": "LST-IDIO-NY",
+  "subtitle": "Liquidity stress result · Drishti Bank Securities Inc."
+ },
+ {
+  "kind": "liquidity-stress",
+  "id": "LST-IDIO-TKY",
+  "title": "LST-IDIO-TKY",
+  "subtitle": "Liquidity stress result · Drishti Securities Japan K.K."
+ },
+ {
+  "kind": "liquidity-stress",
+  "id": "LST-MKT-FRA",
+  "title": "LST-MKT-FRA",
+  "subtitle": "Liquidity stress result · Drishti Bank Europe AG"
+ },
+ {
+  "kind": "liquidity-stress",
+  "id": "LST-MKT-LDN",
+  "title": "LST-MKT-LDN",
+  "subtitle": "Liquidity stress result · Drishti Bank plc"
+ },
+ {
+  "kind": "liquidity-stress",
+  "id": "LST-MKT-NY",
+  "title": "LST-MKT-NY",
+  "subtitle": "Liquidity stress result · Drishti Bank Securities Inc."
+ },
+ {
+  "kind": "liquidity-stress",
+  "id": "LST-MKT-TKY",
+  "title": "LST-MKT-TKY",
+  "subtitle": "Liquidity stress result · Drishti Securities Japan K.K."
+ },
+ {
+  "kind": "intraday-liquidity",
+  "id": "IDL-FRA-EUR",
+  "title": "IDL-FRA-EUR",
+  "subtitle": "Intraday liquidity · Drishti Bank Europe AG"
+ },
+ {
+  "kind": "intraday-liquidity",
+  "id": "IDL-FRA-USD",
+  "title": "IDL-FRA-USD",
+  "subtitle": "Intraday liquidity · Drishti Bank Europe AG"
+ },
+ {
+  "kind": "intraday-liquidity",
+  "id": "IDL-LDN-EUR",
+  "title": "IDL-LDN-EUR",
+  "subtitle": "Intraday liquidity · Drishti Bank plc"
+ },
+ {
+  "kind": "intraday-liquidity",
+  "id": "IDL-LDN-USD",
+  "title": "IDL-LDN-USD",
+  "subtitle": "Intraday liquidity · Drishti Bank plc"
+ },
+ {
+  "kind": "intraday-liquidity",
+  "id": "IDL-NY-USD",
+  "title": "IDL-NY-USD",
+  "subtitle": "Intraday liquidity · Drishti Bank Securities Inc."
+ },
+ {
+  "kind": "intraday-liquidity",
+  "id": "IDL-TKY-USD",
+  "title": "IDL-TKY-USD",
+  "subtitle": "Intraday liquidity · Drishti Securities Japan K.K."
+ }
+]

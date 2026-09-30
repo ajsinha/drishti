@@ -1,0 +1,21 @@
+{
+ "fundingId": "FUND-KESTREL-2",
+ "counterpartyName": "Kestrel Global Macro Fund",
+ "type": "Operational deposit",
+ "amount": 531800000.0,
+ "currency": "USD",
+ "maturity": "2027-03-03",
+ "runOffRate": 0.25,
+ "terms": {
+  "rate": 0.031,
+  "startDate": "2026-01-19",
+  "collateral": "Unsecured",
+  "withdrawable": true
+ },
+ "counterparty": "CP-KESTREL",
+ "legalEntity": "LE-NY",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

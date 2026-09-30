@@ -1,0 +1,141 @@
+{
+ "resultId": "FE-CREDIT-1",
+ "book": "BOOK-CREDIT-1",
+ "financed": 26253,
+ "exposure": 117650000,
+ "intensity": 223,
+ "dataQuality": 3.4,
+ "byCounterparty": [
+  {
+   "counterparty": "Cascadia Airlines Inc.",
+   "exposure": 34500000,
+   "attribution": 0.016904,
+   "financed": 15751,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Aldershot Pension Trust",
+   "exposure": 11550000,
+   "attribution": 0.000259,
+   "financed": 12,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Halcyon Shipping plc",
+   "exposure": 10250000,
+   "attribution": 0.00029,
+   "financed": 3867,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Lumen Semiconductor AG",
+   "exposure": 10050000,
+   "attribution": 0.000136,
+   "financed": 65,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Solaris Energy Corp.",
+   "exposure": 9900000,
+   "attribution": 0.000667,
+   "financed": 5242,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Rheintal Landesbank",
+   "exposure": 8950000,
+   "attribution": 0.000334,
+   "financed": 25,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Verdant Agri Holdings",
+   "exposure": 8250000,
+   "attribution": 9.2e-05,
+   "financed": 1120,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Aurora Sovereign Wealth Fund",
+   "exposure": 7150000,
+   "attribution": 0.002412,
+   "financed": 141,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Kestrel Global Macro Fund",
+   "exposure": 6850000,
+   "attribution": 0.000161,
+   "financed": 8,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Meridian Life Assurance",
+   "exposure": 5400000,
+   "attribution": 0.003796,
+   "financed": 13,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Harbor Point Bank",
+   "exposure": 2750000,
+   "attribution": 7.9e-05,
+   "financed": 7,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Northbridge Capital LLP",
+   "exposure": 2050000,
+   "attribution": 5.1e-05,
+   "financed": 2,
+   "dataQuality": 2
+  }
+ ],
+ "bySector": [
+  {
+   "sector": "Airlines",
+   "financed": 15751
+  },
+  {
+   "sector": "Utilities",
+   "financed": 5242
+  },
+  {
+   "sector": "Shipping",
+   "financed": 3867
+  },
+  {
+   "sector": "Agriculture",
+   "financed": 1120
+  },
+  {
+   "sector": "Government",
+   "financed": 141
+  },
+  {
+   "sector": "Technology",
+   "financed": 65
+  },
+  {
+   "sector": "Banking",
+   "financed": 32
+  },
+  {
+   "sector": "Insurance",
+   "financed": 13
+  },
+  {
+   "sector": "Pensions",
+   "financed": 12
+  },
+  {
+   "sector": "Asset management",
+   "financed": 10
+  }
+ ],
+ "methodology": "PCAF Global GHG Standard, attribution = exposure / EVIC",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

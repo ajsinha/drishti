@@ -1,0 +1,23 @@
+{
+ "holdingId": "HQLA-FRA-03",
+ "security": "Japan Ministry of Finance 2.380% 2036",
+ "level": "Level 1",
+ "marketValue": 792400000.0,
+ "haircut": 0.0,
+ "liquidityValue": 792400000,
+ "encumbered": "No",
+ "bond": "BND-JP0JGB182753",
+ "legalEntity": "LE-FRA",
+ "details": {
+  "isin": "JP0JGB182753",
+  "currency": "JPY",
+  "price": 112.354,
+  "custodian": "BoE",
+  "operationalRequirements": "Met",
+  "centralBankEligible": true
+ },
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

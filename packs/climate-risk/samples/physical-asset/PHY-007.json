@@ -1,0 +1,46 @@
+{
+ "assetId": "PHY-007",
+ "name": "São Paulo processing plant",
+ "counterpartyName": "Rheintal Landesbank",
+ "country": "BR",
+ "value": 471800000.0,
+ "worstHazard": "Coastal flood (95)",
+ "insured": 0.49,
+ "hazards": [
+  {
+   "hazard": "River flood",
+   "score": 48
+  },
+  {
+   "hazard": "Coastal flood",
+   "score": 95
+  },
+  {
+   "hazard": "Extreme heat",
+   "score": 27
+  },
+  {
+   "hazard": "Tropical storm",
+   "score": 15
+  },
+  {
+   "hazard": "Wildfire",
+   "score": 41
+  },
+  {
+   "hazard": "Drought",
+   "score": 86
+  }
+ ],
+ "location": {
+  "latitude": -23.55,
+  "longitude": -46.63,
+  "elevationM": 169,
+  "distanceToCoastKm": 212.1
+ },
+ "counterparty": "CP-RHEINTAL",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

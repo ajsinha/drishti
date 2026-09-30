@@ -1,0 +1,65 @@
+{
+ "profileId": "CLIM-ALDERSHOT",
+ "counterpartyName": "Aldershot Pension Trust",
+ "sector": "Pensions",
+ "scope12": 47418,
+ "intensity": 2,
+ "transitionScore": 12,
+ "physicalScore": 2,
+ "netZeroTarget": "None",
+ "scopes": [
+  {
+   "scope": "Scope 1",
+   "tco2e": 33193
+  },
+  {
+   "scope": "Scope 2",
+   "tco2e": 14225
+  },
+  {
+   "scope": "Scope 3",
+   "tco2e": 197624
+  }
+ ],
+ "history": [
+  {
+   "year": "2019",
+   "tco2e": 56107
+  },
+  {
+   "year": "2020",
+   "tco2e": 54864
+  },
+  {
+   "year": "2021",
+   "tco2e": 53240
+  },
+  {
+   "year": "2022",
+   "tco2e": 50694
+  },
+  {
+   "year": "2023",
+   "tco2e": 48722
+  },
+  {
+   "year": "2024",
+   "tco2e": 49443
+  },
+  {
+   "year": "2025",
+   "tco2e": 46469
+  }
+ ],
+ "targets": {
+  "reduction2030": "25% vs 2019",
+  "disclosure": "CDP only",
+  "revenueUsdM": 21040,
+  "reportingYear": 2025
+ },
+ "counterparty": "CP-ALDERSHOT",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

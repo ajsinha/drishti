@@ -1,0 +1,65 @@
+{
+ "profileId": "CLIM-KESTREL",
+ "counterpartyName": "Kestrel Global Macro Fund",
+ "sector": "Asset management",
+ "scope12": 49828,
+ "intensity": 4,
+ "transitionScore": 24,
+ "physicalScore": 20,
+ "netZeroTarget": "2050",
+ "scopes": [
+  {
+   "scope": "Scope 1",
+   "tco2e": 34880
+  },
+  {
+   "scope": "Scope 2",
+   "tco2e": 14948
+  },
+  {
+   "scope": "Scope 3",
+   "tco2e": 335764
+  }
+ ],
+ "history": [
+  {
+   "year": "2019",
+   "tco2e": 60006
+  },
+  {
+   "year": "2020",
+   "tco2e": 57752
+  },
+  {
+   "year": "2021",
+   "tco2e": 59134
+  },
+  {
+   "year": "2022",
+   "tco2e": 57819
+  },
+  {
+   "year": "2023",
+   "tco2e": 53728
+  },
+  {
+   "year": "2024",
+   "tco2e": 50514
+  },
+  {
+   "year": "2025",
+   "tco2e": 49262
+  }
+ ],
+ "targets": {
+  "reduction2030": "25% vs 2019",
+  "disclosure": "ISSB S2",
+  "revenueUsdM": 11530,
+  "reportingYear": 2025
+ },
+ "counterparty": "CP-KESTREL",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

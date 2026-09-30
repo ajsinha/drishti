@@ -1,0 +1,70 @@
+{
+ "ladderId": "MLAD-NY-USD",
+ "legalEntityName": "Drishti Bank Securities Inc.",
+ "currency": "USD",
+ "gap1m": -2724000000.0,
+ "survivalDays": 365,
+ "buckets": [
+  {
+   "bucket": "O/N",
+   "inflows": 812800000.0,
+   "outflows": 2182100000.0,
+   "net": -1369300000.0,
+   "cumulative": -1369300000.0
+  },
+  {
+   "bucket": "2D-1W",
+   "inflows": 871700000.0,
+   "outflows": 1964500000.0,
+   "net": -1092800000.0,
+   "cumulative": -2462100000.0
+  },
+  {
+   "bucket": "1W-1M",
+   "inflows": 2032900000.0,
+   "outflows": 2294800000.0,
+   "net": -261900000.0,
+   "cumulative": -2724000000.0
+  },
+  {
+   "bucket": "1M-3M",
+   "inflows": 3312400000.0,
+   "outflows": 2810100000.0,
+   "net": 502300000.0,
+   "cumulative": -2221700000.0
+  },
+  {
+   "bucket": "3M-6M",
+   "inflows": 3648200000.0,
+   "outflows": 1384800000.0,
+   "net": 2263400000.0,
+   "cumulative": 41700000.0
+  },
+  {
+   "bucket": "6M-1Y",
+   "inflows": 4818600000.0,
+   "outflows": 1958800000.0,
+   "net": 2859800000.0,
+   "cumulative": 2901500000.0
+  },
+  {
+   "bucket": "1Y-2Y",
+   "inflows": 3194300000.0,
+   "outflows": 4419800000.0,
+   "net": -1225500000.0,
+   "cumulative": 1676000000.0
+  },
+  {
+   "bucket": ">2Y",
+   "inflows": 3547000000.0,
+   "outflows": 1809000000.0,
+   "net": 1738000000.0,
+   "cumulative": 3414000000.0
+  }
+ ],
+ "legalEntity": "LE-NY",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

@@ -1,0 +1,65 @@
+{
+ "profileId": "CLIM-CORAL",
+ "counterpartyName": "Coral Bay Municipal Authority",
+ "sector": "Government",
+ "scope12": 1470706,
+ "intensity": 69,
+ "transitionScore": 46,
+ "physicalScore": 58,
+ "netZeroTarget": "2050 (SBTi validated)",
+ "scopes": [
+  {
+   "scope": "Scope 1",
+   "tco2e": 1029494
+  },
+  {
+   "scope": "Scope 2",
+   "tco2e": 441212
+  },
+  {
+   "scope": "Scope 3",
+   "tco2e": 11574606
+  }
+ ],
+ "history": [
+  {
+   "year": "2019",
+   "tco2e": 1792084
+  },
+  {
+   "year": "2020",
+   "tco2e": 1703315
+  },
+  {
+   "year": "2021",
+   "tco2e": 1632098
+  },
+  {
+   "year": "2022",
+   "tco2e": 1610987
+  },
+  {
+   "year": "2023",
+   "tco2e": 1666910
+  },
+  {
+   "year": "2024",
+   "tco2e": 1595839
+  },
+  {
+   "year": "2025",
+   "tco2e": 1530189
+  }
+ ],
+ "targets": {
+  "reduction2030": "42% vs 2019",
+  "disclosure": "None",
+  "revenueUsdM": 21226,
+  "reportingYear": 2025
+ },
+ "counterparty": "CP-CORAL",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

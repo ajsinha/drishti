@@ -1,0 +1,23 @@
+{
+ "holdingId": "HQLA-TKY-06",
+ "security": "Orbital Telecom SA 4.740% 2031",
+ "level": "Level 2B",
+ "marketValue": 201200000.0,
+ "haircut": 0.5,
+ "liquidityValue": 0,
+ "encumbered": "Yes (pledged)",
+ "bond": "BND-FRORBI079012",
+ "legalEntity": "LE-TKY",
+ "details": {
+  "isin": "FRORBI079012",
+  "currency": "EUR",
+  "price": 104.959,
+  "custodian": "Euroclear",
+  "operationalRequirements": "Met",
+  "centralBankEligible": false
+ },
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

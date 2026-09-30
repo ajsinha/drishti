@@ -1,0 +1,50 @@
+{
+ "resultId": "CST-CURRENTPOLICIES-FI",
+ "scenarioName": "Current policies",
+ "deskName": "Bonds and securitised",
+ "loss2030": -9009250,
+ "loss2050": -14414800,
+ "capitalShare": 0.00225,
+ "bySector": [
+  {
+   "sector": "Utilities",
+   "loss": -2028672
+  },
+  {
+   "sector": "Airlines",
+   "loss": -1479280
+  },
+  {
+   "sector": "Shipping",
+   "loss": -2259422
+  },
+  {
+   "sector": "Materials",
+   "loss": -984761
+  },
+  {
+   "sector": "Autos",
+   "loss": -2257115
+  }
+ ],
+ "byHorizon": [
+  {
+   "year": "2030",
+   "loss": 9009250
+  },
+  {
+   "year": "2040",
+   "loss": 11712025
+  },
+  {
+   "year": "2050",
+   "loss": 14414800
+  }
+ ],
+ "scenario": "NGFS-CURRENTPOLICIES",
+ "desk": "DESK-FI",
+ "_meta": {
+  "source": "climate-stress",
+  "generation": 1
+ }
+}

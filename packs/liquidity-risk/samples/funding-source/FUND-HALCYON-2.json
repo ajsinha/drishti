@@ -1,0 +1,21 @@
+{
+ "fundingId": "FUND-HALCYON-2",
+ "counterpartyName": "Halcyon Shipping plc",
+ "type": "Repo funding",
+ "amount": 409000000.0,
+ "currency": "EUR",
+ "maturity": "2027-02-05",
+ "runOffRate": 0.25,
+ "terms": {
+  "rate": 0.0375,
+  "startDate": "2025-12-28",
+  "collateral": "Government bonds",
+  "withdrawable": false
+ },
+ "counterparty": "CP-HALCYON",
+ "legalEntity": "LE-FRA",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

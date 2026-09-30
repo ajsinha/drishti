@@ -1,0 +1,21 @@
+{
+ "fundingId": "FUND-CORAL-1",
+ "counterpartyName": "Coral Bay Municipal Authority",
+ "type": "Commercial paper",
+ "amount": 272000000.0,
+ "currency": "USD",
+ "maturity": "2027-01-31",
+ "runOffRate": 1.0,
+ "terms": {
+  "rate": 0.0305,
+  "startDate": "2026-04-26",
+  "collateral": "Unsecured",
+  "withdrawable": false
+ },
+ "counterparty": "CP-CORAL",
+ "legalEntity": "LE-LDN",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

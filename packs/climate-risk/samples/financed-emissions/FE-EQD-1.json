@@ -1,0 +1,133 @@
+{
+ "resultId": "FE-EQD-1",
+ "book": "BOOK-EQD-1",
+ "financed": 7903,
+ "exposure": 185700000,
+ "intensity": 43,
+ "dataQuality": 3.31,
+ "byCounterparty": [
+  {
+   "counterparty": "Aldershot Pension Trust",
+   "exposure": 34950000,
+   "attribution": 0.000669,
+   "financed": 32,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Harbor Point Bank",
+   "exposure": 25000000,
+   "attribution": 0.001079,
+   "financed": 98,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Halcyon Shipping plc",
+   "exposure": 22700000,
+   "attribution": 0.00055,
+   "financed": 7320,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Summit Clearing LLC",
+   "exposure": 21750000,
+   "attribution": 0.000534,
+   "financed": 30,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Bramble Asset Management",
+   "exposure": 13350000,
+   "attribution": 0.000222,
+   "financed": 14,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Meridian Life Assurance",
+   "exposure": 13350000,
+   "attribution": 0.006102,
+   "financed": 21,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Pinnacle Credit Partners",
+   "exposure": 12000000,
+   "attribution": 0.000286,
+   "financed": 18,
+   "dataQuality": 2
+  },
+  {
+   "counterparty": "Lumen Semiconductor AG",
+   "exposure": 11100000,
+   "attribution": 0.000141,
+   "financed": 68,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Rheintal Landesbank",
+   "exposure": 9050000,
+   "attribution": 0.00033,
+   "financed": 25,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Kestrel Global Macro Fund",
+   "exposure": 7950000,
+   "attribution": 0.000175,
+   "financed": 9,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Aurora Sovereign Wealth Fund",
+   "exposure": 7850000,
+   "attribution": 0.00433,
+   "financed": 253,
+   "dataQuality": 3
+  },
+  {
+   "counterparty": "Meridian Reinsurance Ltd",
+   "exposure": 6650000,
+   "attribution": 0.000365,
+   "financed": 15,
+   "dataQuality": 3
+  }
+ ],
+ "bySector": [
+  {
+   "sector": "Shipping",
+   "financed": 7320
+  },
+  {
+   "sector": "Government",
+   "financed": 253
+  },
+  {
+   "sector": "Banking",
+   "financed": 123
+  },
+  {
+   "sector": "Technology",
+   "financed": 68
+  },
+  {
+   "sector": "Asset management",
+   "financed": 41
+  },
+  {
+   "sector": "Insurance",
+   "financed": 36
+  },
+  {
+   "sector": "Pensions",
+   "financed": 32
+  },
+  {
+   "sector": "Financial services",
+   "financed": 30
+  }
+ ],
+ "methodology": "PCAF Global GHG Standard, attribution = exposure / EVIC",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}
