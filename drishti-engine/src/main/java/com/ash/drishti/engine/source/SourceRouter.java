@@ -46,6 +46,13 @@ public final class SourceRouter {
     private final SourcesProperties props;
     private final ExecutorService executor;
 
+    private final SourceStats stats = new SourceStats();
+
+    /** Reads per connector, for the health page. */
+    public SourceStats stats() {
+        return stats;
+    }
+
     public SourceRouter(SourceRegistry registry, SourcesProperties props, ExecutorService virtualExecutor) {
         this.registry = registry;
         this.props = props;
@@ -109,14 +116,19 @@ public final class SourceRouter {
         for (SourcePlugin p : candidates) {
             Optional<EntityDocument> d;
             boolean dated = p.manifest().capabilities().dated();
+            String name = p.manifest().name();
+            long t0 = System.nanoTime();
             try {
                 d = dated ? p.fetch(ref, asOf) : p.fetch(ref);
             } catch (Exception e) {
-                throw new DrishtiException(ErrorCode.SOURCE_FAILED, p.manifest().name() + " failed reading " + ref, e);
+                stats.failed(name, System.nanoTime() - t0, e);
+                throw new DrishtiException(ErrorCode.SOURCE_FAILED, name + " failed reading " + ref, e);
             }
             if (d.isPresent()) {
+                stats.found(name, System.nanoTime() - t0);
                 return d.get();
             }
+            stats.notHeld(name, System.nanoTime() - t0);
         }
         throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no source holds " + ref);
     }

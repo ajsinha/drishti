@@ -122,3 +122,19 @@
       .then(function () { b.disabled = false; });
   });
 })();
+
+/* Health: re-render the body every few seconds from the server (no client-side templating). */
+(function () {
+  'use strict';
+  var root = document.querySelector('[data-health]');
+  if (!root) { return; }
+  var body = root.querySelector('[data-health-body]');
+  var every = +root.getAttribute('data-refresh') || 5000;
+  setInterval(function () {
+    if (document.hidden) { return; }
+    fetch('/admin/health?partial=1', { headers: { Accept: 'text/html' } })
+      .then(function (r) { return r.ok ? r.text() : null; })
+      .then(function (html) { if (html) { body.innerHTML = html; } })
+      .catch(function () { /* offline: keep the last picture */ });
+  }, every);
+})();

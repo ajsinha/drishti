@@ -16,6 +16,7 @@
 # Changelog
 
 ## Unreleased
+- **Admin → Health.** Every connector's status (with the reason while it reconnects), reads, errors, p50/p99 latency, last error and caches. Every pack's Sutras, Sutra problems and connectors. Live streaming and server figures. An overall OK / DEGRADED / DOWN. Refreshes every 5 s, and `GET /api/v1/admin/health` serves the same for monitoring. Read statistics are recorded lock-free on the router's read path.
 - **Every connector reconnects by itself.**
   - **JDBC:** pools lazy slots, so it starts with its database down, reconnects broken connections, and lists table kinds in the background until the database answers. Health reports the last error.
   - **Kafka:** a supervisor recreates the consumer after a fatal error or a broker that was down at start, with backoff from 1 s to 30 s, and resumes from the last offset applied instead of replaying.

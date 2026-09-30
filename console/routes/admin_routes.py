@@ -69,6 +69,19 @@ async def audit(request: Request, subject: str = "", limit: int = 200):
     return render(request, "admin/audit.html", events=events, subject=subject)
 
 
+@router.get("/health")
+async def health(request: Request, partial: int = 0):
+    """Connector and pack health (admins): the page, or only its body for the page's own refresh."""
+    me = ident(request)
+    if not me.is_admin:
+        return _forbidden(request)
+    try:
+        data = await request.app.state.backend.admin("GET", "/health", me)
+    except BackendError as e:
+        return render(request, "admin/forbidden.html", status_code=e.status, error=e)
+    return render(request, "admin/_health_body.html" if partial else "admin/health.html", h=data)
+
+
 @router.get("/caches")
 async def caches(request: Request):
     """Every cache (the engine's and each connector's), with a purge for any of them or all."""

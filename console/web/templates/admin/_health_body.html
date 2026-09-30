@@ -1,0 +1,67 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% set tone = {'OK': 'ok', 'UP': 'ok', 'DEGRADED': 'warn', 'DOWN': 'bad'} %}
+<div class="hl-sum">
+  <span class="hl-badge hl-{{ tone[h.status] }}"><i class="bi bi-{{ 'check-circle' if h.status == 'OK' else 'exclamation-triangle' }}" aria-hidden="true"></i> {{ h.status }}</span>
+  <span><b>{{ h.summary.sources - h.summary.sourcesDown }}</b> of {{ h.summary.sources }} connectors up</span>
+  {% if h.summary.failedToStart %}<span class="t-neg"><b>{{ h.summary.failedToStart }}</b> failed to start</span>{% endif %}
+  <span><b>{{ h.summary.packs - h.summary.packsWithProblems }}</b> of {{ h.summary.packs }} packs healthy</span>
+  <span class="text-muted-d mono">v{{ h.server.version }} · up {{ (h.server.uptimeSeconds // 3600) }}h {{ (h.server.uptimeSeconds % 3600) // 60 }}m ·
+    heap {{ h.server.heapUsedMb }}/{{ h.server.heapMaxMb }} MB · {{ h.server.threads }} threads · Java {{ h.server.java }}</span>
+</div>
+
+<h2 class="ws-h">Connectors</h2>
+<section class="pnl"><div class="pnl-b"><div class="tbl-wrap"><table class="tbl hl-tbl">
+  <thead><tr><th>Connector</th><th>Status</th><th>Kinds</th><th class="num">Reads</th><th class="num">Errors</th><th class="num">p50 ms</th><th class="num">p99 ms</th><th>Last error</th><th>Cache</th></tr></thead>
+  <tbody>{% for s in h.sources %}{% set r = s.reads %}
+    <tr class="{{ 'hl-row-down' if s.status == 'DOWN' else '' }}">
+      <td class="mono">{{ s.name }}<div class="cmp-path">{{ [('live' if s.live else ''), ('dated' if s.dated else ''), ('search' if s.search else '')] | select | join(' · ') }}</div></td>
+      <td><span class="hl-badge hl-{{ tone[s.status] }}">{{ s.status }}</span>{% if s.status != 'UP' %}<div class="cmp-path">{{ s.health }}</div>{% endif %}</td>
+      <td title="{{ s.kinds | join(', ') }}">{{ s.kinds | length }}</td>
+      <td class="num mono">{{ r.reads or 0 }}{% if r.reads %}<div class="cmp-path">{{ r.found }} found · {{ r.notHeld }} not held</div>{% endif %}</td>
+      <td class="num mono{% if r.errors %} t-neg{% endif %}">{{ r.errors or 0 }}</td>
+      <td class="num mono">{{ r.p50Ms if r.p50Ms is not none else '' }}</td>
+      <td class="num mono">{{ r.p99Ms if r.p99Ms is not none else '' }}</td>
+      <td class="hl-err">{% if r.lastError %}{{ r.lastError[:140] }}<div class="cmp-path mono">{{ (r.lastErrorAt or '')[:19] | replace('T', ' ') }} UTC</div>{% endif %}</td>
+      <td class="mono cmp-path">{% for k, v in (s.cache or {}).items() %}{{ k }} {{ v }}{% if not loop.last %} · {% endif %}{% endfor %}</td>
+    </tr>{% endfor %}
+    {% for name, why in (h.failedToStart or {}).items() %}
+    <tr class="hl-row-down"><td class="mono">{{ name }}</td><td><span class="hl-badge hl-bad">FAILED</span></td><td colspan="7" class="hl-err">did not start: {{ why }}</td></tr>{% endfor %}
+  </tbody></table></div></div></section>
+
+<h2 class="ws-h">Packs</h2>
+<section class="pnl"><div class="pnl-b"><div class="tbl-wrap"><table class="tbl hl-tbl">
+  <thead><tr><th>Pack</th><th>Status</th><th>Requires</th><th class="num">Kinds</th><th class="num">Sutras</th><th>Connectors</th><th>Problems</th></tr></thead>
+  <tbody>{% for p in h.packs %}
+    <tr class="{{ 'hl-row-down' if p.status != 'OK' else '' }}">
+      <td>{{ p.title }}<div class="cmp-path mono">{{ p.name }} {{ p.version }}</div></td>
+      <td><span class="hl-badge hl-{{ tone[p.status] }}">{{ p.status }}</span></td>
+      <td class="mono cmp-path">{{ p.requires | join(', ') }}</td>
+      <td class="num mono">{{ p.kinds }}</td>
+      <td class="num mono">{{ p.sutras }}</td>
+      <td class="mono cmp-path">{% for c in p.connectors %}<span class="{{ 't-neg' if c in p.connectorsDown else 'text-muted-d' if c in p.connectorsOff else '' }}"
+          title="{{ 'down' if c in p.connectorsDown else 'off (disabled or not started)' if c in p.connectorsOff else 'up' }}">{{ c }}</span>{% if not loop.last %}, {% endif %}{% endfor %}</td>
+      <td class="hl-err">{% for b in p.sutraProblems %}<div><span class="mono">{{ b.file }}</span>: {{ b.problems | join('; ') }}</div>{% endfor %}
+        {% if p.connectorsDown %}<div>connector{{ 's' if p.connectorsDown | length > 1 }} down: {{ p.connectorsDown | join(', ') }}</div>{% endif %}</td>
+    </tr>{% endfor %}
+  </tbody></table></div></div></section>
+
+<h2 class="ws-h">Live</h2>
+<div class="hl-sum">
+  <span><b>{{ h.live.streams }}</b> open streams</span><span><b>{{ h.live.topics }}</b> live topics</span>
+  <span><b>{{ h.live.frames }}</b> frames sent{% if h.live.droppedFrames %}, {{ h.live.droppedFrames }} merged for slow clients{% endif %}</span>
+  <span class="mono">tick → screen p50 {{ '%.1f' | format(h.live.p50Ms or 0) }} ms · p99 {{ '%.1f' | format(h.live.p99Ms or 0) }} ms</span>
+</div>

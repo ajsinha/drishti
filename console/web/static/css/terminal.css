@@ -512,3 +512,12 @@ button.tbar-link { background: none; border: 0; padding: 0 .35rem; font: inherit
 .set-form { display: grid; grid-template-columns: max-content minmax(0, 22rem); gap: .6rem 1rem; align-items: center; }
 .set-form select, .set-form input { background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 5px; padding: .3rem .5rem; }
 @media (max-width: 640px) { .set-form { grid-template-columns: 1fr; } }
+
+/* ---- Health (admin) ---- */
+.hl-sum { display: flex; flex-wrap: wrap; gap: .5rem 1.4rem; align-items: center; margin: .5rem 0 1rem; font-size: .88rem; }
+.hl-badge { display: inline-flex; gap: .3rem; align-items: center; border-radius: 999px; padding: .05rem .55rem; font-size: .74rem; font-weight: 700;
+  border: 1px solid currentColor; }
+.hl-ok { color: var(--d-ok); } .hl-warn { color: var(--d-warn); } .hl-bad { color: var(--d-bad); }
+.hl-row-down td { background: color-mix(in srgb, var(--d-bad) 7%, transparent); }
+.hl-err { font-size: .78rem; color: var(--d-muted); max-width: 26rem; overflow-wrap: anywhere; }
+.hl-tbl td { vertical-align: top; }

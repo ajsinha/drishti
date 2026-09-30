@@ -79,6 +79,21 @@ Nobody is forced to change a password unless it is configured:
 
 Both default to off.
 
+## Health (`/admin/health`)
+
+Admins see, refreshed every 5 seconds:
+
+- **Connectors**: UP or DOWN (with the reason while it reconnects), the kinds each serves, reads (found and not held),
+  errors, p50/p99 read latency over the last 512 reads, the last error and when, and cache sizes. Connectors that
+  failed to start are listed with the reason. What needs attention is listed first.
+- **Packs**: status, what each requires, kinds, Sutras loaded, Sutra problems (file and message) and the state of
+  the pack's connectors.
+- **Live**: open streams, live topics, frames sent (and merged for slow clients), tick-to-screen latency.
+- **Server**: version, uptime, heap, threads.
+
+The overall status is **OK**, **DEGRADED** (a connector down or failed, or a pack with problems) or **DOWN**
+(no connector can serve). Monitoring systems can poll the same data at `GET /api/v1/admin/health` (admin token).
+
 ## Single sign-on (OpenID Connect)
 
 Staff can sign in through the bank's identity provider (Keycloak, Microsoft Entra ID, Okta, Ping, …). The login

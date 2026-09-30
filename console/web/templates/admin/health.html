@@ -1,0 +1,30 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Health · {{ PRODUCT }}{% endblock %}
+{% block screen %}admin{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm health" data-health data-refresh="5000">
+  <h1>Health</h1>
+  {% with tab='health' %}{% include "admin/_nav.html" %}{% endwith %}
+  <p class="text-muted-d">Every connector and pack Drishti depends on. Refreshes every 5 seconds; connectors that are down reconnect by themselves.
+    The same figures are at <span class="mono">GET /api/v1/admin/health</span> for external monitoring.</p>
+  <div data-health-body>{% include "admin/_health_body.html" %}</div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/admin.js?v={{ ASSET_V }}"></script>{% endblock %}
