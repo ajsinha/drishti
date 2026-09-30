@@ -16,6 +16,12 @@
 # Changelog
 
 ## Unreleased
+- **S3 connector.** Entity documents in Amazon S3 or any S3-compatible store, in the file connector's layout (undated, and dated folders by business date).
+  - **Settings:** endpoint override for MinIO or on-prem stores, and static keys or the AWS credential chain.
+  - **Search:** identifiers and dates are listed periodically for search.
+  - **Safety:** identifiers cannot escape the prefix.
+  - **Size:** only the SDK's S3 module and the JDK HTTP client (about 9 MB).
+  - **Tests:** run against an S3 API server in Docker.
 - **ActiveMQ and RabbitMQ connectors.** Live entities from queues and topics, built on a shared base (`drishti-messaging`).
   - **State:** a queue keeps no history, so each connector keeps the latest document of every entity in a persistent RocksDB state store (new persistent mode of the disk cache) that survives Drishti restarts, with a bounded memory cache.
   - **Messages:** documents or envelopes; deletes by empty body, null doc or header. Durable subscriptions and acknowledgement after storing mean nothing is lost while Drishti is down. Changes are pushed live, and search covers everything received.

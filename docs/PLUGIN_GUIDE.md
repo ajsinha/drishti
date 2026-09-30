@@ -29,7 +29,7 @@ Every connector recovers from an outage without a restart of Drishti, and starts
 | `aerospike` | the client tends the cluster in the background (`failIfNotConnected` off) |
 | `activemq` | the failover transport reconnects; its interruptions show in health; a supervisor rebuilds the session after any other failure |
 | `rabbitmq` | a supervisor retries until the first connection succeeds; then the client's automatic recovery reconnects and re-subscribes |
-| `delta`, `file`, `rest`, feeds | nothing long-lived to lose: each call reads or connects afresh |
+| `delta`, `file`, `rest`, `s3`, feeds | nothing long-lived to lose: each call reads or connects afresh |
 
 While a store is down its reads fail (views say which source failed) and `health` reports `DOWN: … (reconnecting)`.
 
@@ -119,6 +119,7 @@ surface as `DRS-1003` and `DRS-1004`.
 | `feed` | Public data: `nyfed-sofr`, `ecb-estr`, `ecb-fx`, `us-treasury`, `fred` | One connector per feed, declared by the market-data pack, each off until switched on. Entities carry the feed in their id (`FIX-SOFR-NYFED`). Keeps history for picked dates; a failed fetch keeps the last good data and shows in health. |
 | `kafka` | Live entities from Kafka topics: an envelope `{kind, id, doc}`, or whole-document messages with `kind` and `id-field` | Reads every partition from the beginning (the topic is the state: the latest message per entity), then pushes each new message to open views. Tombstones delete. No consumer-group commits. The trading pack declares `trading-stream`, off until `DRISHTI_STREAM_TRADING=true`; `tools/samplegen/stream.py` replays and ticks the samples. |
 | `rest` | An HTTP/JSON service: `base-url` + `path` per kind | Headers from settings; the generation from a response header. |
+| `s3` | Documents in Amazon S3 or any S3-compatible store (MinIO, Ceph, on-prem): `<prefix><kind>/<id>.json` and dated `<prefix><yyyy-MM-dd>/<kind>/<id>.json` | `bucket`, `prefix`, `region`, `endpoint` (S3-compatible stores, path-style), `access-key`/`secret-key` or the AWS credential chain (environment, profile, instance role). Identifiers and dates are listed every `rescan-seconds` for search; reads are cached `cache-seconds`. Only the SDK's S3 module and the JDK HTTP client (about 9 MB). |
 | `activemq` | Live entities from ActiveMQ Classic queues and topics (`destinations: queue:trades,topic:quotes`) | Topics through durable subscriptions. Each message is acknowledged after it is stored. See *Message queues* below. |
 | `rabbitmq` | Live entities from RabbitMQ queues (`queues: trades,quotes`; `bind.<queue>: exchange:routing.key`) | Queues declared durable unless `declare: false`; manual acknowledgement after storing; `prefetch` 100. See *Message queues* below. |
 
