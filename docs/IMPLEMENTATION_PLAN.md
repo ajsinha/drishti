@@ -1,0 +1,126 @@
+<!--
+  Project Drishti -- Any data. Any domain. One grammar.
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
+  PROPRIETARY AND CONFIDENTIAL. See the LICENSE file in the root of this repository.
+-->
+
+# Drishti — Implementation Plan
+
+*Revision 1.0 · 2026-09-30 · Author: Ashutosh Sinha · Companion to [ARCHITECTURE.md](ARCHITECTURE.md)*
+
+## Working agreement
+
+- All work happens on **`develop`**. Each wave closes with a green build, updated docs,
+  and a merge to **`main`** ("drill it": push `develop`, merge into `main`, push `main`).
+- Sole author: Ashutosh Sinha. Commit messages explain *why*; no trailers.
+- Every file carries the copyright/proprietary header; build fails otherwise.
+- No source file over 1500 lines (UX templates excepted); build fails otherwise.
+- Each wave updates `docs/` (guides, ADRs, CHANGELOG) as it goes, not afterwards.
+
+## Wave map
+
+Ten waves. Each holds a small set of closely related items and ends with a demo-able exit gate.
+
+| Wave | Theme | Exit gate |
+|---|---|---|
+| W1 | Build foundation | `mvnw verify` green with licence-header, file-size and architecture gates; CI runs |
+| W2 | Console shell & landing | Console serves the landing page with the hero animation, 4 themes and the public nav |
+| W3 | Data model & sources | `demo` and `file` plugins serve the 4 reference entities with provenance and fingerprints |
+| W4 | Sutra grammar | Sutra YAML parses, validates against the schema with line-accurate errors, and hot-reloads |
+| W5 | Sutra-EL & reference Sutras | Expressions compile; formats resolve; the 4 reference Sutras produce golden layouts |
+| W6 | Inference engine | An entity with **no** Sutra renders a sensible layout; "Sutra + inference" merges |
+| W7 | Engine pipeline & entity graph | `ViewPipeline` builds full ViewModels in-process with links; warm p99 < 50 ms (JMH) |
+| W8 | REST API & console views | The 4 mockups are reproduced in the browser end to end, with command line, F-keys, breadcrumbs and F9 |
+| W9 | Live updates | Curves and MTM tick over SSE; top bar shows measured p99; 10k-subscriber soak passes |
+| W10 | Studio, security, ops & release | Sutra Studio, entitlements, Docker, runbooks, `v1.0.0` tagged on `main` |
+
+---
+
+## W1 — Build foundation
+- Maven reactor, `mvnw`, `drishti-bom`, Java 21 enforcer, `.editorconfig`.
+- Spotless (palantir) with `config/spotless/license-header.txt`; Error Prone + NullAway; JaCoCo.
+- Empty modules with `package-info.java`: `api, common, sutra, inference, graph, engine, server, testkit, it, benchmarks`.
+- `drishti-it`: `LicenseHeaderTest`, `SourceFileSizeTest` (1500), `ArchitectureRulesTest` (no Spring in engine, no `Serializable`).
+- GitHub Actions `fast.yml`; `docs/adr/001..006` for decisions D1–D6; `CHANGELOG.md`.
+
+## W2 — Console shell & landing
+- `console/run_drishti_web.py`, `console/config/application.yaml`, properties configurator (YAML → local → env → CLI).
+- `web/templates/{base,landing}.html`, `_nav_public.html`, `_theme_menu.html`, `_footer.html` (copyright), `_macros/ui.html`.
+- `static/css/{tokens,theme}.css`: `terminal` (default), `light`, `blue`, `green`.
+- `static/js/{app,theme,landing}.js`: the JSON → `{◉}` → panels hero canvas, reduced-motion, replay.
+- Brand assets in `static/img/`; vendored Bootstrap and Bootstrap Icons.
+- Tests: file sizes, licence headers, no inline script, colour contrast.
+
+## W3 — Data model & sources
+- `drishti-api`: `EntityRef`, `DataNode`, `Provenance`, `SourcePlugin`, `SourceCapabilities`, `Subscription`, `ReverseLookup`, `PluginManifest`.
+- `drishti-common`: config loader, `ErrorCode`/`DrishtiException` (`DRS-1nnn`), `JsonCodec`, `ShapeFingerprinter` (xxHash64).
+- `drishti-engine`: `PluginDiscovery` (isolated class loaders), `SourceRouter`, virtual-thread fetch executor.
+- `plugins/drishti-plugin-demo`: the 4 reference entities plus curves, CSAs, agreements, counterparties and 14 netting-set trades.
+- `plugins/drishti-plugin-file`: JSON/CSV/Parquet directory source; generation from a sequence number.
+- Tests: fingerprint stability, plugin isolation, routing by config.
+
+## W4 — Sutra grammar
+- `drishti-sutra` model records: `Sutra`, `Match`, `Title`, `Strip`, `Panel`, `KeyMap`.
+- YAML parser with source positions; `sutra.schema.json`; validator emitting `DRS-2nnn` with line/column.
+- `SutraRegistry`: versions, lookup by `name@version`, `WatchService` hot reload.
+- Docs: `docs/SUTRA_REFERENCE.md` (keys, panel kinds, versioning).
+- Tests: parse round-trip, schema negatives, reload races.
+
+## W5 — Sutra-EL & reference Sutras
+- Sutra-EL: lexer → parser → AST → compiled closures (paths, `[?x]` filters, ternary, `link()`, `size()`, arithmetic, concat); EBNF in the reference doc.
+- `FormatRegistry` (`config/formats.yaml`) and tones; `Classifier` (`config/classifiers.yaml`).
+- `sutras/rates/irs-vanilla.v3.yaml`, `sutras/fx/fx-swap.v2.yaml`, `sutras/commodities/listed-future.v1.yaml`, `sutras/credit/netting-set.v1.yaml`.
+- Tests: jqwik property tests for EL; golden `Layout` JSON per reference Sutra.
+
+## W6 — Inference engine
+- `drishti-inference`: `ShapeTree`, `SemanticHints` (`config/inference/semantics.yaml`), the rules in ARCHITECTURE §6.
+- `CandidateScorer`, `AreaPacker` (strip ≤ 8, right column ≤ 4), `LayoutMerger` (Sutra wins; `infer` holes filled).
+- Explanations (rule + score) recorded per inferred panel.
+- Tests: an unknown product renders; each reference entity without its Sutra stays usable (golden).
+- Docs: `docs/INFERENCE.md`.
+
+## W7 — Engine pipeline & entity graph
+- `CommandParser` (`config/mnemonics.yaml`, fuzzy suggestions).
+- `ViewPipeline` (ARCHITECTURE §4), `LayoutResolver` with Caffeine caches, parallel `Binder`, `ViewModel` records and a streaming serializer.
+- `drishti-graph`: `ReferenceCatalog` (`config/references.yaml`), `LinkResolver` with a deadline and pending placeholders, badges, reverse lookups.
+- `drishti-benchmarks`: JMH for fingerprint, EL, bind and the full pipeline.
+- Tests: golden ViewModels for the 4 entities; a slow link degrades to pending.
+
+## W8 — REST API & console views
+- `drishti-server`: Spring Boot 3.5 on virtual threads; `Command`, `View`, `Entity`, `Sutra` and `Source` controllers; `ApiExceptionHandler` (problem+json); springdoc; actuator + Prometheus.
+- Console: `core/api_client.py` (pooled httpx), `routes/{terminal,views,help}.py`, `templates/terminal/{home,view}.html`.
+- `_macros/panels.html` (one macro per panel kind), `_command_bar.html`, `_fkeys.html`, `_breadcrumb.html`, `_provenance.html`.
+- `static/js/{command,keys,view}.js`, `static/js/panels/<kind>.js`, vendored ECharts.
+- Tests: MockMvc, pytest routes, headless Chrome screenshots against the mockups.
+- Docs: `API_GUIDE.md`, `CONFIGURATION.md`, `USER_GUIDE.md`, `KEYBOARD.md`.
+
+## W9 — Live updates
+- `Subscription` in `demo` (random-walk ticker) and a `kafka` plugin.
+- `TopicHub` (single writer per ref, JCTools MPSC), 50 ms coalescing, `ViewMaintainer` with a path→panel dependency index, `PatchDiffer`, HdrHistogram.
+- `StreamController` SSE with `Last-Event-ID` resume and bounded per-client queues.
+- Console `live.js`: patch by `data-path`, flash on change, reconnect banner, live p99 in the top bar.
+- Tests: patch minimality, slow-consumer drop-to-latest, 10k-subscriber soak (`-Pperf`).
+- Docs: `LIVE.md`, `PERFORMANCE.md` with measured numbers.
+
+## W10 — Studio, security, ops & release
+- Sutra Studio (`/studio`): vendored CodeMirror, schema completion, live preview, "promote inferred panel".
+- Security: OIDC login, JWT to the server, `config/entitlements.yaml`, links disabled with the reason, F9 redaction, CSP.
+- Plugins `rest` and `jdbc`; an `aero` stub against a documented interface.
+- Ops: Dockerfiles, `deploy/compose.yaml`, Grafana dashboard, `OPERATIONS.md`, `runbooks/`, `TROUBLESHOOTING.md`.
+- Release: `RELEASE_NOTES.md`, tag `v1.0.0`, merge to `main`.
+
+---
+
+## Risks
+
+| Risk | Mitigation |
+|---|---|
+| Inference produces noisy layouts | Scored rules with density limits; golden tests; Studio "promote" loop |
+| EL grows into a scripting language | Closed grammar, no loops/assignment, reviewed via ADR |
+| Live fan-out cost at scale | Coalescing, dependency index, bounded queues, perf gates in W6 |
+| Mockup fidelity drifts | Screenshot comparison tests from W5 onwards |
+
+---
+
+*Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
+Proprietary and confidential. Unauthorised copying, use or distribution is prohibited.*
