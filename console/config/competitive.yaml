@@ -1,0 +1,209 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Competitive landscape. Categories, not vendors: a comparison naming one product's features would be wrong by its
+# next release and is not ours to state. Each row says where a category's centre of gravity sits (as understood in
+# September 2026) and how Drishti does it. Values: Yes | Partial | No.
+as_of: September 2026
+categories:
+  - { id: terminal, name: Market data terminals, examples: "Bloomberg Terminal, LSEG Workspace, FactSet" }
+  - { id: platform, name: Trading and risk platform screens, examples: "Murex, Calypso, FIS and in-house trade and risk systems" }
+  - { id: lowcode, name: Low-code internal tools, examples: "Retool, Appsmith, Microsoft Power Apps" }
+  - { id: bi, name: BI and dashboards, examples: "Tableau, Power BI, Grafana" }
+intro:
+  - >-
+    Four families of product put financial entities on a screen, and each is good at what it does.
+    <strong>Market data terminals</strong> set the standard for dense, keyboard-driven, live screens, and
+    their content is the product. But the screens are the vendor's, built for the vendor's data.
+    <strong>Trading and risk platforms</strong> have deep screens for every product they book. But each
+    product type's screen is coded, and it shows only that platform's data.
+    <strong>Low-code tools</strong> make internal screens quick to assemble, but a person still assembles
+    each one. <strong>BI and dashboards</strong> are excellent at aggregates and charts, and weaker at
+    one entity, live, with its links.
+  - >-
+    The pattern: the screens that are dense and live are coded per product, and the screens that are quick
+    to make are not terminals. Drishti describes screens in a grammar (<strong>Rachana</strong>), writes
+    one short <strong>Sutra</strong> per product family, infers the rest from the data's shape, and serves
+    it all as a live, linked, keyboard-driven terminal over your own systems.
+rows:
+  - id: any-entity
+    cap: One screen per entity, for any entity from any of your systems
+    terminal: Partial
+    platform: Partial
+    lowcode: Partial
+    bi: "No"
+    drishti: "Yes"
+    problem: >-
+      A trade lives in one system, its netting set in another, its curve in a third. Each tool shows the part
+      it owns, and the desk tabs between them.
+    how:
+      - >-
+        Sources plug in through a small, Spring-free interface: live caches, REST services, databases and feed
+        files, with config-driven routing and deadlines. Every entity, whatever its source, becomes the same
+        immutable document, so one view can show a trade from one system, a curve from another and a netting
+        set from a third.
+  - id: no-coded-screens
+    cap: No hand-built screen per product
+    terminal: "No"
+    platform: "No"
+    lowcode: Partial
+    bi: Partial
+    drishti: "Yes"
+    problem: >-
+      Every new product type waits for a screen. Screens are written once, drift from the data, and are costly
+      to change.
+    how:
+      - >-
+        A screen is a Sutra: a short, versioned YAML file written in Rachana, with twelve panel kinds and a
+        closed, side-effect-free expression language. The four reference views (a swap, an FX swap, a future
+        and a netting set) are 60–90 lines each. A Sutra reloads when it is saved, and a broken edit keeps the
+        last good version live.
+  - id: inference
+    cap: A usable screen for data nobody has laid out yet
+    terminal: "No"
+    platform: "No"
+    lowcode: "No"
+    bi: Partial
+    drishti: "Yes"
+    problem: >-
+      A new feed or product has no screen at all, so on day one people read raw JSON or wait.
+    how:
+      - >-
+        Scored, explainable rules read the document's shape. Similar objects become tabs, rows keyed by tenor
+        become curves, short label-to-number lists become bars, dated rows become ladders, and references
+        become links. Each inferred panel says which rule chose it and why, and Studio turns an inferred
+        layout into an editable Sutra.
+  - id: keyboard
+    cap: Keyboard-first command line with type-ahead
+    terminal: "Yes"
+    platform: Partial
+    lowcode: "No"
+    bi: "No"
+    drishti: "Yes"
+    problem: >-
+      Terminal users expect <code>&lt;MNEMONIC&gt; &lt;ID&gt; &lt;GO&gt;</code> and function keys. Browser tools
+      expect a mouse.
+    how:
+      - >-
+        Commands, a Bloomberg-style suggestion dropdown (mnemonics, recents and entities, answered from
+        in-memory indexes within 30 ms), F-keys per view, F9 raw JSON, Alt+← back, F1 help. The mnemonics are
+        configuration.
+  - id: linked
+    cap: Every identifier is a door, across systems
+    terminal: Partial
+    platform: Partial
+    lowcode: Partial
+    bi: Partial
+    drishti: "Yes"
+    problem: >-
+      Drill-through usually stops at the edge of the tool's own data.
+    how:
+      - >-
+        A configured reference catalogue turns identifiers and fields into links to any source. Linked
+        entities are fetched in parallel within a 40 ms budget, show a badge read from the target
+        (<code>EE 4.1m</code>, <code>threshold 0</code>), and show as pending rather than blocking the view.
+        Breadcrumbs keep the path.
+  - id: live
+    cap: Live ticking with measured latency
+    terminal: "Yes"
+    platform: "Yes"
+    lowcode: Partial
+    bi: Partial
+    drishti: "Yes"
+    problem: >-
+      Refresh-based screens show a snapshot, and live ones rarely say how late they are.
+    how:
+      - >-
+        Server-sent events with one source subscription per entity, leading-edge 50 ms frames, and only changed
+        cells and panels sent. Slow clients get merged frames rather than slowing the others. The top bar shows
+        the measured p99, about 11 ms from tick to frame.
+  - id: provenance
+    cap: Every view says how it was built
+    terminal: Partial
+    platform: Partial
+    lowcode: "No"
+    bi: Partial
+    drishti: "Yes"
+    problem: >-
+      When a number looks wrong, the first question is where it came from and which version of the screen showed it.
+    how:
+      - >-
+        Each view names its layout (<code>Sutra irs-vanilla v3 + inference</code>), the data's shape
+        fingerprint, and the source with its generation. F9 shows the document exactly as the source sent it.
+  - id: versioned
+    cap: Screens as reviewable text in version control
+    terminal: "No"
+    platform: Partial
+    lowcode: Partial
+    bi: Partial
+    drishti: "Yes"
+    problem: >-
+      A screen defined in a tool's database is hard to review, diff or roll back.
+    how:
+      - >-
+        Sutras are plain files, validated with line-accurate problems and versioned by name@version. Old
+        versions stay loadable. Studio previews a change against any entity before it is saved.
+  - id: entitlements
+    cap: Entitlements, with denied links visible but disabled
+    terminal: "Yes"
+    platform: "Yes"
+    lowcode: Partial
+    bi: "Yes"
+    drishti: "Yes"
+    problem: >-
+      Hiding what someone may not see also hides that it exists.
+    how:
+      - >-
+        Roles set which entity kinds a user may open. Links to others stay visible and say "no access". Raw JSON
+        is redacted for roles without raw access. Users, lockout and an audit log are built in.
+  - id: selfhosted
+    cap: Self-hosted and air-gapped
+    terminal: "No"
+    platform: "Yes"
+    lowcode: Partial
+    bi: Partial
+    drishti: "Yes"
+    problem: >-
+      Some desks cannot depend on an external service or a CDN.
+    how:
+      - >-
+        One Spring Boot server and one console. Every front-end asset is vendored, and the console runs under
+        a strict content security policy with no inline script or style.
+  - id: content
+    cap: Market data content and analytics
+    terminal: "Yes"
+    platform: "Yes"
+    lowcode: "No"
+    bi: Partial
+    drishti: "No"
+    problem: >-
+      Prices, curves, reference data and pricing models are what terminals and trading platforms sell.
+    how:
+      - >-
+        Drishti has none of its own, by design. It shows what your sources hold, including a terminal's or
+        platform's data where you connect it, and never computes a price.
+  - id: scale
+    cap: Scale of deployment, ecosystem, vendor support
+    terminal: "Yes"
+    platform: "Yes"
+    lowcode: "Yes"
+    bi: "Yes"
+    drishti: "No"
+    problem: >-
+      The established products have customers, integrations, certifications and support desks.
+    how:
+      - >-
+        Drishti is one author's work and has not been deployed at a supervised institution. It is built to be
+        inspected rather than taken on trust: its tests, golden views, measured numbers and decision records
+        are all in the repository and in this help centre.

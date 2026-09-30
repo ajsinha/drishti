@@ -15,6 +15,9 @@
 -->
 # Changelog
 
+## Unreleased — Wave 12b: competitive landscape and mobile
+- **Competitive landscape** (`/about/competitive`), in Maya's form. It compares categories, not vendors (market data terminals, trading and risk platform screens, low-code tools, BI), with a Yes/Partial/No matrix over twelve capabilities and, for each, the problem and how Drishti does it. It says plainly where Drishti is weaker (no market data content or analytics, no ecosystem or support). The rows are config (`console/config/competitive.yaml`).
+
 ## 1.2.0 — Wave 12: help centre and About (2026-09-30)
 - **Help centre** (`/help`), in Maya's help language:
   - a searchable catalogue of 25 guides in six categories;

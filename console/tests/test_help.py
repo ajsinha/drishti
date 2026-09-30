@@ -65,3 +65,12 @@ def test_about_page(client):
     assert r.status_code == 200
     for text in ("1.2.0", "21.0.12", "1h 2m", "irs-vanilla v3", "demo", "DRISHTI SOFTWARE LICENCE", "Copyright", "/help/notices"):
         assert text in r.text, text
+
+
+def test_competitive_landscape(client):
+    r = client.get("/about/competitive")
+    assert r.status_code == 200
+    for text in ("Competitive landscape", "Market data terminals", "Low-code internal tools", "Categories, not vendors",
+                 "cmp cmp-yes", "cmp cmp-no", 'id="no-coded-screens"', "Market data content and analytics"):
+        assert text in r.text, text
+    assert "/about/competitive" in client.get("/about").text and "/about/competitive" in client.get("/help").text

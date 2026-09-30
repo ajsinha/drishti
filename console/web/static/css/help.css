@@ -89,3 +89,14 @@
 .pnl-help { margin-left: .5rem; color: var(--d-faint); font-size: .8rem; }
 .pnl-help:hover { color: var(--d-accent); text-decoration: none; }
 @media (max-width: 1000px) { .help-cards, .about-grid { grid-template-columns: 1fr; } .help-layout { grid-template-columns: 1fr; } .help-toc { position: static; max-height: none; } }
+/* Competitive landscape */
+.cmp-page .pnl { margin-bottom: .9rem; }
+.cmp-tbl caption { caption-side: top; color: var(--d-muted); font-size: .85rem; padding-bottom: .4rem; }
+.cmp-tbl td, .cmp-tbl th { white-space: normal; }
+.cmp-col { text-align: center; }
+.cmp-us { background: var(--d-accent-tint); }
+.cmp { display: inline-block; min-width: 4.2rem; text-align: center; font-size: .75rem; font-weight: 600; border-radius: 999px; padding: .05rem .5rem; border: 1px solid currentColor; }
+.cmp-yes { color: var(--d-ok); } .cmp-partial { color: var(--d-warn); } .cmp-no { color: var(--d-faint); }
+.cmp-note { font-size: .82rem; margin: .8rem 0 0; }
+.cmp-problem { color: var(--d-muted); font-style: italic; }
+.cmp-problem .bi { color: var(--d-warn); font-style: normal; }

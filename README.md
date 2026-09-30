@@ -79,8 +79,8 @@ terminal does.
   **`drishti-dev-admin` / `drishti-dev-admin123`**. Change that password (the UI warns until you do),
   or set `DRISHTI_SEED_ADMIN=false` in production.
 - **Help.** An in-app help centre (`/help`) with tutorials, guides and every reference, plus search.
-  `F1` gives help for the current screen, each panel has a **?**, and `/about` shows the version and
-  what is loaded.
+  `F1` gives help for the current screen, each panel has a **?**, `/about` shows the version and
+  what is loaded, and `/about/competitive` compares Drishti with the categories it sits among.
 - **Operations.** Prometheus metrics, a Grafana dashboard, Dockerfiles and compose, and runbooks.
 - **Not built** (see the release notes): OIDC/SSO, the `aero` plugin, and F8 Impact.
 

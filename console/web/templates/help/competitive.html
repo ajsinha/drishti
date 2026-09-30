@@ -1,0 +1,61 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Competitive landscape · {{ PRODUCT }}{% endblock %}
+{% block body_class %}terminal help-page{% endblock %}
+{% block nav %}{% include "help/_nav.html" %}{% endblock %}
+{% block content %}
+{# Categories, not vendors (see config/competitive.yaml). #}
+{% set cols = c.categories %}
+<section class="help-hero">
+  <i class="bi bi-bar-chart-steps hero-ico" aria-hidden="true"></i>
+  <h1>Competitive landscape</h1>
+  <p>Where {{ PRODUCT }} sits among the products that put financial entities on a screen, and how it does the things the others do not.</p>
+  <div class="help-cta">
+    <a class="btn-pill btn-ghost" href="/about"><i class="bi bi-info-circle" aria-hidden="true"></i> About {{ PRODUCT }}</a>
+    <a class="btn-pill btn-ghost" href="/help"><i class="bi bi-book" aria-hidden="true"></i> Help</a>
+  </div>
+</section>
+<div class="help-wrap cmp-page">
+  <section class="pnl">
+    <div class="pnl-b">
+      {% for para in c.intro %}<p>{{ para | safe }}</p>{% endfor %}
+      <div class="tbl-wrap"><table class="tbl cmp-tbl">
+        <caption>How the product categories compare. Each capability links to how {{ PRODUCT }} does it.</caption>
+        <thead><tr><th>Capability</th>{% for k in cols %}<th class="cmp-col" title="{{ k.examples }}">{{ k.name }}</th>{% endfor %}<th class="cmp-col cmp-us">{{ PRODUCT }}</th></tr></thead>
+        <tbody>{% for r in c.rows %}<tr><td><a href="#{{ r.id }}">{{ r.cap }}</a></td>
+          {% for k in cols %}<td class="cmp-col"><span class="cmp cmp-{{ r[k.id] | lower }}">{{ r[k.id] }}</span></td>{% endfor %}
+          <td class="cmp-col cmp-us"><span class="cmp cmp-{{ r.drishti | lower }}">{{ r.drishti }}</span></td></tr>{% endfor %}</tbody>
+      </table></div>
+      <p class="text-muted-d cmp-note">Categories, not vendors. Each row says where a category's centre of gravity sits as understood in
+        {{ c.as_of }}. Individual products differ, change between releases, and some cross these lines. Examples:
+        {% for k in cols %}<b>{{ k.name }}</b>: {{ k.examples }}{{ '; ' if not loop.last else '.' }}{% endfor %}
+        <span class="cmp cmp-yes">Yes</span> a centre of gravity · <span class="cmp cmp-partial">Partial</span> some, or with effort ·
+        <span class="cmp cmp-no">No</span> not what it is for.</p>
+    </div>
+  </section>
+  {% for r in c.rows %}
+  <section class="pnl cmp-row" id="{{ r.id }}">
+    <header class="pnl-h"><h3>{{ r.cap }}</h3><span class="cmp cmp-{{ r.drishti | lower }}">{{ PRODUCT }}: {{ r.drishti }}</span></header>
+    <div class="pnl-b">
+      <p class="cmp-problem"><i class="bi bi-exclamation-diamond" aria-hidden="true"></i> {{ r.problem | safe }}</p>
+      {% for h in r.how %}<p>{{ h | safe }}</p>{% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script>{% endblock %}

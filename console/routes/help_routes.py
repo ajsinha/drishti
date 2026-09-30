@@ -56,6 +56,14 @@ async def help_guide(request: Request, slug: str):
     return render(request, "help/guide.html", guide=g, page=page, category=siblings, screen="help")
 
 
+@router.get("/about/competitive")
+async def competitive(request: Request):
+    import yaml
+
+    data = yaml.safe_load((ROOT / "console" / "config" / "competitive.yaml").read_text(encoding="utf-8"))
+    return render(request, "help/competitive.html", c=data, screen="about")
+
+
 def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8") if path.exists() else ""
 
