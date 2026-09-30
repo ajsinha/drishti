@@ -50,6 +50,7 @@ public class BusinessDateController {
         out.put("previous", dates.calendar().previous(current).toString());
         out.put("earliest", dates.earliest().toString());
         out.put("calendar", dates.calendar().name());
+        out.put("zone", dates.zone().getId());
         out.put("holidays", dates.holidays(dates.earliest(), current.plusYears(1)).stream().map(LocalDate::toString).toList());
         return out;
     }

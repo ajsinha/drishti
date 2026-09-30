@@ -45,6 +45,11 @@ public final class BusinessDates {
         this.clock = clock;
     }
 
+    /** The zone business dates and "known at" times are read in. */
+    public ZoneId zone() {
+        return zone;
+    }
+
     public BusinessCalendar calendar() {
         return calendar;
     }

@@ -77,4 +77,22 @@ class BusinessDateTest {
         mvc.perform(get("/api/v1/views/trade/IRS-48213"))
                 .andExpect(jsonPath("$.provenance.live").value(true));
     }
+
+    @Test
+    void historyComparesTwoBusinessDates() throws Exception {
+        mvc.perform(get("/api/v1/history/trade/T-1/diff").param("from", "2026-09-28").param("to", "2026-09-30"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.from.businessDate").value("2026-09-28"))
+                .andExpect(jsonPath("$.to.businessDate").value("2026-09-30"))
+                .andExpect(jsonPath("$.changed").value(1))
+                .andExpect(jsonPath("$.added").value(1))
+                .andExpect(jsonPath("$.changes[?(@.path=='mtm')].delta").value(hasItem(25.0)))
+                .andExpect(jsonPath("$.changes[?(@.path=='mtm')].label").value(hasItem("MTM")))
+                .andExpect(jsonPath("$.changes[?(@.path=='restated')].kind").value(hasItem("added")));
+        // "to" defaults to the date box, "from" to the business day before it
+        mvc.perform(get("/api/v1/history/trade/T-1/diff").header("X-Drishti-As-Of", "2026-09-29"))
+                .andExpect(jsonPath("$.from.businessDate").value("2026-09-28"))
+                .andExpect(jsonPath("$.changes[0].before").value(100))
+                .andExpect(jsonPath("$.changes[0].after").value(110));
+    }
 }

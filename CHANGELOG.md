@@ -16,6 +16,12 @@
 # Changelog
 
 ## Unreleased
+- **W16 History.**
+  - **Server:** `GET /api/v1/history/{kind}/{id}/diff` compares an entity between two business dates, or two "known at" instants, field by field. Arrays are matched by identifier or natural key (tenor, date, code, …), numbers get deltas, each side is redacted for the caller, and labels come from the taxonomy.
+  - **Console:** a **Compare** page (from any dated view; filter changed, added or removed), and a **known at** clock beside a picked date for time travel (read in the business zone, sent as `X-Drishti-Known-At`, cleared with Live).
+  - **Delta:** time travel before a table's first commit finds nothing, and after its last commit reads the latest (both were errors).
+  - **Console fix:** a known-at choice could cache the wrong business date for the top bar.
+  - **Top bar:** it no longer scrolls sideways when a date is picked on narrower screens.
 - **Docs and tutorials.** New *Tutorial 5 · Build a domain pack* (the common pack builder, step by step). README, the user guide (mnemonics of every generated pack, from the manifests), PACKS.md, LIVE.md and the architecture's concurrency section brought up to date; OPERATIONS explains how the disk cache reclaims space.
 - **Concurrency hardening, audited module by module.** Fixed:
   - **Disk cache:** RocksDB generations are reference counted. A nightly clear, a purge or a close never frees native memory under a running read (it could crash the JVM after a 30 s grace period); later calls miss instead of failing.

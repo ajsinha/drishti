@@ -44,6 +44,16 @@
       }
       asof.submit();
     });
+    // Known at (a picked date only): what the date looked like at that time; a restatement shows as a difference.
+    var known = asof.querySelector('[data-asof-known]');
+    if (known) { known.addEventListener('change', function () { asof.submit(); }); }
+    var knownBtn = asof.querySelector('[data-known-toggle]');
+    if (knownBtn && known) {
+      knownBtn.addEventListener('click', function () {
+        knownBtn.hidden = true; known.hidden = false; known.focus();
+        if (known.showPicker) { try { known.showPicker(); } catch (e) { /* not allowed here: typing works */ } }
+      });
+    }
   }
 
   // Pack switcher: choose which of your packs to see.

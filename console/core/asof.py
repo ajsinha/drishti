@@ -24,8 +24,12 @@ import time
 
 COOKIE = "drishti_asof"
 HEADER = "X-Drishti-As-Of"
+KNOWN_COOKIE = "drishti_knownat"
+KNOWN_HEADER = "X-Drishti-Known-At"
 _DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+_INSTANT = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?Z$")
 _current: contextvars.ContextVar[str] = contextvars.ContextVar("drishti_asof", default="live")
+_known: contextvars.ContextVar[str | None] = contextvars.ContextVar("drishti_knownat", default=None)
 
 
 def clean(value: str | None) -> str:
@@ -44,10 +48,56 @@ def set_current(value: str | None) -> str:
     return v
 
 
+def clean_known(value: str | None) -> str | None:
+    """A UTC instant (2026-09-29T14:30:00Z) or None."""
+    v = (value or "").strip()
+    return v if _INSTANT.match(v) else None
+
+
+def known_at() -> str | None:
+    return _known.get()
+
+
+def set_known(value: str | None) -> str | None:
+    v = clean_known(value)
+    _known.set(v)
+    return v
+
+
+def to_instant(local: str | None, zone: str) -> str | None:
+    """A datetime-local value (2026-09-29T10:30) read in the business zone, as a UTC instant; None when blank or bad."""
+    from datetime import datetime, timezone
+    from zoneinfo import ZoneInfo
+
+    try:
+        t = datetime.fromisoformat((local or "").strip()).replace(tzinfo=ZoneInfo(zone or "America/New_York"))
+    except (ValueError, KeyError):
+        return None
+    return t.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def to_local(instant: str | None, zone: str) -> str:
+    """The datetime-local value for a UTC instant in the business zone ('' when none)."""
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    if not instant:
+        return ""
+    try:
+        t = datetime.fromisoformat(instant.replace("Z", "+00:00")).astimezone(ZoneInfo(zone or "America/New_York"))
+    except (ValueError, KeyError):
+        return ""
+    return t.strftime("%Y-%m-%dT%H:%M")
+
+
 def headers() -> dict[str, str]:
-    """The header for backend calls: nothing when live (the server's default)."""
+    """Headers for backend calls: none when live (the server's default); a picked date, and a "known at" if set."""
     v = _current.get()
-    return {} if v == "live" else {HEADER: v}
+    out = {} if v == "live" else {HEADER: v}
+    k = _known.get()
+    if k and v != "live":
+        out[KNOWN_HEADER] = k
+    return out
 
 
 class BusinessDates:

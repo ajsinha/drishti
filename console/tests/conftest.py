@@ -200,7 +200,7 @@ class FakeBackend:
         from core import asof
         sel = asof.current()
         return {"current": "2026-09-30", "selected": "2026-09-30" if sel == "live" else ("2026-09-25" if sel == "2026-09-26" else sel),
-                "live": sel == "live", "previous": "2026-09-29", "earliest": "2021-09-30", "calendar": "USNY",
+                "live": sel == "live", "previous": "2026-09-29", "earliest": "2021-09-30", "calendar": "USNY", "zone": "America/New_York",
                 "holidays": ["2026-10-12", "2026-11-11", "2026-11-26"]}
 
     async def about(self, ident=None):

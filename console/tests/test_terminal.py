@@ -168,3 +168,50 @@ def test_a_surface_panel_renders_a_heatmap_with_a_3d_toggle(client):
     assert 'data-surface=' in out and 'data-surface-view="3d"' in out and "2 × 3 grid" in out
     empty = tpl.render(p={"id": "s", "kind": "surface", "title": "Smile", "area": "main", "empty": True, "data": {"x": [], "y": [], "z": []}})
     assert "No data available" in empty
+
+
+def test_known_at_is_set_in_the_business_zone_and_sent_only_with_a_picked_date(client):
+    from core import asof
+    r = client.get("/asof", params={"d": "2026-09-29", "k": "2026-09-29T10:30", "next": "/t"}, follow_redirects=False)
+    cookies = r.headers.get_list("set-cookie")
+    assert any("drishti_knownat=2026-09-29T14:30:00Z" in c for c in cookies)      # 10:30 New York (EDT) is 14:30 UTC
+    assert asof.to_local("2026-09-29T14:30:00Z", "America/New_York") == "2026-09-29T10:30"
+    assert asof.to_instant("garbage", "America/New_York") is None
+    client.cookies.set("drishti_asof", "2026-09-29")
+    client.cookies.set("drishti_knownat", "2026-09-29T14:30:00Z")
+    try:
+        page = client.get("/v/trade/IRS-48213").text
+        assert 'data-asof-known' in page and 'value="2026-09-29T10:30"' in page and "asof-known on" in page
+    finally:
+        client.cookies.delete("drishti_asof")
+        client.cookies.delete("drishti_knownat")
+    # live never sends a known-at, even if a stale cookie is around
+    asof.set_current("live")
+    asof.set_known("2026-09-29T14:30:00Z")
+    assert asof.headers() == {}
+    asof.set_current("2026-09-29")
+    assert asof.headers() == {"X-Drishti-As-Of": "2026-09-29", "X-Drishti-Known-At": "2026-09-29T14:30:00Z"}
+    asof.set_current("live")
+    asof.set_known(None)
+    live = client.get("/asof", params={"d": "live", "next": "/t"}, follow_redirects=False).headers.get_list("set-cookie")
+    assert any(c.startswith("drishti_knownat=") for c in live)                   # cleared with the date
+
+
+def test_compare_page_shows_what_changed(client, backend):
+    seen = {}
+
+    async def history_diff(kind, id_, ident=None, **params):
+        seen.update(params)
+        return {"ref": {"kind": kind, "id": id_}, "added": 1, "removed": 0, "changed": 1, "truncated": False,
+                "from": {"businessDate": "2026-09-28", "knownAt": None, "provenance": {"source": "trading-store", "generation": 7}},
+                "to": {"businessDate": "2026-09-29", "knownAt": None, "provenance": {"source": "trading-store", "generation": 9}},
+                "changes": [{"path": "valuation.mtm", "label": "MTM", "kind": "changed", "before": -412580.5, "after": -398120, "delta": 14460.5},
+                            {"path": "lifecycle.events[E7].type", "label": "Type [E7]", "kind": "added", "before": None, "after": "Reset", "delta": None}]}
+    backend.history_diff = history_diff
+    r = client.get("/compare/trade/IRS-48213", params={"from": "2026-09-28", "to": "2026-09-29"})
+    assert r.status_code == 200 and "What changed in" in r.text
+    assert "MTM" in r.text and "valuation.mtm" in r.text and "−412,580.5" in r.text and "+14,460.5" in r.text
+    assert "Reset" in r.text and "cmp-k added" in r.text
+    assert seen == {"from": "2026-09-28", "to": "2026-09-29"}
+    only = client.get("/compare/trade/IRS-48213", params={"from": "2026-09-28", "to": "2026-09-29", "only": "added"}).text
+    assert "Reset" in only and "valuation.mtm" not in only

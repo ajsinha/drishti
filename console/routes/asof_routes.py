@@ -25,12 +25,23 @@ router = APIRouter(include_in_schema=False)
 
 
 @router.get("/asof")
-async def choose(request: Request, d: str = "live", next: str = "/t"):
+async def choose(request: Request, d: str = "live", next: str = "/t", k: str | None = None):
+    """Sets the business date (d) and, with a picked date, what was known at a time (k, local time in the business
+    zone; blank clears it). Live clears both."""
     value = asof.clean(d)
     target = next if next.startswith("/") and not next.startswith("//") else "/t"
     r = RedirectResponse(target, status_code=303)
     if value == "live":
         r.delete_cookie(asof.COOKIE, path="/")
-    else:
-        r.set_cookie(asof.COOKIE, value, path="/", samesite="lax", httponly=False, max_age=12 * 3600)
+        r.delete_cookie(asof.KNOWN_COOKIE, path="/")
+        return r
+    r.set_cookie(asof.COOKIE, value, path="/", samesite="lax", httponly=False, max_age=12 * 3600)
+    if k is not None:
+        # the zone does not depend on the date: ask under the request's own date, which is also the cache key
+        info = await request.app.state.business_dates.info(request.app.state.backend, request.state.identity, asof.current())
+        instant = asof.to_instant(k, info.get("zone") or "America/New_York")
+        if instant:
+            r.set_cookie(asof.KNOWN_COOKIE, instant, path="/", samesite="lax", httponly=False, max_age=12 * 3600)
+        else:
+            r.delete_cookie(asof.KNOWN_COOKIE, path="/")
     return r

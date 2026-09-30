@@ -379,6 +379,35 @@ body.embed .vhead { padding: .6rem .8rem; }
 
 /* ---- business date (as-of) ---- */
 .asof { display: flex; align-items: center; gap: .35rem; margin-left: .6rem; }
+.asof-known { display: inline-flex; align-items: center; gap: .25rem; color: var(--d-muted); }
+.asof-known-in { background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 5px; padding: .18rem .35rem;
+  font-size: .76rem; color-scheme: inherit; max-width: 11.5rem; }
+.asof-known.on { color: var(--d-accent); }
+.asof-known.on .asof-known-in { border-color: var(--d-accent); color: var(--d-accent); background: var(--d-accent-tint); font-weight: 600; }
+.asof-known-btn { background: none; border: 1px solid var(--d-border); border-radius: 999px; color: var(--d-muted); padding: .12rem .45rem; line-height: 1; }
+.asof-known-btn:hover, .asof-known-btn:focus-visible { color: var(--d-accent); border-color: var(--d-accent); }
+/* a picked date widens the date controls: below 1700px drop the desk name, the build-time text and the clock
+   (the live dot stays, its text in the tooltip) so the bar never scrolls sideways */
+@media (max-width: 1700px) {
+  .tbar:has(.asof-past) .desk-name, .tbar:has(.asof-past) [data-live-text], .tbar:has(.asof-past) .tbar-clock { display: none !important; }
+}
+/* with a known-at time set the date controls widen: drop the top bar's link labels (icons stay) so nothing overflows */
+.tbar:has(.asof-known.on) .tbar-link > span, .tbar:has(.asof-known.on) .asof-note { display: none !important; }
+.asof-known-x { color: var(--d-muted); text-decoration: none; padding: 0 .2rem; font-size: 1rem; line-height: 1; }
+.asof-known-x:hover { color: var(--d-accent); }
+@media (max-width: 900px) { .asof-known-in { max-width: 8.5rem; font-size: .7rem; } }
+/* History: what changed between two dates */
+.cmp-form { display: flex; flex-wrap: wrap; align-items: end; gap: .6rem 1rem; margin: .6rem 0 1rem; }
+.cmp-form label { display: flex; flex-direction: column; gap: .2rem; font-size: .78rem; color: var(--d-muted); }
+.cmp-form input { background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 5px; padding: .25rem .45rem; color-scheme: inherit; }
+.cmp-sum { display: flex; flex-wrap: wrap; gap: .5rem 1.2rem; margin: .4rem 0 .8rem; font-size: .85rem; }
+.cmp-k { display: inline-block; min-width: 4.6rem; text-align: center; border-radius: 999px; padding: .05rem .5rem; font-size: .72rem; font-weight: 600;
+  border: 1px solid var(--d-border); }
+.cmp-k.added { color: var(--d-link); border-color: var(--d-link); }
+.cmp-k.removed { color: var(--d-neg); border-color: var(--d-neg); }
+.cmp-k.changed { color: var(--d-accent); border-color: var(--d-accent); }
+.cmp-path { color: var(--d-muted); font-size: .72rem; }
+.cmp-old { color: var(--d-muted); text-decoration: line-through; text-decoration-thickness: 1px; }
 .asof-date { background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 5px; padding: .22rem .45rem; font-size: .82rem; color-scheme: inherit; }
 .asof-past .asof-date { border-color: var(--d-accent); color: var(--d-accent); background: var(--d-accent-tint); font-weight: 600; }
 .asof-live { display: inline-flex; align-items: center; gap: .3rem; padding: .2rem .55rem; border: 1px solid var(--d-border); border-radius: 999px;

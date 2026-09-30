@@ -103,6 +103,18 @@ The date box in the top bar says which day you are looking at.
 - If a source keeps no history, the view says so ("*… is not a dated source: this shows its current data*").
   If the latest data is from an earlier day than the one you picked, it says which day.
 - The footer shows the date the data is for (`as of 2026-09-25`).
+- **Known at.** With a date picked, the clock button beside it asks *as known when?* Pick a time (New York time)
+  to see the date as it was known then; later corrections are left out. The × goes back to the latest
+  knowledge. Sources that keep versions (Delta Lake) honour it; others show their only version.
+
+### Compare: what changed
+
+**Compare** (beside *Alert* in a view of a dated entity) lists every field that differs between two business
+dates: the field's label and path, both values, and the change for numbers. By default it compares the date
+in the top bar with the business day before. Pick any two dates, or give the earlier side a *known at* time to
+see what was restated for the same date. Lists are matched by their identifiers or natural keys (a tenor, a
+date, a code), so an inserted cashflow shows as one addition, not as every later cashflow changed. Filter to
+*changed*, *added* or *removed*.
 
 ## Monitors and alerts
 

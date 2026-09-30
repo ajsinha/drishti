@@ -1,0 +1,63 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Compare · {{ id }} · {{ PRODUCT }}{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm compare">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/v/{{ kind }}/{{ id | urlencode }}">← {{ id }}</a></nav>
+  <h1>What changed in <span class="mono">{{ id }}</span></h1>
+  <p class="text-muted-d">Every field of the document compared between two business dates. Add a <b>known at</b> time to the earlier side
+    to see what was restated since: the same date, as it was known then and as it is known now.</p>
+  <form class="cmp-form" method="get" action="/compare/{{ kind }}/{{ id | urlencode }}">
+    <label>From (business date)<input class="mono" type="date" name="from" value="{{ form.get('from', '') }}"></label>
+    <label>Known at (optional)<input class="mono" type="datetime-local" name="fromKnownAt" value="{{ from_known or '' }}"></label>
+    <label>To (business date)<input class="mono" type="date" name="to" value="{{ form.get('to', '') }}"></label>
+    <button type="submit" class="btn btn-sm btn-outline-secondary">Compare</button>
+  </form>
+  {% if error %}
+    <p class="asof-banner" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ error.detail }} <span class="mono">({{ error.code }})</span></p>
+  {% elif data %}
+    <div class="cmp-sum">
+      <span><b class="mono">{{ data.from.businessDate }}</b>{% if data.from.knownAt %} known at <span class="mono">{{ known_local(data.from.knownAt, (business_date or {}).zone) | replace('T', ' ') }}</span>{% endif %}
+        → <b class="mono">{{ data.to.businessDate }}</b>{% if data.to.knownAt %} known at <span class="mono">{{ known_local(data.to.knownAt, (business_date or {}).zone) | replace('T', ' ') }}</span>{% endif %}</span>
+      {% set base = '/compare/' ~ kind ~ '/' ~ (id | urlencode) ~ '?from=' ~ form.get('from', '') ~ '&to=' ~ form.get('to', '') ~ ('&fromKnownAt=' ~ from_known if from_known else '') %}
+      <a class="lnk{% if not only %} on{% endif %}" href="{{ base }}">{{ data.changed + data.added + data.removed }} changes</a>
+      <a class="lnk" href="{{ base }}&only=changed"><span class="cmp-k changed">changed</span> {{ data.changed }}</a>
+      <a class="lnk" href="{{ base }}&only=added"><span class="cmp-k added">added</span> {{ data.added }}</a>
+      <a class="lnk" href="{{ base }}&only=removed"><span class="cmp-k removed">removed</span> {{ data.removed }}</a>
+      <span class="text-muted-d mono">{{ data.from.provenance.source }} · generation {{ data.from.provenance.generation }} → {{ data.to.provenance.generation }}</span>
+    </div>
+    {% if not rows %}
+      <p class="text-muted-d">No differences{% if only %} of this kind{% endif %}: the two versions are the same.</p>
+    {% else %}
+    <section class="pnl"><div class="pnl-b"><div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>Field</th><th></th><th class="num">{{ data.from.businessDate }}</th><th class="num">{{ data.to.businessDate }}</th><th class="num">Change</th></tr></thead>
+      <tbody>{% for c in rows %}
+        <tr><td>{{ c.label }}<div class="cmp-path mono">{{ c.path }}</div></td>
+          <td><span class="cmp-k {{ c.kind }}">{{ c.kind }}</span></td>
+          <td class="num mono{% if c.kind == 'changed' %} cmp-old{% endif %}">{{ c.before_text }}</td>
+          <td class="num mono">{{ c.after_text }}</td>
+          <td class="num mono{% if c.delta_text.startswith('−') %} t-neg{% elif c.delta_text.startswith('+') %} t-pos{% endif %}">{{ c.delta_text }}</td></tr>
+      {% endfor %}</tbody></table></div>
+      {% if data.truncated %}<p class="text-muted-d">Only the first {{ data.changes | length }} changes are shown.</p>{% endif %}
+    </div></section>
+    {% endif %}
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script>{% endblock %}

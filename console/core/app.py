@@ -51,6 +51,7 @@ class AuthGate(BaseHTTPMiddleware):
         from core import asof
 
         request.state.asof = asof.set_current(request.query_params.get("asOf") or request.cookies.get(asof.COOKIE))
+        request.state.known_at = asof.set_known(request.cookies.get(asof.KNOWN_COOKIE)) if request.state.asof != "live" else None
         request.state.business_date = None
         if not path.startswith(("/static/", "/api/", "/healthz", "/asof")):
             request.state.business_date = await request.app.state.business_dates.info(
@@ -107,6 +108,9 @@ def create_app(settings: Settings) -> FastAPI:
         CLOCK_LABEL=settings.get("ui.clock_label", "NY"),
         COPYRIGHT="Copyright © 2026 Ashutosh Sinha. All rights reserved. Proprietary and confidential.",
     )
+    from core.asof import to_local
+
+    templates.env.globals["known_local"] = to_local
     app.state.settings = settings
     app.state.auth = Auth(settings)
     console_dir = WEB.parent

@@ -35,6 +35,15 @@
            data-holidays="{{ (bd.holidays or []) | join(',') }}" data-current="{{ bd.current or '' }}">
     <a href="/asof?d=live&amp;next={{ request.url.path | urlencode }}" class="asof-live{% if asof == 'live' %} on{% endif %}"
        title="Back to live: today's business date, streaming" data-asof-live><span class="dot" aria-hidden="true"></span> Live</a>
+    {% if asof != 'live' %}
+    <label for="asofKnown" class="visually-hidden">Known at</label>
+    <span class="asof-known{% if known_at %} on{% endif %}" title="Time travel: show this date as it was known at a time ({{ bd.zone or 'America/New_York' }}). Blank for the latest.">
+      <button type="button" class="asof-known-btn" data-known-toggle aria-label="Known at: time travel"{% if known_at %} hidden{% endif %}><i class="bi bi-clock-history" aria-hidden="true"></i></button>
+      {% if known_at %}<i class="bi bi-clock-history" aria-hidden="true"></i>{% endif %}
+      <input id="asofKnown" class="asof-known-in mono" type="datetime-local" name="k" value="{{ known_local(known_at, bd.zone) }}" data-asof-known{% if not known_at %} hidden{% endif %}>
+      {% if known_at %}<a class="asof-known-x" href="/asof?d={{ asof }}&amp;k=&amp;next={{ request.url.path | urlencode }}" title="Latest knowledge" aria-label="Clear known at">×</a>{% endif %}
+    </span>
+    {% endif %}
     <noscript><button type="submit" class="asof-go">Go</button></noscript>
     {% if asof != 'live' and bd.selected and bd.selected != asof %}<span class="asof-note mono" title="Not a business day on the {{ bd.calendar }} calendar">↩ {{ asof }}</span>{% endif %}
   </form>
@@ -58,7 +67,7 @@
     {% endif %}
     {% if me and me.is_admin %}<a class="tbar-link" href="/admin/users" title="User administration"><i class="bi bi-people" aria-hidden="true"></i><span class="d-none d-xl-inline"> Admin</span></a>{% endif %}
     <span class="tbar-desk"><span class="desk-name">{{ me.desk if me else DESK }} · </span><a class="tbar-link" href="/account" title="My account">{{ me.display if me else USER }}</a>{% if AUTH_ENABLED %} · <a href="/logout">sign out</a>{% endif %}</span>
-    {% if live is defined %}<span class="tbar-live" data-live-state="{{ 'live' if live else 'static' }}"><span class="dot" aria-hidden="true"></span>
+    {% if live is defined %}<span class="tbar-live" data-live-state="{{ 'live' if live else 'static' }}" title="{{ 'Live' if live else 'Static' }}{% if built_ms %}, built {{ built_ms }} ms{% endif %}"><span class="dot" aria-hidden="true"></span>
       <span data-live-text>{{ 'Live' if live else 'Static' }}{% if built_ms %}, built {{ built_ms }} ms{% endif %}</span></span>{% endif %}
     <span class="tbar-clock mono" data-clock data-tz="{{ CLOCK_TZ }}" data-tz-label="{{ CLOCK_LABEL }}"></span>
     {% include "_theme_menu.html" %}

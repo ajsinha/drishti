@@ -58,7 +58,7 @@ terminal does.
 | P6 | Pack: **genomics and biology** (genes on GRCh38, variants, proteins, pathways, samples, runs, expression, trials) | ✅ done |
 | P7–P8 | Packs: **politics and society** (fictional polities: elections, polls, bills, regions) and **economics** (economies, indicators, central banks, forecasts, trade, labour, fiscal, prices) | ✅ done |
 | 22 | Business dates: Live or a picked date (static) on the USNY calendar; Delta Lake connector with time travel; named connectors; imperfect documents render as "No data available" | ✅ done |
-| 16 | History: diffs between dates, a "known at" control | ◻️ after the risk pack |
+| 16 | History: **Compare** an entity between two business dates (field by field, arrays matched by key, deltas); a **known at** control for time travel and restatements | ✅ done |
 | 20a | Kafka live source: the trading pack's trades stream and tick from a topic (`DRISHTI_STREAM_TRADING=true`) | ✅ done |
 | 17–21 | Structured search · export and share · Sutra governance · OIDC single sign-on · personal settings | ◻️ planned |
 
@@ -68,6 +68,8 @@ terminal does.
   calendar, streaming. Pick a date in the top bar to see that day's data as a static snapshot: views, links,
   impact and suggestions all follow the date. History is read from **Delta Lake** (`data/delta/<domain>/<kind>/`,
   partitioned by business date, with time travel), built for the samples with `tools/samplegen/lake.py`.
+  **Compare** shows what changed in an entity between any two dates, field by field; **known at** shows a date as
+  it was known at an earlier time, so a restatement shows up as a difference.
 - **Imperfect data never breaks a screen.** A panel whose data is missing or in the wrong shape says
   "No data available"; the rest of the view renders.
 
@@ -123,7 +125,7 @@ terminal does.
 - **Mobile.** It works on iPhone and Android browsers and can be added to the home screen. F-keys
   become a swipeable button row.
 - **Operations.** Prometheus metrics, a Grafana dashboard, Dockerfiles and compose, and runbooks.
-- **Not built yet** (on the roadmap): OIDC/SSO and the `aero` plugin (W20), history, structured search, export, and Sutra governance.
+- **Not built yet** (on the roadmap): structured search (W17), export and share (W18), Sutra governance (W19), OIDC/SSO (W20) and personal settings (W21).
 
 ## Try it
 

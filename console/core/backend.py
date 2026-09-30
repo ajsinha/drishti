@@ -68,6 +68,10 @@ class BackendClient:
     async def view(self, kind: str, id_: str, ident) -> dict:
         return await self._get(f"/views/{kind}/{id_}", ident)
 
+    async def history_diff(self, kind: str, id_: str, ident=None, **params: str) -> dict:
+        """What changed between two dates (or two "known at" times); blank parameters take the server's defaults."""
+        return await self._get(f"/history/{kind}/{id_}/diff", ident, **{k: v for k, v in params.items() if v})
+
     async def raw(self, kind: str, id_: str, ident=None) -> dict:
         return await self._get(f"/entities/{kind}/{id_}/raw", ident)
 

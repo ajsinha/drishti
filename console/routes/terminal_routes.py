@@ -17,9 +17,10 @@ from __future__ import annotations
 
 from urllib.parse import quote
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Query, Request
 from fastapi.responses import RedirectResponse
 
+from core import asof
 from core.backend import BackendError
 from routes.common import ident, packs, render
 
@@ -50,6 +51,50 @@ async def impact(request: Request, kind: str, id_: str):
     except BackendError as e:
         return render(request, "terminal/missing.html", status_code=e.status if e.status < 500 else 502, kind=kind, id=id_, error=e)
     return render(request, "terminal/impact.html", kind=kind, id=id_, data=data, screen="impact")
+
+
+def _shown(v) -> str:
+    """A diff value as text: numbers with separators (up to six decimals), lists and objects compactly."""
+    if v is None:
+        return "—"
+    if isinstance(v, bool):
+        return "true" if v else "false"
+    if isinstance(v, (int, float)):
+        text = f"{v:,.6f}".rstrip("0").rstrip(".") if isinstance(v, float) else f"{v:,}"
+        return text.replace("-", "−")
+    if isinstance(v, (list, dict)):
+        return "[]" if v == [] else str(v)[:80]
+    return str(v)
+
+
+def _delta(d) -> str:
+    if d is None:
+        return ""
+    text = f"{d:+,.6f}".rstrip("0").rstrip(".")
+    return text.replace("-", "−")
+
+
+@router.get("/compare/{kind}/{id_}")
+async def compare(request: Request, kind: str, id_: str, from_: str = Query("", alias="from"), to: str = "",
+                  fromKnownAt: str = "", only: str = ""):
+    """History (W16): what changed in an entity between two business dates, or since what was known at a time."""
+    backend = request.app.state.backend
+    info = request.state.business_date or {}
+    params = {"from": from_, "to": to}
+    if fromKnownAt:
+        params["fromKnownAt"] = asof.to_instant(fromKnownAt, info.get("zone") or "America/New_York") or ""
+    try:
+        data = await backend.history_diff(kind, id_, ident(request), **params)
+    except BackendError as e:
+        if e.status == 404 or e.code in ("DRS-4003", "DRS-1001"):
+            return render(request, "terminal/compare.html", kind=kind, id=id_, data=None, error=e, form=params, screen="compare",
+                          from_known=fromKnownAt)
+        return render(request, "terminal/missing.html", status_code=e.status if e.status < 500 else 502, kind=kind, id=id_, error=e)
+    rows = [dict(c, before_text=_shown(c.get("before")), after_text=_shown(c.get("after")), delta_text=_delta(c.get("delta")))
+            for c in data.get("changes", []) if not only or c.get("kind") == only]
+    return render(request, "terminal/compare.html", kind=kind, id=id_, data=data, rows=rows, error=None, only=only, screen="compare",
+                  form={"from": from_ or (data.get("from") or {}).get("businessDate") or "", "to": to or (data.get("to") or {}).get("businessDate") or ""},
+                  from_known=fromKnownAt)
 
 
 @router.get("/v/{kind}/{id_}")

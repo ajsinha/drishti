@@ -82,4 +82,13 @@ class DeltaSourcePluginTest extends DatedSourceContract {
         assertThat(before.data().get("restated").isMissing()).isTrue();
         assertThat(before.provenance().generation()).isZero();
     }
+
+    @Test
+    void knownAtBeforeTheTableExistedFindsNothingAndAfterTheLastCommitReadsTheLatest() throws Exception {
+        EntityRef t1 = EntityRef.of("trade", "T-1");
+        LocalDate d = LocalDate.of(2026, 9, 30);
+        assertThat(plugin().fetch(t1, new AsOf(d, T0.minusSeconds(86_400)))).isEmpty();          // nothing was known yet
+        EntityDocument later = plugin().fetch(t1, new AsOf(d, java.time.Instant.parse("2099-01-01T00:00:00Z"))).orElseThrow();
+        assertThat(later.data().get("mtm").asDouble()).isEqualTo(125);                            // as known now
+    }
 }

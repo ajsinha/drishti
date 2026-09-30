@@ -71,14 +71,36 @@ final class DeltaTable {
         return path;
     }
 
+    /**
+     * The snapshot as known at {@code knownAt}: null when the table did not exist yet (nothing was known then), and
+     * the latest snapshot when the time is after the latest commit (what is known now was known then too).
+     */
+    private Snapshot asOf(Table t, Instant knownAt) {
+        try {
+            return t.getSnapshotAsOfTimestamp(engine, knownAt.toEpochMilli());
+        } catch (io.delta.kernel.exceptions.KernelException e) {
+            String m = String.valueOf(e.getMessage());
+            if (m.contains("before the earliest available version")) {
+                return null;
+            }
+            if (m.contains("after the latest")) {
+                return t.getLatestSnapshot(engine);
+            }
+            throw e;
+        }
+    }
+
     /** The latest snapshot's layout, or the one as known at {@code knownAt}; empty if the table does not exist. */
     Optional<Layout> layout(Instant knownAt) {
         Snapshot s;
         try {
             Table t = Table.forPath(engine, path);
-            s = knownAt == null ? t.getLatestSnapshot(engine) : t.getSnapshotAsOfTimestamp(engine, knownAt.toEpochMilli());
+            s = knownAt == null ? t.getLatestSnapshot(engine) : asOf(t, knownAt);
         } catch (TableNotFoundException e) {
             return Optional.empty();
+        }
+        if (s == null) {
+            return Optional.empty();                     // nothing had been written yet at that time
         }
         Scan scan = s.getScanBuilder().withReadSchema(new StructType().add(idColumn, StringType.STRING).add(docColumn, StringType.STRING)).build();
         NavigableMap<LocalDate, List<Row>> byDate = new TreeMap<>();

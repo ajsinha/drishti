@@ -131,7 +131,7 @@ Ten waves (plus W11, user management, after 1.0.0). Each holds a small set of cl
 | W14 ✅ | Monitors and alerts | watchlists with live columns; threshold alerts with notifications |
 | W15 ✅ | F8 Impact | what depends on an entity (reverse graph), navigable |
 | W22 ✅ | Business dates and Delta Lake | `AsOf` in the SPI; USNY business calendar; top-bar date (Live streams, a picked date is static); Delta Lake connector (Delta Kernel, partitions by business date, time travel); named connectors; dated file folders; JDBC `:asOf`; imperfect documents render as "No data available" (ADR-012) |
-| W16 | History (rest) | diff a view between two dates or versions; a "known at" control in the console (the server already honours `knownAt`) |
+| W16 ✅ | History | `GET /history/{kind}/{id}/diff` (two business dates and/or "known at" instants; objects by field, arrays by identifier or natural key, numeric deltas, redacted per role, labels from the taxonomy); console **Compare** page and a **known at** control beside a picked date; Delta time travel before the first commit finds nothing, after the last reads the latest |
 | W17 | Structured search | `TRD where counterparty = … and mtm < …` giving a live result table |
 | W18 | Export and share | CSV/Excel/PDF of a view; permalinks to an exact view and generation |
 | W19 | Sutra governance | review and approval; version diffs; saved test entities per Sutra |
