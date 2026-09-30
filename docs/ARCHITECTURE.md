@@ -266,6 +266,22 @@ under the input:
 
 ---
 
+## 8b. Business dates and history (ADR-012)
+
+Every read is for a business date. The console keeps the user's choice (**Live**, or a picked date) and sends
+it as `X-Drishti-As-Of`; it never reads data itself. The server's `BusinessDates` resolves it on the
+configured calendar (`BusinessCalendar`: USNY, GBLO, EUTA, JPTO, joint), and the `AsOf` value travels through
+the pipeline, links, impact and suggestions to every plugin. Live streams; a picked date is a static snapshot.
+Dated sources (Delta Lake through Delta Kernel, dated folders, SQL with `:asOf`) read that date and stamp
+`Provenance.businessDate`, and the router tries them first for a picked date. History lives in Delta Lake:
+`<root>/<domain>/<kind>/` tables partitioned by `business_date`, with time travel for "as known at". Named
+connectors give each domain its own lake connector.
+
+```
+console ──X-Drishti-As-Of──▶ AsOfResolver ─▶ BusinessDates ─▶ ViewPipeline ─▶ SourceRouter ─▶ delta (finance-lake)
+                                                                                      └─▶ demo / file / jdbc
+```
+
 ## 8a. Domain packs
 
 The core carries no industry. A **domain pack** (`packs/<name>/`) holds everything specific to one:

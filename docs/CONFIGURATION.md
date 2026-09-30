@@ -30,6 +30,10 @@ The local override is `./application.local.yaml`. Environment variables use Spri
 | `drishti.sources.default-route` / `routes.<kind>` | `demo` | which plugin serves a kind (see PLUGIN_GUIDE) |
 | `drishti.sources.plugin-dir` | — | extra plugin jars, each in its own class loader |
 | `drishti.sources.plugins.<name>.enabled / settings` | | plugin switch and settings |
+| `drishti.sources.connectors.<name>` | `finance-lake` | a named instance of a plugin: `{plugin, enabled, kinds, settings}`; run a plugin several times (a Delta Lake per domain). `source-name` defaults to the connector's name |
+| `drishti.sources.connectors.*.settings` for `delta` | | `root` (`./data/delta`, `DRISHTI_DELTA_ROOT`), `domain` (sub-folder), `kinds`, `mode.<kind>` (`snapshot` or `effective`), `lookback-days` (10), `refresh-seconds` (10), `cache-partitions` (256), `id-column` / `doc-column` / `date-column` |
+| `drishti.business-date.calendar` | `USNY` (`DRISHTI_CALENDAR`) | business-day calendar for the default date: `USNY`, `GBLO`, `EUTA`, `JPTO`, or joint (`USNY+GBLO`) |
+| `drishti.business-date.zone` / `history` | `America/New_York` / `P5Y` | whose "today", and how far back users may go |
 | `drishti.packs.default-for-users` | every installed pack (`DRISHTI_DEFAULT_PACKS`) | the packs a user gets until an admin assigns them |
 | `drishti.packs.dir` / `enabled` | `./packs` / `finance` (`DRISHTI_PACKS_DIR`, `DRISHTI_PACKS`) | domain packs to load, in order (see PACKS.md). One folder per pack. `DRISHTI_PACKS_DIR` sets the folder for both server and console, so give it an absolute path. The defaults are the repository's `packs/`: relative to the working directory for the server, and to `console/` for the console. |
 | `drishti.rachana.dirs` | `./sutras` (`DRISHTI_SUTRAS`) | site Sutra directories, in addition to the packs' |
@@ -47,7 +51,8 @@ The local override is `./application.local.yaml`. Environment variables use Spri
 | `drishti.security.redact` | `[trader, counterpartyId]` | fields masked in raw JSON for roles without `raw` |
 | `drishti.live.frame / heartbeat / max-streams / window` | `50ms / 15s / 20000 / 30s` | live updates |
 | `drishti.sources.plugins.rest.settings.*` | | `base-url`, `path`, `kinds`, `header.<Name>`, `timeout-ms`, `generation-header` |
-| `drishti.sources.plugins.jdbc.settings.*` | | `url`, `user`, `password`, `pool-size`, `query.<kind>` |
+| `drishti.sources.plugins.jdbc.settings.*` | | `url`, `user`, `password`, `pool-size`, `query.<kind>` (with `?` or named `:id` and `:asOf`) |
+| `drishti.sources.plugins.file.settings.lookback-days` | `10` | dated folders `<root>/<yyyy-MM-dd>/<kind>/`: how far back to look for a date's file |
 | `drishti.inference.semantics-file` | — | a site file that replaces the semantic hints |
 | `drishti.engine.layout-cache-size` | `10000` | effective layouts (one per Sutra version × shape) |
 | `drishti.engine.fingerprint-cache-size` | `100000` | fingerprints (one per entity × generation) |

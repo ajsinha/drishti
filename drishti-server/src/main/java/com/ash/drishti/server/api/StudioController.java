@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.api;
 
+import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
@@ -94,22 +95,22 @@ public class StudioController {
     }
 
     @PostMapping("/studio/preview")
-    public ViewModel preview(@RequestBody PreviewRequest req, @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
+    public ViewModel preview(@RequestBody PreviewRequest req, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
         entitlements.requireOpen(principal, req.kind());
         Sutra s = sutras.check(req.yaml());
         if (req.document() != null && !req.document().isNull()) {
             return entitlements.restrict(principal, pipeline.preview(java.util.Optional.of(s), pasted(req.kind(), req.id(), req.document())));
         }
-        return entitlements.restrict(principal, pipeline.preview(s, EntityRef.of(req.kind(), req.id())));
+        return entitlements.restrict(principal, pipeline.preview(s, EntityRef.of(req.kind(), req.id()), asOf));
     }
 
     @GetMapping(path = "/studio/inferred/{kind}/{id}", produces = "text/markdown")
-    public String inferred(@PathVariable String kind, @PathVariable String id, @RequestParam(defaultValue = "") String name,
+    public String inferred(@PathVariable String kind, @PathVariable String id, @RequestParam(defaultValue = "") String name, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
         entitlements.requireOpen(principal, kind);
         String n = name.isBlank() ? kind + "-custom" : name;
         return SutraMarkdown.wrap(n, 1, "Started from what inference makes of " + kind + " " + id + ".",
-                writer.write(pipeline.inferred(EntityRef.of(kind, id)), n, 1));
+                writer.write(pipeline.inferred(EntityRef.of(kind, id), asOf), n, 1));
     }
 
     @PostMapping(path = "/studio/inferred", produces = "text/markdown")

@@ -22,11 +22,19 @@ minted by the console; the token's subject and roles decide what the caller may 
 off (local development), `X-Drishti-User` names the caller for the "recent" suggestions. User and
 admin endpoints are in USER_MANAGEMENT.md; live streaming is in LIVE.md.
 
+**Business date.** Every read endpoint takes the business date from the `X-Drishti-As-Of: 2026-09-29` header
+(or `?asOf=2026-09-29`); without it, or with `live`, it is live: the current business date, streaming. A picked
+date is a static snapshot: views report `provenance.live = false`, and streams send one view and close. Weekends and
+holidays roll back to the previous business day; a future date or one before the history window is
+`400 DRS-4003`. `X-Drishti-Known-At` / `?knownAt=` (an ISO instant) asks for the data as known then (Delta time
+travel). Views carry `provenance.businessDate`, which is empty when the source is not dated.
+
 | Method | Path | Returns |
 |---|---|---|
 | `POST` | `/command` `{"text": "TRD IRS-48213 <GO>"}` | `{"ref": {"kind","id"}, "mnemonic"}`; `400 DRS-4001` if the command can't be read |
 | `GET` | `/command/suggest?q=TRD%20IRS-4&limit=10` | `[{"type","mnemonic","kind","id","title","subtitle","complete"}]` |
-| `GET` | `/views/{kind}/{id}` | `ViewModel` (below); `404 DRS-1001`, `504 DRS-1004` |
+| `GET` | `/business-date` | `{current, selected, live, previous, earliest, calendar, holidays}`: today's business date, the date this request resolves to, and the holidays for the picker |
+| `GET` | `/views/{kind}/{id}` | `ViewModel` (below); `404 DRS-1001`, `504 DRS-1004`. Each panel has `empty: true` when the document lacks what it asks for |
 | `GET` | `/entities/{kind}/{id}/raw` | `{"ref","provenance","data"}`: the document as the source produced it |
 | `GET` | `/sources` | the plugins, their capabilities and health, and any start failures |
 | `GET` | `/sutras` · `/sutras/{name}/{version}` · `/sutras/problems` | the Sutra catalogue, one Sutra, and the load problems |
@@ -88,4 +96,5 @@ of the view is unaffected.
 | DRS-1004 | 504 | the source timed out |
 | DRS-2xxx | 422 | a Sutra problem (see RACHANA_REFERENCE.md) |
 | DRS-4001 | 400 | the command could not be read |
+| DRS-4003 | 400 | the business date is unreadable, in the future, or before the history window |
 | DRS-5001 | 400 | bad request |

@@ -46,13 +46,19 @@ import java.util.concurrent.TimeUnit;
  *
  * <p>Settings: {@code url}, {@code user}, {@code password} (from the environment), {@code source-name}
  * (default {@code jdbc}), {@code pool-size} (default 4), and {@code query.<kind>}: SQL with one {@code ?}
- * for the id. The first row becomes the document: each column is a field, except a column named
- * {@code json}, whose JSON text is used as the whole document. A column named {@code generation}, if
- * present, is the version. Connections are pooled in a small bounded queue.
+ * for the id, or named parameters {@code :id} and {@code :asOf} (the business date, a SQL {@code DATE}). A query
+ * that uses {@code :asOf} makes the source dated, for example
+ * {@code ... WHERE trade_id = :id AND business_date = (SELECT MAX(business_date) FROM trades
+ * WHERE trade_id = :id AND business_date <= :asOf)}. The first row becomes the document: each column is a field,
+ * except a column named {@code json}, whose JSON text is used as the whole document. A column named
+ * {@code generation}, if present, is the version; {@code business_date}, if present, is the date the row is for.
+ * Connections are pooled in a small bounded queue.
  */
 public final class JdbcSourcePlugin implements SourcePlugin {
 
+    private static final java.util.regex.Pattern NAMED = java.util.regex.Pattern.compile(":(id|asOf)\\b");
     private final Map<String, String> queries = new LinkedHashMap<>();
+    private final Map<String, java.util.List<String>> params = new LinkedHashMap<>();
     private BlockingQueue<Connection> pool;
     private SourceContext context;
     private String url;
@@ -62,7 +68,8 @@ public final class JdbcSourcePlugin implements SourcePlugin {
 
     @Override
     public PluginManifest manifest() {
-        return new PluginManifest("jdbc", "1.0", queries.keySet(), SourceCapabilities.FETCH_ONLY);
+        boolean dated = params.values().stream().anyMatch(l -> l.contains("asOf"));
+        return new PluginManifest("jdbc", "1.0", queries.keySet(), new SourceCapabilities(false, false, false, dated));
     }
 
     @Override
@@ -77,7 +84,13 @@ public final class JdbcSourcePlugin implements SourcePlugin {
         this.sourceName = ctx.setting("source-name", "jdbc");
         ctx.settings().forEach((k, v) -> {
             if (k.startsWith("query.")) {
-                queries.put(k.substring(6), v);
+                java.util.List<String> names = new java.util.ArrayList<>();
+                var m = NAMED.matcher(v);
+                while (m.find()) {
+                    names.add(m.group(1));
+                }
+                queries.put(k.substring(6), names.isEmpty() ? v : m.replaceAll("?"));
+                params.put(k.substring(6), names.isEmpty() ? java.util.List.of("id") : names);
             }
         });
         int size = Integer.parseInt(ctx.setting("pool-size", "4"));
@@ -89,6 +102,11 @@ public final class JdbcSourcePlugin implements SourcePlugin {
 
     @Override
     public Optional<EntityDocument> fetch(EntityRef ref) throws Exception {
+        return fetch(ref, com.ash.drishti.api.AsOf.LATEST);
+    }
+
+    @Override
+    public Optional<EntityDocument> fetch(EntityRef ref, com.ash.drishti.api.AsOf asOf) throws Exception {
         String sql = queries.get(ref.kind());
         if (sql == null) {
             return Optional.empty();
@@ -103,12 +121,20 @@ public final class JdbcSourcePlugin implements SourcePlugin {
                 c = DriverManager.getConnection(url, user, password);
             }
             try (PreparedStatement ps = c.prepareStatement(sql)) {
-                ps.setString(1, ref.id());
+                java.util.List<String> names = params.get(ref.kind());
+                java.time.LocalDate date = asOf.businessDate() != null ? asOf.businessDate() : java.time.LocalDate.now();
+                for (int i = 0; i < names.size(); i++) {
+                    if ("asOf".equals(names.get(i))) {
+                        ps.setObject(i + 1, java.sql.Date.valueOf(date));
+                    } else {
+                        ps.setString(i + 1, ref.id());
+                    }
+                }
                 try (ResultSet rs = ps.executeQuery()) {
                     if (!rs.next()) {
                         return Optional.empty();
                     }
-                    return Optional.of(toDocument(ref, rs));
+                    return Optional.of(toDocument(ref, rs, names.contains("asOf") ? date : null));
                 }
             }
         } finally {
@@ -116,7 +142,8 @@ public final class JdbcSourcePlugin implements SourcePlugin {
         }
     }
 
-    private EntityDocument toDocument(EntityRef ref, ResultSet rs) throws Exception {
+    private EntityDocument toDocument(EntityRef ref, ResultSet rs, java.time.LocalDate asked) throws Exception {
+        java.time.LocalDate businessDate = asked;
         ResultSetMetaData md = rs.getMetaData();
         Map<String, Object> fields = new LinkedHashMap<>();
         DataNode doc = null;
@@ -128,11 +155,14 @@ public final class JdbcSourcePlugin implements SourcePlugin {
                 doc = context.parseJson(new ByteArrayInputStream(v.toString().getBytes(StandardCharsets.UTF_8)));
             } else if ("generation".equalsIgnoreCase(name) && v instanceof Number n) {
                 generation = n.longValue();
+            } else if ("business_date".equalsIgnoreCase(name) && v instanceof java.sql.Date d) {
+                businessDate = d.toLocalDate();
+                fields.put("businessDate", businessDate.toString());
             } else {
                 fields.put(camel(name), plain(v));
             }
         }
-        return new EntityDocument(ref, doc != null ? doc : DataNode.of(fields), new Provenance(sourceName, generation, Instant.now(), false));
+        return new EntityDocument(ref, doc != null ? doc : DataNode.of(fields), new Provenance(sourceName, generation, Instant.now(), false, businessDate));
     }
 
     private static Object plain(Object v) {

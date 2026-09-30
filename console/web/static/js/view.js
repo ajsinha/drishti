@@ -63,10 +63,12 @@
     return t;
   }
   function option(el, t) {
-    var d = JSON.parse(el.getAttribute('data-chart')), area = el.getAttribute('data-kind') === 'area';
+    var d = JSON.parse(el.getAttribute('data-chart')) || {}, area = el.getAttribute('data-kind') === 'area';
+    d.x = d.x || []; d.series = d.series || [];
     var tone = function (n) { return t[n] || t.link; };
     var series = d.series.map(function (s) {
-      var o = { type: 'line', name: s.label, data: s.values, smooth: false, symbol: 'circle', symbolSize: 5,
+      s.values = (s.values || []).map(function (v) { return typeof v === 'number' && isFinite(v) ? v : null; });
+      var o = { type: 'line', name: s.label, data: s.values, connectNulls: false, smooth: false, symbol: 'circle', symbolSize: 5,
         lineStyle: { width: 1.6, color: tone(s.tone) }, itemStyle: { color: tone(s.tone) } };
       if (area) { o.areaStyle = { color: tone(s.tone), opacity: .12 }; o.symbol = 'none'; }
       if (d.mark) {
@@ -89,6 +91,7 @@
     };
   }
   function compact(v) {
+    if (typeof v !== 'number' || !isFinite(v)) { return ''; }
     var a = Math.abs(v);
     if (a >= 1e9) { return (v / 1e9).toFixed(1) + 'bn'; }
     if (a >= 1e6) { return (v / 1e6).toFixed(a >= 1e7 ? 0 : 1) + 'm'; }
@@ -99,9 +102,16 @@
     if (!window.echarts) { return; }
     var t = tokens();
     document.querySelectorAll('.chart[data-chart]').forEach(function (el) {
-      var c = window.echarts.getInstanceByDom(el) || window.echarts.init(el, null, { renderer: 'svg' });
-      c.setOption(option(el, t), true);
-      if (charts.indexOf(c) < 0) { charts.push(c); }
+      try {
+        var c = window.echarts.getInstanceByDom(el) || window.echarts.init(el, null, { renderer: 'svg' });
+        c.setOption(option(el, t), true);
+        if (charts.indexOf(c) < 0) { charts.push(c); }
+      } catch (e) {
+        // one chart whose data cannot be drawn must not stop the others or the page
+        el.removeAttribute('data-chart');
+        el.className = 'pnl-empty';
+        el.textContent = 'No data available';
+      }
     });
   }
   drawCharts();

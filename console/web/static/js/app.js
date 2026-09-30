@@ -22,12 +22,28 @@
   function apply(theme) {
     if (THEMES.indexOf(theme) < 0) { return; }
     root.setAttribute('data-theme', theme);
-    root.setAttribute('data-bs-theme', theme === 'light' ? 'light' : 'dark');
+    root.setAttribute('data-bs-theme', theme === 'light' || theme === 'crimson' ? 'light' : 'dark');
     try { localStorage.setItem('drishti.theme', theme); } catch (e) { /* ignore */ }
     document.querySelectorAll('[data-theme-choice]').forEach(function (b) {
       b.classList.toggle('active', b.getAttribute('data-theme-choice') === theme);
     });
     document.dispatchEvent(new CustomEvent('drishti:theme', { detail: theme }));
+  }
+
+  // Business date: picking a date shows that day's data as a static snapshot. Weekends and holidays roll back to
+  // the previous business day on the server; the box says so before it submits.
+  var asof = document.querySelector('[data-asof]');
+  if (asof) {
+    var box = asof.querySelector('input[type="date"]');
+    var holidays = (box.getAttribute('data-holidays') || '').split(',');
+    box.addEventListener('change', function () {
+      if (!box.value) { return; }
+      var d = new Date(box.value + 'T12:00:00Z').getUTCDay();
+      if (d === 0 || d === 6 || holidays.indexOf(box.value) >= 0) {
+        box.title = box.value + ' is not a business day: showing the business day before it';
+      }
+      asof.submit();
+    });
   }
 
   // Pack switcher: choose which of your packs to see.

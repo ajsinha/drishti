@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.engine.source;
 
+import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityHit;
 import com.ash.drishti.api.EntityRef;
@@ -68,25 +69,42 @@ public final class SourceRouter {
     }
 
     public CompletableFuture<EntityDocument> fetch(EntityRef ref) {
-        return fetch(ref, props.fetchTimeout());
+        return fetch(ref, props.fetchTimeout(), AsOf.LATEST);
+    }
+
+    public CompletableFuture<EntityDocument> fetch(EntityRef ref, AsOf asOf) {
+        return fetch(ref, props.fetchTimeout(), asOf);
     }
 
     public CompletableFuture<EntityDocument> fetch(EntityRef ref, Duration timeout) {
+        return fetch(ref, timeout, AsOf.LATEST);
+    }
+
+    /**
+     * Reads {@code ref} as of {@code asOf}. Dated sources get the date and stamp the business date their document
+     * is for; undated ones answer with what they hold and their documents carry no date, so the view can say so.
+     */
+    public CompletableFuture<EntityDocument> fetch(EntityRef ref, Duration timeout, AsOf asOf) {
         List<SourcePlugin> candidates = candidates(ref.kind());
         if (candidates.isEmpty()) {
             return CompletableFuture.failedFuture(
                     new DrishtiException(ErrorCode.NO_SOURCE_FOR_KIND, "no source serves kind '" + ref.kind() + "'"));
         }
-        return CompletableFuture.supplyAsync(() -> readFirst(ref, candidates), executor)
+        if (!asOf.live()) {
+            // a picked date: history comes from dated sources first; undated ones only answer what nothing dated holds
+            candidates.sort(java.util.Comparator.comparing(p -> !p.manifest().capabilities().dated()));
+        }
+        return CompletableFuture.supplyAsync(() -> readFirst(ref, candidates, asOf), executor)
                 .orTimeout(timeout.toMillis(), TimeUnit.MILLISECONDS)
                 .exceptionallyCompose(e -> CompletableFuture.failedFuture(translate(ref, e)));
     }
 
-    private EntityDocument readFirst(EntityRef ref, List<SourcePlugin> candidates) {
+    private EntityDocument readFirst(EntityRef ref, List<SourcePlugin> candidates, AsOf asOf) {
         for (SourcePlugin p : candidates) {
             Optional<EntityDocument> d;
+            boolean dated = p.manifest().capabilities().dated();
             try {
-                d = p.fetch(ref);
+                d = dated ? p.fetch(ref, asOf) : p.fetch(ref);
             } catch (Exception e) {
                 throw new DrishtiException(ErrorCode.SOURCE_FAILED, p.manifest().name() + " failed reading " + ref, e);
             }
@@ -107,8 +125,12 @@ public final class SourceRouter {
 
     /** Reads several entities concurrently; entries that fail are absent from the result. */
     public Map<EntityRef, EntityDocument> fetchAll(Collection<EntityRef> refs, Duration budget) {
+        return fetchAll(refs, budget, AsOf.LATEST);
+    }
+
+    public Map<EntityRef, EntityDocument> fetchAll(Collection<EntityRef> refs, Duration budget, AsOf asOf) {
         Map<EntityRef, CompletableFuture<EntityDocument>> futures = new LinkedHashMap<>();
-        refs.forEach(r -> futures.put(r, fetch(r, budget)));
+        refs.forEach(r -> futures.put(r, fetch(r, budget, asOf)));
         Map<EntityRef, EntityDocument> out = new LinkedHashMap<>();
         futures.forEach((r, f) -> {
             try {
@@ -122,10 +144,15 @@ public final class SourceRouter {
 
     /** Searches every search-capable plugin in parallel; slow plugins are dropped after {@code budget}. */
     public List<EntityHit> search(String kind, String text, int limit, Duration budget) {
+        return search(kind, text, limit, budget, AsOf.LATEST);
+    }
+
+    public List<EntityHit> search(String kind, String text, int limit, Duration budget, AsOf asOf) {
         List<CompletableFuture<List<EntityHit>>> parts = new ArrayList<>();
         for (SourcePlugin p : registry.plugins()) {
             if (p.manifest().capabilities().search() && (kind == null || p.manifest().serves(kind))) {
-                parts.add(CompletableFuture.supplyAsync(() -> p.search(kind, text, limit), executor)
+                boolean dated = p.manifest().capabilities().dated();
+                parts.add(CompletableFuture.supplyAsync(() -> dated ? p.search(kind, text, limit, asOf) : p.search(kind, text, limit), executor)
                         .completeOnTimeout(List.of(), budget.toMillis(), TimeUnit.MILLISECONDS)
                         .exceptionally(e -> List.of()));
             }
@@ -152,10 +179,14 @@ public final class SourceRouter {
     }
 
     public List<EntityRef> reverse(EntityRef target, String kind) {
+        return reverse(target, kind, AsOf.LATEST);
+    }
+
+    public List<EntityRef> reverse(EntityRef target, String kind, AsOf asOf) {
         List<EntityRef> out = new ArrayList<>();
         for (SourcePlugin p : registry.plugins()) {
             if (p.manifest().capabilities().reverseLookup()) {
-                p.reverse(target, kind).stream().filter(r -> !out.contains(r)).forEach(out::add);
+                (p.manifest().capabilities().dated() ? p.reverse(target, kind, asOf) : p.reverse(target, kind)).stream().filter(r -> !out.contains(r)).forEach(out::add);
             }
         }
         return out;

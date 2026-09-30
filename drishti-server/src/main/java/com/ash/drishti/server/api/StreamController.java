@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.api;
 
+import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
@@ -77,15 +78,27 @@ public class StreamController {
     }
 
     @GetMapping(path = "/views/{kind}/{id}/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter stream(@PathVariable String kind, @PathVariable String id,
+    public SseEmitter stream(@PathVariable String kind, @PathVariable String id, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
         entitlements.requireOpen(principal, kind);
         if (open.get() >= props.maxStreams()) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "too many live streams on this server");
         }
         EntityRef ref = EntityRef.of(kind, id);
-        ViewModel initial = pipeline.view(ref);
+        ViewModel initial = pipeline.view(ref, asOf);
         SseEmitter emitter = new SseEmitter(0L);
+        if (!initial.provenance().live()) {
+            // a past business date, or a static source: one view, no ticks
+            executor.execute(() -> {
+                try {
+                    emitter.send(SseEmitter.event().name("view").id("0").data(initial, MediaType.APPLICATION_JSON));
+                    emitter.complete();
+                } catch (IOException | IllegalStateException e) {
+                    emitter.completeWithError(e);
+                }
+            });
+            return emitter;
+        }
         FrameMailbox box = new FrameMailbox();
         ViewStream stream = new ViewStream(ref, initial, chartSources(initial), hub, pipeline, executor, metrics, box::offer);
         open.incrementAndGet();

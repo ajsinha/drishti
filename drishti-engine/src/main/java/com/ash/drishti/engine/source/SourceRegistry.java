@@ -31,7 +31,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Owns the lifecycle of the enabled source plugins. Plugins start in parallel on virtual threads; a
+ * Owns the lifecycle of the enabled source plugins and of the named connector instances
+ * ({@code drishti.sources.connectors}), each a fresh instance of its plugin. Plugins start in parallel on virtual threads; a
  * plugin that fails to start is logged and left out rather than failing the application.
  */
 public final class SourceRegistry implements AutoCloseable {
@@ -45,13 +46,39 @@ public final class SourceRegistry implements AutoCloseable {
     public SourceRegistry(List<SourcePlugin> discovered, SourcesProperties props, JsonCodec codec) {
         this.scheduler = Executors.newScheduledThreadPool(2, Thread.ofPlatform().daemon().name("drishti-source-sched-", 0).factory());
         Map<String, SourcePlugin> started = new LinkedHashMap<>();
-        List<SourcePlugin> enabled = discovered.stream()
+        // a plugin used through named connectors runs as itself only if it is configured under plugins explicitly
+        java.util.Set<String> viaConnectors = new java.util.HashSet<>();
+        props.connectors().values().forEach(c -> viaConnectors.add(c.plugin()));
+        List<SourcePlugin> enabled = new ArrayList<>(discovered.stream()
+                .filter(p -> !viaConnectors.contains(p.manifest().name()) || props.plugins().containsKey(p.manifest().name()))
                 .filter(p -> props.settingsFor(p.manifest().name()).enabled())
-                .toList();
+                .toList());
+        Map<SourcePlugin, Map<String, String>> settings = new java.util.IdentityHashMap<>();
+        enabled.forEach(p -> settings.put(p, props.settingsFor(p.manifest().name()).settings()));
+        props.connectors().forEach((name, c) -> {
+            if (!c.enabled()) {
+                return;
+            }
+            SourcePlugin proto = discovered.stream().filter(p -> p.manifest().name().equals(c.plugin())).findFirst().orElse(null);
+            if (proto == null) {
+                failures.put(name, "no plugin named '" + c.plugin() + "'");
+                return;
+            }
+            try {
+                SourcePlugin fresh = proto.getClass().getDeclaredConstructor().newInstance();
+                SourcePlugin instance = new ConnectorInstance(name, new java.util.HashSet<>(c.kinds()), fresh);
+                enabled.add(instance);
+                Map<String, String> own = new LinkedHashMap<>(c.settings());
+                own.putIfAbsent("source-name", name);   // documents say which connector they came from
+                settings.put(instance, own);
+            } catch (ReflectiveOperationException e) {
+                failures.put(name, "cannot create " + c.plugin() + ": " + e.getMessage());
+            }
+        });
         try (var exec = Executors.newVirtualThreadPerTaskExecutor()) {
             List<Future<?>> starts = new ArrayList<>();
             for (SourcePlugin p : enabled) {
-                var ctx = new EngineSourceContext(props.settingsFor(p.manifest().name()).settings(), codec, scheduler);
+                var ctx = new EngineSourceContext(settings.get(p), codec, scheduler);
                 starts.add(exec.submit(() -> {
                     p.start(ctx);
                     return null;

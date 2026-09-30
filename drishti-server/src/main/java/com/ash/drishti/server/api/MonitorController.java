@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.api;
 
+import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
@@ -119,14 +120,14 @@ public class MonitorController {
 
     /** Each row: the entity, its title and its strip (or the error that stops it rendering). */
     @GetMapping("/{name}")
-    public List<Map<String, Object>> rows(@PathVariable String name, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+    public List<Map<String, Object>> rows(@PathVariable String name, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         List<Map<String, Object>> out = new ArrayList<>();
         for (EntityRef r : refs(p.user(), name)) {
             Map<String, Object> row = new LinkedHashMap<>();
             row.put("ref", new ViewModel.Ref(r.kind(), r.id()));
             try {
                 entitlements.requireOpen(p, r.kind());
-                ViewModel v = pipeline.view(r);
+                ViewModel v = pipeline.view(r, asOf);
                 row.put("mnemonic", v.mnemonic());
                 row.put("title", v.title());
                 row.put("strip", v.strip());
@@ -140,7 +141,7 @@ public class MonitorController {
     }
 
     @GetMapping(path = "/{name}/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter stream(@PathVariable String name, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+    public SseEmitter stream(@PathVariable String name, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         List<EntityRef> refs = refs(p.user(), name);
         SseEmitter emitter = new SseEmitter(0L);
         Map<EntityRef, FrameMailbox> boxes = new LinkedHashMap<>();
@@ -153,7 +154,11 @@ public class MonitorController {
             FrameMailbox box = new FrameMailbox();
             boxes.put(r, box);
             try {
-                streams.add(new ViewStream(r, pipeline.view(r), List.of(), hub, pipeline, executor, metrics, f -> {
+                ViewModel first = pipeline.view(r, asOf);
+                if (!first.provenance().live()) {
+                    continue;
+                }
+                streams.add(new ViewStream(r, first, List.of(), hub, pipeline, executor, metrics, f -> {
                     box.offer(f);
                     signal.release();
                 }));

@@ -376,3 +376,26 @@ body.embed .vhead { padding: .6rem .8rem; }
 .studio-doc h1 { font-size: 1.35rem; }
 .sutra-block-label { display: inline-block; margin-top: .6rem; padding: .05rem .5rem; font-size: .72rem; color: var(--d-bg); background: var(--d-accent); border-radius: 4px 4px 0 0; }
 .sutra-block { margin-top: 0; border-top: 2px solid var(--d-accent); max-height: 24rem; overflow: auto; }
+
+/* ---- business date (as-of) ---- */
+.asof { display: flex; align-items: center; gap: .35rem; margin-left: .6rem; }
+.asof-date { background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 5px; padding: .22rem .45rem; font-size: .82rem; color-scheme: inherit; }
+.asof-past .asof-date { border-color: var(--d-accent); color: var(--d-accent); background: var(--d-accent-tint); font-weight: 600; }
+.asof-live { display: inline-flex; align-items: center; gap: .3rem; padding: .2rem .55rem; border: 1px solid var(--d-border); border-radius: 999px;
+  color: var(--d-muted); font-size: .8rem; text-decoration: none; }
+.asof-live .dot { width: .5rem; height: .5rem; border-radius: 50%; background: var(--d-faint); }
+.asof-live.on { color: var(--d-ok); border-color: var(--d-ok); }
+.asof-live.on .dot { background: var(--d-ok); box-shadow: 0 0 .4rem var(--d-ok); }
+.asof-live:hover { color: var(--d-ink); border-color: var(--d-accent); }
+.asof-note { color: var(--d-warn); font-size: .75rem; white-space: nowrap; }
+.asof, .asof-live { white-space: nowrap; flex-shrink: 0; }
+.asof-go { font-size: .8rem; }
+.asof-banner { margin: .6rem 1.25rem 0; padding: .45rem .8rem; border: 1px solid var(--d-warn); border-radius: 6px; color: var(--d-ink);
+  background: var(--d-highlight); font-size: .85rem; }
+.asof-banner i { color: var(--d-warn); margin-right: .3rem; }
+@media (max-width: 760px) { .asof { margin-left: 0; order: 3; } .asof-live { padding: .15rem .45rem; } }
+
+/* ---- a panel with nothing to show ---- */
+.pnl-empty { margin: 0; padding: .9rem .2rem; color: var(--d-faint); font-size: .85rem; display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+.pnl-empty i { font-size: 1rem; }
+.pnl-empty-why { flex-basis: 100%; font-size: .75rem; color: var(--d-faint); }

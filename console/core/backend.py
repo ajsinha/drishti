@@ -21,6 +21,8 @@ from urllib.parse import quote
 
 import httpx
 
+from core import asof
+
 
 class BackendError(Exception):
     """The server answered with a problem (RFC 7807) or could not be reached."""
@@ -45,6 +47,7 @@ class BackendClient:
 
     async def _send(self, method: str, path: str, ident, **kw: Any) -> Any:
         headers = dict(ident.headers()) if ident is not None else {}
+        headers.update(asof.headers())
         headers.update(kw.pop("headers", {}))
         try:
             r = await self._client.request(method, "/api/v1" + path, headers=headers, **kw)
@@ -134,9 +137,13 @@ class BackendClient:
             kw["json"] = body
         return await self._send(method, "/me" + path, ident, **kw)
 
+    async def business_date(self, ident=None) -> dict:
+        """The server's business date: current, selected (rolled back to a business day), live, holidays."""
+        return await self._get("/business-date", ident)
+
     async def sse(self, path: str, ident=None):
         """Yields ``(event, data)`` from any server SSE endpoint under /api/v1."""
-        headers = {"Accept": "text/event-stream", **(ident.headers() if ident is not None else {})}
+        headers = {"Accept": "text/event-stream", **(ident.headers() if ident is not None else {}), **asof.headers()}
         async with self._client.stream("GET", "/api/v1" + path, timeout=None, headers=headers) as r:
             if r.status_code >= 400:
                 raise BackendError(r.status_code, "DRS-5003", "stream refused")
@@ -169,7 +176,7 @@ class BackendClient:
 
     async def stream(self, kind: str, id_: str, ident=None):
         """Yields ``(event, data)`` pairs from the server's SSE stream for a view, until it ends."""
-        headers = {"Accept": "text/event-stream", **(ident.headers() if ident is not None else {})}
+        headers = {"Accept": "text/event-stream", **(ident.headers() if ident is not None else {}), **asof.headers()}
         async with self._client.stream("GET", f"/api/v1/views/{kind}/{id_}/stream", timeout=None, headers=headers) as r:
             if r.status_code >= 400:
                 raise BackendError(r.status_code, "DRS-5003", "stream refused")

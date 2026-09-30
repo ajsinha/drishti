@@ -191,6 +191,13 @@ class FakeBackend:
     async def delete_workspace(self, name, ident):
         self.saved_workspaces.pop(name, None)
 
+    async def business_date(self, ident=None):
+        from core import asof
+        sel = asof.current()
+        return {"current": "2026-09-30", "selected": "2026-09-30" if sel == "live" else ("2026-09-25" if sel == "2026-09-26" else sel),
+                "live": sel == "live", "previous": "2026-09-29", "earliest": "2021-09-30", "calendar": "USNY",
+                "holidays": ["2026-10-12", "2026-11-11", "2026-11-26"]}
+
     async def about(self, ident=None):
         return {"product": "Drishti", "version": "1.2.0", "built": "2026-09-30T12:00:00Z", "java": "21.0.12 (Ubuntu)",
                 "uptimeSeconds": 3725, "sutras": ["irs-vanilla v3"], "securityEnabled": False,

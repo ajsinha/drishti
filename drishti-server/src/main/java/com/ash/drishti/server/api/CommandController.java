@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.api;
 
+import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.engine.command.CommandParser;
 import com.ash.drishti.engine.command.Mnemonics;
@@ -58,8 +59,8 @@ public class CommandController {
     }
 
     @GetMapping("/suggest")
-    public List<Suggestion> suggest(@RequestParam(defaultValue = "") String q, @RequestParam(required = false) Integer limit,
+    public List<Suggestion> suggest(@RequestParam(defaultValue = "") String q, @RequestParam(required = false) Integer limit, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
-        return entitlements.filter(principal, suggestions.suggest(q, principal.user(), limit));
+        return entitlements.filter(principal, suggestions.suggest(q, principal.user(), limit, asOf));
     }
 }

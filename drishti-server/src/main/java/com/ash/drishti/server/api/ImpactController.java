@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.api;
 
+import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.engine.impact.ImpactService;
 import com.ash.drishti.server.security.Entitlements;
@@ -39,8 +40,8 @@ public class ImpactController {
     }
 
     @GetMapping("/{kind}/{id}")
-    public ImpactService.Impact analyse(@PathVariable String kind, @PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+    public ImpactService.Impact analyse(@PathVariable String kind, @PathVariable String id, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireOpen(p, kind);
-        return impact.analyse(EntityRef.of(kind, id), k -> entitlements.mayOpen(p, k));
+        return impact.analyse(EntityRef.of(kind, id), k -> entitlements.mayOpen(p, k), asOf);
     }
 }

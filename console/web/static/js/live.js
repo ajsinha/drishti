@@ -20,6 +20,8 @@
   'use strict';
   var view = document.querySelector('[data-view]');
   if (!view || !window.EventSource) { return; }
+  // a picked business date is a static snapshot: nothing to stream
+  if (document.querySelector('[data-asof].asof-past') || view.hasAttribute('data-static')) { return; }
   var liveBox = document.querySelector('.tbar-live');
   var liveText = document.querySelector('[data-live-text]');
   var strip = document.querySelectorAll('.strip-i dd');

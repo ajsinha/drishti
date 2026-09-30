@@ -114,3 +114,48 @@ def test_impact_page(client, backend):
     assert r.status_code == 200 and "Impact of" in r.text and "IRS-48213" in r.text and "total −394,160" in r.text
     assert "1 netting set you do not have access to" in r.text
     assert "window.location.href = '/impact/'" in client.get("/static/js/view.js").text
+
+
+def test_the_business_date_is_chosen_in_the_top_bar_and_sent_to_the_server(client, backend):
+    page = client.get("/v/trade/IRS-48213").text
+    assert 'data-asof' in page and 'type="date"' in page and 'max="2026-09-30"' in page and "asof-live on" in page
+    assert "2026-11-26" in page                                      # holidays go to the picker
+    r = client.get("/asof", params={"d": "2026-09-26", "next": "/v/trade/IRS-48213"}, follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == "/v/trade/IRS-48213" and "drishti_asof=2026-09-26" in r.headers["set-cookie"]
+    client.cookies.set("drishti_asof", "2026-09-26")
+    try:
+        past = client.get("/v/trade/IRS-48213").text
+        assert "asof-past" in past and 'value="2026-09-25"' in past and "↩ 2026-09-26" in past
+        assert "is not a dated source" in past                       # the fixture has no business date
+    finally:
+        client.cookies.delete("drishti_asof")
+    assert client.get("/asof", params={"d": "live", "next": "//evil.example"}, follow_redirects=False).headers["location"] == "/t"
+
+
+def test_backend_calls_carry_the_business_date_header():
+    from core import asof
+    assert asof.headers() == {}
+    asof.set_current("2026-09-29")
+    assert asof.headers() == {"X-Drishti-As-Of": "2026-09-29"}
+    asof.set_current("not-a-date")
+    assert asof.headers() == {}
+
+
+KINDS = ["kv", "status", "provenance", "table", "ladder", "tabs", "line", "area", "hbar", "links", "markdown", "gauge"]
+BROKEN = [None, {}, {"fields": None, "rows": None, "tabs": None, "x": None, "series": None, "bars": None, "links": None},
+          {"columns": ["A"], "numeric": [], "rows": [{"cells": None}], "x": ["1Y"], "series": [{"label": "s", "values": [None]}],
+           "bars": [{"label": "a", "value": None, "text": "—"}], "tabs": [{"title": "t", "fields": None}], "value": None, "max": None}]
+
+
+def test_every_panel_kind_renders_imperfect_data_without_failing(client):
+    tpl = client.app.state.templates.env.from_string('{% from "_macros/panels.html" import panel %}{{ panel(p) }}')
+    for kind in KINDS:
+        for data in BROKEN:
+            for empty, error in [(False, None), (True, None), (True, "cannot read rows")]:
+                out = tpl.render(p={"id": "x", "kind": kind, "title": "X", "area": "main", "data": data, "empty": empty, "error": error})
+                assert 'class="pnl"' in out, (kind, data)
+                if empty:
+                    assert "No data available" in out or "No linked entities" in out
+    ok = tpl.render(p={"id": "t", "kind": "table", "title": "T", "area": "main", "empty": False,
+                       "data": {"columns": ["A"], "numeric": [False], "rows": [{"cells": [{"text": "1"}]}]}})
+    assert "No data available" not in ok and ">1<" in ok

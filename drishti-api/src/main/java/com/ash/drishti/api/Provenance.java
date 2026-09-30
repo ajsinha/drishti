@@ -16,6 +16,7 @@
 package com.ash.drishti.api;
 
 import java.time.Instant;
+import java.time.LocalDate;
 
 /**
  * Where a document came from: the source system, its monotonic generation, and when it was read.
@@ -25,4 +26,14 @@ import java.time.Instant;
  * @param fetchedAt when the document was read
  * @param live whether the source can push updates for this document
  */
-public record Provenance(String source, long generation, Instant fetchedAt, boolean live) {}
+public record Provenance(String source, long generation, Instant fetchedAt, boolean live, LocalDate businessDate) {
+
+    /** Provenance of an undated read. */
+    public Provenance(String source, long generation, Instant fetchedAt, boolean live) {
+        this(source, generation, fetchedAt, live, null);
+    }
+
+    public Provenance withBusinessDate(LocalDate date) {
+        return new Provenance(source, generation, fetchedAt, live, date);
+    }
+}

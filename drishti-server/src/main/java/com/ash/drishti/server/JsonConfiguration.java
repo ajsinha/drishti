@@ -50,6 +50,20 @@ public class JsonConfiguration {
                 codec.write(value, gen);
             }
         });
+        // Imperfect source data yields NaN or infinities; JSON has no such numbers, so they are written as null
+        // (a gap in a chart, a blank cell) instead of breaking the whole response.
+        JsonSerializer<Double> finite = new JsonSerializer<>() {
+            @Override
+            public void serialize(Double value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+                if (value == null || value.isNaN() || value.isInfinite()) {
+                    gen.writeNull();
+                } else {
+                    gen.writeNumber(value);
+                }
+            }
+        };
+        m.addSerializer(Double.class, finite);
+        m.addSerializer(double.class, finite);
         return m;
     }
 }

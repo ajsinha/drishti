@@ -89,17 +89,22 @@ public final class ImpactService {
     }
 
     public Impact analyse(EntityRef target, Predicate<String> mayOpen) {
+        return analyse(target, mayOpen, com.ash.drishti.api.AsOf.LATEST);
+    }
+
+    /** What depends on {@code target} as of a business date. */
+    public Impact analyse(EntityRef target, Predicate<String> mayOpen, com.ash.drishti.api.AsOf asOf) {
         long t0 = System.nanoTime();
         Set<String> kinds = new LinkedHashSet<>();
         mnemonics.all().values().forEach(m -> kinds.add(m.kind()));
         List<CompletableFuture<List<EntityRef>>> parts = new ArrayList<>();
         for (String kind : kinds) {
-            parts.add(CompletableFuture.supplyAsync(() -> router.reverse(target, kind), executor));
+            parts.add(CompletableFuture.supplyAsync(() -> router.reverse(target, kind, asOf), executor));
         }
         Set<EntityRef> direct = new LinkedHashSet<>();
         parts.forEach(f -> direct.addAll(f.join()));
         direct.remove(target);
-        Map<EntityRef, EntityDocument> docs = router.fetchAll(direct, Duration.ofSeconds(2));
+        Map<EntityRef, EntityDocument> docs = router.fetchAll(direct, Duration.ofSeconds(2), asOf);
 
         Map<EntityRef, String> rolled = new LinkedHashMap<>();
         for (EntityDocument d : docs.values()) {
@@ -113,7 +118,7 @@ public final class ImpactService {
         }
         rolled.keySet().removeAll(direct);
         rolled.remove(target);
-        Map<EntityRef, EntityDocument> rolledDocs = router.fetchAll(rolled.keySet(), Duration.ofSeconds(2));
+        Map<EntityRef, EntityDocument> rolledDocs = router.fetchAll(rolled.keySet(), Duration.ofSeconds(2), asOf);
 
         List<Group> groups = new ArrayList<>();
         groups.addAll(group(1, direct, docs, Map.of(), mayOpen));

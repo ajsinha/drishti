@@ -25,6 +25,19 @@
       <ul id="cmdList" class="cmd-list" role="listbox" aria-label="Suggestions" hidden></ul>
     </div>
   </form>
+  {% set bd = business_date or {} %}
+  <form class="asof{% if asof != 'live' %} asof-past{% endif %}" action="/asof" method="get" data-asof
+        title="{% if asof == 'live' %}Live: the current business date ({{ bd.calendar or 'NY' }} calendar), streaming{% else %}A picked business date: a static snapshot{% endif %}">
+    <input type="hidden" name="next" value="{{ request.url.path }}">
+    <label for="asofDate" class="visually-hidden">Business date</label>
+    <input id="asofDate" class="asof-date mono" type="date" name="d" value="{{ bd.selected or (asof if asof != 'live' else bd.current) or '' }}"
+           {% if bd.earliest %}min="{{ bd.earliest }}"{% endif %} {% if bd.current %}max="{{ bd.current }}"{% endif %}
+           data-holidays="{{ (bd.holidays or []) | join(',') }}" data-current="{{ bd.current or '' }}">
+    <a href="/asof?d=live&amp;next={{ request.url.path | urlencode }}" class="asof-live{% if asof == 'live' %} on{% endif %}"
+       title="Back to live: today's business date, streaming" data-asof-live><span class="dot" aria-hidden="true"></span> Live</a>
+    <noscript><button type="submit" class="asof-go">Go</button></noscript>
+    {% if asof != 'live' and bd.selected and bd.selected != asof %}<span class="asof-note mono" title="Not a business day on the {{ bd.calendar }} calendar">↩ {{ asof }}</span>{% endif %}
+  </form>
   <div class="tbar-right">
     <a class="tbar-link" href="/help" title="Help (F1)"><i class="bi bi-question-circle" aria-hidden="true"></i><span class="d-none d-xl-inline"> Help</span></a>
     <a class="tbar-link" href="/m" title="Monitors"><i class="bi bi-list-columns" aria-hidden="true"></i><span class="d-none d-xl-inline"> Monitors</span></a>

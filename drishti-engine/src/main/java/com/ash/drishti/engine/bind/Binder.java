@@ -63,7 +63,12 @@ public final class Binder {
     }
 
     public PanelView bind(Panel p, BindContext c) {
-        String title = p.title() == null ? null : el.template(p.title()).render(c.eval());
+        String title;
+        try {
+            title = p.title() == null ? null : el.template(p.title()).render(c.eval());
+        } catch (RuntimeException e) {
+            title = p.title();   // a title that cannot be rendered from this document shows as written
+        }
         String explanation = c.layout().explanations().get(p.id());
         try {
             PanelData data = switch (p.kind()) {
@@ -80,10 +85,11 @@ public final class Binder {
                 case GAUGE -> gauge(p, c);
             };
             return new PanelView(p.id(), p.kind().id(), title, p.code(), p.key(), area(p), p.infer() || explanation != null,
-                    explanation, data, null);
+                    explanation, data, null, com.ash.drishti.engine.view.Emptiness.of(data));
         } catch (RuntimeException e) {
+            // one panel whose data does not fit its Sutra must never take the view down
             return new PanelView(p.id(), p.kind().id(), title, p.code(), p.key(), area(p), p.infer(), explanation, null,
-                    String.valueOf(e.getMessage()));
+                    String.valueOf(e.getMessage()), true);
         }
     }
 
@@ -317,7 +323,10 @@ public final class Binder {
         List<PanelData.Bar> bars = new ArrayList<>();
         for (int i = 0; i < rows.size(); i++) {
             DataNode r = rows.get(i);
-            double v = r.get(value).asDouble();
+            double v = Values.number(r.get(value));
+            if (!Double.isFinite(v)) {
+                continue;   // a row without a usable number is not a bar
+            }
             bars.add(new PanelData.Bar(r.get(label).asText(), v, formats.format(fmt, Values.normalise(v)),
                     tone == null ? (v < 0 ? "neg" : "pos") : Tones.resolve(tone, v)));
         }
@@ -345,8 +354,11 @@ public final class Binder {
 
     private PanelData gauge(Panel p, BindContext c) {
         double v = Values.number(eval(p.option("value").orElseThrow(), c.eval()));
-        double max = p.option("max").map(m -> Values.number(eval(m, c.eval()))).orElse(1.0);
+        double max = p.option("max").map(m -> Values.number(eval(m, c.eval()))).filter(Double::isFinite).orElse(1.0);
         String fmt = p.option("fmt").orElse("pct0");
+        if (!Double.isFinite(v)) {
+            return new PanelData.Gauge(Double.NaN, max, "—", p.option("label").orElse(null));
+        }
         return new PanelData.Gauge(v, max, formats.format(fmt, v / (max == 0 ? 1 : max)), p.option("label").orElse(null));
     }
 

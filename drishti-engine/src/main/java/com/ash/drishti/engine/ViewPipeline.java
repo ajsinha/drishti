@@ -15,8 +15,10 @@
  */
 package com.ash.drishti.engine;
 
+import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityRef;
+import com.ash.drishti.engine.time.BusinessDates;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.common.Fingerprint;
@@ -71,7 +73,7 @@ public final class ViewPipeline {
     /** Cache key for effective layouts. */
     record LayoutKey(String sutra, String kind, Fingerprint fingerprint) {}
 
-    record GenKey(EntityRef ref, long generation) {}
+    record GenKey(EntityRef ref, long generation, java.time.LocalDate businessDate) {}
 
     private final SourceRouter router;
     private final SutraMatcher matcher;
@@ -86,11 +88,13 @@ public final class ViewPipeline {
     private final ExecutorService bindPool;
     private final Cache<LayoutKey, EffectiveLayout> layouts;
     private final Cache<GenKey, Fingerprint> fingerprints;
+    private final BusinessDates dates;
 
     public ViewPipeline(SourceRouter router, SutraMatcher matcher, SutraRegistry registry, LayoutMerger merger,
             ShapeFingerprinter fingerprinter, ReferenceCatalog catalog, GraphProperties graph, Binder binder, ElCompiler el,
-            Formats formats, Mnemonics mnemonics, ExecutorService bindPool, EngineProperties props) {
+            Formats formats, Mnemonics mnemonics, ExecutorService bindPool, EngineProperties props, BusinessDates dates) {
         this.router = router;
+        this.dates = dates;
         this.matcher = matcher;
         this.merger = merger;
         this.fingerprinter = fingerprinter;
@@ -108,20 +112,28 @@ public final class ViewPipeline {
 
     /** A view built with an unsaved Sutra (Sutra Studio). Bypasses the layout cache. */
     public ViewModel preview(Sutra sutra, EntityRef ref) {
+        return preview(sutra, ref, AsOf.LATEST);
+    }
+
+    public ViewModel preview(Sutra sutra, EntityRef ref, AsOf asOf) {
         long t0 = System.nanoTime();
-        EntityDocument doc = fetch(ref);
-        return build(doc, t0, System.nanoTime(), Optional.of(sutra), false);
+        EntityDocument doc = fetch(ref, asOf);
+        return build(doc, t0, System.nanoTime(), Optional.of(sutra), false, asOf);
     }
 
     /** A view of a document supplied by the caller (Studio sample JSON), with a given or matched Sutra. */
     public ViewModel preview(Optional<Sutra> sutra, EntityDocument doc) {
         long t0 = System.nanoTime();
-        return build(doc, t0, t0, sutra.isPresent() ? sutra : matcher.match(doc.ref().kind(), doc.data()), false);
+        return build(doc, t0, t0, sutra.isPresent() ? sutra : matcher.match(doc.ref().kind(), doc.data()), false, AsOf.LATEST);
     }
 
     /** The layout inference alone would give {@code ref}, in Sutra form (Studio "start from inference"). */
     public Sutra inferred(EntityRef ref) {
-        EntityDocument doc = fetch(ref);
+        return inferred(ref, AsOf.LATEST);
+    }
+
+    public Sutra inferred(EntityRef ref, AsOf asOf) {
+        EntityDocument doc = fetch(ref, asOf);
         return merger.merge(Optional.empty(), doc.data(), ref.kind()).sutra();
     }
 
@@ -131,19 +143,26 @@ public final class ViewPipeline {
     }
 
     public ViewModel view(EntityRef ref) {
+        return view(ref, AsOf.LATEST);
+    }
+
+    /** The view of {@code ref} as of a business date: the entity and every linked entity are read for that date. */
+    public ViewModel view(EntityRef ref, AsOf asOf) {
         long t0 = System.nanoTime();
-        EntityDocument doc = fetch(ref);
-        return build(doc, t0, System.nanoTime());
+        EntityDocument doc = fetch(ref, asOf);
+        return build(doc, t0, System.nanoTime(), matcher.match(doc.ref().kind(), doc.data()), true, asOf);
     }
 
-    /** Builds a view from a document already in hand (live updates re-enter here). */
+    /** Builds a view from a document already in hand (live updates re-enter here; live is always current). */
     public ViewModel build(EntityDocument doc, long t0, long tFetched) {
-        return build(doc, t0, tFetched, matcher.match(doc.ref().kind(), doc.data()), true);
+        return build(doc, t0, tFetched, matcher.match(doc.ref().kind(), doc.data()), true, AsOf.LATEST);
     }
 
-    private ViewModel build(EntityDocument doc, long t0, long tFetched, Optional<Sutra> sutra, boolean cached) {
+    private ViewModel build(EntityDocument doc, long t0, long tFetched, Optional<Sutra> sutra, boolean cached, AsOf asOf) {
         EntityRef ref = doc.ref();
-        Fingerprint fp = fingerprints.get(new GenKey(ref, doc.provenance().generation()), k -> fingerprinter.fingerprint(doc.data()));
+        boolean current = dates.isCurrent(asOf);
+        Fingerprint fp = fingerprints.get(new GenKey(ref, doc.provenance().generation(), doc.provenance().businessDate()),
+                k -> fingerprinter.fingerprint(doc.data()));
         EffectiveLayout layout = cached
                 ? layouts.get(new LayoutKey(sutra.map(Sutra::id).orElse("-"), ref.kind(), fp), k -> merger.merge(sutra, doc.data(), ref.kind()))
                 : merger.merge(sutra, doc.data(), ref.kind());
@@ -158,7 +177,7 @@ public final class ViewPipeline {
                 binder.chartSource(p, eval).ifPresent(wanted::add);
             }
         }
-        Map<EntityRef, EntityDocument> linked = wanted.isEmpty() ? Map.of() : router.fetchAll(wanted, graph.linkBudget());
+        Map<EntityRef, EntityDocument> linked = wanted.isEmpty() ? Map.of() : router.fetchAll(wanted, graph.linkBudget(), asOf.businessDate() == null ? dates.resolve(asOf) : asOf);
         Set<EntityRef> pending = new HashSet<>(wanted);
         pending.removeAll(linked.keySet());
         long tLinks = System.nanoTime();
@@ -172,9 +191,15 @@ public final class ViewPipeline {
         Sutra s = layout.sutra();
         List<Cell> strip = new ArrayList<>();
         for (StripItem i : s.strip()) {
-            strip.add(binder.cell(i.label(), el.compile(i.bind()).eval(eval), i.fmt(), i.tone(), i.emphasis(), binder.pathOf(i.bind())));
+            Object v;
+            try {
+                v = el.compile(i.bind()).eval(eval);
+            } catch (RuntimeException e) {
+                v = null;   // a field the document lacks, or of the wrong type, shows as a dash
+            }
+            strip.add(binder.cell(i.label(), v, i.fmt(), i.tone(), i.emphasis(), binder.pathOf(i.bind())));
         }
-        ViewModel.TitleView title = title(s, eval);
+        ViewModel.TitleView title = title(s, eval, ref);
         long tBind = System.nanoTime();
 
         Map<String, Double> timings = new LinkedHashMap<>();
@@ -186,12 +211,12 @@ public final class ViewPipeline {
         var pv = doc.provenance();
         return new ViewModel(new ViewModel.Ref(ref.kind(), ref.id()), mnemonics.codeFor(ref.kind()), title, strip, panels,
                 keys(s, panels, eval), new ViewModel.Provenance(layout.label(), fp.shortForm(), pv.source(), pv.generation(),
-                        pv.fetchedAt().toString(), pv.live()), timings);
+                        pv.fetchedAt().toString(), pv.live() && current, pv.businessDate() == null ? null : pv.businessDate().toString()), timings);
     }
 
-    private EntityDocument fetch(EntityRef ref) {
+    private EntityDocument fetch(EntityRef ref, AsOf asOf) {
         try {
-            return router.fetch(ref).join();
+            return router.fetch(ref, asOf.businessDate() == null ? dates.resolve(asOf) : asOf).join();
         } catch (CompletionException e) {
             if (e.getCause() instanceof DrishtiException d) {
                 throw d;
@@ -200,16 +225,25 @@ public final class ViewPipeline {
         }
     }
 
-    private ViewModel.TitleView title(Sutra s, EvalContext eval) {
+    private ViewModel.TitleView title(Sutra s, EvalContext eval, EntityRef ref) {
         var t = s.title();
-        String id = Values.text(el.compile(t.id()).eval(eval));
+        String id = soft(() -> Values.text(el.compile(t.id()).eval(eval)));
         Cell with = null;
         if (t.with() != null) {
-            Object w = Values.simplify(el.compile(t.with()).eval(eval));
+            Object w = soft(() -> Values.simplify(el.compile(t.with()).eval(eval)));
             with = w == null ? null : binder.cell(null, w, null, null, false, null);
         }
-        String pill = t.pill() == null ? null : el.template(t.pill()).render(eval);
-        return new ViewModel.TitleView(pill, id, with);
+        String pill = t.pill() == null ? null : soft(() -> el.template(t.pill()).render(eval));
+        return new ViewModel.TitleView(pill, id == null || id.isBlank() ? ref.id() : id, with);
+    }
+
+    /** Title parts are best effort: an imperfect document gets a plainer title, never a failed view. */
+    private static <T> T soft(java.util.function.Supplier<T> f) {
+        try {
+            return f.get();
+        } catch (RuntimeException e) {
+            return null;
+        }
     }
 
     private List<KeyView> keys(Sutra s, List<PanelView> panels, EvalContext eval) {

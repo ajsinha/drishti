@@ -69,8 +69,43 @@ class SourceRouterTest {
         }
     }
 
+    /** A dated plugin, instantiated per named connector (it needs a public no-argument constructor). */
+    public static final class Dated implements SourcePlugin {
+        private String name = "dated";
+
+        public PluginManifest manifest() {
+            return new PluginManifest("dated", "t", Set.of("trade"), new SourceCapabilities(false, false, false, true));
+        }
+
+        public void start(SourceContext c) {
+            name = c.setting("source-name", "dated");
+        }
+
+        public Optional<EntityDocument> fetch(EntityRef ref) {
+            return fetch(ref, com.ash.drishti.api.AsOf.LATEST);
+        }
+
+        public Optional<EntityDocument> fetch(EntityRef ref, com.ash.drishti.api.AsOf asOf) {
+            return Optional.of(new EntityDocument(ref, DataNode.of(Map.of("from", name)),
+                    new Provenance(name, 1, Instant.now(), false, asOf.businessDate())));
+        }
+    }
+
+    @Test
+    void aPickedDateGoesToDatedConnectorsFirstAndLiveKeepsTheRoute() {
+        var connectors = Map.of("lake", new SourcesProperties.ConnectorSettings("dated", true, List.of("trade"), Map.of()));
+        var props = new SourcesProperties(Map.of(), "live", Map.of(), Duration.ofMillis(500), null, connectors);
+        SourcePlugin live = new Fake("live", Set.of("trade"), Set.of("T-1"), 0);
+        var router = new SourceRouter(new SourceRegistry(List.of(live, new Dated()), props, new JsonCodec()), props,
+                Executors.newVirtualThreadPerTaskExecutor());
+        var past = router.fetch(EntityRef.of("trade", "T-1"), com.ash.drishti.api.AsOf.of(java.time.LocalDate.of(2026, 9, 29))).join();
+        assertThat(past.data().get("from").asText()).isEqualTo("lake");
+        assertThat(past.provenance().businessDate()).isEqualTo(java.time.LocalDate.of(2026, 9, 29));
+        assertThat(router.fetch(EntityRef.of("trade", "T-1")).join().data().get("from").asText()).isEqualTo("live");
+    }
+
     private SourceRouter router(Map<String, String> routes, SourcePlugin... plugins) {
-        var props = new SourcesProperties(routes, null, Map.of(), Duration.ofMillis(300), null);
+        var props = new SourcesProperties(routes, null, Map.of(), Duration.ofMillis(300), null, null);
         return new SourceRouter(new SourceRegistry(List.of(plugins), props, new JsonCodec()), props,
                 Executors.newVirtualThreadPerTaskExecutor());
     }

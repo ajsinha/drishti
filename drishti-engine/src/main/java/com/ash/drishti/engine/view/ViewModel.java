@@ -98,7 +98,9 @@ public record ViewModel(
      * @param fetchedAt ISO instant
      * @param live whether the source pushes updates
      */
-    public record Provenance(String layout, String fingerprint, String source, long generation, String fetchedAt, boolean live) {}
+    /** @param businessDate the business date the data is for, or {@code null} when the source is not dated */
+    public record Provenance(String layout, String fingerprint, String source, long generation, String fetchedAt, boolean live,
+            String businessDate) {}
 
     /**
      * @param id panel id
@@ -113,7 +115,8 @@ public record ViewModel(
      * @param error set when binding this panel failed; the rest of the view is unaffected
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    /** @param empty nothing to show (the document lacks what the panel asks for); the console says "No data available" */
     public record PanelView(
             String id, String kind, String title, String code, String key, String area, boolean inferred,
-            String explanation, PanelData data, String error) {}
+            String explanation, PanelData data, String error, boolean empty) {}
 }

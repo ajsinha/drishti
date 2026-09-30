@@ -130,7 +130,8 @@ Ten waves (plus W11, user management, after 1.0.0). Each holds a small set of cl
 | W13b ✅ | Domain packs | a neutral core; finance and logistics packs; `DRISHTI_PACKS` |
 | W14 ✅ | Monitors and alerts | watchlists with live columns; threshold alerts with notifications |
 | W15 ✅ | F8 Impact | what depends on an entity (reverse graph), navigable |
-| W16 | History | view an entity as of a generation or time; diff between generations |
+| W22 ✅ | Business dates and Delta Lake | `AsOf` in the SPI; USNY business calendar; top-bar date (Live streams, a picked date is static); Delta Lake connector (Delta Kernel, partitions by business date, time travel); named connectors; dated file folders; JDBC `:asOf`; imperfect documents render as "No data available" (ADR-012) |
+| W16 | History (rest) | diff a view between two dates or versions; a "known at" control in the console (the server already honours `knownAt`) |
 | W17 | Structured search | `TRD where counterparty = … and mtm < …` giving a live result table |
 | W18 | Export and share | CSV/Excel/PDF of a view; permalinks to an exact view and generation |
 | W19 | Sutra governance | review and approval; version diffs; saved test entities per Sutra |

@@ -28,5 +28,6 @@
 | [009](009-users-live-in-the-server.md) | Users live in the server |
 | [010](010-industries-are-domain-packs.md) | Industries are domain packs |
 | [011](011-sutras-are-markdown-documents.md) | Sutras are Markdown documents |
+| [012](012-business-dates-and-delta-lake.md) | Business dates and Delta Lake |
 
 ADRs are amended, never rewritten.

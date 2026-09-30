@@ -54,7 +54,8 @@ import org.springframework.context.annotation.Import;
 /** Beans contributed by {@code drishti-engine}, and the lower modules it assembles. */
 @Configuration(proxyBeanMethods = false)
 @Import({CommonConfiguration.class, RachanaConfiguration.class, InferenceConfiguration.class, GraphConfiguration.class})
-@EnableConfigurationProperties({SourcesProperties.class, EngineProperties.class, CommandsProperties.class, LiveProperties.class})
+@EnableConfigurationProperties({SourcesProperties.class, EngineProperties.class, CommandsProperties.class, LiveProperties.class,
+        com.ash.drishti.engine.time.BusinessDateProperties.class})
 public class EngineConfiguration {
 
     /** One virtual thread per task: fetches, link fan-out and searches block cheaply here. */
@@ -72,6 +73,11 @@ public class EngineConfiguration {
     @Bean(destroyMethod = "close")
     public SourceRegistry sourceRegistry(SourcesProperties props, JsonCodec codec) {
         return new SourceRegistry(new PluginDiscovery().discover(props.pluginDir()), props, codec);
+    }
+
+    @Bean
+    public com.ash.drishti.engine.time.BusinessDates businessDates(com.ash.drishti.engine.time.BusinessDateProperties props) {
+        return new com.ash.drishti.engine.time.BusinessDates(props, java.time.Clock.systemUTC());
     }
 
     @Bean
@@ -113,9 +119,10 @@ public class EngineConfiguration {
     @Bean
     public ViewPipeline viewPipeline(SourceRouter router, SutraMatcher matcher, SutraRegistry registry, LayoutMerger merger,
             ShapeFingerprinter fingerprinter, ReferenceCatalog catalog, GraphProperties graph, Binder binder, ElCompiler el,
-            Formats formats, Mnemonics mnemonics, ForkJoinPool drishtiBindPool, EngineProperties props) {
+            Formats formats, Mnemonics mnemonics, ForkJoinPool drishtiBindPool, EngineProperties props,
+            com.ash.drishti.engine.time.BusinessDates businessDates) {
         return new ViewPipeline(router, matcher, registry, merger, fingerprinter, catalog, graph, binder, el, formats, mnemonics,
-                drishtiBindPool, props);
+                drishtiBindPool, props, businessDates);
     }
 
     /** Frame timer for live topics: two platform threads only schedule; delivery work is tiny. */

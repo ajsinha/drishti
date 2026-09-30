@@ -68,6 +68,23 @@ Matched characters are highlighted.
 - **Breadcrumbs:** `← IRS-48213 / NS-NORTH-01` shows the path you followed in this browser tab.
 - **How this view was built:** the Sutra and version (or *inference only*), the data fingerprint,
   and the source with its generation.
+- **No data available:** a panel whose data the document does not have (or has in an unexpected shape) says so.
+  The rest of the view is unaffected. Real feeds are often incomplete.
+
+## Business date: live or a day in the past
+
+The date box in the top bar says which day you are looking at.
+
+- **Live** (green, the default) is the current business date on the New York calendar. Weekends and
+  holidays count as the business day before. Views stream: numbers tick and flash.
+- **Pick a date** in the calendar to see that day's end-of-day data: the trade, its curve, its netting set, the
+  impact and the suggestions, all as of that date. A picked date is a **static snapshot**, even if you pick today.
+  The box turns amber, and nothing streams.
+- A weekend or holiday rolls back to the business day before; the box shows `↩` with the date you asked for.
+- Press **Live** to go back.
+- If a source keeps no history, the view says so ("*… is not a dated source: this shows its current data*").
+  If the latest data is from an earlier day than the one you picked, it says which day.
+- The footer shows the date the data is for (`as of 2026-09-25`).
 
 ## Monitors and alerts
 

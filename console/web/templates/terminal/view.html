@@ -21,6 +21,13 @@
 {% block nav %}{% if not embed %}{% with command_text=(vm.mnemonic ~ ' ' ~ vm.ref.id ~ ' <GO>') if vm.mnemonic else vm.ref.id, live=vm.provenance.live, built_ms=vm.timings.total %}{% include "terminal/_topbar.html" %}{% endwith %}{% endif %}{% endblock %}
 {% block content %}
 <div class="view" data-view{% if embed %} data-embed{% endif %} data-kind="{{ vm.ref.kind }}" data-id="{{ vm.ref.id }}" data-label="{{ vm.title.id }}">
+  {% if asof != 'live' and not vm.provenance.businessDate %}
+  <p class="asof-banner" role="status"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+    <b>{{ vm.provenance.source }}</b> is not a dated source: this shows its current data, not {{ (business_date or {}).selected or asof }}.</p>
+  {% elif asof != 'live' and vm.provenance.businessDate and vm.provenance.businessDate != (business_date or {}).selected %}
+  <p class="asof-banner" role="status"><i class="bi bi-calendar2-week" aria-hidden="true"></i>
+    Latest data on or before {{ (business_date or {}).selected }} is from <b class="mono">{{ vm.provenance.businessDate }}</b>.</p>
+  {% endif %}
   <section class="vhead">
     <nav class="crumbs" aria-label="Breadcrumb" data-crumbs hidden></nav>
     <div class="vtitle">
@@ -50,7 +57,7 @@
       {% if k.panel %}data-target="{{ k.panel }}"{% endif %}{% if k.link %}data-href="/v/{{ k.link.kind }}/{{ k.link.id }}"{% endif %}>
       <b>{{ k.key }}</b> {{ k.label }}</button>{% endfor %}
     <button type="button" class="fk" data-fkey="Alt+ArrowLeft" data-action="back"><b>Alt+←</b> Back</button></nav>
-  <span class="fk-note">{{ vm.provenance.source }} · gen {{ vm.provenance.generation }} · {{ COPYRIGHT }}</span>
+  <span class="fk-note">{{ vm.provenance.source }} · gen {{ vm.provenance.generation }}{% if vm.provenance.businessDate %} · as of {{ vm.provenance.businessDate }}{% endif %} · {{ COPYRIGHT }}</span>
 </footer>
 {% endif %}{% endblock %}
 {% block scripts %}

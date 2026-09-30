@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.api;
 
+import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.api.SourcePlugin;
@@ -67,11 +68,11 @@ public class CatalogController {
     }
 
     @GetMapping("/entities/{kind}/{id}/raw")
-    public ApiDtos.RawEntity raw(@PathVariable String kind, @PathVariable String id,
+    public ApiDtos.RawEntity raw(@PathVariable String kind, @PathVariable String id, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
         entitlements.requireOpen(principal, kind);
         try {
-            EntityDocument d = router.fetch(EntityRef.of(kind, id)).join();
+            EntityDocument d = router.fetch(EntityRef.of(kind, id), asOf).join();
             return new ApiDtos.RawEntity(new ViewModel.Ref(kind, id), d.provenance(), entitlements.redact(principal, d.data()));
         } catch (CompletionException e) {
             throw e.getCause() instanceof DrishtiException de ? de : new DrishtiException(ErrorCode.SOURCE_FAILED, e.getMessage());

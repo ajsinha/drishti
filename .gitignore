@@ -13,3 +13,4 @@ __pycache__/
 application.local.yaml
 hs_err_pid*
 data/identity/
+data/delta/

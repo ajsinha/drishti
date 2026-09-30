@@ -48,6 +48,7 @@
     <module>plugins/drishti-plugin-file</module>
     <module>plugins/drishti-plugin-rest</module>
     <module>plugins/drishti-plugin-jdbc</module>
+    <module>plugins/drishti-plugin-delta</module>
     <module>drishti-server</module>
     <module>drishti-testkit</module>
     <module>drishti-it</module>
@@ -65,6 +66,8 @@
     <jqwik.version>1.10.1</jqwik.version>
     <jmh.version>1.37</jmh.version>
     <springdoc.version>2.9.1</springdoc.version>
+    <delta-kernel.version>4.4.0</delta-kernel.version>
+    <hadoop.version>3.4.2</hadoop.version>
   </properties>
 
   <dependencyManagement>
@@ -79,6 +82,7 @@
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-packs</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-demo</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-file</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-delta</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-rest</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-jdbc</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-server</artifactId><version>${project.version}</version></dependency>

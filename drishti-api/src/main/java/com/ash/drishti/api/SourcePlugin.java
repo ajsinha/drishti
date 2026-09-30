@@ -33,6 +33,14 @@ public interface SourcePlugin extends AutoCloseable {
     /** Reads one entity; empty when the source does not hold it. May block (it runs on a virtual thread). */
     Optional<EntityDocument> fetch(EntityRef ref) throws Exception;
 
+    /**
+     * Reads one entity as of a business date (and optionally a knowledge time). Dated sources override this;
+     * the default ignores {@code asOf}, which is right for sources that only hold current data.
+     */
+    default Optional<EntityDocument> fetch(EntityRef ref, AsOf asOf) throws Exception {
+        return fetch(ref);
+    }
+
     /** Pushes each new generation of the entity to {@code listener} until the subscription is closed. */
     default Subscription subscribe(EntityRef ref, Consumer<EntityDocument> listener) {
         throw new UnsupportedOperationException(manifest().name() + " is not live");
@@ -43,6 +51,11 @@ public interface SourcePlugin extends AutoCloseable {
         return List.of();
     }
 
+    /** {@link #reverse(EntityRef, String)} as of a business date; dated sources override it. */
+    default List<EntityRef> reverse(EntityRef target, String kind, AsOf asOf) {
+        return reverse(target, kind);
+    }
+
     /**
      * Entities of {@code kind} whose identifier or name contains {@code text} (case-insensitive), best
      * matches first, at most {@code limit}. Powers the command-line suggestion dropdown; must be fast
@@ -50,6 +63,11 @@ public interface SourcePlugin extends AutoCloseable {
      */
     default List<EntityHit> search(String kind, String text, int limit) {
         return List.of();
+    }
+
+    /** {@link #search(String, String, int)} as of a business date; dated sources override it. */
+    default List<EntityHit> search(String kind, String text, int limit, AsOf asOf) {
+        return search(kind, text, limit);
     }
 
     /** Human-readable health; {@code "UP"} when healthy. */

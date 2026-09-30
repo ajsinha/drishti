@@ -50,12 +50,20 @@ terminal does.
 | 15 | F8 impact | ✅ done |
 | 13c | Packs per user: admins assign, users choose, enforced by the server | ✅ done |
 | R1–R2 | Risk pack: taxonomy of 125 products and 45 data kinds; 170 generated Markdown Sutras | ✅ done |
-| R3–R5 | Risk pack: generated data, `datafiles` connector and connector instances, docs, Aerospike and PostgreSQL, public feeds | ⏳ next |
+| R3–R5 | Risk pack: generated data as dated Delta tables, docs, Aerospike and PostgreSQL, public feeds | ⏳ next |
 | P2–P8 | Packs: liquidity, climate, operational/non-financial, retail banking, genomics and biology, politics and society, economics | ◻️ planned |
-| 16 | History | ◻️ after the risk pack |
+| 22 | Business dates: Live or a picked date (static) on the USNY calendar; Delta Lake connector with time travel; named connectors; imperfect documents render as "No data available" | ✅ done |
+| 16 | History: diffs between dates, a "known at" control | ◻️ after the risk pack |
 | 17–21 | Structured search · export and share · Sutra governance · Kafka/aero/OIDC · personal settings | ◻️ planned |
 
 ## What works today
+
+- **Business dates and history.** **Live** (the default) is the current business date on the New York
+  calendar, streaming. Pick a date in the top bar to see that day's data as a static snapshot: views, links,
+  impact and suggestions all follow the date. History is read from **Delta Lake** (`data/delta/<domain>/<kind>/`,
+  partitioned by business date, with time travel), built for the samples with `tools/samplegen/lake.py`.
+- **Imperfect data never breaks a screen.** A panel whose data is missing or in the wrong shape says
+  "No data available"; the rest of the view renders.
 
 - **Console** (`console/`). A landing page with an animated hero: raw JSON is drawn into the `{◉}`
   eye and comes out as live panels. It has seven themes (including *wallstreet* and Maya's *crimson* and *crimson dark*) and a strict CSP. Every asset is vendored

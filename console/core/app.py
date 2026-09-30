@@ -48,6 +48,13 @@ class AuthGate(BaseHTTPMiddleware):
         request.state.identity = auth.identity(request.cookies.get(COOKIE))
         request.state.pack_switcher = []
         path = request.url.path
+        from core import asof
+
+        request.state.asof = asof.set_current(request.query_params.get("asOf") or request.cookies.get(asof.COOKIE))
+        request.state.business_date = None
+        if not path.startswith(("/static/", "/api/", "/healthz", "/asof")):
+            request.state.business_date = await request.app.state.business_dates.info(
+                request.app.state.backend, request.state.identity, request.state.asof)
         if request.state.identity is not None and not path.startswith(("/static/", "/api/", "/healthz")):
             try:
                 request.state.pack_switcher = await request.app.state.packs.assigned(request.app.state.backend, request.state.identity)
@@ -73,7 +80,7 @@ class SecurityHeaders(BaseHTTPMiddleware):
 def create_app(settings: Settings) -> FastAPI:
     from core.backend import BackendClient
     from core.auth import Auth
-    from routes import (admin_routes, api_routes, auth_routes, help_routes, home_routes, monitor_routes, studio_routes,
+    from routes import (admin_routes, api_routes, asof_routes, auth_routes, help_routes, home_routes, monitor_routes, studio_routes,
                         terminal_routes, workspace_routes)
 
     @asynccontextmanager
@@ -109,6 +116,9 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.packs = Packs(settings, console_dir)
     app.state.docs_dir = docs_dir if docs_dir.is_absolute() else (console_dir / docs_dir).resolve()
     app.state.libraries = {}
+    from core.asof import BusinessDates
+
+    app.state.business_dates = BusinessDates()
     app.state.templates = templates
     app.add_middleware(AuthGate)
     app.add_middleware(SecurityHeaders)
@@ -122,4 +132,5 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(help_routes.router)
     app.include_router(workspace_routes.router)
     app.include_router(monitor_routes.router)
+    app.include_router(asof_routes.router)
     return app

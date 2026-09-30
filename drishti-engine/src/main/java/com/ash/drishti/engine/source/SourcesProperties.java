@@ -30,11 +30,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @ConfigurationProperties("drishti.sources")
 public record SourcesProperties(
-        Map<String, String> routes, String defaultRoute, Map<String, PluginSettings> plugins, Duration fetchTimeout, String pluginDir) {
+        Map<String, String> routes, String defaultRoute, Map<String, PluginSettings> plugins, Duration fetchTimeout, String pluginDir,
+        Map<String, ConnectorSettings> connectors) {
 
     public SourcesProperties {
         routes = routes == null ? Map.of() : Map.copyOf(routes);
         plugins = plugins == null ? Map.of() : Map.copyOf(plugins);
+        connectors = connectors == null ? Map.of() : Map.copyOf(connectors);
         fetchTimeout = fetchTimeout == null ? Duration.ofSeconds(2) : fetchTimeout;
     }
 
@@ -45,6 +47,22 @@ public record SourcesProperties(
     public record PluginSettings(Boolean enabled, Map<String, String> settings) {
         public PluginSettings {
             enabled = enabled == null ? Boolean.TRUE : enabled;
+            settings = settings == null ? Map.of() : Map.copyOf(settings);
+        }
+    }
+
+    /**
+     * A named instance of a plugin, e.g. {@code finance-lake: {plugin: delta, settings: {domain: finance}}}.
+     *
+     * @param plugin the plugin's name ({@code delta}, {@code jdbc}, {@code file}, …)
+     * @param enabled whether it starts (default true)
+     * @param kinds kinds it serves (default: what the plugin reports)
+     * @param settings settings handed to this instance
+     */
+    public record ConnectorSettings(String plugin, Boolean enabled, java.util.List<String> kinds, Map<String, String> settings) {
+        public ConnectorSettings {
+            enabled = enabled == null ? Boolean.TRUE : enabled;
+            kinds = kinds == null ? java.util.List.of() : java.util.List.copyOf(kinds);
             settings = settings == null ? Map.of() : Map.copyOf(settings);
         }
     }

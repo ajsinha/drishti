@@ -75,6 +75,32 @@ drishti:
           password: ${DRISHTI_JDBC_PASSWORD:}
           source-name: jdbc
           pool-size: 4
+          # Named parameters :id and :asOf (the business date) make it dated, e.g.
+          # query.trade: SELECT json FROM trades WHERE trade_id = :id AND business_date = (SELECT MAX(business_date)
+          #              FROM trades WHERE trade_id = :id AND business_date <= :asOf)
+      delta:                        # the Delta Lake plugin; runs as named connectors below, one per domain
+        enabled: false
+    # Named connectors: several instances of a plugin, each with its own settings and, optionally, kinds.
+    # A pack keeps its data in its own domain folder of the lake: <root>/<domain>/<kind>/business_date=…/
+    # Build the sample lake with:  uv run --with deltalake --with pyarrow python tools/samplegen/lake.py \
+    #     --samples packs/finance/samples --root data/delta --domain finance --days 10
+    connectors:
+      finance-lake:
+        plugin: delta
+        enabled: ${DRISHTI_LAKE_ENABLED:true}
+        settings:
+          root: ${DRISHTI_DELTA_ROOT:./data/delta}
+          domain: finance
+          lookback-days: 10
+          refresh-seconds: 10
+          # mode.<kind>: effective   for tables that store a row only when an entity changes
+  business-date:
+    # Every read is for a business date. The default is today in `zone`, rolled back to a business day of
+    # `calendar` (weekends and holidays roll to the previous business day). Users pick another date in the top
+    # bar; dated sources (Delta Lake, dated folders, databases with a date column) then read that date.
+    calendar: ${DRISHTI_CALENDAR:USNY}      # USNY, GBLO, EUTA, JPTO or joint, e.g. USNY+GBLO
+    zone: America/New_York
+    history: P5Y                            # how far back users may go
   security:
     # Off for local development. Production: enabled: true and DRISHTI_TOKEN_SECRET (>= 32 bytes, shared with the console).
     enabled: ${DRISHTI_SECURITY_ENABLED:false}

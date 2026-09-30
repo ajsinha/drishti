@@ -50,6 +50,11 @@ public final class SuggestionService {
     }
 
     public List<Suggestion> suggest(String query, String user, Integer limit) {
+        return suggest(query, user, limit, com.ash.drishti.api.AsOf.LATEST);
+    }
+
+    /** Suggestions for the command line; entity hits come from the sources as of the business date. */
+    public List<Suggestion> suggest(String query, String user, Integer limit, com.ash.drishti.api.AsOf asOf) {
         int max = limit == null || limit <= 0 ? defaultLimit : Math.min(limit, 50);
         String q = query == null ? "" : query.replaceAll("(?i)<\\s*GO\\s*>", "");
         String trimmed = q.trim();
@@ -65,7 +70,7 @@ public final class SuggestionService {
             String kind = m.get().kind();
             recents.of(user).stream().filter(h -> h.ref().kind().equals(kind) && matches(h, rest))
                     .forEach(h -> add(out, entity("recent", h)));
-            router.search(kind, rest, max, budget).forEach(h -> add(out, entity("entity", h)));
+            router.search(kind, rest, max, budget, asOf).forEach(h -> add(out, entity("entity", h)));
             return cap(out, max);
         }
         String word = parts[0].toUpperCase(Locale.ROOT);
@@ -75,7 +80,7 @@ public final class SuggestionService {
             }
         });
         recents.of(user).stream().filter(h -> matches(h, trimmed)).forEach(h -> add(out, entity("recent", h)));
-        router.search(null, trimmed, max, budget).forEach(h -> add(out, entity("entity", h)));
+        router.search(null, trimmed, max, budget, asOf).forEach(h -> add(out, entity("entity", h)));
         return cap(out, max);
     }
 

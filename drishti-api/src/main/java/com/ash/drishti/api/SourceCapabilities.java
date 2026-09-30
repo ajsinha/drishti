@@ -21,8 +21,15 @@ package com.ash.drishti.api;
  * @param live the source can push updates through {@link SourcePlugin#subscribe}
  * @param reverseLookup the source answers {@link SourcePlugin#reverse} (for example netting set to trades)
  * @param search the source answers {@link SourcePlugin#search} for command-line suggestions
+ * @param dated the source holds data per business date and honours {@link AsOf} (Delta Lake, dated folders,
+ *     a {@code business_date} column); undated sources return the same data for every date
  */
-public record SourceCapabilities(boolean live, boolean reverseLookup, boolean search) {
+public record SourceCapabilities(boolean live, boolean reverseLookup, boolean search, boolean dated) {
 
-    public static final SourceCapabilities FETCH_ONLY = new SourceCapabilities(false, false, false);
+    public static final SourceCapabilities FETCH_ONLY = new SourceCapabilities(false, false, false, false);
+
+    /** An undated source. */
+    public SourceCapabilities(boolean live, boolean reverseLookup, boolean search) {
+        this(live, reverseLookup, search, false);
+    }
 }

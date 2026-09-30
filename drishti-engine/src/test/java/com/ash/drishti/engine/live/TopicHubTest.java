@@ -78,7 +78,7 @@ class TopicHubTest {
     }
 
     private TopicHub hub(Manual m) {
-        var props = new SourcesProperties(Map.of(), null, Map.of(), Duration.ofSeconds(1), null);
+        var props = new SourcesProperties(Map.of(), null, Map.of(), Duration.ofSeconds(1), null, null);
         var router = new SourceRouter(new SourceRegistry(List.of(m), props, new JsonCodec()), props, Executors.newVirtualThreadPerTaskExecutor());
         return new TopicHub(router, Executors.newScheduledThreadPool(2), new LiveProperties(Duration.ofMillis(30), null, null, null));
     }

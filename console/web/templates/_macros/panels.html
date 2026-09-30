@@ -24,24 +24,24 @@
 
 {% macro fields(list, cols=4) -%}
 <dl class="kv kv-{{ cols }}">
-  {% for f in list %}<div class="kv-item"><dt>{{ f.label }}</dt><dd class="mono{{ tone(f) }}"{% if f.path %} data-path="{{ f.path }}"{% endif %}>{{ cell_text(f) }}</dd></div>{% endfor %}
+  {% for f in (list or []) %}<div class="kv-item"><dt>{{ f.label }}</dt><dd class="mono{{ tone(f) }}"{% if f.path %} data-path="{{ f.path }}"{% endif %}>{{ cell_text(f) }}</dd></div>{% endfor %}
 </dl>
 {%- endmacro %}
 
 {% macro table(d) -%}
 <div class="tbl-wrap"><table class="tbl">
-  <thead><tr>{% for h in d.columns %}<th{% if d.numeric[loop.index0] %} class="num"{% endif %}>{{ h }}</th>{% endfor %}</tr></thead>
+  <thead><tr>{% for h in (d.columns or []) %}<th{% if (d.numeric or [])[loop.index0] %} class="num"{% endif %}>{{ h }}</th>{% endfor %}</tr></thead>
   <tbody>
-  {% for r in d.rows %}
+  {% for r in (d.rows or []) %}
     <tr{% if r.highlight %} class="hl"{% endif %}{% if r.path %} data-path="{{ r.path }}"{% endif %}>
-      {% for c in r.cells %}<td class="mono{% if d.numeric[loop.index0] %} num{% endif %}{{ tone(c) }}">{{ cell_text(c) }}</td>{% endfor %}
+      {% for c in (r.cells or []) %}<td class="mono{% if (d.numeric or [])[loop.index0] %} num{% endif %}{{ tone(c) }}">{{ cell_text(c) }}</td>{% endfor %}
     </tr>
   {% endfor %}
   </tbody>
   {% if d.total or d.more %}
   <tfoot>
-    {% if d.total %}<tr class="total">{% for c in d.total.cells %}<td class="mono{% if d.numeric[loop.index0] %} num{% endif %}{{ tone(c) }}">{{ c.text }}</td>{% endfor %}</tr>{% endif %}
-    {% if d.more %}<tr class="more"><td colspan="{{ d.columns | length }}">{{ d.more }}</td></tr>{% endif %}
+    {% if d.total %}<tr class="total">{% for c in d.total.cells %}<td class="mono{% if (d.numeric or [])[loop.index0] %} num{% endif %}{{ tone(c) }}">{{ c.text }}</td>{% endfor %}</tr>{% endif %}
+    {% if d.more %}<tr class="more"><td colspan="{{ (d.columns or []) | length }}">{{ d.more }}</td></tr>{% endif %}
   </tfoot>
   {% endif %}
 </table></div>
@@ -51,16 +51,16 @@
 {% set d = p.data %}
 {% if d.layout == 'columns' %}
 <div class="cols">
-  {% for t in d.tabs %}<section class="col-box"><h4>{{ t.title }}</h4>
-    <dl class="rows">{% for f in t.fields %}<div><dt>{{ f.label }}</dt><dd class="mono{{ tone(f) }}">{{ cell_text(f) }}</dd></div>{% endfor %}</dl></section>{% endfor %}
+  {% for t in (d.tabs or []) %}<section class="col-box"><h4>{{ t.title }}</h4>
+    <dl class="rows">{% for f in (t.fields or []) %}<div><dt>{{ f.label }}</dt><dd class="mono{{ tone(f) }}">{{ cell_text(f) }}</dd></div>{% endfor %}</dl></section>{% endfor %}
 </div>
 {% else %}
 <div class="tabs" data-tabs>
   <div class="tab-heads" role="tablist">
-    {% for t in d.tabs %}<button type="button" role="tab" id="{{ p.id }}-tab-{{ loop.index0 }}" aria-controls="{{ p.id }}-pane-{{ loop.index0 }}"
+    {% for t in (d.tabs or []) %}<button type="button" role="tab" id="{{ p.id }}-tab-{{ loop.index0 }}" aria-controls="{{ p.id }}-pane-{{ loop.index0 }}"
       aria-selected="{{ 'true' if loop.first else 'false' }}" class="tab-head{% if loop.first %} on{% endif %}">{{ t.title }}</button>{% endfor %}
   </div>
-  {% for t in d.tabs %}<div class="tab-pane" role="tabpanel" id="{{ p.id }}-pane-{{ loop.index0 }}" aria-labelledby="{{ p.id }}-tab-{{ loop.index0 }}"{% if not loop.first %} hidden{% endif %}>
+  {% for t in (d.tabs or []) %}<div class="tab-pane" role="tabpanel" id="{{ p.id }}-pane-{{ loop.index0 }}" aria-labelledby="{{ p.id }}-tab-{{ loop.index0 }}"{% if not loop.first %} hidden{% endif %}>
     {{ fields(t.fields) }}</div>{% endfor %}
 </div>
 {% endif %}
@@ -69,9 +69,9 @@
 {% macro chart(p) -%}
 {% set d = p.data %}
 <div class="chart" data-chart="{{ d | tojson | forceescape }}" data-kind="{{ p.kind }}" role="img"
-     aria-label="{{ p.title }}: {{ d.x | join(', ') }}"></div>
-{% if d.series | length > 1 or d.limit %}
-<ul class="legend">{% for s in d.series %}<li><span class="sw sw-{{ s.tone or 'link' }}"></span>{{ s.label }}</li>{% endfor %}
+     aria-label="{{ p.title }}: {{ (d.x or []) | join(', ') }}"></div>
+{% if (d.series or []) | length > 1 or d.limit %}
+<ul class="legend">{% for s in (d.series or []) %}<li><span class="sw sw-{{ s.tone or 'link' }}"></span>{{ s.label }}</li>{% endfor %}
   {% if d.limit %}<li><span class="sw sw-limit"></span>{{ d.limitLabel or 'Limit' }}</li>{% endif %}</ul>
 {% endif %}
 {% if d.markText or d.source %}<div class="chart-foot"><span class="mono">{% if d.markText %}{{ d.markText }}{% endif %}</span>
@@ -79,9 +79,10 @@
 {%- endmacro %}
 
 {% macro bars(d) -%}
-{% set mx = (d.bars | map(attribute='value') | map('abs') | max) or 1 %}
+{% set ok = (d.bars or []) | selectattr('value', 'number') | list %}
+{% set mx = (ok | map(attribute='value') | map('abs') | max) or 1 %}
 <ul class="bars">
-  {% for b in d.bars %}<li><span class="bl mono">{{ b.label }}</span>
+  {% for b in ok %}<li><span class="bl mono">{{ b.label }}</span>
     <span class="bt"><span class="bf bf-{{ b.tone or 'pos' }}" data-w="{{ ((b.value | abs) / mx * 100) | round(1) }}"></span></span>
     <span class="bv mono t-{{ b.tone or 'pos' }}">{{ b.text }}</span></li>{% endfor %}
 </ul>
@@ -89,10 +90,17 @@
 
 {% macro links(d) -%}
 <ul class="links">
-  {% for l in d.links %}<li class="lk-{{ l.status }}"><span class="lk-label">{{ l.label }}</span>
+  {% for l in (d.links or []) %}<li class="lk-{{ l.status }}"><span class="lk-label">{{ l.label }}</span>
     <span class="lk-target">{% if l.link %}<a class="lnk mono" href="/v/{{ l.link.kind }}/{{ l.link.id }}">{{ l.text }}</a>{% else %}<span class="mono">{{ l.text }}</span>{% endif %}
     {% if l.badge %}<span class="lk-badge">{{ l.badge }}</span>{% elif l.status != 'resolved' %}<span class="lk-badge">{{ l.status }}</span>{% endif %}</span></li>{% endfor %}
 </ul>
+{%- endmacro %}
+
+{# A panel whose document lacks what its Sutra asks for (or whose data could not be read) says so, calmly. #}
+{% macro no_data(p) -%}
+<p class="pnl-empty" role="status"{% if p.error %} title="{{ p.error }}"{% endif %}>
+  <i class="bi bi-inbox" aria-hidden="true"></i> {{ 'No linked entities' if p.kind == 'links' else 'No data available' }}
+  {% if p.error %}<span class="pnl-empty-why">The data did not have the shape this panel expects.</span>{% endif %}</p>
 {%- endmacro %}
 
 {% macro panel(p) -%}
@@ -102,9 +110,9 @@
       {% if p.inferred %}<span class="inf" title="{{ p.explanation or 'completed by inference' }}">inferred</span>{% endif %}
       <a class="pnl-help" href="/help/panel-kinds#{{ p.kind }}" title="What a {{ p.kind }} panel shows" aria-label="Help on {{ p.kind }} panels"><i class="bi bi-question-circle" aria-hidden="true"></i></a></span></header>
   <div class="pnl-b">
-  {% if p.error %}<p class="pnl-err" role="status"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ p.error }}</p>
+  {% if p.empty or (p.data is none and p.kind != 'provenance') %}{{ no_data(p) }}
   {% elif p.kind in ['kv', 'status'] %}{{ fields(p.data.fields, 4 if p.area == 'main' else 2) }}
-  {% elif p.kind == 'provenance' %}<dl class="prov">{% for f in p.data.fields %}<div><dt>{{ f.label }}</dt><dd class="mono">{{ f.text }}</dd></div>{% endfor %}</dl>
+  {% elif p.kind == 'provenance' %}<dl class="prov">{% for f in (p.data.fields or []) %}<div><dt>{{ f.label }}</dt><dd class="mono">{{ f.text }}</dd></div>{% endfor %}</dl>
   {% elif p.kind in ['table', 'ladder'] %}{{ table(p.data) }}
   {% elif p.kind == 'tabs' %}{{ tabs(p) }}
   {% elif p.kind in ['line', 'area'] %}{{ chart(p) }}
