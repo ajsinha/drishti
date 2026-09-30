@@ -114,7 +114,7 @@ primary  = number | string | "true" | "false" | "null" | "$" | "@" | "#index"
 - **`link(id, kind?, label?)`** returns a link value, which the engine resolves into a navigable entity.
 - **Compiled once.** Expressions are compiled once, cached by source text (`drishti.rachana.expression-cache-size`), and shared across threads.
 - **Checked at load.** Every expression in a Sutra is compiled when the file loads, so a typo is reported against the file (`DRS-2101`), not at view time.
-- **Dependency paths.** Each compiled expression reports the document paths it reads. Live updates (Wave 9) use this to re-evaluate only the parts of a view that a change affects.
+- **Dependency paths.** Each compiled expression reports the document paths it reads. It is available for path-targeted re-binding; live updates currently rebuild with the cached layout and diff (see LIVE.md).
 
 ### Choosing a Sutra
 

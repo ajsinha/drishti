@@ -25,7 +25,7 @@ public interface SourcePlugin extends AutoCloseable {
     PluginManifest manifest();                                   // name, version, kinds, capabilities
     void start(SourceContext ctx) throws Exception;              // settings, JSON parser, scheduler
     Optional<EntityDocument> fetch(EntityRef ref) throws Exception;
-    default Subscription subscribe(EntityRef ref, Consumer<EntityDocument> l)  // live (Wave 9)
+    default Subscription subscribe(EntityRef ref, Consumer<EntityDocument> l)  // live updates
     default List<EntityRef> reverse(EntityRef target, String kind)             // e.g. netting set → trades
     default List<EntityHit> search(String kind, String text, int limit)        // command type-ahead
     default String health()

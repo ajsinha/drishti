@@ -42,6 +42,8 @@ terminal does.
 | 9 | Live updates over SSE, measured p99 | ✅ done |
 | 10 | Sutra Studio, security, ops, v1.0.0 | ✅ done |
 | 11 | User management: users, roles, passwords, lockout, audit; seeded dev admin; v1.1.0 | ✅ done |
+| 12 | Help centre and About | ⏳ next |
+| 13–21 | Workspaces · monitors and alerts · F8 impact · history · structured search · export and share · Sutra governance · Kafka/aero/OIDC · personal settings | ◻️ planned |
 
 ## What works today
 

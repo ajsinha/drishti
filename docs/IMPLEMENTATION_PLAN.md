@@ -120,6 +120,23 @@ Ten waves (plus W11, user management, after 1.0.0). Each holds a small set of cl
 - Server: `/api/v1/auth/{login,me,password}`, `/api/v1/admin/{users,audit,roles,status}`; an `admin` role.
 - Console: sign-in through the server, `/account`, `/admin/users`, `/admin/audit`. The users file is retired (ADR-009).
 
+## Waves 12–21 — capability roadmap (after 1.1.0)
+
+| Wave | Theme | Exit gate |
+|---|---|---|
+| W12 | Help centre and About | `/help` guides and tutorials with search; per-panel help and F1; `/about` with version, Sutras, sources, licence |
+| W13 | Workspaces | several views on one screen with linked selection, saved per user |
+| W14 | Monitors and alerts | watchlists with live columns; threshold alerts with notifications |
+| W15 | F8 Impact | what depends on an entity (reverse graph), navigable |
+| W16 | History | view an entity as of a generation or time; diff between generations |
+| W17 | Structured search | `TRD where counterparty = … and mtm < …` giving a live result table |
+| W18 | Export and share | CSV/Excel/PDF of a view; permalinks to an exact view and generation |
+| W19 | Sutra governance | review and approval; version diffs; saved test entities per Sutra |
+| W20 | More connections | Kafka live source; `aero` plugin; OIDC single sign-on |
+| W21 | Personal settings | command history, aliases, per-user theme and default workspace |
+
+Every wave also fixes documentation rot: the README status table, "what works", this plan, the changelog, and any guide the wave touches.
+
 ## Risks
 
 | Risk | Mitigation |

@@ -17,8 +17,10 @@
 
 The Drishti server exposes REST endpoints under `/api/v1`. The OpenAPI document is at `/api/docs`
 and the Swagger UI at `/api/docs/ui`. Every error is RFC 7807 `problem+json` with a stable `code`
-(`DRS-nnnn`). Identify the acting user with the `X-Drishti-User` header; it drives the "recent"
-suggestions. Signed tokens replace this header in Wave 10.
+(`DRS-nnnn`). With security on (`drishti.security.enabled`), every call needs `Authorization: Bearer <HS256 token>`
+minted by the console; the token's subject and roles decide what the caller may see. With security
+off (local development), `X-Drishti-User` names the caller for the "recent" suggestions. User and
+admin endpoints are in USER_MANAGEMENT.md; live streaming is in LIVE.md.
 
 | Method | Path | Returns |
 |---|---|---|
@@ -64,7 +66,7 @@ clients show `−412,580` identically.
 | `links` | `{"links": [{"label", "text", "link", "badge", "status": "resolved" \| "pending" \| "missing"}]}` |
 
 A `Cell` is `{label?, text, tone?, link?, emphasis?, path?}`. The `path` fields let live updates
-(Wave 9) patch single values. A panel whose binding failed carries `error` and no `data`; the rest
+patch single values. A panel whose binding failed carries `error` and no `data`; the rest
 of the view is unaffected.
 
 ## Error codes

@@ -70,7 +70,7 @@ The local override is `console/config/application.local.yaml`. Environment varia
 | `backend.url` | `http://127.0.0.1:18480` (`DRISHTI_BACKEND_URL`) | the Drishti server |
 | `backend.timeout_seconds` / `pool_size` | `5` / `64` | the pooled HTTP client |
 | `ui.default_theme` | `terminal` | `terminal`, `light`, `wallstreet`, `blue` or `green` |
-| `ui.user`, `ui.user_display`, `ui.desk` | `ash`, `Ash`, `Rates desk` | the acting user until sign-in (Wave 10) |
+| `ui.user`, `ui.user_display`, `ui.desk` | `ash`, `Ash`, `Rates desk` | the acting user when `auth.enabled` is false (local development) |
 | `ui.clock_tz` / `ui.clock_label` | `America/New_York` / `NY` | the top-bar clock |
 | `auth.enabled` | `false` (`DRISHTI_AUTH_ENABLED`) | require sign-in |
 | `auth.session_secret` / `token_secret` | from the environment | cookie signing; server tokens (shared with the server) |
