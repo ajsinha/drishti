@@ -15,6 +15,13 @@
 -->
 # Changelog
 
+## Unreleased — Wave 6: inference engine
+- `drishti-inference`: config-driven `Semantics` (roles from field names and value classes, memoised), `ColumnInference`, six rules (legs → tabs, term structure → line/area, distribution → hbar, time series → ladder, arrays → table, nested objects → kv), and a packer with density limits.
+- `LayoutMerger`: Sutra ⊕ inference, where the Sutra always wins. It produces an `EffectiveLayout` with the provenance label (`Sutra irs-vanilla v3 + inference` / `inference only`) and a per-panel explanation.
+- Tests: an unknown product (equity option) renders; each reference entity stays usable without its Sutra; the gaps in the listed-future Sutra are filled.
+- README rewritten to show the real state of the project: a status table per wave, what works, how to run it. It is now updated with every wave.
+- Docs: `INFERENCE.md`.
+
 ## Unreleased — Wave 5: Sutra-EL, formats & matching
 - Sutra-EL: lexer, recursive-descent parser (the EBNF is in `SUTRA_REFERENCE.md`), and immutable closure trees with cached compilation. Paths, filters, ternary, arithmetic, twelve pure functions, `link(...)`, and `${...}` templates.
 - Every expression reports the document paths it reads, ready for dependency-driven live updates.
