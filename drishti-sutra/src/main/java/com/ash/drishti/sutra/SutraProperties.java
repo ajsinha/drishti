@@ -38,8 +38,4 @@ public record SutraProperties(
         reloadDebounce = reloadDebounce == null ? Duration.ofMillis(250) : reloadDebounce;
         expressionCacheSize = expressionCacheSize == null ? 10_000L : expressionCacheSize;
     }
-
-    public SutraProperties(List<String> dirs, Boolean hotReload, Duration reloadDebounce) {
-        this(dirs, hotReload, reloadDebounce, null, null);
-    }
 }
