@@ -45,6 +45,7 @@
     <module>drishti-identity</module>
     <module>drishti-packs</module>
     <module>drishti-testkit</module>
+    <module>drishti-diskcache</module>
     <module>plugins/drishti-plugin-demo</module>
     <module>plugins/drishti-plugin-file</module>
     <module>plugins/drishti-plugin-rest</module>
@@ -72,6 +73,7 @@
     <delta-kernel.version>4.4.0</delta-kernel.version>
     <hadoop.version>3.4.2</hadoop.version>
     <testcontainers.version>2.0.5</testcontainers.version>
+    <rocksdb.version>11.0.4</rocksdb.version>
     <aerospike.version>10.5.0</aerospike.version>
   </properties>
 
@@ -95,6 +97,7 @@
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-jdbc</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-server</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-diskcache</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId><version>${caffeine.version}</version></dependency>
       <dependency><groupId>org.jctools</groupId><artifactId>jctools-core</artifactId><version>${jctools.version}</version></dependency>
       <dependency><groupId>org.hdrhistogram</groupId><artifactId>HdrHistogram</artifactId><version>${hdrhistogram.version}</version></dependency>

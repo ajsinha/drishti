@@ -131,6 +131,26 @@ class KafkaSourcePluginTest {
     }
 
     @Test
+    void theDiskCacheServesTheDaysLiveDataFromTheConnectorsOwnStore() throws Exception {
+        java.nio.file.Path root = java.nio.file.Files.createTempDirectory("drishti-cache");
+        KafkaSourcePlugin disked = new KafkaSourcePlugin();
+        disked.start(DatedSourceContract.context(Map.of("bootstrap-servers", broker.getBrokersAsString(), "topics", "trades",
+                "kind", "trade", "id-field", "tradeId", "cache-mb", "0", "source-name", "desk-stream",
+                "disk-cache.enabled", "true", "disk-cache.root", root.toString(), "disk-cache.reset-at", "02:00")));
+        try {
+            waitFor(() -> "UP".equals(disked.health()), 30);
+            assertThat(disked.fetch(EntityRef.of("trade", "T-1")).orElseThrow().data().get("tradeId").asText()).isEqualTo("T-1");
+            assertThat(disked.diskCache().hits()).isPositive();                         // served from RocksDB, not Kafka
+            assertThat(root.resolve("desk-stream")).isDirectory();                      // the connector's own store
+            assertThat(disked.fetch(EntityRef.of("trade", "T-2"))).isEmpty();
+            disked.diskCache().clear();                                                 // what the nightly reset does
+            assertThat(disked.fetch(EntityRef.of("trade", "T-1"))).isPresent();          // still answered, from the log
+        } finally {
+            disked.close();
+        }
+    }
+
+    @Test
     void ticksModeKeepsNothingButStillPushes() throws Exception {
         KafkaSourcePlugin ticks = new KafkaSourcePlugin();
         ticks.start(DatedSourceContract.context(Map.of("bootstrap-servers", broker.getBrokersAsString(), "topics", "trades",

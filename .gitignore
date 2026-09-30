@@ -14,3 +14,4 @@ application.local.yaml
 hs_err_pid*
 data/identity/
 data/delta/
+data/cache/

@@ -102,7 +102,13 @@ def manifest(name: str) -> dict:
         m["connectors"]["trading-stream"] = {"plugin": "kafka", "enabled": "${DRISHTI_STREAM_TRADING:false}", "kinds": ["trade"],
                                              "settings": {"bootstrap-servers": "${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}",
                                                           "topics": "${DRISHTI_TRADING_TOPIC:drishti.trading.trades}",
-                                                          "kind": "trade", "id-field": "tradeId"}}
+                                                          "kind": "trade", "id-field": "tradeId",
+                                                          # the day's live trades on local disk, in this connector's own RocksDB store
+                                                          "disk-cache.enabled": "${DRISHTI_STREAM_DISK_CACHE:true}",
+                                                          "disk-cache.root": "${DRISHTI_CACHE_ROOT:./data/cache}",
+                                                          "disk-cache.max-gb": "${DRISHTI_STREAM_CACHE_GB:10}",
+                                                          "disk-cache.reset-at": "${DRISHTI_CACHE_RESET_AT:02:00}",
+                                                          "disk-cache.zone": "America/New_York"}}
     if name == "market-data":
         for feed, (switch, kinds_, extra, _) in FEEDS.items():
             m["connectors"][f"{feed}-feed"] = {"plugin": "feed", "enabled": "${" + switch + ":false}", "kinds": kinds_,

@@ -63,6 +63,12 @@ import org.apache.kafka.common.serialization.StringDeserializer;
  * nobody is viewing are not even parsed. In {@code ticks} mode it keeps nothing: a store (Delta Lake, a database)
  * serves the entities and the stream only drives the ticks of open views. Reverse lookups are left to the stores.
  *
+ * <p><b>Disk cache</b> ({@code disk-cache.enabled: true}): every message is also written to this connector's own
+ * RocksDB store on local disk, so the day's live data is served from disk instead of re-read from Kafka. Each
+ * connector has its own store ({@code disk-cache.dir}, default {@code ./data/cache/<connector>}; root
+ * {@code DRISHTI_CACHE_ROOT}), its own budget ({@code disk-cache.max-gb}, 10) and its own nightly clearing
+ * ({@code disk-cache.reset-at}, {@code 02:00}, in {@code disk-cache.zone}, {@code America/New_York}).
+ *
  * <p>Two message shapes. <b>Envelope</b> (default): {@code {"kind": "trade", "id": "T-1", "doc": {...}}}.
  * <b>Mapped</b>: {@code kind.<topic>: trade} and {@code id-field.<topic>: tradeId} (or {@code kind} and {@code id-field} for
  * every topic) make the whole value the document.
@@ -84,6 +90,7 @@ public final class KafkaSourcePlugin implements SourcePlugin {
     private KafkaConsumer<String, String> reader;
     private final Object readerLock = new Object();
     private boolean ticksOnly;
+    private com.ash.drishti.diskcache.DiskCache disk;
     private boolean searchable;
     private final Map<EntityRef, List<Consumer<EntityDocument>>> listeners = new ConcurrentHashMap<>();
     private final Set<String> kinds = ConcurrentHashMap.newKeySet();
@@ -144,6 +151,18 @@ public final class KafkaSourcePlugin implements SourcePlugin {
         long cacheBytes = Long.parseLong(ctx.setting("cache-mb", "256")) * 1024 * 1024;
         this.cache = com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumWeight(cacheBytes)
                 .weigher((EntityRef ref, EntityDocument d) -> weights.getOrDefault(ref, 4096)).build();
+        if (!ticksOnly && Boolean.parseBoolean(ctx.setting("disk-cache.enabled", "false"))) {
+            try {
+                String dir = ctx.setting("disk-cache.dir", ctx.setting("disk-cache.root", "./data/cache") + "/" + sourceName);
+                String at = ctx.setting("disk-cache.reset-at", "02:00");
+                disk = new com.ash.drishti.diskcache.DiskCache(java.nio.file.Path.of(dir),
+                        (long) (Double.parseDouble(ctx.setting("disk-cache.max-gb", "10")) * 1024 * 1024 * 1024),
+                        at.isBlank() || "never".equals(at) ? null : java.time.LocalTime.parse(at),
+                        java.time.ZoneId.of(ctx.setting("disk-cache.zone", "America/New_York")), ctx.scheduler(), java.time.Clock.systemUTC());
+            } catch (java.io.IOException e) {
+                throw new IllegalStateException(e.getMessage(), e);
+            }
+        }
         if (!ticksOnly) {
             Properties rp = new Properties();
             rp.putAll(p);
@@ -214,7 +233,13 @@ public final class KafkaSourcePlugin implements SourcePlugin {
         if (r.value() == null) {
             positions.remove(ref);
             weights.remove(ref);
+            if (disk != null) {
+                disk.delete(diskKey(ref));
+            }
             return;
+        }
+        if (disk != null && kindOfTopic.getOrDefault(r.topic(), defaultKind) != null) {
+            disk.put(diskKey(ref), r.value().getBytes(java.nio.charset.StandardCharsets.UTF_8));
         }
         boolean isNew = positions.put(ref, new Pos(r.partition(), r.offset(), r.topic())) == null;
         kinds.add(ref.kind());
@@ -267,6 +292,9 @@ public final class KafkaSourcePlugin implements SourcePlugin {
             if (!ref.id().equals(r.key())) {
                 track(ref, r);
             }
+            if (disk != null && mapped == null) {
+                disk.put(diskKey(ref), JSON.writeValueAsBytes(doc));
+            }
             DataNode data = context.parseJson(new ByteArrayInputStream(JSON.writeValueAsBytes(doc)));
             EntityDocument d = new EntityDocument(ref, data, new Provenance(sourceName, r.offset(), Instant.ofEpochMilli(r.timestamp()), true));
             if (!ticksOnly && (cache.getIfPresent(ref) != null || listeners.containsKey(ref))) {
@@ -303,6 +331,20 @@ public final class KafkaSourcePlugin implements SourcePlugin {
         Pos pos = positions.get(ref);
         if (pos == null) {
             return Optional.empty();
+        }
+        if (disk != null) {
+            byte[] bytes = disk.get(diskKey(ref));
+            if (bytes != null) {
+                try {
+                    DataNode data = context.parseJson(new ByteArrayInputStream(bytes));
+                    EntityDocument d = new EntityDocument(ref, data, new Provenance(sourceName, pos.offset(), Instant.now(), true));
+                    weights.put(ref, bytes.length);
+                    cache.put(ref, d);
+                    return Optional.of(d);
+                } catch (java.io.IOException e) {
+                    disk.delete(diskKey(ref));
+                }
+            }
         }
         ConsumerRecord<String, String> r = readAt(pos);
         if (r == null) {
@@ -358,6 +400,15 @@ public final class KafkaSourcePlugin implements SourcePlugin {
         return index.search(kind, text, limit);
     }
 
+    private static String diskKey(EntityRef ref) {
+        return ref.kind() + "/" + ref.id();
+    }
+
+    /** The disk cache, if enabled (for tests and metrics). */
+    com.ash.drishti.diskcache.DiskCache diskCache() {
+        return disk;
+    }
+
     @Override
     public String health() {
         return health.get();
@@ -369,17 +420,20 @@ public final class KafkaSourcePlugin implements SourcePlugin {
         if (consumer != null) {
             consumer.wakeup();
         }
-        if (reader != null) {
-            synchronized (readerLock) {
-                reader.close(Duration.ofSeconds(1));
-            }
-        }
         if (loop != null) {
             try {
                 loop.join(3000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
+        }
+        if (reader != null) {
+            synchronized (readerLock) {
+                reader.close(Duration.ofSeconds(1));
+            }
+        }
+        if (disk != null) {
+            disk.close();                 // last: the loop has stopped writing
         }
     }
 }

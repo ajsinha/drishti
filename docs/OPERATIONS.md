@@ -75,6 +75,7 @@ Nothing grows with the day's data unbounded. Every cache has a size limit you ca
 | Where | Holds | Limit (setting) |
 |---|---|---|
 | Kafka connector | the index of where each entity's latest message is (tens of bytes each) and recently read documents | `cache-mb` (256); `mode: ticks` keeps nothing (a store serves entities, the stream only ticks); `search: false` drops the identifier index |
+| Kafka disk cache (per connector) | every live message of the day, on local disk (RocksDB, no write-ahead log, LZ4, oldest files dropped first) | `disk-cache.max-gb` (10); cleared every night at `disk-cache.reset-at` (02:00 New York); its own directory `disk-cache.dir` (default `${DRISHTI_CACHE_ROOT:./data/cache}/<connector>`), so connectors never contend on one store and a busy stream can have its own disk |
 | Delta Lake connector | table partitions read recently | `cache-mb` (512) |
 | Aerospike connector | dates, identifiers and (optionally) references learned by scanning | `reverse-index: false` for large sets |
 | PostgreSQL (JDBC table mode) | nothing: every read is a query | `pool-size` connections |
