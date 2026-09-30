@@ -37,6 +37,8 @@
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-aerospike</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-feeds</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-kafka</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-activemq</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-rabbitmq</artifactId></dependency>
     <dependency><groupId>org.postgresql</groupId><artifactId>postgresql</artifactId><scope>runtime</scope></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-rest</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-jdbc</artifactId></dependency>

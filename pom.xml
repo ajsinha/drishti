@@ -46,6 +46,7 @@
     <module>drishti-packs</module>
     <module>drishti-testkit</module>
     <module>drishti-diskcache</module>
+    <module>drishti-messaging</module>
     <module>plugins/drishti-plugin-demo</module>
     <module>plugins/drishti-plugin-file</module>
     <module>plugins/drishti-plugin-rest</module>
@@ -54,6 +55,8 @@
     <module>plugins/drishti-plugin-aerospike</module>
     <module>plugins/drishti-plugin-feeds</module>
     <module>plugins/drishti-plugin-kafka</module>
+    <module>plugins/drishti-plugin-activemq</module>
+    <module>plugins/drishti-plugin-rabbitmq</module>
     <module>drishti-server</module>
     <module>drishti-it</module>
     <module>drishti-benchmarks</module>
@@ -73,6 +76,8 @@
     <delta-kernel.version>4.4.0</delta-kernel.version>
     <hadoop.version>3.4.2</hadoop.version>
     <testcontainers.version>2.0.5</testcontainers.version>
+    <activemq.version>6.3.2</activemq.version>
+    <rabbitmq.version>5.36.0</rabbitmq.version>
     <rocksdb.version>11.0.4</rocksdb.version>
     <aerospike.version>10.5.0</aerospike.version>
   </properties>
@@ -98,6 +103,12 @@
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-server</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-diskcache</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-messaging</artifactId><version>${project.version}</version></dependency>
+      <!-- pinned here: Spring Boot's dependency management would otherwise pick older clients -->
+      <dependency><groupId>com.rabbitmq</groupId><artifactId>amqp-client</artifactId><version>${rabbitmq.version}</version></dependency>
+      <dependency><groupId>org.apache.activemq</groupId><artifactId>activemq-client</artifactId><version>${activemq.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-activemq</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-rabbitmq</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId><version>${caffeine.version}</version></dependency>
       <dependency><groupId>org.jctools</groupId><artifactId>jctools-core</artifactId><version>${jctools.version}</version></dependency>
       <dependency><groupId>org.hdrhistogram</groupId><artifactId>HdrHistogram</artifactId><version>${hdrhistogram.version}</version></dependency>

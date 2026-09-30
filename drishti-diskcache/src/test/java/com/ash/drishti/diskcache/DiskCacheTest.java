@@ -191,4 +191,26 @@ class DiskCacheTest {
             assertThat(gens.toList()).as("no generation leaked").isEmpty();
         }
     }
+
+    @Test
+    void aPersistentCacheKeepsItsEntriesAcrossRestarts() throws Exception {
+        ScheduledExecutorService sched = Executors.newSingleThreadScheduledExecutor();
+        try {
+            try (DiskCache c = new DiskCache(dir, 64L * 1024 * 1024, null, NY, sched, Clock.systemUTC(), true)) {
+                c.put("trade/T-1", new byte[] {1});
+                c.put("trade/T-2", new byte[] {2});
+            }
+            try (DiskCache c = new DiskCache(dir, 64L * 1024 * 1024, null, NY, sched, Clock.systemUTC(), true)) {
+                assertThat(c.get("trade/T-1")).containsExactly(1);
+                List<String> keys = new ArrayList<>();
+                c.forEach((k, v) -> keys.add(k));
+                assertThat(keys).containsExactly("trade/T-1", "trade/T-2");
+            }
+            try (DiskCache c = new DiskCache(dir, 64L * 1024 * 1024, null, NY, sched, Clock.systemUTC(), false)) {
+                assertThat(c.get("trade/T-1")).isNull();                       // a plain cache still starts empty
+            }
+        } finally {
+            sched.shutdownNow();
+        }
+    }
 }

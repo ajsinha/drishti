@@ -27,6 +27,8 @@ Every connector recovers from an outage without a restart of Drishti, and starts
 | `jdbc` | a pool of lazy slots: each opens its connection on first use and reopens it when broken; table kinds are listed in the background until the database answers |
 | `kafka` | a supervisor recreates the consumer after a fatal error (backoff 1 s → 30 s) and resumes at the last applied offset; short broker blips are ridden out by the Kafka client |
 | `aerospike` | the client tends the cluster in the background (`failIfNotConnected` off) |
+| `activemq` | the failover transport reconnects; its interruptions show in health; a supervisor rebuilds the session after any other failure |
+| `rabbitmq` | a supervisor retries until the first connection succeeds; then the client's automatic recovery reconnects and re-subscribes |
 | `delta`, `file`, `rest`, feeds | nothing long-lived to lose: each call reads or connects afresh |
 
 While a store is down its reads fail (views say which source failed) and `health` reports `DOWN: … (reconnecting)`.
@@ -117,3 +119,37 @@ surface as `DRS-1003` and `DRS-1004`.
 | `feed` | Public data: `nyfed-sofr`, `ecb-estr`, `ecb-fx`, `us-treasury`, `fred` | One connector per feed, declared by the market-data pack, each off until switched on. Entities carry the feed in their id (`FIX-SOFR-NYFED`). Keeps history for picked dates; a failed fetch keeps the last good data and shows in health. |
 | `kafka` | Live entities from Kafka topics: an envelope `{kind, id, doc}`, or whole-document messages with `kind` and `id-field` | Reads every partition from the beginning (the topic is the state: the latest message per entity), then pushes each new message to open views. Tombstones delete. No consumer-group commits. The trading pack declares `trading-stream`, off until `DRISHTI_STREAM_TRADING=true`; `tools/samplegen/stream.py` replays and ticks the samples. |
 | `rest` | An HTTP/JSON service: `base-url` + `path` per kind | Headers from settings; the generation from a response header. |
+| `activemq` | Live entities from ActiveMQ Classic queues and topics (`destinations: queue:trades,topic:quotes`) | Topics through durable subscriptions. Each message is acknowledged after it is stored. See *Message queues* below. |
+| `rabbitmq` | Live entities from RabbitMQ queues (`queues: trades,quotes`; `bind.<queue>: exchange:routing.key`) | Queues declared durable unless `declare: false`; manual acknowledgement after storing; `prefetch` 100. See *Message queues* below. |
+
+### Message queues (ActiveMQ, RabbitMQ)
+
+A queue delivers each message once and keeps no history, unlike a Kafka topic. So these connectors keep the latest
+document of every entity themselves, in a **persistent state store** per connector: RocksDB on local disk
+(`state.dir`, default `./data/state/<connector>`; `state.max-gb`, 10), which survives restarts of Drishti, with the
+recent documents in a memory cache (`cache-mb`, 128). Nothing is lost while Drishti is down: queue messages wait
+in the broker, and topics are read through durable subscriptions. Messages are acknowledged only after they are
+stored, so a crash redelivers rather than loses.
+
+| Message | Becomes |
+|---|---|
+| a body on a destination with `kind.<destination>` | that kind's document; the id is the `id` header, else the field `id-field.<destination>` (default `id`) |
+| a body `{"kind", "id", "doc"}` on any other destination | the envelope's entity |
+| an empty body, `"doc": null`, or a `deleted: true` header | a delete |
+
+Every change is pushed to open views, search finds everything received, and a purge (Admin → Caches) clears only
+the memory cache: the state store is the only copy, so it is never purged (clear it deliberately with
+`state.reset-at`, or by deleting its folder). Declare them as named connectors in a pack or site configuration:
+
+```yaml
+drishti:
+  sources:
+    connectors:
+      desk-orders:
+        plugin: rabbitmq
+        kinds: [order]
+        settings: { uri: "${RABBIT_URI}", queues: orders, kind.orders: order, id-field.orders: orderId }
+      market-quotes:
+        plugin: activemq
+        settings: { broker-url: "failover:(tcp://mq1:61616,tcp://mq2:61616)", destinations: "topic:quotes", kind.quotes: quote }
+```

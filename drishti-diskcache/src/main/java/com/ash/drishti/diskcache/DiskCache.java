@@ -97,12 +97,17 @@ public final class DiskCache implements AutoCloseable {
             return users.decrementAndGet() == 0;
         }
 
+        /** Set when a persistent cache closes: the files stay for the next run, whoever disposes of the store. */
+        volatile boolean keepFiles;
+
         void dispose() {
             write.close();
             db.close();
             options.close();
             fifo.close();
-            deleteTree(dir);
+            if (!keepFiles) {
+                deleteTree(dir);
+            }
         }
     }
 
@@ -111,6 +116,7 @@ public final class DiskCache implements AutoCloseable {
     private final AtomicReference<Store> store = new AtomicReference<>();
     private final ReentrantLock lifecycle = new ReentrantLock();   // clear and close; not synchronized, so virtual threads never pin
     private volatile boolean closed;
+    private final boolean persistent;       // closing keeps the files, for the next run
     private final ScheduledExecutorService scheduler;
     private final AtomicLong generation = new AtomicLong();
     private final AtomicLong hits = new AtomicLong();
@@ -125,19 +131,49 @@ public final class DiskCache implements AutoCloseable {
      * @param scheduler runs the nightly clearing and disposes of retired generations
      */
     public DiskCache(Path root, long maxBytes, LocalTime resetAt, ZoneId zone, ScheduledExecutorService scheduler, Clock clock) throws IOException {
+        this(root, maxBytes, resetAt, zone, scheduler, clock, false);
+    }
+
+    /**
+     * @param persistent keep what a previous run stored (the newest generation is reopened) instead of starting empty:
+     *     for sources that cannot replay their history, such as message queues, whose latest state lives here
+     */
+    public DiskCache(Path root, long maxBytes, LocalTime resetAt, ZoneId zone, ScheduledExecutorService scheduler, Clock clock,
+            boolean persistent) throws IOException {
         this.root = root.toAbsolutePath().normalize();
         this.maxBytes = maxBytes;
         this.scheduler = scheduler;
+        this.persistent = persistent;
         Files.createDirectories(this.root);
-        deleteGenerations();                  // whatever a previous run left is stale by definition
-        store.set(open());
+        Path previous = persistent ? newestGeneration() : null;
+        if (previous == null) {
+            deleteGenerations();              // a cache: whatever a previous run left is stale by definition
+            store.set(open());
+        } else {
+            try (Stream<Path> gens = Files.list(this.root)) {   // keep the newest, drop older leftovers
+                gens.filter(g -> g.getFileName().toString().startsWith("gen-") && !g.equals(previous)).forEach(DiskCache::deleteTree);
+            }
+            store.set(open(previous));
+        }
         if (resetAt != null) {
             scheduleReset(resetAt, zone, clock);
         }
     }
 
+    private Path newestGeneration() throws IOException {
+        try (Stream<Path> gens = Files.list(root)) {
+            return gens.filter(g -> g.getFileName().toString().startsWith("gen-") && Files.isDirectory(g))
+                    .max(Comparator.comparingLong(g -> Long.parseLong(g.getFileName().toString().split("-")[1]))).orElse(null);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
     private Store open() throws IOException {
-        Path dir = root.resolve("gen-" + System.currentTimeMillis() + "-" + generation.incrementAndGet());
+        return open(root.resolve("gen-" + System.currentTimeMillis() + "-" + generation.incrementAndGet()));
+    }
+
+    private Store open(Path dir) throws IOException {
         Files.createDirectories(dir);
         CompactionOptionsFIFO fifo = new CompactionOptionsFIFO().setMaxTableFilesSize(maxBytes);
         Options o = new Options().setCreateIfMissing(true).setCompressionType(CompressionType.LZ4_COMPRESSION)
@@ -279,6 +315,21 @@ public final class DiskCache implements AutoCloseable {
         }
     }
 
+    /** Calls {@code visit} for every stored entry, in key order (for rebuilding an index after a restart). */
+    public void forEach(java.util.function.BiConsumer<String, byte[]> visit) {
+        Store s = enter();
+        if (s == null) {
+            return;
+        }
+        try (org.rocksdb.RocksIterator it = s.db.newIterator()) {
+            for (it.seekToFirst(); it.isValid(); it.next()) {
+                visit.accept(new String(it.key(), StandardCharsets.UTF_8), it.value());
+            }
+        } finally {
+            leave(s);
+        }
+    }
+
     /** Bytes on disk, as RocksDB reports its table files; -1 once closed. */
     public long sizeOnDisk() {
         Store s = enter();
@@ -326,8 +377,11 @@ public final class DiskCache implements AutoCloseable {
             }
             closed = true;
             Store s = store.getAndSet(null);
-            if (s != null && s.leave()) {
-                s.dispose();                  // nobody inside: close here, so the files are gone when close returns
+            if (s != null) {
+                s.keepFiles = persistent;
+                if (s.leave()) {
+                    s.dispose();              // nobody inside: close here (a plain cache's files are gone when close returns)
+                }
             }
         } finally {
             lifecycle.unlock();

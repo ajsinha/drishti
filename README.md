@@ -83,7 +83,7 @@ terminal does.
 - **Server** (`drishti-server`). A Spring Boot application on virtual threads. It discovers source
   plugins and routes reads by config, with deadlines. It loads and hot-reloads Sutras.
 - **Data.** Connectors read Delta Lake (per data domain, dated partitions, time travel), PostgreSQL, Aerospike,
-  Kafka (bounded memory plus a per-connector RocksDB disk cache), public market-data feeds (SOFR, €STR, ECB FX,
+  Kafka (bounded memory plus a per-connector RocksDB disk cache), ActiveMQ and RabbitMQ (latest state kept in a persistent store), public market-data feeds (SOFR, €STR, ECB FX,
   US Treasury, FRED), REST and JSON/CSV files. The `demo` plugin serves the enabled packs' samples.
 - **Grammar.** Four reference Sutras reproduce the header strips of the mockups exactly (golden
   tests). Rachana-EL is compiled once and shared across threads.

@@ -16,6 +16,11 @@
 # Changelog
 
 ## Unreleased
+- **ActiveMQ and RabbitMQ connectors.** Live entities from queues and topics, built on a shared base (`drishti-messaging`).
+  - **State:** a queue keeps no history, so each connector keeps the latest document of every entity in a persistent RocksDB state store (new persistent mode of the disk cache) that survives Drishti restarts, with a bounded memory cache.
+  - **Messages:** documents or envelopes; deletes by empty body, null doc or header. Durable subscriptions and acknowledgement after storing mean nothing is lost while Drishti is down. Changes are pushed live, and search covers everything received.
+  - **Reconnection:** ActiveMQ's failover transport, with interruptions reported in health; RabbitMQ's automatic recovery, with a first-connection supervisor.
+  - **Tests:** a shared contract and an outage test run against real brokers in Docker (ActiveMQ Classic 6.1, RabbitMQ 4.1).
 - **Pack inheritance (ADR-015).** `extends: [parent, …]` (and the older `requires:`) makes a pack inherit everything its parents bring.
   - **Precedence:** C3 linearisation. The child wins over its parents, the rightmost parent over those to its left, and a shared ancestor counts once.
   - **What can be overridden:** mnemonics, link fields, badges, roles, routes, connectors, Sutras (same `name@version`), labels and formats. Overrides apply globally and are logged and listed under Admin → Health.

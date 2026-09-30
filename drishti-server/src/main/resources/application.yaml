@@ -82,6 +82,10 @@ drishti:
         enabled: false
       aerospike:                    # the Aerospike plugin; runs as named connectors (profile `aerospike`)
         enabled: false
+      activemq:                     # ActiveMQ queues and topics; off until configured (or used as a named connector)
+        enabled: ${DRISHTI_ACTIVEMQ_ENABLED:false}
+      rabbitmq:                     # RabbitMQ queues; off until configured (or used as a named connector)
+        enabled: ${DRISHTI_RABBITMQ_ENABLED:false}
     # Named connectors: several instances of a plugin, each with its own settings and, optionally, kinds.
     # A pack keeps its data in its own domain folder of the lake: <root>/<domain>/<kind>/business_date=…/
     # Build the sample lake with:  uv run --with deltalake --with pyarrow python tools/samplegen/lake.py \
