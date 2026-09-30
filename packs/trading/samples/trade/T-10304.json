@@ -1,0 +1,219 @@
+{
+ "tradeId": "T-10304",
+ "productType": "CREDIT_SPREAD_OPT",
+ "productName": "Credit spread option",
+ "assetClass": "Credit",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2024-04-24",
+ "effectiveDate": "2024-04-26",
+ "maturityDate": "2026-10-07",
+ "currency": "JPY",
+ "notional": 201000000.0,
+ "mtm": 1037396,
+ "mtmCurrency": "USD",
+ "pnl1d": 17157,
+ "counterparty": {
+  "id": "CP-LUMEN",
+  "name": "Lumen Semiconductor AG"
+ },
+ "nettingSet": "NS-LUMEN-NY",
+ "book": "BOOK-CREDIT-1",
+ "trader": "TRDR-DWHITFIELD",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-JGB",
+ "underlyingBond": "BND-JP0JGB019237",
+ "creditCurve": "CDS-JGB",
+ "discountCurve": "CRV-JPY-OIS",
+ "terms": {
+  "strikeSpread": 220.6,
+  "optionType": "Call",
+  "expiryDate": "2027-09-24"
+ },
+ "risk": {
+  "cs01": 10401,
+  "vega": 276201
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 3467,
+   "vega": 92067
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 6934,
+   "vega": 184134
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -9545
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -34306
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -45662
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 16757
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -35419
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -52919
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -13023
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -27970
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 7264
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -8971
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 51288
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -30354
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -22919
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -17498
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 19954
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 9090
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 16859
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 64510
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -21141
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 30624
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-04-24",
+  "executionTimestamp": "2024-04-24T09:36:48.371Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "D. Whitfield",
+  "salesperson": null,
+  "orderId": "ORD-37025FD8FB"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-04-24T11:50:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2024-04-24T11:50:00Z",
+  "lastModifiedAt": "2024-04-24T11:50:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA402363767",
+  "matched": "2024-04-24 14:01",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209637025FD8FB9BCE912C84",
+  "upi": "QZDH1VJ5FQ4J",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "LUMEGB33XXX",
+  "ssiId": "SSI-JPY-8CF792",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1037396,
+  "cleanPv": 1037396.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "BND-JP0JGB019237",
+   "CDS-JGB",
+   "CRV-JPY-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 4085
+  }
+ }
+}

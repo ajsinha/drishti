@@ -1,0 +1,158 @@
+{
+ "curveId": "CRV-CAD-GOVT",
+ "currency": "CAD",
+ "curveType": "Government",
+ "index": "CORRA",
+ "tenY": 0.0308,
+ "slope2s10s": 42.6,
+ "asOf": "2026-09-30",
+ "points": [
+  {
+   "tenor": "1M",
+   "maturity": "2026-10-30",
+   "instrument": "Deposit / future",
+   "quote": 0.026045,
+   "zeroRate": 2.6073,
+   "df": 0.99783
+  },
+  {
+   "tenor": "3M",
+   "maturity": "2026-12-30",
+   "instrument": "Deposit / future",
+   "quote": 0.026094,
+   "zeroRate": 2.6179,
+   "df": 0.993477
+  },
+  {
+   "tenor": "6M",
+   "maturity": "2027-03-30",
+   "instrument": "Deposit / future",
+   "quote": 0.026132,
+   "zeroRate": 2.6304,
+   "df": 0.986934
+  },
+  {
+   "tenor": "1Y",
+   "maturity": "2027-09-30",
+   "instrument": "GoC benchmark",
+   "quote": 0.026015,
+   "zeroRate": 2.6359,
+   "df": 0.973985
+  },
+  {
+   "tenor": "2Y",
+   "maturity": "2028-09-30",
+   "instrument": "GoC benchmark",
+   "quote": 0.025846,
+   "zeroRate": 2.6538,
+   "df": 0.948308
+  },
+  {
+   "tenor": "3Y",
+   "maturity": "2029-09-30",
+   "instrument": "GoC benchmark",
+   "quote": 0.026116,
+   "zeroRate": 2.7196,
+   "df": 0.921652
+  },
+  {
+   "tenor": "5Y",
+   "maturity": "2031-09-30",
+   "instrument": "GoC benchmark",
+   "quote": 0.027359,
+   "zeroRate": 2.9421,
+   "df": 0.863203
+  },
+  {
+   "tenor": "7Y",
+   "maturity": "2033-09-30",
+   "instrument": "GoC benchmark",
+   "quote": 0.027334,
+   "zeroRate": 3.0339,
+   "df": 0.808663
+  },
+  {
+   "tenor": "10Y",
+   "maturity": "2036-09-30",
+   "instrument": "GoC benchmark",
+   "quote": 0.026508,
+   "zeroRate": 3.08,
+   "df": 0.734915
+  },
+  {
+   "tenor": "15Y",
+   "maturity": "2041-09-30",
+   "instrument": "GoC benchmark",
+   "quote": 0.024846,
+   "zeroRate": 3.1087,
+   "df": 0.627316
+  },
+  {
+   "tenor": "20Y",
+   "maturity": "2046-09-30",
+   "instrument": "GoC benchmark",
+   "quote": 0.023194,
+   "zeroRate": 3.1169,
+   "df": 0.536129
+  },
+  {
+   "tenor": "30Y",
+   "maturity": "2056-09-30",
+   "instrument": "GoC benchmark",
+   "quote": 0.02026,
+   "zeroRate": 3.12,
+   "df": 0.392193
+  }
+ ],
+ "forwards": [
+  {
+   "tenor": "1Y",
+   "rate": 2.671
+  },
+  {
+   "tenor": "2Y",
+   "rate": 2.8534
+  },
+  {
+   "tenor": "3Y",
+   "rate": 3.1718
+  },
+  {
+   "tenor": "5Y",
+   "rate": 3.2256
+  },
+  {
+   "tenor": "7Y",
+   "rate": 3.1634
+  },
+  {
+   "tenor": "10Y",
+   "rate": 3.1494
+  },
+  {
+   "tenor": "15Y",
+   "rate": 3.141
+  },
+  {
+   "tenor": "20Y",
+   "rate": 3.1292
+  }
+ ],
+ "interpolation": "Log-linear on discount factors",
+ "dayCount": "ACT/365F",
+ "calendar": "CAL-USNY",
+ "fixingIndex": "FIX-CORRA",
+ "builtAt": "2026-09-30T18:02:41Z",
+ "sources": [
+  "Broker composite",
+  "Exchange settlements"
+ ],
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "tenY": 0.0003
+  }
+ }
+}

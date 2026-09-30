@@ -13,9 +13,9 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# The twelve panel kinds
+# The thirteen panel kinds
 
-Every panel in every view is one of twelve kinds. A Sutra names the kind and binds it to data;
+Every panel in every view is one of thirteen kinds. A Sutra names the kind and binds it to data;
 inference picks one when there is no Sutra. The header of each panel shows its code (`CRV`, `REFS`,
 …), its key (`F2`), and an **inferred** tag when inference built or completed it. Hover over the tag to
 see the rule that chose it.
@@ -83,3 +83,21 @@ the target (`EE 4.1m`, `threshold 0`, `live`). *pending* means the target did no
 !!! tip "See it in Studio"
     Open [Sutra Studio](sutra-studio.md), choose `irs-vanilla v3` and change a panel's `kind`. The preview
     updates on Ctrl+Enter.
+
+## surface
+
+A grid of values over two axes: volatility by expiry and strike, swaption vols by expiry and tenor. Each row
+of `rows` is one point on the y axis (named by `y`); each column is one point on the x axis and holds the
+value. It draws as a heatmap, and **3D** turns it into a surface you can rotate (drag) and zoom (scroll).
+
+```yaml
+- id: smile
+  kind: surface
+  title: Smile surface (vol %)
+  rows: $.grid                    # [{expiry: 1M, p25: 7.05, atm: 6.67, c25: 6.79}, …]
+  y: expiry
+  columns:
+    - { label: 25D P, bind: "@.p25" }
+    - { label: ATM, bind: "@.atm" }
+    - { label: 25D C, bind: "@.c25" }
+```

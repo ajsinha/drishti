@@ -1,0 +1,246 @@
+{
+ "tradeId": "T-10342",
+ "productType": "EQ_OPTION_LISTED",
+ "productName": "Listed equity option",
+ "assetClass": "Equity",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2025-04-01",
+ "effectiveDate": "2025-04-03",
+ "maturityDate": "2026-10-07",
+ "currency": "USD",
+ "notional": 122000000.0,
+ "mtm": -181527,
+ "mtmCurrency": "USD",
+ "pnl1d": -11670,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-LDN",
+ "book": "BOOK-EQD-3",
+ "trader": "TRDR-PLINDQVIST",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "clearingAccount": "CLR-EUREX-1",
+ "underlyingEquity": "EQ-SLRS",
+ "equityVolSurface": "EQV-SLRS",
+ "dividendCurve": "DIV-SLRS",
+ "terms": {
+  "optionType": "Call",
+  "exerciseStyle": "American",
+  "expiryDate": "2027-05-02",
+  "strike": 1929.59,
+  "lots": 995
+ },
+ "risk": {
+  "delta": 404448,
+  "gamma": 4152,
+  "vega": 99881,
+  "theta": -11889
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 40445,
+   "gamma": 415,
+   "vega": 9988,
+   "theta": -1189
+  },
+  {
+   "bucket": "1M",
+   "delta": 80890,
+   "gamma": 830,
+   "vega": 19976,
+   "theta": -2378
+  },
+  {
+   "bucket": "3M",
+   "delta": 121334,
+   "gamma": 1246,
+   "vega": 29964,
+   "theta": -3567
+  },
+  {
+   "bucket": "6M",
+   "delta": 161779,
+   "gamma": 1661,
+   "vega": 39952,
+   "theta": -4756
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -3451
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -2327
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -5005
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 1135
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -8223
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 4134
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -6541
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 5475
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -58
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 2398
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 2251
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 514
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 3112
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -962
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 6247
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 1652
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 3862
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -3681
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -14076
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -2009
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-04-01",
+  "executionTimestamp": "2025-04-01T08:57:18.862Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "P. Lindqvist",
+  "salesperson": null,
+  "orderId": "ORD-A358B2BF02"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-04-01T10:01:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2025-04-01T10:01:00Z",
+  "lastModifiedAt": "2025-04-01T10:01:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT287347715",
+  "matched": "2025-04-01 17:38",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH9164755222",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83A358B2BF028C868E3D45",
+  "upi": "QZZMRP2AWQDN",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMUS33XXX",
+  "ssiId": "SSI-USD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -181527,
+  "cleanPv": -181527.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "EQ-SLRS",
+   "EQV-SLRS",
+   "DIV-SLRS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 1583
+  }
+ }
+}

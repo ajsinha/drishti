@@ -1,0 +1,324 @@
+{
+ "tradeId": "T-10079",
+ "productType": "CAP",
+ "productName": "Interest rate cap",
+ "assetClass": "Rates",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2025-12-15",
+ "effectiveDate": "2025-12-17",
+ "maturityDate": "2028-06-29",
+ "currency": "JPY",
+ "notional": 190000000.0,
+ "mtm": -2636721,
+ "mtmCurrency": "USD",
+ "pnl1d": 83998,
+ "counterparty": {
+  "id": "CP-KESTREL",
+  "name": "Kestrel Global Macro Fund"
+ },
+ "nettingSet": "NS-KESTREL-NY",
+ "book": "BOOK-RATES-3",
+ "trader": "TRDR-MOKAFOR",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-JPY-OIS",
+ "forwardCurve": "CRV-JPY-PROJ",
+ "capVolSurface": "CPV-JPY",
+ "terms": {
+  "strike": 0.047883,
+  "capFrequency": "Quarterly",
+  "premium": 1131707.0
+ },
+ "risk": {
+  "dv01": 39787,
+  "vega": 350752
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 2652,
+   "vega": 23383
+  },
+  {
+   "bucket": "6M",
+   "dv01": 5305,
+   "vega": 46767
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 7957,
+   "vega": 70150
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 10610,
+   "vega": 93534
+  },
+  {
+   "bucket": "3Y",
+   "dv01": 13262,
+   "vega": 116917
+  }
+ ],
+ "schedule": [
+  {
+   "fixingDate": "2026-03-17",
+   "period": "2026-03-17..2026-06-17",
+   "index": "TONA",
+   "rate": 0.021684,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-06-17",
+   "period": "2026-06-17..2026-09-17",
+   "index": "TONA",
+   "rate": 0.044102,
+   "payoff": 432345.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-09-17",
+   "period": "2026-09-17..2026-12-17",
+   "index": "TONA",
+   "rate": 0.039508,
+   "payoff": 214130.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-12-17",
+   "period": "2026-12-17..2027-03-17",
+   "index": "TONA",
+   "rate": 0.02087,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-03-17",
+   "period": "2027-03-17..2027-06-17",
+   "index": "TONA",
+   "rate": 0.045534,
+   "payoff": 500365.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-06-17",
+   "period": "2027-06-17..2027-09-17",
+   "index": "TONA",
+   "rate": 0.025604,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-09-17",
+   "period": "2027-09-17..2027-12-17",
+   "index": "TONA",
+   "rate": 0.040793,
+   "payoff": 275167.5,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-12-17",
+   "period": "2027-12-17..2028-03-17",
+   "index": "TONA",
+   "rate": 0.023482,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2028-03-17",
+   "period": "2028-03-17..2028-06-17",
+   "index": "TONA",
+   "rate": 0.020414,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2028-06-17",
+   "period": "2028-06-17..2028-09-17",
+   "index": "TONA",
+   "rate": 0.039066,
+   "payoff": 193135.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2028-06-29",
+   "period": "2028-06-29..2028-09-29",
+   "index": "TONA",
+   "rate": 0.027134,
+   "payoff": 0.0,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 3,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -154000
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -69842
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 76772
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 72629
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 94072
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -38440
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -76433
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -114171
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -189725
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -13230
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -46347
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -42633
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 37950
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 127309
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 76606
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -1963
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -44232
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -32153
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -15257
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -52206
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-12-15",
+  "executionTimestamp": "2025-12-15T14:03:31.876Z",
+  "venue": "Bloomberg SEF",
+  "venueMic": "BSEF",
+  "executionType": "Electronic",
+  "trader": "M. Okafor",
+  "salesperson": null,
+  "orderId": "ORD-9F623B6163"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-12-15T10:56:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2025-12-15T10:56:00Z",
+  "lastModifiedAt": "2025-12-15T10:56:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA924141187",
+  "matched": "2025-12-15 12:11",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20969F623B6163349FD9F74B",
+  "upi": "QZIGSHIFAZL7",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "KESTGB33XXX",
+  "ssiId": "SSI-JPY-69F994",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -2636721,
+  "cleanPv": -2636721.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CRV-JPY-OIS",
+   "CRV-JPY-PROJ",
+   "CPV-JPY"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 7173
+  }
+ }
+}

@@ -1,0 +1,277 @@
+{
+ "tradeId": "T-10601",
+ "productType": "PUTTABLE_BOND",
+ "productName": "Puttable bond",
+ "assetClass": "Fixed income",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2025-11-28",
+ "effectiveDate": "2025-11-28",
+ "maturityDate": "2028-11-06",
+ "currency": "EUR",
+ "notional": 47000000.0,
+ "mtm": -77849,
+ "mtmCurrency": "USD",
+ "pnl1d": -4102,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-2",
+ "trader": "TRDR-RCASTILLO",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-ORBITAL",
+ "benchmarkCurve": "CRV-EUR-GOVT",
+ "underlyingBond": "BND-FRORBI079012",
+ "swaptionVolCube": "IRV-EUR",
+ "terms": {
+  "coupon": 0.048207,
+  "couponFrequency": "Annual",
+  "faceAmount": 33596906.0,
+  "cleanPrice": 98.196,
+  "yield": 0.029428,
+  "firstPut": "2031-08-09",
+  "putPrice": 100.94
+ },
+ "risk": {
+  "dv01": 12728,
+  "cs01": 11296,
+  "vega": 205447
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 849,
+   "cs01": 753,
+   "vega": 13696
+  },
+  {
+   "bucket": "6M",
+   "dv01": 1697,
+   "cs01": 1506,
+   "vega": 27393
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 2546,
+   "cs01": 2259,
+   "vega": 41089
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 3394,
+   "cs01": 3012,
+   "vega": 54786
+  },
+  {
+   "bucket": "3Y",
+   "dv01": 4243,
+   "cs01": 3765,
+   "vega": 68482
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-11-28",
+   "type": "First call",
+   "strike": 0.040616,
+   "status": "Pending"
+  },
+  {
+   "date": "2027-11-28",
+   "type": "Bermudan call",
+   "strike": 0.033462,
+   "status": "Pending"
+  },
+  {
+   "date": "2028-11-06",
+   "type": "Bermudan call",
+   "strike": 0.028013,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -1283
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 1438
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 4247
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -3376
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -1828
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -4749
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -2626
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -7513
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -8113
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 1344
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 1525
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -1525
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -3490
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 439
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 1998
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 3337
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -1870
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -3316
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -110
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 3037
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-11-28",
+  "executionTimestamp": "2025-11-28T14:28:52.782Z",
+  "venue": "MarketAxess",
+  "venueMic": "MAEL",
+  "executionType": "Electronic",
+  "trader": "R. Castillo",
+  "salesperson": null,
+  "orderId": "ORD-EB7E188E1A"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-11-28T12:09:00Z",
+    "by": "fo.capture"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2026-01-04T12:09:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2025-11-28T12:09:00Z",
+  "lastModifiedAt": "2026-01-04T12:09:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT575847794",
+  "matched": "2025-11-28 17:59",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH2143202355",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096EB7E188E1A88EBECC754",
+  "upi": "QZHR9R0LW8F9",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-EUR-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -77849,
+  "cleanPv": -77849.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-EUR-GOVT",
+   "BND-FRORBI079012",
+   "IRV-EUR"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 626
+  }
+ }
+}

@@ -1,0 +1,92 @@
+{
+ "bookId": "BOOK-STRUCT-3",
+ "name": "Structured products · book 3",
+ "deskName": "Structured products",
+ "tradeCount": 10,
+ "mtm": 90091,
+ "dv01": -187254,
+ "topTrades": [
+  {
+   "tradeId": "T-10733",
+   "product": "FX-rates hybrid (PRDC)",
+   "notional": 216000000.0,
+   "maturity": "2036-08-18",
+   "mtm": 4057279
+  },
+  {
+   "tradeId": "T-10729",
+   "product": "Capital-protected note",
+   "notional": 135000000.0,
+   "maturity": "2034-08-07",
+   "mtm": -2117461
+  },
+  {
+   "tradeId": "T-10743",
+   "product": "Worst-of note",
+   "notional": 134000000.0,
+   "maturity": "2029-10-19",
+   "mtm": -2097100
+  },
+  {
+   "tradeId": "T-10730",
+   "product": "Capital-protected note",
+   "notional": 64000000.0,
+   "maturity": "2030-08-27",
+   "mtm": 1294522
+  },
+  {
+   "tradeId": "T-10726",
+   "product": "Range accrual note",
+   "notional": 145000000.0,
+   "maturity": "2035-02-06",
+   "mtm": -1227669
+  },
+  {
+   "tradeId": "T-10742",
+   "product": "Worst-of note",
+   "notional": 118000000.0,
+   "maturity": "2028-05-15",
+   "mtm": -809315
+  },
+  {
+   "tradeId": "T-10746",
+   "product": "Credit basket note",
+   "notional": 139000000.0,
+   "maturity": "2036-04-02",
+   "mtm": 566863
+  },
+  {
+   "tradeId": "T-10741",
+   "product": "Worst-of note",
+   "notional": 41000000.0,
+   "maturity": "2035-01-22",
+   "mtm": 503987
+  },
+  {
+   "tradeId": "T-10739",
+   "product": "Worst-of note",
+   "notional": 113000000.0,
+   "maturity": "2030-12-09",
+   "mtm": -196197
+  },
+  {
+   "tradeId": "T-10738",
+   "product": "FX-rates hybrid (PRDC)",
+   "notional": 27000000.0,
+   "maturity": "2038-01-11",
+   "mtm": 115182
+  }
+ ],
+ "desk": "DESK-STRUCT",
+ "accountingTreatment": "Fair value (FVTPL)",
+ "regulatoryBook": "Trading book",
+ "volcker": "Market making",
+ "_meta": {
+  "source": "org-master",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 5000
+  }
+ }
+}

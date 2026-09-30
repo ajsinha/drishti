@@ -1,0 +1,378 @@
+{
+ "tradeId": "T-10195",
+ "productType": "FX_BARRIER",
+ "productName": "FX barrier option",
+ "assetClass": "FX",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2025-07-08",
+ "effectiveDate": "2025-07-10",
+ "maturityDate": "2029-10-22",
+ "currency": "JPY",
+ "notional": 191000000.0,
+ "mtm": -2456557,
+ "mtmCurrency": "USD",
+ "pnl1d": -16555,
+ "counterparty": {
+  "id": "CP-CASCADIA",
+  "name": "Cascadia Airlines Inc."
+ },
+ "nettingSet": "NS-CASCADIA-LDN",
+ "book": "BOOK-FX-3",
+ "trader": "TRDR-LMOREAU",
+ "desk": "DESK-FX",
+ "legalEntity": "LE-LDN",
+ "fxSpot": "FX-EURJPY",
+ "fxVolSurface": "FXV-EURJPY",
+ "terms": {
+  "optionType": "Put",
+  "exerciseStyle": "American",
+  "expiryDate": "2027-01-16",
+  "premium": 705631.0,
+  "strike": 0.88676,
+  "barrierType": "Down-and-out",
+  "barrier": 131.78146,
+  "rebate": 32370.0
+ },
+ "risk": {
+  "fxDelta": 1910000,
+  "vega": 401530,
+  "gamma": 5977
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "fxDelta": 90952,
+   "vega": 19120,
+   "gamma": 285
+  },
+  {
+   "bucket": "1M",
+   "fxDelta": 181905,
+   "vega": 38241,
+   "gamma": 569
+  },
+  {
+   "bucket": "3M",
+   "fxDelta": 272857,
+   "vega": 57361,
+   "gamma": 854
+  },
+  {
+   "bucket": "6M",
+   "fxDelta": 363810,
+   "vega": 76482,
+   "gamma": 1138
+  },
+  {
+   "bucket": "1Y",
+   "fxDelta": 454762,
+   "vega": 95602,
+   "gamma": 1423
+  },
+  {
+   "bucket": "2Y",
+   "fxDelta": 545714,
+   "vega": 114723,
+   "gamma": 1708
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2025-10-10",
+   "level": 95.71,
+   "trigger": 100.0,
+   "performance": -0.0429,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-01-10",
+   "level": 96.22,
+   "trigger": 100.0,
+   "performance": -0.0378,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-04-10",
+   "level": 85.46,
+   "trigger": 100.0,
+   "performance": -0.1454,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-07-10",
+   "level": 89.75,
+   "trigger": 100.0,
+   "performance": -0.1025,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-10-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-01-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-04-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-07-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-10-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-01-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-04-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-07-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-10-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-01-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-04-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-07-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-10-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-10-22",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 4,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -22300
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -42436
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 3099
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 150913
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -59972
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 60491
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -118371
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -68282
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 10342
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 117973
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -31271
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -102811
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 29484
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -6454
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -35670
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 33204
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 59666
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -81407
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 48624
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -25242
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-07-08",
+  "executionTimestamp": "2025-07-08T16:52:37.199Z",
+  "venue": "360T",
+  "venueMic": "360T",
+  "executionType": "Electronic",
+  "trader": "L. Moreau",
+  "salesperson": null,
+  "orderId": "ORD-060F687477"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-07-08T09:54:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2025-07-08T09:54:00Z",
+  "lastModifiedAt": "2025-07-08T09:54:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT225715564",
+  "matched": "2025-07-08 13:38",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83060F6874779B3D667063",
+  "upi": "QZSOR2CCY5D8",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Foreign exchange"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "CASCGB33XXX",
+  "ssiId": "SSI-JPY-BC4549",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -2456557,
+  "cleanPv": -2456557.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "FX-EURJPY",
+   "FXV-EURJPY"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "calypso-fx",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 6823
+  }
+ }
+}

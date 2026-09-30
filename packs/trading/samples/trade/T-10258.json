@@ -1,0 +1,324 @@
+{
+ "tradeId": "T-10258",
+ "productType": "CDS_TRANCHE",
+ "productName": "Index tranche",
+ "assetClass": "Credit",
+ "family": "cds",
+ "status": "Live",
+ "direction": "Sell protection",
+ "tradeDate": "2024-12-16",
+ "effectiveDate": "2024-12-18",
+ "maturityDate": "2033-10-18",
+ "currency": "EUR",
+ "notional": 232000000.0,
+ "mtm": -1480347,
+ "mtmCurrency": "USD",
+ "pnl1d": -68936,
+ "counterparty": {
+  "id": "CP-PINNACLE",
+  "name": "Pinnacle Credit Partners"
+ },
+ "nettingSet": "NS-PINNACLE-NY",
+ "book": "BOOK-CREDIT-3",
+ "trader": "TRDR-CDUBOIS",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-NOVATEK",
+ "creditCurve": "CDS-NOVATEK",
+ "discountCurve": "CRV-EUR-OIS",
+ "correlation": "CORR-G10FX",
+ "terms": {
+  "index": "CDX.NA.IG S47",
+  "attachment": "0.15",
+  "detachment": "0.07",
+  "protection": "Bought"
+ },
+ "risk": {
+  "cs01": -168477,
+  "jtd": -139200000
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": -8023,
+   "jtd": -6628571
+  },
+  {
+   "bucket": "1Y",
+   "cs01": -16045,
+   "jtd": -13257143
+  },
+  {
+   "bucket": "2Y",
+   "cs01": -24068,
+   "jtd": -19885714
+  },
+  {
+   "bucket": "3Y",
+   "cs01": -32091,
+   "jtd": -26514286
+  },
+  {
+   "bucket": "5Y",
+   "cs01": -40114,
+   "jtd": -33142857
+  },
+  {
+   "bucket": "7Y",
+   "cs01": -48136,
+   "jtd": -39771429
+  }
+ ],
+ "schedule": [
+  {
+   "payDate": "2025-12-18",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -638426.29,
+   "pv": 0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2026-12-18",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -685463.75,
+   "pv": -664899.84,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2027-12-18",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -558203.25,
+   "pv": -541457.15,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2028-12-18",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -524359.01,
+   "pv": -508628.24,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2029-12-18",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -602609.05,
+   "pv": -584530.78,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2030-12-18",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -669394.84,
+   "pv": -649312.99,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2031-12-18",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -609997.82,
+   "pv": -591697.89,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2032-12-18",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -608285.48,
+   "pv": -590036.92,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2033-10-18",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -693217.78,
+   "pv": -672421.25,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 90236
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 90783
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 3880
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -46524
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -64216
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 67400
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 17318
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -88462
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 38619
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -4260
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 36598
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -89661
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 50783
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -35139
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -10611
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -65621
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 29575
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -2866
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -63397
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -35244
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-12-16",
+  "executionTimestamp": "2024-12-16T09:26:27.159Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "C. Dubois",
+  "salesperson": null,
+  "orderId": "ORD-84A680FF63"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-12-16T09:18:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2024-12-16T09:18:00Z",
+  "lastModifiedAt": "2024-12-16T09:18:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA152492843",
+  "matched": "2024-12-16 17:39",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209684A680FF639E3ACE9130",
+  "upi": "QZDTBHN24KLI",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "PINNGB33XXX",
+  "ssiId": "SSI-EUR-F2BB52",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -1480347,
+  "cleanPv": -1480347.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CDS-NOVATEK",
+   "CRV-EUR-OIS",
+   "CORR-G10FX"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 5281
+  }
+ }
+}

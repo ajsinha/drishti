@@ -1,0 +1,50 @@
+{
+ "counterpartyId": "CP-CORAL",
+ "name": "Coral Bay Municipal Authority",
+ "lei": "54930090PSTH3R63NY09",
+ "rating": "AA",
+ "sector": "Government",
+ "country": "US",
+ "type": "Municipality",
+ "netMtm": -50322832,
+ "pfePeak": 73339836,
+ "nettingSets": [
+  {
+   "id": "NS-CORAL-FRA",
+   "agreement": "AGR-CORAL-ISDA",
+   "trades": 3,
+   "netMtm": 3083244
+  },
+  {
+   "id": "NS-CORAL-LDN",
+   "agreement": "AGR-CORAL-ISDA",
+   "trades": 9,
+   "netMtm": -5018209
+  },
+  {
+   "id": "NS-CORAL-NY",
+   "agreement": "AGR-CORAL-ISDA",
+   "trades": 25,
+   "netMtm": -48748718
+  },
+  {
+   "id": "NS-CORAL-TKY",
+   "agreement": "AGR-CORAL-ISDA",
+   "trades": 3,
+   "netMtm": 360851
+  }
+ ],
+ "kyc": {
+  "status": "Approved",
+  "riskRating": "Standard",
+  "lastReview": "2026-02-11",
+  "emirClassification": "NFC-",
+  "pd1y": 0.0003
+ },
+ "group": "GRP-CORAL",
+ "creditLimit": "LIM-CORAL",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

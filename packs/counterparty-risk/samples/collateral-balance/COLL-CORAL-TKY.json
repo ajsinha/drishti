@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-CORAL-TKY",
+ "held": 317701,
+ "posted": 0,
+ "net": 317701,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Orbital Telecom SA 2036",
+   "direction": "Held",
+   "marketValue": 105900,
+   "haircut": 0.01,
+   "value": 104841
+  },
+  {
+   "asset": "United Kingdom Debt Management Office 2031",
+   "direction": "Held",
+   "marketValue": 105900,
+   "haircut": 0.005,
+   "value": 105370
+  },
+  {
+   "asset": "Federal Republic of Germany 2031",
+   "direction": "Held",
+   "marketValue": 105900,
+   "haircut": 0.02,
+   "value": 103782
+  }
+ ],
+ "csa": "CSA-CORAL",
+ "nettingSet": "NS-CORAL-TKY",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

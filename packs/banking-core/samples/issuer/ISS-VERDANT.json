@@ -1,0 +1,25 @@
+{
+ "issuerId": "ISS-VERDANT",
+ "name": "Verdant Agri Holdings",
+ "rating": "BB-",
+ "sector": "Agriculture",
+ "country": "BR",
+ "bonds": [
+  {
+   "isin": "BRVERD054608",
+   "coupon": 0.0579,
+   "maturity": "2031-09-15"
+  },
+  {
+   "isin": "BRVERD178449",
+   "coupon": 0.0629,
+   "maturity": "2036-02-15"
+  }
+ ],
+ "creditCurve": "CDS-VERDANT",
+ "lei": "549300QDHSX2S0VS8A16",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

@@ -1,0 +1,135 @@
+{
+ "indexId": "FIX-CORRA",
+ "name": "Canadian Overnight Repo Rate Average",
+ "latest": 0.02956,
+ "administrator": "Bank of Canada",
+ "tenor": "Overnight",
+ "currency": "CAD",
+ "fixings": [
+  {
+   "date": "2026-09-30",
+   "rate": 0.02956,
+   "ratePct": 2.956,
+   "volumeBn": 1011.1
+  },
+  {
+   "date": "2026-09-29",
+   "rate": 0.029574,
+   "ratePct": 2.9574,
+   "volumeBn": 254.8
+  },
+  {
+   "date": "2026-09-28",
+   "rate": 0.029586,
+   "ratePct": 2.9586,
+   "volumeBn": 1600.0
+  },
+  {
+   "date": "2026-09-25",
+   "rate": 0.0296,
+   "ratePct": 2.96,
+   "volumeBn": 766.2
+  },
+  {
+   "date": "2026-09-24",
+   "rate": 0.029596,
+   "ratePct": 2.9596,
+   "volumeBn": 1714.9
+  },
+  {
+   "date": "2026-09-23",
+   "rate": 0.029589,
+   "ratePct": 2.9589,
+   "volumeBn": 837.4
+  },
+  {
+   "date": "2026-09-22",
+   "rate": 0.029579,
+   "ratePct": 2.9579,
+   "volumeBn": 1831.3
+  },
+  {
+   "date": "2026-09-21",
+   "rate": 0.029565,
+   "ratePct": 2.9565,
+   "volumeBn": 1649.0
+  },
+  {
+   "date": "2026-09-18",
+   "rate": 0.02951,
+   "ratePct": 2.951,
+   "volumeBn": 609.9
+  },
+  {
+   "date": "2026-09-17",
+   "rate": 0.02949,
+   "ratePct": 2.949,
+   "volumeBn": 999.2
+  },
+  {
+   "date": "2026-09-16",
+   "rate": 0.029471,
+   "ratePct": 2.9471,
+   "volumeBn": 1153.4
+  },
+  {
+   "date": "2026-09-15",
+   "rate": 0.029452,
+   "ratePct": 2.9452,
+   "volumeBn": 1392.1
+  },
+  {
+   "date": "2026-09-14",
+   "rate": 0.029436,
+   "ratePct": 2.9436,
+   "volumeBn": 1803.8
+  },
+  {
+   "date": "2026-09-11",
+   "rate": 0.029404,
+   "ratePct": 2.9404,
+   "volumeBn": 1384.4
+  },
+  {
+   "date": "2026-09-10",
+   "rate": 0.0294,
+   "ratePct": 2.94,
+   "volumeBn": 1715.8
+  },
+  {
+   "date": "2026-09-09",
+   "rate": 0.029401,
+   "ratePct": 2.9401,
+   "volumeBn": 935.5
+  },
+  {
+   "date": "2026-09-08",
+   "rate": 0.029405,
+   "ratePct": 2.9405,
+   "volumeBn": 2299.0
+  },
+  {
+   "date": "2026-09-04",
+   "rate": 0.029457,
+   "ratePct": 2.9457,
+   "volumeBn": 1825.4
+  },
+  {
+   "date": "2026-09-03",
+   "rate": 0.029476,
+   "ratePct": 2.9476,
+   "volumeBn": 734.7
+  },
+  {
+   "date": "2026-09-02",
+   "rate": 0.029496,
+   "ratePct": 2.9496,
+   "volumeBn": 1064.7
+  }
+ ],
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

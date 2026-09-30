@@ -1,0 +1,51 @@
+{
+ "counterpartyId": "CP-VERDANT",
+ "name": "Verdant Agri Holdings",
+ "lei": "549300QDHSX2S0VS8A16",
+ "rating": "BB-",
+ "sector": "Agriculture",
+ "country": "BR",
+ "type": "Corporate",
+ "netMtm": 16833283,
+ "pfePeak": 57888512,
+ "nettingSets": [
+  {
+   "id": "NS-VERDANT-FRA",
+   "agreement": "AGR-VERDANT-ISDA",
+   "trades": 2,
+   "netMtm": -894600
+  },
+  {
+   "id": "NS-VERDANT-LDN",
+   "agreement": "AGR-VERDANT-ISDA",
+   "trades": 8,
+   "netMtm": 15798411
+  },
+  {
+   "id": "NS-VERDANT-NY",
+   "agreement": "AGR-VERDANT-ISDA",
+   "trades": 24,
+   "netMtm": 3612550
+  },
+  {
+   "id": "NS-VERDANT-TKY",
+   "agreement": "AGR-VERDANT-ISDA",
+   "trades": 1,
+   "netMtm": -1683078
+  }
+ ],
+ "kyc": {
+  "status": "Approved",
+  "riskRating": "Enhanced",
+  "lastReview": "2026-02-11",
+  "emirClassification": "NFC-",
+  "pd1y": 0.011
+ },
+ "group": "GRP-VERDANT",
+ "creditLimit": "LIM-VERDANT",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ },
+ "creditCurve": "CDS-VERDANT"
+}

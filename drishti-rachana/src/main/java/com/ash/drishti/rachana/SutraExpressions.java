@@ -40,7 +40,7 @@ public final class SutraExpressions {
             Map.entry(PanelKind.AREA, Set.of("rows", "limit")), Map.entry(PanelKind.HBAR, Set.of("rows")),
             Map.entry(PanelKind.LADDER, Set.of("rows", "highlight")), Map.entry(PanelKind.GAUGE, Set.of("value", "max")),
             Map.entry(PanelKind.LINKS, Set.of()), Map.entry(PanelKind.STATUS, Set.of()),
-            Map.entry(PanelKind.PROVENANCE, Set.of()), Map.entry(PanelKind.MARKDOWN, Set.of()));
+            Map.entry(PanelKind.PROVENANCE, Set.of()), Map.entry(PanelKind.MARKDOWN, Set.of()), Map.entry(PanelKind.SURFACE, Set.of("rows")));
 
     private final ElCompiler compiler;
 

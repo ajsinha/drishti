@@ -1,0 +1,111 @@
+{
+ "nettingSetId": "NS-SOLARIS-TKY",
+ "tradeCount": 3,
+ "netMtm": 5850429,
+ "collateral": 4669364,
+ "eePeak": 37303268,
+ "pfePeak": 84133589,
+ "limit": 164000000.0,
+ "utilisation": 0.513,
+ "cva": -213742,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 4206622,
+   "pfe": 11981768
+  },
+  {
+   "tenor": "1M",
+   "ee": 7454913,
+   "pfe": 19128008
+  },
+  {
+   "tenor": "3M",
+   "ee": 12018308,
+   "pfe": 29167477
+  },
+  {
+   "tenor": "6M",
+   "ee": 16469659,
+   "pfe": 38960450
+  },
+  {
+   "tenor": "1Y",
+   "ee": 22737414,
+   "pfe": 52749512
+  },
+  {
+   "tenor": "2Y",
+   "ee": 24094999,
+   "pfe": 55075399
+  },
+  {
+   "tenor": "3Y",
+   "ee": 29190774,
+   "pfe": 66286103
+  },
+  {
+   "tenor": "5Y",
+   "ee": 37303268,
+   "pfe": 84133589
+  },
+  {
+   "tenor": "7Y",
+   "ee": 25807645,
+   "pfe": 57986418
+  },
+  {
+   "tenor": "10Y",
+   "ee": 96948,
+   "pfe": 213285
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10733",
+   "product": "FX-rates hybrid (PRDC)",
+   "notional": 216000000.0,
+   "maturity": "2036-08-18",
+   "mtm": 4057279
+  },
+  {
+   "tradeId": "T-10735",
+   "product": "FX-rates hybrid (PRDC)",
+   "notional": 153000000.0,
+   "maturity": "2033-01-28",
+   "mtm": 2602465
+  },
+  {
+   "tradeId": "T-10742",
+   "product": "Worst-of note",
+   "notional": 118000000.0,
+   "maturity": "2028-05-15",
+   "mtm": -809315
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Structured",
+   "mtm": 5850429
+  }
+ ],
+ "counterparty": "CP-SOLARIS",
+ "agreement": "AGR-SOLARIS-ISDA",
+ "csa": "CSA-SOLARIS",
+ "creditLimit": "LIM-SOLARIS",
+ "exposureProfile": "EXP-SOLARIS-TKY",
+ "cvaResult": "CVA-SOLARIS-TKY",
+ "saccr": "SACCR-SOLARIS-TKY",
+ "simm": "SIMM-SOLARIS",
+ "collateralBalance": "COLL-SOLARIS-TKY",
+ "legalEntity": "LE-TKY",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 11700
+  }
+ }
+}

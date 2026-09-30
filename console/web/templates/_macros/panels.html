@@ -78,6 +78,15 @@
   {% if d.source %}<a class="lnk" href="/v/{{ d.source.kind }}/{{ d.source.id }}">{{ d.source.id }}</a>{% endif %}</div>{% endif %}
 {%- endmacro %}
 
+{% macro surface(p) -%}
+{% set d = p.data %}
+<div class="surface-tools"><button type="button" class="md-btn" data-surface-view="heatmap" aria-pressed="true" title="Heatmap">
+  <i class="bi bi-grid-3x3" aria-hidden="true"></i> Heatmap</button><button type="button" class="md-btn" data-surface-view="3d" aria-pressed="false"
+  title="Rotate a 3D surface (drag to turn, scroll to zoom)"><i class="bi bi-box" aria-hidden="true"></i> 3D</button></div>
+<div class="chart surface" data-surface="{{ d | tojson | forceescape }}" data-view="{{ d.view or 'heatmap' }}" role="img"
+     aria-label="{{ p.title }}: {{ (d.y or []) | length }} × {{ (d.x or []) | length }} grid"></div>
+{%- endmacro %}
+
 {% macro bars(d) -%}
 {% set ok = (d.bars or []) | selectattr('value', 'number') | list %}
 {% set mx = (ok | map(attribute='value') | map('abs') | max) or 1 %}
@@ -117,6 +126,7 @@
   {% elif p.kind == 'tabs' %}{{ tabs(p) }}
   {% elif p.kind in ['line', 'area'] %}{{ chart(p) }}
   {% elif p.kind == 'hbar' %}{{ bars(p.data) }}
+  {% elif p.kind == 'surface' %}{{ surface(p) }}
   {% elif p.kind == 'links' %}{{ links(p.data) }}
   {% elif p.kind == 'markdown' %}<p>{{ p.data.text }}</p>
   {% elif p.kind == 'gauge' %}{% set gv, gm = p.data.value, p.data.max %}<div class="gauge"><span class="bf" data-w="{{ ((gv / (gm or 1)) * 100) | round(1) if gv is number and (gm is number or gm is none) else 0 }}"></span><span class="mono">{{ p.data.text }}</span></div>

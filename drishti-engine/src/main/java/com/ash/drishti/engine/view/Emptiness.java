@@ -40,6 +40,7 @@ public final class Emptiness {
             case PanelData.Links l -> l.links() == null || l.links().isEmpty();
             case PanelData.Text t -> t.text() == null || t.text().isBlank();
             case PanelData.Gauge g -> !Double.isFinite(g.value());
+            case PanelData.Surface s -> s.z() == null || s.z().stream().allMatch(r -> r == null || r.stream().noneMatch(Emptiness::finite));
         };
     }
 

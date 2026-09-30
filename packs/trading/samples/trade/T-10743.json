@@ -1,0 +1,339 @@
+{
+ "tradeId": "T-10743",
+ "productType": "WORST_OF_NOTE",
+ "productName": "Worst-of note",
+ "assetClass": "Structured",
+ "family": "note",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2026-06-02",
+ "effectiveDate": "2026-06-04",
+ "maturityDate": "2029-10-19",
+ "currency": "GBP",
+ "notional": 134000000.0,
+ "mtm": -2097100,
+ "mtmCurrency": "USD",
+ "pnl1d": 40229,
+ "counterparty": {
+  "id": "CP-CORAL",
+  "name": "Coral Bay Municipal Authority"
+ },
+ "nettingSet": "NS-CORAL-TKY",
+ "book": "BOOK-STRUCT-3",
+ "trader": "TRDR-VRAO",
+ "desk": "DESK-STRUCT",
+ "legalEntity": "LE-TKY",
+ "underlyingIndex": "EQX-UKX",
+ "equityVolSurface": "EQV-UKX",
+ "correlation": "CORR-G10FX",
+ "terms": {
+  "coupon": 0.120742,
+  "basketSize": 2,
+  "barrier": 0.540097
+ },
+ "risk": {
+  "delta": -496244,
+  "vega": -337063
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -23631,
+   "vega": -16051
+  },
+  {
+   "bucket": "1M",
+   "delta": -47261,
+   "vega": -32101
+  },
+  {
+   "bucket": "3M",
+   "delta": -70892,
+   "vega": -48152
+  },
+  {
+   "bucket": "6M",
+   "delta": -94523,
+   "vega": -64202
+  },
+  {
+   "bucket": "1Y",
+   "delta": -118153,
+   "vega": -80253
+  },
+  {
+   "bucket": "2Y",
+   "delta": -141784,
+   "vega": -96304
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-09-04",
+   "level": 97.04,
+   "trigger": 100.0,
+   "performance": -0.0296,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-12-04",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-03-04",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-06-04",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-09-04",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-12-04",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-03-04",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-06-04",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-09-04",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-12-04",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-03-04",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-06-04",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-09-04",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-10-19",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -69337
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 15604
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -24892
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 129481
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -138058
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 7985
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 55972
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 35562
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 58537
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -5650
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -129223
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 30166
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -37270
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -234
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -69764
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -98029
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 71991
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 13498
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 35272
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 35217
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-06-02",
+  "executionTimestamp": "2026-06-02T15:37:43.776Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "V. Rao",
+  "salesperson": null,
+  "orderId": "ORD-F31D3951EA"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-06-02T09:21:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2026-06-02T09:21:00Z",
+  "lastModifiedAt": "2026-06-02T09:21:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT892352989",
+  "matched": "2026-06-02 10:39",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300BLAOJ55ZE6F474F31D3951EA2EF1BF2D40",
+  "upi": "QZ1CLJD5924U",
+  "reportingRegimes": [
+   "JFSA"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Barclays Bank plc",
+  "ourAgentBic": "BARCGB22XXX",
+  "theirAgentBic": "CORAGB33XXX",
+  "ssiId": "SSI-GBP-C31AC7",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -2097100,
+  "cleanPv": -2097100.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQX-UKX",
+   "EQV-UKX",
+   "CORR-G10FX"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-struct",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 5534
+  }
+ }
+}

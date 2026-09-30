@@ -1,0 +1,295 @@
+{
+ "tradeId": "T-10272",
+ "productType": "TRS_BOND",
+ "productName": "Total return swap on a bond",
+ "assetClass": "Credit",
+ "family": "swap",
+ "status": "Live",
+ "direction": "Receive fixed",
+ "tradeDate": "2025-02-28",
+ "effectiveDate": "2025-03-03",
+ "maturityDate": "2028-06-09",
+ "currency": "USD",
+ "notional": 104000000.0,
+ "mtm": -529235,
+ "mtmCurrency": "USD",
+ "pnl1d": -25275,
+ "counterparty": {
+  "id": "CP-HARBORPT",
+  "name": "Harbor Point Bank"
+ },
+ "nettingSet": "NS-HARBORPT-NY",
+ "book": "BOOK-CREDIT-2",
+ "trader": "TRDR-CDUBOIS",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-MERIDIAN",
+ "underlyingBond": "BND-USMERI070218",
+ "discountCurve": "CRV-USD-OIS",
+ "repoCurve": "REPO-USD",
+ "terms": {
+  "fundingSpread": 32.9,
+  "resetFrequency": "Quarterly"
+ },
+ "risk": {
+  "cs01": -27720,
+  "dv01": -29849
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": -2772,
+   "dv01": -2985
+  },
+  {
+   "bucket": "1Y",
+   "cs01": -5544,
+   "dv01": -5970
+  },
+  {
+   "bucket": "2Y",
+   "cs01": -8316,
+   "dv01": -8955
+  },
+  {
+   "bucket": "3Y",
+   "cs01": -11088,
+   "dv01": -11940
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Receive performance",
+   "payReceive": "Receive",
+   "rateType": "Performance",
+   "index": "USCPI",
+   "rate": null,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "USD",
+   "notional": 104000000.0
+  },
+  {
+   "leg": 2,
+   "label": "Pay SOFR + spread",
+   "payReceive": "Pay",
+   "rateType": "Float",
+   "index": "SOFR",
+   "rate": 0.036215,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "USD",
+   "notional": 104000000.0
+  }
+ ],
+ "schedule": [
+  {
+   "payDate": "2026-03-03",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -246603.08,
+   "pv": 0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2027-03-03",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -230962.77,
+   "pv": -224033.89,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2028-03-03",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -250336.93,
+   "pv": -242826.82,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2028-06-09",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -300983.87,
+   "pv": -291954.35,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -12577
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -16776
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 3394
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -14575
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 24276
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -6176
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -13279
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -4215
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -1313
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 395
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 7475
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -9184
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 23207
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -14565
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 2687
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 6721
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -7372
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -6121
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 8649
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 12831
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-02-28",
+  "executionTimestamp": "2025-02-28T15:27:35.887Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "C. Dubois",
+  "salesperson": null,
+  "orderId": "ORD-52D58E8528"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-02-28T09:13:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2025-02-28T09:13:00Z",
+  "lastModifiedAt": "2025-02-28T09:13:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA651516773",
+  "matched": "2025-02-28 10:40",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209652D58E8528D663A7AC85",
+  "upi": "QZKCSP6B65GU",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "HARBUS33XXX",
+  "ssiId": "SSI-USD-99A301",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -529235,
+  "cleanPv": -529235.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Multi-curve OIS discounting",
+  "curves": [
+   "BND-USMERI070218",
+   "CRV-USD-OIS",
+   "REPO-USD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 2098
+  }
+ }
+}

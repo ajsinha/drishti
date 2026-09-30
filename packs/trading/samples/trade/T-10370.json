@@ -1,0 +1,235 @@
+{
+ "tradeId": "T-10370",
+ "productType": "EQ_DIGITAL",
+ "productName": "Equity digital option",
+ "assetClass": "Equity",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2025-12-02",
+ "effectiveDate": "2025-12-04",
+ "maturityDate": "2027-04-30",
+ "currency": "GBP",
+ "notional": 49000000.0,
+ "mtm": 30068,
+ "mtmCurrency": "USD",
+ "pnl1d": 1002,
+ "counterparty": {
+  "id": "CP-PINNACLE",
+  "name": "Pinnacle Credit Partners"
+ },
+ "nettingSet": "NS-PINNACLE-LDN",
+ "book": "BOOK-EQD-3",
+ "trader": "TRDR-JWEISS",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingEquity": "EQ-GRNT",
+ "equityVolSurface": "EQV-GRNT",
+ "dividendCurve": "DIV-GRNT",
+ "terms": {
+  "optionType": "Put",
+  "strike": 854.69,
+  "payout": 1049515.0,
+  "expiryDate": "2028-07-26"
+ },
+ "risk": {
+  "delta": 325150,
+  "vega": 106073
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 21677,
+   "vega": 7072
+  },
+  {
+   "bucket": "1M",
+   "delta": 43353,
+   "vega": 14143
+  },
+  {
+   "bucket": "3M",
+   "delta": 65030,
+   "vega": 21215
+  },
+  {
+   "bucket": "6M",
+   "delta": 86707,
+   "vega": 28286
+  },
+  {
+   "bucket": "1Y",
+   "delta": 108383,
+   "vega": 35358
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -1903
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 3328
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 4864
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 3848
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -694
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -1813
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 2554
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -649
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -1664
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -3111
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 6127
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -2804
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 1031
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 933
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -1908
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 2791
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 2639
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 852
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -2489
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -2748
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-12-02",
+  "executionTimestamp": "2025-12-02T08:27:33.034Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "J. Weiss",
+  "salesperson": null,
+  "orderId": "ORD-01F142859D"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-12-02T09:09:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2025-12-02T09:09:00Z",
+  "lastModifiedAt": "2025-12-02T09:09:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT784971523",
+  "matched": "2025-12-02 10:42",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q8301F142859D6F78B946AE",
+  "upi": "QZ1KV1K3OLOL",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Barclays Bank plc",
+  "ourAgentBic": "BARCGB22XXX",
+  "theirAgentBic": "PINNGB33XXX",
+  "ssiId": "SSI-GBP-F2BB52",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 30068,
+  "cleanPv": 30068.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "EQ-GRNT",
+   "EQV-GRNT",
+   "DIV-GRNT"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 550
+  }
+ }
+}

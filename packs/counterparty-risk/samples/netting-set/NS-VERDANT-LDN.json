@@ -1,0 +1,154 @@
+{
+ "nettingSetId": "NS-VERDANT-LDN",
+ "tradeCount": 8,
+ "netMtm": 15798411,
+ "collateral": 10442865,
+ "eePeak": 14861463,
+ "pfePeak": 33585181,
+ "limit": 54000000.0,
+ "utilisation": 0.6219,
+ "cva": -436616,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 7021602,
+   "pfe": 16949287
+  },
+  {
+   "tenor": "1M",
+   "ee": 7536427,
+   "pfe": 17572303
+  },
+  {
+   "tenor": "3M",
+   "ee": 8999720,
+   "pfe": 20791546
+  },
+  {
+   "tenor": "6M",
+   "ee": 10338771,
+   "pfe": 23737460
+  },
+  {
+   "tenor": "1Y",
+   "ee": 12108203,
+   "pfe": 27630210
+  },
+  {
+   "tenor": "2Y",
+   "ee": 14473340,
+   "pfe": 32833511
+  },
+  {
+   "tenor": "3Y",
+   "ee": 14861463,
+   "pfe": 33585181
+  },
+  {
+   "tenor": "5Y",
+   "ee": 7837642,
+   "pfe": 17595174
+  },
+  {
+   "tenor": "7Y",
+   "ee": 4529141,
+   "pfe": 10134122
+  },
+  {
+   "tenor": "10Y",
+   "ee": 439610,
+   "pfe": 967142
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10539",
+   "product": "Zero-coupon inflation swap",
+   "notional": 47000000.0,
+   "maturity": "2036-07-21",
+   "mtm": 8195317
+  },
+  {
+   "tradeId": "T-10235",
+   "product": "Quanto option",
+   "notional": 245000000.0,
+   "maturity": "2033-05-16",
+   "mtm": 2783757
+  },
+  {
+   "tradeId": "T-10191",
+   "product": "FX digital option",
+   "notional": 146000000.0,
+   "maturity": "2029-02-05",
+   "mtm": 2716990
+  },
+  {
+   "tradeId": "T-10437",
+   "product": "Convertible bond",
+   "notional": 88000000.0,
+   "maturity": "2030-09-16",
+   "mtm": 1334065
+  },
+  {
+   "tradeId": "T-10564",
+   "product": "Inflation asset swap",
+   "notional": 124000000.0,
+   "maturity": "2033-05-23",
+   "mtm": 528987
+  },
+  {
+   "tradeId": "T-10424",
+   "product": "Contract for difference",
+   "notional": 91000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 491937
+  },
+  {
+   "tradeId": "T-10237",
+   "product": "Quanto option",
+   "notional": 237000000.0,
+   "maturity": "2036-04-23",
+   "mtm": -199321
+  },
+  {
+   "tradeId": "T-10419",
+   "product": "Portfolio (basket) swap",
+   "notional": 8000000.0,
+   "maturity": "2030-08-07",
+   "mtm": -53321
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Inflation",
+   "mtm": 8724304
+  },
+  {
+   "asset": "FX",
+   "mtm": 5301426
+  },
+  {
+   "asset": "Equity",
+   "mtm": 1772681
+  }
+ ],
+ "counterparty": "CP-VERDANT",
+ "agreement": "AGR-VERDANT-ISDA",
+ "csa": "CSA-VERDANT",
+ "creditLimit": "LIM-VERDANT",
+ "exposureProfile": "EXP-VERDANT-LDN",
+ "cvaResult": "CVA-VERDANT-LDN",
+ "saccr": "SACCR-VERDANT-LDN",
+ "simm": "SIMM-VERDANT",
+ "collateralBalance": "COLL-VERDANT-LDN",
+ "legalEntity": "LE-LDN",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 31596
+  }
+ }
+}

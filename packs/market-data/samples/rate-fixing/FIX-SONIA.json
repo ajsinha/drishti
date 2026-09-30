@@ -1,0 +1,135 @@
+{
+ "indexId": "FIX-SONIA",
+ "name": "Sterling Overnight Index Average",
+ "latest": 0.04056,
+ "administrator": "Bank of England",
+ "tenor": "Overnight",
+ "currency": "GBP",
+ "fixings": [
+  {
+   "date": "2026-09-30",
+   "rate": 0.04056,
+   "ratePct": 4.056,
+   "volumeBn": 2311.5
+  },
+  {
+   "date": "2026-09-29",
+   "rate": 0.040574,
+   "ratePct": 4.0574,
+   "volumeBn": 1584.2
+  },
+  {
+   "date": "2026-09-28",
+   "rate": 0.040586,
+   "ratePct": 4.0586,
+   "volumeBn": 912.2
+  },
+  {
+   "date": "2026-09-25",
+   "rate": 0.0406,
+   "ratePct": 4.06,
+   "volumeBn": 1811.7
+  },
+  {
+   "date": "2026-09-24",
+   "rate": 0.040596,
+   "ratePct": 4.0596,
+   "volumeBn": 1375.7
+  },
+  {
+   "date": "2026-09-23",
+   "rate": 0.040589,
+   "ratePct": 4.0589,
+   "volumeBn": 1206.1
+  },
+  {
+   "date": "2026-09-22",
+   "rate": 0.040579,
+   "ratePct": 4.0579,
+   "volumeBn": 343.1
+  },
+  {
+   "date": "2026-09-21",
+   "rate": 0.040565,
+   "ratePct": 4.0565,
+   "volumeBn": 190.8
+  },
+  {
+   "date": "2026-09-18",
+   "rate": 0.04051,
+   "ratePct": 4.051,
+   "volumeBn": 243.3
+  },
+  {
+   "date": "2026-09-17",
+   "rate": 0.04049,
+   "ratePct": 4.049,
+   "volumeBn": 2258.9
+  },
+  {
+   "date": "2026-09-16",
+   "rate": 0.040471,
+   "ratePct": 4.0471,
+   "volumeBn": 393.5
+  },
+  {
+   "date": "2026-09-15",
+   "rate": 0.040452,
+   "ratePct": 4.0452,
+   "volumeBn": 2096.7
+  },
+  {
+   "date": "2026-09-14",
+   "rate": 0.040436,
+   "ratePct": 4.0436,
+   "volumeBn": 236.2
+  },
+  {
+   "date": "2026-09-11",
+   "rate": 0.040404,
+   "ratePct": 4.0404,
+   "volumeBn": 1654.2
+  },
+  {
+   "date": "2026-09-10",
+   "rate": 0.0404,
+   "ratePct": 4.04,
+   "volumeBn": 2207.8
+  },
+  {
+   "date": "2026-09-09",
+   "rate": 0.040401,
+   "ratePct": 4.0401,
+   "volumeBn": 1182.6
+  },
+  {
+   "date": "2026-09-08",
+   "rate": 0.040405,
+   "ratePct": 4.0405,
+   "volumeBn": 161.2
+  },
+  {
+   "date": "2026-09-07",
+   "rate": 0.040414,
+   "ratePct": 4.0414,
+   "volumeBn": 1347.9
+  },
+  {
+   "date": "2026-09-04",
+   "rate": 0.040457,
+   "ratePct": 4.0457,
+   "volumeBn": 1875.1
+  },
+  {
+   "date": "2026-09-03",
+   "rate": 0.040476,
+   "ratePct": 4.0476,
+   "volumeBn": 854.9
+  }
+ ],
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

@@ -1,0 +1,22 @@
+{
+ "groupId": "GRP-MERIDIAN",
+ "name": "Meridian Financial Group",
+ "limit": 773000000.0,
+ "utilisation": 0.6135,
+ "members": [
+  {
+   "id": "CP-MERIDIAN",
+   "name": "Meridian Life Assurance",
+   "rating": "A+"
+  },
+  {
+   "id": "CP-MERIDIAN-RE",
+   "name": "Meridian Reinsurance Ltd",
+   "rating": "A"
+  }
+ ],
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

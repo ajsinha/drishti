@@ -1,0 +1,37 @@
+{
+ "curveId": "DIV-NDX",
+ "underlier": "EQX-NDX",
+ "dividendYield": 0.018,
+ "points": [
+  {
+   "year": "2026",
+   "amount": 441.54
+  },
+  {
+   "year": "2027",
+   "amount": 459.2
+  },
+  {
+   "year": "2028",
+   "amount": 476.86
+  },
+  {
+   "year": "2029",
+   "amount": 494.52
+  },
+  {
+   "year": "2030",
+   "amount": 512.19
+  },
+  {
+   "year": "2031",
+   "amount": 529.85
+  }
+ ],
+ "underlyingIndex": "EQX-NDX",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

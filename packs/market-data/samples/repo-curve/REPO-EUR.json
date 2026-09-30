@@ -1,0 +1,38 @@
+{
+ "curveId": "REPO-EUR",
+ "currency": "EUR",
+ "collateral": "General collateral (government)",
+ "overnight": 0.0187,
+ "asOf": "2026-09-30",
+ "points": [
+  {
+   "tenor": "ON",
+   "rate": 1.8721
+  },
+  {
+   "tenor": "1W",
+   "rate": 1.8755
+  },
+  {
+   "tenor": "1M",
+   "rate": 1.8815
+  },
+  {
+   "tenor": "3M",
+   "rate": 1.89
+  },
+  {
+   "tenor": "6M",
+   "rate": 1.8983
+  },
+  {
+   "tenor": "1Y",
+   "rate": 1.91
+  }
+ ],
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

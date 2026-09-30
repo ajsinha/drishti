@@ -1,0 +1,150 @@
+{
+ "ticker": "EQ-LUMN",
+ "name": "Lumen Semiconductor AG",
+ "price": 312.5,
+ "change1d": -0.00414,
+ "marketCap": 1274733040201,
+ "sector": "Technology",
+ "exchange": "SIX",
+ "currency": "CHF",
+ "beta": 1.19,
+ "history": [
+  {
+   "date": "2026-08-19",
+   "close": 288.83
+  },
+  {
+   "date": "2026-08-20",
+   "close": 287.28
+  },
+  {
+   "date": "2026-08-21",
+   "close": 290.51
+  },
+  {
+   "date": "2026-08-24",
+   "close": 279.78
+  },
+  {
+   "date": "2026-08-25",
+   "close": 283.24
+  },
+  {
+   "date": "2026-08-26",
+   "close": 284.06
+  },
+  {
+   "date": "2026-08-27",
+   "close": 283.72
+  },
+  {
+   "date": "2026-08-28",
+   "close": 290.01
+  },
+  {
+   "date": "2026-08-31",
+   "close": 298.55
+  },
+  {
+   "date": "2026-09-01",
+   "close": 289.23
+  },
+  {
+   "date": "2026-09-02",
+   "close": 288.97
+  },
+  {
+   "date": "2026-09-03",
+   "close": 296.23
+  },
+  {
+   "date": "2026-09-04",
+   "close": 301.56
+  },
+  {
+   "date": "2026-09-08",
+   "close": 300.4
+  },
+  {
+   "date": "2026-09-09",
+   "close": 290.47
+  },
+  {
+   "date": "2026-09-10",
+   "close": 296.87
+  },
+  {
+   "date": "2026-09-11",
+   "close": 299.02
+  },
+  {
+   "date": "2026-09-14",
+   "close": 300.13
+  },
+  {
+   "date": "2026-09-15",
+   "close": 301.73
+  },
+  {
+   "date": "2026-09-16",
+   "close": 306.08
+  },
+  {
+   "date": "2026-09-17",
+   "close": 296.75
+  },
+  {
+   "date": "2026-09-18",
+   "close": 301.18
+  },
+  {
+   "date": "2026-09-21",
+   "close": 300.24
+  },
+  {
+   "date": "2026-09-22",
+   "close": 304.09
+  },
+  {
+   "date": "2026-09-23",
+   "close": 304.5
+  },
+  {
+   "date": "2026-09-24",
+   "close": 306.58
+  },
+  {
+   "date": "2026-09-25",
+   "close": 310.55
+  },
+  {
+   "date": "2026-09-28",
+   "close": 307.96
+  },
+  {
+   "date": "2026-09-29",
+   "close": 313.8
+  },
+  {
+   "date": "2026-09-30",
+   "close": 312.5
+  }
+ ],
+ "identifiers": {
+  "isin": "CH0LUMN00014",
+  "bloomberg": "LUMN SI Equity",
+  "ric": "LUMN.S",
+  "figi": "BBG613125F80"
+ },
+ "issuer": "ISS-LUMEN",
+ "equityVolSurface": "EQV-LUMN",
+ "dividendCurve": "DIV-LUMN",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "price": 0.3
+  }
+ }
+}

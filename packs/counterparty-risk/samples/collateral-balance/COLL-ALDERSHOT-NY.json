@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-ALDERSHOT-NY",
+ "held": 12274649,
+ "posted": 0,
+ "net": 12274649,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Halcyon Shipping plc 2031",
+   "direction": "Held",
+   "marketValue": 4091550,
+   "haircut": 0.005,
+   "value": 4071092
+  },
+  {
+   "asset": "Helix Pharmaceuticals Inc. 2031",
+   "direction": "Held",
+   "marketValue": 4091550,
+   "haircut": 0.005,
+   "value": 4071092
+  },
+  {
+   "asset": "United States Treasury 2031",
+   "direction": "Held",
+   "marketValue": 4091550,
+   "haircut": 0.005,
+   "value": 4071092
+  }
+ ],
+ "csa": "CSA-ALDERSHOT",
+ "nettingSet": "NS-ALDERSHOT-NY",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

@@ -1,0 +1,35 @@
+{
+ "calcId": "SIMM-LUMEN",
+ "total": 7016493,
+ "posted": 6805998,
+ "received": 7156823,
+ "version": "ISDA SIMM 2.7",
+ "riskClasses": [
+  {
+   "riskClass": "Interest rate",
+   "im": 3157422
+  },
+  {
+   "riskClass": "Credit qualifying",
+   "im": 841979
+  },
+  {
+   "riskClass": "Equity",
+   "im": 1262969
+  },
+  {
+   "riskClass": "Commodity",
+   "im": 561319
+  },
+  {
+   "riskClass": "FX",
+   "im": 1192804
+  }
+ ],
+ "nettingSet": "NS-LUMEN-FRA",
+ "counterparty": "CP-LUMEN",
+ "_meta": {
+  "source": "margin-engine",
+  "generation": 1
+ }
+}

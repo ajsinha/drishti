@@ -1,0 +1,44 @@
+{
+ "counterpartyId": "CP-AURORA",
+ "name": "Aurora Sovereign Wealth Fund",
+ "lei": "549300OAY35XP22MS069",
+ "rating": "AAA",
+ "sector": "Government",
+ "country": "NO",
+ "type": "Sovereign fund",
+ "netMtm": 39170046,
+ "pfePeak": 82685600,
+ "nettingSets": [
+  {
+   "id": "NS-AURORA-FRA",
+   "agreement": "AGR-AURORA-ISDA",
+   "trades": 2,
+   "netMtm": -858131
+  },
+  {
+   "id": "NS-AURORA-LDN",
+   "agreement": "AGR-AURORA-ISDA",
+   "trades": 12,
+   "netMtm": -1138588
+  },
+  {
+   "id": "NS-AURORA-NY",
+   "agreement": "AGR-AURORA-ISDA",
+   "trades": 21,
+   "netMtm": 41166765
+  }
+ ],
+ "kyc": {
+  "status": "Approved",
+  "riskRating": "Standard",
+  "lastReview": "2026-02-11",
+  "emirClassification": "NFC-",
+  "pd1y": 0.0001
+ },
+ "group": "GRP-AURORA",
+ "creditLimit": "LIM-AURORA",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

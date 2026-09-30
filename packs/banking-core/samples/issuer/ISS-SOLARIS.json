@@ -1,0 +1,26 @@
+{
+ "issuerId": "ISS-SOLARIS",
+ "name": "Solaris Energy Corp.",
+ "rating": "BBB",
+ "sector": "Utilities",
+ "country": "US",
+ "bonds": [
+  {
+   "isin": "USSOLA031372",
+   "coupon": 0.0446,
+   "maturity": "2031-12-15"
+  },
+  {
+   "isin": "USSOLA119789",
+   "coupon": 0.0496,
+   "maturity": "2036-10-15"
+  }
+ ],
+ "creditCurve": "CDS-SOLARIS",
+ "lei": "549300PN5S8OB1PSJN06",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ },
+ "equity": "EQ-SLRS"
+}

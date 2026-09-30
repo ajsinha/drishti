@@ -1,0 +1,161 @@
+{
+ "nettingSetId": "NS-CORAL-LDN",
+ "tradeCount": 9,
+ "netMtm": -5018209,
+ "collateral": -2532153,
+ "eePeak": 6411359,
+ "pfePeak": 14567690,
+ "limit": 20000000.0,
+ "utilisation": 0.7284,
+ "cva": -6452,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 592725,
+   "pfe": 1838270
+  },
+  {
+   "tenor": "1M",
+   "ee": 1233855,
+   "pfe": 3248757
+  },
+  {
+   "tenor": "3M",
+   "ee": 2137100,
+   "pfe": 5235895
+  },
+  {
+   "tenor": "6M",
+   "ee": 3022316,
+   "pfe": 7183370
+  },
+  {
+   "tenor": "1Y",
+   "ee": 4234300,
+   "pfe": 9844748
+  },
+  {
+   "tenor": "2Y",
+   "ee": 5741707,
+   "pfe": 13139256
+  },
+  {
+   "tenor": "3Y",
+   "ee": 6411359,
+   "pfe": 14567690
+  },
+  {
+   "tenor": "5Y",
+   "ee": 2496570,
+   "pfe": 5632016
+  },
+  {
+   "tenor": "7Y",
+   "ee": 2953981,
+   "pfe": 6638321
+  },
+  {
+   "tenor": "10Y",
+   "ee": 3152158,
+   "pfe": 7059348
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10563",
+   "product": "Inflation asset swap",
+   "notional": 237000000.0,
+   "maturity": "2031-05-13",
+   "mtm": -2801657
+  },
+  {
+   "tradeId": "T-10175",
+   "product": "FX swap",
+   "notional": 98000000.0,
+   "maturity": "2037-05-15",
+   "mtm": -1679905
+  },
+  {
+   "tradeId": "T-10558",
+   "product": "Inflation-linked bond",
+   "notional": 57000000.0,
+   "maturity": "2027-05-24",
+   "mtm": -1106536
+  },
+  {
+   "tradeId": "T-10543",
+   "product": "Year-on-year inflation swap",
+   "notional": 249000000.0,
+   "maturity": "2028-04-24",
+   "mtm": 956175
+  },
+  {
+   "tradeId": "T-10570",
+   "product": "Limited price index swap",
+   "notional": 171000000.0,
+   "maturity": "2034-07-12",
+   "mtm": -339669
+  },
+  {
+   "tradeId": "T-10390",
+   "product": "Reverse convertible",
+   "notional": 47000000.0,
+   "maturity": "2030-09-09",
+   "mtm": -218334
+  },
+  {
+   "tradeId": "T-10399",
+   "product": "Volatility swap",
+   "notional": 7000000.0,
+   "maturity": "2030-07-09",
+   "mtm": 139897
+  },
+  {
+   "tradeId": "T-10402",
+   "product": "Volatility swap",
+   "notional": 8000000.0,
+   "maturity": "2028-11-07",
+   "mtm": 31675
+  },
+  {
+   "tradeId": "T-10401",
+   "product": "Volatility swap",
+   "notional": 10000000.0,
+   "maturity": "2036-09-29",
+   "mtm": 145
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Inflation",
+   "mtm": -3291687
+  },
+  {
+   "asset": "FX",
+   "mtm": -1679905
+  },
+  {
+   "asset": "Equity",
+   "mtm": -46617
+  }
+ ],
+ "counterparty": "CP-CORAL",
+ "agreement": "AGR-CORAL-ISDA",
+ "csa": "CSA-CORAL",
+ "creditLimit": "LIM-CORAL",
+ "exposureProfile": "EXP-CORAL-LDN",
+ "cvaResult": "CVA-CORAL-LDN",
+ "saccr": "SACCR-CORAL-LDN",
+ "simm": "SIMM-CORAL",
+ "collateralBalance": "COLL-CORAL-LDN",
+ "legalEntity": "LE-LDN",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 10036
+  }
+ }
+}

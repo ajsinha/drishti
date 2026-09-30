@@ -1,0 +1,50 @@
+{
+ "counterpartyId": "CP-NORTHBRIDGE",
+ "name": "Northbridge Capital LLP",
+ "lei": "549300XC29H3SPO07Z24",
+ "rating": "BB+",
+ "sector": "Asset management",
+ "country": "GB",
+ "type": "Hedge fund",
+ "netMtm": 29476521,
+ "pfePeak": 72400540,
+ "nettingSets": [
+  {
+   "id": "NS-NORTHBRIDGE-FRA",
+   "agreement": "AGR-NORTHBRIDGE-ISDA",
+   "trades": 5,
+   "netMtm": 2816262
+  },
+  {
+   "id": "NS-NORTHBRIDGE-LDN",
+   "agreement": "AGR-NORTHBRIDGE-ISDA",
+   "trades": 16,
+   "netMtm": -14873783
+  },
+  {
+   "id": "NS-NORTHBRIDGE-NY",
+   "agreement": "AGR-NORTHBRIDGE-ISDA",
+   "trades": 13,
+   "netMtm": 38305686
+  },
+  {
+   "id": "NS-NORTHBRIDGE-TKY",
+   "agreement": "AGR-NORTHBRIDGE-ISDA",
+   "trades": 1,
+   "netMtm": 3228356
+  }
+ ],
+ "kyc": {
+  "status": "Approved",
+  "riskRating": "Enhanced",
+  "lastReview": "2026-02-11",
+  "emirClassification": "FC",
+  "pd1y": 0.0042
+ },
+ "group": "GRP-NORTHBRIDGE",
+ "creditLimit": "LIM-NORTHBRIDGE",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

@@ -1,0 +1,58 @@
+{
+ "resultId": "CVA-NORTHBRIDGE-FRA",
+ "cva": -1826,
+ "dva": 91,
+ "fva": -3380,
+ "kva": -3515,
+ "cs01": -33,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -1826
+  },
+  {
+   "name": "DVA",
+   "amount": 91
+  },
+  {
+   "name": "FVA",
+   "amount": -3380
+  },
+  {
+   "name": "KVA",
+   "amount": -3515
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -33
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 7
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 4
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -55
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 31
+  }
+ ],
+ "nettingSet": "NS-NORTHBRIDGE-FRA",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

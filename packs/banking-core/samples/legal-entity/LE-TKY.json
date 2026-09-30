@@ -1,0 +1,17 @@
+{
+ "entityId": "LE-TKY",
+ "name": "Drishti Securities Japan K.K.",
+ "lei": "549300BLAOJ55ZE6F474",
+ "jurisdiction": "JP",
+ "regulator": "JFSA",
+ "desks": [
+  {
+   "id": "DESK-STRUCT",
+   "name": "Structured products"
+  }
+ ],
+ "_meta": {
+  "source": "entity-master",
+  "generation": 1
+ }
+}

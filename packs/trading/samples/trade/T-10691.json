@@ -1,0 +1,248 @@
+{
+ "tradeId": "T-10691",
+ "productType": "TRIPARTY_REPO",
+ "productName": "Tri-party repo",
+ "assetClass": "Securities financing",
+ "family": "sft",
+ "status": "Live",
+ "direction": "Reverse repo",
+ "tradeDate": "2026-08-07",
+ "effectiveDate": "2026-08-10",
+ "maturityDate": "2026-10-07",
+ "currency": "USD",
+ "notional": 113000000.0,
+ "mtm": -135470,
+ "mtmCurrency": "USD",
+ "pnl1d": 1839,
+ "counterparty": {
+  "id": "CP-PINNACLE",
+  "name": "Pinnacle Credit Partners"
+ },
+ "nettingSet": "NS-PINNACLE-FRA",
+ "book": "BOOK-SFT-2",
+ "trader": "TRDR-NFAROUK",
+ "desk": "DESK-SFT",
+ "legalEntity": "LE-FRA",
+ "issuer": "ISS-MERIDIAN",
+ "repoCurve": "REPO-USD",
+ "terms": {
+  "repoRate": 0.039324,
+  "agent": "BNY",
+  "basket": "Equities"
+ },
+ "risk": {
+  "exposure": 1399776
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "exposure": 139978
+  },
+  {
+   "bucket": "1M",
+   "exposure": 279955
+  },
+  {
+   "bucket": "3M",
+   "exposure": 419933
+  },
+  {
+   "bucket": "6M",
+   "exposure": 559910
+  }
+ ],
+ "schedule": [
+  {
+   "asset": "Novatek Devices Inc. 2036",
+   "isin": "USNOVA133999",
+   "quantity": 38260130,
+   "marketValue": 38726138,
+   "haircut": 0.04,
+   "value": 37177092
+  },
+  {
+   "asset": "Granite Building Materials plc 2031",
+   "isin": "GBGRAN031444",
+   "quantity": 36933809,
+   "marketValue": 35921823,
+   "haircut": 0.01,
+   "value": 35562605
+  },
+  {
+   "asset": "Rheintal Landesbank 2036",
+   "isin": "DERHEI122872",
+   "quantity": 31988373,
+   "marketValue": 36858603,
+   "haircut": 0.01,
+   "value": 36490017
+  }
+ ],
+ "nextIndex": -1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 6707
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 947
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -2999
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 1069
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -3566
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -1679
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -8913
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 866
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -1639
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -887
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -3404
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 4991
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 3738
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -2042
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 794
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 1178
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 4632
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 2385
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -4681
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -4375
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-08-07",
+  "executionTimestamp": "2026-08-07T10:09:24.610Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "N. Farouk",
+  "salesperson": null,
+  "orderId": "ORD-D16801C3A2"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-08-07T09:52:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-08-07T09:52:00Z",
+  "lastModifiedAt": "2026-08-07T09:52:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT757910591",
+  "matched": "2026-08-07 12:45",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z9DXU4T18OK744D16801C3A2A98015D80C",
+  "upi": "QZR5OK5QMRHW",
+  "reportingRegimes": [
+   "EU EMIR",
+   "EU MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "PINNUS33XXX",
+  "ssiId": "SSI-USD-F2BB52",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -135470,
+  "cleanPv": -135470.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "REPO-USD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "globalone-sft",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 1401
+  }
+ }
+}

@@ -1,0 +1,60 @@
+{
+ "curveId": "FXF-USDJPY",
+ "pair": "USDJPY",
+ "spot": 148.2,
+ "points3m": -116.2,
+ "points1y": -459.6,
+ "points": [
+  {
+   "tenor": "ON",
+   "pips": -1.3,
+   "outright": 148.18721
+  },
+  {
+   "tenor": "1W",
+   "pips": -9.0,
+   "outright": 148.1105
+  },
+  {
+   "tenor": "1M",
+   "pips": -38.9,
+   "outright": 147.81149
+  },
+  {
+   "tenor": "2M",
+   "pips": -77.6,
+   "outright": 147.42399
+  },
+  {
+   "tenor": "3M",
+   "pips": -116.2,
+   "outright": 147.03751
+  },
+  {
+   "tenor": "6M",
+   "pips": -231.6,
+   "outright": 145.88414
+  },
+  {
+   "tenor": "9M",
+   "pips": -346.0,
+   "outright": 144.73981
+  },
+  {
+   "tenor": "1Y",
+   "pips": -459.6,
+   "outright": 143.60446
+  },
+  {
+   "tenor": "2Y",
+   "pips": -904.9,
+   "outright": 139.15142
+  }
+ ],
+ "fxSpot": "FX-USDJPY",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

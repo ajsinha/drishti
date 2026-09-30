@@ -1,0 +1,84 @@
+{
+ "calcId": "SACCR-VERDANT-NY",
+ "replacementCost": 1267792,
+ "addOn": 42543288,
+ "multiplier": 1.0,
+ "ead": 61335512,
+ "rwa": 61335512,
+ "addOns": [
+  {
+   "assetClass": "Interest rate",
+   "addOn": 4468288
+  },
+  {
+   "assetClass": "Credit",
+   "addOn": 8375000
+  },
+  {
+   "assetClass": "Commodity",
+   "addOn": 29700000
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "AUD",
+   "effectiveNotional": -193000000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "EUR",
+   "effectiveNotional": -229000000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "USD",
+   "effectiveNotional": -380000000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "GBP",
+   "effectiveNotional": -23000000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "JPY",
+   "effectiveNotional": -68657534,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "CAD",
+   "effectiveNotional": -39000000,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "USD",
+   "effectiveNotional": -52500000,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "EUR",
+   "effectiveNotional": -76000000,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Commodity",
+   "hedgingSet": "USD",
+   "effectiveNotional": -165000000,
+   "sf": 0.18
+  }
+ ],
+ "nettingSet": "NS-VERDANT-NY",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

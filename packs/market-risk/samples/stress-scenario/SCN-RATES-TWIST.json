@@ -1,0 +1,21 @@
+{
+ "scenarioId": "SCN-RATES-TWIST",
+ "name": "Bear steepener 2s10s +75 bp",
+ "type": "Hypothetical",
+ "severity": "Mild",
+ "shocks": [
+  {
+   "factor": "2Y rates",
+   "shock": 0.25
+  },
+  {
+   "factor": "10Y rates",
+   "shock": 1.0
+  }
+ ],
+ "horizon": "10 days",
+ "_meta": {
+  "source": "stress-engine",
+  "generation": 1
+ }
+}

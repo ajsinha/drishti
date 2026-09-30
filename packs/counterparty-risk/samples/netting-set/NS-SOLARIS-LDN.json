@@ -1,0 +1,164 @@
+{
+ "nettingSetId": "NS-SOLARIS-LDN",
+ "tradeCount": 10,
+ "netMtm": -2692928,
+ "collateral": -2099411,
+ "eePeak": 31751132,
+ "pfePeak": 71352591,
+ "limit": 139000000.0,
+ "utilisation": 0.5133,
+ "cva": -189151,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 2103756,
+   "pfe": 6524563
+  },
+  {
+   "tenor": "1M",
+   "ee": 3997804,
+   "pfe": 10526269
+  },
+  {
+   "tenor": "3M",
+   "ee": 6924400,
+   "pfe": 16964780
+  },
+  {
+   "tenor": "6M",
+   "ee": 9792580,
+   "pfe": 23274777
+  },
+  {
+   "tenor": "1Y",
+   "ee": 13266400,
+   "pfe": 30844380
+  },
+  {
+   "tenor": "2Y",
+   "ee": 18761523,
+   "pfe": 42933650
+  },
+  {
+   "tenor": "3Y",
+   "ee": 22978079,
+   "pfe": 52210073
+  },
+  {
+   "tenor": "5Y",
+   "ee": 29664572,
+   "pfe": 66920359
+  },
+  {
+   "tenor": "7Y",
+   "ee": 31751132,
+   "pfe": 71352591
+  },
+  {
+   "tenor": "10Y",
+   "ee": 0,
+   "pfe": 0
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10219",
+   "product": "FX target redemption forward",
+   "notional": 216000000.0,
+   "maturity": "2034-07-10",
+   "mtm": -3824878
+  },
+  {
+   "tradeId": "T-10164",
+   "product": "FX forward",
+   "notional": 89000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 1722945
+  },
+  {
+   "tradeId": "T-10414",
+   "product": "Equity total return swap",
+   "notional": 210000000.0,
+   "maturity": "2036-03-03",
+   "mtm": -938209
+  },
+  {
+   "tradeId": "T-10226",
+   "product": "FX accumulator",
+   "notional": 226000000.0,
+   "maturity": "2033-09-19",
+   "mtm": 455904
+  },
+  {
+   "tradeId": "T-10192",
+   "product": "FX digital option",
+   "notional": 11000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -210046
+  },
+  {
+   "tradeId": "T-10354",
+   "product": "Index option",
+   "notional": 13000000.0,
+   "maturity": "2027-08-10",
+   "mtm": 154046
+  },
+  {
+   "tradeId": "T-10374",
+   "product": "Cliquet (ratchet)",
+   "notional": 15000000.0,
+   "maturity": "2034-04-05",
+   "mtm": 141431
+  },
+  {
+   "tradeId": "T-10204",
+   "product": "FX double-barrier option",
+   "notional": 63000000.0,
+   "maturity": "2034-12-14",
+   "mtm": -138679
+  },
+  {
+   "tradeId": "T-10396",
+   "product": "Variance swap",
+   "notional": 8000000.0,
+   "maturity": "2035-03-12",
+   "mtm": -68392
+  },
+  {
+   "tradeId": "T-10426",
+   "product": "Contract for difference",
+   "notional": 17000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 12950
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "FX",
+   "mtm": -1994754
+  },
+  {
+   "asset": "Equity",
+   "mtm": -698174
+  }
+ ],
+ "counterparty": "CP-SOLARIS",
+ "agreement": "AGR-SOLARIS-ISDA",
+ "csa": "CSA-SOLARIS",
+ "creditLimit": "LIM-SOLARIS",
+ "exposureProfile": "EXP-SOLARIS-LDN",
+ "cvaResult": "CVA-SOLARIS-LDN",
+ "saccr": "SACCR-SOLARIS-LDN",
+ "simm": "SIMM-SOLARIS",
+ "collateralBalance": "COLL-SOLARIS-LDN",
+ "legalEntity": "LE-LDN",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 5385
+  }
+ }
+}

@@ -1,0 +1,92 @@
+{
+ "bookId": "BOOK-CREDIT-3",
+ "name": "Credit trading · book 3",
+ "deskName": "Credit trading",
+ "tradeCount": 27,
+ "mtm": 17048067,
+ "dv01": 152667,
+ "topTrades": [
+  {
+   "tradeId": "T-10305",
+   "product": "Credit spread option",
+   "notional": 244000000.0,
+   "maturity": "2028-10-24",
+   "mtm": 4754624
+  },
+  {
+   "tradeId": "T-10274",
+   "product": "Total return swap on a bond",
+   "notional": 238000000.0,
+   "maturity": "2030-07-08",
+   "mtm": 4717154
+  },
+  {
+   "tradeId": "T-10253",
+   "product": "Index tranche",
+   "notional": 242000000.0,
+   "maturity": "2034-02-14",
+   "mtm": 3988071
+  },
+  {
+   "tradeId": "T-10295",
+   "product": "Revolving credit facility",
+   "notional": 202000000.0,
+   "maturity": "2032-04-16",
+   "mtm": 3459176
+  },
+  {
+   "tradeId": "T-10303",
+   "product": "Credit spread option",
+   "notional": 147000000.0,
+   "maturity": "2026-10-13",
+   "mtm": -2549257
+  },
+  {
+   "tradeId": "T-10276",
+   "product": "Total return swap on a bond",
+   "notional": 130000000.0,
+   "maturity": "2030-08-07",
+   "mtm": -1895147
+  },
+  {
+   "tradeId": "T-10280",
+   "product": "Total return swap on a loan index",
+   "notional": 178000000.0,
+   "maturity": "2035-07-02",
+   "mtm": 1798395
+  },
+  {
+   "tradeId": "T-10263",
+   "product": "CDS index option",
+   "notional": 147000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 1786443
+  },
+  {
+   "tradeId": "T-10260",
+   "product": "CDS index option",
+   "notional": 247000000.0,
+   "maturity": "2027-01-25",
+   "mtm": 1574254
+  },
+  {
+   "tradeId": "T-10254",
+   "product": "Index tranche",
+   "notional": 202000000.0,
+   "maturity": "2032-11-24",
+   "mtm": 1564064
+  }
+ ],
+ "desk": "DESK-CREDIT",
+ "accountingTreatment": "Fair value (FVTPL)",
+ "regulatoryBook": "Trading book",
+ "volcker": "Market making",
+ "_meta": {
+  "source": "org-master",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 5000
+  }
+ }
+}

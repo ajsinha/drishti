@@ -1,0 +1,25 @@
+{
+ "entityId": "LE-LDN",
+ "name": "Drishti Bank plc",
+ "lei": "549300Z8F6KKOGHS7Q83",
+ "jurisdiction": "GB",
+ "regulator": "PRA / FCA",
+ "desks": [
+  {
+   "id": "DESK-FX",
+   "name": "G10 and EM FX"
+  },
+  {
+   "id": "DESK-EQD",
+   "name": "Equity derivatives"
+  },
+  {
+   "id": "DESK-INFL",
+   "name": "Inflation"
+  }
+ ],
+ "_meta": {
+  "source": "entity-master",
+  "generation": 1
+ }
+}

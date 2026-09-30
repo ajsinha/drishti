@@ -1,0 +1,58 @@
+{
+ "resultId": "CVA-ALDERSHOT-LDN",
+ "cva": -95674,
+ "dva": 50229,
+ "fva": -5864,
+ "kva": -582196,
+ "cs01": -1722,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -95674
+  },
+  {
+   "name": "DVA",
+   "amount": 50229
+  },
+  {
+   "name": "FVA",
+   "amount": -5864
+  },
+  {
+   "name": "KVA",
+   "amount": -582196
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -1722
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 383
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 191
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -2870
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 1626
+  }
+ ],
+ "nettingSet": "NS-ALDERSHOT-LDN",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

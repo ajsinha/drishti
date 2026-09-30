@@ -1,0 +1,289 @@
+{
+ "tradeId": "T-10093",
+ "productType": "COLLAR",
+ "productName": "Interest rate collar",
+ "assetClass": "Rates",
+ "family": "option",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2024-12-23",
+ "effectiveDate": "2024-12-26",
+ "maturityDate": "2026-10-07",
+ "currency": "USD",
+ "notional": 75000000.0,
+ "mtm": 798724,
+ "mtmCurrency": "USD",
+ "pnl1d": 25864,
+ "counterparty": {
+  "id": "CP-AURORA",
+  "name": "Aurora Sovereign Wealth Fund"
+ },
+ "nettingSet": "NS-AURORA-NY",
+ "book": "BOOK-RATES-3",
+ "trader": "TRDR-ASHAH",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-USD-OIS",
+ "forwardCurve": "CRV-USD-PROJ",
+ "capVolSurface": "CPV-USD",
+ "terms": {
+  "capStrike": 0.051636,
+  "floorStrike": 0.023729
+ },
+ "risk": {
+  "dv01": -3984,
+  "vega": -172470
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -664,
+   "vega": -28745
+  },
+  {
+   "bucket": "6M",
+   "dv01": -1328,
+   "vega": -57490
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -1992,
+   "vega": -86235
+  }
+ ],
+ "schedule": [
+  {
+   "fixingDate": "2025-03-26",
+   "period": "2025-03-26..2025-06-26",
+   "index": "SOFR",
+   "rate": 0.036838,
+   "payoff": 34462.5,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2025-06-26",
+   "period": "2025-06-26..2025-09-26",
+   "index": "SOFR",
+   "rate": 0.02065,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2025-09-26",
+   "period": "2025-09-26..2025-12-26",
+   "index": "SOFR",
+   "rate": 0.044773,
+   "payoff": 183243.75,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2025-12-26",
+   "period": "2025-12-26..2026-03-26",
+   "index": "SOFR",
+   "rate": 0.036072,
+   "payoff": 20100.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-03-26",
+   "period": "2026-03-26..2026-06-26",
+   "index": "SOFR",
+   "rate": 0.047916,
+   "payoff": 242175.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-06-26",
+   "period": "2026-06-26..2026-09-26",
+   "index": "SOFR",
+   "rate": 0.027885,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-09-26",
+   "period": "2026-09-26..2026-12-26",
+   "index": "SOFR",
+   "rate": 0.048857,
+   "payoff": 259818.75,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-10-07",
+   "period": "2026-10-07..2027-01-07",
+   "index": "SOFR",
+   "rate": 0.03519,
+   "payoff": 3562.5,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 7,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -24200
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -18701
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -6185
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -4038
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 16931
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 59394
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 25579
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -3034
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 13714
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -18251
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -7909
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 41404
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -18328
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 4232
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -13190
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 11161
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 34020
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -43680
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 16457
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -3814
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-12-23",
+  "executionTimestamp": "2024-12-23T12:47:06.236Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "A. Shah",
+  "salesperson": null,
+  "orderId": "ORD-8DF45E7296"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-12-23T10:21:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2024-12-23T10:21:00Z",
+  "lastModifiedAt": "2024-12-23T10:21:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA589528363",
+  "matched": "2024-12-23 15:41",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20968DF45E7296C99A68F00A",
+  "upi": "QZKY3O6J49DQ",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "AUROUS33XXX",
+  "ssiId": "SSI-USD-79DAAE",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 798724,
+  "cleanPv": 798724.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CRV-USD-OIS",
+   "CRV-USD-PROJ",
+   "CPV-USD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 2347
+  }
+ }
+}

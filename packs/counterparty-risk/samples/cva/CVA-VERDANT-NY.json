@@ -1,0 +1,59 @@
+{
+ "resultId": "CVA-VERDANT-NY",
+ "cva": -669306,
+ "dva": 12778,
+ "fva": -4335,
+ "kva": -231554,
+ "cs01": -12048,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -669306
+  },
+  {
+   "name": "DVA",
+   "amount": 12778
+  },
+  {
+   "name": "FVA",
+   "amount": -4335
+  },
+  {
+   "name": "KVA",
+   "amount": -231554
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -12048
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 2677
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 1339
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -20079
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 11378
+  }
+ ],
+ "nettingSet": "NS-VERDANT-NY",
+ "creditCurve": "CDS-VERDANT",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

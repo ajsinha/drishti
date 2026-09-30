@@ -1,0 +1,50 @@
+{
+ "counterpartyId": "CP-PINNACLE",
+ "name": "Pinnacle Credit Partners",
+ "lei": "549300B54XDAL7PK1U43",
+ "rating": "BBB",
+ "sector": "Asset management",
+ "country": "US",
+ "type": "Hedge fund",
+ "netMtm": -14555626,
+ "pfePeak": 114582147,
+ "nettingSets": [
+  {
+   "id": "NS-PINNACLE-FRA",
+   "agreement": "AGR-PINNACLE-ISDA",
+   "trades": 1,
+   "netMtm": -135470
+  },
+  {
+   "id": "NS-PINNACLE-LDN",
+   "agreement": "AGR-PINNACLE-ISDA",
+   "trades": 13,
+   "netMtm": -39942208
+  },
+  {
+   "id": "NS-PINNACLE-NY",
+   "agreement": "AGR-PINNACLE-ISDA",
+   "trades": 23,
+   "netMtm": 23965549
+  },
+  {
+   "id": "NS-PINNACLE-TKY",
+   "agreement": "AGR-PINNACLE-ISDA",
+   "trades": 5,
+   "netMtm": 1556503
+  }
+ ],
+ "kyc": {
+  "status": "Approved",
+  "riskRating": "Enhanced",
+  "lastReview": "2026-02-11",
+  "emirClassification": "FC",
+  "pd1y": 0.0018
+ },
+ "group": "GRP-PINNACLE",
+ "creditLimit": "LIM-PINNACLE",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

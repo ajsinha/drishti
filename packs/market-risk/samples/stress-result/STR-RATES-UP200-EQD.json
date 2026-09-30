@@ -1,0 +1,26 @@
+{
+ "resultId": "STR-RATES-UP200-EQD",
+ "scenarioName": "Parallel rates +200 bp",
+ "pnl": -31301777,
+ "limit": -83500000.0,
+ "byBook": [
+  {
+   "book": "BOOK-EQD-1",
+   "pnl": -11690855
+  },
+  {
+   "book": "BOOK-EQD-2",
+   "pnl": -10171003
+  },
+  {
+   "book": "BOOK-EQD-3",
+   "pnl": -9439919
+  }
+ ],
+ "scenario": "SCN-RATES-UP200",
+ "desk": "DESK-EQD",
+ "_meta": {
+  "source": "stress-engine",
+  "generation": 1
+ }
+}

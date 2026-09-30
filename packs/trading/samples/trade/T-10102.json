@@ -1,0 +1,228 @@
+{
+ "tradeId": "T-10102",
+ "productType": "SWAPTION_EUR",
+ "productName": "European swaption",
+ "assetClass": "Rates",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2025-02-28",
+ "effectiveDate": "2025-03-03",
+ "maturityDate": "2026-10-07",
+ "currency": "USD",
+ "notional": 222000000.0,
+ "mtm": -1632251,
+ "mtmCurrency": "USD",
+ "pnl1d": -63826,
+ "counterparty": {
+  "id": "CP-HARBORPT",
+  "name": "Harbor Point Bank"
+ },
+ "nettingSet": "NS-HARBORPT-NY",
+ "book": "BOOK-RATES-1",
+ "trader": "TRDR-ASHAH",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-USD-OIS",
+ "forwardCurve": "CRV-USD-PROJ",
+ "swaptionVolCube": "IRV-USD",
+ "terms": {
+  "payerReceiver": "Receiver",
+  "strike": 0.034441,
+  "expiryDate": "2028-06-03",
+  "underlyingTenor": "10Y",
+  "settlement": "Physical",
+  "premium": 255738.0
+ },
+ "risk": {
+  "dv01": 8393,
+  "vega": 395225
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 2798,
+   "vega": 131742
+  },
+  {
+   "bucket": "6M",
+   "dv01": 5595,
+   "vega": 263483
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 80588
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 21219
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -28178
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -8490
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 36834
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 32597
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 11318
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 10104
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 73661
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -11452
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 130660
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 58526
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -28647
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 61982
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 1069
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 30131
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -7885
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -36063
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -34433
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 18211
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-02-28",
+  "executionTimestamp": "2025-02-28T11:17:23.168Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "A. Shah",
+  "salesperson": null,
+  "orderId": "ORD-C6C692E37B"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-02-28T12:06:00Z",
+    "by": "fo.capture"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2025-11-22T12:06:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2025-02-28T12:06:00Z",
+  "lastModifiedAt": "2025-11-22T12:06:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA719896462",
+  "matched": "2025-02-28 10:53",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096C6C692E37BABB52A89E3",
+  "upi": "QZW0XHSW1C0C",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "HARBUS33XXX",
+  "ssiId": "SSI-USD-99A301",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -1632251,
+  "cleanPv": -1632251.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CRV-USD-OIS",
+   "CRV-USD-PROJ",
+   "IRV-USD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 5485
+  }
+ }
+}

@@ -1,0 +1,35 @@
+{
+ "calcId": "SIMM-VERDANT",
+ "total": 6814601,
+ "posted": 6610163,
+ "received": 6950893,
+ "version": "ISDA SIMM 2.7",
+ "riskClasses": [
+  {
+   "riskClass": "Interest rate",
+   "im": 3066570
+  },
+  {
+   "riskClass": "Credit qualifying",
+   "im": 817752
+  },
+  {
+   "riskClass": "Equity",
+   "im": 1226628
+  },
+  {
+   "riskClass": "Commodity",
+   "im": 545168
+  },
+  {
+   "riskClass": "FX",
+   "im": 1158482
+  }
+ ],
+ "nettingSet": "NS-VERDANT-FRA",
+ "counterparty": "CP-VERDANT",
+ "_meta": {
+  "source": "margin-engine",
+  "generation": 1
+ }
+}

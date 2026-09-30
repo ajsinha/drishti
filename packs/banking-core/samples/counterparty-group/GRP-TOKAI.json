@@ -1,0 +1,17 @@
+{
+ "groupId": "GRP-TOKAI",
+ "name": "Tokai Financial Group",
+ "limit": 195000000.0,
+ "utilisation": 0.5356,
+ "members": [
+  {
+   "id": "CP-TOKAI",
+   "name": "Tokai Mutual Trust Bank",
+   "rating": "A"
+  }
+ ],
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

@@ -1,0 +1,92 @@
+{
+ "bookId": "BOOK-EQD-1",
+ "name": "Equity derivatives · book 1",
+ "deskName": "Equity derivatives",
+ "tradeCount": 37,
+ "mtm": -9179047,
+ "dv01": 94813,
+ "topTrades": [
+  {
+   "tradeId": "T-10421",
+   "product": "Contract for difference",
+   "notional": 176000000.0,
+   "maturity": "2027-03-08",
+   "mtm": 6060457
+  },
+  {
+   "tradeId": "T-10323",
+   "product": "Equity forward",
+   "notional": 240000000.0,
+   "maturity": "2027-02-19",
+   "mtm": -4487722
+  },
+  {
+   "tradeId": "T-10364",
+   "product": "Equity Asian option",
+   "notional": 168000000.0,
+   "maturity": "2037-04-13",
+   "mtm": -3294420
+  },
+  {
+   "tradeId": "T-10324",
+   "product": "Equity forward",
+   "notional": 248000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 3225946
+  },
+  {
+   "tradeId": "T-10362",
+   "product": "Equity Asian option",
+   "notional": 167000000.0,
+   "maturity": "2036-04-07",
+   "mtm": -3224113
+  },
+  {
+   "tradeId": "T-10350",
+   "product": "Index option",
+   "notional": 159000000.0,
+   "maturity": "2027-05-27",
+   "mtm": -2574924
+  },
+  {
+   "tradeId": "T-10422",
+   "product": "Contract for difference",
+   "notional": 196000000.0,
+   "maturity": "2028-01-14",
+   "mtm": -2343493
+  },
+  {
+   "tradeId": "T-10412",
+   "product": "Equity total return swap",
+   "notional": 195000000.0,
+   "maturity": "2031-10-20",
+   "mtm": 2341483
+  },
+  {
+   "tradeId": "T-10439",
+   "product": "Basket option",
+   "notional": 97000000.0,
+   "maturity": "2031-11-03",
+   "mtm": 1923365
+  },
+  {
+   "tradeId": "T-10315",
+   "product": "Equity position",
+   "notional": 149000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -1497978
+  }
+ ],
+ "desk": "DESK-EQD",
+ "accountingTreatment": "Fair value (FVTPL)",
+ "regulatoryBook": "Trading book",
+ "volcker": "Market making",
+ "_meta": {
+  "source": "org-master",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 5000
+  }
+ }
+}

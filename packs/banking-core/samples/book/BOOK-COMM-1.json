@@ -1,0 +1,92 @@
+{
+ "bookId": "BOOK-COMM-1",
+ "name": "Commodities · book 1",
+ "deskName": "Commodities",
+ "tradeCount": 28,
+ "mtm": 11845271,
+ "dv01": 0,
+ "topTrades": [
+  {
+   "tradeId": "T-10458",
+   "product": "Commodity swap",
+   "notional": 231000000.0,
+   "maturity": "2034-07-03",
+   "mtm": 4646776
+  },
+  {
+   "tradeId": "T-10496",
+   "product": "Calendar spread",
+   "notional": 143000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 3656838
+  },
+  {
+   "tradeId": "T-10473",
+   "product": "Option on commodity future",
+   "notional": 145000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -2435043
+  },
+  {
+   "tradeId": "T-10475",
+   "product": "Average price option (APO)",
+   "notional": 230000000.0,
+   "maturity": "2029-12-28",
+   "mtm": 2118063
+  },
+  {
+   "tradeId": "T-10452",
+   "product": "Commodity forward",
+   "notional": 231000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 2102537
+  },
+  {
+   "tradeId": "T-10479",
+   "product": "Average price option (APO)",
+   "notional": 156000000.0,
+   "maturity": "2033-01-05",
+   "mtm": -2061219
+  },
+  {
+   "tradeId": "T-10489",
+   "product": "Commodity spread option",
+   "notional": 195000000.0,
+   "maturity": "2032-07-30",
+   "mtm": 1690310
+  },
+  {
+   "tradeId": "T-10500",
+   "product": "Commodity index swap",
+   "notional": 243000000.0,
+   "maturity": "2034-04-28",
+   "mtm": 1673731
+  },
+  {
+   "tradeId": "T-10471",
+   "product": "Option on commodity future",
+   "notional": 198000000.0,
+   "maturity": "2028-02-14",
+   "mtm": -1422464
+  },
+  {
+   "tradeId": "T-10486",
+   "product": "Commodity swaption",
+   "notional": 204000000.0,
+   "maturity": "2027-12-13",
+   "mtm": 1250345
+  }
+ ],
+ "desk": "DESK-COMM",
+ "accountingTreatment": "Fair value (FVTPL)",
+ "regulatoryBook": "Trading book",
+ "volcker": "Market making",
+ "_meta": {
+  "source": "org-master",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 5000
+  }
+ }
+}

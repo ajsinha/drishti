@@ -1,0 +1,84 @@
+{
+ "calcId": "SACCR-ALDERSHOT-LDN",
+ "replacementCost": 0,
+ "addOn": 297001082,
+ "multiplier": 0.9984,
+ "ead": 415136233,
+ "rwa": 83027247,
+ "addOns": [
+  {
+   "assetClass": "Foreign exchange",
+   "addOn": 28578630
+  },
+  {
+   "assetClass": "Equity",
+   "addOn": 268327452
+  },
+  {
+   "assetClass": "Interest rate",
+   "addOn": 95000
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "GBP",
+   "effectiveNotional": 65534247,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "USD",
+   "effectiveNotional": 119931507,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "JPY",
+   "effectiveNotional": 419000000,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "CHF",
+   "effectiveNotional": -110000000,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "JPY",
+   "effectiveNotional": -24800000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "GBP",
+   "effectiveNotional": 330723288,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "USD",
+   "effectiveNotional": -302000000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "CHF",
+   "effectiveNotional": 181000000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "JPY",
+   "effectiveNotional": -19000000,
+   "sf": 0.005
+  }
+ ],
+ "nettingSet": "NS-ALDERSHOT-LDN",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

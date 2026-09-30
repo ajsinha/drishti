@@ -1,0 +1,17 @@
+{
+ "groupId": "GRP-VERDANT",
+ "name": "Verdant Agri Holdings",
+ "limit": 223000000.0,
+ "utilisation": 0.5931,
+ "members": [
+  {
+   "id": "CP-VERDANT",
+   "name": "Verdant Agri Holdings",
+   "rating": "BB-"
+  }
+ ],
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

@@ -1,0 +1,87 @@
+{
+ "profileId": "EXP-LUMEN-FRA",
+ "epe": 13827,
+ "eepe": 74550,
+ "pfePeak": 182648,
+ "paths": 5000,
+ "runDate": "2026-09-30",
+ "buckets": [
+  {
+   "tenor": "0",
+   "ee": 20676,
+   "ene": -982283,
+   "pfe95": 64126,
+   "pfe99": 86054
+  },
+  {
+   "tenor": "1M",
+   "ee": 43041,
+   "ene": -979124,
+   "pfe95": 113329,
+   "pfe99": 150913
+  },
+  {
+   "tenor": "3M",
+   "ee": 74550,
+   "ene": -964115,
+   "pfe95": 182648,
+   "pfe99": 242288
+  },
+  {
+   "tenor": "6M",
+   "ee": 0,
+   "ene": -853177,
+   "pfe95": 0,
+   "pfe99": 0
+  },
+  {
+   "tenor": "1Y",
+   "ee": 0,
+   "ene": -752926,
+   "pfe95": 0,
+   "pfe99": 0
+  },
+  {
+   "tenor": "2Y",
+   "ee": 0,
+   "ene": -586379,
+   "pfe95": 0,
+   "pfe99": 0
+  },
+  {
+   "tenor": "3Y",
+   "ee": 0,
+   "ene": -456673,
+   "pfe95": 0,
+   "pfe99": 0
+  },
+  {
+   "tenor": "5Y",
+   "ee": 0,
+   "ene": -276986,
+   "pfe95": 0,
+   "pfe99": 0
+  },
+  {
+   "tenor": "7Y",
+   "ee": 0,
+   "ene": -168000,
+   "pfe95": 0,
+   "pfe99": 0
+  },
+  {
+   "tenor": "10Y",
+   "ee": 0,
+   "ene": -79358,
+   "pfe95": 0,
+   "pfe99": 0
+  }
+ ],
+ "nettingSet": "NS-LUMEN-FRA",
+ "model": "Hull-White 1F rates, GBM FX and equity, 5,000 paths",
+ "confidence": 0.95,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

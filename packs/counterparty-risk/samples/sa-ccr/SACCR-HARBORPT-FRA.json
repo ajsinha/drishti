@@ -1,0 +1,40 @@
+{
+ "calcId": "SACCR-HARBORPT-FRA",
+ "replacementCost": 0,
+ "addOn": 340514,
+ "multiplier": 0.3455,
+ "ead": 164706,
+ "rwa": 82353,
+ "addOns": [
+  {
+   "assetClass": "Interest rate",
+   "addOn": 340514
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "JPY",
+   "effectiveNotional": -20500000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "CAD",
+   "effectiveNotional": -17435616,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "EUR",
+   "effectiveNotional": -30167123,
+   "sf": 0.005
+  }
+ ],
+ "nettingSet": "NS-HARBORPT-FRA",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

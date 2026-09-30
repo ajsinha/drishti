@@ -1,0 +1,197 @@
+{
+ "nettingSetId": "NS-SOLARIS-NY",
+ "tradeCount": 13,
+ "netMtm": 5625315,
+ "collateral": 4682994,
+ "eePeak": 6296183,
+ "pfePeak": 14188477,
+ "limit": 22000000.0,
+ "utilisation": 0.6449,
+ "cva": -28949,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 1783649,
+   "pfe": 4682390
+  },
+  {
+   "tenor": "1M",
+   "ee": 2674256,
+   "pfe": 6641725
+  },
+  {
+   "tenor": "3M",
+   "ee": 3918679,
+   "pfe": 9379456
+  },
+  {
+   "tenor": "6M",
+   "ee": 5115602,
+   "pfe": 12011636
+  },
+  {
+   "tenor": "1Y",
+   "ee": 3728480,
+   "pfe": 8576982
+  },
+  {
+   "tenor": "2Y",
+   "ee": 4483827,
+   "pfe": 10210219
+  },
+  {
+   "tenor": "3Y",
+   "ee": 5112998,
+   "pfe": 11585470
+  },
+  {
+   "tenor": "5Y",
+   "ee": 6296183,
+   "pfe": 14188477
+  },
+  {
+   "tenor": "7Y",
+   "ee": 182271,
+   "pfe": 401871
+  },
+  {
+   "tenor": "10Y",
+   "ee": 77350,
+   "pfe": 170171
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10665",
+   "product": "Certificate of deposit",
+   "notional": 241000000.0,
+   "maturity": "2027-08-06",
+   "mtm": 3225400
+  },
+  {
+   "tradeId": "T-10285",
+   "product": "Credit-linked note",
+   "notional": 146000000.0,
+   "maturity": "2031-12-03",
+   "mtm": 2791987
+  },
+  {
+   "tradeId": "T-10306",
+   "product": "Credit spread option",
+   "notional": 198000000.0,
+   "maturity": "2027-09-30",
+   "mtm": -2328179
+  },
+  {
+   "tradeId": "T-10278",
+   "product": "Total return swap on a loan index",
+   "notional": 85000000.0,
+   "maturity": "2032-08-31",
+   "mtm": -1607501
+  },
+  {
+   "tradeId": "T-10122",
+   "product": "CMS spread option",
+   "notional": 176000000.0,
+   "maturity": "2028-06-07",
+   "mtm": 1603140
+  },
+  {
+   "tradeId": "T-10454",
+   "product": "Commodity forward",
+   "notional": 57000000.0,
+   "maturity": "2027-05-27",
+   "mtm": 965771
+  },
+  {
+   "tradeId": "T-10283",
+   "product": "Credit-linked note",
+   "notional": 153000000.0,
+   "maturity": "2033-02-25",
+   "mtm": 868056
+  },
+  {
+   "tradeId": "T-10064",
+   "product": "Forward rate agreement",
+   "notional": 104000000.0,
+   "maturity": "2027-08-23",
+   "mtm": 687762
+  },
+  {
+   "tradeId": "T-10151",
+   "product": "Target redemption note (rates)",
+   "notional": 102000000.0,
+   "maturity": "2029-08-27",
+   "mtm": -309129
+  },
+  {
+   "tradeId": "T-10631",
+   "product": "CMO tranche",
+   "notional": 10000000.0,
+   "maturity": "2035-12-07",
+   "mtm": -188070
+  },
+  {
+   "tradeId": "T-10301",
+   "product": "Credit spread option",
+   "notional": 9000000.0,
+   "maturity": "2027-10-04",
+   "mtm": -79292
+  },
+  {
+   "tradeId": "T-10671",
+   "product": "Term deposit / placement",
+   "notional": 12000000.0,
+   "maturity": "2027-01-11",
+   "mtm": -41962
+  },
+  {
+   "tradeId": "T-10289",
+   "product": "Term loan",
+   "notional": 6000000.0,
+   "maturity": "2028-06-12",
+   "mtm": 37332
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Money market",
+   "mtm": 3183438
+  },
+  {
+   "asset": "Rates",
+   "mtm": 1981773
+  },
+  {
+   "asset": "Commodity",
+   "mtm": 965771
+  },
+  {
+   "asset": "Credit",
+   "mtm": -317597
+  },
+  {
+   "asset": "Fixed income",
+   "mtm": -188070
+  }
+ ],
+ "counterparty": "CP-SOLARIS",
+ "agreement": "AGR-SOLARIS-ISDA",
+ "csa": "CSA-SOLARIS",
+ "creditLimit": "LIM-SOLARIS",
+ "exposureProfile": "EXP-SOLARIS-NY",
+ "cvaResult": "CVA-SOLARIS-NY",
+ "saccr": "SACCR-SOLARIS-NY",
+ "simm": "SIMM-SOLARIS",
+ "collateralBalance": "COLL-SOLARIS-NY",
+ "legalEntity": "LE-NY",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 11250
+  }
+ }
+}

@@ -1,0 +1,76 @@
+{
+ "indexId": "INF-UKRPI",
+ "name": "UK RPI",
+ "latest": 401.2,
+ "yoy": 0.039,
+ "lag": "2 months",
+ "currency": "GBP",
+ "fixings": [
+  {
+   "month": "2026-08",
+   "value": 401.2,
+   "yoy": 0.039
+  },
+  {
+   "month": "2026-07",
+   "value": 399.9,
+   "yoy": 0.0398
+  },
+  {
+   "month": "2026-06",
+   "value": 398.605,
+   "yoy": 0.0399
+  },
+  {
+   "month": "2026-05",
+   "value": 397.314,
+   "yoy": 0.0391
+  },
+  {
+   "month": "2026-04",
+   "value": 396.027,
+   "yoy": 0.0382
+  },
+  {
+   "month": "2026-03",
+   "value": 394.744,
+   "yoy": 0.038
+  },
+  {
+   "month": "2026-02",
+   "value": 393.465,
+   "yoy": 0.0387
+  },
+  {
+   "month": "2026-01",
+   "value": 392.19,
+   "yoy": 0.0397
+  },
+  {
+   "month": "2025-12",
+   "value": 390.92,
+   "yoy": 0.04
+  },
+  {
+   "month": "2025-11",
+   "value": 389.653,
+   "yoy": 0.0394
+  },
+  {
+   "month": "2025-10",
+   "value": 388.391,
+   "yoy": 0.0385
+  },
+  {
+   "month": "2025-09",
+   "value": 387.133,
+   "yoy": 0.038
+  }
+ ],
+ "inflationCurve": "INFC-UKRPI",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

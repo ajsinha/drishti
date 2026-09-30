@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-PINNACLE-TKY",
+ "held": 1187168,
+ "posted": 0,
+ "net": 1187168,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Helix Pharmaceuticals Inc. 2031",
+   "direction": "Held",
+   "marketValue": 395723,
+   "haircut": 0.02,
+   "value": 387809
+  },
+  {
+   "asset": "Japan Ministry of Finance 2031",
+   "direction": "Held",
+   "marketValue": 395723,
+   "haircut": 0.01,
+   "value": 391766
+  },
+  {
+   "asset": "United States Treasury 2031",
+   "direction": "Held",
+   "marketValue": 395723,
+   "haircut": 0.01,
+   "value": 391766
+  }
+ ],
+ "csa": "CSA-PINNACLE",
+ "nettingSet": "NS-PINNACLE-TKY",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

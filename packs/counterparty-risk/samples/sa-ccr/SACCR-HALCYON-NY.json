@@ -1,0 +1,96 @@
+{
+ "calcId": "SACCR-HALCYON-NY",
+ "replacementCost": 21470102,
+ "addOn": 115184377,
+ "multiplier": 1.0,
+ "ead": 191316270,
+ "rwa": 191316270,
+ "addOns": [
+  {
+   "assetClass": "Interest rate",
+   "addOn": 3542103
+  },
+  {
+   "assetClass": "Credit",
+   "addOn": 33884247
+  },
+  {
+   "assetClass": "Commodity",
+   "addOn": 77758027
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "EUR",
+   "effectiveNotional": -59232877,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "USD",
+   "effectiveNotional": 20087671,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "CAD",
+   "effectiveNotional": -169000000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "CHF",
+   "effectiveNotional": -277600000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "JPY",
+   "effectiveNotional": 175000000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "GBP",
+   "effectiveNotional": -7500000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "CHF",
+   "effectiveNotional": -249000000,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "JPY",
+   "effectiveNotional": 128000000,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "GBP",
+   "effectiveNotional": 217000000,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "USD",
+   "effectiveNotional": 83684932,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Commodity",
+   "hedgingSet": "USD",
+   "effectiveNotional": -431989041,
+   "sf": 0.18
+  }
+ ],
+ "nettingSet": "NS-HALCYON-NY",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

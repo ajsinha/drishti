@@ -1,0 +1,50 @@
+{
+ "bookId": "BOOK-MM-3",
+ "name": "Money markets · book 3",
+ "deskName": "Money markets",
+ "tradeCount": 4,
+ "mtm": 2339903,
+ "dv01": 429,
+ "topTrades": [
+  {
+   "tradeId": "T-10673",
+   "product": "Call account",
+   "notional": 117000000.0,
+   "maturity": "2027-07-29",
+   "mtm": 2344329
+  },
+  {
+   "tradeId": "T-10662",
+   "product": "Certificate of deposit",
+   "notional": 214000000.0,
+   "maturity": "2027-03-22",
+   "mtm": 1716643
+  },
+  {
+   "tradeId": "T-10666",
+   "product": "Certificate of deposit",
+   "notional": 74000000.0,
+   "maturity": "2026-12-18",
+   "mtm": -1329064
+  },
+  {
+   "tradeId": "T-10678",
+   "product": "Call account",
+   "notional": 30000000.0,
+   "maturity": "2027-01-20",
+   "mtm": -392005
+  }
+ ],
+ "desk": "DESK-MM",
+ "accountingTreatment": "Fair value (FVTPL)",
+ "regulatoryBook": "Trading book",
+ "volcker": "Market making",
+ "_meta": {
+  "source": "org-master",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 5000
+  }
+ }
+}

@@ -1,0 +1,158 @@
+{
+ "curveId": "CRV-CAD-PROJ",
+ "currency": "CAD",
+ "curveType": "Projection",
+ "index": "CORRA",
+ "tenY": 0.0326,
+ "slope2s10s": 42.6,
+ "asOf": "2026-09-30",
+ "points": [
+  {
+   "tenor": "1M",
+   "maturity": "2026-10-30",
+   "instrument": "Deposit / future",
+   "quote": 0.027841,
+   "zeroRate": 2.7873,
+   "df": 0.99768
+  },
+  {
+   "tenor": "3M",
+   "maturity": "2026-12-30",
+   "instrument": "Deposit / future",
+   "quote": 0.027881,
+   "zeroRate": 2.7979,
+   "df": 0.99303
+  },
+  {
+   "tenor": "6M",
+   "maturity": "2027-03-30",
+   "instrument": "Deposit / future",
+   "quote": 0.027907,
+   "zeroRate": 2.8104,
+   "df": 0.986046
+  },
+  {
+   "tenor": "1Y",
+   "maturity": "2027-09-30",
+   "instrument": "Term RFR swap",
+   "quote": 0.027766,
+   "zeroRate": 2.8159,
+   "df": 0.972234
+  },
+  {
+   "tenor": "2Y",
+   "maturity": "2028-09-30",
+   "instrument": "Term RFR swap",
+   "quote": 0.02755,
+   "zeroRate": 2.8338,
+   "df": 0.9449
+  },
+  {
+   "tenor": "3Y",
+   "maturity": "2029-09-30",
+   "instrument": "Term RFR swap",
+   "quote": 0.027771,
+   "zeroRate": 2.8996,
+   "df": 0.916688
+  },
+  {
+   "tenor": "5Y",
+   "maturity": "2031-09-30",
+   "instrument": "Term RFR swap",
+   "quote": 0.028906,
+   "zeroRate": 3.1221,
+   "df": 0.855469
+  },
+  {
+   "tenor": "7Y",
+   "maturity": "2033-09-30",
+   "instrument": "Term RFR swap",
+   "quote": 0.02878,
+   "zeroRate": 3.2139,
+   "df": 0.798538
+  },
+  {
+   "tenor": "10Y",
+   "maturity": "2036-09-30",
+   "instrument": "Term RFR swap",
+   "quote": 0.027819,
+   "zeroRate": 3.26,
+   "df": 0.721805
+  },
+  {
+   "tenor": "15Y",
+   "maturity": "2041-09-30",
+   "instrument": "Term RFR swap",
+   "quote": 0.02596,
+   "zeroRate": 3.2887,
+   "df": 0.610605
+  },
+  {
+   "tenor": "20Y",
+   "maturity": "2046-09-30",
+   "instrument": "Term RFR swap",
+   "quote": 0.024141,
+   "zeroRate": 3.2969,
+   "df": 0.517172
+  },
+  {
+   "tenor": "30Y",
+   "maturity": "2056-09-30",
+   "instrument": "Term RFR swap",
+   "quote": 0.020947,
+   "zeroRate": 3.3,
+   "df": 0.371577
+  }
+ ],
+ "forwards": [
+  {
+   "tenor": "1Y",
+   "rate": 2.8536
+  },
+  {
+   "tenor": "2Y",
+   "rate": 3.0362
+  },
+  {
+   "tenor": "3Y",
+   "rate": 3.3552
+  },
+  {
+   "tenor": "5Y",
+   "rate": 3.4091
+  },
+  {
+   "tenor": "7Y",
+   "rate": 3.3468
+  },
+  {
+   "tenor": "10Y",
+   "rate": 3.3328
+  },
+  {
+   "tenor": "15Y",
+   "rate": 3.3244
+  },
+  {
+   "tenor": "20Y",
+   "rate": 3.3126
+  }
+ ],
+ "interpolation": "Log-linear on discount factors",
+ "dayCount": "ACT/365F",
+ "calendar": "CAL-USNY",
+ "fixingIndex": "FIX-CORRA",
+ "builtAt": "2026-09-30T18:02:41Z",
+ "sources": [
+  "Broker composite",
+  "Exchange settlements"
+ ],
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "tenY": 0.0003
+  }
+ }
+}

@@ -1,0 +1,317 @@
+{
+ "tradeId": "T-10415",
+ "productType": "PORTFOLIO_SWAP",
+ "productName": "Portfolio (basket) swap",
+ "assetClass": "Equity",
+ "family": "swap",
+ "status": "Live",
+ "direction": "Receive fixed",
+ "tradeDate": "2024-08-07",
+ "effectiveDate": "2024-08-09",
+ "maturityDate": "2030-05-20",
+ "currency": "USD",
+ "notional": 162000000.0,
+ "mtm": -1014620,
+ "mtmCurrency": "USD",
+ "pnl1d": -39103,
+ "counterparty": {
+  "id": "CP-MERIDIAN",
+  "name": "Meridian Life Assurance"
+ },
+ "nettingSet": "NS-MERIDIAN-LDN",
+ "book": "BOOK-EQD-1",
+ "trader": "TRDR-PLINDQVIST",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingIndex": "EQX-SPX",
+ "dividendCurve": "DIV-SPX",
+ "discountCurve": "CRV-USD-OIS",
+ "terms": {
+  "constituents": 30,
+  "fundingSpread": 42.7
+ },
+ "risk": {
+  "delta": -707460,
+  "dv01": -88105
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -33689,
+   "dv01": -4195
+  },
+  {
+   "bucket": "1M",
+   "delta": -67377,
+   "dv01": -8391
+  },
+  {
+   "bucket": "3M",
+   "delta": -101066,
+   "dv01": -12586
+  },
+  {
+   "bucket": "6M",
+   "delta": -134754,
+   "dv01": -16782
+  },
+  {
+   "bucket": "1Y",
+   "delta": -168443,
+   "dv01": -20977
+  },
+  {
+   "bucket": "2Y",
+   "delta": -202131,
+   "dv01": -25173
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Receive performance",
+   "payReceive": "Receive",
+   "rateType": "Performance",
+   "index": "SPX",
+   "rate": null,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "USD",
+   "notional": 162000000.0
+  },
+  {
+   "leg": 2,
+   "label": "Pay SOFR + spread",
+   "payReceive": "Pay",
+   "rateType": "Float",
+   "index": "SOFR",
+   "rate": 0.036215,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "USD",
+   "notional": 162000000.0
+  }
+ ],
+ "schedule": [
+  {
+   "name": "Kaizen Motors Corp.",
+   "weight": 0.125,
+   "level": 112.6,
+   "status": "Active"
+  },
+  {
+   "name": "Meridian Financial Group",
+   "weight": 0.125,
+   "level": 68.9,
+   "status": "Active"
+  },
+  {
+   "name": "Granite Building Materials plc",
+   "weight": 0.125,
+   "level": 310.9,
+   "status": "Active"
+  },
+  {
+   "name": "Verdant Agri Holdings",
+   "weight": 0.125,
+   "level": 419.8,
+   "status": "Active"
+  },
+  {
+   "name": "Helix Pharmaceuticals Inc.",
+   "weight": 0.125,
+   "level": 297.1,
+   "status": "Active"
+  },
+  {
+   "name": "Lumen Semiconductor AG",
+   "weight": 0.125,
+   "level": 74.0,
+   "status": "Active"
+  },
+  {
+   "name": "Halcyon Shipping plc",
+   "weight": 0.125,
+   "level": 338.6,
+   "status": "Active"
+  },
+  {
+   "name": "Rheintal Landesbank",
+   "weight": 0.125,
+   "level": 104.5,
+   "status": "Active"
+  }
+ ],
+ "nextIndex": -1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 23376
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -49409
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 1221
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 45271
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 17622
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 7377
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -3146
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -15182
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 181
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 10996
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -953
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -31700
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -8429
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 27903
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 8783
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 56175
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -18342
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -59137
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 38429
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 21413
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-08-07",
+  "executionTimestamp": "2024-08-07T12:15:52.659Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "P. Lindqvist",
+  "salesperson": null,
+  "orderId": "ORD-DFB30051F8"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-08-07T10:56:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2024-08-07T10:56:00Z",
+  "lastModifiedAt": "2024-08-07T10:56:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT774593817",
+  "matched": "2024-08-07 13:19",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83DFB30051F86705CFF099",
+  "upi": "QZLLSAEITE1W",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "MERIUS33XXX",
+  "ssiId": "SSI-USD-4D91C0",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -1014620,
+  "cleanPv": -1014620.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Multi-curve OIS discounting",
+  "curves": [
+   "EQX-SPX",
+   "DIV-SPX",
+   "CRV-USD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 3649
+  }
+ }
+}

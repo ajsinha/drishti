@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-VERDANT-LDN",
+ "held": 10442865,
+ "posted": 0,
+ "net": 10442865,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Meridian Financial Group 2031",
+   "direction": "Held",
+   "marketValue": 3480955,
+   "haircut": 0.01,
+   "value": 3446145
+  },
+  {
+   "asset": "Kaizen Motors Corp. 2036",
+   "direction": "Held",
+   "marketValue": 3480955,
+   "haircut": 0.02,
+   "value": 3411336
+  },
+  {
+   "asset": "Rheintal Landesbank 2031",
+   "direction": "Held",
+   "marketValue": 3480955,
+   "haircut": 0.02,
+   "value": 3411336
+  }
+ ],
+ "csa": "CSA-VERDANT",
+ "nettingSet": "NS-VERDANT-LDN",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

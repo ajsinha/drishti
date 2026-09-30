@@ -1,0 +1,58 @@
+{
+ "resultId": "CVA-NORTHBRIDGE-TKY",
+ "cva": -285389,
+ "dva": 14269,
+ "fva": -3874,
+ "kva": -193177,
+ "cs01": -5137,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -285389
+  },
+  {
+   "name": "DVA",
+   "amount": 14269
+  },
+  {
+   "name": "FVA",
+   "amount": -3874
+  },
+  {
+   "name": "KVA",
+   "amount": -193177
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -5137
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 1142
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 571
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -8562
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 4852
+  }
+ ],
+ "nettingSet": "NS-NORTHBRIDGE-TKY",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

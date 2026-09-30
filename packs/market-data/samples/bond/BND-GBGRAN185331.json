@@ -1,0 +1,180 @@
+{
+ "isin": "BND-GBGRAN185331",
+ "isinCode": "GBGRAN185331",
+ "issuerName": "Granite Building Materials plc",
+ "coupon": 0.0504,
+ "maturity": "2036-07-15",
+ "price": 97.129,
+ "yield": 0.0537,
+ "zSpread": 125.4,
+ "modDuration": 8.7,
+ "rating": "BBB",
+ "terms": {
+  "currency": "GBP",
+  "couponFrequency": "Annual",
+  "dayCount": "ACT/ACT",
+  "issueDate": "2026-07-15",
+  "amountIssued": 700000000,
+  "seniority": "Senior unsecured",
+  "callable": false,
+  "cusip": null
+ },
+ "coupons": [
+  {
+   "date": "2027-07-15",
+   "amount": 5.04
+  },
+  {
+   "date": "2028-07-15",
+   "amount": 5.04
+  },
+  {
+   "date": "2029-07-15",
+   "amount": 5.04
+  },
+  {
+   "date": "2030-07-15",
+   "amount": 5.04
+  },
+  {
+   "date": "2031-07-15",
+   "amount": 5.04
+  },
+  {
+   "date": "2032-07-15",
+   "amount": 5.04
+  }
+ ],
+ "history": [
+  {
+   "date": "2026-08-19",
+   "price": 97.419
+  },
+  {
+   "date": "2026-08-20",
+   "price": 97.414
+  },
+  {
+   "date": "2026-08-21",
+   "price": 97.468
+  },
+  {
+   "date": "2026-08-24",
+   "price": 97.585
+  },
+  {
+   "date": "2026-08-25",
+   "price": 97.478
+  },
+  {
+   "date": "2026-08-26",
+   "price": 97.426
+  },
+  {
+   "date": "2026-08-27",
+   "price": 97.501
+  },
+  {
+   "date": "2026-08-28",
+   "price": 97.516
+  },
+  {
+   "date": "2026-08-31",
+   "price": 97.575
+  },
+  {
+   "date": "2026-09-01",
+   "price": 97.343
+  },
+  {
+   "date": "2026-09-02",
+   "price": 97.155
+  },
+  {
+   "date": "2026-09-03",
+   "price": 96.959
+  },
+  {
+   "date": "2026-09-04",
+   "price": 96.754
+  },
+  {
+   "date": "2026-09-08",
+   "price": 96.574
+  },
+  {
+   "date": "2026-09-09",
+   "price": 96.596
+  },
+  {
+   "date": "2026-09-10",
+   "price": 96.842
+  },
+  {
+   "date": "2026-09-11",
+   "price": 96.782
+  },
+  {
+   "date": "2026-09-14",
+   "price": 96.814
+  },
+  {
+   "date": "2026-09-15",
+   "price": 96.756
+  },
+  {
+   "date": "2026-09-16",
+   "price": 96.697
+  },
+  {
+   "date": "2026-09-17",
+   "price": 96.549
+  },
+  {
+   "date": "2026-09-18",
+   "price": 96.286
+  },
+  {
+   "date": "2026-09-21",
+   "price": 96.128
+  },
+  {
+   "date": "2026-09-22",
+   "price": 96.538
+  },
+  {
+   "date": "2026-09-23",
+   "price": 96.524
+  },
+  {
+   "date": "2026-09-24",
+   "price": 96.679
+  },
+  {
+   "date": "2026-09-25",
+   "price": 96.823
+  },
+  {
+   "date": "2026-09-28",
+   "price": 96.967
+  },
+  {
+   "date": "2026-09-29",
+   "price": 97.174
+  },
+  {
+   "date": "2026-09-30",
+   "price": 97.129
+  }
+ ],
+ "issuer": "ISS-GRANITE",
+ "benchmarkCurve": "CRV-GBP-GOVT",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "price": 0.02
+  }
+ }
+}

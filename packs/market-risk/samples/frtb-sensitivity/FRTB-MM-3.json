@@ -1,0 +1,57 @@
+{
+ "resultId": "FRTB-MM-3",
+ "book": "BOOK-MM-3",
+ "deltaCharge": 56366,
+ "vegaCharge": 15283,
+ "curvatureCharge": 9824,
+ "total": 81473,
+ "sensitivities": [
+  {
+   "riskClass": "GIRR",
+   "bucket": "1",
+   "measure": "Delta",
+   "value": -2280
+  },
+  {
+   "riskClass": "GIRR",
+   "bucket": "1",
+   "measure": "Vega",
+   "value": -3937
+  },
+  {
+   "riskClass": "GIRR",
+   "bucket": "2",
+   "measure": "Delta",
+   "value": 5073
+  },
+  {
+   "riskClass": "GIRR",
+   "bucket": "2",
+   "measure": "Vega",
+   "value": -3287
+  },
+  {
+   "riskClass": "GIRR",
+   "bucket": "3",
+   "measure": "Delta",
+   "value": 1586
+  },
+  {
+   "riskClass": "GIRR",
+   "bucket": "3",
+   "measure": "Vega",
+   "value": 635
+  }
+ ],
+ "byClass": [
+  {
+   "riskClass": "GIRR",
+   "charge": 81473
+  }
+ ],
+ "approach": "FRTB standardised (SBM)",
+ "_meta": {
+  "source": "frtb-engine",
+  "generation": 1
+ }
+}

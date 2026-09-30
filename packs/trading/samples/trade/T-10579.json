@@ -1,0 +1,318 @@
+{
+ "tradeId": "T-10579",
+ "productType": "CORP_BOND",
+ "productName": "Corporate bond",
+ "assetClass": "Fixed income",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-07-31",
+ "effectiveDate": "2026-08-03",
+ "maturityDate": "2031-03-31",
+ "currency": "USD",
+ "notional": 47000000.0,
+ "mtm": -230040,
+ "mtmCurrency": "USD",
+ "pnl1d": 11167,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-3",
+ "trader": "TRDR-BADEYEMI",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-NOVATEK",
+ "benchmarkCurve": "CRV-USD-GOVT",
+ "underlyingBond": "BND-USNOVA065142",
+ "creditCurve": "CDS-NOVATEK",
+ "terms": {
+  "coupon": 0.039132,
+  "couponFrequency": "Semi-annual",
+  "faceAmount": 53940434.0,
+  "cleanPrice": 98.21,
+  "yield": 0.043885,
+  "zSpread": 85.3,
+  "seniority": "Subordinated"
+ },
+ "risk": {
+  "dv01": 17547,
+  "cs01": 20342,
+  "jtd": -28200000
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 836,
+   "cs01": 969,
+   "jtd": -1342857
+  },
+  {
+   "bucket": "6M",
+   "dv01": 1671,
+   "cs01": 1937,
+   "jtd": -2685714
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 2507,
+   "cs01": 2906,
+   "jtd": -4028571
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 3342,
+   "cs01": 3875,
+   "jtd": -5371429
+  },
+  {
+   "bucket": "3Y",
+   "dv01": 4178,
+   "cs01": 4843,
+   "jtd": -6714286
+  },
+  {
+   "bucket": "5Y",
+   "dv01": 5013,
+   "cs01": 5812,
+   "jtd": -8057143
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2027-02-03",
+   "rate": 0.044787,
+   "amount": 940000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-08-03",
+   "rate": 0.046366,
+   "amount": 940000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-02-03",
+   "rate": 0.030696,
+   "amount": 940000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-08-03",
+   "rate": 0.031847,
+   "amount": 940000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-02-03",
+   "rate": 0.046482,
+   "amount": 940000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-08-03",
+   "rate": 0.027845,
+   "amount": 940000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-02-03",
+   "rate": 0.055009,
+   "amount": 940000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-08-03",
+   "rate": 0.025107,
+   "amount": 940000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-02-03",
+   "rate": 0.032834,
+   "amount": 940000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-03-31",
+   "rate": 0.045538,
+   "amount": 940000.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -11490
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -755
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -2494
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -4823
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -9116
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -1641
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 2460
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -10344
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 2151
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -6899
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -2054
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 4577
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 3732
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -9195
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 14151
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -6837
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 7840
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 2796
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -1272
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 2576
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-07-31",
+  "executionTimestamp": "2026-07-31T16:21:43.425Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "B. Adeyemi",
+  "salesperson": null,
+  "orderId": "ORD-E82B596D76"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-07-31T09:21:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-07-31T09:21:00Z",
+  "lastModifiedAt": "2026-07-31T09:21:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT475533071",
+  "matched": "2026-07-31 17:48",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH1780073070",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096E82B596D7630755DFEB6",
+  "upi": "QZGYR1DXBQ3F",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMUS33XXX",
+  "ssiId": "SSI-USD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -230040,
+  "cleanPv": -230040.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-USD-GOVT",
+   "BND-USNOVA065142",
+   "CDS-NOVATEK"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 930
+  }
+ }
+}

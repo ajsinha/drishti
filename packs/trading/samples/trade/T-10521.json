@@ -1,0 +1,223 @@
+{
+ "tradeId": "T-10521",
+ "productType": "EMISSIONS_FUTURE",
+ "productName": "Emissions allowance future",
+ "assetClass": "Commodity",
+ "family": "future",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-09-14",
+ "effectiveDate": "2026-09-16",
+ "maturityDate": "2026-11-02",
+ "currency": "USD",
+ "notional": 96000000.0,
+ "mtm": -1773998,
+ "mtmCurrency": "USD",
+ "pnl1d": -26107,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-COMM-3",
+ "trader": "TRDR-FROSSI",
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-CME-1",
+ "commodityCurve": "CMDC-BRENT",
+ "terms": {
+  "contract": "CCA Z6",
+  "lots": 266
+ },
+ "risk": {
+  "delta": 527876
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 52788
+  },
+  {
+   "bucket": "1M",
+   "delta": 105575
+  },
+  {
+   "bucket": "3M",
+   "delta": 158363
+  },
+  {
+   "bucket": "6M",
+   "delta": 211150
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -21171
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 24869
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 14484
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -15600
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -6821
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -62364
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -24751
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -58775
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -7533
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -23849
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -60667
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -32395
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -19374
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -86568
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 57607
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 74795
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 38571
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 42490
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 12933
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -18072
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-09-14",
+  "executionTimestamp": "2026-09-14T10:34:18.048Z",
+  "venue": "ICE",
+  "venueMic": "IFEU",
+  "executionType": "Electronic",
+  "trader": "F. Rossi",
+  "salesperson": null,
+  "orderId": "ORD-AB41836910"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-09-14T12:58:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2026-09-14T12:58:00Z",
+  "lastModifiedAt": "2026-09-14T12:58:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT104840347",
+  "matched": "2026-09-14 12:46",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH7273391178",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096AB41836910BAD23F2D1C",
+  "upi": "QZS1BRN9FT2H",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMUS33XXX",
+  "ssiId": "SSI-USD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -1773998,
+  "cleanPv": -1773998.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CMDC-BRENT"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "endur-comm",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 4508
+  }
+ }
+}

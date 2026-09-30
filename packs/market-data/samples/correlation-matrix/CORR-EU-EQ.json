@@ -1,0 +1,50 @@
+{
+ "matrixId": "CORR-EU-EQ",
+ "name": "European equities",
+ "factors": [
+  "ORBT",
+  "RHNB",
+  "GRNT",
+  "LUMN"
+ ],
+ "average": 0.385,
+ "pairs": [
+  {
+   "a": "ORBT",
+   "b": "RHNB",
+   "rho": 0.156
+  },
+  {
+   "a": "ORBT",
+   "b": "GRNT",
+   "rho": 0.184
+  },
+  {
+   "a": "ORBT",
+   "b": "LUMN",
+   "rho": 0.571
+  },
+  {
+   "a": "RHNB",
+   "b": "GRNT",
+   "rho": 0.601
+  },
+  {
+   "a": "RHNB",
+   "b": "LUMN",
+   "rho": 0.642
+  },
+  {
+   "a": "GRNT",
+   "b": "LUMN",
+   "rho": 0.156
+  }
+ ],
+ "window": "2 years, daily log returns",
+ "estimator": "Ledoit-Wolf shrinkage",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

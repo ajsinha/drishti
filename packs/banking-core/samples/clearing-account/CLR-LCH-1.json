@@ -1,0 +1,13 @@
+{
+ "accountId": "CLR-LCH-1",
+ "ccpName": "LCH Ltd",
+ "im": 30600000,
+ "vmToday": 0,
+ "excess": 6120000,
+ "trades": [],
+ "ccp": "CCP-LCH",
+ "_meta": {
+  "source": "clearing-system",
+  "generation": 1
+ }
+}

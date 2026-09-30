@@ -1,0 +1,225 @@
+{
+ "tradeId": "T-10073",
+ "productType": "BOND_FUTURE",
+ "productName": "Government bond future",
+ "assetClass": "Rates",
+ "family": "future",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-09-11",
+ "effectiveDate": "2026-09-14",
+ "maturityDate": "2027-05-28",
+ "currency": "GBP",
+ "notional": 227000000.0,
+ "mtm": -4816627,
+ "mtmCurrency": "USD",
+ "pnl1d": 106257,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-RATES-1",
+ "trader": "TRDR-ASHAH",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-CME-1",
+ "benchmarkCurve": "CRV-GBP-GOVT",
+ "underlyingBond": "BND-US0UST030079",
+ "repoCurve": "REPO-GBP",
+ "terms": {
+  "contract": "US Z6",
+  "lots": 689,
+  "ctd": null,
+  "conversionFactor": 0.8425
+ },
+ "risk": {
+  "dv01": 13414
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 2236
+  },
+  {
+   "bucket": "6M",
+   "dv01": 4471
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 6707
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -227959
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -35164
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 112077
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 116098
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 27175
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -33293
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -82388
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 88517
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 59065
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -321117
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 211779
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -156571
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -4858
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 217532
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 102356
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -112912
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 210799
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -62790
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -31671
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 108632
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-09-11",
+  "executionTimestamp": "2026-09-11T12:36:51.657Z",
+  "venue": "Bloomberg SEF",
+  "venueMic": "BSEF",
+  "executionType": "Electronic",
+  "trader": "A. Shah",
+  "salesperson": null,
+  "orderId": "ORD-4444873537"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-09-11T09:58:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2026-09-11T09:58:00Z",
+  "lastModifiedAt": "2026-09-11T09:58:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA788933714",
+  "matched": "2026-09-11 14:16",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH1408802891",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209644448735375D1E1E16DE",
+  "upi": "QZ27DXVCIAHN",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Barclays Bank plc",
+  "ourAgentBic": "BARCGB22XXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-GBP-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -4816627,
+  "cleanPv": -4816627.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-GBP-GOVT",
+   "BND-US0UST030079",
+   "REPO-GBP"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 11903
+  }
+ }
+}

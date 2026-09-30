@@ -1,0 +1,22 @@
+{
+ "agreementId": "AGR-ALDERSHOT-ISDA",
+ "type": "ISDA 2002 Master",
+ "counterpartyName": "Aldershot Pension Trust",
+ "governingLaw": "English",
+ "signed": "2015-12-10",
+ "closeOutNetting": "Enforceable",
+ "elections": {
+  "automaticEarlyTermination": false,
+  "crossDefault": "3% of shareholders' equity",
+  "setOff": true,
+  "terminationCurrency": "USD",
+  "additionalTerminationEvents": "Rating downgrade below BBB-",
+  "protocols": "ISDA 2020 IBOR Fallbacks; 2018 US Resolution Stay"
+ },
+ "counterparty": "CP-ALDERSHOT",
+ "csa": "CSA-ALDERSHOT",
+ "_meta": {
+  "source": "legal-docs",
+  "generation": 1
+ }
+}

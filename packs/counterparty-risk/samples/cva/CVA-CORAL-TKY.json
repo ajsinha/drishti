@@ -1,0 +1,58 @@
+{
+ "resultId": "CVA-CORAL-TKY",
+ "cva": -22602,
+ "dva": 15821,
+ "fva": -433,
+ "kva": -211752,
+ "cs01": -407,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -22602
+  },
+  {
+   "name": "DVA",
+   "amount": 15821
+  },
+  {
+   "name": "FVA",
+   "amount": -433
+  },
+  {
+   "name": "KVA",
+   "amount": -211752
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -407
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 90
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 45
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -678
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 384
+  }
+ ],
+ "nettingSet": "NS-CORAL-TKY",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

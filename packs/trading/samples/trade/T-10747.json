@@ -1,0 +1,295 @@
+{
+ "tradeId": "T-10747",
+ "productType": "CREDIT_BASKET_NOTE",
+ "productName": "Credit basket note",
+ "assetClass": "Structured",
+ "family": "note",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2025-10-31",
+ "effectiveDate": "2025-11-03",
+ "maturityDate": "2035-09-20",
+ "currency": "USD",
+ "notional": 180000000.0,
+ "mtm": 3228356,
+ "mtmCurrency": "USD",
+ "pnl1d": 27349,
+ "counterparty": {
+  "id": "CP-NORTHBRIDGE",
+  "name": "Northbridge Capital LLP"
+ },
+ "nettingSet": "NS-NORTHBRIDGE-TKY",
+ "book": "BOOK-STRUCT-2",
+ "trader": "TRDR-VRAO",
+ "desk": "DESK-STRUCT",
+ "legalEntity": "LE-TKY",
+ "issuer": "ISS-SOLARIS",
+ "creditCurve": "CDS-SOLARIS",
+ "discountCurve": "CRV-USD-OIS",
+ "correlation": "CORR-EU-EQ",
+ "terms": {
+  "coupon": 0.055716,
+  "nth": 2,
+  "basketSize": 9
+ },
+ "risk": {
+  "cs01": 164099,
+  "jtd": -108000000
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 5861,
+   "jtd": -3857143
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 11721,
+   "jtd": -7714286
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 17582,
+   "jtd": -11571429
+  },
+  {
+   "bucket": "3Y",
+   "cs01": 23443,
+   "jtd": -15428571
+  },
+  {
+   "bucket": "5Y",
+   "cs01": 29303,
+   "jtd": -19285714
+  },
+  {
+   "bucket": "7Y",
+   "cs01": 35164,
+   "jtd": -23142857
+  },
+  {
+   "bucket": "10Y",
+   "cs01": 41025,
+   "jtd": -27000000
+  }
+ ],
+ "schedule": [
+  {
+   "name": "Halcyon Shipping plc",
+   "weight": 0.125,
+   "level": 309.2,
+   "status": "Active"
+  },
+  {
+   "name": "Rheintal Landesbank",
+   "weight": 0.125,
+   "level": 296.6,
+   "status": "Active"
+  },
+  {
+   "name": "Kaizen Motors Corp.",
+   "weight": 0.125,
+   "level": 250.5,
+   "status": "Active"
+  },
+  {
+   "name": "Lumen Semiconductor AG",
+   "weight": 0.125,
+   "level": 103.1,
+   "status": "Active"
+  },
+  {
+   "name": "Cascadia Airlines Inc.",
+   "weight": 0.125,
+   "level": 56.8,
+   "status": "Active"
+  },
+  {
+   "name": "Granite Building Materials plc",
+   "weight": 0.125,
+   "level": 238.0,
+   "status": "Active"
+  },
+  {
+   "name": "Solaris Energy Corp.",
+   "weight": 0.125,
+   "level": 312.8,
+   "status": "Active"
+  },
+  {
+   "name": "Verdant Agri Holdings",
+   "weight": 0.125,
+   "level": 104.4,
+   "status": "Active"
+  }
+ ],
+ "nextIndex": -1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -36117
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -159756
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -16889
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -20016
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -4042
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 22523
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 18514
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -50439
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -137549
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -170520
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 32809
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 56754
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -52137
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -63519
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -116002
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -37964
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -158163
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -174525
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -9806
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -20299
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-10-31",
+  "executionTimestamp": "2025-10-31T12:07:51.995Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "V. Rao",
+  "salesperson": null,
+  "orderId": "ORD-E06BC49AB0"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-10-31T12:12:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2025-10-31T12:12:00Z",
+  "lastModifiedAt": "2025-10-31T12:12:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT724919447",
+  "matched": "2025-10-31 11:28",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300BLAOJ55ZE6F474E06BC49AB09B9C646361",
+  "upi": "QZ0WND5E85IX",
+  "reportingRegimes": [
+   "JFSA"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "NORTUS33XXX",
+  "ssiId": "SSI-USD-A0C7C2",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 3228356,
+  "cleanPv": 3228356.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CDS-SOLARIS",
+   "CRV-USD-OIS",
+   "CORR-EU-EQ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-struct",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 8257
+  }
+ }
+}

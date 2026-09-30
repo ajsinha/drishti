@@ -1,0 +1,58 @@
+{
+ "resultId": "CVA-AURORA-FRA",
+ "cva": 0,
+ "dva": 0,
+ "fva": -1030,
+ "kva": -368,
+ "cs01": 0,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": 0
+  },
+  {
+   "name": "DVA",
+   "amount": 0
+  },
+  {
+   "name": "FVA",
+   "amount": -1030
+  },
+  {
+   "name": "KVA",
+   "amount": -368
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": 0
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 0
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 0
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": 0
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 0
+  }
+ ],
+ "nettingSet": "NS-AURORA-FRA",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

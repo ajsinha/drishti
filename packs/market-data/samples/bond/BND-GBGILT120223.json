@@ -1,0 +1,180 @@
+{
+ "isin": "BND-GBGILT120223",
+ "isinCode": "GBGILT120223",
+ "issuerName": "United Kingdom Debt Management Office",
+ "coupon": 0.0436,
+ "maturity": "2036-08-15",
+ "price": 101.131,
+ "yield": 0.0423,
+ "zSpread": 17.1,
+ "modDuration": 8.7,
+ "rating": "AA",
+ "terms": {
+  "currency": "GBP",
+  "couponFrequency": "Annual",
+  "dayCount": "ACT/ACT",
+  "issueDate": "2026-08-15",
+  "amountIssued": 5400000000,
+  "seniority": "Sovereign",
+  "callable": false,
+  "cusip": null
+ },
+ "coupons": [
+  {
+   "date": "2027-08-15",
+   "amount": 4.36
+  },
+  {
+   "date": "2028-08-15",
+   "amount": 4.36
+  },
+  {
+   "date": "2029-08-15",
+   "amount": 4.36
+  },
+  {
+   "date": "2030-08-15",
+   "amount": 4.36
+  },
+  {
+   "date": "2031-08-15",
+   "amount": 4.36
+  },
+  {
+   "date": "2032-08-15",
+   "amount": 4.36
+  }
+ ],
+ "history": [
+  {
+   "date": "2026-08-19",
+   "price": 100.247
+  },
+  {
+   "date": "2026-08-20",
+   "price": 100.218
+  },
+  {
+   "date": "2026-08-21",
+   "price": 99.992
+  },
+  {
+   "date": "2026-08-24",
+   "price": 100.075
+  },
+  {
+   "date": "2026-08-25",
+   "price": 100.07
+  },
+  {
+   "date": "2026-08-26",
+   "price": 100.035
+  },
+  {
+   "date": "2026-08-27",
+   "price": 100.139
+  },
+  {
+   "date": "2026-08-28",
+   "price": 100.219
+  },
+  {
+   "date": "2026-08-31",
+   "price": 100.042
+  },
+  {
+   "date": "2026-09-01",
+   "price": 100.024
+  },
+  {
+   "date": "2026-09-02",
+   "price": 100.207
+  },
+  {
+   "date": "2026-09-03",
+   "price": 100.101
+  },
+  {
+   "date": "2026-09-04",
+   "price": 100.051
+  },
+  {
+   "date": "2026-09-08",
+   "price": 100.283
+  },
+  {
+   "date": "2026-09-09",
+   "price": 100.407
+  },
+  {
+   "date": "2026-09-10",
+   "price": 100.159
+  },
+  {
+   "date": "2026-09-11",
+   "price": 100.386
+  },
+  {
+   "date": "2026-09-14",
+   "price": 100.403
+  },
+  {
+   "date": "2026-09-15",
+   "price": 100.438
+  },
+  {
+   "date": "2026-09-16",
+   "price": 100.198
+  },
+  {
+   "date": "2026-09-17",
+   "price": 100.317
+  },
+  {
+   "date": "2026-09-18",
+   "price": 100.643
+  },
+  {
+   "date": "2026-09-21",
+   "price": 100.634
+  },
+  {
+   "date": "2026-09-22",
+   "price": 100.592
+  },
+  {
+   "date": "2026-09-23",
+   "price": 100.874
+  },
+  {
+   "date": "2026-09-24",
+   "price": 100.705
+  },
+  {
+   "date": "2026-09-25",
+   "price": 100.807
+  },
+  {
+   "date": "2026-09-28",
+   "price": 100.984
+  },
+  {
+   "date": "2026-09-29",
+   "price": 100.974
+  },
+  {
+   "date": "2026-09-30",
+   "price": 101.131
+  }
+ ],
+ "issuer": "ISS-GILT",
+ "benchmarkCurve": "CRV-GBP-GOVT",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "price": 0.02
+  }
+ }
+}

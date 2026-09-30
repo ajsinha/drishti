@@ -1,0 +1,48 @@
+{
+ "limitId": "LIM-CASCADIA",
+ "counterpartyName": "Cascadia Airlines Inc.",
+ "measure": "PFE 95 peak",
+ "limit": 320000000.0,
+ "used": 168725794,
+ "utilisation": 0.5273,
+ "status": "Within limit",
+ "buckets": [
+  {
+   "bucket": "0-1Y",
+   "limit": 320000000,
+   "used": 143416925,
+   "utilisation": 0.4482
+  },
+  {
+   "bucket": "1-3Y",
+   "limit": 320000000,
+   "used": 168725794,
+   "utilisation": 0.5273
+  },
+  {
+   "bucket": "3-5Y",
+   "limit": 256000000,
+   "used": 118108056,
+   "utilisation": 0.4614
+  },
+  {
+   "bucket": "5-10Y",
+   "limit": 192000000,
+   "used": 59054028,
+   "utilisation": 0.3076
+  },
+  {
+   "bucket": "10Y+",
+   "limit": 128000000,
+   "used": 16872579,
+   "utilisation": 0.1318
+  }
+ ],
+ "counterparty": "CP-CASCADIA",
+ "approvedBy": "Credit Risk Committee",
+ "reviewDue": "2027-03-19",
+ "_meta": {
+  "source": "limits-system",
+  "generation": 1
+ }
+}

@@ -95,7 +95,8 @@
     var a = Math.abs(v);
     if (a >= 1e9) { return (v / 1e9).toFixed(1) + 'bn'; }
     if (a >= 1e6) { return (v / 1e6).toFixed(a >= 1e7 ? 0 : 1) + 'm'; }
-    if (a >= 1e4) { return (v / 1e3).toFixed(0) + 'k'; }
+    if (a >= 1e5) { return (v / 1e3).toFixed(0) + 'k'; }
+    if (a >= 1e4) { return (v / 1e3).toFixed(1) + 'k'; }
     return Math.round(v * 100) / 100;
   }
   function drawCharts() {
@@ -115,6 +116,83 @@
     });
   }
   drawCharts();
+
+  // ---- surfaces: a heatmap, or a 3D surface that loads ECharts GL (vendored) only when first asked for ----------
+  function surfaceOption(d, t, view) {
+    var x = d.x || [], y = d.y || [], z = d.z || [], cells = [];
+    z.forEach(function (row, j) { (row || []).forEach(function (v, i) { if (typeof v === 'number' && isFinite(v)) { cells.push([i, j, v]); } }); });
+    var lo = d.min != null ? d.min : 0, hi = d.max != null ? d.max : 1;
+    var visual = { min: lo, max: hi, calculable: true, orient: 'horizontal', left: 'center', bottom: 0, itemHeight: 120, itemWidth: 10,
+      textStyle: { color: t.muted, fontFamily: t.mono, fontSize: 10 }, inRange: { color: [t.link, t.surface, t.accent] } };
+    if (view === '3d') {
+      var axis3 = function (name, labels) {
+        return { type: 'value', name: name, nameTextStyle: { color: t.muted }, min: 0, max: Math.max(labels.length - 1, 1), interval: 1,
+          axisLabel: { color: t.muted, fontSize: 9, formatter: function (v) { return labels[Math.round(v)] || ''; } } };
+      };
+      var pad = (hi - lo) * 0.15 || 1;
+      return { visualMap: Object.assign(visual, { show: false }),
+        xAxis3D: axis3('', x), yAxis3D: axis3('', y),
+        zAxis3D: { type: 'value', name: d.unit || '', min: Math.floor((lo - pad) * 100) / 100, max: Math.ceil((hi + pad) * 100) / 100,
+          nameTextStyle: { color: t.muted }, axisLabel: { color: t.muted, fontSize: 9 } },
+        grid3D: { viewControl: { alpha: 28, beta: 38, distance: 190 }, axisLine: { lineStyle: { color: t.border } },
+          splitLine: { lineStyle: { color: t.border, opacity: .4 } } },
+        series: [{ type: 'surface', wireframe: { show: true, lineStyle: { color: t.border, opacity: .6 } }, shading: 'color',
+          data: cells }] };
+    }
+    return { tooltip: { position: 'top', formatter: function (p) { return y[p.value[1]] + ' · ' + x[p.value[0]] + ': ' + p.value[2]; } },
+      grid: { left: 56, right: 12, top: 8, bottom: 70 },
+      xAxis: { type: 'category', data: x, splitArea: { show: true }, axisLabel: { color: t.muted, fontFamily: t.mono, fontSize: 10 } },
+      yAxis: { type: 'category', data: y, splitArea: { show: true }, axisLabel: { color: t.muted, fontFamily: t.mono, fontSize: 10 } },
+      visualMap: visual,
+      series: [{ type: 'heatmap', data: cells, label: { show: x.length * y.length <= 72, color: t.ink, fontFamily: t.mono, fontSize: 10,
+        formatter: function (p) { return Math.round(p.value[2] * 100) / 100; } } }] };
+  }
+  function loadGl(done) {
+    if (window.echarts && window.echarts.graphicGL) { done(); return; }
+    var s = document.createElement('script');
+    s.src = '/static/vendor/echarts-gl/echarts-gl.min.js';
+    s.onload = function () { done(); };
+    s.onerror = function () { done(new Error('ECharts GL not available')); };
+    document.head.appendChild(s);
+  }
+  function drawSurface(el, view) {
+    if (!window.echarts) { return; }
+    var d;
+    try { d = JSON.parse(el.getAttribute('data-surface')) || {}; } catch (e) { return; }
+    var render = function (err) {
+      var t = tokens();
+      var existing = window.echarts.getInstanceByDom(el);
+      if (existing) { existing.dispose(); }
+      var draw = function (mode) {
+        var c = window.echarts.init(el, null, { renderer: mode === '3d' ? 'canvas' : 'svg' });
+        c.setOption(surfaceOption(d, t, mode), true);
+        charts.push(c);
+      };
+      try {
+        draw(err ? 'heatmap' : view);
+      } catch (e) {
+        // no WebGL, or a grid 3D cannot draw: the heatmap always can
+        el.setAttribute('data-error', String(e && e.message || e));
+        var broken = window.echarts.getInstanceByDom(el);
+        if (broken) { broken.dispose(); }
+        try { draw('heatmap'); } catch (e2) { el.textContent = 'No data available'; }
+      }
+    };
+    if (view === '3d') { loadGl(render); } else { render(); }
+  }
+  document.querySelectorAll('.surface[data-surface]').forEach(function (el) { drawSurface(el, el.getAttribute('data-view') || 'heatmap'); });
+  document.addEventListener('drishti:theme', function () {
+    document.querySelectorAll('.surface[data-surface]').forEach(function (el) { drawSurface(el, el.getAttribute('data-view') || 'heatmap'); });
+  });
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-surface-view]');
+    if (!b) { return; }
+    var panel = b.closest('.pnl-b'), el = panel && panel.querySelector('.surface[data-surface]');
+    if (!el) { return; }
+    panel.querySelectorAll('[data-surface-view]').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+    el.setAttribute('data-view', b.getAttribute('data-surface-view'));
+    drawSurface(el, b.getAttribute('data-surface-view'));
+  });
   window.addEventListener('resize', function () { charts.forEach(function (c) { c.resize(); }); });
   document.addEventListener('drishti:theme', drawCharts);
 

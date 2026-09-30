@@ -1,0 +1,245 @@
+{
+ "tradeId": "T-10688",
+ "productType": "REVERSE_REPO",
+ "productName": "Reverse repo",
+ "assetClass": "Securities financing",
+ "family": "sft",
+ "status": "Live",
+ "direction": "Repo (lend cash)",
+ "tradeDate": "2026-08-14",
+ "effectiveDate": "2026-08-17",
+ "maturityDate": "2026-10-07",
+ "currency": "USD",
+ "notional": 24000000.0,
+ "mtm": 319538,
+ "mtmCurrency": "USD",
+ "pnl1d": -9722,
+ "counterparty": {
+  "id": "CP-MERIDIAN-RE",
+  "name": "Meridian Reinsurance Ltd"
+ },
+ "nettingSet": "NS-MERIDIAN-RE-FRA",
+ "book": "BOOK-SFT-1",
+ "trader": "TRDR-NFAROUK",
+ "desk": "DESK-SFT",
+ "legalEntity": "LE-FRA",
+ "issuer": "ISS-UST",
+ "repoCurve": "REPO-USD",
+ "underlyingBond": "BND-US0UST030079",
+ "terms": {
+  "repoRate": 0.046673,
+  "haircut": 0.0109,
+  "term": "1M"
+ },
+ "risk": {
+  "dv01": 188,
+  "exposure": 536465
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 63,
+   "exposure": 178822
+  },
+  {
+   "bucket": "6M",
+   "dv01": 125,
+   "exposure": 357643
+  }
+ ],
+ "schedule": [
+  {
+   "asset": "Federal Republic of Germany 2036",
+   "isin": "DEBUND130144",
+   "quantity": 7071091,
+   "marketValue": 8338372,
+   "haircut": 0.005,
+   "value": 8296680
+  },
+  {
+   "asset": "United Kingdom Debt Management Office 2036",
+   "isin": "GBGILT120223",
+   "quantity": 7803566,
+   "marketValue": 7891824,
+   "haircut": 0.005,
+   "value": 7852365
+  },
+  {
+   "asset": "Solaris Energy Corp. 2031",
+   "isin": "USSOLA031372",
+   "quantity": 8502739,
+   "marketValue": 8347394,
+   "haircut": 0.04,
+   "value": 8013498
+  }
+ ],
+ "nextIndex": -1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -6808
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -18
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -3000
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 264
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -1461
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -19412
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -11530
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -16795
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 468
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -17262
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 6677
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -6513
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -747
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 11693
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 14624
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -12853
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -4828
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -12373
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -17465
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -1296
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-08-14",
+  "executionTimestamp": "2026-08-14T11:46:11.677Z",
+  "venue": "Bloomberg SEF",
+  "venueMic": "BSEF",
+  "executionType": "Electronic",
+  "trader": "N. Farouk",
+  "salesperson": null,
+  "orderId": "ORD-9C75B86DBF"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-08-14T09:11:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2026-08-14T09:11:00Z",
+  "lastModifiedAt": "2026-08-14T09:11:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT887935061",
+  "matched": "2026-08-14 15:00",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z9DXU4T18OK7449C75B86DBFA779D34C24",
+  "upi": "QZ46U9H7BYAZ",
+  "reportingRegimes": [
+   "EU EMIR",
+   "EU MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "MERIUS33XXX",
+  "ssiId": "SSI-USD-9DC4EA",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 319538,
+  "cleanPv": 319538.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "REPO-USD",
+   "BND-US0UST030079"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "globalone-sft",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 879
+  }
+ }
+}

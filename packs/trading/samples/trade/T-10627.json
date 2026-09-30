@@ -1,0 +1,326 @@
+{
+ "tradeId": "T-10627",
+ "productType": "MBS_PASSTHROUGH",
+ "productName": "Agency MBS pass-through",
+ "assetClass": "Fixed income",
+ "family": "securitized",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-06-17",
+ "effectiveDate": "2026-06-22",
+ "maturityDate": "2031-12-09",
+ "currency": "USD",
+ "notional": 231000000.0,
+ "mtm": 1211464,
+ "mtmCurrency": "USD",
+ "pnl1d": 5672,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-2",
+ "trader": "TRDR-BADEYEMI",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-HELIX",
+ "benchmarkCurve": "CRV-USD-GOVT",
+ "forwardCurve": "CRV-USD-PROJ",
+ "swaptionVolCube": "IRV-USD",
+ "terms": {
+  "agency": "FHLMC",
+  "couponRate": 0.04892,
+  "wac": 0.057151,
+  "cpr": 0.05419,
+  "factor": 0.8889
+ },
+ "risk": {
+  "dv01": 104742,
+  "vega": 1248884
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 4988,
+   "vega": 59471
+  },
+  {
+   "bucket": "6M",
+   "dv01": 9975,
+   "vega": 118941
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 14963,
+   "vega": 178412
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 19951,
+   "vega": 237883
+  },
+  {
+   "bucket": "3Y",
+   "dv01": 24939,
+   "vega": 297353
+  },
+  {
+   "bucket": "5Y",
+   "dv01": 29926,
+   "vega": 356824
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-12-22",
+   "opening": 231000000,
+   "principal": 21000000,
+   "closing": 210000000,
+   "interest": 4620000
+  },
+  {
+   "date": "2027-06-22",
+   "opening": 210000000,
+   "principal": 21000000,
+   "closing": 189000000,
+   "interest": 4200000
+  },
+  {
+   "date": "2027-12-22",
+   "opening": 189000000,
+   "principal": 21000000,
+   "closing": 168000000,
+   "interest": 3780000
+  },
+  {
+   "date": "2028-06-22",
+   "opening": 168000000,
+   "principal": 21000000,
+   "closing": 147000000,
+   "interest": 3360000
+  },
+  {
+   "date": "2028-12-22",
+   "opening": 147000000,
+   "principal": 21000000,
+   "closing": 126000000,
+   "interest": 2940000
+  },
+  {
+   "date": "2029-06-22",
+   "opening": 126000000,
+   "principal": 21000000,
+   "closing": 105000000,
+   "interest": 2520000
+  },
+  {
+   "date": "2029-12-22",
+   "opening": 105000000,
+   "principal": 21000000,
+   "closing": 84000000,
+   "interest": 2100000
+  },
+  {
+   "date": "2030-06-22",
+   "opening": 84000000,
+   "principal": 21000000,
+   "closing": 63000000,
+   "interest": 1680000
+  },
+  {
+   "date": "2030-12-22",
+   "opening": 63000000,
+   "principal": 21000000,
+   "closing": 42000000,
+   "interest": 1260000
+  },
+  {
+   "date": "2031-06-22",
+   "opening": 42000000,
+   "principal": 21000000,
+   "closing": 21000000,
+   "interest": 840000
+  },
+  {
+   "date": "2031-12-09",
+   "opening": 21000000,
+   "principal": 21000000,
+   "closing": 0,
+   "interest": 420000
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -14076
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 8598
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -4772
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -19944
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -13451
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -48637
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -41266
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -13838
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 8403
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -18341
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 41158
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 35084
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -16641
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -72985
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -12190
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 47206
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -51450
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 42031
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 33238
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 10378
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-06-17",
+  "executionTimestamp": "2026-06-17T12:44:15.447Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "B. Adeyemi",
+  "salesperson": null,
+  "orderId": "ORD-9F72865F6C"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-06-17T10:07:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2026-06-17T10:07:00Z",
+  "lastModifiedAt": "2026-06-17T10:07:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT592309350",
+  "matched": "2026-06-17 16:13",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH7988298519",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20969F72865F6C197B7429F3",
+  "upi": "QZ8H0Y0HV0ZU",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMUS33XXX",
+  "ssiId": "SSI-USD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1211464,
+  "cleanPv": 1211464.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-USD-GOVT",
+   "CRV-USD-PROJ",
+   "IRV-USD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 4733
+  }
+ }
+}

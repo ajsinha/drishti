@@ -1,0 +1,26 @@
+{
+ "issuerId": "ISS-LUMEN",
+ "name": "Lumen Semiconductor AG",
+ "rating": "A",
+ "sector": "Technology",
+ "country": "CH",
+ "bonds": [
+  {
+   "isin": "CHLUME076897",
+   "coupon": 0.0213,
+   "maturity": "2031-09-15"
+  },
+  {
+   "isin": "CHLUME169114",
+   "coupon": 0.0263,
+   "maturity": "2036-01-15"
+  }
+ ],
+ "creditCurve": "CDS-LUMEN",
+ "lei": "54930090UZR7PCLV8136",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ },
+ "equity": "EQ-LUMN"
+}

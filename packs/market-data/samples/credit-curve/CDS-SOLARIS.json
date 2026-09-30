@@ -1,0 +1,63 @@
+{
+ "curveId": "CDS-SOLARIS",
+ "issuerName": "Solaris Energy Corp.",
+ "spread5y": 118,
+ "recovery": 0.4,
+ "seniority": "Senior unsecured",
+ "docClause": "CR14",
+ "pd1y": 0.010956,
+ "points": [
+  {
+   "tenor": "6M",
+   "spread": 59.6,
+   "hazard": 0.009933,
+   "survival": 0.995046
+  },
+  {
+   "tenor": "1Y",
+   "spread": 66.1,
+   "hazard": 0.011017,
+   "survival": 0.989044
+  },
+  {
+   "tenor": "2Y",
+   "spread": 79.1,
+   "hazard": 0.013183,
+   "survival": 0.973978
+  },
+  {
+   "tenor": "3Y",
+   "spread": 92.0,
+   "hazard": 0.015333,
+   "survival": 0.955042
+  },
+  {
+   "tenor": "5Y",
+   "spread": 118.0,
+   "hazard": 0.019667,
+   "survival": 0.906347
+  },
+  {
+   "tenor": "7Y",
+   "spread": 125.1,
+   "hazard": 0.02085,
+   "survival": 0.864201
+  },
+  {
+   "tenor": "10Y",
+   "spread": 135.7,
+   "hazard": 0.022617,
+   "survival": 0.797585
+  }
+ ],
+ "issuer": "ISS-SOLARIS",
+ "currency": "USD",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "spread5y": 0.4
+  }
+ }
+}

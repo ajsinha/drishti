@@ -101,7 +101,7 @@ def MD(*items: str) -> list[tuple[str, str, str]]:
 # ---- market-data, risk and reference kinds ----------------------------------------------------------------------
 @dataclass
 class Panel:
-    kind: str                         # kv | table | line | area | hbar | ladder
+    kind: str                         # kv | table | line | area | hbar | ladder | surface
     id: str
     title: str
     rows: str | None = None           # Rachana-EL path to the rows (or object for kv)

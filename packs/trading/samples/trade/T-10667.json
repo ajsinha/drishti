@@ -1,0 +1,217 @@
+{
+ "tradeId": "T-10667",
+ "productType": "DEPOSIT",
+ "productName": "Term deposit / placement",
+ "assetClass": "Money market",
+ "family": "money",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-07-31",
+ "effectiveDate": "2026-08-03",
+ "maturityDate": "2026-10-28",
+ "currency": "AUD",
+ "notional": 131000000.0,
+ "mtm": 1944745,
+ "mtmCurrency": "USD",
+ "pnl1d": -6501,
+ "counterparty": {
+  "id": "CP-HARBORPT",
+  "name": "Harbor Point Bank"
+ },
+ "nettingSet": "NS-HARBORPT-NY",
+ "book": "BOOK-MM-1",
+ "trader": "TRDR-SIYER",
+ "desk": "DESK-MM",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-AUD-OIS",
+ "terms": {
+  "rate": 0.049585,
+  "placedTaken": "Placed"
+ },
+ "risk": {
+  "dv01": 2380
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 793
+  },
+  {
+   "bucket": "6M",
+   "dv01": 1587
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 79485
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -43281
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -43747
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 37920
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 30312
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -30402
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -36617
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 26281
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 49214
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 111720
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -91353
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -98062
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 5389
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -43950
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -47655
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -8314
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -42440
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 56378
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -42049
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -41673
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-07-31",
+  "executionTimestamp": "2026-07-31T15:41:10.579Z",
+  "venue": "Bloomberg SEF",
+  "venueMic": "BSEF",
+  "executionType": "Electronic",
+  "trader": "S. Iyer",
+  "salesperson": null,
+  "orderId": "ORD-04CD743144"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-07-31T09:45:00Z",
+    "by": "fo.capture"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2026-08-06T09:45:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2026-07-31T09:45:00Z",
+  "lastModifiedAt": "2026-08-06T09:45:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT386955517",
+  "matched": "2026-07-31 13:51",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209604CD74314477AE994988",
+  "upi": "QZHG9ZVXFNAF",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "HARBGB33XXX",
+  "ssiId": "SSI-AUD-99A301",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1944745,
+  "cleanPv": 1944745.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-AUD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-mm",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 5199
+  }
+ }
+}

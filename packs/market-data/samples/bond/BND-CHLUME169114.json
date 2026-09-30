@@ -1,0 +1,180 @@
+{
+ "isin": "BND-CHLUME169114",
+ "isinCode": "CHLUME169114",
+ "issuerName": "Lumen Semiconductor AG",
+ "coupon": 0.0263,
+ "maturity": "2036-01-15",
+ "price": 112.963,
+ "yield": 0.0114,
+ "zSpread": 60.8,
+ "modDuration": 8.7,
+ "rating": "A",
+ "terms": {
+  "currency": "CHF",
+  "couponFrequency": "Annual",
+  "dayCount": "ACT/ACT",
+  "issueDate": "2026-01-15",
+  "amountIssued": 2800000000,
+  "seniority": "Senior unsecured",
+  "callable": false,
+  "cusip": null
+ },
+ "coupons": [
+  {
+   "date": "2027-01-15",
+   "amount": 2.63
+  },
+  {
+   "date": "2028-01-15",
+   "amount": 2.63
+  },
+  {
+   "date": "2029-01-15",
+   "amount": 2.63
+  },
+  {
+   "date": "2030-01-15",
+   "amount": 2.63
+  },
+  {
+   "date": "2031-01-15",
+   "amount": 2.63
+  },
+  {
+   "date": "2032-01-15",
+   "amount": 2.63
+  }
+ ],
+ "history": [
+  {
+   "date": "2026-08-19",
+   "price": 112.988
+  },
+  {
+   "date": "2026-08-20",
+   "price": 112.675
+  },
+  {
+   "date": "2026-08-21",
+   "price": 112.941
+  },
+  {
+   "date": "2026-08-24",
+   "price": 113.338
+  },
+  {
+   "date": "2026-08-25",
+   "price": 112.986
+  },
+  {
+   "date": "2026-08-26",
+   "price": 112.92
+  },
+  {
+   "date": "2026-08-27",
+   "price": 112.75
+  },
+  {
+   "date": "2026-08-28",
+   "price": 112.938
+  },
+  {
+   "date": "2026-08-31",
+   "price": 112.974
+  },
+  {
+   "date": "2026-09-01",
+   "price": 113.203
+  },
+  {
+   "date": "2026-09-02",
+   "price": 113.376
+  },
+  {
+   "date": "2026-09-03",
+   "price": 113.528
+  },
+  {
+   "date": "2026-09-04",
+   "price": 113.522
+  },
+  {
+   "date": "2026-09-08",
+   "price": 113.421
+  },
+  {
+   "date": "2026-09-09",
+   "price": 113.674
+  },
+  {
+   "date": "2026-09-10",
+   "price": 113.823
+  },
+  {
+   "date": "2026-09-11",
+   "price": 113.733
+  },
+  {
+   "date": "2026-09-14",
+   "price": 113.444
+  },
+  {
+   "date": "2026-09-15",
+   "price": 113.256
+  },
+  {
+   "date": "2026-09-16",
+   "price": 113.34
+  },
+  {
+   "date": "2026-09-17",
+   "price": 113.621
+  },
+  {
+   "date": "2026-09-18",
+   "price": 113.91
+  },
+  {
+   "date": "2026-09-21",
+   "price": 113.66
+  },
+  {
+   "date": "2026-09-22",
+   "price": 113.269
+  },
+  {
+   "date": "2026-09-23",
+   "price": 113.473
+  },
+  {
+   "date": "2026-09-24",
+   "price": 113.21
+  },
+  {
+   "date": "2026-09-25",
+   "price": 113.254
+  },
+  {
+   "date": "2026-09-28",
+   "price": 113.122
+  },
+  {
+   "date": "2026-09-29",
+   "price": 113.132
+  },
+  {
+   "date": "2026-09-30",
+   "price": 112.963
+  }
+ ],
+ "issuer": "ISS-LUMEN",
+ "benchmarkCurve": "CRV-CHF-GOVT",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "price": 0.02
+  }
+ }
+}

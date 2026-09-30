@@ -1,0 +1,38 @@
+{
+ "resultId": "PNL-MM-1",
+ "date": "2026-09-30",
+ "actual": -152348,
+ "explained": -150079,
+ "unexplained": -2269,
+ "attribution": [
+  {
+   "factor": "Rates delta",
+   "pnl": -63033
+  },
+  {
+   "factor": "FX delta",
+   "pnl": -18009
+  },
+  {
+   "factor": "Credit",
+   "pnl": -12006
+  },
+  {
+   "factor": "Vega",
+   "pnl": -15008
+  },
+  {
+   "factor": "Carry and theta",
+   "pnl": -30016
+  },
+  {
+   "factor": "New trades",
+   "pnl": -12006
+  }
+ ],
+ "book": "BOOK-MM-1",
+ "_meta": {
+  "source": "pnl-explain",
+  "generation": 1
+ }
+}

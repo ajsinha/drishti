@@ -1,0 +1,33 @@
+{
+ "deskId": "DESK-COMM",
+ "name": "Commodities",
+ "head": "T. Brennan",
+ "books": [
+  {
+   "id": "BOOK-COMM-1",
+   "trades": 28,
+   "mtm": 11845271
+  },
+  {
+   "id": "BOOK-COMM-2",
+   "trades": 31,
+   "mtm": 20548795
+  },
+  {
+   "id": "BOOK-COMM-3",
+   "trades": 31,
+   "mtm": -19078473
+  }
+ ],
+ "var99": 10959317,
+ "mtm": 13315593,
+ "legalEntity": "LE-NY",
+ "varResult": "VAR-COMM",
+ "assetClasses": [
+  "Commodity"
+ ],
+ "_meta": {
+  "source": "org-master",
+  "generation": 1
+ }
+}

@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-LUMEN-NY",
+ "held": 0,
+ "posted": 16674907,
+ "net": -16674907,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Orbital Telecom SA 2031",
+   "direction": "Posted",
+   "marketValue": 5558302,
+   "haircut": 0.005,
+   "value": 5530510
+  },
+  {
+   "asset": "Kaizen Motors Corp. 2036",
+   "direction": "Posted",
+   "marketValue": 5558302,
+   "haircut": 0.02,
+   "value": 5447136
+  },
+  {
+   "asset": "Solaris Energy Corp. 2036",
+   "direction": "Posted",
+   "marketValue": 5558302,
+   "haircut": 0.005,
+   "value": 5530510
+  }
+ ],
+ "csa": "CSA-LUMEN",
+ "nettingSet": "NS-LUMEN-NY",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

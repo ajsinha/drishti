@@ -1,0 +1,158 @@
+{
+ "curveId": "CRV-GBP-GOVT",
+ "currency": "GBP",
+ "curveType": "Government",
+ "index": "SONIA",
+ "tenY": 0.0393,
+ "slope2s10s": 28.3,
+ "asOf": "2026-09-30",
+ "points": [
+  {
+   "tenor": "1M",
+   "maturity": "2026-10-30",
+   "instrument": "Deposit / future",
+   "quote": 0.03691,
+   "zeroRate": 3.6967,
+   "df": 0.996924
+  },
+  {
+   "tenor": "3M",
+   "maturity": "2026-12-30",
+   "instrument": "Deposit / future",
+   "quote": 0.036794,
+   "zeroRate": 3.6964,
+   "df": 0.990802
+  },
+  {
+   "tenor": "6M",
+   "maturity": "2027-03-30",
+   "instrument": "Deposit / future",
+   "quote": 0.036595,
+   "zeroRate": 3.6934,
+   "df": 0.981702
+  },
+  {
+   "tenor": "1Y",
+   "maturity": "2027-09-30",
+   "instrument": "Gilt benchmark",
+   "quote": 0.036089,
+   "zeroRate": 3.6756,
+   "df": 0.963911
+  },
+  {
+   "tenor": "2Y",
+   "maturity": "2028-09-30",
+   "instrument": "Gilt benchmark",
+   "quote": 0.035168,
+   "zeroRate": 3.6466,
+   "df": 0.929664
+  },
+  {
+   "tenor": "3Y",
+   "maturity": "2029-09-30",
+   "instrument": "Gilt benchmark",
+   "quote": 0.034805,
+   "zeroRate": 3.6759,
+   "df": 0.895586
+  },
+  {
+   "tenor": "5Y",
+   "maturity": "2031-09-30",
+   "instrument": "Gilt benchmark",
+   "quote": 0.035002,
+   "zeroRate": 3.8477,
+   "df": 0.824989
+  },
+  {
+   "tenor": "7Y",
+   "maturity": "2033-09-30",
+   "instrument": "Gilt benchmark",
+   "quote": 0.034197,
+   "zeroRate": 3.9089,
+   "df": 0.760619
+  },
+  {
+   "tenor": "10Y",
+   "maturity": "2036-09-30",
+   "instrument": "Gilt benchmark",
+   "quote": 0.032497,
+   "zeroRate": 3.93,
+   "df": 0.675029
+  },
+  {
+   "tenor": "15Y",
+   "maturity": "2041-09-30",
+   "instrument": "Gilt benchmark",
+   "quote": 0.029764,
+   "zeroRate": 3.9428,
+   "df": 0.553541
+  },
+  {
+   "tenor": "20Y",
+   "maturity": "2046-09-30",
+   "instrument": "Gilt benchmark",
+   "quote": 0.027291,
+   "zeroRate": 3.9464,
+   "df": 0.454172
+  },
+  {
+   "tenor": "30Y",
+   "maturity": "2056-09-30",
+   "instrument": "Gilt benchmark",
+   "quote": 0.023135,
+   "zeroRate": 3.9478,
+   "df": 0.305948
+  }
+ ],
+ "forwards": [
+  {
+   "tenor": "1Y",
+   "rate": 3.6338
+  },
+  {
+   "tenor": "2Y",
+   "rate": 3.7536
+  },
+  {
+   "tenor": "3Y",
+   "rate": 4.0457
+  },
+  {
+   "tenor": "5Y",
+   "rate": 4.0578
+  },
+  {
+   "tenor": "7Y",
+   "rate": 3.9895
+  },
+  {
+   "tenor": "10Y",
+   "rate": 3.9823
+  },
+  {
+   "tenor": "15Y",
+   "rate": 3.9783
+  },
+  {
+   "tenor": "20Y",
+   "rate": 3.9732
+  }
+ ],
+ "interpolation": "Log-linear on discount factors",
+ "dayCount": "ACT/365F",
+ "calendar": "CAL-GBLO",
+ "fixingIndex": "FIX-SONIA",
+ "builtAt": "2026-09-30T18:02:41Z",
+ "sources": [
+  "Broker composite",
+  "Exchange settlements"
+ ],
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "tenY": 0.0003
+  }
+ }
+}

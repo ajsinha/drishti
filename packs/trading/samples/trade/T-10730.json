@@ -1,0 +1,374 @@
+{
+ "tradeId": "T-10730",
+ "productType": "CAPITAL_PROTECTED_NOTE",
+ "productName": "Capital-protected note",
+ "assetClass": "Structured",
+ "family": "note",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2026-04-01",
+ "effectiveDate": "2026-04-07",
+ "maturityDate": "2030-08-27",
+ "currency": "EUR",
+ "notional": 64000000.0,
+ "mtm": 1294522,
+ "mtmCurrency": "USD",
+ "pnl1d": -36536,
+ "counterparty": {
+  "id": "CP-RHEINTAL",
+  "name": "Rheintal Landesbank"
+ },
+ "nettingSet": "NS-RHEINTAL-TKY",
+ "book": "BOOK-STRUCT-3",
+ "trader": "TRDR-YTANAKA",
+ "desk": "DESK-STRUCT",
+ "legalEntity": "LE-TKY",
+ "underlyingIndex": "EQX-SX5E",
+ "equityVolSurface": "EQV-SX5E",
+ "discountCurve": "CRV-EUR-OIS",
+ "terms": {
+  "protection": 0.907722,
+  "participation": 0.982222,
+  "cap": 0.250032
+ },
+ "risk": {
+  "delta": -129976,
+  "vega": -263044,
+  "dv01": -23768
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -6189,
+   "vega": -12526,
+   "dv01": -1132
+  },
+  {
+   "bucket": "1M",
+   "delta": -12379,
+   "vega": -25052,
+   "dv01": -2264
+  },
+  {
+   "bucket": "3M",
+   "delta": -18568,
+   "vega": -37578,
+   "dv01": -3395
+  },
+  {
+   "bucket": "6M",
+   "delta": -24757,
+   "vega": -50104,
+   "dv01": -4527
+  },
+  {
+   "bucket": "1Y",
+   "delta": -30947,
+   "vega": -62630,
+   "dv01": -5659
+  },
+  {
+   "bucket": "2Y",
+   "delta": -37136,
+   "vega": -75155,
+   "dv01": -6791
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-07-07",
+   "level": 86.54,
+   "trigger": 100.0,
+   "performance": -0.1346,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-10-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-01-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-04-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-07-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-10-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-01-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-04-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-07-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-10-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-01-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-04-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-07-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-10-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-01-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-04-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-07-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-08-27",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 73319
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -32328
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 3702
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -11944
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 1984
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 64687
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 14875
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 37524
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 19224
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -41637
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -45623
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -32549
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 29104
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -27913
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -32001
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 25337
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 34944
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 2137
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 892
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 75716
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-04-01",
+  "executionTimestamp": "2026-04-01T12:47:30.645Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "Y. Tanaka",
+  "salesperson": null,
+  "orderId": "ORD-2427A29BAE"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-04-01T11:19:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2026-04-01T11:19:00Z",
+  "lastModifiedAt": "2026-04-01T11:19:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT811622563",
+  "matched": "2026-04-01 16:47",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300BLAOJ55ZE6F4742427A29BAEEF9BFEDAFA",
+  "upi": "QZIAWIJAPGTG",
+  "reportingRegimes": [
+   "JFSA"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "RHEIGB33XXX",
+  "ssiId": "SSI-EUR-230AB8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1294522,
+  "cleanPv": 1294522.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQX-SX5E",
+   "EQV-SX5E",
+   "CRV-EUR-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-struct",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 3229
+  }
+ }
+}

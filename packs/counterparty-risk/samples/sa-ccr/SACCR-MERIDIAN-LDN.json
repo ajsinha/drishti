@@ -1,0 +1,60 @@
+{
+ "calcId": "SACCR-MERIDIAN-LDN",
+ "replacementCost": 637446,
+ "addOn": 175446000,
+ "multiplier": 1.0,
+ "ead": 246516824,
+ "rwa": 123258412,
+ "addOns": [
+  {
+   "assetClass": "Foreign exchange",
+   "addOn": 2416000
+  },
+  {
+   "assetClass": "Equity",
+   "addOn": 172000000
+  },
+  {
+   "assetClass": "Interest rate",
+   "addOn": 1030000
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "USD",
+   "effectiveNotional": 60400000,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "USD",
+   "effectiveNotional": -31500000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "CHF",
+   "effectiveNotional": -146000000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "EUR",
+   "effectiveNotional": 360000000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "EUR",
+   "effectiveNotional": -206000000,
+   "sf": 0.005
+  }
+ ],
+ "nettingSet": "NS-MERIDIAN-LDN",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

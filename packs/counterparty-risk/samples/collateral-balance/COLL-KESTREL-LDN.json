@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-KESTREL-LDN",
+ "held": 0,
+ "posted": 3197103,
+ "net": -3197103,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Cascadia Airlines Inc. 2031",
+   "direction": "Posted",
+   "marketValue": 1065701,
+   "haircut": 0.005,
+   "value": 1060372
+  },
+  {
+   "asset": "Orbital Telecom SA 2031",
+   "direction": "Posted",
+   "marketValue": 1065701,
+   "haircut": 0.02,
+   "value": 1044387
+  },
+  {
+   "asset": "Japan Ministry of Finance 2036",
+   "direction": "Posted",
+   "marketValue": 1065701,
+   "haircut": 0.005,
+   "value": 1060372
+  }
+ ],
+ "csa": "CSA-KESTREL",
+ "nettingSet": "NS-KESTREL-LDN",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

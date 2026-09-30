@@ -1,0 +1,58 @@
+{
+ "resultId": "CVA-SUMMIT-NY",
+ "cva": -32891,
+ "dva": 8634,
+ "fva": -295,
+ "kva": -307558,
+ "cs01": -592,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -32891
+  },
+  {
+   "name": "DVA",
+   "amount": 8634
+  },
+  {
+   "name": "FVA",
+   "amount": -295
+  },
+  {
+   "name": "KVA",
+   "amount": -307558
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -592
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 132
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 66
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -987
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 559
+  }
+ ],
+ "nettingSet": "NS-SUMMIT-NY",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

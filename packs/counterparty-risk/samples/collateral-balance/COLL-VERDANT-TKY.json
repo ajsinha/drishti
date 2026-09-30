@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-VERDANT-TKY",
+ "held": 0,
+ "posted": 1408096,
+ "net": -1408096,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Japan Ministry of Finance 2031",
+   "direction": "Posted",
+   "marketValue": 469365,
+   "haircut": 0.005,
+   "value": 467018
+  },
+  {
+   "asset": "Helix Pharmaceuticals Inc. 2031",
+   "direction": "Posted",
+   "marketValue": 469365,
+   "haircut": 0.02,
+   "value": 459978
+  },
+  {
+   "asset": "Meridian Financial Group 2036",
+   "direction": "Posted",
+   "marketValue": 469365,
+   "haircut": 0.02,
+   "value": 459978
+  }
+ ],
+ "csa": "CSA-VERDANT",
+ "nettingSet": "NS-VERDANT-TKY",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

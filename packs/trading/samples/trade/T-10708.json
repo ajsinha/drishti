@@ -1,0 +1,261 @@
+{
+ "tradeId": "T-10708",
+ "productType": "SEC_LENDING",
+ "productName": "Securities lending",
+ "assetClass": "Securities financing",
+ "family": "sft",
+ "status": "Live",
+ "direction": "Repo (lend cash)",
+ "tradeDate": "2026-09-01",
+ "effectiveDate": "2026-09-03",
+ "maturityDate": "2026-10-12",
+ "currency": "GBP",
+ "notional": 184000000.0,
+ "mtm": -362786,
+ "mtmCurrency": "USD",
+ "pnl1d": 20862,
+ "counterparty": {
+  "id": "CP-MERIDIAN-RE",
+  "name": "Meridian Reinsurance Ltd"
+ },
+ "nettingSet": "NS-MERIDIAN-RE-FRA",
+ "book": "BOOK-SFT-2",
+ "trader": "TRDR-KBRANDT",
+ "desk": "DESK-SFT",
+ "legalEntity": "LE-FRA",
+ "underlyingEquity": "EQ-GRNT",
+ "repoCurve": "REPO-GBP",
+ "terms": {
+  "fee": 116.6,
+  "collateralType": "Cash",
+  "rebateRate": 0.032436
+ },
+ "risk": {
+  "exposure": 4614490,
+  "delta": 1081733
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "exposure": 461449,
+   "delta": 108173
+  },
+  {
+   "bucket": "1M",
+   "exposure": 922898,
+   "delta": 216347
+  },
+  {
+   "bucket": "3M",
+   "exposure": 1384347,
+   "delta": 324520
+  },
+  {
+   "bucket": "6M",
+   "exposure": 1845796,
+   "delta": 432693
+  }
+ ],
+ "schedule": [
+  {
+   "asset": "United Kingdom Debt Management Office 2031",
+   "isin": "GBGILT065113",
+   "quantity": 60042079,
+   "marketValue": 59597768,
+   "haircut": 0.04,
+   "value": 57213857
+  },
+  {
+   "asset": "Japan Ministry of Finance 2031",
+   "isin": "JP0JGB019237",
+   "quantity": 57240719,
+   "marketValue": 60029487,
+   "haircut": 0.01,
+   "value": 59429192
+  },
+  {
+   "asset": "Meridian Financial Group 2036",
+   "isin": "USMERI186295",
+   "quantity": 60635541,
+   "marketValue": 60952059,
+   "haircut": 0.04,
+   "value": 58513977
+  }
+ ],
+ "nextIndex": -1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 4175
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -486
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 9116
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 1086
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 6449
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -9176
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -8595
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -3670
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -18541
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 6330
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -12978
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 10213
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -9713
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -14854
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 12750
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 89
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -13592
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -6741
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 13767
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -6465
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-09-01",
+  "executionTimestamp": "2026-09-01T16:01:48.901Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "K. Brandt",
+  "salesperson": null,
+  "orderId": "ORD-F38224071C"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-09-01T12:27:00Z",
+    "by": "mo.amend"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2026-09-06T12:27:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-09-01T12:27:00Z",
+  "lastModifiedAt": "2026-09-06T12:27:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT830787701",
+  "matched": "2026-09-01 13:57",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z9DXU4T18OK744F38224071CB0C04D4D4E",
+  "upi": "QZ2ATRWPHXTD",
+  "reportingRegimes": [
+   "EU EMIR",
+   "EU MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Barclays Bank plc",
+  "ourAgentBic": "BARCGB22XXX",
+  "theirAgentBic": "MERIGB33XXX",
+  "ssiId": "SSI-GBP-9DC4EA",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -362786,
+  "cleanPv": -362786.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQ-GRNT",
+   "REPO-GBP"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "globalone-sft",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 2566
+  }
+ }
+}

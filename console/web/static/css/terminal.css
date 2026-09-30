@@ -399,3 +399,8 @@ body.embed .vhead { padding: .6rem .8rem; }
 .pnl-empty { margin: 0; padding: .9rem .2rem; color: var(--d-faint); font-size: .85rem; display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
 .pnl-empty i { font-size: 1rem; }
 .pnl-empty-why { flex-basis: 100%; font-size: .75rem; color: var(--d-faint); }
+
+/* ---- surface panels (heatmap / 3D) ---- */
+.surface-tools { display: flex; gap: .3rem; justify-content: flex-end; margin-bottom: .3rem; }
+.surface-tools .md-btn[aria-pressed="true"] { color: var(--d-accent); border-color: var(--d-accent); }
+.chart.surface { height: 340px; }

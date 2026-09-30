@@ -1,0 +1,59 @@
+{
+ "resultId": "CVA-LUMEN-NY",
+ "cva": -34595,
+ "dva": 12108,
+ "fva": -38615,
+ "kva": -159170,
+ "cs01": -623,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -34595
+  },
+  {
+   "name": "DVA",
+   "amount": 12108
+  },
+  {
+   "name": "FVA",
+   "amount": -38615
+  },
+  {
+   "name": "KVA",
+   "amount": -159170
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -623
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 138
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 69
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -1038
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 588
+  }
+ ],
+ "nettingSet": "NS-LUMEN-NY",
+ "creditCurve": "CDS-LUMEN",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

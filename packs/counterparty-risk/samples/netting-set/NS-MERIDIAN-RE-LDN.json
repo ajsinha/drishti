@@ -1,0 +1,210 @@
+{
+ "nettingSetId": "NS-MERIDIAN-RE-LDN",
+ "tradeCount": 16,
+ "netMtm": 1119348,
+ "collateral": 895573,
+ "eePeak": 72065501,
+ "pfePeak": 162569103,
+ "limit": 234000000.0,
+ "utilisation": 0.6947,
+ "cva": -193821,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 7721852,
+   "pfe": 23746749
+  },
+  {
+   "tenor": "1M",
+   "ee": 14000916,
+   "pfe": 36769691
+  },
+  {
+   "tenor": "3M",
+   "ee": 24080917,
+   "pfe": 58945693
+  },
+  {
+   "tenor": "6M",
+   "ee": 33955748,
+   "pfe": 80670322
+  },
+  {
+   "tenor": "1Y",
+   "ee": 47814176,
+   "pfe": 111146175
+  },
+  {
+   "tenor": "2Y",
+   "ee": 51383432,
+   "pfe": 117573250
+  },
+  {
+   "tenor": "3Y",
+   "ee": 61154259,
+   "pfe": 138945171
+  },
+  {
+   "tenor": "5Y",
+   "ee": 72065501,
+   "pfe": 162569103
+  },
+  {
+   "tenor": "7Y",
+   "ee": 45969129,
+   "pfe": 103302084
+  },
+  {
+   "tenor": "10Y",
+   "ee": 50736243,
+   "pfe": 113624534
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10366",
+   "product": "Equity Asian option",
+   "notional": 169000000.0,
+   "maturity": "2032-02-27",
+   "mtm": 4285041
+  },
+  {
+   "tradeId": "T-10554",
+   "product": "Inflation-linked bond",
+   "notional": 145000000.0,
+   "maturity": "2027-09-27",
+   "mtm": -2725596
+  },
+  {
+   "tradeId": "T-10560",
+   "product": "Inflation asset swap",
+   "notional": 153000000.0,
+   "maturity": "2028-02-03",
+   "mtm": -2304552
+  },
+  {
+   "tradeId": "T-10361",
+   "product": "Equity Asian option",
+   "notional": 173000000.0,
+   "maturity": "2037-02-02",
+   "mtm": 2232719
+  },
+  {
+   "tradeId": "T-10197",
+   "product": "FX barrier option",
+   "notional": 202000000.0,
+   "maturity": "2033-04-13",
+   "mtm": 2035982
+  },
+  {
+   "tradeId": "T-10358",
+   "product": "Equity barrier option",
+   "notional": 185000000.0,
+   "maturity": "2037-02-17",
+   "mtm": 1866866
+  },
+  {
+   "tradeId": "T-10416",
+   "product": "Portfolio (basket) swap",
+   "notional": 143000000.0,
+   "maturity": "2028-08-23",
+   "mtm": -1863356
+  },
+  {
+   "tradeId": "T-10383",
+   "product": "Autocallable note",
+   "notional": 137000000.0,
+   "maturity": "2031-10-06",
+   "mtm": -1847391
+  },
+  {
+   "tradeId": "T-10222",
+   "product": "FX target redemption forward",
+   "notional": 236000000.0,
+   "maturity": "2033-12-21",
+   "mtm": 1608918
+  },
+  {
+   "tradeId": "T-10217",
+   "product": "FX target redemption forward",
+   "notional": 177000000.0,
+   "maturity": "2029-03-21",
+   "mtm": -930931
+  },
+  {
+   "tradeId": "T-10352",
+   "product": "Index option",
+   "notional": 133000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -692360
+  },
+  {
+   "tradeId": "T-10378",
+   "product": "Cliquet (ratchet)",
+   "notional": 68000000.0,
+   "maturity": "2031-01-20",
+   "mtm": -558730
+  },
+  {
+   "tradeId": "T-10161",
+   "product": "FX spot",
+   "notional": 12000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 294618
+  },
+  {
+   "tradeId": "T-10162",
+   "product": "FX spot",
+   "notional": 54000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -273065
+  },
+  {
+   "tradeId": "T-10441",
+   "product": "Basket option",
+   "notional": 109000000.0,
+   "maturity": "2027-10-15",
+   "mtm": -4588
+  },
+  {
+   "tradeId": "T-10231",
+   "product": "FX variance swap",
+   "notional": 1000000.0,
+   "maturity": "2028-06-20",
+   "mtm": -4227
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Inflation",
+   "mtm": -5030148
+  },
+  {
+   "asset": "Equity",
+   "mtm": 3418201
+  },
+  {
+   "asset": "FX",
+   "mtm": 2731295
+  }
+ ],
+ "counterparty": "CP-MERIDIAN-RE",
+ "agreement": "AGR-MERIDIAN-RE-ISDA",
+ "csa": "CSA-MERIDIAN-RE",
+ "creditLimit": "LIM-MERIDIAN-RE",
+ "exposureProfile": "EXP-MERIDIAN-RE-LDN",
+ "cvaResult": "CVA-MERIDIAN-RE-LDN",
+ "saccr": "SACCR-MERIDIAN-RE-LDN",
+ "simm": "SIMM-MERIDIAN-RE",
+ "collateralBalance": "COLL-MERIDIAN-RE-LDN",
+ "legalEntity": "LE-LDN",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 2238
+  }
+ }
+}

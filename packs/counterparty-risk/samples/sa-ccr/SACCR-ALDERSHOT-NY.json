@@ -1,0 +1,90 @@
+{
+ "calcId": "SACCR-ALDERSHOT-NY",
+ "replacementCost": 6197243,
+ "addOn": 36302260,
+ "multiplier": 1.0,
+ "ead": 59499305,
+ "rwa": 11899861,
+ "addOns": [
+  {
+   "assetClass": "Interest rate",
+   "addOn": 4681027
+  },
+  {
+   "assetClass": "Credit",
+   "addOn": 19774521
+  },
+  {
+   "assetClass": "Commodity",
+   "addOn": 11846712
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "GBP",
+   "effectiveNotional": 392000000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "CHF",
+   "effectiveNotional": 118460274,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "USD",
+   "effectiveNotional": -225000000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "AUD",
+   "effectiveNotional": 28353425,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "JPY",
+   "effectiveNotional": 154191781,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "EUR",
+   "effectiveNotional": 18200000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "USD",
+   "effectiveNotional": 79175342,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "JPY",
+   "effectiveNotional": -85315068,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "AUD",
+   "effectiveNotional": 231000000,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Commodity",
+   "hedgingSet": "USD",
+   "effectiveNotional": 65815068,
+   "sf": 0.18
+  }
+ ],
+ "nettingSet": "NS-ALDERSHOT-NY",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

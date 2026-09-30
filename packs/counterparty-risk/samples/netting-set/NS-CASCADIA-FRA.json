@@ -1,0 +1,97 @@
+{
+ "nettingSetId": "NS-CASCADIA-FRA",
+ "tradeCount": 1,
+ "netMtm": 1033179,
+ "collateral": 736263,
+ "eePeak": 306758,
+ "pfePeak": 681780,
+ "limit": 5000000.0,
+ "utilisation": 0.1364,
+ "cva": -3753,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 304585,
+   "pfe": 676999
+  },
+  {
+   "tenor": "1M",
+   "ee": 306758,
+   "pfe": 681780
+  },
+  {
+   "tenor": "3M",
+   "ee": 278927,
+   "pfe": 613639
+  },
+  {
+   "tenor": "6M",
+   "ee": 262027,
+   "pfe": 576460
+  },
+  {
+   "tenor": "1Y",
+   "ee": 231238,
+   "pfe": 508725
+  },
+  {
+   "tenor": "2Y",
+   "ee": 180089,
+   "pfe": 396195
+  },
+  {
+   "tenor": "3Y",
+   "ee": 140253,
+   "pfe": 308557
+  },
+  {
+   "tenor": "5Y",
+   "ee": 85068,
+   "pfe": 187149
+  },
+  {
+   "tenor": "7Y",
+   "ee": 51596,
+   "pfe": 113512
+  },
+  {
+   "tenor": "10Y",
+   "ee": 24372,
+   "pfe": 53619
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10719",
+   "product": "Margin loan",
+   "notional": 79000000.0,
+   "maturity": "2026-11-04",
+   "mtm": 1033179
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Securities financing",
+   "mtm": 1033179
+  }
+ ],
+ "counterparty": "CP-CASCADIA",
+ "agreement": "AGR-CASCADIA-ISDA",
+ "csa": "CSA-CASCADIA",
+ "creditLimit": "LIM-CASCADIA",
+ "exposureProfile": "EXP-CASCADIA-FRA",
+ "cvaResult": "CVA-CASCADIA-FRA",
+ "saccr": "SACCR-CASCADIA-FRA",
+ "simm": "SIMM-CASCADIA",
+ "collateralBalance": "COLL-CASCADIA-FRA",
+ "legalEntity": "LE-FRA",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 2066
+  }
+ }
+}

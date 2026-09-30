@@ -1,0 +1,26 @@
+{
+ "issuerId": "ISS-RHEINTAL",
+ "name": "Rheintal Landesbank",
+ "rating": "A-",
+ "sector": "Banking",
+ "country": "DE",
+ "bonds": [
+  {
+   "isin": "DERHEI090723",
+   "coupon": 0.0428,
+   "maturity": "2031-04-15"
+  },
+  {
+   "isin": "DERHEI122872",
+   "coupon": 0.0478,
+   "maturity": "2036-11-15"
+  }
+ ],
+ "creditCurve": "CDS-RHEINTAL",
+ "lei": "5493005H5I0H7EZJEZ91",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ },
+ "equity": "EQ-RHNB"
+}

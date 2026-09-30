@@ -1,0 +1,71 @@
+{
+ "bookId": "BOOK-MM-2",
+ "name": "Money markets · book 2",
+ "deskName": "Money markets",
+ "tradeCount": 7,
+ "mtm": 1765867,
+ "dv01": -21826,
+ "topTrades": [
+  {
+   "tradeId": "T-10665",
+   "product": "Certificate of deposit",
+   "notional": 241000000.0,
+   "maturity": "2027-08-06",
+   "mtm": 3225400
+  },
+  {
+   "tradeId": "T-10652",
+   "product": "Treasury bill",
+   "notional": 215000000.0,
+   "maturity": "2026-12-11",
+   "mtm": -1859294
+  },
+  {
+   "tradeId": "T-10660",
+   "product": "Commercial paper",
+   "notional": 157000000.0,
+   "maturity": "2027-01-08",
+   "mtm": -996256
+  },
+  {
+   "tradeId": "T-10669",
+   "product": "Term deposit / placement",
+   "notional": 164000000.0,
+   "maturity": "2026-11-06",
+   "mtm": 879743
+  },
+  {
+   "tradeId": "T-10676",
+   "product": "Call account",
+   "notional": 125000000.0,
+   "maturity": "2027-04-05",
+   "mtm": 224016
+  },
+  {
+   "tradeId": "T-10672",
+   "product": "Term deposit / placement",
+   "notional": 32000000.0,
+   "maturity": "2027-04-08",
+   "mtm": 221400
+  },
+  {
+   "tradeId": "T-10668",
+   "product": "Term deposit / placement",
+   "notional": 36000000.0,
+   "maturity": "2026-12-28",
+   "mtm": 70858
+  }
+ ],
+ "desk": "DESK-MM",
+ "accountingTreatment": "Fair value (FVTPL)",
+ "regulatoryBook": "Trading book",
+ "volcker": "Market making",
+ "_meta": {
+  "source": "org-master",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 5000
+  }
+ }
+}

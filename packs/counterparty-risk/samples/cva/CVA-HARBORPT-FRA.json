@@ -1,0 +1,58 @@
+{
+ "resultId": "CVA-HARBORPT-FRA",
+ "cva": -3,
+ "dva": 1,
+ "fva": -5121,
+ "kva": -535,
+ "cs01": 0,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -3
+  },
+  {
+   "name": "DVA",
+   "amount": 1
+  },
+  {
+   "name": "FVA",
+   "amount": -5121
+  },
+  {
+   "name": "KVA",
+   "amount": -535
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": 0
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 0
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 0
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": 0
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 0
+  }
+ ],
+ "nettingSet": "NS-HARBORPT-FRA",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

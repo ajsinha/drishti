@@ -1,0 +1,60 @@
+{
+ "curveId": "FXF-EURGBP",
+ "pair": "EURGBP",
+ "spot": 0.871,
+ "points3m": 41.5,
+ "points1y": 167.1,
+ "points": [
+  {
+   "tenor": "ON",
+   "pips": 0.5,
+   "outright": 0.87105
+  },
+  {
+   "tenor": "1W",
+   "pips": 3.2,
+   "outright": 0.87132
+  },
+  {
+   "tenor": "1M",
+   "pips": 13.8,
+   "outright": 0.87238
+  },
+  {
+   "tenor": "2M",
+   "pips": 27.6,
+   "outright": 0.87376
+  },
+  {
+   "tenor": "3M",
+   "pips": 41.5,
+   "outright": 0.87515
+  },
+  {
+   "tenor": "6M",
+   "pips": 83.1,
+   "outright": 0.87931
+  },
+  {
+   "tenor": "9M",
+   "pips": 125.0,
+   "outright": 0.8835
+  },
+  {
+   "tenor": "1Y",
+   "pips": 167.1,
+   "outright": 0.88771
+  },
+  {
+   "tenor": "2Y",
+   "pips": 337.3,
+   "outright": 0.90473
+  }
+ ],
+ "fxSpot": "FX-EURGBP",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

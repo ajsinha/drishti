@@ -1,0 +1,59 @@
+{
+ "resultId": "CVA-RHEINTAL-TKY",
+ "cva": -5830,
+ "dva": 1530,
+ "fva": -1553,
+ "kva": -46313,
+ "cs01": -105,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -5830
+  },
+  {
+   "name": "DVA",
+   "amount": 1530
+  },
+  {
+   "name": "FVA",
+   "amount": -1553
+  },
+  {
+   "name": "KVA",
+   "amount": -46313
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -105
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 23
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 12
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -175
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 99
+  }
+ ],
+ "nettingSet": "NS-RHEINTAL-TKY",
+ "creditCurve": "CDS-RHEINTAL",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

@@ -1,0 +1,28 @@
+{
+ "calcId": "SACCR-NORTHBRIDGE-TKY",
+ "replacementCost": 911711,
+ "addOn": 57600000,
+ "multiplier": 1.0,
+ "ead": 81916395,
+ "rwa": 81916395,
+ "addOns": [
+  {
+   "assetClass": "Equity",
+   "addOn": 57600000
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "USD",
+   "effectiveNotional": 180000000,
+   "sf": 0.32
+  }
+ ],
+ "nettingSet": "NS-NORTHBRIDGE-TKY",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

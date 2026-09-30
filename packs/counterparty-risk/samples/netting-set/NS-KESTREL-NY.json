@@ -1,0 +1,260 @@
+{
+ "nettingSetId": "NS-KESTREL-NY",
+ "tradeCount": 22,
+ "netMtm": -6803082,
+ "collateral": -4303641,
+ "eePeak": 11915032,
+ "pfePeak": 28319371,
+ "limit": 56000000.0,
+ "utilisation": 0.5057,
+ "cva": -68634,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 2605136,
+   "pfe": 8079536
+  },
+  {
+   "tenor": "1M",
+   "ee": 5392105,
+   "pfe": 14197481
+  },
+  {
+   "tenor": "3M",
+   "ee": 9339400,
+   "pfe": 22881530
+  },
+  {
+   "tenor": "6M",
+   "ee": 11915032,
+   "pfe": 28319371
+  },
+  {
+   "tenor": "1Y",
+   "ee": 10866800,
+   "pfe": 25265310
+  },
+  {
+   "tenor": "2Y",
+   "ee": 6997953,
+   "pfe": 16014034
+  },
+  {
+   "tenor": "3Y",
+   "ee": 8114831,
+   "pfe": 18438266
+  },
+  {
+   "tenor": "5Y",
+   "ee": 6862045,
+   "pfe": 15480100
+  },
+  {
+   "tenor": "7Y",
+   "ee": 2370593,
+   "pfe": 5327305
+  },
+  {
+   "tenor": "10Y",
+   "ee": 0,
+   "pfe": 0
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10037",
+   "product": "Amortising swap",
+   "notional": 161000000.0,
+   "maturity": "2031-12-22",
+   "mtm": -7815523
+  },
+  {
+   "tradeId": "T-10008",
+   "product": "Overnight index swap",
+   "notional": 158000000.0,
+   "maturity": "2030-05-01",
+   "mtm": 6871958
+  },
+  {
+   "tradeId": "T-10079",
+   "product": "Interest rate cap",
+   "notional": 190000000.0,
+   "maturity": "2028-06-29",
+   "mtm": -2636721
+  },
+  {
+   "tradeId": "T-10268",
+   "product": "First-to-default basket",
+   "notional": 155000000.0,
+   "maturity": "2033-05-06",
+   "mtm": 2634218
+  },
+  {
+   "tradeId": "T-10640",
+   "product": "Asset-backed security",
+   "notional": 158000000.0,
+   "maturity": "2030-07-25",
+   "mtm": -2614302
+  },
+  {
+   "tradeId": "T-10041",
+   "product": "Amortising swap",
+   "notional": 233000000.0,
+   "maturity": "2029-08-20",
+   "mtm": -2563201
+  },
+  {
+   "tradeId": "T-10256",
+   "product": "Index tranche",
+   "notional": 137000000.0,
+   "maturity": "2033-03-21",
+   "mtm": -2011432
+  },
+  {
+   "tradeId": "T-10153",
+   "product": "Target redemption note (rates)",
+   "notional": 93000000.0,
+   "maturity": "2028-09-28",
+   "mtm": 1991433
+  },
+  {
+   "tradeId": "T-10017",
+   "product": "Basis swap (float/float)",
+   "notional": 189000000.0,
+   "maturity": "2027-05-25",
+   "mtm": 1857281
+  },
+  {
+   "tradeId": "T-10281",
+   "product": "Total return swap on a loan index",
+   "notional": 189000000.0,
+   "maturity": "2031-03-24",
+   "mtm": -1284431
+  },
+  {
+   "tradeId": "T-10533",
+   "product": "Freight forward agreement",
+   "notional": 227000000.0,
+   "maturity": "2028-05-22",
+   "mtm": -1248401
+  },
+  {
+   "tradeId": "T-10481",
+   "product": "Commodity swaption",
+   "notional": 153000000.0,
+   "maturity": "2027-08-02",
+   "mtm": -752009
+  },
+  {
+   "tradeId": "T-10106",
+   "product": "Bermudan swaption",
+   "notional": 143000000.0,
+   "maturity": "2028-10-25",
+   "mtm": 514934
+  },
+  {
+   "tradeId": "T-10081",
+   "product": "Interest rate cap",
+   "notional": 26000000.0,
+   "maturity": "2027-05-14",
+   "mtm": 282246
+  },
+  {
+   "tradeId": "T-10676",
+   "product": "Call account",
+   "notional": 125000000.0,
+   "maturity": "2027-04-05",
+   "mtm": 224016
+  },
+  {
+   "tradeId": "T-10485",
+   "product": "Commodity swaption",
+   "notional": 75000000.0,
+   "maturity": "2027-07-08",
+   "mtm": -209787
+  },
+  {
+   "tradeId": "T-10018",
+   "product": "Basis swap (float/float)",
+   "notional": 103000000.0,
+   "maturity": "2030-09-25",
+   "mtm": -142545
+  },
+  {
+   "tradeId": "T-10109",
+   "product": "American swaption",
+   "notional": 153000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -88123
+  },
+  {
+   "tradeId": "T-10643",
+   "product": "CLO tranche",
+   "notional": 23000000.0,
+   "maturity": "2032-06-02",
+   "mtm": 86751
+  },
+  {
+   "tradeId": "T-10309",
+   "product": "Unfunded risk participation",
+   "notional": 128000000.0,
+   "maturity": "2036-02-14",
+   "mtm": 55694
+  },
+  {
+   "tradeId": "T-10461",
+   "product": "Commodity swap",
+   "notional": 57000000.0,
+   "maturity": "2027-01-29",
+   "mtm": 48886
+  },
+  {
+   "tradeId": "T-10264",
+   "product": "CDS index option",
+   "notional": 56000000.0,
+   "maturity": "2027-02-24",
+   "mtm": -4024
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Fixed income",
+   "mtm": -2527551
+  },
+  {
+   "asset": "Commodity",
+   "mtm": -2161311
+  },
+  {
+   "asset": "Rates",
+   "mtm": -1728261
+  },
+  {
+   "asset": "Credit",
+   "mtm": -609975
+  },
+  {
+   "asset": "Money market",
+   "mtm": 224016
+  }
+ ],
+ "counterparty": "CP-KESTREL",
+ "agreement": "AGR-KESTREL-ISDA",
+ "csa": "CSA-KESTREL",
+ "creditLimit": "LIM-KESTREL",
+ "exposureProfile": "EXP-KESTREL-NY",
+ "cvaResult": "CVA-KESTREL-NY",
+ "saccr": "SACCR-KESTREL-NY",
+ "simm": "SIMM-KESTREL",
+ "collateralBalance": "COLL-KESTREL-NY",
+ "legalEntity": "LE-NY",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 13606
+  }
+ }
+}

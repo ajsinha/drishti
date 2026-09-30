@@ -1,0 +1,17 @@
+{
+ "groupId": "GRP-SOLARIS",
+ "name": "Solaris Energy Corp.",
+ "limit": 325000000.0,
+ "utilisation": 0.5252,
+ "members": [
+  {
+   "id": "CP-SOLARIS",
+   "name": "Solaris Energy Corp.",
+   "rating": "BBB"
+  }
+ ],
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

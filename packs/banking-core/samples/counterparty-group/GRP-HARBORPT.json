@@ -1,0 +1,17 @@
+{
+ "groupId": "GRP-HARBORPT",
+ "name": "Harbor Point Financial Corp.",
+ "limit": 467000000.0,
+ "utilisation": 0.575,
+ "members": [
+  {
+   "id": "CP-HARBORPT",
+   "name": "Harbor Point Bank",
+   "rating": "A"
+  }
+ ],
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

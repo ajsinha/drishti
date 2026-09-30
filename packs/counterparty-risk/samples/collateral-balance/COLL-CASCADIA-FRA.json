@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-CASCADIA-FRA",
+ "held": 736263,
+ "posted": 0,
+ "net": 736263,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Helix Pharmaceuticals Inc. 2031",
+   "direction": "Held",
+   "marketValue": 245421,
+   "haircut": 0.02,
+   "value": 240513
+  },
+  {
+   "asset": "Orbital Telecom SA 2036",
+   "direction": "Held",
+   "marketValue": 245421,
+   "haircut": 0.01,
+   "value": 242967
+  },
+  {
+   "asset": "Cascadia Airlines Inc. 2036",
+   "direction": "Held",
+   "marketValue": 245421,
+   "haircut": 0.02,
+   "value": 240513
+  }
+ ],
+ "csa": "CSA-CASCADIA",
+ "nettingSet": "NS-CASCADIA-FRA",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

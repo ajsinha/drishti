@@ -1,0 +1,324 @@
+{
+ "tradeId": "T-10254",
+ "productType": "CDS_TRANCHE",
+ "productName": "Index tranche",
+ "assetClass": "Credit",
+ "family": "cds",
+ "status": "Live",
+ "direction": "Buy protection",
+ "tradeDate": "2024-10-17",
+ "effectiveDate": "2024-10-21",
+ "maturityDate": "2032-11-24",
+ "currency": "JPY",
+ "notional": 202000000.0,
+ "mtm": 1564064,
+ "mtmCurrency": "USD",
+ "pnl1d": 38351,
+ "counterparty": {
+  "id": "CP-CORAL",
+  "name": "Coral Bay Municipal Authority"
+ },
+ "nettingSet": "NS-CORAL-NY",
+ "book": "BOOK-CREDIT-3",
+ "trader": "TRDR-DWHITFIELD",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-RHEINTAL",
+ "creditCurve": "CDS-RHEINTAL",
+ "discountCurve": "CRV-JPY-OIS",
+ "correlation": "CORR-EU-EQ",
+ "terms": {
+  "index": "CDX.NA.IG S47",
+  "attachment": "0.07",
+  "detachment": "1",
+  "protection": "Sold"
+ },
+ "risk": {
+  "cs01": 125218,
+  "jtd": -121200000
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 5963,
+   "jtd": -5771429
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 11926,
+   "jtd": -11542857
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 17888,
+   "jtd": -17314286
+  },
+  {
+   "bucket": "3Y",
+   "cs01": 23851,
+   "jtd": -23085714
+  },
+  {
+   "bucket": "5Y",
+   "cs01": 29814,
+   "jtd": -28857143
+  },
+  {
+   "bucket": "7Y",
+   "cs01": 35777,
+   "jtd": -34628571
+  }
+ ],
+ "schedule": [
+  {
+   "payDate": "2025-10-21",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -581430.81,
+   "pv": 0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2026-10-21",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -508474.75,
+   "pv": -493220.51,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2027-10-21",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -415434.67,
+   "pv": -402971.63,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2028-10-21",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -445913.4,
+   "pv": -432536.0,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2029-10-21",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -580115.55,
+   "pv": -562712.08,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2030-10-21",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -496659.71,
+   "pv": -481759.92,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2031-10-21",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -605122.46,
+   "pv": -586968.79,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2032-10-21",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -491564.74,
+   "pv": -476817.8,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2032-11-24",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -518521.62,
+   "pv": -502965.97,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 26653
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -54438
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -26484
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -9526
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -5845
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 5284
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 68956
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 28896
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 27863
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -24158
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -2540
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 52313
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -18817
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 61163
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -25075
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -20042
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 14220
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -104596
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 63446
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 39951
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-10-17",
+  "executionTimestamp": "2024-10-17T09:28:00.825Z",
+  "venue": "MarketAxess",
+  "venueMic": "MAEL",
+  "executionType": "Electronic",
+  "trader": "D. Whitfield",
+  "salesperson": null,
+  "orderId": "ORD-AD32BAB88A"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-10-17T09:38:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2024-10-17T09:38:00Z",
+  "lastModifiedAt": "2024-10-17T09:38:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA314108803",
+  "matched": "2024-10-17 10:18",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096AD32BAB88A8DFF7086CE",
+  "upi": "QZDTBHN24KLI",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "CORAGB33XXX",
+  "ssiId": "SSI-JPY-C31AC7",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1564064,
+  "cleanPv": 1564064.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CDS-RHEINTAL",
+   "CRV-JPY-OIS",
+   "CORR-EU-EQ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 5148
+  }
+ }
+}

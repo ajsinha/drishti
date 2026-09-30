@@ -1,0 +1,135 @@
+{
+ "indexId": "FIX-ESTR",
+ "name": "Euro short-term rate",
+ "latest": 0.02156,
+ "administrator": "ECB",
+ "tenor": "Overnight",
+ "currency": "EUR",
+ "fixings": [
+  {
+   "date": "2026-09-30",
+   "rate": 0.02156,
+   "ratePct": 2.156,
+   "volumeBn": 140.9
+  },
+  {
+   "date": "2026-09-29",
+   "rate": 0.021574,
+   "ratePct": 2.1574,
+   "volumeBn": 2282.7
+  },
+  {
+   "date": "2026-09-28",
+   "rate": 0.021586,
+   "ratePct": 2.1586,
+   "volumeBn": 2262.0
+  },
+  {
+   "date": "2026-09-25",
+   "rate": 0.0216,
+   "ratePct": 2.16,
+   "volumeBn": 937.1
+  },
+  {
+   "date": "2026-09-24",
+   "rate": 0.021596,
+   "ratePct": 2.1596,
+   "volumeBn": 325.2
+  },
+  {
+   "date": "2026-09-23",
+   "rate": 0.021589,
+   "ratePct": 2.1589,
+   "volumeBn": 1368.1
+  },
+  {
+   "date": "2026-09-22",
+   "rate": 0.021579,
+   "ratePct": 2.1579,
+   "volumeBn": 503.7
+  },
+  {
+   "date": "2026-09-21",
+   "rate": 0.021565,
+   "ratePct": 2.1565,
+   "volumeBn": 431.3
+  },
+  {
+   "date": "2026-09-18",
+   "rate": 0.02151,
+   "ratePct": 2.151,
+   "volumeBn": 2175.9
+  },
+  {
+   "date": "2026-09-17",
+   "rate": 0.02149,
+   "ratePct": 2.149,
+   "volumeBn": 393.3
+  },
+  {
+   "date": "2026-09-16",
+   "rate": 0.021471,
+   "ratePct": 2.1471,
+   "volumeBn": 276.8
+  },
+  {
+   "date": "2026-09-15",
+   "rate": 0.021452,
+   "ratePct": 2.1452,
+   "volumeBn": 732.6
+  },
+  {
+   "date": "2026-09-14",
+   "rate": 0.021436,
+   "ratePct": 2.1436,
+   "volumeBn": 1765.1
+  },
+  {
+   "date": "2026-09-11",
+   "rate": 0.021404,
+   "ratePct": 2.1404,
+   "volumeBn": 534.2
+  },
+  {
+   "date": "2026-09-10",
+   "rate": 0.0214,
+   "ratePct": 2.14,
+   "volumeBn": 2089.2
+  },
+  {
+   "date": "2026-09-09",
+   "rate": 0.021401,
+   "ratePct": 2.1401,
+   "volumeBn": 898.2
+  },
+  {
+   "date": "2026-09-08",
+   "rate": 0.021405,
+   "ratePct": 2.1405,
+   "volumeBn": 1101.4
+  },
+  {
+   "date": "2026-09-07",
+   "rate": 0.021414,
+   "ratePct": 2.1414,
+   "volumeBn": 753.5
+  },
+  {
+   "date": "2026-09-04",
+   "rate": 0.021457,
+   "ratePct": 2.1457,
+   "volumeBn": 306.5
+  },
+  {
+   "date": "2026-09-03",
+   "rate": 0.021476,
+   "ratePct": 2.1476,
+   "volumeBn": 884.6
+  }
+ ],
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

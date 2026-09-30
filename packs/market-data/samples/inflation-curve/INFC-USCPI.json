@@ -1,0 +1,88 @@
+{
+ "curveId": "INFC-USCPI",
+ "index": "INF-USCPI",
+ "be5y": 0.028788,
+ "be10y": 0.029697,
+ "points": [
+  {
+   "tenor": "1Y",
+   "breakeven": 2.714
+  },
+  {
+   "tenor": "2Y",
+   "breakeven": 2.7748
+  },
+  {
+   "tenor": "5Y",
+   "breakeven": 2.8788
+  },
+  {
+   "tenor": "10Y",
+   "breakeven": 2.9697
+  },
+  {
+   "tenor": "20Y",
+   "breakeven": 3.0667
+  },
+  {
+   "tenor": "30Y",
+   "breakeven": 3.1251
+  }
+ ],
+ "seasonality": [
+  {
+   "month": "Jan",
+   "factor": 0.00075
+  },
+  {
+   "month": "Feb",
+   "factor": 0.0013
+  },
+  {
+   "month": "Mar",
+   "factor": 0.0015
+  },
+  {
+   "month": "Apr",
+   "factor": 0.0013
+  },
+  {
+   "month": "May",
+   "factor": 0.00075
+  },
+  {
+   "month": "Jun",
+   "factor": 0.0
+  },
+  {
+   "month": "Jul",
+   "factor": -0.00075
+  },
+  {
+   "month": "Aug",
+   "factor": -0.0013
+  },
+  {
+   "month": "Sep",
+   "factor": -0.0015
+  },
+  {
+   "month": "Oct",
+   "factor": -0.0013
+  },
+  {
+   "month": "Nov",
+   "factor": -0.00075
+  },
+  {
+   "month": "Dec",
+   "factor": -0.0
+  }
+ ],
+ "inflationIndex": "INF-USCPI",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

@@ -1,0 +1,38 @@
+{
+ "curveId": "REPO-AUD",
+ "currency": "AUD",
+ "collateral": "General collateral (government)",
+ "overnight": 0.0352,
+ "asOf": "2026-09-30",
+ "points": [
+  {
+   "tenor": "ON",
+   "rate": 3.5221
+  },
+  {
+   "tenor": "1W",
+   "rate": 3.5255
+  },
+  {
+   "tenor": "1M",
+   "rate": 3.5315
+  },
+  {
+   "tenor": "3M",
+   "rate": 3.54
+  },
+  {
+   "tenor": "6M",
+   "rate": 3.5483
+  },
+  {
+   "tenor": "1Y",
+   "rate": 3.56
+  }
+ ],
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

@@ -1,0 +1,59 @@
+{
+ "resultId": "CVA-CASCADIA-TKY",
+ "cva": -518672,
+ "dva": 16018,
+ "fva": -492,
+ "kva": -137062,
+ "cs01": -9336,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -518672
+  },
+  {
+   "name": "DVA",
+   "amount": 16018
+  },
+  {
+   "name": "FVA",
+   "amount": -492
+  },
+  {
+   "name": "KVA",
+   "amount": -137062
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -9336
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 2075
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 1037
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -15560
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 8817
+  }
+ ],
+ "nettingSet": "NS-CASCADIA-TKY",
+ "creditCurve": "CDS-CASCADIA",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

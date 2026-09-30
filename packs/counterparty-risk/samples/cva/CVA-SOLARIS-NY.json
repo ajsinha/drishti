@@ -1,0 +1,59 @@
+{
+ "resultId": "CVA-SOLARIS-NY",
+ "cva": -28949,
+ "dva": 3377,
+ "fva": -6750,
+ "kva": -56754,
+ "cs01": -521,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -28949
+  },
+  {
+   "name": "DVA",
+   "amount": 3377
+  },
+  {
+   "name": "FVA",
+   "amount": -6750
+  },
+  {
+   "name": "KVA",
+   "amount": -56754
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -521
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 116
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 58
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -868
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 492
+  }
+ ],
+ "nettingSet": "NS-SOLARIS-NY",
+ "creditCurve": "CDS-SOLARIS",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

@@ -1,0 +1,27 @@
+{
+ "commodityId": "CMD-SOY",
+ "name": "Soybeans",
+ "front": 1012.0,
+ "unit": "USc/bu",
+ "exchange": "CBOT",
+ "sector": "Agriculture",
+ "spec": {
+  "contract": "SOY",
+  "unit": "USc/bu",
+  "exchange": "CBOT",
+  "settlement": "Physical",
+  "listing": "Monthly",
+  "tickSize": 0.01,
+  "tradingHours": "Sun-Fri 18:00-17:00 ET"
+ },
+ "commodityCurve": "CMDC-SOY",
+ "commodityVolSurface": "CMDV-SOY",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "front": 0.05
+  }
+ }
+}

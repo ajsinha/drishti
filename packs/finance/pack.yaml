@@ -73,6 +73,11 @@ graph:
     credit-limit: "fmt($.limit, 'compact')"
     clearing-account: "'IM limit ' + fmt($.imLimit, 'pct0')"
     contract-spec: "$.exchange"
+connectors:                     # history for the business-date picker (build it with tools/samplegen/lake.py --domain finance)
+  finance-lake:
+    plugin: delta
+    enabled: ${DRISHTI_LAKE_ENABLED:true}
+    settings: { root: "${DRISHTI_DELTA_ROOT:./data/delta}", domain: finance, lookback-days: 10 }
 roles:
   trader: { kinds: [trade, curve, fx-spot, index, book, contract-spec, clearing-account, counterparty, fixing] }
   risk:   { kinds: ["*"], raw: true }

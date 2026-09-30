@@ -1,0 +1,239 @@
+{
+ "nettingSetId": "NS-MERIDIAN-RE-NY",
+ "tradeCount": 19,
+ "netMtm": -56606259,
+ "collateral": -35835945,
+ "eePeak": 20461182,
+ "pfePeak": 45981301,
+ "limit": 71000000.0,
+ "utilisation": 0.6476,
+ "cva": -42012,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 2445354,
+   "pfe": 7583992
+  },
+  {
+   "tenor": "1M",
+   "ee": 4951789,
+   "pfe": 13038123
+  },
+  {
+   "tenor": "3M",
+   "ee": 7669550,
+   "pfe": 18790398
+  },
+  {
+   "tenor": "6M",
+   "ee": 10846382,
+   "pfe": 25779427
+  },
+  {
+   "tenor": "1Y",
+   "ee": 10418800,
+   "pfe": 24223710
+  },
+  {
+   "tenor": "2Y",
+   "ee": 13722680,
+   "pfe": 31402821
+  },
+  {
+   "tenor": "3Y",
+   "ee": 16573994,
+   "pfe": 37658912
+  },
+  {
+   "tenor": "5Y",
+   "ee": 17671645,
+   "pfe": 39865494
+  },
+  {
+   "tenor": "7Y",
+   "ee": 20461182,
+   "pfe": 45981301
+  },
+  {
+   "tenor": "10Y",
+   "ee": 174874,
+   "pfe": 391635
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10007",
+   "product": "Overnight index swap",
+   "notional": 199000000.0,
+   "maturity": "2034-06-26",
+   "mtm": -68527810
+  },
+  {
+   "tradeId": "T-10005",
+   "product": "Interest rate swap (fixed/float)",
+   "notional": 112000000.0,
+   "maturity": "2036-08-15",
+   "mtm": -12009546
+  },
+  {
+   "tradeId": "T-10030",
+   "product": "Cross-currency swap (MtM resetting)",
+   "notional": 152000000.0,
+   "maturity": "2027-12-08",
+   "mtm": 4820300
+  },
+  {
+   "tradeId": "T-10274",
+   "product": "Total return swap on a bond",
+   "notional": 238000000.0,
+   "maturity": "2030-07-08",
+   "mtm": 4717154
+  },
+  {
+   "tradeId": "T-10019",
+   "product": "Cross-currency swap (non-MtM)",
+   "notional": 192000000.0,
+   "maturity": "2029-02-12",
+   "mtm": 4154362
+  },
+  {
+   "tradeId": "T-10253",
+   "product": "Index tranche",
+   "notional": 242000000.0,
+   "maturity": "2034-02-14",
+   "mtm": 3988071
+  },
+  {
+   "tradeId": "T-10644",
+   "product": "CLO tranche",
+   "notional": 212000000.0,
+   "maturity": "2034-08-30",
+   "mtm": 2819294
+  },
+  {
+   "tradeId": "T-10673",
+   "product": "Call account",
+   "notional": 117000000.0,
+   "maturity": "2027-07-29",
+   "mtm": 2344329
+  },
+  {
+   "tradeId": "T-10633",
+   "product": "CMO tranche",
+   "notional": 214000000.0,
+   "maturity": "2034-05-05",
+   "mtm": -2085900
+  },
+  {
+   "tradeId": "T-10001",
+   "product": "Interest rate swap (fixed/float)",
+   "notional": 242000000.0,
+   "maturity": "2032-06-25",
+   "mtm": 1875863
+  },
+  {
+   "tradeId": "T-10142",
+   "product": "Range accrual swap",
+   "notional": 79000000.0,
+   "maturity": "2037-11-16",
+   "mtm": 1349732
+  },
+  {
+   "tradeId": "T-10118",
+   "product": "CMS cap / floor",
+   "notional": 118000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 1337400
+  },
+  {
+   "tradeId": "T-10277",
+   "product": "Total return swap on a loan index",
+   "notional": 60000000.0,
+   "maturity": "2028-02-01",
+   "mtm": -1076104
+  },
+  {
+   "tradeId": "T-10483",
+   "product": "Commodity swaption",
+   "notional": 192000000.0,
+   "maturity": "2027-09-09",
+   "mtm": -735965
+  },
+  {
+   "tradeId": "T-10063",
+   "product": "Forward rate agreement",
+   "notional": 368000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 467887
+  },
+  {
+   "tradeId": "T-10114",
+   "product": "American swaption",
+   "notional": 200000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -260656
+  },
+  {
+   "tradeId": "T-10504",
+   "product": "Commodity index swap",
+   "notional": 72000000.0,
+   "maturity": "2026-11-05",
+   "mtm": 250034
+  },
+  {
+   "tradeId": "T-10243",
+   "product": "Single-name CDS",
+   "notional": 27000000.0,
+   "maturity": "2027-10-14",
+   "mtm": -182288
+  },
+  {
+   "tradeId": "T-10467",
+   "product": "Commodity basis swap",
+   "notional": 217000000.0,
+   "maturity": "2035-09-20",
+   "mtm": 147584
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Rates",
+   "mtm": -66792468
+  },
+  {
+   "asset": "Credit",
+   "mtm": 7446833
+  },
+  {
+   "asset": "Money market",
+   "mtm": 2344329
+  },
+  {
+   "asset": "Fixed income",
+   "mtm": 733394
+  },
+  {
+   "asset": "Commodity",
+   "mtm": -338347
+  }
+ ],
+ "counterparty": "CP-MERIDIAN-RE",
+ "agreement": "AGR-MERIDIAN-RE-ISDA",
+ "csa": "CSA-MERIDIAN-RE",
+ "creditLimit": "LIM-MERIDIAN-RE",
+ "exposureProfile": "EXP-MERIDIAN-RE-NY",
+ "cvaResult": "CVA-MERIDIAN-RE-NY",
+ "saccr": "SACCR-MERIDIAN-RE-NY",
+ "simm": "SIMM-MERIDIAN-RE",
+ "collateralBalance": "COLL-MERIDIAN-RE-NY",
+ "legalEntity": "LE-NY",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 113212
+  }
+ }
+}

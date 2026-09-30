@@ -1,0 +1,256 @@
+{
+ "tradeId": "T-10181",
+ "productType": "FX_OPTION",
+ "productName": "FX vanilla option",
+ "assetClass": "FX",
+ "family": "option",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2025-09-30",
+ "effectiveDate": "2025-10-02",
+ "maturityDate": "2028-06-07",
+ "currency": "USD",
+ "notional": 50000000.0,
+ "mtm": -355449,
+ "mtmCurrency": "USD",
+ "pnl1d": 13743,
+ "counterparty": {
+  "id": "CP-AURORA",
+  "name": "Aurora Sovereign Wealth Fund"
+ },
+ "nettingSet": "NS-AURORA-LDN",
+ "book": "BOOK-FX-2",
+ "trader": "TRDR-ENOVAK",
+ "desk": "DESK-FX",
+ "legalEntity": "LE-LDN",
+ "fxSpot": "FX-USDCNH",
+ "fxForwardCurve": "FXF-USDCNH",
+ "fxVolSurface": "FXV-USDCNH",
+ "terms": {
+  "optionType": "Call",
+  "exerciseStyle": "European",
+  "expiryDate": "2028-08-20",
+  "premium": 119840.0,
+  "strike": 158.79394,
+  "deltaAtTrade": 0.1888
+ },
+ "risk": {
+  "fxDelta": -500000,
+  "vega": -155499,
+  "gamma": 886
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "fxDelta": -23810,
+   "vega": -7405,
+   "gamma": 42
+  },
+  {
+   "bucket": "1M",
+   "fxDelta": -47619,
+   "vega": -14809,
+   "gamma": 84
+  },
+  {
+   "bucket": "3M",
+   "fxDelta": -71429,
+   "vega": -22214,
+   "gamma": 127
+  },
+  {
+   "bucket": "6M",
+   "fxDelta": -95238,
+   "vega": -29619,
+   "gamma": 169
+  },
+  {
+   "bucket": "1Y",
+   "fxDelta": -119048,
+   "vega": -37024,
+   "gamma": 211
+  },
+  {
+   "bucket": "2Y",
+   "fxDelta": -142857,
+   "vega": -44428,
+   "gamma": 253
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 15133
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -20454
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 13404
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -6260
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -11478
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -1770
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 461
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -13235
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -3996
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -9054
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 4735
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -4271
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -3095
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 1670
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 4367
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 14366
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 28258
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 5790
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -3685
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 3676
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-09-30",
+  "executionTimestamp": "2025-09-30T16:33:55.172Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "E. Novak",
+  "salesperson": null,
+  "orderId": "ORD-D50BE66BA1"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-09-30T12:09:00Z",
+    "by": "stp.gateway"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2025-12-23T12:09:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2025-09-30T12:09:00Z",
+  "lastModifiedAt": "2025-12-23T12:09:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT140277259",
+  "matched": "2025-09-30 13:12",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83D50BE66BA142B493A3A4",
+  "upi": "QZFYX06PUULJ",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Foreign exchange"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "AUROUS33XXX",
+  "ssiId": "SSI-USD-79DAAE",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -355449,
+  "cleanPv": -355449.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "FX-USDCNH",
+   "FXF-USDCNH",
+   "FXV-USDCNH"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "calypso-fx",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 1211
+  }
+ }
+}

@@ -1,0 +1,249 @@
+{
+ "tradeId": "T-10715",
+ "productType": "MARGIN_LOAN",
+ "productName": "Margin loan",
+ "assetClass": "Securities financing",
+ "family": "sft",
+ "status": "Live",
+ "direction": "Repo (lend cash)",
+ "tradeDate": "2026-09-14",
+ "effectiveDate": "2026-09-16",
+ "maturityDate": "2027-01-11",
+ "currency": "USD",
+ "notional": 77000000.0,
+ "mtm": -354213,
+ "mtmCurrency": "USD",
+ "pnl1d": 10911,
+ "counterparty": {
+  "id": "CP-LUMEN",
+  "name": "Lumen Semiconductor AG"
+ },
+ "nettingSet": "NS-LUMEN-FRA",
+ "book": "BOOK-SFT-1",
+ "trader": "TRDR-NFAROUK",
+ "desk": "DESK-SFT",
+ "legalEntity": "LE-FRA",
+ "discountCurve": "CRV-USD-OIS",
+ "underlyingIndex": "EQX-NDX",
+ "terms": {
+  "rate": 0.056017,
+  "ltv": 0.50423,
+  "maintenanceMargin": 0.260395
+ },
+ "risk": {
+  "exposure": 816279
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "exposure": 81628
+  },
+  {
+   "bucket": "1M",
+   "exposure": 163256
+  },
+  {
+   "bucket": "3M",
+   "exposure": 244884
+  },
+  {
+   "bucket": "6M",
+   "exposure": 326512
+  }
+ ],
+ "schedule": [
+  {
+   "asset": "Solaris Energy Corp. 2031",
+   "isin": "USSOLA031372",
+   "quantity": 26240070,
+   "marketValue": 25760664,
+   "haircut": 0.01,
+   "value": 25503057
+  },
+  {
+   "asset": "Cascadia Airlines Inc. 2031",
+   "isin": "CACASC059511",
+   "quantity": 26974858,
+   "marketValue": 26763645,
+   "haircut": 0.02,
+   "value": 26228372
+  },
+  {
+   "asset": "Kaizen Motors Corp. 2036",
+   "isin": "JPKAIZ129190",
+   "quantity": 23056038,
+   "marketValue": 25503206,
+   "haircut": 0.04,
+   "value": 24483078
+  }
+ ],
+ "nextIndex": -1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -4474
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 13659
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 12051
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -6171
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 8106
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -4685
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 7312
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -17267
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -1266
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -10527
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 43737
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -11352
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 13761
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 563
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 8478
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 23172
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -20193
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -18155
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 3715
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -5441
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-09-14",
+  "executionTimestamp": "2026-09-14T15:12:29.859Z",
+  "venue": "Bloomberg SEF",
+  "venueMic": "BSEF",
+  "executionType": "Electronic",
+  "trader": "N. Farouk",
+  "salesperson": null,
+  "orderId": "ORD-C0EA26DD15"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-09-14T10:41:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2026-09-14T10:41:00Z",
+  "lastModifiedAt": "2026-09-14T10:41:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT359373921",
+  "matched": "2026-09-14 16:52",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z9DXU4T18OK744C0EA26DD153645CD1DE0",
+  "upi": "QZUVZZMGZ68G",
+  "reportingRegimes": [
+   "EU EMIR",
+   "EU MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "LUMEUS33XXX",
+  "ssiId": "SSI-USD-8CF792",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -354213,
+  "cleanPv": -354213.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-USD-OIS",
+   "EQX-NDX"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "globalone-sft",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 1478
+  }
+ }
+}

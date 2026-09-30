@@ -1,0 +1,87 @@
+{
+ "profileId": "EXP-PINNACLE-FRA",
+ "epe": 1097,
+ "eepe": 10969,
+ "pfePeak": 34020,
+ "paths": 5000,
+ "runDate": "2026-09-30",
+ "buckets": [
+  {
+   "tenor": "0",
+   "ee": 10969,
+   "ene": -45005,
+   "pfe95": 34020,
+   "pfe99": 45653
+  },
+  {
+   "tenor": "1M",
+   "ee": 0,
+   "ene": -36020,
+   "pfe95": 0,
+   "pfe99": 0
+  },
+  {
+   "tenor": "3M",
+   "ee": 0,
+   "ene": -34550,
+   "pfe95": 0,
+   "pfe99": 0
+  },
+  {
+   "tenor": "6M",
+   "ee": 0,
+   "ene": -32456,
+   "pfe95": 0,
+   "pfe99": 0
+  },
+  {
+   "tenor": "1Y",
+   "ee": 0,
+   "ene": -28643,
+   "pfe95": 0,
+   "pfe99": 0
+  },
+  {
+   "tenor": "2Y",
+   "ee": 0,
+   "ene": -22307,
+   "pfe95": 0,
+   "pfe99": 0
+  },
+  {
+   "tenor": "3Y",
+   "ee": 0,
+   "ene": -17373,
+   "pfe95": 0,
+   "pfe99": 0
+  },
+  {
+   "tenor": "5Y",
+   "ee": 0,
+   "ene": -10537,
+   "pfe95": 0,
+   "pfe99": 0
+  },
+  {
+   "tenor": "7Y",
+   "ee": 0,
+   "ene": -6391,
+   "pfe95": 0,
+   "pfe99": 0
+  },
+  {
+   "tenor": "10Y",
+   "ee": 0,
+   "ene": -3019,
+   "pfe95": 0,
+   "pfe99": 0
+  }
+ ],
+ "nettingSet": "NS-PINNACLE-FRA",
+ "model": "Hull-White 1F rates, GBM FX and equity, 5,000 paths",
+ "confidence": 0.95,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

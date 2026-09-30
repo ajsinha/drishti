@@ -1,0 +1,34 @@
+{
+ "calcId": "SACCR-KESTREL-FRA",
+ "replacementCost": 520013,
+ "addOn": 195425,
+ "multiplier": 1.0,
+ "ead": 1001613,
+ "rwa": 1001613,
+ "addOns": [
+  {
+   "assetClass": "Interest rate",
+   "addOn": 195425
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "JPY",
+   "effectiveNotional": -18000000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "USD",
+   "effectiveNotional": -21084932,
+   "sf": 0.005
+  }
+ ],
+ "nettingSet": "NS-KESTREL-FRA",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

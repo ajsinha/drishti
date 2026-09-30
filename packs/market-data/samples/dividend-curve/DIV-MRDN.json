@@ -1,0 +1,37 @@
+{
+ "curveId": "DIV-MRDN",
+ "underlier": "EQ-MRDN",
+ "dividendYield": 0.0271,
+ "points": [
+  {
+   "year": "2026",
+   "amount": 1.93
+  },
+  {
+   "year": "2027",
+   "amount": 2.0
+  },
+  {
+   "year": "2028",
+   "amount": 2.08
+  },
+  {
+   "year": "2029",
+   "amount": 2.16
+  },
+  {
+   "year": "2030",
+   "amount": 2.23
+  },
+  {
+   "year": "2031",
+   "amount": 2.31
+  }
+ ],
+ "underlyingEquity": "EQ-MRDN",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

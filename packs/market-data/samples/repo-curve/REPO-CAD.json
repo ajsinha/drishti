@@ -1,0 +1,38 @@
+{
+ "curveId": "REPO-CAD",
+ "currency": "CAD",
+ "collateral": "General collateral (government)",
+ "overnight": 0.0267,
+ "asOf": "2026-09-30",
+ "points": [
+  {
+   "tenor": "ON",
+   "rate": 2.6721
+  },
+  {
+   "tenor": "1W",
+   "rate": 2.6755
+  },
+  {
+   "tenor": "1M",
+   "rate": 2.6815
+  },
+  {
+   "tenor": "3M",
+   "rate": 2.69
+  },
+  {
+   "tenor": "6M",
+   "rate": 2.6983
+  },
+  {
+   "tenor": "1Y",
+   "rate": 2.71
+  }
+ ],
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

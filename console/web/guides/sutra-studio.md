@@ -37,7 +37,7 @@ milliseconds and uses the same renderer as the terminal. Keys, fields and expres
 The editor is a Markdown editor. The toolbar (and Ctrl+B, Ctrl+I, Ctrl+K) adds headings, bold,
 italics, code, links, lists, quotes and tables. Inside the `sutra` block, Rachana is highlighted.
 
-- **Insert…** adds a `sutra` block, a strip field, or a panel of any of the twelve kinds, already
+- **Insert…** adds a `sutra` block, a strip field, or a panel of any of the thirteen kinds, already
   shaped correctly, at the right place in the block.
 - **Jump to…** lists the headings and the `sutra` block; long documents stay easy to move around.
 - **Wrap** turns soft wrapping on or off.

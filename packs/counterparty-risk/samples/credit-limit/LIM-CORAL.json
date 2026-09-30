@@ -1,0 +1,48 @@
+{
+ "limitId": "LIM-CORAL",
+ "counterpartyName": "Coral Bay Municipal Authority",
+ "measure": "PFE 95 peak",
+ "limit": 273000000.0,
+ "used": 143416455,
+ "utilisation": 0.5253,
+ "status": "Within limit",
+ "buckets": [
+  {
+   "bucket": "0-1Y",
+   "limit": 273000000,
+   "used": 121903987,
+   "utilisation": 0.4465
+  },
+  {
+   "bucket": "1-3Y",
+   "limit": 273000000,
+   "used": 143416455,
+   "utilisation": 0.5253
+  },
+  {
+   "bucket": "3-5Y",
+   "limit": 218400000,
+   "used": 100391518,
+   "utilisation": 0.4597
+  },
+  {
+   "bucket": "5-10Y",
+   "limit": 163800000,
+   "used": 50195759,
+   "utilisation": 0.3064
+  },
+  {
+   "bucket": "10Y+",
+   "limit": 109200000,
+   "used": 14341646,
+   "utilisation": 0.1313
+  }
+ ],
+ "counterparty": "CP-CORAL",
+ "approvedBy": "Credit Risk Committee",
+ "reviewDue": "2027-03-19",
+ "_meta": {
+  "source": "limits-system",
+  "generation": 1
+ }
+}

@@ -1,0 +1,48 @@
+{
+ "limitId": "LIM-SUMMIT",
+ "counterpartyName": "Summit Clearing LLC",
+ "measure": "PFE 95 peak",
+ "limit": 267000000.0,
+ "used": 216858031,
+ "utilisation": 0.8122,
+ "status": "Early warning",
+ "buckets": [
+  {
+   "bucket": "0-1Y",
+   "limit": 267000000,
+   "used": 184329326,
+   "utilisation": 0.6904
+  },
+  {
+   "bucket": "1-3Y",
+   "limit": 267000000,
+   "used": 216858031,
+   "utilisation": 0.8122
+  },
+  {
+   "bucket": "3-5Y",
+   "limit": 213600000,
+   "used": 151800622,
+   "utilisation": 0.7107
+  },
+  {
+   "bucket": "5-10Y",
+   "limit": 160200000,
+   "used": 75900311,
+   "utilisation": 0.4738
+  },
+  {
+   "bucket": "10Y+",
+   "limit": 106800000,
+   "used": 21685803,
+   "utilisation": 0.2031
+  }
+ ],
+ "counterparty": "CP-SUMMIT",
+ "approvedBy": "Credit Risk Committee",
+ "reviewDue": "2027-03-19",
+ "_meta": {
+  "source": "limits-system",
+  "generation": 1
+ }
+}

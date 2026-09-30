@@ -1,0 +1,332 @@
+{
+ "tradeId": "T-10612",
+ "productType": "AMORT_BOND",
+ "productName": "Amortising bond",
+ "assetClass": "Fixed income",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2026-08-28",
+ "effectiveDate": "2026-08-31",
+ "maturityDate": "2032-07-20",
+ "currency": "JPY",
+ "notional": 81000000.0,
+ "mtm": 283194,
+ "mtmCurrency": "USD",
+ "pnl1d": 8633,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-2",
+ "trader": "TRDR-BADEYEMI",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-KAIZEN",
+ "benchmarkCurve": "CRV-JPY-GOVT",
+ "underlyingBond": "BND-JPKAIZ129190",
+ "terms": {
+  "coupon": 0.032584,
+  "couponFrequency": "Semi-annual",
+  "faceAmount": 27197556.0,
+  "cleanPrice": 105.29,
+  "yield": 0.020338,
+  "averageLife": 2.74
+ },
+ "risk": {
+  "dv01": -41833,
+  "cs01": -38186
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -1992,
+   "cs01": -1818
+  },
+  {
+   "bucket": "6M",
+   "dv01": -3984,
+   "cs01": -3637
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -5976,
+   "cs01": -5455
+  },
+  {
+   "bucket": "2Y",
+   "dv01": -7968,
+   "cs01": -7274
+  },
+  {
+   "bucket": "3Y",
+   "dv01": -9960,
+   "cs01": -9092
+  },
+  {
+   "bucket": "5Y",
+   "dv01": -11952,
+   "cs01": -10910
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2027-02-28",
+   "opening": 81000000,
+   "principal": 6750000,
+   "closing": 74250000,
+   "interest": 1620000
+  },
+  {
+   "date": "2027-08-28",
+   "opening": 74250000,
+   "principal": 6750000,
+   "closing": 67500000,
+   "interest": 1485000
+  },
+  {
+   "date": "2028-02-28",
+   "opening": 67500000,
+   "principal": 6750000,
+   "closing": 60750000,
+   "interest": 1350000
+  },
+  {
+   "date": "2028-08-28",
+   "opening": 60750000,
+   "principal": 6750000,
+   "closing": 54000000,
+   "interest": 1215000
+  },
+  {
+   "date": "2029-02-28",
+   "opening": 54000000,
+   "principal": 6750000,
+   "closing": 47250000,
+   "interest": 1080000
+  },
+  {
+   "date": "2029-08-28",
+   "opening": 47250000,
+   "principal": 6750000,
+   "closing": 40500000,
+   "interest": 945000
+  },
+  {
+   "date": "2030-02-28",
+   "opening": 40500000,
+   "principal": 6750000,
+   "closing": 33750000,
+   "interest": 810000
+  },
+  {
+   "date": "2030-08-28",
+   "opening": 33750000,
+   "principal": 6750000,
+   "closing": 27000000,
+   "interest": 675000
+  },
+  {
+   "date": "2031-02-28",
+   "opening": 27000000,
+   "principal": 6750000,
+   "closing": 20250000,
+   "interest": 540000
+  },
+  {
+   "date": "2031-08-28",
+   "opening": 20250000,
+   "principal": 6750000,
+   "closing": 13500000,
+   "interest": 405000
+  },
+  {
+   "date": "2032-02-28",
+   "opening": 13500000,
+   "principal": 6750000,
+   "closing": 6750000,
+   "interest": 270000
+  },
+  {
+   "date": "2032-07-20",
+   "opening": 6750000,
+   "principal": 6750000,
+   "closing": 0,
+   "interest": 135000
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -2256
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 2560
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -4538
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -6162
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -957
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 4301
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 8938
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 3735
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 4742
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -1972
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 9331
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -11490
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -4988
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 14401
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -7670
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 7331
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 21103
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 13697
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 3237
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 10043
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-08-28",
+  "executionTimestamp": "2026-08-28T14:55:39.952Z",
+  "venue": "MarketAxess",
+  "venueMic": "MAEL",
+  "executionType": "Electronic",
+  "trader": "B. Adeyemi",
+  "salesperson": null,
+  "orderId": "ORD-76463D1911"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-08-28T11:33:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2026-08-28T11:33:00Z",
+  "lastModifiedAt": "2026-08-28T11:33:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT482033214",
+  "matched": "2026-08-28 11:24",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "JSCC",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH9735766888",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209676463D191195858CCD1C",
+  "upi": "QZ3SAUCXBY1A",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-JPY-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 283194,
+  "cleanPv": 283194.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-JPY-GOVT",
+   "BND-JPKAIZ129190"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 1376
+  }
+ }
+}

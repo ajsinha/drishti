@@ -1,0 +1,44 @@
+{
+ "counterpartyId": "CP-MERIDIAN-RE",
+ "name": "Meridian Reinsurance Ltd",
+ "lei": "549300HGCM5CFCB6ZB96",
+ "rating": "A",
+ "sector": "Insurance",
+ "country": "BM",
+ "type": "Insurer",
+ "netMtm": -57911861,
+ "pfePeak": 162569103,
+ "nettingSets": [
+  {
+   "id": "NS-MERIDIAN-RE-FRA",
+   "agreement": "AGR-MERIDIAN-RE-ISDA",
+   "trades": 5,
+   "netMtm": -2424950
+  },
+  {
+   "id": "NS-MERIDIAN-RE-LDN",
+   "agreement": "AGR-MERIDIAN-RE-ISDA",
+   "trades": 16,
+   "netMtm": 1119348
+  },
+  {
+   "id": "NS-MERIDIAN-RE-NY",
+   "agreement": "AGR-MERIDIAN-RE-ISDA",
+   "trades": 19,
+   "netMtm": -56606259
+  }
+ ],
+ "kyc": {
+  "status": "Approved",
+  "riskRating": "Standard",
+  "lastReview": "2026-02-11",
+  "emirClassification": "FC",
+  "pd1y": 0.0006
+ },
+ "group": "GRP-MERIDIAN",
+ "creditLimit": "LIM-MERIDIAN-RE",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

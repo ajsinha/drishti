@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-TOKAI-LDN",
+ "held": 480759,
+ "posted": 0,
+ "net": 480759,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "United States Treasury 2031",
+   "direction": "Held",
+   "marketValue": 160253,
+   "haircut": 0.02,
+   "value": 157048
+  },
+  {
+   "asset": "Rheintal Landesbank 2036",
+   "direction": "Held",
+   "marketValue": 160253,
+   "haircut": 0.005,
+   "value": 159452
+  },
+  {
+   "asset": "Halcyon Shipping plc 2031",
+   "direction": "Held",
+   "marketValue": 160253,
+   "haircut": 0.01,
+   "value": 158650
+  }
+ ],
+ "csa": "CSA-TOKAI",
+ "nettingSet": "NS-TOKAI-LDN",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

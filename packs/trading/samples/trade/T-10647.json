@@ -1,0 +1,271 @@
+{
+ "tradeId": "T-10647",
+ "productType": "CLO_TRANCHE",
+ "productName": "CLO tranche",
+ "assetClass": "Fixed income",
+ "family": "securitized",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2025-12-01",
+ "effectiveDate": "2025-12-03",
+ "maturityDate": "2028-09-21",
+ "currency": "JPY",
+ "notional": 58000000.0,
+ "mtm": 635630,
+ "mtmCurrency": "USD",
+ "pnl1d": -8373,
+ "counterparty": {
+  "id": "CP-MERIDIAN",
+  "name": "Meridian Life Assurance"
+ },
+ "nettingSet": "NS-MERIDIAN-NY",
+ "book": "BOOK-FI-3",
+ "trader": "TRDR-BADEYEMI",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-JGB",
+ "forwardCurve": "CRV-JPY-PROJ",
+ "creditCurve": "CDS-JGB",
+ "terms": {
+  "tranche": "AAA",
+  "discountMargin": 473.8
+ },
+ "risk": {
+  "cs01": 13621,
+  "dv01": 12554
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 1362,
+   "dv01": 1255
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 2724,
+   "dv01": 2511
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 4086,
+   "dv01": 3766
+  },
+  {
+   "bucket": "3Y",
+   "cs01": 5448,
+   "dv01": 5022
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-06-03",
+   "opening": 58000000,
+   "principal": 9666667,
+   "closing": 48333333,
+   "interest": 1160000
+  },
+  {
+   "date": "2026-12-03",
+   "opening": 48333333,
+   "principal": 9666667,
+   "closing": 38666667,
+   "interest": 966667
+  },
+  {
+   "date": "2027-06-03",
+   "opening": 38666667,
+   "principal": 9666667,
+   "closing": 29000000,
+   "interest": 773333
+  },
+  {
+   "date": "2027-12-03",
+   "opening": 29000000,
+   "principal": 9666667,
+   "closing": 19333333,
+   "interest": 580000
+  },
+  {
+   "date": "2028-06-03",
+   "opening": 19333333,
+   "principal": 9666667,
+   "closing": 9666667,
+   "interest": 386667
+  },
+  {
+   "date": "2028-09-21",
+   "opening": 9666667,
+   "principal": 9666667,
+   "closing": 0,
+   "interest": 193333
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 6949
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 9905
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -4063
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -13977
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 6725
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 915
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 2740
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 29209
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 5797
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -10426
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 19861
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -8705
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -12813
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -44910
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -25404
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 25170
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -20804
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 12914
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -2197
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -6264
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-12-01",
+  "executionTimestamp": "2025-12-01T15:06:21.991Z",
+  "venue": "MarketAxess",
+  "venueMic": "MAEL",
+  "executionType": "Electronic",
+  "trader": "B. Adeyemi",
+  "salesperson": null,
+  "orderId": "ORD-4EB3AF0B8E"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-12-01T11:18:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2025-12-01T11:18:00Z",
+  "lastModifiedAt": "2025-12-01T11:18:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT460812851",
+  "matched": "2025-12-01 10:30",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20964EB3AF0B8E360C5A5DC9",
+  "upi": "QZA7LW2RGL5X",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "MERIGB33XXX",
+  "ssiId": "SSI-JPY-4D91C0",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 635630,
+  "cleanPv": 635630.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-JPY-PROJ",
+   "CDS-JGB"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 1851
+  }
+ }
+}

@@ -1,0 +1,87 @@
+{
+ "profileId": "EXP-NORTHBRIDGE-FRA",
+ "epe": 170958,
+ "eepe": 379996,
+ "pfePeak": 878778,
+ "paths": 5000,
+ "runDate": "2026-09-30",
+ "buckets": [
+  {
+   "tenor": "0",
+   "ee": 283277,
+   "ene": -45721,
+   "pfe95": 678158,
+   "pfe99": 898432
+  },
+  {
+   "tenor": "1M",
+   "ee": 316545,
+   "ene": -74110,
+   "pfe95": 739186,
+   "pfe99": 977883
+  },
+  {
+   "tenor": "3M",
+   "ee": 379996,
+   "ene": -128362,
+   "pfe95": 878778,
+   "pfe99": 1161890
+  },
+  {
+   "tenor": "6M",
+   "ee": 196192,
+   "ene": 0,
+   "pfe95": 431623,
+   "pfe99": 568958
+  },
+  {
+   "tenor": "1Y",
+   "ee": 173139,
+   "ene": 0,
+   "pfe95": 380906,
+   "pfe99": 502103
+  },
+  {
+   "tenor": "2Y",
+   "ee": 134841,
+   "ene": 0,
+   "pfe95": 296650,
+   "pfe99": 391039
+  },
+  {
+   "tenor": "3Y",
+   "ee": 105014,
+   "ene": 0,
+   "pfe95": 231031,
+   "pfe99": 304541
+  },
+  {
+   "tenor": "5Y",
+   "ee": 63694,
+   "ene": 0,
+   "pfe95": 140127,
+   "pfe99": 184714
+  },
+  {
+   "tenor": "7Y",
+   "ee": 38633,
+   "ene": 0,
+   "pfe95": 84992,
+   "pfe99": 112034
+  },
+  {
+   "tenor": "10Y",
+   "ee": 18249,
+   "ene": 0,
+   "pfe95": 40147,
+   "pfe99": 52921
+  }
+ ],
+ "nettingSet": "NS-NORTHBRIDGE-FRA",
+ "model": "Hull-White 1F rates, GBM FX and equity, 5,000 paths",
+ "confidence": 0.95,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

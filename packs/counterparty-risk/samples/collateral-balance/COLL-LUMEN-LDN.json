@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-LUMEN-LDN",
+ "held": 0,
+ "posted": 6317654,
+ "net": -6317654,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "United Kingdom Debt Management Office 2031",
+   "direction": "Posted",
+   "marketValue": 2105885,
+   "haircut": 0.005,
+   "value": 2095356
+  },
+  {
+   "asset": "Halcyon Shipping plc 2031",
+   "direction": "Posted",
+   "marketValue": 2105885,
+   "haircut": 0.005,
+   "value": 2095356
+  },
+  {
+   "asset": "Meridian Financial Group 2031",
+   "direction": "Posted",
+   "marketValue": 2105885,
+   "haircut": 0.01,
+   "value": 2084826
+  }
+ ],
+ "csa": "CSA-LUMEN",
+ "nettingSet": "NS-LUMEN-LDN",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

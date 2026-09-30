@@ -1,0 +1,249 @@
+{
+ "tradeId": "T-10186",
+ "productType": "FX_OPTION",
+ "productName": "FX vanilla option",
+ "assetClass": "FX",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2026-04-10",
+ "effectiveDate": "2026-04-13",
+ "maturityDate": "2027-11-24",
+ "currency": "USD",
+ "notional": 67000000.0,
+ "mtm": -1313627,
+ "mtmCurrency": "USD",
+ "pnl1d": 121128,
+ "counterparty": {
+  "id": "CP-BRAMBLE",
+  "name": "Bramble Asset Management"
+ },
+ "nettingSet": "NS-BRAMBLE-LDN",
+ "book": "BOOK-FX-1",
+ "trader": "TRDR-ENOVAK",
+ "desk": "DESK-FX",
+ "legalEntity": "LE-LDN",
+ "fxSpot": "FX-USDBRL",
+ "fxForwardCurve": "FXF-USDBRL",
+ "fxVolSurface": "FXV-USDBRL",
+ "terms": {
+  "optionType": "Put",
+  "exerciseStyle": "European",
+  "expiryDate": "2028-12-29",
+  "premium": 864845.0,
+  "strike": 59.97839,
+  "deltaAtTrade": 0.462142
+ },
+ "risk": {
+  "fxDelta": 670000,
+  "vega": 93628,
+  "gamma": 1393
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "fxDelta": 31905,
+   "vega": 4458,
+   "gamma": 66
+  },
+  {
+   "bucket": "1M",
+   "fxDelta": 63810,
+   "vega": 8917,
+   "gamma": 133
+  },
+  {
+   "bucket": "3M",
+   "fxDelta": 95714,
+   "vega": 13375,
+   "gamma": 199
+  },
+  {
+   "bucket": "6M",
+   "fxDelta": 127619,
+   "vega": 17834,
+   "gamma": 265
+  },
+  {
+   "bucket": "1Y",
+   "fxDelta": 159524,
+   "vega": 22292,
+   "gamma": 332
+  },
+  {
+   "bucket": "2Y",
+   "fxDelta": 191429,
+   "vega": 26751,
+   "gamma": 398
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -35944
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -3925
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 17958
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -13102
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -22130
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 33152
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -11193
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -69772
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 24407
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -3569
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -67240
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -38550
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 45800
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 107437
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -48255
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 85438
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -15170
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 34684
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 29437
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 44086
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-04-10",
+  "executionTimestamp": "2026-04-10T08:06:09.331Z",
+  "venue": "EBS",
+  "venueMic": "EBSM",
+  "executionType": "Electronic",
+  "trader": "E. Novak",
+  "salesperson": null,
+  "orderId": "ORD-8AA90939E3"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-04-10T10:33:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-04-10T10:33:00Z",
+  "lastModifiedAt": "2026-04-10T10:33:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT317301007",
+  "matched": "2026-04-10 15:28",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q838AA90939E3F190D1CE25",
+  "upi": "QZFYX06PUULJ",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Foreign exchange"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "BRAMUS33XXX",
+  "ssiId": "SSI-USD-1243C8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -1313627,
+  "cleanPv": -1313627.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "FX-USDBRL",
+   "FXF-USDBRL",
+   "FXV-USDBRL"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "calypso-fx",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 3297
+  }
+ }
+}

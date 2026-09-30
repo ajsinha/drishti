@@ -1,0 +1,27 @@
+{
+ "commodityId": "CMD-NG",
+ "name": "Henry Hub natural gas",
+ "front": 3.12,
+ "unit": "USD/MMBtu",
+ "exchange": "NYMEX",
+ "sector": "Energy",
+ "spec": {
+  "contract": "NG",
+  "unit": "USD/MMBtu",
+  "exchange": "NYMEX",
+  "settlement": "Physical",
+  "listing": "Monthly",
+  "tickSize": 0.01,
+  "tradingHours": "Sun-Fri 18:00-17:00 ET"
+ },
+ "commodityCurve": "CMDC-NG",
+ "commodityVolSurface": "CMDV-NG",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "front": 0.05
+  }
+ }
+}

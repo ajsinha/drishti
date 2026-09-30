@@ -1,0 +1,316 @@
+{
+ "tradeId": "T-10274",
+ "productType": "TRS_BOND",
+ "productName": "Total return swap on a bond",
+ "assetClass": "Credit",
+ "family": "swap",
+ "status": "Live",
+ "direction": "Receive fixed",
+ "tradeDate": "2025-10-21",
+ "effectiveDate": "2025-10-23",
+ "maturityDate": "2030-07-08",
+ "currency": "EUR",
+ "notional": 238000000.0,
+ "mtm": 4717154,
+ "mtmCurrency": "USD",
+ "pnl1d": 53306,
+ "counterparty": {
+  "id": "CP-MERIDIAN-RE",
+  "name": "Meridian Reinsurance Ltd"
+ },
+ "nettingSet": "NS-MERIDIAN-RE-NY",
+ "book": "BOOK-CREDIT-3",
+ "trader": "TRDR-CDUBOIS",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-HALCYON",
+ "underlyingBond": "BND-XSHALC114008",
+ "discountCurve": "CRV-EUR-OIS",
+ "repoCurve": "REPO-EUR",
+ "terms": {
+  "fundingSpread": 145.2,
+  "resetFrequency": "Monthly"
+ },
+ "risk": {
+  "cs01": -86057,
+  "dv01": -89692
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": -5737,
+   "dv01": -5979
+  },
+  {
+   "bucket": "1Y",
+   "cs01": -11474,
+   "dv01": -11959
+  },
+  {
+   "bucket": "2Y",
+   "cs01": -17211,
+   "dv01": -17938
+  },
+  {
+   "bucket": "3Y",
+   "cs01": -22949,
+   "dv01": -23918
+  },
+  {
+   "bucket": "5Y",
+   "cs01": -28686,
+   "dv01": -29897
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Receive performance",
+   "payReceive": "Receive",
+   "rateType": "Performance",
+   "index": "USCPI",
+   "rate": null,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "EUR",
+   "notional": 238000000.0
+  },
+  {
+   "leg": 2,
+   "label": "Pay ESTR + spread",
+   "payReceive": "Pay",
+   "rateType": "Float",
+   "index": "ESTR",
+   "rate": 0.019824,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "EUR",
+   "notional": 238000000.0
+  }
+ ],
+ "schedule": [
+  {
+   "payDate": "2026-10-23",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -636635.19,
+   "pv": -617536.13,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2027-10-23",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -497708.08,
+   "pv": -482776.84,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2028-10-23",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -510606.32,
+   "pv": -495288.13,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2029-10-23",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -518527.01,
+   "pv": -502971.2,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2030-07-08",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -494133.9,
+   "pv": -479309.88,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -125949
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 185511
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -203616
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -127556
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 108359
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -156008
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 58235
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 126162
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -17166
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -95408
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -73745
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 108586
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 74625
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -38120
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -91544
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -126555
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 1828
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -45576
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -32129
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 255856
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-10-21",
+  "executionTimestamp": "2025-10-21T11:15:37.460Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "C. Dubois",
+  "salesperson": null,
+  "orderId": "ORD-AB343CEAB8"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-10-21T12:41:00Z",
+    "by": "fo.capture"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2025-11-04T12:41:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2025-10-21T12:41:00Z",
+  "lastModifiedAt": "2025-11-04T12:41:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA643372395",
+  "matched": "2025-10-21 11:04",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096AB343CEAB8633B8B1341",
+  "upi": "QZKCSP6B65GU",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "MERIGB33XXX",
+  "ssiId": "SSI-EUR-9DC4EA",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 4717154,
+  "cleanPv": 4717154.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Multi-curve OIS discounting",
+  "curves": [
+   "BND-XSHALC114008",
+   "CRV-EUR-OIS",
+   "REPO-EUR"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 11814
+  }
+ }
+}

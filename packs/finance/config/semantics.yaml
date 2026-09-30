@@ -24,6 +24,8 @@ roles:
   - { role: date,         pattern: "maturity|effective|valuedate|reset|value$", fmt: date, weight: 60, dateOnly: true }
   - { role: count,        pattern: "lots|trades|flows", fmt: amount0, weight: 55 }
   - { role: label,        pattern: "product|direction|pair|contract|book|desk", weight: 65 }
+acronyms: [MTM, PV, NPV, DV01, PV01, CS01, IE01, PFE, EE, ENE, EPE, CVA, DVA, FVA, KVA, VaR, ES, SIMM, IM, VM, CSA, ISDA, CCP, LEI, UTI, UPI,
+           ISIN, CUSIP, BIC, SSI, MIC, CFI, FpML, KYC, EMIR, FX, OIS, SOFR, USD, EUR, GBP, JPY, MPoR, MTA, CLS, FRA, IRS, CDS]
 # Listed-contract months (Z6) and overnight tenors also make chart axes.
 tenorPattern: "^(ON|TN|SN|[FGHJKMNQUVXZ]\\d{1,2}|0)$"
 idFields: ["tradeId"]

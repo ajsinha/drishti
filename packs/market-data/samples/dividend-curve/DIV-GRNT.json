@@ -1,0 +1,37 @@
+{
+ "curveId": "DIV-GRNT",
+ "underlier": "EQ-GRNT",
+ "dividendYield": 0.0064,
+ "points": [
+  {
+   "year": "2026",
+   "amount": 0.05
+  },
+  {
+   "year": "2027",
+   "amount": 0.05
+  },
+  {
+   "year": "2028",
+   "amount": 0.05
+  },
+  {
+   "year": "2029",
+   "amount": 0.05
+  },
+  {
+   "year": "2030",
+   "amount": 0.06
+  },
+  {
+   "year": "2031",
+   "amount": 0.06
+  }
+ ],
+ "underlyingEquity": "EQ-GRNT",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

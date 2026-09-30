@@ -1,0 +1,238 @@
+{
+ "tradeId": "T-10190",
+ "productType": "FX_DIGITAL",
+ "productName": "FX digital option",
+ "assetClass": "FX",
+ "family": "option",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2024-05-29",
+ "effectiveDate": "2024-05-31",
+ "maturityDate": "2026-10-13",
+ "currency": "CAD",
+ "notional": 94000000.0,
+ "mtm": -383106,
+ "mtmCurrency": "USD",
+ "pnl1d": 2017,
+ "counterparty": {
+  "id": "CP-BRAMBLE",
+  "name": "Bramble Asset Management"
+ },
+ "nettingSet": "NS-BRAMBLE-LDN",
+ "book": "BOOK-FX-1",
+ "trader": "TRDR-ENOVAK",
+ "desk": "DESK-FX",
+ "legalEntity": "LE-LDN",
+ "fxSpot": "FX-USDCAD",
+ "fxVolSurface": "FXV-USDCAD",
+ "terms": {
+  "optionType": "Call",
+  "strike": 20.14128,
+  "payout": 265276.0,
+  "expiryDate": "2027-04-16"
+ },
+ "risk": {
+  "fxDelta": -940000,
+  "vega": -246622
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "fxDelta": -44762,
+   "vega": -11744
+  },
+  {
+   "bucket": "1M",
+   "fxDelta": -89524,
+   "vega": -23488
+  },
+  {
+   "bucket": "3M",
+   "fxDelta": -134286,
+   "vega": -35232
+  },
+  {
+   "bucket": "6M",
+   "fxDelta": -179048,
+   "vega": -46976
+  },
+  {
+   "bucket": "1Y",
+   "fxDelta": -223810,
+   "vega": -58720
+  },
+  {
+   "bucket": "2Y",
+   "fxDelta": -268571,
+   "vega": -70463
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 17031
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 9249
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 25595
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -2849
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -4554
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -3609
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -2083
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -13824
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -15918
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -5635
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -7426
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 12666
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -7197
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -27068
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 7973
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 12213
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -5618
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -1146
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 26126
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 3526
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-05-29",
+  "executionTimestamp": "2024-05-29T10:54:43.801Z",
+  "venue": "360T",
+  "venueMic": "360T",
+  "executionType": "Electronic",
+  "trader": "E. Novak",
+  "salesperson": null,
+  "orderId": "ORD-AB2944BFF2"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-05-29T10:02:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2024-05-29T10:02:00Z",
+  "lastModifiedAt": "2024-05-29T10:02:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT229079760",
+  "matched": "2024-05-29 13:15",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83AB2944BFF2FFCA3C348C",
+  "upi": "QZ84QMD7FHCR",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Foreign exchange"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "BRAMGB33XXX",
+  "ssiId": "SSI-CAD-1243C8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -383106,
+  "cleanPv": -383106.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "FX-USDCAD",
+   "FXV-USDCAD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "calypso-fx",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 1706
+  }
+ }
+}

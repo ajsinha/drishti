@@ -1,0 +1,33 @@
+{
+ "deskId": "DESK-RATES",
+ "name": "Rates · Swaps and options",
+ "head": "A. Shah",
+ "books": [
+  {
+   "id": "BOOK-RATES-1",
+   "trades": 49,
+   "mtm": 177368451
+  },
+  {
+   "id": "BOOK-RATES-2",
+   "trades": 54,
+   "mtm": -66175404
+  },
+  {
+   "id": "BOOK-RATES-3",
+   "trades": 53,
+   "mtm": 21656450
+  }
+ ],
+ "var99": 9611219,
+ "mtm": 132849497,
+ "legalEntity": "LE-NY",
+ "varResult": "VAR-RATES",
+ "assetClasses": [
+  "Rates"
+ ],
+ "_meta": {
+  "source": "org-master",
+  "generation": 1
+ }
+}

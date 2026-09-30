@@ -1,0 +1,238 @@
+{
+ "nettingSetId": "NS-ALDERSHOT-LDN",
+ "tradeCount": 20,
+ "netMtm": -4886451,
+ "collateral": -3943736,
+ "eePeak": 63603265,
+ "pfePeak": 145548971,
+ "limit": 221000000.0,
+ "utilisation": 0.6586,
+ "cva": -95674,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 11113737,
+   "pfe": 34468010
+  },
+  {
+   "tenor": "1M",
+   "ee": 19927793,
+   "pfe": 52470132
+  },
+  {
+   "tenor": "3M",
+   "ee": 30528750,
+   "pfe": 74795438
+  },
+  {
+   "tenor": "6M",
+   "ee": 43174172,
+   "pfe": 102615367
+  },
+  {
+   "tenor": "1Y",
+   "ee": 59534300,
+   "pfe": 138417248
+  },
+  {
+   "tenor": "2Y",
+   "ee": 63603265,
+   "pfe": 145548971
+  },
+  {
+   "tenor": "3Y",
+   "ee": 57024482,
+   "pfe": 129569248
+  },
+  {
+   "tenor": "5Y",
+   "ee": 42188118,
+   "pfe": 95172247
+  },
+  {
+   "tenor": "7Y",
+   "ee": 28537867,
+   "pfe": 64131596
+  },
+  {
+   "tenor": "10Y",
+   "ee": 29750708,
+   "pfe": 66627558
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10409",
+   "product": "Equity total return swap",
+   "notional": 243000000.0,
+   "maturity": "2028-11-24",
+   "mtm": -5455747
+  },
+  {
+   "tradeId": "T-10388",
+   "product": "Reverse convertible",
+   "notional": 181000000.0,
+   "maturity": "2038-02-01",
+   "mtm": -4142972
+  },
+  {
+   "tradeId": "T-10212",
+   "product": "FX average-rate option",
+   "notional": 218000000.0,
+   "maturity": "2032-10-22",
+   "mtm": -4103348
+  },
+  {
+   "tradeId": "T-10221",
+   "product": "FX target redemption forward",
+   "notional": 217000000.0,
+   "maturity": "2031-12-29",
+   "mtm": 3921080
+  },
+  {
+   "tradeId": "T-10193",
+   "product": "FX barrier option",
+   "notional": 208000000.0,
+   "maturity": "2028-10-02",
+   "mtm": 3355034
+  },
+  {
+   "tradeId": "T-10324",
+   "product": "Equity forward",
+   "notional": 248000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 3225946
+  },
+  {
+   "tradeId": "T-10422",
+   "product": "Contract for difference",
+   "notional": 196000000.0,
+   "maturity": "2028-01-14",
+   "mtm": -2343493
+  },
+  {
+   "tradeId": "T-10176",
+   "product": "FX swap",
+   "notional": 232000000.0,
+   "maturity": "2038-08-04",
+   "mtm": 1696884
+  },
+  {
+   "tradeId": "T-10343",
+   "product": "OTC equity option",
+   "notional": 178000000.0,
+   "maturity": "2026-12-02",
+   "mtm": 1634404
+  },
+  {
+   "tradeId": "T-10348",
+   "product": "OTC equity option",
+   "notional": 129000000.0,
+   "maturity": "2028-04-28",
+   "mtm": -791511
+  },
+  {
+   "tradeId": "T-10559",
+   "product": "Inflation asset swap",
+   "notional": 150000000.0,
+   "maturity": "2036-02-14",
+   "mtm": -771745
+  },
+  {
+   "tradeId": "T-10238",
+   "product": "Quanto option",
+   "notional": 166000000.0,
+   "maturity": "2027-07-06",
+   "mtm": -689995
+  },
+  {
+   "tradeId": "T-10359",
+   "product": "Equity barrier option",
+   "notional": 171000000.0,
+   "maturity": "2030-05-28",
+   "mtm": -496670
+  },
+  {
+   "tradeId": "T-10406",
+   "product": "Dividend swap",
+   "notional": 126000000.0,
+   "maturity": "2031-10-14",
+   "mtm": 409824
+  },
+  {
+   "tradeId": "T-10203",
+   "product": "FX double-barrier option",
+   "notional": 110000000.0,
+   "maturity": "2031-06-09",
+   "mtm": -406378
+  },
+  {
+   "tradeId": "T-10159",
+   "product": "FX spot",
+   "notional": 80000000.0,
+   "maturity": "2027-07-26",
+   "mtm": -288607
+  },
+  {
+   "tradeId": "T-10198",
+   "product": "FX barrier option",
+   "notional": 211000000.0,
+   "maturity": "2035-07-16",
+   "mtm": 263226
+  },
+  {
+   "tradeId": "T-10562",
+   "product": "Inflation asset swap",
+   "notional": 131000000.0,
+   "maturity": "2034-07-31",
+   "mtm": 225940
+  },
+  {
+   "tradeId": "T-10375",
+   "product": "Cliquet (ratchet)",
+   "notional": 129000000.0,
+   "maturity": "2031-04-16",
+   "mtm": -176522
+  },
+  {
+   "tradeId": "T-10172",
+   "product": "Non-deliverable forward",
+   "notional": 26000000.0,
+   "maturity": "2027-04-12",
+   "mtm": 48199
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Equity",
+   "mtm": -8136741
+  },
+  {
+   "asset": "FX",
+   "mtm": 3796095
+  },
+  {
+   "asset": "Inflation",
+   "mtm": -545805
+  }
+ ],
+ "counterparty": "CP-ALDERSHOT",
+ "agreement": "AGR-ALDERSHOT-ISDA",
+ "csa": "CSA-ALDERSHOT",
+ "creditLimit": "LIM-ALDERSHOT",
+ "exposureProfile": "EXP-ALDERSHOT-LDN",
+ "cvaResult": "CVA-ALDERSHOT-LDN",
+ "saccr": "SACCR-ALDERSHOT-LDN",
+ "simm": "SIMM-ALDERSHOT",
+ "collateralBalance": "COLL-ALDERSHOT-LDN",
+ "legalEntity": "LE-LDN",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 9772
+  }
+ }
+}

@@ -1,0 +1,28 @@
+{
+ "calcId": "SACCR-PINNACLE-TKY",
+ "replacementCost": 369335,
+ "addOn": 26240000,
+ "multiplier": 1.0,
+ "ead": 37253069,
+ "rwa": 37253069,
+ "addOns": [
+  {
+   "assetClass": "Equity",
+   "addOn": 26240000
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "USD",
+   "effectiveNotional": -82000000,
+   "sf": 0.32
+  }
+ ],
+ "nettingSet": "NS-PINNACLE-TKY",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

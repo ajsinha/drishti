@@ -1,0 +1,203 @@
+{
+ "nettingSetId": "NS-BRAMBLE-LDN",
+ "tradeCount": 15,
+ "netMtm": -7768121,
+ "collateral": -6631553,
+ "eePeak": 33264238,
+ "pfePeak": 74752910,
+ "limit": 164000000.0,
+ "utilisation": 0.4558,
+ "cva": -124188,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 4489799,
+   "pfe": 13924607
+  },
+  {
+   "tenor": "1M",
+   "ee": 6340432,
+   "pfe": 16694437
+  },
+  {
+   "tenor": "3M",
+   "ee": 10981950,
+   "pfe": 26905778
+  },
+  {
+   "tenor": "6M",
+   "ee": 15530823,
+   "pfe": 36913297
+  },
+  {
+   "tenor": "1Y",
+   "ee": 21963900,
+   "pfe": 51066068
+  },
+  {
+   "tenor": "2Y",
+   "ee": 21280944,
+   "pfe": 48699065
+  },
+  {
+   "tenor": "3Y",
+   "ee": 26063727,
+   "pfe": 59221188
+  },
+  {
+   "tenor": "5Y",
+   "ee": 28113412,
+   "pfe": 63421094
+  },
+  {
+   "tenor": "7Y",
+   "ee": 33264238,
+   "pfe": 74752910
+  },
+  {
+   "tenor": "10Y",
+   "ee": 23800567,
+   "pfe": 53302046
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10551",
+   "product": "Inflation cap / floor",
+   "notional": 171000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 4685483
+  },
+  {
+   "tradeId": "T-10353",
+   "product": "Index option",
+   "notional": 211000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -4330699
+  },
+  {
+   "tradeId": "T-10364",
+   "product": "Equity Asian option",
+   "notional": 168000000.0,
+   "maturity": "2037-04-13",
+   "mtm": -3294420
+  },
+  {
+   "tradeId": "T-10201",
+   "product": "FX double-barrier option",
+   "notional": 237000000.0,
+   "maturity": "2036-06-25",
+   "mtm": -3187239
+  },
+  {
+   "tradeId": "T-10186",
+   "product": "FX vanilla option",
+   "notional": 67000000.0,
+   "maturity": "2027-11-24",
+   "mtm": -1313627
+  },
+  {
+   "tradeId": "T-10569",
+   "product": "Limited price index swap",
+   "notional": 217000000.0,
+   "maturity": "2035-02-22",
+   "mtm": 1126221
+  },
+  {
+   "tradeId": "T-10381",
+   "product": "Autocallable note",
+   "notional": 45000000.0,
+   "maturity": "2035-04-30",
+   "mtm": -1006987
+  },
+  {
+   "tradeId": "T-10411",
+   "product": "Equity total return swap",
+   "notional": 146000000.0,
+   "maturity": "2028-03-29",
+   "mtm": 724534
+  },
+  {
+   "tradeId": "T-10206",
+   "product": "FX one-touch / no-touch",
+   "notional": 213000000.0,
+   "maturity": "2034-07-03",
+   "mtm": -510739
+  },
+  {
+   "tradeId": "T-10405",
+   "product": "Dividend swap",
+   "notional": 49000000.0,
+   "maturity": "2031-07-08",
+   "mtm": -396916
+  },
+  {
+   "tradeId": "T-10190",
+   "product": "FX digital option",
+   "notional": 94000000.0,
+   "maturity": "2026-10-13",
+   "mtm": -383106
+  },
+  {
+   "tradeId": "T-10157",
+   "product": "FX spot",
+   "notional": 56000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 154904
+  },
+  {
+   "tradeId": "T-10394",
+   "product": "Variance swap",
+   "notional": 3000000.0,
+   "maturity": "2034-07-24",
+   "mtm": -37097
+  },
+  {
+   "tradeId": "T-10223",
+   "product": "FX accumulator",
+   "notional": 50000000.0,
+   "maturity": "2030-10-16",
+   "mtm": 4058
+  },
+  {
+   "tradeId": "T-10395",
+   "product": "Variance swap",
+   "notional": 5000000.0,
+   "maturity": "2034-04-17",
+   "mtm": -2491
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Equity",
+   "mtm": -8344076
+  },
+  {
+   "asset": "Inflation",
+   "mtm": 5811704
+  },
+  {
+   "asset": "FX",
+   "mtm": -5235749
+  }
+ ],
+ "counterparty": "CP-BRAMBLE",
+ "agreement": "AGR-BRAMBLE-ISDA",
+ "csa": "CSA-BRAMBLE",
+ "creditLimit": "LIM-BRAMBLE",
+ "exposureProfile": "EXP-BRAMBLE-LDN",
+ "cvaResult": "CVA-BRAMBLE-LDN",
+ "saccr": "SACCR-BRAMBLE-LDN",
+ "simm": "SIMM-BRAMBLE",
+ "collateralBalance": "COLL-BRAMBLE-LDN",
+ "legalEntity": "LE-LDN",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 15536
+  }
+ }
+}

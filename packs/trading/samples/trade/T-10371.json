@@ -1,0 +1,240 @@
+{
+ "tradeId": "T-10371",
+ "productType": "EQ_DIGITAL",
+ "productName": "Equity digital option",
+ "assetClass": "Equity",
+ "family": "option",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2024-12-09",
+ "effectiveDate": "2024-12-11",
+ "maturityDate": "2027-11-25",
+ "currency": "EUR",
+ "notional": 232000000.0,
+ "mtm": 4508571,
+ "mtmCurrency": "USD",
+ "pnl1d": -94109,
+ "counterparty": {
+  "id": "CP-CASCADIA",
+  "name": "Cascadia Airlines Inc."
+ },
+ "nettingSet": "NS-CASCADIA-LDN",
+ "book": "BOOK-EQD-3",
+ "trader": "TRDR-PLINDQVIST",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingEquity": "EQ-RHNB",
+ "equityVolSurface": "EQV-RHNB",
+ "dividendCurve": "DIV-RHNB",
+ "terms": {
+  "optionType": "Call",
+  "strike": 219.95,
+  "payout": 1798234.0,
+  "expiryDate": "2027-07-18"
+ },
+ "risk": {
+  "delta": -782801,
+  "vega": -488959
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -37276,
+   "vega": -23284
+  },
+  {
+   "bucket": "1M",
+   "delta": -74552,
+   "vega": -46568
+  },
+  {
+   "bucket": "3M",
+   "delta": -111829,
+   "vega": -69851
+  },
+  {
+   "bucket": "6M",
+   "delta": -149105,
+   "vega": -93135
+  },
+  {
+   "bucket": "1Y",
+   "delta": -186381,
+   "vega": -116419
+  },
+  {
+   "bucket": "2Y",
+   "delta": -223657,
+   "vega": -139703
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 173817
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -4434
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -215191
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -78563
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 220894
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -38597
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 76109
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 63472
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -3952
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -154922
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -337019
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 125103
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 57311
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 127649
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 17807
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 105754
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -99506
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 49253
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -145666
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -62947
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-12-09",
+  "executionTimestamp": "2024-12-09T13:31:08.702Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "P. Lindqvist",
+  "salesperson": null,
+  "orderId": "ORD-ED25F405D2"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-12-09T10:16:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2024-12-09T10:16:00Z",
+  "lastModifiedAt": "2024-12-09T10:16:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT529789675",
+  "matched": "2024-12-09 10:11",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83ED25F405D22D710A9169",
+  "upi": "QZ1KV1K3OLOL",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "CASCGB33XXX",
+  "ssiId": "SSI-EUR-BC4549",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 4508571,
+  "cleanPv": 4508571.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "EQ-RHNB",
+   "EQV-RHNB",
+   "DIV-RHNB"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 11337
+  }
+ }
+}

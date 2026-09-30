@@ -1,0 +1,50 @@
+{
+ "counterpartyId": "CP-TOKAI",
+ "name": "Tokai Mutual Trust Bank",
+ "lei": "549300RAQK6Q4BA84047",
+ "rating": "A",
+ "sector": "Banking",
+ "country": "JP",
+ "type": "Bank",
+ "netMtm": -3186086,
+ "pfePeak": 58835538,
+ "nettingSets": [
+  {
+   "id": "NS-TOKAI-FRA",
+   "agreement": "AGR-TOKAI-ISDA",
+   "trades": 4,
+   "netMtm": -4237647
+  },
+  {
+   "id": "NS-TOKAI-LDN",
+   "agreement": "AGR-TOKAI-ISDA",
+   "trades": 10,
+   "netMtm": 583614
+  },
+  {
+   "id": "NS-TOKAI-NY",
+   "agreement": "AGR-TOKAI-ISDA",
+   "trades": 15,
+   "netMtm": 1885392
+  },
+  {
+   "id": "NS-TOKAI-TKY",
+   "agreement": "AGR-TOKAI-ISDA",
+   "trades": 2,
+   "netMtm": -1417445
+  }
+ ],
+ "kyc": {
+  "status": "Approved",
+  "riskRating": "Standard",
+  "lastReview": "2026-02-11",
+  "emirClassification": "FC",
+  "pd1y": 0.0006
+ },
+ "group": "GRP-TOKAI",
+ "creditLimit": "LIM-TOKAI",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

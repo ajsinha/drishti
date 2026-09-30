@@ -1,0 +1,25 @@
+{
+ "scenarioId": "SCN-EM-CRISIS",
+ "name": "Emerging-market crisis",
+ "type": "Hypothetical",
+ "severity": "Severe",
+ "shocks": [
+  {
+   "factor": "USD vs EM",
+   "shock": 0.3
+  },
+  {
+   "factor": "EM credit spreads",
+   "shock": 4.0
+  },
+  {
+   "factor": "Equities",
+   "shock": -0.15
+  }
+ ],
+ "horizon": "10 days",
+ "_meta": {
+  "source": "stress-engine",
+  "generation": 1
+ }
+}

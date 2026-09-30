@@ -1,0 +1,97 @@
+{
+ "nettingSetId": "NS-VERDANT-TKY",
+ "tradeCount": 1,
+ "netMtm": -1683078,
+ "collateral": -1408096,
+ "eePeak": 18031652,
+ "pfePeak": 40677635,
+ "limit": 82000000.0,
+ "utilisation": 0.4961,
+ "cva": -447205,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 1118276,
+   "pfe": 3468206
+  },
+  {
+   "tenor": "1M",
+   "ee": 2327876,
+   "pfe": 6129328
+  },
+  {
+   "tenor": "3M",
+   "ee": 4032000,
+   "pfe": 9878400
+  },
+  {
+   "tenor": "6M",
+   "ee": 5702109,
+   "pfe": 13552640
+  },
+  {
+   "tenor": "1Y",
+   "ee": 8064000,
+   "pfe": 18748800
+  },
+  {
+   "tenor": "2Y",
+   "ee": 11404218,
+   "pfe": 26097280
+  },
+  {
+   "tenor": "3Y",
+   "ee": 13967258,
+   "pfe": 31735967
+  },
+  {
+   "tenor": "5Y",
+   "ee": 18031652,
+   "pfe": 40677635
+  },
+  {
+   "tenor": "7Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "10Y",
+   "ee": 0,
+   "pfe": 0
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10728",
+   "product": "Capital-protected note",
+   "notional": 180000000.0,
+   "maturity": "2031-10-27",
+   "mtm": -1683078
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Structured",
+   "mtm": -1683078
+  }
+ ],
+ "counterparty": "CP-VERDANT",
+ "agreement": "AGR-VERDANT-ISDA",
+ "csa": "CSA-VERDANT",
+ "creditLimit": "LIM-VERDANT",
+ "exposureProfile": "EXP-VERDANT-TKY",
+ "cvaResult": "CVA-VERDANT-TKY",
+ "saccr": "SACCR-VERDANT-TKY",
+ "simm": "SIMM-VERDANT",
+ "collateralBalance": "COLL-VERDANT-TKY",
+ "legalEntity": "LE-TKY",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 3366
+  }
+ }
+}

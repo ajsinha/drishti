@@ -1,0 +1,104 @@
+{
+ "nettingSetId": "NS-BRAMBLE-TKY",
+ "tradeCount": 2,
+ "netMtm": 682111,
+ "collateral": 625500,
+ "eePeak": 9221068,
+ "pfePeak": 21098349,
+ "limit": 41000000.0,
+ "utilisation": 0.5146,
+ "cva": -19121,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 957444,
+   "pfe": 2918377
+  },
+  {
+   "tenor": "1M",
+   "ee": 1930677,
+   "pfe": 5059490
+  },
+  {
+   "tenor": "3M",
+   "ee": 3301181,
+   "pfe": 8074598
+  },
+  {
+   "tenor": "6M",
+   "ee": 4643325,
+   "pfe": 11027314
+  },
+  {
+   "tenor": "1Y",
+   "ee": 6540089,
+   "pfe": 15200195
+  },
+  {
+   "tenor": "2Y",
+   "ee": 9221068,
+   "pfe": 21098349
+  },
+  {
+   "tenor": "3Y",
+   "ee": 2121830,
+   "pfe": 4819226
+  },
+  {
+   "tenor": "5Y",
+   "ee": 2720967,
+   "pfe": 6137328
+  },
+  {
+   "tenor": "7Y",
+   "ee": 3210138,
+   "pfe": 7213504
+  },
+  {
+   "tenor": "10Y",
+   "ee": 3829738,
+   "pfe": 8576624
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10727",
+   "product": "Capital-protected note",
+   "notional": 118000000.0,
+   "maturity": "2028-12-18",
+   "mtm": 566929
+  },
+  {
+   "tradeId": "T-10738",
+   "product": "FX-rates hybrid (PRDC)",
+   "notional": 27000000.0,
+   "maturity": "2038-01-11",
+   "mtm": 115182
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Structured",
+   "mtm": 682111
+  }
+ ],
+ "counterparty": "CP-BRAMBLE",
+ "agreement": "AGR-BRAMBLE-ISDA",
+ "csa": "CSA-BRAMBLE",
+ "creditLimit": "LIM-BRAMBLE",
+ "exposureProfile": "EXP-BRAMBLE-TKY",
+ "cvaResult": "CVA-BRAMBLE-TKY",
+ "saccr": "SACCR-BRAMBLE-TKY",
+ "simm": "SIMM-BRAMBLE",
+ "collateralBalance": "COLL-BRAMBLE-TKY",
+ "legalEntity": "LE-TKY",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 1364
+  }
+ }
+}

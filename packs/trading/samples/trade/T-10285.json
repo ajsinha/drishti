@@ -1,0 +1,330 @@
+{
+ "tradeId": "T-10285",
+ "productType": "CLN",
+ "productName": "Credit-linked note",
+ "assetClass": "Credit",
+ "family": "note",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2025-02-14",
+ "effectiveDate": "2025-02-17",
+ "maturityDate": "2031-12-03",
+ "currency": "AUD",
+ "notional": 146000000.0,
+ "mtm": 2791987,
+ "mtmCurrency": "USD",
+ "pnl1d": 187672,
+ "counterparty": {
+  "id": "CP-SOLARIS",
+  "name": "Solaris Energy Corp."
+ },
+ "nettingSet": "NS-SOLARIS-NY",
+ "book": "BOOK-CREDIT-2",
+ "trader": "TRDR-DWHITFIELD",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-GRANITE",
+ "creditCurve": "CDS-GRANITE",
+ "discountCurve": "CRV-AUD-OIS",
+ "terms": {
+  "coupon": 0.104873,
+  "issuePrice": 100.77
+ },
+ "risk": {
+  "cs01": 85926,
+  "jtd": -87600000,
+  "dv01": 78688
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 4092,
+   "jtd": -4171429,
+   "dv01": 3747
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 8183,
+   "jtd": -8342857,
+   "dv01": 7494
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 12275,
+   "jtd": -12514286,
+   "dv01": 11241
+  },
+  {
+   "bucket": "3Y",
+   "cs01": 16367,
+   "jtd": -16685714,
+   "dv01": 14988
+  },
+  {
+   "bucket": "5Y",
+   "cs01": 20459,
+   "jtd": -20857143,
+   "dv01": 18735
+  },
+  {
+   "bucket": "7Y",
+   "cs01": 24550,
+   "jtd": -25028571,
+   "dv01": 22482
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2025-08-17",
+   "rate": 0.050567,
+   "amount": 2920000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-02-17",
+   "rate": 0.024213,
+   "amount": 2920000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-08-17",
+   "rate": 0.039207,
+   "amount": 2920000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2027-02-17",
+   "rate": 0.048604,
+   "amount": 2920000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-08-17",
+   "rate": 0.052904,
+   "amount": 2920000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-02-17",
+   "rate": 0.030768,
+   "amount": 2920000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-08-17",
+   "rate": 0.031523,
+   "amount": 2920000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-02-17",
+   "rate": 0.024528,
+   "amount": 2920000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-08-17",
+   "rate": 0.03226,
+   "amount": 2920000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-02-17",
+   "rate": 0.049979,
+   "amount": 2920000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-08-17",
+   "rate": 0.029088,
+   "amount": 2920000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-02-17",
+   "rate": 0.023474,
+   "amount": 2920000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-08-17",
+   "rate": 0.020322,
+   "amount": 2920000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-12-03",
+   "rate": 0.039528,
+   "amount": 2920000.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 3,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 30323
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 24657
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -104760
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 115359
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 22168
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 13221
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -49618
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 86860
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -183121
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 32595
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 53559
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 148619
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -71768
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -180498
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 45176
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -105460
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -5679
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -53079
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 85695
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 83258
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-02-14",
+  "executionTimestamp": "2025-02-14T11:41:18.853Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "D. Whitfield",
+  "salesperson": null,
+  "orderId": "ORD-CEE8827F31"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-02-14T10:18:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2025-02-14T10:18:00Z",
+  "lastModifiedAt": "2025-02-14T10:18:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA494680733",
+  "matched": "2025-02-14 12:55",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096CEE8827F31021C79337F",
+  "upi": "QZOY91PEFWPF",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SOLAGB33XXX",
+  "ssiId": "SSI-AUD-269904",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 2791987,
+  "cleanPv": 2791987.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CDS-GRANITE",
+   "CRV-AUD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 7044
+  }
+ }
+}

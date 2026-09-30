@@ -1,0 +1,950 @@
+[
+ {
+  "kind": "frtb-sensitivity",
+  "id": "FRTB-COMM-1",
+  "title": "FRTB-COMM-1",
+  "subtitle": "FRTB sensitivities · BOOK-COMM-1"
+ },
+ {
+  "kind": "frtb-sensitivity",
+  "id": "FRTB-COMM-2",
+  "title": "FRTB-COMM-2",
+  "subtitle": "FRTB sensitivities · BOOK-COMM-2"
+ },
+ {
+  "kind": "frtb-sensitivity",
+  "id": "FRTB-COMM-3",
+  "title": "FRTB-COMM-3",
+  "subtitle": "FRTB sensitivities · BOOK-COMM-3"
+ },
+ {
+  "kind": "frtb-sensitivity",
+  "id": "FRTB-CREDIT-1",
+  "title": "FRTB-CREDIT-1",
+  "subtitle": "FRTB sensitivities · BOOK-CREDIT-1"
+ },
+ {
+  "kind": "frtb-sensitivity",
+  "id": "FRTB-CREDIT-2",
+  "title": "FRTB-CREDIT-2",
+  "subtitle": "FRTB sensitivities · BOOK-CREDIT-2"
+ },
+ {
+  "kind": "frtb-sensitivity",
+  "id": "FRTB-CREDIT-3",
+  "title": "FRTB-CREDIT-3",
+  "subtitle": "FRTB sensitivities · BOOK-CREDIT-3"
+ },
+ {
+  "kind": "frtb-sensitivity",
+  "id": "FRTB-EQD-1",
+  "title": "FRTB-EQD-1",
+  "subtitle": "FRTB sensitivities · BOOK-EQD-1"
+ },
+ {
+  "kind": "frtb-sensitivity",
+  "id": "FRTB-EQD-2",
+  "title": "FRTB-EQD-2",
+  "subtitle": "FRTB sensitivities · BOOK-EQD-2"
+ },
+ {
+  "kind": "frtb-sensitivity",
+  "id": "FRTB-EQD-3",
+  "title": "FRTB-EQD-3",
+  "subtitle": "FRTB sensitivities · BOOK-EQD-3"
+ },
+ {
+  "kind": "frtb-sensitivity",
+  "id": "FRTB-FI-1",
+  "title": "FRTB-FI-1",
+  "subtitle": "FRTB sensitivities · BOOK-FI-1"
+ },
+ {
+  "kind": "frtb-sensitivity",
+  "id": "FRTB-FI-2",
+  "title": "FRTB-FI-2",
+  "subtitle": "FRTB sensitivities · BOOK-FI-2"
+ },
+ {
+  "kind": "frtb-sensitivity",
+  "id": "FRTB-FI-3",
+  "title": "FRTB-FI-3",
+  "subtitle": "FRTB sensitivities · BOOK-FI-3"
+ },
+ {
+  "kind": "frtb-sensitivity",
+  "id": "FRTB-FX-1",
+  "title": "FRTB-FX-1",
+  "subtitle": "FRTB sensitivities · BOOK-FX-1"
+ },
+ {
+  "kind": "frtb-sensitivity",
+  "id": "FRTB-FX-2",
+  "title": "FRTB-FX-2",
+  "subtitle": "FRTB sensitivities · BOOK-FX-2"
+ },
+ {
+  "kind": "frtb-sensitivity",
+  "id": "FRTB-FX-3",
+  "title": "FRTB-FX-3",
+  "subtitle": "FRTB sensitivities · BOOK-FX-3"
+ },
+ {
+  "kind": "frtb-sensitivity",
+  "id": "FRTB-INFL-1",
+  "title": "FRTB-INFL-1",
+  "subtitle": "FRTB sensitivities · BOOK-INFL-1"
+ },
+ {
+  "kind": "frtb-sensitivity",
+  "id": "FRTB-INFL-2",
+  "title": "FRTB-INFL-2",
+  "subtitle": "FRTB sensitivities · BOOK-INFL-2"
+ },
+ {
+  "kind": "frtb-sensitivity",
+  "id": "FRTB-INFL-3",
+  "title": "FRTB-INFL-3",
+  "subtitle": "FRTB sensitivities · BOOK-INFL-3"
+ },
+ {
+  "kind": "frtb-sensitivity",
+  "id": "FRTB-MM-1",
+  "title": "FRTB-MM-1",
+  "subtitle": "FRTB sensitivities · BOOK-MM-1"
+ },
+ {
+  "kind": "frtb-sensitivity",
+  "id": "FRTB-MM-2",
+  "title": "FRTB-MM-2",
+  "subtitle": "FRTB sensitivities · BOOK-MM-2"
+ },
+ {
+  "kind": "frtb-sensitivity",
+  "id": "FRTB-MM-3",
+  "title": "FRTB-MM-3",
+  "subtitle": "FRTB sensitivities · BOOK-MM-3"
+ },
+ {
+  "kind": "frtb-sensitivity",
+  "id": "FRTB-RATES-1",
+  "title": "FRTB-RATES-1",
+  "subtitle": "FRTB sensitivities · BOOK-RATES-1"
+ },
+ {
+  "kind": "frtb-sensitivity",
+  "id": "FRTB-RATES-2",
+  "title": "FRTB-RATES-2",
+  "subtitle": "FRTB sensitivities · BOOK-RATES-2"
+ },
+ {
+  "kind": "frtb-sensitivity",
+  "id": "FRTB-RATES-3",
+  "title": "FRTB-RATES-3",
+  "subtitle": "FRTB sensitivities · BOOK-RATES-3"
+ },
+ {
+  "kind": "frtb-sensitivity",
+  "id": "FRTB-SFT-1",
+  "title": "FRTB-SFT-1",
+  "subtitle": "FRTB sensitivities · BOOK-SFT-1"
+ },
+ {
+  "kind": "frtb-sensitivity",
+  "id": "FRTB-SFT-2",
+  "title": "FRTB-SFT-2",
+  "subtitle": "FRTB sensitivities · BOOK-SFT-2"
+ },
+ {
+  "kind": "frtb-sensitivity",
+  "id": "FRTB-SFT-3",
+  "title": "FRTB-SFT-3",
+  "subtitle": "FRTB sensitivities · BOOK-SFT-3"
+ },
+ {
+  "kind": "frtb-sensitivity",
+  "id": "FRTB-STRUCT-1",
+  "title": "FRTB-STRUCT-1",
+  "subtitle": "FRTB sensitivities · BOOK-STRUCT-1"
+ },
+ {
+  "kind": "frtb-sensitivity",
+  "id": "FRTB-STRUCT-2",
+  "title": "FRTB-STRUCT-2",
+  "subtitle": "FRTB sensitivities · BOOK-STRUCT-2"
+ },
+ {
+  "kind": "frtb-sensitivity",
+  "id": "FRTB-STRUCT-3",
+  "title": "FRTB-STRUCT-3",
+  "subtitle": "FRTB sensitivities · BOOK-STRUCT-3"
+ },
+ {
+  "kind": "pnl-explain",
+  "id": "PNL-COMM-1",
+  "title": "PNL-COMM-1",
+  "subtitle": "P&L explain · BOOK-COMM-1"
+ },
+ {
+  "kind": "pnl-explain",
+  "id": "PNL-COMM-2",
+  "title": "PNL-COMM-2",
+  "subtitle": "P&L explain · BOOK-COMM-2"
+ },
+ {
+  "kind": "pnl-explain",
+  "id": "PNL-COMM-3",
+  "title": "PNL-COMM-3",
+  "subtitle": "P&L explain · BOOK-COMM-3"
+ },
+ {
+  "kind": "pnl-explain",
+  "id": "PNL-CREDIT-1",
+  "title": "PNL-CREDIT-1",
+  "subtitle": "P&L explain · BOOK-CREDIT-1"
+ },
+ {
+  "kind": "pnl-explain",
+  "id": "PNL-CREDIT-2",
+  "title": "PNL-CREDIT-2",
+  "subtitle": "P&L explain · BOOK-CREDIT-2"
+ },
+ {
+  "kind": "pnl-explain",
+  "id": "PNL-CREDIT-3",
+  "title": "PNL-CREDIT-3",
+  "subtitle": "P&L explain · BOOK-CREDIT-3"
+ },
+ {
+  "kind": "pnl-explain",
+  "id": "PNL-EQD-1",
+  "title": "PNL-EQD-1",
+  "subtitle": "P&L explain · BOOK-EQD-1"
+ },
+ {
+  "kind": "pnl-explain",
+  "id": "PNL-EQD-2",
+  "title": "PNL-EQD-2",
+  "subtitle": "P&L explain · BOOK-EQD-2"
+ },
+ {
+  "kind": "pnl-explain",
+  "id": "PNL-EQD-3",
+  "title": "PNL-EQD-3",
+  "subtitle": "P&L explain · BOOK-EQD-3"
+ },
+ {
+  "kind": "pnl-explain",
+  "id": "PNL-FI-1",
+  "title": "PNL-FI-1",
+  "subtitle": "P&L explain · BOOK-FI-1"
+ },
+ {
+  "kind": "pnl-explain",
+  "id": "PNL-FI-2",
+  "title": "PNL-FI-2",
+  "subtitle": "P&L explain · BOOK-FI-2"
+ },
+ {
+  "kind": "pnl-explain",
+  "id": "PNL-FI-3",
+  "title": "PNL-FI-3",
+  "subtitle": "P&L explain · BOOK-FI-3"
+ },
+ {
+  "kind": "pnl-explain",
+  "id": "PNL-FX-1",
+  "title": "PNL-FX-1",
+  "subtitle": "P&L explain · BOOK-FX-1"
+ },
+ {
+  "kind": "pnl-explain",
+  "id": "PNL-FX-2",
+  "title": "PNL-FX-2",
+  "subtitle": "P&L explain · BOOK-FX-2"
+ },
+ {
+  "kind": "pnl-explain",
+  "id": "PNL-FX-3",
+  "title": "PNL-FX-3",
+  "subtitle": "P&L explain · BOOK-FX-3"
+ },
+ {
+  "kind": "pnl-explain",
+  "id": "PNL-INFL-1",
+  "title": "PNL-INFL-1",
+  "subtitle": "P&L explain · BOOK-INFL-1"
+ },
+ {
+  "kind": "pnl-explain",
+  "id": "PNL-INFL-2",
+  "title": "PNL-INFL-2",
+  "subtitle": "P&L explain · BOOK-INFL-2"
+ },
+ {
+  "kind": "pnl-explain",
+  "id": "PNL-INFL-3",
+  "title": "PNL-INFL-3",
+  "subtitle": "P&L explain · BOOK-INFL-3"
+ },
+ {
+  "kind": "pnl-explain",
+  "id": "PNL-MM-1",
+  "title": "PNL-MM-1",
+  "subtitle": "P&L explain · BOOK-MM-1"
+ },
+ {
+  "kind": "pnl-explain",
+  "id": "PNL-MM-2",
+  "title": "PNL-MM-2",
+  "subtitle": "P&L explain · BOOK-MM-2"
+ },
+ {
+  "kind": "pnl-explain",
+  "id": "PNL-MM-3",
+  "title": "PNL-MM-3",
+  "subtitle": "P&L explain · BOOK-MM-3"
+ },
+ {
+  "kind": "pnl-explain",
+  "id": "PNL-RATES-1",
+  "title": "PNL-RATES-1",
+  "subtitle": "P&L explain · BOOK-RATES-1"
+ },
+ {
+  "kind": "pnl-explain",
+  "id": "PNL-RATES-2",
+  "title": "PNL-RATES-2",
+  "subtitle": "P&L explain · BOOK-RATES-2"
+ },
+ {
+  "kind": "pnl-explain",
+  "id": "PNL-RATES-3",
+  "title": "PNL-RATES-3",
+  "subtitle": "P&L explain · BOOK-RATES-3"
+ },
+ {
+  "kind": "pnl-explain",
+  "id": "PNL-SFT-1",
+  "title": "PNL-SFT-1",
+  "subtitle": "P&L explain · BOOK-SFT-1"
+ },
+ {
+  "kind": "pnl-explain",
+  "id": "PNL-SFT-2",
+  "title": "PNL-SFT-2",
+  "subtitle": "P&L explain · BOOK-SFT-2"
+ },
+ {
+  "kind": "pnl-explain",
+  "id": "PNL-SFT-3",
+  "title": "PNL-SFT-3",
+  "subtitle": "P&L explain · BOOK-SFT-3"
+ },
+ {
+  "kind": "pnl-explain",
+  "id": "PNL-STRUCT-1",
+  "title": "PNL-STRUCT-1",
+  "subtitle": "P&L explain · BOOK-STRUCT-1"
+ },
+ {
+  "kind": "pnl-explain",
+  "id": "PNL-STRUCT-2",
+  "title": "PNL-STRUCT-2",
+  "subtitle": "P&L explain · BOOK-STRUCT-2"
+ },
+ {
+  "kind": "pnl-explain",
+  "id": "PNL-STRUCT-3",
+  "title": "PNL-STRUCT-3",
+  "subtitle": "P&L explain · BOOK-STRUCT-3"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-COVID2020-COMM",
+  "title": "STR-COVID2020-COMM",
+  "subtitle": "Stress result · COVID-19 March 2020"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-COVID2020-CREDIT",
+  "title": "STR-COVID2020-CREDIT",
+  "subtitle": "Stress result · COVID-19 March 2020"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-COVID2020-EQD",
+  "title": "STR-COVID2020-EQD",
+  "subtitle": "Stress result · COVID-19 March 2020"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-COVID2020-FI",
+  "title": "STR-COVID2020-FI",
+  "subtitle": "Stress result · COVID-19 March 2020"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-COVID2020-FX",
+  "title": "STR-COVID2020-FX",
+  "subtitle": "Stress result · COVID-19 March 2020"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-COVID2020-INFL",
+  "title": "STR-COVID2020-INFL",
+  "subtitle": "Stress result · COVID-19 March 2020"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-COVID2020-MM",
+  "title": "STR-COVID2020-MM",
+  "subtitle": "Stress result · COVID-19 March 2020"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-COVID2020-RATES",
+  "title": "STR-COVID2020-RATES",
+  "subtitle": "Stress result · COVID-19 March 2020"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-COVID2020-SFT",
+  "title": "STR-COVID2020-SFT",
+  "subtitle": "Stress result · COVID-19 March 2020"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-COVID2020-STRUCT",
+  "title": "STR-COVID2020-STRUCT",
+  "subtitle": "Stress result · COVID-19 March 2020"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-EM-CRISIS-COMM",
+  "title": "STR-EM-CRISIS-COMM",
+  "subtitle": "Stress result · Emerging-market crisis"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-EM-CRISIS-CREDIT",
+  "title": "STR-EM-CRISIS-CREDIT",
+  "subtitle": "Stress result · Emerging-market crisis"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-EM-CRISIS-EQD",
+  "title": "STR-EM-CRISIS-EQD",
+  "subtitle": "Stress result · Emerging-market crisis"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-EM-CRISIS-FI",
+  "title": "STR-EM-CRISIS-FI",
+  "subtitle": "Stress result · Emerging-market crisis"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-EM-CRISIS-FX",
+  "title": "STR-EM-CRISIS-FX",
+  "subtitle": "Stress result · Emerging-market crisis"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-EM-CRISIS-INFL",
+  "title": "STR-EM-CRISIS-INFL",
+  "subtitle": "Stress result · Emerging-market crisis"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-EM-CRISIS-MM",
+  "title": "STR-EM-CRISIS-MM",
+  "subtitle": "Stress result · Emerging-market crisis"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-EM-CRISIS-RATES",
+  "title": "STR-EM-CRISIS-RATES",
+  "subtitle": "Stress result · Emerging-market crisis"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-EM-CRISIS-SFT",
+  "title": "STR-EM-CRISIS-SFT",
+  "subtitle": "Stress result · Emerging-market crisis"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-EM-CRISIS-STRUCT",
+  "title": "STR-EM-CRISIS-STRUCT",
+  "subtitle": "Stress result · Emerging-market crisis"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-GFC2008-COMM",
+  "title": "STR-GFC2008-COMM",
+  "subtitle": "Stress result · Global financial crisis 2008"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-GFC2008-CREDIT",
+  "title": "STR-GFC2008-CREDIT",
+  "subtitle": "Stress result · Global financial crisis 2008"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-GFC2008-EQD",
+  "title": "STR-GFC2008-EQD",
+  "subtitle": "Stress result · Global financial crisis 2008"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-GFC2008-FI",
+  "title": "STR-GFC2008-FI",
+  "subtitle": "Stress result · Global financial crisis 2008"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-GFC2008-FX",
+  "title": "STR-GFC2008-FX",
+  "subtitle": "Stress result · Global financial crisis 2008"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-GFC2008-INFL",
+  "title": "STR-GFC2008-INFL",
+  "subtitle": "Stress result · Global financial crisis 2008"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-GFC2008-MM",
+  "title": "STR-GFC2008-MM",
+  "subtitle": "Stress result · Global financial crisis 2008"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-GFC2008-RATES",
+  "title": "STR-GFC2008-RATES",
+  "subtitle": "Stress result · Global financial crisis 2008"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-GFC2008-SFT",
+  "title": "STR-GFC2008-SFT",
+  "subtitle": "Stress result · Global financial crisis 2008"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-GFC2008-STRUCT",
+  "title": "STR-GFC2008-STRUCT",
+  "subtitle": "Stress result · Global financial crisis 2008"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-INFL-SURGE-COMM",
+  "title": "STR-INFL-SURGE-COMM",
+  "subtitle": "Stress result · Inflation surprise"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-INFL-SURGE-CREDIT",
+  "title": "STR-INFL-SURGE-CREDIT",
+  "subtitle": "Stress result · Inflation surprise"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-INFL-SURGE-EQD",
+  "title": "STR-INFL-SURGE-EQD",
+  "subtitle": "Stress result · Inflation surprise"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-INFL-SURGE-FI",
+  "title": "STR-INFL-SURGE-FI",
+  "subtitle": "Stress result · Inflation surprise"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-INFL-SURGE-FX",
+  "title": "STR-INFL-SURGE-FX",
+  "subtitle": "Stress result · Inflation surprise"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-INFL-SURGE-INFL",
+  "title": "STR-INFL-SURGE-INFL",
+  "subtitle": "Stress result · Inflation surprise"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-INFL-SURGE-MM",
+  "title": "STR-INFL-SURGE-MM",
+  "subtitle": "Stress result · Inflation surprise"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-INFL-SURGE-RATES",
+  "title": "STR-INFL-SURGE-RATES",
+  "subtitle": "Stress result · Inflation surprise"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-INFL-SURGE-SFT",
+  "title": "STR-INFL-SURGE-SFT",
+  "subtitle": "Stress result · Inflation surprise"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-INFL-SURGE-STRUCT",
+  "title": "STR-INFL-SURGE-STRUCT",
+  "subtitle": "Stress result · Inflation surprise"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-OIL-SHOCK-COMM",
+  "title": "STR-OIL-SHOCK-COMM",
+  "subtitle": "Stress result · Oil supply shock"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-OIL-SHOCK-CREDIT",
+  "title": "STR-OIL-SHOCK-CREDIT",
+  "subtitle": "Stress result · Oil supply shock"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-OIL-SHOCK-EQD",
+  "title": "STR-OIL-SHOCK-EQD",
+  "subtitle": "Stress result · Oil supply shock"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-OIL-SHOCK-FI",
+  "title": "STR-OIL-SHOCK-FI",
+  "subtitle": "Stress result · Oil supply shock"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-OIL-SHOCK-FX",
+  "title": "STR-OIL-SHOCK-FX",
+  "subtitle": "Stress result · Oil supply shock"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-OIL-SHOCK-INFL",
+  "title": "STR-OIL-SHOCK-INFL",
+  "subtitle": "Stress result · Oil supply shock"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-OIL-SHOCK-MM",
+  "title": "STR-OIL-SHOCK-MM",
+  "subtitle": "Stress result · Oil supply shock"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-OIL-SHOCK-RATES",
+  "title": "STR-OIL-SHOCK-RATES",
+  "subtitle": "Stress result · Oil supply shock"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-OIL-SHOCK-SFT",
+  "title": "STR-OIL-SHOCK-SFT",
+  "subtitle": "Stress result · Oil supply shock"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-OIL-SHOCK-STRUCT",
+  "title": "STR-OIL-SHOCK-STRUCT",
+  "subtitle": "Stress result · Oil supply shock"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-RATES-TWIST-COMM",
+  "title": "STR-RATES-TWIST-COMM",
+  "subtitle": "Stress result · Bear steepener 2s10s +75 bp"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-RATES-TWIST-CREDIT",
+  "title": "STR-RATES-TWIST-CREDIT",
+  "subtitle": "Stress result · Bear steepener 2s10s +75 bp"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-RATES-TWIST-EQD",
+  "title": "STR-RATES-TWIST-EQD",
+  "subtitle": "Stress result · Bear steepener 2s10s +75 bp"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-RATES-TWIST-FI",
+  "title": "STR-RATES-TWIST-FI",
+  "subtitle": "Stress result · Bear steepener 2s10s +75 bp"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-RATES-TWIST-FX",
+  "title": "STR-RATES-TWIST-FX",
+  "subtitle": "Stress result · Bear steepener 2s10s +75 bp"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-RATES-TWIST-INFL",
+  "title": "STR-RATES-TWIST-INFL",
+  "subtitle": "Stress result · Bear steepener 2s10s +75 bp"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-RATES-TWIST-MM",
+  "title": "STR-RATES-TWIST-MM",
+  "subtitle": "Stress result · Bear steepener 2s10s +75 bp"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-RATES-TWIST-RATES",
+  "title": "STR-RATES-TWIST-RATES",
+  "subtitle": "Stress result · Bear steepener 2s10s +75 bp"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-RATES-TWIST-SFT",
+  "title": "STR-RATES-TWIST-SFT",
+  "subtitle": "Stress result · Bear steepener 2s10s +75 bp"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-RATES-TWIST-STRUCT",
+  "title": "STR-RATES-TWIST-STRUCT",
+  "subtitle": "Stress result · Bear steepener 2s10s +75 bp"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-RATES-UP200-COMM",
+  "title": "STR-RATES-UP200-COMM",
+  "subtitle": "Stress result · Parallel rates +200 bp"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-RATES-UP200-CREDIT",
+  "title": "STR-RATES-UP200-CREDIT",
+  "subtitle": "Stress result · Parallel rates +200 bp"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-RATES-UP200-EQD",
+  "title": "STR-RATES-UP200-EQD",
+  "subtitle": "Stress result · Parallel rates +200 bp"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-RATES-UP200-FI",
+  "title": "STR-RATES-UP200-FI",
+  "subtitle": "Stress result · Parallel rates +200 bp"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-RATES-UP200-FX",
+  "title": "STR-RATES-UP200-FX",
+  "subtitle": "Stress result · Parallel rates +200 bp"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-RATES-UP200-INFL",
+  "title": "STR-RATES-UP200-INFL",
+  "subtitle": "Stress result · Parallel rates +200 bp"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-RATES-UP200-MM",
+  "title": "STR-RATES-UP200-MM",
+  "subtitle": "Stress result · Parallel rates +200 bp"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-RATES-UP200-RATES",
+  "title": "STR-RATES-UP200-RATES",
+  "subtitle": "Stress result · Parallel rates +200 bp"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-RATES-UP200-SFT",
+  "title": "STR-RATES-UP200-SFT",
+  "subtitle": "Stress result · Parallel rates +200 bp"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-RATES-UP200-STRUCT",
+  "title": "STR-RATES-UP200-STRUCT",
+  "subtitle": "Stress result · Parallel rates +200 bp"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-USD-SPIKE-COMM",
+  "title": "STR-USD-SPIKE-COMM",
+  "subtitle": "Stress result · USD +15% vs all"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-USD-SPIKE-CREDIT",
+  "title": "STR-USD-SPIKE-CREDIT",
+  "subtitle": "Stress result · USD +15% vs all"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-USD-SPIKE-EQD",
+  "title": "STR-USD-SPIKE-EQD",
+  "subtitle": "Stress result · USD +15% vs all"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-USD-SPIKE-FI",
+  "title": "STR-USD-SPIKE-FI",
+  "subtitle": "Stress result · USD +15% vs all"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-USD-SPIKE-FX",
+  "title": "STR-USD-SPIKE-FX",
+  "subtitle": "Stress result · USD +15% vs all"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-USD-SPIKE-INFL",
+  "title": "STR-USD-SPIKE-INFL",
+  "subtitle": "Stress result · USD +15% vs all"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-USD-SPIKE-MM",
+  "title": "STR-USD-SPIKE-MM",
+  "subtitle": "Stress result · USD +15% vs all"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-USD-SPIKE-RATES",
+  "title": "STR-USD-SPIKE-RATES",
+  "subtitle": "Stress result · USD +15% vs all"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-USD-SPIKE-SFT",
+  "title": "STR-USD-SPIKE-SFT",
+  "subtitle": "Stress result · USD +15% vs all"
+ },
+ {
+  "kind": "stress-result",
+  "id": "STR-USD-SPIKE-STRUCT",
+  "title": "STR-USD-SPIKE-STRUCT",
+  "subtitle": "Stress result · USD +15% vs all"
+ },
+ {
+  "kind": "stress-scenario",
+  "id": "SCN-COVID2020",
+  "title": "SCN-COVID2020",
+  "subtitle": "Stress scenario · COVID-19 March 2020"
+ },
+ {
+  "kind": "stress-scenario",
+  "id": "SCN-EM-CRISIS",
+  "title": "SCN-EM-CRISIS",
+  "subtitle": "Stress scenario · Emerging-market crisis"
+ },
+ {
+  "kind": "stress-scenario",
+  "id": "SCN-GFC2008",
+  "title": "SCN-GFC2008",
+  "subtitle": "Stress scenario · Global financial crisis 2008"
+ },
+ {
+  "kind": "stress-scenario",
+  "id": "SCN-INFL-SURGE",
+  "title": "SCN-INFL-SURGE",
+  "subtitle": "Stress scenario · Inflation surprise"
+ },
+ {
+  "kind": "stress-scenario",
+  "id": "SCN-OIL-SHOCK",
+  "title": "SCN-OIL-SHOCK",
+  "subtitle": "Stress scenario · Oil supply shock"
+ },
+ {
+  "kind": "stress-scenario",
+  "id": "SCN-RATES-TWIST",
+  "title": "SCN-RATES-TWIST",
+  "subtitle": "Stress scenario · Bear steepener 2s10s +75 bp"
+ },
+ {
+  "kind": "stress-scenario",
+  "id": "SCN-RATES-UP200",
+  "title": "SCN-RATES-UP200",
+  "subtitle": "Stress scenario · Parallel rates +200 bp"
+ },
+ {
+  "kind": "stress-scenario",
+  "id": "SCN-USD-SPIKE",
+  "title": "SCN-USD-SPIKE",
+  "subtitle": "Stress scenario · USD +15% vs all"
+ },
+ {
+  "kind": "var",
+  "id": "VAR-COMM",
+  "title": "VAR-COMM",
+  "subtitle": "VaR / expected shortfall"
+ },
+ {
+  "kind": "var",
+  "id": "VAR-CREDIT",
+  "title": "VAR-CREDIT",
+  "subtitle": "VaR / expected shortfall"
+ },
+ {
+  "kind": "var",
+  "id": "VAR-EQD",
+  "title": "VAR-EQD",
+  "subtitle": "VaR / expected shortfall"
+ },
+ {
+  "kind": "var",
+  "id": "VAR-FI",
+  "title": "VAR-FI",
+  "subtitle": "VaR / expected shortfall"
+ },
+ {
+  "kind": "var",
+  "id": "VAR-FX",
+  "title": "VAR-FX",
+  "subtitle": "VaR / expected shortfall"
+ },
+ {
+  "kind": "var",
+  "id": "VAR-INFL",
+  "title": "VAR-INFL",
+  "subtitle": "VaR / expected shortfall"
+ },
+ {
+  "kind": "var",
+  "id": "VAR-MM",
+  "title": "VAR-MM",
+  "subtitle": "VaR / expected shortfall"
+ },
+ {
+  "kind": "var",
+  "id": "VAR-RATES",
+  "title": "VAR-RATES",
+  "subtitle": "VaR / expected shortfall"
+ },
+ {
+  "kind": "var",
+  "id": "VAR-SFT",
+  "title": "VAR-SFT",
+  "subtitle": "VaR / expected shortfall"
+ },
+ {
+  "kind": "var",
+  "id": "VAR-STRUCT",
+  "title": "VAR-STRUCT",
+  "subtitle": "VaR / expected shortfall"
+ }
+]

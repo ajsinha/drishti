@@ -1,0 +1,92 @@
+{
+ "bookId": "BOOK-CREDIT-2",
+ "name": "Credit trading · book 2",
+ "deskName": "Credit trading",
+ "tradeCount": 26,
+ "mtm": -12037408,
+ "dv01": 292347,
+ "topTrades": [
+  {
+   "tradeId": "T-10275",
+   "product": "Total return swap on a bond",
+   "notional": 217000000.0,
+   "maturity": "2030-11-11",
+   "mtm": -5751547
+  },
+  {
+   "tradeId": "T-10269",
+   "product": "First-to-default basket",
+   "notional": 180000000.0,
+   "maturity": "2027-03-22",
+   "mtm": -3938043
+  },
+  {
+   "tradeId": "T-10290",
+   "product": "Term loan",
+   "notional": 206000000.0,
+   "maturity": "2033-07-04",
+   "mtm": -3431576
+  },
+  {
+   "tradeId": "T-10267",
+   "product": "First-to-default basket",
+   "notional": 210000000.0,
+   "maturity": "2030-01-07",
+   "mtm": -2867075
+  },
+  {
+   "tradeId": "T-10285",
+   "product": "Credit-linked note",
+   "notional": 146000000.0,
+   "maturity": "2031-12-03",
+   "mtm": 2791987
+  },
+  {
+   "tradeId": "T-10268",
+   "product": "First-to-default basket",
+   "notional": 155000000.0,
+   "maturity": "2033-05-06",
+   "mtm": 2634218
+  },
+  {
+   "tradeId": "T-10293",
+   "product": "Term loan",
+   "notional": 126000000.0,
+   "maturity": "2029-04-02",
+   "mtm": -2592887
+  },
+  {
+   "tradeId": "T-10278",
+   "product": "Total return swap on a loan index",
+   "notional": 85000000.0,
+   "maturity": "2032-08-31",
+   "mtm": -1607501
+  },
+  {
+   "tradeId": "T-10248",
+   "product": "CDS index (CDX / iTraxx)",
+   "notional": 249000000.0,
+   "maturity": "2034-08-17",
+   "mtm": -1402373
+  },
+  {
+   "tradeId": "T-10296",
+   "product": "Revolving credit facility",
+   "notional": 127000000.0,
+   "maturity": "2035-09-28",
+   "mtm": 1256638
+  }
+ ],
+ "desk": "DESK-CREDIT",
+ "accountingTreatment": "Fair value (FVTPL)",
+ "regulatoryBook": "Trading book",
+ "volcker": "Market making",
+ "_meta": {
+  "source": "org-master",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 5000
+  }
+ }
+}

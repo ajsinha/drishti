@@ -1,0 +1,253 @@
+{
+ "tradeId": "T-10710",
+ "productType": "SEC_BORROWING",
+ "productName": "Securities borrowing",
+ "assetClass": "Securities financing",
+ "family": "sft",
+ "status": "Live",
+ "direction": "Repo (lend cash)",
+ "tradeDate": "2026-09-25",
+ "effectiveDate": "2026-09-28",
+ "maturityDate": "2026-10-27",
+ "currency": "CHF",
+ "notional": 60000000.0,
+ "mtm": -562899,
+ "mtmCurrency": "USD",
+ "pnl1d": 1554,
+ "counterparty": {
+  "id": "CP-SOLARIS",
+  "name": "Solaris Energy Corp."
+ },
+ "nettingSet": "NS-SOLARIS-FRA",
+ "book": "BOOK-SFT-2",
+ "trader": "TRDR-NFAROUK",
+ "desk": "DESK-SFT",
+ "legalEntity": "LE-FRA",
+ "underlyingEquity": "EQ-LUMN",
+ "repoCurve": "REPO-CHF",
+ "terms": {
+  "fee": 410.8,
+  "collateralType": "Cash"
+ },
+ "risk": {
+  "exposure": 803873,
+  "delta": 149980
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "exposure": 80387,
+   "delta": 14998
+  },
+  {
+   "bucket": "1M",
+   "exposure": 160775,
+   "delta": 29996
+  },
+  {
+   "bucket": "3M",
+   "exposure": 241162,
+   "delta": 44994
+  },
+  {
+   "bucket": "6M",
+   "exposure": 321549,
+   "delta": 59992
+  }
+ ],
+ "schedule": [
+  {
+   "asset": "Federal Republic of Germany 2036",
+   "isin": "DEBUND130144",
+   "quantity": 17326133,
+   "marketValue": 20431323,
+   "haircut": 0.005,
+   "value": 20329166
+  },
+  {
+   "asset": "United Kingdom Debt Management Office 2031",
+   "isin": "GBGILT065113",
+   "quantity": 20279912,
+   "marketValue": 20129841,
+   "haircut": 0.02,
+   "value": 19727244
+  },
+  {
+   "asset": "Granite Building Materials plc 2036",
+   "isin": "GBGRAN185331",
+   "quantity": 19722891,
+   "marketValue": 19156647,
+   "haircut": 0.02,
+   "value": 18773514
+  }
+ ],
+ "nextIndex": -1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -15345
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 3170
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 19963
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 7355
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -3979
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -22515
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -15083
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -18186
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 3434
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 8418
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 10702
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 2405
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 6956
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -578
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -10808
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 5725
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 22485
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 12018
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 3295
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 22720
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-09-25",
+  "executionTimestamp": "2026-09-25T10:53:56.484Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "N. Farouk",
+  "salesperson": null,
+  "orderId": "ORD-36786EE567"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-09-25T12:08:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-09-25T12:08:00Z",
+  "lastModifiedAt": "2026-09-25T12:08:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT838414803",
+  "matched": "2026-09-25 15:13",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z9DXU4T18OK74436786EE567362EE2D3A4",
+  "upi": "QZ42XT2AEAJ4",
+  "reportingRegimes": [
+   "EU EMIR",
+   "EU MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SOLAGB33XXX",
+  "ssiId": "SSI-CHF-269904",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -562899,
+  "cleanPv": -562899.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQ-LUMN",
+   "REPO-CHF"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "globalone-sft",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 1726
+  }
+ }
+}

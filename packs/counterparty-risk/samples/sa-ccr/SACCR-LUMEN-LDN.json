@@ -1,0 +1,84 @@
+{
+ "calcId": "SACCR-LUMEN-LDN",
+ "replacementCost": 0,
+ "addOn": 124121123,
+ "multiplier": 0.9963,
+ "ead": 173126625,
+ "rwa": 86563312,
+ "addOns": [
+  {
+   "assetClass": "Foreign exchange",
+   "addOn": 2531945
+  },
+  {
+   "assetClass": "Equity",
+   "addOn": 120539178
+  },
+  {
+   "assetClass": "Interest rate",
+   "addOn": 1050000
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "USD",
+   "effectiveNotional": 24567123,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "JPY",
+   "effectiveNotional": 30021918,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "GBP",
+   "effectiveNotional": 8709589,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "CHF",
+   "effectiveNotional": -800000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "GBP",
+   "effectiveNotional": -110643836,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "EUR",
+   "effectiveNotional": -136241096,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "JPY",
+   "effectiveNotional": 109000000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "USD",
+   "effectiveNotional": -20000000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "JPY",
+   "effectiveNotional": 210000000,
+   "sf": 0.005
+  }
+ ],
+ "nettingSet": "NS-LUMEN-LDN",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

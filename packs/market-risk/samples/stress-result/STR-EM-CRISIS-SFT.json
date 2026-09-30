@@ -1,0 +1,26 @@
+{
+ "resultId": "STR-EM-CRISIS-SFT",
+ "scenarioName": "Emerging-market crisis",
+ "pnl": -202130480,
+ "limit": -166700000.0,
+ "byBook": [
+  {
+   "book": "BOOK-SFT-1",
+   "pnl": -79546769
+  },
+  {
+   "book": "BOOK-SFT-2",
+   "pnl": -45155296
+  },
+  {
+   "book": "BOOK-SFT-3",
+   "pnl": -77428415
+  }
+ ],
+ "scenario": "SCN-EM-CRISIS",
+ "desk": "DESK-SFT",
+ "_meta": {
+  "source": "stress-engine",
+  "generation": 1
+ }
+}

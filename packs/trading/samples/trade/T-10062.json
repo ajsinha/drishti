@@ -1,0 +1,280 @@
+{
+ "tradeId": "T-10062",
+ "productType": "FRA",
+ "productName": "Forward rate agreement",
+ "assetClass": "Rates",
+ "family": "linear",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2024-11-01",
+ "effectiveDate": "2024-11-04",
+ "maturityDate": "2026-10-07",
+ "currency": "AUD",
+ "notional": 452000000.0,
+ "mtm": -5476015,
+ "mtmCurrency": "USD",
+ "pnl1d": -244203,
+ "counterparty": {
+  "id": "CP-VERDANT",
+  "name": "Verdant Agri Holdings"
+ },
+ "nettingSet": "NS-VERDANT-NY",
+ "book": "BOOK-RATES-3",
+ "trader": "TRDR-ASHAH",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-AUD-OIS",
+ "forwardCurve": "CRV-AUD-PROJ",
+ "terms": {
+  "fraRate": 0.048128,
+  "startPeriod": "9x12",
+  "fixingDate": "2027-06-20"
+ },
+ "risk": {
+  "dv01": 17705
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 5902
+  },
+  {
+   "bucket": "6M",
+   "dv01": 11803
+  }
+ ],
+ "schedule": [
+  {
+   "fixingDate": "2025-02-04",
+   "period": "2025-02-04..2025-05-04",
+   "index": "AONIA",
+   "rate": 0.033583,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2025-05-04",
+   "period": "2025-05-04..2025-08-04",
+   "index": "AONIA",
+   "rate": 0.022805,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2025-08-04",
+   "period": "2025-08-04..2025-11-04",
+   "index": "AONIA",
+   "rate": 0.037924,
+   "payoff": 330412.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2025-11-04",
+   "period": "2025-11-04..2026-02-04",
+   "index": "AONIA",
+   "rate": 0.048409,
+   "payoff": 1515217.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-02-04",
+   "period": "2026-02-04..2026-05-04",
+   "index": "AONIA",
+   "rate": 0.044066,
+   "payoff": 1024458.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-05-04",
+   "period": "2026-05-04..2026-08-04",
+   "index": "AONIA",
+   "rate": 0.04359,
+   "payoff": 970670.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-08-04",
+   "period": "2026-08-04..2026-11-04",
+   "index": "AONIA",
+   "rate": 0.02863,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-10-07",
+   "period": "2026-10-07..2027-01-07",
+   "index": "AONIA",
+   "rate": 0.041265,
+   "payoff": 707945.0,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 7,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -31564
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -66929
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 40718
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -87706
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 181788
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 139026
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -258260
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 148318
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 80538
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -126713
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 62312
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 54681
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -9069
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 100341
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 83228
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -3298
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 173492
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 830
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -50196
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -188672
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-11-01",
+  "executionTimestamp": "2024-11-01T14:54:51.350Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "A. Shah",
+  "salesperson": null,
+  "orderId": "ORD-DC5E115940"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-11-01T12:22:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2024-11-01T12:22:00Z",
+  "lastModifiedAt": "2024-11-01T12:22:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA563463476",
+  "matched": "2024-11-01 16:00",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096DC5E115940702C54947D",
+  "upi": "QZ6ULH8CX7EP",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "VERDGB33XXX",
+  "ssiId": "SSI-AUD-ABCF5A",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -5476015,
+  "cleanPv": -5476015.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-AUD-OIS",
+   "CRV-AUD-PROJ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 15472
+  }
+ }
+}

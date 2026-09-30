@@ -1,0 +1,34 @@
+{
+ "csaId": "CSA-CORAL",
+ "marginType": "VM",
+ "thresholdUs": 10000000.0,
+ "thresholdThem": 10000000.0,
+ "mta": 500000,
+ "independentAmount": 0,
+ "frequency": "Daily",
+ "mpor": "10 business days",
+ "eligible": [
+  {
+   "asset": "USD, EUR, GBP cash",
+   "haircut": 0.0
+  },
+  {
+   "asset": "G7 government bonds < 1Y",
+   "haircut": 0.005
+  },
+  {
+   "asset": "G7 government bonds 1-5Y",
+   "haircut": 0.02
+  },
+  {
+   "asset": "G7 government bonds 5-10Y",
+   "haircut": 0.04
+  }
+ ],
+ "agreement": "AGR-CORAL-ISDA",
+ "counterparty": "CP-CORAL",
+ "_meta": {
+  "source": "legal-docs",
+  "generation": 1
+ }
+}

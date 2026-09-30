@@ -1,0 +1,48 @@
+{
+ "limitId": "LIM-TOKAI",
+ "counterpartyName": "Tokai Mutual Trust Bank",
+ "measure": "PFE 95 peak",
+ "limit": 195000000.0,
+ "used": 104437971,
+ "utilisation": 0.5356,
+ "status": "Within limit",
+ "buckets": [
+  {
+   "bucket": "0-1Y",
+   "limit": 195000000,
+   "used": 88772275,
+   "utilisation": 0.4552
+  },
+  {
+   "bucket": "1-3Y",
+   "limit": 195000000,
+   "used": 104437971,
+   "utilisation": 0.5356
+  },
+  {
+   "bucket": "3-5Y",
+   "limit": 156000000,
+   "used": 73106580,
+   "utilisation": 0.4686
+  },
+  {
+   "bucket": "5-10Y",
+   "limit": 117000000,
+   "used": 36553290,
+   "utilisation": 0.3124
+  },
+  {
+   "bucket": "10Y+",
+   "limit": 78000000,
+   "used": 10443797,
+   "utilisation": 0.1339
+  }
+ ],
+ "counterparty": "CP-TOKAI",
+ "approvedBy": "Credit Risk Committee",
+ "reviewDue": "2027-03-19",
+ "_meta": {
+  "source": "limits-system",
+  "generation": 1
+ }
+}

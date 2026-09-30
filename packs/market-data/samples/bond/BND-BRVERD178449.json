@@ -1,0 +1,180 @@
+{
+ "isin": "BND-BRVERD178449",
+ "isinCode": "BRVERD178449",
+ "issuerName": "Verdant Agri Holdings",
+ "coupon": 0.0629,
+ "maturity": "2036-02-15",
+ "price": 91.213,
+ "yield": 0.073,
+ "zSpread": 323.0,
+ "modDuration": 8.7,
+ "rating": "BB-",
+ "terms": {
+  "currency": "USD",
+  "couponFrequency": "Semi-annual",
+  "dayCount": "ACT/ACT",
+  "issueDate": "2026-02-15",
+  "amountIssued": 1600000000,
+  "seniority": "Senior unsecured",
+  "callable": false,
+  "cusip": null
+ },
+ "coupons": [
+  {
+   "date": "2027-02-15",
+   "amount": 3.145
+  },
+  {
+   "date": "2028-02-15",
+   "amount": 3.145
+  },
+  {
+   "date": "2029-02-15",
+   "amount": 3.145
+  },
+  {
+   "date": "2030-02-15",
+   "amount": 3.145
+  },
+  {
+   "date": "2031-02-15",
+   "amount": 3.145
+  },
+  {
+   "date": "2032-02-15",
+   "amount": 3.145
+  }
+ ],
+ "history": [
+  {
+   "date": "2026-08-19",
+   "price": 91.499
+  },
+  {
+   "date": "2026-08-20",
+   "price": 91.388
+  },
+  {
+   "date": "2026-08-21",
+   "price": 91.509
+  },
+  {
+   "date": "2026-08-24",
+   "price": 91.478
+  },
+  {
+   "date": "2026-08-25",
+   "price": 91.801
+  },
+  {
+   "date": "2026-08-26",
+   "price": 91.666
+  },
+  {
+   "date": "2026-08-27",
+   "price": 91.833
+  },
+  {
+   "date": "2026-08-28",
+   "price": 91.793
+  },
+  {
+   "date": "2026-08-31",
+   "price": 91.916
+  },
+  {
+   "date": "2026-09-01",
+   "price": 91.738
+  },
+  {
+   "date": "2026-09-02",
+   "price": 91.335
+  },
+  {
+   "date": "2026-09-03",
+   "price": 91.09
+  },
+  {
+   "date": "2026-09-04",
+   "price": 91.159
+  },
+  {
+   "date": "2026-09-08",
+   "price": 91.116
+  },
+  {
+   "date": "2026-09-09",
+   "price": 91.228
+  },
+  {
+   "date": "2026-09-10",
+   "price": 91.239
+  },
+  {
+   "date": "2026-09-11",
+   "price": 91.148
+  },
+  {
+   "date": "2026-09-14",
+   "price": 91.216
+  },
+  {
+   "date": "2026-09-15",
+   "price": 91.244
+  },
+  {
+   "date": "2026-09-16",
+   "price": 91.396
+  },
+  {
+   "date": "2026-09-17",
+   "price": 91.207
+  },
+  {
+   "date": "2026-09-18",
+   "price": 91.156
+  },
+  {
+   "date": "2026-09-21",
+   "price": 91.305
+  },
+  {
+   "date": "2026-09-22",
+   "price": 91.431
+  },
+  {
+   "date": "2026-09-23",
+   "price": 91.494
+  },
+  {
+   "date": "2026-09-24",
+   "price": 91.724
+  },
+  {
+   "date": "2026-09-25",
+   "price": 91.508
+  },
+  {
+   "date": "2026-09-28",
+   "price": 91.4
+  },
+  {
+   "date": "2026-09-29",
+   "price": 91.389
+  },
+  {
+   "date": "2026-09-30",
+   "price": 91.213
+  }
+ ],
+ "issuer": "ISS-VERDANT",
+ "benchmarkCurve": "CRV-USD-GOVT",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "price": 0.02
+  }
+ }
+}

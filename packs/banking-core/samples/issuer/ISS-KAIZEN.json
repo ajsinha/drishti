@@ -1,0 +1,26 @@
+{
+ "issuerId": "ISS-KAIZEN",
+ "name": "Kaizen Motors Corp.",
+ "rating": "A",
+ "sector": "Autos",
+ "country": "JP",
+ "bonds": [
+  {
+   "isin": "JPKAIZ021595",
+   "coupon": 0.0217,
+   "maturity": "2031-06-15"
+  },
+  {
+   "isin": "JPKAIZ129190",
+   "coupon": 0.0267,
+   "maturity": "2036-12-15"
+  }
+ ],
+ "creditCurve": "CDS-KAIZEN",
+ "lei": "549300QHGAQDWKD74X65",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ },
+ "equity": "EQ-KZNM"
+}

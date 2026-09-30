@@ -1,0 +1,228 @@
+{
+ "tradeId": "T-10113",
+ "productType": "SWAPTION_AMER",
+ "productName": "American swaption",
+ "assetClass": "Rates",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2025-10-10",
+ "effectiveDate": "2025-10-14",
+ "maturityDate": "2028-04-13",
+ "currency": "USD",
+ "notional": 139000000.0,
+ "mtm": 447170,
+ "mtmCurrency": "USD",
+ "pnl1d": -11633,
+ "counterparty": {
+  "id": "CP-PINNACLE",
+  "name": "Pinnacle Credit Partners"
+ },
+ "nettingSet": "NS-PINNACLE-NY",
+ "book": "BOOK-RATES-1",
+ "trader": "TRDR-MOKAFOR",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-USD-OIS",
+ "forwardCurve": "CRV-USD-PROJ",
+ "swaptionVolCube": "IRV-USD",
+ "terms": {
+  "payerReceiver": "Receiver",
+  "strike": 0.034243,
+  "expiryDate": "2028-12-23"
+ },
+ "risk": {
+  "dv01": 27555,
+  "vega": 574461
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 2756,
+   "vega": 57446
+  },
+  {
+   "bucket": "6M",
+   "dv01": 5511,
+   "vega": 114892
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 8266,
+   "vega": 172338
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 11022,
+   "vega": 229784
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 11681
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 10016
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -5020
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -215
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -5705
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 26711
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 3656
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -1189
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 10293
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 209
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -5500
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -9708
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 1950
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -4872
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -14413
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 24944
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -3183
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 23646
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 8582
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -15747
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-10-10",
+  "executionTimestamp": "2025-10-10T16:59:48.524Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "M. Okafor",
+  "salesperson": null,
+  "orderId": "ORD-31069D0BD6"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-10-10T12:10:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2025-10-10T12:10:00Z",
+  "lastModifiedAt": "2025-10-10T12:10:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA859849757",
+  "matched": "2025-10-10 17:33",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209631069D0BD63CC7C9DD9C",
+  "upi": "QZL040OWCYA5",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "PINNUS33XXX",
+  "ssiId": "SSI-USD-F2BB52",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 447170,
+  "cleanPv": 447170.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CRV-USD-OIS",
+   "CRV-USD-PROJ",
+   "IRV-USD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 2284
+  }
+ }
+}

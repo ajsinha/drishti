@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-SOLARIS-FRA",
+ "held": 1446508,
+ "posted": 0,
+ "net": 1446508,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Orbital Telecom SA 2036",
+   "direction": "Held",
+   "marketValue": 482169,
+   "haircut": 0.01,
+   "value": 477347
+  },
+  {
+   "asset": "United Kingdom Debt Management Office 2031",
+   "direction": "Held",
+   "marketValue": 482169,
+   "haircut": 0.01,
+   "value": 477347
+  },
+  {
+   "asset": "Federal Republic of Germany 2036",
+   "direction": "Held",
+   "marketValue": 482169,
+   "haircut": 0.02,
+   "value": 472526
+  }
+ ],
+ "csa": "CSA-SOLARIS",
+ "nettingSet": "NS-SOLARIS-FRA",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

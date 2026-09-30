@@ -1,0 +1,189 @@
+{
+ "nettingSetId": "NS-RHEINTAL-LDN",
+ "tradeCount": 13,
+ "netMtm": -451233,
+ "collateral": -309084,
+ "eePeak": 54620880,
+ "pfePeak": 123219335,
+ "limit": 166000000.0,
+ "utilisation": 0.7423,
+ "cva": -139649,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 4112575,
+   "pfe": 12754690
+  },
+  {
+   "tenor": "1M",
+   "ee": 8561008,
+   "pfe": 22541242
+  },
+  {
+   "tenor": "3M",
+   "ee": 14828100,
+   "pfe": 36328845
+  },
+  {
+   "tenor": "6M",
+   "ee": 20634507,
+   "pfe": 49043616
+  },
+  {
+   "tenor": "1Y",
+   "ee": 24656800,
+   "pfe": 57327060
+  },
+  {
+   "tenor": "2Y",
+   "ee": 34869981,
+   "pfe": 79796058
+  },
+  {
+   "tenor": "3Y",
+   "ee": 42706830,
+   "pfe": 97037127
+  },
+  {
+   "tenor": "5Y",
+   "ee": 54620880,
+   "pfe": 123219335
+  },
+  {
+   "tenor": "7Y",
+   "ee": 41722440,
+   "pfe": 93760568
+  },
+  {
+   "tenor": "10Y",
+   "ee": 0,
+   "pfe": 0
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10194",
+   "product": "FX barrier option",
+   "notional": 224000000.0,
+   "maturity": "2035-06-13",
+   "mtm": -3413754
+  },
+  {
+   "tradeId": "T-10439",
+   "product": "Basket option",
+   "notional": 97000000.0,
+   "maturity": "2031-11-03",
+   "mtm": 1923365
+  },
+  {
+   "tradeId": "T-10380",
+   "product": "Autocallable note",
+   "notional": 101000000.0,
+   "maturity": "2027-04-19",
+   "mtm": -1263466
+  },
+  {
+   "tradeId": "T-10377",
+   "product": "Cliquet (ratchet)",
+   "notional": 84000000.0,
+   "maturity": "2032-07-28",
+   "mtm": -951838
+  },
+  {
+   "tradeId": "T-10440",
+   "product": "Basket option",
+   "notional": 210000000.0,
+   "maturity": "2036-09-22",
+   "mtm": 841815
+  },
+  {
+   "tradeId": "T-10166",
+   "product": "FX forward",
+   "notional": 78000000.0,
+   "maturity": "2027-03-22",
+   "mtm": 808778
+  },
+  {
+   "tradeId": "T-10216",
+   "product": "FX average-rate option",
+   "notional": 32000000.0,
+   "maturity": "2034-05-30",
+   "mtm": 782361
+  },
+  {
+   "tradeId": "T-10205",
+   "product": "FX one-touch / no-touch",
+   "notional": 94000000.0,
+   "maturity": "2032-01-16",
+   "mtm": 621991
+  },
+  {
+   "tradeId": "T-10408",
+   "product": "Dividend swap",
+   "notional": 108000000.0,
+   "maturity": "2036-03-03",
+   "mtm": -538557
+  },
+  {
+   "tradeId": "T-10213",
+   "product": "FX average-rate option",
+   "notional": 41000000.0,
+   "maturity": "2031-08-15",
+   "mtm": 351133
+  },
+  {
+   "tradeId": "T-10548",
+   "product": "Inflation cap / floor",
+   "notional": 54000000.0,
+   "maturity": "2027-03-29",
+   "mtm": 334643
+  },
+  {
+   "tradeId": "T-10234",
+   "product": "FX variance swap",
+   "notional": 4000000.0,
+   "maturity": "2033-06-03",
+   "mtm": 77801
+  },
+  {
+   "tradeId": "T-10398",
+   "product": "Volatility swap",
+   "notional": 2000000.0,
+   "maturity": "2036-04-15",
+   "mtm": -25505
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "FX",
+   "mtm": -771690
+  },
+  {
+   "asset": "Inflation",
+   "mtm": 334643
+  },
+  {
+   "asset": "Equity",
+   "mtm": -14186
+  }
+ ],
+ "counterparty": "CP-RHEINTAL",
+ "agreement": "AGR-RHEINTAL-ISDA",
+ "csa": "CSA-RHEINTAL",
+ "creditLimit": "LIM-RHEINTAL",
+ "exposureProfile": "EXP-RHEINTAL-LDN",
+ "cvaResult": "CVA-RHEINTAL-LDN",
+ "saccr": "SACCR-RHEINTAL-LDN",
+ "simm": "SIMM-RHEINTAL",
+ "collateralBalance": "COLL-RHEINTAL-LDN",
+ "legalEntity": "LE-LDN",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 1000
+  }
+ }
+}

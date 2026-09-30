@@ -1,0 +1,60 @@
+{
+ "curveId": "FXF-USDCAD",
+ "pair": "USDCAD",
+ "spot": 1.389,
+ "points3m": -32.9,
+ "points1y": -131.3,
+ "points": [
+  {
+   "tenor": "ON",
+   "pips": -0.4,
+   "outright": 1.38896
+  },
+  {
+   "tenor": "1W",
+   "pips": -2.5,
+   "outright": 1.38875
+  },
+  {
+   "tenor": "1M",
+   "pips": -11.0,
+   "outright": 1.3879
+  },
+  {
+   "tenor": "2M",
+   "pips": -22.0,
+   "outright": 1.3868
+  },
+  {
+   "tenor": "3M",
+   "pips": -32.9,
+   "outright": 1.38571
+  },
+  {
+   "tenor": "6M",
+   "pips": -65.8,
+   "outright": 1.38242
+  },
+  {
+   "tenor": "9M",
+   "pips": -98.6,
+   "outright": 1.37914
+  },
+  {
+   "tenor": "1Y",
+   "pips": -131.3,
+   "outright": 1.37587
+  },
+  {
+   "tenor": "2Y",
+   "pips": -261.4,
+   "outright": 1.36286
+  }
+ ],
+ "fxSpot": "FX-USDCAD",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

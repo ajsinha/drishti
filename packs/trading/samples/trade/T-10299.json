@@ -1,0 +1,229 @@
+{
+ "tradeId": "T-10299",
+ "productType": "REVOLVER",
+ "productName": "Revolving credit facility",
+ "assetClass": "Credit",
+ "family": "loan",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2025-01-17",
+ "effectiveDate": "2025-01-21",
+ "maturityDate": "2030-03-06",
+ "currency": "CAD",
+ "notional": 120000000.0,
+ "mtm": 1407358,
+ "mtmCurrency": "USD",
+ "pnl1d": -20045,
+ "counterparty": {
+  "id": "CP-PINNACLE",
+  "name": "Pinnacle Credit Partners"
+ },
+ "nettingSet": "NS-PINNACLE-NY",
+ "book": "BOOK-CREDIT-3",
+ "trader": "TRDR-CDUBOIS",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-RHEINTAL",
+ "discountCurve": "CRV-CAD-OIS",
+ "forwardCurve": "CRV-CAD-PROJ",
+ "creditCurve": "CDS-RHEINTAL",
+ "terms": {
+  "commitment": 454540956.0,
+  "drawn": 0.385479,
+  "commitmentFee": 49.9,
+  "margin": 283.6
+ },
+ "risk": {
+  "cs01": 56313
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 3754
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 7508
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 11263
+  },
+  {
+   "bucket": "3Y",
+   "cs01": 15017
+  },
+  {
+   "bucket": "5Y",
+   "cs01": 18771
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -10644
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 41587
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 8264
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 74276
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -1928
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -19687
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 49561
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -12255
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -1048
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -14933
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -32352
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -11739
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 23370
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -27790
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 34129
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 23191
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 56267
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -5884
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 40499
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 68766
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-01-17",
+  "executionTimestamp": "2025-01-17T09:47:36.352Z",
+  "venue": "MarketAxess",
+  "venueMic": "MAEL",
+  "executionType": "Electronic",
+  "trader": "C. Dubois",
+  "salesperson": null,
+  "orderId": "ORD-6F5C7B0215"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-01-17T12:34:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2025-01-17T12:34:00Z",
+  "lastModifiedAt": "2025-01-17T12:34:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA773907648",
+  "matched": "2025-01-17 16:14",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20966F5C7B02158290F02C5C",
+  "upi": "QZYQX44T35EL",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "PINNGB33XXX",
+  "ssiId": "SSI-CAD-F2BB52",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1407358,
+  "cleanPv": 1407358.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-CAD-OIS",
+   "CRV-CAD-PROJ",
+   "CDS-RHEINTAL"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 4015
+  }
+ }
+}

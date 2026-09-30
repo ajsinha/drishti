@@ -1,0 +1,58 @@
+{
+ "resultId": "CVA-SUMMIT-LDN",
+ "cva": -19135,
+ "dva": 5023,
+ "fva": -960,
+ "kva": -559875,
+ "cs01": -344,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -19135
+  },
+  {
+   "name": "DVA",
+   "amount": 5023
+  },
+  {
+   "name": "FVA",
+   "amount": -960
+  },
+  {
+   "name": "KVA",
+   "amount": -559875
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -344
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 77
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 38
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -574
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 325
+  }
+ ],
+ "nettingSet": "NS-SUMMIT-LDN",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

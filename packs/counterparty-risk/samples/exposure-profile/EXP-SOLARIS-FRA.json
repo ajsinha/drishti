@@ -1,0 +1,87 @@
+{
+ "profileId": "EXP-SOLARIS-FRA",
+ "epe": 266616,
+ "eepe": 453281,
+ "pfePeak": 1015944,
+ "paths": 5000,
+ "runDate": "2026-09-30",
+ "buckets": [
+  {
+   "tenor": "0",
+   "ee": 445268,
+   "ene": -19948,
+   "pfe95": 1003564,
+   "pfe99": 1324842
+  },
+  {
+   "tenor": "1M",
+   "ee": 453281,
+   "ene": -32433,
+   "pfe95": 1015944,
+   "pfe99": 1340731
+  },
+  {
+   "tenor": "3M",
+   "ee": 393304,
+   "ene": 0,
+   "pfe95": 865269,
+   "pfe99": 1140582
+  },
+  {
+   "tenor": "6M",
+   "ee": 369475,
+   "ene": 0,
+   "pfe95": 812845,
+   "pfe99": 1071477
+  },
+  {
+   "tenor": "1Y",
+   "ee": 326061,
+   "ene": 0,
+   "pfe95": 717333,
+   "pfe99": 945576
+  },
+  {
+   "tenor": "2Y",
+   "ee": 253936,
+   "ene": 0,
+   "pfe95": 558660,
+   "pfe99": 736415
+  },
+  {
+   "tenor": "3Y",
+   "ee": 197766,
+   "ene": 0,
+   "pfe95": 435085,
+   "pfe99": 573521
+  },
+  {
+   "tenor": "5Y",
+   "ee": 119951,
+   "ene": 0,
+   "pfe95": 263892,
+   "pfe99": 347858
+  },
+  {
+   "tenor": "7Y",
+   "ee": 72754,
+   "ene": 0,
+   "pfe95": 160059,
+   "pfe99": 210986
+  },
+  {
+   "tenor": "10Y",
+   "ee": 34367,
+   "ene": 0,
+   "pfe95": 75606,
+   "pfe99": 99663
+  }
+ ],
+ "nettingSet": "NS-SOLARIS-FRA",
+ "model": "Hull-White 1F rates, GBM FX and equity, 5,000 paths",
+ "confidence": 0.95,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

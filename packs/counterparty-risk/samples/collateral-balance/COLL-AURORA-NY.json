@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-AURORA-NY",
+ "held": 32027217,
+ "posted": 0,
+ "net": 32027217,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "United Kingdom Debt Management Office 2031",
+   "direction": "Held",
+   "marketValue": 10675739,
+   "haircut": 0.01,
+   "value": 10568982
+  },
+  {
+   "asset": "Novatek Devices Inc. 2036",
+   "direction": "Held",
+   "marketValue": 10675739,
+   "haircut": 0.01,
+   "value": 10568982
+  },
+  {
+   "asset": "Helix Pharmaceuticals Inc. 2036",
+   "direction": "Held",
+   "marketValue": 10675739,
+   "haircut": 0.02,
+   "value": 10462224
+  }
+ ],
+ "csa": "CSA-AURORA",
+ "nettingSet": "NS-AURORA-NY",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

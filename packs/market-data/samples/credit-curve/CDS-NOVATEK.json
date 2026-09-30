@@ -1,0 +1,63 @@
+{
+ "curveId": "CDS-NOVATEK",
+ "issuerName": "Novatek Devices Inc.",
+ "spread5y": 52,
+ "recovery": 0.4,
+ "seniority": "Senior unsecured",
+ "docClause": "CR14",
+ "pd1y": 0.004838,
+ "points": [
+  {
+   "tenor": "6M",
+   "spread": 26.3,
+   "hazard": 0.004383,
+   "survival": 0.997811
+  },
+  {
+   "tenor": "1Y",
+   "spread": 29.1,
+   "hazard": 0.00485,
+   "survival": 0.995162
+  },
+  {
+   "tenor": "2Y",
+   "spread": 34.8,
+   "hazard": 0.0058,
+   "survival": 0.988467
+  },
+  {
+   "tenor": "3Y",
+   "spread": 40.6,
+   "hazard": 0.006767,
+   "survival": 0.979905
+  },
+  {
+   "tenor": "5Y",
+   "spread": 52.0,
+   "hazard": 0.008667,
+   "survival": 0.957592
+  },
+  {
+   "tenor": "7Y",
+   "spread": 55.1,
+   "hazard": 0.009183,
+   "survival": 0.937739
+  },
+  {
+   "tenor": "10Y",
+   "spread": 59.8,
+   "hazard": 0.009967,
+   "survival": 0.905139
+  }
+ ],
+ "issuer": "ISS-NOVATEK",
+ "currency": "USD",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "spread5y": 0.4
+  }
+ }
+}

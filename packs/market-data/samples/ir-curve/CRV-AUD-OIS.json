@@ -1,0 +1,158 @@
+{
+ "curveId": "CRV-AUD-OIS",
+ "currency": "AUD",
+ "curveType": "Discount (OIS)",
+ "index": "AONIA",
+ "tenY": 0.042,
+ "slope2s10s": 51.2,
+ "asOf": "2026-09-30",
+ "points": [
+  {
+   "tenor": "1M",
+   "maturity": "2026-10-30",
+   "instrument": "Deposit / future",
+   "quote": 0.035784,
+   "zeroRate": 3.5837,
+   "df": 0.997018
+  },
+  {
+   "tenor": "3M",
+   "maturity": "2026-12-30",
+   "instrument": "Deposit / future",
+   "quote": 0.035846,
+   "zeroRate": 3.6008,
+   "df": 0.991038
+  },
+  {
+   "tenor": "6M",
+   "maturity": "2027-03-30",
+   "instrument": "Deposit / future",
+   "quote": 0.0359,
+   "zeroRate": 3.6226,
+   "df": 0.98205
+  },
+  {
+   "tenor": "1Y",
+   "maturity": "2027-09-30",
+   "instrument": "AONIA OIS",
+   "quote": 0.035765,
+   "zeroRate": 3.642,
+   "df": 0.964235
+  },
+  {
+   "tenor": "2Y",
+   "maturity": "2028-09-30",
+   "instrument": "AONIA OIS",
+   "quote": 0.035554,
+   "zeroRate": 3.6881,
+   "df": 0.928893
+  },
+  {
+   "tenor": "3Y",
+   "maturity": "2029-09-30",
+   "instrument": "AONIA OIS",
+   "quote": 0.035698,
+   "zeroRate": 3.7758,
+   "df": 0.892906
+  },
+  {
+   "tenor": "5Y",
+   "maturity": "2031-09-30",
+   "instrument": "AONIA OIS",
+   "quote": 0.036488,
+   "zeroRate": 4.0286,
+   "df": 0.817561
+  },
+  {
+   "tenor": "7Y",
+   "maturity": "2033-09-30",
+   "instrument": "AONIA OIS",
+   "quote": 0.035933,
+   "zeroRate": 4.1389,
+   "df": 0.748471
+  },
+  {
+   "tenor": "10Y",
+   "maturity": "2036-09-30",
+   "instrument": "AONIA OIS",
+   "quote": 0.034295,
+   "zeroRate": 4.2,
+   "df": 0.657047
+  },
+  {
+   "tenor": "15Y",
+   "maturity": "2041-09-30",
+   "instrument": "AONIA OIS",
+   "quote": 0.031364,
+   "zeroRate": 4.2383,
+   "df": 0.529541
+  },
+  {
+   "tenor": "20Y",
+   "maturity": "2046-09-30",
+   "instrument": "AONIA OIS",
+   "quote": 0.028626,
+   "zeroRate": 4.2493,
+   "df": 0.427475
+  },
+  {
+   "tenor": "30Y",
+   "maturity": "2056-09-30",
+   "instrument": "AONIA OIS",
+   "quote": 0.024028,
+   "zeroRate": 4.2533,
+   "df": 0.279154
+  }
+ ],
+ "forwards": [
+  {
+   "tenor": "1Y",
+   "rate": 3.7532
+  },
+  {
+   "tenor": "2Y",
+   "rate": 3.9759
+  },
+  {
+   "tenor": "3Y",
+   "rate": 4.3152
+  },
+  {
+   "tenor": "5Y",
+   "rate": 4.3956
+  },
+  {
+   "tenor": "7Y",
+   "rate": 4.3357
+  },
+  {
+   "tenor": "10Y",
+   "rate": 4.3175
+  },
+  {
+   "tenor": "15Y",
+   "rate": 4.3064
+  },
+  {
+   "tenor": "20Y",
+   "rate": 4.2901
+  }
+ ],
+ "interpolation": "Log-linear on discount factors",
+ "dayCount": "ACT/365F",
+ "calendar": "CAL-GBLO",
+ "fixingIndex": "FIX-AONIA",
+ "builtAt": "2026-09-30T18:02:41Z",
+ "sources": [
+  "Broker composite",
+  "Exchange settlements"
+ ],
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "tenY": 0.0003
+  }
+ }
+}

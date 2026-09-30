@@ -1,0 +1,78 @@
+{
+ "calcId": "SACCR-AURORA-NY",
+ "replacementCost": 9139548,
+ "addOn": 75612986,
+ "multiplier": 1.0,
+ "ead": 118653548,
+ "rwa": 23730710,
+ "addOns": [
+  {
+   "assetClass": "Interest rate",
+   "addOn": 2436137
+  },
+  {
+   "assetClass": "Credit",
+   "addOn": 23450000
+  },
+  {
+   "assetClass": "Commodity",
+   "addOn": 49726849
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "USD",
+   "effectiveNotional": 261568493,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "GBP",
+   "effectiveNotional": -53794521,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "JPY",
+   "effectiveNotional": -22849315,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "EUR",
+   "effectiveNotional": 149015068,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "USD",
+   "effectiveNotional": -164000000,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "CAD",
+   "effectiveNotional": 178000000,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "GBP",
+   "effectiveNotional": -127000000,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Commodity",
+   "hedgingSet": "USD",
+   "effectiveNotional": 276260274,
+   "sf": 0.18
+  }
+ ],
+ "nettingSet": "NS-AURORA-NY",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

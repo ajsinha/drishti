@@ -1,0 +1,293 @@
+{
+ "tradeId": "T-10547",
+ "productType": "INFL_CAP_FLOOR",
+ "productName": "Inflation cap / floor",
+ "assetClass": "Inflation",
+ "family": "option",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2026-06-18",
+ "effectiveDate": "2026-06-22",
+ "maturityDate": "2028-08-15",
+ "currency": "GBP",
+ "notional": 243000000.0,
+ "mtm": 2197247,
+ "mtmCurrency": "USD",
+ "pnl1d": -53225,
+ "counterparty": {
+  "id": "CP-KESTREL",
+  "name": "Kestrel Global Macro Fund"
+ },
+ "nettingSet": "NS-KESTREL-LDN",
+ "book": "BOOK-INFL-1",
+ "trader": "TRDR-GMENDES",
+ "desk": "DESK-INFL",
+ "legalEntity": "LE-LDN",
+ "discountCurve": "CRV-GBP-OIS",
+ "inflationCurve": "INFC-UKRPI",
+ "inflationIndex": "INF-UKRPI",
+ "terms": {
+  "capFloor": "Floor",
+  "strike": 0.004112
+ },
+ "risk": {
+  "ie01": -46171,
+  "vega": -931314
+ },
+ "sensitivities": [
+  {
+   "bucket": "1Y",
+   "ie01": -15390,
+   "vega": -310438
+  },
+  {
+   "bucket": "2Y",
+   "ie01": -30781,
+   "vega": -620876
+  }
+ ],
+ "schedule": [
+  {
+   "fixingDate": "2026-09-22",
+   "period": "2026-09-22..2026-12-22",
+   "index": "SONIA",
+   "rate": 0.026223,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-12-22",
+   "period": "2026-12-22..2027-03-22",
+   "index": "SONIA",
+   "rate": 0.028217,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-03-22",
+   "period": "2027-03-22..2027-06-22",
+   "index": "SONIA",
+   "rate": 0.048933,
+   "payoff": 846429.75,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-06-22",
+   "period": "2027-06-22..2027-09-22",
+   "index": "SONIA",
+   "rate": 0.042246,
+   "payoff": 440194.5,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-09-22",
+   "period": "2027-09-22..2027-12-22",
+   "index": "SONIA",
+   "rate": 0.037215,
+   "payoff": 134561.25,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-12-22",
+   "period": "2027-12-22..2028-03-22",
+   "index": "SONIA",
+   "rate": 0.046232,
+   "payoff": 682344.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2028-03-22",
+   "period": "2028-03-22..2028-06-22",
+   "index": "SONIA",
+   "rate": 0.047991,
+   "payoff": 789203.25,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2028-06-22",
+   "period": "2028-06-22..2028-09-22",
+   "index": "SONIA",
+   "rate": 0.029561,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2028-08-15",
+   "period": "2028-08-15..2028-11-15",
+   "index": "SONIA",
+   "rate": 0.022396,
+   "payoff": 0.0,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -22462
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -182829
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 5987
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -19308
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -36516
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 61406
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 3285
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 3689
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -7078
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 50510
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -48844
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 5873
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -1798
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 175692
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 58399
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -45768
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 26646
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 45785
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 19195
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -51807
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-06-18",
+  "executionTimestamp": "2026-06-18T12:31:17.016Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "G. Mendes",
+  "salesperson": null,
+  "orderId": "ORD-5D04BF305E"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-06-18T11:30:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2026-06-18T11:30:00Z",
+  "lastModifiedAt": "2026-06-18T11:30:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA780745664",
+  "matched": "2026-06-18 17:08",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q835D04BF305EBBFF503CB8",
+  "upi": "QZ50WCY9W5YD",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Barclays Bank plc",
+  "ourAgentBic": "BARCGB22XXX",
+  "theirAgentBic": "KESTGB33XXX",
+  "ssiId": "SSI-GBP-69F994",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 2197247,
+  "cleanPv": 2197247.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CRV-GBP-OIS",
+   "INFC-UKRPI",
+   "INF-UKRPI"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 6824
+  }
+ }
+}

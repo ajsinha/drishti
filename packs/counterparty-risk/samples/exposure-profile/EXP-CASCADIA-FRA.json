@@ -1,0 +1,87 @@
+{
+ "profileId": "EXP-CASCADIA-FRA",
+ "epe": 186491,
+ "eepe": 306758,
+ "pfePeak": 681780,
+ "paths": 5000,
+ "runDate": "2026-09-30",
+ "buckets": [
+  {
+   "tenor": "0",
+   "ee": 304585,
+   "ene": -5752,
+   "pfe95": 676999,
+   "pfe99": 892973
+  },
+  {
+   "tenor": "1M",
+   "ee": 306758,
+   "ene": -11973,
+   "pfe95": 681780,
+   "pfe99": 899276
+  },
+  {
+   "tenor": "3M",
+   "ee": 278927,
+   "ene": 0,
+   "pfe95": 613639,
+   "pfe99": 808888
+  },
+  {
+   "tenor": "6M",
+   "ee": 262027,
+   "ene": 0,
+   "pfe95": 576460,
+   "pfe99": 759880
+  },
+  {
+   "tenor": "1Y",
+   "ee": 231238,
+   "ene": 0,
+   "pfe95": 508725,
+   "pfe99": 670591
+  },
+  {
+   "tenor": "2Y",
+   "ee": 180089,
+   "ene": 0,
+   "pfe95": 396195,
+   "pfe99": 522257
+  },
+  {
+   "tenor": "3Y",
+   "ee": 140253,
+   "ene": 0,
+   "pfe95": 308557,
+   "pfe99": 406734
+  },
+  {
+   "tenor": "5Y",
+   "ee": 85068,
+   "ene": 0,
+   "pfe95": 187149,
+   "pfe99": 246697
+  },
+  {
+   "tenor": "7Y",
+   "ee": 51596,
+   "ene": 0,
+   "pfe95": 113512,
+   "pfe99": 149629
+  },
+  {
+   "tenor": "10Y",
+   "ee": 24372,
+   "ene": 0,
+   "pfe95": 53619,
+   "pfe99": 70680
+  }
+ ],
+ "nettingSet": "NS-CASCADIA-FRA",
+ "model": "Hull-White 1F rates, GBM FX and equity, 5,000 paths",
+ "confidence": 0.95,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

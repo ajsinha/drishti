@@ -1,0 +1,348 @@
+{
+ "tradeId": "T-10283",
+ "productType": "CLN",
+ "productName": "Credit-linked note",
+ "assetClass": "Credit",
+ "family": "note",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2024-11-06",
+ "effectiveDate": "2024-11-08",
+ "maturityDate": "2033-02-25",
+ "currency": "JPY",
+ "notional": 153000000.0,
+ "mtm": 868056,
+ "mtmCurrency": "USD",
+ "pnl1d": -9902,
+ "counterparty": {
+  "id": "CP-SOLARIS",
+  "name": "Solaris Energy Corp."
+ },
+ "nettingSet": "NS-SOLARIS-NY",
+ "book": "BOOK-CREDIT-3",
+ "trader": "TRDR-CDUBOIS",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-RHEINTAL",
+ "creditCurve": "CDS-RHEINTAL",
+ "discountCurve": "CRV-JPY-OIS",
+ "terms": {
+  "coupon": 0.066451,
+  "issuePrice": 100.15
+ },
+ "risk": {
+  "cs01": 114533,
+  "jtd": -91800000,
+  "dv01": 107942
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 5454,
+   "jtd": -4371429,
+   "dv01": 5140
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 10908,
+   "jtd": -8742857,
+   "dv01": 10280
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 16362,
+   "jtd": -13114286,
+   "dv01": 15420
+  },
+  {
+   "bucket": "3Y",
+   "cs01": 21816,
+   "jtd": -17485714,
+   "dv01": 20560
+  },
+  {
+   "bucket": "5Y",
+   "cs01": 27270,
+   "jtd": -21857143,
+   "dv01": 25700
+  },
+  {
+   "bucket": "7Y",
+   "cs01": 32724,
+   "jtd": -26228571,
+   "dv01": 30841
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2025-05-08",
+   "rate": 0.053397,
+   "amount": 3060000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2025-11-08",
+   "rate": 0.032653,
+   "amount": 3060000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-05-08",
+   "rate": 0.027832,
+   "amount": 3060000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-11-08",
+   "rate": 0.026735,
+   "amount": 3060000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-05-08",
+   "rate": 0.05861,
+   "amount": 3060000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-11-08",
+   "rate": 0.05242,
+   "amount": 3060000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-05-08",
+   "rate": 0.028876,
+   "amount": 3060000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-11-08",
+   "rate": 0.036362,
+   "amount": 3060000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-05-08",
+   "rate": 0.032914,
+   "amount": 3060000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-11-08",
+   "rate": 0.057156,
+   "amount": 3060000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-05-08",
+   "rate": 0.043649,
+   "amount": 3060000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-11-08",
+   "rate": 0.033334,
+   "amount": 3060000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-05-08",
+   "rate": 0.05835,
+   "amount": 3060000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-11-08",
+   "rate": 0.045842,
+   "amount": 3060000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2032-05-08",
+   "rate": 0.057959,
+   "amount": 3060000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2032-11-08",
+   "rate": 0.058166,
+   "amount": 3060000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2033-02-25",
+   "rate": 0.045842,
+   "amount": 3060000.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 3,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -22613
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -10634
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 25434
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 8636
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 17323
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 13839
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -6014
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -68499
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 24958
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -13471
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 40453
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -34533
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -23014
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 18953
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -23024
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -37909
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 9158
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -24676
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -1825
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -14755
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-11-06",
+  "executionTimestamp": "2024-11-06T10:18:29.654Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "C. Dubois",
+  "salesperson": null,
+  "orderId": "ORD-0B3DE5A630"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-11-06T09:28:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2024-11-06T09:28:00Z",
+  "lastModifiedAt": "2024-11-06T09:28:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA937988819",
+  "matched": "2024-11-06 12:32",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20960B3DE5A630D4E43865E7",
+  "upi": "QZOY91PEFWPF",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "SOLAGB33XXX",
+  "ssiId": "SSI-JPY-269904",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 868056,
+  "cleanPv": 868056.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CDS-RHEINTAL",
+   "CRV-JPY-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 3266
+  }
+ }
+}

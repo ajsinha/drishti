@@ -1,0 +1,90 @@
+{
+ "calcId": "SACCR-NORTHBRIDGE-LDN",
+ "replacementCost": 0,
+ "addOn": 110934788,
+ "multiplier": 0.9861,
+ "ead": 153149912,
+ "rwa": 153149912,
+ "addOns": [
+  {
+   "assetClass": "Foreign exchange",
+   "addOn": 4164000
+  },
+  {
+   "assetClass": "Equity",
+   "addOn": 105683288
+  },
+  {
+   "assetClass": "Interest rate",
+   "addOn": 1087500
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "USD",
+   "effectiveNotional": -59700000,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "GBP",
+   "effectiveNotional": -9900000,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "CHF",
+   "effectiveNotional": -8500000,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "JPY",
+   "effectiveNotional": 26000000,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "EUR",
+   "effectiveNotional": -49465753,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "CHF",
+   "effectiveNotional": -218000000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "USD",
+   "effectiveNotional": 52394521,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "GBP",
+   "effectiveNotional": -10400000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "EUR",
+   "effectiveNotional": 211500000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "JPY",
+   "effectiveNotional": 6000000,
+   "sf": 0.005
+  }
+ ],
+ "nettingSet": "NS-NORTHBRIDGE-LDN",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

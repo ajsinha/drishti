@@ -1,0 +1,168 @@
+{
+ "nettingSetId": "NS-TOKAI-LDN",
+ "tradeCount": 10,
+ "netMtm": 583614,
+ "collateral": 480759,
+ "eePeak": 26081449,
+ "pfePeak": 58835538,
+ "limit": 114000000.0,
+ "utilisation": 0.5161,
+ "cva": -58902,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 3359444,
+   "pfe": 10326228
+  },
+  {
+   "tenor": "1M",
+   "ee": 6714975,
+   "pfe": 17636994
+  },
+  {
+   "tenor": "3M",
+   "ee": 11552823,
+   "pfe": 28280261
+  },
+  {
+   "tenor": "6M",
+   "ee": 16292283,
+   "pfe": 38707072
+  },
+  {
+   "tenor": "1Y",
+   "ee": 13002104,
+   "pfe": 30219878
+  },
+  {
+   "tenor": "2Y",
+   "ee": 18336852,
+   "pfe": 41956325
+  },
+  {
+   "tenor": "3Y",
+   "ee": 22430146,
+   "pfe": 50961571
+  },
+  {
+   "tenor": "5Y",
+   "ee": 26081449,
+   "pfe": 58835538
+  },
+  {
+   "tenor": "7Y",
+   "ee": 23010775,
+   "pfe": 51710018
+  },
+  {
+   "tenor": "10Y",
+   "ee": 3868951,
+   "pfe": 8664293
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10207",
+   "product": "FX one-touch / no-touch",
+   "notional": 227000000.0,
+   "maturity": "2030-10-29",
+   "mtm": -1462679
+  },
+  {
+   "tradeId": "T-10165",
+   "product": "FX forward",
+   "notional": 102000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -1066636
+  },
+  {
+   "tradeId": "T-10215",
+   "product": "FX average-rate option",
+   "notional": 218000000.0,
+   "maturity": "2037-03-09",
+   "mtm": 920619
+  },
+  {
+   "tradeId": "T-10220",
+   "product": "FX target redemption forward",
+   "notional": 50000000.0,
+   "maturity": "2034-09-21",
+   "mtm": 850141
+  },
+  {
+   "tradeId": "T-10346",
+   "product": "OTC equity option",
+   "notional": 223000000.0,
+   "maturity": "2027-05-26",
+   "mtm": 780054
+  },
+  {
+   "tradeId": "T-10387",
+   "product": "Reverse convertible",
+   "notional": 65000000.0,
+   "maturity": "2032-05-17",
+   "mtm": 479208
+  },
+  {
+   "tradeId": "T-10557",
+   "product": "Inflation-linked bond",
+   "notional": 69000000.0,
+   "maturity": "2032-06-07",
+   "mtm": 266856
+  },
+  {
+   "tradeId": "T-10565",
+   "product": "Limited price index swap",
+   "notional": 223000000.0,
+   "maturity": "2036-09-19",
+   "mtm": -115232
+  },
+  {
+   "tradeId": "T-10363",
+   "product": "Equity Asian option",
+   "notional": 155000000.0,
+   "maturity": "2035-05-29",
+   "mtm": -51366
+  },
+  {
+   "tradeId": "T-10391",
+   "product": "Variance swap",
+   "notional": 2000000.0,
+   "maturity": "2035-09-10",
+   "mtm": -17351
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Equity",
+   "mtm": 1190545
+  },
+  {
+   "asset": "FX",
+   "mtm": -758555
+  },
+  {
+   "asset": "Inflation",
+   "mtm": 151624
+  }
+ ],
+ "counterparty": "CP-TOKAI",
+ "agreement": "AGR-TOKAI-ISDA",
+ "csa": "CSA-TOKAI",
+ "creditLimit": "LIM-TOKAI",
+ "exposureProfile": "EXP-TOKAI-LDN",
+ "cvaResult": "CVA-TOKAI-LDN",
+ "saccr": "SACCR-TOKAI-LDN",
+ "simm": "SIMM-TOKAI",
+ "collateralBalance": "COLL-TOKAI-LDN",
+ "legalEntity": "LE-LDN",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 1167
+  }
+ }
+}

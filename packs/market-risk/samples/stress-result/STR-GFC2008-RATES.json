@@ -1,0 +1,26 @@
+{
+ "resultId": "STR-GFC2008-RATES",
+ "scenarioName": "Global financial crisis 2008",
+ "pnl": -72972911,
+ "limit": -67000000.0,
+ "byBook": [
+  {
+   "book": "BOOK-RATES-1",
+   "pnl": -27901282
+  },
+  {
+   "book": "BOOK-RATES-2",
+   "pnl": -14891342
+  },
+  {
+   "book": "BOOK-RATES-3",
+   "pnl": -30180287
+  }
+ ],
+ "scenario": "SCN-GFC2008",
+ "desk": "DESK-RATES",
+ "_meta": {
+  "source": "stress-engine",
+  "generation": 1
+ }
+}

@@ -1,0 +1,182 @@
+{
+ "nettingSetId": "NS-CASCADIA-LDN",
+ "tradeCount": 12,
+ "netMtm": -1344648,
+ "collateral": -836737,
+ "eePeak": 38112200,
+ "pfePeak": 88610865,
+ "limit": 169000000.0,
+ "utilisation": 0.5243,
+ "cva": -713437,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 5976368,
+   "pfe": 18535034
+  },
+  {
+   "tenor": "1M",
+   "ee": 11002044,
+   "pfe": 28968523
+  },
+  {
+   "tenor": "3M",
+   "ee": 19056100,
+   "pfe": 46687445
+  },
+  {
+   "tenor": "6M",
+   "ee": 26949395,
+   "pfe": 64052694
+  },
+  {
+   "tenor": "1Y",
+   "ee": 38112200,
+   "pfe": 88610865
+  },
+  {
+   "tenor": "2Y",
+   "ee": 24627964,
+   "pfe": 56358345
+  },
+  {
+   "tenor": "3Y",
+   "ee": 28824443,
+   "pfe": 65494000
+  },
+  {
+   "tenor": "5Y",
+   "ee": 13082339,
+   "pfe": 29512471
+  },
+  {
+   "tenor": "7Y",
+   "ee": 11701100,
+   "pfe": 26295244
+  },
+  {
+   "tenor": "10Y",
+   "ee": 13985489,
+   "pfe": 31320901
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10371",
+   "product": "Equity digital option",
+   "notional": 232000000.0,
+   "maturity": "2027-11-25",
+   "mtm": 4508571
+  },
+  {
+   "tradeId": "T-10433",
+   "product": "Convertible bond",
+   "notional": 214000000.0,
+   "maturity": "2031-07-28",
+   "mtm": 3120994
+  },
+  {
+   "tradeId": "T-10195",
+   "product": "FX barrier option",
+   "notional": 191000000.0,
+   "maturity": "2029-10-22",
+   "mtm": -2456557
+  },
+  {
+   "tradeId": "T-10202",
+   "product": "FX double-barrier option",
+   "notional": 138000000.0,
+   "maturity": "2029-04-09",
+   "mtm": -2103691
+  },
+  {
+   "tradeId": "T-10319",
+   "product": "Equity forward",
+   "notional": 230000000.0,
+   "maturity": "2028-04-07",
+   "mtm": -1368137
+  },
+  {
+   "tradeId": "T-10240",
+   "product": "Quanto option",
+   "notional": 202000000.0,
+   "maturity": "2031-10-31",
+   "mtm": -1346075
+  },
+  {
+   "tradeId": "T-10214",
+   "product": "FX average-rate option",
+   "notional": 53000000.0,
+   "maturity": "2032-01-21",
+   "mtm": -1068715
+  },
+  {
+   "tradeId": "T-10167",
+   "product": "FX forward",
+   "notional": 114000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -940839
+  },
+  {
+   "tradeId": "T-10345",
+   "product": "OTC equity option",
+   "notional": 97000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 521167
+  },
+  {
+   "tradeId": "T-10561",
+   "product": "Inflation asset swap",
+   "notional": 46000000.0,
+   "maturity": "2037-05-26",
+   "mtm": -497035
+  },
+  {
+   "tradeId": "T-10442",
+   "product": "Basket option",
+   "notional": 98000000.0,
+   "maturity": "2037-06-23",
+   "mtm": 304517
+  },
+  {
+   "tradeId": "T-10392",
+   "product": "Variance swap",
+   "notional": 3000000.0,
+   "maturity": "2029-10-22",
+   "mtm": -18848
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "FX",
+   "mtm": -7915877
+  },
+  {
+   "asset": "Equity",
+   "mtm": 7068264
+  },
+  {
+   "asset": "Inflation",
+   "mtm": -497035
+  }
+ ],
+ "counterparty": "CP-CASCADIA",
+ "agreement": "AGR-CASCADIA-ISDA",
+ "csa": "CSA-CASCADIA",
+ "creditLimit": "LIM-CASCADIA",
+ "exposureProfile": "EXP-CASCADIA-LDN",
+ "cvaResult": "CVA-CASCADIA-LDN",
+ "saccr": "SACCR-CASCADIA-LDN",
+ "simm": "SIMM-CASCADIA",
+ "collateralBalance": "COLL-CASCADIA-LDN",
+ "legalEntity": "LE-LDN",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 2689
+  }
+ }
+}

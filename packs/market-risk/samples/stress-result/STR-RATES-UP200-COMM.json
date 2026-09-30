@@ -1,0 +1,26 @@
+{
+ "resultId": "STR-RATES-UP200-COMM",
+ "scenarioName": "Parallel rates +200 bp",
+ "pnl": -36467976,
+ "limit": -75800000.0,
+ "byBook": [
+  {
+   "book": "BOOK-COMM-1",
+   "pnl": -19649547
+  },
+  {
+   "book": "BOOK-COMM-2",
+   "pnl": -8461946
+  },
+  {
+   "book": "BOOK-COMM-3",
+   "pnl": -8356483
+  }
+ ],
+ "scenario": "SCN-RATES-UP200",
+ "desk": "DESK-COMM",
+ "_meta": {
+  "source": "stress-engine",
+  "generation": 1
+ }
+}

@@ -1,0 +1,25 @@
+{
+ "issuerId": "ISS-BUND",
+ "name": "Federal Republic of Germany",
+ "rating": "AAA",
+ "sector": "Sovereign",
+ "country": "DE",
+ "bonds": [
+  {
+   "isin": "DEBUND064772",
+   "coupon": 0.038,
+   "maturity": "2031-03-15"
+  },
+  {
+   "isin": "DEBUND130144",
+   "coupon": 0.043,
+   "maturity": "2036-11-15"
+  }
+ ],
+ "creditCurve": "CDS-BUND",
+ "lei": "549300PJ21SGLK7KWI16",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

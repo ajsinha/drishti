@@ -1,0 +1,63 @@
+{
+ "curveId": "CDS-JGB",
+ "issuerName": "Japan Ministry of Finance",
+ "spread5y": 21,
+ "recovery": 0.25,
+ "seniority": "Senior unsecured",
+ "docClause": "MM14",
+ "pd1y": 0.001572,
+ "points": [
+  {
+   "tenor": "6M",
+   "spread": 10.6,
+   "hazard": 0.001413,
+   "survival": 0.999294
+  },
+  {
+   "tenor": "1Y",
+   "spread": 11.8,
+   "hazard": 0.001573,
+   "survival": 0.998428
+  },
+  {
+   "tenor": "2Y",
+   "spread": 14.1,
+   "hazard": 0.00188,
+   "survival": 0.996247
+  },
+  {
+   "tenor": "3Y",
+   "spread": 16.4,
+   "hazard": 0.002187,
+   "survival": 0.993461
+  },
+  {
+   "tenor": "5Y",
+   "spread": 21.0,
+   "hazard": 0.0028,
+   "survival": 0.986098
+  },
+  {
+   "tenor": "7Y",
+   "spread": 22.3,
+   "hazard": 0.002973,
+   "survival": 0.979402
+  },
+  {
+   "tenor": "10Y",
+   "spread": 24.1,
+   "hazard": 0.003213,
+   "survival": 0.968377
+  }
+ ],
+ "issuer": "ISS-JGB",
+ "currency": "EUR",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "spread5y": 0.4
+  }
+ }
+}

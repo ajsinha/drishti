@@ -1,0 +1,40 @@
+{
+ "calcId": "SACCR-ALDERSHOT-FRA",
+ "replacementCost": 0,
+ "addOn": 791562,
+ "multiplier": 0.933,
+ "ead": 1033938,
+ "rwa": 206788,
+ "addOns": [
+  {
+   "assetClass": "Interest rate",
+   "addOn": 791562
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "JPY",
+   "effectiveNotional": -89605479,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "USD",
+   "effectiveNotional": -54452055,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "EUR",
+   "effectiveNotional": -14254795,
+   "sf": 0.005
+  }
+ ],
+ "nettingSet": "NS-ALDERSHOT-FRA",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

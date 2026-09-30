@@ -1,0 +1,182 @@
+{
+ "nettingSetId": "NS-HARBORPT-LDN",
+ "tradeCount": 12,
+ "netMtm": -6687068,
+ "collateral": -4770309,
+ "eePeak": 90898623,
+ "pfePeak": 205058358,
+ "limit": 343000000.0,
+ "utilisation": 0.5978,
+ "cva": -163199,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 5940257,
+   "pfe": 18423040
+  },
+  {
+   "tenor": "1M",
+   "ee": 12365630,
+   "pfe": 32558862
+  },
+  {
+   "tenor": "3M",
+   "ee": 21417900,
+   "pfe": 52473855
+  },
+  {
+   "tenor": "6M",
+   "ee": 30289485,
+   "pfe": 71991341
+  },
+  {
+   "tenor": "1Y",
+   "ee": 41267800,
+   "pfe": 95947635
+  },
+  {
+   "tenor": "2Y",
+   "ee": 57609121,
+   "pfe": 131832041
+  },
+  {
+   "tenor": "3Y",
+   "ee": 70556475,
+   "pfe": 160316221
+  },
+  {
+   "tenor": "5Y",
+   "ee": 90898623,
+   "pfe": 205058358
+  },
+  {
+   "tenor": "7Y",
+   "ee": 55281122,
+   "pfe": 124230255
+  },
+  {
+   "tenor": "10Y",
+   "ee": 0,
+   "pfe": 0
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10362",
+   "product": "Equity Asian option",
+   "notional": 167000000.0,
+   "maturity": "2036-04-07",
+   "mtm": -3224113
+  },
+  {
+   "tradeId": "T-10435",
+   "product": "Convertible bond",
+   "notional": 198000000.0,
+   "maturity": "2033-09-21",
+   "mtm": -3175475
+  },
+  {
+   "tradeId": "T-10438",
+   "product": "Convertible bond",
+   "notional": 241000000.0,
+   "maturity": "2032-11-24",
+   "mtm": 3067713
+  },
+  {
+   "tradeId": "T-10546",
+   "product": "Year-on-year inflation swap",
+   "notional": 65000000.0,
+   "maturity": "2036-06-02",
+   "mtm": -1644875
+  },
+  {
+   "tradeId": "T-10410",
+   "product": "Equity total return swap",
+   "notional": 190000000.0,
+   "maturity": "2033-11-02",
+   "mtm": -1401680
+  },
+  {
+   "tradeId": "T-10544",
+   "product": "Year-on-year inflation swap",
+   "notional": 121000000.0,
+   "maturity": "2030-12-30",
+   "mtm": -947071
+  },
+  {
+   "tradeId": "T-10357",
+   "product": "Equity barrier option",
+   "notional": 106000000.0,
+   "maturity": "2035-02-16",
+   "mtm": 424387
+  },
+  {
+   "tradeId": "T-10239",
+   "product": "Quanto option",
+   "notional": 95000000.0,
+   "maturity": "2028-04-03",
+   "mtm": 224949
+  },
+  {
+   "tradeId": "T-10351",
+   "product": "Index option",
+   "notional": 35000000.0,
+   "maturity": "2027-04-09",
+   "mtm": -140694
+  },
+  {
+   "tradeId": "T-10236",
+   "product": "Quanto option",
+   "notional": 15000000.0,
+   "maturity": "2034-02-21",
+   "mtm": 123897
+  },
+  {
+   "tradeId": "T-10230",
+   "product": "FX variance swap",
+   "notional": 4000000.0,
+   "maturity": "2034-01-24",
+   "mtm": 5343
+  },
+  {
+   "tradeId": "T-10400",
+   "product": "Volatility swap",
+   "notional": 2000000.0,
+   "maturity": "2033-07-14",
+   "mtm": 551
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Equity",
+   "mtm": -4449311
+  },
+  {
+   "asset": "Inflation",
+   "mtm": -2591946
+  },
+  {
+   "asset": "FX",
+   "mtm": 354189
+  }
+ ],
+ "counterparty": "CP-HARBORPT",
+ "agreement": "AGR-HARBORPT-ISDA",
+ "csa": "CSA-HARBORPT",
+ "creditLimit": "LIM-HARBORPT",
+ "exposureProfile": "EXP-HARBORPT-LDN",
+ "cvaResult": "CVA-HARBORPT-LDN",
+ "saccr": "SACCR-HARBORPT-LDN",
+ "simm": "SIMM-HARBORPT",
+ "collateralBalance": "COLL-HARBORPT-LDN",
+ "legalEntity": "LE-LDN",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 13374
+  }
+ }
+}

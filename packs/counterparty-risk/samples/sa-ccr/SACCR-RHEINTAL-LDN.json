@@ -1,0 +1,78 @@
+{
+ "calcId": "SACCR-RHEINTAL-LDN",
+ "replacementCost": 0,
+ "addOn": 126410082,
+ "multiplier": 0.9994,
+ "ead": 176867931,
+ "rwa": 88433966,
+ "addOns": [
+  {
+   "assetClass": "Foreign exchange",
+   "addOn": 17278795
+  },
+  {
+   "assetClass": "Equity",
+   "addOn": 108998137
+  },
+  {
+   "assetClass": "Interest rate",
+   "addOn": 133151
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "USD",
+   "effectiveNotional": 264969863,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "GBP",
+   "effectiveNotional": -126000000,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "JPY",
+   "effectiveNotional": 41000000,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "EUR",
+   "effectiveNotional": -86000000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "USD",
+   "effectiveNotional": -55619178,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "JPY",
+   "effectiveNotional": 102000000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "GBP",
+   "effectiveNotional": 97000000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "JPY",
+   "effectiveNotional": -26630137,
+   "sf": 0.005
+  }
+ ],
+ "nettingSet": "NS-RHEINTAL-LDN",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

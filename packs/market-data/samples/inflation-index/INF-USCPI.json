@@ -1,0 +1,76 @@
+{
+ "indexId": "INF-USCPI",
+ "name": "US CPI-U NSA",
+ "latest": 322.5,
+ "yoy": 0.029,
+ "lag": "3 months",
+ "currency": "USD",
+ "fixings": [
+  {
+   "month": "2026-08",
+   "value": 322.5,
+   "yoy": 0.029
+  },
+  {
+   "month": "2026-07",
+   "value": 321.723,
+   "yoy": 0.0298
+  },
+  {
+   "month": "2026-06",
+   "value": 320.947,
+   "yoy": 0.0299
+  },
+  {
+   "month": "2026-05",
+   "value": 320.173,
+   "yoy": 0.0291
+  },
+  {
+   "month": "2026-04",
+   "value": 319.401,
+   "yoy": 0.0282
+  },
+  {
+   "month": "2026-03",
+   "value": 318.631,
+   "yoy": 0.028
+  },
+  {
+   "month": "2026-02",
+   "value": 317.863,
+   "yoy": 0.0287
+  },
+  {
+   "month": "2026-01",
+   "value": 317.097,
+   "yoy": 0.0297
+  },
+  {
+   "month": "2025-12",
+   "value": 316.332,
+   "yoy": 0.03
+  },
+  {
+   "month": "2025-11",
+   "value": 315.57,
+   "yoy": 0.0294
+  },
+  {
+   "month": "2025-10",
+   "value": 314.809,
+   "yoy": 0.0285
+  },
+  {
+   "month": "2025-09",
+   "value": 314.05,
+   "yoy": 0.028
+  }
+ ],
+ "inflationCurve": "INFC-USCPI",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

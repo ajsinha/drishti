@@ -1,0 +1,51 @@
+{
+ "counterpartyId": "CP-MERIDIAN",
+ "name": "Meridian Life Assurance",
+ "lei": "549300TP7CRJYJA0LR78",
+ "rating": "A+",
+ "sector": "Insurance",
+ "country": "US",
+ "type": "Insurer",
+ "netMtm": 7734831,
+ "pfePeak": 128505251,
+ "nettingSets": [
+  {
+   "id": "NS-MERIDIAN-FRA",
+   "agreement": "AGR-MERIDIAN-ISDA",
+   "trades": 1,
+   "netMtm": 122689
+  },
+  {
+   "id": "NS-MERIDIAN-LDN",
+   "agreement": "AGR-MERIDIAN-ISDA",
+   "trades": 16,
+   "netMtm": 3567643
+  },
+  {
+   "id": "NS-MERIDIAN-NY",
+   "agreement": "AGR-MERIDIAN-ISDA",
+   "trades": 16,
+   "netMtm": 3215612
+  },
+  {
+   "id": "NS-MERIDIAN-TKY",
+   "agreement": "AGR-MERIDIAN-ISDA",
+   "trades": 3,
+   "netMtm": 828887
+  }
+ ],
+ "kyc": {
+  "status": "Approved",
+  "riskRating": "Standard",
+  "lastReview": "2026-02-11",
+  "emirClassification": "FC",
+  "pd1y": 0.0005
+ },
+ "group": "GRP-MERIDIAN",
+ "creditLimit": "LIM-MERIDIAN",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ },
+ "creditCurve": "CDS-MERIDIAN"
+}

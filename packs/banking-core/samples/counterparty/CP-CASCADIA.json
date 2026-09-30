@@ -1,0 +1,51 @@
+{
+ "counterpartyId": "CP-CASCADIA",
+ "name": "Cascadia Airlines Inc.",
+ "lei": "5493005CUB4V16ZSQX54",
+ "rating": "BB",
+ "sector": "Airlines",
+ "country": "CA",
+ "type": "Corporate",
+ "netMtm": 13129269,
+ "pfePeak": 88610865,
+ "nettingSets": [
+  {
+   "id": "NS-CASCADIA-FRA",
+   "agreement": "AGR-CASCADIA-ISDA",
+   "trades": 1,
+   "netMtm": 1033179
+  },
+  {
+   "id": "NS-CASCADIA-LDN",
+   "agreement": "AGR-CASCADIA-ISDA",
+   "trades": 12,
+   "netMtm": -1344648
+  },
+  {
+   "id": "NS-CASCADIA-NY",
+   "agreement": "AGR-CASCADIA-ISDA",
+   "trades": 18,
+   "netMtm": 13850938
+  },
+  {
+   "id": "NS-CASCADIA-TKY",
+   "agreement": "AGR-CASCADIA-ISDA",
+   "trades": 2,
+   "netMtm": -410200
+  }
+ ],
+ "kyc": {
+  "status": "Approved",
+  "riskRating": "Enhanced",
+  "lastReview": "2026-02-11",
+  "emirClassification": "NFC-",
+  "pd1y": 0.0068
+ },
+ "group": "GRP-CASCADIA",
+ "creditLimit": "LIM-CASCADIA",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ },
+ "creditCurve": "CDS-CASCADIA"
+}

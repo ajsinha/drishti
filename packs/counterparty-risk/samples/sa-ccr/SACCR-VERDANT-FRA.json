@@ -1,0 +1,34 @@
+{
+ "calcId": "SACCR-VERDANT-FRA",
+ "replacementCost": 0,
+ "addOn": 297144,
+ "multiplier": 0.7406,
+ "ead": 308091,
+ "rwa": 308091,
+ "addOns": [
+  {
+   "assetClass": "Interest rate",
+   "addOn": 297144
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "CHF",
+   "effectiveNotional": -48328767,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "EUR",
+   "effectiveNotional": -11100000,
+   "sf": 0.005
+  }
+ ],
+ "nettingSet": "NS-VERDANT-FRA",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

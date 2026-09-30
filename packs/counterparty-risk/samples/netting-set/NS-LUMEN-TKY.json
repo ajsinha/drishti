@@ -1,0 +1,111 @@
+{
+ "nettingSetId": "NS-LUMEN-TKY",
+ "tradeCount": 3,
+ "netMtm": 968442,
+ "collateral": 638160,
+ "eePeak": 19777567,
+ "pfePeak": 45241048,
+ "limit": 77000000.0,
+ "utilisation": 0.5875,
+ "cva": -22082,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 2249988,
+   "pfe": 6680375
+  },
+  {
+   "tenor": "1M",
+   "ee": 4319660,
+   "pfe": 11233652
+  },
+  {
+   "tenor": "3M",
+   "ee": 7231871,
+   "pfe": 17640517
+  },
+  {
+   "tenor": "6M",
+   "ee": 10080093,
+   "pfe": 23906606
+  },
+  {
+   "tenor": "1Y",
+   "ee": 14100424,
+   "pfe": 32751333
+  },
+  {
+   "tenor": "2Y",
+   "ee": 19777567,
+   "pfe": 45241048
+  },
+  {
+   "tenor": "3Y",
+   "ee": 12105779,
+   "pfe": 27495114
+  },
+  {
+   "tenor": "5Y",
+   "ee": 4201837,
+   "pfe": 9473641
+  },
+  {
+   "tenor": "7Y",
+   "ee": 4917110,
+   "pfe": 11047243
+  },
+  {
+   "tenor": "10Y",
+   "ee": 27111,
+   "pfe": 59645
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10724",
+   "product": "Range accrual note",
+   "notional": 155000000.0,
+   "maturity": "2029-09-24",
+   "mtm": 660652
+  },
+  {
+   "tradeId": "T-10741",
+   "product": "Worst-of note",
+   "notional": 41000000.0,
+   "maturity": "2035-01-22",
+   "mtm": 503987
+  },
+  {
+   "tradeId": "T-10739",
+   "product": "Worst-of note",
+   "notional": 113000000.0,
+   "maturity": "2030-12-09",
+   "mtm": -196197
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Structured",
+   "mtm": 968442
+  }
+ ],
+ "counterparty": "CP-LUMEN",
+ "agreement": "AGR-LUMEN-ISDA",
+ "csa": "CSA-LUMEN",
+ "creditLimit": "LIM-LUMEN",
+ "exposureProfile": "EXP-LUMEN-TKY",
+ "cvaResult": "CVA-LUMEN-TKY",
+ "saccr": "SACCR-LUMEN-TKY",
+ "simm": "SIMM-LUMEN",
+ "collateralBalance": "COLL-LUMEN-TKY",
+ "legalEntity": "LE-TKY",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 1936
+  }
+ }
+}

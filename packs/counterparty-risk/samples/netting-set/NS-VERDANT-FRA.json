@@ -1,0 +1,104 @@
+{
+ "nettingSetId": "NS-VERDANT-FRA",
+ "tradeCount": 2,
+ "netMtm": -894600,
+ "collateral": -714535,
+ "eePeak": 42435,
+ "pfePeak": 111733,
+ "limit": 5000000.0,
+ "utilisation": 0.0223,
+ "cva": -23,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 31160,
+   "pfe": 96640
+  },
+  {
+   "tenor": "1M",
+   "ee": 42435,
+   "pfe": 111733
+  },
+  {
+   "tenor": "3M",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "6M",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "1Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "2Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "3Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "5Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "7Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "10Y",
+   "ee": 0,
+   "pfe": 0
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10685",
+   "product": "Reverse repo",
+   "notional": 210000000.0,
+   "maturity": "2026-12-23",
+   "mtm": -2160188
+  },
+  {
+   "tradeId": "T-10696",
+   "product": "Tri-party repo",
+   "notional": 111000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 1265588
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Securities financing",
+   "mtm": -894600
+  }
+ ],
+ "counterparty": "CP-VERDANT",
+ "agreement": "AGR-VERDANT-ISDA",
+ "csa": "CSA-VERDANT",
+ "creditLimit": "LIM-VERDANT",
+ "exposureProfile": "EXP-VERDANT-FRA",
+ "cvaResult": "CVA-VERDANT-FRA",
+ "saccr": "SACCR-VERDANT-FRA",
+ "simm": "SIMM-VERDANT",
+ "collateralBalance": "COLL-VERDANT-FRA",
+ "legalEntity": "LE-FRA",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 1789
+  }
+ }
+}

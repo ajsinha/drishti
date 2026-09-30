@@ -1,0 +1,228 @@
+{
+ "tradeId": "T-10323",
+ "productType": "EQ_FORWARD",
+ "productName": "Equity forward",
+ "assetClass": "Equity",
+ "family": "linear",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-03-24",
+ "effectiveDate": "2026-03-26",
+ "maturityDate": "2027-02-19",
+ "currency": "CHF",
+ "notional": 240000000.0,
+ "mtm": -4487722,
+ "mtmCurrency": "USD",
+ "pnl1d": 159854,
+ "counterparty": {
+  "id": "CP-PINNACLE",
+  "name": "Pinnacle Credit Partners"
+ },
+ "nettingSet": "NS-PINNACLE-LDN",
+ "book": "BOOK-EQD-1",
+ "trader": "TRDR-JWEISS",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingEquity": "EQ-LUMN",
+ "dividendCurve": "DIV-LUMN",
+ "discountCurve": "CRV-CHF-OIS",
+ "terms": {
+  "forwardPrice": 23.08,
+  "quantity": 58721,
+  "settlementDate": "2027-04-07"
+ },
+ "risk": {
+  "delta": 1461521
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 97435
+  },
+  {
+   "bucket": "1M",
+   "delta": 194869
+  },
+  {
+   "bucket": "3M",
+   "delta": 292304
+  },
+  {
+   "bucket": "6M",
+   "delta": 389739
+  },
+  {
+   "bucket": "1Y",
+   "delta": 487174
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -26421
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 154446
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -120065
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 3406
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -57548
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -16281
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -195865
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 69879
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -22181
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 75759
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 43238
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 110408
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -96366
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 93427
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -37215
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -70754
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 152082
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 293465
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -49111
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 74522
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-03-24",
+  "executionTimestamp": "2026-03-24T10:02:31.588Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "J. Weiss",
+  "salesperson": null,
+  "orderId": "ORD-39FAF51FEB"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-03-24T11:24:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2026-03-24T11:24:00Z",
+  "lastModifiedAt": "2026-03-24T11:24:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT933429397",
+  "matched": "2026-03-24 14:07",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q8339FAF51FEB450B333E4D",
+  "upi": "QZ4599AA83E4",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "PINNGB33XXX",
+  "ssiId": "SSI-CHF-F2BB52",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -4487722,
+  "cleanPv": -4487722.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQ-LUMN",
+   "DIV-LUMN",
+   "CRV-CHF-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 11375
+  }
+ }
+}

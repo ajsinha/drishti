@@ -1,0 +1,72 @@
+{
+ "calcId": "SACCR-CASCADIA-LDN",
+ "replacementCost": 0,
+ "addOn": 119310000,
+ "multiplier": 0.9979,
+ "ead": 166683229,
+ "rwa": 166683229,
+ "addOns": [
+  {
+   "assetClass": "Foreign exchange",
+   "addOn": 4296000
+  },
+  {
+   "assetClass": "Equity",
+   "addOn": 114784000
+  },
+  {
+   "assetClass": "Interest rate",
+   "addOn": 230000
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "USD",
+   "effectiveNotional": 11400000,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "JPY",
+   "effectiveNotional": -11000000,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "CAD",
+   "effectiveNotional": -85000000,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "CAD",
+   "effectiveNotional": -16000000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "USD",
+   "effectiveNotional": 9700000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "EUR",
+   "effectiveNotional": -333000000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "GBP",
+   "effectiveNotional": 46000000,
+   "sf": 0.005
+  }
+ ],
+ "nettingSet": "NS-CASCADIA-LDN",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

@@ -1,0 +1,57 @@
+{
+ "resultId": "FRTB-FX-3",
+ "book": "BOOK-FX-3",
+ "deltaCharge": 19422689,
+ "vegaCharge": 1998848,
+ "curvatureCharge": 1289240,
+ "total": 22710777,
+ "sensitivities": [
+  {
+   "riskClass": "FX",
+   "bucket": "1",
+   "measure": "Delta",
+   "value": 526273
+  },
+  {
+   "riskClass": "FX",
+   "bucket": "1",
+   "measure": "Vega",
+   "value": -532198
+  },
+  {
+   "riskClass": "FX",
+   "bucket": "2",
+   "measure": "Delta",
+   "value": -183816
+  },
+  {
+   "riskClass": "FX",
+   "bucket": "2",
+   "measure": "Vega",
+   "value": -813443
+  },
+  {
+   "riskClass": "FX",
+   "bucket": "3",
+   "measure": "Delta",
+   "value": -196939
+  },
+  {
+   "riskClass": "FX",
+   "bucket": "3",
+   "measure": "Vega",
+   "value": -109062
+  }
+ ],
+ "byClass": [
+  {
+   "riskClass": "FX",
+   "charge": 22710777
+  }
+ ],
+ "approach": "FRTB standardised (SBM)",
+ "_meta": {
+  "source": "frtb-engine",
+  "generation": 1
+ }
+}

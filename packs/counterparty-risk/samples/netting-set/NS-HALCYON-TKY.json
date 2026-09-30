@@ -1,0 +1,104 @@
+{
+ "nettingSetId": "NS-HALCYON-TKY",
+ "tradeCount": 2,
+ "netMtm": 2299097,
+ "collateral": 1634919,
+ "eePeak": 39348734,
+ "pfePeak": 88420815,
+ "limit": 159000000.0,
+ "utilisation": 0.5561,
+ "cva": -2215312,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 2720563,
+   "pfe": 7838838
+  },
+  {
+   "tenor": "1M",
+   "ee": 4931190,
+   "pfe": 12702218
+  },
+  {
+   "tenor": "3M",
+   "ee": 8038337,
+   "pfe": 19537942
+  },
+  {
+   "tenor": "6M",
+   "ee": 11071680,
+   "pfe": 26211296
+  },
+  {
+   "tenor": "1Y",
+   "ee": 15346062,
+   "pfe": 35614937
+  },
+  {
+   "tenor": "2Y",
+   "ee": 21373934,
+   "pfe": 48876256
+  },
+  {
+   "tenor": "3Y",
+   "ee": 25997970,
+   "pfe": 59049135
+  },
+  {
+   "tenor": "5Y",
+   "ee": 33348495,
+   "pfe": 75220289
+  },
+  {
+   "tenor": "7Y",
+   "ee": 39348734,
+   "pfe": 88420815
+  },
+  {
+   "tenor": "10Y",
+   "ee": 54519,
+   "pfe": 119942
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10721",
+   "product": "Range accrual note",
+   "notional": 186000000.0,
+   "maturity": "2035-02-22",
+   "mtm": 3526766
+  },
+  {
+   "tradeId": "T-10726",
+   "product": "Range accrual note",
+   "notional": 145000000.0,
+   "maturity": "2035-02-06",
+   "mtm": -1227669
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Structured",
+   "mtm": 2299097
+  }
+ ],
+ "counterparty": "CP-HALCYON",
+ "agreement": "AGR-HALCYON-ISDA",
+ "csa": "CSA-HALCYON",
+ "creditLimit": "LIM-HALCYON",
+ "exposureProfile": "EXP-HALCYON-TKY",
+ "cvaResult": "CVA-HALCYON-TKY",
+ "saccr": "SACCR-HALCYON-TKY",
+ "simm": "SIMM-HALCYON",
+ "collateralBalance": "COLL-HALCYON-TKY",
+ "legalEntity": "LE-TKY",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 4598
+  }
+ }
+}

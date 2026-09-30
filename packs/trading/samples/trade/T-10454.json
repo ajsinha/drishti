@@ -1,0 +1,229 @@
+{
+ "tradeId": "T-10454",
+ "productType": "CMD_FORWARD",
+ "productName": "Commodity forward",
+ "assetClass": "Commodity",
+ "family": "linear",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2025-08-22",
+ "effectiveDate": "2025-08-25",
+ "maturityDate": "2027-05-27",
+ "currency": "USD",
+ "notional": 57000000.0,
+ "mtm": 965771,
+ "mtmCurrency": "USD",
+ "pnl1d": 9372,
+ "counterparty": {
+  "id": "CP-SOLARIS",
+  "name": "Solaris Energy Corp."
+ },
+ "nettingSet": "NS-SOLARIS-NY",
+ "book": "BOOK-COMM-2",
+ "trader": "TRDR-FROSSI",
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "commodityCurve": "CMDC-GOLD",
+ "discountCurve": "CRV-USD-OIS",
+ "terms": {
+  "forwardPrice": 1378.28,
+  "quantity": 383540,
+  "deliveryMonth": "Dec 2026"
+ },
+ "risk": {
+  "delta": 336987
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 16047
+  },
+  {
+   "bucket": "1M",
+   "delta": 32094
+  },
+  {
+   "bucket": "3M",
+   "delta": 48141
+  },
+  {
+   "bucket": "6M",
+   "delta": 64188
+  },
+  {
+   "bucket": "1Y",
+   "delta": 80235
+  },
+  {
+   "bucket": "2Y",
+   "delta": 96282
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 4868
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 50195
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 32577
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 69999
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 32750
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 33840
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -11738
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 1383
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 29579
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -16929
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -13743
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -28394
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -20595
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -6276
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 12504
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 7122
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 20391
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -15496
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 19390
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -47249
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-08-22",
+  "executionTimestamp": "2025-08-22T12:47:10.406Z",
+  "venue": "ICE",
+  "venueMic": "IFEU",
+  "executionType": "Electronic",
+  "trader": "F. Rossi",
+  "salesperson": null,
+  "orderId": "ORD-387C461C88"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-08-22T09:58:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2025-08-22T09:58:00Z",
+  "lastModifiedAt": "2025-08-22T09:58:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT629725278",
+  "matched": "2025-08-22 14:05",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096387C461C88D3755ECFD4",
+  "upi": "QZ1EEIC70TTP",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SOLAUS33XXX",
+  "ssiId": "SSI-USD-269904",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 965771,
+  "cleanPv": 965771.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CMDC-GOLD",
+   "CRV-USD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "endur-comm",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 2502
+  }
+ }
+}

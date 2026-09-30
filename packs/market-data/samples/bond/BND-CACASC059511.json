@@ -1,0 +1,176 @@
+{
+ "isin": "BND-CACASC059511",
+ "isinCode": "CACASC059511",
+ "issuerName": "Cascadia Airlines Inc.",
+ "coupon": 0.0552,
+ "maturity": "2031-02-15",
+ "price": 99.217,
+ "yield": 0.057,
+ "zSpread": 280.2,
+ "modDuration": 4.35,
+ "rating": "BB",
+ "terms": {
+  "currency": "CAD",
+  "couponFrequency": "Annual",
+  "dayCount": "ACT/ACT",
+  "issueDate": "2021-02-15",
+  "amountIssued": 2300000000,
+  "seniority": "Senior unsecured",
+  "callable": false,
+  "cusip": null
+ },
+ "coupons": [
+  {
+   "date": "2027-02-15",
+   "amount": 5.52
+  },
+  {
+   "date": "2028-02-15",
+   "amount": 5.52
+  },
+  {
+   "date": "2029-02-15",
+   "amount": 5.52
+  },
+  {
+   "date": "2030-02-15",
+   "amount": 5.52
+  },
+  {
+   "date": "2031-02-15",
+   "amount": 5.52
+  }
+ ],
+ "history": [
+  {
+   "date": "2026-08-19",
+   "price": 98.06
+  },
+  {
+   "date": "2026-08-20",
+   "price": 97.992
+  },
+  {
+   "date": "2026-08-21",
+   "price": 98.277
+  },
+  {
+   "date": "2026-08-24",
+   "price": 98.253
+  },
+  {
+   "date": "2026-08-25",
+   "price": 98.161
+  },
+  {
+   "date": "2026-08-26",
+   "price": 98.148
+  },
+  {
+   "date": "2026-08-27",
+   "price": 98.153
+  },
+  {
+   "date": "2026-08-28",
+   "price": 98.272
+  },
+  {
+   "date": "2026-08-31",
+   "price": 98.282
+  },
+  {
+   "date": "2026-09-01",
+   "price": 98.35
+  },
+  {
+   "date": "2026-09-02",
+   "price": 98.329
+  },
+  {
+   "date": "2026-09-03",
+   "price": 98.453
+  },
+  {
+   "date": "2026-09-04",
+   "price": 98.394
+  },
+  {
+   "date": "2026-09-08",
+   "price": 98.645
+  },
+  {
+   "date": "2026-09-09",
+   "price": 98.847
+  },
+  {
+   "date": "2026-09-10",
+   "price": 98.717
+  },
+  {
+   "date": "2026-09-11",
+   "price": 98.435
+  },
+  {
+   "date": "2026-09-14",
+   "price": 98.354
+  },
+  {
+   "date": "2026-09-15",
+   "price": 98.096
+  },
+  {
+   "date": "2026-09-16",
+   "price": 98.221
+  },
+  {
+   "date": "2026-09-17",
+   "price": 98.372
+  },
+  {
+   "date": "2026-09-18",
+   "price": 98.284
+  },
+  {
+   "date": "2026-09-21",
+   "price": 98.573
+  },
+  {
+   "date": "2026-09-22",
+   "price": 98.754
+  },
+  {
+   "date": "2026-09-23",
+   "price": 99.111
+  },
+  {
+   "date": "2026-09-24",
+   "price": 99.13
+  },
+  {
+   "date": "2026-09-25",
+   "price": 99.134
+  },
+  {
+   "date": "2026-09-28",
+   "price": 99.359
+  },
+  {
+   "date": "2026-09-29",
+   "price": 99.168
+  },
+  {
+   "date": "2026-09-30",
+   "price": 99.217
+  }
+ ],
+ "issuer": "ISS-CASCADIA",
+ "benchmarkCurve": "CRV-CAD-GOVT",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "price": 0.02
+  }
+ }
+}

@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-ALDERSHOT-FRA",
+ "held": 0,
+ "posted": 229552,
+ "net": -229552,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Solaris Energy Corp. 2031",
+   "direction": "Posted",
+   "marketValue": 76517,
+   "haircut": 0.005,
+   "value": 76134
+  },
+  {
+   "asset": "United States Treasury 2036",
+   "direction": "Posted",
+   "marketValue": 76517,
+   "haircut": 0.005,
+   "value": 76134
+  },
+  {
+   "asset": "Granite Building Materials plc 2031",
+   "direction": "Posted",
+   "marketValue": 76517,
+   "haircut": 0.005,
+   "value": 76134
+  }
+ ],
+ "csa": "CSA-ALDERSHOT",
+ "nettingSet": "NS-ALDERSHOT-FRA",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

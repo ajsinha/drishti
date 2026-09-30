@@ -1,0 +1,37 @@
+{
+ "curveId": "DIV-SX5E",
+ "underlier": "EQX-SX5E",
+ "dividendYield": 0.018,
+ "points": [
+  {
+   "year": "2026",
+   "amount": 98.28
+  },
+  {
+   "year": "2027",
+   "amount": 102.21
+  },
+  {
+   "year": "2028",
+   "amount": 106.14
+  },
+  {
+   "year": "2029",
+   "amount": 110.07
+  },
+  {
+   "year": "2030",
+   "amount": 114.0
+  },
+  {
+   "year": "2031",
+   "amount": 117.94
+  }
+ ],
+ "underlyingIndex": "EQX-SX5E",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

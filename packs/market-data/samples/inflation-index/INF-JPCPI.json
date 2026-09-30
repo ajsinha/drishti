@@ -1,0 +1,76 @@
+{
+ "indexId": "INF-JPCPI",
+ "name": "Japan CPI ex-fresh food",
+ "latest": 110.3,
+ "yoy": 0.024,
+ "lag": "3 months",
+ "currency": "JPY",
+ "fixings": [
+  {
+   "month": "2026-08",
+   "value": 110.3,
+   "yoy": 0.024
+  },
+  {
+   "month": "2026-07",
+   "value": 110.08,
+   "yoy": 0.0248
+  },
+  {
+   "month": "2026-06",
+   "value": 109.86,
+   "yoy": 0.0249
+  },
+  {
+   "month": "2026-05",
+   "value": 109.641,
+   "yoy": 0.0241
+  },
+  {
+   "month": "2026-04",
+   "value": 109.422,
+   "yoy": 0.0232
+  },
+  {
+   "month": "2026-03",
+   "value": 109.204,
+   "yoy": 0.023
+  },
+  {
+   "month": "2026-02",
+   "value": 108.986,
+   "yoy": 0.0237
+  },
+  {
+   "month": "2026-01",
+   "value": 108.768,
+   "yoy": 0.0247
+  },
+  {
+   "month": "2025-12",
+   "value": 108.551,
+   "yoy": 0.025
+  },
+  {
+   "month": "2025-11",
+   "value": 108.334,
+   "yoy": 0.0244
+  },
+  {
+   "month": "2025-10",
+   "value": 108.118,
+   "yoy": 0.0235
+  },
+  {
+   "month": "2025-09",
+   "value": 107.902,
+   "yoy": 0.023
+  }
+ ],
+ "inflationCurve": "INFC-JPCPI",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

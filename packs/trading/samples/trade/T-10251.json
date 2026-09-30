@@ -1,0 +1,354 @@
+{
+ "tradeId": "T-10251",
+ "productType": "CDS_INDEX",
+ "productName": "CDS index (CDX / iTraxx)",
+ "assetClass": "Credit",
+ "family": "cds",
+ "status": "Live",
+ "direction": "Buy protection",
+ "tradeDate": "2025-11-26",
+ "effectiveDate": "2025-11-28",
+ "maturityDate": "2037-10-06",
+ "currency": "CHF",
+ "notional": 44000000.0,
+ "mtm": 644269,
+ "mtmCurrency": "USD",
+ "pnl1d": -13675,
+ "counterparty": {
+  "id": "CP-CASCADIA",
+  "name": "Cascadia Airlines Inc."
+ },
+ "nettingSet": "NS-CASCADIA-NY",
+ "book": "BOOK-CREDIT-2",
+ "trader": "TRDR-DWHITFIELD",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-HELIX",
+ "creditCurve": "CDS-HELIX",
+ "discountCurve": "CRV-CHF-OIS",
+ "terms": {
+  "protection": "Sold",
+  "index": "iTraxx Crossover S46",
+  "coupon": "500",
+  "version": 1
+ },
+ "risk": {
+  "cs01": 43987,
+  "jtd": -26400000
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 1571,
+   "jtd": -942857
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 3142,
+   "jtd": -1885714
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 4713,
+   "jtd": -2828571
+  },
+  {
+   "bucket": "3Y",
+   "cs01": 6284,
+   "jtd": -3771429
+  },
+  {
+   "bucket": "5Y",
+   "cs01": 7855,
+   "jtd": -4714286
+  },
+  {
+   "bucket": "7Y",
+   "cs01": 9426,
+   "jtd": -5657143
+  },
+  {
+   "bucket": "10Y",
+   "cs01": 10997,
+   "jtd": -6600000
+  }
+ ],
+ "schedule": [
+  {
+   "payDate": "2026-11-28",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -131751.22,
+   "pv": -127798.68,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2027-11-28",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -107962.99,
+   "pv": -104724.1,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2028-11-28",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -94401.91,
+   "pv": -91569.85,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2029-11-28",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -126651.03,
+   "pv": -122851.5,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2030-11-28",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -131730.08,
+   "pv": -127778.18,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2031-11-28",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -93508.54,
+   "pv": -90703.28,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2032-11-28",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -96244.08,
+   "pv": -93356.76,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2033-11-28",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -103732.75,
+   "pv": -100620.77,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2034-11-28",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -115787.61,
+   "pv": -112313.98,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2035-11-28",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -106000.96,
+   "pv": -102820.93,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2036-11-28",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -91339.13,
+   "pv": -88598.96,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2037-10-06",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -102051.89,
+   "pv": -98990.33,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -2936
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -8951
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 1354
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 11878
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -2661
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 25752
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 4796
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -13535
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -27544
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -30824
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 14210
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -8403
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -2038
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 35086
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -3401
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 18248
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 10391
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -10987
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 31825
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -3864
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-11-26",
+  "executionTimestamp": "2025-11-26T11:38:35.888Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "D. Whitfield",
+  "salesperson": null,
+  "orderId": "ORD-2A008418DD"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-11-26T10:30:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2025-11-26T10:30:00Z",
+  "lastModifiedAt": "2025-11-26T10:30:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA115033335",
+  "matched": "2025-11-26 10:12",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20962A008418DD86739E8FE5",
+  "upi": "QZ1QCOFWX352",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "CASCGB33XXX",
+  "ssiId": "SSI-CHF-BC4549",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 644269,
+  "cleanPv": 644269.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CDS-HELIX",
+   "CRV-CHF-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 1729
+  }
+ }
+}

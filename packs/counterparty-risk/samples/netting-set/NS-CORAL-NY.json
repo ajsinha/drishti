@@ -1,0 +1,281 @@
+{
+ "nettingSetId": "NS-CORAL-NY",
+ "tradeCount": 25,
+ "netMtm": -48748718,
+ "collateral": -30493645,
+ "eePeak": 32277460,
+ "pfePeak": 73339836,
+ "limit": 146000000.0,
+ "utilisation": 0.5023,
+ "cva": -24107,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 2767538,
+   "pfe": 8583208
+  },
+  {
+   "tenor": "1M",
+   "ee": 5636007,
+   "pfe": 14839677
+  },
+  {
+   "tenor": "3M",
+   "ee": 9761850,
+   "pfe": 23916532
+  },
+  {
+   "tenor": "6M",
+   "ee": 13699416,
+   "pfe": 32560453
+  },
+  {
+   "tenor": "1Y",
+   "ee": 18880400,
+   "pfe": 43896930
+  },
+  {
+   "tenor": "2Y",
+   "ee": 26354435,
+   "pfe": 60309183
+  },
+  {
+   "tenor": "3Y",
+   "ee": 32277460,
+   "pfe": 73339836
+  },
+  {
+   "tenor": "5Y",
+   "ee": 26321203,
+   "pfe": 59378047
+  },
+  {
+   "tenor": "7Y",
+   "ee": 3846658,
+   "pfe": 8644385
+  },
+  {
+   "tenor": "10Y",
+   "ee": 0,
+   "pfe": 0
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10039",
+   "product": "Amortising swap",
+   "notional": 136000000.0,
+   "maturity": "2035-12-03",
+   "mtm": -29328960
+  },
+  {
+   "tradeId": "T-10004",
+   "product": "Interest rate swap (fixed/float)",
+   "notional": 223000000.0,
+   "maturity": "2033-08-17",
+   "mtm": -18800709
+  },
+  {
+   "tradeId": "T-10061",
+   "product": "Forward rate agreement",
+   "notional": 394000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -5003962
+  },
+  {
+   "tradeId": "T-10677",
+   "product": "Call account",
+   "notional": 204000000.0,
+   "maturity": "2027-08-04",
+   "mtm": 4542888
+  },
+  {
+   "tradeId": "T-10295",
+   "product": "Revolving credit facility",
+   "notional": 202000000.0,
+   "maturity": "2032-04-16",
+   "mtm": 3459176
+  },
+  {
+   "tradeId": "T-10632",
+   "product": "CMO tranche",
+   "notional": 228000000.0,
+   "maturity": "2036-01-14",
+   "mtm": -3032972
+  },
+  {
+   "tradeId": "T-10513",
+   "product": "Gas swing option",
+   "notional": 135000000.0,
+   "maturity": "2033-03-28",
+   "mtm": 2742803
+  },
+  {
+   "tradeId": "T-10046",
+   "product": "Accreting swap",
+   "notional": 63000000.0,
+   "maturity": "2036-05-15",
+   "mtm": 2239408
+  },
+  {
+   "tradeId": "T-10057",
+   "product": "Constant maturity swap",
+   "notional": 237000000.0,
+   "maturity": "2027-04-19",
+   "mtm": -2176599
+  },
+  {
+   "tradeId": "T-10479",
+   "product": "Average price option (APO)",
+   "notional": 156000000.0,
+   "maturity": "2033-01-05",
+   "mtm": -2061219
+  },
+  {
+   "tradeId": "T-10674",
+   "product": "Call account",
+   "notional": 234000000.0,
+   "maturity": "2027-04-12",
+   "mtm": -1837797
+  },
+  {
+   "tradeId": "T-10662",
+   "product": "Certificate of deposit",
+   "notional": 214000000.0,
+   "maturity": "2027-03-22",
+   "mtm": 1716643
+  },
+  {
+   "tradeId": "T-10254",
+   "product": "Index tranche",
+   "notional": 202000000.0,
+   "maturity": "2032-11-24",
+   "mtm": 1564064
+  },
+  {
+   "tradeId": "T-10087",
+   "product": "Interest rate floor",
+   "notional": 101000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -1482791
+  },
+  {
+   "tradeId": "T-10155",
+   "product": "Target redemption note (rates)",
+   "notional": 156000000.0,
+   "maturity": "2029-10-08",
+   "mtm": -1414981
+  },
+  {
+   "tradeId": "T-10505",
+   "product": "Power swap",
+   "notional": 30000000.0,
+   "maturity": "2035-04-24",
+   "mtm": 612018
+  },
+  {
+   "tradeId": "T-10119",
+   "product": "CMS cap / floor",
+   "notional": 90000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -596746
+  },
+  {
+   "tradeId": "T-10284",
+   "product": "Credit-linked note",
+   "notional": 57000000.0,
+   "maturity": "2034-02-22",
+   "mtm": -498458
+  },
+  {
+   "tradeId": "T-10286",
+   "product": "Credit-linked note",
+   "notional": 35000000.0,
+   "maturity": "2028-09-18",
+   "mtm": -490007
+  },
+  {
+   "tradeId": "T-10082",
+   "product": "Interest rate cap",
+   "notional": 34000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 453010
+  },
+  {
+   "tradeId": "T-10511",
+   "product": "Gas swing option",
+   "notional": 30000000.0,
+   "maturity": "2029-12-11",
+   "mtm": 441969
+  },
+  {
+   "tradeId": "T-10085",
+   "product": "Interest rate floor",
+   "notional": 30000000.0,
+   "maturity": "2027-09-23",
+   "mtm": 346028
+  },
+  {
+   "tradeId": "T-10512",
+   "product": "Gas swing option",
+   "notional": 230000000.0,
+   "maturity": "2030-07-18",
+   "mtm": -143212
+  },
+  {
+   "tradeId": "T-10246",
+   "product": "Single-name CDS",
+   "notional": 21000000.0,
+   "maturity": "2030-09-11",
+   "mtm": 8248
+  },
+  {
+   "tradeId": "T-10282",
+   "product": "Total return swap on a loan index",
+   "notional": 8000000.0,
+   "maturity": "2030-11-27",
+   "mtm": -6560
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Rates",
+   "mtm": -55766302
+  },
+  {
+   "asset": "Money market",
+   "mtm": 4421734
+  },
+  {
+   "asset": "Credit",
+   "mtm": 4036463
+  },
+  {
+   "asset": "Fixed income",
+   "mtm": -3032972
+  },
+  {
+   "asset": "Commodity",
+   "mtm": 1592359
+  }
+ ],
+ "counterparty": "CP-CORAL",
+ "agreement": "AGR-CORAL-ISDA",
+ "csa": "CSA-CORAL",
+ "creditLimit": "LIM-CORAL",
+ "exposureProfile": "EXP-CORAL-NY",
+ "cvaResult": "CVA-CORAL-NY",
+ "saccr": "SACCR-CORAL-NY",
+ "simm": "SIMM-CORAL",
+ "collateralBalance": "COLL-CORAL-NY",
+ "legalEntity": "LE-NY",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 97497
+  }
+ }
+}

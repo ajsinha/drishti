@@ -141,6 +141,16 @@ routes:
   collateral-balance: collateral-lake
   margin-call: collateral-lake
   simm: collateral-lake
+console:
+  examples:
+  - - NSET NS-SUMMIT-NY
+    - Netting set · 108 trades, exposure, CVA
+  - - LIM LIM-SUMMIT
+    - Credit limit · utilisation by tenor
+  - - CVA CVA-SUMMIT-NY
+    - CVA / XVA
+  - - SACCR SACCR-SUMMIT-NY
+    - SA-CCR exposure at default
 roles:
   credit-risk:
     kinds:

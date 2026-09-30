@@ -1,0 +1,17 @@
+{
+ "groupId": "GRP-PINNACLE",
+ "name": "Pinnacle Partners LP",
+ "limit": 362000000.0,
+ "utilisation": 0.5167,
+ "members": [
+  {
+   "id": "CP-PINNACLE",
+   "name": "Pinnacle Credit Partners",
+   "rating": "BBB"
+  }
+ ],
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

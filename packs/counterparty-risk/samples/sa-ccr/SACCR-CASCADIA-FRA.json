@@ -1,0 +1,28 @@
+{
+ "calcId": "SACCR-CASCADIA-FRA",
+ "replacementCost": 296916,
+ "addOn": 39500,
+ "multiplier": 1.0,
+ "ead": 470982,
+ "rwa": 470982,
+ "addOns": [
+  {
+   "assetClass": "Interest rate",
+   "addOn": 39500
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "JPY",
+   "effectiveNotional": -7900000,
+   "sf": 0.005
+  }
+ ],
+ "nettingSet": "NS-CASCADIA-FRA",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

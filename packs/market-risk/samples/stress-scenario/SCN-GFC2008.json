@@ -1,0 +1,33 @@
+{
+ "scenarioId": "SCN-GFC2008",
+ "name": "Global financial crisis 2008",
+ "type": "Historical",
+ "severity": "Severe",
+ "shocks": [
+  {
+   "factor": "Equities",
+   "shock": -0.42
+  },
+  {
+   "factor": "Credit spreads (IG)",
+   "shock": 2.4
+  },
+  {
+   "factor": "USD rates",
+   "shock": -1.6
+  },
+  {
+   "factor": "Oil",
+   "shock": -0.58
+  },
+  {
+   "factor": "USD vs G10",
+   "shock": 0.12
+  }
+ ],
+ "horizon": "10 days",
+ "_meta": {
+  "source": "stress-engine",
+  "generation": 1
+ }
+}

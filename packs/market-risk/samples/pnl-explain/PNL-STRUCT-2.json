@@ -1,0 +1,38 @@
+{
+ "resultId": "PNL-STRUCT-2",
+ "date": "2026-09-30",
+ "actual": 61554,
+ "explained": 59758,
+ "unexplained": 1796,
+ "attribution": [
+  {
+   "factor": "Rates delta",
+   "pnl": 25098
+  },
+  {
+   "factor": "FX delta",
+   "pnl": 7171
+  },
+  {
+   "factor": "Credit",
+   "pnl": 4781
+  },
+  {
+   "factor": "Vega",
+   "pnl": 5976
+  },
+  {
+   "factor": "Carry and theta",
+   "pnl": 11952
+  },
+  {
+   "factor": "New trades",
+   "pnl": 4781
+  }
+ ],
+ "book": "BOOK-STRUCT-2",
+ "_meta": {
+  "source": "pnl-explain",
+  "generation": 1
+ }
+}

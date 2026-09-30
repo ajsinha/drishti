@@ -1,0 +1,222 @@
+{
+ "tradeId": "T-10259",
+ "productType": "CDS_SWAPTION",
+ "productName": "CDS index option",
+ "assetClass": "Credit",
+ "family": "option",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2024-12-05",
+ "effectiveDate": "2024-12-09",
+ "maturityDate": "2026-12-28",
+ "currency": "AUD",
+ "notional": 77000000.0,
+ "mtm": -244202,
+ "mtmCurrency": "USD",
+ "pnl1d": -10779,
+ "counterparty": {
+  "id": "CP-CASCADIA",
+  "name": "Cascadia Airlines Inc."
+ },
+ "nettingSet": "NS-CASCADIA-NY",
+ "book": "BOOK-CREDIT-3",
+ "trader": "TRDR-DWHITFIELD",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-HALCYON",
+ "creditCurve": "CDS-HALCYON",
+ "discountCurve": "CRV-AUD-OIS",
+ "terms": {
+  "payerReceiver": "Receiver",
+  "strikeSpread": 67.9,
+  "expiryDate": "2026-12-04"
+ },
+ "risk": {
+  "cs01": -13096,
+  "vega": -293604
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": -2183,
+   "vega": -48934
+  },
+  {
+   "bucket": "1Y",
+   "cs01": -4365,
+   "vega": -97868
+  },
+  {
+   "bucket": "2Y",
+   "cs01": -6548,
+   "vega": -146802
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 1617
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -7937
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 4533
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 4676
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 1545
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 3607
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 879
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 8955
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -169
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 9991
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 5072
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -904
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -2752
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 27989
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -12923
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -1519
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 9988
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 4854
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 1591
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 18153
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-12-05",
+  "executionTimestamp": "2024-12-05T10:33:47.325Z",
+  "venue": "MarketAxess",
+  "venueMic": "MAEL",
+  "executionType": "Electronic",
+  "trader": "D. Whitfield",
+  "salesperson": null,
+  "orderId": "ORD-4DA1300D68"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-12-05T10:56:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2024-12-05T10:56:00Z",
+  "lastModifiedAt": "2024-12-05T10:56:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA401333156",
+  "matched": "2024-12-05 14:07",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20964DA1300D68D3E845E38E",
+  "upi": "QZ061ZSFXE5X",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "CASCGB33XXX",
+  "ssiId": "SSI-AUD-BC4549",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -244202,
+  "cleanPv": -244202.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CDS-HALCYON",
+   "CRV-AUD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 1258
+  }
+ }
+}

@@ -1,0 +1,22 @@
+{
+ "traderId": "TRDR-KBRANDT",
+ "name": "K. Brandt",
+ "deskName": "Repo and securities lending",
+ "tradeCount": 23,
+ "books": [
+  {
+   "id": "BOOK-SFT-1"
+  },
+  {
+   "id": "BOOK-SFT-2"
+  },
+  {
+   "id": "BOOK-SFT-3"
+  }
+ ],
+ "desk": "DESK-SFT",
+ "_meta": {
+  "source": "org-master",
+  "generation": 1
+ }
+}

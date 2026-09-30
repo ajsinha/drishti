@@ -1,0 +1,111 @@
+{
+ "nettingSetId": "NS-MERIDIAN-TKY",
+ "tradeCount": 3,
+ "netMtm": 828887,
+ "collateral": 699191,
+ "eePeak": 31551427,
+ "pfePeak": 70902739,
+ "limit": 137000000.0,
+ "utilisation": 0.5175,
+ "cva": -55311,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 2515351,
+   "pfe": 7684171
+  },
+  {
+   "tenor": "1M",
+   "ee": 5093158,
+   "pfe": 13355348
+  },
+  {
+   "tenor": "3M",
+   "ee": 8723438,
+   "pfe": 21341964
+  },
+  {
+   "tenor": "6M",
+   "ee": 12278956,
+   "pfe": 29164103
+  },
+  {
+   "tenor": "1Y",
+   "ee": 17304207,
+   "pfe": 40219656
+  },
+  {
+   "tenor": "2Y",
+   "ee": 24407663,
+   "pfe": 55847259
+  },
+  {
+   "tenor": "3Y",
+   "ee": 29858081,
+   "pfe": 67838177
+  },
+  {
+   "tenor": "5Y",
+   "ee": 26683933,
+   "pfe": 60194253
+  },
+  {
+   "tenor": "7Y",
+   "ee": 31551427,
+   "pfe": 70902739
+  },
+  {
+   "tenor": "10Y",
+   "ee": 10646,
+   "pfe": 23421
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10722",
+   "product": "Range accrual note",
+   "notional": 89000000.0,
+   "maturity": "2035-10-05",
+   "mtm": 587235
+  },
+  {
+   "tradeId": "T-10737",
+   "product": "FX-rates hybrid (PRDC)",
+   "notional": 177000000.0,
+   "maturity": "2034-05-08",
+   "mtm": 401694
+  },
+  {
+   "tradeId": "T-10732",
+   "product": "Capital-protected note",
+   "notional": 118000000.0,
+   "maturity": "2030-06-10",
+   "mtm": -160042
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Structured",
+   "mtm": 828887
+  }
+ ],
+ "counterparty": "CP-MERIDIAN",
+ "agreement": "AGR-MERIDIAN-ISDA",
+ "csa": "CSA-MERIDIAN",
+ "creditLimit": "LIM-MERIDIAN",
+ "exposureProfile": "EXP-MERIDIAN-TKY",
+ "cvaResult": "CVA-MERIDIAN-TKY",
+ "saccr": "SACCR-MERIDIAN-TKY",
+ "simm": "SIMM-MERIDIAN",
+ "collateralBalance": "COLL-MERIDIAN-TKY",
+ "legalEntity": "LE-TKY",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 1657
+  }
+ }
+}

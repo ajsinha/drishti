@@ -1,0 +1,51 @@
+{
+ "counterpartyId": "CP-RHEINTAL",
+ "name": "Rheintal Landesbank",
+ "lei": "5493005H5I0H7EZJEZ91",
+ "rating": "A-",
+ "sector": "Banking",
+ "country": "DE",
+ "type": "Bank",
+ "netMtm": 3644639,
+ "pfePeak": 123219335,
+ "nettingSets": [
+  {
+   "id": "NS-RHEINTAL-FRA",
+   "agreement": "AGR-RHEINTAL-ISDA",
+   "trades": 3,
+   "netMtm": 762432
+  },
+  {
+   "id": "NS-RHEINTAL-LDN",
+   "agreement": "AGR-RHEINTAL-ISDA",
+   "trades": 13,
+   "netMtm": -451233
+  },
+  {
+   "id": "NS-RHEINTAL-NY",
+   "agreement": "AGR-RHEINTAL-ISDA",
+   "trades": 16,
+   "netMtm": 2038918
+  },
+  {
+   "id": "NS-RHEINTAL-TKY",
+   "agreement": "AGR-RHEINTAL-ISDA",
+   "trades": 1,
+   "netMtm": 1294522
+  }
+ ],
+ "kyc": {
+  "status": "Approved",
+  "riskRating": "Standard",
+  "lastReview": "2026-02-11",
+  "emirClassification": "FC",
+  "pd1y": 0.0008
+ },
+ "group": "GRP-RHEINTAL",
+ "creditLimit": "LIM-RHEINTAL",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ },
+ "creditCurve": "CDS-RHEINTAL"
+}

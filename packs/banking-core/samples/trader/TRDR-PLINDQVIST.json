@@ -1,0 +1,22 @@
+{
+ "traderId": "TRDR-PLINDQVIST",
+ "name": "P. Lindqvist",
+ "deskName": "Equity derivatives",
+ "tradeCount": 74,
+ "books": [
+  {
+   "id": "BOOK-EQD-1"
+  },
+  {
+   "id": "BOOK-EQD-2"
+  },
+  {
+   "id": "BOOK-EQD-3"
+  }
+ ],
+ "desk": "DESK-EQD",
+ "_meta": {
+  "source": "org-master",
+  "generation": 1
+ }
+}

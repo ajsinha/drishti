@@ -1,0 +1,90 @@
+{
+ "calcId": "SACCR-KESTREL-NY",
+ "replacementCost": 0,
+ "addOn": 91323144,
+ "multiplier": 0.9864,
+ "ead": 126113609,
+ "rwa": 126113609,
+ "addOns": [
+  {
+   "assetClass": "Interest rate",
+   "addOn": 4760596
+  },
+  {
+   "assetClass": "Credit",
+   "addOn": 15622329
+  },
+  {
+   "assetClass": "Commodity",
+   "addOn": 70940219
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "AUD",
+   "effectiveNotional": 174098630,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "GBP",
+   "effectiveNotional": 35279452,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "USD",
+   "effectiveNotional": -242041096,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "EUR",
+   "effectiveNotional": 233000000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "JPY",
+   "effectiveNotional": 190000000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "CAD",
+   "effectiveNotional": -77700000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "USD",
+   "effectiveNotional": 52000000,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "GBP",
+   "effectiveNotional": -105446575,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "JPY",
+   "effectiveNotional": -155000000,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Commodity",
+   "hedgingSet": "USD",
+   "effectiveNotional": 394112329,
+   "sf": 0.18
+  }
+ ],
+ "nettingSet": "NS-KESTREL-NY",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

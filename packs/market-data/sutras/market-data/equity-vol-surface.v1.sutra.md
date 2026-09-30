@@ -34,6 +34,19 @@ strip:
   - { label: "1Y ATM", bind: $.atm1y, fmt: price2 }
   - { label: "1Y skew (90–110)", bind: $.skew1y, fmt: price2, tone: sign }
 panels:
+  - id: surface
+    kind: surface
+    title: Implied vol by expiry × moneyness (%)
+    code: SURF
+    key: F4
+    rows: $.grid
+    y: expiry
+    columns:
+      - { label: "80%", bind: "@.m80", fmt: price2 }
+      - { label: "90%", bind: "@.m90", fmt: price2 }
+      - { label: "100%", bind: "@.m100", fmt: price2 }
+      - { label: "110%", bind: "@.m110", fmt: price2 }
+      - { label: "120%", bind: "@.m120", fmt: price2 }
   - id: grid
     kind: table
     title: Vol (%) by moneyness
@@ -72,6 +85,7 @@ keys: { F8: impact, F9: raw }
 
 | Panel | Kind | Rows |
 |---|---|---|
+| Implied vol by expiry × moneyness (%) | surface | `$.grid` |
 | Vol (%) by moneyness | table | `$.grid` |
 | ATM term structure | line | `$.grid` |
 

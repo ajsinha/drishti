@@ -1,0 +1,237 @@
+{
+ "tradeId": "T-10489",
+ "productType": "CMD_SPREAD_OPT",
+ "productName": "Commodity spread option",
+ "assetClass": "Commodity",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2025-11-14",
+ "effectiveDate": "2025-11-17",
+ "maturityDate": "2032-07-30",
+ "currency": "USD",
+ "notional": 195000000.0,
+ "mtm": 1690310,
+ "mtmCurrency": "USD",
+ "pnl1d": -11700,
+ "counterparty": {
+  "id": "CP-BRAMBLE",
+  "name": "Bramble Asset Management"
+ },
+ "nettingSet": "NS-BRAMBLE-NY",
+ "book": "BOOK-COMM-1",
+ "trader": "TRDR-TBRENNAN",
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "commodityCurve": "CMDC-GOLD",
+ "commodityVolSurface": "CMDV-GOLD",
+ "correlation": "CORR-US-EQ",
+ "terms": {
+  "spreadType": "Brent–WTI",
+  "strike": 17.89
+ },
+ "risk": {
+  "delta": -731540,
+  "vega": -952798
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -34835,
+   "vega": -45371
+  },
+  {
+   "bucket": "1M",
+   "delta": -69670,
+   "vega": -90743
+  },
+  {
+   "bucket": "3M",
+   "delta": -104506,
+   "vega": -136114
+  },
+  {
+   "bucket": "6M",
+   "delta": -139341,
+   "vega": -181485
+  },
+  {
+   "bucket": "1Y",
+   "delta": -174176,
+   "vega": -226857
+  },
+  {
+   "bucket": "2Y",
+   "delta": -209011,
+   "vega": -272228
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -37319
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -41616
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -35249
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -90001
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 59835
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -61518
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -41669
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -77564
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -59786
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 52153
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -9807
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -44367
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -13752
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 70362
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -15999
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 16933
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -1573
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -59629
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 90201
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 88936
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-11-14",
+  "executionTimestamp": "2025-11-14T13:10:08.773Z",
+  "venue": "ICE",
+  "venueMic": "IFEU",
+  "executionType": "Electronic",
+  "trader": "T. Brennan",
+  "salesperson": null,
+  "orderId": "ORD-4EB33BCBC8"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-11-14T10:17:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2025-11-14T10:17:00Z",
+  "lastModifiedAt": "2025-11-14T10:17:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT842281319",
+  "matched": "2025-11-14 15:42",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20964EB33BCBC8C990A6BB4B",
+  "upi": "QZMBWOMUPQ14",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "BRAMUS33XXX",
+  "ssiId": "SSI-USD-1243C8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1690310,
+  "cleanPv": 1690310.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "CMDC-GOLD",
+   "CMDV-GOLD",
+   "CORR-US-EQ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "endur-comm",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 5331
+  }
+ }
+}

@@ -1,0 +1,176 @@
+{
+ "isin": "BND-USMERI070218",
+ "isinCode": "USMERI070218",
+ "issuerName": "Meridian Financial Group",
+ "coupon": 0.0418,
+ "maturity": "2031-02-15",
+ "price": 98.956,
+ "yield": 0.0442,
+ "zSpread": 68.4,
+ "modDuration": 4.35,
+ "rating": "A",
+ "terms": {
+  "currency": "USD",
+  "couponFrequency": "Semi-annual",
+  "dayCount": "ACT/ACT",
+  "issueDate": "2021-02-15",
+  "amountIssued": 1700000000,
+  "seniority": "Senior unsecured",
+  "callable": false,
+  "cusip": "MERI07029"
+ },
+ "coupons": [
+  {
+   "date": "2027-02-15",
+   "amount": 2.09
+  },
+  {
+   "date": "2028-02-15",
+   "amount": 2.09
+  },
+  {
+   "date": "2029-02-15",
+   "amount": 2.09
+  },
+  {
+   "date": "2030-02-15",
+   "amount": 2.09
+  },
+  {
+   "date": "2031-02-15",
+   "amount": 2.09
+  }
+ ],
+ "history": [
+  {
+   "date": "2026-08-19",
+   "price": 99.587
+  },
+  {
+   "date": "2026-08-20",
+   "price": 99.698
+  },
+  {
+   "date": "2026-08-21",
+   "price": 99.798
+  },
+  {
+   "date": "2026-08-24",
+   "price": 99.713
+  },
+  {
+   "date": "2026-08-25",
+   "price": 99.61
+  },
+  {
+   "date": "2026-08-26",
+   "price": 99.617
+  },
+  {
+   "date": "2026-08-27",
+   "price": 99.69
+  },
+  {
+   "date": "2026-08-28",
+   "price": 99.54
+  },
+  {
+   "date": "2026-08-31",
+   "price": 99.295
+  },
+  {
+   "date": "2026-09-01",
+   "price": 99.293
+  },
+  {
+   "date": "2026-09-02",
+   "price": 99.387
+  },
+  {
+   "date": "2026-09-03",
+   "price": 99.383
+  },
+  {
+   "date": "2026-09-04",
+   "price": 99.267
+  },
+  {
+   "date": "2026-09-08",
+   "price": 99.447
+  },
+  {
+   "date": "2026-09-09",
+   "price": 99.636
+  },
+  {
+   "date": "2026-09-10",
+   "price": 99.689
+  },
+  {
+   "date": "2026-09-11",
+   "price": 99.43
+  },
+  {
+   "date": "2026-09-14",
+   "price": 99.187
+  },
+  {
+   "date": "2026-09-15",
+   "price": 98.857
+  },
+  {
+   "date": "2026-09-16",
+   "price": 99.007
+  },
+  {
+   "date": "2026-09-17",
+   "price": 99.212
+  },
+  {
+   "date": "2026-09-18",
+   "price": 99.467
+  },
+  {
+   "date": "2026-09-21",
+   "price": 99.139
+  },
+  {
+   "date": "2026-09-22",
+   "price": 98.913
+  },
+  {
+   "date": "2026-09-23",
+   "price": 99.235
+  },
+  {
+   "date": "2026-09-24",
+   "price": 99.049
+  },
+  {
+   "date": "2026-09-25",
+   "price": 99.013
+  },
+  {
+   "date": "2026-09-28",
+   "price": 99.167
+  },
+  {
+   "date": "2026-09-29",
+   "price": 99.071
+  },
+  {
+   "date": "2026-09-30",
+   "price": 98.956
+  }
+ ],
+ "issuer": "ISS-MERIDIAN",
+ "benchmarkCurve": "CRV-USD-GOVT",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "price": 0.02
+  }
+ }
+}

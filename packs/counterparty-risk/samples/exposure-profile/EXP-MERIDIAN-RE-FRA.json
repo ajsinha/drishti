@@ -1,0 +1,87 @@
+{
+ "profileId": "EXP-MERIDIAN-RE-FRA",
+ "epe": 10781,
+ "eepe": 56885,
+ "pfePeak": 176421,
+ "paths": 5000,
+ "runDate": "2026-09-30",
+ "buckets": [
+  {
+   "tenor": "0",
+   "ee": 56885,
+   "ene": -1102641,
+   "pfe95": 176421,
+   "pfe99": 236750
+  },
+  {
+   "tenor": "1M",
+   "ee": 50922,
+   "ene": -1076315,
+   "pfe95": 134079,
+   "pfe99": 178545
+  },
+  {
+   "tenor": "3M",
+   "ee": 0,
+   "ene": -995757,
+   "pfe95": 0,
+   "pfe99": 0
+  },
+  {
+   "tenor": "6M",
+   "ee": 0,
+   "ene": -935427,
+   "pfe95": 0,
+   "pfe99": 0
+  },
+  {
+   "tenor": "1Y",
+   "ee": 0,
+   "ene": -825512,
+   "pfe95": 0,
+   "pfe99": 0
+  },
+  {
+   "tenor": "2Y",
+   "ee": 0,
+   "ene": -642909,
+   "pfe95": 0,
+   "pfe99": 0
+  },
+  {
+   "tenor": "3Y",
+   "ee": 0,
+   "ene": -500698,
+   "pfe95": 0,
+   "pfe99": 0
+  },
+  {
+   "tenor": "5Y",
+   "ee": 0,
+   "ene": -303689,
+   "pfe95": 0,
+   "pfe99": 0
+  },
+  {
+   "tenor": "7Y",
+   "ee": 0,
+   "ene": -184197,
+   "pfe95": 0,
+   "pfe99": 0
+  },
+  {
+   "tenor": "10Y",
+   "ee": 0,
+   "ene": -87008,
+   "pfe95": 0,
+   "pfe99": 0
+  }
+ ],
+ "nettingSet": "NS-MERIDIAN-RE-FRA",
+ "model": "Hull-White 1F rates, GBM FX and equity, 5,000 paths",
+ "confidence": 0.95,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

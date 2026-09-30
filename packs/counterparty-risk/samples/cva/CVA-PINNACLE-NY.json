@@ -1,0 +1,58 @@
+{
+ "resultId": "CVA-PINNACLE-NY",
+ "cva": -153332,
+ "dva": 17889,
+ "fva": -28759,
+ "kva": -208068,
+ "cs01": -2760,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -153332
+  },
+  {
+   "name": "DVA",
+   "amount": 17889
+  },
+  {
+   "name": "FVA",
+   "amount": -28759
+  },
+  {
+   "name": "KVA",
+   "amount": -208068
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -2760
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 613
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 307
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -4600
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 2607
+  }
+ ],
+ "nettingSet": "NS-PINNACLE-NY",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

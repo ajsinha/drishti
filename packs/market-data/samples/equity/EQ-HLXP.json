@@ -1,0 +1,151 @@
+{
+ "ticker": "EQ-HLXP",
+ "name": "Helix Pharmaceuticals Inc.",
+ "price": 96.45,
+ "change1d": 0.00375,
+ "marketCap": 147182700000,
+ "sector": "Healthcare",
+ "exchange": "NYSE",
+ "currency": "USD",
+ "beta": 0.74,
+ "history": [
+  {
+   "date": "2026-08-19",
+   "close": 104.31
+  },
+  {
+   "date": "2026-08-20",
+   "close": 105.49
+  },
+  {
+   "date": "2026-08-21",
+   "close": 105.81
+  },
+  {
+   "date": "2026-08-24",
+   "close": 103.27
+  },
+  {
+   "date": "2026-08-25",
+   "close": 102.38
+  },
+  {
+   "date": "2026-08-26",
+   "close": 100.71
+  },
+  {
+   "date": "2026-08-27",
+   "close": 99.22
+  },
+  {
+   "date": "2026-08-28",
+   "close": 101.1
+  },
+  {
+   "date": "2026-08-31",
+   "close": 99.71
+  },
+  {
+   "date": "2026-09-01",
+   "close": 99.15
+  },
+  {
+   "date": "2026-09-02",
+   "close": 97.35
+  },
+  {
+   "date": "2026-09-03",
+   "close": 99.41
+  },
+  {
+   "date": "2026-09-04",
+   "close": 101.51
+  },
+  {
+   "date": "2026-09-08",
+   "close": 102.14
+  },
+  {
+   "date": "2026-09-09",
+   "close": 105.74
+  },
+  {
+   "date": "2026-09-10",
+   "close": 104.74
+  },
+  {
+   "date": "2026-09-11",
+   "close": 106.93
+  },
+  {
+   "date": "2026-09-14",
+   "close": 107.53
+  },
+  {
+   "date": "2026-09-15",
+   "close": 106.08
+  },
+  {
+   "date": "2026-09-16",
+   "close": 107.08
+  },
+  {
+   "date": "2026-09-17",
+   "close": 104.61
+  },
+  {
+   "date": "2026-09-18",
+   "close": 101.68
+  },
+  {
+   "date": "2026-09-21",
+   "close": 98.99
+  },
+  {
+   "date": "2026-09-22",
+   "close": 96.81
+  },
+  {
+   "date": "2026-09-23",
+   "close": 92.57
+  },
+  {
+   "date": "2026-09-24",
+   "close": 95.06
+  },
+  {
+   "date": "2026-09-25",
+   "close": 95.73
+  },
+  {
+   "date": "2026-09-28",
+   "close": 96.08
+  },
+  {
+   "date": "2026-09-29",
+   "close": 96.09
+  },
+  {
+   "date": "2026-09-30",
+   "close": 96.45
+  }
+ ],
+ "identifiers": {
+  "isin": "US0HLXP00018",
+  "bloomberg": "HLXP NY Equity",
+  "ric": "HLXP.N",
+  "figi": "BBGC40AB8154"
+ },
+ "issuer": "ISS-HELIX",
+ "equityVolSurface": "EQV-HLXP",
+ "dividendCurve": "DIV-HLXP",
+ "equityIndex": "EQX-SPX",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "price": 0.3
+  }
+ }
+}

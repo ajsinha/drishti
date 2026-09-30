@@ -1,0 +1,176 @@
+{
+ "isin": "BND-USSOLA031372",
+ "isinCode": "USSOLA031372",
+ "issuerName": "Solaris Energy Corp.",
+ "coupon": 0.0446,
+ "maturity": "2031-12-15",
+ "price": 98.173,
+ "yield": 0.0488,
+ "zSpread": 112.1,
+ "modDuration": 4.35,
+ "rating": "BBB",
+ "terms": {
+  "currency": "USD",
+  "couponFrequency": "Semi-annual",
+  "dayCount": "ACT/ACT",
+  "issueDate": "2021-12-15",
+  "amountIssued": 800000000,
+  "seniority": "Senior unsecured",
+  "callable": false,
+  "cusip": "SOLA03130"
+ },
+ "coupons": [
+  {
+   "date": "2027-12-15",
+   "amount": 2.23
+  },
+  {
+   "date": "2028-12-15",
+   "amount": 2.23
+  },
+  {
+   "date": "2029-12-15",
+   "amount": 2.23
+  },
+  {
+   "date": "2030-12-15",
+   "amount": 2.23
+  },
+  {
+   "date": "2031-12-15",
+   "amount": 2.23
+  }
+ ],
+ "history": [
+  {
+   "date": "2026-08-19",
+   "price": 98.078
+  },
+  {
+   "date": "2026-08-20",
+   "price": 98.017
+  },
+  {
+   "date": "2026-08-21",
+   "price": 97.906
+  },
+  {
+   "date": "2026-08-24",
+   "price": 98.212
+  },
+  {
+   "date": "2026-08-25",
+   "price": 98.332
+  },
+  {
+   "date": "2026-08-26",
+   "price": 98.376
+  },
+  {
+   "date": "2026-08-27",
+   "price": 98.44
+  },
+  {
+   "date": "2026-08-28",
+   "price": 98.432
+  },
+  {
+   "date": "2026-08-31",
+   "price": 98.585
+  },
+  {
+   "date": "2026-09-01",
+   "price": 98.483
+  },
+  {
+   "date": "2026-09-02",
+   "price": 98.577
+  },
+  {
+   "date": "2026-09-03",
+   "price": 98.441
+  },
+  {
+   "date": "2026-09-04",
+   "price": 98.237
+  },
+  {
+   "date": "2026-09-08",
+   "price": 98.521
+  },
+  {
+   "date": "2026-09-09",
+   "price": 98.55
+  },
+  {
+   "date": "2026-09-10",
+   "price": 98.446
+  },
+  {
+   "date": "2026-09-11",
+   "price": 98.623
+  },
+  {
+   "date": "2026-09-14",
+   "price": 98.381
+  },
+  {
+   "date": "2026-09-15",
+   "price": 98.439
+  },
+  {
+   "date": "2026-09-16",
+   "price": 98.333
+  },
+  {
+   "date": "2026-09-17",
+   "price": 98.437
+  },
+  {
+   "date": "2026-09-18",
+   "price": 98.537
+  },
+  {
+   "date": "2026-09-21",
+   "price": 98.277
+  },
+  {
+   "date": "2026-09-22",
+   "price": 98.307
+  },
+  {
+   "date": "2026-09-23",
+   "price": 98.108
+  },
+  {
+   "date": "2026-09-24",
+   "price": 98.023
+  },
+  {
+   "date": "2026-09-25",
+   "price": 98.334
+  },
+  {
+   "date": "2026-09-28",
+   "price": 98.178
+  },
+  {
+   "date": "2026-09-29",
+   "price": 98.248
+  },
+  {
+   "date": "2026-09-30",
+   "price": 98.173
+  }
+ ],
+ "issuer": "ISS-SOLARIS",
+ "benchmarkCurve": "CRV-USD-GOVT",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "price": 0.02
+  }
+ }
+}

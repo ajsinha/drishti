@@ -34,6 +34,7 @@ kinds:
 - clearing-account
 sutras: sutras
 formats: config/formats.yaml
+semantics: config/semantics.yaml
 mnemonics:
   CPTY:
     kind: counterparty
@@ -184,3 +185,13 @@ routes:
   calendar: reference-lake
   csa: reference-lake
   clearing-account: reference-lake
+console:
+  examples:
+  - - CPTY CP-NORTHBRIDGE
+    - Counterparty · netting sets, KYC, rating
+  - - AGR AGR-NORTHBRIDGE-ISDA
+    - ISDA master agreement · elections
+  - - BOOK BOOK-RATES-1
+    - Book · top trades, MTM, DV01
+  - - DESK DESK-RATES
+    - Desk · books, VaR

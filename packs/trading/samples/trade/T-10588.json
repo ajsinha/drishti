@@ -1,0 +1,337 @@
+{
+ "tradeId": "T-10588",
+ "productType": "FRN",
+ "productName": "Floating rate note",
+ "assetClass": "Fixed income",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2024-07-26",
+ "effectiveDate": "2024-07-29",
+ "maturityDate": "2031-09-29",
+ "currency": "GBP",
+ "notional": 245000000.0,
+ "mtm": -3735787,
+ "mtmCurrency": "USD",
+ "pnl1d": 61468,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-1",
+ "trader": "TRDR-BADEYEMI",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-GILT",
+ "forwardCurve": "CRV-GBP-PROJ",
+ "underlyingBond": "BND-GBGILT120223",
+ "creditCurve": "CDS-GILT",
+ "terms": {
+  "quotedMargin": 233.3,
+  "faceAmount": 74576478.0,
+  "cleanPrice": 99.497
+ },
+ "risk": {
+  "cs01": 158118,
+  "dv01": 134665
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 7529,
+   "dv01": 6413
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 15059,
+   "dv01": 12825
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 22588,
+   "dv01": 19238
+  },
+  {
+   "bucket": "3Y",
+   "cs01": 30118,
+   "dv01": 25650
+  },
+  {
+   "bucket": "5Y",
+   "cs01": 37647,
+   "dv01": 32063
+  },
+  {
+   "bucket": "7Y",
+   "cs01": 45177,
+   "dv01": 38476
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2025-01-29",
+   "rate": 0.043485,
+   "amount": 4900000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2025-07-29",
+   "rate": 0.023022,
+   "amount": 4900000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-01-29",
+   "rate": 0.021936,
+   "amount": 4900000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-07-29",
+   "rate": 0.038607,
+   "amount": 4900000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2027-01-29",
+   "rate": 0.035834,
+   "amount": 4900000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-07-29",
+   "rate": 0.046626,
+   "amount": 4900000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-01-29",
+   "rate": 0.054263,
+   "amount": 4900000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-07-29",
+   "rate": 0.053465,
+   "amount": 4900000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-01-29",
+   "rate": 0.051119,
+   "amount": 4900000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-07-29",
+   "rate": 0.037662,
+   "amount": 4900000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-01-29",
+   "rate": 0.037636,
+   "amount": 4900000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-07-29",
+   "rate": 0.059789,
+   "amount": 4900000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-01-29",
+   "rate": 0.021407,
+   "amount": 4900000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-07-29",
+   "rate": 0.030752,
+   "amount": 4900000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-09-29",
+   "rate": 0.037976,
+   "amount": 4900000.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 4,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 161104
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -46034
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 144560
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 42156
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 165284
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -191274
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -20598
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -95596
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 74449
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 163856
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 10261
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 226104
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 47754
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 3449
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 72313
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -50103
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -14320
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -37506
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -187218
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -153569
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-07-26",
+  "executionTimestamp": "2024-07-26T14:04:17.921Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "B. Adeyemi",
+  "salesperson": null,
+  "orderId": "ORD-BFC2BFDF8B"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-07-26T11:35:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2024-07-26T11:35:00Z",
+  "lastModifiedAt": "2024-07-26T11:35:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT127771579",
+  "matched": "2024-07-26 13:05",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH2065162927",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096BFC2BFDF8BBDFC74FFB9",
+  "upi": "QZQBE9VHRFMT",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Barclays Bank plc",
+  "ourAgentBic": "BARCGB22XXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-GBP-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -3735787,
+  "cleanPv": -3735787.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-GBP-PROJ",
+   "BND-GBGILT120223",
+   "CDS-GILT"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 9922
+  }
+ }
+}

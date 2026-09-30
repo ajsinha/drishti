@@ -1,0 +1,229 @@
+{
+ "tradeId": "T-10422",
+ "productType": "CFD",
+ "productName": "Contract for difference",
+ "assetClass": "Equity",
+ "family": "linear",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-04-10",
+ "effectiveDate": "2026-04-13",
+ "maturityDate": "2028-01-14",
+ "currency": "USD",
+ "notional": 196000000.0,
+ "mtm": -2343493,
+ "mtmCurrency": "USD",
+ "pnl1d": -45629,
+ "counterparty": {
+  "id": "CP-ALDERSHOT",
+  "name": "Aldershot Pension Trust"
+ },
+ "nettingSet": "NS-ALDERSHOT-LDN",
+ "book": "BOOK-EQD-1",
+ "trader": "TRDR-JWEISS",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingEquity": "EQ-SLRS",
+ "dividendCurve": "DIV-SLRS",
+ "terms": {
+  "quantity": 7076,
+  "openPrice": 383.74
+ },
+ "risk": {
+  "delta": 885042
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 42145
+  },
+  {
+   "bucket": "1M",
+   "delta": 84290
+  },
+  {
+   "bucket": "3M",
+   "delta": 126435
+  },
+  {
+   "bucket": "6M",
+   "delta": 168579
+  },
+  {
+   "bucket": "1Y",
+   "delta": 210724
+  },
+  {
+   "bucket": "2Y",
+   "delta": 252869
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 120360
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -78300
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -50218
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -19970
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 88880
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -85876
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -37056
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -18567
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -45806
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -115838
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -66141
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -30077
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 10920
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 56009
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 72858
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -69397
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 62968
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 75356
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -56019
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -9149
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-04-10",
+  "executionTimestamp": "2026-04-10T13:27:08.589Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "J. Weiss",
+  "salesperson": null,
+  "orderId": "ORD-3EDAE73FE4"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-04-10T09:25:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2026-04-10T09:25:00Z",
+  "lastModifiedAt": "2026-04-10T09:25:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT655159750",
+  "matched": "2026-04-10 14:19",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q833EDAE73FE4F376C22683",
+  "upi": "QZNMUPU7P0UM",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "ALDEUS33XXX",
+  "ssiId": "SSI-USD-D06EAF",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -2343493,
+  "cleanPv": -2343493.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQ-SLRS",
+   "DIV-SLRS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 6647
+  }
+ }
+}

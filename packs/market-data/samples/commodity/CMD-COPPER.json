@@ -1,0 +1,27 @@
+{
+ "commodityId": "CMD-COPPER",
+ "name": "Copper",
+ "front": 4.86,
+ "unit": "USD/lb",
+ "exchange": "COMEX",
+ "sector": "Metals",
+ "spec": {
+  "contract": "COPPER",
+  "unit": "USD/lb",
+  "exchange": "COMEX",
+  "settlement": "Physical (vault)",
+  "listing": "Monthly",
+  "tickSize": 0.01,
+  "tradingHours": "Sun-Fri 18:00-17:00 ET"
+ },
+ "commodityCurve": "CMDC-COPPER",
+ "commodityVolSurface": "CMDV-COPPER",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "front": 0.05
+  }
+ }
+}

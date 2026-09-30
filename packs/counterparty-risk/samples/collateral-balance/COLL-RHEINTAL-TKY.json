@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-RHEINTAL-TKY",
+ "held": 1011263,
+ "posted": 0,
+ "net": 1011263,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "United States Treasury 2031",
+   "direction": "Held",
+   "marketValue": 337088,
+   "haircut": 0.005,
+   "value": 335403
+  },
+  {
+   "asset": "Japan Ministry of Finance 2036",
+   "direction": "Held",
+   "marketValue": 337088,
+   "haircut": 0.01,
+   "value": 333717
+  },
+  {
+   "asset": "Federal Republic of Germany 2036",
+   "direction": "Held",
+   "marketValue": 337088,
+   "haircut": 0.005,
+   "value": 335403
+  }
+ ],
+ "csa": "CSA-RHEINTAL",
+ "nettingSet": "NS-RHEINTAL-TKY",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

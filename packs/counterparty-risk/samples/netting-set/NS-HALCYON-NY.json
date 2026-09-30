@@ -1,0 +1,274 @@
+{
+ "nettingSetId": "NS-HALCYON-NY",
+ "tradeCount": 24,
+ "netMtm": 63042540,
+ "collateral": 41572438,
+ "eePeak": 44579885,
+ "pfePeak": 100865072,
+ "limit": 179000000.0,
+ "utilisation": 0.5635,
+ "cva": -2428596,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 25959513,
+   "pfe": 61157628
+  },
+  {
+   "tenor": "1M",
+   "ee": 28519277,
+   "pfe": 65986471
+  },
+  {
+   "tenor": "3M",
+   "ee": 33073444,
+   "pfe": 75987615
+  },
+  {
+   "tenor": "6M",
+   "ee": 34774116,
+   "pfe": 79300868
+  },
+  {
+   "tenor": "1Y",
+   "ee": 39035532,
+   "pfe": 88667496
+  },
+  {
+   "tenor": "2Y",
+   "ee": 44579885,
+   "pfe": 100865072
+  },
+  {
+   "tenor": "3Y",
+   "ee": 38273900,
+   "pfe": 86232844
+  },
+  {
+   "tenor": "5Y",
+   "ee": 24757385,
+   "pfe": 55506360
+  },
+  {
+   "tenor": "7Y",
+   "ee": 25557070,
+   "pfe": 57256741
+  },
+  {
+   "tenor": "10Y",
+   "ee": 1762373,
+   "pfe": 3877221
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10043",
+   "product": "Accreting swap",
+   "notional": 172000000.0,
+   "maturity": "2035-02-05",
+   "mtm": 71490903
+  },
+  {
+   "tradeId": "T-10036",
+   "product": "Zero-coupon swap",
+   "notional": 175000000.0,
+   "maturity": "2035-06-11",
+   "mtm": -30205543
+  },
+  {
+   "tradeId": "T-10032",
+   "product": "Zero-coupon swap",
+   "notional": 85000000.0,
+   "maturity": "2033-05-06",
+   "mtm": 22777888
+  },
+  {
+   "tradeId": "T-10024",
+   "product": "Cross-currency swap (non-MtM)",
+   "notional": 169000000.0,
+   "maturity": "2029-10-09",
+   "mtm": 5804007
+  },
+  {
+   "tradeId": "T-10275",
+   "product": "Total return swap on a bond",
+   "notional": 217000000.0,
+   "maturity": "2030-11-11",
+   "mtm": -5751547
+  },
+  {
+   "tradeId": "T-10475",
+   "product": "Average price option (APO)",
+   "notional": 230000000.0,
+   "maturity": "2029-12-28",
+   "mtm": 2118063
+  },
+  {
+   "tradeId": "T-10094",
+   "product": "Interest rate collar",
+   "notional": 206000000.0,
+   "maturity": "2026-11-02",
+   "mtm": -1819636
+  },
+  {
+   "tradeId": "T-10002",
+   "product": "Interest rate swap (fixed/float)",
+   "notional": 110000000.0,
+   "maturity": "2031-04-15",
+   "mtm": 1761589
+  },
+  {
+   "tradeId": "T-10648",
+   "product": "CLO tranche",
+   "notional": 214000000.0,
+   "maturity": "2031-06-02",
+   "mtm": -1673828
+  },
+  {
+   "tradeId": "T-10095",
+   "product": "Interest rate collar",
+   "notional": 245000000.0,
+   "maturity": "2026-10-16",
+   "mtm": 1471835
+  },
+  {
+   "tradeId": "T-10248",
+   "product": "CDS index (CDX / iTraxx)",
+   "notional": 249000000.0,
+   "maturity": "2034-08-17",
+   "mtm": -1402373
+  },
+  {
+   "tradeId": "T-10048",
+   "product": "Accreting swap",
+   "notional": 35000000.0,
+   "maturity": "2029-03-26",
+   "mtm": -1191935
+  },
+  {
+   "tradeId": "T-10490",
+   "product": "Commodity spread option",
+   "notional": 213000000.0,
+   "maturity": "2034-08-14",
+   "mtm": -1012290
+  },
+  {
+   "tradeId": "T-10532",
+   "product": "Freight forward agreement",
+   "notional": 79000000.0,
+   "maturity": "2027-01-06",
+   "mtm": 847802
+  },
+  {
+   "tradeId": "T-10664",
+   "product": "Certificate of deposit",
+   "notional": 86000000.0,
+   "maturity": "2027-04-08",
+   "mtm": 809738
+  },
+  {
+   "tradeId": "T-10508",
+   "product": "Power swap",
+   "notional": 98000000.0,
+   "maturity": "2029-01-30",
+   "mtm": -653002
+  },
+  {
+   "tradeId": "T-10460",
+   "product": "Commodity swap",
+   "notional": 142000000.0,
+   "maturity": "2028-12-18",
+   "mtm": -648320
+  },
+  {
+   "tradeId": "T-10038",
+   "product": "Amortising swap",
+   "notional": 17000000.0,
+   "maturity": "2031-11-10",
+   "mtm": -531063
+  },
+  {
+   "tradeId": "T-10009",
+   "product": "Overnight index swap",
+   "notional": 49000000.0,
+   "maturity": "2031-03-25",
+   "mtm": 449731
+  },
+  {
+   "tradeId": "T-10271",
+   "product": "Total return swap on a bond",
+   "notional": 128000000.0,
+   "maturity": "2036-06-23",
+   "mtm": -409806
+  },
+  {
+   "tradeId": "T-10661",
+   "product": "Certificate of deposit",
+   "notional": 11000000.0,
+   "maturity": "2027-04-20",
+   "mtm": 281651
+  },
+  {
+   "tradeId": "T-10302",
+   "product": "Credit spread option",
+   "notional": 205000000.0,
+   "maturity": "2027-02-26",
+   "mtm": 229074
+  },
+  {
+   "tradeId": "T-10453",
+   "product": "Commodity forward",
+   "notional": 248000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 192680
+  },
+  {
+   "tradeId": "T-10528",
+   "product": "Weather derivative (HDD/CDD)",
+   "notional": 9000000.0,
+   "maturity": "2030-08-19",
+   "mtm": 106922
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Rates",
+   "mtm": 70007776
+  },
+  {
+   "asset": "Credit",
+   "mtm": -7334652
+  },
+  {
+   "asset": "Fixed income",
+   "mtm": -1673828
+  },
+  {
+   "asset": "Money market",
+   "mtm": 1091389
+  },
+  {
+   "asset": "Commodity",
+   "mtm": 951855
+  }
+ ],
+ "counterparty": "CP-HALCYON",
+ "agreement": "AGR-HALCYON-ISDA",
+ "csa": "CSA-HALCYON",
+ "creditLimit": "LIM-HALCYON",
+ "exposureProfile": "EXP-HALCYON-NY",
+ "cvaResult": "CVA-HALCYON-NY",
+ "saccr": "SACCR-HALCYON-NY",
+ "simm": "SIMM-HALCYON",
+ "collateralBalance": "COLL-HALCYON-NY",
+ "legalEntity": "LE-NY",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 126085
+  }
+ }
+}

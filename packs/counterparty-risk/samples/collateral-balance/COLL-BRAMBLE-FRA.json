@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-BRAMBLE-FRA",
+ "held": 2982734,
+ "posted": 0,
+ "net": 2982734,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Verdant Agri Holdings 2036",
+   "direction": "Held",
+   "marketValue": 994245,
+   "haircut": 0.01,
+   "value": 984303
+  },
+  {
+   "asset": "Rheintal Landesbank 2036",
+   "direction": "Held",
+   "marketValue": 994245,
+   "haircut": 0.005,
+   "value": 989274
+  },
+  {
+   "asset": "Helix Pharmaceuticals Inc. 2031",
+   "direction": "Held",
+   "marketValue": 994245,
+   "haircut": 0.02,
+   "value": 974360
+  }
+ ],
+ "csa": "CSA-BRAMBLE",
+ "nettingSet": "NS-BRAMBLE-FRA",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

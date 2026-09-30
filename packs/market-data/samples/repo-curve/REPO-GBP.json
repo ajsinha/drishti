@@ -1,0 +1,38 @@
+{
+ "curveId": "REPO-GBP",
+ "currency": "GBP",
+ "collateral": "General collateral (government)",
+ "overnight": 0.0377,
+ "asOf": "2026-09-30",
+ "points": [
+  {
+   "tenor": "ON",
+   "rate": 3.7721
+  },
+  {
+   "tenor": "1W",
+   "rate": 3.7755
+  },
+  {
+   "tenor": "1M",
+   "rate": 3.7815
+  },
+  {
+   "tenor": "3M",
+   "rate": 3.79
+  },
+  {
+   "tenor": "6M",
+   "rate": 3.7983
+  },
+  {
+   "tenor": "1Y",
+   "rate": 3.81
+  }
+ ],
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

@@ -60,6 +60,21 @@ Rules:
 - Editors can validate the block against `drishti-rachana/src/main/resources/sutra.schema.json`, but
   the authoritative checks are the parser's.
 
+## Labels
+
+Every strip item and column may give a `label`. When it does not, the label is the name of the field it reads
+(the last segment of the path): `bind: $.regulatory.uti` reads as **UTI**, `@.payDate` as **Pay date**. Where a
+label comes from, first match wins:
+
+1. `label:` in the Sutra;
+2. the **pack taxonomy**: `labels:` in the semantics file of an enabled pack (`packs/<pack>/config/semantics.yaml`),
+   e.g. `labels: { mtm: MTM (USD), tradeId: Trade }`;
+3. the **global taxonomy**: `labels:` in the core semantics (or the site's replacement,
+   `drishti.inference.semantics-file`);
+4. the field name in words, spelled with the packs' and the core's `acronyms:` (`dv01ByTenor` → *DV01 by tenor*).
+
+Inference labels the fields it lays out the same way.
+
 ## Top level
 
 | Key | Required | Meaning |
@@ -70,7 +85,7 @@ Rules:
 | `domain` | | Grouping; defaults to the parent folder (`rates`). |
 | `match` | yes | `{kind, where?, priority?}`. The Sutra applies to entities of `kind` for which the Rachana-EL predicate `where` is true. The highest `priority` wins. |
 | `title` | | `{pill, id, with}`: the title line `[pill] ID with <counterparty>`. `id` and `with` are expressions. |
-| `strip` | | Up to **8** header figures: `{label, bind, fmt?, tone?, emphasis?}`. |
+| `strip` | | Up to **8** header figures: `{label?, bind, fmt?, tone?, emphasis?}`. |
 | `panels` | | The panels, in order. See below. |
 | `keys` | | Function key → action: a panel id, `link(expr, kind)`, `impact` or `raw`. |
 
@@ -79,7 +94,7 @@ Rules:
 Common keys: `id` (unique), `kind`, `title` (may embed `${expr}`), `key` (`F1`–`F12`, unique across
 panels and `keys`), `code` (short tag at the header's right, e.g. `CRV`), `area` (`main` | `right`),
 `infer` (let inference fill what is not stated), `columns` (list of
-`{label, bind, fmt?, tone?, total?, link?}`), and `body` (tabs only).
+`{label?, bind, fmt?, tone?, total?, link?}`), and `body` (tabs only).
 
 | Kind | Required | Optional | Renders |
 |---|---|---|---|
@@ -95,6 +110,7 @@ panels and `keys`), `code` (short tag at the header's right, e.g. `CRV`), `area`
 | `provenance` | — | — | *How this view was built*: Sutra and version, fingerprint, source and generation. |
 | `markdown` | `text` | — | Static notes. |
 | `gauge` | `value` | `max`, `label`, `fmt` | Utilisation against a limit. |
+| `surface` | `rows`, `y` | `fmt`, `unit`, `view` (`heatmap` \| `3d`) | A grid over two axes: each row is a `y` point (expiry), each column an `x` point (strike, delta, tenor) holding the value. A heatmap, with a toggle to a rotatable 3D surface (volatility surfaces, swaption cubes). |
 
 ## Formats and tones
 

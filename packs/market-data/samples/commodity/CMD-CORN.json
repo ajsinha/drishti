@@ -1,0 +1,27 @@
+{
+ "commodityId": "CMD-CORN",
+ "name": "Corn",
+ "front": 418.5,
+ "unit": "USc/bu",
+ "exchange": "CBOT",
+ "sector": "Agriculture",
+ "spec": {
+  "contract": "CORN",
+  "unit": "USc/bu",
+  "exchange": "CBOT",
+  "settlement": "Physical",
+  "listing": "Monthly",
+  "tickSize": 0.01,
+  "tradingHours": "Sun-Fri 18:00-17:00 ET"
+ },
+ "commodityCurve": "CMDC-CORN",
+ "commodityVolSurface": "CMDV-CORN",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "front": 0.05
+  }
+ }
+}

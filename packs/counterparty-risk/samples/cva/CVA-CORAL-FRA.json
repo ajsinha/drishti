@@ -1,0 +1,58 @@
+{
+ "resultId": "CVA-CORAL-FRA",
+ "cva": -609,
+ "dva": 426,
+ "fva": -3700,
+ "kva": -10283,
+ "cs01": -11,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -609
+  },
+  {
+   "name": "DVA",
+   "amount": 426
+  },
+  {
+   "name": "FVA",
+   "amount": -3700
+  },
+  {
+   "name": "KVA",
+   "amount": -10283
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -11
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 2
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 1
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -18
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 10
+  }
+ ],
+ "nettingSet": "NS-CORAL-FRA",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

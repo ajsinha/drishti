@@ -1,0 +1,28 @@
+{
+ "callId": "MC-BRAMBLE-LDN-1",
+ "callDate": "2026-09-30",
+ "marginType": "Variation",
+ "direction": "They call",
+ "amount": 441000.0,
+ "status": "Agreed",
+ "disputeAmount": 44000.0,
+ "events": [
+  {
+   "at": "2026-09-30 09:05",
+   "event": "Call issued",
+   "by": "collateral-system"
+  },
+  {
+   "at": "2026-09-30 11:40",
+   "event": "Agreed",
+   "by": "counterparty ops"
+  }
+ ],
+ "nettingSet": "NS-BRAMBLE-LDN",
+ "csa": "CSA-BRAMBLE",
+ "currency": "USD",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

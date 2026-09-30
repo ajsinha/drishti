@@ -1,0 +1,151 @@
+{
+ "ticker": "EQ-NVTK",
+ "name": "Novatek Devices Inc.",
+ "price": 214.3,
+ "change1d": 0.01525,
+ "marketCap": 850556700000,
+ "sector": "Technology",
+ "exchange": "NASDAQ",
+ "currency": "USD",
+ "beta": 1.28,
+ "history": [
+  {
+   "date": "2026-08-19",
+   "close": 219.36
+  },
+  {
+   "date": "2026-08-20",
+   "close": 221.89
+  },
+  {
+   "date": "2026-08-21",
+   "close": 218.73
+  },
+  {
+   "date": "2026-08-24",
+   "close": 220.17
+  },
+  {
+   "date": "2026-08-25",
+   "close": 217.14
+  },
+  {
+   "date": "2026-08-26",
+   "close": 215.68
+  },
+  {
+   "date": "2026-08-27",
+   "close": 219.17
+  },
+  {
+   "date": "2026-08-28",
+   "close": 216.75
+  },
+  {
+   "date": "2026-08-31",
+   "close": 217.03
+  },
+  {
+   "date": "2026-09-01",
+   "close": 219.81
+  },
+  {
+   "date": "2026-09-02",
+   "close": 220.57
+  },
+  {
+   "date": "2026-09-03",
+   "close": 221.72
+  },
+  {
+   "date": "2026-09-04",
+   "close": 222.93
+  },
+  {
+   "date": "2026-09-08",
+   "close": 223.47
+  },
+  {
+   "date": "2026-09-09",
+   "close": 225.41
+  },
+  {
+   "date": "2026-09-10",
+   "close": 222.63
+  },
+  {
+   "date": "2026-09-11",
+   "close": 220.92
+  },
+  {
+   "date": "2026-09-14",
+   "close": 224.17
+  },
+  {
+   "date": "2026-09-15",
+   "close": 220.35
+  },
+  {
+   "date": "2026-09-16",
+   "close": 220.73
+  },
+  {
+   "date": "2026-09-17",
+   "close": 219.97
+  },
+  {
+   "date": "2026-09-18",
+   "close": 215.77
+  },
+  {
+   "date": "2026-09-21",
+   "close": 223.66
+  },
+  {
+   "date": "2026-09-22",
+   "close": 220.64
+  },
+  {
+   "date": "2026-09-23",
+   "close": 219.14
+  },
+  {
+   "date": "2026-09-24",
+   "close": 221.61
+  },
+  {
+   "date": "2026-09-25",
+   "close": 215.73
+  },
+  {
+   "date": "2026-09-28",
+   "close": 221.37
+  },
+  {
+   "date": "2026-09-29",
+   "close": 211.08
+  },
+  {
+   "date": "2026-09-30",
+   "close": 214.3
+  }
+ ],
+ "identifiers": {
+  "isin": "US0NVTK00014",
+  "bloomberg": "NVTK NA Equity",
+  "ric": "NVTK.N",
+  "figi": "BBG3824F24F1"
+ },
+ "issuer": "ISS-NOVATEK",
+ "equityVolSurface": "EQV-NVTK",
+ "dividendCurve": "DIV-NVTK",
+ "equityIndex": "EQX-NDX",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "price": 0.3
+  }
+ }
+}

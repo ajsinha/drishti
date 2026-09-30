@@ -1,0 +1,317 @@
+{
+ "tradeId": "T-10419",
+ "productType": "PORTFOLIO_SWAP",
+ "productName": "Portfolio (basket) swap",
+ "assetClass": "Equity",
+ "family": "swap",
+ "status": "Live",
+ "direction": "Pay fixed",
+ "tradeDate": "2024-12-24",
+ "effectiveDate": "2024-12-27",
+ "maturityDate": "2030-08-07",
+ "currency": "GBP",
+ "notional": 8000000.0,
+ "mtm": -53321,
+ "mtmCurrency": "USD",
+ "pnl1d": 2648,
+ "counterparty": {
+  "id": "CP-VERDANT",
+  "name": "Verdant Agri Holdings"
+ },
+ "nettingSet": "NS-VERDANT-LDN",
+ "book": "BOOK-EQD-2",
+ "trader": "TRDR-JWEISS",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingIndex": "EQX-UKX",
+ "dividendCurve": "DIV-UKX",
+ "discountCurve": "CRV-GBP-OIS",
+ "terms": {
+  "constituents": 34,
+  "fundingSpread": 58.5
+ },
+ "risk": {
+  "delta": 29993,
+  "dv01": 4151
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 1428,
+   "dv01": 198
+  },
+  {
+   "bucket": "1M",
+   "delta": 2856,
+   "dv01": 395
+  },
+  {
+   "bucket": "3M",
+   "delta": 4285,
+   "dv01": 593
+  },
+  {
+   "bucket": "6M",
+   "delta": 5713,
+   "dv01": 791
+  },
+  {
+   "bucket": "1Y",
+   "delta": 7141,
+   "dv01": 988
+  },
+  {
+   "bucket": "2Y",
+   "delta": 8569,
+   "dv01": 1186
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Pay performance",
+   "payReceive": "Pay",
+   "rateType": "Performance",
+   "index": "UKX",
+   "rate": null,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "GBP",
+   "notional": 8000000.0
+  },
+  {
+   "leg": 2,
+   "label": "Receive SONIA + spread",
+   "payReceive": "Receive",
+   "rateType": "Float",
+   "index": "SONIA",
+   "rate": 0.037956,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "GBP",
+   "notional": 8000000.0
+  }
+ ],
+ "schedule": [
+  {
+   "name": "Cascadia Airlines Inc.",
+   "weight": 0.125,
+   "level": 365.5,
+   "status": "Active"
+  },
+  {
+   "name": "Helix Pharmaceuticals Inc.",
+   "weight": 0.125,
+   "level": 238.9,
+   "status": "Active"
+  },
+  {
+   "name": "Orbital Telecom SA",
+   "weight": 0.125,
+   "level": 409.5,
+   "status": "Active"
+  },
+  {
+   "name": "Granite Building Materials plc",
+   "weight": 0.125,
+   "level": 103.9,
+   "status": "Active"
+  },
+  {
+   "name": "Rheintal Landesbank",
+   "weight": 0.125,
+   "level": 297.7,
+   "status": "Active"
+  },
+  {
+   "name": "Halcyon Shipping plc",
+   "weight": 0.125,
+   "level": 95.2,
+   "status": "Active"
+  },
+  {
+   "name": "Solaris Energy Corp.",
+   "weight": 0.125,
+   "level": 92.0,
+   "status": "Active"
+  },
+  {
+   "name": "Novatek Devices Inc.",
+   "weight": 0.125,
+   "level": 305.4,
+   "status": "Active"
+  }
+ ],
+ "nextIndex": -1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 5194
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 2835
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -902
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -607
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -2508
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -3458
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 281
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 4524
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -3918
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -3022
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -803
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 107
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 1465
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -132
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -5461
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -2883
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 2341
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -635
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -3672
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -1396
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-12-24",
+  "executionTimestamp": "2024-12-24T14:15:19.033Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "J. Weiss",
+  "salesperson": null,
+  "orderId": "ORD-EC3E6ECE80"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-12-24T12:44:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2024-12-24T12:44:00Z",
+  "lastModifiedAt": "2024-12-24T12:44:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT789436943",
+  "matched": "2024-12-24 10:34",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83EC3E6ECE801255F6AD51",
+  "upi": "QZLLSAEITE1W",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Barclays Bank plc",
+  "ourAgentBic": "BARCGB22XXX",
+  "theirAgentBic": "VERDGB33XXX",
+  "ssiId": "SSI-GBP-ABCF5A",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -53321,
+  "cleanPv": -53321.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Multi-curve OIS discounting",
+  "curves": [
+   "EQX-UKX",
+   "DIV-UKX",
+   "CRV-GBP-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

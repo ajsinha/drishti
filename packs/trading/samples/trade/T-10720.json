@@ -1,0 +1,249 @@
+{
+ "tradeId": "T-10720",
+ "productType": "MARGIN_LOAN",
+ "productName": "Margin loan",
+ "assetClass": "Securities financing",
+ "family": "sft",
+ "status": "Live",
+ "direction": "Repo (lend cash)",
+ "tradeDate": "2026-09-11",
+ "effectiveDate": "2026-09-14",
+ "maturityDate": "2027-02-25",
+ "currency": "USD",
+ "notional": 52000000.0,
+ "mtm": 1594435,
+ "mtmCurrency": "USD",
+ "pnl1d": 29838,
+ "counterparty": {
+  "id": "CP-KESTREL",
+  "name": "Kestrel Global Macro Fund"
+ },
+ "nettingSet": "NS-KESTREL-FRA",
+ "book": "BOOK-SFT-1",
+ "trader": "TRDR-KBRANDT",
+ "desk": "DESK-SFT",
+ "legalEntity": "LE-FRA",
+ "discountCurve": "CRV-USD-OIS",
+ "underlyingIndex": "EQX-NDX",
+ "terms": {
+  "rate": 0.072696,
+  "ltv": 0.475962,
+  "maintenanceMargin": 0.314853
+ },
+ "risk": {
+  "exposure": 652249
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "exposure": 65225
+  },
+  {
+   "bucket": "1M",
+   "exposure": 130450
+  },
+  {
+   "bucket": "3M",
+   "exposure": 195675
+  },
+  {
+   "bucket": "6M",
+   "exposure": 260900
+  }
+ ],
+ "schedule": [
+  {
+   "asset": "Kaizen Motors Corp. 2036",
+   "isin": "JPKAIZ129190",
+   "quantity": 15244927,
+   "marketValue": 16863023,
+   "haircut": 0.005,
+   "value": 16778708
+  },
+  {
+   "asset": "Novatek Devices Inc. 2031",
+   "isin": "USNOVA065142",
+   "quantity": 17434304,
+   "marketValue": 17312961,
+   "haircut": 0.04,
+   "value": 16620443
+  },
+  {
+   "asset": "Meridian Financial Group 2031",
+   "isin": "USMERI070218",
+   "quantity": 17137706,
+   "marketValue": 16958788,
+   "haircut": 0.005,
+   "value": 16873994
+  }
+ ],
+ "nextIndex": -1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -33651
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -60890
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 10779
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 2549
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 1190
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 39119
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -8927
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 58540
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 22723
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 20217
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -71123
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 72787
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 25051
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 4093
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 5233
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 56724
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -53895
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 31226
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 23956
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -35424
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-09-11",
+  "executionTimestamp": "2026-09-11T14:20:32.730Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "K. Brandt",
+  "salesperson": null,
+  "orderId": "ORD-03C383365B"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-09-11T09:07:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2026-09-11T09:07:00Z",
+  "lastModifiedAt": "2026-09-11T09:07:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT307660446",
+  "matched": "2026-09-11 10:36",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z9DXU4T18OK74403C383365B1A2460AE8C",
+  "upi": "QZUVZZMGZ68G",
+  "reportingRegimes": [
+   "EU EMIR",
+   "EU MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "KESTUS33XXX",
+  "ssiId": "SSI-USD-69F994",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1594435,
+  "cleanPv": 1594435.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-USD-OIS",
+   "EQX-NDX"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "globalone-sft",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 3709
+  }
+ }
+}

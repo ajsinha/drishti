@@ -1,0 +1,220 @@
+{
+ "tradeId": "T-10071",
+ "productType": "STIR_FUTURE",
+ "productName": "Short-term interest rate future",
+ "assetClass": "Rates",
+ "family": "future",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2026-09-04",
+ "effectiveDate": "2026-09-07",
+ "maturityDate": "2027-08-09",
+ "currency": "JPY",
+ "notional": 45000000.0,
+ "mtm": 337713,
+ "mtmCurrency": "USD",
+ "pnl1d": -7327,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-RATES-1",
+ "trader": "TRDR-MOKAFOR",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-CME-1",
+ "forwardCurve": "CRV-JPY-PROJ",
+ "terms": {
+  "contract": "SR3 H7",
+  "lots": 794,
+  "tradePrice": 95.846
+ },
+ "risk": {
+  "dv01": -3914
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -652
+  },
+  {
+   "bucket": "6M",
+   "dv01": -1305
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -1957
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -1192
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -12842
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -16344
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -7899
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -16218
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -6617
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 5170
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -5729
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 557
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -2166
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -7477
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 15431
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -196
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -8659
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -8397
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -8379
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -874
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 7755
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 1832
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 1023
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-09-04",
+  "executionTimestamp": "2026-09-04T14:33:53.926Z",
+  "venue": "Bloomberg SEF",
+  "venueMic": "BSEF",
+  "executionType": "Electronic",
+  "trader": "M. Okafor",
+  "salesperson": null,
+  "orderId": "ORD-85F723BB89"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-09-04T09:06:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-09-04T09:06:00Z",
+  "lastModifiedAt": "2026-09-04T09:06:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA758878338",
+  "matched": "2026-09-04 15:16",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "JSCC",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH8622954982",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209685F723BB896FF584A5B2",
+  "upi": "QZ9ZAUQGJGYU",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-JPY-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 337713,
+  "cleanPv": 337713.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-JPY-PROJ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 1125
+  }
+ }
+}

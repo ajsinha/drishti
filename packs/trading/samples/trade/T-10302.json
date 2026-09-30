@@ -1,0 +1,219 @@
+{
+ "tradeId": "T-10302",
+ "productType": "CREDIT_SPREAD_OPT",
+ "productName": "Credit spread option",
+ "assetClass": "Credit",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2026-03-25",
+ "effectiveDate": "2026-03-27",
+ "maturityDate": "2027-02-26",
+ "currency": "USD",
+ "notional": 205000000.0,
+ "mtm": 229074,
+ "mtmCurrency": "USD",
+ "pnl1d": -5872,
+ "counterparty": {
+  "id": "CP-HALCYON",
+  "name": "Halcyon Shipping plc"
+ },
+ "nettingSet": "NS-HALCYON-NY",
+ "book": "BOOK-CREDIT-1",
+ "trader": "TRDR-CDUBOIS",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-MERIDIAN",
+ "underlyingBond": "BND-USMERI070218",
+ "creditCurve": "CDS-MERIDIAN",
+ "discountCurve": "CRV-USD-OIS",
+ "terms": {
+  "strikeSpread": 263.1,
+  "optionType": "Put",
+  "expiryDate": "2027-06-12"
+ },
+ "risk": {
+  "cs01": 17413,
+  "vega": 566492
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 5804,
+   "vega": 188831
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 11609,
+   "vega": 377661
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -663
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -7977
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -4724
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 7220
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 472
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 1820
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 6831
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 7933
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 4422
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -6075
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 3489
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -5273
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 3859
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -2718
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -1758
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 5067
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 4571
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 10387
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -8159
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 1530
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-03-25",
+  "executionTimestamp": "2026-03-25T16:55:01.312Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "C. Dubois",
+  "salesperson": null,
+  "orderId": "ORD-36FA15BC76"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-03-25T11:59:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2026-03-25T11:59:00Z",
+  "lastModifiedAt": "2026-03-25T11:59:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA538810059",
+  "matched": "2026-03-25 14:10",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209636FA15BC76610E3D7658",
+  "upi": "QZDH1VJ5FQ4J",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "HALCUS33XXX",
+  "ssiId": "SSI-USD-10E970",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 229074,
+  "cleanPv": 229074.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "BND-USMERI070218",
+   "CDS-MERIDIAN",
+   "CRV-USD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 2508
+  }
+ }
+}

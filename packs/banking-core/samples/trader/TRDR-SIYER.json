@@ -1,0 +1,22 @@
+{
+ "traderId": "TRDR-SIYER",
+ "name": "S. Iyer",
+ "deskName": "Money markets",
+ "tradeCount": 17,
+ "books": [
+  {
+   "id": "BOOK-MM-1"
+  },
+  {
+   "id": "BOOK-MM-2"
+  },
+  {
+   "id": "BOOK-MM-3"
+  }
+ ],
+ "desk": "DESK-MM",
+ "_meta": {
+  "source": "org-master",
+  "generation": 1
+ }
+}

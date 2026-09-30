@@ -20,7 +20,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * The twelve panel kinds of the grammar. Each declares which options it requires and which it accepts,
+ * The thirteen panel kinds of the grammar. Each declares which options it requires and which it accepts,
  * so the validator can reject a Sutra before it ever meets data.
  */
 public enum PanelKind {
@@ -35,7 +35,9 @@ public enum PanelKind {
     STATUS(Set.of(), Set.of("fields")),
     PROVENANCE(Set.of(), Set.of()),
     MARKDOWN(Set.of("text"), Set.of()),
-    GAUGE(Set.of("value"), Set.of("max", "label", "fmt"));
+    GAUGE(Set.of("value"), Set.of("max", "label", "fmt")),
+    /** A grid of values over two axes (volatility surfaces, correlation matrices): heatmap, or 3D on request. */
+    SURFACE(Set.of("rows", "y"), Set.of("fmt", "unit", "view"));
 
     private final Set<String> required;
     private final Set<String> optional;

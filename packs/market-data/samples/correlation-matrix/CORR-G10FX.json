@@ -1,0 +1,50 @@
+{
+ "matrixId": "CORR-G10FX",
+ "name": "G10 FX",
+ "factors": [
+  "EURUSD",
+  "GBPUSD",
+  "USDJPY",
+  "AUDUSD"
+ ],
+ "average": 0.512,
+ "pairs": [
+  {
+   "a": "EURUSD",
+   "b": "GBPUSD",
+   "rho": 0.718
+  },
+  {
+   "a": "EURUSD",
+   "b": "USDJPY",
+   "rho": 0.275
+  },
+  {
+   "a": "EURUSD",
+   "b": "AUDUSD",
+   "rho": 0.481
+  },
+  {
+   "a": "GBPUSD",
+   "b": "USDJPY",
+   "rho": 0.572
+  },
+  {
+   "a": "GBPUSD",
+   "b": "AUDUSD",
+   "rho": 0.75
+  },
+  {
+   "a": "USDJPY",
+   "b": "AUDUSD",
+   "rho": 0.276
+  }
+ ],
+ "window": "2 years, daily log returns",
+ "estimator": "Ledoit-Wolf shrinkage",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

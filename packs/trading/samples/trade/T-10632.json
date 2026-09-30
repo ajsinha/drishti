@@ -1,0 +1,391 @@
+{
+ "tradeId": "T-10632",
+ "productType": "CMO_TRANCHE",
+ "productName": "CMO tranche",
+ "assetClass": "Fixed income",
+ "family": "securitized",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2026-02-20",
+ "effectiveDate": "2026-02-23",
+ "maturityDate": "2036-01-14",
+ "currency": "USD",
+ "notional": 228000000.0,
+ "mtm": -3032972,
+ "mtmCurrency": "USD",
+ "pnl1d": -240633,
+ "counterparty": {
+  "id": "CP-CORAL",
+  "name": "Coral Bay Municipal Authority"
+ },
+ "nettingSet": "NS-CORAL-NY",
+ "book": "BOOK-FI-2",
+ "trader": "TRDR-RCASTILLO",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-VERDANT",
+ "benchmarkCurve": "CRV-USD-GOVT",
+ "forwardCurve": "CRV-USD-PROJ",
+ "swaptionVolCube": "IRV-USD",
+ "terms": {
+  "trancheType": "Sequential",
+  "wal": 6.29
+ },
+ "risk": {
+  "dv01": -203114,
+  "vega": -1040015
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -5642,
+   "vega": -28889
+  },
+  {
+   "bucket": "6M",
+   "dv01": -11284,
+   "vega": -57779
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -16926,
+   "vega": -86668
+  },
+  {
+   "bucket": "2Y",
+   "dv01": -22568,
+   "vega": -115557
+  },
+  {
+   "bucket": "3Y",
+   "dv01": -28210,
+   "vega": -144447
+  },
+  {
+   "bucket": "5Y",
+   "dv01": -33852,
+   "vega": -173336
+  },
+  {
+   "bucket": "7Y",
+   "dv01": -39494,
+   "vega": -202225
+  },
+  {
+   "bucket": "10Y",
+   "dv01": -45136,
+   "vega": -231114
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-08-23",
+   "opening": 228000000,
+   "principal": 11400000,
+   "closing": 216600000,
+   "interest": 4560000
+  },
+  {
+   "date": "2027-02-23",
+   "opening": 216600000,
+   "principal": 11400000,
+   "closing": 205200000,
+   "interest": 4332000
+  },
+  {
+   "date": "2027-08-23",
+   "opening": 205200000,
+   "principal": 11400000,
+   "closing": 193800000,
+   "interest": 4104000
+  },
+  {
+   "date": "2028-02-23",
+   "opening": 193800000,
+   "principal": 11400000,
+   "closing": 182400000,
+   "interest": 3876000
+  },
+  {
+   "date": "2028-08-23",
+   "opening": 182400000,
+   "principal": 11400000,
+   "closing": 171000000,
+   "interest": 3648000
+  },
+  {
+   "date": "2029-02-23",
+   "opening": 171000000,
+   "principal": 11400000,
+   "closing": 159600000,
+   "interest": 3420000
+  },
+  {
+   "date": "2029-08-23",
+   "opening": 159600000,
+   "principal": 11400000,
+   "closing": 148200000,
+   "interest": 3192000
+  },
+  {
+   "date": "2030-02-23",
+   "opening": 148200000,
+   "principal": 11400000,
+   "closing": 136800000,
+   "interest": 2964000
+  },
+  {
+   "date": "2030-08-23",
+   "opening": 136800000,
+   "principal": 11400000,
+   "closing": 125400000,
+   "interest": 2736000
+  },
+  {
+   "date": "2031-02-23",
+   "opening": 125400000,
+   "principal": 11400000,
+   "closing": 114000000,
+   "interest": 2508000
+  },
+  {
+   "date": "2031-08-23",
+   "opening": 114000000,
+   "principal": 11400000,
+   "closing": 102600000,
+   "interest": 2280000
+  },
+  {
+   "date": "2032-02-23",
+   "opening": 102600000,
+   "principal": 11400000,
+   "closing": 91200000,
+   "interest": 2052000
+  },
+  {
+   "date": "2032-08-23",
+   "opening": 91200000,
+   "principal": 11400000,
+   "closing": 79800000,
+   "interest": 1824000
+  },
+  {
+   "date": "2033-02-23",
+   "opening": 79800000,
+   "principal": 11400000,
+   "closing": 68400000,
+   "interest": 1596000
+  },
+  {
+   "date": "2033-08-23",
+   "opening": 68400000,
+   "principal": 11400000,
+   "closing": 57000000,
+   "interest": 1368000
+  },
+  {
+   "date": "2034-02-23",
+   "opening": 57000000,
+   "principal": 11400000,
+   "closing": 45600000,
+   "interest": 1140000
+  },
+  {
+   "date": "2034-08-23",
+   "opening": 45600000,
+   "principal": 11400000,
+   "closing": 34200000,
+   "interest": 912000
+  },
+  {
+   "date": "2035-02-23",
+   "opening": 34200000,
+   "principal": 11400000,
+   "closing": 22800000,
+   "interest": 684000
+  },
+  {
+   "date": "2035-08-23",
+   "opening": 22800000,
+   "principal": 11400000,
+   "closing": 11400000,
+   "interest": 456000
+  },
+  {
+   "date": "2036-01-14",
+   "opening": 11400000,
+   "principal": 11400000,
+   "closing": 0,
+   "interest": 228000
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -59898
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 78102
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -83909
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -33430
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 21966
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 22933
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 120717
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 52760
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 79964
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 19735
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 3502
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 8152
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -10477
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 129757
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -12180
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -53400
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 153264
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 21715
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -36271
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 74333
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-02-20",
+  "executionTimestamp": "2026-02-20T08:01:33.600Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "R. Castillo",
+  "salesperson": null,
+  "orderId": "ORD-7C8D03A3D1"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-02-20T11:52:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-02-20T11:52:00Z",
+  "lastModifiedAt": "2026-02-20T11:52:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT251460357",
+  "matched": "2026-02-20 15:28",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20967C8D03A3D1B69545A0A3",
+  "upi": "QZECGYPTP685",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "CORAUS33XXX",
+  "ssiId": "SSI-USD-C31AC7",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -3032972,
+  "cleanPv": -3032972.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-USD-GOVT",
+   "CRV-USD-PROJ",
+   "IRV-USD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 8346
+  }
+ }
+}

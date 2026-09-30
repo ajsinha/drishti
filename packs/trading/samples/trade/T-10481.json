@@ -1,0 +1,238 @@
+{
+ "tradeId": "T-10481",
+ "productType": "CMD_SWAPTION",
+ "productName": "Commodity swaption",
+ "assetClass": "Commodity",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2026-02-27",
+ "effectiveDate": "2026-03-02",
+ "maturityDate": "2027-08-02",
+ "currency": "USD",
+ "notional": 153000000.0,
+ "mtm": -752009,
+ "mtmCurrency": "USD",
+ "pnl1d": 11456,
+ "counterparty": {
+  "id": "CP-KESTREL",
+  "name": "Kestrel Global Macro Fund"
+ },
+ "nettingSet": "NS-KESTREL-NY",
+ "book": "BOOK-COMM-3",
+ "trader": "TRDR-FROSSI",
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "commodityCurve": "CMDC-BRENT",
+ "commodityVolSurface": "CMDV-BRENT",
+ "terms": {
+  "payerReceiver": "Payer",
+  "strike": 1354.21,
+  "expiryDate": "2027-09-15"
+ },
+ "risk": {
+  "delta": 326842,
+  "vega": 490568
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 21789,
+   "vega": 32705
+  },
+  {
+   "bucket": "1M",
+   "delta": 43579,
+   "vega": 65409
+  },
+  {
+   "bucket": "3M",
+   "delta": 65368,
+   "vega": 98114
+  },
+  {
+   "bucket": "6M",
+   "delta": 87158,
+   "vega": 130818
+  },
+  {
+   "bucket": "1Y",
+   "delta": 108947,
+   "vega": 163523
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -6256
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -10145
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 17877
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 3406
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 12468
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -8252
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -41934
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -4575
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 22271
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -24920
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -10287
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 55678
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -12351
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 26334
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -49617
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 17394
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 1478
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -5103
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -13403
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 25171
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-02-27",
+  "executionTimestamp": "2026-02-27T14:39:52.119Z",
+  "venue": "ICE",
+  "venueMic": "IFEU",
+  "executionType": "Electronic",
+  "trader": "F. Rossi",
+  "salesperson": null,
+  "orderId": "ORD-97CBD9C65A"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-02-27T11:20:00Z",
+    "by": "fo.capture"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2026-04-10T11:20:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2026-02-27T11:20:00Z",
+  "lastModifiedAt": "2026-04-10T11:20:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT658580378",
+  "matched": "2026-02-27 14:44",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209697CBD9C65A49107D6FE9",
+  "upi": "QZAP9MJ5IKYD",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "KESTUS33XXX",
+  "ssiId": "SSI-USD-69F994",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -752009,
+  "cleanPv": -752009.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CMDC-BRENT",
+   "CMDV-BRENT"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "endur-comm",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 3034
+  }
+ }
+}

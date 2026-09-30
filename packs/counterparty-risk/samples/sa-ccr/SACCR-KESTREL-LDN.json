@@ -1,0 +1,72 @@
+{
+ "calcId": "SACCR-KESTREL-LDN",
+ "replacementCost": 0,
+ "addOn": 73787199,
+ "multiplier": 0.9929,
+ "ead": 102568633,
+ "rwa": 102568633,
+ "addOns": [
+  {
+   "assetClass": "Foreign exchange",
+   "addOn": 17777753
+  },
+  {
+   "assetClass": "Equity",
+   "addOn": 54915945
+  },
+  {
+   "assetClass": "Interest rate",
+   "addOn": 1093500
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "USD",
+   "effectiveNotional": 17443836,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "GBP",
+   "effectiveNotional": -209000000,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "CHF",
+   "effectiveNotional": 17000000,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "JPY",
+   "effectiveNotional": -201000000,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "USD",
+   "effectiveNotional": 131612329,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "EUR",
+   "effectiveNotional": 40000000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "GBP",
+   "effectiveNotional": -218700000,
+   "sf": 0.005
+  }
+ ],
+ "nettingSet": "NS-KESTREL-LDN",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

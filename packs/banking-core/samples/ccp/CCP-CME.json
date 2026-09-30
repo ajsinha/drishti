@@ -1,0 +1,17 @@
+{
+ "ccpId": "CCP-CME",
+ "name": "CME Clearing",
+ "defaultFund": 720000000.0,
+ "imPosted": 43200000,
+ "marginModel": "SPAN 2",
+ "accounts": [
+  {
+   "id": "CLR-CME-1",
+   "im": 43200000
+  }
+ ],
+ "_meta": {
+  "source": "clearing-system",
+  "generation": 1
+ }
+}

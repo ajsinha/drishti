@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-RHEINTAL-FRA",
+ "held": 498445,
+ "posted": 0,
+ "net": 498445,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Granite Building Materials plc 2031",
+   "direction": "Held",
+   "marketValue": 166148,
+   "haircut": 0.01,
+   "value": 164487
+  },
+  {
+   "asset": "Japan Ministry of Finance 2031",
+   "direction": "Held",
+   "marketValue": 166148,
+   "haircut": 0.02,
+   "value": 162825
+  },
+  {
+   "asset": "Helix Pharmaceuticals Inc. 2036",
+   "direction": "Held",
+   "marketValue": 166148,
+   "haircut": 0.01,
+   "value": 164487
+  }
+ ],
+ "csa": "CSA-RHEINTAL",
+ "nettingSet": "NS-RHEINTAL-FRA",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

@@ -1,0 +1,104 @@
+{
+ "nettingSetId": "NS-SOLARIS-FRA",
+ "tradeCount": 2,
+ "netMtm": 1865178,
+ "collateral": 1446508,
+ "eePeak": 453281,
+ "pfePeak": 1015944,
+ "limit": 5000000.0,
+ "utilisation": 0.2032,
+ "cva": -1403,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 445268,
+   "pfe": 1003564
+  },
+  {
+   "tenor": "1M",
+   "ee": 453281,
+   "pfe": 1015944
+  },
+  {
+   "tenor": "3M",
+   "ee": 393304,
+   "pfe": 865269
+  },
+  {
+   "tenor": "6M",
+   "ee": 369475,
+   "pfe": 812845
+  },
+  {
+   "tenor": "1Y",
+   "ee": 326061,
+   "pfe": 717333
+  },
+  {
+   "tenor": "2Y",
+   "ee": 253936,
+   "pfe": 558660
+  },
+  {
+   "tenor": "3Y",
+   "ee": 197766,
+   "pfe": 435085
+  },
+  {
+   "tenor": "5Y",
+   "ee": 119951,
+   "pfe": 263892
+  },
+  {
+   "tenor": "7Y",
+   "ee": 72754,
+   "pfe": 160059
+  },
+  {
+   "tenor": "10Y",
+   "ee": 34367,
+   "pfe": 75606
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10689",
+   "product": "Reverse repo",
+   "notional": 214000000.0,
+   "maturity": "2026-12-22",
+   "mtm": 2428077
+  },
+  {
+   "tradeId": "T-10710",
+   "product": "Securities borrowing",
+   "notional": 60000000.0,
+   "maturity": "2026-10-27",
+   "mtm": -562899
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Securities financing",
+   "mtm": 1865178
+  }
+ ],
+ "counterparty": "CP-SOLARIS",
+ "agreement": "AGR-SOLARIS-ISDA",
+ "csa": "CSA-SOLARIS",
+ "creditLimit": "LIM-SOLARIS",
+ "exposureProfile": "EXP-SOLARIS-FRA",
+ "cvaResult": "CVA-SOLARIS-FRA",
+ "saccr": "SACCR-SOLARIS-FRA",
+ "simm": "SIMM-SOLARIS",
+ "collateralBalance": "COLL-SOLARIS-FRA",
+ "legalEntity": "LE-FRA",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 3730
+  }
+ }
+}

@@ -1,0 +1,340 @@
+{
+ "tradeId": "T-10231",
+ "productType": "FX_VARIANCE_SWAP",
+ "productName": "FX variance swap",
+ "assetClass": "FX",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2024-06-21",
+ "effectiveDate": "2024-06-24",
+ "maturityDate": "2028-06-20",
+ "currency": "JPY",
+ "notional": 1000000.0,
+ "mtm": -4227,
+ "mtmCurrency": "USD",
+ "pnl1d": 192,
+ "counterparty": {
+  "id": "CP-MERIDIAN-RE",
+  "name": "Meridian Reinsurance Ltd"
+ },
+ "nettingSet": "NS-MERIDIAN-RE-LDN",
+ "book": "BOOK-FX-2",
+ "trader": "TRDR-LMOREAU",
+ "desk": "DESK-FX",
+ "legalEntity": "LE-LDN",
+ "fxSpot": "FX-USDJPY",
+ "fxVolSurface": "FXV-USDJPY",
+ "terms": {
+  "varianceStrike": 9.49,
+  "vegaNotional": 383803.0
+ },
+ "risk": {
+  "vega": -4479
+ },
+ "sensitivities": [
+  {
+   "bucket": "1M",
+   "vega": -299
+  },
+  {
+   "bucket": "3M",
+   "vega": -597
+  },
+  {
+   "bucket": "6M",
+   "vega": -896
+  },
+  {
+   "bucket": "1Y",
+   "vega": -1194
+  },
+  {
+   "bucket": "2Y",
+   "vega": -1493
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2024-09-24",
+   "level": 89.64,
+   "trigger": 100.0,
+   "performance": -0.1036,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2024-12-24",
+   "level": 98.88,
+   "trigger": 100.0,
+   "performance": -0.0112,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-03-24",
+   "level": 86.36,
+   "trigger": 100.0,
+   "performance": -0.1364,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-06-24",
+   "level": 97.44,
+   "trigger": 100.0,
+   "performance": -0.0256,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-09-24",
+   "level": 96.0,
+   "trigger": 100.0,
+   "performance": -0.04,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-12-24",
+   "level": 94.45,
+   "trigger": 100.0,
+   "performance": -0.0555,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-03-24",
+   "level": 93.67,
+   "trigger": 100.0,
+   "performance": -0.0633,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-06-24",
+   "level": 93.17,
+   "trigger": 100.0,
+   "performance": -0.0683,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-09-24",
+   "level": 92.55,
+   "trigger": 100.0,
+   "performance": -0.0745,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-12-24",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-03-24",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-06-24",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-09-24",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-12-24",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-03-24",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-06-20",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 9,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 2227
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -3492
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -277
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 2970
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 1998
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 6110
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 5468
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 3204
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -6483
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 717
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -3738
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -196
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -3672
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -487
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -4228
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -745
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -824
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -1797
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 635
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 3972
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-06-21",
+  "executionTimestamp": "2024-06-21T08:14:15.076Z",
+  "venue": "360T",
+  "venueMic": "360T",
+  "executionType": "Electronic",
+  "trader": "L. Moreau",
+  "salesperson": null,
+  "orderId": "ORD-7741E600BD"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-06-21T12:05:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2024-06-21T12:05:00Z",
+  "lastModifiedAt": "2024-06-21T12:05:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT509164256",
+  "matched": "2024-06-21 13:51",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q837741E600BDE50BC529BC",
+  "upi": "QZH3L6QPLR30",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Foreign exchange"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "MERIGB33XXX",
+  "ssiId": "SSI-JPY-9DC4EA",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -4227,
+  "cleanPv": -4227.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "FX-USDJPY",
+   "FXV-USDJPY"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "calypso-fx",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

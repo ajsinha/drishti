@@ -1,0 +1,398 @@
+{
+ "tradeId": "T-10646",
+ "productType": "CLO_TRANCHE",
+ "productName": "CLO tranche",
+ "assetClass": "Fixed income",
+ "family": "securitized",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2024-12-20",
+ "effectiveDate": "2024-12-23",
+ "maturityDate": "2035-11-13",
+ "currency": "USD",
+ "notional": 192000000.0,
+ "mtm": 2168781,
+ "mtmCurrency": "USD",
+ "pnl1d": -85031,
+ "counterparty": {
+  "id": "CP-CASCADIA",
+  "name": "Cascadia Airlines Inc."
+ },
+ "nettingSet": "NS-CASCADIA-NY",
+ "book": "BOOK-FI-3",
+ "trader": "TRDR-RCASTILLO",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-SOLARIS",
+ "forwardCurve": "CRV-USD-PROJ",
+ "creditCurve": "CDS-SOLARIS",
+ "terms": {
+  "tranche": "BBB",
+  "discountMargin": 812.8
+ },
+ "risk": {
+  "cs01": 168062,
+  "dv01": 179482
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 6002,
+   "dv01": 6410
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 12004,
+   "dv01": 12820
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 18007,
+   "dv01": 19230
+  },
+  {
+   "bucket": "3Y",
+   "cs01": 24009,
+   "dv01": 25640
+  },
+  {
+   "bucket": "5Y",
+   "cs01": 30011,
+   "dv01": 32050
+  },
+  {
+   "bucket": "7Y",
+   "cs01": 36013,
+   "dv01": 38460
+  },
+  {
+   "bucket": "10Y",
+   "cs01": 42016,
+   "dv01": 44870
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2025-06-23",
+   "opening": 192000000,
+   "principal": 8727273,
+   "closing": 183272727,
+   "interest": 3840000
+  },
+  {
+   "date": "2025-12-23",
+   "opening": 183272727,
+   "principal": 8727273,
+   "closing": 174545455,
+   "interest": 3665455
+  },
+  {
+   "date": "2026-06-23",
+   "opening": 174545455,
+   "principal": 8727273,
+   "closing": 165818182,
+   "interest": 3490909
+  },
+  {
+   "date": "2026-12-23",
+   "opening": 165818182,
+   "principal": 8727273,
+   "closing": 157090909,
+   "interest": 3316364
+  },
+  {
+   "date": "2027-06-23",
+   "opening": 157090909,
+   "principal": 8727273,
+   "closing": 148363636,
+   "interest": 3141818
+  },
+  {
+   "date": "2027-12-23",
+   "opening": 148363636,
+   "principal": 8727273,
+   "closing": 139636364,
+   "interest": 2967273
+  },
+  {
+   "date": "2028-06-23",
+   "opening": 139636364,
+   "principal": 8727273,
+   "closing": 130909091,
+   "interest": 2792727
+  },
+  {
+   "date": "2028-12-23",
+   "opening": 130909091,
+   "principal": 8727273,
+   "closing": 122181818,
+   "interest": 2618182
+  },
+  {
+   "date": "2029-06-23",
+   "opening": 122181818,
+   "principal": 8727273,
+   "closing": 113454545,
+   "interest": 2443636
+  },
+  {
+   "date": "2029-12-23",
+   "opening": 113454545,
+   "principal": 8727273,
+   "closing": 104727273,
+   "interest": 2269091
+  },
+  {
+   "date": "2030-06-23",
+   "opening": 104727273,
+   "principal": 8727273,
+   "closing": 96000000,
+   "interest": 2094545
+  },
+  {
+   "date": "2030-12-23",
+   "opening": 96000000,
+   "principal": 8727273,
+   "closing": 87272727,
+   "interest": 1920000
+  },
+  {
+   "date": "2031-06-23",
+   "opening": 87272727,
+   "principal": 8727273,
+   "closing": 78545455,
+   "interest": 1745455
+  },
+  {
+   "date": "2031-12-23",
+   "opening": 78545455,
+   "principal": 8727273,
+   "closing": 69818182,
+   "interest": 1570909
+  },
+  {
+   "date": "2032-06-23",
+   "opening": 69818182,
+   "principal": 8727273,
+   "closing": 61090909,
+   "interest": 1396364
+  },
+  {
+   "date": "2032-12-23",
+   "opening": 61090909,
+   "principal": 8727273,
+   "closing": 52363636,
+   "interest": 1221818
+  },
+  {
+   "date": "2033-06-23",
+   "opening": 52363636,
+   "principal": 8727273,
+   "closing": 43636364,
+   "interest": 1047273
+  },
+  {
+   "date": "2033-12-23",
+   "opening": 43636364,
+   "principal": 8727273,
+   "closing": 34909091,
+   "interest": 872727
+  },
+  {
+   "date": "2034-06-23",
+   "opening": 34909091,
+   "principal": 8727273,
+   "closing": 26181818,
+   "interest": 698182
+  },
+  {
+   "date": "2034-12-23",
+   "opening": 26181818,
+   "principal": 8727273,
+   "closing": 17454545,
+   "interest": 523636
+  },
+  {
+   "date": "2035-06-23",
+   "opening": 17454545,
+   "principal": 8727273,
+   "closing": 8727273,
+   "interest": 349091
+  },
+  {
+   "date": "2035-11-13",
+   "opening": 8727273,
+   "principal": 8727273,
+   "closing": 0,
+   "interest": 174545
+  }
+ ],
+ "nextIndex": 3,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 13477
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 6884
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 66584
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 81668
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -26442
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -70769
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 26180
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -49915
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -61687
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 33034
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -170016
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 43189
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -14739
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -59784
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -16193
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 153594
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -84608
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 51921
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -36924
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 24246
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-12-20",
+  "executionTimestamp": "2024-12-20T08:36:31.791Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "R. Castillo",
+  "salesperson": null,
+  "orderId": "ORD-844C63746F"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-12-20T09:50:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2024-12-20T09:50:00Z",
+  "lastModifiedAt": "2024-12-20T09:50:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT685898098",
+  "matched": "2024-12-20 16:27",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096844C63746FA89E1D27D8",
+  "upi": "QZA7LW2RGL5X",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "CASCUS33XXX",
+  "ssiId": "SSI-USD-BC4549",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 2168781,
+  "cleanPv": 2168781.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-USD-PROJ",
+   "CDS-SOLARIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 6258
+  }
+ }
+}

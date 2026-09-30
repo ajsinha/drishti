@@ -1,0 +1,33 @@
+{
+ "deskId": "DESK-EQD",
+ "name": "Equity derivatives",
+ "head": "P. Lindqvist",
+ "books": [
+  {
+   "id": "BOOK-EQD-1",
+   "trades": 37,
+   "mtm": -9179047
+  },
+  {
+   "id": "BOOK-EQD-2",
+   "trades": 41,
+   "mtm": 11863685
+  },
+  {
+   "id": "BOOK-EQD-3",
+   "trades": 54,
+   "mtm": -9118308
+  }
+ ],
+ "var99": 14706243,
+ "mtm": -6433670,
+ "legalEntity": "LE-LDN",
+ "varResult": "VAR-EQD",
+ "assetClasses": [
+  "Equity"
+ ],
+ "_meta": {
+  "source": "org-master",
+  "generation": 1
+ }
+}

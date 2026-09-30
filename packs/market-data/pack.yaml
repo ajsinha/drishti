@@ -286,3 +286,15 @@ routes:
   rate-fixing: market-lake
   bond: market-lake
   correlation-matrix: market-lake
+console:
+  examples:
+  - - CRV CRV-USD-OIS
+    - SOFR discount curve · zero rates, pillars, forwards
+  - - FXV FXV-EURUSD
+    - EUR/USD vol surface · smile by expiry
+  - - EQ EQ-NVTK
+    - Equity · price history, identifiers
+  - - CDS CDS-SOLARIS
+    - Credit curve · spreads, hazard rates
+  - - CMDC CMDC-WTI
+    - WTI futures curve · backwardation

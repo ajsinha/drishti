@@ -1,0 +1,414 @@
+{
+ "tradeId": "T-10725",
+ "productType": "RANGE_ACCRUAL_NOTE",
+ "productName": "Range accrual note",
+ "assetClass": "Structured",
+ "family": "note",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2026-09-04",
+ "effectiveDate": "2026-09-08",
+ "maturityDate": "2034-06-05",
+ "currency": "USD",
+ "notional": 113000000.0,
+ "mtm": 330790,
+ "mtmCurrency": "USD",
+ "pnl1d": 3653,
+ "counterparty": {
+  "id": "CP-TOKAI",
+  "name": "Tokai Mutual Trust Bank"
+ },
+ "nettingSet": "NS-TOKAI-TKY",
+ "book": "BOOK-STRUCT-1",
+ "trader": "TRDR-YTANAKA",
+ "desk": "DESK-STRUCT",
+ "legalEntity": "LE-TKY",
+ "discountCurve": "CRV-USD-OIS",
+ "forwardCurve": "CRV-USD-PROJ",
+ "swaptionVolCube": "IRV-USD",
+ "terms": {
+  "coupon": 0.087744,
+  "lowerBound": 0.015925,
+  "upperBound": 0.040631
+ },
+ "risk": {
+  "dv01": -78242,
+  "vega": -908473
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -2794,
+   "vega": -32445
+  },
+  {
+   "bucket": "6M",
+   "dv01": -5589,
+   "vega": -64891
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -8383,
+   "vega": -97336
+  },
+  {
+   "bucket": "2Y",
+   "dv01": -11177,
+   "vega": -129782
+  },
+  {
+   "bucket": "3Y",
+   "dv01": -13972,
+   "vega": -162227
+  },
+  {
+   "bucket": "5Y",
+   "dv01": -16766,
+   "vega": -194673
+  },
+  {
+   "bucket": "7Y",
+   "dv01": -19560,
+   "vega": -227118
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-12-08",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-03-08",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-06-08",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-09-08",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-12-08",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-03-08",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-06-08",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-09-08",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-12-08",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-03-08",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-06-08",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-09-08",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-12-08",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-03-08",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-06-08",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-09-08",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-12-08",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-03-08",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-06-08",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-09-08",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-12-08",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2032-03-08",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2032-06-08",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2032-09-08",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -1165
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 18291
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 28441
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 1790
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -9542
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -3867
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -10256
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -8042
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 1213
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -4097
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 10319
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 7547
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 2157
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -7454
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -8311
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 10318
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -457
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 938
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 7244
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -4981
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-09-04",
+  "executionTimestamp": "2026-09-04T16:24:09.521Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "Y. Tanaka",
+  "salesperson": null,
+  "orderId": "ORD-FA2AA33FFE"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-09-04T12:25:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2026-09-04T12:25:00Z",
+  "lastModifiedAt": "2026-09-04T12:25:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT792178892",
+  "matched": "2026-09-04 16:20",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300BLAOJ55ZE6F474FA2AA33FFE1A7D2E5030",
+  "upi": "QZ2YBJLFSDWI",
+  "reportingRegimes": [
+   "JFSA"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "TOKAUS33XXX",
+  "ssiId": "SSI-USD-6E2541",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 330790,
+  "cleanPv": 330790.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-USD-OIS",
+   "CRV-USD-PROJ",
+   "IRV-USD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-struct",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 1792
+  }
+ }
+}

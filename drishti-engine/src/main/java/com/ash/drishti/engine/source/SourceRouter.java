@@ -93,6 +93,9 @@ public final class SourceRouter {
         if (!asOf.live()) {
             // a picked date: history comes from dated sources first; undated ones only answer what nothing dated holds
             candidates.sort(java.util.Comparator.comparing(p -> !p.manifest().capabilities().dated()));
+        } else {
+            // live: sources that stream come first, so the view ticks; the lake answers what no live source holds
+            candidates.sort(java.util.Comparator.comparing(p -> !p.manifest().capabilities().live()));
         }
         return CompletableFuture.supplyAsync(() -> readFirst(ref, candidates, asOf), executor)
                 .orTimeout(timeout.toMillis(), TimeUnit.MILLISECONDS)

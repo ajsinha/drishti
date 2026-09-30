@@ -1,0 +1,76 @@
+{
+ "indexId": "INF-HICPX",
+ "name": "Euro HICP ex-tobacco",
+ "latest": 128.4,
+ "yoy": 0.021,
+ "lag": "3 months",
+ "currency": "EUR",
+ "fixings": [
+  {
+   "month": "2026-08",
+   "value": 128.4,
+   "yoy": 0.021
+  },
+  {
+   "month": "2026-07",
+   "value": 128.176,
+   "yoy": 0.0218
+  },
+  {
+   "month": "2026-06",
+   "value": 127.952,
+   "yoy": 0.0219
+  },
+  {
+   "month": "2026-05",
+   "value": 127.728,
+   "yoy": 0.0211
+  },
+  {
+   "month": "2026-04",
+   "value": 127.505,
+   "yoy": 0.0202
+  },
+  {
+   "month": "2026-03",
+   "value": 127.282,
+   "yoy": 0.02
+  },
+  {
+   "month": "2026-02",
+   "value": 127.06,
+   "yoy": 0.0207
+  },
+  {
+   "month": "2026-01",
+   "value": 126.838,
+   "yoy": 0.0217
+  },
+  {
+   "month": "2025-12",
+   "value": 126.616,
+   "yoy": 0.022
+  },
+  {
+   "month": "2025-11",
+   "value": 126.395,
+   "yoy": 0.0214
+  },
+  {
+   "month": "2025-10",
+   "value": 126.174,
+   "yoy": 0.0205
+  },
+  {
+   "month": "2025-09",
+   "value": 125.954,
+   "yoy": 0.02
+  }
+ ],
+ "inflationCurve": "INFC-HICPX",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

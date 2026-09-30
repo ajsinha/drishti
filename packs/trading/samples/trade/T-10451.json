@@ -1,0 +1,225 @@
+{
+ "tradeId": "T-10451",
+ "productType": "CMD_FORWARD",
+ "productName": "Commodity forward",
+ "assetClass": "Commodity",
+ "family": "linear",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2025-01-31",
+ "effectiveDate": "2025-02-03",
+ "maturityDate": "2026-10-07",
+ "currency": "USD",
+ "notional": 159000000.0,
+ "mtm": -308982,
+ "mtmCurrency": "USD",
+ "pnl1d": -3846,
+ "counterparty": {
+  "id": "CP-ALDERSHOT",
+  "name": "Aldershot Pension Trust"
+ },
+ "nettingSet": "NS-ALDERSHOT-NY",
+ "book": "BOOK-COMM-1",
+ "trader": "TRDR-FROSSI",
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "commodityCurve": "CMDC-GOLD",
+ "discountCurve": "CRV-USD-OIS",
+ "terms": {
+  "forwardPrice": 761.66,
+  "quantity": 64131,
+  "deliveryMonth": "Dec 2026"
+ },
+ "risk": {
+  "delta": -916598
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -61107
+  },
+  {
+   "bucket": "1M",
+   "delta": -122213
+  },
+  {
+   "bucket": "3M",
+   "delta": -183320
+  },
+  {
+   "bucket": "6M",
+   "delta": -244426
+  },
+  {
+   "bucket": "1Y",
+   "delta": -305533
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 1294
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -10231
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 9763
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -6509
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -8966
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 11773
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 7690
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 5910
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 6704
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 14093
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -4278
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 4848
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -439
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 8510
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -18450
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -5066
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 1265
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 2309
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 8814
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -2980
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-01-31",
+  "executionTimestamp": "2025-01-31T12:34:30.453Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "F. Rossi",
+  "salesperson": null,
+  "orderId": "ORD-E20FC3104D"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-01-31T11:24:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2025-01-31T11:24:00Z",
+  "lastModifiedAt": "2025-01-31T11:24:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT586704714",
+  "matched": "2025-01-31 12:00",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096E20FC3104D28B78B3510",
+  "upi": "QZ1EEIC70TTP",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "ALDEUS33XXX",
+  "ssiId": "SSI-USD-D06EAF",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -308982,
+  "cleanPv": -308982.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CMDC-GOLD",
+   "CRV-USD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "endur-comm",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 2208
+  }
+ }
+}

@@ -1,0 +1,22 @@
+{
+ "traderId": "TRDR-LMOREAU",
+ "name": "L. Moreau",
+ "deskName": "G10 and EM FX",
+ "tradeCount": 35,
+ "books": [
+  {
+   "id": "BOOK-FX-1"
+  },
+  {
+   "id": "BOOK-FX-2"
+  },
+  {
+   "id": "BOOK-FX-3"
+  }
+ ],
+ "desk": "DESK-FX",
+ "_meta": {
+  "source": "org-master",
+  "generation": 1
+ }
+}

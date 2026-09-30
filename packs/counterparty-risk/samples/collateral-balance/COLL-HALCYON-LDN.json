@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-HALCYON-LDN",
+ "held": 4699316,
+ "posted": 0,
+ "net": 4699316,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Federal Republic of Germany 2031",
+   "direction": "Held",
+   "marketValue": 1566439,
+   "haircut": 0.005,
+   "value": 1558607
+  },
+  {
+   "asset": "Solaris Energy Corp. 2036",
+   "direction": "Held",
+   "marketValue": 1566439,
+   "haircut": 0.01,
+   "value": 1550775
+  },
+  {
+   "asset": "Federal Republic of Germany 2036",
+   "direction": "Held",
+   "marketValue": 1566439,
+   "haircut": 0.02,
+   "value": 1535110
+  }
+ ],
+ "csa": "CSA-HALCYON",
+ "nettingSet": "NS-HALCYON-LDN",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

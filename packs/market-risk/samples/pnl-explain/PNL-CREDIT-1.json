@@ -1,0 +1,38 @@
+{
+ "resultId": "PNL-CREDIT-1",
+ "date": "2026-09-30",
+ "actual": 145410,
+ "explained": 131999,
+ "unexplained": 13411,
+ "attribution": [
+  {
+   "factor": "Rates delta",
+   "pnl": 55440
+  },
+  {
+   "factor": "FX delta",
+   "pnl": 15840
+  },
+  {
+   "factor": "Credit",
+   "pnl": 10560
+  },
+  {
+   "factor": "Vega",
+   "pnl": 13200
+  },
+  {
+   "factor": "Carry and theta",
+   "pnl": 26400
+  },
+  {
+   "factor": "New trades",
+   "pnl": 10560
+  }
+ ],
+ "book": "BOOK-CREDIT-1",
+ "_meta": {
+  "source": "pnl-explain",
+  "generation": 1
+ }
+}

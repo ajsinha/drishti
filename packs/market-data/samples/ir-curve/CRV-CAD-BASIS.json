@@ -1,0 +1,158 @@
+{
+ "curveId": "CRV-CAD-BASIS",
+ "currency": "CAD",
+ "curveType": "Cross-currency basis",
+ "index": "CORRA",
+ "tenY": 0.0322,
+ "slope2s10s": 42.6,
+ "asOf": "2026-09-30",
+ "points": [
+  {
+   "tenor": "1M",
+   "maturity": "2026-10-30",
+   "instrument": "Deposit / future",
+   "quote": 0.027442,
+   "zeroRate": 2.7473,
+   "df": 0.997713
+  },
+  {
+   "tenor": "3M",
+   "maturity": "2026-12-30",
+   "instrument": "Deposit / future",
+   "quote": 0.027484,
+   "zeroRate": 2.7579,
+   "df": 0.993129
+  },
+  {
+   "tenor": "6M",
+   "maturity": "2027-03-30",
+   "instrument": "Deposit / future",
+   "quote": 0.027513,
+   "zeroRate": 2.7704,
+   "df": 0.986243
+  },
+  {
+   "tenor": "1Y",
+   "maturity": "2027-09-30",
+   "instrument": "Basis swap",
+   "quote": 0.027377,
+   "zeroRate": 2.7759,
+   "df": 0.972623
+  },
+  {
+   "tenor": "2Y",
+   "maturity": "2028-09-30",
+   "instrument": "Basis swap",
+   "quote": 0.027172,
+   "zeroRate": 2.7938,
+   "df": 0.945656
+  },
+  {
+   "tenor": "3Y",
+   "maturity": "2029-09-30",
+   "instrument": "Basis swap",
+   "quote": 0.027404,
+   "zeroRate": 2.8596,
+   "df": 0.917789
+  },
+  {
+   "tenor": "5Y",
+   "maturity": "2031-09-30",
+   "instrument": "Basis swap",
+   "quote": 0.028564,
+   "zeroRate": 3.0821,
+   "df": 0.857182
+  },
+  {
+   "tenor": "7Y",
+   "maturity": "2033-09-30",
+   "instrument": "Basis swap",
+   "quote": 0.02846,
+   "zeroRate": 3.1739,
+   "df": 0.800777
+  },
+  {
+   "tenor": "10Y",
+   "maturity": "2036-09-30",
+   "instrument": "Basis swap",
+   "quote": 0.02753,
+   "zeroRate": 3.22,
+   "df": 0.724698
+  },
+  {
+   "tenor": "15Y",
+   "maturity": "2041-09-30",
+   "instrument": "Basis swap",
+   "quote": 0.025715,
+   "zeroRate": 3.2487,
+   "df": 0.61428
+  },
+  {
+   "tenor": "20Y",
+   "maturity": "2046-09-30",
+   "instrument": "Basis swap",
+   "quote": 0.023934,
+   "zeroRate": 3.2569,
+   "df": 0.521326
+  },
+  {
+   "tenor": "30Y",
+   "maturity": "2056-09-30",
+   "instrument": "Basis swap",
+   "quote": 0.020798,
+   "zeroRate": 3.26,
+   "df": 0.376062
+  }
+ ],
+ "forwards": [
+  {
+   "tenor": "1Y",
+   "rate": 2.813
+  },
+  {
+   "tenor": "2Y",
+   "rate": 2.9955
+  },
+  {
+   "tenor": "3Y",
+   "rate": 3.3144
+  },
+  {
+   "tenor": "5Y",
+   "rate": 3.3683
+  },
+  {
+   "tenor": "7Y",
+   "rate": 3.306
+  },
+  {
+   "tenor": "10Y",
+   "rate": 3.292
+  },
+  {
+   "tenor": "15Y",
+   "rate": 3.2836
+  },
+  {
+   "tenor": "20Y",
+   "rate": 3.2718
+  }
+ ],
+ "interpolation": "Log-linear on discount factors",
+ "dayCount": "ACT/365F",
+ "calendar": "CAL-USNY",
+ "fixingIndex": "FIX-CORRA",
+ "builtAt": "2026-09-30T18:02:41Z",
+ "sources": [
+  "Broker composite",
+  "Exchange settlements"
+ ],
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "tenY": 0.0003
+  }
+ }
+}

@@ -1,0 +1,97 @@
+{
+ "nettingSetId": "NS-NORTHBRIDGE-TKY",
+ "tradeCount": 1,
+ "netMtm": 3228356,
+ "collateral": 2316645,
+ "eePeak": 21493770,
+ "pfePeak": 48294294,
+ "limit": 86000000.0,
+ "utilisation": 0.5616,
+ "cva": -285389,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 2029987,
+   "pfe": 5473971
+  },
+  {
+   "tenor": "1M",
+   "ee": 3220790,
+   "pfe": 8093738
+  },
+  {
+   "tenor": "3M",
+   "ee": 4888473,
+   "pfe": 11762641
+  },
+  {
+   "tenor": "6M",
+   "ee": 6506691,
+   "pfe": 15322721
+  },
+  {
+   "tenor": "1Y",
+   "ee": 8774041,
+   "pfe": 20310891
+  },
+  {
+   "tenor": "2Y",
+   "ee": 11957199,
+   "pfe": 27313837
+  },
+  {
+   "tenor": "3Y",
+   "ee": 14397919,
+   "pfe": 32683423
+  },
+  {
+   "tenor": "5Y",
+   "ee": 18292862,
+   "pfe": 41252296
+  },
+  {
+   "tenor": "7Y",
+   "ee": 21493770,
+   "pfe": 48294294
+  },
+  {
+   "tenor": "10Y",
+   "ee": 74838,
+   "pfe": 164643
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10747",
+   "product": "Credit basket note",
+   "notional": 180000000.0,
+   "maturity": "2035-09-20",
+   "mtm": 3228356
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Structured",
+   "mtm": 3228356
+  }
+ ],
+ "counterparty": "CP-NORTHBRIDGE",
+ "agreement": "AGR-NORTHBRIDGE-ISDA",
+ "csa": "CSA-NORTHBRIDGE",
+ "creditLimit": "LIM-NORTHBRIDGE",
+ "exposureProfile": "EXP-NORTHBRIDGE-TKY",
+ "cvaResult": "CVA-NORTHBRIDGE-TKY",
+ "saccr": "SACCR-NORTHBRIDGE-TKY",
+ "simm": "SIMM-NORTHBRIDGE",
+ "collateralBalance": "COLL-NORTHBRIDGE-TKY",
+ "legalEntity": "LE-TKY",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 6456
+  }
+ }
+}

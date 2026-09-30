@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-LUMEN-FRA",
+ "held": 0,
+ "posted": 1114672,
+ "net": -1114672,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Helix Pharmaceuticals Inc. 2036",
+   "direction": "Posted",
+   "marketValue": 371557,
+   "haircut": 0.005,
+   "value": 369699
+  },
+  {
+   "asset": "Federal Republic of Germany 2031",
+   "direction": "Posted",
+   "marketValue": 371557,
+   "haircut": 0.01,
+   "value": 367841
+  },
+  {
+   "asset": "Lumen Semiconductor AG 2036",
+   "direction": "Posted",
+   "marketValue": 371557,
+   "haircut": 0.02,
+   "value": 364126
+  }
+ ],
+ "csa": "CSA-LUMEN",
+ "nettingSet": "NS-LUMEN-FRA",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

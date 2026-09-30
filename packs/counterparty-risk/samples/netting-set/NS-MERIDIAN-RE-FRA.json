@@ -1,0 +1,125 @@
+{
+ "nettingSetId": "NS-MERIDIAN-RE-FRA",
+ "tradeCount": 5,
+ "netMtm": -2424950,
+ "collateral": -1364972,
+ "eePeak": 56885,
+ "pfePeak": 176421,
+ "limit": 5000000.0,
+ "utilisation": 0.0353,
+ "cva": -2,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 56885,
+   "pfe": 176421
+  },
+  {
+   "tenor": "1M",
+   "ee": 50922,
+   "pfe": 134079
+  },
+  {
+   "tenor": "3M",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "6M",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "1Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "2Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "3Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "5Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "7Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "10Y",
+   "ee": 0,
+   "pfe": 0
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10711",
+   "product": "Securities borrowing",
+   "notional": 126000000.0,
+   "maturity": "2026-10-12",
+   "mtm": -1901921
+  },
+  {
+   "tradeId": "T-10713",
+   "product": "Securities borrowing",
+   "notional": 156000000.0,
+   "maturity": "2026-11-27",
+   "mtm": -1189358
+  },
+  {
+   "tradeId": "T-10716",
+   "product": "Margin loan",
+   "notional": 96000000.0,
+   "maturity": "2026-11-16",
+   "mtm": 709577
+  },
+  {
+   "tradeId": "T-10708",
+   "product": "Securities lending",
+   "notional": 184000000.0,
+   "maturity": "2026-10-12",
+   "mtm": -362786
+  },
+  {
+   "tradeId": "T-10688",
+   "product": "Reverse repo",
+   "notional": 24000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 319538
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Securities financing",
+   "mtm": -2424950
+  }
+ ],
+ "counterparty": "CP-MERIDIAN-RE",
+ "agreement": "AGR-MERIDIAN-RE-ISDA",
+ "csa": "CSA-MERIDIAN-RE",
+ "creditLimit": "LIM-MERIDIAN-RE",
+ "exposureProfile": "EXP-MERIDIAN-RE-FRA",
+ "cvaResult": "CVA-MERIDIAN-RE-FRA",
+ "saccr": "SACCR-MERIDIAN-RE-FRA",
+ "simm": "SIMM-MERIDIAN-RE",
+ "collateralBalance": "COLL-MERIDIAN-RE-FRA",
+ "legalEntity": "LE-FRA",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 4849
+  }
+ }
+}

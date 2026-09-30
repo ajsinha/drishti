@@ -73,10 +73,46 @@ def business_days(end: date, n: int, cal: Calendar) -> list[date]:
     return sorted(out)
 
 
-def main():
+def write_tables(out: pathlib.Path, kinds: dict[str, dict[str, dict]], end: date, days: int, cal: Calendar) -> int:
+    """Writes one Delta table per kind under `out`, with `days` business days of history ending at `end` and a
+    restatement of the newest date's first document. Returns the number of rows written."""
     import pyarrow as pa
     from deltalake import write_deltalake
 
+    dates = business_days(end, days, cal)
+    total = 0
+    for kind, docs in sorted(kinds.items()):
+        if not docs:
+            continue
+        ids, bodies, days_col = [], [], []
+        for i, d in enumerate(dates):
+            steps = len(dates) - 1 - i
+            for id_, doc in docs.items():
+                rnd = random.Random(int(hashlib.sha256(f"{kind}/{id_}".encode()).hexdigest()[:12], 16))
+                body = walk(doc, id_, steps, rnd) if steps else copy.deepcopy(doc)
+                body.pop("_meta", None)
+                body["businessDate"] = d.isoformat()
+                ids.append(id_)
+                bodies.append(json.dumps(body, ensure_ascii=False))
+                days_col.append(d)
+        path = out / kind
+        write_deltalake(str(path), pa.table({"id": pa.array(ids, pa.string()), "doc": pa.array(bodies, pa.string()),
+                                             "business_date": pa.array(days_col, pa.date32())}), mode="overwrite", partition_by=["business_date"])
+        first = next(iter(docs))
+        fixed = copy.deepcopy(docs[first])
+        fixed.pop("_meta", None)
+        fixed["businessDate"] = end.isoformat()
+        fixed["restated"] = {"reason": "End-of-day correction", "version": 2}
+        keep = [(i, b) for i, b, d in zip(ids, bodies, days_col) if d == end and i != first] + [(first, json.dumps(fixed, ensure_ascii=False))]
+        write_deltalake(str(path), pa.table({"id": pa.array([k for k, _ in keep], pa.string()), "doc": pa.array([b for _, b in keep], pa.string()),
+                                             "business_date": pa.array([end] * len(keep), pa.date32())}),
+                        mode="overwrite", partition_by=["business_date"], predicate=f"business_date = '{end.isoformat()}'")
+        total += len(ids)
+        print(f"{path}: {len(docs)} entities x {len(dates)} business days")
+    return total
+
+
+def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--samples", required=True)
     ap.add_argument("--root", default="data/delta")
@@ -89,40 +125,10 @@ def main():
     end = date.fromisoformat(a.as_of) if a.as_of else date.today()
     while not cal.is_business_day(end):
         end -= timedelta(days=1)
-    dates = business_days(end, a.days, cal)
     samples = pathlib.Path(a.samples)
-    out = pathlib.Path(a.root) / a.domain
-    total = 0
-    for kind_dir in sorted(p for p in samples.iterdir() if p.is_dir()):
-        docs = {f.stem: json.loads(f.read_text()) for f in sorted(kind_dir.glob("*.json"))}
-        if not docs:
-            continue
-        ids, bodies, days = [], [], []
-        for i, d in enumerate(dates):
-            steps = len(dates) - 1 - i
-            for id_, doc in docs.items():
-                rnd = random.Random(int(hashlib.sha256(f"{kind_dir.name}/{id_}".encode()).hexdigest()[:12], 16))
-                body = walk(doc, id_, steps, rnd) if steps else copy.deepcopy(doc)
-                body["businessDate"] = d.isoformat()
-                ids.append(id_)
-                bodies.append(json.dumps(body, ensure_ascii=False))
-                days.append(d)
-        table = pa.table({"id": pa.array(ids, pa.string()), "doc": pa.array(bodies, pa.string()),
-                          "business_date": pa.array(days, pa.date32())})
-        path = out / kind_dir.name
-        write_deltalake(str(path), table, mode="overwrite", partition_by=["business_date"])
-        # a restatement of the newest date's first document: time travel shows the value before the correction
-        first = next(iter(docs))
-        fixed = copy.deepcopy(docs[first])
-        fixed["businessDate"] = end.isoformat()
-        fixed["restated"] = {"reason": "End-of-day correction", "version": 2}
-        keep = [(i, b) for i, b, d in zip(ids, bodies, days) if d == end and i != first] + [(first, json.dumps(fixed, ensure_ascii=False))]
-        write_deltalake(str(path), pa.table({"id": pa.array([k for k, _ in keep], pa.string()), "doc": pa.array([b for _, b in keep], pa.string()),
-                                             "business_date": pa.array([end] * len(keep), pa.date32())}),
-                        mode="overwrite", partition_by=["business_date"], predicate=f"business_date = '{end.isoformat()}'")
-        total += len(ids)
-        print(f"{path}: {len(docs)} entities x {len(dates)} business days")
-    print(f"{total} rows, {dates[0]} .. {dates[-1]} ({cal.name})")
+    kinds = {d.name: {f.stem: json.loads(f.read_text()) for f in sorted(d.glob("*.json"))} for d in sorted(samples.iterdir()) if d.is_dir()}
+    total = write_tables(pathlib.Path(a.root) / a.domain, kinds, end, a.days, cal)
+    print(f"{total} rows ({a.calendar})")
 
 
 if __name__ == "__main__":

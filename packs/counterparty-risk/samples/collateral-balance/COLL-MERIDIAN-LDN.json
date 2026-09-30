@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-MERIDIAN-LDN",
+ "held": 2930197,
+ "posted": 0,
+ "net": 2930197,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Verdant Agri Holdings 2036",
+   "direction": "Held",
+   "marketValue": 976732,
+   "haircut": 0.01,
+   "value": 966965
+  },
+  {
+   "asset": "Helix Pharmaceuticals Inc. 2031",
+   "direction": "Held",
+   "marketValue": 976732,
+   "haircut": 0.02,
+   "value": 957197
+  },
+  {
+   "asset": "Lumen Semiconductor AG 2031",
+   "direction": "Held",
+   "marketValue": 976732,
+   "haircut": 0.01,
+   "value": 966965
+  }
+ ],
+ "csa": "CSA-MERIDIAN",
+ "nettingSet": "NS-MERIDIAN-LDN",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

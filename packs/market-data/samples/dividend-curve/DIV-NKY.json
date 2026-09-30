@@ -1,0 +1,37 @@
+{
+ "curveId": "DIV-NKY",
+ "underlier": "EQX-NKY",
+ "dividendYield": 0.018,
+ "points": [
+  {
+   "year": "2026",
+   "amount": 808.74
+  },
+  {
+   "year": "2027",
+   "amount": 841.09
+  },
+  {
+   "year": "2028",
+   "amount": 873.44
+  },
+  {
+   "year": "2029",
+   "amount": 905.79
+  },
+  {
+   "year": "2030",
+   "amount": 938.14
+  },
+  {
+   "year": "2031",
+   "amount": 970.49
+  }
+ ],
+ "underlyingIndex": "EQX-NKY",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

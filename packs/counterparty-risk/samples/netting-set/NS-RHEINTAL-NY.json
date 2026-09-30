@@ -1,0 +1,218 @@
+{
+ "nettingSetId": "NS-RHEINTAL-NY",
+ "tradeCount": 16,
+ "netMtm": 2038918,
+ "collateral": 1491652,
+ "eePeak": 20034547,
+ "pfePeak": 45503215,
+ "limit": 76000000.0,
+ "utilisation": 0.5987,
+ "cva": -45584,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 3035332,
+   "pfe": 8920443
+  },
+  {
+   "tenor": "1M",
+   "ee": 5418259,
+   "pfe": 14034256
+  },
+  {
+   "tenor": "3M",
+   "ee": 8970459,
+   "pfe": 21849097
+  },
+  {
+   "tenor": "6M",
+   "ee": 12318797,
+   "pfe": 29193653
+  },
+  {
+   "tenor": "1Y",
+   "ee": 16671111,
+   "pfe": 38707057
+  },
+  {
+   "tenor": "2Y",
+   "ee": 16498799,
+   "pfe": 37726320
+  },
+  {
+   "tenor": "3Y",
+   "ee": 20034547,
+   "pfe": 45503215
+  },
+  {
+   "tenor": "5Y",
+   "ee": 10823957,
+   "pfe": 24409017
+  },
+  {
+   "tenor": "7Y",
+   "ee": 11644334,
+   "pfe": 26163185
+  },
+  {
+   "tenor": "10Y",
+   "ee": 44922,
+   "pfe": 98829
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10066",
+   "product": "Forward rate agreement",
+   "notional": 480000000.0,
+   "maturity": "2027-09-13",
+   "mtm": 4718731
+  },
+  {
+   "tradeId": "T-10488",
+   "product": "Commodity spread option",
+   "notional": 191000000.0,
+   "maturity": "2028-04-05",
+   "mtm": -3234955
+  },
+  {
+   "tradeId": "T-10031",
+   "product": "Zero-coupon swap",
+   "notional": 31000000.0,
+   "maturity": "2032-04-19",
+   "mtm": 2484165
+  },
+  {
+   "tradeId": "T-10675",
+   "product": "Call account",
+   "notional": 249000000.0,
+   "maturity": "2027-01-25",
+   "mtm": -2192641
+  },
+  {
+   "tradeId": "T-10101",
+   "product": "European swaption",
+   "notional": 126000000.0,
+   "maturity": "2027-07-08",
+   "mtm": -2063151
+  },
+  {
+   "tradeId": "T-10263",
+   "product": "CDS index option",
+   "notional": 147000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 1786443
+  },
+  {
+   "tradeId": "T-10502",
+   "product": "Commodity index swap",
+   "notional": 165000000.0,
+   "maturity": "2033-12-22",
+   "mtm": 1412345
+  },
+  {
+   "tradeId": "T-10656",
+   "product": "Commercial paper",
+   "notional": 99000000.0,
+   "maturity": "2027-06-25",
+   "mtm": 1053527
+  },
+  {
+   "tradeId": "T-10139",
+   "product": "Range accrual swap",
+   "notional": 130000000.0,
+   "maturity": "2034-10-23",
+   "mtm": -910777
+  },
+  {
+   "tradeId": "T-10507",
+   "product": "Power swap",
+   "notional": 209000000.0,
+   "maturity": "2030-04-22",
+   "mtm": -833645
+  },
+  {
+   "tradeId": "T-10146",
+   "product": "Snowball swap",
+   "notional": 166000000.0,
+   "maturity": "2035-10-02",
+   "mtm": -813046
+  },
+  {
+   "tradeId": "T-10148",
+   "product": "Snowball swap",
+   "notional": 20000000.0,
+   "maturity": "2029-05-02",
+   "mtm": 243660
+  },
+  {
+   "tradeId": "T-10639",
+   "product": "Asset-backed security",
+   "notional": 182000000.0,
+   "maturity": "2030-01-04",
+   "mtm": 191276
+  },
+  {
+   "tradeId": "T-10300",
+   "product": "Revolving credit facility",
+   "notional": 179000000.0,
+   "maturity": "2031-04-07",
+   "mtm": 139581
+  },
+  {
+   "tradeId": "T-10478",
+   "product": "Average price option (APO)",
+   "notional": 15000000.0,
+   "maturity": "2033-03-07",
+   "mtm": 91560
+  },
+  {
+   "tradeId": "T-10135",
+   "product": "Callable swap",
+   "notional": 8000000.0,
+   "maturity": "2033-04-19",
+   "mtm": -34155
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Rates",
+   "mtm": 3625427
+  },
+  {
+   "asset": "Commodity",
+   "mtm": -2564695
+  },
+  {
+   "asset": "Credit",
+   "mtm": 1926024
+  },
+  {
+   "asset": "Money market",
+   "mtm": -1139114
+  },
+  {
+   "asset": "Fixed income",
+   "mtm": 191276
+  }
+ ],
+ "counterparty": "CP-RHEINTAL",
+ "agreement": "AGR-RHEINTAL-ISDA",
+ "csa": "CSA-RHEINTAL",
+ "creditLimit": "LIM-RHEINTAL",
+ "exposureProfile": "EXP-RHEINTAL-NY",
+ "cvaResult": "CVA-RHEINTAL-NY",
+ "saccr": "SACCR-RHEINTAL-NY",
+ "simm": "SIMM-RHEINTAL",
+ "collateralBalance": "COLL-RHEINTAL-NY",
+ "legalEntity": "LE-NY",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 4077
+  }
+ }
+}

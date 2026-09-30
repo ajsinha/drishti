@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-NORTHBRIDGE-NY",
+ "held": 27370585,
+ "posted": 0,
+ "net": 27370585,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Japan Ministry of Finance 2036",
+   "direction": "Held",
+   "marketValue": 9123528,
+   "haircut": 0.005,
+   "value": 9077910
+  },
+  {
+   "asset": "Helix Pharmaceuticals Inc. 2036",
+   "direction": "Held",
+   "marketValue": 9123528,
+   "haircut": 0.02,
+   "value": 8941057
+  },
+  {
+   "asset": "Novatek Devices Inc. 2036",
+   "direction": "Held",
+   "marketValue": 9123528,
+   "haircut": 0.005,
+   "value": 9077910
+  }
+ ],
+ "csa": "CSA-NORTHBRIDGE",
+ "nettingSet": "NS-NORTHBRIDGE-NY",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

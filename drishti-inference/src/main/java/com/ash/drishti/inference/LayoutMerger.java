@@ -23,6 +23,7 @@ import com.ash.drishti.rachana.model.Column;
 import com.ash.drishti.rachana.model.Match;
 import com.ash.drishti.rachana.model.Panel;
 import com.ash.drishti.rachana.model.PanelKind;
+import com.ash.drishti.rachana.model.StripItem;
 import com.ash.drishti.rachana.model.Sutra;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -57,10 +58,12 @@ public final class LayoutMerger {
         Map<String, String> why = new LinkedHashMap<>();
         List<Panel> panels = new ArrayList<>();
         for (Panel p : s.panels()) {
-            panels.add(fill(p, doc, why));
+            panels.add(labelled(fill(p, doc, why)));
         }
+        List<StripItem> strip = s.strip().stream().map(i -> i.label() != null ? i
+                : new StripItem(labelOf(i.bind()), i.bind(), i.fmt(), i.tone(), i.emphasis(), i.location())).toList();
         boolean inferred = !why.isEmpty() || panels.stream().anyMatch(p -> p.kind() == PanelKind.LINKS);
-        Sutra effective = new Sutra(s.name(), s.version(), s.domain(), s.match(), s.title(), s.strip(), panels, s.keys(), s.location());
+        Sutra effective = new Sutra(s.name(), s.version(), s.domain(), s.match(), s.title(), strip, panels, s.keys(), s.location());
         return new EffectiveLayout(effective, "Sutra " + s.name() + " v" + s.version() + (inferred ? " + inference" : ""), inferred, why);
     }
 
@@ -94,6 +97,37 @@ public final class LayoutMerger {
         List<Column> cols = engine.columns().forObject(first, "@.");
         why.put(tabs.id(), "ColumnInference: " + cols.size() + " fields per element");
         return new Panel(b.id(), b.kind(), b.title(), b.key(), b.code(), b.area(), b.infer(), cols, b.body(), b.options(), b.location());
+    }
+
+    private static final java.util.regex.Pattern FIELD = java.util.regex.Pattern.compile("[$@](?:\\.[A-Za-z_][A-Za-z0-9_]*|\\[[^\\]]*\\])*");
+
+    /**
+     * A label nobody wrote: the name of the field the expression reads (its last path segment), in words, with the
+     * packs' vocabulary: {@code $.regulatory.uti} reads as {@code UTI}, {@code @.payDate} as {@code Pay date}.
+     */
+    static String labelOf(String bind) {
+        var m = FIELD.matcher(bind == null ? "" : bind);
+        if (m.find()) {
+            String path = m.group();
+            String[] parts = path.replaceAll("\\[[^\\]]*\\]", "").split("\\.");
+            String last = parts[parts.length - 1];
+            if (!last.isEmpty() && !last.equals("$") && !last.equals("@")) {
+                return Semantics.humanize(last);
+            }
+        }
+        return bind == null ? "" : bind;
+    }
+
+    private static Panel labelled(Panel p) {
+        boolean missing = p.columns().stream().anyMatch(c -> c.label() == null)
+                || p.body() != null && p.body().columns().stream().anyMatch(c -> c.label() == null);
+        if (!missing) {
+            return p;
+        }
+        Panel body = p.body() == null ? null : labelled(p.body());
+        List<Column> cols = p.columns().stream().map(c -> c.label() != null ? c
+                : new Column(labelOf(c.bind()), c.bind(), c.fmt(), c.tone(), c.total(), c.link())).toList();
+        return new Panel(p.id(), p.kind(), p.title(), p.key(), p.code(), p.area(), p.infer(), cols, body, p.options(), p.location());
     }
 
     private DataNode rows(String expr, DataNode doc) {

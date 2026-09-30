@@ -1,0 +1,58 @@
+{
+ "resultId": "CVA-MERIDIAN-RE-FRA",
+ "cva": -2,
+ "dva": 1,
+ "fva": -2910,
+ "kva": -706,
+ "cs01": 0,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -2
+  },
+  {
+   "name": "DVA",
+   "amount": 1
+  },
+  {
+   "name": "FVA",
+   "amount": -2910
+  },
+  {
+   "name": "KVA",
+   "amount": -706
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": 0
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 0
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 0
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": 0
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 0
+  }
+ ],
+ "nettingSet": "NS-MERIDIAN-RE-FRA",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

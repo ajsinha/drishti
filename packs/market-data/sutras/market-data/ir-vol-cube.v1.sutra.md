@@ -34,6 +34,19 @@ strip:
   - { label: "1Y×10Y", bind: $.v1y10y, fmt: price2, emphasis: true }
   - { label: "5Y×5Y", bind: $.v5y5y, fmt: price2 }
 panels:
+  - id: surface
+    kind: surface
+    title: Normal vols by expiry × tenor (bp)
+    code: SURF
+    key: F4
+    rows: $.grid
+    y: expiry
+    columns:
+      - { label: "1Y", bind: "@.t1Y", fmt: price2 }
+      - { label: "2Y", bind: "@.t2Y", fmt: price2 }
+      - { label: "5Y", bind: "@.t5Y", fmt: price2 }
+      - { label: "10Y", bind: "@.t10Y", fmt: price2 }
+      - { label: "30Y", bind: "@.t30Y", fmt: price2 }
   - id: grid
     kind: table
     title: ATM normal vols (bp)
@@ -72,5 +85,6 @@ keys: { F8: impact, F9: raw }
 
 | Panel | Kind | Rows |
 |---|---|---|
+| Normal vols by expiry × tenor (bp) | surface | `$.grid` |
 | ATM normal vols (bp) | table | `$.grid` |
 | 10Y tenor by expiry | line | `$.grid` |

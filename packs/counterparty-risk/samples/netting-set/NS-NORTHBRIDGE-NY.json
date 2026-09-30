@@ -1,0 +1,193 @@
+{
+ "nettingSetId": "NS-NORTHBRIDGE-NY",
+ "tradeCount": 13,
+ "netMtm": 38305686,
+ "collateral": 27370585,
+ "eePeak": 20482074,
+ "pfePeak": 46165951,
+ "limit": 59000000.0,
+ "utilisation": 0.7825,
+ "cva": -190342,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 12483117,
+   "pfe": 28858219
+  },
+  {
+   "tenor": "1M",
+   "ee": 13371949,
+   "pfe": 30571101
+  },
+  {
+   "tenor": "3M",
+   "ee": 14859327,
+   "pfe": 33837206
+  },
+  {
+   "tenor": "6M",
+   "ee": 16136837,
+   "pfe": 36647729
+  },
+  {
+   "tenor": "1Y",
+   "ee": 17541365,
+   "pfe": 39719141
+  },
+  {
+   "tenor": "2Y",
+   "ee": 19395893,
+   "pfe": 43799102
+  },
+  {
+   "tenor": "3Y",
+   "ee": 20482074,
+   "pfe": 46165951
+  },
+  {
+   "tenor": "5Y",
+   "ee": 4621509,
+   "pfe": 10250533
+  },
+  {
+   "tenor": "7Y",
+   "ee": 3661512,
+   "pfe": 8138539
+  },
+  {
+   "tenor": "10Y",
+   "ee": 897608,
+   "pfe": 1974737
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10034",
+   "product": "Zero-coupon swap",
+   "notional": 244000000.0,
+   "maturity": "2035-09-19",
+   "mtm": 48834493
+  },
+  {
+   "tradeId": "T-10033",
+   "product": "Zero-coupon swap",
+   "notional": 126000000.0,
+   "maturity": "2030-08-27",
+   "mtm": -6203686
+  },
+  {
+   "tradeId": "T-10267",
+   "product": "First-to-default basket",
+   "notional": 210000000.0,
+   "maturity": "2030-01-07",
+   "mtm": -2867075
+  },
+  {
+   "tradeId": "T-10506",
+   "product": "Power swap",
+   "notional": 241000000.0,
+   "maturity": "2030-11-12",
+   "mtm": -1890065
+  },
+  {
+   "tradeId": "T-10083",
+   "product": "Interest rate cap",
+   "notional": 158000000.0,
+   "maturity": "2027-09-09",
+   "mtm": 1821498
+  },
+  {
+   "tradeId": "T-10111",
+   "product": "American swaption",
+   "notional": 54000000.0,
+   "maturity": "2027-07-09",
+   "mtm": -1663906
+  },
+  {
+   "tradeId": "T-10120",
+   "product": "CMS cap / floor",
+   "notional": 70000000.0,
+   "maturity": "2026-12-14",
+   "mtm": -1401622
+  },
+  {
+   "tradeId": "T-10456",
+   "product": "Commodity forward",
+   "notional": 77000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 1033434
+  },
+  {
+   "tradeId": "T-10270",
+   "product": "First-to-default basket",
+   "notional": 41000000.0,
+   "maturity": "2030-03-18",
+   "mtm": 730145
+  },
+  {
+   "tradeId": "T-10257",
+   "product": "Index tranche",
+   "notional": 37000000.0,
+   "maturity": "2031-09-23",
+   "mtm": -257129
+  },
+  {
+   "tradeId": "T-10466",
+   "product": "Commodity basis swap",
+   "notional": 14000000.0,
+   "maturity": "2036-01-23",
+   "mtm": -181371
+  },
+  {
+   "tradeId": "T-10307",
+   "product": "Unfunded risk participation",
+   "notional": 26000000.0,
+   "maturity": "2028-10-13",
+   "mtm": 177423
+  },
+  {
+   "tradeId": "T-10635",
+   "product": "CMO tranche",
+   "notional": 203000000.0,
+   "maturity": "2035-05-14",
+   "mtm": 173547
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Rates",
+   "mtm": 41386777
+  },
+  {
+   "asset": "Credit",
+   "mtm": -2216636
+  },
+  {
+   "asset": "Commodity",
+   "mtm": -1038002
+  },
+  {
+   "asset": "Fixed income",
+   "mtm": 173547
+  }
+ ],
+ "counterparty": "CP-NORTHBRIDGE",
+ "agreement": "AGR-NORTHBRIDGE-ISDA",
+ "csa": "CSA-NORTHBRIDGE",
+ "creditLimit": "LIM-NORTHBRIDGE",
+ "exposureProfile": "EXP-NORTHBRIDGE-NY",
+ "cvaResult": "CVA-NORTHBRIDGE-NY",
+ "saccr": "SACCR-NORTHBRIDGE-NY",
+ "simm": "SIMM-NORTHBRIDGE",
+ "collateralBalance": "COLL-NORTHBRIDGE-NY",
+ "legalEntity": "LE-NY",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 76611
+  }
+ }
+}

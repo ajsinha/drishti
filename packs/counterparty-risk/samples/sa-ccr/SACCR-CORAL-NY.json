@@ -1,0 +1,108 @@
+{
+ "calcId": "SACCR-CORAL-NY",
+ "replacementCost": 0,
+ "addOn": 65528911,
+ "multiplier": 0.8704,
+ "ead": 79850910,
+ "rwa": 15970182,
+ "addOns": [
+  {
+   "assetClass": "Interest rate",
+   "addOn": 4898911
+  },
+  {
+   "assetClass": "Credit",
+   "addOn": 26250000
+  },
+  {
+   "assetClass": "Commodity",
+   "addOn": 34380000
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "CAD",
+   "effectiveNotional": 31884932,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "GBP",
+   "effectiveNotional": -178800000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "EUR",
+   "effectiveNotional": 63000000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "CHF",
+   "effectiveNotional": -185424658,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "AUD",
+   "effectiveNotional": -111530137,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "JPY",
+   "effectiveNotional": 9000000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "GBP",
+   "effectiveNotional": -21000000,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "JPY",
+   "effectiveNotional": -202000000,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "USD",
+   "effectiveNotional": -8000000,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "CAD",
+   "effectiveNotional": 259000000,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "EUR",
+   "effectiveNotional": 35000000,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Commodity",
+   "hedgingSet": "USD",
+   "effectiveNotional": 191000000,
+   "sf": 0.18
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "USD",
+   "effectiveNotional": -400142466,
+   "sf": 0.005
+  }
+ ],
+ "nettingSet": "NS-CORAL-NY",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

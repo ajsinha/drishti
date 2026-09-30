@@ -1,0 +1,34 @@
+{
+ "calcId": "SACCR-CORAL-FRA",
+ "replacementCost": 1083344,
+ "addOn": 678158,
+ "multiplier": 1.0,
+ "ead": 2466102,
+ "rwa": 493220,
+ "addOns": [
+  {
+   "assetClass": "Interest rate",
+   "addOn": 678158
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "EUR",
+   "effectiveNotional": -81004110,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "GBP",
+   "effectiveNotional": -54627397,
+   "sf": 0.005
+  }
+ ],
+ "nettingSet": "NS-CORAL-FRA",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

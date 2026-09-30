@@ -1,0 +1,420 @@
+{
+ "tradeId": "T-10629",
+ "productType": "MBS_PASSTHROUGH",
+ "productName": "Agency MBS pass-through",
+ "assetClass": "Fixed income",
+ "family": "securitized",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2026-03-13",
+ "effectiveDate": "2026-03-16",
+ "maturityDate": "2037-04-15",
+ "currency": "GBP",
+ "notional": 63000000.0,
+ "mtm": -464682,
+ "mtmCurrency": "USD",
+ "pnl1d": -23231,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-1",
+ "trader": "TRDR-BADEYEMI",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-GRANITE",
+ "benchmarkCurve": "CRV-GBP-GOVT",
+ "forwardCurve": "CRV-GBP-PROJ",
+ "swaptionVolCube": "IRV-GBP",
+ "terms": {
+  "agency": "GNMA",
+  "couponRate": 0.03094,
+  "wac": 0.036829,
+  "cpr": 0.035654,
+  "factor": 0.9842
+ },
+ "risk": {
+  "dv01": -56834,
+  "vega": -605022
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -1579,
+   "vega": -16806
+  },
+  {
+   "bucket": "6M",
+   "dv01": -3157,
+   "vega": -33612
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -4736,
+   "vega": -50418
+  },
+  {
+   "bucket": "2Y",
+   "dv01": -6315,
+   "vega": -67225
+  },
+  {
+   "bucket": "3Y",
+   "dv01": -7894,
+   "vega": -84031
+  },
+  {
+   "bucket": "5Y",
+   "dv01": -9472,
+   "vega": -100837
+  },
+  {
+   "bucket": "7Y",
+   "dv01": -11051,
+   "vega": -117643
+  },
+  {
+   "bucket": "10Y",
+   "dv01": -12630,
+   "vega": -134449
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-09-16",
+   "opening": 63000000,
+   "principal": 2739130,
+   "closing": 60260870,
+   "interest": 1260000
+  },
+  {
+   "date": "2027-03-16",
+   "opening": 60260870,
+   "principal": 2739130,
+   "closing": 57521739,
+   "interest": 1205217
+  },
+  {
+   "date": "2027-09-16",
+   "opening": 57521739,
+   "principal": 2739130,
+   "closing": 54782609,
+   "interest": 1150435
+  },
+  {
+   "date": "2028-03-16",
+   "opening": 54782609,
+   "principal": 2739130,
+   "closing": 52043478,
+   "interest": 1095652
+  },
+  {
+   "date": "2028-09-16",
+   "opening": 52043478,
+   "principal": 2739130,
+   "closing": 49304348,
+   "interest": 1040870
+  },
+  {
+   "date": "2029-03-16",
+   "opening": 49304348,
+   "principal": 2739130,
+   "closing": 46565217,
+   "interest": 986087
+  },
+  {
+   "date": "2029-09-16",
+   "opening": 46565217,
+   "principal": 2739130,
+   "closing": 43826087,
+   "interest": 931304
+  },
+  {
+   "date": "2030-03-16",
+   "opening": 43826087,
+   "principal": 2739130,
+   "closing": 41086957,
+   "interest": 876522
+  },
+  {
+   "date": "2030-09-16",
+   "opening": 41086957,
+   "principal": 2739130,
+   "closing": 38347826,
+   "interest": 821739
+  },
+  {
+   "date": "2031-03-16",
+   "opening": 38347826,
+   "principal": 2739130,
+   "closing": 35608696,
+   "interest": 766957
+  },
+  {
+   "date": "2031-09-16",
+   "opening": 35608696,
+   "principal": 2739130,
+   "closing": 32869565,
+   "interest": 712174
+  },
+  {
+   "date": "2032-03-16",
+   "opening": 32869565,
+   "principal": 2739130,
+   "closing": 30130435,
+   "interest": 657391
+  },
+  {
+   "date": "2032-09-16",
+   "opening": 30130435,
+   "principal": 2739130,
+   "closing": 27391304,
+   "interest": 602609
+  },
+  {
+   "date": "2033-03-16",
+   "opening": 27391304,
+   "principal": 2739130,
+   "closing": 24652174,
+   "interest": 547826
+  },
+  {
+   "date": "2033-09-16",
+   "opening": 24652174,
+   "principal": 2739130,
+   "closing": 21913043,
+   "interest": 493043
+  },
+  {
+   "date": "2034-03-16",
+   "opening": 21913043,
+   "principal": 2739130,
+   "closing": 19173913,
+   "interest": 438261
+  },
+  {
+   "date": "2034-09-16",
+   "opening": 19173913,
+   "principal": 2739130,
+   "closing": 16434783,
+   "interest": 383478
+  },
+  {
+   "date": "2035-03-16",
+   "opening": 16434783,
+   "principal": 2739130,
+   "closing": 13695652,
+   "interest": 328696
+  },
+  {
+   "date": "2035-09-16",
+   "opening": 13695652,
+   "principal": 2739130,
+   "closing": 10956522,
+   "interest": 273913
+  },
+  {
+   "date": "2036-03-16",
+   "opening": 10956522,
+   "principal": 2739130,
+   "closing": 8217391,
+   "interest": 219130
+  },
+  {
+   "date": "2036-09-16",
+   "opening": 8217391,
+   "principal": 2739130,
+   "closing": 5478261,
+   "interest": 164348
+  },
+  {
+   "date": "2037-03-16",
+   "opening": 5478261,
+   "principal": 2739130,
+   "closing": 2739130,
+   "interest": 109565
+  },
+  {
+   "date": "2037-04-15",
+   "opening": 2739130,
+   "principal": 2739130,
+   "closing": 0,
+   "interest": 54783
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -23109
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -8572
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 13265
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 5129
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 23270
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -7331
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -29869
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 9465
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 22204
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 19667
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -8163
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -9970
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -44894
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 6252
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -5552
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 14499
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 7558
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -15203
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 8419
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 3478
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-03-13",
+  "executionTimestamp": "2026-03-13T15:10:42.851Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "B. Adeyemi",
+  "salesperson": null,
+  "orderId": "ORD-CDA2EC6A65"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-03-13T12:23:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-03-13T12:23:00Z",
+  "lastModifiedAt": "2026-03-13T12:23:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT241260844",
+  "matched": "2026-03-13 12:19",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH7915981935",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096CDA2EC6A651584F451C4",
+  "upi": "QZ8H0Y0HV0ZU",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Barclays Bank plc",
+  "ourAgentBic": "BARCGB22XXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-GBP-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -464682,
+  "cleanPv": -464682.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-GBP-GOVT",
+   "CRV-GBP-PROJ",
+   "IRV-GBP"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 1559
+  }
+ }
+}

@@ -1,0 +1,35 @@
+{
+ "calcId": "SIMM-RHEINTAL",
+ "total": 4436141,
+ "posted": 4303057,
+ "received": 4524864,
+ "version": "ISDA SIMM 2.7",
+ "riskClasses": [
+  {
+   "riskClass": "Interest rate",
+   "im": 1996263
+  },
+  {
+   "riskClass": "Credit qualifying",
+   "im": 532337
+  },
+  {
+   "riskClass": "Equity",
+   "im": 798505
+  },
+  {
+   "riskClass": "Commodity",
+   "im": 354891
+  },
+  {
+   "riskClass": "FX",
+   "im": 754144
+  }
+ ],
+ "nettingSet": "NS-RHEINTAL-FRA",
+ "counterparty": "CP-RHEINTAL",
+ "_meta": {
+  "source": "margin-engine",
+  "generation": 1
+ }
+}

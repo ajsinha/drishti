@@ -1,0 +1,17 @@
+{
+ "entityId": "LE-FRA",
+ "name": "Drishti Bank Europe AG",
+ "lei": "549300Z9DXU4T18OK744",
+ "jurisdiction": "DE",
+ "regulator": "ECB / BaFin",
+ "desks": [
+  {
+   "id": "DESK-SFT",
+   "name": "Repo and securities lending"
+  }
+ ],
+ "_meta": {
+  "source": "entity-master",
+  "generation": 1
+ }
+}

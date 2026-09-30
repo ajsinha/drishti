@@ -1,0 +1,59 @@
+{
+ "resultId": "CVA-CASCADIA-NY",
+ "cva": -488978,
+ "dva": 15101,
+ "fva": -16621,
+ "kva": -180670,
+ "cs01": -8802,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -488978
+  },
+  {
+   "name": "DVA",
+   "amount": 15101
+  },
+  {
+   "name": "FVA",
+   "amount": -16621
+  },
+  {
+   "name": "KVA",
+   "amount": -180670
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -8802
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 1956
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 978
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -14669
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 8313
+  }
+ ],
+ "nettingSet": "NS-CASCADIA-NY",
+ "creditCurve": "CDS-CASCADIA",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

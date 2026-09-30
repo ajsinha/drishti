@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-HALCYON-TKY",
+ "held": 1634919,
+ "posted": 0,
+ "net": 1634919,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Federal Republic of Germany 2036",
+   "direction": "Held",
+   "marketValue": 544973,
+   "haircut": 0.005,
+   "value": 542248
+  },
+  {
+   "asset": "Kaizen Motors Corp. 2031",
+   "direction": "Held",
+   "marketValue": 544973,
+   "haircut": 0.01,
+   "value": 539523
+  },
+  {
+   "asset": "Halcyon Shipping plc 2031",
+   "direction": "Held",
+   "marketValue": 544973,
+   "haircut": 0.02,
+   "value": 534074
+  }
+ ],
+ "csa": "CSA-HALCYON",
+ "nettingSet": "NS-HALCYON-TKY",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

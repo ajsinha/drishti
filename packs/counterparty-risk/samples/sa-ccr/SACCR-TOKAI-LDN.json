@@ -1,0 +1,72 @@
+{
+ "calcId": "SACCR-TOKAI-LDN",
+ "replacementCost": 102855,
+ "addOn": 137142630,
+ "multiplier": 1.0,
+ "ead": 192143679,
+ "rwa": 96071840,
+ "addOns": [
+  {
+   "assetClass": "Foreign exchange",
+   "addOn": 19392000
+  },
+  {
+   "assetClass": "Equity",
+   "addOn": 116290630
+  },
+  {
+   "assetClass": "Interest rate",
+   "addOn": 1460000
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "USD",
+   "effectiveNotional": 216800000,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "JPY",
+   "effectiveNotional": -218000000,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "CHF",
+   "effectiveNotional": 50000000,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "JPY",
+   "effectiveNotional": -145408219,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "USD",
+   "effectiveNotional": -218000000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "EUR",
+   "effectiveNotional": -69000000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "GBP",
+   "effectiveNotional": 223000000,
+   "sf": 0.005
+  }
+ ],
+ "nettingSet": "NS-TOKAI-LDN",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

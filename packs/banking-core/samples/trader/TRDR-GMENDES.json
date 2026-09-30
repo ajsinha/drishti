@@ -1,0 +1,22 @@
+{
+ "traderId": "TRDR-GMENDES",
+ "name": "G. Mendes",
+ "deskName": "Inflation",
+ "tradeCount": 17,
+ "books": [
+  {
+   "id": "BOOK-INFL-1"
+  },
+  {
+   "id": "BOOK-INFL-2"
+  },
+  {
+   "id": "BOOK-INFL-3"
+  }
+ ],
+ "desk": "DESK-INFL",
+ "_meta": {
+  "source": "org-master",
+  "generation": 1
+ }
+}

@@ -93,6 +93,14 @@ public sealed interface PanelData {
     /** {@code markdown}. */
     record Text(String text) implements PanelData {}
 
+    /**
+     * {@code surface}: {@code z[row][column]} over {@code x} (the columns' labels) and {@code y} (one per row);
+     * null where the document has no number. {@code view} is {@code heatmap} (default) or {@code 3d}.
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    record Surface(List<String> x, List<String> y, List<List<Double>> z, Double min, Double max, String fmt, String unit, String view)
+            implements PanelData {}
+
     /** {@code gauge}. */
     record Gauge(double value, double max, String text, String label) implements PanelData {}
 }

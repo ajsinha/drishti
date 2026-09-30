@@ -1,0 +1,26 @@
+{
+ "resultId": "STR-COVID2020-EQD",
+ "scenarioName": "COVID-19 March 2020",
+ "pnl": -92769003,
+ "limit": -83500000.0,
+ "byBook": [
+  {
+   "book": "BOOK-EQD-1",
+   "pnl": -19672640
+  },
+  {
+   "book": "BOOK-EQD-2",
+   "pnl": -29164508
+  },
+  {
+   "book": "BOOK-EQD-3",
+   "pnl": -43931855
+  }
+ ],
+ "scenario": "SCN-COVID2020",
+ "desk": "DESK-EQD",
+ "_meta": {
+  "source": "stress-engine",
+  "generation": 1
+ }
+}

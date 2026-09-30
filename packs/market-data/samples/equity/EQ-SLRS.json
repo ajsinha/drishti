@@ -1,0 +1,151 @@
+{
+ "ticker": "EQ-SLRS",
+ "name": "Solaris Energy Corp.",
+ "price": 58.12,
+ "change1d": 0.02108,
+ "marketCap": 88458640000,
+ "sector": "Utilities",
+ "exchange": "NYSE",
+ "currency": "USD",
+ "beta": 0.52,
+ "history": [
+  {
+   "date": "2026-08-19",
+   "close": 55.05
+  },
+  {
+   "date": "2026-08-20",
+   "close": 53.66
+  },
+  {
+   "date": "2026-08-21",
+   "close": 54.47
+  },
+  {
+   "date": "2026-08-24",
+   "close": 55.88
+  },
+  {
+   "date": "2026-08-25",
+   "close": 57.02
+  },
+  {
+   "date": "2026-08-26",
+   "close": 57.01
+  },
+  {
+   "date": "2026-08-27",
+   "close": 56.72
+  },
+  {
+   "date": "2026-08-28",
+   "close": 57.42
+  },
+  {
+   "date": "2026-08-31",
+   "close": 58.31
+  },
+  {
+   "date": "2026-09-01",
+   "close": 58.44
+  },
+  {
+   "date": "2026-09-02",
+   "close": 58.49
+  },
+  {
+   "date": "2026-09-03",
+   "close": 58.07
+  },
+  {
+   "date": "2026-09-04",
+   "close": 57.46
+  },
+  {
+   "date": "2026-09-08",
+   "close": 56.58
+  },
+  {
+   "date": "2026-09-09",
+   "close": 56.76
+  },
+  {
+   "date": "2026-09-10",
+   "close": 56.74
+  },
+  {
+   "date": "2026-09-11",
+   "close": 55.31
+  },
+  {
+   "date": "2026-09-14",
+   "close": 55.58
+  },
+  {
+   "date": "2026-09-15",
+   "close": 55.83
+  },
+  {
+   "date": "2026-09-16",
+   "close": 56.66
+  },
+  {
+   "date": "2026-09-17",
+   "close": 56.38
+  },
+  {
+   "date": "2026-09-18",
+   "close": 56.24
+  },
+  {
+   "date": "2026-09-21",
+   "close": 56.89
+  },
+  {
+   "date": "2026-09-22",
+   "close": 55.29
+  },
+  {
+   "date": "2026-09-23",
+   "close": 56.46
+  },
+  {
+   "date": "2026-09-24",
+   "close": 57.95
+  },
+  {
+   "date": "2026-09-25",
+   "close": 58.43
+  },
+  {
+   "date": "2026-09-28",
+   "close": 58.24
+  },
+  {
+   "date": "2026-09-29",
+   "close": 56.92
+  },
+  {
+   "date": "2026-09-30",
+   "close": 58.12
+  }
+ ],
+ "identifiers": {
+  "isin": "US0SLRS00011",
+  "bloomberg": "SLRS NY Equity",
+  "ric": "SLRS.N",
+  "figi": "BBG0C5B29A1A"
+ },
+ "issuer": "ISS-SOLARIS",
+ "equityVolSurface": "EQV-SLRS",
+ "dividendCurve": "DIV-SLRS",
+ "equityIndex": "EQX-SPX",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "price": 0.3
+  }
+ }
+}

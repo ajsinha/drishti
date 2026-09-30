@@ -1,0 +1,58 @@
+{
+ "resultId": "CVA-HARBORPT-TKY",
+ "cva": -31171,
+ "dva": 10910,
+ "fva": -1991,
+ "kva": -149509,
+ "cs01": -561,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -31171
+  },
+  {
+   "name": "DVA",
+   "amount": 10910
+  },
+  {
+   "name": "FVA",
+   "amount": -1991
+  },
+  {
+   "name": "KVA",
+   "amount": -149509
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -561
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 125
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 62
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -935
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 530
+  }
+ ],
+ "nettingSet": "NS-HARBORPT-TKY",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

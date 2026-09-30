@@ -1,0 +1,45 @@
+{
+ "counterpartyId": "CP-HALCYON",
+ "name": "Halcyon Shipping plc",
+ "lei": "5493005O3QH9D0GNE750",
+ "rating": "B+",
+ "sector": "Shipping",
+ "country": "GR",
+ "type": "Corporate",
+ "netMtm": 71248112,
+ "pfePeak": 124873575,
+ "nettingSets": [
+  {
+   "id": "NS-HALCYON-LDN",
+   "agreement": "AGR-HALCYON-ISDA",
+   "trades": 14,
+   "netMtm": 5906475
+  },
+  {
+   "id": "NS-HALCYON-NY",
+   "agreement": "AGR-HALCYON-ISDA",
+   "trades": 24,
+   "netMtm": 63042540
+  },
+  {
+   "id": "NS-HALCYON-TKY",
+   "agreement": "AGR-HALCYON-ISDA",
+   "trades": 2,
+   "netMtm": 2299097
+  }
+ ],
+ "kyc": {
+  "status": "Approved",
+  "riskRating": "Enhanced",
+  "lastReview": "2026-02-11",
+  "emirClassification": "NFC-",
+  "pd1y": 0.018
+ },
+ "group": "GRP-HALCYON",
+ "creditLimit": "LIM-HALCYON",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ },
+ "creditCurve": "CDS-HALCYON"
+}

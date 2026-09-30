@@ -141,7 +141,7 @@ def test_backend_calls_carry_the_business_date_header():
     assert asof.headers() == {}
 
 
-KINDS = ["kv", "status", "provenance", "table", "ladder", "tabs", "line", "area", "hbar", "links", "markdown", "gauge"]
+KINDS = ["kv", "status", "provenance", "table", "ladder", "tabs", "line", "area", "hbar", "links", "markdown", "gauge", "surface"]
 BROKEN = [None, {}, {"fields": None, "rows": None, "tabs": None, "x": None, "series": None, "bars": None, "links": None},
           {"columns": ["A"], "numeric": [], "rows": [{"cells": None}], "x": ["1Y"], "series": [{"label": "s", "values": [None]}],
            "bars": [{"label": "a", "value": None, "text": "—"}], "tabs": [{"title": "t", "fields": None}], "value": None, "max": None}]
@@ -159,3 +159,12 @@ def test_every_panel_kind_renders_imperfect_data_without_failing(client):
     ok = tpl.render(p={"id": "t", "kind": "table", "title": "T", "area": "main", "empty": False,
                        "data": {"columns": ["A"], "numeric": [False], "rows": [{"cells": [{"text": "1"}]}]}})
     assert "No data available" not in ok and ">1<" in ok
+
+
+def test_a_surface_panel_renders_a_heatmap_with_a_3d_toggle(client):
+    tpl = client.app.state.templates.env.from_string('{% from "_macros/panels.html" import panel %}{{ panel(p) }}')
+    out = tpl.render(p={"id": "s", "kind": "surface", "title": "Smile", "area": "main", "empty": False,
+                        "data": {"x": ["25D P", "ATM", "25D C"], "y": ["1M", "1Y"], "z": [[7.1, 6.7, 6.8], [7.6, None, 7.3]], "min": 6.7, "max": 7.6}})
+    assert 'data-surface=' in out and 'data-surface-view="3d"' in out and "2 × 3 grid" in out
+    empty = tpl.render(p={"id": "s", "kind": "surface", "title": "Smile", "area": "main", "empty": True, "data": {"x": [], "y": [], "z": []}})
+    assert "No data available" in empty

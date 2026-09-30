@@ -1,0 +1,245 @@
+{
+ "tradeId": "T-10679",
+ "productType": "REPO",
+ "productName": "Repurchase agreement",
+ "assetClass": "Securities financing",
+ "family": "sft",
+ "status": "Live",
+ "direction": "Reverse repo",
+ "tradeDate": "2026-08-18",
+ "effectiveDate": "2026-08-20",
+ "maturityDate": "2026-10-07",
+ "currency": "JPY",
+ "notional": 180000000.0,
+ "mtm": -271929,
+ "mtmCurrency": "USD",
+ "pnl1d": -12371,
+ "counterparty": {
+  "id": "CP-KESTREL",
+  "name": "Kestrel Global Macro Fund"
+ },
+ "nettingSet": "NS-KESTREL-FRA",
+ "book": "BOOK-SFT-2",
+ "trader": "TRDR-NFAROUK",
+ "desk": "DESK-SFT",
+ "legalEntity": "LE-FRA",
+ "issuer": "ISS-JGB",
+ "repoCurve": "REPO-JPY",
+ "underlyingBond": "BND-JP0JGB182753",
+ "terms": {
+  "repoRate": 0.045405,
+  "haircut": 0.038351,
+  "term": "1M"
+ },
+ "risk": {
+  "dv01": -1481,
+  "exposure": 2048733
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -494,
+   "exposure": 682911
+  },
+  {
+   "bucket": "6M",
+   "dv01": -987,
+   "exposure": 1365822
+  }
+ ],
+ "schedule": [
+  {
+   "asset": "Solaris Energy Corp. 2031",
+   "isin": "USSOLA031372",
+   "quantity": 60109492,
+   "marketValue": 59011292,
+   "haircut": 0.04,
+   "value": 56650840
+  },
+  {
+   "asset": "Orbital Telecom SA 2031",
+   "isin": "FRORBI079012",
+   "quantity": 59347225,
+   "marketValue": 62290254,
+   "haircut": 0.01,
+   "value": 61667351
+  },
+  {
+   "asset": "Japan Ministry of Finance 2031",
+   "isin": "JP0JGB019237",
+   "quantity": 56029155,
+   "marketValue": 58758895,
+   "haircut": 0.005,
+   "value": 58465101
+  }
+ ],
+ "nextIndex": -1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -1427
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 9398
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 11138
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 1021
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 2369
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 1092
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 11823
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 6945
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 127
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 1563
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 8798
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -1374
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -14092
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -8909
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -12146
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -7902
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -5152
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 978
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 86
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -7477
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-08-18",
+  "executionTimestamp": "2026-08-18T11:22:51.081Z",
+  "venue": "Bloomberg SEF",
+  "venueMic": "BSEF",
+  "executionType": "Electronic",
+  "trader": "N. Farouk",
+  "salesperson": null,
+  "orderId": "ORD-5840EDA2C3"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-08-18T10:02:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2026-08-18T10:02:00Z",
+  "lastModifiedAt": "2026-08-18T10:02:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT838886249",
+  "matched": "2026-08-18 15:46",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z9DXU4T18OK7445840EDA2C317C70324DE",
+  "upi": "QZK3F23O6BGY",
+  "reportingRegimes": [
+   "EU EMIR",
+   "EU MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "KESTGB33XXX",
+  "ssiId": "SSI-JPY-69F994",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -271929,
+  "cleanPv": -271929.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "REPO-JPY",
+   "BND-JP0JGB182753"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "globalone-sft",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 2344
+  }
+ }
+}

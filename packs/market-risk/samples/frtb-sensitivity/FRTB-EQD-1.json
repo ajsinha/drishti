@@ -1,0 +1,57 @@
+{
+ "resultId": "FRTB-EQD-1",
+ "book": "BOOK-EQD-1",
+ "deltaCharge": 10789419,
+ "vegaCharge": 1386038,
+ "curvatureCharge": 1513770,
+ "total": 13689227,
+ "sensitivities": [
+  {
+   "riskClass": "Equity",
+   "bucket": "1",
+   "measure": "Delta",
+   "value": 169016
+  },
+  {
+   "riskClass": "Equity",
+   "bucket": "1",
+   "measure": "Vega",
+   "value": -111696
+  },
+  {
+   "riskClass": "Equity",
+   "bucket": "2",
+   "measure": "Delta",
+   "value": -574595
+  },
+  {
+   "riskClass": "Equity",
+   "bucket": "2",
+   "measure": "Vega",
+   "value": 469767
+  },
+  {
+   "riskClass": "Equity",
+   "bucket": "3",
+   "measure": "Delta",
+   "value": -722893
+  },
+  {
+   "riskClass": "Equity",
+   "bucket": "3",
+   "measure": "Vega",
+   "value": 277471
+  }
+ ],
+ "byClass": [
+  {
+   "riskClass": "Equity",
+   "charge": 13689227
+  }
+ ],
+ "approach": "FRTB standardised (SBM)",
+ "_meta": {
+  "source": "frtb-engine",
+  "generation": 1
+ }
+}

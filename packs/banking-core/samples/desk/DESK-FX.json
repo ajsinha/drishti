@@ -1,0 +1,33 @@
+{
+ "deskId": "DESK-FX",
+ "name": "G10 and EM FX",
+ "head": "L. Moreau",
+ "books": [
+  {
+   "id": "BOOK-FX-1",
+   "trades": 22,
+   "mtm": -1650999
+  },
+  {
+   "id": "BOOK-FX-2",
+   "trades": 31,
+   "mtm": -12267806
+  },
+  {
+   "id": "BOOK-FX-3",
+   "trades": 31,
+   "mtm": -1840614
+  }
+ ],
+ "var99": 20481149,
+ "mtm": -15759419,
+ "legalEntity": "LE-LDN",
+ "varResult": "VAR-FX",
+ "assetClasses": [
+  "FX"
+ ],
+ "_meta": {
+  "source": "org-master",
+  "generation": 1
+ }
+}

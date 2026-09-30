@@ -1,0 +1,104 @@
+{
+ "nettingSetId": "NS-AURORA-FRA",
+ "tradeCount": 2,
+ "netMtm": -858131,
+ "collateral": -592356,
+ "eePeak": 34959,
+ "pfePeak": 92046,
+ "limit": 5000000.0,
+ "utilisation": 0.0184,
+ "cva": 0,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 16794,
+   "pfe": 52083
+  },
+  {
+   "tenor": "1M",
+   "ee": 34959,
+   "pfe": 92046
+  },
+  {
+   "tenor": "3M",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "6M",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "1Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "2Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "3Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "5Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "7Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "10Y",
+   "ee": 0,
+   "pfe": 0
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10687",
+   "product": "Reverse repo",
+   "notional": 159000000.0,
+   "maturity": "2026-11-12",
+   "mtm": -730273
+  },
+  {
+   "tradeId": "T-10699",
+   "product": "Buy / sell-back",
+   "notional": 14000000.0,
+   "maturity": "2026-11-05",
+   "mtm": -127858
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Securities financing",
+   "mtm": -858131
+  }
+ ],
+ "counterparty": "CP-AURORA",
+ "agreement": "AGR-AURORA-ISDA",
+ "csa": "CSA-AURORA",
+ "creditLimit": "LIM-AURORA",
+ "exposureProfile": "EXP-AURORA-FRA",
+ "cvaResult": "CVA-AURORA-FRA",
+ "saccr": "SACCR-AURORA-FRA",
+ "simm": "SIMM-AURORA",
+ "collateralBalance": "COLL-AURORA-FRA",
+ "legalEntity": "LE-FRA",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 1716
+  }
+ }
+}

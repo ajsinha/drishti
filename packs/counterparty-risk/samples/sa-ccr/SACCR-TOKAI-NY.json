@@ -1,0 +1,72 @@
+{
+ "calcId": "SACCR-TOKAI-NY",
+ "replacementCost": 469608,
+ "addOn": 14886082,
+ "multiplier": 1.0,
+ "ead": 21497966,
+ "rwa": 10748983,
+ "addOns": [
+  {
+   "assetClass": "Interest rate",
+   "addOn": 3528082
+  },
+  {
+   "assetClass": "Credit",
+   "addOn": 10350000
+  },
+  {
+   "assetClass": "Commodity",
+   "addOn": 1008000
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "JPY",
+   "effectiveNotional": -206000000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "AUD",
+   "effectiveNotional": -100800000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "USD",
+   "effectiveNotional": -382800000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "JPY",
+   "effectiveNotional": -81000000,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "CAD",
+   "effectiveNotional": 126000000,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Commodity",
+   "hedgingSet": "USD",
+   "effectiveNotional": -5600000,
+   "sf": 0.18
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "EUR",
+   "effectiveNotional": 16016438,
+   "sf": 0.005
+  }
+ ],
+ "nettingSet": "NS-TOKAI-NY",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

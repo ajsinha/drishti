@@ -1,0 +1,331 @@
+{
+ "tradeId": "T-10640",
+ "productType": "ABS",
+ "productName": "Asset-backed security",
+ "assetClass": "Fixed income",
+ "family": "securitized",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2024-06-28",
+ "effectiveDate": "2024-06-28",
+ "maturityDate": "2030-07-25",
+ "currency": "GBP",
+ "notional": 158000000.0,
+ "mtm": -2614302,
+ "mtmCurrency": "USD",
+ "pnl1d": -215717,
+ "counterparty": {
+  "id": "CP-KESTREL",
+  "name": "Kestrel Global Macro Fund"
+ },
+ "nettingSet": "NS-KESTREL-NY",
+ "book": "BOOK-FI-3",
+ "trader": "TRDR-RCASTILLO",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-GILT",
+ "benchmarkCurve": "CRV-GBP-GOVT",
+ "creditCurve": "CDS-GILT",
+ "terms": {
+  "collateral": "Auto loans",
+  "tranche": "C",
+  "wal": 3.2
+ },
+ "risk": {
+  "dv01": 88536,
+  "cs01": 81769
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 4216,
+   "cs01": 3894
+  },
+  {
+   "bucket": "6M",
+   "dv01": 8432,
+   "cs01": 7788
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 12648,
+   "cs01": 11681
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 16864,
+   "cs01": 15575
+  },
+  {
+   "bucket": "3Y",
+   "dv01": 21080,
+   "cs01": 19469
+  },
+  {
+   "bucket": "5Y",
+   "dv01": 25296,
+   "cs01": 23363
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2024-12-28",
+   "opening": 158000000,
+   "principal": 12153846,
+   "closing": 145846154,
+   "interest": 3160000
+  },
+  {
+   "date": "2025-06-28",
+   "opening": 145846154,
+   "principal": 12153846,
+   "closing": 133692308,
+   "interest": 2916923
+  },
+  {
+   "date": "2025-12-28",
+   "opening": 133692308,
+   "principal": 12153846,
+   "closing": 121538462,
+   "interest": 2673846
+  },
+  {
+   "date": "2026-06-28",
+   "opening": 121538462,
+   "principal": 12153846,
+   "closing": 109384615,
+   "interest": 2430769
+  },
+  {
+   "date": "2026-12-28",
+   "opening": 109384615,
+   "principal": 12153846,
+   "closing": 97230769,
+   "interest": 2187692
+  },
+  {
+   "date": "2027-06-28",
+   "opening": 97230769,
+   "principal": 12153846,
+   "closing": 85076923,
+   "interest": 1944615
+  },
+  {
+   "date": "2027-12-28",
+   "opening": 85076923,
+   "principal": 12153846,
+   "closing": 72923077,
+   "interest": 1701538
+  },
+  {
+   "date": "2028-06-28",
+   "opening": 72923077,
+   "principal": 12153846,
+   "closing": 60769231,
+   "interest": 1458462
+  },
+  {
+   "date": "2028-12-28",
+   "opening": 60769231,
+   "principal": 12153846,
+   "closing": 48615385,
+   "interest": 1215385
+  },
+  {
+   "date": "2029-06-28",
+   "opening": 48615385,
+   "principal": 12153846,
+   "closing": 36461538,
+   "interest": 972308
+  },
+  {
+   "date": "2029-12-28",
+   "opening": 36461538,
+   "principal": 12153846,
+   "closing": 24307692,
+   "interest": 729231
+  },
+  {
+   "date": "2030-06-28",
+   "opening": 24307692,
+   "principal": 12153846,
+   "closing": 12153846,
+   "interest": 486154
+  },
+  {
+   "date": "2030-07-25",
+   "opening": 12153846,
+   "principal": 12153846,
+   "closing": 0,
+   "interest": 243077
+  }
+ ],
+ "nextIndex": 4,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 40141
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 87
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 52751
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -45806
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 120385
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -136309
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 22558
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -70117
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 46355
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -10579
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -94078
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -132152
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -14578
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 67397
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 60485
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 94101
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 121526
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 7650
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 135426
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -88039
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-06-28",
+  "executionTimestamp": "2024-06-28T14:50:19.921Z",
+  "venue": "MarketAxess",
+  "venueMic": "MAEL",
+  "executionType": "Electronic",
+  "trader": "R. Castillo",
+  "salesperson": null,
+  "orderId": "ORD-28C0D4122F"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-06-28T12:38:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2024-06-28T12:38:00Z",
+  "lastModifiedAt": "2024-06-28T12:38:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT963961825",
+  "matched": "2024-06-28 14:09",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209628C0D4122F2421148F59",
+  "upi": "QZO3A62SJADU",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Barclays Bank plc",
+  "ourAgentBic": "BARCGB22XXX",
+  "theirAgentBic": "KESTGB33XXX",
+  "ssiId": "SSI-GBP-69F994",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -2614302,
+  "cleanPv": -2614302.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-GBP-GOVT",
+   "CDS-GILT"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 6809
+  }
+ }
+}

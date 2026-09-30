@@ -1,0 +1,79 @@
+{
+ "curveId": "CMDC-SOY",
+ "commodity": "Soybeans",
+ "front": 1012.0,
+ "shape": "contango",
+ "roll": 0.68,
+ "points": [
+  {
+   "month": "X6",
+   "price": 1012.0,
+   "openInterest": 200000
+  },
+  {
+   "month": "Z6",
+   "price": 1018.876,
+   "openInterest": 143306
+  },
+  {
+   "month": "F7",
+   "price": 1024.564,
+   "openInterest": 102683
+  },
+  {
+   "month": "G7",
+   "price": 1028.167,
+   "openInterest": 73575
+  },
+  {
+   "month": "H7",
+   "price": 1029.298,
+   "openInterest": 52719
+  },
+  {
+   "month": "J7",
+   "price": 1028.177,
+   "openInterest": 37775
+  },
+  {
+   "month": "K7",
+   "price": 1025.572,
+   "openInterest": 27067
+  },
+  {
+   "month": "M7",
+   "price": 1022.618,
+   "openInterest": 19394
+  },
+  {
+   "month": "N7",
+   "price": 1020.533,
+   "openInterest": 13896
+  },
+  {
+   "month": "Q7",
+   "price": 1020.323,
+   "openInterest": 9957
+  },
+  {
+   "month": "U7",
+   "price": 1022.536,
+   "openInterest": 7134
+  },
+  {
+   "month": "V7",
+   "price": 1027.124,
+   "openInterest": 5112
+  }
+ ],
+ "commodityRef": "CMD-SOY",
+ "unit": "USc/bu",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "front": 0.05
+  }
+ }
+}

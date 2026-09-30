@@ -1,0 +1,22 @@
+{
+ "traderId": "TRDR-MOKAFOR",
+ "name": "M. Okafor",
+ "deskName": "Rates · Swaps and options",
+ "tradeCount": 80,
+ "books": [
+  {
+   "id": "BOOK-RATES-1"
+  },
+  {
+   "id": "BOOK-RATES-2"
+  },
+  {
+   "id": "BOOK-RATES-3"
+  }
+ ],
+ "desk": "DESK-RATES",
+ "_meta": {
+  "source": "org-master",
+  "generation": 1
+ }
+}

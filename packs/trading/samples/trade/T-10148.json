@@ -1,0 +1,396 @@
+{
+ "tradeId": "T-10148",
+ "productType": "SNOWBALL_SWAP",
+ "productName": "Snowball swap",
+ "assetClass": "Rates",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2024-11-13",
+ "effectiveDate": "2024-11-15",
+ "maturityDate": "2029-05-02",
+ "currency": "EUR",
+ "notional": 20000000.0,
+ "mtm": 243660,
+ "mtmCurrency": "USD",
+ "pnl1d": 7109,
+ "counterparty": {
+  "id": "CP-RHEINTAL",
+  "name": "Rheintal Landesbank"
+ },
+ "nettingSet": "NS-RHEINTAL-NY",
+ "book": "BOOK-RATES-2",
+ "trader": "TRDR-MOKAFOR",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-EUR-OIS",
+ "forwardCurve": "CRV-EUR-PROJ",
+ "swaptionVolCube": "IRV-EUR",
+ "terms": {
+  "initialCoupon": 0.054391,
+  "snowballSpread": 179.9
+ },
+ "risk": {
+  "dv01": -7144,
+  "vega": -103707
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -476,
+   "vega": -6914
+  },
+  {
+   "bucket": "6M",
+   "dv01": -953,
+   "vega": -13828
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -1429,
+   "vega": -20741
+  },
+  {
+   "bucket": "2Y",
+   "dv01": -1905,
+   "vega": -27655
+  },
+  {
+   "bucket": "3Y",
+   "dv01": -2381,
+   "vega": -34569
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Receive performance",
+   "payReceive": "Receive",
+   "rateType": "Performance",
+   "index": "USCPI",
+   "rate": null,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "EUR",
+   "notional": 20000000.0
+  },
+  {
+   "leg": 2,
+   "label": "Pay ESTR + spread",
+   "payReceive": "Pay",
+   "rateType": "Float",
+   "index": "ESTR",
+   "rate": 0.019824,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "EUR",
+   "notional": 20000000.0
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2025-02-15",
+   "level": 83.21,
+   "trigger": 100.0,
+   "performance": -0.1679,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-05-15",
+   "level": 87.66,
+   "trigger": 100.0,
+   "performance": -0.1234,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-08-15",
+   "level": 99.4,
+   "trigger": 100.0,
+   "performance": -0.006,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-11-15",
+   "level": 81.12,
+   "trigger": 100.0,
+   "performance": -0.1888,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-02-15",
+   "level": 79.08,
+   "trigger": 100.0,
+   "performance": -0.2092,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-05-15",
+   "level": 99.4,
+   "trigger": 100.0,
+   "performance": -0.006,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-08-15",
+   "level": 83.38,
+   "trigger": 100.0,
+   "performance": -0.1662,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-11-15",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-02-15",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-05-15",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-08-15",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-11-15",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-02-15",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-05-15",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-08-15",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-11-15",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-02-15",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-05-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 7,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 2968
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -16659
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -7997
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -5224
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -9005
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -1337
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 7063
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 9960
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -3905
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 3488
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -5817
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 8040
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -3111
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -317
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -10906
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -5147
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -6312
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -6242
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 3808
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -2118
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-11-13",
+  "executionTimestamp": "2024-11-13T13:51:25.096Z",
+  "venue": "Bloomberg SEF",
+  "venueMic": "BSEF",
+  "executionType": "Electronic",
+  "trader": "M. Okafor",
+  "salesperson": null,
+  "orderId": "ORD-88F90D4AC3"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-11-13T11:22:00Z",
+    "by": "mo.amend"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2025-08-19T11:22:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2024-11-13T11:22:00Z",
+  "lastModifiedAt": "2025-08-19T11:22:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA906994456",
+  "matched": "2024-11-13 15:27",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209688F90D4AC369CE5D403A",
+  "upi": "QZ6D20JW8FY2",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "RHEIGB33XXX",
+  "ssiId": "SSI-EUR-230AB8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 243660,
+  "cleanPv": 243660.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "CRV-EUR-OIS",
+   "CRV-EUR-PROJ",
+   "IRV-EUR"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 687
+  }
+ }
+}

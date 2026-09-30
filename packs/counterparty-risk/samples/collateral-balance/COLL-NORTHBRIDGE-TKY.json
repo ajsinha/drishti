@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-NORTHBRIDGE-TKY",
+ "held": 2316645,
+ "posted": 0,
+ "net": 2316645,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Kaizen Motors Corp. 2031",
+   "direction": "Held",
+   "marketValue": 772215,
+   "haircut": 0.02,
+   "value": 756771
+  },
+  {
+   "asset": "Lumen Semiconductor AG 2031",
+   "direction": "Held",
+   "marketValue": 772215,
+   "haircut": 0.01,
+   "value": 764493
+  },
+  {
+   "asset": "Federal Republic of Germany 2036",
+   "direction": "Held",
+   "marketValue": 772215,
+   "haircut": 0.02,
+   "value": 756771
+  }
+ ],
+ "csa": "CSA-NORTHBRIDGE",
+ "nettingSet": "NS-NORTHBRIDGE-TKY",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

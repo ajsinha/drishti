@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-PINNACLE-NY",
+ "held": 17910059,
+ "posted": 0,
+ "net": 17910059,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Lumen Semiconductor AG 2036",
+   "direction": "Held",
+   "marketValue": 5970020,
+   "haircut": 0.01,
+   "value": 5910320
+  },
+  {
+   "asset": "Rheintal Landesbank 2031",
+   "direction": "Held",
+   "marketValue": 5970020,
+   "haircut": 0.02,
+   "value": 5850620
+  },
+  {
+   "asset": "Halcyon Shipping plc 2031",
+   "direction": "Held",
+   "marketValue": 5970020,
+   "haircut": 0.005,
+   "value": 5940170
+  }
+ ],
+ "csa": "CSA-PINNACLE",
+ "nettingSet": "NS-PINNACLE-NY",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

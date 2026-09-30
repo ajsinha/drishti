@@ -1,0 +1,216 @@
+{
+ "tradeId": "T-10673",
+ "productType": "CALL_ACCOUNT",
+ "productName": "Call account",
+ "assetClass": "Money market",
+ "family": "money",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-09-10",
+ "effectiveDate": "2026-09-14",
+ "maturityDate": "2027-07-29",
+ "currency": "USD",
+ "notional": 117000000.0,
+ "mtm": 2344329,
+ "mtmCurrency": "USD",
+ "pnl1d": 108282,
+ "counterparty": {
+  "id": "CP-MERIDIAN-RE",
+  "name": "Meridian Reinsurance Ltd"
+ },
+ "nettingSet": "NS-MERIDIAN-RE-NY",
+ "book": "BOOK-MM-3",
+ "trader": "TRDR-ISCHULZ",
+ "desk": "DESK-MM",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-USD-OIS",
+ "fixingIndex": "FIX-SOFR",
+ "terms": {
+  "rate": 0.03171,
+  "noticeDays": 38
+ },
+ "risk": {
+  "dv01": 8179
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 1363
+  },
+  {
+   "bucket": "6M",
+   "dv01": 2726
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 4090
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 24754
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -86941
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 24757
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 18129
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 42455
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 33089
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -90291
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -105250
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -24049
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -23245
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -25761
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 49961
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -53649
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 60917
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -17511
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 28933
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 58586
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 31465
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 28934
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -142497
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-09-10",
+  "executionTimestamp": "2026-09-10T13:22:38.566Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "I. Schulz",
+  "salesperson": null,
+  "orderId": "ORD-69A1756E80"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-09-10T09:21:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2026-09-10T09:21:00Z",
+  "lastModifiedAt": "2026-09-10T09:21:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT357684402",
+  "matched": "2026-09-10 15:55",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209669A1756E80786D00BBFF",
+  "upi": "QZDOYQRZCBQS",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "MERIUS33XXX",
+  "ssiId": "SSI-USD-9DC4EA",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 2344329,
+  "cleanPv": 2344329.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-USD-OIS",
+   "FIX-SOFR"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-mm",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 5859
+  }
+ }
+}

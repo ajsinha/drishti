@@ -65,7 +65,7 @@ rows:
       to change.
     how:
       - >-
-        A screen is a Sutra: a short, versioned YAML file written in Rachana, with twelve panel kinds and a
+        A screen is a Sutra: a short, versioned YAML file written in Rachana, with thirteen panel kinds and a
         closed, side-effect-free expression language. The four reference views (a swap, an FX swap, a future
         and a netting set) are 60–90 lines each. A Sutra reloads when it is saved, and a broken edit keeps the
         last good version live.

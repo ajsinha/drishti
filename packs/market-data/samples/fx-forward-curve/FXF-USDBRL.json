@@ -1,0 +1,60 @@
+{
+ "curveId": "FXF-USDBRL",
+ "pair": "USDBRL",
+ "spot": 5.32,
+ "points3m": 1497.0,
+ "points1y": 6245.4,
+ "points": [
+  {
+   "tenor": "ON",
+   "pips": 16.2,
+   "outright": 5.32162
+  },
+  {
+   "tenor": "1W",
+   "pips": 113.4,
+   "outright": 5.33134
+  },
+  {
+   "tenor": "1M",
+   "pips": 494.4,
+   "outright": 5.36944
+  },
+  {
+   "tenor": "2M",
+   "pips": 993.4,
+   "outright": 5.41934
+  },
+  {
+   "tenor": "3M",
+   "pips": 1497.0,
+   "outright": 5.4697
+  },
+  {
+   "tenor": "6M",
+   "pips": 3036.1,
+   "outright": 5.62361
+  },
+  {
+   "tenor": "9M",
+   "pips": 4618.5,
+   "outright": 5.78185
+  },
+  {
+   "tenor": "1Y",
+   "pips": 6245.4,
+   "outright": 5.94454
+  },
+  {
+   "tenor": "2Y",
+   "pips": 13224.0,
+   "outright": 6.6424
+  }
+ ],
+ "fxSpot": "FX-USDBRL",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

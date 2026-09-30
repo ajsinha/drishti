@@ -1,0 +1,26 @@
+{
+ "resultId": "STR-COVID2020-CREDIT",
+ "scenarioName": "COVID-19 March 2020",
+ "pnl": -3441300376,
+ "limit": -3050600000.0,
+ "byBook": [
+  {
+   "book": "BOOK-CREDIT-1",
+   "pnl": -882505102
+  },
+  {
+   "book": "BOOK-CREDIT-2",
+   "pnl": -1756782455
+  },
+  {
+   "book": "BOOK-CREDIT-3",
+   "pnl": -802012819
+  }
+ ],
+ "scenario": "SCN-COVID2020",
+ "desk": "DESK-CREDIT",
+ "_meta": {
+  "source": "stress-engine",
+  "generation": 1
+ }
+}

@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-SOLARIS-TKY",
+ "held": 4669364,
+ "posted": 0,
+ "net": 4669364,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "United Kingdom Debt Management Office 2036",
+   "direction": "Held",
+   "marketValue": 1556455,
+   "haircut": 0.01,
+   "value": 1540890
+  },
+  {
+   "asset": "Cascadia Airlines Inc. 2036",
+   "direction": "Held",
+   "marketValue": 1556455,
+   "haircut": 0.01,
+   "value": 1540890
+  },
+  {
+   "asset": "Kaizen Motors Corp. 2036",
+   "direction": "Held",
+   "marketValue": 1556455,
+   "haircut": 0.02,
+   "value": 1525326
+  }
+ ],
+ "csa": "CSA-SOLARIS",
+ "nettingSet": "NS-SOLARIS-TKY",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

@@ -1,0 +1,58 @@
+{
+ "resultId": "CVA-TOKAI-TKY",
+ "cva": -28119,
+ "dva": 9842,
+ "fva": -1701,
+ "kva": -151240,
+ "cs01": -506,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -28119
+  },
+  {
+   "name": "DVA",
+   "amount": 9842
+  },
+  {
+   "name": "FVA",
+   "amount": -1701
+  },
+  {
+   "name": "KVA",
+   "amount": -151240
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -506
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 112
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 56
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -844
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 478
+  }
+ ],
+ "nettingSet": "NS-TOKAI-TKY",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

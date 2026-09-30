@@ -1,0 +1,79 @@
+{
+ "curveId": "CMDC-NG",
+ "commodity": "Henry Hub natural gas",
+ "front": 3.12,
+ "shape": "backwardation",
+ "roll": -0.38,
+ "points": [
+  {
+   "month": "X6",
+   "price": 3.12,
+   "openInterest": 200000
+  },
+  {
+   "month": "Z6",
+   "price": 3.108,
+   "openInterest": 143306
+  },
+  {
+   "month": "F7",
+   "price": 3.095,
+   "openInterest": 102683
+  },
+  {
+   "month": "G7",
+   "price": 3.083,
+   "openInterest": 73575
+  },
+  {
+   "month": "H7",
+   "price": 3.07,
+   "openInterest": 52719
+  },
+  {
+   "month": "J7",
+   "price": 3.058,
+   "openInterest": 37775
+  },
+  {
+   "month": "K7",
+   "price": 3.045,
+   "openInterest": 27067
+  },
+  {
+   "month": "M7",
+   "price": 3.033,
+   "openInterest": 19394
+  },
+  {
+   "month": "N7",
+   "price": 3.02,
+   "openInterest": 13896
+  },
+  {
+   "month": "Q7",
+   "price": 3.008,
+   "openInterest": 9957
+  },
+  {
+   "month": "U7",
+   "price": 2.995,
+   "openInterest": 7134
+  },
+  {
+   "month": "V7",
+   "price": 2.983,
+   "openInterest": 5112
+  }
+ ],
+ "commodityRef": "CMD-NG",
+ "unit": "USD/MMBtu",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "front": 0.05
+  }
+ }
+}

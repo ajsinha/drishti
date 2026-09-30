@@ -1,0 +1,59 @@
+{
+ "resultId": "CVA-LUMEN-TKY",
+ "cva": -22082,
+ "dva": 7729,
+ "fva": -1162,
+ "kva": -180964,
+ "cs01": -397,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -22082
+  },
+  {
+   "name": "DVA",
+   "amount": 7729
+  },
+  {
+   "name": "FVA",
+   "amount": -1162
+  },
+  {
+   "name": "KVA",
+   "amount": -180964
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -397
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 88
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 44
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -662
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 375
+  }
+ ],
+ "nettingSet": "NS-LUMEN-TKY",
+ "creditCurve": "CDS-LUMEN",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

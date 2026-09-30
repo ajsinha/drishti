@@ -1,0 +1,63 @@
+{
+ "curveId": "CDS-LUMEN",
+ "issuerName": "Lumen Semiconductor AG",
+ "spread5y": 64,
+ "recovery": 0.4,
+ "seniority": "Senior unsecured",
+ "docClause": "MM14",
+ "pd1y": 0.005949,
+ "points": [
+  {
+   "tenor": "6M",
+   "spread": 32.3,
+   "hazard": 0.005383,
+   "survival": 0.997312
+  },
+  {
+   "tenor": "1Y",
+   "spread": 35.8,
+   "hazard": 0.005967,
+   "survival": 0.994051
+  },
+  {
+   "tenor": "2Y",
+   "spread": 42.9,
+   "hazard": 0.00715,
+   "survival": 0.985802
+  },
+  {
+   "tenor": "3Y",
+   "spread": 49.9,
+   "hazard": 0.008317,
+   "survival": 0.975359
+  },
+  {
+   "tenor": "5Y",
+   "spread": 64.0,
+   "hazard": 0.010667,
+   "survival": 0.948064
+  },
+  {
+   "tenor": "7Y",
+   "spread": 67.8,
+   "hazard": 0.0113,
+   "survival": 0.923948
+  },
+  {
+   "tenor": "10Y",
+   "spread": 73.6,
+   "hazard": 0.012267,
+   "survival": 0.884558
+  }
+ ],
+ "issuer": "ISS-LUMEN",
+ "currency": "EUR",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "spread5y": 0.4
+  }
+ }
+}

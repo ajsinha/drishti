@@ -162,7 +162,7 @@ final class SutraBuilder {
             }
             Map<String, PNode> m = i.map();
             unknownKeys(m, STRIP, "strip item");
-            out.add(new StripItem(requiredText(m, "label", i), requiredText(m, "bind", i), text(m.get("fmt"), null),
+            out.add(new StripItem(text(m.get("label"), null), requiredText(m, "bind", i), text(m.get("fmt"), null),
                     text(m.get("tone"), null), bool(m.get("emphasis")), loc(i)));
         }
         return out;
@@ -201,7 +201,7 @@ final class SutraBuilder {
                 continue;
             }
             unknownKeys(c.map(), COLUMN, "column");
-            columns.add(new Column(requiredText(c.map(), "label", c), requiredText(c.map(), "bind", c),
+            columns.add(new Column(text(c.map().get("label"), null), requiredText(c.map(), "bind", c),
                     text(c.map().get("fmt"), null), text(c.map().get("tone"), null), bool(c.map().get("total")),
                     bool(c.map().get("link"))));
         }

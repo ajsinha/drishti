@@ -1,0 +1,26 @@
+{
+ "resultId": "STR-USD-SPIKE-FX",
+ "scenarioName": "USD +15% vs all",
+ "pnl": -97905138,
+ "limit": -103700000.0,
+ "byBook": [
+  {
+   "book": "BOOK-FX-1",
+   "pnl": -29038878
+  },
+  {
+   "book": "BOOK-FX-2",
+   "pnl": -44296436
+  },
+  {
+   "book": "BOOK-FX-3",
+   "pnl": -24569824
+  }
+ ],
+ "scenario": "SCN-USD-SPIKE",
+ "desk": "DESK-FX",
+ "_meta": {
+  "source": "stress-engine",
+  "generation": 1
+ }
+}

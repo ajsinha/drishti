@@ -1,0 +1,33 @@
+{
+ "entityId": "LE-NY",
+ "name": "Drishti Bank Securities Inc.",
+ "lei": "549300O1N13GO2II2096",
+ "jurisdiction": "US",
+ "regulator": "SEC / CFTC / FINRA",
+ "desks": [
+  {
+   "id": "DESK-RATES",
+   "name": "Rates · Swaps and options"
+  },
+  {
+   "id": "DESK-CREDIT",
+   "name": "Credit trading"
+  },
+  {
+   "id": "DESK-COMM",
+   "name": "Commodities"
+  },
+  {
+   "id": "DESK-FI",
+   "name": "Bonds and securitised"
+  },
+  {
+   "id": "DESK-MM",
+   "name": "Money markets"
+  }
+ ],
+ "_meta": {
+  "source": "entity-master",
+  "generation": 1
+ }
+}

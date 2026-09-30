@@ -84,16 +84,9 @@ drishti:
     # A pack keeps its data in its own domain folder of the lake: <root>/<domain>/<kind>/business_date=…/
     # Build the sample lake with:  uv run --with deltalake --with pyarrow python tools/samplegen/lake.py \
     #     --samples packs/finance/samples --root data/delta --domain finance --days 10
-    connectors:
-      finance-lake:
-        plugin: delta
-        enabled: ${DRISHTI_LAKE_ENABLED:true}
-        settings:
-          root: ${DRISHTI_DELTA_ROOT:./data/delta}
-          domain: finance
-          lookback-days: 10
-          refresh-seconds: 10
-          # mode.<kind>: effective   for tables that store a row only when an entity changes
+    # Packs declare their own connectors (pack.yaml `connectors:`); an entry here overrides a pack's, e.g.
+    #   trading-lake: { plugin: delta, settings: { root: /data/lake, domain: trading } }
+    connectors: {}
   business-date:
     # Every read is for a business date. The default is today in `zone`, rolled back to a business day of
     # `calendar` (weekends and holidays roll to the previous business day). Users pick another date in the top

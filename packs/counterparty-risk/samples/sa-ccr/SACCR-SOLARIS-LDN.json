@@ -1,0 +1,62 @@
+{
+ "calcId": "SACCR-SOLARIS-LDN",
+ "replacementCost": 0,
+ "addOn": 93154740,
+ "multiplier": 0.9968,
+ "ead": 129999302,
+ "rwa": 129999302,
+ "addOns": [
+  {
+   "assetClass": "Foreign exchange",
+   "addOn": 15560000
+  },
+  {
+   "assetClass": "Equity",
+   "addOn": 77594740
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "JPY",
+   "effectiveNotional": -8900000,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "USD",
+   "effectiveNotional": 164100000,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "GBP",
+   "effectiveNotional": -216000000,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "USD",
+   "effectiveNotional": 24483562,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "JPY",
+   "effectiveNotional": 8000000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "EUR",
+   "effectiveNotional": -210000000,
+   "sf": 0.32
+  }
+ ],
+ "nettingSet": "NS-SOLARIS-LDN",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

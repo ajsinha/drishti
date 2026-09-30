@@ -1,0 +1,26 @@
+{
+ "issuerId": "ISS-GRANITE",
+ "name": "Granite Building Materials plc",
+ "rating": "BBB",
+ "sector": "Materials",
+ "country": "GB",
+ "bonds": [
+  {
+   "isin": "GBGRAN031444",
+   "coupon": 0.0454,
+   "maturity": "2031-03-15"
+  },
+  {
+   "isin": "GBGRAN185331",
+   "coupon": 0.0504,
+   "maturity": "2036-07-15"
+  }
+ ],
+ "creditCurve": "CDS-GRANITE",
+ "lei": "549300839RFSN635MD06",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ },
+ "equity": "EQ-GRNT"
+}

@@ -1,0 +1,111 @@
+{
+ "nettingSetId": "NS-RHEINTAL-FRA",
+ "tradeCount": 3,
+ "netMtm": 762432,
+ "collateral": 498445,
+ "eePeak": 310970,
+ "pfePeak": 726484,
+ "limit": 5000000.0,
+ "utilisation": 0.1453,
+ "cva": -394,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 310970,
+   "pfe": 726484
+  },
+  {
+   "tenor": "1M",
+   "ee": 304415,
+   "pfe": 689575
+  },
+  {
+   "tenor": "3M",
+   "ee": 247993,
+   "pfe": 545584
+  },
+  {
+   "tenor": "6M",
+   "ee": 232968,
+   "pfe": 512529
+  },
+  {
+   "tenor": "1Y",
+   "ee": 205593,
+   "pfe": 452305
+  },
+  {
+   "tenor": "2Y",
+   "ee": 160116,
+   "pfe": 352256
+  },
+  {
+   "tenor": "3Y",
+   "ee": 124699,
+   "pfe": 274337
+  },
+  {
+   "tenor": "5Y",
+   "ee": 75634,
+   "pfe": 166394
+  },
+  {
+   "tenor": "7Y",
+   "ee": 45874,
+   "pfe": 100923
+  },
+  {
+   "tenor": "10Y",
+   "ee": 21669,
+   "pfe": 47673
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10682",
+   "product": "Repurchase agreement",
+   "notional": 227000000.0,
+   "maturity": "2026-12-01",
+   "mtm": 4140501
+  },
+  {
+   "tradeId": "T-10702",
+   "product": "Buy / sell-back",
+   "notional": 181000000.0,
+   "maturity": "2026-10-30",
+   "mtm": -2924657
+  },
+  {
+   "tradeId": "T-10698",
+   "product": "Buy / sell-back",
+   "notional": 76000000.0,
+   "maturity": "2026-10-12",
+   "mtm": -453412
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Securities financing",
+   "mtm": 762432
+  }
+ ],
+ "counterparty": "CP-RHEINTAL",
+ "agreement": "AGR-RHEINTAL-ISDA",
+ "csa": "CSA-RHEINTAL",
+ "creditLimit": "LIM-RHEINTAL",
+ "exposureProfile": "EXP-RHEINTAL-FRA",
+ "cvaResult": "CVA-RHEINTAL-FRA",
+ "saccr": "SACCR-RHEINTAL-FRA",
+ "simm": "SIMM-RHEINTAL",
+ "collateralBalance": "COLL-RHEINTAL-FRA",
+ "legalEntity": "LE-FRA",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 1524
+  }
+ }
+}

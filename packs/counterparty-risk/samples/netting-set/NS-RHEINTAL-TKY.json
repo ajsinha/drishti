@@ -1,0 +1,97 @@
+{
+ "nettingSetId": "NS-RHEINTAL-TKY",
+ "tradeCount": 1,
+ "netMtm": 1294522,
+ "collateral": 1011263,
+ "eePeak": 5099938,
+ "pfePeak": 11578264,
+ "limit": 17000000.0,
+ "utilisation": 0.6811,
+ "cva": -5830,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 680868,
+   "pfe": 1856310
+  },
+  {
+   "tenor": "1M",
+   "ee": 1105108,
+   "pfe": 2789638
+  },
+  {
+   "tenor": "3M",
+   "ee": 1699697,
+   "pfe": 4097734
+  },
+  {
+   "tenor": "6M",
+   "ee": 2277392,
+   "pfe": 5368662
+  },
+  {
+   "tenor": "1Y",
+   "ee": 3087802,
+   "pfe": 7151565
+  },
+  {
+   "tenor": "2Y",
+   "ee": 4226638,
+   "pfe": 9657004
+  },
+  {
+   "tenor": "3Y",
+   "ee": 5099938,
+   "pfe": 11578264
+  },
+  {
+   "tenor": "5Y",
+   "ee": 81155,
+   "pfe": 178541
+  },
+  {
+   "tenor": "7Y",
+   "ee": 49223,
+   "pfe": 108291
+  },
+  {
+   "tenor": "10Y",
+   "ee": 23251,
+   "pfe": 51153
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10730",
+   "product": "Capital-protected note",
+   "notional": 64000000.0,
+   "maturity": "2030-08-27",
+   "mtm": 1294522
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Structured",
+   "mtm": 1294522
+  }
+ ],
+ "counterparty": "CP-RHEINTAL",
+ "agreement": "AGR-RHEINTAL-ISDA",
+ "csa": "CSA-RHEINTAL",
+ "creditLimit": "LIM-RHEINTAL",
+ "exposureProfile": "EXP-RHEINTAL-TKY",
+ "cvaResult": "CVA-RHEINTAL-TKY",
+ "saccr": "SACCR-RHEINTAL-TKY",
+ "simm": "SIMM-RHEINTAL",
+ "collateralBalance": "COLL-RHEINTAL-TKY",
+ "legalEntity": "LE-TKY",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 2589
+  }
+ }
+}

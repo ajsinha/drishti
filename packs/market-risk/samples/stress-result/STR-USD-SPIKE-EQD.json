@@ -1,0 +1,26 @@
+{
+ "resultId": "STR-USD-SPIKE-EQD",
+ "scenarioName": "USD +15% vs all",
+ "pnl": -50490765,
+ "limit": -83500000.0,
+ "byBook": [
+  {
+   "book": "BOOK-EQD-1",
+   "pnl": -12954537
+  },
+  {
+   "book": "BOOK-EQD-2",
+   "pnl": -27003396
+  },
+  {
+   "book": "BOOK-EQD-3",
+   "pnl": -10532832
+  }
+ ],
+ "scenario": "SCN-USD-SPIKE",
+ "desk": "DESK-EQD",
+ "_meta": {
+  "source": "stress-engine",
+  "generation": 1
+ }
+}

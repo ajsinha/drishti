@@ -1,0 +1,59 @@
+{
+ "resultId": "CVA-SOLARIS-LDN",
+ "cva": -189151,
+ "dva": 22068,
+ "fva": -3232,
+ "kva": -285410,
+ "cs01": -3405,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -189151
+  },
+  {
+   "name": "DVA",
+   "amount": 22068
+  },
+  {
+   "name": "FVA",
+   "amount": -3232
+  },
+  {
+   "name": "KVA",
+   "amount": -285410
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -3405
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 757
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 378
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -5675
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 3216
+  }
+ ],
+ "nettingSet": "NS-SOLARIS-LDN",
+ "creditCurve": "CDS-SOLARIS",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

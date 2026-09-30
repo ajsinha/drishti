@@ -1,0 +1,237 @@
+{
+ "tradeId": "T-10492",
+ "productType": "CMD_SPREAD_OPT",
+ "productName": "Commodity spread option",
+ "assetClass": "Commodity",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2026-03-23",
+ "effectiveDate": "2026-03-25",
+ "maturityDate": "2037-07-06",
+ "currency": "USD",
+ "notional": 42000000.0,
+ "mtm": 343104,
+ "mtmCurrency": "USD",
+ "pnl1d": 2911,
+ "counterparty": {
+  "id": "CP-CASCADIA",
+  "name": "Cascadia Airlines Inc."
+ },
+ "nettingSet": "NS-CASCADIA-NY",
+ "book": "BOOK-COMM-1",
+ "trader": "TRDR-FROSSI",
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "commodityCurve": "CMDC-SILVER",
+ "commodityVolSurface": "CMDV-SILVER",
+ "correlation": "CORR-G10FX",
+ "terms": {
+  "spreadType": "Crack 3-2-1",
+  "strike": -0.91
+ },
+ "risk": {
+  "delta": 291976,
+  "vega": 413226
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 13904,
+   "vega": 19677
+  },
+  {
+   "bucket": "1M",
+   "delta": 27807,
+   "vega": 39355
+  },
+  {
+   "bucket": "3M",
+   "delta": 41711,
+   "vega": 59032
+  },
+  {
+   "bucket": "6M",
+   "delta": 55614,
+   "vega": 78710
+  },
+  {
+   "bucket": "1Y",
+   "delta": 69518,
+   "vega": 98387
+  },
+  {
+   "bucket": "2Y",
+   "delta": 83422,
+   "vega": 118065
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 10094
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 6260
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -18895
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 788
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 2368
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 6840
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 18037
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 6086
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -6990
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -7793
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 17135
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -1658
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -367
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -7989
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 6954
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -2979
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 15394
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -3244
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 2271
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 1823
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-03-23",
+  "executionTimestamp": "2026-03-23T11:23:38.708Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "F. Rossi",
+  "salesperson": null,
+  "orderId": "ORD-6AFF703E61"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-03-23T10:18:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2026-03-23T10:18:00Z",
+  "lastModifiedAt": "2026-03-23T10:18:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT647742164",
+  "matched": "2026-03-23 11:54",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20966AFF703E611AD2BF640F",
+  "upi": "QZMBWOMUPQ14",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "CASCUS33XXX",
+  "ssiId": "SSI-USD-BC4549",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 343104,
+  "cleanPv": 343104.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "CMDC-SILVER",
+   "CMDV-SILVER",
+   "CORR-G10FX"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "endur-comm",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 1106
+  }
+ }
+}

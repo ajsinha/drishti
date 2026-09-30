@@ -65,7 +65,6 @@
     "type": "object",
     "additionalProperties": false,
     "required": [
-     "label",
      "bind"
     ],
     "properties": {
@@ -115,7 +114,6 @@
    "type": "object",
    "additionalProperties": false,
    "required": [
-    "label",
     "bind"
    ],
    "properties": {
@@ -171,7 +169,8 @@
       "status",
       "provenance",
       "markdown",
-      "gauge"
+      "gauge",
+      "surface"
      ]
     },
     "title": {

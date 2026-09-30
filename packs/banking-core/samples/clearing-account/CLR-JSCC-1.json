@@ -1,0 +1,13 @@
+{
+ "accountId": "CLR-JSCC-1",
+ "ccpName": "Japan Securities Clearing Corp.",
+ "im": 7200000,
+ "vmToday": 0,
+ "excess": 1440000,
+ "trades": [],
+ "ccp": "CCP-JSCC",
+ "_meta": {
+  "source": "clearing-system",
+  "generation": 1
+ }
+}

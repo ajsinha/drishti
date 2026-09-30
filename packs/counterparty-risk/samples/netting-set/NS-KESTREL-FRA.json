@@ -1,0 +1,104 @@
+{
+ "nettingSetId": "NS-KESTREL-FRA",
+ "tradeCount": 2,
+ "netMtm": 1322506,
+ "collateral": 802493,
+ "eePeak": 542534,
+ "pfePeak": 1213874,
+ "limit": 5000000.0,
+ "utilisation": 0.2428,
+ "cva": -2516,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 542534,
+   "pfe": 1213874
+  },
+  {
+   "tenor": "1M",
+   "ee": 519799,
+   "pfe": 1148108
+  },
+  {
+   "tenor": "3M",
+   "ee": 506707,
+   "pfe": 1119305
+  },
+  {
+   "tenor": "6M",
+   "ee": 458910,
+   "pfe": 1009602
+  },
+  {
+   "tenor": "1Y",
+   "ee": 404987,
+   "pfe": 890970
+  },
+  {
+   "tenor": "2Y",
+   "ee": 315404,
+   "pfe": 693888
+  },
+  {
+   "tenor": "3Y",
+   "ee": 245637,
+   "pfe": 540401
+  },
+  {
+   "tenor": "5Y",
+   "ee": 148986,
+   "pfe": 327770
+  },
+  {
+   "tenor": "7Y",
+   "ee": 90365,
+   "pfe": 198802
+  },
+  {
+   "tenor": "10Y",
+   "ee": 42685,
+   "pfe": 93908
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10720",
+   "product": "Margin loan",
+   "notional": 52000000.0,
+   "maturity": "2027-02-25",
+   "mtm": 1594435
+  },
+  {
+   "tradeId": "T-10679",
+   "product": "Repurchase agreement",
+   "notional": 180000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -271929
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Securities financing",
+   "mtm": 1322506
+  }
+ ],
+ "counterparty": "CP-KESTREL",
+ "agreement": "AGR-KESTREL-ISDA",
+ "csa": "CSA-KESTREL",
+ "creditLimit": "LIM-KESTREL",
+ "exposureProfile": "EXP-KESTREL-FRA",
+ "cvaResult": "CVA-KESTREL-FRA",
+ "saccr": "SACCR-KESTREL-FRA",
+ "simm": "SIMM-KESTREL",
+ "collateralBalance": "COLL-KESTREL-FRA",
+ "legalEntity": "LE-FRA",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 2645
+  }
+ }
+}

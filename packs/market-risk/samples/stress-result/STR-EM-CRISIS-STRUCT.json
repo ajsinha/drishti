@@ -1,0 +1,26 @@
+{
+ "resultId": "STR-EM-CRISIS-STRUCT",
+ "scenarioName": "Emerging-market crisis",
+ "pnl": -1453836686,
+ "limit": -1748100000.0,
+ "byBook": [
+  {
+   "book": "BOOK-STRUCT-1",
+   "pnl": -483044825
+  },
+  {
+   "book": "BOOK-STRUCT-2",
+   "pnl": -658419234
+  },
+  {
+   "book": "BOOK-STRUCT-3",
+   "pnl": -312372627
+  }
+ ],
+ "scenario": "SCN-EM-CRISIS",
+ "desk": "DESK-STRUCT",
+ "_meta": {
+  "source": "stress-engine",
+  "generation": 1
+ }
+}

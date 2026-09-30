@@ -1,0 +1,253 @@
+{
+ "tradeId": "T-10353",
+ "productType": "EQ_INDEX_OPTION",
+ "productName": "Index option",
+ "assetClass": "Equity",
+ "family": "option",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2024-11-13",
+ "effectiveDate": "2024-11-15",
+ "maturityDate": "2026-10-07",
+ "currency": "USD",
+ "notional": 211000000.0,
+ "mtm": -4330699,
+ "mtmCurrency": "USD",
+ "pnl1d": -51539,
+ "counterparty": {
+  "id": "CP-BRAMBLE",
+  "name": "Bramble Asset Management"
+ },
+ "nettingSet": "NS-BRAMBLE-LDN",
+ "book": "BOOK-EQD-3",
+ "trader": "TRDR-JWEISS",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingIndex": "EQX-SPX",
+ "equityVolSurface": "EQV-SPX",
+ "terms": {
+  "optionType": "Put",
+  "exerciseStyle": "American",
+  "expiryDate": "2029-08-06",
+  "strike": 3818.84,
+  "contracts": 1111
+ },
+ "risk": {
+  "delta": -777747,
+  "gamma": 4584,
+  "vega": -369318,
+  "theta": -8605
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -37036,
+   "gamma": 218,
+   "vega": -17587,
+   "theta": -410
+  },
+  {
+   "bucket": "1M",
+   "delta": -74071,
+   "gamma": 437,
+   "vega": -35173,
+   "theta": -820
+  },
+  {
+   "bucket": "3M",
+   "delta": -111107,
+   "gamma": 655,
+   "vega": -52760,
+   "theta": -1229
+  },
+  {
+   "bucket": "6M",
+   "delta": -148142,
+   "gamma": 873,
+   "vega": -70346,
+   "theta": -1639
+  },
+  {
+   "bucket": "1Y",
+   "delta": -185178,
+   "gamma": 1091,
+   "vega": -87933,
+   "theta": -2049
+  },
+  {
+   "bucket": "2Y",
+   "delta": -222213,
+   "gamma": 1310,
+   "vega": -105519,
+   "theta": -2459
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 105236
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -126706
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 185079
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -123804
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 857
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 175980
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 144008
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 76080
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -7987
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 79551
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 134730
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -64571
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -65286
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 192370
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 155484
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 211157
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -130713
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -88231
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -37383
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 81527
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-11-13",
+  "executionTimestamp": "2024-11-13T16:38:22.114Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "J. Weiss",
+  "salesperson": null,
+  "orderId": "ORD-4A0102CFD7"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-11-13T09:28:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2024-11-13T09:28:00Z",
+  "lastModifiedAt": "2024-11-13T09:28:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT253242936",
+  "matched": "2024-11-13 17:00",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q834A0102CFD70A486A7104",
+  "upi": "QZTHRNZCJJYV",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "BRAMUS33XXX",
+  "ssiId": "SSI-USD-1243C8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -4330699,
+  "cleanPv": -4330699.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "EQX-SPX",
+   "EQV-SPX"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 10771
+  }
+ }
+}

@@ -1,0 +1,48 @@
+{
+ "limitId": "LIM-LUMEN",
+ "counterpartyName": "Lumen Semiconductor AG",
+ "measure": "PFE 95 peak",
+ "limit": 205000000.0,
+ "used": 127561108,
+ "utilisation": 0.6222,
+ "status": "Within limit",
+ "buckets": [
+  {
+   "bucket": "0-1Y",
+   "limit": 205000000,
+   "used": 108426942,
+   "utilisation": 0.5289
+  },
+  {
+   "bucket": "1-3Y",
+   "limit": 205000000,
+   "used": 127561108,
+   "utilisation": 0.6222
+  },
+  {
+   "bucket": "3-5Y",
+   "limit": 164000000,
+   "used": 89292776,
+   "utilisation": 0.5445
+  },
+  {
+   "bucket": "5-10Y",
+   "limit": 123000000,
+   "used": 44646388,
+   "utilisation": 0.363
+  },
+  {
+   "bucket": "10Y+",
+   "limit": 82000000,
+   "used": 12756111,
+   "utilisation": 0.1556
+  }
+ ],
+ "counterparty": "CP-LUMEN",
+ "approvedBy": "Credit Risk Committee",
+ "reviewDue": "2027-03-19",
+ "_meta": {
+  "source": "limits-system",
+  "generation": 1
+ }
+}

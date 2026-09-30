@@ -1,0 +1,63 @@
+{
+ "curveId": "CDS-HALCYON",
+ "issuerName": "Halcyon Shipping plc",
+ "spread5y": 455,
+ "recovery": 0.4,
+ "seniority": "Senior unsecured",
+ "docClause": "MM14",
+ "pd1y": 0.041578,
+ "points": [
+  {
+   "tenor": "6M",
+   "spread": 229.8,
+   "hazard": 0.0383,
+   "survival": 0.981032
+  },
+  {
+   "tenor": "1Y",
+   "spread": 254.8,
+   "hazard": 0.042467,
+   "survival": 0.958422
+  },
+  {
+   "tenor": "2Y",
+   "spread": 304.9,
+   "hazard": 0.050817,
+   "survival": 0.903361
+  },
+  {
+   "tenor": "3Y",
+   "spread": 354.9,
+   "hazard": 0.05915,
+   "survival": 0.837403
+  },
+  {
+   "tenor": "5Y",
+   "spread": 455.0,
+   "hazard": 0.075833,
+   "survival": 0.684432
+  },
+  {
+   "tenor": "7Y",
+   "spread": 482.3,
+   "hazard": 0.080383,
+   "survival": 0.569678
+  },
+  {
+   "tenor": "10Y",
+   "spread": 523.2,
+   "hazard": 0.0872,
+   "survival": 0.418114
+  }
+ ],
+ "issuer": "ISS-HALCYON",
+ "currency": "EUR",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "spread5y": 0.4
+  }
+ }
+}

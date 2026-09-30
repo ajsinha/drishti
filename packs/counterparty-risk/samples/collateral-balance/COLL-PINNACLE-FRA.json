@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-PINNACLE-FRA",
+ "held": 0,
+ "posted": 98692,
+ "net": -98692,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "United Kingdom Debt Management Office 2031",
+   "direction": "Posted",
+   "marketValue": 32897,
+   "haircut": 0.005,
+   "value": 32733
+  },
+  {
+   "asset": "Kaizen Motors Corp. 2036",
+   "direction": "Posted",
+   "marketValue": 32897,
+   "haircut": 0.02,
+   "value": 32239
+  },
+  {
+   "asset": "Halcyon Shipping plc 2031",
+   "direction": "Posted",
+   "marketValue": 32897,
+   "haircut": 0.01,
+   "value": 32568
+  }
+ ],
+ "csa": "CSA-PINNACLE",
+ "nettingSet": "NS-PINNACLE-FRA",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

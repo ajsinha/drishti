@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-NORTHBRIDGE-FRA",
+ "held": 2593947,
+ "posted": 0,
+ "net": 2593947,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Meridian Financial Group 2036",
+   "direction": "Held",
+   "marketValue": 864649,
+   "haircut": 0.01,
+   "value": 856003
+  },
+  {
+   "asset": "United States Treasury 2031",
+   "direction": "Held",
+   "marketValue": 864649,
+   "haircut": 0.02,
+   "value": 847356
+  },
+  {
+   "asset": "Granite Building Materials plc 2031",
+   "direction": "Held",
+   "marketValue": 864649,
+   "haircut": 0.02,
+   "value": 847356
+  }
+ ],
+ "csa": "CSA-NORTHBRIDGE",
+ "nettingSet": "NS-NORTHBRIDGE-FRA",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

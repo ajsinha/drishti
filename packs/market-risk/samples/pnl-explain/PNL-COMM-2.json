@@ -1,0 +1,38 @@
+{
+ "resultId": "PNL-COMM-2",
+ "date": "2026-09-30",
+ "actual": -102729,
+ "explained": -96147,
+ "unexplained": -6582,
+ "attribution": [
+  {
+   "factor": "Rates delta",
+   "pnl": -40382
+  },
+  {
+   "factor": "FX delta",
+   "pnl": -11538
+  },
+  {
+   "factor": "Credit",
+   "pnl": -7692
+  },
+  {
+   "factor": "Vega",
+   "pnl": -9615
+  },
+  {
+   "factor": "Carry and theta",
+   "pnl": -19229
+  },
+  {
+   "factor": "New trades",
+   "pnl": -7692
+  }
+ ],
+ "book": "BOOK-COMM-2",
+ "_meta": {
+  "source": "pnl-explain",
+  "generation": 1
+ }
+}

@@ -1,0 +1,60 @@
+{
+ "curveId": "FXF-USDKRW",
+ "pair": "USDKRW",
+ "spot": 1398.0,
+ "points3m": -38392.2,
+ "points1y": -152937.3,
+ "points": [
+  {
+   "tenor": "ON",
+   "pips": -421.3,
+   "outright": 1397.95787
+  },
+  {
+   "tenor": "1W",
+   "pips": -2948.9,
+   "outright": 1397.70511
+  },
+  {
+   "tenor": "1M",
+   "pips": -12809.1,
+   "outright": 1396.71909
+  },
+  {
+   "tenor": "2M",
+   "pips": -25606.5,
+   "outright": 1395.43935
+  },
+  {
+   "tenor": "3M",
+   "pips": -38392.2,
+   "outright": 1394.16078
+  },
+  {
+   "tenor": "6M",
+   "pips": -76678.9,
+   "outright": 1390.33211
+  },
+  {
+   "tenor": "9M",
+   "pips": -114860.5,
+   "outright": 1386.51395
+  },
+  {
+   "tenor": "1Y",
+   "pips": -152937.3,
+   "outright": 1382.70627
+  },
+  {
+   "tenor": "2Y",
+   "pips": -304201.5,
+   "outright": 1367.57985
+  }
+ ],
+ "fxSpot": "FX-USDKRW",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

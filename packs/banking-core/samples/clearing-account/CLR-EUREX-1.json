@@ -1,0 +1,224 @@
+{
+ "accountId": "CLR-EUREX-1",
+ "ccpName": "Eurex Clearing AG",
+ "im": 20400000,
+ "vmToday": -511437,
+ "excess": 4080000,
+ "trades": [
+  {
+   "tradeId": "T-10313",
+   "product": "Equity position",
+   "notional": 150000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 1660270
+  },
+  {
+   "tradeId": "T-10314",
+   "product": "Equity position",
+   "notional": 216000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -259412
+  },
+  {
+   "tradeId": "T-10315",
+   "product": "Equity position",
+   "notional": 149000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -1497978
+  },
+  {
+   "tradeId": "T-10316",
+   "product": "Equity position",
+   "notional": 225000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 3106156
+  },
+  {
+   "tradeId": "T-10317",
+   "product": "Equity position",
+   "notional": 67000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -160746
+  },
+  {
+   "tradeId": "T-10318",
+   "product": "Equity position",
+   "notional": 72000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 350811
+  },
+  {
+   "tradeId": "T-10325",
+   "product": "Single-stock future",
+   "notional": 39000000.0,
+   "maturity": "2027-06-15",
+   "mtm": -567305
+  },
+  {
+   "tradeId": "T-10326",
+   "product": "Single-stock future",
+   "notional": 32000000.0,
+   "maturity": "2026-11-20",
+   "mtm": -631204
+  },
+  {
+   "tradeId": "T-10327",
+   "product": "Single-stock future",
+   "notional": 156000000.0,
+   "maturity": "2026-10-13",
+   "mtm": -2220542
+  },
+  {
+   "tradeId": "T-10328",
+   "product": "Single-stock future",
+   "notional": 22000000.0,
+   "maturity": "2027-03-31",
+   "mtm": 430333
+  },
+  {
+   "tradeId": "T-10329",
+   "product": "Single-stock future",
+   "notional": 137000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -1322281
+  },
+  {
+   "tradeId": "T-10330",
+   "product": "Single-stock future",
+   "notional": 214000000.0,
+   "maturity": "2027-04-02",
+   "mtm": 54859
+  },
+  {
+   "tradeId": "T-10331",
+   "product": "Equity index future",
+   "notional": 16000000.0,
+   "maturity": "2027-03-04",
+   "mtm": 198569
+  },
+  {
+   "tradeId": "T-10332",
+   "product": "Equity index future",
+   "notional": 109000000.0,
+   "maturity": "2027-06-28",
+   "mtm": 236997
+  },
+  {
+   "tradeId": "T-10333",
+   "product": "Equity index future",
+   "notional": 109000000.0,
+   "maturity": "2027-10-08",
+   "mtm": -1127269
+  },
+  {
+   "tradeId": "T-10334",
+   "product": "Equity index future",
+   "notional": 242000000.0,
+   "maturity": "2027-09-23",
+   "mtm": -3839873
+  },
+  {
+   "tradeId": "T-10335",
+   "product": "Equity index future",
+   "notional": 214000000.0,
+   "maturity": "2027-02-15",
+   "mtm": 404870
+  },
+  {
+   "tradeId": "T-10336",
+   "product": "Equity index future",
+   "notional": 139000000.0,
+   "maturity": "2027-08-23",
+   "mtm": 347798
+  },
+  {
+   "tradeId": "T-10337",
+   "product": "Listed equity option",
+   "notional": 114000000.0,
+   "maturity": "2027-12-20",
+   "mtm": -1590549
+  },
+  {
+   "tradeId": "T-10338",
+   "product": "Listed equity option",
+   "notional": 82000000.0,
+   "maturity": "2027-12-06",
+   "mtm": -1566065
+  },
+  {
+   "tradeId": "T-10339",
+   "product": "Listed equity option",
+   "notional": 122000000.0,
+   "maturity": "2027-05-11",
+   "mtm": -795277
+  },
+  {
+   "tradeId": "T-10340",
+   "product": "Listed equity option",
+   "notional": 69000000.0,
+   "maturity": "2028-03-09",
+   "mtm": -211896
+  },
+  {
+   "tradeId": "T-10341",
+   "product": "Listed equity option",
+   "notional": 193000000.0,
+   "maturity": "2027-01-25",
+   "mtm": 2756929
+  },
+  {
+   "tradeId": "T-10342",
+   "product": "Listed equity option",
+   "notional": 122000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -181527
+  },
+  {
+   "tradeId": "T-10427",
+   "product": "Equity warrant",
+   "notional": 73000000.0,
+   "maturity": "2027-12-24",
+   "mtm": 544626
+  },
+  {
+   "tradeId": "T-10428",
+   "product": "Equity warrant",
+   "notional": 157000000.0,
+   "maturity": "2027-09-30",
+   "mtm": 45967
+  },
+  {
+   "tradeId": "T-10429",
+   "product": "Equity warrant",
+   "notional": 67000000.0,
+   "maturity": "2027-07-29",
+   "mtm": 601179
+  },
+  {
+   "tradeId": "T-10430",
+   "product": "Equity warrant",
+   "notional": 179000000.0,
+   "maturity": "2028-06-20",
+   "mtm": 3143714
+  },
+  {
+   "tradeId": "T-10431",
+   "product": "Equity warrant",
+   "notional": 144000000.0,
+   "maturity": "2027-06-29",
+   "mtm": -403925
+  },
+  {
+   "tradeId": "T-10432",
+   "product": "Equity warrant",
+   "notional": 192000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 1693183
+  }
+ ],
+ "ccp": "CCP-EUREX",
+ "_meta": {
+  "source": "clearing-system",
+  "generation": 1
+ }
+}

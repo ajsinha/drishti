@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-TOKAI-FRA",
+ "held": 0,
+ "posted": 3360263,
+ "net": -3360263,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Japan Ministry of Finance 2031",
+   "direction": "Posted",
+   "marketValue": 1120088,
+   "haircut": 0.01,
+   "value": 1108887
+  },
+  {
+   "asset": "Verdant Agri Holdings 2036",
+   "direction": "Posted",
+   "marketValue": 1120088,
+   "haircut": 0.005,
+   "value": 1114488
+  },
+  {
+   "asset": "Cascadia Airlines Inc. 2031",
+   "direction": "Posted",
+   "marketValue": 1120088,
+   "haircut": 0.005,
+   "value": 1114488
+  }
+ ],
+ "csa": "CSA-TOKAI",
+ "nettingSet": "NS-TOKAI-FRA",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

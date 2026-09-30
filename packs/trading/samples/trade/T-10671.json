@@ -1,0 +1,217 @@
+{
+ "tradeId": "T-10671",
+ "productType": "DEPOSIT",
+ "productName": "Term deposit / placement",
+ "assetClass": "Money market",
+ "family": "money",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2026-07-31",
+ "effectiveDate": "2026-08-03",
+ "maturityDate": "2027-01-11",
+ "currency": "EUR",
+ "notional": 12000000.0,
+ "mtm": -41962,
+ "mtmCurrency": "USD",
+ "pnl1d": 778,
+ "counterparty": {
+  "id": "CP-SOLARIS",
+  "name": "Solaris Energy Corp."
+ },
+ "nettingSet": "NS-SOLARIS-NY",
+ "book": "BOOK-MM-1",
+ "trader": "TRDR-ISCHULZ",
+ "desk": "DESK-MM",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-EUR-OIS",
+ "terms": {
+  "rate": 0.037625,
+  "placedTaken": "Placed"
+ },
+ "risk": {
+  "dv01": -462
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -154
+  },
+  {
+   "bucket": "6M",
+   "dv01": -308
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 2313
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 5375
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 2667
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -3769
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -2233
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -3078
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 2952
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -6987
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -128
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -1819
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -2087
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 2238
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 2704
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -8640
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -1124
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 925
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 1754
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 5500
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -66
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 2573
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-07-31",
+  "executionTimestamp": "2026-07-31T15:05:00.960Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "I. Schulz",
+  "salesperson": null,
+  "orderId": "ORD-B5BE2E605D"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-07-31T12:35:00Z",
+    "by": "mo.ops"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2026-08-14T12:35:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-07-31T12:35:00Z",
+  "lastModifiedAt": "2026-08-14T12:35:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT106887728",
+  "matched": "2026-07-31 15:53",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096B5BE2E605D5C9CA4F68F",
+  "upi": "QZHG9ZVXFNAF",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "SOLAGB33XXX",
+  "ssiId": "SSI-EUR-269904",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -41962,
+  "cleanPv": -41962.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-EUR-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-mm",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

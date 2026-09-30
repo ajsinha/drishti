@@ -1,0 +1,25 @@
+{
+ "issuerId": "ISS-UST",
+ "name": "United States Treasury",
+ "rating": "AA+",
+ "sector": "Sovereign",
+ "country": "US",
+ "bonds": [
+  {
+   "isin": "US0UST030079",
+   "coupon": 0.0382,
+   "maturity": "2031-02-15"
+  },
+  {
+   "isin": "US0UST151040",
+   "coupon": 0.0432,
+   "maturity": "2036-04-15"
+  }
+ ],
+ "creditCurve": "CDS-UST",
+ "lei": "549300DBLOS7ALI76P85",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

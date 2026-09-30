@@ -1,0 +1,17 @@
+{
+ "groupId": "GRP-AURORA",
+ "name": "Aurora Sovereign Wealth Fund",
+ "limit": 203000000.0,
+ "utilisation": 0.7505,
+ "members": [
+  {
+   "id": "CP-AURORA",
+   "name": "Aurora Sovereign Wealth Fund",
+   "rating": "AAA"
+  }
+ ],
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

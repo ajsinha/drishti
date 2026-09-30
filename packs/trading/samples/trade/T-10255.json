@@ -1,0 +1,338 @@
+{
+ "tradeId": "T-10255",
+ "productType": "CDS_TRANCHE",
+ "productName": "Index tranche",
+ "assetClass": "Credit",
+ "family": "cds",
+ "status": "Live",
+ "direction": "Sell protection",
+ "tradeDate": "2026-02-19",
+ "effectiveDate": "2026-02-23",
+ "maturityDate": "2035-10-10",
+ "currency": "CAD",
+ "notional": 11000000.0,
+ "mtm": 92367,
+ "mtmCurrency": "USD",
+ "pnl1d": -2118,
+ "counterparty": {
+  "id": "CP-BRAMBLE",
+  "name": "Bramble Asset Management"
+ },
+ "nettingSet": "NS-BRAMBLE-NY",
+ "book": "BOOK-CREDIT-2",
+ "trader": "TRDR-CDUBOIS",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-MERIDIAN",
+ "creditCurve": "CDS-MERIDIAN",
+ "discountCurve": "CRV-CAD-OIS",
+ "correlation": "CORR-US-EQ",
+ "terms": {
+  "index": "CDX.NA.IG S47",
+  "attachment": "0.03",
+  "detachment": "0.03",
+  "protection": "Bought"
+ },
+ "risk": {
+  "cs01": -8584,
+  "jtd": -6600000
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": -307,
+   "jtd": -235714
+  },
+  {
+   "bucket": "1Y",
+   "cs01": -613,
+   "jtd": -471429
+  },
+  {
+   "bucket": "2Y",
+   "cs01": -920,
+   "jtd": -707143
+  },
+  {
+   "bucket": "3Y",
+   "cs01": -1226,
+   "jtd": -942857
+  },
+  {
+   "bucket": "5Y",
+   "cs01": -1533,
+   "jtd": -1178571
+  },
+  {
+   "bucket": "7Y",
+   "cs01": -1839,
+   "jtd": -1414286
+  },
+  {
+   "bucket": "10Y",
+   "cs01": -2146,
+   "jtd": -1650000
+  }
+ ],
+ "schedule": [
+  {
+   "payDate": "2027-02-23",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -30284.1,
+   "pv": -29375.58,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2028-02-23",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -24540.48,
+   "pv": -23804.27,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2029-02-23",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -23283.89,
+   "pv": -22585.37,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2030-02-23",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -29462.5,
+   "pv": -28578.62,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2031-02-23",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -24428.55,
+   "pv": -23695.69,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2032-02-23",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -23615.43,
+   "pv": -22906.97,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2033-02-23",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -32960.96,
+   "pv": -31972.13,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2034-02-23",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -28351.12,
+   "pv": -27500.59,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2035-02-23",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -27779.04,
+   "pv": -26945.67,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2035-10-10",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -29736.18,
+   "pv": -28844.09,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 3161
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 1745
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -2354
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 1836
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -3003
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 2389
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 2715
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -1600
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -3062
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 2457
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 897
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -262
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 4314
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -1625
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 2035
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -1444
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 2441
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 1458
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -892
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 2043
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-02-19",
+  "executionTimestamp": "2026-02-19T11:28:18.548Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "C. Dubois",
+  "salesperson": null,
+  "orderId": "ORD-CA6680053F"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-02-19T11:28:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-02-19T11:28:00Z",
+  "lastModifiedAt": "2026-02-19T11:28:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA930539200",
+  "matched": "2026-02-19 16:16",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096CA6680053F1AC98619E0",
+  "upi": "QZDTBHN24KLI",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "BRAMGB33XXX",
+  "ssiId": "SSI-CAD-1243C8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 92367,
+  "cleanPv": 92367.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CDS-MERIDIAN",
+   "CRV-CAD-OIS",
+   "CORR-US-EQ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

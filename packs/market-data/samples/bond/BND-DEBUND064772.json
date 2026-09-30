@@ -1,0 +1,176 @@
+{
+ "isin": "BND-DEBUND064772",
+ "isinCode": "DEBUND064772",
+ "issuerName": "Federal Republic of Germany",
+ "coupon": 0.038,
+ "maturity": "2031-03-15",
+ "price": 107.656,
+ "yield": 0.0204,
+ "zSpread": 8.5,
+ "modDuration": 4.35,
+ "rating": "AAA",
+ "terms": {
+  "currency": "EUR",
+  "couponFrequency": "Annual",
+  "dayCount": "ACT/ACT",
+  "issueDate": "2021-03-15",
+  "amountIssued": 1000000000,
+  "seniority": "Sovereign",
+  "callable": false,
+  "cusip": null
+ },
+ "coupons": [
+  {
+   "date": "2027-03-15",
+   "amount": 3.8
+  },
+  {
+   "date": "2028-03-15",
+   "amount": 3.8
+  },
+  {
+   "date": "2029-03-15",
+   "amount": 3.8
+  },
+  {
+   "date": "2030-03-15",
+   "amount": 3.8
+  },
+  {
+   "date": "2031-03-15",
+   "amount": 3.8
+  }
+ ],
+ "history": [
+  {
+   "date": "2026-08-19",
+   "price": 106.239
+  },
+  {
+   "date": "2026-08-20",
+   "price": 106.528
+  },
+  {
+   "date": "2026-08-21",
+   "price": 106.489
+  },
+  {
+   "date": "2026-08-24",
+   "price": 106.851
+  },
+  {
+   "date": "2026-08-25",
+   "price": 106.675
+  },
+  {
+   "date": "2026-08-26",
+   "price": 106.883
+  },
+  {
+   "date": "2026-08-27",
+   "price": 106.981
+  },
+  {
+   "date": "2026-08-28",
+   "price": 106.819
+  },
+  {
+   "date": "2026-08-31",
+   "price": 106.622
+  },
+  {
+   "date": "2026-09-01",
+   "price": 106.761
+  },
+  {
+   "date": "2026-09-02",
+   "price": 106.794
+  },
+  {
+   "date": "2026-09-03",
+   "price": 107.127
+  },
+  {
+   "date": "2026-09-04",
+   "price": 107.142
+  },
+  {
+   "date": "2026-09-08",
+   "price": 107.145
+  },
+  {
+   "date": "2026-09-09",
+   "price": 107.413
+  },
+  {
+   "date": "2026-09-10",
+   "price": 107.368
+  },
+  {
+   "date": "2026-09-11",
+   "price": 107.421
+  },
+  {
+   "date": "2026-09-14",
+   "price": 107.621
+  },
+  {
+   "date": "2026-09-15",
+   "price": 107.644
+  },
+  {
+   "date": "2026-09-16",
+   "price": 107.735
+  },
+  {
+   "date": "2026-09-17",
+   "price": 107.308
+  },
+  {
+   "date": "2026-09-18",
+   "price": 107.289
+  },
+  {
+   "date": "2026-09-21",
+   "price": 107.251
+  },
+  {
+   "date": "2026-09-22",
+   "price": 107.183
+  },
+  {
+   "date": "2026-09-23",
+   "price": 107.186
+  },
+  {
+   "date": "2026-09-24",
+   "price": 107.454
+  },
+  {
+   "date": "2026-09-25",
+   "price": 107.665
+  },
+  {
+   "date": "2026-09-28",
+   "price": 107.724
+  },
+  {
+   "date": "2026-09-29",
+   "price": 107.638
+  },
+  {
+   "date": "2026-09-30",
+   "price": 107.656
+  }
+ ],
+ "issuer": "ISS-BUND",
+ "benchmarkCurve": "CRV-EUR-GOVT",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "price": 0.02
+  }
+ }
+}

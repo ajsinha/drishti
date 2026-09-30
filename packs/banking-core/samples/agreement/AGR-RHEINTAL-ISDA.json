@@ -1,0 +1,22 @@
+{
+ "agreementId": "AGR-RHEINTAL-ISDA",
+ "type": "ISDA 2002 Master",
+ "counterpartyName": "Rheintal Landesbank",
+ "governingLaw": "English",
+ "signed": "2023-08-10",
+ "closeOutNetting": "Enforceable",
+ "elections": {
+  "automaticEarlyTermination": false,
+  "crossDefault": "3% of shareholders' equity",
+  "setOff": true,
+  "terminationCurrency": "USD",
+  "additionalTerminationEvents": "Rating downgrade below BBB-",
+  "protocols": "ISDA 2020 IBOR Fallbacks; 2018 US Resolution Stay"
+ },
+ "counterparty": "CP-RHEINTAL",
+ "csa": "CSA-RHEINTAL",
+ "_meta": {
+  "source": "legal-docs",
+  "generation": 1
+ }
+}

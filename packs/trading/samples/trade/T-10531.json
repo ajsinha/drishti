@@ -1,0 +1,282 @@
+{
+ "tradeId": "T-10531",
+ "productType": "FREIGHT_FFA",
+ "productName": "Freight forward agreement",
+ "assetClass": "Commodity",
+ "family": "linear",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2025-03-26",
+ "effectiveDate": "2025-03-28",
+ "maturityDate": "2026-10-07",
+ "currency": "USD",
+ "notional": 31000000.0,
+ "mtm": 660756,
+ "mtmCurrency": "USD",
+ "pnl1d": 8964,
+ "counterparty": {
+  "id": "CP-TOKAI",
+  "name": "Tokai Mutual Trust Bank"
+ },
+ "nettingSet": "NS-TOKAI-NY",
+ "book": "BOOK-COMM-1",
+ "trader": "TRDR-TBRENNAN",
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "commodityCurve": "CMDC-SOY",
+ "terms": {
+  "route": "TD3C",
+  "days": 86,
+  "fixedRate": 21201.0
+ },
+ "risk": {
+  "delta": -69194
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -4613
+  },
+  {
+   "bucket": "1M",
+   "delta": -9226
+  },
+  {
+   "bucket": "3M",
+   "delta": -13839
+  },
+  {
+   "bucket": "6M",
+   "delta": -18452
+  },
+  {
+   "bucket": "1Y",
+   "delta": -23065
+  }
+ ],
+ "schedule": [
+  {
+   "fixingDate": "2025-06-28",
+   "period": "2025-06-28..2025-09-28",
+   "index": "SOFR",
+   "rate": 0.043241,
+   "payoff": 63867.75,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2025-09-28",
+   "period": "2025-09-28..2025-12-28",
+   "index": "SOFR",
+   "rate": 0.026305,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2025-12-28",
+   "period": "2025-12-28..2026-03-28",
+   "index": "SOFR",
+   "rate": 0.040097,
+   "payoff": 39501.75,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-03-28",
+   "period": "2026-03-28..2026-06-28",
+   "index": "SOFR",
+   "rate": 0.044447,
+   "payoff": 73214.25,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-06-28",
+   "period": "2026-06-28..2026-09-28",
+   "index": "SOFR",
+   "rate": 0.03446,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-09-28",
+   "period": "2026-09-28..2026-12-28",
+   "index": "SOFR",
+   "rate": 0.036739,
+   "payoff": 13477.25,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-10-07",
+   "period": "2026-10-07..2027-01-07",
+   "index": "SOFR",
+   "rate": 0.04718,
+   "payoff": 94395.0,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 6,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -5938
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 9365
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -47352
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -3791
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -25429
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -31477
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 16605
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -21035
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 11706
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -15228
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -10602
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -63
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -576
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -19166
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -17407
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -16443
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -35523
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -3987
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -9238
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -11845
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-03-26",
+  "executionTimestamp": "2025-03-26T13:34:55.744Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "T. Brennan",
+  "salesperson": null,
+  "orderId": "ORD-24F8560062"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-03-26T11:29:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2025-03-26T11:29:00Z",
+  "lastModifiedAt": "2025-03-26T11:29:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT715735524",
+  "matched": "2025-03-26 15:38",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209624F85600620A2413EE9D",
+  "upi": "QZ4EH0KFS5HO",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "TOKAUS33XXX",
+  "ssiId": "SSI-USD-6E2541",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 660756,
+  "cleanPv": 660756.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CMDC-SOY"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "endur-comm",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 1632
+  }
+ }
+}

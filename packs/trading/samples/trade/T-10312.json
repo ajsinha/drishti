@@ -1,0 +1,233 @@
+{
+ "tradeId": "T-10312",
+ "productType": "RISK_PARTICIPATION",
+ "productName": "Unfunded risk participation",
+ "assetClass": "Credit",
+ "family": "cds",
+ "status": "Live",
+ "direction": "Buy protection",
+ "tradeDate": "2024-06-25",
+ "effectiveDate": "2024-06-27",
+ "maturityDate": "2027-01-20",
+ "currency": "AUD",
+ "notional": 93000000.0,
+ "mtm": -241183,
+ "mtmCurrency": "USD",
+ "pnl1d": 8957,
+ "counterparty": {
+  "id": "CP-BRAMBLE",
+  "name": "Bramble Asset Management"
+ },
+ "nettingSet": "NS-BRAMBLE-NY",
+ "book": "BOOK-CREDIT-2",
+ "trader": "TRDR-DWHITFIELD",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-GRANITE",
+ "creditCurve": "CDS-GRANITE",
+ "discountCurve": "CRV-AUD-OIS",
+ "terms": {
+  "participation": 0.396109,
+  "fee": 248.2
+ },
+ "risk": {
+  "cs01": 18981,
+  "jtd": -55800000
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 1898,
+   "jtd": -5580000
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 3796,
+   "jtd": -11160000
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 5694,
+   "jtd": -16740000
+  },
+  {
+   "bucket": "3Y",
+   "cs01": 7592,
+   "jtd": -22320000
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 6697
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 87
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -10620
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -4728
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 3632
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 8851
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -5165
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -1881
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 13808
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 3539
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 6614
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -12512
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -2758
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 13533
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 11048
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -1586
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -2155
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 6810
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -24057
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 15656
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-06-25",
+  "executionTimestamp": "2024-06-25T12:56:55.893Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "D. Whitfield",
+  "salesperson": null,
+  "orderId": "ORD-295F6D9429"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-06-25T09:09:00Z",
+    "by": "fo.capture"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2024-11-05T09:09:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2024-06-25T09:09:00Z",
+  "lastModifiedAt": "2024-11-05T09:09:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA496856648",
+  "matched": "2024-06-25 17:10",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096295F6D94290DC0D93DD7",
+  "upi": "QZIBLUZQKSL0",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "BRAMGB33XXX",
+  "ssiId": "SSI-AUD-1243C8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -241183,
+  "cleanPv": -241183.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CDS-GRANITE",
+   "CRV-AUD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 1412
+  }
+ }
+}

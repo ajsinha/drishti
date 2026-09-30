@@ -1,0 +1,176 @@
+{
+ "isin": "BND-JP0JGB019237",
+ "isinCode": "JP0JGB019237",
+ "issuerName": "Japan Ministry of Finance",
+ "coupon": 0.0188,
+ "maturity": "2031-01-15",
+ "price": 104.872,
+ "yield": 0.0076,
+ "zSpread": 19.9,
+ "modDuration": 4.35,
+ "rating": "A+",
+ "terms": {
+  "currency": "JPY",
+  "couponFrequency": "Annual",
+  "dayCount": "ACT/ACT",
+  "issueDate": "2021-01-15",
+  "amountIssued": 5100000000,
+  "seniority": "Sovereign",
+  "callable": false,
+  "cusip": null
+ },
+ "coupons": [
+  {
+   "date": "2027-01-15",
+   "amount": 1.88
+  },
+  {
+   "date": "2028-01-15",
+   "amount": 1.88
+  },
+  {
+   "date": "2029-01-15",
+   "amount": 1.88
+  },
+  {
+   "date": "2030-01-15",
+   "amount": 1.88
+  },
+  {
+   "date": "2031-01-15",
+   "amount": 1.88
+  }
+ ],
+ "history": [
+  {
+   "date": "2026-08-19",
+   "price": 104.561
+  },
+  {
+   "date": "2026-08-20",
+   "price": 104.466
+  },
+  {
+   "date": "2026-08-21",
+   "price": 104.565
+  },
+  {
+   "date": "2026-08-24",
+   "price": 104.723
+  },
+  {
+   "date": "2026-08-25",
+   "price": 104.733
+  },
+  {
+   "date": "2026-08-26",
+   "price": 104.589
+  },
+  {
+   "date": "2026-08-27",
+   "price": 104.916
+  },
+  {
+   "date": "2026-08-28",
+   "price": 105.322
+  },
+  {
+   "date": "2026-08-31",
+   "price": 105.243
+  },
+  {
+   "date": "2026-09-01",
+   "price": 105.188
+  },
+  {
+   "date": "2026-09-02",
+   "price": 104.941
+  },
+  {
+   "date": "2026-09-03",
+   "price": 105.289
+  },
+  {
+   "date": "2026-09-04",
+   "price": 105.36
+  },
+  {
+   "date": "2026-09-08",
+   "price": 105.164
+  },
+  {
+   "date": "2026-09-09",
+   "price": 104.951
+  },
+  {
+   "date": "2026-09-10",
+   "price": 104.954
+  },
+  {
+   "date": "2026-09-11",
+   "price": 104.736
+  },
+  {
+   "date": "2026-09-14",
+   "price": 104.772
+  },
+  {
+   "date": "2026-09-15",
+   "price": 105.321
+  },
+  {
+   "date": "2026-09-16",
+   "price": 105.128
+  },
+  {
+   "date": "2026-09-17",
+   "price": 104.892
+  },
+  {
+   "date": "2026-09-18",
+   "price": 105.067
+  },
+  {
+   "date": "2026-09-21",
+   "price": 104.892
+  },
+  {
+   "date": "2026-09-22",
+   "price": 104.788
+  },
+  {
+   "date": "2026-09-23",
+   "price": 104.664
+  },
+  {
+   "date": "2026-09-24",
+   "price": 104.563
+  },
+  {
+   "date": "2026-09-25",
+   "price": 104.51
+  },
+  {
+   "date": "2026-09-28",
+   "price": 104.683
+  },
+  {
+   "date": "2026-09-29",
+   "price": 104.877
+  },
+  {
+   "date": "2026-09-30",
+   "price": 104.872
+  }
+ ],
+ "issuer": "ISS-JGB",
+ "benchmarkCurve": "CRV-JPY-GOVT",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "price": 0.02
+  }
+ }
+}

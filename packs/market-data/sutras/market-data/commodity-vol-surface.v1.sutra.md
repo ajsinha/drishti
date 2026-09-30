@@ -32,6 +32,17 @@ strip:
   - { label: Commodity, bind: $.commodity }
   - { label: Front ATM, bind: $.atmFront, fmt: price2, emphasis: true }
 panels:
+  - id: surface
+    kind: surface
+    title: Implied vol by contract × moneyness (%)
+    code: SURF
+    key: F4
+    rows: $.grid
+    y: month
+    columns:
+      - { label: "90%", bind: "@.m90", fmt: price2 }
+      - { label: "100%", bind: "@.m100", fmt: price2 }
+      - { label: "110%", bind: "@.m110", fmt: price2 }
   - id: grid
     kind: table
     title: Vol (%)
@@ -66,5 +77,6 @@ keys: { F8: impact, F9: raw }
 
 | Panel | Kind | Rows |
 |---|---|---|
+| Implied vol by contract × moneyness (%) | surface | `$.grid` |
 | Vol (%) | table | `$.grid` |
 | ATM by month | line | `$.grid` |

@@ -1,0 +1,35 @@
+{
+ "calcId": "SIMM-CORAL",
+ "total": 9086424,
+ "posted": 8813831,
+ "received": 9268152,
+ "version": "ISDA SIMM 2.7",
+ "riskClasses": [
+  {
+   "riskClass": "Interest rate",
+   "im": 4088891
+  },
+  {
+   "riskClass": "Credit qualifying",
+   "im": 1090371
+  },
+  {
+   "riskClass": "Equity",
+   "im": 1635556
+  },
+  {
+   "riskClass": "Commodity",
+   "im": 726914
+  },
+  {
+   "riskClass": "FX",
+   "im": 1544692
+  }
+ ],
+ "nettingSet": "NS-CORAL-FRA",
+ "counterparty": "CP-CORAL",
+ "_meta": {
+  "source": "margin-engine",
+  "generation": 1
+ }
+}

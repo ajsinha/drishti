@@ -1,0 +1,104 @@
+{
+ "nettingSetId": "NS-LUMEN-FRA",
+ "tradeCount": 2,
+ "netMtm": -2081448,
+ "collateral": -1114672,
+ "eePeak": 74550,
+ "pfePeak": 182648,
+ "limit": 5000000.0,
+ "utilisation": 0.0365,
+ "cva": -6,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 20676,
+   "pfe": 64126
+  },
+  {
+   "tenor": "1M",
+   "ee": 43041,
+   "pfe": 113329
+  },
+  {
+   "tenor": "3M",
+   "ee": 74550,
+   "pfe": 182648
+  },
+  {
+   "tenor": "6M",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "1Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "2Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "3Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "5Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "7Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "10Y",
+   "ee": 0,
+   "pfe": 0
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10695",
+   "product": "Tri-party repo",
+   "notional": 136000000.0,
+   "maturity": "2027-01-29",
+   "mtm": -1727235
+  },
+  {
+   "tradeId": "T-10715",
+   "product": "Margin loan",
+   "notional": 77000000.0,
+   "maturity": "2027-01-11",
+   "mtm": -354213
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Securities financing",
+   "mtm": -2081448
+  }
+ ],
+ "counterparty": "CP-LUMEN",
+ "agreement": "AGR-LUMEN-ISDA",
+ "csa": "CSA-LUMEN",
+ "creditLimit": "LIM-LUMEN",
+ "exposureProfile": "EXP-LUMEN-FRA",
+ "cvaResult": "CVA-LUMEN-FRA",
+ "saccr": "SACCR-LUMEN-FRA",
+ "simm": "SIMM-LUMEN",
+ "collateralBalance": "COLL-LUMEN-FRA",
+ "legalEntity": "LE-FRA",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 4162
+  }
+ }
+}

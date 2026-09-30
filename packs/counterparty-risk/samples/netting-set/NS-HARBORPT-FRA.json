@@ -1,0 +1,111 @@
+{
+ "nettingSetId": "NS-HARBORPT-FRA",
+ "tradeCount": 3,
+ "netMtm": -4267705,
+ "collateral": -3512246,
+ "eePeak": 48295,
+ "pfePeak": 133670,
+ "limit": 5000000.0,
+ "utilisation": 0.0267,
+ "cva": -3,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 43100,
+   "pfe": 133670
+  },
+  {
+   "tenor": "1M",
+   "ee": 48295,
+   "pfe": 127162
+  },
+  {
+   "tenor": "3M",
+   "ee": 31850,
+   "pfe": 78032
+  },
+  {
+   "tenor": "6M",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "1Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "2Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "3Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "5Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "7Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "10Y",
+   "ee": 0,
+   "pfe": 0
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10714",
+   "product": "Securities borrowing",
+   "notional": 91000000.0,
+   "maturity": "2027-01-29",
+   "mtm": -2200202
+  },
+  {
+   "tradeId": "T-10709",
+   "product": "Securities borrowing",
+   "notional": 148000000.0,
+   "maturity": "2026-11-12",
+   "mtm": -2184430
+  },
+  {
+   "tradeId": "T-10705",
+   "product": "Securities lending",
+   "notional": 205000000.0,
+   "maturity": "2026-10-20",
+   "mtm": 116927
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Securities financing",
+   "mtm": -4267705
+  }
+ ],
+ "counterparty": "CP-HARBORPT",
+ "agreement": "AGR-HARBORPT-ISDA",
+ "csa": "CSA-HARBORPT",
+ "creditLimit": "LIM-HARBORPT",
+ "exposureProfile": "EXP-HARBORPT-FRA",
+ "cvaResult": "CVA-HARBORPT-FRA",
+ "saccr": "SACCR-HARBORPT-FRA",
+ "simm": "SIMM-HARBORPT",
+ "collateralBalance": "COLL-HARBORPT-FRA",
+ "legalEntity": "LE-FRA",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 8535
+  }
+ }
+}

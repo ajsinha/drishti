@@ -1,0 +1,63 @@
+{
+ "curveId": "CDS-GILT",
+ "issuerName": "United Kingdom Debt Management Office",
+ "spread5y": 18,
+ "recovery": 0.25,
+ "seniority": "Senior unsecured",
+ "docClause": "MM14",
+ "pd1y": 0.001346,
+ "points": [
+  {
+   "tenor": "6M",
+   "spread": 9.1,
+   "hazard": 0.001213,
+   "survival": 0.999394
+  },
+  {
+   "tenor": "1Y",
+   "spread": 10.1,
+   "hazard": 0.001347,
+   "survival": 0.998654
+  },
+  {
+   "tenor": "2Y",
+   "spread": 12.1,
+   "hazard": 0.001613,
+   "survival": 0.996779
+  },
+  {
+   "tenor": "3Y",
+   "spread": 14.0,
+   "hazard": 0.001867,
+   "survival": 0.994416
+  },
+  {
+   "tenor": "5Y",
+   "spread": 18.0,
+   "hazard": 0.0024,
+   "survival": 0.988072
+  },
+  {
+   "tenor": "7Y",
+   "spread": 19.1,
+   "hazard": 0.002547,
+   "survival": 0.982331
+  },
+  {
+   "tenor": "10Y",
+   "spread": 20.7,
+   "hazard": 0.00276,
+   "survival": 0.972777
+  }
+ ],
+ "issuer": "ISS-GILT",
+ "currency": "EUR",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "spread5y": 0.4
+  }
+ }
+}

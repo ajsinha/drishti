@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-PINNACLE-LDN",
+ "held": 0,
+ "posted": 28410806,
+ "net": -28410806,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Solaris Energy Corp. 2036",
+   "direction": "Posted",
+   "marketValue": 9470269,
+   "haircut": 0.02,
+   "value": 9280864
+  },
+  {
+   "asset": "Verdant Agri Holdings 2036",
+   "direction": "Posted",
+   "marketValue": 9470269,
+   "haircut": 0.02,
+   "value": 9280864
+  },
+  {
+   "asset": "Halcyon Shipping plc 2031",
+   "direction": "Posted",
+   "marketValue": 9470269,
+   "haircut": 0.005,
+   "value": 9422918
+  }
+ ],
+ "csa": "CSA-PINNACLE",
+ "nettingSet": "NS-PINNACLE-LDN",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

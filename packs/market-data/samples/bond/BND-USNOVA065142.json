@@ -1,0 +1,176 @@
+{
+ "isin": "BND-USNOVA065142",
+ "isinCode": "USNOVA065142",
+ "issuerName": "Novatek Devices Inc.",
+ "coupon": 0.0406,
+ "maturity": "2031-12-15",
+ "price": 99.304,
+ "yield": 0.0422,
+ "zSpread": 49.4,
+ "modDuration": 4.35,
+ "rating": "A+",
+ "terms": {
+  "currency": "USD",
+  "couponFrequency": "Semi-annual",
+  "dayCount": "ACT/ACT",
+  "issueDate": "2021-12-15",
+  "amountIssued": 3400000000,
+  "seniority": "Senior unsecured",
+  "callable": false,
+  "cusip": "NOVA06517"
+ },
+ "coupons": [
+  {
+   "date": "2027-12-15",
+   "amount": 2.03
+  },
+  {
+   "date": "2028-12-15",
+   "amount": 2.03
+  },
+  {
+   "date": "2029-12-15",
+   "amount": 2.03
+  },
+  {
+   "date": "2030-12-15",
+   "amount": 2.03
+  },
+  {
+   "date": "2031-12-15",
+   "amount": 2.03
+  }
+ ],
+ "history": [
+  {
+   "date": "2026-08-19",
+   "price": 100.27
+  },
+  {
+   "date": "2026-08-20",
+   "price": 99.946
+  },
+  {
+   "date": "2026-08-21",
+   "price": 100.126
+  },
+  {
+   "date": "2026-08-24",
+   "price": 99.916
+  },
+  {
+   "date": "2026-08-25",
+   "price": 99.824
+  },
+  {
+   "date": "2026-08-26",
+   "price": 99.949
+  },
+  {
+   "date": "2026-08-27",
+   "price": 100.02
+  },
+  {
+   "date": "2026-08-28",
+   "price": 99.806
+  },
+  {
+   "date": "2026-08-31",
+   "price": 99.739
+  },
+  {
+   "date": "2026-09-01",
+   "price": 99.729
+  },
+  {
+   "date": "2026-09-02",
+   "price": 99.997
+  },
+  {
+   "date": "2026-09-03",
+   "price": 99.766
+  },
+  {
+   "date": "2026-09-04",
+   "price": 99.999
+  },
+  {
+   "date": "2026-09-08",
+   "price": 100.064
+  },
+  {
+   "date": "2026-09-09",
+   "price": 100.152
+  },
+  {
+   "date": "2026-09-10",
+   "price": 100.53
+  },
+  {
+   "date": "2026-09-11",
+   "price": 100.001
+  },
+  {
+   "date": "2026-09-14",
+   "price": 100.137
+  },
+  {
+   "date": "2026-09-15",
+   "price": 100.152
+  },
+  {
+   "date": "2026-09-16",
+   "price": 100.034
+  },
+  {
+   "date": "2026-09-17",
+   "price": 99.79
+  },
+  {
+   "date": "2026-09-18",
+   "price": 99.64
+  },
+  {
+   "date": "2026-09-21",
+   "price": 99.701
+  },
+  {
+   "date": "2026-09-22",
+   "price": 99.528
+  },
+  {
+   "date": "2026-09-23",
+   "price": 99.448
+  },
+  {
+   "date": "2026-09-24",
+   "price": 99.668
+  },
+  {
+   "date": "2026-09-25",
+   "price": 99.984
+  },
+  {
+   "date": "2026-09-28",
+   "price": 99.707
+  },
+  {
+   "date": "2026-09-29",
+   "price": 99.625
+  },
+  {
+   "date": "2026-09-30",
+   "price": 99.304
+  }
+ ],
+ "issuer": "ISS-NOVATEK",
+ "benchmarkCurve": "CRV-USD-GOVT",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "price": 0.02
+  }
+ }
+}

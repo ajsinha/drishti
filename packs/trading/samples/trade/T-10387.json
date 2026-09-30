@@ -1,0 +1,331 @@
+{
+ "tradeId": "T-10387",
+ "productType": "REVERSE_CONVERTIBLE",
+ "productName": "Reverse convertible",
+ "assetClass": "Equity",
+ "family": "note",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2025-03-18",
+ "effectiveDate": "2025-03-20",
+ "maturityDate": "2032-05-17",
+ "currency": "USD",
+ "notional": 65000000.0,
+ "mtm": 479208,
+ "mtmCurrency": "USD",
+ "pnl1d": -17903,
+ "counterparty": {
+  "id": "CP-TOKAI",
+  "name": "Tokai Mutual Trust Bank"
+ },
+ "nettingSet": "NS-TOKAI-LDN",
+ "book": "BOOK-EQD-2",
+ "trader": "TRDR-PLINDQVIST",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingEquity": "EQ-HLXP",
+ "equityVolSurface": "EQV-HLXP",
+ "dividendCurve": "DIV-HLXP",
+ "terms": {
+  "coupon": 0.140141,
+  "barrier": 0.761352
+ },
+ "risk": {
+  "delta": -301783,
+  "vega": -320337
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -14371,
+   "vega": -15254
+  },
+  {
+   "bucket": "1M",
+   "delta": -28741,
+   "vega": -30508
+  },
+  {
+   "bucket": "3M",
+   "delta": -43112,
+   "vega": -45762
+  },
+  {
+   "bucket": "6M",
+   "delta": -57482,
+   "vega": -61017
+  },
+  {
+   "bucket": "1Y",
+   "delta": -71853,
+   "vega": -76271
+  },
+  {
+   "bucket": "2Y",
+   "delta": -86224,
+   "vega": -91525
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2025-09-20",
+   "rate": 0.027244,
+   "amount": 1300000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-03-20",
+   "rate": 0.038982,
+   "amount": 1300000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-09-20",
+   "rate": 0.044236,
+   "amount": 1300000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2027-03-20",
+   "rate": 0.021907,
+   "amount": 1300000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-09-20",
+   "rate": 0.045333,
+   "amount": 1300000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-03-20",
+   "rate": 0.046127,
+   "amount": 1300000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-09-20",
+   "rate": 0.023312,
+   "amount": 1300000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-03-20",
+   "rate": 0.035541,
+   "amount": 1300000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-09-20",
+   "rate": 0.041514,
+   "amount": 1300000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-03-20",
+   "rate": 0.039146,
+   "amount": 1300000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-09-20",
+   "rate": 0.056702,
+   "amount": 1300000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-03-20",
+   "rate": 0.037226,
+   "amount": 1300000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-09-20",
+   "rate": 0.028512,
+   "amount": 1300000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2032-03-20",
+   "rate": 0.032549,
+   "amount": 1300000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2032-05-17",
+   "rate": 0.035162,
+   "amount": 1300000.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 3,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 131
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -1640
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -10951
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 37513
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -444
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 4306
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 8633
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 2084
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 7669
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 5409
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 9267
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -19337
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 10964
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -6915
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 23972
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -5068
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -42107
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 4946
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -9966
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 7959
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-03-18",
+  "executionTimestamp": "2025-03-18T09:52:12.056Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "P. Lindqvist",
+  "salesperson": null,
+  "orderId": "ORD-BCDACA2D1A"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-03-18T10:29:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2025-03-18T10:29:00Z",
+  "lastModifiedAt": "2025-03-18T10:29:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT989676441",
+  "matched": "2025-03-18 17:27",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83BCDACA2D1AC8CEC165D1",
+  "upi": "QZT77JKCTCI3",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "TOKAUS33XXX",
+  "ssiId": "SSI-USD-6E2541",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 479208,
+  "cleanPv": 479208.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQ-HLXP",
+   "EQV-HLXP",
+   "DIV-HLXP"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 1608
+  }
+ }
+}

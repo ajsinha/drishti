@@ -1,0 +1,409 @@
+{
+ "tradeId": "T-10206",
+ "productType": "FX_TOUCH",
+ "productName": "FX one-touch / no-touch",
+ "assetClass": "FX",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2025-05-02",
+ "effectiveDate": "2025-05-06",
+ "maturityDate": "2034-07-03",
+ "currency": "JPY",
+ "notional": 213000000.0,
+ "mtm": -510739,
+ "mtmCurrency": "USD",
+ "pnl1d": 1109,
+ "counterparty": {
+  "id": "CP-BRAMBLE",
+  "name": "Bramble Asset Management"
+ },
+ "nettingSet": "NS-BRAMBLE-LDN",
+ "book": "BOOK-FX-2",
+ "trader": "TRDR-LMOREAU",
+ "desk": "DESK-FX",
+ "legalEntity": "LE-LDN",
+ "fxSpot": "FX-USDJPY",
+ "fxVolSurface": "FXV-USDJPY",
+ "terms": {
+  "touchType": "Double no-touch",
+  "barrier": 34.52431,
+  "payout": 1466557.0,
+  "expiryDate": "2027-06-18"
+ },
+ "risk": {
+  "fxDelta": -2130000,
+  "vega": -1793542
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "fxDelta": -101429,
+   "vega": -85407
+  },
+  {
+   "bucket": "1M",
+   "fxDelta": -202857,
+   "vega": -170814
+  },
+  {
+   "bucket": "3M",
+   "fxDelta": -304286,
+   "vega": -256220
+  },
+  {
+   "bucket": "6M",
+   "fxDelta": -405714,
+   "vega": -341627
+  },
+  {
+   "bucket": "1Y",
+   "fxDelta": -507143,
+   "vega": -427034
+  },
+  {
+   "bucket": "2Y",
+   "fxDelta": -608571,
+   "vega": -512441
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2025-08-06",
+   "level": 98.12,
+   "trigger": 100.0,
+   "performance": -0.0188,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-11-06",
+   "level": 85.28,
+   "trigger": 100.0,
+   "performance": -0.1472,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-02-06",
+   "level": 89.2,
+   "trigger": 100.0,
+   "performance": -0.108,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-05-06",
+   "level": 89.36,
+   "trigger": 100.0,
+   "performance": -0.1064,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-08-06",
+   "level": 92.75,
+   "trigger": 100.0,
+   "performance": -0.0725,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-11-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-02-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-05-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-08-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-11-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-02-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-05-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-08-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-11-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-02-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-05-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-08-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-11-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-02-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-05-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-08-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-11-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-02-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-05-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 5,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 25726
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -13230
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 147
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -2145
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 15996
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -19131
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 6416
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 7394
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -1333
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 25316
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -22848
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -8862
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 4784
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -940
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 11985
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 14439
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -9330
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -1280
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 12762
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -14334
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-05-02",
+  "executionTimestamp": "2025-05-02T16:29:43.475Z",
+  "venue": "EBS",
+  "venueMic": "EBSM",
+  "executionType": "Electronic",
+  "trader": "L. Moreau",
+  "salesperson": null,
+  "orderId": "ORD-22F78EC98A"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-05-02T09:33:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2025-05-02T09:33:00Z",
+  "lastModifiedAt": "2025-05-02T09:33:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT948640757",
+  "matched": "2025-05-02 15:09",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q8322F78EC98A0182F31E79",
+  "upi": "QZM12UJAI8TO",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Foreign exchange"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "BRAMGB33XXX",
+  "ssiId": "SSI-JPY-1243C8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -510739,
+  "cleanPv": -510739.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "FX-USDJPY",
+   "FXV-USDJPY"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "calypso-fx",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 3151
+  }
+ }
+}

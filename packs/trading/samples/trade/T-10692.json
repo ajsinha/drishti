@@ -1,0 +1,248 @@
+{
+ "tradeId": "T-10692",
+ "productType": "TRIPARTY_REPO",
+ "productName": "Tri-party repo",
+ "assetClass": "Securities financing",
+ "family": "sft",
+ "status": "Live",
+ "direction": "Repo (lend cash)",
+ "tradeDate": "2026-09-15",
+ "effectiveDate": "2026-09-17",
+ "maturityDate": "2026-10-15",
+ "currency": "EUR",
+ "notional": 223000000.0,
+ "mtm": -4913363,
+ "mtmCurrency": "USD",
+ "pnl1d": -323941,
+ "counterparty": {
+  "id": "CP-TOKAI",
+  "name": "Tokai Mutual Trust Bank"
+ },
+ "nettingSet": "NS-TOKAI-FRA",
+ "book": "BOOK-SFT-3",
+ "trader": "TRDR-NFAROUK",
+ "desk": "DESK-SFT",
+ "legalEntity": "LE-FRA",
+ "issuer": "ISS-ORBITAL",
+ "repoCurve": "REPO-EUR",
+ "terms": {
+  "repoRate": 0.048157,
+  "agent": "JPM",
+  "basket": "Agency"
+ },
+ "risk": {
+  "exposure": 5037891
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "exposure": 503789
+  },
+  {
+   "bucket": "1M",
+   "exposure": 1007578
+  },
+  {
+   "bucket": "3M",
+   "exposure": 1511367
+  },
+  {
+   "bucket": "6M",
+   "exposure": 2015156
+  }
+ ],
+ "schedule": [
+  {
+   "asset": "Helix Pharmaceuticals Inc. 2036",
+   "isin": "USHELI160541",
+   "quantity": 73970115,
+   "marketValue": 74227531,
+   "haircut": 0.04,
+   "value": 71258430
+  },
+  {
+   "asset": "Halcyon Shipping plc 2036",
+   "isin": "XSHALC114008",
+   "quantity": 70733543,
+   "marketValue": 72456612,
+   "haircut": 0.04,
+   "value": 69558348
+  },
+  {
+   "asset": "Halcyon Shipping plc 2031",
+   "isin": "XSHALC061217",
+   "quantity": 75864344,
+   "marketValue": 75798342,
+   "haircut": 0.02,
+   "value": 74282375
+  }
+ ],
+ "nextIndex": -1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -78276
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 48136
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 25147
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 109531
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 36965
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 71965
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 57230
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 300112
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 47653
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 19518
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 15854
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 54064
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 76665
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 3625
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -67070
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 68967
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -12912
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 122746
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 268918
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -173964
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-09-15",
+  "executionTimestamp": "2026-09-15T16:40:41.193Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "N. Farouk",
+  "salesperson": null,
+  "orderId": "ORD-7BBC0305F5"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-09-15T10:05:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-09-15T10:05:00Z",
+  "lastModifiedAt": "2026-09-15T10:05:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT880898395",
+  "matched": "2026-09-15 16:53",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z9DXU4T18OK7447BBC0305F548C68BE145",
+  "upi": "QZR5OK5QMRHW",
+  "reportingRegimes": [
+   "EU EMIR",
+   "EU MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "TOKAGB33XXX",
+  "ssiId": "SSI-EUR-6E2541",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -4913363,
+  "cleanPv": -4913363.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "REPO-EUR"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "globalone-sft",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 12057
+  }
+ }
+}

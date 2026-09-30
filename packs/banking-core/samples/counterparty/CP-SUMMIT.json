@@ -1,0 +1,38 @@
+{
+ "counterpartyId": "CP-SUMMIT",
+ "name": "Summit Clearing LLC",
+ "lei": "5493007J20IL6214KN31",
+ "rating": "A-",
+ "sector": "Financial services",
+ "country": "US",
+ "type": "Clearing broker",
+ "netMtm": -553996,
+ "pfePeak": 139968654,
+ "nettingSets": [
+  {
+   "id": "NS-SUMMIT-LDN",
+   "agreement": "AGR-SUMMIT-ISDA",
+   "trades": 30,
+   "netMtm": -799588
+  },
+  {
+   "id": "NS-SUMMIT-NY",
+   "agreement": "AGR-SUMMIT-ISDA",
+   "trades": 108,
+   "netMtm": 245592
+  }
+ ],
+ "kyc": {
+  "status": "Approved",
+  "riskRating": "Standard",
+  "lastReview": "2026-02-11",
+  "emirClassification": "NFC-",
+  "pd1y": 0.0008
+ },
+ "group": "GRP-SUMMIT",
+ "creditLimit": "LIM-SUMMIT",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

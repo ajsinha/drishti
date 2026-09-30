@@ -1,0 +1,58 @@
+{
+ "resultId": "CVA-CORAL-LDN",
+ "cva": -6452,
+ "dva": 4516,
+ "fva": -6022,
+ "kva": -58271,
+ "cs01": -116,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -6452
+  },
+  {
+   "name": "DVA",
+   "amount": 4516
+  },
+  {
+   "name": "FVA",
+   "amount": -6022
+  },
+  {
+   "name": "KVA",
+   "amount": -58271
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -116
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 26
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 13
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -194
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 110
+  }
+ ],
+ "nettingSet": "NS-CORAL-LDN",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

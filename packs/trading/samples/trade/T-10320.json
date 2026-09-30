@@ -1,0 +1,235 @@
+{
+ "tradeId": "T-10320",
+ "productType": "EQ_FORWARD",
+ "productName": "Equity forward",
+ "assetClass": "Equity",
+ "family": "linear",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2025-04-17",
+ "effectiveDate": "2025-04-22",
+ "maturityDate": "2026-10-07",
+ "currency": "CHF",
+ "notional": 8000000.0,
+ "mtm": -173531,
+ "mtmCurrency": "USD",
+ "pnl1d": 1504,
+ "counterparty": {
+  "id": "CP-LUMEN",
+  "name": "Lumen Semiconductor AG"
+ },
+ "nettingSet": "NS-LUMEN-LDN",
+ "book": "BOOK-EQD-2",
+ "trader": "TRDR-PLINDQVIST",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingEquity": "EQ-LUMN",
+ "dividendCurve": "DIV-LUMN",
+ "discountCurve": "CRV-CHF-OIS",
+ "terms": {
+  "forwardPrice": 104.19,
+  "quantity": 249522,
+  "settlementDate": "2028-06-02"
+ },
+ "risk": {
+  "delta": -52895
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -3526
+  },
+  {
+   "bucket": "1M",
+   "delta": -7053
+  },
+  {
+   "bucket": "3M",
+   "delta": -10579
+  },
+  {
+   "bucket": "6M",
+   "delta": -14105
+  },
+  {
+   "bucket": "1Y",
+   "delta": -17632
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 70
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -2605
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 1295
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 5132
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 6976
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -3985
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 9085
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 4194
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -6674
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 3550
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 2678
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 5879
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -4561
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -1093
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 3432
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -752
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -7457
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -8419
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -1385
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 2281
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-04-17",
+  "executionTimestamp": "2025-04-17T08:35:34.618Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "P. Lindqvist",
+  "salesperson": null,
+  "orderId": "ORD-1A05F97E02"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-04-17T11:20:00Z",
+    "by": "fo.capture"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2025-09-26T11:20:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2025-04-17T11:20:00Z",
+  "lastModifiedAt": "2025-09-26T11:20:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT198285418",
+  "matched": "2025-04-17 17:10",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q831A05F97E02C441DB7F9A",
+  "upi": "QZ4599AA83E4",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "LUMEGB33XXX",
+  "ssiId": "SSI-CHF-8CF792",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -173531,
+  "cleanPv": -173531.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQ-LUMN",
+   "DIV-LUMN",
+   "CRV-CHF-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

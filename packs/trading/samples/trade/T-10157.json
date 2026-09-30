@@ -1,0 +1,219 @@
+{
+ "tradeId": "T-10157",
+ "productType": "FX_SPOT",
+ "productName": "FX spot",
+ "assetClass": "FX",
+ "family": "linear",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2024-04-19",
+ "effectiveDate": "2024-04-22",
+ "maturityDate": "2026-10-07",
+ "currency": "JPY",
+ "notional": 56000000.0,
+ "mtm": 154904,
+ "mtmCurrency": "USD",
+ "pnl1d": 474,
+ "counterparty": {
+  "id": "CP-BRAMBLE",
+  "name": "Bramble Asset Management"
+ },
+ "nettingSet": "NS-BRAMBLE-LDN",
+ "book": "BOOK-FX-3",
+ "trader": "TRDR-LMOREAU",
+ "desk": "DESK-FX",
+ "legalEntity": "LE-LDN",
+ "fxSpot": "FX-EURJPY",
+ "terms": {
+  "rate": 84.36793,
+  "valueDate": "2026-10-02"
+ },
+ "risk": {
+  "fxDelta": -560000
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "fxDelta": -56000
+  },
+  {
+   "bucket": "1M",
+   "fxDelta": -112000
+  },
+  {
+   "bucket": "3M",
+   "fxDelta": -168000
+  },
+  {
+   "bucket": "6M",
+   "fxDelta": -224000
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 937
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 1667
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 2084
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -445
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 1564
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -3181
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 3396
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -2699
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 11778
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 5928
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -4156
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -3041
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -5227
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 6022
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 3109
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 5223
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -3838
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 373
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -9594
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 2555
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-04-19",
+  "executionTimestamp": "2024-04-19T08:50:58.399Z",
+  "venue": "FXall",
+  "venueMic": "FXAL",
+  "executionType": "Electronic",
+  "trader": "L. Moreau",
+  "salesperson": null,
+  "orderId": "ORD-A628B4E9C6"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-04-19T10:03:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2024-04-19T10:03:00Z",
+  "lastModifiedAt": "2024-04-19T10:03:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT847957408",
+  "matched": "2024-04-19 13:19",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83A628B4E9C6294530A8D4",
+  "upi": "QZBCW46RLF1J",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Foreign exchange"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "BRAMGB33XXX",
+  "ssiId": "SSI-JPY-1243C8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 154904,
+  "cleanPv": 154904.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "FX-EURJPY"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "calypso-fx",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 870
+  }
+ }
+}

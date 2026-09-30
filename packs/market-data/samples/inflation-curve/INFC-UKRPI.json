@@ -1,0 +1,88 @@
+{
+ "curveId": "INFC-UKRPI",
+ "index": "INF-UKRPI",
+ "be5y": 0.037788,
+ "be10y": 0.038697,
+ "points": [
+  {
+   "tenor": "1Y",
+   "breakeven": 3.614
+  },
+  {
+   "tenor": "2Y",
+   "breakeven": 3.6748
+  },
+  {
+   "tenor": "5Y",
+   "breakeven": 3.7788
+  },
+  {
+   "tenor": "10Y",
+   "breakeven": 3.8697
+  },
+  {
+   "tenor": "20Y",
+   "breakeven": 3.9667
+  },
+  {
+   "tenor": "30Y",
+   "breakeven": 4.0251
+  }
+ ],
+ "seasonality": [
+  {
+   "month": "Jan",
+   "factor": 0.00075
+  },
+  {
+   "month": "Feb",
+   "factor": 0.0013
+  },
+  {
+   "month": "Mar",
+   "factor": 0.0015
+  },
+  {
+   "month": "Apr",
+   "factor": 0.0013
+  },
+  {
+   "month": "May",
+   "factor": 0.00075
+  },
+  {
+   "month": "Jun",
+   "factor": 0.0
+  },
+  {
+   "month": "Jul",
+   "factor": -0.00075
+  },
+  {
+   "month": "Aug",
+   "factor": -0.0013
+  },
+  {
+   "month": "Sep",
+   "factor": -0.0015
+  },
+  {
+   "month": "Oct",
+   "factor": -0.0013
+  },
+  {
+   "month": "Nov",
+   "factor": -0.00075
+  },
+  {
+   "month": "Dec",
+   "factor": -0.0
+  }
+ ],
+ "inflationIndex": "INF-UKRPI",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

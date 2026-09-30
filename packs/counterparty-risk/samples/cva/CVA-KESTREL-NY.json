@@ -1,0 +1,58 @@
+{
+ "resultId": "CVA-KESTREL-NY",
+ "cva": -68634,
+ "dva": 5544,
+ "fva": -8164,
+ "kva": -113277,
+ "cs01": -1235,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -68634
+  },
+  {
+   "name": "DVA",
+   "amount": 5544
+  },
+  {
+   "name": "FVA",
+   "amount": -8164
+  },
+  {
+   "name": "KVA",
+   "amount": -113277
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -1235
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 275
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 137
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -2059
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 1167
+  }
+ ],
+ "nettingSet": "NS-KESTREL-NY",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

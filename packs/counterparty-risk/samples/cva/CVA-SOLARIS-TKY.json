@@ -1,0 +1,59 @@
+{
+ "resultId": "CVA-SOLARIS-TKY",
+ "cva": -213742,
+ "dva": 24937,
+ "fva": -7021,
+ "kva": -336534,
+ "cs01": -3847,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -213742
+  },
+  {
+   "name": "DVA",
+   "amount": 24937
+  },
+  {
+   "name": "FVA",
+   "amount": -7021
+  },
+  {
+   "name": "KVA",
+   "amount": -336534
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -3847
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 855
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 427
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -6412
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 3634
+  }
+ ],
+ "nettingSet": "NS-SOLARIS-TKY",
+ "creditCurve": "CDS-SOLARIS",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

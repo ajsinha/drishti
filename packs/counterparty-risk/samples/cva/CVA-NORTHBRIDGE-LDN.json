@@ -1,0 +1,58 @@
+{
+ "resultId": "CVA-NORTHBRIDGE-LDN",
+ "cva": -313723,
+ "dva": 15686,
+ "fva": -17849,
+ "kva": -289602,
+ "cs01": -5647,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -313723
+  },
+  {
+   "name": "DVA",
+   "amount": 15686
+  },
+  {
+   "name": "FVA",
+   "amount": -17849
+  },
+  {
+   "name": "KVA",
+   "amount": -289602
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -5647
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 1255
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 627
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -9412
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 5333
+  }
+ ],
+ "nettingSet": "NS-NORTHBRIDGE-LDN",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

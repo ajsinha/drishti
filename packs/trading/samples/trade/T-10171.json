@@ -1,0 +1,228 @@
+{
+ "tradeId": "T-10171",
+ "productType": "FX_NDF",
+ "productName": "Non-deliverable forward",
+ "assetClass": "FX",
+ "family": "linear",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2025-10-24",
+ "effectiveDate": "2025-10-27",
+ "maturityDate": "2026-10-07",
+ "currency": "USD",
+ "notional": 79000000.0,
+ "mtm": -606269,
+ "mtmCurrency": "USD",
+ "pnl1d": -21540,
+ "counterparty": {
+  "id": "CP-MERIDIAN",
+  "name": "Meridian Life Assurance"
+ },
+ "nettingSet": "NS-MERIDIAN-LDN",
+ "book": "BOOK-FX-1",
+ "trader": "TRDR-ENOVAK",
+ "desk": "DESK-FX",
+ "legalEntity": "LE-LDN",
+ "fxSpot": "FX-USDINR",
+ "fxForwardCurve": "FXF-USDINR",
+ "discountCurve": "CRV-USD-OIS",
+ "terms": {
+  "rate": 11.5546,
+  "fixingDate": "2027-07-03",
+  "fixingSource": "RBI"
+ },
+ "risk": {
+  "fxDelta": -790000
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "fxDelta": -52667
+  },
+  {
+   "bucket": "1M",
+   "fxDelta": -105333
+  },
+  {
+   "bucket": "3M",
+   "fxDelta": -158000
+  },
+  {
+   "bucket": "6M",
+   "fxDelta": -210667
+  },
+  {
+   "bucket": "1Y",
+   "fxDelta": -263333
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -25244
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 2735
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 11344
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 6713
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 15824
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -5210
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 23371
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 507
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -13712
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -4432
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 13998
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 52808
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -6864
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -11389
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -1825
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 45634
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -3756
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -16739
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 5991
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -7087
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-10-24",
+  "executionTimestamp": "2025-10-24T14:07:26.278Z",
+  "venue": "360T",
+  "venueMic": "360T",
+  "executionType": "Electronic",
+  "trader": "E. Novak",
+  "salesperson": null,
+  "orderId": "ORD-D0A4E57814"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-10-24T11:17:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2025-10-24T11:17:00Z",
+  "lastModifiedAt": "2025-10-24T11:17:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT961417083",
+  "matched": "2025-10-24 13:57",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83D0A4E578143C9ED86B41",
+  "upi": "QZ6XZW0LYGMJ",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Foreign exchange"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "MERIUS33XXX",
+  "ssiId": "SSI-USD-4D91C0",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -606269,
+  "cleanPv": -606269.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "FX-USDINR",
+   "FXF-USDINR",
+   "CRV-USD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "calypso-fx",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 2003
+  }
+ }
+}

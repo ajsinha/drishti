@@ -1,0 +1,245 @@
+{
+ "tradeId": "T-10681",
+ "productType": "REPO",
+ "productName": "Repurchase agreement",
+ "assetClass": "Securities financing",
+ "family": "sft",
+ "status": "Live",
+ "direction": "Reverse repo",
+ "tradeDate": "2026-08-21",
+ "effectiveDate": "2026-08-24",
+ "maturityDate": "2027-01-04",
+ "currency": "USD",
+ "notional": 178000000.0,
+ "mtm": 396058,
+ "mtmCurrency": "USD",
+ "pnl1d": 9529,
+ "counterparty": {
+  "id": "CP-BRAMBLE",
+  "name": "Bramble Asset Management"
+ },
+ "nettingSet": "NS-BRAMBLE-FRA",
+ "book": "BOOK-SFT-1",
+ "trader": "TRDR-KBRANDT",
+ "desk": "DESK-SFT",
+ "legalEntity": "LE-FRA",
+ "issuer": "ISS-MERIDIAN",
+ "repoCurve": "REPO-USD",
+ "underlyingBond": "BND-USMERI186295",
+ "terms": {
+  "repoRate": 0.040255,
+  "haircut": 0.039758,
+  "term": "1W"
+ },
+ "risk": {
+  "dv01": -5701,
+  "exposure": 3953818
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -1900,
+   "exposure": 1317939
+  },
+  {
+   "bucket": "6M",
+   "dv01": -3801,
+   "exposure": 2635879
+  }
+ ],
+ "schedule": [
+  {
+   "asset": "Meridian Financial Group 2031",
+   "isin": "USMERI070218",
+   "quantity": 57821028,
+   "marketValue": 57217376,
+   "haircut": 0.02,
+   "value": 56073028
+  },
+  {
+   "asset": "Federal Republic of Germany 2036",
+   "isin": "DEBUND130144",
+   "quantity": 50146636,
+   "marketValue": 59133916,
+   "haircut": 0.005,
+   "value": 58838246
+  },
+  {
+   "asset": "Lumen Semiconductor AG 2031",
+   "isin": "CHLUME076897",
+   "quantity": 58616426,
+   "marketValue": 61650998,
+   "haircut": 0.01,
+   "value": 61034488
+  }
+ ],
+ "nextIndex": -1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 1681
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -3727
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -28650
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -1161
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -20559
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -203
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 8356
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 17823
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -9621
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 12220
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -11811
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 5927
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -17197
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -8765
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -3477
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 5275
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 68
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -185
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -3680
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -15886
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-08-21",
+  "executionTimestamp": "2026-08-21T10:55:48.219Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "K. Brandt",
+  "salesperson": null,
+  "orderId": "ORD-2673507457"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-08-21T10:22:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2026-08-21T10:22:00Z",
+  "lastModifiedAt": "2026-08-21T10:22:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT971390139",
+  "matched": "2026-08-21 15:50",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z9DXU4T18OK7442673507457650C1EF79C",
+  "upi": "QZK3F23O6BGY",
+  "reportingRegimes": [
+   "EU EMIR",
+   "EU MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "BRAMUS33XXX",
+  "ssiId": "SSI-USD-1243C8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 396058,
+  "cleanPv": 396058.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "REPO-USD",
+   "BND-USMERI186295"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "globalone-sft",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 2572
+  }
+ }
+}

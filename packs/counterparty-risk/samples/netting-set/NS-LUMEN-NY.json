@@ -1,0 +1,203 @@
+{
+ "nettingSetId": "NS-LUMEN-NY",
+ "tradeCount": 15,
+ "netMtm": -32179190,
+ "collateral": -16674907,
+ "eePeak": 17707220,
+ "pfePeak": 39792471,
+ "limit": 57000000.0,
+ "utilisation": 0.6981,
+ "cva": -34595,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 1473464,
+   "pfe": 4569783
+  },
+  {
+   "tenor": "1M",
+   "ee": 2617850,
+   "pfe": 6892834
+  },
+  {
+   "tenor": "3M",
+   "ee": 4534250,
+   "pfe": 11108912
+  },
+  {
+   "tenor": "6M",
+   "ee": 6404973,
+   "pfe": 15223191
+  },
+  {
+   "tenor": "1Y",
+   "ee": 8897000,
+   "pfe": 20685525
+  },
+  {
+   "tenor": "2Y",
+   "ee": 11978389,
+   "pfe": 27411206
+  },
+  {
+   "tenor": "3Y",
+   "ee": 11712128,
+   "pfe": 26611931
+  },
+  {
+   "tenor": "5Y",
+   "ee": 14984115,
+   "pfe": 33802691
+  },
+  {
+   "tenor": "7Y",
+   "ee": 17707220,
+   "pfe": 39792471
+  },
+  {
+   "tenor": "10Y",
+   "ee": 0,
+   "pfe": 0
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10035",
+   "product": "Zero-coupon swap",
+   "notional": 186000000.0,
+   "maturity": "2035-04-19",
+   "mtm": -39818756
+  },
+  {
+   "tradeId": "T-10042",
+   "product": "Amortising swap",
+   "notional": 87000000.0,
+   "maturity": "2029-11-08",
+   "mtm": -6638895
+  },
+  {
+   "tradeId": "T-10305",
+   "product": "Credit spread option",
+   "notional": 244000000.0,
+   "maturity": "2028-10-24",
+   "mtm": 4754624
+  },
+  {
+   "tradeId": "T-10458",
+   "product": "Commodity swap",
+   "notional": 231000000.0,
+   "maturity": "2034-07-03",
+   "mtm": 4646776
+  },
+  {
+   "tradeId": "T-10047",
+   "product": "Accreting swap",
+   "notional": 52000000.0,
+   "maturity": "2033-10-10",
+   "mtm": 2201547
+  },
+  {
+   "tradeId": "T-10249",
+   "product": "CDS index (CDX / iTraxx)",
+   "notional": 61000000.0,
+   "maturity": "2028-01-24",
+   "mtm": 1066256
+  },
+  {
+   "tradeId": "T-10304",
+   "product": "Credit spread option",
+   "notional": 201000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 1037396
+  },
+  {
+   "tradeId": "T-10029",
+   "product": "Cross-currency swap (MtM resetting)",
+   "notional": 139000000.0,
+   "maturity": "2036-05-12",
+   "mtm": 395535
+  },
+  {
+   "tradeId": "T-10310",
+   "product": "Unfunded risk participation",
+   "notional": 22000000.0,
+   "maturity": "2035-06-04",
+   "mtm": 371591
+  },
+  {
+   "tradeId": "T-10103",
+   "product": "Bermudan swaption",
+   "notional": 167000000.0,
+   "maturity": "2027-07-12",
+   "mtm": -198183
+  },
+  {
+   "tradeId": "T-10503",
+   "product": "Commodity index swap",
+   "notional": 18000000.0,
+   "maturity": "2034-08-16",
+   "mtm": -133332
+  },
+  {
+   "tradeId": "T-10117",
+   "product": "CMS cap / floor",
+   "notional": 63000000.0,
+   "maturity": "2027-07-06",
+   "mtm": 73781
+  },
+  {
+   "tradeId": "T-10105",
+   "product": "Bermudan swaption",
+   "notional": 214000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 36115
+  },
+  {
+   "tradeId": "T-10115",
+   "product": "CMS cap / floor",
+   "notional": 15000000.0,
+   "maturity": "2027-01-04",
+   "mtm": 30927
+  },
+  {
+   "tradeId": "T-10136",
+   "product": "Callable swap",
+   "notional": 12000000.0,
+   "maturity": "2033-09-19",
+   "mtm": -4572
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Rates",
+   "mtm": -43922501
+  },
+  {
+   "asset": "Credit",
+   "mtm": 7229867
+  },
+  {
+   "asset": "Commodity",
+   "mtm": 4513444
+  }
+ ],
+ "counterparty": "CP-LUMEN",
+ "agreement": "AGR-LUMEN-ISDA",
+ "csa": "CSA-LUMEN",
+ "creditLimit": "LIM-LUMEN",
+ "exposureProfile": "EXP-LUMEN-NY",
+ "cvaResult": "CVA-LUMEN-NY",
+ "saccr": "SACCR-LUMEN-NY",
+ "simm": "SIMM-LUMEN",
+ "collateralBalance": "COLL-LUMEN-NY",
+ "legalEntity": "LE-NY",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 64358
+  }
+ }
+}

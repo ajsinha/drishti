@@ -1,0 +1,260 @@
+{
+ "tradeId": "T-10064",
+ "productType": "FRA",
+ "productName": "Forward rate agreement",
+ "assetClass": "Rates",
+ "family": "linear",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2026-07-10",
+ "effectiveDate": "2026-07-13",
+ "maturityDate": "2027-08-23",
+ "currency": "CHF",
+ "notional": 104000000.0,
+ "mtm": 687762,
+ "mtmCurrency": "USD",
+ "pnl1d": 26486,
+ "counterparty": {
+  "id": "CP-SOLARIS",
+  "name": "Solaris Energy Corp."
+ },
+ "nettingSet": "NS-SOLARIS-NY",
+ "book": "BOOK-RATES-2",
+ "trader": "TRDR-ASHAH",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-CHF-OIS",
+ "forwardCurve": "CRV-CHF-PROJ",
+ "terms": {
+  "fraRate": 0.036873,
+  "startPeriod": "6x9",
+  "fixingDate": "2027-08-08"
+ },
+ "risk": {
+  "dv01": -10210
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -1702
+  },
+  {
+   "bucket": "6M",
+   "dv01": -3403
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -5105
+  }
+ ],
+ "schedule": [
+  {
+   "fixingDate": "2026-10-13",
+   "period": "2026-10-13..2027-01-13",
+   "index": "SARON",
+   "rate": 0.040776,
+   "payoff": 150176.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-01-13",
+   "period": "2027-01-13..2027-04-13",
+   "index": "SARON",
+   "rate": 0.047226,
+   "payoff": 317876.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-04-13",
+   "period": "2027-04-13..2027-07-13",
+   "index": "SARON",
+   "rate": 0.041035,
+   "payoff": 156910.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-07-13",
+   "period": "2027-07-13..2027-10-13",
+   "index": "SARON",
+   "rate": 0.02618,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-08-23",
+   "period": "2027-08-23..2027-11-23",
+   "index": "SARON",
+   "rate": 0.026912,
+   "payoff": 0.0,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -29289
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -8653
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 16759
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -24086
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -21750
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -13577
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -8741
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -14350
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -27433
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -14661
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -31940
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -7828
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -18419
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 11284
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 22211
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -10782
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -14820
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -848
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 3414
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 668
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-07-10",
+  "executionTimestamp": "2026-07-10T12:03:16.452Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "A. Shah",
+  "salesperson": null,
+  "orderId": "ORD-2C0100D559"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-07-10T11:40:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2026-07-10T11:40:00Z",
+  "lastModifiedAt": "2026-07-10T11:40:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA627558839",
+  "matched": "2026-07-10 15:43",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20962C0100D559054EC27F10",
+  "upi": "QZ6ULH8CX7EP",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SOLAGB33XXX",
+  "ssiId": "SSI-CHF-269904",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 687762,
+  "cleanPv": 687762.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-CHF-OIS",
+   "CRV-CHF-PROJ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 2416
+  }
+ }
+}

@@ -1,0 +1,236 @@
+{
+ "tradeId": "T-10099",
+ "productType": "SWAPTION_EUR",
+ "productName": "European swaption",
+ "assetClass": "Rates",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2025-02-14",
+ "effectiveDate": "2025-02-17",
+ "maturityDate": "2027-12-03",
+ "currency": "GBP",
+ "notional": 236000000.0,
+ "mtm": 3985722,
+ "mtmCurrency": "USD",
+ "pnl1d": 262615,
+ "counterparty": {
+  "id": "CP-MERIDIAN",
+  "name": "Meridian Life Assurance"
+ },
+ "nettingSet": "NS-MERIDIAN-NY",
+ "book": "BOOK-RATES-2",
+ "trader": "TRDR-MOKAFOR",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-GBP-OIS",
+ "forwardCurve": "CRV-GBP-PROJ",
+ "swaptionVolCube": "IRV-GBP",
+ "terms": {
+  "payerReceiver": "Payer",
+  "strike": 0.039186,
+  "expiryDate": "2029-06-05",
+  "underlyingTenor": "30Y",
+  "settlement": "Cash (par yield)",
+  "premium": 496063.0
+ },
+ "risk": {
+  "dv01": 51401,
+  "vega": 1056501
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 3427,
+   "vega": 70433
+  },
+  {
+   "bucket": "6M",
+   "dv01": 6853,
+   "vega": 140867
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 10280,
+   "vega": 211300
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 13707,
+   "vega": 281734
+  },
+  {
+   "bucket": "3Y",
+   "dv01": 17134,
+   "vega": 352167
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 43011
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 99448
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -214271
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 31203
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 125914
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 22970
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 67990
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -30941
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 22646
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -50400
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 27788
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 19670
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 91723
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -113728
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 60299
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -73432
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 112019
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -51761
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 48636
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -43086
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-02-14",
+  "executionTimestamp": "2025-02-14T15:48:49.407Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "M. Okafor",
+  "salesperson": null,
+  "orderId": "ORD-4C3088307C"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-02-14T12:22:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2025-02-14T12:22:00Z",
+  "lastModifiedAt": "2025-02-14T12:22:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA102284909",
+  "matched": "2025-02-14 10:33",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20964C3088307C1790968E7A",
+  "upi": "QZW0XHSW1C0C",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Barclays Bank plc",
+  "ourAgentBic": "BARCGB22XXX",
+  "theirAgentBic": "MERIGB33XXX",
+  "ssiId": "SSI-GBP-4D91C0",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 3985722,
+  "cleanPv": 3985722.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CRV-GBP-OIS",
+   "CRV-GBP-PROJ",
+   "IRV-GBP"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 10331
+  }
+ }
+}

@@ -1,0 +1,253 @@
+{
+ "nettingSetId": "NS-AURORA-NY",
+ "tradeCount": 21,
+ "netMtm": 41166765,
+ "collateral": 32027217,
+ "eePeak": 30753162,
+ "pfePeak": 69564806,
+ "limit": 146000000.0,
+ "utilisation": 0.4765,
+ "cva": -9318,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 12360803,
+   "pfe": 30097367
+  },
+  {
+   "tenor": "1M",
+   "ee": 15631630,
+   "pfe": 37282337
+  },
+  {
+   "tenor": "3M",
+   "ee": 20121811,
+   "pfe": 47151984
+  },
+  {
+   "tenor": "6M",
+   "ee": 24182496,
+   "pfe": 56050578
+  },
+  {
+   "tenor": "1Y",
+   "ee": 26936987,
+   "pfe": 61738759
+  },
+  {
+   "tenor": "2Y",
+   "ee": 27128275,
+   "pfe": 61590055
+  },
+  {
+   "tenor": "3Y",
+   "ee": 30753162,
+   "pfe": 69564806
+  },
+  {
+   "tenor": "5Y",
+   "ee": 27787705,
+   "pfe": 62539952
+  },
+  {
+   "tenor": "7Y",
+   "ee": 7707309,
+   "pfe": 17245180
+  },
+  {
+   "tenor": "10Y",
+   "ee": 750220,
+   "pfe": 1650484
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10003",
+   "product": "Interest rate swap (fixed/float)",
+   "notional": 204000000.0,
+   "maturity": "2036-05-13",
+   "mtm": 36329052
+  },
+  {
+   "tradeId": "T-10459",
+   "product": "Commodity swap",
+   "notional": 171000000.0,
+   "maturity": "2028-02-11",
+   "mtm": -4133232
+  },
+  {
+   "tradeId": "T-10509",
+   "product": "Power swap",
+   "notional": 199000000.0,
+   "maturity": "2032-06-29",
+   "mtm": 2093005
+  },
+  {
+   "tradeId": "T-10670",
+   "product": "Term deposit / placement",
+   "notional": 229000000.0,
+   "maturity": "2027-01-29",
+   "mtm": 2024594
+  },
+  {
+   "tradeId": "T-10015",
+   "product": "Basis swap (float/float)",
+   "notional": 63000000.0,
+   "maturity": "2027-10-14",
+   "mtm": 1992970
+  },
+  {
+   "tradeId": "T-10280",
+   "product": "Total return swap on a loan index",
+   "notional": 178000000.0,
+   "maturity": "2035-07-02",
+   "mtm": 1798395
+  },
+  {
+   "tradeId": "T-10090",
+   "product": "Interest rate floor",
+   "notional": 80000000.0,
+   "maturity": "2028-02-28",
+   "mtm": -1266905
+  },
+  {
+   "tradeId": "T-10296",
+   "product": "Revolving credit facility",
+   "notional": 127000000.0,
+   "maturity": "2035-09-28",
+   "mtm": 1256638
+  },
+  {
+   "tradeId": "T-10252",
+   "product": "CDS index (CDX / iTraxx)",
+   "notional": 143000000.0,
+   "maturity": "2033-03-02",
+   "mtm": 1209105
+  },
+  {
+   "tradeId": "T-10510",
+   "product": "Power swap",
+   "notional": 147000000.0,
+   "maturity": "2030-01-10",
+   "mtm": -1195681
+  },
+  {
+   "tradeId": "T-10086",
+   "product": "Interest rate floor",
+   "notional": 140000000.0,
+   "maturity": "2027-02-26",
+   "mtm": -1130652
+  },
+  {
+   "tradeId": "T-10468",
+   "product": "Commodity basis swap",
+   "notional": 114000000.0,
+   "maturity": "2032-05-19",
+   "mtm": 921164
+  },
+  {
+   "tradeId": "T-10534",
+   "product": "Freight forward agreement",
+   "notional": 118000000.0,
+   "maturity": "2027-05-13",
+   "mtm": 814341
+  },
+  {
+   "tradeId": "T-10093",
+   "product": "Interest rate collar",
+   "notional": 75000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 798724
+  },
+  {
+   "tradeId": "T-10638",
+   "product": "Asset-backed security",
+   "notional": 78000000.0,
+   "maturity": "2032-12-03",
+   "mtm": -756700
+  },
+  {
+   "tradeId": "T-10126",
+   "product": "CMS spread option",
+   "notional": 100000000.0,
+   "maturity": "2026-11-24",
+   "mtm": 567048
+  },
+  {
+   "tradeId": "T-10678",
+   "product": "Call account",
+   "notional": 30000000.0,
+   "maturity": "2027-01-20",
+   "mtm": -392005
+  },
+  {
+   "tradeId": "T-10125",
+   "product": "CMS spread option",
+   "notional": 49000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 375784
+  },
+  {
+   "tradeId": "T-10026",
+   "product": "Cross-currency swap (MtM resetting)",
+   "notional": 50000000.0,
+   "maturity": "2036-07-07",
+   "mtm": -146693
+  },
+  {
+   "tradeId": "T-10464",
+   "product": "Commodity basis swap",
+   "notional": 12000000.0,
+   "maturity": "2030-10-11",
+   "mtm": 7168
+  },
+  {
+   "tradeId": "T-10244",
+   "product": "Single-name CDS",
+   "notional": 21000000.0,
+   "maturity": "2028-07-10",
+   "mtm": 645
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Rates",
+   "mtm": 37519328
+  },
+  {
+   "asset": "Credit",
+   "mtm": 4264783
+  },
+  {
+   "asset": "Money market",
+   "mtm": 1632589
+  },
+  {
+   "asset": "Commodity",
+   "mtm": -1493235
+  },
+  {
+   "asset": "Fixed income",
+   "mtm": -756700
+  }
+ ],
+ "counterparty": "CP-AURORA",
+ "agreement": "AGR-AURORA-ISDA",
+ "csa": "CSA-AURORA",
+ "creditLimit": "LIM-AURORA",
+ "exposureProfile": "EXP-AURORA-NY",
+ "cvaResult": "CVA-AURORA-NY",
+ "saccr": "SACCR-AURORA-NY",
+ "simm": "SIMM-AURORA",
+ "collateralBalance": "COLL-AURORA-NY",
+ "legalEntity": "LE-NY",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 82333
+  }
+ }
+}

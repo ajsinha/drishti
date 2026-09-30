@@ -1,0 +1,63 @@
+{
+ "curveId": "CDS-VERDANT",
+ "issuerName": "Verdant Agri Holdings",
+ "spread5y": 340,
+ "recovery": 0.4,
+ "seniority": "Senior unsecured",
+ "docClause": "MM14",
+ "pd1y": 0.031235,
+ "points": [
+  {
+   "tenor": "6M",
+   "spread": 171.7,
+   "hazard": 0.028617,
+   "survival": 0.985794
+  },
+  {
+   "tenor": "1Y",
+   "spread": 190.4,
+   "hazard": 0.031733,
+   "survival": 0.968765
+  },
+  {
+   "tenor": "2Y",
+   "spread": 227.8,
+   "hazard": 0.037967,
+   "survival": 0.926878
+  },
+  {
+   "tenor": "3Y",
+   "spread": 265.2,
+   "hazard": 0.0442,
+   "survival": 0.875815
+  },
+  {
+   "tenor": "5Y",
+   "spread": 340.0,
+   "hazard": 0.056667,
+   "survival": 0.753269
+  },
+  {
+   "tenor": "7Y",
+   "spread": 360.4,
+   "hazard": 0.060067,
+   "survival": 0.65674
+  },
+  {
+   "tenor": "10Y",
+   "spread": 391.0,
+   "hazard": 0.065167,
+   "survival": 0.521176
+  }
+ ],
+ "issuer": "ISS-VERDANT",
+ "currency": "USD",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "spread5y": 0.4
+  }
+ }
+}

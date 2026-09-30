@@ -1,0 +1,151 @@
+{
+ "ticker": "EQ-ORBT",
+ "name": "Orbital Telecom SA",
+ "price": 17.36,
+ "change1d": -0.00402,
+ "marketCap": 78363560800,
+ "sector": "Telecoms",
+ "exchange": "Euronext Paris",
+ "currency": "EUR",
+ "beta": 0.81,
+ "history": [
+  {
+   "date": "2026-08-19",
+   "close": 17.75
+  },
+  {
+   "date": "2026-08-20",
+   "close": 17.47
+  },
+  {
+   "date": "2026-08-21",
+   "close": 17.38
+  },
+  {
+   "date": "2026-08-24",
+   "close": 16.96
+  },
+  {
+   "date": "2026-08-25",
+   "close": 17.13
+  },
+  {
+   "date": "2026-08-26",
+   "close": 17.07
+  },
+  {
+   "date": "2026-08-27",
+   "close": 17.39
+  },
+  {
+   "date": "2026-08-28",
+   "close": 17.86
+  },
+  {
+   "date": "2026-08-31",
+   "close": 18.07
+  },
+  {
+   "date": "2026-09-01",
+   "close": 18.34
+  },
+  {
+   "date": "2026-09-02",
+   "close": 18.28
+  },
+  {
+   "date": "2026-09-03",
+   "close": 18.08
+  },
+  {
+   "date": "2026-09-04",
+   "close": 18.25
+  },
+  {
+   "date": "2026-09-08",
+   "close": 18.46
+  },
+  {
+   "date": "2026-09-09",
+   "close": 18.25
+  },
+  {
+   "date": "2026-09-10",
+   "close": 17.88
+  },
+  {
+   "date": "2026-09-11",
+   "close": 18.07
+  },
+  {
+   "date": "2026-09-14",
+   "close": 18.52
+  },
+  {
+   "date": "2026-09-15",
+   "close": 18.52
+  },
+  {
+   "date": "2026-09-16",
+   "close": 18.47
+  },
+  {
+   "date": "2026-09-17",
+   "close": 18.06
+  },
+  {
+   "date": "2026-09-18",
+   "close": 18.01
+  },
+  {
+   "date": "2026-09-21",
+   "close": 18.07
+  },
+  {
+   "date": "2026-09-22",
+   "close": 17.63
+  },
+  {
+   "date": "2026-09-23",
+   "close": 17.91
+  },
+  {
+   "date": "2026-09-24",
+   "close": 18.06
+  },
+  {
+   "date": "2026-09-25",
+   "close": 17.77
+  },
+  {
+   "date": "2026-09-28",
+   "close": 17.57
+  },
+  {
+   "date": "2026-09-29",
+   "close": 17.43
+  },
+  {
+   "date": "2026-09-30",
+   "close": 17.36
+  }
+ ],
+ "identifiers": {
+  "isin": "FR0ORBT00019",
+  "bloomberg": "ORBT EU Equity",
+  "ric": "ORBT.E",
+  "figi": "BBGF0EB3580F"
+ },
+ "issuer": "ISS-ORBITAL",
+ "equityVolSurface": "EQV-ORBT",
+ "dividendCurve": "DIV-ORBT",
+ "equityIndex": "EQX-SX5E",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "price": 0.3
+  }
+ }
+}

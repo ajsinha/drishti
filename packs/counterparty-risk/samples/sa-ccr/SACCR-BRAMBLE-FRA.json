@@ -1,0 +1,34 @@
+{
+ "calcId": "SACCR-BRAMBLE-FRA",
+ "replacementCost": 1010387,
+ "addOn": 520247,
+ "multiplier": 1.0,
+ "ead": 2142887,
+ "rwa": 1071444,
+ "addOns": [
+  {
+   "assetClass": "Interest rate",
+   "addOn": 520247
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "USD",
+   "effectiveNotional": -71254795,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "EUR",
+   "effectiveNotional": -32794521,
+   "sf": 0.005
+  }
+ ],
+ "nettingSet": "NS-BRAMBLE-FRA",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

@@ -69,6 +69,26 @@ class ElTest {
     }
 
     @Test
+    void pathsReachAnyDepthThroughObjectsAndArrays() {
+        DataNode deep = new JsonCodec().read("""
+                {"trade": {"parties": {"us": {"entity": {"name": "Drishti Bank plc", "lei": "5493001"}}},
+                           "legs": [{"schedule": {"periods": [{"fixing": {"rate": 0.0371, "source": {"index": "SOFR"}}},
+                                                              {"fixing": {"rate": 0.0368, "source": {"index": "SOFR"}}}]}},
+                                    {"schedule": {"periods": [{"fixing": {"rate": 0.0250, "source": {"index": "ESTR"}}}]}}]}}""");
+        EvalContext c = EvalContext.of(deep, F);
+        assertThat(Values.simplify(EL.compile("$.trade.parties.us.entity.name").eval(c))).isEqualTo("Drishti Bank plc");
+        assertThat(Values.simplify(EL.compile("$.trade.legs[0].schedule.periods[1].fixing.source.index").eval(c))).isEqualTo("SOFR");
+        assertThat(Values.simplify(EL.compile("$.trade.legs[-1].schedule.periods[0].fixing.rate").eval(c))).isEqualTo(0.025);
+        assertThat(Values.simplify(EL.compile("size($.trade.legs[0].schedule.periods)").eval(c))).isEqualTo(2L);
+        // a row inside a nested array reads further nesting relative to itself
+        EvalContext row = c.withRow(deep.at("trade.legs[0].schedule.periods[0]"), 0);
+        assertThat(Values.simplify(EL.compile("@.fixing.source.index + ' ' + fmt(@.fixing.rate, 'pct4')").eval(row))).isEqualTo("SOFR 3.7100%");
+        // a missing branch anywhere in the path is simply empty, not an error
+        assertThat(Values.simplify(EL.compile("$.trade.parties.them.entity.name").eval(c))).isNull();
+        assertThat(Values.simplify(EL.compile("$.trade.legs[5].schedule.periods[0].fixing.rate").eval(c))).isNull();
+    }
+
+    @Test
     void templates() {
         assertThat(EL.template("Leg 2 · ${$.legs[1].label}").render(EvalContext.of(DOC, F))).isEqualTo("Leg 2 · Receive SOFR");
         assertThat(EL.template("plain").render(EvalContext.of(DOC, F))).isEqualTo("plain");

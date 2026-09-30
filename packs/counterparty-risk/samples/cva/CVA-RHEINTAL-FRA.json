@@ -1,0 +1,59 @@
+{
+ "resultId": "CVA-RHEINTAL-FRA",
+ "cva": -394,
+ "dva": 103,
+ "fva": -915,
+ "kva": -2906,
+ "cs01": -7,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -394
+  },
+  {
+   "name": "DVA",
+   "amount": 103
+  },
+  {
+   "name": "FVA",
+   "amount": -915
+  },
+  {
+   "name": "KVA",
+   "amount": -2906
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -7
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 2
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 1
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -12
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 7
+  }
+ ],
+ "nettingSet": "NS-RHEINTAL-FRA",
+ "creditCurve": "CDS-RHEINTAL",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

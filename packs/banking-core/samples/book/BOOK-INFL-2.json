@@ -1,0 +1,92 @@
+{
+ "bookId": "BOOK-INFL-2",
+ "name": "Inflation · book 2",
+ "deskName": "Inflation",
+ "tradeCount": 16,
+ "mtm": -6815332,
+ "dv01": 183423,
+ "topTrades": [
+  {
+   "tradeId": "T-10539",
+   "product": "Zero-coupon inflation swap",
+   "notional": 47000000.0,
+   "maturity": "2036-07-21",
+   "mtm": 8195317
+  },
+  {
+   "tradeId": "T-10535",
+   "product": "Zero-coupon inflation swap",
+   "notional": 200000000.0,
+   "maturity": "2035-07-12",
+   "mtm": -8112592
+  },
+  {
+   "tradeId": "T-10542",
+   "product": "Year-on-year inflation swap",
+   "notional": 243000000.0,
+   "maturity": "2026-11-05",
+   "mtm": -4921358
+  },
+  {
+   "tradeId": "T-10551",
+   "product": "Inflation cap / floor",
+   "notional": 171000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 4685483
+  },
+  {
+   "tradeId": "T-10563",
+   "product": "Inflation asset swap",
+   "notional": 237000000.0,
+   "maturity": "2031-05-13",
+   "mtm": -2801657
+  },
+  {
+   "tradeId": "T-10568",
+   "product": "Limited price index swap",
+   "notional": 173000000.0,
+   "maturity": "2027-05-26",
+   "mtm": -1373222
+  },
+  {
+   "tradeId": "T-10558",
+   "product": "Inflation-linked bond",
+   "notional": 57000000.0,
+   "maturity": "2027-05-24",
+   "mtm": -1106536
+  },
+  {
+   "tradeId": "T-10556",
+   "product": "Inflation-linked bond",
+   "notional": 192000000.0,
+   "maturity": "2034-10-04",
+   "mtm": -992597
+  },
+  {
+   "tradeId": "T-10543",
+   "product": "Year-on-year inflation swap",
+   "notional": 249000000.0,
+   "maturity": "2028-04-24",
+   "mtm": 956175
+  },
+  {
+   "tradeId": "T-10566",
+   "product": "Limited price index swap",
+   "notional": 71000000.0,
+   "maturity": "2031-07-28",
+   "mtm": -561601
+  }
+ ],
+ "desk": "DESK-INFL",
+ "accountingTreatment": "Fair value (FVTPL)",
+ "regulatoryBook": "Trading book",
+ "volcker": "Market making",
+ "_meta": {
+  "source": "org-master",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 5000
+  }
+ }
+}

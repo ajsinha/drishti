@@ -1,0 +1,207 @@
+{
+ "nettingSetId": "NS-TOKAI-NY",
+ "tradeCount": 15,
+ "netMtm": 1885392,
+ "collateral": 1415784,
+ "eePeak": 3355655,
+ "pfePeak": 7653866,
+ "limit": 12000000.0,
+ "utilisation": 0.6378,
+ "cva": -5659,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 1329865,
+   "pfe": 3701128
+  },
+  {
+   "tenor": "1M",
+   "ee": 1101708,
+   "pfe": 2701658
+  },
+  {
+   "tenor": "3M",
+   "ee": 1526856,
+   "pfe": 3630508
+  },
+  {
+   "tenor": "6M",
+   "ee": 1949839,
+   "pfe": 4561071
+  },
+  {
+   "tenor": "1Y",
+   "ee": 2537131,
+   "pfe": 5853113
+  },
+  {
+   "tenor": "2Y",
+   "ee": 3355655,
+   "pfe": 7653866
+  },
+  {
+   "tenor": "3Y",
+   "ee": 2333890,
+   "pfe": 5286983
+  },
+  {
+   "tenor": "5Y",
+   "ee": 2141192,
+   "pfe": 4822798
+  },
+  {
+   "tenor": "7Y",
+   "ee": 1765097,
+   "pfe": 3962751
+  },
+  {
+   "tenor": "10Y",
+   "ee": 38548,
+   "pfe": 84805
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10056",
+   "product": "Constant maturity swap",
+   "notional": 206000000.0,
+   "maturity": "2033-08-31",
+   "mtm": 4123460
+  },
+  {
+   "tradeId": "T-10293",
+   "product": "Term loan",
+   "notional": 126000000.0,
+   "maturity": "2029-04-02",
+   "mtm": -2592887
+  },
+  {
+   "tradeId": "T-10092",
+   "product": "Interest rate collar",
+   "notional": 192000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 2233273
+  },
+  {
+   "tradeId": "T-10666",
+   "product": "Certificate of deposit",
+   "notional": 74000000.0,
+   "maturity": "2026-12-18",
+   "mtm": -1329064
+  },
+  {
+   "tradeId": "T-10089",
+   "product": "Interest rate floor",
+   "notional": 100000000.0,
+   "maturity": "2028-10-24",
+   "mtm": -1112942
+  },
+  {
+   "tradeId": "T-10250",
+   "product": "CDS index (CDX / iTraxx)",
+   "notional": 46000000.0,
+   "maturity": "2029-12-03",
+   "mtm": 1013301
+  },
+  {
+   "tradeId": "T-10531",
+   "product": "Freight forward agreement",
+   "notional": 31000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 660756
+  },
+  {
+   "tradeId": "T-10266",
+   "product": "First-to-default basket",
+   "notional": 35000000.0,
+   "maturity": "2033-12-22",
+   "mtm": -590420
+  },
+  {
+   "tradeId": "T-10141",
+   "product": "Range accrual swap",
+   "notional": 167000000.0,
+   "maturity": "2032-08-02",
+   "mtm": -453923
+  },
+  {
+   "tradeId": "T-10096",
+   "product": "Interest rate collar",
+   "notional": 123000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 247681
+  },
+  {
+   "tradeId": "T-10123",
+   "product": "CMS spread option",
+   "notional": 115000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -195614
+  },
+  {
+   "tradeId": "T-10134",
+   "product": "Callable swap",
+   "notional": 235000000.0,
+   "maturity": "2035-01-04",
+   "mtm": 125293
+  },
+  {
+   "tradeId": "T-10525",
+   "product": "Weather derivative (HDD/CDD)",
+   "notional": 7000000.0,
+   "maturity": "2034-10-16",
+   "mtm": -121801
+  },
+  {
+   "tradeId": "T-10530",
+   "product": "Freight forward agreement",
+   "notional": 115000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -99778
+  },
+  {
+   "tradeId": "T-10524",
+   "product": "Weather derivative (HDD/CDD)",
+   "notional": 2000000.0,
+   "maturity": "2034-06-22",
+   "mtm": -21943
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Rates",
+   "mtm": 4967228
+  },
+  {
+   "asset": "Credit",
+   "mtm": -2170006
+  },
+  {
+   "asset": "Money market",
+   "mtm": -1329064
+  },
+  {
+   "asset": "Commodity",
+   "mtm": 417234
+  }
+ ],
+ "counterparty": "CP-TOKAI",
+ "agreement": "AGR-TOKAI-ISDA",
+ "csa": "CSA-TOKAI",
+ "creditLimit": "LIM-TOKAI",
+ "exposureProfile": "EXP-TOKAI-NY",
+ "cvaResult": "CVA-TOKAI-NY",
+ "saccr": "SACCR-TOKAI-NY",
+ "simm": "SIMM-TOKAI",
+ "collateralBalance": "COLL-TOKAI-NY",
+ "legalEntity": "LE-NY",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 3770
+  }
+ }
+}

@@ -1,0 +1,292 @@
+{
+ "tradeId": "T-10444",
+ "productType": "EQ_BASKET_OPTION",
+ "productName": "Basket option",
+ "assetClass": "Equity",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2025-01-10",
+ "effectiveDate": "2025-01-13",
+ "maturityDate": "2032-02-25",
+ "currency": "EUR",
+ "notional": 136000000.0,
+ "mtm": 1867436,
+ "mtmCurrency": "USD",
+ "pnl1d": 57616,
+ "counterparty": {
+  "id": "CP-KESTREL",
+  "name": "Kestrel Global Macro Fund"
+ },
+ "nettingSet": "NS-KESTREL-LDN",
+ "book": "BOOK-EQD-3",
+ "trader": "TRDR-JWEISS",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingIndex": "EQX-SX5E",
+ "equityVolSurface": "EQV-SX5E",
+ "correlation": "CORR-G10FX",
+ "terms": {
+  "optionType": "Put",
+  "exerciseStyle": "American",
+  "expiryDate": "2029-04-17",
+  "strike": 4933.62,
+  "basketSize": 5
+ },
+ "risk": {
+  "delta": 846325,
+  "vega": 997537
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 40301,
+   "vega": 47502
+  },
+  {
+   "bucket": "1M",
+   "delta": 80602,
+   "vega": 95004
+  },
+  {
+   "bucket": "3M",
+   "delta": 120904,
+   "vega": 142505
+  },
+  {
+   "bucket": "6M",
+   "delta": 161205,
+   "vega": 190007
+  },
+  {
+   "bucket": "1Y",
+   "delta": 201506,
+   "vega": 237509
+  },
+  {
+   "bucket": "2Y",
+   "delta": 241807,
+   "vega": 285011
+  }
+ ],
+ "schedule": [
+  {
+   "name": "Solaris Energy Corp.",
+   "weight": 0.125,
+   "level": 414.3,
+   "status": "Active"
+  },
+  {
+   "name": "Verdant Agri Holdings",
+   "weight": 0.125,
+   "level": 229.7,
+   "status": "Active"
+  },
+  {
+   "name": "Granite Building Materials plc",
+   "weight": 0.125,
+   "level": 422.3,
+   "status": "Active"
+  },
+  {
+   "name": "Meridian Financial Group",
+   "weight": 0.125,
+   "level": 431.3,
+   "status": "Active"
+  },
+  {
+   "name": "Halcyon Shipping plc",
+   "weight": 0.125,
+   "level": 245.5,
+   "status": "Active"
+  },
+  {
+   "name": "Kaizen Motors Corp.",
+   "weight": 0.125,
+   "level": 336.6,
+   "status": "Active"
+  },
+  {
+   "name": "Lumen Semiconductor AG",
+   "weight": 0.125,
+   "level": 259.4,
+   "status": "Active"
+  },
+  {
+   "name": "Helix Pharmaceuticals Inc.",
+   "weight": 0.125,
+   "level": 146.1,
+   "status": "Active"
+  }
+ ],
+ "nextIndex": -1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -19697
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -22646
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -1311
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -12774
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 70887
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -70605
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -6458
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 53839
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -19519
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 11957
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 22633
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -20877
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 19978
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -48464
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -47669
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -37404
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -43362
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 55450
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 45832
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -20575
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-01-10",
+  "executionTimestamp": "2025-01-10T09:10:28.027Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "J. Weiss",
+  "salesperson": null,
+  "orderId": "ORD-979EE8A3C5"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-01-10T10:01:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2025-01-10T10:01:00Z",
+  "lastModifiedAt": "2025-01-10T10:01:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT410120228",
+  "matched": "2025-01-10 16:41",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83979EE8A3C545C578720A",
+  "upi": "QZ5JCA50VDJH",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "KESTGB33XXX",
+  "ssiId": "SSI-EUR-69F994",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1867436,
+  "cleanPv": 1867436.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "EQX-SX5E",
+   "EQV-SX5E",
+   "CORR-G10FX"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 5095
+  }
+ }
+}

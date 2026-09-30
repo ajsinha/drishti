@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-MERIDIAN-TKY",
+ "held": 699191,
+ "posted": 0,
+ "net": 699191,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Granite Building Materials plc 2031",
+   "direction": "Held",
+   "marketValue": 233064,
+   "haircut": 0.01,
+   "value": 230733
+  },
+  {
+   "asset": "Lumen Semiconductor AG 2031",
+   "direction": "Held",
+   "marketValue": 233064,
+   "haircut": 0.01,
+   "value": 230733
+  },
+  {
+   "asset": "Helix Pharmaceuticals Inc. 2031",
+   "direction": "Held",
+   "marketValue": 233064,
+   "haircut": 0.005,
+   "value": 231899
+  }
+ ],
+ "csa": "CSA-MERIDIAN",
+ "nettingSet": "NS-MERIDIAN-TKY",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

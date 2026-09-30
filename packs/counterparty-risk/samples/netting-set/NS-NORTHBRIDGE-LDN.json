@@ -1,0 +1,210 @@
+{
+ "nettingSetId": "NS-NORTHBRIDGE-LDN",
+ "tradeCount": 16,
+ "netMtm": -14873783,
+ "collateral": -11773050,
+ "eePeak": 32093836,
+ "pfePeak": 72400540,
+ "limit": 114000000.0,
+ "utilisation": 0.6351,
+ "cva": -313723,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 6123433,
+   "pfe": 18991139
+  },
+  {
+   "tenor": "1M",
+   "ee": 7536095,
+   "pfe": 19842635
+  },
+  {
+   "tenor": "3M",
+   "ee": 13052900,
+   "pfe": 31979605
+  },
+  {
+   "tenor": "6M",
+   "ee": 15576855,
+   "pfe": 37022707
+  },
+  {
+   "tenor": "1Y",
+   "ee": 14502600,
+   "pfe": 33718545
+  },
+  {
+   "tenor": "2Y",
+   "ee": 20503834,
+   "pfe": 46920735
+  },
+  {
+   "tenor": "3Y",
+   "ee": 25111965,
+   "pfe": 57058624
+  },
+  {
+   "tenor": "5Y",
+   "ee": 32093836,
+   "pfe": 72400540
+  },
+  {
+   "tenor": "7Y",
+   "ee": 370405,
+   "pfe": 832391
+  },
+  {
+   "tenor": "10Y",
+   "ee": 0,
+   "pfe": 0
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10535",
+   "product": "Zero-coupon inflation swap",
+   "notional": 200000000.0,
+   "maturity": "2035-07-12",
+   "mtm": -8112592
+  },
+  {
+   "tradeId": "T-10386",
+   "product": "Reverse convertible",
+   "notional": 221000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -2940178
+  },
+  {
+   "tradeId": "T-10168",
+   "product": "FX forward",
+   "notional": 99000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -1590129
+  },
+  {
+   "tradeId": "T-10372",
+   "product": "Equity digital option",
+   "notional": 91000000.0,
+   "maturity": "2027-03-03",
+   "mtm": -1069328
+  },
+  {
+   "tradeId": "T-10184",
+   "product": "FX vanilla option",
+   "notional": 85000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -1063530
+  },
+  {
+   "tradeId": "T-10360",
+   "product": "Equity barrier option",
+   "notional": 218000000.0,
+   "maturity": "2033-06-06",
+   "mtm": -773276
+  },
+  {
+   "tradeId": "T-10413",
+   "product": "Equity total return swap",
+   "notional": 79000000.0,
+   "maturity": "2031-10-23",
+   "mtm": 657509
+  },
+  {
+   "tradeId": "T-10163",
+   "product": "FX forward",
+   "notional": 97000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 606494
+  },
+  {
+   "tradeId": "T-10209",
+   "product": "FX one-touch / no-touch",
+   "notional": 50000000.0,
+   "maturity": "2032-11-05",
+   "mtm": -411302
+  },
+  {
+   "tradeId": "T-10552",
+   "product": "Inflation cap / floor",
+   "notional": 115000000.0,
+   "maturity": "2026-10-12",
+   "mtm": -318601
+  },
+  {
+   "tradeId": "T-10423",
+   "product": "Contract for difference",
+   "notional": 168000000.0,
+   "maturity": "2027-05-28",
+   "mtm": 262724
+  },
+  {
+   "tradeId": "T-10425",
+   "product": "Contract for difference",
+   "notional": 104000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 207573
+  },
+  {
+   "tradeId": "T-10536",
+   "product": "Zero-coupon inflation swap",
+   "notional": 6000000.0,
+   "maturity": "2028-08-25",
+   "mtm": -188625
+  },
+  {
+   "tradeId": "T-10347",
+   "product": "OTC equity option",
+   "notional": 41000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -164052
+  },
+  {
+   "tradeId": "T-10434",
+   "product": "Convertible bond",
+   "notional": 14000000.0,
+   "maturity": "2033-03-09",
+   "mtm": 94323
+  },
+  {
+   "tradeId": "T-10224",
+   "product": "FX accumulator",
+   "notional": 26000000.0,
+   "maturity": "2029-11-12",
+   "mtm": -70793
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Inflation",
+   "mtm": -8619818
+  },
+  {
+   "asset": "Equity",
+   "mtm": -3724705
+  },
+  {
+   "asset": "FX",
+   "mtm": -2529260
+  }
+ ],
+ "counterparty": "CP-NORTHBRIDGE",
+ "agreement": "AGR-NORTHBRIDGE-ISDA",
+ "csa": "CSA-NORTHBRIDGE",
+ "creditLimit": "LIM-NORTHBRIDGE",
+ "exposureProfile": "EXP-NORTHBRIDGE-LDN",
+ "cvaResult": "CVA-NORTHBRIDGE-LDN",
+ "saccr": "SACCR-NORTHBRIDGE-LDN",
+ "simm": "SIMM-NORTHBRIDGE",
+ "collateralBalance": "COLL-NORTHBRIDGE-LDN",
+ "legalEntity": "LE-LDN",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 29747
+  }
+ }
+}

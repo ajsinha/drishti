@@ -1,0 +1,50 @@
+{
+ "counterpartyId": "CP-HARBORPT",
+ "name": "Harbor Point Bank",
+ "lei": "5493007NJYHPUYJ8PB72",
+ "rating": "A",
+ "sector": "Banking",
+ "country": "US",
+ "type": "Bank",
+ "netMtm": 16899864,
+ "pfePeak": 205058358,
+ "nettingSets": [
+  {
+   "id": "NS-HARBORPT-FRA",
+   "agreement": "AGR-HARBORPT-ISDA",
+   "trades": 3,
+   "netMtm": -4267705
+  },
+  {
+   "id": "NS-HARBORPT-LDN",
+   "agreement": "AGR-HARBORPT-ISDA",
+   "trades": 12,
+   "netMtm": -6687068
+  },
+  {
+   "id": "NS-HARBORPT-NY",
+   "agreement": "AGR-HARBORPT-ISDA",
+   "trades": 14,
+   "netMtm": 26195845
+  },
+  {
+   "id": "NS-HARBORPT-TKY",
+   "agreement": "AGR-HARBORPT-ISDA",
+   "trades": 1,
+   "netMtm": 1658792
+  }
+ ],
+ "kyc": {
+  "status": "Approved",
+  "riskRating": "Standard",
+  "lastReview": "2026-02-11",
+  "emirClassification": "FC",
+  "pd1y": 0.0006
+ },
+ "group": "GRP-HARBORPT",
+ "creditLimit": "LIM-HARBORPT",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

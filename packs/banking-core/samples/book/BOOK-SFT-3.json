@@ -1,0 +1,92 @@
+{
+ "bookId": "BOOK-SFT-3",
+ "name": "Repo and securities lending · book 3",
+ "deskName": "Repo and securities lending",
+ "tradeCount": 11,
+ "mtm": -633253,
+ "dv01": -4311,
+ "topTrades": [
+  {
+   "tradeId": "T-10692",
+   "product": "Tri-party repo",
+   "notional": 223000000.0,
+   "maturity": "2026-10-15",
+   "mtm": -4913363
+  },
+  {
+   "tradeId": "T-10682",
+   "product": "Repurchase agreement",
+   "notional": 227000000.0,
+   "maturity": "2026-12-01",
+   "mtm": 4140501
+  },
+  {
+   "tradeId": "T-10702",
+   "product": "Buy / sell-back",
+   "notional": 181000000.0,
+   "maturity": "2026-10-30",
+   "mtm": -2924657
+  },
+  {
+   "tradeId": "T-10717",
+   "product": "Margin loan",
+   "notional": 134000000.0,
+   "maturity": "2026-10-23",
+   "mtm": 1993603
+  },
+  {
+   "tradeId": "T-10719",
+   "product": "Margin loan",
+   "notional": 79000000.0,
+   "maturity": "2026-11-04",
+   "mtm": 1033179
+  },
+  {
+   "tradeId": "T-10687",
+   "product": "Reverse repo",
+   "notional": 159000000.0,
+   "maturity": "2026-11-12",
+   "mtm": -730273
+  },
+  {
+   "tradeId": "T-10718",
+   "product": "Margin loan",
+   "notional": 116000000.0,
+   "maturity": "2027-01-25",
+   "mtm": 697723
+  },
+  {
+   "tradeId": "T-10684",
+   "product": "Repurchase agreement",
+   "notional": 139000000.0,
+   "maturity": "2026-10-27",
+   "mtm": -422916
+  },
+  {
+   "tradeId": "T-10683",
+   "product": "Repurchase agreement",
+   "notional": 230000000.0,
+   "maturity": "2027-01-11",
+   "mtm": 269743
+  },
+  {
+   "tradeId": "T-10697",
+   "product": "Buy / sell-back",
+   "notional": 88000000.0,
+   "maturity": "2027-01-13",
+   "mtm": 119432
+  }
+ ],
+ "desk": "DESK-SFT",
+ "accountingTreatment": "Fair value (FVTPL)",
+ "regulatoryBook": "Trading book",
+ "volcker": "Market making",
+ "_meta": {
+  "source": "org-master",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 5000
+  }
+ }
+}

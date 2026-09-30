@@ -1,0 +1,57 @@
+{
+ "resultId": "FRTB-FI-2",
+ "book": "BOOK-FI-2",
+ "deltaCharge": 265378395,
+ "vegaCharge": 61456751,
+ "curvatureCharge": 50625787,
+ "total": 377460933,
+ "sensitivities": [
+  {
+   "riskClass": "CSR non-securitisation",
+   "bucket": "1",
+   "measure": "Delta",
+   "value": 17653920
+  },
+  {
+   "riskClass": "CSR non-securitisation",
+   "bucket": "1",
+   "measure": "Vega",
+   "value": -18847773
+  },
+  {
+   "riskClass": "CSR non-securitisation",
+   "bucket": "2",
+   "measure": "Delta",
+   "value": -2572116
+  },
+  {
+   "riskClass": "CSR non-securitisation",
+   "bucket": "2",
+   "measure": "Vega",
+   "value": 7170071
+  },
+  {
+   "riskClass": "CSR non-securitisation",
+   "bucket": "3",
+   "measure": "Delta",
+   "value": -8011469
+  },
+  {
+   "riskClass": "CSR non-securitisation",
+   "bucket": "3",
+   "measure": "Vega",
+   "value": -5946075
+  }
+ ],
+ "byClass": [
+  {
+   "riskClass": "CSR non-securitisation",
+   "charge": 377460933
+  }
+ ],
+ "approach": "FRTB standardised (SBM)",
+ "_meta": {
+  "source": "frtb-engine",
+  "generation": 1
+ }
+}

@@ -1,0 +1,17 @@
+{
+ "groupId": "GRP-CASCADIA",
+ "name": "Cascadia Airlines Inc.",
+ "limit": 320000000.0,
+ "utilisation": 0.5273,
+ "members": [
+  {
+   "id": "CP-CASCADIA",
+   "name": "Cascadia Airlines Inc.",
+   "rating": "BB"
+  }
+ ],
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

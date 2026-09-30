@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-CASCADIA-LDN",
+ "held": 0,
+ "posted": 836737,
+ "net": -836737,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Halcyon Shipping plc 2036",
+   "direction": "Posted",
+   "marketValue": 278912,
+   "haircut": 0.005,
+   "value": 277517
+  },
+  {
+   "asset": "United Kingdom Debt Management Office 2036",
+   "direction": "Posted",
+   "marketValue": 278912,
+   "haircut": 0.02,
+   "value": 273334
+  },
+  {
+   "asset": "United Kingdom Debt Management Office 2031",
+   "direction": "Posted",
+   "marketValue": 278912,
+   "haircut": 0.02,
+   "value": 273334
+  }
+ ],
+ "csa": "CSA-CASCADIA",
+ "nettingSet": "NS-CASCADIA-LDN",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

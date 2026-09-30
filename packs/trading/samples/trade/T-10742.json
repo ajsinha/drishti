@@ -1,0 +1,325 @@
+{
+ "tradeId": "T-10742",
+ "productType": "WORST_OF_NOTE",
+ "productName": "Worst-of note",
+ "assetClass": "Structured",
+ "family": "note",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2025-06-04",
+ "effectiveDate": "2025-06-06",
+ "maturityDate": "2028-05-15",
+ "currency": "USD",
+ "notional": 118000000.0,
+ "mtm": -809315,
+ "mtmCurrency": "USD",
+ "pnl1d": 11268,
+ "counterparty": {
+  "id": "CP-SOLARIS",
+  "name": "Solaris Energy Corp."
+ },
+ "nettingSet": "NS-SOLARIS-TKY",
+ "book": "BOOK-STRUCT-3",
+ "trader": "TRDR-VRAO",
+ "desk": "DESK-STRUCT",
+ "legalEntity": "LE-TKY",
+ "underlyingIndex": "EQX-NDX",
+ "equityVolSurface": "EQV-NDX",
+ "correlation": "CORR-US-EQ",
+ "terms": {
+  "coupon": 0.08086,
+  "basketSize": 5,
+  "barrier": 0.596987
+ },
+ "risk": {
+  "delta": 282201,
+  "vega": 418356
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 13438,
+   "vega": 19922
+  },
+  {
+   "bucket": "1M",
+   "delta": 26876,
+   "vega": 39843
+  },
+  {
+   "bucket": "3M",
+   "delta": 40314,
+   "vega": 59765
+  },
+  {
+   "bucket": "6M",
+   "delta": 53753,
+   "vega": 79687
+  },
+  {
+   "bucket": "1Y",
+   "delta": 67191,
+   "vega": 99609
+  },
+  {
+   "bucket": "2Y",
+   "delta": 80629,
+   "vega": 119530
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2025-09-06",
+   "level": 89.7,
+   "trigger": 100.0,
+   "performance": -0.103,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-12-06",
+   "level": 86.54,
+   "trigger": 100.0,
+   "performance": -0.1346,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-03-06",
+   "level": 89.87,
+   "trigger": 100.0,
+   "performance": -0.1013,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-06-06",
+   "level": 90.85,
+   "trigger": 100.0,
+   "performance": -0.0915,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-09-06",
+   "level": 99.4,
+   "trigger": 100.0,
+   "performance": -0.006,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-12-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-03-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-06-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-09-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-12-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-03-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-05-15",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 5,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 53281
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -20502
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 523
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 12081
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 2609
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 44159
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 41674
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -19449
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 12348
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -17320
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 12038
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -23963
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 33057
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -14781
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -29934
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 33869
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 12394
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 27982
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -14640
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 21779
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-06-04",
+  "executionTimestamp": "2025-06-04T09:28:32.401Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "V. Rao",
+  "salesperson": null,
+  "orderId": "ORD-EB2FC17EED"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-06-04T09:31:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2025-06-04T09:31:00Z",
+  "lastModifiedAt": "2025-06-04T09:31:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT784670415",
+  "matched": "2025-06-04 15:41",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300BLAOJ55ZE6F474EB2FC17EED9EE4E2E109",
+  "upi": "QZ1CLJD5924U",
+  "reportingRegimes": [
+   "JFSA"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SOLAUS33XXX",
+  "ssiId": "SSI-USD-269904",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -809315,
+  "cleanPv": -809315.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQX-NDX",
+   "EQV-NDX",
+   "CORR-US-EQ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-struct",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 2799
+  }
+ }
+}

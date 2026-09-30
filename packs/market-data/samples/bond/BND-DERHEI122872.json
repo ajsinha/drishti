@@ -1,0 +1,180 @@
+{
+ "isin": "BND-DERHEI122872",
+ "isinCode": "DERHEI122872",
+ "issuerName": "Rheintal Landesbank",
+ "coupon": 0.0478,
+ "maturity": "2036-11-15",
+ "price": 115.225,
+ "yield": 0.0303,
+ "zSpread": 83.6,
+ "modDuration": 8.7,
+ "rating": "A-",
+ "terms": {
+  "currency": "EUR",
+  "couponFrequency": "Annual",
+  "dayCount": "ACT/ACT",
+  "issueDate": "2026-11-15",
+  "amountIssued": 6000000000,
+  "seniority": "Senior unsecured",
+  "callable": false,
+  "cusip": null
+ },
+ "coupons": [
+  {
+   "date": "2027-11-15",
+   "amount": 4.78
+  },
+  {
+   "date": "2028-11-15",
+   "amount": 4.78
+  },
+  {
+   "date": "2029-11-15",
+   "amount": 4.78
+  },
+  {
+   "date": "2030-11-15",
+   "amount": 4.78
+  },
+  {
+   "date": "2031-11-15",
+   "amount": 4.78
+  },
+  {
+   "date": "2032-11-15",
+   "amount": 4.78
+  }
+ ],
+ "history": [
+  {
+   "date": "2026-08-19",
+   "price": 114.13
+  },
+  {
+   "date": "2026-08-20",
+   "price": 114.235
+  },
+  {
+   "date": "2026-08-21",
+   "price": 114.387
+  },
+  {
+   "date": "2026-08-24",
+   "price": 114.433
+  },
+  {
+   "date": "2026-08-25",
+   "price": 114.328
+  },
+  {
+   "date": "2026-08-26",
+   "price": 114.318
+  },
+  {
+   "date": "2026-08-27",
+   "price": 114.364
+  },
+  {
+   "date": "2026-08-28",
+   "price": 114.208
+  },
+  {
+   "date": "2026-08-31",
+   "price": 114.127
+  },
+  {
+   "date": "2026-09-01",
+   "price": 113.841
+  },
+  {
+   "date": "2026-09-02",
+   "price": 114.106
+  },
+  {
+   "date": "2026-09-03",
+   "price": 113.781
+  },
+  {
+   "date": "2026-09-04",
+   "price": 113.638
+  },
+  {
+   "date": "2026-09-08",
+   "price": 113.734
+  },
+  {
+   "date": "2026-09-09",
+   "price": 114.189
+  },
+  {
+   "date": "2026-09-10",
+   "price": 114.195
+  },
+  {
+   "date": "2026-09-11",
+   "price": 113.971
+  },
+  {
+   "date": "2026-09-14",
+   "price": 114.137
+  },
+  {
+   "date": "2026-09-15",
+   "price": 113.951
+  },
+  {
+   "date": "2026-09-16",
+   "price": 114.108
+  },
+  {
+   "date": "2026-09-17",
+   "price": 114.224
+  },
+  {
+   "date": "2026-09-18",
+   "price": 114.28
+  },
+  {
+   "date": "2026-09-21",
+   "price": 114.289
+  },
+  {
+   "date": "2026-09-22",
+   "price": 114.26
+  },
+  {
+   "date": "2026-09-23",
+   "price": 114.11
+  },
+  {
+   "date": "2026-09-24",
+   "price": 114.994
+  },
+  {
+   "date": "2026-09-25",
+   "price": 115.258
+  },
+  {
+   "date": "2026-09-28",
+   "price": 115.167
+  },
+  {
+   "date": "2026-09-29",
+   "price": 115.275
+  },
+  {
+   "date": "2026-09-30",
+   "price": 115.225
+  }
+ ],
+ "issuer": "ISS-RHEINTAL",
+ "benchmarkCurve": "CRV-EUR-GOVT",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "price": 0.02
+  }
+ }
+}

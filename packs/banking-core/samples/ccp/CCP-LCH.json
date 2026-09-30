@@ -1,0 +1,17 @@
+{
+ "ccpId": "CCP-LCH",
+ "name": "LCH Ltd",
+ "defaultFund": 510000000.0,
+ "imPosted": 30600000,
+ "marginModel": "LCH SwapClear PAIRS (5-day, 99.7% ES)",
+ "accounts": [
+  {
+   "id": "CLR-LCH-1",
+   "im": 30600000
+  }
+ ],
+ "_meta": {
+  "source": "clearing-system",
+  "generation": 1
+ }
+}

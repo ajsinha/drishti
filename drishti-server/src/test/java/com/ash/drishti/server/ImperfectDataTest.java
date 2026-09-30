@@ -115,4 +115,19 @@ class ImperfectDataTest {
         }
         assertThat(empties).isPositive();
     }
+
+    /** Tutorial 4's Sutra, over a real, deeply nested trade from the trading pack: every panel has data. */
+    @Test
+    void theNestedDocumentsTutorialWorksOnARealTrade() throws Exception {
+        String guide = Files.readString(Path.of("../console/web/guides/nested-data.md"));
+        var m = java.util.regex.Pattern.compile("(?ms)^```sutra\\s*$\\n(.*?)^```\\s*$").matcher(guide);
+        assertThat(m.find()).isTrue();
+        Sutra s = new com.ash.drishti.rachana.parse.SutraParser().parse(m.group(1), "nested-data.md", "docs");
+        DataNode trade = codec.read(Files.readString(Path.of("../packs/trading/samples/trade/T-10001.json")));
+        ViewModel vm = pipeline.preview(Optional.of(s), new EntityDocument(EntityRef.of("trade", "T-10001"), trade,
+                new Provenance("test", 1, Instant.now(), false)));
+        assertThat(vm.panels()).allSatisfy(p -> assertThat(p.empty()).as(p.id()).isFalse());
+        assertThat(vm.strip()).extracting(ViewModel.Cell::label).contains("UTI", "Venue");
+        assertThat(vm.strip()).filteredOn(c -> c.label().equals("UTI")).allSatisfy(c -> assertThat(c.text()).startsWith("5493"));
+    }
 }

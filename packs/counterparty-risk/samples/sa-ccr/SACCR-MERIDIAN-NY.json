@@ -1,0 +1,84 @@
+{
+ "calcId": "SACCR-MERIDIAN-NY",
+ "replacementCost": 406404,
+ "addOn": 63787541,
+ "multiplier": 1.0,
+ "ead": 89871523,
+ "rwa": 44935762,
+ "addOns": [
+  {
+   "assetClass": "Interest rate",
+   "addOn": 4127541
+  },
+  {
+   "assetClass": "Credit",
+   "addOn": 21500000
+  },
+  {
+   "assetClass": "Commodity",
+   "addOn": 38160000
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "JPY",
+   "effectiveNotional": 212900000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "CAD",
+   "effectiveNotional": -201608219,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "GBP",
+   "effectiveNotional": 112000000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "CAD",
+   "effectiveNotional": 229000000,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "JPY",
+   "effectiveNotional": -108000000,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "USD",
+   "effectiveNotional": -93000000,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Commodity",
+   "hedgingSet": "USD",
+   "effectiveNotional": 212000000,
+   "sf": 0.18
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "CHF",
+   "effectiveNotional": 230000000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "EUR",
+   "effectiveNotional": -69000000,
+   "sf": 0.005
+  }
+ ],
+ "nettingSet": "NS-MERIDIAN-NY",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

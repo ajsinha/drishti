@@ -1,0 +1,236 @@
+{
+ "tradeId": "T-10483",
+ "productType": "CMD_SWAPTION",
+ "productName": "Commodity swaption",
+ "assetClass": "Commodity",
+ "family": "option",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2025-09-18",
+ "effectiveDate": "2025-09-22",
+ "maturityDate": "2027-09-09",
+ "currency": "USD",
+ "notional": 192000000.0,
+ "mtm": -735965,
+ "mtmCurrency": "USD",
+ "pnl1d": -2208,
+ "counterparty": {
+  "id": "CP-MERIDIAN-RE",
+  "name": "Meridian Reinsurance Ltd"
+ },
+ "nettingSet": "NS-MERIDIAN-RE-NY",
+ "book": "BOOK-COMM-2",
+ "trader": "TRDR-TBRENNAN",
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "commodityCurve": "CMDC-SILVER",
+ "commodityVolSurface": "CMDV-SILVER",
+ "terms": {
+  "payerReceiver": "Receiver",
+  "strike": 1683.88,
+  "expiryDate": "2027-09-13"
+ },
+ "risk": {
+  "delta": -976265,
+  "vega": -794203
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -46489,
+   "vega": -37819
+  },
+  {
+   "bucket": "1M",
+   "delta": -92978,
+   "vega": -75638
+  },
+  {
+   "bucket": "3M",
+   "delta": -139466,
+   "vega": -113458
+  },
+  {
+   "bucket": "6M",
+   "delta": -185955,
+   "vega": -151277
+  },
+  {
+   "bucket": "1Y",
+   "delta": -232444,
+   "vega": -189096
+  },
+  {
+   "bucket": "2Y",
+   "delta": -278933,
+   "vega": -226915
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -46215
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -28371
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 38446
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -16677
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -12005
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 5615
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -4008
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -25396
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -30351
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 27748
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 39204
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 22379
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -45762
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 37242
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 10421
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 10590
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 21437
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 42956
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 8845
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 20559
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-09-18",
+  "executionTimestamp": "2025-09-18T08:45:15.082Z",
+  "venue": "ICE",
+  "venueMic": "IFEU",
+  "executionType": "Electronic",
+  "trader": "T. Brennan",
+  "salesperson": null,
+  "orderId": "ORD-BD6524B586"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-09-18T11:01:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2025-09-18T11:01:00Z",
+  "lastModifiedAt": "2025-09-18T11:01:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT954925115",
+  "matched": "2025-09-18 16:29",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096BD6524B58697D5FD2CC0",
+  "upi": "QZAP9MJ5IKYD",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "MERIUS33XXX",
+  "ssiId": "SSI-USD-9DC4EA",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -735965,
+  "cleanPv": -735965.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CMDC-SILVER",
+   "CMDV-SILVER"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "endur-comm",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 3392
+  }
+ }
+}

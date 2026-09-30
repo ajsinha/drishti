@@ -1,0 +1,58 @@
+{
+ "resultId": "CVA-ALDERSHOT-TKY",
+ "cva": -20516,
+ "dva": 10771,
+ "fva": -680,
+ "kva": -148201,
+ "cs01": -369,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -20516
+  },
+  {
+   "name": "DVA",
+   "amount": 10771
+  },
+  {
+   "name": "FVA",
+   "amount": -680
+  },
+  {
+   "name": "KVA",
+   "amount": -148201
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -369
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 82
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 41
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -615
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 349
+  }
+ ],
+ "nettingSet": "NS-ALDERSHOT-TKY",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

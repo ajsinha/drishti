@@ -1,0 +1,57 @@
+{
+ "resultId": "FRTB-STRUCT-3",
+ "book": "BOOK-STRUCT-3",
+ "deltaCharge": 175925886,
+ "vegaCharge": 53207759,
+ "curvatureCharge": 20200315,
+ "total": 249333960,
+ "sensitivities": [
+  {
+   "riskClass": "Equity",
+   "bucket": "1",
+   "measure": "Delta",
+   "value": -3950099
+  },
+  {
+   "riskClass": "Equity",
+   "bucket": "1",
+   "measure": "Vega",
+   "value": 8107168
+  },
+  {
+   "riskClass": "Equity",
+   "bucket": "2",
+   "measure": "Delta",
+   "value": 15669754
+  },
+  {
+   "riskClass": "Equity",
+   "bucket": "2",
+   "measure": "Vega",
+   "value": 8146043
+  },
+  {
+   "riskClass": "Equity",
+   "bucket": "3",
+   "measure": "Delta",
+   "value": 3740250
+  },
+  {
+   "riskClass": "Equity",
+   "bucket": "3",
+   "measure": "Vega",
+   "value": 283577
+  }
+ ],
+ "byClass": [
+  {
+   "riskClass": "Equity",
+   "charge": 249333960
+  }
+ ],
+ "approach": "FRTB standardised (SBM)",
+ "_meta": {
+  "source": "frtb-engine",
+  "generation": 1
+ }
+}

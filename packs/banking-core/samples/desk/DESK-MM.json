@@ -1,0 +1,33 @@
+{
+ "deskId": "DESK-MM",
+ "name": "Money markets",
+ "head": "S. Iyer",
+ "books": [
+  {
+   "id": "BOOK-MM-1",
+   "trades": 19,
+   "mtm": 5347472
+  },
+  {
+   "id": "BOOK-MM-2",
+   "trades": 7,
+   "mtm": 1765867
+  },
+  {
+   "id": "BOOK-MM-3",
+   "trades": 4,
+   "mtm": 2339903
+  }
+ ],
+ "var99": 119144,
+ "mtm": 9453242,
+ "legalEntity": "LE-NY",
+ "varResult": "VAR-MM",
+ "assetClasses": [
+  "Money market"
+ ],
+ "_meta": {
+  "source": "org-master",
+  "generation": 1
+ }
+}

@@ -1,0 +1,406 @@
+{
+ "tradeId": "T-10525",
+ "productType": "WEATHER_HDD",
+ "productName": "Weather derivative (HDD/CDD)",
+ "assetClass": "Commodity",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2024-05-22",
+ "effectiveDate": "2024-05-24",
+ "maturityDate": "2034-10-16",
+ "currency": "USD",
+ "notional": 7000000.0,
+ "mtm": -121801,
+ "mtmCurrency": "USD",
+ "pnl1d": 4503,
+ "counterparty": {
+  "id": "CP-TOKAI",
+  "name": "Tokai Mutual Trust Bank"
+ },
+ "nettingSet": "NS-TOKAI-NY",
+ "book": "BOOK-COMM-3",
+ "trader": "TRDR-TBRENNAN",
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-USD-OIS",
+ "terms": {
+  "station": "Tokyo",
+  "index": "HDD",
+  "strike": 3873,
+  "tick": 10512.0
+ },
+ "risk": {
+  "delta": 27603
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 1314
+  },
+  {
+   "bucket": "1M",
+   "delta": 2629
+  },
+  {
+   "bucket": "3M",
+   "delta": 3943
+  },
+  {
+   "bucket": "6M",
+   "delta": 5258
+  },
+  {
+   "bucket": "1Y",
+   "delta": 6572
+  },
+  {
+   "bucket": "2Y",
+   "delta": 7887
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2024-08-24",
+   "level": 90.04,
+   "trigger": 100.0,
+   "performance": -0.0996,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2024-11-24",
+   "level": 95.64,
+   "trigger": 100.0,
+   "performance": -0.0436,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-02-24",
+   "level": 95.71,
+   "trigger": 100.0,
+   "performance": -0.0429,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-05-24",
+   "level": 77.0,
+   "trigger": 100.0,
+   "performance": -0.23,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-08-24",
+   "level": 88.5,
+   "trigger": 100.0,
+   "performance": -0.115,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-11-24",
+   "level": 88.97,
+   "trigger": 100.0,
+   "performance": -0.1103,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-02-24",
+   "level": 85.1,
+   "trigger": 100.0,
+   "performance": -0.149,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-05-24",
+   "level": 86.24,
+   "trigger": 100.0,
+   "performance": -0.1376,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-08-24",
+   "level": 90.92,
+   "trigger": 100.0,
+   "performance": -0.0908,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-11-24",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-02-24",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-05-24",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-08-24",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-11-24",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-02-24",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-05-24",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-08-24",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-11-24",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-02-24",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-05-24",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-08-24",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-11-24",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-02-24",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-05-24",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 9,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -1124
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -1595
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -4887
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -4609
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 1738
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -826
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -4017
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 504
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -4880
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 3204
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -469
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -55
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -7077
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 2541
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 125
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 3795
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 4108
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -47
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -1065
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 211
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-05-22",
+  "executionTimestamp": "2024-05-22T14:11:40.848Z",
+  "venue": "ICE",
+  "venueMic": "IFEU",
+  "executionType": "Electronic",
+  "trader": "T. Brennan",
+  "salesperson": null,
+  "orderId": "ORD-14526F3AF0"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-05-22T10:40:00Z",
+    "by": "mo.amend"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2025-02-23T10:40:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2024-05-22T10:40:00Z",
+  "lastModifiedAt": "2025-02-23T10:40:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT459487532",
+  "matched": "2024-05-22 17:55",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209614526F3AF08F066E9F21",
+  "upi": "QZXEFK9KZGUL",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "TOKAUS33XXX",
+  "ssiId": "SSI-USD-6E2541",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -121801,
+  "cleanPv": -121801.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "CRV-USD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "endur-comm",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

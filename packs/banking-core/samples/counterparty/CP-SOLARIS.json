@@ -1,0 +1,51 @@
+{
+ "counterpartyId": "CP-SOLARIS",
+ "name": "Solaris Energy Corp.",
+ "lei": "549300PN5S8OB1PSJN06",
+ "rating": "BBB",
+ "sector": "Utilities",
+ "country": "US",
+ "type": "Corporate",
+ "netMtm": 10647994,
+ "pfePeak": 84133589,
+ "nettingSets": [
+  {
+   "id": "NS-SOLARIS-FRA",
+   "agreement": "AGR-SOLARIS-ISDA",
+   "trades": 2,
+   "netMtm": 1865178
+  },
+  {
+   "id": "NS-SOLARIS-LDN",
+   "agreement": "AGR-SOLARIS-ISDA",
+   "trades": 10,
+   "netMtm": -2692928
+  },
+  {
+   "id": "NS-SOLARIS-NY",
+   "agreement": "AGR-SOLARIS-ISDA",
+   "trades": 13,
+   "netMtm": 5625315
+  },
+  {
+   "id": "NS-SOLARIS-TKY",
+   "agreement": "AGR-SOLARIS-ISDA",
+   "trades": 3,
+   "netMtm": 5850429
+  }
+ ],
+ "kyc": {
+  "status": "Approved",
+  "riskRating": "Enhanced",
+  "lastReview": "2026-02-11",
+  "emirClassification": "NFC-",
+  "pd1y": 0.0018
+ },
+ "group": "GRP-SOLARIS",
+ "creditLimit": "LIM-SOLARIS",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ },
+ "creditCurve": "CDS-SOLARIS"
+}

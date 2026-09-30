@@ -1,0 +1,79 @@
+{
+ "curveId": "CMDC-WTI",
+ "commodity": "WTI crude oil",
+ "front": 71.15,
+ "shape": "backwardation",
+ "roll": -0.4,
+ "points": [
+  {
+   "month": "X6",
+   "price": 71.15,
+   "openInterest": 200000
+  },
+  {
+   "month": "Z6",
+   "price": 70.865,
+   "openInterest": 143306
+  },
+  {
+   "month": "F7",
+   "price": 70.581,
+   "openInterest": 102683
+  },
+  {
+   "month": "G7",
+   "price": 70.296,
+   "openInterest": 73575
+  },
+  {
+   "month": "H7",
+   "price": 70.012,
+   "openInterest": 52719
+  },
+  {
+   "month": "J7",
+   "price": 69.727,
+   "openInterest": 37775
+  },
+  {
+   "month": "K7",
+   "price": 69.442,
+   "openInterest": 27067
+  },
+  {
+   "month": "M7",
+   "price": 69.158,
+   "openInterest": 19394
+  },
+  {
+   "month": "N7",
+   "price": 68.873,
+   "openInterest": 13896
+  },
+  {
+   "month": "Q7",
+   "price": 68.589,
+   "openInterest": 9957
+  },
+  {
+   "month": "U7",
+   "price": 68.304,
+   "openInterest": 7134
+  },
+  {
+   "month": "V7",
+   "price": 68.019,
+   "openInterest": 5112
+  }
+ ],
+ "commodityRef": "CMD-WTI",
+ "unit": "USD/bbl",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "front": 0.05
+  }
+ }
+}

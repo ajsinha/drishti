@@ -1,0 +1,58 @@
+{
+ "resultId": "CVA-MERIDIAN-RE-NY",
+ "cva": -42012,
+ "dva": 14704,
+ "fva": -67928,
+ "kva": -183925,
+ "cs01": -756,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -42012
+  },
+  {
+   "name": "DVA",
+   "amount": 14704
+  },
+  {
+   "name": "FVA",
+   "amount": -67928
+  },
+  {
+   "name": "KVA",
+   "amount": -183925
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -756
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 168
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 84
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -1260
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 714
+  }
+ ],
+ "nettingSet": "NS-MERIDIAN-RE-NY",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

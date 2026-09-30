@@ -117,6 +117,29 @@ class InferenceEngineTest {
     }
 
     @Test
+    void aLabelNobodyWroteComesFromTheFieldName() throws Exception {
+        Semantics.load(null, java.util.List.of("../packs/finance/config/semantics.yaml"));   // brings UTI, DV01, MTM…
+        assertThat(LayoutMerger.labelOf("$.regulatory.uti")).isEqualTo("UTI");
+        assertThat(LayoutMerger.labelOf("@.payDate")).isEqualTo("Pay date");
+        assertThat(LayoutMerger.labelOf("$.legs[0].cashflows[1].amount")).isEqualTo("Amount");
+        assertThat(LayoutMerger.labelOf("link($.nettingSet, 'netting-set')")).isEqualTo("Netting set");
+        assertThat(LayoutMerger.labelOf("fmt($.dv01ByTenor, 'x')")).isEqualTo("DV01 by tenor");
+        var parsed = new com.ash.drishti.rachana.parse.SutraParser().parse("""
+                sutra: no-labels
+                version: 1
+                match: { kind: trade }
+                strip:
+                  - { bind: $.mtm, fmt: signed0 }
+                  - { label: Deal, bind: $.tradeId }
+                panels:
+                  - { id: legs, kind: table, rows: $.legs, columns: [ { bind: "@.rate" } ] }
+                """, "t.yaml", "x");
+        var eff = MERGER.merge(java.util.Optional.of(parsed), fixture("trade", "IRS-48213"), "trade").sutra();
+        assertThat(eff.strip()).extracting(StripItem::label).containsExactly("MTM", "Deal");
+        assertThat(eff.panels().get(0).columns()).extracting(c -> c.label()).containsExactly("Rate");
+    }
+
+    @Test
     void semanticsRecogniseRolesAndLabels() {
         Semantics s = Semantics.load(null, java.util.List.of("../packs/finance/config/semantics.yaml"));
         assertThat(s.role("mtm", DataNode.of(-5)).name()).isEqualTo("signed-money");
@@ -126,7 +149,7 @@ class InferenceEngineTest {
         assertThat(s.isTenor("5Y")).isTrue();
         assertThat(s.isTenor("Z6")).isTrue();
         assertThat(s.isTenor("Hello")).isFalse();
-        assertThat(Semantics.humanize("dv01ByTenor")).isEqualTo("Dv01 by tenor");
+        assertThat(Semantics.humanize("dv01ByTenor")).isEqualTo("DV01 by tenor");   // the finance vocabulary spells DV01
         assertThat(s.idFields("netting-set")).first().isEqualTo("nettingSetId");
     }
 }

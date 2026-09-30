@@ -1,0 +1,26 @@
+{
+ "resultId": "STR-RATES-TWIST-EQD",
+ "scenarioName": "Bear steepener 2s10s +75 bp",
+ "pnl": -25135842,
+ "limit": -83500000.0,
+ "byBook": [
+  {
+   "book": "BOOK-EQD-1",
+   "pnl": -5600690
+  },
+  {
+   "book": "BOOK-EQD-2",
+   "pnl": -11255911
+  },
+  {
+   "book": "BOOK-EQD-3",
+   "pnl": -8279241
+  }
+ ],
+ "scenario": "SCN-RATES-TWIST",
+ "desk": "DESK-EQD",
+ "_meta": {
+  "source": "stress-engine",
+  "generation": 1
+ }
+}

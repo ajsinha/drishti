@@ -1,0 +1,35 @@
+{
+ "calcId": "SIMM-SUMMIT",
+ "total": 11371825,
+ "posted": 11030670,
+ "received": 11599262,
+ "version": "ISDA SIMM 2.7",
+ "riskClasses": [
+  {
+   "riskClass": "Interest rate",
+   "im": 5117321
+  },
+  {
+   "riskClass": "Credit qualifying",
+   "im": 1364619
+  },
+  {
+   "riskClass": "Equity",
+   "im": 2046928
+  },
+  {
+   "riskClass": "Commodity",
+   "im": 909746
+  },
+  {
+   "riskClass": "FX",
+   "im": 1933210
+  }
+ ],
+ "nettingSet": "NS-SUMMIT-LDN",
+ "counterparty": "CP-SUMMIT",
+ "_meta": {
+  "source": "margin-engine",
+  "generation": 1
+ }
+}

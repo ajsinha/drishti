@@ -16,6 +16,11 @@
 # Changelog
 
 ## Unreleased
+- **Banking data (R3).** `tools/packgen/banking/make_data.py` generates 1,791 consistent documents across the five banking packs: 750 trades in 125 products (rate swaps with real calculation periods that reprice to their MTM), 220 market-data objects, 66 netting sets with exposure, CVA, SA-CCR and collateral, limits, SIMM, VaR, stress, FRTB and P&L explain, and the reference data. Checks: references resolve, netting sets reconcile, every field a Sutra reads is present. `--lake data/delta` writes it as Delta tables by data domain with ten business days of history. The packs gain example commands.
+- **`surface` panel kind** (the thirteenth): a grid over two axes drawn as a heatmap, with a **3D** toggle (drag to rotate). The volatility kinds use it. ECharts is now the full build, and ECharts GL is vendored with its one `new Function` replaced, so the strict CSP still holds.
+- **Labels are optional.** A strip item or column without `label` is named after the field it reads. Resolution order: the Sutra, then the pack taxonomy (`labels:`), then the global taxonomy, then the field name in words with the `acronyms:` vocabulary (UTI, DV01, MTM…).
+- **Tutorial 4 · Nested documents**: paths of any depth, tables over nested arrays, tabs per element, and a whole Sutra over a real trade. Every complete Sutra in the docs is now parsed by a test.
+- Live views prefer live sources; a picked date prefers dated ones. The finance pack declares its own lake connector.
 - **Banking packs.** The risk pack is split into five packs generated from one taxonomy: `banking-core`, `market-data`, `trading` (125 products), `market-risk` and `counterparty-risk`. Enabling a risk pack brings the packs it requires.
 - **Pack dependencies, connectors and routes.** `pack.yaml` gains `requires:` (loaded dependencies first; cycles and missing packs refused), `connectors:` (one per data domain; several packs may declare the same connector identically) and `routes:` (which connector answers each kind). Delta Lake is organised by data domain (`data/delta/<domain>/<kind>/`): packs and domains are many-to-many. Users can open the kinds of the packs their active packs require.
 

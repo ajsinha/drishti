@@ -1,0 +1,48 @@
+{
+ "limitId": "LIM-VERDANT",
+ "counterpartyName": "Verdant Agri Holdings",
+ "measure": "PFE 95 peak",
+ "limit": 223000000.0,
+ "used": 132263061,
+ "utilisation": 0.5931,
+ "status": "Within limit",
+ "buckets": [
+  {
+   "bucket": "0-1Y",
+   "limit": 223000000,
+   "used": 112423602,
+   "utilisation": 0.5041
+  },
+  {
+   "bucket": "1-3Y",
+   "limit": 223000000,
+   "used": 132263061,
+   "utilisation": 0.5931
+  },
+  {
+   "bucket": "3-5Y",
+   "limit": 178400000,
+   "used": 92584143,
+   "utilisation": 0.519
+  },
+  {
+   "bucket": "5-10Y",
+   "limit": 133800000,
+   "used": 46292071,
+   "utilisation": 0.346
+  },
+  {
+   "bucket": "10Y+",
+   "limit": 89200000,
+   "used": 13226306,
+   "utilisation": 0.1483
+  }
+ ],
+ "counterparty": "CP-VERDANT",
+ "approvedBy": "Credit Risk Committee",
+ "reviewDue": "2027-03-19",
+ "_meta": {
+  "source": "limits-system",
+  "generation": 1
+ }
+}

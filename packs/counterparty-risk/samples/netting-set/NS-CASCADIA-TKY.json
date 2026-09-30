@@ -1,0 +1,104 @@
+{
+ "nettingSetId": "NS-CASCADIA-TKY",
+ "tradeCount": 2,
+ "netMtm": -410200,
+ "collateral": -294572,
+ "eePeak": 15300364,
+ "pfePeak": 34265601,
+ "limit": 43000000.0,
+ "utilisation": 0.7969,
+ "cva": -518672,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 1199040,
+   "pfe": 3718688
+  },
+  {
+   "tenor": "1M",
+   "ee": 2496001,
+   "pfe": 6572002
+  },
+  {
+   "tenor": "3M",
+   "ee": 4323200,
+   "pfe": 10591840
+  },
+  {
+   "tenor": "6M",
+   "ee": 6113928,
+   "pfe": 14531442
+  },
+  {
+   "tenor": "1Y",
+   "ee": 8646400,
+   "pfe": 20102880
+  },
+  {
+   "tenor": "2Y",
+   "ee": 12227856,
+   "pfe": 27982084
+  },
+  {
+   "tenor": "3Y",
+   "ee": 14976004,
+   "pfe": 34028009
+  },
+  {
+   "tenor": "5Y",
+   "ee": 10818991,
+   "pfe": 24406581
+  },
+  {
+   "tenor": "7Y",
+   "ee": 12801203,
+   "pfe": 28767447
+  },
+  {
+   "tenor": "10Y",
+   "ee": 15300364,
+   "pfe": 34265601
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10740",
+   "product": "Worst-of note",
+   "notional": 108000000.0,
+   "maturity": "2038-01-29",
+   "mtm": -1328010
+  },
+  {
+   "tradeId": "T-10734",
+   "product": "FX-rates hybrid (PRDC)",
+   "notional": 85000000.0,
+   "maturity": "2029-10-11",
+   "mtm": 917810
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Structured",
+   "mtm": -410200
+  }
+ ],
+ "counterparty": "CP-CASCADIA",
+ "agreement": "AGR-CASCADIA-ISDA",
+ "csa": "CSA-CASCADIA",
+ "creditLimit": "LIM-CASCADIA",
+ "exposureProfile": "EXP-CASCADIA-TKY",
+ "cvaResult": "CVA-CASCADIA-TKY",
+ "saccr": "SACCR-CASCADIA-TKY",
+ "simm": "SIMM-CASCADIA",
+ "collateralBalance": "COLL-CASCADIA-TKY",
+ "legalEntity": "LE-TKY",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 1000
+  }
+ }
+}

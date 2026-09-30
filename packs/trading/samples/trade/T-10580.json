@@ -1,0 +1,337 @@
+{
+ "tradeId": "T-10580",
+ "productType": "CORP_BOND",
+ "productName": "Corporate bond",
+ "assetClass": "Fixed income",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2025-12-31",
+ "effectiveDate": "2026-01-02",
+ "maturityDate": "2031-12-22",
+ "currency": "USD",
+ "notional": 216000000.0,
+ "mtm": -1502288,
+ "mtmCurrency": "USD",
+ "pnl1d": 36024,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-2",
+ "trader": "TRDR-BADEYEMI",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-SOLARIS",
+ "benchmarkCurve": "CRV-USD-GOVT",
+ "underlyingBond": "BND-USSOLA119789",
+ "creditCurve": "CDS-SOLARIS",
+ "terms": {
+  "coupon": 0.006812,
+  "couponFrequency": "Quarterly",
+  "faceAmount": 30218595.0,
+  "cleanPrice": 106.508,
+  "yield": 0.027558,
+  "zSpread": 373.9,
+  "seniority": "Senior unsecured"
+ },
+ "risk": {
+  "dv01": 116727,
+  "cs01": 121548,
+  "jtd": -129600000
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 5558,
+   "cs01": 5788,
+   "jtd": -6171429
+  },
+  {
+   "bucket": "6M",
+   "dv01": 11117,
+   "cs01": 11576,
+   "jtd": -12342857
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 16675,
+   "cs01": 17364,
+   "jtd": -18514286
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 22234,
+   "cs01": 23152,
+   "jtd": -24685714
+  },
+  {
+   "bucket": "3Y",
+   "dv01": 27792,
+   "cs01": 28940,
+   "jtd": -30857143
+  },
+  {
+   "bucket": "5Y",
+   "dv01": 33351,
+   "cs01": 34728,
+   "jtd": -37028571
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-07-02",
+   "rate": 0.042971,
+   "amount": 4320000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2027-01-02",
+   "rate": 0.035179,
+   "amount": 4320000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-07-02",
+   "rate": 0.038541,
+   "amount": 4320000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-01-02",
+   "rate": 0.048984,
+   "amount": 4320000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-07-02",
+   "rate": 0.037141,
+   "amount": 4320000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-01-02",
+   "rate": 0.030203,
+   "amount": 4320000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-07-02",
+   "rate": 0.030715,
+   "amount": 4320000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-01-02",
+   "rate": 0.038653,
+   "amount": 4320000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-07-02",
+   "rate": 0.023774,
+   "amount": 4320000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-01-02",
+   "rate": 0.021501,
+   "amount": 4320000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-07-02",
+   "rate": 0.041749,
+   "amount": 4320000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-12-22",
+   "rate": 0.027294,
+   "amount": 4320000.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -70909
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -46117
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 21203
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 55906
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 26746
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 8321
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -32480
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 49587
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -71781
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -1032
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 20805
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 21502
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 68256
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 22105
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 17486
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -12651
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -30176
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 80301
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 40817
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 48303
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-12-31",
+  "executionTimestamp": "2025-12-31T15:49:20.589Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "B. Adeyemi",
+  "salesperson": null,
+  "orderId": "ORD-016C1FCD73"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-12-31T10:36:00Z",
+    "by": "stp.gateway"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2026-03-14T10:36:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2025-12-31T10:36:00Z",
+  "lastModifiedAt": "2026-03-14T10:36:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT977318960",
+  "matched": "2025-12-31 17:20",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH8521475949",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096016C1FCD73D24496B419",
+  "upi": "QZGYR1DXBQ3F",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMUS33XXX",
+  "ssiId": "SSI-USD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -1502288,
+  "cleanPv": -1502288.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-USD-GOVT",
+   "BND-USSOLA119789",
+   "CDS-SOLARIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 5165
+  }
+ }
+}

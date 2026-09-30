@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-ALDERSHOT-TKY",
+ "held": 500010,
+ "posted": 0,
+ "net": 500010,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Orbital Telecom SA 2036",
+   "direction": "Held",
+   "marketValue": 166670,
+   "haircut": 0.02,
+   "value": 163337
+  },
+  {
+   "asset": "Halcyon Shipping plc 2036",
+   "direction": "Held",
+   "marketValue": 166670,
+   "haircut": 0.005,
+   "value": 165837
+  },
+  {
+   "asset": "Verdant Agri Holdings 2036",
+   "direction": "Held",
+   "marketValue": 166670,
+   "haircut": 0.02,
+   "value": 163337
+  }
+ ],
+ "csa": "CSA-ALDERSHOT",
+ "nettingSet": "NS-ALDERSHOT-TKY",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

@@ -1,0 +1,38 @@
+{
+ "resultId": "PNL-SFT-1",
+ "date": "2026-09-30",
+ "actual": -327989,
+ "explained": -317550,
+ "unexplained": -10439,
+ "attribution": [
+  {
+   "factor": "Rates delta",
+   "pnl": -133371
+  },
+  {
+   "factor": "FX delta",
+   "pnl": -38106
+  },
+  {
+   "factor": "Credit",
+   "pnl": -25404
+  },
+  {
+   "factor": "Vega",
+   "pnl": -31755
+  },
+  {
+   "factor": "Carry and theta",
+   "pnl": -63510
+  },
+  {
+   "factor": "New trades",
+   "pnl": -25404
+  }
+ ],
+ "book": "BOOK-SFT-1",
+ "_meta": {
+  "source": "pnl-explain",
+  "generation": 1
+ }
+}

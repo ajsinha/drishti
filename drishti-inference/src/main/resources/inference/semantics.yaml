@@ -24,6 +24,9 @@ roles:
   - { role: date,         pattern: "date$|^date|at$|time$|expiry|asof|due", fmt: date, weight: 60, dateOnly: true }
   - { role: count,        pattern: "count|quantity|qty|units|items|^n$", fmt: amount0, weight: 55 }
   - { role: label,        pattern: "name|label|type|status|category|code$|currency|ccy|owner|region", weight: 65 }
+# How field names read as labels: words spelled this way (any case in the name), and explicit labels per field.
+acronyms: [ID, URL, API, JSON, UUID, ISO]
+labels: {}
 # Axis-like values that become chart x-axes: tenors (1M, 5Y), hours (H1), periods (Q1, 2026-Q3).
 tenorPattern: "^(\\d+[DWMY]|H\\d{1,3}|Q[1-4]|\\d{4}-Q[1-4])$"
 datePattern: "^\\d{4}-\\d{2}-\\d{2}"

@@ -1,0 +1,63 @@
+{
+ "curveId": "CDS-CASCADIA",
+ "issuerName": "Cascadia Airlines Inc.",
+ "spread5y": 295,
+ "recovery": 0.4,
+ "seniority": "Senior unsecured",
+ "docClause": "CR14",
+ "pd1y": 0.027158,
+ "points": [
+  {
+   "tenor": "6M",
+   "spread": 149.0,
+   "hazard": 0.024833,
+   "survival": 0.98766
+  },
+  {
+   "tenor": "1Y",
+   "spread": 165.2,
+   "hazard": 0.027533,
+   "survival": 0.972842
+  },
+  {
+   "tenor": "2Y",
+   "spread": 197.7,
+   "hazard": 0.03295,
+   "survival": 0.936224
+  },
+  {
+   "tenor": "3Y",
+   "spread": 230.1,
+   "hazard": 0.03835,
+   "survival": 0.891322
+  },
+  {
+   "tenor": "5Y",
+   "spread": 295.0,
+   "hazard": 0.049167,
+   "survival": 0.782053
+  },
+  {
+   "tenor": "7Y",
+   "spread": 312.7,
+   "hazard": 0.052117,
+   "survival": 0.694324
+  },
+  {
+   "tenor": "10Y",
+   "spread": 339.2,
+   "hazard": 0.056533,
+   "survival": 0.568171
+  }
+ ],
+ "issuer": "ISS-CASCADIA",
+ "currency": "USD",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "spread5y": 0.4
+  }
+ }
+}

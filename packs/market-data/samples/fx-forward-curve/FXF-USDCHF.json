@@ -1,0 +1,60 @@
+{
+ "curveId": "FXF-USDCHF",
+ "pair": "USDCHF",
+ "spot": 0.796,
+ "points3m": -67.4,
+ "points1y": -266.1,
+ "points": [
+  {
+   "tenor": "ON",
+   "pips": -0.7,
+   "outright": 0.79593
+  },
+  {
+   "tenor": "1W",
+   "pips": -5.2,
+   "outright": 0.79548
+  },
+  {
+   "tenor": "1M",
+   "pips": -22.5,
+   "outright": 0.79375
+  },
+  {
+   "tenor": "2M",
+   "pips": -45.0,
+   "outright": 0.7915
+  },
+  {
+   "tenor": "3M",
+   "pips": -67.4,
+   "outright": 0.78926
+  },
+  {
+   "tenor": "6M",
+   "pips": -134.2,
+   "outright": 0.78258
+  },
+  {
+   "tenor": "9M",
+   "pips": -200.4,
+   "outright": 0.77596
+  },
+  {
+   "tenor": "1Y",
+   "pips": -266.1,
+   "outright": 0.76939
+  },
+  {
+   "tenor": "2Y",
+   "pips": -523.3,
+   "outright": 0.74367
+  }
+ ],
+ "fxSpot": "FX-USDCHF",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

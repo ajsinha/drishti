@@ -1,0 +1,97 @@
+{
+ "nettingSetId": "NS-HARBORPT-TKY",
+ "tradeCount": 1,
+ "netMtm": 1658792,
+ "collateral": 1433664,
+ "eePeak": 16633274,
+ "pfePeak": 37377202,
+ "limit": 60000000.0,
+ "utilisation": 0.623,
+ "cva": -31171,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 1094898,
+   "pfe": 3192775
+  },
+  {
+   "tenor": "1M",
+   "ee": 2031057,
+   "pfe": 5252325
+  },
+  {
+   "tenor": "3M",
+   "ee": 3347488,
+   "pfe": 8148474
+  },
+  {
+   "tenor": "6M",
+   "ee": 4633648,
+   "pfe": 10978027
+  },
+  {
+   "tenor": "1Y",
+   "ee": 6447330,
+   "pfe": 14968126
+  },
+  {
+   "tenor": "2Y",
+   "ee": 9006494,
+   "pfe": 20598288
+  },
+  {
+   "tenor": "3Y",
+   "ee": 10969766,
+   "pfe": 24917484
+  },
+  {
+   "tenor": "5Y",
+   "ee": 14089119,
+   "pfe": 31780061
+  },
+  {
+   "tenor": "7Y",
+   "ee": 16633274,
+   "pfe": 37377202
+  },
+  {
+   "tenor": "10Y",
+   "ee": 18480,
+   "pfe": 40655
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10750",
+   "product": "Credit basket note",
+   "notional": 140000000.0,
+   "maturity": "2034-12-04",
+   "mtm": 1658792
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Structured",
+   "mtm": 1658792
+  }
+ ],
+ "counterparty": "CP-HARBORPT",
+ "agreement": "AGR-HARBORPT-ISDA",
+ "csa": "CSA-HARBORPT",
+ "creditLimit": "LIM-HARBORPT",
+ "exposureProfile": "EXP-HARBORPT-TKY",
+ "cvaResult": "CVA-HARBORPT-TKY",
+ "saccr": "SACCR-HARBORPT-TKY",
+ "simm": "SIMM-HARBORPT",
+ "collateralBalance": "COLL-HARBORPT-TKY",
+ "legalEntity": "LE-TKY",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 3317
+  }
+ }
+}

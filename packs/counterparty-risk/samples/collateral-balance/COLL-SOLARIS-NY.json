@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-SOLARIS-NY",
+ "held": 4682994,
+ "posted": 0,
+ "net": 4682994,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Japan Ministry of Finance 2036",
+   "direction": "Held",
+   "marketValue": 1560998,
+   "haircut": 0.01,
+   "value": 1545388
+  },
+  {
+   "asset": "Halcyon Shipping plc 2036",
+   "direction": "Held",
+   "marketValue": 1560998,
+   "haircut": 0.02,
+   "value": 1529778
+  },
+  {
+   "asset": "Helix Pharmaceuticals Inc. 2036",
+   "direction": "Held",
+   "marketValue": 1560998,
+   "haircut": 0.005,
+   "value": 1553193
+  }
+ ],
+ "csa": "CSA-SOLARIS",
+ "nettingSet": "NS-SOLARIS-NY",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

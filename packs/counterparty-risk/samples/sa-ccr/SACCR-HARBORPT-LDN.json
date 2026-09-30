@@ -1,0 +1,60 @@
+{
+ "calcId": "SACCR-HARBORPT-LDN",
+ "replacementCost": 0,
+ "addOn": 218899178,
+ "multiplier": 0.9956,
+ "ead": 305110430,
+ "rwa": 152555215,
+ "addOns": [
+  {
+   "assetClass": "Foreign exchange",
+   "addOn": 3040000
+  },
+  {
+   "assetClass": "Equity",
+   "addOn": 215579178
+  },
+  {
+   "assetClass": "Interest rate",
+   "addOn": 280000
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "USD",
+   "effectiveNotional": 76000000,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "GBP",
+   "effectiveNotional": -346684932,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "CAD",
+   "effectiveNotional": 325000000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "USD",
+   "effectiveNotional": 2000000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "EUR",
+   "effectiveNotional": -56000000,
+   "sf": 0.005
+  }
+ ],
+ "nettingSet": "NS-HARBORPT-LDN",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

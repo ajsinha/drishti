@@ -1,0 +1,182 @@
+{
+ "nettingSetId": "NS-AURORA-LDN",
+ "tradeCount": 12,
+ "netMtm": -1138588,
+ "collateral": -598274,
+ "eePeak": 36794199,
+ "pfePeak": 82685600,
+ "limit": 162000000.0,
+ "utilisation": 0.5104,
+ "cva": -18615,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 4510864,
+   "pfe": 13989937
+  },
+  {
+   "tenor": "1M",
+   "ee": 9390111,
+   "pfe": 24724283
+  },
+  {
+   "tenor": "3M",
+   "ee": 16264150,
+   "pfe": 39847168
+  },
+  {
+   "tenor": "6M",
+   "ee": 23000982,
+   "pfe": 54668197
+  },
+  {
+   "tenor": "1Y",
+   "ee": 22448300,
+   "pfe": 52192298
+  },
+  {
+   "tenor": "2Y",
+   "ee": 31316062,
+   "pfe": 71663312
+  },
+  {
+   "tenor": "3Y",
+   "ee": 26171634,
+   "pfe": 59466370
+  },
+  {
+   "tenor": "5Y",
+   "ee": 32561845,
+   "pfe": 73456323
+  },
+  {
+   "tenor": "7Y",
+   "ee": 36794199,
+   "pfe": 82685600
+  },
+  {
+   "tenor": "10Y",
+   "ee": 31191758,
+   "pfe": 69854830
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10200",
+   "product": "FX double-barrier option",
+   "notional": 89000000.0,
+   "maturity": "2030-08-22",
+   "mtm": 2041598
+  },
+  {
+   "tradeId": "T-10208",
+   "product": "FX one-touch / no-touch",
+   "notional": 117000000.0,
+   "maturity": "2032-06-21",
+   "mtm": -1806756
+  },
+  {
+   "tradeId": "T-10404",
+   "product": "Dividend swap",
+   "notional": 220000000.0,
+   "maturity": "2037-01-16",
+   "mtm": -1409108
+  },
+  {
+   "tradeId": "T-10179",
+   "product": "FX swap",
+   "notional": 130000000.0,
+   "maturity": "2035-07-06",
+   "mtm": 1276114
+  },
+  {
+   "tradeId": "T-10566",
+   "product": "Limited price index swap",
+   "notional": 71000000.0,
+   "maturity": "2031-07-28",
+   "mtm": -561601
+  },
+  {
+   "tradeId": "T-10420",
+   "product": "Portfolio (basket) swap",
+   "notional": 157000000.0,
+   "maturity": "2028-12-13",
+   "mtm": -375356
+  },
+  {
+   "tradeId": "T-10181",
+   "product": "FX vanilla option",
+   "notional": 50000000.0,
+   "maturity": "2028-06-07",
+   "mtm": -355449
+  },
+  {
+   "tradeId": "T-10384",
+   "product": "Autocallable note",
+   "notional": 70000000.0,
+   "maturity": "2033-11-14",
+   "mtm": -241699
+  },
+  {
+   "tradeId": "T-10550",
+   "product": "Inflation cap / floor",
+   "notional": 35000000.0,
+   "maturity": "2027-12-13",
+   "mtm": 215279
+  },
+  {
+   "tradeId": "T-10368",
+   "product": "Equity digital option",
+   "notional": 225000000.0,
+   "maturity": "2027-09-23",
+   "mtm": 159333
+  },
+  {
+   "tradeId": "T-10553",
+   "product": "Inflation-linked bond",
+   "notional": 11000000.0,
+   "maturity": "2037-09-18",
+   "mtm": -116608
+  },
+  {
+   "tradeId": "T-10397",
+   "product": "Volatility swap",
+   "notional": 4000000.0,
+   "maturity": "2035-01-29",
+   "mtm": 35665
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Equity",
+   "mtm": -1831165
+  },
+  {
+   "asset": "FX",
+   "mtm": 1155507
+  },
+  {
+   "asset": "Inflation",
+   "mtm": -462930
+  }
+ ],
+ "counterparty": "CP-AURORA",
+ "agreement": "AGR-AURORA-ISDA",
+ "csa": "CSA-AURORA",
+ "creditLimit": "LIM-AURORA",
+ "exposureProfile": "EXP-AURORA-LDN",
+ "cvaResult": "CVA-AURORA-LDN",
+ "saccr": "SACCR-AURORA-LDN",
+ "simm": "SIMM-AURORA",
+ "collateralBalance": "COLL-AURORA-LDN",
+ "legalEntity": "LE-LDN",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 2277
+  }
+ }
+}

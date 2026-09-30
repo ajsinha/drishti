@@ -89,7 +89,7 @@ terminal does.
 - **Sutras are Markdown.** A Sutra is a `*.sutra.md` document: prose that explains the layout, with the
   layout itself in one fenced `sutra` block (ADR-011). Plain YAML Sutras still load.
 - **Sutra Studio.** At `/studio` a Markdown editor with a toolbar, Rachana highlighting inside the
-  `sutra` block, panel snippets for all twelve kinds, a heading outline and a rendered *Document* tab.
+  `sutra` block, panel snippets for all thirteen kinds, a heading outline and a rendered *Document* tab.
   Ctrl+Enter previews against any entity or pasted JSON, problems are listed by line, and a new Sutra can
   start from what inference makes of an entity.
 - **Security.** Sign-in, per-role entitlements (denied links are shown disabled with the reason),

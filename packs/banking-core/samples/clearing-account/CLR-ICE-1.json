@@ -1,0 +1,13 @@
+{
+ "accountId": "CLR-ICE-1",
+ "ccpName": "ICE Clear Europe",
+ "im": 15600000,
+ "vmToday": 0,
+ "excess": 3120000,
+ "trades": [],
+ "ccp": "CCP-ICE",
+ "_meta": {
+  "source": "clearing-system",
+  "generation": 1
+ }
+}

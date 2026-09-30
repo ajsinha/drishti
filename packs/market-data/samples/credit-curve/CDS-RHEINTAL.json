@@ -1,0 +1,63 @@
+{
+ "curveId": "CDS-RHEINTAL",
+ "issuerName": "Rheintal Landesbank",
+ "spread5y": 88,
+ "recovery": 0.4,
+ "seniority": "Senior unsecured",
+ "docClause": "MM14",
+ "pd1y": 0.008183,
+ "points": [
+  {
+   "tenor": "6M",
+   "spread": 44.4,
+   "hazard": 0.0074,
+   "survival": 0.996307
+  },
+  {
+   "tenor": "1Y",
+   "spread": 49.3,
+   "hazard": 0.008217,
+   "survival": 0.991817
+  },
+  {
+   "tenor": "2Y",
+   "spread": 59.0,
+   "hazard": 0.009833,
+   "survival": 0.980525
+  },
+  {
+   "tenor": "3Y",
+   "spread": 68.6,
+   "hazard": 0.011433,
+   "survival": 0.966282
+  },
+  {
+   "tenor": "5Y",
+   "spread": 88.0,
+   "hazard": 0.014667,
+   "survival": 0.929291
+  },
+  {
+   "tenor": "7Y",
+   "spread": 93.3,
+   "hazard": 0.01555,
+   "survival": 0.896865
+  },
+  {
+   "tenor": "10Y",
+   "spread": 101.2,
+   "hazard": 0.016867,
+   "survival": 0.84479
+  }
+ ],
+ "issuer": "ISS-RHEINTAL",
+ "currency": "EUR",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "spread5y": 0.4
+  }
+ }
+}

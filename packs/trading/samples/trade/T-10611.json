@@ -1,0 +1,426 @@
+{
+ "tradeId": "T-10611",
+ "productType": "AMORT_BOND",
+ "productName": "Amortising bond",
+ "assetClass": "Fixed income",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2024-09-20",
+ "effectiveDate": "2024-09-23",
+ "maturityDate": "2036-08-25",
+ "currency": "USD",
+ "notional": 230000000.0,
+ "mtm": -566957,
+ "mtmCurrency": "USD",
+ "pnl1d": 37563,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-3",
+ "trader": "TRDR-BADEYEMI",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-NOVATEK",
+ "benchmarkCurve": "CRV-USD-GOVT",
+ "underlyingBond": "BND-USNOVA065142",
+ "terms": {
+  "coupon": 0.004828,
+  "couponFrequency": "Semi-annual",
+  "faceAmount": 4660954.0,
+  "cleanPrice": 95.601,
+  "yield": 0.052064,
+  "averageLife": 7.5
+ },
+ "risk": {
+  "dv01": 256652,
+  "cs01": 221650
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 7129,
+   "cs01": 6157
+  },
+  {
+   "bucket": "6M",
+   "dv01": 14258,
+   "cs01": 12314
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 21388,
+   "cs01": 18471
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 28517,
+   "cs01": 24628
+  },
+  {
+   "bucket": "3Y",
+   "dv01": 35646,
+   "cs01": 30785
+  },
+  {
+   "bucket": "5Y",
+   "dv01": 42775,
+   "cs01": 36942
+  },
+  {
+   "bucket": "7Y",
+   "dv01": 49905,
+   "cs01": 43099
+  },
+  {
+   "bucket": "10Y",
+   "dv01": 57034,
+   "cs01": 49256
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2025-03-23",
+   "opening": 230000000,
+   "principal": 9583333,
+   "closing": 220416667,
+   "interest": 4600000
+  },
+  {
+   "date": "2025-09-23",
+   "opening": 220416667,
+   "principal": 9583333,
+   "closing": 210833333,
+   "interest": 4408333
+  },
+  {
+   "date": "2026-03-23",
+   "opening": 210833333,
+   "principal": 9583333,
+   "closing": 201250000,
+   "interest": 4216667
+  },
+  {
+   "date": "2026-09-23",
+   "opening": 201250000,
+   "principal": 9583333,
+   "closing": 191666667,
+   "interest": 4025000
+  },
+  {
+   "date": "2027-03-23",
+   "opening": 191666667,
+   "principal": 9583333,
+   "closing": 182083333,
+   "interest": 3833333
+  },
+  {
+   "date": "2027-09-23",
+   "opening": 182083333,
+   "principal": 9583333,
+   "closing": 172500000,
+   "interest": 3641667
+  },
+  {
+   "date": "2028-03-23",
+   "opening": 172500000,
+   "principal": 9583333,
+   "closing": 162916667,
+   "interest": 3450000
+  },
+  {
+   "date": "2028-09-23",
+   "opening": 162916667,
+   "principal": 9583333,
+   "closing": 153333333,
+   "interest": 3258333
+  },
+  {
+   "date": "2029-03-23",
+   "opening": 153333333,
+   "principal": 9583333,
+   "closing": 143750000,
+   "interest": 3066667
+  },
+  {
+   "date": "2029-09-23",
+   "opening": 143750000,
+   "principal": 9583333,
+   "closing": 134166667,
+   "interest": 2875000
+  },
+  {
+   "date": "2030-03-23",
+   "opening": 134166667,
+   "principal": 9583333,
+   "closing": 124583333,
+   "interest": 2683333
+  },
+  {
+   "date": "2030-09-23",
+   "opening": 124583333,
+   "principal": 9583333,
+   "closing": 115000000,
+   "interest": 2491667
+  },
+  {
+   "date": "2031-03-23",
+   "opening": 115000000,
+   "principal": 9583333,
+   "closing": 105416667,
+   "interest": 2300000
+  },
+  {
+   "date": "2031-09-23",
+   "opening": 105416667,
+   "principal": 9583333,
+   "closing": 95833333,
+   "interest": 2108333
+  },
+  {
+   "date": "2032-03-23",
+   "opening": 95833333,
+   "principal": 9583333,
+   "closing": 86250000,
+   "interest": 1916667
+  },
+  {
+   "date": "2032-09-23",
+   "opening": 86250000,
+   "principal": 9583333,
+   "closing": 76666667,
+   "interest": 1725000
+  },
+  {
+   "date": "2033-03-23",
+   "opening": 76666667,
+   "principal": 9583333,
+   "closing": 67083333,
+   "interest": 1533333
+  },
+  {
+   "date": "2033-09-23",
+   "opening": 67083333,
+   "principal": 9583333,
+   "closing": 57500000,
+   "interest": 1341667
+  },
+  {
+   "date": "2034-03-23",
+   "opening": 57500000,
+   "principal": 9583333,
+   "closing": 47916667,
+   "interest": 1150000
+  },
+  {
+   "date": "2034-09-23",
+   "opening": 47916667,
+   "principal": 9583333,
+   "closing": 38333333,
+   "interest": 958333
+  },
+  {
+   "date": "2035-03-23",
+   "opening": 38333333,
+   "principal": 9583333,
+   "closing": 28750000,
+   "interest": 766667
+  },
+  {
+   "date": "2035-09-23",
+   "opening": 28750000,
+   "principal": 9583333,
+   "closing": 19166667,
+   "interest": 575000
+  },
+  {
+   "date": "2036-03-23",
+   "opening": 19166667,
+   "principal": 9583333,
+   "closing": 9583333,
+   "interest": 383333
+  },
+  {
+   "date": "2036-08-25",
+   "opening": 9583333,
+   "principal": 9583333,
+   "closing": 0,
+   "interest": 191667
+  }
+ ],
+ "nextIndex": 4,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -11836
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 467
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 42961
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 16846
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 4021
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 25618
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 3253
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 4612
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -1242
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -6592
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -15883
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 4965
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -1103
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -24741
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 2791
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 5996
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 20388
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 1758
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -528
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 30210
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-09-20",
+  "executionTimestamp": "2024-09-20T14:24:41.754Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "B. Adeyemi",
+  "salesperson": null,
+  "orderId": "ORD-D76B8B84ED"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-09-20T11:15:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2024-09-20T11:15:00Z",
+  "lastModifiedAt": "2024-09-20T11:15:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT936368155",
+  "matched": "2024-09-20 10:27",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH9269546074",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096D76B8B84ED57E48AC74D",
+  "upi": "QZ3SAUCXBY1A",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMUS33XXX",
+  "ssiId": "SSI-USD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -566957,
+  "cleanPv": -566957.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-USD-GOVT",
+   "BND-USNOVA065142"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 3434
+  }
+ }
+}

@@ -83,6 +83,7 @@ public final class Binder {
                 case PROVENANCE -> provenance(c);
                 case MARKDOWN -> new PanelData.Text(el.template(p.option("text").orElse("")).render(c.eval()));
                 case GAUGE -> gauge(p, c);
+                case SURFACE -> surface(p, c);
             };
             return new PanelView(p.id(), p.kind().id(), title, p.code(), p.key(), area(p), p.infer() || explanation != null,
                     explanation, data, null, com.ash.drishti.engine.view.Emptiness.of(data));
@@ -360,6 +361,33 @@ public final class Binder {
             return new PanelData.Gauge(Double.NaN, max, "—", p.option("label").orElse(null));
         }
         return new PanelData.Gauge(v, max, formats.format(fmt, v / (max == 0 ? 1 : max)), p.option("label").orElse(null));
+    }
+
+    private PanelData surface(Panel p, BindContext c) {
+        DataNode rows = node(eval(p.option("rows").orElseThrow(), c.eval()));
+        String y = p.option("y").orElseThrow();
+        List<Column> cols = p.columns();
+        List<String> ys = new ArrayList<>();
+        List<List<Double>> z = new ArrayList<>();
+        double lo = Double.POSITIVE_INFINITY;
+        double hi = Double.NEGATIVE_INFINITY;
+        for (int i = 0; i < rows.size(); i++) {
+            EvalContext rc = c.eval().withRow(rows.get(i), i);
+            Object label = y.startsWith("@") || y.startsWith("$") ? eval(y, rc) : rows.get(i).get(y);
+            ys.add(Values.text(Values.simplify(label)));
+            List<Double> row = new ArrayList<>(cols.size());
+            for (Column col : cols) {
+                double v = Values.number(el.compile(col.bind()).eval(rc));
+                row.add(Double.isFinite(v) ? v : null);
+                if (Double.isFinite(v)) {
+                    lo = Math.min(lo, v);
+                    hi = Math.max(hi, v);
+                }
+            }
+            z.add(row);
+        }
+        return new PanelData.Surface(cols.stream().map(Column::label).toList(), ys, z, Double.isFinite(lo) ? lo : null,
+                Double.isFinite(hi) ? hi : null, p.option("fmt").orElse(null), p.option("unit").orElse(null), p.option("view").orElse("heatmap"));
     }
 
     /** True for panel kinds that consume linked documents while binding. */

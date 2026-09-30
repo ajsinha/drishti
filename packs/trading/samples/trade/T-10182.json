@@ -1,0 +1,243 @@
+{
+ "tradeId": "T-10182",
+ "productType": "FX_OPTION",
+ "productName": "FX vanilla option",
+ "assetClass": "FX",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2026-08-20",
+ "effectiveDate": "2026-08-24",
+ "maturityDate": "2027-03-22",
+ "currency": "JPY",
+ "notional": 76000000.0,
+ "mtm": -233837,
+ "mtmCurrency": "USD",
+ "pnl1d": 3728,
+ "counterparty": {
+  "id": "CP-LUMEN",
+  "name": "Lumen Semiconductor AG"
+ },
+ "nettingSet": "NS-LUMEN-LDN",
+ "book": "BOOK-FX-2",
+ "trader": "TRDR-LMOREAU",
+ "desk": "DESK-FX",
+ "legalEntity": "LE-LDN",
+ "fxSpot": "FX-USDJPY",
+ "fxForwardCurve": "FXF-USDJPY",
+ "fxVolSurface": "FXV-USDJPY",
+ "terms": {
+  "optionType": "Call",
+  "exerciseStyle": "European",
+  "expiryDate": "2029-05-27",
+  "premium": 849923.0,
+  "strike": 113.85214,
+  "deltaAtTrade": 0.471533
+ },
+ "risk": {
+  "fxDelta": 760000,
+  "vega": 168360,
+  "gamma": 2880
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "fxDelta": 50667,
+   "vega": 11224,
+   "gamma": 192
+  },
+  {
+   "bucket": "1M",
+   "fxDelta": 101333,
+   "vega": 22448,
+   "gamma": 384
+  },
+  {
+   "bucket": "3M",
+   "fxDelta": 152000,
+   "vega": 33672,
+   "gamma": 576
+  },
+  {
+   "bucket": "6M",
+   "fxDelta": 202667,
+   "vega": 44896,
+   "gamma": 768
+  },
+  {
+   "bucket": "1Y",
+   "fxDelta": 253333,
+   "vega": 56120,
+   "gamma": 960
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 8169
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -1582
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -4064
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -1196
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 7634
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 3915
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -11328
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 3599
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 4681
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -2486
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -1426
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -10786
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 1855
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -7251
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -11596
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -7599
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -4125
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -2486
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 214
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -2341
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-08-20",
+  "executionTimestamp": "2026-08-20T14:16:49.522Z",
+  "venue": "FXall",
+  "venueMic": "FXAL",
+  "executionType": "Electronic",
+  "trader": "L. Moreau",
+  "salesperson": null,
+  "orderId": "ORD-13F4A51B8C"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-08-20T10:16:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2026-08-20T10:16:00Z",
+  "lastModifiedAt": "2026-08-20T10:16:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT995696470",
+  "matched": "2026-08-20 14:46",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q8313F4A51B8C4A6AC30614",
+  "upi": "QZFYX06PUULJ",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Foreign exchange"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "LUMEGB33XXX",
+  "ssiId": "SSI-JPY-8CF792",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -233837,
+  "cleanPv": -233837.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "FX-USDJPY",
+   "FXF-USDJPY",
+   "FXV-USDJPY"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "calypso-fx",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 1228
+  }
+ }
+}

@@ -1,0 +1,58 @@
+{
+ "resultId": "CVA-KESTREL-FRA",
+ "cva": -2516,
+ "dva": 203,
+ "fva": -1587,
+ "kva": -4855,
+ "cs01": -45,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -2516
+  },
+  {
+   "name": "DVA",
+   "amount": 203
+  },
+  {
+   "name": "FVA",
+   "amount": -1587
+  },
+  {
+   "name": "KVA",
+   "amount": -4855
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -45
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 10
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 5
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -75
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 43
+  }
+ ],
+ "nettingSet": "NS-KESTREL-FRA",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

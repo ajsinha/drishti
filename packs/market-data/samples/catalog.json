@@ -1,0 +1,1322 @@
+[
+ {
+  "kind": "bond",
+  "id": "BND-BRVERD054608",
+  "title": "BND-BRVERD054608",
+  "subtitle": "Bond (security master) · Verdant Agri Holdings"
+ },
+ {
+  "kind": "bond",
+  "id": "BND-BRVERD178449",
+  "title": "BND-BRVERD178449",
+  "subtitle": "Bond (security master) · Verdant Agri Holdings"
+ },
+ {
+  "kind": "bond",
+  "id": "BND-CACASC059511",
+  "title": "BND-CACASC059511",
+  "subtitle": "Bond (security master) · Cascadia Airlines Inc."
+ },
+ {
+  "kind": "bond",
+  "id": "BND-CACASC169344",
+  "title": "BND-CACASC169344",
+  "subtitle": "Bond (security master) · Cascadia Airlines Inc."
+ },
+ {
+  "kind": "bond",
+  "id": "BND-CHLUME076897",
+  "title": "BND-CHLUME076897",
+  "subtitle": "Bond (security master) · Lumen Semiconductor AG"
+ },
+ {
+  "kind": "bond",
+  "id": "BND-CHLUME169114",
+  "title": "BND-CHLUME169114",
+  "subtitle": "Bond (security master) · Lumen Semiconductor AG"
+ },
+ {
+  "kind": "bond",
+  "id": "BND-DEBUND064772",
+  "title": "BND-DEBUND064772",
+  "subtitle": "Bond (security master) · Federal Republic of Germany"
+ },
+ {
+  "kind": "bond",
+  "id": "BND-DEBUND130144",
+  "title": "BND-DEBUND130144",
+  "subtitle": "Bond (security master) · Federal Republic of Germany"
+ },
+ {
+  "kind": "bond",
+  "id": "BND-DERHEI090723",
+  "title": "BND-DERHEI090723",
+  "subtitle": "Bond (security master) · Rheintal Landesbank"
+ },
+ {
+  "kind": "bond",
+  "id": "BND-DERHEI122872",
+  "title": "BND-DERHEI122872",
+  "subtitle": "Bond (security master) · Rheintal Landesbank"
+ },
+ {
+  "kind": "bond",
+  "id": "BND-FRORBI079012",
+  "title": "BND-FRORBI079012",
+  "subtitle": "Bond (security master) · Orbital Telecom SA"
+ },
+ {
+  "kind": "bond",
+  "id": "BND-FRORBI162925",
+  "title": "BND-FRORBI162925",
+  "subtitle": "Bond (security master) · Orbital Telecom SA"
+ },
+ {
+  "kind": "bond",
+  "id": "BND-GBGILT065113",
+  "title": "BND-GBGILT065113",
+  "subtitle": "Bond (security master) · United Kingdom Debt Management Office"
+ },
+ {
+  "kind": "bond",
+  "id": "BND-GBGILT120223",
+  "title": "BND-GBGILT120223",
+  "subtitle": "Bond (security master) · United Kingdom Debt Management Office"
+ },
+ {
+  "kind": "bond",
+  "id": "BND-GBGRAN031444",
+  "title": "BND-GBGRAN031444",
+  "subtitle": "Bond (security master) · Granite Building Materials plc"
+ },
+ {
+  "kind": "bond",
+  "id": "BND-GBGRAN185331",
+  "title": "BND-GBGRAN185331",
+  "subtitle": "Bond (security master) · Granite Building Materials plc"
+ },
+ {
+  "kind": "bond",
+  "id": "BND-JP0JGB019237",
+  "title": "BND-JP0JGB019237",
+  "subtitle": "Bond (security master) · Japan Ministry of Finance"
+ },
+ {
+  "kind": "bond",
+  "id": "BND-JP0JGB182753",
+  "title": "BND-JP0JGB182753",
+  "subtitle": "Bond (security master) · Japan Ministry of Finance"
+ },
+ {
+  "kind": "bond",
+  "id": "BND-JPKAIZ021595",
+  "title": "BND-JPKAIZ021595",
+  "subtitle": "Bond (security master) · Kaizen Motors Corp."
+ },
+ {
+  "kind": "bond",
+  "id": "BND-JPKAIZ129190",
+  "title": "BND-JPKAIZ129190",
+  "subtitle": "Bond (security master) · Kaizen Motors Corp."
+ },
+ {
+  "kind": "bond",
+  "id": "BND-US0UST030079",
+  "title": "BND-US0UST030079",
+  "subtitle": "Bond (security master) · United States Treasury"
+ },
+ {
+  "kind": "bond",
+  "id": "BND-US0UST151040",
+  "title": "BND-US0UST151040",
+  "subtitle": "Bond (security master) · United States Treasury"
+ },
+ {
+  "kind": "bond",
+  "id": "BND-USHELI055667",
+  "title": "BND-USHELI055667",
+  "subtitle": "Bond (security master) · Helix Pharmaceuticals Inc."
+ },
+ {
+  "kind": "bond",
+  "id": "BND-USHELI160541",
+  "title": "BND-USHELI160541",
+  "subtitle": "Bond (security master) · Helix Pharmaceuticals Inc."
+ },
+ {
+  "kind": "bond",
+  "id": "BND-USMERI070218",
+  "title": "BND-USMERI070218",
+  "subtitle": "Bond (security master) · Meridian Financial Group"
+ },
+ {
+  "kind": "bond",
+  "id": "BND-USMERI186295",
+  "title": "BND-USMERI186295",
+  "subtitle": "Bond (security master) · Meridian Financial Group"
+ },
+ {
+  "kind": "bond",
+  "id": "BND-USNOVA065142",
+  "title": "BND-USNOVA065142",
+  "subtitle": "Bond (security master) · Novatek Devices Inc."
+ },
+ {
+  "kind": "bond",
+  "id": "BND-USNOVA133999",
+  "title": "BND-USNOVA133999",
+  "subtitle": "Bond (security master) · Novatek Devices Inc."
+ },
+ {
+  "kind": "bond",
+  "id": "BND-USSOLA031372",
+  "title": "BND-USSOLA031372",
+  "subtitle": "Bond (security master) · Solaris Energy Corp."
+ },
+ {
+  "kind": "bond",
+  "id": "BND-USSOLA119789",
+  "title": "BND-USSOLA119789",
+  "subtitle": "Bond (security master) · Solaris Energy Corp."
+ },
+ {
+  "kind": "bond",
+  "id": "BND-XSHALC061217",
+  "title": "BND-XSHALC061217",
+  "subtitle": "Bond (security master) · Halcyon Shipping plc"
+ },
+ {
+  "kind": "bond",
+  "id": "BND-XSHALC114008",
+  "title": "BND-XSHALC114008",
+  "subtitle": "Bond (security master) · Halcyon Shipping plc"
+ },
+ {
+  "kind": "cap-vol-surface",
+  "id": "CPV-AUD",
+  "title": "CPV-AUD",
+  "subtitle": "Cap/floor volatility surface · AUD"
+ },
+ {
+  "kind": "cap-vol-surface",
+  "id": "CPV-CAD",
+  "title": "CPV-CAD",
+  "subtitle": "Cap/floor volatility surface · CAD"
+ },
+ {
+  "kind": "cap-vol-surface",
+  "id": "CPV-CHF",
+  "title": "CPV-CHF",
+  "subtitle": "Cap/floor volatility surface · CHF"
+ },
+ {
+  "kind": "cap-vol-surface",
+  "id": "CPV-EUR",
+  "title": "CPV-EUR",
+  "subtitle": "Cap/floor volatility surface · EUR"
+ },
+ {
+  "kind": "cap-vol-surface",
+  "id": "CPV-GBP",
+  "title": "CPV-GBP",
+  "subtitle": "Cap/floor volatility surface · GBP"
+ },
+ {
+  "kind": "cap-vol-surface",
+  "id": "CPV-JPY",
+  "title": "CPV-JPY",
+  "subtitle": "Cap/floor volatility surface · JPY"
+ },
+ {
+  "kind": "cap-vol-surface",
+  "id": "CPV-USD",
+  "title": "CPV-USD",
+  "subtitle": "Cap/floor volatility surface · USD"
+ },
+ {
+  "kind": "commodity",
+  "id": "CMD-BRENT",
+  "title": "CMD-BRENT",
+  "subtitle": "Commodity · Brent crude oil"
+ },
+ {
+  "kind": "commodity",
+  "id": "CMD-COPPER",
+  "title": "CMD-COPPER",
+  "subtitle": "Commodity · Copper"
+ },
+ {
+  "kind": "commodity",
+  "id": "CMD-CORN",
+  "title": "CMD-CORN",
+  "subtitle": "Commodity · Corn"
+ },
+ {
+  "kind": "commodity",
+  "id": "CMD-GOLD",
+  "title": "CMD-GOLD",
+  "subtitle": "Commodity · Gold"
+ },
+ {
+  "kind": "commodity",
+  "id": "CMD-NG",
+  "title": "CMD-NG",
+  "subtitle": "Commodity · Henry Hub natural gas"
+ },
+ {
+  "kind": "commodity",
+  "id": "CMD-SILVER",
+  "title": "CMD-SILVER",
+  "subtitle": "Commodity · Silver"
+ },
+ {
+  "kind": "commodity",
+  "id": "CMD-SOY",
+  "title": "CMD-SOY",
+  "subtitle": "Commodity · Soybeans"
+ },
+ {
+  "kind": "commodity",
+  "id": "CMD-WTI",
+  "title": "CMD-WTI",
+  "subtitle": "Commodity · WTI crude oil"
+ },
+ {
+  "kind": "commodity-curve",
+  "id": "CMDC-BRENT",
+  "title": "CMDC-BRENT",
+  "subtitle": "Commodity forward curve · Brent crude oil"
+ },
+ {
+  "kind": "commodity-curve",
+  "id": "CMDC-COPPER",
+  "title": "CMDC-COPPER",
+  "subtitle": "Commodity forward curve · Copper"
+ },
+ {
+  "kind": "commodity-curve",
+  "id": "CMDC-CORN",
+  "title": "CMDC-CORN",
+  "subtitle": "Commodity forward curve · Corn"
+ },
+ {
+  "kind": "commodity-curve",
+  "id": "CMDC-GOLD",
+  "title": "CMDC-GOLD",
+  "subtitle": "Commodity forward curve · Gold"
+ },
+ {
+  "kind": "commodity-curve",
+  "id": "CMDC-NG",
+  "title": "CMDC-NG",
+  "subtitle": "Commodity forward curve · Henry Hub natural gas"
+ },
+ {
+  "kind": "commodity-curve",
+  "id": "CMDC-SILVER",
+  "title": "CMDC-SILVER",
+  "subtitle": "Commodity forward curve · Silver"
+ },
+ {
+  "kind": "commodity-curve",
+  "id": "CMDC-SOY",
+  "title": "CMDC-SOY",
+  "subtitle": "Commodity forward curve · Soybeans"
+ },
+ {
+  "kind": "commodity-curve",
+  "id": "CMDC-WTI",
+  "title": "CMDC-WTI",
+  "subtitle": "Commodity forward curve · WTI crude oil"
+ },
+ {
+  "kind": "commodity-vol-surface",
+  "id": "CMDV-BRENT",
+  "title": "CMDV-BRENT",
+  "subtitle": "Commodity volatility surface · Brent crude oil"
+ },
+ {
+  "kind": "commodity-vol-surface",
+  "id": "CMDV-COPPER",
+  "title": "CMDV-COPPER",
+  "subtitle": "Commodity volatility surface · Copper"
+ },
+ {
+  "kind": "commodity-vol-surface",
+  "id": "CMDV-CORN",
+  "title": "CMDV-CORN",
+  "subtitle": "Commodity volatility surface · Corn"
+ },
+ {
+  "kind": "commodity-vol-surface",
+  "id": "CMDV-GOLD",
+  "title": "CMDV-GOLD",
+  "subtitle": "Commodity volatility surface · Gold"
+ },
+ {
+  "kind": "commodity-vol-surface",
+  "id": "CMDV-NG",
+  "title": "CMDV-NG",
+  "subtitle": "Commodity volatility surface · Henry Hub natural gas"
+ },
+ {
+  "kind": "commodity-vol-surface",
+  "id": "CMDV-SILVER",
+  "title": "CMDV-SILVER",
+  "subtitle": "Commodity volatility surface · Silver"
+ },
+ {
+  "kind": "commodity-vol-surface",
+  "id": "CMDV-SOY",
+  "title": "CMDV-SOY",
+  "subtitle": "Commodity volatility surface · Soybeans"
+ },
+ {
+  "kind": "commodity-vol-surface",
+  "id": "CMDV-WTI",
+  "title": "CMDV-WTI",
+  "subtitle": "Commodity volatility surface · WTI crude oil"
+ },
+ {
+  "kind": "correlation-matrix",
+  "id": "CORR-EU-EQ",
+  "title": "CORR-EU-EQ",
+  "subtitle": "Correlation matrix · European equities"
+ },
+ {
+  "kind": "correlation-matrix",
+  "id": "CORR-G10FX",
+  "title": "CORR-G10FX",
+  "subtitle": "Correlation matrix · G10 FX"
+ },
+ {
+  "kind": "correlation-matrix",
+  "id": "CORR-US-EQ",
+  "title": "CORR-US-EQ",
+  "subtitle": "Correlation matrix · US equities"
+ },
+ {
+  "kind": "credit-curve",
+  "id": "CDS-BUND",
+  "title": "CDS-BUND",
+  "subtitle": "Credit curve · Federal Republic of Germany"
+ },
+ {
+  "kind": "credit-curve",
+  "id": "CDS-CASCADIA",
+  "title": "CDS-CASCADIA",
+  "subtitle": "Credit curve · Cascadia Airlines Inc."
+ },
+ {
+  "kind": "credit-curve",
+  "id": "CDS-GILT",
+  "title": "CDS-GILT",
+  "subtitle": "Credit curve · United Kingdom Debt Management Office"
+ },
+ {
+  "kind": "credit-curve",
+  "id": "CDS-GRANITE",
+  "title": "CDS-GRANITE",
+  "subtitle": "Credit curve · Granite Building Materials plc"
+ },
+ {
+  "kind": "credit-curve",
+  "id": "CDS-HALCYON",
+  "title": "CDS-HALCYON",
+  "subtitle": "Credit curve · Halcyon Shipping plc"
+ },
+ {
+  "kind": "credit-curve",
+  "id": "CDS-HELIX",
+  "title": "CDS-HELIX",
+  "subtitle": "Credit curve · Helix Pharmaceuticals Inc."
+ },
+ {
+  "kind": "credit-curve",
+  "id": "CDS-JGB",
+  "title": "CDS-JGB",
+  "subtitle": "Credit curve · Japan Ministry of Finance"
+ },
+ {
+  "kind": "credit-curve",
+  "id": "CDS-KAIZEN",
+  "title": "CDS-KAIZEN",
+  "subtitle": "Credit curve · Kaizen Motors Corp."
+ },
+ {
+  "kind": "credit-curve",
+  "id": "CDS-LUMEN",
+  "title": "CDS-LUMEN",
+  "subtitle": "Credit curve · Lumen Semiconductor AG"
+ },
+ {
+  "kind": "credit-curve",
+  "id": "CDS-MERIDIAN",
+  "title": "CDS-MERIDIAN",
+  "subtitle": "Credit curve · Meridian Financial Group"
+ },
+ {
+  "kind": "credit-curve",
+  "id": "CDS-NOVATEK",
+  "title": "CDS-NOVATEK",
+  "subtitle": "Credit curve · Novatek Devices Inc."
+ },
+ {
+  "kind": "credit-curve",
+  "id": "CDS-ORBITAL",
+  "title": "CDS-ORBITAL",
+  "subtitle": "Credit curve · Orbital Telecom SA"
+ },
+ {
+  "kind": "credit-curve",
+  "id": "CDS-RHEINTAL",
+  "title": "CDS-RHEINTAL",
+  "subtitle": "Credit curve · Rheintal Landesbank"
+ },
+ {
+  "kind": "credit-curve",
+  "id": "CDS-SOLARIS",
+  "title": "CDS-SOLARIS",
+  "subtitle": "Credit curve · Solaris Energy Corp."
+ },
+ {
+  "kind": "credit-curve",
+  "id": "CDS-UST",
+  "title": "CDS-UST",
+  "subtitle": "Credit curve · United States Treasury"
+ },
+ {
+  "kind": "credit-curve",
+  "id": "CDS-VERDANT",
+  "title": "CDS-VERDANT",
+  "subtitle": "Credit curve · Verdant Agri Holdings"
+ },
+ {
+  "kind": "dividend-curve",
+  "id": "DIV-CSCA",
+  "title": "DIV-CSCA",
+  "subtitle": "Dividend curve · EQ-CSCA"
+ },
+ {
+  "kind": "dividend-curve",
+  "id": "DIV-GRNT",
+  "title": "DIV-GRNT",
+  "subtitle": "Dividend curve · EQ-GRNT"
+ },
+ {
+  "kind": "dividend-curve",
+  "id": "DIV-HLXP",
+  "title": "DIV-HLXP",
+  "subtitle": "Dividend curve · EQ-HLXP"
+ },
+ {
+  "kind": "dividend-curve",
+  "id": "DIV-KZNM",
+  "title": "DIV-KZNM",
+  "subtitle": "Dividend curve · EQ-KZNM"
+ },
+ {
+  "kind": "dividend-curve",
+  "id": "DIV-LUMN",
+  "title": "DIV-LUMN",
+  "subtitle": "Dividend curve · EQ-LUMN"
+ },
+ {
+  "kind": "dividend-curve",
+  "id": "DIV-MRDN",
+  "title": "DIV-MRDN",
+  "subtitle": "Dividend curve · EQ-MRDN"
+ },
+ {
+  "kind": "dividend-curve",
+  "id": "DIV-NDX",
+  "title": "DIV-NDX",
+  "subtitle": "Dividend curve · EQX-NDX"
+ },
+ {
+  "kind": "dividend-curve",
+  "id": "DIV-NKY",
+  "title": "DIV-NKY",
+  "subtitle": "Dividend curve · EQX-NKY"
+ },
+ {
+  "kind": "dividend-curve",
+  "id": "DIV-NVTK",
+  "title": "DIV-NVTK",
+  "subtitle": "Dividend curve · EQ-NVTK"
+ },
+ {
+  "kind": "dividend-curve",
+  "id": "DIV-ORBT",
+  "title": "DIV-ORBT",
+  "subtitle": "Dividend curve · EQ-ORBT"
+ },
+ {
+  "kind": "dividend-curve",
+  "id": "DIV-RHNB",
+  "title": "DIV-RHNB",
+  "subtitle": "Dividend curve · EQ-RHNB"
+ },
+ {
+  "kind": "dividend-curve",
+  "id": "DIV-SLRS",
+  "title": "DIV-SLRS",
+  "subtitle": "Dividend curve · EQ-SLRS"
+ },
+ {
+  "kind": "dividend-curve",
+  "id": "DIV-SPX",
+  "title": "DIV-SPX",
+  "subtitle": "Dividend curve · EQX-SPX"
+ },
+ {
+  "kind": "dividend-curve",
+  "id": "DIV-SX5E",
+  "title": "DIV-SX5E",
+  "subtitle": "Dividend curve · EQX-SX5E"
+ },
+ {
+  "kind": "dividend-curve",
+  "id": "DIV-UKX",
+  "title": "DIV-UKX",
+  "subtitle": "Dividend curve · EQX-UKX"
+ },
+ {
+  "kind": "equity",
+  "id": "EQ-CSCA",
+  "title": "EQ-CSCA",
+  "subtitle": "Equity · Cascadia Airlines Inc."
+ },
+ {
+  "kind": "equity",
+  "id": "EQ-GRNT",
+  "title": "EQ-GRNT",
+  "subtitle": "Equity · Granite Building Materials plc"
+ },
+ {
+  "kind": "equity",
+  "id": "EQ-HLXP",
+  "title": "EQ-HLXP",
+  "subtitle": "Equity · Helix Pharmaceuticals Inc."
+ },
+ {
+  "kind": "equity",
+  "id": "EQ-KZNM",
+  "title": "EQ-KZNM",
+  "subtitle": "Equity · Kaizen Motors Corp."
+ },
+ {
+  "kind": "equity",
+  "id": "EQ-LUMN",
+  "title": "EQ-LUMN",
+  "subtitle": "Equity · Lumen Semiconductor AG"
+ },
+ {
+  "kind": "equity",
+  "id": "EQ-MRDN",
+  "title": "EQ-MRDN",
+  "subtitle": "Equity · Meridian Financial Group"
+ },
+ {
+  "kind": "equity",
+  "id": "EQ-NVTK",
+  "title": "EQ-NVTK",
+  "subtitle": "Equity · Novatek Devices Inc."
+ },
+ {
+  "kind": "equity",
+  "id": "EQ-ORBT",
+  "title": "EQ-ORBT",
+  "subtitle": "Equity · Orbital Telecom SA"
+ },
+ {
+  "kind": "equity",
+  "id": "EQ-RHNB",
+  "title": "EQ-RHNB",
+  "subtitle": "Equity · Rheintal Landesbank"
+ },
+ {
+  "kind": "equity",
+  "id": "EQ-SLRS",
+  "title": "EQ-SLRS",
+  "subtitle": "Equity · Solaris Energy Corp."
+ },
+ {
+  "kind": "equity-index",
+  "id": "EQX-NDX",
+  "title": "EQX-NDX",
+  "subtitle": "Equity index · Nasdaq-100"
+ },
+ {
+  "kind": "equity-index",
+  "id": "EQX-NKY",
+  "title": "EQX-NKY",
+  "subtitle": "Equity index · Nikkei 225"
+ },
+ {
+  "kind": "equity-index",
+  "id": "EQX-SPX",
+  "title": "EQX-SPX",
+  "subtitle": "Equity index · S&P 500"
+ },
+ {
+  "kind": "equity-index",
+  "id": "EQX-SX5E",
+  "title": "EQX-SX5E",
+  "subtitle": "Equity index · EURO STOXX 50"
+ },
+ {
+  "kind": "equity-index",
+  "id": "EQX-UKX",
+  "title": "EQX-UKX",
+  "subtitle": "Equity index · FTSE 100"
+ },
+ {
+  "kind": "equity-vol-surface",
+  "id": "EQV-CSCA",
+  "title": "EQV-CSCA",
+  "subtitle": "Equity volatility surface · EQ-CSCA"
+ },
+ {
+  "kind": "equity-vol-surface",
+  "id": "EQV-GRNT",
+  "title": "EQV-GRNT",
+  "subtitle": "Equity volatility surface · EQ-GRNT"
+ },
+ {
+  "kind": "equity-vol-surface",
+  "id": "EQV-HLXP",
+  "title": "EQV-HLXP",
+  "subtitle": "Equity volatility surface · EQ-HLXP"
+ },
+ {
+  "kind": "equity-vol-surface",
+  "id": "EQV-KZNM",
+  "title": "EQV-KZNM",
+  "subtitle": "Equity volatility surface · EQ-KZNM"
+ },
+ {
+  "kind": "equity-vol-surface",
+  "id": "EQV-LUMN",
+  "title": "EQV-LUMN",
+  "subtitle": "Equity volatility surface · EQ-LUMN"
+ },
+ {
+  "kind": "equity-vol-surface",
+  "id": "EQV-MRDN",
+  "title": "EQV-MRDN",
+  "subtitle": "Equity volatility surface · EQ-MRDN"
+ },
+ {
+  "kind": "equity-vol-surface",
+  "id": "EQV-NDX",
+  "title": "EQV-NDX",
+  "subtitle": "Equity volatility surface · EQX-NDX"
+ },
+ {
+  "kind": "equity-vol-surface",
+  "id": "EQV-NKY",
+  "title": "EQV-NKY",
+  "subtitle": "Equity volatility surface · EQX-NKY"
+ },
+ {
+  "kind": "equity-vol-surface",
+  "id": "EQV-NVTK",
+  "title": "EQV-NVTK",
+  "subtitle": "Equity volatility surface · EQ-NVTK"
+ },
+ {
+  "kind": "equity-vol-surface",
+  "id": "EQV-ORBT",
+  "title": "EQV-ORBT",
+  "subtitle": "Equity volatility surface · EQ-ORBT"
+ },
+ {
+  "kind": "equity-vol-surface",
+  "id": "EQV-RHNB",
+  "title": "EQV-RHNB",
+  "subtitle": "Equity volatility surface · EQ-RHNB"
+ },
+ {
+  "kind": "equity-vol-surface",
+  "id": "EQV-SLRS",
+  "title": "EQV-SLRS",
+  "subtitle": "Equity volatility surface · EQ-SLRS"
+ },
+ {
+  "kind": "equity-vol-surface",
+  "id": "EQV-SPX",
+  "title": "EQV-SPX",
+  "subtitle": "Equity volatility surface · EQX-SPX"
+ },
+ {
+  "kind": "equity-vol-surface",
+  "id": "EQV-SX5E",
+  "title": "EQV-SX5E",
+  "subtitle": "Equity volatility surface · EQX-SX5E"
+ },
+ {
+  "kind": "equity-vol-surface",
+  "id": "EQV-UKX",
+  "title": "EQV-UKX",
+  "subtitle": "Equity volatility surface · EQX-UKX"
+ },
+ {
+  "kind": "fx-forward-curve",
+  "id": "FXF-AUDUSD",
+  "title": "FXF-AUDUSD",
+  "subtitle": "FX forward curve · AUDUSD"
+ },
+ {
+  "kind": "fx-forward-curve",
+  "id": "FXF-EURGBP",
+  "title": "FXF-EURGBP",
+  "subtitle": "FX forward curve · EURGBP"
+ },
+ {
+  "kind": "fx-forward-curve",
+  "id": "FXF-EURJPY",
+  "title": "FXF-EURJPY",
+  "subtitle": "FX forward curve · EURJPY"
+ },
+ {
+  "kind": "fx-forward-curve",
+  "id": "FXF-EURUSD",
+  "title": "FXF-EURUSD",
+  "subtitle": "FX forward curve · EURUSD"
+ },
+ {
+  "kind": "fx-forward-curve",
+  "id": "FXF-GBPUSD",
+  "title": "FXF-GBPUSD",
+  "subtitle": "FX forward curve · GBPUSD"
+ },
+ {
+  "kind": "fx-forward-curve",
+  "id": "FXF-USDBRL",
+  "title": "FXF-USDBRL",
+  "subtitle": "FX forward curve · USDBRL"
+ },
+ {
+  "kind": "fx-forward-curve",
+  "id": "FXF-USDCAD",
+  "title": "FXF-USDCAD",
+  "subtitle": "FX forward curve · USDCAD"
+ },
+ {
+  "kind": "fx-forward-curve",
+  "id": "FXF-USDCHF",
+  "title": "FXF-USDCHF",
+  "subtitle": "FX forward curve · USDCHF"
+ },
+ {
+  "kind": "fx-forward-curve",
+  "id": "FXF-USDCNH",
+  "title": "FXF-USDCNH",
+  "subtitle": "FX forward curve · USDCNH"
+ },
+ {
+  "kind": "fx-forward-curve",
+  "id": "FXF-USDINR",
+  "title": "FXF-USDINR",
+  "subtitle": "FX forward curve · USDINR"
+ },
+ {
+  "kind": "fx-forward-curve",
+  "id": "FXF-USDJPY",
+  "title": "FXF-USDJPY",
+  "subtitle": "FX forward curve · USDJPY"
+ },
+ {
+  "kind": "fx-forward-curve",
+  "id": "FXF-USDKRW",
+  "title": "FXF-USDKRW",
+  "subtitle": "FX forward curve · USDKRW"
+ },
+ {
+  "kind": "fx-spot",
+  "id": "FX-AUDUSD",
+  "title": "FX-AUDUSD",
+  "subtitle": "FX spot rate · AUD/USD"
+ },
+ {
+  "kind": "fx-spot",
+  "id": "FX-EURGBP",
+  "title": "FX-EURGBP",
+  "subtitle": "FX spot rate · EUR/GBP"
+ },
+ {
+  "kind": "fx-spot",
+  "id": "FX-EURJPY",
+  "title": "FX-EURJPY",
+  "subtitle": "FX spot rate · EUR/JPY"
+ },
+ {
+  "kind": "fx-spot",
+  "id": "FX-EURUSD",
+  "title": "FX-EURUSD",
+  "subtitle": "FX spot rate · EUR/USD"
+ },
+ {
+  "kind": "fx-spot",
+  "id": "FX-GBPUSD",
+  "title": "FX-GBPUSD",
+  "subtitle": "FX spot rate · GBP/USD"
+ },
+ {
+  "kind": "fx-spot",
+  "id": "FX-USDBRL",
+  "title": "FX-USDBRL",
+  "subtitle": "FX spot rate · USD/BRL"
+ },
+ {
+  "kind": "fx-spot",
+  "id": "FX-USDCAD",
+  "title": "FX-USDCAD",
+  "subtitle": "FX spot rate · USD/CAD"
+ },
+ {
+  "kind": "fx-spot",
+  "id": "FX-USDCHF",
+  "title": "FX-USDCHF",
+  "subtitle": "FX spot rate · USD/CHF"
+ },
+ {
+  "kind": "fx-spot",
+  "id": "FX-USDCNH",
+  "title": "FX-USDCNH",
+  "subtitle": "FX spot rate · USD/CNH"
+ },
+ {
+  "kind": "fx-spot",
+  "id": "FX-USDINR",
+  "title": "FX-USDINR",
+  "subtitle": "FX spot rate · USD/INR"
+ },
+ {
+  "kind": "fx-spot",
+  "id": "FX-USDJPY",
+  "title": "FX-USDJPY",
+  "subtitle": "FX spot rate · USD/JPY"
+ },
+ {
+  "kind": "fx-spot",
+  "id": "FX-USDKRW",
+  "title": "FX-USDKRW",
+  "subtitle": "FX spot rate · USD/KRW"
+ },
+ {
+  "kind": "fx-vol-surface",
+  "id": "FXV-AUDUSD",
+  "title": "FXV-AUDUSD",
+  "subtitle": "FX volatility surface · AUDUSD"
+ },
+ {
+  "kind": "fx-vol-surface",
+  "id": "FXV-EURGBP",
+  "title": "FXV-EURGBP",
+  "subtitle": "FX volatility surface · EURGBP"
+ },
+ {
+  "kind": "fx-vol-surface",
+  "id": "FXV-EURJPY",
+  "title": "FXV-EURJPY",
+  "subtitle": "FX volatility surface · EURJPY"
+ },
+ {
+  "kind": "fx-vol-surface",
+  "id": "FXV-EURUSD",
+  "title": "FXV-EURUSD",
+  "subtitle": "FX volatility surface · EURUSD"
+ },
+ {
+  "kind": "fx-vol-surface",
+  "id": "FXV-GBPUSD",
+  "title": "FXV-GBPUSD",
+  "subtitle": "FX volatility surface · GBPUSD"
+ },
+ {
+  "kind": "fx-vol-surface",
+  "id": "FXV-USDBRL",
+  "title": "FXV-USDBRL",
+  "subtitle": "FX volatility surface · USDBRL"
+ },
+ {
+  "kind": "fx-vol-surface",
+  "id": "FXV-USDCAD",
+  "title": "FXV-USDCAD",
+  "subtitle": "FX volatility surface · USDCAD"
+ },
+ {
+  "kind": "fx-vol-surface",
+  "id": "FXV-USDCHF",
+  "title": "FXV-USDCHF",
+  "subtitle": "FX volatility surface · USDCHF"
+ },
+ {
+  "kind": "fx-vol-surface",
+  "id": "FXV-USDCNH",
+  "title": "FXV-USDCNH",
+  "subtitle": "FX volatility surface · USDCNH"
+ },
+ {
+  "kind": "fx-vol-surface",
+  "id": "FXV-USDINR",
+  "title": "FXV-USDINR",
+  "subtitle": "FX volatility surface · USDINR"
+ },
+ {
+  "kind": "fx-vol-surface",
+  "id": "FXV-USDJPY",
+  "title": "FXV-USDJPY",
+  "subtitle": "FX volatility surface · USDJPY"
+ },
+ {
+  "kind": "fx-vol-surface",
+  "id": "FXV-USDKRW",
+  "title": "FXV-USDKRW",
+  "subtitle": "FX volatility surface · USDKRW"
+ },
+ {
+  "kind": "inflation-curve",
+  "id": "INFC-HICPX",
+  "title": "INFC-HICPX",
+  "subtitle": "Inflation curve"
+ },
+ {
+  "kind": "inflation-curve",
+  "id": "INFC-JPCPI",
+  "title": "INFC-JPCPI",
+  "subtitle": "Inflation curve"
+ },
+ {
+  "kind": "inflation-curve",
+  "id": "INFC-UKRPI",
+  "title": "INFC-UKRPI",
+  "subtitle": "Inflation curve"
+ },
+ {
+  "kind": "inflation-curve",
+  "id": "INFC-USCPI",
+  "title": "INFC-USCPI",
+  "subtitle": "Inflation curve"
+ },
+ {
+  "kind": "inflation-index",
+  "id": "INF-HICPX",
+  "title": "INF-HICPX",
+  "subtitle": "Inflation index · Euro HICP ex-tobacco"
+ },
+ {
+  "kind": "inflation-index",
+  "id": "INF-JPCPI",
+  "title": "INF-JPCPI",
+  "subtitle": "Inflation index · Japan CPI ex-fresh food"
+ },
+ {
+  "kind": "inflation-index",
+  "id": "INF-UKRPI",
+  "title": "INF-UKRPI",
+  "subtitle": "Inflation index · UK RPI"
+ },
+ {
+  "kind": "inflation-index",
+  "id": "INF-USCPI",
+  "title": "INF-USCPI",
+  "subtitle": "Inflation index · US CPI-U NSA"
+ },
+ {
+  "kind": "ir-curve",
+  "id": "CRV-AUD-BASIS",
+  "title": "CRV-AUD-BASIS",
+  "subtitle": "Interest rate curve · AUD"
+ },
+ {
+  "kind": "ir-curve",
+  "id": "CRV-AUD-GOVT",
+  "title": "CRV-AUD-GOVT",
+  "subtitle": "Interest rate curve · AUD"
+ },
+ {
+  "kind": "ir-curve",
+  "id": "CRV-AUD-OIS",
+  "title": "CRV-AUD-OIS",
+  "subtitle": "Interest rate curve · AUD"
+ },
+ {
+  "kind": "ir-curve",
+  "id": "CRV-AUD-PROJ",
+  "title": "CRV-AUD-PROJ",
+  "subtitle": "Interest rate curve · AUD"
+ },
+ {
+  "kind": "ir-curve",
+  "id": "CRV-CAD-BASIS",
+  "title": "CRV-CAD-BASIS",
+  "subtitle": "Interest rate curve · CAD"
+ },
+ {
+  "kind": "ir-curve",
+  "id": "CRV-CAD-GOVT",
+  "title": "CRV-CAD-GOVT",
+  "subtitle": "Interest rate curve · CAD"
+ },
+ {
+  "kind": "ir-curve",
+  "id": "CRV-CAD-OIS",
+  "title": "CRV-CAD-OIS",
+  "subtitle": "Interest rate curve · CAD"
+ },
+ {
+  "kind": "ir-curve",
+  "id": "CRV-CAD-PROJ",
+  "title": "CRV-CAD-PROJ",
+  "subtitle": "Interest rate curve · CAD"
+ },
+ {
+  "kind": "ir-curve",
+  "id": "CRV-CHF-BASIS",
+  "title": "CRV-CHF-BASIS",
+  "subtitle": "Interest rate curve · CHF"
+ },
+ {
+  "kind": "ir-curve",
+  "id": "CRV-CHF-GOVT",
+  "title": "CRV-CHF-GOVT",
+  "subtitle": "Interest rate curve · CHF"
+ },
+ {
+  "kind": "ir-curve",
+  "id": "CRV-CHF-OIS",
+  "title": "CRV-CHF-OIS",
+  "subtitle": "Interest rate curve · CHF"
+ },
+ {
+  "kind": "ir-curve",
+  "id": "CRV-CHF-PROJ",
+  "title": "CRV-CHF-PROJ",
+  "subtitle": "Interest rate curve · CHF"
+ },
+ {
+  "kind": "ir-curve",
+  "id": "CRV-EUR-BASIS",
+  "title": "CRV-EUR-BASIS",
+  "subtitle": "Interest rate curve · EUR"
+ },
+ {
+  "kind": "ir-curve",
+  "id": "CRV-EUR-GOVT",
+  "title": "CRV-EUR-GOVT",
+  "subtitle": "Interest rate curve · EUR"
+ },
+ {
+  "kind": "ir-curve",
+  "id": "CRV-EUR-OIS",
+  "title": "CRV-EUR-OIS",
+  "subtitle": "Interest rate curve · EUR"
+ },
+ {
+  "kind": "ir-curve",
+  "id": "CRV-EUR-PROJ",
+  "title": "CRV-EUR-PROJ",
+  "subtitle": "Interest rate curve · EUR"
+ },
+ {
+  "kind": "ir-curve",
+  "id": "CRV-GBP-BASIS",
+  "title": "CRV-GBP-BASIS",
+  "subtitle": "Interest rate curve · GBP"
+ },
+ {
+  "kind": "ir-curve",
+  "id": "CRV-GBP-GOVT",
+  "title": "CRV-GBP-GOVT",
+  "subtitle": "Interest rate curve · GBP"
+ },
+ {
+  "kind": "ir-curve",
+  "id": "CRV-GBP-OIS",
+  "title": "CRV-GBP-OIS",
+  "subtitle": "Interest rate curve · GBP"
+ },
+ {
+  "kind": "ir-curve",
+  "id": "CRV-GBP-PROJ",
+  "title": "CRV-GBP-PROJ",
+  "subtitle": "Interest rate curve · GBP"
+ },
+ {
+  "kind": "ir-curve",
+  "id": "CRV-JPY-BASIS",
+  "title": "CRV-JPY-BASIS",
+  "subtitle": "Interest rate curve · JPY"
+ },
+ {
+  "kind": "ir-curve",
+  "id": "CRV-JPY-GOVT",
+  "title": "CRV-JPY-GOVT",
+  "subtitle": "Interest rate curve · JPY"
+ },
+ {
+  "kind": "ir-curve",
+  "id": "CRV-JPY-OIS",
+  "title": "CRV-JPY-OIS",
+  "subtitle": "Interest rate curve · JPY"
+ },
+ {
+  "kind": "ir-curve",
+  "id": "CRV-JPY-PROJ",
+  "title": "CRV-JPY-PROJ",
+  "subtitle": "Interest rate curve · JPY"
+ },
+ {
+  "kind": "ir-curve",
+  "id": "CRV-USD-BASIS",
+  "title": "CRV-USD-BASIS",
+  "subtitle": "Interest rate curve · USD"
+ },
+ {
+  "kind": "ir-curve",
+  "id": "CRV-USD-GOVT",
+  "title": "CRV-USD-GOVT",
+  "subtitle": "Interest rate curve · USD"
+ },
+ {
+  "kind": "ir-curve",
+  "id": "CRV-USD-OIS",
+  "title": "CRV-USD-OIS",
+  "subtitle": "Interest rate curve · USD"
+ },
+ {
+  "kind": "ir-curve",
+  "id": "CRV-USD-PROJ",
+  "title": "CRV-USD-PROJ",
+  "subtitle": "Interest rate curve · USD"
+ },
+ {
+  "kind": "ir-vol-cube",
+  "id": "IRV-AUD",
+  "title": "IRV-AUD",
+  "subtitle": "Swaption volatility cube · AUD"
+ },
+ {
+  "kind": "ir-vol-cube",
+  "id": "IRV-CAD",
+  "title": "IRV-CAD",
+  "subtitle": "Swaption volatility cube · CAD"
+ },
+ {
+  "kind": "ir-vol-cube",
+  "id": "IRV-CHF",
+  "title": "IRV-CHF",
+  "subtitle": "Swaption volatility cube · CHF"
+ },
+ {
+  "kind": "ir-vol-cube",
+  "id": "IRV-EUR",
+  "title": "IRV-EUR",
+  "subtitle": "Swaption volatility cube · EUR"
+ },
+ {
+  "kind": "ir-vol-cube",
+  "id": "IRV-GBP",
+  "title": "IRV-GBP",
+  "subtitle": "Swaption volatility cube · GBP"
+ },
+ {
+  "kind": "ir-vol-cube",
+  "id": "IRV-JPY",
+  "title": "IRV-JPY",
+  "subtitle": "Swaption volatility cube · JPY"
+ },
+ {
+  "kind": "ir-vol-cube",
+  "id": "IRV-USD",
+  "title": "IRV-USD",
+  "subtitle": "Swaption volatility cube · USD"
+ },
+ {
+  "kind": "rate-fixing",
+  "id": "FIX-AONIA",
+  "title": "FIX-AONIA",
+  "subtitle": "Rate index fixings · AUD Overnight Index Average"
+ },
+ {
+  "kind": "rate-fixing",
+  "id": "FIX-CORRA",
+  "title": "FIX-CORRA",
+  "subtitle": "Rate index fixings · Canadian Overnight Repo Rate Average"
+ },
+ {
+  "kind": "rate-fixing",
+  "id": "FIX-ESTR",
+  "title": "FIX-ESTR",
+  "subtitle": "Rate index fixings · Euro short-term rate"
+ },
+ {
+  "kind": "rate-fixing",
+  "id": "FIX-SARON",
+  "title": "FIX-SARON",
+  "subtitle": "Rate index fixings · Swiss Average Rate Overnight"
+ },
+ {
+  "kind": "rate-fixing",
+  "id": "FIX-SOFR",
+  "title": "FIX-SOFR",
+  "subtitle": "Rate index fixings · Secured Overnight Financing Rate"
+ },
+ {
+  "kind": "rate-fixing",
+  "id": "FIX-SONIA",
+  "title": "FIX-SONIA",
+  "subtitle": "Rate index fixings · Sterling Overnight Index Average"
+ },
+ {
+  "kind": "rate-fixing",
+  "id": "FIX-TONA",
+  "title": "FIX-TONA",
+  "subtitle": "Rate index fixings · Tokyo Overnight Average Rate"
+ },
+ {
+  "kind": "repo-curve",
+  "id": "REPO-AUD",
+  "title": "REPO-AUD",
+  "subtitle": "Repo curve · AUD"
+ },
+ {
+  "kind": "repo-curve",
+  "id": "REPO-CAD",
+  "title": "REPO-CAD",
+  "subtitle": "Repo curve · CAD"
+ },
+ {
+  "kind": "repo-curve",
+  "id": "REPO-CHF",
+  "title": "REPO-CHF",
+  "subtitle": "Repo curve · CHF"
+ },
+ {
+  "kind": "repo-curve",
+  "id": "REPO-EUR",
+  "title": "REPO-EUR",
+  "subtitle": "Repo curve · EUR"
+ },
+ {
+  "kind": "repo-curve",
+  "id": "REPO-GBP",
+  "title": "REPO-GBP",
+  "subtitle": "Repo curve · GBP"
+ },
+ {
+  "kind": "repo-curve",
+  "id": "REPO-JPY",
+  "title": "REPO-JPY",
+  "subtitle": "Repo curve · JPY"
+ },
+ {
+  "kind": "repo-curve",
+  "id": "REPO-USD",
+  "title": "REPO-USD",
+  "subtitle": "Repo curve · USD"
+ }
+]

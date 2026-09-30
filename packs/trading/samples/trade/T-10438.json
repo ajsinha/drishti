@@ -1,0 +1,335 @@
+{
+ "tradeId": "T-10438",
+ "productType": "CONVERTIBLE_BOND",
+ "productName": "Convertible bond",
+ "assetClass": "Equity",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2025-12-12",
+ "effectiveDate": "2025-12-15",
+ "maturityDate": "2032-11-24",
+ "currency": "CAD",
+ "notional": 241000000.0,
+ "mtm": 3067713,
+ "mtmCurrency": "USD",
+ "pnl1d": 51929,
+ "counterparty": {
+  "id": "CP-HARBORPT",
+  "name": "Harbor Point Bank"
+ },
+ "nettingSet": "NS-HARBORPT-LDN",
+ "book": "BOOK-EQD-3",
+ "trader": "TRDR-PLINDQVIST",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingEquity": "EQ-CSCA",
+ "equityVolSurface": "EQV-CSCA",
+ "creditCurve": "CDS-SOLARIS",
+ "discountCurve": "CRV-CAD-OIS",
+ "terms": {
+  "coupon": 0.024835,
+  "conversionRatio": 11.76,
+  "conversionPrice": 335.41
+ },
+ "risk": {
+  "delta": 700187,
+  "cs01": 137055,
+  "vega": 1394135
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 33342,
+   "cs01": 6526,
+   "vega": 66387
+  },
+  {
+   "bucket": "1M",
+   "delta": 66684,
+   "cs01": 13053,
+   "vega": 132775
+  },
+  {
+   "bucket": "3M",
+   "delta": 100027,
+   "cs01": 19579,
+   "vega": 199162
+  },
+  {
+   "bucket": "6M",
+   "delta": 133369,
+   "cs01": 26106,
+   "vega": 265550
+  },
+  {
+   "bucket": "1Y",
+   "delta": 166711,
+   "cs01": 32632,
+   "vega": 331937
+  },
+  {
+   "bucket": "2Y",
+   "delta": 200053,
+   "cs01": 39159,
+   "vega": 398324
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-06-15",
+   "rate": 0.023585,
+   "amount": 4820000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-12-15",
+   "rate": 0.024852,
+   "amount": 4820000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-06-15",
+   "rate": 0.035234,
+   "amount": 4820000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-12-15",
+   "rate": 0.028383,
+   "amount": 4820000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-06-15",
+   "rate": 0.040009,
+   "amount": 4820000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-12-15",
+   "rate": 0.049258,
+   "amount": 4820000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-06-15",
+   "rate": 0.030517,
+   "amount": 4820000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-12-15",
+   "rate": 0.039544,
+   "amount": 4820000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-06-15",
+   "rate": 0.049721,
+   "amount": 4820000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-12-15",
+   "rate": 0.037356,
+   "amount": 4820000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-06-15",
+   "rate": 0.027882,
+   "amount": 4820000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-12-15",
+   "rate": 0.033454,
+   "amount": 4820000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2032-06-15",
+   "rate": 0.047121,
+   "amount": 4820000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2032-11-24",
+   "rate": 0.023633,
+   "amount": 4820000.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 27014
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -131247
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -54565
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 39495
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -14894
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 117194
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -61227
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 53364
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -155121
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -68952
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -35586
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 106887
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -65936
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -164318
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -113834
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -44572
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -35093
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 13756
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 2603
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 85293
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-12-12",
+  "executionTimestamp": "2025-12-12T10:25:14.383Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "P. Lindqvist",
+  "salesperson": null,
+  "orderId": "ORD-F159B1DC01"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-12-12T10:59:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2025-12-12T10:59:00Z",
+  "lastModifiedAt": "2025-12-12T10:59:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT389318960",
+  "matched": "2025-12-12 15:19",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83F159B1DC01B51FC443AD",
+  "upi": "QZPWBE2CX2WY",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "HARBGB33XXX",
+  "ssiId": "SSI-CAD-99A301",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 3067713,
+  "cleanPv": 3067713.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQ-CSCA",
+   "EQV-CSCA",
+   "CDS-SOLARIS",
+   "CRV-CAD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 8545
+  }
+ }
+}

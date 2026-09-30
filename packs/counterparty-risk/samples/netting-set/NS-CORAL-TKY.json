@@ -1,0 +1,111 @@
+{
+ "nettingSetId": "NS-CORAL-TKY",
+ "tradeCount": 3,
+ "netMtm": 360851,
+ "collateral": 317701,
+ "eePeak": 23299145,
+ "pfePeak": 52938120,
+ "limit": 104000000.0,
+ "utilisation": 0.509,
+ "cva": -22602,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 1906943,
+   "pfe": 5875274
+  },
+  {
+   "tenor": "1M",
+   "ee": 3922054,
+   "pfe": 10308519
+  },
+  {
+   "tenor": "3M",
+   "ee": 6760536,
+   "pfe": 16553178
+  },
+  {
+   "tenor": "6M",
+   "ee": 9541595,
+   "pfe": 22671509
+  },
+  {
+   "tenor": "1Y",
+   "ee": 13473605,
+   "pfe": 31321932
+  },
+  {
+   "tenor": "2Y",
+   "ee": 19033202,
+   "pfe": 43553045
+  },
+  {
+   "tenor": "3Y",
+   "ee": 23299145,
+   "pfe": 52938120
+  },
+  {
+   "tenor": "5Y",
+   "ee": 16641553,
+   "pfe": 37541017
+  },
+  {
+   "tenor": "7Y",
+   "ee": 19683422,
+   "pfe": 44233128
+  },
+  {
+   "tenor": "10Y",
+   "ee": 3542,
+   "pfe": 7792
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10731",
+   "product": "Capital-protected note",
+   "notional": 151000000.0,
+   "maturity": "2034-05-22",
+   "mtm": 2529887
+  },
+  {
+   "tradeId": "T-10743",
+   "product": "Worst-of note",
+   "notional": 134000000.0,
+   "maturity": "2029-10-19",
+   "mtm": -2097100
+  },
+  {
+   "tradeId": "T-10723",
+   "product": "Range accrual note",
+   "notional": 15000000.0,
+   "maturity": "2035-02-20",
+   "mtm": -71936
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Structured",
+   "mtm": 360851
+  }
+ ],
+ "counterparty": "CP-CORAL",
+ "agreement": "AGR-CORAL-ISDA",
+ "csa": "CSA-CORAL",
+ "creditLimit": "LIM-CORAL",
+ "exposureProfile": "EXP-CORAL-TKY",
+ "cvaResult": "CVA-CORAL-TKY",
+ "saccr": "SACCR-CORAL-TKY",
+ "simm": "SIMM-CORAL",
+ "collateralBalance": "COLL-CORAL-TKY",
+ "legalEntity": "LE-TKY",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 1000
+  }
+ }
+}

@@ -1,0 +1,97 @@
+{
+ "nettingSetId": "NS-PINNACLE-FRA",
+ "tradeCount": 1,
+ "netMtm": -135470,
+ "collateral": -98692,
+ "eePeak": 10969,
+ "pfePeak": 34020,
+ "limit": 5000000.0,
+ "utilisation": 0.0068,
+ "cva": 0,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 10969,
+   "pfe": 34020
+  },
+  {
+   "tenor": "1M",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "3M",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "6M",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "1Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "2Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "3Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "5Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "7Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "10Y",
+   "ee": 0,
+   "pfe": 0
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10691",
+   "product": "Tri-party repo",
+   "notional": 113000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -135470
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Securities financing",
+   "mtm": -135470
+  }
+ ],
+ "counterparty": "CP-PINNACLE",
+ "agreement": "AGR-PINNACLE-ISDA",
+ "csa": "CSA-PINNACLE",
+ "creditLimit": "LIM-PINNACLE",
+ "exposureProfile": "EXP-PINNACLE-FRA",
+ "cvaResult": "CVA-PINNACLE-FRA",
+ "saccr": "SACCR-PINNACLE-FRA",
+ "simm": "SIMM-PINNACLE",
+ "collateralBalance": "COLL-PINNACLE-FRA",
+ "legalEntity": "LE-FRA",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 1000
+  }
+ }
+}

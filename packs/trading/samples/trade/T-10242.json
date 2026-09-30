@@ -1,0 +1,332 @@
+{
+ "tradeId": "T-10242",
+ "productType": "CDS_SINGLE",
+ "productName": "Single-name CDS",
+ "assetClass": "Credit",
+ "family": "cds",
+ "status": "Live",
+ "direction": "Buy protection",
+ "tradeDate": "2024-11-01",
+ "effectiveDate": "2024-11-04",
+ "maturityDate": "2033-12-12",
+ "currency": "USD",
+ "notional": 31000000.0,
+ "mtm": 149463,
+ "mtmCurrency": "USD",
+ "pnl1d": 1210,
+ "counterparty": {
+  "id": "CP-PINNACLE",
+  "name": "Pinnacle Credit Partners"
+ },
+ "nettingSet": "NS-PINNACLE-NY",
+ "book": "BOOK-CREDIT-2",
+ "trader": "TRDR-CDUBOIS",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-KAIZEN",
+ "creditCurve": "CDS-KAIZEN",
+ "discountCurve": "CRV-USD-OIS",
+ "terms": {
+  "protection": "Sold",
+  "coupon": "100",
+  "seniority": "Senior unsecured",
+  "docClause": "CR14",
+  "upfront": -0.010159
+ },
+ "risk": {
+  "cs01": 22646,
+  "jtd": -18600000
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 1078,
+   "jtd": -885714
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 2157,
+   "jtd": -1771429
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 3235,
+   "jtd": -2657143
+  },
+  {
+   "bucket": "3Y",
+   "cs01": 4314,
+   "jtd": -3542857
+  },
+  {
+   "bucket": "5Y",
+   "cs01": 5392,
+   "jtd": -4428571
+  },
+  {
+   "bucket": "7Y",
+   "cs01": 6470,
+   "jtd": -5314286
+  }
+ ],
+ "schedule": [
+  {
+   "payDate": "2025-11-04",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -80032.3,
+   "pv": 0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2026-11-04",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -70874.18,
+   "pv": -68747.95,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2027-11-04",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -91501.15,
+   "pv": -88756.12,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2028-11-04",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -85257.33,
+   "pv": -82699.61,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2029-11-04",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -73547.06,
+   "pv": -71340.65,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2030-11-04",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -81867.92,
+   "pv": -79411.88,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2031-11-04",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -71938.67,
+   "pv": -69780.51,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2032-11-04",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -84844.08,
+   "pv": -82298.76,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2033-11-04",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -88791.49,
+   "pv": -86127.75,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2033-12-12",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -84915.46,
+   "pv": -82368.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 4919
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 1937
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 1591
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 2305
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -1596
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 4119
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 1705
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 3195
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 883
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -6352
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 9729
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 4125
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -1753
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -4409
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 1280
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 5902
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 770
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 2884
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -796
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -442
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-11-01",
+  "executionTimestamp": "2024-11-01T12:22:20.886Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "C. Dubois",
+  "salesperson": null,
+  "orderId": "ORD-DDFB301B6C"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-11-01T10:07:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2024-11-01T10:07:00Z",
+  "lastModifiedAt": "2024-11-01T10:07:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA132943331",
+  "matched": "2024-11-01 12:27",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096DDFB301B6CCB46503680",
+  "upi": "QZP7DHRA580X",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "PINNUS33XXX",
+  "ssiId": "SSI-USD-F2BB52",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 149463,
+  "cleanPv": 149463.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CDS-KAIZEN",
+   "CRV-USD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 609
+  }
+ }
+}

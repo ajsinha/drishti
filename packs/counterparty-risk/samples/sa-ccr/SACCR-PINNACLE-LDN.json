@@ -1,0 +1,72 @@
+{
+ "calcId": "SACCR-PINNACLE-LDN",
+ "replacementCost": 0,
+ "addOn": 73002671,
+ "multiplier": 0.9242,
+ "ead": 94456696,
+ "rwa": 94456696,
+ "addOns": [
+  {
+   "assetClass": "Foreign exchange",
+   "addOn": 20160000
+  },
+  {
+   "assetClass": "Equity",
+   "addOn": 49353644
+  },
+  {
+   "assetClass": "Interest rate",
+   "addOn": 3489027
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "USD",
+   "effectiveNotional": -504000000,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "CAD",
+   "effectiveNotional": 24400000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "CHF",
+   "effectiveNotional": 93369863,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "GBP",
+   "effectiveNotional": 36460274,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "JPY",
+   "effectiveNotional": 292805479,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "GBP",
+   "effectiveNotional": -380000000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "EUR",
+   "effectiveNotional": 25000000,
+   "sf": 0.005
+  }
+ ],
+ "nettingSet": "NS-PINNACLE-LDN",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

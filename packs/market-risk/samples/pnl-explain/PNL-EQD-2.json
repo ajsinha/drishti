@@ -1,0 +1,38 @@
+{
+ "resultId": "PNL-EQD-2",
+ "date": "2026-09-30",
+ "actual": -852796,
+ "explained": -744254,
+ "unexplained": -108542,
+ "attribution": [
+  {
+   "factor": "Rates delta",
+   "pnl": -312587
+  },
+  {
+   "factor": "FX delta",
+   "pnl": -89310
+  },
+  {
+   "factor": "Credit",
+   "pnl": -59540
+  },
+  {
+   "factor": "Vega",
+   "pnl": -74425
+  },
+  {
+   "factor": "Carry and theta",
+   "pnl": -148851
+  },
+  {
+   "factor": "New trades",
+   "pnl": -59540
+  }
+ ],
+ "book": "BOOK-EQD-2",
+ "_meta": {
+  "source": "pnl-explain",
+  "generation": 1
+ }
+}

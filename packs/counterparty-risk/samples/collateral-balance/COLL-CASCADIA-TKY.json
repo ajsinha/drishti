@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-CASCADIA-TKY",
+ "held": 0,
+ "posted": 294572,
+ "net": -294572,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Meridian Financial Group 2036",
+   "direction": "Posted",
+   "marketValue": 98191,
+   "haircut": 0.01,
+   "value": 97209
+  },
+  {
+   "asset": "Rheintal Landesbank 2031",
+   "direction": "Posted",
+   "marketValue": 98191,
+   "haircut": 0.02,
+   "value": 96227
+  },
+  {
+   "asset": "United Kingdom Debt Management Office 2031",
+   "direction": "Posted",
+   "marketValue": 98191,
+   "haircut": 0.005,
+   "value": 97700
+  }
+ ],
+ "csa": "CSA-CASCADIA",
+ "nettingSet": "NS-CASCADIA-TKY",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

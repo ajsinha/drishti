@@ -1,0 +1,37 @@
+{
+ "curveId": "DIV-UKX",
+ "underlier": "EQX-UKX",
+ "dividendYield": 0.018,
+ "points": [
+  {
+   "year": "2026",
+   "amount": 167.76
+  },
+  {
+   "year": "2027",
+   "amount": 174.47
+  },
+  {
+   "year": "2028",
+   "amount": 181.18
+  },
+  {
+   "year": "2029",
+   "amount": 187.89
+  },
+  {
+   "year": "2030",
+   "amount": 194.6
+  },
+  {
+   "year": "2031",
+   "amount": 201.31
+  }
+ ],
+ "underlyingIndex": "EQX-UKX",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

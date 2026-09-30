@@ -1,0 +1,59 @@
+{
+ "resultId": "CVA-MERIDIAN-LDN",
+ "cva": -135328,
+ "dva": 56838,
+ "fva": -4281,
+ "kva": -514021,
+ "cs01": -2436,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -135328
+  },
+  {
+   "name": "DVA",
+   "amount": 56838
+  },
+  {
+   "name": "FVA",
+   "amount": -4281
+  },
+  {
+   "name": "KVA",
+   "amount": -514021
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -2436
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 541
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 271
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -4060
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 2301
+  }
+ ],
+ "nettingSet": "NS-MERIDIAN-LDN",
+ "creditCurve": "CDS-MERIDIAN",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

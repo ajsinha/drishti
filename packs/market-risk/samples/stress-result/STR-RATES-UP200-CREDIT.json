@@ -1,0 +1,26 @@
+{
+ "resultId": "STR-RATES-UP200-CREDIT",
+ "scenarioName": "Parallel rates +200 bp",
+ "pnl": -2430195632,
+ "limit": -3050600000.0,
+ "byBook": [
+  {
+   "book": "BOOK-CREDIT-1",
+   "pnl": -703406982
+  },
+  {
+   "book": "BOOK-CREDIT-2",
+   "pnl": -966425956
+  },
+  {
+   "book": "BOOK-CREDIT-3",
+   "pnl": -760362694
+  }
+ ],
+ "scenario": "SCN-RATES-UP200",
+ "desk": "DESK-CREDIT",
+ "_meta": {
+  "source": "stress-engine",
+  "generation": 1
+ }
+}

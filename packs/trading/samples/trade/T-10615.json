@@ -1,0 +1,403 @@
+{
+ "tradeId": "T-10615",
+ "productType": "COVERED_BOND",
+ "productName": "Covered bond",
+ "assetClass": "Fixed income",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2025-08-15",
+ "effectiveDate": "2025-08-18",
+ "maturityDate": "2036-09-26",
+ "currency": "EUR",
+ "notional": 73000000.0,
+ "mtm": 38025,
+ "mtmCurrency": "USD",
+ "pnl1d": -2312,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-1",
+ "trader": "TRDR-RCASTILLO",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-HALCYON",
+ "benchmarkCurve": "CRV-EUR-GOVT",
+ "underlyingBond": "BND-XSHALC061217",
+ "terms": {
+  "coupon": 0.039573,
+  "couponFrequency": "Quarterly",
+  "faceAmount": 20860096.0,
+  "cleanPrice": 100.924,
+  "yield": 0.02305,
+  "coverPool": "Residential mortgages"
+ },
+ "risk": {
+  "dv01": 75526,
+  "cs01": 73470
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 2098,
+   "cs01": 2041
+  },
+  {
+   "bucket": "6M",
+   "dv01": 4196,
+   "cs01": 4082
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 6294,
+   "cs01": 6122
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 8392,
+   "cs01": 8163
+  },
+  {
+   "bucket": "3Y",
+   "dv01": 10490,
+   "cs01": 10204
+  },
+  {
+   "bucket": "5Y",
+   "dv01": 12588,
+   "cs01": 12245
+  },
+  {
+   "bucket": "7Y",
+   "dv01": 14686,
+   "cs01": 14286
+  },
+  {
+   "bucket": "10Y",
+   "dv01": 16784,
+   "cs01": 16327
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-02-18",
+   "rate": 0.028685,
+   "amount": 1460000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-08-18",
+   "rate": 0.029775,
+   "amount": 1460000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2027-02-18",
+   "rate": 0.032178,
+   "amount": 1460000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-08-18",
+   "rate": 0.054325,
+   "amount": 1460000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-02-18",
+   "rate": 0.04073,
+   "amount": 1460000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-08-18",
+   "rate": 0.022612,
+   "amount": 1460000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-02-18",
+   "rate": 0.055939,
+   "amount": 1460000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-08-18",
+   "rate": 0.046433,
+   "amount": 1460000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-02-18",
+   "rate": 0.045422,
+   "amount": 1460000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-08-18",
+   "rate": 0.027805,
+   "amount": 1460000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-02-18",
+   "rate": 0.033431,
+   "amount": 1460000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-08-18",
+   "rate": 0.032181,
+   "amount": 1460000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2032-02-18",
+   "rate": 0.025425,
+   "amount": 1460000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2032-08-18",
+   "rate": 0.036769,
+   "amount": 1460000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2033-02-18",
+   "rate": 0.032958,
+   "amount": 1460000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2033-08-18",
+   "rate": 0.025534,
+   "amount": 1460000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2034-02-18",
+   "rate": 0.027423,
+   "amount": 1460000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2034-08-18",
+   "rate": 0.041777,
+   "amount": 1460000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2035-02-18",
+   "rate": 0.052279,
+   "amount": 1460000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2035-08-18",
+   "rate": 0.027203,
+   "amount": 1460000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2036-02-18",
+   "rate": 0.05092,
+   "amount": 1460000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2036-08-18",
+   "rate": 0.030334,
+   "amount": 1460000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2036-09-26",
+   "rate": 0.034845,
+   "amount": 1460000.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 2,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 1477
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 4126
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -2253
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -2919
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -4157
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 705
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 3523
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -2206
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 1037
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 1291
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 1413
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 296
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 1329
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 2172
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -2860
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 1593
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -1715
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 1212
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 5046
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 15
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-08-15",
+  "executionTimestamp": "2025-08-15T15:15:10.078Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "R. Castillo",
+  "salesperson": null,
+  "orderId": "ORD-28C7F0EA91"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-08-15T10:33:00Z",
+    "by": "mo.ops"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2025-08-27T10:33:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2025-08-15T10:33:00Z",
+  "lastModifiedAt": "2025-08-27T10:33:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT980370547",
+  "matched": "2025-08-15 13:42",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH6414484837",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209628C7F0EA9107E9C6B843",
+  "upi": "QZ7Q3QI9HGXI",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-EUR-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 38025,
+  "cleanPv": 38025.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-EUR-GOVT",
+   "BND-XSHALC061217"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 806
+  }
+ }
+}

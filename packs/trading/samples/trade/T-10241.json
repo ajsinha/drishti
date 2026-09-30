@@ -1,0 +1,268 @@
+{
+ "tradeId": "T-10241",
+ "productType": "CDS_SINGLE",
+ "productName": "Single-name CDS",
+ "assetClass": "Credit",
+ "family": "cds",
+ "status": "Live",
+ "direction": "Buy protection",
+ "tradeDate": "2025-05-30",
+ "effectiveDate": "2025-06-02",
+ "maturityDate": "2028-08-15",
+ "currency": "CAD",
+ "notional": 39000000.0,
+ "mtm": 28038,
+ "mtmCurrency": "USD",
+ "pnl1d": -422,
+ "counterparty": {
+  "id": "CP-VERDANT",
+  "name": "Verdant Agri Holdings"
+ },
+ "nettingSet": "NS-VERDANT-NY",
+ "book": "BOOK-CREDIT-3",
+ "trader": "TRDR-DWHITFIELD",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-CASCADIA",
+ "creditCurve": "CDS-CASCADIA",
+ "discountCurve": "CRV-CAD-OIS",
+ "terms": {
+  "protection": "Sold",
+  "coupon": "100",
+  "seniority": "Senior unsecured",
+  "docClause": "MR14",
+  "upfront": -0.022149
+ },
+ "risk": {
+  "cs01": 10106,
+  "jtd": -23400000
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 1011,
+   "jtd": -2340000
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 2021,
+   "jtd": -4680000
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 3032,
+   "jtd": -7020000
+  },
+  {
+   "bucket": "3Y",
+   "cs01": 4042,
+   "jtd": -9360000
+  }
+ ],
+ "schedule": [
+  {
+   "payDate": "2026-06-02",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -111118.0,
+   "pv": 0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2027-06-02",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -112374.42,
+   "pv": -109003.19,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2028-06-02",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -106340.86,
+   "pv": -103150.63,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2028-08-15",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -79574.26,
+   "pv": -77187.03,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 1032
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -3649
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 2470
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -5662
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -2001
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -7447
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 926
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 3176
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 3993
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 1279
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -3421
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -3152
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 776
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -1085
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -3022
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -4064
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 2061
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 676
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -1348
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -261
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-05-30",
+  "executionTimestamp": "2025-05-30T16:16:20.792Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "D. Whitfield",
+  "salesperson": null,
+  "orderId": "ORD-ACAD4981AA"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-05-30T11:18:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2025-05-30T11:18:00Z",
+  "lastModifiedAt": "2025-05-30T11:18:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA906130302",
+  "matched": "2025-05-30 11:51",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096ACAD4981AA880C4459D5",
+  "upi": "QZP7DHRA580X",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "VERDGB33XXX",
+  "ssiId": "SSI-CAD-ABCF5A",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 28038,
+  "cleanPv": 28038.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CDS-CASCADIA",
+   "CRV-CAD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

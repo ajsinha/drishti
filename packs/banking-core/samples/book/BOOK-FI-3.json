@@ -1,0 +1,92 @@
+{
+ "bookId": "BOOK-FI-3",
+ "name": "Bonds and securitised · book 3",
+ "deskName": "Bonds and securitised",
+ "tradeCount": 23,
+ "mtm": 3704494,
+ "dv01": 1222918,
+ "topTrades": [
+  {
+   "tradeId": "T-10603",
+   "product": "Puttable bond",
+   "notional": 197000000.0,
+   "maturity": "2030-11-19",
+   "mtm": 4750454
+  },
+  {
+   "tradeId": "T-10576",
+   "product": "Government bond",
+   "notional": 141000000.0,
+   "maturity": "2032-12-22",
+   "mtm": 2677879
+  },
+  {
+   "tradeId": "T-10640",
+   "product": "Asset-backed security",
+   "notional": 158000000.0,
+   "maturity": "2030-07-25",
+   "mtm": -2614302
+  },
+  {
+   "tradeId": "T-10575",
+   "product": "Government bond",
+   "notional": 237000000.0,
+   "maturity": "2034-12-18",
+   "mtm": -2577766
+  },
+  {
+   "tradeId": "T-10582",
+   "product": "Corporate bond",
+   "notional": 179000000.0,
+   "maturity": "2032-01-12",
+   "mtm": 2211267
+  },
+  {
+   "tradeId": "T-10646",
+   "product": "CLO tranche",
+   "notional": 192000000.0,
+   "maturity": "2035-11-13",
+   "mtm": 2168781
+  },
+  {
+   "tradeId": "T-10609",
+   "product": "Amortising bond",
+   "notional": 129000000.0,
+   "maturity": "2030-12-09",
+   "mtm": -1903497
+  },
+  {
+   "tradeId": "T-10642",
+   "product": "Asset-backed security",
+   "notional": 69000000.0,
+   "maturity": "2028-12-14",
+   "mtm": 1276947
+  },
+  {
+   "tradeId": "T-10571",
+   "product": "Government bond",
+   "notional": 198000000.0,
+   "maturity": "2038-04-30",
+   "mtm": -978378
+  },
+  {
+   "tradeId": "T-10585",
+   "product": "Floating rate note",
+   "notional": 219000000.0,
+   "maturity": "2037-03-25",
+   "mtm": 929743
+  }
+ ],
+ "desk": "DESK-FI",
+ "accountingTreatment": "Fair value (FVTPL)",
+ "regulatoryBook": "Trading book",
+ "volcker": "Market making",
+ "_meta": {
+  "source": "org-master",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 5000
+  }
+ }
+}

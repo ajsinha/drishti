@@ -1,0 +1,26 @@
+{
+ "issuerId": "ISS-NOVATEK",
+ "name": "Novatek Devices Inc.",
+ "rating": "A+",
+ "sector": "Technology",
+ "country": "US",
+ "bonds": [
+  {
+   "isin": "USNOVA065142",
+   "coupon": 0.0406,
+   "maturity": "2031-12-15"
+  },
+  {
+   "isin": "USNOVA133999",
+   "coupon": 0.0456,
+   "maturity": "2036-10-15"
+  }
+ ],
+ "creditCurve": "CDS-NOVATEK",
+ "lei": "549300WHV03WCA51BD18",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ },
+ "equity": "EQ-NVTK"
+}

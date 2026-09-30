@@ -1,0 +1,151 @@
+{
+ "ticker": "EQ-KZNM",
+ "name": "Kaizen Motors Corp.",
+ "price": 2841.0,
+ "change1d": 0.02084,
+ "marketCap": 18614109312,
+ "sector": "Autos",
+ "exchange": "TSE",
+ "currency": "JPY",
+ "beta": 1.02,
+ "history": [
+  {
+   "date": "2026-08-19",
+   "close": 2608.31
+  },
+  {
+   "date": "2026-08-20",
+   "close": 2583.36
+  },
+  {
+   "date": "2026-08-21",
+   "close": 2540.29
+  },
+  {
+   "date": "2026-08-24",
+   "close": 2550.62
+  },
+  {
+   "date": "2026-08-25",
+   "close": 2537.95
+  },
+  {
+   "date": "2026-08-26",
+   "close": 2499.9
+  },
+  {
+   "date": "2026-08-27",
+   "close": 2527.79
+  },
+  {
+   "date": "2026-08-28",
+   "close": 2546.03
+  },
+  {
+   "date": "2026-08-31",
+   "close": 2516.67
+  },
+  {
+   "date": "2026-09-01",
+   "close": 2591.16
+  },
+  {
+   "date": "2026-09-02",
+   "close": 2581.45
+  },
+  {
+   "date": "2026-09-03",
+   "close": 2582.93
+  },
+  {
+   "date": "2026-09-04",
+   "close": 2589.27
+  },
+  {
+   "date": "2026-09-08",
+   "close": 2618.13
+  },
+  {
+   "date": "2026-09-09",
+   "close": 2710.19
+  },
+  {
+   "date": "2026-09-10",
+   "close": 2660.24
+  },
+  {
+   "date": "2026-09-11",
+   "close": 2629.14
+  },
+  {
+   "date": "2026-09-14",
+   "close": 2620.65
+  },
+  {
+   "date": "2026-09-15",
+   "close": 2637.82
+  },
+  {
+   "date": "2026-09-16",
+   "close": 2698.04
+  },
+  {
+   "date": "2026-09-17",
+   "close": 2781.83
+  },
+  {
+   "date": "2026-09-18",
+   "close": 2870.56
+  },
+  {
+   "date": "2026-09-21",
+   "close": 2883.72
+  },
+  {
+   "date": "2026-09-22",
+   "close": 2924.58
+  },
+  {
+   "date": "2026-09-23",
+   "close": 2911.48
+  },
+  {
+   "date": "2026-09-24",
+   "close": 2887.84
+  },
+  {
+   "date": "2026-09-25",
+   "close": 2862.06
+  },
+  {
+   "date": "2026-09-28",
+   "close": 2795.27
+  },
+  {
+   "date": "2026-09-29",
+   "close": 2782.99
+  },
+  {
+   "date": "2026-09-30",
+   "close": 2841.0
+  }
+ ],
+ "identifiers": {
+  "isin": "JP0KZNM00018",
+  "bloomberg": "KZNM TS Equity",
+  "ric": "KZNM.T",
+  "figi": "BBGC3954B5A3"
+ },
+ "issuer": "ISS-KAIZEN",
+ "equityVolSurface": "EQV-KZNM",
+ "dividendCurve": "DIV-KZNM",
+ "equityIndex": "EQX-NKY",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "price": 0.3
+  }
+ }
+}

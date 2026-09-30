@@ -1,0 +1,220 @@
+{
+ "tradeId": "T-10654",
+ "productType": "T_BILL",
+ "productName": "Treasury bill",
+ "assetClass": "Money market",
+ "family": "money",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2026-08-11",
+ "effectiveDate": "2026-08-13",
+ "maturityDate": "2027-06-14",
+ "currency": "USD",
+ "notional": 226000000.0,
+ "mtm": -2467214,
+ "mtmCurrency": "USD",
+ "pnl1d": -45531,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-MM-1",
+ "trader": "TRDR-SIYER",
+ "desk": "DESK-MM",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-HELIX",
+ "benchmarkCurve": "CRV-USD-GOVT",
+ "terms": {
+  "discountRate": 0.052512,
+  "faceAmount": 114579655.0
+ },
+ "risk": {
+  "dv01": -15884
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -2647
+  },
+  {
+   "bucket": "6M",
+   "dv01": -5295
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -7942
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -109396
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 76030
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -226492
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -113985
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 41597
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 51799
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 27372
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -37204
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -81897
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -68280
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 110613
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 51326
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 35349
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 149453
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 48749
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -19928
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 168284
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -35232
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 36077
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 70736
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-08-11",
+  "executionTimestamp": "2026-08-11T10:54:48.794Z",
+  "venue": "Bloomberg SEF",
+  "venueMic": "BSEF",
+  "executionType": "Electronic",
+  "trader": "S. Iyer",
+  "salesperson": null,
+  "orderId": "ORD-8E6FEDC8CB"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-08-11T11:13:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2026-08-11T11:13:00Z",
+  "lastModifiedAt": "2026-08-11T11:13:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT265110516",
+  "matched": "2026-08-11 12:01",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH3942394839",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20968E6FEDC8CBB63FA85AAA",
+  "upi": "QZOV16YCTKDJ",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMUS33XXX",
+  "ssiId": "SSI-USD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -2467214,
+  "cleanPv": -2467214.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-USD-GOVT"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-mm",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 7194
+  }
+ }
+}

@@ -1,0 +1,22 @@
+{
+ "traderId": "TRDR-DWHITFIELD",
+ "name": "D. Whitfield",
+ "deskName": "Credit trading",
+ "tradeCount": 32,
+ "books": [
+  {
+   "id": "BOOK-CREDIT-1"
+  },
+  {
+   "id": "BOOK-CREDIT-2"
+  },
+  {
+   "id": "BOOK-CREDIT-3"
+  }
+ ],
+ "desk": "DESK-CREDIT",
+ "_meta": {
+  "source": "org-master",
+  "generation": 1
+ }
+}

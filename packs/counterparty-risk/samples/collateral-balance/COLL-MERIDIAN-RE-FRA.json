@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-MERIDIAN-RE-FRA",
+ "held": 0,
+ "posted": 1364972,
+ "net": -1364972,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Solaris Energy Corp. 2036",
+   "direction": "Posted",
+   "marketValue": 454991,
+   "haircut": 0.01,
+   "value": 450441
+  },
+  {
+   "asset": "Rheintal Landesbank 2036",
+   "direction": "Posted",
+   "marketValue": 454991,
+   "haircut": 0.01,
+   "value": 450441
+  },
+  {
+   "asset": "Solaris Energy Corp. 2031",
+   "direction": "Posted",
+   "marketValue": 454991,
+   "haircut": 0.01,
+   "value": 450441
+  }
+ ],
+ "csa": "CSA-MERIDIAN-RE",
+ "nettingSet": "NS-MERIDIAN-RE-FRA",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

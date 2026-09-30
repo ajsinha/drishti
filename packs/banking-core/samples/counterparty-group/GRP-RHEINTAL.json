@@ -1,0 +1,17 @@
+{
+ "groupId": "GRP-RHEINTAL",
+ "name": "Rheintal Sparkassen-Verband",
+ "limit": 300000000.0,
+ "utilisation": 0.6034,
+ "members": [
+  {
+   "id": "CP-RHEINTAL",
+   "name": "Rheintal Landesbank",
+   "rating": "A-"
+  }
+ ],
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

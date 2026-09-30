@@ -1,0 +1,158 @@
+{
+ "curveId": "CRV-AUD-PROJ",
+ "currency": "AUD",
+ "curveType": "Projection",
+ "index": "AONIA",
+ "tenY": 0.0426,
+ "slope2s10s": 51.2,
+ "asOf": "2026-09-30",
+ "points": [
+  {
+   "tenor": "1M",
+   "maturity": "2026-10-30",
+   "instrument": "Deposit / future",
+   "quote": 0.036382,
+   "zeroRate": 3.6437,
+   "df": 0.996968
+  },
+  {
+   "tenor": "3M",
+   "maturity": "2026-12-30",
+   "instrument": "Deposit / future",
+   "quote": 0.036441,
+   "zeroRate": 3.6608,
+   "df": 0.99089
+  },
+  {
+   "tenor": "6M",
+   "maturity": "2027-03-30",
+   "instrument": "Deposit / future",
+   "quote": 0.036489,
+   "zeroRate": 3.6826,
+   "df": 0.981755
+  },
+  {
+   "tenor": "1Y",
+   "maturity": "2027-09-30",
+   "instrument": "Term RFR swap",
+   "quote": 0.036343,
+   "zeroRate": 3.702,
+   "df": 0.963657
+  },
+  {
+   "tenor": "2Y",
+   "maturity": "2028-09-30",
+   "instrument": "Term RFR swap",
+   "quote": 0.036111,
+   "zeroRate": 3.7481,
+   "df": 0.927779
+  },
+  {
+   "tenor": "3Y",
+   "maturity": "2029-09-30",
+   "instrument": "Term RFR swap",
+   "quote": 0.036233,
+   "zeroRate": 3.8358,
+   "df": 0.8913
+  },
+  {
+   "tenor": "5Y",
+   "maturity": "2031-09-30",
+   "instrument": "Term RFR swap",
+   "quote": 0.036978,
+   "zeroRate": 4.0886,
+   "df": 0.815112
+  },
+  {
+   "tenor": "7Y",
+   "maturity": "2033-09-30",
+   "instrument": "Term RFR swap",
+   "quote": 0.036381,
+   "zeroRate": 4.1989,
+   "df": 0.745334
+  },
+  {
+   "tenor": "10Y",
+   "maturity": "2036-09-30",
+   "instrument": "Term RFR swap",
+   "quote": 0.034688,
+   "zeroRate": 4.26,
+   "df": 0.653116
+  },
+  {
+   "tenor": "15Y",
+   "maturity": "2041-09-30",
+   "instrument": "Term RFR swap",
+   "quote": 0.03168,
+   "zeroRate": 4.2983,
+   "df": 0.524796
+  },
+  {
+   "tenor": "20Y",
+   "maturity": "2046-09-30",
+   "instrument": "Term RFR swap",
+   "quote": 0.028881,
+   "zeroRate": 4.3093,
+   "df": 0.422376
+  },
+  {
+   "tenor": "30Y",
+   "maturity": "2056-09-30",
+   "instrument": "Term RFR swap",
+   "quote": 0.024194,
+   "zeroRate": 4.3133,
+   "df": 0.274175
+  }
+ ],
+ "forwards": [
+  {
+   "tenor": "1Y",
+   "rate": 3.8147
+  },
+  {
+   "tenor": "2Y",
+   "rate": 4.0375
+  },
+  {
+   "tenor": "3Y",
+   "rate": 4.3769
+  },
+  {
+   "tenor": "5Y",
+   "rate": 4.4575
+  },
+  {
+   "tenor": "7Y",
+   "rate": 4.3975
+  },
+  {
+   "tenor": "10Y",
+   "rate": 4.3793
+  },
+  {
+   "tenor": "15Y",
+   "rate": 4.3681
+  },
+  {
+   "tenor": "20Y",
+   "rate": 4.3518
+  }
+ ],
+ "interpolation": "Log-linear on discount factors",
+ "dayCount": "ACT/365F",
+ "calendar": "CAL-GBLO",
+ "fixingIndex": "FIX-AONIA",
+ "builtAt": "2026-09-30T18:02:41Z",
+ "sources": [
+  "Broker composite",
+  "Exchange settlements"
+ ],
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "tenY": 0.0003
+  }
+ }
+}

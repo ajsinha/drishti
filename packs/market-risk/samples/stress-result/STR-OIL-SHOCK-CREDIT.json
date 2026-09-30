@@ -1,0 +1,26 @@
+{
+ "resultId": "STR-OIL-SHOCK-CREDIT",
+ "scenarioName": "Oil supply shock",
+ "pnl": -2632000322,
+ "limit": -3050600000.0,
+ "byBook": [
+  {
+   "book": "BOOK-CREDIT-1",
+   "pnl": -899834817
+  },
+  {
+   "book": "BOOK-CREDIT-2",
+   "pnl": -962508680
+  },
+  {
+   "book": "BOOK-CREDIT-3",
+   "pnl": -769656825
+  }
+ ],
+ "scenario": "SCN-OIL-SHOCK",
+ "desk": "DESK-CREDIT",
+ "_meta": {
+  "source": "stress-engine",
+  "generation": 1
+ }
+}

@@ -1,0 +1,60 @@
+{
+ "curveId": "FXF-AUDUSD",
+ "pair": "AUDUSD",
+ "spot": 0.661,
+ "points3m": 1.7,
+ "points1y": 6.6,
+ "points": [
+  {
+   "tenor": "ON",
+   "pips": 0.0,
+   "outright": 0.661
+  },
+  {
+   "tenor": "1W",
+   "pips": 0.1,
+   "outright": 0.66101
+  },
+  {
+   "tenor": "1M",
+   "pips": 0.6,
+   "outright": 0.66106
+  },
+  {
+   "tenor": "2M",
+   "pips": 1.1,
+   "outright": 0.66111
+  },
+  {
+   "tenor": "3M",
+   "pips": 1.7,
+   "outright": 0.66117
+  },
+  {
+   "tenor": "6M",
+   "pips": 3.3,
+   "outright": 0.66133
+  },
+  {
+   "tenor": "9M",
+   "pips": 5.0,
+   "outright": 0.6615
+  },
+  {
+   "tenor": "1Y",
+   "pips": 6.6,
+   "outright": 0.66166
+  },
+  {
+   "tenor": "2Y",
+   "pips": 13.2,
+   "outright": 0.66232
+  }
+ ],
+ "fxSpot": "FX-AUDUSD",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

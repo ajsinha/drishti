@@ -1,0 +1,58 @@
+{
+ "resultId": "CVA-CORAL-NY",
+ "cva": -24107,
+ "dva": 16875,
+ "fva": -58498,
+ "kva": -293359,
+ "cs01": -434,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -24107
+  },
+  {
+   "name": "DVA",
+   "amount": 16875
+  },
+  {
+   "name": "FVA",
+   "amount": -58498
+  },
+  {
+   "name": "KVA",
+   "amount": -293359
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -434
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 96
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 48
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -723
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 410
+  }
+ ],
+ "nettingSet": "NS-CORAL-NY",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

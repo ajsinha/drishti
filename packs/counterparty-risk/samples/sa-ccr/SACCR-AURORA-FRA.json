@@ -1,0 +1,34 @@
+{
+ "calcId": "SACCR-AURORA-FRA",
+ "replacementCost": 0,
+ "addOn": 100658,
+ "multiplier": 0.2867,
+ "ead": 40402,
+ "rwa": 8080,
+ "addOns": [
+  {
+   "assetClass": "Interest rate",
+   "addOn": 100658
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "USD",
+   "effectiveNotional": -18731507,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "EUR",
+   "effectiveNotional": -1400000,
+   "sf": 0.005
+  }
+ ],
+ "nettingSet": "NS-AURORA-FRA",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

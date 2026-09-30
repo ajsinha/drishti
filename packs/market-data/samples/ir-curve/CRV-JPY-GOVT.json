@@ -1,0 +1,158 @@
+{
+ "curveId": "CRV-JPY-GOVT",
+ "currency": "JPY",
+ "curveType": "Government",
+ "index": "TONA",
+ "tenY": 0.0123,
+ "slope2s10s": 62.6,
+ "asOf": "2026-09-30",
+ "points": [
+  {
+   "tenor": "1M",
+   "maturity": "2026-10-30",
+   "instrument": "Deposit / future",
+   "quote": 0.004221,
+   "zeroRate": 0.4222,
+   "df": 0.999648
+  },
+  {
+   "tenor": "3M",
+   "maturity": "2026-12-30",
+   "instrument": "Deposit / future",
+   "quote": 0.004477,
+   "zeroRate": 0.448,
+   "df": 0.998881
+  },
+  {
+   "tenor": "6M",
+   "maturity": "2027-03-30",
+   "instrument": "Deposit / future",
+   "quote": 0.004816,
+   "zeroRate": 0.4822,
+   "df": 0.997592
+  },
+  {
+   "tenor": "1Y",
+   "maturity": "2027-09-30",
+   "instrument": "JGB benchmark",
+   "quote": 0.005188,
+   "zeroRate": 0.5202,
+   "df": 0.994812
+  },
+  {
+   "tenor": "2Y",
+   "maturity": "2028-09-30",
+   "instrument": "JGB benchmark",
+   "quote": 0.006002,
+   "zeroRate": 0.6038,
+   "df": 0.987997
+  },
+  {
+   "tenor": "3Y",
+   "maturity": "2029-09-30",
+   "instrument": "JGB benchmark",
+   "quote": 0.007131,
+   "zeroRate": 0.7208,
+   "df": 0.978608
+  },
+  {
+   "tenor": "5Y",
+   "maturity": "2031-09-30",
+   "instrument": "JGB benchmark",
+   "quote": 0.009888,
+   "zeroRate": 1.0141,
+   "df": 0.950559
+  },
+  {
+   "tenor": "7Y",
+   "maturity": "2033-09-30",
+   "instrument": "JGB benchmark",
+   "quote": 0.01104,
+   "zeroRate": 1.149,
+   "df": 0.922719
+  },
+  {
+   "tenor": "10Y",
+   "maturity": "2036-09-30",
+   "instrument": "JGB benchmark",
+   "quote": 0.011574,
+   "zeroRate": 1.23,
+   "df": 0.884264
+  },
+  {
+   "tenor": "15Y",
+   "maturity": "2041-09-30",
+   "instrument": "JGB benchmark",
+   "quote": 0.011654,
+   "zeroRate": 1.281,
+   "df": 0.825183
+  },
+  {
+   "tenor": "20Y",
+   "maturity": "2046-09-30",
+   "instrument": "JGB benchmark",
+   "quote": 0.011414,
+   "zeroRate": 1.2957,
+   "df": 0.771715
+  },
+  {
+   "tenor": "30Y",
+   "maturity": "2056-09-30",
+   "instrument": "JGB benchmark",
+   "quote": 0.010772,
+   "zeroRate": 1.3011,
+   "df": 0.676833
+  }
+ ],
+ "forwards": [
+  {
+   "tenor": "1Y",
+   "rate": 0.6807
+  },
+  {
+   "tenor": "2Y",
+   "rate": 0.9471
+  },
+  {
+   "tenor": "3Y",
+   "rate": 1.2988
+  },
+  {
+   "tenor": "5Y",
+   "rate": 1.4099
+  },
+  {
+   "tenor": "7Y",
+   "rate": 1.3558
+  },
+  {
+   "tenor": "10Y",
+   "rate": 1.3329
+  },
+  {
+   "tenor": "15Y",
+   "rate": 1.3186
+  },
+  {
+   "tenor": "20Y",
+   "rate": 1.2976
+  }
+ ],
+ "interpolation": "Log-linear on discount factors",
+ "dayCount": "ACT/365F",
+ "calendar": "CAL-JPTO",
+ "fixingIndex": "FIX-TONA",
+ "builtAt": "2026-09-30T18:02:41Z",
+ "sources": [
+  "Broker composite",
+  "Exchange settlements"
+ ],
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "tenY": 0.0003
+  }
+ }
+}

@@ -1,0 +1,79 @@
+{
+ "curveId": "CMDC-BRENT",
+ "commodity": "Brent crude oil",
+ "front": 74.6,
+ "shape": "backwardation",
+ "roll": -0.4,
+ "points": [
+  {
+   "month": "X6",
+   "price": 74.6,
+   "openInterest": 200000
+  },
+  {
+   "month": "Z6",
+   "price": 74.302,
+   "openInterest": 143306
+  },
+  {
+   "month": "F7",
+   "price": 74.003,
+   "openInterest": 102683
+  },
+  {
+   "month": "G7",
+   "price": 73.705,
+   "openInterest": 73575
+  },
+  {
+   "month": "H7",
+   "price": 73.406,
+   "openInterest": 52719
+  },
+  {
+   "month": "J7",
+   "price": 73.108,
+   "openInterest": 37775
+  },
+  {
+   "month": "K7",
+   "price": 72.81,
+   "openInterest": 27067
+  },
+  {
+   "month": "M7",
+   "price": 72.511,
+   "openInterest": 19394
+  },
+  {
+   "month": "N7",
+   "price": 72.213,
+   "openInterest": 13896
+  },
+  {
+   "month": "Q7",
+   "price": 71.914,
+   "openInterest": 9957
+  },
+  {
+   "month": "U7",
+   "price": 71.616,
+   "openInterest": 7134
+  },
+  {
+   "month": "V7",
+   "price": 71.318,
+   "openInterest": 5112
+  }
+ ],
+ "commodityRef": "CMD-BRENT",
+ "unit": "USD/bbl",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "front": 0.05
+  }
+ }
+}

@@ -1,0 +1,44 @@
+{
+ "counterpartyId": "CP-KESTREL",
+ "name": "Kestrel Global Macro Fund",
+ "lei": "549300ZVIODSS2RCF485",
+ "rating": "BBB-",
+ "sector": "Asset management",
+ "country": "KY",
+ "type": "Hedge fund",
+ "netMtm": -9729091,
+ "pfePeak": 98784506,
+ "nettingSets": [
+  {
+   "id": "NS-KESTREL-FRA",
+   "agreement": "AGR-KESTREL-ISDA",
+   "trades": 2,
+   "netMtm": 1322506
+  },
+  {
+   "id": "NS-KESTREL-LDN",
+   "agreement": "AGR-KESTREL-ISDA",
+   "trades": 14,
+   "netMtm": -4248515
+  },
+  {
+   "id": "NS-KESTREL-NY",
+   "agreement": "AGR-KESTREL-ISDA",
+   "trades": 22,
+   "netMtm": -6803082
+  }
+ ],
+ "kyc": {
+  "status": "Approved",
+  "riskRating": "Enhanced",
+  "lastReview": "2026-02-11",
+  "emirClassification": "FC",
+  "pd1y": 0.0026
+ },
+ "group": "GRP-KESTREL",
+ "creditLimit": "LIM-KESTREL",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

@@ -1,0 +1,28 @@
+{
+ "calcId": "SACCR-PINNACLE-FRA",
+ "replacementCost": 0,
+ "addOn": 56500,
+ "multiplier": 0.7244,
+ "ead": 57300,
+ "rwa": 57300,
+ "addOns": [
+  {
+   "assetClass": "Interest rate",
+   "addOn": 56500
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "USD",
+   "effectiveNotional": -11300000,
+   "sf": 0.005
+  }
+ ],
+ "nettingSet": "NS-PINNACLE-FRA",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

@@ -51,6 +51,18 @@ connectors:
       domain: trading
 routes:
   trade: trading-lake
+console:
+  examples:
+  - - TRD T-10001
+    - Interest rate swap · legs and every cashflow
+  - - TRD T-10181
+    - FX option
+  - - TRD T-10241
+    - Single-name CDS
+  - - TRD T-10343
+    - OTC equity option
+  - - TRD T-10379
+    - Autocallable note · observation schedule
 roles:
   trader:
     kinds:

@@ -1,0 +1,33 @@
+{
+ "callId": "MC-VERDANT-TKY-2",
+ "callDate": "2026-09-28",
+ "marginType": "Variation",
+ "direction": "They call",
+ "amount": 73000.0,
+ "status": "Settled",
+ "disputeAmount": 0,
+ "events": [
+  {
+   "at": "2026-09-28 09:05",
+   "event": "Call issued",
+   "by": "collateral-system"
+  },
+  {
+   "at": "2026-09-28 11:40",
+   "event": "Agreed",
+   "by": "counterparty ops"
+  },
+  {
+   "at": "2026-09-29 10:15",
+   "event": "Settled",
+   "by": "payments"
+  }
+ ],
+ "nettingSet": "NS-VERDANT-TKY",
+ "csa": "CSA-VERDANT",
+ "currency": "USD",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

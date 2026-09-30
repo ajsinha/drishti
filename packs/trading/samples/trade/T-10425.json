@@ -1,0 +1,225 @@
+{
+ "tradeId": "T-10425",
+ "productType": "CFD",
+ "productName": "Contract for difference",
+ "assetClass": "Equity",
+ "family": "linear",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2024-05-10",
+ "effectiveDate": "2024-05-13",
+ "maturityDate": "2026-10-07",
+ "currency": "GBP",
+ "notional": 104000000.0,
+ "mtm": 207573,
+ "mtmCurrency": "USD",
+ "pnl1d": -9993,
+ "counterparty": {
+  "id": "CP-NORTHBRIDGE",
+  "name": "Northbridge Capital LLP"
+ },
+ "nettingSet": "NS-NORTHBRIDGE-LDN",
+ "book": "BOOK-EQD-2",
+ "trader": "TRDR-PLINDQVIST",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingEquity": "EQ-GRNT",
+ "dividendCurve": "DIV-GRNT",
+ "terms": {
+  "quantity": 66506,
+  "openPrice": 399.93
+ },
+ "risk": {
+  "delta": -660537
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -44036
+  },
+  {
+   "bucket": "1M",
+   "delta": -88072
+  },
+  {
+   "bucket": "3M",
+   "delta": -132107
+  },
+  {
+   "bucket": "6M",
+   "delta": -176143
+  },
+  {
+   "bucket": "1Y",
+   "delta": -220179
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 5426
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 2517
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -541
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -574
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 4866
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -5965
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 8910
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 2947
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -2533
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 5660
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -5084
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 11755
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -4820
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 7838
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 4300
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 1104
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -7211
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 3661
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 964
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 1157
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-05-10",
+  "executionTimestamp": "2024-05-10T16:30:07.619Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "P. Lindqvist",
+  "salesperson": null,
+  "orderId": "ORD-46966A3F0E"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-05-10T09:56:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2024-05-10T09:56:00Z",
+  "lastModifiedAt": "2024-05-10T09:56:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT521897750",
+  "matched": "2024-05-10 12:36",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q8346966A3F0EDFC785C136",
+  "upi": "QZNMUPU7P0UM",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Barclays Bank plc",
+  "ourAgentBic": "BARCGB22XXX",
+  "theirAgentBic": "NORTGB33XXX",
+  "ssiId": "SSI-GBP-A0C7C2",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 207573,
+  "cleanPv": 207573.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQ-GRNT",
+   "DIV-GRNT"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 1455
+  }
+ }
+}

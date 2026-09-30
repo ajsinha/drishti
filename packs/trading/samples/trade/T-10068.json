@@ -1,0 +1,216 @@
+{
+ "tradeId": "T-10068",
+ "productType": "STIR_FUTURE",
+ "productName": "Short-term interest rate future",
+ "assetClass": "Rates",
+ "family": "future",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2026-09-21",
+ "effectiveDate": "2026-09-23",
+ "maturityDate": "2027-01-14",
+ "currency": "USD",
+ "notional": 12000000.0,
+ "mtm": -79707,
+ "mtmCurrency": "USD",
+ "pnl1d": 3523,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-RATES-3",
+ "trader": "TRDR-MOKAFOR",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-CME-1",
+ "forwardCurve": "CRV-USD-PROJ",
+ "terms": {
+  "contract": "ER3 Z6",
+  "lots": 1367,
+  "tradePrice": 95.912
+ },
+ "risk": {
+  "dv01": -326
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -109
+  },
+  {
+   "bucket": "6M",
+   "dv01": -217
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -1845
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 456
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -3197
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 4867
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 319
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -259
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -1969
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 2373
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -2519
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 1923
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 3241
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -4381
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 1736
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 1820
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -4493
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -3196
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 2423
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -2149
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -650
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 599
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-09-21",
+  "executionTimestamp": "2026-09-21T11:43:58.364Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "M. Okafor",
+  "salesperson": null,
+  "orderId": "ORD-5C9AA749CA"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-09-21T09:16:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2026-09-21T09:16:00Z",
+  "lastModifiedAt": "2026-09-21T09:16:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA943350740",
+  "matched": "2026-09-21 14:52",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH1198482318",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20965C9AA749CA31AE866970",
+  "upi": "QZ9ZAUQGJGYU",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMUS33XXX",
+  "ssiId": "SSI-USD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -79707,
+  "cleanPv": -79707.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-USD-PROJ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

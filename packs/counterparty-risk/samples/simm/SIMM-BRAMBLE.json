@@ -1,0 +1,35 @@
+{
+ "calcId": "SIMM-BRAMBLE",
+ "total": 9499198,
+ "posted": 9214222,
+ "received": 9689182,
+ "version": "ISDA SIMM 2.7",
+ "riskClasses": [
+  {
+   "riskClass": "Interest rate",
+   "im": 4274639
+  },
+  {
+   "riskClass": "Credit qualifying",
+   "im": 1139904
+  },
+  {
+   "riskClass": "Equity",
+   "im": 1709856
+  },
+  {
+   "riskClass": "Commodity",
+   "im": 759936
+  },
+  {
+   "riskClass": "FX",
+   "im": 1614864
+  }
+ ],
+ "nettingSet": "NS-BRAMBLE-FRA",
+ "counterparty": "CP-BRAMBLE",
+ "_meta": {
+  "source": "margin-engine",
+  "generation": 1
+ }
+}

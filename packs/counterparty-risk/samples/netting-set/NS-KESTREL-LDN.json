@@ -1,0 +1,196 @@
+{
+ "nettingSetId": "NS-KESTREL-LDN",
+ "tradeCount": 14,
+ "netMtm": -4248515,
+ "collateral": -3197103,
+ "eePeak": 43789366,
+ "pfePeak": 98784506,
+ "limit": 145000000.0,
+ "utilisation": 0.6813,
+ "cva": -386976,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 5591184,
+   "pfe": 17340429
+  },
+  {
+   "tenor": "1M",
+   "ee": 10801588,
+   "pfe": 28440720
+  },
+  {
+   "tenor": "3M",
+   "ee": 18623850,
+   "pfe": 45628432
+  },
+  {
+   "tenor": "6M",
+   "ee": 26338101,
+   "pfe": 62599785
+  },
+  {
+   "tenor": "1Y",
+   "ee": 30068500,
+   "pfe": 69909262
+  },
+  {
+   "tenor": "2Y",
+   "ee": 28605581,
+   "pfe": 65460677
+  },
+  {
+   "tenor": "3Y",
+   "ee": 34869647,
+   "pfe": 79229723
+  },
+  {
+   "tenor": "5Y",
+   "ee": 43789366,
+   "pfe": 98784506
+  },
+  {
+   "tenor": "7Y",
+   "ee": 35692243,
+   "pfe": 80209236
+  },
+  {
+   "tenor": "10Y",
+   "ee": 0,
+   "pfe": 0
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10542",
+   "product": "Year-on-year inflation swap",
+   "notional": 243000000.0,
+   "maturity": "2026-11-05",
+   "mtm": -4921358
+  },
+  {
+   "tradeId": "T-10350",
+   "product": "Index option",
+   "notional": 159000000.0,
+   "maturity": "2027-05-27",
+   "mtm": -2574924
+  },
+  {
+   "tradeId": "T-10196",
+   "product": "FX barrier option",
+   "notional": 111000000.0,
+   "maturity": "2027-12-06",
+   "mtm": -2383626
+  },
+  {
+   "tradeId": "T-10547",
+   "product": "Inflation cap / floor",
+   "notional": 243000000.0,
+   "maturity": "2028-08-15",
+   "mtm": 2197247
+  },
+  {
+   "tradeId": "T-10444",
+   "product": "Basket option",
+   "notional": 136000000.0,
+   "maturity": "2032-02-25",
+   "mtm": 1867436
+  },
+  {
+   "tradeId": "T-10389",
+   "product": "Reverse convertible",
+   "notional": 96000000.0,
+   "maturity": "2035-12-07",
+   "mtm": 906822
+  },
+  {
+   "tradeId": "T-10173",
+   "product": "Non-deliverable forward",
+   "notional": 78000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -747816
+  },
+  {
+   "tradeId": "T-10178",
+   "product": "FX swap",
+   "notional": 98000000.0,
+   "maturity": "2030-06-25",
+   "mtm": 620224
+  },
+  {
+   "tradeId": "T-10225",
+   "product": "FX accumulator",
+   "notional": 201000000.0,
+   "maturity": "2033-12-27",
+   "mtm": 521517
+  },
+  {
+   "tradeId": "T-10367",
+   "product": "Equity digital option",
+   "notional": 202000000.0,
+   "maturity": "2028-03-02",
+   "mtm": 473161
+  },
+  {
+   "tradeId": "T-10189",
+   "product": "FX digital option",
+   "notional": 10000000.0,
+   "maturity": "2027-09-17",
+   "mtm": -112393
+  },
+  {
+   "tradeId": "T-10365",
+   "product": "Equity Asian option",
+   "notional": 180000000.0,
+   "maturity": "2035-11-28",
+   "mtm": -83827
+  },
+  {
+   "tradeId": "T-10322",
+   "product": "Equity forward",
+   "notional": 55000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -24415
+  },
+  {
+   "tradeId": "T-10185",
+   "product": "FX vanilla option",
+   "notional": 17000000.0,
+   "maturity": "2028-10-16",
+   "mtm": 13437
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Inflation",
+   "mtm": -2724111
+  },
+  {
+   "asset": "FX",
+   "mtm": -2088657
+  },
+  {
+   "asset": "Equity",
+   "mtm": 564253
+  }
+ ],
+ "counterparty": "CP-KESTREL",
+ "agreement": "AGR-KESTREL-ISDA",
+ "csa": "CSA-KESTREL",
+ "creditLimit": "LIM-KESTREL",
+ "exposureProfile": "EXP-KESTREL-LDN",
+ "cvaResult": "CVA-KESTREL-LDN",
+ "saccr": "SACCR-KESTREL-LDN",
+ "simm": "SIMM-KESTREL",
+ "collateralBalance": "COLL-KESTREL-LDN",
+ "legalEntity": "LE-LDN",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 8497
+  }
+ }
+}

@@ -1,0 +1,26 @@
+{
+ "resultId": "STR-OIL-SHOCK-FI",
+ "scenarioName": "Oil supply shock",
+ "pnl": -732827887,
+ "limit": -1502400000.0,
+ "byBook": [
+  {
+   "book": "BOOK-FI-1",
+   "pnl": -89587854
+  },
+  {
+   "book": "BOOK-FI-2",
+   "pnl": -366902636
+  },
+  {
+   "book": "BOOK-FI-3",
+   "pnl": -276337397
+  }
+ ],
+ "scenario": "SCN-OIL-SHOCK",
+ "desk": "DESK-FI",
+ "_meta": {
+  "source": "stress-engine",
+  "generation": 1
+ }
+}

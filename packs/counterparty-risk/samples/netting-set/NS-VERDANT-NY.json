@@ -1,0 +1,270 @@
+{
+ "nettingSetId": "NS-VERDANT-NY",
+ "tradeCount": 24,
+ "netMtm": 3612550,
+ "collateral": 2344758,
+ "eePeak": 25496227,
+ "pfePeak": 57888512,
+ "limit": 101000000.0,
+ "utilisation": 0.5732,
+ "cva": -669306,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 3444352,
+   "pfe": 9539500
+  },
+  {
+   "tenor": "1M",
+   "ee": 5496898,
+   "pfe": 13935750
+  },
+  {
+   "tenor": "3M",
+   "ee": 8561280,
+   "pfe": 20677392
+  },
+  {
+   "tenor": "6M",
+   "ee": 11542001,
+   "pfe": 27234977
+  },
+  {
+   "tenor": "1Y",
+   "ee": 15705557,
+   "pfe": 36392001
+  },
+  {
+   "tenor": "2Y",
+   "ee": 21097568,
+   "pfe": 48211461
+  },
+  {
+   "tenor": "3Y",
+   "ee": 25496227,
+   "pfe": 57888512
+  },
+  {
+   "tenor": "5Y",
+   "ee": 19542207,
+   "pfe": 44064993
+  },
+  {
+   "tenor": "7Y",
+   "ee": 1398198,
+   "pfe": 3131685
+  },
+  {
+   "tenor": "10Y",
+   "ee": 104067,
+   "pfe": 228947
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10049",
+   "product": "Forward-starting swap",
+   "notional": 177000000.0,
+   "maturity": "2033-03-14",
+   "mtm": 23383110
+  },
+  {
+   "tradeId": "T-10006",
+   "product": "Interest rate swap (fixed/float)",
+   "notional": 222000000.0,
+   "maturity": "2031-05-09",
+   "mtm": -7039033
+  },
+  {
+   "tradeId": "T-10062",
+   "product": "Forward rate agreement",
+   "notional": 452000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -5476015
+  },
+  {
+   "tradeId": "T-10290",
+   "product": "Term loan",
+   "notional": 206000000.0,
+   "maturity": "2033-07-04",
+   "mtm": -3431576
+  },
+  {
+   "tradeId": "T-10080",
+   "product": "Interest rate cap",
+   "notional": 162000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -2197753
+  },
+  {
+   "tradeId": "T-10276",
+   "product": "Total return swap on a bond",
+   "notional": 130000000.0,
+   "maturity": "2030-08-07",
+   "mtm": -1895147
+  },
+  {
+   "tradeId": "T-10149",
+   "product": "Snowball swap",
+   "notional": 210000000.0,
+   "maturity": "2035-08-16",
+   "mtm": -1550182
+  },
+  {
+   "tradeId": "T-10023",
+   "product": "Cross-currency swap (non-MtM)",
+   "notional": 101000000.0,
+   "maturity": "2028-05-02",
+   "mtm": 1359599
+  },
+  {
+   "tradeId": "T-10261",
+   "product": "CDS index option",
+   "notional": 75000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -1261668
+  },
+  {
+   "tradeId": "T-10515",
+   "product": "Gas swing option",
+   "notional": 116000000.0,
+   "maturity": "2030-12-20",
+   "mtm": -632140
+  },
+  {
+   "tradeId": "T-10014",
+   "product": "Basis swap (float/float)",
+   "notional": 64000000.0,
+   "maturity": "2031-03-05",
+   "mtm": 489888
+  },
+  {
+   "tradeId": "T-10308",
+   "product": "Unfunded risk participation",
+   "notional": 90000000.0,
+   "maturity": "2029-10-05",
+   "mtm": 483052
+  },
+  {
+   "tradeId": "T-10294",
+   "product": "Term loan",
+   "notional": 45000000.0,
+   "maturity": "2032-06-07",
+   "mtm": 414255
+  },
+  {
+   "tradeId": "T-10022",
+   "product": "Cross-currency swap (non-MtM)",
+   "notional": 129000000.0,
+   "maturity": "2035-02-01",
+   "mtm": 378599
+  },
+  {
+   "tradeId": "T-10027",
+   "product": "Cross-currency swap (MtM resetting)",
+   "notional": 117000000.0,
+   "maturity": "2036-08-15",
+   "mtm": 318993
+  },
+  {
+   "tradeId": "T-10137",
+   "product": "Callable swap",
+   "notional": 172000000.0,
+   "maturity": "2033-07-11",
+   "mtm": -263623
+  },
+  {
+   "tradeId": "T-10465",
+   "product": "Commodity basis swap",
+   "notional": 241000000.0,
+   "maturity": "2033-08-11",
+   "mtm": 238821
+  },
+  {
+   "tradeId": "T-10672",
+   "product": "Term deposit / placement",
+   "notional": 32000000.0,
+   "maturity": "2027-04-08",
+   "mtm": 221400
+  },
+  {
+   "tradeId": "T-10487",
+   "product": "Commodity spread option",
+   "notional": 45000000.0,
+   "maturity": "2030-10-16",
+   "mtm": 85934
+  },
+  {
+   "tradeId": "T-10147",
+   "product": "Snowball swap",
+   "notional": 23000000.0,
+   "maturity": "2032-02-23",
+   "mtm": 39565
+  },
+  {
+   "tradeId": "T-10152",
+   "product": "Target redemption note (rates)",
+   "notional": 52000000.0,
+   "maturity": "2033-08-22",
+   "mtm": -32695
+  },
+  {
+   "tradeId": "T-10241",
+   "product": "Single-name CDS",
+   "notional": 39000000.0,
+   "maturity": "2028-08-15",
+   "mtm": 28038
+  },
+  {
+   "tradeId": "T-10526",
+   "product": "Weather derivative (HDD/CDD)",
+   "notional": 5000000.0,
+   "maturity": "2035-03-19",
+   "mtm": -27326
+  },
+  {
+   "tradeId": "T-10013",
+   "product": "Basis swap (float/float)",
+   "notional": 7000000.0,
+   "maturity": "2032-05-12",
+   "mtm": -21546
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Rates",
+   "mtm": 9388907
+  },
+  {
+   "asset": "Credit",
+   "mtm": -5663046
+  },
+  {
+   "asset": "Commodity",
+   "mtm": -334711
+  },
+  {
+   "asset": "Money market",
+   "mtm": 221400
+  }
+ ],
+ "counterparty": "CP-VERDANT",
+ "agreement": "AGR-VERDANT-ISDA",
+ "csa": "CSA-VERDANT",
+ "creditLimit": "LIM-VERDANT",
+ "exposureProfile": "EXP-VERDANT-NY",
+ "cvaResult": "CVA-VERDANT-NY",
+ "saccr": "SACCR-VERDANT-NY",
+ "simm": "SIMM-VERDANT",
+ "collateralBalance": "COLL-VERDANT-NY",
+ "legalEntity": "LE-NY",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 7225
+  }
+ }
+}

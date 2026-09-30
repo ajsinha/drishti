@@ -1,0 +1,176 @@
+{
+ "isin": "BND-FRORBI079012",
+ "isinCode": "FRORBI079012",
+ "issuerName": "Orbital Telecom SA",
+ "coupon": 0.0474,
+ "maturity": "2031-11-15",
+ "price": 104.959,
+ "yield": 0.036,
+ "zSpread": 156.8,
+ "modDuration": 4.35,
+ "rating": "BBB-",
+ "terms": {
+  "currency": "EUR",
+  "couponFrequency": "Annual",
+  "dayCount": "ACT/ACT",
+  "issueDate": "2021-11-15",
+  "amountIssued": 3500000000,
+  "seniority": "Senior unsecured",
+  "callable": false,
+  "cusip": null
+ },
+ "coupons": [
+  {
+   "date": "2027-11-15",
+   "amount": 4.74
+  },
+  {
+   "date": "2028-11-15",
+   "amount": 4.74
+  },
+  {
+   "date": "2029-11-15",
+   "amount": 4.74
+  },
+  {
+   "date": "2030-11-15",
+   "amount": 4.74
+  },
+  {
+   "date": "2031-11-15",
+   "amount": 4.74
+  }
+ ],
+ "history": [
+  {
+   "date": "2026-08-19",
+   "price": 106.395
+  },
+  {
+   "date": "2026-08-20",
+   "price": 106.167
+  },
+  {
+   "date": "2026-08-21",
+   "price": 106.057
+  },
+  {
+   "date": "2026-08-24",
+   "price": 106.176
+  },
+  {
+   "date": "2026-08-25",
+   "price": 106.28
+  },
+  {
+   "date": "2026-08-26",
+   "price": 106.341
+  },
+  {
+   "date": "2026-08-27",
+   "price": 106.219
+  },
+  {
+   "date": "2026-08-28",
+   "price": 106.125
+  },
+  {
+   "date": "2026-08-31",
+   "price": 106.213
+  },
+  {
+   "date": "2026-09-01",
+   "price": 106.163
+  },
+  {
+   "date": "2026-09-02",
+   "price": 106.37
+  },
+  {
+   "date": "2026-09-03",
+   "price": 106.076
+  },
+  {
+   "date": "2026-09-04",
+   "price": 106.017
+  },
+  {
+   "date": "2026-09-08",
+   "price": 106.22
+  },
+  {
+   "date": "2026-09-09",
+   "price": 106.015
+  },
+  {
+   "date": "2026-09-10",
+   "price": 105.747
+  },
+  {
+   "date": "2026-09-11",
+   "price": 105.866
+  },
+  {
+   "date": "2026-09-14",
+   "price": 105.73
+  },
+  {
+   "date": "2026-09-15",
+   "price": 105.59
+  },
+  {
+   "date": "2026-09-16",
+   "price": 105.232
+  },
+  {
+   "date": "2026-09-17",
+   "price": 105.654
+  },
+  {
+   "date": "2026-09-18",
+   "price": 105.631
+  },
+  {
+   "date": "2026-09-21",
+   "price": 105.591
+  },
+  {
+   "date": "2026-09-22",
+   "price": 105.219
+  },
+  {
+   "date": "2026-09-23",
+   "price": 104.906
+  },
+  {
+   "date": "2026-09-24",
+   "price": 104.863
+  },
+  {
+   "date": "2026-09-25",
+   "price": 104.987
+  },
+  {
+   "date": "2026-09-28",
+   "price": 104.961
+  },
+  {
+   "date": "2026-09-29",
+   "price": 104.842
+  },
+  {
+   "date": "2026-09-30",
+   "price": 104.959
+  }
+ ],
+ "issuer": "ISS-ORBITAL",
+ "benchmarkCurve": "CRV-EUR-GOVT",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "price": 0.02
+  }
+ }
+}

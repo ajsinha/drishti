@@ -1,0 +1,60 @@
+{
+ "curveId": "FXF-USDCNH",
+ "pair": "USDCNH",
+ "spot": 7.128,
+ "points3m": -355.5,
+ "points1y": -1411.4,
+ "points": [
+  {
+   "tenor": "ON",
+   "pips": -3.9,
+   "outright": 7.12761
+  },
+  {
+   "tenor": "1W",
+   "pips": -27.3,
+   "outright": 7.12527
+  },
+  {
+   "tenor": "1M",
+   "pips": -118.7,
+   "outright": 7.11613
+  },
+  {
+   "tenor": "2M",
+   "pips": -237.2,
+   "outright": 7.10428
+  },
+  {
+   "tenor": "3M",
+   "pips": -355.5,
+   "outright": 7.09245
+  },
+  {
+   "tenor": "6M",
+   "pips": -709.2,
+   "outright": 7.05708
+  },
+  {
+   "tenor": "9M",
+   "pips": -1061.2,
+   "outright": 7.02188
+  },
+  {
+   "tenor": "1Y",
+   "pips": -1411.4,
+   "outright": 6.98686
+  },
+  {
+   "tenor": "2Y",
+   "pips": -2794.9,
+   "outright": 6.84851
+  }
+ ],
+ "fxSpot": "FX-USDCNH",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

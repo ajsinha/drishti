@@ -1,0 +1,420 @@
+{
+ "tradeId": "T-10506",
+ "productType": "POWER_SWAP",
+ "productName": "Power swap",
+ "assetClass": "Commodity",
+ "family": "swap",
+ "status": "Live",
+ "direction": "Receive fixed",
+ "tradeDate": "2026-01-30",
+ "effectiveDate": "2026-02-02",
+ "maturityDate": "2030-11-12",
+ "currency": "USD",
+ "notional": 241000000.0,
+ "mtm": -1890065,
+ "mtmCurrency": "USD",
+ "pnl1d": 82076,
+ "counterparty": {
+  "id": "CP-NORTHBRIDGE",
+  "name": "Northbridge Capital LLP"
+ },
+ "nettingSet": "NS-NORTHBRIDGE-NY",
+ "book": "BOOK-COMM-3",
+ "trader": "TRDR-FROSSI",
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "commodityCurve": "CMDC-GOLD",
+ "discountCurve": "CRV-USD-OIS",
+ "terms": {
+  "hub": "EEX Base",
+  "shape": "Peak",
+  "mwh": 13327
+ },
+ "risk": {
+  "delta": -700545
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -33359
+  },
+  {
+   "bucket": "1M",
+   "delta": -66719
+  },
+  {
+   "bucket": "3M",
+   "delta": -100078
+  },
+  {
+   "bucket": "6M",
+   "delta": -133437
+  },
+  {
+   "bucket": "1Y",
+   "delta": -166796
+  },
+  {
+   "bucket": "2Y",
+   "delta": -200156
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Receive performance",
+   "payReceive": "Receive",
+   "rateType": "Performance",
+   "index": "GOLD",
+   "rate": null,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "USD",
+   "notional": 241000000.0
+  },
+  {
+   "leg": 2,
+   "label": "Pay SOFR + spread",
+   "payReceive": "Pay",
+   "rateType": "Float",
+   "index": "SOFR",
+   "rate": 0.036215,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "USD",
+   "notional": 241000000.0
+  }
+ ],
+ "schedule": [
+  {
+   "fixingDate": "2026-05-02",
+   "period": "2026-05-02..2026-08-02",
+   "index": "SOFR",
+   "rate": 0.039006,
+   "payoff": 241361.5,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-08-02",
+   "period": "2026-08-02..2026-11-02",
+   "index": "SOFR",
+   "rate": 0.033341,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-11-02",
+   "period": "2026-11-02..2027-02-02",
+   "index": "SOFR",
+   "rate": 0.048915,
+   "payoff": 838378.75,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-02-02",
+   "period": "2027-02-02..2027-05-02",
+   "index": "SOFR",
+   "rate": 0.041142,
+   "payoff": 370055.5,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-05-02",
+   "period": "2027-05-02..2027-08-02",
+   "index": "SOFR",
+   "rate": 0.039693,
+   "payoff": 282753.25,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-08-02",
+   "period": "2027-08-02..2027-11-02",
+   "index": "SOFR",
+   "rate": 0.043435,
+   "payoff": 508208.75,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-11-02",
+   "period": "2027-11-02..2028-02-02",
+   "index": "SOFR",
+   "rate": 0.032036,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2028-02-02",
+   "period": "2028-02-02..2028-05-02",
+   "index": "SOFR",
+   "rate": 0.027457,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2028-05-02",
+   "period": "2028-05-02..2028-08-02",
+   "index": "SOFR",
+   "rate": 0.022999,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2028-08-02",
+   "period": "2028-08-02..2028-11-02",
+   "index": "SOFR",
+   "rate": 0.02261,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2028-11-02",
+   "period": "2028-11-02..2029-02-02",
+   "index": "SOFR",
+   "rate": 0.021873,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2029-02-02",
+   "period": "2029-02-02..2029-05-02",
+   "index": "SOFR",
+   "rate": 0.026255,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2029-05-02",
+   "period": "2029-05-02..2029-08-02",
+   "index": "SOFR",
+   "rate": 0.037499,
+   "payoff": 150564.75,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2029-08-02",
+   "period": "2029-08-02..2029-11-02",
+   "index": "SOFR",
+   "rate": 0.021042,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2029-11-02",
+   "period": "2029-11-02..2030-02-02",
+   "index": "SOFR",
+   "rate": 0.033384,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2030-02-02",
+   "period": "2030-02-02..2030-05-02",
+   "index": "SOFR",
+   "rate": 0.029375,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2030-05-02",
+   "period": "2030-05-02..2030-08-02",
+   "index": "SOFR",
+   "rate": 0.048335,
+   "payoff": 803433.75,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2030-08-02",
+   "period": "2030-08-02..2030-11-02",
+   "index": "SOFR",
+   "rate": 0.026959,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2030-11-02",
+   "period": "2030-11-02..2031-02-02",
+   "index": "SOFR",
+   "rate": 0.024015,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2030-11-12",
+   "period": "2030-11-12..2031-02-12",
+   "index": "SOFR",
+   "rate": 0.044877,
+   "payoff": 595089.25,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 2,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -16181
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 75835
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -57994
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -766
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -43877
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 2398
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -26805
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 80206
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -61709
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 41755
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -115496
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 80217
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 19110
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -44390
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -93426
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 33368
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -47223
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 4160
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -33723
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 35468
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-01-30",
+  "executionTimestamp": "2026-01-30T09:15:33.030Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "F. Rossi",
+  "salesperson": null,
+  "orderId": "ORD-DAD620A198"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-01-30T12:43:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-01-30T12:43:00Z",
+  "lastModifiedAt": "2026-01-30T12:43:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT450536115",
+  "matched": "2026-01-30 12:30",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096DAD620A1988E8FE4EB1E",
+  "upi": "QZCDRLTKDTGO",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "NORTUS33XXX",
+  "ssiId": "SSI-USD-A0C7C2",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -1890065,
+  "cleanPv": -1890065.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Multi-curve OIS discounting",
+  "curves": [
+   "CMDC-GOLD",
+   "CRV-USD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "endur-comm",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 6190
+  }
+ }
+}

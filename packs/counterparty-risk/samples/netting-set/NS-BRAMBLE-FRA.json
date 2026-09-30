@@ -1,0 +1,111 @@
+{
+ "nettingSetId": "NS-BRAMBLE-FRA",
+ "tradeCount": 3,
+ "netMtm": 3993121,
+ "collateral": 2982734,
+ "eePeak": 1093622,
+ "pfePeak": 2451032,
+ "limit": 5000000.0,
+ "utilisation": 0.4902,
+ "cva": -1513,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 1060379,
+   "pfe": 2377897
+  },
+  {
+   "tenor": "1M",
+   "ee": 1093622,
+   "pfe": 2451032
+  },
+  {
+   "tenor": "3M",
+   "ee": 1051371,
+   "pfe": 2338566
+  },
+  {
+   "tenor": "6M",
+   "ee": 891663,
+   "pfe": 1961659
+  },
+  {
+   "tenor": "1Y",
+   "ee": 786890,
+   "pfe": 1731158
+  },
+  {
+   "tenor": "2Y",
+   "ee": 612831,
+   "pfe": 1348228
+  },
+  {
+   "tenor": "3Y",
+   "ee": 477273,
+   "pfe": 1050001
+  },
+  {
+   "tenor": "5Y",
+   "ee": 289481,
+   "pfe": 636858
+  },
+  {
+   "tenor": "7Y",
+   "ee": 175579,
+   "pfe": 386274
+  },
+  {
+   "tenor": "10Y",
+   "ee": 82938,
+   "pfe": 182463
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10690",
+   "product": "Reverse repo",
+   "notional": 223000000.0,
+   "maturity": "2026-11-09",
+   "mtm": 1817034
+  },
+  {
+   "tradeId": "T-10693",
+   "product": "Tri-party repo",
+   "notional": 114000000.0,
+   "maturity": "2027-01-13",
+   "mtm": 1780029
+  },
+  {
+   "tradeId": "T-10681",
+   "product": "Repurchase agreement",
+   "notional": 178000000.0,
+   "maturity": "2027-01-04",
+   "mtm": 396058
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Securities financing",
+   "mtm": 3993121
+  }
+ ],
+ "counterparty": "CP-BRAMBLE",
+ "agreement": "AGR-BRAMBLE-ISDA",
+ "csa": "CSA-BRAMBLE",
+ "creditLimit": "LIM-BRAMBLE",
+ "exposureProfile": "EXP-BRAMBLE-FRA",
+ "cvaResult": "CVA-BRAMBLE-FRA",
+ "saccr": "SACCR-BRAMBLE-FRA",
+ "simm": "SIMM-BRAMBLE",
+ "collateralBalance": "COLL-BRAMBLE-FRA",
+ "legalEntity": "LE-FRA",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 7986
+  }
+ }
+}

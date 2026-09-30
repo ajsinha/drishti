@@ -1,0 +1,274 @@
+{
+ "tradeId": "T-10088",
+ "productType": "FLOOR",
+ "productName": "Interest rate floor",
+ "assetClass": "Rates",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2025-11-27",
+ "effectiveDate": "2025-11-28",
+ "maturityDate": "2027-04-28",
+ "currency": "CHF",
+ "notional": 37000000.0,
+ "mtm": 203454,
+ "mtmCurrency": "USD",
+ "pnl1d": -3147,
+ "counterparty": {
+  "id": "CP-PINNACLE",
+  "name": "Pinnacle Credit Partners"
+ },
+ "nettingSet": "NS-PINNACLE-NY",
+ "book": "BOOK-RATES-2",
+ "trader": "TRDR-ASHAH",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-CHF-OIS",
+ "forwardCurve": "CRV-CHF-PROJ",
+ "capVolSurface": "CPV-CHF",
+ "terms": {
+  "strike": 0.028524,
+  "floorFrequency": "Quarterly",
+  "premium": 1017299.0
+ },
+ "risk": {
+  "dv01": 4475,
+  "vega": 56898
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 746,
+   "vega": 9483
+  },
+  {
+   "bucket": "6M",
+   "dv01": 1492,
+   "vega": 18966
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 2238,
+   "vega": 28449
+  }
+ ],
+ "schedule": [
+  {
+   "fixingDate": "2026-02-28",
+   "period": "2026-02-28..2026-05-28",
+   "index": "SARON",
+   "rate": 0.033404,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-05-28",
+   "period": "2026-05-28..2026-08-28",
+   "index": "SARON",
+   "rate": 0.033553,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-08-28",
+   "period": "2026-08-28..2026-11-28",
+   "index": "SARON",
+   "rate": 0.028487,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-11-28",
+   "period": "2026-11-28..2027-02-28",
+   "index": "SARON",
+   "rate": 0.045862,
+   "payoff": 100473.5,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-02-28",
+   "period": "2027-02-28..2027-05-28",
+   "index": "SARON",
+   "rate": 0.039212,
+   "payoff": 38961.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-04-28",
+   "period": "2027-04-28..2027-07-28",
+   "index": "SARON",
+   "rate": 0.034193,
+   "payoff": 0.0,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 3,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 4617
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -5344
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -13611
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -6380
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 1898
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -538
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -7640
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 4889
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -3615
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 7225
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 5328
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 6028
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 8411
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -11310
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 7518
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -13661
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -3542
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -1817
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -3454
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 813
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-11-27",
+  "executionTimestamp": "2025-11-27T11:20:19.367Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "A. Shah",
+  "salesperson": null,
+  "orderId": "ORD-4CAD5C0AD7"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-11-27T12:54:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2025-11-27T12:54:00Z",
+  "lastModifiedAt": "2025-11-27T12:54:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA142040150",
+  "matched": "2025-11-27 17:47",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20964CAD5C0AD74A92847360",
+  "upi": "QZVA3WDD7YGX",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "PINNGB33XXX",
+  "ssiId": "SSI-CHF-F2BB52",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 203454,
+  "cleanPv": 203454.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CRV-CHF-OIS",
+   "CRV-CHF-PROJ",
+   "CPV-CHF"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 777
+  }
+ }
+}

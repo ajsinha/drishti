@@ -1,0 +1,48 @@
+{
+ "limitId": "LIM-HARBORPT",
+ "counterpartyName": "Harbor Point Bank",
+ "measure": "PFE 95 peak",
+ "limit": 467000000.0,
+ "used": 268519307,
+ "utilisation": 0.575,
+ "status": "Within limit",
+ "buckets": [
+  {
+   "bucket": "0-1Y",
+   "limit": 467000000,
+   "used": 228241411,
+   "utilisation": 0.4887
+  },
+  {
+   "bucket": "1-3Y",
+   "limit": 467000000,
+   "used": 268519307,
+   "utilisation": 0.575
+  },
+  {
+   "bucket": "3-5Y",
+   "limit": 373600000,
+   "used": 187963515,
+   "utilisation": 0.5031
+  },
+  {
+   "bucket": "5-10Y",
+   "limit": 280200000,
+   "used": 93981757,
+   "utilisation": 0.3354
+  },
+  {
+   "bucket": "10Y+",
+   "limit": 186800000,
+   "used": 26851931,
+   "utilisation": 0.1437
+  }
+ ],
+ "counterparty": "CP-HARBORPT",
+ "approvedBy": "Credit Risk Committee",
+ "reviewDue": "2027-03-19",
+ "_meta": {
+  "source": "limits-system",
+  "generation": 1
+ }
+}

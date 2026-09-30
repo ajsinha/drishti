@@ -1,0 +1,261 @@
+{
+ "tradeId": "T-10705",
+ "productType": "SEC_LENDING",
+ "productName": "Securities lending",
+ "assetClass": "Securities financing",
+ "family": "sft",
+ "status": "Live",
+ "direction": "Repo (lend cash)",
+ "tradeDate": "2026-09-04",
+ "effectiveDate": "2026-09-07",
+ "maturityDate": "2026-10-20",
+ "currency": "JPY",
+ "notional": 205000000.0,
+ "mtm": 116927,
+ "mtmCurrency": "USD",
+ "pnl1d": -3708,
+ "counterparty": {
+  "id": "CP-HARBORPT",
+  "name": "Harbor Point Bank"
+ },
+ "nettingSet": "NS-HARBORPT-FRA",
+ "book": "BOOK-SFT-1",
+ "trader": "TRDR-KBRANDT",
+ "desk": "DESK-SFT",
+ "legalEntity": "LE-FRA",
+ "underlyingEquity": "EQ-KZNM",
+ "repoCurve": "REPO-JPY",
+ "terms": {
+  "fee": 21.4,
+  "collateralType": "Non-cash",
+  "rebateRate": 0.039185
+ },
+ "risk": {
+  "exposure": 4021615,
+  "delta": 1045670
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "exposure": 402162,
+   "delta": 104567
+  },
+  {
+   "bucket": "1M",
+   "exposure": 804323,
+   "delta": 209134
+  },
+  {
+   "bucket": "3M",
+   "exposure": 1206484,
+   "delta": 313701
+  },
+  {
+   "bucket": "6M",
+   "exposure": 1608646,
+   "delta": 418268
+  }
+ ],
+ "schedule": [
+  {
+   "asset": "United Kingdom Debt Management Office 2036",
+   "isin": "GBGILT120223",
+   "quantity": 69321873,
+   "marketValue": 70105903,
+   "haircut": 0.02,
+   "value": 68703785
+  },
+  {
+   "asset": "Federal Republic of Germany 2036",
+   "isin": "DEBUND130144",
+   "quantity": 55192844,
+   "marketValue": 65084505,
+   "haircut": 0.005,
+   "value": 64759082
+  },
+  {
+   "asset": "Granite Building Materials plc 2031",
+   "isin": "GBGRAN031444",
+   "quantity": 68456712,
+   "marketValue": 66580998,
+   "haircut": 0.005,
+   "value": 66248093
+  }
+ ],
+ "nextIndex": -1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 172
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -534
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -1633
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -2266
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -1872
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 1653
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 6793
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 798
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 1380
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 2732
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -2756
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -4008
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -3986
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 798
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 3535
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -6512
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 5164
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -1018
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 702
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 1251
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-09-04",
+  "executionTimestamp": "2026-09-04T08:33:22.272Z",
+  "venue": "Bloomberg SEF",
+  "venueMic": "BSEF",
+  "executionType": "Electronic",
+  "trader": "K. Brandt",
+  "salesperson": null,
+  "orderId": "ORD-F2849A82CD"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-09-04T10:15:00Z",
+    "by": "mo.amend"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2026-09-12T10:15:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-09-04T10:15:00Z",
+  "lastModifiedAt": "2026-09-12T10:15:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT227539875",
+  "matched": "2026-09-04 17:51",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z9DXU4T18OK744F2849A82CDA23152605D",
+  "upi": "QZ2ATRWPHXTD",
+  "reportingRegimes": [
+   "EU EMIR",
+   "EU MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "HARBGB33XXX",
+  "ssiId": "SSI-JPY-99A301",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 116927,
+  "cleanPv": 116927.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQ-KZNM",
+   "REPO-JPY"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "globalone-sft",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 2284
+  }
+ }
+}

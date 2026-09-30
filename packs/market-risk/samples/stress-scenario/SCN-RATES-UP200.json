@@ -1,0 +1,29 @@
+{
+ "scenarioId": "SCN-RATES-UP200",
+ "name": "Parallel rates +200 bp",
+ "type": "Hypothetical",
+ "severity": "Moderate",
+ "shocks": [
+  {
+   "factor": "USD rates",
+   "shock": 2.0
+  },
+  {
+   "factor": "EUR rates",
+   "shock": 2.0
+  },
+  {
+   "factor": "GBP rates",
+   "shock": 2.0
+  },
+  {
+   "factor": "JPY rates",
+   "shock": 1.0
+  }
+ ],
+ "horizon": "10 days",
+ "_meta": {
+  "source": "stress-engine",
+  "generation": 1
+ }
+}

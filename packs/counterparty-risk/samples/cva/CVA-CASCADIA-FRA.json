@@ -1,0 +1,59 @@
+{
+ "resultId": "CVA-CASCADIA-FRA",
+ "cva": -3753,
+ "dva": 116,
+ "fva": -1240,
+ "kva": -2727,
+ "cs01": -68,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -3753
+  },
+  {
+   "name": "DVA",
+   "amount": 116
+  },
+  {
+   "name": "FVA",
+   "amount": -1240
+  },
+  {
+   "name": "KVA",
+   "amount": -2727
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -68
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 15
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 8
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -113
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 64
+  }
+ ],
+ "nettingSet": "NS-CASCADIA-FRA",
+ "creditCurve": "CDS-CASCADIA",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

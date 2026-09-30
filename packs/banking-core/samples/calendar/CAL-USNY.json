@@ -1,0 +1,102 @@
+{
+ "calendarId": "CAL-USNY",
+ "name": "New York",
+ "holidays": [
+  {
+   "date": "2026-01-01",
+   "name": "Public holiday"
+  },
+  {
+   "date": "2026-01-19",
+   "name": "Public holiday"
+  },
+  {
+   "date": "2026-02-16",
+   "name": "Public holiday"
+  },
+  {
+   "date": "2026-05-25",
+   "name": "Public holiday"
+  },
+  {
+   "date": "2026-06-19",
+   "name": "Public holiday"
+  },
+  {
+   "date": "2026-07-03",
+   "name": "Public holiday"
+  },
+  {
+   "date": "2026-09-07",
+   "name": "Public holiday"
+  },
+  {
+   "date": "2026-10-12",
+   "name": "Public holiday"
+  },
+  {
+   "date": "2026-11-11",
+   "name": "Public holiday"
+  },
+  {
+   "date": "2026-11-26",
+   "name": "Public holiday"
+  },
+  {
+   "date": "2026-12-25",
+   "name": "Public holiday"
+  },
+  {
+   "date": "2027-01-01",
+   "name": "Public holiday"
+  },
+  {
+   "date": "2027-01-18",
+   "name": "Public holiday"
+  },
+  {
+   "date": "2027-02-15",
+   "name": "Public holiday"
+  },
+  {
+   "date": "2027-05-31",
+   "name": "Public holiday"
+  },
+  {
+   "date": "2027-06-18",
+   "name": "Public holiday"
+  },
+  {
+   "date": "2027-07-05",
+   "name": "Public holiday"
+  },
+  {
+   "date": "2027-09-06",
+   "name": "Public holiday"
+  },
+  {
+   "date": "2027-10-11",
+   "name": "Public holiday"
+  },
+  {
+   "date": "2027-11-11",
+   "name": "Public holiday"
+  },
+  {
+   "date": "2027-11-25",
+   "name": "Public holiday"
+  },
+  {
+   "date": "2027-12-24",
+   "name": "Public holiday"
+  }
+ ],
+ "weekend": [
+  "Saturday",
+  "Sunday"
+ ],
+ "_meta": {
+  "source": "reference-master",
+  "generation": 1
+ }
+}

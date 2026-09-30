@@ -1,0 +1,393 @@
+{
+ "tradeId": "T-10399",
+ "productType": "EQ_VOL_SWAP",
+ "productName": "Volatility swap",
+ "assetClass": "Equity",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2024-12-24",
+ "effectiveDate": "2024-12-26",
+ "maturityDate": "2030-07-09",
+ "currency": "USD",
+ "notional": 7000000.0,
+ "mtm": 139897,
+ "mtmCurrency": "USD",
+ "pnl1d": -11317,
+ "counterparty": {
+  "id": "CP-CORAL",
+  "name": "Coral Bay Municipal Authority"
+ },
+ "nettingSet": "NS-CORAL-LDN",
+ "book": "BOOK-EQD-3",
+ "trader": "TRDR-JWEISS",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingIndex": "EQX-SPX",
+ "equityVolSurface": "EQV-SPX",
+ "terms": {
+  "volStrike": 12.15,
+  "vegaNotional": 569747.0
+ },
+ "risk": {
+  "vega": -36835
+ },
+ "sensitivities": [
+  {
+   "bucket": "1M",
+   "vega": -1754
+  },
+  {
+   "bucket": "3M",
+   "vega": -3508
+  },
+  {
+   "bucket": "6M",
+   "vega": -5262
+  },
+  {
+   "bucket": "1Y",
+   "vega": -7016
+  },
+  {
+   "bucket": "2Y",
+   "vega": -8770
+  },
+  {
+   "bucket": "5Y",
+   "vega": -10524
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2025-03-26",
+   "level": 84.82,
+   "trigger": 100.0,
+   "performance": -0.1518,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-06-26",
+   "level": 85.08,
+   "trigger": 100.0,
+   "performance": -0.1492,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-09-26",
+   "level": 93.89,
+   "trigger": 100.0,
+   "performance": -0.0611,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-12-26",
+   "level": 88.66,
+   "trigger": 100.0,
+   "performance": -0.1134,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-03-26",
+   "level": 85.29,
+   "trigger": 100.0,
+   "performance": -0.1471,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-06-26",
+   "level": 99.4,
+   "trigger": 100.0,
+   "performance": -0.006,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-09-26",
+   "level": 92.3,
+   "trigger": 100.0,
+   "performance": -0.077,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-12-26",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-03-26",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-06-26",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-09-26",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-12-26",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-03-26",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-06-26",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-09-26",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-12-26",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-03-26",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-06-26",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-09-26",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-12-26",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-03-26",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-06-26",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-07-09",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 7,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -1238
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 1269
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 1882
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 46
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -2957
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 2392
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -586
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -1909
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -8883
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 3777
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 26
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -1652
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 5730
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -706
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 11192
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 1280
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 21
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -3408
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -6722
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -211
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-12-24",
+  "executionTimestamp": "2024-12-24T10:35:19.673Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "J. Weiss",
+  "salesperson": null,
+  "orderId": "ORD-4F28AB18DB"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-12-24T11:57:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2024-12-24T11:57:00Z",
+  "lastModifiedAt": "2024-12-24T11:57:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT445571136",
+  "matched": "2024-12-24 16:16",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q834F28AB18DB20A2F3E2B6",
+  "upi": "QZ9DPGC2B84T",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "CORAUS33XXX",
+  "ssiId": "SSI-USD-C31AC7",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 139897,
+  "cleanPv": 139897.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "EQX-SPX",
+   "EQV-SPX"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

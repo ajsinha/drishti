@@ -1,0 +1,17 @@
+{
+ "groupId": "GRP-SUMMIT",
+ "name": "Summit Holdings Inc.",
+ "limit": 267000000.0,
+ "utilisation": 0.8122,
+ "members": [
+  {
+   "id": "CP-SUMMIT",
+   "name": "Summit Clearing LLC",
+   "rating": "A-"
+  }
+ ],
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

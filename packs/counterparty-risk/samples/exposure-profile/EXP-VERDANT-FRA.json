@@ -1,0 +1,87 @@
+{
+ "profileId": "EXP-VERDANT-FRA",
+ "epe": 7360,
+ "eepe": 42435,
+ "pfePeak": 111733,
+ "paths": 5000,
+ "runDate": "2026-09-30",
+ "buckets": [
+  {
+   "tenor": "0",
+   "ee": 31160,
+   "ene": -203435,
+   "pfe95": 96640,
+   "pfe99": 129687
+  },
+  {
+   "tenor": "1M",
+   "ee": 42435,
+   "ene": -208179,
+   "pfe95": 111733,
+   "pfe99": 148787
+  },
+  {
+   "tenor": "3M",
+   "ee": 0,
+   "ene": -169155,
+   "pfe95": 0,
+   "pfe99": 0
+  },
+  {
+   "tenor": "6M",
+   "ee": 0,
+   "ene": -158907,
+   "pfe95": 0,
+   "pfe99": 0
+  },
+  {
+   "tenor": "1Y",
+   "ee": 0,
+   "ene": -140235,
+   "pfe95": 0,
+   "pfe99": 0
+  },
+  {
+   "tenor": "2Y",
+   "ee": 0,
+   "ene": -109215,
+   "pfe95": 0,
+   "pfe99": 0
+  },
+  {
+   "tenor": "3Y",
+   "ee": 0,
+   "ene": -85057,
+   "pfe95": 0,
+   "pfe99": 0
+  },
+  {
+   "tenor": "5Y",
+   "ee": 0,
+   "ene": -51589,
+   "pfe95": 0,
+   "pfe99": 0
+  },
+  {
+   "tenor": "7Y",
+   "ee": 0,
+   "ene": -31291,
+   "pfe95": 0,
+   "pfe99": 0
+  },
+  {
+   "tenor": "10Y",
+   "ee": 0,
+   "ene": -14781,
+   "pfe95": 0,
+   "pfe99": 0
+  }
+ ],
+ "nettingSet": "NS-VERDANT-FRA",
+ "model": "Hull-White 1F rates, GBM FX and equity, 5,000 paths",
+ "confidence": 0.95,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

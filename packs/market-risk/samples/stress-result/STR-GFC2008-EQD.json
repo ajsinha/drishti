@@ -1,0 +1,26 @@
+{
+ "resultId": "STR-GFC2008-EQD",
+ "scenarioName": "Global financial crisis 2008",
+ "pnl": -118161311,
+ "limit": -83500000.0,
+ "byBook": [
+  {
+   "book": "BOOK-EQD-1",
+   "pnl": -39993867
+  },
+  {
+   "book": "BOOK-EQD-2",
+   "pnl": -40231409
+  },
+  {
+   "book": "BOOK-EQD-3",
+   "pnl": -37936035
+  }
+ ],
+ "scenario": "SCN-GFC2008",
+ "desk": "DESK-EQD",
+ "_meta": {
+  "source": "stress-engine",
+  "generation": 1
+ }
+}

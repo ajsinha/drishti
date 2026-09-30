@@ -1,0 +1,111 @@
+{
+ "nettingSetId": "NS-ALDERSHOT-FRA",
+ "tradeCount": 3,
+ "netMtm": -339550,
+ "collateral": -229552,
+ "eePeak": 141750,
+ "pfePeak": 347288,
+ "limit": 5000000.0,
+ "utilisation": 0.0695,
+ "cva": -7,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 39314,
+   "pfe": 121929
+  },
+  {
+   "tenor": "1M",
+   "ee": 81839,
+   "pfe": 215484
+  },
+  {
+   "tenor": "3M",
+   "ee": 141750,
+   "pfe": 347288
+  },
+  {
+   "tenor": "6M",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "1Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "2Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "3Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "5Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "7Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "10Y",
+   "ee": 0,
+   "pfe": 0
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10694",
+   "product": "Tri-party repo",
+   "notional": 237000000.0,
+   "maturity": "2027-02-15",
+   "mtm": -708216
+  },
+  {
+   "tradeId": "T-10703",
+   "product": "Securities lending",
+   "notional": 43000000.0,
+   "maturity": "2027-01-29",
+   "mtm": 516127
+  },
+  {
+   "tradeId": "T-10700",
+   "product": "Buy / sell-back",
+   "notional": 125000000.0,
+   "maturity": "2027-03-08",
+   "mtm": -147461
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Securities financing",
+   "mtm": -339550
+  }
+ ],
+ "counterparty": "CP-ALDERSHOT",
+ "agreement": "AGR-ALDERSHOT-ISDA",
+ "csa": "CSA-ALDERSHOT",
+ "creditLimit": "LIM-ALDERSHOT",
+ "exposureProfile": "EXP-ALDERSHOT-FRA",
+ "cvaResult": "CVA-ALDERSHOT-FRA",
+ "saccr": "SACCR-ALDERSHOT-FRA",
+ "simm": "SIMM-ALDERSHOT",
+ "collateralBalance": "COLL-ALDERSHOT-FRA",
+ "legalEntity": "LE-FRA",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 1000
+  }
+ }
+}

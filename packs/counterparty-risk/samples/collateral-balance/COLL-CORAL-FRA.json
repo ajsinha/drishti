@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-CORAL-FRA",
+ "held": 1999900,
+ "posted": 0,
+ "net": 1999900,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Halcyon Shipping plc 2031",
+   "direction": "Held",
+   "marketValue": 666633,
+   "haircut": 0.02,
+   "value": 653300
+  },
+  {
+   "asset": "Lumen Semiconductor AG 2031",
+   "direction": "Held",
+   "marketValue": 666633,
+   "haircut": 0.01,
+   "value": 659967
+  },
+  {
+   "asset": "Halcyon Shipping plc 2036",
+   "direction": "Held",
+   "marketValue": 666633,
+   "haircut": 0.02,
+   "value": 653300
+  }
+ ],
+ "csa": "CSA-CORAL",
+ "nettingSet": "NS-CORAL-FRA",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

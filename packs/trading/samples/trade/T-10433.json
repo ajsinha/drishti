@@ -1,0 +1,317 @@
+{
+ "tradeId": "T-10433",
+ "productType": "CONVERTIBLE_BOND",
+ "productName": "Convertible bond",
+ "assetClass": "Equity",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-04-27",
+ "effectiveDate": "2026-04-29",
+ "maturityDate": "2031-07-28",
+ "currency": "CAD",
+ "notional": 214000000.0,
+ "mtm": 3120994,
+ "mtmCurrency": "USD",
+ "pnl1d": -126928,
+ "counterparty": {
+  "id": "CP-CASCADIA",
+  "name": "Cascadia Airlines Inc."
+ },
+ "nettingSet": "NS-CASCADIA-LDN",
+ "book": "BOOK-EQD-2",
+ "trader": "TRDR-JWEISS",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingEquity": "EQ-CSCA",
+ "equityVolSurface": "EQV-CSCA",
+ "creditCurve": "CDS-SOLARIS",
+ "discountCurve": "CRV-CAD-OIS",
+ "terms": {
+  "coupon": 0.012696,
+  "conversionRatio": 13.21,
+  "conversionPrice": 370.11
+ },
+ "risk": {
+  "delta": 848244,
+  "cs01": 105957,
+  "vega": 1334537
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 40393,
+   "cs01": 5046,
+   "vega": 63549
+  },
+  {
+   "bucket": "1M",
+   "delta": 80785,
+   "cs01": 10091,
+   "vega": 127099
+  },
+  {
+   "bucket": "3M",
+   "delta": 121178,
+   "cs01": 15137,
+   "vega": 190648
+  },
+  {
+   "bucket": "6M",
+   "delta": 161570,
+   "cs01": 20182,
+   "vega": 254198
+  },
+  {
+   "bucket": "1Y",
+   "delta": 201963,
+   "cs01": 25228,
+   "vega": 317747
+  },
+  {
+   "bucket": "2Y",
+   "delta": 242355,
+   "cs01": 30273,
+   "vega": 381296
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-10-29",
+   "rate": 0.035321,
+   "amount": 4280000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-04-29",
+   "rate": 0.045831,
+   "amount": 4280000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-10-29",
+   "rate": 0.04175,
+   "amount": 4280000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-04-29",
+   "rate": 0.030227,
+   "amount": 4280000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-10-29",
+   "rate": 0.045476,
+   "amount": 4280000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-04-29",
+   "rate": 0.035761,
+   "amount": 4280000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-10-29",
+   "rate": 0.022597,
+   "amount": 4280000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-04-29",
+   "rate": 0.027213,
+   "amount": 4280000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-10-29",
+   "rate": 0.051664,
+   "amount": 4280000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-04-29",
+   "rate": 0.023578,
+   "amount": 4280000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-07-28",
+   "rate": 0.030237,
+   "amount": 4280000.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 80952
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -34999
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 2462
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -115805
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -28143
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 75773
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -46398
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 68323
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 86526
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 414
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -120380
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 34383
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 74093
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -47092
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 31076
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -58090
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 16362
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -55489
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 226069
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 25196
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-04-27",
+  "executionTimestamp": "2026-04-27T12:20:03.938Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "J. Weiss",
+  "salesperson": null,
+  "orderId": "ORD-29C905AF61"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-04-27T09:13:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2026-04-27T09:13:00Z",
+  "lastModifiedAt": "2026-04-27T09:13:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT306144527",
+  "matched": "2026-04-27 12:20",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q8329C905AF61362976E3DF",
+  "upi": "QZPWBE2CX2WY",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "CASCGB33XXX",
+  "ssiId": "SSI-CAD-BC4549",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 3120994,
+  "cleanPv": 3120994.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQ-CSCA",
+   "EQV-CSCA",
+   "CDS-SOLARIS",
+   "CRV-CAD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 8382
+  }
+ }
+}

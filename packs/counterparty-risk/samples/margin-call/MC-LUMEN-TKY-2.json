@@ -1,0 +1,33 @@
+{
+ "callId": "MC-LUMEN-TKY-2",
+ "callDate": "2026-09-28",
+ "marginType": "Variation",
+ "direction": "We call",
+ "amount": 47000.0,
+ "status": "Settled",
+ "disputeAmount": 5000.0,
+ "events": [
+  {
+   "at": "2026-09-28 09:05",
+   "event": "Call issued",
+   "by": "collateral-system"
+  },
+  {
+   "at": "2026-09-28 11:40",
+   "event": "Agreed",
+   "by": "counterparty ops"
+  },
+  {
+   "at": "2026-09-29 10:15",
+   "event": "Settled",
+   "by": "payments"
+  }
+ ],
+ "nettingSet": "NS-LUMEN-TKY",
+ "csa": "CSA-LUMEN",
+ "currency": "USD",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

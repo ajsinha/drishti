@@ -1,0 +1,297 @@
+{
+ "tradeId": "T-10092",
+ "productType": "COLLAR",
+ "productName": "Interest rate collar",
+ "assetClass": "Rates",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2024-08-21",
+ "effectiveDate": "2024-08-23",
+ "maturityDate": "2026-10-07",
+ "currency": "USD",
+ "notional": 192000000.0,
+ "mtm": 2233273,
+ "mtmCurrency": "USD",
+ "pnl1d": 45888,
+ "counterparty": {
+  "id": "CP-TOKAI",
+  "name": "Tokai Mutual Trust Bank"
+ },
+ "nettingSet": "NS-TOKAI-NY",
+ "book": "BOOK-RATES-1",
+ "trader": "TRDR-MOKAFOR",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-USD-OIS",
+ "forwardCurve": "CRV-USD-PROJ",
+ "capVolSurface": "CPV-USD",
+ "terms": {
+  "capStrike": 0.043438,
+  "floorStrike": 0.021996
+ },
+ "risk": {
+  "dv01": 11158,
+  "vega": 174214
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 1860,
+   "vega": 29036
+  },
+  {
+   "bucket": "6M",
+   "dv01": 3719,
+   "vega": 58071
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 5579,
+   "vega": 87107
+  }
+ ],
+ "schedule": [
+  {
+   "fixingDate": "2024-11-23",
+   "period": "2024-11-23..2025-02-23",
+   "index": "SOFR",
+   "rate": 0.03981,
+   "payoff": 230880.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2025-02-23",
+   "period": "2025-02-23..2025-05-23",
+   "index": "SOFR",
+   "rate": 0.043473,
+   "payoff": 406704.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2025-05-23",
+   "period": "2025-05-23..2025-08-23",
+   "index": "SOFR",
+   "rate": 0.02216,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2025-08-23",
+   "period": "2025-08-23..2025-11-23",
+   "index": "SOFR",
+   "rate": 0.042768,
+   "payoff": 372864.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2025-11-23",
+   "period": "2025-11-23..2026-02-23",
+   "index": "SOFR",
+   "rate": 0.037447,
+   "payoff": 117456.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-02-23",
+   "period": "2026-02-23..2026-05-23",
+   "index": "SOFR",
+   "rate": 0.035227,
+   "payoff": 10896.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-05-23",
+   "period": "2026-05-23..2026-08-23",
+   "index": "SOFR",
+   "rate": 0.037591,
+   "payoff": 124368.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-08-23",
+   "period": "2026-08-23..2026-11-23",
+   "index": "SOFR",
+   "rate": 0.044796,
+   "payoff": 470208.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-10-07",
+   "period": "2026-10-07..2027-01-07",
+   "index": "SOFR",
+   "rate": 0.044946,
+   "payoff": 477408.0,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 8,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 34233
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 47396
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -81055
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -38255
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 47722
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -19080
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -9951
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 63687
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -26421
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -56520
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -118020
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -20170
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -87963
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -76892
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -30320
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -65678
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -55290
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 55485
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 26024
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -194087
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-08-21",
+  "executionTimestamp": "2024-08-21T09:05:51.943Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "M. Okafor",
+  "salesperson": null,
+  "orderId": "ORD-54AC4F48C1"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-08-21T10:49:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2024-08-21T10:49:00Z",
+  "lastModifiedAt": "2024-08-21T10:49:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA199160527",
+  "matched": "2024-08-21 16:47",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209654AC4F48C1305DCEF5DB",
+  "upi": "QZKY3O6J49DQ",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "TOKAUS33XXX",
+  "ssiId": "SSI-USD-6E2541",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 2233273,
+  "cleanPv": 2233273.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CRV-USD-OIS",
+   "CRV-USD-PROJ",
+   "CPV-USD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 6387
+  }
+ }
+}

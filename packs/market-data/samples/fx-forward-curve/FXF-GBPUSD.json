@@ -1,0 +1,60 @@
+{
+ "curveId": "FXF-GBPUSD",
+ "pair": "GBPUSD",
+ "spot": 1.348,
+ "points3m": -5.1,
+ "points1y": -20.2,
+ "points": [
+  {
+   "tenor": "ON",
+   "pips": -0.1,
+   "outright": 1.34799
+  },
+  {
+   "tenor": "1W",
+   "pips": -0.4,
+   "outright": 1.34796
+  },
+  {
+   "tenor": "1M",
+   "pips": -1.7,
+   "outright": 1.34783
+  },
+  {
+   "tenor": "2M",
+   "pips": -3.4,
+   "outright": 1.34766
+  },
+  {
+   "tenor": "3M",
+   "pips": -5.1,
+   "outright": 1.34749
+  },
+  {
+   "tenor": "6M",
+   "pips": -10.1,
+   "outright": 1.34699
+  },
+  {
+   "tenor": "9M",
+   "pips": -15.2,
+   "outright": 1.34648
+  },
+  {
+   "tenor": "1Y",
+   "pips": -20.2,
+   "outright": 1.34598
+  },
+  {
+   "tenor": "2Y",
+   "pips": -40.4,
+   "outright": 1.34396
+  }
+ ],
+ "fxSpot": "FX-GBPUSD",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

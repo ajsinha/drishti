@@ -1,0 +1,326 @@
+{
+ "tradeId": "T-10122",
+ "productType": "CMS_SPREAD_OPT",
+ "productName": "CMS spread option",
+ "assetClass": "Rates",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2025-09-19",
+ "effectiveDate": "2025-09-22",
+ "maturityDate": "2028-06-07",
+ "currency": "AUD",
+ "notional": 176000000.0,
+ "mtm": 1603140,
+ "mtmCurrency": "USD",
+ "pnl1d": 15960,
+ "counterparty": {
+  "id": "CP-SOLARIS",
+  "name": "Solaris Energy Corp."
+ },
+ "nettingSet": "NS-SOLARIS-NY",
+ "book": "BOOK-RATES-1",
+ "trader": "TRDR-MOKAFOR",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-AUD-OIS",
+ "forwardCurve": "CRV-AUD-PROJ",
+ "swaptionVolCube": "IRV-AUD",
+ "correlation": "CORR-EU-EQ",
+ "terms": {
+  "longTenor": "30Y",
+  "shortTenor": "2Y",
+  "strike": 73.5
+ },
+ "risk": {
+  "dv01": 36709,
+  "vega": 789774
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 2447,
+   "vega": 52652
+  },
+  {
+   "bucket": "6M",
+   "dv01": 4895,
+   "vega": 105303
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 7342,
+   "vega": 157955
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 9789,
+   "vega": 210606
+  },
+  {
+   "bucket": "3Y",
+   "dv01": 12236,
+   "vega": 263258
+  }
+ ],
+ "schedule": [
+  {
+   "fixingDate": "2025-12-22",
+   "period": "2025-12-22..2026-03-22",
+   "index": "AONIA",
+   "rate": 0.033229,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-03-22",
+   "period": "2026-03-22..2026-06-22",
+   "index": "AONIA",
+   "rate": 0.049216,
+   "payoff": 625504.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-06-22",
+   "period": "2026-06-22..2026-09-22",
+   "index": "AONIA",
+   "rate": 0.025159,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-09-22",
+   "period": "2026-09-22..2026-12-22",
+   "index": "AONIA",
+   "rate": 0.025916,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-12-22",
+   "period": "2026-12-22..2027-03-22",
+   "index": "AONIA",
+   "rate": 0.049542,
+   "payoff": 639848.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-03-22",
+   "period": "2027-03-22..2027-06-22",
+   "index": "AONIA",
+   "rate": 0.048371,
+   "payoff": 588324.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-06-22",
+   "period": "2027-06-22..2027-09-22",
+   "index": "AONIA",
+   "rate": 0.03823,
+   "payoff": 142120.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-09-22",
+   "period": "2027-09-22..2027-12-22",
+   "index": "AONIA",
+   "rate": 0.027508,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-12-22",
+   "period": "2027-12-22..2028-03-22",
+   "index": "AONIA",
+   "rate": 0.020062,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2028-03-22",
+   "period": "2028-03-22..2028-06-22",
+   "index": "AONIA",
+   "rate": 0.034492,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2028-06-07",
+   "period": "2028-06-07..2028-09-07",
+   "index": "AONIA",
+   "rate": 0.035563,
+   "payoff": 24772.0,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 4,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -34506
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 41572
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -54400
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -75178
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -3786
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -78175
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 39636
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -20998
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -108865
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 59179
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -26964
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 51804
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 34505
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -40028
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 2297
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -5711
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -82350
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 72632
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 20671
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -34823
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-09-19",
+  "executionTimestamp": "2025-09-19T16:03:54.540Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "M. Okafor",
+  "salesperson": null,
+  "orderId": "ORD-BD653988BA"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-09-19T10:22:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2025-09-19T10:22:00Z",
+  "lastModifiedAt": "2025-09-19T10:22:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA558472612",
+  "matched": "2025-09-19 15:56",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096BD653988BA974AA99530",
+  "upi": "QZ0UZCACP7AB",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SOLAGB33XXX",
+  "ssiId": "SSI-AUD-269904",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1603140,
+  "cleanPv": 1603140.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CRV-AUD-OIS",
+   "CRV-AUD-PROJ",
+   "IRV-AUD",
+   "CORR-EU-EQ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 4966
+  }
+ }
+}

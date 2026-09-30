@@ -1,0 +1,59 @@
+{
+ "resultId": "CVA-HALCYON-LDN",
+ "cva": -2938375,
+ "dva": 34281,
+ "fva": -7088,
+ "kva": -499494,
+ "cs01": -52891,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -2938375
+  },
+  {
+   "name": "DVA",
+   "amount": 34281
+  },
+  {
+   "name": "FVA",
+   "amount": -7088
+  },
+  {
+   "name": "KVA",
+   "amount": -499494
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -52891
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 11754
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 5877
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -88151
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 49952
+  }
+ ],
+ "nettingSet": "NS-HALCYON-LDN",
+ "creditCurve": "CDS-HALCYON",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

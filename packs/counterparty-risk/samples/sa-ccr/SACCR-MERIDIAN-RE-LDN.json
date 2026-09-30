@@ -1,0 +1,72 @@
+{
+ "calcId": "SACCR-MERIDIAN-RE-LDN",
+ "replacementCost": 223775,
+ "addOn": 327925959,
+ "multiplier": 1.0,
+ "ead": 459409627,
+ "rwa": 229704814,
+ "addOns": [
+  {
+   "assetClass": "Foreign exchange",
+   "addOn": 8744000
+  },
+  {
+   "assetClass": "Equity",
+   "addOn": 319136000
+  },
+  {
+   "assetClass": "Interest rate",
+   "addOn": 45959
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "USD",
+   "effectiveNotional": -212200000,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "CAD",
+   "effectiveNotional": 5400000,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "JPY",
+   "effectiveNotional": -1000000,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "GBP",
+   "effectiveNotional": -81300000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "USD",
+   "effectiveNotional": 779000000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "JPY",
+   "effectiveNotional": -137000000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "JPY",
+   "effectiveNotional": 9191781,
+   "sf": 0.005
+  }
+ ],
+ "nettingSet": "NS-MERIDIAN-RE-LDN",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

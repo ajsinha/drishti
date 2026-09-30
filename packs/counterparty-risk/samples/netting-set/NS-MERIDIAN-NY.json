@@ -1,0 +1,214 @@
+{
+ "nettingSetId": "NS-MERIDIAN-NY",
+ "tradeCount": 16,
+ "netMtm": 3215612,
+ "collateral": 2809208,
+ "eePeak": 29369672,
+ "pfePeak": 65997529,
+ "limit": 126000000.0,
+ "utilisation": 0.5238,
+ "cva": -51428,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 2473661,
+   "pfe": 7305454
+  },
+  {
+   "tenor": "1M",
+   "ee": 4677316,
+   "pfe": 12143083
+  },
+  {
+   "tenor": "3M",
+   "ee": 7793731,
+   "pfe": 18999196
+  },
+  {
+   "tenor": "6M",
+   "ee": 10800638,
+   "pfe": 25607303
+  },
+  {
+   "tenor": "1Y",
+   "ee": 15083708,
+   "pfe": 35030057
+  },
+  {
+   "tenor": "2Y",
+   "ee": 19918773,
+   "pfe": 45560100
+  },
+  {
+   "tenor": "3Y",
+   "ee": 22613543,
+   "pfe": 51367931
+  },
+  {
+   "tenor": "5Y",
+   "ee": 29062560,
+   "pfe": 65555770
+  },
+  {
+   "tenor": "7Y",
+   "ee": 29369672,
+   "pfe": 65997529
+  },
+  {
+   "tenor": "10Y",
+   "ee": 33360,
+   "pfe": 73391
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10059",
+   "product": "Constant maturity swap",
+   "notional": 240000000.0,
+   "maturity": "2033-02-25",
+   "mtm": 8653471
+  },
+  {
+   "tradeId": "T-10099",
+   "product": "European swaption",
+   "notional": 236000000.0,
+   "maturity": "2027-12-03",
+   "mtm": 3985722
+  },
+  {
+   "tradeId": "T-10516",
+   "product": "Gas swing option",
+   "notional": 112000000.0,
+   "maturity": "2036-01-16",
+   "mtm": -3307013
+  },
+  {
+   "tradeId": "T-10634",
+   "product": "CMO tranche",
+   "notional": 230000000.0,
+   "maturity": "2028-11-09",
+   "mtm": -3222264
+  },
+  {
+   "tradeId": "T-10499",
+   "product": "Commodity index swap",
+   "notional": 123000000.0,
+   "maturity": "2035-11-20",
+   "mtm": -1935705
+  },
+  {
+   "tradeId": "T-10292",
+   "product": "Term loan",
+   "notional": 108000000.0,
+   "maturity": "2028-11-17",
+   "mtm": -1725172
+  },
+  {
+   "tradeId": "T-10020",
+   "product": "Cross-currency swap (non-MtM)",
+   "notional": 143000000.0,
+   "maturity": "2032-03-29",
+   "mtm": -1325556
+  },
+  {
+   "tradeId": "T-10642",
+   "product": "Asset-backed security",
+   "notional": 69000000.0,
+   "maturity": "2028-12-14",
+   "mtm": 1276947
+  },
+  {
+   "tradeId": "T-10104",
+   "product": "Bermudan swaption",
+   "notional": 81000000.0,
+   "maturity": "2027-03-22",
+   "mtm": -1238173
+  },
+  {
+   "tradeId": "T-10311",
+   "product": "Unfunded risk participation",
+   "notional": 93000000.0,
+   "maturity": "2028-07-27",
+   "mtm": 896628
+  },
+  {
+   "tradeId": "T-10641",
+   "product": "Asset-backed security",
+   "notional": 124000000.0,
+   "maturity": "2035-09-26",
+   "mtm": 691482
+  },
+  {
+   "tradeId": "T-10647",
+   "product": "CLO tranche",
+   "notional": 58000000.0,
+   "maturity": "2028-09-21",
+   "mtm": 635630
+  },
+  {
+   "tradeId": "T-10291",
+   "product": "Term loan",
+   "notional": 229000000.0,
+   "maturity": "2031-10-16",
+   "mtm": -333574
+  },
+  {
+   "tradeId": "T-10514",
+   "product": "Gas swing option",
+   "notional": 192000000.0,
+   "maturity": "2036-06-23",
+   "mtm": 319975
+  },
+  {
+   "tradeId": "T-10091",
+   "product": "Interest rate collar",
+   "notional": 119000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -242239
+  },
+  {
+   "tradeId": "T-10527",
+   "product": "Weather derivative (HDD/CDD)",
+   "notional": 9000000.0,
+   "maturity": "2034-02-09",
+   "mtm": 85453
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Rates",
+   "mtm": 9833225
+  },
+  {
+   "asset": "Commodity",
+   "mtm": -4837290
+  },
+  {
+   "asset": "Credit",
+   "mtm": -1162118
+  },
+  {
+   "asset": "Fixed income",
+   "mtm": -618205
+  }
+ ],
+ "counterparty": "CP-MERIDIAN",
+ "agreement": "AGR-MERIDIAN-ISDA",
+ "csa": "CSA-MERIDIAN",
+ "creditLimit": "LIM-MERIDIAN",
+ "exposureProfile": "EXP-MERIDIAN-NY",
+ "cvaResult": "CVA-MERIDIAN-NY",
+ "saccr": "SACCR-MERIDIAN-NY",
+ "simm": "SIMM-MERIDIAN",
+ "collateralBalance": "COLL-MERIDIAN-NY",
+ "legalEntity": "LE-NY",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 6431
+  }
+ }
+}

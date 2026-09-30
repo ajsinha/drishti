@@ -1,0 +1,21 @@
+{
+ "scenarioId": "SCN-USD-SPIKE",
+ "name": "USD +15% vs all",
+ "type": "Hypothetical",
+ "severity": "Moderate",
+ "shocks": [
+  {
+   "factor": "USD vs G10",
+   "shock": 0.15
+  },
+  {
+   "factor": "USD vs EM",
+   "shock": 0.2
+  }
+ ],
+ "horizon": "10 days",
+ "_meta": {
+  "source": "stress-engine",
+  "generation": 1
+ }
+}

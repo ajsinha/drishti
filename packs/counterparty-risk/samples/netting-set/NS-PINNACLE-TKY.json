@@ -1,0 +1,125 @@
+{
+ "nettingSetId": "NS-PINNACLE-TKY",
+ "tradeCount": 5,
+ "netMtm": 1556503,
+ "collateral": 1187168,
+ "eePeak": 50794794,
+ "pfePeak": 114582147,
+ "limit": 153000000.0,
+ "utilisation": 0.7489,
+ "cva": -259360,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 4842437,
+   "pfe": 14685362
+  },
+  {
+   "tenor": "1M",
+   "ee": 9673225,
+   "pfe": 25313096
+  },
+  {
+   "tenor": "3M",
+   "ee": 16474958,
+   "pfe": 40276908
+  },
+  {
+   "tenor": "6M",
+   "ee": 23134373,
+   "pfe": 54927621
+  },
+  {
+   "tenor": "1Y",
+   "ee": 32543638,
+   "pfe": 75628004
+  },
+  {
+   "tenor": "2Y",
+   "ee": 32282537,
+   "pfe": 73855182
+  },
+  {
+   "tenor": "3Y",
+   "ee": 39437975,
+   "pfe": 89597145
+  },
+  {
+   "tenor": "5Y",
+   "ee": 50794794,
+   "pfe": 114582147
+  },
+  {
+   "tenor": "7Y",
+   "ee": 20569812,
+   "pfe": 46222386
+  },
+  {
+   "tenor": "10Y",
+   "ee": 30317,
+   "pfe": 66697
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10729",
+   "product": "Capital-protected note",
+   "notional": 135000000.0,
+   "maturity": "2034-08-07",
+   "mtm": -2117461
+  },
+  {
+   "tradeId": "T-10736",
+   "product": "FX-rates hybrid (PRDC)",
+   "notional": 149000000.0,
+   "maturity": "2032-02-02",
+   "mtm": 1945606
+  },
+  {
+   "tradeId": "T-10749",
+   "product": "Credit basket note",
+   "notional": 184000000.0,
+   "maturity": "2032-04-26",
+   "mtm": 772409
+  },
+  {
+   "tradeId": "T-10744",
+   "product": "Worst-of note",
+   "notional": 214000000.0,
+   "maturity": "2028-09-12",
+   "mtm": 765390
+  },
+  {
+   "tradeId": "T-10748",
+   "product": "Credit basket note",
+   "notional": 38000000.0,
+   "maturity": "2035-10-19",
+   "mtm": 190559
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Structured",
+   "mtm": 1556503
+  }
+ ],
+ "counterparty": "CP-PINNACLE",
+ "agreement": "AGR-PINNACLE-ISDA",
+ "csa": "CSA-PINNACLE",
+ "creditLimit": "LIM-PINNACLE",
+ "exposureProfile": "EXP-PINNACLE-TKY",
+ "cvaResult": "CVA-PINNACLE-TKY",
+ "saccr": "SACCR-PINNACLE-TKY",
+ "simm": "SIMM-PINNACLE",
+ "collateralBalance": "COLL-PINNACLE-TKY",
+ "legalEntity": "LE-TKY",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 3113
+  }
+ }
+}

@@ -1,0 +1,46 @@
+{
+ "calcId": "SACCR-MERIDIAN-RE-FRA",
+ "replacementCost": 0,
+ "addOn": 352753,
+ "multiplier": 0.2454,
+ "ead": 121192,
+ "rwa": 60596,
+ "addOns": [
+  {
+   "assetClass": "Interest rate",
+   "addOn": 352753
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "USD",
+   "effectiveNotional": -2400000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "GBP",
+   "effectiveNotional": -31000000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "EUR",
+   "effectiveNotional": -24789041,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "JPY",
+   "effectiveNotional": -12361644,
+   "sf": 0.005
+  }
+ ],
+ "nettingSet": "NS-MERIDIAN-RE-FRA",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

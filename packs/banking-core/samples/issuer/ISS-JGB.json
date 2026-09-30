@@ -1,0 +1,25 @@
+{
+ "issuerId": "ISS-JGB",
+ "name": "Japan Ministry of Finance",
+ "rating": "A+",
+ "sector": "Sovereign",
+ "country": "JP",
+ "bonds": [
+  {
+   "isin": "JP0JGB019237",
+   "coupon": 0.0188,
+   "maturity": "2031-01-15"
+  },
+  {
+   "isin": "JP0JGB182753",
+   "coupon": 0.0238,
+   "maturity": "2036-08-15"
+  }
+ ],
+ "creditCurve": "CDS-JGB",
+ "lei": "549300BMUEW6W7G6W463",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

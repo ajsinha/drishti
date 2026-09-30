@@ -1,0 +1,233 @@
+{
+ "tradeId": "T-10318",
+ "productType": "EQ_CASH",
+ "productName": "Equity position",
+ "assetClass": "Equity",
+ "family": "position",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2025-03-21",
+ "effectiveDate": "2025-03-24",
+ "maturityDate": "2026-10-07",
+ "currency": "USD",
+ "notional": 72000000.0,
+ "mtm": 350811,
+ "mtmCurrency": "USD",
+ "pnl1d": 30136,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-LDN",
+ "book": "BOOK-EQD-2",
+ "trader": "TRDR-PLINDQVIST",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "clearingAccount": "CLR-EUREX-1",
+ "underlyingEquity": "EQ-MRDN",
+ "dividendCurve": "DIV-MRDN",
+ "terms": {
+  "quantity": 456843,
+  "averagePrice": 758.35
+ },
+ "risk": {
+  "delta": -487390
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -48739
+  },
+  {
+   "bucket": "1M",
+   "delta": -97478
+  },
+  {
+   "bucket": "3M",
+   "delta": -146217
+  },
+  {
+   "bucket": "6M",
+   "delta": -194956
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -8336
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -6193
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -2560
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 6741
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 227
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -4036
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 5625
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 22794
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -5056
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -18146
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -558
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -11633
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 7455
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -11203
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 12071
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -24561
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -1971
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -13208
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -9257
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 20165
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-03-21",
+  "executionTimestamp": "2025-03-21T12:34:04.291Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "P. Lindqvist",
+  "salesperson": null,
+  "orderId": "ORD-50DE7BEBEA"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-03-21T11:32:00Z",
+    "by": "fo.capture"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2025-07-20T11:32:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2025-03-21T11:32:00Z",
+  "lastModifiedAt": "2025-07-20T11:32:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT347046246",
+  "matched": "2025-03-21 16:49",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH7463044015",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q8350DE7BEBEA13983B7884",
+  "upi": "QZ7DSWQUPRYO",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMUS33XXX",
+  "ssiId": "SSI-USD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 350811,
+  "cleanPv": 350811.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQ-MRDN",
+   "DIV-MRDN"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 1422
+  }
+ }
+}

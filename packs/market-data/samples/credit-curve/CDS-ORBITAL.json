@@ -1,0 +1,63 @@
+{
+ "curveId": "CDS-ORBITAL",
+ "issuerName": "Orbital Telecom SA",
+ "spread5y": 165,
+ "recovery": 0.4,
+ "seniority": "Senior unsecured",
+ "docClause": "MM14",
+ "pd1y": 0.015282,
+ "points": [
+  {
+   "tenor": "6M",
+   "spread": 83.3,
+   "hazard": 0.013883,
+   "survival": 0.993082
+  },
+  {
+   "tenor": "1Y",
+   "spread": 92.4,
+   "hazard": 0.0154,
+   "survival": 0.984718
+  },
+  {
+   "tenor": "2Y",
+   "spread": 110.6,
+   "hazard": 0.018433,
+   "survival": 0.963805
+  },
+  {
+   "tenor": "3Y",
+   "spread": 128.7,
+   "hazard": 0.02145,
+   "survival": 0.937677
+  },
+  {
+   "tenor": "5Y",
+   "spread": 165.0,
+   "hazard": 0.0275,
+   "survival": 0.871534
+  },
+  {
+   "tenor": "7Y",
+   "spread": 174.9,
+   "hazard": 0.02915,
+   "survival": 0.815422
+  },
+  {
+   "tenor": "10Y",
+   "spread": 189.7,
+   "hazard": 0.031617,
+   "survival": 0.728938
+  }
+ ],
+ "issuer": "ISS-ORBITAL",
+ "currency": "EUR",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "spread5y": 0.4
+  }
+ }
+}

@@ -1,0 +1,245 @@
+{
+ "tradeId": "T-10680",
+ "productType": "REPO",
+ "productName": "Repurchase agreement",
+ "assetClass": "Securities financing",
+ "family": "sft",
+ "status": "Live",
+ "direction": "Reverse repo",
+ "tradeDate": "2026-08-18",
+ "effectiveDate": "2026-08-20",
+ "maturityDate": "2026-12-21",
+ "currency": "USD",
+ "notional": 85000000.0,
+ "mtm": 122689,
+ "mtmCurrency": "USD",
+ "pnl1d": -2198,
+ "counterparty": {
+  "id": "CP-MERIDIAN",
+  "name": "Meridian Life Assurance"
+ },
+ "nettingSet": "NS-MERIDIAN-FRA",
+ "book": "BOOK-SFT-2",
+ "trader": "TRDR-NFAROUK",
+ "desk": "DESK-SFT",
+ "legalEntity": "LE-FRA",
+ "issuer": "ISS-VERDANT",
+ "repoCurve": "REPO-USD",
+ "underlyingBond": "BND-BRVERD054608",
+ "terms": {
+  "repoRate": 0.03196,
+  "haircut": 0.03347,
+  "term": "1W"
+ },
+ "risk": {
+  "dv01": -2443,
+  "exposure": 788986
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -814,
+   "exposure": 262995
+  },
+  {
+   "bucket": "6M",
+   "dv01": -1629,
+   "exposure": 525991
+  }
+ ],
+ "schedule": [
+  {
+   "asset": "Helix Pharmaceuticals Inc. 2031",
+   "isin": "USHELI055667",
+   "quantity": 27279453,
+   "marketValue": 26970922,
+   "haircut": 0.04,
+   "value": 25892085
+  },
+  {
+   "asset": "Japan Ministry of Finance 2031",
+   "isin": "JP0JGB019237",
+   "quantity": 26443613,
+   "marketValue": 27731946,
+   "haircut": 0.01,
+   "value": 27454627
+  },
+  {
+   "asset": "Halcyon Shipping plc 2036",
+   "isin": "XSHALC114008",
+   "quantity": 27395741,
+   "marketValue": 28063101,
+   "haircut": 0.005,
+   "value": 27922785
+  }
+ ],
+ "nextIndex": -1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 4324
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 9401
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -5169
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -3488
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -3376
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 320
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -9708
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 3425
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 531
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -5122
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -3125
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 1174
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -1005
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -366
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -9109
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -1817
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -1824
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 2342
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 319
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 2926
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-08-18",
+  "executionTimestamp": "2026-08-18T14:54:14.803Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "N. Farouk",
+  "salesperson": null,
+  "orderId": "ORD-D432F74E25"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-08-18T10:02:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-08-18T10:02:00Z",
+  "lastModifiedAt": "2026-08-18T10:02:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT404933404",
+  "matched": "2026-08-18 11:33",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z9DXU4T18OK744D432F74E25E685DD10E2",
+  "upi": "QZK3F23O6BGY",
+  "reportingRegimes": [
+   "EU EMIR",
+   "EU MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "MERIUS33XXX",
+  "ssiId": "SSI-USD-4D91C0",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 122689,
+  "cleanPv": 122689.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "REPO-USD",
+   "BND-BRVERD054608"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "globalone-sft",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 1095
+  }
+ }
+}

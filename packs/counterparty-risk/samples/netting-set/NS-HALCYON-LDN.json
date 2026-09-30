@@ -1,0 +1,196 @@
+{
+ "nettingSetId": "NS-HALCYON-LDN",
+ "tradeCount": 14,
+ "netMtm": 5906475,
+ "collateral": 4699316,
+ "eePeak": 55362744,
+ "pfePeak": 124873575,
+ "limit": 235000000.0,
+ "utilisation": 0.5314,
+ "cva": -2938375,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 6530714,
+   "pfe": 19166158
+  },
+  {
+   "tenor": "1M",
+   "ee": 12099242,
+   "pfe": 31345520
+  },
+  {
+   "tenor": "3M",
+   "ee": 20042771,
+   "pfe": 48821284
+  },
+  {
+   "tenor": "6M",
+   "ee": 22230929,
+   "pfe": 52649632
+  },
+  {
+   "tenor": "1Y",
+   "ee": 30872836,
+   "pfe": 71661828
+  },
+  {
+   "tenor": "2Y",
+   "ee": 35650667,
+   "pfe": 81517856
+  },
+  {
+   "tenor": "3Y",
+   "ee": 43186119,
+   "pfe": 98085000
+  },
+  {
+   "tenor": "5Y",
+   "ee": 55362744,
+   "pfe": 124873575
+  },
+  {
+   "tenor": "7Y",
+   "ee": 28434648,
+   "pfe": 63889725
+  },
+  {
+   "tenor": "10Y",
+   "ee": 99090,
+   "pfe": 217997
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10421",
+   "product": "Contract for difference",
+   "notional": 176000000.0,
+   "maturity": "2027-03-08",
+   "mtm": 6060457
+  },
+  {
+   "tradeId": "T-10567",
+   "product": "Limited price index swap",
+   "notional": 124000000.0,
+   "maturity": "2028-10-10",
+   "mtm": -4276973
+  },
+  {
+   "tradeId": "T-10412",
+   "product": "Equity total return swap",
+   "notional": 195000000.0,
+   "maturity": "2031-10-20",
+   "mtm": 2341483
+  },
+  {
+   "tradeId": "T-10417",
+   "product": "Portfolio (basket) swap",
+   "notional": 98000000.0,
+   "maturity": "2034-01-03",
+   "mtm": 1474051
+  },
+  {
+   "tradeId": "T-10211",
+   "product": "FX average-rate option",
+   "notional": 93000000.0,
+   "maturity": "2034-02-06",
+   "mtm": 1054954
+  },
+  {
+   "tradeId": "T-10373",
+   "product": "Cliquet (ratchet)",
+   "notional": 117000000.0,
+   "maturity": "2028-04-03",
+   "mtm": -1004449
+  },
+  {
+   "tradeId": "T-10174",
+   "product": "Non-deliverable forward",
+   "notional": 47000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -708903
+  },
+  {
+   "tradeId": "T-10180",
+   "product": "FX swap",
+   "notional": 108000000.0,
+   "maturity": "2035-05-29",
+   "mtm": 708597
+  },
+  {
+   "tradeId": "T-10379",
+   "product": "Autocallable note",
+   "notional": 115000000.0,
+   "maturity": "2034-01-17",
+   "mtm": -429175
+  },
+  {
+   "tradeId": "T-10356",
+   "product": "Equity barrier option",
+   "notional": 83000000.0,
+   "maturity": "2033-03-10",
+   "mtm": 357206
+  },
+  {
+   "tradeId": "T-10407",
+   "product": "Dividend swap",
+   "notional": 32000000.0,
+   "maturity": "2032-10-04",
+   "mtm": 313322
+  },
+  {
+   "tradeId": "T-10187",
+   "product": "FX digital option",
+   "notional": 16000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -119182
+  },
+  {
+   "tradeId": "T-10555",
+   "product": "Inflation-linked bond",
+   "notional": 69000000.0,
+   "maturity": "2033-07-20",
+   "mtm": 107397
+  },
+  {
+   "tradeId": "T-10158",
+   "product": "FX spot",
+   "notional": 39000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 27690
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Equity",
+   "mtm": 9112895
+  },
+  {
+   "asset": "Inflation",
+   "mtm": -4169576
+  },
+  {
+   "asset": "FX",
+   "mtm": 963156
+  }
+ ],
+ "counterparty": "CP-HALCYON",
+ "agreement": "AGR-HALCYON-ISDA",
+ "csa": "CSA-HALCYON",
+ "creditLimit": "LIM-HALCYON",
+ "exposureProfile": "EXP-HALCYON-LDN",
+ "cvaResult": "CVA-HALCYON-LDN",
+ "saccr": "SACCR-HALCYON-LDN",
+ "simm": "SIMM-HALCYON",
+ "collateralBalance": "COLL-HALCYON-LDN",
+ "legalEntity": "LE-LDN",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 11812
+  }
+ }
+}

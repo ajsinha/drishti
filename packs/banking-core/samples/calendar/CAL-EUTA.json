@@ -1,0 +1,46 @@
+{
+ "calendarId": "CAL-EUTA",
+ "name": "TARGET2",
+ "holidays": [
+  {
+   "date": "2026-01-01",
+   "name": "Public holiday"
+  },
+  {
+   "date": "2026-04-03",
+   "name": "Public holiday"
+  },
+  {
+   "date": "2026-04-06",
+   "name": "Public holiday"
+  },
+  {
+   "date": "2026-05-01",
+   "name": "Public holiday"
+  },
+  {
+   "date": "2026-12-25",
+   "name": "Public holiday"
+  },
+  {
+   "date": "2027-01-01",
+   "name": "Public holiday"
+  },
+  {
+   "date": "2027-03-26",
+   "name": "Public holiday"
+  },
+  {
+   "date": "2027-03-29",
+   "name": "Public holiday"
+  }
+ ],
+ "weekend": [
+  "Saturday",
+  "Sunday"
+ ],
+ "_meta": {
+  "source": "reference-master",
+  "generation": 1
+ }
+}

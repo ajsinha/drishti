@@ -1,0 +1,26 @@
+{
+ "issuerId": "ISS-ORBITAL",
+ "name": "Orbital Telecom SA",
+ "rating": "BBB-",
+ "sector": "Telecoms",
+ "country": "FR",
+ "bonds": [
+  {
+   "isin": "FRORBI079012",
+   "coupon": 0.0474,
+   "maturity": "2031-11-15"
+  },
+  {
+   "isin": "FRORBI162925",
+   "coupon": 0.0524,
+   "maturity": "2036-03-15"
+  }
+ ],
+ "creditCurve": "CDS-ORBITAL",
+ "lei": "549300ZUWYF6TM2EO483",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ },
+ "equity": "EQ-ORBT"
+}

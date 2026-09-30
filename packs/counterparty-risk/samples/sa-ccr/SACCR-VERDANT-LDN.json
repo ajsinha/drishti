@@ -1,0 +1,60 @@
+{
+ "calcId": "SACCR-VERDANT-LDN",
+ "replacementCost": 5355546,
+ "addOn": 47927000,
+ "multiplier": 1.0,
+ "ead": 74595564,
+ "rwa": 74595564,
+ "addOns": [
+  {
+   "assetClass": "Foreign exchange",
+   "addOn": 13440000
+  },
+  {
+   "assetClass": "Equity",
+   "addOn": 33632000
+  },
+  {
+   "assetClass": "Interest rate",
+   "addOn": 855000
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "USD",
+   "effectiveNotional": 91000000,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "GBP",
+   "effectiveNotional": 245000000,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "GBP",
+   "effectiveNotional": 96000000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "USD",
+   "effectiveNotional": 9100000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "JPY",
+   "effectiveNotional": -171000000,
+   "sf": 0.005
+  }
+ ],
+ "nettingSet": "NS-VERDANT-LDN",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

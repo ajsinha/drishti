@@ -1,0 +1,87 @@
+{
+ "profileId": "EXP-KESTREL-FRA",
+ "epe": 327601,
+ "eepe": 542534,
+ "pfePeak": 1213874,
+ "paths": 5000,
+ "runDate": "2026-09-30",
+ "buckets": [
+  {
+   "tenor": "0",
+   "ee": 542534,
+   "ene": -16891,
+   "pfe95": 1213874,
+   "pfe99": 1601768
+  },
+  {
+   "tenor": "1M",
+   "ee": 519799,
+   "ene": -7881,
+   "pfe95": 1148108,
+   "pfe99": 1513788
+  },
+  {
+   "tenor": "3M",
+   "ee": 506707,
+   "ene": -13650,
+   "pfe95": 1119305,
+   "pfe99": 1475820
+  },
+  {
+   "tenor": "6M",
+   "ee": 458910,
+   "ene": 0,
+   "pfe95": 1009602,
+   "pfe99": 1330839
+  },
+  {
+   "tenor": "1Y",
+   "ee": 404987,
+   "ene": 0,
+   "pfe95": 890970,
+   "pfe99": 1174461
+  },
+  {
+   "tenor": "2Y",
+   "ee": 315404,
+   "ene": 0,
+   "pfe95": 693888,
+   "pfe99": 914671
+  },
+  {
+   "tenor": "3Y",
+   "ee": 245637,
+   "ene": 0,
+   "pfe95": 540401,
+   "pfe99": 712347
+  },
+  {
+   "tenor": "5Y",
+   "ee": 148986,
+   "ene": 0,
+   "pfe95": 327770,
+   "pfe99": 432060
+  },
+  {
+   "tenor": "7Y",
+   "ee": 90365,
+   "ene": 0,
+   "pfe95": 198802,
+   "pfe99": 262058
+  },
+  {
+   "tenor": "10Y",
+   "ee": 42685,
+   "ene": 0,
+   "pfe95": 93908,
+   "pfe99": 123787
+  }
+ ],
+ "nettingSet": "NS-KESTREL-FRA",
+ "model": "Hull-White 1F rates, GBM FX and equity, 5,000 paths",
+ "confidence": 0.95,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

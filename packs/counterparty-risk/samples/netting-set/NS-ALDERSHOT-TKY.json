@@ -1,0 +1,97 @@
+{
+ "nettingSetId": "NS-ALDERSHOT-TKY",
+ "tradeCount": 1,
+ "netMtm": 566863,
+ "collateral": 500010,
+ "eePeak": 16487240,
+ "pfePeak": 37050328,
+ "limit": 73000000.0,
+ "utilisation": 0.5075,
+ "cva": -20516,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 930410,
+   "pfe": 2825303
+  },
+  {
+   "tenor": "1M",
+   "ee": 1863112,
+   "pfe": 4877247
+  },
+  {
+   "tenor": "3M",
+   "ee": 3176403,
+   "pfe": 7766486
+  },
+  {
+   "tenor": "6M",
+   "ee": 4462293,
+   "pfe": 10595444
+  },
+  {
+   "tenor": "1Y",
+   "ee": 6279265,
+   "pfe": 14592783
+  },
+  {
+   "tenor": "2Y",
+   "ee": 8847139,
+   "pfe": 20242106
+  },
+  {
+   "tenor": "3Y",
+   "ee": 10817406,
+   "pfe": 24576693
+  },
+  {
+   "tenor": "5Y",
+   "ee": 13943596,
+   "pfe": 31454312
+  },
+  {
+   "tenor": "7Y",
+   "ee": 16487240,
+   "pfe": 37050328
+  },
+  {
+   "tenor": "10Y",
+   "ee": 5488,
+   "pfe": 12073
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10746",
+   "product": "Credit basket note",
+   "notional": 139000000.0,
+   "maturity": "2036-04-02",
+   "mtm": 566863
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Structured",
+   "mtm": 566863
+  }
+ ],
+ "counterparty": "CP-ALDERSHOT",
+ "agreement": "AGR-ALDERSHOT-ISDA",
+ "csa": "CSA-ALDERSHOT",
+ "creditLimit": "LIM-ALDERSHOT",
+ "exposureProfile": "EXP-ALDERSHOT-TKY",
+ "cvaResult": "CVA-ALDERSHOT-TKY",
+ "saccr": "SACCR-ALDERSHOT-TKY",
+ "simm": "SIMM-ALDERSHOT",
+ "collateralBalance": "COLL-ALDERSHOT-TKY",
+ "legalEntity": "LE-TKY",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 1133
+  }
+ }
+}

@@ -1,0 +1,229 @@
+{
+ "tradeId": "T-10403",
+ "productType": "DIVIDEND_SWAP",
+ "productName": "Dividend swap",
+ "assetClass": "Equity",
+ "family": "swap",
+ "status": "Live",
+ "direction": "Pay fixed",
+ "tradeDate": "2025-07-24",
+ "effectiveDate": "2025-07-28",
+ "maturityDate": "2036-10-27",
+ "currency": "EUR",
+ "notional": 70000000.0,
+ "mtm": -455221,
+ "mtmCurrency": "USD",
+ "pnl1d": 24155,
+ "counterparty": {
+  "id": "CP-MERIDIAN",
+  "name": "Meridian Life Assurance"
+ },
+ "nettingSet": "NS-MERIDIAN-LDN",
+ "book": "BOOK-EQD-1",
+ "trader": "TRDR-PLINDQVIST",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingIndex": "EQX-SX5E",
+ "dividendCurve": "DIV-SX5E",
+ "terms": {
+  "dividendStrike": 92.09,
+  "period": "2028"
+ },
+ "risk": {
+  "delta": 365768
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 17418
+  },
+  {
+   "bucket": "1M",
+   "delta": 34835
+  },
+  {
+   "bucket": "3M",
+   "delta": 52253
+  },
+  {
+   "bucket": "6M",
+   "delta": 69670
+  },
+  {
+   "bucket": "1Y",
+   "delta": 87088
+  },
+  {
+   "bucket": "2Y",
+   "delta": 104505
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 7745
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 3646
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 9064
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 2866
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -3508
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -91
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 2854
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 8325
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 9785
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -11163
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -23125
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -2215
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 8348
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -21355
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 16042
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -3852
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -7978
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 5088
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -4591
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -33713
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-07-24",
+  "executionTimestamp": "2025-07-24T11:28:34.633Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "P. Lindqvist",
+  "salesperson": null,
+  "orderId": "ORD-F5DACB5D1A"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-07-24T09:58:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2025-07-24T09:58:00Z",
+  "lastModifiedAt": "2025-07-24T09:58:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT658466895",
+  "matched": "2025-07-24 17:22",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83F5DACB5D1AD0E15A0101",
+  "upi": "QZ9NKLE0HZ46",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "MERIGB33XXX",
+  "ssiId": "SSI-EUR-4D91C0",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -455221,
+  "cleanPv": -455221.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Multi-curve OIS discounting",
+  "curves": [
+   "EQX-SX5E",
+   "DIV-SX5E"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 1610
+  }
+ }
+}

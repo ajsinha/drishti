@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-BRAMBLE-TKY",
+ "held": 625500,
+ "posted": 0,
+ "net": 625500,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Japan Ministry of Finance 2031",
+   "direction": "Held",
+   "marketValue": 208500,
+   "haircut": 0.005,
+   "value": 207458
+  },
+  {
+   "asset": "Helix Pharmaceuticals Inc. 2031",
+   "direction": "Held",
+   "marketValue": 208500,
+   "haircut": 0.01,
+   "value": 206415
+  },
+  {
+   "asset": "Granite Building Materials plc 2031",
+   "direction": "Held",
+   "marketValue": 208500,
+   "haircut": 0.01,
+   "value": 206415
+  }
+ ],
+ "csa": "CSA-BRAMBLE",
+ "nettingSet": "NS-BRAMBLE-TKY",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

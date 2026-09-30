@@ -1,0 +1,17 @@
+{
+ "groupId": "GRP-NORTHBRIDGE",
+ "name": "Northbridge Capital Holdings",
+ "limit": 254000000.0,
+ "utilisation": 0.6604,
+ "members": [
+  {
+   "id": "CP-NORTHBRIDGE",
+   "name": "Northbridge Capital LLP",
+   "rating": "BB+"
+  }
+ ],
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

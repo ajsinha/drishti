@@ -1,0 +1,189 @@
+{
+ "nettingSetId": "NS-PINNACLE-LDN",
+ "tradeCount": 13,
+ "netMtm": -39942208,
+ "collateral": -28410806,
+ "eePeak": 8329300,
+ "pfePeak": 20406785,
+ "limit": 42000000.0,
+ "utilisation": 0.4859,
+ "cva": -50443,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 3826017,
+   "pfe": 11865962
+  },
+  {
+   "tenor": "1M",
+   "ee": 4808924,
+   "pfe": 12661957
+  },
+  {
+   "tenor": "3M",
+   "ee": 8329300,
+   "pfe": 20406785
+  },
+  {
+   "tenor": "6M",
+   "ee": 4176597,
+   "pfe": 9926838
+  },
+  {
+   "tenor": "1Y",
+   "ee": 3590300,
+   "pfe": 8347448
+  },
+  {
+   "tenor": "2Y",
+   "ee": 5077451,
+   "pfe": 11619180
+  },
+  {
+   "tenor": "3Y",
+   "ee": 6218582,
+   "pfe": 14129668
+  },
+  {
+   "tenor": "5Y",
+   "ee": 7888848,
+   "pfe": 17796465
+  },
+  {
+   "tenor": "7Y",
+   "ee": 6904353,
+   "pfe": 15515776
+  },
+  {
+   "tenor": "10Y",
+   "ee": 398447,
+   "pfe": 892333
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10537",
+   "product": "Zero-coupon inflation swap",
+   "notional": 180000000.0,
+   "maturity": "2037-06-15",
+   "mtm": -14905195
+  },
+  {
+   "tradeId": "T-10538",
+   "product": "Zero-coupon inflation swap",
+   "notional": 188000000.0,
+   "maturity": "2036-07-28",
+   "mtm": -9675629
+  },
+  {
+   "tradeId": "T-10323",
+   "product": "Equity forward",
+   "notional": 240000000.0,
+   "maturity": "2027-02-19",
+   "mtm": -4487722
+  },
+  {
+   "tradeId": "T-10199",
+   "product": "FX double-barrier option",
+   "notional": 205000000.0,
+   "maturity": "2034-09-13",
+   "mtm": -4354827
+  },
+  {
+   "tradeId": "T-10218",
+   "product": "FX target redemption forward",
+   "notional": 164000000.0,
+   "maturity": "2033-04-22",
+   "mtm": -4316238
+  },
+  {
+   "tradeId": "T-10177",
+   "product": "FX swap",
+   "notional": 127000000.0,
+   "maturity": "2035-11-13",
+   "mtm": 1986020
+  },
+  {
+   "tradeId": "T-10568",
+   "product": "Limited price index swap",
+   "notional": 173000000.0,
+   "maturity": "2027-05-26",
+   "mtm": -1373222
+  },
+  {
+   "tradeId": "T-10321",
+   "product": "Equity forward",
+   "notional": 244000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -1089396
+  },
+  {
+   "tradeId": "T-10556",
+   "product": "Inflation-linked bond",
+   "notional": 192000000.0,
+   "maturity": "2034-10-04",
+   "mtm": -992597
+  },
+  {
+   "tradeId": "T-10540",
+   "product": "Zero-coupon inflation swap",
+   "notional": 25000000.0,
+   "maturity": "2030-01-28",
+   "mtm": -672060
+  },
+  {
+   "tradeId": "T-10210",
+   "product": "FX one-touch / no-touch",
+   "notional": 8000000.0,
+   "maturity": "2031-03-26",
+   "mtm": -70193
+  },
+  {
+   "tradeId": "T-10370",
+   "product": "Equity digital option",
+   "notional": 49000000.0,
+   "maturity": "2027-04-30",
+   "mtm": 30068
+  },
+  {
+   "tradeId": "T-10393",
+   "product": "Variance swap",
+   "notional": 8000000.0,
+   "maturity": "2036-08-20",
+   "mtm": -21217
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Inflation",
+   "mtm": -27618703
+  },
+  {
+   "asset": "FX",
+   "mtm": -6755238
+  },
+  {
+   "asset": "Equity",
+   "mtm": -5568267
+  }
+ ],
+ "counterparty": "CP-PINNACLE",
+ "agreement": "AGR-PINNACLE-ISDA",
+ "csa": "CSA-PINNACLE",
+ "creditLimit": "LIM-PINNACLE",
+ "exposureProfile": "EXP-PINNACLE-LDN",
+ "cvaResult": "CVA-PINNACLE-LDN",
+ "saccr": "SACCR-PINNACLE-LDN",
+ "simm": "SIMM-PINNACLE",
+ "collateralBalance": "COLL-PINNACLE-LDN",
+ "legalEntity": "LE-LDN",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 79884
+  }
+ }
+}

@@ -1,0 +1,33 @@
+{
+ "deskId": "DESK-STRUCT",
+ "name": "Structured products",
+ "head": "Y. Tanaka",
+ "books": [
+  {
+   "id": "BOOK-STRUCT-1",
+   "trades": 12,
+   "mtm": 7579700
+  },
+  {
+   "id": "BOOK-STRUCT-2",
+   "trades": 8,
+   "mtm": 8114339
+  },
+  {
+   "id": "BOOK-STRUCT-3",
+   "trades": 10,
+   "mtm": 90091
+  }
+ ],
+ "var99": 293660442,
+ "mtm": 15784130,
+ "legalEntity": "LE-TKY",
+ "varResult": "VAR-STRUCT",
+ "assetClasses": [
+  "Structured"
+ ],
+ "_meta": {
+  "source": "org-master",
+  "generation": 1
+ }
+}

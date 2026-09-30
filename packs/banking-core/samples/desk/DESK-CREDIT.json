@@ -1,0 +1,33 @@
+{
+ "deskId": "DESK-CREDIT",
+ "name": "Credit trading",
+ "head": "D. Whitfield",
+ "books": [
+  {
+   "id": "BOOK-CREDIT-1",
+   "trades": 19,
+   "mtm": 2937797
+  },
+  {
+   "id": "BOOK-CREDIT-2",
+   "trades": 26,
+   "mtm": -12037408
+  },
+  {
+   "id": "BOOK-CREDIT-3",
+   "trades": 27,
+   "mtm": 17048067
+  }
+ ],
+ "var99": 541451914,
+ "mtm": 7948456,
+ "legalEntity": "LE-NY",
+ "varResult": "VAR-CREDIT",
+ "assetClasses": [
+  "Credit"
+ ],
+ "_meta": {
+  "source": "org-master",
+  "generation": 1
+ }
+}

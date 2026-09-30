@@ -1,0 +1,409 @@
+{
+ "tradeId": "T-10210",
+ "productType": "FX_TOUCH",
+ "productName": "FX one-touch / no-touch",
+ "assetClass": "FX",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2024-06-18",
+ "effectiveDate": "2024-06-20",
+ "maturityDate": "2031-03-26",
+ "currency": "USD",
+ "notional": 8000000.0,
+ "mtm": -70193,
+ "mtmCurrency": "USD",
+ "pnl1d": 2896,
+ "counterparty": {
+  "id": "CP-PINNACLE",
+  "name": "Pinnacle Credit Partners"
+ },
+ "nettingSet": "NS-PINNACLE-LDN",
+ "book": "BOOK-FX-1",
+ "trader": "TRDR-LMOREAU",
+ "desk": "DESK-FX",
+ "legalEntity": "LE-LDN",
+ "fxSpot": "FX-EURUSD",
+ "fxVolSurface": "FXV-EURUSD",
+ "terms": {
+  "touchType": "Double no-touch",
+  "barrier": 6.34606,
+  "payout": 444900.0,
+  "expiryDate": "2027-07-30"
+ },
+ "risk": {
+  "fxDelta": -80000,
+  "vega": -42944
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "fxDelta": -3810,
+   "vega": -2045
+  },
+  {
+   "bucket": "1M",
+   "fxDelta": -7619,
+   "vega": -4090
+  },
+  {
+   "bucket": "3M",
+   "fxDelta": -11429,
+   "vega": -6135
+  },
+  {
+   "bucket": "6M",
+   "fxDelta": -15238,
+   "vega": -8180
+  },
+  {
+   "bucket": "1Y",
+   "fxDelta": -19048,
+   "vega": -10225
+  },
+  {
+   "bucket": "2Y",
+   "fxDelta": -22857,
+   "vega": -12270
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2024-09-20",
+   "level": 94.32,
+   "trigger": 100.0,
+   "performance": -0.0568,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2024-12-20",
+   "level": 85.83,
+   "trigger": 100.0,
+   "performance": -0.1417,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-03-20",
+   "level": 94.74,
+   "trigger": 100.0,
+   "performance": -0.0526,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-06-20",
+   "level": 90.66,
+   "trigger": 100.0,
+   "performance": -0.0934,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-09-20",
+   "level": 94.46,
+   "trigger": 100.0,
+   "performance": -0.0554,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-12-20",
+   "level": 90.91,
+   "trigger": 100.0,
+   "performance": -0.0909,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-03-20",
+   "level": 91.16,
+   "trigger": 100.0,
+   "performance": -0.0884,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-06-20",
+   "level": 87.31,
+   "trigger": 100.0,
+   "performance": -0.1269,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-09-20",
+   "level": 96.72,
+   "trigger": 100.0,
+   "performance": -0.0328,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-12-20",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-03-20",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-06-20",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-09-20",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-12-20",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-03-20",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-06-20",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-09-20",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-12-20",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-03-20",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-06-20",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-09-20",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-12-20",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-03-20",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-06-20",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 9,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 871
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -1886
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -7464
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -72
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 973
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 1325
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -554
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 3720
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 62
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -8364
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 3875
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 1566
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -181
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 1576
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -1963
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -3762
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -119
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -4319
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -5164
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -104
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-06-18",
+  "executionTimestamp": "2024-06-18T09:16:12.150Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "L. Moreau",
+  "salesperson": null,
+  "orderId": "ORD-25CEA01096"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-06-18T10:17:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2024-06-18T10:17:00Z",
+  "lastModifiedAt": "2024-06-18T10:17:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT226575267",
+  "matched": "2024-06-18 10:24",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q8325CEA01096E504922534",
+  "upi": "QZM12UJAI8TO",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Foreign exchange"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "PINNUS33XXX",
+  "ssiId": "SSI-USD-F2BB52",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -70193,
+  "cleanPv": -70193.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "FX-EURUSD",
+   "FXV-EURUSD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "calypso-fx",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

@@ -1,0 +1,48 @@
+{
+ "limitId": "LIM-NORTHBRIDGE",
+ "counterpartyName": "Northbridge Capital LLP",
+ "measure": "PFE 95 peak",
+ "limit": 254000000.0,
+ "used": 167739563,
+ "utilisation": 0.6604,
+ "status": "Within limit",
+ "buckets": [
+  {
+   "bucket": "0-1Y",
+   "limit": 254000000,
+   "used": 142578629,
+   "utilisation": 0.5613
+  },
+  {
+   "bucket": "1-3Y",
+   "limit": 254000000,
+   "used": 167739563,
+   "utilisation": 0.6604
+  },
+  {
+   "bucket": "3-5Y",
+   "limit": 203200000,
+   "used": 117417694,
+   "utilisation": 0.5778
+  },
+  {
+   "bucket": "5-10Y",
+   "limit": 152400000,
+   "used": 58708847,
+   "utilisation": 0.3852
+  },
+  {
+   "bucket": "10Y+",
+   "limit": 101600000,
+   "used": 16773956,
+   "utilisation": 0.1651
+  }
+ ],
+ "counterparty": "CP-NORTHBRIDGE",
+ "approvedBy": "Credit Risk Committee",
+ "reviewDue": "2027-03-19",
+ "_meta": {
+  "source": "limits-system",
+  "generation": 1
+ }
+}

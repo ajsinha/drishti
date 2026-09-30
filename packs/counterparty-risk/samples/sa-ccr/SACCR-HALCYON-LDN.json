@@ -1,0 +1,60 @@
+{
+ "calcId": "SACCR-HALCYON-LDN",
+ "replacementCost": 1207159,
+ "addOn": 134752918,
+ "multiplier": 1.0,
+ "ead": 190344108,
+ "rwa": 190344108,
+ "addOns": [
+  {
+   "assetClass": "Foreign exchange",
+   "addOn": 504000
+  },
+  {
+   "assetClass": "Equity",
+   "addOn": 133973918
+  },
+  {
+   "assetClass": "Interest rate",
+   "addOn": 275000
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "USD",
+   "effectiveNotional": -12600000,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "EUR",
+   "effectiveNotional": 278000000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "USD",
+   "effectiveNotional": 25668493,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "GBP",
+   "effectiveNotional": -115000000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "USD",
+   "effectiveNotional": 55000000,
+   "sf": 0.005
+  }
+ ],
+ "nettingSet": "NS-HALCYON-LDN",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

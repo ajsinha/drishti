@@ -1,0 +1,17 @@
+{
+ "groupId": "GRP-ALDERSHOT",
+ "name": "Aldershot Pension Trust",
+ "limit": 338000000.0,
+ "utilisation": 0.6672,
+ "members": [
+  {
+   "id": "CP-ALDERSHOT",
+   "name": "Aldershot Pension Trust",
+   "rating": "AA-"
+  }
+ ],
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

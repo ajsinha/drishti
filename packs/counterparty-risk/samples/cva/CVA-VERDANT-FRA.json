@@ -1,0 +1,59 @@
+{
+ "resultId": "CVA-VERDANT-FRA",
+ "cva": -23,
+ "dva": 0,
+ "fva": -1074,
+ "kva": -447,
+ "cs01": 0,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -23
+  },
+  {
+   "name": "DVA",
+   "amount": 0
+  },
+  {
+   "name": "FVA",
+   "amount": -1074
+  },
+  {
+   "name": "KVA",
+   "amount": -447
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": 0
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 0
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 0
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -1
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 0
+  }
+ ],
+ "nettingSet": "NS-VERDANT-FRA",
+ "creditCurve": "CDS-VERDANT",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

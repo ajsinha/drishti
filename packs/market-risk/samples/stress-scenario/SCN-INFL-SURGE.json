@@ -1,0 +1,25 @@
+{
+ "scenarioId": "SCN-INFL-SURGE",
+ "name": "Inflation surprise",
+ "type": "Hypothetical",
+ "severity": "Moderate",
+ "shocks": [
+  {
+   "factor": "Breakevens",
+   "shock": 0.8
+  },
+  {
+   "factor": "USD rates",
+   "shock": 1.2
+  },
+  {
+   "factor": "Equities",
+   "shock": -0.1
+  }
+ ],
+ "horizon": "10 days",
+ "_meta": {
+  "source": "stress-engine",
+  "generation": 1
+ }
+}

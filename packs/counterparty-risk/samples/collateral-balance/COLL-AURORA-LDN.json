@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-AURORA-LDN",
+ "held": 0,
+ "posted": 598274,
+ "net": -598274,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Solaris Energy Corp. 2031",
+   "direction": "Posted",
+   "marketValue": 199425,
+   "haircut": 0.01,
+   "value": 197431
+  },
+  {
+   "asset": "Japan Ministry of Finance 2036",
+   "direction": "Posted",
+   "marketValue": 199425,
+   "haircut": 0.005,
+   "value": 198428
+  },
+  {
+   "asset": "Rheintal Landesbank 2036",
+   "direction": "Posted",
+   "marketValue": 199425,
+   "haircut": 0.01,
+   "value": 197431
+  }
+ ],
+ "csa": "CSA-AURORA",
+ "nettingSet": "NS-AURORA-LDN",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

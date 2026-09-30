@@ -1,0 +1,104 @@
+{
+ "nettingSetId": "NS-TOKAI-TKY",
+ "tradeCount": 2,
+ "netMtm": -1417445,
+ "collateral": -838311,
+ "eePeak": 16262400,
+ "pfePeak": 37810080,
+ "limit": 54000000.0,
+ "utilisation": 0.7002,
+ "cva": -28119,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 2255189,
+   "pfe": 6994216
+  },
+  {
+   "tenor": "1M",
+   "ee": 4694551,
+   "pfe": 12360811
+  },
+  {
+   "tenor": "3M",
+   "ee": 8131200,
+   "pfe": 19921440
+  },
+  {
+   "tenor": "6M",
+   "ee": 11499253,
+   "pfe": 27331157
+  },
+  {
+   "tenor": "1Y",
+   "ee": 16262400,
+   "pfe": 37810080
+  },
+  {
+   "tenor": "2Y",
+   "ee": 7159315,
+   "pfe": 16383292
+  },
+  {
+   "tenor": "3Y",
+   "ee": 8768334,
+   "pfe": 19923135
+  },
+  {
+   "tenor": "5Y",
+   "ee": 11319871,
+   "pfe": 25536515
+  },
+  {
+   "tenor": "7Y",
+   "ee": 13393851,
+   "pfe": 30099273
+  },
+  {
+   "tenor": "10Y",
+   "ee": 0,
+   "pfe": 0
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10745",
+   "product": "Credit basket note",
+   "notional": 250000000.0,
+   "maturity": "2027-11-18",
+   "mtm": -1748235
+  },
+  {
+   "tradeId": "T-10725",
+   "product": "Range accrual note",
+   "notional": 113000000.0,
+   "maturity": "2034-06-05",
+   "mtm": 330790
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Structured",
+   "mtm": -1417445
+  }
+ ],
+ "counterparty": "CP-TOKAI",
+ "agreement": "AGR-TOKAI-ISDA",
+ "csa": "CSA-TOKAI",
+ "creditLimit": "LIM-TOKAI",
+ "exposureProfile": "EXP-TOKAI-TKY",
+ "cvaResult": "CVA-TOKAI-TKY",
+ "saccr": "SACCR-TOKAI-TKY",
+ "simm": "SIMM-TOKAI",
+ "collateralBalance": "COLL-TOKAI-TKY",
+ "legalEntity": "LE-TKY",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 2834
+  }
+ }
+}

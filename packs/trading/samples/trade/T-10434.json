@@ -1,0 +1,359 @@
+{
+ "tradeId": "T-10434",
+ "productType": "CONVERTIBLE_BOND",
+ "productName": "Convertible bond",
+ "assetClass": "Equity",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2024-08-27",
+ "effectiveDate": "2024-08-29",
+ "maturityDate": "2033-03-09",
+ "currency": "USD",
+ "notional": 14000000.0,
+ "mtm": 94323,
+ "mtmCurrency": "USD",
+ "pnl1d": 4293,
+ "counterparty": {
+  "id": "CP-NORTHBRIDGE",
+  "name": "Northbridge Capital LLP"
+ },
+ "nettingSet": "NS-NORTHBRIDGE-LDN",
+ "book": "BOOK-EQD-1",
+ "trader": "TRDR-JWEISS",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingEquity": "EQ-SLRS",
+ "equityVolSurface": "EQV-SLRS",
+ "creditCurve": "CDS-SOLARIS",
+ "discountCurve": "CRV-USD-OIS",
+ "terms": {
+  "coupon": 0.039841,
+  "conversionRatio": 10.74,
+  "conversionPrice": 311.89
+ },
+ "risk": {
+  "delta": 93404,
+  "cs01": 9449,
+  "vega": 108453
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 4448,
+   "cs01": 450,
+   "vega": 5164
+  },
+  {
+   "bucket": "1M",
+   "delta": 8896,
+   "cs01": 900,
+   "vega": 10329
+  },
+  {
+   "bucket": "3M",
+   "delta": 13343,
+   "cs01": 1350,
+   "vega": 15493
+  },
+  {
+   "bucket": "6M",
+   "delta": 17791,
+   "cs01": 1800,
+   "vega": 20658
+  },
+  {
+   "bucket": "1Y",
+   "delta": 22239,
+   "cs01": 2250,
+   "vega": 25822
+  },
+  {
+   "bucket": "2Y",
+   "delta": 26687,
+   "cs01": 2700,
+   "vega": 30987
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2025-02-28",
+   "rate": 0.048481,
+   "amount": 280000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2025-08-28",
+   "rate": 0.047907,
+   "amount": 280000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-02-28",
+   "rate": 0.022175,
+   "amount": 280000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-08-28",
+   "rate": 0.041076,
+   "amount": 280000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2027-02-28",
+   "rate": 0.021403,
+   "amount": 280000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-08-28",
+   "rate": 0.043958,
+   "amount": 280000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-02-28",
+   "rate": 0.032035,
+   "amount": 280000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-08-28",
+   "rate": 0.023743,
+   "amount": 280000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-02-28",
+   "rate": 0.022652,
+   "amount": 280000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-08-28",
+   "rate": 0.042844,
+   "amount": 280000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-02-28",
+   "rate": 0.059536,
+   "amount": 280000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-08-28",
+   "rate": 0.034219,
+   "amount": 280000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-02-28",
+   "rate": 0.054553,
+   "amount": 280000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-08-28",
+   "rate": 0.037421,
+   "amount": 280000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2032-02-28",
+   "rate": 0.026834,
+   "amount": 280000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2032-08-28",
+   "rate": 0.059861,
+   "amount": 280000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2033-02-28",
+   "rate": 0.044395,
+   "amount": 280000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2033-03-09",
+   "rate": 0.022596,
+   "amount": 280000.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 4,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -1210
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 2062
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -224
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -1653
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -667
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 91
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -4577
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -621
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 3328
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 5345
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -1736
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -534
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 7346
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 517
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -1154
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 1353
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -2650
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -577
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -326
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -3725
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-08-27",
+  "executionTimestamp": "2024-08-27T10:19:06.362Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "J. Weiss",
+  "salesperson": null,
+  "orderId": "ORD-B797350131"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-08-27T11:31:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2024-08-27T11:31:00Z",
+  "lastModifiedAt": "2024-08-27T11:31:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT425190699",
+  "matched": "2024-08-27 10:13",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83B797350131139AA6AFC4",
+  "upi": "QZPWBE2CX2WY",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "NORTUS33XXX",
+  "ssiId": "SSI-USD-A0C7C2",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 94323,
+  "cleanPv": 94323.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQ-SLRS",
+   "EQV-SLRS",
+   "CDS-SOLARIS",
+   "CRV-USD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

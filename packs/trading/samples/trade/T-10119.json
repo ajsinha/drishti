@@ -1,0 +1,287 @@
+{
+ "tradeId": "T-10119",
+ "productType": "CMS_CAP",
+ "productName": "CMS cap / floor",
+ "assetClass": "Rates",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2025-02-14",
+ "effectiveDate": "2025-02-17",
+ "maturityDate": "2026-10-07",
+ "currency": "JPY",
+ "notional": 90000000.0,
+ "mtm": -596746,
+ "mtmCurrency": "USD",
+ "pnl1d": -37425,
+ "counterparty": {
+  "id": "CP-CORAL",
+  "name": "Coral Bay Municipal Authority"
+ },
+ "nettingSet": "NS-CORAL-NY",
+ "book": "BOOK-RATES-2",
+ "trader": "TRDR-ASHAH",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-JPY-OIS",
+ "forwardCurve": "CRV-JPY-PROJ",
+ "swaptionVolCube": "IRV-JPY",
+ "terms": {
+  "cmsTenor": "30Y",
+  "strike": 0.05752,
+  "capFloor": "Floor"
+ },
+ "risk": {
+  "dv01": 12733,
+  "vega": 299270
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 1273,
+   "vega": 29927
+  },
+  {
+   "bucket": "6M",
+   "dv01": 2547,
+   "vega": 59854
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 3820,
+   "vega": 89781
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 5093,
+   "vega": 119708
+  }
+ ],
+ "schedule": [
+  {
+   "fixingDate": "2025-05-17",
+   "period": "2025-05-17..2025-08-17",
+   "index": "TONA",
+   "rate": 0.041597,
+   "payoff": 148432.5,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2025-08-17",
+   "period": "2025-08-17..2025-11-17",
+   "index": "TONA",
+   "rate": 0.032826,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2025-11-17",
+   "period": "2025-11-17..2026-02-17",
+   "index": "TONA",
+   "rate": 0.026276,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-02-17",
+   "period": "2026-02-17..2026-05-17",
+   "index": "TONA",
+   "rate": 0.047506,
+   "payoff": 281385.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-05-17",
+   "period": "2026-05-17..2026-08-17",
+   "index": "TONA",
+   "rate": 0.020529,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-08-17",
+   "period": "2026-08-17..2026-11-17",
+   "index": "TONA",
+   "rate": 0.031681,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-10-07",
+   "period": "2026-10-07..2027-01-07",
+   "index": "TONA",
+   "rate": 0.040526,
+   "payoff": 124335.0,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 6,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -23964
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -15901
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 16248
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 14360
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -16784
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 2628
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 2268
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 16111
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 10681
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 12305
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -2134
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 26219
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 15907
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 4376
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -27334
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 6740
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -49439
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -5234
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -7596
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 5644
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-02-14",
+  "executionTimestamp": "2025-02-14T08:26:26.996Z",
+  "venue": "Bloomberg SEF",
+  "venueMic": "BSEF",
+  "executionType": "Electronic",
+  "trader": "A. Shah",
+  "salesperson": null,
+  "orderId": "ORD-CCC01044E7"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-02-14T11:10:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2025-02-14T11:10:00Z",
+  "lastModifiedAt": "2025-02-14T11:10:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA403943951",
+  "matched": "2025-02-14 12:46",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096CCC01044E779C7C505BB",
+  "upi": "QZIXFD5MS7PZ",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "CORAGB33XXX",
+  "ssiId": "SSI-JPY-C31AC7",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -596746,
+  "cleanPv": -596746.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CRV-JPY-OIS",
+   "CRV-JPY-PROJ",
+   "IRV-JPY"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 2093
+  }
+ }
+}

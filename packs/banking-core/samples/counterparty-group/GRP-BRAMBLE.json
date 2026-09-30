@@ -1,0 +1,17 @@
+{
+ "groupId": "GRP-BRAMBLE",
+ "name": "Bramble Holdings plc",
+ "limit": 255000000.0,
+ "utilisation": 0.6703,
+ "members": [
+  {
+   "id": "CP-BRAMBLE",
+   "name": "Bramble Asset Management",
+   "rating": "A-"
+  }
+ ],
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

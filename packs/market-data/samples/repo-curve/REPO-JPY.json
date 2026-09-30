@@ -1,0 +1,38 @@
+{
+ "curveId": "REPO-JPY",
+ "currency": "JPY",
+ "collateral": "General collateral (government)",
+ "overnight": 0.0047,
+ "asOf": "2026-09-30",
+ "points": [
+  {
+   "tenor": "ON",
+   "rate": 0.4721
+  },
+  {
+   "tenor": "1W",
+   "rate": 0.4755
+  },
+  {
+   "tenor": "1M",
+   "rate": 0.4815
+  },
+  {
+   "tenor": "3M",
+   "rate": 0.49
+  },
+  {
+   "tenor": "6M",
+   "rate": 0.4983
+  },
+  {
+   "tenor": "1Y",
+   "rate": 0.51
+  }
+ ],
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

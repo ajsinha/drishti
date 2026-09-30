@@ -1,0 +1,22 @@
+{
+ "traderId": "TRDR-VRAO",
+ "name": "V. Rao",
+ "deskName": "Structured products",
+ "tradeCount": 19,
+ "books": [
+  {
+   "id": "BOOK-STRUCT-1"
+  },
+  {
+   "id": "BOOK-STRUCT-2"
+  },
+  {
+   "id": "BOOK-STRUCT-3"
+  }
+ ],
+ "desk": "DESK-STRUCT",
+ "_meta": {
+  "source": "org-master",
+  "generation": 1
+ }
+}

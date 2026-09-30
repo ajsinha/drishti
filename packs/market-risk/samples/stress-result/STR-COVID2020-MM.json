@@ -1,0 +1,26 @@
+{
+ "resultId": "STR-COVID2020-MM",
+ "scenarioName": "COVID-19 March 2020",
+ "pnl": -916136,
+ "limit": -800000.0,
+ "byBook": [
+  {
+   "book": "BOOK-MM-1",
+   "pnl": -530273
+  },
+  {
+   "book": "BOOK-MM-2",
+   "pnl": -212132
+  },
+  {
+   "book": "BOOK-MM-3",
+   "pnl": -173731
+  }
+ ],
+ "scenario": "SCN-COVID2020",
+ "desk": "DESK-MM",
+ "_meta": {
+  "source": "stress-engine",
+  "generation": 1
+ }
+}

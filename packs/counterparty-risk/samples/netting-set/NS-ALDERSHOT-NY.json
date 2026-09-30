@@ -1,0 +1,260 @@
+{
+ "nettingSetId": "NS-ALDERSHOT-NY",
+ "tradeCount": 22,
+ "netMtm": 18471892,
+ "collateral": 12274649,
+ "eePeak": 18563218,
+ "pfePeak": 42556179,
+ "limit": 74000000.0,
+ "utilisation": 0.5751,
+ "cva": -12348,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 10743829,
+   "pfe": 27734662
+  },
+  {
+   "tenor": "1M",
+   "ee": 12550948,
+   "pfe": 30418648
+  },
+  {
+   "tenor": "3M",
+   "ee": 17048021,
+   "pfe": 40312209
+  },
+  {
+   "tenor": "6M",
+   "ee": 15263113,
+   "pfe": 35310211
+  },
+  {
+   "tenor": "1Y",
+   "ee": 18563218,
+   "pfe": 42556179
+  },
+  {
+   "tenor": "2Y",
+   "ee": 7789892,
+   "pfe": 17494063
+  },
+  {
+   "tenor": "3Y",
+   "ee": 7864408,
+   "pfe": 17657997
+  },
+  {
+   "tenor": "5Y",
+   "ee": 4506897,
+   "pfe": 10067861
+  },
+  {
+   "tenor": "7Y",
+   "ee": 4136466,
+   "pfe": 9244776
+  },
+  {
+   "tenor": "10Y",
+   "ee": 508701,
+   "pfe": 1119142
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10055",
+   "product": "Constant maturity swap",
+   "notional": 245000000.0,
+   "maturity": "2036-09-15",
+   "mtm": 9246729
+  },
+  {
+   "tradeId": "T-10455",
+   "product": "Commodity forward",
+   "notional": 215000000.0,
+   "maturity": "2027-01-07",
+   "mtm": 5446207
+  },
+  {
+   "tradeId": "T-10016",
+   "product": "Basis swap (float/float)",
+   "notional": 146000000.0,
+   "maturity": "2033-12-23",
+   "mtm": -5361207
+  },
+  {
+   "tradeId": "T-10637",
+   "product": "Asset-backed security",
+   "notional": 246000000.0,
+   "maturity": "2036-06-12",
+   "mtm": 4905373
+  },
+  {
+   "tradeId": "T-10269",
+   "product": "First-to-default basket",
+   "notional": 180000000.0,
+   "maturity": "2027-03-22",
+   "mtm": -3938043
+  },
+  {
+   "tradeId": "T-10084",
+   "product": "Interest rate cap",
+   "notional": 182000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 3578990
+  },
+  {
+   "tradeId": "T-10288",
+   "product": "Credit-linked note",
+   "notional": 231000000.0,
+   "maturity": "2030-03-11",
+   "mtm": 3195037
+  },
+  {
+   "tradeId": "T-10484",
+   "product": "Commodity swaption",
+   "notional": 106000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -1906599
+  },
+  {
+   "tradeId": "T-10112",
+   "product": "American swaption",
+   "notional": 199000000.0,
+   "maturity": "2027-02-26",
+   "mtm": 1831652
+  },
+  {
+   "tradeId": "T-10260",
+   "product": "CDS index option",
+   "notional": 247000000.0,
+   "maturity": "2027-01-25",
+   "mtm": 1574254
+  },
+  {
+   "tradeId": "T-10486",
+   "product": "Commodity swaption",
+   "notional": 204000000.0,
+   "maturity": "2027-12-13",
+   "mtm": 1250345
+  },
+  {
+   "tradeId": "T-10482",
+   "product": "Commodity swaption",
+   "notional": 140000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 1233398
+  },
+  {
+   "tradeId": "T-10480",
+   "product": "Average price option (APO)",
+   "notional": 228000000.0,
+   "maturity": "2028-08-07",
+   "mtm": -1215501
+  },
+  {
+   "tradeId": "T-10050",
+   "product": "Forward-starting swap",
+   "notional": 79000000.0,
+   "maturity": "2027-02-08",
+   "mtm": -526108
+  },
+  {
+   "tradeId": "T-10058",
+   "product": "Constant maturity swap",
+   "notional": 17000000.0,
+   "maturity": "2029-11-26",
+   "mtm": -468454
+  },
+  {
+   "tradeId": "T-10133",
+   "product": "Callable swap",
+   "notional": 73000000.0,
+   "maturity": "2033-04-11",
+   "mtm": -432768
+  },
+  {
+   "tradeId": "T-10663",
+   "product": "Certificate of deposit",
+   "notional": 92000000.0,
+   "maturity": "2027-05-10",
+   "mtm": 409089
+  },
+  {
+   "tradeId": "T-10451",
+   "product": "Commodity forward",
+   "notional": 159000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -308982
+  },
+  {
+   "tradeId": "T-10124",
+   "product": "CMS spread option",
+   "notional": 71000000.0,
+   "maturity": "2027-04-26",
+   "mtm": -301692
+  },
+  {
+   "tradeId": "T-10021",
+   "product": "Cross-currency swap (non-MtM)",
+   "notional": 151000000.0,
+   "maturity": "2036-02-21",
+   "mtm": 204436
+  },
+  {
+   "tradeId": "T-10462",
+   "product": "Commodity swap",
+   "notional": 24000000.0,
+   "maturity": "2036-07-14",
+   "mtm": 127504
+  },
+  {
+   "tradeId": "T-10025",
+   "product": "Cross-currency swap (MtM resetting)",
+   "notional": 20000000.0,
+   "maturity": "2033-04-18",
+   "mtm": -71768
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Rates",
+   "mtm": 7699810
+  },
+  {
+   "asset": "Fixed income",
+   "mtm": 4905373
+  },
+  {
+   "asset": "Commodity",
+   "mtm": 4626372
+  },
+  {
+   "asset": "Credit",
+   "mtm": 831248
+  },
+  {
+   "asset": "Money market",
+   "mtm": 409089
+  }
+ ],
+ "counterparty": "CP-ALDERSHOT",
+ "agreement": "AGR-ALDERSHOT-ISDA",
+ "csa": "CSA-ALDERSHOT",
+ "creditLimit": "LIM-ALDERSHOT",
+ "exposureProfile": "EXP-ALDERSHOT-NY",
+ "cvaResult": "CVA-ALDERSHOT-NY",
+ "saccr": "SACCR-ALDERSHOT-NY",
+ "simm": "SIMM-ALDERSHOT",
+ "collateralBalance": "COLL-ALDERSHOT-NY",
+ "legalEntity": "LE-NY",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 36943
+  }
+ }
+}

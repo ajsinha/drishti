@@ -1,0 +1,58 @@
+{
+ "resultId": "CVA-TOKAI-FRA",
+ "cva": -2,
+ "dva": 1,
+ "fva": -5085,
+ "kva": -554,
+ "cs01": 0,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -2
+  },
+  {
+   "name": "DVA",
+   "amount": 1
+  },
+  {
+   "name": "FVA",
+   "amount": -5085
+  },
+  {
+   "name": "KVA",
+   "amount": -554
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": 0
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 0
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 0
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": 0
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 0
+  }
+ ],
+ "nettingSet": "NS-TOKAI-FRA",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

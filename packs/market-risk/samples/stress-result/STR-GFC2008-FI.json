@@ -1,0 +1,26 @@
+{
+ "resultId": "STR-GFC2008-FI",
+ "scenarioName": "Global financial crisis 2008",
+ "pnl": -1239458789,
+ "limit": -1502400000.0,
+ "byBook": [
+  {
+   "book": "BOOK-FI-1",
+   "pnl": -105633296
+  },
+  {
+   "book": "BOOK-FI-2",
+   "pnl": -549701117
+  },
+  {
+   "book": "BOOK-FI-3",
+   "pnl": -584124376
+  }
+ ],
+ "scenario": "SCN-GFC2008",
+ "desk": "DESK-FI",
+ "_meta": {
+  "source": "stress-engine",
+  "generation": 1
+ }
+}

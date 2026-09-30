@@ -84,6 +84,16 @@ routes:
   stress-result: risk-lake
   frtb-sensitivity: risk-lake
   pnl-explain: risk-lake
+console:
+  examples:
+  - - VAR VAR-RATES
+    - Rates desk VaR · P&L series, contributions
+  - - STR STR-GFC2008-RATES
+    - Stress · 2008 crisis on the rates desk
+  - - PNL PNL-RATES-1
+    - P&L explain
+  - - FRTB FRTB-RATES-1
+    - FRTB sensitivities and charges
 roles:
   market-risk:
     kinds:

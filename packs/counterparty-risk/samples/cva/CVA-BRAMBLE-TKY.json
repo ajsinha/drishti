@@ -1,0 +1,58 @@
+{
+ "resultId": "CVA-BRAMBLE-TKY",
+ "cva": -19121,
+ "dva": 5019,
+ "fva": -819,
+ "kva": -84393,
+ "cs01": -344,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -19121
+  },
+  {
+   "name": "DVA",
+   "amount": 5019
+  },
+  {
+   "name": "FVA",
+   "amount": -819
+  },
+  {
+   "name": "KVA",
+   "amount": -84393
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -344
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 76
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 38
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -574
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 325
+  }
+ ],
+ "nettingSet": "NS-BRAMBLE-TKY",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

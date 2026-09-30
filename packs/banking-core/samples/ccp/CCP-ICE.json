@@ -1,0 +1,17 @@
+{
+ "ccpId": "CCP-ICE",
+ "name": "ICE Clear Europe",
+ "defaultFund": 260000000.0,
+ "imPosted": 15600000,
+ "marginModel": "IRM 2",
+ "accounts": [
+  {
+   "id": "CLR-ICE-1",
+   "im": 15600000
+  }
+ ],
+ "_meta": {
+  "source": "clearing-system",
+  "generation": 1
+ }
+}

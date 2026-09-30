@@ -1,0 +1,50 @@
+{
+ "matrixId": "CORR-US-EQ",
+ "name": "US equities",
+ "factors": [
+  "NVTK",
+  "HLXP",
+  "SLRS",
+  "MRDN"
+ ],
+ "average": 0.406,
+ "pairs": [
+  {
+   "a": "NVTK",
+   "b": "HLXP",
+   "rho": 0.235
+  },
+  {
+   "a": "NVTK",
+   "b": "SLRS",
+   "rho": 0.253
+  },
+  {
+   "a": "NVTK",
+   "b": "MRDN",
+   "rho": 0.764
+  },
+  {
+   "a": "HLXP",
+   "b": "SLRS",
+   "rho": 0.187
+  },
+  {
+   "a": "HLXP",
+   "b": "MRDN",
+   "rho": 0.324
+  },
+  {
+   "a": "SLRS",
+   "b": "MRDN",
+   "rho": 0.671
+  }
+ ],
+ "window": "2 years, daily log returns",
+ "estimator": "Ledoit-Wolf shrinkage",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

@@ -1,0 +1,111 @@
+{
+ "nettingSetId": "NS-CORAL-FRA",
+ "tradeCount": 3,
+ "netMtm": 3083244,
+ "collateral": 1999900,
+ "eePeak": 1153158,
+ "pfePeak": 2570809,
+ "limit": 5000000.0,
+ "utilisation": 0.5142,
+ "cva": -609,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 1136540,
+   "pfe": 2548337
+  },
+  {
+   "tenor": "1M",
+   "ee": 1139210,
+   "pfe": 2540124
+  },
+  {
+   "tenor": "3M",
+   "ee": 1153158,
+   "pfe": 2570809
+  },
+  {
+   "tenor": "6M",
+   "ee": 956048,
+   "pfe": 2103305
+  },
+  {
+   "tenor": "1Y",
+   "ee": 843709,
+   "pfe": 1856160
+  },
+  {
+   "tenor": "2Y",
+   "ee": 657081,
+   "pfe": 1445579
+  },
+  {
+   "tenor": "3Y",
+   "ee": 511735,
+   "pfe": 1125818
+  },
+  {
+   "tenor": "5Y",
+   "ee": 310383,
+   "pfe": 682843
+  },
+  {
+   "tenor": "7Y",
+   "ee": 188257,
+   "pfe": 414165
+  },
+  {
+   "tenor": "10Y",
+   "ee": 88926,
+   "pfe": 195638
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10686",
+   "product": "Reverse repo",
+   "notional": 161000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 3324957
+  },
+  {
+   "tradeId": "T-10712",
+   "product": "Securities borrowing",
+   "notional": 157000000.0,
+   "maturity": "2027-02-04",
+   "mtm": -511456
+  },
+  {
+   "tradeId": "T-10683",
+   "product": "Repurchase agreement",
+   "notional": 230000000.0,
+   "maturity": "2027-01-11",
+   "mtm": 269743
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Securities financing",
+   "mtm": 3083244
+  }
+ ],
+ "counterparty": "CP-CORAL",
+ "agreement": "AGR-CORAL-ISDA",
+ "csa": "CSA-CORAL",
+ "creditLimit": "LIM-CORAL",
+ "exposureProfile": "EXP-CORAL-FRA",
+ "cvaResult": "CVA-CORAL-FRA",
+ "saccr": "SACCR-CORAL-FRA",
+ "simm": "SIMM-CORAL",
+ "collateralBalance": "COLL-CORAL-FRA",
+ "legalEntity": "LE-FRA",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 6166
+  }
+ }
+}

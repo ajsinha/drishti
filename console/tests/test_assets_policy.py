@@ -49,3 +49,11 @@ def test_no_inline_script_or_handlers():
 def test_python_files_under_limit():
     over = [str(p) for p in CONSOLE.rglob("*.py") if ".venv" not in p.parts and len(p.read_text().splitlines()) > 1500]
     assert over == []
+
+
+def test_vendored_echarts_gl_needs_no_eval():
+    """ECharts GL is patched so the strict CSP (no unsafe-eval) holds: see vendor/echarts-gl/PATCHED.md."""
+    from pathlib import Path
+    gl = (Path(__file__).resolve().parent.parent / "web/static/vendor/echarts-gl/echarts-gl.min.js").read_text(encoding="utf-8")
+    assert 'new Function("width","height","dpr"' not in gl
+    assert "(width|height|dpr)" in gl

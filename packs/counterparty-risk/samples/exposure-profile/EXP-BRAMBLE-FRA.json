@@ -1,0 +1,87 @@
+{
+ "profileId": "EXP-BRAMBLE-FRA",
+ "epe": 652203,
+ "eepe": 1093622,
+ "pfePeak": 2451032,
+ "paths": 5000,
+ "runDate": "2026-09-30",
+ "buckets": [
+  {
+   "tenor": "0",
+   "ee": 1060379,
+   "ene": -37494,
+   "pfe95": 2377897,
+   "pfe99": 3138188
+  },
+  {
+   "tenor": "1M",
+   "ee": 1093622,
+   "ene": -78051,
+   "pfe95": 2451032,
+   "pfe99": 3234592
+  },
+  {
+   "tenor": "3M",
+   "ee": 1051371,
+   "ene": -76650,
+   "pfe95": 2338566,
+   "pfe99": 3084745
+  },
+  {
+   "tenor": "6M",
+   "ee": 891663,
+   "ene": 0,
+   "pfe95": 1961659,
+   "pfe99": 2585824
+  },
+  {
+   "tenor": "1Y",
+   "ee": 786890,
+   "ene": 0,
+   "pfe95": 1731158,
+   "pfe99": 2281982
+  },
+  {
+   "tenor": "2Y",
+   "ee": 612831,
+   "ene": 0,
+   "pfe95": 1348228,
+   "pfe99": 1777209
+  },
+  {
+   "tenor": "3Y",
+   "ee": 477273,
+   "ene": 0,
+   "pfe95": 1050001,
+   "pfe99": 1384092
+  },
+  {
+   "tenor": "5Y",
+   "ee": 289481,
+   "ene": 0,
+   "pfe95": 636858,
+   "pfe99": 839494
+  },
+  {
+   "tenor": "7Y",
+   "ee": 175579,
+   "ene": 0,
+   "pfe95": 386274,
+   "pfe99": 509179
+  },
+  {
+   "tenor": "10Y",
+   "ee": 82938,
+   "ene": 0,
+   "pfe95": 182463,
+   "pfe99": 240519
+  }
+ ],
+ "nettingSet": "NS-BRAMBLE-FRA",
+ "model": "Hull-White 1F rates, GBM FX and equity, 5,000 paths",
+ "confidence": 0.95,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

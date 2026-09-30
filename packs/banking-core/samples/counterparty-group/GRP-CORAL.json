@@ -1,0 +1,17 @@
+{
+ "groupId": "GRP-CORAL",
+ "name": "Coral Bay Municipal Authority",
+ "limit": 273000000.0,
+ "utilisation": 0.5253,
+ "members": [
+  {
+   "id": "CP-CORAL",
+   "name": "Coral Bay Municipal Authority",
+   "rating": "AA"
+  }
+ ],
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

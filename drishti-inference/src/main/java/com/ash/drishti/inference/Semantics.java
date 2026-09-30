@@ -46,6 +46,9 @@ public final class Semantics {
     private final List<String> idFields = new ArrayList<>();
     private final Map<String, Integer> limits = new ConcurrentHashMap<>();
     private final Map<String, Role> memo = new ConcurrentHashMap<>();
+    /** Field name -> label, and word -> spelling (UTI, DV01), from the core and pack semantics files. */
+    private static volatile Map<String, String> labels = Map.of();
+    private static volatile Map<String, String> acronyms = Map.of();
 
     private Semantics(JsonNode root, List<JsonNode> packs) {
         List<JsonNode> ordered = new ArrayList<>(packs);
@@ -71,6 +74,14 @@ public final class Semantics {
         tenor = Pattern.compile(tenors.isEmpty() ? "^$" : tenors.toString());
         date = Pattern.compile(root.path("datePattern").asText("^\\d{4}-\\d{2}-\\d{2}"));
         root.path("limits").fields().forEachRemaining(e -> limits.put(e.getKey(), e.getValue().asInt()));
+        Map<String, String> l = new java.util.HashMap<>();
+        Map<String, String> a = new java.util.HashMap<>();
+        for (JsonNode src : ordered.reversed()) {                      // packs win over the core
+            src.path("labels").fields().forEachRemaining(e -> l.put(e.getKey(), e.getValue().asText()));
+            src.path("acronyms").forEach(n -> a.put(n.asText().toLowerCase(java.util.Locale.ROOT), n.asText()));
+        }
+        labels = Map.copyOf(l);
+        acronyms = Map.copyOf(a);
     }
 
     private void addRoles(JsonNode root) {
@@ -160,8 +171,32 @@ public final class Semantics {
         return limits.getOrDefault(name, fallback);
     }
 
-    /** {@code dv01ByTenor} becomes {@code Dv01 by tenor}; {@code paymentLag} becomes {@code Payment lag}. */
+    /**
+     * The label for a field name when nobody gave one: an explicit {@code labels:} entry, else the name in words
+     * with the vocabulary's spellings: {@code paymentLag} becomes {@code Payment lag}, {@code dv01ByTenor} becomes
+     * {@code DV01 by tenor} and {@code uti} becomes {@code UTI} when the pack lists those acronyms.
+     */
     public static String humanize(String name) {
+        String explicit = labels.get(name);
+        if (explicit != null) {
+            return explicit;
+        }
+        String[] words = words(name).split(" ");
+        StringBuilder out = new StringBuilder();
+        for (int i = 0; i < words.length; i++) {
+            String w = words[i];
+            String spelled = acronyms.get(w.toLowerCase(java.util.Locale.ROOT));
+            if (spelled != null) {
+                w = spelled;
+            } else if (i == 0 && !w.isEmpty()) {
+                w = Character.toUpperCase(w.charAt(0)) + w.substring(1);
+            }
+            out.append(i == 0 ? "" : " ").append(w);
+        }
+        return out.toString();
+    }
+
+    private static String words(String name) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < name.length(); i++) {
             char c = name.charAt(i);
@@ -173,8 +208,7 @@ public final class Semantics {
                 sb.append(c);
             }
         }
-        String s = sb.toString().trim();
-        return s.isEmpty() ? s : Character.toUpperCase(s.charAt(0)) + s.substring(1);
+        return sb.toString().trim().replaceAll(" +", " ");
     }
 
     static String camel(String kind) {

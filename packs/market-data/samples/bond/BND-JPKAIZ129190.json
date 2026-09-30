@@ -1,0 +1,180 @@
+{
+ "isin": "BND-JPKAIZ129190",
+ "isinCode": "JPKAIZ129190",
+ "issuerName": "Kaizen Motors Corp.",
+ "coupon": 0.0267,
+ "maturity": "2036-12-15",
+ "price": 110.614,
+ "yield": 0.0145,
+ "zSpread": 66.5,
+ "modDuration": 8.7,
+ "rating": "A",
+ "terms": {
+  "currency": "JPY",
+  "couponFrequency": "Annual",
+  "dayCount": "ACT/ACT",
+  "issueDate": "2026-12-15",
+  "amountIssued": 2300000000,
+  "seniority": "Senior unsecured",
+  "callable": false,
+  "cusip": null
+ },
+ "coupons": [
+  {
+   "date": "2027-12-15",
+   "amount": 2.67
+  },
+  {
+   "date": "2028-12-15",
+   "amount": 2.67
+  },
+  {
+   "date": "2029-12-15",
+   "amount": 2.67
+  },
+  {
+   "date": "2030-12-15",
+   "amount": 2.67
+  },
+  {
+   "date": "2031-12-15",
+   "amount": 2.67
+  },
+  {
+   "date": "2032-12-15",
+   "amount": 2.67
+  }
+ ],
+ "history": [
+  {
+   "date": "2026-08-19",
+   "price": 110.471
+  },
+  {
+   "date": "2026-08-20",
+   "price": 110.884
+  },
+  {
+   "date": "2026-08-21",
+   "price": 111.263
+  },
+  {
+   "date": "2026-08-24",
+   "price": 111.422
+  },
+  {
+   "date": "2026-08-25",
+   "price": 111.52
+  },
+  {
+   "date": "2026-08-26",
+   "price": 111.702
+  },
+  {
+   "date": "2026-08-27",
+   "price": 111.442
+  },
+  {
+   "date": "2026-08-28",
+   "price": 111.333
+  },
+  {
+   "date": "2026-08-31",
+   "price": 111.172
+  },
+  {
+   "date": "2026-09-01",
+   "price": 111.212
+  },
+  {
+   "date": "2026-09-02",
+   "price": 111.174
+  },
+  {
+   "date": "2026-09-03",
+   "price": 110.765
+  },
+  {
+   "date": "2026-09-04",
+   "price": 110.686
+  },
+  {
+   "date": "2026-09-08",
+   "price": 110.747
+  },
+  {
+   "date": "2026-09-09",
+   "price": 110.738
+  },
+  {
+   "date": "2026-09-10",
+   "price": 110.962
+  },
+  {
+   "date": "2026-09-11",
+   "price": 110.992
+  },
+  {
+   "date": "2026-09-14",
+   "price": 110.552
+  },
+  {
+   "date": "2026-09-15",
+   "price": 110.724
+  },
+  {
+   "date": "2026-09-16",
+   "price": 110.573
+  },
+  {
+   "date": "2026-09-17",
+   "price": 110.698
+  },
+  {
+   "date": "2026-09-18",
+   "price": 110.618
+  },
+  {
+   "date": "2026-09-21",
+   "price": 110.855
+  },
+  {
+   "date": "2026-09-22",
+   "price": 110.734
+  },
+  {
+   "date": "2026-09-23",
+   "price": 110.556
+  },
+  {
+   "date": "2026-09-24",
+   "price": 110.972
+  },
+  {
+   "date": "2026-09-25",
+   "price": 110.818
+  },
+  {
+   "date": "2026-09-28",
+   "price": 110.909
+  },
+  {
+   "date": "2026-09-29",
+   "price": 110.688
+  },
+  {
+   "date": "2026-09-30",
+   "price": 110.614
+  }
+ ],
+ "issuer": "ISS-KAIZEN",
+ "benchmarkCurve": "CRV-JPY-GOVT",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "price": 0.02
+  }
+ }
+}

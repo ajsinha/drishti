@@ -1,0 +1,63 @@
+{
+ "curveId": "CDS-BUND",
+ "issuerName": "Federal Republic of Germany",
+ "spread5y": 9,
+ "recovery": 0.25,
+ "seniority": "Senior unsecured",
+ "docClause": "MM14",
+ "pd1y": 0.000666,
+ "points": [
+  {
+   "tenor": "6M",
+   "spread": 4.5,
+   "hazard": 0.0006,
+   "survival": 0.9997
+  },
+  {
+   "tenor": "1Y",
+   "spread": 5.0,
+   "hazard": 0.000667,
+   "survival": 0.999334
+  },
+  {
+   "tenor": "2Y",
+   "spread": 6.0,
+   "hazard": 0.0008,
+   "survival": 0.998401
+  },
+  {
+   "tenor": "3Y",
+   "spread": 7.0,
+   "hazard": 0.000933,
+   "survival": 0.997204
+  },
+  {
+   "tenor": "5Y",
+   "spread": 9.0,
+   "hazard": 0.0012,
+   "survival": 0.994018
+  },
+  {
+   "tenor": "7Y",
+   "spread": 9.5,
+   "hazard": 0.001267,
+   "survival": 0.991173
+  },
+  {
+   "tenor": "10Y",
+   "spread": 10.3,
+   "hazard": 0.001373,
+   "survival": 0.986361
+  }
+ ],
+ "issuer": "ISS-BUND",
+ "currency": "EUR",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "spread5y": 0.4
+  }
+ }
+}

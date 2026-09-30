@@ -1,0 +1,58 @@
+{
+ "resultId": "CVA-PINNACLE-TKY",
+ "cva": -259360,
+ "dva": 30259,
+ "fva": -1868,
+ "kva": -458329,
+ "cs01": -4668,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -259360
+  },
+  {
+   "name": "DVA",
+   "amount": 30259
+  },
+  {
+   "name": "FVA",
+   "amount": -1868
+  },
+  {
+   "name": "KVA",
+   "amount": -458329
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -4668
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 1037
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 519
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -7781
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 4409
+  }
+ ],
+ "nettingSet": "NS-PINNACLE-TKY",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

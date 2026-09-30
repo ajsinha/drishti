@@ -1,0 +1,35 @@
+{
+ "calcId": "SIMM-SOLARIS",
+ "total": 3628888,
+ "posted": 3520021,
+ "received": 3701466,
+ "version": "ISDA SIMM 2.7",
+ "riskClasses": [
+  {
+   "riskClass": "Interest rate",
+   "im": 1633000
+  },
+  {
+   "riskClass": "Credit qualifying",
+   "im": 435467
+  },
+  {
+   "riskClass": "Equity",
+   "im": 653200
+  },
+  {
+   "riskClass": "Commodity",
+   "im": 290311
+  },
+  {
+   "riskClass": "FX",
+   "im": 616911
+  }
+ ],
+ "nettingSet": "NS-SOLARIS-FRA",
+ "counterparty": "CP-SOLARIS",
+ "_meta": {
+  "source": "margin-engine",
+  "generation": 1
+ }
+}

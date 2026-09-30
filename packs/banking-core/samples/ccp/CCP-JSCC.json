@@ -1,0 +1,17 @@
+{
+ "ccpId": "CCP-JSCC",
+ "name": "Japan Securities Clearing Corp.",
+ "defaultFund": 120000000.0,
+ "imPosted": 7200000,
+ "marginModel": "JSCC IRS VaR",
+ "accounts": [
+  {
+   "id": "CLR-JSCC-1",
+   "im": 7200000
+  }
+ ],
+ "_meta": {
+  "source": "clearing-system",
+  "generation": 1
+ }
+}

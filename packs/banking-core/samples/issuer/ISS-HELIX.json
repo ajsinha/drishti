@@ -1,0 +1,26 @@
+{
+ "issuerId": "ISS-HELIX",
+ "name": "Helix Pharmaceuticals Inc.",
+ "rating": "A-",
+ "sector": "Healthcare",
+ "country": "US",
+ "bonds": [
+  {
+   "isin": "USHELI055667",
+   "coupon": 0.0422,
+   "maturity": "2031-11-15"
+  },
+  {
+   "isin": "USHELI160541",
+   "coupon": 0.0472,
+   "maturity": "2036-09-15"
+  }
+ ],
+ "creditCurve": "CDS-HELIX",
+ "lei": "5493009U7M7G9NN36J46",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ },
+ "equity": "EQ-HLXP"
+}

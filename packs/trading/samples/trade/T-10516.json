@@ -1,0 +1,305 @@
+{
+ "tradeId": "T-10516",
+ "productType": "GAS_SWING",
+ "productName": "Gas swing option",
+ "assetClass": "Commodity",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2025-03-06",
+ "effectiveDate": "2025-03-10",
+ "maturityDate": "2036-01-16",
+ "currency": "USD",
+ "notional": 112000000.0,
+ "mtm": -3307013,
+ "mtmCurrency": "USD",
+ "pnl1d": 342199,
+ "counterparty": {
+  "id": "CP-MERIDIAN",
+  "name": "Meridian Life Assurance"
+ },
+ "nettingSet": "NS-MERIDIAN-NY",
+ "book": "BOOK-COMM-2",
+ "trader": "TRDR-TBRENNAN",
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "commodityCurve": "CMDC-SOY",
+ "commodityVolSurface": "CMDV-SOY",
+ "terms": {
+  "hub": "NBP",
+  "minDaily": 2063,
+  "maxDaily": 28452
+ },
+ "risk": {
+  "delta": -410904,
+  "vega": -972263
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -19567,
+   "vega": -46298
+  },
+  {
+   "bucket": "1M",
+   "delta": -39134,
+   "vega": -92596
+  },
+  {
+   "bucket": "3M",
+   "delta": -58701,
+   "vega": -138895
+  },
+  {
+   "bucket": "6M",
+   "delta": -78267,
+   "vega": -185193
+  },
+  {
+   "bucket": "1Y",
+   "delta": -97834,
+   "vega": -231491
+  },
+  {
+   "bucket": "2Y",
+   "delta": -117401,
+   "vega": -277789
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-03-10",
+   "type": "First call",
+   "strike": 0.035501,
+   "status": "Expired"
+  },
+  {
+   "date": "2027-03-10",
+   "type": "Bermudan call",
+   "strike": 0.032261,
+   "status": "Pending"
+  },
+  {
+   "date": "2028-03-10",
+   "type": "Bermudan call",
+   "strike": 0.047792,
+   "status": "Pending"
+  },
+  {
+   "date": "2029-03-10",
+   "type": "Bermudan call",
+   "strike": 0.048471,
+   "status": "Pending"
+  },
+  {
+   "date": "2030-03-10",
+   "type": "Bermudan call",
+   "strike": 0.044851,
+   "status": "Pending"
+  },
+  {
+   "date": "2031-03-10",
+   "type": "Bermudan call",
+   "strike": 0.046242,
+   "status": "Pending"
+  },
+  {
+   "date": "2032-03-10",
+   "type": "Bermudan call",
+   "strike": 0.027705,
+   "status": "Pending"
+  },
+  {
+   "date": "2033-03-10",
+   "type": "Bermudan call",
+   "strike": 0.023759,
+   "status": "Pending"
+  },
+  {
+   "date": "2034-03-10",
+   "type": "Bermudan call",
+   "strike": 0.031514,
+   "status": "Pending"
+  },
+  {
+   "date": "2035-03-10",
+   "type": "Bermudan call",
+   "strike": 0.027001,
+   "status": "Pending"
+  },
+  {
+   "date": "2036-01-16",
+   "type": "Bermudan call",
+   "strike": 0.049759,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 143831
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -9295
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 7808
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 25381
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 8206
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 129684
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -20538
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 42473
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 148418
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 85367
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 100862
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -105991
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -9300
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -39025
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -128557
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -12131
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 37685
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 18409
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -107204
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -249736
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-03-06",
+  "executionTimestamp": "2025-03-06T14:09:12.761Z",
+  "venue": "ICE",
+  "venueMic": "IFEU",
+  "executionType": "Electronic",
+  "trader": "T. Brennan",
+  "salesperson": null,
+  "orderId": "ORD-B3CB64A38A"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-03-06T11:39:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2025-03-06T11:39:00Z",
+  "lastModifiedAt": "2025-03-06T11:39:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT625792437",
+  "matched": "2025-03-06 13:13",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096B3CB64A38A09BE9679CA",
+  "upi": "QZG2OH1BW86N",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "MERIUS33XXX",
+  "ssiId": "SSI-USD-4D91C0",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -3307013,
+  "cleanPv": -3307013.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "CMDC-SOY",
+   "CMDV-SOY"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "endur-comm",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 7734
+  }
+ }
+}

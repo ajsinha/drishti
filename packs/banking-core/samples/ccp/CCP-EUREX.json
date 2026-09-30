@@ -1,0 +1,17 @@
+{
+ "ccpId": "CCP-EUREX",
+ "name": "Eurex Clearing AG",
+ "defaultFund": 340000000.0,
+ "imPosted": 20400000,
+ "marginModel": "Prisma",
+ "accounts": [
+  {
+   "id": "CLR-EUREX-1",
+   "im": 20400000
+  }
+ ],
+ "_meta": {
+  "source": "clearing-system",
+  "generation": 1
+ }
+}

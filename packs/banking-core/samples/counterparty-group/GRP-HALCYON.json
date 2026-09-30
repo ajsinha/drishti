@@ -1,0 +1,17 @@
+{
+ "groupId": "GRP-HALCYON",
+ "name": "Halcyon Maritime Group",
+ "limit": 455000000.0,
+ "utilisation": 0.6905,
+ "members": [
+  {
+   "id": "CP-HALCYON",
+   "name": "Halcyon Shipping plc",
+   "rating": "B+"
+  }
+ ],
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-LUMEN-TKY",
+ "held": 638160,
+ "posted": 0,
+ "net": 638160,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "United States Treasury 2036",
+   "direction": "Held",
+   "marketValue": 212720,
+   "haircut": 0.01,
+   "value": 210593
+  },
+  {
+   "asset": "Granite Building Materials plc 2031",
+   "direction": "Held",
+   "marketValue": 212720,
+   "haircut": 0.01,
+   "value": 210593
+  },
+  {
+   "asset": "Halcyon Shipping plc 2036",
+   "direction": "Held",
+   "marketValue": 212720,
+   "haircut": 0.005,
+   "value": 211656
+  }
+ ],
+ "csa": "CSA-LUMEN",
+ "nettingSet": "NS-LUMEN-TKY",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

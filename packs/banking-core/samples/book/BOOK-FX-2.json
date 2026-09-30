@@ -1,0 +1,92 @@
+{
+ "bookId": "BOOK-FX-2",
+ "name": "G10 and EM FX · book 2",
+ "deskName": "G10 and EM FX",
+ "tradeCount": 31,
+ "mtm": -12267806,
+ "dv01": -79666,
+ "topTrades": [
+  {
+   "tradeId": "T-10199",
+   "product": "FX double-barrier option",
+   "notional": 205000000.0,
+   "maturity": "2034-09-13",
+   "mtm": -4354827
+  },
+  {
+   "tradeId": "T-10218",
+   "product": "FX target redemption forward",
+   "notional": 164000000.0,
+   "maturity": "2033-04-22",
+   "mtm": -4316238
+  },
+  {
+   "tradeId": "T-10194",
+   "product": "FX barrier option",
+   "notional": 224000000.0,
+   "maturity": "2035-06-13",
+   "mtm": -3413754
+  },
+  {
+   "tradeId": "T-10193",
+   "product": "FX barrier option",
+   "notional": 208000000.0,
+   "maturity": "2028-10-02",
+   "mtm": 3355034
+  },
+  {
+   "tradeId": "T-10235",
+   "product": "Quanto option",
+   "notional": 245000000.0,
+   "maturity": "2033-05-16",
+   "mtm": 2783757
+  },
+  {
+   "tradeId": "T-10196",
+   "product": "FX barrier option",
+   "notional": 111000000.0,
+   "maturity": "2027-12-06",
+   "mtm": -2383626
+  },
+  {
+   "tradeId": "T-10176",
+   "product": "FX swap",
+   "notional": 232000000.0,
+   "maturity": "2038-08-04",
+   "mtm": 1696884
+  },
+  {
+   "tradeId": "T-10175",
+   "product": "FX swap",
+   "notional": 98000000.0,
+   "maturity": "2037-05-15",
+   "mtm": -1679905
+  },
+  {
+   "tradeId": "T-10222",
+   "product": "FX target redemption forward",
+   "notional": 236000000.0,
+   "maturity": "2033-12-21",
+   "mtm": 1608918
+  },
+  {
+   "tradeId": "T-10168",
+   "product": "FX forward",
+   "notional": 99000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -1590129
+  }
+ ],
+ "desk": "DESK-FX",
+ "accountingTreatment": "Fair value (FVTPL)",
+ "regulatoryBook": "Trading book",
+ "volcker": "Market making",
+ "_meta": {
+  "source": "org-master",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 5000
+  }
+ }
+}

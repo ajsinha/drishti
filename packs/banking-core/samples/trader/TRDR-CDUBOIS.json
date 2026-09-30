@@ -1,0 +1,22 @@
+{
+ "traderId": "TRDR-CDUBOIS",
+ "name": "C. Dubois",
+ "deskName": "Credit trading",
+ "tradeCount": 40,
+ "books": [
+  {
+   "id": "BOOK-CREDIT-1"
+  },
+  {
+   "id": "BOOK-CREDIT-2"
+  },
+  {
+   "id": "BOOK-CREDIT-3"
+  }
+ ],
+ "desk": "DESK-CREDIT",
+ "_meta": {
+  "source": "org-master",
+  "generation": 1
+ }
+}

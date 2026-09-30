@@ -1,0 +1,263 @@
+{
+ "nettingSetId": "NS-PINNACLE-NY",
+ "tradeCount": 23,
+ "netMtm": 23965549,
+ "collateral": 17910059,
+ "eePeak": 23169180,
+ "pfePeak": 52017121,
+ "limit": 85000000.0,
+ "utilisation": 0.612,
+ "cva": -153332,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 7814250,
+   "pfe": 18776675
+  },
+  {
+   "tenor": "1M",
+   "ee": 9530360,
+   "pfe": 22525517
+  },
+  {
+   "tenor": "3M",
+   "ee": 11910906,
+   "pfe": 27759569
+  },
+  {
+   "tenor": "6M",
+   "ee": 14065901,
+   "pfe": 32486820
+  },
+  {
+   "tenor": "1Y",
+   "ee": 16946420,
+   "pfe": 38810925
+  },
+  {
+   "tenor": "2Y",
+   "ee": 18456746,
+   "pfe": 41911566
+  },
+  {
+   "tenor": "3Y",
+   "ee": 19366509,
+   "pfe": 43797544
+  },
+  {
+   "tenor": "5Y",
+   "ee": 20776164,
+   "pfe": 46771998
+  },
+  {
+   "tenor": "7Y",
+   "ee": 23169180,
+   "pfe": 52017121
+  },
+  {
+   "tenor": "10Y",
+   "ee": 497065,
+   "pfe": 1093543
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10044",
+   "product": "Accreting swap",
+   "notional": 224000000.0,
+   "maturity": "2035-03-07",
+   "mtm": 25398239
+  },
+  {
+   "tradeId": "T-10098",
+   "product": "European swaption",
+   "notional": 81000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -2691901
+  },
+  {
+   "tradeId": "T-10097",
+   "product": "European swaption",
+   "notional": 160000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -2322720
+  },
+  {
+   "tradeId": "T-10500",
+   "product": "Commodity index swap",
+   "notional": 243000000.0,
+   "maturity": "2034-04-28",
+   "mtm": 1673731
+  },
+  {
+   "tradeId": "T-10258",
+   "product": "Index tranche",
+   "notional": 232000000.0,
+   "maturity": "2033-10-18",
+   "mtm": -1480347
+  },
+  {
+   "tradeId": "T-10299",
+   "product": "Revolving credit facility",
+   "notional": 120000000.0,
+   "maturity": "2030-03-06",
+   "mtm": 1407358
+  },
+  {
+   "tradeId": "T-10143",
+   "product": "Range accrual swap",
+   "notional": 84000000.0,
+   "maturity": "2031-10-27",
+   "mtm": 1047452
+  },
+  {
+   "tradeId": "T-10051",
+   "product": "Forward-starting swap",
+   "notional": 145000000.0,
+   "maturity": "2031-06-27",
+   "mtm": 1000230
+  },
+  {
+   "tradeId": "T-10660",
+   "product": "Commercial paper",
+   "notional": 157000000.0,
+   "maturity": "2027-01-08",
+   "mtm": -996256
+  },
+  {
+   "tradeId": "T-10110",
+   "product": "American swaption",
+   "notional": 50000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 644255
+  },
+  {
+   "tradeId": "T-10655",
+   "product": "Commercial paper",
+   "notional": 45000000.0,
+   "maturity": "2027-05-03",
+   "mtm": -567489
+  },
+  {
+   "tradeId": "T-10144",
+   "product": "Range accrual swap",
+   "notional": 104000000.0,
+   "maturity": "2031-01-16",
+   "mtm": 482103
+  },
+  {
+   "tradeId": "T-10113",
+   "product": "American swaption",
+   "notional": 139000000.0,
+   "maturity": "2028-04-13",
+   "mtm": 447170
+  },
+  {
+   "tradeId": "T-10028",
+   "product": "Cross-currency swap (MtM resetting)",
+   "notional": 139000000.0,
+   "maturity": "2033-08-12",
+   "mtm": -417694
+  },
+  {
+   "tradeId": "T-10245",
+   "product": "Single-name CDS",
+   "notional": 34000000.0,
+   "maturity": "2034-12-04",
+   "mtm": -287615
+  },
+  {
+   "tradeId": "T-10088",
+   "product": "Interest rate floor",
+   "notional": 37000000.0,
+   "maturity": "2027-04-28",
+   "mtm": 203454
+  },
+  {
+   "tradeId": "T-10529",
+   "product": "Freight forward agreement",
+   "notional": 66000000.0,
+   "maturity": "2028-04-13",
+   "mtm": 176045
+  },
+  {
+   "tradeId": "T-10242",
+   "product": "Single-name CDS",
+   "notional": 31000000.0,
+   "maturity": "2033-12-12",
+   "mtm": 149463
+  },
+  {
+   "tradeId": "T-10108",
+   "product": "Bermudan swaption",
+   "notional": 23000000.0,
+   "maturity": "2028-06-12",
+   "mtm": -96005
+  },
+  {
+   "tradeId": "T-10262",
+   "product": "CDS index option",
+   "notional": 132000000.0,
+   "maturity": "2029-05-10",
+   "mtm": 75526
+  },
+  {
+   "tradeId": "T-10668",
+   "product": "Term deposit / placement",
+   "notional": 36000000.0,
+   "maturity": "2026-12-28",
+   "mtm": 70858
+  },
+  {
+   "tradeId": "T-10121",
+   "product": "CMS spread option",
+   "notional": 13000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 34663
+  },
+  {
+   "tradeId": "T-10658",
+   "product": "Commercial paper",
+   "notional": 67000000.0,
+   "maturity": "2027-04-26",
+   "mtm": 15029
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Rates",
+   "mtm": 23729246
+  },
+  {
+   "asset": "Commodity",
+   "mtm": 1849776
+  },
+  {
+   "asset": "Money market",
+   "mtm": -1477858
+  },
+  {
+   "asset": "Credit",
+   "mtm": -135615
+  }
+ ],
+ "counterparty": "CP-PINNACLE",
+ "agreement": "AGR-PINNACLE-ISDA",
+ "csa": "CSA-PINNACLE",
+ "creditLimit": "LIM-PINNACLE",
+ "exposureProfile": "EXP-PINNACLE-NY",
+ "cvaResult": "CVA-PINNACLE-NY",
+ "saccr": "SACCR-PINNACLE-NY",
+ "simm": "SIMM-PINNACLE",
+ "collateralBalance": "COLL-PINNACLE-NY",
+ "legalEntity": "LE-NY",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 47931
+  }
+ }
+}

@@ -1,0 +1,182 @@
+{
+ "nettingSetId": "NS-LUMEN-LDN",
+ "tradeCount": 12,
+ "netMtm": -7249936,
+ "collateral": -6317654,
+ "eePeak": 17816121,
+ "pfePeak": 42344941,
+ "limit": 58000000.0,
+ "utilisation": 0.7301,
+ "cva": -28857,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 3658664,
+   "pfe": 11346935
+  },
+  {
+   "tenor": "1M",
+   "ee": 7490023,
+   "pfe": 19721325
+  },
+  {
+   "tenor": "3M",
+   "ee": 12973100,
+   "pfe": 31784095
+  },
+  {
+   "tenor": "6M",
+   "ee": 17816121,
+   "pfe": 42344941
+  },
+  {
+   "tenor": "1Y",
+   "ee": 5971000,
+   "pfe": 13882575
+  },
+  {
+   "tenor": "2Y",
+   "ee": 8236380,
+   "pfe": 18848036
+  },
+  {
+   "tenor": "3Y",
+   "ee": 10009868,
+   "pfe": 22744110
+  },
+  {
+   "tenor": "5Y",
+   "ee": 12922684,
+   "pfe": 29152305
+  },
+  {
+   "tenor": "7Y",
+   "ee": 12919733,
+   "pfe": 29033812
+  },
+  {
+   "tenor": "10Y",
+   "ee": 0,
+   "pfe": 0
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10545",
+   "product": "Year-on-year inflation swap",
+   "notional": 210000000.0,
+   "maturity": "2028-04-14",
+   "mtm": -7337433
+  },
+  {
+   "tradeId": "T-10344",
+   "product": "OTC equity option",
+   "notional": 205000000.0,
+   "maturity": "2027-04-15",
+   "mtm": 1219453
+  },
+  {
+   "tradeId": "T-10385",
+   "product": "Reverse convertible",
+   "notional": 222000000.0,
+   "maturity": "2027-05-12",
+   "mtm": -407954
+  },
+  {
+   "tradeId": "T-10170",
+   "product": "Non-deliverable forward",
+   "notional": 14000000.0,
+   "maturity": "2026-10-07",
+   "mtm": 333376
+  },
+  {
+   "tradeId": "T-10418",
+   "product": "Portfolio (basket) swap",
+   "notional": 109000000.0,
+   "maturity": "2035-09-03",
+   "mtm": -330164
+  },
+  {
+   "tradeId": "T-10182",
+   "product": "FX vanilla option",
+   "notional": 76000000.0,
+   "maturity": "2027-03-22",
+   "mtm": -233837
+  },
+  {
+   "tradeId": "T-10188",
+   "product": "FX digital option",
+   "notional": 17000000.0,
+   "maturity": "2027-04-05",
+   "mtm": -198000
+  },
+  {
+   "tradeId": "T-10320",
+   "product": "Equity forward",
+   "notional": 8000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -173531
+  },
+  {
+   "tradeId": "T-10443",
+   "product": "Basket option",
+   "notional": 20000000.0,
+   "maturity": "2031-12-26",
+   "mtm": -51498
+  },
+  {
+   "tradeId": "T-10228",
+   "product": "FX accumulator",
+   "notional": 6000000.0,
+   "maturity": "2028-10-13",
+   "mtm": -37358
+  },
+  {
+   "tradeId": "T-10229",
+   "product": "FX variance swap",
+   "notional": 2000000.0,
+   "maturity": "2029-01-10",
+   "mtm": -16928
+  },
+  {
+   "tradeId": "T-10169",
+   "product": "Non-deliverable forward",
+   "notional": 58000000.0,
+   "maturity": "2027-03-25",
+   "mtm": -16062
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Inflation",
+   "mtm": -7337433
+  },
+  {
+   "asset": "Equity",
+   "mtm": 256306
+  },
+  {
+   "asset": "FX",
+   "mtm": -168809
+  }
+ ],
+ "counterparty": "CP-LUMEN",
+ "agreement": "AGR-LUMEN-ISDA",
+ "csa": "CSA-LUMEN",
+ "creditLimit": "LIM-LUMEN",
+ "exposureProfile": "EXP-LUMEN-LDN",
+ "cvaResult": "CVA-LUMEN-LDN",
+ "saccr": "SACCR-LUMEN-LDN",
+ "simm": "SIMM-LUMEN",
+ "collateralBalance": "COLL-LUMEN-LDN",
+ "legalEntity": "LE-LDN",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 14499
+  }
+ }
+}

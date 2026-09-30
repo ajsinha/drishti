@@ -1,0 +1,59 @@
+{
+ "resultId": "CVA-VERDANT-TKY",
+ "cva": -447205,
+ "dva": 8538,
+ "fva": -2020,
+ "kva": -162711,
+ "cs01": -8050,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -447205
+  },
+  {
+   "name": "DVA",
+   "amount": 8538
+  },
+  {
+   "name": "FVA",
+   "amount": -2020
+  },
+  {
+   "name": "KVA",
+   "amount": -162711
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -8050
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 1789
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 894
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -13416
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 7602
+  }
+ ],
+ "nettingSet": "NS-VERDANT-TKY",
+ "creditCurve": "CDS-VERDANT",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

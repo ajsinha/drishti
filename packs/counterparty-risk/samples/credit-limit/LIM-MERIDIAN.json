@@ -1,0 +1,48 @@
+{
+ "limitId": "LIM-MERIDIAN",
+ "counterpartyName": "Meridian Life Assurance",
+ "measure": "PFE 95 peak",
+ "limit": 466000000.0,
+ "used": 265544824,
+ "utilisation": 0.5698,
+ "status": "Within limit",
+ "buckets": [
+  {
+   "bucket": "0-1Y",
+   "limit": 466000000,
+   "used": 225713100,
+   "utilisation": 0.4844
+  },
+  {
+   "bucket": "1-3Y",
+   "limit": 466000000,
+   "used": 265544824,
+   "utilisation": 0.5698
+  },
+  {
+   "bucket": "3-5Y",
+   "limit": 372800000,
+   "used": 185881377,
+   "utilisation": 0.4986
+  },
+  {
+   "bucket": "5-10Y",
+   "limit": 279600000,
+   "used": 92940688,
+   "utilisation": 0.3324
+  },
+  {
+   "bucket": "10Y+",
+   "limit": 186400000,
+   "used": 26554482,
+   "utilisation": 0.1425
+  }
+ ],
+ "counterparty": "CP-MERIDIAN",
+ "approvedBy": "Credit Risk Committee",
+ "reviewDue": "2027-03-19",
+ "_meta": {
+  "source": "limits-system",
+  "generation": 1
+ }
+}

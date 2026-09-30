@@ -1,0 +1,48 @@
+{
+ "limitId": "LIM-KESTREL",
+ "counterpartyName": "Kestrel Global Macro Fund",
+ "measure": "PFE 95 peak",
+ "limit": 256000000.0,
+ "used": 128317751,
+ "utilisation": 0.5012,
+ "status": "Within limit",
+ "buckets": [
+  {
+   "bucket": "0-1Y",
+   "limit": 256000000,
+   "used": 109070088,
+   "utilisation": 0.4261
+  },
+  {
+   "bucket": "1-3Y",
+   "limit": 256000000,
+   "used": 128317751,
+   "utilisation": 0.5012
+  },
+  {
+   "bucket": "3-5Y",
+   "limit": 204800000,
+   "used": 89822426,
+   "utilisation": 0.4386
+  },
+  {
+   "bucket": "5-10Y",
+   "limit": 153600000,
+   "used": 44911213,
+   "utilisation": 0.2924
+  },
+  {
+   "bucket": "10Y+",
+   "limit": 102400000,
+   "used": 12831775,
+   "utilisation": 0.1253
+  }
+ ],
+ "counterparty": "CP-KESTREL",
+ "approvedBy": "Credit Risk Committee",
+ "reviewDue": "2027-03-19",
+ "_meta": {
+  "source": "limits-system",
+  "generation": 1
+ }
+}

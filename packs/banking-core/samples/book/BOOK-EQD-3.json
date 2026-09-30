@@ -1,0 +1,92 @@
+{
+ "bookId": "BOOK-EQD-3",
+ "name": "Equity derivatives · book 3",
+ "deskName": "Equity derivatives",
+ "tradeCount": 54,
+ "mtm": -9118308,
+ "dv01": -168556,
+ "topTrades": [
+  {
+   "tradeId": "T-10409",
+   "product": "Equity total return swap",
+   "notional": 243000000.0,
+   "maturity": "2028-11-24",
+   "mtm": -5455747
+  },
+  {
+   "tradeId": "T-10371",
+   "product": "Equity digital option",
+   "notional": 232000000.0,
+   "maturity": "2027-11-25",
+   "mtm": 4508571
+  },
+  {
+   "tradeId": "T-10353",
+   "product": "Index option",
+   "notional": 211000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -4330699
+  },
+  {
+   "tradeId": "T-10388",
+   "product": "Reverse convertible",
+   "notional": 181000000.0,
+   "maturity": "2038-02-01",
+   "mtm": -4142972
+  },
+  {
+   "tradeId": "T-10334",
+   "product": "Equity index future",
+   "notional": 242000000.0,
+   "maturity": "2027-09-23",
+   "mtm": -3839873
+  },
+  {
+   "tradeId": "T-10435",
+   "product": "Convertible bond",
+   "notional": 198000000.0,
+   "maturity": "2033-09-21",
+   "mtm": -3175475
+  },
+  {
+   "tradeId": "T-10355",
+   "product": "Equity barrier option",
+   "notional": 146000000.0,
+   "maturity": "2034-04-03",
+   "mtm": 3103153
+  },
+  {
+   "tradeId": "T-10438",
+   "product": "Convertible bond",
+   "notional": 241000000.0,
+   "maturity": "2032-11-24",
+   "mtm": 3067713
+  },
+  {
+   "tradeId": "T-10341",
+   "product": "Listed equity option",
+   "notional": 193000000.0,
+   "maturity": "2027-01-25",
+   "mtm": 2756929
+  },
+  {
+   "tradeId": "T-10444",
+   "product": "Basket option",
+   "notional": 136000000.0,
+   "maturity": "2032-02-25",
+   "mtm": 1867436
+  }
+ ],
+ "desk": "DESK-EQD",
+ "accountingTreatment": "Fair value (FVTPL)",
+ "regulatoryBook": "Trading book",
+ "volcker": "Market making",
+ "_meta": {
+  "source": "org-master",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 5000
+  }
+ }
+}

@@ -1,0 +1,33 @@
+{
+ "deskId": "DESK-SFT",
+ "name": "Repo and securities lending",
+ "head": "K. Brandt",
+ "books": [
+  {
+   "id": "BOOK-SFT-1",
+   "trades": 17,
+   "mtm": 8879873
+  },
+  {
+   "id": "BOOK-SFT-2",
+   "trades": 14,
+   "mtm": -8487510
+  },
+  {
+   "id": "BOOK-SFT-3",
+   "trades": 11,
+   "mtm": -633253
+  }
+ ],
+ "var99": 23755726,
+ "mtm": -240890,
+ "legalEntity": "LE-FRA",
+ "varResult": "VAR-SFT",
+ "assetClasses": [
+  "Securities financing"
+ ],
+ "_meta": {
+  "source": "org-master",
+  "generation": 1
+ }
+}

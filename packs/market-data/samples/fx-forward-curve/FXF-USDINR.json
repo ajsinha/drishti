@@ -1,0 +1,60 @@
+{
+ "curveId": "FXF-USDINR",
+ "pair": "USDINR",
+ "spot": 88.7,
+ "points3m": 4669.0,
+ "points1y": 18824.0,
+ "points": [
+  {
+   "tenor": "ON",
+   "pips": 51.0,
+   "outright": 88.7051
+  },
+  {
+   "tenor": "1W",
+   "pips": 357.3,
+   "outright": 88.73573
+  },
+  {
+   "tenor": "1M",
+   "pips": 1553.6,
+   "outright": 88.85536
+  },
+  {
+   "tenor": "2M",
+   "pips": 3109.9,
+   "outright": 89.01099
+  },
+  {
+   "tenor": "3M",
+   "pips": 4669.0,
+   "outright": 89.1669
+  },
+  {
+   "tenor": "6M",
+   "pips": 9362.6,
+   "outright": 89.63626
+  },
+  {
+   "tenor": "9M",
+   "pips": 14080.8,
+   "outright": 90.10808
+  },
+  {
+   "tenor": "1Y",
+   "pips": 18824.0,
+   "outright": 90.5824
+  },
+  {
+   "tenor": "2Y",
+   "pips": 38047.4,
+   "outright": 92.50474
+  }
+ ],
+ "fxSpot": "FX-USDINR",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

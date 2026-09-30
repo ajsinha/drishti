@@ -1,0 +1,84 @@
+{
+ "calcId": "SACCR-SOLARIS-NY",
+ "replacementCost": 942321,
+ "addOn": 38614411,
+ "multiplier": 1.0,
+ "ead": 55379425,
+ "rwa": 55379425,
+ "addOns": [
+  {
+   "assetClass": "Interest rate",
+   "addOn": 2946219
+  },
+  {
+   "assetClass": "Credit",
+   "addOn": 28950000
+  },
+  {
+   "assetClass": "Commodity",
+   "addOn": 6718192
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "CHF",
+   "effectiveNotional": -195172603,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "AUD",
+   "effectiveNotional": 176000000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "GBP",
+   "effectiveNotional": 76000000,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "JPY",
+   "effectiveNotional": 159000000,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "AUD",
+   "effectiveNotional": 146000000,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "USD",
+   "effectiveNotional": 198000000,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Commodity",
+   "hedgingSet": "USD",
+   "effectiveNotional": 37323288,
+   "sf": 0.18
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "JPY",
+   "effectiveNotional": 10000000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "EUR",
+   "effectiveNotional": -208071233,
+   "sf": 0.005
+  }
+ ],
+ "nettingSet": "NS-SOLARIS-NY",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

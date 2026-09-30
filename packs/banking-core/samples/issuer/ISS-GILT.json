@@ -1,0 +1,25 @@
+{
+ "issuerId": "ISS-GILT",
+ "name": "United Kingdom Debt Management Office",
+ "rating": "AA",
+ "sector": "Sovereign",
+ "country": "GB",
+ "bonds": [
+  {
+   "isin": "GBGILT065113",
+   "coupon": 0.0386,
+   "maturity": "2031-12-15"
+  },
+  {
+   "isin": "GBGILT120223",
+   "coupon": 0.0436,
+   "maturity": "2036-08-15"
+  }
+ ],
+ "creditCurve": "CDS-GILT",
+ "lei": "549300PG4UPEIXK9G793",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

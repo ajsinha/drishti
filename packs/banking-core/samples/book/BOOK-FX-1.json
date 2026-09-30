@@ -1,0 +1,92 @@
+{
+ "bookId": "BOOK-FX-1",
+ "name": "G10 and EM FX · book 1",
+ "deskName": "G10 and EM FX",
+ "tradeCount": 22,
+ "mtm": -1650999,
+ "dv01": -150932,
+ "topTrades": [
+  {
+   "tradeId": "T-10221",
+   "product": "FX target redemption forward",
+   "notional": 217000000.0,
+   "maturity": "2031-12-29",
+   "mtm": 3921080
+  },
+  {
+   "tradeId": "T-10219",
+   "product": "FX target redemption forward",
+   "notional": 216000000.0,
+   "maturity": "2034-07-10",
+   "mtm": -3824878
+  },
+  {
+   "tradeId": "T-10201",
+   "product": "FX double-barrier option",
+   "notional": 237000000.0,
+   "maturity": "2036-06-25",
+   "mtm": -3187239
+  },
+  {
+   "tradeId": "T-10191",
+   "product": "FX digital option",
+   "notional": 146000000.0,
+   "maturity": "2029-02-05",
+   "mtm": 2716990
+  },
+  {
+   "tradeId": "T-10177",
+   "product": "FX swap",
+   "notional": 127000000.0,
+   "maturity": "2035-11-13",
+   "mtm": 1986020
+  },
+  {
+   "tradeId": "T-10208",
+   "product": "FX one-touch / no-touch",
+   "notional": 117000000.0,
+   "maturity": "2032-06-21",
+   "mtm": -1806756
+  },
+  {
+   "tradeId": "T-10186",
+   "product": "FX vanilla option",
+   "notional": 67000000.0,
+   "maturity": "2027-11-24",
+   "mtm": -1313627
+  },
+  {
+   "tradeId": "T-10174",
+   "product": "Non-deliverable forward",
+   "notional": 47000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -708903
+  },
+  {
+   "tradeId": "T-10178",
+   "product": "FX swap",
+   "notional": 98000000.0,
+   "maturity": "2030-06-25",
+   "mtm": 620224
+  },
+  {
+   "tradeId": "T-10171",
+   "product": "Non-deliverable forward",
+   "notional": 79000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -606269
+  }
+ ],
+ "desk": "DESK-FX",
+ "accountingTreatment": "Fair value (FVTPL)",
+ "regulatoryBook": "Trading book",
+ "volcker": "Market making",
+ "_meta": {
+  "source": "org-master",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 5000
+  }
+ }
+}

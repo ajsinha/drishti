@@ -1,0 +1,88 @@
+{
+ "curveId": "INFC-HICPX",
+ "index": "INF-HICPX",
+ "be5y": 0.021588,
+ "be10y": 0.022497,
+ "points": [
+  {
+   "tenor": "1Y",
+   "breakeven": 1.994
+  },
+  {
+   "tenor": "2Y",
+   "breakeven": 2.0548
+  },
+  {
+   "tenor": "5Y",
+   "breakeven": 2.1588
+  },
+  {
+   "tenor": "10Y",
+   "breakeven": 2.2497
+  },
+  {
+   "tenor": "20Y",
+   "breakeven": 2.3467
+  },
+  {
+   "tenor": "30Y",
+   "breakeven": 2.4051
+  }
+ ],
+ "seasonality": [
+  {
+   "month": "Jan",
+   "factor": 0.00075
+  },
+  {
+   "month": "Feb",
+   "factor": 0.0013
+  },
+  {
+   "month": "Mar",
+   "factor": 0.0015
+  },
+  {
+   "month": "Apr",
+   "factor": 0.0013
+  },
+  {
+   "month": "May",
+   "factor": 0.00075
+  },
+  {
+   "month": "Jun",
+   "factor": 0.0
+  },
+  {
+   "month": "Jul",
+   "factor": -0.00075
+  },
+  {
+   "month": "Aug",
+   "factor": -0.0013
+  },
+  {
+   "month": "Sep",
+   "factor": -0.0015
+  },
+  {
+   "month": "Oct",
+   "factor": -0.0013
+  },
+  {
+   "month": "Nov",
+   "factor": -0.00075
+  },
+  {
+   "month": "Dec",
+   "factor": -0.0
+  }
+ ],
+ "inflationIndex": "INF-HICPX",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

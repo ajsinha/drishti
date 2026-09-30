@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-CORAL-NY",
+ "held": 0,
+ "posted": 30493645,
+ "net": -30493645,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Cascadia Airlines Inc. 2031",
+   "direction": "Posted",
+   "marketValue": 10164548,
+   "haircut": 0.01,
+   "value": 10062903
+  },
+  {
+   "asset": "Halcyon Shipping plc 2036",
+   "direction": "Posted",
+   "marketValue": 10164548,
+   "haircut": 0.02,
+   "value": 9961257
+  },
+  {
+   "asset": "Novatek Devices Inc. 2031",
+   "direction": "Posted",
+   "marketValue": 10164548,
+   "haircut": 0.01,
+   "value": 10062903
+  }
+ ],
+ "csa": "CSA-CORAL",
+ "nettingSet": "NS-CORAL-NY",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

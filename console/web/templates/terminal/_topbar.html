@@ -47,7 +47,8 @@
     {% if pack_switcher | length > 1 %}
     <div class="dropdown">
       <button class="theme-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Domain packs">
-        <i class="bi bi-box-seam" aria-hidden="true"></i> <span class="d-none d-lg-inline">{{ pack_switcher | selectattr('active') | map(attribute='name') | join(' + ') }}</span></button>
+        <i class="bi bi-box-seam" aria-hidden="true"></i> {% set on = pack_switcher | selectattr('active') | map(attribute='name') | list %}<span class="d-none d-lg-inline"
+        title="{{ on | join(', ') }}">{{ on | join(' + ') if on | length <= 2 else on | length ~ ' packs' }}</span></button>
       <form class="dropdown-menu dropdown-menu-end pack-menu" data-packs>
         <p class="pack-menu-h">Show these packs</p>
         {% for p in pack_switcher %}<label class="dropdown-item chk"><input type="checkbox" name="pack" value="{{ p.name }}"{% if p.active %} checked{% endif %}> {{ p.title }}</label>{% endfor %}

@@ -1,0 +1,87 @@
+{
+ "profileId": "EXP-RHEINTAL-FRA",
+ "epe": 172993,
+ "eepe": 310970,
+ "pfePeak": 726484,
+ "paths": 5000,
+ "runDate": "2026-09-30",
+ "buckets": [
+  {
+   "tenor": "0",
+   "ee": 310970,
+   "ene": -35237,
+   "pfe95": 726484,
+   "pfe99": 961103
+  },
+  {
+   "tenor": "1M",
+   "ee": 304415,
+   "ene": -34403,
+   "pfe95": 689575,
+   "pfe99": 910610
+  },
+  {
+   "tenor": "3M",
+   "ee": 247993,
+   "ene": 0,
+   "pfe95": 545584,
+   "pfe99": 719179
+  },
+  {
+   "tenor": "6M",
+   "ee": 232968,
+   "ene": 0,
+   "pfe95": 512529,
+   "pfe99": 675606
+  },
+  {
+   "tenor": "1Y",
+   "ee": 205593,
+   "ene": 0,
+   "pfe95": 452305,
+   "pfe99": 596221
+  },
+  {
+   "tenor": "2Y",
+   "ee": 160116,
+   "ene": 0,
+   "pfe95": 352256,
+   "pfe99": 464337
+  },
+  {
+   "tenor": "3Y",
+   "ee": 124699,
+   "ene": 0,
+   "pfe95": 274337,
+   "pfe99": 361626
+  },
+  {
+   "tenor": "5Y",
+   "ee": 75634,
+   "ene": 0,
+   "pfe95": 166394,
+   "pfe99": 219337
+  },
+  {
+   "tenor": "7Y",
+   "ee": 45874,
+   "ene": 0,
+   "pfe95": 100923,
+   "pfe99": 133035
+  },
+  {
+   "tenor": "10Y",
+   "ee": 21669,
+   "ene": 0,
+   "pfe95": 47673,
+   "pfe99": 62841
+  }
+ ],
+ "nettingSet": "NS-RHEINTAL-FRA",
+ "model": "Hull-White 1F rates, GBM FX and equity, 5,000 paths",
+ "confidence": 0.95,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

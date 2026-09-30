@@ -1,0 +1,180 @@
+{
+ "isin": "BND-US0UST151040",
+ "isinCode": "US0UST151040",
+ "issuerName": "United States Treasury",
+ "coupon": 0.0432,
+ "maturity": "2036-04-15",
+ "price": 102.61,
+ "yield": 0.0402,
+ "zSpread": 11.4,
+ "modDuration": 8.7,
+ "rating": "AA+",
+ "terms": {
+  "currency": "USD",
+  "couponFrequency": "Semi-annual",
+  "dayCount": "ACT/ACT",
+  "issueDate": "2026-04-15",
+  "amountIssued": 1200000000,
+  "seniority": "Sovereign",
+  "callable": false,
+  "cusip": "0UST15108"
+ },
+ "coupons": [
+  {
+   "date": "2027-04-15",
+   "amount": 2.16
+  },
+  {
+   "date": "2028-04-15",
+   "amount": 2.16
+  },
+  {
+   "date": "2029-04-15",
+   "amount": 2.16
+  },
+  {
+   "date": "2030-04-15",
+   "amount": 2.16
+  },
+  {
+   "date": "2031-04-15",
+   "amount": 2.16
+  },
+  {
+   "date": "2032-04-15",
+   "amount": 2.16
+  }
+ ],
+ "history": [
+  {
+   "date": "2026-08-19",
+   "price": 103.263
+  },
+  {
+   "date": "2026-08-20",
+   "price": 103.105
+  },
+  {
+   "date": "2026-08-21",
+   "price": 103.049
+  },
+  {
+   "date": "2026-08-24",
+   "price": 103.188
+  },
+  {
+   "date": "2026-08-25",
+   "price": 103.337
+  },
+  {
+   "date": "2026-08-26",
+   "price": 103.288
+  },
+  {
+   "date": "2026-08-27",
+   "price": 103.295
+  },
+  {
+   "date": "2026-08-28",
+   "price": 103.593
+  },
+  {
+   "date": "2026-08-31",
+   "price": 103.445
+  },
+  {
+   "date": "2026-09-01",
+   "price": 103.328
+  },
+  {
+   "date": "2026-09-02",
+   "price": 103.167
+  },
+  {
+   "date": "2026-09-03",
+   "price": 103.125
+  },
+  {
+   "date": "2026-09-04",
+   "price": 102.981
+  },
+  {
+   "date": "2026-09-08",
+   "price": 102.765
+  },
+  {
+   "date": "2026-09-09",
+   "price": 102.731
+  },
+  {
+   "date": "2026-09-10",
+   "price": 102.913
+  },
+  {
+   "date": "2026-09-11",
+   "price": 103.023
+  },
+  {
+   "date": "2026-09-14",
+   "price": 103.032
+  },
+  {
+   "date": "2026-09-15",
+   "price": 103.186
+  },
+  {
+   "date": "2026-09-16",
+   "price": 103.04
+  },
+  {
+   "date": "2026-09-17",
+   "price": 103.129
+  },
+  {
+   "date": "2026-09-18",
+   "price": 103.041
+  },
+  {
+   "date": "2026-09-21",
+   "price": 103.143
+  },
+  {
+   "date": "2026-09-22",
+   "price": 103.281
+  },
+  {
+   "date": "2026-09-23",
+   "price": 103.058
+  },
+  {
+   "date": "2026-09-24",
+   "price": 102.761
+  },
+  {
+   "date": "2026-09-25",
+   "price": 102.809
+  },
+  {
+   "date": "2026-09-28",
+   "price": 102.745
+  },
+  {
+   "date": "2026-09-29",
+   "price": 102.592
+  },
+  {
+   "date": "2026-09-30",
+   "price": 102.61
+  }
+ ],
+ "issuer": "ISS-UST",
+ "benchmarkCurve": "CRV-USD-GOVT",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "price": 0.02
+  }
+ }
+}

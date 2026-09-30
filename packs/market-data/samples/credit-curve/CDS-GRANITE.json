@@ -1,0 +1,63 @@
+{
+ "curveId": "CDS-GRANITE",
+ "issuerName": "Granite Building Materials plc",
+ "spread5y": 132,
+ "recovery": 0.4,
+ "seniority": "Senior unsecured",
+ "docClause": "MM14",
+ "pd1y": 0.012241,
+ "points": [
+  {
+   "tenor": "6M",
+   "spread": 66.7,
+   "hazard": 0.011117,
+   "survival": 0.994457
+  },
+  {
+   "tenor": "1Y",
+   "spread": 73.9,
+   "hazard": 0.012317,
+   "survival": 0.987759
+  },
+  {
+   "tenor": "2Y",
+   "spread": 88.4,
+   "hazard": 0.014733,
+   "survival": 0.970963
+  },
+  {
+   "tenor": "3Y",
+   "spread": 103.0,
+   "hazard": 0.017167,
+   "survival": 0.949804
+  },
+  {
+   "tenor": "5Y",
+   "spread": 132.0,
+   "hazard": 0.022,
+   "survival": 0.895834
+  },
+  {
+   "tenor": "7Y",
+   "spread": 139.9,
+   "hazard": 0.023317,
+   "survival": 0.849407
+  },
+  {
+   "tenor": "10Y",
+   "spread": 151.8,
+   "hazard": 0.0253,
+   "survival": 0.776468
+  }
+ ],
+ "issuer": "ISS-GRANITE",
+ "currency": "EUR",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "spread5y": 0.4
+  }
+ }
+}

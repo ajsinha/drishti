@@ -1,0 +1,26 @@
+{
+ "resultId": "STR-EM-CRISIS-CREDIT",
+ "scenarioName": "Emerging-market crisis",
+ "pnl": -2298489433,
+ "limit": -3050600000.0,
+ "byBook": [
+  {
+   "book": "BOOK-CREDIT-1",
+   "pnl": -610397963
+  },
+  {
+   "book": "BOOK-CREDIT-2",
+   "pnl": -794002349
+  },
+  {
+   "book": "BOOK-CREDIT-3",
+   "pnl": -894089121
+  }
+ ],
+ "scenario": "SCN-EM-CRISIS",
+ "desk": "DESK-CREDIT",
+ "_meta": {
+  "source": "stress-engine",
+  "generation": 1
+ }
+}

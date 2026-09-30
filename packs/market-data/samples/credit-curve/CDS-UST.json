@@ -1,0 +1,63 @@
+{
+ "curveId": "CDS-UST",
+ "issuerName": "United States Treasury",
+ "spread5y": 12,
+ "recovery": 0.25,
+ "seniority": "Senior unsecured",
+ "docClause": "CR14",
+ "pd1y": 0.000893,
+ "points": [
+  {
+   "tenor": "6M",
+   "spread": 6.1,
+   "hazard": 0.000813,
+   "survival": 0.999593
+  },
+  {
+   "tenor": "1Y",
+   "spread": 6.7,
+   "hazard": 0.000893,
+   "survival": 0.999107
+  },
+  {
+   "tenor": "2Y",
+   "spread": 8.0,
+   "hazard": 0.001067,
+   "survival": 0.997869
+  },
+  {
+   "tenor": "3Y",
+   "spread": 9.4,
+   "hazard": 0.001253,
+   "survival": 0.996247
+  },
+  {
+   "tenor": "5Y",
+   "spread": 12.0,
+   "hazard": 0.0016,
+   "survival": 0.992032
+  },
+  {
+   "tenor": "7Y",
+   "spread": 12.7,
+   "hazard": 0.001693,
+   "survival": 0.988217
+  },
+  {
+   "tenor": "10Y",
+   "spread": 13.8,
+   "hazard": 0.00184,
+   "survival": 0.981768
+  }
+ ],
+ "issuer": "ISS-UST",
+ "currency": "USD",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "spread5y": 0.4
+  }
+ }
+}

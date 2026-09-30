@@ -1,0 +1,59 @@
+{
+ "resultId": "CVA-LUMEN-FRA",
+ "cva": -6,
+ "dva": 2,
+ "fva": -2498,
+ "kva": -731,
+ "cs01": 0,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -6
+  },
+  {
+   "name": "DVA",
+   "amount": 2
+  },
+  {
+   "name": "FVA",
+   "amount": -2498
+  },
+  {
+   "name": "KVA",
+   "amount": -731
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": 0
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 0
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 0
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": 0
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 0
+  }
+ ],
+ "nettingSet": "NS-LUMEN-FRA",
+ "creditCurve": "CDS-LUMEN",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

@@ -34,6 +34,19 @@ strip:
   - { label: "1Y ATM", bind: $.atm1y, fmt: price2 }
   - { label: "1Y 25D RR", bind: $.rr1y, fmt: price2, tone: sign }
 panels:
+  - id: smile
+    kind: surface
+    title: Smile surface (vol %)
+    code: SURF
+    key: F4
+    rows: $.grid
+    y: expiry
+    columns:
+      - { label: "10D P", bind: "@.p10", fmt: price2 }
+      - { label: "25D P", bind: "@.p25", fmt: price2 }
+      - { label: ATM, bind: "@.atm", fmt: price2 }
+      - { label: "25D C", bind: "@.c25", fmt: price2 }
+      - { label: "10D C", bind: "@.c10", fmt: price2 }
   - id: atm
     kind: line
     title: ATM vol term structure
@@ -72,6 +85,7 @@ keys: { F7: "link($.fxSpot, 'fx-spot')", F8: impact, F9: raw }
 
 | Panel | Kind | Rows |
 |---|---|---|
+| Smile surface (vol %) | surface | `$.grid` |
 | ATM vol term structure | line | `$.grid` |
 | Surface (vol %) | table | `$.grid` |
 

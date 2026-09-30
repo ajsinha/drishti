@@ -1,0 +1,90 @@
+{
+ "calcId": "SACCR-PINNACLE-NY",
+ "replacementCost": 6055490,
+ "addOn": 61839836,
+ "multiplier": 1.0,
+ "ead": 95053456,
+ "rwa": 95053456,
+ "addOns": [
+  {
+   "assetClass": "Interest rate",
+   "addOn": 2529836
+  },
+  {
+   "assetClass": "Credit",
+   "addOn": 27450000
+  },
+  {
+   "assetClass": "Commodity",
+   "addOn": 31860000
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "USD",
+   "effectiveNotional": 202587671,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "AUD",
+   "effectiveNotional": -237778082,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "CHF",
+   "effectiveNotional": 21287671,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "JPY",
+   "effectiveNotional": 1300000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "USD",
+   "effectiveNotional": -163000000,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "CHF",
+   "effectiveNotional": -34000000,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "EUR",
+   "effectiveNotional": -232000000,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Credit",
+   "hedgingSet": "CAD",
+   "effectiveNotional": 120000000,
+   "sf": 0.05
+  },
+  {
+   "assetClass": "Commodity",
+   "hedgingSet": "USD",
+   "effectiveNotional": 177000000,
+   "sf": 0.18
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "CAD",
+   "effectiveNotional": 43013699,
+   "sf": 0.005
+  }
+ ],
+ "nettingSet": "NS-PINNACLE-NY",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

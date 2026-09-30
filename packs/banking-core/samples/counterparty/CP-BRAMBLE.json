@@ -1,0 +1,50 @@
+{
+ "counterpartyId": "CP-BRAMBLE",
+ "name": "Bramble Asset Management",
+ "lei": "549300NGOD6QK9MVRJ72",
+ "rating": "A-",
+ "sector": "Asset management",
+ "country": "GB",
+ "type": "Asset manager",
+ "netMtm": 60210878,
+ "pfePeak": 74752910,
+ "nettingSets": [
+  {
+   "id": "NS-BRAMBLE-FRA",
+   "agreement": "AGR-BRAMBLE-ISDA",
+   "trades": 3,
+   "netMtm": 3993121
+  },
+  {
+   "id": "NS-BRAMBLE-LDN",
+   "agreement": "AGR-BRAMBLE-ISDA",
+   "trades": 15,
+   "netMtm": -7768121
+  },
+  {
+   "id": "NS-BRAMBLE-NY",
+   "agreement": "AGR-BRAMBLE-ISDA",
+   "trades": 18,
+   "netMtm": 63303767
+  },
+  {
+   "id": "NS-BRAMBLE-TKY",
+   "agreement": "AGR-BRAMBLE-ISDA",
+   "trades": 2,
+   "netMtm": 682111
+  }
+ ],
+ "kyc": {
+  "status": "Approved",
+  "riskRating": "Standard",
+  "lastReview": "2026-02-11",
+  "emirClassification": "FC",
+  "pd1y": 0.0008
+ },
+ "group": "GRP-BRAMBLE",
+ "creditLimit": "LIM-BRAMBLE",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

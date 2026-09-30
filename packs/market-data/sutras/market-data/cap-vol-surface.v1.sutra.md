@@ -32,6 +32,19 @@ strip:
   - { label: Currency, bind: $.currency }
   - { label: "5Y ATM", bind: $.atm5y, fmt: price2, emphasis: true }
 panels:
+  - id: surface
+    kind: surface
+    title: Cap vols by maturity × strike (bp)
+    code: SURF
+    key: F4
+    rows: $.grid
+    y: maturity
+    columns:
+      - { label: ATM, bind: "@.atm", fmt: price2 }
+      - { label: "2%", bind: "@.k2", fmt: price2 }
+      - { label: "3%", bind: "@.k3", fmt: price2 }
+      - { label: "4%", bind: "@.k4", fmt: price2 }
+      - { label: "5%", bind: "@.k5", fmt: price2 }
   - id: grid
     kind: table
     title: Cap vols (bp)
@@ -68,5 +81,6 @@ keys: { F8: impact, F9: raw }
 
 | Panel | Kind | Rows |
 |---|---|---|
+| Cap vols by maturity × strike (bp) | surface | `$.grid` |
 | Cap vols (bp) | table | `$.grid` |
 | ATM by maturity | line | `$.grid` |

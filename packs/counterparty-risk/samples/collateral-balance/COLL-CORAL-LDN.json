@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-CORAL-LDN",
+ "held": 0,
+ "posted": 2532153,
+ "net": -2532153,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Granite Building Materials plc 2036",
+   "direction": "Posted",
+   "marketValue": 844051,
+   "haircut": 0.005,
+   "value": 839831
+  },
+  {
+   "asset": "Kaizen Motors Corp. 2031",
+   "direction": "Posted",
+   "marketValue": 844051,
+   "haircut": 0.01,
+   "value": 835610
+  },
+  {
+   "asset": "United States Treasury 2031",
+   "direction": "Posted",
+   "marketValue": 844051,
+   "haircut": 0.005,
+   "value": 839831
+  }
+ ],
+ "csa": "CSA-CORAL",
+ "nettingSet": "NS-CORAL-LDN",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

@@ -1,0 +1,72 @@
+{
+ "calcId": "SACCR-CORAL-LDN",
+ "replacementCost": 0,
+ "addOn": 25580726,
+ "multiplier": 0.9526,
+ "ead": 34115479,
+ "rwa": 6823096,
+ "addOns": [
+  {
+   "assetClass": "Foreign exchange",
+   "addOn": 3920000
+  },
+  {
+   "assetClass": "Equity",
+   "addOn": 18560000
+  },
+  {
+   "assetClass": "Interest rate",
+   "addOn": 3100726
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Foreign exchange",
+   "hedgingSet": "USD",
+   "effectiveNotional": -98000000,
+   "sf": 0.04
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "EUR",
+   "effectiveNotional": -47000000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "USD",
+   "effectiveNotional": 3000000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "JPY",
+   "effectiveNotional": -8000000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "USD",
+   "effectiveNotional": -212145205,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "JPY",
+   "effectiveNotional": 237000000,
+   "sf": 0.005
+  },
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "GBP",
+   "effectiveNotional": 171000000,
+   "sf": 0.005
+  }
+ ],
+ "nettingSet": "NS-CORAL-LDN",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

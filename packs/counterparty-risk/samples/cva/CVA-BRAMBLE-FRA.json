@@ -1,0 +1,58 @@
+{
+ "resultId": "CVA-BRAMBLE-FRA",
+ "cva": -1513,
+ "dva": 397,
+ "fva": -4792,
+ "kva": -9804,
+ "cs01": -27,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -1513
+  },
+  {
+   "name": "DVA",
+   "amount": 397
+  },
+  {
+   "name": "FVA",
+   "amount": -4792
+  },
+  {
+   "name": "KVA",
+   "amount": -9804
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -27
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 6
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 3
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -45
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 26
+  }
+ ],
+ "nettingSet": "NS-BRAMBLE-FRA",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

@@ -1,0 +1,216 @@
+{
+ "tradeId": "T-10649",
+ "productType": "T_BILL",
+ "productName": "Treasury bill",
+ "assetClass": "Money market",
+ "family": "money",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2026-08-12",
+ "effectiveDate": "2026-08-14",
+ "maturityDate": "2026-12-30",
+ "currency": "EUR",
+ "notional": 46000000.0,
+ "mtm": -500692,
+ "mtmCurrency": "USD",
+ "pnl1d": -15277,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-MM-1",
+ "trader": "TRDR-ISCHULZ",
+ "desk": "DESK-MM",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-ORBITAL",
+ "benchmarkCurve": "CRV-EUR-GOVT",
+ "terms": {
+  "discountRate": 0.037225,
+  "faceAmount": 86995443.0
+ },
+ "risk": {
+  "dv01": -1489
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -496
+  },
+  {
+   "bucket": "6M",
+   "dv01": -993
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -6853
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -904
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -6144
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 31584
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 1333
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 24030
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -14156
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -21367
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 2017
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 29175
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -13559
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 16593
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -1731
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 20156
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -1927
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 19884
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -9158
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 9049
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 6636
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 13797
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-08-12",
+  "executionTimestamp": "2026-08-12T15:55:06.951Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "I. Schulz",
+  "salesperson": null,
+  "orderId": "ORD-1FAAD01331"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-08-12T12:00:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2026-08-12T12:00:00Z",
+  "lastModifiedAt": "2026-08-12T12:00:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT977359184",
+  "matched": "2026-08-12 12:20",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH5140810502",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20961FAAD0133148DF6097DA",
+  "upi": "QZOV16YCTKDJ",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-EUR-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -500692,
+  "cleanPv": -500692.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-EUR-GOVT"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-mm",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 1461
+  }
+ }
+}

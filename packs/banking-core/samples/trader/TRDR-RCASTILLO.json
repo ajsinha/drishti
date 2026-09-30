@@ -1,0 +1,22 @@
+{
+ "traderId": "TRDR-RCASTILLO",
+ "name": "R. Castillo",
+ "deskName": "Bonds and securitised",
+ "tradeCount": 32,
+ "books": [
+  {
+   "id": "BOOK-FI-1"
+  },
+  {
+   "id": "BOOK-FI-2"
+  },
+  {
+   "id": "BOOK-FI-3"
+  }
+ ],
+ "desk": "DESK-FI",
+ "_meta": {
+  "source": "org-master",
+  "generation": 1
+ }
+}

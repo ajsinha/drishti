@@ -1,0 +1,26 @@
+{
+ "issuerId": "ISS-MERIDIAN",
+ "name": "Meridian Financial Group",
+ "rating": "A",
+ "sector": "Insurance",
+ "country": "US",
+ "bonds": [
+  {
+   "isin": "USMERI070218",
+   "coupon": 0.0418,
+   "maturity": "2031-02-15"
+  },
+  {
+   "isin": "USMERI186295",
+   "coupon": 0.0468,
+   "maturity": "2036-06-15"
+  }
+ ],
+ "creditCurve": "CDS-MERIDIAN",
+ "lei": "549300JM179803GCXA39",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ },
+ "equity": "EQ-MRDN"
+}

@@ -1,0 +1,33 @@
+{
+ "deskId": "DESK-FI",
+ "name": "Bonds and securitised",
+ "head": "R. Castillo",
+ "books": [
+  {
+   "id": "BOOK-FI-1",
+   "trades": 26,
+   "mtm": -15358139
+  },
+  {
+   "id": "BOOK-FI-2",
+   "trades": 29,
+   "mtm": 8675969
+  },
+  {
+   "id": "BOOK-FI-3",
+   "trades": 23,
+   "mtm": 3704494
+  }
+ ],
+ "var99": 213105170,
+ "mtm": -2977676,
+ "legalEntity": "LE-NY",
+ "varResult": "VAR-FI",
+ "assetClasses": [
+  "Fixed income"
+ ],
+ "_meta": {
+  "source": "org-master",
+  "generation": 1
+ }
+}

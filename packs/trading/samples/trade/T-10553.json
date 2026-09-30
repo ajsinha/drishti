@@ -1,0 +1,379 @@
+{
+ "tradeId": "T-10553",
+ "productType": "INFL_LINKED_BOND",
+ "productName": "Inflation-linked bond",
+ "assetClass": "Inflation",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-03-05",
+ "effectiveDate": "2026-03-09",
+ "maturityDate": "2037-09-18",
+ "currency": "USD",
+ "notional": 11000000.0,
+ "mtm": -116608,
+ "mtmCurrency": "USD",
+ "pnl1d": -6466,
+ "counterparty": {
+  "id": "CP-AURORA",
+  "name": "Aurora Sovereign Wealth Fund"
+ },
+ "nettingSet": "NS-AURORA-LDN",
+ "book": "BOOK-INFL-2",
+ "trader": "TRDR-GMENDES",
+ "desk": "DESK-INFL",
+ "legalEntity": "LE-LDN",
+ "benchmarkCurve": "CRV-USD-GOVT",
+ "inflationCurve": "INFC-USCPI",
+ "inflationIndex": "INF-USCPI",
+ "terms": {
+  "coupon": 0.031106,
+  "couponFrequency": "Quarterly",
+  "faceAmount": 41037726.0,
+  "cleanPrice": 88.42,
+  "yield": 0.056985,
+  "indexRatio": 1.0563
+ },
+ "risk": {
+  "ie01": 10289,
+  "dv01": 9870
+ },
+ "sensitivities": [
+  {
+   "bucket": "1Y",
+   "ie01": 1029,
+   "dv01": 987
+  },
+  {
+   "bucket": "2Y",
+   "ie01": 2058,
+   "dv01": 1974
+  },
+  {
+   "bucket": "5Y",
+   "ie01": 3087,
+   "dv01": 2961
+  },
+  {
+   "bucket": "10Y",
+   "ie01": 4116,
+   "dv01": 3948
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-09-09",
+   "rate": 0.059886,
+   "amount": 220000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2027-03-09",
+   "rate": 0.058978,
+   "amount": 220000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-09-09",
+   "rate": 0.044423,
+   "amount": 220000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-03-09",
+   "rate": 0.026863,
+   "amount": 220000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-09-09",
+   "rate": 0.020612,
+   "amount": 220000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-03-09",
+   "rate": 0.05384,
+   "amount": 220000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-09-09",
+   "rate": 0.035244,
+   "amount": 220000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-03-09",
+   "rate": 0.047252,
+   "amount": 220000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-09-09",
+   "rate": 0.056643,
+   "amount": 220000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-03-09",
+   "rate": 0.026518,
+   "amount": 220000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-09-09",
+   "rate": 0.033117,
+   "amount": 220000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2032-03-09",
+   "rate": 0.039764,
+   "amount": 220000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2032-09-09",
+   "rate": 0.054288,
+   "amount": 220000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2033-03-09",
+   "rate": 0.039221,
+   "amount": 220000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2033-09-09",
+   "rate": 0.040419,
+   "amount": 220000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2034-03-09",
+   "rate": 0.054356,
+   "amount": 220000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2034-09-09",
+   "rate": 0.031464,
+   "amount": 220000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2035-03-09",
+   "rate": 0.042518,
+   "amount": 220000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2035-09-09",
+   "rate": 0.043981,
+   "amount": 220000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2036-03-09",
+   "rate": 0.052415,
+   "amount": 220000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2036-09-09",
+   "rate": 0.029498,
+   "amount": 220000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2037-03-09",
+   "rate": 0.059084,
+   "amount": 220000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2037-09-09",
+   "rate": 0.03994,
+   "amount": 220000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2037-09-18",
+   "rate": 0.052711,
+   "amount": 220000.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -533
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -1783
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 1154
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -5151
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -1090
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -3756
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -2787
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -2817
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 1389
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 491
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -1125
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -2394
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -4733
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -3535
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 2989
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 1070
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -3537
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -522
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -1111
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 1705
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-03-05",
+  "executionTimestamp": "2026-03-05T14:09:55.256Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "G. Mendes",
+  "salesperson": null,
+  "orderId": "ORD-5337B06ADB"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-03-05T11:56:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-03-05T11:56:00Z",
+  "lastModifiedAt": "2026-03-05T11:56:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA776031750",
+  "matched": "2026-03-05 10:56",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q835337B06ADB84CE90D2D9",
+  "upi": "QZUCHVL0URZR",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "AUROUS33XXX",
+  "ssiId": "SSI-USD-79DAAE",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -116608,
+  "cleanPv": -116608.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-USD-GOVT",
+   "INFC-USCPI",
+   "INF-USCPI"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

@@ -1,0 +1,33 @@
+{
+ "deskId": "DESK-INFL",
+ "name": "Inflation",
+ "head": "H. Okoro",
+ "books": [
+  {
+   "id": "BOOK-INFL-1",
+   "trades": 12,
+   "mtm": -19628073
+  },
+  {
+   "id": "BOOK-INFL-2",
+   "trades": 16,
+   "mtm": -6815332
+  },
+  {
+   "id": "BOOK-INFL-3",
+   "trades": 8,
+   "mtm": -21489291
+  }
+ ],
+ "var99": 4029429,
+ "mtm": -47932696,
+ "legalEntity": "LE-LDN",
+ "varResult": "VAR-INFL",
+ "assetClasses": [
+  "Inflation"
+ ],
+ "_meta": {
+  "source": "org-master",
+  "generation": 1
+ }
+}

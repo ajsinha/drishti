@@ -1,0 +1,26 @@
+{
+ "resultId": "STR-OIL-SHOCK-INFL",
+ "scenarioName": "Oil supply shock",
+ "pnl": -11003142,
+ "limit": -25700000.0,
+ "byBook": [
+  {
+   "book": "BOOK-INFL-1",
+   "pnl": -8001210
+  },
+  {
+   "book": "BOOK-INFL-2",
+   "pnl": -2223715
+  },
+  {
+   "book": "BOOK-INFL-3",
+   "pnl": -778217
+  }
+ ],
+ "scenario": "SCN-OIL-SHOCK",
+ "desk": "DESK-INFL",
+ "_meta": {
+  "source": "stress-engine",
+  "generation": 1
+ }
+}

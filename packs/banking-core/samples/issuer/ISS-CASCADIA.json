@@ -1,0 +1,26 @@
+{
+ "issuerId": "ISS-CASCADIA",
+ "name": "Cascadia Airlines Inc.",
+ "rating": "BB",
+ "sector": "Airlines",
+ "country": "CA",
+ "bonds": [
+  {
+   "isin": "CACASC059511",
+   "coupon": 0.0552,
+   "maturity": "2031-02-15"
+  },
+  {
+   "isin": "CACASC169344",
+   "coupon": 0.0602,
+   "maturity": "2036-01-15"
+  }
+ ],
+ "creditCurve": "CDS-CASCADIA",
+ "lei": "5493005CUB4V16ZSQX54",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ },
+ "equity": "EQ-CSCA"
+}

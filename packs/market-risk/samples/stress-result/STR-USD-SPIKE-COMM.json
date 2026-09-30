@@ -1,0 +1,26 @@
+{
+ "resultId": "STR-USD-SPIKE-COMM",
+ "scenarioName": "USD +15% vs all",
+ "pnl": -30972066,
+ "limit": -75800000.0,
+ "byBook": [
+  {
+   "book": "BOOK-COMM-1",
+   "pnl": -17137472
+  },
+  {
+   "book": "BOOK-COMM-2",
+   "pnl": -7170224
+  },
+  {
+   "book": "BOOK-COMM-3",
+   "pnl": -6664370
+  }
+ ],
+ "scenario": "SCN-USD-SPIKE",
+ "desk": "DESK-COMM",
+ "_meta": {
+  "source": "stress-engine",
+  "generation": 1
+ }
+}

@@ -1,0 +1,324 @@
+{
+ "tradeId": "T-10578",
+ "productType": "CORP_BOND",
+ "productName": "Corporate bond",
+ "assetClass": "Fixed income",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2024-04-12",
+ "effectiveDate": "2024-04-15",
+ "maturityDate": "2029-06-18",
+ "currency": "CHF",
+ "notional": 67000000.0,
+ "mtm": -380672,
+ "mtmCurrency": "USD",
+ "pnl1d": -10357,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-3",
+ "trader": "TRDR-RCASTILLO",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-LUMEN",
+ "benchmarkCurve": "CRV-CHF-GOVT",
+ "underlyingBond": "BND-CHLUME169114",
+ "creditCurve": "CDS-LUMEN",
+ "terms": {
+  "coupon": 0.029506,
+  "couponFrequency": "Quarterly",
+  "faceAmount": 99872856.0,
+  "cleanPrice": 86.58,
+  "yield": 0.029583,
+  "zSpread": 289.7,
+  "seniority": "Senior secured"
+ },
+ "risk": {
+  "dv01": -26702,
+  "cs01": -31709,
+  "jtd": -40200000
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -1272,
+   "cs01": -1510,
+   "jtd": -1914286
+  },
+  {
+   "bucket": "6M",
+   "dv01": -2543,
+   "cs01": -3020,
+   "jtd": -3828571
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -3815,
+   "cs01": -4530,
+   "jtd": -5742857
+  },
+  {
+   "bucket": "2Y",
+   "dv01": -5086,
+   "cs01": -6040,
+   "jtd": -7657143
+  },
+  {
+   "bucket": "3Y",
+   "dv01": -6358,
+   "cs01": -7550,
+   "jtd": -9571429
+  },
+  {
+   "bucket": "5Y",
+   "dv01": -7629,
+   "cs01": -9060,
+   "jtd": -11485714
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2024-10-15",
+   "rate": 0.023494,
+   "amount": 1340000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2025-04-15",
+   "rate": 0.037942,
+   "amount": 1340000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2025-10-15",
+   "rate": 0.040724,
+   "amount": 1340000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-04-15",
+   "rate": 0.026716,
+   "amount": 1340000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-10-15",
+   "rate": 0.021372,
+   "amount": 1340000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-04-15",
+   "rate": 0.048475,
+   "amount": 1340000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-10-15",
+   "rate": 0.034626,
+   "amount": 1340000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-04-15",
+   "rate": 0.037425,
+   "amount": 1340000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-10-15",
+   "rate": 0.048583,
+   "amount": 1340000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-04-15",
+   "rate": 0.028518,
+   "amount": 1340000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-06-18",
+   "rate": 0.025688,
+   "amount": 1340000.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 4,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 300
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 3217
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -2466
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 16023
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 2200
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -5447
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 167
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 3597
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 4689
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -1271
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 16450
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -17284
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -3583
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 3960
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 1342
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -26497
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -8758
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -2144
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 230
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -2165
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-04-12",
+  "executionTimestamp": "2024-04-12T09:52:30.379Z",
+  "venue": "MarketAxess",
+  "venueMic": "MAEL",
+  "executionType": "Electronic",
+  "trader": "R. Castillo",
+  "salesperson": null,
+  "orderId": "ORD-8E85B67070"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-04-12T12:44:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2024-04-12T12:44:00Z",
+  "lastModifiedAt": "2024-04-12T12:44:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT440979487",
+  "matched": "2024-04-12 16:59",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH5928124824",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20968E85B67070E73080DD8C",
+  "upi": "QZGYR1DXBQ3F",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-CHF-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -380672,
+  "cleanPv": -380672.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-CHF-GOVT",
+   "BND-CHLUME169114",
+   "CDS-LUMEN"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 1431
+  }
+ }
+}

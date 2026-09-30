@@ -1,0 +1,48 @@
+{
+ "limitId": "LIM-RHEINTAL",
+ "counterpartyName": "Rheintal Landesbank",
+ "measure": "PFE 95 peak",
+ "limit": 300000000.0,
+ "used": 181027298,
+ "utilisation": 0.6034,
+ "status": "Within limit",
+ "buckets": [
+  {
+   "bucket": "0-1Y",
+   "limit": 300000000,
+   "used": 153873203,
+   "utilisation": 0.5129
+  },
+  {
+   "bucket": "1-3Y",
+   "limit": 300000000,
+   "used": 181027298,
+   "utilisation": 0.6034
+  },
+  {
+   "bucket": "3-5Y",
+   "limit": 240000000,
+   "used": 126719109,
+   "utilisation": 0.528
+  },
+  {
+   "bucket": "5-10Y",
+   "limit": 180000000,
+   "used": 63359554,
+   "utilisation": 0.352
+  },
+  {
+   "bucket": "10Y+",
+   "limit": 120000000,
+   "used": 18102730,
+   "utilisation": 0.1509
+  }
+ ],
+ "counterparty": "CP-RHEINTAL",
+ "approvedBy": "Credit Risk Committee",
+ "reviewDue": "2027-03-19",
+ "_meta": {
+  "source": "limits-system",
+  "generation": 1
+ }
+}

@@ -1,0 +1,58 @@
+{
+ "resultId": "CVA-AURORA-LDN",
+ "cva": -18615,
+ "dva": 39091,
+ "fva": -1366,
+ "kva": -330742,
+ "cs01": -335,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -18615
+  },
+  {
+   "name": "DVA",
+   "amount": 39091
+  },
+  {
+   "name": "FVA",
+   "amount": -1366
+  },
+  {
+   "name": "KVA",
+   "amount": -330742
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -335
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 74
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 37
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -558
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 316
+  }
+ ],
+ "nettingSet": "NS-AURORA-LDN",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

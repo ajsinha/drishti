@@ -1,0 +1,59 @@
+{
+ "resultId": "CVA-MERIDIAN-TKY",
+ "cva": -55311,
+ "dva": 23231,
+ "fva": -995,
+ "kva": -283611,
+ "cs01": -996,
+ "components": [
+  {
+   "name": "CVA",
+   "amount": -55311
+  },
+  {
+   "name": "DVA",
+   "amount": 23231
+  },
+  {
+   "name": "FVA",
+   "amount": -995
+  },
+  {
+   "name": "KVA",
+   "amount": -283611
+  }
+ ],
+ "sensitivities": [
+  {
+   "factor": "Counterparty spread",
+   "bump": "+1 bp",
+   "delta": -996
+  },
+  {
+   "factor": "USD rates",
+   "bump": "+1 bp",
+   "delta": 221
+  },
+  {
+   "factor": "EUR rates",
+   "bump": "+1 bp",
+   "delta": 111
+  },
+  {
+   "factor": "FX vol",
+   "bump": "+1 vol",
+   "delta": -1659
+  },
+  {
+   "factor": "Recovery",
+   "bump": "+1%",
+   "delta": 940
+  }
+ ],
+ "nettingSet": "NS-MERIDIAN-TKY",
+ "creditCurve": "CDS-MERIDIAN",
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1
+ }
+}

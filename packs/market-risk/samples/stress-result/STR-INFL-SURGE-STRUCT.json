@@ -1,0 +1,26 @@
+{
+ "resultId": "STR-INFL-SURGE-STRUCT",
+ "scenarioName": "Inflation surprise",
+ "pnl": -1015674018,
+ "limit": -1748100000.0,
+ "byBook": [
+  {
+   "book": "BOOK-STRUCT-1",
+   "pnl": -272704417
+  },
+  {
+   "book": "BOOK-STRUCT-2",
+   "pnl": -548052161
+  },
+  {
+   "book": "BOOK-STRUCT-3",
+   "pnl": -194917440
+  }
+ ],
+ "scenario": "SCN-INFL-SURGE",
+ "desk": "DESK-STRUCT",
+ "_meta": {
+  "source": "stress-engine",
+  "generation": 1
+ }
+}

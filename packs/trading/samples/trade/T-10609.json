@@ -1,0 +1,351 @@
+{
+ "tradeId": "T-10609",
+ "productType": "AMORT_BOND",
+ "productName": "Amortising bond",
+ "assetClass": "Fixed income",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2024-05-17",
+ "effectiveDate": "2024-05-20",
+ "maturityDate": "2030-12-09",
+ "currency": "USD",
+ "notional": 129000000.0,
+ "mtm": -1903497,
+ "mtmCurrency": "USD",
+ "pnl1d": 53017,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-3",
+ "trader": "TRDR-RCASTILLO",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-NOVATEK",
+ "benchmarkCurve": "CRV-USD-GOVT",
+ "underlyingBond": "BND-USNOVA133999",
+ "terms": {
+  "coupon": 0.014314,
+  "couponFrequency": "Quarterly",
+  "faceAmount": 27924694.0,
+  "cleanPrice": 88.314,
+  "yield": 0.021691,
+  "averageLife": 2.97
+ },
+ "risk": {
+  "dv01": -77139,
+  "cs01": -76818
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -2755,
+   "cs01": -2744
+  },
+  {
+   "bucket": "6M",
+   "dv01": -5510,
+   "cs01": -5487
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -8265,
+   "cs01": -8230
+  },
+  {
+   "bucket": "2Y",
+   "dv01": -11020,
+   "cs01": -10974
+  },
+  {
+   "bucket": "3Y",
+   "dv01": -13775,
+   "cs01": -13718
+  },
+  {
+   "bucket": "5Y",
+   "dv01": -16530,
+   "cs01": -16461
+  },
+  {
+   "bucket": "7Y",
+   "dv01": -19285,
+   "cs01": -19204
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2024-11-20",
+   "opening": 129000000,
+   "principal": 9214286,
+   "closing": 119785714,
+   "interest": 2580000
+  },
+  {
+   "date": "2025-05-20",
+   "opening": 119785714,
+   "principal": 9214286,
+   "closing": 110571429,
+   "interest": 2395714
+  },
+  {
+   "date": "2025-11-20",
+   "opening": 110571429,
+   "principal": 9214286,
+   "closing": 101357143,
+   "interest": 2211429
+  },
+  {
+   "date": "2026-05-20",
+   "opening": 101357143,
+   "principal": 9214286,
+   "closing": 92142857,
+   "interest": 2027143
+  },
+  {
+   "date": "2026-11-20",
+   "opening": 92142857,
+   "principal": 9214286,
+   "closing": 82928571,
+   "interest": 1842857
+  },
+  {
+   "date": "2027-05-20",
+   "opening": 82928571,
+   "principal": 9214286,
+   "closing": 73714286,
+   "interest": 1658571
+  },
+  {
+   "date": "2027-11-20",
+   "opening": 73714286,
+   "principal": 9214286,
+   "closing": 64500000,
+   "interest": 1474286
+  },
+  {
+   "date": "2028-05-20",
+   "opening": 64500000,
+   "principal": 9214286,
+   "closing": 55285714,
+   "interest": 1290000
+  },
+  {
+   "date": "2028-11-20",
+   "opening": 55285714,
+   "principal": 9214286,
+   "closing": 46071429,
+   "interest": 1105714
+  },
+  {
+   "date": "2029-05-20",
+   "opening": 46071429,
+   "principal": 9214286,
+   "closing": 36857143,
+   "interest": 921429
+  },
+  {
+   "date": "2029-11-20",
+   "opening": 36857143,
+   "principal": 9214286,
+   "closing": 27642857,
+   "interest": 737143
+  },
+  {
+   "date": "2030-05-20",
+   "opening": 27642857,
+   "principal": 9214286,
+   "closing": 18428571,
+   "interest": 552857
+  },
+  {
+   "date": "2030-11-20",
+   "opening": 18428571,
+   "principal": 9214286,
+   "closing": 9214286,
+   "interest": 368571
+  },
+  {
+   "date": "2030-12-09",
+   "opening": 9214286,
+   "principal": 9214286,
+   "closing": 0,
+   "interest": 184286
+  }
+ ],
+ "nextIndex": 4,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -47550
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -1765
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -30847
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 39312
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 9686
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 80999
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 4834
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -6394
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 16800
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -20119
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -13898
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -54868
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -62905
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -94350
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 6696
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 72463
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 1155
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 47189
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 73998
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -4405
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-05-17",
+  "executionTimestamp": "2024-05-17T13:39:11.915Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "R. Castillo",
+  "salesperson": null,
+  "orderId": "ORD-56C9F82CCA"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-05-17T09:50:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2024-05-17T09:50:00Z",
+  "lastModifiedAt": "2024-05-17T09:50:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT430548705",
+  "matched": "2024-05-17 17:58",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH6747396787",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209656C9F82CCA9DA6A94A2E",
+  "upi": "QZ3SAUCXBY1A",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMUS33XXX",
+  "ssiId": "SSI-USD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -1903497,
+  "cleanPv": -1903497.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-USD-GOVT",
+   "BND-USNOVA133999"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 5097
+  }
+ }
+}

@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-RHEINTAL-LDN",
+ "held": 0,
+ "posted": 309084,
+ "net": -309084,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Verdant Agri Holdings 2031",
+   "direction": "Posted",
+   "marketValue": 103028,
+   "haircut": 0.01,
+   "value": 101998
+  },
+  {
+   "asset": "Verdant Agri Holdings 2036",
+   "direction": "Posted",
+   "marketValue": 103028,
+   "haircut": 0.005,
+   "value": 102513
+  },
+  {
+   "asset": "Novatek Devices Inc. 2036",
+   "direction": "Posted",
+   "marketValue": 103028,
+   "haircut": 0.005,
+   "value": 102513
+  }
+ ],
+ "csa": "CSA-RHEINTAL",
+ "nettingSet": "NS-RHEINTAL-LDN",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

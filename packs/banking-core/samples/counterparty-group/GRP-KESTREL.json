@@ -1,0 +1,17 @@
+{
+ "groupId": "GRP-KESTREL",
+ "name": "Kestrel Capital Group",
+ "limit": 256000000.0,
+ "utilisation": 0.5012,
+ "members": [
+  {
+   "id": "CP-KESTREL",
+   "name": "Kestrel Global Macro Fund",
+   "rating": "BBB-"
+  }
+ ],
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

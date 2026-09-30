@@ -1,0 +1,79 @@
+{
+ "curveId": "CMDC-COPPER",
+ "commodity": "Copper",
+ "front": 4.86,
+ "shape": "contango",
+ "roll": 0.31,
+ "points": [
+  {
+   "month": "X6",
+   "price": 4.86,
+   "openInterest": 200000
+  },
+  {
+   "month": "Z6",
+   "price": 4.875,
+   "openInterest": 143306
+  },
+  {
+   "month": "F7",
+   "price": 4.889,
+   "openInterest": 102683
+  },
+  {
+   "month": "G7",
+   "price": 4.904,
+   "openInterest": 73575
+  },
+  {
+   "month": "H7",
+   "price": 4.918,
+   "openInterest": 52719
+  },
+  {
+   "month": "J7",
+   "price": 4.933,
+   "openInterest": 37775
+  },
+  {
+   "month": "K7",
+   "price": 4.947,
+   "openInterest": 27067
+  },
+  {
+   "month": "M7",
+   "price": 4.962,
+   "openInterest": 19394
+  },
+  {
+   "month": "N7",
+   "price": 4.977,
+   "openInterest": 13896
+  },
+  {
+   "month": "Q7",
+   "price": 4.991,
+   "openInterest": 9957
+  },
+  {
+   "month": "U7",
+   "price": 5.006,
+   "openInterest": 7134
+  },
+  {
+   "month": "V7",
+   "price": 5.02,
+   "openInterest": 5112
+  }
+ ],
+ "commodityRef": "CMD-COPPER",
+ "unit": "USD/lb",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "front": 0.05
+  }
+ }
+}

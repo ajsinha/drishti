@@ -1,0 +1,38 @@
+{
+ "resultId": "PNL-INFL-2",
+ "date": "2026-09-30",
+ "actual": -27077,
+ "explained": -27780,
+ "unexplained": 703,
+ "attribution": [
+  {
+   "factor": "Rates delta",
+   "pnl": -11668
+  },
+  {
+   "factor": "FX delta",
+   "pnl": -3334
+  },
+  {
+   "factor": "Credit",
+   "pnl": -2222
+  },
+  {
+   "factor": "Vega",
+   "pnl": -2778
+  },
+  {
+   "factor": "Carry and theta",
+   "pnl": -5556
+  },
+  {
+   "factor": "New trades",
+   "pnl": -2222
+  }
+ ],
+ "book": "BOOK-INFL-2",
+ "_meta": {
+  "source": "pnl-explain",
+  "generation": 1
+ }
+}

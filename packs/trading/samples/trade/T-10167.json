@@ -1,0 +1,234 @@
+{
+ "tradeId": "T-10167",
+ "productType": "FX_FORWARD",
+ "productName": "FX forward",
+ "assetClass": "FX",
+ "family": "linear",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2024-07-31",
+ "effectiveDate": "2024-08-02",
+ "maturityDate": "2026-10-07",
+ "currency": "USD",
+ "notional": 114000000.0,
+ "mtm": -940839,
+ "mtmCurrency": "USD",
+ "pnl1d": 14031,
+ "counterparty": {
+  "id": "CP-CASCADIA",
+  "name": "Cascadia Airlines Inc."
+ },
+ "nettingSet": "NS-CASCADIA-LDN",
+ "book": "BOOK-FX-3",
+ "trader": "TRDR-LMOREAU",
+ "desk": "DESK-FX",
+ "legalEntity": "LE-LDN",
+ "fxSpot": "FX-GBPUSD",
+ "fxForwardCurve": "FXF-GBPUSD",
+ "discountCurve": "CRV-USD-OIS",
+ "terms": {
+  "rate": 120.12896,
+  "valueDate": "2027-03-29",
+  "forwardPoints": -89.8
+ },
+ "risk": {
+  "fxDelta": 1140000,
+  "dv01": 6744
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "fxDelta": 76000,
+   "dv01": 450
+  },
+  {
+   "bucket": "1M",
+   "fxDelta": 152000,
+   "dv01": 899
+  },
+  {
+   "bucket": "3M",
+   "fxDelta": 228000,
+   "dv01": 1349
+  },
+  {
+   "bucket": "6M",
+   "fxDelta": 304000,
+   "dv01": 1798
+  },
+  {
+   "bucket": "1Y",
+   "fxDelta": 380000,
+   "dv01": 2248
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 3222
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -34838
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 5264
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -10005
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -35282
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 1322
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 421
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 2473
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 27497
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -20720
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 51411
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 53687
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -970
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -32814
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 30088
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -14026
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 17040
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -37551
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -24744
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -13871
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-07-31",
+  "executionTimestamp": "2024-07-31T15:07:18.439Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "L. Moreau",
+  "salesperson": null,
+  "orderId": "ORD-F5062047FC"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-07-31T12:22:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2024-07-31T12:22:00Z",
+  "lastModifiedAt": "2024-07-31T12:22:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT580716803",
+  "matched": "2024-07-31 10:18",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83F5062047FC2EDB04610D",
+  "upi": "QZE74OAUI2K1",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Foreign exchange"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "CASCUS33XXX",
+  "ssiId": "SSI-USD-BC4549",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -940839,
+  "cleanPv": -940839.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "FX-GBPUSD",
+   "FXF-GBPUSD",
+   "CRV-USD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "calypso-fx",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 3022
+  }
+ }
+}

@@ -1,0 +1,180 @@
+{
+ "isin": "BND-USHELI160541",
+ "isinCode": "USHELI160541",
+ "issuerName": "Helix Pharmaceuticals Inc.",
+ "coupon": 0.0472,
+ "maturity": "2036-09-15",
+ "price": 100.348,
+ "yield": 0.0468,
+ "zSpread": 74.1,
+ "modDuration": 8.7,
+ "rating": "A-",
+ "terms": {
+  "currency": "USD",
+  "couponFrequency": "Semi-annual",
+  "dayCount": "ACT/ACT",
+  "issueDate": "2026-09-15",
+  "amountIssued": 3100000000,
+  "seniority": "Senior unsecured",
+  "callable": false,
+  "cusip": "HELI16055"
+ },
+ "coupons": [
+  {
+   "date": "2027-09-15",
+   "amount": 2.36
+  },
+  {
+   "date": "2028-09-15",
+   "amount": 2.36
+  },
+  {
+   "date": "2029-09-15",
+   "amount": 2.36
+  },
+  {
+   "date": "2030-09-15",
+   "amount": 2.36
+  },
+  {
+   "date": "2031-09-15",
+   "amount": 2.36
+  },
+  {
+   "date": "2032-09-15",
+   "amount": 2.36
+  }
+ ],
+ "history": [
+  {
+   "date": "2026-08-19",
+   "price": 100.702
+  },
+  {
+   "date": "2026-08-20",
+   "price": 100.983
+  },
+  {
+   "date": "2026-08-21",
+   "price": 100.592
+  },
+  {
+   "date": "2026-08-24",
+   "price": 100.48
+  },
+  {
+   "date": "2026-08-25",
+   "price": 100.657
+  },
+  {
+   "date": "2026-08-26",
+   "price": 100.726
+  },
+  {
+   "date": "2026-08-27",
+   "price": 100.922
+  },
+  {
+   "date": "2026-08-28",
+   "price": 100.448
+  },
+  {
+   "date": "2026-08-31",
+   "price": 100.321
+  },
+  {
+   "date": "2026-09-01",
+   "price": 100.353
+  },
+  {
+   "date": "2026-09-02",
+   "price": 100.522
+  },
+  {
+   "date": "2026-09-03",
+   "price": 100.425
+  },
+  {
+   "date": "2026-09-04",
+   "price": 100.351
+  },
+  {
+   "date": "2026-09-08",
+   "price": 100.446
+  },
+  {
+   "date": "2026-09-09",
+   "price": 100.339
+  },
+  {
+   "date": "2026-09-10",
+   "price": 100.226
+  },
+  {
+   "date": "2026-09-11",
+   "price": 100.562
+  },
+  {
+   "date": "2026-09-14",
+   "price": 100.44
+  },
+  {
+   "date": "2026-09-15",
+   "price": 100.685
+  },
+  {
+   "date": "2026-09-16",
+   "price": 100.991
+  },
+  {
+   "date": "2026-09-17",
+   "price": 101.177
+  },
+  {
+   "date": "2026-09-18",
+   "price": 100.936
+  },
+  {
+   "date": "2026-09-21",
+   "price": 100.987
+  },
+  {
+   "date": "2026-09-22",
+   "price": 100.653
+  },
+  {
+   "date": "2026-09-23",
+   "price": 100.6
+  },
+  {
+   "date": "2026-09-24",
+   "price": 100.748
+  },
+  {
+   "date": "2026-09-25",
+   "price": 100.606
+  },
+  {
+   "date": "2026-09-28",
+   "price": 100.636
+  },
+  {
+   "date": "2026-09-29",
+   "price": 100.367
+  },
+  {
+   "date": "2026-09-30",
+   "price": 100.348
+  }
+ ],
+ "issuer": "ISS-HELIX",
+ "benchmarkCurve": "CRV-USD-GOVT",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "price": 0.02
+  }
+ }
+}

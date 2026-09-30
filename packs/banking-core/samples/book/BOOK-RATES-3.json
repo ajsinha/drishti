@@ -1,0 +1,92 @@
+{
+ "bookId": "BOOK-RATES-3",
+ "name": "Rates · Swaps and options · book 3",
+ "deskName": "Rates · Swaps and options",
+ "tradeCount": 53,
+ "mtm": 21656450,
+ "dv01": -990250,
+ "topTrades": [
+  {
+   "tradeId": "T-10007",
+   "product": "Overnight index swap",
+   "notional": 199000000.0,
+   "maturity": "2034-06-26",
+   "mtm": -68527810
+  },
+  {
+   "tradeId": "T-10034",
+   "product": "Zero-coupon swap",
+   "notional": 244000000.0,
+   "maturity": "2035-09-19",
+   "mtm": 48834493
+  },
+  {
+   "tradeId": "T-10052",
+   "product": "Forward-starting swap",
+   "notional": 188000000.0,
+   "maturity": "2037-09-28",
+   "mtm": 38747885
+  },
+  {
+   "tradeId": "T-10032",
+   "product": "Zero-coupon swap",
+   "notional": 85000000.0,
+   "maturity": "2033-05-06",
+   "mtm": 22777888
+  },
+  {
+   "tradeId": "T-10005",
+   "product": "Interest rate swap (fixed/float)",
+   "notional": 112000000.0,
+   "maturity": "2036-08-15",
+   "mtm": -12009546
+  },
+  {
+   "tradeId": "T-10037",
+   "product": "Amortising swap",
+   "notional": 161000000.0,
+   "maturity": "2031-12-22",
+   "mtm": -7815523
+  },
+  {
+   "tradeId": "T-10006",
+   "product": "Interest rate swap (fixed/float)",
+   "notional": 222000000.0,
+   "maturity": "2031-05-09",
+   "mtm": -7039033
+  },
+  {
+   "tradeId": "T-10042",
+   "product": "Amortising swap",
+   "notional": 87000000.0,
+   "maturity": "2029-11-08",
+   "mtm": -6638895
+  },
+  {
+   "tradeId": "T-10062",
+   "product": "Forward rate agreement",
+   "notional": 452000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -5476015
+  },
+  {
+   "tradeId": "T-10030",
+   "product": "Cross-currency swap (MtM resetting)",
+   "notional": 152000000.0,
+   "maturity": "2027-12-08",
+   "mtm": 4820300
+  }
+ ],
+ "desk": "DESK-RATES",
+ "accountingTreatment": "Fair value (FVTPL)",
+ "regulatoryBook": "Trading book",
+ "volcker": "Market making",
+ "_meta": {
+  "source": "org-master",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 5000
+  }
+ }
+}

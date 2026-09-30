@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-CASCADIA-NY",
+ "held": 11694151,
+ "posted": 0,
+ "net": 11694151,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Solaris Energy Corp. 2036",
+   "direction": "Held",
+   "marketValue": 3898050,
+   "haircut": 0.005,
+   "value": 3878560
+  },
+  {
+   "asset": "Kaizen Motors Corp. 2036",
+   "direction": "Held",
+   "marketValue": 3898050,
+   "haircut": 0.005,
+   "value": 3878560
+  },
+  {
+   "asset": "Federal Republic of Germany 2031",
+   "direction": "Held",
+   "marketValue": 3898050,
+   "haircut": 0.02,
+   "value": 3820089
+  }
+ ],
+ "csa": "CSA-CASCADIA",
+ "nettingSet": "NS-CASCADIA-NY",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

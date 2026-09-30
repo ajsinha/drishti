@@ -1,0 +1,25 @@
+{
+ "issuerId": "ISS-HALCYON",
+ "name": "Halcyon Shipping plc",
+ "rating": "B+",
+ "sector": "Shipping",
+ "country": "GR",
+ "bonds": [
+  {
+   "isin": "XSHALC061217",
+   "coupon": 0.0648,
+   "maturity": "2031-01-15"
+  },
+  {
+   "isin": "XSHALC114008",
+   "coupon": 0.0698,
+   "maturity": "2036-09-15"
+  }
+ ],
+ "creditCurve": "CDS-HALCYON",
+ "lei": "5493005O3QH9D0GNE750",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

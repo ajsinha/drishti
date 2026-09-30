@@ -1,0 +1,60 @@
+{
+ "curveId": "FXF-EURUSD",
+ "pair": "EURUSD",
+ "spot": 1.174,
+ "points3m": 51.5,
+ "points1y": 207.3,
+ "points": [
+  {
+   "tenor": "ON",
+   "pips": 0.6,
+   "outright": 1.17406
+  },
+  {
+   "tenor": "1W",
+   "pips": 3.9,
+   "outright": 1.17439
+  },
+  {
+   "tenor": "1M",
+   "pips": 17.1,
+   "outright": 1.17571
+  },
+  {
+   "tenor": "2M",
+   "pips": 34.3,
+   "outright": 1.17743
+  },
+  {
+   "tenor": "3M",
+   "pips": 51.5,
+   "outright": 1.17915
+  },
+  {
+   "tenor": "6M",
+   "pips": 103.2,
+   "outright": 1.18432
+  },
+  {
+   "tenor": "9M",
+   "pips": 155.1,
+   "outright": 1.18951
+  },
+  {
+   "tenor": "1Y",
+   "pips": 207.3,
+   "outright": 1.19473
+  },
+  {
+   "tenor": "2Y",
+   "pips": 418.2,
+   "outright": 1.21582
+  }
+ ],
+ "fxSpot": "FX-EURUSD",
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

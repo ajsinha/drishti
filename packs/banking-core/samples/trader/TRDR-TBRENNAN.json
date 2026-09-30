@@ -1,0 +1,22 @@
+{
+ "traderId": "TRDR-TBRENNAN",
+ "name": "T. Brennan",
+ "deskName": "Commodities",
+ "tradeCount": 45,
+ "books": [
+  {
+   "id": "BOOK-COMM-1"
+  },
+  {
+   "id": "BOOK-COMM-2"
+  },
+  {
+   "id": "BOOK-COMM-3"
+  }
+ ],
+ "desk": "DESK-COMM",
+ "_meta": {
+  "source": "org-master",
+  "generation": 1
+ }
+}

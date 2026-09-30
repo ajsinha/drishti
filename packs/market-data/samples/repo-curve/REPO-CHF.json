@@ -1,0 +1,38 @@
+{
+ "curveId": "REPO-CHF",
+ "currency": "CHF",
+ "collateral": "General collateral (government)",
+ "overnight": 0.0022,
+ "asOf": "2026-09-30",
+ "points": [
+  {
+   "tenor": "ON",
+   "rate": 0.2221
+  },
+  {
+   "tenor": "1W",
+   "rate": 0.2255
+  },
+  {
+   "tenor": "1M",
+   "rate": 0.2315
+  },
+  {
+   "tenor": "3M",
+   "rate": 0.24
+  },
+  {
+   "tenor": "6M",
+   "rate": 0.2483
+  },
+  {
+   "tenor": "1Y",
+   "rate": 0.26
+  }
+ ],
+ "_meta": {
+  "source": "md-hub",
+  "generation": 1,
+  "live": false
+ }
+}

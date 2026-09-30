@@ -1,0 +1,17 @@
+{
+ "groupId": "GRP-LUMEN",
+ "name": "Lumen Holding AG",
+ "limit": 205000000.0,
+ "utilisation": 0.6222,
+ "members": [
+  {
+   "id": "CP-LUMEN",
+   "name": "Lumen Semiconductor AG",
+   "rating": "A"
+  }
+ ],
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

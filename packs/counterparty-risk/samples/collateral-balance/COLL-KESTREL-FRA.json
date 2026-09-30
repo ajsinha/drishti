@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-KESTREL-FRA",
+ "held": 802493,
+ "posted": 0,
+ "net": 802493,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Lumen Semiconductor AG 2031",
+   "direction": "Held",
+   "marketValue": 267498,
+   "haircut": 0.01,
+   "value": 264823
+  },
+  {
+   "asset": "Japan Ministry of Finance 2031",
+   "direction": "Held",
+   "marketValue": 267498,
+   "haircut": 0.01,
+   "value": 264823
+  },
+  {
+   "asset": "United States Treasury 2031",
+   "direction": "Held",
+   "marketValue": 267498,
+   "haircut": 0.02,
+   "value": 262148
+  }
+ ],
+ "csa": "CSA-KESTREL",
+ "nettingSet": "NS-KESTREL-FRA",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

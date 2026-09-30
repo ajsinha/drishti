@@ -1,0 +1,228 @@
+{
+ "tradeId": "T-10322",
+ "productType": "EQ_FORWARD",
+ "productName": "Equity forward",
+ "assetClass": "Equity",
+ "family": "linear",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2024-11-01",
+ "effectiveDate": "2024-11-04",
+ "maturityDate": "2026-10-07",
+ "currency": "USD",
+ "notional": 55000000.0,
+ "mtm": -24415,
+ "mtmCurrency": "USD",
+ "pnl1d": 1023,
+ "counterparty": {
+  "id": "CP-KESTREL",
+  "name": "Kestrel Global Macro Fund"
+ },
+ "nettingSet": "NS-KESTREL-LDN",
+ "book": "BOOK-EQD-3",
+ "trader": "TRDR-PLINDQVIST",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingEquity": "EQ-MRDN",
+ "dividendCurve": "DIV-MRDN",
+ "discountCurve": "CRV-USD-OIS",
+ "terms": {
+  "forwardPrice": 486.23,
+  "quantity": 71955,
+  "settlementDate": "2028-06-12"
+ },
+ "risk": {
+  "delta": 323379
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 21559
+  },
+  {
+   "bucket": "1M",
+   "delta": 43117
+  },
+  {
+   "bucket": "3M",
+   "delta": 64676
+  },
+  {
+   "bucket": "6M",
+   "delta": 86234
+  },
+  {
+   "bucket": "1Y",
+   "delta": 107793
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -3939
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -300
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 4209
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 2432
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -403
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -2908
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -952
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 617
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 3437
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 109
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -2078
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 5604
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -2550
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 2535
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -1609
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 5659
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -183
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -3
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 1362
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 3559
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-11-01",
+  "executionTimestamp": "2024-11-01T16:59:22.304Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "P. Lindqvist",
+  "salesperson": null,
+  "orderId": "ORD-FD654B44E3"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-11-01T11:35:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2024-11-01T11:35:00Z",
+  "lastModifiedAt": "2024-11-01T11:35:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT128658019",
+  "matched": "2024-11-01 10:18",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83FD654B44E3F60E1E792F",
+  "upi": "QZ4599AA83E4",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "KESTUS33XXX",
+  "ssiId": "SSI-USD-69F994",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -24415,
+  "cleanPv": -24415.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQ-MRDN",
+   "DIV-MRDN",
+   "CRV-USD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 599
+  }
+ }
+}

@@ -1,0 +1,50 @@
+{
+ "counterpartyId": "CP-ALDERSHOT",
+ "name": "Aldershot Pension Trust",
+ "lei": "549300H5KZ2QJHEAMB55",
+ "rating": "AA-",
+ "sector": "Pensions",
+ "country": "GB",
+ "type": "Pension fund",
+ "netMtm": 13812754,
+ "pfePeak": 145548971,
+ "nettingSets": [
+  {
+   "id": "NS-ALDERSHOT-FRA",
+   "agreement": "AGR-ALDERSHOT-ISDA",
+   "trades": 3,
+   "netMtm": -339550
+  },
+  {
+   "id": "NS-ALDERSHOT-LDN",
+   "agreement": "AGR-ALDERSHOT-ISDA",
+   "trades": 20,
+   "netMtm": -4886451
+  },
+  {
+   "id": "NS-ALDERSHOT-NY",
+   "agreement": "AGR-ALDERSHOT-ISDA",
+   "trades": 22,
+   "netMtm": 18471892
+  },
+  {
+   "id": "NS-ALDERSHOT-TKY",
+   "agreement": "AGR-ALDERSHOT-ISDA",
+   "trades": 1,
+   "netMtm": 566863
+  }
+ ],
+ "kyc": {
+  "status": "Approved",
+  "riskRating": "Standard",
+  "lastReview": "2026-02-11",
+  "emirClassification": "FC",
+  "pd1y": 0.0004
+ },
+ "group": "GRP-ALDERSHOT",
+ "creditLimit": "LIM-ALDERSHOT",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

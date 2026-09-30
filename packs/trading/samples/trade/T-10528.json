@@ -1,0 +1,392 @@
+{
+ "tradeId": "T-10528",
+ "productType": "WEATHER_HDD",
+ "productName": "Weather derivative (HDD/CDD)",
+ "assetClass": "Commodity",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2024-12-13",
+ "effectiveDate": "2024-12-16",
+ "maturityDate": "2030-08-19",
+ "currency": "USD",
+ "notional": 9000000.0,
+ "mtm": 106922,
+ "mtmCurrency": "USD",
+ "pnl1d": -2147,
+ "counterparty": {
+  "id": "CP-HALCYON",
+  "name": "Halcyon Shipping plc"
+ },
+ "nettingSet": "NS-HALCYON-NY",
+ "book": "BOOK-COMM-1",
+ "trader": "TRDR-FROSSI",
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-USD-OIS",
+ "terms": {
+  "station": "London Heathrow",
+  "index": "CDD",
+  "strike": 1195,
+  "tick": 14203.0
+ },
+ "risk": {
+  "delta": 39651
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 1888
+  },
+  {
+   "bucket": "1M",
+   "delta": 3776
+  },
+  {
+   "bucket": "3M",
+   "delta": 5664
+  },
+  {
+   "bucket": "6M",
+   "delta": 7553
+  },
+  {
+   "bucket": "1Y",
+   "delta": 9441
+  },
+  {
+   "bucket": "2Y",
+   "delta": 11329
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2025-03-16",
+   "level": 96.16,
+   "trigger": 100.0,
+   "performance": -0.0384,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-06-16",
+   "level": 97.87,
+   "trigger": 100.0,
+   "performance": -0.0213,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-09-16",
+   "level": 91.02,
+   "trigger": 100.0,
+   "performance": -0.0898,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-12-16",
+   "level": 95.11,
+   "trigger": 100.0,
+   "performance": -0.0489,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-03-16",
+   "level": 94.6,
+   "trigger": 100.0,
+   "performance": -0.054,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-06-16",
+   "level": 85.95,
+   "trigger": 100.0,
+   "performance": -0.1405,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-09-16",
+   "level": 92.71,
+   "trigger": 100.0,
+   "performance": -0.0729,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-12-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-03-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-06-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-09-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-12-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-03-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-06-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-09-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-12-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-03-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-06-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-09-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-12-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-03-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-06-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-08-19",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 7,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -916
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -2204
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -4629
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -7276
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -843
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -1085
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 6979
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 4867
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -4426
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 4560
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -783
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 5182
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 2269
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 882
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -4305
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -2076
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 3173
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -6470
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -319
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 808
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-12-13",
+  "executionTimestamp": "2024-12-13T14:35:39.468Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "F. Rossi",
+  "salesperson": null,
+  "orderId": "ORD-6B67E4F4FF"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-12-13T12:55:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2024-12-13T12:55:00Z",
+  "lastModifiedAt": "2024-12-13T12:55:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT243428344",
+  "matched": "2024-12-13 11:47",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20966B67E4F4FF951E3D6A35",
+  "upi": "QZXEFK9KZGUL",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "HALCUS33XXX",
+  "ssiId": "SSI-USD-10E970",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 106922,
+  "cleanPv": 106922.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "CRV-USD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "endur-comm",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

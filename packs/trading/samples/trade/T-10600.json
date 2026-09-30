@@ -1,0 +1,313 @@
+{
+ "tradeId": "T-10600",
+ "productType": "CALLABLE_BOND",
+ "productName": "Callable bond",
+ "assetClass": "Fixed income",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2025-08-07",
+ "effectiveDate": "2025-08-11",
+ "maturityDate": "2032-08-16",
+ "currency": "EUR",
+ "notional": 241000000.0,
+ "mtm": 3201249,
+ "mtmCurrency": "USD",
+ "pnl1d": -28369,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-1",
+ "trader": "TRDR-RCASTILLO",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-BUND",
+ "benchmarkCurve": "CRV-EUR-GOVT",
+ "underlyingBond": "BND-DEBUND130144",
+ "swaptionVolCube": "IRV-EUR",
+ "terms": {
+  "coupon": 0.020487,
+  "couponFrequency": "Semi-annual",
+  "faceAmount": 7409304.0,
+  "cleanPrice": 92.039,
+  "yield": 0.023202,
+  "firstCall": "2028-04-29",
+  "callPrice": 101.0,
+  "oas": 170.5
+ },
+ "risk": {
+  "dv01": 140167,
+  "cs01": 143288,
+  "vega": 852088
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 5006,
+   "cs01": 5117,
+   "vega": 30432
+  },
+  {
+   "bucket": "6M",
+   "dv01": 10012,
+   "cs01": 10235,
+   "vega": 60863
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 15018,
+   "cs01": 15352,
+   "vega": 91295
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 20024,
+   "cs01": 20470,
+   "vega": 121727
+  },
+  {
+   "bucket": "3Y",
+   "dv01": 25030,
+   "cs01": 25587,
+   "vega": 152159
+  },
+  {
+   "bucket": "5Y",
+   "dv01": 30036,
+   "cs01": 30705,
+   "vega": 182590
+  },
+  {
+   "bucket": "7Y",
+   "dv01": 35042,
+   "cs01": 35822,
+   "vega": 213022
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-08-11",
+   "type": "First call",
+   "strike": 0.033685,
+   "status": "Expired"
+  },
+  {
+   "date": "2027-08-11",
+   "type": "Bermudan call",
+   "strike": 0.023387,
+   "status": "Pending"
+  },
+  {
+   "date": "2028-08-11",
+   "type": "Bermudan call",
+   "strike": 0.027618,
+   "status": "Pending"
+  },
+  {
+   "date": "2029-08-11",
+   "type": "Bermudan call",
+   "strike": 0.035227,
+   "status": "Pending"
+  },
+  {
+   "date": "2030-08-11",
+   "type": "Bermudan call",
+   "strike": 0.041097,
+   "status": "Pending"
+  },
+  {
+   "date": "2031-08-11",
+   "type": "Bermudan call",
+   "strike": 0.021163,
+   "status": "Pending"
+  },
+  {
+   "date": "2032-08-11",
+   "type": "Bermudan call",
+   "strike": 0.022284,
+   "status": "Pending"
+  },
+  {
+   "date": "2032-08-16",
+   "type": "Bermudan call",
+   "strike": 0.037852,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -109299
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -159653
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -78554
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -90566
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 29953
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -57926
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 166070
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 106762
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 140660
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -107748
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 57104
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -16716
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -28880
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 223297
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -33531
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 134215
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -65844
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 40507
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -56699
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -79153
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-08-07",
+  "executionTimestamp": "2025-08-07T12:58:30.230Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "R. Castillo",
+  "salesperson": null,
+  "orderId": "ORD-464EDDDD9B"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-08-07T10:17:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2025-08-07T10:17:00Z",
+  "lastModifiedAt": "2025-08-07T10:17:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT985243364",
+  "matched": "2025-08-07 14:38",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH3485929490",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096464EDDDD9BCB359229B9",
+  "upi": "QZHW8659J043",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-EUR-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 3201249,
+  "cleanPv": 3201249.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-EUR-GOVT",
+   "BND-DEBUND130144",
+   "IRV-EUR"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 8812
+  }
+ }
+}

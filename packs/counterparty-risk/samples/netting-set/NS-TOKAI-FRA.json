@@ -1,0 +1,118 @@
+{
+ "nettingSetId": "NS-TOKAI-FRA",
+ "tradeCount": 4,
+ "netMtm": -4237647,
+ "collateral": -3360263,
+ "eePeak": 44653,
+ "pfePeak": 138487,
+ "limit": 5000000.0,
+ "utilisation": 0.0277,
+ "cva": -2,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 44653,
+   "pfe": 138487
+  },
+  {
+   "tenor": "1M",
+   "ee": 18591,
+   "pfe": 48949
+  },
+  {
+   "tenor": "3M",
+   "ee": 32200,
+   "pfe": 78890
+  },
+  {
+   "tenor": "6M",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "1Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "2Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "3Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "5Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "7Y",
+   "ee": 0,
+   "pfe": 0
+  },
+  {
+   "tenor": "10Y",
+   "ee": 0,
+   "pfe": 0
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "T-10692",
+   "product": "Tri-party repo",
+   "notional": 223000000.0,
+   "maturity": "2026-10-15",
+   "mtm": -4913363
+  },
+  {
+   "tradeId": "T-10717",
+   "product": "Margin loan",
+   "notional": 134000000.0,
+   "maturity": "2026-10-23",
+   "mtm": 1993603
+  },
+  {
+   "tradeId": "T-10704",
+   "product": "Securities lending",
+   "notional": 92000000.0,
+   "maturity": "2027-01-13",
+   "mtm": -1421662
+  },
+  {
+   "tradeId": "T-10706",
+   "product": "Securities lending",
+   "notional": 11000000.0,
+   "maturity": "2026-10-19",
+   "mtm": 103775
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Securities financing",
+   "mtm": -4237647
+  }
+ ],
+ "counterparty": "CP-TOKAI",
+ "agreement": "AGR-TOKAI-ISDA",
+ "csa": "CSA-TOKAI",
+ "creditLimit": "LIM-TOKAI",
+ "exposureProfile": "EXP-TOKAI-FRA",
+ "cvaResult": "CVA-TOKAI-FRA",
+ "saccr": "SACCR-TOKAI-FRA",
+ "simm": "SIMM-TOKAI",
+ "collateralBalance": "COLL-TOKAI-FRA",
+ "legalEntity": "LE-FRA",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 8475
+  }
+ }
+}

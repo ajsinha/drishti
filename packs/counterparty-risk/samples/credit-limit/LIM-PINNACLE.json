@@ -1,0 +1,48 @@
+{
+ "limitId": "LIM-PINNACLE",
+ "counterpartyName": "Pinnacle Credit Partners",
+ "measure": "PFE 95 peak",
+ "limit": 362000000.0,
+ "used": 187040073,
+ "utilisation": 0.5167,
+ "status": "Within limit",
+ "buckets": [
+  {
+   "bucket": "0-1Y",
+   "limit": 362000000,
+   "used": 158984062,
+   "utilisation": 0.4392
+  },
+  {
+   "bucket": "1-3Y",
+   "limit": 362000000,
+   "used": 187040073,
+   "utilisation": 0.5167
+  },
+  {
+   "bucket": "3-5Y",
+   "limit": 289600000,
+   "used": 130928051,
+   "utilisation": 0.4521
+  },
+  {
+   "bucket": "5-10Y",
+   "limit": 217200000,
+   "used": 65464026,
+   "utilisation": 0.3014
+  },
+  {
+   "bucket": "10Y+",
+   "limit": 144800000,
+   "used": 18704007,
+   "utilisation": 0.1292
+  }
+ ],
+ "counterparty": "CP-PINNACLE",
+ "approvedBy": "Credit Risk Committee",
+ "reviewDue": "2027-03-19",
+ "_meta": {
+  "source": "limits-system",
+  "generation": 1
+ }
+}

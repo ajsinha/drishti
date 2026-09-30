@@ -1,0 +1,237 @@
+{
+ "tradeId": "T-10297",
+ "productType": "REVOLVER",
+ "productName": "Revolving credit facility",
+ "assetClass": "Credit",
+ "family": "loan",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-01-05",
+ "effectiveDate": "2026-01-07",
+ "maturityDate": "2036-10-03",
+ "currency": "AUD",
+ "notional": 156000000.0,
+ "mtm": 1498057,
+ "mtmCurrency": "USD",
+ "pnl1d": 17150,
+ "counterparty": {
+  "id": "CP-CASCADIA",
+  "name": "Cascadia Airlines Inc."
+ },
+ "nettingSet": "NS-CASCADIA-NY",
+ "book": "BOOK-CREDIT-1",
+ "trader": "TRDR-CDUBOIS",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-KAIZEN",
+ "discountCurve": "CRV-AUD-OIS",
+ "forwardCurve": "CRV-AUD-PROJ",
+ "creditCurve": "CDS-KAIZEN",
+ "terms": {
+  "commitment": 725092908.0,
+  "drawn": 0.343041,
+  "commitmentFee": 53.4,
+  "margin": 210.3
+ },
+ "risk": {
+  "cs01": 137707
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 4918
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 9836
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 14754
+  },
+  {
+   "bucket": "3Y",
+   "cs01": 19672
+  },
+  {
+   "bucket": "5Y",
+   "cs01": 24591
+  },
+  {
+   "bucket": "7Y",
+   "cs01": 29509
+  },
+  {
+   "bucket": "10Y",
+   "cs01": 34427
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 31752
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -83690
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 43029
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 48030
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 10675
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 47610
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -44229
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 30233
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -23833
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -49699
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -48614
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -68511
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -34017
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -25342
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -45935
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -34953
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -20679
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -94341
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 33151
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 26889
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-01-05",
+  "executionTimestamp": "2026-01-05T16:39:00.118Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "C. Dubois",
+  "salesperson": null,
+  "orderId": "ORD-AB739C1A3B"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-01-05T12:34:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-01-05T12:34:00Z",
+  "lastModifiedAt": "2026-01-05T12:34:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA981497844",
+  "matched": "2026-01-05 11:08",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096AB739C1A3B4C6BBDD658",
+  "upi": "QZYQX44T35EL",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "CASCGB33XXX",
+  "ssiId": "SSI-AUD-BC4549",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1498057,
+  "cleanPv": 1498057.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-AUD-OIS",
+   "CRV-AUD-PROJ",
+   "CDS-KAIZEN"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 4556
+  }
+ }
+}

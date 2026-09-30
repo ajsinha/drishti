@@ -1,0 +1,51 @@
+{
+ "counterpartyId": "CP-LUMEN",
+ "name": "Lumen Semiconductor AG",
+ "lei": "54930090UZR7PCLV8136",
+ "rating": "A",
+ "sector": "Technology",
+ "country": "CH",
+ "type": "Corporate",
+ "netMtm": -40542132,
+ "pfePeak": 45241048,
+ "nettingSets": [
+  {
+   "id": "NS-LUMEN-FRA",
+   "agreement": "AGR-LUMEN-ISDA",
+   "trades": 2,
+   "netMtm": -2081448
+  },
+  {
+   "id": "NS-LUMEN-LDN",
+   "agreement": "AGR-LUMEN-ISDA",
+   "trades": 12,
+   "netMtm": -7249936
+  },
+  {
+   "id": "NS-LUMEN-NY",
+   "agreement": "AGR-LUMEN-ISDA",
+   "trades": 15,
+   "netMtm": -32179190
+  },
+  {
+   "id": "NS-LUMEN-TKY",
+   "agreement": "AGR-LUMEN-ISDA",
+   "trades": 3,
+   "netMtm": 968442
+  }
+ ],
+ "kyc": {
+  "status": "Approved",
+  "riskRating": "Standard",
+  "lastReview": "2026-02-11",
+  "emirClassification": "NFC-",
+  "pd1y": 0.0006
+ },
+ "group": "GRP-LUMEN",
+ "creditLimit": "LIM-LUMEN",
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ },
+ "creditCurve": "CDS-LUMEN"
+}

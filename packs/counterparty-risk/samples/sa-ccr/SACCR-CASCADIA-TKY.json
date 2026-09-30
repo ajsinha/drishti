@@ -1,0 +1,34 @@
+{
+ "calcId": "SACCR-CASCADIA-TKY",
+ "replacementCost": 0,
+ "addOn": 61760000,
+ "multiplier": 0.9991,
+ "ead": 86386182,
+ "rwa": 86386182,
+ "addOns": [
+  {
+   "assetClass": "Equity",
+   "addOn": 61760000
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "USD",
+   "effectiveNotional": 85000000,
+   "sf": 0.32
+  },
+  {
+   "assetClass": "Equity",
+   "hedgingSet": "JPY",
+   "effectiveNotional": -108000000,
+   "sf": 0.32
+  }
+ ],
+ "nettingSet": "NS-CASCADIA-TKY",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

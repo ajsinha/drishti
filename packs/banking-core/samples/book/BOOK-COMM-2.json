@@ -1,0 +1,92 @@
+{
+ "bookId": "BOOK-COMM-2",
+ "name": "Commodities · book 2",
+ "deskName": "Commodities",
+ "tradeCount": 31,
+ "mtm": 20548795,
+ "dv01": 0,
+ "topTrades": [
+  {
+   "tradeId": "T-10455",
+   "product": "Commodity forward",
+   "notional": 215000000.0,
+   "maturity": "2027-01-07",
+   "mtm": 5446207
+  },
+  {
+   "tradeId": "T-10446",
+   "product": "Commodity future",
+   "notional": 241000000.0,
+   "maturity": "2027-10-04",
+   "mtm": 4446305
+  },
+  {
+   "tradeId": "T-10498",
+   "product": "Calendar spread",
+   "notional": 227000000.0,
+   "maturity": "2027-09-16",
+   "mtm": 3887196
+  },
+  {
+   "tradeId": "T-10516",
+   "product": "Gas swing option",
+   "notional": 112000000.0,
+   "maturity": "2036-01-16",
+   "mtm": -3307013
+  },
+  {
+   "tradeId": "T-10513",
+   "product": "Gas swing option",
+   "notional": 135000000.0,
+   "maturity": "2033-03-28",
+   "mtm": 2742803
+  },
+  {
+   "tradeId": "T-10491",
+   "product": "Commodity spread option",
+   "notional": 96000000.0,
+   "maturity": "2031-08-27",
+   "mtm": 1874087
+  },
+  {
+   "tradeId": "T-10522",
+   "product": "Emissions allowance future",
+   "notional": 153000000.0,
+   "maturity": "2027-05-20",
+   "mtm": 1790391
+  },
+  {
+   "tradeId": "T-10469",
+   "product": "Option on commodity future",
+   "notional": 154000000.0,
+   "maturity": "2026-10-07",
+   "mtm": -1683518
+  },
+  {
+   "tradeId": "T-10502",
+   "product": "Commodity index swap",
+   "notional": 165000000.0,
+   "maturity": "2033-12-22",
+   "mtm": 1412345
+  },
+  {
+   "tradeId": "T-10454",
+   "product": "Commodity forward",
+   "notional": 57000000.0,
+   "maturity": "2027-05-27",
+   "mtm": 965771
+  }
+ ],
+ "desk": "DESK-COMM",
+ "accountingTreatment": "Fair value (FVTPL)",
+ "regulatoryBook": "Trading book",
+ "volcker": "Market making",
+ "_meta": {
+  "source": "org-master",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 5000
+  }
+ }
+}

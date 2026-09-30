@@ -1,0 +1,226 @@
+{
+ "tradeId": "T-10128",
+ "productType": "STIR_FUT_OPT",
+ "productName": "STIR future option",
+ "assetClass": "Rates",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2026-06-18",
+ "effectiveDate": "2026-06-22",
+ "maturityDate": "2027-09-27",
+ "currency": "CAD",
+ "notional": 36000000.0,
+ "mtm": 136287,
+ "mtmCurrency": "USD",
+ "pnl1d": -3682,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-RATES-2",
+ "trader": "TRDR-MOKAFOR",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-CME-1",
+ "forwardCurve": "CRV-CAD-PROJ",
+ "capVolSurface": "CPV-CAD",
+ "terms": {
+  "contract": "SR3 Z6 C 96.00",
+  "lots": 1135,
+  "premiumTicks": 17.7
+ },
+ "risk": {
+  "dv01": 3980,
+  "vega": 79301
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 663,
+   "vega": 13217
+  },
+  {
+   "bucket": "6M",
+   "dv01": 1327,
+   "vega": 26434
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 1990,
+   "vega": 39650
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -2800
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -949
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -1822
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -1441
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -6336
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -8053
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -1773
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -9776
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 2716
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -2212
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -6092
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -731
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 1596
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 8785
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -1866
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -6096
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -4992
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -1317
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 5828
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 1592
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-06-18",
+  "executionTimestamp": "2026-06-18T09:53:34.908Z",
+  "venue": "Bloomberg SEF",
+  "venueMic": "BSEF",
+  "executionType": "Electronic",
+  "trader": "M. Okafor",
+  "salesperson": null,
+  "orderId": "ORD-730D7B2D1B"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-06-18T10:48:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2026-06-18T10:48:00Z",
+  "lastModifiedAt": "2026-06-18T10:48:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA845929467",
+  "matched": "2026-06-18 17:24",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH2030303516",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096730D7B2D1B875F0F44DB",
+  "upi": "QZUHH6SUXVJT",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-CAD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 136287,
+  "cleanPv": 136287.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CRV-CAD-PROJ",
+   "CPV-CAD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 633
+  }
+ }
+}
