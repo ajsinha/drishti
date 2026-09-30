@@ -35,11 +35,29 @@ class AerospikeSourcePluginTest extends DatedSourceContract {
 
     @Container
     @SuppressWarnings("resource")
-    static final GenericContainer<?> AEROSPIKE = new GenericContainer<>("aerospike/aerospike-server:latest")
+    static final GenericContainer<?> AEROSPIKE = new GenericContainer<>("aerospike/aerospike-server:8.1.2.5")
             .withExposedPorts(3000)
+            // Aerospike refuses to start with fewer than 15,000 file descriptors; Docker's default is often 1,024
+            .withCreateContainerCmdModifier(cmd -> cmd.getHostConfig().withUlimits(
+                    new com.github.dockerjava.api.model.Ulimit[] {new com.github.dockerjava.api.model.Ulimit("nofile", 15_000L, 15_000L)}))
             .waitingFor(Wait.forLogMessage(".*service ready: soon there will be cake!.*", 1).withStartupTimeout(Duration.ofMinutes(2)));
 
     private static AerospikeSourcePlugin plugin;
+
+    /** A client once the node answers: Aerospike 8 logs "ready" a little before it finishes initialising. */
+    private static AerospikeClient ready(String host, int port) throws InterruptedException {
+        long until = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(60);
+        while (true) {
+            try {
+                return new AerospikeClient(host, port);
+            } catch (com.aerospike.client.AerospikeException e) {
+                if (System.nanoTime() > until) {
+                    throw e;
+                }
+                Thread.sleep(500);
+            }
+        }
+    }
 
     @Override
     protected synchronized SourcePlugin plugin() throws Exception {
@@ -48,7 +66,7 @@ class AerospikeSourcePluginTest extends DatedSourceContract {
         }
         String host = AEROSPIKE.getHost();
         int port = AEROSPIKE.getMappedPort(3000);
-        try (AerospikeClient c = new AerospikeClient(host, port)) {
+        try (AerospikeClient c = ready(host, port)) {
             for (Row r : ROWS) {
                 c.put(null, new Key("test", "desk", DatedRecords.key(r.kind(), r.id())), DatedRecords.bins(r.kind(), r.id(), r.date(), r.json()));
             }

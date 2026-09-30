@@ -104,6 +104,9 @@ public final class AerospikeSourcePlugin implements SourcePlugin {
         policy.user = ctx.setting("user", null);
         policy.password = ctx.setting("password", null);
         policy.timeout = Integer.parseInt(ctx.setting("connect-timeout-ms", "3000"));
+        // Start even when the cluster is not reachable or still initialising: the client keeps trying in the background,
+        // reads fail (and health says so) until it answers, and the next rescan fills the catalogue.
+        policy.failIfNotConnected = false;
         this.client = new AerospikeClient(policy, Host.parseHosts(ctx.setting("hosts", "localhost:3000"), 3000));
         rescan();
         long refresh = Long.parseLong(ctx.setting("refresh-seconds", "60"));

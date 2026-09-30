@@ -16,6 +16,11 @@
 # Changelog
 
 ## Unreleased
+- **Rachana reference: a complete annotated example.** A swap Sutra with a comment on every line covers matching, templates, the strip, thirteen panels (kv, tabs, table with total and "more", ladders with filters and highlights, status, markdown, provenance, lines from the document and from a linked curve, bars, a gauge, links) and function keys. It comes with the document fragment it reads and a table of what each part does. `RachanaReferenceExampleTest` previews the block exactly as written against `T-10001`.
+- **Docker verified.** The PostgreSQL and Aerospike contract tests pass against real containers.
+  - **Aerospike 8.1:** needs 15,000 file descriptors (set in the test and in compose), and its image is pinned rather than `latest`.
+  - **Aerospike connector:** now starts even when the cluster is not ready yet, and reconnects in the background.
+  - **Compose:** host ports are configurable (`DRISHTI_PG_PORT`, `DRISHTI_KAFKA_PORT`, `DRISHTI_AEROSPIKE_PORT`).
 - **W21 Personal settings.** Theme, landing page after sign-in, clock time zone, compact density, change-flash on or off, default search size, and up to 20 pinned entities on the terminal home.
   - **Storage:** kept on the server (`/api/v1/me/settings`, every value validated), so they follow the user to any browser.
   - **Console:** applies them on every page (the theme before first paint), saves theme changes from the theme menu, and offers **Pin** in every view.
