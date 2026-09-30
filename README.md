@@ -61,7 +61,8 @@ terminal does.
 | 16 | History: **Compare** an entity between two business dates (field by field, arrays matched by key, deltas); a **known at** control for time travel and restatements | ✅ done |
 | 20a | Kafka live source: the trading pack's trades stream and tick from a topic (`DRISHTI_STREAM_TRADING=true`) | ✅ done |
 | 17 | Structured search: `TRD where notional >= 250m and assetClass = 'Rates' order by mtm desc limit 20` on the command line; results by value, redacted per role, following the date box | ✅ done |
-| 18–21 | Export and share · Sutra governance · OIDC single sign-on · personal settings | ◻️ planned |
+| 18 | Export and share: CSV of any panel, search or comparison; the document as JSON; print or save as PDF; **Share** copies a link that reopens the view as you see it (same date and known-at) | ✅ done |
+| 19–21 | Sutra governance · OIDC single sign-on · personal settings | ◻️ planned |
 
 ## What works today
 
@@ -128,7 +129,10 @@ terminal does.
 - **Operations.** Prometheus metrics, a Grafana dashboard, Dockerfiles and compose, and runbooks.
 - **Structured search.** Type `TRD where mtm > 1m and counterparty.name contains 'Meridian' order by mtm desc`
   on the command line: the matching entities, with the fields the query uses as columns.
-- **Not built yet** (on the roadmap): export and share (W18), Sutra governance (W19), OIDC/SSO (W20) and personal settings (W21).
+- **Export and share.** Every table-like panel downloads as CSV (numbers as numbers), as do search results and
+  comparisons; the document downloads as JSON (redacted as your role sees it); **Print** gives a clean light page
+  or PDF; **Share** copies a link that reopens the view exactly as you see it, date and known-at included.
+- **Not built yet** (on the roadmap): Sutra governance (W19), OIDC/SSO (W20) and personal settings (W21).
 
 ## Try it
 

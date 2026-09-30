@@ -25,7 +25,7 @@ router = APIRouter(include_in_schema=False)
 
 
 @router.get("/asof")
-async def choose(request: Request, d: str = "live", next: str = "/t", k: str | None = None):
+async def choose(request: Request, d: str = "live", next: str = "/t", k: str | None = None, ki: str | None = None):
     """Sets the business date (d) and, with a picked date, what was known at a time (k, local time in the business
     zone; blank clears it). Live clears both."""
     value = asof.clean(d)
@@ -36,7 +36,13 @@ async def choose(request: Request, d: str = "live", next: str = "/t", k: str | N
         r.delete_cookie(asof.KNOWN_COOKIE, path="/")
         return r
     r.set_cookie(asof.COOKIE, value, path="/", samesite="lax", httponly=False, max_age=12 * 3600)
-    if k is not None:
+    if ki is not None:                               # an exact instant, as a shared link carries it
+        instant = asof.clean_known(ki)
+        if instant:
+            r.set_cookie(asof.KNOWN_COOKIE, instant, path="/", samesite="lax", httponly=False, max_age=12 * 3600)
+        else:
+            r.delete_cookie(asof.KNOWN_COOKIE, path="/")
+    elif k is not None:
         # the zone does not depend on the date: ask under the request's own date, which is also the cache key
         info = await request.app.state.business_dates.info(request.app.state.backend, request.state.identity, asof.current())
         instant = asof.to_instant(k, info.get("zone") or "America/New_York")

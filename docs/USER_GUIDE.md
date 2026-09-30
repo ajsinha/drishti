@@ -135,6 +135,19 @@ see what was restated for the same date. Lists are matched by their identifiers 
 date, a code), so an inserted cashflow shows as one addition, not as every later cashflow changed. Filter to
 *changed*, *added* or *removed*.
 
+## Export and share
+
+- **CSV.** The ↓ icon in a panel's header downloads that panel: tables and ladders as they are, key/value panels as
+  field and value, charts as a column per series, surfaces as a grid, bars as label and value. Numbers shown as
+  `−412,580` or `4.25%` arrive as `-412580` and `0.0425`, so a spreadsheet can add them up. Search results and
+  comparisons have a **CSV** link too. File names carry the business date when one is picked.
+- **JSON.** **JSON** in the view's header downloads the document, as your role may see it.
+- **Print.** **Print** prints the view, or saves it as PDF from the print dialog: a light page without the
+  top bar, keys or buttons, whatever your theme.
+- **Share.** **Share** copies a link to the view. Live links open live; with a date picked, the link opens that
+  date, and with a known-at time, that exact moment, so a colleague sees what you see (within their own
+  permissions).
+
 ## Monitors and alerts
 
 **Monitors** (`/m`) are live watchlists: each row is an entity with its key figures ticking. **Alerts**

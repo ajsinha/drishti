@@ -35,6 +35,11 @@
       <h1 class="vid mono">{{ vm.title.id }}</h1>
       {% if vm.title.with %}<span class="with">with</span> <span class="with-cp">{{ cell_text(vm.title.with) }}</span>{% endif %}
       {% if not embed %}<a class="tbar-link vhead-alert" href="/alerts?kind={{ vm.ref.kind }}&id={{ vm.ref.id | urlencode }}" title="Set an alert on {{ vm.title.id }}"><i class="bi bi-bell" aria-hidden="true"></i> Alert</a>
+      <span class="vhead-tools">
+        <button type="button" class="tbar-link vhead-alert" data-share="{{ share_url }}" title="Copy a link that opens this view as you see it{% if asof != 'live' %} ({{ asof }}{% if known_at %}, known at {{ known_local(known_at, (business_date or {}).zone) | replace('T', ' ') }}{% endif %}){% endif %}"><i class="bi bi-link-45deg" aria-hidden="true"></i> <span data-share-label>Share</span></button>
+        <a class="tbar-link vhead-alert" href="/export/{{ vm.ref.kind }}/{{ vm.ref.id | urlencode }}.json" title="Download the document as JSON (as your role may see it)"><i class="bi bi-filetype-json" aria-hidden="true"></i> JSON</a>
+        <button type="button" class="tbar-link vhead-alert" data-print title="Print, or save as PDF"><i class="bi bi-printer" aria-hidden="true"></i> Print</button>
+      </span>
       {% if vm.provenance.businessDate %}<a class="tbar-link vhead-alert" href="/compare/{{ vm.ref.kind }}/{{ vm.ref.id | urlencode }}" title="What changed since the previous business day, or between any two dates"><i class="bi bi-arrow-left-right" aria-hidden="true"></i> Compare</a>{% endif %}{% endif %}
     </div>
     <dl class="strip">

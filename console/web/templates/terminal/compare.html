@@ -40,6 +40,7 @@
       <a class="lnk" href="{{ base }}&only=changed"><span class="cmp-k changed">changed</span> {{ data.changed }}</a>
       <a class="lnk" href="{{ base }}&only=added"><span class="cmp-k added">added</span> {{ data.added }}</a>
       <a class="lnk" href="{{ base }}&only=removed"><span class="cmp-k removed">removed</span> {{ data.removed }}</a>
+      <a class="lnk" href="/export/compare/{{ kind }}/{{ id | urlencode }}.csv?from={{ form.get('from', '') }}&to={{ form.get('to', '') }}{% if from_known %}&fromKnownAt={{ from_known | urlencode }}{% endif %}" title="Download the changes as CSV"><i class="bi bi-download" aria-hidden="true"></i> CSV</a>
       <span class="text-muted-d mono">{{ data.from.provenance.source }} · generation {{ data.from.provenance.generation }} → {{ data.to.provenance.generation }}</span>
     </div>
     {% if not rows %}

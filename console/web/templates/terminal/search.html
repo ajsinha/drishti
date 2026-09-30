@@ -36,6 +36,7 @@
     <div class="cmp-sum">
       <span><b>{{ data.matched }}</b> of {{ data.scanned }} {{ data.kind | replace('-', ' ') }}{{ '' if data.scanned == 1 else 's' }} match{% if data.matched > rows | length %}; the first {{ rows | length }} are shown{% endif %}</span>
       <span class="text-muted-d mono">{{ data.elapsedMs }} ms</span>
+      {% if rows %}<a class="lnk" href="/export/search.csv?q={{ q | urlencode }}" title="Download the results as CSV"><i class="bi bi-download" aria-hidden="true"></i> CSV</a>{% endif %}
       {% if rows %}<form class="srch-watch" method="post" action="/s/watch">
         <input type="hidden" name="q" value="{{ q }}"><label for="srchName" class="visually-hidden">Monitor name</label>
         <input id="srchName" name="name" class="mono" value="{{ (data.mnemonic or data.kind) ~ ' search' }}" maxlength="64">

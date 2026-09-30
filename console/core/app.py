@@ -81,8 +81,8 @@ class SecurityHeaders(BaseHTTPMiddleware):
 def create_app(settings: Settings) -> FastAPI:
     from core.backend import BackendClient
     from core.auth import Auth
-    from routes import (admin_routes, api_routes, asof_routes, auth_routes, help_routes, home_routes, monitor_routes, studio_routes,
-                        terminal_routes, workspace_routes)
+    from routes import (admin_routes, api_routes, asof_routes, auth_routes, export_routes, help_routes, home_routes, monitor_routes,
+                        studio_routes, terminal_routes, workspace_routes)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -137,4 +137,5 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(workspace_routes.router)
     app.include_router(monitor_routes.router)
     app.include_router(asof_routes.router)
+    app.include_router(export_routes.router)
     return app

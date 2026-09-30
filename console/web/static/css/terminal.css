@@ -445,3 +445,45 @@ body.embed .vhead { padding: .6rem .8rem; }
 .cache-stat b { color: var(--d-ink); font-weight: 600; }
 .adm-status { min-height: 1.2rem; color: var(--d-ok); font-size: .82rem; }
 .adm-bar .btn-pill { white-space: nowrap; flex-shrink: 0; }
+
+/* ---- Export and share (W18) ---- */
+.vhead-tools { display: inline-flex; gap: .15rem; }
+button.tbar-link { background: none; border: 0; padding: 0 .35rem; font: inherit; cursor: pointer; }
+.pnl-help[data-export-panel] { margin-right: .15rem; }
+
+/* Print and "save as PDF": the view on paper, light whatever the theme, without the controls */
+@media print {
+  /* !important: the themes set these on html[data-theme=…], which outranks a plain selector */
+  :root, html[data-theme] {
+    --d-bg: #fff !important;
+    --d-bg-2: #fff !important;
+    --d-surface: #fff !important;
+    --d-surface-2: #f6f7f9 !important;
+    --d-border: #c9ced6 !important;
+    --d-ink: #111 !important;
+    --d-muted: #555 !important;
+    --d-faint: #888 !important;
+    --d-link: #1f5fc4 !important;
+    --d-accent: #8a5a00 !important;
+    --d-accent-strong: #6b4600 !important;
+    --d-accent-tint: #fff4df !important;
+    --d-pos: #1f5fc4 !important;
+    --d-neg: #b3261e !important;
+    --d-ok: #1b7a3a !important;
+    --d-warn: #8a5a00 !important;
+    --d-bad: #b3261e !important;
+    --d-emph-bg: #f1f1f1 !important;
+    --d-highlight: #fff4df !important;
+    --d-nav: #fff !important;
+    --d-shadow: none !important;
+    --d-glow: none !important;
+    color-scheme: light;
+  }
+  body { background: #fff !important; color: #111 !important; }
+  .tbar, .fkeys .fk, .vhead-tools, .vhead-alert, .pnl-help, .raw, .surface-tools, .srch-form, .srch-help, .srch-watch, .cmp-form,
+  .crumbs, [data-bell], .site-footer, footer:not(.fkeys) { display: none !important; }
+  .fkeys { position: static !important; border: 0 !important; background: none !important; }
+  .vgrid { display: block !important; }
+  .pnl { break-inside: avoid; box-shadow: none !important; border-color: #c9ced6 !important; }
+  a { color: inherit !important; text-decoration: none !important; }
+}

@@ -16,6 +16,12 @@
 # Changelog
 
 ## Unreleased
+- **W18 Export and share.**
+  - **CSV:** any table-like panel downloads as CSV (shown numbers become plain numbers, UTF-8 with BOM), as do search results and comparisons.
+  - **JSON:** the document downloads as JSON, redacted for the role.
+  - **Print:** a print stylesheet gives a clean light page, or a PDF, in every theme.
+  - **Share:** copies a link that reopens the view with the same business date and exact known-at instant (`/asof?ki=`).
+  - **Safety:** exports read through the server like the screen, so entitlements and redaction apply.
 - **W17 Structured search.** Type `TRD where notional >= 250m and assetClass = 'Rates' order by mtm desc limit 20` on the command line.
   - **Syntax:** friendly, over Rachana-EL: `and`, `or`, `not`, `=`, `contains`, `startswith`, and amounts like `1.5m`; nested fields by path.
   - **Server** (`GET /api/v1/search`): reads the kind's entities concurrently within `drishti.search.max-scan` (20,000) and `drishti.search.budget` (3 s). It evaluates the condition on each document as the caller may see it (a masked field never matches), then sorts and limits. It follows the business date and known-at.

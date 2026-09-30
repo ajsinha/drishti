@@ -240,6 +240,26 @@
     });
   }
 
+  // ---- export and share (W18) ------------------------------------------------------------------
+  if (view) {
+    document.querySelectorAll('[data-export-panel]').forEach(function (a) {
+      a.href = '/export/' + encodeURIComponent(view.dataset.kind) + '/' + encodeURIComponent(view.dataset.id) + '/' +
+        encodeURIComponent(a.getAttribute('data-export-panel')) + '.csv';
+      a.hidden = false;
+    });
+  }
+  document.querySelectorAll('[data-share]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var url = b.getAttribute('data-share');
+      var label = b.querySelector('[data-share-label]');
+      var done = function (text) { if (label) { label.textContent = text; setTimeout(function () { label.textContent = 'Share'; }, 2000); } };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(function () { done('Link copied'); }, function () { window.prompt('Copy this link', url); });
+      } else { window.prompt('Copy this link', url); }
+    });
+  });
+  document.querySelectorAll('[data-print]').forEach(function (b) { b.addEventListener('click', function () { window.print(); }); });
+
   // ---- function keys --------------------------------------------------------------------------
   function run(btn) {
     var action = btn.getAttribute('data-action');

@@ -117,6 +117,7 @@
   <header class="pnl-h"><h3 id="h-{{ p.id }}">{{ p.title or '' }}</h3>
     <span class="pnl-code">{% if p.code %}{{ p.code }}{% endif %}{% if p.code and p.key %} · {% endif %}{% if p.key %}{{ p.key }}{% endif %}
       {% if p.inferred %}<span class="inf" title="{{ p.explanation or 'completed by inference' }}">inferred</span>{% endif %}
+      {% if p.kind in ('table', 'ladder', 'kv', 'status', 'tabs', 'line', 'area', 'hbar', 'surface', 'links', 'gauge') and not p.empty %}<a class="pnl-help" data-export-panel="{{ p.id }}" hidden title="Download as CSV" aria-label="Download {{ p.title or p.id }} as CSV"><i class="bi bi-download" aria-hidden="true"></i></a>{% endif %}
       <a class="pnl-help" href="/help/panel-kinds#{{ p.kind }}" title="What a {{ p.kind }} panel shows" aria-label="Help on {{ p.kind }} panels"><i class="bi bi-question-circle" aria-hidden="true"></i></a></span></header>
   <div class="pnl-b">
   {% if p.empty or (p.data is none and p.kind != 'provenance') %}{{ no_data(p) }}

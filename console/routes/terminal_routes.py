@@ -149,4 +149,14 @@ async def view(request: Request, kind: str, id_: str, embed: int = 0):
                       kind=kind, id=id_, error=e, embed=bool(embed))
     main = [p for p in vm["panels"] if p.get("area") != "right"]
     right = [p for p in vm["panels"] if p.get("area") == "right"]
-    return render(request, "terminal/view.html", vm=vm, main=main, right=right, embed=bool(embed))
+    return render(request, "terminal/view.html", vm=vm, main=main, right=right, embed=bool(embed), share_url=share_url(request, kind, id_))
+
+
+def share_url(request: Request, kind: str, id_: str) -> str:
+    """A link that opens this view as the sender sees it: live, or the same business date and "known at" time."""
+    base = str(request.base_url).rstrip("/")
+    path = f"/v/{quote(kind)}/{quote(id_)}"
+    if asof.current() == "live":
+        return base + path
+    known = asof.known_at()
+    return f"{base}/asof?d={asof.current()}" + (f"&ki={quote(known)}" if known else "") + f"&next={quote(path, safe='')}"
