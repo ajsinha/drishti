@@ -26,7 +26,8 @@
     </div>
   </form>
   <div class="tbar-right">
-    <span class="tbar-desk">{{ DESK }} · {{ USER }}</span>
+    <a class="tbar-link" href="/studio" title="Sutra Studio"><i class="bi bi-braces" aria-hidden="true"></i><span class="d-none d-xl-inline"> Studio</span></a>
+    <span class="tbar-desk">{{ me.desk if me else DESK }} · {{ me.display if me else USER }}{% if AUTH_ENABLED %} · <a href="/logout">sign out</a>{% endif %}</span>
     <span class="tbar-live" data-live-state="{{ 'live' if live else 'static' }}"><span class="dot" aria-hidden="true"></span>
       <span data-live-text>{{ 'Live' if live else 'Static' }}{% if built_ms %}, built {{ built_ms }} ms{% endif %}</span></span>
     <span class="tbar-clock mono" data-clock data-tz="{{ CLOCK_TZ }}" data-tz-label="{{ CLOCK_LABEL }}"></span>

@@ -31,3 +31,13 @@ ui:
   desk: Rates desk
   clock_tz: America/New_York
   clock_label: NY
+auth:
+  enabled: ${DRISHTI_AUTH_ENABLED:false}      # off for local development
+  users_file: config/users.yaml               # git-ignored; see config/users.example.yaml
+  session_secret: ${DRISHTI_SESSION_SECRET:}  # >= 32 characters; from the environment only
+  token_secret: ${DRISHTI_TOKEN_SECRET:}      # shared with the server (drishti.security.secret)
+  token_ttl_seconds: 300
+  session_hours: 10
+  secure_cookie: ${DRISHTI_SECURE_COOKIE:true}
+studio:
+  enabled: true

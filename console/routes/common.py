@@ -22,9 +22,11 @@ from fastapi import Request
 
 def render(request: Request, template: str, status_code: int = 200, **context: Any):
     templates = request.app.state.templates
+    context.setdefault("me", getattr(request.state, "identity", None))
+    context.setdefault("AUTH_ENABLED", request.app.state.auth.enabled)
     return templates.TemplateResponse(request, template, context, status_code=status_code)
 
 
-def user_of(request: Request) -> str:
-    """The acting user. Until sign-in lands (Wave 10) this is the configured desk user."""
-    return request.app.state.settings.get("ui.user", "ash")
+def ident(request: Request):
+    """The signed-in identity (set by the auth gate), carrying the token for backend calls."""
+    return request.state.identity

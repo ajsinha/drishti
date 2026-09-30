@@ -122,7 +122,9 @@ body.terminal { font-size: 14px; }
 .links li { display: flex; justify-content: space-between; gap: 1rem; padding: .28rem 0; }
 .lk-label { color: var(--d-ink); }
 .lk-badge { margin-left: .5rem; color: var(--d-muted); font-size: .8rem; }
-.lk-pending .lk-badge { color: var(--d-warn); } .lk-missing .lk-badge { color: var(--d-faint); }
+.lk-pending .lk-badge { color: var(--d-warn); } .lk-denied .lk-badge { color: var(--d-bad); } .lk-denied .mono { color: var(--d-faint); }
+.fk:disabled { opacity: .5; cursor: not-allowed; }
+.tbar-link { color: var(--d-muted); } .tbar-link:hover { color: var(--d-ink); text-decoration: none; } .lk-missing .lk-badge { color: var(--d-faint); }
 .lnk { color: var(--d-link); }
 .gauge { position: relative; height: 18px; background: var(--d-bg-2); border-radius: 3px; }
 .gauge .bf { height: 18px; background: var(--d-accent); }
@@ -171,3 +173,41 @@ kbd { background: var(--d-surface-2); color: var(--d-ink); border: 1px solid var
   .cols { grid-template-columns: 1fr; }
   .cmd-list li { grid-template-columns: 3.6rem 1fr; } .cmd-list .sg-s { grid-column: 2; }
 }
+
+/* ---- Sutra Studio ---- */
+.studio { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: .8rem; padding: .8rem 1.25rem; height: calc(100vh - 58px); }
+.studio-left, .studio-right { display: flex; flex-direction: column; min-height: 0; background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 6px; }
+.studio-bar { display: flex; flex-wrap: wrap; gap: .45rem; align-items: center; padding: .55rem; border-bottom: 1px solid var(--d-border); }
+.studio-bar .btn-pill { padding: .3rem .8rem; font-size: .82rem; }
+.studio-select, .studio-in { background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 5px; padding: .28rem .5rem; font-size: .85rem; }
+.studio-in { width: 9.5rem; }
+.studio-src { flex: 1; width: 100%; background: var(--d-bg-2); color: var(--d-ink); border: 0; padding: .6rem; font-size: .82rem; }
+.studio-left .CodeMirror { flex: 1; height: auto; min-height: 0; background: var(--d-bg-2); color: var(--d-ink); font: .82rem/1.5 var(--d-font-mono); }
+.studio-left .CodeMirror-gutters { background: var(--d-bg); border-right: 1px solid var(--d-border); }
+.studio-left .CodeMirror-linenumber { color: var(--d-faint); }
+.studio-left .CodeMirror-cursor { border-left-color: var(--d-accent); }
+.studio-left .CodeMirror-selected, .studio-left .CodeMirror-focused .CodeMirror-selected { background: var(--d-accent-tint); }
+/* scoped under .studio-left so they beat CodeMirror's default theme */
+.studio-left .cm-s-default .cm-keyword { color: var(--d-accent); } .studio-left .cm-s-default .cm-string { color: var(--d-link); }
+.studio-left .cm-s-default .cm-comment { color: var(--d-faint); font-style: italic; }
+.studio-left .cm-s-default .cm-number, .studio-left .cm-s-default .cm-atom { color: var(--d-pos); }
+.studio-left .cm-s-default .cm-variable-2 { color: var(--d-ok); } .studio-left .cm-s-default .cm-def { color: var(--d-warn); }
+.studio-left .cm-s-default .cm-bracket, .studio-left .cm-s-default .cm-operator { color: var(--d-muted); }
+.studio-problems { list-style: none; margin: 0; padding: 0; max-height: 9rem; overflow: auto; border-top: 1px solid var(--d-border); font-size: .82rem; }
+.studio-problems li { padding: .3rem .6rem; color: var(--d-warn); cursor: pointer; border-bottom: 1px solid var(--d-border); }
+.studio-problems li:hover { background: var(--d-highlight); }
+.studio-status { padding: .5rem .8rem; border-bottom: 1px solid var(--d-border); color: var(--d-muted); font-size: .8rem; }
+.studio-preview { flex: 1; overflow: auto; }
+.studio-view .vtitle { padding: .7rem .9rem 0; margin-bottom: .5rem; }
+.studio-view .strip { padding: 0 .9rem .6rem; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.studio-view .vgrid { padding: .4rem .9rem .9rem; }
+.studio-built { margin-left: auto; color: var(--d-muted); font-size: .78rem; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+/* ---- sign in ---- */
+.login { display: flex; justify-content: center; padding: 4rem 1rem; }
+.login-box { display: flex; flex-direction: column; gap: .5rem; width: min(360px, 100%); background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 10px; padding: 1.5rem; }
+.login-box h1 { font-size: 1.3rem; margin: 0 0 .5rem; }
+.login-box label { color: var(--d-muted); font-size: .85rem; margin-top: .3rem; }
+.login-box .btn-pill { margin-top: .8rem; }
+@media (max-width: 1000px) { .studio { grid-template-columns: 1fr; height: auto; } .studio-left .CodeMirror { height: 50vh; } }

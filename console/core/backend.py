@@ -38,11 +38,12 @@ class BackendClient:
             base_url=base_url.rstrip("/"), timeout=timeout,
             limits=httpx.Limits(max_connections=pool, max_keepalive_connections=pool))
 
-    async def _get(self, path: str, user: str | None = None, **params: Any) -> Any:
-        return await self._send("GET", path, user, params=params)
+    async def _get(self, path: str, ident=None, **params: Any) -> Any:
+        return await self._send("GET", path, ident, params=params)
 
-    async def _send(self, method: str, path: str, user: str | None, **kw: Any) -> Any:
-        headers = {"X-Drishti-User": user} if user else {}
+    async def _send(self, method: str, path: str, ident, **kw: Any) -> Any:
+        headers = dict(ident.headers()) if ident is not None else {}
+        headers.update(kw.pop("headers", {}))
         try:
             r = await self._client.request(method, "/api/v1" + path, headers=headers, **kw)
         except httpx.HTTPError as e:
@@ -52,31 +53,48 @@ class BackendClient:
                 body = r.json()
             except ValueError:
                 body = {}
-            raise BackendError(r.status_code, body.get("code", f"HTTP-{r.status_code}"), body.get("detail", r.text[:200]))
-        return r.json()
+            err = BackendError(r.status_code, body.get("code", f"HTTP-{r.status_code}"), body.get("detail", r.text[:200]))
+            err.problems = body.get("problems", [])
+            raise err
+        return r.json() if "json" in r.headers.get("content-type", "") else r.text
 
-    async def view(self, kind: str, id_: str, user: str) -> dict:
-        return await self._get(f"/views/{kind}/{id_}", user)
+    async def view(self, kind: str, id_: str, ident) -> dict:
+        return await self._get(f"/views/{kind}/{id_}", ident)
 
-    async def raw(self, kind: str, id_: str) -> dict:
-        return await self._get(f"/entities/{kind}/{id_}/raw")
+    async def raw(self, kind: str, id_: str, ident=None) -> dict:
+        return await self._get(f"/entities/{kind}/{id_}/raw", ident)
 
-    async def suggest(self, q: str, user: str, limit: int = 10) -> list:
-        return await self._get("/command/suggest", user, q=q, limit=limit)
+    async def suggest(self, q: str, ident, limit: int = 10) -> list:
+        return await self._get("/command/suggest", ident, q=q, limit=limit)
 
-    async def command(self, text: str) -> dict:
-        return await self._send("POST", "/command", None, json={"text": text})
+    async def command(self, text: str, ident=None) -> dict:
+        return await self._send("POST", "/command", ident, json={"text": text})
 
-    async def sources(self) -> dict:
-        return await self._get("/sources")
+    async def sources(self, ident=None) -> dict:
+        return await self._get("/sources", ident)
 
-    async def sutras(self) -> list:
-        return await self._get("/sutras")
+    async def sutras(self, ident=None) -> list:
+        return await self._get("/sutras", ident)
 
-    async def stream(self, kind: str, id_: str):
+    async def sutra_source(self, name: str, version: int, ident=None) -> str:
+        return await self._get(f"/sutras/{name}/{version}/source", ident)
+
+    async def preview(self, yaml_text: str, kind: str, id_: str, ident=None) -> dict:
+        return await self._send("POST", "/studio/preview", ident, json={"yaml": yaml_text, "kind": kind, "id": id_})
+
+    async def inferred(self, kind: str, id_: str, name: str, ident=None) -> str:
+        return await self._get(f"/studio/inferred/{kind}/{id_}", ident, name=name)
+
+    async def studio_settings(self, ident=None) -> dict:
+        return await self._get("/studio/settings", ident)
+
+    async def save_sutra(self, yaml_text: str, ident=None) -> dict:
+        return await self._send("POST", "/sutras", ident, content=yaml_text.encode(), headers={"Content-Type": "text/yaml"})
+
+    async def stream(self, kind: str, id_: str, ident=None):
         """Yields ``(event, data)`` pairs from the server's SSE stream for a view, until it ends."""
-        async with self._client.stream("GET", f"/api/v1/views/{kind}/{id_}/stream", timeout=None,
-                                       headers={"Accept": "text/event-stream"}) as r:
+        headers = {"Accept": "text/event-stream", **(ident.headers() if ident is not None else {})}
+        async with self._client.stream("GET", f"/api/v1/views/{kind}/{id_}/stream", timeout=None, headers=headers) as r:
             if r.status_code >= 400:
                 raise BackendError(r.status_code, "DRS-5003", "stream refused")
             event, data = None, []

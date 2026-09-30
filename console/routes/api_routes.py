@@ -21,7 +21,7 @@ import json
 from fastapi.responses import JSONResponse, StreamingResponse
 
 from core.backend import BackendError
-from routes.common import user_of
+from routes.common import ident
 
 router = APIRouter(prefix="/api", include_in_schema=False)
 
@@ -33,7 +33,7 @@ def _problem(e: BackendError) -> JSONResponse:
 @router.get("/suggest")
 async def suggest(request: Request, q: str = "", limit: int = 10):
     try:
-        return await request.app.state.backend.suggest(q, user_of(request), limit)
+        return await request.app.state.backend.suggest(q, ident(request), limit)
     except BackendError as e:
         return _problem(e)
 
@@ -41,7 +41,7 @@ async def suggest(request: Request, q: str = "", limit: int = 10):
 @router.get("/raw/{kind}/{id_}")
 async def raw(request: Request, kind: str, id_: str):
     try:
-        return await request.app.state.backend.raw(kind, id_)
+        return await request.app.state.backend.raw(kind, id_, ident(request))
     except BackendError as e:
         return _problem(e)
 
@@ -49,7 +49,7 @@ async def raw(request: Request, kind: str, id_: str):
 @router.get("/view/{kind}/{id_}")
 async def view(request: Request, kind: str, id_: str):
     try:
-        return await request.app.state.backend.view(kind, id_, user_of(request))
+        return await request.app.state.backend.view(kind, id_, ident(request))
     except BackendError as e:
         return _problem(e)
 
@@ -70,7 +70,7 @@ async def stream(request: Request, kind: str, id_: str):
 
     async def events():
         try:
-            async for event, data in backend.stream(kind, id_):
+            async for event, data in backend.stream(kind, id_, ident(request)):
                 if await request.is_disconnected():
                     break
                 if event == "frame":

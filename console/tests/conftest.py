@@ -43,14 +43,33 @@ class FakeBackend:
             raise BackendError(404, "DRS-1001", f"no source holds {kind}/{id_}")
         return json.loads(f.read_text())
 
-    async def raw(self, kind, id_):
+    async def raw(self, kind, id_, ident=None):
         return {"ref": {"kind": kind, "id": id_}, "provenance": {"source": "aero-risk", "generation": 1742}, "data": {"tradeId": id_}}
 
     async def suggest(self, q, user, limit=10):
         self.calls.append(("suggest", q))
         return json.loads((FIXTURES / "suggest.json").read_text())
 
-    async def command(self, text):
+    async def sutras(self, ident=None):
+        return [{"name": "irs-vanilla", "latest": 3, "versions": [3], "domain": "rates", "kind": "trade", "where": None, "priority": 10}]
+
+    async def sutra_source(self, name, version, ident=None):
+        return "sutra: irs-vanilla\nversion: 3\n"
+
+    async def studio_settings(self, ident=None):
+        return {"save": False}
+
+    async def preview(self, yaml_text, kind, id_, ident=None):
+        if "BROKEN" in yaml_text:
+            e = BackendError(422, "DRS-2002", "1 problem(s)")
+            e.problems = [{"code": "DRS-2101", "message": "bad expression", "location": {"file": "studio.yaml", "line": 4, "column": 3}}]
+            raise e
+        return await self.view(kind, id_, ident)
+
+    async def inferred(self, kind, id_, name, ident=None):
+        return f"sutra: {name}\nversion: 1\n"
+
+    async def command(self, text, ident=None):
         if "IRS-48213" in text.upper():
             return {"ref": {"kind": "trade", "id": "IRS-48213"}, "mnemonic": "TRD"}
         raise BackendError(400, "DRS-4001", f"cannot read command '{text}'")

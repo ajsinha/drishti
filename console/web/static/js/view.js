@@ -111,6 +111,7 @@
   /** Hooks for live.js: re-enhance a replaced panel, and move a chart to new data without re-creating it. */
   window.drishti = {
     enhance: function (root) { widths(root); tabsIn(root); },
+    redraw: drawCharts,
     updateChart: function (id, data) {
       var el = document.querySelector('#p-' + CSS.escape(id) + ' .chart[data-chart]');
       if (!el || !window.echarts) { return; }

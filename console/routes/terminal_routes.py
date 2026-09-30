@@ -21,7 +21,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse
 
 from core.backend import BackendError
-from routes.common import render, user_of
+from routes.common import ident, render
 
 router = APIRouter(include_in_schema=False)
 
@@ -43,7 +43,7 @@ async def home(request: Request, error: str | None = None):
 @router.get("/go")
 async def go(request: Request, q: str = ""):
     try:
-        r = await request.app.state.backend.command(q)
+        r = await request.app.state.backend.command(q, ident(request))
     except BackendError as e:
         return RedirectResponse(f"/t?error={quote(e.detail)}", status_code=303)
     return RedirectResponse(f"/v/{r['ref']['kind']}/{quote(r['ref']['id'])}", status_code=303)
@@ -52,7 +52,7 @@ async def go(request: Request, q: str = ""):
 @router.get("/v/{kind}/{id_}")
 async def view(request: Request, kind: str, id_: str):
     try:
-        vm = await request.app.state.backend.view(kind, id_, user_of(request))
+        vm = await request.app.state.backend.view(kind, id_, ident(request))
     except BackendError as e:
         return render(request, "terminal/missing.html", status_code=e.status if e.status < 500 else 502,
                       kind=kind, id=id_, error=e)

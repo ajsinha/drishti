@@ -44,7 +44,7 @@
 {% endblock %}
 {% block footer %}
 <footer class="fkeys" aria-label="Function keys">
-  <nav>{% for k in vm['keys'] %}<button type="button" class="fk" data-fkey="{{ k.key }}" data-action="{{ k.action }}"
+  <nav>{% for k in vm['keys'] %}<button type="button" class="fk" data-fkey="{{ k.key }}" data-action="{{ k.action }}"{% if k.action == 'denied' %} disabled title="You do not have access"{% endif %}
       {% if k.panel %}data-target="{{ k.panel }}"{% endif %}{% if k.link %}data-href="/v/{{ k.link.kind }}/{{ k.link.id }}"{% endif %}>
       <b>{{ k.key }}</b> {{ k.label }}</button>{% endfor %}
     <button type="button" class="fk" data-fkey="Alt+ArrowLeft" data-action="back"><b>Alt+←</b> Back</button></nav>

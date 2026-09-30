@@ -89,7 +89,7 @@ def test_stream_relays_frames_with_server_rendered_panels(client, backend):
         {"op": "strip", "index": 5, "cell": {"label": "MTM (USD)", "text": "−410,000", "tone": "neg"}},
         {"op": "panel", "panel": dv01}, {"op": "panel", "panel": curve}]}
 
-    async def fake_stream(kind, id_):
+    async def fake_stream(kind, id_, ident=None):
         yield "view", _json.dumps(irs)
         yield "frame", _json.dumps(frame)
 

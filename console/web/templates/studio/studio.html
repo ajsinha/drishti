@@ -1,0 +1,53 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Sutra Studio · {{ PRODUCT }}{% endblock %}
+{% block body_class %}terminal studio-page{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}">{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="studio" data-studio data-can-save="{{ 'true' if can_save else 'false' }}">
+  <section class="studio-left">
+    <header class="studio-bar">
+      <label for="sutraPick" class="visually-hidden">Sutra</label>
+      <select id="sutraPick" class="studio-select" data-pick>
+        <option value="">New Sutra…</option>
+        {% for s in sutras %}<option value="{{ s.name }}@{{ s.latest }}"{% if s.name ~ '@' ~ s.latest == picked %} selected{% endif %}>{{ s.name }} v{{ s.latest }} · {{ s.kind }}</option>{% endfor %}
+      </select>
+      <label for="refKind" class="visually-hidden">Kind</label><input id="refKind" class="studio-in mono" value="{{ ref_kind }}" data-kind aria-label="Entity kind">
+      <label for="refId" class="visually-hidden">Id</label><input id="refId" class="studio-in mono" value="{{ ref_id }}" data-id aria-label="Entity id">
+      <button type="button" class="btn-pill btn-accent" data-preview title="Ctrl+Enter"><i class="bi bi-play" aria-hidden="true"></i> Preview</button>
+      <button type="button" class="btn-pill btn-ghost" data-infer title="Load what inference makes of this entity as a new Sutra"><i class="bi bi-stars" aria-hidden="true"></i> Start from inference</button>
+      <button type="button" class="btn-pill btn-ghost" data-save {% if not can_save %}disabled title="Saving is off here, or you are not an author"{% endif %}><i class="bi bi-save" aria-hidden="true"></i> Save</button>
+    </header>
+    <textarea id="sutraSrc" class="studio-src mono" spellcheck="false" data-src aria-label="Sutra YAML">{{ source }}</textarea>
+    <ul class="studio-problems" data-problems aria-live="polite"></ul>
+  </section>
+  <section class="studio-right" aria-label="Preview">
+    <div class="studio-status mono" data-status>Ctrl+Enter previews. The Sutra is checked on every preview; nothing is saved until you press Save.</div>
+    <div class="studio-preview" data-out></div>
+  </section>
+</div>
+{% endblock %}
+{% block footer %}{% endblock %}
+{% block scripts %}
+<script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/cm-yaml.js?v={{ ASSET_V }}"></script>
+<script src="/static/vendor/echarts/echarts.common.min.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/command.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/view.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/studio.js?v={{ ASSET_V }}"></script>
+{% endblock %}

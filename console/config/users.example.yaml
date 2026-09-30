@@ -1,0 +1,28 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Copy to config/users.yaml (git-ignored) and replace the hashes:
+#   python console/tools/hash_password.py
+# Roles must exist in the server's drishti.security.roles.
+users:
+  ash:
+    display: Ash
+    desk: Rates desk
+    roles: [author]
+    password: pbkdf2_sha256$240000$<salt-hex>$<hash-hex>
+  tina:
+    display: Tina
+    desk: FX desk
+    roles: [trader]
+    password: pbkdf2_sha256$240000$<salt-hex>$<hash-hex>
