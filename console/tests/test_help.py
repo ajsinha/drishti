@@ -83,3 +83,13 @@ def test_mobile_ready(client):
     assert m.status_code == 200 and '"start_url": "/t"' in m.text
     css = client.get("/static/css/terminal.css").text
     assert "@media (max-width: 640px)" in css and "safe-area-inset-bottom" in css and "font-size: 16px" in css
+
+
+def test_the_sutra_guide_is_a_help_card_with_screenshots(client):
+    index = client.get("/help").text
+    assert "The Sutra guide" in index and "/help/sutra-guide" in index
+    page = client.get("/help/sutra-guide").text
+    assert "The thirteen panel kinds" in page and page.count('src="/static/img/guide/') >= 15
+    import re
+    for src in set(re.findall(r'src="(/static/img/guide/[^"]+)"', page)):
+        assert client.get(src).status_code == 200, src

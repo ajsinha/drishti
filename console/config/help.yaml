@@ -29,6 +29,7 @@ categories:
     icon: braces
     blurb: How screens are described instead of coded. Rachana is the grammar; each Sutra is one layout written in it.
     guides:
+      - { slug: sutra-guide, title: The Sutra guide, icon: journal-richtext, summary: "Everything about writing Sutras: anatomy, labels and taxonomies, paths, formats, all thirteen panel kinds with screenshots, matching, inference, Studio." }
       - { slug: panel-kinds, title: The thirteen panel kinds, icon: grid-1x2, summary: "What each panel kind shows, when to use it, and the Sutra that produces it." }
       - { slug: sutra-studio, title: "Tutorial 3 · Sutra Studio", kind: tutorial, icon: stars, summary: "Start from inference, edit with live preview, fix problems by line, and save." }
       - { slug: nested-data, title: "Tutorial 4 · Nested documents", kind: tutorial, icon: diagram-2, summary: "Paths of any depth, tables over nested arrays, tabs per element, and a whole Sutra over a real trade." }
