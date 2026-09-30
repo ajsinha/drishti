@@ -209,7 +209,7 @@ The palette menu offers seven themes:
 - **Blue** and **Green**;
 - **Crimson** and **Crimson dark** (the Maya palette: Harvard crimson with indigo).
 
-The choice is remembered per browser.
+The choice is saved to your account when you are signed in (it follows you to any browser; see *Your settings*), and remembered by the browser otherwise.
 
 Every theme has two gradient colours of its own (terminal: amber to blue; crimson: crimson to navy; blue: cyan to
 violet, and so on). They shade the page, the top bar, the view header and panel headers, accent buttons and titles;
