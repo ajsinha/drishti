@@ -80,10 +80,10 @@ desk ─► VaR ─► stress results ◄─ stress scenario        book ─► 
 
 ## Packs and data domains
 
-| Pack | Requires | Reads domains |
+| Pack | Extends | Reads domains |
 |---|---|---|
 | `banking-core` | — | `reference` |
 | `market-data` | `banking-core` | `market` |
 | `trading` | `banking-core`, `market-data` | `trading` |
-| `market-risk` | `trading` | `risk` |
-| `counterparty-risk` | `trading` | `credit`, `collateral` |
+| `market-risk` | `market-data`, `trading` | `risk` |
+| `counterparty-risk` | `market-data`, `trading` | `credit`, `collateral` |

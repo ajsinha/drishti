@@ -20,9 +20,9 @@ Counterparty climate profiles, PCAF financed emissions, NGFS scenarios, climate 
 
 Climate figures reuse the banking packs' counterparties, books, desks and legal entities: a counterparty's climate profile follows its sector, financed emissions attribute its emissions to the books that trade with it, and climate stress runs on each desk.
 
-**Requires:** `trading` · **Kinds:** 6 · **Sample documents:** 93
+**Extends:** `trading` · **Kinds:** 6 · **Sample documents:** 93
 
-Enable it with `DRISHTI_PACKS=climate-risk` (the packs it requires come with it).
+Enable it with `DRISHTI_PACKS=climate-risk` (the packs it extends come with it).
 
 ## Try it
 

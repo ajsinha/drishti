@@ -71,7 +71,7 @@ def build() -> dict[str, dict[str, dict]]:
 ```python
 def spec() -> PB.PackSpec:
     return PB.PackSpec(
-        name="library", title="Library", requires=[], generator="tools/packgen/library/make.py",
+        name="library", title="Library", requires=[], generator="tools/packgen/library/make.py",   # requires= becomes extends: in pack.yaml
         description="Titles, authors and loans.",
         domains={"library": KINDS},                      # data domain -> kinds (a Delta Lake folder each)
         examples=[("TITLE TITLE-0001", "A book · loans and copies")],

@@ -16,6 +16,11 @@
 # Changelog
 
 ## Unreleased
+- **Pack inheritance (ADR-015).** `extends: [parent, …]` (and the older `requires:`) makes a pack inherit everything its parents bring.
+  - **Precedence:** C3 linearisation. The child wins over its parents, the rightmost parent over those to its left, and a shared ancestor counts once.
+  - **What can be overridden:** mnemonics, link fields, badges, roles, routes, connectors, Sutras (same `name@version`), labels and formats. Overrides apply globally and are logged and listed under Admin → Health.
+  - **Still strict:** kinds are never overridden, and unrelated packs still may not clash.
+  - **Packs:** `market-risk` and `counterparty-risk` now extend `[market-data, trading]`, and the generators write `extends:`.
 - **Admin → Health.** Every connector's status (with the reason while it reconnects), reads, errors, p50/p99 latency, last error and caches. Every pack's Sutras, Sutra problems and connectors. Live streaming and server figures. An overall OK / DEGRADED / DOWN. Refreshes every 5 s, and `GET /api/v1/admin/health` serves the same for monitoring. Read statistics are recorded lock-free on the router's read path.
 - **Every connector reconnects by itself.**
   - **JDBC:** pools lazy slots, so it starts with its database down, reconnects broken connections, and lists table kinds in the background until the database answers. Health reports the last error.

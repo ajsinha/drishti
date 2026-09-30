@@ -98,11 +98,11 @@ random-walks those fields, so a pack needs no code for live samples.
 
 ### Dependencies, connectors and routes
 
-A pack can build on others and says where its data comes from:
+A pack can inherit from others and says where its data comes from:
 
 ```yaml
 # packs/counterparty-risk/pack.yaml (abridged)
-requires: [trading]                 # loads trading first, and what trading requires (market-data, banking-core)
+extends: [market-data, trading]     # everything in both (and in banking-core, which they extend) comes with this pack
 connectors:                         # one per data domain it reads; declared identically by every pack that uses it
   credit-store:     { plugin: delta, kinds: [netting-set, credit-limit, …], settings: { root: "${DRISHTI_DELTA_ROOT:./data/delta}", domain: credit } }
   collateral-store: { plugin: delta, kinds: [collateral-balance, margin-call, simm], settings: { domain: collateral } }
@@ -111,9 +111,9 @@ routes:                             # which connector answers each of the pack's
   margin-call: collateral-store
 ```
 
-- **`requires`**: enabling a pack enables what it requires, dependencies first. A user who may see
-  `market-risk` can open the kinds of the packs it requires (a VaR result links to its trades and books).
-  Missing packs and cycles stop the server with a clear message.
+- **`extends`** (the older `requires` means the same): enabling a pack enables everything it inherits from, and a
+  user who may see `market-risk` can open the kinds of its parents (a VaR result links to its trades and books).
+  Missing packs and cycles stop the server with a clear message. See *Inheritance* below.
 - **Data domains and packs are many-to-many.** Delta Lake is organised by data domain (`data/delta/<domain>/<kind>/`),
   not by pack. A pack may read several domains, and one domain serves every pack that uses it: several packs may
   declare the same connector, identically. A different declaration under the same name is an error.
@@ -121,18 +121,46 @@ routes:                             # which connector answers each of the pack's
 - Site configuration (`drishti.sources.connectors.<name>`) overrides anything a pack declares, for example
   to point a domain at a database instead of the lake, or to switch it off.
 
+### Inheritance
+
+A pack inherits everything its parents bring: kinds (to open), mnemonics, identifier patterns and link fields,
+badges, roles, connectors and routes, Sutras, labels and formats, samples, alert suggestions, workspaces and help.
+When two related packs define the same thing, **the more specific definition wins**, everywhere (for every user):
+
+- a child wins over its parents;
+- among parents, **the rightmost wins**: with `extends: [market-data, trading]`, `trading`'s definition beats
+  `market-data`'s;
+- a pack shared through several parents (both `market-data` and `trading` extend `banking-core`) counts once, below
+  all of them.
+
+The order is C3 linearisation, as Python orders classes (ADR-015): `counterparty-risk → trading → market-data →
+banking-core`. What can be redefined, and how:
+
+| Thing | A more specific pack may |
+|---|---|
+| mnemonic, link field, badge, role, route | define the same name again; its definition replaces the parent's |
+| connector | declare the same connector differently (point a domain at another store); identical declarations just merge |
+| Sutra | ship a Sutra with the same `name@version`; it replaces the parent's (or ship another name with a higher `priority`) |
+| labels (`semantics.yaml`) and formats | define the same label or format; the more specific pack's wins |
+
+Two rules stay strict: **a kind belongs to exactly one pack** (a child re-lays out a parent's kind with a Sutra; it
+cannot redefine what the kind is), and **unrelated packs** (neither inherits from the other, and no pack inherits
+from both) may not define the same thing differently: the server refuses to start and names both. Every override
+is logged and listed under *Admin → Health* (`mnemonic TRD: trading overrides market-data`), so a surprising
+result is always traceable.
+
 ### The banking packs
 
 Five packs cover market risk and counterparty credit risk. They are generated from one taxonomy
 (`tools/packgen/banking/`: `make_packs.py` writes the manifests, `make_sutras.py` the 170 Sutras).
 
-| Pack | Requires | Kinds | Data domains |
+| Pack | Extends | Kinds | Data domains |
 |---|---|---|---|
 | `banking-core` | — | counterparties, groups, issuers, agreements, CCPs, legal entities, books, desks, traders, calendars, CSAs, clearing accounts | `reference` (effective-dated) |
 | `market-data` | banking-core | curves, vol surfaces and cubes, FX, equities, indices, dividends, credit, inflation, commodities, fixings, bonds, correlations | `market` |
 | `trading` | banking-core, market-data | `trade`: 125 products in ten asset classes | `trading` |
-| `market-risk` | trading | VaR, stress scenarios and results, FRTB sensitivities, P&L explain | `risk` |
-| `counterparty-risk` | trading | netting sets, credit limits, exposure profiles, CVA, SA-CCR, collateral balances, margin calls, SIMM | `credit`, `collateral` |
+| `market-risk` | market-data, trading | VaR, stress scenarios and results, FRTB sensitivities, P&L explain | `risk` |
+| `counterparty-risk` | market-data, trading | netting sets, credit limits, exposure profiles, CVA, SA-CCR, collateral balances, margin calls, SIMM | `credit`, `collateral` |
 
 Enable them with `DRISHTI_PACKS=market-risk,counterparty-risk` (the others come with them).
 
@@ -142,7 +170,7 @@ Further packs describe themselves with a `PackSpec` (kinds, data domains, exampl
 `tools/packgen/common/packbuild.py` writes the manifest, the Sutras, the samples, the guide and the lake, after
 checking every id, link and Sutra path.
 
-| Pack | Requires | Kinds | Data domain |
+| Pack | Extends | Kinds | Data domain |
 |---|---|---|---|
 | `liquidity-risk` | trading | LCR, NSFR, maturity ladders, HQLA holdings, funding sources, liquidity stress, intraday liquidity | `liquidity` |
 | `climate-risk` | trading | climate profiles, PCAF financed emissions, NGFS scenarios, climate stress, physical-risk assets, green asset ratio | `climate` |

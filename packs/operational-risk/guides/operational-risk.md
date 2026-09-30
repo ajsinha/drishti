@@ -20,9 +20,9 @@ Loss events, RCSA, key risk indicators, issues and actions, scenarios, third-par
 
 Operational risk is organised by the banking-core desks and legal entities: losses, controls and indicators belong to desks, capital and scenarios to legal entities. A loss links to the control that failed, and issues and cyber incidents link to the losses they caused.
 
-**Requires:** `banking-core` · **Kinds:** 8 · **Sample documents:** 136
+**Extends:** `banking-core` · **Kinds:** 8 · **Sample documents:** 136
 
-Enable it with `DRISHTI_PACKS=operational-risk` (the packs it requires come with it).
+Enable it with `DRISHTI_PACKS=operational-risk` (the packs it extends come with it).
 
 ## Try it
 

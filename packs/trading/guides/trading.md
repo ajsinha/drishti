@@ -18,9 +18,9 @@
 
 Trades in 125 products across rates, FX, credit, equity, commodities, inflation, fixed income, securities financing, money markets and structured products.
 
-**Requires:** `banking-core`, `market-data` · **Required by:** `market-risk`, `counterparty-risk` · **Kinds:** 1 · **Sample documents:** 750
+**Extends:** `banking-core`, `market-data` · **Extended by:** `market-risk`, `counterparty-risk` · **Kinds:** 1 · **Sample documents:** 750
 
-Enable it with `DRISHTI_PACKS=trading` (the packs it requires come with it).
+Enable it with `DRISHTI_PACKS=trading` (the packs it extends come with it; where they differ, the more specific wins).
 
 ## Try it
 

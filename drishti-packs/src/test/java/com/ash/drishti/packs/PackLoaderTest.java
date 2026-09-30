@@ -77,7 +77,7 @@ class PackLoaderTest {
                 .containsEntry("drishti.sources.routes.var", "risk-lake")
                 .containsEntry("drishti.packs.loaded", "core,risk");
         write(dir, "clash", "connectors:\n  core-lake: { plugin: delta, settings: { domain: other } }\n");
-        assertThatThrownBy(() -> l.properties(l.load(dir, List.of("risk", "clash")))).hasMessageContaining("declared differently");
+        assertThatThrownBy(() -> l.properties(l.load(dir, List.of("risk", "clash")))).hasMessageContaining("do not inherit from each other");
         write(dir, "a", "requires: [b]\n");
         write(dir, "b", "requires: [a]\n");
         assertThatThrownBy(() -> l.load(dir, List.of("a"))).hasMessageContaining("cycle: a -> b -> a");
@@ -88,5 +88,53 @@ class PackLoaderTest {
     private static void write(Path dir, String name, String body) throws Exception {
         java.nio.file.Files.createDirectories(dir.resolve(name));
         java.nio.file.Files.writeString(dir.resolve(name).resolve("pack.yaml"), "pack: " + name + "\nversion: 1.0.0\n" + body);
+    }
+
+    @Test
+    void aChildInheritsItsParentsAndTheRightmostParentWins(@TempDir Path dir) throws Exception {
+        write(dir, "base", "kinds: [curve]\nmnemonics: { CRV: { kind: curve, label: Curve } }\nroles: { viewer: { kinds: [curve] } }\n"
+                + "graph: { badges: { curve: \"'base'\" } }\n");
+        write(dir, "left", "extends: [base]\nkinds: [trade]\nmnemonics: { TRD: { kind: trade, label: Left trade } }\n"
+                + "roles: { trader: { kinds: [trade] } }\ngraph: { badges: { curve: \"'left'\" } }\n");
+        write(dir, "right", "extends: [base]\nkinds: [quote]\nmnemonics: { TRD: { kind: trade, label: Right trade } }\n"
+                + "roles: { trader: { kinds: [trade, quote] } }\n");
+        write(dir, "child", "extends: [left, right]\nkinds: [var]\nroles: { viewer: { kinds: [curve, trade, var] } }\n");
+        PackLoader l = new PackLoader();
+        List<Pack> packs = l.load(dir, List.of("child"));
+        assertThat(packs).extracting(Pack::name).containsExactlyInAnyOrder("base", "left", "right", "child");
+        assertThat(PackLoader.lineage(packs).linearisation("child")).containsExactly("child", "right", "left", "base");
+        Map<String, Object> p = l.properties(packs);
+        assertThat(p).containsEntry("drishti.commands.mnemonics.TRD.label", "Right trade")            // rightmost parent wins
+                .containsEntry("drishti.security.roles.trader.kinds[1]", "quote")
+                .containsEntry("drishti.security.roles.viewer.kinds[2]", "var")                        // the child wins over all
+                .containsEntry("drishti.graph.badges.curve", "'left'")                                // only left redefines it: left over base
+                .containsEntry("drishti.commands.mnemonics.CRV.kind", "curve");                        // inherited untouched
+        assertThat(p.values()).anyMatch(v -> v.equals("mnemonic TRD: right overrides left"))
+                .anyMatch(v -> v.equals("role viewer: child overrides base"));
+    }
+
+    @Test
+    void unrelatedPacksStillMayNotClashAndKindsAreNeverOverridden(@TempDir Path dir) throws Exception {
+        write(dir, "a", "mnemonics: { TRD: { kind: trade } }\n");
+        write(dir, "b", "mnemonics: { TRD: { kind: deal } }\n");
+        PackLoader l = new PackLoader();
+        assertThatThrownBy(() -> l.properties(l.load(dir, List.of("a", "b")))).hasMessageContaining("do not inherit from each other");
+        write(dir, "owner", "kinds: [trade]\n");
+        write(dir, "thief", "extends: [owner]\nkinds: [trade]\n");
+        assertThatThrownBy(() -> l.properties(l.load(dir, List.of("thief")))).hasMessageContaining("kind trade");
+    }
+
+    @Test
+    void inconsistentOrdersAndCyclesAreRefused(@TempDir Path dir) throws Exception {
+        write(dir, "x", "kinds: [x]\n");
+        write(dir, "y", "kinds: [y]\n");
+        write(dir, "xy", "extends: [x, y]\n");
+        write(dir, "yx", "extends: [y, x]\n");
+        write(dir, "both", "extends: [xy, yx]\n");
+        PackLoader l = new PackLoader();
+        assertThatThrownBy(() -> l.properties(l.load(dir, List.of("both")))).hasMessageContaining("inconsistent");
+        write(dir, "p", "extends: [q]\n");
+        write(dir, "q", "extends: [p]\n");
+        assertThatThrownBy(() -> l.load(dir, List.of("p"))).hasMessageContaining("cycle");
     }
 }

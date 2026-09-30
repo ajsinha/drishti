@@ -30,8 +30,13 @@ import java.util.Map;
 /**
  * Reads {@code <dir>/<name>/pack.yaml} for each enabled pack, in the order given, and turns their content into
  * Drishti properties. A pack contributes: mnemonics, reference patterns and fields, link badges, roles, Sutra
- * directories, format and semantic-hint files, and sample directories for the demo source. Conflicts (two
- * packs claiming the same mnemonic or field) are errors, reported with both pack names.
+ * directories, format and semantic-hint files, and sample directories for the demo source.
+ *
+ * <p>Packs inherit ({@code extends: [parent, …]}, see {@link PackLineage}): a child has everything its parents have,
+ * and where two related packs define the same mnemonic, field, badge, role, route or connector, the more specific one
+ * wins (the child over its parents, the rightmost parent over the others). Every such override is reported
+ * ({@code drishti.packs.overrides}). Unrelated packs defining the same thing are still an error, and a kind always
+ * belongs to exactly one pack.
  */
 public final class PackLoader {
 
@@ -61,7 +66,7 @@ public final class PackLoader {
         }
         path.addLast(name);
         Pack p = read(dir, name, path.size() > 1 ? path.toArray(new String[0])[path.size() - 2] : null);
-        for (String r : p.requires()) {
+        for (String r : p.parents()) {
             visit(dir, r.trim(), done, path);
         }
         path.removeLast();
@@ -87,30 +92,49 @@ public final class PackLoader {
         }
     }
 
+    /** The inheritance order of the given packs (they must include every pack they inherit from). */
+    public static PackLineage lineage(List<Pack> packs) {
+        Map<String, List<String>> parents = new LinkedHashMap<>();
+        packs.forEach(p -> parents.put(p.name(), p.parents()));
+        java.util.Set<String> inherited = new java.util.HashSet<>();
+        parents.values().forEach(inherited::addAll);
+        List<String> leaves = packs.stream().map(Pack::name).filter(n -> !inherited.contains(n)).toList();
+        return new PackLineage(parents, leaves);
+    }
+
+    /** One definition of a named thing (a mnemonic, a role, …) by one pack: the properties it contributes. */
+    private record Claim(String pack, Map<String, Object> props) {}
+
     /** Flattened Spring properties for the given packs, lowest precedence. */
     @SuppressWarnings("unchecked")
     public Map<String, Object> properties(List<Pack> packs) {
+        PackLineage lineage = lineage(packs);
+        List<String> order = lineage.order();                                  // most specific first
+        List<Pack> general = new ArrayList<>(packs);
+        general.sort(java.util.Comparator.comparingInt((Pack x) -> order.indexOf(x.name())).reversed());   // most general first
         Map<String, Object> p = new LinkedHashMap<>();
-        Map<String, String> owner = new LinkedHashMap<>();
-        Map<String, Object> connectors = new LinkedHashMap<>();
+        Map<String, String> kindOwner = new LinkedHashMap<>();
+        Map<String, Claim> claims = new LinkedHashMap<>();
+        List<String> overrides = new ArrayList<>();
         int patterns = 0;
         int follows = 0;
         List<String> sutraDirs = new ArrayList<>();
         List<String> formats = new ArrayList<>();
         List<String> semantics = new ArrayList<>();
         List<String> samples = new ArrayList<>();
-        for (Pack pack : packs) {
+        for (Pack pack : general) {
             Map<String, Object> m = pack.manifest();
             List<Object> owned = (List<Object>) m.getOrDefault("kinds", List.of());
             for (int i = 0; i < owned.size(); i++) {
-                claim(owner, "kind " + owned.get(i), pack.name());
+                claim(kindOwner, "kind " + owned.get(i), pack.name());         // a kind belongs to one pack: never overridden
                 p.put("drishti.packs.kinds." + pack.name() + "[" + i + "]", owned.get(i));
             }
             for (Map.Entry<String, Object> e : map(m.get("mnemonics")).entrySet()) {
-                claim(owner, "mnemonic " + e.getKey(), pack.name());
                 Map<String, Object> def = map(e.getValue());
-                p.put("drishti.commands.mnemonics." + e.getKey() + ".kind", def.get("kind"));
-                p.put("drishti.commands.mnemonics." + e.getKey() + ".label", def.getOrDefault("label", e.getKey()));
+                Map<String, Object> props = new LinkedHashMap<>();
+                props.put("drishti.commands.mnemonics." + e.getKey() + ".kind", def.get("kind"));
+                props.put("drishti.commands.mnemonics." + e.getKey() + ".label", def.getOrDefault("label", e.getKey()));
+                offer(claims, overrides, lineage, "mnemonic " + e.getKey(), pack.name(), props);
             }
             Map<String, Object> graph = map(m.get("graph"));
             for (Object o : (List<Object>) graph.getOrDefault("id-patterns", List.of())) {
@@ -120,77 +144,99 @@ public final class PackLoader {
                 patterns++;
             }
             for (Map.Entry<String, Object> e : map(graph.get("fields")).entrySet()) {
-                claim(owner, "field " + e.getKey(), pack.name());
                 Map<String, Object> f = map(e.getValue());
-                p.put("drishti.graph.fields." + e.getKey() + ".kind", f.get("kind"));
+                Map<String, Object> props = new LinkedHashMap<>();
+                props.put("drishti.graph.fields." + e.getKey() + ".kind", f.get("kind"));
                 if (f.get("label") != null) {
-                    p.put("drishti.graph.fields." + e.getKey() + ".label", f.get("label"));
+                    props.put("drishti.graph.fields." + e.getKey() + ".label", f.get("label"));
                 }
+                offer(claims, overrides, lineage, "field " + e.getKey(), pack.name(), props);
             }
             Map<String, Object> impact = map(graph.get("impact"));
             for (Object f : (List<Object>) impact.getOrDefault("follow", List.of())) {
                 p.put("drishti.graph.impact.follow[" + follows++ + "]", f);
             }
-            map(impact.get("measures")).forEach((kind, expr) -> p.put("drishti.graph.impact.measures." + kind, expr));
+            map(impact.get("measures")).forEach((kind, expr) -> p.put("drishti.graph.impact.measures." + kind, expr));   // general first: specific wins
             map(impact.get("formats")).forEach((kind, fmt) -> p.put("drishti.graph.impact.formats." + kind, fmt));
-            map(graph.get("badges")).forEach((kind, expr) -> {
-                claim(owner, "badge " + kind, pack.name());
-                p.put("drishti.graph.badges." + kind, expr);
-            });
+            map(graph.get("badges")).forEach((kind, expr) ->
+                    offer(claims, overrides, lineage, "badge " + kind, pack.name(), Map.of("drishti.graph.badges." + kind, expr)));
             for (Map.Entry<String, Object> e : map(m.get("roles")).entrySet()) {
-                claim(owner, "role " + e.getKey(), pack.name());
                 Map<String, Object> r = map(e.getValue());
+                Map<String, Object> props = new LinkedHashMap<>();
                 List<Object> kinds = (List<Object>) r.getOrDefault("kinds", List.of());
                 for (int i = 0; i < kinds.size(); i++) {
-                    p.put("drishti.security.roles." + e.getKey() + ".kinds[" + i + "]", kinds.get(i));
+                    props.put("drishti.security.roles." + e.getKey() + ".kinds[" + i + "]", kinds.get(i));
                 }
                 for (String flag : new String[] {"raw", "author", "admin", "approve"}) {
                     if (r.get(flag) != null) {
-                        p.put("drishti.security.roles." + e.getKey() + "." + flag, r.get(flag));
+                        props.put("drishti.security.roles." + e.getKey() + "." + flag, r.get(flag));
                     }
                 }
+                offer(claims, overrides, lineage, "role " + e.getKey(), pack.name(), props);
             }
             // connectors: one per data domain (a Delta Lake domain folder, a database). Data domains and packs are
-            // many-to-many: several packs may declare the same connector, identically; a differing declaration is an error.
+            // many-to-many: several packs may declare the same connector identically; a child may redefine one.
             for (Map.Entry<String, Object> e : map(m.get("connectors")).entrySet()) {
-                Object seen = connectors.putIfAbsent(e.getKey(), e.getValue());
-                if (seen != null) {
-                    if (!seen.equals(e.getValue())) {
-                        throw new IllegalStateException("connector '" + e.getKey() + "' is declared differently by pack '" + pack.name()
-                                + "' and an earlier pack; declare it identically or give it another name");
-                    }
-                    continue;
-                }
                 Map<String, Object> c = map(e.getValue());
                 String base = "drishti.sources.connectors." + e.getKey();
-                p.put(base + ".plugin", c.get("plugin"));
+                Map<String, Object> props = new LinkedHashMap<>();
+                props.put(base + ".plugin", c.get("plugin"));
                 if (c.get("enabled") != null) {
-                    p.put(base + ".enabled", c.get("enabled"));
+                    props.put(base + ".enabled", c.get("enabled"));
                 }
                 List<Object> ck = (List<Object>) c.getOrDefault("kinds", List.of());
                 for (int i = 0; i < ck.size(); i++) {
-                    p.put(base + ".kinds[" + i + "]", ck.get(i));
+                    props.put(base + ".kinds[" + i + "]", ck.get(i));
                 }
-                map(c.get("settings")).forEach((k, v) -> p.put(base + ".settings." + k, String.valueOf(v)));
+                map(c.get("settings")).forEach((k, v) -> props.put(base + ".settings." + k, String.valueOf(v)));
+                offer(claims, overrides, lineage, "connector " + e.getKey(), pack.name(), props);
             }
             // routes: which connector answers each of the pack's kinds (the query inside a pack picks the connector)
             for (Map.Entry<String, Object> e : map(m.get("routes")).entrySet()) {
-                claim(owner, "route " + e.getKey(), pack.name());
-                p.put("drishti.sources.routes." + e.getKey(), String.valueOf(e.getValue()));
+                offer(claims, overrides, lineage, "route " + e.getKey(), pack.name(), Map.of("drishti.sources.routes." + e.getKey(), String.valueOf(e.getValue())));
             }
-            addIfExists(sutraDirs, pack, m.getOrDefault("sutras", "sutras"));
-            addIfExists(formats, pack, m.getOrDefault("formats", "config/formats.yaml"));
-            addIfExists(semantics, pack, m.getOrDefault("semantics", "config/semantics.yaml"));
+            addIfExists(sutraDirs, pack, m.getOrDefault("sutras", "sutras"));          // general first: a later directory may override a Sutra
+            addIfExists(formats, pack, m.getOrDefault("formats", "config/formats.yaml")); // general first: later files win
             addIfExists(samples, pack, m.getOrDefault("samples", "samples"));
         }
+        for (Pack pack : packs.stream().sorted(java.util.Comparator.comparingInt(x -> order.indexOf(x.name()))).toList()) {
+            addIfExists(semantics, pack, pack.manifest().getOrDefault("semantics", "config/semantics.yaml"));   // specific first: first wins
+        }
+        claims.values().forEach(c -> p.putAll(c.props()));
         indexed(p, "drishti.rachana.pack-dirs", sutraDirs);
         indexed(p, "drishti.rachana.pack-formats-files", formats);
         indexed(p, "drishti.inference.pack-semantics-files", semantics);
+        indexed(p, "drishti.packs.overrides", overrides);
         if (!samples.isEmpty()) {
             p.put("drishti.sources.plugins.demo.settings.dirs", String.join(",", samples));
         }
         p.put("drishti.packs.loaded", String.join(",", packs.stream().map(Pack::name).toList()));
         return p;
+    }
+
+    /**
+     * A pack defines {@code what}. Identical to what another pack defined: nothing to do. Different, from a related
+     * pack: the more specific definition wins and the override is recorded. From an unrelated pack: an error.
+     */
+    private static void offer(Map<String, Claim> claims, List<String> overrides, PackLineage lineage, String what, String pack, Map<String, Object> props) {
+        Claim prev = claims.get(what);
+        if (prev == null) {
+            claims.put(what, new Claim(pack, props));
+            return;
+        }
+        if (prev.props().equals(props) || prev.pack().equals(pack)) {
+            return;
+        }
+        String winner = lineage.winner(prev.pack(), pack);
+        if (winner == null) {
+            throw new IllegalStateException(what + " is defined by both pack '" + prev.pack() + "' and pack '" + pack
+                    + "', which do not inherit from each other; declare it identically, or make one pack extend the other");
+        }
+        String loser = winner.equals(pack) ? prev.pack() : pack;
+        if (winner.equals(pack)) {
+            claims.put(what, new Claim(pack, props));
+        }
+        overrides.add(what + ": " + winner + " overrides " + loser);
     }
 
     private static void claim(Map<String, String> owner, String what, String pack) {

@@ -19,7 +19,7 @@ version: 1.0.0
 title: Economics
 description: Economies, macro indicators and releases, central-bank decisions, forecasts, trade flows, labour markets, fiscal positions and price
   baskets.
-requires: []
+extends: []
 kinds:
 - economy
 - macro-indicator

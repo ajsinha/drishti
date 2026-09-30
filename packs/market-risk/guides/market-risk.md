@@ -18,9 +18,9 @@
 
 Value at risk, stress testing, FRTB sensitivities and P&L explain.
 
-**Requires:** `trading` · **Required by:** none · **Kinds:** 5 · **Sample documents:** 158
+**Extends:** `market-data`, `trading` · **Extended by:** none · **Kinds:** 5 · **Sample documents:** 158
 
-Enable it with `DRISHTI_PACKS=market-risk` (the packs it requires come with it).
+Enable it with `DRISHTI_PACKS=market-risk` (the packs it extends come with it; where they differ, the more specific wins).
 
 ## Try it
 

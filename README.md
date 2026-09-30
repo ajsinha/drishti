@@ -120,7 +120,8 @@ terminal does.
   - other domains: `genomics`, `politics-society` and `economics`;
   - the small `finance` and `logistics` packs behind the original mockups.
 
-  A new industry is configuration only. Admins assign packs to users, and users choose which to see. See [PACKS.md](docs/PACKS.md).
+  Packs inherit (`extends: [market-data, trading]`): a pack has everything its parents have, and where they differ
+  the more specific pack wins (ADR-015). A new industry is configuration only. Admins assign packs to users, and users choose which to see. See [PACKS.md](docs/PACKS.md).
 - **Impact (F8).** What depends on an entity, what that rolls into, and the amount at stake.
 - **Monitors and alerts.** Live watchlists (`/m`), and rules the server checks on every tick
   (`$.utilisation > 0.8`), with a bell and toasts when they fire.

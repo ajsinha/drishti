@@ -20,9 +20,9 @@ Customers, deposit accounts, mortgages, cards, personal loans, branches, collect
 
 Retail customers belong to branches, and branches and portfolio segments to the banking-core legal entities. A customer view lists every product the customer holds; each product links back to its holder, and delinquent cards and loans open collections cases.
 
-**Requires:** `banking-core` · **Kinds:** 8 · **Sample documents:** 147
+**Extends:** `banking-core` · **Kinds:** 8 · **Sample documents:** 147
 
-Enable it with `DRISHTI_PACKS=retail-banking` (the packs it requires come with it).
+Enable it with `DRISHTI_PACKS=retail-banking` (the packs it extends come with it).
 
 ## Try it
 

@@ -19,7 +19,7 @@ version: 1.0.0
 title: Trading
 description: Trades in 125 products across rates, FX, credit, equity, commodities, inflation, fixed income, securities financing, money markets
   and structured products.
-requires:
+extends:
 - banking-core
 - market-data
 kinds:

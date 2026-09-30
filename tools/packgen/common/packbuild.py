@@ -76,7 +76,7 @@ def manifest(spec: PackSpec, known_fields: dict[str, tuple[str, str]]) -> dict:
             elif known_fields[f][0] != target:   # the field already means another kind: its links would go astray
                 raise SystemExit(f"{spec.name}: link field '{f}' of {k.kind} points at {target}, but the banking packs map it to "
                                  f"{known_fields[f][0]}; use another field name")
-    m = {"pack": spec.name, "version": "1.0.0", "title": spec.title, "description": spec.description, "requires": spec.requires,
+    m = {"pack": spec.name, "version": "1.0.0", "title": spec.title, "description": spec.description, "extends": spec.requires,
          "kinds": [k.kind for k in kinds], "sutras": "sutras",
          "mnemonics": {k.mnemonic: {"kind": k.kind, "label": k.label} for k in kinds},
          "graph": {"id-patterns": [{"pattern": "^" + k.prefix, "kind": k.kind} for k in kinds], "fields": dict(sorted(fields.items()))},
@@ -108,9 +108,9 @@ def overview(spec: PackSpec, docs: dict) -> str:
     lines = [DOC_HEADER, "<!-- " + _generated(spec, "file") + " -->", f"# {spec.title} pack", "", spec.description, ""]
     if spec.overview:
         lines += [spec.overview.strip(), ""]
-    lines += [f"**Requires:** {', '.join(f'`{r}`' for r in spec.requires) or 'nothing'} · **Kinds:** {len(spec.kinds)} · "
+    lines += [f"**Extends:** {', '.join(f'`{r}`' for r in spec.requires) or 'nothing'} · **Kinds:** {len(spec.kinds)} · "
               f"**Sample documents:** {sum(len(docs.get(k.kind, {})) for k in spec.kinds):,}", "",
-              f"Enable it with `DRISHTI_PACKS={spec.name}` (the packs it requires come with it).", "", "## Try it", ""]
+              f"Enable it with `DRISHTI_PACKS={spec.name}` (the packs it extends come with it).", "", "## Try it", ""]
     lines += t(["Command", "Shows"], [[f"`{c} <GO>`", s] for c, s in spec.examples])
     lines += ["## Where the data comes from", ""]
     lines += t(["Connector", "Folder", "Kinds"], [[f"`{d}-store`", f"`data/delta/{d}/`", ", ".join(f"`{k.kind}`" for k in ks)]

@@ -18,9 +18,9 @@
 
 The parties, organisation and legal agreements every banking pack builds on.
 
-**Requires:** nothing (it is the base) · **Required by:** `market-data`, `trading` · **Kinds:** 12 · **Sample documents:** 165
+**Extends:** nothing (it is the base) · **Extended by:** `market-data`, `trading` · **Kinds:** 12 · **Sample documents:** 165
 
-Enable it with `DRISHTI_PACKS=banking-core` (the packs it requires come with it).
+Enable it with `DRISHTI_PACKS=banking-core` (the packs it extends come with it; where they differ, the more specific wins).
 
 ## Try it
 
@@ -172,4 +172,4 @@ An account at a CCP holding cleared trades and margin.
 
 ## Who can see it
 
-No extra roles: any user assigned the pack (or a pack that requires it) can open its kinds.
+No extra roles: any user assigned the pack (or a pack that extends it) can open its kinds.

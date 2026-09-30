@@ -18,9 +18,9 @@
 
 Curves, volatility surfaces, FX, equities, credit, inflation, commodities, fixings and bonds.
 
-**Requires:** `banking-core` · **Required by:** `trading` · **Kinds:** 20 · **Sample documents:** 220
+**Extends:** `banking-core` · **Extended by:** `trading`, `market-risk`, `counterparty-risk` · **Kinds:** 20 · **Sample documents:** 220
 
-Enable it with `DRISHTI_PACKS=market-data` (the packs it requires come with it).
+Enable it with `DRISHTI_PACKS=market-data` (the packs it extends come with it; where they differ, the more specific wins).
 
 ## Try it
 
@@ -267,4 +267,4 @@ Pairwise correlations used by basket, quanto and spread products.
 
 ## Who can see it
 
-No extra roles: any user assigned the pack (or a pack that requires it) can open its kinds.
+No extra roles: any user assigned the pack (or a pack that extends it) can open its kinds.

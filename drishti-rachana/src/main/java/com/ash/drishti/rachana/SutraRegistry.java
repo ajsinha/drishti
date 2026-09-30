@@ -220,9 +220,17 @@ public final class SutraRegistry implements AutoCloseable {
             }
             Path other = origin.putIfAbsent(s.id(), f);
             if (other != null && !other.equals(f)) {
-                problems.computeIfAbsent(f.toString(), k -> new ArrayList<>()).add(new SutraProblem("DRS-2028",
-                        s.id() + " is already defined in " + other, s.location()));
-                continue;
+                // pack directories come most general first: a more specific pack may redefine a parent's Sutra
+                int was = packIndex(other);
+                int now = packIndex(f);
+                if (was >= 0 && now > was) {
+                    origin.put(s.id(), f);
+                    LOG.info("sutra {} from {} overrides the one in {}", s.id(), f, other);
+                } else {
+                    problems.computeIfAbsent(f.toString(), k -> new ArrayList<>()).add(new SutraProblem("DRS-2028",
+                            s.id() + " is already defined in " + other, s.location()));
+                    continue;
+                }
             }
             byName.computeIfAbsent(s.name(), k -> new TreeMap<>()).put(s.version(), s);
             try {
@@ -259,6 +267,17 @@ public final class SutraRegistry implements AutoCloseable {
         Map<String, Sutra> out = new HashMap<>();
         s.byName().values().forEach(v -> v.values().forEach(x -> out.put(x.id(), x)));
         return out;
+    }
+
+    /** The position of the pack Sutra directory holding {@code f} (most general first), or -1 for a site directory. */
+    private int packIndex(Path f) {
+        List<String> dirs = props.packDirs();
+        for (int i = dirs.size() - 1; i >= 0; i--) {
+            if (f.startsWith(Path.of(dirs.get(i)).toAbsolutePath().normalize())) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     private List<Path> files() {

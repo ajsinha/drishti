@@ -19,7 +19,7 @@ version: 1.0.0
 title: Climate risk
 description: Counterparty climate profiles, PCAF financed emissions, NGFS scenarios, climate stress, physical-risk assets and the green asset
   ratio.
-requires:
+extends:
 - trading
 kinds:
 - climate-profile

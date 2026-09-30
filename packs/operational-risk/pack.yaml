@@ -18,7 +18,7 @@ pack: operational-risk
 version: 1.0.0
 title: Operational and non-financial risk
 description: Loss events, RCSA, key risk indicators, issues and actions, scenarios, third-party and cyber risk, and SMA operational-risk capital.
-requires:
+extends:
 - banking-core
 kinds:
 - loss-event

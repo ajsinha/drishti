@@ -18,7 +18,7 @@ pack: genomics
 version: 1.0.0
 title: Genomics and biology
 description: Genes, variants, proteins, pathways, sequenced samples, sequencing runs, expression studies and clinical trials.
-requires: []
+extends: []
 kinds:
 - gene
 - variant

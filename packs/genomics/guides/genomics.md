@@ -20,9 +20,9 @@ Genes, variants, proteins, pathways, sequenced samples, sequencing runs, express
 
 Gene coordinates (GRCh38), UniProt accessions, variant names and dbSNP ids are public reference facts; samples, runs, studies, trials, frequencies and expression values are synthetic. A gene links to its protein and pathway, a variant to its gene, a sample to the run that sequenced it and the trial it was screened for, and a trial to its target gene and biomarker variant.
 
-**Requires:** nothing · **Kinds:** 8 · **Sample documents:** 58
+**Extends:** nothing · **Kinds:** 8 · **Sample documents:** 58
 
-Enable it with `DRISHTI_PACKS=genomics` (the packs it requires come with it).
+Enable it with `DRISHTI_PACKS=genomics` (the packs it extends come with it).
 
 ## Try it
 

@@ -47,11 +47,11 @@ PACKS = {
                        "securities financing, money markets and structured products.",
         "kinds": {"trading": ["trade"]}},
     "market-risk": {
-        "title": "Market risk", "requires": ["trading"],
+        "title": "Market risk", "requires": ["market-data", "trading"],
         "description": "Value at risk, stress testing, FRTB sensitivities and P&L explain.",
         "kinds": {"risk": ["var", "stress-scenario", "stress-result", "frtb-sensitivity", "pnl-explain"]}},
     "counterparty-risk": {
-        "title": "Counterparty credit risk", "requires": ["trading"],
+        "title": "Counterparty credit risk", "requires": ["market-data", "trading"],
         "description": "Netting sets, exposure and PFE, CVA/XVA, SA-CCR, credit limits, collateral, margin calls and SIMM.",
         "kinds": {"credit": ["netting-set", "credit-limit", "exposure-profile", "cva", "sa-ccr"],
                   "collateral": ["collateral-balance", "margin-call", "simm"]}},

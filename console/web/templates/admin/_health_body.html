@@ -44,12 +44,12 @@
 
 <h2 class="ws-h">Packs</h2>
 <section class="pnl"><div class="pnl-b"><div class="tbl-wrap"><table class="tbl hl-tbl">
-  <thead><tr><th>Pack</th><th>Status</th><th>Requires</th><th class="num">Kinds</th><th class="num">Sutras</th><th>Connectors</th><th>Problems</th></tr></thead>
+  <thead><tr><th>Pack</th><th>Status</th><th>Extends</th><th class="num">Kinds</th><th class="num">Sutras</th><th>Connectors</th><th>Problems</th></tr></thead>
   <tbody>{% for p in h.packs %}
     <tr class="{{ 'hl-row-down' if p.status != 'OK' else '' }}">
       <td>{{ p.title }}<div class="cmp-path mono">{{ p.name }} {{ p.version }}</div></td>
       <td><span class="hl-badge hl-{{ tone[p.status] }}">{{ p.status }}</span></td>
-      <td class="mono cmp-path">{{ p.requires | join(', ') }}</td>
+      <td class="mono cmp-path">{{ (p.extends or p.requires or []) | join(', ') }}{% if p.overrides %}<div title="{{ p.overrides | join('\n') }}">{{ p.overrides | length }} override{{ 's' if p.overrides | length > 1 }}</div>{% endif %}</td>
       <td class="num mono">{{ p.kinds }}</td>
       <td class="num mono">{{ p.sutras }}</td>
       <td class="mono cmp-path">{% for c in p.connectors %}<span class="{{ 't-neg' if c in p.connectorsDown else 'text-muted-d' if c in p.connectorsOff else '' }}"
@@ -58,6 +58,11 @@
         {% if p.connectorsDown %}<div>connector{{ 's' if p.connectorsDown | length > 1 }} down: {{ p.connectorsDown | join(', ') }}</div>{% endif %}</td>
     </tr>{% endfor %}
   </tbody></table></div></div></section>
+
+{% if h.overrides %}
+<details class="hl-over"><summary>{{ h.overrides | length }} inherited definition{{ 's' if h.overrides | length > 1 }} overridden by a more specific pack</summary>
+  <ul class="mono cmp-path">{% for o in h.overrides %}<li>{{ o }}</li>{% endfor %}</ul></details>
+{% endif %}
 
 <h2 class="ws-h">Live</h2>
 <div class="hl-sum">

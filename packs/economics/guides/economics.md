@@ -20,9 +20,9 @@ Economies, macro indicators and releases, central-bank decisions, forecasts, tra
 
 The economies are real; the figures are illustrative, not official statistics. An economy links to its central bank's latest decision, labour market, fiscal position, price basket and forecast; indicators, decisions and trade flows link back to their economies. For real rates, the market-data pack's feeds (SOFR, €STR, Treasury curve, FRED) can run alongside.
 
-**Requires:** nothing · **Kinds:** 8 · **Sample documents:** 77
+**Extends:** nothing · **Kinds:** 8 · **Sample documents:** 77
 
-Enable it with `DRISHTI_PACKS=economics` (the packs it requires come with it).
+Enable it with `DRISHTI_PACKS=economics` (the packs it extends come with it).
 
 ## Try it
 

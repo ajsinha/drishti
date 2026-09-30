@@ -58,9 +58,13 @@ public class HealthController {
     private final LiveStreamSlots slots;
     private final Entitlements entitlements;
     private final String version;
+    private final List<String> overrides;
 
     public HealthController(SourceRegistry registry, SourceRouter router, PackRegistry packs, SutraRegistry sutras, LiveMetrics live,
-            TopicHub hub, LiveStreamSlots slots, Entitlements entitlements, ObjectProvider<BuildProperties> build) {
+            TopicHub hub, LiveStreamSlots slots, Entitlements entitlements, ObjectProvider<BuildProperties> build,
+            org.springframework.core.env.Environment env) {
+        this.overrides = org.springframework.boot.context.properties.bind.Binder.get(env)
+                .bind("drishti.packs.overrides", org.springframework.boot.context.properties.bind.Bindable.listOf(String.class)).orElse(List.of());
         this.registry = registry;
         this.router = router;
         this.packs = packs;
@@ -113,6 +117,7 @@ public class HealthController {
         out.put("sources", sources);
         out.put("failedToStart", failures);
         out.put("packs", packRows);
+        out.put("overrides", overrides);
         out.put("live", Map.of("streams", slots.open(), "topics", hub.topicCount(), "frames", live.frames(), "droppedFrames", live.droppedFrames(),
                 "p50Ms", live.percentile(50), "p99Ms", live.percentile(99)));
         return out;
@@ -142,7 +147,8 @@ public class HealthController {
             row.put("name", pack.name());
             row.put("title", pack.title());
             row.put("version", pack.version());
-            row.put("requires", pack.requires());
+            row.put("extends", pack.parents());
+            row.put("overrides", overrides.stream().filter(o -> o.contains(": " + pack.name() + " overrides ")).toList());
             row.put("kinds", pack.kinds().size());
             row.put("sutras", countSutras(dir));
             row.put("sutraProblems", broken);

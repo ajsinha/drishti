@@ -18,7 +18,8 @@ pack: counterparty-risk
 version: 1.0.0
 title: Counterparty credit risk
 description: Netting sets, exposure and PFE, CVA/XVA, SA-CCR, credit limits, collateral, margin calls and SIMM.
-requires:
+extends:
+- market-data
 - trading
 kinds:
 - netting-set

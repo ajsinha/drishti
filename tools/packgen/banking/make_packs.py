@@ -89,7 +89,7 @@ def manifest(name: str) -> dict:
     kinds = [k for ks in p["kinds"].values() for k in ks]
     specs = {k.kind: k for k in T.KINDS + [T.TRADE]}
     fields = {f: {"kind": kind, "label": label} for f, (kind, label) in T.graph_fields().items() if kind in kinds}
-    m = {"pack": name, "version": "1.0.0", "title": p["title"], "description": p["description"], "requires": p["requires"],
+    m = {"pack": name, "version": "1.0.0", "title": p["title"], "description": p["description"], "extends": p["requires"],
          "kinds": kinds, "sutras": "sutras", "formats": "config/formats.yaml",
          **({"semantics": "config/semantics.yaml"} if name == "banking-core" else {}),
          "mnemonics": {specs[k].mnemonic: {"kind": k, "label": specs[k].label} for k in kinds},

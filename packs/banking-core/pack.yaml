@@ -18,7 +18,7 @@ pack: banking-core
 version: 1.0.0
 title: Banking core
 description: The parties, organisation and legal agreements every banking pack builds on.
-requires: []
+extends: []
 kinds:
 - counterparty
 - counterparty-group

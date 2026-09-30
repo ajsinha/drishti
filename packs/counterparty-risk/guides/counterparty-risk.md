@@ -18,9 +18,9 @@
 
 Netting sets, exposure and PFE, CVA/XVA, SA-CCR, credit limits, collateral, margin calls and SIMM.
 
-**Requires:** `trading` · **Required by:** none · **Kinds:** 8 · **Sample documents:** 498
+**Extends:** `market-data`, `trading` · **Extended by:** none · **Kinds:** 8 · **Sample documents:** 498
 
-Enable it with `DRISHTI_PACKS=counterparty-risk` (the packs it requires come with it).
+Enable it with `DRISHTI_PACKS=counterparty-risk` (the packs it extends come with it; where they differ, the more specific wins).
 
 ## Try it
 

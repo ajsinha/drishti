@@ -20,9 +20,9 @@ LCR and NSFR by legal entity, maturity ladders, HQLA holdings, funding sources, 
 
 Liquidity figures are computed per legal entity from the same entities, counterparties and bonds as the banking packs: HQLA holdings are the sovereign and corporate bonds of the market-data pack, funding sources are the banking-core counterparties.
 
-**Requires:** `trading` · **Kinds:** 7 · **Sample documents:** 104
+**Extends:** `trading` · **Kinds:** 7 · **Sample documents:** 104
 
-Enable it with `DRISHTI_PACKS=liquidity-risk` (the packs it requires come with it).
+Enable it with `DRISHTI_PACKS=liquidity-risk` (the packs it extends come with it).
 
 ## Try it
 

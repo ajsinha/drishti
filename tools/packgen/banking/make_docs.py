@@ -63,10 +63,10 @@ def overview(name: str, docs: dict) -> str:
     lines = [HEADER, GENERATED, f"# {p['title']} pack", "", p["description"], ""]
     req = p["requires"]
     needed_by = [n for n, q in layout.PACKS.items() if name in q["requires"]]
-    lines += [f"**Requires:** {', '.join(f'`{r}`' for r in req) if req else 'nothing (it is the base)'} · "
-              f"**Required by:** {', '.join(f'`{r}`' for r in needed_by) or 'none'} · "
+    lines += [f"**Extends:** {', '.join(f'`{r}`' for r in req) if req else 'nothing (it is the base)'} · "
+              f"**Extended by:** {', '.join(f'`{r}`' for r in needed_by) or 'none'} · "
               f"**Kinds:** {len(kinds)} · **Sample documents:** {sum(len(docs.get(k, {})) for k in kinds):,}", "",
-              "Enable it with `DRISHTI_PACKS=" + name + "` (the packs it requires come with it).", ""]
+              "Enable it with `DRISHTI_PACKS=" + name + "` (the packs it extends come with it; where they differ, the more specific wins).", ""]
     lines += ["## Try it", ""]
     lines += table(["Command", "Shows"], [[f"`{c} <GO>`", s] for c, s in make_packs.EXAMPLES[name]])
     lines += ["## Where the data comes from", "",
@@ -111,7 +111,7 @@ def overview(name: str, docs: dict) -> str:
     lines += ["## Who can see it", ""]
     roles = make_packs.ROLES.get(name)
     lines += ([f"Role `{r}`: kinds {', '.join(f'`{x}`' for x in v['kinds'])}{', raw JSON' if v.get('raw') else ''}." for r, v in roles.items()]
-              if roles else ["No extra roles: any user assigned the pack (or a pack that requires it) can open its kinds."]) + [""]
+              if roles else ["No extra roles: any user assigned the pack (or a pack that extends it) can open its kinds."]) + [""]
     impact = make_packs.IMPACT.get(name)
     if impact:
         lines += ["## F8 impact", "", "Amounts at stake: " + ", ".join(f"`{k}` by `{v}`" for k, v in impact["measures"].items())
@@ -175,7 +175,7 @@ def model() -> str:
     lines += table(["Field", "Label", "Opens kind", "Pack", "Data domain"], rows)
     lines += ["## Packs and data domains", ""]
     rows = [[f"`{n}`", ", ".join(f"`{r}`" for r in p["requires"]) or "—", ", ".join(f"`{d}`" for d in p["kinds"])] for n, p in layout.PACKS.items()]
-    lines += table(["Pack", "Requires", "Reads domains"], rows)
+    lines += table(["Pack", "Extends", "Reads domains"], rows)
     return "\n".join(lines)
 
 

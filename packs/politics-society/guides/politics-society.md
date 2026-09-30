@@ -20,9 +20,9 @@ Jurisdictions, parties, candidates, elections, opinion polls, bills, regions and
 
 Valdoria and Kestria are fictional, so nothing here describes real parties or people. The mechanics are real: Valdoria's seats are allocated by D'Hondt with a 5% threshold, Kestria's by first past the post; poll margins of error are 95% intervals for the sample size.
 
-**Requires:** nothing · **Kinds:** 8 · **Sample documents:** 96
+**Extends:** nothing · **Kinds:** 8 · **Sample documents:** 96
 
-Enable it with `DRISHTI_PACKS=politics-society` (the packs it requires come with it).
+Enable it with `DRISHTI_PACKS=politics-society` (the packs it extends come with it).
 
 ## Try it
 

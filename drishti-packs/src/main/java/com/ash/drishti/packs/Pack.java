@@ -37,10 +37,24 @@ public record Pack(String name, String version, String title, String description
         return k instanceof java.util.List<?> l ? l.stream().map(String::valueOf).toList() : java.util.List.of();
     }
 
-    /** Packs this one builds on (their kinds, links and connectors come with it). */
+    /**
+     * The packs this one inherits from, in declaration order: {@code extends:} (and the older {@code requires:}, read
+     * the same way). Everything a parent brings comes with the child; where two contributions conflict, the more
+     * specific one wins: the child over its parents, and the rightmost parent over those to its left.
+     */
+    public java.util.List<String> parents() {
+        java.util.LinkedHashSet<String> out = new java.util.LinkedHashSet<>();
+        for (String key : new String[] {"extends", "requires"}) {
+            if (manifest.get(key) instanceof java.util.List<?> l) {
+                l.forEach(x -> out.add(String.valueOf(x).trim()));
+            }
+        }
+        return java.util.List.copyOf(out);
+    }
+
+    /** Same as {@link #parents()}; kept for callers written before inheritance. */
     public java.util.List<String> requires() {
-        Object r = manifest.get("requires");
-        return r instanceof java.util.List<?> l ? l.stream().map(String::valueOf).toList() : java.util.List.of();
+        return parents();
     }
 
     public Path resolve(String relative) {
