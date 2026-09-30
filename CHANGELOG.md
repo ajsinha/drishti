@@ -15,6 +15,17 @@
 -->
 # Changelog
 
+## Unreleased — Wave 7: view pipeline, entity graph, type-ahead
+- `drishti-graph`: config-driven `ReferenceCatalog` (identifier patterns and reference fields) and `BadgeRenderer` (`EE 4.1m`, `threshold 0`, `live`).
+- `drishti-engine`:
+  - `ViewPipeline` (fetch → match → fingerprint → cached layout → parallel link fetch within 40 ms → parallel panel binding);
+  - `Binder` for all twelve panel kinds, with one error per panel rather than per view;
+  - the `ViewModel` JSON contract, with pre-formatted, toned cells and document paths for live patches.
+- Commands: config-driven `Mnemonics`, `CommandParser` (`TRD IRS-48213 <GO>`, a bare id, any case), `SuggestionService` (mnemonics, per-user recents, parallel plugin search within 30 ms) and `RecentEntities`.
+- Golden ViewModel tests for all four mockups: strip, legs, cashflows and totals, curve with mark, link badges, ladder highlight, "10 more trades", exposure limit.
+- Latency gate: warm p99 under 50 ms.
+- `drishti-benchmarks` (JMH). Docs: `PERFORMANCE.md` with measured numbers.
+
 ## Unreleased — Wave 6: inference engine
 - `drishti-inference`: config-driven `Semantics` (roles from field names and value classes, memoised), `ColumnInference`, six rules (legs → tabs, term structure → line/area, distribution → hbar, time series → ladder, arrays → table, nested objects → kv), and a packer with density limits.
 - `LayoutMerger`: Sutra ⊕ inference, where the Sutra always wins. It produces an `EffectiveLayout` with the provenance label (`Sutra irs-vanilla v3 + inference` / `inference only`) and a per-panel explanation.

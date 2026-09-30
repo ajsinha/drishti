@@ -36,8 +36,8 @@ Drishti is built in ten waves on `develop`. Each wave is merged to `main` when i
 | 4 | Sutra grammar: parser with line/column errors, hot-reloading registry | ✅ done |
 | 5 | Sutra-EL expressions, formats, Sutra matching; golden strips for all four mockups | ✅ done |
 | 6 | Inference engine: rules, packing, Sutra ⊕ inference merge | ✅ done |
-| 7 | View pipeline, entity links, command type-ahead service | ⏳ next |
-| 8 | REST API and console entity views (the four mockups end to end) | ◻️ |
+| 7 | View pipeline, entity links, command type-ahead service | ✅ done |
+| 8 | REST API and console entity views (the four mockups end to end) | ⏳ next |
 | 9 | Live updates over SSE, measured p99 | ◻️ |
 | 10 | Sutra Studio, security, ops, v1.0.0 | ◻️ |
 
@@ -54,7 +54,12 @@ Drishti is built in ten waves on `develop`. Each wave is merged to `main` when i
   tests). Sutra-EL is compiled once and shared across threads.
 - **Inference.** An entity with no Sutra still gets a sensible layout: strip, tabs, tables, curves,
   bars, ladders, key/value panels and links. Each inferred panel records why it was chosen.
-- **Not yet:** REST views, the console entity pages and live ticking. These arrive in Waves 7–9.
+- **Views.** `ViewPipeline` builds the complete ViewModel of any entity: the title, strip, panels,
+  linked entities with badges, function keys and provenance. Layouts are cached per data shape, and
+  warm p99 is under 50 ms (a test gate). The golden tests reproduce all four mockups' values.
+- **Type-ahead.** `SuggestionService` offers mnemonics, recents and entities as you type
+  (`T` → `TRD`; `TRD IRS-4` → `IRS-47102`, `IRS-48213`, …), searching the sources in parallel within 30 ms.
+- **Not yet:** the REST endpoints and console entity pages (Wave 8), and live ticking (Wave 9).
 
 ## Try it
 
@@ -85,7 +90,9 @@ drishti/
 ├── drishti-common/              error codes, JSON codec, shape fingerprints
 ├── drishti-sutra/               Sutra model, parser, registry, Sutra-EL, formats
 ├── drishti-inference/           semantic hints, rules, packer, Sutra ⊕ inference merge
-├── drishti-graph/ drishti-engine/   entity links; plugin discovery, routing, (W7) view pipeline
+├── drishti-graph/               reference catalogue, link badges
+├── drishti-engine/              sources, view pipeline, binder, ViewModel, commands, type-ahead
+├── drishti-benchmarks/          JMH hot-path benchmarks
 ├── drishti-server/              the Spring Boot application
 ├── drishti-testkit/ drishti-it/ fixtures; architecture, licence-header and file-size gates
 ├── plugins/drishti-plugin-{demo,file}/
@@ -104,6 +111,7 @@ drishti/
 | [SUTRA_REFERENCE.md](docs/SUTRA_REFERENCE.md) | **The layout grammar.** Keys, panel kinds, formats, Sutra-EL, problem codes. |
 | [INFERENCE.md](docs/INFERENCE.md) | **Layouts from shape.** Rules, packing, merging, semantic hints. |
 | [PLUGIN_GUIDE.md](docs/PLUGIN_GUIDE.md) | **Bringing data in.** The source SPI, routing and configuration. |
+| [PERFORMANCE.md](docs/PERFORMANCE.md) | **Measured numbers.** JMH hot paths and the end-to-end latency gate. |
 | [adr/](docs/adr/README.md) | Architecture decision records. |
 | [CHANGELOG.md](CHANGELOG.md) | What changed, wave by wave. |
 

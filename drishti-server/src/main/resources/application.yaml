@@ -66,3 +66,55 @@ drishti:
     # Edit a Sutra and the next view uses it; an invalid edit keeps the last good version.
     hot-reload: true
     reload-debounce: 250ms
+  engine:
+    layout-cache-size: 10000        # effective layouts, one per (Sutra version, kind, data shape)
+    fingerprint-cache-size: 100000  # one per (entity, generation)
+    bind-parallelism: 0             # 0 = one binding thread per core
+  commands:
+    suggest-limit: 10
+    suggest-budget: 30ms            # type-ahead answers with what the sources returned by then
+    recent-size: 20
+    mnemonics:                      # <MNEMONIC> <ID> <GO>
+      TRD:  { kind: trade, label: Trade }
+      NSET: { kind: netting-set, label: Netting set }
+      CSA:  { kind: csa, label: Credit support annex }
+      AGR:  { kind: agreement, label: Master agreement }
+      CRV:  { kind: curve, label: Curve }
+      CPTY: { kind: counterparty, label: Counterparty }
+      LIM:  { kind: credit-limit, label: Credit limit }
+      CLR:  { kind: clearing-account, label: Clearing account }
+      SPEC: { kind: contract-spec, label: Contract specification }
+      IDX:  { kind: index, label: Rate index }
+      FXS:  { kind: fx-spot, label: FX spot }
+      BOOK: { kind: book, label: Book }
+  graph:
+    link-budget: 40ms               # linked entities slower than this show as pending
+    id-patterns:                    # identifiers whose kind is not stated
+      - { pattern: "^(IRS|FXS|CFT|XCS|SWPT)-\\d+$", kind: trade }
+      - { pattern: "^NS-", kind: netting-set }
+      - { pattern: "^CSA-", kind: csa }
+      - { pattern: "^ISDA-", kind: agreement }
+      - { pattern: "^CP-", kind: counterparty }
+      - { pattern: "^LIM-", kind: credit-limit }
+      - { pattern: "^CLR-", kind: clearing-account }
+    fields:                         # document field -> linked entity
+      nettingSet:      { kind: netting-set, label: Netting set }
+      agreement:       { kind: agreement, label: Agreement }
+      csa:             { kind: csa, label: CSA }
+      creditLimit:     { kind: credit-limit, label: Credit limit }
+      discountCurve:   { kind: curve, label: Discount curve }
+      discountCurves:  { kind: curve, label: Discount curve }
+      forwardCurve:    { kind: curve, label: Forward curve }
+      index:           { kind: index, label: Index }
+      spot:            { kind: fx-spot, label: Spot }
+      clearingAccount: { kind: clearing-account, label: Clearing account }
+      contractSpec:    { kind: contract-spec, label: Contract spec }
+      book:            { kind: book, label: Book }
+    badges:                         # kind -> Sutra-EL over the linked document
+      netting-set: "'EE ' + fmt($.eePeak, 'compact')"
+      csa: "'threshold ' + $.threshold"
+      curve: "$.status"
+      fx-spot: "$.status"
+      credit-limit: "fmt($.limit, 'compact')"
+      clearing-account: "'IM limit ' + fmt($.imLimit, 'pct0')"
+      contract-spec: "$.exchange"

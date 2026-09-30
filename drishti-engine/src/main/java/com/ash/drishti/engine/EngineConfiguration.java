@@ -16,30 +16,53 @@
 package com.ash.drishti.engine;
 
 import com.ash.drishti.common.CommonConfiguration;
-import com.ash.drishti.inference.InferenceConfiguration;
-import com.ash.drishti.sutra.SutraConfiguration;
 import com.ash.drishti.common.JsonCodec;
+import com.ash.drishti.common.ShapeFingerprinter;
+import com.ash.drishti.engine.bind.Binder;
+import com.ash.drishti.engine.command.CommandParser;
+import com.ash.drishti.engine.command.CommandsProperties;
+import com.ash.drishti.engine.command.Mnemonics;
+import com.ash.drishti.engine.command.RecentEntities;
+import com.ash.drishti.engine.command.SuggestionService;
 import com.ash.drishti.engine.source.PluginDiscovery;
 import com.ash.drishti.engine.source.SourceRegistry;
 import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.engine.source.SourcesProperties;
+import com.ash.drishti.graph.BadgeRenderer;
+import com.ash.drishti.graph.GraphConfiguration;
+import com.ash.drishti.graph.GraphProperties;
+import com.ash.drishti.graph.ReferenceCatalog;
+import com.ash.drishti.inference.InferenceConfiguration;
+import com.ash.drishti.inference.LayoutMerger;
+import com.ash.drishti.sutra.SutraConfiguration;
+import com.ash.drishti.sutra.SutraMatcher;
+import com.ash.drishti.sutra.SutraRegistry;
+import com.ash.drishti.sutra.el.ElCompiler;
+import com.ash.drishti.sutra.format.Formats;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
-/** Beans contributed by {@code drishti-engine}. */
+/** Beans contributed by {@code drishti-engine}, and the lower modules it assembles. */
 @Configuration(proxyBeanMethods = false)
-@Import({CommonConfiguration.class, SutraConfiguration.class, InferenceConfiguration.class})
-@EnableConfigurationProperties(SourcesProperties.class)
+@Import({CommonConfiguration.class, SutraConfiguration.class, InferenceConfiguration.class, GraphConfiguration.class})
+@EnableConfigurationProperties({SourcesProperties.class, EngineProperties.class, CommandsProperties.class})
 public class EngineConfiguration {
 
     /** One virtual thread per task: fetches, link fan-out and searches block cheaply here. */
     @Bean(destroyMethod = "close")
     public ExecutorService drishtiVirtualExecutor() {
         return Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("drishti-vt-", 0).factory());
+    }
+
+    /** Bounded CPU pool for binding panels; sized to cores by default. */
+    @Bean(destroyMethod = "shutdown")
+    public ForkJoinPool drishtiBindPool(EngineProperties props) {
+        return new ForkJoinPool(props.bindParallelism());
     }
 
     @Bean(destroyMethod = "close")
@@ -50,5 +73,38 @@ public class EngineConfiguration {
     @Bean
     public SourceRouter sourceRouter(SourceRegistry registry, SourcesProperties props, ExecutorService drishtiVirtualExecutor) {
         return new SourceRouter(registry, props, drishtiVirtualExecutor);
+    }
+
+    @Bean
+    public Mnemonics mnemonics(CommandsProperties props) {
+        return new Mnemonics(props);
+    }
+
+    @Bean
+    public CommandParser commandParser(Mnemonics mnemonics, ReferenceCatalog catalog) {
+        return new CommandParser(mnemonics, catalog);
+    }
+
+    @Bean
+    public RecentEntities recentEntities(CommandsProperties props) {
+        return new RecentEntities(props.recentSize());
+    }
+
+    @Bean
+    public SuggestionService suggestionService(Mnemonics mnemonics, SourceRouter router, RecentEntities recents, CommandsProperties props) {
+        return new SuggestionService(mnemonics, router, recents, props);
+    }
+
+    @Bean
+    public Binder binder(ElCompiler el, Formats formats, ReferenceCatalog catalog, BadgeRenderer badges, Mnemonics mnemonics) {
+        return new Binder(el, formats, catalog, badges, mnemonics);
+    }
+
+    @Bean
+    public ViewPipeline viewPipeline(SourceRouter router, SutraMatcher matcher, SutraRegistry registry, LayoutMerger merger,
+            ShapeFingerprinter fingerprinter, ReferenceCatalog catalog, GraphProperties graph, Binder binder, ElCompiler el,
+            Formats formats, Mnemonics mnemonics, ForkJoinPool drishtiBindPool, EngineProperties props) {
+        return new ViewPipeline(router, matcher, registry, merger, fingerprinter, catalog, graph, binder, el, formats, mnemonics,
+                drishtiBindPool, props);
     }
 }

@@ -47,6 +47,7 @@
     <module>drishti-server</module>
     <module>drishti-testkit</module>
     <module>drishti-it</module>
+    <module>drishti-benchmarks</module>
   </modules>
 
   <properties>

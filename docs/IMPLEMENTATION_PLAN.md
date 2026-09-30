@@ -81,7 +81,7 @@ Ten waves. Each holds a small set of closely related items and ends with a demo-
 - Docs: `docs/INFERENCE.md`.
 
 ## W7 — Engine pipeline & entity graph
-- `CommandParser` (`config/mnemonics.yaml`); `SuggestionService` + `EntityIndex` for type-ahead (mnemonics, recents, parallel `SourcePlugin.search` under a 30 ms budget).
+- `CommandParser` (`config/mnemonics.yaml`); `SuggestionService` + per-plugin `HitIndex` for type-ahead (mnemonics, recents, parallel `SourcePlugin.search` under a 30 ms budget).
 - `ViewPipeline` (ARCHITECTURE §4), `LayoutResolver` with Caffeine caches, parallel `Binder`, `ViewModel` records and a streaming serializer.
 - `drishti-graph`: `ReferenceCatalog` (`config/references.yaml`), `LinkResolver` with a deadline and pending placeholders, badges, reverse lookups.
 - `drishti-benchmarks`: JMH for fingerprint, EL, bind and the full pipeline.

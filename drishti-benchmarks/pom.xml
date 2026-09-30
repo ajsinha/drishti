@@ -24,16 +24,25 @@
     <version>0.1.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
-  <artifactId>drishti-engine</artifactId>
-  <name>drishti-engine</name>
-  <description>View pipeline, caches, live hub</description>
+  <artifactId>drishti-benchmarks</artifactId>
+  <name>drishti-benchmarks</name>
+  <description>JMH benchmarks for the hot paths: fingerprint, Sutra-EL, formats</description>
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-inference</artifactId></dependency>
-    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-graph</artifactId></dependency>
-    <dependency><groupId>io.micrometer</groupId><artifactId>micrometer-core</artifactId></dependency>
-    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot</artifactId></dependency>
-    <dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId></dependency>
-    <dependency><groupId>org.jctools</groupId><artifactId>jctools-core</artifactId></dependency>
-    <dependency><groupId>org.hdrhistogram</groupId><artifactId>HdrHistogram</artifactId></dependency>
+    <dependency><groupId>org.openjdk.jmh</groupId><artifactId>jmh-core</artifactId><version>${jmh.version}</version></dependency>
+    <dependency><groupId>org.openjdk.jmh</groupId><artifactId>jmh-generator-annprocess</artifactId><version>${jmh.version}</version><scope>provided</scope></dependency>
   </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <annotationProcessorPaths>
+            <path><groupId>org.openjdk.jmh</groupId><artifactId>jmh-generator-annprocess</artifactId><version>${jmh.version}</version></path>
+          </annotationProcessorPaths>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>

@@ -236,7 +236,7 @@ under the input:
 - **Engine:**
   - `SuggestionService` merges hits from the mnemonic table, a per-user **recent** list and `SourcePlugin.search`.
   - Plugins are queried in parallel on virtual threads, each within a 30 ms budget; late hits are dropped.
-  - The engine's `EntityIndex` (a sorted, case-folded prefix and substring index, refreshed from sources that list their catalogue) answers most queries in microseconds.
+  - Each plugin answers from an in-memory `HitIndex` (in `drishti-api`), so most queries finish in microseconds.
 - **API:** `GET /api/v1/command/suggest?q=TRD%20IRS-4&limit=10` → `[{mnemonic, ref, title, subtitle, score}]`.
 - **Console:**
   - `command.js` debounces requests by 60 ms and cancels stale ones with `AbortController`.
