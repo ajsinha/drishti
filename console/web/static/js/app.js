@@ -17,7 +17,7 @@
 (function () {
   'use strict';
   var root = document.documentElement;
-  var THEMES = ['terminal', 'light', 'wallstreet', 'blue', 'green'];
+  var THEMES = ['terminal', 'light', 'wallstreet', 'blue', 'green', 'crimson', 'crimson-dark'];
 
   function apply(theme) {
     if (THEMES.indexOf(theme) < 0) { return; }

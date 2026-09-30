@@ -17,16 +17,48 @@
 
 **Rachana** (रचना, *composition*) is Drishti's declarative screen grammar. Because of it, no product
 ever gets its own coded screen. A **Sutra** (सूत्र, *thread*) is one layout written in Rachana: a
-versioned YAML file that describes how to lay out one family of entities. The mockups' *How this
+versioned file that describes how to lay out one family of entities. The mockups' *How this
 view was built* reads `Sutra irs-vanilla v3 + inference`, meaning the Sutra `irs-vanilla`, version
 3, completed by inference.
 
-In short, a Sutra is a versioned YAML file that describes how to lay out one family of entities. It holds
-no code and no pixels. Files live under `sutras/<domain>/<name>.v<N>.yaml`, are loaded by
-`SutraRegistry` from `drishti.rachana.dirs`, and reload as soon as they are saved. If an edit is
-invalid, the last good version is kept and the problems are reported. Editors can validate against
-`drishti-rachana/src/main/resources/sutra.schema.json`, but the authoritative checks are the parser's,
-which report every problem with its line and column.
+A Sutra holds no code and no pixels. It is loaded by `SutraRegistry` from `drishti.rachana.dirs` and the
+enabled packs, and reloads as soon as it is saved. If an edit is invalid, the last good version is kept
+and the problems are reported with line and column.
+
+## File format: Markdown Sutras
+
+The standard format is a **Markdown Sutra**, `sutras/<domain>/<name>.v<N>.sutra.md`: an ordinary
+Markdown document that people and AI assistants can read, with exactly one fenced `sutra` block that
+holds the layout in Rachana (YAML syntax, with Rachana-EL expressions in string values).
+
+````markdown
+# Vanilla interest-rate swap (`irs-vanilla` v3)
+
+Fixed-for-floating swaps. The strip leads with MTM and DV01; F2 shows the legs.
+
+```sutra
+sutra: irs-vanilla
+version: 3
+match: { kind: trade, where: "$.product == 'IRS'" }
+panels:
+  - { id: legs, kind: kv, title: Legs, key: F2, rows: $.legs }
+```
+
+## Why these panels
+Traders asked for the legs first …
+````
+
+Rules:
+
+- The engine reads only the `sutra` block. Everything else is documentation: headings, prose, tables,
+  links, images. Write down *why* the layout is what it is; the help centre and Studio render it.
+- Exactly one `sutra` block (DRS-2004 otherwise). Both ```` ``` ```` and `~~~` fences work.
+- Problem locations use the line numbers of the Markdown file, so an error at line 14 is at line 14 in
+  your editor.
+- Plain `*.yaml` Sutras still load (the block's content on its own), for tools that emit YAML.
+  `tools/sutra_to_md.py` converts them.
+- Editors can validate the block against `drishti-rachana/src/main/resources/sutra.schema.json`, but
+  the authoritative checks are the parser's.
 
 ## Top level
 
@@ -127,6 +159,7 @@ There is no separate classifier file: `match` is the classifier.
 | Code | Meaning |
 |---|---|
 | DRS-2001 | YAML syntax error |
+| DRS-2004 | a Markdown Sutra has no ```sutra block, more than one, or an unclosed one |
 | DRS-2010 | missing required key |
 | DRS-2011 | unknown key |
 | DRS-2012 | wrong type |
@@ -145,7 +178,7 @@ There is no separate classifier file: `match` is the classifier.
 
 | File | Entity | Mockup |
 |---|---|---|
-| `packs/finance/sutras/rates/irs-vanilla.v3.yaml` | `TRD IRS-48213` | drishti-irs.png |
-| `packs/finance/sutras/fx/fx-swap.v2.yaml` | `TRD FXS-20931` | drishti-fx-swap.png |
-| `packs/finance/sutras/commodities/listed-future.v1.yaml` | `TRD CFT-77120` | drishti-commodity-future.png |
-| `packs/finance/sutras/credit/netting-set.v1.yaml` | `NSET NS-NORTH-01` | drishti-netting-set.png |
+| `packs/finance/sutras/rates/irs-vanilla.v3.sutra.md` | `TRD IRS-48213` | drishti-irs.png |
+| `packs/finance/sutras/fx/fx-swap.v2.sutra.md` | `TRD FXS-20931` | drishti-fx-swap.png |
+| `packs/finance/sutras/commodities/listed-future.v1.sutra.md` | `TRD CFT-77120` | drishti-commodity-future.png |
+| `packs/finance/sutras/credit/netting-set.v1.sutra.md` | `NSET NS-NORTH-01` | drishti-netting-set.png |

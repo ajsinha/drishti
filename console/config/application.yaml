@@ -23,7 +23,7 @@ backend:
   timeout_seconds: 5
   pool_size: 64
 ui:
-  default_theme: terminal        # terminal | light | wallstreet | blue | green
+  default_theme: terminal        # terminal | light | wallstreet | blue | green | crimson | crimson-dark
   product: Drishti
   tagline: Any data. Any domain. One grammar.
   user: ${DRISHTI_USER:ash}          # acting user until sign-in lands (Wave 10)

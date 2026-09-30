@@ -38,7 +38,7 @@ def _ratio(a, b):
 
 
 def test_contrast_all_themes():
-    for name in ("terminal", "light", "wallstreet", "blue", "green"):
+    for name in ("terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark"):
         t = _theme(name)
         for fg in ("ink", "muted", "link", "neg", "pos"):
             for bg in ("bg", "surface"):

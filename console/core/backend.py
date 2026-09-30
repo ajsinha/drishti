@@ -99,7 +99,7 @@ class BackendClient:
         return await self._get("/studio/settings", ident)
 
     async def save_sutra(self, yaml_text: str, ident=None) -> dict:
-        return await self._send("POST", "/sutras", ident, content=yaml_text.encode(), headers={"Content-Type": "text/yaml"})
+        return await self._send("POST", "/sutras", ident, content=yaml_text.encode(), headers={"Content-Type": "text/markdown"})
 
     async def impact(self, kind: str, id_: str, ident=None) -> dict:
         return await self._get(f"/impact/{kind}/{quote(id_)}", ident)

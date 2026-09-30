@@ -1,17 +1,27 @@
-# Project Drishti · Any data. Any domain. One grammar.
-#
-# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
-# All rights reserved.
-#
-# PROPRIETARY AND CONFIDENTIAL.
-#
-# This file is the confidential and proprietary property of Ashutosh Sinha.
-# Unauthorised copying, use, modification, distribution or disclosure of this
-# file, via any medium, is strictly prohibited except with the express prior
-# written permission of the copyright holder.
-#
-# See the LICENSE file in the root of this repository for the full terms.
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
 
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+# Netting set (`netting-set` v1)
+
+Netting set with exposure profile, member trades, CSA and collateral (mockup drishti-netting-set.png).
+
+**Applies to:** entities of kind `netting-set`, priority 10.
+
+**Strip:** Trades, Net MTM (USD), Collateral posted, EE peak, PFE 95 peak, Limit, Utilisation, As of.
+
+```sutra
 sutra: netting-set
 version: 1
 description: Netting set with exposure profile, member trades, CSA and collateral (mockup drishti-netting-set.png).
@@ -58,3 +68,16 @@ panels:
   - { id: collateral, kind: kv, title: Collateral, code: COLL, area: right, rows: $.collateral }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
 keys: { F7: "link($.counterparty.id, 'counterparty')", F9: raw }
+```
+
+## Panels
+
+| Panel | Code | Key | Shows | Area |
+|---|---|---|---|---|
+| Exposure profile (USD) | EXP | F2 | area chart | main |
+| Member trades | TRD | F3 | table | main |
+| CSA terms | CSA | F4 | field list | right |
+| Collateral | COLL |  | field list | right |
+| Linked entities | REFS |  | linked entities | right |
+
+**Function keys:** F7 → `link($.counterparty.id, 'counterparty')`, F9 → `raw`.

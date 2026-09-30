@@ -13,7 +13,8 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Sutra Studio: a Rachana editor with live preview. Ctrl+Enter previews the unsaved Sutra against the
+/* Sutra Studio: a Markdown editor for Sutras with live preview (md-editor.js adds the toolbar, snippets and
+   outline; the Document tab renders the prose). Ctrl+Enter previews the unsaved Sutra against the
    chosen entity; problems list their line (click to jump); "Start from inference" loads what inference
    makes of the entity as an editable Sutra; Save writes the file (authors, where enabled). */
 (function () {
@@ -22,8 +23,11 @@
   if (!root) { return; }
   var ta = root.querySelector('[data-src]'), out = root.querySelector('[data-out]'), status = root.querySelector('[data-status]');
   var list = root.querySelector('[data-problems]'), kindIn = root.querySelector('[data-kind]'), idIn = root.querySelector('[data-id]');
-  var editor = window.CodeMirror ? window.CodeMirror.fromTextArea(ta, { mode: 'rachana-yaml', lineNumbers: true, indentUnit: 2, tabSize: 2,
+  var editor = window.CodeMirror ? window.CodeMirror.fromTextArea(ta, { mode: modeFor(ta.value), lineNumbers: true, indentUnit: 2, tabSize: 2,
     extraKeys: { 'Ctrl-Enter': preview, 'Cmd-Enter': preview, Tab: function (cm) { cm.replaceSelection('  '); } } }) : null;
+  function modeFor(t) { return /^\s*(```|~~~)\s*sutra\s*$/m.test(t) || !/^sutra:/m.test(t) ? 'sutra-markdown' : 'rachana-yaml'; }
+  if (editor && window.drishtiMd) { window.drishtiMd.attach(editor, root, function (m, bad) { say(m, bad); }); }
+  if (editor) { editor.on('change', function () { var m = modeFor(editor.getValue()); if (editor.getOption('mode') !== m) { editor.setOption('mode', m); } }); }
   function text() { return editor ? editor.getValue() : ta.value; }
   function setText(t) { if (editor) { editor.setValue(t); } else { ta.value = t; } }
   function say(msg, bad) { status.textContent = msg; status.classList.toggle('t-bad', !!bad); }
@@ -46,6 +50,7 @@
     t.addEventListener('click', function () {
       root.querySelectorAll('[data-tab]').forEach(function (x) { x.classList.toggle('on', x === t); x.setAttribute('aria-selected', x === t ? 'true' : 'false'); });
       root.querySelectorAll('[data-pane]').forEach(function (p) { p.hidden = p.getAttribute('data-pane') !== t.getAttribute('data-tab'); });
+      if (t.getAttribute('data-tab') === 'doc') { renderDoc(); }
     });
   });
   function pastedDocument() {
@@ -63,7 +68,24 @@
   });
   useJson.addEventListener('change', function () { preview(); });
 
+  var docPane = root.querySelector('[data-doc]');
+  function renderDoc() {
+    fetch('/studio/render', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ yaml: text() }) })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        docPane.innerHTML = d.html || '<p class="text-muted-d">Nothing to show yet: write some Markdown around the sutra block.</p>';
+        docPane.querySelectorAll('a[href^="#"]').forEach(function (a) {
+          a.addEventListener('click', function (e) {
+            var el = docPane.querySelector('[id="' + a.getAttribute('href').slice(1) + '"]');
+            if (el) { e.preventDefault(); el.scrollIntoView({ block: 'start' }); }
+          });
+        });
+      })
+      .catch(function (e) { say('Could not render the document: ' + e, true); });
+  }
+
   function preview() {
+    if (!docPane.hidden) { renderDoc(); }
     say('Previewing…');
     var t0 = performance.now();
     var doc;

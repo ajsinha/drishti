@@ -20,6 +20,7 @@ import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.rachana.el.ElCompiler;
 import com.ash.drishti.rachana.model.SourceLocation;
 import com.ash.drishti.rachana.model.Sutra;
+import com.ash.drishti.rachana.parse.SutraMarkdown;
 import com.ash.drishti.rachana.parse.SutraParser;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -112,13 +113,14 @@ public final class SutraRegistry implements AutoCloseable {
         return v == null ? List.of() : List.copyOf(v.keySet());
     }
 
-    /** The YAML text of a loaded Sutra, as last read from its file. */
+    /** The text of a loaded Sutra (Markdown or YAML), as last read from its file. */
     public Optional<String> source(String name, int version) {
         return Optional.ofNullable(sources.get(name + "@" + version));
     }
 
     /**
-     * Validates and writes a Sutra into the first Sutra directory ({@code <domain>/<name>.v<N>.yaml}), then
+     * Validates and writes a Sutra into the first Sutra directory ({@code <domain>/<name>.v<N>.sutra.md}, or
+     * {@code .yaml} for plain YAML text), then
      * reloads. Refuses a {@code name@version} that another file already defines.
      *
      * @return the written Sutra
@@ -133,7 +135,7 @@ public final class SutraRegistry implements AutoCloseable {
             throw new SutraException(List.of(new SutraProblem("DRS-2020", "no site Sutra directory to save into (drishti.rachana.dirs)", s.location())));
         }
         Path dir = Path.of(props.dirs().get(0)).toAbsolutePath().normalize();
-        Path target = dir.resolve(s.domain()).resolve(s.name() + ".v" + s.version() + ".yaml").normalize();
+        Path target = dir.resolve(s.domain()).resolve(s.name() + ".v" + s.version() + (SutraMarkdown.isMarkdown(yaml) ? ".sutra.md" : ".yaml")).normalize();
         if (!target.startsWith(dir)) {
             throw new SutraException(List.of(new SutraProblem("DRS-2020", "bad domain or name", s.location())));
         }
@@ -250,7 +252,7 @@ public final class SutraRegistry implements AutoCloseable {
                 continue;
             }
             try (Stream<Path> s = Files.walk(dir)) {
-                s.filter(p -> p.toString().endsWith(".yaml") || p.toString().endsWith(".yml")).sorted().forEach(out::add);
+                s.filter(p -> SutraMarkdown.isFile(p.toString()) || p.toString().endsWith(".yaml") || p.toString().endsWith(".yml")).sorted().forEach(out::add);
             } catch (IOException e) {
                 LOG.warn("cannot scan {}", dir, e);
             }

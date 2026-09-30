@@ -24,7 +24,7 @@ The product concept names the declarative screen grammar **Rachana** (रचन�
 
 ## Decision
 - **Rachana** is the grammar: the language, its schema, its expression language (**Rachana-EL**) and the module `drishti-rachana` (packages `com.ash.drishti.rachana`), configured under `drishti.rachana.*`, documented in `RACHANA_REFERENCE.md`.
-- A **Sutra** is one layout written in Rachana: a versioned file `sutras/<domain>/<name>.v<N>.yaml`, modelled by `Sutra` and loaded by `SutraRegistry`.
+- A **Sutra** is one layout written in Rachana: a versioned file `sutras/<domain>/<name>.v<N>.sutra.md` (Markdown with one `sutra` block; ADR-011), modelled by `Sutra` and loaded by `SutraRegistry`.
 
 ## Consequences
 Both names mean what the concept and the mockups say. The views keep the mockups' wording (`Sutra irs-vanilla v3 + inference`). Renaming touched only module, package, configuration and document names; no behaviour changed.

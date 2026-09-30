@@ -14,7 +14,8 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* Drishti design tokens. Colours are defined here and nowhere else.
-   Themes: terminal (default, navy + amber as in the reference mockups), light (parchment), blue, green.
+   Themes: terminal (default, navy + amber as in the reference mockups), light (parchment), wallstreet, blue,
+   green, crimson and crimson-dark (the Maya palette).
    Selected by data-theme on <html>; "terminal" also answers prefers-color-scheme: dark. */
 :root,
 :root[data-theme="terminal"] {
@@ -149,6 +150,63 @@
   --d-grad-to: #ffd400;
   --d-nav: rgba(0, 0, 0, .9);
   --d-shadow: 0 10px 40px rgba(0, 0, 0, .6);
+  color-scheme: dark;
+}
+
+/* Crimson and crimson dark: the Maya palette (Harvard crimson with indigo), same roles as every theme. */
+:root[data-theme="crimson"] {
+  --d-bg: #f7f5f2;
+  --d-bg-2: #efebe5;
+  --d-surface: #ffffff;
+  --d-surface-2: #fbf9f6;
+  --d-border: #e3ded7;
+  --d-ink: #1a1a1a;
+  --d-muted: #5c6470;
+  --d-faint: #8d949d;
+  --d-accent: #a51c30;
+  --d-accent-strong: #8a1626;
+  --d-accent-tint: rgba(165, 28, 48, .08);
+  --d-link: #293352;
+  --d-pos: #293352;
+  --d-neg: #a51c30;
+  --d-ok: #1e6b3a;
+  --d-warn: #7a5200;
+  --d-bad: #8a1626;
+  --d-highlight: rgba(165, 28, 48, .05);
+  --d-emph-bg: rgba(244, 221, 160, .7);
+  --d-glow: rgba(165, 28, 48, .22);
+  --d-grad-from: #a51c30;
+  --d-grad-to: #293352;
+  --d-nav: rgba(247, 245, 242, .92);
+  --d-shadow: 0 10px 30px rgba(41, 51, 82, .12);
+  color-scheme: light;
+}
+
+:root[data-theme="crimson-dark"] {
+  --d-bg: #151517;
+  --d-bg-2: #1a1a1d;
+  --d-surface: #1f1f23;
+  --d-surface-2: #25252a;
+  --d-border: #34343a;
+  --d-ink: #ececef;
+  --d-muted: #97a2ab;
+  --d-faint: #6f7a85;
+  --d-accent: #de6b81;
+  --d-accent-strong: #e07a8e;
+  --d-accent-tint: rgba(222, 107, 129, .14);
+  --d-link: #a9b6d6;
+  --d-pos: #a9b6d6;
+  --d-neg: #f08a9c;
+  --d-ok: #7fd39b;
+  --d-warn: #e8c26a;
+  --d-bad: #f08a9c;
+  --d-highlight: rgba(169, 182, 214, .07);
+  --d-emph-bg: rgba(222, 107, 129, .26);
+  --d-glow: rgba(222, 107, 129, .30);
+  --d-grad-from: #de6b81;
+  --d-grad-to: #a9b6d6;
+  --d-nav: rgba(21, 21, 23, .88);
+  --d-shadow: 0 10px 40px rgba(0, 0, 0, .5);
   color-scheme: dark;
 }
 

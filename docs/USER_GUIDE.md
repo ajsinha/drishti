@@ -109,10 +109,11 @@ the top bar lets you choose which to see. Commands, suggestions, examples and he
 
 ## Themes
 
-The palette menu offers five themes:
+The palette menu offers seven themes:
 - **Terminal** (default);
 - **Parchment** (light);
 - **Wall Street** (the Bloomberg Terminal colour scheme: black, amber, yellow);
-- **Blue** and **Green**.
+- **Blue** and **Green**;
+- **Crimson** and **Crimson dark** (the Maya palette: Harvard crimson with indigo).
 
 The choice is remembered per browser.

@@ -111,7 +111,7 @@
   {% elif p.kind == 'hbar' %}{{ bars(p.data) }}
   {% elif p.kind == 'links' %}{{ links(p.data) }}
   {% elif p.kind == 'markdown' %}<p>{{ p.data.text }}</p>
-  {% elif p.kind == 'gauge' %}<div class="gauge"><span class="bf" data-w="{{ ((p.data.value / (p.data.max or 1)) * 100) | round(1) }}"></span><span class="mono">{{ p.data.text }}</span></div>
+  {% elif p.kind == 'gauge' %}{% set gv, gm = p.data.value, p.data.max %}<div class="gauge"><span class="bf" data-w="{{ ((gv / (gm or 1)) * 100) | round(1) if gv is number and (gm is number or gm is none) else 0 }}"></span><span class="mono">{{ p.data.text }}</span></div>
   {% endif %}
   </div>
 </section>

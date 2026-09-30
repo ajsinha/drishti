@@ -71,7 +71,7 @@ The local override is `console/config/application.local.yaml`. Environment varia
 | `server.host` / `server.port` | `127.0.0.1` / `17480` | where the console listens |
 | `backend.url` | `http://127.0.0.1:18480` (`DRISHTI_BACKEND_URL`) | the Drishti server |
 | `backend.timeout_seconds` / `pool_size` | `5` / `64` | the pooled HTTP client |
-| `ui.default_theme` | `terminal` | `terminal`, `light`, `wallstreet`, `blue` or `green` |
+| `ui.default_theme` | `terminal` | `terminal`, `light`, `wallstreet`, `blue`, `green`, `crimson` or `crimson-dark` |
 | `ui.user`, `ui.user_display`, `ui.desk` | `ash`, `Ash`, `Rates desk` | the acting user when `auth.enabled` is false (local development) |
 | `ui.clock_tz` / `ui.clock_label` | `America/New_York` / `NY` | the top-bar clock |
 | `packs.dir` / `packs.enabled` | `../packs` / `finance` | where pack content lives; the enabled list is asked of the server, and this one is used only when the server can't be reached |

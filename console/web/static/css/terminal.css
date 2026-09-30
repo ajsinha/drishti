@@ -355,3 +355,23 @@ body.embed .vhead { padding: .6rem .8rem; }
 .studio-json { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 .studio-json .studio-src { min-height: 50vh; }
 .studio-hint { font-size: .8rem; padding: .4rem .8rem; margin: 0; }
+
+/* ---- Sutra Studio: the Markdown editor ---- */
+.md-bar { display: flex; flex-wrap: wrap; gap: .2rem; align-items: center; padding: .3rem .55rem; border-bottom: 1px solid var(--d-border); background: var(--d-surface-2); }
+.md-btn { background: transparent; color: var(--d-muted); border: 1px solid transparent; border-radius: 4px; padding: .12rem .42rem; font-size: .95rem; line-height: 1.2; }
+.md-btn:hover, .md-btn:focus-visible { color: var(--d-accent); border-color: var(--d-border); background: var(--d-bg-2); }
+.md-sep { width: 1px; align-self: stretch; background: var(--d-border); margin: 0 .3rem; }
+.md-select { font-size: .8rem; padding: .18rem .4rem; max-width: 11rem; }
+.md-wrap { margin-left: auto; color: var(--d-muted); font-size: .8rem; }
+.studio-left .cm-s-default .cm-header { color: var(--d-accent); font-weight: 700; }
+.studio-left .cm-s-default .cm-strong { color: var(--d-ink); font-weight: 700; }
+.studio-left .cm-s-default .cm-em { color: var(--d-ink); font-style: italic; }
+.studio-left .cm-s-default .cm-link { color: var(--d-link); text-decoration: underline; }
+.studio-left .cm-s-default .cm-quote { color: var(--d-muted); font-style: italic; }
+.studio-left .cm-s-default .cm-string-2 { color: var(--d-link); }
+.studio-left .cm-s-default .cm-variable-3, .studio-left .cm-s-default .cm-hr { color: var(--d-warn); }
+.studio-left .cm-s-default .cm-sutra-fence { color: var(--d-accent); background: var(--d-accent-tint); font-weight: 700; }
+.studio-doc { flex: 1; overflow: auto; padding: .9rem 1.2rem; max-width: none; }
+.studio-doc h1 { font-size: 1.35rem; }
+.sutra-block-label { display: inline-block; margin-top: .6rem; padding: .05rem .5rem; font-size: .72rem; color: var(--d-bg); background: var(--d-accent); border-radius: 4px 4px 0 0; }
+.sutra-block { margin-top: 0; border-top: 2px solid var(--d-accent); max-height: 24rem; overflow: auto; }

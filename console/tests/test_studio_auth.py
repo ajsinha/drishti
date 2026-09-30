@@ -120,3 +120,25 @@ def test_non_admins_do_not_see_admin_pages(backend):
     c.cookies.set(COOKIE, app.state.auth.session_for({"username": "tina", "displayName": "Tina", "desk": "FX", "roles": ["trader"]}))
     assert c.get("/admin/users").status_code == 403
     assert 'href="/admin/users"' not in c.get("/t").text
+
+
+def test_studio_is_a_markdown_editor(client):
+    page = client.get("/studio", params={"sutra": ""}).text
+    for marker in ("data-insert", "data-outline", 'data-md="bold"', 'data-tab="doc"', "cm-sutra-md.js", "md-editor.js"):
+        assert marker in page
+    assert "```sutra" in page  # the new-Sutra template is a Markdown Sutra
+
+
+def test_studio_renders_the_document_safely(client):
+    md = "<!-- header -->\n# Title\n\nSome *prose*. <script>alert(1)</script> [x](javascript:alert(1)) [y](#title)\n\n```sutra\nsutra: a\n```\n"
+    d = client.post("/studio/render", json={"yaml": md}).json()
+    assert "<script>" not in d["html"] and "javascript:" not in d["html"] and "header" not in d["html"]
+    assert 'class="sutra-block"' in d["html"] and 'href="#title"' in d["html"]
+    assert d["outline"][0]["name"] == "Title" and d["block"] == {"from": 6, "to": 8}
+
+
+def test_gauge_without_numbers_renders_empty(client):
+    tpl = client.app.state.templates.env.from_string('{% from "_macros/panels.html" import panel %}{{ panel(p) }}')
+    for data in ({"value": "—", "max": "—", "text": "—"}, {"value": 5, "max": None, "text": "5"}):
+        out = tpl.render(p={"id": "g", "kind": "gauge", "title": "G", "area": "right", "data": data})
+        assert 'class="gauge"' in out

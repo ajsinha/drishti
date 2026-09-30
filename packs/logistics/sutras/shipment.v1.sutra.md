@@ -1,17 +1,27 @@
-# Project Drishti · Any data. Any domain. One grammar.
-#
-# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
-# All rights reserved.
-#
-# PROPRIETARY AND CONFIDENTIAL.
-#
-# This file is the confidential and proprietary property of Ashutosh Sinha.
-# Unauthorised copying, use, modification, distribution or disclosure of this
-# file, via any medium, is strictly prohibited except with the express prior
-# written permission of the copyright holder.
-#
-# See the LICENSE file in the root of this repository for the full terms.
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
 
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+# Shipment · ocean (`shipment` v1)
+
+An ocean shipment in transit, with its route, milestones and the reefer container's temperature.
+
+**Applies to:** entities of kind `shipment` where `$.status == 'In transit'`, priority 10.
+
+**Strip:** Status, Origin, Destination, ETA, Delay, Weight (kg), Declared value, Incoterm.
+
+```sutra
 sutra: shipment
 version: 1
 description: An ocean shipment in transit, with its route, milestones and the reefer container's temperature.
@@ -68,3 +78,17 @@ panels:
     mark: "'H24'"
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
 keys: { F7: "link($.vessel, 'vessel')", F9: raw }
+```
+
+## Panels
+
+| Panel | Code | Key | Shows | Area |
+|---|---|---|---|---|
+| Route | LEGS | F2 | table | main |
+| Milestones | EVT | F3 | ladder | main |
+| Cargo |  |  | field list | main |
+| How this view was built |  |  | how the view was built | main |
+| Reefer temperature (°C), last 24 h | TEMP | F4 | line chart | right |
+| Linked entities | REFS |  | linked entities | right |
+
+**Function keys:** F7 → `link($.vessel, 'vessel')`, F9 → `raw`.

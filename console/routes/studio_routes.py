@@ -12,7 +12,8 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Sutra Studio: edit a Sutra, preview it against any entity, start from inference, save (authors)."""
+"""Sutra Studio: a Markdown editor for Sutras. Edit, preview against any entity or pasted JSON, read the rendered
+document, start from inference, save (authors)."""
 from __future__ import annotations
 
 import json
@@ -21,11 +22,18 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 
 from core.backend import BackendError
+from core import sutra_doc
 from routes.common import ident, render
 
 router = APIRouter(prefix="/studio", include_in_schema=False)
 
-NEW_SUTRA = """sutra: my-layout
+NEW_SUTRA = """# My layout (`my-layout` v1)
+
+What this layout is for, and who reads it. The engine reads only the `sutra` block below; everything
+else is documentation for people and AI assistants.
+
+```sutra
+sutra: my-layout
 version: 1
 match: { kind: trade, where: "$.productType == 'IRS'" }
 title: { pill: "Trade", id: $.tradeId }
@@ -33,6 +41,11 @@ strip:
   - { label: MTM (USD), bind: $.mtm, fmt: signed0, tone: sign, emphasis: true }
 panels:
   - { id: refs, kind: links, title: Linked entities, area: right }
+```
+
+## Why this layout
+
+- The strip leads with the number the reader checks first.
 """
 
 
@@ -74,6 +87,13 @@ async def preview(request: Request):
         return _problem(e)
     html = request.app.state.templates.get_template("studio/_preview.html").render(vm=vm)
     return HTMLResponse(html)
+
+
+@router.post("/render")
+async def render_doc(request: Request):
+    """The Document tab: the Markdown Sutra rendered as a page, with its outline."""
+    body = json.loads(await request.body() or b"{}")
+    return JSONResponse(sutra_doc.render(body.get("yaml", "")))
 
 
 @router.get("/inferred/{kind}/{id_}")

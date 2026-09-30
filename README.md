@@ -32,7 +32,7 @@ terminal does.
 | Wave | Theme | State |
 |---|---|---|
 | 1 | Build foundation: Maven reactor, copyright/size/architecture gates, CI | ✅ done |
-| 2 | Console shell, 5 themes (incl. *wallstreet*), landing page with hero animation | ✅ done |
+| 2 | Console shell, 7 themes (incl. *wallstreet*, *crimson*), landing page with hero animation | ✅ done |
 | 3 | Data model, plugin SPI, `demo` + `file` sources, routing, fingerprints | ✅ done |
 | 4 | Sutra grammar: parser with line/column errors, hot-reloading registry | ✅ done |
 | 5 | Rachana-EL expressions, formats, Sutra matching; golden strips for all four mockups | ✅ done |
@@ -57,7 +57,7 @@ terminal does.
 ## What works today
 
 - **Console** (`console/`). A landing page with an animated hero: raw JSON is drawn into the `{◉}`
-  eye and comes out as live panels. It has five themes and a strict CSP. Every asset is vendored
+  eye and comes out as live panels. It has seven themes (including *wallstreet* and Maya's *crimson* and *crimson dark*) and a strict CSP. Every asset is vendored
   (no CDN), and the contrast of every theme is checked in tests.
 - **Server** (`drishti-server`). A Spring Boot application on virtual threads. It discovers source
   plugins and routes reads by config, with deadlines. It loads and hot-reloads Sutras.
@@ -77,8 +77,12 @@ terminal does.
   links open other entities, and breadcrumbs lead back. REST API under `/api/v1` (OpenAPI at `/api/docs`).
 - **Live.** Views of live entities tick over server-sent events: MTM, curves, exposure and settlements
   move in place, changed values flash, and the top bar shows the measured p99 (about 11 ms).
-- **Sutra Studio.** At `/studio` you can edit a Sutra with highlighting, press Ctrl+Enter to preview it
-  against any entity, see problems by line, and start a new Sutra from what inference makes of an entity.
+- **Sutras are Markdown.** A Sutra is a `*.sutra.md` document: prose that explains the layout, with the
+  layout itself in one fenced `sutra` block (ADR-011). Plain YAML Sutras still load.
+- **Sutra Studio.** At `/studio` a Markdown editor with a toolbar, Rachana highlighting inside the
+  `sutra` block, panel snippets for all twelve kinds, a heading outline and a rendered *Document* tab.
+  Ctrl+Enter previews against any entity or pasted JSON, problems are listed by line, and a new Sutra can
+  start from what inference makes of an entity.
 - **Security.** Sign-in, per-role entitlements (denied links are shown disabled with the reason),
   raw JSON redaction, and signed tokens between the console and the server. It is off by default for
   local development.

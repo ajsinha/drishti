@@ -18,10 +18,29 @@
 A Sutra is one layout written in **Rachana**, Drishti's screen grammar. You will lay out interest rate
 swaps with a header strip, a cashflow table and a curve: about a dozen lines, and no code.
 
+## 0. The file
+
+A Sutra is a Markdown file, `sutras/rates/my-swap.v1.sutra.md`. Write whatever helps the next reader
+(what the layout is for, why the panels are in that order) and put the layout itself in one fenced
+block marked `sutra`:
+
+````markdown
+# My swap (`my-swap` v1)
+
+Swaps for the rates desk: the strip leads with MTM because that is what traders check first.
+
+```sutra
+sutra: my-swap
+version: 1
+...
+```
+````
+
+The engine reads only the `sutra` block. The snippets below are its contents.
+
 ## 1. Name it and say what it matches
 
 ```yaml
-# sutras/rates/my-swap.v1.yaml
 sutra: my-swap
 version: 1
 match: { kind: trade, where: "$.productType == 'IRS'", priority: 20 }

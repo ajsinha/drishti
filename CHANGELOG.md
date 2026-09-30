@@ -16,6 +16,10 @@
 # Changelog
 
 ## Unreleased
+- **Sutras are Markdown documents** (ADR-011). The standard file is `<name>.v<N>.sutra.md`: prose for people and AI assistants, with the layout in one fenced `sutra` block. Problems keep the Markdown file's line numbers, and a missing, duplicated or unclosed block is `DRS-2004`. Plain `*.yaml` Sutras still load. The finance and logistics Sutras are converted, and `tools/sutra_to_md.py` converts others.
+- **Studio is a Markdown editor:** a toolbar with shortcuts, Markdown highlighting with Rachana inside the block, **Insert…** snippets (a `sutra` block, a strip field, all twelve panel kinds), a **Jump to…** outline, soft wrap and a rendered **Document** tab (rendered without raw HTML and with only safe links). Inference and Save produce Markdown Sutras.
+- **Themes:** *crimson* and *crimson dark*, Maya's Harvard crimson and indigo palette, bring the total to seven themes. Contrast is checked like the others.
+- Fix: a `gauge` panel whose value or maximum is not a number no longer breaks the page.
 - **Studio, sample JSON:** a *Sample JSON* tab shows the entity's document (**Load entity JSON**). You can paste any JSON object and tick **Preview against this JSON** to render it with the unsaved Sutra, with no source needed. **Start from inference** works on pasted JSON. Server: `POST /api/v1/studio/preview` accepts `document`; `POST /api/v1/studio/inferred` infers from a document.
 - **Risk pack, R1:** the taxonomy, a single machine-readable source (`packs/risk/tools/`) of 125 products in ten asset classes, 21 market-data kinds and 24 risk and reference kinds. Uniqueness of codes, kinds, mnemonics, ID prefixes and reference fields is checked (`python3 packs/risk/tools/taxonomy.py`).
 

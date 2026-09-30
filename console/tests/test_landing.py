@@ -22,7 +22,7 @@ def test_landing_renders(client):
     assert 'id="lpHero"' in html
     assert "One grammar." in html
     assert "Copyright © 2026 Ashutosh Sinha" in html
-    for theme in ("terminal", "light", "wallstreet", "blue", "green"):
+    for theme in ("terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark"):
         assert f'data-theme-choice="{theme}"' in html
     for shot in ("irs", "fx-swap", "commodity-future", "netting-set"):
         assert f"shot-{shot}.png" in html

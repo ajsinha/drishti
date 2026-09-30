@@ -58,6 +58,8 @@ a:hover { text-decoration: underline; }
 .swatch-blue { background: linear-gradient(135deg, #0a1830 50%, #5cc8ff 50%); }
 .swatch-wallstreet { background: linear-gradient(135deg, #000 50%, #fb8b1e 50%); }
 .swatch-green { background: linear-gradient(135deg, #0b1a17 50%, #4fd6a0 50%); }
+.swatch-crimson { background: linear-gradient(135deg, #f7f5f2 50%, #a51c30 50%); }
+.swatch-crimson-dark { background: linear-gradient(135deg, #151517 50%, #de6b81 50%); }
 
 /* ---- Buttons ---- */
 .btn-pill { border-radius: 999px; padding: .6rem 1.35rem; font-weight: 600; border: 1px solid transparent; }

@@ -39,7 +39,7 @@ class SutraParserTest {
 
     @Test
     void referenceSutrasParse() throws Exception {
-        Sutra irs = load("rates/irs-vanilla.v3.yaml");
+        Sutra irs = load("rates/irs-vanilla.v3.sutra.md");
         assertThat(irs.id()).isEqualTo("irs-vanilla@3");
         assertThat(irs.domain()).isEqualTo("rates");
         assertThat(irs.strip()).hasSize(8);
@@ -47,10 +47,40 @@ class SutraParserTest {
         assertThat(irs.panels().get(0).body().kind()).isEqualTo(PanelKind.KV);
         assertThat(irs.panels().get(4).area()).isEqualTo(Area.RIGHT);
         assertThat(irs.keys()).containsKeys("F7", "F8", "F9");
-        for (String f : List.of("fx/fx-swap.v2.yaml", "commodities/listed-future.v1.yaml", "credit/netting-set.v1.yaml")) {
+        for (String f : List.of("fx/fx-swap.v2.sutra.md", "commodities/listed-future.v1.sutra.md", "credit/netting-set.v1.sutra.md")) {
             assertThat(load(f).panels()).isNotEmpty();
         }
-        assertThat(load("credit/netting-set.v1.yaml").panels().get(0).options().get("series")).isInstanceOf(List.class);
+        assertThat(load("credit/netting-set.v1.sutra.md").panels().get(0).options().get("series")).isInstanceOf(List.class);
+    }
+
+    @Test
+    void markdownSutraReadsOnlyTheBlockAndKeepsMarkdownLineNumbers() {
+        String md = """
+                # My layout
+
+                Prose with `code`, a table and *emphasis*; the engine ignores it.
+
+                ```sutra
+                sutra: md-layout
+                version: 2
+                match: { kind: trade }
+                colour: red
+                ```
+
+                ## Why
+                ```yaml
+                not: read
+                ```
+                """;
+        assertThatThrownBy(() -> parser.parse(md, "x.v2.sutra.md", "rates"))
+                .isInstanceOf(SutraException.class)
+                .satisfies(e -> assertThat(((SutraException) e).problems().get(0).location().line()).isEqualTo(9));
+        Sutra ok = parser.parse(md.replace("colour: red\n", ""), "x.v2.sutra.md", "rates");
+        assertThat(ok.id()).isEqualTo("md-layout@2");
+        assertThatThrownBy(() -> parser.parse("# no block\n", "y.v1.sutra.md", "rates"))
+                .satisfies(e -> assertThat(((SutraException) e).problems().get(0).code()).isEqualTo("DRS-2004"));
+        assertThatThrownBy(() -> parser.parse("```sutra\nsutra: a\n", "z.v1.sutra.md", "rates"))
+                .satisfies(e -> assertThat(((SutraException) e).problems().get(0).code()).isEqualTo("DRS-2004"));
     }
 
     @Test

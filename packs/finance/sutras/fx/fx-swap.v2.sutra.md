@@ -1,17 +1,27 @@
-# Project Drishti · Any data. Any domain. One grammar.
-#
-# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
-# All rights reserved.
-#
-# PROPRIETARY AND CONFIDENTIAL.
-#
-# This file is the confidential and proprietary property of Ashutosh Sinha.
-# Unauthorised copying, use, modification, distribution or disclosure of this
-# file, via any medium, is strictly prohibited except with the express prior
-# written permission of the copyright holder.
-#
-# See the LICENSE file in the root of this repository for the full terms.
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
 
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+# Trade · FX swap (`fx-swap` v2)
+
+FX swap, near and far legs (mockup drishti-fx-swap.png).
+
+**Applies to:** entities of kind `trade` where `$.productType == 'FXSWAP'`, priority 10.
+
+**Strip:** Pair, Near value, Far value, Near rate, Far rate, Swap points, MTM (USD), Book.
+
+```sutra
 sutra: fx-swap
 version: 2
 description: FX swap, near and far legs (mockup drishti-fx-swap.png).
@@ -90,3 +100,18 @@ panels:
     fmt: signed0
     tone: sign
 keys: { F7: "link($.nettingSet, 'netting-set')", F8: impact, F9: raw }
+```
+
+## Panels
+
+| Panel | Code | Key | Shows | Area |
+|---|---|---|---|---|
+| Legs |  | F2 | tabbed tables | main |
+| Cashflows | CF · by currency | F3 | table | main |
+| Confirmation and settlement | OPS |  | status list | main |
+| How this view was built |  |  | how the view was built | main |
+| EUR/USD forward points (pips) | CRV | F4 | line chart | right |
+| Linked entities | REFS |  | linked entities | right |
+| Risk (USD) | SENS |  | bar chart | right |
+
+**Function keys:** F7 → `link($.nettingSet, 'netting-set')`, F8 → `impact`, F9 → `raw`.

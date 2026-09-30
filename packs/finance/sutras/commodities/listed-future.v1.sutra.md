@@ -1,17 +1,27 @@
-# Project Drishti · Any data. Any domain. One grammar.
-#
-# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
-# All rights reserved.
-#
-# PROPRIETARY AND CONFIDENTIAL.
-#
-# This file is the confidential and proprietary property of Ashutosh Sinha.
-# Unauthorised copying, use, modification, distribution or disclosure of this
-# file, via any medium, is strictly prohibited except with the express prior
-# written permission of the copyright holder.
-#
-# See the LICENSE file in the root of this repository for the full terms.
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
 
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+# Trade · Commodity future (`listed-future` v1)
+
+Exchange-traded future with daily settlement and variation margin (mockup drishti-commodity-future.png).
+
+**Applies to:** entities of kind `trade` where `$.productType == 'FUT'`, priority 10.
+
+**Strip:** Contract, Direction, Lots, Trade price, Last price, MTM (USD), Last trade, Book.
+
+```sutra
 sutra: listed-future
 version: 1
 description: Exchange-traded future with daily settlement and variation margin (mockup drishti-commodity-future.png).
@@ -76,3 +86,18 @@ panels:
     fmt: signed2
     tone: sign
 keys: { F7: "link($.clearingAccount, 'clearing-account')", F8: impact, F9: raw }
+```
+
+## Panels
+
+| Panel | Code | Key | Shows | Area |
+|---|---|---|---|---|
+| Contract |  | F2 | field list | main |
+| Daily settlement and variation margin | VM · ladder |  | ladder | main |
+| Margin | MRG | F3 | field list | main |
+| How this view was built |  |  | how the view was built | main |
+| WTI futures curve (USD/bbl) | CRV | F4 | line chart | right |
+| Linked entities | REFS |  | linked entities | right |
+| Daily price change (USD/bbl) | HIST |  | bar chart | right |
+
+**Function keys:** F7 → `link($.clearingAccount, 'clearing-account')`, F8 → `impact`, F9 → `raw`.
