@@ -257,8 +257,10 @@ under the input:
                                                 drop-to-latest on slow consumers)
 ```
 
-- The dependency index `path → panels` is computed once per Layout, so a curve tick
-  re-binds the curve panel and the MTM strip cell, nothing else.
+- Each rebuild uses the cached layout and is diffed against what the client holds; only changed strip
+  cells and panels travel. (Expressions also report their paths, so path-targeted re-binding is
+  possible; measurement showed the rebuild-and-diff approach is fast enough. See LIVE.md.)
+- Frames use a leading-edge throttle: a tick after a quiet frame is sent at once.
 - The top-bar `Live, p99 38 ms` is a rolling HdrHistogram of source-tick → SSE-write
   latency, published at `/api/v1/health/live`.
 

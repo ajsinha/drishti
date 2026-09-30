@@ -19,6 +19,7 @@ import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityHit;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.api.SourcePlugin;
+import com.ash.drishti.api.Subscription;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import java.time.Duration;
@@ -132,6 +133,22 @@ public final class SourceRouter {
         Map<EntityRef, EntityHit> merged = new LinkedHashMap<>();
         parts.forEach(f -> f.join().forEach(h -> merged.putIfAbsent(h.ref(), h)));
         return merged.values().stream().limit(limit).toList();
+    }
+
+    /**
+     * Subscribes to live updates from the first live plugin that holds {@code ref}. Returns
+     * {@link Subscription#NONE} when no source can push it (the view then stays static).
+     */
+    public Subscription subscribe(EntityRef ref, java.util.function.Consumer<EntityDocument> listener) {
+        for (SourcePlugin p : candidates(ref.kind())) {
+            if (p.manifest().capabilities().live()) {
+                Subscription s = p.subscribe(ref, listener);
+                if (s != Subscription.NONE) {
+                    return s;
+                }
+            }
+        }
+        return Subscription.NONE;
     }
 
     public List<EntityRef> reverse(EntityRef target, String kind) {

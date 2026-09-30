@@ -25,6 +25,7 @@ import com.ash.drishti.api.Provenance;
 import com.ash.drishti.api.SourceCapabilities;
 import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
+import com.ash.drishti.api.Subscription;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
@@ -35,11 +36,19 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
  * Serves the reference entities of the Drishti mockups from classpath fixtures ({@code demo/<kind>/<id>.json},
  * listed in {@code demo/catalog.json}). Each fixture's {@code _meta} block becomes the provenance, so views
  * show the source systems of the mockups ({@code aero-risk}, {@code aero-fx}, {@code eod-futures}).
+ *
+ * <p>Documents marked live tick while someone subscribes: every {@code tick-ms} (default 400) one
+ * random-walk step moves prices, rates and MTM, and the generation increases. Setting {@code ticking: false}
+ * freezes them (used by golden tests).
  */
 public final class DemoSourcePlugin implements SourcePlugin {
 
@@ -48,10 +57,13 @@ public final class DemoSourcePlugin implements SourcePlugin {
 
     private final Map<EntityRef, EntityDocument> documents = new ConcurrentHashMap<>();
     private final HitIndex index = new HitIndex();
+    private final Map<EntityRef, List<Consumer<EntityDocument>>> listeners = new ConcurrentHashMap<>();
+    private final DemoTicker ticker = new DemoTicker(42);
+    private ScheduledFuture<?> tickTask;
 
     @Override
     public PluginManifest manifest() {
-        return new PluginManifest(NAME, "1.0", Set.of(), new SourceCapabilities(false, true, true));
+        return new PluginManifest(NAME, "1.0", Set.of(), new SourceCapabilities(true, true, true));
     }
 
     @Override
@@ -63,6 +75,51 @@ public final class DemoSourcePlugin implements SourcePlugin {
             DataNode raw = read(context, ROOT + ref.kind() + "/" + ref.id() + ".json");
             documents.put(ref, toDocument(ref, raw));
             index.add(new EntityHit(ref, e.get("title").asText(), e.get("subtitle").asText()));
+        }
+        if (Boolean.parseBoolean(context.setting("ticking", "true"))) {
+            long ms = Long.parseLong(context.setting("tick-ms", "400"));
+            tickTask = context.scheduler().scheduleAtFixedRate(this::tick, ms, ms, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    /** One step for every subscribed live document; runs on the single scheduler thread. */
+    void tick() {
+        listeners.forEach((ref, subs) -> {
+            if (subs.isEmpty()) {
+                return;
+            }
+            EntityDocument d = documents.get(ref);
+            if (d == null || !d.provenance().live()) {
+                return;
+            }
+            EntityDocument next = new EntityDocument(ref, ticker.tick(ref.kind(), d.data()), new Provenance(
+                    d.provenance().source(), d.provenance().generation() + 1, Instant.now(), true));
+            documents.put(ref, next);
+            for (Consumer<EntityDocument> l : subs) {
+                try {
+                    l.accept(next);
+                } catch (RuntimeException ignored) {
+                    // a failing listener must not stop the ticker
+                }
+            }
+        });
+    }
+
+    @Override
+    public Subscription subscribe(EntityRef ref, Consumer<EntityDocument> listener) {
+        EntityDocument d = documents.get(ref);
+        if (d == null || !d.provenance().live()) {
+            return Subscription.NONE;
+        }
+        List<Consumer<EntityDocument>> subs = listeners.computeIfAbsent(ref, r -> new CopyOnWriteArrayList<>());
+        subs.add(listener);
+        return () -> subs.remove(listener);
+    }
+
+    @Override
+    public void close() {
+        if (tickTask != null) {
+            tickTask.cancel(false);
         }
     }
 

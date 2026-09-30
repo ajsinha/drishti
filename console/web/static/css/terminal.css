@@ -44,6 +44,7 @@ body.terminal { font-size: 14px; }
 .tbar-right { margin-left: auto; display: flex; align-items: center; gap: 1.1rem; color: var(--d-muted); font-size: .85rem; }
 .tbar-live { display: inline-flex; align-items: center; gap: .4rem; color: var(--d-ink); }
 .tbar-live .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--d-faint); }
+.tbar-live[data-live-state="reconnecting"] .dot { background: var(--d-warn); }
 .tbar-live[data-live-state="live"] .dot { background: var(--d-link); box-shadow: 0 0 8px var(--d-link); }
 .tbar-clock { color: var(--d-ink); }
 

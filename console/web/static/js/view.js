@@ -32,13 +32,16 @@
   }
 
   // ---- bars and gauges: widths from data-w (the CSP forbids inline styles) ---------------------
-  document.querySelectorAll('[data-w]').forEach(function (el) {
-    var w = parseFloat(el.getAttribute('data-w')) || 0;
-    requestAnimationFrame(function () { el.style.width = Math.max(0, Math.min(100, w)) + '%'; });
-  });
+  function widths(root) {
+    root.querySelectorAll('[data-w]').forEach(function (el) {
+      var w = parseFloat(el.getAttribute('data-w')) || 0;
+      requestAnimationFrame(function () { el.style.width = Math.max(0, Math.min(100, w)) + '%'; });
+    });
+  }
+  widths(document);
 
   // ---- tabs -----------------------------------------------------------------------------------
-  document.querySelectorAll('[data-tabs]').forEach(function (box) {
+  function tabsIn(root) { root.querySelectorAll('[data-tabs]').forEach(function (box) {
     var heads = box.querySelectorAll('[role="tab"]');
     heads.forEach(function (h, i) {
       h.addEventListener('click', function () {
@@ -48,7 +51,8 @@
         });
       });
     });
-  });
+  }); }
+  tabsIn(document);
 
   // ---- charts ---------------------------------------------------------------------------------
   var charts = [];
@@ -103,6 +107,20 @@
   drawCharts();
   window.addEventListener('resize', function () { charts.forEach(function (c) { c.resize(); }); });
   document.addEventListener('drishti:theme', drawCharts);
+
+  /** Hooks for live.js: re-enhance a replaced panel, and move a chart to new data without re-creating it. */
+  window.drishti = {
+    enhance: function (root) { widths(root); tabsIn(root); },
+    updateChart: function (id, data) {
+      var el = document.querySelector('#p-' + CSS.escape(id) + ' .chart[data-chart]');
+      if (!el || !window.echarts) { return; }
+      el.setAttribute('data-chart', JSON.stringify(data));
+      var c = window.echarts.getInstanceByDom(el);
+      if (c) { c.setOption(option(el, tokens()), false); }
+      var foot = el.parentNode.querySelector('.chart-foot .mono');
+      if (foot && data.markText) { foot.textContent = data.markText; }
+    }
+  };
 
   // ---- raw JSON drawer (F9) -------------------------------------------------------------------
   var raw = document.getElementById('rawDrawer');

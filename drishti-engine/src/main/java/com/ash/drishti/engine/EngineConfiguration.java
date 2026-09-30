@@ -24,6 +24,9 @@ import com.ash.drishti.engine.command.CommandsProperties;
 import com.ash.drishti.engine.command.Mnemonics;
 import com.ash.drishti.engine.command.RecentEntities;
 import com.ash.drishti.engine.command.SuggestionService;
+import com.ash.drishti.engine.live.LiveMetrics;
+import com.ash.drishti.engine.live.LiveProperties;
+import com.ash.drishti.engine.live.TopicHub;
 import com.ash.drishti.engine.source.PluginDiscovery;
 import com.ash.drishti.engine.source.SourceRegistry;
 import com.ash.drishti.engine.source.SourceRouter;
@@ -42,6 +45,7 @@ import com.ash.drishti.rachana.format.Formats;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ScheduledExecutorService;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -50,7 +54,7 @@ import org.springframework.context.annotation.Import;
 /** Beans contributed by {@code drishti-engine}, and the lower modules it assembles. */
 @Configuration(proxyBeanMethods = false)
 @Import({CommonConfiguration.class, RachanaConfiguration.class, InferenceConfiguration.class, GraphConfiguration.class})
-@EnableConfigurationProperties({SourcesProperties.class, EngineProperties.class, CommandsProperties.class})
+@EnableConfigurationProperties({SourcesProperties.class, EngineProperties.class, CommandsProperties.class, LiveProperties.class})
 public class EngineConfiguration {
 
     /** One virtual thread per task: fetches, link fan-out and searches block cheaply here. */
@@ -106,5 +110,21 @@ public class EngineConfiguration {
             Formats formats, Mnemonics mnemonics, ForkJoinPool drishtiBindPool, EngineProperties props) {
         return new ViewPipeline(router, matcher, registry, merger, fingerprinter, catalog, graph, binder, el, formats, mnemonics,
                 drishtiBindPool, props);
+    }
+
+    /** Frame timer for live topics: two platform threads only schedule; delivery work is tiny. */
+    @Bean(destroyMethod = "shutdownNow")
+    public ScheduledExecutorService drishtiFrameScheduler() {
+        return Executors.newScheduledThreadPool(2, Thread.ofPlatform().daemon().name("drishti-frame-", 0).factory());
+    }
+
+    @Bean(destroyMethod = "close")
+    public TopicHub topicHub(SourceRouter router, ScheduledExecutorService drishtiFrameScheduler, LiveProperties props) {
+        return new TopicHub(router, drishtiFrameScheduler, props);
+    }
+
+    @Bean
+    public LiveMetrics liveMetrics(LiveProperties props) {
+        return new LiveMetrics(props.window());
     }
 }

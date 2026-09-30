@@ -39,8 +39,8 @@ Drishti is built in ten waves on `develop`. Each wave is merged to `main` when i
 | 6 | Inference engine: rules, packing, Sutra ⊕ inference merge | ✅ done |
 | 7 | View pipeline, entity links, command type-ahead service | ✅ done |
 | 8 | REST API and console entity views (the four mockups end to end) | ✅ done |
-| 9 | Live updates over SSE, measured p99 | ⏳ next |
-| 10 | Sutra Studio, security, ops, v1.0.0 | ◻️ |
+| 9 | Live updates over SSE, measured p99 | ✅ done |
+| 10 | Sutra Studio, security, ops, v1.0.0 | ⏳ next |
 
 ## What works today
 
@@ -63,7 +63,9 @@ Drishti is built in ten waves on `develop`. Each wave is merged to `main` when i
 - **Terminal.** Open `/t` in the console, type `TRD IRS-48213 <GO>`, and the view renders like the
   mockup. Suggestions drop down as you type, F-keys jump between panels, F9 shows the raw JSON,
   links open other entities, and breadcrumbs lead back. REST API under `/api/v1` (OpenAPI at `/api/docs`).
-- **Not yet:** live ticking (Wave 9); Sutra Studio, sign-in and packaging (Wave 10).
+- **Live.** Views of live entities tick over server-sent events: MTM, curves, exposure and settlements
+  move in place, changed values flash, and the top bar shows the measured p99 (about 11 ms).
+- **Not yet:** Sutra Studio, sign-in and entitlements, and packaging (Wave 10).
 
 ## Try it
 
@@ -118,6 +120,7 @@ drishti/
 | [USER_GUIDE.md](docs/USER_GUIDE.md) | **Using the terminal.** Commands, suggestions, keyboard, reading a view. |
 | [API_GUIDE.md](docs/API_GUIDE.md) | **The REST API** and the ViewModel contract. |
 | [CONFIGURATION.md](docs/CONFIGURATION.md) | **Every setting**, server and console. |
+| [LIVE.md](docs/LIVE.md) | **Live updates.** Topics, frames, patches, slow clients, reconnects. |
 | [PERFORMANCE.md](docs/PERFORMANCE.md) | **Measured numbers.** JMH hot paths and the end-to-end latency gate. |
 | [adr/](docs/adr/README.md) | Architecture decision records. |
 | [CHANGELOG.md](CHANGELOG.md) | What changed, wave by wave. |

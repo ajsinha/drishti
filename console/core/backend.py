@@ -73,5 +73,21 @@ class BackendClient:
     async def sutras(self) -> list:
         return await self._get("/sutras")
 
+    async def stream(self, kind: str, id_: str):
+        """Yields ``(event, data)`` pairs from the server's SSE stream for a view, until it ends."""
+        async with self._client.stream("GET", f"/api/v1/views/{kind}/{id_}/stream", timeout=None,
+                                       headers={"Accept": "text/event-stream"}) as r:
+            if r.status_code >= 400:
+                raise BackendError(r.status_code, "DRS-5003", "stream refused")
+            event, data = None, []
+            async for line in r.aiter_lines():
+                if line.startswith("event:"):
+                    event = line[6:].strip()
+                elif line.startswith("data:"):
+                    data.append(line[5:])
+                elif line == "" and event:
+                    yield event, "\n".join(data)
+                    event, data = None, []
+
     async def aclose(self) -> None:
         await self._client.aclose()

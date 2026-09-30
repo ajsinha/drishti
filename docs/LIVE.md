@@ -1,0 +1,76 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+# Live updates
+
+Views of live entities tick. The path from a source tick to a changed cell on screen:
+
+```
+SourcePlugin.subscribe ─► TopicHub topic (one per entity, one source subscription, latest-wins slot)
+                              │ leading-edge frame throttle (drishti.live.frame, 50 ms)
+                              ▼
+                          ViewStream (one per client view; also listens to its charts' source entities)
+                              │ rebuild with the cached layout → PatchDiffer (old vs new ViewModel)
+                              ▼
+                          FrameMailbox (latest-wins; merges frames for a slow client)
+                              │ one virtual-thread writer per client
+                              ▼
+            SSE  /api/v1/views/{kind}/{id}/stream   event: view (full ViewModel), then event: frame (patches)
+                              │
+            console /api/stream/{kind}/{id}: panels re-rendered to HTML with the same Jinja macros;
+                              │ charts are sent as data
+                              ▼
+            live.js: strip cells updated in place, panels swapped, charts moved with setOption; changes flash
+```
+
+## Guarantees and limits
+
+- **One source subscription per entity**, however many people watch it. It closes when the last
+  viewer leaves.
+- **Frames.**
+  - A tick after a quiet period goes out immediately.
+  - Ticks within 50 ms of the last frame are coalesced: the latest wins, so a fast source costs one
+    delivery per frame.
+  - Rebuilds for one view never overlap; a change that arrives during a rebuild causes exactly one more.
+- **Minimal patches.** Only changed strip cells, changed panels, and the provenance when the
+  generation moves. A Sutra edit changes the layout label, and the affected panels are re-sent.
+- **Slow clients** never slow down others. Their pending frames merge (newest value per cell or panel)
+  in a one-slot mailbox, so memory is bounded.
+- **Reconnects.** The browser's EventSource reconnects by itself. The server opens every stream with
+  a fresh `view` event, so a client that missed frames repaints from it; nothing is replayed.
+- **Heartbeats.** An SSE comment every 15 s keeps proxies from closing idle streams.
+- **Capacity.** `drishti.live.max-streams` (20,000) caps the streams per server.
+
+## Latency
+
+The top bar shows `Live, p99 N ms`: the rolling (30 s) p99 of source-tick → frame-built across the
+server, recorded lock-free in an HdrHistogram. `GET /api/v1/health/live` reports streams, topics,
+frames, p50 and p99.
+
+## The demo source
+
+The `demo` plugin ticks entities whose fixture says `live` (IRS and FX trades, curves, spot, netting
+sets) every `tick-ms` (400 ms), but only while someone watches. It takes a random-walk step and keeps
+dependent values consistent: for the future, MTM follows the last price, and the intraday settlement
+row and variation margin follow too. Setting `drishti.sources.plugins.demo.settings.ticking: false`
+freezes it.
+
+## Implementation note
+
+The architecture first proposed re-binding only the panels whose expressions read the changed
+paths. Every expression can report its paths (`Expr.paths`), and every cell and row carries its
+`path`. Measurement showed that rebuilding the whole view with the cached layout and diffing takes a
+few hundred microseconds, well inside the budget. The simpler rebuild-and-diff design was therefore
+kept. The path index remains available if a very large view ever needs it.

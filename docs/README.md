@@ -17,12 +17,13 @@ Suggested reading order:
 | [API_GUIDE.md](API_GUIDE.md) | **The REST API** and the ViewModel JSON contract. |
 | [CONFIGURATION.md](CONFIGURATION.md) | **Every setting**, server and console, with defaults. |
 | [INFERENCE.md](INFERENCE.md) | **Layouts from shape.** Rules, packing, Sutra ⊕ inference merge, semantic hints. |
+| [LIVE.md](LIVE.md) | **Live updates.** Topics, leading-edge frames, patches, slow clients, reconnects. |
 | [PERFORMANCE.md](PERFORMANCE.md) | **Measured numbers.** JMH hot paths and the end-to-end latency gate. |
 | [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md) | **Bringing data in.** The source plugin SPI, routing and configuration, and the built-in plugins. |
 | [adr/](adr/README.md) | **Why things are the way they are.** Architecture decision records. |
 | [requirements/](requirements/) | **The target.** Four reference mockups (IRS, FX swap, commodity future, netting set) and the brand marks. |
 
-Documents added as the waves land: `LIVE.md` (W9), `OPERATIONS.md` and `runbooks/` (W10), plus `adr/`.
+Documents added as the waves land: `OPERATIONS.md` and `runbooks/` (W10), plus `adr/`.
 
 ---
 

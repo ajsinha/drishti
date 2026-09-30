@@ -42,6 +42,18 @@ java -cp "drishti-benchmarks/target/classes:$(cat cp.txt)" org.openjdk.jmh.Main
 after warm-up: fetch, match, layout (cached), link fan-out on virtual threads, parallel binding.
 The build fails if p99 ≥ 50 ms or if the layout cache hit rate is ≤ 99 %.
 
+## Live latency (measured)
+
+| Measure | 2026-09-30, developer workstation | How |
+|---|---|---|
+| tick → frame built, p50 | 2.4 ms | `GET /api/v1/health/live` after streaming IRS-48213 through the console |
+| tick → frame built, p99 | 11.2 ms | same; target < 40 ms |
+| browser top bar | "Live, p99 2 ms" | read from real Chrome over the DevTools protocol |
+| fan-out | 10,000 listeners on one topic all receive the latest of 50 ticks | `TopicHubTest` |
+
+The first version delayed every tick by a whole frame (p50 52 ms). Switching to a leading-edge
+throttle (send at once after a quiet frame, coalesce inside a busy one) brought p50 to 2.4 ms.
+
 ## Why it is fast
 
 - **Layouts are data-free and cached** by (Sutra version, kind, shape fingerprint). Inference and

@@ -72,3 +72,32 @@ def test_json_proxy_for_the_browser(client, backend):
     assert s[0]["complete"].startswith("TRD IRS-4")
     assert client.get("/api/raw/trade/IRS-48213").json()["provenance"]["source"] == "aero-risk"
     assert client.get("/api/view/trade/NOPE-1").status_code == 404
+
+
+def test_live_views_load_the_live_script(client):
+    assert "/static/js/live.js" in client.get("/v/trade/IRS-48213").text
+    assert "/static/js/live.js" not in client.get("/v/trade/CFT-77120").text
+
+
+def test_stream_relays_frames_with_server_rendered_panels(client, backend):
+    import json as _json
+
+    irs = _json.loads((__import__("pathlib").Path(__file__).parent / "fixtures" / "view_trade_IRS-48213.json").read_text())
+    dv01 = next(p for p in irs["panels"] if p["id"] == "dv01")
+    curve = next(p for p in irs["panels"] if p["id"] == "curve")
+    frame = {"seq": 1, "generation": 1743, "latencyMs": 3.1, "p99Ms": 12.0, "patches": [
+        {"op": "strip", "index": 5, "cell": {"label": "MTM (USD)", "text": "−410,000", "tone": "neg"}},
+        {"op": "panel", "panel": dv01}, {"op": "panel", "panel": curve}]}
+
+    async def fake_stream(kind, id_):
+        yield "view", _json.dumps(irs)
+        yield "frame", _json.dumps(frame)
+
+    backend.stream = fake_stream
+    with client.stream("GET", "/api/stream/trade/IRS-48213") as r:
+        body = "".join(r.iter_text())
+    assert "event: view" in body and '"generation": 1742' in body
+    data = _json.loads(body.split("event: frame\ndata: ")[1].split("\n\n")[0])
+    assert data["patches"][0]["cell"]["text"] == "−410,000"
+    assert 'id="p-dv01"' in data["patches"][1]["html"] and "+7,030" in data["patches"][1]["html"]
+    assert "html" not in data["patches"][2] and data["patches"][2]["panel"]["data"]["mark"] == "5Y"

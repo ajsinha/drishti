@@ -15,6 +15,19 @@
 -->
 # Changelog
 
+## Unreleased — Wave 9: live updates
+- The `demo` source ticks live entities with consistent random walks while someone watches (MTM, DV01, curves, spot, exposure; futures keep MTM, settlement and VM consistent).
+- Engine:
+  - `TopicHub`: one source subscription per entity, latest-wins, leading-edge 50 ms frames, single writer.
+  - `ViewStream`: rebuild with the cached layout, then diff; rebuilds never overlap.
+  - `PatchDiffer`; `LiveMetrics` (HdrHistogram rolling p50/p99).
+- Server:
+  - SSE `/api/v1/views/{kind}/{id}/stream` (a `view` event, then `frame` events), with a per-client latest-wins `FrameMailbox` that merges frames for slow clients, and heartbeats.
+  - `/api/v1/health/live`.
+- Console: `/api/stream` relay that renders changed panels with the same Jinja macros; `live.js` patches cells, panels and charts in place, flashes changes and shows `Live, p99 N ms`.
+- Measured: p50 2.4 ms, p99 11 ms from tick to frame; 10,000 listeners on one topic all see the latest tick. Verified in real Chrome over the DevTools protocol.
+- Docs: `LIVE.md`; `PERFORMANCE.md` updated.
+
 ## Unreleased — Wave 8: REST API and console entity views
 - Server REST API under `/api/v1`: command, suggest, views, raw entities, sources and Sutras. RFC 7807 errors with `DRS` codes, springdoc at `/api/docs`, and a Micrometer `drishti.view` timer.
 - Console terminal:
