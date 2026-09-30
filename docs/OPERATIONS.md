@@ -57,8 +57,12 @@ docker compose -f deploy/compose.data.yaml up -d
 uv run --with "psycopg[binary]" python tools/packgen/banking/make_data.py --postgres postgresql://drishti:drishti@localhost:5432/drishti
 tools/load-aerospike.sh localhost:3000 test
 
-# Start with the store you want and the feeds you want
-SPRING_PROFILES_ACTIVE=postgres DRISHTI_PACKS=market-risk,counterparty-risk DRISHTI_FEED_NYFED_SOFR=true java -jar drishti-server-*-exec.jar
+# Live trades from Kafka (broker in deploy/compose.data.yaml)
+uv run --with kafka-python python tools/samplegen/stream.py --rate 5
+
+# Start with the store you want, the feeds you want and the stream
+SPRING_PROFILES_ACTIVE=postgres DRISHTI_PACKS=market-risk,counterparty-risk DRISHTI_FEED_NYFED_SOFR=true \
+  DRISHTI_STREAM_TRADING=true java -jar drishti-server-*-exec.jar
 ```
 
 Each connector's health is on `/api/v1/sources`: a database that is down, or a feed that failed, shows there and

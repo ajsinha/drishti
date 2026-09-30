@@ -49,6 +49,16 @@ connectors:
     settings:
       root: ${DRISHTI_DELTA_ROOT:./data/delta}
       domain: trading
+  trading-stream:
+    plugin: kafka
+    enabled: ${DRISHTI_STREAM_TRADING:false}
+    kinds:
+    - trade
+    settings:
+      bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
+      topics: ${DRISHTI_TRADING_TOPIC:drishti.trading.trades}
+      kind: trade
+      id-field: tradeId
 routes:
   trade: trading-store
 console:

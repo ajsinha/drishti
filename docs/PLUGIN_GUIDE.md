@@ -89,7 +89,7 @@ connectors each extend it; the database tests run PostgreSQL 18 and Aerospike CE
 skipped where Docker is not reachable.
 
 Routing order for a kind: its configured route, then `default-route`, then any other plugin whose
-manifest serves the kind (for a picked business date, dated sources first). Missing entities fall through to the next plugin. Errors and timeouts
+manifest serves the kind (for a picked business date, dated sources first; for Live, live sources first, and a real stream before the default route's samples). Missing entities fall through to the next plugin. Errors and timeouts
 surface as `DRS-1003` and `DRS-1004`.
 
 ## Built-in plugins
@@ -102,4 +102,5 @@ surface as `DRS-1003` and `DRS-1004`.
 | `jdbc` | Per-kind SQL (`query.<kind>` with `:id`, `:asOf`), or **table mode** (`table: trading.entities`): all kinds of a data domain in one PostgreSQL table `(kind, id, business_date, doc jsonb)`, dated, with search and reverse lookups by SQL/JSON path | The driver comes with the server for PostgreSQL. `mode.<kind>` is `snapshot` or `effective`. Load a domain with `make_data.py --postgres`. |
 | `aerospike` | A set per data domain; a record per entity (`kind/id`) with a bin per business date | Reads are key lookups; the dates, identifiers and references are learned by scanning the set at start and every `refresh-seconds`. Load with `tools/load-aerospike.sh`. |
 | `feed` | Public data: `nyfed-sofr`, `ecb-estr`, `ecb-fx`, `us-treasury`, `fred` | One connector per feed, declared by the market-data pack, each off until switched on. Entities carry the feed in their id (`FIX-SOFR-NYFED`). Keeps history for picked dates; a failed fetch keeps the last good data and shows in health. |
+| `kafka` | Live entities from Kafka topics: an envelope `{kind, id, doc}`, or whole-document messages with `kind` and `id-field` | Reads every partition from the beginning (the topic is the state: the latest message per entity), then pushes each new message to open views. Tombstones delete. No consumer-group commits. The trading pack declares `trading-stream`, off until `DRISHTI_STREAM_TRADING=true`; `tools/samplegen/stream.py` replays and ticks the samples. |
 | `rest` | An HTTP/JSON service: `base-url` + `path` per kind | Headers from settings; the generation from a response header. |

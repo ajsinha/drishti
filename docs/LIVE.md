@@ -67,6 +67,14 @@ The top bar shows `Live, p99 N ms`: the rolling (30 s) p99 of source-tick → fr
 server, recorded lock-free in an HdrHistogram. `GET /api/v1/health/live` reports streams, topics,
 frames, p50 and p99.
 
+## Streaming sources
+
+A plugin that declares `live` pushes each new generation of an entity through `subscribe`. The `kafka` plugin does
+this from a topic: it rebuilds the latest document per entity from the start of the topic, then forwards every new
+message to the views that are open on that entity, through the same TopicHub, frames and patches as any live source.
+For Live, the router asks live sources first, and a real stream before the demo samples; a picked business date
+never streams.
+
 ## The demo source
 
 The `demo` plugin ticks entities whose fixture says `live` (IRS and FX trades, curves, spot, netting

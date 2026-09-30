@@ -94,8 +94,11 @@ public final class SourceRouter {
             // a picked date: history comes from dated sources first; undated ones only answer what nothing dated holds
             candidates.sort(java.util.Comparator.comparing(p -> !p.manifest().capabilities().dated()));
         } else {
-            // live: sources that stream come first, so the view ticks; the lake answers what no live source holds
-            candidates.sort(java.util.Comparator.comparing(p -> !p.manifest().capabilities().live()));
+            // live: sources that stream come first, so the view ticks; among them a real stream (Kafka) beats the default
+            // route (the demo samples); the stores answer what no live source holds
+            String fallback = props.defaultRoute();
+            candidates.sort(java.util.Comparator.<SourcePlugin, Boolean>comparing(p -> !p.manifest().capabilities().live())
+                    .thenComparing(p -> p.manifest().capabilities().live() && p.manifest().name().equals(fallback)));
         }
         return CompletableFuture.supplyAsync(() -> readFirst(ref, candidates, asOf), executor)
                 .orTimeout(timeout.toMillis(), TimeUnit.MILLISECONDS)

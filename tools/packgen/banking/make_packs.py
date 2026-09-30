@@ -98,6 +98,11 @@ def manifest(name: str) -> dict:
                    "badges": {k: specs[k].badge for k in kinds if specs[k].badge}},
          "connectors": {f"{d}-store": connector(d) for d in p["kinds"]},
          "routes": {k: f"{d}-store" for d, ks in p["kinds"].items() for k in ks}}
+    if name == "trading":
+        m["connectors"]["trading-stream"] = {"plugin": "kafka", "enabled": "${DRISHTI_STREAM_TRADING:false}", "kinds": ["trade"],
+                                             "settings": {"bootstrap-servers": "${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}",
+                                                          "topics": "${DRISHTI_TRADING_TOPIC:drishti.trading.trades}",
+                                                          "kind": "trade", "id-field": "tradeId"}}
     if name == "market-data":
         for feed, (switch, kinds_, extra, _) in FEEDS.items():
             m["connectors"][f"{feed}-feed"] = {"plugin": "feed", "enabled": "${" + switch + ":false}", "kinds": kinds_,

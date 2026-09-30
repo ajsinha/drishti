@@ -55,7 +55,8 @@ terminal does.
 | P2–P8 | Packs: liquidity, climate, operational/non-financial, retail banking, genomics and biology, politics and society, economics | ◻️ planned |
 | 22 | Business dates: Live or a picked date (static) on the USNY calendar; Delta Lake connector with time travel; named connectors; imperfect documents render as "No data available" | ✅ done |
 | 16 | History: diffs between dates, a "known at" control | ◻️ after the risk pack |
-| 17–21 | Structured search · export and share · Sutra governance · Kafka/aero/OIDC · personal settings | ◻️ planned |
+| 20a | Kafka live source: the trading pack's trades stream and tick from a topic (`DRISHTI_STREAM_TRADING=true`) | ✅ done |
+| 17–21 | Structured search · export and share · Sutra governance · OIDC single sign-on · personal settings | ◻️ planned |
 
 ## What works today
 

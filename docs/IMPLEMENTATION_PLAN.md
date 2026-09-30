@@ -135,7 +135,7 @@ Ten waves (plus W11, user management, after 1.0.0). Each holds a small set of cl
 | W17 | Structured search | `TRD where counterparty = … and mtm < …` giving a live result table |
 | W18 | Export and share | CSV/Excel/PDF of a view; permalinks to an exact view and generation |
 | W19 | Sutra governance | review and approval; version diffs; saved test entities per Sutra |
-| W20 | More connections | Kafka live source; `aero` plugin; OIDC single sign-on |
+| W20 | More connections | ✅ Kafka live source (trading stream); ✅ Aerospike connector; OIDC single sign-on still to do |
 | W21 | Personal settings | command history, aliases, per-user theme and default workspace |
 
 ### Domain-pack roadmap (agreed 2026-09-30)
