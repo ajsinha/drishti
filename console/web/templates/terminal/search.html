@@ -1,0 +1,69 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Search · {{ PRODUCT }}{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm search">
+  <h1>Search by value</h1>
+  <form class="srch-form" method="get" action="/s" role="search">
+    <label for="srchQ" class="visually-hidden">Search</label>
+    <input id="srchQ" class="srch-q mono" name="q" value="{{ q }}" placeholder="TRD where mtm > 1m and currency = 'EUR' order by mtm desc limit 50" autocomplete="off" spellcheck="false">
+    <button type="submit" class="btn btn-sm btn-outline-secondary">Search</button>
+  </form>
+  <p class="srch-help text-muted-d">
+    <span class="mono">&lt;mnemonic&gt; where &lt;condition&gt; [order by &lt;field&gt; [desc]] [limit N]</span> · fields by name or path
+    (<span class="mono">counterparty.name</span>, <span class="mono">legs[0].rate</span>) · <span class="mono">= != &lt; &lt;= &gt; &gt;=</span>
+    · <span class="mono">and or not</span> · <span class="mono">contains</span> · <span class="mono">startswith</span> · amounts <span class="mono">250k 1.5m 2bn</span>.
+    It follows the date in the top bar.</p>
+  {% if error %}
+    <p class="asof-banner" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ error.detail }} <span class="mono">({{ error.code }})</span></p>
+  {% elif data %}
+    <div class="cmp-sum">
+      <span><b>{{ data.matched }}</b> of {{ data.scanned }} {{ data.kind | replace('-', ' ') }}{{ '' if data.scanned == 1 else 's' }} match{% if data.matched > rows | length %}; the first {{ rows | length }} are shown{% endif %}</span>
+      <span class="text-muted-d mono">{{ data.elapsedMs }} ms</span>
+      {% if rows %}<form class="srch-watch" method="post" action="/s/watch">
+        <input type="hidden" name="q" value="{{ q }}"><label for="srchName" class="visually-hidden">Monitor name</label>
+        <input id="srchName" name="name" class="mono" value="{{ (data.mnemonic or data.kind) ~ ' search' }}" maxlength="64">
+        <button type="submit" class="btn btn-sm btn-outline-secondary" title="Save the first 50 results as a monitor and watch them live"><i class="bi bi-list-columns" aria-hidden="true"></i> Watch as a monitor</button>
+      </form>{% endif %}
+      {% if data.partial %}<span class="text-muted-d"><i class="bi bi-exclamation-circle" aria-hidden="true"></i> not every source answered in time, or the scan limit was reached: results may be incomplete</span>{% endif %}
+    </div>
+    {% if rows %}
+    <section class="pnl"><div class="pnl-b"><div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>{{ data.mnemonic or data.kind }}</th>{% if titled %}<th>Title</th>{% endif %}
+        {% for c in data.columns %}<th class="{{ 'num' if rows and rows[0].cells[loop.index0][1] else '' }}" title="{{ c }}">{{ data.labels[c] }}</th>{% endfor %}</tr></thead>
+      <tbody>{% for r in rows %}
+        <tr><td><a class="lnk mono" href="/v/{{ r.ref.kind }}/{{ r.ref.id | urlencode }}">{{ r.ref.id }}</a></td>{% if titled %}<td>{{ r.title }}</td>{% endif %}
+          {% for text, number in r.cells %}<td class="{{ 'num ' if number else '' }}mono">{{ text }}</td>{% endfor %}</tr>
+      {% endfor %}</tbody></table></div></div></section>
+    {% else %}
+      <p class="text-muted-d">Nothing matches.</p>
+    {% endif %}
+  {% else %}
+    <h2 class="ws-h">Examples</h2>
+    <ul class="srch-ex">
+      {% for ex in ["TRD where notional >= 250m and assetClass = 'Rates' order by mtm desc limit 20",
+                    "TRD where counterparty.name contains 'Meridian'",
+                    "TRD where mtm < 0 and maturityDate < '2027-01-01' order by mtm",
+                    "LIM where utilisation > 0.8 order by utilisation desc"] %}
+      <li><a class="lnk mono" href="/s?q={{ ex | urlencode }}">{{ ex }}</a></li>{% endfor %}
+    </ul>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script>{% endblock %}

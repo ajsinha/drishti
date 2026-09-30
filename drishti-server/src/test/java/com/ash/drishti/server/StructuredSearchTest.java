@@ -1,0 +1,87 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+package com.ash.drishti.server;
+
+import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.ash.drishti.server.security.TokenVerifier;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.web.servlet.MockMvc;
+
+/** W17: structured search over the trading pack's trades, honouring entitlements and redaction. */
+@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=trading",
+        "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
+        "drishti.security.roles.searcher.kinds[0]=trade", "drishti.security.roles.searcher.raw=true",
+        "drishti.security.roles.masked.kinds[0]=trade", "drishti.security.roles.masked.raw=false",
+        "drishti.security.roles.nothing.kinds[0]=curve"})
+@AutoConfigureMockMvc
+class StructuredSearchTest {
+
+    @Autowired MockMvc mvc;
+    @Autowired TokenVerifier tokens;
+
+    private String as(String role) {
+        return "Bearer " + tokens.mint("u-" + role, List.of(role), 300);
+    }
+
+    @Test
+    void findsSortsAndLimitsByFieldValues() throws Exception {
+        String body = mvc.perform(get("/api/v1/search").param("q", "TRD where assetClass = 'Rates' and notional >= 100m order by mtm desc limit 5")
+                        .header("Authorization", as("searcher")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.kind").value("trade"))
+                .andExpect(jsonPath("$.rows", hasSize(5)))
+                .andExpect(jsonPath("$.matched").value(greaterThan(5)))
+                .andExpect(jsonPath("$.rows[*].values['$.notional']", everyItem(greaterThan(99_999_999.0))))
+                .andReturn().getResponse().getContentAsString();
+        JsonNode rows = new ObjectMapper().readTree(body).get("rows");
+        for (int i = 1; i < rows.size(); i++) {
+            Assertions.assertThat(rows.get(i - 1).get("values").get("$.mtm").asDouble()).isGreaterThanOrEqualTo(rows.get(i).get("values").get("$.mtm").asDouble());
+        }
+        Assertions.assertThat(new ObjectMapper().readTree(body).get("columns").toString()).contains("$.assetClass", "$.notional", "$.mtm");
+    }
+
+    @Test
+    void aRedactedFieldCannotBeProbedAndAKindYouCannotOpenIsRefused() throws Exception {
+        String q = "TRD where trader startswith 'TRDR-'";
+        mvc.perform(get("/api/v1/search").param("q", q).header("Authorization", as("searcher")))
+                .andExpect(jsonPath("$.matched").value(greaterThan(0)));
+        mvc.perform(get("/api/v1/search").param("q", q).header("Authorization", as("masked")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.matched").value(0));
+        mvc.perform(get("/api/v1/search").param("q", "TRD where mtm > 0").header("Authorization", as("nothing")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void badQueriesSayWhy() throws Exception {
+        mvc.perform(get("/api/v1/search").param("q", "TRD where mtm >").header("Authorization", as("searcher")))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("DRS-4004"));
+        mvc.perform(get("/api/v1/search").param("q", "TRD where name = 'open").header("Authorization", as("searcher")))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("not closed")));
+    }
+}

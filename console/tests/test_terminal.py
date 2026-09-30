@@ -215,3 +215,40 @@ def test_compare_page_shows_what_changed(client, backend):
     assert seen == {"from": "2026-09-28", "to": "2026-09-29"}
     only = client.get("/compare/trade/IRS-48213", params={"from": "2026-09-28", "to": "2026-09-29", "only": "added"}).text
     assert "Reset" in only and "valuation.mtm" not in only
+
+
+def test_a_search_on_the_command_line_opens_the_results(client, backend):
+    r = client.get("/go", params={"q": "TRD where mtm > 1m order by mtm desc <GO>"}, follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"].startswith("/s?q=TRD%20where%20mtm")
+    asked = {}
+
+    async def search(q, ident=None):
+        asked["q"] = q
+        return {"kind": "trade", "mnemonic": "TRD", "columns": ["$.mtm", "$.currency"], "labels": {"$.mtm": "MTM", "$.currency": "Currency"},
+                "rows": [{"ref": {"kind": "trade", "id": "IRS-48213"}, "title": "IRS-48213", "values": {"$.mtm": -412580.5, "$.currency": "USD"}}],
+                "scanned": 36, "matched": 1, "partial": False, "elapsedMs": 4.2}
+    backend.search = search
+    page = client.get("/s", params={"q": "TRD where mtm > 1m"}).text
+    assert asked["q"] == "TRD where mtm > 1m"
+    assert "<b>1</b> of 36 trades match" in page and "MTM" in page and "−412,580.5" in page and 'href="/v/trade/IRS-48213"' in page
+    assert "Examples" in client.get("/s").text
+    assert "Watch as a monitor" in page
+    saved = {}
+
+    async def mine(method, path, ident, body=None, **params):
+        saved.update(method=method, path=path, body=body)
+        return body
+    backend.mine = mine
+    r = client.post("/s/watch", data={"q": "TRD where mtm > 1m", "name": "Big <MTM>"}, follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == "/m/Big%20MTM"
+    assert saved == {"method": "PUT", "path": "/monitors/Big%20MTM", "body": {"entities": [{"kind": "trade", "id": "IRS-48213"}]}}
+
+
+def test_a_bad_search_says_why(client, backend):
+    from core.backend import BackendError
+
+    async def search(q, ident=None):
+        raise BackendError(400, "DRS-4004", "a string is not closed: 'open")
+    backend.search = search
+    page = client.get("/s", params={"q": "TRD where name = 'open"}).text
+    assert "a string is not closed" in page and "DRS-4004" in page

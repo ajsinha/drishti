@@ -30,7 +30,8 @@ public final class Functions {
             Map.entry("link", new int[] {1, 3}), Map.entry("size", new int[] {1, 1}), Map.entry("sum", new int[] {1, 2}),
             Map.entry("fmt", new int[] {2, 2}), Map.entry("coalesce", new int[] {1, 8}), Map.entry("first", new int[] {1, 1}),
             Map.entry("last", new int[] {1, 1}), Map.entry("abs", new int[] {1, 1}), Map.entry("min", new int[] {1, 8}),
-            Map.entry("max", new int[] {1, 8}), Map.entry("upper", new int[] {1, 1}), Map.entry("lower", new int[] {1, 1}));
+            Map.entry("max", new int[] {1, 8}), Map.entry("upper", new int[] {1, 1}), Map.entry("lower", new int[] {1, 1}),
+            Map.entry("contains", new int[] {2, 2}), Map.entry("startsWith", new int[] {2, 2}));
 
     private static final Map<String, ElFunction> FUNCTIONS = Map.ofEntries(
             Map.entry("link", Functions::link), Map.entry("size", (a, c) -> size(a.get(0))),
@@ -41,9 +42,25 @@ public final class Functions {
             Map.entry("abs", (a, c) -> Values.normalise(Math.abs(Values.number(a.get(0))))),
             Map.entry("min", (a, c) -> extreme(a, true)), Map.entry("max", (a, c) -> extreme(a, false)),
             Map.entry("upper", (a, c) -> Values.text(a.get(0)).toUpperCase(Locale.ROOT)),
-            Map.entry("lower", (a, c) -> Values.text(a.get(0)).toLowerCase(Locale.ROOT)));
+            Map.entry("lower", (a, c) -> Values.text(a.get(0)).toLowerCase(Locale.ROOT)),
+            Map.entry("contains", (a, c) -> contains(a.get(0), Values.text(a.get(1)))),
+            Map.entry("startsWith", (a, c) -> Values.text(a.get(0)).toLowerCase(Locale.ROOT).startsWith(Values.text(a.get(1)).toLowerCase(Locale.ROOT))));
 
     private Functions() {}
+
+    /** Case-insensitive: text contains the part, or a list has an element that does. */
+    private static boolean contains(Object where, String part) {
+        String p = part.toLowerCase(Locale.ROOT);
+        if (where instanceof DataNode n && n.type() == com.ash.drishti.api.NodeType.ARRAY) {
+            for (int i = 0; i < n.size(); i++) {
+                if (contains(n.get(i), part)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        return !Values.isNull(where) && Values.text(where).toLowerCase(Locale.ROOT).contains(p);
+    }
 
     static ElFunction get(String name) {
         return FUNCTIONS.get(name);

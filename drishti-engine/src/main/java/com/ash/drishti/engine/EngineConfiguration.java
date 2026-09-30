@@ -55,7 +55,7 @@ import org.springframework.context.annotation.Import;
 @Configuration(proxyBeanMethods = false)
 @Import({CommonConfiguration.class, RachanaConfiguration.class, InferenceConfiguration.class, GraphConfiguration.class})
 @EnableConfigurationProperties({SourcesProperties.class, EngineProperties.class, CommandsProperties.class, LiveProperties.class,
-        com.ash.drishti.engine.time.BusinessDateProperties.class})
+        com.ash.drishti.engine.time.BusinessDateProperties.class, com.ash.drishti.engine.search.SearchProperties.class})
 public class EngineConfiguration {
 
     /**
@@ -107,6 +107,12 @@ public class EngineConfiguration {
     @Bean
     public SuggestionService suggestionService(Mnemonics mnemonics, SourceRouter router, RecentEntities recents, CommandsProperties props) {
         return new SuggestionService(mnemonics, router, recents, props);
+    }
+
+    @Bean
+    public com.ash.drishti.engine.search.StructuredSearch structuredSearch(SourceRouter router, Mnemonics mnemonics, ElCompiler el, Formats formats,
+            com.ash.drishti.engine.search.SearchProperties props) {
+        return new com.ash.drishti.engine.search.StructuredSearch(router, mnemonics, el, formats, props);
     }
 
     @Bean

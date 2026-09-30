@@ -49,6 +49,25 @@ The generated packs bring these (the landing page and each pack's guide list exa
 | `economics` | `ECON` economy · `MACRO` macro indicator · `CBD` central-bank decision · `FCST` economic forecast · `TFLOW` trade flow · `LABR` labour market · `FISC` fiscal position · `CPIB` consumer-price basket |
 
 
+### Search by value
+
+Add `where` to a mnemonic to find entities by what they contain:
+
+```
+TRD where notional >= 250m and assetClass = 'Rates' order by mtm desc limit 20
+TRD where counterparty.name contains 'Meridian'
+CUST where totalDeposits > 100k order by totalDeposits desc
+VRNT where significance contains 'pathogenic'
+```
+
+Fields are named as in the document, with dots and brackets for nested ones (`counterparty.name`,
+`legs[0].rate`). Compare with `= != < <= > >=`, combine with `and`, `or` and `not`, match text with `contains`
+and `startswith` (case-insensitive; `contains` also looks inside lists), and write amounts as `250k`, `1.5m`
+or `2bn`. `order by <field> [desc]` sorts and `limit N` caps the list (100 by default). The results show the
+fields the query uses, labelled as in views. A search follows the date in the top bar, sees only what your role
+may see (a masked field never matches), and says so when a slow source or the scan limit may have left
+entities out. **Watch as a monitor** saves the first 50 results as a monitor, so the list updates live.
+
 ### Suggestions as you type
 
 The command line suggests in a dropdown, as the Bloomberg terminal does:

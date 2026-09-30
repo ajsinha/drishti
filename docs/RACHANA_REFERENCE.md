@@ -133,7 +133,7 @@ Bindings are Rachana-EL expressions. It is closed and side-effect free:
 | Filters | `$.legs[?@.payer]` |
 | Operators | `+ - * / %`, `== != < <= > >=`, `&& || !`, `a ? b : c`; `+` also concatenates text. |
 | Literals | `'text'`, numbers, `true`, `false`, `null` |
-| Functions | `link(id, kind?, label?)`, `size(x)`, `sum(rows, 'field')`, `fmt(x, 'format')`, `coalesce(a, b)`, `first(x)`, `last(x)`, `abs`, `min`, `max`, `upper`, `lower` |
+| Functions | `link(id, kind?, label?)`, `size(x)`, `sum(rows, 'field')`, `fmt(x, 'format')`, `coalesce(a, b)`, `first(x)`, `last(x)`, `abs`, `min`, `max`, `upper`, `lower`, `contains(text or list, part)`, `startsWith(text, prefix)` (both case-insensitive) |
 
 ### Grammar
 

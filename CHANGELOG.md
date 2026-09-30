@@ -16,6 +16,11 @@
 # Changelog
 
 ## Unreleased
+- **W17 Structured search.** Type `TRD where notional >= 250m and assetClass = 'Rates' order by mtm desc limit 20` on the command line.
+  - **Syntax:** friendly, over Rachana-EL: `and`, `or`, `not`, `=`, `contains`, `startswith`, and amounts like `1.5m`; nested fields by path.
+  - **Server** (`GET /api/v1/search`): reads the kind's entities concurrently within `drishti.search.max-scan` (20,000) and `drishti.search.budget` (3 s). It evaluates the condition on each document as the caller may see it (a masked field never matches), then sorts and limits. It follows the business date and known-at.
+  - **Console:** a results page whose columns are the query's fields, labelled from the taxonomy; **Watch as a monitor** turns the results into a live watchlist.
+  - **Rachana-EL:** gains `contains()` and `startsWith()`; new error code `DRS-4004`.
 - **W16 History.**
   - **Server:** `GET /api/v1/history/{kind}/{id}/diff` compares an entity between two business dates, or two "known at" instants, field by field. Arrays are matched by identifier or natural key (tenor, date, code, …), numbers get deltas, each side is redacted for the caller, and labels come from the taxonomy.
   - **Console:** a **Compare** page (from any dated view; filter changed, added or removed), and a **known at** clock beside a picked date for time travel (read in the business zone, sent as `X-Drishti-Known-At`, cleared with Live).

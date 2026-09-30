@@ -396,6 +396,14 @@ body.embed .vhead { padding: .6rem .8rem; }
 .asof-known-x { color: var(--d-muted); text-decoration: none; padding: 0 .2rem; font-size: 1rem; line-height: 1; }
 .asof-known-x:hover { color: var(--d-accent); }
 @media (max-width: 900px) { .asof-known-in { max-width: 8.5rem; font-size: .7rem; } }
+/* Structured search */
+.srch-form { display: flex; gap: .5rem; margin: .6rem 0 .3rem; }
+.srch-q { flex: 1; min-width: 0; background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 6px; padding: .4rem .6rem; }
+.srch-q:focus { outline: 2px solid var(--d-accent); outline-offset: 1px; }
+.srch-help { font-size: .78rem; }
+.srch-watch { display: inline-flex; gap: .4rem; align-items: center; }
+.srch-watch input { background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 5px; padding: .15rem .4rem; font-size: .8rem; width: 11rem; }
+.srch-ex { padding-left: 1.1rem; } .srch-ex li { margin: .3rem 0; }
 /* History: what changed between two dates */
 .cmp-form { display: flex; flex-wrap: wrap; align-items: end; gap: .6rem 1rem; margin: .6rem 0 1rem; }
 .cmp-form label { display: flex; flex-direction: column; gap: .2rem; font-size: .78rem; color: var(--d-muted); }

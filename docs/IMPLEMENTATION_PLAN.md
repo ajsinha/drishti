@@ -132,7 +132,7 @@ Ten waves (plus W11, user management, after 1.0.0). Each holds a small set of cl
 | W15 ✅ | F8 Impact | what depends on an entity (reverse graph), navigable |
 | W22 ✅ | Business dates and Delta Lake | `AsOf` in the SPI; USNY business calendar; top-bar date (Live streams, a picked date is static); Delta Lake connector (Delta Kernel, partitions by business date, time travel); named connectors; dated file folders; JDBC `:asOf`; imperfect documents render as "No data available" (ADR-012) |
 | W16 ✅ | History | `GET /history/{kind}/{id}/diff` (two business dates and/or "known at" instants; objects by field, arrays by identifier or natural key, numeric deltas, redacted per role, labels from the taxonomy); console **Compare** page and a **known at** control beside a picked date; Delta time travel before the first commit finds nothing, after the last reads the latest |
-| W17 | Structured search | `TRD where counterparty = … and mtm < …` giving a live result table |
+| W17 ✅ | Structured search | `GET /search?q=` with a friendly syntax over Rachana-EL (`and/or/not`, `=`, `contains`, `startswith`, `1.5m`), scan of the kind's entities on virtual threads within `drishti.search.max-scan` and `budget`, conditions on redacted documents, sort and limit; `where` on the command line opens the results page, and **Watch as a monitor** makes the results a live table |
 | W18 | Export and share | CSV/Excel/PDF of a view; permalinks to an exact view and generation |
 | W19 | Sutra governance | review and approval; version diffs; saved test entities per Sutra |
 | W20 | More connections | ✅ Kafka live source (trading stream); ✅ Aerospike connector; OIDC single sign-on still to do |

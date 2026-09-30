@@ -54,6 +54,7 @@ The local override is `./application.local.yaml`. Environment variables use Spri
 | `drishti.identity.force-password-change-on-create / -on-reset` | `false / false` | force a password change at next sign-in |
 | `drishti.security.redact` | `[trader, counterpartyId]` | fields masked in raw JSON for roles without `raw` |
 | `drishti.live.frame / heartbeat / max-streams / window` | `50ms / 15s / 20000 / 30s` | live updates |
+| `drishti.search.max-scan / budget` | `20000 / 3s` | structured search: entities read per search, and the time allowed |
 | `drishti.sources.plugins.rest.settings.*` | | `base-url`, `path`, `kinds`, `header.<Name>`, `timeout-ms`, `generation-header` |
 | `drishti.sources.plugins.jdbc.settings.*` | | `url`, `user`, `password`, `pool-size`, `query.<kind>` (with `?` or named `:id` and `:asOf`) |
 | `drishti.sources.plugins.file.settings.lookback-days` | `10` | dated folders `<root>/<yyyy-MM-dd>/<kind>/`: how far back to look for a date's file |

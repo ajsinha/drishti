@@ -15,6 +15,7 @@
 """The terminal: home, command dispatch (<GO>) and entity views."""
 from __future__ import annotations
 
+import re
 from urllib.parse import quote
 
 from fastapi import APIRouter, Query, Request
@@ -35,8 +36,13 @@ async def home(request: Request, error: str | None = None):
     return render(request, "terminal/home.html", examples=examples, packs=current, error=error)
 
 
+_SEARCH = re.compile(r"(?is)^\s*\S+\s+(where|order\s+by|limit)\s+.+")
+
+
 @router.get("/go")
 async def go(request: Request, q: str = ""):
+    if _SEARCH.match(q.replace("<GO>", "")):
+        return RedirectResponse(f"/s?q={quote(q.replace('<GO>', '').strip())}", status_code=303)
     try:
         r = await request.app.state.backend.command(q, ident(request))
     except BackendError as e:
@@ -72,6 +78,42 @@ def _delta(d) -> str:
         return ""
     text = f"{d:+,.6f}".rstrip("0").rstrip(".")
     return text.replace("-", "−")
+
+
+@router.get("/s")
+async def search(request: Request, q: str = ""):
+    """Structured search (W17): entities by field values, e.g. TRD where mtm > 1m and currency = 'EUR' order by mtm desc."""
+    data, error = None, None
+    if q.strip():
+        try:
+            data = await request.app.state.backend.search(q, ident(request))
+        except BackendError as e:
+            error = e
+    rows = []
+    if data:
+        for r in data.get("rows", []):
+            rows.append({"ref": r["ref"], "title": r.get("title") or r["ref"]["id"],
+                         "cells": [(_shown(r["values"].get(c)), isinstance(r["values"].get(c), (int, float)) and not isinstance(r["values"].get(c), bool))
+                                   for c in data.get("columns", [])]})
+    titled = any(r["title"] != r["ref"]["id"] for r in rows)       # a title that only repeats the id is left out
+    return render(request, "terminal/search.html", q=q, data=data, rows=rows, error=error, titled=titled, screen="search")
+
+
+@router.post("/s/watch")
+async def watch_search(request: Request):
+    """Saves a search's first 50 results as a monitor: the results, watched live."""
+    form = await request.form()
+    q, name = str(form.get("q", "")), re.sub(r"[^A-Za-z0-9 ._-]", "", str(form.get("name", "")))[:64].strip() or "Search results"
+    backend = request.app.state.backend
+    try:
+        data = await backend.search(q, ident(request))
+        entities = [{"kind": r["ref"]["kind"], "id": r["ref"]["id"]} for r in data.get("rows", [])[:50]]
+        if not entities:
+            return RedirectResponse(f"/s?q={quote(q)}", status_code=303)
+        await backend.mine("PUT", f"/monitors/{quote(name)}", ident(request), {"entities": entities})
+    except BackendError as e:
+        return render(request, "terminal/search.html", q=q, data=None, rows=[], error=e, titled=False, screen="search")
+    return RedirectResponse(f"/m/{quote(name)}", status_code=303)
 
 
 @router.get("/compare/{kind}/{id_}")
