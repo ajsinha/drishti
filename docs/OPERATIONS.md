@@ -68,6 +68,45 @@ SPRING_PROFILES_ACTIVE=postgres DRISHTI_PACKS=market-risk,counterparty-risk DRIS
 Each connector's health is on `/api/v1/sources`: a database that is down, or a feed that failed, shows there and
 in *About*, and the rest of Drishti keeps working. A feed keeps its last good data until the next refresh.
 
+## The lake: where it lives, and keeping it bounded
+
+**Local disk or object storage.** The Delta connector reads a lake through `LakeStore`: a `root` without a scheme is
+a local directory; `s3a://bucket/lake` is Amazon S3 or any S3-compatible store (MinIO, Ceph, on-prem), read through
+Hadoop's S3 file system with only the AWS SDK modules it needs (no 600 MB bundle). Everything else (dates, time
+travel, reverse lookups, search) works the same; the same contract tests run on both.
+
+```yaml
+connectors:
+  trading-store:
+    plugin: delta
+    settings:
+      root: s3a://risk-lake/banking
+      domain: trading
+      s3.region: us-east-1               # credentials from the AWS chain (environment, profile, instance role),
+      # s3.endpoint: https://minio.bank.example   # or s3.access-key / s3.secret-key; an endpoint for S3-compatible stores
+      # hadoop.fs.s3a.connection.maximum: "200"   # any Hadoop S3A setting, prefixed hadoop.
+```
+
+**Maintenance.** Drishti's server only reads the lake. Writers leave small files every day, and Delta keeps old
+files for time travel, so a lake grows until something tidies it. `tools/lake/maintain.py` does, on a schedule, for
+local and S3 lakes (`deploy/lake-maintenance.yaml`):
+
+| Step | Setting | What it does |
+|---|---|---|
+| retention | `keep-business-days` (e.g. 520, about two years; null keeps all) | deletes business dates older than the history window |
+| compaction | `compact`, `target-file-mb` (128) | merges each day's small files |
+| checkpoint | `checkpoint` | writes a Delta checkpoint, so readers replay a short log |
+| vacuum | `vacuum-hours` (168) | removes files unreferenced for longer; *known at* reaches back this far |
+
+```bash
+uv run --with deltalake --with pyarrow --with pyyaml python tools/lake/maintain.py --config deploy/lake-maintenance.yaml --once --dry-run
+uv run --with deltalake --with pyarrow --with pyyaml python tools/lake/maintain.py --config deploy/lake-maintenance.yaml --daemon   # every day at schedule.at
+```
+
+Run it as a service or container next to the writers (or from cron with `--once`). It prints a JSON line per table
+and step (files and megabytes before and after); one failing table is reported and the rest go on. A test proves
+that Drishti's reader reads a lake the job has compacted, checkpointed and vacuumed.
+
 ## Memory
 
 Nothing grows with the day's data unbounded. Every cache has a size limit you can set:

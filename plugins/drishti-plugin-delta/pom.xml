@@ -41,6 +41,21 @@
     </dependency>
     <dependency><groupId>org.apache.hadoop</groupId><artifactId>hadoop-client-api</artifactId><version>${hadoop.version}</version></dependency>
     <dependency><groupId>org.apache.hadoop</groupId><artifactId>hadoop-client-runtime</artifactId><version>${hadoop.version}</version></dependency>
+    <!-- lakes in S3 (s3a://): Hadoop's S3 file system with the AWS SDK modules it uses, not the whole 600 MB SDK bundle -->
+    <dependency>
+      <groupId>org.apache.hadoop</groupId><artifactId>hadoop-aws</artifactId><version>${hadoop.version}</version>
+      <exclusions>
+        <exclusion><groupId>software.amazon.awssdk</groupId><artifactId>bundle</artifactId></exclusion>
+        <exclusion><groupId>org.apache.hadoop</groupId><artifactId>hadoop-common</artifactId></exclusion>
+        <exclusion><groupId>org.wildfly.openssl</groupId><artifactId>wildfly-openssl</artifactId></exclusion>
+      </exclusions>
+    </dependency>
+    <dependency><groupId>software.amazon.awssdk</groupId><artifactId>s3</artifactId><version>${awssdk.version}</version></dependency>
+    <dependency><groupId>software.amazon.awssdk</groupId><artifactId>s3-transfer-manager</artifactId><version>${awssdk.version}</version></dependency>
+    <dependency><groupId>software.amazon.awssdk</groupId><artifactId>sts</artifactId><version>${awssdk.version}</version></dependency>
+    <dependency><groupId>software.amazon.awssdk</groupId><artifactId>apache-client</artifactId><version>${awssdk.version}</version></dependency>
+    <dependency><groupId>org.testcontainers</groupId><artifactId>testcontainers</artifactId><version>${testcontainers.version}</version><scope>test</scope></dependency>
+    <dependency><groupId>org.testcontainers</groupId><artifactId>testcontainers-junit-jupiter</artifactId><version>${testcontainers.version}</version><scope>test</scope></dependency>
     <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-core</artifactId></dependency>
     <dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId><scope>test</scope></dependency>

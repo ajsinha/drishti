@@ -86,7 +86,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     private SourceContext context;
     private String sourceName;
     private int lookbackDays;
-    private Path base;
+    private LakeStore lake;
 
     @Override
     public PluginManifest manifest() {
@@ -98,18 +98,14 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         this.context = ctx;
         this.sourceName = ctx.setting("source-name", "delta");
         this.lookbackDays = Integer.parseInt(ctx.setting("lookback-days", "10"));
-        Path root = Path.of(ctx.setting("root", "./data/delta")).toAbsolutePath().normalize();
-        String domain = ctx.setting("domain", "");
-        this.base = domain.isBlank() ? root : root.resolve(domain).normalize();
-        if (!base.startsWith(root)) {
-            throw new IllegalArgumentException("domain escapes the Delta root: " + domain);
-        }
-        Engine engine = DefaultEngine.create(new Configuration());
+        // local disk or object storage (s3a://, abfs://, gs://): the rest of the connector does not know which
+        this.lake = LakeStore.of(ctx.setting("root", "./data/delta"), ctx.setting("domain", ""), ctx.settings());
+        Engine engine = DefaultEngine.create(lake.hadoop());
         String id = ctx.setting("id-column", "id");
         String doc = ctx.setting("doc-column", "doc");
         String date = ctx.setting("date-column", "business_date");
         for (String kind : kinds(ctx.setting("kinds", ""))) {
-            tables.put(kind, new DeltaTable(engine, base.resolve(kind).toUri().toString(), id, doc, date));
+            tables.put(kind, new DeltaTable(engine, lake.table(kind), id, doc, date));
             modes.put(kind, ctx.setting("mode." + kind, "snapshot"));
         }
         long refresh = Long.parseLong(ctx.setting("refresh-seconds", "10"));
@@ -128,12 +124,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         if (!configured.isBlank()) {
             return java.util.Arrays.stream(configured.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList();
         }
-        if (!Files.isDirectory(base)) {
-            return List.of();
-        }
-        try (Stream<Path> s = Files.list(base)) {
-            return s.filter(p -> Files.isDirectory(p.resolve("_delta_log"))).map(p -> p.getFileName().toString()).sorted().toList();
-        }
+        return lake.tables();
     }
 
     private Optional<DeltaTable.Layout> layout(String kind, Instant knownAt) {
@@ -273,9 +264,9 @@ public final class DeltaSourcePlugin implements SourcePlugin {
 
     @Override
     public String health() {
-        if (!Files.isDirectory(base)) {
-            return "DOWN: no directory " + base;
+        if (!lake.reachable()) {
+            return "DOWN: cannot reach " + lake.describe();
         }
-        return tables.isEmpty() ? "DOWN: no Delta tables under " + base : "UP";
+        return tables.isEmpty() ? "DOWN: no Delta tables under " + lake.describe() : "UP";
     }
 }

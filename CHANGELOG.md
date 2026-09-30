@@ -16,6 +16,11 @@
 # Changelog
 
 ## Unreleased
+- **Delta Lake in S3, and lake maintenance.**
+  - **Storage:** the Delta connector reads through a `LakeStore`, either a local folder or any Hadoop file system: `s3a://` for S3 and S3-compatible stores. This uses Hadoop's S3 module with only the AWS SDK modules it needs (no bundle).
+  - **Settings:** `s3.*` shorthands, any `hadoop.fs.s3a.*` setting, and the AWS credential chain.
+  - **Tests:** the dated contract passes on a lake served from an S3 API server in Docker.
+  - **Maintenance:** `tools/lake/maintain.py` applies a retention window by business date, compacts, checkpoints and vacuums, on a daily schedule or once (with dry run), for local and S3 lakes. It logs JSON per table, and a failing table doesn't stop the others. A test proves Drishti's Java reader reads a lake it has maintained.
 - **S3 connector.** Entity documents in Amazon S3 or any S3-compatible store, in the file connector's layout (undated, and dated folders by business date).
   - **Settings:** endpoint override for MinIO or on-prem stores, and static keys or the AWS credential chain.
   - **Search:** identifiers and dates are listed periodically for search.
