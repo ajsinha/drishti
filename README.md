@@ -27,7 +27,7 @@ terminal does.
 
 ## Status
 
-**Drishti 1.8.0 is released** (see [RELEASE_NOTES.md](RELEASE_NOTES.md)). It is built in waves on `develop`, each merged to `main` when its build was green.
+**Drishti 1.9.0 is released** (see [RELEASE_NOTES.md](RELEASE_NOTES.md)). It is built in waves on `develop`, each merged to `main` when its build was green.
 
 | Wave | Theme | State |
 |---|---|---|

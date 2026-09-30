@@ -13,6 +13,33 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 1.9.0 — release notes
+
+*2026-09-30.* **Business dates and history.** Drishti now answers "what did this look like on a given day?"
+
+- **Live or a picked date.** The top bar has a date box. **Live** (the default) is the current business date on
+  the New York calendar, and views stream. A **picked date** is a static snapshot of that day's end-of-day
+  data, even when it is today: the view, its links, F8 impact and suggestions all follow the date. Weekends and
+  holidays roll back to the previous business day.
+- **Delta Lake.** History is read from Delta Lake by a new server connector (Delta Kernel, no Spark): one table
+  per kind under `data/delta/<domain>/`, partitioned by business date, with time travel for data "as known at"
+  an instant. The console never touches the lake. **Named connectors** let each domain have its own.
+- **Imperfect data never breaks a screen.** A panel whose data is missing or has the wrong shape says "No data
+  available".
+- **Sutras are Markdown documents** (`*.sutra.md`): prose that explains the layout, around one `sutra` block.
+  Studio is now a Markdown editor with snippets, an outline and a rendered Document tab.
+- **Realistic sample data.** Every finance trade is fully booked (identifiers with check digits, execution,
+  lifecycle, regulatory, settlement, valuation, full cashflow schedules that reprice to the MTM), built on the
+  new `tools/samplegen` toolkit.
+- **Risk pack groundwork:** a taxonomy of 125 products and 45 data kinds, and 170 generated Sutras.
+- **Themes:** *crimson* and *crimson dark*, from Maya.
+
+Upgrade notes: plugins keep working unchanged (the dated SPI methods have defaults). Sutra `*.yaml` files still
+load. `tools/sutra_to_md.py` converts them. To see history locally, build the sample lake:
+`uv run --with deltalake --with pyarrow python tools/samplegen/lake.py --samples packs/finance/samples --root data/delta --domain finance`.
+
+---
+
 # Drishti 1.8.0 — release notes
 
 *2026-09-30.* **Packs per user.** Admins assign domain packs to each user. Users with several packs

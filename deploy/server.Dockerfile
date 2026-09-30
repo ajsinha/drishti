@@ -1,5 +1,5 @@
 # Drishti server image. Build from the repository root after ./mvnw -q package -DskipTests:
-#   docker build -f deploy/server.Dockerfile -t drishti-server:1.8.0 .
+#   docker build -f deploy/server.Dockerfile -t drishti-server:1.9.0 .
 FROM eclipse-temurin:21-jre
 RUN useradd --system --uid 10001 drishti
 WORKDIR /opt/drishti
