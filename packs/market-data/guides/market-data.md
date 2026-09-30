@@ -40,6 +40,18 @@ Each kind is read from the Delta Lake folder of its **data domain** (`data/delta
 |---|---|---|---|---|
 | `market-store` | `data/delta/market/` | Market data: curves, surfaces, prices, fixings | snapshot (every business date) | `ir-curve`, `repo-curve`, `fx-spot`, `fx-forward-curve`, `fx-vol-surface`, `ir-vol-cube`, `cap-vol-surface`, `equity`, `equity-index`, `dividend-curve`, `equity-vol-surface`, `credit-curve`, `inflation-index`, `inflation-curve`, `commodity`, `commodity-curve`, `commodity-vol-surface`, `rate-fixing`, `bond`, `correlation-matrix` |
 
+### Public data feeds
+
+Real market data from public sources, each its own connector and **off by default**. Switch one on with its environment variable (or `drishti.sources.connectors.<name>.enabled: true` in the site configuration). Feed data has its own identifiers, so it is never mistaken for the samples, and it keeps its history, so a picked date shows that day's value.
+
+| Connector | Switch | Kind | What |
+|---|---|---|---|
+| `nyfed-sofr-feed` | `DRISHTI_FEED_NYFED_SOFR=true` | `rate-fixing` | SOFR from the New York Fed: FIX-SOFR-NYFED |
+| `ecb-estr-feed` | `DRISHTI_FEED_ECB_ESTR=true` | `rate-fixing` | Euro short-term rate from the ECB: FIX-ESTR-ECB |
+| `ecb-fx-feed` | `DRISHTI_FEED_ECB_FX=true` | `fx-spot` | ECB euro reference rates, with USD crosses: FX-EURUSD-ECB, FX-USDJPY-ECB, … |
+| `us-treasury-feed` | `DRISHTI_FEED_US_TREASURY=true` | `ir-curve` | US Treasury daily par yield curve: CRV-USD-UST |
+| `fred-feed` | `DRISHTI_FEED_FRED=true` | `rate-fixing` | FRED series (needs FRED_API_KEY): FIX-FRED-DGS10, FIX-FRED-DFF |
+
 Build the lake with `uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta`. Point a domain at a database instead by overriding its connector in the site configuration.
 
 ## Kinds

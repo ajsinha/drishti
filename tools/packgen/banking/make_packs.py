@@ -41,6 +41,14 @@ ACRONYMS = ["MTM", "PV", "NPV", "DV01", "PV01", "CS01", "IE01", "PFE", "EE", "EN
             "ES", "SVaR", "FRTB", "SIMM", "IM", "VM", "CSA", "ISDA", "GMRA", "CCP", "LEI", "UTI", "UPI", "ISIN", "CUSIP", "FIGI", "RIC", "BIC",
             "SSI", "MIC", "CFI", "FpML", "KYC", "EMIR", "FX", "OIS", "RFR", "SOFR", "ESTR", "SONIA", "TONA", "USD", "EUR", "GBP", "JPY", "CHF",
             "AUD", "CAD", "MPoR", "MTA", "CLS", "ATM", "RR", "BF", "PD", "LGD", "JTD", "SA", "CCR", "SA-CCR", "SBM", "GIRR", "CSR", "NDF", "TRS"]
+# Public data feeds: each its own connector, each off unless its switch (an environment variable, or the site
+# configuration drishti.sources.connectors.<name>.enabled) turns it on.
+FEEDS = {"nyfed-sofr": ("DRISHTI_FEED_NYFED_SOFR", ["rate-fixing"], {}, "SOFR from the New York Fed: FIX-SOFR-NYFED"),
+         "ecb-estr": ("DRISHTI_FEED_ECB_ESTR", ["rate-fixing"], {}, "Euro short-term rate from the ECB: FIX-ESTR-ECB"),
+         "ecb-fx": ("DRISHTI_FEED_ECB_FX", ["fx-spot"], {}, "ECB euro reference rates, with USD crosses: FX-EURUSD-ECB, FX-USDJPY-ECB, …"),
+         "us-treasury": ("DRISHTI_FEED_US_TREASURY", ["ir-curve"], {}, "US Treasury daily par yield curve: CRV-USD-UST"),
+         "fred": ("DRISHTI_FEED_FRED", ["rate-fixing"], {"api-key": "${FRED_API_KEY:}", "series": "${DRISHTI_FRED_SERIES:DGS10,DFF}"},
+                  "FRED series (needs FRED_API_KEY): FIX-FRED-DGS10, FIX-FRED-DFF")}
 # Reference data changes rarely: its tables keep a row only when an entity changes (effective dating).
 EFFECTIVE_DOMAINS = {"reference"}
 IMPACT = {"trading": {"measures": {"trade": "$.mtm"}, "formats": {"trade": "signed0"}},
@@ -90,6 +98,10 @@ def manifest(name: str) -> dict:
                    "badges": {k: specs[k].badge for k in kinds if specs[k].badge}},
          "connectors": {f"{d}-store": connector(d) for d in p["kinds"]},
          "routes": {k: f"{d}-store" for d, ks in p["kinds"].items() for k in ks}}
+    if name == "market-data":
+        for feed, (switch, kinds_, extra, _) in FEEDS.items():
+            m["connectors"][f"{feed}-feed"] = {"plugin": "feed", "enabled": "${" + switch + ":false}", "kinds": kinds_,
+                                               "settings": {"feed": feed, "refresh-minutes": 60, **extra}}
     m["console"] = {"examples": [list(e) for e in EXAMPLES[name]], "help": "config/help.yaml"}
     if name in IMPACT:
         m["graph"]["impact"] = IMPACT[name]

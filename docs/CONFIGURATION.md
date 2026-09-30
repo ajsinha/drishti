@@ -32,6 +32,8 @@ The local override is `./application.local.yaml`. Environment variables use Spri
 | `drishti.sources.plugins.<name>.enabled / settings` | | plugin switch and settings |
 | `drishti.sources.connectors.<name>` | `finance-lake` | a named instance of a plugin: `{plugin, enabled, kinds, settings}`; run a plugin several times (a Delta Lake per domain). `source-name` defaults to the connector's name |
 | `drishti.sources.connectors.*.settings` for `delta` | | `root` (`./data/delta`, `DRISHTI_DELTA_ROOT`), `domain` (sub-folder), `kinds`, `mode.<kind>` (`snapshot` or `effective`), `lookback-days` (10), `refresh-seconds` (10), `cache-partitions` (256), `id-column` / `doc-column` / `date-column` |
+| `SPRING_PROFILES_ACTIVE` | — | `postgres` or `aerospike`: the banking packs' data domains (`<domain>-store`) read PostgreSQL (`DRISHTI_PG_URL`, `DRISHTI_PG_USER`, `DRISHTI_PG_PASSWORD`) or Aerospike (`DRISHTI_AEROSPIKE_HOSTS`, `DRISHTI_AEROSPIKE_NAMESPACE`) instead of Delta Lake |
+| `DRISHTI_FEED_NYFED_SOFR`, `DRISHTI_FEED_ECB_ESTR`, `DRISHTI_FEED_ECB_FX`, `DRISHTI_FEED_US_TREASURY`, `DRISHTI_FEED_FRED` | `false` | switch each public data feed on (market-data pack); FRED also needs `FRED_API_KEY` and takes `DRISHTI_FRED_SERIES` |
 | `drishti.business-date.calendar` | `USNY` (`DRISHTI_CALENDAR`) | business-day calendar for the default date: `USNY`, `GBLO`, `EUTA`, `JPTO`, or joint (`USNY+GBLO`) |
 | `drishti.business-date.zone` / `history` | `America/New_York` / `P5Y` | whose "today", and how far back users may go |
 | `drishti.packs.default-for-users` | every installed pack (`DRISHTI_DEFAULT_PACKS`) | the packs a user gets until an admin assigns them |

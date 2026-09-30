@@ -43,6 +43,27 @@ docker compose -f deploy/compose.yaml up -d
 - The server image uses ZGC with 75 % of the container memory.
 - Sutras are mounted read-only; update them by redeploying the volume, and hot reload picks them up.
 
+## Data stores and feeds
+
+The banking packs read one store per data domain (`reference`, `market`, `trading`, `risk`, `credit`,
+`collateral`). Delta Lake is the default; PostgreSQL and Aerospike are one profile away.
+
+```bash
+# Delta Lake (default): write data/delta/<domain>/<kind>/ with ten business days of history
+uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta
+
+# PostgreSQL and Aerospike in Docker
+docker compose -f deploy/compose.data.yaml up -d
+uv run --with "psycopg[binary]" python tools/packgen/banking/make_data.py --postgres postgresql://drishti:drishti@localhost:5432/drishti
+tools/load-aerospike.sh localhost:3000 test
+
+# Start with the store you want and the feeds you want
+SPRING_PROFILES_ACTIVE=postgres DRISHTI_PACKS=market-risk,counterparty-risk DRISHTI_FEED_NYFED_SOFR=true java -jar drishti-server-*-exec.jar
+```
+
+Each connector's health is on `/api/v1/sources`: a database that is down, or a feed that failed, shows there and
+in *About*, and the rest of Drishti keeps working. A feed keeps its last good data until the next refresh.
+
 ## Security checklist
 
 - **Server:** `DRISHTI_SECURITY_ENABLED=true` and `DRISHTI_TOKEN_SECRET` (≥ 32 bytes), shared with the console.

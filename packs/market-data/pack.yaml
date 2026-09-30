@@ -265,6 +265,48 @@ connectors:
     settings:
       root: ${DRISHTI_DELTA_ROOT:./data/delta}
       domain: market
+  nyfed-sofr-feed:
+    plugin: feed
+    enabled: ${DRISHTI_FEED_NYFED_SOFR:false}
+    kinds:
+    - rate-fixing
+    settings:
+      feed: nyfed-sofr
+      refresh-minutes: 60
+  ecb-estr-feed:
+    plugin: feed
+    enabled: ${DRISHTI_FEED_ECB_ESTR:false}
+    kinds:
+    - rate-fixing
+    settings:
+      feed: ecb-estr
+      refresh-minutes: 60
+  ecb-fx-feed:
+    plugin: feed
+    enabled: ${DRISHTI_FEED_ECB_FX:false}
+    kinds:
+    - fx-spot
+    settings:
+      feed: ecb-fx
+      refresh-minutes: 60
+  us-treasury-feed:
+    plugin: feed
+    enabled: ${DRISHTI_FEED_US_TREASURY:false}
+    kinds:
+    - ir-curve
+    settings:
+      feed: us-treasury
+      refresh-minutes: 60
+  fred-feed:
+    plugin: feed
+    enabled: ${DRISHTI_FEED_FRED:false}
+    kinds:
+    - rate-fixing
+    settings:
+      feed: fred
+      refresh-minutes: 60
+      api-key: ${FRED_API_KEY:}
+      series: ${DRISHTI_FRED_SERIES:DGS10,DFF}
 routes:
   ir-curve: market-store
   repo-curve: market-store
