@@ -1,0 +1,12 @@
+{
+ "spec": "CL-Z6",
+ "exchange": "NYMEX",
+ "product": "WTI crude oil",
+ "contractSize": 1000,
+ "unit": "bbl",
+ "_meta": {
+  "source": "eod-futures",
+  "generation": 20260930,
+  "live": false
+ }
+}

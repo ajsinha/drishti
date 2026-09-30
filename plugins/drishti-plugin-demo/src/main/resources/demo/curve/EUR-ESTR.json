@@ -1,0 +1,42 @@
+{
+ "curveId": "EUR-ESTR",
+ "currency": "EUR",
+ "index": "ESTR",
+ "status": "live",
+ "unit": "%",
+ "points": [
+  {
+   "tenor": "1M",
+   "rate": 2.02
+  },
+  {
+   "tenor": "3M",
+   "rate": 2.0
+  },
+  {
+   "tenor": "6M",
+   "rate": 1.97
+  },
+  {
+   "tenor": "1Y",
+   "rate": 1.95
+  },
+  {
+   "tenor": "2Y",
+   "rate": 2.01
+  },
+  {
+   "tenor": "5Y",
+   "rate": 2.22
+  },
+  {
+   "tenor": "10Y",
+   "rate": 2.51
+  }
+ ],
+ "_meta": {
+  "source": "aero-fx",
+  "generation": 88,
+  "live": true
+ }
+}

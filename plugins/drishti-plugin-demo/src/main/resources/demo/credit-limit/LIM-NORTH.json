@@ -1,0 +1,15 @@
+{
+ "limitId": "LIM-NORTH",
+ "counterparty": {
+  "id": "CP-NORTHBRIDGE",
+  "name": "Northbridge Capital LLP"
+ },
+ "limit": 15000000,
+ "measure": "PFE95 peak",
+ "utilisation": 0.65,
+ "_meta": {
+  "source": "aero-risk",
+  "generation": 1742,
+  "live": false
+ }
+}

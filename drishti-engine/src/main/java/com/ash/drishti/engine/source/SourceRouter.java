@@ -1,0 +1,146 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+package com.ash.drishti.engine.source;
+
+import com.ash.drishti.api.EntityDocument;
+import com.ash.drishti.api.EntityHit;
+import com.ash.drishti.api.EntityRef;
+import com.ash.drishti.api.SourcePlugin;
+import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.common.ErrorCode;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+/**
+ * Routes entity reads to plugins. The configured route for a kind is tried first, then the default route,
+ * then any other plugin that serves the kind. Every read runs on a virtual thread with a deadline.
+ */
+public final class SourceRouter {
+
+    private final SourceRegistry registry;
+    private final SourcesProperties props;
+    private final ExecutorService executor;
+
+    public SourceRouter(SourceRegistry registry, SourcesProperties props, ExecutorService virtualExecutor) {
+        this.registry = registry;
+        this.props = props;
+        this.executor = virtualExecutor;
+    }
+
+    /** Plugins to try for {@code kind}, in order. */
+    List<SourcePlugin> candidates(String kind) {
+        Map<String, SourcePlugin> ordered = new LinkedHashMap<>();
+        for (String name : new String[] {props.routes().get(kind), props.defaultRoute()}) {
+            if (name != null) {
+                registry.plugin(name).filter(p -> p.manifest().serves(kind)).ifPresent(p -> ordered.put(name, p));
+            }
+        }
+        for (SourcePlugin p : registry.plugins()) {
+            if (p.manifest().serves(kind)) {
+                ordered.putIfAbsent(p.manifest().name(), p);
+            }
+        }
+        return new ArrayList<>(ordered.values());
+    }
+
+    public CompletableFuture<EntityDocument> fetch(EntityRef ref) {
+        return fetch(ref, props.fetchTimeout());
+    }
+
+    public CompletableFuture<EntityDocument> fetch(EntityRef ref, Duration timeout) {
+        List<SourcePlugin> candidates = candidates(ref.kind());
+        if (candidates.isEmpty()) {
+            return CompletableFuture.failedFuture(
+                    new DrishtiException(ErrorCode.NO_SOURCE_FOR_KIND, "no source serves kind '" + ref.kind() + "'"));
+        }
+        return CompletableFuture.supplyAsync(() -> readFirst(ref, candidates), executor)
+                .orTimeout(timeout.toMillis(), TimeUnit.MILLISECONDS)
+                .exceptionallyCompose(e -> CompletableFuture.failedFuture(translate(ref, e)));
+    }
+
+    private EntityDocument readFirst(EntityRef ref, List<SourcePlugin> candidates) {
+        for (SourcePlugin p : candidates) {
+            Optional<EntityDocument> d;
+            try {
+                d = p.fetch(ref);
+            } catch (Exception e) {
+                throw new DrishtiException(ErrorCode.SOURCE_FAILED, p.manifest().name() + " failed reading " + ref, e);
+            }
+            if (d.isPresent()) {
+                return d.get();
+            }
+        }
+        throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no source holds " + ref);
+    }
+
+    private static Throwable translate(EntityRef ref, Throwable e) {
+        Throwable t = e instanceof CompletionException && e.getCause() != null ? e.getCause() : e;
+        if (t instanceof TimeoutException) {
+            return new DrishtiException(ErrorCode.SOURCE_TIMEOUT, "timed out reading " + ref, t);
+        }
+        return t;
+    }
+
+    /** Reads several entities concurrently; entries that fail are absent from the result. */
+    public Map<EntityRef, EntityDocument> fetchAll(Collection<EntityRef> refs, Duration budget) {
+        Map<EntityRef, CompletableFuture<EntityDocument>> futures = new LinkedHashMap<>();
+        refs.forEach(r -> futures.put(r, fetch(r, budget)));
+        Map<EntityRef, EntityDocument> out = new LinkedHashMap<>();
+        futures.forEach((r, f) -> {
+            try {
+                out.put(r, f.join());
+            } catch (CompletionException | DrishtiException ignored) {
+                // a missing link must not fail the caller
+            }
+        });
+        return out;
+    }
+
+    /** Searches every search-capable plugin in parallel; slow plugins are dropped after {@code budget}. */
+    public List<EntityHit> search(String kind, String text, int limit, Duration budget) {
+        List<CompletableFuture<List<EntityHit>>> parts = new ArrayList<>();
+        for (SourcePlugin p : registry.plugins()) {
+            if (p.manifest().capabilities().search() && (kind == null || p.manifest().serves(kind))) {
+                parts.add(CompletableFuture.supplyAsync(() -> p.search(kind, text, limit), executor)
+                        .completeOnTimeout(List.of(), budget.toMillis(), TimeUnit.MILLISECONDS)
+                        .exceptionally(e -> List.of()));
+            }
+        }
+        Map<EntityRef, EntityHit> merged = new LinkedHashMap<>();
+        parts.forEach(f -> f.join().forEach(h -> merged.putIfAbsent(h.ref(), h)));
+        return merged.values().stream().limit(limit).toList();
+    }
+
+    public List<EntityRef> reverse(EntityRef target, String kind) {
+        List<EntityRef> out = new ArrayList<>();
+        for (SourcePlugin p : registry.plugins()) {
+            if (p.manifest().capabilities().reverseLookup()) {
+                p.reverse(target, kind).stream().filter(r -> !out.contains(r)).forEach(out::add);
+            }
+        }
+        return out;
+    }
+}

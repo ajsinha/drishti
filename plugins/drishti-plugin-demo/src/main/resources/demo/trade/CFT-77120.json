@@ -1,0 +1,82 @@
+{
+ "tradeId": "CFT-77120",
+ "productType": "FUT",
+ "product": "Commodity future",
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "contract": "NYMEX CL Z6",
+ "contractSpec": "CL-Z6",
+ "direction": "Long",
+ "lots": 150,
+ "tradePrice": 68.42,
+ "lastPrice": 71.15,
+ "mtm": 409500,
+ "lastTrade": "2026-11-20",
+ "book": "COMM-NY-1",
+ "clearingAccount": "CLR-NY-07",
+ "forwardCurve": "WTI-NYMEX",
+ "contractTerms": {
+  "exchange": "NYMEX",
+  "product": "WTI crude oil (CL)",
+  "deliveryMonth": "December 2026",
+  "contractSize": "1,000 bbl",
+  "priceUnit": "USD/bbl",
+  "tick": "0.01 = USD 10",
+  "settlement": "Physical"
+ },
+ "settlements": [
+  {
+   "date": "2026-09-24",
+   "settle": 69.1,
+   "change": 0.68,
+   "variationMargin": 102000,
+   "cumulative": 102000,
+   "intraday": false
+  },
+  {
+   "date": "2026-09-25",
+   "settle": 69.85,
+   "change": 0.75,
+   "variationMargin": 112500,
+   "cumulative": 214500,
+   "intraday": false
+  },
+  {
+   "date": "2026-09-28",
+   "settle": 70.4,
+   "change": 0.55,
+   "variationMargin": 82500,
+   "cumulative": 297000,
+   "intraday": false
+  },
+  {
+   "date": "2026-09-29",
+   "settle": 70.62,
+   "change": 0.22,
+   "variationMargin": 33000,
+   "cumulative": 330000,
+   "intraday": false
+  },
+  {
+   "date": "2026-09-30",
+   "settle": 71.15,
+   "change": 0.53,
+   "variationMargin": 79500,
+   "cumulative": 409500,
+   "intraday": true
+  }
+ ],
+ "margin": {
+  "initialMargin": "[IM PER LOT] \u00d7 150",
+  "variationMarginToday": 79500,
+  "deltaBbl": 150000,
+  "usdPerDollarMove": 150000
+ },
+ "_meta": {
+  "source": "eod-futures",
+  "generation": 20260930,
+  "live": false
+ }
+}

@@ -41,3 +41,22 @@ management:
     health:
       probes:
         enabled: true
+
+drishti:
+  sources:
+    # Longest a single source read may take before the view shows the entity as unavailable.
+    fetch-timeout: 2s
+    # Optional directory of extra plugin jars; each gets its own class loader.
+    plugin-dir: ${DRISHTI_PLUGIN_DIR:}
+    # kind -> plugin. Kinds without a route try default-route first, then any plugin that serves them.
+    default-route: demo
+    routes: {}
+    plugins:
+      demo:
+        enabled: ${DRISHTI_DEMO_ENABLED:true}
+      file:
+        enabled: true
+        settings:
+          root: ${DRISHTI_FEEDS:./data/feeds}
+          source-name: feed-file
+          rescan-seconds: 30

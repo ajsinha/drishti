@@ -1,0 +1,50 @@
+{
+ "curveId": "USD-SOFR",
+ "currency": "USD",
+ "index": "SOFR",
+ "status": "live",
+ "unit": "%",
+ "points": [
+  {
+   "tenor": "1M",
+   "rate": 3.93
+  },
+  {
+   "tenor": "3M",
+   "rate": 3.88
+  },
+  {
+   "tenor": "6M",
+   "rate": 3.8
+  },
+  {
+   "tenor": "1Y",
+   "rate": 3.7
+  },
+  {
+   "tenor": "2Y",
+   "rate": 3.58
+  },
+  {
+   "tenor": "3Y",
+   "rate": 3.54
+  },
+  {
+   "tenor": "5Y",
+   "rate": 3.6
+  },
+  {
+   "tenor": "7Y",
+   "rate": 3.66
+  },
+  {
+   "tenor": "10Y",
+   "rate": 3.8
+  }
+ ],
+ "_meta": {
+  "source": "aero-risk",
+  "generation": 1742,
+  "live": true
+ }
+}

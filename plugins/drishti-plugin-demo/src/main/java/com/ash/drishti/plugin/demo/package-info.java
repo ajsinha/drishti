@@ -13,5 +13,5 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/** Demo source with the reference entities. */
+/** Demo source serving the reference entities of the Drishti mockups. */
 package com.ash.drishti.plugin.demo;

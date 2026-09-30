@@ -23,7 +23,7 @@ NSET NS-NORTH-01 <GO>     →  exposure profile, member trades, CSA, collateral
 
 ## Status — read this first
 
-This repository is being built in waves. **Waves 1–2 are done** (build foundation; console shell and landing page). The architecture and plan are
+This repository is being built in waves. **Waves 1–3 are done** (build foundation; console shell and landing page; data model and sources). The architecture and plan are
 written; code arrives wave by wave on `develop` and is merged to `main` as each wave
 closes. Nothing below "What it will do" is built yet.
 
@@ -40,7 +40,7 @@ closes. Nothing below "What it will do" is built yet.
 
 | Layer | Technology |
 |---|---|
-| Backend | One Spring Boot 3.5 application (Java 21, virtual threads) — never an embedded library. Modules: Sutra, inference, graph, pipeline, live hub; REST + SSE, springdoc, Micrometer |
+| Backend | One Spring Boot 3.5 application (OpenJDK 21, virtual threads) — never an embedded library. Modules: Sutra, inference, graph, pipeline, live hub; REST + SSE, springdoc, Micrometer |
 | Plugins | ServiceLoader SPI with isolated class loaders |
 | Console | Python 3.12, FastAPI + Jinja2, vendored Bootstrap / ECharts, no CDN |
 
@@ -73,6 +73,7 @@ drishti/
 ## Building (from Wave 1)
 
 ```bash
+export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64   # OpenJDK 21 is required (enforced)
 ./mvnw -q verify                       # engine, server, plugins, tests
 uv venv console/.venv && uv pip install --python console/.venv/bin/python -r console/requirements.txt
 console/.venv/bin/python console/run_drishti_web.py   # http://localhost:17480

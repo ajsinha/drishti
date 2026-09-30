@@ -28,6 +28,7 @@
   <name>drishti-plugin-file</name>
   <description>Directory source for JSON/CSV feed files</description>
   <dependencies>
-    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId><scope>test</scope></dependency>
   </dependencies>
 </project>

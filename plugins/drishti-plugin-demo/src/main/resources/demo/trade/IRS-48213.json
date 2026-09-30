@@ -1,0 +1,137 @@
+{
+ "tradeId": "IRS-48213",
+ "productType": "IRS",
+ "product": "Interest rate swap",
+ "counterparty": {
+  "id": "CP-NORTHBRIDGE",
+  "name": "Northbridge Capital LLP"
+ },
+ "notional": 50000000,
+ "currency": "USD",
+ "direction": "PAY_FIXED",
+ "effectiveDate": "2026-10-02",
+ "maturityDate": "2031-10-02",
+ "maturityTenor": "5Y",
+ "fixedRate": 0.0385,
+ "mtm": -412580,
+ "dv01": 22310,
+ "book": "RATES-NY-3",
+ "nettingSet": "NS-NORTH-01",
+ "agreement": "ISDA-2002-0417",
+ "csa": "CSA-VM-0417",
+ "discountCurve": "USD-SOFR",
+ "index": "SOFR",
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Pay fixed 3.8500%",
+   "payer": true,
+   "type": "FIXED",
+   "currency": "USD",
+   "notional": 50000000,
+   "rate": 0.0385,
+   "dayCount": "ACT/360",
+   "frequency": "Annual",
+   "businessDay": "Mod. following",
+   "calendar": "USNY",
+   "paymentLag": "2 business days",
+   "cashflows": [
+    {
+     "n": 1,
+     "accrualStart": "2026-10-02",
+     "accrualEnd": "2027-10-04",
+     "payDate": "2027-10-06",
+     "notional": 50000000,
+     "rate": 0.0385,
+     "amount": -1962430.56,
+     "df": 0.9632,
+     "pv": -1890213.11
+    },
+    {
+     "n": 2,
+     "accrualStart": "2027-10-04",
+     "accrualEnd": "2028-10-02",
+     "payDate": "2028-10-04",
+     "notional": 50000000,
+     "rate": 0.0385,
+     "amount": -1946388.89,
+     "df": 0.928,
+     "pv": -1806248.89
+    },
+    {
+     "n": 3,
+     "accrualStart": "2028-10-02",
+     "accrualEnd": "2029-10-02",
+     "payDate": "2029-10-04",
+     "notional": 50000000,
+     "rate": 0.0385,
+     "amount": -1951736.11,
+     "df": 0.8943,
+     "pv": -1745437.6
+    },
+    {
+     "n": 4,
+     "accrualStart": "2029-10-02",
+     "accrualEnd": "2030-10-02",
+     "payDate": "2030-10-04",
+     "notional": 50000000,
+     "rate": 0.0385,
+     "amount": -1951736.11,
+     "df": 0.862,
+     "pv": -1682396.53
+    },
+    {
+     "n": 5,
+     "accrualStart": "2030-10-02",
+     "accrualEnd": "2031-10-02",
+     "payDate": "2031-10-06",
+     "notional": 50000000,
+     "rate": 0.0385,
+     "amount": -1951736.11,
+     "df": 0.831,
+     "pv": -1621892.71
+    }
+   ]
+  },
+  {
+   "leg": 2,
+   "label": "Receive SOFR compounded",
+   "payer": false,
+   "type": "FLOAT",
+   "currency": "USD",
+   "notional": 50000000,
+   "index": "SOFR",
+   "spread": 0.0,
+   "nextReset": "2026-10-02",
+   "projectedFlows": 5,
+   "pv": 8333608.84
+  }
+ ],
+ "dv01ByTenor": [
+  {
+   "tenor": "1Y",
+   "dv01": 1180
+  },
+  {
+   "tenor": "2Y",
+   "dv01": 3420
+  },
+  {
+   "tenor": "3Y",
+   "dv01": 4760
+  },
+  {
+   "tenor": "4Y",
+   "dv01": 5920
+  },
+  {
+   "tenor": "5Y",
+   "dv01": 7030
+  }
+ ],
+ "_meta": {
+  "source": "aero-risk",
+  "generation": 1742,
+  "live": true
+ }
+}

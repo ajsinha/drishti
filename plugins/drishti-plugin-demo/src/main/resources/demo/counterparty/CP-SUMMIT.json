@@ -1,0 +1,10 @@
+{
+ "counterpartyId": "CP-SUMMIT",
+ "name": "Summit Clearing LLC",
+ "type": "Clearing broker \u00b7 Chicago",
+ "_meta": {
+  "source": "aero-risk",
+  "generation": 1742,
+  "live": false
+ }
+}

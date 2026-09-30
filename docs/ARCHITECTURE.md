@@ -214,6 +214,34 @@ and the rule name, surfaced in *How this view was built* and in Sutra Studio as
 
 ---
 
+## 7a. Command suggestions (type-ahead)
+
+As in the Bloomberg terminal, the command line suggests while the user types, in a dropdown
+under the input:
+
+```
+┌ TRD IRS-4█ ─────────────────────────────────────────────────────────┐
+│ TRD  IRS-48213   Interest rate swap · Northbridge Capital · USD 50m │  ← highlighted
+│ TRD  IRS-47102   Interest rate swap · Northbridge Capital · USD 80m │
+│ NSET NS-NORTH-01 Netting set · Northbridge Capital · 14 trades      │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+- **What it matches**, by the state of the input:
+  - an empty or partial first token matches **mnemonics** (`T` → `TRD Trade`, `NSET Netting set`, …);
+  - after a mnemonic, it matches **entities of that kind** by identifier or name;
+  - a bare identifier (`NS-N`) matches any kind, with the mnemonic filled in.
+  - Recently viewed entities rank first.
+- **Engine:**
+  - `SuggestionService` merges hits from the mnemonic table, a per-user **recent** list and `SourcePlugin.search`.
+  - Plugins are queried in parallel on virtual threads, each within a 30 ms budget; late hits are dropped.
+  - The engine's `EntityIndex` (a sorted, case-folded prefix and substring index, refreshed from sources that list their catalogue) answers most queries in microseconds.
+- **API:** `GET /api/v1/command/suggest?q=TRD%20IRS-4&limit=10` → `[{mnemonic, ref, title, subtitle, score}]`.
+- **Console:**
+  - `command.js` debounces requests by 60 ms and cancels stale ones with `AbortController`.
+  - Keys: ↑/↓ move through the list, `Tab` completes, `Enter` (`<GO>`) opens, `Esc` closes.
+  - Matched characters are highlighted, and the list is fully usable from the keyboard (ARIA `combobox`/`listbox`).
+
 ## 8. Live updates
 
 ```
@@ -297,6 +325,7 @@ in tracked files.
 | Method | Path | Returns |
 |---|---|---|
 | `POST` | `/command` `{text}` | `EntityRef` or suggestions (fuzzy) |
+| `GET` | `/command/suggest?q=&limit=` | type-ahead dropdown entries (mnemonics, recents, entity hits) |
 | `GET` | `/views/{kind}/{id}` | `ViewModel` |
 | `GET` | `/views/{kind}/{id}/stream` | SSE: `view` frame then `patch` frames |
 | `GET` | `/entities/{kind}/{id}/raw` | source document + provenance (F9) |

@@ -1,0 +1,10 @@
+{
+ "pair": "EUR/USD",
+ "spot": 1.174,
+ "status": "live",
+ "_meta": {
+  "source": "aero-fx",
+  "generation": 88,
+  "live": true
+ }
+}

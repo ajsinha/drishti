@@ -1,0 +1,11 @@
+{
+ "index": "SOFR",
+ "name": "Secured Overnight Financing Rate",
+ "fixing": 3.94,
+ "administrator": "FRBNY",
+ "_meta": {
+  "source": "aero-risk",
+  "generation": 1742,
+  "live": false
+ }
+}

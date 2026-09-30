@@ -55,6 +55,7 @@ Ten waves. Each holds a small set of closely related items and ends with a demo-
 - `drishti-api`: `EntityRef`, `DataNode`, `Provenance`, `SourcePlugin`, `SourceCapabilities`, `Subscription`, `ReverseLookup`, `PluginManifest`.
 - `drishti-common`: config loader, `ErrorCode`/`DrishtiException` (`DRS-1nnn`), `JsonCodec`, `ShapeFingerprinter` (xxHash64).
 - `drishti-engine`: `PluginDiscovery` (isolated class loaders), `SourceRouter`, virtual-thread fetch executor.
+- `SourcePlugin.search` in the SPI (type-ahead); demo and file plugins index their catalogue in memory.
 - `plugins/drishti-plugin-demo`: the 4 reference entities plus curves, CSAs, agreements, counterparties and 14 netting-set trades.
 - `plugins/drishti-plugin-file`: JSON/CSV/Parquet directory source; generation from a sequence number.
 - Tests: fingerprint stability, plugin isolation, routing by config.
@@ -80,17 +81,17 @@ Ten waves. Each holds a small set of closely related items and ends with a demo-
 - Docs: `docs/INFERENCE.md`.
 
 ## W7 — Engine pipeline & entity graph
-- `CommandParser` (`config/mnemonics.yaml`, fuzzy suggestions).
+- `CommandParser` (`config/mnemonics.yaml`); `SuggestionService` + `EntityIndex` for type-ahead (mnemonics, recents, parallel `SourcePlugin.search` under a 30 ms budget).
 - `ViewPipeline` (ARCHITECTURE §4), `LayoutResolver` with Caffeine caches, parallel `Binder`, `ViewModel` records and a streaming serializer.
 - `drishti-graph`: `ReferenceCatalog` (`config/references.yaml`), `LinkResolver` with a deadline and pending placeholders, badges, reverse lookups.
 - `drishti-benchmarks`: JMH for fingerprint, EL, bind and the full pipeline.
 - Tests: golden ViewModels for the 4 entities; a slow link degrades to pending.
 
 ## W8 — REST API & console views
-- `drishti-server` (the single Spring Boot application, `DrishtiApplication`, wiring each module's `@Configuration`): virtual threads; `Command`, `View`, `Entity`, `Sutra` and `Source` controllers; `ApiExceptionHandler` (problem+json); springdoc; actuator + Prometheus.
+- `drishti-server` (the single Spring Boot application, `DrishtiApplication`, wiring each module's `@Configuration`): virtual threads; `Command` (incl. `/command/suggest`), `View`, `Entity`, `Sutra` and `Source` controllers; `ApiExceptionHandler` (problem+json); springdoc; actuator + Prometheus.
 - Console: `core/api_client.py` (pooled httpx), `routes/{terminal,views,help}.py`, `templates/terminal/{home,view}.html`.
 - `_macros/panels.html` (one macro per panel kind), `_command_bar.html`, `_fkeys.html`, `_breadcrumb.html`, `_provenance.html`.
-- `static/js/{command,keys,view}.js`, `static/js/panels/<kind>.js`, vendored ECharts.
+- `static/js/command.js`: Bloomberg-style suggestion dropdown (debounced, abortable, ↑/↓/Tab/Enter/Esc, ARIA combobox); `static/js/{keys,view}.js`, `static/js/panels/<kind>.js`, vendored ECharts.
 - Tests: MockMvc, pytest routes, headless Chrome screenshots against the mockups.
 - Docs: `API_GUIDE.md`, `CONFIGURATION.md`, `USER_GUIDE.md`, `KEYBOARD.md`.
 

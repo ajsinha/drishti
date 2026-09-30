@@ -1,0 +1,16 @@
+{
+ "csaId": "CSA-VM-0288",
+ "counterparty": {
+  "id": "CP-HARBOR-POINT",
+  "name": "Harbor Point Bank"
+ },
+ "marginType": "VM",
+ "threshold": 0,
+ "minTransfer": 500000,
+ "currency": "USD",
+ "_meta": {
+  "source": "aero-fx",
+  "generation": 88,
+  "live": false
+ }
+}

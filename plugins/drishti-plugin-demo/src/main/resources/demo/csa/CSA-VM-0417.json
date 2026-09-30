@@ -1,0 +1,17 @@
+{
+ "csaId": "CSA-VM-0417",
+ "counterparty": {
+  "id": "CP-NORTHBRIDGE",
+  "name": "Northbridge Capital LLP"
+ },
+ "agreement": "ISDA-2002-0417",
+ "marginType": "VM",
+ "threshold": 0,
+ "minTransfer": 250000,
+ "currency": "USD",
+ "_meta": {
+  "source": "aero-risk",
+  "generation": 1742,
+  "live": false
+ }
+}

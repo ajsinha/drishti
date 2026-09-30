@@ -1,0 +1,10 @@
+{
+ "counterpartyId": "CP-HARBOR-POINT",
+ "name": "Harbor Point Bank",
+ "type": "Bank \u00b7 Boston",
+ "_meta": {
+  "source": "aero-risk",
+  "generation": 1742,
+  "live": false
+ }
+}

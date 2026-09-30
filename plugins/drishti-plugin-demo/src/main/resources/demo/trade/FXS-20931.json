@@ -1,0 +1,118 @@
+{
+ "tradeId": "FXS-20931",
+ "productType": "FXSWAP",
+ "product": "FX swap",
+ "counterparty": {
+  "id": "CP-HARBOR-POINT",
+  "name": "Harbor Point Bank"
+ },
+ "pair": "EUR/USD",
+ "nearValue": "2026-10-02",
+ "farValue": "2027-01-04",
+ "nearRate": 1.174,
+ "farRate": 1.17958,
+ "swapPoints": 55.8,
+ "mtm": 18420,
+ "book": "FX-LDN-2",
+ "nettingSet": "NS-HARB-02",
+ "csa": "CSA-VM-0288",
+ "spot": "EURUSD",
+ "discountCurves": [
+  "EUR-ESTR",
+  "USD-SOFR"
+ ],
+ "forwardCurve": "EURUSD-FWD",
+ "legs": [
+  {
+   "leg": "Near",
+   "valueDate": "2026-10-02",
+   "buy": {
+    "ccy": "EUR",
+    "amount": 25000000.0
+   },
+   "sell": {
+    "ccy": "USD",
+    "amount": 29350000.0
+   },
+   "rate": 1.174,
+   "settlement": "CLS"
+  },
+  {
+   "leg": "Far",
+   "valueDate": "2027-01-04",
+   "sell": {
+    "ccy": "EUR",
+    "amount": 25000000.0
+   },
+   "buy": {
+    "ccy": "USD",
+    "amount": 29489500.0
+   },
+   "rate": 1.17958,
+   "settlement": "CLS"
+  }
+ ],
+ "cashflows": [
+  {
+   "payDate": "2026-10-02",
+   "leg": "Near",
+   "currency": "EUR",
+   "direction": "Receive",
+   "amount": 25000000.0,
+   "df": 0.9998,
+   "pvUsd": 29344130
+  },
+  {
+   "payDate": "2026-10-02",
+   "leg": "Near",
+   "currency": "USD",
+   "direction": "Pay",
+   "amount": -29350000.0,
+   "df": 0.9997,
+   "pvUsd": -29341200
+  },
+  {
+   "payDate": "2027-01-04",
+   "leg": "Far",
+   "currency": "EUR",
+   "direction": "Pay",
+   "amount": -25000000.0,
+   "df": 0.9947,
+   "pvUsd": -29194450
+  },
+  {
+   "payDate": "2027-01-04",
+   "leg": "Far",
+   "currency": "USD",
+   "direction": "Receive",
+   "amount": 29489500.0,
+   "df": 0.9906,
+   "pvUsd": 29209940
+  }
+ ],
+ "confirmation": {
+  "status": "Confirmed",
+  "matched": "2026-09-30 13:41",
+  "clsEligible": true,
+  "trader": "L. Moreau"
+ },
+ "risk": [
+  {
+   "factor": "EUR IR",
+   "usd": -610
+  },
+  {
+   "factor": "USD IR",
+   "usd": 730
+  },
+  {
+   "factor": "FX \u0394",
+   "usd": 2150
+  }
+ ],
+ "_meta": {
+  "source": "aero-fx",
+  "generation": 88,
+  "live": true
+ }
+}

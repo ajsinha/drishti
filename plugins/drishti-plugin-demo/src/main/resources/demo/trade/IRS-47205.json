@@ -1,0 +1,21 @@
+{
+ "tradeId": "IRS-47205",
+ "productType": "IRS",
+ "product": "Interest rate swap",
+ "counterparty": {
+  "id": "CP-NORTHBRIDGE",
+  "name": "Northbridge Capital LLP"
+ },
+ "notional": 35000000,
+ "currency": "USD",
+ "maturityDate": "2033-06-15",
+ "mtm": 22100,
+ "book": "RATES-NY-3",
+ "nettingSet": "NS-NORTH-01",
+ "csa": "CSA-VM-0417",
+ "_meta": {
+  "source": "aero-risk",
+  "generation": 1742,
+  "live": false
+ }
+}

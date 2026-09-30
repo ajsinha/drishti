@@ -1,0 +1,46 @@
+{
+ "curveId": "EURUSD-FWD",
+ "pair": "EUR/USD",
+ "status": "live",
+ "unit": "pips",
+ "spot": 1.174,
+ "points": [
+  {
+   "tenor": "ON",
+   "points": 0.6
+  },
+  {
+   "tenor": "1W",
+   "points": 3.9
+  },
+  {
+   "tenor": "1M",
+   "points": 17.1
+  },
+  {
+   "tenor": "2M",
+   "points": 36.3
+  },
+  {
+   "tenor": "3M",
+   "points": 55.8
+  },
+  {
+   "tenor": "6M",
+   "points": 110.2
+  },
+  {
+   "tenor": "9M",
+   "points": 163.5
+  },
+  {
+   "tenor": "1Y",
+   "points": 222.0
+  }
+ ],
+ "_meta": {
+  "source": "aero-fx",
+  "generation": 88,
+  "live": true
+ }
+}

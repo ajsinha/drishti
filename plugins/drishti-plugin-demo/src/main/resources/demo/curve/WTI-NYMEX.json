@@ -1,0 +1,62 @@
+{
+ "curveId": "WTI-NYMEX",
+ "commodity": "WTI crude",
+ "status": "live",
+ "unit": "USD/bbl",
+ "shape": "backwardation",
+ "points": [
+  {
+   "tenor": "X6",
+   "price": 71.62
+  },
+  {
+   "tenor": "Z6",
+   "price": 71.15
+  },
+  {
+   "tenor": "F7",
+   "price": 70.78
+  },
+  {
+   "tenor": "G7",
+   "price": 70.45
+  },
+  {
+   "tenor": "H7",
+   "price": 70.1
+  },
+  {
+   "tenor": "J7",
+   "price": 69.82
+  },
+  {
+   "tenor": "K7",
+   "price": 69.55
+  },
+  {
+   "tenor": "M7",
+   "price": 69.3
+  },
+  {
+   "tenor": "N7",
+   "price": 69.08
+  },
+  {
+   "tenor": "Q7",
+   "price": 68.9
+  },
+  {
+   "tenor": "U7",
+   "price": 68.74
+  },
+  {
+   "tenor": "V7",
+   "price": 68.58
+  }
+ ],
+ "_meta": {
+  "source": "eod-futures",
+  "generation": 20260930,
+  "live": true
+ }
+}

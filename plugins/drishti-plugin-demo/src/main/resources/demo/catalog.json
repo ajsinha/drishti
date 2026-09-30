@@ -1,0 +1,218 @@
+[
+ {
+  "kind": "trade",
+  "id": "IRS-48213",
+  "title": "IRS-48213",
+  "subtitle": "Interest rate swap \u00b7 Northbridge Capital \u00b7 USD 50m \u00b7 5Y"
+ },
+ {
+  "kind": "trade",
+  "id": "FXS-20931",
+  "title": "FXS-20931",
+  "subtitle": "FX swap \u00b7 Harbor Point Bank \u00b7 EUR/USD 25m"
+ },
+ {
+  "kind": "trade",
+  "id": "CFT-77120",
+  "title": "CFT-77120",
+  "subtitle": "Commodity future \u00b7 NYMEX CL Z6 \u00b7 Long 150"
+ },
+ {
+  "kind": "netting-set",
+  "id": "NS-NORTH-01",
+  "title": "NS-NORTH-01",
+  "subtitle": "Netting set \u00b7 Northbridge Capital \u00b7 14 trades"
+ },
+ {
+  "kind": "trade",
+  "id": "IRS-47102",
+  "title": "IRS-47102",
+  "subtitle": "Interest rate swap \u00b7 Northbridge Capital \u00b7 USD 80m"
+ },
+ {
+  "kind": "trade",
+  "id": "XCS-11820",
+  "title": "XCS-11820",
+  "subtitle": "Cross-currency swap \u00b7 Northbridge Capital \u00b7 EUR 40m"
+ },
+ {
+  "kind": "trade",
+  "id": "SWPT-3301",
+  "title": "SWPT-3301",
+  "subtitle": "Swaption \u00b7 Northbridge Capital \u00b7 USD 25m"
+ },
+ {
+  "kind": "trade",
+  "id": "IRS-47200",
+  "title": "IRS-47200",
+  "subtitle": "Interest rate swap \u00b7 Northbridge Capital \u00b7 USD 10m"
+ },
+ {
+  "kind": "trade",
+  "id": "IRS-47201",
+  "title": "IRS-47201",
+  "subtitle": "Interest rate swap \u00b7 Northbridge Capital \u00b7 USD 15m"
+ },
+ {
+  "kind": "trade",
+  "id": "IRS-47202",
+  "title": "IRS-47202",
+  "subtitle": "Interest rate swap \u00b7 Northbridge Capital \u00b7 USD 20m"
+ },
+ {
+  "kind": "trade",
+  "id": "IRS-47203",
+  "title": "IRS-47203",
+  "subtitle": "Interest rate swap \u00b7 Northbridge Capital \u00b7 USD 25m"
+ },
+ {
+  "kind": "trade",
+  "id": "IRS-47204",
+  "title": "IRS-47204",
+  "subtitle": "Interest rate swap \u00b7 Northbridge Capital \u00b7 USD 30m"
+ },
+ {
+  "kind": "trade",
+  "id": "IRS-47205",
+  "title": "IRS-47205",
+  "subtitle": "Interest rate swap \u00b7 Northbridge Capital \u00b7 USD 35m"
+ },
+ {
+  "kind": "trade",
+  "id": "IRS-47206",
+  "title": "IRS-47206",
+  "subtitle": "Interest rate swap \u00b7 Northbridge Capital \u00b7 USD 40m"
+ },
+ {
+  "kind": "trade",
+  "id": "IRS-47207",
+  "title": "IRS-47207",
+  "subtitle": "Interest rate swap \u00b7 Northbridge Capital \u00b7 USD 45m"
+ },
+ {
+  "kind": "trade",
+  "id": "IRS-47208",
+  "title": "IRS-47208",
+  "subtitle": "Interest rate swap \u00b7 Northbridge Capital \u00b7 USD 50m"
+ },
+ {
+  "kind": "trade",
+  "id": "IRS-47209",
+  "title": "IRS-47209",
+  "subtitle": "Interest rate swap \u00b7 Northbridge Capital \u00b7 USD 55m"
+ },
+ {
+  "kind": "netting-set",
+  "id": "NS-HARB-02",
+  "title": "NS-HARB-02",
+  "subtitle": "Netting set \u00b7 Harbor Point Bank \u00b7 1 trade"
+ },
+ {
+  "kind": "curve",
+  "id": "USD-SOFR",
+  "title": "USD-SOFR",
+  "subtitle": "Curve \u00b7 USD SOFR discount"
+ },
+ {
+  "kind": "curve",
+  "id": "EUR-ESTR",
+  "title": "EUR-ESTR",
+  "subtitle": "Curve \u00b7 EUR \u20acSTR discount"
+ },
+ {
+  "kind": "curve",
+  "id": "EURUSD-FWD",
+  "title": "EURUSD-FWD",
+  "subtitle": "Curve \u00b7 EUR/USD forward points"
+ },
+ {
+  "kind": "curve",
+  "id": "WTI-NYMEX",
+  "title": "WTI-NYMEX",
+  "subtitle": "Curve \u00b7 WTI crude futures (NYMEX)"
+ },
+ {
+  "kind": "fx-spot",
+  "id": "EURUSD",
+  "title": "EURUSD",
+  "subtitle": "FX spot \u00b7 EUR/USD"
+ },
+ {
+  "kind": "index",
+  "id": "SOFR",
+  "title": "SOFR",
+  "subtitle": "Index \u00b7 Secured Overnight Financing Rate"
+ },
+ {
+  "kind": "csa",
+  "id": "CSA-VM-0417",
+  "title": "CSA-VM-0417",
+  "subtitle": "CSA \u00b7 VM \u00b7 Northbridge Capital"
+ },
+ {
+  "kind": "csa",
+  "id": "CSA-VM-0288",
+  "title": "CSA-VM-0288",
+  "subtitle": "CSA \u00b7 VM \u00b7 Harbor Point Bank"
+ },
+ {
+  "kind": "agreement",
+  "id": "ISDA-2002-0417",
+  "title": "ISDA-2002-0417",
+  "subtitle": "ISDA 2002 Master \u00b7 Northbridge Capital"
+ },
+ {
+  "kind": "credit-limit",
+  "id": "LIM-NORTH",
+  "title": "LIM-NORTH",
+  "subtitle": "Credit limit \u00b7 Northbridge \u00b7 15.0m"
+ },
+ {
+  "kind": "counterparty",
+  "id": "CP-NORTHBRIDGE",
+  "title": "CP-NORTHBRIDGE",
+  "subtitle": "Northbridge Capital LLP \u00b7 Hedge fund \u00b7 London"
+ },
+ {
+  "kind": "counterparty",
+  "id": "CP-HARBOR-POINT",
+  "title": "CP-HARBOR-POINT",
+  "subtitle": "Harbor Point Bank \u00b7 Bank \u00b7 Boston"
+ },
+ {
+  "kind": "counterparty",
+  "id": "CP-SUMMIT",
+  "title": "CP-SUMMIT",
+  "subtitle": "Summit Clearing LLC \u00b7 Clearing broker \u00b7 Chicago"
+ },
+ {
+  "kind": "clearing-account",
+  "id": "CLR-NY-07",
+  "title": "CLR-NY-07",
+  "subtitle": "Clearing account \u00b7 Summit \u00b7 IM limit 60%"
+ },
+ {
+  "kind": "contract-spec",
+  "id": "CL-Z6",
+  "title": "CL-Z6",
+  "subtitle": "Contract spec \u00b7 NYMEX CL December 2026"
+ },
+ {
+  "kind": "book",
+  "id": "RATES-NY-3",
+  "title": "RATES-NY-3",
+  "subtitle": "Book \u00b7 Rates \u00b7 New York"
+ },
+ {
+  "kind": "book",
+  "id": "FX-LDN-2",
+  "title": "FX-LDN-2",
+  "subtitle": "Book \u00b7 FX \u00b7 London"
+ },
+ {
+  "kind": "book",
+  "id": "COMM-NY-1",
+  "title": "COMM-NY-1",
+  "subtitle": "Book \u00b7 Commodities \u00b7 New York"
+ }
+]

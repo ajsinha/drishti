@@ -63,6 +63,7 @@ class ArchitectureRulesTest {
 
     @ArchTest
     static final ArchRule noSerializable = noClasses()
+            .that().areNotEnums().and().areNotAssignableTo(Throwable.class)
             .should().implement(java.io.Serializable.class)
-            .andShould().notBeEnums().allowEmptyShould(true);
+            .allowEmptyShould(true);
 }

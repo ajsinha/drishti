@@ -1,0 +1,21 @@
+{
+ "tradeId": "SWPT-3301",
+ "productType": "SWPT",
+ "product": "Swaption",
+ "counterparty": {
+  "id": "CP-NORTHBRIDGE",
+  "name": "Northbridge Capital LLP"
+ },
+ "notional": 25000000,
+ "currency": "USD",
+ "maturityDate": "2027-09-30",
+ "mtm": 340760,
+ "book": "RATES-NY-3",
+ "nettingSet": "NS-NORTH-01",
+ "csa": "CSA-VM-0417",
+ "_meta": {
+  "source": "aero-risk",
+  "generation": 1742,
+  "live": false
+ }
+}

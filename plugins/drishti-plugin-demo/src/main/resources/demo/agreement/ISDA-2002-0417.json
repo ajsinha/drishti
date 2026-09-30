@@ -1,0 +1,15 @@
+{
+ "agreementId": "ISDA-2002-0417",
+ "type": "ISDA 2002 Master",
+ "counterparty": {
+  "id": "CP-NORTHBRIDGE",
+  "name": "Northbridge Capital LLP"
+ },
+ "governingLaw": "English",
+ "signed": "2019-04-17",
+ "_meta": {
+  "source": "aero-risk",
+  "generation": 1742,
+  "live": false
+ }
+}

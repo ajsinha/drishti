@@ -1,0 +1,200 @@
+{
+ "nettingSetId": "NS-NORTH-01",
+ "counterparty": {
+  "id": "CP-NORTHBRIDGE",
+  "name": "Northbridge Capital LLP"
+ },
+ "agreement": "ISDA-2002-0417",
+ "csa": "CSA-VM-0417",
+ "creditLimit": "LIM-NORTH",
+ "trades": 14,
+ "netMtm": -1259900,
+ "collateralPosted": 1300000,
+ "eePeak": 4100000,
+ "pfe95Peak": 9800000,
+ "limit": 15000000,
+ "utilisation": 0.65,
+ "asOf": "14:01 NY",
+ "exposure": [
+  {
+   "tenor": "0",
+   "ee": 1200000.0,
+   "pfe95": 3100000.0
+  },
+  {
+   "tenor": "3M",
+   "ee": 2500000.0,
+   "pfe95": 5800000.0
+  },
+  {
+   "tenor": "6M",
+   "ee": 3100000.0,
+   "pfe95": 7200000.0
+  },
+  {
+   "tenor": "1Y",
+   "ee": 3800000.0,
+   "pfe95": 8800000.0
+  },
+  {
+   "tenor": "2Y",
+   "ee": 4100000.0,
+   "pfe95": 9800000.0
+  },
+  {
+   "tenor": "3Y",
+   "ee": 3700000.0,
+   "pfe95": 8900000.0
+  },
+  {
+   "tenor": "5Y",
+   "ee": 2600000.0,
+   "pfe95": 6400000.0
+  },
+  {
+   "tenor": "7Y",
+   "ee": 1100000.0,
+   "pfe95": 3000000.0
+  },
+  {
+   "tenor": "10Y",
+   "ee": 400000.0,
+   "pfe95": 1000000.0
+  }
+ ],
+ "memberTrades": [
+  {
+   "trade": "IRS-48213",
+   "product": "Interest rate swap",
+   "currency": "USD",
+   "notional": 50000000,
+   "maturity": "2031-10-02",
+   "mtm": -412580
+  },
+  {
+   "trade": "IRS-47102",
+   "product": "Interest rate swap",
+   "currency": "USD",
+   "notional": 80000000,
+   "maturity": "2033-03-15",
+   "mtm": 1106420
+  },
+  {
+   "trade": "XCS-11820",
+   "product": "Cross-currency swap",
+   "currency": "EUR",
+   "notional": 40000000,
+   "maturity": "2030-06-20",
+   "mtm": -2318900
+  },
+  {
+   "trade": "SWPT-3301",
+   "product": "Swaption",
+   "currency": "USD",
+   "notional": 25000000,
+   "maturity": "2027-09-30",
+   "mtm": 340760
+  },
+  {
+   "trade": "IRS-47200",
+   "product": "Interest rate swap",
+   "currency": "USD",
+   "notional": 10000000,
+   "maturity": "2028-01-15",
+   "mtm": 22100
+  },
+  {
+   "trade": "IRS-47201",
+   "product": "Interest rate swap",
+   "currency": "USD",
+   "notional": 15000000,
+   "maturity": "2029-02-15",
+   "mtm": -18400
+  },
+  {
+   "trade": "IRS-47202",
+   "product": "Interest rate swap",
+   "currency": "USD",
+   "notional": 20000000,
+   "maturity": "2030-03-15",
+   "mtm": 15000
+  },
+  {
+   "trade": "IRS-47203",
+   "product": "Interest rate swap",
+   "currency": "USD",
+   "notional": 25000000,
+   "maturity": "2031-04-15",
+   "mtm": -9600
+  },
+  {
+   "trade": "IRS-47204",
+   "product": "Interest rate swap",
+   "currency": "USD",
+   "notional": 30000000,
+   "maturity": "2032-05-15",
+   "mtm": 4800
+  },
+  {
+   "trade": "IRS-47205",
+   "product": "Interest rate swap",
+   "currency": "USD",
+   "notional": 35000000,
+   "maturity": "2033-06-15",
+   "mtm": 22100
+  },
+  {
+   "trade": "IRS-47206",
+   "product": "Interest rate swap",
+   "currency": "USD",
+   "notional": 40000000,
+   "maturity": "2028-07-15",
+   "mtm": -13100
+  },
+  {
+   "trade": "IRS-47207",
+   "product": "Interest rate swap",
+   "currency": "USD",
+   "notional": 45000000,
+   "maturity": "2029-08-15",
+   "mtm": 900
+  },
+  {
+   "trade": "IRS-47208",
+   "product": "Interest rate swap",
+   "currency": "USD",
+   "notional": 50000000,
+   "maturity": "2030-09-15",
+   "mtm": -3300
+  },
+  {
+   "trade": "IRS-47209",
+   "product": "Interest rate swap",
+   "currency": "USD",
+   "notional": 55000000,
+   "maturity": "2031-01-15",
+   "mtm": 3900
+  }
+ ],
+ "csaTerms": {
+  "marginType": "Variation",
+  "threshold": 0,
+  "minTransfer": "USD 250,000",
+  "independentAmount": 0,
+  "eligibleCollateral": "USD cash",
+  "frequency": "Daily",
+  "mpor": "10 days",
+  "rounding": "USD 10,000"
+ },
+ "collateral": {
+  "posted": "USD 1,300,000",
+  "callToday": "none",
+  "disputes": "none",
+  "lastMovement": "2026-09-29"
+ },
+ "_meta": {
+  "source": "aero-risk",
+  "generation": 1742,
+  "live": true
+ }
+}

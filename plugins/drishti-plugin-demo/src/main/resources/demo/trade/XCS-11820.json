@@ -1,0 +1,21 @@
+{
+ "tradeId": "XCS-11820",
+ "productType": "XCS",
+ "product": "Cross-currency swap",
+ "counterparty": {
+  "id": "CP-NORTHBRIDGE",
+  "name": "Northbridge Capital LLP"
+ },
+ "notional": 40000000,
+ "currency": "EUR",
+ "maturityDate": "2030-06-20",
+ "mtm": -2318900,
+ "book": "RATES-NY-3",
+ "nettingSet": "NS-NORTH-01",
+ "csa": "CSA-VM-0417",
+ "_meta": {
+  "source": "aero-risk",
+  "generation": 1742,
+  "live": false
+ }
+}

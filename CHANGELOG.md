@@ -15,6 +15,14 @@
 -->
 # Changelog
 
+## Unreleased — Wave 3: data model & sources
+- `drishti-api`: `DataNode` (immutable tree; navigation never throws), `EntityRef`, `EntityDocument`, `Provenance`, and the `SourcePlugin` SPI with `search` (for the type-ahead) and `reverse`. `HitIndex` provides in-memory search.
+- `drishti-common`: `DRS-nnnn` error codes, a streaming `JsonCodec`, and `ShapeFingerprinter` (canonical shape, FNV-1a 64; values and array lengths do not change it).
+- `drishti-engine`: `PluginDiscovery` (class path plus isolated plugin jars), `SourceRegistry` (parallel start on virtual threads, failures isolated), and `SourceRouter` (config-driven routes, deadlines, partial `fetchAll`, parallel `search` under a time budget).
+- Plugins: `demo` (36 reference entities) and `file` (JSON/CSV feed directory).
+- The build is pinned to OpenJDK 21 by the enforcer.
+- Docs: `PLUGIN_GUIDE.md`; ARCHITECTURE §7a (command suggestions).
+
 ## Unreleased — Wave 2: console shell & landing
 - FastAPI + Jinja2 console (`console/`) with a layered config (YAML → local → env → CLI), a strict CSP and security headers.
 - Five themes, tokens only in `tokens.css`: terminal (default), parchment, **wallstreet** (Bloomberg Terminal colour scheme), blue, green.

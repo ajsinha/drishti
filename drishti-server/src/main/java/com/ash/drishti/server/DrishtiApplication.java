@@ -15,14 +15,17 @@
  */
 package com.ash.drishti.server;
 
+import com.ash.drishti.engine.EngineConfiguration;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Import;
 
 /**
  * The Drishti backend. Drishti ships only as this Spring Boot application; it is never embedded as a library.
  * Each module contributes its beans through its own {@code @Configuration} class, imported here.
  */
 @SpringBootApplication
+@Import(EngineConfiguration.class)
 public class DrishtiApplication {
 
     public static void main(String[] args) {
