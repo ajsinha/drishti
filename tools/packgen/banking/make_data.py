@@ -150,7 +150,7 @@ def main() -> None:
     print(f"wrote {sum(len(v) for v in docs.values())} documents into {len(layout.PACKS)} packs' samples")
     if "--jsonl" in sys.argv:
         from samplegen.dates import Calendar
-        from samplegen.lake import history_rows
+        from samplegen.lake import final_rows
 
         out = Path(sys.argv[sys.argv.index("--jsonl") + 1])
         days = int(sys.argv[sys.argv.index("--days") + 1]) if "--days" in sys.argv else 10
@@ -158,7 +158,7 @@ def main() -> None:
         with out.open("w", encoding="utf-8") as f:
             for domain in layout.DOMAINS:
                 kinds = {k: docs.get(k, {}) for k in (x for p in layout.PACKS.values() for d, ks in p["kinds"].items() if d == domain for x in ks)}
-                for kind, id_, d, body in history_rows(kinds, N.AS_OF, days, Calendar.of("USNY")):
+                for kind, id_, d, body in final_rows(kinds, N.AS_OF, days, Calendar.of("USNY")):
                     f.write(json.dumps({"domain": domain, "kind": kind, "id": id_, "date": d.isoformat(), "doc": body}, ensure_ascii=False) + "\n")
                     n += 1
         print(f"jsonl: {n} rows in {out} (load into Aerospike with tools/load-aerospike.sh)")

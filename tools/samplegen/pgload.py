@@ -27,7 +27,7 @@ import re
 from datetime import date
 
 from samplegen.dates import Calendar
-from samplegen.lake import history_rows
+from samplegen.lake import final_rows
 
 def write_domain(url: str, domain: str, kinds: dict[str, dict[str, dict]], end: date, days: int, cal: Calendar) -> int:
     import psycopg
@@ -35,7 +35,7 @@ def write_domain(url: str, domain: str, kinds: dict[str, dict[str, dict]], end: 
     schema = domain.replace("-", "_")
     if not re.fullmatch(r"[a-z][a-z0-9_]*", schema):
         raise ValueError(f"bad domain name {domain!r}")
-    rows = list(history_rows(kinds, end, days, cal))
+    rows = list(final_rows(kinds, end, days, cal))      # the latest knowledge, as the lake ends up after its correction
     with psycopg.connect(url, autocommit=False) as conn, conn.cursor() as cur:
         cur.execute(f"CREATE SCHEMA IF NOT EXISTS {schema}")
         cur.execute(f"DROP TABLE IF EXISTS {schema}.entities")

@@ -88,6 +88,26 @@ def history_rows(kinds: dict[str, dict[str, dict]], end: date, days: int, cal: C
                 yield kind, id_, d, json.dumps(body, ensure_ascii=False)
 
 
+def restatement(docs: dict[str, dict], end: date) -> tuple[str, str]:
+    """The correction the lake records for the newest date, after the fact: (id, document JSON). The lake writes it
+    as a second commit (so "known at" time travel has something to show); stores without versions load it directly,
+    so every store ends in the same state."""
+    first = next(iter(docs))
+    fixed = copy.deepcopy(docs[first])
+    fixed.pop("_meta", None)
+    fixed["businessDate"] = end.isoformat()
+    fixed["restated"] = {"reason": "End-of-day correction", "version": 2}
+    return first, json.dumps(fixed, ensure_ascii=False)
+
+
+def final_rows(kinds: dict[str, dict[str, dict]], end: date, days: int, cal: Calendar):
+    """history_rows with the newest date's restatement applied: the latest knowledge, for stores without versions."""
+    fixes = {kind: restatement(docs, end) for kind, docs in kinds.items() if docs}
+    for kind, id_, d, body in history_rows(kinds, end, days, cal):
+        fix = fixes.get(kind)
+        yield kind, id_, d, fix[1] if fix and d == end and id_ == fix[0] else body
+
+
 def write_tables(out: pathlib.Path, kinds: dict[str, dict[str, dict]], end: date, days: int, cal: Calendar) -> int:
     """Writes one Delta table per kind under `out` (see history_rows), plus a restatement of the newest date's first
     document, so time travel has something to show. Returns the number of rows written."""
@@ -103,12 +123,8 @@ def write_tables(out: pathlib.Path, kinds: dict[str, dict[str, dict]], end: date
         path = out / kind
         write_deltalake(str(path), pa.table({"id": pa.array(ids, pa.string()), "doc": pa.array(bodies, pa.string()),
                                              "business_date": pa.array(days_col, pa.date32())}), mode="overwrite", partition_by=["business_date"])
-        first = next(iter(docs))
-        fixed = copy.deepcopy(docs[first])
-        fixed.pop("_meta", None)
-        fixed["businessDate"] = end.isoformat()
-        fixed["restated"] = {"reason": "End-of-day correction", "version": 2}
-        keep = [(i, b) for i, b, d in zip(ids, bodies, days_col) if d == end and i != first] + [(first, json.dumps(fixed, ensure_ascii=False))]
+        first, fixed = restatement(docs, end)
+        keep = [(i, b) for i, b, d in zip(ids, bodies, days_col) if d == end and i != first] + [(first, fixed)]
         write_deltalake(str(path), pa.table({"id": pa.array([k for k, _ in keep], pa.string()), "doc": pa.array([b for _, b in keep], pa.string()),
                                              "business_date": pa.array([end] * len(keep), pa.date32())}),
                         mode="overwrite", partition_by=["business_date"], predicate=f"business_date = '{end.isoformat()}'")
