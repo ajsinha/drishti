@@ -16,6 +16,7 @@
 <nav class="adm-tabs" aria-label="Administration">
   <a href="/admin/users"{% if tab == 'users' %} aria-current="page"{% endif %}><i class="bi bi-people" aria-hidden="true"></i> Users</a>
   <a href="/admin/audit"{% if tab == 'audit' %} aria-current="page"{% endif %}><i class="bi bi-journal-text" aria-hidden="true"></i> Audit log</a>
+  <a href="/admin/caches"{% if tab == 'caches' %} aria-current="page"{% endif %}><i class="bi bi-hdd-stack" aria-hidden="true"></i> Caches</a>
   <a href="/account"><i class="bi bi-person-circle" aria-hidden="true"></i> My account</a>
 </nav>
 {% if status and status.defaultAdminPasswordInUse %}

@@ -102,6 +102,11 @@ class FakeBackend:
             return ["admin", "author", "risk", "trader"]
         if path == "/status":
             return {"defaultAdminPasswordInUse": True, "users": 1, "forceChangeOnCreate": False}
+        if path == "/caches":
+            return [{"name": "engine", "type": "Layouts and shape fingerprints", "stats": {"layouts": 12, "fingerprints": 40}},
+                    {"name": "trading-stream", "type": "Connector", "stats": {"memoryEntries": 3, "diskMb": 1.5}}]
+        if path.endswith("/purge"):
+            return {"purged": [path.split("/")[2]], "elapsedMs": 0.4}
         if path == "/audit":
             return [{"at": "2026-09-30T12:00:00Z", "actor": "system", "action": "user-seeded", "subject": "drishti-dev-admin", "detail": ""}]
         if path == "/users" and method == "POST":

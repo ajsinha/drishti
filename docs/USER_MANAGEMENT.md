@@ -55,6 +55,10 @@ and nobody can disable or delete their own account.
 - Read the **audit log** (`/admin/audit`): sign-ins, failures, lockouts and every change, with the
   actor. It is append-only JSON lines on disk, never contains passwords, and can be filtered by user.
 
+- Purge **caches** (`/admin/caches`): see what the engine and each connector hold (entries, memory, disk, hits)
+  and purge one cache, or all, at any time. The next reads refill from the sources. Every purge is audited
+  (`cache-purged`).
+
 ## Packs per user
 
 In the user dialog, **Packs** sets which installed domain packs the user may use. Users with more than
@@ -96,6 +100,8 @@ Back up `data/identity/`, and keep it out of version control (it is git-ignored)
 | `POST` | `/api/v1/admin/users/{u}/enabled` `{enabled}` | enable or disable |
 | `POST` | `/api/v1/admin/users/{u}/password` `{password}` | reset password |
 | `GET` | `/api/v1/admin/audit?limit=&subject=` | audit events, newest first |
+| `GET` | `/api/v1/admin/caches` | every cache: `[{name, type, stats}]` (the engine, and each connector that caches) |
+| `POST` | `/api/v1/admin/caches/{name}/purge` | purge one cache, or `all`; `{purged, elapsedMs}`; `404 DRS-5004` for an unknown name |
 | `GET` | `/api/v1/admin/roles` · `/api/v1/admin/status` | role names · seeded-password warning and settings |
 
 Error codes:

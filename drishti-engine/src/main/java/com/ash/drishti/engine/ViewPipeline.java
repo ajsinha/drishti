@@ -300,6 +300,19 @@ public final class ViewPipeline {
         return Math.round(nanos / 10_000.0) / 100.0;
     }
 
+    /** The engine's caches, for the admin's cache page. */
+    public Map<String, Object> cacheStats() {
+        var s = layouts.stats();
+        return Map.of("layouts", layouts.estimatedSize(), "layoutHitRate", Math.round(s.hitRate() * 1000) / 1000.0,
+                "fingerprints", fingerprints.estimatedSize());
+    }
+
+    /** Drops cached layouts and fingerprints; the next views recompute them. */
+    public void purgeCaches() {
+        layouts.invalidateAll();
+        fingerprints.invalidateAll();
+    }
+
     /** Layout cache hit ratio, for metrics. */
     public double layoutHitRate() {
         return layouts.stats().hitRate();

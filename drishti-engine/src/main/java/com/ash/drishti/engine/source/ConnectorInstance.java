@@ -97,6 +97,16 @@ final class ConnectorInstance implements SourcePlugin {
     }
 
     @Override
+    public java.util.Map<String, Object> cacheStats() {
+        return delegate.cacheStats();
+    }
+
+    @Override
+    public void purgeCaches() {
+        delegate.purgeCaches();
+    }
+
+    @Override
     public String health() {
         return delegate.health();
     }

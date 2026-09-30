@@ -235,6 +235,18 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     }
 
     @Override
+    public Map<String, Object> cacheStats() {
+        return Map.of("partitions", parts.estimatedSize(), "tables", latest.estimatedSize(), "timeTravel", travelled.estimatedSize());
+    }
+
+    @Override
+    public void purgeCaches() {
+        parts.invalidateAll();
+        latest.invalidateAll();
+        travelled.invalidateAll();
+    }
+
+    @Override
     public String health() {
         if (!Files.isDirectory(base)) {
             return "DOWN: no directory " + base;

@@ -70,6 +70,20 @@ public interface SourcePlugin extends AutoCloseable {
         return search(kind, text, limit);
     }
 
+    /**
+     * What this source caches, for the admin's cache page: entry counts, sizes, hits. Empty when it caches nothing.
+     */
+    default java.util.Map<String, Object> cacheStats() {
+        return java.util.Map.of();
+    }
+
+    /**
+     * Drops everything this source caches (memory and disk); the next reads refill from the source of truth.
+     * Called by an admin at any time; must be safe while reads are in flight.
+     */
+    default void purgeCaches() {
+    }
+
     /** Human-readable health; {@code "UP"} when healthy. */
     default String health() {
         return "UP";

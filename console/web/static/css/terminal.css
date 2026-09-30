@@ -404,3 +404,7 @@ body.embed .vhead { padding: .6rem .8rem; }
 .surface-tools { display: flex; gap: .3rem; justify-content: flex-end; margin-bottom: .3rem; }
 .surface-tools .md-btn[aria-pressed="true"] { color: var(--d-accent); border-color: var(--d-accent); }
 .chart.surface { height: 340px; }
+.cache-stat { display: inline-block; margin-right: .9rem; color: var(--d-muted); font-size: .8rem; }
+.cache-stat b { color: var(--d-ink); font-weight: 600; }
+.adm-status { min-height: 1.2rem; color: var(--d-ok); font-size: .82rem; }
+.adm-bar .btn-pill { white-space: nowrap; flex-shrink: 0; }

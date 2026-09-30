@@ -231,6 +231,17 @@ public final class AerospikeSourcePlugin implements SourcePlugin {
     }
 
     @Override
+    public Map<String, Object> cacheStats() {
+        return Map.of("kinds", catalog.dates().size(), "datesIndexed", catalog.dates().values().stream().mapToInt(Set::size).sum());
+    }
+
+    /** Rebuilds the scanned catalogue now. */
+    @Override
+    public void purgeCaches() {
+        rescan();
+    }
+
+    @Override
     public String health() {
         return client != null && client.isConnected() ? "UP" : "DOWN: not connected to Aerospike";
     }

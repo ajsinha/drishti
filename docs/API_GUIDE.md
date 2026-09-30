@@ -98,3 +98,4 @@ of the view is unaffected.
 | DRS-4001 | 400 | the command could not be read |
 | DRS-4003 | 400 | the business date is unreadable, in the future, or before the history window |
 | DRS-5001 | 400 | bad request |
+| DRS-5004 | 404 | no cache by that name (admin cache purge) |

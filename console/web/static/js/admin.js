@@ -99,3 +99,26 @@
     });
   });
 })();
+
+/* Caches page: purge one cache, or all, then reload to show the new sizes. */
+(function () {
+  'use strict';
+  var root = document.querySelector('[data-caches]');
+  if (!root) { return; }
+  var status = root.querySelector('[data-purge-status]');
+  root.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-purge]');
+    if (!b) { return; }
+    var name = b.getAttribute('data-purge');
+    if (name === 'all' && !window.confirm('Purge every cache? Views refill from the sources; the first reads will be slower.')) { return; }
+    b.disabled = true;
+    fetch('/admin/api/caches/' + encodeURIComponent(name) + '/purge', { method: 'POST' })
+      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+      .then(function (res) {
+        status.textContent = res.ok ? 'Purged ' + res.d.purged.join(', ') + ' in ' + res.d.elapsedMs + ' ms.' : (res.d.code + ': ' + res.d.detail);
+        if (res.ok) { window.setTimeout(function () { window.location.reload(); }, 900); }
+      })
+      .catch(function (err) { status.textContent = 'Purge failed: ' + err; })
+      .then(function () { b.disabled = false; });
+  });
+})();

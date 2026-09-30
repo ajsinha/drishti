@@ -228,6 +228,11 @@ public final class UserService {
         audit.record(actor, "user-deleted", u.username(), "");
     }
 
+    /** Records an administrative action that is not about a user (e.g. purging a cache). */
+    public void recordAudit(String actor, String action, String subject, String detail) {
+        audit.record(actor, action, subject, detail);
+    }
+
     public List<AuditLog.Event> audit(int limit, String subject) {
         return audit.recent(Math.min(Math.max(limit, 1), 1000), subject);
     }

@@ -152,6 +152,19 @@ public final class FeedSourcePlugin implements SourcePlugin {
     }
 
     @Override
+    public Map<String, Object> cacheStats() {
+        return Map.of("series", series.size(), "observations", series.values().stream().mapToInt(s -> s.observations().size()).sum(),
+                "fetchedAt", fetchedAt.toString());
+    }
+
+    /** Drops the feed's data and fetches it again now. */
+    @Override
+    public void purgeCaches() {
+        series.clear();
+        refresh();
+    }
+
+    @Override
     public String health() {
         return health;
     }

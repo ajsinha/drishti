@@ -69,6 +69,27 @@ async def audit(request: Request, subject: str = "", limit: int = 200):
     return render(request, "admin/audit.html", events=events, subject=subject)
 
 
+@router.get("/caches")
+async def caches(request: Request):
+    """Every cache (the engine's and each connector's), with a purge for any of them or all."""
+    me = ident(request)
+    if not me.is_admin:
+        return _forbidden(request)
+    try:
+        rows = await request.app.state.backend.admin("GET", "/caches", me)
+    except BackendError as e:
+        return render(request, "admin/forbidden.html", status_code=e.status, error=e)
+    return render(request, "admin/caches.html", caches=rows)
+
+
+@router.post("/api/caches/{name}/purge")
+async def purge(request: Request, name: str):
+    try:
+        return await request.app.state.backend.admin("POST", f"/caches/{quote(name)}/purge", ident(request))
+    except BackendError as e:
+        return _problem(e)
+
+
 @router.post("/api/users")
 async def create(request: Request):
     body = json.loads(await request.body() or b"{}")

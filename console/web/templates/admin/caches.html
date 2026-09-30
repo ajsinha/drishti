@@ -1,0 +1,42 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Caches · {{ PRODUCT }}{% endblock %}
+{% block screen %}admin{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm" data-caches>
+  <h1>Caches</h1>
+  {% with tab='caches' %}{% include "admin/_nav.html" %}{% endwith %}
+  <div class="adm-bar">
+    <p class="text-muted-d">What the engine and each connector hold in memory and on disk. Purging is safe at any time: the next reads
+      refill from the source. Disk caches also clear themselves every night. Every purge is audited.</p>
+    <button type="button" class="btn-pill btn-ghost" data-purge="all"><i class="bi bi-trash" aria-hidden="true"></i> Purge all</button>
+  </div>
+  <p class="adm-status mono" data-purge-status role="status" aria-live="polite"></p>
+  <div class="tbl-wrap"><table class="tbl">
+    <thead><tr><th>Cache</th><th>Kind</th><th>Holds</th><th></th></tr></thead>
+    <tbody>{% for c in caches %}<tr>
+      <td class="mono">{{ c.name }}</td><td>{{ c.type }}</td>
+      <td class="mono">{% for k, v in (c.stats or {}).items() %}<span class="cache-stat">{{ k }} <b>{{ v }}</b></span>{% endfor %}</td>
+      <td><button type="button" class="btn-pill btn-ghost" data-purge="{{ c.name }}"><i class="bi bi-trash" aria-hidden="true"></i> Purge</button></td></tr>
+    {% else %}<tr><td colspan="4">No caches.</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div>
+{% endblock %}
+{% block footer %}{% include "_footer.html" %}{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/admin.js?v={{ ASSET_V }}"></script>{% endblock %}

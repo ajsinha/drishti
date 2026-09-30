@@ -400,6 +400,29 @@ public final class KafkaSourcePlugin implements SourcePlugin {
         return index.search(kind, text, limit);
     }
 
+    @Override
+    public Map<String, Object> cacheStats() {
+        Map<String, Object> out = new java.util.LinkedHashMap<>();
+        out.put("indexedEntities", positions.size());
+        out.put("memoryEntries", cache.estimatedSize());
+        out.put("memoryMb", Math.round(cache.asMap().keySet().stream().mapToLong(r -> weights.getOrDefault(r, 0)).sum() / 1048576.0 * 10) / 10.0);
+        if (disk != null) {
+            out.put("diskMb", Math.round(disk.sizeOnDisk() / 1048576.0 * 10) / 10.0);
+            out.put("diskHits", disk.hits());
+            out.put("diskMisses", disk.misses());
+            out.put("diskClears", disk.resets());
+        }
+        return out;
+    }
+
+    @Override
+    public void purgeCaches() {
+        cache.invalidateAll();
+        if (disk != null) {
+            disk.clear();
+        }
+    }
+
     private static String diskKey(EntityRef ref) {
         return ref.kind() + "/" + ref.id();
     }
