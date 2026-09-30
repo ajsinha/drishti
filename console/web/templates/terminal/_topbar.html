@@ -69,7 +69,8 @@
     <span class="tbar-desk"><span class="desk-name">{{ me.desk if me else DESK }} · </span><a class="tbar-link" href="/account" title="My account">{{ me.display if me else USER }}</a>{% if AUTH_ENABLED %} · <a href="/logout">sign out</a>{% endif %}</span>
     {% if live is defined %}<span class="tbar-live" data-live-state="{{ 'live' if live else 'static' }}" title="{{ 'Live' if live else 'Static' }}{% if built_ms %}, built {{ built_ms }} ms{% endif %}"><span class="dot" aria-hidden="true"></span>
       <span data-live-text>{{ 'Live' if live else 'Static' }}{% if built_ms %}, built {{ built_ms }} ms{% endif %}</span></span>{% endif %}
-    <span class="tbar-clock mono" data-clock data-tz="{{ CLOCK_TZ }}" data-tz-label="{{ CLOCK_LABEL }}"></span>
+    {% set zone = (settings or {}).clockZone %}
+    <span class="tbar-clock mono" data-clock data-tz="{{ zone or CLOCK_TZ }}" data-tz-label="{{ (zone.split('/') | last | replace('_', ' ')) if zone else CLOCK_LABEL }}"></span>
     {% include "_theme_menu.html" %}
   </div>
 </header>

@@ -16,6 +16,9 @@
 # Changelog
 
 ## Unreleased
+- **W21 Personal settings.** Theme, landing page after sign-in, clock time zone, compact density, change-flash on or off, default search size, and up to 20 pinned entities on the terminal home.
+  - **Storage:** kept on the server (`/api/v1/me/settings`, every value validated), so they follow the user to any browser.
+  - **Console:** applies them on every page (the theme before first paint), saves theme changes from the theme menu, and offers **Pin** in every view.
 - **W20 Single sign-on (OpenID Connect, ADR-014).**
   - **Console:** runs the authorization code flow with PKCE, state and nonce, and offers "Sign in with single sign-on" on the login page.
   - **Server:** verifies the ID token itself: signature against the provider's keys (JDK cryptography only; RSA, RSA-PSS or ECDSA; never `none` or an HMAC), issuer, audience, authorised party, expiry, not-before, issued-at and nonce.

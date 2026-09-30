@@ -24,6 +24,11 @@
     root.setAttribute('data-theme', theme);
     root.setAttribute('data-bs-theme', theme === 'light' || theme === 'crimson' ? 'light' : 'dark');
     try { localStorage.setItem('drishti.theme', theme); } catch (e) { /* ignore */ }
+    if (root.hasAttribute('data-signed-in') && root.getAttribute('data-user-theme') !== theme) {   // follow the user to other browsers
+      root.setAttribute('data-user-theme', theme);
+      fetch('/api/settings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ theme: theme }) })
+        .catch(function () { /* offline: this browser still remembers */ });
+    }
     document.querySelectorAll('[data-theme-choice]').forEach(function (b) {
       b.classList.toggle('active', b.getAttribute('data-theme-choice') === theme);
     });

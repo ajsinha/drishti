@@ -24,6 +24,13 @@
   <p class="text-muted-d">Form: <span class="mono">&lt;MNEMONIC&gt; &lt;ID&gt; &lt;GO&gt;</span>. Suggestions appear as you type;
     <kbd>↑</kbd>/<kbd>↓</kbd> choose, <kbd>Tab</kbd> completes, <kbd>Enter</kbd> opens, <kbd>/</kbd> focuses the command line.</p>
   {% if error %}<p class="pnl-err" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ error }}</p>{% endif %}
+  {% if pinned %}
+  <h2 class="ws-h"><i class="bi bi-pin-angle" aria-hidden="true"></i> Pinned</h2>
+  <ul class="thome-list thome-pins">
+    {% for p in pinned %}<li><a href="/v/{{ p.kind }}/{{ p.id | urlencode }}"><span class="mono cmdtxt">{{ p.id }}</span><span>{{ p.kind | replace('-', ' ') }}</span></a></li>{% endfor %}
+  </ul>
+  <h2 class="ws-h">Examples</h2>
+  {% endif %}
   <ul class="thome-list">
     {% for cmd, what, pack in examples %}<li><a href="/go?q={{ cmd | urlencode }}"><span class="mono cmdtxt">{{ cmd }} &lt;GO&gt;</span><span>{{ what }} <span class="badge-kind">{{ pack }}</span></span></a></li>
     {% else %}<li class="text-muted-d">No domain pack is enabled, so there are no example commands. Type an identifier, or see Help → Domain packs.</li>{% endfor %}

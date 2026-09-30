@@ -135,6 +135,20 @@ see what was restated for the same date. Lists are matched by their identifiers 
 date, a code), so an inserted cashflow shows as one addition, not as every later cashflow changed. Filter to
 *changed*, *added* or *removed*.
 
+## Your settings
+
+*My account → Settings* keeps your preferences with your account, so they follow you to any browser:
+
+- **Theme**: the one you pick from the theme menu is saved here too.
+- **After signing in, open**: the terminal (`/t`), a workspace (`/w/Rates`), a monitor (`/m/Watchlist`) or a
+  view (`/v/trade/T-10001`).
+- **Clock time zone**: the top bar's clock.
+- **Density**: *compact* fits more on the screen.
+- **Flash changed values**: turn off the flash on live changes.
+- **Search results**: how many a search shows unless it says `limit`.
+- **Pin**: the pin in a view's header adds the entity to *Pinned* on the terminal home (up to 20); press it again
+  to unpin.
+
 ## Export and share
 
 - **CSV.** The ↓ icon in a panel's header downloads that panel: tables and ladders as they are, key/value panels as

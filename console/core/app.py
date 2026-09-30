@@ -35,7 +35,7 @@ CSP = ("default-src 'self'; img-src 'self' data:; style-src 'self'; script-src '
        "font-src 'self'; connect-src 'self'; frame-src 'self'; frame-ancestors 'self'")
 
 
-PROTECTED = ("/t", "/v/", "/go", "/studio", "/api/", "/admin", "/account", "/w", "/m", "/alerts", "/impact", "/s/", "/compare/", "/export/")
+PROTECTED = ("/t", "/v/", "/go", "/studio", "/api/", "/admin", "/account", "/w", "/m", "/alerts", "/impact", "/s/", "/compare/", "/export/", "/pin/")
 EXACT = ("/t", "/s")                        # pages whose path is a prefix of public ones (/s of /static)
 
 
@@ -57,7 +57,9 @@ class AuthGate(BaseHTTPMiddleware):
         if not path.startswith(("/static/", "/api/", "/healthz", "/asof")):
             request.state.business_date = await request.app.state.business_dates.info(
                 request.app.state.backend, request.state.identity, request.state.asof)
+        request.state.settings = None
         if request.state.identity is not None and not path.startswith(("/static/", "/api/", "/healthz")):
+            request.state.settings = await request.app.state.user_settings.get(request.app.state.backend, request.state.identity)
             try:
                 request.state.pack_switcher = await request.app.state.packs.assigned(request.app.state.backend, request.state.identity)
             except Exception:  # noqa: BLE001 - the switcher is a convenience; never fail a page for it
@@ -117,6 +119,9 @@ def create_app(settings: Settings) -> FastAPI:
     from core.oidc import Oidc
 
     app.state.oidc = Oidc(settings, app.state.auth)
+    from core.settings import UserSettings
+
+    app.state.user_settings = UserSettings()
     console_dir = WEB.parent
     docs_dir = Path(settings.get("help.docs_dir", "../docs"))
     from core.packs import Packs

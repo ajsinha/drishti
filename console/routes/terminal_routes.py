@@ -33,7 +33,24 @@ router = APIRouter(include_in_schema=False)
 async def home(request: Request, error: str | None = None):
     current = await packs(request)
     examples = [(cmd, what, p["title"]) for p in current for cmd, what in p["examples"]]
-    return render(request, "terminal/home.html", examples=examples, packs=current, error=error)
+    pinned = (getattr(request.state, "settings", None) or {}).get("pinned") or []
+    return render(request, "terminal/home.html", examples=examples, packs=current, error=error, pinned=pinned)
+
+
+@router.post("/pin/{kind}/{id_}")
+async def pin(request: Request, kind: str, id_: str):
+    """Pins an entity to the terminal home, or unpins it (W21)."""
+    me = ident(request)
+    s = await request.app.state.user_settings.get(request.app.state.backend, me)
+    pins = [p for p in s.get("pinned") or [] if not (p.get("kind") == kind and p.get("id") == id_)]
+    if len(pins) == len(s.get("pinned") or []):
+        pins = ([{"kind": kind, "id": id_}] + pins)[:20]
+    try:
+        await request.app.state.backend.patch_settings({"pinned": pins}, me)
+    except BackendError:
+        pass
+    request.app.state.user_settings.forget(me.user if me else "")
+    return RedirectResponse(f"/v/{quote(kind)}/{quote(id_)}", status_code=303)
 
 
 _SEARCH = re.compile(r"(?is)^\s*\S+\s+(where|order\s+by|limit)\s+.+")
@@ -85,8 +102,10 @@ async def search(request: Request, q: str = ""):
     """Structured search (W17): entities by field values, e.g. TRD where mtm > 1m and currency = 'EUR' order by mtm desc."""
     data, error = None, None
     if q.strip():
+        limit = (getattr(request.state, "settings", None) or {}).get("searchLimit") or 100
+        asked = q if re.search(r"(?i)\slimit\s+\d+\s*$", q) else f"{q.rstrip()} limit {limit}"   # the user's default size
         try:
-            data = await request.app.state.backend.search(q, ident(request))
+            data = await request.app.state.backend.search(asked, ident(request))
         except BackendError as e:
             error = e
     rows = []

@@ -16,7 +16,7 @@
 from __future__ import annotations
 
 import json
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, quote
 
 import httpx
 from fastapi import APIRouter, Request
@@ -54,7 +54,7 @@ async def login(request: Request):
         msg = {"DRS-6005": "This account is locked after repeated failures. Try again later or ask an administrator."}.get(
             e.code, "Unknown user or wrong password." if e.status in (401, 404) else f"Sign-in unavailable: {e.detail}")
         return render(request, "auth/login.html", status_code=401 if e.status < 500 else 503, next=target, error=msg)
-    r = RedirectResponse("/account?must=1" if profile.get("mustChangePassword") else target, status_code=303)
+    r = RedirectResponse("/account?must=1" if profile.get("mustChangePassword") else await _landing(request, profile, target), status_code=303)
     r.set_cookie(COOKIE, auth.session_for(profile), httponly=True, samesite="lax", secure=auth.secure_cookie, max_age=auth.session_ttl)
     return r
 
@@ -89,7 +89,7 @@ async def oidc_callback(request: Request, code: str = "", state: str = "", error
     except BackendError as e:
         return render(request, "auth/login.html", status_code=401 if e.status < 500 else 503, next="/t",
                       error=e.detail if e.status < 500 else f"Sign-in unavailable: {e.detail}")
-    r = RedirectResponse(_safe_next(target), status_code=303)
+    r = RedirectResponse(await _landing(request, profile, _safe_next(target)), status_code=303)
     r.delete_cookie(OIDC_COOKIE, path="/auth/oidc")
     r.set_cookie(COOKIE, auth.session_for(profile), httponly=True, samesite="lax", secure=auth.secure_cookie, max_age=auth.session_ttl)
     return r
@@ -103,13 +103,47 @@ async def logout():
 
 
 @router.get("/account")
-async def account(request: Request, must: int = 0):
+async def account(request: Request, must: int = 0, saved: int = 0, error: str = ""):
     me = ident(request)
     try:
         profile = await request.app.state.backend.me(me)
     except BackendError:
         profile = {"username": me.user, "displayName": me.display, "desk": me.desk, "roles": list(me.roles)}
-    return render(request, "account.html", profile=profile, must=bool(must) or me.must_change)
+    return render(request, "account.html", profile=profile, must=bool(must) or me.must_change, saved=bool(saved), error=error,
+                  zones=ZONES)
+
+
+ZONES = ["America/New_York", "America/Chicago", "America/Toronto", "America/Sao_Paulo", "Europe/London", "Europe/Frankfurt", "Europe/Paris",
+         "Europe/Zurich", "Asia/Dubai", "Asia/Kolkata", "Asia/Singapore", "Asia/Hong_Kong", "Asia/Shanghai", "Asia/Tokyo", "Australia/Sydney", "UTC"]
+
+
+@router.post("/account/settings")
+async def save_settings(request: Request):
+    """Personal settings from the account page (W21); the server validates every value."""
+    me = ident(request)
+    form = {k: v[0] for k, v in parse_qs((await request.body()).decode(), keep_blank_values=True).items()}
+    changes = {"theme": form.get("theme") or None, "clockZone": form.get("clockZone") or None, "density": form.get("density") or "comfortable",
+               "flash": form.get("flash") == "on", "landing": form.get("landing") or "/t"}
+    if form.get("searchLimit", "").isdigit():
+        changes["searchLimit"] = int(form["searchLimit"])
+    try:
+        await request.app.state.backend.patch_settings(changes, me)
+    except BackendError as e:
+        return RedirectResponse(f"/account?error={quote(e.detail)}#settings", status_code=303)
+    request.app.state.user_settings.forget(me.user)
+    return RedirectResponse("/account?saved=1#settings", status_code=303)
+
+
+async def _landing(request: Request, profile: dict, target: str) -> str:
+    """Where to go after signing in: the page asked for, or the user's chosen landing page when none was."""
+    if target != "/t":
+        return target
+    auth = request.app.state.auth
+    who = auth.identity(auth.session_for(profile))
+    try:
+        return _safe_next((await request.app.state.backend.settings(who)).get("landing") or "/t")
+    except Exception:  # noqa: BLE001 - a missing landing page never blocks a sign-in
+        return target
 
 
 @router.post("/account/password")

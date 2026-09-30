@@ -64,7 +64,7 @@ terminal does.
 | 18 | Export and share: CSV of any panel, search or comparison; the document as JSON; print or save as PDF; **Share** copies a link that reopens the view as you see it (same date and known-at) | ✅ done |
 | 19 | Sutra governance: a Studio save is a proposal; approvers review the diff and approve (it goes live) or reject; four eyes; stale approvals refused; audited (ADR-013) | ✅ done |
 | 20 | Single sign-on (OIDC, ADR-014): code flow with PKCE in the console; the server verifies the ID token with JDK cryptography, maps groups to roles, provisions users; local disables win | ✅ done |
-| 21 | Personal settings | ◻️ next |
+| 21 | Personal settings: theme, landing page, clock zone, density, change-flash, pinned entities, search size; kept on the server, so they follow you | ✅ done |
 
 ## What works today
 
@@ -138,7 +138,9 @@ terminal does.
   Sutra and approves (it goes live) or rejects with a reason; nobody approves their own; every step is audited.
 - **Single sign-on.** Sign in through the bank's OpenID Connect provider; its groups become Drishti roles, and the
   server verifies every ID token itself.
-- **Not built yet** (on the roadmap): personal settings (W21).
+- **Personal settings.** *My account → Settings*: theme, the page to open after signing in, the clock's time zone,
+  compact density, whether changes flash, the default number of search results; **Pin** entities to the terminal
+  home. Kept on the server, so they follow you to any browser.
 
 ## Try it
 

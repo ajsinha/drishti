@@ -56,6 +56,9 @@ class FakeBackend:
     async def sutra_source(self, name, version, ident=None):
         return "sutra: irs-vanilla\nversion: 3\n"
 
+    async def settings(self, ident=None):
+        return {}
+
     async def studio_settings(self, ident=None):
         return {"save": False}
 

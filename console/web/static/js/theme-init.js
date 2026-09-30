@@ -17,7 +17,8 @@
 (function () {
   'use strict';
   try {
-    var t = localStorage.getItem('drishti.theme');
+    // a theme saved in the user's settings (server side) wins over this browser's last choice
+    var t = document.documentElement.getAttribute('data-user-theme') || localStorage.getItem('drishti.theme');
     if (t) { document.documentElement.setAttribute('data-theme', t); }
   } catch (e) { /* storage blocked: keep the server default */ }
 })();

@@ -29,6 +29,30 @@
     <div><dt>Roles</dt><dd>{% for r in profile.roles | sort %}<span class="role">{{ r }}</span>{% endfor %}</dd></div>
     {% if profile.lastLoginAt %}<div><dt>Last sign-in</dt><dd class="mono">{{ profile.lastLoginAt[:16] | replace('T', ' ') }} UTC</dd></div>{% endif %}
   </dl>
+  <form class="login-box adm-pw" method="post" action="/account/settings" id="settings">
+    <h2>Settings</h2>
+    <p class="text-muted-d adm-hint">Kept with your account, so they follow you to any browser.</p>
+    {% if saved %}<p class="adm-msg" role="status">Saved.</p>{% endif %}
+    {% if error %}<p class="pnl-err" role="alert">{{ error }}</p>{% endif %}
+    <div class="set-form">
+      <label for="sTheme">Theme</label>
+      <select id="sTheme" name="theme"><option value="">This browser's choice</option>
+        {% for t in ['terminal', 'light', 'wallstreet', 'blue', 'green', 'crimson', 'crimson-dark'] %}<option value="{{ t }}"{% if settings.theme == t %} selected{% endif %}>{{ t | replace('-', ' ') | capitalize }}</option>{% endfor %}</select>
+      <label for="sLanding">After signing in, open</label>
+      <input id="sLanding" name="landing" class="mono" value="{{ settings.landing or '/t' }}" placeholder="/t, /w/Rates, /m/Watchlist or /v/trade/T-10001">
+      <label for="sZone">Clock time zone</label>
+      <select id="sZone" name="clockZone"><option value="">Default ({{ CLOCK_LABEL }})</option>
+        {% for z in zones %}<option value="{{ z }}"{% if settings.clockZone == z %} selected{% endif %}>{{ z | replace('_', ' ') }}</option>{% endfor %}</select>
+      <label for="sDensity">Density</label>
+      <select id="sDensity" name="density">{% for d in ['comfortable', 'compact'] %}<option value="{{ d }}"{% if settings.density == d %} selected{% endif %}>{{ d | capitalize }}</option>{% endfor %}</select>
+      <label for="sFlash">Flash changed values</label>
+      <input id="sFlash" name="flash" type="checkbox"{% if settings.flash != false %} checked{% endif %}>
+      <label for="sLimit">Search results</label>
+      <input id="sLimit" name="searchLimit" type="number" min="10" max="1000" value="{{ settings.searchLimit or 100 }}">
+    </div>
+    <p class="text-muted-d adm-hint">Pin entities from their view (<i class="bi bi-pin-angle" aria-hidden="true"></i> Pin); they appear on the terminal home.</p>
+    <button type="submit" class="btn-pill btn-accent">Save settings</button>
+  </form>
   <form class="login-box adm-pw" data-password>
     <h2>Change password</h2>
     <label for="pc">Current password</label><input id="pc" name="current" type="password" class="cmd-input" autocomplete="current-password" required>

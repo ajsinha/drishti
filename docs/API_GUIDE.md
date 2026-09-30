@@ -34,6 +34,7 @@ travel). Views carry `provenance.businessDate`, which is empty when the source i
 | `POST` | `/command` `{"text": "TRD IRS-48213 <GO>"}` | `{"ref": {"kind","id"}, "mnemonic"}`; `400 DRS-4001` if the command can't be read |
 | `GET` | `/command/suggest?q=TRD%20IRS-4&limit=10` | `[{"type","mnemonic","kind","id","title","subtitle","complete"}]` |
 | `GET` | `/business-date` | `{current, selected, live, knownAt, previous, earliest, calendar, zone, holidays}`: today's business date, the date this request resolves to, the zone "known at" times are read in, and the holidays for the picker |
+| `GET` · `PATCH` | `/me/settings` | the caller's settings `{theme, landing, clockZone, density, flash, searchLimit, pinned}`; a patch changes only the fields it names (`null` resets one); every value is validated (`400` otherwise) |
 | `POST` | `/auth/oidc` `{"idToken", "nonce"}` | single sign-on (console service identity only): the server verifies the provider's ID token, maps groups to roles and returns the user; `401 DRS-6004` when refused |
 | `POST` | `/sutras?note=` (body: the Sutra) | with review on, `202 {"proposal": {id, name, version, status}}`; otherwise the saved Sutra |
 | `GET` | `/sutras/proposals?status=&name=` · `/sutras/proposals/{id}` | proposals (authors and approvers); one proposal with its text, the base text and the live text |

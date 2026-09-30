@@ -36,6 +36,8 @@
       {% if vm.title.with %}<span class="with">with</span> <span class="with-cp">{{ cell_text(vm.title.with) }}</span>{% endif %}
       {% if not embed %}<a class="tbar-link vhead-alert" href="/alerts?kind={{ vm.ref.kind }}&id={{ vm.ref.id | urlencode }}" title="Set an alert on {{ vm.title.id }}"><i class="bi bi-bell" aria-hidden="true"></i> Alert</a>
       <span class="vhead-tools">
+        {% set pinned_here = (settings.pinned or []) | selectattr('kind', 'equalto', vm.ref.kind) | selectattr('id', 'equalto', vm.ref.id) | list %}
+        <form method="post" action="/pin/{{ vm.ref.kind }}/{{ vm.ref.id | urlencode }}" class="d-inline"><button type="submit" class="tbar-link vhead-alert{% if pinned_here %} pin-on{% endif %}" title="{{ 'Unpin from' if pinned_here else 'Pin to' }} your terminal home"><i class="bi bi-pin-angle{% if pinned_here %}-fill{% endif %}" aria-hidden="true"></i> {{ 'Pinned' if pinned_here else 'Pin' }}</button></form>
         <button type="button" class="tbar-link vhead-alert" data-share="{{ share_url }}" title="Copy a link that opens this view as you see it{% if asof != 'live' %} ({{ asof }}{% if known_at %}, known at {{ known_local(known_at, (business_date or {}).zone) | replace('T', ' ') }}{% endif %}){% endif %}"><i class="bi bi-link-45deg" aria-hidden="true"></i> <span data-share-label>Share</span></button>
         <a class="tbar-link vhead-alert" href="/export/{{ vm.ref.kind }}/{{ vm.ref.id | urlencode }}.json" title="Download the document as JSON (as your role may see it)"><i class="bi bi-filetype-json" aria-hidden="true"></i> JSON</a>
         <button type="button" class="tbar-link vhead-alert" data-print title="Print, or save as PDF"><i class="bi bi-printer" aria-hidden="true"></i> Print</button>

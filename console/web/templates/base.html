@@ -14,7 +14,7 @@
   See the LICENSE file in the root of this repository for the full terms.
 #}
 <!doctype html>
-<html lang="en" data-theme="{{ DEFAULT_THEME }}" data-default-theme="{{ DEFAULT_THEME }}">
+<html lang="en" data-theme="{{ (settings or {}).theme or DEFAULT_THEME }}" data-default-theme="{{ DEFAULT_THEME }}"{% if (settings or {}).theme %} data-user-theme="{{ settings.theme }}"{% endif %}{% if me and AUTH_ENABLED %} data-signed-in{% endif %}>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -38,7 +38,7 @@
   <link rel="stylesheet" href="/static/css/help.css?v={{ ASSET_V }}">
   {% block head %}{% endblock %}
 </head>
-<body class="{% block body_class %}{% endblock %}" data-screen="{% block screen %}{{ screen | default('landing') }}{% endblock %}">
+<body class="{% block body_class %}{% endblock %}{% if (settings or {}).density == 'compact' %} density-compact{% endif %}{% if (settings or {}).flash == false %} no-flash{% endif %}" data-screen="{% block screen %}{{ screen | default('landing') }}{% endblock %}">
   <a class="skip-link" href="#main">Skip to content</a>
   {% block nav %}{% include "_nav_public.html" %}{% endblock %}
   <main id="main">{% block content %}{% endblock %}</main>

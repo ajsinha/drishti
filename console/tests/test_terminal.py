@@ -229,7 +229,7 @@ def test_a_search_on_the_command_line_opens_the_results(client, backend):
                 "scanned": 36, "matched": 1, "partial": False, "elapsedMs": 4.2}
     backend.search = search
     page = client.get("/s", params={"q": "TRD where mtm > 1m"}).text
-    assert asked["q"] == "TRD where mtm > 1m"
+    assert asked["q"] == "TRD where mtm > 1m limit 100"                        # the user's default result size
     assert "<b>1</b> of 36 trades match" in page and "MTM" in page and "−412,580.5" in page and 'href="/v/trade/IRS-48213"' in page
     assert "Examples" in client.get("/s").text
     assert "Watch as a monitor" in page
