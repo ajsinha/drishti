@@ -27,7 +27,7 @@ Ten waves. Each holds a small set of closely related items and ends with a demo-
 | W2 | Console shell & landing | Console serves the landing page with the hero animation, 5 themes and the public nav |
 | W3 | Data model & sources | `demo` and `file` plugins serve the 4 reference entities with provenance and fingerprints |
 | W4 | Sutra grammar | Sutra YAML parses, validates against the schema with line-accurate errors, and hot-reloads |
-| W5 | Sutra-EL & reference Sutras | Expressions compile; formats resolve; the 4 reference Sutras produce golden layouts |
+| W5 | Rachana-EL & reference Sutras | Expressions compile; formats resolve; the 4 reference Sutras produce golden layouts |
 | W6 | Inference engine | An entity with **no** Sutra renders a sensible layout; "Sutra + inference" merges |
 | W7 | Engine pipeline & entity graph | `ViewPipeline` builds full ViewModels in-process with links; warm p99 < 50 ms (JMH) |
 | W8 | REST API & console views | The 4 mockups are reproduced in the browser end to end, with command line, F-keys, breadcrumbs and F9 |
@@ -61,14 +61,14 @@ Ten waves. Each holds a small set of closely related items and ends with a demo-
 - Tests: fingerprint stability, plugin isolation, routing by config.
 
 ## W4 — Sutra grammar
-- `drishti-sutra` model records: `Sutra`, `Match`, `Title`, `Strip`, `Panel`, `KeyMap`.
+- `drishti-rachana` model records: `Sutra`, `Match`, `Title`, `Strip`, `Panel`, `KeyMap`.
 - YAML parser with source positions; `sutra.schema.json`; validator emitting `DRS-2nnn` with line/column.
 - `SutraRegistry`: versions, lookup by `name@version`, `WatchService` hot reload.
-- Docs: `docs/SUTRA_REFERENCE.md` (keys, panel kinds, versioning).
+- Docs: `docs/RACHANA_REFERENCE.md` (keys, panel kinds, versioning).
 - Tests: parse round-trip, schema negatives, reload races.
 
-## W5 — Sutra-EL & reference Sutras
-- Sutra-EL: lexer → parser → AST → compiled closures (paths, `[?x]` filters, ternary, `link()`, `size()`, arithmetic, concat); EBNF in the reference doc.
+## W5 — Rachana-EL & reference Sutras
+- Rachana-EL: lexer → parser → AST → compiled closures (paths, `[?x]` filters, ternary, `link()`, `size()`, arithmetic, concat); EBNF in the reference doc.
 - `Formats` (bundled `formats.yaml`, site override file) and `Tones`; `SutraMatcher` (the Sutra `match` block is the classifier).
 - `sutras/rates/irs-vanilla.v3.yaml`, `sutras/fx/fx-swap.v2.yaml`, `sutras/commodities/listed-future.v1.yaml`, `sutras/credit/netting-set.v1.yaml`.
 - Tests: jqwik property tests for EL; golden `Layout` JSON per reference Sutra.

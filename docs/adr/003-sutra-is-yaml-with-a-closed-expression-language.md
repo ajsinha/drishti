@@ -23,7 +23,7 @@
 Layouts need bindings, conditions and small computations without becoming programs.
 
 ## Decision
-Sutra files are YAML. Bindings use Sutra-EL, a closed, side-effect-free expression language (paths, filters, ternary, arithmetic, a few functions) compiled to closures.
+Sutra files are YAML. Bindings use Rachana-EL, a closed, side-effect-free expression language (paths, filters, ternary, arithmetic, a few functions) compiled to closures.
 
 ## Consequences
 Layouts are reviewable, diffable and safe. Adding a function needs an ADR amendment.

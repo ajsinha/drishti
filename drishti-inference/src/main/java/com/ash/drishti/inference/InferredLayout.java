@@ -15,9 +15,9 @@
  */
 package com.ash.drishti.inference;
 
-import com.ash.drishti.sutra.model.Panel;
-import com.ash.drishti.sutra.model.StripItem;
-import com.ash.drishti.sutra.model.Title;
+import com.ash.drishti.rachana.model.Panel;
+import com.ash.drishti.rachana.model.StripItem;
+import com.ash.drishti.rachana.model.Title;
 import java.util.List;
 import java.util.Map;
 

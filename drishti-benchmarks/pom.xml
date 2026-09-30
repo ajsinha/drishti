@@ -26,7 +26,7 @@
   </parent>
   <artifactId>drishti-benchmarks</artifactId>
   <name>drishti-benchmarks</name>
-  <description>JMH benchmarks for the hot paths: fingerprint, Sutra-EL, formats</description>
+  <description>JMH benchmarks for the hot paths: fingerprint, Rachana-EL, formats</description>
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-inference</artifactId></dependency>
     <dependency><groupId>org.openjdk.jmh</groupId><artifactId>jmh-core</artifactId><version>${jmh.version}</version></dependency>

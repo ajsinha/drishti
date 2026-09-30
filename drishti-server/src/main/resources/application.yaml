@@ -60,8 +60,8 @@ drishti:
           root: ${DRISHTI_FEEDS:./data/feeds}
           source-name: feed-file
           rescan-seconds: 30
-  sutra:
-    # Directories scanned recursively for *.yaml layout files (see docs/SUTRA_REFERENCE.md).
+  rachana:
+    # Directories scanned recursively for *.yaml layout files (see docs/RACHANA_REFERENCE.md).
     dirs: ${DRISHTI_SUTRAS:./sutras}
     # Edit a Sutra and the next view uses it; an invalid edit keeps the last good version.
     hot-reload: true
@@ -110,7 +110,7 @@ drishti:
       clearingAccount: { kind: clearing-account, label: Clearing account }
       contractSpec:    { kind: contract-spec, label: Contract spec }
       book:            { kind: book, label: Book }
-    badges:                         # kind -> Sutra-EL over the linked document
+    badges:                         # kind -> Rachana-EL over the linked document
       netting-set: "'EE ' + fmt($.eePeak, 'compact')"
       csa: "'threshold ' + $.threshold"
       curve: "$.status"

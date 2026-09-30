@@ -34,11 +34,11 @@ import com.ash.drishti.graph.GraphProperties;
 import com.ash.drishti.graph.ReferenceCatalog;
 import com.ash.drishti.inference.InferenceConfiguration;
 import com.ash.drishti.inference.LayoutMerger;
-import com.ash.drishti.sutra.SutraConfiguration;
-import com.ash.drishti.sutra.SutraMatcher;
-import com.ash.drishti.sutra.SutraRegistry;
-import com.ash.drishti.sutra.el.ElCompiler;
-import com.ash.drishti.sutra.format.Formats;
+import com.ash.drishti.rachana.RachanaConfiguration;
+import com.ash.drishti.rachana.SutraMatcher;
+import com.ash.drishti.rachana.SutraRegistry;
+import com.ash.drishti.rachana.el.ElCompiler;
+import com.ash.drishti.rachana.format.Formats;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
@@ -49,7 +49,7 @@ import org.springframework.context.annotation.Import;
 
 /** Beans contributed by {@code drishti-engine}, and the lower modules it assembles. */
 @Configuration(proxyBeanMethods = false)
-@Import({CommonConfiguration.class, SutraConfiguration.class, InferenceConfiguration.class, GraphConfiguration.class})
+@Import({CommonConfiguration.class, RachanaConfiguration.class, InferenceConfiguration.class, GraphConfiguration.class})
 @EnableConfigurationProperties({SourcesProperties.class, EngineProperties.class, CommandsProperties.class})
 public class EngineConfiguration {
 

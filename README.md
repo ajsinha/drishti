@@ -13,7 +13,8 @@
 Drishti (दृष्टि, "sight") is a live, keyboard-driven terminal. It renders **any entity from any
 system** as a dense, linked, ticking view: a swap, an FX trade, a futures position, a netting set.
 It does not need a hand-coded screen per product:
-- **Sutra**, a declarative layout grammar, describes the view.
+- **Rachana** (रचना, *composition*) is a declarative screen grammar. Each product family
+  gets a **Sutra**, a short versioned layout written in Rachana, instead of a coded screen.
 - Where no Sutra exists, or a Sutra leaves gaps, an **inference engine** reads the shape of the data and fills them in.
 
 ```
@@ -34,7 +35,7 @@ Drishti is built in ten waves on `develop`. Each wave is merged to `main` when i
 | 2 | Console shell, 5 themes (incl. *wallstreet*), landing page with hero animation | ✅ done |
 | 3 | Data model, plugin SPI, `demo` + `file` sources, routing, fingerprints | ✅ done |
 | 4 | Sutra grammar: parser with line/column errors, hot-reloading registry | ✅ done |
-| 5 | Sutra-EL expressions, formats, Sutra matching; golden strips for all four mockups | ✅ done |
+| 5 | Rachana-EL expressions, formats, Sutra matching; golden strips for all four mockups | ✅ done |
 | 6 | Inference engine: rules, packing, Sutra ⊕ inference merge | ✅ done |
 | 7 | View pipeline, entity links, command type-ahead service | ✅ done |
 | 8 | REST API and console entity views (the four mockups end to end) | ⏳ next |
@@ -51,7 +52,7 @@ Drishti is built in ten waves on `develop`. Each wave is merged to `main` when i
 - **Data.** The `demo` plugin serves the 36 entities behind the four mockups. The `file` plugin
   serves JSON/CSV feed directories.
 - **Grammar.** Four reference Sutras reproduce the header strips of the mockups exactly (golden
-  tests). Sutra-EL is compiled once and shared across threads.
+  tests). Rachana-EL is compiled once and shared across threads.
 - **Inference.** An entity with no Sutra still gets a sensible layout: strip, tabs, tables, curves,
   bars, ladders, key/value panels and links. Each inferred panel records why it was chosen.
 - **Views.** `ViewPipeline` builds the complete ViewModel of any entity: the title, strip, panels,
@@ -88,7 +89,7 @@ console/.venv/bin/python -m pytest -q console/tests
 drishti/
 ├── drishti-api/                 plugin SPI, DataNode, EntityRef, HitIndex (no Spring)
 ├── drishti-common/              error codes, JSON codec, shape fingerprints
-├── drishti-sutra/               Sutra model, parser, registry, Sutra-EL, formats
+├── drishti-rachana/             Rachana grammar: Sutra model, parser, registry, Rachana-EL, formats
 ├── drishti-inference/           semantic hints, rules, packer, Sutra ⊕ inference merge
 ├── drishti-graph/               reference catalogue, link badges
 ├── drishti-engine/              sources, view pipeline, binder, ViewModel, commands, type-ahead
@@ -108,7 +109,7 @@ drishti/
 |---|---|
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | **The design.** Pipeline, Sutra, inference, type-ahead, live updates, modules, API, UX. |
 | [IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) | **The waves.** W1–W10 with exit gates. |
-| [SUTRA_REFERENCE.md](docs/SUTRA_REFERENCE.md) | **The layout grammar.** Keys, panel kinds, formats, Sutra-EL, problem codes. |
+| [RACHANA_REFERENCE.md](docs/RACHANA_REFERENCE.md) | **The screen grammar.** Keys, panel kinds, formats, Rachana-EL, problem codes. |
 | [INFERENCE.md](docs/INFERENCE.md) | **Layouts from shape.** Rules, packing, merging, semantic hints. |
 | [PLUGIN_GUIDE.md](docs/PLUGIN_GUIDE.md) | **Bringing data in.** The source SPI, routing and configuration. |
 | [PERFORMANCE.md](docs/PERFORMANCE.md) | **Measured numbers.** JMH hot paths and the end-to-end latency gate. |

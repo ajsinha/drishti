@@ -15,6 +15,11 @@
 -->
 # Changelog
 
+## Unreleased — naming: Rachana and Sutra (ADR-008)
+- **Rachana** (रचना) is the declarative screen grammar. **Sutra** is one layout written in it.
+- The module `drishti-sutra` is now `drishti-rachana` (packages `com.ash.drishti.rachana`). The configuration prefix is `drishti.rachana.*`, the expression language is **Rachana-EL**, and the reference is `RACHANA_REFERENCE.md`.
+- Sutra files, `Sutra`, `SutraRegistry` and the view label `Sutra irs-vanilla v3 + inference` keep their names.
+
 ## Unreleased — Wave 7: view pipeline, entity graph, type-ahead
 - `drishti-graph`: config-driven `ReferenceCatalog` (identifier patterns and reference fields) and `BadgeRenderer` (`EE 4.1m`, `threshold 0`, `live`).
 - `drishti-engine`:
@@ -33,8 +38,8 @@
 - README rewritten to show the real state of the project: a status table per wave, what works, how to run it. It is now updated with every wave.
 - Docs: `INFERENCE.md`.
 
-## Unreleased — Wave 5: Sutra-EL, formats & matching
-- Sutra-EL: lexer, recursive-descent parser (the EBNF is in `SUTRA_REFERENCE.md`), and immutable closure trees with cached compilation. Paths, filters, ternary, arithmetic, twelve pure functions, `link(...)`, and `${...}` templates.
+## Unreleased — Wave 5: Rachana-EL, formats & matching
+- Rachana-EL: lexer, recursive-descent parser (the EBNF is in `RACHANA_REFERENCE.md`), and immutable closure trees with cached compilation. Paths, filters, ternary, arithmetic, twelve pure functions, `link(...)`, and `${...}` templates.
 - Every expression reports the document paths it reads, ready for dependency-driven live updates.
 - Every expression in a Sutra is compiled at load; errors are reported against the file (`DRS-2101`).
 - `Formats` (bundled `formats.yaml` plus a site override; true minus sign, grouping, percent, compact `4.1m`, dates) and `Tones`.
@@ -42,11 +47,11 @@
 - Golden test: the four reference Sutras reproduce the mockups' header strips exactly. jqwik property tests check the arithmetic and comparisons.
 
 ## Unreleased — Wave 4: Sutra grammar
-- `drishti-sutra`: immutable model (`Sutra`, `Match`, `Title`, `StripItem`, `Panel`, `Column`, twelve `PanelKind`s with per-kind required and optional options).
+- `drishti-rachana`: immutable model (`Sutra`, `Match`, `Title`, `StripItem`, `Panel`, `Column`, twelve `PanelKind`s with per-kind required and optional options).
 - A position-aware YAML reader and a validator that reports **every** problem with its line and column (`DRS-20xx`).
 - `SutraRegistry`: `name@version` lookup, per-kind matching by priority, lock-free snapshot reads, `WatchService` hot reload with debounce, last good version kept on error, change listeners.
 - `sutra.schema.json` for editors. The four reference Sutras for the mockups.
-- Docs: `SUTRA_REFERENCE.md`.
+- Docs: `RACHANA_REFERENCE.md`.
 
 ## Unreleased — Wave 3: data model & sources
 - `drishti-api`: `DataNode` (immutable tree; navigation never throws), `EntityRef`, `EntityDocument`, `Provenance`, and the `SourcePlugin` SPI with `search` (for the type-ahead) and `reverse`. `HitIndex` provides in-memory search.

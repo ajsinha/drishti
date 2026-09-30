@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.graph;
 
-import com.ash.drishti.sutra.el.ElCompiler;
-import com.ash.drishti.sutra.format.Formats;
+import com.ash.drishti.rachana.el.ElCompiler;
+import com.ash.drishti.rachana.format.Formats;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

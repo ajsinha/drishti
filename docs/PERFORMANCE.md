@@ -30,7 +30,7 @@ java -cp "drishti-benchmarks/target/classes:$(cat cp.txt)" org.openjdk.jmh.Main
 
 | Benchmark | 2026-09-30, developer workstation | What it is |
 |---|---|---|
-| `evalTernary` | 0.011 µs | `$.direction == 'PAY_FIXED' ? … : …` (compiled Sutra-EL) |
+| `evalTernary` | 0.011 µs | `$.direction == 'PAY_FIXED' ? … : …` (compiled Rachana-EL) |
 | `evalSum` | 0.049 µs | `sum($.legs[0].cashflows, 'pv')` |
 | `formatSigned` | 0.090 µs | `signed2` of −1,962,430.56 |
 | `fingerprint` | 3.5 µs | shape fingerprint of the whole IRS document (cached per generation) |

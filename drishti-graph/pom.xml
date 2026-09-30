@@ -28,7 +28,7 @@
   <name>drishti-graph</name>
   <description>Entity references and link resolution</description>
   <dependencies>
-    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-sutra</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-rachana</artifactId></dependency>
     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot</artifactId></dependency>
   </dependencies>
 </project>

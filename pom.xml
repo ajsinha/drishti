@@ -38,7 +38,7 @@
   <modules>
     <module>drishti-api</module>
     <module>drishti-common</module>
-    <module>drishti-sutra</module>
+    <module>drishti-rachana</module>
     <module>drishti-inference</module>
     <module>drishti-graph</module>
     <module>drishti-engine</module>
@@ -67,7 +67,7 @@
     <dependencies>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId><version>${project.version}</version></dependency>
-      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-sutra</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-rachana</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-inference</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-graph</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-engine</artifactId><version>${project.version}</version></dependency>

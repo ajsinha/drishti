@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.inference;
 
-import com.ash.drishti.sutra.model.Panel;
+import com.ash.drishti.rachana.model.Panel;
 
 /**
  * A panel proposed by a rule.

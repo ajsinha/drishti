@@ -19,14 +19,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.common.JsonCodec;
-import com.ash.drishti.sutra.SutraMatcher;
-import com.ash.drishti.sutra.SutraProperties;
-import com.ash.drishti.sutra.SutraRegistry;
-import com.ash.drishti.sutra.el.ElCompiler;
-import com.ash.drishti.sutra.format.Formats;
-import com.ash.drishti.sutra.model.Panel;
-import com.ash.drishti.sutra.model.PanelKind;
-import com.ash.drishti.sutra.model.StripItem;
+import com.ash.drishti.rachana.SutraMatcher;
+import com.ash.drishti.rachana.RachanaProperties;
+import com.ash.drishti.rachana.SutraRegistry;
+import com.ash.drishti.rachana.el.ElCompiler;
+import com.ash.drishti.rachana.format.Formats;
+import com.ash.drishti.rachana.model.Panel;
+import com.ash.drishti.rachana.model.PanelKind;
+import com.ash.drishti.rachana.model.StripItem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -95,7 +95,7 @@ class InferenceEngineTest {
 
     @Test
     void sutraWinsAndInferenceFillsItsGaps() throws Exception {
-        try (SutraRegistry reg = new SutraRegistry(new SutraProperties(List.of("../sutras"), false, null, null, null), EL)) {
+        try (SutraRegistry reg = new SutraRegistry(new RachanaProperties(List.of("../sutras"), false, null, null, null), EL)) {
             SutraMatcher matcher = new SutraMatcher(reg, EL, F);
             DataNode fut = fixture("trade", "CFT-77120");
             EffectiveLayout e = MERGER.merge(matcher.match("trade", fut), fut, "trade");

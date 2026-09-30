@@ -36,12 +36,12 @@ class ArchitectureRulesTest {
     static final ArchRule apiDependsOnNothingInternal = noClasses()
             .that().resideInAPackage("com.ash.drishti.api..")
             .should().dependOnClassesThat().resideInAnyPackage(
-                    "com.ash.drishti.common..", "com.ash.drishti.sutra..", "com.ash.drishti.engine..",
+                    "com.ash.drishti.common..", "com.ash.drishti.rachana..", "com.ash.drishti.engine..",
                     "com.ash.drishti.server..");
 
     @ArchTest
     static final ArchRule lowerLayersDoNotSeeEngine = noClasses()
-            .that().resideInAnyPackage("com.ash.drishti.common..", "com.ash.drishti.sutra..",
+            .that().resideInAnyPackage("com.ash.drishti.common..", "com.ash.drishti.rachana..",
                     "com.ash.drishti.inference..", "com.ash.drishti.graph..")
             .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.engine..", "com.ash.drishti.server..");
 

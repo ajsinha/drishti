@@ -20,7 +20,7 @@ import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.common.Fingerprint;
 import com.ash.drishti.graph.LinkRef;
 import com.ash.drishti.inference.EffectiveLayout;
-import com.ash.drishti.sutra.el.EvalContext;
+import com.ash.drishti.rachana.el.EvalContext;
 import java.util.List;
 import java.util.Map;
 

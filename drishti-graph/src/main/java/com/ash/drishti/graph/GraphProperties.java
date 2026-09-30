@@ -25,7 +25,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * @param idPatterns identifier regex to kind, tried in order, for values whose kind is not stated
  * @param fields document field name to the kind and label of the entity it references
- * @param badges kind to a Sutra-EL expression over the target document, shown beside the link ({@code EE 4.1m})
+ * @param badges kind to a Rachana-EL expression over the target document, shown beside the link ({@code EE 4.1m})
  * @param linkBudget how long a view waits for linked entities before showing them as pending
  */
 @ConfigurationProperties("drishti.graph")

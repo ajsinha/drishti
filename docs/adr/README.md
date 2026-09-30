@@ -24,5 +24,6 @@
 | [005](005-server-sent-events-for-live-updates.md) | Server sent events for live updates |
 | [006](006-vendored-front-end-without-a-build-pipeline.md) | Vendored front end without a build pipeline |
 | [007](007-build-gates-in-tests.md) | Build gates in tests |
+| [008](008-rachana-is-the-grammar-a-sutra-is-a-layout.md) | Rachana is the grammar, a Sutra is a layout |
 
 ADRs are amended, never rewritten.

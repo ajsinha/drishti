@@ -22,7 +22,7 @@ Each one traditionally gets a bespoke screen, written once and rotting forever.
 The data changes shape faster than screens can be rebuilt.
 
 Drishti inverts this. A screen is **not code** — it is the result of applying a
-declarative layout grammar (**Sutra**) to a data document, with an **inference
+layout written in the declarative screen grammar **Rachana** (a **Sutra**) to a data document, with an **inference
 engine** filling whatever the grammar does not say. A brand-new product type with
 no Sutra at all still renders a usable view on day one; a Sutra makes it beautiful.
 
@@ -98,7 +98,8 @@ way MAYA's web layer is.
 | **DataNode** | Immutable, source-neutral tree (object / array / scalar) holding the entity document. |
 | **Source** | A plugin that can `fetch`, optionally `subscribe`, and describes its *generation* (monotonic version). |
 | **Fingerprint** | Stable hash of a document's **shape** (paths + types, not values), e.g. `a91c…71e4`. Keys the layout cache. |
-| **Sutra** | Versioned declarative layout grammar: header strip, panels, bindings, formats, keys, links. |
+| **Rachana** | The declarative screen grammar (रचना, *composition*): so no product ever gets its own coded screen. |
+| **Sutra** | One layout written in Rachana, versioned (`irs-vanilla v3`): header strip, panels, bindings, formats, keys, links. |
 | **Inference** | Rule engine that derives panels from shape when a Sutra is absent or partial ("Sutra X + inference"). |
 | **Layout** | Resolved, data-free plan = Sutra ⊕ inferred panels. Cached per `(sutra@version, fingerprint)`. |
 | **ViewModel** | Layout bound to values: what the console renders. Serialisable JSON. |
@@ -132,11 +133,11 @@ binding renders an inline error chip for that panel only; the view still renders
 
 ---
 
-## 5. Sutra — the layout grammar
+## 5. Rachana — the screen grammar — and Sutras written in it
 
-Sutra files are YAML, live in `sutras/<domain>/<name>.v<N>.yaml`, are validated
+Rachana is the grammar; each Sutra is a YAML file written in it. Sutra files live in `sutras/<domain>/<name>.v<N>.yaml`, are validated
 against a JSON Schema at load, and hot-reload via `WatchService`. Bindings use a
-small, compiled path/expression language (**Sutra-EL**) — not scripting.
+small, compiled path/expression language (**Rachana-EL**) — not scripting.
 
 ```yaml
 # sutras/rates/irs-vanilla.v3.yaml
@@ -164,7 +165,7 @@ keys:   { F7: link($.nettingSet), F8: impact, F9: raw }
 
 **Panel kinds (v1):** `kv`, `table`, `tabs`, `line`, `area`, `hbar`, `ladder`,
 `links`, `status`, `provenance`, `markdown`, `gauge`. The full grammar is in
-[SUTRA_REFERENCE.md](SUTRA_REFERENCE.md). New kinds are added via
+[RACHANA_REFERENCE.md](RACHANA_REFERENCE.md). New kinds are added via
 the `PanelKind` SPI on the Java side plus a Jinja macro + JS renderer on the console.
 
 **Formats** (`fmt`) are named, config driven (`config/formats.yaml`): `amount0`,
@@ -272,7 +273,7 @@ Maven multi-module reactor on `spring-boot-starter-parent`, `groupId com.ash.dri
 |---|---|---|
 | `drishti-api` | Plugin SPI: `SourcePlugin`, `DataNode`, `EntityRef`, `PanelKind`, `InferenceRule`, `Formatter` (no Spring, so plugins stay light) | – |
 | `drishti-common` | Error codes (`DRS-nnnn`), JSON, fingerprints, config records | `CommonConfiguration` |
-| `drishti-sutra` | Sutra model, YAML parser, JSON-Schema validation, Sutra-EL compiler, registry + hot reload | `SutraConfiguration` |
+| `drishti-rachana` | Sutra model, YAML parser, JSON-Schema validation, Rachana-EL compiler, registry + hot reload | `RachanaConfiguration` |
 | `drishti-inference` | Shape analysis, semantic hints, rules, scorer, packer | `InferenceConfiguration` |
 | `drishti-graph` | Reference catalog, link resolution, reverse lookups | `GraphConfiguration` |
 | `drishti-engine` | Pipeline, `LayoutResolver`, `Binder`, caches, `TopicHub`, `ViewMaintainer`, plugin discovery | `EngineConfiguration` |
@@ -313,7 +314,7 @@ in tracked files.
 | `drishti-server/src/main/resources/application.yaml` | server, `drishti.engine.*` (budgets, pools, cache sizes), `drishti.sources.*` |
 | `config/mnemonics.yaml` | `TRD → trade`, `NSET → netting-set`, … |
 | `config/references.yaml` | id patterns and field names → kinds |
-| `drishti-sutra/.../formats.yaml` (+ `drishti.sutra.formats-file`) | named number/date formats |
+| `drishti-rachana/.../formats.yaml` (+ `drishti.rachana.formats-file`) | named number/date formats |
 | `config/inference/*.yaml` | rule weights, semantic hints, density limits |
 | `sutras/**` | layout grammar files |
 | `console/config/application.yaml` | console port, server URL, theme default, feature flags |

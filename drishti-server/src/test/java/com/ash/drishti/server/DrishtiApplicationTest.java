@@ -20,12 +20,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.engine.source.SourceRegistry;
 import com.ash.drishti.engine.source.SourceRouter;
-import com.ash.drishti.sutra.SutraRegistry;
+import com.ash.drishti.rachana.SutraRegistry;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest(properties = {"drishti.sutra.dirs=../sutras", "drishti.sutra.hot-reload=false"})
+@SpringBootTest(properties = {"drishti.rachana.dirs=../sutras", "drishti.rachana.hot-reload=false"})
 class DrishtiApplicationTest {
 
     private final SourceRegistry registry;

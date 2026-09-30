@@ -17,7 +17,7 @@ package com.ash.drishti.inference;
 
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.NodeType;
-import com.ash.drishti.sutra.model.Column;
+import com.ash.drishti.rachana.model.Column;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
