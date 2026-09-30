@@ -15,6 +15,16 @@
 -->
 # Changelog
 
+## 1.7.0 — Wave 15: F8 Impact (2026-09-30)
+- **F8 Impact** (`/impact/{kind}/{id}`, `GET /api/v1/impact/{kind}/{id}`) answers "what depends on this?":
+  - level 1: every entity that references it (reverse lookups across all known kinds, in parallel);
+  - level 2: what those roll into, following fields each pack configures (finance: `nettingSet`, `creditLimit`; logistics: `vessel`, `destination`);
+  - each group shows its count and the summed measure at stake (trade MTM, netting-set net MTM, shipment declared value);
+  - kinds the caller may not open are counted, never shown.
+  A SOFR move reaches its trades and their netting sets in about 1–6 ms.
+- The demo source's reverse lookup also matches arrays of identifiers (for example `discountCurves`).
+- Docs: an *F8 · Impact* guide in help; user guide, API guide, architecture and packs guide updated; README no longer lists F8 as unbuilt.
+
 ## 1.6.0 — Wave 14: monitors and alerts (2026-09-30)
 - **Monitors** (`/m`): live watchlists of up to 50 entities of any kinds, each row showing its own strip. One multiplexed SSE stream per page (`/api/v1/me/monitors/{name}/stream`, a `row` event per changed entity). Starters come from packs (finance: *Credit watch*; logistics: *Fleet watch*). Saved per user.
 - **Alerts** (`/alerts`):

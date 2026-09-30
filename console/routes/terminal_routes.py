@@ -43,6 +43,15 @@ async def go(request: Request, q: str = ""):
     return RedirectResponse(f"/v/{r['ref']['kind']}/{quote(r['ref']['id'])}", status_code=303)
 
 
+@router.get("/impact/{kind}/{id_}")
+async def impact(request: Request, kind: str, id_: str):
+    try:
+        data = await request.app.state.backend.impact(kind, id_, ident(request))
+    except BackendError as e:
+        return render(request, "terminal/missing.html", status_code=e.status if e.status < 500 else 502, kind=kind, id=id_, error=e)
+    return render(request, "terminal/impact.html", kind=kind, id=id_, data=data, screen="impact")
+
+
 @router.get("/v/{kind}/{id_}")
 async def view(request: Request, kind: str, id_: str, embed: int = 0):
     try:

@@ -69,6 +69,7 @@ public final class PackLoader {
         Map<String, Object> p = new LinkedHashMap<>();
         Map<String, String> owner = new LinkedHashMap<>();
         int patterns = 0;
+        int follows = 0;
         List<String> sutraDirs = new ArrayList<>();
         List<String> formats = new ArrayList<>();
         List<String> semantics = new ArrayList<>();
@@ -96,6 +97,12 @@ public final class PackLoader {
                     p.put("drishti.graph.fields." + e.getKey() + ".label", f.get("label"));
                 }
             }
+            Map<String, Object> impact = map(graph.get("impact"));
+            for (Object f : (List<Object>) impact.getOrDefault("follow", List.of())) {
+                p.put("drishti.graph.impact.follow[" + follows++ + "]", f);
+            }
+            map(impact.get("measures")).forEach((kind, expr) -> p.put("drishti.graph.impact.measures." + kind, expr));
+            map(impact.get("formats")).forEach((kind, fmt) -> p.put("drishti.graph.impact.formats." + kind, fmt));
             map(graph.get("badges")).forEach((kind, expr) -> {
                 claim(owner, "badge " + kind, pack.name());
                 p.put("drishti.graph.badges." + kind, expr);

@@ -129,7 +129,7 @@ Ten waves (plus W11, user management, after 1.0.0). Each holds a small set of cl
 | W13 ✅ | Workspaces | several views on one screen with linked selection, saved per user |
 | W13b ✅ | Domain packs | a neutral core; finance and logistics packs; `DRISHTI_PACKS` |
 | W14 ✅ | Monitors and alerts | watchlists with live columns; threshold alerts with notifications |
-| W15 | F8 Impact | what depends on an entity (reverse graph), navigable |
+| W15 ✅ | F8 Impact | what depends on an entity (reverse graph), navigable |
 | W16 | History | view an entity as of a generation or time; diff between generations |
 | W17 | Structured search | `TRD where counterparty = … and mtm < …` giving a live result table |
 | W18 | Export and share | CSV/Excel/PDF of a view; permalinks to an exact view and generation |

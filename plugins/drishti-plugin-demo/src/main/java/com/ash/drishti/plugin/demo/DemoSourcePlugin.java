@@ -172,6 +172,13 @@ public final class DemoSourcePlugin implements SourcePlugin {
                 if (v instanceof DataNode.Val val && id.equals(val.asText())) {
                     return true;
                 }
+                if (v instanceof DataNode.Arr arr) {
+                    for (DataNode e : arr.elements()) {
+                        if (e instanceof DataNode.Val val && id.equals(val.asText())) {
+                            return true;
+                        }
+                    }
+                }
             }
         }
         return false;

@@ -27,16 +27,31 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param fields document field name to the kind and label of the entity it references
  * @param badges kind to a Rachana-EL expression over the target document, shown beside the link ({@code EE 4.1m})
  * @param linkBudget how long a view waits for linked entities before showing them as pending
+ * @param impact how impact analysis (F8) rolls dependents up and what it measures
  */
 @ConfigurationProperties("drishti.graph")
 public record GraphProperties(
-        List<IdPattern> idPatterns, Map<String, FieldRef> fields, Map<String, String> badges, Duration linkBudget) {
+        List<IdPattern> idPatterns, Map<String, FieldRef> fields, Map<String, String> badges, Duration linkBudget, Impact impact) {
 
     public GraphProperties {
         idPatterns = idPatterns == null ? List.of() : List.copyOf(idPatterns);
         fields = fields == null ? Map.of() : Map.copyOf(fields);
         badges = badges == null ? Map.of() : Map.copyOf(badges);
         linkBudget = linkBudget == null ? Duration.ofMillis(40) : linkBudget;
+        impact = impact == null ? new Impact(null, null, null) : impact;
+    }
+
+    /**
+     * @param follow reference fields followed upward from dependents (a trade's {@code nettingSet}) to find what they roll into
+     * @param measures kind to a Rachana-EL expression summed per group ({@code $.mtm})
+     * @param formats kind to the format for its measure
+     */
+    public record Impact(List<String> follow, Map<String, String> measures, Map<String, String> formats) {
+        public Impact {
+            follow = follow == null ? List.of() : List.copyOf(follow);
+            measures = measures == null ? Map.of() : Map.copyOf(measures);
+            formats = formats == null ? Map.of() : Map.copyOf(formats);
+        }
     }
 
     /**

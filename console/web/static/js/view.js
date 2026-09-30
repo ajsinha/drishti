@@ -161,7 +161,9 @@
     } else if (action === 'link') { window.location.href = btn.getAttribute('data-href'); }
     else if (action === 'raw') { toggleRaw(); }
     else if (action === 'back') { history.back(); }
-    else if (action === 'impact') { btn.title = 'Impact analysis arrives in a later wave'; }
+    else if (action === 'impact' && view) {
+      window.location.href = '/impact/' + encodeURIComponent(view.dataset.kind) + '/' + encodeURIComponent(view.dataset.id);
+    }
   }
   document.querySelectorAll('[data-fkey]').forEach(function (b) { b.addEventListener('click', function () { run(b); }); });
   document.addEventListener('keydown', function (e) {

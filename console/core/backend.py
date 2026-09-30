@@ -95,6 +95,9 @@ class BackendClient:
     async def save_sutra(self, yaml_text: str, ident=None) -> dict:
         return await self._send("POST", "/sutras", ident, content=yaml_text.encode(), headers={"Content-Type": "text/yaml"})
 
+    async def impact(self, kind: str, id_: str, ident=None) -> dict:
+        return await self._get(f"/impact/{kind}/{quote(id_)}", ident)
+
     async def packs(self, ident=None) -> list:
         return await self._get("/packs", ident)
 

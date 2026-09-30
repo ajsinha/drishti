@@ -101,3 +101,16 @@ def test_stream_relays_frames_with_server_rendered_panels(client, backend):
     assert data["patches"][0]["cell"]["text"] == "−410,000"
     assert 'id="p-dv01"' in data["patches"][1]["html"] and "+7,030" in data["patches"][1]["html"]
     assert "html" not in data["patches"][2] and data["patches"][2]["panel"]["data"]["mark"] == "5Y"
+
+
+def test_impact_page(client, backend):
+    async def impact(kind, id_, ident=None):
+        return {"ref": {"kind": kind, "id": id_}, "elapsedMs": 3.2, "groups": [
+            {"level": 1, "kind": "trade", "mnemonic": "TRD", "hidden": 0, "total": "−394,160",
+             "items": [{"ref": {"kind": "trade", "id": "IRS-48213"}, "via": None, "measure": "−412,580"}]},
+            {"level": 2, "kind": "netting-set", "mnemonic": "NSET", "hidden": 1, "total": None, "items": []}]}
+    backend.impact = impact
+    r = client.get("/impact/curve/USD-SOFR")
+    assert r.status_code == 200 and "Impact of" in r.text and "IRS-48213" in r.text and "total −394,160" in r.text
+    assert "1 netting set you do not have access to" in r.text
+    assert "window.location.href = '/impact/'" in client.get("/static/js/view.js").text

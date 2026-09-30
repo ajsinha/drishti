@@ -37,6 +37,10 @@ graph:
     vessel:      { kind: vessel, label: Vessel }
     container:   { kind: container, label: Container }
     shipment:    { kind: shipment, label: Shipment }
+  impact:
+    follow: [vessel, destination]
+    measures: { shipment: "$.declaredValue" }
+    formats:  { shipment: amount0 }
   badges:
     container: "fmt($.currentC, 'temp1')"
     vessel: "fmt($.speedKnots, 'knots1')"

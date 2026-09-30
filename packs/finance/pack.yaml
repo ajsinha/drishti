@@ -60,6 +60,10 @@ graph:
     clearingAccount: { kind: clearing-account, label: Clearing account }
     contractSpec:    { kind: contract-spec, label: Contract spec }
     book:            { kind: book, label: Book }
+  impact:                       # F8: what depends on an entity
+    follow: [nettingSet, creditLimit]          # roll dependents up into their netting sets and limits
+    measures: { trade: "$.mtm", netting-set: "$.netMtm", credit-limit: "$.limit" }
+    formats:  { trade: signed0, netting-set: signed0, credit-limit: compact }
   badges:                       # kind -> Rachana-EL over the linked document
     netting-set: "'EE ' + fmt($.eePeak, 'compact')"
     csa: "'threshold ' + $.threshold"

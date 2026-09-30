@@ -52,7 +52,7 @@ Matched characters are highlighted.
 | `Esc` | close the suggestions or the raw drawer |
 | `F2`–`F6` | jump to a panel (shown in each panel's header and the footer) |
 | `F7` | open the main linked entity (netting set, clearing account, counterparty) |
-| `F8` | impact (a later wave) |
+| `F8` | impact: what depends on this entity, what that rolls into, and the amount at stake |
 | `F9` | raw JSON of the entity, with its source and generation |
 | `Alt+←` | back |
 

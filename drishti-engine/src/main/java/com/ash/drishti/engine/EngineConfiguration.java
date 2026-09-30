@@ -100,6 +100,12 @@ public class EngineConfiguration {
     }
 
     @Bean
+    public com.ash.drishti.engine.impact.ImpactService impactService(SourceRouter router, Mnemonics mnemonics, ReferenceCatalog catalog,
+            GraphProperties graph, ElCompiler el, Formats formats, ExecutorService drishtiVirtualExecutor) {
+        return new com.ash.drishti.engine.impact.ImpactService(router, mnemonics, catalog, graph, el, formats, drishtiVirtualExecutor);
+    }
+
+    @Bean
     public Binder binder(ElCompiler el, Formats formats, ReferenceCatalog catalog, BadgeRenderer badges, Mnemonics mnemonics) {
         return new Binder(el, formats, catalog, badges, mnemonics);
     }

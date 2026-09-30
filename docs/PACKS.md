@@ -70,6 +70,11 @@ console:
   help:       config/help.yaml
 ```
 
+Impact (F8) is configured under `graph.impact`:
+- `follow` lists the fields used to roll dependents up;
+- `measures` gives the Rachana-EL expression summed per kind;
+- `formats` gives how to show it.
+
 A pack can also suggest **alert rules** per kind (`alerts:` with `kind`, `name`, `when`, `severity`,
 `message`) and offer **starter monitors** (`console.monitors: { Name: [ {kind, id}, … ] }`).
 

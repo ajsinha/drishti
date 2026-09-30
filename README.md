@@ -27,7 +27,7 @@ terminal does.
 
 ## Status
 
-**Drishti 1.6.0 is released** (see [RELEASE_NOTES.md](RELEASE_NOTES.md)). It is built in waves on `develop`, each merged to `main` when its build was green.
+**Drishti 1.7.0 is released** (see [RELEASE_NOTES.md](RELEASE_NOTES.md)). It is built in waves on `develop`, each merged to `main` when its build was green.
 
 | Wave | Theme | State |
 |---|---|---|
@@ -47,8 +47,9 @@ terminal does.
 | 13 | Workspaces | ✅ done |
 | 13b | Domain packs: neutral core; finance and logistics packs | ✅ done |
 | 14 | Monitors and alerts | ✅ done |
-| 15 | F8 impact | ⏳ next |
-| 16–21 | History · structured search · export and share · Sutra governance · Kafka/aero/OIDC · personal settings | ◻️ planned |
+| 15 | F8 impact | ✅ done |
+| 16 | History | ⏳ next |
+| 17–21 | Structured search · export and share · Sutra governance · Kafka/aero/OIDC · personal settings | ◻️ planned |
 
 ## What works today
 
@@ -88,6 +89,7 @@ terminal does.
 - **Domain packs.** The core carries no industry. `finance` (the mockups) and `logistics` (shipments,
   containers, vessels, ports) are packs you enable with `DRISHTI_PACKS=finance,logistics`, and a new
   industry is configuration only. See [PACKS.md](docs/PACKS.md).
+- **Impact (F8).** What depends on an entity, what that rolls into, and the amount at stake.
 - **Monitors and alerts.** Live watchlists (`/m`), and rules the server checks on every tick
   (`$.utilisation > 0.8`), with a bell and toasts when they fire.
 - **Workspaces.** Several live views on one screen (`/w`); a pane can follow another's selection.
@@ -95,7 +97,7 @@ terminal does.
 - **Mobile.** It works on iPhone and Android browsers and can be added to the home screen. F-keys
   become a swipeable button row.
 - **Operations.** Prometheus metrics, a Grafana dashboard, Dockerfiles and compose, and runbooks.
-- **Not built** (see the release notes): OIDC/SSO, the `aero` plugin, and F8 Impact.
+- **Not built yet** (on the roadmap): OIDC/SSO and the `aero` plugin (W20), history, structured search, export, and Sutra governance.
 
 ## Try it
 

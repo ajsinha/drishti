@@ -13,6 +13,13 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 1.7.0 — release notes
+
+*2026-09-30.* **F8 Impact** is built. It is the known limit listed since 1.0.0, and it now shows what
+depends on an entity, what that rolls into, and the amount at stake.
+
+---
+
 # Drishti 1.6.0 — release notes
 
 *2026-09-30.* This release adds **monitors and alerts**:

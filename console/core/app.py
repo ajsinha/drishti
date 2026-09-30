@@ -30,12 +30,12 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from core.config import Settings
 
 WEB = Path(__file__).resolve().parent.parent / "web"
-ASSET_VERSION = "1.6.0"
+ASSET_VERSION = "1.7.0"
 CSP = ("default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; "
        "font-src 'self'; connect-src 'self'; frame-src 'self'; frame-ancestors 'self'")
 
 
-PROTECTED = ("/t", "/v/", "/go", "/studio", "/api/", "/admin", "/account", "/w", "/m", "/alerts")
+PROTECTED = ("/t", "/v/", "/go", "/studio", "/api/", "/admin", "/account", "/w", "/m", "/alerts", "/impact")
 
 
 class AuthGate(BaseHTTPMiddleware):

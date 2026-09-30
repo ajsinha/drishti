@@ -36,6 +36,7 @@ admin endpoints are in USER_MANAGEMENT.md; live streaming is in LIVE.md.
 | `GET` / `PUT` / `DELETE` | `/me/alerts/rules[/{name}]` | alert rules `{kind, id, when, severity, message, enabled}`; `when` and `message` are Rachana-EL, checked on save (`DRS-2101`) |
 | `GET` | `/me/alerts` · `/me/alerts/stream` · `/me/alerts/suggestions/{kind}` | fired alerts (newest first) · SSE `alert` events · the packs' suggested rules for a kind |
 | `GET` | `/packs` | the enabled domain packs |
+| `GET` | `/impact/{kind}/{id}` | F8: `{ref, groups: [{level, kind, mnemonic, items: [{ref, via, measure}], hidden, total}], elapsedMs}`; level 1 = dependents, level 2 = what they roll into; kinds the caller may not open are only counted |
 | `GET` / `PUT` / `DELETE` | `/me/workspaces[/{name}]` | the caller's workspaces: `{layout, panes: [{ref, follows, title}]}`; validated (known layout, 1–4 panes, entities the caller may open, no follow cycles) |
 
 ```bash
