@@ -142,7 +142,11 @@ Ten waves (plus W11, user management, after 1.0.0). Each holds a small set of cl
 | Wave | Pack | Scope |
 |---|---|---|
 | W13c | Per-user packs | admins assign packs to users; users choose active packs; kinds owned by one pack; enforced server-side |
-| R1–R5 | **risk** (market risk and counterparty credit risk) | taxonomy of ~110 products, market data and risk/reference kinds; generated Sutras, data and documentation; `datafiles` connector; the same data in Aerospike and PostgreSQL |
+| R1 ✅ | **risk**: taxonomy | 125 products in ten asset classes, 21 market-data kinds, 24 risk and reference kinds, one source of truth (`packs/risk/tools/taxonomy.py`) with uniqueness checks |
+| R2 ✅ | risk: Sutras | `make_sutras.py` writes 170 Markdown Sutras (125 products, 45 kinds) that double as the data dictionary; `trade_shape.py` is the trade-document contract; every pack's Sutras load with zero problems (`PackSutrasTest`); drill fails if generated files drift |
+| R3 | risk: data | `make_data.py`: thousands of consistent JSON documents (counterparties → netting sets → trades → market data; exposure, CVA, SA-CCR, SIMM, VaR, stress, FRTB, P&L) and a consistency checker |
+| R4 | risk: connector and docs | `datafiles` connector; named connector instances (several per pack); risk `pack.yaml`; `make_docs.py` |
+| R5 | risk: databases and feeds | the same data in Aerospike and PostgreSQL with the same tests; public data feeds as separately switchable connectors, off by default |
 | P2 | liquidity risk | |
 | P3 | climate risk | |
 | P4 | operational and non-financial risk | |

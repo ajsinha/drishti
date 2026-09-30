@@ -49,7 +49,8 @@ terminal does.
 | 14 | Monitors and alerts | ✅ done |
 | 15 | F8 impact | ✅ done |
 | 13c | Packs per user: admins assign, users choose, enforced by the server | ✅ done |
-| R1–R5 | Risk pack (market and counterparty credit risk): ~110 products, market data, risk data, `datafiles` connector, Aerospike and PostgreSQL | ⏳ next |
+| R1–R2 | Risk pack: taxonomy of 125 products and 45 data kinds; 170 generated Markdown Sutras | ✅ done |
+| R3–R5 | Risk pack: generated data, `datafiles` connector and connector instances, docs, Aerospike and PostgreSQL, public feeds | ⏳ next |
 | P2–P8 | Packs: liquidity, climate, operational/non-financial, retail banking, genomics and biology, politics and society, economics | ◻️ planned |
 | 16 | History | ◻️ after the risk pack |
 | 17–21 | Structured search · export and share · Sutra governance · Kafka/aero/OIDC · personal settings | ◻️ planned |

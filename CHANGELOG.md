@@ -16,6 +16,7 @@
 # Changelog
 
 ## Unreleased
+- **Risk pack, R2:** `packs/risk/tools/make_sutras.py` writes 170 Markdown Sutras from the taxonomy: one per product (terms, legs, schedule, market-data chart, risk by bucket, P&L, links) and one per market-data, risk and reference kind. Each explains its fields, market data and risk measures, so the Sutras are also the data dictionary. `trade_shape.py` fixes the trade-document contract shared with the data generator. New `PackSutrasTest` loads every pack's Sutras with zero problems, and `tools/drill.sh` refuses to merge if generated pack files are out of date.
 - **Sutras are Markdown documents** (ADR-011). The standard file is `<name>.v<N>.sutra.md`: prose for people and AI assistants, with the layout in one fenced `sutra` block. Problems keep the Markdown file's line numbers, and a missing, duplicated or unclosed block is `DRS-2004`. Plain `*.yaml` Sutras still load. The finance and logistics Sutras are converted, and `tools/sutra_to_md.py` converts others.
 - **Studio is a Markdown editor:** a toolbar with shortcuts, Markdown highlighting with Rachana inside the block, **Insert…** snippets (a `sutra` block, a strip field, all twelve panel kinds), a **Jump to…** outline, soft wrap and a rendered **Document** tab (rendered without raw HTML and with only safe links). Inference and Save produce Markdown Sutras.
 - **Themes:** *crimson* and *crimson dark*, Maya's Harvard crimson and indigo palette, bring the total to seven themes. Contrast is checked like the others.
