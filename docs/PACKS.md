@@ -23,6 +23,8 @@ everything specific to that domain. Enable the packs you need; everything else s
 |---|---|
 | `finance` (default) | Trades (IRS, FX swap, futures, and more), netting sets, CSAs, agreements, curves, limits; the four reference Sutras; finance vocabulary (MTM, DV01, notional, pips); `trader` and `risk` roles; the mockups' live sample data; the capital-markets tutorials |
 | `logistics` | Shipments, reefer containers, vessels, ports; a shipment Sutra; logistics vocabulary (weights, temperatures, delays, knots, TEU); an `ops` role; live samples; a Shipment tracker workspace |
+| banking family | `banking-core`, `market-data`, `trading`, `market-risk`, `counterparty-risk` (generated from one taxonomy), plus `liquidity-risk`, `climate-risk`, `operational-risk` and `retail-banking`; see below |
+| other domains | `genomics` (genes, variants, proteins, samples, trials), `politics-society` (fictional polities: elections, polls, bills), `economics` (economies, indicators, central banks, forecasts, trade) |
 
 ## Enabling packs
 

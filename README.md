@@ -76,8 +76,9 @@ terminal does.
   (no CDN), and the contrast of every theme is checked in tests.
 - **Server** (`drishti-server`). A Spring Boot application on virtual threads. It discovers source
   plugins and routes reads by config, with deadlines. It loads and hot-reloads Sutras.
-- **Data.** The `demo` plugin serves the enabled packs' samples: the finance pack has the 36 entities behind the four mockups, and the logistics pack has shipments, containers, vessels and ports. The `file` plugin
-  serves JSON/CSV feed directories.
+- **Data.** Connectors read Delta Lake (per data domain, dated partitions, time travel), PostgreSQL, Aerospike,
+  Kafka (bounded memory plus a per-connector RocksDB disk cache), public market-data feeds (SOFR, €STR, ECB FX,
+  US Treasury, FRED), REST and JSON/CSV files. The `demo` plugin serves the enabled packs' samples.
 - **Grammar.** Four reference Sutras reproduce the header strips of the mockups exactly (golden
   tests). Rachana-EL is compiled once and shared across threads.
 - **Inference.** An entity with no Sutra still gets a sensible layout: strip, tabs, tables, curves,
@@ -108,9 +109,12 @@ terminal does.
 - **Help.** An in-app help centre (`/help`) with tutorials, guides and every reference, plus search.
   `F1` gives help for the current screen, each panel has a **?**, `/about` shows the version and
   what is loaded, and `/about/competitive` compares Drishti with the categories it sits among.
-- **Domain packs.** The core carries no industry. `finance` (the mockups) and `logistics` (shipments,
-  containers, vessels, ports) are packs you enable with `DRISHTI_PACKS=finance,logistics`, and a new
-  industry is configuration only. Admins assign packs to users, and users choose which to see. See [PACKS.md](docs/PACKS.md).
+- **Domain packs.** The core carries no industry; each domain is a pack you enable with `DRISHTI_PACKS`:
+  - banking: `banking-core`, `market-data`, `trading` (125 products), `market-risk`, `counterparty-risk`, `liquidity-risk`, `climate-risk`, `operational-risk` and `retail-banking`;
+  - other domains: `genomics`, `politics-society` and `economics`;
+  - the small `finance` and `logistics` packs behind the original mockups.
+
+  A new industry is configuration only. Admins assign packs to users, and users choose which to see. See [PACKS.md](docs/PACKS.md).
 - **Impact (F8).** What depends on an entity, what that rolls into, and the amount at stake.
 - **Monitors and alerts.** Live watchlists (`/m`), and rules the server checks on every tick
   (`$.utilisation > 0.8`), with a bell and toasts when they fire.

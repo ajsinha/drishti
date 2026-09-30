@@ -51,7 +51,7 @@ SourcePlugin.subscribe ─► TopicHub topic (one per entity, one source subscri
 - **Reconnects.** The browser's EventSource reconnects by itself. The server opens every stream with
   a fresh `view` event, so a client that missed frames repaints from it; nothing is replayed.
 - **Heartbeats.** An SSE comment every 15 s keeps proxies from closing idle streams.
-- **Capacity.** `drishti.live.max-streams` (20,000) caps the streams per server.
+- **Capacity.** `drishti.live.max-streams` (20,000) caps the streams per server, view and monitor streams together. A slot is taken atomically before any work, so concurrent requests never overshoot it, and released exactly once however the stream ends.
 
 ## Monitors and alerts
 

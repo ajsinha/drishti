@@ -16,6 +16,7 @@
 # Changelog
 
 ## Unreleased
+- **Docs and tutorials.** New *Tutorial 5 · Build a domain pack* (the common pack builder, step by step). README, the user guide (mnemonics of every generated pack, from the manifests), PACKS.md, LIVE.md and the architecture's concurrency section brought up to date; OPERATIONS explains how the disk cache reclaims space.
 - **Concurrency hardening, audited module by module.** Fixed:
   - **Disk cache:** RocksDB generations are reference counted. A nightly clear, a purge or a close never frees native memory under a running read (it could crash the JVM after a 30 s grace period); later calls miss instead of failing.
   - **Sign-in and administration:** changes are applied to the current record under per-user and admin locks. Parallel wrong guesses can no longer dodge lockout, a sign-in finishing late can no longer undo an admin's disable or password reset, and two admins can no longer disable each other at once.

@@ -31,6 +31,24 @@ Mnemonics come from the enabled domain packs. With the finance pack: `TRD` trade
 spec · `IDX` rate index · `FXS` FX spot · `BOOK` book · `FIX` rate fixings. With the logistics pack: `SHP` shipment · `CTR` container
 · `VSL` vessel · `PORT` port. Sites add their own in `drishti.commands.mnemonics`; see PACKS.md.
 
+The generated packs bring these (the landing page and each pack's guide list example commands):
+
+| Pack | Mnemonics |
+|---|---|
+| `banking-core` | `CPTY` counterparty · `GRP` counterparty group · `ISS` issuer · `AGR` master agreement · `CCP` central counterparty · `LE` bank legal entity · `BOOK` book · `DESK` desk · `TRDR` trader · `CAL` holiday calendar · `CSA` credit support annex · `CLR` clearing account |
+| `market-data` | `CRV` interest rate curve · `REPO` repo curve · `FX` fx spot rate · `FXF` fx forward curve · `FXV` fx volatility surface · `IRV` swaption volatility cube · `CPV` cap/floor volatility surface · `EQ` equity · `EQX` equity index · `DIV` dividend curve · `EQV` equity volatility surface · `CDS` credit curve · `INF` inflation index · `INFC` inflation curve · `CMD` commodity · `CMDC` commodity forward curve · `CMDV` commodity volatility surface · `FIX` rate index fixings · `BND` bond (security master) · `CORR` correlation matrix |
+| `trading` | `TRD` trade |
+| `market-risk` | `VAR` var / expected shortfall · `SCN` stress scenario · `STR` stress result · `FRTB` frtb sensitivities · `PNL` p&l explain |
+| `counterparty-risk` | `NSET` netting set · `LIM` credit limit · `EXP` exposure profile · `CVA` cva / xva · `SACCR` sa-ccr exposure · `COLL` collateral balance · `MC` margin call · `SIMM` isda simm initial margin |
+| `liquidity-risk` | `LCR` liquidity coverage ratio · `NSFR` net stable funding ratio · `MLAD` maturity ladder · `HQLA` hqla holding · `FUND` funding source · `LST` liquidity stress result · `IDL` intraday liquidity |
+| `climate-risk` | `CLIM` climate profile · `FE` financed emissions · `NGFS` climate scenario · `CST` climate stress result · `PHY` physical-risk asset · `GAR` green asset ratio |
+| `operational-risk` | `LOSS` operational loss event · `RCSA` risk and control assessment · `KRI` key risk indicator · `ISSUE` issue and action · `OPSCN` operational-risk scenario · `VEND` third-party (vendor) · `CYBER` cyber incident · `OPCAP` operational-risk capital |
+| `retail-banking` | `CUST` customer · `ACCT` deposit account · `MTG` mortgage · `CARD` card account · `PLN` personal loan · `BRN` branch · `COLC` collections case · `RPF` retail portfolio (ifrs 9) |
+| `genomics` | `GENE` gene · `VRNT` variant · `PROT` protein · `PWY` pathway · `SMPL` sample · `SEQ` sequencing run · `EXPR` expression study · `TRIAL` clinical trial |
+| `politics-society` | `JUR` jurisdiction · `PARTY` party · `CAND` candidate · `ELEC` election · `POLL` opinion poll · `BILL` bill · `REGN` region · `SOCI` social indicator |
+| `economics` | `ECON` economy · `MACRO` macro indicator · `CBD` central-bank decision · `FCST` economic forecast · `TFLOW` trade flow · `LABR` labour market · `FISC` fiscal position · `CPIB` consumer-price basket |
+
+
 ### Suggestions as you type
 
 The command line suggests in a dropdown, as the Bloomberg terminal does:

@@ -49,6 +49,7 @@ categories:
     blurb: The industries plugged in, what each pack holds, its data model and its example commands.
     guides:
       - { slug: packs, doc: PACKS.md, title: Domain packs, icon: box-seam, summary: "How industries plug in: what a pack contains, dependencies, connectors and routes, enabling packs, and writing your own." }
+      - { slug: build-a-pack, title: "Tutorial 5 · Build a domain pack", kind: tutorial, icon: hammer, summary: "Describe kinds and documents in Python; the common pack builder checks them and writes the manifest, Sutras, samples, guide and lake." }
   - id: admin
     name: Administration
     icon: shield-lock
