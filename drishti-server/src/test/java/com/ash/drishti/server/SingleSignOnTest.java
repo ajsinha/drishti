@@ -78,10 +78,11 @@ class SingleSignOnTest {
 
     @Test
     void groupsBecomeRolesAndTheUserIsProvisionedThenUpdated() throws Exception {
-        signIn("console", "Ana.Lima@Bank.example", List.of("desk-rates", "unrelated")).andExpect(status().isOk())
-                .andExpect(jsonPath("$.username").value("ana.lima-bank.example"))
+        String ana = "Ana.Lima" + System.nanoTime() + "@Bank.example";
+        signIn("console", ana, List.of("desk-rates", "unrelated")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value(ana.toLowerCase(java.util.Locale.ROOT).replace('@', '-')))
                 .andExpect(jsonPath("$.roles", contains("trader")));
-        signIn("console", "Ana.Lima@Bank.example", List.of("desk-rates", "market-risk")).andExpect(status().isOk())
+        signIn("console", ana, List.of("desk-rates", "market-risk")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.roles", containsInAnyOrder("trader", "risk")));
     }
 
@@ -93,9 +94,10 @@ class SingleSignOnTest {
 
     @Test
     void aLocallyDisabledUserStaysOut() throws Exception {
-        signIn("console", "rui", List.of("market-risk")).andExpect(status().isOk());
-        mvc.perform(post("/api/v1/admin/users/rui/enabled").header("Authorization", "Bearer " + tokens.mint("root", List.of("admin"), 60))
+        String rui = "rui-" + System.nanoTime();                       // the users file outlives a test run
+        signIn("console", rui, List.of("market-risk")).andExpect(status().isOk());
+        mvc.perform(post("/api/v1/admin/users/" + rui + "/enabled").header("Authorization", "Bearer " + tokens.mint("root", List.of("admin"), 60))
                 .contentType(MediaType.APPLICATION_JSON).content("{\"enabled\":false}")).andExpect(status().isOk());
-        signIn("console", "rui", List.of("market-risk")).andExpect(status().isUnauthorized());
+        signIn("console", rui, List.of("market-risk")).andExpect(status().isUnauthorized());
     }
 }
