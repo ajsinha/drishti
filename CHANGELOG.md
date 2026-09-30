@@ -16,6 +16,12 @@
 # Changelog
 
 ## Unreleased
+- **Every connector reconnects by itself.**
+  - **JDBC:** pools lazy slots, so it starts with its database down, reconnects broken connections, and lists table kinds in the background until the database answers. Health reports the last error.
+  - **Kafka:** a supervisor recreates the consumer after a fatal error or a broker that was down at start, with backoff from 1 s to 30 s, and resumes from the last offset applied instead of replaying.
+  - **Aerospike:** the client keeps tending the cluster in the background.
+  - **Others:** feeds, REST, files and Delta connect afresh on every call.
+  - **Tests:** reconnect tests kill and restart a real PostgreSQL in Docker, and bring a Kafka broker up after the connector.
 - **Rachana reference: a complete annotated example.** A swap Sutra with a comment on every line covers matching, templates, the strip, thirteen panels (kv, tabs, table with total and "more", ladders with filters and highlights, status, markdown, provenance, lines from the document and from a linked curve, bars, a gauge, links) and function keys. It comes with the document fragment it reads and a table of what each part does. `RachanaReferenceExampleTest` previews the block exactly as written against `T-10001`.
 - **Docker verified.** The PostgreSQL and Aerospike contract tests pass against real containers.
   - **Aerospike 8.1:** needs 15,000 file descriptors (set in the test and in compose), and its image is pinned rather than `latest`.

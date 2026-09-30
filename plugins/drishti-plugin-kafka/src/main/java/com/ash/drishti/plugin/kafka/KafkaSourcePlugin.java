@@ -99,7 +99,10 @@ public final class KafkaSourcePlugin implements SourcePlugin {
     private final AtomicReference<String> health = new AtomicReference<>("DOWN: not started");
     private final Map<String, String> kindOfTopic = new HashMap<>();
     private final Map<String, String> idFieldOfTopic = new HashMap<>();
-    private KafkaConsumer<String, String> consumer;
+    private volatile KafkaConsumer<String, String> consumer;   // replaced when the supervisor reconnects
+    private Properties consumerProps;
+    /** The next offset to read per partition: a reconnect resumes here instead of replaying the topic. */
+    private final Map<TopicPartition, Long> resumeAt = new ConcurrentHashMap<>();
     private Thread loop;
     private SourceContext context;
     private String sourceName;
@@ -147,7 +150,7 @@ public final class KafkaSourcePlugin implements SourcePlugin {
                 p.put(k.substring(7), v);
             }
         });
-        consumer = new KafkaConsumer<>(p);
+        consumerProps = p;                           // the consumer is created (and re-created) by the supervisor
         this.ticksOnly = "ticks".equals(ctx.setting("mode", "state"));
         this.searchable = !ticksOnly && Boolean.parseBoolean(ctx.setting("search", "true"));
         long cacheBytes = Long.parseLong(ctx.setting("cache-mb", "256")) * 1024 * 1024;
@@ -173,35 +176,91 @@ public final class KafkaSourcePlugin implements SourcePlugin {
             reader = new KafkaConsumer<>(rp);
         }
         long pollMs = Long.parseLong(ctx.setting("poll-ms", "200"));
-        loop = Thread.ofVirtual().name("drishti-kafka-" + sourceName).start(() -> run(topics, pollMs));
+        loop = Thread.ofVirtual().name("drishti-kafka-" + sourceName).start(() -> supervise(topics, pollMs));
     }
 
-    private void run(List<String> topics, long pollMs) {
+    /**
+     * Keeps a consumer running for as long as the plugin is open. The Kafka client rides out short broker outages by
+     * itself; when it gives up (the broker was down at start, the topic is not there yet, a fatal error), the
+     * supervisor waits (1 s doubling to 30 s), creates a new consumer and resumes where the last one stopped.
+     */
+    private void supervise(List<String> topics, long pollMs) {
+        long backoff = 1_000;
+        while (running) {
+            KafkaConsumer<String, String> c;
+            try {
+                c = new KafkaConsumer<>(consumerProps);
+            } catch (RuntimeException e) {
+                health.set("DOWN: " + e.getMessage() + " (retrying)");
+                if (!pause(backoff)) {
+                    return;
+                }
+                backoff = Math.min(30_000, backoff * 2);
+                continue;
+            }
+            consumer = c;
+            long started = System.nanoTime();
+            try {
+                if (running) {
+                    run(c, topics, pollMs);
+                }
+            } catch (WakeupException e) {
+                // closing
+            } catch (RuntimeException e) {
+                health.set("DOWN: " + e.getClass().getSimpleName() + ": " + e.getMessage() + " (reconnecting)");
+            } finally {
+                c.close(Duration.ofSeconds(2));
+            }
+            if (System.nanoTime() - started > java.util.concurrent.TimeUnit.MINUTES.toNanos(1)) {
+                backoff = 1_000;                     // it had been running fine: retry promptly
+            }
+            if (!running || !pause(backoff)) {
+                return;
+            }
+            backoff = Math.min(30_000, backoff * 2);
+        }
+    }
+
+    private boolean pause(long millis) {
         try {
-            List<TopicPartition> parts = new ArrayList<>();
-            for (String t : topics) {
-                consumer.partitionsFor(t, Duration.ofSeconds(30)).forEach(i -> parts.add(new TopicPartition(t, i.partition())));
+            Thread.sleep(millis);
+            return running;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
+    }
+
+    private void run(KafkaConsumer<String, String> c, List<String> topics, long pollMs) {
+        List<TopicPartition> parts = new ArrayList<>();
+        for (String t : topics) {
+            List<org.apache.kafka.common.PartitionInfo> infos = c.partitionsFor(t, Duration.ofSeconds(30));
+            if (infos == null || infos.isEmpty()) {
+                throw new IllegalStateException("topic " + t + " has no partitions yet");
             }
-            consumer.assign(parts);
-            consumer.seekToBeginning(parts);
-            Map<TopicPartition, Long> end = consumer.endOffsets(parts);
-            health.set("UP (catching up)");
-            while (running) {
-                for (ConsumerRecord<String, String> r : consumer.poll(Duration.ofMillis(pollMs))) {
-                    apply(r);
-                }
-                if (!caughtUp && end.entrySet().stream().allMatch(e -> consumer.position(e.getKey()) >= e.getValue())) {
-                    caughtUp = true;
-                    health.set("UP");
-                    rebuildIndex();
-                }
+            infos.forEach(i -> parts.add(new TopicPartition(t, i.partition())));
+        }
+        c.assign(parts);
+        for (TopicPartition tp : parts) {
+            Long at = resumeAt.get(tp);
+            if (at == null) {
+                c.seekToBeginning(List.of(tp));
+            } else {
+                c.seek(tp, at);                      // after a reconnect: carry on, do not replay
             }
-        } catch (WakeupException e) {
-            // closing
-        } catch (RuntimeException e) {
-            health.set("DOWN: " + e.getClass().getSimpleName() + ": " + e.getMessage());
-        } finally {
-            consumer.close(Duration.ofSeconds(2));
+        }
+        Map<TopicPartition, Long> end = c.endOffsets(parts);
+        health.set(caughtUp ? "UP" : "UP (catching up)");
+        while (running) {
+            for (ConsumerRecord<String, String> r : c.poll(Duration.ofMillis(pollMs))) {
+                apply(r);
+                resumeAt.put(new TopicPartition(r.topic(), r.partition()), r.offset() + 1);
+            }
+            if (!caughtUp && end.entrySet().stream().allMatch(e -> c.position(e.getKey()) >= e.getValue())) {
+                caughtUp = true;
+                health.set("UP");
+                rebuildIndex();
+            }
         }
     }
 
@@ -481,8 +540,12 @@ public final class KafkaSourcePlugin implements SourcePlugin {
     public void close() {
         closed = true;
         running = false;
-        if (consumer != null) {
-            consumer.wakeup();
+        KafkaConsumer<String, String> c = consumer;
+        if (c != null) {
+            c.wakeup();
+        }
+        if (loop != null) {
+            loop.interrupt();                        // ends a supervisor waiting to reconnect
         }
         if (loop != null) {
             try {

@@ -18,6 +18,19 @@
 A source plugin brings entity documents from one system into Drishti. Plugins depend only on
 `drishti-api` (no Spring, no Jackson), so they stay small and cannot clash with the server's libraries.
 
+## Reconnecting
+
+Every connector recovers from an outage without a restart of Drishti, and starts even when its store is down:
+
+| Connector | How |
+|---|---|
+| `jdbc` | a pool of lazy slots: each opens its connection on first use and reopens it when broken; table kinds are listed in the background until the database answers |
+| `kafka` | a supervisor recreates the consumer after a fatal error (backoff 1 s → 30 s) and resumes at the last applied offset; short broker blips are ridden out by the Kafka client |
+| `aerospike` | the client tends the cluster in the background (`failIfNotConnected` off) |
+| `delta`, `file`, `rest`, feeds | nothing long-lived to lose: each call reads or connects afresh |
+
+While a store is down its reads fail (views say which source failed) and `health` reports `DOWN: … (reconnecting)`.
+
 ## The contract
 
 ```java

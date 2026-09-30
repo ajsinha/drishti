@@ -52,7 +52,8 @@ import java.util.concurrent.TimeUnit;
  * WHERE trade_id = :id AND business_date <= :asOf)}. The first row becomes the document: each column is a field,
  * except a column named {@code json}, whose JSON text is used as the whole document. A column named
  * {@code generation}, if present, is the version; {@code business_date}, if present, is the date the row is for.
- * Connections are pooled in a small bounded queue.
+ * Connections are pooled in a small bounded queue of slots, each opened on first use and reopened whenever it is
+ * found broken, so the connector starts while the database is down and recovers by itself when it comes back.
  *
  * <p><b>Table mode</b> ({@code table: reference.entities}): every kind of a data domain in one PostgreSQL table of
  * {@code (kind, id, business_date, doc jsonb)} rows, dated, with search and reverse lookups; {@code mode.<kind>}
@@ -63,9 +64,15 @@ public final class JdbcSourcePlugin implements SourcePlugin {
     private static final java.util.regex.Pattern NAMED = java.util.regex.Pattern.compile(":(id|asOf)\\b");
     private final Map<String, String> queries = new LinkedHashMap<>();
     private EntityTable table;
-    private java.util.List<String> tableKinds = java.util.List.of();
+    private volatile java.util.List<String> tableKinds = java.util.List.of();   // discovered later when the database starts after us
     private final Map<String, java.util.List<String>> params = new LinkedHashMap<>();
-    private BlockingQueue<Connection> pool;
+    /** A pool slot: its connection is opened lazily and replaced when broken; only its borrower touches it. */
+    private static final class Slot {
+        Connection connection;
+    }
+
+    private BlockingQueue<Slot> pool;
+    private volatile String lastError;
     private SourceContext context;
     private String url;
     private String user;
@@ -81,20 +88,48 @@ public final class JdbcSourcePlugin implements SourcePlugin {
         return new PluginManifest("jdbc", "1.0", queries.keySet(), new SourceCapabilities(false, false, false, dated));
     }
 
-    /** Runs {@code work} on a pooled connection, replacing it if it went stale. */
+    /**
+     * Runs {@code work} on a pooled connection, (re)connecting the slot when it has none or its connection is broken.
+     * A failure to connect fails this call only: the slot goes back empty and the next call tries again.
+     */
     private <T> T withConnection(SqlWork<T> work) throws Exception {
-        Connection c = pool.poll(5, TimeUnit.SECONDS);
-        if (c == null) {
+        Slot s = pool.poll(5, TimeUnit.SECONDS);
+        if (s == null) {
             throw new SQLException("no free connection in " + sourceName + " pool");
         }
         try {
-            if (!c.isValid(1)) {
-                c.close();
-                c = DriverManager.getConnection(url, user, password);
+            if (s.connection == null || !s.connection.isValid(1)) {
+                if (s.connection != null) {
+                    try {
+                        s.connection.close();
+                    } catch (SQLException ignored) {
+                        // already broken
+                    }
+                    s.connection = null;
+                }
+                try {
+                    s.connection = DriverManager.getConnection(url, user, password);
+                } catch (SQLException e) {
+                    lastError = e.getMessage();
+                    throw e;
+                }
             }
-            return work.run(c);
+            T out = work.run(s.connection);
+            lastError = null;
+            return out;
+        } catch (SQLException e) {
+            if (s.connection != null && !s.connection.isValid(1)) {   // the connection died mid-call: reconnect next time
+                try {
+                    s.connection.close();
+                } catch (SQLException ignored) {
+                    // already broken
+                }
+                s.connection = null;
+            }
+            lastError = e.getMessage();
+            throw e;
         } finally {
-            pool.offer(c);
+            pool.offer(s);
         }
     }
 
@@ -161,7 +196,7 @@ public final class JdbcSourcePlugin implements SourcePlugin {
         int size = Integer.parseInt(ctx.setting("pool-size", "4"));
         this.pool = new ArrayBlockingQueue<>(size);
         for (int i = 0; i < size; i++) {
-            pool.add(DriverManager.getConnection(url, user, password));
+            pool.add(new Slot());                    // connected on first use: the database may still be starting
         }
         String t = ctx.setting("table", "");
         if (!t.isBlank()) {
@@ -175,12 +210,27 @@ public final class JdbcSourcePlugin implements SourcePlugin {
                     ctx.setting("date-column", "business_date"), ctx.setting("doc-column", "doc"), modes,
                     Integer.parseInt(ctx.setting("lookback-days", "10")));
             String configured = ctx.setting("kinds", "");
-            try {
-                tableKinds = configured.isBlank() ? withConnection(table::kinds)
-                        : java.util.Arrays.stream(configured.split(",")).map(String::trim).filter(x -> !x.isEmpty()).toList();
-            } catch (Exception e) {
-                throw new SQLException("cannot list kinds in " + t + ": " + e.getMessage(), e);
+            if (!configured.isBlank()) {
+                tableKinds = java.util.Arrays.stream(configured.split(",")).map(String::trim).filter(x -> !x.isEmpty()).toList();
+            } else if (!discoverKinds()) {
+                // the database is not answering yet: keep asking in the background until it does
+                java.util.concurrent.ScheduledFuture<?>[] retry = new java.util.concurrent.ScheduledFuture<?>[1];
+                retry[0] = ctx.scheduler().scheduleWithFixedDelay(() -> {
+                    if (discoverKinds() && retry[0] != null) {
+                        retry[0].cancel(false);
+                    }
+                }, 10, 10, TimeUnit.SECONDS);
             }
+        }
+    }
+
+    /** Lists the kinds the table holds; false (and nothing changes) when the database cannot answer yet. */
+    private boolean discoverKinds() {
+        try {
+            tableKinds = java.util.List.copyOf(withConnection(table::kinds));
+            return true;
+        } catch (Exception e) {
+            return false;
         }
     }
 
@@ -207,15 +257,7 @@ public final class JdbcSourcePlugin implements SourcePlugin {
         if (sql == null) {
             return Optional.empty();
         }
-        Connection c = pool.poll(5, TimeUnit.SECONDS);
-        if (c == null) {
-            throw new SQLException("no free connection in " + sourceName + " pool");
-        }
-        try {
-            if (!c.isValid(1)) {
-                c.close();
-                c = DriverManager.getConnection(url, user, password);
-            }
+        return withConnection(c -> {
             try (PreparedStatement ps = c.prepareStatement(sql)) {
                 java.util.List<String> names = params.get(ref.kind());
                 java.time.LocalDate date = asOf.businessDate() != null ? asOf.businessDate() : java.time.LocalDate.now();
@@ -233,9 +275,7 @@ public final class JdbcSourcePlugin implements SourcePlugin {
                     return Optional.of(toDocument(ref, rs, names.contains("asOf") ? date : null));
                 }
             }
-        } finally {
-            pool.offer(c);
-        }
+        });
     }
 
     private EntityDocument toDocument(EntityRef ref, ResultSet rs, java.time.LocalDate asked) throws Exception {
@@ -294,15 +334,18 @@ public final class JdbcSourcePlugin implements SourcePlugin {
 
     @Override
     public String health() {
-        return pool == null ? "DOWN: not started" : "UP";
+        String e = lastError;
+        return pool == null ? "DOWN: not started" : e == null ? "UP" : "DOWN: " + e + " (reconnecting)";
     }
 
     @Override
     public void close() {
         if (pool != null) {
-            pool.forEach(c -> {
+            pool.forEach(s -> {
                 try {
-                    c.close();
+                    if (s.connection != null) {
+                        s.connection.close();
+                    }
                 } catch (SQLException ignored) {
                     // shutting down
                 }
