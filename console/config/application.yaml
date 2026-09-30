@@ -43,5 +43,5 @@ studio:
 help:
   docs_dir: ../docs          # the repository docs rendered as the help centre's reference section
 packs:
-  dir: ../packs              # the same packs directory the server uses
+  dir: ${DRISHTI_PACKS_DIR:../packs}   # the same packs directory the server uses (one variable sets both)
   enabled: finance           # used only when the server cannot be asked which packs are enabled

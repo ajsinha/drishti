@@ -31,7 +31,7 @@ The local override is `./application.local.yaml`. Environment variables use Spri
 | `drishti.sources.plugin-dir` | — | extra plugin jars, each in its own class loader |
 | `drishti.sources.plugins.<name>.enabled / settings` | | plugin switch and settings |
 | `drishti.packs.default-for-users` | every installed pack (`DRISHTI_DEFAULT_PACKS`) | the packs a user gets until an admin assigns them |
-| `drishti.packs.dir` / `enabled` | `./packs` / `finance` (`DRISHTI_PACKS_DIR`, `DRISHTI_PACKS`) | domain packs to load, in order (see PACKS.md) |
+| `drishti.packs.dir` / `enabled` | `./packs` / `finance` (`DRISHTI_PACKS_DIR`, `DRISHTI_PACKS`) | domain packs to load, in order (see PACKS.md). One folder per pack. `DRISHTI_PACKS_DIR` sets the folder for both server and console, so give it an absolute path. The defaults are the repository's `packs/`: relative to the working directory for the server, and to `console/` for the console. |
 | `drishti.rachana.dirs` | `./sutras` (`DRISHTI_SUTRAS`) | site Sutra directories, in addition to the packs' |
 | `drishti.rachana.hot-reload` / `reload-debounce` | `true` / `250ms` | reload Sutras when they are saved |
 | `drishti.rachana.formats-file` | — | a site file that overrides or adds named formats |
