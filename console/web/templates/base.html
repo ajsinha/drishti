@@ -45,6 +45,7 @@
   <main id="main">{% block content %}{% endblock %}</main>
   {% block footer %}{% include "_footer.html" %}{% endblock %}
   <script src="/static/vendor/bootstrap/js/bootstrap.bundle.min.js?v={{ ASSET_V }}"></script>
+  <script src="/static/js/channel.js?v={{ ASSET_V }}"></script>
   <script src="/static/js/app.js?v={{ ASSET_V }}"></script>
   {% if me %}<script src="/static/js/alerts.js?v={{ ASSET_V }}"></script>{% endif %}
   {% block scripts %}{% endblock %}

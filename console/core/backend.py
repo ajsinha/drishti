@@ -160,10 +160,13 @@ class BackendClient:
         """The server's business date: current, selected (rolled back to a business day), live, holidays."""
         return await self._get("/business-date", ident)
 
-    async def sse(self, path: str, ident=None):
-        """Yields ``(event, data)`` from any server SSE endpoint under /api/v1."""
+    async def sse(self, path: str, ident=None, opened: list | None = None):
+        """Yields ``(event, data)`` from any server SSE endpoint under /api/v1. The open response is appended to
+        ``opened`` when given, so a caller can close it from another task to end the stream."""
         headers = {"Accept": "text/event-stream", **(ident.headers() if ident is not None else {}), **asof.headers()}
         async with self._client.stream("GET", "/api/v1" + path, timeout=None, headers=headers) as r:
+            if opened is not None:
+                opened.append(r)
             if r.status_code >= 400:
                 raise BackendError(r.status_code, "DRS-5003", "stream refused")
             event, data = None, []
@@ -203,10 +206,12 @@ class BackendClient:
             kw["json"] = body
         return await self._send(method, "/admin" + path, ident, **kw)
 
-    async def stream(self, kind: str, id_: str, ident=None):
-        """Yields ``(event, data)`` pairs from the server's SSE stream for a view, until it ends."""
+    async def stream(self, kind: str, id_: str, ident=None, opened: list | None = None):
+        """Yields ``(event, data)`` pairs from the server's SSE stream for a view, until it ends (see ``sse`` for ``opened``)."""
         headers = {"Accept": "text/event-stream", **(ident.headers() if ident is not None else {}), **asof.headers()}
         async with self._client.stream("GET", f"/api/v1/views/{kind}/{id_}/stream", timeout=None, headers=headers) as r:
+            if opened is not None:
+                opened.append(r)
             if r.status_code >= 400:
                 raise BackendError(r.status_code, "DRS-5003", "stream refused")
             event, data = None, []

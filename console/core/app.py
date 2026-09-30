@@ -31,6 +31,19 @@ from core.config import Settings
 
 WEB = Path(__file__).resolve().parent.parent / "web"
 ASSET_VERSION = "1.9.0"
+
+
+def asset_fingerprint() -> str:
+    """A short hash of the scripts and stylesheets (names, sizes, times): part of every asset URL, so browsers fetch a
+    changed file at once instead of running a cached old one against a newer server."""
+    import hashlib
+
+    h = hashlib.sha1()
+    for folder in ("js", "css"):
+        for f in sorted((WEB / "static" / folder).glob("*")):
+            st = f.stat()
+            h.update(f"{f.name}:{st.st_size}:{st.st_mtime_ns};".encode())
+    return h.hexdigest()[:8]
 CSP = ("default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; "
        "font-src 'self'; connect-src 'self'; frame-src 'self'; frame-ancestors 'self'")
 
@@ -101,7 +114,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.backend = None
     templates = Jinja2Templates(directory=str(WEB / "templates"))
     templates.env.globals.update(
-        ASSET_V=ASSET_VERSION,
+        ASSET_V=f"{ASSET_VERSION}-{asset_fingerprint()}",
         PRODUCT=settings.get("ui.product", "Drishti"),
         TAGLINE=settings.get("ui.tagline", ""),
         DEFAULT_THEME=settings.get("ui.default_theme", "terminal"),

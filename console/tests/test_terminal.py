@@ -252,3 +252,54 @@ def test_a_bad_search_says_why(client, backend):
     backend.search = search
     page = client.get("/s", params={"q": "TRD where name = 'open"}).text
     assert "a string is not closed" in page and "DRS-4004" in page
+
+
+def test_one_channel_carries_every_live_subscription_of_a_tab(client, backend, monkeypatch):
+    import json as _json
+
+    irs = _json.loads((__import__("pathlib").Path(__file__).parent / "fixtures" / "view_trade_IRS-48213.json").read_text())
+
+    async def fake_stream(kind, id_, ident=None, opened=None):
+        yield "view", _json.dumps(irs)
+        yield "frame", _json.dumps({"seq": 1, "generation": 9, "p99Ms": 2.0, "patches": [
+            {"op": "strip", "index": 5, "cell": {"label": "MTM", "text": id_}}]})
+    monkeypatch.setattr(backend, "stream", fake_stream, raising=False)
+    seen = []
+    with client.stream("GET", "/api/channel", params=[("s", "view:trade/IRS-48213"), ("s", "view:trade/FXS-20931"), ("s", "alerts")]) as r:
+        event = None
+        for line in r.iter_lines():
+            if line.startswith("event: "):
+                event = line[7:]
+            elif line.startswith("data: "):
+                seen.append((event, _json.loads(line[6:])))
+                if len([s for s in seen if s[0] == "frame"]) == 2 and any(s[0] == "alert" for s in seen):
+                    break
+    frames = {m["ch"]: m["d"]["patches"][0]["cell"]["text"] for e, m in seen if e == "frame"}
+    assert frames == {"view:trade/IRS-48213": "IRS-48213", "view:trade/FXS-20931": "FXS-20931"}   # two views, one connection
+    assert any(e == "alert" and m["ch"] == "alerts" and m["d"]["severity"] == "critical" for e, m in seen)
+    assert any(e == "view" and m["d"] == {"generation": 1742} for e, m in seen)
+
+
+def test_pages_never_open_their_own_event_streams():
+    """Browsers allow six connections per site: every live feature must share the tab's channel (channel.js)."""
+    from pathlib import Path
+    js = Path(__file__).resolve().parent.parent / "web" / "static" / "js"
+    offenders = [f.name for f in js.glob("*.js") if "new EventSource" in f.read_text() and f.name != "channel.js"]
+    assert offenders == []
+    page = Path(__file__).resolve().parent.parent / "web" / "templates" / "base.html"
+    assert page.read_text().index("channel.js") < page.read_text().index("alerts.js")
+
+
+def test_a_channel_takes_new_subscriptions_without_reconnecting(client):
+    from routes import api_routes
+    calls = []
+    api_routes.CHANNELS["c1"] = {"user": "ash", "add": lambda s: calls.append(("add", s)), "remove": lambda s: calls.append(("remove", s))}
+    try:
+        r = client.post("/api/channel/c1", json={"add": ["view:trade/T-2"], "remove": ["view:trade/T-1"]})
+        assert r.status_code == 200 and calls == [("remove", "view:trade/T-1"), ("add", "view:trade/T-2")]
+        api_routes.CHANNELS["c2"] = {"user": "someone-else", "add": calls.append, "remove": calls.append}
+        assert client.post("/api/channel/c2", json={"add": ["alerts"]}).status_code == 404       # not yours
+        assert client.post("/api/channel/nope", json={"add": ["alerts"]}).status_code == 404    # gone: the page opens a new one
+    finally:
+        api_routes.CHANNELS.pop("c1", None)
+        api_routes.CHANNELS.pop("c2", None)

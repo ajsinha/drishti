@@ -29,11 +29,26 @@ SourcePlugin.subscribe ─► TopicHub topic (one per entity, one source subscri
                               ▼
             SSE  /api/v1/views/{kind}/{id}/stream   event: view (full ViewModel), then event: frame (patches)
                               │
-            console /api/stream/{kind}/{id}: panels re-rendered to HTML with the same Jinja macros;
-                              │ charts are sent as data
+            console /api/channel: ONE stream per browser tab carrying all its views (every workspace pane),
+                              │ the alerts bell and monitors; panels re-rendered to HTML with the same Jinja
+                              │ macros; charts sent as data
                               ▼
-            live.js: strip cells updated in place, panels swapped, charts moved with setOption; changes flash
+            channel.js → live.js: strip cells updated in place, panels swapped, charts moved; changes flash
 ```
+
+### One connection per tab
+
+Browsers open at most six connections to one site over HTTP/1.1. A stream per view and one for the alerts bell
+used them up with three tabs open (or a workspace and a tab), and every other request, the command line's
+suggestions included, then waited forever: the page looked alive but did nothing. So each tab opens **one**
+channel (`/api/channel?s=view:trade/T-1&s=alerts`), a workspace's panes share their page's channel, and
+subscriptions that arrive later are added to the open channel (`POST /api/channel/{id}`) instead of reconnecting.
+A tab hidden for 10 s gives its connection back and reconnects, repainting from fresh data, when shown.
+
+Upstream, the console reads the server's streams through its pooled HTTP client and closes each one within
+seconds of the tab going away, busy or quiet: it closes the HTTP response itself from a task outside the
+request's cancel scope, because Starlette's scope cancels every clean-up await of a finished request. A test
+guards that no page opens its own `EventSource`.
 
 ## Guarantees and limits
 

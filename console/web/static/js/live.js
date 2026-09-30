@@ -13,13 +13,13 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Live views: listens to /api/stream/<kind>/<id> and applies each frame's patches in place. Strip cells
+/* Live views: subscribes to the view on the tab's live channel (channel.js) and applies each frame's patches in place. Strip cells
    are updated text-and-tone, charts move to new data, other panels are swapped for server-rendered HTML
    (same macros as first paint). A changed value flashes. The top bar shows the server's rolling p99. */
 (function () {
   'use strict';
   var view = document.querySelector('[data-view]');
-  if (!view || !window.EventSource) { return; }
+  if (!view || !window.DrishtiChannel) { return; }
   // a picked business date is a static snapshot: nothing to stream
   if (document.querySelector('[data-asof].asof-past') || view.hasAttribute('data-static')) { return; }
   var liveBox = document.querySelector('.tbar-live');
@@ -66,14 +66,18 @@
     if (note) { note.textContent = note.textContent.replace(/gen \d+/, 'gen ' + p.provenance.generation); }
   }
 
-  var es = new EventSource('/api/stream/' + encodeURIComponent(view.dataset.kind) + '/' + encodeURIComponent(view.dataset.id));
-  es.addEventListener('view', function () {
-    if (!first) { location.reload(); return; }   // reconnected: the server sent a fresh view, so repaint from it
-    first = false;
-    state('live', 'Live');
+  var off = window.DrishtiChannel.subscribe('view:' + view.dataset.kind + '/' + view.dataset.id, {
+    view: function () {
+      if (!first) { location.reload(); return; }   // reconnected: the server sent a fresh view, so repaint from it
+      first = false;
+      state('live', 'Live');
+    },
+    frame: onFrame,
+    gone: function () { off(); state('static', 'Static'); },
+    error: function () { state('reconnecting', 'Reconnecting…'); },
+    paused: function () { state('reconnecting', 'Paused while hidden'); }
   });
-  es.addEventListener('frame', function (e) {
-    var f = JSON.parse(e.data);
+  function onFrame(f) {
     state('live', 'Live, p99 ' + Math.round(f.p99Ms) + ' ms');
     f.patches.forEach(function (p) {
       try {
@@ -82,7 +86,5 @@
         if (window.console) { console.warn('drishti: patch not applied', p.op, err); }
       }
     });
-  });
-  es.addEventListener('gone', function () { es.close(); state('static', 'Static'); });
-  es.onerror = function () { state('reconnecting', 'Reconnecting…'); };
+  }
 })();

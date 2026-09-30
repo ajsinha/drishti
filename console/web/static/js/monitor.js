@@ -28,10 +28,12 @@
     return fetch('/m/api/' + encodeURIComponent(name), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ entities: list }) })
       .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, b: b }; }); });
   }
-  if (window.EventSource) {
-    var es = new EventSource('/api/monitor-stream/' + encodeURIComponent(name));
-    es.addEventListener('row', function (e) {
-      var d = JSON.parse(e.data), row = root.querySelector('[data-row="' + CSS.escape(d.kind + '/' + d.id) + '"]');
+  if (window.DrishtiChannel) {
+    window.DrishtiChannel.subscribe('monitor:' + name, { row: onRow, error: onError });   // the tab's one live connection
+  }
+  function onRow(d) {
+    {
+      var row = root.querySelector('[data-row="' + CSS.escape(d.kind + '/' + d.id) + '"]');
       if (liveText) { liveText.textContent = 'Live, p99 ' + Math.round(d.p99Ms) + ' ms'; liveBox.setAttribute('data-live-state', 'live'); }
       if (!row) { return; }
       d.patches.forEach(function (p) {
@@ -41,9 +43,9 @@
         dd.className = dd.className.replace(/\bt-\w+/g, '').trim() + (p.cell.tone ? ' t-' + p.cell.tone : '');
         dd.classList.remove('flash'); void dd.offsetWidth; dd.classList.add('flash');
       });
-    });
-    es.onerror = function () { if (liveBox) { liveBox.setAttribute('data-live-state', 'reconnecting'); liveText.textContent = 'Reconnecting…'; } };
+    }
   }
+  function onError() { if (liveBox) { liveBox.setAttribute('data-live-state', 'reconnecting'); liveText.textContent = 'Reconnecting…'; } }
   root.querySelector('[data-add]').addEventListener('submit', function (e) {
     e.preventDefault();
     var input = e.target.querySelector('input');

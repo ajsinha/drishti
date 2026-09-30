@@ -16,6 +16,13 @@
 # Changelog
 
 ## Unreleased
+- **Fix: the UI could freeze.** The page stayed on screen but typing did nothing and no suggestions appeared.
+  - **Browser cause:** every view and the alerts bell held its own connection, and browsers allow six per site over HTTP/1.1. With three tabs (or a workspace and a tab) every other request waited forever.
+  - **Browser fix:** each tab now opens one live channel carrying its views, workspace panes, bell and monitors. Subscriptions are added to it without reconnecting, and a tab hidden for 10 s gives its connection back.
+  - **Console cause:** a stream whose tab had closed kept its connection to the server for good, because Starlette's cancel scope cancelled the clean-up.
+  - **Console fix:** the console now closes such streams within seconds.
+  - **Checks:** verified in Chrome (8 tabs: suggestions in 7 ms; closed tabs: no streams left on the server), with regression tests.
+  - **Assets:** asset URLs now carry a fingerprint, so browsers pick up new scripts at once.
 - **Gradient themes.** Every theme uses its own two gradient colours on its chrome:
   - **Where:** a soft wash over the page, a glass top bar with a gradient rule, a tinted view header and panel headers with accent bars, gradient accent buttons, and gradient text on titles and the brand.
   - **Readability:** panel bodies, tables and figures stay solid, so contrast is unchanged. The solid look is used when the system asks for more contrast or less transparency, and print is plain.

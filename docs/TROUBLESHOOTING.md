@@ -25,6 +25,8 @@
 | Suggestions don't appear | a source without `search`, or a slow one (30 ms budget) | declare `search` in the plugin, and index in memory with `HitIndex` |
 | View does not tick | the entity or its source is not live | `/api/v1/sources` shows `live`; the demo ticks only live fixtures |
 | "Reconnecting…" in the top bar | the stream dropped | the browser reconnects by itself and repaints from a fresh view |
+| The page looks fine but typing does nothing (no suggestions dropdown), often with several tabs open | before 1.10: each view and the alerts bell held a connection, and browsers allow six per site | fixed: one live connection per tab (see LIVE.md); hard-refresh old tabs once (Ctrl+Shift+R) so they load the new scripts |
+| "Paused while hidden" in the top bar | the tab was hidden for 10 s and gave its connection back | show the tab: it reconnects and repaints |
 | Charts are blank | ECharts not loaded (CSP or path) | check `/static/vendor/echarts/echarts.common.min.js` loads |
 | Studio Save is disabled | saving is off, or you are not an author | `DRISHTI_STUDIO_SAVE=true` and an `author` role |
 | `LicenseHeaderTest` fails | a new file has no header | `python3 tools/license_headers.py --fix` |

@@ -161,7 +161,7 @@ class FakeBackend:
                      "id": "IRS-48213", "severity": "warn", "message": "IRS-48213: MTM -412,580", "generation": 1}]
         raise BackendError(404, "DRS-1001", path)
 
-    async def sse(self, path, ident=None):
+    async def sse(self, path, ident=None, opened=None):
         yield "hello", "{}"
         if path.endswith("/alerts/stream"):
             yield "alert", json.dumps({"seq": 2, "kind": "trade", "id": "IRS-48213", "severity": "critical", "message": "x"})

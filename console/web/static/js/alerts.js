@@ -18,15 +18,14 @@
 (function () {
   'use strict';
   var bell = document.querySelector('[data-bell]');
-  if (!bell || !window.EventSource || document.querySelector('[data-embed]')) { return; }
+  if (!bell || !window.DrishtiChannel || document.querySelector('[data-embed]')) { return; }
   var count = 0, badge = bell.querySelector('[data-bell-count]');
   var tray = document.createElement('div');
   tray.className = 'toasts'; tray.setAttribute('role', 'status'); tray.setAttribute('aria-live', 'polite');
   document.body.appendChild(tray);
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
-  var es = new EventSource('/api/alerts/stream');
-  es.addEventListener('alert', function (e) {
-    var a = JSON.parse(e.data);
+  window.DrishtiChannel.subscribe('alerts', { alert: onAlert });   // on the tab's one live connection (channel.js)
+  function onAlert(a) {
     count++; badge.textContent = String(count); badge.hidden = false;
     var t = document.createElement('a');
     t.className = 'toast-a sev-' + a.severity;
@@ -37,7 +36,7 @@
     if (window.Notification && Notification.permission === 'granted') {
       try { new Notification('Drishti · ' + a.severity, { body: a.id + ': ' + a.message }); } catch (err) { /* not available */ }
     }
-  });
+  }
   bell.addEventListener('click', function () {
     if (window.Notification && Notification.permission === 'default') { Notification.requestPermission(); }
   });
