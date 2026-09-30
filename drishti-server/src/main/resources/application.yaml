@@ -60,12 +60,24 @@ drishti:
           root: ${DRISHTI_FEEDS:./data/feeds}
           source-name: feed-file
           rescan-seconds: 30
+  security:
+    # Off for local development. Production: enabled: true and DRISHTI_TOKEN_SECRET (>= 32 bytes, shared with the console).
+    enabled: ${DRISHTI_SECURITY_ENABLED:false}
+    secret: ${DRISHTI_TOKEN_SECRET:}
+    clock-skew: 30s
+    roles:
+      trader:  { kinds: [trade, curve, fx-spot, index, book, contract-spec, clearing-account, counterparty] }
+      risk:    { kinds: ["*"], raw: true }
+      author:  { kinds: ["*"], raw: true, author: true }
+    redact: [trader, counterpartyId]   # masked in raw JSON (F9) for roles without raw
   rachana:
     # Directories scanned recursively for *.yaml layout files (see docs/RACHANA_REFERENCE.md).
     dirs: ${DRISHTI_SUTRAS:./sutras}
     # Edit a Sutra and the next view uses it; an invalid edit keeps the last good version.
     hot-reload: true
     reload-debounce: 250ms
+    # Let Sutra Studio save files (authors only). Off by default; turn on in authoring environments.
+    studio-save: ${DRISHTI_STUDIO_SAVE:false}
   engine:
     layout-cache-size: 10000        # effective layouts, one per (Sutra version, kind, data shape)
     fingerprint-cache-size: 100000  # one per (entity, generation)

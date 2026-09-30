@@ -64,6 +64,8 @@ public final class SutraRegistry implements AutoCloseable {
     private final RachanaProperties props;
     private final SutraExpressions expressions;
     private final Map<Path, Sutra> lastGood = new HashMap<>();
+    private volatile Map<String, String> sources = Map.of();
+    private volatile Map<String, Path> fileOf = Map.of();
     private final List<Consumer<Set<String>>> listeners = new CopyOnWriteArrayList<>();
     private volatile Snapshot snapshot = new Snapshot(Map.of(), Map.of());
     private volatile WatchService watcher;
@@ -110,6 +112,48 @@ public final class SutraRegistry implements AutoCloseable {
         return v == null ? List.of() : List.copyOf(v.keySet());
     }
 
+    /** The YAML text of a loaded Sutra, as last read from its file. */
+    public Optional<String> source(String name, int version) {
+        return Optional.ofNullable(sources.get(name + "@" + version));
+    }
+
+    /**
+     * Validates and writes a Sutra into the first Sutra directory ({@code <domain>/<name>.v<N>.yaml}), then
+     * reloads. Refuses a {@code name@version} that another file already defines.
+     *
+     * @return the written Sutra
+     */
+    public synchronized Sutra save(String yaml) throws IOException {
+        Sutra s = parser.parse(yaml, "studio.yaml", "studio");
+        List<SutraProblem> problems = expressions.check(s);
+        if (!problems.isEmpty()) {
+            throw new SutraException(problems);
+        }
+        Path dir = Path.of(props.dirs().get(0)).toAbsolutePath().normalize();
+        Path target = dir.resolve(s.domain()).resolve(s.name() + ".v" + s.version() + ".yaml").normalize();
+        if (!target.startsWith(dir)) {
+            throw new SutraException(List.of(new SutraProblem("DRS-2020", "bad domain or name", s.location())));
+        }
+        Path existing = fileOf.get(s.id());
+        if (existing != null && !existing.equals(target)) {
+            throw new SutraException(List.of(new SutraProblem("DRS-2028", s.id() + " is already defined in " + existing, s.location())));
+        }
+        Files.createDirectories(target.getParent());
+        Files.writeString(target, yaml, StandardCharsets.UTF_8);
+        reload();
+        return s;
+    }
+
+    /** Parses and checks {@code yaml} without saving it, for Studio previews. */
+    public Sutra check(String yaml) {
+        Sutra s = parser.parse(yaml, "studio.yaml", "studio");
+        List<SutraProblem> problems = expressions.check(s);
+        if (!problems.isEmpty()) {
+            throw new SutraException(problems);
+        }
+        return s;
+    }
+
     /** Problems per file from the last reload; empty when every file is valid. */
     public Map<String, List<SutraProblem>> problems() {
         return snapshot.problems();
@@ -126,6 +170,7 @@ public final class SutraRegistry implements AutoCloseable {
         Map<String, NavigableMap<Integer, Sutra>> byName = new TreeMap<>();
         Map<String, List<SutraProblem>> problems = new LinkedHashMap<>();
         Map<String, Path> origin = new HashMap<>();
+        Map<String, String> texts = new HashMap<>();
         List<Path> files = files();
         lastGood.keySet().retainAll(files);
         for (Path f : files) {
@@ -155,10 +200,17 @@ public final class SutraRegistry implements AutoCloseable {
                 continue;
             }
             byName.computeIfAbsent(s.name(), k -> new TreeMap<>()).put(s.version(), s);
+            try {
+                texts.put(s.id(), Files.readString(f, StandardCharsets.UTF_8));
+            } catch (IOException e) {
+                texts.put(s.id(), "");
+            }
         }
         Map<String, NavigableMap<Integer, Sutra>> frozen = new TreeMap<>();
         byName.forEach((k, v) -> frozen.put(k, Collections.unmodifiableNavigableMap(v)));
         snapshot = new Snapshot(Collections.unmodifiableMap(frozen), Collections.unmodifiableMap(problems));
+        sources = Map.copyOf(texts);
+        fileOf = Map.copyOf(origin);
         problems.forEach((f, ps) -> ps.forEach(p -> LOG.warn("sutra problem {}", p)));
         Set<String> changed = changedIds(before, snapshot);
         LOG.info("sutras loaded: {} names, {} problem file(s), {} changed", frozen.size(), problems.size(), changed.size());

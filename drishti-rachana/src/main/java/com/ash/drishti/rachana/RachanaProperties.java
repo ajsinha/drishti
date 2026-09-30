@@ -27,15 +27,17 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param reloadDebounce quiet period before a burst of file events triggers one reload
  * @param formatsFile optional site file overriding or adding named formats
  * @param expressionCacheSize compiled Rachana-EL expressions kept in memory
+ * @param studioSave allow Sutra Studio to write Sutra files (off by default; turn on for authoring environments)
  */
 @ConfigurationProperties("drishti.rachana")
 public record RachanaProperties(
-        List<String> dirs, Boolean hotReload, Duration reloadDebounce, String formatsFile, Long expressionCacheSize) {
+        List<String> dirs, Boolean hotReload, Duration reloadDebounce, String formatsFile, Long expressionCacheSize, Boolean studioSave) {
 
     public RachanaProperties {
         dirs = dirs == null || dirs.isEmpty() ? List.of("./sutras") : List.copyOf(dirs);
         hotReload = hotReload == null ? Boolean.TRUE : hotReload;
         reloadDebounce = reloadDebounce == null ? Duration.ofMillis(250) : reloadDebounce;
         expressionCacheSize = expressionCacheSize == null ? 10_000L : expressionCacheSize;
+        studioSave = studioSave != null && studioSave;
     }
 }

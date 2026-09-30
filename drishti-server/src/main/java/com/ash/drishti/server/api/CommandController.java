@@ -21,11 +21,13 @@ import com.ash.drishti.engine.command.Mnemonics;
 import com.ash.drishti.engine.command.Suggestion;
 import com.ash.drishti.engine.command.SuggestionService;
 import com.ash.drishti.engine.view.ViewModel;
+import com.ash.drishti.server.security.Entitlements;
+import com.ash.drishti.server.security.Principal;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,27 +37,29 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/command")
 public class CommandController {
 
-    static final String USER = "X-Drishti-User";
-
     private final CommandParser parser;
     private final SuggestionService suggestions;
     private final Mnemonics mnemonics;
+    private final Entitlements entitlements;
 
-    public CommandController(CommandParser parser, SuggestionService suggestions, Mnemonics mnemonics) {
+    public CommandController(CommandParser parser, SuggestionService suggestions, Mnemonics mnemonics, Entitlements entitlements) {
         this.parser = parser;
         this.suggestions = suggestions;
         this.mnemonics = mnemonics;
+        this.entitlements = entitlements;
     }
 
     @PostMapping
-    public ApiDtos.CommandResponse command(@RequestBody ApiDtos.CommandRequest req) {
+    public ApiDtos.CommandResponse command(@RequestBody ApiDtos.CommandRequest req,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
         EntityRef ref = parser.require(req.text());
+        entitlements.requireOpen(principal, ref.kind());
         return new ApiDtos.CommandResponse(new ViewModel.Ref(ref.kind(), ref.id()), mnemonics.codeFor(ref.kind()));
     }
 
     @GetMapping("/suggest")
     public List<Suggestion> suggest(@RequestParam(defaultValue = "") String q, @RequestParam(required = false) Integer limit,
-            @RequestHeader(value = USER, defaultValue = "anonymous") String user) {
-        return suggestions.suggest(q, user, limit);
+            @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
+        return entitlements.filter(principal, suggestions.suggest(q, principal.user(), limit));
     }
 }

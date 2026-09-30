@@ -106,6 +106,19 @@ public final class ViewPipeline {
         registry.onChange(changed -> layouts.invalidateAll());
     }
 
+    /** A view built with an unsaved Sutra (Sutra Studio). Bypasses the layout cache. */
+    public ViewModel preview(Sutra sutra, EntityRef ref) {
+        long t0 = System.nanoTime();
+        EntityDocument doc = fetch(ref);
+        return build(doc, t0, System.nanoTime(), Optional.of(sutra), false);
+    }
+
+    /** The layout inference alone would give {@code ref}, in Sutra form (Studio "start from inference"). */
+    public Sutra inferred(EntityRef ref) {
+        EntityDocument doc = fetch(ref);
+        return merger.merge(Optional.empty(), doc.data(), ref.kind()).sutra();
+    }
+
     public ViewModel view(EntityRef ref) {
         long t0 = System.nanoTime();
         EntityDocument doc = fetch(ref);
@@ -114,11 +127,15 @@ public final class ViewPipeline {
 
     /** Builds a view from a document already in hand (live updates re-enter here). */
     public ViewModel build(EntityDocument doc, long t0, long tFetched) {
+        return build(doc, t0, tFetched, matcher.match(doc.ref().kind(), doc.data()), true);
+    }
+
+    private ViewModel build(EntityDocument doc, long t0, long tFetched, Optional<Sutra> sutra, boolean cached) {
         EntityRef ref = doc.ref();
-        Optional<Sutra> sutra = matcher.match(ref.kind(), doc.data());
         Fingerprint fp = fingerprints.get(new GenKey(ref, doc.provenance().generation()), k -> fingerprinter.fingerprint(doc.data()));
-        EffectiveLayout layout = layouts.get(new LayoutKey(sutra.map(Sutra::id).orElse("-"), ref.kind(), fp),
-                k -> merger.merge(sutra, doc.data(), ref.kind()));
+        EffectiveLayout layout = cached
+                ? layouts.get(new LayoutKey(sutra.map(Sutra::id).orElse("-"), ref.kind(), fp), k -> merger.merge(sutra, doc.data(), ref.kind()))
+                : merger.merge(sutra, doc.data(), ref.kind());
         long tLayout = System.nanoTime();
 
         EvalContext eval = EvalContext.of(doc.data(), formats);

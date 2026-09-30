@@ -26,6 +26,8 @@ import com.ash.drishti.engine.live.TopicHub;
 import com.ash.drishti.engine.live.ViewStream;
 import com.ash.drishti.engine.view.PanelData;
 import com.ash.drishti.engine.view.ViewModel;
+import com.ash.drishti.server.security.Entitlements;
+import com.ash.drishti.server.security.Principal;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -36,6 +38,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -56,9 +59,11 @@ public class StreamController {
     private final LiveProperties props;
     private final ExecutorService executor;
     private final AtomicInteger open = new AtomicInteger();
+    private final Entitlements entitlements;
 
     public StreamController(ViewPipeline pipeline, TopicHub hub, LiveMetrics metrics, LiveProperties props,
-            ExecutorService drishtiVirtualExecutor) {
+            ExecutorService drishtiVirtualExecutor, Entitlements entitlements) {
+        this.entitlements = entitlements;
         this.pipeline = pipeline;
         this.hub = hub;
         this.metrics = metrics;
@@ -67,7 +72,9 @@ public class StreamController {
     }
 
     @GetMapping(path = "/views/{kind}/{id}/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter stream(@PathVariable String kind, @PathVariable String id) {
+    public SseEmitter stream(@PathVariable String kind, @PathVariable String id,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
+        entitlements.requireOpen(principal, kind);
         if (open.get() >= props.maxStreams()) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "too many live streams on this server");
         }

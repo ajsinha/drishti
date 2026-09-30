@@ -34,7 +34,9 @@ public enum ErrorCode {
     INFERENCE_FAILED("DRS-3001", 500),
     COMMAND_UNKNOWN("DRS-4001", 400),
     VIEW_FAILED("DRS-4002", 500),
-    BAD_REQUEST("DRS-5001", 400);
+    BAD_REQUEST("DRS-5001", 400),
+    FORBIDDEN("DRS-5002", 403),
+    UNAUTHENTICATED("DRS-5010", 401);
 
     private final String code;
     private final int httpStatus;

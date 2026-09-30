@@ -1,0 +1,55 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+package com.ash.drishti.server.security;
+
+import java.time.Duration;
+import java.util.List;
+import java.util.Map;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
+/**
+ * {@code drishti.security.*}. Off by default for local development; production turns it on and supplies
+ * the shared secret through the environment ({@code DRISHTI_TOKEN_SECRET}), never a tracked file.
+ *
+ * @param enabled require a signed bearer token on every {@code /api/**} call
+ * @param secret HS256 key shared with the console (at least 32 bytes)
+ * @param clockSkew tolerated clock difference when checking expiry
+ * @param roles role name to what it may see and do
+ * @param redact field names masked in raw JSON (F9) for roles without {@code raw}
+ */
+@ConfigurationProperties("drishti.security")
+public record SecurityProperties(Boolean enabled, String secret, Duration clockSkew, Map<String, Role> roles, List<String> redact) {
+
+    public SecurityProperties {
+        enabled = enabled != null && enabled;
+        clockSkew = clockSkew == null ? Duration.ofSeconds(30) : clockSkew;
+        roles = roles == null ? Map.of() : Map.copyOf(roles);
+        redact = redact == null ? List.of() : List.copyOf(redact);
+    }
+
+    /**
+     * @param kinds entity kinds the role may open; {@code *} for all
+     * @param raw may see unredacted raw JSON
+     * @param author may save Sutras from Studio
+     */
+    public record Role(List<String> kinds, Boolean raw, Boolean author) {
+        public Role {
+            kinds = kinds == null ? List.of() : List.copyOf(kinds);
+            raw = raw != null && raw;
+            author = author != null && author;
+        }
+    }
+}

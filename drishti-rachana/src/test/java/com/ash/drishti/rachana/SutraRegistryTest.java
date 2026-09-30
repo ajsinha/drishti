@@ -36,7 +36,7 @@ class SutraRegistryTest {
     }
 
     private SutraRegistry registry(boolean hot) {
-        return new SutraRegistry(new RachanaProperties(List.of(dir.toString()), hot, Duration.ofMillis(50), null, null), new com.ash.drishti.rachana.el.ElCompiler());
+        return new SutraRegistry(new RachanaProperties(List.of(dir.toString()), hot, Duration.ofMillis(50), null, null, null), new com.ash.drishti.rachana.el.ElCompiler());
     }
 
     @Test

@@ -95,7 +95,7 @@ class InferenceEngineTest {
 
     @Test
     void sutraWinsAndInferenceFillsItsGaps() throws Exception {
-        try (SutraRegistry reg = new SutraRegistry(new RachanaProperties(List.of("../sutras"), false, null, null, null), EL)) {
+        try (SutraRegistry reg = new SutraRegistry(new RachanaProperties(List.of("../sutras"), false, null, null, null, null), EL)) {
             SutraMatcher matcher = new SutraMatcher(reg, EL, F);
             DataNode fut = fixture("trade", "CFT-77120");
             EffectiveLayout e = MERGER.merge(matcher.match("trade", fut), fut, "trade");

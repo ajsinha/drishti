@@ -49,6 +49,13 @@ public class ApiExceptionHandler {
         return p;
     }
 
+    @ExceptionHandler(org.springframework.web.bind.ServletRequestBindingException.class)
+    ProblemDetail binding(org.springframework.web.bind.ServletRequestBindingException e) {
+        ProblemDetail p = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "no principal on request");
+        p.setProperty("code", "DRS-5010");
+        return p;
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     ProblemDetail bad(IllegalArgumentException e) {
         ProblemDetail p = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
