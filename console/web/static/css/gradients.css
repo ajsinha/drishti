@@ -1,0 +1,100 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+/*
+ * Gradients: every theme gets depth from its own two gradient colours (--d-grad-from, --d-grad-to), mixed lightly
+ * into its chrome. Only chrome is graded (the page, the top bar, headers, buttons, titles); panel bodies, tables and
+ * numbers stay on solid surfaces, so the contrast every theme is tested for is unchanged.
+ */
+
+/* the page: a soft diagonal wash from one theme colour to the other */
+body {
+  background:
+    radial-gradient(1200px 600px at 0% 0%, color-mix(in srgb, var(--d-grad-from) 18%, transparent), transparent 62%),
+    radial-gradient(1000px 700px at 100% 100%, color-mix(in srgb, var(--d-grad-to) 18%, transparent), transparent 62%),
+    var(--d-bg);
+  background-attachment: fixed;
+}
+
+/* the top bar: glass over the wash, with a thin gradient rule underneath */
+.tbar {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--d-grad-from) 22%, var(--d-bg)), var(--d-bg) 45%,
+    color-mix(in srgb, var(--d-grad-to) 22%, var(--d-bg)));
+  border-bottom: 0;
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--d-border) 60%, transparent);
+}
+.tbar::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 2px; pointer-events: none;
+  background: linear-gradient(90deg, var(--d-grad-from), var(--d-grad-to));
+  opacity: .75;
+}
+.tbar-brand span {
+  background: linear-gradient(90deg, var(--d-grad-from), var(--d-grad-to));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+
+/* the view header and panel headers: a tint that fades out, over solid surfaces */
+.vhead {
+  background: linear-gradient(120deg, color-mix(in srgb, var(--d-grad-from) 16%, var(--d-bg-2)), var(--d-bg-2) 55%,
+    color-mix(in srgb, var(--d-grad-to) 16%, var(--d-bg-2)));
+}
+.pnl { box-shadow: 0 1px 0 color-mix(in srgb, var(--d-grad-to) 12%, transparent), 0 8px 24px -18px color-mix(in srgb, var(--d-grad-from) 40%, transparent); }
+.pnl-h {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--d-grad-from) 14%, var(--d-surface)), color-mix(in srgb, var(--d-grad-to) 4%, var(--d-surface)) 75%);
+  border-top-left-radius: 6px; border-top-right-radius: 6px;
+}
+.pnl-h h3::before {
+  content: ""; display: inline-block; width: 3px; height: .95em; margin-right: .5rem; vertical-align: -.1em; border-radius: 2px;
+  background: linear-gradient(180deg, var(--d-grad-from), var(--d-grad-to));
+}
+
+/* titles: gradient text on large headings only (never on figures) */
+.adm > h1, .thome > h1, .help-hero h1, .login-box h1 {
+  background: linear-gradient(90deg, var(--d-grad-from), var(--d-grad-to));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.ws-h { border-image: linear-gradient(90deg, var(--d-grad-from), transparent 60%) 1; }
+
+/* accent controls: a gradient of the accent toward the second colour, keeping the accent's dark label */
+.btn-accent, .btn-pill.btn-accent {
+  background: linear-gradient(135deg, var(--d-accent), color-mix(in srgb, var(--d-accent) 72%, var(--d-grad-to)));
+  border: 0;
+}
+.btn-accent:hover, .btn-pill.btn-accent:hover {
+  background: linear-gradient(135deg, var(--d-accent-strong), color-mix(in srgb, var(--d-accent-strong) 65%, var(--d-grad-to)));
+}
+.pill {
+  border-color: transparent;
+  background: linear-gradient(var(--d-bg-2), var(--d-bg-2)) padding-box, linear-gradient(90deg, var(--d-grad-from), var(--d-grad-to)) border-box;
+  border: 1px solid transparent;
+}
+.strip-i dd.emph {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--d-grad-from) 22%, var(--d-emph-bg)), var(--d-emph-bg));
+}
+.asof-live.on, .hl-badge.hl-ok { box-shadow: 0 0 0 1px color-mix(in srgb, var(--d-grad-to) 25%, transparent); }
+
+/* people who prefer less: keep the solid look */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  body { background: var(--d-bg); }
+  .tbar, .vhead, .pnl-h { background: var(--d-bg-2); }
+  .tbar-brand span, .adm > h1, .thome > h1, .help-hero h1, .login-box h1 { background: none; color: var(--d-ink); }
+}
+@media print {
+  body, .vhead, .pnl-h { background: #fff !important; }
+  .pnl-h h3::before, .tbar::after { display: none; }
+}
+
+/* the top bar is full at laptop widths: the clock and desk name give way first (the clock is also in the footer) */
+@media (max-width: 1500px) { .tbar-clock, .tbar [data-live-text], .theme-btn .d-md-inline { display: none !important; } }
+@media (max-width: 1400px) { .desk-name { display: none; } }

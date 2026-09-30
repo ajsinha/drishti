@@ -210,3 +210,8 @@ The palette menu offers seven themes:
 - **Crimson** and **Crimson dark** (the Maya palette: Harvard crimson with indigo).
 
 The choice is remembered per browser.
+
+Every theme has two gradient colours of its own (terminal: amber to blue; crimson: crimson to navy; blue: cyan to
+violet, and so on). They shade the page, the top bar, the view header and panel headers, accent buttons and titles;
+panel bodies, tables and figures stay on solid colours, so they read as clearly as before. If your system asks for
+more contrast or less transparency, the solid look is used.

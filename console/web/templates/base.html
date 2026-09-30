@@ -36,6 +36,7 @@
   <link rel="stylesheet" href="/static/css/theme.css?v={{ ASSET_V }}">
   <link rel="stylesheet" href="/static/css/terminal.css?v={{ ASSET_V }}">
   <link rel="stylesheet" href="/static/css/help.css?v={{ ASSET_V }}">
+  <link rel="stylesheet" href="/static/css/gradients.css?v={{ ASSET_V }}">
   {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}{% if (settings or {}).density == 'compact' %} density-compact{% endif %}{% if (settings or {}).flash == false %} no-flash{% endif %}" data-screen="{% block screen %}{{ screen | default('landing') }}{% endblock %}">

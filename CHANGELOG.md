@@ -16,6 +16,10 @@
 # Changelog
 
 ## Unreleased
+- **Gradient themes.** Every theme uses its own two gradient colours on its chrome:
+  - **Where:** a soft wash over the page, a glass top bar with a gradient rule, a tinted view header and panel headers with accent bars, gradient accent buttons, and gradient text on titles and the brand.
+  - **Readability:** panel bodies, tables and figures stay solid, so contrast is unchanged. The solid look is used when the system asks for more contrast or less transparency, and print is plain.
+  - **Fix:** the top bar no longer overflows at laptop widths; the clock, live text and theme label give way first.
 - **Delta Lake in S3, and lake maintenance.**
   - **Storage:** the Delta connector reads through a `LakeStore`, either a local folder or any Hadoop file system: `s3a://` for S3 and S3-compatible stores. This uses Hadoop's S3 module with only the AWS SDK modules it needs (no bundle).
   - **Settings:** `s3.*` shorthands, any `hadoop.fs.s3a.*` setting, and the AWS credential chain.
