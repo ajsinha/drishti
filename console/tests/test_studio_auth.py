@@ -22,7 +22,7 @@ CONSOLE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(CONSOLE))
 
 from core.app import create_app  # noqa: E402
-from core.auth import COOKIE, Auth, hash_password, mint_token, verify_password  # noqa: E402
+from core.auth import COOKIE, mint_token  # noqa: E402
 from core.config import Settings, load_settings  # noqa: E402
 
 
@@ -35,11 +35,6 @@ def test_studio_page_and_preview(client):
     bad = client.post("/studio/preview", json={"yaml": "BROKEN", "kind": "trade", "id": "IRS-48213"})
     assert bad.status_code == 422 and bad.json()["problems"][0]["location"]["line"] == 4
     assert client.get("/studio/inferred/trade/IRS-47102", params={"name": "irs-plain"}).text.startswith("sutra: irs-plain")
-
-
-def test_passwords_hash_and_verify():
-    h = hash_password("s3cret", iterations=1000)
-    assert verify_password("s3cret", h) and not verify_password("wrong", h) and not verify_password("x", "junk")
 
 
 def test_tokens_are_hs256_and_verifiable():
@@ -57,26 +52,62 @@ def test_tokens_are_hs256_and_verifiable():
     assert base64.urlsafe_b64decode(pad(s)) == expect
 
 
-def test_sign_in_flow(tmp_path, backend):
-    users = tmp_path / "users.yaml"
-    users.write_text("users:\n  ash:\n    display: Ash\n    desk: Rates desk\n    roles: [author]\n    password: "
-                     + hash_password("pw", iterations=1000) + "\n")
+def _secure_app(backend):
     settings = load_settings(CONSOLE / "config")
     data = settings.as_dict()
-    data["auth"] = {"enabled": True, "users_file": str(users), "session_secret": "s" * 40, "token_secret": "t" * 40,
+    data["auth"] = {"enabled": True, "session_secret": "s" * 40, "token_secret": "t" * 40,
                     "token_ttl_seconds": 60, "session_hours": 1, "secure_cookie": False}
     app = create_app(Settings(data))
     app.state.backend = backend
+    return app
+
+
+FORM = {"Content-Type": "application/x-www-form-urlencoded"}
+
+
+def test_sign_in_goes_through_the_server(backend):
+    app = _secure_app(backend)
     c = TestClient(app)
     assert c.get("/t", follow_redirects=False).headers["location"].startswith("/login")
+    assert c.get("/admin/users", follow_redirects=False).status_code == 303
     assert c.get("/api/suggest").status_code == 401
     assert c.get("/").status_code == 200
-    assert c.post("/login", content="user=ash&password=nope&next=/t", headers={"Content-Type": "application/x-www-form-urlencoded"}).status_code == 401
-    r = c.post("/login", content="user=ash&password=pw&next=//evil.example", follow_redirects=False,
-               headers={"Content-Type": "application/x-www-form-urlencoded"})
+    bad = c.post("/login", content="user=drishti-dev-admin&password=nope&next=/t", headers=FORM)
+    assert bad.status_code == 401 and "wrong password" in bad.text
+    r = c.post("/login", content="user=drishti-dev-admin&password=drishti-dev-admin123&next=//evil.example",
+               follow_redirects=False, headers=FORM)
     assert r.status_code == 303 and r.headers["location"] == "/t"
-    assert c.get("/t").status_code == 200 and "sign out" in c.get("/t").text
+    home = c.get("/t").text
+    assert "sign out" in home and 'href="/admin/users"' in home
     ident = app.state.auth.identity(c.cookies.get(COOKIE))
-    assert ident.user == "ash" and ident.headers()["Authorization"].startswith("Bearer ")
-    c.cookies.set(COOKIE, c.cookies.get(COOKIE).replace("ash", "eve"))
+    assert ident.user == "drishti-dev-admin" and ident.is_admin and ident.headers()["Authorization"].startswith("Bearer ")
+    payload, sig = c.cookies.get(COOKIE).split(".")
+    c.cookies.set(COOKIE, payload[:-2] + "xx." + sig)
     assert c.get("/t", follow_redirects=False).status_code == 303
+
+
+def test_admin_pages_and_actions(client, backend):
+    page = client.get("/admin/users")
+    assert page.status_code == 200 and "drishti-dev-admin" in page.text and "default password" in page.text
+    assert 'name="mustChangePassword">' in page.text  # not pre-ticked unless configured
+    assert "user-seeded" in client.get("/admin/audit").text
+    created = client.post("/admin/api/users", json={"username": "tina", "roles": ["trader"], "password": "trader-pass-1"})
+    assert created.status_code == 201
+    dup = client.post("/admin/api/users", json={"username": "drishti-dev-admin", "password": "x"})
+    assert dup.status_code == 409 and dup.json()["code"] == "DRS-6002"
+    assert client.post("/admin/api/users/tina/enabled", json={"enabled": False}).status_code == 200
+    assert client.post("/admin/api/users/tina/nonsense", json={}).status_code == 400
+
+
+def test_account_page_and_password_change(client):
+    assert "Change password" in client.get("/account").text
+    assert client.post("/account/password", json={"current": "wrong", "next": "x"}).status_code == 401
+    assert client.post("/account/password", json={"current": "drishti-dev-admin123", "next": "better-pass-99"}).json()["ok"]
+
+
+def test_non_admins_do_not_see_admin_pages(backend):
+    app = _secure_app(backend)
+    c = TestClient(app)
+    c.cookies.set(COOKIE, app.state.auth.session_for({"username": "tina", "displayName": "Tina", "desk": "FX", "roles": ["trader"]}))
+    assert c.get("/admin/users").status_code == 403
+    assert 'href="/admin/users"' not in c.get("/t").text

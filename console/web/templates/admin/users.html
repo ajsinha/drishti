@@ -1,0 +1,71 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Users · {{ PRODUCT }}{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm" data-admin data-me="{{ me.user }}">
+  <h1>Users</h1>
+  {% with tab='users' %}{% include "admin/_nav.html" %}{% endwith %}
+  <div class="adm-bar">
+    <form method="get" action="/admin/users" role="search"><label for="uq" class="visually-hidden">Search users</label>
+      <input id="uq" name="q" value="{{ q }}" class="studio-in" placeholder="Search name, email, role"></form>
+    <button type="button" class="btn-pill btn-accent" data-new><i class="bi bi-person-plus" aria-hidden="true"></i> New user</button>
+  </div>
+  <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
+  <div class="tbl-wrap"><table class="tbl adm-tbl">
+    <thead><tr><th>User</th><th>Name</th><th>Desk</th><th>Email</th><th>Roles</th><th>Status</th><th>Last sign-in</th><th></th></tr></thead>
+    <tbody>
+    {% for u in users %}
+      <tr data-user="{{ u.username }}" data-json="{{ u | tojson | forceescape }}">
+        <td class="mono">{{ u.username }}</td><td>{{ u.displayName }}</td><td>{{ u.desk }}</td><td>{{ u.email }}</td>
+        <td>{% for r in u.roles | sort %}<span class="role">{{ r }}</span>{% endfor %}</td>
+        <td>{% if not u.enabled %}<span class="st st-bad">disabled</span>{% elif u.locked %}<span class="st st-warn">locked</span>{% else %}<span class="st st-ok">active</span>{% endif %}
+            {% if u.mustChangePassword %}<span class="st st-warn">must change password</span>{% endif %}</td>
+        <td class="mono">{{ (u.lastLoginAt or '—')[:16] | replace('T', ' ') }}</td>
+        <td class="adm-actions">
+          <button type="button" class="fk" data-edit>Edit</button>
+          <button type="button" class="fk" data-reset>Reset password</button>
+          <button type="button" class="fk" data-toggle>{{ 'Disable' if u.enabled else 'Enable' }}</button>
+          <button type="button" class="fk" data-delete{% if u.username == me.user %} disabled title="You cannot delete yourself"{% endif %}>Delete</button>
+        </td>
+      </tr>
+    {% else %}<tr><td colspan="8">No users match.</td></tr>{% endfor %}
+    </tbody>
+  </table></div>
+
+  <dialog class="adm-dialog" data-dialog aria-labelledby="dlgTitle">
+    <form method="dialog" data-form>
+      <h2 id="dlgTitle" data-title>New user</h2>
+      <label>User name<input name="username" class="studio-in" required pattern="[a-z0-9][a-z0-9._-]{2,63}" autocomplete="off"></label>
+      <label>Display name<input name="displayName" class="studio-in"></label>
+      <label>Desk<input name="desk" class="studio-in"></label>
+      <label>Email<input name="email" type="email" class="studio-in"></label>
+      <fieldset><legend>Roles</legend>
+        {% for r in roles %}<label class="chk"><input type="checkbox" name="roles" value="{{ r }}"> {{ r }}</label>{% endfor %}</fieldset>
+      <label class="chk"><input type="checkbox" name="enabled" checked> Enabled</label>
+      <label data-pw>Initial password<input name="password" type="password" class="studio-in" autocomplete="new-password"></label>
+      <label class="chk" data-pw><input type="checkbox" name="mustChangePassword"{% if status and status.forceChangeOnCreate %} checked{% endif %}> Must change at first sign-in</label>
+      <p class="adm-msg" data-dlg-msg role="alert"></p>
+      <div class="adm-dlg-actions"><button type="button" class="btn-pill btn-ghost" data-cancel>Cancel</button>
+        <button type="submit" class="btn-pill btn-accent" data-submit>Save</button></div>
+    </form>
+  </dialog>
+</div>
+{% endblock %}
+{% block footer %}{% include "_footer.html" %}{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/view.js?v={{ ASSET_V }}"></script><script src="/static/js/admin.js?v={{ ASSET_V }}"></script>{% endblock %}

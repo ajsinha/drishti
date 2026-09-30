@@ -30,12 +30,12 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from core.config import Settings
 
 WEB = Path(__file__).resolve().parent.parent / "web"
-ASSET_VERSION = "1.0.0"
+ASSET_VERSION = "1.1.0"
 CSP = ("default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; "
        "font-src 'self'; connect-src 'self'; frame-ancestors 'none'")
 
 
-PROTECTED = ("/t", "/v/", "/go", "/studio", "/api/")
+PROTECTED = ("/t", "/v/", "/go", "/studio", "/api/", "/admin", "/account")
 
 
 class AuthGate(BaseHTTPMiddleware):
@@ -66,7 +66,7 @@ class SecurityHeaders(BaseHTTPMiddleware):
 def create_app(settings: Settings) -> FastAPI:
     from core.backend import BackendClient
     from core.auth import Auth
-    from routes import api_routes, auth_routes, home_routes, studio_routes, terminal_routes
+    from routes import admin_routes, api_routes, auth_routes, home_routes, studio_routes, terminal_routes
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -93,7 +93,7 @@ def create_app(settings: Settings) -> FastAPI:
         COPYRIGHT="Copyright © 2026 Ashutosh Sinha. All rights reserved. Proprietary and confidential.",
     )
     app.state.settings = settings
-    app.state.auth = Auth(settings, WEB.parent)
+    app.state.auth = Auth(settings)
     app.state.templates = templates
     app.add_middleware(AuthGate)
     app.add_middleware(SecurityHeaders)
@@ -103,4 +103,5 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(api_routes.router)
     app.include_router(auth_routes.router)
     app.include_router(studio_routes.router)
+    app.include_router(admin_routes.router)
     return app

@@ -33,7 +33,6 @@ ui:
   clock_label: NY
 auth:
   enabled: ${DRISHTI_AUTH_ENABLED:false}      # off for local development
-  users_file: config/users.yaml               # git-ignored; see config/users.example.yaml
   session_secret: ${DRISHTI_SESSION_SECRET:}  # >= 32 characters; from the environment only
   token_secret: ${DRISHTI_TOKEN_SECRET:}      # shared with the server (drishti.security.secret)
   token_ttl_seconds: 300

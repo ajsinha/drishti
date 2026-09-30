@@ -18,6 +18,7 @@ Suggested reading order:
 | [CONFIGURATION.md](CONFIGURATION.md) | **Every setting**, server and console, with defaults. |
 | [INFERENCE.md](INFERENCE.md) | **Layouts from shape.** Rules, packing, Sutra ⊕ inference merge, semantic hints. |
 | [LIVE.md](LIVE.md) | **Live updates.** Topics, leading-edge frames, patches, slow clients, reconnects. |
+| [USER_MANAGEMENT.md](USER_MANAGEMENT.md) | **Users and roles.** The seeded dev admin, admin pages, password rules, lockout, audit, API. |
 | [OPERATIONS.md](OPERATIONS.md) | **Running it.** Deploy, security checklist, monitoring, capacity; [runbooks/](runbooks/). |
 | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | Symptoms, likely causes and fixes. |
 | [PERFORMANCE.md](PERFORMANCE.md) | **Measured numbers.** JMH hot paths and the end-to-end latency gate. |

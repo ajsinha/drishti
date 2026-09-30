@@ -17,7 +17,7 @@
 #   docker compose -f deploy/compose.yaml up
 services:
   server:
-    image: drishti-server:1.0.0
+    image: drishti-server:1.1.0
     build: { context: .., dockerfile: deploy/server.Dockerfile }
     environment:
       DRISHTI_SECURITY_ENABLED: "true"
@@ -26,9 +26,10 @@ services:
     volumes:
       - ../sutras:/opt/drishti/sutras:ro
       - ../data/feeds:/opt/drishti/data/feeds:ro
+      - drishti-identity:/opt/drishti/data/identity
     ports: ["18480:18480"]
   console:
-    image: drishti-console:1.0.0
+    image: drishti-console:1.1.0
     build: { context: .., dockerfile: deploy/console.Dockerfile }
     depends_on: [server]
     environment:
@@ -36,6 +37,6 @@ services:
       DRISHTI_AUTH_ENABLED: "true"
       DRISHTI_TOKEN_SECRET: ${DRISHTI_TOKEN_SECRET:?set DRISHTI_TOKEN_SECRET}
       DRISHTI_SESSION_SECRET: ${DRISHTI_SESSION_SECRET:?set DRISHTI_SESSION_SECRET}
-    volumes:
-      - ./users.yaml:/opt/drishti/console/config/users.yaml:ro
     ports: ["17480:17480"]
+volumes:
+  drishti-identity: {}

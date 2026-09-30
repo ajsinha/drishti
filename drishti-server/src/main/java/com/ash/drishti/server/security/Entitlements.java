@@ -66,6 +66,25 @@ public final class Entitlements {
         return p.roles().stream().map(props.roles()::get).anyMatch(r -> r != null && test.test(r));
     }
 
+    /** The console's own identity, used only to verify sign-ins. */
+    public static final String SERVICE = "service";
+
+    public boolean isAdmin(Principal p) {
+        return has(p, SecurityProperties.Role::admin);
+    }
+
+    public void requireAdmin(Principal p) {
+        if (!isAdmin(p)) {
+            throw new DrishtiException(ErrorCode.FORBIDDEN, p.user() + " is not an administrator");
+        }
+    }
+
+    public void requireService(Principal p) {
+        if (props.enabled() && !p.roles().contains(SERVICE)) {
+            throw new DrishtiException(ErrorCode.FORBIDDEN, "sign-in is verified by the console only");
+        }
+    }
+
     public boolean mayAuthor(Principal p) {
         return has(p, SecurityProperties.Role::author);
     }

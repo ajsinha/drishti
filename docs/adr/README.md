@@ -25,5 +25,6 @@
 | [006](006-vendored-front-end-without-a-build-pipeline.md) | Vendored front end without a build pipeline |
 | [007](007-build-gates-in-tests.md) | Build gates in tests |
 | [008](008-rachana-is-the-grammar-a-sutra-is-a-layout.md) | Rachana is the grammar, a Sutra is a layout |
+| [009](009-users-live-in-the-server.md) | Users live in the server |
 
 ADRs are amended, never rewritten.

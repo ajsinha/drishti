@@ -13,6 +13,19 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 1.1.0 — release notes
+
+*2026-09-30.* This release adds **user management**:
+- admins create, edit, enable or disable, reset and delete users, and read the audit log;
+- everyone can change their own password;
+- PBKDF2 hashing, a password policy, lockout, and a guard that always keeps an enabled admin.
+
+A development admin, `drishti-dev-admin` / `drishti-dev-admin123`, is created on an empty store.
+Change its password, or set `DRISHTI_SEED_ADMIN=false`. Nobody is forced to change a password unless
+that is configured. See `docs/USER_MANAGEMENT.md`.
+
+---
+
 # Drishti 1.0.0 — release notes
 
 *2026-09-30 · Ashutosh Sinha*

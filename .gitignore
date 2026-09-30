@@ -12,4 +12,4 @@ __pycache__/
 .pytest_cache/
 application.local.yaml
 hs_err_pid*
-console/config/users.yaml
+data/identity/

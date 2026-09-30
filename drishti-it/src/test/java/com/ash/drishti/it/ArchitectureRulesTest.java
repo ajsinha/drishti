@@ -42,7 +42,7 @@ class ArchitectureRulesTest {
     @ArchTest
     static final ArchRule lowerLayersDoNotSeeEngine = noClasses()
             .that().resideInAnyPackage("com.ash.drishti.common..", "com.ash.drishti.rachana..",
-                    "com.ash.drishti.inference..", "com.ash.drishti.graph..")
+                    "com.ash.drishti.inference..", "com.ash.drishti.graph..", "com.ash.drishti.identity..")
             .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.engine..", "com.ash.drishti.server..");
 
     @ArchTest

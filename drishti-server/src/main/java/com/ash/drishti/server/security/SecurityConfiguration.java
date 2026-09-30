@@ -42,6 +42,14 @@ public class SecurityConfiguration {
         return r;
     }
 
+    /** Role names users may be given: the configured roles. */
+    @Bean
+    public java.util.Set<String> drishtiRoleNames(SecurityProperties props) {
+        java.util.Set<String> names = new java.util.TreeSet<>(props.roles().keySet());
+        names.add("admin");
+        return java.util.Set.copyOf(names);
+    }
+
     @Bean
     public Entitlements entitlements(SecurityProperties props) {
         return new Entitlements(props);

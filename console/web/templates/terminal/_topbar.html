@@ -27,9 +27,10 @@
   </form>
   <div class="tbar-right">
     <a class="tbar-link" href="/studio" title="Sutra Studio"><i class="bi bi-braces" aria-hidden="true"></i><span class="d-none d-xl-inline"> Studio</span></a>
-    <span class="tbar-desk">{{ me.desk if me else DESK }} · {{ me.display if me else USER }}{% if AUTH_ENABLED %} · <a href="/logout">sign out</a>{% endif %}</span>
-    <span class="tbar-live" data-live-state="{{ 'live' if live else 'static' }}"><span class="dot" aria-hidden="true"></span>
-      <span data-live-text>{{ 'Live' if live else 'Static' }}{% if built_ms %}, built {{ built_ms }} ms{% endif %}</span></span>
+    {% if me and me.is_admin %}<a class="tbar-link" href="/admin/users" title="User administration"><i class="bi bi-people" aria-hidden="true"></i><span class="d-none d-xl-inline"> Admin</span></a>{% endif %}
+    <span class="tbar-desk"><span class="desk-name">{{ me.desk if me else DESK }} · </span><a class="tbar-link" href="/account" title="My account">{{ me.display if me else USER }}</a>{% if AUTH_ENABLED %} · <a href="/logout">sign out</a>{% endif %}</span>
+    {% if live is defined %}<span class="tbar-live" data-live-state="{{ 'live' if live else 'static' }}"><span class="dot" aria-hidden="true"></span>
+      <span data-live-text>{{ 'Live' if live else 'Static' }}{% if built_ms %}, built {{ built_ms }} ms{% endif %}</span></span>{% endif %}
     <span class="tbar-clock mono" data-clock data-tz="{{ CLOCK_TZ }}" data-tz-label="{{ CLOCK_LABEL }}"></span>
     {% include "_theme_menu.html" %}
   </div>

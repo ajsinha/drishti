@@ -25,7 +25,8 @@ import org.springframework.context.annotation.Import;
  * Each module contributes its beans through its own {@code @Configuration} class, imported here.
  */
 @SpringBootApplication
-@Import({EngineConfiguration.class, com.ash.drishti.server.security.SecurityConfiguration.class})
+@Import({EngineConfiguration.class, com.ash.drishti.server.security.SecurityConfiguration.class,
+        com.ash.drishti.identity.IdentityConfiguration.class})
 public class DrishtiApplication {
 
     public static void main(String[] args) {

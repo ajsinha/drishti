@@ -1,0 +1,171 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+package com.ash.drishti.server.api;
+
+import com.ash.drishti.identity.AuditLog;
+import com.ash.drishti.identity.User;
+import com.ash.drishti.identity.UserService;
+import com.ash.drishti.identity.UserView;
+import com.ash.drishti.server.security.Entitlements;
+import com.ash.drishti.server.security.Principal;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestAttribute;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * Sign-in verification (for the console), self service ({@code /auth/me}, password change) and user
+ * administration ({@code /admin/**}, admins only). Password hashes never leave the server.
+ */
+@RestController
+@RequestMapping("/api/v1")
+public class IdentityController {
+
+    /** @param username user name @param password password */
+    public record LoginRequest(String username, String password) {}
+
+    /** @param current current password @param next new password */
+    public record PasswordChange(String current, String next) {}
+
+    /** @param password new password chosen by an admin */
+    public record PasswordReset(String password) {}
+
+    /** @param enabled whether the user may sign in */
+    public record EnabledChange(boolean enabled) {}
+
+    /**
+     * @param username user name
+     * @param displayName display name
+     * @param email email
+     * @param desk desk
+     * @param roles roles
+     * @param enabled may sign in
+     * @param password initial password
+     * @param mustChangePassword ask the user to change it at first sign-in (default: {@code force-password-change-on-create})
+     */
+    public record NewUser(String username, String displayName, String email, String desk, Set<String> roles, Boolean enabled,
+            String password, Boolean mustChangePassword) {}
+
+    private final UserService users;
+    private final Entitlements entitlements;
+
+    public IdentityController(UserService users, Entitlements entitlements) {
+        this.users = users;
+        this.entitlements = entitlements;
+    }
+
+    private static UserView view(User u) {
+        return UserView.of(u, Instant.now());
+    }
+
+    // ---- sign-in and self service --------------------------------------------------------------
+
+    @PostMapping("/auth/login")
+    public UserView login(@RequestBody LoginRequest req, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireService(p);
+        return view(users.authenticate(req.username(), req.password()));
+    }
+
+    @GetMapping("/auth/me")
+    public UserView me(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return view(users.require(p.user()));
+    }
+
+    @PostMapping("/auth/password")
+    public UserView changePassword(@RequestBody PasswordChange req, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return view(users.changeOwnPassword(p.user(), req.current(), req.next()));
+    }
+
+    // ---- administration ------------------------------------------------------------------------
+
+    @GetMapping("/admin/users")
+    public List<UserView> list(@RequestParam(defaultValue = "") String q, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireAdmin(p);
+        return users.list(q).stream().map(IdentityController::view).toList();
+    }
+
+    @PostMapping("/admin/users")
+    @ResponseStatus(HttpStatus.CREATED)
+    public UserView create(@RequestBody NewUser n, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireAdmin(p);
+        return view(users.create(p.user(), n.username(), new UserService.Profile(n.displayName(), n.email(), n.desk(),
+                n.roles() == null ? Set.of() : n.roles(), n.enabled()), n.password(), n.mustChangePassword() == null ? users.forceChangeOnCreate() : n.mustChangePassword()));
+    }
+
+    @GetMapping("/admin/users/{username}")
+    public UserView get(@PathVariable String username, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireAdmin(p);
+        return view(users.require(username));
+    }
+
+    @PutMapping("/admin/users/{username}")
+    public UserView update(@PathVariable String username, @RequestBody UserService.Profile profile,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireAdmin(p);
+        return view(users.update(p.user(), username, profile));
+    }
+
+    @PostMapping("/admin/users/{username}/enabled")
+    public UserView enable(@PathVariable String username, @RequestBody EnabledChange req, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireAdmin(p);
+        return view(users.setEnabled(p.user(), username, req.enabled()));
+    }
+
+    @PostMapping("/admin/users/{username}/password")
+    public UserView reset(@PathVariable String username, @RequestBody PasswordReset req, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireAdmin(p);
+        return view(users.resetPassword(p.user(), username, req.password()));
+    }
+
+    @DeleteMapping("/admin/users/{username}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable String username, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireAdmin(p);
+        users.delete(p.user(), username);
+    }
+
+    @GetMapping("/admin/audit")
+    public List<AuditLog.Event> audit(@RequestParam(defaultValue = "200") int limit, @RequestParam(defaultValue = "") String subject,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireAdmin(p);
+        return users.audit(limit, subject);
+    }
+
+    @GetMapping("/admin/roles")
+    public Set<String> roles(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireAdmin(p);
+        return users.knownRoles();
+    }
+
+    @GetMapping("/admin/status")
+    public Map<String, Object> status(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireAdmin(p);
+        return Map.of("defaultAdminPasswordInUse", users.defaultAdminPasswordInUse(), "users", users.list("").size(),
+                "forceChangeOnCreate", users.forceChangeOnCreate());
+    }
+}

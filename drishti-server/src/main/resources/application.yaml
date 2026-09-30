@@ -84,7 +84,25 @@ drishti:
       trader:  { kinds: [trade, curve, fx-spot, index, book, contract-spec, clearing-account, counterparty] }
       risk:    { kinds: ["*"], raw: true }
       author:  { kinds: ["*"], raw: true, author: true }
+      admin:   { kinds: ["*"], raw: true, author: true, admin: true }
     redact: [trader, counterpartyId]   # masked in raw JSON (F9) for roles without raw
+  identity:
+    # Users and the audit log; written atomically, owner-only permissions. Keep ./data out of version control.
+    users-file: ${DRISHTI_USERS_FILE:./data/identity/users.json}
+    audit-file: ${DRISHTI_AUDIT_FILE:./data/identity/audit.jsonl}
+    iterations: 240000              # PBKDF2-HMAC-SHA256
+    min-password-length: 10
+    max-failed-attempts: 5
+    lockout: 15m
+    # Nobody is forced to change a password unless configured here (an admin can still tick it per user).
+    force-password-change-on-create: ${DRISHTI_FORCE_PW_CHANGE_ON_CREATE:false}
+    force-password-change-on-reset: ${DRISHTI_FORCE_PW_CHANGE_ON_RESET:false}
+    # On first start with no users, create a development admin. Change its password at once;
+    # the console warns until you do. Turn off (DRISHTI_SEED_ADMIN=false) for production.
+    seed-admin: ${DRISHTI_SEED_ADMIN:true}
+    seed-username: drishti-dev-admin
+    seed-password: drishti-dev-admin123
+    seed-roles: [admin]
   rachana:
     # Directories scanned recursively for *.yaml layout files (see docs/RACHANA_REFERENCE.md).
     dirs: ${DRISHTI_SUTRAS:./sutras}

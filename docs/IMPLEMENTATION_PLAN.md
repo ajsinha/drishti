@@ -19,7 +19,7 @@
 
 ## Wave map
 
-Ten waves. Each holds a small set of closely related items and ends with a demo-able exit gate.
+Ten waves (plus W11, user management, after 1.0.0). Each holds a small set of closely related items and ends with a demo-able exit gate.
 
 | Wave | Theme | Exit gate |
 |---|---|---|
@@ -32,6 +32,7 @@ Ten waves. Each holds a small set of closely related items and ends with a demo-
 | W7 | Engine pipeline & entity graph | `ViewPipeline` builds full ViewModels in-process with links; warm p99 < 50 ms (JMH) |
 | W8 | REST API & console views | The 4 mockups are reproduced in the browser end to end, with command line, F-keys, breadcrumbs and F9 |
 | W9 | Live updates | Curves and MTM tick over SSE; top bar shows measured p99; 10k-subscriber soak passes |
+| W11 | User management | Admins manage users, roles and passwords; the audit log; seeded `drishti-dev-admin`; `v1.1.0` |
 | W10 | Studio, security, ops & release | Sutra Studio, entitlements, Docker, runbooks, `v1.0.0` tagged on `main` |
 
 ---
@@ -111,6 +112,13 @@ Ten waves. Each holds a small set of closely related items and ends with a demo-
 - Release: `RELEASE_NOTES.md`, tag `v1.0.0`, merge to `main`.
 
 ---
+
+## W11 — User management (added after 1.0.0)
+- `drishti-identity`: `User`, `UserStore` / `FileUserStore` (atomic, mode 600), `PasswordHasher` (PBKDF2), `UserService` (lockout, policy, last-admin guard), `AuditLog`.
+- Seed `drishti-dev-admin` / `drishti-dev-admin123` (admin) when the store is empty; warn until it is changed.
+- Forced password change is off unless configured.
+- Server: `/api/v1/auth/{login,me,password}`, `/api/v1/admin/{users,audit,roles,status}`; an `admin` role.
+- Console: sign-in through the server, `/account`, `/admin/users`, `/admin/audit`. The users file is retired (ADR-009).
 
 ## Risks
 

@@ -56,6 +56,8 @@ class BackendClient:
             err = BackendError(r.status_code, body.get("code", f"HTTP-{r.status_code}"), body.get("detail", r.text[:200]))
             err.problems = body.get("problems", [])
             raise err
+        if r.status_code == 204:
+            return None
         return r.json() if "json" in r.headers.get("content-type", "") else r.text
 
     async def view(self, kind: str, id_: str, ident) -> dict:
@@ -90,6 +92,23 @@ class BackendClient:
 
     async def save_sutra(self, yaml_text: str, ident=None) -> dict:
         return await self._send("POST", "/sutras", ident, content=yaml_text.encode(), headers={"Content-Type": "text/yaml"})
+
+    # -- identity ---------------------------------------------------------------------------------
+    async def login(self, username: str, password: str, service) -> dict:
+        return await self._send("POST", "/auth/login", service, json={"username": username, "password": password})
+
+    async def me(self, ident) -> dict:
+        return await self._get("/auth/me", ident)
+
+    async def change_password(self, current: str, new: str, ident) -> dict:
+        return await self._send("POST", "/auth/password", ident, json={"current": current, "next": new})
+
+    async def admin(self, method: str, path: str, ident, body: dict | None = None, **params):
+        """Admin endpoints (``/admin/...``); the server enforces the admin role."""
+        kw = {"params": params} if params else {}
+        if body is not None:
+            kw["json"] = body
+        return await self._send(method, "/admin" + path, ident, **kw)
 
     async def stream(self, kind: str, id_: str, ident=None):
         """Yields ``(event, data)`` pairs from the server's SSE stream for a view, until it ends."""

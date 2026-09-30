@@ -27,7 +27,7 @@ terminal does.
 
 ## Status
 
-**Drishti 1.0.0 is released** (see [RELEASE_NOTES.md](RELEASE_NOTES.md)). It was built in ten waves on `develop`, each merged to `main` when its build was green.
+**Drishti 1.1.0 is released** (see [RELEASE_NOTES.md](RELEASE_NOTES.md)). It was built in eleven waves on `develop`, each merged to `main` when its build was green.
 
 | Wave | Theme | State |
 |---|---|---|
@@ -41,6 +41,7 @@ terminal does.
 | 8 | REST API and console entity views (the four mockups end to end) | ✅ done |
 | 9 | Live updates over SSE, measured p99 | ✅ done |
 | 10 | Sutra Studio, security, ops, v1.0.0 | ✅ done |
+| 11 | User management: users, roles, passwords, lockout, audit; seeded dev admin; v1.1.0 | ✅ done |
 
 ## What works today
 
@@ -70,6 +71,10 @@ terminal does.
 - **Security.** Sign-in, per-role entitlements (denied links are shown disabled with the reason),
   raw JSON redaction, and signed tokens between the console and the server. It is off by default for
   local development.
+- **Users.** Admins manage users, roles and passwords at `/admin/users` and read the audit log. Everyone
+  can change their own password at `/account`. The server seeds a development admin on an empty store:
+  **`drishti-dev-admin` / `drishti-dev-admin123`**. Change that password (the UI warns until you do),
+  or set `DRISHTI_SEED_ADMIN=false` in production.
 - **Operations.** Prometheus metrics, a Grafana dashboard, Dockerfiles and compose, and runbooks.
 - **Not built** (see the release notes): OIDC/SSO, the `aero` plugin, and F8 Impact.
 
@@ -103,6 +108,7 @@ drishti/
 ├── drishti-rachana/             Rachana grammar: Sutra model, parser, registry, Rachana-EL, formats
 ├── drishti-inference/           semantic hints, rules, packer, Sutra ⊕ inference merge
 ├── drishti-graph/               reference catalogue, link badges
+├── drishti-identity/            users, passwords, roles, lockout, audit
 ├── drishti-engine/              sources, view pipeline, binder, ViewModel, commands, type-ahead
 ├── drishti-benchmarks/          JMH hot-path benchmarks
 ├── drishti-server/              the Spring Boot application
@@ -130,6 +136,7 @@ drishti/
 | [LIVE.md](docs/LIVE.md) | **Live updates.** Topics, frames, patches, slow clients, reconnects. |
 | [PERFORMANCE.md](docs/PERFORMANCE.md) | **Measured numbers.** JMH hot paths and the end-to-end latency gate. |
 | [adr/](docs/adr/README.md) | Architecture decision records. |
+| [USER_MANAGEMENT.md](docs/USER_MANAGEMENT.md) | **Users and roles.** The seeded admin, admin pages, password rules, audit, API. |
 | [OPERATIONS.md](docs/OPERATIONS.md) | **Running it.** Deploy, security checklist, monitoring, runbooks. |
 | [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Symptoms, causes and fixes. |
 | [CHANGELOG.md](CHANGELOG.md) · [RELEASE_NOTES.md](RELEASE_NOTES.md) | What changed, wave by wave; what 1.0.0 is. |

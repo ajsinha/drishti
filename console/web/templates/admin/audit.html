@@ -1,0 +1,36 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Audit log · {{ PRODUCT }}{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm">
+  <h1>Audit log</h1>
+  {% with tab='audit' %}{% include "admin/_nav.html" %}{% endwith %}
+  <form class="adm-bar" method="get" action="/admin/audit" role="search"><label for="as" class="visually-hidden">User</label>
+    <input id="as" name="subject" value="{{ subject }}" class="studio-in" placeholder="Filter by user"></form>
+  <div class="tbl-wrap"><table class="tbl">
+    <thead><tr><th>When (UTC)</th><th>Actor</th><th>Action</th><th>User</th><th>Detail</th></tr></thead>
+    <tbody>{% for e in events %}<tr><td class="mono">{{ e.at[:19] | replace('T', ' ') }}</td><td class="mono">{{ e.actor }}</td>
+      <td><span class="st {{ 'st-bad' if 'fail' in e.action or e.action in ['locked', 'login-refused'] else 'st-ok' }}">{{ e.action }}</span></td>
+      <td class="mono">{{ e.subject }}</td><td>{{ e.detail }}</td></tr>
+    {% else %}<tr><td colspan="5">No events.</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div>
+{% endblock %}
+{% block footer %}{% include "_footer.html" %}{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/view.js?v={{ ASSET_V }}"></script>{% endblock %}

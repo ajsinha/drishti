@@ -37,6 +37,11 @@ The local override is `./application.local.yaml`. Environment variables use Spri
 | `drishti.rachana.studio-save` | `false` (`DRISHTI_STUDIO_SAVE`) | let Studio write Sutra files (authors only) |
 | `drishti.security.enabled` / `secret` | `false` / — (`DRISHTI_TOKEN_SECRET`) | require HS256 bearer tokens; the secret is shared with the console |
 | `drishti.security.roles.<role>` | trader, risk, author | `{kinds, raw, author}` |
+| `drishti.identity.users-file` / `audit-file` | `./data/identity/users.json` / `audit.jsonl` | user store and audit log |
+| `drishti.identity.iterations / min-password-length` | `240000 / 10` | hashing and password policy |
+| `drishti.identity.max-failed-attempts / lockout` | `5 / 15m` | lockout |
+| `drishti.identity.seed-admin` | `true` (`DRISHTI_SEED_ADMIN`) | create `drishti-dev-admin` on an empty store |
+| `drishti.identity.force-password-change-on-create / -on-reset` | `false / false` | force a password change at next sign-in |
 | `drishti.security.redact` | `[trader, counterpartyId]` | fields masked in raw JSON for roles without `raw` |
 | `drishti.live.frame / heartbeat / max-streams / window` | `50ms / 15s / 20000 / 30s` | live updates |
 | `drishti.sources.plugins.rest.settings.*` | | `base-url`, `path`, `kinds`, `header.<Name>`, `timeout-ms`, `generation-header` |
@@ -68,6 +73,5 @@ The local override is `console/config/application.local.yaml`. Environment varia
 | `ui.user`, `ui.user_display`, `ui.desk` | `ash`, `Ash`, `Rates desk` | the acting user until sign-in (Wave 10) |
 | `ui.clock_tz` / `ui.clock_label` | `America/New_York` / `NY` | the top-bar clock |
 | `auth.enabled` | `false` (`DRISHTI_AUTH_ENABLED`) | require sign-in |
-| `auth.users_file` | `config/users.yaml` | users with PBKDF2 hashes (git-ignored; see `users.example.yaml`) |
 | `auth.session_secret` / `token_secret` | from the environment | cookie signing; server tokens (shared with the server) |
 | `auth.token_ttl_seconds` / `session_hours` / `secure_cookie` | `300` / `10` / `true` | token and session lifetimes |

@@ -15,6 +15,18 @@
 -->
 # Changelog
 
+## 1.1.0 — Wave 11: user management (2026-09-30)
+- New module `drishti-identity`:
+  - users with profiles, roles and enabled flags;
+  - PBKDF2-HMAC-SHA256 passwords with a policy; lockout after 5 failures;
+  - atomic, owner-only JSON storage; an append-only audit log;
+  - a guard so there is always an enabled admin.
+- A development admin **`drishti-dev-admin` / `drishti-dev-admin123`** (role `admin`) is seeded on an empty store. The console warns until its password is changed; `DRISHTI_SEED_ADMIN=false` turns seeding off.
+- Forced password changes are **off unless configured** (`force-password-change-on-create`, `force-password-change-on-reset`).
+- Server: `/api/v1/auth/login` (console service token only), `/auth/me`, `/auth/password`, and `/api/v1/admin/**` (users CRUD, enable/disable, reset, audit, roles, status); an `admin` role.
+- Console: sign-in through the server; `/account` (profile, change password); `/admin/users` (search, create, edit, enable/disable, reset, delete); `/admin/audit`. The users file and hashing tool are retired (ADR-009).
+- Docs: `USER_MANAGEMENT.md`, ADR-009; updated operations, runbook, configuration.
+
 ## 1.0.0 — Wave 10: Studio, security, operations, release (2026-09-30)
 - **Sutra Studio** (`/studio`):
   - a Rachana editor (vendored CodeMirror with a Drishti YAML mode);

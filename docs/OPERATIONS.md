@@ -31,10 +31,11 @@ The console's sessions are signed cookies, so any console instance can serve any
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 ./mvnw -q package -DskipTests
-docker build -f deploy/server.Dockerfile  -t drishti-server:1.0.0 .
-docker build -f deploy/console.Dockerfile -t drishti-console:1.0.0 .
+docker build -f deploy/server.Dockerfile  -t drishti-server:1.1.0 .
+docker build -f deploy/console.Dockerfile -t drishti-console:1.1.0 .
 export DRISHTI_TOKEN_SECRET=$(openssl rand -hex 32) DRISHTI_SESSION_SECRET=$(openssl rand -hex 32)
-cp console/config/users.example.yaml deploy/users.yaml     # then set real hashes: python console/tools/hash_password.py
+# first start seeds drishti-dev-admin / drishti-dev-admin123; sign in, change it, create real admins
+# (or DRISHTI_SEED_ADMIN=false and provision users through the admin API). See docs/USER_MANAGEMENT.md.
 docker compose -f deploy/compose.yaml up -d
 ```
 
@@ -45,8 +46,9 @@ docker compose -f deploy/compose.yaml up -d
 ## Security checklist
 
 - **Server:** `DRISHTI_SECURITY_ENABLED=true` and `DRISHTI_TOKEN_SECRET` (≥ 32 bytes), shared with the console.
-- **Console:** `DRISHTI_AUTH_ENABLED=true`, `DRISHTI_SESSION_SECRET` (≥ 32), and `config/users.yaml`
-  with PBKDF2 hashes (git-ignored).
+- **Console:** `DRISHTI_AUTH_ENABLED=true` and `DRISHTI_SESSION_SECRET` (≥ 32).
+- **Users:** managed in the server (`/admin/users`). Change the seeded `drishti-dev-admin` password,
+  or set `DRISHTI_SEED_ADMIN=false`. Back up `data/identity/` (users and audit).
 - **Roles:** set per desk in `drishti.security.roles`. Keep `redact` listing the fields traders must
   not see in raw JSON.
 - **Studio saving:** `DRISHTI_STUDIO_SAVE=true` only in authoring environments. Save writes into the

@@ -69,6 +69,40 @@ class FakeBackend:
     async def inferred(self, kind, id_, name, ident=None):
         return f"sutra: {name}\nversion: 1\n"
 
+    users = {"drishti-dev-admin": {"username": "drishti-dev-admin", "displayName": "Drishti dev admin", "desk": "Administration",
+                                   "roles": ["admin"], "enabled": True, "mustChangePassword": False, "locked": False, "email": "",
+                                   "lastLoginAt": None}}
+
+    async def login(self, username, password, service):
+        assert service.roles == ("service",)
+        if username == "drishti-dev-admin" and password == "drishti-dev-admin123":
+            return self.users[username]
+        raise BackendError(401, "DRS-6004", "unknown user or wrong password")
+
+    async def me(self, ident):
+        return self.users.get(ident.user, {"username": ident.user, "displayName": ident.display, "desk": ident.desk, "roles": list(ident.roles)})
+
+    async def change_password(self, current, new, ident):
+        if current != "drishti-dev-admin123":
+            raise BackendError(401, "DRS-6004", "current password is wrong")
+        return self.users["drishti-dev-admin"]
+
+    async def admin(self, method, path, ident, body=None, **params):
+        self.calls.append(("admin", method, path, body))
+        if path == "/users" and method == "GET":
+            return list(self.users.values())
+        if path == "/roles":
+            return ["admin", "author", "risk", "trader"]
+        if path == "/status":
+            return {"defaultAdminPasswordInUse": True, "users": 1, "forceChangeOnCreate": False}
+        if path == "/audit":
+            return [{"at": "2026-09-30T12:00:00Z", "actor": "system", "action": "user-seeded", "subject": "drishti-dev-admin", "detail": ""}]
+        if path == "/users" and method == "POST":
+            if body.get("username") in self.users:
+                raise BackendError(409, "DRS-6002", "exists")
+            return {**body, "enabled": True}
+        return {"ok": True}
+
     async def command(self, text, ident=None):
         if "IRS-48213" in text.upper():
             return {"ref": {"kind": "trade", "id": "IRS-48213"}, "mnemonic": "TRD"}

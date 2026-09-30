@@ -17,7 +17,7 @@ package com.ash.drishti.common;
 
 /**
  * Stable error codes, {@code DRS-nnnn}. The first digit groups them: 1 sources and data, 2 Sutra,
- * 3 inference, 4 engine and graph, 5 API. Codes are never reused.
+ * 3 inference, 4 engine and graph, 5 API, 6 identity. Codes are never reused.
  */
 public enum ErrorCode {
     ENTITY_NOT_FOUND("DRS-1001", 404),
@@ -36,7 +36,14 @@ public enum ErrorCode {
     VIEW_FAILED("DRS-4002", 500),
     BAD_REQUEST("DRS-5001", 400),
     FORBIDDEN("DRS-5002", 403),
-    UNAUTHENTICATED("DRS-5010", 401);
+    UNAUTHENTICATED("DRS-5010", 401),
+    USER_NOT_FOUND("DRS-6001", 404),
+    USER_EXISTS("DRS-6002", 409),
+    WEAK_PASSWORD("DRS-6003", 422),
+    BAD_CREDENTIALS("DRS-6004", 401),
+    ACCOUNT_LOCKED("DRS-6005", 423),
+    LAST_ADMIN("DRS-6006", 409),
+    INVALID_USER("DRS-6007", 422);
 
     private final String code;
     private final int httpStatus;
