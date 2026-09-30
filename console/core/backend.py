@@ -114,6 +114,30 @@ class BackendClient:
     async def delete_workspace(self, name: str, ident) -> None:
         return await self._send("DELETE", f"/me/workspaces/{quote(name)}", ident)
 
+    # -- monitors and alerts ----------------------------------------------------------------------
+    async def mine(self, method: str, path: str, ident, body=None, **params):
+        """Calls under /me (monitors, alerts) for the signed-in user."""
+        kw = {"params": params} if params else {}
+        if body is not None:
+            kw["json"] = body
+        return await self._send(method, "/me" + path, ident, **kw)
+
+    async def sse(self, path: str, ident=None):
+        """Yields ``(event, data)`` from any server SSE endpoint under /api/v1."""
+        headers = {"Accept": "text/event-stream", **(ident.headers() if ident is not None else {})}
+        async with self._client.stream("GET", "/api/v1" + path, timeout=None, headers=headers) as r:
+            if r.status_code >= 400:
+                raise BackendError(r.status_code, "DRS-5003", "stream refused")
+            event, data = None, []
+            async for line in r.aiter_lines():
+                if line.startswith("event:"):
+                    event = line[6:].strip()
+                elif line.startswith("data:"):
+                    data.append(line[5:])
+                elif line == "" and event:
+                    yield event, "\n".join(data)
+                    event, data = None, []
+
     # -- identity ---------------------------------------------------------------------------------
     async def login(self, username: str, password: str, service) -> dict:
         return await self._send("POST", "/auth/login", service, json={"username": username, "password": password})

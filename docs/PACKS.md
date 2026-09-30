@@ -70,6 +70,9 @@ console:
   help:       config/help.yaml
 ```
 
+A pack can also suggest **alert rules** per kind (`alerts:` with `kind`, `name`, `when`, `severity`,
+`message`) and offer **starter monitors** (`console.monitors: { Name: [ {kind, id}, … ] }`).
+
 Sample fixtures tick while someone watches them when their `_meta` says so. `"walk": {"etaDelayHours": 1}`
 random-walks those fields, so a pack needs no code for live samples.
 

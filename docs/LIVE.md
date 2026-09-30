@@ -53,6 +53,14 @@ SourcePlugin.subscribe ─► TopicHub topic (one per entity, one source subscri
 - **Heartbeats.** An SSE comment every 15 s keeps proxies from closing idle streams.
 - **Capacity.** `drishti.live.max-streams` (20,000) caps the streams per server.
 
+## Monitors and alerts
+
+- A **monitor** stream holds one `ViewStream` per row and multiplexes their strip patches as `row` events
+  over one connection, with a latest-wins mailbox per row.
+- The **alert engine** subscribes to the topics of every entity that some enabled rule watches, whether
+  or not a browser is open. It evaluates each rule's Rachana-EL condition on every frame, fires on the
+  false → true edge, and pushes `alert` events to that user's open streams.
+
 ## Latency
 
 The top bar shows `Live, p99 N ms`: the rolling (30 s) p99 of source-tick → frame-built across the

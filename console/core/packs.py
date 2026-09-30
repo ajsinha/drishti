@@ -50,7 +50,8 @@ class Packs:
         m = yaml.safe_load(manifest.read_text(encoding="utf-8")) or {}
         console = m.get("console", {}) or {}
         out = {"name": name, "title": m.get("title", name), "version": m.get("version", ""), "description": m.get("description", ""),
-               "dir": pdir, "examples": console.get("examples", []), "workspaces": {}, "guides": [], "contextual": {}}
+               "dir": pdir, "examples": console.get("examples", []), "workspaces": {}, "guides": [], "contextual": {},
+               "monitors": console.get("monitors", {}) or {}, "alerts": m.get("alerts", []) or []}
         if console.get("workspaces") and (pdir / console["workspaces"]).exists():
             out["workspaces"] = (yaml.safe_load((pdir / console["workspaces"]).read_text()) or {}).get("templates", {}) or {}
         if console.get("help") and (pdir / console["help"]).exists():

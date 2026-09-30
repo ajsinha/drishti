@@ -1,0 +1,38 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Monitors · {{ PRODUCT }}{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm">
+  <h1>Monitors</h1>
+  <p class="text-muted-d">A monitor is a live watchlist: one row per entity, each showing its own key figures as they tick. Pair it with <a href="/alerts">alerts</a> to be told when a figure crosses a line.</p>
+  {% if missing %}<p class="pnl-err" role="alert">There is no monitor “{{ missing }}”.</p>{% endif %}
+  <h2 class="ws-h">Yours</h2>
+  {% if mine %}<ul class="ws-list">{% for n in mine %}<li><a href="/m/{{ n | urlencode }}"><i class="bi bi-list-columns" aria-hidden="true"></i> {{ n }}</a></li>{% endfor %}</ul>
+  {% else %}<p class="text-muted-d">None yet. Start from one below; it is saved to your account.</p>{% endif %}
+  <h2 class="ws-h">Starters</h2>
+  <div class="help-cards">
+    {% for n, s in starters.items() %}
+    <a class="help-card" href="/m/{{ n | urlencode }}?template={{ n | urlencode }}">
+      <div class="hc-title"><span class="hc-ico"><i class="bi bi-list-columns" aria-hidden="true"></i></span><span>{{ n }} <span class="badge-kind">{{ s.pack }}</span></span></div>
+      <p>{{ s.entities | map(attribute='id') | join(' · ') }}</p><span class="more">Open <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a>
+    {% else %}<p class="text-muted-d">The enabled packs offer no starter monitors.</p>{% endfor %}
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script>{% endblock %}

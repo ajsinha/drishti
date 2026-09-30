@@ -13,6 +13,16 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 1.6.0 — release notes
+
+*2026-09-30.* This release adds **monitors and alerts**:
+- live watchlists of mixed entities, over one connection per page;
+- alert rules that the server checks on every tick and that fire once when they become true, with a
+  bell and toasts;
+- packs that suggest rules and starter monitors.
+
+---
+
 # Drishti 1.5.0 — release notes
 
 *2026-09-30.* **Domain packs.** Drishti's core is now industry-neutral. Finance (the mockups) and

@@ -34,6 +34,13 @@ public class JsonConfiguration {
         return new com.ash.drishti.packs.PackRegistry(env);
     }
 
+    @Bean(destroyMethod = "close")
+    public com.ash.drishti.server.alerts.AlertEngine alertEngine(com.ash.drishti.identity.PreferenceStore store,
+            com.ash.drishti.engine.live.TopicHub hub, com.ash.drishti.engine.source.SourceRouter router,
+            com.ash.drishti.rachana.el.ElCompiler el, com.ash.drishti.rachana.format.Formats formats) {
+        return new com.ash.drishti.server.alerts.AlertEngine(store, hub, router, el, formats);
+    }
+
     @Bean
     public SimpleModule drishtiJsonModule(JsonCodec codec) {
         SimpleModule m = new SimpleModule("drishti");

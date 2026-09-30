@@ -43,6 +43,9 @@ graph:
     port: "'wait ' + $.berthWaitHours + ' h'"
 roles:
   ops: { kinds: [shipment, container, vessel, port] }
+alerts:
+  - { kind: shipment, name: "Delayed more than 12 h", when: "$.etaDelayHours > 12", severity: critical, message: "${$.shipmentId}: ETA ${fmt($.etaDelayHours, 'hours0')}" }
+  - { kind: container, name: "Reefer out of range", when: "$.currentC > 8 || $.currentC < 2", severity: critical, message: "${$.containerId}: ${fmt($.currentC, 'temp1')}" }
 console:
   examples:
     - ["SHP SHP-10042", "Shipment in transit · route, milestones, reefer temperature"]
@@ -51,3 +54,5 @@ console:
     - ["SHP SHP-10077", "A delivered shipment · no Sutra match, inferred"]
   workspaces: config/workspaces.yaml
   help: config/help.yaml
+  monitors:
+    Fleet watch: [ { kind: shipment, id: SHP-10042 }, { kind: container, id: CTR-MSKU1234567 }, { kind: vessel, id: VSL-9811000 }, { kind: port, id: PORT-NLRTM } ]

@@ -31,6 +31,11 @@ admin endpoints are in USER_MANAGEMENT.md; live streaming is in LIVE.md.
 | `GET` | `/sources` | the plugins, their capabilities and health, and any start failures |
 | `GET` | `/sutras` · `/sutras/{name}/{version}` · `/sutras/problems` | the Sutra catalogue, one Sutra, and the load problems |
 | `GET` | `/about` | version, build, Java, uptime, loaded Sutras, sources, security mode |
+| `GET` / `PUT` / `DELETE` | `/me/monitors[/{name}]` | watchlists `{entities: [{kind, id}]}` (1–50); `GET /me/monitors/{name}` returns each row's title and strip |
+| `GET` | `/me/monitors/{name}/stream` | SSE: one `row` event per changed entity (strip patches), multiplexed over one connection |
+| `GET` / `PUT` / `DELETE` | `/me/alerts/rules[/{name}]` | alert rules `{kind, id, when, severity, message, enabled}`; `when` and `message` are Rachana-EL, checked on save (`DRS-2101`) |
+| `GET` | `/me/alerts` · `/me/alerts/stream` · `/me/alerts/suggestions/{kind}` | fired alerts (newest first) · SSE `alert` events · the packs' suggested rules for a kind |
+| `GET` | `/packs` | the enabled domain packs |
 | `GET` / `PUT` / `DELETE` | `/me/workspaces[/{name}]` | the caller's workspaces: `{layout, panes: [{ref, follows, title}]}`; validated (known layout, 1–4 panes, entities the caller may open, no follow cycles) |
 
 ```bash

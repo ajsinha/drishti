@@ -104,6 +104,54 @@ class FakeBackend:
         return {"ok": True}
 
     enabled_packs = ["finance", "logistics"]
+    monitors = {}
+    rules = {}
+
+    async def mine(self, method, path, ident, body=None, **params):
+        from urllib.parse import unquote
+        parts = [unquote(p) for p in path.strip("/").split("/")]
+        if parts[0] == "monitors":
+            if len(parts) == 1:
+                return sorted(self.monitors)
+            name = parts[1]
+            if method == "PUT":
+                self.monitors[name] = body
+                return body
+            if method == "DELETE":
+                self.monitors.pop(name, None)
+                return None
+            if name not in self.monitors:
+                raise BackendError(404, "DRS-1001", "no monitor")
+            rows = []
+            for e in self.monitors[name]["entities"]:
+                try:
+                    v = await self.view(e["kind"], e["id"], ident)
+                    rows.append({"ref": e, "title": v["title"], "strip": v["strip"], "live": True})
+                except BackendError as err:
+                    rows.append({"ref": e, "error": err.code})
+            return rows
+        if parts[0] == "alerts":
+            if parts[-1] == "rules" and method == "GET":
+                return list(self.rules.values())
+            if len(parts) == 3 and method == "PUT":
+                if body.get("when", "").endswith("<"):
+                    raise BackendError(422, "DRS-2101", "alert expression: unexpected end")
+                self.rules[parts[2]] = {"name": parts[2], "ref": {"kind": body["kind"], "id": body["id"]},
+                                        "when": body["when"], "severity": body.get("severity", "warn")}
+                return self.rules[parts[2]]
+            if len(parts) == 3 and method == "DELETE":
+                self.rules.pop(parts[2], None)
+                return None
+            return [{"seq": 1, "at": "2026-09-30T12:00:05Z", "user": "ash", "rule": "Deep", "kind": "trade",
+                     "id": "IRS-48213", "severity": "warn", "message": "IRS-48213: MTM -412,580", "generation": 1}]
+        raise BackendError(404, "DRS-1001", path)
+
+    async def sse(self, path, ident=None):
+        yield "hello", "{}"
+        if path.endswith("/alerts/stream"):
+            yield "alert", json.dumps({"seq": 2, "kind": "trade", "id": "IRS-48213", "severity": "critical", "message": "x"})
+        else:
+            yield "row", json.dumps({"kind": "trade", "id": "IRS-48213", "patches": [], "p99Ms": 3})
 
     async def packs(self, ident=None):
         return [{"name": n, "version": "1.0.0", "title": n.title(), "description": "", "console": {}} for n in self.enabled_packs]

@@ -27,6 +27,7 @@
       {% if vm.title.pill %}<span class="pill">{{ vm.title.pill }}</span>{% endif %}
       <h1 class="vid mono">{{ vm.title.id }}</h1>
       {% if vm.title.with %}<span class="with">with</span> <span class="with-cp">{{ cell_text(vm.title.with) }}</span>{% endif %}
+      {% if not embed %}<a class="tbar-link vhead-alert" href="/alerts?kind={{ vm.ref.kind }}&id={{ vm.ref.id | urlencode }}" title="Set an alert on {{ vm.title.id }}"><i class="bi bi-bell" aria-hidden="true"></i> Alert</a>{% endif %}
     </div>
     <dl class="strip">
       {% for c in vm.strip %}<div class="strip-i"><dt>{{ c.label }}</dt>

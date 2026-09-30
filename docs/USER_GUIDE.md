@@ -69,6 +69,13 @@ Matched characters are highlighted.
 - **How this view was built:** the Sutra and version (or *inference only*), the data fingerprint,
   and the source with its generation.
 
+## Monitors and alerts
+
+**Monitors** (`/m`) are live watchlists: each row is an entity with its key figures ticking. **Alerts**
+(`/alerts`, or **Alert** in a view's title line) are rules such as `$.utilisation > 0.8`. The server
+checks them on every change and alerts once, with a toast and a count on the bell. See *Monitors and
+alerts* in help.
+
 ## Workspaces
 
 **Workspaces** in the top bar (`/w`) puts several live views on one screen. A pane can follow

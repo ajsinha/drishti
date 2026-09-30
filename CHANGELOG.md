@@ -15,6 +15,17 @@
 -->
 # Changelog
 
+## 1.6.0 — Wave 14: monitors and alerts (2026-09-30)
+- **Monitors** (`/m`): live watchlists of up to 50 entities of any kinds, each row showing its own strip. One multiplexed SSE stream per page (`/api/v1/me/monitors/{name}/stream`, a `row` event per changed entity). Starters come from packs (finance: *Credit watch*; logistics: *Fleet watch*). Saved per user.
+- **Alerts** (`/alerts`):
+  - per-user rules in Rachana-EL (`$.utilisation > 0.8`), compiled on save;
+  - evaluated by the server on every tick of the watched entity, with no browser needed;
+  - edge-triggered (fire on false → true, re-arm on false), so a rule already true when saved fires at once;
+  - severities `info`/`warn`/`critical` and message templates.
+  Packs suggest rules per kind. A bell with a count and toasts appear on every signed-in page, with optional browser notifications, and each view has an **Alert** shortcut.
+- The most recent 200 alerts per user are kept in memory (a restart clears the history; rules persist).
+- Docs: a *Monitors and alerts* guide in help; API guide, architecture, live, user guide and packs guide updated.
+
 ## 1.5.0 — Wave 13b: domain packs (2026-09-30)
 - **Domain packs.** The core is now industry-neutral, and everything domain-specific lives in `packs/<name>/`:
   - Sutras, mnemonics, identifier patterns, reference fields, link badges, roles;

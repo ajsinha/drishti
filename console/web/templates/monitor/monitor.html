@@ -1,0 +1,43 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% from "_macros/panels.html" import cell_text, tone %}
+{% block title %}{{ name }} · Monitor · {{ PRODUCT }}{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% with live=true %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
+{% block content %}
+<div class="adm mon" data-monitor data-name="{{ name }}">
+  <div class="adm-bar"><h1>{{ name }}</h1>
+    <form class="ws-cmd mon-add" data-add><label class="visually-hidden" for="monAdd">Add an entity</label>
+      <input id="monAdd" class="studio-in mono" placeholder="Add: command or identifier"></form>
+    <button type="button" class="btn-pill btn-ghost" data-delete>Delete monitor</button></div>
+  <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
+  <div class="mon-rows">
+  {% for r in rows %}
+    <section class="mon-row pnl" data-row="{{ r.ref.kind }}/{{ r.ref.id }}" data-kind="{{ r.ref.kind }}" data-id="{{ r.ref.id }}">
+      <header class="mon-h"><a class="lnk mono" href="/v/{{ r.ref.kind }}/{{ r.ref.id }}">{{ r.ref.id }}</a>
+        {% if r.title and r.title.pill %}<span class="pill">{{ r.title.pill }}</span>{% endif %}
+        <a class="tbar-link" href="/alerts?kind={{ r.ref.kind }}&id={{ r.ref.id | urlencode }}" title="Set an alert on {{ r.ref.id }}"><i class="bi bi-bell" aria-hidden="true"></i></a>
+        <button type="button" class="tbar-link ws-x" data-remove aria-label="Remove {{ r.ref.id }}">×</button></header>
+      {% if r.error %}<p class="pnl-err">{{ r.error }}</p>
+      {% else %}<dl class="strip mon-strip">{% for c in r.strip %}<div class="strip-i"><dt>{{ c.label }}</dt>
+        <dd class="mono{{ tone(c) }}{% if c.emphasis %} emph{% endif %}" data-i="{{ loop.index0 }}">{{ cell_text(c) }}</dd></div>{% endfor %}</dl>{% endif %}
+    </section>
+  {% endfor %}
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/monitor.js?v={{ ASSET_V }}"></script>{% endblock %}

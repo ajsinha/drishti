@@ -119,6 +119,20 @@ public final class PreferenceStore {
         }
     }
 
+    /** Users who have stored anything (one file each). */
+    public List<String> users() {
+        List<String> out = new ArrayList<>();
+        if (!Files.isDirectory(dir)) {
+            return out;
+        }
+        try (var s = Files.list(dir)) {
+            s.map(p -> p.getFileName().toString()).filter(n -> n.endsWith(".json")).forEach(n -> out.add(n.substring(0, n.length() - 5)));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        return out;
+    }
+
     /** Removes every document of a user (called when the user is deleted). */
     public void forget(String user) {
         try {

@@ -31,6 +31,7 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 final class FrameMailbox {
 
+
     private final ReentrantLock lock = new ReentrantLock();
     private final Condition ready = lock.newCondition();
     private Frame pending;

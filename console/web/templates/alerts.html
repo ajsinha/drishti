@@ -1,0 +1,51 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Alerts · {{ PRODUCT }}{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm" data-alerts>
+  <h1>Alerts</h1>
+  <p class="text-muted-d">A rule watches one entity. The server checks it on every change, even when nobody has Drishti open, and alerts once when it becomes true; it re-arms when it turns false again.</p>
+  <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
+  <section class="pnl"><header class="pnl-h"><h3>New rule</h3><span class="pnl-code">RULE</span></header><div class="pnl-b">
+    <form class="alert-form" data-rule-form>
+      <label>Name<input name="name" class="studio-in" required></label>
+      <label>Kind<input name="kind" class="studio-in mono" value="{{ kind }}" required></label>
+      <label>Id<input name="id" class="studio-in mono" value="{{ id }}" required></label>
+      <label class="wide">When (Rachana-EL over the entity)<input name="when" class="studio-in mono" placeholder="$.utilisation > 0.8" required></label>
+      <label>Severity<select name="severity" class="studio-select"><option>info</option><option selected>warn</option><option>critical</option></select></label>
+      <label class="wide">Message (optional template)<input name="message" class="studio-in mono" placeholder="${$.nettingSetId}: ${fmt($.utilisation, 'pct0')}"></label>
+      <button type="submit" class="btn-pill btn-accent">Save rule</button>
+    </form>
+    {% if suggestions %}<p class="text-muted-d">Suggested by the enabled packs{% if kind %} for {{ kind }}{% endif %}:</p>
+    <ul class="alert-sugg">{% for s in suggestions %}<li><button type="button" class="fk" data-suggest="{{ s | tojson | forceescape }}"><b>{{ s.kind }}</b> {{ s.name }}</button> <code>{{ s.when }}</code></li>{% endfor %}</ul>{% endif %}
+  </div></section>
+  <section class="pnl"><header class="pnl-h"><h3>Your rules</h3><span class="pnl-code">{{ rules | length }}</span></header><div class="pnl-b">
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Name</th><th>Entity</th><th>When</th><th>Severity</th><th></th></tr></thead><tbody>
+    {% for r in rules %}<tr><td>{{ r.name }}</td><td><a class="lnk mono" href="/v/{{ r.ref.kind }}/{{ r.ref.id }}">{{ r.ref.id }}</a></td>
+      <td class="mono">{{ r.when }}</td><td><span class="st st-{{ {'critical': 'bad', 'warn': 'warn'}.get(r.severity, 'ok') }}">{{ r.severity }}</span></td>
+      <td><button type="button" class="fk" data-delete-rule="{{ r.name }}">Delete</button></td></tr>
+    {% else %}<tr><td colspan="5">No rules yet.</td></tr>{% endfor %}</tbody></table></div></div></section>
+  <section class="pnl"><header class="pnl-h"><h3>Recent alerts</h3><span class="pnl-code">LOG</span></header><div class="pnl-b">
+    <ul class="alert-log" data-log>{% for e in events %}<li class="sev-{{ e.severity }}"><span class="mono">{{ e.at[11:19] }}</span>
+      <span class="st st-{{ {'critical': 'bad', 'warn': 'warn'}.get(e.severity, 'ok') }}">{{ e.severity }}</span>
+      <a class="lnk mono" href="/v/{{ e.kind }}/{{ e.id }}">{{ e.id }}</a> {{ e.message }}</li>
+    {% else %}<li class="text-muted-d" data-empty>Nothing yet.</li>{% endfor %}</ul></div></section>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/alerts-page.js?v={{ ASSET_V }}"></script>{% endblock %}

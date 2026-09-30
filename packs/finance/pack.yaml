@@ -71,6 +71,11 @@ graph:
 roles:
   trader: { kinds: [trade, curve, fx-spot, index, book, contract-spec, clearing-account, counterparty, fixing] }
   risk:   { kinds: ["*"], raw: true }
+alerts:                         # suggested alert rules, offered per kind
+  - { kind: netting-set, name: "PFE near limit", when: "$.utilisation > 0.8", severity: warn, message: "${$.nettingSetId}: utilisation ${fmt($.utilisation, 'pct0')} of limit" }
+  - { kind: netting-set, name: "Net MTM below −1.5m", when: "$.netMtm < -1500000", severity: warn, message: "${$.nettingSetId}: net MTM ${fmt($.netMtm, 'signed0')}" }
+  - { kind: trade, name: "MTM below −450k", when: "$.mtm < -450000", severity: warn, message: "${$.tradeId}: MTM ${fmt($.mtm, 'signed0')}" }
+  - { kind: trade, name: "Variation margin above 100k today", when: "$.margin.variationMarginToday > 100000", severity: info, message: "${$.tradeId}: VM today ${fmt($.margin.variationMarginToday, 'signed0')}" }
 console:                        # read by the console
   examples:
     - ["TRD IRS-48213", "Interest rate swap · legs, cashflows, SOFR curve, DV01"]
@@ -82,3 +87,5 @@ console:                        # read by the console
     - ["FIX SOFR-HISTORY", "A feed file (CSV) · inferred"]
   workspaces: config/workspaces.yaml
   help: config/help.yaml
+  monitors:
+    Credit watch: [ { kind: netting-set, id: NS-NORTH-01 }, { kind: netting-set, id: NS-HARB-02 }, { kind: trade, id: IRS-48213 }, { kind: trade, id: FXS-20931 }, { kind: trade, id: CFT-77120 } ]
