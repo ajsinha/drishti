@@ -57,4 +57,36 @@ class PackLoaderTest {
         assertThatThrownBy(() -> l.load(dir, List.of("nope"))).hasMessageContaining("not found");
         assertThatThrownBy(() -> l.load(dir, List.of("../a"))).hasMessageContaining("not found");
     }
+
+    @Test
+    void requiredPacksLoadFirstAndBringTheirConnectors(@TempDir Path dir) throws Exception {
+        write(dir, "core", "kinds: [counterparty]\nconnectors:\n  core-lake:\n    plugin: delta\n    kinds: [counterparty]\n"
+                + "    settings: { root: \"${DRISHTI_DELTA_ROOT:./data/delta}\", domain: core }\n");
+        write(dir, "risk", "requires: [core]\nkinds: [var]\nconnectors:\n  risk-lake: { plugin: delta, settings: { domain: risk } }\n"
+                + "  core-lake:\n    plugin: delta\n    kinds: [counterparty]\n"
+                + "    settings: { root: \"${DRISHTI_DELTA_ROOT:./data/delta}\", domain: core }\nroutes: { var: risk-lake }\n");
+        PackLoader l = new PackLoader();
+        List<Pack> packs = l.load(dir, List.of("risk"));
+        assertThat(packs).extracting(Pack::name).containsExactly("core", "risk");
+        var props = l.properties(packs);
+        assertThat(props).containsEntry("drishti.sources.connectors.core-lake.plugin", "delta")
+                .containsEntry("drishti.sources.connectors.core-lake.kinds[0]", "counterparty")
+                .containsEntry("drishti.sources.connectors.core-lake.settings.domain", "core")
+                .containsEntry("drishti.sources.connectors.core-lake.settings.root", "${DRISHTI_DELTA_ROOT:./data/delta}")
+                .containsEntry("drishti.sources.connectors.risk-lake.settings.domain", "risk")
+                .containsEntry("drishti.sources.routes.var", "risk-lake")
+                .containsEntry("drishti.packs.loaded", "core,risk");
+        write(dir, "clash", "connectors:\n  core-lake: { plugin: delta, settings: { domain: other } }\n");
+        assertThatThrownBy(() -> l.properties(l.load(dir, List.of("risk", "clash")))).hasMessageContaining("declared differently");
+        write(dir, "a", "requires: [b]\n");
+        write(dir, "b", "requires: [a]\n");
+        assertThatThrownBy(() -> l.load(dir, List.of("a"))).hasMessageContaining("cycle: a -> b -> a");
+        write(dir, "c", "requires: [ghost]\n");
+        assertThatThrownBy(() -> l.load(dir, List.of("c"))).hasMessageContaining("required by 'c'");
+    }
+
+    private static void write(Path dir, String name, String body) throws Exception {
+        java.nio.file.Files.createDirectories(dir.resolve(name));
+        java.nio.file.Files.writeString(dir.resolve(name).resolve("pack.yaml"), "pack: " + name + "\nversion: 1.0.0\n" + body);
+    }
 }

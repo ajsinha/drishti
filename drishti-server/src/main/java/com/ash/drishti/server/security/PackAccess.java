@@ -96,10 +96,25 @@ public final class PackAccess {
         return active(user);
     }
 
-    /** False only when the kind belongs to a pack that is not active for the user. */
+    /** The user's active packs and every pack they require (a risk pack brings its reference data with it). */
+    public Set<String> effective(String user) {
+        Map<String, Pack> byName = new HashMap<>();
+        registry.packs().forEach(p -> byName.put(p.name(), p));
+        Set<String> out = new LinkedHashSet<>();
+        java.util.ArrayDeque<String> todo = new java.util.ArrayDeque<>(active(user));
+        while (!todo.isEmpty()) {
+            String n = todo.pop();
+            if (out.add(n) && byName.containsKey(n)) {
+                todo.addAll(byName.get(n).requires());
+            }
+        }
+        return out;
+    }
+
+    /** False only when the kind belongs to a pack that is neither active for the user nor required by one that is. */
     public boolean kindAllowed(String user, String kind) {
         String owner = kindOwner.get(kind);
-        return owner == null || active(user).contains(owner);
+        return owner == null || effective(user).contains(owner);
     }
 
     public void validate(Set<String> packs) {

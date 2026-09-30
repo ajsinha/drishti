@@ -15,6 +15,10 @@
 -->
 # Changelog
 
+## Unreleased
+- **Banking packs.** The risk pack is split into five packs generated from one taxonomy: `banking-core`, `market-data`, `trading` (125 products), `market-risk` and `counterparty-risk`. Enabling a risk pack brings the packs it requires.
+- **Pack dependencies, connectors and routes.** `pack.yaml` gains `requires:` (loaded dependencies first; cycles and missing packs refused), `connectors:` (one per data domain; several packs may declare the same connector identically) and `routes:` (which connector answers each kind). Delta Lake is organised by data domain (`data/delta/<domain>/<kind>/`): packs and domains are many-to-many. Users can open the kinds of the packs their active packs require.
+
 ## 1.9.0 — Wave 22, risk pack R1–R2, Markdown Sutras, realistic samples (2026-09-30)
 - **Business dates (Wave 22, ADR-012).** A date box in the top bar: **Live** (the default) is the current business date on the New York calendar and streams; a **picked date** is a static snapshot, even when it is today. Weekends and holidays roll back to the previous business day. The console only stores the choice and sends `X-Drishti-As-Of`; the server resolves it (`GET /api/v1/business-date`, `DRS-4003`), and the date reaches every read: views, links, F8 impact, suggestions, raw JSON, monitors and Studio. Views state the date their data is for, and say so when a source keeps no history.
 - **Delta Lake connector** (`delta`, Delta Kernel, no Spark). Tables live at `<root>/<domain>/<kind>/`, root configurable (default `./data/delta`), partitioned by `business_date`. Snapshot and effective (last change) tables, time travel with `knownAt`, date-aware reverse lookups and search. `tools/samplegen/lake.py` writes a pack's samples as a lake with ten business days of history plus a restatement.

@@ -94,6 +94,48 @@ A pack can also suggest **alert rules** per kind (`alerts:` with `kind`, `name`,
 Sample fixtures tick while someone watches them when their `_meta` says so. `"walk": {"etaDelayHours": 1}`
 random-walks those fields, so a pack needs no code for live samples.
 
+### Dependencies, connectors and routes
+
+A pack can build on others and says where its data comes from:
+
+```yaml
+# packs/counterparty-risk/pack.yaml (abridged)
+requires: [trading]                 # loads trading first, and what trading requires (market-data, banking-core)
+connectors:                         # one per data domain it reads; declared identically by every pack that uses it
+  credit-lake:     { plugin: delta, kinds: [netting-set, credit-limit, …], settings: { root: "${DRISHTI_DELTA_ROOT:./data/delta}", domain: credit } }
+  collateral-lake: { plugin: delta, kinds: [collateral-balance, margin-call, simm], settings: { domain: collateral } }
+routes:                             # which connector answers each of the pack's kinds
+  netting-set: credit-lake
+  margin-call: collateral-lake
+```
+
+- **`requires`**: enabling a pack enables what it requires, dependencies first. A user who may see
+  `market-risk` can open the kinds of the packs it requires (a VaR result links to its trades and books).
+  Missing packs and cycles stop the server with a clear message.
+- **Data domains and packs are many-to-many.** Delta Lake is organised by data domain (`data/delta/<domain>/<kind>/`),
+  not by pack. A pack may read several domains, and one domain serves every pack that uses it: several packs may
+  declare the same connector, identically. A different declaration under the same name is an error.
+- **`routes`** map each of the pack's kinds to the connector that answers it.
+- Site configuration (`drishti.sources.connectors.<name>`) overrides anything a pack declares, for example
+  to point a domain at a database instead of the lake, or to switch it off.
+
+### The banking packs
+
+Five packs cover market risk and counterparty credit risk. They are generated from one taxonomy
+(`tools/packgen/banking/`: `make_packs.py` writes the manifests, `make_sutras.py` the 170 Sutras).
+
+| Pack | Requires | Kinds | Data domains |
+|---|---|---|---|
+| `banking-core` | — | counterparties, groups, issuers, agreements, CCPs, legal entities, books, desks, traders, calendars, CSAs, clearing accounts | `reference` (effective-dated) |
+| `market-data` | banking-core | curves, vol surfaces and cubes, FX, equities, indices, dividends, credit, inflation, commodities, fixings, bonds, correlations | `market` |
+| `trading` | banking-core, market-data | `trade`: 125 products in ten asset classes | `trading` |
+| `market-risk` | trading | VaR, stress scenarios and results, FRTB sensitivities, P&L explain | `risk` |
+| `counterparty-risk` | trading | netting sets, credit limits, exposure profiles, CVA, SA-CCR, collateral balances, margin calls, SIMM | `credit`, `collateral` |
+
+Enable them with `DRISHTI_PACKS=market-risk,counterparty-risk` (the others come with them). They and
+`finance` (the small demo behind the mockups) both define trades and counterparties, so a site runs one
+family or the other.
+
 ## Writing a pack
 
 1. Copy `packs/logistics` to `packs/<yours>`, and set `pack: <yours>` in `pack.yaml`.

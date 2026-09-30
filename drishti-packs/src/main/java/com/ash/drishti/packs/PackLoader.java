@@ -37,30 +37,54 @@ public final class PackLoader {
 
     private final ObjectMapper yaml = new ObjectMapper(new YAMLFactory());
 
+    /**
+     * The enabled packs and everything they require, dependencies first (a pack that {@code requires:} another
+     * loads after it). A missing pack or a cycle stops the server with a clear message.
+     */
     public List<Pack> load(Path dir, List<String> enabled) {
-        List<Pack> out = new ArrayList<>();
+        Map<String, Pack> done = new LinkedHashMap<>();
         for (String name : enabled) {
             String n = name.trim();
-            if (n.isEmpty()) {
-                continue;
-            }
-            Path packDir = dir.resolve(n).normalize();
-            Path manifest = packDir.resolve("pack.yaml");
-            if (!packDir.startsWith(dir.normalize()) || !Files.isRegularFile(manifest)) {
-                throw new IllegalStateException("pack '" + n + "' not found at " + manifest);
-            }
-            try {
-                Map<String, Object> m = yaml.readValue(manifest.toFile(), new TypeReference<Map<String, Object>>() {});
-                if (!n.equals(m.get("pack"))) {
-                    throw new IllegalStateException(manifest + " declares pack '" + m.get("pack") + "', expected '" + n + "'");
-                }
-                out.add(new Pack(n, String.valueOf(m.getOrDefault("version", "0")), String.valueOf(m.getOrDefault("title", n)),
-                        String.valueOf(m.getOrDefault("description", "")), packDir.toAbsolutePath(), m));
-            } catch (IOException e) {
-                throw new UncheckedIOException("cannot read " + manifest, e);
+            if (!n.isEmpty()) {
+                visit(dir, n, done, new java.util.ArrayDeque<>());
             }
         }
-        return out;
+        return new ArrayList<>(done.values());
+    }
+
+    private void visit(Path dir, String name, Map<String, Pack> done, java.util.Deque<String> path) {
+        if (done.containsKey(name)) {
+            return;
+        }
+        if (path.contains(name)) {
+            throw new IllegalStateException("packs require each other in a cycle: " + String.join(" -> ", path) + " -> " + name);
+        }
+        path.addLast(name);
+        Pack p = read(dir, name, path.size() > 1 ? path.toArray(new String[0])[path.size() - 2] : null);
+        for (String r : p.requires()) {
+            visit(dir, r.trim(), done, path);
+        }
+        path.removeLast();
+        done.put(name, p);
+    }
+
+    private Pack read(Path dir, String n, String requiredBy) {
+        Path packDir = dir.resolve(n).normalize();
+        Path manifest = packDir.resolve("pack.yaml");
+        if (!packDir.startsWith(dir.normalize()) || !Files.isRegularFile(manifest)) {
+            throw new IllegalStateException("pack '" + n + "' not found at " + manifest
+                    + (requiredBy == null ? "" : " (required by '" + requiredBy + "')"));
+        }
+        try {
+            Map<String, Object> m = yaml.readValue(manifest.toFile(), new TypeReference<Map<String, Object>>() {});
+            if (!n.equals(m.get("pack"))) {
+                throw new IllegalStateException(manifest + " declares pack '" + m.get("pack") + "', expected '" + n + "'");
+            }
+            return new Pack(n, String.valueOf(m.getOrDefault("version", "0")), String.valueOf(m.getOrDefault("title", n)),
+                    String.valueOf(m.getOrDefault("description", "")), packDir.toAbsolutePath(), m);
+        } catch (IOException e) {
+            throw new UncheckedIOException("cannot read " + manifest, e);
+        }
     }
 
     /** Flattened Spring properties for the given packs, lowest precedence. */
@@ -68,6 +92,7 @@ public final class PackLoader {
     public Map<String, Object> properties(List<Pack> packs) {
         Map<String, Object> p = new LinkedHashMap<>();
         Map<String, String> owner = new LinkedHashMap<>();
+        Map<String, Object> connectors = new LinkedHashMap<>();
         int patterns = 0;
         int follows = 0;
         List<String> sutraDirs = new ArrayList<>();
@@ -124,6 +149,34 @@ public final class PackLoader {
                         p.put("drishti.security.roles." + e.getKey() + "." + flag, r.get(flag));
                     }
                 }
+            }
+            // connectors: one per data domain (a Delta Lake domain folder, a database). Data domains and packs are
+            // many-to-many: several packs may declare the same connector, identically; a differing declaration is an error.
+            for (Map.Entry<String, Object> e : map(m.get("connectors")).entrySet()) {
+                Object seen = connectors.putIfAbsent(e.getKey(), e.getValue());
+                if (seen != null) {
+                    if (!seen.equals(e.getValue())) {
+                        throw new IllegalStateException("connector '" + e.getKey() + "' is declared differently by pack '" + pack.name()
+                                + "' and an earlier pack; declare it identically or give it another name");
+                    }
+                    continue;
+                }
+                Map<String, Object> c = map(e.getValue());
+                String base = "drishti.sources.connectors." + e.getKey();
+                p.put(base + ".plugin", c.get("plugin"));
+                if (c.get("enabled") != null) {
+                    p.put(base + ".enabled", c.get("enabled"));
+                }
+                List<Object> ck = (List<Object>) c.getOrDefault("kinds", List.of());
+                for (int i = 0; i < ck.size(); i++) {
+                    p.put(base + ".kinds[" + i + "]", ck.get(i));
+                }
+                map(c.get("settings")).forEach((k, v) -> p.put(base + ".settings." + k, String.valueOf(v)));
+            }
+            // routes: which connector answers each of the pack's kinds (the query inside a pack picks the connector)
+            for (Map.Entry<String, Object> e : map(m.get("routes")).entrySet()) {
+                claim(owner, "route " + e.getKey(), pack.name());
+                p.put("drishti.sources.routes." + e.getKey(), String.valueOf(e.getValue()));
             }
             addIfExists(sutraDirs, pack, m.getOrDefault("sutras", "sutras"));
             addIfExists(formats, pack, m.getOrDefault("formats", "config/formats.yaml"));

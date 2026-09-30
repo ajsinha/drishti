@@ -49,8 +49,8 @@ terminal does.
 | 14 | Monitors and alerts | ✅ done |
 | 15 | F8 impact | ✅ done |
 | 13c | Packs per user: admins assign, users choose, enforced by the server | ✅ done |
-| R1–R2 | Risk pack: taxonomy of 125 products and 45 data kinds; 170 generated Markdown Sutras | ✅ done |
-| R3–R5 | Risk pack: generated data as dated Delta tables, docs, Aerospike and PostgreSQL, public feeds | ⏳ next |
+| R1–R2, B0 | Banking packs (banking-core, market-data, trading, market-risk, counterparty-risk): taxonomy of 125 products and 45 data kinds, 170 generated Sutras; pack `requires`, `connectors` per data domain, `routes` | ✅ done |
+| R3–R5 | Banking packs: generated data as dated Delta tables by data domain, docs, Aerospike and PostgreSQL, public feeds | ⏳ next |
 | P2–P8 | Packs: liquidity, climate, operational/non-financial, retail banking, genomics and biology, politics and society, economics | ◻️ planned |
 | 22 | Business dates: Live or a picked date (static) on the USNY calendar; Delta Lake connector with time travel; named connectors; imperfect documents render as "No data available" | ✅ done |
 | 16 | History: diffs between dates, a "known at" control | ◻️ after the risk pack |

@@ -37,6 +37,12 @@ public record Pack(String name, String version, String title, String description
         return k instanceof java.util.List<?> l ? l.stream().map(String::valueOf).toList() : java.util.List.of();
     }
 
+    /** Packs this one builds on (their kinds, links and connectors come with it). */
+    public java.util.List<String> requires() {
+        Object r = manifest.get("requires");
+        return r instanceof java.util.List<?> l ? l.stream().map(String::valueOf).toList() : java.util.List.of();
+    }
+
     public Path resolve(String relative) {
         return dir.resolve(relative).normalize();
     }
