@@ -33,8 +33,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -42,17 +40,43 @@ import org.junit.jupiter.api.Test;
 /** Reads the fixture lake (written by delta-rs): dates, snapshot and effective tables, time travel, reverse, search. */
 class DeltaSourcePluginTest {
 
-    static final Path ROOT = Path.of("src/test/resources/lake");
+    static final Instant T0 = Instant.parse("2026-09-30T20:00:00Z");
+    static Path root;
     static final ScheduledExecutorService SCHEDULER = Executors.newSingleThreadScheduledExecutor();
     static DeltaSourcePlugin plugin;
 
+    /**
+     * Delta time travel for these tables resolves instants against the commit files' modification times, which a
+     * checkout or copy rewrites. The test works on a copy with pinned times: version 0 at T0, version 1 ten
+     * seconds later.
+     */
     @BeforeAll
     static void start() throws Exception {
+        root = Files.createTempDirectory("drishti-lake");
+        Path src = Path.of("src/test/resources/lake");
+        try (var files = Files.walk(src)) {
+            for (Path f : files.toList()) {
+                Path to = root.resolve(src.relativize(f).toString());
+                if (Files.isDirectory(f)) {
+                    Files.createDirectories(to);
+                } else {
+                    Files.copy(f, to);
+                }
+            }
+        }
+        for (String table : new String[] {"trade", "counterparty"}) {
+            try (var logs = Files.list(root.resolve("desk").resolve(table).resolve("_delta_log"))) {
+                for (Path log : logs.filter(f -> f.getFileName().toString().endsWith(".json")).toList()) {
+                    long version = Long.parseLong(log.getFileName().toString().replace(".json", ""));
+                    Files.setLastModifiedTime(log, java.nio.file.attribute.FileTime.from(T0.plusSeconds(10 * version)));
+                }
+            }
+        }
         JsonCodec codec = new JsonCodec();
         plugin = new DeltaSourcePlugin();
         plugin.start(new SourceContext() {
             public Map<String, String> settings() {
-                return Map.of("root", ROOT.toString(), "domain", "desk", "mode.counterparty", "effective", "source-name", "lake");
+                return Map.of("root", root.toString(), "domain", "desk", "mode.counterparty", "effective", "source-name", "lake");
             }
 
             public DataNode parseJson(InputStream in) throws IOException {
@@ -106,8 +130,7 @@ class DeltaSourcePluginTest {
 
     @Test
     void knownAtReadsTheTableBeforeALaterCorrection() throws Exception {
-        Instant firstCommit = commitTime(ROOT.resolve("desk/trade/_delta_log/00000000000000000000.json"));
-        EntityDocument before = plugin.fetch(EntityRef.of("trade", "T-1"), new AsOf(LocalDate.of(2026, 9, 30), firstCommit.plusMillis(1))).orElseThrow();
+        EntityDocument before = plugin.fetch(EntityRef.of("trade", "T-1"), new AsOf(LocalDate.of(2026, 9, 30), T0.plusSeconds(5))).orElseThrow();
         assertThat(before.data().get("mtm").asDouble()).isEqualTo(120);
         assertThat(before.data().get("restated").isMissing()).isTrue();
         assertThat(before.provenance().generation()).isZero();
@@ -119,10 +142,5 @@ class DeltaSourcePluginTest {
                 .containsExactly(EntityRef.of("trade", "T-1"), EntityRef.of("trade", "T-2"));
         assertThat(plugin.reverse(EntityRef.of("netting-set", "NS-B"), "trade", AsOf.of(LocalDate.of(2026, 9, 30)))).isEmpty();
         assertThat(plugin.search("trade", "t-", 10)).extracting(h -> h.ref().id()).contains("T-1", "T-2");
-    }
-
-    static Instant commitTime(Path log) throws IOException {
-        Matcher m = Pattern.compile("\"timestamp\"\\s*:\\s*(\\d+)").matcher(Files.readString(log));
-        return m.find() ? Instant.ofEpochMilli(Long.parseLong(m.group(1))) : Instant.EPOCH;
     }
 }
