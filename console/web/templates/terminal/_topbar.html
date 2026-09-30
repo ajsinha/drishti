@@ -20,7 +20,7 @@
     <label class="cmd-label" for="cmdInput">Command</label>
     <div class="cmd-box">
       <input id="cmdInput" name="q" class="cmd-input" type="text" spellcheck="false"
-             value="{{ command_text | default('') }}" placeholder="TRD IRS-48213 <GO>"
+             value="{{ command_text | default('') }}" placeholder="Command or identifier, then <GO>"
              role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="cmdList">
       <ul id="cmdList" class="cmd-list" role="listbox" aria-label="Suggestions" hidden></ul>
     </div>

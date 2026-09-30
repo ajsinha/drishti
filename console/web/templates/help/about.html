@@ -38,6 +38,7 @@
         <div><dt>Up for</dt><dd class="mono">{{ (info.uptimeSeconds // 3600) }}h {{ (info.uptimeSeconds % 3600) // 60 }}m</dd></div>
         <div><dt>Security</dt><dd>{{ 'on' if info.securityEnabled else 'off (development)' }}</dd></div>{% endif %}
         <div><dt>Console version</dt><dd class="mono">{{ ASSET_V }}</dd></div>
+        <div><dt>Domain packs</dt><dd>{% for p in packs %}<span class="role" title="{{ p.description }}">{{ p.title }} {{ p.version }}</span>{% else %}none{% endfor %}</dd></div>
       </dl></div></section>
     <section class="pnl"><header class="pnl-h"><h3>Sources</h3><span class="pnl-code">SRC</span></header>
       <div class="pnl-b"><ul class="links">{% for s in info.sources or [] %}<li><span class="lk-label">{{ s.name }} <span class="text-muted-d">v{{ s.version }}</span></span>

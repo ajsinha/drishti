@@ -33,15 +33,15 @@ import org.junit.jupiter.api.Test;
 /** Golden test: the reference Sutras applied to the demo fixtures reproduce the mockups' header strips. */
 class ReferenceSutrasTest {
 
-    static final Path FIXTURES = Path.of("..", "plugins", "drishti-plugin-demo", "src", "main", "resources", "demo");
+    static final Path FIXTURES = Path.of("..", "packs", "finance", "samples");
     static final ElCompiler EL = new ElCompiler();
-    static final Formats F = Formats.defaults();
+    static final Formats F = Formats.load(null, java.util.List.of("../packs/finance/config/formats.yaml"));
     static SutraRegistry registry;
     static SutraMatcher matcher;
 
     @BeforeAll
     static void load() {
-        registry = new SutraRegistry(new RachanaProperties(List.of("../sutras"), false, null, null, null, null), EL);
+        registry = new SutraRegistry(new RachanaProperties(List.of("../packs/finance/sutras"), false, null, null, null, null, null, null), EL);
         matcher = new SutraMatcher(registry, EL, F);
     }
 

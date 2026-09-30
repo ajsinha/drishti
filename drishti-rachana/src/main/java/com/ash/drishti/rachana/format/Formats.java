@@ -43,9 +43,19 @@ public final class Formats {
 
     /** The bundled formats, plus overrides from {@code overrideFile} when it exists. */
     public static Formats load(String overrideFile) {
+        return load(overrideFile, java.util.List.of());
+    }
+
+    /** The bundled formats, then each pack's formats, then the site override file. */
+    public static Formats load(String overrideFile, java.util.List<String> packFiles) {
         Map<String, FormatSpec> m = new HashMap<>();
         try (InputStream in = Formats.class.getClassLoader().getResourceAsStream("formats.yaml")) {
             read(in, m);
+            for (String f : packFiles) {
+                try (InputStream p = Files.newInputStream(Path.of(f))) {
+                    read(p, m);
+                }
+            }
             if (overrideFile != null && !overrideFile.isBlank() && Files.isRegularFile(Path.of(overrideFile))) {
                 try (InputStream o = Files.newInputStream(Path.of(overrideFile))) {
                     read(o, m);

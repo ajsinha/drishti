@@ -26,9 +26,10 @@ CRV USD-SOFR <GO>         a curve
 IRS-48213                 a bare identifier works when its pattern names the kind
 ```
 
-Mnemonics: `TRD` trade · `NSET` netting set · `CSA` credit support annex · `AGR` master agreement ·
+Mnemonics come from the enabled domain packs. With the finance pack: `TRD` trade · `NSET` netting set · `CSA` credit support annex · `AGR` master agreement ·
 `CRV` curve · `CPTY` counterparty · `LIM` credit limit · `CLR` clearing account · `SPEC` contract
-spec · `IDX` rate index · `FXS` FX spot · `BOOK` book. Sites add their own in `drishti.commands.mnemonics`.
+spec · `IDX` rate index · `FXS` FX spot · `BOOK` book · `FIX` rate fixings. With the logistics pack: `SHP` shipment · `CTR` container
+· `VSL` vessel · `PORT` port. Sites add their own in `drishti.commands.mnemonics`; see PACKS.md.
 
 ### Suggestions as you type
 

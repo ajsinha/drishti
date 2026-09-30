@@ -30,7 +30,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from core.config import Settings
 
 WEB = Path(__file__).resolve().parent.parent / "web"
-ASSET_VERSION = "1.4.0"
+ASSET_VERSION = "1.5.0"
 CSP = ("default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; "
        "font-src 'self'; connect-src 'self'; frame-src 'self'; frame-ancestors 'self'")
 
@@ -67,7 +67,6 @@ class SecurityHeaders(BaseHTTPMiddleware):
 def create_app(settings: Settings) -> FastAPI:
     from core.backend import BackendClient
     from core.auth import Auth
-    from core.guides import Library
     from routes import (admin_routes, api_routes, auth_routes, help_routes, home_routes, studio_routes, terminal_routes,
                         workspace_routes)
 
@@ -99,8 +98,11 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.auth = Auth(settings)
     console_dir = WEB.parent
     docs_dir = Path(settings.get("help.docs_dir", "../docs"))
-    app.state.library = Library(console_dir, console_dir / "config" / "help.yaml",
-                                docs_dir if docs_dir.is_absolute() else (console_dir / docs_dir).resolve())
+    from core.packs import Packs
+
+    app.state.packs = Packs(settings, console_dir)
+    app.state.docs_dir = docs_dir if docs_dir.is_absolute() else (console_dir / docs_dir).resolve()
+    app.state.libraries = {}
     app.state.templates = templates
     app.add_middleware(AuthGate)
     app.add_middleware(SecurityHeaders)

@@ -141,11 +141,11 @@ There is no separate classifier file: `match` is the classifier.
 | DRS-2028 | `name@version` defined twice |
 | DRS-2101 | expression or template does not compile |
 
-## The reference Sutras
+## The reference Sutras (finance pack)
 
 | File | Entity | Mockup |
 |---|---|---|
-| `sutras/rates/irs-vanilla.v3.yaml` | `TRD IRS-48213` | drishti-irs.png |
-| `sutras/fx/fx-swap.v2.yaml` | `TRD FXS-20931` | drishti-fx-swap.png |
-| `sutras/commodities/listed-future.v1.yaml` | `TRD CFT-77120` | drishti-commodity-future.png |
-| `sutras/credit/netting-set.v1.yaml` | `NSET NS-NORTH-01` | drishti-netting-set.png |
+| `packs/finance/sutras/rates/irs-vanilla.v3.yaml` | `TRD IRS-48213` | drishti-irs.png |
+| `packs/finance/sutras/fx/fx-swap.v2.yaml` | `TRD FXS-20931` | drishti-fx-swap.png |
+| `packs/finance/sutras/commodities/listed-future.v1.yaml` | `TRD CFT-77120` | drishti-commodity-future.png |
+| `packs/finance/sutras/credit/netting-set.v1.yaml` | `NSET NS-NORTH-01` | drishti-netting-set.png |

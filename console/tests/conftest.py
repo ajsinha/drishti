@@ -103,6 +103,11 @@ class FakeBackend:
             return {**body, "enabled": True}
         return {"ok": True}
 
+    enabled_packs = ["finance", "logistics"]
+
+    async def packs(self, ident=None):
+        return [{"name": n, "version": "1.0.0", "title": n.title(), "description": "", "console": {}} for n in self.enabled_packs]
+
     saved_workspaces = {}
 
     async def workspaces(self, ident):

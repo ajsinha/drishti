@@ -33,10 +33,24 @@ final class DemoTicker {
         this.rnd = new SplittableRandom(seed);
     }
 
-    /** A moved copy of {@code doc}. */
+    /**
+     * A moved copy of {@code doc}. A fixture's {@code _meta.walk} ({@code {"field": stepSize}}) walks those top-level
+     * numeric fields, so any pack can make its samples tick without code; the finance kinds below also keep
+     * dependent values consistent.
+     */
     @SuppressWarnings("unchecked")
-    DataNode tick(String kind, DataNode doc) {
+    DataNode tick(String kind, DataNode doc, DataNode walk) {
         Map<String, Object> m = (Map<String, Object>) doc.unwrap();
+        if (walk instanceof DataNode.Obj w && w.size() > 0) {
+            w.fields().forEach((field, step) -> {
+                if (m.get(field) instanceof Number n) {
+                    double sd = step.asDouble();
+                    double v = n.doubleValue() + gauss(sd);
+                    m.put(field, sd >= 1 ? (Object) Math.round(v) : (Object) round(v, 2));
+                }
+            });
+            return DataNode.of(m);
+        }
         switch (kind) {
             case "curve" -> curve(m);
             case "fx-spot" -> m.put("spot", round(num(m, "spot") + gauss(0.00008), 5));

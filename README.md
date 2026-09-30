@@ -27,7 +27,7 @@ terminal does.
 
 ## Status
 
-**Drishti 1.4.0 is released** (see [RELEASE_NOTES.md](RELEASE_NOTES.md)). It is built in waves on `develop`, each merged to `main` when its build was green.
+**Drishti 1.5.0 is released** (see [RELEASE_NOTES.md](RELEASE_NOTES.md)). It is built in waves on `develop`, each merged to `main` when its build was green.
 
 | Wave | Theme | State |
 |---|---|---|
@@ -45,6 +45,7 @@ terminal does.
 | 12 | Help centre and About | ✅ done |
 | 12b | Competitive landscape; mobile (iPhone and Android, add to home screen) | ✅ done |
 | 13 | Workspaces | ✅ done |
+| 13b | Domain packs: neutral core; finance and logistics packs | ✅ done |
 | 14 | Monitors and alerts | ⏳ next |
 | 15–21 | F8 impact · history · structured search · export and share · Sutra governance · Kafka/aero/OIDC · personal settings | ◻️ planned |
 
@@ -55,7 +56,7 @@ terminal does.
   (no CDN), and the contrast of every theme is checked in tests.
 - **Server** (`drishti-server`). A Spring Boot application on virtual threads. It discovers source
   plugins and routes reads by config, with deadlines. It loads and hot-reloads Sutras.
-- **Data.** The `demo` plugin serves the 36 entities behind the four mockups. The `file` plugin
+- **Data.** The `demo` plugin serves the enabled packs' samples: the finance pack has the 36 entities behind the four mockups, and the logistics pack has shipments, containers, vessels and ports. The `file` plugin
   serves JSON/CSV feed directories.
 - **Grammar.** Four reference Sutras reproduce the header strips of the mockups exactly (golden
   tests). Rachana-EL is compiled once and shared across threads.
@@ -83,6 +84,9 @@ terminal does.
 - **Help.** An in-app help centre (`/help`) with tutorials, guides and every reference, plus search.
   `F1` gives help for the current screen, each panel has a **?**, `/about` shows the version and
   what is loaded, and `/about/competitive` compares Drishti with the categories it sits among.
+- **Domain packs.** The core carries no industry. `finance` (the mockups) and `logistics` (shipments,
+  containers, vessels, ports) are packs you enable with `DRISHTI_PACKS=finance,logistics`, and a new
+  industry is configuration only. See [PACKS.md](docs/PACKS.md).
 - **Workspaces.** Several live views on one screen (`/w`); a pane can follow another's selection.
   Workspaces are saved to your account.
 - **Mobile.** It works on iPhone and Android browsers and can be added to the home screen. F-keys
@@ -120,14 +124,16 @@ drishti/
 ├── drishti-rachana/             Rachana grammar: Sutra model, parser, registry, Rachana-EL, formats
 ├── drishti-inference/           semantic hints, rules, packer, Sutra ⊕ inference merge
 ├── drishti-graph/               reference catalogue, link badges
-├── drishti-identity/            users, passwords, roles, lockout, audit
+├── drishti-identity/            users, passwords, roles, lockout, audit, per-user preferences
+├── drishti-packs/               domain pack loader
 ├── drishti-engine/              sources, view pipeline, binder, ViewModel, commands, type-ahead
 ├── drishti-benchmarks/          JMH hot-path benchmarks
 ├── drishti-server/              the Spring Boot application
 ├── drishti-testkit/ drishti-it/ fixtures; architecture, licence-header and file-size gates
 ├── plugins/drishti-plugin-{demo,file,rest,jdbc}/
 ├── console/                     FastAPI + Jinja2 web UI (routes/, core/, web/templates, web/static)
-├── sutras/<domain>/<name>.v<N>.yaml
+├── packs/finance/, packs/logistics/   domain packs: Sutras, vocabulary, links, roles, samples, guides
+├── sutras/                      site Sutras (optional; packs carry their own)
 ├── deploy/                      Dockerfiles, compose, Grafana dashboard
 ├── tools/                       license_headers.py, drill.sh
 └── docs/                        architecture, plan, references, ADRs
@@ -148,6 +154,7 @@ drishti/
 | [LIVE.md](docs/LIVE.md) | **Live updates.** Topics, frames, patches, slow clients, reconnects. |
 | [PERFORMANCE.md](docs/PERFORMANCE.md) | **Measured numbers.** JMH hot paths and the end-to-end latency gate. |
 | [adr/](docs/adr/README.md) | Architecture decision records. |
+| [PACKS.md](docs/PACKS.md) | **Industries.** Domain packs: what they contain, enabling them, writing your own. |
 | [USER_MANAGEMENT.md](docs/USER_MANAGEMENT.md) | **Users and roles.** The seeded admin, admin pages, password rules, audit, API. |
 | [OPERATIONS.md](docs/OPERATIONS.md) | **Running it.** Deploy, security checklist, monitoring, runbooks. |
 | [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Symptoms, causes and fixes. |

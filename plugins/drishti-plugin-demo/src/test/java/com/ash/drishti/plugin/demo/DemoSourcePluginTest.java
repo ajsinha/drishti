@@ -39,7 +39,7 @@ class DemoSourcePluginTest {
         JsonCodec codec = new JsonCodec();
         PLUGIN.start(new SourceContext() {
             public Map<String, String> settings() {
-                return Map.of();
+                return Map.of("dirs", java.nio.file.Path.of("../../packs/finance/samples").toAbsolutePath().toString(), "ticking", "false");
             }
 
             public DataNode parseJson(InputStream in) throws IOException {

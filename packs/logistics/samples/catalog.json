@@ -1,0 +1,50 @@
+[
+ {
+  "kind": "port",
+  "id": "PORT-SGSIN",
+  "title": "PORT-SGSIN",
+  "subtitle": "Port \u00b7 Singapore, SG"
+ },
+ {
+  "kind": "port",
+  "id": "PORT-LKCMB",
+  "title": "PORT-LKCMB",
+  "subtitle": "Port \u00b7 Colombo, LK"
+ },
+ {
+  "kind": "port",
+  "id": "PORT-EGPSD",
+  "title": "PORT-EGPSD",
+  "subtitle": "Port \u00b7 Port Said, EG"
+ },
+ {
+  "kind": "port",
+  "id": "PORT-NLRTM",
+  "title": "PORT-NLRTM",
+  "subtitle": "Port \u00b7 Rotterdam, NL"
+ },
+ {
+  "kind": "vessel",
+  "id": "VSL-9811000",
+  "title": "VSL-9811000",
+  "subtitle": "Vessel \u00b7 MSC Aurora \u00b7 14,000 TEU"
+ },
+ {
+  "kind": "container",
+  "id": "CTR-MSKU1234567",
+  "title": "CTR-MSKU1234567",
+  "subtitle": "Container \u00b7 40' reefer \u00b7 set 5.0 \u00b0C"
+ },
+ {
+  "kind": "shipment",
+  "id": "SHP-10042",
+  "title": "SHP-10042",
+  "subtitle": "Shipment \u00b7 Singapore \u2192 Rotterdam \u00b7 reefer \u00b7 Acme Pharma"
+ },
+ {
+  "kind": "shipment",
+  "id": "SHP-10077",
+  "title": "SHP-10077",
+  "subtitle": "Shipment \u00b7 Colombo \u2192 Singapore \u00b7 delivered (no Sutra match: inferred)"
+ }
+]

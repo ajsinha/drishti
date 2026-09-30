@@ -35,7 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 /** Golden ViewModels for the four reference entities, degradation, commands, suggestions and a latency gate. */
-@SpringBootTest(properties = {"drishti.rachana.dirs=../sutras", "drishti.rachana.hot-reload=false"})
+@SpringBootTest(properties = {"drishti.rachana.hot-reload=false"})
 class ViewPipelineTest {
 
     @Autowired ViewPipeline pipeline;

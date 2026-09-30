@@ -32,7 +32,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-@SpringBootTest(properties = {"drishti.rachana.dirs=../sutras", "drishti.rachana.hot-reload=false",
+@SpringBootTest(properties = {"drishti.rachana.hot-reload=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.sources.plugins.demo.settings.ticking=false", "drishti.identity.iterations=1000",
         "drishti.identity.users-file=target/identity-${random.uuid}/users.json",

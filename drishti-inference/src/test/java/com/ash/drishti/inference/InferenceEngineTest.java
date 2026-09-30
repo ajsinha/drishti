@@ -35,10 +35,10 @@ import org.junit.jupiter.api.Test;
 
 class InferenceEngineTest {
 
-    static final Path FIXTURES = Path.of("..", "plugins", "drishti-plugin-demo", "src", "main", "resources", "demo");
+    static final Path FIXTURES = Path.of("..", "packs", "finance", "samples");
     static final ElCompiler EL = new ElCompiler();
-    static final Formats F = Formats.defaults();
-    static final InferenceEngine ENGINE = new InferenceEngine(Semantics.defaults(), Rules.builtIn());
+    static final Formats F = Formats.load(null, java.util.List.of("../packs/finance/config/formats.yaml"));
+    static final InferenceEngine ENGINE = new InferenceEngine(Semantics.load(null, java.util.List.of("../packs/finance/config/semantics.yaml")), Rules.builtIn());
     static final LayoutMerger MERGER = new LayoutMerger(ENGINE, EL, F);
     static final JsonCodec JSON = new JsonCodec();
 
@@ -95,7 +95,7 @@ class InferenceEngineTest {
 
     @Test
     void sutraWinsAndInferenceFillsItsGaps() throws Exception {
-        try (SutraRegistry reg = new SutraRegistry(new RachanaProperties(List.of("../sutras"), false, null, null, null, null), EL)) {
+        try (SutraRegistry reg = new SutraRegistry(new RachanaProperties(List.of("../packs/finance/sutras"), false, null, null, null, null, null, null), EL)) {
             SutraMatcher matcher = new SutraMatcher(reg, EL, F);
             DataNode fut = fixture("trade", "CFT-77120");
             EffectiveLayout e = MERGER.merge(matcher.match("trade", fut), fut, "trade");
@@ -118,7 +118,7 @@ class InferenceEngineTest {
 
     @Test
     void semanticsRecogniseRolesAndLabels() {
-        Semantics s = Semantics.defaults();
+        Semantics s = Semantics.load(null, java.util.List.of("../packs/finance/config/semantics.yaml"));
         assertThat(s.role("mtm", DataNode.of(-5)).name()).isEqualTo("signed-money");
         assertThat(s.role("fixedRate", DataNode.of(0.0385)).fmt()).isEqualTo("pct4");
         assertThat(s.role("maturityDate", DataNode.of("2031-10-02")).fmt()).isEqualTo("date");

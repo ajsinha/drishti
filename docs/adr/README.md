@@ -26,5 +26,6 @@
 | [007](007-build-gates-in-tests.md) | Build gates in tests |
 | [008](008-rachana-is-the-grammar-a-sutra-is-a-layout.md) | Rachana is the grammar, a Sutra is a layout |
 | [009](009-users-live-in-the-server.md) | Users live in the server |
+| [010](010-industries-are-domain-packs.md) | Industries are domain packs |
 
 ADRs are amended, never rewritten.

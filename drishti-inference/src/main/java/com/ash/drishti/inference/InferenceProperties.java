@@ -21,6 +21,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * {@code drishti.inference.*}.
  *
  * @param semanticsFile optional site file replacing the bundled {@code inference/semantics.yaml}
+ * @param packSemanticsFiles semantic hints contributed by enabled packs, tried before the core roles
  */
 @ConfigurationProperties("drishti.inference")
-public record InferenceProperties(String semanticsFile) {}
+public record InferenceProperties(String semanticsFile, java.util.List<String> packSemanticsFiles) {
+
+    public InferenceProperties {
+        packSemanticsFiles = packSemanticsFiles == null ? java.util.List.of() : java.util.List.copyOf(packSemanticsFiles);
+    }
+}

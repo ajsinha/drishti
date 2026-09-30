@@ -28,7 +28,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-@SpringBootTest(properties = {"drishti.rachana.dirs=../sutras", "drishti.rachana.hot-reload=false",
+@SpringBootTest(properties = {"drishti.rachana.hot-reload=false",
         "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.identity.preferences-dir=target/prefs-${random.uuid}"})
 @AutoConfigureMockMvc

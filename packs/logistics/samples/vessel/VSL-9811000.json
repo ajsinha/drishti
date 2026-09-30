@@ -1,0 +1,25 @@
+{
+ "vesselId": "VSL-9811000",
+ "name": "MSC Aurora",
+ "imo": "9811000",
+ "flag": "Panama",
+ "speedKnots": 17.4,
+ "headingDeg": 292,
+ "latitude": 12.91,
+ "longitude": 53.44,
+ "nextPort": "PORT-EGPSD",
+ "eta": "2026-10-02",
+ "teuCapacity": 14000,
+ "teuLoaded": 12180,
+ "utilisation": 0.87,
+ "_meta": {
+  "source": "port-ops",
+  "generation": 512,
+  "live": true,
+  "walk": {
+   "speedKnots": 0.3,
+   "latitude": 0.02,
+   "longitude": 0.03
+  }
+ }
+}

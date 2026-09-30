@@ -13,12 +13,12 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Generates the demo plugin's JSON fixtures: the four reference entities of the mockups and the
-entities they link to. Run from the repository root:  python3 plugins/drishti-plugin-demo/tools/make_fixtures.py
+entities they link to. Run from the repository root:  python3 packs/finance/tools/make_fixtures.py
 """
 import json
 import pathlib
 
-OUT = pathlib.Path(__file__).resolve().parent.parent / "src/main/resources/demo"
+OUT = pathlib.Path(__file__).resolve().parent.parent / "samples"
 catalog = []
 
 

@@ -47,29 +47,62 @@ public final class Semantics {
     private final Map<String, Integer> limits = new ConcurrentHashMap<>();
     private final Map<String, Role> memo = new ConcurrentHashMap<>();
 
-    private Semantics(JsonNode root) {
+    private Semantics(JsonNode root, List<JsonNode> packs) {
+        List<JsonNode> ordered = new ArrayList<>(packs);
+        ordered.add(root);
+        StringBuilder tenors = new StringBuilder();
+        for (JsonNode src : ordered) {
+            addRoles(src);
+            String t = src.path("tenorPattern").asText("");
+            if (!t.isEmpty()) {
+                tenors.append(tenors.isEmpty() ? "" : "|").append("(?:").append(t).append(")");
+            }
+        }
+        List<JsonNode> idOrder = new ArrayList<>();
+        idOrder.add(root);
+        idOrder.addAll(packs);
+        for (JsonNode src : idOrder) {
+            src.path("idFields").forEach(n -> {
+                if (!idFields.contains(n.asText())) {
+                    idFields.add(n.asText());
+                }
+            });
+        }
+        tenor = Pattern.compile(tenors.isEmpty() ? "^$" : tenors.toString());
+        date = Pattern.compile(root.path("datePattern").asText("^\\d{4}-\\d{2}-\\d{2}"));
+        root.path("limits").fields().forEachRemaining(e -> limits.put(e.getKey(), e.getValue().asInt()));
+    }
+
+    private void addRoles(JsonNode root) {
         for (JsonNode r : root.path("roles")) {
             rules.add(new RoleRule(Pattern.compile(r.path("pattern").asText(), Pattern.CASE_INSENSITIVE),
                     new Role(r.path("role").asText(), r.hasNonNull("fmt") ? r.get("fmt").asText() : null,
                             r.hasNonNull("tone") ? r.get("tone").asText() : null, r.path("weight").asInt(10)),
                     r.path("fractionOnly").asBoolean(false), r.path("dateOnly").asBoolean(false)));
         }
-        tenor = Pattern.compile(root.path("tenorPattern").asText("^$"));
-        date = Pattern.compile(root.path("datePattern").asText("^\\d{4}-\\d{2}-\\d{2}"));
-        root.path("idFields").forEach(n -> idFields.add(n.asText()));
-        root.path("limits").fields().forEachRemaining(e -> limits.put(e.getKey(), e.getValue().asInt()));
     }
 
     public static Semantics load(String overrideFile) {
+        return load(overrideFile, List.of());
+    }
+
+    /** The core hints (or the site's replacement), with each pack's roles tried first, in pack order. */
+    public static Semantics load(String overrideFile, List<String> packFiles) {
         try {
             ObjectMapper yaml = new ObjectMapper(new YAMLFactory());
+            List<JsonNode> packs = new ArrayList<>();
+            for (String f : packFiles) {
+                try (InputStream in = Files.newInputStream(Path.of(f))) {
+                    packs.add(yaml.readTree(in));
+                }
+            }
             if (overrideFile != null && !overrideFile.isBlank() && Files.isRegularFile(Path.of(overrideFile))) {
                 try (InputStream in = Files.newInputStream(Path.of(overrideFile))) {
-                    return new Semantics(yaml.readTree(in));
+                    return new Semantics(yaml.readTree(in), packs);
                 }
             }
             try (InputStream in = Semantics.class.getClassLoader().getResourceAsStream("inference/semantics.yaml")) {
-                return new Semantics(yaml.readTree(in));
+                return new Semantics(yaml.readTree(in), packs);
             }
         } catch (IOException e) {
             throw new UncheckedIOException(e);

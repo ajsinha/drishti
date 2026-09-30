@@ -12,28 +12,5 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Starter workspaces offered to everyone. A user opens one, changes it, and saves it as their own.
-# Layouts: 2col, 3col, 2x2, 1+2 (one large pane left, two stacked right). A pane with `follows: N`
-# opens whatever entity is selected in pane N (0-based).
-templates:
-  Credit desk:
-    description: A netting set, the member trade you pick in it, and the discount curve.
-    layout: "1+2"
-    panes:
-      - { ref: { kind: netting-set, id: NS-NORTH-01 }, title: Netting set }
-      - { ref: { kind: trade, id: IRS-48213 }, follows: 0, title: Selected trade }
-      - { ref: { kind: curve, id: USD-SOFR }, title: Discount curve }
-  Rates:
-    description: A swap beside its discount curve.
-    layout: "2col"
-    panes:
-      - { ref: { kind: trade, id: IRS-48213 }, title: Swap }
-      - { ref: { kind: curve, id: USD-SOFR }, follows: 0, title: Linked entity }
-  Cross-asset:
-    description: The four reference views at once.
-    layout: "2x2"
-    panes:
-      - { ref: { kind: trade, id: IRS-48213 }, title: Rates }
-      - { ref: { kind: trade, id: FXS-20931 }, title: FX }
-      - { ref: { kind: trade, id: CFT-77120 }, title: Commodities }
-      - { ref: { kind: netting-set, id: NS-NORTH-01 }, title: Credit }
+# Core starter workspaces (packs add their own in packs/<name>/config/workspaces.yaml).
+templates: {}

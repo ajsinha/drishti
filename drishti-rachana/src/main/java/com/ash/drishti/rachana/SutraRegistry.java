@@ -129,6 +129,9 @@ public final class SutraRegistry implements AutoCloseable {
         if (!problems.isEmpty()) {
             throw new SutraException(problems);
         }
+        if (props.dirs().isEmpty()) {
+            throw new SutraException(List.of(new SutraProblem("DRS-2020", "no site Sutra directory to save into (drishti.rachana.dirs)", s.location())));
+        }
         Path dir = Path.of(props.dirs().get(0)).toAbsolutePath().normalize();
         Path target = dir.resolve(s.domain()).resolve(s.name() + ".v" + s.version() + ".yaml").normalize();
         if (!target.startsWith(dir)) {
@@ -240,7 +243,7 @@ public final class SutraRegistry implements AutoCloseable {
 
     private List<Path> files() {
         List<Path> out = new ArrayList<>();
-        for (String d : props.dirs()) {
+        for (String d : props.allDirs()) {
             Path dir = Path.of(d).toAbsolutePath().normalize();
             if (!Files.isDirectory(dir)) {
                 LOG.warn("sutra directory {} does not exist", dir);
@@ -258,7 +261,7 @@ public final class SutraRegistry implements AutoCloseable {
     private void startWatching() {
         try {
             watcher = FileSystems.getDefault().newWatchService();
-            for (String d : props.dirs()) {
+            for (String d : props.allDirs()) {
                 Path dir = Path.of(d).toAbsolutePath().normalize();
                 if (Files.isDirectory(dir)) {
                     try (Stream<Path> s = Files.walk(dir)) {

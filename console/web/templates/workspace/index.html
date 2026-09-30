@@ -29,7 +29,7 @@
   <div class="help-cards">
     {% for n, t in templates.items() %}
     <a class="help-card" href="/w/{{ n | urlencode }}?template={{ n | urlencode }}">
-      <div class="hc-title"><span class="hc-ico"><i class="bi bi-grid-1x2" aria-hidden="true"></i></span><span>{{ n }} <span class="badge-kind">{{ t.layout }}</span></span></div>
+      <div class="hc-title"><span class="hc-ico"><i class="bi bi-grid-1x2" aria-hidden="true"></i></span><span>{{ n }} <span class="badge-kind">{{ t.layout }}</span>{% if t.pack %} <span class="badge-kind">{{ t.pack }}</span>{% endif %}</span></div>
       <p>{{ t.description }}</p><span class="more">Open <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a>
     {% endfor %}
   </div>

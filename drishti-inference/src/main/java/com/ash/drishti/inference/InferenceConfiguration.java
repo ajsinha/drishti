@@ -28,7 +28,7 @@ public class InferenceConfiguration {
 
     @Bean
     public InferenceEngine inferenceEngine(InferenceProperties props) {
-        return new InferenceEngine(Semantics.load(props.semanticsFile()), Rules.builtIn());
+        return new InferenceEngine(Semantics.load(props.semanticsFile(), props.packSemanticsFiles()), Rules.builtIn());
     }
 
     @Bean

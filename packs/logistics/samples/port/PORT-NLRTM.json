@@ -1,0 +1,17 @@
+{
+ "portId": "PORT-NLRTM",
+ "name": "Rotterdam",
+ "country": "NL",
+ "congestionIndex": 2.8,
+ "berthWaitHours": 11,
+ "vesselsAtAnchor": 22,
+ "_meta": {
+  "source": "port-ops",
+  "generation": 512,
+  "live": true,
+  "walk": {
+   "berthWaitHours": 1,
+   "congestionIndex": 0.1
+  }
+ }
+}

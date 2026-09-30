@@ -1,0 +1,17 @@
+{
+ "portId": "PORT-LKCMB",
+ "name": "Colombo",
+ "country": "LK",
+ "congestionIndex": 2.1,
+ "berthWaitHours": 9,
+ "vesselsAtAnchor": 18,
+ "_meta": {
+  "source": "port-ops",
+  "generation": 512,
+  "live": true,
+  "walk": {
+   "berthWaitHours": 1,
+   "congestionIndex": 0.1
+  }
+ }
+}

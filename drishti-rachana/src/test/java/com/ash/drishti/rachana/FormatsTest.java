@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test;
 
 class FormatsTest {
 
-    final Formats f = Formats.defaults();
+    final Formats f = Formats.load(null, java.util.List.of("../packs/finance/config/formats.yaml"));
 
     @Test
     void numbersSignsPercentsAndCompact() {

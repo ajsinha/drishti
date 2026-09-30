@@ -15,6 +15,23 @@
 -->
 # Changelog
 
+## 1.5.0 — Wave 13b: domain packs (2026-09-30)
+- **Domain packs.** The core is now industry-neutral, and everything domain-specific lives in `packs/<name>/`:
+  - Sutras, mnemonics, identifier patterns, reference fields, link badges, roles;
+  - semantic hints and formats;
+  - starter workspaces, help guides and sample data.
+  Enable packs with `DRISHTI_PACKS=finance,logistics`. They load in order at the lowest precedence, so site configuration wins, and a clash between packs stops start-up with both names.
+- New module `drishti-packs` (an `EnvironmentPostProcessor`; no core module depends on it). The server gains `GET /api/v1/packs`; About lists the active packs.
+- **Finance pack:** everything that was finance-specific moved out of the core: the four Sutras, 13 mnemonics, reference patterns and fields, badges, `trader`/`risk` roles, finance semantic hints (MTM, DV01, notional, pips…), finance formats (`pct4`, `rate5`, `pips1`, `df4`, `bp1`), the mockup samples, starters and tutorials.
+- **Logistics pack** (new), which proves the core is neutral:
+  - shipments, reefer containers, vessels and ports;
+  - a shipment Sutra (route, milestones, reefer temperature from the linked container);
+  - logistics vocabulary (weights, temperatures, delays, knots, TEU) and formats (`temp1`, `hours0`, `knots1`);
+  - an `ops` role, live samples, and a *Shipment tracker* workspace.
+- The demo source reads pack sample directories and can tick any pack's samples through `_meta.walk`; no code is needed.
+- Core semantic hints and formats are now neutral; the console's placeholders and examples are pack-driven.
+- Docs: `PACKS.md`, ADR-010; architecture §8a; configuration, plugin guide, user guide, Rachana reference and deploy files updated.
+
 ## 1.4.0 — Wave 13: workspaces (2026-09-30)
 - **Workspaces** (`/w`): 2–4 live views on one screen, in layouts of two or three columns, two by two, or one large with two stacked.
   - Each pane is a same-origin embedded view with its own live stream and keys.

@@ -28,16 +28,28 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param formatsFile optional site file overriding or adding named formats
  * @param expressionCacheSize compiled Rachana-EL expressions kept in memory
  * @param studioSave allow Sutra Studio to write Sutra files (off by default; turn on for authoring environments)
+ * @param packDirs Sutra directories contributed by enabled packs (set by the pack loader)
+ * @param packFormatsFiles format files contributed by enabled packs
  */
 @ConfigurationProperties("drishti.rachana")
 public record RachanaProperties(
-        List<String> dirs, Boolean hotReload, Duration reloadDebounce, String formatsFile, Long expressionCacheSize, Boolean studioSave) {
+        List<String> dirs, Boolean hotReload, Duration reloadDebounce, String formatsFile, Long expressionCacheSize, Boolean studioSave,
+        List<String> packDirs, List<String> packFormatsFiles) {
 
     public RachanaProperties {
-        dirs = dirs == null || dirs.isEmpty() ? List.of("./sutras") : List.copyOf(dirs);
+        dirs = dirs == null ? List.of("./sutras") : List.copyOf(dirs);
         hotReload = hotReload == null ? Boolean.TRUE : hotReload;
         reloadDebounce = reloadDebounce == null ? Duration.ofMillis(250) : reloadDebounce;
         expressionCacheSize = expressionCacheSize == null ? 10_000L : expressionCacheSize;
         studioSave = studioSave != null && studioSave;
+        packDirs = packDirs == null ? List.of() : List.copyOf(packDirs);
+        packFormatsFiles = packFormatsFiles == null ? List.of() : List.copyOf(packFormatsFiles);
+    }
+
+    /** Site directories, then pack directories. */
+    public List<String> allDirs() {
+        List<String> all = new java.util.ArrayList<>(dirs);
+        all.addAll(packDirs);
+        return all;
     }
 }

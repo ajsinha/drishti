@@ -1,10 +1,10 @@
 # Drishti server image. Build from the repository root after ./mvnw -q package -DskipTests:
-#   docker build -f deploy/server.Dockerfile -t drishti-server:1.4.0 .
+#   docker build -f deploy/server.Dockerfile -t drishti-server:1.5.0 .
 FROM eclipse-temurin:21-jre
 RUN useradd --system --uid 10001 drishti
 WORKDIR /opt/drishti
 COPY drishti-server/target/drishti-server-*-exec.jar app.jar
-COPY sutras/ sutras/
+COPY packs/ packs/
 USER drishti
 EXPOSE 18480
 ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:+ZGenerational"

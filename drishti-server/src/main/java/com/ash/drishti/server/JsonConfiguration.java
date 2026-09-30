@@ -30,6 +30,11 @@ import org.springframework.context.annotation.Configuration;
 public class JsonConfiguration {
 
     @Bean
+    public com.ash.drishti.packs.PackRegistry packRegistry(org.springframework.core.env.Environment env) {
+        return new com.ash.drishti.packs.PackRegistry(env);
+    }
+
+    @Bean
     public SimpleModule drishtiJsonModule(JsonCodec codec) {
         SimpleModule m = new SimpleModule("drishti");
         m.addSerializer(DataNode.class, new JsonSerializer<>() {

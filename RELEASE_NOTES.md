@@ -13,6 +13,15 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 1.5.0 — release notes
+
+*2026-09-30.* **Domain packs.** Drishti's core is now industry-neutral. Finance (the mockups) and
+logistics (shipments, containers, vessels, ports) ship as packs, enabled with `DRISHTI_PACKS`. A new
+industry needs configuration and content only: Sutras, vocabulary, links, roles, samples and guides.
+See `docs/PACKS.md`.
+
+---
+
 # Drishti 1.4.0 — release notes
 
 *2026-09-30.* This release adds **workspaces**:

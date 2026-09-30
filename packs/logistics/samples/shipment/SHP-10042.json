@@ -1,0 +1,84 @@
+{
+ "shipmentId": "SHP-10042",
+ "status": "In transit",
+ "customer": {
+  "id": "CUS-ACME",
+  "name": "Acme Pharma BV"
+ },
+ "origin": "PORT-SGSIN",
+ "destination": "PORT-NLRTM",
+ "vessel": "VSL-9811000",
+ "container": "CTR-MSKU1234567",
+ "departed": "2026-09-12",
+ "eta": "2026-10-09",
+ "etaDelayHours": 6,
+ "weightKg": 18400,
+ "declaredValue": 1250000,
+ "currency": "USD",
+ "incoterm": "FOB",
+ "commodity": "Pharmaceuticals (2\u20138 \u00b0C)",
+ "route": [
+  {
+   "leg": 1,
+   "from": "PORT-SGSIN",
+   "to": "PORT-LKCMB",
+   "mode": "Sea",
+   "departed": "2026-09-12",
+   "arrived": "2026-09-17",
+   "carrier": "MSC"
+  },
+  {
+   "leg": 2,
+   "from": "PORT-LKCMB",
+   "to": "PORT-EGPSD",
+   "mode": "Sea",
+   "departed": "2026-09-18",
+   "arrived": null,
+   "carrier": "MSC"
+  },
+  {
+   "leg": 3,
+   "from": "PORT-EGPSD",
+   "to": "PORT-NLRTM",
+   "mode": "Sea",
+   "departed": null,
+   "arrived": null,
+   "carrier": "MSC"
+  }
+ ],
+ "milestones": [
+  {
+   "date": "2026-09-10",
+   "event": "Booked",
+   "location": "Singapore"
+  },
+  {
+   "date": "2026-09-12",
+   "event": "Loaded and departed",
+   "location": "Singapore"
+  },
+  {
+   "date": "2026-09-17",
+   "event": "Transhipped",
+   "location": "Colombo"
+  },
+  {
+   "date": "2026-09-26",
+   "event": "Temperature alarm cleared",
+   "location": "Arabian Sea"
+  },
+  {
+   "date": "2026-09-30",
+   "event": "Delay: Suez queue (+6 h)",
+   "location": "Gulf of Aden"
+  }
+ ],
+ "_meta": {
+  "source": "port-ops",
+  "generation": 512,
+  "live": true,
+  "walk": {
+   "etaDelayHours": 1
+  }
+ }
+}

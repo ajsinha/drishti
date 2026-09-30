@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Named formats for Sutra `fmt:` keys and fmt(...) calls. A site can override or add formats with
+# Core named formats for Sutra `fmt:` keys and fmt(...) calls (domain-neutral; packs add their own). A site can override or add formats with
 # drishti.rachana.formats-file. Negative numbers use the true minus sign (U+2212).
 formats:
   text:     { type: text }
@@ -22,12 +22,7 @@ formats:
   signed2:  { type: number, decimals: 2, sign: always }
   pct0:     { type: number, decimals: 0, scale: 100, suffix: "%" }
   pct2:     { type: number, decimals: 2, scale: 100, suffix: "%" }
-  pct4:     { type: number, decimals: 4, scale: 100, suffix: "%" }
-  rate5:    { type: number, decimals: 5, grouping: false }
-  pips1:    { type: number, decimals: 1, sign: always }
   price2:   { type: number, decimals: 2 }
-  df4:      { type: number, decimals: 4 }
-  bp1:      { type: number, decimals: 1, sign: always, suffix: " bp" }
   compact:  { type: compact, decimals: 1 }
   date:     { type: date, pattern: yyyy-MM-dd }
   dmy:      { type: date, pattern: dd MMM yyyy }

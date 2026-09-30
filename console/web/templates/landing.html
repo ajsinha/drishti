@@ -58,7 +58,7 @@
         tables, term structures into curves and identifiers into links.</p>
     </div>
     <div class="code-panel" aria-label="Example Sutra">
-      <div class="bar"><i></i><i></i><i></i>&nbsp; sutras/rates/irs-vanilla.v3.yaml</div>
+      <div class="bar"><i></i><i></i><i></i>&nbsp; packs/finance/sutras/rates/irs-vanilla.v3.yaml</div>
 <pre><span class="tok-k">sutra</span>: irs-vanilla
 <span class="tok-k">version</span>: 3
 <span class="tok-k">match</span>: { kind: trade, where: <span class="tok-s">"productType == 'IRS'"</span> }
@@ -103,7 +103,7 @@
       {{ card("keyboard", "Keyboard first", "TRD IRS-48213 <GO>. Function keys per view, Alt+← to go back, F9 for the raw JSON — always.") }}
       {{ card("diagram-3", "Linked", "Every identifier opens another view: netting set, CSA, agreement, curve. A breadcrumb trail shows how you got there.") }}
       {{ card("activity", "Live", "Views tick over server-sent events. Only the changed cells repaint, and the top bar shows the measured p99 latency.") }}
-      {{ card("plug", "Any source", "Live caches, REST, JDBC, feed files and Kafka, each plugged in through a small Java interface with a generation counter.") }}
+      {{ card("plug", "Any source, any industry", "Plugins bring the data (caches, REST, JDBC, feed files); domain packs bring the vocabulary: finance and logistics ship, and yours is configuration only.") }}
       {{ card("fingerprint", "Provenance", "Each view says how it was built: Sutra and version, data fingerprint, source and generation.") }}
       {{ card("stars", "Inference", "Scored, explainable rules turn data shapes into panels. Studio lets you promote an inferred panel into the Sutra.") }}
     </div>

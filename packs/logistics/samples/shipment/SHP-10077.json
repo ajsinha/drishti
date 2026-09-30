@@ -1,0 +1,19 @@
+{
+ "shipmentId": "SHP-10077",
+ "status": "Delivered",
+ "origin": "PORT-LKCMB",
+ "destination": "PORT-SGSIN",
+ "departed": "2026-08-30",
+ "eta": "2026-09-04",
+ "etaDelayHours": 0,
+ "weightKg": 9200,
+ "declaredValue": 310000,
+ "currency": "USD",
+ "incoterm": "CIF",
+ "commodity": "Tea",
+ "_meta": {
+  "source": "port-ops",
+  "generation": 512,
+  "live": false
+ }
+}

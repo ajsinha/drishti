@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 class ElTest {
 
     static final ElCompiler EL = new ElCompiler();
-    static final Formats F = Formats.defaults();
+    static final Formats F = Formats.load(null, java.util.List.of("../packs/finance/config/formats.yaml"));
     static final DataNode DOC = new JsonCodec().read("""
             {"tradeId":"IRS-1","notional":50000000,"direction":"PAY_FIXED","rate":0.0385,
              "legs":[{"leg":1,"payer":true,"label":"Pay fixed","rows":[{"a":1},{"a":2.5}]},

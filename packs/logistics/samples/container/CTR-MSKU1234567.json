@@ -1,0 +1,117 @@
+{
+ "containerId": "CTR-MSKU1234567",
+ "type": "40' reefer",
+ "setpointC": 5.0,
+ "currentC": 4.6,
+ "humidityPct": 0.78,
+ "alarms": 1,
+ "powerOn": true,
+ "shipment": "SHP-10042",
+ "vessel": "VSL-9811000",
+ "readings": [
+  {
+   "hour": "H1",
+   "celsius": 4.8
+  },
+  {
+   "hour": "H2",
+   "celsius": 4.9
+  },
+  {
+   "hour": "H3",
+   "celsius": 5.0
+  },
+  {
+   "hour": "H4",
+   "celsius": 5.1
+  },
+  {
+   "hour": "H5",
+   "celsius": 5.1
+  },
+  {
+   "hour": "H6",
+   "celsius": 5.1
+  },
+  {
+   "hour": "H7",
+   "celsius": 5.0
+  },
+  {
+   "hour": "H8",
+   "celsius": 4.9
+  },
+  {
+   "hour": "H9",
+   "celsius": 4.8
+  },
+  {
+   "hour": "H10",
+   "celsius": 4.6
+  },
+  {
+   "hour": "H11",
+   "celsius": 4.5
+  },
+  {
+   "hour": "H12",
+   "celsius": 4.3
+  },
+  {
+   "hour": "H13",
+   "celsius": 4.2
+  },
+  {
+   "hour": "H14",
+   "celsius": 5.0
+  },
+  {
+   "hour": "H15",
+   "celsius": 5.0
+  },
+  {
+   "hour": "H16",
+   "celsius": 5.0
+  },
+  {
+   "hour": "H17",
+   "celsius": 4.2
+  },
+  {
+   "hour": "H18",
+   "celsius": 4.3
+  },
+  {
+   "hour": "H19",
+   "celsius": 4.4
+  },
+  {
+   "hour": "H20",
+   "celsius": 4.6
+  },
+  {
+   "hour": "H21",
+   "celsius": 4.7
+  },
+  {
+   "hour": "H22",
+   "celsius": 4.9
+  },
+  {
+   "hour": "H23",
+   "celsius": 5.0
+  },
+  {
+   "hour": "H24",
+   "celsius": 5.1
+  }
+ ],
+ "_meta": {
+  "source": "port-ops",
+  "generation": 512,
+  "live": true,
+  "walk": {
+   "currentC": 0.15
+  }
+ }
+}

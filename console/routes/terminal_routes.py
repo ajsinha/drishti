@@ -21,23 +21,17 @@ from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse
 
 from core.backend import BackendError
-from routes.common import ident, render
+from routes.common import ident, packs, render
 
 router = APIRouter(include_in_schema=False)
 
-EXAMPLES = [
-    ("TRD IRS-48213", "Interest rate swap · legs, cashflows, SOFR curve, DV01"),
-    ("TRD FXS-20931", "FX swap · near and far legs, forward points"),
-    ("TRD CFT-77120", "Commodity future · settlements and variation margin"),
-    ("NSET NS-NORTH-01", "Netting set · exposure profile, member trades, CSA"),
-    ("TRD IRS-47102", "A trade with no Sutra · laid out by inference alone"),
-    ("CRV USD-SOFR", "A curve · inferred"),
-]
 
 
 @router.get("/t")
 async def home(request: Request, error: str | None = None):
-    return render(request, "terminal/home.html", examples=EXAMPLES, error=error)
+    current = await packs(request)
+    examples = [(cmd, what, p["title"]) for p in current for cmd, what in p["examples"]]
+    return render(request, "terminal/home.html", examples=examples, packs=current, error=error)
 
 
 @router.get("/go")

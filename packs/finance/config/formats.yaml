@@ -1,0 +1,21 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Finance pack formats, added to the core formats.
+formats:
+  pct4:     { type: number, decimals: 4, scale: 100, suffix: "%" }
+  rate5:    { type: number, decimals: 5, grouping: false }
+  pips1:    { type: number, decimals: 1, sign: always }
+  df4:      { type: number, decimals: 4 }
+  bp1:      { type: number, decimals: 1, sign: always, suffix: " bp" }

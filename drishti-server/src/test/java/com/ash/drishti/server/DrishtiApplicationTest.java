@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest(properties = {"drishti.rachana.dirs=../sutras", "drishti.rachana.hot-reload=false"})
+@SpringBootTest(properties = {"drishti.rachana.hot-reload=false"})
 class DrishtiApplicationTest {
 
     private final SourceRegistry registry;

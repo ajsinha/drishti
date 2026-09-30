@@ -21,7 +21,7 @@
   <parent>
     <groupId>com.ash.drishti</groupId>
     <artifactId>drishti-parent</artifactId>
-    <version>1.4.0</version>
+    <version>1.5.0</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
   <artifactId>drishti-server</artifactId>
@@ -30,6 +30,7 @@
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-engine</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-identity</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-packs</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-demo</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-file</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-rest</artifactId></dependency>
@@ -51,6 +52,8 @@
             <drishti.identity.users-file>${project.build.directory}/identity/users.json</drishti.identity.users-file>
             <drishti.identity.audit-file>${project.build.directory}/identity/audit.jsonl</drishti.identity.audit-file>
             <drishti.identity.iterations>1000</drishti.identity.iterations>
+            <drishti.packs.dir>${project.basedir}/../packs</drishti.packs.dir>
+            <drishti.rachana.dirs>${project.build.directory}/no-site-sutras</drishti.rachana.dirs>
             <drishti.identity.preferences-dir>${project.build.directory}/identity/preferences</drishti.identity.preferences-dir>
           </systemPropertyVariables>
         </configuration>

@@ -140,7 +140,7 @@ against a JSON Schema at load, and hot-reload via `WatchService`. Bindings use a
 small, compiled path/expression language (**Rachana-EL**) — not scripting.
 
 ```yaml
-# sutras/rates/irs-vanilla.v3.yaml
+# packs/finance/sutras/rates/irs-vanilla.v3.yaml
 sutra: irs-vanilla
 version: 3
 match:  { kind: trade, where: "productType == 'IRS' && legs.size() == 2" }
@@ -266,6 +266,20 @@ under the input:
 
 ---
 
+## 8a. Domain packs
+
+The core carries no industry. A **domain pack** (`packs/<name>/`) holds everything specific to one:
+- Sutras, mnemonics, identifier patterns, reference fields and link badges;
+- roles, semantic hints and formats;
+- starter workspaces, help guides, and sample data.
+
+`drishti.packs.enabled` lists the packs to load, in order. At start-up, `drishti-packs` turns them into
+the **lowest-precedence** property source, so site configuration always wins. A clash between two
+packs (the same mnemonic, field, badge or role) stops start-up and names both packs. The console asks
+the server which packs are enabled and reads their console content from the same folders. Shipped
+packs: **finance** (the reference mockups) and **logistics** (shipments, containers, vessels, ports),
+which proves the core is neutral. See [PACKS.md](PACKS.md) and ADR-010.
+
 ## 9. Module layout (Java)
 
 Maven multi-module reactor on `spring-boot-starter-parent`, `groupId com.ash.drishti`, Java 21, packages
@@ -279,6 +293,8 @@ Maven multi-module reactor on `spring-boot-starter-parent`, `groupId com.ash.dri
 | `drishti-inference` | Shape analysis, semantic hints, rules, scorer, packer | `InferenceConfiguration` |
 | `drishti-graph` | Reference catalog, link resolution, reverse lookups | `GraphConfiguration` |
 | `drishti-engine` | Pipeline, `LayoutResolver`, `Binder`, caches, `TopicHub`, `ViewMaintainer`, plugin discovery | `EngineConfiguration` |
+| `drishti-identity` | Users, passwords, lockout, audit, per-user preferences (workspaces) | `IdentityConfiguration` |
+| `drishti-packs` | Domain packs: loads `packs/<name>/pack.yaml` and contributes their content as lowest-precedence properties (an `EnvironmentPostProcessor`; no core module depends on it) | `PackRegistry` |
 | `drishti-server` | **The** Spring Boot application: `DrishtiApplication`, REST, SSE, security, actuator, OpenAPI | controllers, filters |
 | `plugins/drishti-plugin-{demo,file,rest,jdbc,kafka,aero}` | Source plugins (ServiceLoader, isolated class loaders) | – |
 | `drishti-testkit` | Fixtures, golden ViewModel assertions, `@DrishtiTest` slice | – |

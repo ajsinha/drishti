@@ -21,7 +21,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse
 
 from core.backend import BackendError
-from routes.common import ident, render
+from routes.common import ident, library, packs, render
 
 router = APIRouter(include_in_schema=False)
 ROOT = Path(__file__).resolve().parent.parent.parent
@@ -29,24 +29,25 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 
 @router.get("/help")
 async def help_index(request: Request):
-    lib = request.app.state.library
+    lib = await library(request)
     return render(request, "help/index.html", categories=lib.categories, count=len(lib.guides), screen="help")
 
 
 @router.get("/help/search")
 async def help_search(request: Request, q: str = ""):
-    return render(request, "help/search.html", q=q, hits=request.app.state.library.search(q), screen="help")
+    return render(request, "help/search.html", q=q, hits=(await library(request)).search(q), screen="help")
 
 
 @router.get("/help/context/{screen}")
 async def help_context(request: Request, screen: str):
-    slug = request.app.state.library.contextual.get(screen, "getting-started")
+    lib = await library(request)
+    slug = lib.contextual.get(screen) or lib.contextual.get("help") or "using-the-terminal"
     return RedirectResponse(f"/help/{slug}", status_code=303)
 
 
 @router.get("/help/{slug}")
 async def help_guide(request: Request, slug: str):
-    lib = request.app.state.library
+    lib = await library(request)
     if slug not in lib.guides:
         return render(request, "help/search.html", status_code=404, q=slug.replace("-", " "),
                       hits=lib.search(slug.replace("-", " ")), missing=slug, screen="help")
@@ -77,4 +78,4 @@ async def about(request: Request):
         info = {"error": f"{e.code} {e.detail}"}
     licence = _read(ROOT / "LICENSE")
     return render(request, "help/about.html", info=info, licence_intro="\n".join(licence.splitlines()[:5]),
-                  notices=request.app.state.library.guides.get("notices"), screen="about")
+                  notices=(await library(request)).guides.get("notices"), packs=await packs(request), screen="about")

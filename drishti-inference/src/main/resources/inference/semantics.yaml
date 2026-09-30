@@ -12,26 +12,21 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Semantic hints: how inference recognises what a field means from its name and value.
-# Roles are tried in order; the first whose name pattern matches (case-insensitive regex on the
-# field name) wins. `weight` ranks candidates for the header strip (higher shows first).
-# A site can override this file with drishti.inference.semantics-file.
+# Core semantic hints: domain-neutral. Packs prepend their own roles (see packs/<name>/config/semantics.yaml),
+# so a pack's meaning of a field name wins over these. Roles are tried in order; the first whose name pattern
+# matches (case-insensitive regex on the field name) wins. `weight` ranks candidates for the header strip.
+# A site can replace this file with drishti.inference.semantics-file.
 roles:
-  - { role: signed-money, pattern: "(^|_)(mtm|pv|pnl|dv01|pv01|cs01|vega|delta|gamma|change|variationmargin|netmtm|pvusd)$|mtm$|pv$|pnl$", fmt: signed0, tone: sign, weight: 90 }
-  - { role: money,        pattern: "notional|amount|margin|collateral|exposure|limit|ee(peak)?$|pfe|balance|principal|value$", fmt: amount0, weight: 80 }
-  - { role: percent,      pattern: "utili[sz]ation|ratio|share|weight", fmt: pct0, weight: 50 }
-  - { role: rate,         pattern: "rate$|spread|yield|coupon|fixing|strike", fmt: pct4, weight: 70, fractionOnly: true }
-  - { role: fx-rate,      pattern: "(near|far|spot|fwd|forward)rate$|^rate$", fmt: rate5, weight: 70 }
-  - { role: price,        pattern: "price|settle|px$", fmt: price2, weight: 70 }
-  - { role: points,       pattern: "points|pips", fmt: pips1, weight: 60 }
-  - { role: df,           pattern: "^df$|discount", fmt: df4, weight: 20 }
-  - { role: date,         pattern: "date$|^date|maturity|effective|valuedate|reset|expiry|asof|value$", fmt: date, weight: 60, dateOnly: true }
-  - { role: count,        pattern: "lots|trades|count|flows|^n$|quantity|qty", fmt: amount0, weight: 55 }
-  - { role: label,        pattern: "name|label|product|type|direction|status|pair|contract|currency|ccy|book|desk", weight: 65 }
-# Values that look like tenors or listed-contract months become chart axes.
-tenorPattern: "^(ON|TN|SN|\\d+[DWMY]|[FGHJKMNQUVXZ]\\d{1,2}|0)$"
+  - { role: signed-money, pattern: "(^|_)(pnl|profit|loss|change|delta|variance)$|pnl$|change$", fmt: signed0, tone: sign, weight: 90 }
+  - { role: money,        pattern: "amount|value$|cost|price$|balance|revenue|total$|budget", fmt: amount0, weight: 80 }
+  - { role: percent,      pattern: "utili[sz]ation|ratio|share$|pct$|percent", fmt: pct0, weight: 50 }
+  - { role: rate,         pattern: "rate$", fmt: pct2, weight: 70, fractionOnly: true }
+  - { role: date,         pattern: "date$|^date|at$|time$|expiry|asof|due", fmt: date, weight: 60, dateOnly: true }
+  - { role: count,        pattern: "count|quantity|qty|units|items|^n$", fmt: amount0, weight: 55 }
+  - { role: label,        pattern: "name|label|type|status|category|code$|currency|ccy|owner|region", weight: 65 }
+# Axis-like values that become chart x-axes: tenors (1M, 5Y), hours (H1), periods (Q1, 2026-Q3).
+tenorPattern: "^(\\d+[DWMY]|H\\d{1,3}|Q[1-4]|\\d{4}-Q[1-4])$"
 datePattern: "^\\d{4}-\\d{2}-\\d{2}"
-# Field names that identify the entity itself (used for the title) — {kind} is replaced by the camel-case kind.
-idFields: ["{kind}Id", "id", "tradeId", "code", "name"]
-# Layout density limits.
+# Field names that identify the entity itself (used for the title); {kind} is the camel-case kind.
+idFields: ["{kind}Id", "id", "code", "name"]
 limits: { strip: 8, right: 4, main: 6, kvMaxFields: 16, tableMaxColumns: 9 }

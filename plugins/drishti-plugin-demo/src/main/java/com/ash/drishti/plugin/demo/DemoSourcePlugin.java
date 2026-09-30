@@ -42,9 +42,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /**
- * Serves the reference entities of the Drishti mockups from classpath fixtures ({@code demo/<kind>/<id>.json},
- * listed in {@code demo/catalog.json}). Each fixture's {@code _meta} block becomes the provenance, so views
- * show the source systems of the mockups ({@code aero-risk}, {@code aero-fx}, {@code eod-futures}).
+ * Serves sample entities from pack sample directories ({@code dirs}: comma-separated, each holding
+ * {@code catalog.json} and {@code <kind>/<id>.json}). The enabled packs supply the directories. Each fixture's
+ * {@code _meta} block becomes the provenance, so views show the source systems of the samples
+ * ({@code aero-risk}, {@code port-ops}, ...).
  *
  * <p>Documents marked live tick while someone subscribes: every {@code tick-ms} (default 400) one
  * random-walk step moves prices, rates and MTM, and the generation increases. Setting {@code ticking: false}
@@ -53,12 +54,12 @@ import java.util.function.Consumer;
 public final class DemoSourcePlugin implements SourcePlugin {
 
     static final String NAME = "demo";
-    private static final String ROOT = "demo/";
 
     private final Map<EntityRef, EntityDocument> documents = new ConcurrentHashMap<>();
     private final HitIndex index = new HitIndex();
     private final Map<EntityRef, List<Consumer<EntityDocument>>> listeners = new ConcurrentHashMap<>();
     private final DemoTicker ticker = new DemoTicker(42);
+    private final Map<EntityRef, DataNode> walks = new ConcurrentHashMap<>();
     private ScheduledFuture<?> tickTask;
 
     @Override
@@ -68,13 +69,20 @@ public final class DemoSourcePlugin implements SourcePlugin {
 
     @Override
     public void start(SourceContext context) throws IOException {
-        DataNode catalog = read(context, ROOT + "catalog.json");
-        for (int i = 0; i < catalog.size(); i++) {
-            DataNode e = catalog.get(i);
-            EntityRef ref = EntityRef.of(e.get("kind").asText(), e.get("id").asText());
-            DataNode raw = read(context, ROOT + ref.kind() + "/" + ref.id() + ".json");
-            documents.put(ref, toDocument(ref, raw));
-            index.add(new EntityHit(ref, e.get("title").asText(), e.get("subtitle").asText()));
+        for (String dir : context.setting("dirs", "").split(",")) {
+            if (dir.isBlank()) {
+                continue;
+            }
+            java.nio.file.Path root = java.nio.file.Path.of(dir.trim());
+            DataNode catalog = read(context, root.resolve("catalog.json"));
+            for (int i = 0; i < catalog.size(); i++) {
+                DataNode e = catalog.get(i);
+                EntityRef ref = EntityRef.of(e.get("kind").asText(), e.get("id").asText());
+                DataNode raw = read(context, root.resolve(ref.kind()).resolve(ref.id() + ".json"));
+                documents.put(ref, toDocument(ref, raw));
+                walks.put(ref, raw.get("_meta").get("walk"));
+                index.add(new EntityHit(ref, e.get("title").asText(), e.get("subtitle").asText()));
+            }
         }
         if (Boolean.parseBoolean(context.setting("ticking", "true"))) {
             long ms = Long.parseLong(context.setting("tick-ms", "400"));
@@ -92,7 +100,7 @@ public final class DemoSourcePlugin implements SourcePlugin {
             if (d == null || !d.provenance().live()) {
                 return;
             }
-            EntityDocument next = new EntityDocument(ref, ticker.tick(ref.kind(), d.data()), new Provenance(
+            EntityDocument next = new EntityDocument(ref, ticker.tick(ref.kind(), d.data(), walks.get(ref)), new Provenance(
                     d.provenance().source(), d.provenance().generation() + 1, Instant.now(), true));
             documents.put(ref, next);
             for (Consumer<EntityDocument> l : subs) {
@@ -123,11 +131,8 @@ public final class DemoSourcePlugin implements SourcePlugin {
         }
     }
 
-    private static DataNode read(SourceContext context, String resource) throws IOException {
-        try (InputStream in = DemoSourcePlugin.class.getClassLoader().getResourceAsStream(resource)) {
-            if (in == null) {
-                throw new IOException("missing demo resource " + resource);
-            }
+    private static DataNode read(SourceContext context, java.nio.file.Path file) throws IOException {
+        try (InputStream in = java.nio.file.Files.newInputStream(file)) {
             return context.parseJson(in);
         }
     }

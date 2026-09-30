@@ -64,7 +64,7 @@ Save the file under `sutras/`. The server reloads it within a quarter of a secon
 and `/api/v1/sutras/problems` lists each problem with its line and column.
 
 !!! warning "Test in Studio first"
-    [Sutra Studio](sutra-studio.md) previews an unsaved Sutra against any entity. It is the quickest way to
+    [Sutra Studio](../../../console/web/guides/sutra-studio.md) previews an unsaved Sutra against any entity. It is the quickest way to
     see a mistake.
 
 Every key and option is in the [Rachana reference](../../../docs/RACHANA_REFERENCE.md).

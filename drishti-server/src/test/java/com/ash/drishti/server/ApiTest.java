@@ -29,7 +29,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-@SpringBootTest(properties = {"drishti.rachana.dirs=../sutras", "drishti.rachana.hot-reload=false"})
+@SpringBootTest(properties = {"drishti.rachana.hot-reload=false"})
 @AutoConfigureMockMvc
 class ApiTest {
 

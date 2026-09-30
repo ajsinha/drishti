@@ -49,10 +49,12 @@ public class CatalogController {
     private final Entitlements entitlements;
     private final java.util.Optional<org.springframework.boot.info.BuildProperties> build;
     private final com.ash.drishti.server.security.SecurityProperties security;
+    private final com.ash.drishti.packs.PackRegistry packRegistry;
 
     public CatalogController(SourceRouter router, SourceRegistry sources, SutraRegistry sutras, Entitlements entitlements,
             org.springframework.beans.factory.ObjectProvider<org.springframework.boot.info.BuildProperties> build,
-            com.ash.drishti.server.security.SecurityProperties security) {
+            com.ash.drishti.server.security.SecurityProperties security, com.ash.drishti.packs.PackRegistry packRegistry) {
+        this.packRegistry = packRegistry;
         this.entitlements = entitlements;
         this.build = java.util.Optional.ofNullable(build.getIfAvailable());
         this.security = security;
@@ -85,8 +87,23 @@ public class CatalogController {
         m.put("sutras", sutras.all().stream().map(s -> s.name() + " v" + s.version()).sorted().toList());
         m.put("sources", sources().sources());
         m.put("securityEnabled", security.enabled());
+        m.put("packs", packs());
         m.put("copyright", "Copyright (c) 2026 Ashutosh Sinha. All rights reserved. Proprietary and confidential.");
         return m;
+    }
+
+    /** The enabled domain packs, with what the console needs from each (examples, workspaces, help). */
+    @GetMapping("/packs")
+    public List<Map<String, Object>> packs() {
+        return packRegistry.packs().stream().map(p -> {
+            Map<String, Object> m = new java.util.LinkedHashMap<>();
+            m.put("name", p.name());
+            m.put("version", p.version());
+            m.put("title", p.title());
+            m.put("description", p.description());
+            m.put("console", p.manifest().getOrDefault("console", Map.of()));
+            return m;
+        }).toList();
     }
 
     @GetMapping("/sources")

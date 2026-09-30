@@ -33,7 +33,7 @@ public class RachanaConfiguration {
 
     @Bean
     public Formats formats(RachanaProperties props) {
-        return Formats.load(props.formatsFile());
+        return Formats.load(props.formatsFile(), props.packFormatsFiles());
     }
 
     @Bean(destroyMethod = "close")

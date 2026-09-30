@@ -71,7 +71,7 @@ Ten waves (plus W11, user management, after 1.0.0). Each holds a small set of cl
 ## W5 — Rachana-EL & reference Sutras
 - Rachana-EL: lexer → parser → AST → compiled closures (paths, `[?x]` filters, ternary, `link()`, `size()`, arithmetic, concat); EBNF in the reference doc.
 - `Formats` (bundled `formats.yaml`, site override file) and `Tones`; `SutraMatcher` (the Sutra `match` block is the classifier).
-- `sutras/rates/irs-vanilla.v3.yaml`, `sutras/fx/fx-swap.v2.yaml`, `sutras/commodities/listed-future.v1.yaml`, `sutras/credit/netting-set.v1.yaml`.
+- `packs/finance/sutras/rates/irs-vanilla.v3.yaml`, `packs/finance/sutras/fx/fx-swap.v2.yaml`, `packs/finance/sutras/commodities/listed-future.v1.yaml`, `packs/finance/sutras/credit/netting-set.v1.yaml`.
 - Tests: jqwik property tests for EL; golden `Layout` JSON per reference Sutra.
 
 ## W6 — Inference engine
@@ -127,6 +127,7 @@ Ten waves (plus W11, user management, after 1.0.0). Each holds a small set of cl
 | W12 ✅ | Help centre and About | `/help` guides and tutorials with search; per-panel help and F1; `/about` with version, Sutras, sources, licence |
 | W12b ✅ | Competitive landscape and mobile | `/about/competitive`; every page fits 390 px; add to home screen |
 | W13 ✅ | Workspaces | several views on one screen with linked selection, saved per user |
+| W13b ✅ | Domain packs | a neutral core; finance and logistics packs; `DRISHTI_PACKS` |
 | W14 | Monitors and alerts | watchlists with live columns; threshold alerts with notifications |
 | W15 | F8 Impact | what depends on an entity (reverse graph), navigable |
 | W16 | History | view an entity as of a generation or time; diff between generations |

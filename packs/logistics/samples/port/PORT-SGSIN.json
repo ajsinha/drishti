@@ -1,0 +1,17 @@
+{
+ "portId": "PORT-SGSIN",
+ "name": "Singapore",
+ "country": "SG",
+ "congestionIndex": 1.6,
+ "berthWaitHours": 5,
+ "vesselsAtAnchor": 10,
+ "_meta": {
+  "source": "port-ops",
+  "generation": 512,
+  "live": true,
+  "walk": {
+   "berthWaitHours": 1,
+   "congestionIndex": 0.1
+  }
+ }
+}

@@ -23,14 +23,18 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
 from core.backend import BackendError
-from routes.common import ident, render
+from routes.common import ident, packs, render
 
 router = APIRouter(prefix="/w", include_in_schema=False)
 TEMPLATES = Path(__file__).resolve().parent.parent / "config" / "workspaces.yaml"
 
 
-def _templates() -> dict:
-    return yaml.safe_load(TEMPLATES.read_text(encoding="utf-8")).get("templates", {})
+async def _templates(request: Request) -> dict:
+    core = yaml.safe_load(TEMPLATES.read_text(encoding="utf-8")).get("templates", {}) or {}
+    for p in await packs(request):
+        for name, t in p["workspaces"].items():
+            core.setdefault(name, {**t, "pack": p["title"]})
+    return core
 
 
 def _problem(e: BackendError) -> JSONResponse:
@@ -43,21 +47,21 @@ async def index(request: Request):
         mine = await request.app.state.backend.workspaces(ident(request))
     except BackendError:
         mine = []
-    return render(request, "workspace/index.html", mine=mine, templates=_templates(), screen="workspace")
+    return render(request, "workspace/index.html", mine=mine, templates=await _templates(request), screen="workspace")
 
 
 @router.get("/{name}")
 async def workspace(request: Request, name: str, template: str = ""):
     ws, saved = None, False
     if template:
-        ws = _templates().get(template)
+        ws = (await _templates(request)).get(template)
     else:
         try:
             ws, saved = await request.app.state.backend.workspace(name, ident(request)), True
         except BackendError:
-            ws = _templates().get(name)
+            ws = (await _templates(request)).get(name)
     if ws is None:
-        return render(request, "workspace/index.html", status_code=404, mine=[], templates=_templates(), missing=name,
+        return render(request, "workspace/index.html", status_code=404, mine=[], templates=await _templates(request), missing=name,
                       screen="workspace")
     return render(request, "workspace/workspace.html", name=name, ws=ws, saved=saved, screen="workspace")
 

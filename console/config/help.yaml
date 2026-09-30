@@ -20,7 +20,6 @@ categories:
     icon: flag
     blurb: Open your first view, learn the command line and the keys, and read what a view is telling you.
     guides:
-      - { slug: getting-started, title: "Tutorial 1 · Your first view", kind: tutorial, icon: play-circle, summary: "Type TRD IRS-48213 <GO>, follow the links, watch it tick, read the raw JSON." }
       - { slug: workspaces, title: Workspaces, icon: grid-1x2, summary: "Several live views on one screen, panes that follow each other, saved per user." }
       - { slug: using-the-terminal, doc: USER_GUIDE.md, title: Using the terminal, icon: terminal, summary: "Commands, type-ahead, every key, and how to read the strip, panels, links and provenance." }
   - id: layouts
@@ -29,7 +28,6 @@ categories:
     blurb: How screens are described instead of coded. Rachana is the grammar; each Sutra is one layout written in it.
     guides:
       - { slug: panel-kinds, title: The twelve panel kinds, icon: grid-1x2, summary: "What each panel kind shows, when to use it, and the Sutra that produces it." }
-      - { slug: write-your-first-sutra, title: "Tutorial 2 · Write your first Sutra", kind: tutorial, icon: pencil-square, summary: "Lay out a trade with a strip, a table and a curve, in a dozen lines of YAML." }
       - { slug: sutra-studio, title: "Tutorial 3 · Sutra Studio", kind: tutorial, icon: stars, summary: "Start from inference, edit with live preview, fix problems by line, and save." }
       - { slug: rachana-reference, doc: RACHANA_REFERENCE.md, title: Rachana reference, icon: book, summary: "Every key, panel option, format, tone, Rachana-EL expression and problem code." }
       - { slug: inference, doc: INFERENCE.md, title: Inference, icon: diagram-3, summary: "The rules that lay out data with no Sutra, how they are scored, and how they fill a Sutra's gaps." }
@@ -59,6 +57,7 @@ categories:
     icon: code-square
     blurb: The API, the design, and why it is the way it is.
     guides:
+      - { slug: packs, doc: PACKS.md, title: Domain packs, icon: box-seam, summary: "How industries plug in: what a pack contains, enabling packs, and writing your own." }
       - { slug: api, doc: API_GUIDE.md, title: API guide, icon: braces-asterisk, summary: "REST endpoints, the ViewModel contract and error codes." }
       - { slug: architecture, doc: ARCHITECTURE.md, title: Architecture, icon: diagram-2, summary: "The pipeline, grammar, inference, live updates, modules and UX." }
       - { slug: decisions, doc: adr/README.md, title: Decision records, icon: signpost-split, summary: "The architecture decisions, each with its context and consequences." }
@@ -73,11 +72,11 @@ categories:
       - { slug: notices, doc: ../THIRD-PARTY-NOTICES.md, title: Third-party notices, icon: file-earmark-text, summary: "Components and their licences." }
 # F1 opens the guide for the current screen.
 contextual:
-  landing: getting-started
-  terminal: getting-started
+  landing: using-the-terminal
+  terminal: using-the-terminal
   view: using-the-terminal
   studio: sutra-studio
   admin: user-management
   account: user-management
-  help: getting-started
+  help: using-the-terminal
   workspace: workspaces

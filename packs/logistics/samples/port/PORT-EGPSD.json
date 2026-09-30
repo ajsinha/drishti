@@ -1,0 +1,17 @@
+{
+ "portId": "PORT-EGPSD",
+ "name": "Port Said",
+ "country": "EG",
+ "congestionIndex": 3.4,
+ "berthWaitHours": 14,
+ "vesselsAtAnchor": 28,
+ "_meta": {
+  "source": "port-ops",
+  "generation": 512,
+  "live": true,
+  "walk": {
+   "berthWaitHours": 1,
+   "congestionIndex": 0.1
+  }
+ }
+}

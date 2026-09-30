@@ -25,7 +25,8 @@
     <kbd>↑</kbd>/<kbd>↓</kbd> choose, <kbd>Tab</kbd> completes, <kbd>Enter</kbd> opens, <kbd>/</kbd> focuses the command line.</p>
   {% if error %}<p class="pnl-err" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ error }}</p>{% endif %}
   <ul class="thome-list">
-    {% for cmd, what in examples %}<li><a href="/go?q={{ cmd | urlencode }}"><span class="mono cmdtxt">{{ cmd }} &lt;GO&gt;</span><span>{{ what }}</span></a></li>{% endfor %}
+    {% for cmd, what, pack in examples %}<li><a href="/go?q={{ cmd | urlencode }}"><span class="mono cmdtxt">{{ cmd }} &lt;GO&gt;</span><span>{{ what }} <span class="badge-kind">{{ pack }}</span></span></a></li>
+    {% else %}<li class="text-muted-d">No domain pack is enabled, so there are no example commands. Type an identifier, or see Help → Domain packs.</li>{% endfor %}
   </ul>
 </div>
 {% endblock %}

@@ -35,7 +35,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 
 /** A real server on a random port with a fast-ticking demo source; the SSE stream is read over HTTP. */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
-        "drishti.rachana.dirs=../sutras", "drishti.rachana.hot-reload=false",
+        "drishti.rachana.hot-reload=false",
         "drishti.sources.plugins.demo.settings.tick-ms=40", "drishti.live.frame=20ms"})
 class LiveTest {
 

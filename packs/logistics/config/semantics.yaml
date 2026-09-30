@@ -1,0 +1,24 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Logistics pack semantic hints, tried before the core roles.
+roles:
+  - { role: delay,       pattern: "delay|late", fmt: hours0, tone: sign, weight: 88 }
+  - { role: weight,      pattern: "weight|kg$", fmt: amount0, weight: 72 }
+  - { role: temperature, pattern: "celsius|temp|c$", fmt: temp1, weight: 75 }
+  - { role: speed,       pattern: "knots", fmt: knots1, weight: 60 }
+  - { role: capacity,    pattern: "teu", fmt: amount0, weight: 58 }
+  - { role: date,        pattern: "eta|departed|arrived", fmt: date, weight: 62, dateOnly: true }
+  - { role: label,       pattern: "incoterm|commodity|carrier|flag|mode", weight: 64 }
+idFields: ["shipmentId", "containerId", "vesselId", "portId"]

@@ -49,7 +49,7 @@ class Guide:
 class Library:
     """Loads the catalogue once; renders and searches guides on demand. Thread-safe for reads."""
 
-    def __init__(self, console_dir: Path, catalogue: Path, docs_dir: Path):
+    def __init__(self, console_dir: Path, catalogue: Path, docs_dir: Path, packs: list | None = None):
         self.docs_dir = docs_dir
         data = yaml.safe_load(catalogue.read_text(encoding="utf-8"))
         self.categories = []
@@ -66,8 +66,22 @@ class Library:
                     items.append(guide)
             self.categories.append({"id": cat["id"], "name": cat["name"], "icon": cat.get("icon", "book"),
                                     "blurb": cat.get("blurb", ""), "guides": items})
+        cats = {c["id"]: c for c in self.categories}
+        self.contextual = dict(data.get("contextual", {}))
+        for pack in packs or []:
+            for g in pack.get("guides", []):
+                if not g["path"].exists() or g["slug"] in self.guides:
+                    continue
+                cat = cats.get(g.get("category")) or cats.get("start")
+                guide = Guide(g["slug"], g["title"], g.get("summary", ""), g.get("icon", "journal-text"),
+                              g.get("kind", "guide"), cat["id"], g["path"])
+                self.guides[guide.slug] = guide
+                if g["slug"] == "getting-started":
+                    cat["guides"].insert(0, guide)
+                else:
+                    cat["guides"].append(guide)
+            self.contextual.update({k: v for k, v in pack.get("contextual", {}).items() if v in self.guides})
         self.by_file = {g.path.resolve(): g.slug for g in self.guides.values()}
-        self.contextual = data.get("contextual", {})
         self._cache: dict[str, tuple[float, dict]] = {}
 
     def render(self, slug: str) -> dict:
