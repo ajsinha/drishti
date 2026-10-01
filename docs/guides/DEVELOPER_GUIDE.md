@@ -212,7 +212,7 @@ tests on a machine with Docker before you merge a schema change ([§5.6](#56-add
 
 ```bash
 uv venv console/.venv
-uv pip install --python console/.venv/bin/python -r console/requirements.txt
+uv pip install --python console/.venv/bin/python -r console/requirements-test.txt   # requirements.txt, plus numpy and scipy for the quant tests
 console/.venv/bin/python console/run_drishti_web.py
 ```
 
