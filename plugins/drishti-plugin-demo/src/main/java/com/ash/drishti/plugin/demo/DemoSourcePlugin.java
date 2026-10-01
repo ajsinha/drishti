@@ -73,12 +73,16 @@ public final class DemoSourcePlugin implements SourcePlugin {
             if (dir.isBlank()) {
                 continue;
             }
-            java.nio.file.Path root = java.nio.file.Path.of(dir.trim());
+            java.nio.file.Path root = java.nio.file.Path.of(dir.trim()).toAbsolutePath().normalize();
             DataNode catalog = read(context, root.resolve("catalog.json"));
             for (int i = 0; i < catalog.size(); i++) {
                 DataNode e = catalog.get(i);
                 EntityRef ref = EntityRef.of(e.get("kind").asText(), e.get("id").asText());
-                DataNode raw = read(context, root.resolve(ref.kind()).resolve(ref.id() + ".json"));
+                java.nio.file.Path file = root.resolve(ref.kind()).resolve(ref.id() + ".json").normalize();
+                if (!file.startsWith(root)) {
+                    continue;                                  // a catalogue entry may not point outside its pack's samples
+                }
+                DataNode raw = read(context, file);
                 documents.put(ref, toDocument(ref, raw));
                 walks.put(ref, raw.get("_meta").get("walk"));
                 index.add(new EntityHit(ref, e.get("title").asText(), e.get("subtitle").asText()));
@@ -109,8 +113,13 @@ public final class DemoSourcePlugin implements SourcePlugin {
             if (d == null || !d.provenance().live()) {
                 return;
             }
-            EntityDocument next = new EntityDocument(ref, ticker.tick(ref.kind(), d.data(), walks.get(ref)), new Provenance(
-                    d.provenance().source(), d.provenance().generation() + 1, Instant.now(), true));
+            EntityDocument next;
+            try {
+                next = new EntityDocument(ref, ticker.tick(ref.kind(), d.data(), walks.get(ref)), new Provenance(
+                        d.provenance().source(), d.provenance().generation() + 1, Instant.now(), true));
+            } catch (RuntimeException e) {
+                return;                                        // one sample that cannot tick must not stop the ticker for every other
+            }
             documents.put(ref, next);
             for (Consumer<EntityDocument> l : subs) {
                 try {
@@ -174,7 +183,7 @@ public final class DemoSourcePlugin implements SourcePlugin {
     public List<EntityRef> reverse(EntityRef target, String kind) {
         List<EntityRef> out = new ArrayList<>();
         documents.forEach((ref, doc) -> {
-            if (ref.kind().equals(kind) && references(doc.data(), target.id())) {
+            if (ref.kind().equals(kind) && !ref.equals(target) && references(doc.data(), target.id())) {
                 out.add(ref);
             }
         });
@@ -182,18 +191,22 @@ public final class DemoSourcePlugin implements SourcePlugin {
         return out;
     }
 
+    /** True when {@code id} is a value anywhere in the document (a trade's {@code counterparty.id} as well as its {@code nettingSet}). */
     private static boolean references(DataNode node, String id) {
+        if (node instanceof DataNode.Val val) {
+            return id.equals(val.asText());
+        }
         if (node instanceof DataNode.Obj o) {
             for (DataNode v : o.fields().values()) {
-                if (v instanceof DataNode.Val val && id.equals(val.asText())) {
+                if (references(v, id)) {
                     return true;
                 }
-                if (v instanceof DataNode.Arr arr) {
-                    for (DataNode e : arr.elements()) {
-                        if (e instanceof DataNode.Val val && id.equals(val.asText())) {
-                            return true;
-                        }
-                    }
+            }
+        }
+        if (node instanceof DataNode.Arr arr) {
+            for (DataNode e : arr.elements()) {
+                if (references(e, id)) {
+                    return true;
                 }
             }
         }

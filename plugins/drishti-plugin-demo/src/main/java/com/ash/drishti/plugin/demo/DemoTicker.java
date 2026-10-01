@@ -46,7 +46,9 @@ final class DemoTicker {
                 if (m.get(field) instanceof Number n) {
                     double sd = step.asDouble();
                     double v = n.doubleValue() + gauss(sd);
-                    m.put(field, sd >= 1 ? (Object) Math.round(v) : (Object) round(v, 2));
+                    // keep the step's precision: an FX spot walking by 0.0005 must not round back to two decimals and freeze
+                    int places = sd <= 0 ? 2 : Math.max(2, (int) Math.ceil(-Math.log10(sd)) + 2);
+                    m.put(field, sd >= 1 ? (Object) Math.round(v) : (Object) round(v, places));
                 }
             });
             return DataNode.of(m);

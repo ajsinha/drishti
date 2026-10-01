@@ -107,6 +107,10 @@ public final class FeedSourcePlugin implements SourcePlugin {
                 bodies.add(get(url));
             }
             List<Feed.Series> parsed = feed.parse(bodies, context.settings());
+            if (parsed.isEmpty()) {                            // an answer with no rows: keep serving the last good data
+                health = series.isEmpty() ? "DOWN: the feed returned no data" : "DOWN: the feed returned no data (serving the last data)";
+                return;
+            }
             List<EntityHit> hits = new ArrayList<>();
             for (Feed.Series s : parsed) {
                 EntityRef ref = EntityRef.of(s.kind(), s.id());
@@ -115,10 +119,8 @@ public final class FeedSourcePlugin implements SourcePlugin {
             }
             index.replaceAll(hits);
             fetchedAt = Instant.now();
-            health = parsed.isEmpty() ? "DOWN: the feed returned no data" : "UP";
-            if (!parsed.isEmpty()) {
-                lastUpdate = java.time.Instant.now();
-            }
+            health = "UP";
+            lastUpdate = java.time.Instant.now();
         } catch (Exception e) {
             health = "DOWN: " + e.getClass().getSimpleName() + ": " + e.getMessage();
         }

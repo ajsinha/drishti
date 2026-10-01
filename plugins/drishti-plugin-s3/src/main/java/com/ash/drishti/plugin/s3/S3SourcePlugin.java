@@ -81,6 +81,8 @@ public final class S3SourcePlugin implements SourcePlugin {
     private volatile List<LocalDate> dates = List.of();            // dated folders, newest first
     private volatile Set<String> kinds = Set.of();
     private volatile String lastError;
+    /** Why the last listing failed (a successful read does not clear it: only the next good listing does). */
+    private volatile String listingError;
     private Cache<String, Optional<EntityDocument>> cache;
 
     @Override
@@ -125,7 +127,11 @@ public final class S3SourcePlugin implements SourcePlugin {
                 for (CommonPrefix cp : page.commonPrefixes()) {
                     String name = cp.prefix().substring(prefix.length()).replace("/", "");
                     if (DATE.matcher(name).matches()) {
-                        found.add(LocalDate.parse(name));
+                        try {
+                            found.add(LocalDate.parse(name));
+                        } catch (java.time.DateTimeException e) {
+                            // a folder named like a date that is not one (2026-13-01): ignored, not fatal to the listing
+                        }
                     }
                 }
             }
@@ -148,9 +154,9 @@ public final class S3SourcePlugin implements SourcePlugin {
             dates = List.copyOf(found);
             kinds = Set.copyOf(ks);
             index.replaceAll(new ArrayList<>(hits.values()));
-            lastError = null;
+            listingError = null;
         } catch (RuntimeException e) {
-            lastError = e.getClass().getSimpleName() + ": " + e.getMessage();
+            listingError = e.getClass().getSimpleName() + ": " + e.getMessage();
         }
     }
 
@@ -218,7 +224,7 @@ public final class S3SourcePlugin implements SourcePlugin {
 
     @Override
     public String health() {
-        String e = lastError;
+        String e = listingError != null ? listingError : lastError;
         return e == null ? "UP" : "DOWN: " + e + " (retrying)";
     }
 
