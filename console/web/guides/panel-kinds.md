@@ -144,6 +144,17 @@ Inside `columns`, `@` is the current row: `@.mtm` is the row's `mtm`.
 | `limit`, `moreLabel` | Show only the first N rows, and a line saying how many more there are. |
 | `totalLabel` | The text in the total row (default *Total*). Columns with `total: true` are summed. |
 | `link` | `link: true` on a column makes each cell open the entity it names. |
+| `pivot` | `true`, or `{ fields, rows, columns, values, filters, heat, chart }`: a **Table \| Pivot** switch over every row of the table, where readers drag fields into rows, columns, values and filters ([the Pivot tab](pivot-tab)). Without it, no switch. |
+
+```yaml
+# a table with a Pivot tab: notional by product and maturity bucket to start with
+  pivot:
+    fields: [product, currency, maturityBucket, notional, mtm, tradeId]   # row paths; they need not be columns
+    rows: [product]
+    columns: [maturityBucket]
+    values: [{ field: notional, agg: sum }]
+    filters: [currency]
+```
 
 ## tabs
 
@@ -304,6 +315,7 @@ settlements with today's row.
 | `columns` | As for `table`. |
 | `highlight` | A condition evaluated per row. |
 | `totalLabel` | The total row's text. |
+| `pivot` | As for `table`: a [Pivot tab](pivot-tab) over the ladder's rows (the banking cash-flow ladders open on PV by flow type and leg). |
 
 ## links
 

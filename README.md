@@ -40,6 +40,9 @@ live trades over 5m in BOOK-RATES-3       →  the same in plain words: Drishti 
 - **Views** of any entity: a header strip, panels (tables, curves, ladders, surfaces, key-value, links), function
   keys, linked entities with badges, and the raw document (F9). Every table sorts, filters, pages and walks with
   the keyboard; id columns link to their entities.
+- **The Pivot tab**, where a Sutra or pack offers it: an Excel-style pivot of a table or of a search's results (drag
+  fields, or use the keys, into rows, columns, values and filters), with totals, drill-down, a chart, CSV and Excel;
+  a search pivots every match of the day on the server, from its columns. Saved per user; authors promote it.
 - **Structured search** (`TRD where notional >= 250m and assetClass = 'Rates' order by mtm desc limit 20`), or
   **plain words** (`usd trades maturing before 2028 with negative mtm`): a deterministic parser shows the search
   it makes, part by part, before anything runs. No AI service is involved.

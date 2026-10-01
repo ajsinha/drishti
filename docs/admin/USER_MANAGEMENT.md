@@ -248,6 +248,23 @@ hide a view's panels for themselves. What an administrator needs to know:
 - **Switched off for everyone:** `DRISHTI_LAYOUTS_ENABLED=false` (server and console); saved layouts are then not
   applied either.
 
+## Pivots
+
+The Pivot tab ([USER_GUIDE.md](../guides/USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way)), offered where a Sutra
+or a pack opts in, has **no power of its own**:
+
+- **Who:** anyone who may open the kind may pivot its tables and search results and save their arrangement, as they
+  may sort or filter a table; it changes nothing for anyone else. The pivot reads only what the view or search would
+  show them: a panel's rows as the view has them, a search's matches masked exactly as in a search (a masked field
+  groups under `•••` and is never added up).
+- **What is kept:** each user's arrangement per Sutra and panel, and per kind for searches (`drishti_preference`,
+  namespace `pivots`), deleted with the user.
+- **Promoting a pivot** to a Sutra needs `author` (and `drishti.rachana.studio-save`): a Sutra proposal like any Studio
+  save, reviewed by an approver and audited as `sutra-proposed`.
+- **Reads** are in the access log: a panel's rows for its pivot as a `view`, a search pivot and its drill-downs as a
+  `search`.
+- **Switched off for everyone:** `DRISHTI_PIVOT_ENABLED=false` (server).
+
 ## Notes and shared workspaces
 
 - **Notes** (see the User guide): anyone who may open a kind reads and adds notes on its entities; only the author

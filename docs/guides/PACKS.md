@@ -25,7 +25,7 @@ This guide explains, with examples:
 2. [How to load packs](#turning-packs-on), [switch them off and on for everyone](#switching-packs-off-and-on-admin--packs)
    and [who sees which pack](#who-sees-which-pack).
 3. [Every key of `pack.yaml`](#packyaml-key-by-key), annotated, using a real pack, including
-   [`columns:`](#columns-the-key-fields-of-a-pick-list) for pick lists.
+   [`columns:`](#columns-the-key-fields-of-a-pick-list) for pick lists and [`pivot:`](#pivot-a-pivot-tab-on-search-results) for a Pivot tab on them.
 4. [How inheritance works](#inheritance), with a worked example.
 5. [How to write your own pack](#writing-a-pack-by-hand-step-by-step), step by step.
 6. [How the shipped packs are generated](#how-the-shipped-packs-are-generated), and why you never edit their files by hand.
@@ -309,6 +309,7 @@ Below is the complete `packs/logistics/pack.yaml`, annotated. Then the keys only
 | `graph.badges` | server | `agent: "$.openTickets + ' open'"` | Text shown beside a link, read from the target | below |
 | `graph.impact` | server | `follow: [assignee]`, `measures: { ticket: "$.ageHours" }` | What F8 rolls up and sums | below |
 | `columns` | server | `ticket: [subject, status, priority]` | Key fields in pick lists and searches | [columns](#columns-the-key-fields-of-a-pick-list) |
+| `pivot` | server | `trade: { rows: [book], columns: [currency] }` | A Pivot tab on the kind's search results and pick lists | [pivot](#pivot-a-pivot-tab-on-search-results) |
 | `roles` | server | `support: { kinds: [ticket, agent] }` | Roles this pack adds | [Roles](#roles) |
 | `python` | server | `python: { enabled: true }` | Calc (Python in the browser, `Alt+C`) on this pack's kinds, and starter snippets (also `python/*.py`) | [Calc](#calc-python-snippets) |
 | `connectors` | server | `helpdesk-store: { plugin: file, … }` | Named data sources | [below](#keys-for-packs-that-inherit-and-read-real-data) |
@@ -464,6 +465,50 @@ curl -s -G http://localhost:18480/api/v1/search --data-urlencode 'q=BOOK limit 1
 
 You should see `['$.name', '$.deskName', '$.tradeCount', '$.mtm', '$.dv01']`.
 
+### `pivot`: a Pivot tab on search results
+
+A kind's search results and pick lists can offer the same **Table | Pivot** switch a Sutra gives a table
+([USER_GUIDE.md](USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way)). It is offered **only** for the kinds a pack names
+under `pivot:`, beside `columns:`; every other kind's results stay a plain list. From `packs/trading/pack.yaml`
+(generated):
+
+```yaml
+pivot:                          # KIND: true, or { fields, rows, columns, values, filters, heat, chart }
+  trade:
+    fields: [book, desk, currency, assetClass, productType, direction, status, counterparty.name, nettingSet,
+             sourceSystem, maturityDate, notional, mtm, pnl1d, risk.dv01]
+    rows: [book]
+    columns: [currency]
+    values: [{ field: mtm, agg: sum }]
+    filters: [assetClass, status]
+```
+
+The value is the same as a Sutra's [`pivot` option](RACHANA_REFERENCE.md#pivot-a-pivot-tab-on-a-table-or-ladder),
+with one difference: fields are **document paths** (`counterparty.name`, `risk.dv01`; `$.` may be written), never
+expressions (`bind` is refused). `pivot: { trade: true }` offers the kind's `columns:` as the fields. `false` (or no
+entry) offers nothing.
+
+Unlike a panel's pivot, which the browser computes from one document's rows, a search's pivot is computed **on the
+server** over every entity the search matches on the business date (not only the page shown), from the day's
+**columns**: the fields its store keeps beside each document ([Large kinds](#large-kinds-the-lake-layout)). So choose
+fields the connector's `layout.<kind>.columns` lists; the trading pack's are exactly its trade table's columns. A
+field that no source keeps as a column is marked *doc* in the field list; using it, the server refuses with the reason
+and the user may ask for a **document read** instead (at most `drishti.pivot.document-scan`, 20,000 documents; marked
+partial beyond). The sample data (the demo plugin) keeps no columns, so on samples every search pivot is a document
+read.
+
+Fields the user's role may not see are masked exactly as in a search: grouped under `•••`, never added up.
+
+The server keeps each kind's declaration as `drishti.search.pivot.<kind>`: `true`, or the mapping as JSON. A site may
+set it directly in its configuration, as `true` or a JSON string (`drishti.search.pivot.trade: '{"rows": ["book"]}'`). A
+declaration the server cannot read is logged (*no Pivot tab for trade: …*) and that kind offers no Pivot tab; a value
+that is neither `true`, `false` nor a mapping stops the pack from loading. In a generated pack, set it in the
+generator: `PIVOTS` in `tools/packgen/banking/make_packs.py`.
+
+A Sutra's tables opt in on their own (`pivot:` on the panel). In the banking generators that is `pivot=` on a `Panel`
+in `tools/packgen/banking/risk_data.py` (netting sets, books, clearing accounts, desks, collateral) and
+`SCHEDULE_PIVOTS` in `make_sutras.py` (a trade's cash flows, fixings and amortisation); rerun `make_sutras.py`.
+
 ### Keys for packs that inherit and read real data
 
 From `packs/counterparty-risk/pack.yaml` (abridged; the file is generated by `tools/packgen/banking/make_packs.py`):
@@ -521,6 +566,7 @@ The server turns the manifest into ordinary settings. Knowing this helps when yo
 | `connectors.x` | `drishti.sources.connectors.x.plugin`, `.enabled`, `.kinds[i]`, `.settings.*` |
 | `routes.kind` | `drishti.sources.routes.<kind>` |
 | `columns.trade` | `drishti.search.columns.trade[i]` |
+| `pivot.trade` | `drishti.search.pivot.trade` (`true`, or the mapping as JSON) |
 | `sutras`, `formats`, `semantics` | added to `drishti.rachana.pack-dirs`, `drishti.rachana.pack-formats-files`, `drishti.inference.pack-semantics-files` |
 | `samples` | added to `drishti.sources.plugins.demo.settings.dirs` |
 
@@ -1620,7 +1666,7 @@ help cards from one description. Each generated file says so in a comment near t
 
 | Packs | Generator |
 |---|---|
-| `banking-core`, `market-data`, `trading`, `market-risk`, `counterparty-risk` | `tools/packgen/banking/`: `make_packs.py` the manifests and the Calc snippets (`python/*.py`, from `calc_snippets.py`), `make_sutras.py` the 170 Sutras, `make_docs.py` the guides, `make_data.py` the documents and the lake |
+| `banking-core`, `market-data`, `trading`, `market-risk`, `counterparty-risk` | `tools/packgen/banking/`: `make_packs.py` the manifests and the Calc snippets (`python/*.py`, from `calc_snippets.py`), `make_sutras.py` the 171 Sutras, `make_docs.py` the guides, `make_data.py` the documents and the lake |
 | `liquidity-risk`, `climate-risk`, `operational-risk`, `retail-banking`, `genomics`, `politics-society`, `economics` | `tools/packgen/<area>/make.py` (`liquidity`, `climate`, `oprisk`, `retail`, `genomics`, `politics`, `economics`), all on the common builder `tools/packgen/common/packbuild.py` |
 | `finance`, `logistics` | hand-written; their samples come from `packs/<name>/tools/` |
 
@@ -1640,7 +1686,7 @@ When everything is in step you should see:
 
 ```text
 5 pack manifests up to date
-170 Sutras up to date
+171 Sutras up to date
 retail-banking: 159 files up to date
 ```
 

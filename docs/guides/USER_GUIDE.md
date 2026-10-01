@@ -37,6 +37,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | [Tables: paging and the keyboard](#tables-sorting-filtering-paging-and-the-keyboard) | The pager, ▲ ▼, and the keys that walk a table |
 | [Reading a view](#reading-a-view) | Title, strip, panels, links, provenance |
 | [Layout mode](#layout-mode-arrange-a-view-your-way) | `Alt+L`: drag, resize and hide panels for yourself; promote your layout to the Sutra |
+| [The Pivot tab](#the-pivot-tab-slice-a-table-your-way) | Rows, columns, values and filters over a table or a search's results, by drag or by key; totals, drill-down, chart, export |
 | [Keyboard](#keyboard) | Every key in one table |
 | [Live updates](#live-updates), [Business dates](#business-dates-live-or-a-day-in-the-past), [Compare](#compare-what-changed) | Ticking values, past dates, what changed |
 | [Search by value](#search-by-value) | `where` searches, sorting and limits |
@@ -558,6 +559,152 @@ Write a note for the reviewer and press **Submit for review**. As with a save in
 goes live only when approved ([Reviews](#reviews-approving-a-sutra)). With review switched off on the server the button
 reads **Publish** and the new version is live at once.
 
+## The Pivot tab: slice a table your way
+
+Some tables can be turned into an **Excel-style pivot**: drag *Product* down the side, *Maturity bucket* across the
+top, *Notional* into the cells, and read the totals; click any number to see the trades behind it. Such a table has a
+**Table | Pivot** switch above it. Search results and pick lists of some kinds have one too.
+
+The switch is there **only where it was asked for**: a Sutra author adds `pivot:` to a table or ladder
+([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#pivot-a-pivot-tab-on-a-table-or-ladder)), or a pack adds it to a kind's
+search results ([PACKS.md](PACKS.md#pivot-a-pivot-tab-on-search-results)), and chooses which fields you may use and
+how it opens. Every other table stays a table. In the banking packs, for example: a netting set's and a clearing
+account's trades (notional by product and maturity bucket), a book's largest trades and a desk's trades (MTM by
+product, or by book, and currency), a desk's P&L (`DPNL`), collateral positions, a trade's cash flows (PV by flow type
+and leg), and trade searches (MTM by book and currency). In the finance pack: a netting set's member trades, a book's
+P&L and trade searches.
+
+![The Pivot tab on a netting set's member trades: currency and product down the side, asset class and maturity bucket across, notional summed](/static/img/guide/pivot-netting-set.png)
+
+### Opening it
+
+Click **Pivot** above the table (or `Tab` to the switch and press `→`; `←` goes back to **Table**). The first time,
+the console reads **every row** of the panel, not only the rows the table shows: a netting set table showing its first
+four trades pivots all of them. The pivot opens as the Sutra (or pack) arranged it, or as you saved it last.
+
+Under the switch: the **field list** and four **zones**, a toolbar, a status line (*42 rows · source records · 1 ms*)
+and the grid.
+
+### Fields and zones, with the mouse
+
+| Zone | What a field there does |
+|---|---|
+| **Rows** | Its values go down the side, one group per value; a second field nests inside the first |
+| **Columns** | Its values go across the top; a second field nests inside the first |
+| **Values** | The numbers in the cells. Each has two choices: **sum**, **count**, **avg**, **min**, **max** or **distinct** (how many different values), and **value**, **% of row**, **% of column** or **% of total** |
+| **Filters** | A chip reading *Currency: all*: click it for a pick list of the values (search box, **All**, **None**, tick what to keep) or, for numbers and dates, a **from** and **to**; **Apply** |
+
+Drag a field from the list into a zone (the zone lights up where it will land), drag a chip to another zone or to
+another place in its zone, or back to the field list to remove it. A field may be in Rows or Columns, not both, and a
+numeric field can be in Values more than once (sum of MTM and count of MTM). At most 4 fields in Rows, 4 in Columns
+and 6 values. Fields marked `#` are numbers.
+
+### Fields and zones, with the keyboard
+
+| Key | On | Does |
+|---|---|---|
+| `←` `→` (`Home`, `End`) | the Table / Pivot switch | Switch between the table and the pivot |
+| `Tab`, then the arrows | the fields | Move between chips |
+| `R` `C` `V` `F` | a chip | Put the field in Rows, Columns, Values or Filters |
+| `Delete` (or `Backspace`) | a chip in a zone | Take it out of the zone |
+| `Alt`+`↑` `↓` (or `←` `→`) | a chip in a zone | Move it earlier or later in its zone (outer or inner level) |
+| `Enter` or `Space` | a chip in the field list | Add it: a number to Values, anything else to Rows |
+| `Enter` | a value's chip | Go to its aggregation and show-as choices (`Esc` comes back) |
+| `Enter` | a filter's chip | Open its pick list (`Esc` closes it) |
+| arrows, `Home` `End`, `PgUp` `PgDn` | the grid | Move from cell to cell |
+| `Enter` or `Space` | a cell | Show the rows under it |
+| `Enter` or `Space` | a value's heading | Sort the rows by it: ascending, descending, then back to key order |
+| `Esc` | the rows under a cell, the promote panel | Close it |
+
+Every change is announced to screen readers (*Currency moved to Rows*, *Rows sorted by Sum of Notional, largest
+first*).
+
+### The grid
+
+- **Totals.** Each group has a subtotal row (*Total GBP*) and column; the last row and column are the grand totals. Untick
+  **Totals** to hide them. The totals cover every row, including groups beyond the grid's limits.
+- **Groups open and close.** ▾ beside a group closes it to its total (▸ opens it); **Collapse all** and **Expand all**.
+- **Sort.** Click a value's heading: within each group the rows are sorted by it, largest first or smallest first.
+- **Group order.** Groups come in natural order: numbers by value, and `0-1Y`, `1-2Y`, `2-5Y`, `5-10Y`, `10Y+`,
+  `BOOK-9` before `BOOK-10`; a missing value is *(blank)*, last.
+- **Heat.** Tick **Heat** to shade each cell by its value: one colour for a range of positive numbers, two (gains and
+  losses in the theme's colours) when the values have both signs. The number is always written; the shades keep the
+  text readable in every theme.
+- **Shares.** With **% of row**, **% of column** or **% of total**, a cell is its share of its row's total, its column's
+  total or the grand total (the grand total itself reads 100%).
+
+### Rows under a cell, the chart, export, print
+
+- **Drill down.** Click any number (totals too), or press `Enter` on it: a dialog lists the rows behind it (*Rows under
+  GBP · Equity barrier option*) with every field, ids as links that open the entity. `Esc` closes it.
+- **Chart.** Choose **Bar chart**, **Line chart** or **Heatmap** in the toolbar (and which value, when there are
+  several): a chart of the grid as it is now, in the theme's colours, redrawn when you change anything.
+- **CSV** and **Excel** download the grid as shown: one column per row field, then one per column group and value, the
+  subtotal and total rows labelled, numbers as numbers. The Excel file has a bold, frozen header row.
+- **Print** prints the pivot and its chart alone, in the print palette.
+
+### Save, reset, and what follows you
+
+**Save** keeps your arrangement (rows, columns, values, filters, heat, chart) on the server, for you: it belongs to the
+**Sutra and the panel**, so every netting set that Sutra lays out opens its Pivot tab your way, on any browser. A
+search's pivot is kept per kind (every trade search). **Reset** goes back to the arrangement the Sutra or pack chose
+and forgets yours. Nobody else's screen changes.
+
+Keeping a pivot needs no special power: you may arrange the pivot of anything you may open, as you may sort a table.
+When the Sutra changes, an arrangement that names a field it no longer offers is set aside, and the tab opens as the
+Sutra says.
+
+### Promote to Sutra
+
+If your role may author Sutras (and Studio saving is on), the toolbar has **Promote to Sutra…**. It saves your
+arrangement and opens a panel with the changes in words (*the pivot of 'trades' opens with rows currency, product (was
+product)*) and the diff of the **next version** of the Sutra: only that panel's `pivot:` changes, written as you
+arranged it; its fields and everything else in the file stay as written. Add a note and **Submit for review**: an
+approver reviews it as any Studio save ([Reviews](#reviews-approving-a-sutra)), and once approved everyone's Pivot tab
+opens that way (those who saved their own keep theirs). With review off the button reads **Publish**.
+
+### Search results: computed on the server
+
+On a search or pick list whose kind offers a Pivot tab (`TRD where mtm > 0`), the pivot is not limited to the 100
+results the page lists: the server aggregates **every entity the search matches** on the business date and sends only
+the cells. It reads the day's **columns**, the fields a large store keeps beside each document (a bank's trade table
+keeps `book`, `desk`, `currency`, `mtm` and a dozen more), so a whole book pivots without a document being read.
+
+- A field no source keeps as a column is marked **doc**. Using one, or searching a kind whose store keeps no columns
+  (the sample data), the server says so instead of guessing: *no source of trade keeps its fields as columns here. Ask
+  for a document read …*. **Read documents instead** computes from the documents themselves, at most 20,000 of them;
+  when there were more, the status line says *partial: the first 20000 documents*.
+- **Masked fields stay masked.** A field your role may not see (as in a search) groups under `•••` and is never added
+  up; the status line says *hidden from your role: Book*.
+- The rows under a cell come from the server a page at a time (**Previous**, **Next**).
+
+![The Pivot tab on TRD where mtm > 0: MTM by book and currency over the 379 matching trades, read from documents](/static/img/guide/pivot-search.png)
+
+### Worked example
+
+With the counterparty-risk pack, open `NSET NS-ALDERSHOT-LDN`:
+
+1. On *Member trades*, click **Pivot**. You see notional by product down the side and maturity buckets across
+   (`0-1Y` … `10Y+`), with totals: how much of the netting set's notional matures when.
+2. Drag **Currency** into Rows, before *Product*: each currency is a group, with a *Total* row.
+3. Drag **Asset class** into Columns: each asset class spans its maturity buckets, with its own total column.
+4. Set the value's second choice to **% of total**: each cell is its share of the netting set's notional.
+5. Drag **MTM (USD)** into Values: two numbers per cell.
+6. Click *Currency: all* in Filters, **None**, tick `USD`, **Apply**.
+7. Click the largest number: the trades behind it, with links. `Esc`.
+8. Choose **Bar chart**; then **Excel** to download the grid.
+9. **Save**, and open `NSET NS-ALDERSHOT-NY`: its Pivot tab opens the same way.
+
+The same keyboard-only: `Tab` to the switch, `→`; `Tab` to *Currency* in the field list, `R`; to *Asset class*, `C`;
+to *MTM (USD)*, `V`; to a cell, `Enter`.
+
+### Limits
+
+A panel's pivot reads at most 50,000 rows (*the first 50000 of N rows* when cut short); a pivot shows at most 2,000
+innermost row groups and 200 column groups (further ones are still in the totals, and the status line says *more row
+keys than shown*); a search's drill-down shows 50 rows a page. An administrator sets these (`drishti.pivot`,
+[CONFIGURATION.md](../admin/CONFIGURATION.md#drishtipivot--the-pivot-tab)) and can switch every Pivot tab off.
+
 ## Keyboard
 
 | Key | Does |
@@ -577,6 +724,7 @@ reads **Publish** and the new version is live at once.
 | `Alt+←` | Back |
 | `Alt+C` | Calc: Python on this view (where a pack offers it; `Option+C` on a Mac) |
 | `Alt+L` | Layout mode: arrange this view's panels for yourself (`Option+L` on a Mac); in layout mode, [its keys](#with-the-keyboard) |
+| `R` `C` `V` `F`, `Delete`, `Alt+↑` `↓` | On a field of a [Pivot tab](#the-pivot-tab-slice-a-table-your-way): move it to Rows, Columns, Values or Filters, remove it, reorder it ([all its keys](#fields-and-zones-with-the-keyboard)) |
 | `Ctrl+Enter` | In Calc: run the code (`Cmd+Enter` on a Mac) |
 | `Alt+1`…`Alt+4` | In a workspace: move to pane 1 to 4 |
 
@@ -821,6 +969,8 @@ without `where` opens a single match directly.
 - A mistake gives an error such as `DRS-4004 cannot read the condition: …` with the position.
 - **CSV** downloads the results. **Watch as a monitor** saves the first 50 results as a live monitor
   (see [Monitors](#monitors)).
+- Where the kind's pack offers it, a **Table | Pivot** switch turns the results into a pivot over **every** match of
+  the day, computed on the server ([The Pivot tab](#search-results-computed-on-the-server)).
 
 ## Export, print and share
 
@@ -830,6 +980,7 @@ The buttons in a view's title line, and the **↓** in each panel header.
 |---|---|---|
 | Panel as CSV | **↓** in a panel header | Tables and ladders as they are; key/value panels as field and value; charts as one column per series; surfaces as a grid; bars as label and value |
 | Search as CSV | **CSV** on the results page | One row per result |
+| Pivot as CSV or Excel | **CSV**, **Excel** in a [Pivot tab](#the-pivot-tab-slice-a-table-your-way) | The grid as shown: row fields, one column per column group and value, totals labelled; Excel with a bold frozen header |
 | Comparison as CSV | **CSV** on the Compare page | One row per change |
 | Document as JSON | **JSON** in the title line | The whole document, as your role may see it |
 | Print or PDF | **Print** | A clean light page without the top bar and buttons; choose *Save as PDF* in the print dialog |
@@ -1190,6 +1341,9 @@ every role with its kinds (or *every kind*), its powers, how many users hold it,
 | administer | use every admin page |
 | Calc | use Calc (`Alt+C`): Python in the browser on what the role opens ([PYTHON_CALC.md](PYTHON_CALC.md#9-roles-who-may-use-calc)) |
 | layouts | use [layout mode](#layout-mode-arrange-a-view-your-way) (`Alt+L`) and keep personal layouts. On for every role unless unticked; the built-in `viewer` role does not have it |
+
+There is no power for the [Pivot tab](#the-pivot-tab-slice-a-table-your-way): anyone who may open a kind may arrange and save its pivots, as they
+may sort a table; promoting one to a Sutra needs **author Sutras** (and goes through review).
 
 Roles marked **built-in** come from the server's configuration and from packs (`viewer`, `author`,
 `approver`, `admin`, and pack roles such as `trader`, `credit-risk` or `retail`). They are shown read-only.
