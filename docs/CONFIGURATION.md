@@ -537,7 +537,8 @@ The JDBC driver jar goes on the class path or in `plugin-dir`.
 |---|---|---|
 | `url`, `user`, `password` | empty | Connection. Keep the password in the environment. |
 | `pool-size` | `4` | Connections kept. A broken connection is reopened; the connector starts even if the database is down. |
-| `query.<kind>` | none | Query mode: SQL with one `?` for the id, or named `:id` and `:asOf` (the business date). The first row is the document: each column a field, or a column named `json` as the whole document; optional `generation` and `business_date` columns. |
+| `query.<kind>` | none | Query mode: SQL with one `?` for the id, or named `:id` and `:asOf` (the business date). The first row is the document: each column a field, or a column named `json` as the whole document; optional `generation` and `business_date` columns. A `json`/`jsonb` column becomes nested data. |
+| `json-columns` | none | Query mode: comma list of text columns that hold JSON (`legs, extras`), parsed into nested data like a `json`/`jsonb` column; a cell that is not JSON stays text. |
 | `table` | empty | Table mode: every kind of a domain in one PostgreSQL table of `(kind, id, business_date, doc jsonb)` rows, with search and reverse lookups. |
 | `mode.<kind>` | `snapshot` | Table mode: `snapshot` or `effective`. |
 | `kinds`, `kind-column`, `id-column`, `doc-column`, `date-column`, `lookback-days` | empty, `kind`, `id`, `doc`, `business_date`, `10` | Table mode column names and look-back. |

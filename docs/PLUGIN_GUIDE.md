@@ -530,6 +530,7 @@ drishti:
 | `source-name` | `jdbc` (a connector: its name) | provenance source |
 | `pool-size` | `4` | connections; each opened on first use and reopened when broken |
 | `query.<kind>` | — | the statement for `<kind>`: either one `?` for the id, or named `:id` / `:asOf` (each may appear several times) |
+| `json-columns` | — | text columns that hold JSON (comma list), parsed into nested data; columns of type `json`/`jsonb` are parsed without being listed; a cell that is not JSON stays text |
 
 The manifest's kinds are the `query.*` kinds, and the source is dated when any query uses `:asOf`.
 

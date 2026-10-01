@@ -637,6 +637,17 @@ becomes `2026-09-30`, `TIMESTAMP` an ISO instant. Three column names are special
 | `generation` (a number) | the version shown in provenance; otherwise the read time |
 | `business_date` (a `DATE`) | the date the row is for (provenance), also added as `businessDate` |
 
+**JSON inside a row.** A column of type `json` or `jsonb` becomes nested data under its field name, so a trade with
+its legs in one column reads as `legs[0].rate` in a Sutra. JSON kept in a text column needs naming:
+
+```yaml
+settings:
+  query.trade: SELECT trade_id, notional, legs, extras FROM desk.trades WHERE trade_id = :id
+  json-columns: extras            # a TEXT/VARCHAR column holding JSON; `legs` is jsonb and needs no listing
+```
+
+A cell that is not valid JSON stays as text, so one bad row never fails the view.
+
 A statement for documents already stored as JSON:
 
 ```yaml

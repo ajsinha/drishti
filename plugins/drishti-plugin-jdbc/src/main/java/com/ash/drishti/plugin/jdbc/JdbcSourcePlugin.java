@@ -177,7 +177,12 @@ public final class JdbcSourcePlugin implements SourcePlugin {
         this.context = ctx;
         this.url = ctx.setting("url", "");
         if (url.isEmpty()) {
-            throw new IllegalStateException("jdbc plugin needs settings.url");
+            throw new com.ash.drishti.api.PluginNotConfigured("jdbc needs settings.url");
+        }
+        for (String c : ctx.setting("json-columns", "").split(",")) {
+            if (!c.isBlank()) {
+                jsonColumns.add(c.trim().toLowerCase(java.util.Locale.ROOT));
+            }
         }
         this.user = ctx.setting("user", "");
         this.password = ctx.setting("password", "");
@@ -278,6 +283,8 @@ public final class JdbcSourcePlugin implements SourcePlugin {
         });
     }
 
+    private final java.util.Set<String> jsonColumns = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
     private EntityDocument toDocument(EntityRef ref, ResultSet rs, java.time.LocalDate asked) throws Exception {
         java.time.LocalDate businessDate = asked;
         ResultSetMetaData md = rs.getMetaData();
@@ -294,11 +301,30 @@ public final class JdbcSourcePlugin implements SourcePlugin {
             } else if ("business_date".equalsIgnoreCase(name) && v instanceof java.sql.Date d) {
                 businessDate = d.toLocalDate();
                 fields.put("businessDate", businessDate.toString());
+            } else if (v != null && isJson(md.getColumnTypeName(i), name)) {
+                fields.put(camel(name), nested(v instanceof byte[] b ? new String(b, StandardCharsets.UTF_8) : v.toString()));  // nested, not text
             } else {
                 fields.put(camel(name), plain(v));
             }
         }
         return new EntityDocument(ref, doc != null ? doc : DataNode.of(fields), new Provenance(sourceName, generation, Instant.now(), false, businessDate));
+    }
+
+    /** A json/jsonb column (PostgreSQL, MySQL), or one named in {@code json-columns} (JSON kept in a text column). */
+    private boolean isJson(String typeName, String column) {
+        if (typeName != null && (typeName.equalsIgnoreCase("json") || typeName.equalsIgnoreCase("jsonb"))) {
+            return true;
+        }
+        return jsonColumns.contains(column.toLowerCase(java.util.Locale.ROOT));
+    }
+
+    /** Parsed JSON; a value that is not JSON stays as its text, so one bad cell never fails the document. */
+    private Object nested(String text) {
+        try {
+            return context.parseJson(new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8)));
+        } catch (Exception e) {
+            return text;
+        }
     }
 
     private static Object plain(Object v) {

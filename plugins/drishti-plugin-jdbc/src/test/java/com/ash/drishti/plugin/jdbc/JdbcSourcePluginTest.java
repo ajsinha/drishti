@@ -69,4 +69,38 @@ class JdbcSourcePluginTest {
         assertThat(p.manifest().kinds()).containsExactlyInAnyOrder("trade", "curve");
         p.close();
     }
+
+    @Test
+    void jsonColumnsBecomeNestedDataInQueryMode() throws Exception {
+        String url = "jdbc:h2:mem:drishti-json;DB_CLOSE_DELAY=-1";
+        try (Connection c = DriverManager.getConnection(url); Statement s = c.createStatement()) {
+            s.execute("create table trades(trade_id varchar primary key, legs json, extras varchar, note varchar)");
+            s.execute("insert into trades values ('T-1', JSON '[{\"leg\":1,\"rate\":3.5},{\"leg\":2,\"index\":\"SOFR\"}]', "
+                    + "'{\"desk\":\"Rates\",\"tags\":[\"a\",\"b\"]}', '{not json}')");
+        }
+        JsonCodec codec = new JsonCodec();
+        JdbcSourcePlugin p = new JdbcSourcePlugin();
+        p.start(new SourceContext() {
+            public Map<String, String> settings() {
+                return Map.of("url", url, "pool-size", "1", "json-columns", "extras, note", "query.trade", "select * from trades where trade_id = ?");
+            }
+
+            public DataNode parseJson(InputStream in) throws IOException {
+                return codec.read(in);
+            }
+
+            public ScheduledExecutorService scheduler() {
+                return Executors.newSingleThreadScheduledExecutor();
+            }
+        });
+        try {
+            DataNode t = p.fetch(EntityRef.of("trade", "T-1")).orElseThrow().data();
+            assertThat(t.at("legs[0].rate").asDouble()).isEqualTo(3.5);               // a JSON column: nested
+            assertThat(t.at("legs[1].index").asText()).isEqualTo("SOFR");
+            assertThat(t.at("extras.tags[1]").asText()).isEqualTo("b");               // JSON in a text column named in json-columns
+            assertThat(t.get("note").asText()).isEqualTo("{not json}");                // not JSON: kept as text
+        } finally {
+            p.close();
+        }
+    }
 }
