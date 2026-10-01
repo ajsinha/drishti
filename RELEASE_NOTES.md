@@ -13,7 +13,54 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Drishti 1.9.0 — release notes
+# Drishti 1.10.0 — release notes
+
+*2026-09-30.* **Fourteen domain packs, users in a database, and a terminal that behaves like one.**
+
+- **Domain packs.**
+  - **Banking:** five packs generated from one taxonomy, with 125 products, 45 kinds and 170 Sutras: banking core, market data, trading, market risk and counterparty credit risk.
+  - **Other domains:** liquidity, climate, operational risk, retail banking, genomics, economics, and politics and society.
+  - **Inheritance:** packs inherit from parent packs (`extends:`, ADR-015).
+  - **Switching:** admins switch packs off and on for everyone in Admin → Packs.
+- **Users, roles and saved work in a database.**
+  - **Databases:** SQLite by default, PostgreSQL by URL, through JPA. There is one schema file per database and no migrations.
+  - **Roles:** admins define roles in Admin → Roles.
+  - **Upgrading:** 1.9 users, audit and saved documents are imported on first start.
+- **Pick lists.** One match opens the entity; several give a table with the kind's key fields. Case never matters.
+  - `TRD T-100` lists trades whose id starts with T-100.
+  - `CPTY north` matches titles too.
+  - `TRD productType=Revolver` lists trades by field value.
+- **Tables:** every table pages and walks with the keyboard, and id columns link to their entities.
+- **Top bar:** redesigned on two rows with mega menus.
+- **Connectors.**
+  - **Message queues:** Kafka, ActiveMQ and RabbitMQ, keeping state in RocksDB.
+  - **Stores:** PostgreSQL table mode, Aerospike, S3, and Delta Lake on S3 with scheduled lake maintenance.
+  - **Public data:** NY Fed, ECB, US Treasury and FRED feeds.
+  - **Reconnecting:** every connector reconnects by itself, and Admin → Health shows each one's state.
+- **Waves 16–21:**
+  - history and diffs between dates;
+  - structured search;
+  - export and share links;
+  - Sutra governance (four eyes, ADR-013);
+  - single sign-on with OpenID Connect (ADR-014);
+  - personal settings.
+- **Reliability.**
+  - **Freeze fix:** the UI no longer freezes; each tab uses one live connection.
+  - **Concurrency:** hardened throughout.
+  - **Security:** with security on, the operational endpoints are guarded (`DRISHTI_METRICS_TOKEN` for Prometheus).
+  - **Readiness:** the console has `/readyz`.
+- **Configuration and documentation.**
+  - **Branding:** the product name and legal notices come from configuration.
+  - **Documentation:** every guide is rewritten with worked examples, and there are a new quickstart and a developer guide.
+
+Upgrade notes:
+- **Identity database:** the server creates `data/identity/drishti.db` and imports `users.json`, `audit.jsonl` and `preferences/`, renaming them `*.imported`. For PostgreSQL, set `DRISHTI_IDENTITY_DB_URL`, `DRISHTI_IDENTITY_DB_USER` and `DRISHTI_IDENTITY_DB_PASSWORD` first.
+- **Monitoring:** with security on, give Prometheus `DRISHTI_METRICS_TOKEN`.
+- **Plugins:** they keep working; one with no settings may now throw `PluginNotConfigured` to stay idle.
+
+---
+
+# Previous release: Drishti 1.9.0 — release notes
 
 *2026-09-30.* **Business dates and history.** Drishti now answers "what did this look like on a given day?"
 

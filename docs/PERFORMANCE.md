@@ -18,7 +18,7 @@
 This document answers three questions:
 
 1. **How fast is Drishti?** The [targets and measured numbers](#targets-and-measured-numbers).
-2. **How do I measure it on my installation?** [Five ways, from a single `curl` to JMH](#how-to-measure).
+2. **How do I measure it on my installation?** [Eight ways, from a single `curl` to JMH](#how-to-measure).
 3. **What can I change when it is slow?** [The tuning knobs](#tuning-knobs), each with an example.
 
 Every number below was measured, not estimated. Each row names the date, the machine and the command, so
@@ -35,6 +35,9 @@ anyone can check it again.
 | Browser top bar | — | `Live, p99 2 ms` | read from real Chrome over the DevTools protocol |
 | Fan-out | — | 10,000 listeners on one topic all receive the latest of 50 ticks | `TopicHubTest` |
 | Structured search over 750 trades | — | 7.2 ms (`elapsedMs`) | `GET /api/v1/search`, below |
+| Pick list `TRD T-100` (99 of 99) | — | 1.2 ms (`elapsedMs`) | `GET /api/v1/search`, 2026-09-30; an id pattern reads only the ids it names |
+| Pick list `TRD productType=Revolver` (6 of 750) | — | 5.9 ms (`elapsedMs`) | same; a field condition reads every trade |
+| Command-line suggestions over HTTP | 30 ms budget per source | p50 5.2 ms, p99 8.0 ms (25 entries) | the `curl` loop in method 6, 2026-09-30, on a busy workstation |
 
 The first live implementation delayed every tick by a whole frame (p50 52 ms). Switching to a leading-edge
 throttle (send at once after a quiet frame, coalesce inside a busy one) brought p50 to 2.4 ms.
@@ -86,6 +89,10 @@ You should see something like (2026-09-30, developer workstation, server and cli
 n=200 p50=1.7 ms p99=3.0 ms max=3.8 ms
 ```
 
+Numbers move with whatever else the machine is doing. The same loop on the same machine while two Maven builds
+ran gave `n=200 p50=4.0 ms p99=8.3 ms max=12.5 ms`; the server-side `timings.total` stayed under 1 ms, so the
+difference was the busy client and network stack, not view building. Compare like with like.
+
 With security on, add `-H "Authorization: Bearer $TOKEN"` (see [API_GUIDE.md](API_GUIDE.md)). Run it from the
 console's host to include the network path the console uses.
 
@@ -96,6 +103,17 @@ The server publishes its own timers at `/actuator/prometheus`:
 ```bash
 curl -s http://localhost:18480/actuator/prometheus | grep -E '^drishti_'
 ```
+
+**With security on** (`DRISHTI_SECURITY_ENABLED=true`) only `/actuator/health` stays open; the rest of
+`/actuator` answers `401` without a token. Send the scrape token the server was started with
+(`DRISHTI_METRICS_TOKEN`), or an admin's token:
+
+```bash
+curl -s -H "Authorization: Bearer $DRISHTI_METRICS_TOKEN" http://localhost:18480/actuator/prometheus | grep -E '^drishti_'
+```
+
+Prometheus does the same with `authorization: { type: Bearer, credentials: … }` in its scrape job (see
+[TROUBLESHOOTING.md](TROUBLESHOOTING.md#monitoring-endpoints)). With security off, as below, no token is needed.
 
 ```text
 drishti_live_frames_total 11680.0
@@ -120,7 +138,8 @@ drishti_view_seconds_sum 0.318121785
 
 `deploy/grafana/drishti-dashboard.json` is a ready Grafana dashboard over these metrics (view p99, views per
 second, live p99, streams and topics, frames per second). Import it in Grafana (Dashboards → Import) with a
-Prometheus data source that scrapes `http://<server>:18480/actuator/prometheus`.
+Prometheus data source that scrapes `http://<server>:18480/actuator/prometheus` (with the scrape token when
+security is on).
 
 For one metric without Prometheus use the actuator's JSON form:
 
@@ -173,7 +192,48 @@ curl -s -G http://localhost:18480/api/v1/search --data-urlencode 'q=TRD where $.
 `"partial": true` means the search stopped at `drishti.search.max-scan` entities or ran out of
 `drishti.search.budget`, and the result says so to the user.
 
-### 6. Micro-benchmarks (JMH)
+Pick lists go through the same endpoint. Compare an id pattern with a field condition:
+
+```bash
+for q in 'TRD T-100' 'TRD productType=Revolver' 'TRD'; do
+  curl -s -G http://localhost:18480/api/v1/search --data-urlencode "q=$q" \
+    | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["query"], {k: d[k] for k in ("scanned","matched","elapsedMs")})'
+done
+```
+
+```text
+TRD T-100 {'scanned': 99, 'matched': 99, 'elapsedMs': 1.2}
+TRD productType=Revolver {'scanned': 750, 'matched': 6, 'elapsedMs': 5.88}
+TRD {'scanned': 750, 'matched': 750, 'elapsedMs': 6.13}
+```
+
+An id pattern (`T-100`) reads only the entities whose ids it names (`scanned` 99); a field condition reads every
+entity of the kind (`scanned` 750). On a large kind, put an id pattern in front of the condition
+(`TRD T-1* currency=usd`) when you can. The console adds `limit <your Search results setting>` (100 by
+default), so only the first 100 rows travel to the browser; the table then pages them 25 at a time in the
+browser, with no further requests.
+
+### 6. Suggestions (type-ahead)
+
+The command line asks for suggestions about 60 ms after each keystroke. Each source has 30 ms
+(`drishti.commands.suggest-budget`) to answer; a slow source is left out of that answer rather than slowing it.
+Measure what a user feels:
+
+```bash
+for i in $(seq 100); do
+  curl -s -o /dev/null -w "%{time_total}\n" 'http://localhost:18480/api/v1/command/suggest?q=TRD%20T-10'
+done | sort -n | awk '{a[NR]=$1} END {printf "n=%d p50=%.1f ms p99=%.1f ms max=%.1f ms\n",
+  NR, a[int(NR*0.5)]*1000, a[int(NR*0.99)]*1000, a[NR]*1000}'
+```
+
+```text
+n=100 p50=5.2 ms p99=8.0 ms max=10.3 ms
+```
+
+Each answer holds up to 25 entries (`drishti.commands.suggest-limit`, `DRISHTI_SUGGEST_LIMIT`). A larger number
+costs a little more per keystroke for every user; a program may ask for up to 50 with `&limit=50`.
+
+### 7. Micro-benchmarks (JMH)
 
 `drishti-benchmarks/HotPathBenchmark` times the innermost hot paths against the IRS-48213 reference document
 (`packs/finance/samples/trade/IRS-48213.json`). Run it from the repository root, because it reads that file
@@ -197,7 +257,7 @@ repository root whichever module Maven runs in). Add a name pattern to run one b
 | `fingerprint` | 3.5 µs | shape fingerprint of the whole IRS document (cached per generation) |
 | `inferColdLayout` | 12.9 µs | full inference for the IRS document (cached per shape) |
 
-### 7. The build's performance gate
+### 8. The build's performance gate
 
 `ViewPipelineTest.warmViewsStayWellUnderFiftyMillisecondsAtP99` (in `drishti-server`) builds the full IRS
 view 300 times to warm up and then 2,000 times while timing: fetch, match, layout (cached), link fan-out on
@@ -234,6 +294,7 @@ measure again with the methods above.
 | `drishti.live.frame` | `50ms` | CPU is high under many fast-ticking entities; trade freshness for throughput. | You need fresher frames and have CPU to spare. |
 | `drishti.live.max-streams` | `20000` | You run a big server with many viewers. | You must protect a small server from a burst of tabs. |
 | `drishti.commands.suggest-budget` | `30ms` | Type-ahead often misses entities from a slow source. | Typing feels sluggish. |
+| `drishti.commands.suggest-limit` (`DRISHTI_SUGGEST_LIMIT`) | `25` | Users want a longer dropdown. | Many users type at once on a small server. |
 | `drishti.search.max-scan` | `20000` | Searches report `partial` because a kind has more entities. | Searches over huge kinds load the source too much. |
 | `drishti.search.budget` | `3s` | Searches over slow sources report `partial`. | — |
 
@@ -255,7 +316,7 @@ Restart the server and check that `timings.fetch` is below the new timeout and t
 ### Example 2: many fast-ticking entities on a small server
 
 ```bash
-java -XX:+UseZGC -XX:+ZGenerational -jar drishti-server-1.9.0-exec.jar \
+java -XX:+UseZGC -XX:+ZGenerational -jar drishti-server-1.10.0-exec.jar \
   --drishti.live.frame=100ms --drishti.live.max-streams=5000
 ```
 
@@ -294,7 +355,7 @@ The server image runs with `-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:+ZGeneration
 p99. Use the same flags when you run the jar yourself:
 
 ```bash
-JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:+ZGenerational" java -jar drishti-server-1.9.0-exec.jar
+JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:+ZGenerational" java -jar drishti-server-1.10.0-exec.jar
 ```
 
 Check heap use under load in Admin → Health (`server.heapUsedMb`, `heapMaxMb`) or with

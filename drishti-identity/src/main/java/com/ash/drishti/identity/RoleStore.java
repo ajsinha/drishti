@@ -51,6 +51,16 @@ public final class RoleStore {
         reload();
     }
 
+    /** Re-reads the table: another server sharing the database may have changed it. */
+    public void refresh() {
+        writes.lock();
+        try {
+            reload();
+        } finally {
+            writes.unlock();
+        }
+    }
+
     private void reload() {
         snapshot = tx.execute(s -> roles.findAll().stream().map(RoleStore::toDefinition)
                 .collect(Collectors.toUnmodifiableMap(RoleDefinition::name, Function.identity())));

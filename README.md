@@ -23,11 +23,18 @@ NSET NS-NORTH-01 <GO>     →  exposure profile, member trades, CSA, collateral
 ```
 
 As you type, the command line suggests mnemonics and entities in a dropdown, as the Bloomberg
-terminal does.
+terminal does. A command that names several entities gives a pick list:
+
+```
+TRD T-100 <GO>                 →  99 trades whose id starts with T-100, with product, direction, notional, MTM …
+TRD productType=Revolver <GO>  →  6 revolving credit facilities
+CPTY north <GO>                →  one match, so CP-NORTHBRIDGE opens at once
+```
 
 ## Status
 
-**Drishti 1.9.0 is released** (see [RELEASE_NOTES.md](RELEASE_NOTES.md)). It is built in waves on `develop`, each merged to `main` when its build was green.
+**Drishti 1.10.0 is the current release** (see [RELEASE_NOTES.md](RELEASE_NOTES.md)). Every planned wave is
+done; [IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) maps waves to releases and lists the known gaps. It is built in waves on `develop`, each merged to `main` when its build was green.
 
 | Wave | Theme | State |
 |---|---|---|
@@ -65,6 +72,7 @@ terminal does.
 | 19 | Sutra governance: a Studio save is a proposal; approvers review the diff and approve (it goes live) or reject; four eyes; stale approvals refused; audited (ADR-013) | ✅ done |
 | 20 | Single sign-on (OIDC, ADR-014): code flow with PKCE in the console; the server verifies the ID token with JDK cryptography, maps groups to roles, provisions users; local disables win | ✅ done |
 | 21 | Personal settings: theme, landing page, clock zone, density, change-flash, pinned entities, search size; kept on the server, so they follow you | ✅ done |
+| 1.10 | Pack inheritance; ActiveMQ, RabbitMQ, S3 and Delta-on-S3 connectors that reconnect by themselves; Admin → Health; users, roles and audit in a JPA database with Admin → Roles; Admin → Packs; pick lists, paged tables, linked id columns; the two-row top bar; guarded `/actuator`; console `/readyz` | ✅ done |
 
 ## What works today
 
@@ -93,12 +101,21 @@ terminal does.
   linked entities with badges, function keys and provenance. Layouts are cached per data shape, and
   warm p99 is under 50 ms (a test gate). The golden tests reproduce all four mockups' values.
 - **Type-ahead.** `SuggestionService` offers mnemonics, recents and entities as you type
-  (`T` → `TRD`; `TRD IRS-4` → `IRS-47102`, `IRS-48213`, …), searching the sources in parallel within 30 ms.
+  (`T` → `TRD`; `TRD IRS-4` → `IRS-47102`, `IRS-48213`, …), up to 25 at a time, searching the sources in
+  parallel within 30 ms.
+- **Pick lists.** A command that names one entity opens it; one that names several gives a table to pick from,
+  with the kind's key fields beside each id (`columns:` in `pack.yaml`): `TRD T-100`, `CPTY north`, `TRD T-1*0`,
+  `TRD productType=Revolver`, `TRD` alone. Case never matters.
+- **Tables.** Every table pages (25, 50, 100 or 250 rows, remembered) and walks with the keyboard (↑ ↓, PgUp/PgDn,
+  Home/End, Enter opens the row). Id columns link to their entities.
+- **Top bar.** Two rows, after MAYA's: Views, Build, Admin and Help mega menus, then round tools for live state,
+  alerts, packs, theme and the user menu; the command line and the business date on the second row.
 - **Terminal.** Open `/t` in the console, type `TRD IRS-48213 <GO>`, and the view renders like the
   mockup. Suggestions drop down as you type, F-keys jump between panels, F9 shows the raw JSON,
   links open other entities, and breadcrumbs lead back. REST API under `/api/v1` (OpenAPI at `/api/docs`).
 - **Live.** Views of live entities tick over server-sent events: MTM, curves, exposure and settlements
-  move in place, changed values flash, and the top bar shows the measured p99 (about 11 ms).
+  move in place, changed values flash, and a dot in the top bar shows the live state (the server's measured
+  p99, about 11 ms, is at `GET /api/v1/health/live`).
 - **Sutras are Markdown.** A Sutra is a `*.sutra.md` document: prose that explains the layout, with the
   layout itself in one fenced `sutra` block (ADR-011). Plain YAML Sutras still load.
 - **Sutra Studio.** At `/studio` a Markdown editor with a toolbar, Rachana highlighting inside the
@@ -108,8 +125,9 @@ terminal does.
 - **Security.** Sign-in, per-role entitlements (denied links are shown disabled with the reason),
   raw JSON redaction, and signed tokens between the console and the server. It is off by default for
   local development.
-- **Users.** Admins manage users, roles and passwords at `/admin/users` and read the audit log. Everyone
-  can change their own password at `/account`. The server seeds a development admin on an empty store:
+- **Users.** Admins manage users, roles and passwords at `/admin/users`, define roles at `/admin/roles`, and read
+  the audit log. Users, roles, saved work and the audit log live in a database (SQLite by default, PostgreSQL by
+  URL). Everyone can change their own password at `/account`. The server seeds a development admin on an empty store:
   **`drishti-dev-admin` / `drishti-dev-admin123`**. Change that password (the UI warns until you do),
   or set `DRISHTI_SEED_ADMIN=false` in production.
 - **Help.** An in-app help centre (`/help`) with tutorials, guides and every reference, plus search.
@@ -121,7 +139,8 @@ terminal does.
   - the small `finance` and `logistics` packs behind the original mockups.
 
   Packs inherit (`extends: [market-data, trading]`): a pack has everything its parents have, and where they differ
-  the more specific pack wins (ADR-015). A new industry is configuration only. Admins assign packs to users, and users choose which to see. See [PACKS.md](docs/PACKS.md).
+  the more specific pack wins (ADR-015). A new industry is configuration only. Admins assign packs to users, switch
+  packs off and on for everyone at `/admin/packs`, and users choose which to see. See [PACKS.md](docs/PACKS.md).
 - **Impact (F8).** What depends on an entity, what that rolls into, and the amount at stake.
 - **Monitors and alerts.** Live watchlists (`/m`), and rules the server checks on every tick
   (`$.utilisation > 0.8`), with a bell and toasts when they fire.
@@ -129,7 +148,9 @@ terminal does.
   Workspaces are saved to your account.
 - **Mobile.** It works on iPhone and Android browsers and can be added to the home screen. F-keys
   become a swipeable button row.
-- **Operations.** Prometheus metrics, a Grafana dashboard, Dockerfiles and compose, and runbooks.
+- **Operations.** Prometheus metrics (guarded by an admin or scrape token when security is on), a Grafana
+  dashboard, Admin → Health, console liveness `/healthz` and readiness `/readyz`, Dockerfiles and compose, and
+  runbooks.
 - **Structured search.** Type `TRD where mtm > 1m and counterparty.name contains 'Meridian' order by mtm desc`
   on the command line: the matching entities, with the fields the query uses as columns.
 - **Export and share.** Every table-like panel downloads as CSV (numbers as numbers), as do search results and
@@ -145,8 +166,9 @@ terminal does.
 
 ## Try it
 
-New to Drishti? **[docs/GETTING_STARTED.md](docs/GETTING_STARTED.md)** walks you through every step from a
-clean machine, with what you should see at each one. The short version, from the repository root:
+New to Drishti? **[docs/QUICKSTART.md](docs/QUICKSTART.md)** gets you to a live view in ten minutes;
+**[docs/GETTING_STARTED.md](docs/GETTING_STARTED.md)** walks through every step from a clean machine, with what
+you should see at each one. The short version, from the repository root:
 
 ```bash
 # 1. Build (OpenJDK 21 is required and enforced; Maven comes with the repository)
@@ -158,7 +180,7 @@ uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py
 
 # 3. Start the server on :18480 (packs to load; their parents load with them)
 DRISHTI_PACKS=market-risk,counterparty-risk DRISHTI_STUDIO_SAVE=true \
-  java -jar drishti-server/target/drishti-server-1.9.0-exec.jar
+  java -jar drishti-server/target/drishti-server-1.10.0-exec.jar
 
 # 4. In a second terminal: the console on http://localhost:17480
 uv venv console/.venv && uv pip install --python console/.venv/bin/python -r console/requirements.txt
@@ -173,7 +195,8 @@ as the development admin **`drishti-dev-admin` / `drishti-dev-admin123`**, see
 [GETTING_STARTED.md, Step 13](docs/GETTING_STARTED.md#step-13--optional-turn-on-sign-in-and-change-the-admin-password).
 
 Checks: `curl -s localhost:18480/actuator/health` (server) and `curl -s localhost:17480/healthz` (console)
-both answer `{"status":"UP"…}`. Console tests: `console/.venv/bin/python -m pytest -q console/tests`.
+both answer `{"status":"UP"…}`; `curl -s localhost:17480/readyz` answers `{"status":"UP","server":"reachable"}`
+once the console can reach the server. Console tests: `console/.venv/bin/python -m pytest -q console/tests`.
 
 `tools/drill.sh` runs every check, then pushes `develop` and merges it into `main`.
 
@@ -193,7 +216,7 @@ drishti/
 ├── drishti-rachana/             Rachana grammar: Sutra model, parser, registry, Rachana-EL, formats
 ├── drishti-inference/           semantic hints, rules, packer, Sutra ⊕ inference merge
 ├── drishti-graph/               reference catalogue, link badges
-├── drishti-identity/            users, passwords, roles, lockout, audit, per-user preferences
+├── drishti-identity/            users, roles, packs per user, pack switches, audit, saved documents (JPA: SQLite or PostgreSQL)
 ├── drishti-packs/               domain pack loader
 ├── drishti-engine/              sources, view pipeline, binder, ViewModel, commands, type-ahead
 ├── drishti-diskcache/ drishti-messaging/   connector disk cache; shared messaging-connector support
@@ -206,27 +229,37 @@ drishti/
 ├── sutras/                      site Sutras (optional; packs carry their own)
 ├── deploy/                      Dockerfiles, compose, Grafana dashboard
 ├── tools/                       packgen/ and samplegen/ (pack data and lake), lake/ (maintenance), drill.sh, license_headers.py
-└── docs/                        architecture, plan, references, ADRs
+└── docs/                        quickstart, guides, references, runbooks, plan, ADRs
 ```
 
 ## Documentation
 
-Start with **[GETTING_STARTED.md](docs/GETTING_STARTED.md)**, then the **[user guide](docs/USER_GUIDE.md)**.
-The **[documentation map](docs/README.md)** lists every document by what you want to do.
+Start with the **[10-minute quickstart](docs/QUICKSTART.md)**, then the **[user guide](docs/USER_GUIDE.md)**.
+The **[documentation map](docs/README.md)** lists every document by what you want to do, and says when to read
+each one.
 
-| If you want to… | Read |
+| Read this when… | Document |
 |---|---|
-| Install, start and try Drishti, step by step | [GETTING_STARTED.md](docs/GETTING_STARTED.md) |
-| Use every console feature, with worked examples | [USER_GUIDE.md](docs/USER_GUIDE.md) |
-| Know the packs, their commands, and write your own | [PACKS.md](docs/PACKS.md) |
-| Write or change a screen layout (Sutra) | [RACHANA_REFERENCE.md](docs/RACHANA_REFERENCE.md) and the in-app Sutra guide |
-| Manage users, roles and passwords | [USER_MANAGEMENT.md](docs/USER_MANAGEMENT.md) |
-| Connect your own data | [PLUGIN_GUIDE.md](docs/PLUGIN_GUIDE.md) and [CONFIGURATION.md](docs/CONFIGURATION.md) |
-| Run it in production | [OPERATIONS.md](docs/OPERATIONS.md) |
-| Fix a problem | [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) |
-| Understand the design | [ARCHITECTURE.md](docs/ARCHITECTURE.md), [adr/](docs/adr/README.md) |
-| Call the REST API | [API_GUIDE.md](docs/API_GUIDE.md) |
-| See what changed | [CHANGELOG.md](CHANGELOG.md) · [RELEASE_NOTES.md](RELEASE_NOTES.md) |
+| you want it running in ten minutes, commands only | [QUICKSTART.md](docs/QUICKSTART.md), the 10-minute quickstart |
+| you install for the first time and want every step explained | [GETTING_STARTED.md](docs/GETTING_STARTED.md) |
+| you use the console: top bar, pick lists, tables, views, dates, search, export, monitors, admin | [USER_GUIDE.md](docs/USER_GUIDE.md) |
+| you load, switch, assign or build a domain pack | [PACKS.md](docs/PACKS.md) |
+| you learn to write a screen layout (Sutra), step by step | [RACHANA_GUIDE.md](docs/RACHANA_GUIDE.md) and the in-app Sutra guide |
+| you need an exact Sutra key, format or expression | [RACHANA_REFERENCE.md](docs/RACHANA_REFERENCE.md) |
+| a view is laid out by inference and you want to know why | [INFERENCE.md](docs/INFERENCE.md) |
+| you connect your own data, step by step | [CONNECTOR_GUIDE.md](docs/CONNECTOR_GUIDE.md) |
+| you need every connector setting, or write a plugin | [PLUGIN_GUIDE.md](docs/PLUGIN_GUIDE.md) |
+| you need a setting's name, default and environment variable | [CONFIGURATION.md](docs/CONFIGURATION.md) |
+| you manage users, roles, packs per user, passwords or single sign-on | [USER_MANAGEMENT.md](docs/USER_MANAGEMENT.md) |
+| you run it in production | [OPERATIONS.md](docs/OPERATIONS.md) |
+| you want the numbers, or to tune it | [PERFORMANCE.md](docs/PERFORMANCE.md) |
+| something is not working | [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) and the [runbooks](docs/runbooks/) |
+| live values tick late, or not at all | [LIVE.md](docs/LIVE.md), [runbooks/live-latency-high.md](docs/runbooks/live-latency-high.md) |
+| you change the code | [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md), the developer guide |
+| you want to understand the design | [ARCHITECTURE.md](docs/ARCHITECTURE.md), [adr/](docs/adr/README.md) |
+| you call the REST API | [API_GUIDE.md](docs/API_GUIDE.md) |
+| you want to know what shipped when, and what is open | [IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) |
+| you want to see what changed | [CHANGELOG.md](CHANGELOG.md) · [RELEASE_NOTES.md](RELEASE_NOTES.md) |
 
 ## Contributing rules
 

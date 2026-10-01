@@ -203,14 +203,34 @@ The alerts stream does not count against `drishti.live.max-streams`.
 | `alerts` | The alerts stream. |
 | `monitor:<name>` | A monitor's stream. |
 
-Up to 32 subscriptions per channel. Events: `channel` (first; carries the id), the relayed events wrapped as
-`{"ch": "<subscription>", "d": <data>}`, `gone` (`{"code", "detail"}` when one subscription fails, for example
-`DRS-1001` for an entity that does not exist; the others carry on), `end` (every subscription has finished;
-the browser then closes instead of reconnecting) and a `: hb` comment about every 15 s.
+Up to 32 subscriptions per channel (more are ignored). Events: `channel` (first; carries the id and the
+subscriptions it opened with), the relayed events wrapped as `{"ch": "<subscription>", "d": <data>}`, `gone`
+(`{"code", "detail"}` when one subscription fails; the others carry on), `end` (every subscription has finished;
+the browser then closes instead of reconnecting) and a `: hb` comment about every 14 s when nothing else is sent.
+
+`gone` does not pass the server's own error code through: a view the server refuses (an entity that does not
+exist, `DRS-1001` on the server; a kind you may not open, `DRS-5002`) arrives as `DRS-5003 stream refused`, and a
+console that cannot reach the server as `DRS-5003 backend unreachable: …`. For example:
+
+```bash
+curl -sN --max-time 3 "http://localhost:17480/api/channel?s=view:trade/T-10452&s=view:trade/NOPE-1"
+```
+
+You should see, among the frames of `T-10452`:
+
+```text
+event: gone
+data: {"ch": "view:trade/NOPE-1", "d": {"code": "DRS-5003", "detail": "stream refused"}}
+```
+
+To see the real reason, ask the server directly: `curl -s http://localhost:18480/api/v1/views/trade/NOPE-1/stream`
+answers `404` with `"code":"DRS-1001"` and `no source holds trade/NOPE-1`.
 
 `POST /api/channel/{id}` with `{"add": ["view:trade/T-10001"], "remove": ["view:trade/T-10452"]}` changes the
-subscriptions of an open channel. A workspace uses it as its panes load one by one. It answers `404` with
-`DRS-5001` "no such channel: open a new one" when the channel has closed or belongs to another user.
+subscriptions of an open channel and answers `{"ok": true}`. A workspace uses it as its panes load one by one.
+It answers `404` with `DRS-5001` "no such channel: open a new one" when the channel has closed or belongs to
+another user. Removing a subscription closes its upstream stream on the server; adding one that is already
+there, or beyond 32, does nothing.
 
 The console also keeps `GET /api/stream/{kind}/{id}` (one view, same relaying) for API clients. Pages do not use it.
 
@@ -240,9 +260,12 @@ Step by step, for one tick of T-10452:
 1. The demo source moves the trade's price one random-walk step and raises its generation (29 → 30).
 2. The entity's **topic** in `TopicHub` receives the new document. If no frame went out in the last 50 ms it
    is delivered at once; otherwise it waits in a one-slot "latest wins" holder until the frame is due.
-3. Each **ViewStream** watching T-10452 rebuilds the view with the layout it already has cached (no Sutra
-   matching, no inference) and diffs it against the previous ViewModel. Here only the MTM cell, the
-   provenance panel and the provenance changed, so the frame has three patches.
+3. Each **ViewStream** watching T-10452 rebuilds the view from the new document and diffs it against the
+   previous ViewModel. The rebuild re-evaluates the Sutra's `match` (cheap) and takes the effective layout from
+   the layout cache, so inference does not run again unless the document's shape changed or a Sutra was
+   reloaded. Here only the MTM cell, the provenance panel and the provenance changed, so the frame has three
+   patches. If a rebuild fails (the source is down, the entity is gone), the stream retries after 0.5 s,
+   doubling to 30 s, and any new tick retries at once.
 4. The frame goes into that client's **FrameMailbox**. The client's writer (a virtual thread) takes it and
    writes `event:frame`.
 5. The console's channel relays it to the tab, rendering the `built` panel to HTML.
@@ -263,6 +286,43 @@ seconds of the tab going away, busy or quiet: it closes the HTTP response itself
 request's cancel scope, because Starlette's scope cancels every clean-up await of a finished request. A test
 guards that no page opens its own `EventSource`.
 
+#### In the browser: `channel.js`
+
+`console/web/static/js/channel.js` gives every script on the page one object, `window.DrishtiChannel`, with a
+single call, `subscribe(key, handlers)`, which returns a function that unsubscribes:
+
+```js
+var off = window.DrishtiChannel.subscribe('view:trade/T-10452', {
+  view:   function (d) { /* first event: d.generation */ },
+  frame:  function (f) { /* f.patches, f.p99Ms */ },
+  gone:   function (d) { /* d.code, d.detail: this subscription ended */ },
+  error:  function () { /* the connection dropped; it reconnects by itself */ },
+  paused: function () { /* the tab was hidden for 10 s and gave its connection back */ }
+});
+```
+
+Handlers for `alert`, `row` and `hello` work the same way. `live.js` (entity views), `alerts.js` (the bell) and
+`monitor.js` (monitor pages) are its only users. How it behaves:
+
+| Situation | What `channel.js` does |
+|---|---|
+| the first subscriptions of a page | waits 60 ms so that subscriptions made together open **one** `EventSource` on `/api/channel?s=…&s=…` (keys sorted) |
+| a subscription added later (a workspace pane loading) | `POST /api/channel/{id}` with `add`, on the open connection; no reconnect |
+| the last handler of a key unsubscribes | `POST … {"remove": [key]}` after 60 ms; when no keys are left, the connection is closed |
+| two handlers for one key (two panes of one entity) | one subscription on the server; both handlers receive every event |
+| a `POST` answered `404` (the console restarted, or another process holds the channel) | closes and opens a new channel with every current key |
+| `end` | closes, so the browser does not reconnect to a channel with nothing left |
+| a dropped connection | every handler's `error`; the browser reconnects; the new `channel` event carries a new id, and `channel.js` re-sends anything subscribed meanwhile |
+| tab hidden for 10 s | closes the connection and calls `paused`; when the tab is shown again it reopens, and each view reloads from fresh data |
+| inside a workspace pane (an iframe of the same site) | uses the parent window's `DrishtiChannel`, so a workspace of six panes still holds one connection |
+
+#### In the console: lifetime of a channel
+
+Each `GET /api/channel` gets a random id and a task per subscription that reads the server's stream through the
+console's pooled HTTP client. The channel ends, and every upstream stream is closed within about a second, when
+the browser disconnects, when nothing has read the channel for 5 s (a browser that vanished without closing it),
+or after `end`. A channel opened with no subscriptions stays open, waiting for `POST … add`.
+
 Open channels live in the memory of the console process that served them. If you run several console
 processes behind a load balancer, make sessions sticky, so that a page's `POST /api/channel/{id}` reaches the
 process holding its channel. Otherwise it gets `404` and the page reopens its channel.
@@ -281,7 +341,11 @@ process holding its channel. Otherwise it gets `404` and the page reopens its ch
 - **Slow clients** never slow down others. Their pending frames merge (newest value per cell or panel)
   in a one-slot mailbox, so memory is bounded.
 - **Reconnects.** The browser's EventSource reconnects by itself. The server opens every stream with
-  a fresh `view` event, so a client that missed frames repaints from it; nothing is replayed.
+  a fresh `view` event, so a client that missed frames repaints from it; nothing is replayed. In the console,
+  a `view` event that arrives after the first one (a reconnect) makes the page reload itself, so it shows the
+  current state rather than patching a stale one.
+- **Sutra edits.** A Sutra saved while views are open (hot reload) clears the layout cache; open live views pick
+  up the new layout on their next tick, as a `panel` patch for every panel that changed.
 - **Heartbeats.** An SSE comment every 15 s keeps proxies from closing idle streams.
 - **Capacity.** `drishti.live.max-streams` (20,000) caps the streams per server, view and monitor streams together. A slot is taken atomically before any work, so concurrent requests never overshoot it, and released exactly once however the stream ends.
   A request over the cap is refused with `400`:
@@ -299,8 +363,89 @@ process holding its channel. Otherwise it gets `404` and the page reopens its ch
 - A **monitor** stream holds one `ViewStream` per row and multiplexes their strip patches as `row` events
   over one connection, with a latest-wins mailbox per row.
 - The **alert engine** subscribes to the topics of every entity that some enabled rule watches, whether
-  or not a browser is open. It evaluates each rule's Rachana-EL condition on every frame, fires on the
-  false → true edge, and pushes `alert` events to that user's open streams.
+  or not a browser is open. It evaluates each rule's Rachana-EL condition on every new document of that entity,
+  fires on the false → true edge, and pushes `alert` events to that user's open streams. A rule's subscription
+  keeps the source subscription open too, so an entity watched by a rule ticks even with no viewer.
+
+### Worked example: a monitor
+
+A monitor is a named list of entities, saved per user. The examples use `curl` against the server with security
+off; `X-Drishti-User` says whose monitor it is (with security on, your token does).
+
+1. Save a monitor of three live entities:
+
+   ```bash
+   curl -s -X PUT http://localhost:18480/api/v1/me/monitors/rates-desk \
+        -H 'Content-Type: application/json' -H 'X-Drishti-User: ash' \
+        -d '{"entities": [{"kind": "trade", "id": "T-10001"}, {"kind": "trade", "id": "T-10452"},
+                          {"kind": "netting-set", "id": "NS-MERIDIAN-RE-NY"}]}'
+   ```
+
+   You should see the saved list echoed back: `{"entities":[{"kind":"trade","id":"T-10001"},…]}`. Between 1 and 50
+   entities are allowed (`DRS-5001 a monitor has 1 to 50 entities` otherwise), and each must be a kind you may open.
+2. Read its rows once: `curl -s -H 'X-Drishti-User: ash' http://localhost:18480/api/v1/me/monitors/rates-desk`.
+   You should see one object per entity with `ref`, `mnemonic`, `title`, `strip` and `live`; an entity that cannot
+   be shown has `error` instead (`DRS-1001 no source holds …`).
+3. Stream it:
+
+   ```bash
+   curl -N -H 'X-Drishti-User: ash' http://localhost:18480/api/v1/me/monitors/rates-desk/stream
+   ```
+
+   You should see `event:hello` with `{"rows":3}`, then `event:row` events such as
+   `{"kind":"trade","id":"T-10452","patches":[{"op":"strip","index":4,"cell":{"label":"MTM (USD)","text":"+2,104,880",…}}],"p99Ms":1.2}`.
+   Only strip patches are sent. The stream counts as one live stream against `drishti.live.max-streams`, however
+   many rows it has.
+4. In the console, the monitor page subscribes with `monitor:rates-desk` on the tab's channel.
+
+### Worked example: an alert that fires
+
+1. Look at the value you want to watch. `T-10452`'s MTM moves around 2.1 million:
+
+   ```bash
+   curl -s http://localhost:18480/api/v1/views/trade/T-10452 | python3 -c "
+   import json, sys; print([c['text'] for c in json.load(sys.stdin)['strip'] if 'MTM' in c['label']])"
+   ```
+
+   You should see something like `['+2,102,537']`.
+2. Keep a stream open in a second terminal, so you see the alert arrive:
+
+   ```bash
+   curl -N -H 'X-Drishti-User: ash' http://localhost:18480/api/v1/me/alerts/stream
+   ```
+
+   You should see `event:hello` with `{"user":"ash"}`.
+3. Save a rule (`PUT /api/v1/me/alerts/rules/{name}`). `when` is a Rachana-EL condition over the entity's
+   document; `message` is a template:
+
+   ```bash
+   curl -s -X PUT http://localhost:18480/api/v1/me/alerts/rules/mtm-above-2-1m \
+        -H 'Content-Type: application/json' -H 'X-Drishti-User: ash' \
+        -d '{"kind": "trade", "id": "T-10452", "when": "$.mtm > 2100000", "severity": "warn",
+             "message": "${$.tradeId}: MTM ${fmt($.mtm, '"'"'signed0'"'"')}"}'
+   ```
+
+   You should see the rule echoed back. Saving checks the condition and the message (`DRS-2101` for a typo,
+   `DRS-5001 severity must be one of […]` for anything but `info`, `warn` or `critical`), then evaluates the rule **at once** against the
+   current document.
+4. If MTM is already above 2.1 m, the alert fires immediately; otherwise it fires on the first tick that crosses
+   the line. In the second terminal you should see:
+
+   ```text
+   event:alert
+   id:1
+   data:{"seq":1,"at":"2026-10-01T01:50:12.301Z","user":"ash","rule":"mtm-above-2-1m","kind":"trade","id":"T-10452","severity":"warn","message":"T-10452: MTM +2,104,880","generation":41}
+   ```
+
+   It does not fire again while MTM stays above 2.1 m. When MTM falls below and rises above again, it fires again.
+5. Recent alerts (the last 200 per user, kept in memory) are listed by
+   `curl -s -H 'X-Drishti-User: ash' 'http://localhost:18480/api/v1/me/alerts?limit=10'`; the bell in the console
+   shows the same. Delete the rule with `curl -s -X DELETE -H 'X-Drishti-User: ash' http://localhost:18480/api/v1/me/alerts/rules/mtm-above-2-1m`.
+
+Packs can suggest rules for a kind (`alerts:` in `pack.yaml`), which the console offers when you create one:
+`GET /api/v1/me/alerts/suggestions/netting-set` returns, with the finance pack enabled,
+`{"kind": "netting-set", "name": "PFE near limit", "when": "$.utilisation > 0.8", "severity": "warn", …}`. With the
+banking packs enabled, no pack suggests rules for `trade`, so `GET /api/v1/me/alerts/suggestions/trade` returns `[]`.
 
 A rule is saved with `PUT /api/v1/me/alerts/rules/{name}`; it needs `kind`, `id` and `when`, and takes an
 optional `severity` (`info`, `warn` (default) or `critical`), `message` and `enabled`. For example, to be
@@ -356,7 +501,7 @@ drishti:
     max-streams: 5000
 ```
 
-Or for one run: `java -jar drishti-server-1.9.0-exec.jar --drishti.live.frame=100ms`.
+Or for one run: `java -jar drishti-server-1.10.0-exec.jar --drishti.live.frame=100ms`.
 
 Behind a reverse proxy, turn off response buffering for SSE (`proxy_buffering off;` in nginx; the console
 already sends `X-Accel-Buffering: no`) and set the read timeout above the heartbeat interval. See
@@ -373,6 +518,64 @@ never streams.
 `GET /api/v1/sources` lists every source with `"live": true` or `false`. In the sample configuration only
 `demo` is live; the `trading` pack's Kafka connector `trading-stream` becomes live when you set
 `DRISHTI_STREAM_TRADING=true` and point `DRISHTI_KAFKA_BOOTSTRAP` at your brokers.
+
+### Worked example: making trades live from Kafka
+
+The trading pack declares the connector in `packs/trading/pack.yaml`:
+
+```yaml
+connectors:
+  trading-stream:
+    plugin: kafka
+    enabled: ${DRISHTI_STREAM_TRADING:false}
+    kinds: [trade]
+    settings:
+      bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
+      topics: ${DRISHTI_TRADING_TOPIC:drishti.trading.trades}
+      kind: trade                 # "mapped" messages: the whole value is the trade document …
+      id-field: tradeId           # … and its tradeId is the entity id
+      disk-cache.enabled: ${DRISHTI_STREAM_DISK_CACHE:true}
+```
+
+1. Create the topic (compacted, so the latest message per trade is kept):
+
+   ```bash
+   kafka-topics.sh --bootstrap-server localhost:9092 --create --topic drishti.trading.trades \
+     --partitions 3 --config cleanup.policy=compact
+   ```
+2. Start the server with the connector on:
+
+   ```bash
+   DRISHTI_STREAM_TRADING=true DRISHTI_KAFKA_BOOTSTRAP=localhost:9092 java -jar drishti-server/target/drishti-server-*-exec.jar
+   ```
+
+   `curl -s http://localhost:18480/api/v1/sources` should now list `trading-stream` with `"live":true` and
+   `"health":"UP"` (`"UP (catching up)"` while it reads the topic from the beginning).
+3. Publish a trade. In mapped mode the message **value** is the document; the key should be the trade id (it is
+   used for deletes):
+
+   ```bash
+   echo 'T-90001|{"tradeId":"T-90001","productType":"IRS_FIXFLOAT","productName":"Interest rate swap (fixed/float)","assetClass":"Rates","status":"Live","currency":"USD","notional":50000000,"mtm":12500,"counterparty":{"id":"CP-MERIDIAN-RE","name":"Meridian Reinsurance Ltd"}}' \
+     | kafka-console-producer.sh --bootstrap-server localhost:9092 --topic drishti.trading.trades \
+         --property parse.key=true --property key.separator='|'
+   ```
+4. Open `TRD T-90001 <GO>` (or `curl -N http://localhost:18480/api/v1/views/trade/T-90001/stream`). The view uses
+   the `irs-fixfloat` Sutra (its `where` matches), `How this view was built` says `trading-stream, gen <offset>`
+   (the generation of a Kafka document is its offset), and the top bar says `Live`. This small document lacks
+   the legs, schedule and risk the Sutra reads, so those panels say *No data available*; a real feed carries
+   them. All live sources that serve `trade` are asked, live ones first, so a trade held both in Kafka and in the
+   Delta Lake store is read (and ticks) from Kafka.
+5. Publish the same trade again with `"mtm":13750`. Within a frame (50 ms) the stream sends
+   `event:frame` with a `strip` patch for `MTM (USD)` (`+13,750`) and the provenance's new generation, and the
+   cell flashes in the browser.
+6. Publish `T-90001|` with an empty value (a *tombstone*; with `kafka-console-producer` use
+   `--property null.marker=NULL` and send `T-90001|NULL`): the trade is deleted from the connector, and a new view
+   of it is `DRS-1001`.
+
+Other shapes: without `kind`/`id-field` the connector expects **envelopes**,
+`{"kind": "trade", "id": "T-1", "doc": {…}}`, and a tombstone's key is `kind/id`. `mode: ticks` keeps nothing in
+memory and only drives the ticks of open views while a store (Delta Lake, a database) serves the documents.
+See [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md) for every Kafka setting.
 
 ## The demo source
 

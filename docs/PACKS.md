@@ -22,10 +22,13 @@ help pages — arrives in a **domain pack**: one folder under `packs/`.
 This guide explains, with examples:
 
 1. [What a pack is](#what-a-pack-is), and [every pack that ships](#the-packs-that-ship), with its commands.
-2. [How to turn packs on](#turning-packs-on) and [who sees which pack](#who-sees-which-pack).
-3. [Every key of `pack.yaml`](#packyaml-key-by-key), annotated, using a real pack.
+2. [How to load packs](#turning-packs-on), [switch them off and on for everyone](#switching-packs-off-and-on-admin--packs)
+   and [who sees which pack](#who-sees-which-pack).
+3. [Every key of `pack.yaml`](#packyaml-key-by-key), annotated, using a real pack, including
+   [`columns:`](#columns-the-key-fields-of-a-pick-list) for pick lists.
 4. [How inheritance works](#inheritance), with a worked example.
 5. [How to write your own pack](#writing-a-pack-by-hand-step-by-step), step by step.
+6. [How the shipped packs are generated](#how-the-shipped-packs-are-generated), and why you never edit their files by hand.
 
 ## What a pack is
 
@@ -88,8 +91,18 @@ command to try. The example ids are real: they exist in the pack's `samples/` fo
 | `finance` | — | `TRD` trade · `NSET` netting set · `CSA` credit support annex · `AGR` master agreement · `CRV` curve · `CPTY` counterparty · `LIM` credit limit · `CLR` clearing account · `SPEC` contract specification · `IDX` rate index · `FXS` FX spot · `BOOK` book · `FIX` rate fixings | `TRD IRS-48213` |
 | `logistics` | — | `SHP` shipment · `CTR` container · `VSL` vessel · `PORT` port | `SHP SHP-10042` |
 
-Every pack's overview guide (*Help → Domain packs*, or `packs/<name>/guides/`) starts with a **Try it** list of
-commands like these.
+Every pack's overview guide (*Help → Domain packs*, or `packs/<name>/guides/`) describes its domain and has a
+**Finding things** section with the commands that work for every kind of the pack:
+
+| Command | Does |
+|---|---|
+| `CUST <id> <GO>` | Opens that customer. A bare identifier works too: its prefix (`CUST-…`) tells Drishti the kind. |
+| `CUST <start of an id> <GO>` | A pick list: one match opens, several give a table with the kind's key fields. `*` is a wildcard, and case never matters. |
+| `CUST <field>=<value> <GO>` | Lists by field value. Compare with `<` and `>`, combine with `and`, sort with `order by <field> desc`. |
+| `CUST <GO>` | Lists every customer. |
+
+(That table is copied from `packs/retail-banking/guides/retail-banking.md`; every pack guide has the same one
+for its own kinds. Pick lists are explained in [USER_GUIDE.md](USER_GUIDE.md#pick-lists-when-a-command-names-several-entities).)
 
 **Two families.** The `finance` pack is the small demo behind the four original mockups (`TRD IRS-48213`). The
 banking family (`banking-core` … `retail-banking`) is the full model: 125 trade products, 45 data kinds. Both
@@ -121,7 +134,7 @@ default `./packs`, relative to the directory you start the server in).
 
    ```bash
    export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-   DRISHTI_PACKS=finance,logistics java -jar drishti-server/target/drishti-server-*-exec.jar
+   DRISHTI_PACKS=finance,logistics java -jar drishti-server/target/drishti-server-1.10.0-exec.jar
    ```
 
 3. Check what loaded. Any of these works:
@@ -130,7 +143,8 @@ default `./packs`, relative to the directory you start the server in).
    curl -s http://localhost:18480/api/v1/packs | python3 -m json.tool | grep '"name"'
    ```
 
-   You should see one line per loaded pack, parents included:
+   You should see one line per loaded pack that is switched on, parents included (a pack an admin switched off
+   is missing here; *Admin → Packs* lists every pack with its status):
 
    ```text
        "name": "finance",
@@ -158,22 +172,111 @@ What happens at start-up:
   - two packs own the same kind (`kind trade is defined by both pack 'finance' and pack 'trading'`);
   - two **unrelated** packs define the same mnemonic, link field, badge, role, connector or route differently.
 
+## Switching packs off and on (Admin → Packs)
+
+`DRISHTI_PACKS` decides which packs the server **loads** at start-up. Once it runs, an administrator can
+switch any loaded pack **off** for everyone, and back **on**, without a restart: *Admin → Packs* in the
+console (`/admin/packs`).
+
+| Status on the page | Meaning | What an admin can do |
+|---|---|---|
+| **on** | Loaded and in use | **Switch off** (unless another switched-on pack needs it) |
+| **off** | Loaded, but switched off for everyone | **Switch on** |
+| **not loaded** | A folder under `packs/` that `DRISHTI_PACKS` did not name | Nothing here: add it to `DRISHTI_PACKS` and restart. The row shows the hint `DRISHTI_PACKS=…,<name>` |
+
+What switching off does, at every user's next click:
+
+- the pack's kinds cannot be opened (`DRS-5002`), and links to them show disabled;
+- its mnemonics, suggestions, examples, guides, starter workspaces and monitors disappear;
+- it leaves every user's pack menu, and `GET /api/v1/packs` stops listing it.
+
+Its Sutras, connectors and routes stay loaded, so switching it back on is instant.
+
+**The rules.**
+
+1. **A pack that a switched-on pack builds on cannot be switched off.** `trading` is needed by
+   `market-risk`, `counterparty-risk`, `liquidity-risk` and `climate-risk` (directly or through a parent).
+   Its button is greyed (*Needed by …: switch those off first*), and the API refuses with
+   `DRS-5001 'trading' is needed by [market-risk, counterparty-risk, liquidity-risk, climate-risk]; switch those off first`.
+2. **Switching a pack on switches on everything it builds on.** With `trading` and `market-risk` both off,
+   switching `market-risk` on switches `trading` on too (and `market-data` and `banking-core`, if they were
+   off).
+3. **Packs that were not loaded cannot be switched on** (`DRS-5001 '<name>' is not loaded; installed: […]`):
+   packs load only when the server starts.
+
+**Where the choice is kept.** In the identity database, table `drishti_pack_state` (one row per pack that was
+ever switched: `name`, `enabled`, `updated_at`, `updated_by`). It survives restarts. A pack with no row is on.
+Each server keeps it in memory and re-reads it every `drishti.identity.refresh-seconds` (15), so with several
+servers sharing one database a switch applies at once on the server that made it and within 15 seconds on the
+others (roles defined in Admin → Roles behave the same). Each switch is audited as `pack-enabled` or
+`pack-disabled`, with the admin's name, in *Admin → Audit log*.
+
+**For programs** (an admin's token when security is on):
+
+```bash
+curl -s http://localhost:18480/api/v1/admin/packs | python3 -c '
+import json,sys
+for p in json.load(sys.stdin): print(p["name"], "loaded" if p["loaded"] else "NOT LOADED", "on" if p["enabled"] else "off", p.get("requiredBy") or "")'
+```
+
+On a server started with `DRISHTI_PACKS=market-risk,counterparty-risk,liquidity-risk,climate-risk,operational-risk,retail-banking,genomics,politics-society,economics`
+you should see (abridged):
+
+```text
+banking-core loaded on ['market-data', 'trading', 'market-risk', 'counterparty-risk', 'liquidity-risk', 'climate-risk', 'operational-risk', 'retail-banking']
+market-data loaded on ['trading', 'market-risk', 'counterparty-risk', 'liquidity-risk', 'climate-risk']
+trading loaded on ['market-risk', 'counterparty-risk', 'liquidity-risk', 'climate-risk']
+market-risk loaded on
+…
+economics loaded on
+finance NOT LOADED off
+logistics NOT LOADED off
+```
+
+To switch a pack, `PUT /api/v1/admin/packs/<name>` with `{"enabled": false}` or `{"enabled": true}`. The answer
+lists the packs now on: `{"name": "operational-risk", "enabled": false, "enabledPacks": [...]}`. See
+[API_GUIDE.md](API_GUIDE.md).
+
 ## Who sees which pack
 
-Three lists decide what a user sees:
+Four lists decide what a user sees. Each one narrows the one before it:
 
 | List | Set by | Meaning |
 |---|---|---|
-| **Installed** | `DRISHTI_PACKS` | what the server runs |
-| **Assigned** | an administrator, per user | what this user may use. A user with no assignment gets `drishti.packs.default-for-users` (`DRISHTI_DEFAULT_PACKS`; empty means every installed pack). |
-| **Active** | the user, with the pack switcher | which of their assigned packs they want to see now |
+| **Loaded** | `DRISHTI_PACKS`, at start-up | what the server runs (the listed packs and their parents) |
+| **Switched on** | an administrator, for everyone (*Admin → Packs*) | which loaded packs are in use; all of them unless switched off ([above](#switching-packs-off-and-on-admin--packs)) |
+| **Assigned** | an administrator, per user (*Admin → Users*) | what this user may use. A user with no assignment gets `drishti.packs.default-for-users` (`DRISHTI_DEFAULT_PACKS`; empty means every switched-on pack). |
+| **Active** | the user, with the pack menu in the top bar | which of their assigned packs they want to see now |
 
-**To assign packs to a user** (administrators): *Admin → Users*, edit the user, tick the packs under **Packs**,
-save. The user list shows each user's packs, or *default packs*. See [USER_MANAGEMENT.md](USER_MANAGEMENT.md) for
-the user dialog and roles.
+Example: the server loads twelve packs; an admin switches `operational-risk` off; Priya is assigned
+`trading`, `counterparty-risk` and `operational-risk`; she ticks only `counterparty-risk`. Priya sees
+counterparty risk, plus the kinds of the packs it extends (`trading`, `market-data`, `banking-core`), and
+nothing of operational risk even though it is assigned to her, because it is off for everyone.
 
-**To choose which packs you see** (any user with more than one pack): click the box icon in the top bar and tick
-the packs. The choice is saved to your account. (For programs: `GET /api/v1/me/packs` answers
+**To assign packs to a user** (administrators), step by step:
+
+1. Open *Admin → Users* (`/admin/users`) and click **Edit** on the user (or **New user**).
+2. Under **Packs**, tick the packs this person may use, say `banking-core` and `counterparty-risk`.
+   Ticking none means *default packs* (`DRISHTI_DEFAULT_PACKS`, or every switched-on pack when that is empty).
+3. Click **Save**. The user list now shows `banking-core, counterparty-risk` in the user's row (or
+   *default packs*), and the change is in the audit log.
+4. At the user's next click, their pack menu lists only those two packs, and kinds of other packs answer
+   `DRS-5002`.
+
+The same with the API (an admin's token when security is on), when creating a user:
+
+```bash
+curl -s -X POST localhost:18480/api/v1/admin/users -H 'Content-Type: application/json' \
+  -d '{"username":"priya","displayName":"Priya Raman","desk":"Credit","roles":["viewer"],
+       "packs":["banking-core","counterparty-risk"],"password":"credit-desk-2026"}'
+```
+
+`PUT /api/v1/admin/users/priya` with a `packs` list changes it later. See
+[USER_MANAGEMENT.md](USER_MANAGEMENT.md) for the user dialog, roles, and where assignments are stored
+(`drishti_user_pack`).
+
+**To choose which packs you see** (any user with more than one pack): click the round box tool in the top bar
+(it shows how many packs you have on), tick the packs (**all** and **none** help), and click **Apply**. The choice is saved to your account. (For programs: `GET /api/v1/me/packs` answers
 `{"assigned": [...], "active": [...]}` for the signed-in user, and `PUT` with `{"active": [...]}` chooses.)
 
 **Enforcement is on the server.** A kind owned by a pack that is not active for you cannot be opened: the view
@@ -188,6 +291,34 @@ Roles work on top of packs: a role lists the kinds it may open (see [Roles](#rol
 Below is the complete `packs/logistics/pack.yaml`, annotated. Then the keys only larger packs use, from
 `packs/counterparty-risk/pack.yaml`. Every key here is read either by the server's pack loader
 (`drishti-packs/…/PackLoader.java`) or by the console (`console/core/packs.py`); keys not listed are ignored.
+
+**Every key at a glance.** Only `pack` is required; a pack with nothing else loads and does nothing.
+
+| Key | Read by | One-line example | What it does | Details |
+|---|---|---|---|---|
+| `pack` | server | `pack: helpdesk` | The pack's name; must equal the folder name | below |
+| `version` | server | `version: 1.2.0` | Shown in About, Admin → Health and Admin → Packs | [Versioning](#versioning-and-upgrading-a-pack) |
+| `title`, `description` | both | `title: Help desk` | The pack's name and paragraph in menus, help and admin pages | below |
+| `extends` (or `requires`) | server | `extends: [market-data, trading]` | Inherit everything from these packs | [Inheritance](#inheritance) |
+| `kinds` | server | `kinds: [ticket, agent]` | The kinds this pack owns | below |
+| `mnemonics` | server | `TKT: { kind: ticket, label: Ticket }` | The commands | below |
+| `graph.id-patterns` | server | `- { pattern: "^TKT-", kind: ticket }` | Recognise a bare id's kind | below |
+| `graph.fields` | server | `assignee: { kind: agent, label: Assigned agent }` | Turn a field's value into a link | below |
+| `graph.badges` | server | `agent: "$.openTickets + ' open'"` | Text shown beside a link, read from the target | below |
+| `graph.impact` | server | `follow: [assignee]`, `measures: { ticket: "$.ageHours" }` | What F8 rolls up and sums | below |
+| `columns` | server | `ticket: [subject, status, priority]` | Key fields in pick lists and searches | [columns](#columns-the-key-fields-of-a-pick-list) |
+| `roles` | server | `support: { kinds: [ticket, agent] }` | Roles this pack adds | [Roles](#roles) |
+| `connectors` | server | `helpdesk-store: { plugin: file, … }` | Named data sources | [below](#keys-for-packs-that-inherit-and-read-real-data) |
+| `routes` | server | `ticket: helpdesk-store` | Which connector answers a kind | [below](#keys-for-packs-that-inherit-and-read-real-data) |
+| `alerts` | server | `- { kind: ticket, name: …, when: "$.ageHours > 24" }` | Suggested alert rules | below |
+| `sutras`, `formats`, `semantics`, `samples` | server | `sutras: sutras` | Where the pack's folders and files are | below |
+| `console.examples` | console | `- ["TKT TKT-1001", "An open ticket"]` | Example commands on `/t` and the landing page | below |
+| `console.workspaces` | console | `workspaces: config/workspaces.yaml` | Starter workspaces | below |
+| `console.help` | console | `help: config/help.yaml` | Help-centre cards and F1 targets | [Guides and help](#guides-and-help) |
+| `console.monitors` | console | `Queue watch: [ { kind: ticket, id: TKT-1001 } ]` | Starter monitors | below |
+
+Values may use `${VARIABLE:default}`, resolved from the environment when the server starts
+(`root: ${HELPDESK_DIR:./data/helpdesk}`).
 
 ```yaml
 pack: logistics                 # REQUIRED. Must equal the folder name, or the server refuses to start.
@@ -263,6 +394,73 @@ is used when the key is absent. A folder or file that does not exist is simply s
 | `semantics` | `config/semantics.yaml` | inference hints: `roles:` (a field-name regex → format, tone, strip weight) and `idFields:` |
 | `samples` | `samples` | sample documents for the built-in `demo` source |
 
+### `columns`: the key fields of a pick list
+
+When a command names several entities (`TRD T-100`, `CPTY north`, `TRD productType=Revolver`), the user gets a
+**pick list**: a table with one row per entity. `columns:` says which fields of each kind appear beside the id,
+in order. From `packs/trading/pack.yaml` and `packs/banking-core/pack.yaml`:
+
+```yaml
+columns:                        # KIND: [field, …]  document paths, as in a search ("counterparty.name" works too)
+  trade:
+  - productType
+  - direction
+  - currency
+  - notional
+  - mtm
+  - maturityDate
+  - book
+```
+
+```yaml
+columns:
+  counterparty: [name, rating, sector, country, netMtm]
+  book: [name, deskName, tradeCount, mtm, dv01]
+```
+
+With these, `TRD T-100 <GO>` shows:
+
+```text
+TRD      Product type   Direction      Currency  Notional      MTM (USD)    Maturity date  Book
+T-10001  IRS_FIXFLOAT   Receive fixed  AUD       242,000,000   1,875,863    2032-06-25     BOOK-RATES-3
+T-10002  IRS_FIXFLOAT   Pay fixed      EUR       110,000,000   1,761,589    2031-04-15     BOOK-RATES-1
+…
+```
+
+How the columns of a pick list or search are chosen:
+
+1. the fields the command itself uses, in the order they appear (`TRD currency=usd order by mtm desc` puts
+   *Currency* and *MTM (USD)* first);
+2. then the kind's `columns:`, skipping any already shown;
+3. if the kind has no `columns:`, the first plain (non-list, non-object) fields of the first document,
+   leaving out `id` and fields starting with `_`, up to six columns in all.
+
+Column headings come from the label taxonomy (*MTM (USD)* for `mtm`), like every other label. A path may be
+written `mtm` or `$.mtm`; both mean the same.
+
+Rules:
+
+- `columns:` is optional. Only `trade`, `counterparty` and `book` have it in the shipped packs; every other
+  kind uses the automatic columns (for `LCR`: *Lcr ID*, *Legal entity name*, *Lcr*, *Hqla*, …).
+- Choose five to seven fields that tell rows apart at a glance: a type, a direction or status, an amount, a
+  date, an owner.
+- A child pack may give a kind of its parent other columns; the more specific pack wins, as for every other
+  key ([Inheritance](#inheritance)).
+- In a **generated** pack, set the columns in the generator, never in `pack.yaml`
+  ([below](#how-the-shipped-packs-are-generated)). For the banking packs that is the `COLUMNS` table in
+  `tools/packgen/banking/make_packs.py`; for the packs built with `tools/packgen/common/packbuild.py` it is the
+  `columns=` argument of the pack's `PackSpec` (for example `columns={"lcr": ["legalEntity", "lcr", "hqla"]}` in
+  `tools/packgen/liquidity/make.py`), then rerun its `make.py`.
+
+Check what the server uses for a kind:
+
+```bash
+curl -s -G http://localhost:18480/api/v1/search --data-urlencode 'q=BOOK limit 1' \
+  | python3 -c 'import json,sys; print(json.load(sys.stdin)["columns"])'
+```
+
+You should see `['$.name', '$.deskName', '$.tradeCount', '$.mtm', '$.dv01']`.
+
 ### Keys for packs that inherit and read real data
 
 From `packs/counterparty-risk/pack.yaml` (abridged; the file is generated by `tools/packgen/banking/make_packs.py`):
@@ -319,6 +517,7 @@ The server turns the manifest into ordinary settings. Knowing this helps when yo
 | `roles.ops` | `drishti.security.roles.ops.kinds[i]`, `.raw`, `.author`, `.admin`, `.approve` |
 | `connectors.x` | `drishti.sources.connectors.x.plugin`, `.enabled`, `.kinds[i]`, `.settings.*` |
 | `routes.kind` | `drishti.sources.routes.<kind>` |
+| `columns.trade` | `drishti.search.columns.trade[i]` |
 | `sutras`, `formats`, `semantics` | added to `drishti.rachana.pack-dirs`, `drishti.rachana.pack-formats-files`, `drishti.inference.pack-semantics-files` |
 | `samples` | added to `drishti.sources.plugins.demo.settings.dirs` |
 
@@ -402,9 +601,10 @@ contextual:                     # optional: which guide F1 opens on a screen
 Screens for `contextual` include `landing`, `terminal`, `view`, `studio`, `workspace`, `monitor`, `alerts`,
 `impact`, `admin`, `account` and `help`.
 
-Write the guide in Markdown with the copyright header comment at the top. Start it with a **Try it** section of
-commands that open real samples, as every shipped overview guide does. Links to other help documents with a relative
-path (`[Sutra guide](../../../console/web/guides/sutra-guide.md)`) open inside the help centre.
+Write the guide in Markdown with the copyright header comment at the top. Describe the domain (what each kind
+is, how they link, where the data comes from) rather than listing sample records, and include a **Finding
+things** section like the one above, so readers know the commands work on their own data too. Links to other help documents with a relative
+path (`[Sutra guide](../console/web/guides/sutra-guide.md)`) open inside the help centre.
 
 ## Roles
 
@@ -427,6 +627,11 @@ roles:
 The core always has `viewer`, `author`, `approver` and `admin`. Roles are given to users by an administrator; see
 [USER_MANAGEMENT.md](USER_MANAGEMENT.md). Security is off by default for local development; roles take effect when
 it is on.
+
+A pack's roles appear in *Admin → Roles* marked **built-in**, read-only: change them in the pack (or, for a
+generated pack, in its generator). An administrator can also define new roles there without touching any pack;
+the dialog's *Add every kind of a pack* buttons fill in a pack's kinds in one click
+([USER_GUIDE.md](USER_GUIDE.md#admin--roles-what-a-role-may-do)).
 
 ## Inheritance
 
@@ -501,6 +706,83 @@ route netting-set: my-bank overrides counterparty-risk
 
 The same list is in `GET /api/v1/admin/health` under `overrides`. It is empty when nothing is overridden.
 
+### Worked example: a child of two parents (the rightmost wins)
+
+This example is the one `PackLoaderTest.aChildInheritsItsParentsAndTheRightmostParentWins` builds and checks
+on every build, so the results below are guaranteed. Four small packs:
+
+```yaml
+# packs/base/pack.yaml
+pack: base
+kinds: [curve]
+mnemonics: { CRV: { kind: curve, label: Curve } }
+roles: { viewer: { kinds: [curve] } }
+graph: { badges: { curve: "'base'" } }
+```
+
+```yaml
+# packs/left/pack.yaml
+pack: left
+extends: [base]
+kinds: [trade]
+mnemonics: { TRD: { kind: trade, label: Left trade } }
+roles: { trader: { kinds: [trade] } }
+graph: { badges: { curve: "'left'" } }
+```
+
+```yaml
+# packs/right/pack.yaml
+pack: right
+extends: [base]
+kinds: [quote]
+mnemonics: { TRD: { kind: trade, label: Right trade } }
+roles: { trader: { kinds: [trade, quote] } }
+```
+
+```yaml
+# packs/child/pack.yaml
+pack: child
+extends: [left, right]
+kinds: [var]
+roles: { viewer: { kinds: [curve, trade, var] } }
+```
+
+Start the server with `DRISHTI_PACKS=child`. All four load, and the order, most specific first, is:
+
+```text
+child → right → left → base
+```
+
+(`right` comes before `left` because it is the rightmost parent; `base` comes once, after both.) Each thing
+defined more than once is settled by that order:
+
+| Defined by | Thing | Result | Why |
+|---|---|---|---|
+| `left` and `right` | mnemonic `TRD` | label *Right trade* | rightmost parent wins |
+| `left` and `right` | role `trader` | kinds `[trade, quote]` | rightmost parent wins |
+| `base` and `child` | role `viewer` | kinds `[curve, trade, var]` | the child wins over everything |
+| `base` and `left` | badge for `curve` | `'left'` | only `left` redefines it, and `left` is more specific than `base` |
+| `base` only | mnemonic `CRV` | `curve` | inherited untouched |
+
+The override report (*Admin → Health*, *Overrides*, and `overrides` in `GET /api/v1/admin/health`) lists each
+decision, one line per thing, including:
+
+```text
+mnemonic TRD: right overrides left
+role viewer: child overrides base
+```
+
+Now start the server with `DRISHTI_PACKS=left,right` instead, without `child`. `left` and `right` are now
+**unrelated**: neither extends the other, and no loaded pack extends both. Their different `TRD` stops the
+server:
+
+```text
+mnemonic TRD is defined by both pack 'left' and pack 'right', which do not inherit from each other; declare it identically, or make one pack extend the other
+```
+
+That is the point of the rule: two packs may disagree only when some pack has said which of them it prefers, by
+listing both in its `extends:`.
+
 ### What can be redefined
 
 | Thing | A more specific pack may |
@@ -521,45 +803,87 @@ Two rules never bend:
 
 ## Writing a pack by hand, step by step
 
-This builds a tiny `helpdesk` pack with tickets. It takes about fifteen minutes and needs no code.
+This tutorial builds a complete `helpdesk` pack from an empty folder: three kinds (tickets, agents, clients),
+commands, links with badges, F8 impact, pick-list columns, a role, an alert, a Sutra, a guide, starters, sample
+data, and finally a real data folder behind a connector. It needs no code and takes about forty minutes. Each
+step says what to type and what you should see.
 
-**1. Create the folders.**
+The finished pack:
+
+```text
+packs/helpdesk/
+├── pack.yaml                         step 2, grown in steps 6–9 and 13
+├── samples/
+│   ├── catalog.json                  step 3
+│   ├── ticket/TKT-1001.json  TKT-1002.json
+│   ├── agent/AGT-07.json
+│   └── client/CLI-ACME.json  CLI-GLOBEX.json
+├── config/
+│   ├── semantics.yaml  formats.yaml  step 10
+│   ├── help.yaml  workspaces.yaml     step 12
+├── sutras/
+│   └── ticket.v1.sutra.md            step 11
+└── guides/
+    └── helpdesk.md                   step 12
+```
+
+Before you start: the server and console run from the repository root ([QUICKSTART.md](QUICKSTART.md)), and
+you know which packs your server loads (`curl -s http://localhost:18480/api/v1/packs`). The helpdesk pack shares
+no kinds with any shipped pack, so it can be added to the `finance` demo or to the banking family alike. The
+examples below add it to the banking family.
+
+### Step 1. Create the folders
 
 ```bash
-mkdir -p packs/helpdesk/samples/ticket packs/helpdesk/sutras packs/helpdesk/guides packs/helpdesk/config
+mkdir -p packs/helpdesk/{samples/ticket,samples/agent,samples/client,sutras,guides,config}
 ```
 
-**2. Write `packs/helpdesk/pack.yaml`.** (Every file in the repository needs the copyright header; copy it from
-`packs/logistics/pack.yaml`, or run `python3 tools/license_headers.py --fix` afterwards.)
+### Step 2. The smallest working manifest
+
+Create `packs/helpdesk/pack.yaml`. Every file in the repository carries the copyright header: copy the comment
+block at the top of `packs/logistics/pack.yaml`, or run `python3 tools/license_headers.py --fix` when you are
+done (the build's `LicenseHeaderTest` fails otherwise).
 
 ```yaml
-pack: helpdesk
+pack: helpdesk                    # must equal the folder name
 version: 0.1.0
 title: Help desk
-description: Support tickets and their agents.
-kinds: [ticket, agent]
-mnemonics:
+description: Support tickets, the agents who work them and the clients who raise them.
+
+kinds: [ticket, agent, client]    # the kinds this pack owns; no other loaded pack may own them
+
+mnemonics:                        # what users type
   TKT: { kind: ticket, label: Ticket }
-  AGT: { kind: agent, label: Agent }
+  AGT: { kind: agent,  label: Agent }
+  CLI: { kind: client, label: Client }
+
 graph:
-  id-patterns:
+  id-patterns:                    # a bare id is recognised by its prefix
     - { pattern: "^TKT-", kind: ticket }
     - { pattern: "^AGT-", kind: agent }
-  fields:
-    assignee: { kind: agent, label: Assigned agent }
-roles:
-  support: { kinds: [ticket, agent] }
+    - { pattern: "^CLI-", kind: client }
+
 console:
-  examples:
-    - ["TKT TKT-1001", "An open ticket"]
+  examples:                       # shown on /t; also what DomainPacksTest-style tests open
+    - ["TKT TKT-1001", "An open ticket · history and agent"]
+    - ["AGT AGT-07", "An agent · inferred"]
 ```
 
-**3. Add samples.** `packs/helpdesk/samples/catalog.json`:
+### Step 3. Sample data
+
+The built-in `demo` source serves every loaded pack's `samples/` folder, so the pack works before you have a real
+data store. `samples/catalog.json` lists every sample; each entry needs all four fields. The `title` and
+`subtitle` are what the suggestions show.
+
+`packs/helpdesk/samples/catalog.json`:
 
 ```json
 [
-  { "kind": "ticket", "id": "TKT-1001", "title": "TKT-1001", "subtitle": "Ticket · Cannot sign in" },
-  { "kind": "agent",  "id": "AGT-07",   "title": "AGT-07",   "subtitle": "Agent · Priya N." }
+  { "kind": "ticket", "id": "TKT-1001", "title": "TKT-1001", "subtitle": "Ticket · Cannot sign in · High" },
+  { "kind": "ticket", "id": "TKT-1002", "title": "TKT-1002", "subtitle": "Ticket · Invoice missing · Normal" },
+  { "kind": "agent",  "id": "AGT-07",   "title": "AGT-07",   "subtitle": "Agent · Priya N. · Identity" },
+  { "kind": "client", "id": "CLI-ACME",   "title": "CLI-ACME",   "subtitle": "Client · Acme Freight Ltd" },
+  { "kind": "client", "id": "CLI-GLOBEX", "title": "CLI-GLOBEX", "subtitle": "Client · Globex Retail plc" }
 ]
 ```
 
@@ -572,69 +896,544 @@ console:
   "status": "Open",
   "priority": "High",
   "assignee": "AGT-07",
-  "ageHours": 5,
+  "client": "CLI-ACME",
+  "clientName": "Acme Freight Ltd",
+  "ageHours": 30,
   "history": [
-    { "date": "2026-09-28", "event": "Opened" },
+    { "date": "2026-09-28", "event": "Opened by client" },
     { "date": "2026-09-29", "event": "Assigned to AGT-07" },
-    { "date": "2026-09-30", "event": "Customer replied" }
+    { "date": "2026-09-30", "event": "Client replied" }
   ],
   "_meta": { "source": "helpdesk", "generation": 1, "live": true, "walk": { "ageHours": 1 } }
 }
 ```
 
-and `packs/helpdesk/samples/agent/AGT-07.json`:
+`packs/helpdesk/samples/ticket/TKT-1002.json`:
 
 ```json
-{ "agentId": "AGT-07", "name": "Priya N.", "team": "Identity", "openTickets": 4,
+{
+  "ticketId": "TKT-1002",
+  "subject": "Invoice missing",
+  "status": "Waiting on client",
+  "priority": "Normal",
+  "assignee": "AGT-07",
+  "client": "CLI-GLOBEX",
+  "clientName": "Globex Retail plc",
+  "ageHours": 6,
+  "history": [ { "date": "2026-09-30", "event": "Opened by client" } ],
+  "_meta": { "source": "helpdesk", "generation": 1, "live": false }
+}
+```
+
+`packs/helpdesk/samples/agent/AGT-07.json`:
+
+```json
+{ "agentId": "AGT-07", "name": "Priya N.", "team": "Identity", "openTickets": 2, "shift": "EMEA early",
   "_meta": { "source": "helpdesk", "generation": 1, "live": false } }
 ```
 
-**4. Turn it on.** Restart the server with the pack added (it has no kinds in common with `finance`):
+`packs/helpdesk/samples/client/CLI-ACME.json` (and `CLI-GLOBEX.json` alike, with `"name": "Globex Retail plc"`
+and `"tier": "Silver"`):
 
-```bash
-DRISHTI_PACKS=finance,helpdesk java -jar drishti-server/target/drishti-server-*-exec.jar
+```json
+{ "clientId": "CLI-ACME", "name": "Acme Freight Ltd", "tier": "Gold", "country": "GB",
+  "_meta": { "source": "helpdesk", "generation": 1, "live": false } }
 ```
 
-You should see `helpdesk` in `curl -s http://localhost:18480/api/v1/packs`. In the terminal, typing `TK` suggests
-`TKT`, and `TKT TKT-1` suggests `TKT-1001`.
+| `_meta` key | Meaning |
+|---|---|
+| `source` | the source system named in *How this view was built* and in `F9` |
+| `generation` | a version number shown with the source |
+| `live` | `true`: the document ticks while someone watches it |
+| `walk` | `{ field: step }`: top-level numbers that random-walk by up to `step` on each tick (here the ticket's age) |
 
-**5. Open it.** Type `TKT TKT-1001 <GO>`. There is no Sutra yet, so inference lays it out: a strip with the
-scalar fields, a ladder for `history` (rows led by a date), and **Linked entities** with `AGT-07`. The footer says
-*inference only*. See [INFERENCE.md](INFERENCE.md) for how it decides.
+Every catalogue entry must have its file; a missing file stops the demo source from starting.
 
-**6. Make it a Sutra.** Open **Studio** (`/studio`), load the entity `ticket` / `TKT-1001`, press **Start from inference**,
-adjust the layout with the live preview, and save it as `packs/helpdesk/sutras/ticket.v1.sutra.md`. (Saving needs
-`DRISHTI_STUDIO_SAVE=true` and an author role; otherwise copy the text into the file.) The
-[Sutra guide](../console/web/guides/sutra-guide.md) and [Sutra Studio tutorial](../console/web/guides/sutra-studio.md)
-explain the grammar and the editor.
+### Step 4. Load it
 
-**7. Finish it.** Optional, in any order:
+Packs load when the server starts. Stop the server (Ctrl+C in its terminal) and start it with the pack added:
 
-- `config/semantics.yaml`, so inference formats your fields (`ageHours` as hours):
-  `roles: [ { role: age, pattern: "hours$", fmt: amount0, weight: 70 } ]`;
-- `config/formats.yaml` for new formats;
-- `graph.badges.agent: "$.openTickets + ' open'"`, so a link to an agent shows its load;
-- an `alerts:` suggestion (`when: "$.ageHours > 24"`);
-- `guides/helpdesk.md`, starting with **Try it**, and `config/help.yaml` with its card;
-- `config/workspaces.yaml` and `console.monitors` for starters.
+```bash
+export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+DRISHTI_PACKS=market-risk,counterparty-risk,helpdesk \
+  java -jar drishti-server/target/drishti-server-1.10.0-exec.jar
+```
 
-**8. Real data.** When the data lives somewhere real, add a `connectors:` entry for it and a `routes:` line per
-kind (see above and [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md)). The samples can stay for demos.
+Check it loaded:
 
-To generate a larger pack — many kinds, consistent documents, Sutras, a guide and a Delta Lake — from a short
+```bash
+curl -s http://localhost:18480/api/v1/packs | python3 -c 'import json,sys; print([p["name"] for p in json.load(sys.stdin)])'
+```
+
+You should see `helpdesk` in the list, after the banking packs. If the server stopped instead, the message says
+why (a typo in a folder name, a kind another pack owns, a clash with an unrelated pack): see
+[TROUBLESHOOTING.md](TROUBLESHOOTING.md#building-and-starting).
+
+The console needs no restart: it asks the server which packs are on, and refreshes its own copy of each pack's
+`console:` keys within a minute.
+
+### Step 5. Open it (inference only)
+
+In the terminal (`/t`):
+
+1. Type `TK`. The dropdown offers `TKT` *Ticket*. Type `TKT TKT-1`: it offers `TKT-1001` and `TKT-1002` with
+   their subtitles.
+2. Type `TKT TKT-1001` and press Enter. There is no Sutra yet, so **inference** lays the ticket out: the strip
+   holds the plain fields it scores highest (such as *Subject*, *Status*, *Priority*), `history` becomes a ladder
+   (rows led by a date), and *How this view was built* says `inference only`.
+3. `AGT-07` and `CLI-ACME` appear as plain text: nothing says yet that they are ids of other kinds.
+4. Type `TKT TKT-100` and press Enter: a pick list, *Pick a ticket*, `2 of 2 tickets match`, with the first
+   plain fields of a ticket as columns. Type `TKT-1001` on its own and press Enter: the bare id opens the ticket,
+   because of the `^TKT-` pattern.
+
+See [INFERENCE.md](INFERENCE.md) for how inference decides.
+
+### Step 6. Links and badges
+
+Add to `graph:` in `pack.yaml`:
+
+```yaml
+  fields:                         # a field whose value is another entity's id becomes a link
+    assignee: { kind: agent,  label: Assigned agent }
+    client:   { kind: client, label: Client }
+  badges:                         # Rachana-EL, evaluated on the TARGET of the link
+    agent:  "$.openTickets + ' open'"
+    client: "$.tier"
+```
+
+Restart the server and open `TKT TKT-1001` again. *Linked entities* now lists **Assigned agent** `AGT-07` with
+the badge `2 open`, and **Client** `CLI-ACME` with `Gold`. Click `AGT-07`: the agent opens, and the breadcrumbs
+read `← TKT-1001 / AGT-07`.
+
+A link field name means **one kind everywhere**: if another loaded pack also declares a `client` field for a
+different kind, the server refuses to start. Pick names that fit your domain (`assignee`, not `owner`, if
+`owner` is taken).
+
+### Step 7. Impact (F8)
+
+Add under `graph:`:
+
+```yaml
+  impact:
+    follow: [client]              # roll dependents up through these link fields
+    measures: { ticket: "$.ageHours" }   # Rachana-EL per dependent kind, summed per group
+    formats:  { ticket: amount0 }
+```
+
+Restart, open `AGT AGT-07` and press `F8`. You should see *Impact of AGT-07*:
+
+- **Depends on it directly:** *Ticket · 2*: `TKT-1001` and `TKT-1002`, which name the agent in `assignee`,
+  with their ages summed in the group's header.
+- **Rolls up into:** *Client · 2*: `CLI-ACME` and `CLI-GLOBEX`, reached through the tickets' `client` field
+  (shown in the **Via** column). Clients have no measure, so they are listed without one.
+
+That answers *"which clients are affected if Priya is off sick?"*. Impact finds dependents through the sources'
+reverse lookups; the `demo` source has them, as do the lake and database connectors. See the
+[Impact guide](../console/web/guides/impact.md).
+
+### Step 8. Pick-list columns
+
+Add at the top level of `pack.yaml`:
+
+```yaml
+columns:                          # key fields beside each id in pick lists and searches
+  ticket: [subject, status, priority, assignee, ageHours]
+  agent:  [name, team, openTickets]
+  client: [name, tier, country]
+```
+
+Restart and type `TKT TKT-100`, then Enter. The pick list now shows *Subject*, *Status*, *Priority*, *Assignee*
+and the age for each ticket. Try `TKT status=open`: one match, so `TKT-1001` opens at once. Try
+`TKT priority != high order by ageHours desc`: a list again.
+
+### Step 9. A role and an alert suggestion
+
+```yaml
+roles:
+  support: { kinds: [ticket, agent, client] }           # opens the pack's kinds, nothing else
+  support-lead: { kinds: [ticket, agent, client], raw: true }   # and sees F9 unmasked
+
+alerts:
+  - kind: ticket
+    name: "Open more than a day"
+    when: "$.ageHours > 24 && $.status != 'Closed'"
+    severity: warn
+    message: "${$.ticketId}: open ${fmt($.ageHours, 'amount0')} h (${$.clientName})"
+```
+
+- Roles take effect when sign-in is on. They appear in *Admin → Roles*, marked **built-in**; give them to users
+  in *Admin → Users* ([USER_MANAGEMENT.md](USER_MANAGEMENT.md)).
+- The alert appears as a suggestion on the Alerts page when the kind is `ticket`. Open `TKT TKT-1001`, click
+  **Alert**, and pick *Open more than a day*: the form fills in. Save it: the ticket's age is about 30 (it ticks),
+  so the bell shows an alert at once, reading like `warn TKT-1001 TKT-1001: open 31 h (Acme Freight Ltd)`.
+
+### Step 10. Vocabulary: labels and formats for inference
+
+`packs/helpdesk/config/formats.yaml`, a format of your own:
+
+```yaml
+formats:
+  age0: { type: number, decimals: 0, suffix: " h" }
+```
+
+`packs/helpdesk/config/semantics.yaml`, hints that inference and labels use:
+
+```yaml
+roles:                            # a field-name pattern → how inference shows such fields
+  - { role: age, pattern: "hours$", fmt: age0, weight: 80 }   # ageHours, slaHours, … shown as "30 h"
+labels:                           # field → label, everywhere (strips, tables, pick-list headings)
+  ageHours: Age (h)
+  assignee: Agent
+idFields: ["ticketId", "agentId", "clientId"]
+```
+
+Restart. In the inferred ticket view the age now reads `30 h`, and the pick list's column is headed *Age (h)*
+and *Agent*. Labels are optional: a field without one is humanised (`openTickets` → *Open tickets*).
+
+### Step 11. A Sutra: the layout you want
+
+Inference is a good start; a **Sutra** fixes the layout. Create `packs/helpdesk/sutras/ticket.v1.sutra.md`
+(header comment first, then prose, then exactly one `sutra` block):
+
+````markdown
+# Ticket (`ticket` v1)
+
+A support ticket: its status, age and agent in the strip, its history as a ladder.
+
+```sutra
+sutra: ticket
+version: 1
+description: A support ticket with its history, agent and client.
+match: { kind: ticket, priority: 10 }
+title: { pill: "Ticket", id: $.ticketId, with: $.clientName }
+strip:
+  - { label: Subject, bind: $.subject }
+  - { label: Status, bind: $.status, tone: status }
+  - { label: Priority, bind: $.priority }
+  - { label: Age, bind: $.ageHours, fmt: age0, emphasis: true }
+  - { label: Agent, bind: "link($.assignee, 'agent')" }
+  - { label: Client, bind: "link($.client, 'client')" }
+panels:
+  - id: history
+    kind: ladder
+    title: History
+    code: HIST
+    key: F2
+    rows: $.history
+    highlight: "#index == size($.history) - 1"
+    columns:
+      - { label: Date, bind: "@.date", fmt: date }
+      - { label: Event, bind: "@.event" }
+  - { id: built, kind: provenance, title: How this view was built }
+  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+keys: { F7: "link($.assignee, 'agent')", F9: raw }
+```
+````
+
+Pack Sutras are watched: the server picks the file up within about a second, without a restart. Check:
+
+```bash
+curl -s http://localhost:18480/api/v1/sutras/problems
+```
+
+You should see `{}`. Open `TKT TKT-1001`: the title reads `[Ticket] TKT-1001 with Acme Freight Ltd`, the strip
+has your six figures, *History* is on `F2`, `F7` opens the agent, and *How this view was built* says
+`Sutra ticket v1 + inference`. A mistake (say `kind: ladderr`) is reported with its line instead, and the view
+keeps the last good version: see [runbooks/sutra-broken.md](runbooks/sutra-broken.md).
+
+Writing Sutras is taught in the [Sutra guide](../console/web/guides/sutra-guide.md) and
+[RACHANA_GUIDE.md](RACHANA_GUIDE.md); every key is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md). Studio's
+**Start from inference** turns the inferred view into a Sutra you can edit.
+
+### Step 12. Guide, help card, starters
+
+`packs/helpdesk/guides/helpdesk.md` (Markdown, header comment first). Describe the domain, not the samples:
+
+```markdown
+# The help-desk pack
+
+Tickets raised by clients and worked by agents.
+
+## Kinds
+
+| Kind | Mnemonic | What it is |
+|---|---|---|
+| ticket | `TKT` | One support request, from opening to closing |
+| agent | `AGT` | A person who works tickets |
+| client | `CLI` | An organisation that raises tickets |
+
+## Finding things
+
+| Command | Does |
+|---|---|
+| `TKT <id> <GO>` | Opens that ticket. A bare id (`TKT-…`) works too. |
+| `TKT <start of an id> <GO>` | A pick list; one match opens. `*` is a wildcard; case never matters. |
+| `TKT <field>=<value> <GO>` | Lists by value: `TKT status=open`, `TKT ageHours > 24 order by ageHours desc`. |
+| `TKT <GO>` | Lists every ticket. |
+```
+
+`packs/helpdesk/config/help.yaml`, the card in the help centre and the guide `F1` opens on the terminal:
+
+```yaml
+guides:
+  - { slug: helpdesk-pack, category: start, title: "The help-desk pack", kind: guide, icon: headset,
+      file: guides/helpdesk.md, summary: "Tickets, agents and clients." }
+contextual:
+  terminal: helpdesk-pack
+```
+
+`packs/helpdesk/config/workspaces.yaml`, a starter workspace:
+
+```yaml
+templates:
+  Ticket desk:
+    description: A ticket beside its agent.
+    layout: "1+2"
+    panes:
+      - { ref: { kind: ticket, id: TKT-1001 }, title: Ticket }
+      - { ref: { kind: agent, id: AGT-07 }, follows: 0, title: Agent }
+```
+
+and in `pack.yaml`, under `console:`:
+
+```yaml
+  workspaces: config/workspaces.yaml
+  help: config/help.yaml
+  monitors:
+    Queue watch: [ { kind: ticket, id: TKT-1001 }, { kind: ticket, id: TKT-1002 } ]
+```
+
+Restart the server, wait a minute, then check: *Help → Help centre* has a card *The help-desk pack*;
+*Views → Workspaces* offers *Ticket desk*; *Views → Monitors* offers *Queue watch*, where `TKT-1001`'s age
+ticks.
+
+### Step 13. Real data: a connector and a route
+
+Samples are for demos. Real tickets live somewhere else; here, JSON files that a ticketing system exports to a
+folder every few minutes. The `file` plugin reads such a folder ([PLUGIN_GUIDE.md](PLUGIN_GUIDE.md#file)).
+
+1. Create the folder and one exported ticket, `data/helpdesk/ticket/TKT-2001.json` (the kind is the folder name,
+   the id the file name; no `_meta` needed):
+
+   ```json
+   { "ticketId": "TKT-2001", "subject": "VPN drops every hour", "status": "Open", "priority": "High",
+     "assignee": "AGT-07", "client": "CLI-ACME", "clientName": "Acme Freight Ltd", "ageHours": 3,
+     "history": [ { "date": "2026-09-30", "event": "Opened by client" } ] }
+   ```
+
+2. Declare the connector and route tickets to it, in `pack.yaml`:
+
+   ```yaml
+   connectors:
+     helpdesk-store:
+       plugin: file
+       enabled: ${HELPDESK_STORE_ENABLED:true}
+       kinds: [ticket]
+       settings:
+         root: ${HELPDESK_DIR:./data/helpdesk}
+         rescan-seconds: 30
+   routes:
+     ticket: helpdesk-store          # tickets are read from this connector first
+   ```
+
+3. Restart the server and check the connector:
+
+   ```bash
+   curl -s http://localhost:18480/api/v1/sources | python3 -c 'import json,sys; [print(s["name"], s["kinds"], s["health"]) for s in json.load(sys.stdin)["sources"] if s["name"]=="helpdesk-store"]'
+   ```
+
+   You should see `helpdesk-store ['ticket'] UP`. A wrong folder gives `DOWN: no directory …`.
+
+4. Type `TKT TKT-2001` and press Enter. The ticket opens with your Sutra, and *How this view was built* names
+   `helpdesk-store` as the source. `TKT-1001` still opens from the samples.
+5. Drop more files into the folder: they open at once, and appear in suggestions and pick lists after the next
+   rescan (30 s).
+
+For a database, a lake, Kafka or S3 instead, only the `plugin` and `settings` change; see
+[PLUGIN_GUIDE.md](PLUGIN_GUIDE.md) and, for a pack reading from several stores, its last section. A site can
+point the connector elsewhere without touching the pack: `HELPDESK_DIR=/srv/exports/tickets`, or
+`drishti.sources.connectors.helpdesk-store.settings.root` in its own configuration.
+
+### Step 14. Check it, as the build does
+
+```bash
+python3 tools/license_headers.py --fix        # adds the header to any new file that lacks one
+./mvnw -q -pl drishti-rachana -am test -Dtest=PackSutrasTest -Dsurefire.failIfNoSpecifiedTests=false   # every pack's Sutras load
+```
+
+`PackSutrasTest` finds every folder under `packs/` that has a `sutras/` folder, so your pack is tested without
+registering it anywhere. See [Testing a pack](#testing-a-pack) for the rest.
+
+### What you built, key by key
+
+| Step | Key | What the user gets |
+|---|---|---|
+| 2 | `pack`, `version`, `title`, `description`, `kinds`, `mnemonics`, `graph.id-patterns`, `console.examples` | `TKT TKT-1001`, `TKT-1001` alone, suggestions, examples on `/t` |
+| 3 | `samples/` | data with no database |
+| 6 | `graph.fields`, `graph.badges` | links between tickets, agents and clients, with badges |
+| 7 | `graph.impact` | F8 on an agent: tickets, then clients |
+| 8 | `columns` | useful pick lists |
+| 9 | `roles`, `alerts` | access control; one-click alert rules |
+| 10 | `config/formats.yaml`, `config/semantics.yaml` | `30 h`, *Age (h)* |
+| 11 | `sutras/` | the layout you designed |
+| 12 | `guides/`, `console.help`, `console.workspaces`, `console.monitors` | help card, F1, starters |
+| 13 | `connectors`, `routes` | real data |
+
+To generate a much larger pack (many kinds, consistent documents, Sutras, a guide and a Delta Lake) from a short
 Python description, follow [Tutorial 5 · Build a domain pack](../console/web/guides/build-a-pack.md). That is how
 every pack after the banking family was made (`tools/packgen/common/packbuild.py`).
 
+## Versioning and upgrading a pack
+
+**The pack's `version`** (`version: 1.2.0`) is a label: it is shown on About, *Admin → Health* and *Admin →
+Packs*, and nothing else depends on it. Raise it whenever the pack changes, so an administrator can tell which
+copy a server runs:
+
+```bash
+curl -s http://localhost:18480/api/v1/packs | python3 -c 'import json,sys; [print(p["name"], p["version"]) for p in json.load(sys.stdin)]'
+```
+
+**Sutras carry their own versions** (`version: 2` inside the `sutra` block, and `ticket.v2.sutra.md` as the
+file name by convention). The highest version of each Sutra name is the one used. Keep the old file while
+views may still need it to compare, or delete it; a name and version defined twice is an error (`DRS-2028`).
+
+**What a change needs**, by part of the pack:
+
+| You changed | It takes effect |
+|---|---|
+| a Sutra (`sutras/`) | within about a second (hot reload), on every server reading that folder |
+| `pack.yaml` (any key), `config/formats.yaml`, `config/semantics.yaml` | at the next server restart |
+| `samples/` | at the next server restart (the demo source reads them when it starts) |
+| `console:` keys, `guides/`, `config/help.yaml`, `config/workspaces.yaml` | in the console within a minute |
+| data behind a connector | at once, or at the connector's next rescan |
+
+**Upgrading a pack on a running installation**, step by step:
+
+1. Read the pack's change notes (its guide, or the generator's commit). Look for renamed kinds, mnemonics or
+   link fields: saved monitors, workspaces and alert rules refer to kinds and ids, and a renamed kind leaves
+   them pointing at nothing.
+2. Replace the folder `packs/<name>/` with the new version (for a repository checkout: `git pull`).
+3. If it adds packs it extends, nothing else is needed: parents load with their child.
+4. Restart the server. Watch its log for the pack loader's refusals (a kind now owned by two packs, a clash
+   with an unrelated pack).
+5. Check *Admin → Health*: the pack shows its new version, `sutraProblems` is empty, and its connectors are
+   up. Check *Admin → Packs*: a pack switched off before the upgrade stays off (the switch is kept by name).
+6. Open one of its example commands from `/t`.
+
+**Removing a pack:** take it out of `DRISHTI_PACKS` and restart. Saved monitors, workspaces and alert rules that
+refer to its kinds stay saved, but those entities cannot be opened until the pack returns. To hide a
+pack without a restart, switch it off in *Admin → Packs* instead.
+
+## Testing a pack
+
+These checks cover a pack. The Java tests run on every `./mvnw verify`; the drill (`tools/drill.sh`) runs them, plus the
+generator checks, before anything reaches `main`.
+
+| Check | Where | What it proves | Picks up a new pack by itself? |
+|---|---|---|---|
+| `PackLoaderTest` | `drishti-packs` | the loader: manifests, inheritance order, overrides, refusals (clashes, cycles, missing packs) | — (tests the rules, with packs it writes itself) |
+| `PackSutrasTest` | `drishti-rachana` | every pack's Sutras parse and validate with zero problems, and every `name@version` is unique | yes: every `packs/*/sutras/` |
+| `ImperfectDataTest` | `drishti-server` | every Sutra of every pack survives missing fields, wrong types and flipped shapes: the view still builds, and empty panels say *No data available* | yes |
+| `DomainPacksTest` | `drishti-server` | the seven generated domain packs load together, and every example command they advertise opens a full view built by a Sutra, every panel filled, no link missing | no: it names the packs it tests |
+| `BankingPacksTest` | `drishti-server` | enabling two risk packs brings the packs they extend, their Sutras and their data-domain connectors | no |
+| generator checks | `tools/packgen/*/make*.py --check` | generated files are exactly what the generator writes | yes, for generated packs |
+| `LicenseHeaderTest` | `drishti-it` | every file carries the copyright header | yes |
+
+Run the pack-related tests alone while you work:
+
+```bash
+export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+./mvnw -q -pl drishti-packs -am test -Dtest=PackLoaderTest -Dsurefire.failIfNoSpecifiedTests=false
+./mvnw -q -pl drishti-rachana -am test -Dtest=PackSutrasTest -Dsurefire.failIfNoSpecifiedTests=false
+./mvnw -q -pl drishti-server -am test -Dtest='ImperfectDataTest,DomainPacksTest' -Dsurefire.failIfNoSpecifiedTests=false
+```
+
+To have your pack's examples tested like the shipped ones, add its name to the list in
+`DomainPacksTest.everyAdvertisedExampleOpensAFullView` and to the `drishti.packs.enabled` property at the top of
+that class. The test then opens each `console.examples` command and fails if a view is laid out by inference
+only, if a panel is empty, or if a link points at an entity no source holds.
+
+A manual check after any change takes a minute:
+
+1. `curl -s http://localhost:18480/api/v1/sutras/problems` prints `{}`.
+2. *Admin → Health* shows the pack **OK**, with no Sutra problems, no connectors down, and the overrides you
+   expect (and no others).
+3. Each `console.examples` command opens, and its *How this view was built* names a Sutra.
+4. `<MN> <GO>` for each mnemonic gives a pick list with sensible columns.
+
 ## How the shipped packs are generated
 
-Most shipped packs are generated, and their files say so in a comment (`Generated by …, edit the generator, not
-this file`). Regenerating overwrites hand edits.
+Most shipped packs are **generated**: a Python program writes their `pack.yaml`, Sutras, samples, guides and
+help cards from one description. Each generated file says so in a comment near the top:
+
+```yaml
+# Generated by tools/packgen/banking/make_packs.py from the taxonomy. Edit the generator, not this file.
+```
 
 | Packs | Generator |
 |---|---|
-| `banking-core`, `market-data`, `trading`, `market-risk`, `counterparty-risk` | `tools/packgen/banking/` (`make_packs.py` manifests, `make_sutras.py` the 170 Sutras, `make_docs.py` guides, `make_data.py` documents and lake) |
-| `liquidity-risk`, `climate-risk`, `operational-risk`, `retail-banking`, `genomics`, `politics-society`, `economics` | `tools/packgen/<area>/make.py` on the common builder `tools/packgen/common/packbuild.py` |
-| `finance`, `logistics` | hand-written; samples from `packs/<name>/tools/` |
+| `banking-core`, `market-data`, `trading`, `market-risk`, `counterparty-risk` | `tools/packgen/banking/`: `make_packs.py` the manifests, `make_sutras.py` the 170 Sutras, `make_docs.py` the guides, `make_data.py` the documents and the lake |
+| `liquidity-risk`, `climate-risk`, `operational-risk`, `retail-banking`, `genomics`, `politics-society`, `economics` | `tools/packgen/<area>/make.py` (`liquidity`, `climate`, `oprisk`, `retail`, `genomics`, `politics`, `economics`), all on the common builder `tools/packgen/common/packbuild.py` |
+| `finance`, `logistics` | hand-written; their samples come from `packs/<name>/tools/` |
+
+### Never edit a generated file by hand
+
+A hand edit to a generated `pack.yaml`, Sutra, sample or guide is lost the next time the generator runs, and
+before that it **fails the drill**. `tools/drill.sh`, which must pass before anything is merged to `main`,
+runs every generator in check mode:
+
+```bash
+python3 tools/packgen/banking/make_packs.py --check
+python3 tools/packgen/banking/make_sutras.py --check
+python3 tools/packgen/retail/make.py --check
+```
+
+When everything is in step you should see:
+
+```text
+5 pack manifests up to date
+170 Sutras up to date
+retail-banking: 159 files up to date
+```
+
+After a hand edit to `packs/trading/pack.yaml`, the first command stops with
+`pack manifests out of date; run make_packs.py: ['packs/trading/pack.yaml']`. The packbuild generators also
+refuse files they did not write: an extra Sutra dropped into `packs/retail-banking/sutras/` gives
+`retail-banking pack out of date; run tools/packgen/retail/make.py. stale=[] extra=[…]`.
+
+### Changing a generated pack, step by step
+
+Example: show the trader's name in trade pick lists.
+
+1. Find the generator named in the file's comment: `tools/packgen/banking/make_packs.py`.
+2. Change its input. Here, the `COLUMNS` table near the top:
+
+   ```python
+   COLUMNS = {"trading": {"trade": ["productType", "direction", "currency", "notional", "mtm", "maturityDate", "book", "trader"]},
+   ```
+
+3. Run the generator without `--check`. It rewrites the files:
+
+   ```bash
+   python3 tools/packgen/banking/make_packs.py
+   ```
+
+   You should see `wrote 5 pack manifests: banking-core, market-data, trading, market-risk, counterparty-risk`.
+4. Check the result: `git diff packs/trading/pack.yaml` shows `- trader` added under `columns: trade:`.
+5. Restart the server (packs load at start-up), type `TRD T-100` and press Enter: the pick list has a
+   *Trader* column.
+6. Commit the generator **and** the files it wrote, together. `--check` now passes.
+
+### Changing a pack you do not own
+
+To change a shipped pack for your site without touching its files at all, use one of these instead:
+
+| You want | Do this |
+|---|---|
+| A different layout for one kind | Put a Sutra with a higher `version` in the site Sutra folder (`./sutras`, `DRISHTI_SUTRAS`), or edit it in Studio |
+| Other mnemonics, labels, columns, connectors or routes | A small pack of your own that `extends` the shipped one ([Inheritance](#inheritance)) |
+| A connector pointed elsewhere, or switched off | Site configuration: `drishti.sources.connectors.<name>.…` ([CONFIGURATION.md](CONFIGURATION.md)) |
+| A pack hidden from everyone | *Admin → Packs* → **Switch off** ([above](#switching-packs-off-and-on-admin--packs)) |
 
 The banking lake is built with:
 

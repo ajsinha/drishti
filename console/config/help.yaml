@@ -20,6 +20,7 @@ categories:
     icon: flag
     blurb: Open your first view, learn the command line and the keys, and read what a view is telling you.
     guides:
+      - { slug: quickstart, doc: QUICKSTART.md, title: Quickstart, icon: lightning, summary: "Ten minutes from a fresh clone to a live view: build, start, and eight commands to try." }
       - { slug: install-and-run, doc: GETTING_STARTED.md, title: Install and run, icon: download, summary: "From nothing to your first view: build, start, sign in, and the first commands to type, step by step." }
       - { slug: impact, title: F8 · Impact, icon: diagram-3, summary: "What depends on an entity: its dependents, what they roll into, and the amount at stake." }
       - { slug: monitors-and-alerts, title: Monitors and alerts, icon: bell, summary: "Live watchlists, and rules the server checks on every change: alerted once, re-armed when clear." }
@@ -30,6 +31,7 @@ categories:
     icon: braces
     blurb: How screens are described instead of coded. Rachana is the grammar; each Sutra is one layout written in it.
     guides:
+      - { slug: rachana-guide, doc: RACHANA_GUIDE.md, title: Rachana, step by step, icon: mortarboard, summary: "A tutorial from your first Sutra to a full trade view: strips, panels, tables, charts, keys, conditions, matching and review." }
       - { slug: sutra-guide, title: The Sutra guide, icon: journal-richtext, summary: "Everything about writing Sutras: anatomy, labels and taxonomies, paths, formats, all thirteen panel kinds with screenshots, matching, inference, Studio." }
       - { slug: panel-kinds, title: The thirteen panel kinds, icon: grid-1x2, summary: "What each panel kind shows, when to use it, and the Sutra that produces it." }
       - { slug: sutra-studio, title: "Tutorial 3 · Sutra Studio", kind: tutorial, icon: stars, summary: "Start from inference, edit with live preview, fix problems by line, and save." }
@@ -69,6 +71,8 @@ categories:
     icon: code-square
     blurb: The API, the design, and why it is the way it is.
     guides:
+      - { slug: connectors, doc: CONNECTOR_GUIDE.md, title: Connector guide, icon: plug, summary: "Get your data in: which connector to use, a worked set-up for each, routing, reconnecting, health and troubleshooting." }
+      - { slug: developer-guide, doc: DEVELOPER_GUIDE.md, title: Developer guide, icon: tools, summary: "Repository map, building and testing, project rules, the request path, and recipes for endpoints, plugins, panel kinds, packs and pages." }
       - { slug: api, doc: API_GUIDE.md, title: API guide, icon: braces-asterisk, summary: "REST endpoints, the ViewModel contract and error codes." }
       - { slug: architecture, doc: ARCHITECTURE.md, title: Architecture, icon: diagram-2, summary: "The pipeline, grammar, inference, live updates, modules and UX." }
       - { slug: decisions, doc: adr/README.md, title: Decision records, icon: signpost-split, summary: "The architecture decisions, each with its context and consequences." }

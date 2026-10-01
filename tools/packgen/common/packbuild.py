@@ -54,6 +54,7 @@ class PackSpec:
     generator: str                                  # e.g. tools/packgen/liquidity/make.py
     effective_domains: set[str] = field(default_factory=set)
     roles: dict = field(default_factory=dict)
+    columns: dict[str, list[str]] = field(default_factory=dict)   # kind -> key fields shown in pick lists (pack.yaml columns:)
     impact: dict | None = None
     overview: str = ""                              # prose for the overview guide
     external_ids: dict[str, set[str]] = field(default_factory=dict)   # kind -> ids that live in required packs
@@ -95,6 +96,8 @@ def manifest(spec: PackSpec, known_fields: dict[str, tuple[str, str]]) -> dict:
         m["connectors"][f"{d}-store"] = {"plugin": "delta", "enabled": "${DRISHTI_LAKE_ENABLED:true}", "kinds": [k.kind for k in ks],
                                          "settings": settings}
         m["routes"].update({k.kind: f"{d}-store" for k in ks})
+    if spec.columns:
+        m["columns"] = spec.columns
     if spec.roles:
         m["roles"] = spec.roles
     return m

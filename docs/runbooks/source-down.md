@@ -66,7 +66,17 @@ How to read it:
 | `failedToStart` | `{"<source>": "<reason>"}` for plugins that threw while starting. They serve nothing until the server restarts. | Step 2 |
 | a source with `status: DOWN` | It started but its health check fails now. `health` holds the reason the plugin gave. | Step 3 |
 | `connectorsDown` of a pack | Connectors of that pack that are `DOWN`. | Step 3 |
-| `connectorsOff` of a pack | Connectors the pack declares that are not running: switched off (for example `trading-stream` until `DRISHTI_STREAM_TRADING=true`) or failed to start. Off by design is normal. | Step 2 if you expected it on |
+| `connectorsOff` of a pack | Connectors the pack declares that are not running: switched off (for example `trading-stream` until `DRISHTI_STREAM_TRADING=true`), idle because not configured (below), or failed to start. Off by design is normal. | Step 2 if you expected it on |
+
+**Idle is not failed.** A plugin that is enabled but has no settings (a Kafka connector without `topics`, a feed
+without `feed`) throws `PluginNotConfigured` when it starts. The server then leaves it **idle**: it is not in
+`failedToStart`, the status stays `OK`, and the log says, at INFO level:
+
+```text
+source plugin kafka is installed but not configured (kafka needs settings.topics); it stays idle
+```
+
+Give it its settings and restart if you meant to use it; otherwise there is nothing to do.
 
 Without admin rights, `GET /api/v1/sources` lists every running source with its `health`, and `failures` (the
 plugins that failed to start):
@@ -95,6 +105,12 @@ directory, a refused connection, bad credentials, a missing setting). The usual 
 | Plugin switched on without its settings | the setting's name | Add the missing setting under `settings:`. |
 
 The same reason, without the stack trace, is in `failedToStart`.
+
+To find idle plugins (not failures, see above):
+
+```bash
+journalctl -u drishti-server --since today | grep "it stays idle"
+```
 
 Connector settings are listed per plugin in [CONFIGURATION.md](../CONFIGURATION.md).
 

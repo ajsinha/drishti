@@ -144,6 +144,7 @@ drishti:
     database-user: ${DRISHTI_IDENTITY_DB_USER:}
     database-password: ${DRISHTI_IDENTITY_DB_PASSWORD:}
     database-pool-size: 8
+    refresh-seconds: 15              # servers sharing one database see each other's role and pack changes this soon
     # The files of releases before 1.10, imported once into an empty database and renamed *.imported.
     users-file: ${DRISHTI_USERS_FILE:./data/identity/users.json}
     audit-file: ${DRISHTI_AUDIT_FILE:./data/identity/audit.jsonl}

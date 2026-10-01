@@ -20,16 +20,24 @@ Use this runbook when live views are slow, late or frozen. How live updates work
 
 The examples use `http://localhost:18480` for the server and `http://localhost:17480` for the console.
 Replace them with your hosts. With security on, add `-H "Authorization: Bearer $TOKEN"` to server calls
-(see [API_GUIDE.md](../API_GUIDE.md)); `/actuator/*` needs no token.
+(see [API_GUIDE.md](../API_GUIDE.md)). `/actuator/health` needs no token; the rest of `/actuator`
+(`/actuator/prometheus`, `/actuator/metrics`) needs the scrape token `DRISHTI_METRICS_TOKEN` or an admin's token
+when security is on:
+
+```bash
+curl -s -H "Authorization: Bearer $DRISHTI_METRICS_TOKEN" http://localhost:18480/actuator/prometheus | grep '^drishti_live'
+```
 
 ## Symptoms
 
 Any of these:
 
-- The top bar shows `Live, p99 N ms` with N above 40 for more than a minute (normal: single digits).
+- `p99Ms` from `GET /api/v1/health/live` stays above 40 for more than a minute (normal: single digits). (The
+  console's live dot does not show the p99 on screen; screen readers announce it as `Live, p99 N ms`.)
 - The Grafana panel or alert on `drishti_live_latency_p99_milliseconds` is above 40.
 - Values change in bursts, or seconds late, compared with the source.
-- The top bar stays on `Reconnecting…`, or values stop changing although the source is ticking.
+- The live dot in the top bar stays **amber** (*Reconnecting…*), or values stop changing although the source
+  is ticking.
 - New live views fail to open with `DRS-5001 too many live streams on this server`.
 
 ## Diagnosis
@@ -64,7 +72,7 @@ A healthy server with some viewers:
    ```
 
    ```text
-   {'version': '1.9.0', 'uptimeSeconds': 6945, 'java': '21.0.12.1', 'heapUsedMb': 127, 'heapMaxMb': 15640, 'threads': 75, 'cpus': 24}
+   {'version': '1.10.0', 'uptimeSeconds': 6945, 'java': '21.0.12.1', 'heapUsedMb': 127, 'heapMaxMb': 15640, 'threads': 75, 'cpus': 24}
    ```
 
    `heapUsedMb` near `heapMaxMb` means the heap is too small (Fix D). Check host CPU with `top` or your monitoring.
@@ -124,7 +132,8 @@ A healthy server with some viewers:
 
    Only sources listed here can tick. If yours is missing or not `UP`, follow [source-down.md](source-down.md).
 
-2. Is the user on today's business date? A picked past date never streams; the top bar then says `Static`.
+2. Is the user on today's business date? A picked past date never streams; the live dot is then grey
+   (*Static*), and the date box is amber.
 
 3. Stream the entity straight from the server, bypassing the console:
 
@@ -184,13 +193,13 @@ server, so load spreads by user. To protect a server from a burst, lower the cap
 `DRS-5001` and the browser retries:
 
 ```bash
-java -jar drishti-server-1.9.0-exec.jar --drishti.live.max-streams=5000
+java -jar drishti-server-1.10.0-exec.jar --drishti.live.max-streams=5000
 ```
 
 **Fix D. JVM.** Give the server ZGC and enough heap:
 
 ```bash
-JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:+ZGenerational" java -jar drishti-server-1.9.0-exec.jar
+JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:+ZGenerational" java -jar drishti-server-1.10.0-exec.jar
 ```
 
 **Fix E. Sticky sessions** for several console processes. In nginx, for example, `ip_hash;` in the console's
@@ -202,6 +211,6 @@ Every change to the server's configuration needs a restart of the server. Live v
 
 1. Within one 30 s window after the fix, `curl -s http://localhost:18480/api/v1/health/live` shows `p99Ms`
    below 40 (normally single digits).
-2. The top bar shows `Live, p99 N ms` with N below 40, and `MTM (USD)` on `TRD T-10452` changes every few
-   hundred milliseconds.
+2. In the console, the live dot glows (not amber) on `TRD T-10452`, and `MTM (USD)` changes every few hundred
+   milliseconds.
 3. `drishti_live_latency_p99_milliseconds` in Prometheus stays below 40 for the next hour.

@@ -18,11 +18,32 @@
 This guide explains every part of the Drishti console, one feature at a time. Each section says what
 the feature is for, then walks through an example: the exact text to type and what you should see.
 
-If Drishti is not running yet, start with [GETTING_STARTED.md](GETTING_STARTED.md).
+If Drishti is not running yet, start with [QUICKSTART.md](QUICKSTART.md) (ten minutes) or
+[GETTING_STARTED.md](GETTING_STARTED.md) (every step explained).
 
 The examples use the banking packs (`trading`, `counterparty-risk` and the others) with their sample
 data, so ids such as `T-10001` and `NS-SUMMIT-NY` exist. If your administrator loaded other packs, the
-**Examples** list on the terminal page shows ids that work for you.
+**Examples** list on the terminal page shows ids that work for you, and every pack's guide (*Help → Help
+centre → Domain packs*) has a *Finding things* section with the same commands for its own kinds.
+
+**Contents**
+
+| Section | What you learn |
+|---|---|
+| [The pages at a glance](#the-pages-at-a-glance) | Every page and its address |
+| [The top bar](#the-top-bar) | The menus and the round tools on the right |
+| [The command line](#the-command-line) | Opening an entity, suggestions, what an error means |
+| [Pick lists](#pick-lists-when-a-command-names-several-entities) | `TRD T-100`, `CPTY north`, `TRD productType=Revolver`, `TRD` |
+| [Tables: paging and the keyboard](#tables-paging-and-the-keyboard) | The pager, ▲ ▼, and the keys that walk a table |
+| [Reading a view](#reading-a-view) | Title, strip, panels, links, provenance |
+| [Keyboard](#keyboard) | Every key in one table |
+| [Live updates](#live-updates), [Business dates](#business-dates-live-or-a-day-in-the-past), [Compare](#compare-what-changed) | Ticking values, past dates, what changed |
+| [Search by value](#search-by-value) | `where` searches, sorting and limits |
+| [Export, print and share](#export-print-and-share) | CSV, JSON, PDF and links |
+| [Monitors](#monitors), [Alerts](#alerts), [Workspaces](#workspaces) | Watching many entities at once |
+| [Your settings](#your-settings), [Themes](#themes), [Domain packs](#domain-packs-choosing-what-you-see) | Making the console yours |
+| [Sutra Studio](#sutra-studio-changing-how-a-screen-looks) | Changing how a screen looks |
+| [Administration](#administration) | Users, roles, packs, audit, health, caches |
 
 ## The pages at a glance
 
@@ -31,21 +52,66 @@ data, so ids such as `T-10001` and `NS-SUMMIT-NY` exist. If your administrator l
 | Landing | `/` | The start page, with a button to open the terminal |
 | Terminal | `/t` | The command line, your pinned entities and example commands |
 | View | `/v/<kind>/<id>` | One entity, laid out in full (for example `/v/trade/T-10001`) |
-| Search results | `/s?q=…` | Entities that match a `where` search |
+| Pick list and search results | `/s?q=…` | Entities a command names (`TRD T-100`) or a `where` search finds |
 | Compare | `/compare/<kind>/<id>` | What changed in an entity between two business dates |
 | Impact | `/impact/<kind>/<id>` | What depends on an entity (F8) |
 | Monitors | `/m` | Live watchlists |
 | Alerts | `/alerts` | Your alert rules and recent alerts |
 | Workspaces | `/w` | Several live views on one screen |
-| Studio | `/studio` | Edit and preview layouts (Sutras) |
+| Studio | `/studio`, `/studio/reviews` | Edit and preview layouts (Sutras); approve proposed ones |
 | My account | `/account` | Your profile, settings and password |
-| Admin | `/admin/users` | Users, audit log, health and caches (admins only) |
+| Admin | `/admin/users`, `/admin/roles`, `/admin/packs`, `/admin/audit`, `/admin/health`, `/admin/caches` | Users, roles, packs, audit log, health and caches (admins only) |
 | Help | `/help` | Tutorials, guides and every reference |
-| About | `/about` | Version, loaded Sutras and the health of each source |
+| About | `/about` | Version, licence, loaded Sutras and the health of each source |
+
+## The top bar
+
+Every page after the landing page has the same top bar, on two rows.
+
+```text
+Row 1:  ◉ Drishti   Views ▾  Build ▾  Admin ▾  Help ▾          ●  [bell]  [box 12]  [palette]  (A) Ash ▾
+Row 2:  > TRD T-10001, CPTY north, TRD productType=Revolver …  then <GO>        [2026-09-30]  ● Live
+```
+
+**Row one, on the left:** the brand (click it to go back to `/`), then four menus. Each opens a wide panel
+(a *mega menu*) in which every entry has an icon and one line saying what it does. The menu holding the page
+you are on is highlighted.
+
+| Menu | Column | Entries |
+|---|---|---|
+| **Views** | Look up | *Terminal* (`/t`), *Search & pick lists* (`/s`) |
+| | Watch | *Workspaces* (`/w`), *Monitors* (`/m`), *Alerts* (`/alerts`) |
+| **Build** | Layouts | *Sutra Studio* (`/studio`), *Reviews* (`/studio/reviews`) |
+| | Learn | *Sutra guide*, *Build a pack* |
+| **Admin** (admins only) | People & access | *Users*, *Roles*, *Audit log* |
+| | Operations | *Packs*, *Health*, *Caches* |
+| **Help** | Learn | *Help centre* (`/help`, also `F1`), *Install and run*, *About* |
+
+**Row one, on the right:** round tools, from left to right.
+
+| Tool | Looks like | What it does |
+|---|---|---|
+| Live | a dot, only on a view | Glows while the view streams; amber while it reconnects or while the tab is paused; grey for a static view (a past date). Hover over it to read `Live, built 1.92 ms`: how long the server took to build the view |
+| Alerts | a bell | Opens `/alerts`. A number on the bell counts alerts you have not seen ([Alerts](#alerts)) |
+| Packs | a box with a number | Appears when you may use more than one pack. The number is how many you have switched on; hover to read their names ([Domain packs](#domain-packs-choosing-what-you-see)) |
+| Theme | a palette | Seven themes ([Themes](#themes)) |
+| You | a round avatar with your initial and name | A menu: your name, desk and roles, a clock in your time zone (`NY` by default), **My account**, **Settings**, and **Sign out** when sign-in is on |
+
+**Row two** is the [command line](#the-command-line), across the width of the screen, and the
+[business date](#business-dates-live-or-a-day-in-the-past) box with its **Live** button.
+
+Worked example: find the audit log without typing an address.
+
+1. Click **Admin** in the top bar. A panel opens with two columns, *People & access* and *Operations*.
+2. Click **Audit log** (*Every sign-in and change, by whom*). The audit page opens and **Admin** stays
+   highlighted.
+3. Press `Esc`, or click anywhere outside, to close a menu without choosing.
+
+If you do not see **Admin**, your account has no admin role; ask an administrator.
 
 ## The command line
 
-The command line is the box at the top of every terminal page. Press `/` anywhere to jump to it.
+The command line is the box on the second row of the top bar. Press `/` anywhere to jump to it.
 
 ### The form of a command
 
@@ -72,7 +138,11 @@ VRNT VRNT-BRAF-V600E a genetic variant
 **A bare id** works when its shape tells Drishti the kind. Type `T-10001` and press Enter: it opens
 the same trade as `TRD T-10001`.
 
-**Case** does not matter for the mnemonic: `trd T-10001` works.
+**Case** never matters: `trd t-10001` opens `T-10001`.
+
+**One match opens; several give a pick list.** If what you typed names exactly one entity, it opens. If it
+names several (`TRD T-100`, the start of an id), you get a table to pick from. See
+[Pick lists](#pick-lists-when-a-command-names-several-entities).
 
 Mnemonics come from the packs that are switched on. The full list, pack by pack, is in
 [PACKS.md](PACKS.md#the-packs-that-ship). The most used banking ones:
@@ -91,32 +161,167 @@ Mnemonics come from the packs that are switched on. The full list, pack by pack,
 
 ### Suggestions as you type
 
-The command line suggests as you type, in a dropdown, like the Bloomberg terminal.
+The command line suggests as you type, in a dropdown, like the Bloomberg terminal. The dropdown holds up to
+**25 suggestions** and scrolls when there are more than fit.
 
 | You have typed | You see |
 |---|---|
-| nothing (click in the box) | the entities you opened recently |
-| `T` | mnemonics that start with T (`TRD` Trade, `TRDR` Trader) and matching entities |
-| `TRD ` (with a space) | trades |
+| nothing (click in the box) | the entities you opened recently, marked `recent ·` |
+| `T` | mnemonics that start with T (`TFLOW` Trade flow, `TRD` Trade, `TRDR` Trader, `TRIAL` Clinical trial), then recent entities |
+| `TRD ` (with a space) | trades: `T-10001`, `T-10002`, … |
 | `TRD T-101` | trades whose id starts that way: `T-10100`, `T-10101`, … |
-| `NSET SUMMIT` | netting sets whose id or title contains it: `NS-SUMMIT-NY`, `NS-SUMMIT-LDN` |
+| `NSET SUMMIT` | netting sets whose id or title contains it: `NS-SUMMIT-LDN`, `NS-SUMMIT-NY` |
+| `XYZ Q` | `No matches for "XYZ Q"` |
 
-Each suggestion shows the id and a subtitle (`Trader · A. Shah`). The matched letters are highlighted.
+Each suggestion shows the mnemonic, the id (the letters you typed are highlighted) and a subtitle, for
+example:
+
+```text
+TRD   T-10001   Trade · Interest rate swap (fixed/float) · Meridian Reinsurance Ltd · AUD 242m
+```
+
+| Key in the command line | Does |
+|---|---|
+| `↓` / `↑` | Highlight the next / previous suggestion (the list scrolls with you) |
+| `Tab` | Copy the highlighted suggestion into the box (the first one if none is highlighted). For an entity the box then reads `CPTY CP-NORTHBRIDGE <GO>`; for a mnemonic it reads `TRD ` and the dropdown refreshes |
+| `Enter` | With a suggestion highlighted: open it straight away. With none highlighted: run what you typed as a command (it opens one entity or a pick list) |
+| `Esc` | Close the dropdown |
 
 Worked example:
 
 1. Press `/` and type `CPTY north`.
-2. The dropdown shows `CP-NORTHBRIDGE`. Press `↓` to highlight it.
-3. Press `Tab`: the box now reads `CPTY CP-NORTHBRIDGE`.
+2. The dropdown shows one line: `CPTY  CP-NORTHBRIDGE  Counterparty · Northbridge Capital LLP`. Press `↓` to
+   highlight it.
+3. Press `Tab`: the box now reads `CPTY CP-NORTHBRIDGE <GO>`.
 4. Press `Enter`: the counterparty opens.
+
+Without steps 2 and 3, pressing `Enter` on `CPTY north` gives the same result: the command names one
+counterparty, so it opens at once.
+
+The number of suggestions is a server setting (`drishti.commands.suggest-limit`, environment
+`DRISHTI_SUGGEST_LIMIT`, default 25). A program can ask for a different number, up to 50:
+`curl -s 'http://localhost:18480/api/v1/command/suggest?q=TRD%20T-1&limit=50'`.
 
 ### When a command does not work
 
-| Message | Meaning | What to do |
+| You see | Meaning | What to do |
 |---|---|---|
-| `DRS-4001 cannot read command 'XYZ T-1'; try <MNEMONIC> <ID> <GO>` | The mnemonic is unknown | Type the first letter and pick from the suggestions; check the pack is switched on |
-| `DRS-1001 no source holds trade/T-99999` | No source has that id | Type part of the id and pick from the suggestions |
-| `You do not have access` | Your role may not see that kind | Ask an administrator |
+| `DRS-4001 cannot read command 'XYZ T-1'; try <MNEMONIC> <ID> <GO>, for example TRD IRS-48213 <GO>` on the terminal page | The first word is not a mnemonic, and the text is not an id any pack recognises | Type the first letter and pick from the suggestions; check the pack is switched on ([Domain packs](#domain-packs-choosing-what-you-see)) |
+| A page headed *Pick a trade* that says `0 of 0 trades match` and *Nothing matches.* | The mnemonic is fine, but no trade's id starts with what you typed (`TRD T-99999`) and no title contains it | Type less of the id (`TRD T-1`) and pick from the list |
+| `DRS-1001 no source holds trade/T-99999` | You opened an address such as `/v/trade/T-99999` directly, and no source has that id | Check the id; use the command line to find it |
+| `DRS-4004 'XYZ' is neither a mnemonic nor a kind; type it alone to see suggestions` | A pick list or search started with an unknown word | Type the first letter and pick a mnemonic |
+| `DRS-5002 <you> may not open lcr entities` | Your roles, or the packs you have switched on, do not include that kind | Switch the pack on in the box menu; otherwise ask an administrator |
+
+## Pick lists: when a command names several entities
+
+On a Bloomberg terminal, a command that matches several securities shows a list to pick from. Drishti does
+the same. After you press Enter:
+
+- if your command names **exactly one** entity, that entity opens;
+- otherwise you get a **pick list** at `/s?q=…`, headed *Pick a trade* (or *Pick a book*, …), with one row
+  per match and the kind's **key fields** beside each id.
+
+### The forms
+
+| You type | You get | Real result on the banking samples |
+|---|---|---|
+| `TRD T-10001` | That trade opens (an exact id) | the swap `T-10001` |
+| `TRD T-100` | Trades whose id **starts with** `T-100`, or whose title **contains** it | `99 of 99 trades match`: `T-10001` … `T-10099` |
+| `CPTY north` | Counterparties whose id starts with, or title contains, `north` | one match, so `CP-NORTHBRIDGE` opens at once |
+| `TRD T-1*0` | `*` stands for any text, anywhere in the id | `75 of 75 trades match`: `T-10010`, `T-10020`, `T-10030`, … |
+| `TRD productType=Revolver` | Trades whose field has that value | `6 of 750 trades match`: `T-10295` … `T-10300` |
+| `TRD notional > 10m and currency = usd` | Trades matching a condition (no `where` needed) | `317 of 750 trades match; the first 100 are shown` |
+| `TRD T-1* currency=usd order by mtm desc` | An id pattern and a condition together, sorted | `344 of 750 trades match`, largest MTM first |
+| `TRD` | Every trade | `750 of 750 trades match; the first 100 are shown` |
+
+Rules:
+
+- **Case never matters**, for ids, names and values: `trd t-100`, `CPTY NORTH` and `productType=revolver`
+  all work. Text compared with `=` or `!=` ignores case in every search.
+- **A word without `*`** matches ids that **start** with it and titles that **contain** it. **A word with
+  `*`** is a pattern on the id only (`*SUMMIT*` matches `NS-SUMMIT-NY`).
+- **A bare word after a comparison is a value:** `productType = Revolver` needs no quotes. Quote values that
+  contain spaces: `status = 'Early warning'`.
+- **Everything from [Search by value](#search-by-value) works here** (`and`, `or`, `not`, `contains`, `250k`,
+  `order by`, `limit`). `not status = matured` means *not (status = matured)*.
+- **How many rows** you see is your *Search results* setting (100 unless you change it in
+  [Your settings](#your-settings)), or `limit N` at the end of the command. The table then pages through them
+  25 at a time ([Tables](#tables-paging-and-the-keyboard)).
+- **Pick lists follow the date** in the top bar, like every other read.
+
+### The columns
+
+The first column is the id (a link). Then come:
+
+1. the fields your command uses (`currency` and `mtm` in `TRD T-1* currency=usd order by mtm desc`);
+2. the kind's **key fields**, which the pack declares under `columns:` in its `pack.yaml`
+   ([PACKS.md](PACKS.md#columns-the-key-fields-of-a-pick-list)). For the banking packs:
+
+   | Kind | Key fields shown |
+   |---|---|
+   | trade | Product type, Direction, Currency, Notional, MTM (USD), Maturity date, Book |
+   | counterparty | Name, Rating, Sector, Country, Net MTM |
+   | book | Name, Desk name, Trade count, MTM (USD), DV01 |
+
+3. for a kind whose pack declares no key fields, the first plain fields of its documents, up to six columns
+   in all, so a pick list always says more than the id.
+
+A *Title* column appears only when titles say more than the id.
+
+### Worked example: find the revolving credit facilities
+
+1. Press `/`, type `TRD productType=Revolver` and press Enter.
+2. You should see *Pick a trade*, the line `6 of 750 trades match`, the time it took, and a table:
+
+   ```text
+   TRD      Product type  Direction  Currency  Notional      MTM (USD)   Maturity date  Book
+   T-10295  REVOLVER      Long       CAD       202,000,000   3,459,176   2032-04-16     BOOK-CREDIT-3
+   T-10296  REVOLVER      Short      GBP       127,000,000   1,256,638   2035-09-28     BOOK-CREDIT-2
+   T-10297  REVOLVER      Long       AUD       156,000,000   1,498,057   2036-10-03     BOOK-CREDIT-1
+   …
+   ```
+
+3. Press `↓` twice: the second row is selected. Press `Enter`: `T-10296` opens.
+4. Press `Alt+←` to come back to the list, and change the box at the top of the page to
+   `TRD productType=Revolver order by mtm desc`. Press **Search**: the largest MTM is now first.
+5. **CSV** downloads the list; **Watch as a monitor** turns its first 50 rows into a live watchlist
+   ([Monitors](#monitors)).
+
+## Tables: paging and the keyboard
+
+Every table in the console (pick lists, search results, the tables inside views, admin lists) has a pager
+under it and can be walked with the keyboard.
+
+```text
+«  ‹  1–25 of 99 · page 1 of 4  ›  »                         ▲  ▼  [25 rows ▾]
+```
+
+| Control | Does |
+|---|---|
+| `«` `‹` `›` `»` | First, previous, next and last page. Buttons that lead nowhere are greyed |
+| `1–25 of 99 · page 1 of 4` | Which rows you are looking at |
+| `▲` `▼` | Select the previous / next row, turning the page when needed |
+| *rows per page* | 25, 50, 100 or 250. Your choice is **remembered in this browser** and applies to every table, at once |
+
+**The keyboard.** Click a row, or press `Tab` until the table has the focus, then:
+
+| Key | Does |
+|---|---|
+| `↓` / `↑` | Select the next / previous row; at the end of a page the next page opens |
+| `PgDn` / `PgUp` | Move the selection one page down / up |
+| `Home` / `End` | Select the first / last row (of all pages) |
+| `Enter` | Open the selected row's link (its id) |
+
+Worked example:
+
+1. Type `TRD T-100` and press Enter. The pager reads `1–25 of 99 · page 1 of 4`.
+2. Click the first row (`T-10001`), then press `End`. The last page opens with `T-10099` selected.
+3. Press `PgUp`: the selection moves 25 rows up, to `T-10074`, on page 3.
+4. Choose *50 rows*. The pager reads `51–99 of 99 · page 2 of 2`, still showing your selection.
+5. Press `Enter`: `T-10074` opens. Open any other list: it shows 50 rows per page too.
+
+Tables that update live (a monitor, a ticking table inside a view) keep their page and selection when
+their rows change.
 
 ## Reading a view
 
@@ -191,6 +396,12 @@ Every identifier in a view is a door. Click `BOOK-RATES-3` in the strip and the 
 target (for example `EE 32.4m` on a netting set). A badge that says *pending* means the target did not
 answer in time; open it to see it.
 
+**Ids in tables are links too.** A table column that shows an identifier (a column bound to a field whose
+name ends in `Id`, `Ref` or `_id`, such as `tradeId`, `counterpartyId` or `bookRef`) links each value to its
+entity, as long as a pack recognises the id. Example: open `BOOK BOOK-RATES-1`; its *Largest trades* table
+(`F2`) starts with the *Trade* column (`T-10043`, `T-10011`, …), and clicking `T-10043` opens that trade. With the table selected, `↓` to a row and
+`Enter` does the same ([Tables](#tables-paging-and-the-keyboard)).
+
 **Breadcrumbs** above the title (`← T-10001 / NS-MERIDIAN-RE-NY`) show the path you followed in this
 browser tab. Click one to go back to it, or press `Alt+←`.
 
@@ -212,10 +423,12 @@ The footer repeats the source and generation, and the business date when one is 
 | Key | Does |
 |---|---|
 | `/` | Focus the command line, from anywhere |
-| `↑` `↓` | Move through the suggestions |
+| `↑` `↓` | In the command line: move through the suggestions. In a selected table: move the selected row |
 | `Tab` | Complete the highlighted suggestion |
-| `Enter` | Open it (`<GO>`) |
-| `Esc` | Close the suggestions, or the raw JSON drawer |
+| `Enter` | Open the highlighted suggestion, or run the command (`<GO>`). In a table: open the selected row |
+| `PgUp` `PgDn` | In a selected table: move the selection a page up or down |
+| `Home` `End` | In a selected table: select the first or last row |
+| `Esc` | Close the suggestions, a menu, or the raw JSON drawer |
 | `F1` | Help for the page you are on |
 | `F2`–`F6` | Jump to the panel that shows that key in its header |
 | `F7` | Open the main linked entity (for a trade: its netting set) |
@@ -247,12 +460,18 @@ Each group has a total. Click any id to open it. See the [Impact guide](../conso
 Views of live entities tick: figures change in place and flash briefly. Open `TRD T-10001` and watch
 **MTM (USD)** for a few seconds.
 
-- The top bar shows a green dot with **Live** and how long the view took to build (`Live, built 0.82 ms`).
+- The **live dot** among the round tools of the top bar glows while the view streams. Hover over it to read
+  how long the view took to build (`Live, built 1.92 ms`).
 - All views, panes, the bell and monitors in one browser tab share **one** connection.
-- **Reconnecting…** means the connection dropped; the page reconnects and repaints by itself.
-- **Paused while hidden** means the tab was in the background for a while and gave its connection back.
-  Show the tab and it resumes.
-- A view on a picked past date never ticks: it is a snapshot.
+- The dot turns **amber** when the connection dropped (*Reconnecting…*): the page reconnects and repaints by
+  itself.
+- It also turns amber when the tab was in the background for 10 seconds and gave its connection back
+  (*Paused while hidden*). Show the tab and it resumes.
+- It is **grey** on a view of a picked past date, which never ticks: it is a snapshot.
+
+Screen readers hear the full state, including the server's rolling p99 (`Live, p99 2 ms`). To see the same
+figures yourself, ask the server: `curl -s http://localhost:18480/api/v1/health/live`
+([PERFORMANCE.md](PERFORMANCE.md#4-live-latency)).
 
 To turn off the flash, untick *Flash changed values* in [your settings](#your-settings).
 
@@ -334,9 +553,13 @@ Add `where` after a mnemonic to find entities by what they contain.
 TRD where mtm > 1m order by mtm desc limit 50
 ```
 
-You should see a results page with a summary line such as `163 of 750 trades match; the first 50 are
-shown`, the time it took, and a table: one row per trade, with a column for each field the query uses
-(here **MTM (USD)**). Click an id to open it.
+You should see a page headed *Search by value*, a summary line such as `163 of 750 trades match; the first 50
+are shown`, the time it took, and a table: one row per trade, with a column for each field the query uses
+(here **MTM (USD)**), then the kind's key fields (*Product type*, *Direction*, *Currency*, …). Click an id to
+open it, or walk the table with the keyboard ([Tables](#tables-paging-and-the-keyboard)).
+
+`where` is optional: `TRD mtm > 1m` and `TRD productType=Revolver` work as well, and come back as a
+[pick list](#pick-lists-when-a-command-names-several-entities). The rest of this section applies to both.
 
 ### The parts of a search
 
@@ -348,11 +571,11 @@ shown`, the time it took, and a table: one row per trade, with a column for each
 |---|---|---|
 | Mnemonic | Any mnemonic, or a kind name | `TRD`, `NSET`, `customer` |
 | Field | As named in the document; dots for nested fields, brackets for list items | `mtm`, `counterparty.name`, `legs[0].rate` |
-| Compare | `=`  `!=`  `<`  `<=`  `>`  `>=` | `assetClass = 'Rates'` |
+| Compare | `=`  `!=`  `<`  `<=`  `>`  `>=`; text compared with `=` and `!=` ignores case | `assetClass = 'Rates'` (also matches `rates`) |
 | Text | `contains` and `startswith`, case-insensitive; `contains` also looks inside lists | `counterparty.name contains 'Meridian'` |
-| Combine | `and`, `or`, `not`, brackets; put brackets after `not` | `mtm > 1m and not (status = 'Matured')` |
+| Combine | `and`, `or`, `not`, brackets. `not` applies to the comparison after it | `mtm > 1m and not status = 'Matured'` |
 | Amounts | `k` thousand, `m` million, `bn` billion | `250k`, `1.5m`, `2bn` |
-| Text values | in single quotes | `'Rates'` |
+| Text values | in single quotes; a single word may go without | `'Early warning'`, `Rates` |
 | Sort | `order by <field>`, add `desc` for largest first | `order by mtm desc` |
 | Size | `limit N`, from 1 to 1000 | `limit 20` |
 
@@ -361,15 +584,19 @@ change it).
 
 ### Examples to try
 
-```text
-TRD where notional >= 250m and assetClass = 'Rates' order by mtm desc limit 20
-TRD where counterparty.name contains 'Meridian'
-TRD where mtm < -1m order by mtm
-NSET where utilisation > 0.5 order by utilisation desc
-LIM where status = 'Early warning'
-CUST where totalDeposits > 100k order by totalDeposits desc
-VRNT where significance contains 'pathogenic'
-```
+| Search | Matches on the banking samples |
+|---|---|
+| `TRD where notional >= 250m and assetClass = 'Rates' order by mtm desc limit 20` | 4 of 750 trades |
+| `TRD where counterparty.name contains 'Meridian'` | 76 of 750 trades |
+| `TRD where mtm < -1m order by mtm` | 171 of 750 trades, most negative first |
+| `TRD where assetClass = rates` | 156 of 750 trades (case ignored, no quotes needed) |
+| `NSET where utilisation > 0.5 order by utilisation desc` | 46 of 66 netting sets |
+| `LIM where status = 'Early warning'` | 1 of 18 credit limits |
+| `CUST where totalDeposits > 100k order by totalDeposits desc` | 10 of 32 customers |
+| `VRNT where significance contains 'pathogenic'` | 6 of 8 variants |
+
+A search whose condition matches exactly one entity still shows its one-row table; only a command typed
+without `where` opens a single match directly.
 
 ### Good to know
 
@@ -418,7 +645,7 @@ example `/export/trade/T-10001/schedule.csv` (`schedule` is the panel's id) or `
 A monitor is a **live watchlist**: one row per entity, each row showing that entity's key figures (its
 strip) as they tick. Rows can be of different kinds.
 
-**Monitors** in the top bar (`/m`) lists *Yours* and the *Starters* the packs offer. Opening a starter
+*Views → Monitors* in the top bar (`/m`) lists *Yours* and the *Starters* the packs offer. Opening a starter
 saves a copy to your account. (The `finance` pack offers *Credit watch* and `logistics` *Fleet watch*;
 the banking packs offer none, so start from a search.)
 
@@ -442,8 +669,8 @@ An alert rule watches **one entity** and tells you when a condition becomes true
 - The **server** checks every rule on every change of its entity, even when nobody has Drishti open.
 - A rule alerts **once** when its condition becomes true, and re-arms when it turns false again.
 - A rule that is already true when you save it alerts straight away.
-- New alerts show as a **toast** and a count on the **bell** in the top bar, on every page. Click the
-  bell to see them all, and to allow browser notifications.
+- New alerts show as a **toast** and a count on the **bell** among the round tools of the top bar, on every
+  page. Click the bell to see them all, and to allow browser notifications. *Views → Alerts* opens the same page.
 
 Worked example:
 
@@ -487,7 +714,7 @@ so a server restart clears the alert history but not the rules. More in the
 A workspace puts up to four live views on one screen. A pane can **follow** another: a link you click
 in the followed pane opens in the following pane.
 
-**Workspaces** in the top bar (`/w`) lists yours and the starters. Starters come from packs that
+*Views → Workspaces* in the top bar (`/w`) lists yours and the starters. Starters come from packs that
 define them (`finance`: *Credit desk*, *Rates*, *Cross-asset*; `logistics`: one more) and from
 `console/config/workspaces.yaml`.
 
@@ -530,8 +757,9 @@ templates:
 
 ## Your settings
 
-*My account* (`/account`, or click your name in the top bar) shows your profile and roles, your
-settings, and a form to change your password. Settings are kept on the server, so they follow you to
+*My account* (`/account`) shows your profile and roles, your settings, and a form to change your password.
+To get there, click your avatar at the right of the top bar and choose **My account**, or **Settings** to
+jump straight to the settings (`/account#settings`). Settings are kept on the server, so they follow you to
 any browser.
 
 | Setting | Choices | Example |
@@ -554,7 +782,7 @@ in [USER_MANAGEMENT.md](USER_MANAGEMENT.md).
 
 ## Themes
 
-The palette icon in the top bar offers seven themes:
+The palette among the round tools of the top bar offers seven themes:
 
 | Theme | Look |
 |---|---|
@@ -572,20 +800,35 @@ otherwise the browser remembers it.
 
 ## Domain packs: choosing what you see
 
-If you may use more than one pack, the box icon in the top bar shows how many are on (`12 packs`).
+A pack brings one domain: its mnemonics, layouts and data. If you may use more than one pack, the round
+**box** tool in the top bar shows how many you have switched on, for example `12`. Hover over it to read
+their names (*Packs shown: banking-core, market-data, …*).
 
-1. Click it. You see a tick box per pack (*Banking core*, *Market data*, *Trading*, …).
-2. Untick the ones you do not need, say everything except *Trading* and *Counterparty credit risk*.
-3. Click **Apply**.
+Worked example: see only trading and counterparty risk.
 
-The examples on `/t`, the suggestions, the help and search now cover only those packs. Commands for a
-pack you switched off stop working until you switch it back on. You can choose only among the packs an
-administrator assigned to you; see [PACKS.md](PACKS.md).
+1. Click the box. A menu opens headed *Show these packs*, with one line per pack: a tick box, the pack's
+   title (*Banking core*, *Market data*, *Trading*, …) and one line on what it covers.
+2. Click **none** (top right of the menu): every box is cleared.
+3. Tick *Trading* and *Counterparty credit risk*.
+4. Click **Apply**. The page reloads and the box shows `2`.
+5. Type `L`. The suggestions no longer offer `LCR` (liquidity) or `LOSS` (operational risk).
+6. To undo, open the box, click **all**, then **Apply**.
+
+What changes when a pack is off for you:
+
+- its mnemonics leave the suggestions, and its examples leave `/t`, the help centre and the search page;
+- opening one of its entities is refused with `DRS-5002 … may not open … entities`;
+- a pack's parents stay usable through it: with *Counterparty credit risk* on, a netting set still links to
+  its trades and counterparties (see [PACKS.md](PACKS.md#who-sees-which-pack)).
+
+**Apply** needs at least one ticked pack; with none ticked it does nothing. The choice is saved to your
+account. You can choose only among the packs an administrator assigned to you, and only among packs that
+are switched on for everyone ([Admin → Packs](#admin--packs-switching-a-pack-off-for-everyone)).
 
 ## Sutra Studio: changing how a screen looks
 
 A **Sutra** is a layout, written as a Markdown document with the layout itself in one fenced `sutra`
-block. **Studio** (`/studio`, in the top bar) is the editor. You need the *author* role; saving must be
+block. **Studio** (`/studio`, *Build → Sutra Studio* in the top bar) is the editor. You need the *author* role; saving must be
 switched on for the server (`DRISHTI_STUDIO_SAVE=true`).
 
 The Studio page has:
@@ -644,31 +887,125 @@ own proposal (four eyes); a proposal whose live Sutra changed since it was made 
 
 ## Administration
 
-Admins see **Admin** in the top bar. The admin pages are:
+Admins see the **Admin** menu in the top bar. The admin pages also share a row of tabs, so you can move
+between them without the menu.
 
 | Page | Address | What you do there |
 |---|---|---|
 | Users | `/admin/users` | Create users; set roles and the packs each user may use; enable, disable, reset passwords |
-| Audit log | `/admin/audit` | Sign-ins, failures, lockouts, user changes, Sutra proposals and approvals, cache purges |
+| Roles | `/admin/roles` | Define roles: the kinds each opens, and its powers |
+| Packs | `/admin/packs` | Switch a domain pack off or on for everyone |
+| Audit log | `/admin/audit` | Sign-ins, failures, lockouts, user, role and pack changes, Sutra proposals and approvals, cache purges |
 | Health | `/admin/health` | Every connector and pack: up or down, reads, timings. Refreshes every 5 seconds |
 | Caches | `/admin/caches` | What the engine and each connector hold; **Purge** one or **Purge all** (safe at any time) |
 
+### Admin → Roles: what a role may do
+
+A role says which **kinds** of entity its holders may open, and which **powers** they have. The table lists
+every role with its kinds (or *every kind*), its powers, how many users hold it, and who changed it last.
+
+| Power | Lets its holders |
+|---|---|
+| raw JSON | see the raw document (`F9`, **JSON**) without masked fields |
+| author Sutras | use Sutra Studio |
+| approve Sutras | approve proposed Sutras in Reviews |
+| administer | use every admin page |
+
+Roles marked **built-in** come from the server's configuration and from packs (`viewer`, `author`,
+`approver`, `admin`, and pack roles such as `trader`, `credit-risk` or `retail`). They are shown read-only.
+
+Worked example: a role for credit analysts.
+
+1. Open *Admin → Roles* and click **New role**.
+2. **Name** `credit-analyst` (lower case, digits and hyphens); **Description** `Reads counterparties and
+   credit exposure`.
+3. Under *Add every kind of a pack*, click **Counterparty credit risk**: its kinds (`netting-set`,
+   `credit-limit`, `exposure-profile`, …) fill the *Kinds it opens* box, one per line. Add `counterparty`
+   on a line of its own.
+4. Leave every power unticked, and click **Save**. The role appears in the table with `0` users.
+5. Open *Admin → Users*, edit a user, tick `credit-analyst` and save. At that user's next click, netting sets
+   open for them; a trade does not, and links to trades show disabled with the reason.
+
+Changes apply at the holder's next request and are written to the audit log. **Delete** is greyed while
+anyone holds the role (*Held by 1 user(s): take it away from them first*); the server answers `DRS-6009`
+if asked anyway. Roles only matter when sign-in is on. More in [USER_MANAGEMENT.md](USER_MANAGEMENT.md).
+
+### Admin → Packs: switching a pack off for everyone
+
+*Admin → Packs* lists every pack in the server's packs folder, one row each:
+
+| Column | Example |
+|---|---|
+| Pack | *Trading* `trading 1.0.0` |
+| What it brings | its description |
+| Builds on | `banking-core, market-data`, and under it *needed by market-risk, counterparty-risk, …* |
+| Kinds | `1 (TRD)`: the number of kinds and the first four mnemonics |
+| Connectors | `trading-store, trading-stream` |
+| Status | **on**, **off**, or **not loaded** |
+| Changed | when and by whom it was last switched |
+
+Switching a pack **off** takes effect for every user at their next click: its kinds cannot be opened, its
+mnemonics and suggestions disappear, and it leaves every pack menu. Switching it **on** brings it all back.
+The choice is kept in the database, so it survives restarts, and each switch is in the audit log
+(`pack-disabled`, `pack-enabled`).
+
+Two safeguards keep packs consistent:
+
+- **A pack another switched-on pack builds on cannot be switched off.** Its **Switch off** button is greyed
+  with the reason (*Needed by market-risk, counterparty-risk: switch those off first*).
+- **Switching a pack on switches on what it builds on.** If you switched off `counterparty-risk`, then
+  `trading`, switching `counterparty-risk` on again switches `trading` (and anything it needs) on as well.
+
+Worked example: take operational risk away for everyone.
+
+1. Open *Admin → Packs*. The *Operational and non-financial risk* row says **on**; *Builds on* reads
+   `banking-core`; nothing needs it.
+2. Click **Switch off**. The status turns to **off**, and *Changed* shows the time and your name.
+3. Type `LOSS` in the command line: no suggestions come. In the box menu, the pack is gone.
+4. Open *Admin → Audit log*: the newest line is `pack-disabled operational-risk` by you.
+5. Click **Switch on** to bring it back.
+
+**Not loaded** packs are folders on disk that the server did not load at start-up. They cannot be switched
+on here, because packs load only when the server starts. The row shows what to do, for example
+`DRISHTI_PACKS=…,logistics`: add the pack to `DRISHTI_PACKS` and restart the server. See
+[PACKS.md](PACKS.md#switching-packs-off-and-on-admin--packs).
+
+### Admin → Health: is everything up?
+
 Worked example: check that every data source is up.
 
-1. Open `/admin/health`. Each connector (for example `trading-store`, `market-store`, `demo`) shows its
-   state. A Delta Lake connector whose folder is missing shows `DOWN: no Delta tables under …`.
-2. The same figures are at `GET /api/v1/admin/health` for external monitoring. A shorter list of
-   sources, with their kinds and health, comes from the command below.
+1. Open *Admin → Health* (`/admin/health`). At the top is the overall state, **OK**, **DEGRADED** or
+   **DOWN**, and a summary. Below it, each connector (for example `trading-store`, `market-store`, `demo`)
+   shows its state, reads, errors and p50/p99 read times. A Delta Lake connector whose folder is missing
+   shows `DOWN: no Delta tables under …`.
+2. The page refreshes itself every 5 seconds. The same figures are at `GET /api/v1/admin/health` for
+   external monitoring:
 
-```bash
-curl -s localhost:18480/api/v1/sources
-```
+   ```bash
+   curl -s localhost:18480/api/v1/admin/health | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["status"], d["summary"])'
+   ```
+
+   You should see:
+
+   ```text
+   OK {'packs': 12, 'sources': 18, 'sourcesDown': 0, 'failedToStart': 0, 'packsWithProblems': 0}
+   ```
+
+3. A shorter list of sources, with their kinds and health, needs no admin rights:
+
+   ```bash
+   curl -s localhost:18480/api/v1/sources
+   ```
+
+A connector whose plugin is installed but has no settings (a Kafka connector without `topics`, a feed without
+`feed`) stays **idle**: it is not started and is not counted as failed. Anything else that is not **UP** is
+explained in [runbooks/source-down.md](runbooks/source-down.md).
 
 Managing users and roles is explained in [USER_MANAGEMENT.md](USER_MANAGEMENT.md).
 
 ## Help
 
-- **Help** in the top bar, or `F1`, opens the help centre (`/help`): tutorials, guides, every reference
+- *Help → Help centre* in the top bar, or `F1`, opens the help centre (`/help`): tutorials, guides, every reference
   document and each pack's guides, with search. On any page, `F1` opens the guide for that page.
 - The **?** in each panel header explains that panel kind.
 - **About** (`/about`) shows the version, the Sutras loaded and the health of each source.

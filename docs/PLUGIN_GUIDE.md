@@ -155,11 +155,9 @@ The first source that holds the entity answers; a source that does not hold it p
 *fails* (an exception) ends the read with `DRS-1003`; a read that takes longer than `fetch-timeout` ends with
 `DRS-1004`; no source holding it is `DRS-1001`; no source serving the kind at all is `DRS-1002`.
 
-Live updates are subscribed separately (`SourceRouter.subscribe`): from the first live source, in the order *before*
-the re-ordering above (route, `default-route`, the rest), that accepts the subscription. A source accepts only
-entities it can push (the demo source only its live samples). So where the `default-route`'s samples hold the same
-entity as a stream, the first read comes from the stream but the ticks come from the samples; switch the demo off
-(`DRISHTI_DEMO_ENABLED=false`) where a real stream serves the kind. Search asks every search-capable source and
+Live updates are subscribed separately (`SourceRouter.subscribe`), in the same live order as reads (a real stream
+before the `default-route`'s samples): to the first live source that holds the entity, so ticks come from the source
+that answered the read; only when none holds it yet, to the first that accepts the subscription. Search asks every search-capable source and
 merges the hits; reverse lookups ask every source that declares them.
 
 ## Built-in plugins
@@ -191,7 +189,7 @@ acknowledged only after they are stored, so a crash redelivers rather than loses
 |---|---|
 | a body on a destination with `kind.<destination>` (or any destination when `kind` is set) | that kind's document; the id is the `id` header, else the field `id-field.<destination>` (else `id-field`, default `id`) |
 | a body `{"kind", "id", "doc"}` on any other destination | the envelope's entity (the `id` header stands in for a missing `"id"`) |
-| an empty body, `"doc": null`, or a `deleted: true` header | a delete |
+| `"doc": null` in an envelope, a `deleted: true` header, or an empty body on a destination with a kind and an `id` header | a delete (an empty body anywhere else is counted as rejected) |
 | anything else (not JSON, no kind or id) | skipped and counted as `rejected` in the connector's cache figures |
 
 Every change is pushed to open views, search finds everything received, and a purge (Admin → Caches) clears only
@@ -927,7 +925,7 @@ drishti:
 | `kind.<topic>` | — | mapped messages on that topic |
 | `id-field` | `id` | mapped messages: the id field, for every topic |
 | `id-field.<topic>` | — | the id field on that topic |
-| `mode` | `state` | `state` keeps an index and serves reads; `ticks` keeps nothing and only drives the ticks of views another store serves |
+| `mode` | `state` | `state` keeps an index and serves reads; `ticks` keeps nothing. Keep `state`: a view opens a live stream only when a live source answered its read, so a `ticks` connector behind a lake has nothing to tick (see CONNECTOR_GUIDE.md) |
 | `cache-mb` | `256` | recently read documents in memory (a miss reads the one record back from Kafka by offset) |
 | `search` | `true` | keep ids for type-ahead (`state` mode only) |
 | `poll-ms` | `200` | poll interval |
@@ -1043,7 +1041,8 @@ body:        {"orderId": "O-55120", "side": "BUY", "instrument": "EQ-NVTK", "qty
 ```
 
 On a destination without a kind, the body is an envelope `{"kind": "order", "id": "O-55120", "doc": {…}}`. A
-message with property `deleted=true`, an empty body or `"doc": null` deletes. Generation is a counter that rises with
+message with property `deleted=true` or `"doc": null` deletes (an empty body deletes only on a destination with a kind,
+with the `id` header naming the entity). Generation is a counter that rises with
 every message; documents are live and undated.
 
 **Try it.**

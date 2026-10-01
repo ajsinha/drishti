@@ -15,7 +15,14 @@
 -->
 # Changelog
 
-## Unreleased
+## 1.10.0 — Banking and domain packs, users in a database, pick lists, a new top bar (2026-09-30)
+- **Documentation, expanded with worked examples throughout.**
+  - **New guides:** QUICKSTART.md (ten minutes to a live view), DEVELOPER_GUIDE.md (repository map, building and testing, project rules, the request path, recipes for endpoints, plugins, panel kinds, packs, pages, database tables and settings), RACHANA_GUIDE.md (a tutorial from a first Sutra to a full view) and CONNECTOR_GUIDE.md (getting your data in, a worked set-up per connector).
+  - **Expanded:** RACHANA_REFERENCE.md is the complete reference (every panel kind and function, every problem code). PACKS.md is the full pack guide. The user guide, inference, live, troubleshooting, performance, runbooks and plan are expanded too.
+  - **Help centre:** the new guides are in the in-app help centre.
+- **Several servers, one database:** role and pack changes reach every server within `drishti.identity.refresh-seconds` (15).
+- **Generated packs can declare pick-list columns** (`columns=` in `PackSpec`).
+- **Build fix:** `drishti-messaging` pointed at the wrong parent POM path.
 - **Security: operational endpoints are guarded when security is on.**
   - `/actuator/health` stays open for probes.
   - The rest of `/actuator` (metrics, Prometheus, info) needs an admin token, or the scrape token `DRISHTI_METRICS_TOKEN` as a bearer token.

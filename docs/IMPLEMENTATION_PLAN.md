@@ -6,7 +6,27 @@
 
 # Drishti — Implementation Plan
 
-*Revision 1.0 · 2026-09-30 · Author: Ashutosh Sinha · Companion to [ARCHITECTURE.md](ARCHITECTURE.md)*
+*Revision 1.1 · 2026-09-30 · Author: Ashutosh Sinha · Companion to [ARCHITECTURE.md](ARCHITECTURE.md)*
+
+**Where things stand.** Every wave in this plan is done. The current release is **1.10.0**
+([CHANGELOG.md](../CHANGELOG.md), [RELEASE_NOTES.md](../RELEASE_NOTES.md)). The table below maps each release to
+the waves it shipped; [What shipped after the waves](#what-shipped-after-the-waves-1100) lists the work done since
+the last numbered wave, and [Known gaps](#known-gaps) lists what is still open. The wave sections themselves are
+kept as they were planned, with notes where the delivery differed.
+
+| Release | Waves |
+|---|---|
+| 1.0.0 | W1–W10 |
+| 1.1.0 | W11 user management |
+| 1.2.0 | W12 help centre and About |
+| 1.3.0 | W12b competitive landscape and mobile |
+| 1.4.0 | W13 workspaces |
+| 1.5.0 | W13b domain packs |
+| 1.6.0 | W14 monitors and alerts |
+| 1.7.0 | W15 F8 impact |
+| 1.8.0 | W13c packs per user |
+| 1.9.0 | W22 business dates and Delta Lake; R1–R2 risk taxonomy and Sutras; Markdown Sutras |
+| 1.10.0 | B0, R3–R5, P2–P8 (all domain packs); W16–W21; and the work [below](#what-shipped-after-the-waves-1100) |
 
 ## Working agreement
 
@@ -19,7 +39,7 @@
 
 ## Wave map
 
-Ten waves (plus W11, user management, after 1.0.0). Each holds a small set of closely related items and ends with a demo-able exit gate.
+The first ten waves (plus W11, user management, after 1.0.0); all are done. Each held a small set of closely related items and ended with a demo-able exit gate. Later waves are in [Waves 12–21](#waves-1221--capability-roadmap-after-110) and the [domain-pack roadmap](#domain-pack-roadmap-agreed-2026-09-30).
 
 | Wave | Theme | Exit gate |
 |---|---|---|
@@ -106,8 +126,8 @@ Ten waves (plus W11, user management, after 1.0.0). Each holds a small set of cl
 
 ## W10 — Studio, security, ops & release
 - Sutra Studio (`/studio`): vendored CodeMirror, schema completion, live preview, "promote inferred panel".
-- Security: console sign-in (users file, PBKDF2, signed cookies), HS256 tokens to the server, per-role kinds (`drishti.security.roles`), links disabled with the reason, F9 redaction, CSP. *(OIDC deferred.)*
-- Plugins `rest` and `jdbc`. *(The `aero` plugin is deferred.)*
+- Security: console sign-in (users file, PBKDF2, signed cookies), HS256 tokens to the server, per-role kinds (`drishti.security.roles`), links disabled with the reason, F9 redaction, CSP. *(OIDC was deferred; it shipped in W20.)*
+- Plugins `rest` and `jdbc`. *(The `aero` plugin was deferred; it shipped in R5 as `aerospike`.)*
 - Ops: Dockerfiles, `deploy/compose.yaml`, Grafana dashboard, `OPERATIONS.md`, `runbooks/`, `TROUBLESHOOTING.md`.
 - Release: `RELEASE_NOTES.md`, tag `v1.0.0`, merge to `main`.
 
@@ -119,6 +139,8 @@ Ten waves (plus W11, user management, after 1.0.0). Each holds a small set of cl
 - Forced password change is off unless configured.
 - Server: `/api/v1/auth/{login,me,password}`, `/api/v1/admin/{users,audit,roles,status}`; an `admin` role.
 - Console: sign-in through the server, `/account`, `/admin/users`, `/admin/audit`. The users file is retired (ADR-009).
+- *Later (1.10.0):* the file stores were replaced by a JPA database (SQLite by default, PostgreSQL by URL), with
+  1.9 files imported once; administrators define roles in Admin → Roles.
 
 ## Waves 12–21 — capability roadmap (after 1.1.0)
 
@@ -135,14 +157,14 @@ Ten waves (plus W11, user management, after 1.0.0). Each holds a small set of cl
 | W17 ✅ | Structured search | `GET /search?q=` with a friendly syntax over Rachana-EL (`and/or/not`, `=`, `contains`, `startswith`, `1.5m`), scan of the kind's entities on virtual threads within `drishti.search.max-scan` and `budget`, conditions on redacted documents, sort and limit; `where` on the command line opens the results page, and **Watch as a monitor** makes the results a live table |
 | W18 ✅ | Export and share | CSV of every table-like panel (tables, ladders, key/value, tabs, charts, bars, surfaces, links, gauges; shown numbers exported as numbers, UTF-8 with BOM), of search results and of comparisons; the document as JSON; a print stylesheet (light, no controls) for print and PDF; **Share** links that carry the business date and the exact known-at instant. Everything reads through the server, so entitlements and redaction apply |
 | W19 ✅ | Sutra governance | Studio saves become proposals (validated, with the base text); approvers (`approve` role flag or admin) see the diff and approve (published, hot-reloaded) or reject with a reason; authors withdraw; four eyes; stale approvals refused; JSON store under `drishti.governance.dir`; audited; per-Sutra history (ADR-013) |
-| W20 ✅ | Single sign-on | OIDC code flow with PKCE, state and nonce in the console; `POST /auth/oidc` verifies the ID token on the server (JWKS discovery and rate-limited refresh, RSA/PSS/ECDSA via the JDK, never `none`/HMAC; issuer, audience, azp, exp, nbf, iat, nonce); group-to-role map; provisioning on first sign-in; local disables and the last admin protected; audited (ADR-014). The Aerospike plugin was delivered in R4 |
+| W20 ✅ | Single sign-on | OIDC code flow with PKCE, state and nonce in the console; `POST /auth/oidc` verifies the ID token on the server (JWKS discovery and rate-limited refresh, RSA/PSS/ECDSA via the JDK, never `none`/HMAC; issuer, audience, azp, exp, nbf, iat, nonce); group-to-role map; provisioning on first sign-in; local disables and the last admin protected; audited (ADR-014). The Aerospike plugin was delivered in R5 |
 | W21 ✅ | Personal settings | `GET/PATCH /me/settings` (validated: theme, landing page, clock zone, density, flash, pinned entities, search size); the console applies them on every page (theme before first paint, body classes, clock), saves theme changes from the menu, opens the landing page after sign-in, pins from a view's header |
 
 ### Domain-pack roadmap (agreed 2026-09-30)
 
 | Wave | Pack | Scope |
 |---|---|---|
-| W13c | Per-user packs | admins assign packs to users; users choose active packs; kinds owned by one pack; enforced server-side |
+| W13c ✅ | Per-user packs | admins assign packs to users; users choose active packs; kinds owned by one pack; enforced server-side (1.8.0) |
 | R1 ✅ | **risk**: taxonomy | 125 products in ten asset classes, 21 market-data kinds, 24 risk and reference kinds, one source of truth (`tools/packgen/banking/taxonomy.py`) with uniqueness checks |
 | R2 ✅ | risk: Sutras | `make_sutras.py` writes 170 Markdown Sutras (125 products, 45 kinds) that double as the data dictionary; `trade_shape.py` is the trade-document contract; every pack's Sutras load with zero problems (`PackSutrasTest`); drill fails if generated files drift |
 | B0 ✅ | banking packs split | `requires:`, `connectors:` and `routes:` in pack.yaml; data domains and packs many-to-many; five packs (banking-core, market-data, trading, market-risk, counterparty-risk) generated from the taxonomy (`tools/packgen/banking/`) |
@@ -157,9 +179,35 @@ Ten waves (plus W11, user management, after 1.0.0). Each holds a small set of cl
 | P7 ✅ | politics and society | jurisdictions, parties, candidates, elections, polls, bills, regions, social indicators |
 | P8 ✅ | economics | economies, indicators, central-bank decisions, forecasts, trade flows, labour, fiscal, price baskets |
 
-Waves 16–21 resume after the risk pack.
+Waves 16–21 were done after the risk pack, as planned, and shipped in 1.10.0.
 
 Every wave also fixes documentation rot: the README status table, "what works", this plan, the changelog, and any guide the wave touches.
+
+## What shipped after the waves (1.10.0)
+
+Work done after the last numbered wave, grouped by theme. Each item is in [CHANGELOG.md](../CHANGELOG.md) under
+1.10.0 with details.
+
+| Theme | Delivered | Where to read |
+|---|---|---|
+| Pack inheritance | `extends:` with C3 order, the more specific pack wins, overrides reported; risk packs extend market data and trading (ADR-015) | [PACKS.md](PACKS.md#inheritance) |
+| Connectors | ActiveMQ and RabbitMQ on a shared messaging base with a persistent state store; S3; Delta Lake on S3 through `LakeStore`; scheduled lake maintenance (`tools/lake/maintain.py`); every connector reconnects by itself | [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md) |
+| Operations | Admin → Health (connectors, packs, live, server; `GET /api/v1/admin/health`); guarded `/actuator` and `/api/docs` when security is on (`DRISHTI_METRICS_TOKEN`); console `/readyz`; product name and legal notices from configuration | [OPERATIONS.md](OPERATIONS.md) |
+| Identity | Users, roles, saved documents and audit in a JPA database (SQLite default, PostgreSQL), one schema file per database, no migrations; Admin → Roles | [USER_MANAGEMENT.md](USER_MANAGEMENT.md) |
+| Packs for everyone | Admin → Packs switches packs off and on for everyone (`drishti_pack_state`, audited); packs on disk but not loaded are listed | [PACKS.md](PACKS.md#switching-packs-off-and-on-admin--packs) |
+| Terminal | Pick lists (`TRD T-100`, `CPTY north`, `TRD T-1*0`, `TRD productType=Revolver`, `TRD`; one match opens; case-insensitive; key columns from `columns:`); every table pages and walks with the keyboard; id columns link; 25 suggestions | [USER_GUIDE.md](USER_GUIDE.md#pick-lists-when-a-command-names-several-entities) |
+| Console chrome | A two-row top bar after MAYA's: Views, Build, Admin and Help mega menus; round tools (live, alerts, packs, theme, user menu); gradient themes; one live channel per tab (the freeze fix) | [USER_GUIDE.md](USER_GUIDE.md#the-top-bar) |
+| Documentation | Every guide rewritten example-first; a 10-minute quickstart, a developer guide, a Rachana tutorial and a connector guide | [README.md](README.md) |
+
+## Known gaps
+
+What is open today. None blocks normal use; each is a candidate for a future wave.
+
+| Gap | Today | Where it shows |
+|---|---|---|
+| Alert history | Rules are stored; the last 200 alerts per user are kept in memory, so a restart clears the history | [USER_GUIDE.md](USER_GUIDE.md#alerts) |
+| Several console processes | A tab's live channel lives in one console process, so a load balancer needs sticky sessions | [LIVE.md](LIVE.md) |
+| Formatting and static analysis gates | Spotless and Error Prone are deferred (ADR-007); `.editorconfig` only | [adr/007](adr/007-build-gates-in-tests.md) |
 
 ## Risks
 

@@ -36,7 +36,7 @@ console's admin pages do the same for you.
 | "Unknown user or wrong password." for **everyone**, correct passwords included | Console and server disagree on `DRISHTI_TOKEN_SECRET`, or the console has none. | Step 3 |
 | "Sign-in unavailable: backend unreachable: …" | The console cannot reach the server. | Step 4 |
 | Signed in, but pages fail with `DRS-5010` | Tokens refused: secrets differ, or the clocks differ by more than 30 s. | Step 3 |
-| Signed in, but an entity or a link says "no access" / `DRS-5002` | The user's roles do not include that kind. | Fix D |
+| Signed in, but an entity or a link says "no access" / `DRS-5002` | The user's roles do not include that kind, or its pack is not among theirs, or is switched off for everyone. | Fix D |
 | "Single sign-on is unavailable" or "The sign-in provider said: …" | OIDC configuration or provider. | Step 5 |
 | Nobody with the admin role can sign in | All admins locked out or passwords lost. | Fix E |
 
@@ -112,7 +112,17 @@ and the server verifies with `drishti.security.secret` (the same variable). They
 
 ### Step 4. Can the console reach the server?
 
-From the console's host:
+Ask the console itself; its readiness check calls the server exactly as sign-in does:
+
+```bash
+curl -s -w ' %{http_code}\n' http://localhost:17480/readyz
+```
+
+You should see `{"status":"UP","server":"reachable"} 200`. A `503` with `"server":"unreachable"` and a `detail`
+means the console cannot reach the server; the `detail` says why (a refused connection, a timeout, or
+`bad token signature` when the secrets differ, step 3).
+
+Then, from the console's host, ask the server directly:
 
 ```bash
 curl -s http://localhost:18480/actuator/health/readiness
@@ -144,7 +154,9 @@ Give the user the new password over a separate channel.
 10 characters (`drishti.identity.min-password-length`).
 
 **Fix D. Give access to a kind.** Edit the user's roles in Admin → Users, or the role's kinds in Admin → Roles.
-"No access" on a link is the expected result when a role lacks that kind; nothing is broken.
+If the role is fine, check the packs: the kind's pack must be ticked for the user in Admin → Users (or the user
+must have *default packs*), ticked in the user's own pack menu, and **on** in Admin → Packs. "No access" on a link
+is the expected result when a role lacks that kind; nothing is broken.
 
 **Fix E. No admin can sign in.**
 

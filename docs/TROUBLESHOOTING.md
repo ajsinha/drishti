@@ -23,15 +23,18 @@ same machine. Replace `localhost` if yours run elsewhere.
 
 | Area | Problems |
 |---|---|
-| [First checks](#first-checks-run-these-first) | three commands that locate most problems |
+| [First checks](#first-checks-run-these-first) | four commands that locate most problems |
 | [Building and starting](#building-and-starting) | wrong JDK, port in use, packs not found, old version runs, console will not start |
 | [Signing in](#signing-in) | no sign-in page, wrong password, locked, signed in but bounced back |
-| [The console and the server](#the-console-and-the-server) | backend unreachable, Reconnecting…, typing does nothing |
-| [Commands and views](#commands-and-views) | cannot read command, DRS-1001, may not open, no suggestions, No data available, pending links, blank charts |
+| [The console and the server](#the-console-and-the-server) | backend unreachable, `/readyz` says 503, the live dot is amber, typing does nothing |
+| [Commands and views](#commands-and-views) | cannot read command, *Nothing matches*, DRS-1001, may not open, no suggestions, No data available, pending links, blank charts |
+| [Pick lists and tables](#pick-lists-and-tables) | a pick list instead of the entity, only ids in the list, only 25 rows, keys do nothing |
 | [Live and dates](#live-updates-and-business-dates) | view does not tick, not a dated source, DRS-4003, known at has no effect |
 | [Search](#search) | DRS-4004, empty results, partial results |
 | [Studio and Sutras](#studio-and-sutras) | Save disabled, an edit has no effect, approval refused |
-| [Packs](#packs) | mnemonics missing, a pack not offered |
+| [Packs](#packs) | mnemonics missing, a pack switched off, *not loaded*, cannot switch off, generated files out of date |
+| [Connectors](#connectors) | a connector is idle, a connector failed to start |
+| [Monitoring endpoints](#monitoring-endpoints) | `/actuator/prometheus` answers 401 or 403, `/api/docs` answers 401 |
 | [Alerts](#alerts-and-monitors) | an alert never fires |
 | [Development](#development) | licence header test fails |
 
@@ -52,9 +55,19 @@ same machine. Replace `localhost` if yours run elsewhere.
    curl -s http://localhost:17480/healthz
    ```
 
-   You should see `{"status":"UP"}`.
+   You should see `{"status":"UP"}`. This only says the console process answers.
 
-3. **What is loaded?**
+3. **Can the console reach the server?**
+
+   ```bash
+   curl -s -w ' %{http_code}\n' http://localhost:17480/readyz
+   ```
+
+   You should see `{"status":"UP","server":"reachable"} 200`. While the console cannot reach the server it
+   answers `503` with `{"status":"DOWN","server":"unreachable","detail":"…"}`; see
+   [`/readyz` says 503](#readyz-answers-503-server-unreachable).
+
+4. **What is loaded?**
 
    ```bash
    curl -s http://localhost:18480/api/v1/about | python3 -m json.tool | head -20
@@ -101,7 +114,7 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
 - **Fix:** stop the other process, or start this one on another port and tell the console where it is:
 
   ```bash
-  DRISHTI_PORT=18481 java -jar drishti-server/target/drishti-server-1.9.0-exec.jar
+  DRISHTI_PORT=18481 java -jar drishti-server/target/drishti-server-1.10.0-exec.jar
   DRISHTI_BACKEND_URL=http://127.0.0.1:18481 console/.venv/bin/python console/run_drishti_web.py
   ```
 
@@ -119,7 +132,7 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
 
   ```bash
   DRISHTI_PACKS=trading,counterparty-risk DRISHTI_PACKS_DIR=$PWD/packs \
-    java -jar drishti-server/target/drishti-server-1.9.0-exec.jar
+    java -jar drishti-server/target/drishti-server-1.10.0-exec.jar
   ```
 
   A pack's parents load by themselves: enabling `trading` also loads `banking-core` and `market-data`. Other
@@ -140,7 +153,7 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
   expands to all of them; Java runs the **first** (the oldest, alphabetically) and ignores the rest.
 - **Check:** `curl -s http://localhost:18480/api/v1/about | python3 -c "import json,sys; print(json.load(sys.stdin)['version'])"`
   and `ls drishti-server/target/*-exec.jar`.
-- **Fix:** name the jar exactly (`drishti-server-1.9.0-exec.jar`), or delete the old ones.
+- **Fix:** name the jar exactly (`drishti-server-1.10.0-exec.jar`), or delete the old ones.
 
 ### The console will not start: `ModuleNotFoundError: No module named 'fastapi'`
 
@@ -169,7 +182,7 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
 
   ```bash
   export DRISHTI_TOKEN_SECRET='at-least-32-characters-shared-secret!!'   # same value for both
-  DRISHTI_SECURITY_ENABLED=true java -jar drishti-server/target/drishti-server-1.9.0-exec.jar
+  DRISHTI_SECURITY_ENABLED=true java -jar drishti-server/target/drishti-server-1.10.0-exec.jar
   DRISHTI_AUTH_ENABLED=true DRISHTI_SESSION_SECRET='another-secret-of-32-characters-or-more' \
     console/.venv/bin/python console/run_drishti_web.py
   ```
@@ -223,13 +236,31 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
   pointing elsewhere: the console reads `DRISHTI_BACKEND_URL` (default `http://127.0.0.1:18480`).
 - **Fix:** start the server, or restart the console with the right `DRISHTI_BACKEND_URL`.
 
-### "Reconnecting…" in the top bar
+### `/readyz` answers 503 ("server": "unreachable")
 
+- **What you see:** `curl -s http://localhost:17480/readyz` prints
+  `{"status":"DOWN","server":"unreachable","detail":"…"}` with HTTP status 503, while `/healthz` still says
+  `{"status":"UP"}`. A load balancer or Kubernetes takes the console out of service; pages that load show
+  `DRS-5003 backend unreachable`.
+- **Cause:** the console runs, but cannot reach the server. `/healthz` is the cheap *liveness* check (is the
+  process alive? restarting it would not help); `/readyz` is the *readiness* check (should traffic come here?),
+  and asks the server for today's business date each time.
+- **Check:** the `detail` text names the problem (a refused connection, a timeout, a bad token). Then
+  `curl -s http://localhost:18480/actuator/health` from the console's host.
+- **Fix:** start the server, or point the console at it with `DRISHTI_BACKEND_URL`; with security on, give
+  both the same `DRISHTI_TOKEN_SECRET`. The console becomes ready by itself; no restart is needed. In
+  Kubernetes, use `/healthz` for the liveness probe and `/readyz` for the readiness probe (see
+  [OPERATIONS.md](OPERATIONS.md)).
+
+### The live dot is amber ("Reconnecting…")
+
+- **What you see:** the dot among the round tools of the top bar turns amber, and values stop changing.
+  Hover over it, or use a screen reader, to read *Reconnecting…*.
 - **Cause:** the live stream dropped (server restarted, network blip).
 - **Fix:** nothing to do: the browser reconnects by itself and repaints from a fresh view. If it never
   recovers, run the first checks.
 
-### "Paused while hidden" in the top bar
+### The live dot is amber after the tab was in the background ("Paused while hidden")
 
 - **Cause:** the tab was hidden for 10 seconds and gave its connection back, to save resources.
 - **Fix:** show the tab: it reconnects and repaints.
@@ -257,11 +288,28 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
 - **Fix:** use the form `MNEMONIC ID`, for example `TRD T-10001 <GO>` (case does not matter; `<GO>` is optional,
   Enter is enough).
 
+### *Pick a trade*: "0 of 0 trades match" and "Nothing matches."
+
+- **What you see:** you typed `TRD T-99999 <GO>` and got a page headed *Pick a trade* instead of a trade.
+- **Cause:** the mnemonic is fine, but no trade has that id, no trade's id starts with it, and no title
+  contains it. A command that does not name exactly one entity becomes a pick list, and this one is empty.
+- **Check:** type less of the id (`TRD T-1`) and see what the list holds; or ask the server directly:
+
+  ```bash
+  curl -s -G http://localhost:18480/api/v1/search --data-urlencode 'q=TRD T-1 limit 5' \
+    | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["matched"], [r["ref"]["id"] for r in d["rows"]])'
+  ```
+
+  You should see `750 ['T-10001', 'T-10002', 'T-10003', 'T-10004', 'T-10005']` on the banking samples.
+- **Fix:** correct the id. If the list is empty for every id you try, the source that holds the kind may be
+  down (see [runbooks/source-down.md](runbooks/source-down.md)), or you picked a past date the source has no
+  data for.
+
 ### "DRS-1001 no source holds trade/T-99999"
 
-- **Cause:** the mnemonic is fine, but no source has that identifier.
-- **Check:** type the mnemonic and the start of the id (`TRD T-100`) and pick from the suggestions; or
-  `curl -s "http://localhost:18480/api/v1/command/suggest?q=TRD%20T-100"`.
+- **Cause:** you opened a view address directly (`/v/trade/T-99999`, a bookmark or an old share link), and no
+  source has that identifier. (From the command line you get an empty pick list instead; see above.)
+- **Check:** `curl -s -o /dev/null -w "%{http_code}\n" http://localhost:18480/api/v1/views/trade/T-99999` prints `404`.
 - **Fix:** correct the id. The example commands for each pack are on the terminal home and in each pack's guide
   under **Help → Domain packs**.
 
@@ -269,9 +317,10 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
 
 - **Cause:** your roles do not include that kind, or the pack that owns it is not among your packs.
 - **Check:** `curl -s http://localhost:18480/api/v1/me/packs` lists `assigned` and `active` packs (with security
-  on, check in the console's pack menu, the box icon in the top bar).
-- **Fix:** tick the pack in the box menu, or ask an admin to assign the pack or a role. See
-  [USER_MANAGEMENT.md](USER_MANAGEMENT.md).
+  on, check in the console's pack menu, the round box tool in the top bar). An admin also checks
+  *Admin → Packs*: a pack switched **off** there is off for everyone.
+- **Fix:** tick the pack in the box menu, or ask an admin to assign the pack or a role, or to switch the pack on.
+  See [USER_MANAGEMENT.md](USER_MANAGEMENT.md).
 
 ### Suggestions do not appear
 
@@ -310,6 +359,51 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
 - **Check:** `curl -s -o /dev/null -w "%{http_code}\n" http://localhost:17480/static/vendor/echarts/echarts.min.js`
   should print `200`. The browser's developer console (F12) shows any blocked script.
 - **Fix:** allow the console's own `/static/` path through the proxy or extension; hard-refresh.
+
+## Pick lists and tables
+
+### I typed an id and got a pick list instead of the entity
+
+- **Cause:** the command did not name exactly one entity. `TRD T-100` is the *start* of 99 trade ids, so it
+  lists them. A word after the id (`TRD T-10001 swap`), a `*`, or a comparison (`=`, `>`) also makes a pick
+  list.
+- **Fix:** type the whole id (`TRD T-10001`), or pick the row: click it, or select it with `↓` and press
+  `Enter`. A command that names exactly one entity (`CPTY north`, `TRD productType=X` with one match) opens it
+  at once.
+
+### The pick list shows only ids, or columns I did not expect
+
+- **Cause:** the columns are the fields the command uses, then the kind's key fields from its pack's
+  `columns:` in `pack.yaml`. A kind without `columns:` shows the first plain fields of its first document
+  (up to six columns), which may not be the most useful ones. Ids only: the documents of that kind have no plain
+  fields at the top level, or your role masks them.
+- **Check:** which columns the server chose:
+
+  ```bash
+  curl -s -G http://localhost:18480/api/v1/search --data-urlencode 'q=LCR limit 1' \
+    | python3 -c 'import json,sys; print(json.load(sys.stdin)["columns"])'
+  ```
+
+  You should see `['$.lcrId', '$.legalEntityName', '$.lcr', '$.hqla', '$.netOutflows', '$.minimum']`
+  (automatic: the liquidity pack declares no `columns:`).
+- **Fix:** add `columns:` for the kind to its pack ([PACKS.md](PACKS.md#columns-the-key-fields-of-a-pick-list)),
+  through the generator for a generated pack, and restart the server. For one search, name the fields you
+  want in the command: `LCR lcr < 1.2 order by lcr` puts *Lcr* first.
+
+### A table shows only 25 rows, or keeps the wrong number of rows
+
+- **Cause:** every table pages, 25 rows per page by default. The pager under the table reads, for example,
+  `1–25 of 99 · page 1 of 4`. The rows-per-page choice (25, 50, 100, 250) is remembered **per browser**, in
+  local storage, and applies to every table.
+- **Fix:** use `›` and `»`, or choose more rows per page. In a private window the choice lasts only for the page.
+  A pick list or search also stops at your *Search results* setting (100 by default, *My account → Settings*)
+  or at `limit N`: the summary then says `…; the first 100 are shown`.
+
+### ↑ ↓ or Enter do nothing in a table
+
+- **Cause:** the table does not have the focus; the keys go to the page instead.
+- **Fix:** click a row first (it is highlighted), or press `Tab` until the table is outlined, then use `↑`
+  `↓`, `PgUp` `PgDn`, `Home` `End` and `Enter`. Keys typed inside a box or a menu in the table are left alone.
 
 ## Live updates and business dates
 
@@ -370,10 +464,12 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
 
 ### A search returns nothing
 
-- **Check:** the mnemonic first: `XYZ where a = 1` is not an error, it is a search of a kind nobody serves
-  (`"mnemonic": null`, `"scanned": 0` in the API answer). Then the field name: press **F9** on one entity of that
-  kind and copy the path exactly (`counterparty.name`, `legs[0].rate`). A masked field never matches.
-- **Fix:** correct the mnemonic or path. Text matching with `contains` is case-insensitive.
+- **Check:** the field name: press **F9** on one entity of that kind and copy the path exactly
+  (`counterparty.name`, `legs[0].rate`). A field that does not exist is simply never true. A masked field
+  never matches. (An unknown mnemonic is an error, not an empty result:
+  `DRS-4004 'XYZ' is neither a mnemonic nor a kind; type it alone to see suggestions`.)
+- **Fix:** correct the path. Text matching with `=`, `!=`, `contains` and `startswith` ignores case, so
+  `currency = usd` finds `USD`.
 
 ### "… results may be incomplete"
 
@@ -411,16 +507,108 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
 
 ### A pack's mnemonics are missing from the command line
 
-- **Check:** is it enabled? `curl -s http://localhost:18480/api/v1/packs` lists enabled packs. Is it chosen? The box
-  icon in the top bar shows ticks for your active packs.
+- **Check:** is it enabled? `curl -s http://localhost:18480/api/v1/packs` lists enabled packs. Is it chosen? The round
+  box tool in the top bar shows ticks for your active packs.
 - **Fix:** enable it on the server (`DRISHTI_PACKS`, then restart), then tick it in the box menu. An admin may
-  need to assign it to you first (**Admin → Users**).
+  need to assign it to you first (**Admin → Users**), or switch it on (**Admin → Packs**).
 
 ### A pack is enabled but a pack problem shows in Admin → Health
 
 - **Check:** `curl -s http://localhost:18480/api/v1/admin/health | python3 -c "import json,sys; [print(p['name'], p['status'], p['sutraProblems'], p['connectorsDown']) for p in json.load(sys.stdin)['packs']]"`
 - **Fix:** Sutra problems: see *A Sutra edit has no effect*. A connector down: see
   [runbooks/source-down.md](runbooks/source-down.md).
+
+
+### A pack is *off* in Admin → Packs, or its users get `DRS-5002`
+
+- **Cause:** an administrator switched it off for everyone. Its kinds cannot be opened, and its mnemonics and
+  suggestions are gone, even for users it is assigned to.
+- **Check:** *Admin → Packs* shows **off** and, under *Changed*, when and by whom. The audit log has a
+  `pack-disabled` line.
+- **Fix:** **Switch on**. It takes effect at everyone's next click; no restart.
+
+### A pack says *not loaded* in Admin → Packs
+
+- **Cause:** its folder is in `packs/`, but `DRISHTI_PACKS` did not name it (nor any pack that extends it), so
+  the server did not load it. It cannot be switched on from the page.
+- **Fix:** add it to `DRISHTI_PACKS` (the hint on its row shows how, `DRISHTI_PACKS=…,logistics`) and restart
+  the server. Mind that `finance` and the banking packs define the same kinds and cannot be loaded together
+  ([PACKS.md](PACKS.md#the-packs-that-ship)).
+
+### "Switch off" is greyed, or the API says "… is needed by …; switch those off first"
+
+- **Cause:** another switched-on pack builds on this one (`DRS-5001 'trading' is needed by [market-risk,
+  counterparty-risk, liquidity-risk, climate-risk]; switch those off first`).
+- **Fix:** switch off the packs named first, then this one. Switching any of them on later switches this one on
+  again by itself.
+
+### The drill fails with "pack manifests out of date" or "… pack out of date; run …"
+
+- **Cause:** a generated file (`pack.yaml`, a Sutra, a sample or a guide of a generated pack) was edited by
+  hand, or the generator was changed and not run.
+- **Check:** run the check that failed, for example `python3 tools/packgen/banking/make_packs.py --check`; the
+  message lists the stale files, and `extra=[…]` lists files the generator did not write.
+- **Fix:** move the change into the generator, run it without `--check`, and commit both
+  ([PACKS.md](PACKS.md#how-the-shipped-packs-are-generated)). To discard a hand edit instead:
+  `git checkout -- packs/<name>/…`.
+
+## Connectors
+
+### A connector is listed as idle, not as failed
+
+- **What you see:** the server log says
+  `source plugin kafka is installed but not configured (kafka needs settings.topics); it stays idle`, and the
+  connector is missing from `/api/v1/sources` but not under `failedToStart` in Admin → Health.
+- **Cause:** a plugin is on the class path and enabled, but has no settings (Kafka without `topics`, a feed
+  without `feed`). Such a plugin stays idle on purpose (`PluginNotConfigured`): it is not an error, and the
+  overall status stays **OK**.
+- **Fix:** nothing, if you do not use it. To use it, give it its settings under
+  `drishti.sources.connectors.<name>.settings` (or the plugin's own `drishti.sources.plugins.<name>.settings`),
+  and restart. See [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md).
+
+### A connector failed to start
+
+- **What you see:** Admin → Health says **DEGRADED**, and `failedToStart` names the connector with a reason.
+- **Fix:** follow [runbooks/source-down.md](runbooks/source-down.md), step 2.
+
+## Monitoring endpoints
+
+### `/actuator/prometheus` (or `/actuator/metrics`) answers 401 or 403
+
+- **Cause:** security is on (`DRISHTI_SECURITY_ENABLED=true`). Then only `/actuator/health` (and
+  `/actuator/health/liveness`, `/actuator/health/readiness`) stay open for probes; the rest of `/actuator`
+  needs a bearer token: an **admin's** token, or the **scrape token** `DRISHTI_METRICS_TOKEN`.
+  - `401` with `{"title":"unauthenticated",…,"detail":"operational endpoints need an admin token or the metrics token"}`:
+    no token was sent.
+  - `403` with `"title":"forbidden"`: a token was sent, but it is neither the scrape token nor a valid admin
+    token.
+- **Check:**
+
+  ```bash
+  curl -s -o /dev/null -w "%{http_code}\n" http://localhost:18480/actuator/prometheus
+  curl -s -o /dev/null -w "%{http_code}\n" -H "Authorization: Bearer $DRISHTI_METRICS_TOKEN" http://localhost:18480/actuator/prometheus
+  ```
+
+  You should see `401`, then `200`.
+- **Fix:** start the server with a long random `DRISHTI_METRICS_TOKEN` (for example from
+  `openssl rand -hex 32`) and give Prometheus the same value:
+
+  ```yaml
+  scrape_configs:
+    - job_name: drishti
+      metrics_path: /actuator/prometheus
+      authorization: { type: Bearer, credentials: "<the DRISHTI_METRICS_TOKEN value>" }
+      static_configs: [ { targets: ["drishti-server:18480"] } ]
+  ```
+
+  With security off (local development) every endpoint is open, as before.
+
+### `/api/docs` answers 401
+
+- **Cause:** with security on, the API description (`/api/docs`, `/api/docs/ui`) needs any valid user token.
+  The metrics token is not accepted there.
+- **Fix:** send a user's token (`-H "Authorization: Bearer $TOKEN"`; see [API_GUIDE.md](API_GUIDE.md)), or read
+  [API_GUIDE.md](API_GUIDE.md) instead.
 
 ## Alerts and monitors
 

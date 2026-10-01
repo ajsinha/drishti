@@ -47,6 +47,16 @@ public final class PackStateStore {
         reload();
     }
 
+    /** Re-reads the table: another server sharing the database may have changed it. */
+    public void refresh() {
+        writes.lock();
+        try {
+            reload();
+        } finally {
+            writes.unlock();
+        }
+    }
+
     private void reload() {
         snapshot = tx.execute(s -> states.findAll().stream().map(e -> new State(e.name, e.enabled, e.updatedAt, e.updatedBy))
                 .collect(Collectors.toUnmodifiableMap(State::name, Function.identity())));

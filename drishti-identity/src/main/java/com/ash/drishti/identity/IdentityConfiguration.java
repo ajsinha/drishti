@@ -56,6 +56,26 @@ public class IdentityConfiguration {
         return new PackStateStore(states, identityTransactions, auditLog);
     }
 
+    /**
+     * Servers that share one database (PostgreSQL) see each other's role and pack changes within
+     * {@code drishti.identity.refresh-seconds} (15): the snapshots every check reads are re-read on that interval.
+     */
+    @Bean(destroyMethod = "shutdownNow")
+    public java.util.concurrent.ScheduledExecutorService identityRefresher(RoleStore roles, PackStateStore packs,
+            org.springframework.core.env.Environment env) {
+        long every = Long.parseLong(env.getProperty("drishti.identity.refresh-seconds", "15"));
+        var exec = java.util.concurrent.Executors.newSingleThreadScheduledExecutor(Thread.ofVirtual().name("drishti-identity-refresh").factory());
+        exec.scheduleWithFixedDelay(() -> {
+            try {
+                roles.refresh();
+                packs.refresh();
+            } catch (RuntimeException e) {
+                org.slf4j.LoggerFactory.getLogger(IdentityConfiguration.class).warn("identity refresh failed: {}", e.getMessage());
+            }
+        }, every, every, java.util.concurrent.TimeUnit.SECONDS);
+        return exec;
+    }
+
     @Bean
     public UserService userService(JpaUserStore store, JpaAuditLog auditLog, PreferenceStore preferences, IdentityProperties props,
             RoleNames roles) {

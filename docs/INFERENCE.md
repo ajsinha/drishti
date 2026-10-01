@@ -24,10 +24,13 @@ This page explains, with worked examples:
 1. [what inference does, in one minute](#in-one-minute);
 2. [a worked example from a document you could paste yourself](#worked-example-a-warehouse-document);
 3. [a real example from the climate-risk pack](#a-real-example-ngfs-delayed);
-4. [how to see why a panel was chosen](#seeing-why-a-panel-was-chosen);
-5. [how a Sutra overrides inference, and how inference fills a Sutra's gaps](#sutra-and-inference-together);
-6. [the rules, scores and limits](#the-rules) (the reference part);
-7. [semantic hints: how field names become formats and labels](#semantic-hints), and how a site replaces them.
+4. [how the engine decides, step by step](#how-the-engine-decides-step-by-step);
+5. [two more real examples, a small one and a big one](#a-worked-example-on-real-data-kri-comm-1);
+6. [how to go from an inferred layout to a Sutra](#from-an-inferred-layout-to-a-sutra);
+7. [how to see why a panel was chosen](#seeing-why-a-panel-was-chosen);
+8. [how a Sutra overrides inference, and how inference fills a Sutra's gaps](#sutra-and-inference-together);
+9. [the rules, scores and limits](#the-rules) (the reference part);
+10. [semantic hints: how field names become formats and labels](#semantic-hints), and how a site replaces them.
 
 ## In one minute
 
@@ -189,7 +192,8 @@ ignoring the pack's own Sutra:
 curl -s "http://localhost:18480/api/v1/studio/inferred/climate-scenario/NGFS-DELAYED?name=my-scenario"
 ```
 
-You should see a Markdown Sutra; its `sutra` block is:
+You should see a Markdown Sutra; its `sutra` block is (option lines inside a panel, such as `rows`, `label` and
+`value` here, may come in a different order from one run to the next):
 
 ```yaml
 sutra: my-scenario
@@ -220,10 +224,10 @@ panels:
     kind: hbar
     title: "Carbon path"
     area: right
-    fmt: "amount0"
-    label: "year"
-    value: "price"
     rows: "$.carbonPath"
+    value: "price"
+    label: "year"
+    fmt: "amount0"
   - id: refs
     kind: links
     title: "Linked entities"
@@ -247,6 +251,232 @@ The pack's hand-written Sutra (`packs/climate-risk/sutras/climate/climate-scenar
 of these: it titles the view by `$.scenarioId`, draws the carbon path as a **line** over `year`, and shows the
 shocks with `fmt: pct0, tone: sign`. That is the normal workflow: start from inference, then correct what a
 person knows better. Open `NGFS NGFS-DELAYED <GO>` in the terminal to see the result.
+
+## How the engine decides, step by step
+
+`InferenceEngine.infer` does the same five things for every document. Knowing them makes any inferred layout
+predictable.
+
+1. **Every rule proposes candidates.** The six rules (below) look at the document and add *candidates*: a
+   proposed panel, a score between 0 and 1, the rule's name, a one-line reason, and the document path the
+   panel shows (`$.schedule`). One path usually gets several candidates (a table **and** a ladder for a dated
+   array).
+2. **One winner per path.** For each path the highest score wins; on a tie the candidate proposed first is
+   kept. The rules run in this order: `LegsRule`, `HomogeneousArrayRule`, `TermStructureRule`,
+   `DistributionRule`, `TimeSeriesRule`, `NestedObjectRule`.
+3. **Split by column, keep the best.** Winners go to the main column or the right column (each rule decides
+   which). The main column keeps the best 6 (`limits.main`), the right column the best 3 (`limits.right` 4,
+   minus one place for *Linked entities*). Equal scores keep their order from step 2.
+4. **Put them back in reading order.** Kept panels are sorted by their position in the document. Arrays are
+   numbered among arrays and objects among all fields, so the order is close to, but not exactly, the
+   document's.
+5. **Finish the layout.** The first five main panels get `F2`–`F6`; *How this view was built* closes the main
+   column; *Linked entities* goes after the first right-column panel (or alone); the title and the strip are
+   inferred; `F9` opens the raw JSON. The result is a Sutra named `inferred-<kind>`, version 0, labelled
+   **inference only**.
+
+Each kept panel records its explanation as `<Rule> <score>: <reason>`, for example
+`TimeSeriesRule 0.72: 20 dated rows in order`.
+
+The result is cached per (Sutra, kind, **shape fingerprint**). The fingerprint describes the document's
+structure (field names sorted, value types, the union of an array's element shapes); neither values nor array
+lengths change it. So two trades of the same shape share one inferred layout, and inference runs once per shape
+(`drishti.engine.layout-cache-size`). One consequence: decisions that depend on sizes are made by the **first**
+document of a shape seen since the cache was last cleared. A ladder's `highlight: "#index == 19"` was written for
+a 20-row history; another document of the same shape with 25 rows gets the same layout and lights row 20. The
+cache is cleared by any Sutra reload and from Admin → Caches. A Sutra avoids the problem with an expression such as
+`highlight: "#index == size($.history) - 1"`.
+
+## A worked example on real data: KRI-COMM-1
+
+This document is a key risk indicator from the operational-risk pack. Fetch it as the server holds it:
+
+```bash
+curl -s http://localhost:18480/api/v1/entities/key-risk-indicator/KRI-COMM-1/raw
+```
+
+You should see (the `data` part, with the history shortened):
+
+```json
+{
+  "kriId": "KRI-COMM-1",
+  "name": "Trade breaks older than 2 days",
+  "deskName": "Commodities",
+  "value": 8.83,
+  "amber": 20.0,
+  "red": 32.0,
+  "status": "Green",
+  "history": [
+    { "date": "2026-09-03", "value": 0 },
+    { "date": "2026-09-04", "value": 2.46 },
+    …
+    { "date": "2026-09-30", "value": 8.83 }
+  ],
+  "definition": { "unit": "count", "frequency": "Daily", "owner": "S. Okafor", "source": "Operations data mart" },
+  "desk": "DESK-COMM"
+}
+```
+
+Ask what inference alone makes of it (the pack's own Sutra is ignored):
+
+```bash
+curl -s "http://localhost:18480/api/v1/studio/inferred/key-risk-indicator/KRI-COMM-1?name=kri-draft"
+```
+
+You should see this `sutra` block (option lines inside a panel may come in a different order):
+
+```yaml
+sutra: kri-draft
+version: 1
+description: Started from inference for key-risk-indicator. Edit freely.
+match: { kind: key-risk-indicator, priority: 1 }
+title: { pill: "Key risk indicator", id: "$.name" }
+strip:
+  - { label: "Kri ID", bind: "$.kriId" }
+  - { label: "Desk name", bind: "$.deskName" }
+  - { label: "Value", bind: "$.value", fmt: "amount0" }
+  - { label: "Amber", bind: "$.amber", fmt: "amount0" }
+  - { label: "Red", bind: "$.red", fmt: "amount0" }
+  - { label: "Status", bind: "$.status" }
+  - { label: "Desk", bind: "$.desk" }
+panels:
+  - id: history
+    kind: ladder
+    title: "History"
+    key: "F2"
+    highlight: "#index == 19"
+    rows: "$.history"
+    columns:
+      - { label: "Date", bind: "@.date", fmt: "date" }
+      - { label: "Value", bind: "@.value", fmt: "amount0" }
+  - id: built
+    kind: provenance
+    title: "How this view was built"
+  - id: definition
+    kind: kv
+    title: "Definition"
+    area: right
+    rows: "$.definition"
+    columns:
+      - { label: "Unit", bind: "@.unit" }
+      - { label: "Frequency", bind: "@.frequency" }
+      - { label: "Owner", bind: "@.owner" }
+      - { label: "Source", bind: "@.source" }
+  - id: refs
+    kind: links
+    title: "Linked entities"
+    code: "REFS"
+    area: right
+keys: { F9: "raw" }
+```
+
+Why each part came out this way:
+
+| Part | Result | Reason |
+|---|---|---|
+| Title id | `$.name` | the identifier fields are `keyRiskIndicatorId`, `id`, `code`, `name`; only `name` exists. `kriId` would only be used if none of them did. |
+| Pill | `Key risk indicator` | the kind in words; there is no `product` field |
+| Strip | all 7 remaining scalars | fewer than 8 candidates, so all are kept, in document order |
+| `value` | `amount0` | its name ends in `value`, which the core calls *money*, so `8.83` shows as `9` |
+| `amber`, `red` | `amount0` | no pattern matches; a number gets `amount0` |
+| `kriId` | label `Kri ID` | `ID` is a core acronym; `Kri` is not |
+| `$.history` | **ladder**, `F2` | candidates: ladder 0.72 (TimeSeriesRule: 20 rows led by an ISO date, in order), table 0.65 (HomogeneousArrayRule: 0.55 + 0.01 × 10). No line chart: the dates are not *tenors* (`1M`, `5Y`), and DistributionRule takes at most 12 rows. |
+| `$.definition` | **kv**, right | NestedObjectRule 0.55: 4 scalar fields, 6 or fewer, so the right column |
+
+In the console this view would read `[Key risk indicator] Trade breaks older than 2 days` with the strip
+`Kri ID KRI-COMM-1 · Desk name Commodities · Value 9 · Amber 20 · Red 32 · Status Green · Desk DESK-COMM`, a
+20-row ladder with the last row lit, the definition on the right, and `DESK-COMM` under *Linked entities*.
+
+## A bigger real example: trade T-10001
+
+A vanilla swap has 39 top-level fields, five arrays and ten nested objects, so it shows the limits at work.
+
+```bash
+curl -s "http://localhost:18480/api/v1/studio/inferred/trade/T-10001?name=swap-draft"
+```
+
+What happens to each part of the document (with the banking packs enabled, which add no roles for trade fields):
+
+| Path | Candidates (score) | Kept? | Why |
+|---|---|---|---|
+| `$.legs` (2 objects × 21 fields) | tabs 0.90, table 0.57 | **tabs**, main | LegsRule: 2–4 similar objects with 5+ fields |
+| `$.legs[0].cashflows` (7 rows) | table 0.62 | **table**, main | arrays inside the first leg are visited too; titled *Cashflows · Legs 1* |
+| `$.schedule` (35 rows) | ladder 0.72, table 0.65 | **ladder**, main | dated rows in order; the last (`#index == 34`) is lit |
+| `$.pnlHistory` (20 rows) | ladder 0.72, table 0.65 | **ladder**, main | same; `pnl` is *signed money*, so the column gets `signed0`, a tone and a total |
+| `$.sensitivities` (7 rows of `bucket`, `dv01`) | line 0.82, table 0.62, hbar 0.45 | **line**, right | `bucket` values are tenors (`3M` … `7Y`); `dv01` is not money to the core hints, so the line keeps 0.82 and bars only get 0.45 |
+| `$.execution` (8 scalars) | kv 0.55 | **kv**, main | more than 6 scalars: main column |
+| `$.clearing` (7 scalars) | kv 0.55 | **kv**, main | sixth and last main panel |
+| `$.regulatory`, `$.valuation` | kv 0.55 | dropped | the main column is full (6); ties are kept in the order proposed |
+| `$.terms` (4), `$.lifecycle` (6) | kv 0.55 | **kv**, right | with the line, the three right-column panels |
+| `$.confirmation`, `$.settlementInstructions` | kv 0.55 | dropped | the right column is full (3) |
+| `$.counterparty` | none | | an object of just `id` and `name` is a reference, not a panel; it gives the title's `with` |
+| `$.risk` | none | | one field only |
+
+The strip keeps eight of the top-level scalars by role weight: `Product name`, `Status`, `Currency`, `MTM currency`
+(labels, 65), the three dates (60) and `Notional` (a plain number, 30, ahead of `mtm` because it comes first).
+`mtm` itself does not make the strip: without the finance pack's roles it is just a number.
+
+Things a person would change, and that the trading pack's `irs-fixfloat` Sutra does change:
+
+- `MTM` and `DV01` belong in the strip, signed and coloured;
+- `Rate` should be `pct4`, not `pct2`; `Year fraction` with `amount0` shows `1` or `0`;
+- the sensitivities read better as **bars**, the discount curve (another entity) as a line;
+- the schedule's highlighted row should be the next payment (`#index == $.nextIndex`), not the last.
+
+The finance pack's hints make inference itself closer: its roles make `mtm`, `pv` and `dv01` signed money, so
+`MTM` is emphasised in the strip and `$.sensitivities` scores hbar 0.80 against line 0.50.
+
+## From an inferred layout to a Sutra
+
+The usual way to write a Sutra for a new kind is to start from inference and correct it.
+
+1. **Get the draft.** In Studio, enter the kind and id and press **Start from inference**, or fetch it:
+
+   ```bash
+   curl -s "http://localhost:18480/api/v1/studio/inferred/key-risk-indicator/KRI-COMM-1?name=kri-mine" > kri-mine.v1.sutra.md
+   ```
+
+   The draft is a complete Markdown Sutra with `priority: 1`, so it loses to any pack Sutra at the normal 10
+   until you raise it.
+2. **Fix the identity.** Title the view by its real identifier and say what it is:
+   `title: { pill: Operational risk · Key risk indicator, id: $.kriId }`.
+3. **Fix the formats inference could not know.** `value`, `amber` and `red` are measurements, not money:
+   `fmt: price2`. Colour the status: `tone: status`.
+4. **Choose better panels.** A history is a chart, not a ladder:
+
+   ```yaml
+     - id: history
+       kind: line
+       title: Last 20 business days
+       key: F2
+       rows: $.history
+       x: date
+       y: value
+       fmt: price2
+   ```
+
+5. **Drop what inference had to spell out.** A kv panel over an object can leave its columns out; inference
+   fills them on every view (and picks up new fields when the source adds them):
+   `- { id: definition, kind: kv, title: Definition, area: right, rows: $.definition }`.
+6. **Add keys.** `keys: { F7: "link($.desk, 'desk')", F8: impact, F9: raw }`.
+7. **Preview** (Ctrl+Enter), then **save**: with governance on it becomes a proposal for an approver. Or put the
+   file in a Sutra directory (`drishti.rachana.dirs`, or a pack's `sutras/` folder); it loads at once.
+
+After these steps you have, nearly line for line, the operational-risk pack's own
+`packs/operational-risk/sutras/operational-and-non-financial-risk/key-risk-indicator.v1.sutra.md`. Check the
+result:
+
+```bash
+curl -s http://localhost:18480/api/v1/views/key-risk-indicator/KRI-COMM-1 | python3 -c "
+import json, sys
+v = json.load(sys.stdin)
+print(v['provenance']['layout'])
+print([(s['label'], s['text']) for s in v['strip']])"
+```
+
+You should see `Sutra key-risk-indicator v1 + inference` and
+`[('Indicator', 'Trade breaks older than 2 days'), ('Desk', 'Commodities'), ('Value', '8.83'), ('Amber', '20.00'), ('Red', '32.00'), ('Status', 'Green')]`.
+The `+ inference` is there because the *Definition* panel's fields and the *Linked entities* are filled in at view time.
 
 ## Seeing why a panel was chosen
 
@@ -288,8 +518,8 @@ Sutra you can edit; see the *Sutra Studio* tutorial in help.
 
 The Sutra always wins. Inference only fills in:
 
-- the columns of a `table` or `ladder` panel that has `rows:` but no `columns:`, or that says `infer: true`
-  (every scalar field present in at least 60% of rows, up to 9 columns);
+- the columns of a `table` or `ladder` panel that has `rows:` but no `columns:` (every scalar field present in
+  at least 60% of rows, up to 9 columns);
 - the fields of a `kv` panel that has `rows:` but no `columns:` (every scalar field of the object, up to 16; a
   nested object with a `name` shows its name);
 - the `kv` body of a `tabs` panel whose body states no columns (the fields of the first element);
@@ -310,9 +540,12 @@ The document has `"kyc": {"status": "Approved", "riskRating": "Enhanced", "lastR
 "emirClassification": "FC", "pd1y": 0.0042}`, so inference supplies five fields: Status, Risk rating, Last
 review, EMIR classification, Pd1y. Type `CPTY CP-NORTHBRIDGE <GO>` and hover over the panel's *inferred* tag.
 
-To take control of a panel, list its columns yourself. To keep your columns *and* let inference add more, say
-`infer: true`. To lay out a whole kind by hand, write a Sutra whose `match` names the kind; see the
-[Rachana reference](RACHANA_REFERENCE.md) and the *Sutra guide* in help.
+Inference never adds to columns you wrote: as soon as a panel lists one column, it shows exactly the columns
+listed. To take control of a panel, list its columns yourself; to let inference choose them, leave `columns:`
+out. `infer: true` only marks a panel with the *inferred* tag; it does not make inference add columns to a panel
+that has some. Panels of other kinds (`status`, `hbar`, charts) are never filled. To lay out a whole kind by hand,
+write a Sutra whose `match` names the kind; see the [Rachana reference](RACHANA_REFERENCE.md) and the
+[Rachana guide](RACHANA_GUIDE.md).
 
 ## The rules
 
@@ -439,7 +672,7 @@ Restart the server after changing a semantics file: hints are read once at start
    or on the command line:
 
    ```bash
-   java -jar drishti-server/target/drishti-server-1.9.0-exec.jar --drishti.inference.semantics-file=/etc/drishti/semantics.yaml
+   java -jar drishti-server/target/drishti-server-1.10.0-exec.jar --drishti.inference.semantics-file=/etc/drishti/semantics.yaml
    ```
 3. Restart the server, then check a view with no Sutra (or Studio's **Start from inference**).
 
