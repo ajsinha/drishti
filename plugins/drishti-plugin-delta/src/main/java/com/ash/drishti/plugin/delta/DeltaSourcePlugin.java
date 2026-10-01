@@ -249,7 +249,6 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         return index.search(kind, text, limit);
     }
 
-    /** Rebuilds the search index from each table's newest partition (identifiers are stable across dates). */
     /** The newest commit time among the domain's tables (data loaded, appended or restated). */
     private volatile java.time.Instant lastUpdate;
     private final Map<String, Long> versions = new java.util.concurrent.ConcurrentHashMap<>();
@@ -259,6 +258,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         return lastUpdate;
     }
 
+    /** Rebuilds the search index from each table's newest partition (identifiers are stable across dates). */
     void reindex() {
         discoverTables();
         List<EntityHit> hits = new ArrayList<>();
