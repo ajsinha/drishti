@@ -26,11 +26,12 @@
   </parent>
   <artifactId>drishti-plugin-aerospike</artifactId>
   <name>drishti-plugin-aerospike</name>
-  <description>Aerospike source: a record per entity per data domain, a bin per business date</description>
+  <description>Aerospike source: a record per entity per business date, an index record per entity, promoted bins for searches</description>
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <dependency><groupId>com.aerospike</groupId><artifactId>aerospike-client-jdk21</artifactId><version>${aerospike.version}</version></dependency>
     <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-core</artifactId></dependency>
+    <dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId><scope>test</scope></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><scope>test</scope></dependency>
     <!-- Aerospike in Docker for the contract test; skipped where Docker is not reachable -->

@@ -186,6 +186,19 @@ def _piece(job):
     return arrow_table(day, ids, texts, cols, _types)
 
 
+def _lines(job):
+    """Rows of a slice as JSON lines for tools/load-aerospike.sh: the document and its promoted values by path."""
+    indices, day, steps = job
+    names = dict(zip(_layout.names, _layout.columns))
+    out = []
+    for i in indices:
+        new_id, doc = document(i, day, steps)
+        columns = {names[n]: v for n, v in promote(doc, _layout).items()}
+        out.append(json.dumps({"domain": "trading", "kind": "trade", "id": new_id, "date": day.isoformat(),
+                               "doc": json.dumps(doc, ensure_ascii=False), "columns": columns}, ensure_ascii=False))
+    return out
+
+
 def plan(trades: int, templates: list, file_rows: int) -> list[list[int]]:
     """Trade numbers in id order, cut into files of file_rows: each file holds its own contiguous id range."""
     ids = [trade_id(i, templates)[0] for i in range(trades)]
@@ -201,6 +214,8 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--as-of", default=AS_OF.isoformat(), help=f"the newest business date (default {AS_OF})")
     ap.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1))
     ap.add_argument("--file-rows", type=int, default=None, help="trades per Parquet file (default: the trading pack's layout, file-rows)")
+    ap.add_argument("--jsonl", default=None, help="write JSON lines to this file (- for standard output) instead of the lake, for "
+                                                  "tools/load-aerospike.sh: the documents with the fields the trading pack promotes")
     a = ap.parse_args(argv)
     if a.trades < 1 or a.days < 1:
         raise SystemExit("--trades and --days must be at least 1")
@@ -217,6 +232,19 @@ def main(argv: list[str]) -> int:
     root = Path(a.root)
     days = business_days(date.fromisoformat(a.as_of), a.days, Calendar.of("USNY"))
     t0 = time.time()
+    if a.jsonl:                                       # a stream for Aerospike (or anything that reads JSON lines)
+        out = sys.stdout if a.jsonl == "-" else open(a.jsonl, "w", encoding="utf-8")
+        jobs = [(list(range(s, min(s + 5_000, a.trades))), d, len(days) - 1 - n) for n, d in enumerate(days) for s in range(0, a.trades, 5_000)]
+        written = 0
+        with multiprocessing.Pool(a.workers, initializer=_init, initargs=(templates, lay, types)) as pool:
+            for lines in pool.imap_unordered(_lines, jobs):
+                out.write("\n".join(lines) + "\n")
+                written += len(lines)
+                print(f"\r{written:,} of {a.trades * len(days):,} trade-days written ({time.time() - t0:,.0f} s)", end="", flush=True, file=sys.stderr)
+        if out is not sys.stdout:
+            out.close()
+        print(f"\n{written:,} trade-days as JSON lines in {time.time() - t0:,.0f} s", file=sys.stderr)
+        return 0
 
     if not (root / "reference").is_dir():
         print(f"warning: {root} has no reference data; build the lake first: make_data.py --lake {root}")

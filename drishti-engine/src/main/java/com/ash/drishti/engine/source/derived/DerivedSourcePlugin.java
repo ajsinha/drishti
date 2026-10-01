@@ -81,6 +81,17 @@ public final class DerivedSourcePlugin implements SourcePlugin {
         refresh = org.springframework.boot.convert.DurationStyle.detectAndParse(context.setting("refresh", "30s"));
         maxScan = Integer.parseInt(context.setting("max-scan", "50000"));
         sourceName = context.setting("source-name", "derived");
+        // the first computation after start, so the first reader of a large book finds it ready
+        if (context.scheduler() == null) {
+            return;
+        }
+        context.scheduler().schedule(() -> {
+            try {
+                snapshot(AsOf.LATEST);
+            } catch (RuntimeException e) {
+                // the first reader computes it
+            }
+        }, 15, java.util.concurrent.TimeUnit.SECONDS);
     }
 
     @Override
@@ -141,7 +152,25 @@ public final class DerivedSourcePlugin implements SourcePlugin {
             f = cache.get(key);
             boolean stale = f != null && f.isDone() && !f.isCompletedExceptionally()
                     && f.join().at().plus(refresh).isBefore(Instant.now());
-            if (f == null || stale || f.isCompletedExceptionally()) {
+            if (stale) {
+                // serve the last computation now and refresh it behind: a reader never waits for a recomputation
+                Snapshot last = f.join();
+                CompletableFuture<Snapshot> next = new CompletableFuture<>();
+                cache.put(key, CompletableFuture.completedFuture(new Snapshot(last.byKind(), last.scanned(), last.dataDate(), last.generation(),
+                        Instant.now())));                                  // one refresh at a time
+                Thread.ofVirtual().name("derived-refresh").start(() -> {
+                    try {
+                        next.complete(compute(asOf));
+                        synchronized (cache) {
+                            cache.put(key, next);
+                        }
+                    } catch (RuntimeException e) {
+                        health = "DOWN: " + e.getMessage();
+                    }
+                });
+                return last;
+            }
+            if (f == null || f.isCompletedExceptionally()) {
                 f = new CompletableFuture<>();
                 cache.put(key, f);
                 mine = true;

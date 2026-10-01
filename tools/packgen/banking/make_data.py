@@ -152,6 +152,7 @@ def main() -> None:
     if "--jsonl" in sys.argv:
         from samplegen.dates import Calendar
         from samplegen.lake import final_rows
+        from samplegen.layout import layouts_for_domain, promote
 
         out = Path(sys.argv[sys.argv.index("--jsonl") + 1])
         days = int(sys.argv[sys.argv.index("--days") + 1]) if "--days" in sys.argv else 10
@@ -159,8 +160,14 @@ def main() -> None:
         with out.open("w", encoding="utf-8") as f:
             for domain in layout.DOMAINS:
                 kinds = {k: docs.get(k, {}) for k in (x for p in layout.PACKS.values() for d, ks in p["kinds"].items() if d == domain for x in ks)}
+                layouts = layouts_for_domain(domain)
                 for kind, id_, d, body in final_rows(kinds, N.AS_OF, days, Calendar.of("USNY")):
-                    f.write(json.dumps({"domain": domain, "kind": kind, "id": id_, "date": d.isoformat(), "doc": body}, ensure_ascii=False) + "\n")
+                    row = {"domain": domain, "kind": kind, "id": id_, "date": d.isoformat(), "doc": body}
+                    lay = layouts.get(kind)
+                    if lay:                             # the fields the pack promotes, by path (Aerospike stores them as bins)
+                        names = dict(zip(lay.names, lay.columns))
+                        row["columns"] = {names[k]: v for k, v in promote(json.loads(body), lay).items()}
+                    f.write(json.dumps(row, ensure_ascii=False) + "\n")
                     n += 1
         print(f"jsonl: {n} rows in {out} (load into Aerospike with tools/load-aerospike.sh)")
     if "--postgres" in sys.argv:
