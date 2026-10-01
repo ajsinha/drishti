@@ -13,6 +13,25 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 1.12.0 — release notes
+
+*2026-10-01.* **Derived kinds, notes, reports, plain words and a signed pack registry.**
+- **One console, many servers (ADR-016).** Configure a list of servers in the console. People pick one and sign in to it. Each server has its own session, and links carry their server.
+- **Derived kinds.** A pack can declare a kind computed from another, such as a book's or desk's P&L from its trades.
+  - It has history wherever its members do.
+  - The finance pack ships `BPNL` and the trading pack ships `DPNL`.
+- **Notes and shared workspaces.**
+  - **Notes:** anyone who may open an entity can leave notes on it or on its fields. They are audited, and only the author edits them.
+  - **Shared workspaces:** workspaces can be shared read-only with everyone, with roles or with people.
+- **Scheduled reports.** A search can run as you on a schedule (`business-days 18:30` and others) and deliver CSV to a folder or to an allowed webhook.
+- **Who looked at what.** Every answered read is recorded and shown in Admin → Access, kept for 90 days.
+- **Ask in plain words.** Type `live trades over 5m in BOOK-RATES-3, biggest first` to see the search it makes before it runs. It is deterministic, with no AI service.
+- **Signed pack registry (ADR-018).** Ed25519-signed, versioned packs can be installed, upgraded and rolled back from Admin → Packs.
+- **Expression language change:** text that is not a number now orders as text, so ISO dates compare (`$.maturityDate < '2028-01-01'`).
+- **Fix:** CSV numbers are written in full.
+
+---
+
 # Drishti 1.11.0 — release notes
 
 *2026-10-01.* **Tokens, history and freshness.**

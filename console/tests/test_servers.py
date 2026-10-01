@@ -45,7 +45,7 @@ def two():
     app.state.backend = Switch(fakes, "open")
 
     async def states(timeout=2.0):
-        return {"open": {"up": True, "version": "1.11.0", "signIn": {"required": True, "password": True}},
+        return {"open": {"up": True, "version": "1.12.0", "signIn": {"required": True, "password": True}},
                 "desk": {"up": False, "error": "ConnectError"}}
     app.state.servers.states = states
     return TestClient(app), app, fakes
@@ -86,7 +86,7 @@ def test_only_catalogued_servers_and_links_name_theirs(two):
     c.get("/t?srv=elsewhere")
     assert c.cookies.get("drishti_server") == "open"
     page = c.get("/servers").text
-    assert "Rates desk" in page and "DOWN" in page and "1.11.0" in page and "signed in" in page and ">Lab<" not in page
+    assert "Rates desk" in page and "DOWN" in page and "1.12.0" in page and "signed in" in page and ">Lab<" not in page
 
 
 def test_without_a_catalogue_there_is_one_default_server():

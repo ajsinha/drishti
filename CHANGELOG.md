@@ -15,7 +15,7 @@
 -->
 # Changelog
 
-## Unreleased
+## 1.12.0 — Derived kinds, notes, reports, plain words and a signed pack registry (2026-10-01)
 - **A signed, versioned pack registry (ADR-018).** `tools/packreg/packreg.py` makes Ed25519 keys and publishes pack folders as reproducible, signed archives with an `index.json`.
   - **Installing:** Admin → Packs → **From the registry** installs, upgrades and rolls back packs.
   - **Checks before installing:** the SHA-256, the signature by a trusted publisher (`drishti.packs.registry.trusted-keys`), that files stay inside the pack with sizes bounded, and that `pack.yaml` names the same pack and version.
