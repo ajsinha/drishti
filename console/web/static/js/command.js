@@ -15,7 +15,8 @@
  */
 /* The command line: Bloomberg-style type-ahead. Suggestions are fetched as you type (debounced 60 ms,
    stale requests aborted), shown in an ARIA listbox, and driven from the keyboard:
-   ↑/↓ move (↑ in an empty box: earlier commands), Tab completes, Enter opens (<GO>), Esc closes. "/" focuses the command line anywhere. */
+   ↑/↓ move (↑ in an empty box: earlier commands), Tab completes, Enter opens (<GO>), Esc closes. "/" focuses the command line anywhere.
+   An entity suggestion carries its kind and id, so a workspace can take it by drag and drop (workspace.js). */
 (function () {
   'use strict';
   var form = document.querySelector('[data-command]');
@@ -45,7 +46,8 @@
       return;
     }
     list.innerHTML = items.map(function (s, i) {
-      return '<li role="option" id="sg-' + i + '" data-i="' + i + '" aria-selected="false">' +
+      return '<li role="option" id="sg-' + i + '" data-i="' + i + '" aria-selected="false"' +
+        (s.id && s.kind ? ' data-ref data-kind="' + esc(s.kind) + '" data-id="' + esc(s.id) + '" data-label="' + esc(s.id) + '"' : '') + '>' +
         '<span class="sg-m">' + esc(s.mnemonic || '') + '</span>' +
         '<span class="sg-t">' + mark(s.id || s.title, q) + '</span>' +
         '<span class="sg-s">' + (s.type === 'recent' ? '<span class="sg-type">recent · </span>' : '') + esc(s.subtitle || '') + '</span></li>';
@@ -127,6 +129,8 @@
     if (li) { e.preventDefault(); go(+li.getAttribute('data-i')); }
   });
   input.addEventListener('blur', function () { setTimeout(function () { open(false); }, 120); });
+  /** For a workspace: a suggestion dragged into a pane opens there; one clicked without dragging opens as usual. */
+  window.drishtiCommand = { go: go, close: function () { open(false); } };
   document.addEventListener('keydown', function (e) {
     var tag = (e.target.tagName || '').toLowerCase();
     if (e.key === '/' && tag !== 'input' && tag !== 'textarea') { e.preventDefault(); input.focus(); }

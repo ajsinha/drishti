@@ -22,7 +22,9 @@
 {% block nav %}{% if not embed %}{% with command_text=(vm.mnemonic ~ ' ' ~ vm.ref.id ~ ' <GO>') if vm.mnemonic else vm.ref.id, live=vm.provenance.live, built_ms=vm.timings.total %}{% include "terminal/_topbar.html" %}{% endwith %}{% endif %}{% endblock %}
 {% block content %}
 <div class="view" data-view{% if embed %} data-embed{% endif %} data-kind="{{ vm.ref.kind }}" data-id="{{ vm.ref.id }}" data-label="{{ vm.title.id }}"
-     data-me="{{ me.user if me else '' }}"{% if me and me.is_admin %} data-admin{% endif %}>
+     data-me="{{ me.user if me else '' }}"{% if me and me.is_admin %} data-admin{% endif %}{% if layout and layout.offered and layout.allowed %}
+     data-sutra="{{ layout.sutra }}" data-layout-base="{{ layout.base | tojson | forceescape }}"{% if layout.mine %} data-layout-mine{% endif %}{% endif %}>
+  {% if layout and layout.offered and layout.allowed %}{% include "terminal/_layout.html" %}{% endif %}
   {% if asof != 'live' and not vm.provenance.businessDate %}
   <p class="asof-banner" role="status"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
     <b>{{ vm.provenance.source }}</b> is not a dated source: this shows its current data, not {{ (business_date or {}).selected or asof }}.</p>
@@ -83,11 +85,12 @@
 {% endblock %}
 {% block footer %}{% if not embed %}
 <footer class="fkeys" aria-label="Function keys">
-  <nav>{% for k in vm['keys'] %}<button type="button" class="fk" data-fkey="{{ k.key }}" data-action="{{ k.action }}"{% if k.action == 'denied' %} disabled title="You do not have access"{% endif %}
+  <nav>{% for k in vm['keys'] %}<button type="button" class="fk" data-fkey="{{ k.key }}" data-action="{{ k.action }}"{% if k.action == 'denied' %} disabled title="You do not have access"{% elif k.panel and k.panel in (hidden_ids or []) %} disabled title="Hidden in your layout: show it again in layout mode (Alt+L)"{% endif %}
       {% if k.panel %}data-target="{{ k.panel }}"{% endif %}{% if k.link %}data-href="/v/{{ k.link.kind }}/{{ k.link.id }}"{% endif %}>
       <b>{{ k.key }}</b> {{ k.label }}</button>{% endfor %}
     <button type="button" class="fk" data-fkey="Alt+ArrowLeft" data-action="back"><b>Alt+←</b> Back</button>
-    {% if calc and calc.offered %}<button type="button" class="fk" data-calc-open{% if not calc.allowed %} disabled title="You do not have access: Calc needs a role with calc (ask an administrator)"{% else %} title="Calc: Python on this view (Alt+C)"{% endif %}><b>Alt+C</b> Calc</button>{% endif %}</nav>
+    {% if calc and calc.offered %}<button type="button" class="fk" data-calc-open{% if not calc.allowed %} disabled title="You do not have access: Calc needs a role with calc (ask an administrator)"{% else %} title="Calc: Python on this view (Alt+C)"{% endif %}><b>Alt+C</b> Calc</button>{% endif %}
+    {% if layout and layout.offered %}<button type="button" class="fk" data-layout-open{% if not layout.allowed %} disabled title="{{ layout.why }}"{% else %} title="Layout mode: arrange this view's panels for yourself (Alt+L){% if layout.mine %}. You are seeing your own layout{% endif %}"{% endif %}><b>Alt+L</b> Layout{% if layout.mine %} <span class="fk-mine" aria-label="(yours)">•</span>{% endif %}</button>{% endif %}</nav>
   <span class="fk-note">{{ vm.provenance.source }}{% if vm.provenance.updatedAt %} · updated <span data-age="{{ vm.provenance.updatedAt }}"{% if vm.provenance.stale %} class="t-warn"{% endif %} title="{{ vm.provenance.updatedAt }}">{{ vm.provenance.updatedAt[:16] | replace('T', ' ') }}</span>{% endif %} · gen {{ vm.provenance.generation }}{% if vm.provenance.businessDate %} · as of {{ vm.provenance.businessDate }}{% endif %} · {{ COPYRIGHT }}</span>
 </footer>
 {% endif %}{% endblock %}
@@ -102,4 +105,5 @@
 <script src="/static/vendor/codemirror/mode/python/python.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/calc.js?v={{ ASSET_V }}"></script>{% endif %}
 {% if vm.provenance.live %}<script src="/static/js/live.js?v={{ ASSET_V }}"></script>{% endif %}
+{% if layout and layout.offered and layout.allowed %}<script src="/static/js/layout.js?v={{ ASSET_V }}"></script>{% endif %}
 {% endblock %}

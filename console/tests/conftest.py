@@ -41,7 +41,50 @@ class FakeBackend:
         f = FIXTURES / f"view_{kind}_{id_}.json"
         if not f.exists():
             raise BackendError(404, "DRS-1001", f"no source holds {kind}/{id_}")
-        return json.loads(f.read_text())
+        vm = json.loads(f.read_text())
+        prov = vm.get("provenance") or {}
+        if "sutra" not in prov and str(prov.get("layout", "")).startswith("Sutra "):     # as the server says since layouts
+            prov["sutra"] = prov["layout"].split()[1]
+        return vm
+
+    # personal layouts: kept per user and Sutra, validated against the Sutra's panels as the server does
+    layout_allowed = True
+    layout_promote = True
+    layouts_kept = {}
+    sutra_panels = {"irs-vanilla": ("trade", ["legs", "cashflows", "leg2", "built", "curve", "refs", "dv01"])}
+
+    async def layouts(self, ident=None):
+        self.calls.append(("layouts", ident.user if ident else None))
+        return {"enabled": True, "allowed": self.layout_allowed, "promote": self.layout_allowed and self.layout_promote, "review": True,
+                "layouts": [dict(v, sutra=k[0], kind=k[1]) for k, v in self.layouts_kept.items() if self.layout_allowed]}
+
+    async def save_layout(self, sutra, kind, body, ident=None):
+        if not self.layout_allowed:
+            raise BackendError(403, "DRS-5002", f"{ident.user} may not customise layouts: ask an administrator for a role with layout")
+        if sutra not in self.sutra_panels:
+            raise BackendError(404, "DRS-2003", f"no Sutra '{sutra}'")
+        known = self.sutra_panels[sutra][1]
+        for p in body.get("panels") or []:
+            if p.get("id") not in known:
+                raise BackendError(400, "DRS-5001", f"'{p.get('id')}' is not a panel of {sutra}")
+        self.layouts_kept[(sutra, kind)] = {"panels": body["panels"]}
+        return self.layouts_kept[(sutra, kind)]
+
+    async def reset_layout(self, sutra, kind, ident=None):
+        if self.layouts_kept.pop((sutra, kind), None) is None:
+            raise BackendError(404, "DRS-1001", f"no personal layout for {sutra} ({kind})")
+
+    async def layout_promotion(self, sutra, kind, drop_hidden, ident=None):
+        if not self.layout_promote:
+            raise BackendError(403, "DRS-5002", f"{ident.user} is not a Sutra author: promoting a layout needs a role with author")
+        base = "rachana: 1\nsutra: irs-vanilla\nversion: 3\npanels:\n  - { id: legs, kind: kv }\n  - { id: refs, kind: links, area: right }\n"
+        text = base.replace("version: 3", "version: 4").replace("area: right", "span: 6")
+        return {"sutra": sutra, "kind": kind, "fromVersion": 3, "version": 4, "base": base, "text": text, "review": True,
+                "changes": ["'refs' moves to the main column"] + (["'built' is removed (hidden in the layout)"] if drop_hidden else [])}
+
+    async def promote_layout(self, sutra, kind, note, drop_hidden, ident=None):
+        self.calls.append(("promote", sutra, kind, note, drop_hidden))
+        return {"proposal": {"id": "P-000042", "name": sutra, "version": 4, "status": "pending"}}
 
     async def raw(self, kind, id_, ident=None):
         return {"ref": {"kind": kind, "id": id_}, "provenance": {"source": "aero-risk", "generation": 1742}, "data": {"tradeId": id_}}

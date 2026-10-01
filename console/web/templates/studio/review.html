@@ -27,7 +27,7 @@
   {% if error %}<p class="asof-banner" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ error.detail }} <span class="mono">({{ error.code }})</span></p>{% endif %}
   {% if p.stale %}<p class="asof-banner" role="status"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> The live Sutra changed after this was proposed.
     It cannot be approved: reject it and propose again from the live version.</p>{% endif %}
-  <h2 class="ws-h">{{ 'New version: the whole Sutra' if p.newVersion else 'Changes against the live Sutra' }}</h2>
+  <h2 class="ws-h">{{ ('New version: changes against the latest earlier version' if p.previousText else 'New version: the whole Sutra') if p.newVersion else 'Changes against the live Sutra' }}</h2>
   <section class="pnl"><div class="pnl-b"><pre class="diff mono" aria-label="Differences">{% for kind, line in diff %}<span class="d-{{ kind }}">{{ line }}</span>
 {% endfor %}{% if not diff %}<span class="d-ctx">No differences.</span>{% endif %}</pre></div></section>
   <p><a class="lnk" href="/studio?sutra={{ p.name }}@{{ p.version }}">Open the live version in Studio</a></p>

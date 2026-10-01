@@ -201,11 +201,12 @@ async def view(request: Request, kind: str, id_: str, embed: int = 0):
     except BackendError as e:
         return render(request, "terminal/missing.html", status_code=e.status if e.status < 500 else 502,
                       kind=kind, id=id_, error=e, embed=bool(embed))
-    main = [p for p in vm["panels"] if p.get("area") != "right"]
-    right = [p for p in vm["panels"] if p.get("area") == "right"]
+    layout = await request.app.state.layouts.context(request, vm, bool(embed))      # the user's own arrangement, if any
+    main = [p for p in layout["panels"] if p.get("area") != "right"]
+    right = [p for p in layout["panels"] if p.get("area") == "right"]
     calc = {"offered": False} if embed else await request.app.state.calc.context(request, await packs(request), vm["ref"]["kind"])
     return render(request, "terminal/view.html", vm=vm, main=main, right=right, embed=bool(embed), share_url=share_url(request, kind, id_),
-                  calc=calc)
+                  calc=calc, layout=layout, hidden_ids=[p["id"] for p in layout["panels"] if p.get("hidden")])
 
 
 def share_url(request: Request, kind: str, id_: str) -> str:

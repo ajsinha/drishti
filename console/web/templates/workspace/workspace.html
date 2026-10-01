@@ -44,11 +44,12 @@
     <span class="text-muted-d">They see it as you keep it, read-only, and only the panes they may open.</span>
   </form>{% endif %}
   <div class="ws-grid" data-grid></div>
+  <span class="visually-hidden" data-ws-live role="status" aria-live="polite"></span>
 </div>
 <template id="paneTpl">
   <section class="ws-pane" tabindex="-1">
     <header class="ws-pane-h">
-      <span class="ws-num mono"></span>
+      <span class="ws-num mono" title="Drag this number onto another pane to show this view there"></span>
       <form class="ws-cmd" data-pane-cmd><label class="visually-hidden">Entity for this pane</label>
         <input class="studio-in mono" placeholder="Command or identifier" data-pane-input></form>
       <label class="ws-follow">follows <select class="studio-select" data-follows><option value="">—</option></select></label>
@@ -56,6 +57,7 @@
       <button type="button" class="tbar-link ws-x" data-remove title="Remove pane" aria-label="Remove pane">×</button>
     </header>
     <iframe class="ws-frame" title="Pane" loading="lazy"></iframe>
+    <div class="ws-drop" aria-hidden="true"><span>Drop to show it here</span></div>
   </section>
 </template>
 {% endblock %}
