@@ -743,7 +743,9 @@ You should see `{"save":true,"review":true,"approve":true}` (`approve` is whethe
    it stands; if it has problems they are listed and nothing is submitted. Otherwise the status line says
    `Submitted gene-mine v1 for review as <id>`.
 2. An approver opens **Studio → Reviews** (`/studio/reviews`), sees the proposal with a diff against the live
-   version (empty for a new Sutra), and approves or rejects it (a rejection needs a reason).
+   version (empty for a new Sutra), and approves or rejects it (a rejection needs a reason). Panel blocks that only
+   changed place are listed as moves (*moved: Legs from position 1 to 2 (main → side)*), with the remaining edits as
+   a line diff; **Full line diff** opens the plain diff.
 3. With security on and `drishti.governance.four-eyes: true` (the default), the author cannot approve their own
    proposal (`DRS-2007`). If someone changed the live Sutra after you proposed, approval is refused (`DRS-2006`):
    propose again from the live version.

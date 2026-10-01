@@ -1822,7 +1822,7 @@ With `drishti.governance.enabled: true` (the default), Save does not publish: it
 | Step | Who | What happens |
 |---|---|---|
 | Propose | an author | the Sutra is checked as it stands (it must be publishable) and stored with the live text it is based on (`202 Accepted`, `{"proposal": {"id", "name", "version", "status": "pending"}}`). Proposing exactly the live text is refused. |
-| Review | an approver | `/studio/reviews` lists proposals; each shows a diff against the live version |
+| Review | an approver | `/studio/reviews` lists proposals; each shows a diff against the live version (or, for a new version, the latest earlier one): panel blocks that moved are said in words (`moved: <title> from position a to b (main → side)`, positions counted within the column), the other edits as a line diff, and the full line diff behind a toggle |
 | Approve | an approver | with `drishti.governance.four-eyes: true` (default) and security on, the author cannot approve their own proposal (`DRS-2007`). If the live text changed since the proposal, approval is refused (`DRS-2006`). Otherwise the file is written and goes live. |
 | Reject | an approver | needs a comment saying why |
 | Withdraw | the author or an admin | |

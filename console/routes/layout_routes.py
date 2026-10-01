@@ -25,7 +25,7 @@ from fastapi.responses import JSONResponse
 
 from core.backend import BackendError
 from routes.common import ident
-from routes.studio_routes import _diff
+from core import sutra_diff
 
 router = APIRouter(prefix="/api/layout", include_in_schema=False)
 KEYS = ("id", "area", "span", "height", "hidden")
@@ -75,13 +75,15 @@ async def reset(request: Request, sutra: str, kind: str):
 
 @router.get("/{sutra}/{kind}/promotion")
 async def promotion(request: Request, sutra: str, kind: str, dropHidden: bool = False):  # noqa: N803 - the query's name
-    """What promoting the saved layout would propose: the changes in words and the diff against the latest version."""
+    """What promoting the saved layout would propose: the changes in words, the panels it moves, and the diff against the
+    latest version (``edits`` without the moves, ``diff`` the full line diff)."""
     try:
         p = await request.app.state.backend.layout_promotion(sutra, kind, dropHidden, ident(request))
     except BackendError as e:
         return _problem(e)
+    d = sutra_diff.review(p.get("base") or "", p.get("text") or "")
     return {"sutra": p.get("sutra"), "fromVersion": p.get("fromVersion"), "version": p.get("version"), "review": p.get("review"),
-            "changes": p.get("changes") or [], "diff": _diff(p.get("base") or "", p.get("text") or "")}
+            "changes": p.get("changes") or [], "moves": [m["text"] for m in d["moves"]], "edits": d["edits"], "diff": d["full"]}
 
 
 @router.post("/{sutra}/{kind}/promotion")

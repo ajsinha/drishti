@@ -555,7 +555,10 @@ If your role may author Sutras, the bar has **Promote to Sutra…**. It saves yo
 
 Write a note for the reviewer and press **Submit for review**. As with a save in Studio, the new version is a
 **proposal**: an approver opens it in *Build → Reviews* (the review shows the diff against the version before), and it
-goes live only when approved ([Reviews](#reviews-approving-a-sutra)). With review switched off on the server the button
+goes live only when approved. A panel your layout moved is listed in words, for example *moved: DV01 by tenor (USD)
+from position 3 to 1 (side → main)*, and the line diff below it holds only the real edits (a width, a height, a
+removed panel); the full line diff, where a move reads as a deleted block and an added one, is behind **Full line
+diff**. The promote drawer shows the same before you submit ([Reviews](#reviews-approving-a-sutra)). With review switched off on the server the button
 reads **Publish** and the new version is live at once.
 
 ## Keyboard

@@ -158,6 +158,12 @@ def test_promotion_shows_the_diff_and_proposes_through_review(client, backend, l
     assert "'built' is removed (hidden in the layout)" in d["changes"]
     assert ["del", "-version: 3"] in d["diff"] and ["add", "+version: 4"] in d["diff"]
     assert ["add", "+  - { id: refs, kind: links, span: 6 }"] in d["diff"]
+    assert d["moves"] == ["moved: refs from position 1 to 2 (side → main)"]          # in words, beside the edits
+    assert [x for x in d["edits"] if x[0] in ("add", "del")] == [["del", "-version: 3"], ["add", "+version: 4"],
+                                                                ["del", "-  - { id: refs, kind: links, area: right }"],
+                                                                ["add", "+  - { id: refs, kind: links, span: 6 }"]]
+    js = client.get("/static/js/layout.js").text
+    assert "data-promote-moves" in js and "data-promote-full-diff" in js and "res.b.edits" in js
     r = client.post("/api/layout/irs-vanilla/trade/promotion", json={"note": "cashflows first", "dropHidden": True}).json()
     assert r["proposal"]["id"] == "P-000042" and r["href"] == "/studio/reviews/P-000042"
     assert ("promote", "irs-vanilla", "trade", "cashflows first", True) in backend.calls

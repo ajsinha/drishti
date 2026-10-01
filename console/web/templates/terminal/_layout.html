@@ -38,7 +38,10 @@
       {% if layout.review %}It is a proposal: an approver reviews it before it goes live.{% else %}Review is off on this server: it goes live at once.{% endif %}</p>
     <ul class="lay-changes" data-promote-changes></ul>
     <label class="lay-drop"><input type="checkbox" data-promote-drop> Remove the panels I hid from the Sutra (otherwise they stay, for everyone else)</label>
+    <ul class="diff-moves" data-promote-moves aria-label="Panels moved" hidden></ul>
     <pre class="diff mono" data-promote-diff aria-label="Differences against the latest version">Loading…</pre>
+    <details class="diff-full" data-promote-full hidden><summary>Full line diff (moves as deleted and added lines)</summary>
+      <pre class="diff mono" data-promote-full-diff aria-label="Full line diff"></pre></details>
     <form class="lay-promote-form" data-promote-form>
       <label for="promoteNote" class="visually-hidden">Note for the reviewer</label>
       <input id="promoteNote" class="studio-in" name="note" maxlength="500" placeholder="Why (for the reviewer)">

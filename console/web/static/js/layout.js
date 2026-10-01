@@ -380,9 +380,9 @@
   // ---- promote to Sutra (authors): saves the layout, shows the diff, proposes the next version ------------
   var drawer = document.getElementById('layoutPromote');
   var promoteBtn = bar.querySelector('[data-layout-promote]');
-  function diffLines(pre, lines) {
+  function diffLines(pre, lines, none) {
     pre.textContent = '';
-    if (!lines.length) { pre.textContent = 'No differences.'; return; }
+    if (!lines.length) { pre.textContent = none || 'No differences.'; return; }
     lines.forEach(function (l) {
       var s = document.createElement('span');
       s.className = 'd-' + l[0];
@@ -403,7 +403,18 @@
         (res.b.changes.length ? res.b.changes : ['Only the version changes: the layout is the Sutra’s.']).forEach(function (c) {
           var li = document.createElement('li'); li.textContent = c; ul.appendChild(li);
         });
-        diffLines(pre, res.b.diff || []);
+        // moved panels in words, the line diff of the other edits, and the full line diff behind a toggle
+        var moves = res.b.moves || [], movesUl = drawer.querySelector('[data-promote-moves]'), full = drawer.querySelector('[data-promote-full]');
+        if (movesUl) {
+          movesUl.textContent = '';
+          moves.forEach(function (m) { var li = document.createElement('li'); li.textContent = m; movesUl.appendChild(li); });
+          movesUl.hidden = !moves.length;
+        }
+        if (full) {
+          full.hidden = !moves.length;
+          diffLines(full.querySelector('[data-promote-full-diff]'), res.b.diff || []);
+        }
+        diffLines(pre, moves.length ? (res.b.edits || []) : (res.b.diff || []), moves.length ? 'No other edits: only panels moved.' : null);
       });
   }
   if (drawer && promoteBtn) {

@@ -16,6 +16,15 @@
 # Changelog
 
 ## Unreleased — A million trades a day, for seven years
+- **A review shows moved panels as moves** ([USER_GUIDE.md › Layout mode](docs/guides/USER_GUIDE.md#layout-mode-arrange-a-view-your-way)).
+  A layout promotion (Sutra version N against N+1) used to show a moved panel block as a deleted block and an added one,
+  hiding the one real edit in it. The review page and the promote drawer now list each moved panel in words, *moved:
+  DV01 by tenor (USD) from position 3 to 1 (side → main)* (positions within the column), and show only the real edits
+  as a line diff; **Full line diff** keeps the plain diff one click away. `console/core/sutra_diff.py` matches panel
+  blocks by id (with the comments above them), finds the ones out of order with a longest common subsequence per
+  column, and diffs the old text with its blocks in the new order. A Sutra it cannot read as a panel list (a flow
+  list, duplicate ids) gets the full diff, so nothing is hidden. `GET /api/layout/{sutra}/{kind}/promotion` adds
+  `moves` and `edits` beside `diff`.
 - **Waterfalls rise green and fall red** ([PANELS.md › waterfall](docs/guides/PANELS.md#7-waterfall)). Steps now
   take the theme's good and bad colours (`--d-ok`, `--d-bad`) in every theme, light and dark, and totals are a neutral
   grey (`--d-muted`) instead of the link blue. A new option, `colors: gain-loss | theme` (default `gain-loss`), keeps

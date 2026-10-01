@@ -61,8 +61,9 @@ Each change is read out by screen readers.
   built-in `viewer`. Without it, the key is greyed with the reason.
 - **Printing** and **workspace panes** follow your layout. Exports, Calc and the API do not depend on it.
 - **When the Sutra changes**, panels it dropped leave your layout and new ones appear at the end of their column.
-- **Authors** see **Promote to Sutra…**: your layout as the next version of the Sutra, shown as a diff, then submitted
-  for review like a Studio save.
+- **Authors** see **Promote to Sutra…**: your layout as the next version of the Sutra, shown as the panels it moves
+  (*moved: Legs from position 1 to 2 (main → side)*) and a diff of the other edits (the full line diff is one click
+  away), then submitted for review like a Studio save. The reviewer sees the same.
 
 More in the [user guide](using-the-terminal) (*Layout mode*), and the panel options `span` and `height` in the
 [Rachana reference](rachana-reference).

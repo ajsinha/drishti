@@ -28,8 +28,16 @@
   {% if p.stale %}<p class="asof-banner" role="status"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> The live Sutra changed after this was proposed.
     It cannot be approved: reject it and propose again from the live version.</p>{% endif %}
   <h2 class="ws-h">{{ ('New version: changes against the latest earlier version' if p.previousText else 'New version: the whole Sutra') if p.newVersion else 'Changes against the live Sutra' }}</h2>
-  <section class="pnl"><div class="pnl-b"><pre class="diff mono" aria-label="Differences">{% for kind, line in diff %}<span class="d-{{ kind }}">{{ line }}</span>
-{% endfor %}{% if not diff %}<span class="d-ctx">No differences.</span>{% endif %}</pre></div></section>
+  <section class="pnl"><div class="pnl-b">
+    {% if diff.moves %}<ul class="diff-moves" aria-label="Panels moved">{% for m in diff.moves %}
+      <li><i class="bi bi-arrows-move" aria-hidden="true"></i> {{ m.text }}</li>{% endfor %}</ul>
+    <p class="diff-cap text-muted-d">{{ 'Other edits' if diff.edits else 'No other edits: only panels moved.' }}</p>{% endif %}
+    {% if diff.edits or not diff.moves %}<pre class="diff mono" aria-label="{{ 'Edits besides the moves' if diff.moves else 'Differences' }}">{% for kind, line in diff.edits %}<span class="d-{{ kind }}">{{ line }}</span>
+{% endfor %}{% if not diff.full %}<span class="d-ctx">No differences.</span>{% endif %}</pre>{% endif %}
+    {% if diff.moves %}<details class="diff-full"><summary>Full line diff (moves as deleted and added lines)</summary>
+      <pre class="diff mono" aria-label="Full line diff">{% for kind, line in diff.full %}<span class="d-{{ kind }}">{{ line }}</span>
+{% endfor %}</pre></details>{% endif %}
+  </div></section>
   <p><a class="lnk" href="/studio?sutra={{ p.name }}@{{ p.version }}">Open the live version in Studio</a></p>
   {% if p.status == 'pending' %}
   <div class="review-actions">
