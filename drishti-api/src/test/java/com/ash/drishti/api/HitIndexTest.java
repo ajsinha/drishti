@@ -54,4 +54,44 @@ class HitIndexTest {
         org.assertj.core.api.Assertions.assertThat(index.search("trade", "MX-99999999", 5)).extracting(h -> h.ref().id()).containsExactly("MX-99999999");
         org.assertj.core.api.Assertions.assertThat(ms).isLessThan(500);
     }
+
+    @Test
+    void removedEntitiesLeaveTypeAheadWhetherFoldedOrPendingAndMayComeBack() {
+        HitIndex idx = new HitIndex();
+        idx.replaceAll(java.util.List.of(hit("trade", "T-1"), hit("trade", "T-2"), hit("book", "T-1")));
+        idx.add(hit("trade", "T-3"));                                     // still pending
+        idx.remove(EntityRef.of("trade", "T-1"));                         // in the sorted array: marked removed
+        idx.remove(EntityRef.of("trade", "T-3"));                         // pending: dropped
+        idx.remove(EntityRef.of("trade", "T-404"));                       // not held: nothing happens
+        assertThat(idx.search("trade", "t-", 10)).extracting(h -> h.ref().id()).containsExactly("T-2");
+        assertThat(idx.search(null, "t-1", 10)).extracting(h -> h.ref().kind()).containsExactly("book");
+        assertThat(idx.search("trade", "", 10)).extracting(h -> h.ref().id()).containsExactly("T-2");
+        assertThat(idx.size()).isEqualTo(2);
+        idx.add(hit("trade", "T-1"));                                     // re-created
+        assertThat(idx.search("trade", "t-1", 10)).extracting(h -> h.ref().id()).containsExactly("T-1");
+    }
+
+    @Test
+    void removingFromAMillionEntitiesIsCheapAndFoldsAway() {
+        HitIndex index = new HitIndex();
+        java.util.List<EntityHit> hits = new java.util.ArrayList<>();
+        for (int i = 0; i < 1_000_000; i++) {
+            hits.add(hit("trade", "MX-" + (30_000_000 + i)));
+        }
+        index.replaceAll(hits);
+        long t0 = System.nanoTime();
+        for (int i = 0; i < 10_000; i++) {                                // crosses the fold threshold twice
+            index.remove(EntityRef.of("trade", "MX-" + (30_000_000 + i)));
+        }
+        long ms = (System.nanoTime() - t0) / 1_000_000;
+        assertThat(index.size()).isEqualTo(990_000);
+        assertThat(index.search("trade", "mx-300", 3)).extracting(h -> h.ref().id())
+                .containsExactly("MX-30010000", "MX-30010001", "MX-30010002");
+        assertThat(index.search("trade", "MX-30009999", 3)).isEmpty();
+        assertThat(ms).isLessThan(5_000);
+    }
+
+    private static EntityHit hit(String kind, String id) {
+        return new EntityHit(EntityRef.of(kind, id), id, kind + " · test");
+    }
 }

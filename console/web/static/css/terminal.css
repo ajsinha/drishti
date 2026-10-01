@@ -634,6 +634,12 @@ table.tbl tr.tbl-filter th::after { content: none; }
 .hist-origin { margin: .55rem .9rem 0; font-size: .84rem; }
 .stale-banner { border-color: var(--d-warn, #d9a441); }
 
+/* A live view whose entity the source deleted (live.js): a banner says when, the last state stays, greyed. */
+.deleted-banner { border-color: var(--d-bad); }
+.deleted-banner i { color: var(--d-bad); }
+.view-deleted .pnl, .view-deleted .strip { filter: grayscale(1); opacity: .55; transition: opacity .3s, filter .3s; }
+.tbar-live[data-live-state="deleted"] .dot { background: var(--d-bad); }
+
 /* One console, many servers (ADR-016) */
 .srv-dot { display: inline-block; width: .6rem; height: .6rem; border-radius: 50%; background: var(--srv); vertical-align: middle; }
 .srv-chip { gap: .35rem; border: 1px solid var(--d-border); border-radius: 999px; padding: .1rem .55rem; }

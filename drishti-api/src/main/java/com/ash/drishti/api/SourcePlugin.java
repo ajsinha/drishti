@@ -41,7 +41,14 @@ public interface SourcePlugin extends AutoCloseable {
         return fetch(ref);
     }
 
-    /** Pushes each new generation of the entity to {@code listener} until the subscription is closed. */
+    /**
+     * Pushes each new generation of the entity to {@code listener} until the subscription is closed. A source that
+     * learns the entity was deleted (a Kafka tombstone, a queue's delete message) pushes
+     * {@link EntityDocument#deleted(EntityRef, Provenance)} through the same listener, so a delete and a later
+     * re-creation arrive in order; open views then say the entity was deleted. Sources that never delete need do
+     * nothing, and listeners that do not care about deletes skip documents whose {@link EntityDocument#deleted()} is
+     * true.
+     */
     default Subscription subscribe(EntityRef ref, Consumer<EntityDocument> listener) {
         throw new UnsupportedOperationException(manifest().name() + " is not live");
     }

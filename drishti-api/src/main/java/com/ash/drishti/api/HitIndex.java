@@ -35,12 +35,15 @@ public final class HitIndex {
 
     private record Entry(EntityHit hit, String id, String text) {}
 
-    /** One immutable version: entries sorted by id, per kind, and additions not yet folded in. */
-    private record State(Map<String, Entry[]> byKind, List<Entry> pending, int size) {}
+    /**
+     * One immutable version: entries sorted by id, per kind; additions not yet folded in; and entities removed from the
+     * sorted arrays but not yet folded out (searches skip them).
+     */
+    private record State(Map<String, Entry[]> byKind, List<Entry> pending, java.util.Set<EntityRef> removed, int size) {}
 
     private static final int FOLD_AT = 4096;
     private static final Comparator<Entry> BY_ID = Comparator.comparing(Entry::id);
-    private final AtomicReference<State> state = new AtomicReference<>(new State(Map.of(), List.of(), 0));
+    private final AtomicReference<State> state = new AtomicReference<>(new State(Map.of(), List.of(), java.util.Set.of(), 0));
 
     private static Entry entry(EntityHit h) {
         return new Entry(h, h.ref().id().toLowerCase(Locale.ROOT), (h.title() + " " + h.subtitle()).toLowerCase(Locale.ROOT));
@@ -52,9 +55,57 @@ public final class HitIndex {
             List<Entry> pending = new ArrayList<>(old.pending().size() + 1);
             pending.addAll(old.pending());
             pending.add(e);
-            State next = new State(old.byKind(), List.copyOf(pending), old.size() + 1);
+            State next = new State(old.byKind(), List.copyOf(pending), old.removed(), old.size() + 1);
             return pending.size() >= FOLD_AT ? fold(next) : next;
         });
+    }
+
+    /**
+     * Forgets {@code ref} (a deleted entity). Cheap at any size: an entry still waiting to be folded is dropped from
+     * the pending list, and one in the sorted arrays is marked removed (searches skip it) until the next fold drops
+     * it. Does nothing when the index does not hold {@code ref}.
+     */
+    public void remove(EntityRef ref) {
+        state.updateAndGet(old -> {
+            List<Entry> pending = old.pending();
+            boolean inPending = false;
+            for (Entry e : pending) {
+                if (e.hit().ref().equals(ref)) {
+                    inPending = true;
+                    break;
+                }
+            }
+            if (inPending) {
+                pending = pending.stream().filter(e -> !e.hit().ref().equals(ref)).toList();
+            }
+            boolean inArrays = !old.removed().contains(ref) && find(old.byKind().get(ref.kind()), ref);
+            if (!inPending && !inArrays) {
+                return old;
+            }
+            java.util.Set<EntityRef> removed = old.removed();
+            if (inArrays) {
+                java.util.Set<EntityRef> r = new java.util.HashSet<>(removed);
+                r.add(ref);
+                removed = java.util.Set.copyOf(r);
+            }
+            int size = old.size() - (inPending ? old.pending().size() - pending.size() : 0) - (inArrays ? 1 : 0);
+            State next = new State(old.byKind(), pending, removed, Math.max(0, size));
+            return removed.size() >= FOLD_AT ? fold(next) : next;
+        });
+    }
+
+    /** True when the sorted array holds {@code ref} (binary search on its lower-cased id, then the exact ref). */
+    private static boolean find(Entry[] a, EntityRef ref) {
+        if (a == null) {
+            return false;
+        }
+        String id = ref.id().toLowerCase(Locale.ROOT);
+        for (int i = lowerBound(a, id); i < a.length && a[i].id().equals(id); i++) {
+            if (a[i].hit().ref().equals(ref)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void replaceAll(List<EntityHit> hits) {
@@ -64,12 +115,25 @@ public final class HitIndex {
         }
         Map<String, Entry[]> byKind = new HashMap<>();
         grouped.forEach((k, list) -> byKind.put(k, sorted(list)));
-        state.set(new State(Map.copyOf(byKind), List.of(), hits.size()));
+        state.set(new State(Map.copyOf(byKind), List.of(), java.util.Set.of(), hits.size()));
     }
 
-    /** Pending additions merged into the sorted arrays; a later entry for the same entity replaces the earlier. */
+    /**
+     * Removed entities dropped from the sorted arrays, then pending additions merged in; a later entry for the same
+     * entity replaces the earlier.
+     */
     private static State fold(State s) {
         Map<String, Entry[]> byKind = new HashMap<>(s.byKind());
+        if (!s.removed().isEmpty()) {
+            java.util.Set<String> touched = new java.util.HashSet<>();
+            s.removed().forEach(r -> touched.add(r.kind()));
+            for (String k : touched) {
+                Entry[] a = byKind.get(k);
+                if (a != null) {
+                    byKind.put(k, Arrays.stream(a).filter(e -> !s.removed().contains(e.hit().ref())).toArray(Entry[]::new));
+                }
+            }
+        }
         Map<String, List<Entry>> added = new HashMap<>();
         s.pending().forEach(e -> added.computeIfAbsent(e.hit().ref().kind(), k -> new ArrayList<>()).add(e));
         added.forEach((k, list) -> {
@@ -81,7 +145,7 @@ public final class HitIndex {
             byKind.put(k, sorted(new ArrayList<>(merged.values())));
         });
         int size = byKind.values().stream().mapToInt(a -> a.length).sum();
-        return new State(Map.copyOf(byKind), List.of(), size);
+        return new State(Map.copyOf(byKind), List.of(), java.util.Set.of(), size);
     }
 
     private static Entry[] sorted(List<Entry> list) {
@@ -115,7 +179,9 @@ public final class HitIndex {
         List<Entry> prefix = new ArrayList<>();
         for (Entry[] a : arrays) {
             for (int i = lowerBound(a, q); i < a.length && a[i].id().startsWith(q) && prefix.size() < max + pending.size(); i++) {
-                prefix.add(a[i]);
+                if (!s.removed().contains(a[i].hit().ref())) {
+                    prefix.add(a[i]);
+                }
             }
         }
         pending.stream().filter(e -> e.id().startsWith(q)).forEach(prefix::add);
@@ -132,7 +198,7 @@ public final class HitIndex {
                     if (found.size() >= max) {
                         break;
                     }
-                    if (matches(e, q, rank) && !seen.contains(e.hit().ref())) {
+                    if (matches(e, q, rank) && !seen.contains(e.hit().ref()) && !s.removed().contains(e.hit().ref())) {
                         found.add(e);
                     }
                 }

@@ -162,9 +162,10 @@ connector serves grow as new ones arrive.
 | an empty (or blank) body with an `id` property, on a destination with a kind | that entity is deleted |
 | an empty body on a destination without a kind | rejected |
 
-A delete removes the entity from the state store, the memory cache and the type-ahead index. It is not pushed to open
-views: a view already showing the entity keeps its last document until it is reopened, when the read answers "not
-held" and the next connector is asked.
+A delete removes the entity from the state store, the memory cache and the type-ahead index, and is **pushed to open
+views**: a view already showing the entity keeps its last document, greyed, under a banner saying when it was deleted,
+and stops updating ([LIVE.md](../architecture/LIVE.md#deleted-entities)). A later message for the entity repaints it.
+Reopened, the read answers "not held" and the next connector is asked.
 
 A delete with property `deleted=true` and a body must still have a body that is JSON (or blank); a body that is not
 JSON is rejected before the delete flag is looked at.
@@ -379,7 +380,8 @@ with the budget, and `state.when-full` decides what happens past it:
 "Written longest ago" is the time of the entity's last message in this run. Entities found in the store at start
 count as older than anything this run writes, and among themselves go in key order (`<kind>/<id>`), since the store
 does not record when they were written. An evicted entity is gone from the store, the memory cache and type-ahead,
-exactly as if a delete had arrived (an open view keeps its last document); its next message brings it back.
+as if a delete had arrived, except that open views are not told (the entity was not deleted at its source: an open
+view keeps its last document); its next message brings it back.
 
 The health text gives sizes in the same gigabytes as `state.max-gb` (1,024³ bytes), so a budget of `10` shows as
 `10.0 GB`. `budgetMb` in the cache figures is the budget in MB (`10240` for `10`). Any `state.when-full` other than
@@ -424,7 +426,7 @@ holds the entity, so a view that read its document from this connector ticks fro
 | Event | Open view |
 |---|---|
 | a new document for the entity | repainted with it |
-| a delete | not notified; keeps the last document |
+| a delete | told: keeps its last document, greyed, under a banner "deleted at <time>"; stops updating |
 | the broker is down | keeps the last document, stops ticking; health is `DOWN` |
 | a picked date | static: no subscription |
 
@@ -481,7 +483,7 @@ server with its own `client-id`), or a queue per server fed by the broker (virtu
 |---|---|---|
 | recent documents | estimated by the connector as twice the stored JSON bytes plus 64 | `cache-mb` (128 MB) |
 | the set of known entities and the type-ahead index | an entity reference and a search hit (its id, a subtitle) | nothing: one entry per entity held |
-| a size entry used to weigh cached documents | an entity reference and a number | nothing: one entry per entity seen in this run, deletes included |
+| a size entry used to weigh cached documents | an entity reference and a number | nothing: one entry per entity held (a delete removes it) |
 | when each entity was last written (for `evict-oldest`) | an entity reference and a number | one entry per entity held |
 
 The last three grow with the number of entities and are not bounded. Estimated from those structures (not measured),
@@ -494,7 +496,7 @@ The connector works with a million entities, with these costs:
 | Operation | Cost at a million entities |
 |---|---|
 | start | the whole state store is read once to rebuild the index (seconds to minutes, with the number of entities) |
-| a delete of a held entity | **rebuilds the whole type-ahead index** (every known entity): fine for occasional deletes, expensive for a stream of them |
+| a delete of a held entity | a cheap removal from the type-ahead index (marked removed, folded out every 4,096 removals); open views are told |
 | a structured search | reads at most 20,000 documents (`partial: true` beyond) |
 | disk | the compressed latest document of each entity (section 6.2), within `state.max-gb` |
 | a million **new** entities a day | the store grows with the entities until `state.max-gb`; then `evict-oldest` removes the entities written longest ago (an eviction of many entities also rebuilds the type-ahead index), or `state.reset-at` clears it daily |
@@ -620,7 +622,7 @@ last message received, rejected messages included.
 | `rejected` grows | bodies that are not JSON, no kind, or no id | check `kind.<destination>` and `id-field.<destination>` against the bodies; the names are without `queue:`/`topic:` |
 | a message was sent but `LIM <id>` says not held | the id came from a different field (or header) than you expect; or another server on the same queue took it | look at `received`/`rejected`; read `/api/v1/entities/<kind>/<id>/raw` |
 | entities are split between two servers | both read the same queue | a topic, or a queue per server |
-| a deleted entity still shows | the view was open: deletes are not pushed | reopen the view |
+| a deleted entity still shows, not greyed | the delete named a different id, or the view is on a picked business date (static: no live stream) | send the delete with the exact id |
 | an old entity will not go away | no delete was ever sent | send a delete; or `state.reset-at`; or stop the server and delete the state folder |
 | `DOWN: … (messages are not acknowledged and come again)` | the state store cannot write: the disk is full, or an I/O error | free or grow the disk (`df -h` on `state.root`); the connector resumes by itself and the broker redelivers, without limit unless `max-redeliveries` is set |
 | messages in `ActiveMQ.DLQ` after a disk problem | `max-redeliveries` was set to a number and was reached while the store could not write | move them back to the queue from the broker console; leave `max-redeliveries` at `-1` |

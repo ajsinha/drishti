@@ -133,8 +133,8 @@ deleted by a tombstone.
 
 | Message | Effect |
 |---|---|
-| mapped topic, key `MX-20000001`, value `null` (a tombstone) | `trade/MX-20000001` deleted: its index entry, memory-cache entry and disk-cache entry go |
-| envelope topic, key `netting-set/NS-1`, value `null` | `netting-set/NS-1` deleted from the index and the memory cache |
+| mapped topic, key `MX-20000001`, value `null` (a tombstone) | `trade/MX-20000001` deleted: its index entry, memory-cache entry, disk-cache entry and type-ahead entry go, and open views are told |
+| envelope topic, key `netting-set/NS-1`, value `null` | `netting-set/NS-1` deleted, as above |
 | envelope with `"doc": null` | deleted, as above |
 | envelope whose value is not JSON, or has no `kind` or `id` | skipped; the stream goes on |
 | envelope tombstone keyed by a bare id (no `/`) | ignored: the kind is unknown |
@@ -142,11 +142,15 @@ deleted by a tombstone.
 
 Notes, from the code:
 
-- A delete is not pushed to open views: a view already open keeps its last document until it is opened again.
-- A deleted id stays in type-ahead until the next restart (the type-ahead index is rebuilt only when the
-  connector first catches up); opening it answers "not held", so the next connector is asked.
-- An envelope delete leaves the entity's disk-cache entry in place (it is unreachable, because the index no longer
-  points at it) until the nightly clearing.
+- A delete is **pushed to open views**: the view keeps its last document, greyed, under a banner saying when the
+  entity was deleted (the tombstone's timestamp), and stops updating. If a later message brings the entity back, the
+  view repaints. Under the hood the connector hands its subscribers a deletion
+  (`EntityDocument.deleted(ref, provenance)`); the server sends it on the view's live stream as a `deleted` patch
+  ([LIVE.md](../architecture/LIVE.md#deleted-entities)). This works in `mode: ticks` too.
+- A deleted id **leaves type-ahead at once** (a cheap removal from the index, not a rebuild), and leaves the
+  "recent" list of the command line when a view of it was open. Before the connector has caught up, the index is
+  built from what is left at the end, so deletes during the replay are reflected too.
+- Opening a deleted entity answers "not held", so the next connector is asked.
 - An empty value is not a tombstone. With `kafka-console-producer.sh`, send a real null with
   `--property null.marker=NULL` and the line `MX-20000001|NULL`.
 
@@ -482,7 +486,7 @@ settings:
 - **Every server reads the whole topic**, at start and continuously.
 - **A restart replays the topic**; search is empty and reads may be behind until it has caught up.
 - **Cold reads are serial** through one reader; enable the disk cache for topics with many entities.
-- **Deletes are not pushed** to open views, and deleted ids stay in type-ahead until a restart.
+- **Deletes need a tombstone keyed `<kind>/<id>`** on an envelope topic; a bare-id envelope key cannot be deleted.
 - **Ordering is per partition**: keep each entity on one key.
 
 ## 13. Diagnosing

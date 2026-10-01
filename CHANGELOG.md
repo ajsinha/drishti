@@ -16,6 +16,23 @@
 # Changelog
 
 ## Unreleased — A million trades a day, for seven years
+- **Deletes reach open views** ([LIVE.md › Deleted entities](docs/architecture/LIVE.md#deleted-entities)). A Kafka
+  tombstone (or an envelope with `"doc": null`) and an ActiveMQ or RabbitMQ delete used to remove the entity from the
+  store while open views kept showing it, and Kafka kept the id in type-ahead until a restart. Now the connector pushes
+  the deletion through the view's existing subscription, the server sends it on the live stream as a `deleted` patch
+  with the time of the delete, and the console greys the view under a banner, *"MX-29000001 was deleted at 1 Oct 2026,
+  09:30:05 by its source"*, with `Deleted` in the top bar; it is not an error page. An entity that comes back repaints
+  the view (a `restored` patch). The id leaves type-ahead at once, and the command line's "recent" list too.
+  - **SPI:** `EntityDocument` gains `deleted()` and `EntityDocument.deleted(ref, provenance)`; the old three-argument
+    constructor stays, so every plugin compiles unchanged and a plugin that never deletes needs nothing. Listeners that
+    do not care skip deleted documents (the alert engine does).
+  - **`HitIndex.remove(ref)`:** a cheap removal at any size (dropped from the pending list, or marked removed and folded
+    out every 4,096 removals). `MessageStateSource` uses it instead of rebuilding the whole type-ahead index on the
+    consumer thread for every delete; it also forgets a deleted entity's cache weight. The Kafka connector also clears
+    an envelope-deleted entity's disk-cache entry at once.
+  - **Tests:** the Kafka plugin (both message shapes, type-ahead, re-creation), the message-queue contract run against
+    ActiveMQ and RabbitMQ in Docker, `HitIndex` removal (a million entities), the server's SSE stream with an embedded
+    Kafka (`deleted` then `restored`), the mailbox's merge order, and `live.js` run under Node.
 - **Delta Lake without Hadoop; Drishti on Windows** ([DELTA_CONNECTOR.md › Engines](docs/connectors/DELTA_CONNECTOR.md#16-engines-native-and-hadoop),
   [WINDOWS.md](docs/guides/WINDOWS.md)). A new module, `drishti-deltalake`, is a Delta Kernel engine (`NativeEngine`)
   that never touches Hadoop's file systems: local lakes through `java.nio` (drive letters, backslashes and UNC shares),

@@ -40,6 +40,7 @@ If you only want to *use* live views, read the first section and stop. Operators
    | `Reconnecting…` | The connection dropped; the browser is reconnecting by itself. |
    | `Paused while hidden` | The tab has been hidden for 10 seconds and gave its connection back. It reconnects and repaints when you return. |
    | `Static` | This view does not tick: the source is not live, or you picked a past business date. |
+   | `Deleted` (red dot) | The source deleted the entity. A banner over the view says when; see [Deleted entities](#deleted-entities). |
 
 A view is live only when **both** are true: the source holding the entity can push changes, and you are
 looking at today's business date. Pick a past date in the top bar and every view becomes a static snapshot.
@@ -160,6 +161,8 @@ A frame's `patches` are a list of these:
 | `strip` | `index`, `cell` | Replacing header strip cell number `index` (0-based) with `cell`. |
 | `panel` | `panel` | Replacing the panel with the same `panel.id`. |
 | `provenance` | `provenance` | Replacing the view's provenance (generation, source, fetched-at). |
+| `deleted` | `at` (ISO-8601 instant) | Saying the entity was deleted at `at`; keeping what is shown; applying no later patches. |
+| `restored` | none | Repainting the whole view: a deleted entity came back (the patches after it bring it up to date). |
 
 ### Server: a monitor (`GET /api/v1/me/monitors/{name}/stream`)
 
@@ -357,6 +360,33 @@ process holding its channel. Otherwise it gets `404` and the page reopens its ch
 - **Entitlements.** Opening a stream checks that your roles may open the entity's kind, exactly like a
   plain view request (`403`, `DRS-5002`, otherwise). A missing entity is `404`, `DRS-1001`, before any
   stream starts.
+
+### Deleted entities
+
+A source that learns an entity was deleted (a Kafka tombstone; an ActiveMQ or RabbitMQ delete message) tells the
+views that show it, through the same subscription that carries its updates:
+
+1. The connector drops the entity from its state, its caches and type-ahead (a cheap removal from the `HitIndex`),
+   and hands every subscriber `EntityDocument.deleted(ref, provenance)`: a document whose `deleted()` is true, whose
+   data is missing, and whose provenance's `fetchedAt` is when the source learnt of the delete (a tombstone's
+   timestamp). Updates and deletes travel through one listener, so a delete followed by a re-creation stays in order
+   in the topic's latest-wins slot.
+2. Each `ViewStream` of the entity sends one frame with a single `deleted` patch, `{"op": "deleted", "at":
+   "2026-10-01T09:30:05Z"}`, and rebuilds nothing while the entity stays deleted (ticks of its charts' sources
+   included). The server also forgets the entity in every user's "recent" list, so the command line stops offering
+   it. Alerts on the entity do not evaluate a deletion.
+3. The console relays the patch unchanged. `live.js` keeps the view's last state, greys its panels and strip, puts a
+   banner over it, *"MX-29000001 was deleted at 1 Oct 2026, 09:30:05 by its source. What you see is its last state;
+   it no longer updates."*, and sets the top bar to `Deleted`. It is not an error page: links still work, and the
+   last values can still be read and copied.
+4. If the entity comes back (a new message for it), the next frame starts with a `restored` patch and the page
+   repaints from the server. A page reloaded while the entity is deleted gets the usual "not held" answer
+   (`DRS-1001`), since no source holds it.
+
+A source plugin that deletes (see [§5.2 of the developer guide](../guides/DEVELOPER_GUIDE.md#52-add-a-source-plugin))
+pushes `EntityDocument.deleted(ref, provenance)` to its listeners; one that never deletes needs no change. A listener
+that does not care about deletes skips documents whose `deleted()` is true. Eviction from a full state store is not a
+deletion and is not pushed.
 
 ## Monitors and alerts
 
@@ -570,8 +600,9 @@ connectors:
    cell flashes in the browser.
 6. Publish a *tombstone*: a **null** value, not an empty one (an empty value is not a delete). With
    `kafka-console-producer` use `--property null.marker=NULL` and send `MX-29000001|NULL`. The trade is deleted from
-   the connector, and a new view of it is `DRS-1001`. The delete is not pushed: a view already open keeps showing the
-   last document until it is opened again, and the id stays in type-ahead until the server restarts.
+   the connector, and a new view of it is `DRS-1001`. The delete is pushed: a view already open gets a `deleted`
+   patch and says *"MX-29000001 was deleted at …"* over its last state, greyed ([Deleted entities](#deleted-entities)),
+   and the id leaves type-ahead at once.
 
 Other shapes: without `kind`/`id-field` the connector expects **envelopes**,
 `{"kind": "trade", "id": "MX-20000001", "doc": {…}}`, and a tombstone's key is `kind/id`. `mode: ticks` keeps nothing in

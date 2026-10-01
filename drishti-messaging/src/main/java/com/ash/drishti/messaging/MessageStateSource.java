@@ -195,9 +195,11 @@ public abstract class MessageStateSource implements SourcePlugin {
                 store.remove(key(ref));
                 updated.remove(ref);
                 memory.invalidate(ref);
+                weights.remove(ref);
                 if (known.remove(ref)) {
-                    rebuildIndex();
+                    index.remove(ref);                   // a cheap removal on the consumer thread, not a rebuild
                 }
+                push(ref, EntityDocument.deleted(ref, new Provenance(sourceName, generation.incrementAndGet(), lastUpdate, true)));
                 return true;
             }
             byte[] bytes = JSON.writeValueAsBytes(doc);
@@ -210,16 +212,7 @@ public abstract class MessageStateSource implements SourcePlugin {
             if (known.add(ref)) {
                 index.add(new EntityHit(ref, ref.id(), ref.kind() + " · " + sourceName));
             }
-            List<Consumer<EntityDocument>> subs = listeners.get(ref);
-            if (subs != null) {
-                subs.forEach(l -> {
-                    try {
-                        l.accept(d);
-                    } catch (RuntimeException ignored) {
-                        // one broken view must not stop the others
-                    }
-                });
-            }
+            push(ref, d);
             storeProblem = null;
             return true;
         } catch (java.io.IOException e) {
@@ -232,6 +225,20 @@ public abstract class MessageStateSource implements SourcePlugin {
         } catch (Exception e) {
             rejected.incrementAndGet();                   // not a document: skipped, counted
             return true;
+        }
+    }
+
+    /** Hands a new document, or a deletion, to the open views of {@code ref}. */
+    private void push(EntityRef ref, EntityDocument d) {
+        List<Consumer<EntityDocument>> subs = listeners.get(ref);
+        if (subs != null) {
+            subs.forEach(l -> {
+                try {
+                    l.accept(d);
+                } catch (RuntimeException ignored) {
+                    // one broken view must not stop the others
+                }
+            });
         }
     }
 
@@ -331,6 +338,7 @@ public abstract class MessageStateSource implements SourcePlugin {
             }
             updated.remove(ref);
             memory.invalidate(ref);
+            weights.remove(ref);
             known.remove(ref);
         }
         rebuildIndex();

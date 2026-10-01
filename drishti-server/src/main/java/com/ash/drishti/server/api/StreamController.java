@@ -48,7 +48,8 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
  * Live views over Server-Sent Events. A stream opens with a {@code view} event (the full ViewModel) and
  * then carries {@code frame} events of patches. Each client has its own writer (a virtual thread) and a
  * latest-wins mailbox, so a slow client never slows the others. A reconnecting client simply receives a
- * fresh {@code view} event, so nothing is lost across reconnects.
+ * fresh {@code view} event, so nothing is lost across reconnects. When the source deletes the entity, a frame carries a
+ * {@code deleted} patch with the time of the delete (and a {@code restored} patch if it comes back).
  */
 @RestController
 @RequestMapping("/api/v1")
@@ -61,11 +62,13 @@ public class StreamController {
     private final ExecutorService executor;
     private final LiveStreamSlots slots;
     private final Entitlements entitlements;
+    private final com.ash.drishti.engine.command.RecentEntities recents;
 
     public StreamController(ViewPipeline pipeline, TopicHub hub, LiveMetrics metrics, LiveProperties props,
             ExecutorService drishtiVirtualExecutor, Entitlements entitlements, io.micrometer.core.instrument.MeterRegistry meters,
-            LiveStreamSlots slots) {
+            LiveStreamSlots slots, com.ash.drishti.engine.command.RecentEntities recents) {
         this.entitlements = entitlements;
+        this.recents = recents;
         this.slots = slots;
         io.micrometer.core.instrument.Gauge.builder("drishti.live.streams", slots.counter(), AtomicInteger::get).register(meters);
         io.micrometer.core.instrument.Gauge.builder("drishti.live.topics", hub, TopicHub::topicCount).register(meters);
@@ -112,7 +115,12 @@ public class StreamController {
         FrameMailbox box = new FrameMailbox();
         ViewStream stream;
         try {
-            stream = new ViewStream(ref, initial, chartSources(initial), hub, pipeline, executor, metrics, box::offer);
+            stream = new ViewStream(ref, initial, chartSources(initial), hub, pipeline, executor, metrics, f -> {
+                if (f.patches().stream().anyMatch(p -> "deleted".equals(p.op()))) {
+                    recents.forget(ref);              // the command line stops offering a deleted entity as recent
+                }
+                box.offer(f);
+            });
         } catch (RuntimeException e) {
             slot.release();
             throw e;

@@ -43,6 +43,15 @@ public final class RecentEntities {
         }
     }
 
+    /** Forgets {@code ref} for every user (it was deleted), so the command line stops offering it. */
+    public void forget(com.ash.drishti.api.EntityRef ref) {
+        byUser.asMap().values().forEach(d -> {
+            synchronized (d) {
+                d.removeIf(h -> h.ref().equals(ref));
+            }
+        });
+    }
+
     public List<EntityHit> of(String user) {
         Deque<EntityHit> d = byUser.getIfPresent(user);
         if (d == null) {

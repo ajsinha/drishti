@@ -215,7 +215,7 @@ and counted as `rejected`, since they would otherwise come back forever (no dead
 | `"doc": null` or no `"doc"` key in an envelope, a `deleted: true` header, or an empty body on a destination with a kind and an `id` header | a delete (an empty body anywhere else is counted as rejected) |
 | anything else (not JSON, no kind or id) | skipped and counted as `rejected` in the connector's cache figures |
 
-Every change is pushed to open views (a delete is not: an open view keeps its last document until reopened), search
+Every change is pushed to open views (a delete too: the view says the entity was deleted, and when), search
 finds everything received, and a purge (Admin → Caches) clears only the memory cache: the state store is the only
 copy, so it is never purged (clear it deliberately with `state.reset-at`, which clears only the disk store, or by
 deleting its folder with the server stopped). The store keeps only the latest value of each entity (level
@@ -1047,8 +1047,8 @@ value: {"kind": "netting-set", "id": "NS-NORTH-01", "doc": {"nettingSetId": "NS-
 ```
 
 A **tombstone** (a null value; an empty value is not one) deletes: mapped, keyed by the id; envelope, keyed
-`<kind>/<id>`. An envelope with `"doc": null` deletes too. Deletes are not pushed to open views, and a deleted id
-stays in type-ahead until a restart. An envelope that is not JSON is skipped; a keyed mapped message that is not JSON
+`<kind>/<id>`. An envelope with `"doc": null` deletes too. A delete is pushed to open views (they say the entity was
+deleted, and when) and takes the id out of type-ahead at once. An envelope that is not JSON is skipped; a keyed mapped message that is not JSON
 is indexed by its key and reads as "not held". The generation is the offset, the fetch time the
 message timestamp, and documents are live and undated. Health is `UP (catching up)` until the end offsets seen at
 start are reached, then `UP`; `DOWN: no connection to the broker (reconnecting)` once the broker has been unreachable

@@ -15,7 +15,9 @@
  */
 /* Live views: subscribes to the view on the tab's live channel (channel.js) and applies each frame's patches in place. Strip cells
    are updated text-and-tone, charts move to new data, other panels are swapped for server-rendered HTML
-   (same macros as first paint). A changed value flashes. The top bar shows the server's rolling p99. */
+   (same macros as first paint). A changed value flashes. The top bar shows the server's rolling p99.
+   When the source deletes the entity (a Kafka tombstone, a queue's delete message) a "deleted" patch arrives: the view keeps
+   its last state, greyed, under a banner saying when it was deleted. A "restored" patch (it came back) repaints the view. */
 (function () {
   'use strict';
   var view = document.querySelector('[data-view]');
@@ -26,6 +28,7 @@
   var liveText = document.querySelector('[data-live-text]');
   var strip = document.querySelectorAll('.strip-i dd');
   var first = true;
+  var deletedAt = null;   // set once the source deleted the entity: the view then keeps its last state, greyed
 
   function state(s, text) {
     if (liveBox) { liveBox.setAttribute('data-live-state', s); }
@@ -69,6 +72,31 @@
     fresh.querySelectorAll('tbody td, dd').forEach(function (td) { td.classList.add('live-cell'); });
   }
 
+  function when(iso) {
+    var d = new Date(iso);
+    return isNaN(d.getTime()) ? String(iso) : d.toLocaleString([], { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  }
+
+  function applyDeleted(p) {
+    deletedAt = p.at || new Date().toISOString();
+    view.classList.add('view-deleted');
+    view.setAttribute('data-deleted-at', deletedAt);
+    var banner = view.querySelector('[data-deleted-banner]');
+    if (!banner) {
+      banner = document.createElement('p');
+      banner.className = 'asof-banner deleted-banner';
+      banner.setAttribute('role', 'alert');
+      banner.setAttribute('data-deleted-banner', '');
+      var head = view.querySelector('.vhead');
+      view.insertBefore(banner, head || view.firstChild);
+    }
+    banner.innerHTML = '<i class="bi bi-trash3" aria-hidden="true"></i> <b class="mono">' + esc(view.dataset.label || view.dataset.id) +
+      '</b> was deleted at <time class="mono" datetime="' + esc(deletedAt) + '">' + esc(when(deletedAt)) +
+      '</time> by its source. What you see is its last state; it no longer updates.';
+    view.querySelectorAll('.pnl, .strip').forEach(function (el) { el.setAttribute('aria-disabled', 'true'); });
+    state('deleted', 'Deleted');
+  }
+
   function applyProvenance(p) {
     var note = document.querySelector('.fk-note');
     if (note) { note.textContent = note.textContent.replace(/gen \d+/, 'gen ' + p.provenance.generation); }
@@ -81,18 +109,25 @@
       state('live', 'Live');
     },
     frame: onFrame,
-    gone: function () { off(); state('static', 'Static'); },
+    gone: function () { off(); if (!deletedAt) { state('static', 'Static'); } },
     error: function () { state('reconnecting', 'Reconnecting…'); },
     paused: function () { state('reconnecting', 'Paused while hidden'); }
   });
   function onFrame(f) {
-    state('live', 'Live, p99 ' + Math.round(f.p99Ms) + ' ms');
-    f.patches.forEach(function (p) {
+    for (var i = 0; i < f.patches.length; i++) {
+      var p = f.patches[i];
+      if (p.op === 'restored') {
+        if (deletedAt) { location.reload(); return; }   // it came back: repaint the whole view from the server
+        continue;
+      }
+      if (p.op === 'deleted') { applyDeleted(p); continue; }
+      if (deletedAt) { continue; }                      // a deleted view keeps its last state
       try {
         if (p.op === 'strip') { applyStrip(p); } else if (p.op === 'panel') { applyPanel(p); } else if (p.op === 'provenance') { applyProvenance(p); }
       } catch (err) {
         if (window.console) { console.warn('drishti: patch not applied', p.op, err); }
       }
-    });
+    }
+    if (!deletedAt) { state('live', 'Live, p99 ' + Math.round(f.p99Ms) + ' ms'); }
   }
 })();

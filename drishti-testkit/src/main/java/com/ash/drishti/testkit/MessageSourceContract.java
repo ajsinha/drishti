@@ -100,4 +100,42 @@ public abstract class MessageSourceContract {
             again.close();
         }
     }
+
+    @Test
+    void aDeleteReachesOpenViewsAndLeavesTypeAhead() throws Exception {
+        Path state = Files.createTempDirectory("drishti-queue-state");
+        SourcePlugin p = start(state);
+        try {
+            eventually(() -> p.health().startsWith("UP"), 60);
+            send(TRADES, null, "{\"tradeId\":\"D-1\",\"mtm\":1}", false);
+            send(ENTITIES, null, "{\"kind\":\"netting-set\",\"id\":\"NS-D\",\"doc\":{\"netMtm\":2}}", false);
+            eventually(() -> mtm(p, "D-1") == 1 && !p.search("netting-set", "ns-d", 5).isEmpty(), 30);
+            List<EntityDocument> deletes = new CopyOnWriteArrayList<>();
+            var trade = p.subscribe(EntityRef.of("trade", "D-1"), (EntityDocument d) -> {
+                if (d.deleted()) {
+                    deletes.add(d);
+                }
+            });
+            var set = p.subscribe(EntityRef.of("netting-set", "NS-D"), (EntityDocument d) -> {
+                if (d.deleted()) {
+                    deletes.add(d);
+                }
+            });
+            send(TRADES, "D-1", "", true);                                                     // a delete header
+            send(ENTITIES, null, "{\"kind\":\"netting-set\",\"id\":\"NS-D\",\"doc\":null}", false);  // a null doc
+            eventually(() -> deletes.size() == 2, 30);
+            trade.close();
+            set.close();
+            assertThat(deletes).extracting(d -> d.ref().id()).containsExactlyInAnyOrder("D-1", "NS-D");
+            assertThat(deletes).allSatisfy(d -> {
+                assertThat(d.data().isMissing()).isTrue();
+                assertThat(d.provenance().fetchedAt()).isNotNull();
+            });
+            assertThat(Double.isNaN(mtm(p, "D-1"))).isTrue();
+            assertThat(p.search("trade", "d-1", 5)).isEmpty();
+            assertThat(p.search("netting-set", "ns-d", 5)).isEmpty();
+        } finally {
+            p.close();
+        }
+    }
 }

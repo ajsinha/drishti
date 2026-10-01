@@ -113,6 +113,45 @@ class KafkaSourcePluginTest {
     }
 
     @Test
+    void aTombstoneIsPushedToOpenViewsAndLeavesTypeAhead() throws Exception {
+        EntityRef t8 = EntityRef.of("trade", "T-8");
+        send("trades", "T-8", "{\"tradeId\":\"T-8\",\"mtm\":1}");
+        waitFor(() -> !plugin.search("trade", "T-8", 5).isEmpty(), 15);
+        CompletableFuture<EntityDocument> gone = new CompletableFuture<>();
+        try (var sub = plugin.subscribe(t8, d -> {
+            if (d.deleted()) {
+                gone.complete(d);
+            }
+        })) {
+            send("trades", "T-8", null);
+            EntityDocument d = gone.get(15, TimeUnit.SECONDS);
+            assertThat(d.ref()).isEqualTo(t8);
+            assertThat(d.data().isMissing()).isTrue();
+            assertThat(d.provenance().source()).isEqualTo("trade-stream");
+            assertThat(d.provenance().fetchedAt()).isNotNull();
+        }
+        assertThat(plugin.fetch(t8)).isEmpty();
+        assertThat(plugin.search("trade", "T-8", 5)).isEmpty();
+
+        // the envelope shape deletes with a null doc; a re-created entity comes back to type-ahead
+        EntityRef ns3 = EntityRef.of("netting-set", "NS-3");
+        send("entities", "netting-set/NS-3", "{\"kind\":\"netting-set\",\"id\":\"NS-3\",\"doc\":{\"netMtm\":1}}");
+        waitFor(() -> !plugin.search("netting-set", "NS-3", 5).isEmpty(), 15);
+        CompletableFuture<EntityDocument> envelopeGone = new CompletableFuture<>();
+        try (var sub = plugin.subscribe(ns3, d -> {
+            if (d.deleted()) {
+                envelopeGone.complete(d);
+            }
+        })) {
+            send("entities", "netting-set/NS-3", "{\"kind\":\"netting-set\",\"id\":\"NS-3\",\"doc\":null}");
+            assertThat(envelopeGone.get(15, TimeUnit.SECONDS).ref()).isEqualTo(ns3);
+        }
+        assertThat(plugin.search("netting-set", "NS-3", 5)).isEmpty();
+        send("trades", "T-8", "{\"tradeId\":\"T-8\",\"mtm\":4}");
+        waitFor(() -> !plugin.search("trade", "T-8", 5).isEmpty(), 15);
+    }
+
+    @Test
     void searchCoversTheStreamAndReverseLookupsAreLeftToTheStores() {
         assertThat(plugin.search("trade", "t-1", 5)).extracting(h -> h.ref().id()).contains("T-1");
         assertThat(plugin.manifest().capabilities().reverseLookup()).isFalse();

@@ -488,8 +488,8 @@ bind". In code:
 | 3 | `console/routes/api_routes.py` `channel()` | For each subscription it opens an upstream stream (`BackendClient.stream` → `GET /api/v1/views/{kind}/{id}/stream`; `alerts` and `monitor:<name>` go to their own server streams), in **detached** tasks, and multiplexes everything into one SSE response as `{"ch": "<subscription>", "d": …}`. Frames are rewritten by `_view_event`: each patched panel is rendered to HTML with the same `panels.html` macro as first paint (charts stay data). A watchdog ends a channel nobody has read for five seconds; a comment every ~15s keeps proxies from closing it. |
 | 4 | `server.api.StreamController.stream` | Takes a slot from `LiveStreamSlots` (cap `drishti.live.max-streams`), builds the initial view, and creates a `ViewStream`. A writer on a virtual thread sends a `view` event, then a `frame` event per frame, or a heartbeat comment (`drishti.live.heartbeat`, 15s). Each client has its own latest-wins `FrameMailbox`, so a slow client never slows others. |
 | 5 | `engine.live.TopicHub` | One topic per live entity, shared by every view of it, holding a single source subscription (`SourceRouter.subscribe` → the plugin's `subscribe`). Ticks land in a latest-wins slot and are delivered at most once per frame (`drishti.live.frame`, 50ms). The subscription closes with the last listener. |
-| 6 | `engine.live.ViewStream`, `PatchDiffer` | On a tick, the view is rebuilt (`ViewPipeline.build`) and `PatchDiffer.diff(before, after)` produces `Patch`es; they travel as a `Frame`. |
-| 7 | `live.js` | Applies the patches in place: strip cells get new text and tone, panels are swapped for the server-rendered HTML, charts move to new data, and changed values flash. |
+| 6 | `engine.live.ViewStream`, `PatchDiffer` | On a tick, the view is rebuilt (`ViewPipeline.build`) and `PatchDiffer.diff(before, after)` produces `Patch`es; they travel as a `Frame`. A deletion (`EntityDocument.deleted()`) is sent as one `deleted` patch instead, and nothing is rebuilt until the entity comes back (`restored`). |
+| 7 | `live.js` | Applies the patches in place: strip cells get new text and tone, panels are swapped for the server-rendered HTML, charts move to new data, and changed values flash. A `deleted` patch greys the view under a "deleted at" banner. |
 
 [LIVE.md](../architecture/LIVE.md) has the details: frames, coalescing, reconnects and the latency metrics.
 
@@ -796,6 +796,10 @@ What to take from this:
   `SourceCapabilities(live, reverseLookup, search, dated)` says which optional methods you implement:
   `subscribe` for live, `reverse` for reverse lookup, `search` for the dropdown, and the `AsOf` overloads of
   `fetch`/`reverse`/`search` for dated data (stamp `Provenance.businessDate` on what you return).
+- **Deletes.** A live source that learns an entity was deleted pushes `EntityDocument.deleted(ref, provenance)` to
+  the entity's listeners (the same `Consumer` that receives its updates), and takes the id out of its `HitIndex` with
+  `remove(ref)`, which is cheap at any size. Open views then say the entity was deleted, and when
+  ([LIVE.md](../architecture/LIVE.md#deleted-entities)). A source that never deletes does nothing.
 - **Settings** arrive through `SourceContext.settings()` from `drishti.sources.plugins.<name>.settings.*`, or from
   a named connector's `settings` (then `source-name` defaults to the connector's name).
 - **`PluginNotConfigured`.** A plugin on the class path starts unless it is disabled

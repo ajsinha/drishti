@@ -1324,9 +1324,9 @@ value: {"kind": "netting-set", "id": "NS-ALDERSHOT-FRA",
 ```
 
 **Deletes.** A tombstone (a null value, not an empty one) deletes: on a mapped topic keyed by the id, on an envelope
-topic keyed `<kind>/<id>`. An envelope with `"doc": null` deletes too. A delete is **not pushed** to open views (a
-view already open keeps its last document until it is opened again), and a deleted id stays in type-ahead until the
-server restarts; opening it answers "not held". An envelope that is not JSON is skipped. On a mapped topic, a keyed
+topic keyed `<kind>/<id>`. An envelope with `"doc": null` deletes too. A delete is **pushed** to open views (the view
+keeps its last document, greyed, under a banner saying when the entity was deleted), and the id leaves type-ahead at
+once; opening it again answers "not held". An envelope that is not JSON is skipped. On a mapped topic, a keyed
 message whose value is not JSON is still indexed by its key, without parsing; reading that entity then fails to
 parse and answers "not held".
 
@@ -1455,7 +1455,7 @@ so the next store (the lake) answers. Cache figures:
 | the view does not tick | the trade is answered by another live source (the samples) | `DRISHTI_DEMO_ENABLED=false`, or check `provenance.source` |
 | an envelope is ignored | not JSON, or no `kind`/`id` | validate the value with `jq` |
 | a delete does not delete | envelope tombstone keyed by the bare id, or an empty value instead of null | key envelopes `<kind>/<id>`; send a real null |
-| a deleted trade still shows in an open view or in type-ahead | deletes are not pushed to views; type-ahead keeps the id until a restart | reopen the view; opening the id answers "not held" |
+| a deleted trade still shows in an open view (not greyed) or in type-ahead | the tombstone was an empty value, not a null; or an envelope tombstone keyed by the bare id | send a real null, keyed `<kind>/<id>` on envelope topics |
 | `DOWN: … TimeoutException …` behind TLS/SASL | missing `client.*` security settings | copy the properties your other consumers use, prefixed `client.` |
 
 ---
@@ -1501,7 +1501,8 @@ Three more properties of the store matter in production:
   ([ACTIVEMQ_CONNECTOR.md](ACTIVEMQ_CONNECTOR.md#7-durability-and-disk-budget)).
 - **`state.reset-at` clears only the disk store.** Documents still in the memory cache keep answering until evicted,
   and type-ahead keeps every id received until the server restarts.
-- **Deletes are not pushed** to open views: a view already open keeps its last document until it is opened again.
+- **Deletes are pushed** to open views: a view already open keeps its last document, greyed, under a banner saying
+  when the entity was deleted ([LIVE.md](../architecture/LIVE.md#deleted-entities)).
 
 ### The data
 

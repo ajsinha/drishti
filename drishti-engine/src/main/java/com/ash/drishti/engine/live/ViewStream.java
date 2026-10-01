@@ -37,6 +37,10 @@ import java.util.function.Consumer;
  * charts read from; on any change it rebuilds the view (the layout is cached, so this is binding only),
  * diffs it against what the client has, and hands the patches to the sink. Rebuilds never overlap: a
  * change during a rebuild triggers exactly one more.
+ *
+ * <p>When the source pushes the entity's deletion ({@link EntityDocument#deleted()}), the client gets one frame with a
+ * {@code deleted} patch carrying when it was deleted, and nothing is rebuilt while it stays deleted; if the entity
+ * comes back, the next frame starts with a {@code restored} patch.
  */
 public final class ViewStream implements AutoCloseable {
 
@@ -88,15 +92,33 @@ public final class ViewStream implements AutoCloseable {
 
     /** Consecutive failed rebuilds; only the single drainer touches it (handed over through {@code running}). */
     private int failures;
+    /** The client was told the entity is deleted; only the single drainer touches it. */
+    private boolean gone;
 
     private void drain() {
         try {
             while (!closed && dirty.getAndSet(false)) {
                 Instant at = tickAt;
                 EntityDocument main = latestMain.get();
+                if (main != null && main.deleted()) {
+                    if (!gone) {                       // told once; ticks of its chart sources rebuild nothing meanwhile
+                        gone = true;
+                        double latency = Duration.between(at, Instant.now()).toNanos() / 1e6;
+                        sink.accept(new Frame(seq.incrementAndGet(), main.provenance().generation(),
+                                List.of(Patch.deleted(main.provenance().fetchedAt())), latency, metrics.percentile(99)));
+                    }
+                    continue;
+                }
                 ViewModel next = main != null ? pipeline.build(main, System.nanoTime(), System.nanoTime()) : pipeline.view(ref);
                 ViewModel before = shown.getAndSet(next);
                 List<Patch> patches = differ.diff(before, next);
+                if (gone) {
+                    gone = false;
+                    List<Patch> back = new ArrayList<>(patches.size() + 1);
+                    back.add(Patch.restored());
+                    back.addAll(patches);
+                    patches = back;
+                }
                 if (!patches.isEmpty()) {
                     double latency = Duration.between(at, Instant.now()).toNanos() / 1e6;
                     metrics.record(latency);

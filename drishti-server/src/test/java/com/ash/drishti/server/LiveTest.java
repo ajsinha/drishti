@@ -94,6 +94,19 @@ class LiveTest {
         assertThat(m.patches().get(1).cell().text()).isEqualTo("b");
     }
 
+    @Test
+    void aMergedDeleteAndRestoreKeepTheirOrderSoTheLastOneWins() {
+        var deleted = new Patch("deleted", null, null, null, null, java.time.Instant.parse("2026-10-01T09:30:00Z"));
+        var restored = new Patch("restored", null, null, null, null);
+        Frame gone = com.ash.drishti.server.api.MailboxAccess.merge(new Frame(1, 10, List.of(stripPatch(1, "x")), 1, 1),
+                new Frame(2, 11, List.of(deleted), 1, 1));
+        assertThat(gone.patches()).extracting(Patch::op).containsExactly("strip", "deleted");
+        Frame back = com.ash.drishti.server.api.MailboxAccess.merge(gone, new Frame(3, 12, List.of(restored, stripPatch(1, "y")), 1, 1));
+        assertThat(back.patches()).extracting(Patch::op).containsExactly("deleted", "restored", "strip");
+        Frame goneAgain = com.ash.drishti.server.api.MailboxAccess.merge(back, new Frame(4, 13, List.of(deleted), 1, 1));
+        assertThat(goneAgain.patches()).extracting(Patch::op).containsExactly("restored", "strip", "deleted");
+    }
+
     static Patch stripPatch(int i, String text) {
         return new Patch("strip", i, com.ash.drishti.engine.view.ViewModel.Cell.of(null, text), null, null);
     }

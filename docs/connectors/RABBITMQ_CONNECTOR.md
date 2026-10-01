@@ -161,9 +161,10 @@ queue of envelopes can carry any number of kinds; each kind seen joins the conne
 | an empty body on a queue without a kind | rejected |
 | a body that is not JSON, or no kind, or no id | rejected |
 
-A delete removes the entity from the state store, the memory cache and type-ahead. Open views of it receive nothing
-(they keep the last document they showed until reopened). Every message, rejected or not, counts in `received` and
-moves the connector's `lastUpdate` (used by `stale-after`).
+A delete removes the entity from the state store, the memory cache and type-ahead, and is **pushed to open views of
+it**: the view keeps its last document, greyed, under a banner saying when the entity was deleted, and stops updating
+([LIVE.md](../architecture/LIVE.md#deleted-entities)). A later message for the entity repaints it. Every message,
+rejected or not, counts in `received` and moves the connector's `lastUpdate` (used by `stale-after`).
 
 A delete with a header looks like this (from the connector's test):
 
@@ -362,7 +363,8 @@ with the budget, and `state.when-full` decides what happens past it:
 "Written longest ago" is the time of the entity's last message in this run. Entities found in the store at start
 count as older than anything this run writes, and among themselves go in key order (`<kind>/<id>`), since the store
 does not record when they were written. An evicted entity is gone from the store, the memory cache and type-ahead,
-exactly as if a delete had arrived (an open view keeps its last document); its next message brings it back.
+as if a delete had arrived, except that open views are not told (the entity was not deleted at its source: an open
+view keeps its last document); its next message brings it back.
 
 The health text gives sizes in the same gigabytes as `state.max-gb` (1,024³ bytes), so a budget of `10` shows as
 `10.0 GB`. `budgetMb` in the cache figures is the budget in MB (`10240` for `10`). Any `state.when-full` other than
@@ -406,7 +408,8 @@ again after a restart. `businessDate` is `null`.
 
 Every entity received is in type-ahead, with the subtitle `<kind> · <source-name>` (for example `margin-call ·
 margin-mq`). A new id is appended to a pending list, folded into the sorted arrays every 4,096 additions. A delete of a
-known entity rebuilds the whole index.
+known entity is a cheap removal on the consumer thread: dropped from the pending list, or marked removed in the sorted
+arrays (searches skip it) and folded out every 4,096 removals.
 
 ## 8. Live updates
 
@@ -425,9 +428,9 @@ A view of a picked business date is a static snapshot and does not tick.
 | Held in the heap | Per entity | Bounded by |
 |---|---|---|
 | recent documents | about twice the JSON size | `cache-mb` (128) |
-| the id set, the weight map, the type-ahead entry, the last-written time (for `evict-oldest`) | a few small objects (an estimate of the order of half a kilobyte, not a measurement) | nothing: one entry per entity held (the weight map: per entity ever received) |
+| the id set, the weight map, the type-ahead entry, the last-written time (for `evict-oldest`) | a few small objects (an estimate of the order of half a kilobyte, not a measurement) | nothing: one entry per entity held |
 
-The weight map keeps an entry even for deleted entities until a restart. With a million entities, plan for several
+A delete or an eviction removes the entity's entry from every one of these. With a million entities, plan for several
 hundred megabytes of heap for the id structures beyond `cache-mb`.
 
 ### 9.2 Disk
@@ -448,8 +451,8 @@ feed, split it over several connectors (each with its own connection, channel an
 
 Costs that grow with the number of entities:
 
-- **Deletes** of a known entity rebuild the whole type-ahead index (sorting every id). A burst of deletes over a large
-  state slows consumption; with millions of entities and frequent deletes, prefer a store with real retention.
+- **Deletes** of a known entity are cheap: marked removed in the type-ahead index and folded out every 4,096 removals
+  (one pass over that kind's ids).
 - **New ids** are folded into the index every 4,096 additions (a merge and sort of that kind's ids).
 - **Evictions** (`state.when-full: evict-oldest`) remove many entities at once and rebuild the index once per check.
 
@@ -573,7 +576,7 @@ on each queue.
 | `DOWN: consumer cancelled on <queue>` | the queue was deleted | recreate it (or let `declare: true` do it), then restart the server |
 | `UP`, nothing arrives | the queue is not bound to the exchange the producer uses, or another consumer takes the messages | `bind.<queue>`, or bind it on the broker; give each server its own queue |
 | `rejected` grows | bodies that are not JSON, or no id: no `id` header, no `message_id`, and the body lacks `id-field.<queue>`; or envelopes without `kind` on a queue with no kind | check the queue's `kind.<queue>` and `id-field.<queue>` against a real message |
-| a deleted entity still offered by type-ahead | a delete arrived for an id spelled differently; or the state was cleared by `state.reset-at` (type-ahead keeps ids until restart) | send the delete with the exact id; restart to rebuild type-ahead from the store |
+| a deleted entity still offered by type-ahead | a delete arrived for an id spelled differently; or the state was cleared by `state.reset-at` (type-ahead keeps ids until restart); or it is in the command line's "recent" list (cleared only when an open view saw the delete) | send the delete with the exact id; restart to rebuild type-ahead from the store |
 | an old entity reads "not held" and is gone from type-ahead; `evicted` grows; WARN `state store over its budget … evicted …` | `state.max-gb` reached: `evict-oldest` removed the entities written longest ago | raise `state.max-gb` (and the disk), or `state.when-full: warn`; republish the entity |
 | `UP (state store over its budget: … nothing is dropped …)` | `state.when-full: warn` and the store is past `state.max-gb` | raise `state.max-gb` or add disk before it fills; or switch to `evict-oldest` |
 | `DOWN: … (messages are not acknowledged and come again)`; the queue's unacknowledged and redelivered counts rise | the state store cannot write: the disk is full, or an I/O error | free or grow the disk (`df -h` on `state.root`); the connector resumes by itself. On a quorum queue, mind its delivery limit ([section 6.2](#62-when-the-store-cannot-keep-a-message)) |

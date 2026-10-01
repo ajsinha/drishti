@@ -712,8 +712,8 @@ Full detail: [REST_CONNECTOR.md](../connectors/REST_CONNECTOR.md).
 | `disk-cache.reset-at` / `disk-cache.zone` | `02:00` / `America/New_York` | Nightly clearing time. |
 | `source-name` | `kafka` (a connector: its name) | The name shown in provenance and Health. |
 
-Only a null value (a tombstone), or an envelope with `"doc": null`, deletes; an empty value does not. Deletes are not
-pushed to open views, and a deleted id stays in type-ahead until a restart. Full detail:
+Only a null value (a tombstone), or an envelope with `"doc": null`, deletes; an empty value does not. A delete is
+pushed to open views (they say the entity was deleted, and when) and takes the id out of type-ahead at once. Full detail:
 [KAFKA_CONNECTOR.md](../connectors/KAFKA_CONNECTOR.md).
 
 ### `activemq` and `rabbitmq` — message queues

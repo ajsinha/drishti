@@ -307,11 +307,12 @@ public final class KafkaSourcePlugin implements SourcePlugin {
             track(ref, r);
             // after track: a fetch that cached an older document either sees the new position and drops it, or
             // finished before track, in which case this check sees its entry and replaces it
+            if (r.value() == null) {
+                deleted(ref, r);
+                return;
+            }
             boolean wanted = listeners.containsKey(ref) || cache.getIfPresent(ref) != null;
-            if (!wanted || r.value() == null) {
-                if (r.value() == null) {
-                    cache.invalidate(ref);
-                }
+            if (!wanted) {
                 return;
             }
         }
@@ -378,7 +379,11 @@ public final class KafkaSourcePlugin implements SourcePlugin {
             EntityRef ref = EntityRef.of(kind, id);
             if (doc == null || doc.isNull()) {
                 positions.remove(ref);
-                cache.invalidate(ref);
+                weights.remove(ref);
+                if (disk != null) {
+                    disk.delete(diskKey(ref));
+                }
+                deleted(ref, r);
                 return;
             }
             if (mapped == null || !ref.id().equals(r.key())) {   // apply() tracked only a mapped message, by its key
@@ -399,6 +404,28 @@ public final class KafkaSourcePlugin implements SourcePlugin {
             }
         } catch (Exception e) {
             // a malformed message is skipped; the stream goes on
+        }
+    }
+
+    /**
+     * A tombstone (or an envelope whose {@code doc} is null): the entity leaves the cache and type-ahead, and every open
+     * view of it is told, so it says the entity was deleted instead of showing the last document.
+     */
+    private void deleted(EntityRef ref, ConsumerRecord<String, String> r) {
+        cache.invalidate(ref);
+        if (searchable && caughtUp) {
+            index.remove(ref);                       // before catching up, the index is built from positions at the end
+        }
+        List<Consumer<EntityDocument>> subs = listeners.get(ref);
+        if (subs != null) {
+            EntityDocument gone = EntityDocument.deleted(ref, new Provenance(sourceName, r.offset(), Instant.ofEpochMilli(r.timestamp()), true));
+            subs.forEach(l -> {
+                try {
+                    l.accept(gone);
+                } catch (RuntimeException ignored) {
+                    // one broken view must not stop the others
+                }
+            });
         }
     }
 

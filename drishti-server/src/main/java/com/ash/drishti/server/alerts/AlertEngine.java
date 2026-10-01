@@ -162,6 +162,9 @@ public final class AlertEngine implements AutoCloseable {
     // ---- evaluation ----------------------------------------------------------------------------
 
     void evaluate(EntityDocument doc) {
+        if (doc.deleted()) {
+            return;                                   // a deleted entity has no values to cross a threshold with
+        }
         EvalContext ctx = EvalContext.of(doc.data(), formats);
         rulesByUser.forEach((user, rules) -> {
             for (AlertRule r : rules) {
