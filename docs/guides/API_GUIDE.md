@@ -373,7 +373,8 @@ curl -s $B/views/trade/MX-20000001 | jq -c '{ref, mnemonic, title, strip: .strip
  "strip":[{"label":"Notional","text":"AUD 242,000,000","path":"$.currency"},
           {"label":"Direction","text":"Receive fixed","path":"$.direction"}],
  "provenance":{"layout":"Sutra irs-fixfloat v1 + inference","fingerprint":"b7df…1372","source":"murex-rates",
-               "generation":1674,"fetchedAt":"2026-10-01T00:58:57.229603068Z","live":true,"businessDate":null},
+               "generation":1674,"fetchedAt":"2026-10-01T00:58:57.229603068Z","live":true,"businessDate":null,
+               "sutra":"irs-fixfloat"},
  "timings":{"fetch":0.15,"layout":0.11,"links":0.15,"bind":0.22,"total":0.64}}
 ```
 
@@ -553,7 +554,11 @@ It is kept on the server, so it follows the user to any browser.
 | `GET` | `/me/packs` | `{assigned, active}` |
 | `PUT` | `/me/packs` | body `{"active": [...]}`; must be a non-empty subset of `assigned` (`403 DRS-5002` otherwise) |
 | `GET` | `/me/workspaces` | names of saved workspaces |
-| `GET` · `PUT` · `DELETE` | `/me/workspaces/{name}` | one workspace `{layout, panes}`; `404 DRS-1001` if missing; `DELETE` answers `204` |
+| `GET` · `PUT` · `DELETE` | `/me/workspaces/{name}` | one workspace `{layout, panes, sizes}`; `sizes` (optional) is `{"cols": [1.4, 0.6], "rows": [1, 1]}`, one weight from 0.1 to 10 per column and row of the layout, where its dividers were dragged; `404 DRS-1001` if missing; `DELETE` answers `204` |
+| `GET` | `/me/layouts` | personal layouts: `{enabled, allowed, promote, review, layouts}`; `allowed` is the `layout` power, `promote` adds `author`; each layout is read against its Sutra as it is now |
+| `GET` · `PUT` · `DELETE` | `/me/layouts/{sutra}/{kind}` | the caller's layout of a Sutra. `PUT` body `{"panels": [{"id": "cashflows", "area": "main", "span": 8, "height": 10}, {"id": "built", "hidden": true}]}` in display order: only panel ids the Sutra has, `area` `main`/`right`, `span` 1-12, `height` 1-24, else `400 DRS-5001`; the Sutra must lay out `kind`. `GET` drops panels the Sutra no longer has and appends new ones (`added: true`). `DELETE` (back to the Sutra) answers `204`. `403 DRS-5002` without the `layout` power |
+| `GET` | `/me/layouts/{sutra}/{kind}/promotion?dropHidden=false` | what promoting the layout would propose: `{sutra, kind, fromVersion, version, base, text, changes, review}`, the next version written from the latest one (order, `area`, `span`, `height`; the rest of the text kept). Needs `author` |
+| `POST` | `/me/layouts/{sutra}/{kind}/promotion` | body `{"note": "…", "dropHidden": false}`: proposes it for review (`202` `{proposal}`), or with review off saves it (`200` `{saved}`) |
 | `GET` | `/me/monitors` | names of saved monitors (watchlists) |
 | `PUT` · `DELETE` | `/me/monitors/{name}` | body `{"entities": [{"kind","id"}, …]}`, 1 to 50 entities; `DELETE` answers `204` |
 | `GET` | `/me/monitors/{name}` | as-of. One row per entity: `{ref, mnemonic, title, strip, live}` or `{ref, error}` |

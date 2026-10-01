@@ -353,6 +353,7 @@ Check: `curl -s localhost:18480/api/v1/studio/settings` returns `{"approve":…,
 | `roles.<role>.approve` | `false` | May approve or reject proposed Sutras. |
 | `roles.<role>.admin` | `false` | May manage users, read the audit log, approve Sutras. |
 | `roles.<role>.calc` | `false` | May use Calc, Python in the browser on what the role opens ([PYTHON_CALC.md](../guides/PYTHON_CALC.md#9-roles-who-may-use-calc)). |
+| `roles.<role>.layout` | `true` | May customise layouts: layout mode (`Alt+L`) and personal layouts ([USER_GUIDE.md](../guides/USER_GUIDE.md#layout-mode-arrange-a-view-your-way)). On unless set to `false`; the bundled `viewer` sets it to `false`. |
 | `redact` | `[trader, counterpartyId, patientName]` | Field names masked in raw JSON for roles without `raw`. |
 
 The bundled roles; packs add domain roles (finance: `trader`, `risk`; logistics: `ops`):
@@ -361,7 +362,7 @@ The bundled roles; packs add domain roles (finance: `trader`, `risk`; logistics:
 drishti:
   security:
     roles:
-      viewer:   { kinds: ["*"] }
+      viewer:   { kinds: ["*"], layout: false }
       author:   { kinds: ["*"], raw: true, author: true, calc: true }
       approver: { kinds: ["*"], raw: true, author: true, approve: true, calc: true }
       admin:    { kinds: ["*"], raw: true, author: true, admin: true, calc: true }
@@ -469,6 +470,19 @@ decides who may use it (roles with `calc`), keeps each user's snippets, and serv
 
 Which views offer Calc is a pack's choice (`python: { enabled: true }` in `pack.yaml`), not configuration; see
 [PACKS.md](../guides/PACKS.md#calc-python-snippets).
+
+### `drishti.layouts` — personal layouts
+
+Layout mode ([USER_GUIDE.md](../guides/USER_GUIDE.md#layout-mode-arrange-a-view-your-way)): each user's arrangement of
+a Sutra's panels, kept per user and Sutra in the preference store (namespace `layouts`, at most 50 per user) and
+applied by the console when it draws that user's views. Who may is a role power (`roles.<role>.layout`, above).
+
+| Key | Default | Meaning |
+|---|---|---|
+| `enabled` | `true` (`DRISHTI_LAYOUTS_ENABLED`) | Layout mode at all. Off: nobody may keep a layout, `/api/v1/me/layouts/**` refuses with `403 DRS-5002`, and `GET /api/v1/me/layouts` says `enabled: false`. The console has its own switch, `layouts.enabled`, read from the same variable. |
+
+Promoting a layout to a Sutra also needs `drishti.rachana.studio-save: true` and a role with `author`; it is reviewed
+as any Studio save (`drishti.governance`).
 
 ### `drishti.panels` — chart and aggregate panel limits
 
@@ -1109,6 +1123,12 @@ is decided by the server (`drishti.rachana.studio-save`).
 | Key | Default | Meaning |
 |---|---|---|
 | `calc.enabled` | `true` (`DRISHTI_CALC_ENABLED`) | Off: no view offers Calc and the console's `/api/calc/*` routes refuse, whatever packs and roles say ([PYTHON_CALC.md](../guides/PYTHON_CALC.md)). |
+
+### `layouts`
+
+| Key | Default | Meaning |
+|---|---|---|
+| `layouts.enabled` | `true` (`DRISHTI_LAYOUTS_ENABLED`) | Off: no view offers layout mode and saved personal layouts are not applied, whatever roles say ([USER_GUIDE.md](../guides/USER_GUIDE.md#layout-mode-arrange-a-view-your-way)). |
 
 The Python runtime is a folder, not a setting: `console/web/static/vendor/pyodide/`, installed by
 `tools/fetch-pyodide.sh` and served at `/pyodide/<version>/` when present

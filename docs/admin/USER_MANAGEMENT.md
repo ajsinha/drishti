@@ -105,7 +105,7 @@ filter to see only what concerns her.
 A role says two things:
 
 1. **Which kinds of entity** its holders may open (`trade`, `counterparty`, … or `*` for every kind).
-2. **Five powers**:
+2. **Six powers**:
 
    | Power | Lets the holder |
    |---|---|
@@ -114,6 +114,7 @@ A role says two things:
    | `approve` | approve or reject proposed Sutras, but never their own (four eyes) |
    | `admin` | everything in this guide: users, roles, caches, health, audit |
    | `calc` | use Calc (`Alt+C`): Python run in their own browser on the views a pack offers it, reading only what their roles open ([PYTHON_CALC.md](../guides/PYTHON_CALC.md)) |
+   | `layout` | use layout mode (`Alt+L`): arrange a view's panels for themselves and keep that personal layout ([USER_GUIDE.md](../guides/USER_GUIDE.md#layout-mode-arrange-a-view-your-way)). **On unless a role says `layout: false`**; with `author` too, they may promote a layout to a Sutra proposal |
 
 A person may hold several roles. They may open a kind if **any** of their roles allows it, and they have a power if
 **any** of their roles grants it.
@@ -129,17 +130,19 @@ A person may hold several roles. They may open a kind if **any** of their roles 
 
 Configuration ships with these:
 
-| Role | Opens | Raw JSON | Author | Approve | Admin | Calc |
-|---|---|---|---|---|---|---|
-| `viewer` | everything | masked | — | — | — | — |
-| `author` | everything | yes | yes | — | — | yes |
-| `approver` | everything | yes | yes | yes | — | yes |
-| `admin` | everything | yes | yes | — | yes (and admins may approve) | yes |
+| Role | Opens | Raw JSON | Author | Approve | Admin | Calc | Layout |
+|---|---|---|---|---|---|---|---|
+| `viewer` | everything | masked | — | — | — | — | — (`layout: false`) |
+| `author` | everything | yes | yes | — | — | yes | yes |
+| `approver` | everything | yes | yes | yes | — | yes | yes |
+| `admin` | everything | yes | yes | — | yes (and admins may approve) | yes | yes |
 
 Packs add their own: for example `trader` (finance), `credit-risk` (counterparty-risk), `market-risk`,
 `climate-analyst`, `retail`, `oprisk`, `scientist` and `economist`. The analysts' roles of the packs that offer Calc
 hold `calc`: `trader` and `risk` (finance), `trader` (trading), `market-risk` and `credit-risk`. Roles of packs that do
-not offer Calc do not ([PYTHON_CALC.md](../guides/PYTHON_CALC.md#9-roles-who-may-use-calc)). A pack declares one like this:
+not offer Calc do not ([PYTHON_CALC.md](../guides/PYTHON_CALC.md#9-roles-who-may-use-calc)). Every pack role has
+`layout` (none sets `layout: false`), and so has every role you define in Admin → Roles unless you untick *Customise
+layouts*. A pack declares one like this:
 
 ```yaml
 # packs/climate-risk/pack.yaml
@@ -225,6 +228,26 @@ What an administrator needs to know:
   with the user. Reads are in the access log like any read (`drishti.columns()` as a `search`).
 - **Switched off for everyone:** `DRISHTI_CALC_ENABLED=false` (server and console).
 
+## Layouts
+
+Layout mode ([USER_GUIDE.md](../guides/USER_GUIDE.md#layout-mode-arrange-a-view-your-way)) lets a user drag, resize and
+hide a view's panels for themselves. What an administrator needs to know:
+
+- **Who:** holders of a role with `layout`, which is **every role unless it says otherwise**: the exact defaults are
+  `viewer` without it, `author`, `approver`, `admin` and every pack role with it, and roles defined in Admin → Roles
+  with it unless *Customise layouts* is unticked. To take it away from a role in configuration or a pack, write
+  `layout: false`. A person with several roles has it if any of them grants it. Without it, the footer's **Layout**
+  key is greyed with the reason and `/api/v1/me/layouts/**` answers `403 DRS-5002`.
+- **What is kept:** each user's layout per Sutra (`drishti_preference`, namespace `layouts`, one document per Sutra:
+  panel order, column, `span`, `height`, `hidden`; at most 50), deleted with the user. A layout never changes the
+  Sutra; the console applies it only when it draws that user's views.
+- **Promoting a layout** needs `author` as well (and `drishti.rachana.studio-save`): it is a Sutra proposal like any
+  Studio save, reviewed by an approver (four eyes) and audited as `sutra-proposed`.
+- **Stored as:** a `no-layout` row in `drishti_role_power` for a role defined in Admin → Roles without it (so roles
+  saved before this power existed keep the default, allowed).
+- **Switched off for everyone:** `DRISHTI_LAYOUTS_ENABLED=false` (server and console); saved layouts are then not
+  applied either.
+
 ## Notes and shared workspaces
 
 - **Notes** (see the User guide): anyone who may open a kind reads and adds notes on its entities; only the author
@@ -267,8 +290,8 @@ column, if they do not.
 | `drishti_user` | one row per person: name, email, desk, password hash, enabled, lockout, timestamps |
 | `drishti_user_role` | (user, role) pairs |
 | `drishti_user_pack` | (user, pack) pairs; `drishti_user.packs_assigned` says whether they apply or the defaults do |
-| `drishti_role` · `drishti_role_kind` · `drishti_role_power` | roles defined in Admin → Roles, the kinds each opens, and powers added since the first release (`calc`), one row each |
-| `drishti_preference` | (user, namespace, name) → a JSON document: workspaces, monitors, alert rules, settings, Calc snippets (`calc-snippets`) |
+| `drishti_role` · `drishti_role_kind` · `drishti_role_power` | roles defined in Admin → Roles, the kinds each opens, and powers added since the first release (`calc`; `no-layout` for a role that may not customise layouts), one row each |
+| `drishti_preference` | (user, namespace, name) → a JSON document: workspaces (with their divider sizes), monitors, alert rules, settings, Calc snippets (`calc-snippets`), personal layouts (`layouts`, one per Sutra) |
 | `drishti_audit` | one row per audited action, numbered in order |
 | `drishti_alert` | every alert a user's rules fired: when, rule, entity, severity, message (the newest `drishti.alerts.keep`, 1,000, per user) |
 | `drishti_pack_state` | packs an admin switched off or on (Admin → Packs) |
@@ -465,7 +488,7 @@ curl -s 'localhost:18480/api/v1/admin/audit?subject=priya&limit=20'
 | `POST` | `/admin/users/{u}/enabled` `{enabled}` | enable or disable |
 | `POST` | `/admin/users/{u}/password` `{password}` | reset a password (also clears a lockout) |
 | `GET` | `/admin/roles` | every role name a user may be given |
-| `GET` | `/admin/role-definitions` | every role: kinds, powers (`raw`, `author`, `approve`, `admin`, `calc`), built-in or not, holders |
+| `GET` | `/admin/role-definitions` | every role: kinds, powers (`raw`, `author`, `approve`, `admin`, `calc`, `layout`), built-in or not, holders |
 | `GET` / `PUT` / `DELETE` | `/admin/role-definitions/{name}` | read / create or replace / delete a role you defined |
 | `GET` | `/admin/audit?limit=&subject=` | audit events, newest first; `subject` matches who did it or to whom |
 | `GET` | `/admin/status` | the default-password warning, user count, installed packs |

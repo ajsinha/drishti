@@ -205,7 +205,8 @@ straight away, and the old one stays loadable for history.
 
 1. An approver (role `approver`, or an admin) clicks **Reviews** in Studio (`/studio/reviews`). The button shows
    how many proposals are waiting.
-2. Opening a proposal shows the author's note and the change as a **diff** against the live Sutra.
+2. Opening a proposal shows the author's note and the change as a **diff** against the live Sutra. A proposal of a
+   new version (`version: 4` of a Sutra whose latest is 3) is shown against the version before it.
 3. **Approve** (with an optional comment) publishes it, and views use it at once. **Reject** requires a reason,
    which is kept with the proposal for the author to read.
 4. While it waits, the author can **Withdraw** it.
@@ -216,6 +217,13 @@ Rules that keep this safe:
 - **No stale approvals.** If the live Sutra changed after the proposal was made, approval is refused; propose again
   from the live version.
 - **Audited.** Every proposal, approval, rejection and withdrawal is recorded in the audit log.
+
+### Proposals from layout mode
+
+An author can also start a proposal from a view: arrange its panels in [layout mode](layout-mode) (`Alt+L`) and press
+**Promote to Sutra…**. Drishti writes the next version of the Sutra from its text (the panels in the new order,
+`area: right` for the side column, `span` and `height` for the sizes; every other line as it was), shows the diff, and
+submits it with the author's note. It arrives in **Reviews** like any other proposal and is reviewed the same way.
 
 !!! note "In production"
     Many teams keep saving off in production and move Sutras through version control (a pull request that adds

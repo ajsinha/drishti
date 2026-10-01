@@ -58,8 +58,8 @@ live trades over 5m in BOOK-RATES-3       →  the same in plain words: Drishti 
 **Live**
 - Views of live entities tick over server-sent events (measured p99 about 11 ms); changed values flash.
 - **Monitors** (live watchlists) and **alerts** (rules the server checks on every change, with a bell and history).
-- **Workspaces**: several live views on one screen, a pane following another's selection, saved and **shared**
-  read-only with roles or people.
+- **Workspaces**: several live views on one screen, a pane following another's selection, views dragged into panes,
+  dividers dragged to resize, saved and **shared** read-only with roles or people.
 
 **Work together**
 - **Notes** on an entity or one of its fields, for the next reader; the author edits, every change is audited.
@@ -71,6 +71,8 @@ live trades over 5m in BOOK-RATES-3       →  the same in plain words: Drishti 
   ([CLIENTS.md](docs/guides/CLIENTS.md)).
 
 **Shape it**
+- **Layout mode** (`Alt+L`): drag, resize and hide a view's panels on a 12-column grid, with the mouse, a pen, a finger
+  or the keyboard, and keep it as your own layout of the Sutra; an author promotes it to the Sutra through review.
 - **Sutra Studio** (`/studio`): a YAML editor with completion from the language's JSON Schema, live checks and a
   preview against any entity. A save is a proposal; an approver reviews the diff (four eyes).
 - **Domain packs**, enabled per server and assigned per user: `banking-core`, `market-data`, `trading`
