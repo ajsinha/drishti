@@ -8,7 +8,7 @@
 FROM python:3.13-slim AS pyodide
 WORKDIR /src
 COPY tools/fetch-pyodide.sh tools/fetch-pyodide.sh
-COPY console/web/static/vendor/ console/web/static/vendor/
+COPY console/ console/
 RUN bash tools/fetch-pyodide.sh && rm -rf /root/.cache/drishti
 
 FROM python:3.13-slim
@@ -16,8 +16,7 @@ RUN useradd --system --uid 10001 drishti
 WORKDIR /opt/drishti/console
 COPY console/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-COPY console/ .
-COPY --from=pyodide /src/console/web/static/vendor/pyodide/ web/static/vendor/pyodide/
+COPY --from=pyodide /src/console/ .
 # The help centre renders the repository's documents, so they ship with the console.
 COPY docs/ /opt/drishti/docs/
 COPY packs/ /opt/drishti/packs/
