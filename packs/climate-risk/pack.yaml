@@ -104,6 +104,43 @@ console:
   - - GAR GAR-FRA
     - EU taxonomy green asset ratio
   help: config/help.yaml
+columns:
+  climate-profile:
+  - counterpartyName
+  - sector
+  - intensity
+  - transitionScore
+  - physicalScore
+  - netZeroTarget
+  climate-stress:
+  - scenarioName
+  - deskName
+  - loss2030
+  - loss2050
+  - capitalShare
+  financed-emissions:
+  - book
+  - financed
+  - exposure
+  - intensity
+  - dataQuality
+  physical-asset:
+  - name
+  - counterpartyName
+  - country
+  - value
+  - worstHazard
+  climate-scenario:
+  - name
+  - category
+  - warming
+  - carbon2030
+  - carbon2050
+  taxonomy-alignment:
+  - legalEntityName
+  - gar
+  - eligible
+  - covered
 roles:
   climate-analyst:
     kinds:

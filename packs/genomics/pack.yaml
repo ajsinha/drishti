@@ -137,6 +137,42 @@ console:
   - - TRIAL TRIAL-ONC-101
     - Clinical trial · enrolment and arms
   help: config/help.yaml
+columns:
+  gene:
+  - symbol
+  - name
+  - chromosome
+  - location
+  - length
+  variant:
+  - geneSymbol
+  - proteinChange
+  - consequence
+  - significance
+  - condition
+  sample:
+  - tissue
+  - diagnosis
+  - purity
+  - variantCount
+  - collected
+  clinical-trial:
+  - title
+  - phase
+  - status
+  - enrolled
+  - biomarkerName
+  protein:
+  - name
+  - accession
+  - length
+  - massKda
+  - subcellular
+  sequencing-run:
+  - instrument
+  - yieldGb
+  - q30
+  - status
 roles:
   scientist:
     kinds:

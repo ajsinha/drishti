@@ -111,6 +111,41 @@ console:
   - - IDL IDL-NY-USD
     - Intraday liquidity · usage through the day
   help: config/help.yaml
+columns:
+  lcr:
+  - legalEntityName
+  - lcr
+  - hqla
+  - netOutflows
+  - buffer
+  nsfr:
+  - legalEntityName
+  - nsfr
+  - asfTotal
+  - rsfTotal
+  funding-source:
+  - counterpartyName
+  - type
+  - amount
+  - currency
+  - maturity
+  - runOffRate
+  hqla-holding:
+  - security
+  - level
+  - marketValue
+  - haircut
+  - liquidityValue
+  liquidity-stress:
+  - scenarioName
+  - legalEntityName
+  - survivalDays
+  - minimumPosition
+  maturity-ladder:
+  - legalEntityName
+  - currency
+  - gap1m
+  - survivalDays
 roles:
   treasury:
     kinds:

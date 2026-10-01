@@ -227,6 +227,7 @@ def build(bank: dict) -> dict[str, dict[str, dict]]:
 
 def spec(bank: dict) -> PB.PackSpec:
     return PB.PackSpec(
+        columns={'loss-event': ['eventType', 'deskName', 'netLoss', 'grossLoss', 'status', 'occurred'], 'key-risk-indicator': ['name', 'deskName', 'value', 'amber', 'red', 'status'], 'issue': ['title', 'severity', 'owner', 'due', 'status'], 'risk-control': ['risk', 'deskName', 'inherent', 'effectiveness', 'residual'], 'cyber-incident': ['title', 'severity', 'recordsAffected', 'status'], 'third-party': ['name', 'criticality', 'annualSpend', 'slaBreaches']},  # key fields shown beside each entity in pick lists
         name="operational-risk", title="Operational and non-financial risk", requires=["banking-core"], generator="tools/packgen/oprisk/make.py",
         description="Loss events, RCSA, key risk indicators, issues and actions, scenarios, third-party and cyber risk, and SMA operational-risk capital.",
         domains={"oprisk": KINDS},

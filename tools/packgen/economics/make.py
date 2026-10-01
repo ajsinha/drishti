@@ -240,6 +240,7 @@ def _release_date(period: str) -> str:
 
 def spec() -> PB.PackSpec:
     return PB.PackSpec(
+        columns={'economy': ['name', 'currency', 'gdpUsdTn', 'growth', 'inflation', 'unemployment', 'policyRate'], 'macro-indicator': ['name', 'latest', 'unit', 'previous', 'nextRelease'], 'central-bank-decision': ['bank', 'date', 'decision', 'rate', 'vote'], 'trade-flow': ['reporterName', 'partnerName', 'exports', 'imports', 'balance'], 'economic-forecast': ['economyName', 'vintage', 'growth2027', 'inflation2027', 'recessionProbability']},  # key fields shown beside each entity in pick lists
         name="economics", title="Economics", requires=[], generator="tools/packgen/economics/make.py",
         description="Economies, macro indicators and releases, central-bank decisions, forecasts, trade flows, labour markets, fiscal positions and price baskets.",
         domains={"macro": KINDS},

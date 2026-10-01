@@ -135,6 +135,42 @@ console:
   - - SOCI SOCI-KES-TIP
     - Social indicator · trust in parliament
   help: config/help.yaml
+columns:
+  candidate:
+  - name
+  - partyName
+  - constituency
+  - role
+  - voteShare
+  party:
+  - name
+  - position
+  - leaderName
+  - seats
+  - polling
+  poll:
+  - pollster
+  - fieldwork
+  - sample
+  - lead
+  - moe
+  bill:
+  - title
+  - sponsorName
+  - stage
+  - introduced
+  - costM
+  region:
+  - name
+  - populationM
+  - medianIncome
+  - unemployment
+  election:
+  - title
+  - date
+  - turnout
+  - winner
+  - majority
 roles:
   analyst:
     kinds:

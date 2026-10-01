@@ -124,6 +124,43 @@ console:
   - - OPCAP OPCAP-LDN
     - SMA operational-risk capital
   help: config/help.yaml
+columns:
+  loss-event:
+  - eventType
+  - deskName
+  - netLoss
+  - grossLoss
+  - status
+  - occurred
+  key-risk-indicator:
+  - name
+  - deskName
+  - value
+  - amber
+  - red
+  - status
+  issue:
+  - title
+  - severity
+  - owner
+  - due
+  - status
+  risk-control:
+  - risk
+  - deskName
+  - inherent
+  - effectiveness
+  - residual
+  cyber-incident:
+  - title
+  - severity
+  - recordsAffected
+  - status
+  third-party:
+  - name
+  - criticality
+  - annualSpend
+  - slaBreaches
 roles:
   oprisk:
     kinds:

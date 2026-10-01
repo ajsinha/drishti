@@ -240,6 +240,7 @@ def build(bank: dict) -> dict[str, dict[str, dict]]:
 
 def spec(bank: dict) -> PB.PackSpec:
     return PB.PackSpec(
+        columns={'lcr': ['legalEntityName', 'lcr', 'hqla', 'netOutflows', 'buffer'], 'nsfr': ['legalEntityName', 'nsfr', 'asfTotal', 'rsfTotal'], 'funding-source': ['counterpartyName', 'type', 'amount', 'currency', 'maturity', 'runOffRate'], 'hqla-holding': ['security', 'level', 'marketValue', 'haircut', 'liquidityValue'], 'liquidity-stress': ['scenarioName', 'legalEntityName', 'survivalDays', 'minimumPosition'], 'maturity-ladder': ['legalEntityName', 'currency', 'gap1m', 'survivalDays']},  # key fields shown beside each entity in pick lists
         name="liquidity-risk", title="Liquidity risk", requires=["trading"], generator="tools/packgen/liquidity/make.py",
         description="LCR and NSFR by legal entity, maturity ladders, HQLA holdings, funding sources, liquidity stress survival and intraday liquidity.",
         domains={"liquidity": KINDS},

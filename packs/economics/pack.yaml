@@ -139,6 +139,39 @@ console:
   - - CPIB CPIB-JP
     - Consumer prices · contributions by component
   help: config/help.yaml
+columns:
+  economy:
+  - name
+  - currency
+  - gdpUsdTn
+  - growth
+  - inflation
+  - unemployment
+  - policyRate
+  macro-indicator:
+  - name
+  - latest
+  - unit
+  - previous
+  - nextRelease
+  central-bank-decision:
+  - bank
+  - date
+  - decision
+  - rate
+  - vote
+  trade-flow:
+  - reporterName
+  - partnerName
+  - exports
+  - imports
+  - balance
+  economic-forecast:
+  - economyName
+  - vintage
+  - growth2027
+  - inflation2027
+  - recessionProbability
 roles:
   economist:
     kinds:

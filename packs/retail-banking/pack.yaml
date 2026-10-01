@@ -131,6 +131,52 @@ console:
   - - RPF RPF-US-CARD
     - IFRS 9 · ECL by stage, delinquency
   help: config/help.yaml
+columns:
+  customer:
+  - name
+  - segment
+  - totalDeposits
+  - totalLending
+  - kycRisk
+  deposit-account:
+  - holderName
+  - type
+  - balance
+  - currency
+  - rate
+  - status
+  mortgage:
+  - borrowerName
+  - balance
+  - rate
+  - ltv
+  - remainingYears
+  - daysPastDue
+  card-account:
+  - holderName
+  - product
+  - balance
+  - limit
+  - utilisation
+  - status
+  personal-loan:
+  - borrowerName
+  - purpose
+  - balance
+  - rate
+  - daysPastDue
+  collections-case:
+  - customerName
+  - arrears
+  - daysPastDue
+  - stage
+  - status
+  branch:
+  - name
+  - city
+  - customers
+  - deposits
+  - lending
 roles:
   retail:
     kinds:
