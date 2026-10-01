@@ -9,7 +9,7 @@
 *Revision 1.1 · 2026-09-30 · Author: Ashutosh Sinha · Companion to [ARCHITECTURE.md](ARCHITECTURE.md)*
 
 **Where things stand.** Every wave in this plan is done. The current release is **1.12.0**
-([CHANGELOG.md](../CHANGELOG.md), [RELEASE_NOTES.md](../RELEASE_NOTES.md)). The table below maps each release to
+([CHANGELOG.md](../../CHANGELOG.md), [RELEASE_NOTES.md](../../RELEASE_NOTES.md)). The table below maps each release to
 the waves it shipped; [What shipped after the waves](#what-shipped-after-the-waves-1100) lists the work done since
 the last numbered wave, and [Known gaps](#known-gaps) lists what is still open. The wave sections themselves are
 kept as they were planned, with notes where the delivery differed.
@@ -63,7 +63,7 @@ The first ten waves (plus W11, user management, after 1.0.0); all are done. Each
 - `config/license-header.txt` and `tools/license_headers.py --fix`; Spotless and Error Prone deferred (ADR-007).
 - Empty modules with `package-info.java`: `api, common, sutra, inference, graph, engine, server, testkit, it, benchmarks`.
 - `drishti-it`: `LicenseHeaderTest`, `SourceFileSizeTest` (1500), `ArchitectureRulesTest` (one-way module deps, Spring-free `drishti-api`, no `Serializable`, no field injection).
-- GitHub Actions `fast.yml`; `docs/adr/001..007`; `CHANGELOG.md`.
+- GitHub Actions `fast.yml`; `docs/architecture/adr/001..007`; `CHANGELOG.md`.
 
 ## W2 — Console shell & landing
 - `console/run_drishti_web.py`, `console/config/application.yaml`, properties configurator (YAML → local → env → CLI).
@@ -86,7 +86,7 @@ The first ten waves (plus W11, user management, after 1.0.0); all are done. Each
 - `drishti-rachana` model records: `Sutra`, `Match`, `Title`, `Strip`, `Panel`, `KeyMap`.
 - YAML parser with source positions; `sutra.schema.json` (since 1.11 the schema is generated from the grammar and served at `GET /api/v1/rachana/schema`); validator emitting `DRS-2nnn` with line/column.
 - `SutraRegistry`: versions, lookup by `name@version`, `WatchService` hot reload.
-- Docs: `docs/RACHANA_REFERENCE.md` (keys, panel kinds, versioning).
+- Docs: `docs/guides/RACHANA_REFERENCE.md` (keys, panel kinds, versioning).
 - Tests: parse round-trip, schema negatives, reload races.
 
 ## W5 — Rachana-EL & reference Sutras
@@ -100,7 +100,7 @@ The first ten waves (plus W11, user management, after 1.0.0); all are done. Each
 - `CandidateScorer`, `AreaPacker` (strip ≤ 8, right column ≤ 4), `LayoutMerger` (Sutra wins; `infer` holes filled).
 - Explanations (rule + score) recorded per inferred panel.
 - Tests: an unknown product renders; each reference entity without its Sutra stays usable (golden).
-- Docs: `docs/INFERENCE.md`.
+- Docs: `docs/architecture/INFERENCE.md`.
 
 ## W7 — Engine pipeline & entity graph
 - `CommandParser` (`config/mnemonics.yaml`); `SuggestionService` + per-plugin `HitIndex` for type-ahead (mnemonics, recents, parallel `SourcePlugin.search` under a 30 ms budget).
@@ -186,35 +186,35 @@ Every wave also fixes documentation rot: the README status table, "what works", 
 
 ## What shipped after the waves (1.10.0)
 
-Work done after the last numbered wave, grouped by theme. Each item is in [CHANGELOG.md](../CHANGELOG.md) under
+Work done after the last numbered wave, grouped by theme. Each item is in [CHANGELOG.md](../../CHANGELOG.md) under
 1.10.0 with details.
 
 | Theme | Delivered | Where to read |
 |---|---|---|
-| Pack inheritance | `extends:` with C3 order, the more specific pack wins, overrides reported; risk packs extend market data and trading (ADR-015) | [PACKS.md](PACKS.md#inheritance) |
-| Connectors | ActiveMQ and RabbitMQ on a shared messaging base with a persistent state store; S3; Delta Lake on S3 through `LakeStore`; scheduled lake maintenance (`tools/lake/maintain.py`); every connector reconnects by itself | [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md) |
-| Operations | Admin → Health (connectors, packs, live, server; `GET /api/v1/admin/health`); guarded `/actuator` and `/api/docs` when security is on (`DRISHTI_METRICS_TOKEN`); console `/readyz`; product name and legal notices from configuration | [OPERATIONS.md](OPERATIONS.md) |
-| Identity | Users, roles, saved documents and audit in a JPA database (SQLite default, PostgreSQL), one schema file per database, no migrations; Admin → Roles | [USER_MANAGEMENT.md](USER_MANAGEMENT.md) |
-| Packs for everyone | Admin → Packs switches packs off and on for everyone (`drishti_pack_state`, audited); packs on disk but not loaded are listed | [PACKS.md](PACKS.md#switching-packs-off-and-on-admin--packs) |
-| Terminal | Pick lists (`TRD MX-200000`, `CPTY north`, `TRD MX-2*0`, `TRD productType=Revolver`, `TRD`; one match opens; case-insensitive; key columns from `columns:`); every table pages and walks with the keyboard; id columns link; 25 suggestions | [USER_GUIDE.md](USER_GUIDE.md#pick-lists-when-a-command-names-several-entities) |
-| Console chrome | A two-row top bar after MAYA's: Views, Build, Admin and Help mega menus; round tools (live, alerts, packs, theme, user menu); gradient themes; one live channel per tab (the freeze fix) | [USER_GUIDE.md](USER_GUIDE.md#the-top-bar) |
-| Documentation | Every guide rewritten example-first; a 10-minute quickstart, a developer guide, a Rachana tutorial and a connector guide | [README.md](README.md) |
+| Pack inheritance | `extends:` with C3 order, the more specific pack wins, overrides reported; risk packs extend market data and trading (ADR-015) | [PACKS.md](../guides/PACKS.md#inheritance) |
+| Connectors | ActiveMQ and RabbitMQ on a shared messaging base with a persistent state store; S3; Delta Lake on S3 through `LakeStore`; scheduled lake maintenance (`tools/lake/maintain.py`); every connector reconnects by itself | [PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md) |
+| Operations | Admin → Health (connectors, packs, live, server; `GET /api/v1/admin/health`); guarded `/actuator` and `/api/docs` when security is on (`DRISHTI_METRICS_TOKEN`); console `/readyz`; product name and legal notices from configuration | [OPERATIONS.md](../admin/OPERATIONS.md) |
+| Identity | Users, roles, saved documents and audit in a JPA database (SQLite default, PostgreSQL), one schema file per database, no migrations; Admin → Roles | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) |
+| Packs for everyone | Admin → Packs switches packs off and on for everyone (`drishti_pack_state`, audited); packs on disk but not loaded are listed | [PACKS.md](../guides/PACKS.md#switching-packs-off-and-on-admin--packs) |
+| Terminal | Pick lists (`TRD MX-200000`, `CPTY north`, `TRD MX-2*0`, `TRD productType=Revolver`, `TRD`; one match opens; case-insensitive; key columns from `columns:`); every table pages and walks with the keyboard; id columns link; 25 suggestions | [USER_GUIDE.md](../guides/USER_GUIDE.md#pick-lists-when-a-command-names-several-entities) |
+| Console chrome | A two-row top bar after MAYA's: Views, Build, Admin and Help mega menus; round tools (live, alerts, packs, theme, user menu); gradient themes; one live channel per tab (the freeze fix) | [USER_GUIDE.md](../guides/USER_GUIDE.md#the-top-bar) |
+| Documentation | Every guide rewritten example-first; a 10-minute quickstart, a developer guide, a Rachana tutorial and a connector guide | [README.md](../README.md) |
 
 ## Since 1.10
 
-Work after 1.12.0, in [CHANGELOG.md](../CHANGELOG.md) under *Unreleased*.
+Work after 1.12.0, in [CHANGELOG.md](../../CHANGELOG.md) under *Unreleased*.
 
 | Theme | Delivered | Where to read |
 |---|---|---|
-| Sutras are YAML only | One file per Sutra, `<name>.v<N>.sutra.yaml`, starting with `rachana: 1` (missing or unknown: `DRS-2009`); `description`, `notes` and a per-panel `description` for prose; Markdown Sutras no longer read (`DRS-2004`, converted by `tools/rachana/md_to_yaml.py`); all 228 shipped Sutras converted and the generators write YAML; the JSON Schema of the language at `GET /api/v1/rachana/schema`; Studio a YAML editor with completion (ADR-017, superseding ADR-011) | [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md), [adr/017](adr/017-sutras-are-yaml.md) |
-| Build gates | Error Prone in every compile and Spotless at `verify` (ADR-007 amended) | [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) |
-| Packs while running | Admin → Packs → Load / Unload a pack without a restart of the process (pack overlay, rollback) | [PACKS.md](PACKS.md) |
-| API tokens and clients | Personal read-only API tokens, searches as CSV, a Python client, Excel through Power Query | [CLIENTS.md](CLIENTS.md) |
-| History and freshness | A field over business days, searches compared between two dates, freshness and `stale-after` per connector | [USER_GUIDE.md](USER_GUIDE.md) |
-| One console, many servers | `servers:` in the console; a session per server; picker, `/connect/<id>`, `?srv=` links; public `/public/about` (ADR-016) | [CONFIGURATION.md](CONFIGURATION.md), [adr/016](adr/016-one-console-many-servers.md) |
-| Derived kinds, notes, shared workspaces | Kinds computed from others (`derived`), notes on entities and fields, workspaces shared read-only | [PACKS.md](PACKS.md), [USER_GUIDE.md](USER_GUIDE.md) |
-| Reports, access log, plain words | Scheduled CSV reports, who-viewed-what, a deterministic phrase parser | [USER_GUIDE.md](USER_GUIDE.md), [USER_MANAGEMENT.md](USER_MANAGEMENT.md) |
-| Signed pack registry | Ed25519-signed, versioned packs installed and rolled back from Admin → Packs (ADR-018) | [PACKS.md](PACKS.md), [adr/018](adr/018-signed-pack-registry.md) |
+| Sutras are YAML only | One file per Sutra, `<name>.v<N>.sutra.yaml`, starting with `rachana: 1` (missing or unknown: `DRS-2009`); `description`, `notes` and a per-panel `description` for prose; Markdown Sutras no longer read (`DRS-2004`, converted by `tools/rachana/md_to_yaml.py`); all 228 shipped Sutras converted and the generators write YAML; the JSON Schema of the language at `GET /api/v1/rachana/schema`; Studio a YAML editor with completion (ADR-017, superseding ADR-011) | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md), [adr/017](adr/017-sutras-are-yaml.md) |
+| Build gates | Error Prone in every compile and Spotless at `verify` (ADR-007 amended) | [DEVELOPER_GUIDE.md](../guides/DEVELOPER_GUIDE.md) |
+| Packs while running | Admin → Packs → Load / Unload a pack without a restart of the process (pack overlay, rollback) | [PACKS.md](../guides/PACKS.md) |
+| API tokens and clients | Personal read-only API tokens, searches as CSV, a Python client, Excel through Power Query | [CLIENTS.md](../guides/CLIENTS.md) |
+| History and freshness | A field over business days, searches compared between two dates, freshness and `stale-after` per connector | [USER_GUIDE.md](../guides/USER_GUIDE.md) |
+| One console, many servers | `servers:` in the console; a session per server; picker, `/connect/<id>`, `?srv=` links; public `/public/about` (ADR-016) | [CONFIGURATION.md](../admin/CONFIGURATION.md), [adr/016](adr/016-one-console-many-servers.md) |
+| Derived kinds, notes, shared workspaces | Kinds computed from others (`derived`), notes on entities and fields, workspaces shared read-only | [PACKS.md](../guides/PACKS.md), [USER_GUIDE.md](../guides/USER_GUIDE.md) |
+| Reports, access log, plain words | Scheduled CSV reports, who-viewed-what, a deterministic phrase parser | [USER_GUIDE.md](../guides/USER_GUIDE.md), [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) |
+| Signed pack registry | Ed25519-signed, versioned packs installed and rolled back from Admin → Packs (ADR-018) | [PACKS.md](../guides/PACKS.md), [adr/018](adr/018-signed-pack-registry.md) |
 
 ## Known gaps
 

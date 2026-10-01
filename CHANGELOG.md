@@ -16,20 +16,23 @@
 # Changelog
 
 ## Unreleased — A million trades a day, for seven years
-- **Delta Lake at scale** ([DELTA_CONNECTOR.md](docs/DELTA_CONNECTOR.md)). A pack declares a kind's lake layout (`layout.<kind>`: promoted columns, rows sorted by id, files of 250,000 rows, row groups of 1,000), and the writers and nightly maintenance keep it.
+- **Delta Lake at scale** ([DELTA_CONNECTOR.md](docs/connectors/DELTA_CONNECTOR.md)). A pack declares a kind's lake layout (`layout.<kind>`: promoted columns, rows sorted by id, files of 250,000 rows, row groups of 1,000), and the writers and nightly maintenance keep it.
   - **Reads:** the connector never loads a day. An id map per day finds an entity's file; one row group is read per entity; type-ahead comes from the id column.
   - **Columns:** searches, pick lists, derived kinds, impact and reverse lookups read a day's promoted columns, cached and warmed for the newest day. A search over a million trades takes 120–320 ms and is exact, no longer `partial`.
   - **Log:** statistics leave out the document, so the log stays small. Maintenance re-sorts only the days that drifted from the layout.
-- **Aerospike at scale** ([AEROSPIKE_CONNECTOR.md](docs/AEROSPIKE_CONNECTOR.md)). Data is stored as a record per entity per business day, an index record per entity and a dates record per kind, with promoted bins. This replaces a record per entity with a bin per day, which could not hold more than about four and a half years.
+- **Aerospike at scale** ([AEROSPIKE_CONNECTOR.md](docs/connectors/AEROSPIKE_CONNECTOR.md)). Data is stored as a record per entity per business day, an index record per entity and a dates record per kind, with promoted bins. This replaces a record per entity with a bin per day, which could not hold more than about four and a half years.
   - **Reads:** two key reads per entity. Type-ahead comes from the index set.
   - **Columns:** a day's promoted bins are read by filtered scans, run in parallel over partition ranges.
   - **Loader and retention:** the loader streams and writes in parallel; record TTL gives retention without a maintenance job.
-- **PostgreSQL at scale** ([POSTGRES_CONNECTOR.md](docs/POSTGRES_CONNECTOR.md)). The `jdbc` connector's table mode now uses a partitioned table, and the old table form is still read.
+- **PostgreSQL at scale** ([POSTGRES_CONNECTOR.md](docs/connectors/POSTGRES_CONNECTOR.md)). The `jdbc` connector's table mode now uses a partitioned table, and the old table form is still read.
   - **Layout:** a table per data domain, partitioned by month, with LZ4-compressed documents. The pack's promoted fields are columns, a `(kind, business_date, id)` index lists a day's ids, and an `entity_dates` catalogue records each kind's days.
   - **Reads:** type-ahead comes from memory instead of a `LIKE` query per keystroke. A single read is one primary-key probe. A day's columns are read in parallel by id range.
   - **Loading and retention:** `PostgresLoader` / `tools/load-postgres.sh` uses parallel `COPY` and replaces a day whole. `--keep-months` drops old partitions.
   - **Measured:** searches over a million trades take 100–225 ms. `make_data.py --postgres` and `pgload.py` are replaced by the loader.
-- **Demo data in every store** ([DEMO_DATA.md](docs/DEMO_DATA.md)). `tools/load-delta.sh`, `tools/load-postgres.sh` and `tools/load-aerospike.sh` take the same `--trades N --days D` options, from the samples up to a million trades a day.
+- **The file connector reads JSON lines** ([FILE_CONNECTOR.md](docs/connectors/FILE_CONNECTOR.md)): one file per kind per business day (`<root>/<domain>/<date>/<kind>.jsonl`), each line the loaders' row or a plain document. A day is indexed once, in parallel segments: ids with byte offsets, and the promoted fields as columns. A read is one positioned read, and searches read the columns. `tools/load-files.sh` writes the files and a `files` profile serves them. Type-ahead over many files is no longer quadratic.
+- **Documents by audience**: `docs/guides`, `docs/connectors`, `docs/admin` (with the runbooks) and `docs/architecture` (with the ADRs).
+- **The landing page** counts 13 panel kinds (it said 12) and links to their guide.
+- **Demo data in every store** ([DEMO_DATA.md](docs/connectors/DEMO_DATA.md)). `tools/load-delta.sh`, `tools/load-postgres.sh` and `tools/load-aerospike.sh` take the same `--trades N --days D` options, from the samples up to a million trades a day.
 - **Recent history in one store, years in another.** A search on a business day that the first store does not hold (for example, older than Aerospike's TTL) is answered by the next store that does (for example, Delta Lake).
 - **Engine:**
   - The plugin interface gains `columnar`/`columns` (`ColumnSet`). Derived kinds aggregate over columns and serve their last result while recomputing.
@@ -101,7 +104,7 @@
   - **Tokens:** made on My account → API tokens. A token is `drk_<id>_<secret>`, shown once and stored only as a SHA-256 hash. It reads as its owner (their current roles and packs), only while they are enabled, and never writes. It can have an expiry and a last-used time, and can be revoked. Admin → Tokens lists and revokes anyone's; every change is audited.
   - **CSV search:** `GET /api/v1/search/csv` returns any search as CSV for spreadsheets, with formula-like text neutralised.
   - **Python client:** `clients/python/drishti_client.py` uses the standard library only, with `field`, `document`, `view`, `search`, `diff` and `to_pandas`, plus a CSV command line.
-  - **Docs:** `docs/CLIENTS.md` covers Python, Power Query for Excel, and curl.
+  - **Docs:** `docs/guides/CLIENTS.md` covers Python, Power Query for Excel, and curl.
 - **Sutra Studio is a YAML editor with completion.**
   - **Completion** comes from the served schema, by where the cursor is (Ctrl+Space, or as you type):
     - keys valid at that point (a panel's common keys plus its kind's options);

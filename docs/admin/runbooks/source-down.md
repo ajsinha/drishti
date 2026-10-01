@@ -20,7 +20,7 @@ a feed. Each one is a plugin instance, usually a named connector declared by a p
 pack's `trading-store`). When one fails, the others keep serving; only the kinds it holds are affected.
 
 The examples use `http://localhost:18480`. With security on, add `-H "Authorization: Bearer $TOKEN"`
-(an admin's token for `/api/v1/admin/*`; see [API_GUIDE.md](../API_GUIDE.md)).
+(an admin's token for `/api/v1/admin/*`; see [API_GUIDE.md](../../guides/API_GUIDE.md)).
 
 ## Symptoms
 
@@ -46,7 +46,7 @@ print("failed to start:", d["failedToStart"])
 for s in d["sources"]:
     if s["status"] != "UP": print("DOWN:", s["name"], s["health"], s["kinds"])
 for p in d["packs"]:
-    if p["connectorsDown"] or p["connectorsOff"]: print("pack", p["name"], "down:", p["connectorsDown"], "off:", p["connectorsOff"])'
+    if p["connectorsDown"] or p["connectorsOff"]: ../../runbooks/print("pack", p["name"], "down:", p["connectorsDown"], "off:", p["connectorsOff"])'
 ```
 
 On a healthy server you should see:

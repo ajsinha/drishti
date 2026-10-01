@@ -41,11 +41,11 @@ anyone can check it again.
 
 ### A book of a million trades a day
 
-How the connectors achieve these figures is in [DELTA_CONNECTOR.md](DELTA_CONNECTOR.md) and, for the same book in
-Aerospike, [AEROSPIKE_CONNECTOR.md](AEROSPIKE_CONNECTOR.md).
+How the connectors achieve these figures is in [DELTA_CONNECTOR.md](../connectors/DELTA_CONNECTOR.md) and, for the same book in
+Aerospike, [AEROSPIKE_CONNECTOR.md](../connectors/AEROSPIKE_CONNECTOR.md).
 
 Measured 2026-10-01 on the developer workstation (24 cores, server heap 15.6 GB), the trading pack's lake laid out as
-declared ([PACKS.md](PACKS.md#large-kinds-the-lake-layout)), 1,000,000 trades a day over three business days (5.2 GB;
+declared ([PACKS.md](../guides/PACKS.md#large-kinds-the-lake-layout)), 1,000,000 trades a day over three business days (5.2 GB;
 `tools/samplegen/bulk_trades.py --trades 1000000 --days 3`), times over HTTP:
 
 | What | Time |
@@ -120,7 +120,7 @@ Numbers move with whatever else the machine is doing. The same loop on the same 
 ran gave `n=200 p50=4.0 ms p99=8.3 ms max=12.5 ms`; the server-side `timings.total` stayed under 1 ms, so the
 difference was the busy client and network stack, not view building. Compare like with like.
 
-With security on, add `-H "Authorization: Bearer $TOKEN"` (see [API_GUIDE.md](API_GUIDE.md)). Run it from the
+With security on, add `-H "Authorization: Bearer $TOKEN"` (see [API_GUIDE.md](../guides/API_GUIDE.md)). Run it from the
 console's host to include the network path the console uses.
 
 ### 3. Server metrics (Prometheus)
@@ -140,7 +140,7 @@ curl -s -H "Authorization: Bearer $DRISHTI_METRICS_TOKEN" http://localhost:18480
 ```
 
 Prometheus does the same with `authorization: { type: Bearer, credentials: … }` in its scrape job (see
-[TROUBLESHOOTING.md](TROUBLESHOOTING.md#monitoring-endpoints)). With security off, as below, no token is needed.
+[TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md#monitoring-endpoints)). With security off, as below, no token is needed.
 
 ```text
 drishti_live_frames_total 11680.0
@@ -201,7 +201,7 @@ kill $(jobs -p)
 
 You should see `"streams":50,"topics":1`: fifty viewers of one entity share one topic and one source
 subscription. Open fifty *different* live entities to load the source and frame builder harder. The meaning
-of each field is in [LIVE.md](LIVE.md#3-check-the-live-counters).
+of each field is in [LIVE.md](../architecture/LIVE.md#3-check-the-live-counters).
 
 ### 5. Search
 
@@ -302,7 +302,7 @@ It runs with every `./mvnw verify`, so a change that makes views slow cannot be 
   Linked entities are fetched in parallel under a 40 ms budget; late ones render as *pending*.
 - **Panels bind in parallel** on a bounded pool sized to the cores.
 - **Live views rebuild, then diff.** A tick re-binds the view with its cached layout and sends only the changed
-  cells and panels; a busy entity costs at most one frame per 50 ms however fast it ticks ([LIVE.md](LIVE.md)).
+  cells and panels; a busy entity costs at most one frame per 50 ms however fast it ticks ([LIVE.md](../architecture/LIVE.md)).
 - **Responses are compressed** (`server.compression`, JSON and event streams).
 
 ## Tuning knobs
@@ -394,4 +394,4 @@ A server holds its own topics, streams and caches; servers share nothing at run 
 run more servers behind a load balancer. Tokens are stateless, so any server can serve any request. Live
 streams stay on the server that opened them, and the browser's reconnect may land on another server, which
 simply starts with a fresh `view` event. The console keeps each tab's live channel in its own memory, so
-when you run several console processes, make sessions sticky (see [LIVE.md](LIVE.md#one-connection-per-tab)).
+when you run several console processes, make sessions sticky (see [LIVE.md](../architecture/LIVE.md#one-connection-per-tab)).

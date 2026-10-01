@@ -272,7 +272,7 @@ curl -s -X POST localhost:18480/api/v1/admin/users -H 'Content-Type: application
 ```
 
 `PUT /api/v1/admin/users/priya` with a `packs` list changes it later. See
-[USER_MANAGEMENT.md](USER_MANAGEMENT.md) for the user dialog, roles, and where assignments are stored
+[USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) for the user dialog, roles, and where assignments are stored
 (`drishti_user_pack`).
 
 **To choose which packs you see** (any user with more than one pack): click the round box tool in the top bar
@@ -501,7 +501,7 @@ roles:
   under the same name is an error, unless one pack extends the other (then the more specific wins).
 - **Site configuration overrides a pack.** To point the `credit` domain at PostgreSQL instead of the lake, or to
   switch a connector off, set `drishti.sources.connectors.credit-store.…` in the site configuration. See
-  [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md) and [CONFIGURATION.md](CONFIGURATION.md).
+  [PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md) and [CONFIGURATION.md](../admin/CONFIGURATION.md).
 
 ### What becomes of each key
 
@@ -562,7 +562,7 @@ connectors:
   `counterparty.id`). Each column costs little: repeated values (books, desks, currencies) compress to almost
   nothing.
 
-The measured effect, for 1,000,000 trades a day, is in [PERFORMANCE.md](PERFORMANCE.md#a-book-of-a-million-trades-a-day).
+The measured effect, for 1,000,000 trades a day, is in [PERFORMANCE.md](../admin/PERFORMANCE.md#a-book-of-a-million-trades-a-day).
 
 ## Derived kinds: entities computed from other kinds
 
@@ -699,7 +699,7 @@ Screens for `contextual` include `landing`, `terminal`, `view`, `studio`, `works
 Write the guide in Markdown with the copyright header comment at the top. Describe the domain (what each kind
 is, how they link, where the data comes from) rather than listing sample records, and include a **Finding
 things** section like the one above, so readers know the commands work on their own data too. Links to other help documents with a relative
-path (`[Sutra guide](../console/web/guides/sutra-guide.md)`) open inside the help centre.
+path (`[Sutra guide](../../console/web/guides/sutra-guide.md)`) open inside the help centre.
 
 ## Roles
 
@@ -720,7 +720,7 @@ roles:
 | `admin` | may administer users |
 
 The core always has `viewer`, `author`, `approver` and `admin`. Roles are given to users by an administrator; see
-[USER_MANAGEMENT.md](USER_MANAGEMENT.md). Security is off by default for local development; roles take effect when
+[USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md). Security is off by default for local development; roles take effect when
 it is on.
 
 A pack's roles appear in *Admin → Roles* marked **built-in**, read-only: change them in the pack (or, for a
@@ -1184,7 +1184,7 @@ In the terminal (`/t`):
    plain fields of a ticket as columns. Type `TKT-1001` on its own and press Enter: the bare id opens the ticket,
    because of the `^TKT-` pattern.
 
-See [INFERENCE.md](INFERENCE.md) for how inference decides.
+See [INFERENCE.md](../architecture/INFERENCE.md) for how inference decides.
 
 ### Step 6. Links and badges
 
@@ -1227,7 +1227,7 @@ Restart, open `AGT AGT-07` and press `F8`. You should see *Impact of AGT-07*:
 
 That answers *"which clients are affected if Priya is off sick?"*. Impact finds dependents through the sources'
 reverse lookups; the `demo` source has them, as do the lake and database connectors. See the
-[Impact guide](../console/web/guides/impact.md).
+[Impact guide](../../console/web/guides/impact.md).
 
 ### Step 8. Pick-list columns
 
@@ -1260,7 +1260,7 @@ alerts:
 ```
 
 - Roles take effect when sign-in is on. They appear in *Admin → Roles*, marked **built-in**; give them to users
-  in *Admin → Users* ([USER_MANAGEMENT.md](USER_MANAGEMENT.md)).
+  in *Admin → Users* ([USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)).
 - The alert appears as a suggestion on the Alerts page when the kind is `ticket`. Open `TKT TKT-1001`, click
   **Alert**, and pick *Open more than a day*: the form fills in. Save it: the ticket's age is about 30 (it ticks),
   so the bell shows an alert at once, reading like `warn TKT-1001 TKT-1001: open 31 h (Acme Freight Ltd)`.
@@ -1336,9 +1336,9 @@ curl -s http://localhost:18480/api/v1/sutras/problems
 You should see `{}`. Open `TKT TKT-1001`: the title reads `[Ticket] TKT-1001 with Acme Freight Ltd`, the strip
 has your six figures, *History* is on `F2`, `F7` opens the agent, and *How this view was built* says
 `Sutra ticket v1 + inference`. A mistake (say `kind: ladderr`) is reported with its line instead, and the view
-keeps the last good version: see [runbooks/sutra-broken.md](runbooks/sutra-broken.md).
+keeps the last good version: see [runbooks/sutra-broken.md](../admin/runbooks/sutra-broken.md).
 
-Writing Sutras is taught in the [Sutra guide](../console/web/guides/sutra-guide.md) and
+Writing Sutras is taught in the [Sutra guide](../../console/web/guides/sutra-guide.md) and
 [RACHANA_GUIDE.md](RACHANA_GUIDE.md); every key is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md). Studio's
 **Start from inference** turns the inferred view into a Sutra you can edit, and its editor completes keys,
 panel kinds, options, formats and the kinds this server serves from the schema at `GET /api/v1/rachana/schema`.
@@ -1408,7 +1408,7 @@ ticks.
 ### Step 13. Real data: a connector and a route
 
 Samples are for demos. Real tickets live somewhere else; here, JSON files that a ticketing system exports to a
-folder every few minutes. The `file` plugin reads such a folder ([PLUGIN_GUIDE.md](PLUGIN_GUIDE.md#file)).
+folder every few minutes. The `file` plugin reads such a folder ([PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md#file)).
 
 1. Create the folder and one exported ticket, `data/helpdesk/ticket/TKT-2001.json` (the kind is the folder name,
    the id the file name; no `_meta` needed):
@@ -1448,7 +1448,7 @@ folder every few minutes. The `file` plugin reads such a folder ([PLUGIN_GUIDE.m
    rescan (30 s).
 
 For a database, a lake, Kafka or S3 instead, only the `plugin` and `settings` change; see
-[PLUGIN_GUIDE.md](PLUGIN_GUIDE.md) and, for a pack reading from several stores, its last section. A site can
+[PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md) and, for a pack reading from several stores, its last section. A site can
 point the connector elsewhere without touching the pack: `HELPDESK_DIR=/srv/exports/tickets`, or
 `drishti.sources.connectors.helpdesk-store.settings.root` in its own configuration.
 
@@ -1478,7 +1478,7 @@ registering it anywhere. See [Testing a pack](#testing-a-pack) for the rest.
 | 13 | `connectors`, `routes` | real data |
 
 To generate a much larger pack (many kinds, consistent documents, Sutras, a guide and a Delta Lake) from a short
-Python description, follow [Tutorial 5 · Build a domain pack](../console/web/guides/build-a-pack.md). That is how
+Python description, follow [Tutorial 5 · Build a domain pack](../../console/web/guides/build-a-pack.md). That is how
 every pack after the banking family was made (`tools/packgen/common/packbuild.py`).
 
 ## Versioning and upgrading a pack
@@ -1630,7 +1630,7 @@ To change a shipped pack for your site without touching its files at all, use on
 |---|---|
 | A different layout for one kind | Put a Sutra with a higher `version` in the site Sutra folder (`./sutras`, `DRISHTI_SUTRAS`), or edit it in Studio |
 | Other mnemonics, labels, columns, connectors or routes | A small pack of your own that `extends` the shipped one ([Inheritance](#inheritance)) |
-| A connector pointed elsewhere, or switched off | Site configuration: `drishti.sources.connectors.<name>.…` ([CONFIGURATION.md](CONFIGURATION.md)) |
+| A connector pointed elsewhere, or switched off | Site configuration: `drishti.sources.connectors.<name>.…` ([CONFIGURATION.md](../admin/CONFIGURATION.md)) |
 | A pack hidden from everyone | *Admin → Packs* → **Switch off** ([above](#switching-packs-off-and-on-admin--packs)) |
 
 The banking lake is built with:

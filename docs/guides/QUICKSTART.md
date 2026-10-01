@@ -149,7 +149,7 @@ Without the sample history, the view says the source is not a dated source and t
 **Workspaces** in the top bar (`/w`) puts up to four live views on one screen, and a pane can follow
 another. The starter workspaces come from the `finance` and `logistics` packs: restart the server with
 `DRISHTI_PACKS=finance`, open `/w`, and click **Credit desk** under *Starters*. The
-[workspaces guide](../console/web/guides/workspaces.md) walks through it.
+[workspaces guide](../../console/web/guides/workspaces.md) walks through it.
 
 ## If something goes wrong
 
@@ -172,9 +172,9 @@ More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 | The packs and the commands each one adds | [PACKS.md](PACKS.md) |
 | Change how a screen looks (Sutras) | [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md) and the in-app *Sutra guide* |
 | Build Drishti from source, run the tests, add an endpoint, plugin, pack or page | [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) |
-| Connect your own data | [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md) and [CONFIGURATION.md](CONFIGURATION.md) |
-| Turn on sign-in and run it for others | [USER_MANAGEMENT.md](USER_MANAGEMENT.md) and [OPERATIONS.md](OPERATIONS.md) |
-| See every document | [the documentation map](README.md) |
+| Connect your own data | [PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md) and [CONFIGURATION.md](../admin/CONFIGURATION.md) |
+| Turn on sign-in and run it for others | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) and [OPERATIONS.md](../admin/OPERATIONS.md) |
+| See every document | [the documentation map](../README.md) |
 
 ---
 

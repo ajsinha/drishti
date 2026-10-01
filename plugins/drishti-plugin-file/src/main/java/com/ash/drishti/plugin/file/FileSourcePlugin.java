@@ -46,7 +46,7 @@ import java.util.stream.Stream;
  * {@code <root>/<kind>.jsonl}), each line an entity (see {@link JsonlDay}); a day's file is indexed once (ids with
  * their byte offsets, and the kind's promoted fields as columns), so a million lines a day are served by a positioned
  * read per entity and searches, derived kinds, impact and reverse lookups from the columns. See
- * {@code docs/FILE_CONNECTOR.md}.
+ * {@code docs/connectors/FILE_CONNECTOR.md}.
  *
  * <p>Also serves feed files from a directory laid out as {@code <root>/<kind>/<id>.json} or {@code .csv}, and, for dated
  * data, {@code <root>/<yyyy-MM-dd>/<kind>/<id>.json}. A read for a business date takes the file from the latest

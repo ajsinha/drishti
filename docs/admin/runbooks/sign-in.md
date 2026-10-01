@@ -24,7 +24,7 @@ sign-on (OIDC), the provider replaces the password step. Users, roles and the au
 [USER_MANAGEMENT.md](../USER_MANAGEMENT.md).
 
 The examples use `http://localhost:18480` for the server and `http://localhost:17480` for the console.
-Admin calls to the server need an admin's token when security is on (see [API_GUIDE.md](../API_GUIDE.md)); the
+Admin calls to the server need an admin's token when security is on (see [API_GUIDE.md](../../guides/API_GUIDE.md)); the
 console's admin pages do the same for you.
 
 ## Symptoms

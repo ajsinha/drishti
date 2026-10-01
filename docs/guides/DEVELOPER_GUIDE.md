@@ -21,7 +21,7 @@ worked recipes for the changes people make most often. Every class, path and com
 repository; the recipes follow the idioms of the real classes they imitate.
 
 If you only want to run Drishti, read [QUICKSTART.md](QUICKSTART.md) or [GETTING_STARTED.md](GETTING_STARTED.md).
-For the design and its reasons, read [ARCHITECTURE.md](ARCHITECTURE.md) and the [decision records](adr/README.md).
+For the design and its reasons, read [ARCHITECTURE.md](../architecture/ARCHITECTURE.md) and the [decision records](../architecture/adr/README.md).
 
 **Contents**
 
@@ -71,7 +71,7 @@ inherits from `spring-boot-starter-parent`, which aligns library versions, so th
 Each plugin is its own module under `plugins/`, depends on `drishti-api` only (plus `drishti-common` and
 `drishti-testkit` for tests), and registers itself in `src/main/resources/META-INF/services/com.ash.drishti.api.SourcePlugin`.
 The server depends on all of them, so they are on its class path; each starts only when enabled or used by a
-named connector (see [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md)).
+named connector (see [PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md)).
 
 | Module | Plugin name | Reads | Extra internal dependency |
 |---|---|---|---|
@@ -118,7 +118,7 @@ drishti-benchmarks                (inference)
 | `console/` | The web console: `run_drishti_web.py` (entry point), `core/` (app factory, backend client, auth, business date, packs, config loader), `routes/` (one router per area), `web/templates/` (Jinja2, with `_macros/panels.html` holding one macro per panel kind), `web/static/` (`js/`, `css/`, `img/`, and third-party code under `vendor/`), `web/guides/` (in-app guides), `config/` (`application.yaml`, `help.yaml`, `workspaces.yaml`, `competitive.yaml`), `tests/` (pytest, with a fake backend in `conftest.py`) |
 | `packs/<name>/` | One domain pack: `pack.yaml`, `sutras/`, `samples/`, `config/` (formats, semantics, help, workspaces), `guides/`. Fourteen ship. |
 | `tools/packgen/` | Pack generators: `banking/` (five banking packs from one taxonomy), `common/packbuild.py` (the shared builder), and one `make.py` per other generated pack (`climate`, `economics`, `genomics`, `liquidity`, `oprisk`, `politics`, `retail`) |
-| `tools/load-delta.sh`, `tools/load-postgres.sh`, `tools/load-aerospike.sh` | Build or load the demo data in each store, small (the samples) to a million trades a day (`--trades N --days D`); see [DEMO_DATA.md](DEMO_DATA.md) |
+| `tools/load-delta.sh`, `tools/load-postgres.sh`, `tools/load-aerospike.sh` | Build or load the demo data in each store, small (the samples) to a million trades a day (`--trades N --days D`); see [DEMO_DATA.md](../connectors/DEMO_DATA.md) |
 | `tools/samplegen/` | Sample-history helpers: `lake.py` (Delta Lake writer), `layout.py` (the pack-declared lake layout: promoted columns, sorted files), `bulk_trades.py` (a large trading book for scale tests: `--trades`, `--days`), `stream.py` (Kafka ticker), plus `test_samplegen.py` and `test_layout.py` |
 | `tools/lake/` | `maintain.py`: Delta Lake retention, compaction (layout-preserving for laid-out tables), checkpoints, vacuum and `relayout`; `test_maintain.py` |
 | `tools/packreg/` | `packreg.py`: signing keys, publishing packs to a signed registry, verifying one (ADR-018); `test_packreg.py` |
@@ -126,7 +126,7 @@ drishti-benchmarks                (inference)
 | `deploy/` | `server.Dockerfile`, `console.Dockerfile`, `compose.yaml`, `compose.data.yaml`, `lake-maintenance.yaml`, `grafana/` |
 | `config/license-header.txt` | The text of the copyright header that `license_headers.py` inserts |
 | `data/` | Runtime and generated data, all git-ignored: `delta/` (the sample lake, `make_data.py --lake`), `feeds/` (`make_data.py`), `banking.jsonl` (`make_data.py --jsonl`, for Aerospike), `identity/` (the SQLite database), `governance/` (Sutra proposals), `reports/` |
-| `docs/` | These documents, the ADRs under `adr/`, the runbooks under `runbooks/`, and the reference mockups under `requirements/` |
+| `docs/` | These documents, by audience: `guides/` (quickstart, user, developer, API, Rachana and troubleshooting guides), `connectors/` (the connector and plugin guides, a design document per store, demo data), `admin/` (operations, configuration, users, performance, and the runbooks under `admin/runbooks/`), `architecture/` (architecture, design notes and the ADRs under `architecture/adr/`); `README.md` is the index; reference mockups and logos under `requirements/` |
 | `.github/workflows/fast.yml` | CI: `./mvnw -B -q verify` and the header check on Java 21; `pytest` for the console on Python 3.13 |
 
 ---
@@ -479,7 +479,7 @@ bind". In code:
 | 6 | `engine.live.ViewStream`, `PatchDiffer` | On a tick, the view is rebuilt (`ViewPipeline.build`) and `PatchDiffer.diff(before, after)` produces `Patch`es; they travel as a `Frame`. |
 | 7 | `live.js` | Applies the patches in place: strip cells get new text and tone, panels are swapped for the server-rendered HTML, charts move to new data, and changed values flash. |
 
-[LIVE.md](LIVE.md) has the details: frames, coalescing, reconnects and the latency metrics.
+[LIVE.md](../architecture/LIVE.md) has the details: frames, coalescing, reconnects and the latency metrics.
 
 ---
 
@@ -626,7 +626,7 @@ in `console/tests/conftest.py`.
 ### 5.2 Add a source plugin
 
 **Goal:** a plugin `ndjson` that serves `<root>/<kind>.ndjson`, one JSON document per line, each with an `id`
-field. Read [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md) for the full SPI; this recipe shows the shape of a new module.
+field. Read [PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md) for the full SPI; this recipe shows the shape of a new module.
 
 **1. Create the module** `plugins/drishti-plugin-ndjson/pom.xml`. Depend on `drishti-api` only; the other
 internal modules are for tests:
@@ -859,7 +859,7 @@ until configured, like the other optional plugins:
 
 Route kinds to it with `drishti.sources.routes` (`trade: ndjson`) or run it several times as named connectors
 (`drishti.sources.connectors.<name>: {plugin: ndjson, settings: {...}, kinds: [...]}`). Document the settings in
-[PLUGIN_GUIDE.md](PLUGIN_GUIDE.md) and [CONFIGURATION.md](CONFIGURATION.md), and add the module to the plugin table
+[PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md) and [CONFIGURATION.md](../admin/CONFIGURATION.md), and add the module to the plugin table
 in this guide and in `README.md`.
 
 ### 5.3 Add a Rachana-EL function
@@ -867,7 +867,7 @@ in this guide and in `README.md`.
 **Goal:** `round(x, digits?)` rounds half up: `round(2.345, 2)` is `2.35`.
 
 Adding a function changes the grammar: record it as an amendment to
-[ADR-003](adr/003-sutra-is-yaml-with-a-closed-expression-language.md). Functions must stay pure, total (odd input
+[ADR-003](../architecture/adr/003-sutra-is-yaml-with-a-closed-expression-language.md). Functions must stay pure, total (odd input
 gives `null`, never an exception) and cheap.
 
 **1. Register it** in `drishti-rachana/src/main/java/com/ash/drishti/rachana/el/Functions.java`. `ARITY` holds
@@ -1198,7 +1198,7 @@ curl -s localhost:18480/api/v1/views/wind-farm/WF-HORNSEA-1 | python3 -c 'import
 
 You should see `['banking-core', 'energy']`, `{}` for problems, `"packsWithProblems": 0`, and
 `Energy · Wind farm ['turbines', 'refs']`: the sample laid out by the `wind-farm` Sutra. The parent `banking-core` reads its reference data from the Delta Lake under `data/delta`, which
-is not in git: build it once (`make_data.py --lake data/delta`, see [README.md](../README.md)) or point
+is not in git: build it once (`make_data.py --lake data/delta`, see [README.md](../../README.md)) or point
 `DRISHTI_DELTA_ROOT` at one; without it `banking-core` reports its `reference-store` connector `DOWN` and counts in
 `packsWithProblems`. Two packs that define the
 same mnemonic, role or connector differently without one extending the other stop the server at start-up: that is
@@ -1469,7 +1469,7 @@ drishti:
 The default in the YAML and in the record must agree: the record's default applies when the key is absent
 (`SearchProperties` keys are not in the bundled file at all).
 
-**4. Document it** in [CONFIGURATION.md](CONFIGURATION.md), in the section for its prefix: key, default, meaning,
+**4. Document it** in [CONFIGURATION.md](../admin/CONFIGURATION.md), in the section for its prefix: key, default, meaning,
 and the environment variable.
 
 **5. Test it** where the behaviour is, with the property set in the test:
@@ -1631,7 +1631,7 @@ console/.venv/bin/python -m pytest -q console/tests/test_sources.py -k connector
 | Repository rules | `drishti-it` | ArchUnit and file walks | `ArchitectureRulesTest`, `LicenseHeaderTest`, `SourceFileSizeTest` |
 | Documentation | rachana, server | the docs are parsed as code | `DocumentedSutrasTest` (every complete Sutra, a ```` ```yaml ```` block starting `rachana:`, in `docs/`, `console/web/guides/` and pack guides), `RachanaReferenceExampleTest` (the annotated example in `RACHANA_REFERENCE.md` previews as described), `PackSutrasTest` |
 | Performance gate | `drishti-server` | timed in the test | `ViewPipelineTest.warmViewsStayWellUnderFiftyMillisecondsAtP99`: 300 warm-up views, then 2000 timed; p99 must be under 50ms and the layout cache hit rate above 0.99 |
-| Micro-benchmarks | `drishti-benchmarks` | JMH, run by hand | `HotPathBenchmark` ([PERFORMANCE.md](PERFORMANCE.md) has the commands) |
+| Micro-benchmarks | `drishti-benchmarks` | JMH, run by hand | `HotPathBenchmark` ([PERFORMANCE.md](../admin/PERFORMANCE.md) has the commands) |
 | Console | `console/tests` | pytest with `FakeBackend`; fixtures in `tests/fixtures/` are ViewModels captured from the real server | `test_terminal.py` (every panel kind with broken data), `test_assets_policy.py` (no CDN, no inline code, Python size), `test_contrast.py` (theme contrast), `test_help.py` (every catalogued guide renders) |
 | Python tools | `tools/` | `unittest` | `tools/samplegen/test_samplegen.py`, `tools/lake/test_maintain.py` |
 | Generated content | `tools/packgen`, pack tools | `--check` | run by the drill |
@@ -1662,7 +1662,7 @@ Habits that keep the suite fast and reliable:
 | What did the source send? | `F9` in the view, or `curl -s localhost:18480/api/v1/entities/trade/MX-20000001/raw` (redacted for roles without `raw`) |
 | Which Sutra, how long? | The view JSON's `provenance.layout` (`Sutra irs-fixfloat v1 + inference`, or `inference only`) and `timings` (`fetch`, `layout`, `links`, `bind`, `total` in ms) |
 | What would inference do on its own? | `curl -s localhost:18480/api/v1/studio/inferred/trade/MX-20000001` returns the inferred Sutra as YAML (`text/yaml`, starting `rachana: 1`) |
-| Is a Sutra broken? | `curl -s localhost:18480/api/v1/sutras/problems` (`{}` when none); see [runbooks/sutra-broken.md](runbooks/sutra-broken.md) |
+| Is a Sutra broken? | `curl -s localhost:18480/api/v1/sutras/problems` (`{}` when none); see [runbooks/sutra-broken.md](../admin/runbooks/sutra-broken.md) |
 | Which sources run? | `curl -s localhost:18480/api/v1/sources` (and `failures`) |
 | What changed between dates? | `curl -s localhost:18480/api/v1/history/trade/MX-20000001/diff` |
 | How are live streams doing? | `curl -s localhost:18480/api/v1/health/live` → `{"streams":…,"topics":…,"frames":…,"p50Ms":…,"p99Ms":…}` |
@@ -1712,7 +1712,7 @@ The console runs Uvicorn with access logs off (`access_log=False` in `run_drisht
    vendor upgrades) are not fingerprinted; change their name or bump `ASSET_VERSION`.
 3. **Editing generated files.** Generated `pack.yaml`, Sutras, samples, guides and `help.yaml` are overwritten by the
    next generator run, and the drill's `--check` rejects a hand edit. The generated pack manifests even copy their
-   header from lines 2–14 of `docs/RACHANA_REFERENCE.md` (`make_packs.py`), so editing that document's header makes
+   header from lines 2–14 of `docs/guides/RACHANA_REFERENCE.md` (`make_packs.py`), so editing that document's header makes
    them stale too.
 4. **Sutras in documentation are compiled.** `DocumentedSutrasTest` parses every ```` ```yaml ```` block whose first
    line after any comments is `rachana:` in `docs/`, `console/web/guides/` and pack guides, and compiles its
@@ -1779,7 +1779,7 @@ The release commit for 1.9.0 (`Release 1.9.0`) shows every file a bump touches.
 
 8. **Images (optional):** `docker build -f deploy/server.Dockerfile -t drishti-server:X.Y.Z .` and
    `docker build -f deploy/console.Dockerfile -t drishti-console:X.Y.Z .` from the repository root, after building
-   the jar. [OPERATIONS.md](OPERATIONS.md) covers deployment and upgrades.
+   the jar. [OPERATIONS.md](../admin/OPERATIONS.md) covers deployment and upgrades.
 
 ---
 

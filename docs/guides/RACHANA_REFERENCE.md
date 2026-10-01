@@ -626,7 +626,7 @@ column with `area: right`.
 | `key` | | none | A function key `F1`–`F12`, unique across panels and `keys` (`DRS-2025`). Pressing it scrolls to the panel and flashes it. Avoid `F1`, which the console uses for help. |
 | `code` | | none | A short tag shown at the right of the panel header (`CRV`, `SENS`). |
 | `area` | | `main` | `main` or `right` (any case; anything else is `DRS-2027`). |
-| `infer` | | `false` | Marks the panel as completed by inference (an *inferred* tag in its header). Inference fills a panel's columns whenever it states none, with or without this flag; see [Inference](INFERENCE.md#sutra-and-inference-together). |
+| `infer` | | `false` | Marks the panel as completed by inference (an *inferred* tag in its header). Inference fills a panel's columns whenever it states none, with or without this flag; see [Inference](../architecture/INFERENCE.md#sutra-and-inference-together). |
 | `columns` | | empty | The columns or fields; see below. Used by `kv`, `table`, `ladder`, `tabs` (in the body) and `surface`. |
 | `body` | `tabs` only | | The panel drawn once per tab. On any other kind, `DRS-2023 only 'tabs' panels take a 'body'`. |
 | `description` | | none | Plain text for authors: what the panel shows. Not shown in the view. |
@@ -1227,7 +1227,7 @@ value, never an error page.
 | strip `bind`, column `bind`, status field `bind` | expression |
 | `rows`, `each`, `tabTitle`, `moreLabel`, `highlight`, `source`, `mark`, area `limit`, gauge `value`/`max` | expression |
 | `keys` entries starting with `link(` | expression |
-| alert rules (`when`, `message`) | expression, template (see [LIVE.md](LIVE.md#monitors-and-alerts)) |
+| alert rules (`when`, `message`) | expression, template (see [LIVE.md](../architecture/LIVE.md#monitors-and-alerts)) |
 
 ### Lexical rules
 
@@ -1671,4 +1671,4 @@ wins matching.
 | `packs/finance/sutras/credit/netting-set.v1.sutra.yaml` | `NSET NS-NORTH-01` | `link: true` columns, kv with inferred fields |
 
 For a guided, step-by-step introduction, see [RACHANA_GUIDE.md](RACHANA_GUIDE.md). For how inference fills
-what a Sutra leaves out, see [INFERENCE.md](INFERENCE.md).
+what a Sutra leaves out, see [INFERENCE.md](../architecture/INFERENCE.md).

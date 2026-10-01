@@ -20,64 +20,64 @@ categories:
     icon: flag
     blurb: Open your first view, learn the command line and the keys, and read what a view is telling you.
     guides:
-      - { slug: quickstart, doc: QUICKSTART.md, title: Quickstart, icon: lightning, summary: "Ten minutes from a fresh clone to a live view: build, start, and eight commands to try." }
-      - { slug: install-and-run, doc: GETTING_STARTED.md, title: Install and run, icon: download, summary: "From nothing to your first view: build, start, sign in, and the first commands to type, step by step." }
+      - { slug: quickstart, doc: guides/QUICKSTART.md, title: Quickstart, icon: lightning, summary: "Ten minutes from a fresh clone to a live view: build, start, and eight commands to try." }
+      - { slug: install-and-run, doc: guides/GETTING_STARTED.md, title: Install and run, icon: download, summary: "From nothing to your first view: build, start, sign in, and the first commands to type, step by step." }
       - { slug: impact, title: F8 · Impact, icon: diagram-3, summary: "What depends on an entity: its dependents, what they roll into, and the amount at stake." }
       - { slug: monitors-and-alerts, title: Monitors and alerts, icon: bell, summary: "Live watchlists, and rules the server checks on every change: alerted once, re-armed when clear." }
       - { slug: workspaces, title: Workspaces, icon: grid-1x2, summary: "Several live views on one screen, panes that follow each other, saved per user." }
-      - { slug: using-the-terminal, doc: USER_GUIDE.md, title: Using the terminal, icon: terminal, summary: "Commands, type-ahead, every key, and how to read the strip, panels, links and provenance." }
+      - { slug: using-the-terminal, doc: guides/USER_GUIDE.md, title: Using the terminal, icon: terminal, summary: "Commands, type-ahead, every key, and how to read the strip, panels, links and provenance." }
   - id: layouts
     name: Layouts, Rachana and Sutras
     icon: braces
     blurb: How screens are described instead of coded. Rachana is the grammar; each Sutra is one layout written in it.
     guides:
-      - { slug: rachana-guide, doc: RACHANA_GUIDE.md, title: Rachana, step by step, icon: mortarboard, summary: "A tutorial from your first Sutra to a full trade view: strips, panels, tables, charts, keys, conditions, matching and review." }
+      - { slug: rachana-guide, doc: guides/RACHANA_GUIDE.md, title: Rachana, step by step, icon: mortarboard, summary: "A tutorial from your first Sutra to a full trade view: strips, panels, tables, charts, keys, conditions, matching and review." }
       - { slug: sutra-guide, title: The Sutra guide, icon: journal-richtext, summary: "Everything about writing Sutras: anatomy, labels and taxonomies, paths, formats, all thirteen panel kinds with screenshots, matching, inference, Studio." }
       - { slug: panel-kinds, title: The thirteen panel kinds, icon: grid-1x2, summary: "What each panel kind shows, when to use it, and the Sutra that produces it." }
       - { slug: sutra-studio, title: "Tutorial 3 · Sutra Studio", kind: tutorial, icon: stars, summary: "Start from inference, edit with live preview, fix problems by line, and save." }
       - { slug: nested-data, title: "Tutorial 4 · Nested documents", kind: tutorial, icon: diagram-2, summary: "Paths of any depth, tables over nested arrays, tabs per element, and a whole Sutra over a real trade." }
-      - { slug: rachana-reference, doc: RACHANA_REFERENCE.md, title: Rachana reference, icon: book, summary: "Every key, panel option, format, tone, Rachana-EL expression and problem code." }
-      - { slug: inference, doc: INFERENCE.md, title: Inference, icon: diagram-3, summary: "The rules that lay out data with no Sutra, how they are scored, and how they fill a Sutra's gaps." }
+      - { slug: rachana-reference, doc: guides/RACHANA_REFERENCE.md, title: Rachana reference, icon: book, summary: "Every key, panel option, format, tone, Rachana-EL expression and problem code." }
+      - { slug: inference, doc: architecture/INFERENCE.md, title: Inference, icon: diagram-3, summary: "The rules that lay out data with no Sutra, how they are scored, and how they fill a Sutra's gaps." }
   - id: data
     name: Data and live updates
     icon: activity
     blurb: Where entities come from, how they tick, and how fast.
     guides:
-      - { slug: plugins, doc: PLUGIN_GUIDE.md, title: Sources and plugins, icon: plug, summary: "The source SPI, business dates, named connectors, routing, and the demo, file, REST, JDBC and Delta Lake plugins." }
-      - { slug: live, doc: LIVE.md, title: Live updates, icon: broadcast, summary: "Topics, frames, patches, slow clients and reconnects." }
-      - { slug: performance, doc: PERFORMANCE.md, title: Performance, icon: speedometer2, summary: "Measured numbers and why the pipeline is fast." }
+      - { slug: plugins, doc: connectors/PLUGIN_GUIDE.md, title: Sources and plugins, icon: plug, summary: "The source SPI, business dates, named connectors, routing, and the demo, file, REST, JDBC and Delta Lake plugins." }
+      - { slug: live, doc: architecture/LIVE.md, title: Live updates, icon: broadcast, summary: "Topics, frames, patches, slow clients and reconnects." }
+      - { slug: performance, doc: admin/PERFORMANCE.md, title: Performance, icon: speedometer2, summary: "Measured numbers and why the pipeline is fast." }
   - id: packs
     name: Domain packs
     icon: box-seam
     blurb: The industries plugged in, what each pack holds, its data model and its example commands.
     guides:
-      - { slug: packs, doc: PACKS.md, title: Domain packs, icon: box-seam, summary: "How industries plug in: what a pack contains, dependencies, connectors and routes, enabling packs, and writing your own." }
+      - { slug: packs, doc: guides/PACKS.md, title: Domain packs, icon: box-seam, summary: "How industries plug in: what a pack contains, dependencies, connectors and routes, enabling packs, and writing your own." }
       - { slug: build-a-pack, title: "Tutorial 5 · Build a domain pack", kind: tutorial, icon: hammer, summary: "Describe kinds and documents in Python; the common pack builder checks them and writes the manifest, Sutras, samples, guide and lake." }
   - id: admin
     name: Administration
     icon: shield-lock
     blurb: Users and roles, running Drishti, and what to do when something goes wrong.
     guides:
-      - { slug: user-management, doc: USER_MANAGEMENT.md, title: Users and roles, icon: people, summary: "The seeded admin, managing users, password rules, lockout and the audit log." }
-      - { slug: operations, doc: OPERATIONS.md, title: Operations, icon: hdd-stack, summary: "Deploying, the security checklist, monitoring and capacity." }
-      - { slug: configuration, doc: CONFIGURATION.md, title: Configuration, icon: sliders, summary: "Every server and console setting with its default." }
-      - { slug: troubleshooting, doc: TROUBLESHOOTING.md, title: Troubleshooting, icon: life-preserver, summary: "Symptoms, likely causes and fixes." }
-      - { slug: runbook-source-down, doc: runbooks/source-down.md, title: "Runbook · Source down", icon: exclamation-triangle, summary: "Views fail or links stay pending." }
-      - { slug: runbook-sutra-broken, doc: runbooks/sutra-broken.md, title: "Runbook · A Sutra is broken", icon: exclamation-triangle, summary: "Problems after an edit; the last good version stays live." }
-      - { slug: runbook-live-latency, doc: runbooks/live-latency-high.md, title: "Runbook · Live latency high", icon: exclamation-triangle, summary: "The top bar p99 is above target." }
-      - { slug: runbook-sign-in, doc: runbooks/sign-in.md, title: "Runbook · Sign-in problems", icon: exclamation-triangle, summary: "Wrong password, locked, disabled, no admin." }
+      - { slug: user-management, doc: admin/USER_MANAGEMENT.md, title: Users and roles, icon: people, summary: "The seeded admin, managing users, password rules, lockout and the audit log." }
+      - { slug: operations, doc: admin/OPERATIONS.md, title: Operations, icon: hdd-stack, summary: "Deploying, the security checklist, monitoring and capacity." }
+      - { slug: configuration, doc: admin/CONFIGURATION.md, title: Configuration, icon: sliders, summary: "Every server and console setting with its default." }
+      - { slug: troubleshooting, doc: guides/TROUBLESHOOTING.md, title: Troubleshooting, icon: life-preserver, summary: "Symptoms, likely causes and fixes." }
+      - { slug: runbook-source-down, doc: admin/runbooks/source-down.md, title: "Runbook · Source down", icon: exclamation-triangle, summary: "Views fail or links stay pending." }
+      - { slug: runbook-sutra-broken, doc: admin/runbooks/sutra-broken.md, title: "Runbook · A Sutra is broken", icon: exclamation-triangle, summary: "Problems after an edit; the last good version stays live." }
+      - { slug: runbook-live-latency, doc: admin/runbooks/live-latency-high.md, title: "Runbook · Live latency high", icon: exclamation-triangle, summary: "The top bar p99 is above target." }
+      - { slug: runbook-sign-in, doc: admin/runbooks/sign-in.md, title: "Runbook · Sign-in problems", icon: exclamation-triangle, summary: "Wrong password, locked, disabled, no admin." }
   - id: developers
     name: Developers
     icon: code-square
     blurb: The API, the design, and why it is the way it is.
     guides:
-      - { slug: connectors, doc: CONNECTOR_GUIDE.md, title: Connector guide, icon: plug, summary: "Get your data in: which connector to use, a worked set-up for each, routing, reconnecting, health and troubleshooting." }
-      - { slug: clients, doc: CLIENTS.md, title: Scripts, notebooks and Excel, icon: filetype-py, summary: "Personal API tokens, the Python client, and Excel through Power Query: read anything you may open, from code." }
-      - { slug: developer-guide, doc: DEVELOPER_GUIDE.md, title: Developer guide, icon: tools, summary: "Repository map, building and testing, project rules, the request path, and recipes for endpoints, plugins, panel kinds, packs and pages." }
-      - { slug: api, doc: API_GUIDE.md, title: API guide, icon: braces-asterisk, summary: "REST endpoints, the ViewModel contract and error codes." }
-      - { slug: architecture, doc: ARCHITECTURE.md, title: Architecture, icon: diagram-2, summary: "The pipeline, grammar, inference, live updates, modules and UX." }
-      - { slug: decisions, doc: adr/README.md, title: Decision records, icon: signpost-split, summary: "The architecture decisions, each with its context and consequences." }
-      - { slug: plan, doc: IMPLEMENTATION_PLAN.md, title: Implementation plan, icon: map, summary: "The waves, their exit gates, and the roadmap." }
+      - { slug: connectors, doc: connectors/CONNECTOR_GUIDE.md, title: Connector guide, icon: plug, summary: "Get your data in: which connector to use, a worked set-up for each, routing, reconnecting, health and troubleshooting." }
+      - { slug: clients, doc: guides/CLIENTS.md, title: Scripts, notebooks and Excel, icon: filetype-py, summary: "Personal API tokens, the Python client, and Excel through Power Query: read anything you may open, from code." }
+      - { slug: developer-guide, doc: guides/DEVELOPER_GUIDE.md, title: Developer guide, icon: tools, summary: "Repository map, building and testing, project rules, the request path, and recipes for endpoints, plugins, panel kinds, packs and pages." }
+      - { slug: api, doc: guides/API_GUIDE.md, title: API guide, icon: braces-asterisk, summary: "REST endpoints, the ViewModel contract and error codes." }
+      - { slug: architecture, doc: architecture/ARCHITECTURE.md, title: Architecture, icon: diagram-2, summary: "The pipeline, grammar, inference, live updates, modules and UX." }
+      - { slug: decisions, doc: architecture/adr/README.md, title: Decision records, icon: signpost-split, summary: "The architecture decisions, each with its context and consequences." }
+      - { slug: plan, doc: architecture/IMPLEMENTATION_PLAN.md, title: Implementation plan, icon: map, summary: "The waves, their exit gates, and the roadmap." }
   - id: releases
     name: Releases and legal
     icon: tag

@@ -36,7 +36,7 @@
 
 *2026-10-01.* **Tokens, history and freshness.**
 - **Personal API tokens:** read-only, revocable, kept only as a hash and audited. You make them under *My account*, and administrators manage them in Admin → Tokens.
-- **Clients:** a standard-library Python client (`clients/python/drishti_client.py`), searches as CSV, and Excel through Power Query (see `docs/CLIENTS.md`).
+- **Clients:** a standard-library Python client (`clients/python/drishti_client.py`), searches as CSV, and Excel through Power Query (see `docs/guides/CLIENTS.md`).
 - **Field history:** click a number in a view to see it over the last 10, 30, 90 or 250 business days, as a chart and a table. The window also shows where the value comes from: its path, connector, business date and generation.
 - **Search compare:** the search page's **Compare with** shows each number's change between two dates and marks entities added or removed.
 - **Freshness:** a view's footer says when its source last received new data. A connector's `stale-after` setting marks it behind, with a banner on views and a **Last update** column in Admin → Health, and the overall status turns `DEGRADED`.
@@ -167,7 +167,7 @@ depends on an entity, what that rolls into, and the amount at stake.
 *2026-09-30.* **Domain packs.** Drishti's core is now industry-neutral. Finance (the mockups) and
 logistics (shipments, containers, vessels, ports) ship as packs, enabled with `DRISHTI_PACKS`. A new
 industry needs configuration and content only: Sutras, vocabulary, links, roles, samples and guides.
-See `docs/PACKS.md`.
+See `docs/guides/PACKS.md`.
 
 ---
 
@@ -211,7 +211,7 @@ The help renders the repository's own docs, so the two cannot drift apart.
 
 A development admin, `drishti-dev-admin` / `drishti-dev-admin123`, is created on an empty store.
 Change its password, or set `DRISHTI_SEED_ADMIN=false`. Nobody is forced to change a password unless
-that is configured. See `docs/USER_MANAGEMENT.md`.
+that is configured. See `docs/admin/USER_MANAGEMENT.md`.
 
 ---
 
@@ -251,7 +251,7 @@ inference fills whatever a Sutra leaves out.
 ## Measured
 
 Warm view p99 < 50 ms (a build gate); cold IRS view about 14 ms; Rachana-EL evaluation 10–50 ns;
-cold inference about 13 µs; live p99 about 11 ms. See `docs/PERFORMANCE.md`.
+cold inference about 13 µs; live p99 about 11 ms. See `docs/admin/PERFORMANCE.md`.
 
 ## Known limits (stated plainly)
 
@@ -261,13 +261,13 @@ cold inference about 13 µs; live p99 about 11 ms. See `docs/PERFORMANCE.md`.
   and databases.
 - **F8 Impact** is reserved but not implemented.
 - **Docker images** are defined (`deploy/`), but were not built in the release environment because
-  it had no Docker daemon access. Build them with the commands in `docs/OPERATIONS.md`.
+  it had no Docker daemon access. Build them with the commands in `docs/admin/OPERATIONS.md`.
 - **Studio saving** writes files locally. There is no review workflow yet; Sutras are expected to go
   through version control.
 
 ## Upgrading
 
-This is the first release. Configuration keys are documented in `docs/CONFIGURATION.md`.
+This is the first release. Configuration keys are documented in `docs/admin/CONFIGURATION.md`.
 
 ---
 

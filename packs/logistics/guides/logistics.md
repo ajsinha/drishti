@@ -62,4 +62,4 @@ the pack's vocabulary instead: weights, temperatures and delays are recognised a
 Containers, vessels and ports have no Sutra and are always inferred.
 
 !!! note "Turning the pack on or off"
-    `DRISHTI_PACKS=finance,logistics` (the default is `finance`). See [Domain packs](../../../docs/PACKS.md).
+    `DRISHTI_PACKS=finance,logistics` (the default is `finance`). See [Domain packs](../../../docs/guides/PACKS.md).

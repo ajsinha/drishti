@@ -46,7 +46,7 @@ import java.util.function.Predicate;
 
 /**
  * What table mode keeps in memory so that a table of a million entities a business day over years answers quickly
- * (see {@code docs/POSTGRES_CONNECTOR.md}): each kind's business dates (from the loader's dates table, else a skip
+ * (see {@code docs/connectors/POSTGRES_CONNECTOR.md}): each kind's business dates (from the loader's dates table, else a skip
  * scan of the index), the newest day's ids for type-ahead (read from the index alone), and days of promoted columns
  * for searches, pick lists, derived kinds, impact and reverse lookups, read in parallel by id range and kept by memory.
  * Nothing here ever reads a document.

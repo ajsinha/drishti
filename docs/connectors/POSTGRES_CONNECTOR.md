@@ -22,7 +22,7 @@ manageable. It covers the table layout, the loader, each read path, retention, s
 
 Read it if you run Drishti on PostgreSQL, load PostgreSQL for Drishti, or change the connector. For a first setup see
 [CONNECTOR_GUIDE.md](CONNECTOR_GUIDE.md#7-a-database-loaded-for-drishti-jdbc-table-mode); every setting is in
-[CONFIGURATION.md](CONFIGURATION.md#jdbc--a-database). The same design for the other stores is in
+[CONFIGURATION.md](../admin/CONFIGURATION.md#jdbc--a-database). The same design for the other stores is in
 [DELTA_CONNECTOR.md](DELTA_CONNECTOR.md) (whose [section 7](DELTA_CONNECTOR.md#7-searches-pick-lists-derived-kinds-and-impact-over-columns)
 explains how the engine uses a day's columns) and [AEROSPIKE_CONNECTOR.md](AEROSPIKE_CONNECTOR.md). To build demo data
 of any size, see [DEMO_DATA.md](DEMO_DATA.md).

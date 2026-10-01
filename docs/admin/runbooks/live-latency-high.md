@@ -16,11 +16,11 @@
 # Runbook: live latency high, or live views stop ticking
 
 Use this runbook when live views are slow, late or frozen. How live updates work is explained in
-[LIVE.md](../LIVE.md); the normal numbers are in [PERFORMANCE.md](../PERFORMANCE.md).
+[LIVE.md](../../architecture/LIVE.md); the normal numbers are in [PERFORMANCE.md](../PERFORMANCE.md).
 
 The examples use `http://localhost:18480` for the server and `http://localhost:17480` for the console.
 Replace them with your hosts. With security on, add `-H "Authorization: Bearer $TOKEN"` to server calls
-(see [API_GUIDE.md](../API_GUIDE.md)). `/actuator/health` needs no token; the rest of `/actuator`
+(see [API_GUIDE.md](../../guides/API_GUIDE.md)). `/actuator/health` needs no token; the rest of `/actuator`
 (`/actuator/prometheus`, `/actuator/metrics`) needs the scrape token `DRISHTI_METRICS_TOKEN` or an admin's token
 when security is on:
 
@@ -186,7 +186,7 @@ drishti:
 
 **Fix B. Make the expensive view cheaper.** Open the Sutra named in the view's provenance
 (`"layout":"Sutra cmd-forward v1 + inference"`) in Studio (`/studio`) and reduce what it binds: fewer columns
-in large tables, fewer rows, simpler expressions. See [RACHANA_REFERENCE.md](../RACHANA_REFERENCE.md).
+in large tables, fewer rows, simpler expressions. See [RACHANA_REFERENCE.md](../../guides/RACHANA_REFERENCE.md).
 
 **Fix C. Add capacity or cap streams.** Run another server behind the load balancer; topics and streams are per
 server, so load spreads by user. To protect a server from a burst, lower the cap. Requests over it get

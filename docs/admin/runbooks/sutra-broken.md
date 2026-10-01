@@ -19,7 +19,7 @@ A *Sutra* is the file that lays out the view of one family of entities, for exam
 `packs/trading/sutras/commodity/cmd-forward.v1.sutra.yaml` for commodity forwards. A Sutra is one YAML file, `<name>.v<N>.sutra.yaml`, whose
 first key is `rachana: 1` (the Rachana language version). Sutras are read from the
 enabled packs' `sutras/` folders and from the site directory (`drishti.rachana.dirs`, default `./sutras`,
-environment `DRISHTI_SUTRAS`). The grammar is in [RACHANA_REFERENCE.md](../RACHANA_REFERENCE.md).
+environment `DRISHTI_SUTRAS`). The grammar is in [RACHANA_REFERENCE.md](../../guides/RACHANA_REFERENCE.md).
 
 **What Drishti does with a bad Sutra.** An invalid edit never takes a view down. The server reloads a changed
 file within about 250 ms (`drishti.rachana.reload-debounce`). If the new text is invalid, the last good version
@@ -209,7 +209,7 @@ to jump to it. The preview changes nothing on the server.
 works at once, but the drill (`tools/drill.sh`) then fails with `… out of date`, and the next run of the
 generator undoes it. Use the in-place fix only to restore service; then make the same change in the generator (or the taxonomy
 it reads, `tools/packgen/banking/taxonomy.py`), run it, and commit both. The banking packs' Sutras come from `tools/packgen/banking/make_sutras.py`; the
-others from `tools/packgen/<area>/make.py` ([PACKS.md](../PACKS.md#how-the-shipped-packs-are-generated)).
+others from `tools/packgen/<area>/make.py` ([PACKS.md](../../guides/PACKS.md#how-the-shipped-packs-are-generated)).
 To change a generated layout for your site only, save a higher version in the site Sutra folder (Studio does
 this) instead of editing the pack.
 

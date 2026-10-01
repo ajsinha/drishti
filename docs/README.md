@@ -11,12 +11,21 @@ are, so fixing a file here fixes the help.
 
 ## New here? Read these, in order
 
-1. **[QUICKSTART.md](QUICKSTART.md)**: ten minutes from a fresh clone to your first live view, commands only.
-2. **[USER_GUIDE.md](USER_GUIDE.md)**: every feature of the console, each with a worked example.
-3. **[PACKS.md](PACKS.md)**: which industries are available, the commands each one adds, and how to build your own.
+1. **[QUICKSTART.md](guides/QUICKSTART.md)**: ten minutes from a fresh clone to your first live view, commands only.
+2. **[USER_GUIDE.md](guides/USER_GUIDE.md)**: every feature of the console, each with a worked example.
+3. **[PACKS.md](guides/PACKS.md)**: which industries are available, the commands each one adds, and how to build your own.
 
-If the quickstart goes too fast, [GETTING_STARTED.md](GETTING_STARTED.md) walks the same ground with every step
-explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md).
+If the quickstart goes too fast, [GETTING_STARTED.md](guides/GETTING_STARTED.md) walks the same ground with every step
+explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER_GUIDE.md).
+
+## How these documents are organised
+
+| Folder | What is in it |
+|---|---|
+| [guides/](guides/) | getting started, the user, developer, API and Rachana guides, packs, clients and troubleshooting |
+| [connectors/](connectors/) | connecting your data: the connector and plugin guides, a design document per store (Delta Lake, PostgreSQL, Aerospike, files …) and demo data |
+| [admin/](admin/) | running Drishti: operations, configuration, users and roles, performance, and the runbooks |
+| [architecture/](architecture/) | how Drishti is built: the architecture, design notes (inference, live updates), the implementation plan and the decision records (ADRs) |
 
 ## If you want to…
 
@@ -24,73 +33,74 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](DEVEL
 
 | If you want to… | Read |
 |---|---|
-| Get it running in ten minutes | [QUICKSTART.md](QUICKSTART.md) |
-| Install and start it with every step explained | [GETTING_STARTED.md](GETTING_STARTED.md) |
-| Find your way around the top bar and its menus | [USER_GUIDE.md › The top bar](USER_GUIDE.md#the-top-bar) |
-| Read Drishti from a script, a notebook or Excel with a personal API token | [CLIENTS.md](CLIENTS.md) |
-| Open a view, and learn the command line and keys | [USER_GUIDE.md › The command line](USER_GUIDE.md#the-command-line), [Keyboard](USER_GUIDE.md#keyboard) |
-| List entities to pick from (`TRD MX-200000`, `CPTY north`, `TRD productType=Revolver`) | [USER_GUIDE.md › Pick lists](USER_GUIDE.md#pick-lists-when-a-command-names-several-entities) |
-| Page through a table, or walk it with the keyboard | [USER_GUIDE.md › Tables](USER_GUIDE.md#tables-paging-and-the-keyboard) |
-| Understand what a view is showing you | [USER_GUIDE.md › Reading a view](USER_GUIDE.md#reading-a-view) |
-| Find entities by value (`TRD where mtm > 1m …`) | [USER_GUIDE.md › Search by value](USER_GUIDE.md#search-by-value) |
-| Look at a past date, or compare two dates | [USER_GUIDE.md › Business dates](USER_GUIDE.md#business-dates-live-or-a-day-in-the-past), [Compare](USER_GUIDE.md#compare-what-changed) |
+| Get it running in ten minutes | [QUICKSTART.md](guides/QUICKSTART.md) |
+| Install and start it with every step explained | [GETTING_STARTED.md](guides/GETTING_STARTED.md) |
+| Find your way around the top bar and its menus | [USER_GUIDE.md › The top bar](guides/USER_GUIDE.md#the-top-bar) |
+| Read Drishti from a script, a notebook or Excel with a personal API token | [CLIENTS.md](guides/CLIENTS.md) |
+| Open a view, and learn the command line and keys | [USER_GUIDE.md › The command line](guides/USER_GUIDE.md#the-command-line), [Keyboard](guides/USER_GUIDE.md#keyboard) |
+| List entities to pick from (`TRD MX-200000`, `CPTY north`, `TRD productType=Revolver`) | [USER_GUIDE.md › Pick lists](guides/USER_GUIDE.md#pick-lists-when-a-command-names-several-entities) |
+| Page through a table, or walk it with the keyboard | [USER_GUIDE.md › Tables](guides/USER_GUIDE.md#tables-sorting-filtering-paging-and-the-keyboard) |
+| Understand what a view is showing you | [USER_GUIDE.md › Reading a view](guides/USER_GUIDE.md#reading-a-view) |
+| Find entities by value (`TRD where mtm > 1m …`) | [USER_GUIDE.md › Search by value](guides/USER_GUIDE.md#search-by-value) |
+| Look at a past date, or compare two dates | [USER_GUIDE.md › Business dates](guides/USER_GUIDE.md#business-dates-live-or-a-day-in-the-past), [Compare](guides/USER_GUIDE.md#compare-what-changed) |
 | See what depends on an entity (F8) | [Impact guide](../console/web/guides/impact.md) |
-| Download CSV or JSON, print, or share a link | [USER_GUIDE.md › Export, print and share](USER_GUIDE.md#export-print-and-share) |
+| Download CSV or JSON, print, or share a link | [USER_GUIDE.md › Export, print and share](guides/USER_GUIDE.md#export-print-and-share) |
 | Watch a list live, or be alerted when a figure crosses a line | [Monitors and alerts guide](../console/web/guides/monitors-and-alerts.md) |
 | Put several views on one screen | [Workspaces guide](../console/web/guides/workspaces.md) |
-| Change your theme, landing page or password | [USER_GUIDE.md › Your settings](USER_GUIDE.md#your-settings) |
-| Choose which packs you see | [USER_GUIDE.md › Domain packs](USER_GUIDE.md#domain-packs-choosing-what-you-see) |
-| Find the commands for a pack | [PACKS.md › The packs that ship](PACKS.md#the-packs-that-ship), and the pack's own guide under *Help → Domain packs* |
+| Change your theme, landing page or password | [USER_GUIDE.md › Your settings](guides/USER_GUIDE.md#your-settings) |
+| Choose which packs you see | [USER_GUIDE.md › Domain packs](guides/USER_GUIDE.md#domain-packs-choosing-what-you-see) |
+| Find the commands for a pack | [PACKS.md › The packs that ship](guides/PACKS.md#the-packs-that-ship), and the pack's own guide under *Help → Domain packs* |
 
 ### Change how screens look
 
 | If you want to… | Read |
 |---|---|
-| Learn the layout grammar from scratch, lesson by lesson | [RACHANA_GUIDE.md](RACHANA_GUIDE.md) |
+| Learn the layout grammar from scratch, lesson by lesson | [RACHANA_GUIDE.md](guides/RACHANA_GUIDE.md) |
 | Learn what a Sutra is and write one | [Sutra guide](../console/web/guides/sutra-guide.md) |
 | Edit a Sutra with live preview and submit it for review | [Sutra Studio tutorial](../console/web/guides/sutra-studio.md) |
 | Lay out nested documents (lists inside lists) | [Nested documents tutorial](../console/web/guides/nested-data.md) |
 | Choose the right panel kind | [Panel kinds](../console/web/guides/panel-kinds.md) |
-| Look up a key, format, expression or problem code | [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md) |
-| Get completion for Sutras in your own editor (the JSON Schema of the language) | [API_GUIDE.md](API_GUIDE.md#catalogue-about-packs-sources-sutras) (`GET /api/v1/rachana/schema`) |
-| Convert Markdown Sutras (`*.sutra.md`) from before 1.11 | [runbooks/sutra-broken.md](runbooks/sutra-broken.md#step-1a-a-sutramd-or-plain-yaml-file-drs-2004-drs-2009) |
-| Understand the screens Drishti draws with no Sutra | [INFERENCE.md](INFERENCE.md) |
+| Look up a key, format, expression or problem code | [RACHANA_REFERENCE.md](guides/RACHANA_REFERENCE.md) |
+| Get completion for Sutras in your own editor (the JSON Schema of the language) | [API_GUIDE.md](guides/API_GUIDE.md#catalogue-about-packs-sources-sutras) (`GET /api/v1/rachana/schema`) |
+| Convert Markdown Sutras (`*.sutra.md`) from before 1.11 | [runbooks/sutra-broken.md](admin/runbooks/sutra-broken.md#step-1a-a-sutramd-or-plain-yaml-file-drs-2004-drs-2009) |
+| Understand the screens Drishti draws with no Sutra | [INFERENCE.md](architecture/INFERENCE.md) |
 
 ### Add an industry or data
 
 | If you want to… | Read |
 |---|---|
-| Build a pack by hand, from an empty folder to a working view | [PACKS.md › Writing a pack by hand](PACKS.md#writing-a-pack-by-hand-step-by-step) |
-| Load packs, switch them off and on, assign them to users | [PACKS.md](PACKS.md#turning-packs-on) |
+| Build a pack by hand, from an empty folder to a working view | [PACKS.md › Writing a pack by hand](guides/PACKS.md#writing-a-pack-by-hand-step-by-step) |
+| Load packs, switch them off and on, assign them to users | [PACKS.md](guides/PACKS.md#turning-packs-on) |
 | Generate a full pack from Python (Sutras, samples, guide, lake) | [Build a domain pack tutorial](../console/web/guides/build-a-pack.md) |
-| Connect your data, step by step (files, PostgreSQL, Delta Lake, Kafka, S3, REST, …) | [CONNECTOR_GUIDE.md](CONNECTOR_GUIDE.md) |
-| Look up every connector's settings, or write a new plugin | [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md) |
-| Understand live updates (SSE, frames, reconnects) | [LIVE.md](LIVE.md) |
+| Connect your data, step by step (files, PostgreSQL, Delta Lake, Kafka, S3, REST, …) | [CONNECTOR_GUIDE.md](connectors/CONNECTOR_GUIDE.md) |
+| Look up every connector's settings, or write a new plugin | [PLUGIN_GUIDE.md](connectors/PLUGIN_GUIDE.md) |
+| Understand live updates (SSE, frames, reconnects) | [LIVE.md](architecture/LIVE.md) |
 
 ### Run and administer it
 
 | If you want to… | Read |
 |---|---|
-| Create users, give roles and packs, read the audit log | [USER_MANAGEMENT.md](USER_MANAGEMENT.md) |
-| Define roles, or switch a pack off for everyone | [USER_GUIDE.md › Administration](USER_GUIDE.md#administration) |
-| Look up any setting and its environment variable | [CONFIGURATION.md](CONFIGURATION.md) |
-| Deploy, secure and monitor it; keep the lake bounded | [OPERATIONS.md](OPERATIONS.md) |
-| Fix something that is not working | [TROUBLESHOOTING.md](TROUBLESHOOTING.md), then the runbooks below |
-| Know how fast it is, and how that is measured | [PERFORMANCE.md](PERFORMANCE.md) |
-| Serve millions of entities a day for years from Delta Lake | [DELTA_CONNECTOR.md](DELTA_CONNECTOR.md) |
-| Serve millions of entities a day from Aerospike, with recent history there and years in Delta Lake | [AEROSPIKE_CONNECTOR.md](AEROSPIKE_CONNECTOR.md) |
-| Serve millions of entities a day from PostgreSQL | [POSTGRES_CONNECTOR.md](POSTGRES_CONNECTOR.md) |
-| Build demo data in any store, small to a million trades a day | [DEMO_DATA.md](DEMO_DATA.md) |
+| Create users, give roles and packs, read the audit log | [USER_MANAGEMENT.md](admin/USER_MANAGEMENT.md) |
+| Define roles, or switch a pack off for everyone | [USER_GUIDE.md › Administration](guides/USER_GUIDE.md#administration) |
+| Look up any setting and its environment variable | [CONFIGURATION.md](admin/CONFIGURATION.md) |
+| Deploy, secure and monitor it; keep the lake bounded | [OPERATIONS.md](admin/OPERATIONS.md) |
+| Fix something that is not working | [TROUBLESHOOTING.md](guides/TROUBLESHOOTING.md), then the runbooks below |
+| Know how fast it is, and how that is measured | [PERFORMANCE.md](admin/PERFORMANCE.md) |
+| Serve millions of entities a day for years from Delta Lake | [DELTA_CONNECTOR.md](connectors/DELTA_CONNECTOR.md) |
+| Serve millions of entities a day from Aerospike, with recent history there and years in Delta Lake | [AEROSPIKE_CONNECTOR.md](connectors/AEROSPIKE_CONNECTOR.md) |
+| Serve millions of entities a day from PostgreSQL | [POSTGRES_CONNECTOR.md](connectors/POSTGRES_CONNECTOR.md) |
+| Serve data from plain JSON-lines files, the simplest store | [FILE_CONNECTOR.md](connectors/FILE_CONNECTOR.md) |
+| Build demo data in any store, small to a million trades a day | [DEMO_DATA.md](connectors/DEMO_DATA.md) |
 
 ### Develop on it
 
 | If you want to… | Read |
 |---|---|
-| Build, test and change the code; recipes for common changes | [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) |
-| Understand the design: pipeline, grammar, inference, modules | [ARCHITECTURE.md](ARCHITECTURE.md) |
-| Call the REST API, or read the ViewModel contract | [API_GUIDE.md](API_GUIDE.md) (OpenAPI at `http://localhost:18480/api/docs/ui`) |
-| Know why something is the way it is | [adr/](adr/README.md): the architecture decision records |
-| See how it was built, wave by wave, and what is still open | [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) |
+| Build, test and change the code; recipes for common changes | [DEVELOPER_GUIDE.md](guides/DEVELOPER_GUIDE.md) |
+| Understand the design: pipeline, grammar, inference, modules | [ARCHITECTURE.md](architecture/ARCHITECTURE.md) |
+| Call the REST API, or read the ViewModel contract | [API_GUIDE.md](guides/API_GUIDE.md) (OpenAPI at `http://localhost:18480/api/docs/ui`) |
+| Know why something is the way it is | [adr/](architecture/adr/README.md): the architecture decision records |
+| See how it was built, wave by wave, and what is still open | [IMPLEMENTATION_PLAN.md](architecture/IMPLEMENTATION_PLAN.md) |
 | See the four reference mockups the views reproduce | [requirements/](requirements/) |
 | See what changed in each release | [../CHANGELOG.md](../CHANGELOG.md), [../RELEASE_NOTES.md](../RELEASE_NOTES.md) |
 
@@ -100,38 +110,39 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](DEVEL
 
 | Document | Read this when… |
 |---|---|
-| [QUICKSTART.md](QUICKSTART.md) | you want Drishti running in ten minutes and need only the commands |
-| [GETTING_STARTED.md](GETTING_STARTED.md) | you are installing for the first time and want each step explained, with what you should see |
-| [USER_GUIDE.md](USER_GUIDE.md) | you use the console: top bar, command line, pick lists, tables, views, dates, search, export, monitors, alerts, workspaces, settings, Studio, administration |
-| [PACKS.md](PACKS.md) | you load, switch, assign, change, test or build a domain pack, or need any `pack.yaml` key |
-| [RACHANA_GUIDE.md](RACHANA_GUIDE.md) | you are learning to write Sutras and want a tutorial that builds one up step by step |
-| [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md) | you are writing a Sutra and need the exact key, panel option, format, expression or problem code |
-| [INFERENCE.md](INFERENCE.md) | a view looks different from what you expected and *How this view was built* says `inference` |
-| [CONNECTOR_GUIDE.md](CONNECTOR_GUIDE.md) | you are connecting your own data and want a worked, step-by-step path for your store |
-| [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md) | you need every setting of a connector, the data layout it expects, or you are writing a new source plugin |
-| [LIVE.md](LIVE.md) | you need to know how values tick: streams, frames, coalescing, reconnects, one channel per tab |
-| [USER_MANAGEMENT.md](USER_MANAGEMENT.md) | you create users, define roles, assign packs, reset passwords, set up single sign-on or read the audit log |
-| [CONFIGURATION.md](CONFIGURATION.md) | you need a setting's name, default and environment variable |
-| [OPERATIONS.md](OPERATIONS.md) | you deploy, secure, monitor, back up or upgrade a server and console |
-| [PERFORMANCE.md](PERFORMANCE.md) | you want the measured numbers, to measure your own installation, or to tune it |
-| [DELTA_CONNECTOR.md](DELTA_CONNECTOR.md) | you run Drishti over a large Delta Lake (a million trades a day for seven years): layout, writers, reads, memory, maintenance, measurements |
-| [POSTGRES_CONNECTOR.md](POSTGRES_CONNECTOR.md) | you run Drishti on PostgreSQL at scale: partitioned table, promoted columns, COPY loader, monthly retention, sizing, measurements |
-| [DEMO_DATA.md](DEMO_DATA.md) | you need demo data in Delta Lake, PostgreSQL or Aerospike, small for a laptop or a million trades a day |
-| [AEROSPIKE_CONNECTOR.md](AEROSPIKE_CONNECTOR.md) | you run Drishti on Aerospike at scale: record layout, loader, partition-parallel scans, TTL retention, sizing, measurements |
-| [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | something is not working: each problem has what you see, how to check and the fix |
-| [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) | you change Drishti's code: layout, build, tests, gates, and recipes |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | you want to understand how the pieces fit: pipeline, grammar, inference, graph, modules |
-| [API_GUIDE.md](API_GUIDE.md) | you call the REST API from a program, or need the ViewModel contract |
-| [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) | you want to know which waves shipped in which release, and what is still open |
+| [QUICKSTART.md](guides/QUICKSTART.md) | you want Drishti running in ten minutes and need only the commands |
+| [GETTING_STARTED.md](guides/GETTING_STARTED.md) | you are installing for the first time and want each step explained, with what you should see |
+| [USER_GUIDE.md](guides/USER_GUIDE.md) | you use the console: top bar, command line, pick lists, tables, views, dates, search, export, monitors, alerts, workspaces, settings, Studio, administration |
+| [PACKS.md](guides/PACKS.md) | you load, switch, assign, change, test or build a domain pack, or need any `pack.yaml` key |
+| [RACHANA_GUIDE.md](guides/RACHANA_GUIDE.md) | you are learning to write Sutras and want a tutorial that builds one up step by step |
+| [RACHANA_REFERENCE.md](guides/RACHANA_REFERENCE.md) | you are writing a Sutra and need the exact key, panel option, format, expression or problem code |
+| [INFERENCE.md](architecture/INFERENCE.md) | a view looks different from what you expected and *How this view was built* says `inference` |
+| [CONNECTOR_GUIDE.md](connectors/CONNECTOR_GUIDE.md) | you are connecting your own data and want a worked, step-by-step path for your store |
+| [PLUGIN_GUIDE.md](connectors/PLUGIN_GUIDE.md) | you need every setting of a connector, the data layout it expects, or you are writing a new source plugin |
+| [LIVE.md](architecture/LIVE.md) | you need to know how values tick: streams, frames, coalescing, reconnects, one channel per tab |
+| [USER_MANAGEMENT.md](admin/USER_MANAGEMENT.md) | you create users, define roles, assign packs, reset passwords, set up single sign-on or read the audit log |
+| [CONFIGURATION.md](admin/CONFIGURATION.md) | you need a setting's name, default and environment variable |
+| [OPERATIONS.md](admin/OPERATIONS.md) | you deploy, secure, monitor, back up or upgrade a server and console |
+| [PERFORMANCE.md](admin/PERFORMANCE.md) | you want the measured numbers, to measure your own installation, or to tune it |
+| [DELTA_CONNECTOR.md](connectors/DELTA_CONNECTOR.md) | you run Drishti over a large Delta Lake (a million trades a day for seven years): layout, writers, reads, memory, maintenance, measurements |
+| [FILE_CONNECTOR.md](connectors/FILE_CONNECTOR.md) | you serve data from JSON-lines files: the layout, one file per kind per day, the index of a day, loading, sizes, measurements |
+| [POSTGRES_CONNECTOR.md](connectors/POSTGRES_CONNECTOR.md) | you run Drishti on PostgreSQL at scale: partitioned table, promoted columns, COPY loader, monthly retention, sizing, measurements |
+| [DEMO_DATA.md](connectors/DEMO_DATA.md) | you need demo data in Delta Lake, PostgreSQL or Aerospike, small for a laptop or a million trades a day |
+| [AEROSPIKE_CONNECTOR.md](connectors/AEROSPIKE_CONNECTOR.md) | you run Drishti on Aerospike at scale: record layout, loader, partition-parallel scans, TTL retention, sizing, measurements |
+| [TROUBLESHOOTING.md](guides/TROUBLESHOOTING.md) | something is not working: each problem has what you see, how to check and the fix |
+| [DEVELOPER_GUIDE.md](guides/DEVELOPER_GUIDE.md) | you change Drishti's code: layout, build, tests, gates, and recipes |
+| [ARCHITECTURE.md](architecture/ARCHITECTURE.md) | you want to understand how the pieces fit: pipeline, grammar, inference, graph, modules |
+| [API_GUIDE.md](guides/API_GUIDE.md) | you call the REST API from a program, or need the ViewModel contract |
+| [IMPLEMENTATION_PLAN.md](architecture/IMPLEMENTATION_PLAN.md) | you want to know which waves shipped in which release, and what is still open |
 
 ### Runbooks (`runbooks/`)
 
 | Runbook | Read this when… |
 |---|---|
-| [source-down.md](runbooks/source-down.md) | a connector is down, slow, idle or failed to start; views fail with `DRS-1003`/`DRS-1004`; links say *pending* |
-| [sutra-broken.md](runbooks/sutra-broken.md) | a Sutra has problems, an edit does not show, or a view says `inference only` where you expected a Sutra |
-| [live-latency-high.md](runbooks/live-latency-high.md) | live views are slow, late or frozen, or the live dot stays amber |
-| [sign-in.md](runbooks/sign-in.md) | users cannot sign in, are locked out, or are refused (`DRS-5010`, `DRS-5002`) |
+| [source-down.md](admin/runbooks/source-down.md) | a connector is down, slow, idle or failed to start; views fail with `DRS-1003`/`DRS-1004`; links say *pending* |
+| [sutra-broken.md](admin/runbooks/sutra-broken.md) | a Sutra has problems, an edit does not show, or a view says `inference only` where you expected a Sutra |
+| [live-latency-high.md](admin/runbooks/live-latency-high.md) | live views are slow, late or frozen, or the live dot stays amber |
+| [sign-in.md](admin/runbooks/sign-in.md) | users cannot sign in, are locked out, or are refused (`DRS-5010`, `DRS-5002`) |
 
 ### In-app guides (`../console/web/guides/`, also under *Help*)
 
@@ -150,7 +161,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](DEVEL
 
 | Folder | Read this when… |
 |---|---|
-| [adr/](adr/README.md) | you want the reason behind a design decision (seventeen records; ADR-017 made Sutras YAML only) |
+| [adr/](architecture/adr/README.md) | you want the reason behind a design decision (seventeen records; ADR-017 made Sutras YAML only) |
 | [requirements/](requirements/) | you want the four reference mockups the first views reproduced |
 
 ## Words you will meet

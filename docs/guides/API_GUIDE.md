@@ -20,8 +20,8 @@ tool, check a deployment, or simply understand what the console does behind the 
 server has is listed here, grouped by what it is for, with a `curl` command you can paste and an abbreviated
 copy of a real answer.
 
-Live streaming is covered briefly here and in depth in [LIVE.md](LIVE.md). Users, roles and sign-in are
-covered in depth in [USER_MANAGEMENT.md](USER_MANAGEMENT.md).
+Live streaming is covered briefly here and in depth in [LIVE.md](../architecture/LIVE.md). Users, roles and sign-in are
+covered in depth in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
 
 ## Contents
 
@@ -223,7 +223,7 @@ curl -s -H "Authorization: Bearer $TOKEN" $B/about | jq .version
 
 You should see the version string, for example `"1.12.0"`. The roles you put in the token decide what the
 script may open (roles are defined under `drishti.security.roles`; see
-[USER_MANAGEMENT.md](USER_MANAGEMENT.md)). Keep the lifetime short.
+[USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)). Keep the lifetime short.
 
 ### What roles allow
 
@@ -496,7 +496,7 @@ The condition language is Rachana-EL; see [RACHANA_REFERENCE.md](RACHANA_REFEREN
 ### Live streams
 
 All three are Server-Sent Events (`text/event-stream`). Use `curl -N` (no buffering). Details, event
-shapes and reconnection rules are in [LIVE.md](LIVE.md).
+shapes and reconnection rules are in [LIVE.md](../architecture/LIVE.md).
 
 | Method | Path | Events |
 |---|---|---|
@@ -765,7 +765,7 @@ You should see `{"proposal":{"id":"â€¦","name":"my-swap","version":1,"status":"â
 
 ### Sign-in and user administration
 
-These are summarised here; [USER_MANAGEMENT.md](USER_MANAGEMENT.md) explains users, roles, password rules,
+These are summarised here; [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) explains users, roles, password rules,
 lockout and the audit log in full. User records are held by the server's identity store; the console never
 sees password hashes.
 

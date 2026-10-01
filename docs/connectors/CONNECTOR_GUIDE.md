@@ -22,8 +22,8 @@ the commands to load sample data or point at a real system, what you type in the
 how the connector shows in health, what happens when the store goes down, and the errors people usually hit.
 
 You do not need to know Java. If you want to *write* a connector, or you need the complete table of every setting a
-plugin reads, see [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md). For packs (kinds, mnemonics, Sutras) see [PACKS.md](PACKS.md);
-for running the server in production see [OPERATIONS.md](OPERATIONS.md).
+plugin reads, see [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md). For packs (kinds, mnemonics, Sutras) see [PACKS.md](../guides/PACKS.md);
+for running the server in production see [OPERATIONS.md](../admin/OPERATIONS.md).
 
 ## Contents
 
@@ -189,7 +189,7 @@ alike, and are how secrets stay out of files.
 | on ActiveMQ queues or topics | [`activemq`](#11-a-message-queue-activemq) | live; the connector keeps the latest document per entity on local disk | a queue delivers once: the local state store is the only copy |
 | on RabbitMQ queues | [`rabbitmq`](#12-a-message-queue-rabbitmq) | as ActiveMQ, AMQP 0-9-1 | as ActiveMQ |
 | JSON objects in a bucket (S3, MinIO, Ceph) | [`s3`](#13-an-object-store-s3) | the `file` layout in object storage, dated by folder | cost of listing large buckets; reads cached `cache-seconds` |
-| a total or summary of another kind (a book's P&L from its trades) | `derived` ([PACKS.md](PACKS.md#derived-kinds-entities-computed-from-other-kinds)) | computed by the server from the other kind, through whichever connectors serve it | reads every member once per `refresh`; keep `max-scan` above the member count |
+| a total or summary of another kind (a book's P&L from its trades) | `derived` ([PACKS.md](../guides/PACKS.md#derived-kinds-entities-computed-from-other-kinds)) | computed by the server from the other kind, through whichever connectors serve it | reads every member once per `refresh`; keep `max-scan` above the member count |
 | public rates and FX | [`feed`](#14-public-market-data-feed) | NY Fed SOFR, ECB €STR and FX, US Treasury curve, FRED; switched on by one variable each | needs internet (or a mirror); FRED needs a free key |
 
 ### What each connector can do
@@ -197,7 +197,7 @@ alike, and are how secrets stay out of files.
 | Connector | History (picked dates) | Live ticks | Search | Reverse lookups | Long-lived connection | Local disk |
 |---|---|---|---|---|---|---|
 | `demo` | no | yes | yes | yes | — | — |
-| `file` | yes, by folder | no | yes | no | — | — |
+| `file` | yes, by folder | no | yes | yes (JSON lines) | — | — |
 | `rest` | no | no | no | no | — | — |
 | `jdbc` query mode | when a query uses `:asOf` | no | no | no | a small pool | — |
 | `jdbc` table mode | yes (`snapshot`/`effective`) | no | yes | yes | a small pool | — |
@@ -226,7 +226,7 @@ alike, and are how secrets stay out of files.
 
 Every chapter below uses the same few commands. They are collected here once.
 
-**1. Build once** (from the repository root; see [GETTING_STARTED.md](GETTING_STARTED.md) for Java 21 and the
+**1. Build once** (from the repository root; see [GETTING_STARTED.md](../guides/GETTING_STARTED.md) for Java 21 and the
 console's Python environment):
 
 ```bash
@@ -272,7 +272,7 @@ curl -s http://localhost:18480/api/v1/sources | jq '.failures'
 ```
 
 For administrators (with security on, add `-H "Authorization: Bearer $TOKEN"`; see
-[API_GUIDE.md](API_GUIDE.md#minting-a-token-for-a-script)):
+[API_GUIDE.md](../guides/API_GUIDE.md#minting-a-token-for-a-script)):
 
 ```bash
 curl -s http://localhost:18480/api/v1/admin/health | jq '{status, summary, failedToStart}'
@@ -313,6 +313,11 @@ the date the document is for (`null` for undated connectors); `live` says whethe
 ---
 
 ## 4. Files on disk: `file`
+
+For more than a handful of entities, keep one **JSON-lines file per kind per business day**
+(`<root>/<domain>/<yyyy-MM-dd>/<kind>.jsonl`, written by `tools/load-files.sh`, served by the `files` profile): the
+connector indexes each day once and serves single reads, searches and reverse lookups without reading whole files.
+[FILE_CONNECTOR.md](FILE_CONNECTOR.md) explains it in full. The rest of this chapter shows the file-per-entity layout.
 
 ### The situation
 
@@ -981,7 +986,7 @@ The full design, with every read path, memory figures, maintenance and measureme
 [DELTA_CONNECTOR.md](DELTA_CONNECTOR.md).
 
 A table of a few thousand entities a day can be read any way. For a book of a million trades a day, kept for years,
-declare a layout on the connector ([PACKS.md, Large kinds](PACKS.md#large-kinds-the-lake-layout)). The connector then
+declare a layout on the connector ([PACKS.md, Large kinds](../guides/PACKS.md#large-kinds-the-lake-layout)). The connector then
 reads:
 
 | What | How |
@@ -1983,7 +1988,7 @@ Points to remember:
   `GET /api/v1/admin/health` shows `"failedToStart": {"trading-stor": "no plugin named 'null'"}`.
 - **Between packs**, a child pack that redefines a parent's connector replaces it *as a whole*, and the override is
   listed in health (`overrides`); two unrelated packs that define the same connector differently stop the server at
-  start, naming both. See [PACKS.md](PACKS.md).
+  start, naming both. See [PACKS.md](../guides/PACKS.md).
 
 ### Switching connectors off
 
@@ -2029,7 +2034,7 @@ and `secret-key` for S3 and S3A.
 |---|---|
 | `status` | `OK`; `DEGRADED` (a connector is down or stale, one failed to start, or a pack has problems); `DOWN` (no connector is up) |
 | `summary` | counts: `sources`, `sourcesDown`, `failedToStart`, `packs`, `packsWithProblems` |
-| `sources[]` | one row per running connector: `status` (`UP` when `health` starts with `UP`, else `DOWN`), `health` text, `kinds`, `live`, `dated`, `search`, `reads` (`reads`, `found`, `notHeld`, `errors`, `lastError`, `lastErrorAt`, `lastOkAt`, `p50Ms`, `p99Ms`), `cache`, `lastUpdate` (when it last received new data; null for sources read on demand), `staleAfter` and `stale` (nothing new within the connector's `stale-after` setting, see [CONFIGURATION.md](CONFIGURATION.md#connector-settings-plugin-by-plugin)). Down connectors are listed first |
+| `sources[]` | one row per running connector: `status` (`UP` when `health` starts with `UP`, else `DOWN`), `health` text, `kinds`, `live`, `dated`, `search`, `reads` (`reads`, `found`, `notHeld`, `errors`, `lastError`, `lastErrorAt`, `lastOkAt`, `p50Ms`, `p99Ms`), `cache`, `lastUpdate` (when it last received new data; null for sources read on demand), `staleAfter` and `stale` (nothing new within the connector's `stale-after` setting, see [CONFIGURATION.md](../admin/CONFIGURATION.md#connector-settings-plugin-by-plugin)). Down connectors are listed first |
 | `failedToStart` | connector name → error message |
 | `packs[]` | each pack's `connectors`, `connectorsDown` (running but down), `connectorsOff` (switched off, or failed to start) |
 | `overrides` | pack definitions overridden by a child pack |
@@ -2173,5 +2178,5 @@ calls.
 | The overall status is `DEGRADED` | `curl -s $B/admin/health \| jq '{summary, failedToStart, packs: [.packs[] \| select(.status!="OK") \| {name, connectorsDown, sutraProblems}]}'` | fix what is listed; a switched-off connector does not degrade |
 | Admin health answers `403` | the caller is not an administrator | use `/api/v1/sources` (anyone), or an admin token |
 
-If none of these fit, [TROUBLESHOOTING.md](TROUBLESHOOTING.md) covers the server and console generally, and
+If none of these fit, [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md) covers the server and console generally, and
 [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md) has every setting of every plugin and the contract for writing your own.

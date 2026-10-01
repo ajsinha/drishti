@@ -51,7 +51,7 @@ When you open an entity (`GENE GENE-BRCA1 <GO>` in the terminal), Drishti:
 2. looks for a Sutra whose `match.kind` is the entity's kind and whose `where` condition holds, highest
    `priority` first;
 3. if it finds one, lays out the view by it, and lets **inference** fill only what it leaves out; if it finds
-   none, lays out the whole view by inference (from the shape of the data; see [INFERENCE.md](INFERENCE.md)).
+   none, lays out the whole view by inference (from the shape of the data; see [INFERENCE.md](../architecture/INFERENCE.md)).
 
 The bottom panel of every view, *How this view was built*, tells you which case applied. So does the API:
 
@@ -840,6 +840,6 @@ and `GET /api/v1/sutras/problems` give `<file>:<line>:<column> <code> <message>`
 ## Where next
 
 - [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md): every key, panel kind, format, function and problem code.
-- [INFERENCE.md](INFERENCE.md): what Drishti does without a Sutra, and how to start a Sutra from inference.
-- [LIVE.md](LIVE.md): how a view you laid out keeps itself up to date.
+- [INFERENCE.md](../architecture/INFERENCE.md): what Drishti does without a Sutra, and how to start a Sutra from inference.
+- [LIVE.md](../architecture/LIVE.md): how a view you laid out keeps itself up to date.
 - [PACKS.md](PACKS.md): packaging Sutras with mnemonics, links, formats and samples.

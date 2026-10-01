@@ -34,7 +34,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | [The top bar](#the-top-bar) | The menus and the round tools on the right |
 | [The command line](#the-command-line) | Opening an entity, suggestions, what an error means |
 | [Pick lists](#pick-lists-when-a-command-names-several-entities) | `TRD MX-200000`, `CPTY north`, `TRD productType=Revolver`, `TRD` |
-| [Tables: paging and the keyboard](#tables-paging-and-the-keyboard) | The pager, ▲ ▼, and the keys that walk a table |
+| [Tables: paging and the keyboard](#tables-sorting-filtering-paging-and-the-keyboard) | The pager, ▲ ▼, and the keys that walk a table |
 | [Reading a view](#reading-a-view) | Title, strip, panels, links, provenance |
 | [Keyboard](#keyboard) | Every key in one table |
 | [Live updates](#live-updates), [Business dates](#business-dates-live-or-a-day-in-the-past), [Compare](#compare-what-changed) | Ticking values, past dates, what changed |
@@ -263,7 +263,7 @@ Rules:
   `order by`, `limit`). `not status = matured` means *not (status = matured)*.
 - **How many rows** you see is your *Search results* setting (100 unless you change it in
   [Your settings](#your-settings)), or `limit N` at the end of the command. The table then pages through them
-  25 at a time ([Tables](#tables-paging-and-the-keyboard)).
+  25 at a time ([Tables](#tables-sorting-filtering-paging-and-the-keyboard)).
 - **Pick lists follow the date** in the top bar, like every other read.
 
 ### The columns
@@ -420,7 +420,7 @@ Panel kinds you will meet:
 | `links` | linked entities with badges | *Linked entities* everywhere |
 | `provenance` | how the view was built | *How this view was built* |
 
-The [panel kinds guide](../console/web/guides/panel-kinds.md) shows each one in detail.
+The [panel kinds guide](../../console/web/guides/panel-kinds.md) shows each one in detail.
 
 **No data available.** A panel whose data is missing, or not in the expected shape, says *No data
 available*. The rest of the view still renders. Real feeds are often incomplete; this is normal.
@@ -436,7 +436,7 @@ answer in time; open it to see it.
 name ends in `Id`, `Ref` or `_id`, such as `tradeId`, `counterpartyId` or `bookRef`) links each value to its
 entity, as long as a pack recognises the id. Example: open `BOOK BOOK-RATES-1`; its *Largest trades* table
 (`F2`) starts with the *Trade* column (`MX-20000043`, `MX-20000011`, …), and clicking `MX-20000043` opens that trade. With the table selected, `↓` to a row and
-`Enter` does the same ([Tables](#tables-paging-and-the-keyboard)).
+`Enter` does the same ([Tables](#tables-sorting-filtering-paging-and-the-keyboard)).
 
 **Breadcrumbs** above the title (`← MX-20000001 / NS-MERIDIAN-RE-NY`) show the path you followed in this
 browser tab. Click one to go back to it, or press `Alt+←`.
@@ -489,7 +489,7 @@ You should see *Impact of MX-20000001*:
 - **Depends on it directly:** *Netting set · 1*: `NS-MERIDIAN-RE-NY` with its net MTM.
 - **Rolls up into:** *Credit limit · 1*: `LIM-MERIDIAN-RE` via `creditLimit`, with the limit amount.
 
-Each group has a total. Click any id to open it. See the [Impact guide](../console/web/guides/impact.md).
+Each group has a total. Click any id to open it. See the [Impact guide](../../console/web/guides/impact.md).
 
 ## Live updates
 
@@ -507,7 +507,7 @@ Views of live entities tick: figures change in place and flash briefly. Open `TR
 
 Screen readers hear the full state, including the server's rolling p99 (`Live, p99 2 ms`). To see the same
 figures yourself, ask the server: `curl -s http://localhost:18480/api/v1/health/live`
-([PERFORMANCE.md](PERFORMANCE.md#4-live-latency)).
+([PERFORMANCE.md](../admin/PERFORMANCE.md#4-live-latency)).
 
 To turn off the flash, untick *Flash changed values* in [your settings](#your-settings).
 
@@ -649,7 +649,7 @@ TRD where mtm > 1m order by mtm desc limit 50
 You should see a page headed *Search by value*, a summary line such as `163 of 750 trades match; the first 50
 are shown`, the time it took, and a table: one row per trade, with a column for each field the query uses
 (here **MTM (USD)**), then the kind's key fields (*Product type*, *Direction*, *Currency*, …). Click an id to
-open it, or walk the table with the keyboard ([Tables](#tables-paging-and-the-keyboard)).
+open it, or walk the table with the keyboard ([Tables](#tables-sorting-filtering-paging-and-the-keyboard)).
 
 `where` is optional: `TRD mtm > 1m` and `TRD productType=Revolver` work as well, and come back as a
 [pick list](#pick-lists-when-a-command-names-several-entities). The rest of this section applies to both.
@@ -825,7 +825,7 @@ on the Alerts page and fill the form when clicked.
 
 Rules are kept with your account, and so are the alerts they fire: the newest 1,000 per user
 (`drishti.alerts.keep`) are kept in the identity database, so they are still there after a server restart. More in the
-[Monitors and alerts guide](../console/web/guides/monitors-and-alerts.md).
+[Monitors and alerts guide](../../console/web/guides/monitors-and-alerts.md).
 
 ## Workspaces
 
@@ -871,7 +871,7 @@ templates:
       - { ref: { kind: ir-curve, id: CRV-USD-OIS }, title: Discount curve }
 ```
 
-`follows: 0` means "follow the first pane". See the [Workspaces guide](../console/web/guides/workspaces.md).
+`follows: 0` means "follow the first pane". See the [Workspaces guide](../../console/web/guides/workspaces.md).
 
 ### Sharing a workspace
 
@@ -928,7 +928,7 @@ to 20. The button then reads **Pinned**; press it again to unpin.
 
 **Changing your password.** Type the current password and the new one twice (at least 10 characters,
 with letters and digits), then click **Change password**. Users, roles and password rules are covered
-in [USER_MANAGEMENT.md](USER_MANAGEMENT.md).
+in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
 
 ## Themes
 
@@ -1021,8 +1021,8 @@ Sutra folder (`./sutras/…/irs-fixfloat.v2.sutra.yaml`), and views use the high
 **Start from inference** turns what Drishti infers for the entity into an editable Sutra: a quick
 start for a kind that has no Sutra.
 
-The [Sutra Studio tutorial](../console/web/guides/sutra-studio.md) and the
-[Sutra guide](../console/web/guides/sutra-guide.md) go much further.
+The [Sutra Studio tutorial](../../console/web/guides/sutra-studio.md) and the
+[Sutra guide](../../console/web/guides/sutra-guide.md) go much further.
 
 ### Reviews: approving a Sutra
 
@@ -1082,7 +1082,7 @@ Worked example: a role for credit analysts.
 
 Changes apply at the holder's next request and are written to the audit log. **Delete** is greyed while
 anyone holds the role (*Held by 1 user(s): take it away from them first*); the server answers `DRS-6009`
-if asked anyway. Roles only matter when sign-in is on. More in [USER_MANAGEMENT.md](USER_MANAGEMENT.md).
+if asked anyway. Roles only matter when sign-in is on. More in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
 
 ### Admin → Packs: switching a pack off for everyone
 
@@ -1155,9 +1155,9 @@ Worked example: check that every data source is up.
 
 A connector whose plugin is installed but has no settings (a Kafka connector without `topics`, a feed without
 `feed`) stays **idle**: it is not started and is not counted as failed. Anything else that is not **UP** is
-explained in [runbooks/source-down.md](runbooks/source-down.md).
+explained in [runbooks/source-down.md](../admin/runbooks/source-down.md).
 
-Managing users and roles is explained in [USER_MANAGEMENT.md](USER_MANAGEMENT.md).
+Managing users and roles is explained in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
 
 ## Help
 

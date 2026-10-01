@@ -86,7 +86,17 @@ SPRING_PROFILES_ACTIVE=aerospike DRISHTI_PACKS=market-risk,counterparty-risk jav
 `--ttl-days N` lets Aerospike expire each day after N days. The default namespace of the Docker image keeps data in
 memory and is too small for the large size; see [AEROSPIKE_CONNECTOR.md](AEROSPIKE_CONNECTOR.md#4-loading).
 
-## Files (no store at all)
+## JSON-lines files (no store at all)
+
+```bash
+tools/load-files.sh                              # small: data/files
+tools/load-files.sh --trades 10000               # and 10,000 trades a day for 3 days (9 s, 274 MB)
+SPRING_PROFILES_ACTIVE=files DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
+```
+
+One file per kind per business day, `data/files/<domain>/<date>/<kind>.jsonl`: see [FILE_CONNECTOR.md](FILE_CONNECTOR.md).
+
+## The samples
 
 The banking packs' samples in `packs/<pack>/samples/` are what the `demo` source serves live; they are written by
 
@@ -119,6 +129,7 @@ So any store a new connector adds can be loaded with the same demo data.
 
 | Script | What it does |
 |---|---|
+| `tools/load-files.sh [root] [--trades N] [--days D]` | `make_data.py --jsonl`, then `JsonlLoader` into `<root>/<domain>/<date>/<kind>.jsonl` |
 | `tools/load-delta.sh [root] [--trades N] [--days D]` | `make_data.py --lake`, then `bulk_trades.py` |
 | `tools/load-postgres.sh [jdbc-url] [--trades N] [--days D] [--keep-months N] [--user U] [--password P] [--writers N]` | `make_data.py --jsonl`, then `PostgresLoader` (samples with `--recreate`), then the bulk book streamed |
 | `tools/load-aerospike.sh [hosts] [namespace] [--trades N] [--days D] [--ttl-days N]` | `make_data.py --jsonl`, then `AerospikeLoader`, then the bulk book streamed |

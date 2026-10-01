@@ -217,7 +217,7 @@ banking-core  climate-risk  counterparty-risk  economics  finance  genomics  liq
 market-data  market-risk  operational-risk  politics-society  retail-banking  trading
 ```
 
-What each pack contains, and how to write your own, is in [PACKS.md](PACKS.md). Most packs read a Delta Lake under
+What each pack contains, and how to write your own, is in [PACKS.md](../guides/PACKS.md). Most packs read a Delta Lake under
 `./data/delta`; section 5 shows how to generate sample data for them.
 
 ## 4. Install with Docker Compose
@@ -368,7 +368,7 @@ records never expire. In the generated book a day record takes about 7 KB of nam
 about 150 bytes (`asinfo -v sets/test/trading` and `sets/test/trading_ix`: `data_used_bytes` over `objects`); size
 the namespace for trades × days kept. Drishti's memory does not grow with the days kept: it holds one id per entity in the index set and the
 days of promoted bins in use (section 12). See
-[AEROSPIKE_CONNECTOR.md](AEROSPIKE_CONNECTOR.md) for the design.
+[AEROSPIKE_CONNECTOR.md](../connectors/AEROSPIKE_CONNECTOR.md) for the design.
 
 ### 5.3 Live trades from Kafka
 
@@ -446,7 +446,7 @@ Everything about users, roles and the identity database is in [USER_MANAGEMENT.m
 | `DRISHTI_REST_ENABLED` / `DRISHTI_REST_URL` | `false` / `http://localhost:9000/api` | the REST connector and its base URL (it reads `<base>/{kind}/{id}`) |
 | `DRISHTI_JDBC_ENABLED` | `false` | the single JDBC connector |
 | `DRISHTI_JDBC_URL`, `DRISHTI_JDBC_USER`, `DRISHTI_JDBC_PASSWORD` | empty | its connection |
-| `DRISHTI_ACTIVEMQ_ENABLED` | `false` | the ActiveMQ plugin (configure its settings in `application.local.yaml`; see [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md)) |
+| `DRISHTI_ACTIVEMQ_ENABLED` | `false` | the ActiveMQ plugin (configure its settings in `application.local.yaml`; see [PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md)) |
 | `DRISHTI_RABBITMQ_ENABLED` | `false` | the RabbitMQ plugin (likewise) |
 | `DRISHTI_S3_ENABLED` | `false` | the S3 document plugin (likewise) |
 
@@ -831,7 +831,7 @@ drishti:
           # hadoop.fs.s3a.connection.maximum: "200"   # any Hadoop S3A setting, prefixed hadoop.
 ```
 
-The layout is `<root>/<domain>/<kind>/business_date=YYYY-MM-DD/`. See [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md) for every
+The layout is `<root>/<domain>/<kind>/business_date=YYYY-MM-DD/`. See [PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md) for every
 Delta setting.
 
 **Sizing.** A laid-out trade table takes about 1.7 KB per trade per business day (Parquet, compressed): 1,000,000
@@ -1028,7 +1028,7 @@ curl -s localhost:18480/api/v1/health/live
 
 `streams` is the number of open live views, `topics` the distinct entities being watched, `frames` the frames sent
 since start, and `p50Ms`/`p99Ms` the tick-to-frame latency over the last 30 seconds (`drishti.live.window`). The
-same p99 is in the console's top bar. See [LIVE.md](LIVE.md) and [PERFORMANCE.md](PERFORMANCE.md).
+same p99 is in the console's top bar. See [LIVE.md](../architecture/LIVE.md) and [PERFORMANCE.md](PERFORMANCE.md).
 
 ### 13.4 Prometheus and Grafana
 
@@ -1147,4 +1147,4 @@ Measured on a developer workstation; see [PERFORMANCE.md](PERFORMANCE.md) for ho
 - [A Sutra is broken](runbooks/sutra-broken.md)
 - [Live latency high](runbooks/live-latency-high.md)
 - [Users cannot sign in](runbooks/sign-in.md)
-- [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for everything else.
+- [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md) for everything else.

@@ -187,7 +187,7 @@ A pack's role is still needed to open its kinds. Giving Priya the *trading* pack
 ## API tokens
 
 People read Drishti from scripts, notebooks and Excel with personal API tokens they make on **My account → API
-tokens** ([CLIENTS.md](CLIENTS.md)). What an administrator needs to know:
+tokens** ([CLIENTS.md](../guides/CLIENTS.md)). What an administrator needs to know:
 
 - A token acts as its owner, with the owner's roles and packs at the time of each call, and **only reads**.
 - Disabling a user stops their tokens at once; deleting a user deletes them.

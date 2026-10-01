@@ -24,7 +24,7 @@ written and kept in shape, how much memory the server needs, what was measured, 
 Read it if you run Drishti over a large lake, if you load such a lake (your ETL writes what is described here), or if
 you change the connector. For setting the connector up the first time, start with
 [CONNECTOR_GUIDE.md](CONNECTOR_GUIDE.md#8-a-data-lake-delta); every setting is in
-[CONFIGURATION.md](CONFIGURATION.md#delta--delta-lake). The Aerospike connector follows the same design with its own
+[CONFIGURATION.md](../admin/CONFIGURATION.md#delta--delta-lake). The Aerospike connector follows the same design with its own
 storage: [AEROSPIKE_CONNECTOR.md](AEROSPIKE_CONNECTOR.md).
 
 ## Contents
@@ -383,7 +383,7 @@ If any field is not promoted, the search reads documents as before, up to `drish
 
 ### 7.2 Derived kinds
 
-A derived kind (desk P&L: trades grouped by `desk`, `count`, `sum $.mtm` …, see [PACKS.md](PACKS.md#derived-kinds-entities-computed-from-other-kinds))
+A derived kind (desk P&L: trades grouped by `desk`, `count`, `sum $.mtm` …, see [PACKS.md](../guides/PACKS.md#derived-kinds-entities-computed-from-other-kinds))
 is computed from columns when all its expressions are plain paths that are promoted:
 
 1. Rows are grouped by the key column directly (the `desk` value of each row).
@@ -561,7 +561,7 @@ On a Delta connector (`drishti.sources.connectors.<name>.settings`, or the conne
 | `id-column`, `doc-column`, `date-column` | `id`, `doc`, `business_date` | column names |
 | `source-name` | the connector's name | the name shown in provenance and Health |
 | `stale-after` | none | warn when no new data arrived for this long |
-| `s3.endpoint`, `s3.access-key`, `s3.secret-key`, `s3.region`, `s3.path-style`, `hadoop.<key>` | — | object storage ([CONFIGURATION.md](CONFIGURATION.md#delta--delta-lake)) |
+| `s3.endpoint`, `s3.access-key`, `s3.secret-key`, `s3.region`, `s3.path-style`, `hadoop.<key>` | — | object storage ([CONFIGURATION.md](../admin/CONFIGURATION.md#delta--delta-lake)) |
 
 ## 15. Checklist for production
 

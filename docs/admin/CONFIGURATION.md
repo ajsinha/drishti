@@ -305,7 +305,7 @@ drishti:
 The pack loader also writes some keys for the rest of the server (`drishti.packs.loaded`,
 `drishti.packs.kinds.*`, `drishti.packs.overrides`, `drishti.rachana.pack-dirs`,
 `drishti.rachana.pack-formats-files`, `drishti.inference.pack-semantics-files`,
-`drishti.sources.plugins.demo.settings.dirs`). Do not set them yourself. See [PACKS.md](PACKS.md).
+`drishti.sources.plugins.demo.settings.dirs`). Do not set them yourself. See [PACKS.md](../guides/PACKS.md).
 
 ### `drishti.packs.registry` — the signed pack registry
 
@@ -317,7 +317,7 @@ The pack loader also writes some keys for the rest of the server (`drishti.packs
 | `max-archive-mb` / `max-unpacked-mb` | `50` / `200` | Size limits for an archive and for what it unpacks to. |
 | `allow-http` | `false` | Accept plain `http:` registries. For tests only. |
 
-See [PACKS.md](PACKS.md#a-signed-pack-registry-publishing-and-installing).
+See [PACKS.md](../guides/PACKS.md#a-signed-pack-registry-publishing-and-installing).
 
 ### `drishti.rachana` — Sutras
 
@@ -488,7 +488,7 @@ Not in the bundled file; the defaults apply until you set them.
 | `max-streams` | `20000` | Live streams (views and monitors) the server keeps open at once; further requests are refused. |
 | `window` | `30s` | Rolling window for the live latency p99 shown in the top bar. |
 
-See [LIVE.md](LIVE.md).
+See [LIVE.md](../architecture/LIVE.md).
 
 ### `drishti.graph` — links between entities
 
@@ -518,7 +518,7 @@ drishti:
 
 | Key | Default | Meaning |
 |---|---|---|
-| `semantics-file` | none | A site file that replaces the bundled semantic hints (`inference/semantics.yaml`). Packs' `config/semantics.yaml` files are tried first. See [INFERENCE.md](INFERENCE.md). |
+| `semantics-file` | none | A site file that replaces the bundled semantic hints (`inference/semantics.yaml`). Packs' `config/semantics.yaml` files are tried first. See [INFERENCE.md](../architecture/INFERENCE.md). |
 
 ---
 
@@ -527,7 +527,7 @@ drishti:
 These go under `drishti.sources.plugins.<plugin>.settings` (single instance) or
 `drishti.sources.connectors.<name>.settings` (named instance). Every plugin takes `source-name`, the name shown
 in provenance and health (default: the connector's name, or the plugin's name). Writing a plugin of your own is
-described in [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md).
+described in [PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md).
 
 Every plugin also takes **`stale-after`**: a duration (`15m`, `2h`, `4d`). When the connector has received nothing new
 for longer than that, it is *stale*: Admin → Health shows it in amber and turns the overall status `DEGRADED`, and
@@ -559,7 +559,7 @@ Layout: `<root>/<domain>/<kind>/business_date=yyyy-MM-dd/` holding `(id, doc)` r
 | `id-column` / `doc-column` / `date-column` | `id` / `doc` / `business_date` | Column names. |
 | `refresh-seconds` | `10` | How often each table's latest version is checked. |
 | `cache-mb` | `512` | Whole days kept in memory, by size, for small tables that are not laid out. |
-| `layout.<kind>.columns` | none | Document paths stored as columns beside the document (see [PACKS.md](PACKS.md#large-kinds-the-lake-layout)); searches, pick lists, derived kinds and impact read them instead of documents. `layout.<kind>.sort-by`, `file-rows`, `row-group-rows` tell the writers how to lay the table out. |
+| `layout.<kind>.columns` | none | Document paths stored as columns beside the document (see [PACKS.md](../guides/PACKS.md#large-kinds-the-lake-layout)); searches, pick lists, derived kinds and impact read them instead of documents. `layout.<kind>.sort-by`, `file-rows`, `row-group-rows` tell the writers how to lay the table out. |
 | `id-map-mb` | `1024` | Each day's ids and the file each is in, read from the id column alone, kept by size. |
 | `doc-cache-mb` | `256` | Single documents read recently. |
 | `columns-cache-mb` | `1024` | A day's promoted columns, read once and kept by size (the newest day is loaded in the background). |
@@ -592,7 +592,7 @@ The JDBC driver jar goes on the class path or in `plugin-dir`.
 | `pool-size` | `4` | Connections kept. A broken connection is reopened; the connector starts even if the database is down. |
 | `query.<kind>` | none | Query mode: SQL with one `?` for the id, or named `:id` and `:asOf` (the business date). The first row is the document: each column a field, or a column named `json` as the whole document; optional `generation` and `business_date` columns. A `json`/`jsonb` column becomes nested data. |
 | `json-columns` | none | Query mode: comma list of text columns that hold JSON (`legs, extras`), parsed into nested data like a `json`/`jsonb` column; a cell that is not JSON stays text. |
-| `table` | empty | Table mode: every kind of a domain in one PostgreSQL table of `(kind, id, business_date, doc jsonb, <promoted columns>)` rows, partitioned by month ([POSTGRES_CONNECTOR.md](POSTGRES_CONNECTOR.md)). |
+| `table` | empty | Table mode: every kind of a domain in one PostgreSQL table of `(kind, id, business_date, doc jsonb, <promoted columns>)` rows, partitioned by month ([POSTGRES_CONNECTOR.md](../connectors/POSTGRES_CONNECTOR.md)). |
 | `mode.<kind>` | `snapshot` | Table mode: `snapshot` or `effective`. |
 | `kinds`, `kind-column`, `id-column`, `doc-column`, `date-column`, `lookback-days` | the kinds the table holds, `kind`, `id`, `doc`, `business_date`, `10` | Table mode column names and look-back. |
 | `layout.<kind>.columns` | none | Table mode: the paths the pack promotes, each a column of the table, read by searches, pick lists, derived kinds, impact and reverse lookups instead of documents. |
@@ -696,8 +696,8 @@ Layout as the file connector: `<prefix><kind>/<id>.json` and `<prefix><yyyy-MM-d
 
 A data domain is three sets: `<set>` (a record per entity per business date, key `kind/id/yyyyMMdd`, bins `kind`,
 `id`, `date`, `doc` and the promoted fields), `<set>_ix` (a record per entity, key `kind/id`, bin `dates`) and
-`<set>_kinds` (a record per kind, bin `dates`). See the [connector guide](CONNECTOR_GUIDE.md#9-a-key-value-store-aerospike)
-and [AEROSPIKE_CONNECTOR.md](AEROSPIKE_CONNECTOR.md).
+`<set>_kinds` (a record per kind, bin `dates`). See the [connector guide](../connectors/CONNECTOR_GUIDE.md#9-a-key-value-store-aerospike)
+and [AEROSPIKE_CONNECTOR.md](../connectors/AEROSPIKE_CONNECTOR.md).
 
 | Setting | Default | Meaning |
 |---|---|---|
@@ -748,7 +748,7 @@ One connector per feed (the market-data pack declares them, all off by default).
 | `max-scan` | `50000` | Members read at most. |
 
 In a pack the settings may be nested (`book-pnl: { from: trade, fields: { mtm: sum $.mtm } }`): nested maps become
-dotted keys. Worked example: [PACKS.md](PACKS.md#derived-kinds-entities-computed-from-other-kinds).
+dotted keys. Worked example: [PACKS.md](../guides/PACKS.md#derived-kinds-entities-computed-from-other-kinds).
 
 ### `demo` — sample data
 

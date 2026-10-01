@@ -1,0 +1,284 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+# The file connector: JSON lines on disk, from a demo to a large book
+
+The `file` connector is the simplest store Drishti reads: plain files in a folder. No database, no cluster, no
+service to run. Each business day of a kind is one file of JSON lines, one entity per line, which any tool can write
+(a script, an export job, `jq`, a spreadsheet macro) and any person can open in a text editor. This document explains
+the layout, how the connector serves it quickly even when a day holds many thousands of entities, how to load it, its
+limits, and every setting.
+
+For the other stores see [DELTA_CONNECTOR.md](DELTA_CONNECTOR.md), [POSTGRES_CONNECTOR.md](POSTGRES_CONNECTOR.md) and
+[AEROSPIKE_CONNECTOR.md](AEROSPIKE_CONNECTOR.md); the engine side (how searches, derived kinds and impact use a day's
+columns) is in [DELTA_CONNECTOR.md, section 7](DELTA_CONNECTOR.md#7-searches-pick-lists-derived-kinds-and-impact-over-columns).
+To build demo data see [DEMO_DATA.md](DEMO_DATA.md).
+
+## Contents
+
+1. [When to use it](#1-when-to-use-it)
+2. [The layout](#2-the-layout)
+3. [What a line holds](#3-what-a-line-holds)
+4. [Declaring promoted fields](#4-declaring-promoted-fields)
+5. [Loading](#5-loading)
+6. [How the connector reads](#6-how-the-connector-reads)
+7. [Dates: snapshot and effective kinds](#7-dates-snapshot-and-effective-kinds)
+8. [Memory and size](#8-memory-and-size)
+9. [Measured results](#9-measured-results)
+10. [Limits and trade-offs](#10-limits-and-trade-offs)
+11. [Diagnosing](#11-diagnosing)
+12. [Settings](#12-settings)
+13. [The older layout: a file per entity](#13-the-older-layout-a-file-per-entity)
+
+---
+
+## 1. When to use it
+
+| Use it for | Prefer another store for |
+|---|---|
+| a demo on a laptop, a training environment | a book of a million entities a day kept for years (Delta Lake, PostgreSQL) |
+| data a team exports as files every night | data that changes during the day and must show at once (Kafka, Redis) |
+| reference data kept by hand (books, desks, limits) | many writers at once |
+| a first connector, before a database is chosen | queries other systems also run against the same store |
+
+It holds tens of thousands of entities a day comfortably and hundreds of thousands with enough memory; its reads stay
+fast because it never reads a whole day to answer one question ([section 6](#6-how-the-connector-reads)).
+
+## 2. The layout
+
+```
+<root>/                                   DRISHTI_FILES_ROOT, e.g. ./data/files
+└── trading/                              the data domain (the connector's `domain` setting)
+    ├── 2026-09-28/
+    │   └── trade.jsonl                   every trade of 28 September, one per line
+    ├── 2026-09-29/
+    │   └── trade.jsonl
+    └── 2026-09-30/
+        └── trade.jsonl
+└── reference/
+    ├── 2026-09-30/
+    │   ├── counterparty.jsonl
+    │   └── book.jsonl
+    └── desk.jsonl                        undated: the same for every business date
+```
+
+- **One file per kind per business day**, named after the kind, in a folder named after the date (`yyyy-MM-dd`).
+- **An undated file** (`<kind>.jsonl` directly in the domain folder) serves every date: right for data that does not
+  change by day.
+- Lines may be in any order; the connector sorts what it needs in memory.
+
+## 3. What a line holds
+
+A line is one JSON object. Two forms are read, and a file may mix them:
+
+**The loaders' row** (what `make_data.py --jsonl`, `bulk_trades.py --jsonl` and every Drishti loader read and write):
+
+```json
+{"domain": "trading", "kind": "trade", "id": "MX-20000001", "date": "2026-09-30",
+ "doc": "{\"tradeId\": \"MX-20000001\", \"productType\": \"IRS_FIXFLOAT\", \"mtm\": 1875863, …}",
+ "columns": {"mtm": 1875863.0, "book": "BOOK-RATES-3", "counterparty.id": "CP-MERIDIAN-RE", …}}
+```
+
+`doc` is the entity's document, as a JSON string or as an object; `columns` carries the pack's promoted fields, so the
+connector can index them without reading the document.
+
+**A plain document per line**, the simplest file anyone can write:
+
+```json
+{"id": "BOOK-RATES-3", "name": "Rates book 3", "desk": "DESK-RATES", "currency": "USD"}
+{"id": "BOOK-FX-1", "name": "FX book 1", "desk": "DESK-FX", "currency": "USD"}
+```
+
+The id is the field named by `id-field` (`id` by default); promoted fields are read from the document by their paths.
+
+## 4. Declaring promoted fields
+
+As for every store, the pack declares the fields searches use, on the connector that stores the kind
+(`layout.<kind>.columns`; see [DELTA_CONNECTOR.md, section 4](DELTA_CONNECTOR.md#4-declaring-the-layout-in-a-pack) for
+how to choose them). The `files` profile (`SPRING_PROFILES_ACTIVE=files`) switches the banking packs' store connectors
+to this plugin and keeps the packs' settings, so the trading pack's 19 promoted trade fields apply unchanged:
+
+```yaml
+# drishti-server application-files.yaml (the profile)
+drishti:
+  sources:
+    connectors:
+      trading-store: { plugin: file, settings: { root: "${DRISHTI_FILES_ROOT:./data/files}" } }
+      # … reference-store, market-store, risk-store, credit-store, collateral-store alike
+```
+
+The connector takes `<root>/<domain>` as its folder, `domain` coming from the pack (`trading`).
+
+## 5. Loading
+
+```bash
+tools/load-files.sh                              # the samples: 1,791 documents x 10 business days, into data/files
+tools/load-files.sh --trades 10000               # and a book of 10,000 trades a day for 3 days
+tools/load-files.sh /tmp/files --trades 50000    # somewhere else, a larger book
+SPRING_PROFILES_ACTIVE=files DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
+```
+
+```
+files: wrote 17,910 rows into 460 files under data/files in 0 s
+files: wrote 30,000 rows into 3 files under data/files in 2 s
+```
+
+`JsonlLoader` (in the plugin) reads the loaders' rows from a file or standard input and copies each line, as it is,
+into `<root>/<domain>/<date>/<kind>.jsonl`:
+
+- **A file the stream reaches is replaced whole.** Its lines go to `<kind>.jsonl.tmp` beside it, moved into place in
+  one atomic rename at the end, so a running server never reads half a day.
+- **At most 256 files are open at once**; a file closed early is reopened for appending.
+- A row that would land outside the root (a domain or kind like `../x`) is refused.
+
+Writing files yourself needs no loader: any process that writes a complete `<kind>.jsonl` (ideally to a temporary
+name, then renamed) is enough. The connector notices the new file on its next rescan (`rescan-seconds`, 30) and
+re-indexes a changed file the next time it is read.
+
+## 6. How the connector reads
+
+### 6.1 Finding the files
+
+Every `rescan-seconds` (30) the connector lists the domain folder: the dated folders and the `.jsonl` files in each,
+and the undated `.jsonl` files. Listing folders is cheap; no file is opened.
+
+### 6.2 The index of a day
+
+The first time a day's file is needed, the connector reads it once and keeps an **index**:
+
+- every id, sorted, with the byte offset and length of its line;
+- the kind's promoted fields, as columns (numbers as `double[]`, text as `String[]` with repeated values shared).
+
+The file is cut at line ends into up to 8 segments (one per 64 MB) indexed at once on as many threads, each reading
+4 MB blocks; a line's envelope is parsed without parsing its document. Indexes are kept by memory (`index-cache-mb`,
+1024) and rebuilt when a file's size or modification time changes. The newest day of every kind is indexed during the
+rescan, in the background, so type-ahead and the first search find it ready.
+
+### 6.3 Opening one entity
+
+`TRD MX-20000017`: a binary search of the day's sorted ids gives the line's offset and length, and one positioned read
+returns exactly that line. No other line is read, however large the file.
+
+### 6.4 Type-ahead
+
+From memory: the newest day's ids of every kind (all days' ids for effective kinds), in Drishti's sorted type-ahead
+index.
+
+### 6.5 Searches, pick lists, derived kinds and impact
+
+From the day's promoted columns in the index, exactly as on Delta Lake: a search is exact over every entity of the day
+(`partial: false`) and reads no document.
+
+### 6.6 Reverse lookups
+
+"Which trades reference netting set `NS-SUMMIT-NY`?" comes from the promoted text columns: every value equal to the id.
+A kind without promoted fields is answered by reading its lines, at most `max-load-rows` (200,000), and matching the id
+as a JSON string.
+
+## 7. Dates: snapshot and effective kinds
+
+| `mode.<kind>` | Meaning | A read on a date |
+|---|---|---|
+| `snapshot` (default) | every entity every business day | the kind's newest dated file on or before the date (within `lookback-days`, 10); an entity not in it is gone. Else the undated file, if any. |
+| `effective` | a line only when an entity changes | the entity's line in the newest file on or before the date that holds it |
+
+A date older than every file (or beyond the lookback) is not held, so the next store configured for the kind is asked:
+recent days can come from files and older ones from Delta Lake.
+
+## 8. Memory and size
+
+| Per 10,000 trades a day | Size |
+|---|---|
+| one day's file | 78 MB (about 7.8 KB a trade, the documents as JSON text) |
+| one day's index: ids and offsets | about 1 MB |
+| one day's index: 19 promoted fields | about 2.5 MB |
+
+Estimated for a million trades a day: a file of about 7.8 GB, an index of about 75 MB of ids and 230 MB of columns,
+and indexing a day in roughly 20–30 seconds on 8 threads. Files compress well (`gzip` about 8:1), but compressed files
+cannot be read by offset, so the connector reads them uncompressed.
+
+## 9. Measured results
+
+On 2026-10-01, a developer workstation, the banking packs' samples plus 10,000 trades a day for three business days
+(274 MB of files), a Drishti server with the `files` profile and `-Xmx2g`, times over HTTP:
+
+| Question | Time |
+|---|---|
+| write the samples / 30,000 trade-days | under 1 s / 2 s (9 s with generation) |
+| server start, every kind's newest day indexed | 8 s |
+| type-ahead `TRD CLY-40000` | 50 ms |
+| open a trade (view), first / again | 70 ms / 21 ms |
+| a trade's document | 18 ms |
+| a trade on a past day: first (the day is indexed) / again | 190–240 ms / 17 ms |
+| `TRD where mtm < -50m order by mtm` | 27 ms (21 matches of 10,000) |
+| `TRD where currency = 'USD' and notional > 500m …` | 26 ms (113 matches) |
+| `TRD book=BOOK-RATES-3` | 17 ms (689 matches) |
+| desk P&L | 23 ms |
+| impact of a netting set (1,282 trades) | 96 ms |
+| server heap in use | 321 MB |
+
+Every search answered over all 10,000 trades (`partial: false`).
+
+## 10. Limits and trade-offs
+
+- **The first read of a day indexes it**: a moment for a small day, tens of seconds for a million lines. The newest
+  day is indexed in the background; older days on first use.
+- **One process writes.** Files have no transactions: write a day to a temporary name and rename it, as the loader
+  does.
+- **No compression on disk** (offsets must address the plain file); a large book takes several times the disk of
+  Delta Lake or PostgreSQL.
+- **Only promoted fields are fast** for searches; others read documents (20,000 at most, `partial`).
+- **No time travel** (*known at*): a rewritten file replaces the day.
+
+## 11. Diagnosing
+
+`GET /api/v1/admin/health`:
+
+```json
+{"name": "trading-store", "health": "UP", "cache": {"jsonlKinds": 1, "jsonlDays": 10, "indexedDays": 1, "ids": 10000}}
+```
+
+| Symptom | Likely cause | What to do |
+|---|---|---|
+| `DOWN: no directory …` | the root (or `<root>/<domain>`) does not exist | create it, or fix `root`/`DRISHTI_FILES_ROOT` |
+| a new file is not served | the next rescan has not run | wait `rescan-seconds` (30) |
+| a kind is missing from type-ahead | its file has unreadable lines, or no id field | check the file; set `id-field` for plain documents |
+| searches say `partial: true` | a field the query reads is not promoted | add it to `layout.<kind>.columns`, and to the rows' `columns` |
+| the first read of an old day is slow | the day is being indexed | expected once; raise `index-cache-mb` to keep more days |
+
+## 12. Settings
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `root` | `data/feeds` | the folder; with `domain`, the connector reads `<root>/<domain>` |
+| `domain` | none | the data-domain folder under the root |
+| `mode.<kind>` | `snapshot` | `snapshot` or `effective` |
+| `lookback-days` | `10` | how far back a snapshot read looks for the newest day on or before the date asked |
+| `layout.<kind>.columns` | none | the promoted paths |
+| `id-field` | `id` | the id of a plain document per line |
+| `rescan-seconds` | `30` | how often the folders are listed again |
+| `index-cache-mb` | `1024` | memory for days' indexes |
+| `max-load-rows` | `200000` | lines a reverse lookup reads for a kind without promoted link fields |
+| `source-name` | `file` | the name shown in provenance and Health |
+
+`JsonlLoader` takes the input (`FILE` or `-`) and the root; `tools/load-files.sh [root] [--trades N] [--days D]` runs
+it.
+
+## 13. The older layout: a file per entity
+
+The connector still reads one file per entity, `<root>/<kind>/<id>.json` (or `.csv`) and dated
+`<root>/<yyyy-MM-dd>/<kind>/<id>.json`, as the public-data feeds use (`data/feeds/fixing/SOFR-HISTORY.csv`). It suits
+a handful of documents; for more than a few thousand entities a day use JSON lines, since a file per entity means a
+file system entry per entity per day. When a kind has JSON-lines files they are read first.

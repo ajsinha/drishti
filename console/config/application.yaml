@@ -23,7 +23,7 @@ backend:
   timeout_seconds: 5
   pool_size: 64
 # Several servers (ADR-016): list them and people pick one, then sign in to it. Without this list, backend.url is the
-# one server. See docs/CONFIGURATION.md, "servers".
+# one server. See docs/admin/CONFIGURATION.md, "servers".
 # servers:
 #   - { id: open, name: Drishti, url: "http://127.0.0.1:18480", color: "#2a9d8f" }
 #   - { id: rates-desk, name: Rates desk, url: "http://127.0.0.1:18481", token_secret: "${DRISHTI_TOKEN_SECRET_RATES:}" }

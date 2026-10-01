@@ -549,8 +549,8 @@ Inference never adds to columns you wrote: as soon as a panel lists one column, 
 listed. To take control of a panel, list its columns yourself; to let inference choose them, leave `columns:`
 out. `infer: true` only marks a panel with the *inferred* tag; it does not make inference add columns to a panel
 that has some. Panels of other kinds (`status`, `hbar`, charts) are never filled. To lay out a whole kind by hand,
-write a Sutra whose `match` names the kind; see the [Rachana reference](RACHANA_REFERENCE.md) and the
-[Rachana guide](RACHANA_GUIDE.md).
+write a Sutra whose `match` names the kind; see the [Rachana reference](../guides/RACHANA_REFERENCE.md) and the
+[Rachana guide](../guides/RACHANA_GUIDE.md).
 
 ## The rules
 
@@ -686,6 +686,6 @@ the bundled hints, so check the path when your change seems to have no effect.
 
 ## See also
 
-- [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md): panel kinds, formats, `infer: true`.
-- [PACKS.md](PACKS.md): where a pack's `config/semantics.yaml` fits.
+- [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md): panel kinds, formats, `infer: true`.
+- [PACKS.md](../guides/PACKS.md): where a pack's `config/semantics.yaml` fits.
 - [ARCHITECTURE.md](ARCHITECTURE.md): the view pipeline and its caches.

@@ -394,10 +394,10 @@ wrong passwords in a row lock an account for 15 minutes.
 
 **Admin** in the top bar opens the administration pages: *Users* (create users, give roles and packs),
 *Audit log*, *Health* and *Caches*. Users, roles and packs per user are explained in
-[USER_MANAGEMENT.md](USER_MANAGEMENT.md).
+[USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
 
 > **Production:** set `DRISHTI_SEED_ADMIN=false` so no development admin is created, and use long random
-> secrets. See [OPERATIONS.md](OPERATIONS.md).
+> secrets. See [OPERATIONS.md](../admin/OPERATIONS.md).
 
 ## Step 14 · Switch packs, themes and settings
 
@@ -436,7 +436,7 @@ docker compose -f deploy/compose.yaml up -d --build
 
 Sign-in is **on** in this setup: sign in at http://localhost:17480 as `drishti-dev-admin` /
 `drishti-dev-admin123` and change the password (Step 13). `docker compose -f deploy/compose.yaml down`
-stops it. Production details are in [OPERATIONS.md](OPERATIONS.md).
+stops it. Production details are in [OPERATIONS.md](../admin/OPERATIONS.md).
 
 ## If something goes wrong
 
@@ -458,6 +458,6 @@ More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 | Learn every feature of the console, with examples | [USER_GUIDE.md](USER_GUIDE.md) |
 | Know which packs exist and what commands they offer | [PACKS.md](PACKS.md) |
 | Change how a screen looks | the in-app *Sutra guide* and *Sutra Studio* tutorial, and [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md) |
-| Add users and roles | [USER_MANAGEMENT.md](USER_MANAGEMENT.md) |
-| Connect your own data | [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md) and [CONFIGURATION.md](CONFIGURATION.md) |
-| See every document | [the documentation map](README.md) |
+| Add users and roles | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) |
+| Connect your own data | [PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md) and [CONFIGURATION.md](../admin/CONFIGURATION.md) |
+| See every document | [the documentation map](../README.md) |

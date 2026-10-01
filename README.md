@@ -29,7 +29,7 @@ live trades over 5m in BOOK-RATES-3       →  the same in plain words: Drishti 
 ```
 
 **Current release: 1.12.0** ([release notes](RELEASE_NOTES.md) · [changelog](CHANGELOG.md) ·
-[what shipped when](docs/IMPLEMENTATION_PLAN.md)).
+[what shipped when](docs/architecture/IMPLEMENTATION_PLAN.md)).
 
 ## What you can do
 
@@ -68,7 +68,7 @@ live trades over 5m in BOOK-RATES-3       →  the same in plain words: Drishti 
 - **Scheduled reports**: a search run as you on a schedule (`business-days 18:30`) and delivered as CSV to a
   folder or an approved webhook.
 - **API tokens** (read-only, revocable), a standard-library **Python client** and **Excel** through Power Query
-  ([CLIENTS.md](docs/CLIENTS.md)).
+  ([CLIENTS.md](docs/guides/CLIENTS.md)).
 
 **Shape it**
 - **Sutra Studio** (`/studio`): a YAML editor with completion from the language's JSON Schema, live checks and a
@@ -77,7 +77,7 @@ live trades over 5m in BOOK-RATES-3       →  the same in plain words: Drishti 
   (125 products), `market-risk`, `counterparty-risk`, `liquidity-risk`, `climate-risk`, `operational-risk`,
   `retail-banking`, `genomics`, `politics-society`, `economics`, and the small `finance` and `logistics` packs.
   Packs inherit from each other, load and unload from Admin → Packs, and install from a **signed, versioned
-  registry** with rollback ([PACKS.md](docs/PACKS.md)).
+  registry** with rollback ([PACKS.md](docs/guides/PACKS.md)).
 - **Derived kinds**: entities computed from others, declared in a pack, such as each desk's P&L summed from its
   trades (`DPNL DESK-RATES`), with history wherever their members have it.
 
@@ -85,7 +85,7 @@ live trades over 5m in BOOK-RATES-3       →  the same in plain words: Drishti 
 - Delta Lake (local or S3, dated, time travel), PostgreSQL and other JDBC databases, Aerospike, Kafka, ActiveMQ,
   RabbitMQ, Amazon S3 and compatible stores, REST services, JSON and CSV files, and public market data (NY Fed
   SOFR, ECB €STR and FX, US Treasury, FRED). Connectors reconnect by themselves and report their health
-  ([CONNECTOR_GUIDE.md](docs/CONNECTOR_GUIDE.md)).
+  ([CONNECTOR_GUIDE.md](docs/connectors/CONNECTOR_GUIDE.md)).
 
 **Run it safely**
 - Sign-in with passwords or single sign-on (OpenID Connect), roles that decide which kinds each person may open,
@@ -94,14 +94,14 @@ live trades over 5m in BOOK-RATES-3       →  the same in plain words: Drishti 
   for production.
 - **One console, many servers**: list several servers and people pick one, signing in to each separately.
 - Admin → Health, Prometheus metrics, a Grafana dashboard, liveness and readiness checks, Docker images and
-  runbooks ([OPERATIONS.md](docs/OPERATIONS.md)).
+  runbooks ([OPERATIONS.md](docs/admin/OPERATIONS.md)).
 - Seven themes, a strict content security policy with every asset vendored (no CDN), and phones: it works on iPhone
   and Android and can be added to the home screen.
 
 ## Try it
 
-New to Drishti? **[QUICKSTART.md](docs/QUICKSTART.md)** gets you to a live view in ten minutes;
-**[GETTING_STARTED.md](docs/GETTING_STARTED.md)** explains every step from a clean machine. The short version,
+New to Drishti? **[QUICKSTART.md](docs/guides/QUICKSTART.md)** gets you to a live view in ten minutes;
+**[GETTING_STARTED.md](docs/guides/GETTING_STARTED.md)** explains every step from a clean machine. The short version,
 from the repository root (OpenJDK 21, Python 3.11 or newer, [uv](https://docs.astral.sh/uv/)):
 
 ```bash
@@ -127,7 +127,7 @@ top bar, or `live trades over 5m, biggest first`. Without `DRISHTI_PACKS` the se
 
 Sign-in is off for local development (you act as a user with every role). To turn it on and sign in as the
 development admin **`drishti-dev-admin` / `drishti-dev-admin123`** (change that password; the UI warns until you
-do), see [GETTING_STARTED.md, Step 13](docs/GETTING_STARTED.md#step-13--optional-turn-on-sign-in-and-change-the-admin-password).
+do), see [GETTING_STARTED.md, Step 13](docs/guides/GETTING_STARTED.md#step-13--optional-turn-on-sign-in-and-change-the-admin-password).
 
 Checks: `curl -s localhost:18480/actuator/health` and `curl -s localhost:17480/healthz` answer
 `{"status":"UP"…}`; `curl -s localhost:17480/readyz` answers `{"status":"UP","server":"reachable"}` once the
@@ -170,29 +170,29 @@ drishti/
 
 ## Documentation
 
-Start with the **[quickstart](docs/QUICKSTART.md)**, then the **[user guide](docs/USER_GUIDE.md)**. The
+Start with the **[quickstart](docs/guides/QUICKSTART.md)**, then the **[user guide](docs/guides/USER_GUIDE.md)**. The
 **[documentation map](docs/README.md)** lists every document by what you want to do.
 
 | Read this when… | Document |
 |---|---|
-| you want it running in ten minutes | [QUICKSTART.md](docs/QUICKSTART.md) |
-| you install for the first time, every step explained | [GETTING_STARTED.md](docs/GETTING_STARTED.md) |
-| you use the console | [USER_GUIDE.md](docs/USER_GUIDE.md) |
-| you load, assign, build, publish or install a domain pack | [PACKS.md](docs/PACKS.md) |
-| you learn to write a Sutra, step by step | [RACHANA_GUIDE.md](docs/RACHANA_GUIDE.md) |
-| you need an exact Sutra key, format or expression | [RACHANA_REFERENCE.md](docs/RACHANA_REFERENCE.md) |
-| a view is laid out by inference and you want to know why | [INFERENCE.md](docs/INFERENCE.md) |
-| you connect your own data | [CONNECTOR_GUIDE.md](docs/CONNECTOR_GUIDE.md), [PLUGIN_GUIDE.md](docs/PLUGIN_GUIDE.md) |
-| you need a setting's name, default and environment variable | [CONFIGURATION.md](docs/CONFIGURATION.md) |
-| you manage users, roles, single sign-on, tokens or the access log | [USER_MANAGEMENT.md](docs/USER_MANAGEMENT.md) |
-| you script against it, from Python, Excel or curl | [CLIENTS.md](docs/CLIENTS.md), [API_GUIDE.md](docs/API_GUIDE.md) |
-| you run it in production | [OPERATIONS.md](docs/OPERATIONS.md), [PERFORMANCE.md](docs/PERFORMANCE.md), [LIVE.md](docs/LIVE.md) |
-| you serve millions of entities a day for years | [DELTA_CONNECTOR.md](docs/DELTA_CONNECTOR.md), [POSTGRES_CONNECTOR.md](docs/POSTGRES_CONNECTOR.md), [AEROSPIKE_CONNECTOR.md](docs/AEROSPIKE_CONNECTOR.md) |
-| you need demo data, small or large | [DEMO_DATA.md](docs/DEMO_DATA.md) |
-| something is not working | [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md), [runbooks](docs/runbooks/) |
-| you change the code | [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) |
-| you want to understand the design and its decisions | [ARCHITECTURE.md](docs/ARCHITECTURE.md), [ADRs](docs/adr/README.md) |
-| you want to know what shipped when, and what is next | [IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md), [CHANGELOG.md](CHANGELOG.md) |
+| you want it running in ten minutes | [QUICKSTART.md](docs/guides/QUICKSTART.md) |
+| you install for the first time, every step explained | [GETTING_STARTED.md](docs/guides/GETTING_STARTED.md) |
+| you use the console | [USER_GUIDE.md](docs/guides/USER_GUIDE.md) |
+| you load, assign, build, publish or install a domain pack | [PACKS.md](docs/guides/PACKS.md) |
+| you learn to write a Sutra, step by step | [RACHANA_GUIDE.md](docs/guides/RACHANA_GUIDE.md) |
+| you need an exact Sutra key, format or expression | [RACHANA_REFERENCE.md](docs/guides/RACHANA_REFERENCE.md) |
+| a view is laid out by inference and you want to know why | [INFERENCE.md](docs/architecture/INFERENCE.md) |
+| you connect your own data | [CONNECTOR_GUIDE.md](docs/connectors/CONNECTOR_GUIDE.md), [PLUGIN_GUIDE.md](docs/connectors/PLUGIN_GUIDE.md) |
+| you need a setting's name, default and environment variable | [CONFIGURATION.md](docs/admin/CONFIGURATION.md) |
+| you manage users, roles, single sign-on, tokens or the access log | [USER_MANAGEMENT.md](docs/admin/USER_MANAGEMENT.md) |
+| you script against it, from Python, Excel or curl | [CLIENTS.md](docs/guides/CLIENTS.md), [API_GUIDE.md](docs/guides/API_GUIDE.md) |
+| you run it in production | [OPERATIONS.md](docs/admin/OPERATIONS.md), [PERFORMANCE.md](docs/admin/PERFORMANCE.md), [LIVE.md](docs/architecture/LIVE.md) |
+| you serve millions of entities a day for years | [DELTA_CONNECTOR.md](docs/connectors/DELTA_CONNECTOR.md), [POSTGRES_CONNECTOR.md](docs/connectors/POSTGRES_CONNECTOR.md), [AEROSPIKE_CONNECTOR.md](docs/connectors/AEROSPIKE_CONNECTOR.md) |
+| you need demo data, small or large | [DEMO_DATA.md](docs/connectors/DEMO_DATA.md) |
+| something is not working | [TROUBLESHOOTING.md](docs/guides/TROUBLESHOOTING.md), [runbooks](docs/admin/runbooks/) |
+| you change the code | [DEVELOPER_GUIDE.md](docs/guides/DEVELOPER_GUIDE.md) |
+| you want to understand the design and its decisions | [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md), [ADRs](docs/architecture/adr/README.md) |
+| you want to know what shipped when, and what is next | [IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md), [CHANGELOG.md](CHANGELOG.md) |
 
 ## Contributing rules
 

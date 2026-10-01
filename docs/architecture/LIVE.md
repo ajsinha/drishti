@@ -49,7 +49,7 @@ looking at today's business date. Pick a past date in the top bar and every view
 The server streams over Server-Sent Events (SSE): a plain HTTP response that never ends, made of text
 events. `curl -N` (no buffering) shows them as they arrive. The examples run against a local server with
 security off (`drishti.security.enabled: false`); with security on, add an `Authorization: Bearer …`
-header (see [API_GUIDE.md](API_GUIDE.md)).
+header (see [API_GUIDE.md](../guides/API_GUIDE.md)).
 
 ### 1. Stream one view from the server
 
@@ -457,7 +457,7 @@ told when END-1000008's MTM rises above 2.1 million:
 ```
 
 Because it fires on the false → true edge, you get one alert when MTM crosses 2.1 m, not one per tick while it
-stays above. Users normally create rules from the console's alerts page; see [USER_GUIDE.md](USER_GUIDE.md).
+stays above. Users normally create rules from the console's alerts page; see [USER_GUIDE.md](../guides/USER_GUIDE.md).
 
 ## Latency
 
@@ -477,12 +477,12 @@ drishti_live_streams 0.0
 drishti_live_topics 0.0
 ```
 
-If p99 stays above 40 ms, follow [runbooks/live-latency-high.md](runbooks/live-latency-high.md).
-Measured numbers are in [PERFORMANCE.md](PERFORMANCE.md).
+If p99 stays above 40 ms, follow [runbooks/live-latency-high.md](../admin/runbooks/live-latency-high.md).
+Measured numbers are in [PERFORMANCE.md](../admin/PERFORMANCE.md).
 
 ## Settings
 
-All under `drishti.live` in the server's configuration ([CONFIGURATION.md](CONFIGURATION.md)):
+All under `drishti.live` in the server's configuration ([CONFIGURATION.md](../admin/CONFIGURATION.md)):
 
 | Key | Default | Effect |
 |---|---|---|
@@ -505,7 +505,7 @@ Or for one run: `java -jar drishti-server-1.12.0-exec.jar --drishti.live.frame=1
 
 Behind a reverse proxy, turn off response buffering for SSE (`proxy_buffering off;` in nginx; the console
 already sends `X-Accel-Buffering: no`) and set the read timeout above the heartbeat interval. See
-[OPERATIONS.md](OPERATIONS.md).
+[OPERATIONS.md](../admin/OPERATIONS.md).
 
 ## Streaming sources
 
@@ -577,7 +577,7 @@ Other shapes: without `kind`/`id-field` the connector expects **envelopes**,
 memory and only drives the ticks of open views while a store (Delta Lake, a database) serves the documents: such a
 view is live although its document came from the store, because a live connector declares that it pushes the kind
 (`SourcePlugin.pushes`), and it subscribes there.
-See [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md) for every Kafka setting.
+See [PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md) for every Kafka setting.
 
 ## The demo source
 

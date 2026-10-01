@@ -309,7 +309,7 @@ panels:
 
 **Panel kinds** (the `PanelKind` enum, thirteen): `kv`, `table`, `tabs`, `line`, `area`, `hbar`, `ladder`, `links`,
 `status`, `provenance`, `markdown`, `gauge`, `surface`. The full grammar is in
-[RACHANA_REFERENCE.md](RACHANA_REFERENCE.md). A new kind is added to the enum (with its required and allowed
+[RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md). A new kind is added to the enum (with its required and allowed
 options) and to the binder on the Java side, plus a Jinja macro in `_macros/panels.html` and its client-side
 handling on the console.
 
@@ -447,7 +447,7 @@ Dated sources stamp `Provenance.businessDate` and are tried first for a picked d
 | `delta` | Delta Lake through Delta Kernel: `<root>/<domain>/<kind>/business_date=yyyy-MM-dd/`; `root` may be local or object storage (`s3a://…`, through `LakeStore`); time travel answers "as known at" |
 | `file`, `s3` | dated folders `<root or prefix>/<yyyy-MM-dd>/<kind>/<id>.json`, newest on or before the date |
 | `jdbc` | a query that uses `:asOf` |
-| `aerospike` | a record per entity per business date (`kind/id/yyyyMMdd`), found through the entity's index record listing its dates ([AEROSPIKE_CONNECTOR.md](AEROSPIKE_CONNECTOR.md)) |
+| `aerospike` | a record per entity per business date (`kind/id/yyyyMMdd`), found through the entity's index record listing its dates ([AEROSPIKE_CONNECTOR.md](../connectors/AEROSPIKE_CONNECTOR.md)) |
 | `feeds` | keeps dated observations of public feeds |
 
 ```
@@ -496,7 +496,7 @@ connectors, starter workspaces, help guides and sample data.
   non-financial ones prove the core is neutral.
 
 `GET /api/v1/packs` lists the loaded packs; the console reads their console content from the same folders. See
-[PACKS.md](PACKS.md) and ADR-010.
+[PACKS.md](../guides/PACKS.md) and ADR-010.
 
 ---
 
@@ -551,7 +551,7 @@ Spring Data repositories in `identity.db` are the exception).
 
 Precedence (low → high): pack content → `application.yaml` → `application.local.yaml` (git-ignored, imported from
 the working directory) → environment variables → `--key=value` arguments. `${VAR:default}` interpolation; no
-secrets in tracked files. The full key reference is [CONFIGURATION.md](CONFIGURATION.md).
+secrets in tracked files. The full key reference is [CONFIGURATION.md](../admin/CONFIGURATION.md).
 
 | File | Owns |
 |---|---|
@@ -567,7 +567,7 @@ secrets in tracked files. The full key reference is [CONFIGURATION.md](CONFIGURA
 
 ## 16. REST and streaming API (`/api/v1`)
 
-The main endpoints; [API_GUIDE.md](API_GUIDE.md) lists every one with examples. OpenAPI is served at `/api/docs`
+The main endpoints; [API_GUIDE.md](../guides/API_GUIDE.md) lists every one with examples. OpenAPI is served at `/api/docs`
 (Swagger UI at `/api/docs/ui`).
 
 | Method | Path | Returns |
@@ -653,7 +653,7 @@ one panel, updates strip cells in place, and hands chart panels new data — so 
 - **Sign-in.** Users, roles, preferences and the audit trail live in the **server** (`drishti-identity`), in a JPA
   database: SQLite by default (one file) or PostgreSQL. The console verifies a sign-in by calling
   `POST /api/v1/auth/login` with its own service token and never sees password hashes (PBKDF2). It then keeps a
-  signed, expiring session cookie. Details, storage and administration: [USER_MANAGEMENT.md](USER_MANAGEMENT.md).
+  signed, expiring session cookie. Details, storage and administration: [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
 - **Token boundary.** For every server call the console mints a short-lived HS256 token (`auth.token_secret` =
   server `drishti.security.secret`, `DRISHTI_TOKEN_SECRET`; 300 s). With `drishti.security.enabled`, `TokenFilter`
   requires it on every `/api/**` request (algorithm pinned, constant-time check) and answers 401 problem+json
@@ -706,7 +706,7 @@ one panel, updates strip cells in place, and hands chart panels new data — so 
 | D6 | Vendored front-end assets, no build pipeline | Air-gapped desks; MAYA/Pravaha practice |
 | D7 | Industries are packs that inherit; users live in the server | Neutral core; any number of consoles share users (ADR-009, ADR-010, ADR-015) |
 
-The full records are in [`docs/adr/`](adr/).
+The full records are in [`docs/architecture/adr/`](adr/).
 
 ---
 

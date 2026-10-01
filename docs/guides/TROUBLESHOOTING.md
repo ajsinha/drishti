@@ -169,7 +169,7 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
 
 - **Cause:** it listens on `127.0.0.1` only, by default.
 - **Fix:** `DRISHTI_CONSOLE_HOST=0.0.0.0 console/.venv/bin/python console/run_drishti_web.py`, and, for anything
-  beyond a trial, turn security on first (see [OPERATIONS.md](OPERATIONS.md)).
+  beyond a trial, turn security on first (see [OPERATIONS.md](../admin/OPERATIONS.md)).
 
 ## Signing in
 
@@ -189,7 +189,7 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
 
   Then sign in at `http://localhost:17480/login` as **`drishti-dev-admin`** / **`drishti-dev-admin123`** and
   change the password at **My account** (`/account`). The admin pages warn until you do. See
-  [USER_MANAGEMENT.md](USER_MANAGEMENT.md).
+  [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
 
 ### The console will not start: "auth.session_secret must be at least 32 characters when auth is enabled"
 
@@ -213,7 +213,7 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
 - **Cause:** the console cannot reach the server, or `DRISHTI_TOKEN_SECRET` differs between them, so the server
   refuses the console's service token. Clocks more than 30 seconds apart also cause it.
 - **Fix:** run the [first checks](#first-checks-run-these-first); set the same secret in both environments; check
-  the clocks (NTP). More in [runbooks/sign-in.md](runbooks/sign-in.md).
+  the clocks (NTP). More in [runbooks/sign-in.md](../admin/runbooks/sign-in.md).
 
 ### I sign in and land back on the sign-in page
 
@@ -250,7 +250,7 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
 - **Fix:** start the server, or point the console at it with `DRISHTI_BACKEND_URL`; with security on, give
   both the same `DRISHTI_TOKEN_SECRET`. The console becomes ready by itself; no restart is needed. In
   Kubernetes, use `/healthz` for the liveness probe and `/readyz` for the readiness probe (see
-  [OPERATIONS.md](OPERATIONS.md)).
+  [OPERATIONS.md](../admin/OPERATIONS.md)).
 
 ### The live dot is amber ("Reconnecting…")
 
@@ -268,7 +268,7 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
 ### The page looks fine but typing does nothing (no suggestions), often with several tabs open
 
 - **Cause:** before 1.10, each view and the alerts bell held its own connection, and browsers allow only six per
-  site. Each tab now uses one live connection (see [LIVE.md](LIVE.md)).
+  site. Each tab now uses one live connection (see [LIVE.md](../architecture/LIVE.md)).
 - **Fix:** hard-refresh old tabs once (**Ctrl+Shift+R**) so they load the new scripts.
 
 ## Commands and views
@@ -302,7 +302,7 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
 
   You should see `750 ['MX-20000001', 'MX-20000002', 'MX-20000003', 'MX-20000004', 'MX-20000005']` on the banking samples.
 - **Fix:** correct the id. If the list is empty for every id you try, the source that holds the kind may be
-  down (see [runbooks/source-down.md](runbooks/source-down.md)), or you picked a past date the source has no
+  down (see [runbooks/source-down.md](../admin/runbooks/source-down.md)), or you picked a past date the source has no
   data for.
 
 ### "DRS-1001 no source holds trade/MX-29999999"
@@ -320,7 +320,7 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
   on, check in the console's pack menu, the round box tool in the top bar). An admin also checks
   *Admin → Packs*: a pack switched **off** there is off for everyone.
 - **Fix:** tick the pack in the box menu, or ask an admin to assign the pack or a role, or to switch the pack on.
-  See [USER_MANAGEMENT.md](USER_MANAGEMENT.md).
+  See [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
 
 ### Suggestions do not appear
 
@@ -333,7 +333,7 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
   A list means the server is fine: refresh the page (see *typing does nothing* above). An empty list means no
   enabled pack has a mnemonic starting with that text, or every source missed the 30 ms budget.
 - **Fix:** for a custom source, declare `search` in the plugin and index ids in memory with `HitIndex`
-  ([PLUGIN_GUIDE.md](PLUGIN_GUIDE.md)). `/api/v1/sources` shows `"search": true` for sources that can suggest.
+  ([PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md)). `/api/v1/sources` shows `"search": true` for sources that can suggest.
 
 ### A panel says "No data available"
 
@@ -343,14 +343,14 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
   to read the exact error. Press **F9** to see the raw JSON and compare it with the panel's `rows:` path in the
   Sutra (Studio shows it).
 - **Fix:** if the data is right and the Sutra is wrong, fix the Sutra in Studio; see
-  [runbooks/sutra-broken.md](runbooks/sutra-broken.md).
+  [runbooks/sutra-broken.md](../admin/runbooks/sutra-broken.md).
 
 ### A linked entity shows `pending` or `missing` instead of a badge
 
 - **Cause:** `pending`: the linked entity did not arrive within the 40 ms link budget (`drishti.graph.link-budget`).
   `missing`: no source has it.
 - **Check:** `curl -s http://localhost:18480/api/v1/sources` for a source whose `health` is not `UP`.
-- **Fix:** a slow source: see [runbooks/source-down.md](runbooks/source-down.md). Open the link itself to see the
+- **Fix:** a slow source: see [runbooks/source-down.md](../admin/runbooks/source-down.md). Open the link itself to see the
   real error.
 
 ### Charts are blank
@@ -414,7 +414,7 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
   shows `'live': True` for an entity that ticks.
 - **Fix:** press **Live**. If `live` is `False`, that entity's source does not stream (in the samples, only
   documents marked live in the `demo` source tick; the trading pack's Kafka stream needs
-  `DRISHTI_STREAM_TRADING=true`). See [LIVE.md](LIVE.md).
+  `DRISHTI_STREAM_TRADING=true`). See [LIVE.md](../architecture/LIVE.md).
 
 ### "… is not a dated source: this shows its current data, not 2026-08-03"
 
@@ -442,7 +442,7 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
 
 - **Cause:** only sources that keep versions (Delta Lake) honour it; others have one version. Delta resolves times
   from the `_delta_log` files' modification times, so a lake copied without preserving times loses its history.
-- **Fix:** copy lakes with `cp -p` or `rsync -t`. See [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md).
+- **Fix:** copy lakes with `cp -p` or `rsync -t`. See [PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md).
 
 ## Search
 
@@ -475,7 +475,7 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
 
 - **Cause:** the scan stopped short: more than 20,000 entities of that kind (`drishti.search.max-scan`), or a
   source slower than 3 seconds (`drishti.search.budget`). The API answer has `"partial": true`.
-- **Fix:** narrow the search, or raise the limits ([CONFIGURATION.md](CONFIGURATION.md)).
+- **Fix:** narrow the search, or raise the limits ([CONFIGURATION.md](../admin/CONFIGURATION.md)).
 
 ## Studio and Sutras
 
@@ -493,7 +493,7 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
 - **Cause and fix:** an invalid edit keeps the **last good version** live. Fix the reported line (Studio's
   Ctrl+Enter lists problems by line). With review on (the default), a saved Sutra is only a **proposal** until an
   approver approves it in **Studio → Reviews**. *How this view was built* shows the version actually used. See
-  [runbooks/sutra-broken.md](runbooks/sutra-broken.md).
+  [runbooks/sutra-broken.md](../admin/runbooks/sutra-broken.md).
 
 ### After upgrading, Sutras are missing and `problems` lists `.sutra.md` files
 
@@ -504,7 +504,7 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
 - **Fix:** convert them, from the repository root: `python3 tools/rachana/md_to_yaml.py ./sutras --delete` (a file or
   a folder). You should see one `… .sutra.md -> … .sutra.yaml` line per file, then `{}` from `problems`. Rename a
   plain YAML Sutra to `<name>.v<N>.sutra.yaml`; move other YAML files out of the folder. A file without `rachana: 1`
-  at the top is `DRS-2009`: add it. See [runbooks/sutra-broken.md](runbooks/sutra-broken.md).
+  at the top is `DRS-2009`: add it. See [runbooks/sutra-broken.md](../admin/runbooks/sutra-broken.md).
 
 ### Approving fails with `DRS-2007` or `DRS-2006`
 
@@ -527,7 +527,7 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
 
 - **Check:** `curl -s http://localhost:18480/api/v1/admin/health | python3 -c "import json,sys; [print(p['name'], p['status'], p['sutraProblems'], p['connectorsDown']) for p in json.load(sys.stdin)['packs']]"`
 - **Fix:** Sutra problems: see *A Sutra edit has no effect*. A connector down: see
-  [runbooks/source-down.md](runbooks/source-down.md).
+  [runbooks/source-down.md](../admin/runbooks/source-down.md).
 
 
 ### A pack is *off* in Admin → Packs, or its users get `DRS-5002`
@@ -576,12 +576,12 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
   overall status stays **OK**.
 - **Fix:** nothing, if you do not use it. To use it, give it its settings under
   `drishti.sources.connectors.<name>.settings` (or the plugin's own `drishti.sources.plugins.<name>.settings`),
-  and restart. See [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md).
+  and restart. See [PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md).
 
 ### A connector failed to start
 
 - **What you see:** Admin → Health says **DEGRADED**, and `failedToStart` names the connector with a reason.
-- **Fix:** follow [runbooks/source-down.md](runbooks/source-down.md), step 2.
+- **Fix:** follow [runbooks/source-down.md](../admin/runbooks/source-down.md), step 2.
 
 ## Monitoring endpoints
 
@@ -656,4 +656,4 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
 | `DRS-5002` | forbidden (role or pack) |
 | `DRS-5003` | console cannot reach the server |
 | `DRS-5010` | not signed in |
-| `DRS-6001`–`DRS-6009` | user management (see [USER_MANAGEMENT.md](USER_MANAGEMENT.md)); `DRS-6005` is a locked account |
+| `DRS-6001`–`DRS-6009` | user management (see [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)); `DRS-6005` is a locked account |

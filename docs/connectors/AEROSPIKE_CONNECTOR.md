@@ -23,7 +23,7 @@ limits.
 
 Read it if you run Drishti on Aerospike, load Aerospike for Drishti, or change the connector. For a first setup see
 [CONNECTOR_GUIDE.md](CONNECTOR_GUIDE.md#9-a-key-value-store-aerospike); every setting is in
-[CONFIGURATION.md](CONFIGURATION.md#aerospike). The same design for Delta Lake is in
+[CONFIGURATION.md](../admin/CONFIGURATION.md#aerospike). The same design for Delta Lake is in
 [DELTA_CONNECTOR.md](DELTA_CONNECTOR.md); the two share the engine side (columns, searches, derived kinds, impact), which
 is explained there in [section 7](DELTA_CONNECTOR.md#7-searches-pick-lists-derived-kinds-and-impact-over-columns).
 
