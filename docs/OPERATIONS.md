@@ -323,7 +323,7 @@ repository root.
 uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta
 
 # the finance pack's own lake (domain "finance")
-uv run --with deltalake --with pyarrow python tools/samplegen/lake.py \
+uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/lake.py \
     --samples packs/finance/samples --root data/delta --domain finance --days 10
 ```
 

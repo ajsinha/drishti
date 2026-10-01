@@ -424,7 +424,7 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
 - **Fix:** pick a date the lake covers, or build more history:
 
   ```bash
-  uv run --with deltalake --with pyarrow python tools/samplegen/lake.py \
+  uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/lake.py \
       --samples packs/finance/samples --root data/delta --domain finance --days 30
   ```
 
