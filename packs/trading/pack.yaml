@@ -66,8 +66,15 @@ connectors:
       disk-cache.zone: America/New_York
 routes:
   trade: trading-store
-columns:                       # key fields shown beside each trade in pick lists (TRD T-100) and searches
-  trade: [productType, direction, currency, notional, mtm, maturityDate, book]
+columns:
+  trade:
+  - productType
+  - direction
+  - currency
+  - notional
+  - mtm
+  - maturityDate
+  - book
 console:
   examples:
   - - TRD T-10001

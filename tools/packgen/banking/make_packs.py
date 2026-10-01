@@ -69,6 +69,11 @@ EXAMPLES = {  # command, what it shows (ids from make_data.py's deterministic da
 }
 TRADER_KINDS = ["trade", *layout.PACKS["market-data"]["kinds"]["market"], "counterparty", "counterparty-group", "issuer", "book", "desk",
                 "trader", "legal-entity", "calendar", "agreement", "csa", "ccp", "clearing-account"]
+# key fields shown beside each entity in pick lists (TRD T-100, CPTY north) and searches
+COLUMNS = {"trading": {"trade": ["productType", "direction", "currency", "notional", "mtm", "maturityDate", "book"]},
+           "banking-core": {"counterparty": ["name", "rating", "sector", "country", "netMtm"],
+                            "book": ["name", "deskName", "tradeCount", "mtm", "dv01"]}}
+
 ROLES = {"trading": {"trader": {"kinds": TRADER_KINDS}}, "market-risk": {"market-risk": {"kinds": ["*"], "raw": True}},
          "counterparty-risk": {"credit-risk": {"kinds": ["*"], "raw": True}}}
 
@@ -112,7 +117,11 @@ def manifest(name: str) -> dict:
     if name == "market-data":
         for feed, (switch, kinds_, extra, _) in FEEDS.items():
             m["connectors"][f"{feed}-feed"] = {"plugin": "feed", "enabled": "${" + switch + ":false}", "kinds": kinds_,
-                                               "settings": {"feed": feed, "refresh-minutes": 60, **extra}}
+                                               "settings": {"feed": feed,
+                                                            "user-agent": "${drishti.branding.product:feed} public data feed connector",
+                                                            "refresh-minutes": 60, **extra}}
+    if name in COLUMNS:
+        m["columns"] = COLUMNS[name]
     m["console"] = {"examples": [list(e) for e in EXAMPLES[name]], "help": "config/help.yaml"}
     if name in IMPACT:
         m["graph"]["impact"] = IMPACT[name]
