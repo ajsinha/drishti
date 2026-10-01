@@ -10,179 +10,109 @@
 
 **Any data. Any domain. One grammar.**
 
-Drishti (दृष्टि, "sight") is a live, keyboard-driven terminal. It renders **any entity from any
-system** as a dense, linked, ticking view: a swap, an FX trade, a futures position, a netting set.
-It does not need a hand-coded screen per product:
-- **Rachana** (रचना, *composition*) is a declarative screen grammar. Each product family
-  gets a **Sutra**, a short versioned layout written in Rachana, instead of a coded screen.
-- Where no Sutra exists, or a Sutra leaves gaps, an **inference engine** reads the shape of the data and fills them in.
+Drishti (दृष्टि, "sight") is a live, keyboard-driven terminal for any kind of data. Type an identifier and it
+renders the entity behind it, a swap, a counterparty, a liquidity ladder, a gene, as a dense, linked, ticking view,
+from whichever system holds it. Nobody codes a screen per product:
+
+- **Rachana** (रचना, *composition*) is a declarative screen grammar. A product family gets a **Sutra**: a short,
+  versioned YAML file that says what the screen shows.
+- Where there is no Sutra, or a Sutra leaves gaps, an **inference engine** reads the shape of the data and lays
+  out the rest.
+- **Domain packs** bring an industry: its kinds, mnemonics, Sutras, vocabulary, links, roles and connectors. The core
+  knows no industry.
 
 ```
-TRD IRS-48213 <GO>        →  swap legs, cashflows, SOFR curve, DV01 ladder, links
-NSET NS-NORTH-01 <GO>     →  exposure profile, member trades, CSA, collateral
+TRD T-10001 <GO>                          →  the trade: terms, legs, cashflows, curve, DV01 ladder, links
+NSET NS-SUMMIT-NY <GO>                    →  exposure profile, member trades, CSA, collateral
+TRD where mtm < -10m order by mtm         →  every trade losing more than 10m, worst first
+live trades over 5m in BOOK-RATES-3       →  the same in plain words: Drishti shows the search it makes
 ```
 
-As you type, the command line suggests mnemonics and entities in a dropdown, as the Bloomberg
-terminal does. A command that names several entities gives a pick list:
+**Current release: 1.12.0** ([release notes](RELEASE_NOTES.md) · [changelog](CHANGELOG.md) ·
+[what shipped when](docs/IMPLEMENTATION_PLAN.md)).
 
-```
-TRD T-100 <GO>                 →  99 trades whose id starts with T-100, with product, direction, notional, MTM …
-TRD productType=Revolver <GO>  →  6 revolving credit facilities
-CPTY north <GO>                →  one match, so CP-NORTHBRIDGE opens at once
-```
+## What you can do
 
-## Status
+**Look things up**
+- A command line with type-ahead, as on a Bloomberg terminal: mnemonics, recent entities and matches from every
+  source as you type. One match opens; several give a **pick list** with each kind's key fields
+  (`TRD T-100`, `CPTY north`, `TRD productType=Revolver`).
+- **Views** of any entity: a header strip, panels (tables, curves, ladders, surfaces, key-value, links), function
+  keys, linked entities with badges, and the raw document (F9). Every table sorts, filters, pages and walks with
+  the keyboard; id columns link to their entities.
+- **Structured search** (`TRD where notional >= 250m and assetClass = 'Rates' order by mtm desc limit 20`), or
+  **plain words** (`usd trades maturing before 2028 with negative mtm`): a deterministic parser shows the search
+  it makes, part by part, before anything runs. No AI service is involved.
+- **Impact (F8)**: what depends on an entity, what it rolls into, and the amount at stake.
 
-**Drishti 1.12.0 is the current release** (see [RELEASE_NOTES.md](RELEASE_NOTES.md)). Every planned wave is
-done; [IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) maps waves to releases and lists the known gaps. It is built in waves on `develop`, each merged to `main` when its build was green.
+**Over time**
+- **Business dates**: Live, or any past business day on the server's calendar, as a static snapshot. Views,
+  links, search and impact all follow the date. **Known at** shows a day as it was known at an earlier time.
+- **Compare** an entity between two dates, field by field, and a search between two dates, with the change in
+  every number.
+- **Field history**: click any number for its line over the last 10 to 250 business days, with the date and
+  connector each value came from.
+- **Freshness**: every view says when its source last received data; a source quiet for longer than its
+  `stale-after` is flagged, on the view and in Admin → Health.
 
-| Wave | Theme | State |
-|---|---|---|
-| 1 | Build foundation: Maven reactor, copyright/size/architecture gates, CI | ✅ done |
-| 2 | Console shell, 7 themes (incl. *wallstreet*, *crimson*), landing page with hero animation | ✅ done |
-| 3 | Data model, plugin SPI, `demo` + `file` sources, routing, fingerprints | ✅ done |
-| 4 | Sutra grammar: parser with line/column errors, hot-reloading registry | ✅ done |
-| 5 | Rachana-EL expressions, formats, Sutra matching; golden strips for all four mockups | ✅ done |
-| 6 | Inference engine: rules, packing, Sutra ⊕ inference merge | ✅ done |
-| 7 | View pipeline, entity links, command type-ahead service | ✅ done |
-| 8 | REST API and console entity views (the four mockups end to end) | ✅ done |
-| 9 | Live updates over SSE, measured p99 | ✅ done |
-| 10 | Sutra Studio, security, ops, v1.0.0 | ✅ done |
-| 11 | User management: users, roles, passwords, lockout, audit; seeded dev admin; v1.1.0 | ✅ done |
-| 12 | Help centre and About | ✅ done |
-| 12b | Competitive landscape; mobile (iPhone and Android, add to home screen) | ✅ done |
-| 13 | Workspaces | ✅ done |
-| 13b | Domain packs: neutral core; finance and logistics packs | ✅ done |
-| 14 | Monitors and alerts | ✅ done |
-| 15 | F8 impact | ✅ done |
-| 13c | Packs per user: admins assign, users choose, enforced by the server | ✅ done |
-| R1–R2, B0 | Banking packs (banking-core, market-data, trading, market-risk, counterparty-risk): taxonomy of 125 products and 45 data kinds, 170 generated Sutras; pack `requires`, `connectors` per data domain, `routes` | ✅ done |
-| R3–R4 | Banking packs: 1,791 consistent documents and a Delta Lake by data domain with business-day history; generated pack guides (overviews, 125-product catalogue, market-data catalogue, data model) under Help → Domain packs | ✅ done |
-| R5 | Banking packs in PostgreSQL (JDBC table mode) and Aerospike, behind one dated-source contract shared with Delta Lake; `postgres`/`aerospike` profiles; five public feeds (NY Fed SOFR, ECB €STR and FX, US Treasury, FRED), each switchable, off by default | ✅ done (database tests run in Docker) |
-| P2–P3 | Packs: **liquidity risk** (LCR, NSFR, ladders, HQLA, funding, stress, intraday) and **climate risk** (profiles, PCAF, NGFS, stress, physical risk, GAR), on a common pack builder | ✅ done |
-| P4 | Pack: **operational and non-financial risk** (losses, RCSA, KRIs, issues, scenarios, vendors, cyber, SMA capital) | ✅ done |
-| P5 | Pack: **retail banking** (customers, deposits, mortgages, cards, loans, branches, collections, IFRS 9) | ✅ done |
-| P6 | Pack: **genomics and biology** (genes on GRCh38, variants, proteins, pathways, samples, runs, expression, trials) | ✅ done |
-| P7–P8 | Packs: **politics and society** (fictional polities: elections, polls, bills, regions) and **economics** (economies, indicators, central banks, forecasts, trade, labour, fiscal, prices) | ✅ done |
-| 22 | Business dates: Live or a picked date (static) on the USNY calendar; Delta Lake connector with time travel; named connectors; imperfect documents render as "No data available" | ✅ done |
-| 16 | History: **Compare** an entity between two business dates (field by field, arrays matched by key, deltas); a **known at** control for time travel and restatements | ✅ done |
-| 20a | Kafka live source: the trading pack's trades stream and tick from a topic (`DRISHTI_STREAM_TRADING=true`) | ✅ done |
-| 17 | Structured search: `TRD where notional >= 250m and assetClass = 'Rates' order by mtm desc limit 20` on the command line; results by value, redacted per role, following the date box | ✅ done |
-| 18 | Export and share: CSV of any panel, search or comparison; the document as JSON; print or save as PDF; **Share** copies a link that reopens the view as you see it (same date and known-at) | ✅ done |
-| 19 | Sutra governance: a Studio save is a proposal; approvers review the diff and approve (it goes live) or reject; four eyes; stale approvals refused; audited (ADR-013) | ✅ done |
-| 20 | Single sign-on (OIDC, ADR-014): code flow with PKCE in the console; the server verifies the ID token with JDK cryptography, maps groups to roles, provisions users; local disables win | ✅ done |
-| 21 | Personal settings: theme, landing page, clock zone, density, change-flash, pinned entities, search size; kept on the server, so they follow you | ✅ done |
-| 1.11 | Sutras are YAML only (ADR-017): `*.sutra.yaml` with `rachana: 1`, `description` and `notes`; all 228 shipped Sutras converted; the language's JSON Schema at `GET /api/v1/rachana/schema`; Studio as a YAML editor with completion | ✅ done |
-| 1.10 | Pack inheritance; ActiveMQ, RabbitMQ, S3 and Delta-on-S3 connectors that reconnect by themselves; Admin → Health; users, roles and audit in a JPA database with Admin → Roles; Admin → Packs; pick lists, paged tables, linked id columns; the two-row top bar; guarded `/actuator`; console `/readyz` | ✅ done |
+**Live**
+- Views of live entities tick over server-sent events (measured p99 about 11 ms); changed values flash.
+- **Monitors** (live watchlists) and **alerts** (rules the server checks on every change, with a bell and history).
+- **Workspaces**: several live views on one screen, a pane following another's selection, saved and **shared**
+  read-only with roles or people.
 
-## What works today
+**Work together**
+- **Notes** on an entity or one of its fields, for the next reader; the author edits, every change is audited.
+- **Export and share**: CSV of any table, search or comparison; the document as JSON; print or PDF; a link that
+  reopens the view exactly as you see it.
+- **Scheduled reports**: a search run as you on a schedule (`business-days 18:30`) and delivered as CSV to a
+  folder or an approved webhook.
+- **API tokens** (read-only, revocable), a standard-library **Python client** and **Excel** through Power Query
+  ([CLIENTS.md](docs/CLIENTS.md)).
 
-- **Business dates and history.** **Live** (the default) is the current business date on the New York
-  calendar, streaming. Pick a date in the top bar to see that day's data as a static snapshot: views, links,
-  impact and suggestions all follow the date. History is read from **Delta Lake** (`data/delta/<domain>/<kind>/`,
-  partitioned by business date, with time travel), built for the samples with `tools/samplegen/lake.py`.
-  **Compare** shows what changed in an entity between any two dates, field by field; **known at** shows a date as
-  it was known at an earlier time, so a restatement shows up as a difference.
-- **Imperfect data never breaks a screen.** A panel whose data is missing or in the wrong shape says
-  "No data available"; the rest of the view renders.
+**Shape it**
+- **Sutra Studio** (`/studio`): a YAML editor with completion from the language's JSON Schema, live checks and a
+  preview against any entity. A save is a proposal; an approver reviews the diff (four eyes).
+- **Domain packs**, enabled per server and assigned per user: `banking-core`, `market-data`, `trading`
+  (125 products), `market-risk`, `counterparty-risk`, `liquidity-risk`, `climate-risk`, `operational-risk`,
+  `retail-banking`, `genomics`, `politics-society`, `economics`, and the small `finance` and `logistics` packs.
+  Packs inherit from each other, load and unload from Admin → Packs, and install from a **signed, versioned
+  registry** with rollback ([PACKS.md](docs/PACKS.md)).
+- **Derived kinds**: entities computed from others, declared in a pack, such as each desk's P&L summed from its
+  trades (`DPNL DESK-RATES`), with history wherever their members have it.
 
-- **Console** (`console/`). A landing page with an animated hero: raw JSON is drawn into the `{◉}`
-  eye and comes out as live panels. It has seven themes (including *wallstreet* and Maya's *crimson* and *crimson dark*) and a strict CSP. Every asset is vendored
-  (no CDN), and the contrast of every theme is checked in tests.
-- **Server** (`drishti-server`). A Spring Boot application on virtual threads. It discovers source
-  plugins and routes reads by config, with deadlines. It loads and hot-reloads Sutras.
-- **Data.** Connectors read Delta Lake (per data domain, dated partitions, time travel), PostgreSQL, Aerospike,
-  Kafka (bounded memory plus a per-connector RocksDB disk cache), ActiveMQ and RabbitMQ (latest state kept in a persistent store), Amazon S3 and S3-compatible stores, public market-data feeds (SOFR, €STR, ECB FX,
-  US Treasury, FRED), REST and JSON/CSV files. The `demo` plugin serves the enabled packs' samples.
-- **Grammar.** Four reference Sutras reproduce the header strips of the mockups exactly (golden
-  tests). Rachana-EL is compiled once and shared across threads.
-- **Inference.** An entity with no Sutra still gets a sensible layout: strip, tabs, tables, curves,
-  bars, ladders, key/value panels and links. Each inferred panel records why it was chosen.
-- **Views.** `ViewPipeline` builds the complete ViewModel of any entity: the title, strip, panels,
-  linked entities with badges, function keys and provenance. Layouts are cached per data shape, and
-  warm p99 is under 50 ms (a test gate). The golden tests reproduce all four mockups' values.
-- **Type-ahead.** `SuggestionService` offers mnemonics, recents and entities as you type
-  (`T` → `TRD`; `TRD IRS-4` → `IRS-47102`, `IRS-48213`, …), up to 25 at a time, searching the sources in
-  parallel within 30 ms.
-- **Pick lists.** A command that names one entity opens it; one that names several gives a table to pick from,
-  with the kind's key fields beside each id (`columns:` in `pack.yaml`): `TRD T-100`, `CPTY north`, `TRD T-1*0`,
-  `TRD productType=Revolver`, `TRD` alone. Case never matters.
-- **Tables.** Every table pages (25, 50, 100 or 250 rows, remembered) and walks with the keyboard (↑ ↓, PgUp/PgDn,
-  Home/End, Enter opens the row). Id columns link to their entities.
-- **Top bar.** Two rows, after MAYA's: Views, Build, Admin and Help mega menus, then round tools for live state,
-  alerts, packs, theme and the user menu; the command line and the business date on the second row.
-- **Terminal.** Open `/t` in the console, type `TRD IRS-48213 <GO>`, and the view renders like the
-  mockup. Suggestions drop down as you type, F-keys jump between panels, F9 shows the raw JSON,
-  links open other entities, and breadcrumbs lead back. REST API under `/api/v1` (OpenAPI at `/api/docs`).
-- **Live.** Views of live entities tick over server-sent events: MTM, curves, exposure and settlements
-  move in place, changed values flash, and a dot in the top bar shows the live state (the server's measured
-  p99, about 11 ms, is at `GET /api/v1/health/live`).
-- **Sutras are YAML.** A Sutra is one YAML file, `<name>.v<N>.sutra.yaml`, that starts with `rachana: 1` (the
-  version of the Rachana language). `description:` and `notes:` hold the prose that explains the layout, and each
-  panel may carry a `description:` (ADR-017, which replaced Markdown Sutras). `GET /api/v1/rachana/schema` serves the
-  JSON Schema of the language, so any editor that reads JSON Schema completes and checks Sutras.
-  `tools/rachana/md_to_yaml.py` converts Markdown Sutras written before 1.11.
-- **Sutra Studio.** At `/studio` a YAML editor that completes keys, panel kinds, options, formats and kinds from
-  that schema and checks the Sutra as you type, with a summary of the layout. Ctrl+Enter previews against any
-  entity or pasted JSON, test entities are kept per Sutra, problems are listed by line, and a new Sutra can start
-  from what inference makes of an entity.
-- **Security.** Sign-in, per-role entitlements (denied links are shown disabled with the reason),
-  raw JSON redaction, and signed tokens between the console and the server. It is off by default for
-  local development.
-- **Users.** Admins manage users, roles and passwords at `/admin/users`, define roles at `/admin/roles`, and read
-  the audit log. Users, roles, saved work and the audit log live in a database (SQLite by default, PostgreSQL by
-  URL). Everyone can change their own password at `/account`. The server seeds a development admin on an empty store:
-  **`drishti-dev-admin` / `drishti-dev-admin123`**. Change that password (the UI warns until you do),
-  or set `DRISHTI_SEED_ADMIN=false` in production.
-- **Help.** An in-app help centre (`/help`) with tutorials, guides and every reference, plus search.
-  `F1` gives help for the current screen, each panel has a **?**, `/about` shows the version and
-  what is loaded, and `/about/competitive` compares Drishti with the categories it sits among.
-- **Domain packs.** The core carries no industry; each domain is a pack you enable with `DRISHTI_PACKS`:
-  - banking: `banking-core`, `market-data`, `trading` (125 products), `market-risk`, `counterparty-risk`, `liquidity-risk`, `climate-risk`, `operational-risk` and `retail-banking`;
-  - other domains: `genomics`, `politics-society` and `economics`;
-  - the small `finance` and `logistics` packs behind the original mockups.
+**Connect any data**
+- Delta Lake (local or S3, dated, time travel), PostgreSQL and other JDBC databases, Aerospike, Kafka, ActiveMQ,
+  RabbitMQ, Amazon S3 and compatible stores, REST services, JSON and CSV files, and public market data (NY Fed
+  SOFR, ECB €STR and FX, US Treasury, FRED). Connectors reconnect by themselves and report their health
+  ([CONNECTOR_GUIDE.md](docs/CONNECTOR_GUIDE.md)).
 
-  Packs inherit (`extends: [market-data, trading]`): a pack has everything its parents have, and where they differ
-  the more specific pack wins (ADR-015). A new industry is configuration only. Admins assign packs to users, switch
-  packs off and on for everyone at `/admin/packs`, and users choose which to see. See [PACKS.md](docs/PACKS.md).
-- **Impact (F8).** What depends on an entity, what that rolls into, and the amount at stake.
-- **Monitors and alerts.** Live watchlists (`/m`), and rules the server checks on every tick
-  (`$.utilisation > 0.8`), with a bell and toasts when they fire.
-- **Workspaces.** Several live views on one screen (`/w`); a pane can follow another's selection.
-  Workspaces are saved to your account.
-- **Mobile.** It works on iPhone and Android browsers and can be added to the home screen. F-keys
-  become a swipeable button row.
-- **Operations.** Prometheus metrics (guarded by an admin or scrape token when security is on), a Grafana
-  dashboard, Admin → Health, console liveness `/healthz` and readiness `/readyz`, Dockerfiles and compose, and
-  runbooks.
-- **Structured search.** Type `TRD where mtm > 1m and counterparty.name contains 'Meridian' order by mtm desc`
-  on the command line: the matching entities, with the fields the query uses as columns.
-- **Export and share.** Every table-like panel downloads as CSV (numbers as numbers), as do search results and
-  comparisons; the document downloads as JSON (redacted as your role sees it); **Print** gives a clean light page
-  or PDF; **Share** copies a link that reopens the view exactly as you see it, date and known-at included.
-- **Sutra governance.** Saving in Studio submits the Sutra for review. An approver reads the diff against the live
-  Sutra and approves (it goes live) or rejects with a reason; nobody approves their own; every step is audited.
-- **Single sign-on.** Sign in through the bank's OpenID Connect provider; its groups become Drishti roles, and the
-  server verifies every ID token itself.
-- **Personal settings.** *My account → Settings*: theme, the page to open after signing in, the clock's time zone,
-  compact density, whether changes flash, the default number of search results; **Pin** entities to the terminal
-  home. Kept on the server, so they follow you to any browser.
+**Run it safely**
+- Sign-in with passwords or single sign-on (OpenID Connect), roles that decide which kinds each person may open,
+  redaction of sensitive fields, and an **access log** of who looked at what (Admin → Access).
+- Users, roles, packs per user, notes, reports and audit in one identity database: SQLite by default, PostgreSQL
+  for production.
+- **One console, many servers**: list several servers and people pick one, signing in to each separately.
+- Admin → Health, Prometheus metrics, a Grafana dashboard, liveness and readiness checks, Docker images and
+  runbooks ([OPERATIONS.md](docs/OPERATIONS.md)).
+- Seven themes, a strict content security policy with every asset vendored (no CDN), and phones: it works on iPhone
+  and Android and can be added to the home screen.
 
 ## Try it
 
-New to Drishti? **[docs/QUICKSTART.md](docs/QUICKSTART.md)** gets you to a live view in ten minutes;
-**[docs/GETTING_STARTED.md](docs/GETTING_STARTED.md)** walks through every step from a clean machine, with what
-you should see at each one. The short version, from the repository root:
+New to Drishti? **[QUICKSTART.md](docs/QUICKSTART.md)** gets you to a live view in ten minutes;
+**[GETTING_STARTED.md](docs/GETTING_STARTED.md)** explains every step from a clean machine. The short version,
+from the repository root (OpenJDK 21, Python 3.11 or newer, [uv](https://docs.astral.sh/uv/)):
 
 ```bash
 # 1. Build (OpenJDK 21 is required and enforced; Maven comes with the repository)
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 ./mvnw -q package -DskipTests                 # or: ./mvnw -q verify  (also runs every test)
 
-# 2. Optional: business-day history for the banking packs, so past dates and Compare work
+# 2. Optional: business-day history for the banking packs, so past dates, Compare and field history work
 uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta
 
-# 3. Start the server on :18480 (packs to load; their parents load with them)
+# 3. Start the server on :18480 with the packs to load (their parents load with them)
 DRISHTI_PACKS=market-risk,counterparty-risk DRISHTI_STUDIO_SAVE=true \
   java -jar drishti-server/target/drishti-server-1.12.0-exec.jar
 
@@ -191,88 +121,89 @@ uv venv console/.venv && uv pip install --python console/.venv/bin/python -r con
 console/.venv/bin/python console/run_drishti_web.py
 ```
 
-Open http://localhost:17480/t, type `TRD T-10001` and press Enter. Without `DRISHTI_PACKS` the server
-loads only the small `finance` pack; then try `TRD IRS-48213`.
+Open http://localhost:17480/t, type `TRD T-10001` and press Enter. Then try `DPNL DESK-RATES`, a past date in the
+top bar, or `live trades over 5m, biggest first`. Without `DRISHTI_PACKS` the server loads only the small
+`finance` pack; then try `TRD IRS-48213`.
 
-Sign-in is off for local development (you act as a user with every role). To turn it on, and to sign in
-as the development admin **`drishti-dev-admin` / `drishti-dev-admin123`**, see
-[GETTING_STARTED.md, Step 13](docs/GETTING_STARTED.md#step-13--optional-turn-on-sign-in-and-change-the-admin-password).
+Sign-in is off for local development (you act as a user with every role). To turn it on and sign in as the
+development admin **`drishti-dev-admin` / `drishti-dev-admin123`** (change that password; the UI warns until you
+do), see [GETTING_STARTED.md, Step 13](docs/GETTING_STARTED.md#step-13--optional-turn-on-sign-in-and-change-the-admin-password).
 
-Checks: `curl -s localhost:18480/actuator/health` (server) and `curl -s localhost:17480/healthz` (console)
-both answer `{"status":"UP"…}`; `curl -s localhost:17480/readyz` answers `{"status":"UP","server":"reachable"}`
-once the console can reach the server. Console tests: `console/.venv/bin/python -m pytest -q console/tests`.
-
-`tools/drill.sh` runs every check, then pushes `develop` and merges it into `main`.
+Checks: `curl -s localhost:18480/actuator/health` and `curl -s localhost:17480/healthz` answer
+`{"status":"UP"…}`; `curl -s localhost:17480/readyz` answers `{"status":"UP","server":"reachable"}` once the
+console reaches the server.
 
 ## How it is built
 
 | Layer | Technology |
 |---|---|
-| Backend | One Spring Boot 3.5 application on OpenJDK 21 and virtual threads. It is never an embedded library. |
-| Modules | `api` (Spring-free plugin SPI) · `common` · `sutra` · `inference` · `graph` · `engine` · `server` |
-| Plugins | ServiceLoader SPI; extra jars load in isolated class loaders |
-| Console | Python, FastAPI and Jinja2; vendored Bootstrap, Bootstrap Icons and ECharts; no CDN; no inline script |
+| Server | One Spring Boot 3.5 application on OpenJDK 21 and virtual threads, REST under `/api/v1` (OpenAPI at `/api/docs`) |
+| Plugins | A Spring-free SPI found by ServiceLoader; extra jars load in isolated class loaders |
+| Identity | JPA over SQLite or PostgreSQL, one schema file per database, no migrations |
+| Console | Python, FastAPI and Jinja2; vendored Bootstrap, Bootstrap Icons and ECharts; no inline script |
+| Gates | Error Prone and Spotless in every build; ArchUnit, licence-header and file-size tests; `tools/drill.sh` |
 
 ```
 drishti/
-├── drishti-api/                 plugin SPI, DataNode, EntityRef, HitIndex (no Spring)
-├── drishti-common/              error codes, JSON codec, shape fingerprints
-├── drishti-rachana/             Rachana grammar: Sutra model, parser, registry, Rachana-EL, formats
-├── drishti-inference/           semantic hints, rules, packer, Sutra ⊕ inference merge
-├── drishti-graph/               reference catalogue, link badges
-├── drishti-identity/            users, roles, packs per user, pack switches, audit, saved documents (JPA: SQLite or PostgreSQL)
-├── drishti-packs/               domain pack loader
-├── drishti-engine/              sources, view pipeline, binder, ViewModel, commands, type-ahead
-├── drishti-diskcache/ drishti-messaging/   connector disk cache; shared messaging-connector support
+├── drishti-api/                 plugin SPI: SourcePlugin, DataNode, EntityRef, HitIndex (no Spring)
+├── drishti-common/              error codes, JSON codec, business calendar, shape fingerprints
+├── drishti-rachana/             the Rachana grammar: Sutra model, YAML parser, registry, Rachana-EL, formats
+├── drishti-inference/           semantic hints, layout rules, packer, Sutra ⊕ inference merge
+├── drishti-graph/               links between entities, badges
+├── drishti-engine/              sources and routing, derived kinds, view pipeline, impact, commands, search, phrases
+├── drishti-identity/            users, roles, packs per user, notes, access log, reports' store, audit (JPA)
+├── drishti-packs/               domain pack loader (inheritance, installed and shipped packs)
+├── drishti-diskcache/           the connectors' RocksDB disk cache
+├── drishti-messaging/           shared support for message-queue connectors
+├── drishti-server/              the Spring Boot application: API, security, alerts, reports, pack registry
+├── drishti-testkit/ drishti-it/ test fixtures; architecture, licence-header and file-size gates
 ├── drishti-benchmarks/          JMH hot-path benchmarks
-├── drishti-server/              the Spring Boot application
-├── drishti-testkit/ drishti-it/ fixtures; architecture, licence-header and file-size gates
 ├── plugins/drishti-plugin-*/     demo, file, rest, jdbc, delta, aerospike, feeds, kafka, activemq, rabbitmq, s3
-├── console/                     FastAPI + Jinja2 web UI (routes/, core/, web/templates, web/static)
-├── packs/<name>/                domain packs (14): pack.yaml, Sutras, vocabulary, links, roles, samples, guides
-├── sutras/                      site Sutras (optional; packs carry their own)
+├── console/                     the web console (routes/, core/, web/templates, web/static, tests/)
+├── clients/python/              drishti_client.py: the standard-library Python client
+├── packs/<name>/                the 14 domain packs: pack.yaml, Sutras, vocabulary, samples, guides
 ├── deploy/                      Dockerfiles, compose, Grafana dashboard
-├── tools/                       packgen/ and samplegen/ (pack data and lake), lake/ (maintenance), drill.sh, license_headers.py
+├── tools/                       packgen/ samplegen/ lake/ (pack data and lakes), rachana/, packreg/ (signed packs),
+│                                drill.sh, license_headers.py
 └── docs/                        quickstart, guides, references, runbooks, plan, ADRs
 ```
 
 ## Documentation
 
-Start with the **[10-minute quickstart](docs/QUICKSTART.md)**, then the **[user guide](docs/USER_GUIDE.md)**.
-The **[documentation map](docs/README.md)** lists every document by what you want to do, and says when to read
-each one.
+Start with the **[quickstart](docs/QUICKSTART.md)**, then the **[user guide](docs/USER_GUIDE.md)**. The
+**[documentation map](docs/README.md)** lists every document by what you want to do.
 
 | Read this when… | Document |
 |---|---|
-| you want it running in ten minutes, commands only | [QUICKSTART.md](docs/QUICKSTART.md), the 10-minute quickstart |
-| you install for the first time and want every step explained | [GETTING_STARTED.md](docs/GETTING_STARTED.md) |
-| you use the console: top bar, pick lists, tables, views, dates, search, export, monitors, admin | [USER_GUIDE.md](docs/USER_GUIDE.md) |
-| you load, switch, assign or build a domain pack | [PACKS.md](docs/PACKS.md) |
-| you learn to write a screen layout (Sutra), step by step | [RACHANA_GUIDE.md](docs/RACHANA_GUIDE.md) and the in-app Sutra guide |
+| you want it running in ten minutes | [QUICKSTART.md](docs/QUICKSTART.md) |
+| you install for the first time, every step explained | [GETTING_STARTED.md](docs/GETTING_STARTED.md) |
+| you use the console | [USER_GUIDE.md](docs/USER_GUIDE.md) |
+| you load, assign, build, publish or install a domain pack | [PACKS.md](docs/PACKS.md) |
+| you learn to write a Sutra, step by step | [RACHANA_GUIDE.md](docs/RACHANA_GUIDE.md) |
 | you need an exact Sutra key, format or expression | [RACHANA_REFERENCE.md](docs/RACHANA_REFERENCE.md) |
 | a view is laid out by inference and you want to know why | [INFERENCE.md](docs/INFERENCE.md) |
-| you connect your own data, step by step | [CONNECTOR_GUIDE.md](docs/CONNECTOR_GUIDE.md) |
-| you need every connector setting, or write a plugin | [PLUGIN_GUIDE.md](docs/PLUGIN_GUIDE.md) |
+| you connect your own data | [CONNECTOR_GUIDE.md](docs/CONNECTOR_GUIDE.md), [PLUGIN_GUIDE.md](docs/PLUGIN_GUIDE.md) |
 | you need a setting's name, default and environment variable | [CONFIGURATION.md](docs/CONFIGURATION.md) |
-| you manage users, roles, packs per user, passwords or single sign-on | [USER_MANAGEMENT.md](docs/USER_MANAGEMENT.md) |
-| you run it in production | [OPERATIONS.md](docs/OPERATIONS.md) |
-| you want the numbers, or to tune it | [PERFORMANCE.md](docs/PERFORMANCE.md) |
-| something is not working | [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) and the [runbooks](docs/runbooks/) |
-| live values tick late, or not at all | [LIVE.md](docs/LIVE.md), [runbooks/live-latency-high.md](docs/runbooks/live-latency-high.md) |
-| you change the code | [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md), the developer guide |
-| you want to understand the design | [ARCHITECTURE.md](docs/ARCHITECTURE.md), [adr/](docs/adr/README.md) |
-| you call the REST API | [API_GUIDE.md](docs/API_GUIDE.md) |
-| you want to know what shipped when, and what is open | [IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) |
-| you want to see what changed | [CHANGELOG.md](CHANGELOG.md) · [RELEASE_NOTES.md](RELEASE_NOTES.md) |
+| you manage users, roles, single sign-on, tokens or the access log | [USER_MANAGEMENT.md](docs/USER_MANAGEMENT.md) |
+| you script against it, from Python, Excel or curl | [CLIENTS.md](docs/CLIENTS.md), [API_GUIDE.md](docs/API_GUIDE.md) |
+| you run it in production | [OPERATIONS.md](docs/OPERATIONS.md), [PERFORMANCE.md](docs/PERFORMANCE.md), [LIVE.md](docs/LIVE.md) |
+| something is not working | [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md), [runbooks](docs/runbooks/) |
+| you change the code | [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) |
+| you want to understand the design and its decisions | [ARCHITECTURE.md](docs/ARCHITECTURE.md), [ADRs](docs/adr/README.md) |
+| you want to know what shipped when, and what is next | [IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md), [CHANGELOG.md](CHANGELOG.md) |
 
 ## Contributing rules
 
-- Work on `develop`. Waves merge to `main` through `tools/drill.sh`.
-- No source file may exceed 1500 lines (UX templates excepted). Enforced by tests.
-- Every file carries the copyright header (`python3 tools/license_headers.py --fix`). Enforced by tests.
-- Modules depend in one direction only, controllers live only in the server, and the SPI is
-  Spring-free. Enforced by ArchUnit.
-- Front-end assets are vendored. A test rejects any external URL.
+- Work on `develop`. `tools/drill.sh` runs every check, pushes `develop` and fast-forwards `main`; releases are
+  tagged on `main` after it.
+- Every build runs Error Prone and Spotless; `./mvnw -q verify` must pass, as must the console tests
+  (`console/.venv/bin/python -m pytest -q console/tests`).
+- No source file over 1,500 lines (UX templates excepted), and every file carries the copyright header
+  (`python3 tools/license_headers.py --fix`). Both are enforced by tests.
+- Modules depend in one direction only, controllers live only in the server, and the plugin SPI is Spring-free
+  (ArchUnit).
+- Front-end assets are vendored; a test rejects any external URL. Product name and legal notices come from
+  configuration, never from code.
 
 ## Legal
 
