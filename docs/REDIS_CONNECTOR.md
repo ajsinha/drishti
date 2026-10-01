@@ -522,6 +522,7 @@ at most about 80,000 commands a second, under a third of what Lettuce sustains. 
 
 | Symptom | Likely cause | What to do |
 |---|---|---|
+| the plugin is listed as installed but not configured | a Redis plugin on the class path with no `uri` (for example no `redis` profile) | nothing to do: it stays idle; set `uri` on a connector to use it |
 | `DOWN: cannot reach Redis at redis://…` | Redis unreachable, wrong URI or credentials | check `uri`, `user`/`password`, TLS (`rediss://`); the connector retries every refresh |
 | `UP (not laid out as the pack declares: trade (12 of 19 columns) …)` | the day was loaded without some declared fields | load lines whose `columns` carry every declared path |
 | a trade is in type-ahead but does not open on a date | its key for that day expired or was never loaded | `ZRANGE trading:trade:{ID} 0 -1`, `EXISTS trading:trade:{ID}:yyyyMMdd`; with Delta Lake behind, older days come from there |
@@ -541,7 +542,7 @@ On a Redis connector (`drishti.sources.connectors.<name>.settings`):
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `uri` | `redis://localhost:6379` | Lettuce URI; `rediss://` for TLS, `redis://user:secret@host:port/db` for credentials; several comma-separated for Cluster seed nodes |
+| `uri` | none (required) | Lettuce URI, e.g. `redis://localhost:6379`; `rediss://` for TLS, `redis://user:secret@host:port/db` for credentials; several comma-separated for Cluster seed nodes |
 | `cluster` | `false` | `true` for Redis Cluster (also implied by several URIs) |
 | `user`, `password` | none | credentials (override the URI's) |
 | `domain` | `drishti` | the data domain: the key prefix (`trading:…`) |

@@ -189,6 +189,12 @@ class RedisSourcePluginTest extends DatedSourceContract {
     }
 
     @Test
+    void withoutAUriThePluginStaysIdle() {
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> new RedisSourcePlugin().start(context(Map.of())))
+                .isInstanceOf(com.ash.drishti.api.PluginNotConfigured.class);
+    }
+
+    @Test
     void documentsAreStoredCompressedAndReadBackWithEveryCodec() {
         byte[] json = ROWS.get(0).json().getBytes(StandardCharsets.UTF_8);
         List<byte[]> samples = new ArrayList<>();

@@ -77,7 +77,7 @@ import java.util.function.Consumer;
  * and re-read only when a loader has rewritten it. With {@code live} (true) the connector listens on
  * {@code <domain>:changes} and pushes changed entities to open views.
  *
- * <p>Settings: {@code uri} ({@code redis://localhost:6379}; {@code rediss://} for TLS, credentials in the URI or in
+ * <p>Settings: {@code uri} (required, e.g. {@code redis://localhost:6379}; {@code rediss://} for TLS, credentials in the URI or in
  * {@code user}/{@code password}; several URIs or {@code cluster: true} for Redis Cluster), {@code domain} (the data
  * domain, e.g. {@code trading}), {@code kinds}, {@code mode.<kind>}, {@code layout.<kind>.columns}, {@code lookback-days}
  * (10), {@code refresh-seconds} (60), {@code columns-cache-mb} (1024), {@code heavy-reads} (2), {@code max-load-rows}
@@ -145,7 +145,11 @@ public final class RedisSourcePlugin implements SourcePlugin {
     public void start(SourceContext ctx) {
         this.context = ctx;
         this.sourceName = ctx.setting("source-name", "redis");
-        this.uri = ctx.setting("uri", "redis://localhost:6379");
+        this.uri = ctx.setting("uri", "");
+        if (uri.isEmpty()) {
+            // installed but not pointed at a Redis: idle, rather than a live source that serves every kind and fails
+            throw new com.ash.drishti.api.PluginNotConfigured("redis needs settings.uri (redis://host:6379)");
+        }
         this.cluster = Boolean.parseBoolean(ctx.setting("cluster", "false"));
         this.user = ctx.setting("user", null);
         this.password = ctx.setting("password", null);
