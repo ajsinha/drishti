@@ -17,7 +17,7 @@
 # Nothing is pushed or merged unless the full Java build and the console tests pass.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-21-openjdk-amd64}"
+export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-25-openjdk-amd64}"
 
 [[ "$(git rev-parse --abbrev-ref HEAD)" == "develop" ]] || { echo "drill: must be on develop" >&2; exit 1; }
 [[ -z "$(git status --porcelain)" ]] || { echo "drill: commit your changes first" >&2; exit 1; }

@@ -70,16 +70,15 @@ You need a Linux or macOS machine (Windows works through WSL) with:
 On Ubuntu or Debian:
 
 ```bash
-sudo apt install openjdk-21-jdk python3 python3-venv git curl
+sudo apt install openjdk-25-jdk python3 python3-venv git curl
 curl -LsSf https://astral.sh/uv/install.sh | sh      # installs uv into ~/.local/bin
 ```
 
-Drishti builds with Java 21 or 25 (both long-term releases; the server runs on either) and refuses any other.
-Point `JAVA_HOME` at one of them in every terminal you use for Drishti. On Ubuntu the path for 21 is
-(`java-25-openjdk-amd64` for 25):
+Drishti builds and runs on Java 25 (the current long-term release) and refuses any other. Point `JAVA_HOME` at
+it in every terminal you use for Drishti. On Ubuntu the path is:
 
 ```bash
-export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
 export PATH="$JAVA_HOME/bin:$PATH"
 java -version
 ```
@@ -119,7 +118,7 @@ You should see `drishti-server/target/drishti-server-1.12.0-exec.jar`.
 > **Note:** `./mvnw -q verify` builds **and** runs every test (several minutes more). Use it when you
 > change code; for a first try, `package -DskipTests` is enough.
 
-If the build stops with `Drishti builds on OpenJDK 21 or 25 (bytecode for 21; runs on 21 and later).`, your `JAVA_HOME` is not Java 21 or 25. Go
+If the build stops with `Drishti builds and runs on OpenJDK 25.`, your `JAVA_HOME` is not Java 25. Go
 back to Step 1.
 
 ## Step 4 · Set up the console
@@ -174,7 +173,7 @@ The sample history holds ten business days, ending on **30 September 2026**.
 Open a terminal in the `drishti` folder and run:
 
 ```bash
-export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
 export DRISHTI_PACKS=market-risk,counterparty-risk,liquidity-risk,climate-risk,operational-risk,retail-banking,genomics,politics-society,economics
 export DRISHTI_STUDIO_SAVE=true
 java -jar drishti-server/target/drishti-server-1.12.0-exec.jar
@@ -443,7 +442,7 @@ stops it. Production details are in [OPERATIONS.md](../admin/OPERATIONS.md).
 
 | You see | Do this |
 |---|---|
-| `Drishti builds on OpenJDK 21 or 25 (bytecode for 21; runs on 21 and later).` | `export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64` and build again |
+| `Drishti builds and runs on OpenJDK 25.` | `export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64` and build again |
 | `Port 18480 was already in use` | another server is running; stop it, or start this one with `DRISHTI_PORT=18481` and the console with `DRISHTI_BACKEND_URL=http://127.0.0.1:18481` |
 | The console says the backend is unreachable (`DRS-5003`) | start the server first; check `curl -s localhost:18480/actuator/health` |
 | A command gives `DRS-4001` | the mnemonic is unknown: check its pack is loaded (`/api/v1/packs`) and chosen in the pack switcher |

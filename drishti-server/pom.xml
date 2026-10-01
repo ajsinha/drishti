@@ -74,7 +74,7 @@
         </configuration>
       </plugin>
       <!-- the executable jar's manifest grants native access (RocksDB, SQLite, DuckDB, Hadoop load native libraries):
-           JDK 22 and later warn without it and a future JDK blocks it; JDK 21 ignores the attribute -->
+           JDK 25 warns without it and a future JDK blocks it -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>

@@ -25,7 +25,7 @@
 # domain's newest. The database defaults to DRISHTI_DUCKDB_PATH, else data/duckdb/drishti.duckdb.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-21-openjdk-amd64}"
+export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-25-openjdk-amd64}"
 DB="${DRISHTI_DUCKDB_PATH:-data/duckdb/drishti.duckdb}"; OPTS=(); TRADES=""; DAYS="3"
 [[ $# -gt 0 && "$1" != --* ]] && { DB="$1"; shift; }
 while [[ $# -gt 0 ]]; do

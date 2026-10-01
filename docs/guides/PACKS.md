@@ -133,7 +133,7 @@ default `./packs`, relative to the directory you start the server in).
 2. Start it with the packs you want. From the repository root:
 
    ```bash
-   export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+   export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
    DRISHTI_PACKS=finance,logistics java -jar drishti-server/target/drishti-server-1.12.0-exec.jar
    ```
 
@@ -1154,7 +1154,7 @@ Every catalogue entry must have its file; a missing file stops the demo source f
 Packs load when the server starts. Stop the server (Ctrl+C in its terminal) and start it with the pack added:
 
 ```bash
-export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
 DRISHTI_PACKS=market-risk,counterparty-risk,helpdesk \
   java -jar drishti-server/target/drishti-server-1.12.0-exec.jar
 ```
@@ -1542,7 +1542,7 @@ generator checks, before anything reaches `main`.
 Run the pack-related tests alone while you work:
 
 ```bash
-export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
 ./mvnw -q -pl drishti-packs -am test -Dtest=PackLoaderTest -Dsurefire.failIfNoSpecifiedTests=false
 ./mvnw -q -pl drishti-rachana -am test -Dtest=PackSutrasTest -Dsurefire.failIfNoSpecifiedTests=false
 ./mvnw -q -pl drishti-server -am test -Dtest='ImperfectDataTest,DomainPacksTest' -Dsurefire.failIfNoSpecifiedTests=false

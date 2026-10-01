@@ -29,7 +29,7 @@ Header and file-size rules must not depend on developer discipline.
 A plain `./mvnw verify` enforces the rules. The formatter gate may be added later if drift appears.
 
 ## Amendment (1.10.3): Error Prone and Spotless are on
-- **Error Prone** runs in every compile (`maven-compiler-plugin`, `.mvn/jvm.config` opens the compiler on JDK 21). Its
+- **Error Prone** runs in every compile (`maven-compiler-plugin`, `.mvn/jvm.config` opens the compiler on the JDK). Its
   default error-level checks fail the build; `NonAtomicVolatileUpdate`, `LockNotBeforeTry` and
   `JavaTimeDefaultTimeZone` are raised to errors too. Style-level findings stay warnings. An intentional exception
   carries `@SuppressWarnings("<Check>")` with the reason beside it.

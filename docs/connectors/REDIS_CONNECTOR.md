@@ -485,8 +485,8 @@ Every search reported `partial: false` and `scanned: 1000000`.
 | `SET`, pipelined | 287,000 a second (2,000 in flight from one thread) | 1,073,000 a second (pipelines of 2,000) |
 
 Reads decide: the server reads from many virtual threads at once, and Lettuce multiplexes them over one connection
-without a pool or pinned carrier threads (Jedis blocks inside `synchronized` code, which pins a virtual thread's carrier
-in Java 21). Jedis pipelines write faster from one thread, but the loader is bound by its input (the generator wrote
+without a pool or pinned carrier threads (Jedis blocks inside `synchronized` code, which pinned a virtual thread's carrier
+before Java 24). Jedis pipelines write faster from one thread, but the loader is bound by its input (the generator wrote
 12,000 to 20,000 trades a second, and the loader kept up) and sends two commands a trade without a TTL, four with one:
 at most about 80,000 commands a second, under a third of what Lettuce sustains. Lettuce also gives Redis Cluster, TLS and pub/sub with one API.
 

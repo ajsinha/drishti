@@ -57,7 +57,7 @@ Drishti is two processes. Users only ever talk to the console; the console talks
 
 | Process | Default port | Health check | Metrics | Started by |
 |---|---|---|---|---|
-| `drishti-server` (Spring Boot, OpenJDK 21 or 25) | 18480 | `/actuator/health/liveness`, `/actuator/health/readiness` | `/actuator/prometheus` | `java -jar drishti-server-<version>-exec.jar` |
+| `drishti-server` (Spring Boot, OpenJDK 25) | 18480 | `/actuator/health/liveness`, `/actuator/health/readiness` | `/actuator/prometheus` | `java -jar drishti-server-<version>-exec.jar` |
 | `console` (FastAPI on uvicorn, Python) | 17480 | `/healthz` | none | `python console/run_drishti_web.py` |
 
 Things worth knowing before you plan an installation:
@@ -89,7 +89,7 @@ Things worth knowing before you plan an installation:
 Check Java:
 
 ```bash
-export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
 $JAVA_HOME/bin/java -version
 ```
 
@@ -104,7 +104,7 @@ This installs both processes under `/opt/drishti` on a Linux host. Adjust the pa
 From a checkout of the repository:
 
 ```bash
-export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
 ./mvnw -q clean package -DskipTests
 ls drishti-server/target/*-exec.jar
 ```
@@ -158,8 +158,8 @@ Open two terminals. In the first:
 
 ```bash
 cd /opt/drishti
-sudo -u drishti env JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 DRISHTI_PACKS=finance \
-  /usr/lib/jvm/java-21-openjdk-amd64/bin/java -jar drishti-server.jar
+sudo -u drishti env JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64 DRISHTI_PACKS=finance \
+  /usr/lib/jvm/java-25-openjdk-amd64/bin/java -XX:+UseCompactObjectHeaders -jar drishti-server.jar
 ```
 
 You should see, after a few seconds, a line ending `Started DrishtiApplication in … seconds`, and on the very first
@@ -231,7 +231,7 @@ uses up to three quarters of the container's memory limit.
 From the repository root:
 
 ```bash
-export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
 ./mvnw -q clean package -DskipTests
 docker build -f deploy/server.Dockerfile  -t drishti-server:1.12.0 .
 docker build -f deploy/console.Dockerfile -t drishti-console:1.12.0 .
@@ -566,7 +566,7 @@ User=drishti
 WorkingDirectory=/opt/drishti
 EnvironmentFile=/etc/drishti/drishti.env
 Environment=JAVA_TOOL_OPTIONS=-Xmx4g -XX:+UseZGC -XX:+ZGenerational
-ExecStart=/usr/lib/jvm/java-21-openjdk-amd64/bin/java -jar /opt/drishti/drishti-server.jar
+ExecStart=/usr/lib/jvm/java-25-openjdk-amd64/bin/java -XX:+UseCompactObjectHeaders -jar /opt/drishti/drishti-server.jar
 SuccessExitStatus=143
 TimeoutStopSec=45
 Restart=on-failure

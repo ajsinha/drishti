@@ -39,7 +39,7 @@ For the design and its reasons, read [ARCHITECTURE.md](../architecture/ARCHITECT
 
 ## 1. The repository
 
-Drishti has two programs. The **server** is one Spring Boot 3.5 application on OpenJDK 21 (`drishti-server`),
+Drishti has two programs. The **server** is one Spring Boot 3.5 application on OpenJDK 25 (`drishti-server`),
 built from a Maven reactor of internal modules. The **console** is a FastAPI and Jinja2 web application in
 `console/` that renders the server's JSON. Industries are **packs** (`packs/`), which are content and
 configuration, not code.
@@ -127,7 +127,7 @@ drishti-benchmarks                (inference)
 | `config/license-header.txt` | The text of the copyright header that `license_headers.py` inserts |
 | `data/` | Runtime and generated data, all git-ignored: `delta/` (the sample lake, `make_data.py --lake`), `feeds/` (`make_data.py`), `banking.jsonl` (`make_data.py --jsonl`, for Aerospike), `identity/` (the SQLite database), `governance/` (Sutra proposals), `reports/` |
 | `docs/` | These documents, by audience: `guides/` (quickstart, user, developer, API, Rachana and troubleshooting guides), `connectors/` (the connector and plugin guides, a design document per store, demo data), `admin/` (operations, configuration, users, performance, and the runbooks under `admin/runbooks/`), `architecture/` (architecture, design notes and the ADRs under `architecture/adr/`); `README.md` is the index; reference mockups and logos under `requirements/` |
-| `.github/workflows/fast.yml` | CI: `./mvnw -B -q verify` and the header check on Java 21; `pytest` for the console on Python 3.13 |
+| `.github/workflows/fast.yml` | CI: `./mvnw -B -q verify` and the header check on Java 25; `pytest` for the console on Python 3.13 |
 
 ---
 
@@ -137,7 +137,7 @@ drishti-benchmarks                (inference)
 
 | Tool | Version | Notes |
 |---|---|---|
-| OpenJDK | 21 or 25 | The enforcer rule in `pom.xml` (`requireJavaVersion [21,22),[25,26)`) stops any other version with `Drishti builds on OpenJDK 21 or 25 (bytecode for 21; runs on 21 and later).` The bytecode targets 21 (`maven.compiler.release`), so a jar built on 25 runs on 21. `.java-version` says `21`. Every test passes built and run on either. |
+| OpenJDK | 25 | The enforcer rule in `pom.xml` (`requireJavaVersion [25,26)`) stops any other version with `Drishti builds and runs on OpenJDK 25.` The bytecode targets 25 (`maven.compiler.release`). `.java-version` says `25`. Run the server with `-XX:+UseCompactObjectHeaders` (about 10% less heap; measured faster than JDK 21 by 10–20% in requests a second). |
 | Python | 3.11 or newer | The console and the tools. CI uses 3.13. |
 | uv | any recent | Creates the console's environment, and runs the lake tools with `uv run --with …` so nothing is installed globally. |
 | Docker | optional | Only for the Testcontainers tests (PostgreSQL, Aerospike, ActiveMQ, RabbitMQ, MinIO) and `deploy/compose.yaml`. |
@@ -145,7 +145,7 @@ drishti-benchmarks                (inference)
 Set `JAVA_HOME` in every terminal:
 
 ```bash
-export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
 export PATH="$JAVA_HOME/bin:$PATH"
 ./mvnw -v
 ```
@@ -279,7 +279,7 @@ What it does, in order (it stops at the first failure, `set -euo pipefail`):
 8. Pushes `develop`, fast-forwards `main` to `develop` (`git merge --ff-only`), pushes `main`, and returns to
    `develop`. It prints `drilled: <the last commit>`.
 
-`JAVA_HOME` defaults to `/usr/lib/jvm/java-21-openjdk-amd64` inside the script when it is not set.
+`JAVA_HOME` defaults to `/usr/lib/jvm/java-25-openjdk-amd64` inside the script when it is not set.
 
 ---
 

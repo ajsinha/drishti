@@ -26,7 +26,7 @@
 # folder) and take about the size of the loaded JSON; put them on a disk, not a memory-backed /tmp, for a large book.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-21-openjdk-amd64}"
+export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-25-openjdk-amd64}"
 ROOT="./data/iceberg"; OPTS=(); TRADES=""; DAYS="3"
 [[ $# -gt 0 && "$1" != --* ]] && { ROOT="$1"; shift; }
 while [[ $# -gt 0 ]]; do

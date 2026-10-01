@@ -24,7 +24,7 @@
 # User and password default to DRISHTI_PG_USER / DRISHTI_PG_PASSWORD, else drishti / drishti.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-21-openjdk-amd64}"
+export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-25-openjdk-amd64}"
 URL="${DRISHTI_PG_URL:-jdbc:postgresql://localhost:5432/drishti}"; OPTS=(); TRADES=""; DAYS="3"
 [[ $# -gt 0 && "$1" != --* ]] && { URL="$1"; shift; }
 while [[ $# -gt 0 ]]; do

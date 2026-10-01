@@ -23,7 +23,7 @@
 # never reads half a day; it picks the new files up on its next rescan.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-21-openjdk-amd64}"
+export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-25-openjdk-amd64}"
 ROOT="data/files"; TRADES=""; DAYS="3"
 [[ $# -gt 0 && "$1" != --* ]] && { ROOT="$1"; shift; }
 while [[ $# -gt 0 ]]; do

@@ -231,7 +231,7 @@ alike, and are how secrets stay out of files.
 
 Every chapter below uses the same few commands. They are collected here once.
 
-**1. Build once** (from the repository root; see [GETTING_STARTED.md](../guides/GETTING_STARTED.md) for Java 21 and the
+**1. Build once** (from the repository root; see [GETTING_STARTED.md](../guides/GETTING_STARTED.md) for Java 25 and the
 console's Python environment):
 
 ```bash

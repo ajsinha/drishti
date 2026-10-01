@@ -67,7 +67,7 @@ default):
                                                 │ REST + SSE under /api/v1 (JSON ViewModel, frames of patches)
                                                 │ Authorization: Bearer <HS256 token minted per call>
                                    ┌────────────▼────────────┐
-                                   │  drishti-server         │  Java 21 · Spring Boot 3.5
+                                   │  drishti-server         │  Java 25 · Spring Boot 3.5
                                    │  (port 18480)           │  virtual threads
                                    │  ┌───────────────────┐  │
                                    │  │ drishti-engine    │  │  fetch → match → fingerprint
@@ -504,7 +504,7 @@ connectors, starter workspaces, help guides and sample data.
 
 ## 13. Module layout (Java)
 
-Maven multi-module reactor on `spring-boot-starter-parent`, `groupId com.ash.drishti`, Java 21, packages
+Maven multi-module reactor on `spring-boot-starter-parent`, `groupId com.ash.drishti`, Java 25, packages
 `com.ash.drishti.<module>…`, `package-info.java` everywhere.
 
 | Module | Responsibility | Contributes |
@@ -539,7 +539,7 @@ Spring Data repositories in `identity.db` are the exception).
 | CPU work (bind) | Bounded `ForkJoinPool` (`drishti.engine.bind-parallelism`, 0 = one per core); panels bound in parallel |
 | Live state | One topic per `EntityRef`, one source subscription each (connected exactly once, even when subscribers arrive together); ticks land in a latest-wins slot and a single flush per frame delivers them; frames are timed by a small platform-thread scheduler (`drishti-frame-*`); one drainer per view stream, failed rebuilds retried with backoff |
 | Caching | Caffeine in the engine: layouts (`layout-cache-size`, 10,000, keyed by Sutra version, kind and fingerprint), fingerprints (`fingerprint-cache-size`, 100,000, keyed by entity, generation and date), compiled expressions (`drishti.rachana.expression-cache-size`, 10,000). Connectors keep their own caches (Delta partitions by size, `cache-mb`; Kafka documents; RocksDB disk caches). The Delta plugin's loads that do I/O use async caches loading on virtual threads, so no lock is held during I/O. A Sutra change clears the layout cache. Admins see and purge every cache at **Admin → Caches** (`GET /api/v1/admin/caches`) |
-| Locks | `ReentrantLock` around anything that can block (file I/O, network, subscribes): on Java 21 a virtual thread blocked in `synchronized` pins its carrier. `synchronized` remains only around short in-memory sections. Read-modify-write of shared records happens under the record's lock on the *current* value |
+| Locks | `ReentrantLock` around anything that can block (file I/O, network, subscribes): Java 21 pinned a virtual thread blocked in `synchronized` to its carrier (Java 24 and later no longer do; the rule stays, so locks that may block remain explicit). `synchronized` remains only around short in-memory sections. Read-modify-write of shared records happens under the record's lock on the *current* value |
 | Publication | State that readers need together is published in one volatile write of an immutable snapshot (Sutra registry, search index); readers never lock |
 | Native resources | RocksDB generations are reference counted: a call enters the current generation and leaves after, and a retired generation closes only when its last caller has left, so a nightly clear or a purge never frees memory under a running read |
 | Schedulers | The plugins' shared scheduler runs on virtual-thread workers, so a slow refresh or scan never delays another plugin's ticks or the nightly cache clearing |

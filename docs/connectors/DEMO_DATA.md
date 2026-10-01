@@ -186,4 +186,4 @@ So any store a new connector adds can be loaded with the same demo data.
 | `tools/packgen/banking/make_data.py` | the samples, `--lake`, `--jsonl`, `--check` |
 | `tools/samplegen/bulk_trades.py` | a large trade book, into the lake or as JSON lines |
 
-They need `uv` (Python), Java 21 or 25 (`JAVA_HOME`), and Maven's offline cache for the loaders (run `./mvnw install` once).
+They need `uv` (Python), Java 25 (`JAVA_HOME`), and Maven's offline cache for the loaders (run `./mvnw install` once).
