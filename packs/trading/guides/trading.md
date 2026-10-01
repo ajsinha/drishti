@@ -70,7 +70,7 @@ tradeId, productType, productName, assetClass, family, status, direction, tradeD
 
 ## Who can see it
 
-Role `trader`: kinds `trade`, `ir-curve`, `repo-curve`, `fx-spot`, `fx-forward-curve`, `fx-vol-surface`, `ir-vol-cube`, `cap-vol-surface`, `equity`, `equity-index`, `dividend-curve`, `equity-vol-surface`, `credit-curve`, `inflation-index`, `inflation-curve`, `commodity`, `commodity-curve`, `commodity-vol-surface`, `rate-fixing`, `bond`, `correlation-matrix`, `counterparty`, `counterparty-group`, `issuer`, `book`, `desk`, `trader`, `legal-entity`, `calendar`, `agreement`, `csa`, `ccp`, `clearing-account`.
+Role `trader`: kinds `trade`, `ir-curve`, `repo-curve`, `fx-spot`, `fx-forward-curve`, `fx-vol-surface`, `ir-vol-cube`, `cap-vol-surface`, `equity`, `equity-index`, `dividend-curve`, `equity-vol-surface`, `credit-curve`, `inflation-index`, `inflation-curve`, `commodity`, `commodity-curve`, `commodity-vol-surface`, `rate-fixing`, `bond`, `correlation-matrix`, `counterparty`, `counterparty-group`, `issuer`, `book`, `desk`, `trader`, `legal-entity`, `calendar`, `agreement`, `csa`, `ccp`, `clearing-account`, `desk-pnl`.
 
 ## F8 impact
 
