@@ -12,14 +12,14 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 # Profile `postgres` (SPRING_PROFILES_ACTIVE=postgres): the banking packs' data domains are read from PostgreSQL
-# (one table <domain>.entities each, loaded by make_data.py --postgres) instead of Delta Lake. The packs still
+# (one table <domain>.entities each, loaded by tools/load-postgres.sh) instead of Delta Lake. The packs still
 # decide the kinds, routes and modes of each <domain>-store connector; this profile only changes the store.
 drishti:
   sources:
     connectors:
       reference-store:  { plugin: jdbc, settings: { url: "${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}", user: "${DRISHTI_PG_USER:drishti}", password: "${DRISHTI_PG_PASSWORD:drishti}", table: reference.entities, pool-size: "4" } }
       market-store:     { plugin: jdbc, settings: { url: "${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}", user: "${DRISHTI_PG_USER:drishti}", password: "${DRISHTI_PG_PASSWORD:drishti}", table: market.entities, pool-size: "4" } }
-      trading-store:    { plugin: jdbc, settings: { url: "${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}", user: "${DRISHTI_PG_USER:drishti}", password: "${DRISHTI_PG_PASSWORD:drishti}", table: trading.entities, pool-size: "8" } }
+      trading-store:    { plugin: jdbc, settings: { url: "${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}", user: "${DRISHTI_PG_USER:drishti}", password: "${DRISHTI_PG_PASSWORD:drishti}", table: trading.entities, pool-size: "12" } }
       risk-store:       { plugin: jdbc, settings: { url: "${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}", user: "${DRISHTI_PG_USER:drishti}", password: "${DRISHTI_PG_PASSWORD:drishti}", table: risk.entities, pool-size: "4" } }
       credit-store:     { plugin: jdbc, settings: { url: "${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}", user: "${DRISHTI_PG_USER:drishti}", password: "${DRISHTI_PG_PASSWORD:drishti}", table: credit.entities, pool-size: "4" } }
       collateral-store: { plugin: jdbc, settings: { url: "${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}", user: "${DRISHTI_PG_USER:drishti}", password: "${DRISHTI_PG_PASSWORD:drishti}", table: collateral.entities, pool-size: "4" } }

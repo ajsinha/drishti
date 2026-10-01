@@ -19,9 +19,7 @@
     uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta [--days 10]
                                                                 also write data/delta/<domain>/<kind>/ with business-day history,
                                                                 each kind in the layout its pack declares (the trade table's)
-    uv run --with "psycopg[binary]" python tools/packgen/banking/make_data.py --postgres postgresql://drishti:drishti@localhost:5432/drishti
-                                                                also load each domain into PostgreSQL (<domain>.entities)
-    python3 tools/packgen/banking/make_data.py --jsonl data/banking.jsonl   rows for tools/load-aerospike.sh
+    python3 tools/packgen/banking/make_data.py --jsonl data/banking.jsonl   rows for tools/load-postgres.sh and load-aerospike.sh
 
 The samples are what the demo source serves live; the lake is the history (a table per kind, partitioned by
 business date, in the data domain that owns the kind, see layout.py). Everything is deterministic.
@@ -189,18 +187,7 @@ def main() -> None:
                         row["columns"] = {names[k]: v for k, v in promote(json.loads(body), lay).items()}
                     f.write(json.dumps(row, ensure_ascii=False) + "\n")
                     n += 1
-        print(f"jsonl: {n} rows in {out} (load into Aerospike with tools/load-aerospike.sh)")
-    if "--postgres" in sys.argv:
-        from samplegen.dates import Calendar
-        from samplegen.pgload import write_domain
-
-        url = sys.argv[sys.argv.index("--postgres") + 1]
-        days = int(sys.argv[sys.argv.index("--days") + 1]) if "--days" in sys.argv else 10
-        rows = 0
-        for domain in layout.DOMAINS:
-            kinds = {k: docs.get(k, {}) for k in (x for p in layout.PACKS.values() for d, ks in p["kinds"].items() if d == domain for x in ks)}
-            rows += write_domain(url, domain, kinds, N.AS_OF, days, Calendar.of("USNY"))
-        print(f"postgres: {rows} rows in schemas {', '.join(layout.DOMAINS)}")
+        print(f"jsonl: {n} rows in {out} (tools/load-postgres.sh and tools/load-aerospike.sh load them)")
     if "--lake" in sys.argv:
         from samplegen.dates import Calendar
         from samplegen.lake import write_tables

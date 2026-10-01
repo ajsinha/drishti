@@ -79,6 +79,8 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](DEVEL
 | Know how fast it is, and how that is measured | [PERFORMANCE.md](PERFORMANCE.md) |
 | Serve millions of entities a day for years from Delta Lake | [DELTA_CONNECTOR.md](DELTA_CONNECTOR.md) |
 | Serve millions of entities a day from Aerospike, with recent history there and years in Delta Lake | [AEROSPIKE_CONNECTOR.md](AEROSPIKE_CONNECTOR.md) |
+| Serve millions of entities a day from PostgreSQL | [POSTGRES_CONNECTOR.md](POSTGRES_CONNECTOR.md) |
+| Build demo data in any store, small to a million trades a day | [DEMO_DATA.md](DEMO_DATA.md) |
 
 ### Develop on it
 
@@ -113,6 +115,8 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](DEVEL
 | [OPERATIONS.md](OPERATIONS.md) | you deploy, secure, monitor, back up or upgrade a server and console |
 | [PERFORMANCE.md](PERFORMANCE.md) | you want the measured numbers, to measure your own installation, or to tune it |
 | [DELTA_CONNECTOR.md](DELTA_CONNECTOR.md) | you run Drishti over a large Delta Lake (a million trades a day for seven years): layout, writers, reads, memory, maintenance, measurements |
+| [POSTGRES_CONNECTOR.md](POSTGRES_CONNECTOR.md) | you run Drishti on PostgreSQL at scale: partitioned table, promoted columns, COPY loader, monthly retention, sizing, measurements |
+| [DEMO_DATA.md](DEMO_DATA.md) | you need demo data in Delta Lake, PostgreSQL or Aerospike, small for a laptop or a million trades a day |
 | [AEROSPIKE_CONNECTOR.md](AEROSPIKE_CONNECTOR.md) | you run Drishti on Aerospike at scale: record layout, loader, partition-parallel scans, TTL retention, sizing, measurements |
 | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | something is not working: each problem has what you see, how to check and the fix |
 | [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) | you change Drishti's code: layout, build, tests, gates, and recipes |

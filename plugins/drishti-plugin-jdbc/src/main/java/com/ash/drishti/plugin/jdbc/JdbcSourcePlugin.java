@@ -64,6 +64,10 @@ public final class JdbcSourcePlugin implements SourcePlugin {
     private static final java.util.regex.Pattern NAMED = java.util.regex.Pattern.compile(":(id|asOf)\\b");
     private final Map<String, String> queries = new LinkedHashMap<>();
     private EntityTable table;
+    private TableCatalog catalog;
+    private final Map<String, String> modes = new LinkedHashMap<>();
+    private int maxLoadRows = 200_000;
+    private boolean reverseIndex = true;
     private volatile java.util.List<String> tableKinds = java.util.List.of();   // discovered later when the database starts after us
     private final Map<String, java.util.List<String>> params = new LinkedHashMap<>();
     /** A pool slot: its connection is opened lazily and replaced when broken; only its borrower touches it. */
@@ -118,7 +122,9 @@ public final class JdbcSourcePlugin implements SourcePlugin {
             lastError = null;
             return out;
         } catch (SQLException e) {
-            if (s.connection != null && !s.connection.isValid(1)) {   // the connection died mid-call: reconnect next time
+            // the connection died mid-call, or its cached plans predate a table that was dropped and recreated (a reload,
+            // SQL state 0A000 "cached plan must not change result type"): reconnect next time
+            if (s.connection != null && ("0A000".equals(e.getSQLState()) || !s.connection.isValid(1))) {
                 try {
                     s.connection.close();
                 } catch (SQLException ignored) {
@@ -148,15 +154,25 @@ public final class JdbcSourcePlugin implements SourcePlugin {
         if (table == null) {
             return java.util.List.of();
         }
-        try {
-            java.util.List<EntityRef> out = new java.util.ArrayList<>();
-            for (String k : kind == null ? tableKinds : java.util.List.of(kind)) {
-                withConnection(c -> table.reverse(c, k, target.id(), asOf.businessDate())).forEach(i -> out.add(EntityRef.of(k, i)));
-            }
-            return out;
-        } catch (Exception e) {
+        if (!reverseIndex) {
             return java.util.List.of();
         }
+        java.util.List<EntityRef> out = new java.util.ArrayList<>();
+        for (String k : kind == null ? tableKinds : java.util.List.of(kind)) {
+            if (!tableKinds.contains(k)) {
+                continue;                                      // a kind this table does not hold: no query
+            }
+            try {
+                // promoted link columns (nettingSet, book, counterparty.id …) of the day: no document is read
+                Optional<java.util.Set<String>> fromColumns = catalog.referrers(k, target.id(), asOf.businessDate());
+                java.util.Collection<String> ids = fromColumns.isPresent() ? fromColumns.get()
+                        : withConnection(c -> table.reverse(c, k, target.id(), asOf.businessDate(), maxLoadRows));
+                ids.forEach(i -> out.add(EntityRef.of(k, i)));
+            } catch (Exception e) {
+                // no referrers from here, not an error page
+            }
+        }
+        return out;
     }
 
     @Override
@@ -164,12 +180,7 @@ public final class JdbcSourcePlugin implements SourcePlugin {
         if (table == null) {
             return java.util.List.of();
         }
-        try {
-            return withConnection(c -> table.search(c, kind, text, limit)).stream()
-                    .map(r -> new com.ash.drishti.api.EntityHit(EntityRef.of(r[0], r[1]), r[1], r[0] + " · " + sourceName)).toList();
-        } catch (Exception e) {
-            return java.util.List.of();
-        }
+        return catalog.search(kind, text, limit);               // in memory: the newest day's ids, never a query per keystroke
     }
 
     @Override
@@ -205,7 +216,6 @@ public final class JdbcSourcePlugin implements SourcePlugin {
         }
         String t = ctx.setting("table", "");
         if (!t.isBlank()) {
-            Map<String, String> modes = new LinkedHashMap<>();
             ctx.settings().forEach((k, v) -> {
                 if (k.startsWith("mode.")) {
                     modes.put(k.substring(5), v);
@@ -214,28 +224,70 @@ public final class JdbcSourcePlugin implements SourcePlugin {
             table = new EntityTable(t, ctx.setting("kind-column", "kind"), ctx.setting("id-column", "id"),
                     ctx.setting("date-column", "business_date"), ctx.setting("doc-column", "doc"), modes,
                     Integer.parseInt(ctx.setting("lookback-days", "10")));
+            Map<String, java.util.List<String>> promoted = new LinkedHashMap<>();
+            ctx.settings().forEach((k, v) -> {
+                if (k.startsWith("layout.") && k.endsWith(".columns")) {
+                    promoted.put(k.substring(7, k.length() - 8), java.util.Arrays.stream(v.split(",")).map(String::trim).filter(x -> !x.isEmpty()).toList());
+                }
+            });
+            this.maxLoadRows = Integer.parseInt(ctx.setting("max-load-rows", "200000"));
+            this.reverseIndex = Boolean.parseBoolean(ctx.setting("reverse-index", "true"));
+            catalog = new TableCatalog(table, new TableCatalog.Db() {
+                @Override
+                public <T> T with(TableCatalog.Work<T> work) throws Exception {
+                    return withConnection(work::run);
+                }
+            }, sourceName, k -> "effective".equals(modes.get(k)), Integer.parseInt(ctx.setting("lookback-days", "10")), promoted,
+                    Integer.parseInt(ctx.setting("scan-threads", "4")), Long.parseLong(ctx.setting("columns-cache-mb", "1024")),
+                    java.time.Duration.ofSeconds(Long.parseLong(ctx.setting("columns-seconds", "300"))));
             String configured = ctx.setting("kinds", "");
-            if (!configured.isBlank()) {
-                tableKinds = java.util.Arrays.stream(configured.split(",")).map(String::trim).filter(x -> !x.isEmpty()).toList();
-            } else if (!discoverKinds()) {
-                // the database is not answering yet: keep asking in the background until it does
-                java.util.concurrent.ScheduledFuture<?>[] retry = new java.util.concurrent.ScheduledFuture<?>[1];
-                retry[0] = ctx.scheduler().scheduleWithFixedDelay(() -> {
-                    if (discoverKinds() && retry[0] != null) {
-                        retry[0].cancel(false);
-                    }
-                }, 10, 10, TimeUnit.SECONDS);
+            java.util.List<String> fixed = configured.isBlank() ? java.util.List.of()
+                    : java.util.Arrays.stream(configured.split(",")).map(String::trim).filter(x -> !x.isEmpty()).toList();
+            if (!fixed.isEmpty()) {
+                tableKinds = fixed;
+            }
+            // the dates, the newest day's ids and columns, now and every refresh-seconds; the database may start after us
+            Runnable refresh = () -> {
+                if (catalog.refresh(fixed) && fixed.isEmpty()) {
+                    tableKinds = java.util.List.copyOf(catalog.kinds());
+                }
+            };
+            refresh.run();
+            long every = Long.parseLong(ctx.setting("refresh-seconds", "60"));
+            if (ctx.scheduler() != null) {
+                ctx.scheduler().scheduleWithFixedDelay(refresh, Math.min(10, every), every, TimeUnit.SECONDS);
             }
         }
     }
 
-    /** Lists the kinds the table holds; false (and nothing changes) when the database cannot answer yet. */
-    private boolean discoverKinds() {
-        try {
-            tableKinds = java.util.List.copyOf(withConnection(table::kinds));
-            return true;
-        } catch (Exception e) {
-            return false;
+    private String modeOf(String kind) {
+        return modes.getOrDefault(kind, "snapshot");
+    }
+
+    @Override
+    public java.util.Set<String> columnar(String kind) {
+        return catalog == null ? java.util.Set.of() : catalog.columnar(kind);
+    }
+
+    @Override
+    public Optional<com.ash.drishti.api.ColumnSet> columns(String kind, java.util.Collection<String> paths, com.ash.drishti.api.AsOf asOf) {
+        return catalog == null ? Optional.empty() : catalog.columns(kind, paths, asOf.businessDate());
+    }
+
+    @Override
+    public Instant lastUpdate() {
+        return catalog == null ? null : catalog.loadedAt();
+    }
+
+    @Override
+    public Map<String, Object> cacheStats() {
+        return catalog == null ? Map.of() : catalog.stats();
+    }
+
+    @Override
+    public void purgeCaches() {
+        if (catalog != null) {
+            catalog.clear();
         }
     }
 
@@ -250,7 +302,17 @@ public final class JdbcSourcePlugin implements SourcePlugin {
             if (!tableKinds.contains(ref.kind())) {
                 return Optional.empty();
             }
-            Optional<EntityTable.Hit> hit = withConnection(c -> table.fetch(c, ref.kind(), ref.id(), asOf.businessDate()));
+            Optional<EntityTable.Hit> hit;
+            if (catalog.known(ref.kind()) && !"effective".equals(modeOf(ref.kind()))) {
+                // the snapshot date from memory, then a primary-key lookup in that date's partition
+                Optional<java.time.LocalDate> day = catalog.snapshotDate(ref.kind(), asOf.businessDate());
+                if (day.isEmpty()) {
+                    return Optional.empty();
+                }
+                hit = withConnection(c -> table.fetchOn(c, ref.kind(), ref.id(), day.get()));
+            } else {
+                hit = withConnection(c -> table.fetch(c, ref.kind(), ref.id(), asOf.businessDate()));
+            }
             if (hit.isEmpty()) {
                 return Optional.empty();
             }
@@ -362,7 +424,17 @@ public final class JdbcSourcePlugin implements SourcePlugin {
     @Override
     public String health() {
         String e = lastError;
-        return pool == null ? "DOWN: not started" : e == null ? "UP" : "DOWN: " + e + " (reconnecting)";
+        if (pool == null) {
+            return "DOWN: not started";
+        }
+        if (e != null) {
+            return "DOWN: " + e + " (reconnecting)";
+        }
+        if (catalog != null && catalog.problem() != null) {
+            return "UP (" + catalog.problem() + ")";
+        }
+        java.util.List<String> notLaidOut = catalog == null ? java.util.List.of() : catalog.notLaidOut();
+        return notLaidOut.isEmpty() ? "UP" : "UP (not laid out as the pack declares: " + String.join(", ", notLaidOut) + "; searches read documents)";
     }
 
     @Override

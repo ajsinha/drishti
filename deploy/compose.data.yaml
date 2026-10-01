@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 # The stores the banking packs can read instead of Delta Lake (PostgreSQL 18, Aerospike CE) and a Kafka broker for live trades.
 #   docker compose -f deploy/compose.data.yaml up -d
-#   uv run --with "psycopg[binary]" python tools/packgen/banking/make_data.py --postgres postgresql://drishti:drishti@localhost:5432/drishti
+#   tools/load-postgres.sh jdbc:postgresql://localhost:5432/drishti
 #   tools/load-aerospike.sh localhost:3000 test
 #   uv run --with kafka-python python tools/samplegen/stream.py          (live trades; DRISHTI_STREAM_TRADING=true)
 # Then start the server with SPRING_PROFILES_ACTIVE=postgres (or aerospike) and DRISHTI_PACKS=market-risk,counterparty-risk.

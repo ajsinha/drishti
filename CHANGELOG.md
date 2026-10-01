@@ -24,6 +24,12 @@
   - **Reads:** two key reads per entity. Type-ahead comes from the index set.
   - **Columns:** a day's promoted bins are read by filtered scans, run in parallel over partition ranges.
   - **Loader and retention:** the loader streams and writes in parallel; record TTL gives retention without a maintenance job.
+- **PostgreSQL at scale** ([POSTGRES_CONNECTOR.md](docs/POSTGRES_CONNECTOR.md)). The `jdbc` connector's table mode now uses a partitioned table, and the old table form is still read.
+  - **Layout:** a table per data domain, partitioned by month, with LZ4-compressed documents. The pack's promoted fields are columns, a `(kind, business_date, id)` index lists a day's ids, and an `entity_dates` catalogue records each kind's days.
+  - **Reads:** type-ahead comes from memory instead of a `LIKE` query per keystroke. A single read is one primary-key probe. A day's columns are read in parallel by id range.
+  - **Loading and retention:** `PostgresLoader` / `tools/load-postgres.sh` uses parallel `COPY` and replaces a day whole. `--keep-months` drops old partitions.
+  - **Measured:** searches over a million trades take 100–225 ms. `make_data.py --postgres` and `pgload.py` are replaced by the loader.
+- **Demo data in every store** ([DEMO_DATA.md](docs/DEMO_DATA.md)). `tools/load-delta.sh`, `tools/load-postgres.sh` and `tools/load-aerospike.sh` take the same `--trades N --days D` options, from the samples up to a million trades a day.
 - **Recent history in one store, years in another.** A search on a business day that the first store does not hold (for example, older than Aerospike's TTL) is answered by the next store that does (for example, Delta Lake).
 - **Engine:**
   - The plugin interface gains `columnar`/`columns` (`ColumnSet`). Derived kinds aggregate over columns and serve their last result while recomputing.

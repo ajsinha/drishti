@@ -779,7 +779,7 @@ connectors:
       table: trading.entities                        # schema.table; plain SQL names only
       mode.trade: snapshot                           # the default; effective for reference data
       lookback-days: 10                              # snapshot kinds: how far back a picked date may fall
-      # kinds: trade                                 # optional; otherwise SELECT DISTINCT kind at start
+      # kinds: trade                                 # optional; otherwise the kinds the table holds
 routes:
   trade: trading-store
 ```
@@ -791,16 +791,16 @@ Column names other than `kind`, `id`, `business_date`, `doc` are set with `kind-
 
 ```bash
 docker compose -f deploy/compose.data.yaml up -d postgres
-uv run --with "psycopg[binary]" python tools/packgen/banking/make_data.py \
-    --postgres postgresql://drishti:drishti@localhost:5432/drishti --days 10
+tools/load-postgres.sh jdbc:postgresql://localhost:5432/drishti
 SPRING_PROFILES_ACTIVE=postgres DRISHTI_PACKS=counterparty-risk,market-risk \
   java -jar drishti-server/target/drishti-server-*-exec.jar
 ```
 
-`make_data.py --postgres` (re)creates one `<schema>.entities` table per domain (`reference`, `market`, `trading`,
-`risk`, `credit`, `collateral`) with ten business days, and prints `postgres <schema>.entities: <n> rows (<k>
-kinds)` for each. It also rewrites the banking packs' `samples/` folders from the same generator (no change if they
-are up to date).
+`tools/load-postgres.sh` (re)creates one `<schema>.entities` table per domain (`reference`, `market`, `trading`,
+`risk`, `credit`, `collateral`) with ten business days, partitioned by month, the pack's promoted fields as columns,
+and prints `postgres: loaded 17,910 rows in 2 s`. Add `--trades 50000` (a medium demo) or `--trades 1000000 --days 3`
+(the scale test) for a larger trade book, streamed from the generator into the loader. How the layout serves a
+million trades a day is in [POSTGRES_CONNECTOR.md](POSTGRES_CONNECTOR.md).
 
 ```bash
 curl -s "http://localhost:18480/api/v1/entities/trade/MX-20000001/raw?asOf=2026-09-29" | jq -c .provenance
@@ -817,19 +817,21 @@ SQL. (*Linked entities* shows the ids the counterparty itself refers to: its gro
 
 ### Health, and when the database goes down
 
-As query mode: `UP` or `DOWN: <driver message> (reconnecting)`; connections reopen by themselves. If the database is
-down when the server starts and you did not list `kinds` in the settings, the connector asks `SELECT DISTINCT kind`
-again every 10 seconds until the database answers; until then it holds nothing, so reads of its kinds go on to the
-next connector (the samples, when they are on) until the retry after the database is back.
+As query mode: `UP` or `DOWN: <driver message> (reconnecting)`; connections reopen by themselves. A table without
+the columns the pack declares says `UP (not laid out as the pack declares: trade (0 of 19 columns); searches read
+documents)`. If the database is down when the server starts and you did not list `kinds` in the settings, the
+connector reads its catalogue again 10 seconds later and then every `refresh-seconds`; until then it holds nothing, so
+reads of its kinds go on to the next connector (the samples, when they are on).
 
 ### Common errors
 
 | You see | Cause | Fix |
 |---|---|---|
 | `not a plain SQL identifier: …` under `failedToStart` | `table` or a column name holds anything but letters, digits, `_` and one `.` | use plain names |
-| reverse lookups are slow | no GIN index on `doc` | `CREATE INDEX ON <schema>.entities USING gin (doc jsonb_path_ops)` |
+| searches say `partial: true` | the table has no promoted columns (an earlier table, or written another way) | reload with `tools/load-postgres.sh`, or add the columns the pack declares |
+| `… is a plain table of the old layout: load with --recreate` | the loader found a table of the earlier form | `--recreate` (the samples' load does it) |
 | a picked date returns nothing for a snapshot kind | the newest date on or before it is more than `lookback-days` older | load every business date, or set `mode.<kind>: effective` for data that changes rarely |
-| the connector serves no kinds after an outage at start | it is still retrying `SELECT DISTINCT kind` | wait 10 s, or list `kinds:` in settings |
+| the connector serves no kinds after an outage at start | it reads its catalogue again after 10 s, then every `refresh-seconds` | wait, or list `kinds:` in settings |
 
 ---
 

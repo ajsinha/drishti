@@ -97,14 +97,18 @@ final class EntityTable {
         }
     }
 
-    List<String> reverse(Connection c, String k, String target, LocalDate asked) throws SQLException {
+    /**
+     * Entities of a kind whose document mentions {@code target} anywhere, reading at most {@code maxRows} documents (a
+     * kind of millions a day is answered from its promoted link columns instead; see {@link TableCatalog}).
+     */
+    List<String> reverse(Connection c, String k, String target, LocalDate asked, int maxRows) throws SQLException {
         LocalDate on = asked == null ? LATEST : asked;
         String match = "jsonb_path_exists(" + doc + ", '$.** ? (@ == $v)', jsonb_build_object('v', ?::text))";
         String sql = effective(k)
                 ? "SELECT eid FROM (SELECT DISTINCT ON (" + id + ") " + id + " AS eid, " + doc + " FROM " + table + " WHERE " + kind
-                        + " = ? AND " + date + " <= ? ORDER BY " + id + ", " + date + " DESC) latest WHERE " + match + " ORDER BY eid"
-                : "SELECT " + id + " FROM " + table + " WHERE " + kind + " = ? AND " + date + " = " + snapshotDate() + " AND " + match
-                        + " ORDER BY " + id;
+                        + " = ? AND " + date + " <= ? ORDER BY " + id + ", " + date + " DESC LIMIT " + maxRows + ") latest WHERE " + match + " ORDER BY eid"
+                : "SELECT eid FROM (SELECT " + id + " AS eid, " + doc + " FROM " + table + " WHERE " + kind + " = ? AND " + date + " = " + snapshotDate()
+                        + " LIMIT " + maxRows + ") day WHERE " + match + " ORDER BY eid";
         try (PreparedStatement ps = c.prepareStatement(sql)) {
             int i = 1;
             ps.setString(i++, k);
@@ -126,25 +130,180 @@ final class EntityTable {
         }
     }
 
-    /** Distinct identifiers containing {@code text} (case-insensitive), for the command-line suggestions. */
-    List<String[]> search(Connection c, String k, String text, int limit) throws SQLException {
-        String sql = "SELECT DISTINCT " + kind + ", " + id + " FROM " + table + " WHERE " + (k == null ? "" : kind + " = ? AND ")
-                + "LOWER(" + id + ") LIKE ? ORDER BY " + id + " LIMIT ?";
-        try (PreparedStatement ps = c.prepareStatement(sql)) {
-            int i = 1;
-            if (k != null) {
-                ps.setString(i++, k);
-            }
-            ps.setString(i++, "%" + text.toLowerCase(java.util.Locale.ROOT).replace("%", "\\%").replace("_", "\\_") + "%");
-            ps.setInt(i, limit);
-            List<String[]> out = new ArrayList<>();
+    /** The schema of the table ({@code trading} for {@code trading.entities}; {@code public} without one). */
+    String schema() {
+        return table.contains(".") ? table.substring(0, table.indexOf('.')) : "public";
+    }
+
+    /** The table's name without its schema. */
+    String name() {
+        return table.contains(".") ? table.substring(table.indexOf('.') + 1) : table;
+    }
+
+    /** True when the schema has the {@link PostgresLayout} dates table (each kind's business dates, kept by the loader). */
+    boolean hasDates(Connection c) throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement("SELECT to_regclass(?) IS NOT NULL")) {
+            ps.setString(1, schema() + "." + PostgresLayout.DATES);
             try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() && rs.getBoolean(1);
+            }
+        }
+    }
+
+    /**
+     * Each kind's business dates and when the newest load finished: from the dates table when the loader keeps one,
+     * else from the index with a skip scan (one probe per date, never a scan of the rows).
+     */
+    Map<String, java.util.NavigableSet<LocalDate>> dates(Connection c, boolean fromTable, java.util.Collection<String> kinds) throws SQLException {
+        Map<String, java.util.NavigableSet<LocalDate>> out = new java.util.TreeMap<>();
+        if (fromTable) {
+            try (PreparedStatement ps = c.prepareStatement("SELECT kind, business_date FROM " + schema() + "." + PostgresLayout.DATES);
+                 ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    out.add(new String[] {rs.getString(1), rs.getString(2)});
+                    out.computeIfAbsent(rs.getString(1), k -> new java.util.TreeSet<>()).add(rs.getDate(2).toLocalDate());
                 }
             }
             return out;
         }
+        String sql = "WITH RECURSIVE d AS (SELECT MIN(" + date + ") AS v FROM " + table + " WHERE " + kind + " = ? UNION ALL SELECT (SELECT MIN("
+                + date + ") FROM " + table + " WHERE " + kind + " = ? AND " + date + " > d.v) FROM d WHERE d.v IS NOT NULL) SELECT v FROM d WHERE v IS NOT NULL";
+        for (String k : kinds) {
+            try (PreparedStatement ps = c.prepareStatement(sql)) {
+                ps.setString(1, k);
+                ps.setString(2, k);
+                try (ResultSet rs = ps.executeQuery()) {
+                    java.util.NavigableSet<LocalDate> ds = new java.util.TreeSet<>();
+                    while (rs.next()) {
+                        ds.add(rs.getDate(1).toLocalDate());
+                    }
+                    out.put(k, ds);
+                }
+            }
+        }
+        return out;
+    }
+
+    /** When the newest load finished (the dates table), or null. */
+    java.time.Instant loadedAt(Connection c) throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement("SELECT MAX(loaded_at) FROM " + schema() + "." + PostgresLayout.DATES);
+             ResultSet rs = ps.executeQuery()) {
+            return rs.next() && rs.getTimestamp(1) != null ? rs.getTimestamp(1).toInstant() : null;
+        }
+    }
+
+    /** One entity on a known business date: a primary-key lookup in that date's partition. */
+    Optional<Hit> fetchOn(Connection c, String k, String entity, LocalDate day) throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement("SELECT " + doc + "::text FROM " + table + " WHERE " + kind + " = ? AND " + id + " = ? AND "
+                + date + " = ?")) {
+            ps.setString(1, k);
+            ps.setString(2, entity);
+            ps.setDate(3, Date.valueOf(day));
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? Optional.of(new Hit(rs.getString(1), day)) : Optional.empty();
+            }
+        }
+    }
+
+    /** Streams a large result in pieces (PostgreSQL sends the rows in batches only inside a transaction). */
+    private static <T> T streaming(Connection c, SqlCall<T> call) throws SQLException {
+        boolean auto = c.getAutoCommit();
+        c.setAutoCommit(false);
+        try {
+            return call.run();
+        } finally {
+            c.rollback();                                     // read only: nothing to keep
+            c.setAutoCommit(auto);
+        }
+    }
+
+    @FunctionalInterface
+    interface SqlCall<T> {
+        T run() throws SQLException;
+    }
+
+    /** A business date's ids of a kind (snapshot), or every id it ever had (effective, day null), from the index. */
+    void ids(Connection c, String k, LocalDate day, java.util.function.Consumer<String> each) throws SQLException {
+        String sql = day == null ? "SELECT DISTINCT " + id + " FROM " + table + " WHERE " + kind + " = ?"
+                : "SELECT " + id + " FROM " + table + " WHERE " + kind + " = ? AND " + date + " = ?";
+        streaming(c, () -> {
+            try (PreparedStatement ps = c.prepareStatement(sql)) {
+                ps.setFetchSize(50_000);
+                ps.setString(1, k);
+                if (day != null) {
+                    ps.setDate(2, Date.valueOf(day));
+                }
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        each.accept(rs.getString(1));
+                    }
+                }
+            }
+            return null;
+        });
+    }
+
+    /** {@code n - 1} ids that cut a day's ids into {@code n} ranges of about equal size (read from the index). */
+    List<String> boundaries(Connection c, String k, LocalDate day, int n) throws SQLException {
+        if (n <= 1) {
+            return List.of();
+        }
+        StringBuilder fractions = new StringBuilder();
+        for (int i = 1; i < n; i++) {
+            fractions.append(i == 1 ? "" : ",").append((double) i / n);
+        }
+        try (PreparedStatement ps = c.prepareStatement("SELECT percentile_disc(ARRAY[" + fractions + "]) WITHIN GROUP (ORDER BY " + id + ") FROM "
+                + table + " WHERE " + kind + " = ? AND " + date + " = ?")) {
+            ps.setString(1, k);
+            ps.setDate(2, Date.valueOf(day));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next() || rs.getArray(1) == null) {
+                    return List.of();
+                }
+                return java.util.Arrays.stream((Object[]) rs.getArray(1).getArray()).map(String::valueOf).distinct().toList();
+            }
+        }
+    }
+
+    /** Receives one row of a day's promoted columns. */
+    @FunctionalInterface
+    interface ColumnRow {
+        void accept(ResultSet rs) throws SQLException;
+    }
+
+    /**
+     * A day's ids and promoted columns for ids in {@code [from, to)} (either may be null: unbounded), streamed; no
+     * document is read.
+     */
+    void columns(Connection c, String k, LocalDate day, String from, String to, List<String> columns, ColumnRow each) throws SQLException {
+        StringBuilder sql = new StringBuilder("SELECT ").append(id);
+        columns.forEach(col -> sql.append(", \"").append(col).append('"'));
+        sql.append(" FROM ").append(table).append(" WHERE ").append(kind).append(" = ? AND ").append(date).append(" = ?");
+        if (from != null) {
+            sql.append(" AND ").append(id).append(" >= ?");
+        }
+        if (to != null) {
+            sql.append(" AND ").append(id).append(" < ?");
+        }
+        streaming(c, () -> {
+            try (PreparedStatement ps = c.prepareStatement(sql.toString())) {
+                ps.setFetchSize(20_000);
+                int i = 1;
+                ps.setString(i++, k);
+                ps.setDate(i++, Date.valueOf(day));
+                if (from != null) {
+                    ps.setString(i++, from);
+                }
+                if (to != null) {
+                    ps.setString(i, to);
+                }
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        each.accept(rs);
+                    }
+                }
+            }
+            return null;
+        });
     }
 
     List<String> kinds(Connection c) throws SQLException {

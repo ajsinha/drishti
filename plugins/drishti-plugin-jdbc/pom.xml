@@ -29,12 +29,14 @@
   <description>JDBC source (driver supplied by the site)</description>
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
+    <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-core</artifactId></dependency>
+    <dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId><scope>test</scope></dependency>
     <dependency><groupId>com.h2database</groupId><artifactId>h2</artifactId><version>2.3.232</version><scope>test</scope></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><scope>test</scope></dependency>
     <!-- PostgreSQL in Docker for the contract test; it is skipped where Docker is not reachable -->
     <dependency><groupId>org.testcontainers</groupId><artifactId>testcontainers-postgresql</artifactId><version>${testcontainers.version}</version><scope>test</scope></dependency>
     <dependency><groupId>org.testcontainers</groupId><artifactId>testcontainers-junit-jupiter</artifactId><version>${testcontainers.version}</version><scope>test</scope></dependency>
-    <dependency><groupId>org.postgresql</groupId><artifactId>postgresql</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>org.postgresql</groupId><artifactId>postgresql</artifactId><scope>provided</scope></dependency>
   </dependencies>
 </project>

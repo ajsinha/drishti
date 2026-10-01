@@ -592,9 +592,14 @@ The JDBC driver jar goes on the class path or in `plugin-dir`.
 | `pool-size` | `4` | Connections kept. A broken connection is reopened; the connector starts even if the database is down. |
 | `query.<kind>` | none | Query mode: SQL with one `?` for the id, or named `:id` and `:asOf` (the business date). The first row is the document: each column a field, or a column named `json` as the whole document; optional `generation` and `business_date` columns. A `json`/`jsonb` column becomes nested data. |
 | `json-columns` | none | Query mode: comma list of text columns that hold JSON (`legs, extras`), parsed into nested data like a `json`/`jsonb` column; a cell that is not JSON stays text. |
-| `table` | empty | Table mode: every kind of a domain in one PostgreSQL table of `(kind, id, business_date, doc jsonb)` rows, with search and reverse lookups. |
+| `table` | empty | Table mode: every kind of a domain in one PostgreSQL table of `(kind, id, business_date, doc jsonb, <promoted columns>)` rows, partitioned by month ([POSTGRES_CONNECTOR.md](POSTGRES_CONNECTOR.md)). |
 | `mode.<kind>` | `snapshot` | Table mode: `snapshot` or `effective`. |
-| `kinds`, `kind-column`, `id-column`, `doc-column`, `date-column`, `lookback-days` | empty, `kind`, `id`, `doc`, `business_date`, `10` | Table mode column names and look-back. |
+| `kinds`, `kind-column`, `id-column`, `doc-column`, `date-column`, `lookback-days` | the kinds the table holds, `kind`, `id`, `doc`, `business_date`, `10` | Table mode column names and look-back. |
+| `layout.<kind>.columns` | none | Table mode: the paths the pack promotes, each a column of the table, read by searches, pick lists, derived kinds, impact and reverse lookups instead of documents. |
+| `refresh-seconds` | `60` | Table mode: how often each kind's dates and the newest day's ids (type-ahead, kept in memory) are re-read. |
+| `scan-threads` | `4` | Table mode: id ranges of a day read at once (on as many pooled connections) when reading a day's columns. |
+| `columns-cache-mb`, `columns-seconds` | `1024`, `300` | Table mode: memory for days of promoted columns, and how long a day is kept (a new load clears them). |
+| `max-load-rows`, `reverse-index` | `200000`, `true` | Table mode: the most documents a reverse lookup reads for a kind without promoted link columns; `false` turns reverse lookups off. |
 
 ```yaml
 drishti:

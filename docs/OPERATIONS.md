@@ -338,7 +338,7 @@ the pack's own files under `packs/`.
 
 ```bash
 docker compose -f deploy/compose.data.yaml up -d
-uv run --with "psycopg[binary]" python tools/packgen/banking/make_data.py --postgres postgresql://drishti:drishti@localhost:5432/drishti
+tools/load-postgres.sh jdbc:postgresql://localhost:5432/drishti
 tools/load-aerospike.sh localhost:3000 test
 ```
 

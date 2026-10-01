@@ -89,7 +89,8 @@ class PostgresReconnectTest {
         PostgreSQLContainer db = database(port);
         try {
             assertThat(eventually(() -> reads(p), Duration.ofSeconds(30))).as("serves once the database is up").isTrue();
-            assertThat(p.health()).isEqualTo("UP");
+            // the catalogue (dates, type-ahead ids) is read again within 10 s of the database coming back
+            assertThat(eventually(() -> p.health().equals("UP"), Duration.ofSeconds(30))).as(p.health()).isTrue();
         } finally {
             db.stop();                                                          // the database dies under the pooled connections
         }
