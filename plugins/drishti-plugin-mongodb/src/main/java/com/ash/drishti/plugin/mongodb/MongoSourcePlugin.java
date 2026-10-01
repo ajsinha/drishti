@@ -137,6 +137,10 @@ public final class MongoSourcePlugin implements SourcePlugin {
 
     @Override
     public void start(SourceContext ctx) {
+        if (ctx.setting("uri", "").isBlank()) {
+            // installed but not configured (the plugin running as itself): idle, rather than DOWN on a database nobody named
+            throw new com.ash.drishti.api.PluginNotConfigured("mongodb needs settings.uri (mongodb://host:27017)");
+        }
         this.context = ctx;
         this.sourceName = ctx.setting("source-name", "mongodb");
         this.collection = ctx.setting("collection", ctx.setting("domain", "drishti"));

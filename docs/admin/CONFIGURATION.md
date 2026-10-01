@@ -748,7 +748,7 @@ loading and maintenance: [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.
 | Setting | Default | Meaning |
 |---|---|---|
 | `catalog` | `hadoop` | `hadoop` (path-based tables) or `rest` |
-| `root` | `./data/iceberg` | `hadoop`: the lake, a folder or `s3a://…` (`abfs://`, `gs://`, `hdfs://`) |
+| `root` | none (`root` or `uri` is required; the plugin stays idle without one; the `iceberg` profile sets `./data/iceberg`) | `hadoop`: the lake, a folder or `s3a://…` (`abfs://`, `gs://`, `hdfs://`) |
 | `domain` | empty | the data domain: the folder under `root`, or the REST namespace |
 | `namespace` | the domain | `rest`: the namespace (dots separate levels) |
 | `uri` | none | `rest`: the catalog's URI |
@@ -806,7 +806,7 @@ A document per entity per business day, in a collection per data domain. Design,
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `uri` | `mongodb://localhost:27017` | connection string: hosts, replica set, credentials, TLS |
+| `uri` | none (required; the plugin stays idle without it; the `mongodb` profile sets `mongodb://localhost:27017`) | connection string: hosts, replica set, credentials, TLS |
 | `database` | `drishti` | the database |
 | `collection` | the connector's `domain`, else `drishti` | the domain's collection (`<collection>_columns` beside it) |
 | `read-preference` | `primary` | `primary`, `primaryPreferred`, `secondary`, `secondaryPreferred` or `nearest` |

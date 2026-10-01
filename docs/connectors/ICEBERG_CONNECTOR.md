@@ -517,7 +517,7 @@ On an Iceberg connector (`drishti.sources.connectors.<name>.settings`, or the co
 | Setting | Default | Meaning |
 |---|---|---|
 | `catalog` | `hadoop` | `hadoop` (path-based tables) or `rest` |
-| `root` | `./data/iceberg` | `hadoop`: the lake, a folder or `s3a://…` (`abfs://`, `gs://`, `hdfs://`) |
+| `root` | none (`root` or `uri` is required: without either the plugin stays idle; the `iceberg` profile sets `./data/iceberg`) | `hadoop`: the lake, a folder or `s3a://…` (`abfs://`, `gs://`, `hdfs://`) |
 | `domain` | empty | the data domain: the folder under `root`, or the REST namespace |
 | `namespace` | the domain | `rest`: the namespace (dots separate levels) |
 | `uri` | none | `rest`: the catalog's URI |

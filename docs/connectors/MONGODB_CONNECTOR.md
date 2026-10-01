@@ -462,7 +462,7 @@ On a MongoDB connector (`drishti.sources.connectors.<name>.settings`):
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `uri` | `mongodb://localhost:27017` | connection string: hosts, replica set, credentials, TLS, compressors |
+| `uri` | none (required: without it the plugin stays idle; the `mongodb` profile sets `mongodb://localhost:27017`) | connection string: hosts, replica set, credentials, TLS, compressors |
 | `database` | `drishti` | the database |
 | `collection` | the connector's `domain`, else `drishti` | the domain's collection (`<collection>_columns` beside it) |
 | `read-preference` | `primary` | `primary`, `primaryPreferred`, `secondary`, `secondaryPreferred` or `nearest` |

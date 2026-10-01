@@ -81,7 +81,7 @@
     <jmh.version>1.37</jmh.version>
     <springdoc.version>2.9.1</springdoc.version>
     <delta-kernel.version>4.4.0</delta-kernel.version>
-    <hadoop.version>3.4.2</hadoop.version>
+    <hadoop.version>3.4.3</hadoop.version>
     <testcontainers.version>2.0.5</testcontainers.version>
     <activemq.version>6.3.2</activemq.version>
     <rabbitmq.version>5.36.0</rabbitmq.version>

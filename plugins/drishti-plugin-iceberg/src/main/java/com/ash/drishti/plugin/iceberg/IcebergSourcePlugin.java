@@ -122,6 +122,10 @@ public final class IcebergSourcePlugin implements SourcePlugin {
 
     @Override
     public void start(SourceContext ctx) throws IOException {
+        if (ctx.setting("root", "").isBlank() && ctx.setting("uri", "").isBlank()) {
+            // installed but not configured (the plugin running as itself): idle, rather than DOWN on a lake nobody named
+            throw new com.ash.drishti.api.PluginNotConfigured("iceberg needs settings.root (a folder or s3a://…) or settings.uri (a REST catalog)");
+        }
         this.context = ctx;
         this.sourceName = ctx.setting("source-name", "iceberg");
         this.lookbackDays = Integer.parseInt(ctx.setting("lookback-days", "10"));
