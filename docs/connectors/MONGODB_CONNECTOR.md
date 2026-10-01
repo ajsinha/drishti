@@ -28,8 +28,9 @@ derived kinds, impact) is shared by all of them and explained in
 [DELTA_CONNECTOR.md, section 7](DELTA_CONNECTOR.md#7-searches-pick-lists-derived-kinds-and-impact-over-columns).
 
 **About the numbers.** The measurements in this document were taken with **10,000 trades a day** over three business
-days (plus the banking samples), on a MongoDB container capped at 2 GB of memory. Figures for a million trades a day are
-**estimates**, scaled from the measured size per document and per index entry; they are labelled as such.
+days (plus the banking samples), on a MongoDB container capped at 2 GB of memory; the scale benchmark added 25,000 and
+50,000 ([section 9](#9-measured-results)). Figures for a million trades a day are **estimates**, scaled from the
+measured size per document and per index entry, or **extrapolations** from the benchmark; they are labelled as such.
 
 ## Contents
 
@@ -416,10 +417,44 @@ HTTP (the second of two passes, so without JIT warm-up):
 
 Every search scanned all 10,000 trades of the day from columns (`scanned: 10000`, `partial: false`).
 
-**Estimates for a million trades a day** (not measured on this machine; from the per-document sizes above and from
-development runs before the measurement limit): a cold day's columns in about 0.5–1 s from `trading_columns` with 8–16
-ranges; a cached search in tens to a few hundred milliseconds, as on Aerospike and Delta Lake, since the engine side is
-the same; about 220 MB of heap per cached day.
+**A million trades a day: not measured; extrapolated.** The straight lines through the scale benchmark's points (the
+table below) put the newest day's three searches at 70–180 ms, impact of `NS-SUMMIT-NY` at about 130 ms, the first
+search on another business day at about 4 s (its columns read from `trading_columns`) and then about 220 ms, and three
+days at about 3.9 GB of compressed storage and indexes. These are **extrapolations from 10,000 to 50,000 trades a day,
+not measurements**. Development runs before the measurement limit read a million-trade day's columns through the
+connector in 0.4–0.8 s from `trading_columns` ([section 5.4](#54-a-days-columns)), far below the line's 4 s: the cold
+search jumped from 26 ms at 25,000 trades to 184 ms at 50,000, and one such point steepens a four-point line. Treat that
+figure as an upper bound; about 220 MB of heap per cached day remains an estimate.
+
+**The scaling curve, measured with the scale benchmark (2026-10-01).** `tools/bench/scale.sh`
+([SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md)) loaded 10,000, 25,000 and 50,000 trades a day over three business
+days (plus the banking samples) and asked the same questions over HTTP each time: a 24-thread laptop shared with other
+work, a Drishti server with `-Xmx2g`, MongoDB 7 in Docker capped at 2 GB, WiredTiger cache 0.5 GB. Medians of 25
+requests; every search exact (`partial: false`, `scanned` equal to the trades a day). The last column carries a
+straight-line fit (R² beside it) to a million trades a day: **an extrapolation from the measured points, not a
+measurement**; "flat" means the measure does not grow with the book. This store has not been measured at a million
+trades a day; the last column is the best figure there is, and only an order of magnitude.
+
+| | 10,000 | 25,000 | 50,000 | R² | 1,000,000 (**extrapolated**) |
+|---|---|---|---|---|---|
+| type-ahead `TRD CLY-400` (ms) | 6.3 | 6.8 | 6.9 | 0.01 | flat, about 6.9 ms |
+| open a trade (view), first time (ms) | 4.8 | 3.5 | 5.6 | 0.04 | 14.5 ms (weak fit) |
+| a trade's document, today (ms) | 1.4 | 1.7 | 3.0 | 0.67 | 30.3 ms |
+| a trade's document, a past day (ms) | 1.3 | 2.7 | 6.2 | 0.95 | 111 ms |
+| `TRD where mtm < -50m order by mtm` (ms) | 1.0 | 2.5 | 4.0 | 0.98 | 68.7 ms |
+| `TRD where currency = 'USD' and notional > 500m …` (ms) | 2.3 | 4.0 | 9.6 | 0.97 | 177 ms |
+| `TRD book=BOOK-RATES-3` (ms) | 1.6 | 4.3 | 9.4 | 0.96 | 176 ms |
+| pick list `TRD END-1100` (ms) | 1.0 | 1.0 | 2.9 | 0.84 | 45.3 ms |
+| desk P&L `DESK-RATES` (ms) | 6.6 | 4.6 | 3.3 | 0.19 | flat, about 4.4 ms |
+| impact of `NS-SUMMIT-NY` (ms) | 17.9 | 19.9 | 22.8 | 0.98 | 132 ms |
+| a search on another day, first (ms) | 14.1 | 25.6 | 184 | 0.90 | 4,133 ms |
+| a search on another day, again (ms) | 1.1 | 2.1 | 10.3 | 0.91 | 221 ms |
+| load (the whole script) (s) | 10.2 | 16.2 | 17.1 | 0.73 | 155 s |
+| store size (MB) | 47.1 | 104 | 202 | 1.00 | 3,872 MB |
+| server live heap after a full GC (MB) | 109 | 132 | 174 | 1.00 | 1,702 MB |
+
+Run-to-run variance, requests per second with 8 clients, server start and the other stores side by side:
+[SCALE_BENCHMARK.md › Results](../admin/SCALE_BENCHMARK.md#4-results).
 
 ## 10. Limits and trade-offs
 

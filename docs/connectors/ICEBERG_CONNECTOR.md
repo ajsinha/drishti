@@ -30,9 +30,10 @@ the JSON-lines files the loader reads are described in [FILE_CONNECTOR.md](FILE_
 [DEMO_DATA.md](DEMO_DATA.md). Every setting is in [CONFIGURATION.md](../admin/CONFIGURATION.md).
 
 **About the numbers.** The measurements in this document were taken on 2026-10-01 with **10,000 trades a day over three
-business days** (plus the banking samples), on a shared workstation, with the Drishti server at `-Xmx2g`. Figures for a
-million trades a day are **estimates**, marked as such, scaled from the 10,000-trade measurements and from the file and
-row-group sizes the loader produces.
+business days** (plus the banking samples), on a shared workstation, with the Drishti server at `-Xmx2g`; the scale
+benchmark added 25,000 and 50,000 ([section 12](#12-measured-results)). Figures for a million trades a day are
+**estimates**, marked as such, scaled from the 10,000-trade measurements and from the file and row-group sizes the
+loader produces, or **extrapolations** from the benchmark, also marked.
 
 ## Contents
 
@@ -462,9 +463,41 @@ HTTP from the same machine:
 | maintenance: drift check / keep 5 days + rewrite 5 + manifests + expiry | 0.7 s / 2.9 s |
 | server heap in use | 126–437 MB |
 
-**Estimates for a million trades a day** (not measured under the current test limits): single reads 40–50 ms, searches
-over a day's columns a few hundred milliseconds as on Delta Lake, the newest day's column set ready in the background a
-few seconds after a new snapshot, another day's first search one to two seconds, heap 2–3.5 GB.
+**A million trades a day: not measured; extrapolated.** The straight lines through the scale benchmark's points (the
+table below) put the newest day's three searches at 75–170 ms, a trade's document at about 80 ms today and 180 ms on a
+past day, impact of `NS-SUMMIT-NY` at about 140 ms, the first search on another business day at about 5.5 s (its column
+set read) and then about 60 ms, and three days at about 2.5 GB. These are **extrapolations from 10,000 to 50,000 trades
+a day, not measurements**. Heap of 2–3.5 GB, as on Delta Lake, remains an estimate.
+
+**The scaling curve, measured with the scale benchmark (2026-10-01).** `tools/bench/scale.sh`
+([SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md)) loaded 10,000, 25,000 and 50,000 trades a day over three business
+days (plus the banking samples) and asked the same questions over HTTP each time: a 24-thread laptop shared with other
+work, a Drishti server with `-Xmx2g`, path-based tables on local disk. Medians of 25 requests; every search exact
+(`partial: false`, `scanned` equal to the trades a day). The last column carries a straight-line fit (R² beside it) to a
+million trades a day: **an extrapolation from the measured points, not a measurement**; "flat" means the measure does
+not grow with the book. This store has not been measured at a million trades a day; the last column is the best figure
+there is, and only an order of magnitude.
+
+| | 10,000 | 25,000 | 50,000 | R² | 1,000,000 (**extrapolated**) |
+|---|---|---|---|---|---|
+| type-ahead `TRD CLY-400` (ms) | 8.4 | 8.7 | 7.3 | 0.47 | flat, about 8.1 ms |
+| open a trade (view), first time (ms) | 5.7 | 5.3 | 4.5 | 0.11 | flat, about 5.0 ms |
+| a trade's document, today (ms) | 11.3 | 10.1 | 14.1 | 0.62 | 83.2 ms |
+| a trade's document, a past day (ms) | 10.9 | 11.5 | 17.1 | 0.93 | 183 ms |
+| `TRD where mtm < -50m order by mtm` (ms) | 2.7 | 4.3 | 5.8 | 0.97 | 73.5 ms |
+| `TRD where currency = 'USD' and notional > 500m …` (ms) | 2.7 | 5.0 | 9.6 | 0.99 | 168 ms |
+| `TRD book=BOOK-RATES-3` (ms) | 3.0 | 4.5 | 6.6 | 0.97 | 101 ms |
+| pick list `TRD END-1100` (ms) | 1.0 | 2.3 | 2.0 | 0.58 | 29.4 ms |
+| desk P&L `DESK-RATES` (ms) | 3.1 | 3.6 | 4.0 | 0.08 | flat, about 4.4 ms |
+| impact of `NS-SUMMIT-NY` (ms) | 19.3 | 21.6 | 24.3 | 0.99 | 136 ms |
+| a search on another day, first (ms) | 33.4 | 123 | 264 | 0.99 | 5,451 ms |
+| a search on another day, again (ms) | 2.6 | 5.4 | 5.4 | 0.62 | 59.2 ms |
+| load (the whole script) (s) | 18.2 | 22.4 | 26.4 | 0.97 | 232 s |
+| store size (MB) | 34.8 | 71.5 | 133 | 1.00 | 2,462 MB |
+| server live heap after a full GC (MB) | 98.2 | 110 | 127 | 0.99 | 763 MB |
+
+Run-to-run variance, requests per second with 8 clients, server start and the other stores side by side:
+[SCALE_BENCHMARK.md › Results](../admin/SCALE_BENCHMARK.md#4-results).
 
 ## 13. Limits and trade-offs
 

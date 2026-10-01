@@ -327,7 +327,7 @@ public final class AerospikeSourcePlugin implements SourcePlugin {
         scans.acquireUninterruptibly();
         try (var pool = java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()) {
             int parts = 4096;
-            int step = -(-parts / Math.max(1, scanThreads));
+            int step = Math.max(1, Math.ceilDiv(parts, Math.max(1, scanThreads)));
             List<java.util.concurrent.Future<?>> running = new ArrayList<>();
             for (int begin = 0; begin < parts; begin += step) {
                 int from = begin;

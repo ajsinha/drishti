@@ -29,8 +29,9 @@ setting is also in [CONFIGURATION.md](../admin/CONFIGURATION.md). To build demo 
 [DEMO_DATA.md](DEMO_DATA.md).
 
 **About the numbers.** Every measurement here was taken on 2026-10-01 with **10,000 trades a day over three business
-days** plus the banking samples (47,910 rows), a Drishti server with `-Xmx2g` and DuckDB limited to 1 GB. Figures
-for a million trades a day are **estimates** scaled from those measurements and say so where they appear.
+days** plus the banking samples (47,910 rows), a Drishti server with `-Xmx2g` and DuckDB limited to 1 GB; the scale
+benchmark added 25,000 and 50,000 ([section 9](#9-measured-results)). Figures for a million trades a day are
+**estimates** or **extrapolations** from those measurements and say so where they appear.
 
 ## Contents
 
@@ -422,12 +423,43 @@ over HTTP:
 
 Every search answered over all 10,000 trades of the day (`partial: false`, `scanned: 10000`).
 
-**A million trades a day (estimates, not measured).** Point reads touch one row group whatever the size of the day,
-so they should stay near the measured 15 ms. Type-ahead is in memory and stays under 50 ms, as on the other stores.
-A search on the newest day is answered from the column set in memory, so it scales like the other stores' (100–250 ms
-on PostgreSQL and Delta Lake for a million rows). The first read of another day's columns is a columnar scan of
-19 narrow columns of a million rows: expect about a second. Loading is limited by the generator and by rewriting the
-file ([section 4.4](#44-the-cost-of-rewriting-the-file-and-the-production-pattern)).
+**A million trades a day: not measured; extrapolated.** The straight lines through the scale benchmark's points (the
+table below) put the newest day's three searches at 64–155 ms, the first search on another business day at about 2 s and
+then about 70 ms, the file for three days at about 2.2 GB (0.7 GB a day, as estimated in [section
+7](#7-sizing-and-duckdb-with-delta-lake)), and a trade's document today flat at about 10 ms; a document on a past day
+rises with the size of that day's id lookup (about 260 ms on the line). These are **extrapolations from 10,000 to 50,000
+trades a day, not measurements**. Loading is limited by the generator and by rewriting the file ([section
+4.4](#44-the-cost-of-rewriting-the-file-and-the-production-pattern)).
+
+**The scaling curve, measured with the scale benchmark (2026-10-01).** `tools/bench/scale.sh`
+([SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md)) loaded 10,000, 25,000 and 50,000 trades a day over three business
+days (plus the banking samples) and asked the same questions over HTTP each time: a 24-thread laptop shared with other
+work, a Drishti server with `-Xmx2g`, DuckDB embedded, `memory-limit` 1 GB. Medians of 25 requests; every search exact
+(`partial: false`, `scanned` equal to the trades a day). The last column carries a straight-line fit (R² beside it) to a
+million trades a day: **an extrapolation from the measured points, not a measurement**; "flat" means the measure does
+not grow with the book. This store has not been measured at a million trades a day; the last column is the best figure
+there is, and only an order of magnitude.
+
+| | 10,000 | 25,000 | 50,000 | R² | 1,000,000 (**extrapolated**) |
+|---|---|---|---|---|---|
+| type-ahead `TRD CLY-400` (ms) | 7.8 | 8.5 | 8.0 | 0.19 | 18.3 ms (weak fit) |
+| open a trade (view), first time (ms) | 5.3 | 3.8 | 4.1 | 0.42 | flat, about 4.5 ms |
+| a trade's document, today (ms) | 11.6 | 11.9 | 6.0 | 0.79 | flat, about 10.2 ms |
+| a trade's document, a past day (ms) | 6.0 | 6.7 | 16.6 | 0.90 | 264 ms |
+| `TRD where mtm < -50m order by mtm` (ms) | 1.2 | 2.4 | 3.6 | 0.98 | 64.1 ms |
+| `TRD where currency = 'USD' and notional > 500m …` (ms) | 1.7 | 4.3 | 7.9 | 1.00 | 155 ms |
+| `TRD book=BOOK-RATES-3` (ms) | 2.3 | 3.7 | 8.0 | 0.98 | 151 ms |
+| pick list `TRD END-1100` (ms) | 0.8 | 1.5 | 3.4 | 0.99 | 64.6 ms |
+| desk P&L `DESK-RATES` (ms) | 3.0 | 3.2 | 3.4 | 0.98 | 11.1 ms |
+| impact of `NS-SUMMIT-NY` (ms) | 21.2 | 23.0 | 23.8 | 0.64 | 67.1 ms |
+| a search on another day, first (ms) | 38.3 | 62.5 | 115 | 1.00 | 1,965 ms |
+| a search on another day, again (ms) | 1.3 | 2.9 | 4.1 | 0.95 | 72.4 ms |
+| load (the whole script) (s) | 12.5 | 15.4 | 22.3 | 0.99 | 258 s |
+| store size (MB) | 36.5 | 68.3 | 122 | 1.00 | 2,158 MB |
+| server live heap after a full GC (MB) | 87.4 | 97.8 | 114 | 1.00 | 728 MB |
+
+Run-to-run variance, requests per second with 8 clients, server start and the other stores side by side:
+[SCALE_BENCHMARK.md › Results](../admin/SCALE_BENCHMARK.md#4-results).
 
 ## 10. Limits and trade-offs
 

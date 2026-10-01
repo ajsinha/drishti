@@ -332,6 +332,8 @@ use with a million trades a day: **2.75 GB**. Give the server at least 8 GB of h
 
 ## 9. Measured results
 
+**Measured at a million trades a day, by hand, on 2026-10-01.**
+
 On 2026-10-01, a developer workstation (24 cores), one Aerospike Community Edition 8.1 node in Docker with file
 storage, 1,000,000 trades a day over three business days plus the banking samples (3,017,910 day records), a Drishti
 server with the `aerospike` profile, times over HTTP:
@@ -354,6 +356,36 @@ server with the `aerospike` profile, times over HTTP:
 
 Before this design the same book could not be held: the old layout's records would have exceeded 8 MB after four and a
 half years, and every search read at most 20,000 documents.
+
+**The scaling curve, measured with the scale benchmark (2026-10-01).** `tools/bench/scale.sh`
+([SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md)) loaded 10,000, 25,000 and 50,000 trades a day over three business
+days (plus the banking samples) and asked the same questions over HTTP each time: a 24-thread laptop shared with other
+work, a Drishti server with `-Xmx2g`, one Aerospike CE 8.1 node in Docker capped at 2 GB, namespace on a file. Medians
+of 25 requests; every search exact (`partial: false`, `scanned` equal to the trades a day). The last column carries a
+straight-line fit (R² beside it) to a million trades a day: **an extrapolation from the measured points, not a
+measurement**; "flat" means the measure does not grow with the book. The million-trade measurement above is the real
+figure; where the line and it differ, trust the measurement.
+
+| | 10,000 | 25,000 | 50,000 | R² | 1,000,000 (**extrapolated**) |
+|---|---|---|---|---|---|
+| type-ahead `TRD CLY-400` (ms) | 22.8 | 9.1 | 8.9 | 0.25 | flat, about 12.5 ms |
+| open a trade (view), first time (ms) | 8.3 | 5.2 | 4.7 | 0.60 | flat, about 6.1 ms |
+| a trade's document, today (ms) | 3.4 | 2.4 | 2.8 | 0.32 | flat, about 3.7 ms |
+| a trade's document, a past day (ms) | 3.5 | 2.3 | 5.0 | 0.00 | 7.3 ms (weak fit) |
+| `TRD where mtm < -50m order by mtm` (ms) | 1.5 | 2.2 | 5.0 | 0.19 | 44.7 ms (weak fit) |
+| `TRD where currency = 'USD' and notional > 500m …` (ms) | 4.0 | 6.4 | 8.0 | 0.95 | 105 ms |
+| `TRD book=BOOK-RATES-3` (ms) | 2.6 | 3.2 | 8.1 | 0.52 | 98.3 ms |
+| pick list `TRD END-1100` (ms) | 2.1 | 0.9 | 6.2 | 0.74 | 112 ms |
+| desk P&L `DESK-RATES` (ms) | 5.9 | 3.2 | 5.5 | 0.04 | flat, about 5.2 ms |
+| impact of `NS-SUMMIT-NY` (ms) | 165 | 601 | 174 | 0.01 | 1,248 ms (weak fit) |
+| a search on another day, first (ms) | 66.6 | 189 | 426 | 0.98 | 8,432 ms |
+| a search on another day, again (ms) | 2.5 | 3.1 | 6.5 | 0.92 | 97.7 ms |
+| load (the whole script) (s) | 14.4 | 14.9 | 18.8 | 0.61 | 96.7 s |
+| store size (MB) | 276 | 613 | 1,176 | 1.00 | 22,558 MB |
+| server live heap after a full GC (MB) | 88.9 | 98.8 | 117 | 1.00 | 799 MB |
+
+Run-to-run variance, requests per second with 8 clients, server start and the other stores side by side:
+[SCALE_BENCHMARK.md › Results](../admin/SCALE_BENCHMARK.md#4-results).
 
 ## 10. Limits and trade-offs
 

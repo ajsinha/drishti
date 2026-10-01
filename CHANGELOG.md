@@ -16,6 +16,21 @@
 # Changelog
 
 ## Unreleased — A million trades a day, for seven years
+- **A scale benchmark for every store** ([SCALE_BENCHMARK.md](docs/admin/SCALE_BENCHMARK.md)). `tools/bench/scale.sh
+  <store> <trades-a-day>` starts the store (a container for PostgreSQL, MongoDB, Redis and Aerospike, capped in memory),
+  loads it with the project's loader, starts a server with the store's profile, measures over HTTP with
+  `tools/bench/measure.py` (median and p95 of 25 requests, requests per second with 8 clients, load time, size, start,
+  live heap after a full GC, and that every search is exact) and removes everything; `tools/bench/report.py` turns the
+  JSON lines into tables with a linear fit per measure and its value at a million trades a day, labelled as an
+  extrapolation. Run on 2026-10-01 for Delta Lake (native), PostgreSQL, DuckDB, files, MongoDB, Redis, Aerospike and
+  Iceberg at 10,000, 25,000 and 50,000 trades a day over three days (raw results in
+  `tools/bench/results/2026-10-01.jsonl`); every search exact. Each connector document's measured results gain the
+  curve; the earlier million-trade measurements (Delta Lake, PostgreSQL, Aerospike, Redis) are kept with their date, and
+  the other stores' million figures are now labelled extrapolations or estimates.
+  - **Fixed: Redis lost the last partial chunk of a day's columns.** The loader counted chunks with Java's truncating
+    division, so a day whose size was not a multiple of 10,000 (25,000 trades: two chunks, not three) was written short,
+    and every search on it read documents. `DayColumns.chunks` uses `Math.ceilDiv` (`DayColumnsTest`); the Aerospike
+    scan's partition ranges use it too (more than 4,096 `scan-threads` looped forever).
 - **Delta Lake without Hadoop; Drishti on Windows** ([DELTA_CONNECTOR.md › Engines](docs/connectors/DELTA_CONNECTOR.md#16-engines-native-and-hadoop),
   [WINDOWS.md](docs/guides/WINDOWS.md)). A new module, `drishti-deltalake`, is a Delta Kernel engine (`NativeEngine`)
   that never touches Hadoop's file systems: local lakes through `java.nio` (drive letters, backslashes and UNC shares),
