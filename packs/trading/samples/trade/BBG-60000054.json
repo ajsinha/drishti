@@ -1,0 +1,329 @@
+{
+ "tradeId": "BBG-60000054",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000054",
+ "productType": "MUNI_BOND",
+ "productName": "Municipal bond",
+ "assetClass": "Fixed income",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2026-08-31",
+ "effectiveDate": "2026-09-02",
+ "maturityDate": "2032-11-12",
+ "currency": "USD",
+ "notional": 6000000.0,
+ "mtm": 129572,
+ "mtmCurrency": "USD",
+ "pnl1d": 7711,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-1",
+ "trader": "TRDR-BADEYEMI",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-NOVATEK",
+ "benchmarkCurve": "CRV-USD-GOVT",
+ "underlyingBond": "BND-USNOVA133999",
+ "terms": {
+  "coupon": 0.04664,
+  "couponFrequency": "Quarterly",
+  "faceAmount": 81245864.0,
+  "cleanPrice": 89.528,
+  "yield": 0.046955,
+  "taxStatus": "Taxable",
+  "sector": "Revenue"
+ },
+ "risk": {
+  "dv01": -2948,
+  "cs01": -3339
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -140,
+   "cs01": -159
+  },
+  {
+   "bucket": "6M",
+   "dv01": -281,
+   "cs01": -318
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -421,
+   "cs01": -477
+  },
+  {
+   "bucket": "2Y",
+   "dv01": -562,
+   "cs01": -636
+  },
+  {
+   "bucket": "3Y",
+   "dv01": -702,
+   "cs01": -795
+  },
+  {
+   "bucket": "5Y",
+   "dv01": -842,
+   "cs01": -954
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2027-03-02",
+   "rate": 0.056753,
+   "amount": 120000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-09-02",
+   "rate": 0.024431,
+   "amount": 120000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-03-02",
+   "rate": 0.051937,
+   "amount": 120000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-09-02",
+   "rate": 0.043223,
+   "amount": 120000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-03-02",
+   "rate": 0.038374,
+   "amount": 120000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-09-02",
+   "rate": 0.045026,
+   "amount": 120000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-03-02",
+   "rate": 0.020551,
+   "amount": 120000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-09-02",
+   "rate": 0.039995,
+   "amount": 120000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-03-02",
+   "rate": 0.038498,
+   "amount": 120000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-09-02",
+   "rate": 0.031274,
+   "amount": 120000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2032-03-02",
+   "rate": 0.042777,
+   "amount": 120000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2032-09-02",
+   "rate": 0.034327,
+   "amount": 120000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2032-11-12",
+   "rate": 0.034175,
+   "amount": 120000.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 1192
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -4637
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 2916
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -7067
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -4685
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 304
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -1160
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -9320
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 792
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -9244
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -3507
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 270
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 4297
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -2835
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 2602
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 872
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -324
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 4045
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -5811
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -67
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-08-31",
+  "executionTimestamp": "2026-08-31T09:23:44.048Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "B. Adeyemi",
+  "salesperson": null,
+  "orderId": "ORD-613C48D4A5"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-08-31T12:17:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-08-31T12:17:00Z",
+  "lastModifiedAt": "2026-08-31T12:17:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT800761474",
+  "matched": "2026-08-31 14:37",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH8669026727",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096613C48D4A557B489252D",
+  "upi": "QZ1NHV54Z0EH",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMUS33XXX",
+  "ssiId": "SSI-USD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 129572,
+  "cleanPv": 129572.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-USD-GOVT",
+   "BND-USNOVA133999"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

@@ -1,0 +1,237 @@
+{
+ "tradeId": "IMG-400012",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400012",
+ "productType": "EQ_FORWARD",
+ "productName": "Equity forward",
+ "assetClass": "Equity",
+ "family": "linear",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2024-10-21",
+ "effectiveDate": "2024-10-23",
+ "maturityDate": "2026-10-07",
+ "currency": "JPY",
+ "notional": 248000000.0,
+ "mtm": 3225946,
+ "mtmCurrency": "USD",
+ "pnl1d": -6082,
+ "counterparty": {
+  "id": "CP-ALDERSHOT",
+  "name": "Aldershot Pension Trust"
+ },
+ "nettingSet": "NS-ALDERSHOT-LDN",
+ "book": "BOOK-EQD-1",
+ "trader": "TRDR-JWEISS",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingEquity": "EQ-KZNM",
+ "dividendCurve": "DIV-KZNM",
+ "discountCurve": "CRV-JPY-OIS",
+ "terms": {
+  "forwardPrice": 28.2,
+  "quantity": 107764,
+  "settlementDate": "2027-11-02"
+ },
+ "risk": {
+  "delta": -861969
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -57465
+  },
+  {
+   "bucket": "1M",
+   "delta": -114929
+  },
+  {
+   "bucket": "3M",
+   "delta": -172394
+  },
+  {
+   "bucket": "6M",
+   "delta": -229858
+  },
+  {
+   "bucket": "1Y",
+   "delta": -287323
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -19375
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 9862
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -109553
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 82329
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 149803
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 65927
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -99597
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -102387
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -72081
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -91352
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 88620
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 44923
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -164827
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 45126
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 24414
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 93092
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -7802
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -1401
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -10511
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 180392
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-10-21",
+  "executionTimestamp": "2024-10-21T11:25:53.797Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "J. Weiss",
+  "salesperson": null,
+  "orderId": "ORD-6E97CBF037"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-10-21T11:17:00Z",
+    "by": "mo.ops"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2025-01-11T11:17:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2024-10-21T11:17:00Z",
+  "lastModifiedAt": "2025-01-11T11:17:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT612820472",
+  "matched": "2024-10-21 13:23",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q836E97CBF0377142BCC915",
+  "upi": "QZ4599AA83E4",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "ALDEGB33XXX",
+  "ssiId": "SSI-JPY-D06EAF",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 3225946,
+  "cleanPv": 3225946.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQ-KZNM",
+   "DIV-KZNM",
+   "CRV-JPY-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 8932
+  }
+ }
+}

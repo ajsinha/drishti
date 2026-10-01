@@ -62,14 +62,14 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10745",
+   "tradeId": "IMG-400157",
    "product": "Credit basket note",
    "notional": 250000000.0,
    "maturity": "2027-11-18",
    "mtm": -1748235
   },
   {
-   "tradeId": "T-10725",
+   "tradeId": "IMG-400137",
    "product": "Range accrual note",
    "notional": 113000000.0,
    "maturity": "2034-06-05",

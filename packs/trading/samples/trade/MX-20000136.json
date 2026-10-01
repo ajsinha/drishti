@@ -1,0 +1,346 @@
+{
+ "tradeId": "MX-20000136",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000136",
+ "productType": "CALLABLE_SWAP",
+ "productName": "Callable swap",
+ "assetClass": "Rates",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2024-08-06",
+ "effectiveDate": "2024-08-08",
+ "maturityDate": "2033-09-19",
+ "currency": "CAD",
+ "notional": 12000000.0,
+ "mtm": -4572,
+ "mtmCurrency": "USD",
+ "pnl1d": 211,
+ "counterparty": {
+  "id": "CP-LUMEN",
+  "name": "Lumen Semiconductor AG"
+ },
+ "nettingSet": "NS-LUMEN-NY",
+ "book": "BOOK-RATES-1",
+ "trader": "TRDR-MOKAFOR",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-CAD-OIS",
+ "forwardCurve": "CRV-CAD-PROJ",
+ "swaptionVolCube": "IRV-CAD",
+ "terms": {
+  "fixedRate": 0.022093,
+  "payFrequency": "Semi-annual",
+  "dayCount": "ACT/360",
+  "businessDay": "Following",
+  "callable": "Counterparty",
+  "firstCall": "2028-02-18"
+ },
+ "risk": {
+  "dv01": -9489,
+  "vega": -47648
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -339,
+   "vega": -1702
+  },
+  {
+   "bucket": "6M",
+   "dv01": -678,
+   "vega": -3403
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -1017,
+   "vega": -5105
+  },
+  {
+   "bucket": "2Y",
+   "dv01": -1356,
+   "vega": -6807
+  },
+  {
+   "bucket": "3Y",
+   "dv01": -1694,
+   "vega": -8509
+  },
+  {
+   "bucket": "5Y",
+   "dv01": -2033,
+   "vega": -10210
+  },
+  {
+   "bucket": "7Y",
+   "dv01": -2372,
+   "vega": -11912
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Receive performance",
+   "payReceive": "Receive",
+   "rateType": "Performance",
+   "index": "USCPI",
+   "rate": null,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "CAD",
+   "notional": 12000000.0
+  },
+  {
+   "leg": 2,
+   "label": "Pay CORRA + spread",
+   "payReceive": "Pay",
+   "rateType": "Float",
+   "index": "CORRA",
+   "rate": 0.027559,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "CAD",
+   "notional": 12000000.0
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2025-08-08",
+   "type": "First call",
+   "strike": 0.023598,
+   "status": "Expired"
+  },
+  {
+   "date": "2026-08-08",
+   "type": "Bermudan call",
+   "strike": 0.043614,
+   "status": "Expired"
+  },
+  {
+   "date": "2027-08-08",
+   "type": "Bermudan call",
+   "strike": 0.044433,
+   "status": "Pending"
+  },
+  {
+   "date": "2028-08-08",
+   "type": "Bermudan call",
+   "strike": 0.049697,
+   "status": "Pending"
+  },
+  {
+   "date": "2029-08-08",
+   "type": "Bermudan call",
+   "strike": 0.038964,
+   "status": "Pending"
+  },
+  {
+   "date": "2030-08-08",
+   "type": "Bermudan call",
+   "strike": 0.036442,
+   "status": "Pending"
+  },
+  {
+   "date": "2031-08-08",
+   "type": "Bermudan call",
+   "strike": 0.039987,
+   "status": "Pending"
+  },
+  {
+   "date": "2032-08-08",
+   "type": "Bermudan call",
+   "strike": 0.021159,
+   "status": "Pending"
+  },
+  {
+   "date": "2033-08-08",
+   "type": "Bermudan call",
+   "strike": 0.047153,
+   "status": "Pending"
+  },
+  {
+   "date": "2033-09-19",
+   "type": "Bermudan call",
+   "strike": 0.025763,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 2,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 5452
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 5634
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 4263
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 333
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -2359
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -852
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -428
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 2376
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -1461
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 4638
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 4103
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 983
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 1982
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 1739
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -2786
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -2364
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -6423
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 1279
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -3193
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 2805
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-08-06",
+  "executionTimestamp": "2024-08-06T12:09:22.519Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "M. Okafor",
+  "salesperson": null,
+  "orderId": "ORD-C9857BCED4"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-08-06T11:45:00Z",
+    "by": "stp.gateway"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2025-05-23T11:45:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2024-08-06T11:45:00Z",
+  "lastModifiedAt": "2025-05-23T11:45:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA454527710",
+  "matched": "2024-08-06 11:01",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096C9857BCED4A2E9D802CF",
+  "upi": "QZ3VNT0G9T30",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "LUMEGB33XXX",
+  "ssiId": "SSI-CAD-8CF792",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -4572,
+  "cleanPv": -4572.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "CRV-CAD-OIS",
+   "CRV-CAD-PROJ",
+   "IRV-CAD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

@@ -1,0 +1,256 @@
+{
+ "tradeId": "BBG-60000103",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000103",
+ "productType": "SEC_LENDING",
+ "productName": "Securities lending",
+ "assetClass": "Securities financing",
+ "family": "sft",
+ "status": "Live",
+ "direction": "Reverse repo",
+ "tradeDate": "2026-08-24",
+ "effectiveDate": "2026-08-26",
+ "maturityDate": "2027-01-29",
+ "currency": "EUR",
+ "notional": 43000000.0,
+ "mtm": 516127,
+ "mtmCurrency": "USD",
+ "pnl1d": -5011,
+ "counterparty": {
+  "id": "CP-ALDERSHOT",
+  "name": "Aldershot Pension Trust"
+ },
+ "nettingSet": "NS-ALDERSHOT-FRA",
+ "book": "BOOK-SFT-2",
+ "trader": "TRDR-KBRANDT",
+ "desk": "DESK-SFT",
+ "legalEntity": "LE-FRA",
+ "underlyingEquity": "EQ-RHNB",
+ "repoCurve": "REPO-EUR",
+ "terms": {
+  "fee": 211.8,
+  "collateralType": "Cash",
+  "rebateRate": 0.024997
+ },
+ "risk": {
+  "exposure": 462719,
+  "delta": -287207
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "exposure": 46272,
+   "delta": -28721
+  },
+  {
+   "bucket": "1M",
+   "exposure": 92544,
+   "delta": -57441
+  },
+  {
+   "bucket": "3M",
+   "exposure": 138816,
+   "delta": -86162
+  },
+  {
+   "bucket": "6M",
+   "exposure": 185088,
+   "delta": -114883
+  }
+ ],
+ "schedule": [
+  {
+   "asset": "Verdant Agri Holdings 2031",
+   "isin": "BRVERD054608",
+   "quantity": 14712526,
+   "marketValue": 13874206,
+   "haircut": 0.01,
+   "value": 13735464
+  },
+  {
+   "asset": "Kaizen Motors Corp. 2031",
+   "isin": "JPKAIZ021595",
+   "quantity": 14441462,
+   "marketValue": 15019409,
+   "haircut": 0.02,
+   "value": 14719021
+  },
+  {
+   "asset": "Halcyon Shipping plc 2036",
+   "isin": "XSHALC114008",
+   "quantity": 14216117,
+   "marketValue": 14562422,
+   "haircut": 0.04,
+   "value": 13979925
+  }
+ ],
+ "nextIndex": -1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 21199
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 9068
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 4372
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -5451
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 20412
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 6101
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -18504
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 17690
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 9706
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 1454
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -17699
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -8217
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -7869
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 50769
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 1750
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 7940
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -1957
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -8005
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 22057
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 2356
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-08-24",
+  "executionTimestamp": "2026-08-24T13:33:55.100Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "K. Brandt",
+  "salesperson": null,
+  "orderId": "ORD-8B67D898A5"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-08-24T09:14:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2026-08-24T09:14:00Z",
+  "lastModifiedAt": "2026-08-24T09:14:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT595355971",
+  "matched": "2026-08-24 17:09",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z9DXU4T18OK7448B67D898A5111B29F4CC",
+  "upi": "QZ2ATRWPHXTD",
+  "reportingRegimes": [
+   "EU EMIR",
+   "EU MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "ALDEGB33XXX",
+  "ssiId": "SSI-EUR-D06EAF",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 516127,
+  "cleanPv": 516127.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQ-RHNB",
+   "REPO-EUR"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "globalone-sft",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 1462
+  }
+ }
+}

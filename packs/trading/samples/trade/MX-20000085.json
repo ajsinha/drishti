@@ -1,0 +1,297 @@
+{
+ "tradeId": "MX-20000085",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000085",
+ "productType": "FLOOR",
+ "productName": "Interest rate floor",
+ "assetClass": "Rates",
+ "family": "option",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2025-10-31",
+ "effectiveDate": "2025-11-03",
+ "maturityDate": "2027-09-23",
+ "currency": "CHF",
+ "notional": 30000000.0,
+ "mtm": 346028,
+ "mtmCurrency": "USD",
+ "pnl1d": -7107,
+ "counterparty": {
+  "id": "CP-CORAL",
+  "name": "Coral Bay Municipal Authority"
+ },
+ "nettingSet": "NS-CORAL-NY",
+ "book": "BOOK-RATES-1",
+ "trader": "TRDR-MOKAFOR",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-CHF-OIS",
+ "forwardCurve": "CRV-CHF-PROJ",
+ "capVolSurface": "CPV-CHF",
+ "terms": {
+  "strike": 0.013742,
+  "floorFrequency": "Semi-annual",
+  "premium": 854406.0
+ },
+ "risk": {
+  "dv01": -4408,
+  "vega": -88672
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -441,
+   "vega": -8867
+  },
+  {
+   "bucket": "6M",
+   "dv01": -882,
+   "vega": -17734
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -1322,
+   "vega": -26602
+  },
+  {
+   "bucket": "2Y",
+   "dv01": -1763,
+   "vega": -35469
+  }
+ ],
+ "schedule": [
+  {
+   "fixingDate": "2026-02-03",
+   "period": "2026-02-03..2026-05-03",
+   "index": "SARON",
+   "rate": 0.022002,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-05-03",
+   "period": "2026-05-03..2026-08-03",
+   "index": "SARON",
+   "rate": 0.035164,
+   "payoff": 1230.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-08-03",
+   "period": "2026-08-03..2026-11-03",
+   "index": "SARON",
+   "rate": 0.030912,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-11-03",
+   "period": "2026-11-03..2027-02-03",
+   "index": "SARON",
+   "rate": 0.03676,
+   "payoff": 13200.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-02-03",
+   "period": "2027-02-03..2027-05-03",
+   "index": "SARON",
+   "rate": 0.032537,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-05-03",
+   "period": "2027-05-03..2027-08-03",
+   "index": "SARON",
+   "rate": 0.021816,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-08-03",
+   "period": "2027-08-03..2027-11-03",
+   "index": "SARON",
+   "rate": 0.030076,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-09-23",
+   "period": "2027-09-23..2027-12-23",
+   "index": "SARON",
+   "rate": 0.047017,
+   "payoff": 90127.5,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 3,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -1104
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -4674
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -3249
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 19557
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 39722
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 17048
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 11761
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -6314
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -2542
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -175
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 7658
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -7690
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -8576
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 15778
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -5208
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 324
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -10477
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -4521
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 11714
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 5198
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-10-31",
+  "executionTimestamp": "2025-10-31T11:41:56.832Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "M. Okafor",
+  "salesperson": null,
+  "orderId": "ORD-D071192155"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-10-31T09:44:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2025-10-31T09:44:00Z",
+  "lastModifiedAt": "2025-10-31T09:44:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA412670379",
+  "matched": "2025-10-31 10:41",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096D07119215515A143F77C",
+  "upi": "QZVA3WDD7YGX",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "CORAGB33XXX",
+  "ssiId": "SSI-CHF-C31AC7",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 346028,
+  "cleanPv": 346028.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CRV-CHF-OIS",
+   "CRV-CHF-PROJ",
+   "CPV-CHF"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 992
+  }
+ }
+}

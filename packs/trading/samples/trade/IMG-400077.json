@@ -1,0 +1,370 @@
+{
+ "tradeId": "IMG-400077",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400077",
+ "productType": "REVERSE_CONVERTIBLE",
+ "productName": "Reverse convertible",
+ "assetClass": "Equity",
+ "family": "note",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2026-05-05",
+ "effectiveDate": "2026-05-07",
+ "maturityDate": "2035-12-07",
+ "currency": "EUR",
+ "notional": 96000000.0,
+ "mtm": 906822,
+ "mtmCurrency": "USD",
+ "pnl1d": -18682,
+ "counterparty": {
+  "id": "CP-KESTREL",
+  "name": "Kestrel Global Macro Fund"
+ },
+ "nettingSet": "NS-KESTREL-LDN",
+ "book": "BOOK-EQD-2",
+ "trader": "TRDR-JWEISS",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingEquity": "EQ-ORBT",
+ "equityVolSurface": "EQV-ORBT",
+ "dividendCurve": "DIV-ORBT",
+ "terms": {
+  "coupon": 0.126201,
+  "barrier": 0.776325
+ },
+ "risk": {
+  "delta": -380320,
+  "vega": -695528
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -18110,
+   "vega": -33120
+  },
+  {
+   "bucket": "1M",
+   "delta": -36221,
+   "vega": -66241
+  },
+  {
+   "bucket": "3M",
+   "delta": -54331,
+   "vega": -99361
+  },
+  {
+   "bucket": "6M",
+   "delta": -72442,
+   "vega": -132482
+  },
+  {
+   "bucket": "1Y",
+   "delta": -90552,
+   "vega": -165602
+  },
+  {
+   "bucket": "2Y",
+   "delta": -108663,
+   "vega": -198722
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-11-07",
+   "rate": 0.021492,
+   "amount": 1920000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-05-07",
+   "rate": 0.039545,
+   "amount": 1920000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-11-07",
+   "rate": 0.033985,
+   "amount": 1920000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-05-07",
+   "rate": 0.025869,
+   "amount": 1920000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-11-07",
+   "rate": 0.025197,
+   "amount": 1920000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-05-07",
+   "rate": 0.036572,
+   "amount": 1920000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-11-07",
+   "rate": 0.043416,
+   "amount": 1920000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-05-07",
+   "rate": 0.04977,
+   "amount": 1920000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-11-07",
+   "rate": 0.023746,
+   "amount": 1920000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-05-07",
+   "rate": 0.043625,
+   "amount": 1920000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-11-07",
+   "rate": 0.053905,
+   "amount": 1920000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2032-05-07",
+   "rate": 0.025031,
+   "amount": 1920000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2032-11-07",
+   "rate": 0.024596,
+   "amount": 1920000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2033-05-07",
+   "rate": 0.046223,
+   "amount": 1920000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2033-11-07",
+   "rate": 0.020868,
+   "amount": 1920000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2034-05-07",
+   "rate": 0.027001,
+   "amount": 1920000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2034-11-07",
+   "rate": 0.028641,
+   "amount": 1920000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2035-05-07",
+   "rate": 0.054731,
+   "amount": 1920000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2035-11-07",
+   "rate": 0.043542,
+   "amount": 1920000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2035-12-07",
+   "rate": 0.020591,
+   "amount": 1920000.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -32695
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 17015
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -19342
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 7458
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 29044
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -5781
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -21218
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 4889
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -7018
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 5954
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -20029
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 21605
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -32122
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -60774
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -3135
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -3591
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -12259
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -16640
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -27432
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 6439
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-05-05",
+  "executionTimestamp": "2026-05-05T12:14:32.951Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "J. Weiss",
+  "salesperson": null,
+  "orderId": "ORD-4546539FED"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-05-05T10:34:00Z",
+    "by": "stp.gateway"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2026-07-16T10:34:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-05-05T10:34:00Z",
+  "lastModifiedAt": "2026-07-16T10:34:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT732704417",
+  "matched": "2026-05-05 12:32",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q834546539FED2803ED1CAE",
+  "upi": "QZT77JKCTCI3",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "KESTGB33XXX",
+  "ssiId": "SSI-EUR-69F994",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 906822,
+  "cleanPv": 906822.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQ-ORBT",
+   "EQV-ORBT",
+   "DIV-ORBT"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 2774
+  }
+ }
+}

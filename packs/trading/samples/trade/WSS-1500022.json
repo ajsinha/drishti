@@ -1,0 +1,317 @@
+{
+ "tradeId": "WSS-1500022",
+ "sourceSystem": "Wall Street Systems",
+ "sourceTradeId": "1500022",
+ "productType": "FX_SWAP",
+ "productName": "FX swap",
+ "assetClass": "FX",
+ "family": "swap",
+ "status": "Live",
+ "direction": "Receive fixed",
+ "tradeDate": "2025-07-15",
+ "effectiveDate": "2025-07-17",
+ "maturityDate": "2030-06-25",
+ "currency": "GBP",
+ "notional": 98000000.0,
+ "mtm": 620224,
+ "mtmCurrency": "USD",
+ "pnl1d": 29843,
+ "counterparty": {
+  "id": "CP-KESTREL",
+  "name": "Kestrel Global Macro Fund"
+ },
+ "nettingSet": "NS-KESTREL-LDN",
+ "book": "BOOK-FX-1",
+ "trader": "TRDR-LMOREAU",
+ "desk": "DESK-FX",
+ "legalEntity": "LE-LDN",
+ "fxSpot": "FX-EURGBP",
+ "fxForwardCurve": "FXF-EURGBP",
+ "discountCurve": "CRV-GBP-OIS",
+ "terms": {
+  "nearRate": 90.4537,
+  "farRate": 28.21034,
+  "swapPoints": 192.9
+ },
+ "risk": {
+  "fxDelta": -980000,
+  "dv01": -44647
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "fxDelta": -46667,
+   "dv01": -2126
+  },
+  {
+   "bucket": "1M",
+   "fxDelta": -93333,
+   "dv01": -4252
+  },
+  {
+   "bucket": "3M",
+   "fxDelta": -140000,
+   "dv01": -6378
+  },
+  {
+   "bucket": "6M",
+   "fxDelta": -186667,
+   "dv01": -8504
+  },
+  {
+   "bucket": "1Y",
+   "fxDelta": -233333,
+   "dv01": -10630
+  },
+  {
+   "bucket": "2Y",
+   "fxDelta": -280000,
+   "dv01": -12756
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Receive performance",
+   "payReceive": "Receive",
+   "rateType": "Performance",
+   "index": "USCPI",
+   "rate": null,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "GBP",
+   "notional": 98000000.0
+  },
+  {
+   "leg": 2,
+   "label": "Pay SONIA + spread",
+   "payReceive": "Pay",
+   "rateType": "Float",
+   "index": "SONIA",
+   "rate": 0.037956,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "GBP",
+   "notional": 98000000.0
+  }
+ ],
+ "schedule": [
+  {
+   "payDate": "2026-07-17",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -251738.95,
+   "pv": 0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2027-07-17",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -216846.45,
+   "pv": -210341.06,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2028-07-17",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -278199.46,
+   "pv": -269853.48,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2029-07-17",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -245642.55,
+   "pv": -238273.27,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2030-06-25",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -196807.25,
+   "pv": -190903.03,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 16894
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 2969
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 5338
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 43431
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -1933
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 21325
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 11975
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -6544
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -4152
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 17496
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 25974
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 2543
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 13942
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 12958
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -12037
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 39510
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -26604
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 41160
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 27841
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -26354
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-07-15",
+  "executionTimestamp": "2025-07-15T14:16:34.808Z",
+  "venue": "EBS",
+  "venueMic": "EBSM",
+  "executionType": "Electronic",
+  "trader": "L. Moreau",
+  "salesperson": null,
+  "orderId": "ORD-1C5309587F"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-07-15T12:59:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2025-07-15T12:59:00Z",
+  "lastModifiedAt": "2025-07-15T12:59:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT527430170",
+  "matched": "2025-07-15 17:10",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q831C5309587FE5B5138229",
+  "upi": "QZGGKY9WHPFH",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Foreign exchange"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Barclays Bank plc",
+  "ourAgentBic": "BARCGB22XXX",
+  "theirAgentBic": "KESTGB33XXX",
+  "ssiId": "SSI-GBP-69F994",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 620224,
+  "cleanPv": 620224.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Multi-curve OIS discounting",
+  "curves": [
+   "FX-EURGBP",
+   "FXF-EURGBP",
+   "CRV-GBP-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "calypso-fx",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 2220
+  }
+ }
+}

@@ -1,0 +1,316 @@
+{
+ "tradeId": "MX-20000179",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000179",
+ "productType": "INFL_LINKED_BOND",
+ "productName": "Inflation-linked bond",
+ "assetClass": "Inflation",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2025-11-14",
+ "effectiveDate": "2025-11-17",
+ "maturityDate": "2032-06-07",
+ "currency": "EUR",
+ "notional": 69000000.0,
+ "mtm": 266856,
+ "mtmCurrency": "USD",
+ "pnl1d": 22323,
+ "counterparty": {
+  "id": "CP-TOKAI",
+  "name": "Tokai Mutual Trust Bank"
+ },
+ "nettingSet": "NS-TOKAI-LDN",
+ "book": "BOOK-INFL-1",
+ "trader": "TRDR-HOKORO",
+ "desk": "DESK-INFL",
+ "legalEntity": "LE-LDN",
+ "benchmarkCurve": "CRV-EUR-GOVT",
+ "inflationCurve": "INFC-HICPX",
+ "inflationIndex": "INF-HICPX",
+ "terms": {
+  "coupon": 0.014682,
+  "couponFrequency": "Semi-annual",
+  "faceAmount": 6525985.0,
+  "cleanPrice": 95.735,
+  "yield": 0.051666,
+  "indexRatio": 1.3369
+ },
+ "risk": {
+  "ie01": -40949,
+  "dv01": -41878
+ },
+ "sensitivities": [
+  {
+   "bucket": "1Y",
+   "ie01": -6825,
+   "dv01": -6980
+  },
+  {
+   "bucket": "2Y",
+   "ie01": -13650,
+   "dv01": -13959
+  },
+  {
+   "bucket": "5Y",
+   "ie01": -20474,
+   "dv01": -20939
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-05-17",
+   "rate": 0.020791,
+   "amount": 1380000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-11-17",
+   "rate": 0.047009,
+   "amount": 1380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-05-17",
+   "rate": 0.053233,
+   "amount": 1380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-11-17",
+   "rate": 0.034525,
+   "amount": 1380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-05-17",
+   "rate": 0.02999,
+   "amount": 1380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-11-17",
+   "rate": 0.052935,
+   "amount": 1380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-05-17",
+   "rate": 0.056589,
+   "amount": 1380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-11-17",
+   "rate": 0.052518,
+   "amount": 1380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-05-17",
+   "rate": 0.047504,
+   "amount": 1380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-11-17",
+   "rate": 0.027878,
+   "amount": 1380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-05-17",
+   "rate": 0.035544,
+   "amount": 1380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-11-17",
+   "rate": 0.020689,
+   "amount": 1380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2032-05-17",
+   "rate": 0.030983,
+   "amount": 1380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2032-06-07",
+   "rate": 0.027742,
+   "amount": 1380000.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -28198
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -136
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 3564
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 5717
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -7610
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -729
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -790
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 13970
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -2747
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -5695
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 660
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 13438
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -345
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -10940
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -2571
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -4095
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 9017
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 8079
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -7125
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 17160
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-11-14",
+  "executionTimestamp": "2025-11-14T09:17:49.803Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "H. Okoro",
+  "salesperson": null,
+  "orderId": "ORD-9DB5E8D6BA"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-11-14T11:11:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2025-11-14T11:11:00Z",
+  "lastModifiedAt": "2025-11-14T11:11:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA308998745",
+  "matched": "2025-11-14 10:21",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q839DB5E8D6BA4A768F119F",
+  "upi": "QZUCHVL0URZR",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "TOKAGB33XXX",
+  "ssiId": "SSI-EUR-6E2541",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 266856,
+  "cleanPv": 266856.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-EUR-GOVT",
+   "INFC-HICPX",
+   "INF-HICPX"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 1224
+  }
+ }
+}

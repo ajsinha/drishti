@@ -41,14 +41,14 @@ net MTM), and, in *Rolls up into*, the **Via** column: the field that led there 
 live data, so yours will differ slightly.
 
 The small diagram icon beside each identifier runs impact on **that** entity. For example, click it next to
-`T-10001` to see what depends on that trade in turn.
+`MX-20000001` to see what depends on that trade in turn.
 
 ## Worked examples
 
 | Start from | Command | What impact shows (all banking packs enabled) |
 |---|---|---|
 | a curve | `CRV CRV-AUD-OIS`, then F8 | 31 trades valued on it; then 15 netting sets |
-| a trade | `TRD T-10001`, then F8 | the netting set that lists it (`NS-MERIDIAN-RE-NY`); then that netting set's credit limit |
+| a trade | `TRD MX-20000001`, then F8 | the netting set that lists it (`NS-MERIDIAN-RE-NY`); then that netting set's credit limit |
 | a netting set | `NSET NS-SUMMIT-NY`, then F8 | its 108 member trades (total MTM), its CVA, SA-CCR, exposure profile, margin calls, collateral balance and counterparty; then its credit limit |
 | a counterparty | `CPTY CP-NORTHBRIDGE`, then F8 | its 35 trades, 4 netting sets, agreement, CSA, credit limit, SIMM, funding sources and climate profile |
 | a port (logistics pack) | `PORT PORT-NLRTM`, then F8 | shipments bound for it, then their vessels |

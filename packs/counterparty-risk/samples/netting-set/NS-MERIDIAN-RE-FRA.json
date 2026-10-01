@@ -62,35 +62,35 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10711",
+   "tradeId": "BBG-60000111",
    "product": "Securities borrowing",
    "notional": 126000000.0,
    "maturity": "2026-10-12",
    "mtm": -1901921
   },
   {
-   "tradeId": "T-10713",
+   "tradeId": "BBG-60000113",
    "product": "Securities borrowing",
    "notional": 156000000.0,
    "maturity": "2026-11-27",
    "mtm": -1189358
   },
   {
-   "tradeId": "T-10716",
+   "tradeId": "BBG-60000116",
    "product": "Margin loan",
    "notional": 96000000.0,
    "maturity": "2026-11-16",
    "mtm": 709577
   },
   {
-   "tradeId": "T-10708",
+   "tradeId": "BBG-60000108",
    "product": "Securities lending",
    "notional": 184000000.0,
    "maturity": "2026-10-12",
    "mtm": -362786
   },
   {
-   "tradeId": "T-10688",
+   "tradeId": "BBG-60000088",
    "product": "Reverse repo",
    "notional": 24000000.0,
    "maturity": "2026-10-07",

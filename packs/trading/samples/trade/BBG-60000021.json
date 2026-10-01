@@ -1,0 +1,237 @@
+{
+ "tradeId": "BBG-60000021",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000021",
+ "productType": "ZERO_BOND",
+ "productName": "Zero-coupon bond",
+ "assetClass": "Fixed income",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2024-04-19",
+ "effectiveDate": "2024-04-22",
+ "maturityDate": "2030-09-12",
+ "currency": "CHF",
+ "notional": 188000000.0,
+ "mtm": -1467679,
+ "mtmCurrency": "USD",
+ "pnl1d": -13702,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-1",
+ "trader": "TRDR-BADEYEMI",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-LUMEN",
+ "benchmarkCurve": "CRV-CHF-GOVT",
+ "underlyingBond": "BND-CHLUME169114",
+ "terms": {
+  "faceAmount": 34814589.0,
+  "cleanPrice": 71.815,
+  "yield": 0.040721
+ },
+ "risk": {
+  "dv01": -109560
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -5217
+  },
+  {
+   "bucket": "6M",
+   "dv01": -10434
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -15651
+  },
+  {
+   "bucket": "2Y",
+   "dv01": -20869
+  },
+  {
+   "bucket": "3Y",
+   "dv01": -26086
+  },
+  {
+   "bucket": "5Y",
+   "dv01": -31303
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -49908
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 72829
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -48400
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 5305
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -38861
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -39797
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 32247
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -67505
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 12435
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 47510
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 880
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 61257
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -89904
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -89849
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 84863
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -47715
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 20010
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -28724
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 15751
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 66588
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-04-19",
+  "executionTimestamp": "2024-04-19T11:31:08.149Z",
+  "venue": "MarketAxess",
+  "venueMic": "MAEL",
+  "executionType": "Electronic",
+  "trader": "B. Adeyemi",
+  "salesperson": null,
+  "orderId": "ORD-A7D62BB04D"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-04-19T10:54:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2024-04-19T10:54:00Z",
+  "lastModifiedAt": "2024-04-19T10:54:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT443336515",
+  "matched": "2024-04-19 11:30",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH1345029011",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096A7D62BB04DF673415E10",
+  "upi": "QZORFVQDXZD1",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-CHF-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -1467679,
+  "cleanPv": -1467679.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-CHF-GOVT",
+   "BND-CHLUME169114"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 4815
+  }
+ }
+}

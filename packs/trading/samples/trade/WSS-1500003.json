@@ -1,0 +1,225 @@
+{
+ "tradeId": "WSS-1500003",
+ "sourceSystem": "Wall Street Systems",
+ "sourceTradeId": "1500003",
+ "productType": "FX_SPOT",
+ "productName": "FX spot",
+ "assetClass": "FX",
+ "family": "linear",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-08-10",
+ "effectiveDate": "2026-08-12",
+ "maturityDate": "2027-07-26",
+ "currency": "GBP",
+ "notional": 80000000.0,
+ "mtm": -288607,
+ "mtmCurrency": "USD",
+ "pnl1d": 6913,
+ "counterparty": {
+  "id": "CP-ALDERSHOT",
+  "name": "Aldershot Pension Trust"
+ },
+ "nettingSet": "NS-ALDERSHOT-LDN",
+ "book": "BOOK-FX-2",
+ "trader": "TRDR-ENOVAK",
+ "desk": "DESK-FX",
+ "legalEntity": "LE-LDN",
+ "fxSpot": "FX-EURGBP",
+ "terms": {
+  "rate": 159.13018,
+  "valueDate": "2026-10-02"
+ },
+ "risk": {
+  "fxDelta": 800000
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "fxDelta": 53333
+  },
+  {
+   "bucket": "1M",
+   "fxDelta": 106667
+  },
+  {
+   "bucket": "3M",
+   "fxDelta": 160000
+  },
+  {
+   "bucket": "6M",
+   "fxDelta": 213333
+  },
+  {
+   "bucket": "1Y",
+   "fxDelta": 266667
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -16130
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 10910
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -9919
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -3800
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 6226
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -9484
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 7490
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -9823
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -5052
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 37
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -446
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -12329
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -7556
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -5284
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 3365
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -4518
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 7645
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -10951
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 11730
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 10138
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-08-10",
+  "executionTimestamp": "2026-08-10T15:17:02.736Z",
+  "venue": "FXall",
+  "venueMic": "FXAL",
+  "executionType": "Electronic",
+  "trader": "E. Novak",
+  "salesperson": null,
+  "orderId": "ORD-0ABBC7E2D5"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-08-10T12:25:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2026-08-10T12:25:00Z",
+  "lastModifiedAt": "2026-08-10T12:25:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT452658930",
+  "matched": "2026-08-10 14:34",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q830ABBC7E2D53AB1DCF7FD",
+  "upi": "QZBCW46RLF1J",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Foreign exchange"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Barclays Bank plc",
+  "ourAgentBic": "BARCGB22XXX",
+  "theirAgentBic": "ALDEGB33XXX",
+  "ssiId": "SSI-GBP-D06EAF",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -288607,
+  "cleanPv": -288607.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "FX-EURGBP"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "calypso-fx",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 1377
+  }
+ }
+}

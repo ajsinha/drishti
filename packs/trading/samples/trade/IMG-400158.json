@@ -1,0 +1,297 @@
+{
+ "tradeId": "IMG-400158",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400158",
+ "productType": "CREDIT_BASKET_NOTE",
+ "productName": "Credit basket note",
+ "assetClass": "Structured",
+ "family": "note",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2024-06-24",
+ "effectiveDate": "2024-06-26",
+ "maturityDate": "2036-04-02",
+ "currency": "AUD",
+ "notional": 139000000.0,
+ "mtm": 566863,
+ "mtmCurrency": "USD",
+ "pnl1d": -41782,
+ "counterparty": {
+  "id": "CP-ALDERSHOT",
+  "name": "Aldershot Pension Trust"
+ },
+ "nettingSet": "NS-ALDERSHOT-TKY",
+ "book": "BOOK-STRUCT-3",
+ "trader": "TRDR-VRAO",
+ "desk": "DESK-STRUCT",
+ "legalEntity": "LE-TKY",
+ "issuer": "ISS-VERDANT",
+ "creditCurve": "CDS-VERDANT",
+ "discountCurve": "CRV-AUD-OIS",
+ "correlation": "CORR-G10FX",
+ "terms": {
+  "coupon": 0.083827,
+  "nth": 2,
+  "basketSize": 10
+ },
+ "risk": {
+  "cs01": 131960,
+  "jtd": -83400000
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 4713,
+   "jtd": -2978571
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 9426,
+   "jtd": -5957143
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 14139,
+   "jtd": -8935714
+  },
+  {
+   "bucket": "3Y",
+   "cs01": 18851,
+   "jtd": -11914286
+  },
+  {
+   "bucket": "5Y",
+   "cs01": 23564,
+   "jtd": -14892857
+  },
+  {
+   "bucket": "7Y",
+   "cs01": 28277,
+   "jtd": -17871429
+  },
+  {
+   "bucket": "10Y",
+   "cs01": 32990,
+   "jtd": -20850000
+  }
+ ],
+ "schedule": [
+  {
+   "name": "Lumen Semiconductor AG",
+   "weight": 0.125,
+   "level": 428.0,
+   "status": "Active"
+  },
+  {
+   "name": "Orbital Telecom SA",
+   "weight": 0.125,
+   "level": 96.4,
+   "status": "Active"
+  },
+  {
+   "name": "Novatek Devices Inc.",
+   "weight": 0.125,
+   "level": 121.8,
+   "status": "Active"
+  },
+  {
+   "name": "Cascadia Airlines Inc.",
+   "weight": 0.125,
+   "level": 407.0,
+   "status": "Active"
+  },
+  {
+   "name": "Kaizen Motors Corp.",
+   "weight": 0.125,
+   "level": 87.0,
+   "status": "Active"
+  },
+  {
+   "name": "Granite Building Materials plc",
+   "weight": 0.125,
+   "level": 220.8,
+   "status": "Active"
+  },
+  {
+   "name": "Halcyon Shipping plc",
+   "weight": 0.125,
+   "level": 78.1,
+   "status": "Active"
+  },
+  {
+   "name": "Helix Pharmaceuticals Inc.",
+   "weight": 0.125,
+   "level": 91.5,
+   "status": "Active"
+  }
+ ],
+ "nextIndex": -1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -1288
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -12574
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -4645
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -12023
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -15321
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -17072
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -2852
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 8475
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 26533
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 10301
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 243
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -5050
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 7631
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -3585
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 6553
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 3160
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 35590
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -20242
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 3204
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 7132
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-06-24",
+  "executionTimestamp": "2024-06-24T13:31:51.636Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "V. Rao",
+  "salesperson": null,
+  "orderId": "ORD-4DD6177EF4"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-06-24T12:50:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2024-06-24T12:50:00Z",
+  "lastModifiedAt": "2024-06-24T12:50:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT414063486",
+  "matched": "2024-06-24 10:45",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300BLAOJ55ZE6F4744DD6177EF45D3B9F5091",
+  "upi": "QZ0WND5E85IX",
+  "reportingRegimes": [
+   "JFSA"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "ALDEGB33XXX",
+  "ssiId": "SSI-AUD-D06EAF",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 566863,
+  "cleanPv": 566863.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CDS-VERDANT",
+   "CRV-AUD-OIS",
+   "CORR-G10FX"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-struct",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 2524
+  }
+ }
+}

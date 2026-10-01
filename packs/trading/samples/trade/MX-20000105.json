@@ -1,0 +1,241 @@
+{
+ "tradeId": "MX-20000105",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000105",
+ "productType": "SWAPTION_BERM",
+ "productName": "Bermudan swaption",
+ "assetClass": "Rates",
+ "family": "option",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2025-01-16",
+ "effectiveDate": "2025-01-20",
+ "maturityDate": "2026-10-07",
+ "currency": "EUR",
+ "notional": 214000000.0,
+ "mtm": 36115,
+ "mtmCurrency": "USD",
+ "pnl1d": 996,
+ "counterparty": {
+  "id": "CP-LUMEN",
+  "name": "Lumen Semiconductor AG"
+ },
+ "nettingSet": "NS-LUMEN-NY",
+ "book": "BOOK-RATES-3",
+ "trader": "TRDR-MOKAFOR",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-EUR-OIS",
+ "forwardCurve": "CRV-EUR-PROJ",
+ "swaptionVolCube": "IRV-EUR",
+ "terms": {
+  "payerReceiver": "Payer",
+  "strike": 0.03205,
+  "firstExercise": "2028-06-04",
+  "exerciseFrequency": "Semi-annual"
+ },
+ "risk": {
+  "dv01": -14914,
+  "vega": -447935
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -2486,
+   "vega": -74656
+  },
+  {
+   "bucket": "6M",
+   "dv01": -4971,
+   "vega": -149312
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -7457,
+   "vega": -223968
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-01-20",
+   "type": "First call",
+   "strike": 0.033298,
+   "status": "Expired"
+  },
+  {
+   "date": "2026-10-07",
+   "type": "Bermudan call",
+   "strike": 0.043555,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -1056
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 1626
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -2452
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 4312
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 1386
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 1401
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -1233
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -5388
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 4040
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 2961
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -2426
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 659
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 3333
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -2257
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 119
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 539
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 4717
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -176
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 62
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 615
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-01-16",
+  "executionTimestamp": "2025-01-16T15:59:33.108Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "M. Okafor",
+  "salesperson": null,
+  "orderId": "ORD-4010D1A5BD"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-01-16T09:26:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2025-01-16T09:26:00Z",
+  "lastModifiedAt": "2025-01-16T09:26:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA497207131",
+  "matched": "2025-01-16 13:16",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20964010D1A5BDEC13DF9CD6",
+  "upi": "QZ5SPI21U482",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "LUMEGB33XXX",
+  "ssiId": "SSI-EUR-8CF792",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 36115,
+  "cleanPv": 36115.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CRV-EUR-OIS",
+   "CRV-EUR-PROJ",
+   "IRV-EUR"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 2212
+  }
+ }
+}

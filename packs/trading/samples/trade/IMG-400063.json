@@ -1,0 +1,410 @@
+{
+ "tradeId": "IMG-400063",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400063",
+ "productType": "EQ_CLIQUET",
+ "productName": "Cliquet (ratchet)",
+ "assetClass": "Equity",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2025-06-25",
+ "effectiveDate": "2025-06-27",
+ "maturityDate": "2031-04-16",
+ "currency": "USD",
+ "notional": 129000000.0,
+ "mtm": -176522,
+ "mtmCurrency": "USD",
+ "pnl1d": -13270,
+ "counterparty": {
+  "id": "CP-ALDERSHOT",
+  "name": "Aldershot Pension Trust"
+ },
+ "nettingSet": "NS-ALDERSHOT-LDN",
+ "book": "BOOK-EQD-1",
+ "trader": "TRDR-PLINDQVIST",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingIndex": "EQX-NDX",
+ "equityVolSurface": "EQV-NDX",
+ "terms": {
+  "localCap": 0.063955,
+  "localFloor": -0.001014,
+  "globalFloor": 0.015939
+ },
+ "risk": {
+  "delta": -359020,
+  "vega": -470670
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -17096,
+   "vega": -22413
+  },
+  {
+   "bucket": "1M",
+   "delta": -34192,
+   "vega": -44826
+  },
+  {
+   "bucket": "3M",
+   "delta": -51289,
+   "vega": -67239
+  },
+  {
+   "bucket": "6M",
+   "delta": -68385,
+   "vega": -89651
+  },
+  {
+   "bucket": "1Y",
+   "delta": -85481,
+   "vega": -112064
+  },
+  {
+   "bucket": "2Y",
+   "delta": -102577,
+   "vega": -134477
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2025-09-27",
+   "level": 92.94,
+   "trigger": 100.0,
+   "performance": -0.0706,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-12-27",
+   "level": 97.73,
+   "trigger": 100.0,
+   "performance": -0.0227,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-03-27",
+   "level": 87.29,
+   "trigger": 100.0,
+   "performance": -0.1271,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-06-27",
+   "level": 96.82,
+   "trigger": 100.0,
+   "performance": -0.0318,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-09-27",
+   "level": 90.39,
+   "trigger": 100.0,
+   "performance": -0.0961,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-12-27",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-03-27",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-06-27",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-09-27",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-12-27",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-03-27",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-06-27",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-09-27",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-12-27",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-03-27",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-06-27",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-09-27",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-12-27",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-03-27",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-06-27",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-09-27",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-12-27",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-03-27",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-04-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 5,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 2639
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -9314
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -6224
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -7210
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 6923
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 3459
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -2335
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -1266
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -264
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -504
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 915
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -2837
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 6150
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -6713
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 3046
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -3077
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 1684
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -5259
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 7851
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -1127
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-06-25",
+  "executionTimestamp": "2025-06-25T10:03:30.241Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "P. Lindqvist",
+  "salesperson": null,
+  "orderId": "ORD-763DB8E9B3"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-06-25T10:07:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2025-06-25T10:07:00Z",
+  "lastModifiedAt": "2025-06-25T10:07:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT821020853",
+  "matched": "2025-06-25 10:38",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83763DB8E9B3BA78A27751",
+  "upi": "QZ2D9EBE62NO",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "ALDEUS33XXX",
+  "ssiId": "SSI-USD-D06EAF",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -176522,
+  "cleanPv": -176522.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "EQX-NDX",
+   "EQV-NDX"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 1643
+  }
+ }
+}

@@ -1,0 +1,233 @@
+{
+ "tradeId": "CLY-3000068",
+ "sourceSystem": "Calypso",
+ "sourceTradeId": "3000068",
+ "productType": "RISK_PARTICIPATION",
+ "productName": "Unfunded risk participation",
+ "assetClass": "Credit",
+ "family": "cds",
+ "status": "Live",
+ "direction": "Sell protection",
+ "tradeDate": "2024-08-20",
+ "effectiveDate": "2024-08-22",
+ "maturityDate": "2029-10-05",
+ "currency": "USD",
+ "notional": 90000000.0,
+ "mtm": 483052,
+ "mtmCurrency": "USD",
+ "pnl1d": 3473,
+ "counterparty": {
+  "id": "CP-VERDANT",
+  "name": "Verdant Agri Holdings"
+ },
+ "nettingSet": "NS-VERDANT-NY",
+ "book": "BOOK-CREDIT-1",
+ "trader": "TRDR-DWHITFIELD",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-HELIX",
+ "creditCurve": "CDS-HELIX",
+ "discountCurve": "CRV-USD-OIS",
+ "terms": {
+  "participation": 0.145355,
+  "fee": 163.7
+ },
+ "risk": {
+  "cs01": -36450,
+  "jtd": -54000000
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": -2430,
+   "jtd": -3600000
+  },
+  {
+   "bucket": "1Y",
+   "cs01": -4860,
+   "jtd": -7200000
+  },
+  {
+   "bucket": "2Y",
+   "cs01": -7290,
+   "jtd": -10800000
+  },
+  {
+   "bucket": "3Y",
+   "cs01": -9720,
+   "jtd": -14400000
+  },
+  {
+   "bucket": "5Y",
+   "cs01": -12150,
+   "jtd": -18000000
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -11798
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 17007
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -3941
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -4402
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 11744
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 3600
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -9497
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -6696
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 12920
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 11537
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -6031
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -8236
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 17557
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 15930
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 34956
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 20827
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 5994
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -7543
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -3661
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 4692
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-08-20",
+  "executionTimestamp": "2024-08-20T14:53:38.894Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "D. Whitfield",
+  "salesperson": null,
+  "orderId": "ORD-40E8254AC1"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-08-20T09:31:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2024-08-20T09:31:00Z",
+  "lastModifiedAt": "2024-08-20T09:31:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA971815766",
+  "matched": "2024-08-20 11:54",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209640E8254AC135989611E1",
+  "upi": "QZIBLUZQKSL0",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "VERDUS33XXX",
+  "ssiId": "SSI-USD-ABCF5A",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 483052,
+  "cleanPv": 483052.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CDS-HELIX",
+   "CRV-USD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 1866
+  }
+ }
+}

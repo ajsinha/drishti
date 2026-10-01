@@ -23,7 +23,7 @@
   ('Views', 'grid-1x2', [
     ('Look up', [
       ('/t', 'terminal', 'Terminal', 'Type a command or an id, then <GO>', '/t'),
-      ('/s', 'search', 'Search & pick lists', 'TRD T-100, TRD productType=Revolver, TRD where …', '/s')]),
+      ('/s', 'search', 'Search & pick lists', 'TRD MX-200000, TRD productType=Revolver, TRD where …', '/s')]),
     ('Watch', [
       ('/w', 'grid-1x2', 'Workspaces', 'Several live views on one screen', '/w'),
       ('/m', 'list-columns', 'Monitors', 'Live watchlists of entities', '/m'),
@@ -66,7 +66,7 @@
     <div class="cmd-box">
       <span class="cmd-prompt mono" aria-hidden="true">&gt;</span>
       <input id="cmdInput" name="q" class="cmd-input" type="text" spellcheck="false"
-             value="{{ command_text | default('') }}" placeholder="TRD T-10001, CPTY north, TRD productType=Revolver …  then <GO>"
+             value="{{ command_text | default('') }}" placeholder="TRD MX-20000001, CPTY north, TRD productType=Revolver …  then <GO>"
              role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="cmdList">
       <ul id="cmdList" class="cmd-list" role="listbox" aria-label="Suggestions" hidden></ul>
     </div>

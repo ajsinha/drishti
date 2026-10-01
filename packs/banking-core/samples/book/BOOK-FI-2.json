@@ -7,70 +7,70 @@
  "dv01": 49065,
  "topTrades": [
   {
-   "tradeId": "T-10637",
+   "tradeId": "BBG-60000067",
    "product": "Asset-backed security",
    "notional": 246000000.0,
    "maturity": "2036-06-12",
    "mtm": 4905373
   },
   {
-   "tradeId": "T-10590",
+   "tradeId": "BBG-60000020",
    "product": "Zero-coupon bond",
    "notional": 163000000.0,
    "maturity": "2029-03-12",
    "mtm": 3464598
   },
   {
-   "tradeId": "T-10597",
+   "tradeId": "BBG-60000027",
    "product": "Callable bond",
    "notional": 210000000.0,
    "maturity": "2036-04-10",
    "mtm": 3432773
   },
   {
-   "tradeId": "T-10634",
+   "tradeId": "BBG-60000064",
    "product": "CMO tranche",
    "notional": 230000000.0,
    "maturity": "2028-11-09",
    "mtm": -3222264
   },
   {
-   "tradeId": "T-10632",
+   "tradeId": "BBG-60000062",
    "product": "CMO tranche",
    "notional": 228000000.0,
    "maturity": "2036-01-14",
    "mtm": -3032972
   },
   {
-   "tradeId": "T-10644",
+   "tradeId": "BBG-60000074",
    "product": "CLO tranche",
    "notional": 212000000.0,
    "maturity": "2034-08-30",
    "mtm": 2819294
   },
   {
-   "tradeId": "T-10622",
+   "tradeId": "BBG-60000052",
    "product": "Municipal bond",
    "notional": 207000000.0,
    "maturity": "2027-06-22",
    "mtm": 1977148
   },
   {
-   "tradeId": "T-10593",
+   "tradeId": "BBG-60000023",
    "product": "Zero-coupon bond",
    "notional": 208000000.0,
    "maturity": "2028-05-30",
    "mtm": -1773546
   },
   {
-   "tradeId": "T-10648",
+   "tradeId": "BBG-60000078",
    "product": "CLO tranche",
    "notional": 214000000.0,
    "maturity": "2031-06-02",
    "mtm": -1673828
   },
   {
-   "tradeId": "T-10580",
+   "tradeId": "BBG-60000010",
    "product": "Corporate bond",
    "notional": 216000000.0,
    "maturity": "2031-12-22",

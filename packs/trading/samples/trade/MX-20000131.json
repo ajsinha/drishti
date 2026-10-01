@@ -1,0 +1,233 @@
+{
+ "tradeId": "MX-20000131",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000131",
+ "productType": "STIR_FUT_OPT",
+ "productName": "STIR future option",
+ "assetClass": "Rates",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2026-04-24",
+ "effectiveDate": "2026-04-27",
+ "maturityDate": "2028-04-11",
+ "currency": "USD",
+ "notional": 244000000.0,
+ "mtm": -848339,
+ "mtmCurrency": "USD",
+ "pnl1d": 48677,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-RATES-2",
+ "trader": "TRDR-MOKAFOR",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-CME-1",
+ "forwardCurve": "CRV-USD-PROJ",
+ "capVolSurface": "CPV-USD",
+ "terms": {
+  "contract": "ER3 Z6 C 97.50",
+  "lots": 241,
+  "premiumTicks": 24.4
+ },
+ "risk": {
+  "dv01": 40985,
+  "vega": 981863
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 4098,
+   "vega": 98186
+  },
+  {
+   "bucket": "6M",
+   "dv01": 8197,
+   "vega": 196373
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 12296,
+   "vega": 294559
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 16394,
+   "vega": 392745
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 12306
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -34032
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -12602
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 12879
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 32539
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -35839
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -43389
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 30450
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 1877
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 4511
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -17493
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 2865
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 33827
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 11411
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -33333
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -7933
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 34213
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -6089
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -11278
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 17733
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-04-24",
+  "executionTimestamp": "2026-04-24T09:05:38.205Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "M. Okafor",
+  "salesperson": null,
+  "orderId": "ORD-5B0983781A"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-04-24T11:22:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2026-04-24T11:22:00Z",
+  "lastModifiedAt": "2026-04-24T11:22:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA940355648",
+  "matched": "2026-04-24 10:41",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH1965683265",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20965B0983781A3DE3700EB7",
+  "upi": "QZUHH6SUXVJT",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMUS33XXX",
+  "ssiId": "SSI-USD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -848339,
+  "cleanPv": -848339.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CRV-USD-PROJ",
+   "CPV-USD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 4137
+  }
+ }
+}

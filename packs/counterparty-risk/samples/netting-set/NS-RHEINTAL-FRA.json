@@ -62,21 +62,21 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10682",
+   "tradeId": "BBG-60000082",
    "product": "Repurchase agreement",
    "notional": 227000000.0,
    "maturity": "2026-12-01",
    "mtm": 4140501
   },
   {
-   "tradeId": "T-10702",
+   "tradeId": "BBG-60000102",
    "product": "Buy / sell-back",
    "notional": 181000000.0,
    "maturity": "2026-10-30",
    "mtm": -2924657
   },
   {
-   "tradeId": "T-10698",
+   "tradeId": "BBG-60000098",
    "product": "Buy / sell-back",
    "notional": 76000000.0,
    "maturity": "2026-10-12",

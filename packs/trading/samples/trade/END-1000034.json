@@ -1,0 +1,435 @@
+{
+ "tradeId": "END-1000034",
+ "sourceSystem": "Endur",
+ "sourceTradeId": "1000034",
+ "productType": "CMD_APO",
+ "productName": "Average price option (APO)",
+ "assetClass": "Commodity",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2025-05-16",
+ "effectiveDate": "2025-05-19",
+ "maturityDate": "2033-03-07",
+ "currency": "USD",
+ "notional": 15000000.0,
+ "mtm": 91560,
+ "mtmCurrency": "USD",
+ "pnl1d": 1494,
+ "counterparty": {
+  "id": "CP-RHEINTAL",
+  "name": "Rheintal Landesbank"
+ },
+ "nettingSet": "NS-RHEINTAL-NY",
+ "book": "BOOK-COMM-1",
+ "trader": "TRDR-FROSSI",
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "commodityCurve": "CMDC-SOY",
+ "commodityVolSurface": "CMDV-SOY",
+ "terms": {
+  "optionType": "Put",
+  "exerciseStyle": "American",
+  "expiryDate": "2029-01-18",
+  "strike": 3632.04,
+  "averagingPeriod": "Monthly"
+ },
+ "risk": {
+  "delta": 81468,
+  "vega": 108774
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 3879,
+   "vega": 5180
+  },
+  {
+   "bucket": "1M",
+   "delta": 7759,
+   "vega": 10359
+  },
+  {
+   "bucket": "3M",
+   "delta": 11638,
+   "vega": 15539
+  },
+  {
+   "bucket": "6M",
+   "delta": 15518,
+   "vega": 20719
+  },
+  {
+   "bucket": "1Y",
+   "delta": 19397,
+   "vega": 25899
+  },
+  {
+   "bucket": "2Y",
+   "delta": 23277,
+   "vega": 31078
+  }
+ ],
+ "schedule": [
+  {
+   "fixingDate": "2025-08-19",
+   "period": "2025-08-19..2025-11-19",
+   "index": "SOFR",
+   "rate": 0.048292,
+   "payoff": 49845.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2025-11-19",
+   "period": "2025-11-19..2026-02-19",
+   "index": "SOFR",
+   "rate": 0.03261,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-02-19",
+   "period": "2026-02-19..2026-05-19",
+   "index": "SOFR",
+   "rate": 0.031093,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-05-19",
+   "period": "2026-05-19..2026-08-19",
+   "index": "SOFR",
+   "rate": 0.040306,
+   "payoff": 19897.5,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-08-19",
+   "period": "2026-08-19..2026-11-19",
+   "index": "SOFR",
+   "rate": 0.046665,
+   "payoff": 43743.75,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-11-19",
+   "period": "2026-11-19..2027-02-19",
+   "index": "SOFR",
+   "rate": 0.029321,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-02-19",
+   "period": "2027-02-19..2027-05-19",
+   "index": "SOFR",
+   "rate": 0.032251,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-05-19",
+   "period": "2027-05-19..2027-08-19",
+   "index": "SOFR",
+   "rate": 0.046967,
+   "payoff": 44876.25,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-08-19",
+   "period": "2027-08-19..2027-11-19",
+   "index": "SOFR",
+   "rate": 0.028134,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-11-19",
+   "period": "2027-11-19..2028-02-19",
+   "index": "SOFR",
+   "rate": 0.033949,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2028-02-19",
+   "period": "2028-02-19..2028-05-19",
+   "index": "SOFR",
+   "rate": 0.028288,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2028-05-19",
+   "period": "2028-05-19..2028-08-19",
+   "index": "SOFR",
+   "rate": 0.040793,
+   "payoff": 21723.75,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2028-08-19",
+   "period": "2028-08-19..2028-11-19",
+   "index": "SOFR",
+   "rate": 0.020576,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2028-11-19",
+   "period": "2028-11-19..2029-02-19",
+   "index": "SOFR",
+   "rate": 0.020794,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2029-02-19",
+   "period": "2029-02-19..2029-05-19",
+   "index": "SOFR",
+   "rate": 0.036782,
+   "payoff": 6682.5,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2029-05-19",
+   "period": "2029-05-19..2029-08-19",
+   "index": "SOFR",
+   "rate": 0.02239,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2029-08-19",
+   "period": "2029-08-19..2029-11-19",
+   "index": "SOFR",
+   "rate": 0.03432,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2029-11-19",
+   "period": "2029-11-19..2030-02-19",
+   "index": "SOFR",
+   "rate": 0.031904,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2030-02-19",
+   "period": "2030-02-19..2030-05-19",
+   "index": "SOFR",
+   "rate": 0.030771,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2030-05-19",
+   "period": "2030-05-19..2030-08-19",
+   "index": "SOFR",
+   "rate": 0.033054,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2030-08-19",
+   "period": "2030-08-19..2030-11-19",
+   "index": "SOFR",
+   "rate": 0.037654,
+   "payoff": 9952.5,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2030-11-19",
+   "period": "2030-11-19..2031-02-19",
+   "index": "SOFR",
+   "rate": 0.022943,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2031-02-19",
+   "period": "2031-02-19..2031-05-19",
+   "index": "SOFR",
+   "rate": 0.035351,
+   "payoff": 1316.25,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2031-05-19",
+   "period": "2031-05-19..2031-08-19",
+   "index": "SOFR",
+   "rate": 0.025867,
+   "payoff": 0.0,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 5,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -1095
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 890
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 916
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -953
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 3183
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -418
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 183
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -3402
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -6575
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 3874
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 3741
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 1078
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -930
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 230
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 2455
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 397
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 352
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -2391
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 117
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -1203
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-05-16",
+  "executionTimestamp": "2025-05-16T14:25:44.992Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "F. Rossi",
+  "salesperson": null,
+  "orderId": "ORD-FE1852FE70"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-05-16T12:01:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2025-05-16T12:01:00Z",
+  "lastModifiedAt": "2025-05-16T12:01:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT226690234",
+  "matched": "2025-05-16 12:45",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096FE1852FE70F142A455C6",
+  "upi": "QZWMSYKI6W4X",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "RHEIUS33XXX",
+  "ssiId": "SSI-USD-230AB8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 91560,
+  "cleanPv": 91560.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "CMDC-SOY",
+   "CMDV-SOY"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "endur-comm",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

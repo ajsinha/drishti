@@ -1,0 +1,227 @@
+{
+ "tradeId": "MX-20000074",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000074",
+ "productType": "BOND_FUTURE",
+ "productName": "Government bond future",
+ "assetClass": "Rates",
+ "family": "future",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-08-18",
+ "effectiveDate": "2026-08-20",
+ "maturityDate": "2027-03-15",
+ "currency": "USD",
+ "notional": 81000000.0,
+ "mtm": -164331,
+ "mtmCurrency": "USD",
+ "pnl1d": 14203,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-RATES-2",
+ "trader": "TRDR-ASHAH",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-CME-1",
+ "benchmarkCurve": "CRV-USD-GOVT",
+ "underlyingBond": "BND-US0UST030079",
+ "repoCurve": "REPO-USD",
+ "terms": {
+  "contract": "US Z6",
+  "lots": 184,
+  "ctd": null,
+  "conversionFactor": 0.7989
+ },
+ "risk": {
+  "dv01": 3925
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 654
+  },
+  {
+   "bucket": "6M",
+   "dv01": 1308
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 1962
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 2375
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 3214
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -1405
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -12570
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -1789
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -12721
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 4552
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 2722
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -10630
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 6766
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -5710
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 8976
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -215
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 2471
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -11656
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 6861
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -4050
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 205
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 1648
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 8462
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-08-18",
+  "executionTimestamp": "2026-08-18T09:31:01.506Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "A. Shah",
+  "salesperson": null,
+  "orderId": "ORD-BFFEB47DA6"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-08-18T09:31:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2026-08-18T09:31:00Z",
+  "lastModifiedAt": "2026-08-18T09:31:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA461305591",
+  "matched": "2026-08-18 17:23",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH6765188458",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096BFFEB47DA64D96C589FA",
+  "upi": "QZ27DXVCIAHN",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMUS33XXX",
+  "ssiId": "SSI-USD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -164331,
+  "cleanPv": -164331.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-USD-GOVT",
+   "BND-US0UST030079",
+   "REPO-USD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 1139
+  }
+ }
+}

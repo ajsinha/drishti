@@ -1,0 +1,321 @@
+{
+ "tradeId": "MX-20000137",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000137",
+ "productType": "CALLABLE_SWAP",
+ "productName": "Callable swap",
+ "assetClass": "Rates",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2026-08-06",
+ "effectiveDate": "2026-08-10",
+ "maturityDate": "2033-07-11",
+ "currency": "EUR",
+ "notional": 172000000.0,
+ "mtm": -263623,
+ "mtmCurrency": "USD",
+ "pnl1d": -6533,
+ "counterparty": {
+  "id": "CP-VERDANT",
+  "name": "Verdant Agri Holdings"
+ },
+ "nettingSet": "NS-VERDANT-NY",
+ "book": "BOOK-RATES-3",
+ "trader": "TRDR-ASHAH",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-EUR-OIS",
+ "forwardCurve": "CRV-EUR-PROJ",
+ "swaptionVolCube": "IRV-EUR",
+ "terms": {
+  "fixedRate": 0.016725,
+  "payFrequency": "Quarterly",
+  "dayCount": "ACT/360",
+  "businessDay": "Mod. following",
+  "callable": "Counterparty",
+  "firstCall": "2029-04-09"
+ },
+ "risk": {
+  "dv01": -94124,
+  "vega": -602836
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -3362,
+   "vega": -21530
+  },
+  {
+   "bucket": "6M",
+   "dv01": -6723,
+   "vega": -43060
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -10085,
+   "vega": -64590
+  },
+  {
+   "bucket": "2Y",
+   "dv01": -13446,
+   "vega": -86119
+  },
+  {
+   "bucket": "3Y",
+   "dv01": -16808,
+   "vega": -107649
+  },
+  {
+   "bucket": "5Y",
+   "dv01": -20169,
+   "vega": -129179
+  },
+  {
+   "bucket": "7Y",
+   "dv01": -23531,
+   "vega": -150709
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Receive performance",
+   "payReceive": "Receive",
+   "rateType": "Performance",
+   "index": "USCPI",
+   "rate": null,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "EUR",
+   "notional": 172000000.0
+  },
+  {
+   "leg": 2,
+   "label": "Pay ESTR + spread",
+   "payReceive": "Pay",
+   "rateType": "Float",
+   "index": "ESTR",
+   "rate": 0.019824,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "EUR",
+   "notional": 172000000.0
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2027-08-10",
+   "type": "First call",
+   "strike": 0.039818,
+   "status": "Pending"
+  },
+  {
+   "date": "2028-08-10",
+   "type": "Bermudan call",
+   "strike": 0.034448,
+   "status": "Pending"
+  },
+  {
+   "date": "2029-08-10",
+   "type": "Bermudan call",
+   "strike": 0.034138,
+   "status": "Pending"
+  },
+  {
+   "date": "2030-08-10",
+   "type": "Bermudan call",
+   "strike": 0.03742,
+   "status": "Pending"
+  },
+  {
+   "date": "2031-08-10",
+   "type": "Bermudan call",
+   "strike": 0.04537,
+   "status": "Pending"
+  },
+  {
+   "date": "2032-08-10",
+   "type": "Bermudan call",
+   "strike": 0.025152,
+   "status": "Pending"
+  },
+  {
+   "date": "2033-07-11",
+   "type": "Bermudan call",
+   "strike": 0.032505,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 9927
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 3125
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -2368
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -1745
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -915
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -3686
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 13375
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 2476
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 2954
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -18707
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -1740
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 7028
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 1322
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 14899
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -3297
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -8352
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -109
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 1817
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 4705
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 5462
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-08-06",
+  "executionTimestamp": "2026-08-06T14:42:06.114Z",
+  "venue": "Bloomberg SEF",
+  "venueMic": "BSEF",
+  "executionType": "Electronic",
+  "trader": "A. Shah",
+  "salesperson": null,
+  "orderId": "ORD-7F17D7195B"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-08-06T10:04:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2026-08-06T10:04:00Z",
+  "lastModifiedAt": "2026-08-06T10:04:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA455419661",
+  "matched": "2026-08-06 10:15",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20967F17D7195BCE1B063E8B",
+  "upi": "QZ3VNT0G9T30",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "VERDGB33XXX",
+  "ssiId": "SSI-EUR-ABCF5A",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -263623,
+  "cleanPv": -263623.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "CRV-EUR-OIS",
+   "CRV-EUR-PROJ",
+   "IRV-EUR"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 2247
+  }
+ }
+}

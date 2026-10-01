@@ -1,0 +1,244 @@
+{
+ "tradeId": "BBG-60000020",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000020",
+ "productType": "ZERO_BOND",
+ "productName": "Zero-coupon bond",
+ "assetClass": "Fixed income",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2024-07-04",
+ "effectiveDate": "2024-07-08",
+ "maturityDate": "2029-03-12",
+ "currency": "JPY",
+ "notional": 163000000.0,
+ "mtm": 3464598,
+ "mtmCurrency": "USD",
+ "pnl1d": 35121,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-2",
+ "trader": "TRDR-RCASTILLO",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-KAIZEN",
+ "benchmarkCurve": "CRV-JPY-GOVT",
+ "underlyingBond": "BND-JPKAIZ021595",
+ "terms": {
+  "faceAmount": 27117099.0,
+  "cleanPrice": 64.308,
+  "yield": 0.029933
+ },
+ "risk": {
+  "dv01": 62424
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 2973
+  },
+  {
+   "bucket": "6M",
+   "dv01": 5945
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 8918
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 11890
+  },
+  {
+   "bucket": "3Y",
+   "dv01": 14863
+  },
+  {
+   "bucket": "5Y",
+   "dv01": 17835
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -17574
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -45626
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -100057
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -93568
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -3431
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 115978
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 114476
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -140913
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -98438
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -60515
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -11760
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -65530
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -118291
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -109557
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 56766
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -55654
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -38100
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -169233
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -35157
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 74936
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-07-04",
+  "executionTimestamp": "2024-07-04T11:37:00.844Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "R. Castillo",
+  "salesperson": null,
+  "orderId": "ORD-9310A46BA2"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-07-04T09:31:00Z",
+    "by": "mo.amend"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2024-07-27T09:31:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2024-07-04T09:31:00Z",
+  "lastModifiedAt": "2024-07-27T09:31:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT155426686",
+  "matched": "2024-07-04 11:43",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "JSCC",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH2140687255",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20969310A46BA2D0A032E58D",
+  "upi": "QZORFVQDXZD1",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-JPY-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 3464598,
+  "cleanPv": 3464598.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-JPY-GOVT",
+   "BND-JPKAIZ021595"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 8559
+  }
+ }
+}

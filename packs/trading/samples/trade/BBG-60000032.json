@@ -1,0 +1,314 @@
+{
+ "tradeId": "BBG-60000032",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000032",
+ "productType": "PUTTABLE_BOND",
+ "productName": "Puttable bond",
+ "assetClass": "Fixed income",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2024-08-30",
+ "effectiveDate": "2024-09-03",
+ "maturityDate": "2031-12-30",
+ "currency": "USD",
+ "notional": 8000000.0,
+ "mtm": -98062,
+ "mtmCurrency": "USD",
+ "pnl1d": 1932,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-2",
+ "trader": "TRDR-RCASTILLO",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-NOVATEK",
+ "benchmarkCurve": "CRV-USD-GOVT",
+ "underlyingBond": "BND-USNOVA133999",
+ "swaptionVolCube": "IRV-USD",
+ "terms": {
+  "coupon": 0.003547,
+  "couponFrequency": "Annual",
+  "faceAmount": 43758283.0,
+  "cleanPrice": 100.672,
+  "yield": 0.048422,
+  "firstPut": "2031-05-19",
+  "putPrice": 100.3
+ },
+ "risk": {
+  "dv01": -5338,
+  "cs01": -5053,
+  "vega": -44936
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -191,
+   "cs01": -180,
+   "vega": -1605
+  },
+  {
+   "bucket": "6M",
+   "dv01": -381,
+   "cs01": -361,
+   "vega": -3210
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -572,
+   "cs01": -541,
+   "vega": -4815
+  },
+  {
+   "bucket": "2Y",
+   "dv01": -763,
+   "cs01": -722,
+   "vega": -6419
+  },
+  {
+   "bucket": "3Y",
+   "dv01": -953,
+   "cs01": -902,
+   "vega": -8024
+  },
+  {
+   "bucket": "5Y",
+   "dv01": -1144,
+   "cs01": -1083,
+   "vega": -9629
+  },
+  {
+   "bucket": "7Y",
+   "dv01": -1334,
+   "cs01": -1263,
+   "vega": -11234
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2025-09-03",
+   "type": "First call",
+   "strike": 0.024533,
+   "status": "Expired"
+  },
+  {
+   "date": "2026-09-03",
+   "type": "Bermudan call",
+   "strike": 0.029673,
+   "status": "Expired"
+  },
+  {
+   "date": "2027-09-03",
+   "type": "Bermudan call",
+   "strike": 0.036367,
+   "status": "Pending"
+  },
+  {
+   "date": "2028-09-03",
+   "type": "Bermudan call",
+   "strike": 0.021271,
+   "status": "Pending"
+  },
+  {
+   "date": "2029-09-03",
+   "type": "Bermudan call",
+   "strike": 0.042286,
+   "status": "Pending"
+  },
+  {
+   "date": "2030-09-03",
+   "type": "Bermudan call",
+   "strike": 0.041403,
+   "status": "Pending"
+  },
+  {
+   "date": "2031-09-03",
+   "type": "Bermudan call",
+   "strike": 0.048494,
+   "status": "Pending"
+  },
+  {
+   "date": "2031-12-30",
+   "type": "Bermudan call",
+   "strike": 0.030637,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 2,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -4069
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -658
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 3976
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 1482
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 6805
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -8887
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 157
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 2201
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 3109
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -509
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -167
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -1684
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 1353
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -1448
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -348
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -2474
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -1676
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 2427
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -798
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 1065
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-08-30",
+  "executionTimestamp": "2024-08-30T13:59:07.815Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "R. Castillo",
+  "salesperson": null,
+  "orderId": "ORD-2D2BCABA11"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-08-30T10:38:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2024-08-30T10:38:00Z",
+  "lastModifiedAt": "2024-08-30T10:38:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT571626970",
+  "matched": "2024-08-30 16:54",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH5656720468",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20962D2BCABA11753ACF8D1B",
+  "upi": "QZHR9R0LW8F9",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMUS33XXX",
+  "ssiId": "SSI-USD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -98062,
+  "cleanPv": -98062.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-USD-GOVT",
+   "BND-USNOVA133999",
+   "IRV-USD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

@@ -1,0 +1,283 @@
+{
+ "tradeId": "CLY-3000053",
+ "sourceSystem": "Calypso",
+ "sourceTradeId": "3000053",
+ "productType": "TERM_LOAN",
+ "productName": "Term loan",
+ "assetClass": "Credit",
+ "family": "loan",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-01-02",
+ "effectiveDate": "2026-01-05",
+ "maturityDate": "2029-04-02",
+ "currency": "CAD",
+ "notional": 126000000.0,
+ "mtm": -2592887,
+ "mtmCurrency": "USD",
+ "pnl1d": 146573,
+ "counterparty": {
+  "id": "CP-TOKAI",
+  "name": "Tokai Mutual Trust Bank"
+ },
+ "nettingSet": "NS-TOKAI-NY",
+ "book": "BOOK-CREDIT-2",
+ "trader": "TRDR-DWHITFIELD",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-SOLARIS",
+ "discountCurve": "CRV-CAD-OIS",
+ "forwardCurve": "CRV-CAD-PROJ",
+ "creditCurve": "CDS-SOLARIS",
+ "terms": {
+  "margin": 378.4,
+  "facilityType": "Term Loan B",
+  "amortisation": "Linear"
+ },
+ "risk": {
+  "cs01": 36994,
+  "dv01": 34984
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 3699,
+   "dv01": 3498
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 7399,
+   "dv01": 6997
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 11098,
+   "dv01": 10495
+  },
+  {
+   "bucket": "3Y",
+   "cs01": 14798,
+   "dv01": 13994
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-07-05",
+   "opening": 126000000,
+   "principal": 18000000,
+   "closing": 108000000,
+   "interest": 2520000
+  },
+  {
+   "date": "2027-01-05",
+   "opening": 108000000,
+   "principal": 18000000,
+   "closing": 90000000,
+   "interest": 2160000
+  },
+  {
+   "date": "2027-07-05",
+   "opening": 90000000,
+   "principal": 18000000,
+   "closing": 72000000,
+   "interest": 1800000
+  },
+  {
+   "date": "2028-01-05",
+   "opening": 72000000,
+   "principal": 18000000,
+   "closing": 54000000,
+   "interest": 1440000
+  },
+  {
+   "date": "2028-07-05",
+   "opening": 54000000,
+   "principal": 18000000,
+   "closing": 36000000,
+   "interest": 1080000
+  },
+  {
+   "date": "2029-01-05",
+   "opening": 36000000,
+   "principal": 18000000,
+   "closing": 18000000,
+   "interest": 720000
+  },
+  {
+   "date": "2029-04-02",
+   "opening": 18000000,
+   "principal": 18000000,
+   "closing": 0,
+   "interest": 360000
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 98904
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -55488
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -108776
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -7933
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -36797
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 11332
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 29295
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -17197
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -97192
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -9482
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 90989
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -46624
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 103306
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -81917
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -160183
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 40624
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -99291
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -4136
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -50035
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -53043
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-01-02",
+  "executionTimestamp": "2026-01-02T14:36:34.629Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "D. Whitfield",
+  "salesperson": null,
+  "orderId": "ORD-DE9D2D3FA0"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-01-02T11:22:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2026-01-02T11:22:00Z",
+  "lastModifiedAt": "2026-01-02T11:22:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA317096911",
+  "matched": "2026-01-02 14:07",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096DE9D2D3FA044B98E020E",
+  "upi": "QZR40D99STCM",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "TOKAGB33XXX",
+  "ssiId": "SSI-CAD-6E2541",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -2592887,
+  "cleanPv": -2592887.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-CAD-OIS",
+   "CRV-CAD-PROJ",
+   "CDS-SOLARIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 6446
+  }
+ }
+}

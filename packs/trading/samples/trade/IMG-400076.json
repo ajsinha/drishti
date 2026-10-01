@@ -1,0 +1,387 @@
+{
+ "tradeId": "IMG-400076",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400076",
+ "productType": "REVERSE_CONVERTIBLE",
+ "productName": "Reverse convertible",
+ "assetClass": "Equity",
+ "family": "note",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-03-26",
+ "effectiveDate": "2026-03-30",
+ "maturityDate": "2038-02-01",
+ "currency": "CHF",
+ "notional": 181000000.0,
+ "mtm": -4142972,
+ "mtmCurrency": "USD",
+ "pnl1d": 279826,
+ "counterparty": {
+  "id": "CP-ALDERSHOT",
+  "name": "Aldershot Pension Trust"
+ },
+ "nettingSet": "NS-ALDERSHOT-LDN",
+ "book": "BOOK-EQD-3",
+ "trader": "TRDR-JWEISS",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingEquity": "EQ-LUMN",
+ "equityVolSurface": "EQV-LUMN",
+ "dividendCurve": "DIV-LUMN",
+ "terms": {
+  "coupon": 0.12633,
+  "barrier": 0.696392
+ },
+ "risk": {
+  "delta": 880259,
+  "vega": 1801952
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 41917,
+   "vega": 85807
+  },
+  {
+   "bucket": "1M",
+   "delta": 83834,
+   "vega": 171614
+  },
+  {
+   "bucket": "3M",
+   "delta": 125751,
+   "vega": 257422
+  },
+  {
+   "bucket": "6M",
+   "delta": 167668,
+   "vega": 343229
+  },
+  {
+   "bucket": "1Y",
+   "delta": 209585,
+   "vega": 429036
+  },
+  {
+   "bucket": "2Y",
+   "delta": 251503,
+   "vega": 514843
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-09-30",
+   "rate": 0.044465,
+   "amount": 3620000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2027-03-30",
+   "rate": 0.056634,
+   "amount": 3620000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-09-30",
+   "rate": 0.05556,
+   "amount": 3620000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-03-30",
+   "rate": 0.037229,
+   "amount": 3620000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-09-30",
+   "rate": 0.051575,
+   "amount": 3620000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-03-30",
+   "rate": 0.057541,
+   "amount": 3620000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-09-30",
+   "rate": 0.024101,
+   "amount": 3620000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-03-30",
+   "rate": 0.042015,
+   "amount": 3620000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-09-30",
+   "rate": 0.0409,
+   "amount": 3620000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-03-30",
+   "rate": 0.042276,
+   "amount": 3620000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-09-30",
+   "rate": 0.021456,
+   "amount": 3620000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2032-03-30",
+   "rate": 0.050367,
+   "amount": 3620000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2032-09-30",
+   "rate": 0.053122,
+   "amount": 3620000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2033-03-30",
+   "rate": 0.033518,
+   "amount": 3620000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2033-09-30",
+   "rate": 0.032682,
+   "amount": 3620000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2034-03-30",
+   "rate": 0.056917,
+   "amount": 3620000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2034-09-30",
+   "rate": 0.046535,
+   "amount": 3620000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2035-03-30",
+   "rate": 0.033796,
+   "amount": 3620000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2035-09-30",
+   "rate": 0.043584,
+   "amount": 3620000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2036-03-30",
+   "rate": 0.051849,
+   "amount": 3620000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2036-09-30",
+   "rate": 0.057456,
+   "amount": 3620000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2037-03-30",
+   "rate": 0.04822,
+   "amount": 3620000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2037-09-30",
+   "rate": 0.035242,
+   "amount": 3620000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2038-02-01",
+   "rate": 0.03826,
+   "amount": 3620000.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -39488
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 77649
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 45872
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -158250
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 6677
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -150266
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 63552
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -288346
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -237013
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 238488
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -59844
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -124488
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -111830
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 145522
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -33595
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -90752
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -92942
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 60682
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -159273
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 67471
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-03-26",
+  "executionTimestamp": "2026-03-26T15:07:22.502Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "J. Weiss",
+  "salesperson": null,
+  "orderId": "ORD-ADB9839D6C"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-03-26T10:21:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2026-03-26T10:21:00Z",
+  "lastModifiedAt": "2026-03-26T10:21:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT929000211",
+  "matched": "2026-03-26 15:54",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83ADB9839D6C2C4C8D1DF0",
+  "upi": "QZT77JKCTCI3",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "ALDEGB33XXX",
+  "ssiId": "SSI-CHF-D06EAF",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -4142972,
+  "cleanPv": -4142972.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQ-LUMN",
+   "EQV-LUMN",
+   "DIV-LUMN"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 10096
+  }
+ }
+}

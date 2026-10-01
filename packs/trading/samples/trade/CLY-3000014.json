@@ -1,0 +1,326 @@
+{
+ "tradeId": "CLY-3000014",
+ "sourceSystem": "Calypso",
+ "sourceTradeId": "3000014",
+ "productType": "CDS_TRANCHE",
+ "productName": "Index tranche",
+ "assetClass": "Credit",
+ "family": "cds",
+ "status": "Live",
+ "direction": "Buy protection",
+ "tradeDate": "2024-10-17",
+ "effectiveDate": "2024-10-21",
+ "maturityDate": "2032-11-24",
+ "currency": "JPY",
+ "notional": 202000000.0,
+ "mtm": 1564064,
+ "mtmCurrency": "USD",
+ "pnl1d": 38351,
+ "counterparty": {
+  "id": "CP-CORAL",
+  "name": "Coral Bay Municipal Authority"
+ },
+ "nettingSet": "NS-CORAL-NY",
+ "book": "BOOK-CREDIT-3",
+ "trader": "TRDR-DWHITFIELD",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-RHEINTAL",
+ "creditCurve": "CDS-RHEINTAL",
+ "discountCurve": "CRV-JPY-OIS",
+ "correlation": "CORR-EU-EQ",
+ "terms": {
+  "index": "CDX.NA.IG S47",
+  "attachment": "0.07",
+  "detachment": "1",
+  "protection": "Sold"
+ },
+ "risk": {
+  "cs01": 125218,
+  "jtd": -121200000
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 5963,
+   "jtd": -5771429
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 11926,
+   "jtd": -11542857
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 17888,
+   "jtd": -17314286
+  },
+  {
+   "bucket": "3Y",
+   "cs01": 23851,
+   "jtd": -23085714
+  },
+  {
+   "bucket": "5Y",
+   "cs01": 29814,
+   "jtd": -28857143
+  },
+  {
+   "bucket": "7Y",
+   "cs01": 35777,
+   "jtd": -34628571
+  }
+ ],
+ "schedule": [
+  {
+   "payDate": "2025-10-21",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -581430.81,
+   "pv": 0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2026-10-21",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -508474.75,
+   "pv": -493220.51,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2027-10-21",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -415434.67,
+   "pv": -402971.63,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2028-10-21",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -445913.4,
+   "pv": -432536.0,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2029-10-21",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -580115.55,
+   "pv": -562712.08,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2030-10-21",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -496659.71,
+   "pv": -481759.92,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2031-10-21",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -605122.46,
+   "pv": -586968.79,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2032-10-21",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -491564.74,
+   "pv": -476817.8,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2032-11-24",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -518521.62,
+   "pv": -502965.97,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 104779
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 87041
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 74140
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -19107
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 37145
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 47232
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -47632
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 31521
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -62460
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 6980
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 75513
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 32224
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -7042
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 13233
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -68206
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -39116
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 44001
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -78673
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 98802
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 86829
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-10-17",
+  "executionTimestamp": "2024-10-17T09:37:14.763Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "D. Whitfield",
+  "salesperson": null,
+  "orderId": "ORD-0C709182CE"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-10-17T10:26:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2024-10-17T10:26:00Z",
+  "lastModifiedAt": "2024-10-17T10:26:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA653181717",
+  "matched": "2024-10-17 11:37",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20960C709182CE2CFF219A4F",
+  "upi": "QZDTBHN24KLI",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "CORAGB33XXX",
+  "ssiId": "SSI-JPY-C31AC7",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1564064,
+  "cleanPv": 1564064.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CDS-RHEINTAL",
+   "CRV-JPY-OIS",
+   "CORR-EU-EQ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 5148
+  }
+ }
+}

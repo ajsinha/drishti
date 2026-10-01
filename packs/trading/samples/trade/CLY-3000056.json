@@ -1,0 +1,239 @@
+{
+ "tradeId": "CLY-3000056",
+ "sourceSystem": "Calypso",
+ "sourceTradeId": "3000056",
+ "productType": "REVOLVER",
+ "productName": "Revolving credit facility",
+ "assetClass": "Credit",
+ "family": "loan",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2025-11-04",
+ "effectiveDate": "2025-11-06",
+ "maturityDate": "2035-09-28",
+ "currency": "GBP",
+ "notional": 127000000.0,
+ "mtm": 1256638,
+ "mtmCurrency": "USD",
+ "pnl1d": -33836,
+ "counterparty": {
+  "id": "CP-AURORA",
+  "name": "Aurora Sovereign Wealth Fund"
+ },
+ "nettingSet": "NS-AURORA-NY",
+ "book": "BOOK-CREDIT-2",
+ "trader": "TRDR-CDUBOIS",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-NOVATEK",
+ "discountCurve": "CRV-GBP-OIS",
+ "forwardCurve": "CRV-GBP-PROJ",
+ "creditCurve": "CDS-NOVATEK",
+ "terms": {
+  "commitment": 286938881.0,
+  "drawn": 0.327675,
+  "commitmentFee": 36.0,
+  "margin": 124.2
+ },
+ "risk": {
+  "cs01": -103779
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": -3706
+  },
+  {
+   "bucket": "1Y",
+   "cs01": -7413
+  },
+  {
+   "bucket": "2Y",
+   "cs01": -11119
+  },
+  {
+   "bucket": "3Y",
+   "cs01": -14826
+  },
+  {
+   "bucket": "5Y",
+   "cs01": -18532
+  },
+  {
+   "bucket": "7Y",
+   "cs01": -22238
+  },
+  {
+   "bucket": "10Y",
+   "cs01": -25945
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 19892
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 24379
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 46214
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -21792
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -20677
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -11936
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -11917
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 43787
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 38481
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 7782
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 19392
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 33226
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 32460
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 4942
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -17580
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 10778
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 8602
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 2820
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -3154
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 15518
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-11-04",
+  "executionTimestamp": "2025-11-04T11:43:39.415Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "C. Dubois",
+  "salesperson": null,
+  "orderId": "ORD-23D00BC5D7"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-11-04T10:13:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2025-11-04T10:13:00Z",
+  "lastModifiedAt": "2025-11-04T10:13:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA850527209",
+  "matched": "2025-11-04 16:29",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209623D00BC5D7B9057F71E5",
+  "upi": "QZYQX44T35EL",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Barclays Bank plc",
+  "ourAgentBic": "BARCGB22XXX",
+  "theirAgentBic": "AUROGB33XXX",
+  "ssiId": "SSI-GBP-79DAAE",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1256638,
+  "cleanPv": 1256638.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-GBP-OIS",
+   "CRV-GBP-PROJ",
+   "CDS-NOVATEK"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 3783
+  }
+ }
+}

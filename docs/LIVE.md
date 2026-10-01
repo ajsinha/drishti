@@ -26,7 +26,7 @@ If you only want to *use* live views, read the first section and stop. Operators
 
 ## What you see in the browser
 
-1. Open a live entity, for example type `TRD T-10452 <GO>` (a commodity forward in the `trading` pack's samples).
+1. Open a live entity, for example type `TRD END-1000008 <GO>` (a commodity forward in the `trading` pack's samples).
 2. The top bar shows **`Live, p99 N ms`**. N is the 99th percentile, over the last 30 seconds and across the
    whole server, of the time from a source tick to a finished frame. Single-digit milliseconds is normal.
 3. The `MTM (USD)` figure in the header strip changes every few hundred milliseconds and flashes when it does.
@@ -54,7 +54,7 @@ header (see [API_GUIDE.md](API_GUIDE.md)).
 ### 1. Stream one view from the server
 
 ```bash
-curl -N http://localhost:18480/api/v1/views/trade/T-10452/stream
+curl -N http://localhost:18480/api/v1/views/trade/END-1000008/stream
 ```
 
 You should see one `view` event, then a `frame` event about every 400 ms (the demo source's tick rate).
@@ -63,7 +63,7 @@ Abbreviated:
 ```text
 event:view
 id:0
-data:{"ref":{"kind":"trade","id":"T-10452"},"mnemonic":"TRD","title":{"pill":"Commodity · Commodity forward","id":"T-10452","with":{"text":"Harbor Point Bank",…}},"strip":[{"label":"Notional","text":"USD 231,000,000","path":"$.currency"},…,{"label":"MTM (USD)","text":"+2,148,146","tone":"pos","emphasis":true,"path":"$.mtm"}],"panels":[…],"provenance":{"layout":"Sutra cmd-forward v1 + inference","fingerprint":"205d…ad0d","source":"endur-comm","generation":29,"fetchedAt":"2026-10-01T01:01:40.877Z","live":true,"businessDate":null},"timings":{"fetch":0.09,"layout":0.13,"links":0.21,"bind":0.15,"total":0.57}}
+data:{"ref":{"kind":"trade","id":"END-1000008"},"mnemonic":"TRD","title":{"pill":"Commodity · Commodity forward","id":"END-1000008","with":{"text":"Harbor Point Bank",…}},"strip":[{"label":"Notional","text":"USD 231,000,000","path":"$.currency"},…,{"label":"MTM (USD)","text":"+2,148,146","tone":"pos","emphasis":true,"path":"$.mtm"}],"panels":[…],"provenance":{"layout":"Sutra cmd-forward v1 + inference","fingerprint":"205d…ad0d","source":"endur-comm","generation":29,"fetchedAt":"2026-10-01T01:01:40.877Z","live":true,"businessDate":null},"timings":{"fetch":0.09,"layout":0.13,"links":0.21,"bind":0.15,"total":0.57}}
 
 event:frame
 id:1
@@ -75,7 +75,7 @@ data:{"seq":2,"generation":31,"patches":[{"op":"strip","index":4,"cell":{"label"
 ```
 
 Press Ctrl+C to stop. The server notices the closed connection, releases the stream's slot and, if you were
-the last viewer of T-10452, closes the source subscription.
+the last viewer of END-1000008, closes the source subscription.
 
 When nothing changes for 15 seconds you see a heartbeat line instead. It is an SSE comment, which clients ignore:
 
@@ -86,7 +86,7 @@ When nothing changes for 15 seconds you see a heartbeat line instead. It is an S
 ### 2. Ask for a past business date
 
 ```bash
-curl -N "http://localhost:18480/api/v1/views/trade/T-10452/stream?asOf=2026-09-28"
+curl -N "http://localhost:18480/api/v1/views/trade/END-1000008/stream?asOf=2026-09-28"
 ```
 
 You should see exactly one `view` event whose provenance says `"live":false,"businessDate":"2026-09-28"`,
@@ -121,23 +121,23 @@ The web console does not let each panel open its own stream. Each browser tab op
 console, which relays the server's streams and turns panel patches into ready HTML:
 
 ```bash
-curl -N "http://localhost:17480/api/channel?s=view:trade/T-10452&s=alerts"
+curl -N "http://localhost:17480/api/channel?s=view:trade/END-1000008&s=alerts"
 ```
 
 (With console sign-in on, add your session cookie: `-b "drishti_session=…"`.) You should see:
 
 ```text
 event: channel
-data: {"ch": "", "d": {"id": "NavddrgbWaTX_LlT", "subs": ["view:trade/T-10452", "alerts"]}}
+data: {"ch": "", "d": {"id": "NavddrgbWaTX_LlT", "subs": ["view:trade/END-1000008", "alerts"]}}
 
 event: hello
 data: {"ch": "alerts", "d": {"user": "ash"}}
 
 event: view
-data: {"ch": "view:trade/T-10452", "d": {"generation": 18}}
+data: {"ch": "view:trade/END-1000008", "d": {"generation": 18}}
 
 event: frame
-data: {"ch": "view:trade/T-10452", "d": {"seq": 1, "generation": 19, "patches": [{"op": "strip", "index": 4, "cell": {"label": "MTM (USD)", "text": "+2,110,140", …}}, {"op": "panel", "panel": {"id": "built", "kind": "provenance"}, "html": "<section class=…"}, …]}}
+data: {"ch": "view:trade/END-1000008", "d": {"seq": 1, "generation": 19, "patches": [{"op": "strip", "index": 4, "cell": {"label": "MTM (USD)", "text": "+2,110,140", …}}, {"op": "panel", "panel": {"id": "built", "kind": "provenance"}, "html": "<section class=…"}, …]}}
 ```
 
 Every event says which subscription it belongs to (`ch`). The first `channel` event carries the channel id.
@@ -190,7 +190,7 @@ With security off and no `X-Drishti-User` header the user is `anonymous`; the co
 ```text
 event:alert
 id:12
-data:{"seq":12,"at":"2026-09-30T14:02:11.120Z","user":"ash","rule":"mtm-limit","kind":"trade","id":"T-10452","severity":"warn","message":"MTM above 2.1m","generation":31}
+data:{"seq":12,"at":"2026-09-30T14:02:11.120Z","user":"ash","rule":"mtm-limit","kind":"trade","id":"END-1000008","severity":"warn","message":"MTM above 2.1m","generation":31}
 ```
 
 The alerts stream does not count against `drishti.live.max-streams`.
@@ -213,10 +213,10 @@ exist, `DRS-1001` on the server; a kind you may not open, `DRS-5002`) arrives as
 console that cannot reach the server as `DRS-5003 backend unreachable: …`. For example:
 
 ```bash
-curl -sN --max-time 3 "http://localhost:17480/api/channel?s=view:trade/T-10452&s=view:trade/NOPE-1"
+curl -sN --max-time 3 "http://localhost:17480/api/channel?s=view:trade/END-1000008&s=view:trade/NOPE-1"
 ```
 
-You should see, among the frames of `T-10452`:
+You should see, among the frames of `END-1000008`:
 
 ```text
 event: gone
@@ -226,7 +226,7 @@ data: {"ch": "view:trade/NOPE-1", "d": {"code": "DRS-5003", "detail": "stream re
 To see the real reason, ask the server directly: `curl -s http://localhost:18480/api/v1/views/trade/NOPE-1/stream`
 answers `404` with `"code":"DRS-1001"` and `no source holds trade/NOPE-1`.
 
-`POST /api/channel/{id}` with `{"add": ["view:trade/T-10001"], "remove": ["view:trade/T-10452"]}` changes the
+`POST /api/channel/{id}` with `{"add": ["view:trade/MX-20000001"], "remove": ["view:trade/END-1000008"]}` changes the
 subscriptions of an open channel and answers `{"ok": true}`. A workspace uses it as its panes load one by one.
 It answers `404` with `DRS-5001` "no such channel: open a new one" when the channel has closed or belongs to
 another user. Removing a subscription closes its upstream stream on the server; adding one that is already
@@ -255,12 +255,12 @@ SourcePlugin.subscribe ─► TopicHub topic (one per entity, one source subscri
             channel.js → live.js: strip cells updated in place, panels swapped, charts moved; changes flash
 ```
 
-Step by step, for one tick of T-10452:
+Step by step, for one tick of END-1000008:
 
 1. The demo source moves the trade's price one random-walk step and raises its generation (29 → 30).
 2. The entity's **topic** in `TopicHub` receives the new document. If no frame went out in the last 50 ms it
    is delivered at once; otherwise it waits in a one-slot "latest wins" holder until the frame is due.
-3. Each **ViewStream** watching T-10452 rebuilds the view from the new document and diffs it against the
+3. Each **ViewStream** watching END-1000008 rebuilds the view from the new document and diffs it against the
    previous ViewModel. The rebuild re-evaluates the Sutra's `match` (cheap) and takes the effective layout from
    the layout cache, so inference does not run again unless the document's shape changed or a Sutra was
    reloaded. Here only the MTM cell, the provenance panel and the provenance changed, so the frame has three
@@ -277,7 +277,7 @@ Step by step, for one tick of T-10452:
 Browsers open at most six connections to one site over HTTP/1.1. A stream per view and one for the alerts bell
 used them up with three tabs open (or a workspace and a tab), and every other request, the command line's
 suggestions included, then waited forever: the page looked alive but did nothing. So each tab opens **one**
-channel (`/api/channel?s=view:trade/T-1&s=alerts`), a workspace's panes share their page's channel, and
+channel (`/api/channel?s=view:trade/MX-20000001&s=alerts`), a workspace's panes share their page's channel, and
 subscriptions that arrive later are added to the open channel (`POST /api/channel/{id}`) instead of reconnecting.
 A tab hidden for 10 s gives its connection back and reconnects, repainting from fresh data, when shown.
 
@@ -292,7 +292,7 @@ guards that no page opens its own `EventSource`.
 single call, `subscribe(key, handlers)`, which returns a function that unsubscribes:
 
 ```js
-var off = window.DrishtiChannel.subscribe('view:trade/T-10452', {
+var off = window.DrishtiChannel.subscribe('view:trade/END-1000008', {
   view:   function (d) { /* first event: d.generation */ },
   frame:  function (f) { /* f.patches, f.p99Ms */ },
   gone:   function (d) { /* d.code, d.detail: this subscription ended */ },
@@ -377,11 +377,11 @@ off; `X-Drishti-User` says whose monitor it is (with security on, your token doe
    ```bash
    curl -s -X PUT http://localhost:18480/api/v1/me/monitors/rates-desk \
         -H 'Content-Type: application/json' -H 'X-Drishti-User: ash' \
-        -d '{"entities": [{"kind": "trade", "id": "T-10001"}, {"kind": "trade", "id": "T-10452"},
+        -d '{"entities": [{"kind": "trade", "id": "MX-20000001"}, {"kind": "trade", "id": "END-1000008"},
                           {"kind": "netting-set", "id": "NS-MERIDIAN-RE-NY"}]}'
    ```
 
-   You should see the saved list echoed back: `{"entities":[{"kind":"trade","id":"T-10001"},…]}`. Between 1 and 50
+   You should see the saved list echoed back: `{"entities":[{"kind":"trade","id":"MX-20000001"},…]}`. Between 1 and 50
    entities are allowed (`DRS-5001 a monitor has 1 to 50 entities` otherwise), and each must be a kind you may open.
 2. Read its rows once: `curl -s -H 'X-Drishti-User: ash' http://localhost:18480/api/v1/me/monitors/rates-desk`.
    You should see one object per entity with `ref`, `mnemonic`, `title`, `strip` and `live`; an entity that cannot
@@ -393,17 +393,17 @@ off; `X-Drishti-User` says whose monitor it is (with security on, your token doe
    ```
 
    You should see `event:hello` with `{"rows":3}`, then `event:row` events such as
-   `{"kind":"trade","id":"T-10452","patches":[{"op":"strip","index":4,"cell":{"label":"MTM (USD)","text":"+2,104,880",…}}],"p99Ms":1.2}`.
+   `{"kind":"trade","id":"END-1000008","patches":[{"op":"strip","index":4,"cell":{"label":"MTM (USD)","text":"+2,104,880",…}}],"p99Ms":1.2}`.
    Only strip patches are sent. The stream counts as one live stream against `drishti.live.max-streams`, however
    many rows it has.
 4. In the console, the monitor page subscribes with `monitor:rates-desk` on the tab's channel.
 
 ### Worked example: an alert that fires
 
-1. Look at the value you want to watch. `T-10452`'s MTM moves around 2.1 million:
+1. Look at the value you want to watch. `END-1000008`'s MTM moves around 2.1 million:
 
    ```bash
-   curl -s http://localhost:18480/api/v1/views/trade/T-10452 | python3 -c "
+   curl -s http://localhost:18480/api/v1/views/trade/END-1000008 | python3 -c "
    import json, sys; print([c['text'] for c in json.load(sys.stdin)['strip'] if 'MTM' in c['label']])"
    ```
 
@@ -421,7 +421,7 @@ off; `X-Drishti-User` says whose monitor it is (with security on, your token doe
    ```bash
    curl -s -X PUT http://localhost:18480/api/v1/me/alerts/rules/mtm-above-2-1m \
         -H 'Content-Type: application/json' -H 'X-Drishti-User: ash' \
-        -d '{"kind": "trade", "id": "T-10452", "when": "$.mtm > 2100000", "severity": "warn",
+        -d '{"kind": "trade", "id": "END-1000008", "when": "$.mtm > 2100000", "severity": "warn",
              "message": "${$.tradeId}: MTM ${fmt($.mtm, '"'"'signed0'"'"')}"}'
    ```
 
@@ -434,7 +434,7 @@ off; `X-Drishti-User` says whose monitor it is (with security on, your token doe
    ```text
    event:alert
    id:1
-   data:{"seq":1,"at":"2026-10-01T01:50:12.301Z","user":"ash","rule":"mtm-above-2-1m","kind":"trade","id":"T-10452","severity":"warn","message":"T-10452: MTM +2,104,880","generation":41}
+   data:{"seq":1,"at":"2026-10-01T01:50:12.301Z","user":"ash","rule":"mtm-above-2-1m","kind":"trade","id":"END-1000008","severity":"warn","message":"END-1000008: MTM +2,104,880","generation":41}
    ```
 
    It does not fire again while MTM stays above 2.1 m. When MTM falls below and rises above again, it fires again.
@@ -449,10 +449,10 @@ banking packs enabled, no pack suggests rules for `trade`, so `GET /api/v1/me/al
 
 A rule is saved with `PUT /api/v1/me/alerts/rules/{name}`; it needs `kind`, `id` and `when`, and takes an
 optional `severity` (`info`, `warn` (default) or `critical`), `message` and `enabled`. For example, to be
-told when T-10452's MTM rises above 2.1 million:
+told when END-1000008's MTM rises above 2.1 million:
 
 ```json
-{"kind": "trade", "id": "T-10452", "when": "$.mtm > 2100000", "severity": "warn",
+{"kind": "trade", "id": "END-1000008", "when": "$.mtm > 2100000", "severity": "warn",
  "message": "MTM ${fmt($.mtm, 'signed0')}"}
 ```
 
@@ -555,11 +555,11 @@ connectors:
    used for deletes):
 
    ```bash
-   echo 'T-90001|{"tradeId":"T-90001","productType":"IRS_FIXFLOAT","productName":"Interest rate swap (fixed/float)","assetClass":"Rates","status":"Live","currency":"USD","notional":50000000,"mtm":12500,"counterparty":{"id":"CP-MERIDIAN-RE","name":"Meridian Reinsurance Ltd"}}' \
+   echo 'MX-29000001|{"tradeId":"MX-29000001","productType":"IRS_FIXFLOAT","productName":"Interest rate swap (fixed/float)","assetClass":"Rates","status":"Live","currency":"USD","notional":50000000,"mtm":12500,"counterparty":{"id":"CP-MERIDIAN-RE","name":"Meridian Reinsurance Ltd"}}' \
      | kafka-console-producer.sh --bootstrap-server localhost:9092 --topic drishti.trading.trades \
          --property parse.key=true --property key.separator='|'
    ```
-4. Open `TRD T-90001 <GO>` (or `curl -N http://localhost:18480/api/v1/views/trade/T-90001/stream`). The view uses
+4. Open `TRD MX-29000001 <GO>` (or `curl -N http://localhost:18480/api/v1/views/trade/MX-29000001/stream`). The view uses
    the `irs-fixfloat` Sutra (its `where` matches), `How this view was built` says `trading-stream, gen <offset>`
    (the generation of a Kafka document is its offset), and the top bar says `Live`. This small document lacks
    the legs, schedule and risk the Sutra reads, so those panels say *No data available*; a real feed carries
@@ -568,12 +568,12 @@ connectors:
 5. Publish the same trade again with `"mtm":13750`. Within a frame (50 ms) the stream sends
    `event:frame` with a `strip` patch for `MTM (USD)` (`+13,750`) and the provenance's new generation, and the
    cell flashes in the browser.
-6. Publish `T-90001|` with an empty value (a *tombstone*; with `kafka-console-producer` use
-   `--property null.marker=NULL` and send `T-90001|NULL`): the trade is deleted from the connector, and a new view
+6. Publish `MX-29000001|` with an empty value (a *tombstone*; with `kafka-console-producer` use
+   `--property null.marker=NULL` and send `MX-29000001|NULL`): the trade is deleted from the connector, and a new view
    of it is `DRS-1001`.
 
 Other shapes: without `kind`/`id-field` the connector expects **envelopes**,
-`{"kind": "trade", "id": "T-1", "doc": {…}}`, and a tombstone's key is `kind/id`. `mode: ticks` keeps nothing in
+`{"kind": "trade", "id": "MX-20000001", "doc": {…}}`, and a tombstone's key is `kind/id`. `mode: ticks` keeps nothing in
 memory and only drives the ticks of open views while a store (Delta Lake, a database) serves the documents: such a
 view is live although its document came from the store, because a live connector declares that it pushes the kind
 (`SourcePlugin.pushes`), and it subscribes there.

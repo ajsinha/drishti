@@ -120,9 +120,9 @@ Every view, live or not, is built by `ViewPipeline` (`drishti-engine`) in the sa
 immutable inputs, so they are safe to run concurrently and their results cache well.
 
 ```
- "TRD T-10001 <GO>"
+ "TRD MX-20000001 <GO>"
         │
- ① Command    CommandParser + Mnemonics → EntityRef(kind=trade, id=T-10001)               ~µs
+ ① Command    CommandParser + Mnemonics → EntityRef(kind=trade, id=MX-20000001)               ~µs
  ② Fetch      SourceRouter → EntityDocument (DataNode + Provenance)                       I/O, virtual thread,
                                                                                           drishti.sources.fetch-timeout (2s)
  ③ Match      SutraMatcher → highest-priority Sutra of the kind whose `where` holds (or none)   ~µs
@@ -158,7 +158,7 @@ Notes on each stage, checked against the code:
 This follows a single command from the keyboard to the screen and then through one live tick. The outputs are
 real, captured from a running server with the `trading` pack enabled (security off, so no token is needed).
 
-**1. The user types `TRD T-10001` and presses Enter.** While typing, `command.js` asks the console for
+**1. The user types `TRD MX-20000001` and presses Enter.** While typing, `command.js` asks the console for
 suggestions (debounced 60 ms, stale requests cancelled); the console forwards to the server:
 
 ```bash
@@ -166,31 +166,31 @@ curl -s 'http://localhost:18480/api/v1/command/suggest?q=TRD%20T-1000&limit=2'
 ```
 
 ```json
-[{"type":"entity","mnemonic":"TRD","kind":"trade","id":"T-10001","title":"T-10001",
-  "subtitle":"Trade · Interest rate swap (fixed/float) · Meridian Reinsurance Ltd · AUD 242m","complete":"TRD T-10001"}, …]
+[{"type":"entity","mnemonic":"TRD","kind":"trade","id":"MX-20000001","title":"MX-20000001",
+  "subtitle":"Trade · Interest rate swap (fixed/float) · Meridian Reinsurance Ltd · AUD 242m","complete":"TRD MX-20000001"}, …]
 ```
 
-**2. The console resolves the command.** The form goes to the console's `GET /go?q=TRD T-10001`. The console
-calls the server's `POST /api/v1/command` with `{"text": "TRD T-10001"}`, receives `{"ref": {"kind": "trade",
-"id": "T-10001"}, "mnemonic": "TRD"}`, and redirects the browser to `/v/trade/T-10001`.
+**2. The console resolves the command.** The form goes to the console's `GET /go?q=TRD MX-20000001`. The console
+calls the server's `POST /api/v1/command` with `{"text": "TRD MX-20000001"}`, receives `{"ref": {"kind": "trade",
+"id": "MX-20000001"}, "mnemonic": "TRD"}`, and redirects the browser to `/v/trade/MX-20000001`.
 
-**3. The console renders the first paint.** For `/v/trade/T-10001` the console calls
-`GET /api/v1/views/trade/T-10001`. Each call carries `X-Drishti-User`, `Authorization: Bearer <token>` (when sign-in
+**3. The console renders the first paint.** For `/v/trade/MX-20000001` the console calls
+`GET /api/v1/views/trade/MX-20000001`. Each call carries `X-Drishti-User`, `Authorization: Bearer <token>` (when sign-in
 is on; the console mints a fresh HS256 token for every call) and `X-Drishti-As-Of` when a business date is picked.
 On the server, `TokenFilter` turns the token into a `Principal`, `Entitlements` checks the role and pack may open
 `trade`, `AsOfResolver` resolves the business date, and `ViewPipeline.view` runs the stages of section 4:
 
 ```bash
-curl -s http://localhost:18480/api/v1/views/trade/T-10001 | python3 -m json.tool | head -40
+curl -s http://localhost:18480/api/v1/views/trade/MX-20000001 | python3 -m json.tool | head -40
 ```
 
 Abbreviated:
 
 ```json
 {
-  "ref": {"kind": "trade", "id": "T-10001"},
+  "ref": {"kind": "trade", "id": "MX-20000001"},
   "mnemonic": "TRD",
-  "title": {"pill": "Rates · Interest rate swap (fixed/float)", "id": "T-10001",
+  "title": {"pill": "Rates · Interest rate swap (fixed/float)", "id": "MX-20000001",
             "with": {"text": "Meridian Reinsurance Ltd",
                      "link": {"kind": "counterparty", "id": "CP-MERIDIAN-RE", "mnemonic": "CPTY"}}},
   "strip": [{"label": "Notional", "text": "AUD 242,000,000", "path": "$.currency"},
@@ -217,19 +217,19 @@ Sutra did not say ("+ inference"); the counterparty, netting set, book and trade
 badges from the pack's `badges:` expressions. The console renders the panels with the Jinja macros in
 `web/templates/_macros/panels.html`, main-area panels on the left and `area: right` panels on the right.
 
-**4. The page goes live.** The page does not open its own stream. `live.js` subscribes `view:trade/T-10001` on the
-tab's single channel (`channel.js` → console `GET /api/channel?s=view:trade/T-10001&s=alerts`). The console opens
+**4. The page goes live.** The page does not open its own stream. `live.js` subscribes `view:trade/MX-20000001` on the
+tab's single channel (`channel.js` → console `GET /api/channel?s=view:trade/MX-20000001&s=alerts`). The console opens
 the server stream for that subscription and relays its events, each wrapped with its subscription
-(`{"ch": "view:trade/T-10001", "d": …}`). Directly against the server:
+(`{"ch": "view:trade/MX-20000001", "d": …}`). Directly against the server:
 
 ```bash
-curl -sN http://localhost:18480/api/v1/views/trade/T-10001/stream
+curl -sN http://localhost:18480/api/v1/views/trade/MX-20000001/stream
 ```
 
 ```
 event:view
 id:0
-data:{"ref":{"kind":"trade","id":"T-10001"},"mnemonic":"TRD","title":{…},"strip":[…],"panels":[…],…}
+data:{"ref":{"kind":"trade","id":"MX-20000001"},"mnemonic":"TRD","title":{…},"strip":[…],"panels":[…],…}
 
 event:frame
 id:1
@@ -368,9 +368,9 @@ layout as a Sutra to start from (`GET /api/v1/studio/inferred/{kind}/{id}`).
 As in the Bloomberg terminal, the command line suggests while the user types, in a dropdown under the input:
 
 ```
-┌ TRD T-1000█ ───────────────────────────────────────────────────────────────────────┐
-│ TRD  T-10001   Trade · Interest rate swap (fixed/float) · Meridian Reinsurance Ltd │  ← highlighted
-│ TRD  T-10002   Trade · Interest rate swap (fixed/float) · Halcyon Shipping plc     │
+┌ TRD MX-2000█ ───────────────────────────────────────────────────────────────────────┐
+│ TRD  MX-20000001   Trade · Interest rate swap (fixed/float) · Meridian Reinsurance Ltd │  ← highlighted
+│ TRD  MX-20000002   Trade · Interest rate swap (fixed/float) · Halcyon Shipping plc     │
 └────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -418,7 +418,7 @@ As in the Bloomberg terminal, the command line suggests while the user types, in
   atomically before any work. Over the cap the request is refused with `DRS-5001` ("too many live streams on this server").
 - **One channel per browser tab.** Browsers allow six connections per site over HTTP/1.1, so the console never lets
   a page open its own `EventSource`. Views, the alerts bell, monitors and every workspace pane subscribe on the tab's
-  single channel (`/api/channel?s=view:trade/T-1&s=alerts&s=monitor:<name>`, at most 32 subscriptions); later
+  single channel (`/api/channel?s=view:trade/MX-20000001&s=alerts&s=monitor:<name>`, at most 32 subscriptions); later
   subscriptions are added to the open channel with `POST /api/channel/{id}`. A tab hidden for 10 s gives its
   connection back and repaints from fresh data when shown. The console closes each upstream server stream within
   seconds of the tab going away. Details in [LIVE.md](LIVE.md).

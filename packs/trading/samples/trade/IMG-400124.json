@@ -1,0 +1,367 @@
+{
+ "tradeId": "IMG-400124",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400124",
+ "productType": "CONVERTIBLE_BOND",
+ "productName": "Convertible bond",
+ "assetClass": "Equity",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2024-08-16",
+ "effectiveDate": "2024-08-19",
+ "maturityDate": "2033-09-08",
+ "currency": "EUR",
+ "notional": 124000000.0,
+ "mtm": 1796698,
+ "mtmCurrency": "USD",
+ "pnl1d": -89342,
+ "counterparty": {
+  "id": "CP-MERIDIAN",
+  "name": "Meridian Life Assurance"
+ },
+ "nettingSet": "NS-MERIDIAN-LDN",
+ "book": "BOOK-EQD-3",
+ "trader": "TRDR-PLINDQVIST",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingEquity": "EQ-RHNB",
+ "equityVolSurface": "EQV-RHNB",
+ "creditCurve": "CDS-SOLARIS",
+ "discountCurve": "CRV-EUR-OIS",
+ "terms": {
+  "coupon": 0.014053,
+  "conversionRatio": 26.27,
+  "conversionPrice": 297.69
+ },
+ "risk": {
+  "delta": 669837,
+  "cs01": 106038,
+  "vega": 866166
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 31897,
+   "cs01": 5049,
+   "vega": 41246
+  },
+  {
+   "bucket": "1M",
+   "delta": 63794,
+   "cs01": 10099,
+   "vega": 82492
+  },
+  {
+   "bucket": "3M",
+   "delta": 95691,
+   "cs01": 15148,
+   "vega": 123738
+  },
+  {
+   "bucket": "6M",
+   "delta": 127588,
+   "cs01": 20198,
+   "vega": 164984
+  },
+  {
+   "bucket": "1Y",
+   "delta": 159485,
+   "cs01": 25247,
+   "vega": 206230
+  },
+  {
+   "bucket": "2Y",
+   "delta": 191382,
+   "cs01": 30297,
+   "vega": 247476
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2025-02-19",
+   "rate": 0.059819,
+   "amount": 2480000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2025-08-19",
+   "rate": 0.042317,
+   "amount": 2480000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-02-19",
+   "rate": 0.030998,
+   "amount": 2480000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-08-19",
+   "rate": 0.029227,
+   "amount": 2480000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2027-02-19",
+   "rate": 0.041984,
+   "amount": 2480000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-08-19",
+   "rate": 0.057946,
+   "amount": 2480000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-02-19",
+   "rate": 0.020433,
+   "amount": 2480000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-08-19",
+   "rate": 0.03059,
+   "amount": 2480000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-02-19",
+   "rate": 0.038122,
+   "amount": 2480000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-08-19",
+   "rate": 0.02124,
+   "amount": 2480000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-02-19",
+   "rate": 0.028516,
+   "amount": 2480000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-08-19",
+   "rate": 0.055019,
+   "amount": 2480000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-02-19",
+   "rate": 0.05181,
+   "amount": 2480000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-08-19",
+   "rate": 0.049566,
+   "amount": 2480000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2032-02-19",
+   "rate": 0.023307,
+   "amount": 2480000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2032-08-19",
+   "rate": 0.042374,
+   "amount": 2480000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2033-02-19",
+   "rate": 0.049556,
+   "amount": 2480000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2033-08-19",
+   "rate": 0.052622,
+   "amount": 2480000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2033-09-08",
+   "rate": 0.02745,
+   "amount": 2480000.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 4,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -31869
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -16160
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 47852
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -77757
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 20930
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 3981
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -77893
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -43042
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 9804
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -32057
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 42356
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -73360
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 3251
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 6731
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 77704
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -35590
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 72164
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -90073
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -51263
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -9251
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-08-16",
+  "executionTimestamp": "2024-08-16T16:27:37.365Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "P. Lindqvist",
+  "salesperson": null,
+  "orderId": "ORD-84CFCB5B53"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-08-16T12:54:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2024-08-16T12:54:00Z",
+  "lastModifiedAt": "2024-08-16T12:54:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT262724519",
+  "matched": "2024-08-16 17:11",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q8384CFCB5B5311370F8C7A",
+  "upi": "QZPWBE2CX2WY",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "MERIGB33XXX",
+  "ssiId": "SSI-EUR-4D91C0",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1796698,
+  "cleanPv": 1796698.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQ-RHNB",
+   "EQV-RHNB",
+   "CDS-SOLARIS",
+   "CRV-EUR-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 4833
+  }
+ }
+}

@@ -1,0 +1,218 @@
+{
+ "tradeId": "MX-20000068",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000068",
+ "productType": "STIR_FUTURE",
+ "productName": "Short-term interest rate future",
+ "assetClass": "Rates",
+ "family": "future",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2026-09-21",
+ "effectiveDate": "2026-09-23",
+ "maturityDate": "2027-01-14",
+ "currency": "USD",
+ "notional": 12000000.0,
+ "mtm": -79707,
+ "mtmCurrency": "USD",
+ "pnl1d": 3523,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-RATES-3",
+ "trader": "TRDR-MOKAFOR",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-CME-1",
+ "forwardCurve": "CRV-USD-PROJ",
+ "terms": {
+  "contract": "ER3 Z6",
+  "lots": 1367,
+  "tradePrice": 95.912
+ },
+ "risk": {
+  "dv01": -326
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -109
+  },
+  {
+   "bucket": "6M",
+   "dv01": -217
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -439
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -2363
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -1530
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 7944
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 1598
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -2918
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -2886
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 1786
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 360
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -2532
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -1394
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -4116
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -135
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 3262
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 1768
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -1264
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 2662
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -2465
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -1715
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -1414
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-09-21",
+  "executionTimestamp": "2026-09-21T11:52:21.993Z",
+  "venue": "Bloomberg SEF",
+  "venueMic": "BSEF",
+  "executionType": "Electronic",
+  "trader": "M. Okafor",
+  "salesperson": null,
+  "orderId": "ORD-07DEAEEB23"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-09-21T10:23:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2026-09-21T10:23:00Z",
+  "lastModifiedAt": "2026-09-21T10:23:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA395142344",
+  "matched": "2026-09-21 16:45",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH8801458675",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209607DEAEEB236051DC4ACF",
+  "upi": "QZ9ZAUQGJGYU",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMUS33XXX",
+  "ssiId": "SSI-USD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -79707,
+  "cleanPv": -79707.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-USD-PROJ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

@@ -62,35 +62,35 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10707",
+   "tradeId": "BBG-60000107",
    "product": "Securities lending",
    "notional": 243000000.0,
    "maturity": "2027-01-15",
    "mtm": 2398191
   },
   {
-   "tradeId": "T-10718",
+   "tradeId": "BBG-60000118",
    "product": "Margin loan",
    "notional": 116000000.0,
    "maturity": "2027-01-25",
    "mtm": 697723
   },
   {
-   "tradeId": "T-10684",
+   "tradeId": "BBG-60000084",
    "product": "Repurchase agreement",
    "notional": 139000000.0,
    "maturity": "2026-10-27",
    "mtm": -422916
   },
   {
-   "tradeId": "T-10697",
+   "tradeId": "BBG-60000097",
    "product": "Buy / sell-back",
    "notional": 88000000.0,
    "maturity": "2027-01-13",
    "mtm": 119432
   },
   {
-   "tradeId": "T-10701",
+   "tradeId": "BBG-60000101",
    "product": "Buy / sell-back",
    "notional": 42000000.0,
    "maturity": "2027-02-23",

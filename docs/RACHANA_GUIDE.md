@@ -362,8 +362,8 @@ gene, and you should see `Known variants (1)` with `VRNT-TP53-R175H`.
 ## 3. Rachana-EL step by step
 
 Every `bind`, `rows`, `where` and `highlight` is a Rachana-EL expression. This section builds them up with
-before/after pairs against the swap `T-10001` (look at it with
-`curl -s http://localhost:18480/api/v1/entities/trade/T-10001/raw | python3 -m json.tool`).
+before/after pairs against the swap `MX-20000001` (look at it with
+`curl -s http://localhost:18480/api/v1/entities/trade/MX-20000001/raw | python3 -m json.tool`).
 
 ### Paths
 
@@ -390,7 +390,7 @@ Inside `rows:`, `each:` or a filter, `@` is the current element and `#index` its
 
 `[?condition]` keeps the elements of a list for which the condition holds, with `@` set to each.
 
-| Expression | Result for `T-10001` |
+| Expression | Result for `MX-20000001` |
 |---|---|
 | `size($.schedule)` | `35` |
 | `size($.schedule[?@.status != 'Settled'])` | `29` |
@@ -452,8 +452,8 @@ Two traps:
 
 ## 4. A trade view, built step by step
 
-Now a bigger layout: the swap `T-10001`. Open Studio on it
-(`http://localhost:17480/studio?kind=trade&id=T-10001`) and grow the Sutra one block at a time, previewing each.
+Now a bigger layout: the swap `MX-20000001`. Open Studio on it
+(`http://localhost:17480/studio?kind=trade&id=MX-20000001`) and grow the Sutra one block at a time, previewing each.
 
 ### 4.1 Identity, title and strip
 
@@ -482,7 +482,7 @@ strip:
 panels: []
 ```
 
-You should see `[Rates · Interest rate swap (fixed/float)] T-10001 with Meridian Reinsurance Ltd` and the strip
+You should see `[Rates · Interest rate swap (fixed/float)] MX-20000001 with Meridian Reinsurance Ltd` and the strip
 `Notional AUD 242,000,000 · Direction Receive fixed · Maturity 2032-06-25 · MTM (USD) +1,875,863 · 1-day P&L +126,986 ·
 DV01 (USD) −155,245 · Status Live · Book BOOK-RATES-3`. `with` and `Book` are links. `panels: []` is valid: a Sutra
 may have no panels.
@@ -668,7 +668,7 @@ match: { kind: trade, where: "$.productType == 'IRS_FIXFLOAT'", priority: 20 }
 match: { kind: trade, priority: 0 }
 ```
 
-`T-10001` is `Live`, so `irs-matured` does not hold; `swap-desk` does. A trade of another product falls to
+`MX-20000001` is `Live`, so `irs-matured` does not hold; `swap-desk` does. A trade of another product falls to
 `trade-fallback` (no `where` always holds). Without a fallback, it falls to the product's own pack Sutra if one
 matches, and to inference otherwise.
 

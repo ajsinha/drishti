@@ -7,70 +7,70 @@
  "dv01": -7212,
  "topTrades": [
   {
-   "tradeId": "T-10212",
+   "tradeId": "WSS-1500056",
    "product": "FX average-rate option",
    "notional": 218000000.0,
    "maturity": "2032-10-22",
    "mtm": -4103348
   },
   {
-   "tradeId": "T-10195",
+   "tradeId": "WSS-1500039",
    "product": "FX barrier option",
    "notional": 191000000.0,
    "maturity": "2029-10-22",
    "mtm": -2456557
   },
   {
-   "tradeId": "T-10202",
+   "tradeId": "WSS-1500046",
    "product": "FX double-barrier option",
    "notional": 138000000.0,
    "maturity": "2029-04-09",
    "mtm": -2103691
   },
   {
-   "tradeId": "T-10200",
+   "tradeId": "WSS-1500044",
    "product": "FX double-barrier option",
    "notional": 89000000.0,
    "maturity": "2030-08-22",
    "mtm": 2041598
   },
   {
-   "tradeId": "T-10197",
+   "tradeId": "WSS-1500041",
    "product": "FX barrier option",
    "notional": 202000000.0,
    "maturity": "2033-04-13",
    "mtm": 2035982
   },
   {
-   "tradeId": "T-10164",
+   "tradeId": "WSS-1500008",
    "product": "FX forward",
    "notional": 89000000.0,
    "maturity": "2026-10-07",
    "mtm": 1722945
   },
   {
-   "tradeId": "T-10167",
+   "tradeId": "WSS-1500011",
    "product": "FX forward",
    "notional": 114000000.0,
    "maturity": "2026-10-07",
    "mtm": -940839
   },
   {
-   "tradeId": "T-10217",
+   "tradeId": "WSS-1500061",
    "product": "FX target redemption forward",
    "notional": 177000000.0,
    "maturity": "2029-03-21",
    "mtm": -930931
   },
   {
-   "tradeId": "T-10215",
+   "tradeId": "WSS-1500059",
    "product": "FX average-rate option",
    "notional": 218000000.0,
    "maturity": "2037-03-09",
    "mtm": 920619
   },
   {
-   "tradeId": "T-10166",
+   "tradeId": "WSS-1500010",
    "product": "FX forward",
    "notional": 78000000.0,
    "maturity": "2027-03-22",

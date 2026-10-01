@@ -34,7 +34,7 @@ Drishti is a data viewer that you drive from the keyboard, like a Bloomberg term
 **command** and press Enter, and a full screen of figures, tables and charts appears:
 
 ```text
-TRD T-10001        a trade: an interest rate swap
+TRD MX-20000001        a trade: an interest rate swap
 NSET NS-SUMMIT-NY  a netting set: all trades with one counterparty under one agreement
 CUST CUST-100231   a retail bank customer
 GENE GENE-TP53     a gene
@@ -238,11 +238,11 @@ On the terminal page (`/t`), the command line is at the top. Below it is a list 
 or more per pack.
 
 1. Click in the command line (or press `/`).
-2. Type `TRD T-10001` and press **Enter**.
+2. Type `TRD MX-20000001` and press **Enter**.
 
 You should see a full view of an interest rate swap:
 
-- the **title line**: `Rates · Interest rate swap (fixed/float)`, the id `T-10001`, and `with Meridian Reinsurance Ltd`;
+- the **title line**: `Rates · Interest rate swap (fixed/float)`, the id `MX-20000001`, and `with Meridian Reinsurance Ltd`;
 - the **strip** of key figures: Notional `AUD 242,000,000`, Direction `Receive fixed`, Trade date, Maturity,
   **MTM (USD)** (highlighted), DV01, Status `Live`, Book `BOOK-RATES-3`;
 - **panels**: *Terms* (F2), *Legs* (one tab per leg), *Cashflows* (F3), *How this view was built*, a curve
@@ -260,7 +260,7 @@ Try these next:
 | `F9` | The raw JSON document on the right, with its source (`murex-rates`) and generation |
 | `F7` | The netting set `NS-MERIDIAN-RE-NY` this trade belongs to |
 | `Alt+←` | Back to the trade |
-| `F8` | *Impact of T-10001*: the netting set that depends on it, and the credit limit it rolls into |
+| `F8` | *Impact of MX-20000001*: the netting set that depends on it, and the credit limit it rolls into |
 | click `BOOK-RATES-3` in the strip | The book: its top trades, MTM and DV01 |
 
 ## Step 9 · Let the suggestions help you
@@ -268,10 +268,10 @@ Try these next:
 You rarely need to remember an identifier. Type slowly and watch the dropdown:
 
 1. Clear the command line and type `T`. You should see mnemonics such as `TRD` (Trade) and `TRDR` (Trader).
-2. Type `TRD T-101`. You should see trades whose ids start that way: `T-10100`, `T-10101`, …
+2. Type `TRD MX-2000010`. You should see trades whose ids start that way: `MX-20000100`, `MX-20000101`, …
 3. Press `↓` to highlight one, `Tab` to complete it, and `Enter` to open it.
 
-A bare identifier works too when its shape tells Drishti the kind: type `T-10001` and press Enter.
+A bare identifier works too when its shape tells Drishti the kind: type `MX-20000001` and press Enter.
 
 More to try, one from each kind of pack:
 
@@ -314,12 +314,12 @@ The full rules are in the [user guide](USER_GUIDE.md#search-by-value).
 The **Business date** box in the top bar says which day you are looking at. **Live** (green) means
 today, streaming.
 
-1. Open `TRD T-10001`.
+1. Open `TRD MX-20000001`.
 2. Click the date box and pick **29 September 2026** (any weekday in the last two weeks of September 2026
    works with the sample history from Step 5).
 3. The box turns amber, the **Live** dot goes out, and the footer says `as of 2026-09-29`. The MTM is that
    day's value and no longer ticks.
-4. Click **Compare** in the title line. You should see *What changed in T-10001*: every field that differs
+4. Click **Compare** in the title line. You should see *What changed in MX-20000001*: every field that differs
    from the business day before, such as **MTM (USD)** and the **DV01** of each tenor, with the change.
 5. Click **Live** in the top bar to return to today.
 
@@ -407,7 +407,7 @@ wrong passwords in a row lock an account for 15 minutes.
 - **Themes.** The palette icon offers seven themes: Terminal, Parchment, Blue, Wall Street, Green, Crimson
   and Crimson dark.
 - **Settings.** *My account → Settings* (`/account`) keeps your theme, the page to open after signing in
-  (for example `/v/trade/T-10001`), the clock's time zone, density, whether changes flash, and how many
+  (for example `/v/trade/MX-20000001`), the clock's time zone, density, whether changes flash, and how many
   search results to show.
 
 ## Step 15 · Find help

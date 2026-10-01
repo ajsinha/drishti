@@ -1,0 +1,252 @@
+{
+ "tradeId": "MX-20000103",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000103",
+ "productType": "SWAPTION_BERM",
+ "productName": "Bermudan swaption",
+ "assetClass": "Rates",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2025-01-24",
+ "effectiveDate": "2025-01-27",
+ "maturityDate": "2027-07-12",
+ "currency": "AUD",
+ "notional": 167000000.0,
+ "mtm": -198183,
+ "mtmCurrency": "USD",
+ "pnl1d": 71,
+ "counterparty": {
+  "id": "CP-LUMEN",
+  "name": "Lumen Semiconductor AG"
+ },
+ "nettingSet": "NS-LUMEN-NY",
+ "book": "BOOK-RATES-2",
+ "trader": "TRDR-MOKAFOR",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-AUD-OIS",
+ "forwardCurve": "CRV-AUD-PROJ",
+ "swaptionVolCube": "IRV-AUD",
+ "terms": {
+  "payerReceiver": "Receiver",
+  "strike": 0.02776,
+  "firstExercise": "2029-09-17",
+  "exerciseFrequency": "Annual"
+ },
+ "risk": {
+  "dv01": 36819,
+  "vega": 586758
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 3682,
+   "vega": 58676
+  },
+  {
+   "bucket": "6M",
+   "dv01": 7364,
+   "vega": 117352
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 11046,
+   "vega": 176027
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 14728,
+   "vega": 234703
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-01-27",
+   "type": "First call",
+   "strike": 0.038895,
+   "status": "Expired"
+  },
+  {
+   "date": "2027-01-27",
+   "type": "Bermudan call",
+   "strike": 0.023404,
+   "status": "Pending"
+  },
+  {
+   "date": "2027-07-12",
+   "type": "Bermudan call",
+   "strike": 0.032656,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -4216
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 4558
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -12218
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -4672
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 10174
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -4299
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -5012
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 12457
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -1167
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -8504
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -6955
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 3453
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 2988
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 455
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 10401
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -1966
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -11010
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -2833
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -2099
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 4931
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-01-24",
+  "executionTimestamp": "2025-01-24T14:54:56.835Z",
+  "venue": "Bloomberg SEF",
+  "venueMic": "BSEF",
+  "executionType": "Electronic",
+  "trader": "M. Okafor",
+  "salesperson": null,
+  "orderId": "ORD-AB5EF58EFD"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-01-24T11:30:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2025-01-24T11:30:00Z",
+  "lastModifiedAt": "2025-01-24T11:30:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA959171100",
+  "matched": "2025-01-24 10:21",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096AB5EF58EFDD28F4D7611",
+  "upi": "QZ5SPI21U482",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "LUMEGB33XXX",
+  "ssiId": "SSI-AUD-8CF792",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -198183,
+  "cleanPv": -198183.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CRV-AUD-OIS",
+   "CRV-AUD-PROJ",
+   "IRV-AUD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 2066
+  }
+ }
+}

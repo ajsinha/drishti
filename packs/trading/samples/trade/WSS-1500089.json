@@ -1,0 +1,222 @@
+{
+ "tradeId": "WSS-1500089",
+ "sourceSystem": "Wall Street Systems",
+ "sourceTradeId": "1500089",
+ "productType": "T_BILL",
+ "productName": "Treasury bill",
+ "assetClass": "Money market",
+ "family": "money",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2026-09-11",
+ "effectiveDate": "2026-09-14",
+ "maturityDate": "2027-07-12",
+ "currency": "USD",
+ "notional": 98000000.0,
+ "mtm": 967365,
+ "mtmCurrency": "USD",
+ "pnl1d": -66962,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-MM-1",
+ "trader": "TRDR-SIYER",
+ "desk": "DESK-MM",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-VERDANT",
+ "benchmarkCurve": "CRV-USD-GOVT",
+ "terms": {
+  "discountRate": 0.05482,
+  "faceAmount": 87442776.0
+ },
+ "risk": {
+  "dv01": -6604
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -1101
+  },
+  {
+   "bucket": "6M",
+   "dv01": -2201
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -3302
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -14065
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 19564
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 49002
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -16058
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 18442
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 29376
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 7902
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -13762
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -39718
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 10487
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 6947
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 3962
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -30368
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 1263
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -49964
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -35809
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 1480
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -11659
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -17879
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 5747
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-09-11",
+  "executionTimestamp": "2026-09-11T15:19:01.059Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "S. Iyer",
+  "salesperson": null,
+  "orderId": "ORD-826FD2C483"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-09-11T11:59:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2026-09-11T11:59:00Z",
+  "lastModifiedAt": "2026-09-11T11:59:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT215494303",
+  "matched": "2026-09-11 14:42",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH8534468648",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096826FD2C483BFB719827A",
+  "upi": "QZOV16YCTKDJ",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMUS33XXX",
+  "ssiId": "SSI-USD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 967365,
+  "cleanPv": 967365.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-USD-GOVT"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-mm",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 2915
+  }
+ }
+}

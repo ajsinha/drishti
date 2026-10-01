@@ -1,0 +1,351 @@
+{
+ "tradeId": "END-1000057",
+ "sourceSystem": "Endur",
+ "sourceTradeId": "1000057",
+ "productType": "CMD_INDEX_SWAP",
+ "productName": "Commodity index swap",
+ "assetClass": "Commodity",
+ "family": "swap",
+ "status": "Live",
+ "direction": "Pay fixed",
+ "tradeDate": "2025-03-03",
+ "effectiveDate": "2025-03-05",
+ "maturityDate": "2034-11-06",
+ "currency": "USD",
+ "notional": 223000000.0,
+ "mtm": 915725,
+ "mtmCurrency": "USD",
+ "pnl1d": -3426,
+ "counterparty": {
+  "id": "CP-BRAMBLE",
+  "name": "Bramble Asset Management"
+ },
+ "nettingSet": "NS-BRAMBLE-NY",
+ "book": "BOOK-COMM-3",
+ "trader": "TRDR-FROSSI",
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "commodityCurve": "CMDC-COPPER",
+ "discountCurve": "CRV-USD-OIS",
+ "terms": {
+  "index": "BCOM TR",
+  "fundingSpread": 31.6
+ },
+ "risk": {
+  "delta": 508105
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 24195
+  },
+  {
+   "bucket": "1M",
+   "delta": 48391
+  },
+  {
+   "bucket": "3M",
+   "delta": 72586
+  },
+  {
+   "bucket": "6M",
+   "delta": 96782
+  },
+  {
+   "bucket": "1Y",
+   "delta": 120977
+  },
+  {
+   "bucket": "2Y",
+   "delta": 145173
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Pay performance",
+   "payReceive": "Pay",
+   "rateType": "Performance",
+   "index": "COPPER",
+   "rate": null,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "USD",
+   "notional": 223000000.0
+  },
+  {
+   "leg": 2,
+   "label": "Receive SOFR + spread",
+   "payReceive": "Receive",
+   "rateType": "Float",
+   "index": "SOFR",
+   "rate": 0.036215,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "USD",
+   "notional": 223000000.0
+  }
+ ],
+ "schedule": [
+  {
+   "payDate": "2026-03-05",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -668525.64,
+   "pv": 0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2027-03-05",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -552375.54,
+   "pv": -535804.27,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2028-03-05",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -601683.61,
+   "pv": -583633.1,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2029-03-05",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -666563.03,
+   "pv": -646566.14,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2030-03-05",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -459305.11,
+   "pv": -445525.96,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2031-03-05",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -528090.75,
+   "pv": -512248.03,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2032-03-05",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -663697.9,
+   "pv": -643786.96,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2033-03-05",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -548785.19,
+   "pv": -532321.63,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2034-03-05",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -600482.94,
+   "pv": -582468.45,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2034-11-06",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -623650.94,
+   "pv": -604941.41,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -23252
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -23104
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -10212
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 26031
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -13169
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 20805
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 39266
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 35451
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 23612
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -27987
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 56315
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 15149
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 3568
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -12370
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 14581
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -355
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -38234
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 49840
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -25922
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 40698
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-03-03",
+  "executionTimestamp": "2025-03-03T09:47:10.353Z",
+  "venue": "ICE",
+  "venueMic": "IFEU",
+  "executionType": "Electronic",
+  "trader": "F. Rossi",
+  "salesperson": null,
+  "orderId": "ORD-9765C20865"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-03-03T09:09:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2025-03-03T09:09:00Z",
+  "lastModifiedAt": "2025-03-03T09:09:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT538411396",
+  "matched": "2025-03-03 11:16",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20969765C20865AE872CBF4A",
+  "upi": "QZINSLYHNQDP",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "BRAMUS33XXX",
+  "ssiId": "SSI-USD-1243C8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 915725,
+  "cleanPv": 915725.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Multi-curve OIS discounting",
+  "curves": [
+   "CMDC-COPPER",
+   "CRV-USD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "endur-comm",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 4061
+  }
+ }
+}

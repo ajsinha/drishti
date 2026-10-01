@@ -1,0 +1,238 @@
+{
+ "tradeId": "MX-20000101",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000101",
+ "productType": "SWAPTION_EUR",
+ "productName": "European swaption",
+ "assetClass": "Rates",
+ "family": "option",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2024-09-20",
+ "effectiveDate": "2024-09-23",
+ "maturityDate": "2027-07-08",
+ "currency": "EUR",
+ "notional": 126000000.0,
+ "mtm": -2063151,
+ "mtmCurrency": "USD",
+ "pnl1d": -68984,
+ "counterparty": {
+  "id": "CP-RHEINTAL",
+  "name": "Rheintal Landesbank"
+ },
+ "nettingSet": "NS-RHEINTAL-NY",
+ "book": "BOOK-RATES-3",
+ "trader": "TRDR-ASHAH",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-EUR-OIS",
+ "forwardCurve": "CRV-EUR-PROJ",
+ "swaptionVolCube": "IRV-EUR",
+ "terms": {
+  "payerReceiver": "Payer",
+  "strike": 0.028263,
+  "expiryDate": "2028-11-24",
+  "underlyingTenor": "10Y",
+  "settlement": "Physical",
+  "premium": 1840997.0
+ },
+ "risk": {
+  "dv01": -32938,
+  "vega": -233790
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -2196,
+   "vega": -15586
+  },
+  {
+   "bucket": "6M",
+   "dv01": -4392,
+   "vega": -31172
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -6588,
+   "vega": -46758
+  },
+  {
+   "bucket": "2Y",
+   "dv01": -8783,
+   "vega": -62344
+  },
+  {
+   "bucket": "3Y",
+   "dv01": -10979,
+   "vega": -77930
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 40096
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -56813
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 14931
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -10834
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -4024
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -5361
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -28517
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 17398
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -11079
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -169652
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 96601
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 4958
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 117623
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -20543
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 75386
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -60741
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 18762
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -11844
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 74901
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -58712
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-09-20",
+  "executionTimestamp": "2024-09-20T09:38:41.139Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "A. Shah",
+  "salesperson": null,
+  "orderId": "ORD-13ED5DDDB7"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-09-20T12:27:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2024-09-20T12:27:00Z",
+  "lastModifiedAt": "2024-09-20T12:27:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA590580652",
+  "matched": "2024-09-20 10:58",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209613ED5DDDB7D165D531F9",
+  "upi": "QZW0XHSW1C0C",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "RHEIGB33XXX",
+  "ssiId": "SSI-EUR-230AB8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -2063151,
+  "cleanPv": -2063151.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CRV-EUR-OIS",
+   "CRV-EUR-PROJ",
+   "IRV-EUR"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 5386
+  }
+ }
+}

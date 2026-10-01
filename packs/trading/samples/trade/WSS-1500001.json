@@ -1,0 +1,221 @@
+{
+ "tradeId": "WSS-1500001",
+ "sourceSystem": "Wall Street Systems",
+ "sourceTradeId": "1500001",
+ "productType": "FX_SPOT",
+ "productName": "FX spot",
+ "assetClass": "FX",
+ "family": "linear",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2024-04-19",
+ "effectiveDate": "2024-04-22",
+ "maturityDate": "2026-10-07",
+ "currency": "JPY",
+ "notional": 56000000.0,
+ "mtm": 154904,
+ "mtmCurrency": "USD",
+ "pnl1d": 474,
+ "counterparty": {
+  "id": "CP-BRAMBLE",
+  "name": "Bramble Asset Management"
+ },
+ "nettingSet": "NS-BRAMBLE-LDN",
+ "book": "BOOK-FX-3",
+ "trader": "TRDR-LMOREAU",
+ "desk": "DESK-FX",
+ "legalEntity": "LE-LDN",
+ "fxSpot": "FX-EURJPY",
+ "terms": {
+  "rate": 84.36793,
+  "valueDate": "2026-10-02"
+ },
+ "risk": {
+  "fxDelta": -560000
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "fxDelta": -56000
+  },
+  {
+   "bucket": "1M",
+   "fxDelta": -112000
+  },
+  {
+   "bucket": "3M",
+   "fxDelta": -168000
+  },
+  {
+   "bucket": "6M",
+   "fxDelta": -224000
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 2562
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -5919
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 7924
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 97
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -4699
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 1738
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -7855
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 1570
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -3539
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 4656
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -1911
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -2259
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 4444
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -4384
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -7228
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 125
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -678
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -9340
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 1732
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 2185
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-04-19",
+  "executionTimestamp": "2024-04-19T08:33:29.458Z",
+  "venue": "360T",
+  "venueMic": "360T",
+  "executionType": "Electronic",
+  "trader": "L. Moreau",
+  "salesperson": null,
+  "orderId": "ORD-434DB7280B"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-04-19T10:34:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2024-04-19T10:34:00Z",
+  "lastModifiedAt": "2024-04-19T10:34:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT850209375",
+  "matched": "2024-04-19 15:13",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83434DB7280BAE5D4403D9",
+  "upi": "QZBCW46RLF1J",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Foreign exchange"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "BRAMGB33XXX",
+  "ssiId": "SSI-JPY-1243C8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 154904,
+  "cleanPv": 154904.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "FX-EURJPY"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "calypso-fx",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 870
+  }
+ }
+}

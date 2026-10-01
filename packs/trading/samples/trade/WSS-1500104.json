@@ -1,0 +1,212 @@
+{
+ "tradeId": "WSS-1500104",
+ "sourceSystem": "Wall Street Systems",
+ "sourceTradeId": "1500104",
+ "productType": "DEPOSIT",
+ "productName": "Term deposit / placement",
+ "assetClass": "Money market",
+ "family": "money",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2026-09-25",
+ "effectiveDate": "2026-09-28",
+ "maturityDate": "2026-12-28",
+ "currency": "AUD",
+ "notional": 36000000.0,
+ "mtm": 70858,
+ "mtmCurrency": "USD",
+ "pnl1d": -1080,
+ "counterparty": {
+  "id": "CP-PINNACLE",
+  "name": "Pinnacle Credit Partners"
+ },
+ "nettingSet": "NS-PINNACLE-NY",
+ "book": "BOOK-MM-2",
+ "trader": "TRDR-ISCHULZ",
+ "desk": "DESK-MM",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-AUD-OIS",
+ "terms": {
+  "rate": 0.034556,
+  "placedTaken": "Taken"
+ },
+ "risk": {
+  "dv01": -799
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -266
+  },
+  {
+   "bucket": "6M",
+   "dv01": -533
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 5060
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -620
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 312
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -1065
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 3638
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -1886
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -3313
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -988
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -3817
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 1102
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 4589
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -5432
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 2675
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -555
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -3229
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 1861
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 1709
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -2113
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 5326
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 3363
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-09-25",
+  "executionTimestamp": "2026-09-25T14:13:04.029Z",
+  "venue": "Bloomberg SEF",
+  "venueMic": "BSEF",
+  "executionType": "Electronic",
+  "trader": "I. Schulz",
+  "salesperson": null,
+  "orderId": "ORD-73928C9CE4"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-09-25T10:28:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2026-09-25T10:28:00Z",
+  "lastModifiedAt": "2026-09-25T10:28:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT899356705",
+  "matched": "2026-09-25 15:31",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209673928C9CE45E097B1440",
+  "upi": "QZHG9ZVXFNAF",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "PINNGB33XXX",
+  "ssiId": "SSI-AUD-F2BB52",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 70858,
+  "cleanPv": 70858.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-AUD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-mm",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 502
+  }
+ }
+}

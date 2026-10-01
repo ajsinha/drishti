@@ -62,14 +62,14 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10695",
+   "tradeId": "BBG-60000095",
    "product": "Tri-party repo",
    "notional": 136000000.0,
    "maturity": "2027-01-29",
    "mtm": -1727235
   },
   {
-   "tradeId": "T-10715",
+   "tradeId": "BBG-60000115",
    "product": "Margin loan",
    "notional": 77000000.0,
    "maturity": "2027-01-11",

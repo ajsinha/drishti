@@ -1,0 +1,218 @@
+{
+ "tradeId": "WSS-1500095",
+ "sourceSystem": "Wall Street Systems",
+ "sourceTradeId": "1500095",
+ "productType": "COMMERCIAL_PAPER",
+ "productName": "Commercial paper",
+ "assetClass": "Money market",
+ "family": "money",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-07-31",
+ "effectiveDate": "2026-08-03",
+ "maturityDate": "2027-01-27",
+ "currency": "JPY",
+ "notional": 115000000.0,
+ "mtm": -703947,
+ "mtmCurrency": "USD",
+ "pnl1d": 2195,
+ "counterparty": {
+  "id": "CP-HARBORPT",
+  "name": "Harbor Point Bank"
+ },
+ "nettingSet": "NS-HARBORPT-NY",
+ "book": "BOOK-MM-1",
+ "trader": "TRDR-ISCHULZ",
+ "desk": "DESK-MM",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-CASCADIA",
+ "discountCurve": "CRV-JPY-OIS",
+ "creditCurve": "CDS-CASCADIA",
+ "terms": {
+  "discountRate": 0.056994,
+  "rating": "A-1"
+ },
+ "risk": {
+  "dv01": 5178,
+  "cs01": 4309
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 1726,
+   "cs01": 1436
+  },
+  {
+   "bucket": "6M",
+   "dv01": 3452,
+   "cs01": 2873
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 1964
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 17493
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -21231
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 2852
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -1887
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 2090
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 11040
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 53104
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 16501
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -9707
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -7122
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 60630
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -26919
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -8163
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 34060
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 49839
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 26240
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 3783
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -29867
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 3259
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-07-31",
+  "executionTimestamp": "2026-07-31T12:57:11.032Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "I. Schulz",
+  "salesperson": null,
+  "orderId": "ORD-50F3CE1954"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-07-31T10:45:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-07-31T10:45:00Z",
+  "lastModifiedAt": "2026-07-31T10:45:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT461123047",
+  "matched": "2026-07-31 12:33",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209650F3CE1954B912172E94",
+  "upi": "QZ71MAHONOBG",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "HARBGB33XXX",
+  "ssiId": "SSI-JPY-99A301",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -703947,
+  "cleanPv": -703947.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-JPY-OIS",
+   "CDS-CASCADIA"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-mm",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 2558
+  }
+ }
+}

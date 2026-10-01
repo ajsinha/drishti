@@ -1,0 +1,231 @@
+{
+ "tradeId": "CLY-3000024",
+ "sourceSystem": "Calypso",
+ "sourceTradeId": "3000024",
+ "productType": "CDS_SWAPTION",
+ "productName": "CDS index option",
+ "assetClass": "Credit",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2025-02-12",
+ "effectiveDate": "2025-02-14",
+ "maturityDate": "2027-02-24",
+ "currency": "GBP",
+ "notional": 56000000.0,
+ "mtm": -4024,
+ "mtmCurrency": "USD",
+ "pnl1d": 1,
+ "counterparty": {
+  "id": "CP-KESTREL",
+  "name": "Kestrel Global Macro Fund"
+ },
+ "nettingSet": "NS-KESTREL-NY",
+ "book": "BOOK-CREDIT-3",
+ "trader": "TRDR-CDUBOIS",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-KAIZEN",
+ "creditCurve": "CDS-KAIZEN",
+ "discountCurve": "CRV-GBP-OIS",
+ "terms": {
+  "payerReceiver": "Payer",
+  "strikeSpread": 87.9,
+  "expiryDate": "2027-01-22"
+ },
+ "risk": {
+  "cs01": 10458,
+  "vega": 130703
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 1743,
+   "vega": 21784
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 3486,
+   "vega": 43568
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 5229,
+   "vega": 65352
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -4830
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 1289
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 1589
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 4066
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 615
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 5039
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -337
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 87
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -718
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 995
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 2812
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -3488
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 5184
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 1038
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 2299
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 4166
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -1972
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 2797
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 2296
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -526
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-02-12",
+  "executionTimestamp": "2025-02-12T16:31:21.926Z",
+  "venue": "MarketAxess",
+  "venueMic": "MAEL",
+  "executionType": "Electronic",
+  "trader": "C. Dubois",
+  "salesperson": null,
+  "orderId": "ORD-FBF31F5AA6"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-02-12T09:32:00Z",
+    "by": "fo.capture"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2025-10-01T09:32:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2025-02-12T09:32:00Z",
+  "lastModifiedAt": "2025-10-01T09:32:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA253449651",
+  "matched": "2025-02-12 14:08",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096FBF31F5AA626882AFB57",
+  "upi": "QZ061ZSFXE5X",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Barclays Bank plc",
+  "ourAgentBic": "BARCGB22XXX",
+  "theirAgentBic": "KESTGB33XXX",
+  "ssiId": "SSI-GBP-69F994",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -4024,
+  "cleanPv": -4024.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CDS-KAIZEN",
+   "CRV-GBP-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 568
+  }
+ }
+}

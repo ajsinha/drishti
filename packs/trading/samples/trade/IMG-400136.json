@@ -1,0 +1,383 @@
+{
+ "tradeId": "IMG-400136",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400136",
+ "productType": "RANGE_ACCRUAL_NOTE",
+ "productName": "Range accrual note",
+ "assetClass": "Structured",
+ "family": "note",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2024-12-11",
+ "effectiveDate": "2024-12-13",
+ "maturityDate": "2029-09-24",
+ "currency": "AUD",
+ "notional": 155000000.0,
+ "mtm": 660652,
+ "mtmCurrency": "USD",
+ "pnl1d": 6821,
+ "counterparty": {
+  "id": "CP-LUMEN",
+  "name": "Lumen Semiconductor AG"
+ },
+ "nettingSet": "NS-LUMEN-TKY",
+ "book": "BOOK-STRUCT-2",
+ "trader": "TRDR-VRAO",
+ "desk": "DESK-STRUCT",
+ "legalEntity": "LE-TKY",
+ "discountCurve": "CRV-AUD-OIS",
+ "forwardCurve": "CRV-AUD-PROJ",
+ "swaptionVolCube": "IRV-AUD",
+ "terms": {
+  "coupon": 0.055235,
+  "lowerBound": 4.6e-05,
+  "upperBound": 0.055188
+ },
+ "risk": {
+  "dv01": 58915,
+  "vega": 509377
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 2805,
+   "vega": 24256
+  },
+  {
+   "bucket": "6M",
+   "dv01": 5611,
+   "vega": 48512
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 8416,
+   "vega": 72768
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 11222,
+   "vega": 97024
+  },
+  {
+   "bucket": "3Y",
+   "dv01": 14027,
+   "vega": 121280
+  },
+  {
+   "bucket": "5Y",
+   "dv01": 16833,
+   "vega": 145536
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2025-03-13",
+   "level": 89.61,
+   "trigger": 100.0,
+   "performance": -0.1039,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-06-13",
+   "level": 85.13,
+   "trigger": 100.0,
+   "performance": -0.1487,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-09-13",
+   "level": 90.79,
+   "trigger": 100.0,
+   "performance": -0.0921,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-12-13",
+   "level": 85.11,
+   "trigger": 100.0,
+   "performance": -0.1489,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-03-13",
+   "level": 96.83,
+   "trigger": 100.0,
+   "performance": -0.0317,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-06-13",
+   "level": 97.49,
+   "trigger": 100.0,
+   "performance": -0.0251,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-09-13",
+   "level": 95.53,
+   "trigger": 100.0,
+   "performance": -0.0447,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-12-13",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-03-13",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-06-13",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-09-13",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-12-13",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-03-13",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-06-13",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-09-13",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-12-13",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-03-13",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-06-13",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-09-13",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-09-24",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 7,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 15832
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 3596
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -9898
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -5888
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 5445
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 35311
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -20307
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 20345
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 66008
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 7
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 13478
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -14952
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 27773
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 48696
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -22611
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -8145
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 11176
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 26039
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -12215
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -12405
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-12-11",
+  "executionTimestamp": "2024-12-11T08:20:10.881Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "V. Rao",
+  "salesperson": null,
+  "orderId": "ORD-5E170E4AE6"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-12-11T12:34:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2024-12-11T12:34:00Z",
+  "lastModifiedAt": "2024-12-11T12:34:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT803848068",
+  "matched": "2024-12-11 13:19",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300BLAOJ55ZE6F4745E170E4AE6581FD3FDCF",
+  "upi": "QZ2YBJLFSDWI",
+  "reportingRegimes": [
+   "JFSA"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "LUMEGB33XXX",
+  "ssiId": "SSI-AUD-8CF792",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 660652,
+  "cleanPv": 660652.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-AUD-OIS",
+   "CRV-AUD-PROJ",
+   "IRV-AUD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-struct",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 2871
+  }
+ }
+}

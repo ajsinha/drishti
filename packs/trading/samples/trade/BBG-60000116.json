@@ -1,0 +1,251 @@
+{
+ "tradeId": "BBG-60000116",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000116",
+ "productType": "MARGIN_LOAN",
+ "productName": "Margin loan",
+ "assetClass": "Securities financing",
+ "family": "sft",
+ "status": "Live",
+ "direction": "Reverse repo",
+ "tradeDate": "2026-08-14",
+ "effectiveDate": "2026-08-17",
+ "maturityDate": "2026-11-16",
+ "currency": "JPY",
+ "notional": 96000000.0,
+ "mtm": 709577,
+ "mtmCurrency": "USD",
+ "pnl1d": -56496,
+ "counterparty": {
+  "id": "CP-MERIDIAN-RE",
+  "name": "Meridian Reinsurance Ltd"
+ },
+ "nettingSet": "NS-MERIDIAN-RE-FRA",
+ "book": "BOOK-SFT-1",
+ "trader": "TRDR-NFAROUK",
+ "desk": "DESK-SFT",
+ "legalEntity": "LE-FRA",
+ "discountCurve": "CRV-JPY-OIS",
+ "underlyingIndex": "EQX-NKY",
+ "terms": {
+  "rate": 0.043906,
+  "ltv": 0.494897,
+  "maintenanceMargin": 0.354993
+ },
+ "risk": {
+  "exposure": 2635819
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "exposure": 263582
+  },
+  {
+   "bucket": "1M",
+   "exposure": 527164
+  },
+  {
+   "bucket": "3M",
+   "exposure": 790746
+  },
+  {
+   "bucket": "6M",
+   "exposure": 1054328
+  }
+ ],
+ "schedule": [
+  {
+   "asset": "Meridian Financial Group 2036",
+   "isin": "USMERI186295",
+   "quantity": 32754714,
+   "marketValue": 32925694,
+   "haircut": 0.005,
+   "value": 32761066
+  },
+  {
+   "asset": "Solaris Energy Corp. 2036",
+   "isin": "USSOLA119789",
+   "quantity": 33179323,
+   "marketValue": 32832931,
+   "haircut": 0.02,
+   "value": 32176272
+  },
+  {
+   "asset": "Verdant Agri Holdings 2036",
+   "isin": "BRVERD178449",
+   "quantity": 33677105,
+   "marketValue": 30717898,
+   "haircut": 0.01,
+   "value": 30410719
+  }
+ ],
+ "nextIndex": -1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -2808
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 40377
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 6928
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 10730
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -3032
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -35189
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 8780
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -18629
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -9806
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 2254
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 36104
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -836
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -30704
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -32781
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 24051
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -4064
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 361
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -6745
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -17952
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -22688
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-08-14",
+  "executionTimestamp": "2026-08-14T16:52:26.810Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "N. Farouk",
+  "salesperson": null,
+  "orderId": "ORD-E65718F69B"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-08-14T11:26:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2026-08-14T11:26:00Z",
+  "lastModifiedAt": "2026-08-14T11:26:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT312033333",
+  "matched": "2026-08-14 11:14",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z9DXU4T18OK744E65718F69BB9F09B1674",
+  "upi": "QZUVZZMGZ68G",
+  "reportingRegimes": [
+   "EU EMIR",
+   "EU MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "MERIGB33XXX",
+  "ssiId": "SSI-JPY-9DC4EA",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 709577,
+  "cleanPv": 709577.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-JPY-OIS",
+   "EQX-NKY"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "globalone-sft",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 2379
+  }
+ }
+}

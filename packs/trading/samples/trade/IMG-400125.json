@@ -1,0 +1,313 @@
+{
+ "tradeId": "IMG-400125",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400125",
+ "productType": "CONVERTIBLE_BOND",
+ "productName": "Convertible bond",
+ "assetClass": "Equity",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2025-10-20",
+ "effectiveDate": "2025-10-22",
+ "maturityDate": "2030-09-16",
+ "currency": "GBP",
+ "notional": 88000000.0,
+ "mtm": 1334065,
+ "mtmCurrency": "USD",
+ "pnl1d": -53130,
+ "counterparty": {
+  "id": "CP-VERDANT",
+  "name": "Verdant Agri Holdings"
+ },
+ "nettingSet": "NS-VERDANT-LDN",
+ "book": "BOOK-EQD-3",
+ "trader": "TRDR-PLINDQVIST",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingEquity": "EQ-GRNT",
+ "equityVolSurface": "EQV-GRNT",
+ "creditCurve": "CDS-SOLARIS",
+ "discountCurve": "CRV-GBP-OIS",
+ "terms": {
+  "coupon": 0.003706,
+  "conversionRatio": 8.21,
+  "conversionPrice": 82.91
+ },
+ "risk": {
+  "delta": 392271,
+  "cs01": 36491,
+  "vega": 364917
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 18680,
+   "cs01": 1738,
+   "vega": 17377
+  },
+  {
+   "bucket": "1M",
+   "delta": 37359,
+   "cs01": 3475,
+   "vega": 34754
+  },
+  {
+   "bucket": "3M",
+   "delta": 56039,
+   "cs01": 5213,
+   "vega": 52131
+  },
+  {
+   "bucket": "6M",
+   "delta": 74718,
+   "cs01": 6951,
+   "vega": 69508
+  },
+  {
+   "bucket": "1Y",
+   "delta": 93398,
+   "cs01": 8688,
+   "vega": 86885
+  },
+  {
+   "bucket": "2Y",
+   "delta": 112077,
+   "cs01": 10426,
+   "vega": 104262
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-04-22",
+   "rate": 0.028116,
+   "amount": 1760000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-10-22",
+   "rate": 0.036366,
+   "amount": 1760000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-04-22",
+   "rate": 0.051828,
+   "amount": 1760000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-10-22",
+   "rate": 0.024414,
+   "amount": 1760000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-04-22",
+   "rate": 0.046258,
+   "amount": 1760000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-10-22",
+   "rate": 0.023884,
+   "amount": 1760000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-04-22",
+   "rate": 0.046787,
+   "amount": 1760000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-10-22",
+   "rate": 0.059561,
+   "amount": 1760000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-04-22",
+   "rate": 0.057427,
+   "amount": 1760000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-09-16",
+   "rate": 0.037764,
+   "amount": 1760000.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -33189
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -7187
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -14826
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 105394
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 8961
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 21505
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -29037
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -56084
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 52670
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 27181
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 35896
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 8214
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -46392
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 43856
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 105229
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 34806
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -80515
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 41852
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -26204
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -54646
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-10-20",
+  "executionTimestamp": "2025-10-20T13:15:50.116Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "P. Lindqvist",
+  "salesperson": null,
+  "orderId": "ORD-94E683BA1C"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-10-20T12:23:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2025-10-20T12:23:00Z",
+  "lastModifiedAt": "2025-10-20T12:23:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT301633578",
+  "matched": "2025-10-20 12:38",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q8394E683BA1C7BA40C313E",
+  "upi": "QZPWBE2CX2WY",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Barclays Bank plc",
+  "ourAgentBic": "BARCGB22XXX",
+  "theirAgentBic": "VERDGB33XXX",
+  "ssiId": "SSI-GBP-ABCF5A",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1334065,
+  "cleanPv": 1334065.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQ-GRNT",
+   "EQV-GRNT",
+   "CDS-SOLARIS",
+   "CRV-GBP-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 3548
+  }
+ }
+}

@@ -1,0 +1,281 @@
+{
+ "tradeId": "CLY-3000027",
+ "sourceSystem": "Calypso",
+ "sourceTradeId": "3000027",
+ "productType": "FIRST_TO_DEFAULT",
+ "productName": "First-to-default basket",
+ "assetClass": "Credit",
+ "family": "cds",
+ "status": "Live",
+ "direction": "Buy protection",
+ "tradeDate": "2026-08-14",
+ "effectiveDate": "2026-08-17",
+ "maturityDate": "2030-01-07",
+ "currency": "JPY",
+ "notional": 210000000.0,
+ "mtm": -2867075,
+ "mtmCurrency": "USD",
+ "pnl1d": 4863,
+ "counterparty": {
+  "id": "CP-NORTHBRIDGE",
+  "name": "Northbridge Capital LLP"
+ },
+ "nettingSet": "NS-NORTHBRIDGE-NY",
+ "book": "BOOK-CREDIT-2",
+ "trader": "TRDR-DWHITFIELD",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-RHEINTAL",
+ "creditCurve": "CDS-RHEINTAL",
+ "discountCurve": "CRV-JPY-OIS",
+ "correlation": "CORR-US-EQ",
+ "terms": {
+  "basketSize": 3,
+  "spread": 402.5
+ },
+ "risk": {
+  "cs01": 61368,
+  "jtd": -126000000
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 6137,
+   "jtd": -12600000
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 12274,
+   "jtd": -25200000
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 18410,
+   "jtd": -37800000
+  },
+  {
+   "bucket": "3Y",
+   "cs01": 24547,
+   "jtd": -50400000
+  }
+ ],
+ "schedule": [
+  {
+   "name": "Cascadia Airlines Inc.",
+   "weight": 0.125,
+   "level": 390.4,
+   "status": "Active"
+  },
+  {
+   "name": "Meridian Financial Group",
+   "weight": 0.125,
+   "level": 337.4,
+   "status": "Active"
+  },
+  {
+   "name": "Solaris Energy Corp.",
+   "weight": 0.125,
+   "level": 169.4,
+   "status": "Active"
+  },
+  {
+   "name": "Verdant Agri Holdings",
+   "weight": 0.125,
+   "level": 272.1,
+   "status": "Active"
+  },
+  {
+   "name": "Lumen Semiconductor AG",
+   "weight": 0.125,
+   "level": 290.5,
+   "status": "Active"
+  },
+  {
+   "name": "Rheintal Landesbank",
+   "weight": 0.125,
+   "level": 249.0,
+   "status": "Active"
+  },
+  {
+   "name": "Novatek Devices Inc.",
+   "weight": 0.125,
+   "level": 198.0,
+   "status": "Active"
+  },
+  {
+   "name": "Halcyon Shipping plc",
+   "weight": 0.125,
+   "level": 175.5,
+   "status": "Active"
+  }
+ ],
+ "nextIndex": -1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -18476
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 185227
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -98862
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 47547
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 312190
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 125574
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -8918
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 168850
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -108117
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 54167
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -13563
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 90940
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -37445
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 24278
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 42560
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -44137
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 39309
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -65807
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -82585
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 39221
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-08-14",
+  "executionTimestamp": "2026-08-14T11:04:44.696Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "D. Whitfield",
+  "salesperson": null,
+  "orderId": "ORD-C33B056011"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-08-14T10:18:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-08-14T10:18:00Z",
+  "lastModifiedAt": "2026-08-14T10:18:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA217275180",
+  "matched": "2026-08-14 15:47",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096C33B0560119BE42625C0",
+  "upi": "QZ9A7VB080DG",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "NORTGB33XXX",
+  "ssiId": "SSI-JPY-A0C7C2",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -2867075,
+  "cleanPv": -2867075.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CDS-RHEINTAL",
+   "CRV-JPY-OIS",
+   "CORR-US-EQ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 7834
+  }
+ }
+}

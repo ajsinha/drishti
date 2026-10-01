@@ -1,0 +1,321 @@
+{
+ "tradeId": "BBG-60000026",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000026",
+ "productType": "CALLABLE_BOND",
+ "productName": "Callable bond",
+ "assetClass": "Fixed income",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2025-03-27",
+ "effectiveDate": "2025-03-31",
+ "maturityDate": "2034-02-28",
+ "currency": "JPY",
+ "notional": 115000000.0,
+ "mtm": -1530581,
+ "mtmCurrency": "USD",
+ "pnl1d": 17569,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-1",
+ "trader": "TRDR-BADEYEMI",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-JGB",
+ "benchmarkCurve": "CRV-JPY-GOVT",
+ "underlyingBond": "BND-JP0JGB182753",
+ "swaptionVolCube": "IRV-JPY",
+ "terms": {
+  "coupon": 0.003042,
+  "couponFrequency": "Annual",
+  "faceAmount": 86162554.0,
+  "cleanPrice": 99.341,
+  "yield": 0.021956,
+  "firstCall": "2029-09-25",
+  "callPrice": 102.03,
+  "oas": 297.4
+ },
+ "risk": {
+  "dv01": 85424,
+  "cs01": 78647,
+  "vega": 367098
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 3051,
+   "cs01": 2809,
+   "vega": 13111
+  },
+  {
+   "bucket": "6M",
+   "dv01": 6102,
+   "cs01": 5618,
+   "vega": 26221
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 9153,
+   "cs01": 8426,
+   "vega": 39332
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 12203,
+   "cs01": 11235,
+   "vega": 52443
+  },
+  {
+   "bucket": "3Y",
+   "dv01": 15254,
+   "cs01": 14044,
+   "vega": 65553
+  },
+  {
+   "bucket": "5Y",
+   "dv01": 18305,
+   "cs01": 16853,
+   "vega": 78664
+  },
+  {
+   "bucket": "7Y",
+   "dv01": 21356,
+   "cs01": 19662,
+   "vega": 91774
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-03-31",
+   "type": "First call",
+   "strike": 0.047101,
+   "status": "Expired"
+  },
+  {
+   "date": "2027-03-31",
+   "type": "Bermudan call",
+   "strike": 0.022633,
+   "status": "Pending"
+  },
+  {
+   "date": "2028-03-31",
+   "type": "Bermudan call",
+   "strike": 0.039728,
+   "status": "Pending"
+  },
+  {
+   "date": "2029-03-31",
+   "type": "Bermudan call",
+   "strike": 0.041016,
+   "status": "Pending"
+  },
+  {
+   "date": "2030-03-31",
+   "type": "Bermudan call",
+   "strike": 0.031376,
+   "status": "Pending"
+  },
+  {
+   "date": "2031-03-31",
+   "type": "Bermudan call",
+   "strike": 0.029643,
+   "status": "Pending"
+  },
+  {
+   "date": "2032-03-31",
+   "type": "Bermudan call",
+   "strike": 0.0277,
+   "status": "Pending"
+  },
+  {
+   "date": "2033-03-31",
+   "type": "Bermudan call",
+   "strike": 0.046768,
+   "status": "Pending"
+  },
+  {
+   "date": "2034-02-28",
+   "type": "Bermudan call",
+   "strike": 0.041168,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 96615
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 60598
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 49463
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -6134
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 814
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 37845
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -59307
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 5378
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 21133
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -32816
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 25315
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -27299
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 17861
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -121473
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 13437
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 11290
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 23906
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -9721
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 9316
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 30906
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-03-27",
+  "executionTimestamp": "2025-03-27T14:05:43.518Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "B. Adeyemi",
+  "salesperson": null,
+  "orderId": "ORD-27C350228B"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-03-27T11:52:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2025-03-27T11:52:00Z",
+  "lastModifiedAt": "2025-03-27T11:52:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT378563440",
+  "matched": "2025-03-27 14:49",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "JSCC",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH8815382098",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209627C350228BB5B87A416E",
+  "upi": "QZHW8659J043",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-JPY-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -1530581,
+  "cleanPv": -1530581.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-JPY-GOVT",
+   "BND-JP0JGB182753",
+   "IRV-JPY"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 4211
+  }
+ }
+}

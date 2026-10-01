@@ -62,91 +62,91 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10537",
+   "tradeId": "MX-20000159",
    "product": "Zero-coupon inflation swap",
    "notional": 180000000.0,
    "maturity": "2037-06-15",
    "mtm": -14905195
   },
   {
-   "tradeId": "T-10538",
+   "tradeId": "MX-20000160",
    "product": "Zero-coupon inflation swap",
    "notional": 188000000.0,
    "maturity": "2036-07-28",
    "mtm": -9675629
   },
   {
-   "tradeId": "T-10323",
+   "tradeId": "IMG-400011",
    "product": "Equity forward",
    "notional": 240000000.0,
    "maturity": "2027-02-19",
    "mtm": -4487722
   },
   {
-   "tradeId": "T-10199",
+   "tradeId": "WSS-1500043",
    "product": "FX double-barrier option",
    "notional": 205000000.0,
    "maturity": "2034-09-13",
    "mtm": -4354827
   },
   {
-   "tradeId": "T-10218",
+   "tradeId": "WSS-1500062",
    "product": "FX target redemption forward",
    "notional": 164000000.0,
    "maturity": "2033-04-22",
    "mtm": -4316238
   },
   {
-   "tradeId": "T-10177",
+   "tradeId": "WSS-1500021",
    "product": "FX swap",
    "notional": 127000000.0,
    "maturity": "2035-11-13",
    "mtm": 1986020
   },
   {
-   "tradeId": "T-10568",
+   "tradeId": "MX-20000190",
    "product": "Limited price index swap",
    "notional": 173000000.0,
    "maturity": "2027-05-26",
    "mtm": -1373222
   },
   {
-   "tradeId": "T-10321",
+   "tradeId": "IMG-400009",
    "product": "Equity forward",
    "notional": 244000000.0,
    "maturity": "2026-10-07",
    "mtm": -1089396
   },
   {
-   "tradeId": "T-10556",
+   "tradeId": "MX-20000178",
    "product": "Inflation-linked bond",
    "notional": 192000000.0,
    "maturity": "2034-10-04",
    "mtm": -992597
   },
   {
-   "tradeId": "T-10540",
+   "tradeId": "MX-20000162",
    "product": "Zero-coupon inflation swap",
    "notional": 25000000.0,
    "maturity": "2030-01-28",
    "mtm": -672060
   },
   {
-   "tradeId": "T-10210",
+   "tradeId": "WSS-1500054",
    "product": "FX one-touch / no-touch",
    "notional": 8000000.0,
    "maturity": "2031-03-26",
    "mtm": -70193
   },
   {
-   "tradeId": "T-10370",
+   "tradeId": "IMG-400058",
    "product": "Equity digital option",
    "notional": 49000000.0,
    "maturity": "2027-04-30",
    "mtm": 30068
   },
   {
-   "tradeId": "T-10393",
+   "tradeId": "IMG-400081",
    "product": "Variance swap",
    "notional": 8000000.0,
    "maturity": "2036-08-20",

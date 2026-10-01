@@ -1,0 +1,231 @@
+{
+ "tradeId": "IMG-400095",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400095",
+ "productType": "DIVIDEND_SWAP",
+ "productName": "Dividend swap",
+ "assetClass": "Equity",
+ "family": "swap",
+ "status": "Live",
+ "direction": "Receive fixed",
+ "tradeDate": "2024-09-05",
+ "effectiveDate": "2024-09-09",
+ "maturityDate": "2032-10-04",
+ "currency": "USD",
+ "notional": 32000000.0,
+ "mtm": 313322,
+ "mtmCurrency": "USD",
+ "pnl1d": 11834,
+ "counterparty": {
+  "id": "CP-HALCYON",
+  "name": "Halcyon Shipping plc"
+ },
+ "nettingSet": "NS-HALCYON-LDN",
+ "book": "BOOK-EQD-3",
+ "trader": "TRDR-PLINDQVIST",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingIndex": "EQX-SPX",
+ "dividendCurve": "DIV-SPX",
+ "terms": {
+  "dividendStrike": 168.18,
+  "period": "2026"
+ },
+ "risk": {
+  "delta": -202301
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -9633
+  },
+  {
+   "bucket": "1M",
+   "delta": -19267
+  },
+  {
+   "bucket": "3M",
+   "delta": -28900
+  },
+  {
+   "bucket": "6M",
+   "delta": -38534
+  },
+  {
+   "bucket": "1Y",
+   "delta": -48167
+  },
+  {
+   "bucket": "2Y",
+   "delta": -57800
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -9060
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 5024
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 1868
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 1395
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 3962
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 4327
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 4735
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -7482
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -5113
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 15832
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -2233
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -5425
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 10235
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 7610
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -21203
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -16109
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 6441
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 27949
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 3392
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -4602
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-09-05",
+  "executionTimestamp": "2024-09-05T14:51:04.946Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "P. Lindqvist",
+  "salesperson": null,
+  "orderId": "ORD-44D913BA9E"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-09-05T10:32:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2024-09-05T10:32:00Z",
+  "lastModifiedAt": "2024-09-05T10:32:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT781139393",
+  "matched": "2024-09-05 16:39",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q8344D913BA9E3F98274B8C",
+  "upi": "QZ9NKLE0HZ46",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "HALCUS33XXX",
+  "ssiId": "SSI-USD-10E970",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 313322,
+  "cleanPv": 313322.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Multi-curve OIS discounting",
+  "curves": [
+   "EQX-SPX",
+   "DIV-SPX"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 947
+  }
+ }
+}

@@ -1,0 +1,299 @@
+{
+ "tradeId": "MX-20000084",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000084",
+ "productType": "CAP",
+ "productName": "Interest rate cap",
+ "assetClass": "Rates",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2024-10-17",
+ "effectiveDate": "2024-10-21",
+ "maturityDate": "2026-10-07",
+ "currency": "EUR",
+ "notional": 182000000.0,
+ "mtm": 3578990,
+ "mtmCurrency": "USD",
+ "pnl1d": -309785,
+ "counterparty": {
+  "id": "CP-ALDERSHOT",
+  "name": "Aldershot Pension Trust"
+ },
+ "nettingSet": "NS-ALDERSHOT-NY",
+ "book": "BOOK-RATES-2",
+ "trader": "TRDR-ASHAH",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-EUR-OIS",
+ "forwardCurve": "CRV-EUR-PROJ",
+ "capVolSurface": "CPV-EUR",
+ "terms": {
+  "strike": 0.028856,
+  "capFrequency": "Semi-annual",
+  "premium": 68516.0
+ },
+ "risk": {
+  "dv01": 20075,
+  "vega": 393846
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 3346,
+   "vega": 65641
+  },
+  {
+   "bucket": "6M",
+   "dv01": 6692,
+   "vega": 131282
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 10038,
+   "vega": 196923
+  }
+ ],
+ "schedule": [
+  {
+   "fixingDate": "2025-01-21",
+   "period": "2025-01-21..2025-04-21",
+   "index": "ESTR",
+   "rate": 0.024925,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2025-04-21",
+   "period": "2025-04-21..2025-07-21",
+   "index": "ESTR",
+   "rate": 0.044599,
+   "payoff": 436754.5,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2025-07-21",
+   "period": "2025-07-21..2025-10-21",
+   "index": "ESTR",
+   "rate": 0.04278,
+   "payoff": 353990.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2025-10-21",
+   "period": "2025-10-21..2026-01-21",
+   "index": "ESTR",
+   "rate": 0.030379,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-01-21",
+   "period": "2026-01-21..2026-04-21",
+   "index": "ESTR",
+   "rate": 0.027716,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-04-21",
+   "period": "2026-04-21..2026-07-21",
+   "index": "ESTR",
+   "rate": 0.039535,
+   "payoff": 206342.5,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-07-21",
+   "period": "2026-07-21..2026-10-21",
+   "index": "ESTR",
+   "rate": 0.048779,
+   "payoff": 626944.5,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-10-07",
+   "period": "2026-10-07..2027-01-07",
+   "index": "ESTR",
+   "rate": 0.031192,
+   "payoff": 0.0,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 7,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -142387
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 43593
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 64113
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -117738
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 29000
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -33328
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -30348
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -145002
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 64627
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -99802
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -187942
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -132106
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 112802
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -98285
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 52945
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -18894
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -180444
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 82039
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 54221
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 67785
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-10-17",
+  "executionTimestamp": "2024-10-17T13:41:50.542Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "A. Shah",
+  "salesperson": null,
+  "orderId": "ORD-267973B3DB"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-10-17T13:00:00Z",
+    "by": "mo.amend"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2025-06-16T13:00:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2024-10-17T13:00:00Z",
+  "lastModifiedAt": "2025-06-16T13:00:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA182065966",
+  "matched": "2024-10-17 11:01",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096267973B3DB61436EC6D0",
+  "upi": "QZIGSHIFAZL7",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "ALDEGB33XXX",
+  "ssiId": "SSI-EUR-D06EAF",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 3578990,
+  "cleanPv": 3578990.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CRV-EUR-OIS",
+   "CRV-EUR-PROJ",
+   "CPV-EUR"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 8978
+  }
+ }
+}

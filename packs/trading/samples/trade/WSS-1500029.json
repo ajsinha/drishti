@@ -1,0 +1,251 @@
+{
+ "tradeId": "WSS-1500029",
+ "sourceSystem": "Wall Street Systems",
+ "sourceTradeId": "1500029",
+ "productType": "FX_OPTION",
+ "productName": "FX vanilla option",
+ "assetClass": "FX",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2026-01-27",
+ "effectiveDate": "2026-01-29",
+ "maturityDate": "2028-10-16",
+ "currency": "CHF",
+ "notional": 17000000.0,
+ "mtm": 13437,
+ "mtmCurrency": "USD",
+ "pnl1d": 365,
+ "counterparty": {
+  "id": "CP-KESTREL",
+  "name": "Kestrel Global Macro Fund"
+ },
+ "nettingSet": "NS-KESTREL-LDN",
+ "book": "BOOK-FX-3",
+ "trader": "TRDR-LMOREAU",
+ "desk": "DESK-FX",
+ "legalEntity": "LE-LDN",
+ "fxSpot": "FX-USDCHF",
+ "fxForwardCurve": "FXF-USDCHF",
+ "fxVolSurface": "FXV-USDCHF",
+ "terms": {
+  "optionType": "Put",
+  "exerciseStyle": "American",
+  "expiryDate": "2027-02-27",
+  "premium": 314441.0,
+  "strike": 33.26205,
+  "deltaAtTrade": 0.428537
+ },
+ "risk": {
+  "fxDelta": 170000,
+  "vega": 41640,
+  "gamma": 362
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "fxDelta": 8095,
+   "vega": 1983,
+   "gamma": 17
+  },
+  {
+   "bucket": "1M",
+   "fxDelta": 16190,
+   "vega": 3966,
+   "gamma": 34
+  },
+  {
+   "bucket": "3M",
+   "fxDelta": 24286,
+   "vega": 5949,
+   "gamma": 52
+  },
+  {
+   "bucket": "6M",
+   "fxDelta": 32381,
+   "vega": 7931,
+   "gamma": 69
+  },
+  {
+   "bucket": "1Y",
+   "fxDelta": 40476,
+   "vega": 9914,
+   "gamma": 86
+  },
+  {
+   "bucket": "2Y",
+   "fxDelta": 48571,
+   "vega": 11897,
+   "gamma": 103
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -3580
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 252
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -653
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 2616
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -1020
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -3403
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -857
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -30
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 2454
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 4521
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 232
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -1193
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 5024
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 1242
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 532
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 1676
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 4012
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 2395
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -54
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 1096
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-01-27",
+  "executionTimestamp": "2026-01-27T16:12:43.350Z",
+  "venue": "360T",
+  "venueMic": "360T",
+  "executionType": "Electronic",
+  "trader": "L. Moreau",
+  "salesperson": null,
+  "orderId": "ORD-7D987E84B5"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-01-27T10:55:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-01-27T10:55:00Z",
+  "lastModifiedAt": "2026-01-27T10:55:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT725514014",
+  "matched": "2026-01-27 11:15",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q837D987E84B5242DDB4421",
+  "upi": "QZFYX06PUULJ",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Foreign exchange"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "KESTGB33XXX",
+  "ssiId": "SSI-CHF-69F994",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 13437,
+  "cleanPv": 13437.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "FX-USDCHF",
+   "FXF-USDCHF",
+   "FXV-USDCHF"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "calypso-fx",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

@@ -1,0 +1,247 @@
+{
+ "tradeId": "BBG-60000089",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000089",
+ "productType": "REVERSE_REPO",
+ "productName": "Reverse repo",
+ "assetClass": "Securities financing",
+ "family": "sft",
+ "status": "Live",
+ "direction": "Repo (lend cash)",
+ "tradeDate": "2026-08-06",
+ "effectiveDate": "2026-08-10",
+ "maturityDate": "2026-12-22",
+ "currency": "USD",
+ "notional": 214000000.0,
+ "mtm": 2428077,
+ "mtmCurrency": "USD",
+ "pnl1d": -124863,
+ "counterparty": {
+  "id": "CP-SOLARIS",
+  "name": "Solaris Energy Corp."
+ },
+ "nettingSet": "NS-SOLARIS-FRA",
+ "book": "BOOK-SFT-1",
+ "trader": "TRDR-KBRANDT",
+ "desk": "DESK-SFT",
+ "legalEntity": "LE-FRA",
+ "issuer": "ISS-MERIDIAN",
+ "repoCurve": "REPO-USD",
+ "underlyingBond": "BND-USMERI070218",
+ "terms": {
+  "repoRate": 0.036594,
+  "haircut": 0.011617,
+  "term": "1W"
+ },
+ "risk": {
+  "dv01": 6860,
+  "exposure": 6413495
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 2287,
+   "exposure": 2137832
+  },
+  {
+   "bucket": "6M",
+   "dv01": 4573,
+   "exposure": 4275663
+  }
+ ],
+ "schedule": [
+  {
+   "asset": "Orbital Telecom SA 2031",
+   "isin": "FRORBI079012",
+   "quantity": 68655374,
+   "marketValue": 72059994,
+   "haircut": 0.005,
+   "value": 71699694
+  },
+  {
+   "asset": "Japan Ministry of Finance 2036",
+   "isin": "JP0JGB182753",
+   "quantity": 64609702,
+   "marketValue": 72591585,
+   "haircut": 0.02,
+   "value": 71139753
+  },
+  {
+   "asset": "Lumen Semiconductor AG 2031",
+   "isin": "CHLUME076897",
+   "quantity": 67568534,
+   "marketValue": 71066557,
+   "haircut": 0.02,
+   "value": 69645226
+  }
+ ],
+ "nextIndex": -1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 59182
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 53551
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 87761
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -73316
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -167577
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -36214
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 79449
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -29909
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -1286
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 24141
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -129073
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 124081
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 8956
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 11165
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -24113
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 86234
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -80486
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -72343
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -62035
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -27476
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-08-06",
+  "executionTimestamp": "2026-08-06T10:31:20.449Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "K. Brandt",
+  "salesperson": null,
+  "orderId": "ORD-ACAA755C9C"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-08-06T12:21:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2026-08-06T12:21:00Z",
+  "lastModifiedAt": "2026-08-06T12:21:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT106020053",
+  "matched": "2026-08-06 14:59",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z9DXU4T18OK744ACAA755C9CA098074BF5",
+  "upi": "QZ46U9H7BYAZ",
+  "reportingRegimes": [
+   "EU EMIR",
+   "EU MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SOLAUS33XXX",
+  "ssiId": "SSI-USD-269904",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 2428077,
+  "cleanPv": 2428077.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "REPO-USD",
+   "BND-USMERI070218"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "globalone-sft",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 6996
+  }
+ }
+}

@@ -1,0 +1,235 @@
+{
+ "tradeId": "WSS-1500033",
+ "sourceSystem": "Wall Street Systems",
+ "sourceTradeId": "1500033",
+ "productType": "FX_DIGITAL",
+ "productName": "FX digital option",
+ "assetClass": "FX",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2026-05-05",
+ "effectiveDate": "2026-05-07",
+ "maturityDate": "2027-09-17",
+ "currency": "USD",
+ "notional": 10000000.0,
+ "mtm": -112393,
+ "mtmCurrency": "USD",
+ "pnl1d": -8029,
+ "counterparty": {
+  "id": "CP-KESTREL",
+  "name": "Kestrel Global Macro Fund"
+ },
+ "nettingSet": "NS-KESTREL-LDN",
+ "book": "BOOK-FX-1",
+ "trader": "TRDR-LMOREAU",
+ "desk": "DESK-FX",
+ "legalEntity": "LE-LDN",
+ "fxSpot": "FX-USDBRL",
+ "fxVolSurface": "FXV-USDBRL",
+ "terms": {
+  "optionType": "Put",
+  "strike": 44.96048,
+  "payout": 2662187.0,
+  "expiryDate": "2026-12-06"
+ },
+ "risk": {
+  "fxDelta": 100000,
+  "vega": 30210
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "fxDelta": 6667,
+   "vega": 2014
+  },
+  {
+   "bucket": "1M",
+   "fxDelta": 13333,
+   "vega": 4028
+  },
+  {
+   "bucket": "3M",
+   "fxDelta": 20000,
+   "vega": 6042
+  },
+  {
+   "bucket": "6M",
+   "fxDelta": 26667,
+   "vega": 8056
+  },
+  {
+   "bucket": "1Y",
+   "fxDelta": 33333,
+   "vega": 10070
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -445
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -4982
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -2292
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 3185
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -347
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 3103
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -1064
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -812
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -1382
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -6797
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 2036
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 3068
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -3896
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 1371
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 386
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -847
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -2314
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 2424
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 2348
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -145
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-05-05",
+  "executionTimestamp": "2026-05-05T08:22:07.123Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "L. Moreau",
+  "salesperson": null,
+  "orderId": "ORD-4A3037D4A7"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-05-05T09:04:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-05-05T09:04:00Z",
+  "lastModifiedAt": "2026-05-05T09:04:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT158407559",
+  "matched": "2026-05-05 16:53",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q834A3037D4A7A8E26549E5",
+  "upi": "QZ84QMD7FHCR",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Foreign exchange"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "KESTUS33XXX",
+  "ssiId": "SSI-USD-69F994",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -112393,
+  "cleanPv": -112393.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "FX-USDBRL",
+   "FXV-USDBRL"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "calypso-fx",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

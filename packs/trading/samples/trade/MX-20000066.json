@@ -1,0 +1,262 @@
+{
+ "tradeId": "MX-20000066",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000066",
+ "productType": "FRA",
+ "productName": "Forward rate agreement",
+ "assetClass": "Rates",
+ "family": "linear",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2026-07-21",
+ "effectiveDate": "2026-07-23",
+ "maturityDate": "2027-09-13",
+ "currency": "USD",
+ "notional": 480000000.0,
+ "mtm": 4718731,
+ "mtmCurrency": "USD",
+ "pnl1d": -248288,
+ "counterparty": {
+  "id": "CP-RHEINTAL",
+  "name": "Rheintal Landesbank"
+ },
+ "nettingSet": "NS-RHEINTAL-NY",
+ "book": "BOOK-RATES-2",
+ "trader": "TRDR-MOKAFOR",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-USD-OIS",
+ "forwardCurve": "CRV-USD-PROJ",
+ "terms": {
+  "fraRate": 0.050719,
+  "startPeriod": "6x9",
+  "fixingDate": "2027-02-01"
+ },
+ "risk": {
+  "dv01": -47033
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -7839
+  },
+  {
+   "bucket": "6M",
+   "dv01": -15678
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -23516
+  }
+ ],
+ "schedule": [
+  {
+   "fixingDate": "2026-10-23",
+   "period": "2026-10-23..2027-01-23",
+   "index": "SOFR",
+   "rate": 0.036126,
+   "payoff": 135120.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-01-23",
+   "period": "2027-01-23..2027-04-23",
+   "index": "SOFR",
+   "rate": 0.049902,
+   "payoff": 1788240.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-04-23",
+   "period": "2027-04-23..2027-07-23",
+   "index": "SOFR",
+   "rate": 0.023704,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-07-23",
+   "period": "2027-07-23..2027-10-23",
+   "index": "SOFR",
+   "rate": 0.031983,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-09-13",
+   "period": "2027-09-13..2027-12-13",
+   "index": "SOFR",
+   "rate": 0.026377,
+   "payoff": 0.0,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -13508
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 145588
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -158054
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -132297
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -202416
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -22506
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -78352
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -119279
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 38992
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -97218
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 68425
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 235740
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 64494
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 192386
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -116131
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -124532
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 5756
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 112265
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 269039
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -183208
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-07-21",
+  "executionTimestamp": "2026-07-21T15:52:10.071Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "M. Okafor",
+  "salesperson": null,
+  "orderId": "ORD-C906AC5DCE"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-07-21T10:40:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2026-07-21T10:40:00Z",
+  "lastModifiedAt": "2026-07-21T10:40:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA498907634",
+  "matched": "2026-07-21 13:09",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096C906AC5DCEDA2FCEBCF0",
+  "upi": "QZ6ULH8CX7EP",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "RHEIUS33XXX",
+  "ssiId": "SSI-USD-230AB8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 4718731,
+  "cleanPv": 4718731.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-USD-OIS",
+   "CRV-USD-PROJ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 14237
+  }
+ }
+}

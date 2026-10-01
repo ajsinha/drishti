@@ -1,0 +1,230 @@
+{
+ "tradeId": "END-1000054",
+ "sourceSystem": "Endur",
+ "sourceTradeId": "1000054",
+ "productType": "CMD_CALENDAR_SPREAD",
+ "productName": "Calendar spread",
+ "assetClass": "Commodity",
+ "family": "linear",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2026-03-25",
+ "effectiveDate": "2026-03-27",
+ "maturityDate": "2027-09-16",
+ "currency": "USD",
+ "notional": 227000000.0,
+ "mtm": 3887196,
+ "mtmCurrency": "USD",
+ "pnl1d": -18037,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-COMM-2",
+ "trader": "TRDR-TBRENNAN",
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-CME-1",
+ "commodityCurve": "CMDC-CORN",
+ "terms": {
+  "nearMonth": "Dec 2026",
+  "farMonth": "Mar 2027",
+  "lots": 127
+ },
+ "risk": {
+  "delta": -1449423
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -96628
+  },
+  {
+   "bucket": "1M",
+   "delta": -193256
+  },
+  {
+   "bucket": "3M",
+   "delta": -289885
+  },
+  {
+   "bucket": "6M",
+   "delta": -386513
+  },
+  {
+   "bucket": "1Y",
+   "delta": -483141
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -132811
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 96251
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -40733
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 68080
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -46185
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -2019
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -133300
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 13570
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -53635
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -24142
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -70088
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 229322
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 50617
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -85448
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -113338
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -58790
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 68367
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 205275
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -44972
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -84064
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-03-25",
+  "executionTimestamp": "2026-03-25T16:04:09.567Z",
+  "venue": "ICE",
+  "venueMic": "IFEU",
+  "executionType": "Electronic",
+  "trader": "T. Brennan",
+  "salesperson": null,
+  "orderId": "ORD-F82DA249E0"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-03-25T09:50:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2026-03-25T09:50:00Z",
+  "lastModifiedAt": "2026-03-25T09:50:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT986734153",
+  "matched": "2026-03-25 13:38",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH6692961843",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096F82DA249E0D9986837D2",
+  "upi": "QZBDG0N8OQPO",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMUS33XXX",
+  "ssiId": "SSI-USD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 3887196,
+  "cleanPv": 3887196.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CMDC-CORN"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "endur-comm",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 10044
+  }
+ }
+}

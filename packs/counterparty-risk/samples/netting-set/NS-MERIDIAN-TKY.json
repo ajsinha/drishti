@@ -62,21 +62,21 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10722",
+   "tradeId": "IMG-400134",
    "product": "Range accrual note",
    "notional": 89000000.0,
    "maturity": "2035-10-05",
    "mtm": 587235
   },
   {
-   "tradeId": "T-10737",
+   "tradeId": "IMG-400149",
    "product": "FX-rates hybrid (PRDC)",
    "notional": 177000000.0,
    "maturity": "2034-05-08",
    "mtm": 401694
   },
   {
-   "tradeId": "T-10732",
+   "tradeId": "IMG-400144",
    "product": "Capital-protected note",
    "notional": 118000000.0,
    "maturity": "2030-06-10",

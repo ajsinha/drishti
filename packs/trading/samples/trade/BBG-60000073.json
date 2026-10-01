@@ -1,0 +1,360 @@
+{
+ "tradeId": "BBG-60000073",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000073",
+ "productType": "CLO_TRANCHE",
+ "productName": "CLO tranche",
+ "assetClass": "Fixed income",
+ "family": "securitized",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2024-07-12",
+ "effectiveDate": "2024-07-15",
+ "maturityDate": "2032-06-02",
+ "currency": "USD",
+ "notional": 23000000.0,
+ "mtm": 86751,
+ "mtmCurrency": "USD",
+ "pnl1d": 2882,
+ "counterparty": {
+  "id": "CP-KESTREL",
+  "name": "Kestrel Global Macro Fund"
+ },
+ "nettingSet": "NS-KESTREL-NY",
+ "book": "BOOK-FI-3",
+ "trader": "TRDR-BADEYEMI",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-HELIX",
+ "forwardCurve": "CRV-USD-PROJ",
+ "creditCurve": "CDS-HELIX",
+ "terms": {
+  "tranche": "BB",
+  "discountMargin": 153.4
+ },
+ "risk": {
+  "cs01": 15676,
+  "dv01": 14655
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 746,
+   "dv01": 698
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 1493,
+   "dv01": 1396
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 2239,
+   "dv01": 2094
+  },
+  {
+   "bucket": "3Y",
+   "cs01": 2986,
+   "dv01": 2791
+  },
+  {
+   "bucket": "5Y",
+   "cs01": 3732,
+   "dv01": 3489
+  },
+  {
+   "bucket": "7Y",
+   "cs01": 4479,
+   "dv01": 4187
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2025-01-15",
+   "opening": 23000000,
+   "principal": 1437500,
+   "closing": 21562500,
+   "interest": 460000
+  },
+  {
+   "date": "2025-07-15",
+   "opening": 21562500,
+   "principal": 1437500,
+   "closing": 20125000,
+   "interest": 431250
+  },
+  {
+   "date": "2026-01-15",
+   "opening": 20125000,
+   "principal": 1437500,
+   "closing": 18687500,
+   "interest": 402500
+  },
+  {
+   "date": "2026-07-15",
+   "opening": 18687500,
+   "principal": 1437500,
+   "closing": 17250000,
+   "interest": 373750
+  },
+  {
+   "date": "2027-01-15",
+   "opening": 17250000,
+   "principal": 1437500,
+   "closing": 15812500,
+   "interest": 345000
+  },
+  {
+   "date": "2027-07-15",
+   "opening": 15812500,
+   "principal": 1437500,
+   "closing": 14375000,
+   "interest": 316250
+  },
+  {
+   "date": "2028-01-15",
+   "opening": 14375000,
+   "principal": 1437500,
+   "closing": 12937500,
+   "interest": 287500
+  },
+  {
+   "date": "2028-07-15",
+   "opening": 12937500,
+   "principal": 1437500,
+   "closing": 11500000,
+   "interest": 258750
+  },
+  {
+   "date": "2029-01-15",
+   "opening": 11500000,
+   "principal": 1437500,
+   "closing": 10062500,
+   "interest": 230000
+  },
+  {
+   "date": "2029-07-15",
+   "opening": 10062500,
+   "principal": 1437500,
+   "closing": 8625000,
+   "interest": 201250
+  },
+  {
+   "date": "2030-01-15",
+   "opening": 8625000,
+   "principal": 1437500,
+   "closing": 7187500,
+   "interest": 172500
+  },
+  {
+   "date": "2030-07-15",
+   "opening": 7187500,
+   "principal": 1437500,
+   "closing": 5750000,
+   "interest": 143750
+  },
+  {
+   "date": "2031-01-15",
+   "opening": 5750000,
+   "principal": 1437500,
+   "closing": 4312500,
+   "interest": 115000
+  },
+  {
+   "date": "2031-07-15",
+   "opening": 4312500,
+   "principal": 1437500,
+   "closing": 2875000,
+   "interest": 86250
+  },
+  {
+   "date": "2032-01-15",
+   "opening": 2875000,
+   "principal": 1437500,
+   "closing": 1437500,
+   "interest": 57500
+  },
+  {
+   "date": "2032-06-02",
+   "opening": 1437500,
+   "principal": 1437500,
+   "closing": 0,
+   "interest": 28750
+  }
+ ],
+ "nextIndex": 4,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 2132
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 1380
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -3840
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 2769
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 3474
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 4526
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 2235
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 4146
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 729
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 823
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -3793
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -868
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 3429
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -512
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 5016
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -1351
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -3326
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -3289
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -7492
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -979
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-07-12",
+  "executionTimestamp": "2024-07-12T12:57:25.330Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "B. Adeyemi",
+  "salesperson": null,
+  "orderId": "ORD-35127E15FE"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-07-12T12:04:00Z",
+    "by": "stp.gateway"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2025-02-02T12:04:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2024-07-12T12:04:00Z",
+  "lastModifiedAt": "2025-02-02T12:04:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT878452089",
+  "matched": "2024-07-12 11:46",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209635127E15FE0B4D1D905F",
+  "upi": "QZA7LW2RGL5X",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "KESTUS33XXX",
+  "ssiId": "SSI-USD-69F994",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 86751,
+  "cleanPv": 86751.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-USD-PROJ",
+   "CDS-HELIX"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

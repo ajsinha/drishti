@@ -307,14 +307,14 @@ def test_a_channel_takes_new_subscriptions_without_reconnecting(client):
 
 def test_a_command_naming_several_entities_shows_a_pick_list(client, backend, monkeypatch):
     async def command(text, ident=None):
-        if text.strip() == "TRD T-100":
-            return {"ref": None, "mnemonic": "TRD", "list": "TRD T-100", "matched": 12}
-        return {"ref": {"kind": "trade", "id": "T-10001"}, "mnemonic": "TRD"}
+        if text.strip() == "TRD MX-200000":
+            return {"ref": None, "mnemonic": "TRD", "list": "TRD MX-200000", "matched": 12}
+        return {"ref": {"kind": "trade", "id": "MX-20000001"}, "mnemonic": "TRD"}
     monkeypatch.setattr(backend, "command", command, raising=False)
-    r = client.get("/go", params={"q": "TRD T-100"}, follow_redirects=False)
-    assert r.status_code == 303 and r.headers["location"] == "/s?q=TRD%20T-100"
-    one = client.get("/go", params={"q": "TRD T-10001"}, follow_redirects=False)
-    assert one.headers["location"] == "/v/trade/T-10001"
+    r = client.get("/go", params={"q": "TRD MX-200000"}, follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == "/s?q=TRD%20MX-200000"
+    one = client.get("/go", params={"q": "TRD MX-20000001"}, follow_redirects=False)
+    assert one.headers["location"] == "/v/trade/MX-20000001"
 
 
 def test_readiness_says_whether_the_server_answers(client, backend, monkeypatch):
@@ -339,7 +339,7 @@ def test_a_packs_code_opens_its_overview(client):
 
 
 def test_history_and_aliases(client, backend):
-    assert client.get("/api/history").json() == ["TRD T-10001", "MKT"]
+    assert client.get("/api/history").json() == ["TRD MX-20000001", "MKT"]
     page = client.get("/account").text
     assert 'value="MYBOOK"' in page and 'value="BOOK BOOK-RATES-1"' in page and "data-plain" in page
     r = client.put("/api/aliases", json={"revs": "TRD productType=Revolver"})

@@ -1,0 +1,246 @@
+{
+ "tradeId": "MX-20000108",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000108",
+ "productType": "SWAPTION_BERM",
+ "productName": "Bermudan swaption",
+ "assetClass": "Rates",
+ "family": "option",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2026-07-09",
+ "effectiveDate": "2026-07-13",
+ "maturityDate": "2028-06-12",
+ "currency": "USD",
+ "notional": 23000000.0,
+ "mtm": -96005,
+ "mtmCurrency": "USD",
+ "pnl1d": 5733,
+ "counterparty": {
+  "id": "CP-PINNACLE",
+  "name": "Pinnacle Credit Partners"
+ },
+ "nettingSet": "NS-PINNACLE-NY",
+ "book": "BOOK-RATES-3",
+ "trader": "TRDR-ASHAH",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-USD-OIS",
+ "forwardCurve": "CRV-USD-PROJ",
+ "swaptionVolCube": "IRV-USD",
+ "terms": {
+  "payerReceiver": "Receiver",
+  "strike": 0.022058,
+  "firstExercise": "2028-10-06",
+  "exerciseFrequency": "Annual"
+ },
+ "risk": {
+  "dv01": -3910,
+  "vega": -50788
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -391,
+   "vega": -5079
+  },
+  {
+   "bucket": "6M",
+   "dv01": -782,
+   "vega": -10158
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -1173,
+   "vega": -15236
+  },
+  {
+   "bucket": "2Y",
+   "dv01": -1564,
+   "vega": -20315
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2027-07-13",
+   "type": "First call",
+   "strike": 0.022539,
+   "status": "Pending"
+  },
+  {
+   "date": "2028-06-12",
+   "type": "Bermudan call",
+   "strike": 0.049466,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 4445
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -3294
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 899
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -2341
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -2195
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 2560
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 472
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 1347
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 944
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -5353
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -1701
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 1858
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 623
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -326
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 4060
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 2593
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 3336
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -4550
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -1866
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 2399
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-07-09",
+  "executionTimestamp": "2026-07-09T10:21:22.339Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "A. Shah",
+  "salesperson": null,
+  "orderId": "ORD-A7DFF30B9E"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-07-09T09:49:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2026-07-09T09:49:00Z",
+  "lastModifiedAt": "2026-07-09T09:49:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA373353694",
+  "matched": "2026-07-09 17:01",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096A7DFF30B9E086BF73CE0",
+  "upi": "QZ5SPI21U482",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "PINNUS33XXX",
+  "ssiId": "SSI-USD-F2BB52",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -96005,
+  "cleanPv": -96005.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CRV-USD-OIS",
+   "CRV-USD-PROJ",
+   "IRV-USD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

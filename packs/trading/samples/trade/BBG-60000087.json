@@ -1,0 +1,247 @@
+{
+ "tradeId": "BBG-60000087",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000087",
+ "productType": "REVERSE_REPO",
+ "productName": "Reverse repo",
+ "assetClass": "Securities financing",
+ "family": "sft",
+ "status": "Live",
+ "direction": "Reverse repo",
+ "tradeDate": "2026-07-31",
+ "effectiveDate": "2026-08-03",
+ "maturityDate": "2026-11-12",
+ "currency": "USD",
+ "notional": 159000000.0,
+ "mtm": -730273,
+ "mtmCurrency": "USD",
+ "pnl1d": 1738,
+ "counterparty": {
+  "id": "CP-AURORA",
+  "name": "Aurora Sovereign Wealth Fund"
+ },
+ "nettingSet": "NS-AURORA-FRA",
+ "book": "BOOK-SFT-3",
+ "trader": "TRDR-KBRANDT",
+ "desk": "DESK-SFT",
+ "legalEntity": "LE-FRA",
+ "issuer": "ISS-HELIX",
+ "repoCurve": "REPO-USD",
+ "underlyingBond": "BND-USHELI055667",
+ "terms": {
+  "repoRate": 0.04182,
+  "haircut": 0.060236,
+  "term": "1W"
+ },
+ "risk": {
+  "dv01": -3468,
+  "exposure": 1660530
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -1156,
+   "exposure": 553510
+  },
+  {
+   "bucket": "6M",
+   "dv01": -2312,
+   "exposure": 1107020
+  }
+ ],
+ "schedule": [
+  {
+   "asset": "Lumen Semiconductor AG 2031",
+   "isin": "CHLUME076897",
+   "quantity": 50135290,
+   "marketValue": 52730794,
+   "haircut": 0.02,
+   "value": 51676178
+  },
+  {
+   "asset": "Verdant Agri Holdings 2031",
+   "isin": "BRVERD054608",
+   "quantity": 54293371,
+   "marketValue": 51199735,
+   "haircut": 0.04,
+   "value": 49151746
+  },
+  {
+   "asset": "Solaris Energy Corp. 2036",
+   "isin": "USSOLA119789",
+   "quantity": 50972139,
+   "marketValue": 50439990,
+   "haircut": 0.005,
+   "value": 50187790
+  }
+ ],
+ "nextIndex": -1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 29188
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -13027
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -44703
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 22820
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -22338
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 30741
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -24241
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 7511
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -29875
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 7648
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 16692
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 2814
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -37164
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 26181
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 14996
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -39269
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 25392
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 26233
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 29637
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 27152
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-07-31",
+  "executionTimestamp": "2026-07-31T14:17:00.453Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "K. Brandt",
+  "salesperson": null,
+  "orderId": "ORD-29FB81DC7F"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-07-31T13:00:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2026-07-31T13:00:00Z",
+  "lastModifiedAt": "2026-07-31T13:00:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT297730110",
+  "matched": "2026-07-31 15:34",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z9DXU4T18OK74429FB81DC7FCC759692CC",
+  "upi": "QZ46U9H7BYAZ",
+  "reportingRegimes": [
+   "EU EMIR",
+   "EU MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "AUROUS33XXX",
+  "ssiId": "SSI-USD-79DAAE",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -730273,
+  "cleanPv": -730273.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "REPO-USD",
+   "BND-USHELI055667"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "globalone-sft",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 3051
+  }
+ }
+}

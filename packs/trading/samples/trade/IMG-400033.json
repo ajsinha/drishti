@@ -1,0 +1,252 @@
+{
+ "tradeId": "IMG-400033",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400033",
+ "productType": "EQ_OPTION_OTC",
+ "productName": "OTC equity option",
+ "assetClass": "Equity",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2024-06-28",
+ "effectiveDate": "2024-06-28",
+ "maturityDate": "2026-10-07",
+ "currency": "USD",
+ "notional": 97000000.0,
+ "mtm": 521167,
+ "mtmCurrency": "USD",
+ "pnl1d": 15079,
+ "counterparty": {
+  "id": "CP-CASCADIA",
+  "name": "Cascadia Airlines Inc."
+ },
+ "nettingSet": "NS-CASCADIA-LDN",
+ "book": "BOOK-EQD-2",
+ "trader": "TRDR-PLINDQVIST",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingEquity": "EQ-SLRS",
+ "equityVolSurface": "EQV-SLRS",
+ "dividendCurve": "DIV-SLRS",
+ "discountCurve": "CRV-USD-OIS",
+ "terms": {
+  "optionType": "Put",
+  "exerciseStyle": "European",
+  "expiryDate": "2029-08-06",
+  "strike": 965.92,
+  "quantity": 159751
+ },
+ "risk": {
+  "delta": 465522,
+  "gamma": 3513,
+  "vega": 282494,
+  "theta": -7812
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 31035,
+   "gamma": 234,
+   "vega": 18833,
+   "theta": -521
+  },
+  {
+   "bucket": "1M",
+   "delta": 62070,
+   "gamma": 468,
+   "vega": 37666,
+   "theta": -1042
+  },
+  {
+   "bucket": "3M",
+   "delta": 93104,
+   "gamma": 703,
+   "vega": 56499,
+   "theta": -1562
+  },
+  {
+   "bucket": "6M",
+   "delta": 124139,
+   "gamma": 937,
+   "vega": 75332,
+   "theta": -2083
+  },
+  {
+   "bucket": "1Y",
+   "delta": 155174,
+   "gamma": 1171,
+   "vega": 94165,
+   "theta": -2604
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 23718
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -3043
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 16099
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -8202
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 36158
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 1187
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 3002
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 18224
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -9901
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -24583
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 12981
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -20109
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 14354
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -2984
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 15631
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 4312
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 28567
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -14666
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -37983
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -3216
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-06-28",
+  "executionTimestamp": "2024-06-28T11:09:52.992Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "P. Lindqvist",
+  "salesperson": null,
+  "orderId": "ORD-6C1E75B648"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-06-28T12:38:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2024-06-28T12:38:00Z",
+  "lastModifiedAt": "2024-06-28T12:38:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT751775922",
+  "matched": "2024-06-28 12:43",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q836C1E75B648D9A4F0EE09",
+  "upi": "QZO34VLXG3MW",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "CASCUS33XXX",
+  "ssiId": "SSI-USD-BC4549",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 521167,
+  "cleanPv": 521167.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "EQ-SLRS",
+   "EQV-SLRS",
+   "DIV-SLRS",
+   "CRV-USD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 2012
+  }
+ }
+}

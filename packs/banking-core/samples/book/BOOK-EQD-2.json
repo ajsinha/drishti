@@ -7,70 +7,70 @@
  "dv01": 96984,
  "topTrades": [
   {
-   "tradeId": "T-10366",
+   "tradeId": "IMG-400054",
    "product": "Equity Asian option",
    "notional": 169000000.0,
    "maturity": "2032-02-27",
    "mtm": 4285041
   },
   {
-   "tradeId": "T-10430",
+   "tradeId": "IMG-400118",
    "product": "Equity warrant",
    "notional": 179000000.0,
    "maturity": "2028-06-20",
    "mtm": 3143714
   },
   {
-   "tradeId": "T-10433",
+   "tradeId": "IMG-400121",
    "product": "Convertible bond",
    "notional": 214000000.0,
    "maturity": "2031-07-28",
    "mtm": 3120994
   },
   {
-   "tradeId": "T-10316",
+   "tradeId": "IMG-400004",
    "product": "Equity position",
    "notional": 225000000.0,
    "maturity": "2026-10-07",
    "mtm": 3106156
   },
   {
-   "tradeId": "T-10386",
+   "tradeId": "IMG-400074",
    "product": "Reverse convertible",
    "notional": 221000000.0,
    "maturity": "2026-10-07",
    "mtm": -2940178
   },
   {
-   "tradeId": "T-10361",
+   "tradeId": "IMG-400049",
    "product": "Equity Asian option",
    "notional": 173000000.0,
    "maturity": "2037-02-02",
    "mtm": 2232719
   },
   {
-   "tradeId": "T-10327",
+   "tradeId": "IMG-400015",
    "product": "Single-stock future",
    "notional": 156000000.0,
    "maturity": "2026-10-13",
    "mtm": -2220542
   },
   {
-   "tradeId": "T-10358",
+   "tradeId": "IMG-400046",
    "product": "Equity barrier option",
    "notional": 185000000.0,
    "maturity": "2037-02-17",
    "mtm": 1866866
   },
   {
-   "tradeId": "T-10416",
+   "tradeId": "IMG-400104",
    "product": "Portfolio (basket) swap",
    "notional": 143000000.0,
    "maturity": "2028-08-23",
    "mtm": -1863356
   },
   {
-   "tradeId": "T-10432",
+   "tradeId": "IMG-400120",
    "product": "Equity warrant",
    "notional": 192000000.0,
    "maturity": "2026-10-07",

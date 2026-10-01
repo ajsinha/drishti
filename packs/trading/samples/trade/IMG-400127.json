@@ -1,0 +1,294 @@
+{
+ "tradeId": "IMG-400127",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400127",
+ "productType": "EQ_BASKET_OPTION",
+ "productName": "Basket option",
+ "assetClass": "Equity",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2025-06-13",
+ "effectiveDate": "2025-06-16",
+ "maturityDate": "2031-11-03",
+ "currency": "GBP",
+ "notional": 97000000.0,
+ "mtm": 1923365,
+ "mtmCurrency": "USD",
+ "pnl1d": 35604,
+ "counterparty": {
+  "id": "CP-RHEINTAL",
+  "name": "Rheintal Landesbank"
+ },
+ "nettingSet": "NS-RHEINTAL-LDN",
+ "book": "BOOK-EQD-1",
+ "trader": "TRDR-PLINDQVIST",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingIndex": "EQX-UKX",
+ "equityVolSurface": "EQV-UKX",
+ "correlation": "CORR-EU-EQ",
+ "terms": {
+  "optionType": "Put",
+  "exerciseStyle": "European",
+  "expiryDate": "2029-07-01",
+  "strike": 117.75,
+  "basketSize": 10
+ },
+ "risk": {
+  "delta": 490658,
+  "vega": 715059
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 23365,
+   "vega": 34050
+  },
+  {
+   "bucket": "1M",
+   "delta": 46729,
+   "vega": 68101
+  },
+  {
+   "bucket": "3M",
+   "delta": 70094,
+   "vega": 102151
+  },
+  {
+   "bucket": "6M",
+   "delta": 93459,
+   "vega": 136202
+  },
+  {
+   "bucket": "1Y",
+   "delta": 116823,
+   "vega": 170252
+  },
+  {
+   "bucket": "2Y",
+   "delta": 140188,
+   "vega": 204303
+  }
+ ],
+ "schedule": [
+  {
+   "name": "Cascadia Airlines Inc.",
+   "weight": 0.125,
+   "level": 175.3,
+   "status": "Active"
+  },
+  {
+   "name": "Lumen Semiconductor AG",
+   "weight": 0.125,
+   "level": 433.4,
+   "status": "Active"
+  },
+  {
+   "name": "Rheintal Landesbank",
+   "weight": 0.125,
+   "level": 135.4,
+   "status": "Active"
+  },
+  {
+   "name": "Verdant Agri Holdings",
+   "weight": 0.125,
+   "level": 313.6,
+   "status": "Active"
+  },
+  {
+   "name": "Granite Building Materials plc",
+   "weight": 0.125,
+   "level": 199.1,
+   "status": "Active"
+  },
+  {
+   "name": "Helix Pharmaceuticals Inc.",
+   "weight": 0.125,
+   "level": 171.8,
+   "status": "Active"
+  },
+  {
+   "name": "Halcyon Shipping plc",
+   "weight": 0.125,
+   "level": 214.3,
+   "status": "Active"
+  },
+  {
+   "name": "Orbital Telecom SA",
+   "weight": 0.125,
+   "level": 355.9,
+   "status": "Active"
+  }
+ ],
+ "nextIndex": -1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -20564
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 739
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -30239
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 39459
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 59986
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 66341
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -9455
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -50799
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 46054
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -138710
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -19709
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -19558
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -40218
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -39787
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -102760
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 48859
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 45043
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -80081
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -9840
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -104586
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-06-13",
+  "executionTimestamp": "2025-06-13T09:38:46.228Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "P. Lindqvist",
+  "salesperson": null,
+  "orderId": "ORD-A049D54B9C"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-06-13T11:00:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2025-06-13T11:00:00Z",
+  "lastModifiedAt": "2025-06-13T11:00:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT950360782",
+  "matched": "2025-06-13 14:46",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83A049D54B9CF9CD709369",
+  "upi": "QZ5JCA50VDJH",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Barclays Bank plc",
+  "ourAgentBic": "BARCGB22XXX",
+  "theirAgentBic": "RHEIGB33XXX",
+  "ssiId": "SSI-GBP-230AB8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1923365,
+  "cleanPv": 1923365.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "EQX-UKX",
+   "EQV-UKX",
+   "CORR-EU-EQ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 4817
+  }
+ }
+}

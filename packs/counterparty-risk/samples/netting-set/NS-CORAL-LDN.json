@@ -62,63 +62,63 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10563",
+   "tradeId": "MX-20000185",
    "product": "Inflation asset swap",
    "notional": 237000000.0,
    "maturity": "2031-05-13",
    "mtm": -2801657
   },
   {
-   "tradeId": "T-10175",
+   "tradeId": "WSS-1500019",
    "product": "FX swap",
    "notional": 98000000.0,
    "maturity": "2037-05-15",
    "mtm": -1679905
   },
   {
-   "tradeId": "T-10558",
+   "tradeId": "MX-20000180",
    "product": "Inflation-linked bond",
    "notional": 57000000.0,
    "maturity": "2027-05-24",
    "mtm": -1106536
   },
   {
-   "tradeId": "T-10543",
+   "tradeId": "MX-20000165",
    "product": "Year-on-year inflation swap",
    "notional": 249000000.0,
    "maturity": "2028-04-24",
    "mtm": 956175
   },
   {
-   "tradeId": "T-10570",
+   "tradeId": "MX-20000192",
    "product": "Limited price index swap",
    "notional": 171000000.0,
    "maturity": "2034-07-12",
    "mtm": -339669
   },
   {
-   "tradeId": "T-10390",
+   "tradeId": "IMG-400078",
    "product": "Reverse convertible",
    "notional": 47000000.0,
    "maturity": "2030-09-09",
    "mtm": -218334
   },
   {
-   "tradeId": "T-10399",
+   "tradeId": "IMG-400087",
    "product": "Volatility swap",
    "notional": 7000000.0,
    "maturity": "2030-07-09",
    "mtm": 139897
   },
   {
-   "tradeId": "T-10402",
+   "tradeId": "IMG-400090",
    "product": "Volatility swap",
    "notional": 8000000.0,
    "maturity": "2028-11-07",
    "mtm": 31675
   },
   {
-   "tradeId": "T-10401",
+   "tradeId": "IMG-400089",
    "product": "Volatility swap",
    "notional": 10000000.0,
    "maturity": "2036-09-29",

@@ -1,0 +1,326 @@
+{
+ "tradeId": "CLY-3000016",
+ "sourceSystem": "Calypso",
+ "sourceTradeId": "3000016",
+ "productType": "CDS_TRANCHE",
+ "productName": "Index tranche",
+ "assetClass": "Credit",
+ "family": "cds",
+ "status": "Live",
+ "direction": "Sell protection",
+ "tradeDate": "2025-02-20",
+ "effectiveDate": "2025-02-24",
+ "maturityDate": "2033-03-21",
+ "currency": "USD",
+ "notional": 137000000.0,
+ "mtm": -2011432,
+ "mtmCurrency": "USD",
+ "pnl1d": 31629,
+ "counterparty": {
+  "id": "CP-KESTREL",
+  "name": "Kestrel Global Macro Fund"
+ },
+ "nettingSet": "NS-KESTREL-NY",
+ "book": "BOOK-CREDIT-1",
+ "trader": "TRDR-CDUBOIS",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-KAIZEN",
+ "creditCurve": "CDS-KAIZEN",
+ "discountCurve": "CRV-USD-OIS",
+ "correlation": "CORR-EU-EQ",
+ "terms": {
+  "index": "CDX.NA.IG S47",
+  "attachment": "0.07",
+  "detachment": "0.15",
+  "protection": "Sold"
+ },
+ "risk": {
+  "cs01": -97936,
+  "jtd": -82200000
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": -4664,
+   "jtd": -3914286
+  },
+  {
+   "bucket": "1Y",
+   "cs01": -9327,
+   "jtd": -7828571
+  },
+  {
+   "bucket": "2Y",
+   "cs01": -13991,
+   "jtd": -11742857
+  },
+  {
+   "bucket": "3Y",
+   "cs01": -18654,
+   "jtd": -15657143
+  },
+  {
+   "bucket": "5Y",
+   "cs01": -23318,
+   "jtd": -19571429
+  },
+  {
+   "bucket": "7Y",
+   "cs01": -27982,
+   "jtd": -23485714
+  }
+ ],
+ "schedule": [
+  {
+   "payDate": "2026-02-24",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -333971.37,
+   "pv": 0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2027-02-24",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -389937.13,
+   "pv": -378239.02,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2028-02-24",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -291742.05,
+   "pv": -282989.79,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2029-02-24",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -361260.61,
+   "pv": -350422.79,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2030-02-24",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -299936.11,
+   "pv": -290938.03,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2031-02-24",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -395935.6,
+   "pv": -384057.53,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2032-02-24",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -329223.98,
+   "pv": -319347.26,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2033-02-24",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -346200.79,
+   "pv": -335814.77,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2033-03-21",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -387077.12,
+   "pv": -375464.81,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 2824
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 8322
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 23497
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 146363
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 52083
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -70375
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -87134
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 24571
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -18886
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -140547
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 52636
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 89893
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -22073
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -72383
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 29231
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -126540
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -80915
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -64517
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -41241
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -29885
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-02-20",
+  "executionTimestamp": "2025-02-20T10:42:02.430Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "C. Dubois",
+  "salesperson": null,
+  "orderId": "ORD-9E13156511"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-02-20T10:26:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2025-02-20T10:26:00Z",
+  "lastModifiedAt": "2025-02-20T10:26:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA379897644",
+  "matched": "2025-02-20 15:17",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20969E131565113B57DCB341",
+  "upi": "QZDTBHN24KLI",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "KESTUS33XXX",
+  "ssiId": "SSI-USD-69F994",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -2011432,
+  "cleanPv": -2011432.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CDS-KAIZEN",
+   "CRV-USD-OIS",
+   "CORR-EU-EQ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 5393
+  }
+ }
+}

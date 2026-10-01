@@ -1,0 +1,305 @@
+{
+ "tradeId": "IMG-400061",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400061",
+ "productType": "EQ_CLIQUET",
+ "productName": "Cliquet (ratchet)",
+ "assetClass": "Equity",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2026-02-20",
+ "effectiveDate": "2026-02-23",
+ "maturityDate": "2028-04-03",
+ "currency": "USD",
+ "notional": 117000000.0,
+ "mtm": -1004449,
+ "mtmCurrency": "USD",
+ "pnl1d": -73386,
+ "counterparty": {
+  "id": "CP-HALCYON",
+  "name": "Halcyon Shipping plc"
+ },
+ "nettingSet": "NS-HALCYON-LDN",
+ "book": "BOOK-EQD-3",
+ "trader": "TRDR-JWEISS",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingIndex": "EQX-NDX",
+ "equityVolSurface": "EQV-NDX",
+ "terms": {
+  "localCap": 0.040956,
+  "localFloor": -0.028036,
+  "globalFloor": 0.023729
+ },
+ "risk": {
+  "delta": -362815,
+  "vega": -359554
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -17277,
+   "vega": -17122
+  },
+  {
+   "bucket": "1M",
+   "delta": -34554,
+   "vega": -34243
+  },
+  {
+   "bucket": "3M",
+   "delta": -51831,
+   "vega": -51365
+  },
+  {
+   "bucket": "6M",
+   "delta": -69108,
+   "vega": -68486
+  },
+  {
+   "bucket": "1Y",
+   "delta": -86385,
+   "vega": -85608
+  },
+  {
+   "bucket": "2Y",
+   "delta": -103661,
+   "vega": -102730
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-05-23",
+   "level": 99.23,
+   "trigger": 100.0,
+   "performance": -0.0077,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-08-23",
+   "level": 85.68,
+   "trigger": 100.0,
+   "performance": -0.1432,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-11-23",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-02-23",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-05-23",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-08-23",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-11-23",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-02-23",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-04-03",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 2,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 16930
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 42393
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 39664
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -17963
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 27061
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 14383
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 20541
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -54840
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 26055
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -21389
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -12381
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 35925
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 31166
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 13395
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 6898
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -2096
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 24457
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 9417
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -21053
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 58598
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-02-20",
+  "executionTimestamp": "2026-02-20T12:00:54.111Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "J. Weiss",
+  "salesperson": null,
+  "orderId": "ORD-2F9725BD9F"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-02-20T09:57:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2026-02-20T09:57:00Z",
+  "lastModifiedAt": "2026-02-20T09:57:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT906447049",
+  "matched": "2026-02-20 14:15",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q832F9725BD9F1F8F3E6233",
+  "upi": "QZ2D9EBE62NO",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "HALCUS33XXX",
+  "ssiId": "SSI-USD-10E970",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -1004449,
+  "cleanPv": -1004449.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "EQX-NDX",
+   "EQV-NDX"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 3179
+  }
+ }
+}

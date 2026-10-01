@@ -1,0 +1,291 @@
+{
+ "tradeId": "CLY-3000025",
+ "sourceSystem": "Calypso",
+ "sourceTradeId": "3000025",
+ "productType": "FIRST_TO_DEFAULT",
+ "productName": "First-to-default basket",
+ "assetClass": "Credit",
+ "family": "cds",
+ "status": "Live",
+ "direction": "Buy protection",
+ "tradeDate": "2026-07-28",
+ "effectiveDate": "2026-07-30",
+ "maturityDate": "2033-04-22",
+ "currency": "GBP",
+ "notional": 153000000.0,
+ "mtm": 1940,
+ "mtmCurrency": "USD",
+ "pnl1d": 123,
+ "counterparty": {
+  "id": "CP-CASCADIA",
+  "name": "Cascadia Airlines Inc."
+ },
+ "nettingSet": "NS-CASCADIA-NY",
+ "book": "BOOK-CREDIT-1",
+ "trader": "TRDR-CDUBOIS",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-HALCYON",
+ "creditCurve": "CDS-HALCYON",
+ "discountCurve": "CRV-GBP-OIS",
+ "correlation": "CORR-EU-EQ",
+ "terms": {
+  "basketSize": 8,
+  "spread": 874.0
+ },
+ "risk": {
+  "cs01": 83310,
+  "jtd": -91800000
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 3967,
+   "jtd": -4371429
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 7934,
+   "jtd": -8742857
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 11901,
+   "jtd": -13114286
+  },
+  {
+   "bucket": "3Y",
+   "cs01": 15869,
+   "jtd": -17485714
+  },
+  {
+   "bucket": "5Y",
+   "cs01": 19836,
+   "jtd": -21857143
+  },
+  {
+   "bucket": "7Y",
+   "cs01": 23803,
+   "jtd": -26228571
+  }
+ ],
+ "schedule": [
+  {
+   "name": "Granite Building Materials plc",
+   "weight": 0.125,
+   "level": 135.4,
+   "status": "Active"
+  },
+  {
+   "name": "Halcyon Shipping plc",
+   "weight": 0.125,
+   "level": 302.2,
+   "status": "Active"
+  },
+  {
+   "name": "Rheintal Landesbank",
+   "weight": 0.125,
+   "level": 285.9,
+   "status": "Active"
+  },
+  {
+   "name": "Kaizen Motors Corp.",
+   "weight": 0.125,
+   "level": 136.8,
+   "status": "Active"
+  },
+  {
+   "name": "Helix Pharmaceuticals Inc.",
+   "weight": 0.125,
+   "level": 273.3,
+   "status": "Active"
+  },
+  {
+   "name": "Verdant Agri Holdings",
+   "weight": 0.125,
+   "level": 309.6,
+   "status": "Active"
+  },
+  {
+   "name": "Solaris Energy Corp.",
+   "weight": 0.125,
+   "level": 300.7,
+   "status": "Active"
+  },
+  {
+   "name": "Novatek Devices Inc.",
+   "weight": 0.125,
+   "level": 106.4,
+   "status": "Active"
+  }
+ ],
+ "nextIndex": -1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -3317
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 3196
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -2790
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 1331
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -6106
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -1768
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 2237
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 796
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 643
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 197
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -1225
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 2054
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -6749
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -1261
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -4325
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 1922
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 496
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -380
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -776
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 3461
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-07-28",
+  "executionTimestamp": "2026-07-28T14:47:05.611Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "C. Dubois",
+  "salesperson": null,
+  "orderId": "ORD-A47218C99F"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-07-28T12:22:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-07-28T12:22:00Z",
+  "lastModifiedAt": "2026-07-28T12:22:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA823799325",
+  "matched": "2026-07-28 15:34",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096A47218C99F953D345716",
+  "upi": "QZ9A7VB080DG",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Barclays Bank plc",
+  "ourAgentBic": "BARCGB22XXX",
+  "theirAgentBic": "CASCGB33XXX",
+  "ssiId": "SSI-GBP-BC4549",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1940,
+  "cleanPv": 1940.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CDS-HALCYON",
+   "CRV-GBP-OIS",
+   "CORR-EU-EQ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 1534
+  }
+ }
+}

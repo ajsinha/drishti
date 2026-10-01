@@ -1,0 +1,411 @@
+{
+ "tradeId": "WSS-1500053",
+ "sourceSystem": "Wall Street Systems",
+ "sourceTradeId": "1500053",
+ "productType": "FX_TOUCH",
+ "productName": "FX one-touch / no-touch",
+ "assetClass": "FX",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2024-06-28",
+ "effectiveDate": "2024-06-28",
+ "maturityDate": "2032-11-05",
+ "currency": "USD",
+ "notional": 50000000.0,
+ "mtm": -411302,
+ "mtmCurrency": "USD",
+ "pnl1d": 4273,
+ "counterparty": {
+  "id": "CP-NORTHBRIDGE",
+  "name": "Northbridge Capital LLP"
+ },
+ "nettingSet": "NS-NORTHBRIDGE-LDN",
+ "book": "BOOK-FX-3",
+ "trader": "TRDR-LMOREAU",
+ "desk": "DESK-FX",
+ "legalEntity": "LE-LDN",
+ "fxSpot": "FX-AUDUSD",
+ "fxVolSurface": "FXV-AUDUSD",
+ "terms": {
+  "touchType": "No-touch",
+  "barrier": 40.24335,
+  "payout": 1801515.0,
+  "expiryDate": "2027-06-23"
+ },
+ "risk": {
+  "fxDelta": -500000,
+  "vega": -372781
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "fxDelta": -23810,
+   "vega": -17751
+  },
+  {
+   "bucket": "1M",
+   "fxDelta": -47619,
+   "vega": -35503
+  },
+  {
+   "bucket": "3M",
+   "fxDelta": -71429,
+   "vega": -53254
+  },
+  {
+   "bucket": "6M",
+   "fxDelta": -95238,
+   "vega": -71006
+  },
+  {
+   "bucket": "1Y",
+   "fxDelta": -119048,
+   "vega": -88757
+  },
+  {
+   "bucket": "2Y",
+   "fxDelta": -142857,
+   "vega": -106509
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2024-09-28",
+   "level": 89.31,
+   "trigger": 100.0,
+   "performance": -0.1069,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2024-12-28",
+   "level": 99.4,
+   "trigger": 100.0,
+   "performance": -0.006,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-03-28",
+   "level": 93.2,
+   "trigger": 100.0,
+   "performance": -0.068,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-06-28",
+   "level": 96.72,
+   "trigger": 100.0,
+   "performance": -0.0328,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-09-28",
+   "level": 78.84,
+   "trigger": 100.0,
+   "performance": -0.2116,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-12-28",
+   "level": 92.79,
+   "trigger": 100.0,
+   "performance": -0.0721,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-03-28",
+   "level": 93.63,
+   "trigger": 100.0,
+   "performance": -0.0637,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-06-28",
+   "level": 97.76,
+   "trigger": 100.0,
+   "performance": -0.0224,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-09-28",
+   "level": 99.4,
+   "trigger": 100.0,
+   "performance": -0.006,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-12-28",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-03-28",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-06-28",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-09-28",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-12-28",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-03-28",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-06-28",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-09-28",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-12-28",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-03-28",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-06-28",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-09-28",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-12-28",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-03-28",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-06-28",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 9,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 5424
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 6296
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 7797
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -7401
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -28663
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -9584
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 16391
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -332
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -8450
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 2537
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -2118
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -871
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 262
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -9819
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 1843
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -331
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 1804
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -6918
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 12906
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 1418
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-06-28",
+  "executionTimestamp": "2024-06-28T08:55:52.494Z",
+  "venue": "EBS",
+  "venueMic": "EBSM",
+  "executionType": "Electronic",
+  "trader": "L. Moreau",
+  "salesperson": null,
+  "orderId": "ORD-2E2A78979B"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-06-28T12:20:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2024-06-28T12:20:00Z",
+  "lastModifiedAt": "2024-06-28T12:20:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT413722444",
+  "matched": "2024-06-28 17:51",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q832E2A78979B016821D84F",
+  "upi": "QZM12UJAI8TO",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Foreign exchange"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "NORTUS33XXX",
+  "ssiId": "SSI-USD-A0C7C2",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -411302,
+  "cleanPv": -411302.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "FX-AUDUSD",
+   "FXV-AUDUSD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "calypso-fx",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 1323
+  }
+ }
+}

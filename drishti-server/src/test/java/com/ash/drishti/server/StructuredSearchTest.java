@@ -93,10 +93,10 @@ class StructuredSearchTest {
 
     @Test
     void oneMatchOpensAndSeveralGiveAPickList() throws Exception {
-        command("TRD T-10001 <GO>").andExpect(jsonPath("$.ref.id").value("T-10001"));                    // exists: opened
-        command("trd t-10001").andExpect(jsonPath("$.ref.id").value("T-10001"));                          // case never matters
-        command("TRD T-100").andExpect(jsonPath("$.ref").doesNotExist())                                 // T-10001 … T-10099: pick one
-                .andExpect(jsonPath("$.list").value("TRD T-100")).andExpect(jsonPath("$.matched").value(greaterThan(1)));
+        command("TRD MX-20000001 <GO>").andExpect(jsonPath("$.ref.id").value("MX-20000001"));                    // exists: opened
+        command("trd mx-20000001").andExpect(jsonPath("$.ref.id").value("MX-20000001"));                          // case never matters
+        command("TRD MX-200000").andExpect(jsonPath("$.ref").doesNotExist())                                 // MX-20000001 … MX-20000099: pick one
+                .andExpect(jsonPath("$.list").value("TRD MX-200000")).andExpect(jsonPath("$.matched").value(greaterThan(1)));
         command("TRD productType=revolver").andExpect(jsonPath("$.ref").doesNotExist()).andExpect(jsonPath("$.matched").value(6));
         command("TRD productType=revolver and direction=nobody").andExpect(jsonPath("$.matched").value(0));
 
@@ -105,9 +105,9 @@ class StructuredSearchTest {
                 .andExpect(jsonPath("$.rows", hasSize(6)))
                 .andExpect(jsonPath("$.rows[*].values['$.productType']", everyItem(org.hamcrest.Matchers.is("REVOLVER"))))
                 .andExpect(jsonPath("$.columns", org.hamcrest.Matchers.hasItems("$.productType", "$.notional", "$.mtm", "$.book")));  // the pack's key fields
-        mvc.perform(get("/api/v1/search").param("q", "TRD T-1000").header("Authorization", as("searcher")))
-                .andExpect(jsonPath("$.rows[*].ref.id", everyItem(org.hamcrest.Matchers.startsWith("T-1000"))));
-        mvc.perform(get("/api/v1/search").param("q", "TRD T-10001").header("Authorization", as("nothing"))).andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/search").param("q", "TRD MX-200000").header("Authorization", as("searcher")))
+                .andExpect(jsonPath("$.rows[*].ref.id", everyItem(org.hamcrest.Matchers.startsWith("MX-200000"))));
+        mvc.perform(get("/api/v1/search").param("q", "TRD MX-20000001").header("Authorization", as("nothing"))).andExpect(status().isForbidden());
     }
 
     @Test
@@ -130,12 +130,12 @@ class StructuredSearchTest {
         String me = as("searcher");
         mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/v1/command/aliases").header("Authorization", me)
                         .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                        .content("{\"revs\":\"TRD productType=Revolver\",\"first\":\"TRD T-10001\"}"))
+                        .content("{\"revs\":\"TRD productType=Revolver\",\"first\":\"TRD MX-20000001\"}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.REVS").value("TRD productType=Revolver"));
         mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/v1/command/aliases").header("Authorization", me)
                 .contentType(org.springframework.http.MediaType.APPLICATION_JSON).content("{\"TRD\":\"TRD T-1\"}"))
                 .andExpect(status().isBadRequest());                                                 // a mnemonic is not free
-        command("first <GO>").andExpect(jsonPath("$.ref.id").value("T-10001"));
+        command("first <GO>").andExpect(jsonPath("$.ref.id").value("MX-20000001"));
         command("revs").andExpect(jsonPath("$.matched").value(6));
         java.util.concurrent.TimeUnit.MILLISECONDS.sleep(300);                                    // history is written in the background
         mvc.perform(get("/api/v1/command/history").header("Authorization", me))
@@ -146,9 +146,9 @@ class StructuredSearchTest {
     void authorsKeepTestEntitiesPerSutra() throws Exception {
         var put = org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/v1/me/studio-tests/irs-fixfloat")
                 .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                .content("[{\"kind\":\"trade\",\"id\":\"T-10001\"},{\"kind\":\"trade\",\"id\":\"T-10001\"},{\"kind\":\"trade\",\"id\":\"T-10044\"}]");
+                .content("[{\"kind\":\"trade\",\"id\":\"MX-20000001\"},{\"kind\":\"trade\",\"id\":\"MX-20000001\"},{\"kind\":\"trade\",\"id\":\"MX-20000044\"}]");
         mvc.perform(put.header("Authorization", as("admin"))).andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(2)));   // duplicates once
-        mvc.perform(get("/api/v1/me/studio-tests/irs-fixfloat").header("Authorization", as("admin"))).andExpect(jsonPath("$[1].id").value("T-10044"));
+        mvc.perform(get("/api/v1/me/studio-tests/irs-fixfloat").header("Authorization", as("admin"))).andExpect(jsonPath("$[1].id").value("MX-20000044"));
         mvc.perform(get("/api/v1/me/studio-tests/irs-fixfloat").header("Authorization", as("searcher"))).andExpect(status().isForbidden());
     }
 
@@ -159,7 +159,7 @@ class StructuredSearchTest {
         String[] lines = csv.split("\r\n");
         org.assertj.core.api.Assertions.assertThat(lines[0]).startsWith("kind,id,title,");
         org.assertj.core.api.Assertions.assertThat(lines).hasSize(7);                              // a header and the 6 revolvers
-        org.assertj.core.api.Assertions.assertThat(lines[1]).startsWith("trade,T-");
+        org.assertj.core.api.Assertions.assertThat(lines[1]).startsWith("trade,CLY-");                       // revolvers are credit: Calypso
         org.assertj.core.api.Assertions.assertThat(csv).doesNotContainPattern("\\dE\\d");                // numbers in full, never 1.99E8
     }
 
@@ -175,5 +175,13 @@ class StructuredSearchTest {
                 .andExpect(jsonPath("$.rows[0].values['$.mtm']").value(org.hamcrest.Matchers.greaterThan(1000000)));
         mvc.perform(get("/api/v1/phrase").param("text", "the weather tomorrow").header("Authorization", as("searcher")))
                 .andExpect(jsonPath("$.query").doesNotExist()).andExpect(jsonPath("$.problem").exists());
+    }
+
+    @Test
+    void aMnemonicAloneSuggestsItsKind() throws Exception {
+        mvc.perform(get("/api/v1/command/suggest").param("q", "TRD").header("Authorization", as("searcher"))).andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.type=='entity')].kind", everyItem(org.hamcrest.Matchers.is("trade"))))
+                .andExpect(jsonPath("$[?(@.type=='entity')].id", org.hamcrest.Matchers.hasItem("BBG-60000001")))
+                .andExpect(jsonPath("$[?(@.type=='mnemonic')].mnemonic", org.hamcrest.Matchers.hasItem("TRD")));
     }
 }

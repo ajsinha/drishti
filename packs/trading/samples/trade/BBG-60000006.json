@@ -1,0 +1,361 @@
+{
+ "tradeId": "BBG-60000006",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000006",
+ "productType": "GOVT_BOND",
+ "productName": "Government bond",
+ "assetClass": "Fixed income",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2024-05-17",
+ "effectiveDate": "2024-05-20",
+ "maturityDate": "2032-12-22",
+ "currency": "EUR",
+ "notional": 141000000.0,
+ "mtm": 2677879,
+ "mtmCurrency": "USD",
+ "pnl1d": 14720,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-3",
+ "trader": "TRDR-BADEYEMI",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-ORBITAL",
+ "benchmarkCurve": "CRV-EUR-GOVT",
+ "underlyingBond": "BND-FRORBI079012",
+ "terms": {
+  "coupon": 0.005441,
+  "couponFrequency": "Semi-annual",
+  "faceAmount": 6491422.0,
+  "cleanPrice": 108.12,
+  "yield": 0.045354
+ },
+ "risk": {
+  "dv01": 108320
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 3869
+  },
+  {
+   "bucket": "6M",
+   "dv01": 7737
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 11606
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 15474
+  },
+  {
+   "bucket": "3Y",
+   "dv01": 19343
+  },
+  {
+   "bucket": "5Y",
+   "dv01": 23211
+  },
+  {
+   "bucket": "7Y",
+   "dv01": 27080
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2024-11-20",
+   "rate": 0.043798,
+   "amount": 2820000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2025-05-20",
+   "rate": 0.028319,
+   "amount": 2820000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2025-11-20",
+   "rate": 0.048265,
+   "amount": 2820000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-05-20",
+   "rate": 0.022556,
+   "amount": 2820000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-11-20",
+   "rate": 0.032585,
+   "amount": 2820000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-05-20",
+   "rate": 0.034593,
+   "amount": 2820000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-11-20",
+   "rate": 0.055891,
+   "amount": 2820000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-05-20",
+   "rate": 0.040049,
+   "amount": 2820000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-11-20",
+   "rate": 0.035212,
+   "amount": 2820000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-05-20",
+   "rate": 0.033137,
+   "amount": 2820000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-11-20",
+   "rate": 0.048831,
+   "amount": 2820000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-05-20",
+   "rate": 0.03323,
+   "amount": 2820000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-11-20",
+   "rate": 0.053626,
+   "amount": 2820000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-05-20",
+   "rate": 0.038955,
+   "amount": 2820000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-11-20",
+   "rate": 0.050955,
+   "amount": 2820000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2032-05-20",
+   "rate": 0.037503,
+   "amount": 2820000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2032-11-20",
+   "rate": 0.039129,
+   "amount": 2820000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2032-12-22",
+   "rate": 0.033281,
+   "amount": 2820000.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 4,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 38677
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 207782
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -68629
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 79285
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -57450
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -45697
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -24427
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -67924
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 35483
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -50097
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -150689
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 3307
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 61302
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 158597
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -4291
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -96743
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -32331
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 36248
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -93399
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 67324
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-05-17",
+  "executionTimestamp": "2024-05-17T12:41:16.561Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "B. Adeyemi",
+  "salesperson": null,
+  "orderId": "ORD-89B2AC9F0F"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-05-17T12:13:00Z",
+    "by": "mo.ops"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2024-05-21T12:13:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2024-05-17T12:13:00Z",
+  "lastModifiedAt": "2024-05-21T12:13:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT721243030",
+  "matched": "2024-05-17 16:26",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH5681919118",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209689B2AC9F0F8D5C75A65E",
+  "upi": "QZS3AB6UEB7B",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-EUR-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 2677879,
+  "cleanPv": 2677879.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-EUR-GOVT",
+   "BND-FRORBI079012"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 6766
+  }
+ }
+}

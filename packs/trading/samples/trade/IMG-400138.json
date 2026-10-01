@@ -1,0 +1,416 @@
+{
+ "tradeId": "IMG-400138",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400138",
+ "productType": "RANGE_ACCRUAL_NOTE",
+ "productName": "Range accrual note",
+ "assetClass": "Structured",
+ "family": "note",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2026-02-13",
+ "effectiveDate": "2026-02-17",
+ "maturityDate": "2035-02-06",
+ "currency": "CAD",
+ "notional": 145000000.0,
+ "mtm": -1227669,
+ "mtmCurrency": "USD",
+ "pnl1d": 42613,
+ "counterparty": {
+  "id": "CP-HALCYON",
+  "name": "Halcyon Shipping plc"
+ },
+ "nettingSet": "NS-HALCYON-TKY",
+ "book": "BOOK-STRUCT-3",
+ "trader": "TRDR-VRAO",
+ "desk": "DESK-STRUCT",
+ "legalEntity": "LE-TKY",
+ "discountCurve": "CRV-CAD-OIS",
+ "forwardCurve": "CRV-CAD-PROJ",
+ "swaptionVolCube": "IRV-CAD",
+ "terms": {
+  "coupon": 0.046105,
+  "lowerBound": 0.016374,
+  "upperBound": 0.069488
+ },
+ "risk": {
+  "dv01": -115513,
+  "vega": -952017
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -4125,
+   "vega": -34001
+  },
+  {
+   "bucket": "6M",
+   "dv01": -8251,
+   "vega": -68001
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -12376,
+   "vega": -102002
+  },
+  {
+   "bucket": "2Y",
+   "dv01": -16502,
+   "vega": -136002
+  },
+  {
+   "bucket": "3Y",
+   "dv01": -20627,
+   "vega": -170003
+  },
+  {
+   "bucket": "5Y",
+   "dv01": -24753,
+   "vega": -204004
+  },
+  {
+   "bucket": "7Y",
+   "dv01": -28878,
+   "vega": -238004
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-05-17",
+   "level": 99.4,
+   "trigger": 100.0,
+   "performance": -0.006,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-08-17",
+   "level": 94.26,
+   "trigger": 100.0,
+   "performance": -0.0574,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-11-17",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-02-17",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-05-17",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-08-17",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-11-17",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-02-17",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-05-17",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-08-17",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-11-17",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-02-17",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-05-17",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-08-17",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-11-17",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-02-17",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-05-17",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-08-17",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-11-17",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-02-17",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-05-17",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-08-17",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-11-17",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2032-02-17",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 2,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -20781
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -44783
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 30465
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -22107
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 14631
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 41922
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -18638
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -37663
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -33137
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 52157
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 23586
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -48464
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 30416
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 1390
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 1037
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 65105
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 36666
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -19303
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -46398
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 9980
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-02-13",
+  "executionTimestamp": "2026-02-13T14:43:12.460Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "V. Rao",
+  "salesperson": null,
+  "orderId": "ORD-C6FAB7613B"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-02-13T12:56:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2026-02-13T12:56:00Z",
+  "lastModifiedAt": "2026-02-13T12:56:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT167204928",
+  "matched": "2026-02-13 15:50",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300BLAOJ55ZE6F474C6FAB7613B2EC4192EE8",
+  "upi": "QZ2YBJLFSDWI",
+  "reportingRegimes": [
+   "JFSA"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "HALCGB33XXX",
+  "ssiId": "SSI-CAD-10E970",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -1227669,
+  "cleanPv": -1227669.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-CAD-OIS",
+   "CRV-CAD-PROJ",
+   "IRV-CAD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-struct",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 3905
+  }
+ }
+}

@@ -1,0 +1,420 @@
+{
+ "tradeId": "BBG-60000067",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000067",
+ "productType": "ABS",
+ "productName": "Asset-backed security",
+ "assetClass": "Fixed income",
+ "family": "securitized",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2024-08-20",
+ "effectiveDate": "2024-08-22",
+ "maturityDate": "2036-06-12",
+ "currency": "GBP",
+ "notional": 246000000.0,
+ "mtm": 4905373,
+ "mtmCurrency": "USD",
+ "pnl1d": -241939,
+ "counterparty": {
+  "id": "CP-ALDERSHOT",
+  "name": "Aldershot Pension Trust"
+ },
+ "nettingSet": "NS-ALDERSHOT-NY",
+ "book": "BOOK-FI-2",
+ "trader": "TRDR-RCASTILLO",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-GILT",
+ "benchmarkCurve": "CRV-GBP-GOVT",
+ "creditCurve": "CDS-GILT",
+ "terms": {
+  "collateral": "Student loans",
+  "tranche": "B",
+  "wal": 2.86
+ },
+ "risk": {
+  "dv01": 248015,
+  "cs01": 232153
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 6889,
+   "cs01": 6449
+  },
+  {
+   "bucket": "6M",
+   "dv01": 13779,
+   "cs01": 12897
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 20668,
+   "cs01": 19346
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 27557,
+   "cs01": 25795
+  },
+  {
+   "bucket": "3Y",
+   "dv01": 34447,
+   "cs01": 32243
+  },
+  {
+   "bucket": "5Y",
+   "dv01": 41336,
+   "cs01": 38692
+  },
+  {
+   "bucket": "7Y",
+   "dv01": 48225,
+   "cs01": 45141
+  },
+  {
+   "bucket": "10Y",
+   "dv01": 55114,
+   "cs01": 51590
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2025-02-22",
+   "opening": 246000000,
+   "principal": 10250000,
+   "closing": 235750000,
+   "interest": 4920000
+  },
+  {
+   "date": "2025-08-22",
+   "opening": 235750000,
+   "principal": 10250000,
+   "closing": 225500000,
+   "interest": 4715000
+  },
+  {
+   "date": "2026-02-22",
+   "opening": 225500000,
+   "principal": 10250000,
+   "closing": 215250000,
+   "interest": 4510000
+  },
+  {
+   "date": "2026-08-22",
+   "opening": 215250000,
+   "principal": 10250000,
+   "closing": 205000000,
+   "interest": 4305000
+  },
+  {
+   "date": "2027-02-22",
+   "opening": 205000000,
+   "principal": 10250000,
+   "closing": 194750000,
+   "interest": 4100000
+  },
+  {
+   "date": "2027-08-22",
+   "opening": 194750000,
+   "principal": 10250000,
+   "closing": 184500000,
+   "interest": 3895000
+  },
+  {
+   "date": "2028-02-22",
+   "opening": 184500000,
+   "principal": 10250000,
+   "closing": 174250000,
+   "interest": 3690000
+  },
+  {
+   "date": "2028-08-22",
+   "opening": 174250000,
+   "principal": 10250000,
+   "closing": 164000000,
+   "interest": 3485000
+  },
+  {
+   "date": "2029-02-22",
+   "opening": 164000000,
+   "principal": 10250000,
+   "closing": 153750000,
+   "interest": 3280000
+  },
+  {
+   "date": "2029-08-22",
+   "opening": 153750000,
+   "principal": 10250000,
+   "closing": 143500000,
+   "interest": 3075000
+  },
+  {
+   "date": "2030-02-22",
+   "opening": 143500000,
+   "principal": 10250000,
+   "closing": 133250000,
+   "interest": 2870000
+  },
+  {
+   "date": "2030-08-22",
+   "opening": 133250000,
+   "principal": 10250000,
+   "closing": 123000000,
+   "interest": 2665000
+  },
+  {
+   "date": "2031-02-22",
+   "opening": 123000000,
+   "principal": 10250000,
+   "closing": 112750000,
+   "interest": 2460000
+  },
+  {
+   "date": "2031-08-22",
+   "opening": 112750000,
+   "principal": 10250000,
+   "closing": 102500000,
+   "interest": 2255000
+  },
+  {
+   "date": "2032-02-22",
+   "opening": 102500000,
+   "principal": 10250000,
+   "closing": 92250000,
+   "interest": 2050000
+  },
+  {
+   "date": "2032-08-22",
+   "opening": 92250000,
+   "principal": 10250000,
+   "closing": 82000000,
+   "interest": 1845000
+  },
+  {
+   "date": "2033-02-22",
+   "opening": 82000000,
+   "principal": 10250000,
+   "closing": 71750000,
+   "interest": 1640000
+  },
+  {
+   "date": "2033-08-22",
+   "opening": 71750000,
+   "principal": 10250000,
+   "closing": 61500000,
+   "interest": 1435000
+  },
+  {
+   "date": "2034-02-22",
+   "opening": 61500000,
+   "principal": 10250000,
+   "closing": 51250000,
+   "interest": 1230000
+  },
+  {
+   "date": "2034-08-22",
+   "opening": 51250000,
+   "principal": 10250000,
+   "closing": 41000000,
+   "interest": 1025000
+  },
+  {
+   "date": "2035-02-22",
+   "opening": 41000000,
+   "principal": 10250000,
+   "closing": 30750000,
+   "interest": 820000
+  },
+  {
+   "date": "2035-08-22",
+   "opening": 30750000,
+   "principal": 10250000,
+   "closing": 20500000,
+   "interest": 615000
+  },
+  {
+   "date": "2036-02-22",
+   "opening": 20500000,
+   "principal": 10250000,
+   "closing": 10250000,
+   "interest": 410000
+  },
+  {
+   "date": "2036-06-12",
+   "opening": 10250000,
+   "principal": 10250000,
+   "closing": 0,
+   "interest": 205000
+  }
+ ],
+ "nextIndex": 4,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 55726
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 155828
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -138602
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -164322
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 180164
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 166217
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 101045
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -200754
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -43340
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -56268
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -130961
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 105058
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 142719
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -160930
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -329326
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -235879
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -116666
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 193477
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 52606
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -122602
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-08-20",
+  "executionTimestamp": "2024-08-20T15:05:05.110Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "R. Castillo",
+  "salesperson": null,
+  "orderId": "ORD-F20AD141F6"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-08-20T10:26:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2024-08-20T10:26:00Z",
+  "lastModifiedAt": "2024-08-20T10:26:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT663371997",
+  "matched": "2024-08-20 16:11",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096F20AD141F65F04AEFA45",
+  "upi": "QZO3A62SJADU",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Barclays Bank plc",
+  "ourAgentBic": "BARCGB22XXX",
+  "theirAgentBic": "ALDEGB33XXX",
+  "ssiId": "SSI-GBP-D06EAF",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 4905373,
+  "cleanPv": 4905373.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-GBP-GOVT",
+   "CDS-GILT"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 12271
+  }
+ }
+}

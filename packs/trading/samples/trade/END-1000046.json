@@ -1,0 +1,239 @@
+{
+ "tradeId": "END-1000046",
+ "sourceSystem": "Endur",
+ "sourceTradeId": "1000046",
+ "productType": "CMD_SPREAD_OPT",
+ "productName": "Commodity spread option",
+ "assetClass": "Commodity",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2024-04-26",
+ "effectiveDate": "2024-04-29",
+ "maturityDate": "2034-08-14",
+ "currency": "USD",
+ "notional": 213000000.0,
+ "mtm": -1012290,
+ "mtmCurrency": "USD",
+ "pnl1d": 27264,
+ "counterparty": {
+  "id": "CP-HALCYON",
+  "name": "Halcyon Shipping plc"
+ },
+ "nettingSet": "NS-HALCYON-NY",
+ "book": "BOOK-COMM-1",
+ "trader": "TRDR-TBRENNAN",
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "commodityCurve": "CMDC-SOY",
+ "commodityVolSurface": "CMDV-SOY",
+ "correlation": "CORR-US-EQ",
+ "terms": {
+  "spreadType": "Brent–WTI",
+  "strike": 29.43
+ },
+ "risk": {
+  "delta": -1311379,
+  "vega": -784821
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -62447,
+   "vega": -37372
+  },
+  {
+   "bucket": "1M",
+   "delta": -124893,
+   "vega": -74745
+  },
+  {
+   "bucket": "3M",
+   "delta": -187340,
+   "vega": -112117
+  },
+  {
+   "bucket": "6M",
+   "delta": -249786,
+   "vega": -149490
+  },
+  {
+   "bucket": "1Y",
+   "delta": -312233,
+   "vega": -186862
+  },
+  {
+   "bucket": "2Y",
+   "delta": -374680,
+   "vega": -224235
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -9670
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -4774
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 27735
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -11207
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -38783
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -53327
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -25385
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -49410
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -2480
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 36714
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 9824
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 42363
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -53480
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -5679
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 59700
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -29301
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 23145
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 31226
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -7333
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -16986
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-04-26",
+  "executionTimestamp": "2024-04-26T10:04:18.050Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "T. Brennan",
+  "salesperson": null,
+  "orderId": "ORD-8C09F8B5F9"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-04-26T10:15:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2024-04-26T10:15:00Z",
+  "lastModifiedAt": "2024-04-26T10:15:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT469585578",
+  "matched": "2024-04-26 17:06",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20968C09F8B5F9BD2BC6A896",
+  "upi": "QZMBWOMUPQ14",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "HALCUS33XXX",
+  "ssiId": "SSI-USD-10E970",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -1012290,
+  "cleanPv": -1012290.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "CMDC-SOY",
+   "CMDV-SOY",
+   "CORR-US-EQ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "endur-comm",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 4155
+  }
+ }
+}

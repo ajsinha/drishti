@@ -38,7 +38,7 @@ each server decides who gets in.
 3. **The session is bound to one server.** The session cookie carries the server id beside the user; every call,
    every cache key (packs, settings, business dates) and every live channel is scoped by (server, user). Switching
    server ends the current session for that tab after asking, and starts sign-in on the other.
-4. **Links name their server.** Shared links and bookmarks carry the server id (`/s/<server>/v/trade/T-1`, or a
+4. **Links name their server.** Shared links and bookmarks carry the server id (`/s/<server>/v/trade/MX-20000001`, or a
    `srv=` parameter), so a link opens on the right server, asking to sign in there if needed.
 5. **The picker shows each server's state** from its public `/api/v1/about` and `/readyz`-style health: name,
    version, packs, up or down, and whether this user already holds a session there.

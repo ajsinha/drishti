@@ -1,0 +1,226 @@
+{
+ "tradeId": "CLY-3000063",
+ "sourceSystem": "Calypso",
+ "sourceTradeId": "3000063",
+ "productType": "CREDIT_SPREAD_OPT",
+ "productName": "Credit spread option",
+ "assetClass": "Credit",
+ "family": "option",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2024-09-24",
+ "effectiveDate": "2024-09-26",
+ "maturityDate": "2026-10-13",
+ "currency": "EUR",
+ "notional": 147000000.0,
+ "mtm": -2549257,
+ "mtmCurrency": "USD",
+ "pnl1d": -16147,
+ "counterparty": {
+  "id": "CP-BRAMBLE",
+  "name": "Bramble Asset Management"
+ },
+ "nettingSet": "NS-BRAMBLE-NY",
+ "book": "BOOK-CREDIT-3",
+ "trader": "TRDR-CDUBOIS",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-RHEINTAL",
+ "underlyingBond": "BND-DERHEI090723",
+ "creditCurve": "CDS-RHEINTAL",
+ "discountCurve": "CRV-EUR-OIS",
+ "terms": {
+  "strikeSpread": 234.1,
+  "optionType": "Call",
+  "expiryDate": "2027-06-04"
+ },
+ "risk": {
+  "cs01": -23193,
+  "vega": -381296
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": -3866,
+   "vega": -63549
+  },
+  {
+   "bucket": "1Y",
+   "cs01": -7731,
+   "vega": -127099
+  },
+  {
+   "bucket": "2Y",
+   "cs01": -11596,
+   "vega": -190648
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -78901
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 48335
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 5653
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -35619
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 176345
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 26400
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 140136
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -166148
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -52792
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -102152
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 21013
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -46043
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 107245
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -47096
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -86501
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 18843
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -61622
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -87260
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 251
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 39534
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-09-24",
+  "executionTimestamp": "2024-09-24T08:52:53.961Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "C. Dubois",
+  "salesperson": null,
+  "orderId": "ORD-3F6F212E8C"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-09-24T11:02:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2024-09-24T11:02:00Z",
+  "lastModifiedAt": "2024-09-24T11:02:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA238315565",
+  "matched": "2024-09-24 10:14",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20963F6F212E8CFF8308D0E7",
+  "upi": "QZDH1VJ5FQ4J",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "BRAMGB33XXX",
+  "ssiId": "SSI-EUR-1243C8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -2549257,
+  "cleanPv": -2549257.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "BND-DERHEI090723",
+   "CDS-RHEINTAL",
+   "CRV-EUR-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 6569
+  }
+ }
+}

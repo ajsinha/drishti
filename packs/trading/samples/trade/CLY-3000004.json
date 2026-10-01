@@ -1,0 +1,256 @@
+{
+ "tradeId": "CLY-3000004",
+ "sourceSystem": "Calypso",
+ "sourceTradeId": "3000004",
+ "productType": "CDS_SINGLE",
+ "productName": "Single-name CDS",
+ "assetClass": "Credit",
+ "family": "cds",
+ "status": "Live",
+ "direction": "Sell protection",
+ "tradeDate": "2026-01-30",
+ "effectiveDate": "2026-02-02",
+ "maturityDate": "2028-07-10",
+ "currency": "USD",
+ "notional": 21000000.0,
+ "mtm": 645,
+ "mtmCurrency": "USD",
+ "pnl1d": 13,
+ "counterparty": {
+  "id": "CP-AURORA",
+  "name": "Aurora Sovereign Wealth Fund"
+ },
+ "nettingSet": "NS-AURORA-NY",
+ "book": "BOOK-CREDIT-3",
+ "trader": "TRDR-DWHITFIELD",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-SOLARIS",
+ "creditCurve": "CDS-SOLARIS",
+ "discountCurve": "CRV-USD-OIS",
+ "terms": {
+  "protection": "Bought",
+  "coupon": "500",
+  "seniority": "Senior unsecured",
+  "docClause": "MM14",
+  "upfront": 0.039272
+ },
+ "risk": {
+  "cs01": -4249,
+  "jtd": -12600000
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": -708,
+   "jtd": -2100000
+  },
+  {
+   "bucket": "1Y",
+   "cs01": -1416,
+   "jtd": -4200000
+  },
+  {
+   "bucket": "2Y",
+   "cs01": -2124,
+   "jtd": -6300000
+  }
+ ],
+ "schedule": [
+  {
+   "payDate": "2027-02-02",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -47672.09,
+   "pv": -46241.93,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2028-02-02",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -55568.08,
+   "pv": -53901.04,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2028-07-10",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -54765.32,
+   "pv": -53122.36,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 1829
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 141
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -4263
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 2003
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -1289
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -3969
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -3272
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -831
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 1899
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 3698
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 940
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 2706
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 1314
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -6902
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -623
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -1977
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 3230
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -2251
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 1992
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -3891
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-01-30",
+  "executionTimestamp": "2026-01-30T16:01:20.905Z",
+  "venue": "MarketAxess",
+  "venueMic": "MAEL",
+  "executionType": "Electronic",
+  "trader": "D. Whitfield",
+  "salesperson": null,
+  "orderId": "ORD-2266FCE72A"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-01-30T12:33:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2026-01-30T12:33:00Z",
+  "lastModifiedAt": "2026-01-30T12:33:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA790904102",
+  "matched": "2026-01-30 16:39",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20962266FCE72AF02E210512",
+  "upi": "QZP7DHRA580X",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "AUROUS33XXX",
+  "ssiId": "SSI-USD-79DAAE",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 645,
+  "cleanPv": 645.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CDS-SOLARIS",
+   "CRV-USD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

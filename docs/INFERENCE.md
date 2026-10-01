@@ -391,12 +391,12 @@ In the console this view would read `[Key risk indicator] Trade breaks older tha
 `Kri ID KRI-COMM-1 · Desk name Commodities · Value 9 · Amber 20 · Red 32 · Status Green · Desk DESK-COMM`, a
 20-row ladder with the last row lit, the definition on the right, and `DESK-COMM` under *Linked entities*.
 
-## A bigger real example: trade T-10001
+## A bigger real example: trade MX-20000001
 
 A vanilla swap has 39 top-level fields, five arrays and ten nested objects, so it shows the limits at work.
 
 ```bash
-curl -s "http://localhost:18480/api/v1/studio/inferred/trade/T-10001?name=swap-draft"
+curl -s "http://localhost:18480/api/v1/studio/inferred/trade/MX-20000001?name=swap-draft"
 ```
 
 What happens to each part of the document (with the banking packs enabled, which add no roles for trade fields):

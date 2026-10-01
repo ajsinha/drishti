@@ -62,98 +62,98 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10011",
+   "tradeId": "MX-20000011",
    "product": "Overnight index swap",
    "notional": 199000000.0,
    "maturity": "2031-06-23",
    "mtm": 36805234
   },
   {
-   "tradeId": "T-10054",
+   "tradeId": "MX-20000054",
    "product": "Forward-starting swap",
    "notional": 50000000.0,
    "maturity": "2037-12-14",
    "mtm": -8928821
   },
   {
-   "tradeId": "T-10053",
+   "tradeId": "MX-20000053",
    "product": "Forward-starting swap",
    "notional": 174000000.0,
    "maturity": "2032-11-05",
    "mtm": -2963153
   },
   {
-   "tradeId": "T-10452",
+   "tradeId": "END-1000008",
    "product": "Commodity forward",
    "notional": 231000000.0,
    "maturity": "2026-10-07",
    "mtm": 2102537
   },
   {
-   "tradeId": "T-10667",
+   "tradeId": "WSS-1500103",
    "product": "Term deposit / placement",
    "notional": 131000000.0,
    "maturity": "2026-10-28",
    "mtm": 1944745
   },
   {
-   "tradeId": "T-10102",
+   "tradeId": "MX-20000102",
    "product": "European swaption",
    "notional": 222000000.0,
    "maturity": "2026-10-07",
    "mtm": -1632251
   },
   {
-   "tradeId": "T-10457",
+   "tradeId": "END-1000013",
    "product": "Commodity swap",
    "notional": 208000000.0,
    "maturity": "2031-09-11",
    "mtm": -1134050
   },
   {
-   "tradeId": "T-10659",
+   "tradeId": "WSS-1500095",
    "product": "Commercial paper",
    "notional": 115000000.0,
    "maturity": "2027-01-27",
    "mtm": -703947
   },
   {
-   "tradeId": "T-10156",
+   "tradeId": "MX-20000156",
    "product": "Target redemption note (rates)",
    "notional": 139000000.0,
    "maturity": "2035-07-04",
    "mtm": 634079
   },
   {
-   "tradeId": "T-10272",
+   "tradeId": "CLY-3000032",
    "product": "Total return swap on a bond",
    "notional": 104000000.0,
    "maturity": "2028-06-09",
    "mtm": -529235
   },
   {
-   "tradeId": "T-10107",
+   "tradeId": "MX-20000107",
    "product": "Bermudan swaption",
    "notional": 61000000.0,
    "maturity": "2027-10-08",
    "mtm": 244842
   },
   {
-   "tradeId": "T-10645",
+   "tradeId": "BBG-60000075",
    "product": "CLO tranche",
    "notional": 150000000.0,
    "maturity": "2035-07-30",
    "mtm": 187425
   },
   {
-   "tradeId": "T-10657",
+   "tradeId": "WSS-1500093",
    "product": "Commercial paper",
    "notional": 49000000.0,
    "maturity": "2026-11-18",
    "mtm": 147333
   },
   {
-   "tradeId": "T-10247",
+   "tradeId": "CLY-3000007",
    "product": "CDS index (CDX / iTraxx)",
    "notional": 55000000.0,
    "maturity": "2032-02-17",

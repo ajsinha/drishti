@@ -62,84 +62,84 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10371",
+   "tradeId": "IMG-400059",
    "product": "Equity digital option",
    "notional": 232000000.0,
    "maturity": "2027-11-25",
    "mtm": 4508571
   },
   {
-   "tradeId": "T-10433",
+   "tradeId": "IMG-400121",
    "product": "Convertible bond",
    "notional": 214000000.0,
    "maturity": "2031-07-28",
    "mtm": 3120994
   },
   {
-   "tradeId": "T-10195",
+   "tradeId": "WSS-1500039",
    "product": "FX barrier option",
    "notional": 191000000.0,
    "maturity": "2029-10-22",
    "mtm": -2456557
   },
   {
-   "tradeId": "T-10202",
+   "tradeId": "WSS-1500046",
    "product": "FX double-barrier option",
    "notional": 138000000.0,
    "maturity": "2029-04-09",
    "mtm": -2103691
   },
   {
-   "tradeId": "T-10319",
+   "tradeId": "IMG-400007",
    "product": "Equity forward",
    "notional": 230000000.0,
    "maturity": "2028-04-07",
    "mtm": -1368137
   },
   {
-   "tradeId": "T-10240",
+   "tradeId": "WSS-1500084",
    "product": "Quanto option",
    "notional": 202000000.0,
    "maturity": "2031-10-31",
    "mtm": -1346075
   },
   {
-   "tradeId": "T-10214",
+   "tradeId": "WSS-1500058",
    "product": "FX average-rate option",
    "notional": 53000000.0,
    "maturity": "2032-01-21",
    "mtm": -1068715
   },
   {
-   "tradeId": "T-10167",
+   "tradeId": "WSS-1500011",
    "product": "FX forward",
    "notional": 114000000.0,
    "maturity": "2026-10-07",
    "mtm": -940839
   },
   {
-   "tradeId": "T-10345",
+   "tradeId": "IMG-400033",
    "product": "OTC equity option",
    "notional": 97000000.0,
    "maturity": "2026-10-07",
    "mtm": 521167
   },
   {
-   "tradeId": "T-10561",
+   "tradeId": "MX-20000183",
    "product": "Inflation asset swap",
    "notional": 46000000.0,
    "maturity": "2037-05-26",
    "mtm": -497035
   },
   {
-   "tradeId": "T-10442",
+   "tradeId": "IMG-400130",
    "product": "Basket option",
    "notional": 98000000.0,
    "maturity": "2037-06-23",
    "mtm": 304517
   },
   {
-   "tradeId": "T-10392",
+   "tradeId": "IMG-400080",
    "product": "Variance swap",
    "notional": 3000000.0,
    "maturity": "2029-10-22",

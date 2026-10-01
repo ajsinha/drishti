@@ -31,7 +31,7 @@ any request other than `GET` with a token is refused (`403 DRS-5002 API tokens o
 Send it in the `Authorization` header:
 
 ```bash
-curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "https://drishti.bank.example:18480/api/v1/entities/trade/T-10001/raw" | jq .data.mtm
+curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "https://drishti.bank.example:18480/api/v1/entities/trade/MX-20000001/raw" | jq .data.mtm
 ```
 
 You should see the trade's MTM, for example `1875863`.
@@ -51,15 +51,15 @@ from drishti_client import Drishti
 
 d = Drishti("https://drishti.bank.example:18480", token="drk_…")   # or set DRISHTI_URL and DRISHTI_TOKEN
 
-d.field("trade", "T-10001", "mtm")                 # 1875863.0
-d.field("trade", "T-10001", "legs[0].rate")        # a path into the document
-doc = d.document("trade", "T-10001")               # the whole document (masked fields stay masked)
+d.field("trade", "MX-20000001", "mtm")                 # 1875863.0
+d.field("trade", "MX-20000001", "legs[0].rate")        # a path into the document
+doc = d.document("trade", "MX-20000001")               # the whole document (masked fields stay masked)
 
 rows = d.search("TRD productType=Revolver")         # a pick list: one dict per entity, with the pack's key columns
-# [{'kind': 'trade', 'id': 'T-10295', 'title': …, 'Product type': 'REVOLVER', 'Notional': 202000000, …}, …]
+# [{'kind': 'trade', 'id': 'CLY-3000055', 'title': …, 'Product type': 'REVOLVER', 'Notional': 202000000, …}, …]
 
 d.search("TRD where notional > 250m order by mtm desc limit 20", as_of="2026-09-29")   # a past business date
-d.diff("trade", "T-10001", "2026-09-25", "2026-09-30")                                # what changed between two dates
+d.diff("trade", "MX-20000001", "2026-09-25", "2026-09-30")                                # what changed between two dates
 df = d.to_pandas("CPTY rating=BBB")                 # a pandas DataFrame, if pandas is installed
 ```
 
@@ -71,8 +71,8 @@ From the shell, the same client writes CSV:
 ```bash
 export DRISHTI_URL=https://drishti.bank.example:18480 DRISHTI_TOKEN=drk_…
 python3 clients/python/drishti_client.py search "TRD productType=Revolver" > revolvers.csv
-python3 clients/python/drishti_client.py field trade T-10001 mtm
-python3 clients/python/drishti_client.py --as-of 2026-09-29 document trade T-10001
+python3 clients/python/drishti_client.py field trade MX-20000001 mtm
+python3 clients/python/drishti_client.py --as-of 2026-09-29 document trade MX-20000001
 ```
 
 ## 3. Excel

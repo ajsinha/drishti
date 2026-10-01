@@ -1,0 +1,326 @@
+{
+ "tradeId": "BBG-60000007",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000007",
+ "productType": "CORP_BOND",
+ "productName": "Corporate bond",
+ "assetClass": "Fixed income",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2024-12-06",
+ "effectiveDate": "2024-12-09",
+ "maturityDate": "2030-01-15",
+ "currency": "USD",
+ "notional": 44000000.0,
+ "mtm": -78300,
+ "mtmCurrency": "USD",
+ "pnl1d": -735,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-1",
+ "trader": "TRDR-RCASTILLO",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-SOLARIS",
+ "benchmarkCurve": "CRV-USD-GOVT",
+ "underlyingBond": "BND-USSOLA031372",
+ "creditCurve": "CDS-SOLARIS",
+ "terms": {
+  "coupon": 0.028544,
+  "couponFrequency": "Semi-annual",
+  "faceAmount": 63191940.0,
+  "cleanPrice": 86.697,
+  "yield": 0.03606,
+  "zSpread": 320.0,
+  "seniority": "Senior secured"
+ },
+ "risk": {
+  "dv01": -18836,
+  "cs01": -18523,
+  "jtd": -26400000
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -897,
+   "cs01": -882,
+   "jtd": -1257143
+  },
+  {
+   "bucket": "6M",
+   "dv01": -1794,
+   "cs01": -1764,
+   "jtd": -2514286
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -2691,
+   "cs01": -2646,
+   "jtd": -3771429
+  },
+  {
+   "bucket": "2Y",
+   "dv01": -3588,
+   "cs01": -3528,
+   "jtd": -5028571
+  },
+  {
+   "bucket": "3Y",
+   "dv01": -4485,
+   "cs01": -4410,
+   "jtd": -6285714
+  },
+  {
+   "bucket": "5Y",
+   "dv01": -5382,
+   "cs01": -5292,
+   "jtd": -7542857
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2025-06-09",
+   "rate": 0.041339,
+   "amount": 880000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2025-12-09",
+   "rate": 0.029758,
+   "amount": 880000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-06-09",
+   "rate": 0.057473,
+   "amount": 880000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-12-09",
+   "rate": 0.038327,
+   "amount": 880000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-06-09",
+   "rate": 0.045584,
+   "amount": 880000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-12-09",
+   "rate": 0.049151,
+   "amount": 880000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-06-09",
+   "rate": 0.048939,
+   "amount": 880000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-12-09",
+   "rate": 0.04466,
+   "amount": 880000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-06-09",
+   "rate": 0.038421,
+   "amount": 880000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-12-09",
+   "rate": 0.026172,
+   "amount": 880000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-01-15",
+   "rate": 0.046617,
+   "amount": 880000.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 3,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -1787
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 698
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 1720
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 4279
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -9168
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -1512
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 440
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -5843
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 250
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -2858
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 1703
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -2829
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 2140
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 2102
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 3058
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 4526
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -3732
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -5414
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -2043
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 3655
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-12-06",
+  "executionTimestamp": "2024-12-06T10:06:15.212Z",
+  "venue": "MarketAxess",
+  "venueMic": "MAEL",
+  "executionType": "Electronic",
+  "trader": "R. Castillo",
+  "salesperson": null,
+  "orderId": "ORD-DC8204031E"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-12-06T10:56:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2024-12-06T10:56:00Z",
+  "lastModifiedAt": "2024-12-06T10:56:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT245502626",
+  "matched": "2024-12-06 15:24",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH5287646048",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096DC8204031E53C7613487",
+  "upi": "QZGYR1DXBQ3F",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMUS33XXX",
+  "ssiId": "SSI-USD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -78300,
+  "cleanPv": -78300.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-USD-GOVT",
+   "BND-USSOLA031372",
+   "CDS-SOLARIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 597
+  }
+ }
+}

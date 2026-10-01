@@ -1,0 +1,284 @@
+{
+ "tradeId": "CLY-3000048",
+ "sourceSystem": "Calypso",
+ "sourceTradeId": "3000048",
+ "productType": "CLN",
+ "productName": "Credit-linked note",
+ "assetClass": "Credit",
+ "family": "note",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-04-21",
+ "effectiveDate": "2026-04-23",
+ "maturityDate": "2030-03-11",
+ "currency": "AUD",
+ "notional": 231000000.0,
+ "mtm": 3195037,
+ "mtmCurrency": "USD",
+ "pnl1d": 78147,
+ "counterparty": {
+  "id": "CP-ALDERSHOT",
+  "name": "Aldershot Pension Trust"
+ },
+ "nettingSet": "NS-ALDERSHOT-NY",
+ "book": "BOOK-CREDIT-1",
+ "trader": "TRDR-DWHITFIELD",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-HALCYON",
+ "creditCurve": "CDS-HALCYON",
+ "discountCurve": "CRV-AUD-OIS",
+ "terms": {
+  "coupon": 0.056836,
+  "issuePrice": 100.97
+ },
+ "risk": {
+  "cs01": 71581,
+  "jtd": -138600000,
+  "dv01": 75021
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 7158,
+   "jtd": -13860000,
+   "dv01": 7502
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 14316,
+   "jtd": -27720000,
+   "dv01": 15004
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 21474,
+   "jtd": -41580000,
+   "dv01": 22506
+  },
+  {
+   "bucket": "3Y",
+   "cs01": 28632,
+   "jtd": -55440000,
+   "dv01": 30008
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-10-23",
+   "rate": 0.039496,
+   "amount": 4620000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-04-23",
+   "rate": 0.050754,
+   "amount": 4620000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-10-23",
+   "rate": 0.051051,
+   "amount": 4620000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-04-23",
+   "rate": 0.034324,
+   "amount": 4620000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-10-23",
+   "rate": 0.037194,
+   "amount": 4620000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-04-23",
+   "rate": 0.047074,
+   "amount": 4620000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-10-23",
+   "rate": 0.05305,
+   "amount": 4620000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-03-11",
+   "rate": 0.045914,
+   "amount": 4620000.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 1613
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 11108
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 23486
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 111919
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -11248
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -35980
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 51226
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 106608
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 3913
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -129003
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 19476
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -77934
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -45373
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 5355
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -177275
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 31792
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 39396
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -45996
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 151054
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -53611
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-04-21",
+  "executionTimestamp": "2026-04-21T12:52:31.718Z",
+  "venue": "MarketAxess",
+  "venueMic": "MAEL",
+  "executionType": "Electronic",
+  "trader": "D. Whitfield",
+  "salesperson": null,
+  "orderId": "ORD-632F9D08F5"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-04-21T12:34:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2026-04-21T12:34:00Z",
+  "lastModifiedAt": "2026-04-21T12:34:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA649446469",
+  "matched": "2026-04-21 10:05",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096632F9D08F535BB29C39C",
+  "upi": "QZOY91PEFWPF",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "ALDEGB33XXX",
+  "ssiId": "SSI-AUD-D06EAF",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 3195037,
+  "cleanPv": 3195037.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CDS-HALCYON",
+   "CRV-AUD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 8700
+  }
+ }
+}

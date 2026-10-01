@@ -62,105 +62,105 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10551",
+   "tradeId": "MX-20000173",
    "product": "Inflation cap / floor",
    "notional": 171000000.0,
    "maturity": "2026-10-07",
    "mtm": 4685483
   },
   {
-   "tradeId": "T-10353",
+   "tradeId": "IMG-400041",
    "product": "Index option",
    "notional": 211000000.0,
    "maturity": "2026-10-07",
    "mtm": -4330699
   },
   {
-   "tradeId": "T-10364",
+   "tradeId": "IMG-400052",
    "product": "Equity Asian option",
    "notional": 168000000.0,
    "maturity": "2037-04-13",
    "mtm": -3294420
   },
   {
-   "tradeId": "T-10201",
+   "tradeId": "WSS-1500045",
    "product": "FX double-barrier option",
    "notional": 237000000.0,
    "maturity": "2036-06-25",
    "mtm": -3187239
   },
   {
-   "tradeId": "T-10186",
+   "tradeId": "WSS-1500030",
    "product": "FX vanilla option",
    "notional": 67000000.0,
    "maturity": "2027-11-24",
    "mtm": -1313627
   },
   {
-   "tradeId": "T-10569",
+   "tradeId": "MX-20000191",
    "product": "Limited price index swap",
    "notional": 217000000.0,
    "maturity": "2035-02-22",
    "mtm": 1126221
   },
   {
-   "tradeId": "T-10381",
+   "tradeId": "IMG-400069",
    "product": "Autocallable note",
    "notional": 45000000.0,
    "maturity": "2035-04-30",
    "mtm": -1006987
   },
   {
-   "tradeId": "T-10411",
+   "tradeId": "IMG-400099",
    "product": "Equity total return swap",
    "notional": 146000000.0,
    "maturity": "2028-03-29",
    "mtm": 724534
   },
   {
-   "tradeId": "T-10206",
+   "tradeId": "WSS-1500050",
    "product": "FX one-touch / no-touch",
    "notional": 213000000.0,
    "maturity": "2034-07-03",
    "mtm": -510739
   },
   {
-   "tradeId": "T-10405",
+   "tradeId": "IMG-400093",
    "product": "Dividend swap",
    "notional": 49000000.0,
    "maturity": "2031-07-08",
    "mtm": -396916
   },
   {
-   "tradeId": "T-10190",
+   "tradeId": "WSS-1500034",
    "product": "FX digital option",
    "notional": 94000000.0,
    "maturity": "2026-10-13",
    "mtm": -383106
   },
   {
-   "tradeId": "T-10157",
+   "tradeId": "WSS-1500001",
    "product": "FX spot",
    "notional": 56000000.0,
    "maturity": "2026-10-07",
    "mtm": 154904
   },
   {
-   "tradeId": "T-10394",
+   "tradeId": "IMG-400082",
    "product": "Variance swap",
    "notional": 3000000.0,
    "maturity": "2034-07-24",
    "mtm": -37097
   },
   {
-   "tradeId": "T-10223",
+   "tradeId": "WSS-1500067",
    "product": "FX accumulator",
    "notional": 50000000.0,
    "maturity": "2030-10-16",
    "mtm": 4058
   },
   {
-   "tradeId": "T-10395",
+   "tradeId": "IMG-400083",
    "product": "Variance swap",
    "notional": 5000000.0,
    "maturity": "2034-04-17",

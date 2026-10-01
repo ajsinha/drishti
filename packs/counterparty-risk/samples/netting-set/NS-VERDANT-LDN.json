@@ -62,56 +62,56 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10539",
+   "tradeId": "MX-20000161",
    "product": "Zero-coupon inflation swap",
    "notional": 47000000.0,
    "maturity": "2036-07-21",
    "mtm": 8195317
   },
   {
-   "tradeId": "T-10235",
+   "tradeId": "WSS-1500079",
    "product": "Quanto option",
    "notional": 245000000.0,
    "maturity": "2033-05-16",
    "mtm": 2783757
   },
   {
-   "tradeId": "T-10191",
+   "tradeId": "WSS-1500035",
    "product": "FX digital option",
    "notional": 146000000.0,
    "maturity": "2029-02-05",
    "mtm": 2716990
   },
   {
-   "tradeId": "T-10437",
+   "tradeId": "IMG-400125",
    "product": "Convertible bond",
    "notional": 88000000.0,
    "maturity": "2030-09-16",
    "mtm": 1334065
   },
   {
-   "tradeId": "T-10564",
+   "tradeId": "MX-20000186",
    "product": "Inflation asset swap",
    "notional": 124000000.0,
    "maturity": "2033-05-23",
    "mtm": 528987
   },
   {
-   "tradeId": "T-10424",
+   "tradeId": "IMG-400112",
    "product": "Contract for difference",
    "notional": 91000000.0,
    "maturity": "2026-10-07",
    "mtm": 491937
   },
   {
-   "tradeId": "T-10237",
+   "tradeId": "WSS-1500081",
    "product": "Quanto option",
    "notional": 237000000.0,
    "maturity": "2036-04-23",
    "mtm": -199321
   },
   {
-   "tradeId": "T-10419",
+   "tradeId": "IMG-400107",
    "product": "Portfolio (basket) swap",
    "notional": 8000000.0,
    "maturity": "2030-08-07",

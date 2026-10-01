@@ -1,0 +1,313 @@
+{
+ "tradeId": "MX-20000116",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000116",
+ "productType": "CMS_CAP",
+ "productName": "CMS cap / floor",
+ "assetClass": "Rates",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2025-03-21",
+ "effectiveDate": "2025-03-24",
+ "maturityDate": "2027-09-13",
+ "currency": "EUR",
+ "notional": 191000000.0,
+ "mtm": 479917,
+ "mtmCurrency": "USD",
+ "pnl1d": 18376,
+ "counterparty": {
+  "id": "CP-BRAMBLE",
+  "name": "Bramble Asset Management"
+ },
+ "nettingSet": "NS-BRAMBLE-NY",
+ "book": "BOOK-RATES-2",
+ "trader": "TRDR-MOKAFOR",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-EUR-OIS",
+ "forwardCurve": "CRV-EUR-PROJ",
+ "swaptionVolCube": "IRV-EUR",
+ "terms": {
+  "cmsTenor": "30Y",
+  "strike": 0.05186,
+  "capFloor": "Cap"
+ },
+ "risk": {
+  "dv01": 43166,
+  "vega": 710157
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 4317,
+   "vega": 71016
+  },
+  {
+   "bucket": "6M",
+   "dv01": 8633,
+   "vega": 142031
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 12950,
+   "vega": 213047
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 17266,
+   "vega": 284063
+  }
+ ],
+ "schedule": [
+  {
+   "fixingDate": "2025-06-24",
+   "period": "2025-06-24..2025-09-24",
+   "index": "ESTR",
+   "rate": 0.021532,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2025-09-24",
+   "period": "2025-09-24..2025-12-24",
+   "index": "ESTR",
+   "rate": 0.038076,
+   "payoff": 146879.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2025-12-24",
+   "period": "2025-12-24..2026-03-24",
+   "index": "ESTR",
+   "rate": 0.025527,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-03-24",
+   "period": "2026-03-24..2026-06-24",
+   "index": "ESTR",
+   "rate": 0.036512,
+   "payoff": 72198.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-06-24",
+   "period": "2026-06-24..2026-09-24",
+   "index": "ESTR",
+   "rate": 0.020225,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-09-24",
+   "period": "2026-09-24..2026-12-24",
+   "index": "ESTR",
+   "rate": 0.026891,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-12-24",
+   "period": "2026-12-24..2027-03-24",
+   "index": "ESTR",
+   "rate": 0.041831,
+   "payoff": 326180.25,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-03-24",
+   "period": "2027-03-24..2027-06-24",
+   "index": "ESTR",
+   "rate": 0.029652,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-06-24",
+   "period": "2027-06-24..2027-09-24",
+   "index": "ESTR",
+   "rate": 0.028389,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-09-13",
+   "period": "2027-09-13..2027-12-13",
+   "index": "ESTR",
+   "rate": 0.027751,
+   "payoff": 0.0,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 6,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 16138
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 20108
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -13115
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -484
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 10076
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 8565
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -8670
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 261
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 7992
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 3041
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 19995
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 23346
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 23697
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -7758
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 1939
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -8833
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -25152
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 39329
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -15333
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -24882
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-03-21",
+  "executionTimestamp": "2025-03-21T10:05:03.825Z",
+  "venue": "Bloomberg SEF",
+  "venueMic": "BSEF",
+  "executionType": "Electronic",
+  "trader": "M. Okafor",
+  "salesperson": null,
+  "orderId": "ORD-F90DE5C506"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-03-21T10:22:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2025-03-21T10:22:00Z",
+  "lastModifiedAt": "2025-03-21T10:22:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA569142869",
+  "matched": "2025-03-21 12:41",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096F90DE5C5064AEADA3A95",
+  "upi": "QZIXFD5MS7PZ",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "BRAMGB33XXX",
+  "ssiId": "SSI-EUR-1243C8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 479917,
+  "cleanPv": 479917.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CRV-EUR-OIS",
+   "CRV-EUR-PROJ",
+   "IRV-EUR"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 2870
+  }
+ }
+}

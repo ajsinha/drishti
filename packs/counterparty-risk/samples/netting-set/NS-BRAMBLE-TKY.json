@@ -62,14 +62,14 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10727",
+   "tradeId": "IMG-400139",
    "product": "Capital-protected note",
    "notional": 118000000.0,
    "maturity": "2028-12-18",
    "mtm": 566929
   },
   {
-   "tradeId": "T-10738",
+   "tradeId": "IMG-400150",
    "product": "FX-rates hybrid (PRDC)",
    "notional": 27000000.0,
    "maturity": "2038-01-11",

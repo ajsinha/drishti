@@ -62,14 +62,14 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10740",
+   "tradeId": "IMG-400152",
    "product": "Worst-of note",
    "notional": 108000000.0,
    "maturity": "2038-01-29",
    "mtm": -1328010
   },
   {
-   "tradeId": "T-10734",
+   "tradeId": "IMG-400146",
    "product": "FX-rates hybrid (PRDC)",
    "notional": 85000000.0,
    "maturity": "2029-10-11",

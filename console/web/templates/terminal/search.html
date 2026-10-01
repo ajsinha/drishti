@@ -23,7 +23,7 @@
   <h1>{% if picking and data %}Pick {{ 'an' if (data.kind or 'x')[0] in 'aeiou' else 'a' }} {{ data.kind | replace('-', ' ') }}{% else %}Search by value{% endif %}</h1>
   <form class="srch-form" method="get" action="/s" role="search">
     <label for="srchQ" class="visually-hidden">Search</label>
-    <input id="srchQ" class="srch-q mono" name="q" value="{{ q }}" placeholder="TRD T-100 · TRD productType=Revolver · TRD where mtm > 1m order by mtm desc" autocomplete="off" spellcheck="false">
+    <input id="srchQ" class="srch-q mono" name="q" value="{{ q }}" placeholder="TRD MX-200000 · TRD productType=Revolver · TRD where mtm > 1m order by mtm desc" autocomplete="off" spellcheck="false">
     {% if q %}<a class="srch-vs lnk" href="/reports?q={{ q | urlencode }}" title="Run this search on a schedule and deliver it as CSV">Schedule…</a>{% endif %}
     <label for="srchVs" class="srch-vs" title="Run the same search on another business date: each number shows its change">Compare with
       <input id="srchVs" name="vs" type="date" class="mono" value="{{ vs or '' }}"></label>
@@ -44,7 +44,7 @@
     {% else %}<p class="t-warn">{{ phrase.problem or 'These words do not make a search.' }}</p>{% endif %}
   </div></section>{% endif %}
   <p class="srch-help text-muted-d">
-    <span class="mono">&lt;mnemonic&gt; &lt;start of an id or a name&gt;</span> lists what it names (<span class="mono">T-1*0</span>: <span class="mono">*</span> is any text) ·
+    <span class="mono">&lt;mnemonic&gt; &lt;start of an id or a name&gt;</span> lists what it names (<span class="mono">MX-2*0</span>: <span class="mono">*</span> is any text) ·
     <span class="mono">&lt;mnemonic&gt; &lt;field&gt;=&lt;value&gt;</span> lists by value · case never matters · one match opens at once.<br>
     <span class="mono">&lt;mnemonic&gt; [where] &lt;condition&gt; [order by &lt;field&gt; [desc]] [limit N]</span> · fields by name or path
     (<span class="mono">counterparty.name</span>, <span class="mono">legs[0].rate</span>) · <span class="mono">= != &lt; &lt;= &gt; &gt;=</span>
@@ -78,7 +78,7 @@
   {% else %}
     <h2 class="ws-h">Examples</h2>
     <ul class="srch-ex">
-      {% for ex in ["TRD T-100", "TRD productType=Revolver", "TRD T-10* currency=usd order by notional desc", "CPTY north",
+      {% for ex in ["TRD MX-200000", "TRD productType=Revolver", "TRD MX-2000* currency=usd order by notional desc", "CPTY north",
                     "TRD where notional >= 250m and assetClass = 'Rates' order by mtm desc limit 20",
                     "TRD where counterparty.name contains 'Meridian'",
                     "TRD where mtm < 0 and maturityDate < '2027-01-01' order by mtm",

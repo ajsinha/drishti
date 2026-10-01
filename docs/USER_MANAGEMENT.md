@@ -161,7 +161,7 @@ Rules for your own roles:
 Two checks, and both must pass:
 
 ```
-may open trade T-1  =  one of my roles opens "trade"          (roles: section 2)
+may open trade MX-20000001  =  one of my roles opens "trade"          (roles: section 2)
                    AND the pack that defines "trade" is mine   (packs: section 3)
 ```
 
@@ -201,7 +201,7 @@ Every read that was answered is recorded: a view, a raw document (F9), a history
 CSV export, with the person, the time, the entity (or the search text) and the business date asked for (blank for
 live). Refused reads are not recorded (they returned nothing). Administrators see it in **Admin → Access**, filtered
 by person, action, kind, id and dates; a view's **Viewed by** (administrators only) opens the list for that entity.
-Worked example: "who looked at T-10001 last week" is Access with kind `trade`, id `T-10001`, from and until.
+Worked example: "who looked at MX-20000001 last week" is Access with kind `trade`, id `MX-20000001`, from and until.
 
 It is in the identity database (`drishti_access`), kept `drishti.access-log.keep-days` (90) days. Recording is
 asynchronous and never slows a read; if the database cannot keep up, events are dropped and the page says how

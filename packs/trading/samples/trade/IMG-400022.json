@@ -1,0 +1,240 @@
+{
+ "tradeId": "IMG-400022",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400022",
+ "productType": "EQ_INDEX_FUTURE",
+ "productName": "Equity index future",
+ "assetClass": "Equity",
+ "family": "future",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2026-09-23",
+ "effectiveDate": "2026-09-25",
+ "maturityDate": "2027-09-23",
+ "currency": "GBP",
+ "notional": 242000000.0,
+ "mtm": -3839873,
+ "mtmCurrency": "USD",
+ "pnl1d": 39049,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-LDN",
+ "book": "BOOK-EQD-3",
+ "trader": "TRDR-JWEISS",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "clearingAccount": "CLR-EUREX-1",
+ "underlyingIndex": "EQX-UKX",
+ "dividendCurve": "DIV-UKX",
+ "terms": {
+  "contract": "NQ Z6",
+  "lots": 1782,
+  "tradePrice": 12055.04
+ },
+ "risk": {
+  "delta": -1278225
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -85215
+  },
+  {
+   "bucket": "1M",
+   "delta": -170430
+  },
+  {
+   "bucket": "3M",
+   "delta": -255645
+  },
+  {
+   "bucket": "6M",
+   "delta": -340860
+  },
+  {
+   "bucket": "1Y",
+   "delta": -426075
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 37390
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 14535
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 20706
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -153339
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -22171
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -52349
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -180522
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 174306
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -61144
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 23366
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -120121
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -120237
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -3317
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 40727
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -23846
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 45517
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 33280
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 102458
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -24744
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -248505
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-09-23",
+  "executionTimestamp": "2026-09-23T12:19:48.856Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "J. Weiss",
+  "salesperson": null,
+  "orderId": "ORD-6C48BC2A2B"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-09-23T11:29:00Z",
+    "by": "mo.ops"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2026-09-25T11:29:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2026-09-23T11:29:00Z",
+  "lastModifiedAt": "2026-09-25T11:29:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT394359967",
+  "matched": "2026-09-23 12:28",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH3549008901",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q836C48BC2A2B0E94400C8D",
+  "upi": "QZFJBTQOAIHS",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Barclays Bank plc",
+  "ourAgentBic": "BARCGB22XXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-GBP-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -3839873,
+  "cleanPv": -3839873.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQX-UKX",
+   "DIV-UKX"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 10100
+  }
+ }
+}

@@ -1,0 +1,416 @@
+{
+ "tradeId": "IMG-400134",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400134",
+ "productType": "RANGE_ACCRUAL_NOTE",
+ "productName": "Range accrual note",
+ "assetClass": "Structured",
+ "family": "note",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-04-08",
+ "effectiveDate": "2026-04-10",
+ "maturityDate": "2035-10-05",
+ "currency": "EUR",
+ "notional": 89000000.0,
+ "mtm": 587235,
+ "mtmCurrency": "USD",
+ "pnl1d": -12830,
+ "counterparty": {
+  "id": "CP-MERIDIAN",
+  "name": "Meridian Life Assurance"
+ },
+ "nettingSet": "NS-MERIDIAN-TKY",
+ "book": "BOOK-STRUCT-1",
+ "trader": "TRDR-YTANAKA",
+ "desk": "DESK-STRUCT",
+ "legalEntity": "LE-TKY",
+ "discountCurve": "CRV-EUR-OIS",
+ "forwardCurve": "CRV-EUR-PROJ",
+ "swaptionVolCube": "IRV-EUR",
+ "terms": {
+  "coupon": 0.069961,
+  "lowerBound": 0.011625,
+  "upperBound": 0.058888
+ },
+ "risk": {
+  "dv01": 73733,
+  "vega": 709812
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 2633,
+   "vega": 25350
+  },
+  {
+   "bucket": "6M",
+   "dv01": 5267,
+   "vega": 50701
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 7900,
+   "vega": 76051
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 10533,
+   "vega": 101402
+  },
+  {
+   "bucket": "3Y",
+   "dv01": 13167,
+   "vega": 126752
+  },
+  {
+   "bucket": "5Y",
+   "dv01": 15800,
+   "vega": 152103
+  },
+  {
+   "bucket": "7Y",
+   "dv01": 18433,
+   "vega": 177453
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-07-10",
+   "level": 94.46,
+   "trigger": 100.0,
+   "performance": -0.0554,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-10-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-01-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-04-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-07-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-10-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-01-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-04-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-07-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-10-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-01-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-04-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-07-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-10-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-01-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-04-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-07-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-10-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-01-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-04-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-07-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-10-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2032-01-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2032-04-10",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 25417
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 17145
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 2967
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 21732
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -10459
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 2589
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -31676
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 3098
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -9466
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 9866
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -32815
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -58604
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -13447
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -8057
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 16737
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 2798
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 9440
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 26454
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -5673
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 8115
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-04-08",
+  "executionTimestamp": "2026-04-08T09:11:02.444Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "Y. Tanaka",
+  "salesperson": null,
+  "orderId": "ORD-DF20AB37DE"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-04-08T12:02:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-04-08T12:02:00Z",
+  "lastModifiedAt": "2026-04-08T12:02:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT589294722",
+  "matched": "2026-04-08 10:07",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300BLAOJ55ZE6F474DF20AB37DEB8EECC1E51",
+  "upi": "QZ2YBJLFSDWI",
+  "reportingRegimes": [
+   "JFSA"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "MERIGB33XXX",
+  "ssiId": "SSI-EUR-4D91C0",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 587235,
+  "cleanPv": 587235.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-EUR-OIS",
+   "CRV-EUR-PROJ",
+   "IRV-EUR"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-struct",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 2064
+  }
+ }
+}

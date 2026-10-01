@@ -1,0 +1,252 @@
+{
+ "tradeId": "END-1000028",
+ "sourceSystem": "Endur",
+ "sourceTradeId": "1000028",
+ "productType": "CMD_FUT_OPTION",
+ "productName": "Option on commodity future",
+ "assetClass": "Commodity",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2026-02-20",
+ "effectiveDate": "2026-02-23",
+ "maturityDate": "2028-09-27",
+ "currency": "USD",
+ "notional": 134000000.0,
+ "mtm": -3096114,
+ "mtmCurrency": "USD",
+ "pnl1d": -134519,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-COMM-3",
+ "trader": "TRDR-FROSSI",
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-CME-1",
+ "commodityCurve": "CMDC-GOLD",
+ "commodityVolSurface": "CMDV-GOLD",
+ "terms": {
+  "optionType": "Call",
+  "exerciseStyle": "European",
+  "expiryDate": "2029-07-21",
+  "strike": 3079.89,
+  "lots": 796
+ },
+ "risk": {
+  "delta": 565552,
+  "gamma": 5323,
+  "vega": 499487
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 26931,
+   "gamma": 253,
+   "vega": 23785
+  },
+  {
+   "bucket": "1M",
+   "delta": 53862,
+   "gamma": 507,
+   "vega": 47570
+  },
+  {
+   "bucket": "3M",
+   "delta": 80793,
+   "gamma": 760,
+   "vega": 71355
+  },
+  {
+   "bucket": "6M",
+   "delta": 107724,
+   "gamma": 1014,
+   "vega": 95140
+  },
+  {
+   "bucket": "1Y",
+   "delta": 134655,
+   "gamma": 1267,
+   "vega": 118925
+  },
+  {
+   "bucket": "2Y",
+   "delta": 161586,
+   "gamma": 1521,
+   "vega": 142711
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -17952
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -82051
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 8711
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -21876
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -77260
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 78956
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 7904
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 118090
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -3068
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -31422
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 15027
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -55004
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 26520
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -99708
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 95783
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -74109
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 117075
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 43905
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 106130
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 126095
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-02-20",
+  "executionTimestamp": "2026-02-20T11:31:55.701Z",
+  "venue": "ICE",
+  "venueMic": "IFEU",
+  "executionType": "Electronic",
+  "trader": "F. Rossi",
+  "salesperson": null,
+  "orderId": "ORD-2DA390B5EA"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-02-20T10:52:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2026-02-20T10:52:00Z",
+  "lastModifiedAt": "2026-02-20T10:52:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT464375798",
+  "matched": "2026-02-20 17:37",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH5831875899",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20962DA390B5EA0D3143F36E",
+  "upi": "QZMQ7IK6BH47",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMUS33XXX",
+  "ssiId": "SSI-USD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -3096114,
+  "cleanPv": -3096114.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CMDC-GOLD",
+   "CMDV-GOLD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "endur-comm",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 7532
+  }
+ }
+}

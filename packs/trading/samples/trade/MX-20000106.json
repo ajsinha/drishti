@@ -1,0 +1,252 @@
+{
+ "tradeId": "MX-20000106",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000106",
+ "productType": "SWAPTION_BERM",
+ "productName": "Bermudan swaption",
+ "assetClass": "Rates",
+ "family": "option",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2026-07-07",
+ "effectiveDate": "2026-07-09",
+ "maturityDate": "2028-10-25",
+ "currency": "USD",
+ "notional": 143000000.0,
+ "mtm": 514934,
+ "mtmCurrency": "USD",
+ "pnl1d": 21793,
+ "counterparty": {
+  "id": "CP-KESTREL",
+  "name": "Kestrel Global Macro Fund"
+ },
+ "nettingSet": "NS-KESTREL-NY",
+ "book": "BOOK-RATES-1",
+ "trader": "TRDR-MOKAFOR",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-USD-OIS",
+ "forwardCurve": "CRV-USD-PROJ",
+ "swaptionVolCube": "IRV-USD",
+ "terms": {
+  "payerReceiver": "Receiver",
+  "strike": 0.026492,
+  "firstExercise": "2028-12-25",
+  "exerciseFrequency": "Annual"
+ },
+ "risk": {
+  "dv01": -28502,
+  "vega": -500825
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -2850,
+   "vega": -50082
+  },
+  {
+   "bucket": "6M",
+   "dv01": -5700,
+   "vega": -100165
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -8551,
+   "vega": -150248
+  },
+  {
+   "bucket": "2Y",
+   "dv01": -11401,
+   "vega": -200330
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2027-07-09",
+   "type": "First call",
+   "strike": 0.032682,
+   "status": "Pending"
+  },
+  {
+   "date": "2028-07-09",
+   "type": "Bermudan call",
+   "strike": 0.023385,
+   "status": "Pending"
+  },
+  {
+   "date": "2028-10-25",
+   "type": "Bermudan call",
+   "strike": 0.023615,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 8399
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 11465
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 12295
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 4062
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -4415
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -18218
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 13128
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 22564
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -2089
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 10433
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 20497
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 9973
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 21671
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -45469
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 24365
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -17563
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -17846
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 6564
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 7392
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -23678
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-07-07",
+  "executionTimestamp": "2026-07-07T15:27:51.455Z",
+  "venue": "Bloomberg SEF",
+  "venueMic": "BSEF",
+  "executionType": "Electronic",
+  "trader": "M. Okafor",
+  "salesperson": null,
+  "orderId": "ORD-54D57D60F2"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-07-07T09:02:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2026-07-07T09:02:00Z",
+  "lastModifiedAt": "2026-07-07T09:02:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA634286588",
+  "matched": "2026-07-07 13:39",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209654D57D60F2EC683B37F4",
+  "upi": "QZ5SPI21U482",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "KESTUS33XXX",
+  "ssiId": "SSI-USD-69F994",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 514934,
+  "cleanPv": 514934.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CRV-USD-OIS",
+   "CRV-USD-PROJ",
+   "IRV-USD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 2460
+  }
+ }
+}

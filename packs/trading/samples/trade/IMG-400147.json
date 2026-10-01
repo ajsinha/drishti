@@ -1,0 +1,426 @@
+{
+ "tradeId": "IMG-400147",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400147",
+ "productType": "HYBRID_FX_RATES",
+ "productName": "FX-rates hybrid (PRDC)",
+ "assetClass": "Structured",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2026-05-15",
+ "effectiveDate": "2026-05-18",
+ "maturityDate": "2033-01-28",
+ "currency": "USD",
+ "notional": 153000000.0,
+ "mtm": 2602465,
+ "mtmCurrency": "USD",
+ "pnl1d": 99493,
+ "counterparty": {
+  "id": "CP-SOLARIS",
+  "name": "Solaris Energy Corp."
+ },
+ "nettingSet": "NS-SOLARIS-TKY",
+ "book": "BOOK-STRUCT-1",
+ "trader": "TRDR-VRAO",
+ "desk": "DESK-STRUCT",
+ "legalEntity": "LE-TKY",
+ "fxSpot": "FX-USDKRW",
+ "fxVolSurface": "FXV-USDKRW",
+ "discountCurve": "CRV-USD-OIS",
+ "correlation": "CORR-G10FX",
+ "terms": {
+  "couponFormula": "max(0",
+  "callable": "Yes"
+ },
+ "risk": {
+  "fxDelta": -1530000,
+  "dv01": -80273,
+  "vega": -733773
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "fxDelta": -72857,
+   "dv01": -3823,
+   "vega": -34942
+  },
+  {
+   "bucket": "1M",
+   "fxDelta": -145714,
+   "dv01": -7645,
+   "vega": -69883
+  },
+  {
+   "bucket": "3M",
+   "fxDelta": -218571,
+   "dv01": -11468,
+   "vega": -104825
+  },
+  {
+   "bucket": "6M",
+   "fxDelta": -291429,
+   "dv01": -15290,
+   "vega": -139766
+  },
+  {
+   "bucket": "1Y",
+   "fxDelta": -364286,
+   "dv01": -19113,
+   "vega": -174708
+  },
+  {
+   "bucket": "2Y",
+   "fxDelta": -437143,
+   "dv01": -22935,
+   "vega": -209649
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-08-18",
+   "level": 92.36,
+   "trigger": 100.0,
+   "performance": -0.0764,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-11-18",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-02-18",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-05-18",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-08-18",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-11-18",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-02-18",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-05-18",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-08-18",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-11-18",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-02-18",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-05-18",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-08-18",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-11-18",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-02-18",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-05-18",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-08-18",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-11-18",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-02-18",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-05-18",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-08-18",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-11-18",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2032-02-18",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2032-05-18",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -11649
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 18825
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -68435
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -40028
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -53392
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -34530
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 10691
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -61274
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 4433
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 18675
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -68177
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 105776
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -882
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 202882
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -65561
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 69761
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 81894
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 169418
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -70596
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -24417
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-05-15",
+  "executionTimestamp": "2026-05-15T11:39:46.324Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "V. Rao",
+  "salesperson": null,
+  "orderId": "ORD-7DBFB08CA5"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-05-15T12:47:00Z",
+    "by": "mo.ops"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2026-07-11T12:47:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2026-05-15T12:47:00Z",
+  "lastModifiedAt": "2026-07-11T12:47:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT544015595",
+  "matched": "2026-05-15 14:49",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300BLAOJ55ZE6F4747DBFB08CA51123666541",
+  "upi": "QZ5DTN3MFLKN",
+  "reportingRegimes": [
+   "JFSA"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SOLAUS33XXX",
+  "ssiId": "SSI-USD-269904",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 2602465,
+  "cleanPv": 2602465.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "FX-USDKRW",
+   "FXV-USDKRW",
+   "CRV-USD-OIS",
+   "CORR-G10FX"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-struct",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 6735
+  }
+ }
+}

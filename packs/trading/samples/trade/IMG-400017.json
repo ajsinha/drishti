@@ -1,0 +1,228 @@
+{
+ "tradeId": "IMG-400017",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400017",
+ "productType": "EQ_FUTURE_SINGLE",
+ "productName": "Single-stock future",
+ "assetClass": "Equity",
+ "family": "future",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-07-31",
+ "effectiveDate": "2026-08-03",
+ "maturityDate": "2026-10-07",
+ "currency": "EUR",
+ "notional": 137000000.0,
+ "mtm": -1322281,
+ "mtmCurrency": "USD",
+ "pnl1d": -75685,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-LDN",
+ "book": "BOOK-EQD-2",
+ "trader": "TRDR-JWEISS",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "clearingAccount": "CLR-EUREX-1",
+ "underlyingEquity": "EQ-RHNB",
+ "dividendCurve": "DIV-RHNB",
+ "terms": {
+  "contract": "AAPL Z6",
+  "lots": 908
+ },
+ "risk": {
+  "delta": 691461
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 69146
+  },
+  {
+   "bucket": "1M",
+   "delta": 138292
+  },
+  {
+   "bucket": "3M",
+   "delta": 207438
+  },
+  {
+   "bucket": "6M",
+   "delta": 276584
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -29163
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 12996
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 19540
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 30225
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 13849
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 81728
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -14727
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -53375
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 40890
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -20496
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -27441
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -37205
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -58336
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -22902
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -53421
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -59545
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 29352
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 48538
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 11355
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 38207
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-07-31",
+  "executionTimestamp": "2026-07-31T11:00:54.626Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "J. Weiss",
+  "salesperson": null,
+  "orderId": "ORD-5728588567"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-07-31T09:50:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2026-07-31T09:50:00Z",
+  "lastModifiedAt": "2026-07-31T09:50:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT899381088",
+  "matched": "2026-07-31 13:49",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH9730713675",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q835728588567176F3A66D8",
+  "upi": "QZHQYKZUC3BI",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-EUR-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -1322281,
+  "cleanPv": -1322281.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQ-RHNB",
+   "DIV-RHNB"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 4015
+  }
+ }
+}

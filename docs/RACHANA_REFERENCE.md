@@ -41,7 +41,7 @@ This page is the authoritative reference. Everything in it was checked against t
 
 ## How a Sutra becomes a view
 
-Every request for an entity (`TRD T-10001 <GO>`, `GET /api/v1/views/trade/T-10001`) goes through the same steps:
+Every request for an entity (`TRD MX-20000001 <GO>`, `GET /api/v1/views/trade/MX-20000001`) goes through the same steps:
 
 1. **Fetch** the document (JSON) from the source that holds the kind.
 2. **Match**: take the Sutras whose `match.kind` is the entity's kind and pick the first, in priority order,
@@ -57,7 +57,7 @@ Every request for an entity (`TRD T-10001 <GO>`, `GET /api/v1/views/trade/T-1000
 The result is a ViewModel (JSON) that the console renders. You can see it with:
 
 ```bash
-curl -s http://localhost:18480/api/v1/views/trade/T-10001 | python3 -m json.tool | head -40
+curl -s http://localhost:18480/api/v1/views/trade/MX-20000001 | python3 -m json.tool | head -40
 ```
 
 You should see `ref`, `mnemonic`, `title`, `strip`, `panels`, `keys`, `provenance` and `timings`, with
@@ -180,10 +180,10 @@ expression, which a schema cannot).
 
 ## A complete example, annotated
 
-The Sutra below lays out a vanilla fixed/float interest rate swap from the trading pack (`TRD T-10001`). It
+The Sutra below lays out a vanilla fixed/float interest rate swap from the trading pack (`TRD MX-20000001`). It
 uses most of the grammar: matching, the title, the strip, a dozen panels of different kinds, expressions,
 templates, links and function keys. Every line is commented. The test suite (`RachanaReferenceExampleTest`)
-previews this exact block against `T-10001` and fails if it stops parsing or leaves a panel empty, so it
+previews this exact block against `MX-20000001` and fails if it stops parsing or leaves a panel empty, so it
 always works as written.
 
 How to read the notation:
@@ -196,11 +196,11 @@ How to read the notation:
 - `#` starts a YAML comment, which the engine ignores.
 
 The fragment of the document that the Sutra reads looks like this (abridged; the full document is
-`GET /api/v1/entities/trade/T-10001/raw`):
+`GET /api/v1/entities/trade/MX-20000001/raw`):
 
 ```json
 {
-  "tradeId": "T-10001", "productType": "IRS_FIXFLOAT", "productName": "Interest rate swap (fixed/float)",
+  "tradeId": "MX-20000001", "productType": "IRS_FIXFLOAT", "productName": "Interest rate swap (fixed/float)",
   "assetClass": "Rates", "status": "Live", "direction": "Receive fixed", "currency": "AUD",
   "notional": 242000000, "mtm": 1875863, "pnl1d": 126986, "maturityDate": "2032-06-25",
   "counterparty": { "id": "CP-MERIDIAN-RE", "name": "Meridian Reinsurance Ltd" },
@@ -416,7 +416,7 @@ keys:
 # ---- Notes for authors and reviewers (plain text; the engine ignores them) ------------------------------------
 notes: |
   Written to show the grammar, not for a desk. The priority is 50 so that a preview
-  of T-10001 picks this layout over the trading pack's irs-fixfloat.
+  of MX-20000001 picks this layout over the trading pack's irs-fixfloat.
 
   description (top) and notes are prose for people; a panel's description says what that panel shows.
 ```
@@ -424,18 +424,18 @@ What each part does when the view is built:
 
 | Part | What happens |
 |---|---|
-| `match` | The engine takes the `trade` Sutras, highest `priority` first, and uses the first whose `where` holds for `T-10001`. |
+| `match` | The engine takes the `trade` Sutras, highest `priority` first, and uses the first whose `where` holds for `MX-20000001`. |
 | `title`, `strip` | Evaluated once per document: each expression gives a value, which `fmt` formats and `tone` colours. |
 | `rows`, `each` | Evaluated to a list; the panel's columns are evaluated once per element with `@` set to it. |
 | `source` | Follows the link and reads the other entity (the curve) through the same sources and business date. |
 | `key`, `keys` | Become the function-key bar; a panel key scrolls to the panel, a link key opens the entity. |
 | Missing data | A path that is absent evaluates to nothing: the cell is empty, and a panel with no data says so. |
 
-You should see, previewing this block against `T-10001` in Studio:
+You should see, previewing this block against `MX-20000001` in Studio:
 
 | Where | Shows |
 |---|---|
-| Title | `[Rates · Interest rate swap (fixed/float)] T-10001 with Meridian Reinsurance Ltd` (the name is a link to `CPTY CP-MERIDIAN-RE`) |
+| Title | `[Rates · Interest rate swap (fixed/float)] MX-20000001 with Meridian Reinsurance Ltd` (the name is a link to `CPTY CP-MERIDIAN-RE`) |
 | Strip | `Notional 242,000,000`, `Fixed rate 4.0829%`, `MTM (USD) +1,875,863` (highlighted, positive colour) … `Book BOOK-RATES-3` (a link) |
 | Terms | `Net PV of the legs +1,875,863`, `Flows left 29 of 35` |
 | Cashflows | six of the seven fixed cashflows, a *Total* row, and `1 later cashflows` under it |
@@ -539,11 +539,11 @@ match: { kind: trade, where: "$.productType == 'IRS_FIXFLOAT' && $.status == 'Ma
 match: { kind: trade, where: "$.productType == 'IRS_FIXFLOAT'", priority: 10 }
 ```
 
-`T-10001` has `"status": "Live"`, so `irs-matured` does not hold and `irs-fixfloat` is used. To check which
+`MX-20000001` has `"status": "Live"`, so `irs-matured` does not hold and `irs-fixfloat` is used. To check which
 Sutra a document gets:
 
 ```bash
-curl -s http://localhost:18480/api/v1/views/trade/T-10001 | python3 -c "import json,sys; print(json.load(sys.stdin)['provenance']['layout'])"
+curl -s http://localhost:18480/api/v1/views/trade/MX-20000001 | python3 -c "import json,sys; print(json.load(sys.stdin)['provenance']['layout'])"
 ```
 
 You should see `Sutra irs-fixfloat v1 + inference`.
@@ -726,7 +726,7 @@ object that has a `name` shows that name. Without either, the panel is empty.
   - { id: clearing, kind: kv, title: Clearing, area: right, rows: $.clearing }   # fields inferred from the object
 ```
 
-You should see, for `T-10001`: `Fixed rate 4.0829%`, `Day count ACT/365F`, `Effective 2025-07-28`,
+You should see, for `MX-20000001`: `Fixed rate 4.0829%`, `Day count ACT/365F`, `Effective 2025-07-28`,
 `Counterparty Meridian Reinsurance Ltd`. In the view JSON a kv panel's data is
 `{"fields": [{"label": "Fixed rate", "text": "4.0829%", "path": "$.terms.fixedRate"}, …]}`.
 
@@ -769,7 +769,7 @@ first column when the first totalled column is the first).
 
 This is the counterparty-risk pack's *Member trades* table with a limit and a net row added. You should see, for
 netting set `NS-MERIDIAN-RE-NY`, rows such as
-`T-10007 · Overnight index swap · 199.0m · 2034-06-26 · −68,527,810`, the trade ids as links, a `Net` row, and
+`MX-20000007 · Overnight index swap · 199.0m · 2034-06-26 · −68,527,810`, the trade ids as links, a `Net` row, and
 the "more trades" line. The data is
 `{"columns": [...], "numeric": [false, false, true, false, true], "rows": [{"cells": [...], "highlight": false, "path": "$.trades[0]"}], "total": {...}, "more": "…"}`.
 
@@ -948,7 +948,7 @@ with `id` (and `name`, which becomes the text). Each item is fetched within the 
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
 ```
 
-You should see, for `T-10001`, items such as `Counterparty CP-MERIDIAN-RE A`, `Netting set NS-MERIDIAN-RE-NY PFE 46.0m`,
+You should see, for `MX-20000001`, items such as `Counterparty CP-MERIDIAN-RE A`, `Netting set NS-MERIDIAN-RE-NY PFE 46.0m`,
 `Book BOOK-RATES-3`, `Trader TRDR-ASHAH`, `Desk DESK-RATES`. An item that did not arrive in time says
 `pending`; one that does not exist says `missing`. A Sutra with a links panel always reports
 `+ inference` in its layout label, because the links are discovered rather than declared.
@@ -1313,11 +1313,11 @@ object, or a link (from `link(...)`).
 
 ### Paths and filters, by example
 
-Against `T-10001`:
+Against `MX-20000001`:
 
 | Expression | Result |
 |---|---|
-| `$.tradeId` | `T-10001` |
+| `$.tradeId` | `MX-20000001` |
 | `$.counterparty.name` | `Meridian Reinsurance Ltd` |
 | `$.legs[1].index` | `AONIA` |
 | `$.legs[-1].label` | `Pay AONIA compounded` (the last leg) |
@@ -1352,7 +1352,7 @@ The set is closed (`Functions.java`); a name outside it is a compile error
 | `contains(where, part)` | 2 | **case-insensitive**: true when the text contains `part`, or when `where` is a list with an element that does (nested lists are searched) |
 | `startsWith(text, prefix)` | 2 | **case-insensitive** prefix test |
 
-Examples against `T-10001`:
+Examples against `MX-20000001`:
 
 | Expression | Result | Shown with `fmt: signed0` |
 |---|---|---|
@@ -1486,7 +1486,7 @@ preview or save.
 ## Recipes
 
 Each recipe is a panel (or two) you can paste into the `panels:` of a Sutra for `trade` and preview against
-`T-10001`. The figures under each are what that preview shows.
+`MX-20000001`. The figures under each are what that preview shows.
 
 ### A table with a filter, totals and "more"
 
@@ -1662,7 +1662,7 @@ wins matching.
 
 | File | Entity | Notes |
 |---|---|---|
-| `packs/trading/sutras/rates/irs-fixfloat.v1.sutra.yaml` | `TRD T-10001` | kv, tabs (columns), ladder, line from a curve, hbar, links |
+| `packs/trading/sutras/rates/irs-fixfloat.v1.sutra.yaml` | `TRD MX-20000001` | kv, tabs (columns), ladder, line from a curve, hbar, links |
 | `packs/counterparty-risk/sutras/exposure-and-capital/netting-set.v1.sutra.yaml` | `NSET NS-MERIDIAN-RE-NY` | area with limit, table with totals and automatic id links |
 | `packs/market-data/sutras/market-data/equity-vol-surface.v1.sutra.yaml` | `EQV EQV-CSCA` | surface, table, line |
 | `packs/finance/sutras/rates/irs-vanilla.v3.sutra.yaml` | `TRD IRS-48213` | line with `mark` (finance pack; enabled by default with `DRISHTI_PACKS=finance`) |

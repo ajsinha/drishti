@@ -314,7 +314,7 @@ loader adds it to `drishti.sources.plugins.demo.settings.dirs`.
 ```
 
 Every document needs `_meta` with `source` (the name shown in provenance), `generation` and `live`; `walk` is
-optional. A finance FX spot (shortened), and `packs/trading/samples/trade/T-10001.json` (shortened), which walks its MTM:
+optional. A finance FX spot (shortened), and `packs/trading/samples/trade/MX-20000001.json` (shortened), which walks its MTM:
 
 ```json
 {
@@ -325,7 +325,7 @@ optional. A finance FX spot (shortened), and `packs/trading/samples/trade/T-1000
 
 ```json
 {
-  "tradeId": "T-10001", "productType": "…", "notional": 242000000.0, "mtm": 1875863, "nettingSet": "…",
+  "tradeId": "MX-20000001", "productType": "…", "notional": 242000000.0, "mtm": 1875863, "nettingSet": "…",
   "_meta": { "source": "murex-rates", "generation": 1, "live": true, "walk": { "mtm": 6172 } }
 }
 ```
@@ -561,13 +561,13 @@ CREATE TABLE desk.trades (
   currency      text,
   PRIMARY KEY (trade_id, business_date)
 );
-INSERT INTO desk.trades VALUES ('T-10001', '2026-09-30', 'IRS', 'CP-NORTHBRIDGE', 242000000, 1875863.00, 'USD');
+INSERT INTO desk.trades VALUES ('MX-20000001', '2026-09-30', 'IRS', 'CP-NORTHBRIDGE', 242000000, 1875863.00, 'USD');
 ```
 
-`query.trade` above, for `TRD T-10001` on 2026-09-30, returns:
+`query.trade` above, for `TRD MX-20000001` on 2026-09-30, returns:
 
 ```json
-{ "tradeId": "T-10001", "businessDate": "2026-09-30", "product": "IRS", "counterparty": "CP-NORTHBRIDGE",
+{ "tradeId": "MX-20000001", "businessDate": "2026-09-30", "product": "IRS", "counterparty": "CP-NORTHBRIDGE",
   "notional": 242000000, "mtm": 1875863.0, "currency": "USD" }
 ```
 
@@ -637,7 +637,7 @@ CREATE TABLE trading.entities (
 CREATE INDEX ON trading.entities (kind, business_date);                 -- snapshot dates
 CREATE INDEX ON trading.entities USING gin (doc jsonb_path_ops);        -- reverse lookups
 INSERT INTO trading.entities VALUES
-  ('trade', 'T-10001', '2026-09-30', '{"tradeId": "T-10001", "counterparty": "CP-NORTHBRIDGE", "mtm": 1875863, "businessDate": "2026-09-30"}');
+  ('trade', 'MX-20000001', '2026-09-30', '{"tradeId": "MX-20000001", "counterparty": "CP-NORTHBRIDGE", "mtm": 1875863, "businessDate": "2026-09-30"}');
 ```
 
 The document is `doc` as stored; its business date is the row's `business_date`; the generation is that date's
@@ -654,7 +654,7 @@ uv run --with "psycopg[binary]" python tools/packgen/banking/make_data.py \
 SPRING_PROFILES_ACTIVE=postgres DRISHTI_PACKS=trading java -jar drishti-server/target/drishti-server-*-exec.jar
 ```
 
-**What the user sees.** `TRD T-10001 <GO>`; pick an earlier date in the top bar and the trade's numbers change.
+**What the user sees.** `TRD MX-20000001 <GO>`; pick an earlier date in the top bar and the trade's numbers change.
 Provenance `trading-store`, with the business date. Health: `UP`, or `DOWN: <driver message> (reconnecting)`.
 
 ---
@@ -756,7 +756,7 @@ One table per kind, partitioned by `business_date` (`DATE`), with columns `id ST
 `doc STRING` (the JSON document). A `doc` value:
 
 ```json
-{ "tradeId": "T-10001", "productType": "IRS", "counterparty": "CP-NORTHBRIDGE", "nettingSet": "NS-…", "mtm": 1875863,
+{ "tradeId": "MX-20000001", "productType": "IRS", "counterparty": "CP-NORTHBRIDGE", "nettingSet": "NS-…", "mtm": 1875863,
   "notional": 242000000.0, "businessDate": "2026-09-30" }
 ```
 
@@ -784,7 +784,7 @@ that commit shows the original. It writes to local disk only; for S3 build local
 against the upload times. Keep a lake bounded with `tools/lake/maintain.py --config deploy/lake-maintenance.yaml
 --once` (see OPERATIONS).
 
-**What the user sees.** `TRD T-10001 <GO>`, then a date in the top bar; *Raw JSON* shows `businessDate`.
+**What the user sees.** `TRD MX-20000001 <GO>`, then a date in the top bar; *Raw JSON* shows `businessDate`.
 Provenance `trading-store`. Health: `UP`, `DOWN: cannot reach <root>/<domain>`, or `DOWN: no Delta tables under …`.
 
 ---
@@ -847,11 +847,11 @@ routes:
 `dYYYYMMDD` (nine characters, within Aerospike's bin-name limit) holding that day's JSON document as a string:
 
 ```text
-namespace test · set trading · key "trade/T-10001"
+namespace test · set trading · key "trade/MX-20000001"
   kind      = "trade"
-  id        = "T-10001"
-  d20260929 = "{\"tradeId\":\"T-10001\",\"mtm\":1868210,…,\"businessDate\":\"2026-09-29\"}"
-  d20260930 = "{\"tradeId\":\"T-10001\",\"mtm\":1875863,…,\"businessDate\":\"2026-09-30\"}"
+  id        = "MX-20000001"
+  d20260929 = "{\"tradeId\":\"MX-20000001\",\"mtm\":1868210,…,\"businessDate\":\"2026-09-29\"}"
+  d20260930 = "{\"tradeId\":\"MX-20000001\",\"mtm\":1875863,…,\"businessDate\":\"2026-09-30\"}"
 ```
 
 A snapshot kind's date is the kind's newest date (across all records) on or before the one asked, and an entity
@@ -871,7 +871,7 @@ SPRING_PROFILES_ACTIVE=aerospike DRISHTI_PACKS=trading java -jar drishti-server/
 `AerospikeLoader`, which reads lines `{"domain", "kind", "id", "date", "doc"}` and writes each into the set named by
 `domain`. Your own loader can write the same layout.
 
-**What the user sees.** `TRD T-10001 <GO>`, dated. Health: `UP` or `DOWN: not connected to Aerospike`; the cache
+**What the user sees.** `TRD MX-20000001 <GO>`, dated. Health: `UP` or `DOWN: not connected to Aerospike`; the cache
 figures show `kinds` and `datesIndexed`, and a purge rescans.
 
 ---
@@ -955,8 +955,8 @@ not in memory.
 message without a key, the `id-field`. Keep the key equal to the id.
 
 ```text
-key:   T-10001
-value: {"tradeId": "T-10001", "productType": "IRS", "mtm": 1875863, "pnl1d": 4120, "notional": 242000000.0, …}
+key:   MX-20000001
+value: {"tradeId": "MX-20000001", "productType": "IRS", "mtm": 1875863, "pnl1d": 4120, "notional": 242000000.0, …}
 ```
 
 *Envelope* (no kind for the topic): the value carries kind, id and document. Key it `<kind>/<id>`.
@@ -988,10 +988,10 @@ new `mtm` and `pnl1d`; `--seconds 0` runs until interrupted. To send one message
 ```bash
 docker compose -f deploy/compose.data.yaml exec kafka /opt/kafka/bin/kafka-console-producer.sh \
     --bootstrap-server localhost:9092 --topic drishti.trading.trades --property parse.key=true --property key.separator='|'
-T-10001|{"tradeId":"T-10001","productType":"IRS","mtm":1900000,"notional":242000000.0}
+MX-20000001|{"tradeId":"MX-20000001","productType":"IRS","mtm":1900000,"notional":242000000.0}
 ```
 
-**What the user sees.** `TRD T-10001 <GO>` on Live: provenance `trading-stream`, live, and the MTM ticks. The
+**What the user sees.** `TRD MX-20000001 <GO>` on Live: provenance `trading-stream`, live, and the MTM ticks. The
 trading pack's samples hold the same trade ids, so start the server with `DRISHTI_DEMO_ENABLED=false` to have the
 ticks come from Kafka rather than from the samples' random walk (see *Routing order*). Pick a date and the same
 trade comes from `trading-store` (the lake), because dated sources go first for a picked date. Health:

@@ -68,7 +68,7 @@ import org.apache.kafka.common.serialization.StringDeserializer;
  * {@code DRISHTI_CACHE_ROOT}), its own budget ({@code disk-cache.max-gb}, 10) and its own nightly clearing
  * ({@code disk-cache.reset-at}, {@code 02:00}, in {@code disk-cache.zone}, {@code America/New_York}).
  *
- * <p>Two message shapes. <b>Envelope</b> (default): {@code {"kind": "trade", "id": "T-1", "doc": {...}}}.
+ * <p>Two message shapes. <b>Envelope</b> (default): {@code {"kind": "trade", "id": "MX-20000001", "doc": {...}}}.
  * <b>Mapped</b>: {@code kind.<topic>: trade} and {@code id-field.<topic>: tradeId} (or {@code kind} and {@code id-field} for
  * every topic) make the whole value the document.
  * A message whose value is null (a tombstone) deletes the entity.

@@ -1,0 +1,347 @@
+{
+ "tradeId": "WSS-1500071",
+ "sourceSystem": "Wall Street Systems",
+ "sourceTradeId": "1500071",
+ "productType": "FX_ACCUMULATOR",
+ "productName": "FX accumulator",
+ "assetClass": "FX",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2025-09-11",
+ "effectiveDate": "2025-09-15",
+ "maturityDate": "2029-05-29",
+ "currency": "USD",
+ "notional": 71000000.0,
+ "mtm": 272423,
+ "mtmCurrency": "USD",
+ "pnl1d": -6139,
+ "counterparty": {
+  "id": "CP-MERIDIAN",
+  "name": "Meridian Life Assurance"
+ },
+ "nettingSet": "NS-MERIDIAN-LDN",
+ "book": "BOOK-FX-2",
+ "trader": "TRDR-LMOREAU",
+ "desk": "DESK-FX",
+ "legalEntity": "LE-LDN",
+ "fxSpot": "FX-USDCNH",
+ "fxVolSurface": "FXV-USDCNH",
+ "terms": {
+  "strike": 144.87764,
+  "knockOut": 149.02403,
+  "dailyAmount": 970706.0
+ },
+ "risk": {
+  "fxDelta": 710000,
+  "vega": 402197
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "fxDelta": 33810,
+   "vega": 19152
+  },
+  {
+   "bucket": "1M",
+   "fxDelta": 67619,
+   "vega": 38304
+  },
+  {
+   "bucket": "3M",
+   "fxDelta": 101429,
+   "vega": 57457
+  },
+  {
+   "bucket": "6M",
+   "fxDelta": 135238,
+   "vega": 76609
+  },
+  {
+   "bucket": "1Y",
+   "fxDelta": 169048,
+   "vega": 95761
+  },
+  {
+   "bucket": "2Y",
+   "fxDelta": 202857,
+   "vega": 114913
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2025-12-15",
+   "level": 94.15,
+   "trigger": 100.0,
+   "performance": -0.0585,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-03-15",
+   "level": 93.57,
+   "trigger": 100.0,
+   "performance": -0.0643,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-06-15",
+   "level": 96.7,
+   "trigger": 100.0,
+   "performance": -0.033,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-09-15",
+   "level": 95.36,
+   "trigger": 100.0,
+   "performance": -0.0464,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-12-15",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-03-15",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-06-15",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-09-15",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-12-15",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-03-15",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-06-15",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-09-15",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-12-15",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-03-15",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-05-29",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 4,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -16759
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 2568
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 21358
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 1800
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -3992
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -9581
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -7503
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 7733
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 244
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -9415
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 5202
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -12163
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 1627
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 17159
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -3759
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -1793
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 6767
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 14324
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -11059
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 2028
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-09-11",
+  "executionTimestamp": "2025-09-11T15:58:50.570Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "L. Moreau",
+  "salesperson": null,
+  "orderId": "ORD-0A3193CC9F"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-09-11T12:41:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2025-09-11T12:41:00Z",
+  "lastModifiedAt": "2025-09-11T12:41:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT217226450",
+  "matched": "2025-09-11 17:35",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q830A3193CC9F85CEA5ABBF",
+  "upi": "QZY4BR2V5UVX",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Foreign exchange"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "MERIUS33XXX",
+  "ssiId": "SSI-USD-4D91C0",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 272423,
+  "cleanPv": 272423.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "FX-USDCNH",
+   "FXV-USDCNH"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "calypso-fx",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 1255
+  }
+ }
+}

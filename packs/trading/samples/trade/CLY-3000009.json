@@ -1,0 +1,262 @@
+{
+ "tradeId": "CLY-3000009",
+ "sourceSystem": "Calypso",
+ "sourceTradeId": "3000009",
+ "productType": "CDS_INDEX",
+ "productName": "CDS index (CDX / iTraxx)",
+ "assetClass": "Credit",
+ "family": "cds",
+ "status": "Live",
+ "direction": "Buy protection",
+ "tradeDate": "2025-10-24",
+ "effectiveDate": "2025-10-27",
+ "maturityDate": "2028-01-24",
+ "currency": "JPY",
+ "notional": 61000000.0,
+ "mtm": 1066256,
+ "mtmCurrency": "USD",
+ "pnl1d": 26611,
+ "counterparty": {
+  "id": "CP-LUMEN",
+  "name": "Lumen Semiconductor AG"
+ },
+ "nettingSet": "NS-LUMEN-NY",
+ "book": "BOOK-CREDIT-2",
+ "trader": "TRDR-CDUBOIS",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-KAIZEN",
+ "creditCurve": "CDS-KAIZEN",
+ "discountCurve": "CRV-JPY-OIS",
+ "terms": {
+  "protection": "Bought",
+  "index": "CDX.NA.IG S47",
+  "coupon": "100",
+  "version": 3
+ },
+ "risk": {
+  "cs01": 12480,
+  "jtd": -36600000
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 2080,
+   "jtd": -6100000
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 4160,
+   "jtd": -12200000
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 6240,
+   "jtd": -18300000
+  }
+ ],
+ "schedule": [
+  {
+   "payDate": "2026-10-27",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -157874.88,
+   "pv": -153138.63,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2027-10-27",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -170100.27,
+   "pv": -164997.26,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2028-01-24",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -123398.64,
+   "pv": -119696.68,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 40398
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 73190
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 34709
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 15625
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 2398
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -18838
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 104793
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 5515
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 13981
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -39111
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -14676
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 43088
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -30744
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 51932
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -1248
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 17822
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 27469
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 33559
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -38880
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 2118
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-10-24",
+  "executionTimestamp": "2025-10-24T10:40:30.091Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "C. Dubois",
+  "salesperson": null,
+  "orderId": "ORD-2916410949"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-10-24T10:14:00Z",
+    "by": "mo.amend"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2026-02-21T10:14:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2025-10-24T10:14:00Z",
+  "lastModifiedAt": "2026-02-21T10:14:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA585965383",
+  "matched": "2025-10-24 14:00",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20962916410949555E878D3F",
+  "upi": "QZ1QCOFWX352",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "LUMEGB33XXX",
+  "ssiId": "SSI-JPY-8CF792",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1066256,
+  "cleanPv": 1066256.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CDS-KAIZEN",
+   "CRV-JPY-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 2743
+  }
+ }
+}

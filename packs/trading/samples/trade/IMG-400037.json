@@ -1,0 +1,241 @@
+{
+ "tradeId": "IMG-400037",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400037",
+ "productType": "EQ_INDEX_OPTION",
+ "productName": "Index option",
+ "assetClass": "Equity",
+ "family": "option",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2024-10-25",
+ "effectiveDate": "2024-10-28",
+ "maturityDate": "2026-10-07",
+ "currency": "USD",
+ "notional": 25000000.0,
+ "mtm": -36533,
+ "mtmCurrency": "USD",
+ "pnl1d": -695,
+ "counterparty": {
+  "id": "CP-MERIDIAN",
+  "name": "Meridian Life Assurance"
+ },
+ "nettingSet": "NS-MERIDIAN-LDN",
+ "book": "BOOK-EQD-3",
+ "trader": "TRDR-PLINDQVIST",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingIndex": "EQX-SPX",
+ "equityVolSurface": "EQV-SPX",
+ "terms": {
+  "optionType": "Put",
+  "exerciseStyle": "European",
+  "expiryDate": "2028-12-01",
+  "strike": 4388.88,
+  "contracts": 30
+ },
+ "risk": {
+  "delta": -82040,
+  "gamma": 432,
+  "vega": -26997,
+  "theta": -2120
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -8204,
+   "gamma": 43,
+   "vega": -2700,
+   "theta": -212
+  },
+  {
+   "bucket": "1M",
+   "delta": -16408,
+   "gamma": 86,
+   "vega": -5399,
+   "theta": -424
+  },
+  {
+   "bucket": "3M",
+   "delta": -24612,
+   "gamma": 130,
+   "vega": -8099,
+   "theta": -636
+  },
+  {
+   "bucket": "6M",
+   "delta": -32816,
+   "gamma": 173,
+   "vega": -10799,
+   "theta": -848
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 2782
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -455
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 1612
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 1059
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -1593
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -2781
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 2185
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 4506
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -1557
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -1451
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -316
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 553
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -6782
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -637
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -2291
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -1685
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 1908
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 224
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -9460
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -2961
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-10-25",
+  "executionTimestamp": "2024-10-25T12:12:19.020Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "P. Lindqvist",
+  "salesperson": null,
+  "orderId": "ORD-FDC346E056"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-10-25T11:08:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2024-10-25T11:08:00Z",
+  "lastModifiedAt": "2024-10-25T11:08:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT818609944",
+  "matched": "2024-10-25 11:31",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83FDC346E05607E86C623A",
+  "upi": "QZTHRNZCJJYV",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "MERIUS33XXX",
+  "ssiId": "SSI-USD-4D91C0",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -36533,
+  "cleanPv": -36533.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "EQX-SPX",
+   "EQV-SPX"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

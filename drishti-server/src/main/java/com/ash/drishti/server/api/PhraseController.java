@@ -49,7 +49,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/phrase")
 public class PhraseController {
 
-    private static final int SAMPLE = 25;
+    private static final int SAMPLE = 50;
     private static final int MAX_VALUES = 40;
     private static final Duration KEEP = Duration.ofMinutes(5);
     private final Mnemonics mnemonics;
@@ -93,7 +93,12 @@ public class PhraseController {
         if (l != null && System.currentTimeMillis() - l.at() < KEEP.toMillis()) {
             return l.fields();
         }
-        List<EntityHit> hits = router.search(kind, "", SAMPLE, Duration.ofSeconds(3), AsOf.LATEST);
+        // a sample spread across the whole book, not its first ids (which may all be one booking system or desk)
+        List<EntityHit> all = router.search(kind, "", SAMPLE * 40, Duration.ofSeconds(3), AsOf.LATEST);
+        List<EntityHit> hits = new ArrayList<>();
+        for (int i = 0; i < all.size() && hits.size() < SAMPLE; i += Math.max(1, all.size() / SAMPLE)) {
+            hits.add(all.get(i));
+        }
         Map<com.ash.drishti.api.EntityRef, EntityDocument> docs = router.fetchAll(hits.stream().map(EntityHit::ref).toList(), Duration.ofSeconds(5));
         Map<String, Stats> stats = new LinkedHashMap<>();
         docs.values().forEach(d -> walk("", d.data(), stats, 0));

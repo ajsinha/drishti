@@ -1,0 +1,227 @@
+{
+ "tradeId": "MX-20000112",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000112",
+ "productType": "SWAPTION_AMER",
+ "productName": "American swaption",
+ "assetClass": "Rates",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2026-09-22",
+ "effectiveDate": "2026-09-24",
+ "maturityDate": "2027-02-26",
+ "currency": "JPY",
+ "notional": 199000000.0,
+ "mtm": 1831652,
+ "mtmCurrency": "USD",
+ "pnl1d": -60956,
+ "counterparty": {
+  "id": "CP-ALDERSHOT",
+  "name": "Aldershot Pension Trust"
+ },
+ "nettingSet": "NS-ALDERSHOT-NY",
+ "book": "BOOK-RATES-3",
+ "trader": "TRDR-ASHAH",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-JPY-OIS",
+ "forwardCurve": "CRV-JPY-PROJ",
+ "swaptionVolCube": "IRV-JPY",
+ "terms": {
+  "payerReceiver": "Receiver",
+  "strike": 0.024904,
+  "expiryDate": "2027-04-29"
+ },
+ "risk": {
+  "dv01": 6501,
+  "vega": 252497
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 2167,
+   "vega": 84166
+  },
+  {
+   "bucket": "6M",
+   "dv01": 4334,
+   "vega": 168331
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 4313
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 104463
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -82885
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -11140
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 53935
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 133240
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -8612
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -16603
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -24434
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -79923
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -700
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 31177
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -29754
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 21818
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 11970
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -1894
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 41328
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 108320
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -12929
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -6491
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-09-22",
+  "executionTimestamp": "2026-09-22T12:44:41.616Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "A. Shah",
+  "salesperson": null,
+  "orderId": "ORD-9A495AE248"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-09-22T10:38:00Z",
+    "by": "mo.amend"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2026-09-26T10:38:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2026-09-22T10:38:00Z",
+  "lastModifiedAt": "2026-09-26T10:38:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA323745370",
+  "matched": "2026-09-22 15:33",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20969A495AE248BFCADB016F",
+  "upi": "QZL040OWCYA5",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "ALDEGB33XXX",
+  "ssiId": "SSI-JPY-D06EAF",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1831652,
+  "cleanPv": 1831652.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CRV-JPY-OIS",
+   "CRV-JPY-PROJ",
+   "IRV-JPY"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 5653
+  }
+ }
+}

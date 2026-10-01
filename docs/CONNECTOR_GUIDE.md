@@ -53,12 +53,12 @@ for running the server in production see [OPERATIONS.md](OPERATIONS.md).
 ### Entities, kinds and documents
 
 Everything Drishti shows is an **entity**: a trade, a counterparty, a curve, a margin call. Each entity has a
-**kind** (`trade`, `counterparty`, `ir-curve`) and an **id** (`T-10001`, `CP-ALDERSHOT`). The data behind an
+**kind** (`trade`, `counterparty`, `ir-curve`) and an **id** (`MX-20000001`, `CP-ALDERSHOT`). The data behind an
 entity is one **document**: a JSON object, as your system holds it. Drishti lays the document out on screen by
 itself (and with a Sutra, if a pack ships one for the kind), so you do not reshape your data for Drishti; you only
 tell Drishti where to find it.
 
-A user opens an entity by typing `<MNEMONIC> <ID> <GO>` in the terminal, for example `TRD T-10001 <GO>`. The mnemonic
+A user opens an entity by typing `<MNEMONIC> <ID> <GO>` in the terminal, for example `TRD MX-20000001 <GO>`. The mnemonic
 (`TRD`) comes from a pack and stands for a kind (`trade`). A connector can serve any kind, but a user can only type a
 kind that some enabled pack gives a mnemonic (or an id pattern) to; through the API any kind can be read
 (`GET /api/v1/views/{kind}/{id}`).
@@ -137,9 +137,9 @@ stream off), the same trade is read three ways:
 
 ```bash
 B=http://localhost:18480/api/v1
-curl -s $B/entities/trade/T-10001/raw | jq -c .provenance
-curl -s "$B/entities/trade/T-10001/raw?asOf=2026-09-29" | jq -c .provenance
-curl -s "$B/entities/trade/T-10001/raw?asOf=2026-08-01" | jq -c .provenance
+curl -s $B/entities/trade/MX-20000001/raw | jq -c .provenance
+curl -s "$B/entities/trade/MX-20000001/raw?asOf=2026-09-29" | jq -c .provenance
+curl -s "$B/entities/trade/MX-20000001/raw?asOf=2026-08-01" | jq -c .provenance
 ```
 
 You should see:
@@ -577,8 +577,8 @@ CREATE TABLE desk.trades (
   PRIMARY KEY (trade_id, business_date)
 );
 INSERT INTO desk.trades VALUES
-  ('T-77001', '2026-09-29', 'IRS', 'CP-ALDERSHOT', 50000000, 412300.00, 'USD'),
-  ('T-77001', '2026-09-30', 'IRS', 'CP-ALDERSHOT', 50000000, 398150.00, 'USD');
+  ('MX-21770001', '2026-09-29', 'IRS', 'CP-ALDERSHOT', 50000000, 412300.00, 'USD'),
+  ('MX-21770001', '2026-09-30', 'IRS', 'CP-ALDERSHOT', 50000000, 398150.00, 'USD');
 ```
 
 ### Configure it
@@ -669,28 +669,28 @@ DESK_DB_URL=jdbc:postgresql://localhost:5432/drishti DESK_DB_USER=drishti DESK_D
 ```
 
 ```bash
-curl -s "http://localhost:18480/api/v1/entities/trade/T-77001/raw?asOf=2026-09-30" | jq -c '{provenance, data}'
+curl -s "http://localhost:18480/api/v1/entities/trade/MX-21770001/raw?asOf=2026-09-30" | jq -c '{provenance, data}'
 ```
 
 You should see (real output; the generation is the read time):
 
 ```json
 {"provenance":{"source":"desk-db","generation":1790828309088,"fetchedAt":"2026-10-01T04:18:29.093601107Z","live":false,"businessDate":"2026-09-30"},
- "data":{"tradeId":"T-77001","businessDate":"2026-09-30","product":"IRS","counterparty":"CP-ALDERSHOT",
+ "data":{"tradeId":"MX-21770001","businessDate":"2026-09-30","product":"IRS","counterparty":"CP-ALDERSHOT",
          "notional":50000000,"mtm":398150.0,"currency":"USD"}}
 ```
 
 ### In the terminal
 
-`TRD T-77001 <GO>`. Pick 29 September: `mtm` is `412,300`. The `counterparty` value `CP-ALDERSHOT` is a link
-(Drishti recognises the id), so the counterparty opens with a click. The type-ahead does not offer `T-77001` (query
+`TRD MX-21770001 <GO>`. Pick 29 September: `mtm` is `412,300`. The `counterparty` value `CP-ALDERSHOT` is a link
+(Drishti recognises the id), so the counterparty opens with a click. The type-ahead does not offer `MX-21770001` (query
 mode cannot search); users type the id.
 
 ### Health, and when the database goes down
 
 `health` is `UP`, `DOWN: not started`, or `DOWN: <driver message> (reconnecting)` after a failed read. The
 connector starts even when the database is down: each pooled connection is opened on first use and reopened when
-broken. While the database is down, reads fail with `DRS-1003 desk-db failed reading trade/T-77001` and health reads
+broken. While the database is down, reads fail with `DRS-1003 desk-db failed reading trade/MX-21770001` and health reads
 (real output):
 
 ```text
@@ -727,7 +727,7 @@ One row per entity per business date:
 CREATE SCHEMA IF NOT EXISTS trading;
 CREATE TABLE trading.entities (
   kind          text  NOT NULL,                  -- the entity's kind: trade
-  id            text  NOT NULL,                  -- its id: T-10001
+  id            text  NOT NULL,                  -- its id: MX-20000001
   business_date date  NOT NULL,                  -- the date the document is for
   doc           jsonb NOT NULL,                  -- the document
   PRIMARY KEY (kind, id, business_date)          -- dated reads
@@ -735,8 +735,8 @@ CREATE TABLE trading.entities (
 CREATE INDEX ON trading.entities (kind, business_date);               -- snapshot dates
 CREATE INDEX ON trading.entities USING gin (doc jsonb_path_ops);      -- reverse lookups
 INSERT INTO trading.entities VALUES
-  ('trade', 'T-10001', '2026-09-30',
-   '{"tradeId": "T-10001", "counterparty": "CP-NORTHBRIDGE", "nettingSet": "NS-NORTHBRIDGE-IRS", "mtm": 1875863, "businessDate": "2026-09-30"}');
+  ('trade', 'MX-20000001', '2026-09-30',
+   '{"tradeId": "MX-20000001", "counterparty": "CP-NORTHBRIDGE", "nettingSet": "NS-NORTHBRIDGE-IRS", "mtm": 1875863, "businessDate": "2026-09-30"}');
 ```
 
 The document's business date is the row's `business_date`; its version is that date's day number. Reverse lookups
@@ -803,14 +803,14 @@ kinds)` for each. It also rewrites the banking packs' `samples/` folders from th
 are up to date).
 
 ```bash
-curl -s "http://localhost:18480/api/v1/entities/trade/T-10001/raw?asOf=2026-09-29" | jq -c .provenance
+curl -s "http://localhost:18480/api/v1/entities/trade/MX-20000001/raw?asOf=2026-09-29" | jq -c .provenance
 ```
 
 You should see `"source":"trading-store"` and `"businessDate":"2026-09-29"`.
 
 ### In the terminal
 
-`TRD T-10001 <GO>`, then pick an earlier date: the trade's numbers change. `CPTY CP-NORTHBRIDGE <GO>` on a picked
+`TRD MX-20000001 <GO>`, then pick an earlier date: the trade's numbers change. `CPTY CP-NORTHBRIDGE <GO>` on a picked
 date: the *Netting sets* panel lists the four netting sets that mention the counterparty, and impact analysis (F8, or
 `GET /api/v1/impact/counterparty/CP-NORTHBRIDGE?asOf=2026-09-29`) lists them with its 35 trades: reverse lookups by
 SQL. (*Linked entities* shows the ids the counterparty itself refers to: its group and credit limit.)
@@ -859,7 +859,7 @@ A row:
 
 | id | doc | business_date |
 |---|---|---|
-| `T-10001` | `{"tradeId": "T-10001", "productType": "IRS_FIXFLOAT", "counterparty": "CP-NORTHBRIDGE", "mtm": 1875863, "businessDate": "2026-09-30", …}` | `2026-09-30` |
+| `MX-20000001` | `{"tradeId": "MX-20000001", "productType": "IRS_FIXFLOAT", "counterparty": "CP-NORTHBRIDGE", "mtm": 1875863, "businessDate": "2026-09-30", …}` | `2026-09-30` |
 
 Writing a day from Python (the same calls `tools/samplegen/lake.py` uses): append a new date, or replace one date
 that was restated:
@@ -869,7 +869,7 @@ import json, datetime, pyarrow as pa
 from deltalake import write_deltalake
 
 day = datetime.date(2026, 9, 30)
-docs = {"T-10001": {"tradeId": "T-10001", "mtm": 1875863, "businessDate": day.isoformat()}}
+docs = {"MX-20000001": {"tradeId": "MX-20000001", "mtm": 1875863, "businessDate": day.isoformat()}}
 table = pa.table({"id": pa.array(list(docs), pa.string()),
                   "doc": pa.array([json.dumps(d) for d in docs.values()], pa.string()),
                   "business_date": pa.array([day] * len(docs), pa.date32())})
@@ -968,7 +968,7 @@ commit restates one document per kind), so *known at* before that commit shows t
 
 ### In the terminal
 
-`TRD T-10001 <GO>`; pick 29 September in the top bar and the numbers change; *Raw JSON* (F9) shows `businessDate`.
+`TRD MX-20000001 <GO>`; pick 29 September in the top bar and the numbers change; *Raw JSON* (F9) shows `businessDate`.
 `CPTY CP-NORTHBRIDGE <GO>` on a picked date lists its netting sets (*Netting sets* panel) and F8 (impact) its trades:
 reverse lookups, for which the lake indexes every value that looks like an identifier (capital letters and digits with
 at least one dash, such as `CP-NORTHBRIDGE` or `NS-NORTH-01`).
@@ -1070,11 +1070,11 @@ Key `<kind>/<id>` in the domain's set; bins `kind`, `id`, and one bin per busine
 day's JSON document as a string:
 
 ```text
-namespace test · set trading · key "trade/T-10001"
+namespace test · set trading · key "trade/MX-20000001"
   kind      = "trade"
-  id        = "T-10001"
-  d20260929 = "{\"tradeId\":\"T-10001\",\"mtm\":1868210,…,\"businessDate\":\"2026-09-29\"}"
-  d20260930 = "{\"tradeId\":\"T-10001\",\"mtm\":1875863,…,\"businessDate\":\"2026-09-30\"}"
+  id        = "MX-20000001"
+  d20260929 = "{\"tradeId\":\"MX-20000001\",\"mtm\":1868210,…,\"businessDate\":\"2026-09-29\"}"
+  d20260930 = "{\"tradeId\":\"MX-20000001\",\"mtm\":1875863,…,\"businessDate\":\"2026-09-30\"}"
 ```
 
 ### Configure it
@@ -1129,7 +1129,7 @@ write the same layout.
 
 ### In the terminal
 
-`TRD T-10001 <GO>`, dated. Search and reverse lookups use what the last scan found, so a record written after the
+`TRD MX-20000001 <GO>`, dated. Search and reverse lookups use what the last scan found, so a record written after the
 scan is readable at once but searchable after `refresh-seconds`.
 
 ### Health, and when the cluster goes down
@@ -1178,8 +1178,8 @@ cannot accept message without key`.)
 
 ```text
 topic: drishti.trading.trades
-key:   T-10001
-value: {"tradeId": "T-10001", "productType": "IRS_FIXFLOAT", "currency": "AUD", "notional": 242000000.0, "mtm": 1900000, "pnl1d": 24137}
+key:   MX-20000001
+value: {"tradeId": "MX-20000001", "productType": "IRS_FIXFLOAT", "currency": "AUD", "notional": 242000000.0, "mtm": 1900000, "pnl1d": 24137}
 ```
 
 **Envelope** (no kind for the topic): the value carries kind, id and document, so one topic can carry many kinds.
@@ -1283,7 +1283,7 @@ EOF
 
 ### In the terminal
 
-`TRD T-10001 <GO>` on Live: the *Live* badge shows, provenance is `trading-stream`, and the MTM moves every time
+`TRD MX-20000001 <GO>` on Live: the *Live* badge shows, provenance is `trading-stream`, and the MTM moves every time
 `stream.py` touches the trade. Pick a date: the same trade comes from `trading-store` (the lake), because dated
 connectors go first for a picked date, and the view is a static snapshot.
 
@@ -1819,8 +1819,8 @@ drishti:
 ```
 
 The view is live because a connector *pushes* the kind (the plugin answers `pushes(ref)` with true in ticks mode),
-not because the document that answered is live: `TRD T-10001` reads from `trading-store` (its provenance names the
-lake), shows the green live dot, and each message for T-10001 on the topic repaints it within a frame. A picked
+not because the document that answered is live: `TRD MX-20000001` reads from `trading-store` (its provenance names the
+lake), shows the green live dot, and each message for MX-20000001 on the topic repaints it within a frame. A picked
 business date stays a static snapshot either way.
 
 ### Several domains
@@ -2044,7 +2044,7 @@ calls.
 
 | Symptom | Check | Fix |
 |---|---|---|
-| The view says `DRS-1001 no source holds trade/T-1` | `curl -s $B/sources \| jq -c '.sources[] \| select(.kinds==[] or (.kinds \| index("trade"))) \| {name, health}'` (who serves the kind) | the id is spelled differently in the store; the store is off; or the date is outside its history |
+| The view says `DRS-1001 no source holds trade/MX-20000001` | `curl -s $B/sources \| jq -c '.sources[] \| select(.kinds==[] or (.kinds \| index("trade"))) \| {name, health}'` (who serves the kind) | the id is spelled differently in the store; the store is off; or the date is outside its history |
 | `DRS-1002 no source serves kind 'x'` | `curl -s $B/sources \| jq '.sources[].kinds'` | no running connector serves the kind (both `demo` and `file` are off): add `kinds` to a connector, or switch one on |
 | `DRS-1003 <connector> failed reading …` | `curl -s $B/admin/health \| jq '.sources[] \| select(.name=="<connector>") \| {health, reads}'` | the store is down or rejecting the query: `lastError` says why |
 | `DRS-1004 timed out reading …` | `reads.p99Ms` of the connectors serving the kind | raise `drishti.sources.fetch-timeout`; route the kind to the fast store |

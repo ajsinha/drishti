@@ -79,6 +79,12 @@ public final class SuggestionService {
                 add(out, new Suggestion("mnemonic", code, def.kind(), null, code, def.label(), code + " "));
             }
         });
+        if (m.isPresent()) {                    // TRD alone: trades, not every id that happens to contain "trd"
+            String kind = m.get().kind();
+            recents.of(user).stream().filter(h -> h.ref().kind().equals(kind)).forEach(h -> add(out, entity("recent", h)));
+            router.search(kind, "", max, budget, asOf).forEach(h -> add(out, entity("entity", h)));
+            return cap(out, max);
+        }
         recents.of(user).stream().filter(h -> matches(h, trimmed)).forEach(h -> add(out, entity("recent", h)));
         router.search(null, trimmed, max, budget, asOf).forEach(h -> add(out, entity("entity", h)));
         return cap(out, max);

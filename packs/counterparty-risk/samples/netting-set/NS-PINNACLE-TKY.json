@@ -62,35 +62,35 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10729",
+   "tradeId": "IMG-400141",
    "product": "Capital-protected note",
    "notional": 135000000.0,
    "maturity": "2034-08-07",
    "mtm": -2117461
   },
   {
-   "tradeId": "T-10736",
+   "tradeId": "IMG-400148",
    "product": "FX-rates hybrid (PRDC)",
    "notional": 149000000.0,
    "maturity": "2032-02-02",
    "mtm": 1945606
   },
   {
-   "tradeId": "T-10749",
+   "tradeId": "IMG-400161",
    "product": "Credit basket note",
    "notional": 184000000.0,
    "maturity": "2032-04-26",
    "mtm": 772409
   },
   {
-   "tradeId": "T-10744",
+   "tradeId": "IMG-400156",
    "product": "Worst-of note",
    "notional": 214000000.0,
    "maturity": "2028-09-12",
    "mtm": 765390
   },
   {
-   "tradeId": "T-10748",
+   "tradeId": "IMG-400160",
    "product": "Credit basket note",
    "notional": 38000000.0,
    "maturity": "2035-10-19",

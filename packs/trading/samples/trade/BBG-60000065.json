@@ -1,0 +1,381 @@
+{
+ "tradeId": "BBG-60000065",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000065",
+ "productType": "CMO_TRANCHE",
+ "productName": "CMO tranche",
+ "assetClass": "Fixed income",
+ "family": "securitized",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-02-19",
+ "effectiveDate": "2026-02-23",
+ "maturityDate": "2035-05-14",
+ "currency": "USD",
+ "notional": 203000000.0,
+ "mtm": 173547,
+ "mtmCurrency": "USD",
+ "pnl1d": 3,
+ "counterparty": {
+  "id": "CP-NORTHBRIDGE",
+  "name": "Northbridge Capital LLP"
+ },
+ "nettingSet": "NS-NORTHBRIDGE-NY",
+ "book": "BOOK-FI-3",
+ "trader": "TRDR-BADEYEMI",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-UST",
+ "benchmarkCurve": "CRV-USD-GOVT",
+ "forwardCurve": "CRV-USD-PROJ",
+ "swaptionVolCube": "IRV-USD",
+ "terms": {
+  "trancheType": "Sequential",
+  "wal": 8.46
+ },
+ "risk": {
+  "dv01": 166411,
+  "vega": 656457
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 5943,
+   "vega": 23445
+  },
+  {
+   "bucket": "6M",
+   "dv01": 11886,
+   "vega": 46890
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 17830,
+   "vega": 70335
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 23773,
+   "vega": 93780
+  },
+  {
+   "bucket": "3Y",
+   "dv01": 29716,
+   "vega": 117224
+  },
+  {
+   "bucket": "5Y",
+   "dv01": 35660,
+   "vega": 140669
+  },
+  {
+   "bucket": "7Y",
+   "dv01": 41603,
+   "vega": 164114
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-08-23",
+   "opening": 203000000,
+   "principal": 10684211,
+   "closing": 192315789,
+   "interest": 4060000
+  },
+  {
+   "date": "2027-02-23",
+   "opening": 192315789,
+   "principal": 10684211,
+   "closing": 181631579,
+   "interest": 3846316
+  },
+  {
+   "date": "2027-08-23",
+   "opening": 181631579,
+   "principal": 10684211,
+   "closing": 170947368,
+   "interest": 3632632
+  },
+  {
+   "date": "2028-02-23",
+   "opening": 170947368,
+   "principal": 10684211,
+   "closing": 160263158,
+   "interest": 3418947
+  },
+  {
+   "date": "2028-08-23",
+   "opening": 160263158,
+   "principal": 10684211,
+   "closing": 149578947,
+   "interest": 3205263
+  },
+  {
+   "date": "2029-02-23",
+   "opening": 149578947,
+   "principal": 10684211,
+   "closing": 138894737,
+   "interest": 2991579
+  },
+  {
+   "date": "2029-08-23",
+   "opening": 138894737,
+   "principal": 10684211,
+   "closing": 128210526,
+   "interest": 2777895
+  },
+  {
+   "date": "2030-02-23",
+   "opening": 128210526,
+   "principal": 10684211,
+   "closing": 117526316,
+   "interest": 2564211
+  },
+  {
+   "date": "2030-08-23",
+   "opening": 117526316,
+   "principal": 10684211,
+   "closing": 106842105,
+   "interest": 2350526
+  },
+  {
+   "date": "2031-02-23",
+   "opening": 106842105,
+   "principal": 10684211,
+   "closing": 96157895,
+   "interest": 2136842
+  },
+  {
+   "date": "2031-08-23",
+   "opening": 96157895,
+   "principal": 10684211,
+   "closing": 85473684,
+   "interest": 1923158
+  },
+  {
+   "date": "2032-02-23",
+   "opening": 85473684,
+   "principal": 10684211,
+   "closing": 74789474,
+   "interest": 1709474
+  },
+  {
+   "date": "2032-08-23",
+   "opening": 74789474,
+   "principal": 10684211,
+   "closing": 64105263,
+   "interest": 1495789
+  },
+  {
+   "date": "2033-02-23",
+   "opening": 64105263,
+   "principal": 10684211,
+   "closing": 53421053,
+   "interest": 1282105
+  },
+  {
+   "date": "2033-08-23",
+   "opening": 53421053,
+   "principal": 10684211,
+   "closing": 42736842,
+   "interest": 1068421
+  },
+  {
+   "date": "2034-02-23",
+   "opening": 42736842,
+   "principal": 10684211,
+   "closing": 32052632,
+   "interest": 854737
+  },
+  {
+   "date": "2034-08-23",
+   "opening": 32052632,
+   "principal": 10684211,
+   "closing": 21368421,
+   "interest": 641053
+  },
+  {
+   "date": "2035-02-23",
+   "opening": 21368421,
+   "principal": 10684211,
+   "closing": 10684211,
+   "interest": 427368
+  },
+  {
+   "date": "2035-05-14",
+   "opening": 10684211,
+   "principal": 10684211,
+   "closing": 0,
+   "interest": 213684
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -11499
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 4765
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -8156
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 7238
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 5026
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -6139
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -2205
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -1495
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -2340
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 801
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -3881
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -2028
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 3041
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -2621
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 314
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -4878
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -5461
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -3242
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -658
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 481
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-02-19",
+  "executionTimestamp": "2026-02-19T13:22:49.198Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "B. Adeyemi",
+  "salesperson": null,
+  "orderId": "ORD-0B07B17F57"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-02-19T12:15:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2026-02-19T12:15:00Z",
+  "lastModifiedAt": "2026-02-19T12:15:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT910787343",
+  "matched": "2026-02-19 13:17",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20960B07B17F5770575A054A",
+  "upi": "QZECGYPTP685",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "NORTUS33XXX",
+  "ssiId": "SSI-USD-A0C7C2",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 173547,
+  "cleanPv": 173547.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-USD-GOVT",
+   "CRV-USD-PROJ",
+   "IRV-USD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 2377
+  }
+ }
+}

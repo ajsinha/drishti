@@ -1,0 +1,319 @@
+{
+ "tradeId": "IMG-400104",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400104",
+ "productType": "PORTFOLIO_SWAP",
+ "productName": "Portfolio (basket) swap",
+ "assetClass": "Equity",
+ "family": "swap",
+ "status": "Live",
+ "direction": "Pay fixed",
+ "tradeDate": "2024-07-12",
+ "effectiveDate": "2024-07-15",
+ "maturityDate": "2028-08-23",
+ "currency": "USD",
+ "notional": 143000000.0,
+ "mtm": -1863356,
+ "mtmCurrency": "USD",
+ "pnl1d": -122208,
+ "counterparty": {
+  "id": "CP-MERIDIAN-RE",
+  "name": "Meridian Reinsurance Ltd"
+ },
+ "nettingSet": "NS-MERIDIAN-RE-LDN",
+ "book": "BOOK-EQD-2",
+ "trader": "TRDR-PLINDQVIST",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingIndex": "EQX-SPX",
+ "dividendCurve": "DIV-SPX",
+ "discountCurve": "CRV-USD-OIS",
+ "terms": {
+  "constituents": 43,
+  "fundingSpread": 68.5
+ },
+ "risk": {
+  "delta": 983525,
+  "dv01": 54058
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 46835,
+   "dv01": 2574
+  },
+  {
+   "bucket": "1M",
+   "delta": 93669,
+   "dv01": 5148
+  },
+  {
+   "bucket": "3M",
+   "delta": 140504,
+   "dv01": 7723
+  },
+  {
+   "bucket": "6M",
+   "delta": 187338,
+   "dv01": 10297
+  },
+  {
+   "bucket": "1Y",
+   "delta": 234173,
+   "dv01": 12871
+  },
+  {
+   "bucket": "2Y",
+   "delta": 281007,
+   "dv01": 15445
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Pay performance",
+   "payReceive": "Pay",
+   "rateType": "Performance",
+   "index": "SPX",
+   "rate": null,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "USD",
+   "notional": 143000000.0
+  },
+  {
+   "leg": 2,
+   "label": "Receive SOFR + spread",
+   "payReceive": "Receive",
+   "rateType": "Float",
+   "index": "SOFR",
+   "rate": 0.036215,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "USD",
+   "notional": 143000000.0
+  }
+ ],
+ "schedule": [
+  {
+   "name": "Orbital Telecom SA",
+   "weight": 0.125,
+   "level": 313.6,
+   "status": "Active"
+  },
+  {
+   "name": "Novatek Devices Inc.",
+   "weight": 0.125,
+   "level": 260.0,
+   "status": "Active"
+  },
+  {
+   "name": "Kaizen Motors Corp.",
+   "weight": 0.125,
+   "level": 281.2,
+   "status": "Active"
+  },
+  {
+   "name": "Verdant Agri Holdings",
+   "weight": 0.125,
+   "level": 258.1,
+   "status": "Active"
+  },
+  {
+   "name": "Cascadia Airlines Inc.",
+   "weight": 0.125,
+   "level": 416.0,
+   "status": "Active"
+  },
+  {
+   "name": "Solaris Energy Corp.",
+   "weight": 0.125,
+   "level": 207.5,
+   "status": "Active"
+  },
+  {
+   "name": "Halcyon Shipping plc",
+   "weight": 0.125,
+   "level": 156.0,
+   "status": "Active"
+  },
+  {
+   "name": "Meridian Financial Group",
+   "weight": 0.125,
+   "level": 57.3,
+   "status": "Active"
+  }
+ ],
+ "nextIndex": -1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -34840
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -46325
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -35497
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -54718
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -189422
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 8253
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -13888
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 72152
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -24256
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 92636
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -86027
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -18399
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -13658
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 21210
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 88528
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -22769
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 40127
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 79235
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -30313
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 70019
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-07-12",
+  "executionTimestamp": "2024-07-12T08:42:06.497Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "P. Lindqvist",
+  "salesperson": null,
+  "orderId": "ORD-4874C3256B"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-07-12T10:37:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2024-07-12T10:37:00Z",
+  "lastModifiedAt": "2024-07-12T10:37:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT745410643",
+  "matched": "2024-07-12 10:01",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q834874C3256B3EFD1F6BF2",
+  "upi": "QZLLSAEITE1W",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "MERIUS33XXX",
+  "ssiId": "SSI-USD-9DC4EA",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -1863356,
+  "cleanPv": -1863356.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Multi-curve OIS discounting",
+  "curves": [
+   "EQX-SPX",
+   "DIV-SPX",
+   "CRV-USD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 5157
+  }
+ }
+}

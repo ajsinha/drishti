@@ -35,7 +35,7 @@ anyone can check it again.
 | Browser top bar | — | `Live, p99 2 ms` | read from real Chrome over the DevTools protocol |
 | Fan-out | — | 10,000 listeners on one topic all receive the latest of 50 ticks | `TopicHubTest` |
 | Structured search over 750 trades | — | 7.2 ms (`elapsedMs`) | `GET /api/v1/search`, below |
-| Pick list `TRD T-100` (99 of 99) | — | 1.2 ms (`elapsedMs`) | `GET /api/v1/search`, 2026-09-30; an id pattern reads only the ids it names |
+| Pick list `TRD MX-200000` (99 of 99) | — | 1.2 ms (`elapsedMs`) | `GET /api/v1/search`, 2026-09-30; an id pattern reads only the ids it names |
 | Pick list `TRD productType=Revolver` (6 of 750) | — | 5.9 ms (`elapsedMs`) | same; a field condition reads every trade |
 | Command-line suggestions over HTTP | 30 ms budget per source | p50 5.2 ms, p99 8.0 ms (25 entries) | the `curl` loop in method 6, 2026-09-30, on a busy workstation |
 
@@ -75,7 +75,7 @@ Start with method 1. It needs nothing but `curl` and tells you, for one view, wh
 Every view the server builds reports how long each stage took, in milliseconds:
 
 ```bash
-curl -s http://localhost:18480/api/v1/views/trade/T-10001 \
+curl -s http://localhost:18480/api/v1/views/trade/MX-20000001 \
   | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["timings"]); print(d["provenance"]["layout"])'
 ```
 
@@ -102,7 +102,7 @@ Repeat the same request and sort the times. This measures what a client sees, HT
 
 ```bash
 for i in $(seq 200); do
-  curl -s -o /dev/null -w "%{time_total}\n" http://localhost:18480/api/v1/views/trade/T-10001
+  curl -s -o /dev/null -w "%{time_total}\n" http://localhost:18480/api/v1/views/trade/MX-20000001
 done | sort -n | awk '{a[NR]=$1} END {printf "n=%d p50=%.1f ms p99=%.1f ms max=%.1f ms\n",
   NR, a[int(NR*0.5)]*1000, a[int(NR*0.99)]*1000, a[NR]*1000}'
 ```
@@ -190,7 +190,7 @@ The percentiles cover only the last 30 seconds (`drishti.live.window`), so measu
 streaming. To generate load from the command line, open some streams in the background, measure, and stop them:
 
 ```bash
-for i in $(seq 50); do curl -sN -o /dev/null http://localhost:18480/api/v1/views/trade/T-10452/stream & done
+for i in $(seq 50); do curl -sN -o /dev/null http://localhost:18480/api/v1/views/trade/END-1000008/stream & done
 sleep 10
 curl -s http://localhost:18480/api/v1/health/live
 kill $(jobs -p)
@@ -219,21 +219,21 @@ curl -s -G http://localhost:18480/api/v1/search --data-urlencode 'q=TRD where $.
 Pick lists go through the same endpoint. Compare an id pattern with a field condition:
 
 ```bash
-for q in 'TRD T-100' 'TRD productType=Revolver' 'TRD'; do
+for q in 'TRD MX-200000' 'TRD productType=Revolver' 'TRD'; do
   curl -s -G http://localhost:18480/api/v1/search --data-urlencode "q=$q" \
     | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["query"], {k: d[k] for k in ("scanned","matched","elapsedMs")})'
 done
 ```
 
 ```text
-TRD T-100 {'scanned': 99, 'matched': 99, 'elapsedMs': 1.2}
+TRD MX-200000 {'scanned': 99, 'matched': 99, 'elapsedMs': 1.2}
 TRD productType=Revolver {'scanned': 750, 'matched': 6, 'elapsedMs': 5.88}
 TRD {'scanned': 750, 'matched': 750, 'elapsedMs': 6.13}
 ```
 
-An id pattern (`T-100`) reads only the entities whose ids it names (`scanned` 99); a field condition reads every
+An id pattern (`MX-200000`) reads only the entities whose ids it names (`scanned` 99); a field condition reads every
 entity of the kind (`scanned` 750). On a large kind, put an id pattern in front of the condition
-(`TRD T-1* currency=usd`) when you can. The console adds `limit <your Search results setting>` (100 by
+(`TRD MX-2* currency=usd`) when you can. The console adds `limit <your Search results setting>` (100 by
 default), so only the first 100 rows travel to the browser; the table then pages them 25 at a time in the
 browser, with no further requests.
 

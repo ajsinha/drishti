@@ -1,0 +1,231 @@
+{
+ "tradeId": "IMG-400094",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400094",
+ "productType": "DIVIDEND_SWAP",
+ "productName": "Dividend swap",
+ "assetClass": "Equity",
+ "family": "swap",
+ "status": "Live",
+ "direction": "Receive fixed",
+ "tradeDate": "2025-05-27",
+ "effectiveDate": "2025-05-29",
+ "maturityDate": "2031-10-14",
+ "currency": "USD",
+ "notional": 126000000.0,
+ "mtm": 409824,
+ "mtmCurrency": "USD",
+ "pnl1d": -42741,
+ "counterparty": {
+  "id": "CP-ALDERSHOT",
+  "name": "Aldershot Pension Trust"
+ },
+ "nettingSet": "NS-ALDERSHOT-LDN",
+ "book": "BOOK-EQD-1",
+ "trader": "TRDR-JWEISS",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingIndex": "EQX-SPX",
+ "dividendCurve": "DIV-SPX",
+ "terms": {
+  "dividendStrike": 125.79,
+  "period": "2028"
+ },
+ "risk": {
+  "delta": -841785
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -40085
+  },
+  {
+   "bucket": "1M",
+   "delta": -80170
+  },
+  {
+   "bucket": "3M",
+   "delta": -120255
+  },
+  {
+   "bucket": "6M",
+   "delta": -160340
+  },
+  {
+   "bucket": "1Y",
+   "delta": -200425
+  },
+  {
+   "bucket": "2Y",
+   "delta": -240510
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 42025
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 7239
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -8737
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -6666
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 10319
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 5178
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -5043
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 2528
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 633
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 4444
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -3358
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 557
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -8288
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -10399
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -7062
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -52
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 9044
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -1743
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 1776
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -1365
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-05-27",
+  "executionTimestamp": "2025-05-27T16:33:01.308Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "J. Weiss",
+  "salesperson": null,
+  "orderId": "ORD-DE991A8E05"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-05-27T09:57:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2025-05-27T09:57:00Z",
+  "lastModifiedAt": "2025-05-27T09:57:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT946206424",
+  "matched": "2025-05-27 11:02",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83DE991A8E05BEF198E44C",
+  "upi": "QZ9NKLE0HZ46",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "ALDEUS33XXX",
+  "ssiId": "SSI-USD-D06EAF",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 409824,
+  "cleanPv": 409824.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Multi-curve OIS discounting",
+  "curves": [
+   "EQX-SPX",
+   "DIV-SPX"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 2080
+  }
+ }
+}

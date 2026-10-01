@@ -1,0 +1,279 @@
+{
+ "tradeId": "MX-20000171",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000171",
+ "productType": "INFL_CAP_FLOOR",
+ "productName": "Inflation cap / floor",
+ "assetClass": "Inflation",
+ "family": "option",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2026-09-11",
+ "effectiveDate": "2026-09-14",
+ "maturityDate": "2028-03-21",
+ "currency": "EUR",
+ "notional": 200000000.0,
+ "mtm": -100943,
+ "mtmCurrency": "USD",
+ "pnl1d": -8615,
+ "counterparty": {
+  "id": "CP-MERIDIAN",
+  "name": "Meridian Life Assurance"
+ },
+ "nettingSet": "NS-MERIDIAN-LDN",
+ "book": "BOOK-INFL-2",
+ "trader": "TRDR-GMENDES",
+ "desk": "DESK-INFL",
+ "legalEntity": "LE-LDN",
+ "discountCurve": "CRV-EUR-OIS",
+ "inflationCurve": "INFC-HICPX",
+ "inflationIndex": "INF-HICPX",
+ "terms": {
+  "capFloor": "Cap",
+  "strike": 0.048718
+ },
+ "risk": {
+  "ie01": -28221,
+  "vega": -727687
+ },
+ "sensitivities": [
+  {
+   "bucket": "1Y",
+   "ie01": -9407,
+   "vega": -242562
+  },
+  {
+   "bucket": "2Y",
+   "ie01": -18814,
+   "vega": -485125
+  }
+ ],
+ "schedule": [
+  {
+   "fixingDate": "2026-12-14",
+   "period": "2026-12-14..2027-03-14",
+   "index": "ESTR",
+   "rate": 0.045855,
+   "payoff": 542750.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-03-14",
+   "period": "2027-03-14..2027-06-14",
+   "index": "ESTR",
+   "rate": 0.049787,
+   "payoff": 739350.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-06-14",
+   "period": "2027-06-14..2027-09-14",
+   "index": "ESTR",
+   "rate": 0.024843,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-09-14",
+   "period": "2027-09-14..2027-12-14",
+   "index": "ESTR",
+   "rate": 0.027255,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-12-14",
+   "period": "2027-12-14..2028-03-14",
+   "index": "ESTR",
+   "rate": 0.039826,
+   "payoff": 241300.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2028-03-14",
+   "period": "2028-03-14..2028-06-14",
+   "index": "ESTR",
+   "rate": 0.041689,
+   "payoff": 334450.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2028-03-21",
+   "period": "2028-03-21..2028-06-21",
+   "index": "ESTR",
+   "rate": 0.042915,
+   "payoff": 395750.0,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 2892
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 3626
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 4472
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 99
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 2824
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -1499
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 398
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -1215
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 2070
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -747
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -2926
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 6340
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -3011
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 2557
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 4339
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -2044
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 478
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 2583
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 2880
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 3939
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-09-11",
+  "executionTimestamp": "2026-09-11T11:43:28.868Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "G. Mendes",
+  "salesperson": null,
+  "orderId": "ORD-2DB93C8F2E"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-09-11T12:53:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2026-09-11T12:53:00Z",
+  "lastModifiedAt": "2026-09-11T12:53:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA945517529",
+  "matched": "2026-09-11 15:25",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q832DB93C8F2EAF32B75CC8",
+  "upi": "QZ50WCY9W5YD",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "MERIGB33XXX",
+  "ssiId": "SSI-EUR-4D91C0",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -100943,
+  "cleanPv": -100943.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CRV-EUR-OIS",
+   "INFC-HICPX",
+   "INF-HICPX"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 2202
+  }
+ }
+}

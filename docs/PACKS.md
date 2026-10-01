@@ -78,7 +78,7 @@ command to try. The example ids are real: they exist in the pack's `samples/` fo
 |---|---|---|---|
 | `banking-core` | — | `CPTY` counterparty · `GRP` counterparty group · `ISS` issuer · `AGR` master agreement · `CCP` central counterparty · `LE` bank legal entity · `BOOK` book · `DESK` desk · `TRDR` trader · `CAL` holiday calendar · `CSA` credit support annex · `CLR` clearing account | `CPTY CP-NORTHBRIDGE` |
 | `market-data` | `banking-core` | `CRV` interest rate curve · `REPO` repo curve · `FX` FX spot rate · `FXF` FX forward curve · `FXV` FX volatility surface · `IRV` swaption volatility cube · `CPV` cap/floor volatility surface · `EQ` equity · `EQX` equity index · `DIV` dividend curve · `EQV` equity volatility surface · `CDS` credit curve · `INF` inflation index · `INFC` inflation curve · `CMD` commodity · `CMDC` commodity forward curve · `CMDV` commodity volatility surface · `FIX` rate index fixings · `BND` bond (security master) · `CORR` correlation matrix | `CRV CRV-USD-OIS` |
-| `trading` | `banking-core`, `market-data` | `TRD` trade (125 products in ten asset classes) | `TRD T-10001` |
+| `trading` | `banking-core`, `market-data` | `TRD` trade (125 products in ten asset classes) | `TRD MX-20000001` |
 | `market-risk` | `market-data`, `trading` | `VAR` VaR / expected shortfall · `SCN` stress scenario · `STR` stress result · `FRTB` FRTB sensitivities · `PNL` P&L explain | `VAR VAR-RATES` |
 | `counterparty-risk` | `market-data`, `trading` | `NSET` netting set · `LIM` credit limit · `EXP` exposure profile · `CVA` CVA / XVA · `SACCR` SA-CCR exposure · `COLL` collateral balance · `MC` margin call · `SIMM` ISDA SIMM initial margin | `NSET NS-SUMMIT-NY` |
 | `liquidity-risk` | `trading` | `LCR` liquidity coverage ratio · `NSFR` net stable funding ratio · `MLAD` maturity ladder · `HQLA` HQLA holding · `FUND` funding source · `LST` liquidity stress result · `IDL` intraday liquidity | `LCR LCR-NY` |
@@ -397,7 +397,7 @@ is used when the key is absent. A folder or file that does not exist is simply s
 
 ### `columns`: the key fields of a pick list
 
-When a command names several entities (`TRD T-100`, `CPTY north`, `TRD productType=Revolver`), the user gets a
+When a command names several entities (`TRD MX-200000`, `CPTY north`, `TRD productType=Revolver`), the user gets a
 **pick list**: a table with one row per entity. `columns:` says which fields of each kind appear beside the id,
 in order. From `packs/trading/pack.yaml` and `packs/banking-core/pack.yaml`:
 
@@ -419,12 +419,12 @@ columns:
   book: [name, deskName, tradeCount, mtm, dv01]
 ```
 
-With these, `TRD T-100 <GO>` shows:
+With these, `TRD MX-200000 <GO>` shows:
 
 ```text
 TRD      Product type   Direction      Currency  Notional      MTM (USD)    Maturity date  Book
-T-10001  IRS_FIXFLOAT   Receive fixed  AUD       242,000,000   1,875,863    2032-06-25     BOOK-RATES-3
-T-10002  IRS_FIXFLOAT   Pay fixed      EUR       110,000,000   1,761,589    2031-04-15     BOOK-RATES-1
+MX-20000001  IRS_FIXFLOAT   Receive fixed  AUD       242,000,000   1,875,863    2032-06-25     BOOK-RATES-3
+MX-20000002  IRS_FIXFLOAT   Pay fixed      EUR       110,000,000   1,761,589    2031-04-15     BOOK-RATES-1
 …
 ```
 
@@ -1618,7 +1618,7 @@ Example: show the trader's name in trade pick lists.
 
    You should see `wrote 5 pack manifests: banking-core, market-data, trading, market-risk, counterparty-risk`.
 4. Check the result: `git diff packs/trading/pack.yaml` shows `- trader` added under `columns: trade:`.
-5. Restart the server (packs load at start-up), type `TRD T-100` and press Enter: the pick list has a
+5. Restart the server (packs load at start-up), type `TRD MX-200000` and press Enter: the pick list has a
    *Trader* column.
 6. Commit the generator **and** the files it wrote, together. `--check` now passes.
 

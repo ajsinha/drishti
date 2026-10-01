@@ -1,0 +1,448 @@
+{
+ "tradeId": "MX-20000154",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000154",
+ "productType": "TARN_RATES",
+ "productName": "Target redemption note (rates)",
+ "assetClass": "Rates",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2026-09-18",
+ "effectiveDate": "2026-09-21",
+ "maturityDate": "2036-11-07",
+ "currency": "AUD",
+ "notional": 7000000.0,
+ "mtm": -47123,
+ "mtmCurrency": "USD",
+ "pnl1d": -1291,
+ "counterparty": {
+  "id": "CP-BRAMBLE",
+  "name": "Bramble Asset Management"
+ },
+ "nettingSet": "NS-BRAMBLE-NY",
+ "book": "BOOK-RATES-2",
+ "trader": "TRDR-ASHAH",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-AUD-OIS",
+ "forwardCurve": "CRV-AUD-PROJ",
+ "swaptionVolCube": "IRV-AUD",
+ "terms": {
+  "target": 0.144436,
+  "couponFormula": "2 × (Strike − Index)"
+ },
+ "risk": {
+  "dv01": 5716,
+  "vega": 60421
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 159,
+   "vega": 1678
+  },
+  {
+   "bucket": "6M",
+   "dv01": 318,
+   "vega": 3357
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 476,
+   "vega": 5035
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 635,
+   "vega": 6713
+  },
+  {
+   "bucket": "3Y",
+   "dv01": 794,
+   "vega": 8392
+  },
+  {
+   "bucket": "5Y",
+   "dv01": 953,
+   "vega": 10070
+  },
+  {
+   "bucket": "7Y",
+   "dv01": 1111,
+   "vega": 11749
+  },
+  {
+   "bucket": "10Y",
+   "dv01": 1270,
+   "vega": 13427
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Pay performance",
+   "payReceive": "Pay",
+   "rateType": "Performance",
+   "index": "USCPI",
+   "rate": null,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "AUD",
+   "notional": 7000000.0
+  },
+  {
+   "leg": 2,
+   "label": "Receive AONIA + spread",
+   "payReceive": "Receive",
+   "rateType": "Float",
+   "index": "AONIA",
+   "rate": 0.03642,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "AUD",
+   "notional": 7000000.0
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-12-21",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-03-21",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-06-21",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-09-21",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-12-21",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-03-21",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-06-21",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-09-21",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-12-21",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-03-21",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-06-21",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-09-21",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-12-21",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-03-21",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-06-21",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-09-21",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-12-21",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-03-21",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-06-21",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-09-21",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-12-21",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2032-03-21",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2032-06-21",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2032-09-21",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 162
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -2308
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -4554
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 411
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -1649
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -1111
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 2384
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -896
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -584
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -4096
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -7481
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 4299
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -3146
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -571
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 2540
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 2727
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 3674
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -2758
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -4946
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 395
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-09-18",
+  "executionTimestamp": "2026-09-18T14:52:14.123Z",
+  "venue": "Bloomberg SEF",
+  "venueMic": "BSEF",
+  "executionType": "Electronic",
+  "trader": "A. Shah",
+  "salesperson": null,
+  "orderId": "ORD-832D9890F1"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-09-18T11:50:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2026-09-18T11:50:00Z",
+  "lastModifiedAt": "2026-09-18T11:50:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA537615401",
+  "matched": "2026-09-18 11:23",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096832D9890F1959D1B1EB2",
+  "upi": "QZZL2YKIFV0V",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "BRAMGB33XXX",
+  "ssiId": "SSI-AUD-1243C8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -47123,
+  "cleanPv": -47123.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "CRV-AUD-OIS",
+   "CRV-AUD-PROJ",
+   "IRV-AUD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

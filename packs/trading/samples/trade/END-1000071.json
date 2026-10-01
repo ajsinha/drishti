@@ -1,0 +1,277 @@
+{
+ "tradeId": "END-1000071",
+ "sourceSystem": "Endur",
+ "sourceTradeId": "1000071",
+ "productType": "GAS_SWING",
+ "productName": "Gas swing option",
+ "assetClass": "Commodity",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2025-05-14",
+ "effectiveDate": "2025-05-16",
+ "maturityDate": "2030-12-20",
+ "currency": "USD",
+ "notional": 116000000.0,
+ "mtm": -632140,
+ "mtmCurrency": "USD",
+ "pnl1d": 53843,
+ "counterparty": {
+  "id": "CP-VERDANT",
+  "name": "Verdant Agri Holdings"
+ },
+ "nettingSet": "NS-VERDANT-NY",
+ "book": "BOOK-COMM-2",
+ "trader": "TRDR-FROSSI",
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "commodityCurve": "CMDC-SOY",
+ "commodityVolSurface": "CMDV-SOY",
+ "terms": {
+  "hub": "NBP",
+  "minDaily": 5801,
+  "maxDaily": 44857
+ },
+ "risk": {
+  "delta": 699488,
+  "vega": 705289
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 33309,
+   "vega": 33585
+  },
+  {
+   "bucket": "1M",
+   "delta": 66618,
+   "vega": 67170
+  },
+  {
+   "bucket": "3M",
+   "delta": 99927,
+   "vega": 100756
+  },
+  {
+   "bucket": "6M",
+   "delta": 133236,
+   "vega": 134341
+  },
+  {
+   "bucket": "1Y",
+   "delta": 166545,
+   "vega": 167926
+  },
+  {
+   "bucket": "2Y",
+   "delta": 199854,
+   "vega": 201511
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-05-16",
+   "type": "First call",
+   "strike": 0.031364,
+   "status": "Expired"
+  },
+  {
+   "date": "2027-05-16",
+   "type": "Bermudan call",
+   "strike": 0.04782,
+   "status": "Pending"
+  },
+  {
+   "date": "2028-05-16",
+   "type": "Bermudan call",
+   "strike": 0.022704,
+   "status": "Pending"
+  },
+  {
+   "date": "2029-05-16",
+   "type": "Bermudan call",
+   "strike": 0.023424,
+   "status": "Pending"
+  },
+  {
+   "date": "2030-05-16",
+   "type": "Bermudan call",
+   "strike": 0.043269,
+   "status": "Pending"
+  },
+  {
+   "date": "2030-12-20",
+   "type": "Bermudan call",
+   "strike": 0.032506,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -48999
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 3680
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 34296
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -939
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 19091
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 6811
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 17634
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 25612
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 40369
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -1678
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -22206
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -3156
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 19654
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -7020
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 10222
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -2036
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -14178
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 10804
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -3231
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -1634
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-05-14",
+  "executionTimestamp": "2025-05-14T15:06:07.255Z",
+  "venue": "ICE",
+  "venueMic": "IFEU",
+  "executionType": "Electronic",
+  "trader": "F. Rossi",
+  "salesperson": null,
+  "orderId": "ORD-3E6B70BEBB"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-05-14T09:02:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2025-05-14T09:02:00Z",
+  "lastModifiedAt": "2025-05-14T09:02:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT956498922",
+  "matched": "2025-05-14 16:03",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20963E6B70BEBB8CA57FB116",
+  "upi": "QZG2OH1BW86N",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "VERDUS33XXX",
+  "ssiId": "SSI-USD-ABCF5A",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -632140,
+  "cleanPv": -632140.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "CMDC-SOY",
+   "CMDV-SOY"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "endur-comm",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 2424
+  }
+ }
+}

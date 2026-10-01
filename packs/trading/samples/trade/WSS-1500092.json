@@ -1,0 +1,223 @@
+{
+ "tradeId": "WSS-1500092",
+ "sourceSystem": "Wall Street Systems",
+ "sourceTradeId": "1500092",
+ "productType": "COMMERCIAL_PAPER",
+ "productName": "Commercial paper",
+ "assetClass": "Money market",
+ "family": "money",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2026-08-03",
+ "effectiveDate": "2026-08-05",
+ "maturityDate": "2027-06-25",
+ "currency": "CHF",
+ "notional": 99000000.0,
+ "mtm": 1053527,
+ "mtmCurrency": "USD",
+ "pnl1d": 2492,
+ "counterparty": {
+  "id": "CP-RHEINTAL",
+  "name": "Rheintal Landesbank"
+ },
+ "nettingSet": "NS-RHEINTAL-NY",
+ "book": "BOOK-MM-1",
+ "trader": "TRDR-SIYER",
+ "desk": "DESK-MM",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-KAIZEN",
+ "discountCurve": "CRV-CHF-OIS",
+ "creditCurve": "CDS-KAIZEN",
+ "terms": {
+  "discountRate": 0.046382,
+  "rating": "A-1"
+ },
+ "risk": {
+  "dv01": -7450,
+  "cs01": -7256
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -1242,
+   "cs01": -1209
+  },
+  {
+   "bucket": "6M",
+   "dv01": -2483,
+   "cs01": -2419
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -3725,
+   "cs01": -3628
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -30836
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -29351
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -31993
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 8073
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -24960
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 25330
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 84374
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -45801
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -17876
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 9059
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -8639
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -5896
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 1326
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 65776
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 34656
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -3708
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 41245
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -24613
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -8994
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -45084
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-08-03",
+  "executionTimestamp": "2026-08-03T08:45:22.108Z",
+  "venue": "Bloomberg SEF",
+  "venueMic": "BSEF",
+  "executionType": "Electronic",
+  "trader": "S. Iyer",
+  "salesperson": null,
+  "orderId": "ORD-A5706B5706"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-08-03T10:28:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-08-03T10:28:00Z",
+  "lastModifiedAt": "2026-08-03T10:28:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT551161780",
+  "matched": "2026-08-03 14:38",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096A5706B5706F1430888F4",
+  "upi": "QZ71MAHONOBG",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "RHEIGB33XXX",
+  "ssiId": "SSI-CHF-230AB8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1053527,
+  "cleanPv": 1053527.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-CHF-OIS",
+   "CDS-KAIZEN"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-mm",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 3097
+  }
+ }
+}

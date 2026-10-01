@@ -1,0 +1,381 @@
+{
+ "tradeId": "BBG-60000063",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000063",
+ "productType": "CMO_TRANCHE",
+ "productName": "CMO tranche",
+ "assetClass": "Fixed income",
+ "family": "securitized",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2025-02-07",
+ "effectiveDate": "2025-02-10",
+ "maturityDate": "2034-05-05",
+ "currency": "EUR",
+ "notional": 214000000.0,
+ "mtm": -2085900,
+ "mtmCurrency": "USD",
+ "pnl1d": 73745,
+ "counterparty": {
+  "id": "CP-MERIDIAN-RE",
+  "name": "Meridian Reinsurance Ltd"
+ },
+ "nettingSet": "NS-MERIDIAN-RE-NY",
+ "book": "BOOK-FI-1",
+ "trader": "TRDR-BADEYEMI",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-ORBITAL",
+ "benchmarkCurve": "CRV-EUR-GOVT",
+ "forwardCurve": "CRV-EUR-PROJ",
+ "swaptionVolCube": "IRV-EUR",
+ "terms": {
+  "trancheType": "PO",
+  "wal": 6.42
+ },
+ "risk": {
+  "dv01": 185290,
+  "vega": 1869628
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 6618,
+   "vega": 66772
+  },
+  {
+   "bucket": "6M",
+   "dv01": 13235,
+   "vega": 133545
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 19852,
+   "vega": 200317
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 26470,
+   "vega": 267090
+  },
+  {
+   "bucket": "3Y",
+   "dv01": 33088,
+   "vega": 333862
+  },
+  {
+   "bucket": "5Y",
+   "dv01": 39705,
+   "vega": 400635
+  },
+  {
+   "bucket": "7Y",
+   "dv01": 46322,
+   "vega": 467407
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2025-08-10",
+   "opening": 214000000,
+   "principal": 11263158,
+   "closing": 202736842,
+   "interest": 4280000
+  },
+  {
+   "date": "2026-02-10",
+   "opening": 202736842,
+   "principal": 11263158,
+   "closing": 191473684,
+   "interest": 4054737
+  },
+  {
+   "date": "2026-08-10",
+   "opening": 191473684,
+   "principal": 11263158,
+   "closing": 180210526,
+   "interest": 3829474
+  },
+  {
+   "date": "2027-02-10",
+   "opening": 180210526,
+   "principal": 11263158,
+   "closing": 168947368,
+   "interest": 3604211
+  },
+  {
+   "date": "2027-08-10",
+   "opening": 168947368,
+   "principal": 11263158,
+   "closing": 157684211,
+   "interest": 3378947
+  },
+  {
+   "date": "2028-02-10",
+   "opening": 157684211,
+   "principal": 11263158,
+   "closing": 146421053,
+   "interest": 3153684
+  },
+  {
+   "date": "2028-08-10",
+   "opening": 146421053,
+   "principal": 11263158,
+   "closing": 135157895,
+   "interest": 2928421
+  },
+  {
+   "date": "2029-02-10",
+   "opening": 135157895,
+   "principal": 11263158,
+   "closing": 123894737,
+   "interest": 2703158
+  },
+  {
+   "date": "2029-08-10",
+   "opening": 123894737,
+   "principal": 11263158,
+   "closing": 112631579,
+   "interest": 2477895
+  },
+  {
+   "date": "2030-02-10",
+   "opening": 112631579,
+   "principal": 11263158,
+   "closing": 101368421,
+   "interest": 2252632
+  },
+  {
+   "date": "2030-08-10",
+   "opening": 101368421,
+   "principal": 11263158,
+   "closing": 90105263,
+   "interest": 2027368
+  },
+  {
+   "date": "2031-02-10",
+   "opening": 90105263,
+   "principal": 11263158,
+   "closing": 78842105,
+   "interest": 1802105
+  },
+  {
+   "date": "2031-08-10",
+   "opening": 78842105,
+   "principal": 11263158,
+   "closing": 67578947,
+   "interest": 1576842
+  },
+  {
+   "date": "2032-02-10",
+   "opening": 67578947,
+   "principal": 11263158,
+   "closing": 56315789,
+   "interest": 1351579
+  },
+  {
+   "date": "2032-08-10",
+   "opening": 56315789,
+   "principal": 11263158,
+   "closing": 45052632,
+   "interest": 1126316
+  },
+  {
+   "date": "2033-02-10",
+   "opening": 45052632,
+   "principal": 11263158,
+   "closing": 33789474,
+   "interest": 901053
+  },
+  {
+   "date": "2033-08-10",
+   "opening": 33789474,
+   "principal": 11263158,
+   "closing": 22526316,
+   "interest": 675789
+  },
+  {
+   "date": "2034-02-10",
+   "opening": 22526316,
+   "principal": 11263158,
+   "closing": 11263158,
+   "interest": 450526
+  },
+  {
+   "date": "2034-05-05",
+   "opening": 11263158,
+   "principal": 11263158,
+   "closing": 0,
+   "interest": 225263
+  }
+ ],
+ "nextIndex": 3,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 15531
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -47691
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 69555
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -59723
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -11490
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 23652
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -9923
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 49525
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -23240
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 907
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -26435
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 34743
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -62658
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 2837
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 70763
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 58634
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -6185
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -22092
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -989
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 39743
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-02-07",
+  "executionTimestamp": "2025-02-07T09:27:45.922Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "B. Adeyemi",
+  "salesperson": null,
+  "orderId": "ORD-886EC4BBA5"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-02-07T12:24:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2025-02-07T12:24:00Z",
+  "lastModifiedAt": "2025-02-07T12:24:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT223042168",
+  "matched": "2025-02-07 10:18",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096886EC4BBA578DBB3459F",
+  "upi": "QZECGYPTP685",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "MERIGB33XXX",
+  "ssiId": "SSI-EUR-9DC4EA",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -2085900,
+  "cleanPv": -2085900.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-EUR-GOVT",
+   "CRV-EUR-PROJ",
+   "IRV-EUR"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 6312
+  }
+ }
+}

@@ -1,0 +1,228 @@
+{
+ "tradeId": "IMG-400002",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400002",
+ "productType": "EQ_CASH",
+ "productName": "Equity position",
+ "assetClass": "Equity",
+ "family": "position",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2024-08-21",
+ "effectiveDate": "2024-08-23",
+ "maturityDate": "2026-10-07",
+ "currency": "USD",
+ "notional": 216000000.0,
+ "mtm": -259412,
+ "mtmCurrency": "USD",
+ "pnl1d": 7433,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-LDN",
+ "book": "BOOK-EQD-2",
+ "trader": "TRDR-JWEISS",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "clearingAccount": "CLR-EUREX-1",
+ "underlyingEquity": "EQ-HLXP",
+ "dividendCurve": "DIV-HLXP",
+ "terms": {
+  "quantity": 142849,
+  "averagePrice": 625.32
+ },
+ "risk": {
+  "delta": -457726
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -45773
+  },
+  {
+   "bucket": "1M",
+   "delta": -91545
+  },
+  {
+   "bucket": "3M",
+   "delta": -137318
+  },
+  {
+   "bucket": "6M",
+   "delta": -183090
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 1098
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -23686
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 707
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 12559
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -6616
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -1469
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -6191
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -8945
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -15367
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 4870
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -2232
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 3204
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 5434
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -6918
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -7472
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -15907
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -19313
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 7476
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -4722
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -10536
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-08-21",
+  "executionTimestamp": "2024-08-21T10:07:47.417Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "J. Weiss",
+  "salesperson": null,
+  "orderId": "ORD-B58E85BE60"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-08-21T12:38:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2024-08-21T12:38:00Z",
+  "lastModifiedAt": "2024-08-21T12:38:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT610953802",
+  "matched": "2024-08-21 16:33",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH7304761357",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83B58E85BE60EC93E0951F",
+  "upi": "QZ7DSWQUPRYO",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMUS33XXX",
+  "ssiId": "SSI-USD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -259412,
+  "cleanPv": -259412.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQ-HLXP",
+   "DIV-HLXP"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 2679
+  }
+ }
+}

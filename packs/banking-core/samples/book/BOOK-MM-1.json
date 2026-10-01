@@ -7,70 +7,70 @@
  "dv01": 5166,
  "topTrades": [
   {
-   "tradeId": "T-10677",
+   "tradeId": "WSS-1500113",
    "product": "Call account",
    "notional": 204000000.0,
    "maturity": "2027-08-04",
    "mtm": 4542888
   },
   {
-   "tradeId": "T-10654",
+   "tradeId": "WSS-1500090",
    "product": "Treasury bill",
    "notional": 226000000.0,
    "maturity": "2027-06-14",
    "mtm": -2467214
   },
   {
-   "tradeId": "T-10675",
+   "tradeId": "WSS-1500111",
    "product": "Call account",
    "notional": 249000000.0,
    "maturity": "2027-01-25",
    "mtm": -2192641
   },
   {
-   "tradeId": "T-10670",
+   "tradeId": "WSS-1500106",
    "product": "Term deposit / placement",
    "notional": 229000000.0,
    "maturity": "2027-01-29",
    "mtm": 2024594
   },
   {
-   "tradeId": "T-10667",
+   "tradeId": "WSS-1500103",
    "product": "Term deposit / placement",
    "notional": 131000000.0,
    "maturity": "2026-10-28",
    "mtm": 1944745
   },
   {
-   "tradeId": "T-10674",
+   "tradeId": "WSS-1500110",
    "product": "Call account",
    "notional": 234000000.0,
    "maturity": "2027-04-12",
    "mtm": -1837797
   },
   {
-   "tradeId": "T-10651",
+   "tradeId": "WSS-1500087",
    "product": "Treasury bill",
    "notional": 51000000.0,
    "maturity": "2026-11-16",
    "mtm": 1540400
   },
   {
-   "tradeId": "T-10656",
+   "tradeId": "WSS-1500092",
    "product": "Commercial paper",
    "notional": 99000000.0,
    "maturity": "2027-06-25",
    "mtm": 1053527
   },
   {
-   "tradeId": "T-10653",
+   "tradeId": "WSS-1500089",
    "product": "Treasury bill",
    "notional": 98000000.0,
    "maturity": "2027-07-12",
    "mtm": 967365
   },
   {
-   "tradeId": "T-10664",
+   "tradeId": "WSS-1500100",
    "product": "Certificate of deposit",
    "notional": 86000000.0,
    "maturity": "2027-04-08",

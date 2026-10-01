@@ -1,0 +1,222 @@
+{
+ "tradeId": "MX-20000069",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000069",
+ "productType": "STIR_FUTURE",
+ "productName": "Short-term interest rate future",
+ "assetClass": "Rates",
+ "family": "future",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-08-28",
+ "effectiveDate": "2026-08-28",
+ "maturityDate": "2027-09-13",
+ "currency": "AUD",
+ "notional": 98000000.0,
+ "mtm": -945874,
+ "mtmCurrency": "USD",
+ "pnl1d": -39968,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-RATES-2",
+ "trader": "TRDR-ASHAH",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-CME-1",
+ "forwardCurve": "CRV-AUD-PROJ",
+ "terms": {
+  "contract": "SR3 H7",
+  "lots": 570,
+  "tradePrice": 96.301
+ },
+ "risk": {
+  "dv01": 9285
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 1548
+  },
+  {
+   "bucket": "6M",
+   "dv01": 3095
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 4642
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -15880
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -7880
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -24282
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 30112
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 713
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -3317
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -28568
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -4445
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -21480
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -22711
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -12698
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -28188
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -9079
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -34621
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -64205
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -9052
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 19464
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -60259
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 51722
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 41282
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-08-28",
+  "executionTimestamp": "2026-08-28T12:57:29.420Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "A. Shah",
+  "salesperson": null,
+  "orderId": "ORD-F6D69C2EF5"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-08-28T10:51:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2026-08-28T10:51:00Z",
+  "lastModifiedAt": "2026-08-28T10:51:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA645677099",
+  "matched": "2026-08-28 17:48",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH2876444555",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096F6D69C2EF526C84C283E",
+  "upi": "QZ9ZAUQGJGYU",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-AUD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -945874,
+  "cleanPv": -945874.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-AUD-PROJ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 2872
+  }
+ }
+}

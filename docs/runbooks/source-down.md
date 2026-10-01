@@ -28,7 +28,7 @@ Any of these:
 
 - A view shows an error with `DRS-1003` (the source failed) or `DRS-1004` (the source timed out).
 - A view opens, but linked entities (counterparty, curves) show *pending* or *missing*.
-- `DRS-1001 no source holds trade/T-10452` for an entity that exists, or `DRS-1002` (no source for the kind).
+- `DRS-1001 no source holds trade/END-1000008` for an entity that exists, or `DRS-1002` (no source for the kind).
 - **Admin → Health** (`/admin/health` in the console) shows a status of `DEGRADED` or `DOWN`, a source with
   status `DOWN`, or a pack with connectors down.
 - Search results say they are partial, or type-ahead stops suggesting entities of one kind.
@@ -119,7 +119,7 @@ Connector settings are listed per plugin in [CONFIGURATION.md](../CONFIGURATION.
 1. Time one view of an affected kind and look at where the time goes (milliseconds):
 
    ```bash
-   curl -s http://localhost:18480/api/v1/views/trade/T-10001 | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["timings"], d["provenance"]["source"])'
+   curl -s http://localhost:18480/api/v1/views/trade/MX-20000001 | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["timings"], d["provenance"]["source"])'
    ```
 
    ```text
@@ -180,7 +180,7 @@ example `DRISHTI_LAKE_ENABLED=false` turns off the packs' lake connectors) or wi
    timeout:
 
    ```bash
-   curl -s -o /dev/null -w "%{http_code}\n" http://localhost:18480/api/v1/views/trade/T-10001
+   curl -s -o /dev/null -w "%{http_code}\n" http://localhost:18480/api/v1/views/trade/MX-20000001
    ```
 
    You should see `200`.

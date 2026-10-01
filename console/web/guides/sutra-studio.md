@@ -19,7 +19,7 @@ Studio (`/studio`) is where screen layouts are written. You edit a Sutra on the 
 real entity on the right, in the same renderer the terminal uses. Nothing is saved until you press **Save** (or
 **Submit for review**), so you can experiment freely.
 
-This tutorial takes about fifteen minutes. It uses the trading pack's interest rate swap `T-10001`; any entity
+This tutorial takes about fifteen minutes. It uses the trading pack's interest rate swap `MX-20000001`; any entity
 works.
 
 ## The screen at a glance
@@ -27,7 +27,7 @@ works.
 | Where | What it is |
 |---|---|
 | Top left: **Sutra picker** | *New Sutra…*, or an existing Sutra such as `irs-fixfloat v1 · trade`. |
-| Top left: two small boxes | The **kind** and **id** of the entity to preview against (`trade`, `T-10001`). |
+| Top left: two small boxes | The **kind** and **id** of the entity to preview against (`trade`, `MX-20000001`). |
 | **Preview** (Ctrl+Enter) | Renders the Sutra against that entity. |
 | **Start from inference** | Replaces the editor with what inference makes of the entity, as an editable Sutra. |
 | **Save** / **Submit for review** | Only where saving is switched on and you are an author (see step 7). |
@@ -41,15 +41,15 @@ works.
 Go to:
 
 ```text
-# Studio with the swap Sutra and T-10001 already chosen
-/studio?sutra=irs-fixfloat@1&kind=trade&id=T-10001
+# Studio with the swap Sutra and MX-20000001 already chosen
+/studio?sutra=irs-fixfloat@1&kind=trade&id=MX-20000001
 ```
 
-Or choose `irs-fixfloat v1 · trade` in the picker and type `trade` and `T-10001` in the two boxes. Press
+Or choose `irs-fixfloat v1 · trade` in the picker and type `trade` and `MX-20000001` in the two boxes. Press
 **Ctrl+Enter**.
 
 You should see the swap on the right exactly as the terminal shows it: the title *Rates · Interest rate swap
-(fixed/float) T-10001 with Meridian Reinsurance Ltd*, eight strip figures, *Terms*, *Legs*, *Cashflows*, the
+(fixed/float) MX-20000001 with Meridian Reinsurance Ltd*, eight strip figures, *Terms*, *Legs*, *Cashflows*, the
 curve and the DV01 bars.
 
 ## 2. Make a change and preview it
@@ -111,7 +111,7 @@ source sent it:
 
 ```json
 {
-  "tradeId": "T-10001",
+  "tradeId": "MX-20000001",
   "productType": "IRS_FIXFLOAT",
   "counterparty": { "id": "CP-MERIDIAN-RE", "name": "Meridian Reinsurance Ltd" },
   "execution": { "venue": "Voice", "venueMic": "XOFF", "orderId": "ORD-C00C6EF736", … },
@@ -134,13 +134,13 @@ Preview: the strip shows *Venue Voice (XOFF)*. (A strip holds at most eight figu
 You can design a layout before any source is connected:
 
 ```json
-{"tradeId": "T-1", "notional": 5000000, "mtm": -12500,
+{"tradeId": "MX-20000001", "notional": 5000000, "mtm": -12500,
  "legs": [{"leg": 1, "rate": 0.031}, {"leg": 2, "index": "SOFR"}]}
 ```
 
 1. In **Sample JSON**, replace the document with your own, such as the one above.
 2. Tick **Preview against this JSON**.
-3. Press **Ctrl+Enter**. The preview renders your document instead of fetching `T-10001`.
+3. Press **Ctrl+Enter**. The preview renders your document instead of fetching `MX-20000001`.
 
 **Start from inference** also uses the pasted document when the box is ticked, so you can get a first layout for
 data Drishti has never seen.
@@ -173,12 +173,12 @@ notes: |
 
 A layout has to work for every entity it matches, not just the one on screen. Keep a few typical and awkward ones:
 
-1. Type a kind and an id (for example `trade` and `T-10044`) and press **Preview**.
+1. Type a kind and an id (for example `trade` and `MX-20000044`) and press **Preview**.
 2. Press **+** next to *Test entities*: the entity is kept for this Sutra (by its `name:`), for you, on the server.
 3. Keep as many as you need (up to 30): one of each product the Sutra matches, one with missing fields, one large.
 4. After a change, press **Run all**. Every kept entity is previewed with the Sutra as it is in the editor. The
    status line says *All 5 test entities render without problems*, or lists each one with a problem below, such as
-   `trade T-10044 — legs: path $.legs[2].rate not found`.
+   `trade MX-20000044 — legs: path $.legs[2].rate not found`.
 5. Pick one from *Test entities* to preview it on its own.
 
 ## 7. Save, or submit for review

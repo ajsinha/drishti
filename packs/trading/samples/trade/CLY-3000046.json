@@ -1,0 +1,272 @@
+{
+ "tradeId": "CLY-3000046",
+ "sourceSystem": "Calypso",
+ "sourceTradeId": "3000046",
+ "productType": "CLN",
+ "productName": "Credit-linked note",
+ "assetClass": "Credit",
+ "family": "note",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2025-10-31",
+ "effectiveDate": "2025-11-03",
+ "maturityDate": "2028-09-18",
+ "currency": "EUR",
+ "notional": 35000000.0,
+ "mtm": -490007,
+ "mtmCurrency": "USD",
+ "pnl1d": -22689,
+ "counterparty": {
+  "id": "CP-CORAL",
+  "name": "Coral Bay Municipal Authority"
+ },
+ "nettingSet": "NS-CORAL-NY",
+ "book": "BOOK-CREDIT-2",
+ "trader": "TRDR-DWHITFIELD",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-MERIDIAN",
+ "creditCurve": "CDS-MERIDIAN",
+ "discountCurve": "CRV-EUR-OIS",
+ "terms": {
+  "coupon": 0.051167,
+  "issuePrice": 98.9
+ },
+ "risk": {
+  "cs01": 7812,
+  "jtd": -21000000,
+  "dv01": 7758
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 781,
+   "jtd": -2100000,
+   "dv01": 776
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 1562,
+   "jtd": -4200000,
+   "dv01": 1552
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 2344,
+   "jtd": -6300000,
+   "dv01": 2327
+  },
+  {
+   "bucket": "3Y",
+   "cs01": 3125,
+   "jtd": -8400000,
+   "dv01": 3103
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-05-03",
+   "rate": 0.027749,
+   "amount": 700000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-11-03",
+   "rate": 0.057712,
+   "amount": 700000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-05-03",
+   "rate": 0.047308,
+   "amount": 700000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-11-03",
+   "rate": 0.041354,
+   "amount": 700000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-05-03",
+   "rate": 0.050937,
+   "amount": 700000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-09-18",
+   "rate": 0.021372,
+   "amount": 700000.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -1084
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 11377
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 23302
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -4744
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 9117
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -15667
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 5665
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 14669
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 25915
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 13156
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 43164
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 14052
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -26312
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 17859
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 10842
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -36746
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -16622
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -2156
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -18106
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 25954
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-10-31",
+  "executionTimestamp": "2025-10-31T08:01:53.802Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "D. Whitfield",
+  "salesperson": null,
+  "orderId": "ORD-B1E7A7CB41"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-10-31T09:42:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2025-10-31T09:42:00Z",
+  "lastModifiedAt": "2025-10-31T09:42:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA367706336",
+  "matched": "2025-10-31 13:47",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096B1E7A7CB41BDA50E00B3",
+  "upi": "QZOY91PEFWPF",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "CORAGB33XXX",
+  "ssiId": "SSI-EUR-C31AC7",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -490007,
+  "cleanPv": -490007.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CDS-MERIDIAN",
+   "CRV-EUR-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 1330
+  }
+ }
+}

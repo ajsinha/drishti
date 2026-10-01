@@ -1,0 +1,271 @@
+{
+ "tradeId": "BBG-60000049",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000049",
+ "productType": "MUNI_BOND",
+ "productName": "Municipal bond",
+ "assetClass": "Fixed income",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2025-09-22",
+ "effectiveDate": "2025-09-24",
+ "maturityDate": "2028-03-06",
+ "currency": "CAD",
+ "notional": 34000000.0,
+ "mtm": 398064,
+ "mtmCurrency": "USD",
+ "pnl1d": -856,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-1",
+ "trader": "TRDR-RCASTILLO",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-CASCADIA",
+ "benchmarkCurve": "CRV-CAD-GOVT",
+ "underlyingBond": "BND-CACASC169344",
+ "terms": {
+  "coupon": 0.033326,
+  "couponFrequency": "Quarterly",
+  "faceAmount": 34279780.0,
+  "cleanPrice": 90.301,
+  "yield": 0.066676,
+  "taxStatus": "Taxable",
+  "sector": "Revenue"
+ },
+ "risk": {
+  "dv01": -7622,
+  "cs01": -7479
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -762,
+   "cs01": -748
+  },
+  {
+   "bucket": "6M",
+   "dv01": -1524,
+   "cs01": -1496
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -2287,
+   "cs01": -2244
+  },
+  {
+   "bucket": "2Y",
+   "dv01": -3049,
+   "cs01": -2992
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-03-24",
+   "rate": 0.026536,
+   "amount": 680000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-09-24",
+   "rate": 0.025873,
+   "amount": 680000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2027-03-24",
+   "rate": 0.037822,
+   "amount": 680000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-09-24",
+   "rate": 0.032003,
+   "amount": 680000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-03-06",
+   "rate": 0.024376,
+   "amount": 680000.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 2,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -18465
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -28084
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 4152
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 664
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 8184
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -6199
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -28142
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -5704
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 7489
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 3860
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -886
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -15039
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -22894
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 2569
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -26275
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -13815
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -8882
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 8331
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -13874
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 3784
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-09-22",
+  "executionTimestamp": "2025-09-22T12:18:47.123Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "R. Castillo",
+  "salesperson": null,
+  "orderId": "ORD-0345B2F7E8"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-09-22T11:42:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2025-09-22T11:42:00Z",
+  "lastModifiedAt": "2025-09-22T11:42:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT185087068",
+  "matched": "2025-09-22 15:09",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH1014422077",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20960345B2F7E8B2F7FA6EEA",
+  "upi": "QZ1NHV54Z0EH",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-CAD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 398064,
+  "cleanPv": 398064.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-CAD-GOVT",
+   "BND-CACASC169344"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 1136
+  }
+ }
+}

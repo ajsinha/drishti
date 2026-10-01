@@ -1,0 +1,347 @@
+{
+ "tradeId": "CLY-3000008",
+ "sourceSystem": "Calypso",
+ "sourceTradeId": "3000008",
+ "productType": "CDS_INDEX",
+ "productName": "CDS index (CDX / iTraxx)",
+ "assetClass": "Credit",
+ "family": "cds",
+ "status": "Live",
+ "direction": "Sell protection",
+ "tradeDate": "2024-07-05",
+ "effectiveDate": "2024-07-08",
+ "maturityDate": "2034-08-17",
+ "currency": "CHF",
+ "notional": 249000000.0,
+ "mtm": -1402373,
+ "mtmCurrency": "USD",
+ "pnl1d": -12928,
+ "counterparty": {
+  "id": "CP-HALCYON",
+  "name": "Halcyon Shipping plc"
+ },
+ "nettingSet": "NS-HALCYON-NY",
+ "book": "BOOK-CREDIT-2",
+ "trader": "TRDR-CDUBOIS",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-MERIDIAN",
+ "creditCurve": "CDS-MERIDIAN",
+ "discountCurve": "CRV-CHF-OIS",
+ "terms": {
+  "protection": "Bought",
+  "index": "CDX.NA.HY S47",
+  "coupon": "100",
+  "version": 3
+ },
+ "risk": {
+  "cs01": -226885,
+  "jtd": -149400000
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": -8103,
+   "jtd": -5335714
+  },
+  {
+   "bucket": "1Y",
+   "cs01": -16206,
+   "jtd": -10671429
+  },
+  {
+   "bucket": "2Y",
+   "cs01": -24309,
+   "jtd": -16007143
+  },
+  {
+   "bucket": "3Y",
+   "cs01": -32412,
+   "jtd": -21342857
+  },
+  {
+   "bucket": "5Y",
+   "cs01": -40515,
+   "jtd": -26678571
+  },
+  {
+   "bucket": "7Y",
+   "cs01": -48618,
+   "jtd": -32014286
+  },
+  {
+   "bucket": "10Y",
+   "cs01": -56721,
+   "jtd": -37350000
+  }
+ ],
+ "schedule": [
+  {
+   "payDate": "2025-07-08",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -697254.4,
+   "pv": 0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2026-07-08",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -540577.62,
+   "pv": 0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2027-07-08",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -745318.81,
+   "pv": -722959.25,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2028-07-08",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -693245.27,
+   "pv": -672447.91,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2029-07-08",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -708925.26,
+   "pv": -687657.5,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2030-07-08",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -522641.65,
+   "pv": -506962.4,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2031-07-08",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -513093.73,
+   "pv": -497700.92,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2032-07-08",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -620014.49,
+   "pv": -601414.06,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2033-07-08",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -732798.55,
+   "pv": -710814.59,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2034-07-08",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -554142.85,
+   "pv": -537518.56,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2034-08-17",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -519224.52,
+   "pv": -503647.78,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 2,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 60748
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 14225
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -74917
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 58567
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -15435
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 24910
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 31262
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 16557
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -22746
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 732
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -67847
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 80546
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -2669
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 19705
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 37601
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 84007
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 69717
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 31923
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -19363
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -1428
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-07-05",
+  "executionTimestamp": "2024-07-05T16:03:03.034Z",
+  "venue": "MarketAxess",
+  "venueMic": "MAEL",
+  "executionType": "Electronic",
+  "trader": "C. Dubois",
+  "salesperson": null,
+  "orderId": "ORD-8CE9E23E8D"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-07-05T10:24:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2024-07-05T10:24:00Z",
+  "lastModifiedAt": "2024-07-05T10:24:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA241311903",
+  "matched": "2024-07-05 10:33",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20968CE9E23E8D1BA43D6FE6",
+  "upi": "QZ1QCOFWX352",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "HALCGB33XXX",
+  "ssiId": "SSI-CHF-10E970",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -1402373,
+  "cleanPv": -1402373.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CDS-MERIDIAN",
+   "CRV-CHF-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 5295
+  }
+ }
+}

@@ -26,6 +26,7 @@ from pathlib import Path
 
 import yaml
 
+import booking as BK
 import layout
 import taxonomy as T
 
@@ -60,8 +61,8 @@ EXAMPLES = {  # command, what it shows (ids from make_data.py's deterministic da
     "market-data": [("CRV CRV-USD-OIS", "SOFR discount curve · zero rates, pillars, forwards"), ("FXV FXV-EURUSD", "EUR/USD vol surface · smile by expiry"),
                     ("EQ EQ-NVTK", "Equity · price history, identifiers"), ("CDS CDS-SOLARIS", "Credit curve · spreads, hazard rates"),
                     ("CMDC CMDC-WTI", "WTI futures curve · backwardation")],
-    "trading": [("TRD T-10001", "Interest rate swap · legs and every cashflow"), ("TRD T-10181", "FX option"), ("TRD T-10241", "Single-name CDS"),
-                ("TRD T-10343", "OTC equity option"), ("TRD T-10379", "Autocallable note · observation schedule")],
+    "trading": [("TRD MX-20000001", "Interest rate swap · legs and every cashflow"), ("TRD WSS-1500025", "FX option"), ("TRD CLY-3000001", "Single-name CDS"),
+                ("TRD IMG-400031", "OTC equity option"), ("TRD IMG-400067", "Autocallable note · observation schedule")],
     "market-risk": [("VAR VAR-RATES", "Rates desk VaR · P&L series, contributions"), ("STR STR-GFC2008-RATES", "Stress · 2008 crisis on the rates desk"),
                     ("PNL PNL-RATES-1", "P&L explain"), ("FRTB FRTB-RATES-1", "FRTB sensitivities and charges")],
     "counterparty-risk": [("NSET NS-SUMMIT-NY", "Netting set · 108 trades, exposure, CVA"), ("LIM LIM-SUMMIT", "Credit limit · utilisation by tenor"),
@@ -72,7 +73,7 @@ TRADER_KINDS = ["trade", *layout.PACKS["market-data"]["kinds"]["market"], "count
 # the pack's own code: typed alone it opens the pack's overview (its kinds, mnemonics and counts)
 CODES = {"banking-core": "BNK", "market-data": "MKT", "trading": "TRDS", "market-risk": "MRSK", "counterparty-risk": "CCR"}
 
-# key fields shown beside each entity in pick lists (TRD T-100, CPTY north) and searches
+# key fields shown beside each entity in pick lists (TRD MX-200000, CPTY north) and searches
 COLUMNS = {"trading": {"trade": ["productType", "direction", "currency", "notional", "mtm", "maturityDate", "book"]},
            "banking-core": {"counterparty": ["name", "rating", "sector", "country", "netMtm"],
                             "book": ["name", "deskName", "tradeCount", "mtm", "dv01"]}}
@@ -111,7 +112,7 @@ def manifest(name: str) -> dict:
          "kinds": kinds, "sutras": "sutras", "formats": "config/formats.yaml",
          **({"semantics": "config/semantics.yaml"} if name == "banking-core" else {}),
          "mnemonics": {specs[k].mnemonic: {"kind": k, "label": specs[k].label} for k in kinds},
-         "graph": {"id-patterns": [{"pattern": "^" + specs[k].prefix, "kind": k} for k in kinds],
+         "graph": {"id-patterns": [{"pattern": BK.ID_PATTERN if k == "trade" else "^" + specs[k].prefix, "kind": k} for k in kinds],
                    "fields": dict(sorted(fields.items())),
                    "badges": {k: specs[k].badge for k in kinds if specs[k].badge}},
          "connectors": {f"{d}-store": connector(d) for d in p["kinds"]},
@@ -129,8 +130,6 @@ def manifest(name: str) -> dict:
                                                           "disk-cache.max-gb": "${DRISHTI_STREAM_CACHE_GB:10}",
                                                           "disk-cache.reset-at": "${DRISHTI_CACHE_RESET_AT:02:00}",
                                                           "disk-cache.zone": "America/New_York"}}
-        # trades booked in other systems keep their system's numbering behind a prefix (tools/samplegen/bulk_trades.py)
-        m["graph"]["id-patterns"].append({"pattern": "^(MX|CLY|END|IMG|BBG|WSS)-\\d+$", "kind": "trade"})
         # a derived kind: each desk's P&L, computed from the trades wherever they come from (PACKS.md, Derived kinds)
         m["kinds"].append("desk-pnl")
         m["mnemonics"]["DPNL"] = {"kind": "desk-pnl", "label": "Desk P&L (derived from trades)"}

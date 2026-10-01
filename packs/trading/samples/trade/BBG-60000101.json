@@ -1,0 +1,253 @@
+{
+ "tradeId": "BBG-60000101",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000101",
+ "productType": "BUY_SELL_BACK",
+ "productName": "Buy / sell-back",
+ "assetClass": "Securities financing",
+ "family": "sft",
+ "status": "Live",
+ "direction": "Repo (lend cash)",
+ "tradeDate": "2026-08-24",
+ "effectiveDate": "2026-08-26",
+ "maturityDate": "2027-02-23",
+ "currency": "JPY",
+ "notional": 42000000.0,
+ "mtm": 23832,
+ "mtmCurrency": "USD",
+ "pnl1d": 73,
+ "counterparty": {
+  "id": "CP-NORTHBRIDGE",
+  "name": "Northbridge Capital LLP"
+ },
+ "nettingSet": "NS-NORTHBRIDGE-FRA",
+ "book": "BOOK-SFT-1",
+ "trader": "TRDR-KBRANDT",
+ "desk": "DESK-SFT",
+ "legalEntity": "LE-FRA",
+ "issuer": "ISS-JGB",
+ "repoCurve": "REPO-JPY",
+ "underlyingBond": "BND-JP0JGB019237",
+ "terms": {
+  "repoRate": 0.037596,
+  "haircut": 0.034716
+ },
+ "risk": {
+  "dv01": 1678,
+  "exposure": 943689
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 559,
+   "exposure": 314563
+  },
+  {
+   "bucket": "6M",
+   "dv01": 1119,
+   "exposure": 629126
+  }
+ ],
+ "schedule": [
+  {
+   "asset": "Rheintal Landesbank 2036",
+   "isin": "DERHEI122872",
+   "quantity": 11548931,
+   "marketValue": 13307256,
+   "haircut": 0.04,
+   "value": 12774966
+  },
+  {
+   "asset": "United States Treasury 2031",
+   "isin": "US0UST030079",
+   "quantity": 13668688,
+   "marketValue": 13668688,
+   "haircut": 0.02,
+   "value": 13395314
+  },
+  {
+   "asset": "United Kingdom Debt Management Office 2031",
+   "isin": "GBGILT065113",
+   "quantity": 14510097,
+   "marketValue": 14402722,
+   "haircut": 0.01,
+   "value": 14258695
+  }
+ ],
+ "nextIndex": -1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -6087
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 1439
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -1435
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 3251
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 223
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 7721
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 873
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -1470
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -1753
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 2232
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -2792
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 5467
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -5507
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -2127
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 1279
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -4696
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -1536
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 2427
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -1575
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -5019
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-08-24",
+  "executionTimestamp": "2026-08-24T16:11:42.678Z",
+  "venue": "Bloomberg SEF",
+  "venueMic": "BSEF",
+  "executionType": "Electronic",
+  "trader": "K. Brandt",
+  "salesperson": null,
+  "orderId": "ORD-3C7BB71E8F"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-08-24T09:53:00Z",
+    "by": "fo.capture"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2026-08-28T09:53:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2026-08-24T09:53:00Z",
+  "lastModifiedAt": "2026-08-28T09:53:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT764832508",
+  "matched": "2026-08-24 12:23",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z9DXU4T18OK7443C7BB71E8FB0A3CB3DD6",
+  "upi": "QZPTCH50MAHI",
+  "reportingRegimes": [
+   "EU EMIR",
+   "EU MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "NORTGB33XXX",
+  "ssiId": "SSI-JPY-A0C7C2",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 23832,
+  "cleanPv": 23832.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "REPO-JPY",
+   "BND-JP0JGB019237"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "globalone-sft",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

@@ -179,5 +179,5 @@ lost passwords or lockouts, not from an admin removing the last admin.
 ## Verification
 
 1. The user signs in at `http://localhost:17480/login` and lands on the terminal.
-2. They open an entity their roles allow, for example `TRD T-10001 <GO>`, and it loads.
+2. They open an entity their roles allow, for example `TRD MX-20000001 <GO>`, and it loads.
 3. Admin → Audit shows a `login` entry for them and no new `login-failed` entries.

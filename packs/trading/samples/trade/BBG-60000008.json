@@ -1,0 +1,326 @@
+{
+ "tradeId": "BBG-60000008",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000008",
+ "productType": "CORP_BOND",
+ "productName": "Corporate bond",
+ "assetClass": "Fixed income",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2024-04-12",
+ "effectiveDate": "2024-04-15",
+ "maturityDate": "2029-06-18",
+ "currency": "CHF",
+ "notional": 67000000.0,
+ "mtm": -380672,
+ "mtmCurrency": "USD",
+ "pnl1d": -10357,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-3",
+ "trader": "TRDR-RCASTILLO",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-LUMEN",
+ "benchmarkCurve": "CRV-CHF-GOVT",
+ "underlyingBond": "BND-CHLUME169114",
+ "creditCurve": "CDS-LUMEN",
+ "terms": {
+  "coupon": 0.029506,
+  "couponFrequency": "Quarterly",
+  "faceAmount": 99872856.0,
+  "cleanPrice": 86.58,
+  "yield": 0.029583,
+  "zSpread": 289.7,
+  "seniority": "Senior secured"
+ },
+ "risk": {
+  "dv01": -26702,
+  "cs01": -31709,
+  "jtd": -40200000
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -1272,
+   "cs01": -1510,
+   "jtd": -1914286
+  },
+  {
+   "bucket": "6M",
+   "dv01": -2543,
+   "cs01": -3020,
+   "jtd": -3828571
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -3815,
+   "cs01": -4530,
+   "jtd": -5742857
+  },
+  {
+   "bucket": "2Y",
+   "dv01": -5086,
+   "cs01": -6040,
+   "jtd": -7657143
+  },
+  {
+   "bucket": "3Y",
+   "dv01": -6358,
+   "cs01": -7550,
+   "jtd": -9571429
+  },
+  {
+   "bucket": "5Y",
+   "dv01": -7629,
+   "cs01": -9060,
+   "jtd": -11485714
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2024-10-15",
+   "rate": 0.023494,
+   "amount": 1340000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2025-04-15",
+   "rate": 0.037942,
+   "amount": 1340000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2025-10-15",
+   "rate": 0.040724,
+   "amount": 1340000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-04-15",
+   "rate": 0.026716,
+   "amount": 1340000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-10-15",
+   "rate": 0.021372,
+   "amount": 1340000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-04-15",
+   "rate": 0.048475,
+   "amount": 1340000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-10-15",
+   "rate": 0.034626,
+   "amount": 1340000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-04-15",
+   "rate": 0.037425,
+   "amount": 1340000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-10-15",
+   "rate": 0.048583,
+   "amount": 1340000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-04-15",
+   "rate": 0.028518,
+   "amount": 1340000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-06-18",
+   "rate": 0.025688,
+   "amount": 1340000.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 4,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -12807
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 7433
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -4382
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -13266
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -18855
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -15246
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -16307
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 14026
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -12166
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -5197
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 15689
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -18886
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -6521
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -30378
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 29489
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -9451
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 9667
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 6591
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 2360
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -5066
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-04-12",
+  "executionTimestamp": "2024-04-12T16:51:23.293Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "R. Castillo",
+  "salesperson": null,
+  "orderId": "ORD-AE4BE04A40"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-04-12T10:56:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2024-04-12T10:56:00Z",
+  "lastModifiedAt": "2024-04-12T10:56:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT300462066",
+  "matched": "2024-04-12 15:33",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH2262284411",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096AE4BE04A40AC2D96C1A1",
+  "upi": "QZGYR1DXBQ3F",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-CHF-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -380672,
+  "cleanPv": -380672.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-CHF-GOVT",
+   "BND-CHLUME169114",
+   "CDS-LUMEN"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 1431
+  }
+ }
+}

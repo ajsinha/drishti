@@ -1,0 +1,273 @@
+{
+ "tradeId": "IMG-400073",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400073",
+ "productType": "REVERSE_CONVERTIBLE",
+ "productName": "Reverse convertible",
+ "assetClass": "Equity",
+ "family": "note",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2025-01-10",
+ "effectiveDate": "2025-01-13",
+ "maturityDate": "2027-05-12",
+ "currency": "EUR",
+ "notional": 222000000.0,
+ "mtm": -407954,
+ "mtmCurrency": "USD",
+ "pnl1d": 11816,
+ "counterparty": {
+  "id": "CP-LUMEN",
+  "name": "Lumen Semiconductor AG"
+ },
+ "nettingSet": "NS-LUMEN-LDN",
+ "book": "BOOK-EQD-1",
+ "trader": "TRDR-PLINDQVIST",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingEquity": "EQ-RHNB",
+ "equityVolSurface": "EQV-RHNB",
+ "dividendCurve": "DIV-RHNB",
+ "terms": {
+  "coupon": 0.147576,
+  "barrier": 0.698281
+ },
+ "risk": {
+  "delta": -1160087,
+  "vega": -427366
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -55242,
+   "vega": -20351
+  },
+  {
+   "bucket": "1M",
+   "delta": -110484,
+   "vega": -40702
+  },
+  {
+   "bucket": "3M",
+   "delta": -165727,
+   "vega": -61052
+  },
+  {
+   "bucket": "6M",
+   "delta": -220969,
+   "vega": -81403
+  },
+  {
+   "bucket": "1Y",
+   "delta": -276211,
+   "vega": -101754
+  },
+  {
+   "bucket": "2Y",
+   "delta": -331453,
+   "vega": -122105
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2025-07-13",
+   "rate": 0.028122,
+   "amount": 4440000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-01-13",
+   "rate": 0.051233,
+   "amount": 4440000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-07-13",
+   "rate": 0.035137,
+   "amount": 4440000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2027-01-13",
+   "rate": 0.032729,
+   "amount": 4440000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-05-12",
+   "rate": 0.038779,
+   "amount": 4440000.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 3,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -13819
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -25130
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -17659
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 5683
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -14803
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -6748
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 14312
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 24
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -7104
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 8209
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -9165
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 17436
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 10283
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 145
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 2662
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 17615
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 1130
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 280
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 5895
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 13043
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-01-10",
+  "executionTimestamp": "2025-01-10T11:28:28.829Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "P. Lindqvist",
+  "salesperson": null,
+  "orderId": "ORD-2BCD8BB6FC"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-01-10T11:00:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2025-01-10T11:00:00Z",
+  "lastModifiedAt": "2025-01-10T11:00:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT343279324",
+  "matched": "2025-01-10 14:31",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q832BCD8BB6FC4CC270683D",
+  "upi": "QZT77JKCTCI3",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "LUMEGB33XXX",
+  "ssiId": "SSI-EUR-8CF792",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -407954,
+  "cleanPv": -407954.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQ-RHNB",
+   "EQV-RHNB",
+   "DIV-RHNB"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 3036
+  }
+ }
+}

@@ -1,0 +1,301 @@
+{
+ "tradeId": "IMG-400131",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400131",
+ "productType": "EQ_BASKET_OPTION",
+ "productName": "Basket option",
+ "assetClass": "Equity",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2026-03-27",
+ "effectiveDate": "2026-03-30",
+ "maturityDate": "2031-12-26",
+ "currency": "USD",
+ "notional": 20000000.0,
+ "mtm": -51498,
+ "mtmCurrency": "USD",
+ "pnl1d": -1136,
+ "counterparty": {
+  "id": "CP-LUMEN",
+  "name": "Lumen Semiconductor AG"
+ },
+ "nettingSet": "NS-LUMEN-LDN",
+ "book": "BOOK-EQD-3",
+ "trader": "TRDR-PLINDQVIST",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingIndex": "EQX-NDX",
+ "equityVolSurface": "EQV-NDX",
+ "correlation": "CORR-G10FX",
+ "terms": {
+  "optionType": "Put",
+  "exerciseStyle": "European",
+  "expiryDate": "2027-09-24",
+  "strike": 2638.99,
+  "basketSize": 7
+ },
+ "risk": {
+  "delta": -81523,
+  "vega": -61523
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -3882,
+   "vega": -2930
+  },
+  {
+   "bucket": "1M",
+   "delta": -7764,
+   "vega": -5859
+  },
+  {
+   "bucket": "3M",
+   "delta": -11646,
+   "vega": -8789
+  },
+  {
+   "bucket": "6M",
+   "delta": -15528,
+   "vega": -11719
+  },
+  {
+   "bucket": "1Y",
+   "delta": -19410,
+   "vega": -14648
+  },
+  {
+   "bucket": "2Y",
+   "delta": -23292,
+   "vega": -17578
+  }
+ ],
+ "schedule": [
+  {
+   "name": "Granite Building Materials plc",
+   "weight": 0.125,
+   "level": 402.0,
+   "status": "Active"
+  },
+  {
+   "name": "Orbital Telecom SA",
+   "weight": 0.125,
+   "level": 419.6,
+   "status": "Active"
+  },
+  {
+   "name": "Rheintal Landesbank",
+   "weight": 0.125,
+   "level": 288.2,
+   "status": "Active"
+  },
+  {
+   "name": "Lumen Semiconductor AG",
+   "weight": 0.125,
+   "level": 106.0,
+   "status": "Active"
+  },
+  {
+   "name": "Halcyon Shipping plc",
+   "weight": 0.125,
+   "level": 224.7,
+   "status": "Active"
+  },
+  {
+   "name": "Meridian Financial Group",
+   "weight": 0.125,
+   "level": 136.7,
+   "status": "Active"
+  },
+  {
+   "name": "Cascadia Airlines Inc.",
+   "weight": 0.125,
+   "level": 327.1,
+   "status": "Active"
+  },
+  {
+   "name": "Solaris Energy Corp.",
+   "weight": 0.125,
+   "level": 329.8,
+   "status": "Active"
+  }
+ ],
+ "nextIndex": -1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 859
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 5630
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -7518
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 334
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 943
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 2104
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 434
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -1497
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 473
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 5374
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 9992
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -3010
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 1328
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -2082
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 2230
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 2257
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 1161
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 4618
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 284
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -2724
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-03-27",
+  "executionTimestamp": "2026-03-27T15:01:54.293Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "P. Lindqvist",
+  "salesperson": null,
+  "orderId": "ORD-01464A352A"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-03-27T10:38:00Z",
+    "by": "mo.amend"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2026-04-10T10:38:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2026-03-27T10:38:00Z",
+  "lastModifiedAt": "2026-04-10T10:38:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT346472499",
+  "matched": "2026-03-27 15:50",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q8301464A352A5766707E21",
+  "upi": "QZ5JCA50VDJH",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "LUMEUS33XXX",
+  "ssiId": "SSI-USD-8CF792",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -51498,
+  "cleanPv": -51498.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "EQX-NDX",
+   "EQV-NDX",
+   "CORR-G10FX"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

@@ -1,0 +1,239 @@
+{
+ "tradeId": "END-1000047",
+ "sourceSystem": "Endur",
+ "sourceTradeId": "1000047",
+ "productType": "CMD_SPREAD_OPT",
+ "productName": "Commodity spread option",
+ "assetClass": "Commodity",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2025-12-04",
+ "effectiveDate": "2025-12-08",
+ "maturityDate": "2031-08-27",
+ "currency": "USD",
+ "notional": 96000000.0,
+ "mtm": 1874087,
+ "mtmCurrency": "USD",
+ "pnl1d": -70467,
+ "counterparty": {
+  "id": "CP-BRAMBLE",
+  "name": "Bramble Asset Management"
+ },
+ "nettingSet": "NS-BRAMBLE-NY",
+ "book": "BOOK-COMM-2",
+ "trader": "TRDR-FROSSI",
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "commodityCurve": "CMDC-BRENT",
+ "commodityVolSurface": "CMDV-BRENT",
+ "correlation": "CORR-EU-EQ",
+ "terms": {
+  "spreadType": "Brent–WTI",
+  "strike": 23.66
+ },
+ "risk": {
+  "delta": 353737,
+  "vega": 350530
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 16845,
+   "vega": 16692
+  },
+  {
+   "bucket": "1M",
+   "delta": 33689,
+   "vega": 33384
+  },
+  {
+   "bucket": "3M",
+   "delta": 50534,
+   "vega": 50076
+  },
+  {
+   "bucket": "6M",
+   "delta": 67378,
+   "vega": 66768
+  },
+  {
+   "bucket": "1Y",
+   "delta": 84223,
+   "vega": 83460
+  },
+  {
+   "bucket": "2Y",
+   "delta": 101068,
+   "vega": 100151
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 69089
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 46150
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -31884
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -9689
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -1771
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -20511
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -10368
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -41855
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 19542
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -5722
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -4397
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -52769
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -94916
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -57839
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 17885
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -116801
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -9961
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 79545
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 824
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -27583
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-12-04",
+  "executionTimestamp": "2025-12-04T15:17:49.364Z",
+  "venue": "ICE",
+  "venueMic": "IFEU",
+  "executionType": "Electronic",
+  "trader": "F. Rossi",
+  "salesperson": null,
+  "orderId": "ORD-E63D4A2B7E"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-12-04T10:22:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2025-12-04T10:22:00Z",
+  "lastModifiedAt": "2025-12-04T10:22:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT313213444",
+  "matched": "2025-12-04 12:31",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096E63D4A2B7E8125B25B23",
+  "upi": "QZMBWOMUPQ14",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "BRAMUS33XXX",
+  "ssiId": "SSI-USD-1243C8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1874087,
+  "cleanPv": 1874087.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "CMDC-BRENT",
+   "CMDV-BRENT",
+   "CORR-EU-EQ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "endur-comm",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 4708
+  }
+ }
+}

@@ -1,0 +1,340 @@
+{
+ "tradeId": "MX-20000134",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000134",
+ "productType": "CALLABLE_SWAP",
+ "productName": "Callable swap",
+ "assetClass": "Rates",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2026-07-29",
+ "effectiveDate": "2026-07-31",
+ "maturityDate": "2035-01-04",
+ "currency": "USD",
+ "notional": 235000000.0,
+ "mtm": 125293,
+ "mtmCurrency": "USD",
+ "pnl1d": -5706,
+ "counterparty": {
+  "id": "CP-TOKAI",
+  "name": "Tokai Mutual Trust Bank"
+ },
+ "nettingSet": "NS-TOKAI-NY",
+ "book": "BOOK-RATES-1",
+ "trader": "TRDR-MOKAFOR",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-USD-OIS",
+ "forwardCurve": "CRV-USD-PROJ",
+ "swaptionVolCube": "IRV-USD",
+ "terms": {
+  "fixedRate": 0.038484,
+  "payFrequency": "Semi-annual",
+  "dayCount": "30/360",
+  "businessDay": "Following",
+  "callable": "Us",
+  "firstCall": "2029-11-05"
+ },
+ "risk": {
+  "dv01": -186903,
+  "vega": -1906667
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -6675,
+   "vega": -68095
+  },
+  {
+   "bucket": "6M",
+   "dv01": -13350,
+   "vega": -136190
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -20025,
+   "vega": -204286
+  },
+  {
+   "bucket": "2Y",
+   "dv01": -26700,
+   "vega": -272381
+  },
+  {
+   "bucket": "3Y",
+   "dv01": -33376,
+   "vega": -340476
+  },
+  {
+   "bucket": "5Y",
+   "dv01": -40051,
+   "vega": -408572
+  },
+  {
+   "bucket": "7Y",
+   "dv01": -46726,
+   "vega": -476667
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Receive performance",
+   "payReceive": "Receive",
+   "rateType": "Performance",
+   "index": "USCPI",
+   "rate": null,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "USD",
+   "notional": 235000000.0
+  },
+  {
+   "leg": 2,
+   "label": "Pay SOFR + spread",
+   "payReceive": "Pay",
+   "rateType": "Float",
+   "index": "SOFR",
+   "rate": 0.036215,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "USD",
+   "notional": 235000000.0
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2027-07-31",
+   "type": "First call",
+   "strike": 0.036589,
+   "status": "Pending"
+  },
+  {
+   "date": "2028-07-31",
+   "type": "Bermudan call",
+   "strike": 0.03713,
+   "status": "Pending"
+  },
+  {
+   "date": "2029-07-31",
+   "type": "Bermudan call",
+   "strike": 0.046018,
+   "status": "Pending"
+  },
+  {
+   "date": "2030-07-31",
+   "type": "Bermudan call",
+   "strike": 0.044257,
+   "status": "Pending"
+  },
+  {
+   "date": "2031-07-31",
+   "type": "Bermudan call",
+   "strike": 0.041303,
+   "status": "Pending"
+  },
+  {
+   "date": "2032-07-31",
+   "type": "Bermudan call",
+   "strike": 0.022168,
+   "status": "Pending"
+  },
+  {
+   "date": "2033-07-31",
+   "type": "Bermudan call",
+   "strike": 0.022497,
+   "status": "Pending"
+  },
+  {
+   "date": "2034-07-31",
+   "type": "Bermudan call",
+   "strike": 0.03904,
+   "status": "Pending"
+  },
+  {
+   "date": "2035-01-04",
+   "type": "Bermudan call",
+   "strike": 0.043459,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 1339
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 5390
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 215
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 2536
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 706
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -6209
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 3085
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 3175
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 4719
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 7393
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 3394
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -3963
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -1440
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 479
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 1454
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -1129
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -454
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 5241
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -6450
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 1699
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-07-29",
+  "executionTimestamp": "2026-07-29T10:21:18.940Z",
+  "venue": "Bloomberg SEF",
+  "venueMic": "BSEF",
+  "executionType": "Electronic",
+  "trader": "M. Okafor",
+  "salesperson": null,
+  "orderId": "ORD-45C23A65DE"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-07-29T10:19:00Z",
+    "by": "stp.gateway"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2026-08-24T10:19:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2026-07-29T10:19:00Z",
+  "lastModifiedAt": "2026-08-24T10:19:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA751509204",
+  "matched": "2026-07-29 13:20",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209645C23A65DE8DD86AA991",
+  "upi": "QZ3VNT0G9T30",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "TOKAUS33XXX",
+  "ssiId": "SSI-USD-6E2541",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 125293,
+  "cleanPv": 125293.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "CRV-USD-OIS",
+   "CRV-USD-PROJ",
+   "IRV-USD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 2601
+  }
+ }
+}

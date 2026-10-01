@@ -1,0 +1,909 @@
+{
+ "tradeId": "MX-20000024",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000024",
+ "productType": "XCCY_SWAP",
+ "productName": "Cross-currency swap (non-MtM)",
+ "assetClass": "Rates",
+ "family": "swap",
+ "status": "Live",
+ "direction": "Receive fixed",
+ "tradeDate": "2024-11-22",
+ "effectiveDate": "2024-11-25",
+ "maturityDate": "2029-10-09",
+ "currency": "CAD",
+ "notional": 169000000.0,
+ "mtm": 5804007,
+ "mtmCurrency": "USD",
+ "pnl1d": -121371,
+ "counterparty": {
+  "id": "CP-HALCYON",
+  "name": "Halcyon Shipping plc"
+ },
+ "nettingSet": "NS-HALCYON-NY",
+ "book": "BOOK-RATES-2",
+ "trader": "TRDR-MOKAFOR",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-CAD-OIS",
+ "forwardCurve": "CRV-CAD-PROJ",
+ "basisCurve": "CRV-CAD-BASIS",
+ "fxSpot": "FX-USDCAD",
+ "terms": {
+  "otherCurrency": "GBP",
+  "fxRateAtStart": 0.6936,
+  "xccyBasis": -2.9
+ },
+ "risk": {
+  "dv01": -77034,
+  "fxDelta": -1690000
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -3668,
+   "fxDelta": -80476
+  },
+  {
+   "bucket": "6M",
+   "dv01": -7337,
+   "fxDelta": -160952
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -11005,
+   "fxDelta": -241429
+  },
+  {
+   "bucket": "2Y",
+   "dv01": -14673,
+   "fxDelta": -321905
+  },
+  {
+   "bucket": "3Y",
+   "dv01": -18341,
+   "fxDelta": -402381
+  },
+  {
+   "bucket": "5Y",
+   "dv01": -22010,
+   "fxDelta": -482857
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Receive fixed 3.1621%",
+   "payer": false,
+   "type": "FIXED",
+   "currency": "CAD",
+   "notional": 169000000.0,
+   "rate": 0.031621,
+   "dayCount": "ACT/360",
+   "frequency": "Annual",
+   "businessDay": "Mod. following",
+   "calendar": "USNY",
+   "paymentLag": "2 business days",
+   "rollConvention": "9",
+   "stub": "None",
+   "cashflows": [
+    {
+     "n": 1,
+     "accrualStart": "2024-11-25",
+     "accrualEnd": "2025-10-09",
+     "payDate": "2025-10-14",
+     "notional": 169000000.0,
+     "rate": 0.031621,
+     "yearFraction": 0.883333,
+     "amount": 4720488.28,
+     "df": 1.0,
+     "pv": 0.0,
+     "status": "Settled"
+    },
+    {
+     "n": 2,
+     "accrualStart": "2025-10-09",
+     "accrualEnd": "2026-10-09",
+     "payDate": "2026-10-14",
+     "notional": 169000000.0,
+     "rate": 0.031621,
+     "yearFraction": 1.013889,
+     "amount": 5418170.51,
+     "df": 0.998954,
+     "pv": 5412505.6,
+     "status": "Fixed"
+    },
+    {
+     "n": 3,
+     "accrualStart": "2026-10-09",
+     "accrualEnd": "2027-10-12",
+     "payDate": "2027-10-14",
+     "notional": 169000000.0,
+     "rate": 0.031621,
+     "yearFraction": 1.022222,
+     "amount": 5462703.42,
+     "df": 0.971783,
+     "pv": 5308560.0,
+     "status": "Projected"
+    },
+    {
+     "n": 4,
+     "accrualStart": "2027-10-12",
+     "accrualEnd": "2028-10-10",
+     "payDate": "2028-10-12",
+     "notional": 169000000.0,
+     "rate": 0.031621,
+     "yearFraction": 1.011111,
+     "amount": 5403326.21,
+     "df": 0.945055,
+     "pv": 5106443.09,
+     "status": "Projected"
+    },
+    {
+     "n": 5,
+     "accrualStart": "2028-10-10",
+     "accrualEnd": "2029-10-09",
+     "payDate": "2029-10-11",
+     "notional": 169000000.0,
+     "rate": 0.031621,
+     "yearFraction": 1.011111,
+     "amount": 5403326.21,
+     "df": 0.917381,
+     "pv": 4956908.37,
+     "status": "Projected"
+    }
+   ],
+   "pv": 20784417.06,
+   "accrued": 0.0,
+   "payReceive": "Receive",
+   "rateType": "Fixed",
+   "index": null,
+   "spread": 0.0
+  },
+  {
+   "leg": 2,
+   "label": "Pay CORRA compounded",
+   "payer": true,
+   "type": "FLOAT",
+   "currency": "CAD",
+   "notional": 169000000.0,
+   "index": "CORRA",
+   "spread": 0.0,
+   "dayCount": "ACT/360",
+   "frequency": "Quarterly",
+   "businessDay": "Mod. following",
+   "calendar": "USNY",
+   "paymentLag": "2 business days",
+   "compounding": "Compounded in arrears",
+   "observation": "Lookback 2 business days, no observation shift",
+   "nextReset": "2026-09-30",
+   "projectedFlows": 13,
+   "cashflows": [
+    {
+     "n": 1,
+     "accrualStart": "2024-11-25",
+     "accrualEnd": "2025-01-09",
+     "fixingDate": "2025-01-07",
+     "payDate": "2025-01-13",
+     "notional": 169000000.0,
+     "index": "CORRA",
+     "rate": 0.027442,
+     "spread": 0.0,
+     "yearFraction": 0.125,
+     "amount": -579712.25,
+     "df": 1.0,
+     "pv": 0.0,
+     "status": "Settled"
+    },
+    {
+     "n": 2,
+     "accrualStart": "2025-01-09",
+     "accrualEnd": "2025-04-09",
+     "fixingDate": "2025-04-07",
+     "payDate": "2025-04-11",
+     "notional": 169000000.0,
+     "index": "CORRA",
+     "rate": 0.027681,
+     "spread": 0.0,
+     "yearFraction": 0.25,
+     "amount": -1169522.25,
+     "df": 1.0,
+     "pv": 0.0,
+     "status": "Settled"
+    },
+    {
+     "n": 3,
+     "accrualStart": "2025-04-09",
+     "accrualEnd": "2025-07-09",
+     "fixingDate": "2025-07-07",
+     "payDate": "2025-07-11",
+     "notional": 169000000.0,
+     "index": "CORRA",
+     "rate": 0.026845,
+     "spread": 0.0,
+     "yearFraction": 0.252778,
+     "amount": -1146803.49,
+     "df": 1.0,
+     "pv": 0.0,
+     "status": "Settled"
+    },
+    {
+     "n": 4,
+     "accrualStart": "2025-07-09",
+     "accrualEnd": "2025-10-09",
+     "fixingDate": "2025-10-07",
+     "payDate": "2025-10-14",
+     "notional": 169000000.0,
+     "index": "CORRA",
+     "rate": 0.027288,
+     "spread": 0.0,
+     "yearFraction": 0.255556,
+     "amount": -1178538.4,
+     "df": 1.0,
+     "pv": 0.0,
+     "status": "Settled"
+    },
+    {
+     "n": 5,
+     "accrualStart": "2025-10-09",
+     "accrualEnd": "2026-01-09",
+     "fixingDate": "2026-01-07",
+     "payDate": "2026-01-13",
+     "notional": 169000000.0,
+     "index": "CORRA",
+     "rate": 0.027718,
+     "spread": 0.0,
+     "yearFraction": 0.255556,
+     "amount": -1197109.62,
+     "df": 1.0,
+     "pv": 0.0,
+     "status": "Settled"
+    },
+    {
+     "n": 6,
+     "accrualStart": "2026-01-09",
+     "accrualEnd": "2026-04-09",
+     "fixingDate": "2026-04-07",
+     "payDate": "2026-04-13",
+     "notional": 169000000.0,
+     "index": "CORRA",
+     "rate": 0.026909,
+     "spread": 0.0,
+     "yearFraction": 0.25,
+     "amount": -1136905.25,
+     "df": 1.0,
+     "pv": 0.0,
+     "status": "Settled"
+    },
+    {
+     "n": 7,
+     "accrualStart": "2026-04-09",
+     "accrualEnd": "2026-07-09",
+     "fixingDate": "2026-07-07",
+     "payDate": "2026-07-13",
+     "notional": 169000000.0,
+     "index": "CORRA",
+     "rate": 0.027133,
+     "spread": 0.0,
+     "yearFraction": 0.252778,
+     "amount": -1159106.69,
+     "df": 1.0,
+     "pv": 0.0,
+     "status": "Settled"
+    },
+    {
+     "n": 8,
+     "accrualStart": "2026-07-09",
+     "accrualEnd": "2026-10-09",
+     "fixingDate": "2026-10-07",
+     "payDate": "2026-10-14",
+     "notional": 169000000.0,
+     "index": "CORRA",
+     "rate": 0.026908,
+     "spread": 0.0,
+     "yearFraction": 0.255556,
+     "amount": -1162145.8,
+     "df": 0.998954,
+     "pv": -1160930.73,
+     "status": "Projected"
+    },
+    {
+     "n": 9,
+     "accrualStart": "2026-10-09",
+     "accrualEnd": "2027-01-11",
+     "fixingDate": "2027-01-07",
+     "payDate": "2027-01-13",
+     "notional": 169000000.0,
+     "index": "CORRA",
+     "rate": 0.027127,
+     "spread": 0.0,
+     "yearFraction": 0.261111,
+     "amount": -1197052.97,
+     "df": 0.992149,
+     "pv": -1187655.4,
+     "status": "Projected"
+    },
+    {
+     "n": 10,
+     "accrualStart": "2027-01-11",
+     "accrualEnd": "2027-04-09",
+     "fixingDate": "2027-04-07",
+     "payDate": "2027-04-13",
+     "notional": 169000000.0,
+     "index": "CORRA",
+     "rate": 0.027349,
+     "spread": 0.0,
+     "yearFraction": 0.244444,
+     "amount": -1129836.32,
+     "df": 0.985412,
+     "pv": -1113353.74,
+     "status": "Projected"
+    },
+    {
+     "n": 11,
+     "accrualStart": "2027-04-09",
+     "accrualEnd": "2027-07-09",
+     "fixingDate": "2027-07-07",
+     "payDate": "2027-07-13",
+     "notional": 169000000.0,
+     "index": "CORRA",
+     "rate": 0.027307,
+     "spread": 0.0,
+     "yearFraction": 0.252778,
+     "amount": -1166556.85,
+     "df": 0.978656,
+     "pv": -1141657.35,
+     "status": "Projected"
+    },
+    {
+     "n": 12,
+     "accrualStart": "2027-07-09",
+     "accrualEnd": "2027-10-12",
+     "fixingDate": "2027-10-07",
+     "payDate": "2027-10-14",
+     "notional": 169000000.0,
+     "index": "CORRA",
+     "rate": 0.027376,
+     "spread": 0.0,
+     "yearFraction": 0.263889,
+     "amount": -1220900.7,
+     "df": 0.971783,
+     "pv": -1186450.02,
+     "status": "Projected"
+    },
+    {
+     "n": 13,
+     "accrualStart": "2027-10-12",
+     "accrualEnd": "2028-01-10",
+     "fixingDate": "2028-01-06",
+     "payDate": "2028-01-12",
+     "notional": 169000000.0,
+     "index": "CORRA",
+     "rate": 0.027507,
+     "spread": 0.0,
+     "yearFraction": 0.25,
+     "amount": -1162184.21,
+     "df": 0.965145,
+     "pv": -1121676.24,
+     "status": "Projected"
+    },
+    {
+     "n": 14,
+     "accrualStart": "2028-01-10",
+     "accrualEnd": "2028-04-10",
+     "fixingDate": "2028-04-06",
+     "payDate": "2028-04-12",
+     "notional": 169000000.0,
+     "index": "CORRA",
+     "rate": 0.027597,
+     "spread": 0.0,
+     "yearFraction": 0.252778,
+     "amount": -1178908.23,
+     "df": 0.958458,
+     "pv": -1129934.6,
+     "status": "Projected"
+    },
+    {
+     "n": 15,
+     "accrualStart": "2028-04-10",
+     "accrualEnd": "2028-07-10",
+     "fixingDate": "2028-07-06",
+     "payDate": "2028-07-12",
+     "notional": 169000000.0,
+     "index": "CORRA",
+     "rate": 0.027685,
+     "spread": 0.0,
+     "yearFraction": 0.252778,
+     "amount": -1182695.19,
+     "df": 0.951797,
+     "pv": -1125685.92,
+     "status": "Projected"
+    },
+    {
+     "n": 16,
+     "accrualStart": "2028-07-10",
+     "accrualEnd": "2028-10-10",
+     "fixingDate": "2028-10-05",
+     "payDate": "2028-10-12",
+     "notional": 169000000.0,
+     "index": "CORRA",
+     "rate": 0.027891,
+     "spread": 0.0,
+     "yearFraction": 0.255556,
+     "amount": -1204575.69,
+     "df": 0.945055,
+     "pv": -1138390.87,
+     "status": "Projected"
+    },
+    {
+     "n": 17,
+     "accrualStart": "2028-10-10",
+     "accrualEnd": "2029-01-09",
+     "fixingDate": "2029-01-05",
+     "payDate": "2029-01-11",
+     "notional": 169000000.0,
+     "index": "CORRA",
+     "rate": 0.028962,
+     "spread": 0.0,
+     "yearFraction": 0.252778,
+     "amount": -1237258.59,
+     "df": 0.938185,
+     "pv": -1160777.8,
+     "status": "Projected"
+    },
+    {
+     "n": 18,
+     "accrualStart": "2029-01-09",
+     "accrualEnd": "2029-04-09",
+     "fixingDate": "2029-04-05",
+     "payDate": "2029-04-11",
+     "notional": 169000000.0,
+     "index": "CORRA",
+     "rate": 0.029285,
+     "spread": 0.0,
+     "yearFraction": 0.25,
+     "amount": -1237309.39,
+     "df": 0.931365,
+     "pv": -1152386.36,
+     "status": "Projected"
+    },
+    {
+     "n": 19,
+     "accrualStart": "2029-04-09",
+     "accrualEnd": "2029-07-09",
+     "fixingDate": "2029-07-05",
+     "payDate": "2029-07-11",
+     "notional": 169000000.0,
+     "index": "CORRA",
+     "rate": 0.029611,
+     "spread": 0.0,
+     "yearFraction": 0.252778,
+     "amount": -1264958.61,
+     "df": 0.924444,
+     "pv": -1169382.96,
+     "status": "Projected"
+    },
+    {
+     "n": 20,
+     "accrualStart": "2029-07-09",
+     "accrualEnd": "2029-10-09",
+     "fixingDate": "2029-10-04",
+     "payDate": "2029-10-11",
+     "notional": 169000000.0,
+     "index": "CORRA",
+     "rate": 0.030089,
+     "spread": 0.0,
+     "yearFraction": 0.255556,
+     "amount": -1299491.26,
+     "df": 0.917381,
+     "pv": -1192128.48,
+     "status": "Projected"
+    }
+   ],
+   "pv": -14980410.47,
+   "payReceive": "Pay",
+   "rateType": "Float"
+  }
+ ],
+ "schedule": [
+  {
+   "payDate": "2025-01-13",
+   "leg": 2,
+   "type": "Float",
+   "rate": 0.027442,
+   "amount": -579712.25,
+   "pv": 0.0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2025-04-11",
+   "leg": 2,
+   "type": "Float",
+   "rate": 0.027681,
+   "amount": -1169522.25,
+   "pv": 0.0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2025-07-11",
+   "leg": 2,
+   "type": "Float",
+   "rate": 0.026845,
+   "amount": -1146803.49,
+   "pv": 0.0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2025-10-14",
+   "leg": 1,
+   "type": "Fixed",
+   "rate": 0.031621,
+   "amount": 4720488.28,
+   "pv": 0.0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2025-10-14",
+   "leg": 2,
+   "type": "Float",
+   "rate": 0.027288,
+   "amount": -1178538.4,
+   "pv": 0.0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2026-01-13",
+   "leg": 2,
+   "type": "Float",
+   "rate": 0.027718,
+   "amount": -1197109.62,
+   "pv": 0.0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2026-04-13",
+   "leg": 2,
+   "type": "Float",
+   "rate": 0.026909,
+   "amount": -1136905.25,
+   "pv": 0.0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2026-07-13",
+   "leg": 2,
+   "type": "Float",
+   "rate": 0.027133,
+   "amount": -1159106.69,
+   "pv": 0.0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2026-10-14",
+   "leg": 1,
+   "type": "Fixed",
+   "rate": 0.031621,
+   "amount": 5418170.51,
+   "pv": 5412505.6,
+   "status": "Fixed"
+  },
+  {
+   "payDate": "2026-10-14",
+   "leg": 2,
+   "type": "Float",
+   "rate": 0.026908,
+   "amount": -1162145.8,
+   "pv": -1160930.73,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2027-01-13",
+   "leg": 2,
+   "type": "Float",
+   "rate": 0.027127,
+   "amount": -1197052.97,
+   "pv": -1187655.4,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2027-04-13",
+   "leg": 2,
+   "type": "Float",
+   "rate": 0.027349,
+   "amount": -1129836.32,
+   "pv": -1113353.74,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2027-07-13",
+   "leg": 2,
+   "type": "Float",
+   "rate": 0.027307,
+   "amount": -1166556.85,
+   "pv": -1141657.35,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2027-10-14",
+   "leg": 1,
+   "type": "Fixed",
+   "rate": 0.031621,
+   "amount": 5462703.42,
+   "pv": 5308560.0,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2027-10-14",
+   "leg": 2,
+   "type": "Float",
+   "rate": 0.027376,
+   "amount": -1220900.7,
+   "pv": -1186450.02,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2028-01-12",
+   "leg": 2,
+   "type": "Float",
+   "rate": 0.027507,
+   "amount": -1162184.21,
+   "pv": -1121676.24,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2028-04-12",
+   "leg": 2,
+   "type": "Float",
+   "rate": 0.027597,
+   "amount": -1178908.23,
+   "pv": -1129934.6,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2028-07-12",
+   "leg": 2,
+   "type": "Float",
+   "rate": 0.027685,
+   "amount": -1182695.19,
+   "pv": -1125685.92,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2028-10-12",
+   "leg": 1,
+   "type": "Fixed",
+   "rate": 0.031621,
+   "amount": 5403326.21,
+   "pv": 5106443.09,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2028-10-12",
+   "leg": 2,
+   "type": "Float",
+   "rate": 0.027891,
+   "amount": -1204575.69,
+   "pv": -1138390.87,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2029-01-11",
+   "leg": 2,
+   "type": "Float",
+   "rate": 0.028962,
+   "amount": -1237258.59,
+   "pv": -1160777.8,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2029-04-11",
+   "leg": 2,
+   "type": "Float",
+   "rate": 0.029285,
+   "amount": -1237309.39,
+   "pv": -1152386.36,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2029-07-11",
+   "leg": 2,
+   "type": "Float",
+   "rate": 0.029611,
+   "amount": -1264958.61,
+   "pv": -1169382.96,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2029-10-11",
+   "leg": 1,
+   "type": "Fixed",
+   "rate": 0.031621,
+   "amount": 5403326.21,
+   "pv": 4956908.37,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2029-10-11",
+   "leg": 2,
+   "type": "Float",
+   "rate": 0.030089,
+   "amount": -1299491.26,
+   "pv": -1192128.48,
+   "status": "Projected"
+  }
+ ],
+ "nextIndex": 8,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -45137
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -4989
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -77460
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 73594
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 181811
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -269293
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 77470
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 138145
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -89908
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 3263
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -123616
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 410576
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -46792
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -15796
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -73602
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -130506
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -361168
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -285637
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 331067
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 312339
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-11-22",
+  "executionTimestamp": "2024-11-22T12:50:21.322Z",
+  "venue": "Bloomberg SEF",
+  "venueMic": "BSEF",
+  "executionType": "Electronic",
+  "trader": "M. Okafor",
+  "salesperson": null,
+  "orderId": "ORD-2FDA021C63"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-11-22T09:04:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2024-11-22T09:04:00Z",
+  "lastModifiedAt": "2024-11-22T09:04:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA874552564",
+  "matched": "2024-11-22 14:17",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH8933103191",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20962FDA021C6383DD15EE3D",
+  "upi": "QZGVHFOLWLIS",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "HALCGB33XXX",
+  "ssiId": "SSI-CAD-10E970",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 5804007,
+  "cleanPv": 5804007.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Multi-curve OIS discounting",
+  "curves": [
+   "CRV-CAD-OIS",
+   "CRV-CAD-PROJ",
+   "CRV-CAD-BASIS",
+   "FX-USDCAD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 13298
+  }
+ }
+}

@@ -337,7 +337,7 @@ class FakeBackend:
         return list(entities)
 
     async def command_history(self, ident=None):
-        return ["TRD T-10001", "MKT"]
+        return ["TRD MX-20000001", "MKT"]
 
     async def aliases(self, ident=None):
         return dict(self.aliases_saved)

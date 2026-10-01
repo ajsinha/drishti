@@ -105,8 +105,8 @@ public final class StructuredSearch {
         if (fast.isPresent()) {
             return fast.get();
         }
-        // a pick list names what it wants (TRD T-100): the sources' own indexes narrow by it, so a large book is not
-        // cut at maxScan before the match is found; a wildcard (T-1*0) is filtered here
+        // a pick list names what it wants (TRD MX-200000): the sources' own indexes narrow by it, so a large book is not
+        // cut at maxScan before the match is found; a wildcard (MX-2*0) is filtered here
         String narrow = q.idPattern() != null && !q.idPattern().contains("*") ? q.idPattern() : "";
         List<EntityHit> hits = router.search(kind, narrow, props.maxScan() + 1, props.budget(), asOf);
         if (q.idPattern() != null) {                            // only what the word names, before any read

@@ -29,6 +29,7 @@ from samplegen import blocks as B, legs as L  # noqa: E402
 from samplegen.curves import Curve  # noqa: E402
 from samplegen.dates import Calendar, add_months, iso, tenor_years  # noqa: E402
 
+import booking as BK  # noqa: E402
 import data_market as M  # noqa: E402
 import data_names as N  # noqa: E402
 import taxonomy as T  # noqa: E402
@@ -263,12 +264,13 @@ def sensitivities(p, risk: dict, years: float) -> list[dict]:
 
 def build() -> dict[str, dict]:
     trades = {}
-    seq = 10000
+    booked: dict[str, int] = {}                  # trades so far per booking system
     for p in T.PRODUCTS:
         for k in range(N.TRADES_PER_PRODUCT):
-            seq += 1
             r = M.rng(f"{p.code}/{k}")
-            tid = f"T-{seq}"
+            system = BK.system_of(p.asset)
+            booked[system] = booked.get(system, 0) + 1
+            tid, native = BK.sample_id(system, booked[system])
             ctx = context(p, r)
             ccy = ctx["ccy"]
             lo, hi = p.notional
@@ -295,7 +297,7 @@ def build() -> dict[str, dict]:
             direction = {"swap": "Pay fixed" if pay else "Receive fixed", "option": "Buy" if pay else "Sell", "exotic": "Buy" if pay else "Sell",
                          "cds": "Buy protection" if pay else "Sell protection", "sft": "Repo (lend cash)" if pay else "Reverse repo"}.get(
                 p.family, "Long" if pay else "Short")
-            doc = {"tradeId": tid, "productType": p.code, "productName": p.name, "assetClass": p.asset, "family": p.family,
+            doc = {"tradeId": tid, "sourceSystem": system, "sourceTradeId": native, "productType": p.code, "productName": p.name, "assetClass": p.asset, "family": p.family,
                    "status": "Live" if mat > N.AS_OF else "Matured", "direction": direction, "tradeDate": iso(trade_date),
                    "effectiveDate": iso(start), "maturityDate": iso(mat), "currency": ccy, "notional": notional, "mtm": mtm,
                    "mtmCurrency": "USD", "pnl1d": round(mtm * r.gauss(0, 0.04)),

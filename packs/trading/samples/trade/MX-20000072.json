@@ -1,0 +1,229 @@
+{
+ "tradeId": "MX-20000072",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000072",
+ "productType": "STIR_FUTURE",
+ "productName": "Short-term interest rate future",
+ "assetClass": "Rates",
+ "family": "future",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-08-07",
+ "effectiveDate": "2026-08-10",
+ "maturityDate": "2027-07-15",
+ "currency": "EUR",
+ "notional": 192000000.0,
+ "mtm": 1126695,
+ "mtmCurrency": "USD",
+ "pnl1d": -72259,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-RATES-3",
+ "trader": "TRDR-ASHAH",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-CME-1",
+ "forwardCurve": "CRV-EUR-PROJ",
+ "terms": {
+  "contract": "SR3 H7",
+  "lots": 397,
+  "tradePrice": 95.462
+ },
+ "risk": {
+  "dv01": 14875
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 2479
+  },
+  {
+   "bucket": "6M",
+   "dv01": 4958
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 7438
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 16739
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 6867
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 37891
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 1386
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 43151
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -12112
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 20037
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 25601
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 22987
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -12011
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 61472
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 30608
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 8485
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -25080
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -16090
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 29711
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -31628
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 16628
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -19566
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 65548
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-08-07",
+  "executionTimestamp": "2026-08-07T14:19:49.559Z",
+  "venue": "Bloomberg SEF",
+  "venueMic": "BSEF",
+  "executionType": "Electronic",
+  "trader": "A. Shah",
+  "salesperson": null,
+  "orderId": "ORD-B0C5B50BAD"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-08-07T09:57:00Z",
+    "by": "fo.capture"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2026-08-21T09:57:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2026-08-07T09:57:00Z",
+  "lastModifiedAt": "2026-08-21T09:57:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA513731689",
+  "matched": "2026-08-07 12:31",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH3399427432",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096B0C5B50BAD926137AC08",
+  "upi": "QZ9ZAUQGJGYU",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-EUR-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1126695,
+  "cleanPv": 1126695.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-EUR-PROJ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 4173
+  }
+ }
+}

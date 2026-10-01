@@ -1,0 +1,354 @@
+{
+ "tradeId": "WSS-1500068",
+ "sourceSystem": "Wall Street Systems",
+ "sourceTradeId": "1500068",
+ "productType": "FX_ACCUMULATOR",
+ "productName": "FX accumulator",
+ "assetClass": "FX",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2025-12-11",
+ "effectiveDate": "2025-12-15",
+ "maturityDate": "2029-11-12",
+ "currency": "JPY",
+ "notional": 26000000.0,
+ "mtm": -70793,
+ "mtmCurrency": "USD",
+ "pnl1d": -56,
+ "counterparty": {
+  "id": "CP-NORTHBRIDGE",
+  "name": "Northbridge Capital LLP"
+ },
+ "nettingSet": "NS-NORTHBRIDGE-LDN",
+ "book": "BOOK-FX-3",
+ "trader": "TRDR-ENOVAK",
+ "desk": "DESK-FX",
+ "legalEntity": "LE-LDN",
+ "fxSpot": "FX-EURJPY",
+ "fxVolSurface": "FXV-EURJPY",
+ "terms": {
+  "strike": 36.34862,
+  "knockOut": 148.98953,
+  "dailyAmount": 604028.0
+ },
+ "risk": {
+  "fxDelta": 260000,
+  "vega": 71053
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "fxDelta": 12381,
+   "vega": 3383
+  },
+  {
+   "bucket": "1M",
+   "fxDelta": 24762,
+   "vega": 6767
+  },
+  {
+   "bucket": "3M",
+   "fxDelta": 37143,
+   "vega": 10150
+  },
+  {
+   "bucket": "6M",
+   "fxDelta": 49524,
+   "vega": 13534
+  },
+  {
+   "bucket": "1Y",
+   "fxDelta": 61905,
+   "vega": 16917
+  },
+  {
+   "bucket": "2Y",
+   "fxDelta": 74286,
+   "vega": 20301
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-03-15",
+   "level": 88.46,
+   "trigger": 100.0,
+   "performance": -0.1154,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-06-15",
+   "level": 89.63,
+   "trigger": 100.0,
+   "performance": -0.1037,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-09-15",
+   "level": 93.82,
+   "trigger": 100.0,
+   "performance": -0.0618,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-12-15",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-03-15",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-06-15",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-09-15",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-12-15",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-03-15",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-06-15",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-09-15",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-12-15",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-03-15",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-06-15",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-09-15",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-11-12",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 3,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -2394
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -781
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -483
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 353
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 1708
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 2412
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -700
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -80
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -4681
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -4217
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -3420
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 1605
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -987
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 2439
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 2299
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -685
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 2418
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -3063
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 2144
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -6045
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-12-11",
+  "executionTimestamp": "2025-12-11T14:31:37.122Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "E. Novak",
+  "salesperson": null,
+  "orderId": "ORD-25E41C3CBD"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-12-11T11:11:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2025-12-11T11:11:00Z",
+  "lastModifiedAt": "2025-12-11T11:11:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT673437494",
+  "matched": "2025-12-11 17:08",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q8325E41C3CBD3E378E4C36",
+  "upi": "QZY4BR2V5UVX",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Foreign exchange"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "NORTGB33XXX",
+  "ssiId": "SSI-JPY-A0C7C2",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -70793,
+  "cleanPv": -70793.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "FX-EURJPY",
+   "FXV-EURJPY"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "calypso-fx",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

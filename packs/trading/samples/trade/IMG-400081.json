@@ -1,0 +1,402 @@
+{
+ "tradeId": "IMG-400081",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400081",
+ "productType": "EQ_VARIANCE_SWAP",
+ "productName": "Variance swap",
+ "assetClass": "Equity",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2025-07-03",
+ "effectiveDate": "2025-07-07",
+ "maturityDate": "2036-08-20",
+ "currency": "GBP",
+ "notional": 8000000.0,
+ "mtm": -21217,
+ "mtmCurrency": "USD",
+ "pnl1d": -20,
+ "counterparty": {
+  "id": "CP-PINNACLE",
+  "name": "Pinnacle Credit Partners"
+ },
+ "nettingSet": "NS-PINNACLE-LDN",
+ "book": "BOOK-EQD-3",
+ "trader": "TRDR-JWEISS",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingIndex": "EQX-UKX",
+ "equityVolSurface": "EQV-UKX",
+ "terms": {
+  "varianceStrike": 30.27,
+  "vegaNotional": 113035.0
+ },
+ "risk": {
+  "vega": 58674
+ },
+ "sensitivities": [
+  {
+   "bucket": "1M",
+   "vega": 2794
+  },
+  {
+   "bucket": "3M",
+   "vega": 5588
+  },
+  {
+   "bucket": "6M",
+   "vega": 8382
+  },
+  {
+   "bucket": "1Y",
+   "vega": 11176
+  },
+  {
+   "bucket": "2Y",
+   "vega": 13970
+  },
+  {
+   "bucket": "5Y",
+   "vega": 16764
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2025-10-07",
+   "level": 85.75,
+   "trigger": 100.0,
+   "performance": -0.1425,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-01-07",
+   "level": 87.95,
+   "trigger": 100.0,
+   "performance": -0.1205,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-04-07",
+   "level": 90.92,
+   "trigger": 100.0,
+   "performance": -0.0908,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-07-07",
+   "level": 87.02,
+   "trigger": 100.0,
+   "performance": -0.1298,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-10-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-01-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-04-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-07-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-10-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-01-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-04-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-07-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-10-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-01-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-04-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-07-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-10-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-01-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-04-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-07-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-10-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-01-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-04-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-07-07",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 4,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -1805
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -6881
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -1737
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -2753
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 94
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 1830
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 8959
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 1120
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 2016
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 1741
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -2651
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 755
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 851
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -2364
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -3568
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -2267
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 5207
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -2747
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -7
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -276
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-07-03",
+  "executionTimestamp": "2025-07-03T09:55:01.241Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "J. Weiss",
+  "salesperson": null,
+  "orderId": "ORD-F894E5503D"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-07-03T09:12:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2025-07-03T09:12:00Z",
+  "lastModifiedAt": "2025-07-03T09:12:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT787693570",
+  "matched": "2025-07-03 10:34",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83F894E5503D1BF5C6B022",
+  "upi": "QZ5YFGIJ1S34",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Barclays Bank plc",
+  "ourAgentBic": "BARCGB22XXX",
+  "theirAgentBic": "PINNGB33XXX",
+  "ssiId": "SSI-GBP-F2BB52",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -21217,
+  "cleanPv": -21217.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "EQX-UKX",
+   "EQV-UKX"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

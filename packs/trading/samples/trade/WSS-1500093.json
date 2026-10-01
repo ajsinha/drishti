@@ -1,0 +1,218 @@
+{
+ "tradeId": "WSS-1500093",
+ "sourceSystem": "Wall Street Systems",
+ "sourceTradeId": "1500093",
+ "productType": "COMMERCIAL_PAPER",
+ "productName": "Commercial paper",
+ "assetClass": "Money market",
+ "family": "money",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-09-10",
+ "effectiveDate": "2026-09-14",
+ "maturityDate": "2026-11-18",
+ "currency": "CAD",
+ "notional": 49000000.0,
+ "mtm": 147333,
+ "mtmCurrency": "USD",
+ "pnl1d": 3417,
+ "counterparty": {
+  "id": "CP-HARBORPT",
+  "name": "Harbor Point Bank"
+ },
+ "nettingSet": "NS-HARBORPT-NY",
+ "book": "BOOK-MM-1",
+ "trader": "TRDR-ISCHULZ",
+ "desk": "DESK-MM",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-VERDANT",
+ "discountCurve": "CRV-CAD-OIS",
+ "creditCurve": "CDS-VERDANT",
+ "terms": {
+  "discountRate": 0.045952,
+  "rating": "A-1+"
+ },
+ "risk": {
+  "dv01": 727,
+  "cs01": 816
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 242,
+   "cs01": 272
+  },
+  {
+   "bucket": "6M",
+   "dv01": 485,
+   "cs01": 544
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -7914
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -6116
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 1863
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 8964
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -2915
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 1941
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -375
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -431
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 368
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 680
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 2029
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -6530
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 10
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -2216
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -1227
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -1800
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 5212
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 5764
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 1875
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -97
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-09-10",
+  "executionTimestamp": "2026-09-10T09:48:43.240Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "I. Schulz",
+  "salesperson": null,
+  "orderId": "ORD-7F9829DE4C"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-09-10T12:02:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2026-09-10T12:02:00Z",
+  "lastModifiedAt": "2026-09-10T12:02:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT610153357",
+  "matched": "2026-09-10 13:37",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20967F9829DE4C2B1E0D9E6D",
+  "upi": "QZ71MAHONOBG",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "HARBGB33XXX",
+  "ssiId": "SSI-CAD-99A301",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 147333,
+  "cleanPv": 147333.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-CAD-OIS",
+   "CDS-VERDANT"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-mm",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 785
+  }
+ }
+}

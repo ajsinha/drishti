@@ -1,0 +1,253 @@
+{
+ "tradeId": "IMG-400119",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400119",
+ "productType": "WARRANT",
+ "productName": "Equity warrant",
+ "assetClass": "Equity",
+ "family": "option",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2025-04-17",
+ "effectiveDate": "2025-04-22",
+ "maturityDate": "2027-06-29",
+ "currency": "GBP",
+ "notional": 144000000.0,
+ "mtm": -403925,
+ "mtmCurrency": "USD",
+ "pnl1d": -3690,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-LDN",
+ "book": "BOOK-EQD-3",
+ "trader": "TRDR-JWEISS",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "clearingAccount": "CLR-EUREX-1",
+ "underlyingEquity": "EQ-GRNT",
+ "equityVolSurface": "EQV-GRNT",
+ "terms": {
+  "optionType": "Put",
+  "exerciseStyle": "American",
+  "expiryDate": "2028-10-01",
+  "strike": 4876.89,
+  "ratio": 0.8
+ },
+ "risk": {
+  "delta": -708980,
+  "vega": -617349
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -33761,
+   "vega": -29398
+  },
+  {
+   "bucket": "1M",
+   "delta": -67522,
+   "vega": -58795
+  },
+  {
+   "bucket": "3M",
+   "delta": -101283,
+   "vega": -88193
+  },
+  {
+   "bucket": "6M",
+   "delta": -135044,
+   "vega": -117590
+  },
+  {
+   "bucket": "1Y",
+   "delta": -168805,
+   "vega": -146988
+  },
+  {
+   "bucket": "2Y",
+   "delta": -202566,
+   "vega": -176385
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -12956
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -20897
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -6035
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -15965
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 13849
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 24579
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -10173
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 3781
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -18964
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 15181
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -10484
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -15655
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -16215
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -18699
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -3940
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -20075
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -8409
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -27733
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -260
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 8392
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-04-17",
+  "executionTimestamp": "2025-04-17T08:45:00.806Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "J. Weiss",
+  "salesperson": null,
+  "orderId": "ORD-38A7A96612"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-04-17T12:45:00Z",
+    "by": "mo.ops"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2025-05-18T12:45:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2025-04-17T12:45:00Z",
+  "lastModifiedAt": "2025-05-18T12:45:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT808915288",
+  "matched": "2025-04-17 13:11",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH6005737462",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q8338A7A96612858B06BEA6",
+  "upi": "QZSBYSCPX222",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Barclays Bank plc",
+  "ourAgentBic": "BARCGB22XXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-GBP-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -403925,
+  "cleanPv": -403925.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "EQ-GRNT",
+   "EQV-GRNT"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 2248
+  }
+ }
+}

@@ -1,0 +1,289 @@
+{
+ "tradeId": "MX-20000081",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000081",
+ "productType": "CAP",
+ "productName": "Interest rate cap",
+ "assetClass": "Rates",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2025-10-27",
+ "effectiveDate": "2025-10-29",
+ "maturityDate": "2027-05-14",
+ "currency": "AUD",
+ "notional": 26000000.0,
+ "mtm": 282246,
+ "mtmCurrency": "USD",
+ "pnl1d": -5797,
+ "counterparty": {
+  "id": "CP-KESTREL",
+  "name": "Kestrel Global Macro Fund"
+ },
+ "nettingSet": "NS-KESTREL-NY",
+ "book": "BOOK-RATES-1",
+ "trader": "TRDR-ASHAH",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-AUD-OIS",
+ "forwardCurve": "CRV-AUD-PROJ",
+ "capVolSurface": "CPV-AUD",
+ "terms": {
+  "strike": 0.044882,
+  "capFrequency": "Semi-annual",
+  "premium": 1187215.0
+ },
+ "risk": {
+  "dv01": 3356,
+  "vega": 41002
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 336,
+   "vega": 4100
+  },
+  {
+   "bucket": "6M",
+   "dv01": 671,
+   "vega": 8200
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 1007,
+   "vega": 12301
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 1342,
+   "vega": 16401
+  }
+ ],
+ "schedule": [
+  {
+   "fixingDate": "2026-01-29",
+   "period": "2026-01-29..2026-04-29",
+   "index": "AONIA",
+   "rate": 0.038438,
+   "payoff": 22347.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-04-29",
+   "period": "2026-04-29..2026-07-29",
+   "index": "AONIA",
+   "rate": 0.023091,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-07-29",
+   "period": "2026-07-29..2026-10-29",
+   "index": "AONIA",
+   "rate": 0.046018,
+   "payoff": 71617.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-10-29",
+   "period": "2026-10-29..2027-01-29",
+   "index": "AONIA",
+   "rate": 0.030919,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-01-29",
+   "period": "2027-01-29..2027-04-29",
+   "index": "AONIA",
+   "rate": 0.024085,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-04-29",
+   "period": "2027-04-29..2027-07-29",
+   "index": "AONIA",
+   "rate": 0.027904,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-05-14",
+   "period": "2027-05-14..2027-08-14",
+   "index": "AONIA",
+   "rate": 0.046352,
+   "payoff": 73788.0,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 3,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 6987
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 24464
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 8490
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 1722
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -955
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -804
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 4989
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -5619
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 4920
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -16793
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -15345
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -755
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 2887
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 6441
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -4177
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -1855
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 15582
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -6575
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 14278
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 4010
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-10-27",
+  "executionTimestamp": "2025-10-27T13:28:20.866Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "A. Shah",
+  "salesperson": null,
+  "orderId": "ORD-CE6F9651FE"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-10-27T11:35:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2025-10-27T11:35:00Z",
+  "lastModifiedAt": "2025-10-27T11:35:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA816615993",
+  "matched": "2025-10-27 16:05",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096CE6F9651FEE80E578BDC",
+  "upi": "QZIGSHIFAZL7",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "KESTGB33XXX",
+  "ssiId": "SSI-AUD-69F994",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 282246,
+  "cleanPv": 282246.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CRV-AUD-OIS",
+   "CRV-AUD-PROJ",
+   "CPV-AUD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 824
+  }
+ }
+}

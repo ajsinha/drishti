@@ -1,0 +1,250 @@
+{
+ "tradeId": "BBG-60000094",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000094",
+ "productType": "TRIPARTY_REPO",
+ "productName": "Tri-party repo",
+ "assetClass": "Securities financing",
+ "family": "sft",
+ "status": "Live",
+ "direction": "Repo (lend cash)",
+ "tradeDate": "2026-08-21",
+ "effectiveDate": "2026-08-24",
+ "maturityDate": "2027-02-15",
+ "currency": "JPY",
+ "notional": 237000000.0,
+ "mtm": -708216,
+ "mtmCurrency": "USD",
+ "pnl1d": -21915,
+ "counterparty": {
+  "id": "CP-ALDERSHOT",
+  "name": "Aldershot Pension Trust"
+ },
+ "nettingSet": "NS-ALDERSHOT-FRA",
+ "book": "BOOK-SFT-1",
+ "trader": "TRDR-KBRANDT",
+ "desk": "DESK-SFT",
+ "legalEntity": "LE-FRA",
+ "issuer": "ISS-JGB",
+ "repoCurve": "REPO-JPY",
+ "terms": {
+  "repoRate": 0.041287,
+  "agent": "JPM",
+  "basket": "UST"
+ },
+ "risk": {
+  "exposure": 3523618
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "exposure": 352362
+  },
+  {
+   "bucket": "1M",
+   "exposure": 704724
+  },
+  {
+   "bucket": "3M",
+   "exposure": 1057085
+  },
+  {
+   "bucket": "6M",
+   "exposure": 1409447
+  }
+ ],
+ "schedule": [
+  {
+   "asset": "Kaizen Motors Corp. 2031",
+   "isin": "JPKAIZ021595",
+   "quantity": 75747722,
+   "marketValue": 78779146,
+   "haircut": 0.01,
+   "value": 77991355
+  },
+  {
+   "asset": "Meridian Financial Group 2031",
+   "isin": "USMERI070218",
+   "quantity": 82275868,
+   "marketValue": 81416908,
+   "haircut": 0.02,
+   "value": 79788570
+  },
+  {
+   "asset": "Meridian Financial Group 2036",
+   "isin": "USMERI186295",
+   "quantity": 81472403,
+   "marketValue": 81897689,
+   "haircut": 0.04,
+   "value": 78621781
+  }
+ ],
+ "nextIndex": -1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -33493
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -5213
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 20502
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 30726
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 17121
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 16375
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -7243
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -11029
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -9474
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 24087
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -22863
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -44691
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 26542
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -9657
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 18819
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 23484
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -29033
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -3989
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -15445
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 29561
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-08-21",
+  "executionTimestamp": "2026-08-21T08:27:19.241Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "K. Brandt",
+  "salesperson": null,
+  "orderId": "ORD-742E8A4300"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-08-21T09:20:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-08-21T09:20:00Z",
+  "lastModifiedAt": "2026-08-21T09:20:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT947544303",
+  "matched": "2026-08-21 12:46",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z9DXU4T18OK744742E8A43004B873ACD0A",
+  "upi": "QZR5OK5QMRHW",
+  "reportingRegimes": [
+   "EU EMIR",
+   "EU MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "ALDEGB33XXX",
+  "ssiId": "SSI-JPY-D06EAF",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -708216,
+  "cleanPv": -708216.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "REPO-JPY"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "globalone-sft",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 3786
+  }
+ }
+}

@@ -1,0 +1,229 @@
+{
+ "tradeId": "END-1000076",
+ "sourceSystem": "Endur",
+ "sourceTradeId": "1000076",
+ "productType": "EMISSIONS_FUTURE",
+ "productName": "Emissions allowance future",
+ "assetClass": "Commodity",
+ "family": "future",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2026-08-14",
+ "effectiveDate": "2026-08-17",
+ "maturityDate": "2027-08-24",
+ "currency": "USD",
+ "notional": 58000000.0,
+ "mtm": 1058377,
+ "mtmCurrency": "USD",
+ "pnl1d": 52078,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-COMM-3",
+ "trader": "TRDR-FROSSI",
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-CME-1",
+ "commodityCurve": "CMDC-GOLD",
+ "terms": {
+  "contract": "EUA Z6",
+  "lots": 160
+ },
+ "risk": {
+  "delta": -189519
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -12635
+  },
+  {
+   "bucket": "1M",
+   "delta": -25269
+  },
+  {
+   "bucket": "3M",
+   "delta": -37904
+  },
+  {
+   "bucket": "6M",
+   "delta": -50538
+  },
+  {
+   "bucket": "1Y",
+   "delta": -63173
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 33295
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 1393
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -81928
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 39888
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 828
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 4263
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -33791
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 40891
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 21227
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 44232
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 40184
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 1697
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 44693
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -5357
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -25241
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 62257
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -45003
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 20308
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -2877
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -73473
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-08-14",
+  "executionTimestamp": "2026-08-14T15:56:00.678Z",
+  "venue": "CME Globex",
+  "venueMic": "XCME",
+  "executionType": "Electronic",
+  "trader": "F. Rossi",
+  "salesperson": null,
+  "orderId": "ORD-9E7F37F493"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-08-14T09:20:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-08-14T09:20:00Z",
+  "lastModifiedAt": "2026-08-14T09:20:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT194689307",
+  "matched": "2026-08-14 14:35",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH6067792908",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20969E7F37F4931DF88EAFD7",
+  "upi": "QZS1BRN9FT2H",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMUS33XXX",
+  "ssiId": "SSI-USD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1058377,
+  "cleanPv": 1058377.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CMDC-GOLD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "endur-comm",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 2697
+  }
+ }
+}

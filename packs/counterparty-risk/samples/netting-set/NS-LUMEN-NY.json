@@ -62,105 +62,105 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10035",
+   "tradeId": "MX-20000035",
    "product": "Zero-coupon swap",
    "notional": 186000000.0,
    "maturity": "2035-04-19",
    "mtm": -39818756
   },
   {
-   "tradeId": "T-10042",
+   "tradeId": "MX-20000042",
    "product": "Amortising swap",
    "notional": 87000000.0,
    "maturity": "2029-11-08",
    "mtm": -6638895
   },
   {
-   "tradeId": "T-10305",
+   "tradeId": "CLY-3000065",
    "product": "Credit spread option",
    "notional": 244000000.0,
    "maturity": "2028-10-24",
    "mtm": 4754624
   },
   {
-   "tradeId": "T-10458",
+   "tradeId": "END-1000014",
    "product": "Commodity swap",
    "notional": 231000000.0,
    "maturity": "2034-07-03",
    "mtm": 4646776
   },
   {
-   "tradeId": "T-10047",
+   "tradeId": "MX-20000047",
    "product": "Accreting swap",
    "notional": 52000000.0,
    "maturity": "2033-10-10",
    "mtm": 2201547
   },
   {
-   "tradeId": "T-10249",
+   "tradeId": "CLY-3000009",
    "product": "CDS index (CDX / iTraxx)",
    "notional": 61000000.0,
    "maturity": "2028-01-24",
    "mtm": 1066256
   },
   {
-   "tradeId": "T-10304",
+   "tradeId": "CLY-3000064",
    "product": "Credit spread option",
    "notional": 201000000.0,
    "maturity": "2026-10-07",
    "mtm": 1037396
   },
   {
-   "tradeId": "T-10029",
+   "tradeId": "MX-20000029",
    "product": "Cross-currency swap (MtM resetting)",
    "notional": 139000000.0,
    "maturity": "2036-05-12",
    "mtm": 395535
   },
   {
-   "tradeId": "T-10310",
+   "tradeId": "CLY-3000070",
    "product": "Unfunded risk participation",
    "notional": 22000000.0,
    "maturity": "2035-06-04",
    "mtm": 371591
   },
   {
-   "tradeId": "T-10103",
+   "tradeId": "MX-20000103",
    "product": "Bermudan swaption",
    "notional": 167000000.0,
    "maturity": "2027-07-12",
    "mtm": -198183
   },
   {
-   "tradeId": "T-10503",
+   "tradeId": "END-1000059",
    "product": "Commodity index swap",
    "notional": 18000000.0,
    "maturity": "2034-08-16",
    "mtm": -133332
   },
   {
-   "tradeId": "T-10117",
+   "tradeId": "MX-20000117",
    "product": "CMS cap / floor",
    "notional": 63000000.0,
    "maturity": "2027-07-06",
    "mtm": 73781
   },
   {
-   "tradeId": "T-10105",
+   "tradeId": "MX-20000105",
    "product": "Bermudan swaption",
    "notional": 214000000.0,
    "maturity": "2026-10-07",
    "mtm": 36115
   },
   {
-   "tradeId": "T-10115",
+   "tradeId": "MX-20000115",
    "product": "CMS cap / floor",
    "notional": 15000000.0,
    "maturity": "2027-01-04",
    "mtm": 30927
   },
   {
-   "tradeId": "T-10136",
+   "tradeId": "MX-20000136",
    "product": "Callable swap",
    "notional": 12000000.0,
    "maturity": "2033-09-19",

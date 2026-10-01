@@ -1,0 +1,259 @@
+{
+ "tradeId": "MX-20000091",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000091",
+ "productType": "COLLAR",
+ "productName": "Interest rate collar",
+ "assetClass": "Rates",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2025-11-26",
+ "effectiveDate": "2025-11-28",
+ "maturityDate": "2026-10-07",
+ "currency": "JPY",
+ "notional": 119000000.0,
+ "mtm": -242239,
+ "mtmCurrency": "USD",
+ "pnl1d": 8840,
+ "counterparty": {
+  "id": "CP-MERIDIAN",
+  "name": "Meridian Life Assurance"
+ },
+ "nettingSet": "NS-MERIDIAN-NY",
+ "book": "BOOK-RATES-1",
+ "trader": "TRDR-ASHAH",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-JPY-OIS",
+ "forwardCurve": "CRV-JPY-PROJ",
+ "capVolSurface": "CPV-JPY",
+ "terms": {
+  "capStrike": 0.04225,
+  "floorStrike": 0.026501
+ },
+ "risk": {
+  "dv01": 7195,
+  "vega": 269139
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 1199,
+   "vega": 44856
+  },
+  {
+   "bucket": "6M",
+   "dv01": 2398,
+   "vega": 89713
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 3598,
+   "vega": 134570
+  }
+ ],
+ "schedule": [
+  {
+   "fixingDate": "2026-02-28",
+   "period": "2026-02-28..2026-05-28",
+   "index": "TONA",
+   "rate": 0.03346,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-05-28",
+   "period": "2026-05-28..2026-08-28",
+   "index": "TONA",
+   "rate": 0.030358,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-08-28",
+   "period": "2026-08-28..2026-11-28",
+   "index": "TONA",
+   "rate": 0.043426,
+   "payoff": 250673.5,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-10-07",
+   "period": "2026-10-07..2027-01-07",
+   "index": "TONA",
+   "rate": 0.027825,
+   "payoff": 0.0,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 3,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -5775
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -17334
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 9844
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 9446
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -5917
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 10417
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -1377
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 7088
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -7162
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 7545
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -12823
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -8904
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 993
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 1708
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -2108
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -3050
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 844
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 10026
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 2422
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 283
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-11-26",
+  "executionTimestamp": "2025-11-26T09:40:17.153Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "A. Shah",
+  "salesperson": null,
+  "orderId": "ORD-E3E9C80763"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-11-26T09:53:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2025-11-26T09:53:00Z",
+  "lastModifiedAt": "2025-11-26T09:53:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA136773906",
+  "matched": "2025-11-26 13:09",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096E3E9C8076372ECD7AB9B",
+  "upi": "QZKY3O6J49DQ",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "MERIGB33XXX",
+  "ssiId": "SSI-JPY-4D91C0",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -242239,
+  "cleanPv": -242239.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CRV-JPY-OIS",
+   "CRV-JPY-PROJ",
+   "CPV-JPY"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 1674
+  }
+ }
+}

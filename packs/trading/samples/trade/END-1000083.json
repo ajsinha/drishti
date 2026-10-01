@@ -1,0 +1,401 @@
+{
+ "tradeId": "END-1000083",
+ "sourceSystem": "Endur",
+ "sourceTradeId": "1000083",
+ "productType": "WEATHER_HDD",
+ "productName": "Weather derivative (HDD/CDD)",
+ "assetClass": "Commodity",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2025-12-19",
+ "effectiveDate": "2025-12-22",
+ "maturityDate": "2034-02-09",
+ "currency": "USD",
+ "notional": 9000000.0,
+ "mtm": 85453,
+ "mtmCurrency": "USD",
+ "pnl1d": -1283,
+ "counterparty": {
+  "id": "CP-MERIDIAN",
+  "name": "Meridian Life Assurance"
+ },
+ "nettingSet": "NS-MERIDIAN-NY",
+ "book": "BOOK-COMM-1",
+ "trader": "TRDR-TBRENNAN",
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-USD-OIS",
+ "terms": {
+  "station": "Tokyo",
+  "index": "CDD",
+  "strike": 1365,
+  "tick": 18417.0
+ },
+ "risk": {
+  "delta": 55200
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 2629
+  },
+  {
+   "bucket": "1M",
+   "delta": 5257
+  },
+  {
+   "bucket": "3M",
+   "delta": 7886
+  },
+  {
+   "bucket": "6M",
+   "delta": 10514
+  },
+  {
+   "bucket": "1Y",
+   "delta": 13143
+  },
+  {
+   "bucket": "2Y",
+   "delta": 15771
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-03-22",
+   "level": 88.38,
+   "trigger": 100.0,
+   "performance": -0.1162,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-06-22",
+   "level": 91.79,
+   "trigger": 100.0,
+   "performance": -0.0821,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-09-22",
+   "level": 91.01,
+   "trigger": 100.0,
+   "performance": -0.0899,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-12-22",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-03-22",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-06-22",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-09-22",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-12-22",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-03-22",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-06-22",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-09-22",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-12-22",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-03-22",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-06-22",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-09-22",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-12-22",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-03-22",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-06-22",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-09-22",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-12-22",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-03-22",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-06-22",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-09-22",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-12-22",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 3,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 3234
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -1345
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 2920
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 1428
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -3472
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -5972
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -4322
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 205
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -2154
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 158
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -3011
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 1729
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -914
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -885
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 5641
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 1998
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 1840
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -408
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 1185
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 1195
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-12-19",
+  "executionTimestamp": "2025-12-19T13:13:18.673Z",
+  "venue": "CME Globex",
+  "venueMic": "XCME",
+  "executionType": "Electronic",
+  "trader": "T. Brennan",
+  "salesperson": null,
+  "orderId": "ORD-17C4BCB221"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-12-19T11:36:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2025-12-19T11:36:00Z",
+  "lastModifiedAt": "2025-12-19T11:36:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT447302006",
+  "matched": "2025-12-19 14:10",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209617C4BCB221754488D006",
+  "upi": "QZXEFK9KZGUL",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "MERIUS33XXX",
+  "ssiId": "SSI-USD-4D91C0",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 85453,
+  "cleanPv": 85453.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "CRV-USD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "endur-comm",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

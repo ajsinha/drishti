@@ -1,0 +1,334 @@
+{
+ "tradeId": "MX-20000133",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000133",
+ "productType": "CALLABLE_SWAP",
+ "productName": "Callable swap",
+ "assetClass": "Rates",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2025-08-21",
+ "effectiveDate": "2025-08-25",
+ "maturityDate": "2033-04-11",
+ "currency": "CHF",
+ "notional": 73000000.0,
+ "mtm": -432768,
+ "mtmCurrency": "USD",
+ "pnl1d": -20753,
+ "counterparty": {
+  "id": "CP-ALDERSHOT",
+  "name": "Aldershot Pension Trust"
+ },
+ "nettingSet": "NS-ALDERSHOT-NY",
+ "book": "BOOK-RATES-3",
+ "trader": "TRDR-MOKAFOR",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-CHF-OIS",
+ "forwardCurve": "CRV-CHF-PROJ",
+ "swaptionVolCube": "IRV-CHF",
+ "terms": {
+  "fixedRate": 0.036857,
+  "payFrequency": "Semi-annual",
+  "dayCount": "ACT/360",
+  "businessDay": "Mod. following",
+  "callable": "Counterparty",
+  "firstCall": "2030-03-23"
+ },
+ "risk": {
+  "dv01": -50425,
+  "vega": -298338
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -1801,
+   "vega": -10655
+  },
+  {
+   "bucket": "6M",
+   "dv01": -3602,
+   "vega": -21310
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -5403,
+   "vega": -31965
+  },
+  {
+   "bucket": "2Y",
+   "dv01": -7204,
+   "vega": -42620
+  },
+  {
+   "bucket": "3Y",
+   "dv01": -9004,
+   "vega": -53275
+  },
+  {
+   "bucket": "5Y",
+   "dv01": -10805,
+   "vega": -63930
+  },
+  {
+   "bucket": "7Y",
+   "dv01": -12606,
+   "vega": -74584
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Receive performance",
+   "payReceive": "Receive",
+   "rateType": "Performance",
+   "index": "USCPI",
+   "rate": null,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "CHF",
+   "notional": 73000000.0
+  },
+  {
+   "leg": 2,
+   "label": "Pay SARON + spread",
+   "payReceive": "Pay",
+   "rateType": "Float",
+   "index": "SARON",
+   "rate": 0.0033,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "CHF",
+   "notional": 73000000.0
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-08-25",
+   "type": "First call",
+   "strike": 0.049676,
+   "status": "Expired"
+  },
+  {
+   "date": "2027-08-25",
+   "type": "Bermudan call",
+   "strike": 0.047986,
+   "status": "Pending"
+  },
+  {
+   "date": "2028-08-25",
+   "type": "Bermudan call",
+   "strike": 0.046473,
+   "status": "Pending"
+  },
+  {
+   "date": "2029-08-25",
+   "type": "Bermudan call",
+   "strike": 0.021721,
+   "status": "Pending"
+  },
+  {
+   "date": "2030-08-25",
+   "type": "Bermudan call",
+   "strike": 0.046259,
+   "status": "Pending"
+  },
+  {
+   "date": "2031-08-25",
+   "type": "Bermudan call",
+   "strike": 0.022954,
+   "status": "Pending"
+  },
+  {
+   "date": "2032-08-25",
+   "type": "Bermudan call",
+   "strike": 0.027436,
+   "status": "Pending"
+  },
+  {
+   "date": "2033-04-11",
+   "type": "Bermudan call",
+   "strike": 0.042382,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 12282
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -9775
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 14017
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 10538
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 18176
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 22138
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -10315
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 14777
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 24399
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -1761
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 8870
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 25352
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 3105
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -6837
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 33788
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 5070
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 5422
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 12039
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 2777
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -222
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-08-21",
+  "executionTimestamp": "2025-08-21T16:03:33.875Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "M. Okafor",
+  "salesperson": null,
+  "orderId": "ORD-55B9D57D94"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-08-21T09:10:00Z",
+    "by": "stp.gateway"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2025-11-22T09:10:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2025-08-21T09:10:00Z",
+  "lastModifiedAt": "2025-11-22T09:10:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA807538520",
+  "matched": "2025-08-21 15:44",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209655B9D57D945EEE454FAC",
+  "upi": "QZ3VNT0G9T30",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "ALDEGB33XXX",
+  "ssiId": "SSI-CHF-D06EAF",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -432768,
+  "cleanPv": -432768.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "CRV-CHF-OIS",
+   "CRV-CHF-PROJ",
+   "IRV-CHF"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 1596
+  }
+ }
+}

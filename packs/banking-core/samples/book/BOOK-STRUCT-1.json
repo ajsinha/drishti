@@ -7,70 +7,70 @@
  "dv01": -239876,
  "topTrades": [
   {
-   "tradeId": "T-10721",
+   "tradeId": "IMG-400133",
    "product": "Range accrual note",
    "notional": 186000000.0,
    "maturity": "2035-02-22",
    "mtm": 3526766
   },
   {
-   "tradeId": "T-10735",
+   "tradeId": "IMG-400147",
    "product": "FX-rates hybrid (PRDC)",
    "notional": 153000000.0,
    "maturity": "2033-01-28",
    "mtm": 2602465
   },
   {
-   "tradeId": "T-10736",
+   "tradeId": "IMG-400148",
    "product": "FX-rates hybrid (PRDC)",
    "notional": 149000000.0,
    "maturity": "2032-02-02",
    "mtm": 1945606
   },
   {
-   "tradeId": "T-10745",
+   "tradeId": "IMG-400157",
    "product": "Credit basket note",
    "notional": 250000000.0,
    "maturity": "2027-11-18",
    "mtm": -1748235
   },
   {
-   "tradeId": "T-10728",
+   "tradeId": "IMG-400140",
    "product": "Capital-protected note",
    "notional": 180000000.0,
    "maturity": "2031-10-27",
    "mtm": -1683078
   },
   {
-   "tradeId": "T-10734",
+   "tradeId": "IMG-400146",
    "product": "FX-rates hybrid (PRDC)",
    "notional": 85000000.0,
    "maturity": "2029-10-11",
    "mtm": 917810
   },
   {
-   "tradeId": "T-10744",
+   "tradeId": "IMG-400156",
    "product": "Worst-of note",
    "notional": 214000000.0,
    "maturity": "2028-09-12",
    "mtm": 765390
   },
   {
-   "tradeId": "T-10722",
+   "tradeId": "IMG-400134",
    "product": "Range accrual note",
    "notional": 89000000.0,
    "maturity": "2035-10-05",
    "mtm": 587235
   },
   {
-   "tradeId": "T-10727",
+   "tradeId": "IMG-400139",
    "product": "Capital-protected note",
    "notional": 118000000.0,
    "maturity": "2028-12-18",
    "mtm": 566929
   },
   {
-   "tradeId": "T-10725",
+   "tradeId": "IMG-400137",
    "product": "Range accrual note",
    "notional": 113000000.0,
    "maturity": "2034-06-05",

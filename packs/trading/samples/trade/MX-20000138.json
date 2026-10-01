@@ -1,0 +1,350 @@
+{
+ "tradeId": "MX-20000138",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000138",
+ "productType": "CALLABLE_SWAP",
+ "productName": "Callable swap",
+ "assetClass": "Rates",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2025-02-28",
+ "effectiveDate": "2025-03-03",
+ "maturityDate": "2035-04-24",
+ "currency": "AUD",
+ "notional": 117000000.0,
+ "mtm": -1611444,
+ "mtmCurrency": "USD",
+ "pnl1d": -31436,
+ "counterparty": {
+  "id": "CP-CASCADIA",
+  "name": "Cascadia Airlines Inc."
+ },
+ "nettingSet": "NS-CASCADIA-NY",
+ "book": "BOOK-RATES-2",
+ "trader": "TRDR-ASHAH",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-AUD-OIS",
+ "forwardCurve": "CRV-AUD-PROJ",
+ "swaptionVolCube": "IRV-AUD",
+ "terms": {
+  "fixedRate": 0.010516,
+  "payFrequency": "Semi-annual",
+  "dayCount": "30/360",
+  "businessDay": "Mod. following",
+  "callable": "Us",
+  "firstCall": "2029-02-03"
+ },
+ "risk": {
+  "dv01": 93941,
+  "vega": 550400
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 2609,
+   "vega": 15289
+  },
+  {
+   "bucket": "6M",
+   "dv01": 5219,
+   "vega": 30578
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 7828,
+   "vega": 45867
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 10438,
+   "vega": 61156
+  },
+  {
+   "bucket": "3Y",
+   "dv01": 13047,
+   "vega": 76444
+  },
+  {
+   "bucket": "5Y",
+   "dv01": 15657,
+   "vega": 91733
+  },
+  {
+   "bucket": "7Y",
+   "dv01": 18266,
+   "vega": 107022
+  },
+  {
+   "bucket": "10Y",
+   "dv01": 20876,
+   "vega": 122311
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Pay performance",
+   "payReceive": "Pay",
+   "rateType": "Performance",
+   "index": "USCPI",
+   "rate": null,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "AUD",
+   "notional": 117000000.0
+  },
+  {
+   "leg": 2,
+   "label": "Receive AONIA + spread",
+   "payReceive": "Receive",
+   "rateType": "Float",
+   "index": "AONIA",
+   "rate": 0.03642,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "AUD",
+   "notional": 117000000.0
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-03-03",
+   "type": "First call",
+   "strike": 0.040064,
+   "status": "Expired"
+  },
+  {
+   "date": "2027-03-03",
+   "type": "Bermudan call",
+   "strike": 0.038428,
+   "status": "Pending"
+  },
+  {
+   "date": "2028-03-03",
+   "type": "Bermudan call",
+   "strike": 0.048724,
+   "status": "Pending"
+  },
+  {
+   "date": "2029-03-03",
+   "type": "Bermudan call",
+   "strike": 0.02049,
+   "status": "Pending"
+  },
+  {
+   "date": "2030-03-03",
+   "type": "Bermudan call",
+   "strike": 0.023146,
+   "status": "Pending"
+  },
+  {
+   "date": "2031-03-03",
+   "type": "Bermudan call",
+   "strike": 0.026326,
+   "status": "Pending"
+  },
+  {
+   "date": "2032-03-03",
+   "type": "Bermudan call",
+   "strike": 0.036943,
+   "status": "Pending"
+  },
+  {
+   "date": "2033-03-03",
+   "type": "Bermudan call",
+   "strike": 0.038663,
+   "status": "Pending"
+  },
+  {
+   "date": "2034-03-03",
+   "type": "Bermudan call",
+   "strike": 0.026256,
+   "status": "Pending"
+  },
+  {
+   "date": "2035-03-03",
+   "type": "Bermudan call",
+   "strike": 0.020545,
+   "status": "Pending"
+  },
+  {
+   "date": "2035-04-24",
+   "type": "Bermudan call",
+   "strike": 0.023705,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -3021
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 21890
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -36464
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -5567
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 22177
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -55148
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 28047
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 34302
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 32779
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 15038
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -7407
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -46692
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -33743
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -2739
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -57474
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 38904
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 7564
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -57688
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 66293
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -25849
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-02-28",
+  "executionTimestamp": "2025-02-28T14:17:32.116Z",
+  "venue": "Bloomberg SEF",
+  "venueMic": "BSEF",
+  "executionType": "Electronic",
+  "trader": "A. Shah",
+  "salesperson": null,
+  "orderId": "ORD-608AE1F1B8"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-02-28T11:03:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2025-02-28T11:03:00Z",
+  "lastModifiedAt": "2025-02-28T11:03:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA701514069",
+  "matched": "2025-02-28 17:55",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096608AE1F1B898E2DF3AFB",
+  "upi": "QZ3VNT0G9T30",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "CASCGB33XXX",
+  "ssiId": "SSI-AUD-BC4549",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -1611444,
+  "cleanPv": -1611444.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "CRV-AUD-OIS",
+   "CRV-AUD-PROJ",
+   "IRV-AUD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 4393
+  }
+ }
+}

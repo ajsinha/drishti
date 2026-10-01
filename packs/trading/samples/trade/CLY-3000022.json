@@ -1,0 +1,229 @@
+{
+ "tradeId": "CLY-3000022",
+ "sourceSystem": "Calypso",
+ "sourceTradeId": "3000022",
+ "productType": "CDS_SWAPTION",
+ "productName": "CDS index option",
+ "assetClass": "Credit",
+ "family": "option",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2026-07-24",
+ "effectiveDate": "2026-07-27",
+ "maturityDate": "2029-05-10",
+ "currency": "USD",
+ "notional": 132000000.0,
+ "mtm": 75526,
+ "mtmCurrency": "USD",
+ "pnl1d": 2895,
+ "counterparty": {
+  "id": "CP-PINNACLE",
+  "name": "Pinnacle Credit Partners"
+ },
+ "nettingSet": "NS-PINNACLE-NY",
+ "book": "BOOK-CREDIT-2",
+ "trader": "TRDR-CDUBOIS",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-SOLARIS",
+ "creditCurve": "CDS-SOLARIS",
+ "discountCurve": "CRV-USD-OIS",
+ "terms": {
+  "payerReceiver": "Payer",
+  "strikeSpread": 87.4,
+  "expiryDate": "2026-12-05"
+ },
+ "risk": {
+  "cs01": -31689,
+  "vega": -310342
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": -3169,
+   "vega": -31034
+  },
+  {
+   "bucket": "1Y",
+   "cs01": -6338,
+   "vega": -62068
+  },
+  {
+   "bucket": "2Y",
+   "cs01": -9507,
+   "vega": -93103
+  },
+  {
+   "bucket": "3Y",
+   "cs01": -12676,
+   "vega": -124137
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -837
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 3280
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -7047
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 2169
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -3180
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 1665
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 1214
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 3643
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -350
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 6083
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -5230
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 3724
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 3471
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -733
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 1503
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -4152
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -507
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 4679
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -301
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -3852
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-07-24",
+  "executionTimestamp": "2026-07-24T09:37:03.186Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "C. Dubois",
+  "salesperson": null,
+  "orderId": "ORD-3BBEE0C6E3"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-07-24T10:54:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2026-07-24T10:54:00Z",
+  "lastModifiedAt": "2026-07-24T10:54:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA352018076",
+  "matched": "2026-07-24 16:48",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20963BBEE0C6E30D5EA758FB",
+  "upi": "QZ061ZSFXE5X",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "PINNUS33XXX",
+  "ssiId": "SSI-USD-F2BB52",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 75526,
+  "cleanPv": 75526.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CDS-SOLARIS",
+   "CRV-USD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 1471
+  }
+ }
+}

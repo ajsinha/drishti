@@ -1,0 +1,323 @@
+{
+ "tradeId": "MX-20000153",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000153",
+ "productType": "TARN_RATES",
+ "productName": "Target redemption note (rates)",
+ "assetClass": "Rates",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2026-07-15",
+ "effectiveDate": "2026-07-17",
+ "maturityDate": "2028-09-28",
+ "currency": "CAD",
+ "notional": 93000000.0,
+ "mtm": 1991433,
+ "mtmCurrency": "USD",
+ "pnl1d": 14251,
+ "counterparty": {
+  "id": "CP-KESTREL",
+  "name": "Kestrel Global Macro Fund"
+ },
+ "nettingSet": "NS-KESTREL-NY",
+ "book": "BOOK-RATES-3",
+ "trader": "TRDR-MOKAFOR",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-CAD-OIS",
+ "forwardCurve": "CRV-CAD-PROJ",
+ "swaptionVolCube": "IRV-CAD",
+ "terms": {
+  "target": 0.05543,
+  "couponFormula": "2 × (Strike − Index)"
+ },
+ "risk": {
+  "dv01": -17570,
+  "vega": -301685
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -1757,
+   "vega": -30168
+  },
+  {
+   "bucket": "6M",
+   "dv01": -3514,
+   "vega": -60337
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -5271,
+   "vega": -90506
+  },
+  {
+   "bucket": "2Y",
+   "dv01": -7028,
+   "vega": -120674
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Receive performance",
+   "payReceive": "Receive",
+   "rateType": "Performance",
+   "index": "USCPI",
+   "rate": null,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "CAD",
+   "notional": 93000000.0
+  },
+  {
+   "leg": 2,
+   "label": "Pay CORRA + spread",
+   "payReceive": "Pay",
+   "rateType": "Float",
+   "index": "CORRA",
+   "rate": 0.027559,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "CAD",
+   "notional": 93000000.0
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-10-17",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-01-17",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-04-17",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-07-17",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-10-17",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-01-17",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-04-17",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-07-17",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-09-28",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -54664
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -14510
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -121652
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -13632
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 30925
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 29259
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -20955
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 96394
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 39869
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 72763
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -94009
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 172322
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 16897
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -25208
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -84024
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 9413
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 84465
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -74198
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 66112
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 45495
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-07-15",
+  "executionTimestamp": "2026-07-15T15:39:18.019Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "M. Okafor",
+  "salesperson": null,
+  "orderId": "ORD-40CBB8DA17"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-07-15T11:09:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2026-07-15T11:09:00Z",
+  "lastModifiedAt": "2026-07-15T11:09:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA984311629",
+  "matched": "2026-07-15 11:28",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209640CBB8DA176C83B95061",
+  "upi": "QZZL2YKIFV0V",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "KESTGB33XXX",
+  "ssiId": "SSI-CAD-69F994",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1991433,
+  "cleanPv": 1991433.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "CRV-CAD-OIS",
+   "CRV-CAD-PROJ",
+   "IRV-CAD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 4913
+  }
+ }
+}

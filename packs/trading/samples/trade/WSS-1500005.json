@@ -1,0 +1,225 @@
+{
+ "tradeId": "WSS-1500005",
+ "sourceSystem": "Wall Street Systems",
+ "sourceTradeId": "1500005",
+ "productType": "FX_SPOT",
+ "productName": "FX spot",
+ "assetClass": "FX",
+ "family": "linear",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2024-07-26",
+ "effectiveDate": "2024-07-29",
+ "maturityDate": "2026-10-07",
+ "currency": "USD",
+ "notional": 12000000.0,
+ "mtm": 294618,
+ "mtmCurrency": "USD",
+ "pnl1d": 16460,
+ "counterparty": {
+  "id": "CP-MERIDIAN-RE",
+  "name": "Meridian Reinsurance Ltd"
+ },
+ "nettingSet": "NS-MERIDIAN-RE-LDN",
+ "book": "BOOK-FX-3",
+ "trader": "TRDR-LMOREAU",
+ "desk": "DESK-FX",
+ "legalEntity": "LE-LDN",
+ "fxSpot": "FX-USDCNH",
+ "terms": {
+  "rate": 50.49261,
+  "valueDate": "2026-10-01"
+ },
+ "risk": {
+  "fxDelta": -120000
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "fxDelta": -8000
+  },
+  {
+   "bucket": "1M",
+   "fxDelta": -16000
+  },
+  {
+   "bucket": "3M",
+   "fxDelta": -24000
+  },
+  {
+   "bucket": "6M",
+   "fxDelta": -32000
+  },
+  {
+   "bucket": "1Y",
+   "fxDelta": -40000
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -13030
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -354
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -3127
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 6946
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -2936
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -4390
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -2310
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -15250
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -17736
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -6696
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -2952
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -756
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 8457
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 10523
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 14452
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -867
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 5596
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -5439
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 2775
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 1830
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-07-26",
+  "executionTimestamp": "2024-07-26T10:23:46.302Z",
+  "venue": "360T",
+  "venueMic": "360T",
+  "executionType": "Electronic",
+  "trader": "L. Moreau",
+  "salesperson": null,
+  "orderId": "ORD-BF5CB76FBD"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-07-26T11:53:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2024-07-26T11:53:00Z",
+  "lastModifiedAt": "2024-07-26T11:53:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT382196808",
+  "matched": "2024-07-26 17:27",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83BF5CB76FBDDCE2F264F9",
+  "upi": "QZBCW46RLF1J",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Foreign exchange"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "MERIUS33XXX",
+  "ssiId": "SSI-USD-9DC4EA",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 294618,
+  "cleanPv": 294618.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "FX-USDCNH"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "calypso-fx",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 709
+  }
+ }
+}

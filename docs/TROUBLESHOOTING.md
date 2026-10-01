@@ -285,31 +285,31 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
 
   An empty list (`[]`) for every prefix you try means the pack that owns that mnemonic is not enabled, or
   not chosen (see [Packs](#packs)).
-- **Fix:** use the form `MNEMONIC ID`, for example `TRD T-10001 <GO>` (case does not matter; `<GO>` is optional,
+- **Fix:** use the form `MNEMONIC ID`, for example `TRD MX-20000001 <GO>` (case does not matter; `<GO>` is optional,
   Enter is enough).
 
 ### *Pick a trade*: "0 of 0 trades match" and "Nothing matches."
 
-- **What you see:** you typed `TRD T-99999 <GO>` and got a page headed *Pick a trade* instead of a trade.
+- **What you see:** you typed `TRD MX-29999999 <GO>` and got a page headed *Pick a trade* instead of a trade.
 - **Cause:** the mnemonic is fine, but no trade has that id, no trade's id starts with it, and no title
   contains it. A command that does not name exactly one entity becomes a pick list, and this one is empty.
-- **Check:** type less of the id (`TRD T-1`) and see what the list holds; or ask the server directly:
+- **Check:** type less of the id (`TRD MX-2`) and see what the list holds; or ask the server directly:
 
   ```bash
-  curl -s -G http://localhost:18480/api/v1/search --data-urlencode 'q=TRD T-1 limit 5' \
+  curl -s -G http://localhost:18480/api/v1/search --data-urlencode 'q=TRD MX-2 limit 5' \
     | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["matched"], [r["ref"]["id"] for r in d["rows"]])'
   ```
 
-  You should see `750 ['T-10001', 'T-10002', 'T-10003', 'T-10004', 'T-10005']` on the banking samples.
+  You should see `750 ['MX-20000001', 'MX-20000002', 'MX-20000003', 'MX-20000004', 'MX-20000005']` on the banking samples.
 - **Fix:** correct the id. If the list is empty for every id you try, the source that holds the kind may be
   down (see [runbooks/source-down.md](runbooks/source-down.md)), or you picked a past date the source has no
   data for.
 
-### "DRS-1001 no source holds trade/T-99999"
+### "DRS-1001 no source holds trade/MX-29999999"
 
-- **Cause:** you opened a view address directly (`/v/trade/T-99999`, a bookmark or an old share link), and no
+- **Cause:** you opened a view address directly (`/v/trade/MX-29999999`, a bookmark or an old share link), and no
   source has that identifier. (From the command line you get an empty pick list instead; see above.)
-- **Check:** `curl -s -o /dev/null -w "%{http_code}\n" http://localhost:18480/api/v1/views/trade/T-99999` prints `404`.
+- **Check:** `curl -s -o /dev/null -w "%{http_code}\n" http://localhost:18480/api/v1/views/trade/MX-29999999` prints `404`.
 - **Fix:** correct the id. The example commands for each pack are on the terminal home and in each pack's guide
   under **Help → Domain packs**.
 
@@ -364,10 +364,10 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
 
 ### I typed an id and got a pick list instead of the entity
 
-- **Cause:** the command did not name exactly one entity. `TRD T-100` is the *start* of 99 trade ids, so it
-  lists them. A word after the id (`TRD T-10001 swap`), a `*`, or a comparison (`=`, `>`) also makes a pick
+- **Cause:** the command did not name exactly one entity. `TRD MX-200000` is the *start* of 99 trade ids, so it
+  lists them. A word after the id (`TRD MX-20000001 swap`), a `*`, or a comparison (`=`, `>`) also makes a pick
   list.
-- **Fix:** type the whole id (`TRD T-10001`), or pick the row: click it, or select it with `↓` and press
+- **Fix:** type the whole id (`TRD MX-20000001`), or pick the row: click it, or select it with `↓` and press
   `Enter`. A command that names exactly one entity (`CPTY north`, `TRD productType=X` with one match) opens it
   at once.
 
@@ -410,7 +410,7 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
 ### A view does not tick
 
 - **Check:** the top bar date box: a picked date (amber) is a **static snapshot**; only **Live** (green) streams.
-  Then the source: `curl -s http://localhost:18480/api/v1/views/trade/T-10001 | python3 -c "import json,sys; print(json.load(sys.stdin)['provenance'])"`
+  Then the source: `curl -s http://localhost:18480/api/v1/views/trade/MX-20000001 | python3 -c "import json,sys; print(json.load(sys.stdin)['provenance'])"`
   shows `'live': True` for an entity that ticks.
 - **Fix:** press **Live**. If `live` is `False`, that entity's source does not stream (in the samples, only
   documents marked live in the `demo` source tick; the trading pack's Kafka stream needs

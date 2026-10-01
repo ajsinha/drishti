@@ -62,14 +62,14 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10720",
+   "tradeId": "BBG-60000120",
    "product": "Margin loan",
    "notional": 52000000.0,
    "maturity": "2027-02-25",
    "mtm": 1594435
   },
   {
-   "tradeId": "T-10679",
+   "tradeId": "BBG-60000079",
    "product": "Repurchase agreement",
    "notional": 180000000.0,
    "maturity": "2026-10-07",

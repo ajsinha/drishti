@@ -1,0 +1,371 @@
+{
+ "tradeId": "WSS-1500021",
+ "sourceSystem": "Wall Street Systems",
+ "sourceTradeId": "1500021",
+ "productType": "FX_SWAP",
+ "productName": "FX swap",
+ "assetClass": "FX",
+ "family": "swap",
+ "status": "Live",
+ "direction": "Receive fixed",
+ "tradeDate": "2025-03-14",
+ "effectiveDate": "2025-03-17",
+ "maturityDate": "2035-11-13",
+ "currency": "USD",
+ "notional": 127000000.0,
+ "mtm": 1986020,
+ "mtmCurrency": "USD",
+ "pnl1d": 127304,
+ "counterparty": {
+  "id": "CP-PINNACLE",
+  "name": "Pinnacle Credit Partners"
+ },
+ "nettingSet": "NS-PINNACLE-LDN",
+ "book": "BOOK-FX-1",
+ "trader": "TRDR-ENOVAK",
+ "desk": "DESK-FX",
+ "legalEntity": "LE-LDN",
+ "fxSpot": "FX-EURUSD",
+ "fxForwardCurve": "FXF-EURUSD",
+ "discountCurve": "CRV-USD-OIS",
+ "terms": {
+  "nearRate": 52.50745,
+  "farRate": 98.0078,
+  "swapPoints": 269.6
+ },
+ "risk": {
+  "fxDelta": -1270000,
+  "dv01": -106285
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "fxDelta": -60476,
+   "dv01": -5061
+  },
+  {
+   "bucket": "1M",
+   "fxDelta": -120952,
+   "dv01": -10122
+  },
+  {
+   "bucket": "3M",
+   "fxDelta": -181429,
+   "dv01": -15184
+  },
+  {
+   "bucket": "6M",
+   "fxDelta": -241905,
+   "dv01": -20245
+  },
+  {
+   "bucket": "1Y",
+   "fxDelta": -302381,
+   "dv01": -25306
+  },
+  {
+   "bucket": "2Y",
+   "fxDelta": -362857,
+   "dv01": -30367
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Receive performance",
+   "payReceive": "Receive",
+   "rateType": "Performance",
+   "index": "USCPI",
+   "rate": null,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "USD",
+   "notional": 127000000.0
+  },
+  {
+   "leg": 2,
+   "label": "Pay SOFR + spread",
+   "payReceive": "Pay",
+   "rateType": "Float",
+   "index": "SOFR",
+   "rate": 0.036215,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "USD",
+   "notional": 127000000.0
+  }
+ ],
+ "schedule": [
+  {
+   "payDate": "2026-03-17",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -290291.91,
+   "pv": 0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2027-03-17",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -338313.32,
+   "pv": -328163.92,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2028-03-17",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -373913.58,
+   "pv": -362696.17,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2029-03-17",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -322456.88,
+   "pv": -312783.17,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2030-03-17",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -263806.96,
+   "pv": -255892.75,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2031-03-17",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -255535.53,
+   "pv": -247869.46,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2032-03-17",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -355733.76,
+   "pv": -345061.75,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2033-03-17",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -341601.43,
+   "pv": -331353.39,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2034-03-17",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -347475.61,
+   "pv": -337051.34,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2035-03-17",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -299442.87,
+   "pv": -290459.58,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2035-11-13",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -262559.23,
+   "pv": -254682.45,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 19164
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -86259
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -117363
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -9651
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 48212
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 106622
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -115450
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 100115
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -2933
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -51150
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 62250
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 55297
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -38016
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 18549
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 15336
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 28823
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -3411
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 15438
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 34022
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 66711
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-03-14",
+  "executionTimestamp": "2025-03-14T10:08:57.572Z",
+  "venue": "360T",
+  "venueMic": "360T",
+  "executionType": "Electronic",
+  "trader": "E. Novak",
+  "salesperson": null,
+  "orderId": "ORD-612D47ACA2"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-03-14T10:57:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2025-03-14T10:57:00Z",
+  "lastModifiedAt": "2025-03-14T10:57:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT401103128",
+  "matched": "2025-03-14 15:51",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83612D47ACA298F6C35842",
+  "upi": "QZGGKY9WHPFH",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Foreign exchange"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "PINNUS33XXX",
+  "ssiId": "SSI-USD-F2BB52",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1986020,
+  "cleanPv": 1986020.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Multi-curve OIS discounting",
+  "curves": [
+   "FX-EURUSD",
+   "FXF-EURUSD",
+   "CRV-USD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "calypso-fx",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 5242
+  }
+ }
+}

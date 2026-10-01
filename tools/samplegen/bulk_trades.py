@@ -29,18 +29,12 @@ sorted first; the workers build each file's documents in slices, and the main pr
 (one append each), so memory holds about two files' rows whatever the size of the book.
 
 The trades are the trading pack's 750 sample trades (packs/trading/samples/trade, written by make_data.py), kept
-as they are, and clones of them booked in six trading systems, in turn, each numbering its trades its own way:
-
-    Murex (MX.3)             MX-30000000 …    trade number                  sourceSystem: Murex
-    Calypso                  CLY-4000000 …    trade id                      sourceSystem: Calypso
-    Endur (Openlink)         END-1100000 …    deal tracking number          sourceSystem: Endur
-    Imagine Trading System   IMG-500000 …     trade id                      sourceSystem: Imagine
-    Bloomberg (TOMS)         BBG-70000000 …   ticket number                 sourceSystem: Bloomberg TOMS
-    Wall Street Systems      WSS-2000000 …    deal number                   sourceSystem: Wall Street Systems
-
-Each system keys trades by a number it generates (sourceTradeId); the prefix keeps the ids unique across systems,
-as a firm's trade store does when it lands several systems in one book. The ranges are illustrative: real
-installations start and format their numbers as they are configured. Each clone keeps its template's product, book, desk,
+as they are, and clones of them. Every trade is booked in the system its asset class lives in and carries that
+system's number (tools/packgen/banking/booking.py): Murex MX-… (rates, inflation), Calypso CLY-… (credit), Endur
+END-… (commodities), Imagine IMG-… (equity, structured), Bloomberg TOMS BBG-… (fixed income, securities financing),
+Wall Street Systems WSS-… (FX, money markets). A clone stays in its template's system and continues that system's
+numbering from a higher range than the samples (MX-30000000 …, CLY-4000000 …), so ids never collide; sourceSystem
+and sourceTradeId say where each trade lives. Each clone keeps its template's product, book, desk,
 counterparty, netting set and curves (so every link still opens) and scales its amounts (notional, MTM, P&L,
 DV01, cashflows) by a factor of its own between 0.2 and 5. Past business days move the market-sensitive numbers
 by the same deterministic walk as the rest of the lake. Everything is deterministic: the same arguments give the
@@ -72,7 +66,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools"))
+sys.path.insert(0, str(ROOT / "tools" / "packgen" / "banking"))
 
+import booking as BK  # noqa: E402
 from samplegen.dates import Calendar  # noqa: E402
 from samplegen.lake import business_days, walk  # noqa: E402
 from samplegen.layout import Layout, arrow_table, infer_types, layouts_for_domain, promote, write_file  # noqa: E402
@@ -84,38 +80,55 @@ PLACEHOLDER = "\u0000ID\u0000"
 SCALE = {"notional", "mtm", "pnl1d", "pnl", "dv01", "pv01", "cs01", "vega", "delta", "gamma", "theta", "amount", "pv", "npv",
          "accrued", "marketValue", "exposure", "premium", "principal", "quantity", "collateral", "margin"}
 
-_templates: list[tuple[str, str]] = []         # (template id, document JSON with its id replaced by PLACEHOLDER)
+_templates: list[tuple[str, str, str]] = []    # (template id, document JSON with its id replaced by PLACEHOLDER, its system)
 _layout: Layout = Layout()                     # the trade table's layout (trading pack.yaml), in each worker
 _types: dict[str, str] = {}                    # its columns' types, fixed for the whole run
 
 
-def load_templates() -> list[tuple[str, str]]:
+def load_templates() -> list[tuple[str, str, str]]:
     out = []
     for f in sorted(TEMPLATES.glob("*.json")):
         doc = json.loads(f.read_text(encoding="utf-8"))
         doc.pop("_meta", None)
         tid = f.stem
-        text = re.sub(re.escape(tid) + r"(?!\d)", PLACEHOLDER, json.dumps(doc, ensure_ascii=False))
-        out.append((tid, text))
+        system = doc.get("sourceSystem") or "Murex"
+        native = str(doc.get("sourceTradeId") or "")
+        text = json.dumps(doc, ensure_ascii=False)
+        if native:                                  # the system's own number is the id's number: both change in a clone
+            text = text.replace(f'"sourceTradeId": "{native}"', f'"sourceTradeId": "{PLACEHOLDER}N"')
+        text = re.sub(re.escape(tid) + r"(?!\d)", PLACEHOLDER, text)
+        out.append((tid, text, system))
     if not out:
         raise SystemExit(f"no template trades in {TEMPLATES}: run tools/packgen/banking/make_data.py first")
     return out
 
 
-# (system, prefix, first number): each system numbers its own trades, in turn across the clones
-SYSTEMS = [("Murex", "MX", 30_000_000), ("Calypso", "CLY", 4_000_000), ("Endur", "END", 1_100_000),
-           ("Imagine", "IMG", 500_000), ("Bloomberg TOMS", "BBG", 70_000_000), ("Wall Street Systems", "WSS", 2_000_000)]
-
-
 def trade_id(i: int, templates: list) -> tuple[str, str | None, str | None]:
-    """(id, source system, the system's own number): the first len(templates) trades keep their ids (T-10001 …);
-    the rest are booked in the six systems in turn."""
+    """(id, source system, the system's own number): the first len(templates) trades are the samples as they are;
+    clone i is booked in its template's system and numbered in that system's clone range, in order."""
     if i < len(templates):
         return templates[i][0], None, None
-    k = i - len(templates)
-    system, prefix, first = SYSTEMS[k % len(SYSTEMS)]
-    native = str(first + k // len(SYSTEMS))
-    return f"{prefix}-{native}", system, native
+    rank, count = _ranks(templates)
+    t = i % len(templates)
+    system = templates[t][2]
+    ordinal = (i // len(templates) - 1) * count[system] + rank[t]
+    new_id, native = BK.clone_id(system, ordinal)
+    return new_id, system, native
+
+
+_RANKS: dict[int, tuple[list[int], dict[str, int]]] = {}
+
+
+def _ranks(templates: list) -> tuple[list[int], dict[str, int]]:
+    """Each template's place among its system's templates, and how many each system has (cached per template list)."""
+    key = id(templates)
+    if key not in _RANKS:
+        rank, count = [], {}
+        for _, _, system in templates:
+            rank.append(count.get(system, 0))
+            count[system] = count.get(system, 0) + 1
+        _RANKS[key] = (rank, count)
+    return _RANKS[key]
 
 
 def scaled(doc, factor: float):
@@ -134,9 +147,9 @@ def scaled(doc, factor: float):
 
 def document(i: int, day: date, steps: int) -> tuple[str, dict]:
     """Trade number i on one business day: (id, document)."""
-    tid, text = _templates[i % len(_templates)]
+    tid, text, _ = _templates[i % len(_templates)]
     new_id, system, native = trade_id(i, _templates)
-    doc = json.loads(text.replace(PLACEHOLDER, new_id))
+    doc = json.loads(text.replace(PLACEHOLDER + "N", native or tid.split("-", 1)[1]).replace(PLACEHOLDER, new_id))
     if system is not None:
         doc["sourceSystem"] = system
         doc["sourceTradeId"] = native
@@ -199,7 +212,7 @@ def main(argv: list[str]) -> int:
         lay = replace(lay, file_rows=a.file_rows)
     templates = load_templates()
     _init(templates, lay, {})
-    sample = [document(i, AS_OF, 0)[1] for i in range(min(a.trades, len(templates) + len(SYSTEMS)))]
+    sample = [document(i, AS_OF, 0)[1] for i in range(min(a.trades, len(templates) + 6))]
     types = infer_types({n: [promote(d, lay)[n] for d in sample] for n in lay.names})
     root = Path(a.root)
     days = business_days(date.fromisoformat(a.as_of), a.days, Calendar.of("USNY"))

@@ -1,0 +1,237 @@
+{
+ "tradeId": "IMG-400009",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400009",
+ "productType": "EQ_FORWARD",
+ "productName": "Equity forward",
+ "assetClass": "Equity",
+ "family": "linear",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2024-11-20",
+ "effectiveDate": "2024-11-22",
+ "maturityDate": "2026-10-07",
+ "currency": "CAD",
+ "notional": 244000000.0,
+ "mtm": -1089396,
+ "mtmCurrency": "USD",
+ "pnl1d": -15355,
+ "counterparty": {
+  "id": "CP-PINNACLE",
+  "name": "Pinnacle Credit Partners"
+ },
+ "nettingSet": "NS-PINNACLE-LDN",
+ "book": "BOOK-EQD-3",
+ "trader": "TRDR-PLINDQVIST",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingEquity": "EQ-CSCA",
+ "dividendCurve": "DIV-CSCA",
+ "discountCurve": "CRV-CAD-OIS",
+ "terms": {
+  "forwardPrice": 222.85,
+  "quantity": 101353,
+  "settlementDate": "2027-11-11"
+ },
+ "risk": {
+  "delta": 883171
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 58878
+  },
+  {
+   "bucket": "1M",
+   "delta": 117756
+  },
+  {
+   "bucket": "3M",
+   "delta": 176634
+  },
+  {
+   "bucket": "6M",
+   "delta": 235512
+  },
+  {
+   "bucket": "1Y",
+   "delta": 294390
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -72326
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -22247
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 21338
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -19515
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 58529
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -69146
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 56506
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -34111
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 27568
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -15372
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -4730
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 2910
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -16744
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -2570
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -76027
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 5522
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 14943
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -39465
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -19910
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 27003
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-11-20",
+  "executionTimestamp": "2024-11-20T10:43:48.896Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "P. Lindqvist",
+  "salesperson": null,
+  "orderId": "ORD-7B2718288E"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-11-20T10:03:00Z",
+    "by": "mo.amend"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2025-01-29T10:03:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2024-11-20T10:03:00Z",
+  "lastModifiedAt": "2025-01-29T10:03:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT931847513",
+  "matched": "2024-11-20 10:26",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q837B2718288EC4EB3FD0CA",
+  "upi": "QZ4599AA83E4",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "PINNGB33XXX",
+  "ssiId": "SSI-CAD-F2BB52",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -1089396,
+  "cleanPv": -1089396.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQ-CSCA",
+   "DIV-CSCA",
+   "CRV-CAD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 4619
+  }
+ }
+}

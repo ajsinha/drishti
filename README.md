@@ -22,7 +22,7 @@ from whichever system holds it. Nobody codes a screen per product:
   knows no industry.
 
 ```
-TRD T-10001 <GO>                          →  the trade: terms, legs, cashflows, curve, DV01 ladder, links
+TRD MX-20000001 <GO>                          →  the trade: terms, legs, cashflows, curve, DV01 ladder, links
 NSET NS-SUMMIT-NY <GO>                    →  exposure profile, member trades, CSA, collateral
 TRD where mtm < -10m order by mtm         →  every trade losing more than 10m, worst first
 live trades over 5m in BOOK-RATES-3       →  the same in plain words: Drishti shows the search it makes
@@ -36,7 +36,7 @@ live trades over 5m in BOOK-RATES-3       →  the same in plain words: Drishti 
 **Look things up**
 - A command line with type-ahead, as on a Bloomberg terminal: mnemonics, recent entities and matches from every
   source as you type. One match opens; several give a **pick list** with each kind's key fields
-  (`TRD T-100`, `CPTY north`, `TRD productType=Revolver`).
+  (`TRD MX-200000`, `CPTY north`, `TRD productType=Revolver`).
 - **Views** of any entity: a header strip, panels (tables, curves, ladders, surfaces, key-value, links), function
   keys, linked entities with badges, and the raw document (F9). Every table sorts, filters, pages and walks with
   the keyboard; id columns link to their entities.
@@ -121,7 +121,7 @@ uv venv console/.venv && uv pip install --python console/.venv/bin/python -r con
 console/.venv/bin/python console/run_drishti_web.py
 ```
 
-Open http://localhost:17480/t, type `TRD T-10001` and press Enter. Then try `DPNL DESK-RATES`, a past date in the
+Open http://localhost:17480/t, type `TRD MX-20000001` and press Enter. Then try `DPNL DESK-RATES`, a past date in the
 top bar, or `live trades over 5m, biggest first`. Without `DRISHTI_PACKS` the server loads only the small
 `finance` pack; then try `TRD IRS-48213`.
 

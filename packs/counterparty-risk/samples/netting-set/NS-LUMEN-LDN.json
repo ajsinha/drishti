@@ -62,84 +62,84 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10545",
+   "tradeId": "MX-20000167",
    "product": "Year-on-year inflation swap",
    "notional": 210000000.0,
    "maturity": "2028-04-14",
    "mtm": -7337433
   },
   {
-   "tradeId": "T-10344",
+   "tradeId": "IMG-400032",
    "product": "OTC equity option",
    "notional": 205000000.0,
    "maturity": "2027-04-15",
    "mtm": 1219453
   },
   {
-   "tradeId": "T-10385",
+   "tradeId": "IMG-400073",
    "product": "Reverse convertible",
    "notional": 222000000.0,
    "maturity": "2027-05-12",
    "mtm": -407954
   },
   {
-   "tradeId": "T-10170",
+   "tradeId": "WSS-1500014",
    "product": "Non-deliverable forward",
    "notional": 14000000.0,
    "maturity": "2026-10-07",
    "mtm": 333376
   },
   {
-   "tradeId": "T-10418",
+   "tradeId": "IMG-400106",
    "product": "Portfolio (basket) swap",
    "notional": 109000000.0,
    "maturity": "2035-09-03",
    "mtm": -330164
   },
   {
-   "tradeId": "T-10182",
+   "tradeId": "WSS-1500026",
    "product": "FX vanilla option",
    "notional": 76000000.0,
    "maturity": "2027-03-22",
    "mtm": -233837
   },
   {
-   "tradeId": "T-10188",
+   "tradeId": "WSS-1500032",
    "product": "FX digital option",
    "notional": 17000000.0,
    "maturity": "2027-04-05",
    "mtm": -198000
   },
   {
-   "tradeId": "T-10320",
+   "tradeId": "IMG-400008",
    "product": "Equity forward",
    "notional": 8000000.0,
    "maturity": "2026-10-07",
    "mtm": -173531
   },
   {
-   "tradeId": "T-10443",
+   "tradeId": "IMG-400131",
    "product": "Basket option",
    "notional": 20000000.0,
    "maturity": "2031-12-26",
    "mtm": -51498
   },
   {
-   "tradeId": "T-10228",
+   "tradeId": "WSS-1500072",
    "product": "FX accumulator",
    "notional": 6000000.0,
    "maturity": "2028-10-13",
    "mtm": -37358
   },
   {
-   "tradeId": "T-10229",
+   "tradeId": "WSS-1500073",
    "product": "FX variance swap",
    "notional": 2000000.0,
    "maturity": "2029-01-10",
    "mtm": -16928
   },
   {
-   "tradeId": "T-10169",
+   "tradeId": "WSS-1500013",
    "product": "Non-deliverable forward",
    "notional": 58000000.0,
    "maturity": "2027-03-25",

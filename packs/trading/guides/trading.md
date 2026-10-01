@@ -28,7 +28,7 @@ Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start o
 
 | Command | Does |
 |---|---|
-| `TRD <id> <GO>` | Opens that trade. A bare identifier works too: its prefix (`T-…`) tells Drishti the kind. |
+| `TRD <id> <GO>` | Opens that trade. A bare identifier works too: its prefix (`MX-…`, `CLY-…`, `END-…`, `IMG-…`, `BBG-…`, `WSS-…`) tells Drishti the kind. |
 | `TRD <start of an id> <GO>` | A pick list: one match opens, several give a table with the kind's key fields. `*` is a wildcard, and case never matters. |
 | `TRD <field>=<value> <GO>` | Lists by field value, for example `TRD productType=IRS_FIXFLOAT`. Compare with `<` and `>`, combine with `and`, sort with `order by <field> desc`. |
 | `TRD <GO>` | Lists every trade. |
@@ -47,7 +47,7 @@ Load real data into each domain's folder, or point a domain at a database instea
 
 | Kind | Name | Mnemonic | Identifiers | Id field | What it is |
 |---|---|---|---|---|---|
-| `trade` | Trade | `TRD` | `T-…` | `tradeId` | A trade in any of the pack's products; its productType selects its Sutra. |
+| `trade` | Trade | `TRD` | `MX-…`, `CLY-…`, `END-…`, `IMG-…`, `BBG-…`, `WSS-…` | `tradeId` | A trade in any of the pack's products; its productType selects its Sutra. |
 
 ### Trade (`trade`)
 

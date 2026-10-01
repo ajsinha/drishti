@@ -1,0 +1,228 @@
+{
+ "tradeId": "CLY-3000071",
+ "sourceSystem": "Calypso",
+ "sourceTradeId": "3000071",
+ "productType": "RISK_PARTICIPATION",
+ "productName": "Unfunded risk participation",
+ "assetClass": "Credit",
+ "family": "cds",
+ "status": "Live",
+ "direction": "Buy protection",
+ "tradeDate": "2025-01-15",
+ "effectiveDate": "2025-01-17",
+ "maturityDate": "2028-07-27",
+ "currency": "USD",
+ "notional": 93000000.0,
+ "mtm": 896628,
+ "mtmCurrency": "USD",
+ "pnl1d": 394,
+ "counterparty": {
+  "id": "CP-MERIDIAN",
+  "name": "Meridian Life Assurance"
+ },
+ "nettingSet": "NS-MERIDIAN-NY",
+ "book": "BOOK-CREDIT-3",
+ "trader": "TRDR-CDUBOIS",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-RHEINTAL",
+ "creditCurve": "CDS-RHEINTAL",
+ "discountCurve": "CRV-USD-OIS",
+ "terms": {
+  "participation": 0.155643,
+  "fee": 75.0
+ },
+ "risk": {
+  "cs01": 28310,
+  "jtd": -55800000
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 2831,
+   "jtd": -5580000
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 5662,
+   "jtd": -11160000
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 8493,
+   "jtd": -16740000
+  },
+  {
+   "bucket": "3Y",
+   "cs01": 11324,
+   "jtd": -22320000
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -16624
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -44611
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 54490
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 4350
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -28516
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 5794
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 143
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -9361
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -17419
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -24833
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 13354
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 4031
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 11777
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -38111
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 40628
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -5114
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -28456
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -51
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -35603
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -13593
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-01-15",
+  "executionTimestamp": "2025-01-15T12:30:35.904Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "C. Dubois",
+  "salesperson": null,
+  "orderId": "ORD-72EAEB4124"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-01-15T11:26:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2025-01-15T11:26:00Z",
+  "lastModifiedAt": "2025-01-15T11:26:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA911946567",
+  "matched": "2025-01-15 16:52",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209672EAEB412406C3192D85",
+  "upi": "QZIBLUZQKSL0",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "MERIUS33XXX",
+  "ssiId": "SSI-USD-4D91C0",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 896628,
+  "cleanPv": 896628.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CDS-RHEINTAL",
+   "CRV-USD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 2723
+  }
+ }
+}

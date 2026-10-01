@@ -1,0 +1,320 @@
+{
+ "tradeId": "MX-20000083",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000083",
+ "productType": "CAP",
+ "productName": "Interest rate cap",
+ "assetClass": "Rates",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2025-05-28",
+ "effectiveDate": "2025-05-30",
+ "maturityDate": "2027-09-09",
+ "currency": "EUR",
+ "notional": 158000000.0,
+ "mtm": 1821498,
+ "mtmCurrency": "USD",
+ "pnl1d": -52792,
+ "counterparty": {
+  "id": "CP-NORTHBRIDGE",
+  "name": "Northbridge Capital LLP"
+ },
+ "nettingSet": "NS-NORTHBRIDGE-NY",
+ "book": "BOOK-RATES-1",
+ "trader": "TRDR-MOKAFOR",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-EUR-OIS",
+ "forwardCurve": "CRV-EUR-PROJ",
+ "capVolSurface": "CPV-EUR",
+ "terms": {
+  "strike": 0.042846,
+  "capFrequency": "Semi-annual",
+  "premium": 1155760.0
+ },
+ "risk": {
+  "dv01": 30378,
+  "vega": 537514
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 3038,
+   "vega": 53751
+  },
+  {
+   "bucket": "6M",
+   "dv01": 6076,
+   "vega": 107503
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 9113,
+   "vega": 161254
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 12151,
+   "vega": 215006
+  }
+ ],
+ "schedule": [
+  {
+   "fixingDate": "2025-08-30",
+   "period": "2025-08-30..2025-11-30",
+   "index": "ESTR",
+   "rate": 0.024816,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2025-11-30",
+   "period": "2025-11-30..2026-02-28",
+   "index": "ESTR",
+   "rate": 0.042797,
+   "payoff": 307981.5,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-02-28",
+   "period": "2026-02-28..2026-05-28",
+   "index": "ESTR",
+   "rate": 0.040604,
+   "payoff": 221358.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-05-28",
+   "period": "2026-05-28..2026-08-28",
+   "index": "ESTR",
+   "rate": 0.039517,
+   "payoff": 178421.5,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-08-28",
+   "period": "2026-08-28..2026-11-28",
+   "index": "ESTR",
+   "rate": 0.028357,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-11-28",
+   "period": "2026-11-28..2027-02-28",
+   "index": "ESTR",
+   "rate": 0.045886,
+   "payoff": 429997.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-02-28",
+   "period": "2027-02-28..2027-05-28",
+   "index": "ESTR",
+   "rate": 0.021451,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-05-28",
+   "period": "2027-05-28..2027-08-28",
+   "index": "ESTR",
+   "rate": 0.030059,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-08-28",
+   "period": "2027-08-28..2027-11-28",
+   "index": "ESTR",
+   "rate": 0.030616,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-09-09",
+   "period": "2027-09-09..2027-12-09",
+   "index": "ESTR",
+   "rate": 0.044045,
+   "payoff": 357277.5,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 5,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -39089
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -52291
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 8773
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 16206
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -2333
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 28535
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -17954
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 81197
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 26508
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -49655
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -25576
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -66307
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -37132
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 15978
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 53922
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -24712
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -217119
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -55362
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 2541
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -67997
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-05-28",
+  "executionTimestamp": "2025-05-28T08:43:16.332Z",
+  "venue": "Bloomberg SEF",
+  "venueMic": "BSEF",
+  "executionType": "Electronic",
+  "trader": "M. Okafor",
+  "salesperson": null,
+  "orderId": "ORD-CDFE06E57F"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-05-28T10:28:00Z",
+    "by": "fo.capture"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2025-12-07T10:28:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2025-05-28T10:28:00Z",
+  "lastModifiedAt": "2025-12-07T10:28:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA789357422",
+  "matched": "2025-05-28 11:42",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096CDFE06E57F92BE05EBD6",
+  "upi": "QZIGSHIFAZL7",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "NORTGB33XXX",
+  "ssiId": "SSI-EUR-A0C7C2",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1821498,
+  "cleanPv": 1821498.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CRV-EUR-OIS",
+   "CRV-EUR-PROJ",
+   "CPV-EUR"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 5223
+  }
+ }
+}

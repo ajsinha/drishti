@@ -25,7 +25,7 @@ Open any view, for example:
 
 ```text
 # Type this on the command line, then press Enter
-TRD T-10001
+TRD MX-20000001
 ```
 
 You should see an interest rate swap. Look at the header of the *Terms* panel. From left to right it shows:
@@ -40,7 +40,7 @@ You should see an interest rate swap. Look at the header of the *Terms* panel. F
 | **?** | | Opens the section of this page for the panel's kind. |
 
 !!! tip "Try every kind in Studio"
-    Open **Studio** (`/studio`), type `trade` and `T-10001` in the two boxes at the top, and paste any example
+    Open **Studio** (`/studio`), type `trade` and `MX-20000001` in the two boxes at the top, and paste any example
     below into the `panels:` list of a Sutra. Press **Ctrl+Enter** to preview. Nothing is saved until you
     press Save, so experiment freely.
 
@@ -64,7 +64,7 @@ Quick chooser:
 
 **Label/value fields**: the terms of a trade, the margin of a position, an identifier block.
 
-*See it:* `TRD T-10001`, panel **Terms** (F2). It shows *Fixed rate 4.0829%*, *Pay frequency Annual*,
+*See it:* `TRD MX-20000001`, panel **Terms** (F2). It shows *Fixed rate 4.0829%*, *Pay frequency Annual*,
 *Day count ACT/365F* and so on.
 
 ![kv](/static/img/guide/kind-kv.png)
@@ -140,7 +140,7 @@ Inside `columns`, `@` is the current row: `@.mtm` is the row's `mtm`.
 
 **One layout per element** of a small array: the two legs of a swap, the near and far legs of an FX swap.
 
-*See it:* `TRD T-10001`, panel **Legs**: *Leg 1 · Receive fixed 4.0829%* and *Leg 2 · Pay AONIA compounded*, side
+*See it:* `TRD MX-20000001`, panel **Legs**: *Leg 1 · Receive fixed 4.0829%* and *Leg 2 · Pay AONIA compounded*, side
 by side.
 
 ![tabs](/static/img/guide/kind-tabs.png)
@@ -172,7 +172,7 @@ by side.
 
 **A curve**: zero rates by tenor, daily P&L by date.
 
-*See it:* `TRD T-10001`, right column, **Interest rate curve: Zero rates (%)** (F4). The points do not come from
+*See it:* `TRD MX-20000001`, right column, **Interest rate curve: Zero rates (%)** (F4). The points do not come from
 the trade: they are read from the trade's discount curve, `CRV-AUD-OIS`.
 
 ![line](/static/img/guide/kind-line.png)
@@ -239,7 +239,7 @@ line at the 133m limit.
 **Horizontal bars**, one per row, scaled to the largest: DV01 by tenor bucket, MTM by asset class, expression by
 tissue.
 
-*See it:* `TRD T-10001`, right column, **DV01 by bucket (USD)**. Negative bars use the negative colour.
+*See it:* `TRD MX-20000001`, right column, **DV01 by bucket (USD)**. Negative bars use the negative colour.
 
 ![hbar](/static/img/guide/kind-hbar.png)
 
@@ -267,7 +267,7 @@ tissue.
 **A dated table with one row highlighted**: the cashflow schedule with the next payment marked, daily
 settlements with today's row.
 
-*See it:* `TRD T-10001`, panel **Cashflows** (F3): 35 payments of both legs, with the next one highlighted.
+*See it:* `TRD MX-20000001`, panel **Cashflows** (F3): 35 payments of both legs, with the next one highlighted.
 
 ![ladder](/static/img/guide/kind-ladder.png)
 
@@ -301,7 +301,7 @@ settlements with today's row.
 **Linked entities**: every reference in the document becomes a door to another entity, with a short badge read
 from that entity.
 
-*See it:* `TRD T-10001`, right column, **Linked entities**. You should see *Counterparty CP-MERIDIAN-RE* (badge
+*See it:* `TRD MX-20000001`, right column, **Linked entities**. You should see *Counterparty CP-MERIDIAN-RE* (badge
 `A`, its rating), *Netting set NS-MERIDIAN-RE-NY* (badge `PFE 46.0m`), *Book BOOK-RATES-3*, *Trader TRDR-ASHAH*,
 *Desk DESK-RATES*, the curves and the fixing index. Click any of them to open it.
 
@@ -341,11 +341,11 @@ colour is never the only signal.
     - { label: Reporting, bind: $.regulatory.reportingStatus, tone: status } # Accepted
 ```
 
-Try it on `T-10001` in Studio: the four values above appear.
+Try it on `MX-20000001` in Studio: the four values above appear.
 
 ## provenance
 
-**How this view was built.** Every view should end with this panel. For `TRD T-10001` it reads, for example:
+**How this view was built.** Every view should end with this panel. For `TRD MX-20000001` it reads, for example:
 
 ```text
 # What the provenance panel tells you
@@ -382,7 +382,7 @@ values from the document. The note is shown as plain text, so write sentences ra
   text: "MTM is in USD whatever the trade currency. This trade faces ${$.counterparty.name}."
 ```
 
-On `T-10001` the note reads *MTM is in USD whatever the trade currency. This trade faces Meridian Reinsurance Ltd.*
+On `MX-20000001` the note reads *MTM is in USD whatever the trade currency. This trade faces Meridian Reinsurance Ltd.*
 
 ## gauge
 

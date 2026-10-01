@@ -1,0 +1,226 @@
+{
+ "tradeId": "END-1000005",
+ "sourceSystem": "Endur",
+ "sourceTradeId": "1000005",
+ "productType": "CMD_FUTURE",
+ "productName": "Commodity future",
+ "assetClass": "Commodity",
+ "family": "future",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-09-15",
+ "effectiveDate": "2026-09-17",
+ "maturityDate": "2027-03-09",
+ "currency": "USD",
+ "notional": 228000000.0,
+ "mtm": 828768,
+ "mtmCurrency": "USD",
+ "pnl1d": -9655,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-COMM-2",
+ "trader": "TRDR-FROSSI",
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-CME-1",
+ "commodityCurve": "CMDC-NG",
+ "terms": {
+  "contract": "GC Z6",
+  "lots": 1439,
+  "tradePrice": 1763.97
+ },
+ "risk": {
+  "delta": 1030497
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 103050
+  },
+  {
+   "bucket": "1M",
+   "delta": 206099
+  },
+  {
+   "bucket": "3M",
+   "delta": 309149
+  },
+  {
+   "bucket": "6M",
+   "delta": 412199
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -2058
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -21357
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 16690
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 887
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -29006
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -12761
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -12860
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 11856
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 7003
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -6525
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 9513
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -2364
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -31149
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -14293
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 28527
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 18008
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -13591
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 19964
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 18811
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 38520
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-09-15",
+  "executionTimestamp": "2026-09-15T12:33:46.881Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "F. Rossi",
+  "salesperson": null,
+  "orderId": "ORD-A9B7B6E2FB"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-09-15T11:53:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2026-09-15T11:53:00Z",
+  "lastModifiedAt": "2026-09-15T11:53:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT646720468",
+  "matched": "2026-09-15 10:04",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH2918413775",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096A9B7B6E2FB494F43A5EB",
+  "upi": "QZWX3GE3U1NB",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMUS33XXX",
+  "ssiId": "SSI-USD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 828768,
+  "cleanPv": 828768.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CMDC-NG"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "endur-comm",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 3938
+  }
+ }
+}

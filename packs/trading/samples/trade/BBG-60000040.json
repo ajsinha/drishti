@@ -1,0 +1,421 @@
+{
+ "tradeId": "BBG-60000040",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000040",
+ "productType": "AMORT_BOND",
+ "productName": "Amortising bond",
+ "assetClass": "Fixed income",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-01-28",
+ "effectiveDate": "2026-01-30",
+ "maturityDate": "2037-02-10",
+ "currency": "USD",
+ "notional": 143000000.0,
+ "mtm": 598736,
+ "mtmCurrency": "USD",
+ "pnl1d": -21263,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-1",
+ "trader": "TRDR-BADEYEMI",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-MERIDIAN",
+ "benchmarkCurve": "CRV-USD-GOVT",
+ "underlyingBond": "BND-USMERI186295",
+ "terms": {
+  "coupon": 0.061539,
+  "couponFrequency": "Annual",
+  "faceAmount": 11065315.0,
+  "cleanPrice": 104.823,
+  "yield": 0.036379,
+  "averageLife": 8.56
+ },
+ "risk": {
+  "dv01": 133285,
+  "cs01": 144303
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 3702,
+   "cs01": 4008
+  },
+  {
+   "bucket": "6M",
+   "dv01": 7405,
+   "cs01": 8017
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 11107,
+   "cs01": 12025
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 14809,
+   "cs01": 16034
+  },
+  {
+   "bucket": "3Y",
+   "dv01": 18512,
+   "cs01": 20042
+  },
+  {
+   "bucket": "5Y",
+   "dv01": 22214,
+   "cs01": 24050
+  },
+  {
+   "bucket": "7Y",
+   "dv01": 25917,
+   "cs01": 28059
+  },
+  {
+   "bucket": "10Y",
+   "dv01": 29619,
+   "cs01": 32067
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-07-30",
+   "opening": 143000000,
+   "principal": 6217391,
+   "closing": 136782609,
+   "interest": 2860000
+  },
+  {
+   "date": "2027-01-30",
+   "opening": 136782609,
+   "principal": 6217391,
+   "closing": 130565217,
+   "interest": 2735652
+  },
+  {
+   "date": "2027-07-30",
+   "opening": 130565217,
+   "principal": 6217391,
+   "closing": 124347826,
+   "interest": 2611304
+  },
+  {
+   "date": "2028-01-30",
+   "opening": 124347826,
+   "principal": 6217391,
+   "closing": 118130435,
+   "interest": 2486957
+  },
+  {
+   "date": "2028-07-30",
+   "opening": 118130435,
+   "principal": 6217391,
+   "closing": 111913043,
+   "interest": 2362609
+  },
+  {
+   "date": "2029-01-30",
+   "opening": 111913043,
+   "principal": 6217391,
+   "closing": 105695652,
+   "interest": 2238261
+  },
+  {
+   "date": "2029-07-30",
+   "opening": 105695652,
+   "principal": 6217391,
+   "closing": 99478261,
+   "interest": 2113913
+  },
+  {
+   "date": "2030-01-30",
+   "opening": 99478261,
+   "principal": 6217391,
+   "closing": 93260870,
+   "interest": 1989565
+  },
+  {
+   "date": "2030-07-30",
+   "opening": 93260870,
+   "principal": 6217391,
+   "closing": 87043478,
+   "interest": 1865217
+  },
+  {
+   "date": "2031-01-30",
+   "opening": 87043478,
+   "principal": 6217391,
+   "closing": 80826087,
+   "interest": 1740870
+  },
+  {
+   "date": "2031-07-30",
+   "opening": 80826087,
+   "principal": 6217391,
+   "closing": 74608696,
+   "interest": 1616522
+  },
+  {
+   "date": "2032-01-30",
+   "opening": 74608696,
+   "principal": 6217391,
+   "closing": 68391304,
+   "interest": 1492174
+  },
+  {
+   "date": "2032-07-30",
+   "opening": 68391304,
+   "principal": 6217391,
+   "closing": 62173913,
+   "interest": 1367826
+  },
+  {
+   "date": "2033-01-30",
+   "opening": 62173913,
+   "principal": 6217391,
+   "closing": 55956522,
+   "interest": 1243478
+  },
+  {
+   "date": "2033-07-30",
+   "opening": 55956522,
+   "principal": 6217391,
+   "closing": 49739130,
+   "interest": 1119130
+  },
+  {
+   "date": "2034-01-30",
+   "opening": 49739130,
+   "principal": 6217391,
+   "closing": 43521739,
+   "interest": 994783
+  },
+  {
+   "date": "2034-07-30",
+   "opening": 43521739,
+   "principal": 6217391,
+   "closing": 37304348,
+   "interest": 870435
+  },
+  {
+   "date": "2035-01-30",
+   "opening": 37304348,
+   "principal": 6217391,
+   "closing": 31086957,
+   "interest": 746087
+  },
+  {
+   "date": "2035-07-30",
+   "opening": 31086957,
+   "principal": 6217391,
+   "closing": 24869565,
+   "interest": 621739
+  },
+  {
+   "date": "2036-01-30",
+   "opening": 24869565,
+   "principal": 6217391,
+   "closing": 18652174,
+   "interest": 497391
+  },
+  {
+   "date": "2036-07-30",
+   "opening": 18652174,
+   "principal": 6217391,
+   "closing": 12434783,
+   "interest": 373043
+  },
+  {
+   "date": "2037-01-30",
+   "opening": 12434783,
+   "principal": 6217391,
+   "closing": 6217391,
+   "interest": 248696
+  },
+  {
+   "date": "2037-02-10",
+   "opening": 6217391,
+   "principal": 6217391,
+   "closing": 0,
+   "interest": 124348
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -3923
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -16491
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -3603
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -22472
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -7652
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 34315
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 2109
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -15400
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -8992
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -22759
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -32121
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -5409
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 11020
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 8255
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 18985
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 16345
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 865
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 16851
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -13014
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -2826
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-01-28",
+  "executionTimestamp": "2026-01-28T08:39:24.360Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "B. Adeyemi",
+  "salesperson": null,
+  "orderId": "ORD-0B3488C1DC"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-01-28T09:31:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-01-28T09:31:00Z",
+  "lastModifiedAt": "2026-01-28T09:31:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT867765107",
+  "matched": "2026-01-28 13:54",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH2497059402",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20960B3488C1DC0A71C7CC28",
+  "upi": "QZ3SAUCXBY1A",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMUS33XXX",
+  "ssiId": "SSI-USD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 598736,
+  "cleanPv": 598736.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-USD-GOVT",
+   "BND-USMERI186295"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 2627
+  }
+ }
+}

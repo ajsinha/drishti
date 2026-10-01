@@ -62,91 +62,91 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10034",
+   "tradeId": "MX-20000034",
    "product": "Zero-coupon swap",
    "notional": 244000000.0,
    "maturity": "2035-09-19",
    "mtm": 48834493
   },
   {
-   "tradeId": "T-10033",
+   "tradeId": "MX-20000033",
    "product": "Zero-coupon swap",
    "notional": 126000000.0,
    "maturity": "2030-08-27",
    "mtm": -6203686
   },
   {
-   "tradeId": "T-10267",
+   "tradeId": "CLY-3000027",
    "product": "First-to-default basket",
    "notional": 210000000.0,
    "maturity": "2030-01-07",
    "mtm": -2867075
   },
   {
-   "tradeId": "T-10506",
+   "tradeId": "END-1000062",
    "product": "Power swap",
    "notional": 241000000.0,
    "maturity": "2030-11-12",
    "mtm": -1890065
   },
   {
-   "tradeId": "T-10083",
+   "tradeId": "MX-20000083",
    "product": "Interest rate cap",
    "notional": 158000000.0,
    "maturity": "2027-09-09",
    "mtm": 1821498
   },
   {
-   "tradeId": "T-10111",
+   "tradeId": "MX-20000111",
    "product": "American swaption",
    "notional": 54000000.0,
    "maturity": "2027-07-09",
    "mtm": -1663906
   },
   {
-   "tradeId": "T-10120",
+   "tradeId": "MX-20000120",
    "product": "CMS cap / floor",
    "notional": 70000000.0,
    "maturity": "2026-12-14",
    "mtm": -1401622
   },
   {
-   "tradeId": "T-10456",
+   "tradeId": "END-1000012",
    "product": "Commodity forward",
    "notional": 77000000.0,
    "maturity": "2026-10-07",
    "mtm": 1033434
   },
   {
-   "tradeId": "T-10270",
+   "tradeId": "CLY-3000030",
    "product": "First-to-default basket",
    "notional": 41000000.0,
    "maturity": "2030-03-18",
    "mtm": 730145
   },
   {
-   "tradeId": "T-10257",
+   "tradeId": "CLY-3000017",
    "product": "Index tranche",
    "notional": 37000000.0,
    "maturity": "2031-09-23",
    "mtm": -257129
   },
   {
-   "tradeId": "T-10466",
+   "tradeId": "END-1000022",
    "product": "Commodity basis swap",
    "notional": 14000000.0,
    "maturity": "2036-01-23",
    "mtm": -181371
   },
   {
-   "tradeId": "T-10307",
+   "tradeId": "CLY-3000067",
    "product": "Unfunded risk participation",
    "notional": 26000000.0,
    "maturity": "2028-10-13",
    "mtm": 177423
   },
   {
-   "tradeId": "T-10635",
+   "tradeId": "BBG-60000065",
    "product": "CMO tranche",
    "notional": 203000000.0,
    "maturity": "2035-05-14",

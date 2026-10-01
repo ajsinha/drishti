@@ -30,7 +30,7 @@ KIND = {k.kind: k for k in KINDS}
 TRADE_LINKS = {"nettingSet": ("netting-set", "Netting set"), "book": ("book", "Book"), "trader": ("trader", "Trader"),
                "clearingAccount": ("clearing-account", "Clearing account"), "issuer": ("issuer", "Reference entity"),
                "counterparty": ("counterparty", "Counterparty")}
-TRADE = Kind("trade", "TRD", "T-", "Trade", "Trades", "A trade in any of the pack's products; its productType selects its Sutra.", "tradeId", [], [])
+TRADE = Kind("trade", "TRD", "MX-", "Trade", "Trades", "A trade in any of the pack's products; its productType selects its Sutra.", "tradeId", [], [])   # ids carry their booking system's prefix (booking.py)
 
 
 def graph_fields() -> dict[str, tuple[str, str]]:

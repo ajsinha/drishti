@@ -1,0 +1,306 @@
+{
+ "tradeId": "CLY-3000035",
+ "sourceSystem": "Calypso",
+ "sourceTradeId": "3000035",
+ "productType": "TRS_BOND",
+ "productName": "Total return swap on a bond",
+ "assetClass": "Credit",
+ "family": "swap",
+ "status": "Live",
+ "direction": "Pay fixed",
+ "tradeDate": "2026-09-03",
+ "effectiveDate": "2026-09-07",
+ "maturityDate": "2030-11-11",
+ "currency": "GBP",
+ "notional": 217000000.0,
+ "mtm": -5751547,
+ "mtmCurrency": "USD",
+ "pnl1d": 198115,
+ "counterparty": {
+  "id": "CP-HALCYON",
+  "name": "Halcyon Shipping plc"
+ },
+ "nettingSet": "NS-HALCYON-NY",
+ "book": "BOOK-CREDIT-2",
+ "trader": "TRDR-CDUBOIS",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-GILT",
+ "underlyingBond": "BND-GBGILT120223",
+ "discountCurve": "CRV-GBP-OIS",
+ "repoCurve": "REPO-GBP",
+ "terms": {
+  "fundingSpread": 113.9,
+  "resetFrequency": "Monthly"
+ },
+ "risk": {
+  "cs01": 85100,
+  "dv01": 85728
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 8510,
+   "dv01": 8573
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 17020,
+   "dv01": 17146
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 25530,
+   "dv01": 25718
+  },
+  {
+   "bucket": "3Y",
+   "cs01": 34040,
+   "dv01": 34291
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Pay performance",
+   "payReceive": "Pay",
+   "rateType": "Performance",
+   "index": "USCPI",
+   "rate": null,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "GBP",
+   "notional": 217000000.0
+  },
+  {
+   "leg": 2,
+   "label": "Receive SONIA + spread",
+   "payReceive": "Receive",
+   "rateType": "Float",
+   "index": "SONIA",
+   "rate": 0.037956,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "GBP",
+   "notional": 217000000.0
+  }
+ ],
+ "schedule": [
+  {
+   "payDate": "2027-09-07",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -566942.79,
+   "pv": -549934.51,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2028-09-07",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -434997.0,
+   "pv": -421947.09,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2029-09-07",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -594162.04,
+   "pv": -576337.18,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2030-09-07",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -613094.4,
+   "pv": -594701.57,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2030-11-11",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -450020.06,
+   "pv": -436519.46,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 39174
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 4148
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 133962
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -39828
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 151333
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -109068
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 68518
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -29647
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 22765
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 46549
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 121066
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 254580
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 23902
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -221134
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 132668
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 211327
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 247340
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 88341
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 47805
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -163850
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-09-03",
+  "executionTimestamp": "2026-09-03T12:10:01.499Z",
+  "venue": "MarketAxess",
+  "venueMic": "MAEL",
+  "executionType": "Electronic",
+  "trader": "C. Dubois",
+  "salesperson": null,
+  "orderId": "ORD-D37E362D40"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-09-03T09:13:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2026-09-03T09:13:00Z",
+  "lastModifiedAt": "2026-09-03T09:13:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA983355226",
+  "matched": "2026-09-03 16:58",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096D37E362D400C4EE2E138",
+  "upi": "QZKCSP6B65GU",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Barclays Bank plc",
+  "ourAgentBic": "BARCGB22XXX",
+  "theirAgentBic": "HALCGB33XXX",
+  "ssiId": "SSI-GBP-10E970",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -5751547,
+  "cleanPv": -5751547.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Multi-curve OIS discounting",
+  "curves": [
+   "BND-GBGILT120223",
+   "CRV-GBP-OIS",
+   "REPO-GBP"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 13673
+  }
+ }
+}

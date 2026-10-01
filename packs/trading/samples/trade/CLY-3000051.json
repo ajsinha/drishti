@@ -1,0 +1,342 @@
+{
+ "tradeId": "CLY-3000051",
+ "sourceSystem": "Calypso",
+ "sourceTradeId": "3000051",
+ "productType": "TERM_LOAN",
+ "productName": "Term loan",
+ "assetClass": "Credit",
+ "family": "loan",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2025-03-24",
+ "effectiveDate": "2025-03-26",
+ "maturityDate": "2031-10-16",
+ "currency": "CAD",
+ "notional": 229000000.0,
+ "mtm": -333574,
+ "mtmCurrency": "USD",
+ "pnl1d": -1124,
+ "counterparty": {
+  "id": "CP-MERIDIAN",
+  "name": "Meridian Life Assurance"
+ },
+ "nettingSet": "NS-MERIDIAN-NY",
+ "book": "BOOK-CREDIT-2",
+ "trader": "TRDR-CDUBOIS",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-NOVATEK",
+ "discountCurve": "CRV-CAD-OIS",
+ "forwardCurve": "CRV-CAD-PROJ",
+ "creditCurve": "CDS-NOVATEK",
+ "terms": {
+  "margin": 414.1,
+  "facilityType": "Term Loan B",
+  "amortisation": "1% p.a."
+ },
+ "risk": {
+  "cs01": 138221,
+  "dv01": 122486
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 6582,
+   "dv01": 5833
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 13164,
+   "dv01": 11665
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 19746,
+   "dv01": 17498
+  },
+  {
+   "bucket": "3Y",
+   "cs01": 26328,
+   "dv01": 23331
+  },
+  {
+   "bucket": "5Y",
+   "cs01": 32910,
+   "dv01": 29163
+  },
+  {
+   "bucket": "7Y",
+   "cs01": 39492,
+   "dv01": 34996
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2025-09-26",
+   "opening": 229000000,
+   "principal": 16357143,
+   "closing": 212642857,
+   "interest": 4580000
+  },
+  {
+   "date": "2026-03-26",
+   "opening": 212642857,
+   "principal": 16357143,
+   "closing": 196285714,
+   "interest": 4252857
+  },
+  {
+   "date": "2026-09-26",
+   "opening": 196285714,
+   "principal": 16357143,
+   "closing": 179928571,
+   "interest": 3925714
+  },
+  {
+   "date": "2027-03-26",
+   "opening": 179928571,
+   "principal": 16357143,
+   "closing": 163571429,
+   "interest": 3598571
+  },
+  {
+   "date": "2027-09-26",
+   "opening": 163571429,
+   "principal": 16357143,
+   "closing": 147214286,
+   "interest": 3271429
+  },
+  {
+   "date": "2028-03-26",
+   "opening": 147214286,
+   "principal": 16357143,
+   "closing": 130857143,
+   "interest": 2944286
+  },
+  {
+   "date": "2028-09-26",
+   "opening": 130857143,
+   "principal": 16357143,
+   "closing": 114500000,
+   "interest": 2617143
+  },
+  {
+   "date": "2029-03-26",
+   "opening": 114500000,
+   "principal": 16357143,
+   "closing": 98142857,
+   "interest": 2290000
+  },
+  {
+   "date": "2029-09-26",
+   "opening": 98142857,
+   "principal": 16357143,
+   "closing": 81785714,
+   "interest": 1962857
+  },
+  {
+   "date": "2030-03-26",
+   "opening": 81785714,
+   "principal": 16357143,
+   "closing": 65428571,
+   "interest": 1635714
+  },
+  {
+   "date": "2030-09-26",
+   "opening": 65428571,
+   "principal": 16357143,
+   "closing": 49071429,
+   "interest": 1308571
+  },
+  {
+   "date": "2031-03-26",
+   "opening": 49071429,
+   "principal": 16357143,
+   "closing": 32714286,
+   "interest": 981429
+  },
+  {
+   "date": "2031-09-26",
+   "opening": 32714286,
+   "principal": 16357143,
+   "closing": 16357143,
+   "interest": 654286
+  },
+  {
+   "date": "2031-10-16",
+   "opening": 16357143,
+   "principal": 16357143,
+   "closing": 0,
+   "interest": 327143
+  }
+ ],
+ "nextIndex": 3,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 17158
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 1205
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 8872
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -9379
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -1975
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 1429
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 5669
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -6268
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 4123
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 9566
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -5647
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 989
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 15339
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 4282
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -949
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -1175
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -12909
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -12261
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 2039
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -6370
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-03-24",
+  "executionTimestamp": "2025-03-24T15:56:04.804Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "C. Dubois",
+  "salesperson": null,
+  "orderId": "ORD-1E3AD9D899"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-03-24T12:00:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2025-03-24T12:00:00Z",
+  "lastModifiedAt": "2025-03-24T12:00:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA999725625",
+  "matched": "2025-03-24 13:17",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20961E3AD9D8993380015CA4",
+  "upi": "QZR40D99STCM",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "MERIGB33XXX",
+  "ssiId": "SSI-CAD-4D91C0",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -333574,
+  "cleanPv": -333574.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-CAD-OIS",
+   "CRV-CAD-PROJ",
+   "CDS-NOVATEK"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 2957
+  }
+ }
+}

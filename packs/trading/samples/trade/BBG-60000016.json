@@ -1,0 +1,293 @@
+{
+ "tradeId": "BBG-60000016",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000016",
+ "productType": "FRN",
+ "productName": "Floating rate note",
+ "assetClass": "Fixed income",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-02-02",
+ "effectiveDate": "2026-02-04",
+ "maturityDate": "2030-04-11",
+ "currency": "EUR",
+ "notional": 38000000.0,
+ "mtm": -218563,
+ "mtmCurrency": "USD",
+ "pnl1d": -908,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-2",
+ "trader": "TRDR-BADEYEMI",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-HALCYON",
+ "forwardCurve": "CRV-EUR-PROJ",
+ "underlyingBond": "BND-XSHALC114008",
+ "creditCurve": "CDS-HALCYON",
+ "terms": {
+  "quotedMargin": 181.7,
+  "faceAmount": 68629813.0,
+  "cleanPrice": 98.708
+ },
+ "risk": {
+  "cs01": 12770,
+  "dv01": 14848
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 1277,
+   "dv01": 1485
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 2554,
+   "dv01": 2970
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 3831,
+   "dv01": 4454
+  },
+  {
+   "bucket": "3Y",
+   "cs01": 5108,
+   "dv01": 5939
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-08-04",
+   "rate": 0.020113,
+   "amount": 760000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2027-02-04",
+   "rate": 0.033483,
+   "amount": 760000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-08-04",
+   "rate": 0.051816,
+   "amount": 760000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-02-04",
+   "rate": 0.041839,
+   "amount": 760000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-08-04",
+   "rate": 0.043803,
+   "amount": 760000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-02-04",
+   "rate": 0.02253,
+   "amount": 760000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-08-04",
+   "rate": 0.045483,
+   "amount": 760000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-02-04",
+   "rate": 0.050717,
+   "amount": 760000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-04-11",
+   "rate": 0.046386,
+   "amount": 760000.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 5506
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -7009
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -3796
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 2103
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 8482
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -2880
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 2429
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -14831
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 3002
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 7168
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -260
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -12238
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -6808
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 6473
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 3267
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -2068
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 5470
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 5280
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -7324
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 11383
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-02-02",
+  "executionTimestamp": "2026-02-02T10:56:32.633Z",
+  "venue": "MarketAxess",
+  "venueMic": "MAEL",
+  "executionType": "Electronic",
+  "trader": "B. Adeyemi",
+  "salesperson": null,
+  "orderId": "ORD-D851F5A76F"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-02-02T11:10:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-02-02T11:10:00Z",
+  "lastModifiedAt": "2026-02-02T11:10:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT838936328",
+  "matched": "2026-02-02 15:04",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH6975631568",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096D851F5A76FA634F57B11",
+  "upi": "QZQBE9VHRFMT",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-EUR-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -218563,
+  "cleanPv": -218563.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-EUR-PROJ",
+   "BND-XSHALC114008",
+   "CDS-HALCYON"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 817
+  }
+ }
+}

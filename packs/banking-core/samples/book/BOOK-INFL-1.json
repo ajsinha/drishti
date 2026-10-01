@@ -7,70 +7,70 @@
  "dv01": -39025,
  "topTrades": [
   {
-   "tradeId": "T-10537",
+   "tradeId": "MX-20000159",
    "product": "Zero-coupon inflation swap",
    "notional": 180000000.0,
    "maturity": "2037-06-15",
    "mtm": -14905195
   },
   {
-   "tradeId": "T-10567",
+   "tradeId": "MX-20000189",
    "product": "Limited price index swap",
    "notional": 124000000.0,
    "maturity": "2028-10-10",
    "mtm": -4276973
   },
   {
-   "tradeId": "T-10560",
+   "tradeId": "MX-20000182",
    "product": "Inflation asset swap",
    "notional": 153000000.0,
    "maturity": "2028-02-03",
    "mtm": -2304552
   },
   {
-   "tradeId": "T-10547",
+   "tradeId": "MX-20000169",
    "product": "Inflation cap / floor",
    "notional": 243000000.0,
    "maturity": "2028-08-15",
    "mtm": 2197247
   },
   {
-   "tradeId": "T-10569",
+   "tradeId": "MX-20000191",
    "product": "Limited price index swap",
    "notional": 217000000.0,
    "maturity": "2035-02-22",
    "mtm": 1126221
   },
   {
-   "tradeId": "T-10544",
+   "tradeId": "MX-20000166",
    "product": "Year-on-year inflation swap",
    "notional": 121000000.0,
    "maturity": "2030-12-30",
    "mtm": -947071
   },
   {
-   "tradeId": "T-10559",
+   "tradeId": "MX-20000181",
    "product": "Inflation asset swap",
    "notional": 150000000.0,
    "maturity": "2036-02-14",
    "mtm": -771745
   },
   {
-   "tradeId": "T-10570",
+   "tradeId": "MX-20000192",
    "product": "Limited price index swap",
    "notional": 171000000.0,
    "maturity": "2034-07-12",
    "mtm": -339669
   },
   {
-   "tradeId": "T-10548",
+   "tradeId": "MX-20000170",
    "product": "Inflation cap / floor",
    "notional": 54000000.0,
    "maturity": "2027-03-29",
    "mtm": 334643
   },
   {
-   "tradeId": "T-10557",
+   "tradeId": "MX-20000179",
    "product": "Inflation-linked bond",
    "notional": 69000000.0,
    "maturity": "2032-06-07",

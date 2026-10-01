@@ -1,0 +1,244 @@
+{
+ "tradeId": "WSS-1500082",
+ "sourceSystem": "Wall Street Systems",
+ "sourceTradeId": "1500082",
+ "productType": "FX_QUANTO",
+ "productName": "Quanto option",
+ "assetClass": "FX",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2025-06-26",
+ "effectiveDate": "2025-06-30",
+ "maturityDate": "2027-07-06",
+ "currency": "USD",
+ "notional": 166000000.0,
+ "mtm": -689995,
+ "mtmCurrency": "USD",
+ "pnl1d": -10086,
+ "counterparty": {
+  "id": "CP-ALDERSHOT",
+  "name": "Aldershot Pension Trust"
+ },
+ "nettingSet": "NS-ALDERSHOT-LDN",
+ "book": "BOOK-FX-3",
+ "trader": "TRDR-ENOVAK",
+ "desk": "DESK-FX",
+ "legalEntity": "LE-LDN",
+ "fxSpot": "FX-USDINR",
+ "fxVolSurface": "FXV-USDINR",
+ "correlation": "CORR-US-EQ",
+ "terms": {
+  "optionType": "Put",
+  "exerciseStyle": "European",
+  "expiryDate": "2028-04-30",
+  "premium": 519249.0,
+  "strike": 294.33,
+  "quantoRate": 1.3743
+ },
+ "risk": {
+  "fxDelta": -1660000,
+  "vega": -487659
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "fxDelta": -79048,
+   "vega": -23222
+  },
+  {
+   "bucket": "1M",
+   "fxDelta": -158095,
+   "vega": -46444
+  },
+  {
+   "bucket": "3M",
+   "fxDelta": -237143,
+   "vega": -69666
+  },
+  {
+   "bucket": "6M",
+   "fxDelta": -316190,
+   "vega": -92887
+  },
+  {
+   "bucket": "1Y",
+   "fxDelta": -395238,
+   "vega": -116109
+  },
+  {
+   "bucket": "2Y",
+   "fxDelta": -474286,
+   "vega": -139331
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -24005
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -57326
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -5346
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 5677
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 10415
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 9480
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 7690
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 10594
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -4087
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -37627
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -21830
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -34199
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 17491
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -22945
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -15023
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 5139
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 6105
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -20316
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 461
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 7930
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-06-26",
+  "executionTimestamp": "2025-06-26T13:25:37.497Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "E. Novak",
+  "salesperson": null,
+  "orderId": "ORD-799BC130AC"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-06-26T13:00:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2025-06-26T13:00:00Z",
+  "lastModifiedAt": "2025-06-26T13:00:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT979557742",
+  "matched": "2025-06-26 11:36",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83799BC130AC2A5FB62E83",
+  "upi": "QZ4QUULD3AP0",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Foreign exchange"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "ALDEUS33XXX",
+  "ssiId": "SSI-USD-D06EAF",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -689995,
+  "cleanPv": -689995.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "FX-USDINR",
+   "FXV-USDINR",
+   "CORR-US-EQ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "calypso-fx",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 3040
+  }
+ }
+}

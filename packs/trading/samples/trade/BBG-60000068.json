@@ -1,0 +1,366 @@
+{
+ "tradeId": "BBG-60000068",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000068",
+ "productType": "ABS",
+ "productName": "Asset-backed security",
+ "assetClass": "Fixed income",
+ "family": "securitized",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2024-06-07",
+ "effectiveDate": "2024-06-10",
+ "maturityDate": "2032-12-03",
+ "currency": "EUR",
+ "notional": 78000000.0,
+ "mtm": -756700,
+ "mtmCurrency": "USD",
+ "pnl1d": 61423,
+ "counterparty": {
+  "id": "CP-AURORA",
+  "name": "Aurora Sovereign Wealth Fund"
+ },
+ "nettingSet": "NS-AURORA-NY",
+ "book": "BOOK-FI-3",
+ "trader": "TRDR-BADEYEMI",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-HALCYON",
+ "benchmarkCurve": "CRV-EUR-GOVT",
+ "creditCurve": "CDS-HALCYON",
+ "terms": {
+  "collateral": "Student loans",
+  "tranche": "C",
+  "wal": 1.29
+ },
+ "risk": {
+  "dv01": 57280,
+  "cs01": 51080
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 2046,
+   "cs01": 1824
+  },
+  {
+   "bucket": "6M",
+   "dv01": 4091,
+   "cs01": 3649
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 6137,
+   "cs01": 5473
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 8183,
+   "cs01": 7297
+  },
+  {
+   "bucket": "3Y",
+   "dv01": 10229,
+   "cs01": 9121
+  },
+  {
+   "bucket": "5Y",
+   "dv01": 12274,
+   "cs01": 10946
+  },
+  {
+   "bucket": "7Y",
+   "dv01": 14320,
+   "cs01": 12770
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2024-12-10",
+   "opening": 78000000,
+   "principal": 4588235,
+   "closing": 73411765,
+   "interest": 1560000
+  },
+  {
+   "date": "2025-06-10",
+   "opening": 73411765,
+   "principal": 4588235,
+   "closing": 68823529,
+   "interest": 1468235
+  },
+  {
+   "date": "2025-12-10",
+   "opening": 68823529,
+   "principal": 4588235,
+   "closing": 64235294,
+   "interest": 1376471
+  },
+  {
+   "date": "2026-06-10",
+   "opening": 64235294,
+   "principal": 4588235,
+   "closing": 59647059,
+   "interest": 1284706
+  },
+  {
+   "date": "2026-12-10",
+   "opening": 59647059,
+   "principal": 4588235,
+   "closing": 55058824,
+   "interest": 1192941
+  },
+  {
+   "date": "2027-06-10",
+   "opening": 55058824,
+   "principal": 4588235,
+   "closing": 50470588,
+   "interest": 1101176
+  },
+  {
+   "date": "2027-12-10",
+   "opening": 50470588,
+   "principal": 4588235,
+   "closing": 45882353,
+   "interest": 1009412
+  },
+  {
+   "date": "2028-06-10",
+   "opening": 45882353,
+   "principal": 4588235,
+   "closing": 41294118,
+   "interest": 917647
+  },
+  {
+   "date": "2028-12-10",
+   "opening": 41294118,
+   "principal": 4588235,
+   "closing": 36705882,
+   "interest": 825882
+  },
+  {
+   "date": "2029-06-10",
+   "opening": 36705882,
+   "principal": 4588235,
+   "closing": 32117647,
+   "interest": 734118
+  },
+  {
+   "date": "2029-12-10",
+   "opening": 32117647,
+   "principal": 4588235,
+   "closing": 27529412,
+   "interest": 642353
+  },
+  {
+   "date": "2030-06-10",
+   "opening": 27529412,
+   "principal": 4588235,
+   "closing": 22941176,
+   "interest": 550588
+  },
+  {
+   "date": "2030-12-10",
+   "opening": 22941176,
+   "principal": 4588235,
+   "closing": 18352941,
+   "interest": 458824
+  },
+  {
+   "date": "2031-06-10",
+   "opening": 18352941,
+   "principal": 4588235,
+   "closing": 13764706,
+   "interest": 367059
+  },
+  {
+   "date": "2031-12-10",
+   "opening": 13764706,
+   "principal": 4588235,
+   "closing": 9176471,
+   "interest": 275294
+  },
+  {
+   "date": "2032-06-10",
+   "opening": 9176471,
+   "principal": 4588235,
+   "closing": 4588235,
+   "interest": 183529
+  },
+  {
+   "date": "2032-12-03",
+   "opening": 4588235,
+   "principal": 4588235,
+   "closing": 0,
+   "interest": 91765
+  }
+ ],
+ "nextIndex": 4,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 11831
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 11011
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -22283
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 41874
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -64993
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 1153
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 10498
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -47397
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -23461
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -293
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 22627
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 34912
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 47652
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 34363
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -12965
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 4020
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -22237
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 6607
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 10887
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 45805
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-06-07",
+  "executionTimestamp": "2024-06-07T14:57:08.249Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "B. Adeyemi",
+  "salesperson": null,
+  "orderId": "ORD-EB71846095"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-06-07T12:25:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2024-06-07T12:25:00Z",
+  "lastModifiedAt": "2024-06-07T12:25:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT555082682",
+  "matched": "2024-06-07 12:37",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096EB718460952D84B3B423",
+  "upi": "QZO3A62SJADU",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "AUROGB33XXX",
+  "ssiId": "SSI-EUR-79DAAE",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -756700,
+  "cleanPv": -756700.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-EUR-GOVT",
+   "CDS-HALCYON"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 2293
+  }
+ }
+}

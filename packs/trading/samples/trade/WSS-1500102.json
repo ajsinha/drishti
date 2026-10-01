@@ -1,0 +1,212 @@
+{
+ "tradeId": "WSS-1500102",
+ "sourceSystem": "Wall Street Systems",
+ "sourceTradeId": "1500102",
+ "productType": "CERT_DEPOSIT",
+ "productName": "Certificate of deposit",
+ "assetClass": "Money market",
+ "family": "money",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-09-07",
+ "effectiveDate": "2026-09-09",
+ "maturityDate": "2026-12-18",
+ "currency": "EUR",
+ "notional": 74000000.0,
+ "mtm": -1329064,
+ "mtmCurrency": "USD",
+ "pnl1d": -61991,
+ "counterparty": {
+  "id": "CP-TOKAI",
+  "name": "Tokai Mutual Trust Bank"
+ },
+ "nettingSet": "NS-TOKAI-NY",
+ "book": "BOOK-MM-3",
+ "trader": "TRDR-SIYER",
+ "desk": "DESK-MM",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-GRANITE",
+ "discountCurve": "CRV-EUR-OIS",
+ "terms": {
+  "rate": 0.044738
+ },
+ "risk": {
+  "dv01": 1864
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 621
+  },
+  {
+   "bucket": "6M",
+   "dv01": 1243
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 2998
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 565
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 24765
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 28069
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 46087
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -22045
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 54646
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 8183
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -10718
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -60589
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -15640
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 3752
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 26001
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -41332
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -19479
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 52693
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -18532
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -25736
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 28593
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -30332
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-09-07",
+  "executionTimestamp": "2026-09-07T15:42:22.250Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "S. Iyer",
+  "salesperson": null,
+  "orderId": "ORD-A43D3C1584"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-09-07T11:00:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-09-07T11:00:00Z",
+  "lastModifiedAt": "2026-09-07T11:00:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT168635736",
+  "matched": "2026-09-07 14:16",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096A43D3C1584CF75CBC4D2",
+  "upi": "QZJCTTO5ATDD",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "TOKAGB33XXX",
+  "ssiId": "SSI-EUR-6E2541",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -1329064,
+  "cleanPv": -1329064.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-EUR-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-mm",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 3398
+  }
+ }
+}

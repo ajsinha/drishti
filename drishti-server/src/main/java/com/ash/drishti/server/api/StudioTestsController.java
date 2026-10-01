@@ -36,7 +36,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The entities an author keeps for trying a Sutra in Studio ({@code irs-fixfloat}: T-10001, T-10044, …), so a change can
+ * The entities an author keeps for trying a Sutra in Studio ({@code irs-fixfloat}: MX-20000001, MX-20000044, …), so a change can
  * be previewed against all of them before it is saved. Kept per author and per Sutra name with their saved documents.
  */
 @RestController

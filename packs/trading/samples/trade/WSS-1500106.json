@@ -1,0 +1,212 @@
+{
+ "tradeId": "WSS-1500106",
+ "sourceSystem": "Wall Street Systems",
+ "sourceTradeId": "1500106",
+ "productType": "DEPOSIT",
+ "productName": "Term deposit / placement",
+ "assetClass": "Money market",
+ "family": "money",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-09-09",
+ "effectiveDate": "2026-09-11",
+ "maturityDate": "2027-01-29",
+ "currency": "EUR",
+ "notional": 229000000.0,
+ "mtm": 2024594,
+ "mtmCurrency": "USD",
+ "pnl1d": -11813,
+ "counterparty": {
+  "id": "CP-AURORA",
+  "name": "Aurora Sovereign Wealth Fund"
+ },
+ "nettingSet": "NS-AURORA-NY",
+ "book": "BOOK-MM-1",
+ "trader": "TRDR-ISCHULZ",
+ "desk": "DESK-MM",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-EUR-OIS",
+ "terms": {
+  "rate": 0.044969,
+  "placedTaken": "Taken"
+ },
+ "risk": {
+  "dv01": 7201
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 2400
+  },
+  {
+   "bucket": "6M",
+   "dv01": 4801
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 30110
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -9771
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -55105
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 2485
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -61238
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 124363
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -18238
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 34677
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -53194
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -31268
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 89598
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -13826
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -25179
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 3528
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 94590
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 7880
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 32593
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -36201
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -26341
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -54473
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-09-09",
+  "executionTimestamp": "2026-09-09T09:23:13.294Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "I. Schulz",
+  "salesperson": null,
+  "orderId": "ORD-D330836BCC"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-09-09T10:42:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2026-09-09T10:42:00Z",
+  "lastModifiedAt": "2026-09-09T10:42:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT408337557",
+  "matched": "2026-09-09 16:42",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096D330836BCC42079C6BDE",
+  "upi": "QZHG9ZVXFNAF",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "AUROGB33XXX",
+  "ssiId": "SSI-EUR-79DAAE",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 2024594,
+  "cleanPv": 2024594.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-EUR-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-mm",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 6339
+  }
+ }
+}

@@ -1,0 +1,301 @@
+{
+ "tradeId": "CLY-3000017",
+ "sourceSystem": "Calypso",
+ "sourceTradeId": "3000017",
+ "productType": "CDS_TRANCHE",
+ "productName": "Index tranche",
+ "assetClass": "Credit",
+ "family": "cds",
+ "status": "Live",
+ "direction": "Sell protection",
+ "tradeDate": "2026-02-06",
+ "effectiveDate": "2026-02-09",
+ "maturityDate": "2031-09-23",
+ "currency": "CHF",
+ "notional": 37000000.0,
+ "mtm": -257129,
+ "mtmCurrency": "USD",
+ "pnl1d": 4604,
+ "counterparty": {
+  "id": "CP-NORTHBRIDGE",
+  "name": "Northbridge Capital LLP"
+ },
+ "nettingSet": "NS-NORTHBRIDGE-NY",
+ "book": "BOOK-CREDIT-3",
+ "trader": "TRDR-DWHITFIELD",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-VERDANT",
+ "creditCurve": "CDS-VERDANT",
+ "discountCurve": "CRV-CHF-OIS",
+ "correlation": "CORR-US-EQ",
+ "terms": {
+  "index": "CDX.NA.IG S47",
+  "attachment": "0.15",
+  "detachment": "0.15",
+  "protection": "Bought"
+ },
+ "risk": {
+  "cs01": -17807,
+  "jtd": -22200000
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": -1187,
+   "jtd": -1480000
+  },
+  {
+   "bucket": "1Y",
+   "cs01": -2374,
+   "jtd": -2960000
+  },
+  {
+   "bucket": "2Y",
+   "cs01": -3561,
+   "jtd": -4440000
+  },
+  {
+   "bucket": "3Y",
+   "cs01": -4749,
+   "jtd": -5920000
+  },
+  {
+   "bucket": "5Y",
+   "cs01": -5936,
+   "jtd": -7400000
+  }
+ ],
+ "schedule": [
+  {
+   "payDate": "2027-02-09",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -100278.92,
+   "pv": -97270.55,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2028-02-09",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -82246.78,
+   "pv": -79779.38,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2029-02-09",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -102892.37,
+   "pv": -99805.6,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2030-02-09",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -96450.25,
+   "pv": -93556.74,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2031-02-09",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -92333.26,
+   "pv": -89563.26,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2031-09-23",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -85703.09,
+   "pv": -83132.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -16860
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 15470
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 11870
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 5454
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -2165
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -6465
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 2151
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 6627
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -3378
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -12551
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -876
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -8298
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -873
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -7483
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -2832
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 3229
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 4287
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -4766
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 7524
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 5686
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-02-06",
+  "executionTimestamp": "2026-02-06T14:50:07.426Z",
+  "venue": "MarketAxess",
+  "venueMic": "MAEL",
+  "executionType": "Electronic",
+  "trader": "D. Whitfield",
+  "salesperson": null,
+  "orderId": "ORD-DB0356630F"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-02-06T11:52:00Z",
+    "by": "stp.gateway"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2026-04-06T11:52:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2026-02-06T11:52:00Z",
+  "lastModifiedAt": "2026-04-06T11:52:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA705767226",
+  "matched": "2026-02-06 16:04",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096DB0356630F26BFFF2B61",
+  "upi": "QZDTBHN24KLI",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "NORTGB33XXX",
+  "ssiId": "SSI-CHF-A0C7C2",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -257129,
+  "cleanPv": -257129.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CDS-VERDANT",
+   "CRV-CHF-OIS",
+   "CORR-US-EQ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 884
+  }
+ }
+}

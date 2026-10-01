@@ -1,0 +1,252 @@
+{
+ "tradeId": "END-1000027",
+ "sourceSystem": "Endur",
+ "sourceTradeId": "1000027",
+ "productType": "CMD_FUT_OPTION",
+ "productName": "Option on commodity future",
+ "assetClass": "Commodity",
+ "family": "option",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2025-08-08",
+ "effectiveDate": "2025-08-11",
+ "maturityDate": "2028-02-14",
+ "currency": "USD",
+ "notional": 198000000.0,
+ "mtm": -1422464,
+ "mtmCurrency": "USD",
+ "pnl1d": 28441,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-COMM-1",
+ "trader": "TRDR-TBRENNAN",
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-CME-1",
+ "commodityCurve": "CMDC-GOLD",
+ "commodityVolSurface": "CMDV-GOLD",
+ "terms": {
+  "optionType": "Call",
+  "exerciseStyle": "American",
+  "expiryDate": "2029-04-20",
+  "strike": 4805.94,
+  "lots": 660
+ },
+ "risk": {
+  "delta": -1157076,
+  "gamma": 6656,
+  "vega": -644298
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -55099,
+   "gamma": 317,
+   "vega": -30681
+  },
+  {
+   "bucket": "1M",
+   "delta": -110198,
+   "gamma": 634,
+   "vega": -61362
+  },
+  {
+   "bucket": "3M",
+   "delta": -165297,
+   "gamma": 951,
+   "vega": -92043
+  },
+  {
+   "bucket": "6M",
+   "delta": -220395,
+   "gamma": 1268,
+   "vega": -122723
+  },
+  {
+   "bucket": "1Y",
+   "delta": -275494,
+   "gamma": 1585,
+   "vega": -153404
+  },
+  {
+   "bucket": "2Y",
+   "delta": -330593,
+   "gamma": 1902,
+   "vega": -184085
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -3766
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -45800
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 81201
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -2902
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 1585
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -12755
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -3413
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 7724
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -44685
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -3361
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -11732
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -18870
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 28299
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -71410
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -45469
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 75976
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -6899
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -49638
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -56702
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 69971
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-08-08",
+  "executionTimestamp": "2025-08-08T16:09:12.833Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "T. Brennan",
+  "salesperson": null,
+  "orderId": "ORD-842C9BF66C"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-08-08T11:55:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2025-08-08T11:55:00Z",
+  "lastModifiedAt": "2025-08-08T11:55:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT466132938",
+  "matched": "2025-08-08 17:10",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH8984155905",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096842C9BF66C62C240E136",
+  "upi": "QZMQ7IK6BH47",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMUS33XXX",
+  "ssiId": "SSI-USD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -1422464,
+  "cleanPv": -1422464.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CMDC-GOLD",
+   "CMDV-GOLD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "endur-comm",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 4825
+  }
+ }
+}

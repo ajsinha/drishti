@@ -78,10 +78,10 @@ A healthy server with some viewers:
    `heapUsedMb` near `heapMaxMb` means the heap is too small (Fix D). Check host CPU with `top` or your monitoring.
 
 2. Check how long one view takes to build. A live frame is a rebuild of the view, so a slow view is a slow frame.
-   Take an entity that is slow on screen, for example `trade/T-10452`:
+   Take an entity that is slow on screen, for example `trade/END-1000008`:
 
    ```bash
-   curl -s http://localhost:18480/api/v1/views/trade/T-10452 | python3 -c 'import json,sys; print(json.load(sys.stdin)["timings"])'
+   curl -s http://localhost:18480/api/v1/views/trade/END-1000008 | python3 -c 'import json,sys; print(json.load(sys.stdin)["timings"])'
    ```
 
    ```text
@@ -138,7 +138,7 @@ A healthy server with some viewers:
 3. Stream the entity straight from the server, bypassing the console:
 
    ```bash
-   curl -N http://localhost:18480/api/v1/views/trade/T-10452/stream
+   curl -N http://localhost:18480/api/v1/views/trade/END-1000008/stream
    ```
 
    You should see `event:view` and then `event:frame` lines as the source ticks. Press Ctrl+C to stop.
@@ -155,7 +155,7 @@ A healthy server with some viewers:
 1. Stream through the console, as the browser does:
 
    ```bash
-   curl -N "http://localhost:17480/api/channel?s=view:trade/T-10452"
+   curl -N "http://localhost:17480/api/channel?s=view:trade/END-1000008"
    ```
 
    (With console sign-in on, add `-b "drishti_session=<your cookie>"`.) You should see `event: channel`,
@@ -211,6 +211,6 @@ Every change to the server's configuration needs a restart of the server. Live v
 
 1. Within one 30 s window after the fix, `curl -s http://localhost:18480/api/v1/health/live` shows `p99Ms`
    below 40 (normally single digits).
-2. In the console, the live dot glows (not amber) on `TRD T-10452`, and `MTM (USD)` changes every few hundred
+2. In the console, the live dot glows (not amber) on `TRD END-1000008`, and `MTM (USD)` changes every few hundred
    milliseconds.
 3. `drishti_live_latency_p99_milliseconds` in Prometheus stays below 40 for the next hour.

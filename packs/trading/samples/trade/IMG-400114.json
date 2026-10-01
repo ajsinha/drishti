@@ -1,0 +1,227 @@
+{
+ "tradeId": "IMG-400114",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400114",
+ "productType": "CFD",
+ "productName": "Contract for difference",
+ "assetClass": "Equity",
+ "family": "linear",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2024-11-01",
+ "effectiveDate": "2024-11-04",
+ "maturityDate": "2026-10-07",
+ "currency": "USD",
+ "notional": 17000000.0,
+ "mtm": 12950,
+ "mtmCurrency": "USD",
+ "pnl1d": -523,
+ "counterparty": {
+  "id": "CP-SOLARIS",
+  "name": "Solaris Energy Corp."
+ },
+ "nettingSet": "NS-SOLARIS-LDN",
+ "book": "BOOK-EQD-1",
+ "trader": "TRDR-JWEISS",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingEquity": "EQ-NVTK",
+ "dividendCurve": "DIV-NVTK",
+ "terms": {
+  "quantity": 103222,
+  "openPrice": 895.19
+ },
+ "risk": {
+  "delta": -68731
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -4582
+  },
+  {
+   "bucket": "1M",
+   "delta": -9164
+  },
+  {
+   "bucket": "3M",
+   "delta": -13746
+  },
+  {
+   "bucket": "6M",
+   "delta": -18328
+  },
+  {
+   "bucket": "1Y",
+   "delta": -22910
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 1176
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -870
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 4285
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -3614
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 1702
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 2003
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -1040
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -404
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 5263
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -3184
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 2269
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 2563
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 1394
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 4272
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 1034
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 6438
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 1544
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 4210
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -838
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -2347
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-11-01",
+  "executionTimestamp": "2024-11-01T08:12:04.900Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "J. Weiss",
+  "salesperson": null,
+  "orderId": "ORD-411DE9E219"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-11-01T11:00:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2024-11-01T11:00:00Z",
+  "lastModifiedAt": "2024-11-01T11:00:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT712852542",
+  "matched": "2024-11-01 17:27",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83411DE9E2197E1DA7A680",
+  "upi": "QZNMUPU7P0UM",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SOLAUS33XXX",
+  "ssiId": "SSI-USD-269904",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 12950,
+  "cleanPv": 12950.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQ-NVTK",
+   "DIV-NVTK"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

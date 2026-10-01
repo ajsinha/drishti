@@ -7,70 +7,70 @@
  "dv01": 800425,
  "topTrades": [
   {
-   "tradeId": "T-10588",
+   "tradeId": "BBG-60000018",
    "product": "Floating rate note",
    "notional": 245000000.0,
    "maturity": "2031-09-29",
    "mtm": -3735787
   },
   {
-   "tradeId": "T-10620",
+   "tradeId": "BBG-60000050",
    "product": "Municipal bond",
    "notional": 194000000.0,
    "maturity": "2036-05-05",
    "mtm": -3693532
   },
   {
-   "tradeId": "T-10607",
+   "tradeId": "BBG-60000037",
    "product": "Amortising bond",
    "notional": 204000000.0,
    "maturity": "2034-08-14",
    "mtm": -3664626
   },
   {
-   "tradeId": "T-10600",
+   "tradeId": "BBG-60000030",
    "product": "Callable bond",
    "notional": 241000000.0,
    "maturity": "2032-08-16",
    "mtm": 3201249
   },
   {
-   "tradeId": "T-10618",
+   "tradeId": "BBG-60000048",
    "product": "Covered bond",
    "notional": 158000000.0,
    "maturity": "2035-11-29",
    "mtm": 2694900
   },
   {
-   "tradeId": "T-10630",
+   "tradeId": "BBG-60000060",
    "product": "Agency MBS pass-through",
    "notional": 211000000.0,
    "maturity": "2031-01-23",
    "mtm": -2303954
   },
   {
-   "tradeId": "T-10633",
+   "tradeId": "BBG-60000063",
    "product": "CMO tranche",
    "notional": 214000000.0,
    "maturity": "2034-05-05",
    "mtm": -2085900
   },
   {
-   "tradeId": "T-10608",
+   "tradeId": "BBG-60000038",
    "product": "Amortising bond",
    "notional": 164000000.0,
    "maturity": "2032-05-20",
    "mtm": -1645510
   },
   {
-   "tradeId": "T-10573",
+   "tradeId": "BBG-60000003",
    "product": "Government bond",
    "notional": 105000000.0,
    "maturity": "2034-10-31",
    "mtm": -1569609
   },
   {
-   "tradeId": "T-10596",
+   "tradeId": "BBG-60000026",
    "product": "Callable bond",
    "notional": 115000000.0,
    "maturity": "2034-02-28",

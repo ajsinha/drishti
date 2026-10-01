@@ -29,7 +29,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](DEVEL
 | Find your way around the top bar and its menus | [USER_GUIDE.md › The top bar](USER_GUIDE.md#the-top-bar) |
 | Read Drishti from a script, a notebook or Excel with a personal API token | [CLIENTS.md](CLIENTS.md) |
 | Open a view, and learn the command line and keys | [USER_GUIDE.md › The command line](USER_GUIDE.md#the-command-line), [Keyboard](USER_GUIDE.md#keyboard) |
-| List entities to pick from (`TRD T-100`, `CPTY north`, `TRD productType=Revolver`) | [USER_GUIDE.md › Pick lists](USER_GUIDE.md#pick-lists-when-a-command-names-several-entities) |
+| List entities to pick from (`TRD MX-200000`, `CPTY north`, `TRD productType=Revolver`) | [USER_GUIDE.md › Pick lists](USER_GUIDE.md#pick-lists-when-a-command-names-several-entities) |
 | Page through a table, or walk it with the keyboard | [USER_GUIDE.md › Tables](USER_GUIDE.md#tables-paging-and-the-keyboard) |
 | Understand what a view is showing you | [USER_GUIDE.md › Reading a view](USER_GUIDE.md#reading-a-view) |
 | Find entities by value (`TRD where mtm > 1m …`) | [USER_GUIDE.md › Search by value](USER_GUIDE.md#search-by-value) |
@@ -149,9 +149,9 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](DEVEL
 
 | Word | Meaning |
 |---|---|
-| **Entity** | One thing you can open: a trade, a netting set, a gene. It has a **kind** (`trade`) and an **id** (`T-10001`) |
+| **Entity** | One thing you can open: a trade, a netting set, a gene. It has a **kind** (`trade`) and an **id** (`MX-20000001`) |
 | **Mnemonic** | The short code you type for a kind: `TRD` for trade |
-| **Pick list** | The table you get when a command names several entities (`TRD T-100`); one match opens directly |
+| **Pick list** | The table you get when a command names several entities (`TRD MX-200000`); one match opens directly |
 | **View** | The screen for one entity: title, strip, panels, links |
 | **Strip** | The row of key figures under a view's title |
 | **Panel** | One box in a view: a table, a chart, label/value pairs |

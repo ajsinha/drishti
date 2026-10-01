@@ -1,0 +1,228 @@
+{
+ "tradeId": "IMG-400004",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400004",
+ "productType": "EQ_CASH",
+ "productName": "Equity position",
+ "assetClass": "Equity",
+ "family": "position",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2024-06-06",
+ "effectiveDate": "2024-06-10",
+ "maturityDate": "2026-10-07",
+ "currency": "USD",
+ "notional": 225000000.0,
+ "mtm": 3106156,
+ "mtmCurrency": "USD",
+ "pnl1d": -202862,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-LDN",
+ "book": "BOOK-EQD-2",
+ "trader": "TRDR-PLINDQVIST",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "clearingAccount": "CLR-EUREX-1",
+ "underlyingEquity": "EQ-HLXP",
+ "dividendCurve": "DIV-HLXP",
+ "terms": {
+  "quantity": 391334,
+  "averagePrice": 202.39
+ },
+ "risk": {
+  "delta": -1309686
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -130969
+  },
+  {
+   "bucket": "1M",
+   "delta": -261937
+  },
+  {
+   "bucket": "3M",
+   "delta": -392906
+  },
+  {
+   "bucket": "6M",
+   "delta": -523874
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 24970
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 54701
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 5686
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 46364
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 55087
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -66857
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -186840
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -98373
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -53309
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -63566
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 24592
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 178882
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -115952
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -204251
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 15103
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -67819
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -89971
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 10399
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -59849
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 136693
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-06-06",
+  "executionTimestamp": "2024-06-06T10:10:29.086Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "P. Lindqvist",
+  "salesperson": null,
+  "orderId": "ORD-8FDE366980"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-06-06T11:31:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2024-06-06T11:31:00Z",
+  "lastModifiedAt": "2024-06-06T11:31:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT338729019",
+  "matched": "2024-06-06 11:12",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH5840157125",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q838FDE3669806D456FFC5F",
+  "upi": "QZ7DSWQUPRYO",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMUS33XXX",
+  "ssiId": "SSI-USD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 3106156,
+  "cleanPv": 3106156.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQ-HLXP",
+   "DIV-HLXP"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 8462
+  }
+ }
+}

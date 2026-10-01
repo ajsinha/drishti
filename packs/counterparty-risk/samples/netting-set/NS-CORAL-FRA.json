@@ -62,21 +62,21 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10686",
+   "tradeId": "BBG-60000086",
    "product": "Reverse repo",
    "notional": 161000000.0,
    "maturity": "2026-10-07",
    "mtm": 3324957
   },
   {
-   "tradeId": "T-10712",
+   "tradeId": "BBG-60000112",
    "product": "Securities borrowing",
    "notional": 157000000.0,
    "maturity": "2027-02-04",
    "mtm": -511456
   },
   {
-   "tradeId": "T-10683",
+   "tradeId": "BBG-60000083",
    "product": "Repurchase agreement",
    "notional": 230000000.0,
    "maturity": "2027-01-11",

@@ -1,0 +1,301 @@
+{
+ "tradeId": "BBG-60000064",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000064",
+ "productType": "CMO_TRANCHE",
+ "productName": "CMO tranche",
+ "assetClass": "Fixed income",
+ "family": "securitized",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2024-09-26",
+ "effectiveDate": "2024-09-30",
+ "maturityDate": "2028-11-09",
+ "currency": "CHF",
+ "notional": 230000000.0,
+ "mtm": -3222264,
+ "mtmCurrency": "USD",
+ "pnl1d": 75395,
+ "counterparty": {
+  "id": "CP-MERIDIAN",
+  "name": "Meridian Life Assurance"
+ },
+ "nettingSet": "NS-MERIDIAN-NY",
+ "book": "BOOK-FI-2",
+ "trader": "TRDR-BADEYEMI",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-LUMEN",
+ "benchmarkCurve": "CRV-CHF-GOVT",
+ "forwardCurve": "CRV-CHF-PROJ",
+ "swaptionVolCube": "IRV-CHF",
+ "terms": {
+  "trancheType": "Support",
+  "wal": 9.97
+ },
+ "risk": {
+  "dv01": 83418,
+  "vega": 946329
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 5561,
+   "vega": 63089
+  },
+  {
+   "bucket": "6M",
+   "dv01": 11122,
+   "vega": 126177
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 16684,
+   "vega": 189266
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 22245,
+   "vega": 252354
+  },
+  {
+   "bucket": "3Y",
+   "dv01": 27806,
+   "vega": 315443
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2025-03-30",
+   "opening": 230000000,
+   "principal": 25555556,
+   "closing": 204444444,
+   "interest": 4600000
+  },
+  {
+   "date": "2025-09-30",
+   "opening": 204444444,
+   "principal": 25555556,
+   "closing": 178888889,
+   "interest": 4088889
+  },
+  {
+   "date": "2026-03-30",
+   "opening": 178888889,
+   "principal": 25555556,
+   "closing": 153333333,
+   "interest": 3577778
+  },
+  {
+   "date": "2026-09-30",
+   "opening": 153333333,
+   "principal": 25555556,
+   "closing": 127777778,
+   "interest": 3066667
+  },
+  {
+   "date": "2027-03-30",
+   "opening": 127777778,
+   "principal": 25555556,
+   "closing": 102222222,
+   "interest": 2555556
+  },
+  {
+   "date": "2027-09-30",
+   "opening": 102222222,
+   "principal": 25555556,
+   "closing": 76666667,
+   "interest": 2044444
+  },
+  {
+   "date": "2028-03-30",
+   "opening": 76666667,
+   "principal": 25555556,
+   "closing": 51111111,
+   "interest": 1533333
+  },
+  {
+   "date": "2028-09-30",
+   "opening": 51111111,
+   "principal": 25555556,
+   "closing": 25555556,
+   "interest": 1022222
+  },
+  {
+   "date": "2028-11-09",
+   "opening": 25555556,
+   "principal": 25555556,
+   "closing": 0,
+   "interest": 511111
+  }
+ ],
+ "nextIndex": 4,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 43343
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -106122
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 26660
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 24508
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 81227
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -40887
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 32451
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 37867
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -11896
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -113639
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -59987
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 93646
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -190667
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 7388
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -6411
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 18133
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -23181
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 22997
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -133808
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -11522
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-09-26",
+  "executionTimestamp": "2024-09-26T15:46:25.579Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "B. Adeyemi",
+  "salesperson": null,
+  "orderId": "ORD-8F0B361541"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-09-26T09:30:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2024-09-26T09:30:00Z",
+  "lastModifiedAt": "2024-09-26T09:30:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT654578880",
+  "matched": "2024-09-26 16:28",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20968F0B361541DE475FA629",
+  "upi": "QZECGYPTP685",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "MERIGB33XXX",
+  "ssiId": "SSI-CHF-4D91C0",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -3222264,
+  "cleanPv": -3222264.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-CHF-GOVT",
+   "CRV-CHF-PROJ",
+   "IRV-CHF"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 8745
+  }
+ }
+}

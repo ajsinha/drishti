@@ -62,112 +62,112 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10366",
+   "tradeId": "IMG-400054",
    "product": "Equity Asian option",
    "notional": 169000000.0,
    "maturity": "2032-02-27",
    "mtm": 4285041
   },
   {
-   "tradeId": "T-10554",
+   "tradeId": "MX-20000176",
    "product": "Inflation-linked bond",
    "notional": 145000000.0,
    "maturity": "2027-09-27",
    "mtm": -2725596
   },
   {
-   "tradeId": "T-10560",
+   "tradeId": "MX-20000182",
    "product": "Inflation asset swap",
    "notional": 153000000.0,
    "maturity": "2028-02-03",
    "mtm": -2304552
   },
   {
-   "tradeId": "T-10361",
+   "tradeId": "IMG-400049",
    "product": "Equity Asian option",
    "notional": 173000000.0,
    "maturity": "2037-02-02",
    "mtm": 2232719
   },
   {
-   "tradeId": "T-10197",
+   "tradeId": "WSS-1500041",
    "product": "FX barrier option",
    "notional": 202000000.0,
    "maturity": "2033-04-13",
    "mtm": 2035982
   },
   {
-   "tradeId": "T-10358",
+   "tradeId": "IMG-400046",
    "product": "Equity barrier option",
    "notional": 185000000.0,
    "maturity": "2037-02-17",
    "mtm": 1866866
   },
   {
-   "tradeId": "T-10416",
+   "tradeId": "IMG-400104",
    "product": "Portfolio (basket) swap",
    "notional": 143000000.0,
    "maturity": "2028-08-23",
    "mtm": -1863356
   },
   {
-   "tradeId": "T-10383",
+   "tradeId": "IMG-400071",
    "product": "Autocallable note",
    "notional": 137000000.0,
    "maturity": "2031-10-06",
    "mtm": -1847391
   },
   {
-   "tradeId": "T-10222",
+   "tradeId": "WSS-1500066",
    "product": "FX target redemption forward",
    "notional": 236000000.0,
    "maturity": "2033-12-21",
    "mtm": 1608918
   },
   {
-   "tradeId": "T-10217",
+   "tradeId": "WSS-1500061",
    "product": "FX target redemption forward",
    "notional": 177000000.0,
    "maturity": "2029-03-21",
    "mtm": -930931
   },
   {
-   "tradeId": "T-10352",
+   "tradeId": "IMG-400040",
    "product": "Index option",
    "notional": 133000000.0,
    "maturity": "2026-10-07",
    "mtm": -692360
   },
   {
-   "tradeId": "T-10378",
+   "tradeId": "IMG-400066",
    "product": "Cliquet (ratchet)",
    "notional": 68000000.0,
    "maturity": "2031-01-20",
    "mtm": -558730
   },
   {
-   "tradeId": "T-10161",
+   "tradeId": "WSS-1500005",
    "product": "FX spot",
    "notional": 12000000.0,
    "maturity": "2026-10-07",
    "mtm": 294618
   },
   {
-   "tradeId": "T-10162",
+   "tradeId": "WSS-1500006",
    "product": "FX spot",
    "notional": 54000000.0,
    "maturity": "2026-10-07",
    "mtm": -273065
   },
   {
-   "tradeId": "T-10441",
+   "tradeId": "IMG-400129",
    "product": "Basket option",
    "notional": 109000000.0,
    "maturity": "2027-10-15",
    "mtm": -4588
   },
   {
-   "tradeId": "T-10231",
+   "tradeId": "WSS-1500075",
    "product": "FX variance swap",
    "notional": 1000000.0,
    "maturity": "2028-06-20",

@@ -1,0 +1,340 @@
+{
+ "tradeId": "MX-20000177",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000177",
+ "productType": "INFL_LINKED_BOND",
+ "productName": "Inflation-linked bond",
+ "assetClass": "Inflation",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2024-09-19",
+ "effectiveDate": "2024-09-23",
+ "maturityDate": "2033-07-20",
+ "currency": "USD",
+ "notional": 69000000.0,
+ "mtm": 107397,
+ "mtmCurrency": "USD",
+ "pnl1d": 1264,
+ "counterparty": {
+  "id": "CP-HALCYON",
+  "name": "Halcyon Shipping plc"
+ },
+ "nettingSet": "NS-HALCYON-LDN",
+ "book": "BOOK-INFL-1",
+ "trader": "TRDR-GMENDES",
+ "desk": "DESK-INFL",
+ "legalEntity": "LE-LDN",
+ "benchmarkCurve": "CRV-USD-GOVT",
+ "inflationCurve": "INFC-USCPI",
+ "inflationIndex": "INF-USCPI",
+ "terms": {
+  "coupon": 0.037762,
+  "couponFrequency": "Quarterly",
+  "faceAmount": 56188652.0,
+  "cleanPrice": 104.15,
+  "yield": 0.048589,
+  "indexRatio": 1.1823
+ },
+ "risk": {
+  "ie01": -55648,
+  "dv01": -56040
+ },
+ "sensitivities": [
+  {
+   "bucket": "1Y",
+   "ie01": -9275,
+   "dv01": -9340
+  },
+  {
+   "bucket": "2Y",
+   "ie01": -18549,
+   "dv01": -18680
+  },
+  {
+   "bucket": "5Y",
+   "ie01": -27824,
+   "dv01": -28020
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2025-03-23",
+   "rate": 0.052683,
+   "amount": 1380000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2025-09-23",
+   "rate": 0.055613,
+   "amount": 1380000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-03-23",
+   "rate": 0.039332,
+   "amount": 1380000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-09-23",
+   "rate": 0.042628,
+   "amount": 1380000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2027-03-23",
+   "rate": 0.045443,
+   "amount": 1380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-09-23",
+   "rate": 0.045048,
+   "amount": 1380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-03-23",
+   "rate": 0.055872,
+   "amount": 1380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-09-23",
+   "rate": 0.037069,
+   "amount": 1380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-03-23",
+   "rate": 0.043958,
+   "amount": 1380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-09-23",
+   "rate": 0.031601,
+   "amount": 1380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-03-23",
+   "rate": 0.041598,
+   "amount": 1380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-09-23",
+   "rate": 0.051377,
+   "amount": 1380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-03-23",
+   "rate": 0.047457,
+   "amount": 1380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-09-23",
+   "rate": 0.058521,
+   "amount": 1380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2032-03-23",
+   "rate": 0.034878,
+   "amount": 1380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2032-09-23",
+   "rate": 0.020289,
+   "amount": 1380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2033-03-23",
+   "rate": 0.052311,
+   "amount": 1380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2033-07-20",
+   "rate": 0.059178,
+   "amount": 1380000.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 4,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -991
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -2012
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 555
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 3798
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -3353
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -3358
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 438
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 2830
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -465
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 3755
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 556
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 4371
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -763
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 1158
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 2139
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -1044
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -4
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -7339
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -3290
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 347
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-09-19",
+  "executionTimestamp": "2024-09-19T16:34:45.589Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "G. Mendes",
+  "salesperson": null,
+  "orderId": "ORD-8D59A1F90F"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-09-19T12:59:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2024-09-19T12:59:00Z",
+  "lastModifiedAt": "2024-09-19T12:59:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA813516118",
+  "matched": "2024-09-19 13:37",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q838D59A1F90FE33DA2396D",
+  "upi": "QZUCHVL0URZR",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "HALCUS33XXX",
+  "ssiId": "SSI-USD-10E970",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 107397,
+  "cleanPv": 107397.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-USD-GOVT",
+   "INFC-USCPI",
+   "INF-USCPI"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 905
+  }
+ }
+}

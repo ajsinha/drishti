@@ -62,112 +62,112 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10066",
+   "tradeId": "MX-20000066",
    "product": "Forward rate agreement",
    "notional": 480000000.0,
    "maturity": "2027-09-13",
    "mtm": 4718731
   },
   {
-   "tradeId": "T-10488",
+   "tradeId": "END-1000044",
    "product": "Commodity spread option",
    "notional": 191000000.0,
    "maturity": "2028-04-05",
    "mtm": -3234955
   },
   {
-   "tradeId": "T-10031",
+   "tradeId": "MX-20000031",
    "product": "Zero-coupon swap",
    "notional": 31000000.0,
    "maturity": "2032-04-19",
    "mtm": 2484165
   },
   {
-   "tradeId": "T-10675",
+   "tradeId": "WSS-1500111",
    "product": "Call account",
    "notional": 249000000.0,
    "maturity": "2027-01-25",
    "mtm": -2192641
   },
   {
-   "tradeId": "T-10101",
+   "tradeId": "MX-20000101",
    "product": "European swaption",
    "notional": 126000000.0,
    "maturity": "2027-07-08",
    "mtm": -2063151
   },
   {
-   "tradeId": "T-10263",
+   "tradeId": "CLY-3000023",
    "product": "CDS index option",
    "notional": 147000000.0,
    "maturity": "2026-10-07",
    "mtm": 1786443
   },
   {
-   "tradeId": "T-10502",
+   "tradeId": "END-1000058",
    "product": "Commodity index swap",
    "notional": 165000000.0,
    "maturity": "2033-12-22",
    "mtm": 1412345
   },
   {
-   "tradeId": "T-10656",
+   "tradeId": "WSS-1500092",
    "product": "Commercial paper",
    "notional": 99000000.0,
    "maturity": "2027-06-25",
    "mtm": 1053527
   },
   {
-   "tradeId": "T-10139",
+   "tradeId": "MX-20000139",
    "product": "Range accrual swap",
    "notional": 130000000.0,
    "maturity": "2034-10-23",
    "mtm": -910777
   },
   {
-   "tradeId": "T-10507",
+   "tradeId": "END-1000063",
    "product": "Power swap",
    "notional": 209000000.0,
    "maturity": "2030-04-22",
    "mtm": -833645
   },
   {
-   "tradeId": "T-10146",
+   "tradeId": "MX-20000146",
    "product": "Snowball swap",
    "notional": 166000000.0,
    "maturity": "2035-10-02",
    "mtm": -813046
   },
   {
-   "tradeId": "T-10148",
+   "tradeId": "MX-20000148",
    "product": "Snowball swap",
    "notional": 20000000.0,
    "maturity": "2029-05-02",
    "mtm": 243660
   },
   {
-   "tradeId": "T-10639",
+   "tradeId": "BBG-60000069",
    "product": "Asset-backed security",
    "notional": 182000000.0,
    "maturity": "2030-01-04",
    "mtm": 191276
   },
   {
-   "tradeId": "T-10300",
+   "tradeId": "CLY-3000060",
    "product": "Revolving credit facility",
    "notional": 179000000.0,
    "maturity": "2031-04-07",
    "mtm": 139581
   },
   {
-   "tradeId": "T-10478",
+   "tradeId": "END-1000034",
    "product": "Average price option (APO)",
    "notional": 15000000.0,
    "maturity": "2033-03-07",
    "mtm": 91560
   },
   {
-   "tradeId": "T-10135",
+   "tradeId": "MX-20000135",
    "product": "Callable swap",
    "notional": 8000000.0,
    "maturity": "2033-04-19",

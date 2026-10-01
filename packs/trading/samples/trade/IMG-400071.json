@@ -1,0 +1,420 @@
+{
+ "tradeId": "IMG-400071",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400071",
+ "productType": "AUTOCALLABLE",
+ "productName": "Autocallable note",
+ "assetClass": "Equity",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2025-09-30",
+ "effectiveDate": "2025-10-02",
+ "maturityDate": "2031-10-06",
+ "currency": "JPY",
+ "notional": 137000000.0,
+ "mtm": -1847391,
+ "mtmCurrency": "USD",
+ "pnl1d": 52758,
+ "counterparty": {
+  "id": "CP-MERIDIAN-RE",
+  "name": "Meridian Reinsurance Ltd"
+ },
+ "nettingSet": "NS-MERIDIAN-RE-LDN",
+ "book": "BOOK-EQD-3",
+ "trader": "TRDR-PLINDQVIST",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingIndex": "EQX-NKY",
+ "equityVolSurface": "EQV-NKY",
+ "correlation": "CORR-EU-EQ",
+ "terms": {
+  "autocallTrigger": 1.009378,
+  "couponRate": 0.126536,
+  "knockInBarrier": 0.627362,
+  "memory": "No"
+ },
+ "risk": {
+  "delta": -292458,
+  "vega": -898723,
+  "gamma": 2464
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -13927,
+   "vega": -42796,
+   "gamma": 117
+  },
+  {
+   "bucket": "1M",
+   "delta": -27853,
+   "vega": -85593,
+   "gamma": 235
+  },
+  {
+   "bucket": "3M",
+   "delta": -41780,
+   "vega": -128389,
+   "gamma": 352
+  },
+  {
+   "bucket": "6M",
+   "delta": -55706,
+   "vega": -171185,
+   "gamma": 469
+  },
+  {
+   "bucket": "1Y",
+   "delta": -69633,
+   "vega": -213982,
+   "gamma": 587
+  },
+  {
+   "bucket": "2Y",
+   "delta": -83559,
+   "vega": -256778,
+   "gamma": 704
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-01-02",
+   "level": 93.54,
+   "trigger": 100.0,
+   "performance": -0.0646,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-04-02",
+   "level": 93.8,
+   "trigger": 100.0,
+   "performance": -0.062,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-07-02",
+   "level": 93.47,
+   "trigger": 100.0,
+   "performance": -0.0653,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-10-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-01-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-04-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-07-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-10-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-01-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-04-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-07-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-10-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-01-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-04-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-07-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-10-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-01-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-04-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-07-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-10-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-01-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-04-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-07-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-10-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 3,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -94182
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 53153
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -23037
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -84800
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -1701
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 11055
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -71253
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -56552
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -37644
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 39615
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 37370
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 15122
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -26489
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 65837
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -41631
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -186021
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -36152
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -22339
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -20357
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 19959
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-09-30",
+  "executionTimestamp": "2025-09-30T16:22:03.030Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "P. Lindqvist",
+  "salesperson": null,
+  "orderId": "ORD-4F4BDCE765"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-09-30T11:21:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2025-09-30T11:21:00Z",
+  "lastModifiedAt": "2025-09-30T11:21:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT621723186",
+  "matched": "2025-09-30 15:00",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q834F4BDCE765AF8E8EA13C",
+  "upi": "QZ05XODNYFRY",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "MERIGB33XXX",
+  "ssiId": "SSI-JPY-9DC4EA",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -1847391,
+  "cleanPv": -1847391.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "EQX-NKY",
+   "EQV-NKY",
+   "CORR-EU-EQ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 5065
+  }
+ }
+}

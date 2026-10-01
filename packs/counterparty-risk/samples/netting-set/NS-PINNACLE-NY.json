@@ -62,161 +62,161 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10044",
+   "tradeId": "MX-20000044",
    "product": "Accreting swap",
    "notional": 224000000.0,
    "maturity": "2035-03-07",
    "mtm": 25398239
   },
   {
-   "tradeId": "T-10098",
+   "tradeId": "MX-20000098",
    "product": "European swaption",
    "notional": 81000000.0,
    "maturity": "2026-10-07",
    "mtm": -2691901
   },
   {
-   "tradeId": "T-10097",
+   "tradeId": "MX-20000097",
    "product": "European swaption",
    "notional": 160000000.0,
    "maturity": "2026-10-07",
    "mtm": -2322720
   },
   {
-   "tradeId": "T-10500",
+   "tradeId": "END-1000056",
    "product": "Commodity index swap",
    "notional": 243000000.0,
    "maturity": "2034-04-28",
    "mtm": 1673731
   },
   {
-   "tradeId": "T-10258",
+   "tradeId": "CLY-3000018",
    "product": "Index tranche",
    "notional": 232000000.0,
    "maturity": "2033-10-18",
    "mtm": -1480347
   },
   {
-   "tradeId": "T-10299",
+   "tradeId": "CLY-3000059",
    "product": "Revolving credit facility",
    "notional": 120000000.0,
    "maturity": "2030-03-06",
    "mtm": 1407358
   },
   {
-   "tradeId": "T-10143",
+   "tradeId": "MX-20000143",
    "product": "Range accrual swap",
    "notional": 84000000.0,
    "maturity": "2031-10-27",
    "mtm": 1047452
   },
   {
-   "tradeId": "T-10051",
+   "tradeId": "MX-20000051",
    "product": "Forward-starting swap",
    "notional": 145000000.0,
    "maturity": "2031-06-27",
    "mtm": 1000230
   },
   {
-   "tradeId": "T-10660",
+   "tradeId": "WSS-1500096",
    "product": "Commercial paper",
    "notional": 157000000.0,
    "maturity": "2027-01-08",
    "mtm": -996256
   },
   {
-   "tradeId": "T-10110",
+   "tradeId": "MX-20000110",
    "product": "American swaption",
    "notional": 50000000.0,
    "maturity": "2026-10-07",
    "mtm": 644255
   },
   {
-   "tradeId": "T-10655",
+   "tradeId": "WSS-1500091",
    "product": "Commercial paper",
    "notional": 45000000.0,
    "maturity": "2027-05-03",
    "mtm": -567489
   },
   {
-   "tradeId": "T-10144",
+   "tradeId": "MX-20000144",
    "product": "Range accrual swap",
    "notional": 104000000.0,
    "maturity": "2031-01-16",
    "mtm": 482103
   },
   {
-   "tradeId": "T-10113",
+   "tradeId": "MX-20000113",
    "product": "American swaption",
    "notional": 139000000.0,
    "maturity": "2028-04-13",
    "mtm": 447170
   },
   {
-   "tradeId": "T-10028",
+   "tradeId": "MX-20000028",
    "product": "Cross-currency swap (MtM resetting)",
    "notional": 139000000.0,
    "maturity": "2033-08-12",
    "mtm": -417694
   },
   {
-   "tradeId": "T-10245",
+   "tradeId": "CLY-3000005",
    "product": "Single-name CDS",
    "notional": 34000000.0,
    "maturity": "2034-12-04",
    "mtm": -287615
   },
   {
-   "tradeId": "T-10088",
+   "tradeId": "MX-20000088",
    "product": "Interest rate floor",
    "notional": 37000000.0,
    "maturity": "2027-04-28",
    "mtm": 203454
   },
   {
-   "tradeId": "T-10529",
+   "tradeId": "END-1000085",
    "product": "Freight forward agreement",
    "notional": 66000000.0,
    "maturity": "2028-04-13",
    "mtm": 176045
   },
   {
-   "tradeId": "T-10242",
+   "tradeId": "CLY-3000002",
    "product": "Single-name CDS",
    "notional": 31000000.0,
    "maturity": "2033-12-12",
    "mtm": 149463
   },
   {
-   "tradeId": "T-10108",
+   "tradeId": "MX-20000108",
    "product": "Bermudan swaption",
    "notional": 23000000.0,
    "maturity": "2028-06-12",
    "mtm": -96005
   },
   {
-   "tradeId": "T-10262",
+   "tradeId": "CLY-3000022",
    "product": "CDS index option",
    "notional": 132000000.0,
    "maturity": "2029-05-10",
    "mtm": 75526
   },
   {
-   "tradeId": "T-10668",
+   "tradeId": "WSS-1500104",
    "product": "Term deposit / placement",
    "notional": 36000000.0,
    "maturity": "2026-12-28",
    "mtm": 70858
   },
   {
-   "tradeId": "T-10121",
+   "tradeId": "MX-20000121",
    "product": "CMS spread option",
    "notional": 13000000.0,
    "maturity": "2026-10-07",
    "mtm": 34663
   },
   {
-   "tradeId": "T-10658",
+   "tradeId": "WSS-1500094",
    "product": "Commercial paper",
    "notional": 67000000.0,
    "maturity": "2027-04-26",

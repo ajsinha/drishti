@@ -62,70 +62,70 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10219",
+   "tradeId": "WSS-1500063",
    "product": "FX target redemption forward",
    "notional": 216000000.0,
    "maturity": "2034-07-10",
    "mtm": -3824878
   },
   {
-   "tradeId": "T-10164",
+   "tradeId": "WSS-1500008",
    "product": "FX forward",
    "notional": 89000000.0,
    "maturity": "2026-10-07",
    "mtm": 1722945
   },
   {
-   "tradeId": "T-10414",
+   "tradeId": "IMG-400102",
    "product": "Equity total return swap",
    "notional": 210000000.0,
    "maturity": "2036-03-03",
    "mtm": -938209
   },
   {
-   "tradeId": "T-10226",
+   "tradeId": "WSS-1500070",
    "product": "FX accumulator",
    "notional": 226000000.0,
    "maturity": "2033-09-19",
    "mtm": 455904
   },
   {
-   "tradeId": "T-10192",
+   "tradeId": "WSS-1500036",
    "product": "FX digital option",
    "notional": 11000000.0,
    "maturity": "2026-10-07",
    "mtm": -210046
   },
   {
-   "tradeId": "T-10354",
+   "tradeId": "IMG-400042",
    "product": "Index option",
    "notional": 13000000.0,
    "maturity": "2027-08-10",
    "mtm": 154046
   },
   {
-   "tradeId": "T-10374",
+   "tradeId": "IMG-400062",
    "product": "Cliquet (ratchet)",
    "notional": 15000000.0,
    "maturity": "2034-04-05",
    "mtm": 141431
   },
   {
-   "tradeId": "T-10204",
+   "tradeId": "WSS-1500048",
    "product": "FX double-barrier option",
    "notional": 63000000.0,
    "maturity": "2034-12-14",
    "mtm": -138679
   },
   {
-   "tradeId": "T-10396",
+   "tradeId": "IMG-400084",
    "product": "Variance swap",
    "notional": 8000000.0,
    "maturity": "2035-03-12",
    "mtm": -68392
   },
   {
-   "tradeId": "T-10426",
+   "tradeId": "IMG-400114",
    "product": "Contract for difference",
    "notional": 17000000.0,
    "maturity": "2026-10-07",

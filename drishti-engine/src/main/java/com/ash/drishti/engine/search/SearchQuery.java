@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
 /**
  * A structured search as typed on the command line:
  * {@code TRD where mtm > 1m and counterparty.name contains 'Meridian' order by mtm desc limit 50}, or as a pick list
- * ({@link #pick}): {@code TRD T-100}, {@code TRD productType=Revolver}, {@code TRD T-1* desk=rates}.
+ * ({@link #pick}): {@code TRD MX-200000}, {@code TRD productType=Revolver}, {@code TRD MX-2* desk=rates}.
  * The head is a mnemonic or a kind. The condition is friendly Rachana-EL: {@code and}, {@code or}, {@code not},
  * {@code =} for equality, {@code x contains 'y'} and {@code x startswith 'y'}, amounts with {@code k}, {@code m} or
  * {@code bn}, and bare field paths, which are read from the document ({@code mtm} is {@code $.mtm}). A bare word
@@ -72,9 +72,9 @@ public record SearchQuery(String head, String condition, String orderBy, boolean
     /**
      * A command that lists entities to pick from, as a Bloomberg terminal does:
      * <ul>
-     *   <li>{@code TRD T-100}: trades whose id starts with T-100 (ignoring case); {@code TRD *100*}: ids containing 100;</li>
+     *   <li>{@code TRD MX-200000}: trades whose id starts with MX-200000 (ignoring case); {@code TRD *100*}: ids containing 100;</li>
      *   <li>{@code TRD productType=Revolver}, {@code TRD notional > 10m and currency = usd}: trades whose fields match;</li>
-     *   <li>{@code TRD T-1* desk=Rates order by mtm desc}: both, sorted;</li>
+     *   <li>{@code TRD MX-2* desk=Rates order by mtm desc}: both, sorted;</li>
      *   <li>{@code TRD where …}: the structured search ({@link #parse});</li>
      *   <li>{@code TRD}: every trade.</li>
      * </ul>

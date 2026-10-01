@@ -1,0 +1,259 @@
+{
+ "tradeId": "MX-20000095",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000095",
+ "productType": "COLLAR",
+ "productName": "Interest rate collar",
+ "assetClass": "Rates",
+ "family": "option",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2025-11-26",
+ "effectiveDate": "2025-11-28",
+ "maturityDate": "2026-10-16",
+ "currency": "GBP",
+ "notional": 245000000.0,
+ "mtm": 1471835,
+ "mtmCurrency": "USD",
+ "pnl1d": 5244,
+ "counterparty": {
+  "id": "CP-HALCYON",
+  "name": "Halcyon Shipping plc"
+ },
+ "nettingSet": "NS-HALCYON-NY",
+ "book": "BOOK-RATES-3",
+ "trader": "TRDR-ASHAH",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-GBP-OIS",
+ "forwardCurve": "CRV-GBP-PROJ",
+ "capVolSurface": "CPV-GBP",
+ "terms": {
+  "capStrike": 0.059076,
+  "floorStrike": 0.024444
+ },
+ "risk": {
+  "dv01": -16625,
+  "vega": -563597
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -2771,
+   "vega": -93933
+  },
+  {
+   "bucket": "6M",
+   "dv01": -5542,
+   "vega": -187866
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -8312,
+   "vega": -281798
+  }
+ ],
+ "schedule": [
+  {
+   "fixingDate": "2026-02-28",
+   "period": "2026-02-28..2026-05-28",
+   "index": "SONIA",
+   "rate": 0.031026,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-05-28",
+   "period": "2026-05-28..2026-08-28",
+   "index": "SONIA",
+   "rate": 0.040619,
+   "payoff": 344163.75,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-08-28",
+   "period": "2026-08-28..2026-11-28",
+   "index": "SONIA",
+   "rate": 0.049986,
+   "payoff": 917892.5,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-10-16",
+   "period": "2026-10-16..2027-01-16",
+   "index": "SONIA",
+   "rate": 0.021178,
+   "payoff": 0.0,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 3,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -63677
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 45932
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 12861
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -3096
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 34714
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -61722
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 32985
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -7876
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -18698
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -43748
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 30702
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -5817
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 117836
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 22044
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -58094
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 49529
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 6847
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 34516
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -23388
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -40261
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-11-26",
+  "executionTimestamp": "2025-11-26T09:34:11.988Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "A. Shah",
+  "salesperson": null,
+  "orderId": "ORD-1C0D20991B"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-11-26T09:32:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2025-11-26T09:32:00Z",
+  "lastModifiedAt": "2025-11-26T09:32:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA925095971",
+  "matched": "2025-11-26 15:39",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20961C0D20991BAF6DE6E64D",
+  "upi": "QZKY3O6J49DQ",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Barclays Bank plc",
+  "ourAgentBic": "BARCGB22XXX",
+  "theirAgentBic": "HALCGB33XXX",
+  "ssiId": "SSI-GBP-10E970",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1471835,
+  "cleanPv": 1471835.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CRV-GBP-OIS",
+   "CRV-GBP-PROJ",
+   "CPV-GBP"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 5394
+  }
+ }
+}

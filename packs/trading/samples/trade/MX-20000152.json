@@ -1,0 +1,443 @@
+{
+ "tradeId": "MX-20000152",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000152",
+ "productType": "TARN_RATES",
+ "productName": "Target redemption note (rates)",
+ "assetClass": "Rates",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2024-05-14",
+ "effectiveDate": "2024-05-16",
+ "maturityDate": "2033-08-22",
+ "currency": "JPY",
+ "notional": 52000000.0,
+ "mtm": -32695,
+ "mtmCurrency": "USD",
+ "pnl1d": -477,
+ "counterparty": {
+  "id": "CP-VERDANT",
+  "name": "Verdant Agri Holdings"
+ },
+ "nettingSet": "NS-VERDANT-NY",
+ "book": "BOOK-RATES-3",
+ "trader": "TRDR-MOKAFOR",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-JPY-OIS",
+ "forwardCurve": "CRV-JPY-PROJ",
+ "swaptionVolCube": "IRV-JPY",
+ "terms": {
+  "target": 0.106413,
+  "couponFormula": "2 × (Strike − Index)"
+ },
+ "risk": {
+  "dv01": -37550,
+  "vega": -327091
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -1341,
+   "vega": -11682
+  },
+  {
+   "bucket": "6M",
+   "dv01": -2682,
+   "vega": -23364
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -4023,
+   "vega": -35045
+  },
+  {
+   "bucket": "2Y",
+   "dv01": -5364,
+   "vega": -46727
+  },
+  {
+   "bucket": "3Y",
+   "dv01": -6705,
+   "vega": -58409
+  },
+  {
+   "bucket": "5Y",
+   "dv01": -8046,
+   "vega": -70091
+  },
+  {
+   "bucket": "7Y",
+   "dv01": -9388,
+   "vega": -81773
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Receive performance",
+   "payReceive": "Receive",
+   "rateType": "Performance",
+   "index": "USCPI",
+   "rate": null,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "JPY",
+   "notional": 52000000.0
+  },
+  {
+   "leg": 2,
+   "label": "Pay TONA + spread",
+   "payReceive": "Pay",
+   "rateType": "Float",
+   "index": "TONA",
+   "rate": 0.006402,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "JPY",
+   "notional": 52000000.0
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2024-08-16",
+   "level": 94.96,
+   "trigger": 100.0,
+   "performance": -0.0504,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2024-11-16",
+   "level": 88.53,
+   "trigger": 100.0,
+   "performance": -0.1147,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-02-16",
+   "level": 88.84,
+   "trigger": 100.0,
+   "performance": -0.1116,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-05-16",
+   "level": 85.4,
+   "trigger": 100.0,
+   "performance": -0.146,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-08-16",
+   "level": 88.11,
+   "trigger": 100.0,
+   "performance": -0.1189,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-11-16",
+   "level": 96.61,
+   "trigger": 100.0,
+   "performance": -0.0339,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-02-16",
+   "level": 87.23,
+   "trigger": 100.0,
+   "performance": -0.1277,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-05-16",
+   "level": 96.72,
+   "trigger": 100.0,
+   "performance": -0.0328,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-08-16",
+   "level": 97.91,
+   "trigger": 100.0,
+   "performance": -0.0209,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-11-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-02-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-05-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-08-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-11-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-02-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-05-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-08-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-11-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-02-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-05-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-08-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-11-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-02-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-05-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 9,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -3813
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 1295
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -6418
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -980
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -1303
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 305
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -9757
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -5764
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -152
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 2911
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -4186
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 1631
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -1438
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 595
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -194
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 699
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -1655
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -1308
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -2371
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 1846
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-05-14",
+  "executionTimestamp": "2024-05-14T08:44:27.814Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "M. Okafor",
+  "salesperson": null,
+  "orderId": "ORD-32F7E7394F"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-05-14T11:23:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2024-05-14T11:23:00Z",
+  "lastModifiedAt": "2024-05-14T11:23:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA895583238",
+  "matched": "2024-05-14 14:00",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209632F7E7394FDC11A8AAD9",
+  "upi": "QZZL2YKIFV0V",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "VERDGB33XXX",
+  "ssiId": "SSI-JPY-ABCF5A",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -32695,
+  "cleanPv": -32695.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "CRV-JPY-OIS",
+   "CRV-JPY-PROJ",
+   "IRV-JPY"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 585
+  }
+ }
+}

@@ -62,112 +62,112 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10059",
+   "tradeId": "MX-20000059",
    "product": "Constant maturity swap",
    "notional": 240000000.0,
    "maturity": "2033-02-25",
    "mtm": 8653471
   },
   {
-   "tradeId": "T-10099",
+   "tradeId": "MX-20000099",
    "product": "European swaption",
    "notional": 236000000.0,
    "maturity": "2027-12-03",
    "mtm": 3985722
   },
   {
-   "tradeId": "T-10516",
+   "tradeId": "END-1000072",
    "product": "Gas swing option",
    "notional": 112000000.0,
    "maturity": "2036-01-16",
    "mtm": -3307013
   },
   {
-   "tradeId": "T-10634",
+   "tradeId": "BBG-60000064",
    "product": "CMO tranche",
    "notional": 230000000.0,
    "maturity": "2028-11-09",
    "mtm": -3222264
   },
   {
-   "tradeId": "T-10499",
+   "tradeId": "END-1000055",
    "product": "Commodity index swap",
    "notional": 123000000.0,
    "maturity": "2035-11-20",
    "mtm": -1935705
   },
   {
-   "tradeId": "T-10292",
+   "tradeId": "CLY-3000052",
    "product": "Term loan",
    "notional": 108000000.0,
    "maturity": "2028-11-17",
    "mtm": -1725172
   },
   {
-   "tradeId": "T-10020",
+   "tradeId": "MX-20000020",
    "product": "Cross-currency swap (non-MtM)",
    "notional": 143000000.0,
    "maturity": "2032-03-29",
    "mtm": -1325556
   },
   {
-   "tradeId": "T-10642",
+   "tradeId": "BBG-60000072",
    "product": "Asset-backed security",
    "notional": 69000000.0,
    "maturity": "2028-12-14",
    "mtm": 1276947
   },
   {
-   "tradeId": "T-10104",
+   "tradeId": "MX-20000104",
    "product": "Bermudan swaption",
    "notional": 81000000.0,
    "maturity": "2027-03-22",
    "mtm": -1238173
   },
   {
-   "tradeId": "T-10311",
+   "tradeId": "CLY-3000071",
    "product": "Unfunded risk participation",
    "notional": 93000000.0,
    "maturity": "2028-07-27",
    "mtm": 896628
   },
   {
-   "tradeId": "T-10641",
+   "tradeId": "BBG-60000071",
    "product": "Asset-backed security",
    "notional": 124000000.0,
    "maturity": "2035-09-26",
    "mtm": 691482
   },
   {
-   "tradeId": "T-10647",
+   "tradeId": "BBG-60000077",
    "product": "CLO tranche",
    "notional": 58000000.0,
    "maturity": "2028-09-21",
    "mtm": 635630
   },
   {
-   "tradeId": "T-10291",
+   "tradeId": "CLY-3000051",
    "product": "Term loan",
    "notional": 229000000.0,
    "maturity": "2031-10-16",
    "mtm": -333574
   },
   {
-   "tradeId": "T-10514",
+   "tradeId": "END-1000070",
    "product": "Gas swing option",
    "notional": 192000000.0,
    "maturity": "2036-06-23",
    "mtm": 319975
   },
   {
-   "tradeId": "T-10091",
+   "tradeId": "MX-20000091",
    "product": "Interest rate collar",
    "notional": 119000000.0,
    "maturity": "2026-10-07",
    "mtm": -242239
   },
   {
-   "tradeId": "T-10527",
+   "tradeId": "END-1000083",
    "product": "Weather derivative (HDD/CDD)",
    "notional": 9000000.0,
    "maturity": "2034-02-09",

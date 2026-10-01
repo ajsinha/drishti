@@ -62,70 +62,70 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10207",
+   "tradeId": "WSS-1500051",
    "product": "FX one-touch / no-touch",
    "notional": 227000000.0,
    "maturity": "2030-10-29",
    "mtm": -1462679
   },
   {
-   "tradeId": "T-10165",
+   "tradeId": "WSS-1500009",
    "product": "FX forward",
    "notional": 102000000.0,
    "maturity": "2026-10-07",
    "mtm": -1066636
   },
   {
-   "tradeId": "T-10215",
+   "tradeId": "WSS-1500059",
    "product": "FX average-rate option",
    "notional": 218000000.0,
    "maturity": "2037-03-09",
    "mtm": 920619
   },
   {
-   "tradeId": "T-10220",
+   "tradeId": "WSS-1500064",
    "product": "FX target redemption forward",
    "notional": 50000000.0,
    "maturity": "2034-09-21",
    "mtm": 850141
   },
   {
-   "tradeId": "T-10346",
+   "tradeId": "IMG-400034",
    "product": "OTC equity option",
    "notional": 223000000.0,
    "maturity": "2027-05-26",
    "mtm": 780054
   },
   {
-   "tradeId": "T-10387",
+   "tradeId": "IMG-400075",
    "product": "Reverse convertible",
    "notional": 65000000.0,
    "maturity": "2032-05-17",
    "mtm": 479208
   },
   {
-   "tradeId": "T-10557",
+   "tradeId": "MX-20000179",
    "product": "Inflation-linked bond",
    "notional": 69000000.0,
    "maturity": "2032-06-07",
    "mtm": 266856
   },
   {
-   "tradeId": "T-10565",
+   "tradeId": "MX-20000187",
    "product": "Limited price index swap",
    "notional": 223000000.0,
    "maturity": "2036-09-19",
    "mtm": -115232
   },
   {
-   "tradeId": "T-10363",
+   "tradeId": "IMG-400051",
    "product": "Equity Asian option",
    "notional": 155000000.0,
    "maturity": "2035-05-29",
    "mtm": -51366
   },
   {
-   "tradeId": "T-10391",
+   "tradeId": "IMG-400079",
    "product": "Variance swap",
    "notional": 2000000.0,
    "maturity": "2035-09-10",

@@ -1,0 +1,270 @@
+{
+ "tradeId": "MX-20000124",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000124",
+ "productType": "CMS_SPREAD_OPT",
+ "productName": "CMS spread option",
+ "assetClass": "Rates",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2026-01-28",
+ "effectiveDate": "2026-01-30",
+ "maturityDate": "2027-04-26",
+ "currency": "CHF",
+ "notional": 71000000.0,
+ "mtm": -301692,
+ "mtmCurrency": "USD",
+ "pnl1d": 3615,
+ "counterparty": {
+  "id": "CP-ALDERSHOT",
+  "name": "Aldershot Pension Trust"
+ },
+ "nettingSet": "NS-ALDERSHOT-NY",
+ "book": "BOOK-RATES-2",
+ "trader": "TRDR-MOKAFOR",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-CHF-OIS",
+ "forwardCurve": "CRV-CHF-PROJ",
+ "swaptionVolCube": "IRV-CHF",
+ "correlation": "CORR-EU-EQ",
+ "terms": {
+  "longTenor": "30Y",
+  "shortTenor": "5Y",
+  "strike": 44.5
+ },
+ "risk": {
+  "dv01": 7237,
+  "vega": 198643
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 1206,
+   "vega": 33107
+  },
+  {
+   "bucket": "6M",
+   "dv01": 2412,
+   "vega": 66214
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 3618,
+   "vega": 99322
+  }
+ ],
+ "schedule": [
+  {
+   "fixingDate": "2026-04-30",
+   "period": "2026-04-30..2026-07-30",
+   "index": "SARON",
+   "rate": 0.024443,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-07-30",
+   "period": "2026-07-30..2026-10-30",
+   "index": "SARON",
+   "rate": 0.023496,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-10-30",
+   "period": "2026-10-30..2027-01-30",
+   "index": "SARON",
+   "rate": 0.025904,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-01-30",
+   "period": "2027-01-30..2027-04-30",
+   "index": "SARON",
+   "rate": 0.033909,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-04-26",
+   "period": "2027-04-26..2027-07-26",
+   "index": "SARON",
+   "rate": 0.027574,
+   "payoff": 0.0,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 2,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 1529
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -7777
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -7807
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -10285
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 4370
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -2216
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -7070
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -1895
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -11549
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 5148
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -5770
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -7741
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -7474
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -4834
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -20231
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 1434
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -3030
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -8272
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 7169
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 2174
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-01-28",
+  "executionTimestamp": "2026-01-28T15:49:14.000Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "M. Okafor",
+  "salesperson": null,
+  "orderId": "ORD-23B2ECF5B5"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-01-28T09:08:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2026-01-28T09:08:00Z",
+  "lastModifiedAt": "2026-01-28T09:08:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA615031630",
+  "matched": "2026-01-28 10:17",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209623B2ECF5B546F8980513",
+  "upi": "QZ0UZCACP7AB",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "ALDEGB33XXX",
+  "ssiId": "SSI-CHF-D06EAF",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -301692,
+  "cleanPv": -301692.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CRV-CHF-OIS",
+   "CRV-CHF-PROJ",
+   "IRV-CHF",
+   "CORR-EU-EQ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 1313
+  }
+ }
+}

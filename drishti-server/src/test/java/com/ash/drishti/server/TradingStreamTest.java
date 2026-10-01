@@ -50,9 +50,9 @@ class TradingStreamTest {
         p.put("key.serializer", StringSerializer.class.getName());
         p.put("value.serializer", StringSerializer.class.getName());
         try (KafkaProducer<String, String> producer = new KafkaProducer<>(p)) {
-            String sample = Files.readString(Path.of("../packs/trading/samples/trade/T-10001.json"));
+            String sample = Files.readString(Path.of("../packs/trading/samples/trade/MX-20000001.json"));
             String streamed = sample.replaceFirst("\"mtm\": -?[0-9.]+", "\"mtm\": 1234567");
-            producer.send(new ProducerRecord<>("drishti.trading.trades", "T-10001", streamed)).get(10, TimeUnit.SECONDS);
+            producer.send(new ProducerRecord<>("drishti.trading.trades", "MX-20000001", streamed)).get(10, TimeUnit.SECONDS);
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
@@ -76,10 +76,10 @@ class TradingStreamTest {
         String source = "";
         while (!"trading-stream".equals(source) && System.nanoTime() < until) {
             Thread.sleep(200);
-            String body = mvc.perform(get("/api/v1/views/trade/T-10001")).andReturn().getResponse().getContentAsString();
+            String body = mvc.perform(get("/api/v1/views/trade/MX-20000001")).andReturn().getResponse().getContentAsString();
             source = com.jayway.jsonpath.JsonPath.read(body, "$.provenance.source");
         }
-        mvc.perform(get("/api/v1/views/trade/T-10001"))
+        mvc.perform(get("/api/v1/views/trade/MX-20000001"))
                 .andExpect(jsonPath("$.provenance.source").value("trading-stream"))
                 .andExpect(jsonPath("$.provenance.live").value(true))
                 .andExpect(jsonPath("$.strip[?(@.label == 'MTM (USD)')].text").value(org.hamcrest.Matchers.hasItem("+1,234,567")));

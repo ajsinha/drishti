@@ -1,0 +1,276 @@
+{
+ "tradeId": "CLY-3000029",
+ "sourceSystem": "Calypso",
+ "sourceTradeId": "3000029",
+ "productType": "FIRST_TO_DEFAULT",
+ "productName": "First-to-default basket",
+ "assetClass": "Credit",
+ "family": "cds",
+ "status": "Live",
+ "direction": "Buy protection",
+ "tradeDate": "2024-11-08",
+ "effectiveDate": "2024-11-11",
+ "maturityDate": "2027-03-22",
+ "currency": "JPY",
+ "notional": 180000000.0,
+ "mtm": -3938043,
+ "mtmCurrency": "USD",
+ "pnl1d": 90892,
+ "counterparty": {
+  "id": "CP-ALDERSHOT",
+  "name": "Aldershot Pension Trust"
+ },
+ "nettingSet": "NS-ALDERSHOT-NY",
+ "book": "BOOK-CREDIT-2",
+ "trader": "TRDR-DWHITFIELD",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-ORBITAL",
+ "creditCurve": "CDS-ORBITAL",
+ "discountCurve": "CRV-JPY-OIS",
+ "correlation": "CORR-EU-EQ",
+ "terms": {
+  "basketSize": 4,
+  "spread": 279.0
+ },
+ "risk": {
+  "cs01": 34933,
+  "jtd": -108000000
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 5822,
+   "jtd": -18000000
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 11644,
+   "jtd": -36000000
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 17466,
+   "jtd": -54000000
+  }
+ ],
+ "schedule": [
+  {
+   "name": "Rheintal Landesbank",
+   "weight": 0.125,
+   "level": 245.5,
+   "status": "Active"
+  },
+  {
+   "name": "Helix Pharmaceuticals Inc.",
+   "weight": 0.125,
+   "level": 371.7,
+   "status": "Active"
+  },
+  {
+   "name": "Cascadia Airlines Inc.",
+   "weight": 0.125,
+   "level": 168.9,
+   "status": "Active"
+  },
+  {
+   "name": "Lumen Semiconductor AG",
+   "weight": 0.125,
+   "level": 434.5,
+   "status": "Active"
+  },
+  {
+   "name": "Kaizen Motors Corp.",
+   "weight": 0.125,
+   "level": 438.0,
+   "status": "Active"
+  },
+  {
+   "name": "Halcyon Shipping plc",
+   "weight": 0.125,
+   "level": 432.5,
+   "status": "Active"
+  },
+  {
+   "name": "Orbital Telecom SA",
+   "weight": 0.125,
+   "level": 169.7,
+   "status": "Active"
+  },
+  {
+   "name": "Meridian Financial Group",
+   "weight": 0.125,
+   "level": 100.9,
+   "status": "Active"
+  }
+ ],
+ "nextIndex": -1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 119505
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -38886
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 23686
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 41965
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 16693
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -228428
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -122725
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 55990
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 108756
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -82419
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 71615
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -71483
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 70096
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 33214
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 210162
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -147415
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 37821
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 194894
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 43956
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 26832
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-11-08",
+  "executionTimestamp": "2024-11-08T16:14:52.827Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "D. Whitfield",
+  "salesperson": null,
+  "orderId": "ORD-56BC91816C"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-11-08T10:03:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2024-11-08T10:03:00Z",
+  "lastModifiedAt": "2024-11-08T10:03:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA476173337",
+  "matched": "2024-11-08 13:28",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209656BC91816C691FEB4617",
+  "upi": "QZ9A7VB080DG",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "ALDEGB33XXX",
+  "ssiId": "SSI-JPY-D06EAF",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -3938043,
+  "cleanPv": -3938043.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CDS-ORBITAL",
+   "CRV-JPY-OIS",
+   "CORR-EU-EQ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 9676
+  }
+ }
+}

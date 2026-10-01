@@ -57,6 +57,11 @@ def fields_of(k) -> list[str]:
     return list(dict.fromkeys(names))
 
 
+def shown_prefix(spec) -> str:
+    """How a kind's identifiers begin, for the guides: trades carry their booking system's prefix (booking.py)."""
+    return "MX-…`, `CLY-…`, `END-…`, `IMG-…`, `BBG-…`, `WSS-" if spec.kind == "trade" else spec.prefix
+
+
 def finding(mnemonic: str, label: str, prefix: str, field_example: str = "") -> list[str]:
     """How to open and search a pack's documents, with placeholders rather than sample ids: the guides describe the
     pack, and the documents a site holds are its own."""
@@ -85,7 +90,7 @@ def overview(name: str, docs: dict) -> str:
               f"**Kinds:** {len(kinds)}", "",
               "Enable it with `DRISHTI_PACKS=" + name + "` (the packs it extends come with it; where they differ, the more specific wins).", ""]
     first = SPEC["trade"] if "trade" in kinds else SPEC[kinds[0]]
-    lines += finding(first.mnemonic, first.label, first.prefix, "productType=IRS_FIXFLOAT" if first.kind == "trade" else "")
+    lines += finding(first.mnemonic, first.label, shown_prefix(first), "productType=IRS_FIXFLOAT" if first.kind == "trade" else "")
     lines += ["## Where the data comes from", "",
               "Each kind is read from the Delta Lake folder of its **data domain** (`data/delta/<domain>/<kind>/`, partitioned by "
               "business date). Pick a date in the top bar to see that day; **Live** reads the streaming source first.", ""]
@@ -108,7 +113,7 @@ def overview(name: str, docs: dict) -> str:
     rows = []
     for k in kinds:
         s = SPEC[k]
-        rows.append([f"`{k}`", s.label, f"`{s.mnemonic}`", f"`{s.prefix}…`", f"`{s.id_field}`", s.desc])
+        rows.append([f"`{k}`", s.label, f"`{s.mnemonic}`", f"`{shown_prefix(s)}…`", f"`{s.id_field}`", s.desc])
     lines += table(["Kind", "Name", "Mnemonic", "Identifiers", "Id field", "What it is"], rows)
     for k in kinds:
         s = SPEC[k]
@@ -162,7 +167,7 @@ def market(docs: dict) -> str:
              "`<mnemonic> <GO>` lists every object of a kind, and `<mnemonic> <id> <GO>` opens one.", ""]
     for k in layout.PACKS["market-data"]["kinds"]["market"]:
         s = SPEC[k]
-        lines += [f"## {s.label} (`{k}`)", "", s.desc, "", f"**Mnemonic:** `{s.mnemonic}` · **Identifiers:** `{s.prefix}…` · **Id field:** `{s.id_field}`", ""]
+        lines += [f"## {s.label} (`{k}`)", "", s.desc, "", f"**Mnemonic:** `{s.mnemonic}` · **Identifiers:** `{shown_prefix(s)}…` · **Id field:** `{s.id_field}`", ""]
         fs = fields_of(s)
         if fs:
             lines += ["**Fields its Sutra reads:** " + ", ".join(f"`{f}`" for f in fs) + ".", ""]

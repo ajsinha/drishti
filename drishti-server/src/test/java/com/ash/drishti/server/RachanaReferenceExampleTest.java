@@ -35,7 +35,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 /**
  * The annotated example in RACHANA_REFERENCE.md is real: it is taken from the document as written, previewed against
- * the trading pack's T-10001, and every panel must render with data.
+ * the trading pack's MX-20000001, and every panel must render with data.
  */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=trading"})
 @AutoConfigureMockMvc
@@ -64,7 +64,7 @@ class RachanaReferenceExampleTest {
 
     @Test
     void theAnnotatedExampleRendersEveryPanel() throws Exception {
-        String body = json.writeValueAsString(Map.of("yaml", example(), "kind", "trade", "id", "T-10001"));
+        String body = json.writeValueAsString(Map.of("yaml", example(), "kind", "trade", "id", "MX-20000001"));
         String out = mvc.perform(post("/api/v1/studio/preview").contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
         JsonNode v = json.readTree(out);

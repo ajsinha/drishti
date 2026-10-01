@@ -1,0 +1,306 @@
+{
+ "tradeId": "MX-20000063",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000063",
+ "productType": "FRA",
+ "productName": "Forward rate agreement",
+ "assetClass": "Rates",
+ "family": "linear",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2024-05-29",
+ "effectiveDate": "2024-05-31",
+ "maturityDate": "2026-10-07",
+ "currency": "USD",
+ "notional": 368000000.0,
+ "mtm": 467887,
+ "mtmCurrency": "USD",
+ "pnl1d": -41178,
+ "counterparty": {
+  "id": "CP-MERIDIAN-RE",
+  "name": "Meridian Reinsurance Ltd"
+ },
+ "nettingSet": "NS-MERIDIAN-RE-NY",
+ "book": "BOOK-RATES-3",
+ "trader": "TRDR-ASHAH",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-USD-OIS",
+ "forwardCurve": "CRV-USD-PROJ",
+ "terms": {
+  "fraRate": 0.033999,
+  "startPeriod": "3x6",
+  "fixingDate": "2026-12-11"
+ },
+ "risk": {
+  "dv01": 64342
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 6434
+  },
+  {
+   "bucket": "6M",
+   "dv01": 12868
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 19303
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 25737
+  }
+ ],
+ "schedule": [
+  {
+   "fixingDate": "2024-08-31",
+   "period": "2024-08-31..2024-11-30",
+   "index": "SOFR",
+   "rate": 0.033135,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2024-11-30",
+   "period": "2024-11-30..2025-02-28",
+   "index": "SOFR",
+   "rate": 0.038335,
+   "payoff": 306820.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2025-02-28",
+   "period": "2025-02-28..2025-05-28",
+   "index": "SOFR",
+   "rate": 0.031246,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2025-05-28",
+   "period": "2025-05-28..2025-08-28",
+   "index": "SOFR",
+   "rate": 0.044046,
+   "payoff": 832232.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2025-08-28",
+   "period": "2025-08-28..2025-11-28",
+   "index": "SOFR",
+   "rate": 0.044934,
+   "payoff": 913928.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2025-11-28",
+   "period": "2025-11-28..2026-02-28",
+   "index": "SOFR",
+   "rate": 0.049581,
+   "payoff": 1341452.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-02-28",
+   "period": "2026-02-28..2026-05-28",
+   "index": "SOFR",
+   "rate": 0.04804,
+   "payoff": 1199680.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-05-28",
+   "period": "2026-05-28..2026-08-28",
+   "index": "SOFR",
+   "rate": 0.020709,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-08-28",
+   "period": "2026-08-28..2026-11-28",
+   "index": "SOFR",
+   "rate": 0.044316,
+   "payoff": 857072.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-10-07",
+   "period": "2026-10-07..2027-01-07",
+   "index": "SOFR",
+   "rate": 0.044472,
+   "payoff": 871424.0,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 9,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -8913
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -10900
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 2899
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 15529
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 6219
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -10683
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -3509
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 21635
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 23973
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -14596
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -24327
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -947
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -789
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 7501
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 8760
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 1710
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 2643
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 13943
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -4159
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 981
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-05-29",
+  "executionTimestamp": "2024-05-29T16:29:04.566Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "A. Shah",
+  "salesperson": null,
+  "orderId": "ORD-696F94B3AB"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-05-29T10:22:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2024-05-29T10:22:00Z",
+  "lastModifiedAt": "2024-05-29T10:22:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA633052240",
+  "matched": "2024-05-29 17:59",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096696F94B3ABC196B69627",
+  "upi": "QZ6ULH8CX7EP",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "MERIUS33XXX",
+  "ssiId": "SSI-USD-9DC4EA",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 467887,
+  "cleanPv": 467887.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-USD-OIS",
+   "CRV-USD-PROJ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 4616
+  }
+ }
+}

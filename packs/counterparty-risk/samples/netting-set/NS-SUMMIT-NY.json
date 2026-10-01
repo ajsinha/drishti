@@ -62,280 +62,280 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10073",
+   "tradeId": "MX-20000073",
    "product": "Government bond future",
    "notional": 227000000.0,
    "maturity": "2027-05-28",
    "mtm": -4816627
   },
   {
-   "tradeId": "T-10603",
+   "tradeId": "BBG-60000033",
    "product": "Puttable bond",
    "notional": 197000000.0,
    "maturity": "2030-11-19",
    "mtm": 4750454
   },
   {
-   "tradeId": "T-10446",
+   "tradeId": "END-1000002",
    "product": "Commodity future",
    "notional": 241000000.0,
    "maturity": "2027-10-04",
    "mtm": 4446305
   },
   {
-   "tradeId": "T-10498",
+   "tradeId": "END-1000054",
    "product": "Calendar spread",
    "notional": 227000000.0,
    "maturity": "2027-09-16",
    "mtm": 3887196
   },
   {
-   "tradeId": "T-10588",
+   "tradeId": "BBG-60000018",
    "product": "Floating rate note",
    "notional": 245000000.0,
    "maturity": "2031-09-29",
    "mtm": -3735787
   },
   {
-   "tradeId": "T-10620",
+   "tradeId": "BBG-60000050",
    "product": "Municipal bond",
    "notional": 194000000.0,
    "maturity": "2036-05-05",
    "mtm": -3693532
   },
   {
-   "tradeId": "T-10607",
+   "tradeId": "BBG-60000037",
    "product": "Amortising bond",
    "notional": 204000000.0,
    "maturity": "2034-08-14",
    "mtm": -3664626
   },
   {
-   "tradeId": "T-10496",
+   "tradeId": "END-1000052",
    "product": "Calendar spread",
    "notional": 143000000.0,
    "maturity": "2026-10-07",
    "mtm": 3656838
   },
   {
-   "tradeId": "T-10590",
+   "tradeId": "BBG-60000020",
    "product": "Zero-coupon bond",
    "notional": 163000000.0,
    "maturity": "2029-03-12",
    "mtm": 3464598
   },
   {
-   "tradeId": "T-10597",
+   "tradeId": "BBG-60000027",
    "product": "Callable bond",
    "notional": 210000000.0,
    "maturity": "2036-04-10",
    "mtm": 3432773
   },
   {
-   "tradeId": "T-10600",
+   "tradeId": "BBG-60000030",
    "product": "Callable bond",
    "notional": 241000000.0,
    "maturity": "2032-08-16",
    "mtm": 3201249
   },
   {
-   "tradeId": "T-10472",
+   "tradeId": "END-1000028",
    "product": "Option on commodity future",
    "notional": 134000000.0,
    "maturity": "2028-09-27",
    "mtm": -3096114
   },
   {
-   "tradeId": "T-10618",
+   "tradeId": "BBG-60000048",
    "product": "Covered bond",
    "notional": 158000000.0,
    "maturity": "2035-11-29",
    "mtm": 2694900
   },
   {
-   "tradeId": "T-10576",
+   "tradeId": "BBG-60000006",
    "product": "Government bond",
    "notional": 141000000.0,
    "maturity": "2032-12-22",
    "mtm": 2677879
   },
   {
-   "tradeId": "T-10076",
+   "tradeId": "MX-20000076",
    "product": "Government bond future",
    "notional": 147000000.0,
    "maturity": "2027-10-18",
    "mtm": -2629986
   },
   {
-   "tradeId": "T-10575",
+   "tradeId": "BBG-60000005",
    "product": "Government bond",
    "notional": 237000000.0,
    "maturity": "2034-12-18",
    "mtm": -2577766
   },
   {
-   "tradeId": "T-10654",
+   "tradeId": "WSS-1500090",
    "product": "Treasury bill",
    "notional": 226000000.0,
    "maturity": "2027-06-14",
    "mtm": -2467214
   },
   {
-   "tradeId": "T-10473",
+   "tradeId": "END-1000029",
    "product": "Option on commodity future",
    "notional": 145000000.0,
    "maturity": "2026-10-07",
    "mtm": -2435043
   },
   {
-   "tradeId": "T-10070",
+   "tradeId": "MX-20000070",
    "product": "Short-term interest rate future",
    "notional": 246000000.0,
    "maturity": "2027-05-10",
    "mtm": 2387948
   },
   {
-   "tradeId": "T-10630",
+   "tradeId": "BBG-60000060",
    "product": "Agency MBS pass-through",
    "notional": 211000000.0,
    "maturity": "2031-01-23",
    "mtm": -2303954
   },
   {
-   "tradeId": "T-10582",
+   "tradeId": "BBG-60000012",
    "product": "Corporate bond",
    "notional": 179000000.0,
    "maturity": "2032-01-12",
    "mtm": 2211267
   },
   {
-   "tradeId": "T-10622",
+   "tradeId": "BBG-60000052",
    "product": "Municipal bond",
    "notional": 207000000.0,
    "maturity": "2027-06-22",
    "mtm": 1977148
   },
   {
-   "tradeId": "T-10609",
+   "tradeId": "BBG-60000039",
    "product": "Amortising bond",
    "notional": 129000000.0,
    "maturity": "2030-12-09",
    "mtm": -1903497
   },
   {
-   "tradeId": "T-10652",
+   "tradeId": "WSS-1500088",
    "product": "Treasury bill",
    "notional": 215000000.0,
    "maturity": "2026-12-11",
    "mtm": -1859294
   },
   {
-   "tradeId": "T-10522",
+   "tradeId": "END-1000078",
    "product": "Emissions allowance future",
    "notional": 153000000.0,
    "maturity": "2027-05-20",
    "mtm": 1790391
   },
   {
-   "tradeId": "T-10521",
+   "tradeId": "END-1000077",
    "product": "Emissions allowance future",
    "notional": 96000000.0,
    "maturity": "2026-11-02",
    "mtm": -1773998
   },
   {
-   "tradeId": "T-10593",
+   "tradeId": "BBG-60000023",
    "product": "Zero-coupon bond",
    "notional": 208000000.0,
    "maturity": "2028-05-30",
    "mtm": -1773546
   },
   {
-   "tradeId": "T-10469",
+   "tradeId": "END-1000025",
    "product": "Option on commodity future",
    "notional": 154000000.0,
    "maturity": "2026-10-07",
    "mtm": -1683518
   },
   {
-   "tradeId": "T-10608",
+   "tradeId": "BBG-60000038",
    "product": "Amortising bond",
    "notional": 164000000.0,
    "maturity": "2032-05-20",
    "mtm": -1645510
   },
   {
-   "tradeId": "T-10573",
+   "tradeId": "BBG-60000003",
    "product": "Government bond",
    "notional": 105000000.0,
    "maturity": "2034-10-31",
    "mtm": -1569609
   },
   {
-   "tradeId": "T-10651",
+   "tradeId": "WSS-1500087",
    "product": "Treasury bill",
    "notional": 51000000.0,
    "maturity": "2026-11-16",
    "mtm": 1540400
   },
   {
-   "tradeId": "T-10596",
+   "tradeId": "BBG-60000026",
    "product": "Callable bond",
    "notional": 115000000.0,
    "maturity": "2034-02-28",
    "mtm": -1530581
   },
   {
-   "tradeId": "T-10580",
+   "tradeId": "BBG-60000010",
    "product": "Corporate bond",
    "notional": 216000000.0,
    "maturity": "2031-12-22",
    "mtm": -1502288
   },
   {
-   "tradeId": "T-10591",
+   "tradeId": "BBG-60000021",
    "product": "Zero-coupon bond",
    "notional": 188000000.0,
    "maturity": "2030-09-12",
    "mtm": -1467679
   },
   {
-   "tradeId": "T-10471",
+   "tradeId": "END-1000027",
    "product": "Option on commodity future",
    "notional": 198000000.0,
    "maturity": "2028-02-14",
    "mtm": -1422464
   },
   {
-   "tradeId": "T-10494",
+   "tradeId": "END-1000050",
    "product": "Calendar spread",
    "notional": 185000000.0,
    "maturity": "2026-10-07",
    "mtm": 1269696
   },
   {
-   "tradeId": "T-10627",
+   "tradeId": "BBG-60000057",
    "product": "Agency MBS pass-through",
    "notional": 231000000.0,
    "maturity": "2031-12-09",
    "mtm": 1211464
   },
   {
-   "tradeId": "T-10599",
+   "tradeId": "BBG-60000029",
    "product": "Callable bond",
    "notional": 59000000.0,
    "maturity": "2026-10-07",
    "mtm": 1197314
   },
   {
-   "tradeId": "T-10129",
+   "tradeId": "MX-20000129",
    "product": "STIR future option",
    "notional": 95000000.0,
    "maturity": "2026-10-07",
    "mtm": 1184715
   },
   {
-   "tradeId": "T-10581",
+   "tradeId": "BBG-60000011",
    "product": "Corporate bond",
    "notional": 40000000.0,
    "maturity": "2029-05-17",

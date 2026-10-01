@@ -1,0 +1,308 @@
+{
+ "tradeId": "IMG-400099",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400099",
+ "productType": "EQ_TRS",
+ "productName": "Equity total return swap",
+ "assetClass": "Equity",
+ "family": "swap",
+ "status": "Live",
+ "direction": "Receive fixed",
+ "tradeDate": "2024-09-11",
+ "effectiveDate": "2024-09-13",
+ "maturityDate": "2028-03-29",
+ "currency": "EUR",
+ "notional": 146000000.0,
+ "mtm": 724534,
+ "mtmCurrency": "USD",
+ "pnl1d": 69,
+ "counterparty": {
+  "id": "CP-BRAMBLE",
+  "name": "Bramble Asset Management"
+ },
+ "nettingSet": "NS-BRAMBLE-LDN",
+ "book": "BOOK-EQD-3",
+ "trader": "TRDR-JWEISS",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingEquity": "EQ-RHNB",
+ "dividendCurve": "DIV-RHNB",
+ "discountCurve": "CRV-EUR-OIS",
+ "terms": {
+  "fundingSpread": 142.8,
+  "resetFrequency": "Quarterly",
+  "quantity": 247535
+ },
+ "risk": {
+  "delta": -299073,
+  "dv01": -44138
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -14242,
+   "dv01": -2102
+  },
+  {
+   "bucket": "1M",
+   "delta": -28483,
+   "dv01": -4204
+  },
+  {
+   "bucket": "3M",
+   "delta": -42725,
+   "dv01": -6305
+  },
+  {
+   "bucket": "6M",
+   "delta": -56966,
+   "dv01": -8407
+  },
+  {
+   "bucket": "1Y",
+   "delta": -71208,
+   "dv01": -10509
+  },
+  {
+   "bucket": "2Y",
+   "delta": -85449,
+   "dv01": -12611
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Receive performance",
+   "payReceive": "Receive",
+   "rateType": "Performance",
+   "index": "RHNB",
+   "rate": null,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "EUR",
+   "notional": 146000000.0
+  },
+  {
+   "leg": 2,
+   "label": "Pay ESTR + spread",
+   "payReceive": "Pay",
+   "rateType": "Float",
+   "index": "ESTR",
+   "rate": 0.019824,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "EUR",
+   "notional": 146000000.0
+  }
+ ],
+ "schedule": [
+  {
+   "payDate": "2025-09-13",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -387413.53,
+   "pv": 0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2026-09-13",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -297889.26,
+   "pv": 0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2027-09-13",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -305056.47,
+   "pv": -295904.78,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2028-03-29",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -354296.73,
+   "pv": -343667.83,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 2,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -1074
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -16385
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -5595
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 27300
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 969
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -6498
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 14135
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 5910
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 28042
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -6941
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 31654
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -23682
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 26297
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -21459
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 5019
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 5705
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 4675
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 4931
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -3673
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 33533
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-09-11",
+  "executionTimestamp": "2024-09-11T09:21:27.755Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "J. Weiss",
+  "salesperson": null,
+  "orderId": "ORD-8EAA5C2675"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-09-11T10:13:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2024-09-11T10:13:00Z",
+  "lastModifiedAt": "2024-09-11T10:13:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT821230857",
+  "matched": "2024-09-11 16:26",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q838EAA5C26755EEF80DBD6",
+  "upi": "QZAXHNUNR27G",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "BRAMGB33XXX",
+  "ssiId": "SSI-EUR-1243C8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 724534,
+  "cleanPv": 724534.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Multi-curve OIS discounting",
+  "curves": [
+   "EQ-RHNB",
+   "DIV-RHNB",
+   "CRV-EUR-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 2909
+  }
+ }
+}

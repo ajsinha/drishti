@@ -1,0 +1,238 @@
+{
+ "tradeId": "WSS-1500012",
+ "sourceSystem": "Wall Street Systems",
+ "sourceTradeId": "1500012",
+ "productType": "FX_FORWARD",
+ "productName": "FX forward",
+ "assetClass": "FX",
+ "family": "linear",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2025-10-31",
+ "effectiveDate": "2025-11-03",
+ "maturityDate": "2026-10-07",
+ "currency": "GBP",
+ "notional": 99000000.0,
+ "mtm": -1590129,
+ "mtmCurrency": "USD",
+ "pnl1d": 54748,
+ "counterparty": {
+  "id": "CP-NORTHBRIDGE",
+  "name": "Northbridge Capital LLP"
+ },
+ "nettingSet": "NS-NORTHBRIDGE-LDN",
+ "book": "BOOK-FX-2",
+ "trader": "TRDR-LMOREAU",
+ "desk": "DESK-FX",
+ "legalEntity": "LE-LDN",
+ "fxSpot": "FX-EURGBP",
+ "fxForwardCurve": "FXF-EURGBP",
+ "discountCurve": "CRV-GBP-OIS",
+ "terms": {
+  "rate": 121.08961,
+  "valueDate": "2027-07-19",
+  "forwardPoints": 39.2
+ },
+ "risk": {
+  "fxDelta": -990000,
+  "dv01": -3900
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "fxDelta": -99000,
+   "dv01": -390
+  },
+  {
+   "bucket": "1M",
+   "fxDelta": -198000,
+   "dv01": -780
+  },
+  {
+   "bucket": "3M",
+   "fxDelta": -297000,
+   "dv01": -1170
+  },
+  {
+   "bucket": "6M",
+   "fxDelta": -396000,
+   "dv01": -1560
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 54641
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -21335
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 55535
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -88750
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 6781
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -47217
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 104507
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -33887
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 4515
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 41503
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 10728
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 10199
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 153127
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 23053
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -61948
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 11253
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -5085
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -16228
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -57754
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -16003
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-10-31",
+  "executionTimestamp": "2025-10-31T11:18:02.400Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "L. Moreau",
+  "salesperson": null,
+  "orderId": "ORD-7C52F88151"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-10-31T12:01:00Z",
+    "by": "mo.ops"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2026-01-04T12:01:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2025-10-31T12:01:00Z",
+  "lastModifiedAt": "2026-01-04T12:01:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT980735854",
+  "matched": "2025-10-31 10:18",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q837C52F88151A7B7717D1C",
+  "upi": "QZE74OAUI2K1",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Foreign exchange"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Barclays Bank plc",
+  "ourAgentBic": "BARCGB22XXX",
+  "theirAgentBic": "NORTGB33XXX",
+  "ssiId": "SSI-GBP-A0C7C2",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -1590129,
+  "cleanPv": -1590129.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "FX-EURGBP",
+   "FXF-EURGBP",
+   "CRV-GBP-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "calypso-fx",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 4170
+  }
+ }
+}

@@ -1,0 +1,398 @@
+{
+ "tradeId": "BBG-60000015",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000015",
+ "productType": "FRN",
+ "productName": "Floating rate note",
+ "assetClass": "Fixed income",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2025-08-26",
+ "effectiveDate": "2025-08-28",
+ "maturityDate": "2037-03-25",
+ "currency": "JPY",
+ "notional": 219000000.0,
+ "mtm": 929743,
+ "mtmCurrency": "USD",
+ "pnl1d": 26593,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-3",
+ "trader": "TRDR-BADEYEMI",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-KAIZEN",
+ "forwardCurve": "CRV-JPY-PROJ",
+ "underlyingBond": "BND-JPKAIZ021595",
+ "creditCurve": "CDS-KAIZEN",
+ "terms": {
+  "quotedMargin": 65.8,
+  "faceAmount": 21228418.0,
+  "cleanPrice": 100.922
+ },
+ "risk": {
+  "cs01": 217425,
+  "dv01": 232092
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 7765,
+   "dv01": 8289
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 15530,
+   "dv01": 16578
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 23296,
+   "dv01": 24867
+  },
+  {
+   "bucket": "3Y",
+   "cs01": 31061,
+   "dv01": 33156
+  },
+  {
+   "bucket": "5Y",
+   "cs01": 38826,
+   "dv01": 41445
+  },
+  {
+   "bucket": "7Y",
+   "cs01": 46591,
+   "dv01": 49734
+  },
+  {
+   "bucket": "10Y",
+   "cs01": 54356,
+   "dv01": 58023
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-02-28",
+   "rate": 0.051327,
+   "amount": 4380000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-08-28",
+   "rate": 0.055862,
+   "amount": 4380000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2027-02-28",
+   "rate": 0.052834,
+   "amount": 4380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-08-28",
+   "rate": 0.045415,
+   "amount": 4380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-02-28",
+   "rate": 0.045879,
+   "amount": 4380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-08-28",
+   "rate": 0.032412,
+   "amount": 4380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-02-28",
+   "rate": 0.054697,
+   "amount": 4380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-08-28",
+   "rate": 0.03197,
+   "amount": 4380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-02-28",
+   "rate": 0.029387,
+   "amount": 4380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2030-08-28",
+   "rate": 0.024482,
+   "amount": 4380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-02-28",
+   "rate": 0.031485,
+   "amount": 4380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2031-08-28",
+   "rate": 0.048736,
+   "amount": 4380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2032-02-28",
+   "rate": 0.044548,
+   "amount": 4380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2032-08-28",
+   "rate": 0.033543,
+   "amount": 4380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2033-02-28",
+   "rate": 0.044698,
+   "amount": 4380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2033-08-28",
+   "rate": 0.026403,
+   "amount": 4380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2034-02-28",
+   "rate": 0.040315,
+   "amount": 4380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2034-08-28",
+   "rate": 0.044015,
+   "amount": 4380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2035-02-28",
+   "rate": 0.020013,
+   "amount": 4380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2035-08-28",
+   "rate": 0.030865,
+   "amount": 4380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2036-02-28",
+   "rate": 0.035964,
+   "amount": 4380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2036-08-28",
+   "rate": 0.050659,
+   "amount": 4380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2037-02-28",
+   "rate": 0.03605,
+   "amount": 4380000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2037-03-25",
+   "rate": 0.020113,
+   "amount": 4380000.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 2,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 21454
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -63336
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -22369
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -6213
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 17967
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -33821
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -19316
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 29634
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 13330
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 34544
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -29958
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 30840
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -49736
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -4681
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 13926
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 9413
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 21539
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 4808
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 21682
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 10276
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-08-26",
+  "executionTimestamp": "2025-08-26T08:10:59.055Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "B. Adeyemi",
+  "salesperson": null,
+  "orderId": "ORD-A2A4FB4E5E"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-08-26T09:26:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2025-08-26T09:26:00Z",
+  "lastModifiedAt": "2025-08-26T09:26:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT784454391",
+  "matched": "2025-08-26 10:10",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "JSCC",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH1160536388",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096A2A4FB4E5E390494A2FF",
+  "upi": "QZQBE9VHRFMT",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-JPY-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 929743,
+  "cleanPv": 929743.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-JPY-PROJ",
+   "BND-JPKAIZ021595",
+   "CDS-KAIZEN"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 4049
+  }
+ }
+}

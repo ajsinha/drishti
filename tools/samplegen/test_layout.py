@@ -171,8 +171,9 @@ class BulkTrades(unittest.TestCase):
                     self.assertTrue(all(n <= 10_000 for n in row_groups(uri, a)))
             got = {r["id"]: r for r in rows_of(uri) if r["business_date"] == date(2026, 9, 30)}
             self.assertEqual(len(got), 3000)
-            self.assertIn("T-10001", got)
-            self.assertIsNone(got["T-10001"]["sourceSystem"])
+            self.assertIn("MX-20000001", got)
+            self.assertEqual(got["MX-20000001"]["sourceSystem"], "Murex")                         # samples carry their system too
+            self.assertEqual(json.loads(got["CLY-4000000"]["doc"])["assetClass"], "Credit")              # a clone stays in its template's system
             self.assertEqual(got["MX-30000000"]["sourceSystem"], "Murex")
             self.assertEqual(json.loads(got["MX-30000000"]["doc"])["sourceTradeId"], "30000000")
             self.assertEqual(got["MX-30000000"]["notional"], float(json.loads(got["MX-30000000"]["doc"])["notional"]))

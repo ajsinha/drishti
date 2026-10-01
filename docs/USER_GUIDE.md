@@ -22,7 +22,7 @@ If Drishti is not running yet, start with [QUICKSTART.md](QUICKSTART.md) (ten mi
 [GETTING_STARTED.md](GETTING_STARTED.md) (every step explained).
 
 The examples use the banking packs (`trading`, `counterparty-risk` and the others) with their sample
-data, so ids such as `T-10001` and `NS-SUMMIT-NY` exist. If your administrator loaded other packs, the
+data, so ids such as `MX-20000001` and `NS-SUMMIT-NY` exist. If your administrator loaded other packs, the
 **Examples** list on the terminal page shows ids that work for you, and every pack's guide (*Help → Help
 centre → Domain packs*) has a *Finding things* section with the same commands for its own kinds.
 
@@ -33,7 +33,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | [The pages at a glance](#the-pages-at-a-glance) | Every page and its address |
 | [The top bar](#the-top-bar) | The menus and the round tools on the right |
 | [The command line](#the-command-line) | Opening an entity, suggestions, what an error means |
-| [Pick lists](#pick-lists-when-a-command-names-several-entities) | `TRD T-100`, `CPTY north`, `TRD productType=Revolver`, `TRD` |
+| [Pick lists](#pick-lists-when-a-command-names-several-entities) | `TRD MX-200000`, `CPTY north`, `TRD productType=Revolver`, `TRD` |
 | [Tables: paging and the keyboard](#tables-paging-and-the-keyboard) | The pager, ▲ ▼, and the keys that walk a table |
 | [Reading a view](#reading-a-view) | Title, strip, panels, links, provenance |
 | [Keyboard](#keyboard) | Every key in one table |
@@ -51,8 +51,8 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 |---|---|---|
 | Landing | `/` | The start page, with a button to open the terminal |
 | Terminal | `/t` | The command line, your pinned entities and example commands |
-| View | `/v/<kind>/<id>` | One entity, laid out in full (for example `/v/trade/T-10001`) |
-| Pick list and search results | `/s?q=…` | Entities a command names (`TRD T-100`) or a `where` search finds |
+| View | `/v/<kind>/<id>` | One entity, laid out in full (for example `/v/trade/MX-20000001`) |
+| Pick list and search results | `/s?q=…` | Entities a command names (`TRD MX-200000`) or a `where` search finds |
 | Compare | `/compare/<kind>/<id>` | What changed in an entity between two business dates |
 | Impact | `/impact/<kind>/<id>` | What depends on an entity (F8) |
 | Monitors | `/m` | Live watchlists |
@@ -69,7 +69,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 Every page after the landing page has the same top bar, on one row.
 
 ```text
-◉ Drishti  > TRD T-10001, CPTY north …  [2026-09-30] ● Live   Views ▾  Build ▾  Admin ▾  Help ▾   ● [bell] [box 12] [palette] (A) Ash ▾
+◉ Drishti  > TRD MX-20000001, CPTY north …  [2026-09-30] ● Live   Views ▾  Build ▾  Admin ▾  Help ▾   ● [bell] [box 12] [palette] (A) Ash ▾
 ```
 
 **Beside the brand** (click it to go back to `/`) are the [command line](#the-command-line), which takes the
@@ -120,14 +120,14 @@ The command line is the box beside the brand in the top bar. Press `/` anywhere 
 ```
 
 - The **mnemonic** names a kind of entity: `TRD` is a trade, `NSET` a netting set, `GENE` a gene.
-- The **id** names one entity of that kind: `T-10001`.
+- The **id** names one entity of that kind: `MX-20000001`.
 - `<GO>` means "press Enter".
 
 Examples:
 
 ```text
-TRD T-10001          an interest rate swap
-TRD T-10181          an FX option
+TRD MX-20000001          an interest rate swap
+TRD WSS-1500025          an FX option
 NSET NS-SUMMIT-NY    a netting set
 CRV CRV-USD-OIS      the USD SOFR discount curve
 CPTY CP-NORTHBRIDGE  a counterparty
@@ -135,13 +135,13 @@ CUST CUST-100231     a retail customer
 VRNT VRNT-BRAF-V600E a genetic variant
 ```
 
-**A bare id** works when its shape tells Drishti the kind. Type `T-10001` and press Enter: it opens
-the same trade as `TRD T-10001`.
+**A bare id** works when its shape tells Drishti the kind. Type `MX-20000001` and press Enter: it opens
+the same trade as `TRD MX-20000001`.
 
-**Case** never matters: `trd t-10001` opens `T-10001`.
+**Case** never matters: `trd t-10001` opens `MX-20000001`.
 
 **One match opens; several give a pick list.** If what you typed names exactly one entity, it opens. If it
-names several (`TRD T-100`, the start of an id), you get a table to pick from. See
+names several (`TRD MX-200000`, the start of an id), you get a table to pick from. See
 [Pick lists](#pick-lists-when-a-command-names-several-entities).
 
 Mnemonics come from the packs that are switched on. The full list, pack by pack, is in
@@ -149,7 +149,7 @@ Mnemonics come from the packs that are switched on. The full list, pack by pack,
 
 | Mnemonic | Kind | Example |
 |---|---|---|
-| `TRD` | trade | `TRD T-10001` |
+| `TRD` | trade | `TRD MX-20000001` |
 | `CPTY` | counterparty | `CPTY CP-NORTHBRIDGE` |
 | `BOOK` | book | `BOOK BOOK-RATES-1` |
 | `NSET` | netting set | `NSET NS-SUMMIT-NY` |
@@ -168,8 +168,8 @@ The command line suggests as you type, in a dropdown, like the Bloomberg termina
 |---|---|
 | nothing (click in the box) | the entities you opened recently, marked `recent ·` |
 | `T` | mnemonics that start with T (`TFLOW` Trade flow, `TRD` Trade, `TRDR` Trader, `TRIAL` Clinical trial), then recent entities |
-| `TRD ` (with a space) | trades: `T-10001`, `T-10002`, … |
-| `TRD T-101` | trades whose id starts that way: `T-10100`, `T-10101`, … |
+| `TRD ` (with a space) | trades: `MX-20000001`, `MX-20000002`, … |
+| `TRD MX-2000010` | trades whose id starts that way: `MX-20000100`, `MX-20000101`, … |
 | `NSET SUMMIT` | netting sets whose id or title contains it: `NS-SUMMIT-LDN`, `NS-SUMMIT-NY` |
 | `XYZ Q` | `No matches for "XYZ Q"` |
 
@@ -177,7 +177,7 @@ Each suggestion shows the mnemonic, the id (the letters you typed are highlighte
 example:
 
 ```text
-TRD   T-10001   Trade · Interest rate swap (fixed/float) · Meridian Reinsurance Ltd · AUD 242m
+TRD   MX-20000001   Trade · Interest rate swap (fixed/float) · Meridian Reinsurance Ltd · AUD 242m
 ```
 
 | Key in the command line | Does |
@@ -216,9 +216,9 @@ The number of suggestions is a server setting (`drishti.commands.suggest-limit`,
 
 | You see | Meaning | What to do |
 |---|---|---|
-| `DRS-4001 cannot read command 'XYZ T-1'; try <MNEMONIC> <ID> <GO>, for example TRD IRS-48213 <GO>` on the terminal page | The first word is not a mnemonic, and the text is not an id any pack recognises | Type the first letter and pick from the suggestions; check the pack is switched on ([Domain packs](#domain-packs-choosing-what-you-see)) |
-| A page headed *Pick a trade* that says `0 of 0 trades match` and *Nothing matches.* | The mnemonic is fine, but no trade's id starts with what you typed (`TRD T-99999`) and no title contains it | Type less of the id (`TRD T-1`) and pick from the list |
-| `DRS-1001 no source holds trade/T-99999` | You opened an address such as `/v/trade/T-99999` directly, and no source has that id | Check the id; use the command line to find it |
+| `DRS-4001 cannot read command 'XYZ MX-20000001'; try <MNEMONIC> <ID> <GO>, for example TRD IRS-48213 <GO>` on the terminal page | The first word is not a mnemonic, and the text is not an id any pack recognises | Type the first letter and pick from the suggestions; check the pack is switched on ([Domain packs](#domain-packs-choosing-what-you-see)) |
+| A page headed *Pick a trade* that says `0 of 0 trades match` and *Nothing matches.* | The mnemonic is fine, but no trade's id starts with what you typed (`TRD MX-29999999`) and no title contains it | Type less of the id (`TRD MX-2`) and pick from the list |
+| `DRS-1001 no source holds trade/MX-29999999` | You opened an address such as `/v/trade/MX-29999999` directly, and no source has that id | Check the id; use the command line to find it |
 | `DRS-4004 'XYZ' is neither a mnemonic nor a kind; type it alone to see suggestions` | A pick list or search started with an unknown word | Type the first letter and pick a mnemonic |
 | `DRS-5002 <you> may not open lcr entities` | Your roles, or the packs you have switched on, do not include that kind | Switch the pack on in the box menu; otherwise ask an administrator |
 
@@ -242,13 +242,13 @@ the same. After you press Enter:
 
 | You type | You get | Real result on the banking samples |
 |---|---|---|
-| `TRD T-10001` | That trade opens (an exact id) | the swap `T-10001` |
-| `TRD T-100` | Trades whose id **starts with** `T-100`, or whose title **contains** it | `99 of 99 trades match`: `T-10001` … `T-10099` |
+| `TRD MX-20000001` | That trade opens (an exact id) | the swap `MX-20000001` |
+| `TRD MX-200000` | Trades whose id **starts with** `MX-200000`, or whose title **contains** it | `99 of 99 trades match`: `MX-20000001` … `MX-20000099` |
 | `CPTY north` | Counterparties whose id starts with, or title contains, `north` | one match, so `CP-NORTHBRIDGE` opens at once |
-| `TRD T-1*0` | `*` stands for any text, anywhere in the id | `75 of 75 trades match`: `T-10010`, `T-10020`, `T-10030`, … |
-| `TRD productType=Revolver` | Trades whose field has that value | `6 of 750 trades match`: `T-10295` … `T-10300` |
+| `TRD MX-2*0` | `*` stands for any text, anywhere in the id | `19 of 19 trades match`: `MX-20000010`, `MX-20000020`, `MX-20000030`, … |
+| `TRD productType=Revolver` | Trades whose field has that value | `6 of 750 trades match`: `CLY-3000055` … `CLY-3000060` |
 | `TRD notional > 10m and currency = usd` | Trades matching a condition (no `where` needed) | `317 of 750 trades match; the first 100 are shown` |
-| `TRD T-1* currency=usd order by mtm desc` | An id pattern and a condition together, sorted | `344 of 750 trades match`, largest MTM first |
+| `TRD MX-2* currency=usd order by mtm desc` | An id pattern and a condition together, sorted | `53 of 750 trades match`, largest MTM first (`MX-20000003`) |
 | `TRD` | Every trade | `750 of 750 trades match; the first 100 are shown` |
 
 Rules:
@@ -270,7 +270,7 @@ Rules:
 
 The first column is the id (a link). Then come:
 
-1. the fields your command uses (`currency` and `mtm` in `TRD T-1* currency=usd order by mtm desc`);
+1. the fields your command uses (`currency` and `mtm` in `TRD MX-2* currency=usd order by mtm desc`);
 2. the kind's **key fields**, which the pack declares under `columns:` in its `pack.yaml`
    ([PACKS.md](PACKS.md#columns-the-key-fields-of-a-pick-list)). For the banking packs:
 
@@ -292,13 +292,13 @@ A *Title* column appears only when titles say more than the id.
 
    ```text
    TRD      Product type  Direction  Currency  Notional      MTM (USD)   Maturity date  Book
-   T-10295  REVOLVER      Long       CAD       202,000,000   3,459,176   2032-04-16     BOOK-CREDIT-3
-   T-10296  REVOLVER      Short      GBP       127,000,000   1,256,638   2035-09-28     BOOK-CREDIT-2
-   T-10297  REVOLVER      Long       AUD       156,000,000   1,498,057   2036-10-03     BOOK-CREDIT-1
+   CLY-3000055  REVOLVER      Long       CAD       202,000,000   3,459,176   2032-04-16     BOOK-CREDIT-3
+   CLY-3000056  REVOLVER      Short      GBP       127,000,000   1,256,638   2035-09-28     BOOK-CREDIT-2
+   CLY-3000057  REVOLVER      Long       AUD       156,000,000   1,498,057   2036-10-03     BOOK-CREDIT-1
    …
    ```
 
-3. Press `↓` twice: the second row is selected. Press `Enter`: `T-10296` opens.
+3. Press `↓` twice: the second row is selected. Press `Enter`: `CLY-3000056` opens.
 4. Press `Alt+←` to come back to the list, and change the box at the top of the page to
    `TRD productType=Revolver order by mtm desc`. Press **Search**: the largest MTM is now first.
 5. **CSV** downloads the list; **Watch as a monitor** turns its first 50 rows into a live watchlist
@@ -326,7 +326,7 @@ there is nowhere to go.
   list or admin list); a row stays when any cell contains the text (any case). Every table has it (table and
   ladder panels too); a Sutra may turn it off for a panel (`search: false`).
 - **Filter by column**: `⧩` shows a box under each heading. Text matches within that column; in a number column
-  `>1m`, `<0`, `>=250k` or `=5` compare values. Example: on `TRD T-1`, type `>200m` under *Notional* to keep the 21
+  `>1m`, `<0`, `>=250k` or `=5` compare values. Example: on `TRD MX-2`, type `>200m` under *Notional* to keep the 18
   trades above 200 million.
 - A pick list or search holds the rows the server sent (100 by default); sorting and filtering work on those. For
   all of a kind, sort or filter on the server instead: `TRD where notional > 200m order by notional desc`.
@@ -350,23 +350,23 @@ there is nowhere to go.
 
 Worked example:
 
-1. Type `TRD T-100` and press Enter. The pager reads `1–25 of 99 · page 1 of 4`.
-2. Click the first row (`T-10001`), then press `End`. The last page opens with `T-10099` selected.
-3. Press `PgUp`: the selection moves 25 rows up, to `T-10074`, on page 3.
+1. Type `TRD MX-200000` and press Enter. The pager reads `1–25 of 99 · page 1 of 4`.
+2. Click the first row (`MX-20000001`), then press `End`. The last page opens with `MX-20000099` selected.
+3. Press `PgUp`: the selection moves 25 rows up, to `MX-20000074`, on page 3.
 4. Choose *50 rows*. The pager reads `51–99 of 99 · page 2 of 2`, still showing your selection.
-5. Press `Enter`: `T-10074` opens. Open any other list: it shows 50 rows per page too.
+5. Press `Enter`: `MX-20000074` opens. Open any other list: it shows 50 rows per page too.
 
 Tables that update live (a monitor, a ticking table inside a view) keep their page and selection when
 their rows change.
 
 ## Reading a view
 
-Open `TRD T-10001`. A view has five parts.
+Open `TRD MX-20000001`. A view has five parts.
 
 ### 1 · The title line
 
 ```text
-[Rates · Interest rate swap (fixed/float)]  T-10001  with Meridian Reinsurance Ltd   Alert  Pin  Share  JSON  Print
+[Rates · Interest rate swap (fixed/float)]  MX-20000001  with Meridian Reinsurance Ltd   Alert  Pin  Share  JSON  Print
 ```
 
 - The **pill** says what the entity is.
@@ -376,7 +376,7 @@ Open `TRD T-10001`. A view has five parts.
 
 ### 2 · The strip
 
-The row of key figures under the title. For `T-10001`:
+The row of key figures under the title. For `MX-20000001`:
 
 | Label | Value (example) |
 |---|---|
@@ -402,17 +402,17 @@ header with:
 - a **↓** icon to download the panel as CSV;
 - a **?** that explains this kind of panel.
 
-`T-10001` shows *Terms*, *Legs* (one tab per leg), *Cashflows*, *How this view was built*, a curve
+`MX-20000001` shows *Terms*, *Legs* (one tab per leg), *Cashflows*, *How this view was built*, a curve
 chart, *DV01 by bucket*, *Daily P&L, last 20 days* and *Linked entities*.
 
 Panel kinds you will meet:
 
 | Kind | Looks like | Example |
 |---|---|---|
-| `kv` | label and value pairs | *Terms* in `TRD T-10001` |
+| `kv` | label and value pairs | *Terms* in `TRD MX-20000001` |
 | `table` | rows and columns, totals for money | member trades in `NSET NS-SUMMIT-NY` |
-| `tabs` | one tab per element of a list | *Legs* in `TRD T-10001` |
-| `ladder` | dated rows, the next one highlighted | *Cashflows* in `TRD T-10001` |
+| `tabs` | one tab per element of a list | *Legs* in `TRD MX-20000001` |
+| `ladder` | dated rows, the next one highlighted | *Cashflows* in `TRD MX-20000001` |
 | `line` / `area` | a chart over tenors or dates | the curve in `CRV CRV-USD-OIS` |
 | `hbar` | horizontal bars | *DV01 by bucket* |
 | `surface` | a grid as a heatmap, or a 3D surface you can rotate | `FXV FXV-EURUSD` (*Heatmap* / *3D* buttons) |
@@ -435,10 +435,10 @@ answer in time; open it to see it.
 **Ids in tables are links too.** A table column that shows an identifier (a column bound to a field whose
 name ends in `Id`, `Ref` or `_id`, such as `tradeId`, `counterpartyId` or `bookRef`) links each value to its
 entity, as long as a pack recognises the id. Example: open `BOOK BOOK-RATES-1`; its *Largest trades* table
-(`F2`) starts with the *Trade* column (`T-10043`, `T-10011`, …), and clicking `T-10043` opens that trade. With the table selected, `↓` to a row and
+(`F2`) starts with the *Trade* column (`MX-20000043`, `MX-20000011`, …), and clicking `MX-20000043` opens that trade. With the table selected, `↓` to a row and
 `Enter` does the same ([Tables](#tables-paging-and-the-keyboard)).
 
-**Breadcrumbs** above the title (`← T-10001 / NS-MERIDIAN-RE-NY`) show the path you followed in this
+**Breadcrumbs** above the title (`← MX-20000001 / NS-MERIDIAN-RE-NY`) show the path you followed in this
 browser tab. Click one to go back to it, or press `Alt+←`.
 
 ### 5 · How this view was built
@@ -477,14 +477,14 @@ The keys a view offers are also buttons along the bottom of the screen, so you c
 
 ### F9 · Raw JSON
 
-Press `F9` in `TRD T-10001`. A drawer opens on the right with the full document, starting
-`{"tradeId": "T-10001", "productType": "IRS_FIXFLOAT", …}`, and its source and generation. Press `Esc`
+Press `F9` in `TRD MX-20000001`. A drawer opens on the right with the full document, starting
+`{"tradeId": "MX-20000001", "productType": "IRS_FIXFLOAT", …}`, and its source and generation. Press `Esc`
 to close it. If your role does not have raw access, fields such as `trader` are masked.
 
 ### F8 · Impact
 
-Impact answers "what depends on this, and how much is at stake?". Open `TRD T-10001` and press `F8`.
-You should see *Impact of T-10001*:
+Impact answers "what depends on this, and how much is at stake?". Open `TRD MX-20000001` and press `F8`.
+You should see *Impact of MX-20000001*:
 
 - **Depends on it directly:** *Netting set · 1*: `NS-MERIDIAN-RE-NY` with its net MTM.
 - **Rolls up into:** *Credit limit · 1*: `LIM-MERIDIAN-RE` via `creditLimit`, with the limit amount.
@@ -493,7 +493,7 @@ Each group has a total. Click any id to open it. See the [Impact guide](../conso
 
 ## Live updates
 
-Views of live entities tick: figures change in place and flash briefly. Open `TRD T-10001` and watch
+Views of live entities tick: figures change in place and flash briefly. Open `TRD MX-20000001` and watch
 **MTM (USD)** for a few seconds.
 
 - The **live dot** among the round tools of the top bar glows while the view streams. Hover over it to read
@@ -521,7 +521,7 @@ The **Business date** box in the top bar says which day you are looking at.
 
 Worked example (needs the sample history; see [GETTING_STARTED.md](GETTING_STARTED.md), Step 5):
 
-1. Open `TRD T-10001`.
+1. Open `TRD MX-20000001`.
 2. Click the date box and pick `2026-09-29`.
 3. You should see the same layout with that day's figures. The footer reads `… as of 2026-09-29`, the
    MTM no longer ticks, and a **Compare** button appears in the title line.
@@ -552,8 +552,8 @@ Compare lists every field that differs in one entity between two business dates.
 
 Worked example:
 
-1. Pick `2026-09-30` in the date box and open `TRD T-10001`.
-2. Click **Compare**. You should see *What changed in T-10001*, comparing `2026-09-30` with the business
+1. Pick `2026-09-30` in the date box and open `TRD MX-20000001`.
+2. Click **Compare**. You should see *What changed in MX-20000001*, comparing `2026-09-30` with the business
    day before, `2026-09-29`.
 3. Each row shows the field's label and path, the value on each date, and the change for numbers
    (see the example below).
@@ -561,7 +561,7 @@ Worked example:
    to see what was restated on the same date.
 5. Filter to *changed*, *added* or *removed*. **CSV** downloads the comparison.
 
-Example rows for `T-10001`, 2026-09-29 against 2026-09-30:
+Example rows for `MX-20000001`, 2026-09-29 against 2026-09-30:
 
 | Field | Path | Before | After | Change |
 |---|---|---|---|---|
@@ -576,7 +576,7 @@ above reads `sensitivities[3M]` rather than `sensitivities[0]`.
 The same comparison is available to programs:
 
 ```bash
-curl -s 'http://localhost:18480/api/v1/history/trade/T-10001/diff?from=2026-09-29&to=2026-09-30'
+curl -s 'http://localhost:18480/api/v1/history/trade/MX-20000001/diff?from=2026-09-29&to=2026-09-30'
 ```
 
 It also takes `fromKnownAt` and `toKnownAt`. See [API_GUIDE.md](API_GUIDE.md).
@@ -597,7 +597,7 @@ Choose 10, 30, 90 or 250 days at the top. Links still open what they name; a num
 The first line says where the value comes from: the path in the document, the connector, the business date the data
 is for and the source's generation, with a link to the raw document.
 
-Worked example: open `TRD T-10001`, click the MTM in the strip. You see *MTM (USD) · T-10001 over time*, a line
+Worked example: open `TRD MX-20000001`, click the MTM in the strip. You see *MTM (USD) · MX-20000001 over time*, a line
 over 30 business days, and below it the values, newest first, each with *Data for* and *Source* (`trading-store`).
 A *Data for* date in amber is earlier than the day it is listed under: the source carried its last value forward
 (no data that day). An entity no dated source holds shows today's value with a note, since no history is kept.
@@ -714,7 +714,7 @@ The buttons in a view's title line, and the **↓** in each panel header.
 | Print or PDF | **Print** | A clean light page without the top bar and buttons; choose *Save as PDF* in the print dialog |
 | Share | **Share** | A link copied to the clipboard (the button briefly confirms) |
 
-Worked example (CSV): open `TRD T-10001` and click **↓** on *Cashflows*. You get a file whose first
+Worked example (CSV): open `TRD MX-20000001` and click **↓** on *Cashflows*. You get a file whose first
 lines are:
 
 ```text
@@ -725,11 +725,11 @@ Pay date,Leg,Type,Rate,Amount,PV
 
 Numbers arrive as plain numbers (`-1403091`, `0.0425` for `4.25%`), so a spreadsheet can add them up.
 File names carry the business date when one is picked. Each download also has a direct address, for
-example `/export/trade/T-10001/schedule.csv` (`schedule` is the panel's id) or `/export/trade/T-10001.json`.
+example `/export/trade/MX-20000001/schedule.csv` (`schedule` is the panel's id) or `/export/trade/MX-20000001.json`.
 
 **Share** links:
 
-- in Live, the link is the view's address, such as `http://localhost:17480/v/trade/T-10001`;
+- in Live, the link is the view's address, such as `http://localhost:17480/v/trade/MX-20000001`;
 - with a date picked, the link opens that date (`/asof?d=2026-09-29&next=…`), and with a *known at*
   time, that exact moment. A colleague sees what you see, within their own permissions.
 
@@ -749,7 +749,7 @@ Worked example: build a monitor from a search.
 3. Click **Watch as a monitor**. The monitor page opens: rows such as `NS-CASCADIA-TKY`,
    `NS-NORTHBRIDGE-NY`, `NS-SUMMIT-LDN`, each with its strip: Trades, Net MTM, Collateral, EE peak,
    PFE 95 peak, Limit, Utilisation and CVA.
-4. In **Add an entity**, type `TRD T-10001` and press Enter. The trade joins the list.
+4. In **Add an entity**, type `TRD MX-20000001` and press Enter. The trade joins the list.
 5. Click **×** on a row to remove it. **Delete monitor** removes the whole monitor.
 
 The monitor is saved on the server under your account, so it follows you to any browser. All rows share
@@ -849,7 +849,7 @@ Worked example (with the `finance` pack):
 | Control | Does |
 |---|---|
 | Layout | *Two columns*, *Three columns*, *Two by two*, *One large, two stacked* |
-| Entity for this pane | A command or id (`TRD T-10001`, `NS-SUMMIT-NY`), then Enter |
+| Entity for this pane | A command or id (`TRD MX-20000001`, `NS-SUMMIT-NY`), then Enter |
 | follows | Which pane this one follows, or `—` |
 | Pane / × | Add a pane (up to four) / remove one |
 | Save / Save as… / Delete | Keep it under its name / a new name / remove it |
@@ -867,7 +867,7 @@ templates:
     layout: "1+2"
     panes:
       - { ref: { kind: netting-set, id: NS-SUMMIT-NY }, title: Netting set }
-      - { ref: { kind: trade, id: T-10001 }, follows: 0, title: Selected trade }
+      - { ref: { kind: trade, id: MX-20000001 }, follows: 0, title: Selected trade }
       - { ref: { kind: ir-curve, id: CRV-USD-OIS }, title: Discount curve }
 ```
 
@@ -915,7 +915,7 @@ any browser.
 | Setting | Choices | Example |
 |---|---|---|
 | Theme | *This browser's choice* or one of the seven themes | `Wallstreet` |
-| After signing in, open | Any console address | `/t`, `/w/Rates`, `/m/High utilisation`, `/v/trade/T-10001` |
+| After signing in, open | Any console address | `/t`, `/w/Rates`, `/m/High utilisation`, `/v/trade/MX-20000001` |
 | Clock time zone | Default (NY) or a listed zone | `Europe/London` |
 | Density | *Comfortable* or *Compact* (more on screen) | `Compact` |
 | Flash changed values | On or off | off for a calmer screen |
@@ -997,8 +997,8 @@ The Studio page has:
 
 Worked example: add a one-day P&L figure to the swap's strip.
 
-1. Open `/studio?sutra=irs-fixfloat@1&kind=trade&id=T-10001`. The editor shows the Sutra; the preview
-   shows `T-10001`.
+1. Open `/studio?sutra=irs-fixfloat@1&kind=trade&id=MX-20000001`. The editor shows the Sutra; the preview
+   shows `MX-20000001`.
 2. Near the top, under `rachana: 1` and `sutra: irs-fixfloat`, change `version: 1` to `version: 2`.
 3. Under `strip:`, after the `MTM (USD)` line, add the line shown below this list
    (same indentation as the other strip lines).

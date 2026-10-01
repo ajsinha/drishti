@@ -1,0 +1,339 @@
+{
+ "tradeId": "BBG-60000027",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000027",
+ "productType": "CALLABLE_BOND",
+ "productName": "Callable bond",
+ "assetClass": "Fixed income",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2025-08-25",
+ "effectiveDate": "2025-08-27",
+ "maturityDate": "2036-04-10",
+ "currency": "EUR",
+ "notional": 210000000.0,
+ "mtm": 3432773,
+ "mtmCurrency": "USD",
+ "pnl1d": 108937,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-2",
+ "trader": "TRDR-BADEYEMI",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-BUND",
+ "benchmarkCurve": "CRV-EUR-GOVT",
+ "underlyingBond": "BND-DEBUND064772",
+ "swaptionVolCube": "IRV-EUR",
+ "terms": {
+  "coupon": 0.065706,
+  "couponFrequency": "Quarterly",
+  "faceAmount": 59697412.0,
+  "cleanPrice": 95.38,
+  "yield": 0.048251,
+  "firstCall": "2027-10-06",
+  "callPrice": 102.46,
+  "oas": 123.0
+ },
+ "risk": {
+  "dv01": -205648,
+  "cs01": -192747,
+  "vega": -778312
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -5712,
+   "cs01": -5354,
+   "vega": -21620
+  },
+  {
+   "bucket": "6M",
+   "dv01": -11425,
+   "cs01": -10708,
+   "vega": -43240
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -17137,
+   "cs01": -16062,
+   "vega": -64859
+  },
+  {
+   "bucket": "2Y",
+   "dv01": -22850,
+   "cs01": -21416,
+   "vega": -86479
+  },
+  {
+   "bucket": "3Y",
+   "dv01": -28562,
+   "cs01": -26770,
+   "vega": -108099
+  },
+  {
+   "bucket": "5Y",
+   "dv01": -34275,
+   "cs01": -32124,
+   "vega": -129719
+  },
+  {
+   "bucket": "7Y",
+   "dv01": -39987,
+   "cs01": -37479,
+   "vega": -151338
+  },
+  {
+   "bucket": "10Y",
+   "dv01": -45700,
+   "cs01": -42833,
+   "vega": -172958
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-08-27",
+   "type": "First call",
+   "strike": 0.02642,
+   "status": "Expired"
+  },
+  {
+   "date": "2027-08-27",
+   "type": "Bermudan call",
+   "strike": 0.027936,
+   "status": "Pending"
+  },
+  {
+   "date": "2028-08-27",
+   "type": "Bermudan call",
+   "strike": 0.042557,
+   "status": "Pending"
+  },
+  {
+   "date": "2029-08-27",
+   "type": "Bermudan call",
+   "strike": 0.039582,
+   "status": "Pending"
+  },
+  {
+   "date": "2030-08-27",
+   "type": "Bermudan call",
+   "strike": 0.049918,
+   "status": "Pending"
+  },
+  {
+   "date": "2031-08-27",
+   "type": "Bermudan call",
+   "strike": 0.025964,
+   "status": "Pending"
+  },
+  {
+   "date": "2032-08-27",
+   "type": "Bermudan call",
+   "strike": 0.043963,
+   "status": "Pending"
+  },
+  {
+   "date": "2033-08-27",
+   "type": "Bermudan call",
+   "strike": 0.035161,
+   "status": "Pending"
+  },
+  {
+   "date": "2034-08-27",
+   "type": "Bermudan call",
+   "strike": 0.034526,
+   "status": "Pending"
+  },
+  {
+   "date": "2035-08-27",
+   "type": "Bermudan call",
+   "strike": 0.021961,
+   "status": "Pending"
+  },
+  {
+   "date": "2036-04-10",
+   "type": "Bermudan call",
+   "strike": 0.047694,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 86432
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -31173
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -40706
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 30486
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 19960
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 105043
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -19407
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -38839
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -70365
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -69047
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -3535
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 29410
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -9284
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 27761
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -100229
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 183347
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 20894
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -23775
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -231657
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 18630
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-08-25",
+  "executionTimestamp": "2025-08-25T15:55:38.720Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "B. Adeyemi",
+  "salesperson": null,
+  "orderId": "ORD-DDA10DA005"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-08-25T10:12:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2025-08-25T10:12:00Z",
+  "lastModifiedAt": "2025-08-25T10:12:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT398464408",
+  "matched": "2025-08-25 14:28",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH2406969596",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096DDA10DA0051E62EA2B49",
+  "upi": "QZHW8659J043",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-EUR-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 3432773,
+  "cleanPv": 3432773.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-EUR-GOVT",
+   "BND-DEBUND064772",
+   "IRV-EUR"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 8966
+  }
+ }
+}

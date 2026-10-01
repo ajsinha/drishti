@@ -1,0 +1,247 @@
+{
+ "tradeId": "WSS-1500035",
+ "sourceSystem": "Wall Street Systems",
+ "sourceTradeId": "1500035",
+ "productType": "FX_DIGITAL",
+ "productName": "FX digital option",
+ "assetClass": "FX",
+ "family": "option",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2026-06-23",
+ "effectiveDate": "2026-06-25",
+ "maturityDate": "2029-02-05",
+ "currency": "USD",
+ "notional": 146000000.0,
+ "mtm": 2716990,
+ "mtmCurrency": "USD",
+ "pnl1d": 159944,
+ "counterparty": {
+  "id": "CP-VERDANT",
+  "name": "Verdant Agri Holdings"
+ },
+ "nettingSet": "NS-VERDANT-LDN",
+ "book": "BOOK-FX-1",
+ "trader": "TRDR-ENOVAK",
+ "desk": "DESK-FX",
+ "legalEntity": "LE-LDN",
+ "fxSpot": "FX-GBPUSD",
+ "fxVolSurface": "FXV-GBPUSD",
+ "terms": {
+  "optionType": "Put",
+  "strike": 158.07287,
+  "payout": 2872209.0,
+  "expiryDate": "2027-06-14"
+ },
+ "risk": {
+  "fxDelta": -1460000,
+  "vega": -677238
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "fxDelta": -69524,
+   "vega": -32249
+  },
+  {
+   "bucket": "1M",
+   "fxDelta": -139048,
+   "vega": -64499
+  },
+  {
+   "bucket": "3M",
+   "fxDelta": -208571,
+   "vega": -96748
+  },
+  {
+   "bucket": "6M",
+   "fxDelta": -278095,
+   "vega": -128998
+  },
+  {
+   "bucket": "1Y",
+   "fxDelta": -347619,
+   "vega": -161247
+  },
+  {
+   "bucket": "2Y",
+   "fxDelta": -417143,
+   "vega": -193497
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 43808
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 70841
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 31134
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -51826
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -86511
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -24588
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 4510
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 71115
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 54345
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 58136
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -65167
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 169746
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 3839
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -29252
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -94259
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -146160
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 7598
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 37955
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -38648
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -27111
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-06-23",
+  "executionTimestamp": "2026-06-23T13:28:55.359Z",
+  "venue": "EBS",
+  "venueMic": "EBSM",
+  "executionType": "Electronic",
+  "trader": "E. Novak",
+  "salesperson": null,
+  "orderId": "ORD-F858D5EE5D"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-06-23T12:20:00Z",
+    "by": "stp.gateway"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2026-08-08T12:20:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-06-23T12:20:00Z",
+  "lastModifiedAt": "2026-08-08T12:20:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT677359911",
+  "matched": "2026-06-23 15:12",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83F858D5EE5D9B9DE3B99C",
+  "upi": "QZ84QMD7FHCR",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Foreign exchange"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "VERDUS33XXX",
+  "ssiId": "SSI-USD-ABCF5A",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 2716990,
+  "cleanPv": 2716990.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "FX-GBPUSD",
+   "FXV-GBPUSD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "calypso-fx",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 6894
+  }
+ }
+}

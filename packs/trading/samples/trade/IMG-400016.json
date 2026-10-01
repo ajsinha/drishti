@@ -1,0 +1,232 @@
+{
+ "tradeId": "IMG-400016",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400016",
+ "productType": "EQ_FUTURE_SINGLE",
+ "productName": "Single-stock future",
+ "assetClass": "Equity",
+ "family": "future",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2026-08-07",
+ "effectiveDate": "2026-08-10",
+ "maturityDate": "2027-03-31",
+ "currency": "CAD",
+ "notional": 22000000.0,
+ "mtm": 430333,
+ "mtmCurrency": "USD",
+ "pnl1d": 16861,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-LDN",
+ "book": "BOOK-EQD-1",
+ "trader": "TRDR-JWEISS",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "clearingAccount": "CLR-EUREX-1",
+ "underlyingEquity": "EQ-CSCA",
+ "dividendCurve": "DIV-CSCA",
+ "terms": {
+  "contract": "SAP Z6",
+  "lots": 983
+ },
+ "risk": {
+  "delta": -88587
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -5906
+  },
+  {
+   "bucket": "1M",
+   "delta": -11812
+  },
+  {
+   "bucket": "3M",
+   "delta": -17717
+  },
+  {
+   "bucket": "6M",
+   "delta": -23623
+  },
+  {
+   "bucket": "1Y",
+   "delta": -29529
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 25161
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 6719
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -5368
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -9989
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 12836
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -11989
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 30904
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -13576
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 1570
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -10197
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 14896
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -1253
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -4338
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 23644
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 11117
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -31647
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 14165
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 90
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 5031
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -9571
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-08-07",
+  "executionTimestamp": "2026-08-07T11:18:05.523Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "J. Weiss",
+  "salesperson": null,
+  "orderId": "ORD-83B9AC46C1"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-08-07T09:17:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2026-08-07T09:17:00Z",
+  "lastModifiedAt": "2026-08-07T09:17:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT444669387",
+  "matched": "2026-08-07 12:33",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH2763722864",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q8383B9AC46C10DEF54C25A",
+  "upi": "QZHQYKZUC3BI",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-CAD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 430333,
+  "cleanPv": 430333.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQ-CSCA",
+   "DIV-CSCA"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 1081
+  }
+ }
+}

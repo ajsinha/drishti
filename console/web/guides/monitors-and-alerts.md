@@ -54,7 +54,7 @@ is not added by itself. Run the search again to refresh it.
 ### 3. Add and remove rows
 
 - **Add:** type a command or identifier in the *Add* box at the top and press Enter, for example
-  `TRD T-10001` or just `NS-SUMMIT-NY`. Rows of different kinds can sit together.
+  `TRD MX-20000001` or just `NS-SUMMIT-NY`. Rows of different kinds can sit together.
 - **Remove:** press **×** on a row.
 - **Delete monitor** removes the whole list.
 

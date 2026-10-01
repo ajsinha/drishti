@@ -1,0 +1,255 @@
+{
+ "tradeId": "BBG-60000113",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000113",
+ "productType": "SEC_BORROWING",
+ "productName": "Securities borrowing",
+ "assetClass": "Securities financing",
+ "family": "sft",
+ "status": "Live",
+ "direction": "Repo (lend cash)",
+ "tradeDate": "2026-09-18",
+ "effectiveDate": "2026-09-21",
+ "maturityDate": "2026-11-27",
+ "currency": "EUR",
+ "notional": 156000000.0,
+ "mtm": -1189358,
+ "mtmCurrency": "USD",
+ "pnl1d": -25882,
+ "counterparty": {
+  "id": "CP-MERIDIAN-RE",
+  "name": "Meridian Reinsurance Ltd"
+ },
+ "nettingSet": "NS-MERIDIAN-RE-FRA",
+ "book": "BOOK-SFT-1",
+ "trader": "TRDR-KBRANDT",
+ "desk": "DESK-SFT",
+ "legalEntity": "LE-FRA",
+ "underlyingEquity": "EQ-RHNB",
+ "repoCurve": "REPO-EUR",
+ "terms": {
+  "fee": 437.7,
+  "collateralType": "Non-cash"
+ },
+ "risk": {
+  "exposure": 4053039,
+  "delta": 882587
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "exposure": 405304,
+   "delta": 88259
+  },
+  {
+   "bucket": "1M",
+   "exposure": 810608,
+   "delta": 176517
+  },
+  {
+   "bucket": "3M",
+   "exposure": 1215912,
+   "delta": 264776
+  },
+  {
+   "bucket": "6M",
+   "exposure": 1621216,
+   "delta": 353035
+  }
+ ],
+ "schedule": [
+  {
+   "asset": "Meridian Financial Group 2031",
+   "isin": "USMERI070218",
+   "quantity": 51690683,
+   "marketValue": 51151032,
+   "haircut": 0.02,
+   "value": 50128011
+  },
+  {
+   "asset": "Helix Pharmaceuticals Inc. 2031",
+   "isin": "USHELI055667",
+   "quantity": 52574078,
+   "marketValue": 51979465,
+   "haircut": 0.04,
+   "value": 49900286
+  },
+  {
+   "asset": "Orbital Telecom SA 2036",
+   "isin": "FRORBI162925",
+   "quantity": 45410577,
+   "marketValue": 51099614,
+   "haircut": 0.04,
+   "value": 49055629
+  }
+ ],
+ "nextIndex": -1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -20787
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 595
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 18629
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -35535
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -62941
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -35551
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -51507
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 28775
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -93994
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 28133
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -14906
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 22399
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -54770
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 40787
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -20378
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 8879
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -21379
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 17132
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -48521
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 15869
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-09-18",
+  "executionTimestamp": "2026-09-18T08:43:56.789Z",
+  "venue": "Bloomberg SEF",
+  "venueMic": "BSEF",
+  "executionType": "Electronic",
+  "trader": "K. Brandt",
+  "salesperson": null,
+  "orderId": "ORD-18513BC0F0"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-09-18T12:50:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2026-09-18T12:50:00Z",
+  "lastModifiedAt": "2026-09-18T12:50:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT489431420",
+  "matched": "2026-09-18 17:58",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z9DXU4T18OK74418513BC0F095299FBF1F",
+  "upi": "QZ42XT2AEAJ4",
+  "reportingRegimes": [
+   "EU EMIR",
+   "EU MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "MERIGB33XXX",
+  "ssiId": "SSI-EUR-9DC4EA",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -1189358,
+  "cleanPv": -1189358.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQ-RHNB",
+   "REPO-EUR"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "globalone-sft",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 3939
+  }
+ }
+}

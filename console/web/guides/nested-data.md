@@ -19,19 +19,19 @@ Real documents are trees. A trade from a booking system holds a counterparty obj
 own list of cashflows, an execution block, a lifecycle with a list of events, a regulatory block, and so on,
 several levels deep. Rachana reads any depth with the same short paths.
 
-Every example below runs against the trading pack's interest rate swap **`T-10001`**. To follow along:
+Every example below runs against the trading pack's interest rate swap **`MX-20000001`**. To follow along:
 
 1. Open **Studio** (`/studio`).
-2. Type `trade` and `T-10001` in the two boxes at the top.
+2. Type `trade` and `MX-20000001` in the two boxes at the top.
 3. Open the **Sample JSON** tab and press **Load entity JSON**, so you can see the document while you write paths.
 
 ## 1. The shape of the document
 
-This is the part of `T-10001` that the examples read (abridged; `…` marks what is left out):
+This is the part of `MX-20000001` that the examples read (abridged; `…` marks what is left out):
 
 ```json
 {
-  "tradeId": "T-10001",
+  "tradeId": "MX-20000001",
   "productName": "Interest rate swap (fixed/float)",
   "counterparty": { "id": "CP-MERIDIAN-RE", "name": "Meridian Reinsurance Ltd" },
   "legs": [
@@ -59,7 +59,7 @@ This is the part of `T-10001` that the examples read (abridged; `…` marks what
 
 A path starts at `$` (the document), walks into objects with `.name` and into arrays with `[n]` (counting from 0).
 
-| Path | Reads, on T-10001 |
+| Path | Reads, on MX-20000001 |
 |---|---|
 | `$.counterparty.name` | *Meridian Reinsurance Ltd* (a field of a nested object) |
 | `$.execution.venue` | *Voice* |
@@ -151,7 +151,7 @@ You should see two columns. *Leg 1 · Receive fixed 4.0829%*: Index *Fixed*, Per
 
 This Sutra is an operations view of any trade: who, where, what the regulator sees, where cash settles,
 and every version of the trade. In Studio, start a new Sutra, replace the editor's text with the YAML below, keep
-`trade` / `T-10001` as the entity to preview against, and preview it. `description` and `notes` at the top and
+`trade` / `MX-20000001` as the entity to preview against, and preview it. `description` and `notes` at the top and
 bottom are plain text for the people who maintain the layout; they do not change the view.
 
 ```yaml
@@ -234,7 +234,7 @@ it the default where operations staff work, give it a higher priority in that in
 
 ## 7. When inference meets a tree
 
-With no Sutra at all, inference also walks the tree. Press **Start from inference** for `trade` / `T-10001` and
+With no Sutra at all, inference also walks the tree. Press **Start from inference** for `trade` / `MX-20000001` and
 you get, among others:
 
 | Part of the document | Inferred panel |

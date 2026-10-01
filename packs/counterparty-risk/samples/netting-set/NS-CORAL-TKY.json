@@ -62,21 +62,21 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10731",
+   "tradeId": "IMG-400143",
    "product": "Capital-protected note",
    "notional": 151000000.0,
    "maturity": "2034-05-22",
    "mtm": 2529887
   },
   {
-   "tradeId": "T-10743",
+   "tradeId": "IMG-400155",
    "product": "Worst-of note",
    "notional": 134000000.0,
    "maturity": "2029-10-19",
    "mtm": -2097100
   },
   {
-   "tradeId": "T-10723",
+   "tradeId": "IMG-400135",
    "product": "Range accrual note",
    "notional": 15000000.0,
    "maturity": "2035-02-20",

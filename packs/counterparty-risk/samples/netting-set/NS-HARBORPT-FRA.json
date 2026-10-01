@@ -62,21 +62,21 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10714",
+   "tradeId": "BBG-60000114",
    "product": "Securities borrowing",
    "notional": 91000000.0,
    "maturity": "2027-01-29",
    "mtm": -2200202
   },
   {
-   "tradeId": "T-10709",
+   "tradeId": "BBG-60000109",
    "product": "Securities borrowing",
    "notional": 148000000.0,
    "maturity": "2026-11-12",
    "mtm": -2184430
   },
   {
-   "tradeId": "T-10705",
+   "tradeId": "BBG-60000105",
    "product": "Securities lending",
    "notional": 205000000.0,
    "maturity": "2026-10-20",

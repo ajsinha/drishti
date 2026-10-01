@@ -1,0 +1,364 @@
+{
+ "tradeId": "CLY-3000040",
+ "sourceSystem": "Calypso",
+ "sourceTradeId": "3000040",
+ "productType": "TRS_LOAN_INDEX",
+ "productName": "Total return swap on a loan index",
+ "assetClass": "Credit",
+ "family": "swap",
+ "status": "Live",
+ "direction": "Pay fixed",
+ "tradeDate": "2025-04-04",
+ "effectiveDate": "2025-04-07",
+ "maturityDate": "2035-07-02",
+ "currency": "CAD",
+ "notional": 178000000.0,
+ "mtm": 1798395,
+ "mtmCurrency": "USD",
+ "pnl1d": 77365,
+ "counterparty": {
+  "id": "CP-AURORA",
+  "name": "Aurora Sovereign Wealth Fund"
+ },
+ "nettingSet": "NS-AURORA-NY",
+ "book": "BOOK-CREDIT-3",
+ "trader": "TRDR-CDUBOIS",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-CAD-OIS",
+ "forwardCurve": "CRV-CAD-PROJ",
+ "terms": {
+  "index": "iBoxx USD Liquid Leveraged Loans",
+  "fundingSpread": 259.5
+ },
+ "risk": {
+  "cs01": 142606
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 5093
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 10186
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 15279
+  },
+  {
+   "bucket": "3Y",
+   "cs01": 20372
+  },
+  {
+   "bucket": "5Y",
+   "cs01": 25465
+  },
+  {
+   "bucket": "7Y",
+   "cs01": 30558
+  },
+  {
+   "bucket": "10Y",
+   "cs01": 35652
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Pay performance",
+   "payReceive": "Pay",
+   "rateType": "Performance",
+   "index": "USCPI",
+   "rate": null,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "CAD",
+   "notional": 178000000.0
+  },
+  {
+   "leg": 2,
+   "label": "Receive CORRA + spread",
+   "payReceive": "Receive",
+   "rateType": "Float",
+   "index": "CORRA",
+   "rate": 0.027559,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "CAD",
+   "notional": 178000000.0
+  }
+ ],
+ "schedule": [
+  {
+   "payDate": "2026-04-07",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -363150.14,
+   "pv": 0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2027-04-07",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -414763.82,
+   "pv": -402320.91,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2028-04-07",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -359399.74,
+   "pv": -348617.75,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2029-04-07",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -366155.31,
+   "pv": -355170.65,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2030-04-07",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -395128.25,
+   "pv": -383274.4,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2031-04-07",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -525058.04,
+   "pv": -509306.3,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2032-04-07",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -455109.57,
+   "pv": -441456.28,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2033-04-07",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -368845.33,
+   "pv": -357779.97,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2034-04-07",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -358598.57,
+   "pv": -347840.61,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2035-04-07",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -366481.15,
+   "pv": -355486.72,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2035-07-02",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -440700.63,
+   "pv": -427479.61,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -20616
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 27391
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -55324
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 55827
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 31589
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -120443
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -41676
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -62023
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 110831
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 89597
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -77636
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 15092
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 19308
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -10258
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 43106
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -21164
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -72989
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 38716
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 15022
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -52120
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-04-04",
+  "executionTimestamp": "2025-04-04T08:58:38.321Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "C. Dubois",
+  "salesperson": null,
+  "orderId": "ORD-A965DE7C44"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-04-04T10:10:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2025-04-04T10:10:00Z",
+  "lastModifiedAt": "2025-04-04T10:10:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA488030984",
+  "matched": "2025-04-04 13:57",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096A965DE7C44A272D13162",
+  "upi": "QZFCF8GWSUA7",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "AUROGB33XXX",
+  "ssiId": "SSI-CAD-79DAAE",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1798395,
+  "cleanPv": 1798395.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Multi-curve OIS discounting",
+  "curves": [
+   "CRV-CAD-OIS",
+   "CRV-CAD-PROJ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 5377
+  }
+ }
+}

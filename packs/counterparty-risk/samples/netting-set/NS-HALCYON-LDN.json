@@ -62,98 +62,98 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10421",
+   "tradeId": "IMG-400109",
    "product": "Contract for difference",
    "notional": 176000000.0,
    "maturity": "2027-03-08",
    "mtm": 6060457
   },
   {
-   "tradeId": "T-10567",
+   "tradeId": "MX-20000189",
    "product": "Limited price index swap",
    "notional": 124000000.0,
    "maturity": "2028-10-10",
    "mtm": -4276973
   },
   {
-   "tradeId": "T-10412",
+   "tradeId": "IMG-400100",
    "product": "Equity total return swap",
    "notional": 195000000.0,
    "maturity": "2031-10-20",
    "mtm": 2341483
   },
   {
-   "tradeId": "T-10417",
+   "tradeId": "IMG-400105",
    "product": "Portfolio (basket) swap",
    "notional": 98000000.0,
    "maturity": "2034-01-03",
    "mtm": 1474051
   },
   {
-   "tradeId": "T-10211",
+   "tradeId": "WSS-1500055",
    "product": "FX average-rate option",
    "notional": 93000000.0,
    "maturity": "2034-02-06",
    "mtm": 1054954
   },
   {
-   "tradeId": "T-10373",
+   "tradeId": "IMG-400061",
    "product": "Cliquet (ratchet)",
    "notional": 117000000.0,
    "maturity": "2028-04-03",
    "mtm": -1004449
   },
   {
-   "tradeId": "T-10174",
+   "tradeId": "WSS-1500018",
    "product": "Non-deliverable forward",
    "notional": 47000000.0,
    "maturity": "2026-10-07",
    "mtm": -708903
   },
   {
-   "tradeId": "T-10180",
+   "tradeId": "WSS-1500024",
    "product": "FX swap",
    "notional": 108000000.0,
    "maturity": "2035-05-29",
    "mtm": 708597
   },
   {
-   "tradeId": "T-10379",
+   "tradeId": "IMG-400067",
    "product": "Autocallable note",
    "notional": 115000000.0,
    "maturity": "2034-01-17",
    "mtm": -429175
   },
   {
-   "tradeId": "T-10356",
+   "tradeId": "IMG-400044",
    "product": "Equity barrier option",
    "notional": 83000000.0,
    "maturity": "2033-03-10",
    "mtm": 357206
   },
   {
-   "tradeId": "T-10407",
+   "tradeId": "IMG-400095",
    "product": "Dividend swap",
    "notional": 32000000.0,
    "maturity": "2032-10-04",
    "mtm": 313322
   },
   {
-   "tradeId": "T-10187",
+   "tradeId": "WSS-1500031",
    "product": "FX digital option",
    "notional": 16000000.0,
    "maturity": "2026-10-07",
    "mtm": -119182
   },
   {
-   "tradeId": "T-10555",
+   "tradeId": "MX-20000177",
    "product": "Inflation-linked bond",
    "notional": 69000000.0,
    "maturity": "2033-07-20",
    "mtm": 107397
   },
   {
-   "tradeId": "T-10158",
+   "tradeId": "WSS-1500002",
    "product": "FX spot",
    "notional": 39000000.0,
    "maturity": "2026-10-07",

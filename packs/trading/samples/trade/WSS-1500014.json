@@ -1,0 +1,237 @@
+{
+ "tradeId": "WSS-1500014",
+ "sourceSystem": "Wall Street Systems",
+ "sourceTradeId": "1500014",
+ "productType": "FX_NDF",
+ "productName": "Non-deliverable forward",
+ "assetClass": "FX",
+ "family": "linear",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2025-03-17",
+ "effectiveDate": "2025-03-19",
+ "maturityDate": "2026-10-07",
+ "currency": "USD",
+ "notional": 14000000.0,
+ "mtm": 333376,
+ "mtmCurrency": "USD",
+ "pnl1d": 10185,
+ "counterparty": {
+  "id": "CP-LUMEN",
+  "name": "Lumen Semiconductor AG"
+ },
+ "nettingSet": "NS-LUMEN-LDN",
+ "book": "BOOK-FX-1",
+ "trader": "TRDR-LMOREAU",
+ "desk": "DESK-FX",
+ "legalEntity": "LE-LDN",
+ "fxSpot": "FX-USDCNH",
+ "fxForwardCurve": "FXF-USDCNH",
+ "discountCurve": "CRV-USD-OIS",
+ "terms": {
+  "rate": 9.4863,
+  "fixingDate": "2026-12-12",
+  "fixingSource": "KFTC"
+ },
+ "risk": {
+  "fxDelta": -140000
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "fxDelta": -9333
+  },
+  {
+   "bucket": "1M",
+   "fxDelta": -18667
+  },
+  {
+   "bucket": "3M",
+   "fxDelta": -28000
+  },
+  {
+   "bucket": "6M",
+   "fxDelta": -37333
+  },
+  {
+   "bucket": "1Y",
+   "fxDelta": -46667
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 7225
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 15901
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 10644
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -9462
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 4934
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -27534
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -8403
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -933
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 15341
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -10156
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 23862
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -6536
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 868
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 22776
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 480
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 5207
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 6866
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 28415
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -21056
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -17293
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-03-17",
+  "executionTimestamp": "2025-03-17T15:52:28.386Z",
+  "venue": "EBS",
+  "venueMic": "EBSM",
+  "executionType": "Electronic",
+  "trader": "L. Moreau",
+  "salesperson": null,
+  "orderId": "ORD-734299BA83"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-03-17T12:39:00Z",
+    "by": "mo.amend"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2025-10-05T12:39:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2025-03-17T12:39:00Z",
+  "lastModifiedAt": "2025-10-05T12:39:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT502521731",
+  "matched": "2025-03-17 14:11",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83734299BA833CB0195384",
+  "upi": "QZ6XZW0LYGMJ",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Foreign exchange"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "LUMEUS33XXX",
+  "ssiId": "SSI-USD-8CF792",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 333376,
+  "cleanPv": 333376.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "FX-USDCNH",
+   "FXF-USDCNH",
+   "CRV-USD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "calypso-fx",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 807
+  }
+ }
+}

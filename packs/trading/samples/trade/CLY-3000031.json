@@ -1,0 +1,366 @@
+{
+ "tradeId": "CLY-3000031",
+ "sourceSystem": "Calypso",
+ "sourceTradeId": "3000031",
+ "productType": "TRS_BOND",
+ "productName": "Total return swap on a bond",
+ "assetClass": "Credit",
+ "family": "swap",
+ "status": "Live",
+ "direction": "Pay fixed",
+ "tradeDate": "2026-07-24",
+ "effectiveDate": "2026-07-27",
+ "maturityDate": "2036-06-23",
+ "currency": "JPY",
+ "notional": 128000000.0,
+ "mtm": -409806,
+ "mtmCurrency": "USD",
+ "pnl1d": 6704,
+ "counterparty": {
+  "id": "CP-HALCYON",
+  "name": "Halcyon Shipping plc"
+ },
+ "nettingSet": "NS-HALCYON-NY",
+ "book": "BOOK-CREDIT-2",
+ "trader": "TRDR-DWHITFIELD",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-KAIZEN",
+ "underlyingBond": "BND-JPKAIZ021595",
+ "discountCurve": "CRV-JPY-OIS",
+ "repoCurve": "REPO-JPY",
+ "terms": {
+  "fundingSpread": 111.0,
+  "resetFrequency": "Quarterly"
+ },
+ "risk": {
+  "cs01": 116506,
+  "dv01": 117588
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 4161,
+   "dv01": 4200
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 8322,
+   "dv01": 8399
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 12483,
+   "dv01": 12599
+  },
+  {
+   "bucket": "3Y",
+   "cs01": 16644,
+   "dv01": 16798
+  },
+  {
+   "bucket": "5Y",
+   "cs01": 20805,
+   "dv01": 20998
+  },
+  {
+   "bucket": "7Y",
+   "cs01": 24966,
+   "dv01": 25197
+  },
+  {
+   "bucket": "10Y",
+   "cs01": 29126,
+   "dv01": 29397
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Pay performance",
+   "payReceive": "Pay",
+   "rateType": "Performance",
+   "index": "USCPI",
+   "rate": null,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "JPY",
+   "notional": 128000000.0
+  },
+  {
+   "leg": 2,
+   "label": "Receive TONA + spread",
+   "payReceive": "Receive",
+   "rateType": "Float",
+   "index": "TONA",
+   "rate": 0.006402,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "JPY",
+   "notional": 128000000.0
+  }
+ ],
+ "schedule": [
+  {
+   "payDate": "2027-07-27",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -371803.79,
+   "pv": -360649.68,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2028-07-27",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -263646.56,
+   "pv": -255737.16,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2029-07-27",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -357501.31,
+   "pv": -346776.27,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2030-07-27",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -275875.61,
+   "pv": -267599.34,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2031-07-27",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -305968.69,
+   "pv": -296789.63,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2032-07-27",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -333847.55,
+   "pv": -323832.12,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2033-07-27",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -310550.72,
+   "pv": -301234.2,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2034-07-27",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -310197.06,
+   "pv": -300891.15,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2035-07-27",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -265538.57,
+   "pv": -257572.41,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2036-06-23",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -321122.27,
+   "pv": -311488.6,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 30149
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -2936
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -8884
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -5636
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -5257
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -10351
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 7798
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -18625
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 3463
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 1595
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 9541
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 1068
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -14819
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 9097
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 7461
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 17330
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 11516
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -13920
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 20520
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 15371
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-07-24",
+  "executionTimestamp": "2026-07-24T13:11:14.699Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "D. Whitfield",
+  "salesperson": null,
+  "orderId": "ORD-D49DBAD81B"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-07-24T09:12:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2026-07-24T09:12:00Z",
+  "lastModifiedAt": "2026-07-24T09:12:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA143430661",
+  "matched": "2026-07-24 10:29",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096D49DBAD81BF401CF6E1F",
+  "upi": "QZKCSP6B65GU",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "HALCGB33XXX",
+  "ssiId": "SSI-JPY-10E970",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -409806,
+  "cleanPv": -409806.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Multi-curve OIS discounting",
+  "curves": [
+   "BND-JPKAIZ021595",
+   "CRV-JPY-OIS",
+   "REPO-JPY"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 2100
+  }
+ }
+}

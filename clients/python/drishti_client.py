@@ -17,11 +17,11 @@
 
     from drishti_client import Drishti
     d = Drishti("https://drishti.bank.example:18480", token="drk_…")   # a token from My account → API tokens
-    d.field("trade", "T-10001", "mtm")                                   # 1875863.0
-    d.document("trade", "T-10001")["legs"][0]["rate"]
+    d.field("trade", "MX-20000001", "mtm")                                   # 1875863.0
+    d.document("trade", "MX-20000001")["legs"][0]["rate"]
     rows = d.search("TRD productType=Revolver")                         # list of dicts: kind, id, title, then the columns
     d.search("TRD where notional > 250m order by mtm desc limit 20", as_of="2026-09-29")
-    d.diff("trade", "T-10001", "2026-09-25", "2026-09-30")              # what changed between two business dates
+    d.diff("trade", "MX-20000001", "2026-09-25", "2026-09-30")              # what changed between two business dates
 
     python3 drishti_client.py --url … --token … search "TRD productType=Revolver" > revolvers.csv
 
@@ -93,7 +93,7 @@ class Drishti:
         return self._get(f"/views/{urllib.parse.quote(kind)}/{urllib.parse.quote(id_)}", as_of)
 
     def search(self, query: str, as_of: str | None = None) -> list[dict]:
-        """A pick list or search (TRD T-100, TRD productType=Revolver, TRD where …): one dict per entity."""
+        """A pick list or search (TRD MX-200000, TRD productType=Revolver, TRD where …): one dict per entity."""
         r = self._get("/search", as_of, q=query)
         labels = r.get("labels", {})
         return [{"kind": row["ref"]["kind"], "id": row["ref"]["id"], "title": row.get("title"),

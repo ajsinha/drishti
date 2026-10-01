@@ -1,0 +1,328 @@
+{
+ "tradeId": "BBG-60000057",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000057",
+ "productType": "MBS_PASSTHROUGH",
+ "productName": "Agency MBS pass-through",
+ "assetClass": "Fixed income",
+ "family": "securitized",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-06-17",
+ "effectiveDate": "2026-06-22",
+ "maturityDate": "2031-12-09",
+ "currency": "USD",
+ "notional": 231000000.0,
+ "mtm": 1211464,
+ "mtmCurrency": "USD",
+ "pnl1d": 5672,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-2",
+ "trader": "TRDR-BADEYEMI",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-HELIX",
+ "benchmarkCurve": "CRV-USD-GOVT",
+ "forwardCurve": "CRV-USD-PROJ",
+ "swaptionVolCube": "IRV-USD",
+ "terms": {
+  "agency": "FHLMC",
+  "couponRate": 0.04892,
+  "wac": 0.057151,
+  "cpr": 0.05419,
+  "factor": 0.8889
+ },
+ "risk": {
+  "dv01": 104742,
+  "vega": 1248884
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 4988,
+   "vega": 59471
+  },
+  {
+   "bucket": "6M",
+   "dv01": 9975,
+   "vega": 118941
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 14963,
+   "vega": 178412
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 19951,
+   "vega": 237883
+  },
+  {
+   "bucket": "3Y",
+   "dv01": 24939,
+   "vega": 297353
+  },
+  {
+   "bucket": "5Y",
+   "dv01": 29926,
+   "vega": 356824
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-12-22",
+   "opening": 231000000,
+   "principal": 21000000,
+   "closing": 210000000,
+   "interest": 4620000
+  },
+  {
+   "date": "2027-06-22",
+   "opening": 210000000,
+   "principal": 21000000,
+   "closing": 189000000,
+   "interest": 4200000
+  },
+  {
+   "date": "2027-12-22",
+   "opening": 189000000,
+   "principal": 21000000,
+   "closing": 168000000,
+   "interest": 3780000
+  },
+  {
+   "date": "2028-06-22",
+   "opening": 168000000,
+   "principal": 21000000,
+   "closing": 147000000,
+   "interest": 3360000
+  },
+  {
+   "date": "2028-12-22",
+   "opening": 147000000,
+   "principal": 21000000,
+   "closing": 126000000,
+   "interest": 2940000
+  },
+  {
+   "date": "2029-06-22",
+   "opening": 126000000,
+   "principal": 21000000,
+   "closing": 105000000,
+   "interest": 2520000
+  },
+  {
+   "date": "2029-12-22",
+   "opening": 105000000,
+   "principal": 21000000,
+   "closing": 84000000,
+   "interest": 2100000
+  },
+  {
+   "date": "2030-06-22",
+   "opening": 84000000,
+   "principal": 21000000,
+   "closing": 63000000,
+   "interest": 1680000
+  },
+  {
+   "date": "2030-12-22",
+   "opening": 63000000,
+   "principal": 21000000,
+   "closing": 42000000,
+   "interest": 1260000
+  },
+  {
+   "date": "2031-06-22",
+   "opening": 42000000,
+   "principal": 21000000,
+   "closing": 21000000,
+   "interest": 840000
+  },
+  {
+   "date": "2031-12-09",
+   "opening": 21000000,
+   "principal": 21000000,
+   "closing": 0,
+   "interest": 420000
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -43724
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 58158
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 13475
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -18241
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -1078
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 1392
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 4635
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 10529
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 19474
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 39230
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 15314
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -35511
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 31706
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -6486
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 14764
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 4529
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -83696
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 27855
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -21618
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -17379
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-06-17",
+  "executionTimestamp": "2026-06-17T15:28:23.646Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "B. Adeyemi",
+  "salesperson": null,
+  "orderId": "ORD-A6135FA0D0"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-06-17T11:52:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-06-17T11:52:00Z",
+  "lastModifiedAt": "2026-06-17T11:52:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT262656098",
+  "matched": "2026-06-17 12:40",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH1399224673",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096A6135FA0D0E7FD39F5CB",
+  "upi": "QZ8H0Y0HV0ZU",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMUS33XXX",
+  "ssiId": "SSI-USD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1211464,
+  "cleanPv": 1211464.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-USD-GOVT",
+   "CRV-USD-PROJ",
+   "IRV-USD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 4733
+  }
+ }
+}

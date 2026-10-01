@@ -1,0 +1,294 @@
+{
+ "tradeId": "IMG-400128",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400128",
+ "productType": "EQ_BASKET_OPTION",
+ "productName": "Basket option",
+ "assetClass": "Equity",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2026-03-26",
+ "effectiveDate": "2026-03-30",
+ "maturityDate": "2036-09-22",
+ "currency": "JPY",
+ "notional": 210000000.0,
+ "mtm": 841815,
+ "mtmCurrency": "USD",
+ "pnl1d": -13054,
+ "counterparty": {
+  "id": "CP-RHEINTAL",
+  "name": "Rheintal Landesbank"
+ },
+ "nettingSet": "NS-RHEINTAL-LDN",
+ "book": "BOOK-EQD-2",
+ "trader": "TRDR-JWEISS",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingIndex": "EQX-NKY",
+ "equityVolSurface": "EQV-NKY",
+ "correlation": "CORR-US-EQ",
+ "terms": {
+  "optionType": "Put",
+  "exerciseStyle": "American",
+  "expiryDate": "2027-05-20",
+  "strike": 3214.41,
+  "basketSize": 4
+ },
+ "risk": {
+  "delta": 1131662,
+  "vega": 1572235
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 53889,
+   "vega": 74868
+  },
+  {
+   "bucket": "1M",
+   "delta": 107777,
+   "vega": 149737
+  },
+  {
+   "bucket": "3M",
+   "delta": 161666,
+   "vega": 224605
+  },
+  {
+   "bucket": "6M",
+   "delta": 215555,
+   "vega": 299473
+  },
+  {
+   "bucket": "1Y",
+   "delta": 269443,
+   "vega": 374342
+  },
+  {
+   "bucket": "2Y",
+   "delta": 323332,
+   "vega": 449210
+  }
+ ],
+ "schedule": [
+  {
+   "name": "Solaris Energy Corp.",
+   "weight": 0.125,
+   "level": 244.0,
+   "status": "Active"
+  },
+  {
+   "name": "Cascadia Airlines Inc.",
+   "weight": 0.125,
+   "level": 386.7,
+   "status": "Active"
+  },
+  {
+   "name": "Meridian Financial Group",
+   "weight": 0.125,
+   "level": 164.2,
+   "status": "Active"
+  },
+  {
+   "name": "Helix Pharmaceuticals Inc.",
+   "weight": 0.125,
+   "level": 424.0,
+   "status": "Active"
+  },
+  {
+   "name": "Novatek Devices Inc.",
+   "weight": 0.125,
+   "level": 418.3,
+   "status": "Active"
+  },
+  {
+   "name": "Granite Building Materials plc",
+   "weight": 0.125,
+   "level": 332.3,
+   "status": "Active"
+  },
+  {
+   "name": "Kaizen Motors Corp.",
+   "weight": 0.125,
+   "level": 319.2,
+   "status": "Active"
+  },
+  {
+   "name": "Verdant Agri Holdings",
+   "weight": 0.125,
+   "level": 398.0,
+   "status": "Active"
+  }
+ ],
+ "nextIndex": -1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -19019
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -45491
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -18284
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 18067
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 25183
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -30900
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 16272
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -22986
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 26471
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 73120
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -47658
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -34061
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 10682
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 37099
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -25270
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 12994
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 5877
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 20603
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -21241
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 10702
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-03-26",
+  "executionTimestamp": "2026-03-26T11:17:21.024Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "J. Weiss",
+  "salesperson": null,
+  "orderId": "ORD-7EB7F61EC6"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-03-26T12:30:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2026-03-26T12:30:00Z",
+  "lastModifiedAt": "2026-03-26T12:30:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT610242590",
+  "matched": "2026-03-26 13:13",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q837EB7F61EC65EAFAA11DE",
+  "upi": "QZ5JCA50VDJH",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "RHEIGB33XXX",
+  "ssiId": "SSI-JPY-230AB8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 841815,
+  "cleanPv": 841815.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "EQX-NKY",
+   "EQV-NKY",
+   "CORR-US-EQ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 3784
+  }
+ }
+}

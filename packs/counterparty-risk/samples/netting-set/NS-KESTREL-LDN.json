@@ -62,98 +62,98 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10542",
+   "tradeId": "MX-20000164",
    "product": "Year-on-year inflation swap",
    "notional": 243000000.0,
    "maturity": "2026-11-05",
    "mtm": -4921358
   },
   {
-   "tradeId": "T-10350",
+   "tradeId": "IMG-400038",
    "product": "Index option",
    "notional": 159000000.0,
    "maturity": "2027-05-27",
    "mtm": -2574924
   },
   {
-   "tradeId": "T-10196",
+   "tradeId": "WSS-1500040",
    "product": "FX barrier option",
    "notional": 111000000.0,
    "maturity": "2027-12-06",
    "mtm": -2383626
   },
   {
-   "tradeId": "T-10547",
+   "tradeId": "MX-20000169",
    "product": "Inflation cap / floor",
    "notional": 243000000.0,
    "maturity": "2028-08-15",
    "mtm": 2197247
   },
   {
-   "tradeId": "T-10444",
+   "tradeId": "IMG-400132",
    "product": "Basket option",
    "notional": 136000000.0,
    "maturity": "2032-02-25",
    "mtm": 1867436
   },
   {
-   "tradeId": "T-10389",
+   "tradeId": "IMG-400077",
    "product": "Reverse convertible",
    "notional": 96000000.0,
    "maturity": "2035-12-07",
    "mtm": 906822
   },
   {
-   "tradeId": "T-10173",
+   "tradeId": "WSS-1500017",
    "product": "Non-deliverable forward",
    "notional": 78000000.0,
    "maturity": "2026-10-07",
    "mtm": -747816
   },
   {
-   "tradeId": "T-10178",
+   "tradeId": "WSS-1500022",
    "product": "FX swap",
    "notional": 98000000.0,
    "maturity": "2030-06-25",
    "mtm": 620224
   },
   {
-   "tradeId": "T-10225",
+   "tradeId": "WSS-1500069",
    "product": "FX accumulator",
    "notional": 201000000.0,
    "maturity": "2033-12-27",
    "mtm": 521517
   },
   {
-   "tradeId": "T-10367",
+   "tradeId": "IMG-400055",
    "product": "Equity digital option",
    "notional": 202000000.0,
    "maturity": "2028-03-02",
    "mtm": 473161
   },
   {
-   "tradeId": "T-10189",
+   "tradeId": "WSS-1500033",
    "product": "FX digital option",
    "notional": 10000000.0,
    "maturity": "2027-09-17",
    "mtm": -112393
   },
   {
-   "tradeId": "T-10365",
+   "tradeId": "IMG-400053",
    "product": "Equity Asian option",
    "notional": 180000000.0,
    "maturity": "2035-11-28",
    "mtm": -83827
   },
   {
-   "tradeId": "T-10322",
+   "tradeId": "IMG-400010",
    "product": "Equity forward",
    "notional": 55000000.0,
    "maturity": "2026-10-07",
    "mtm": -24415
   },
   {
-   "tradeId": "T-10185",
+   "tradeId": "WSS-1500029",
    "product": "FX vanilla option",
    "notional": 17000000.0,
    "maturity": "2028-10-16",

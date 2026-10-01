@@ -1,0 +1,258 @@
+{
+ "tradeId": "MX-20000170",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000170",
+ "productType": "INFL_CAP_FLOOR",
+ "productName": "Inflation cap / floor",
+ "assetClass": "Inflation",
+ "family": "option",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2026-01-21",
+ "effectiveDate": "2026-01-23",
+ "maturityDate": "2027-03-29",
+ "currency": "JPY",
+ "notional": 54000000.0,
+ "mtm": 334643,
+ "mtmCurrency": "USD",
+ "pnl1d": 4508,
+ "counterparty": {
+  "id": "CP-RHEINTAL",
+  "name": "Rheintal Landesbank"
+ },
+ "nettingSet": "NS-RHEINTAL-LDN",
+ "book": "BOOK-INFL-1",
+ "trader": "TRDR-GMENDES",
+ "desk": "DESK-INFL",
+ "legalEntity": "LE-LDN",
+ "discountCurve": "CRV-JPY-OIS",
+ "inflationCurve": "INFC-JPCPI",
+ "inflationIndex": "INF-JPCPI",
+ "terms": {
+  "capFloor": "Cap",
+  "strike": 0.047698
+ },
+ "risk": {
+  "ie01": -5537,
+  "vega": -98505
+ },
+ "sensitivities": [
+  {
+   "bucket": "1Y",
+   "ie01": -5537,
+   "vega": -98505
+  }
+ ],
+ "schedule": [
+  {
+   "fixingDate": "2026-04-23",
+   "period": "2026-04-23..2026-07-23",
+   "index": "TONA",
+   "rate": 0.036103,
+   "payoff": 14890.5,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-07-23",
+   "period": "2026-07-23..2026-10-23",
+   "index": "TONA",
+   "rate": 0.044691,
+   "payoff": 130828.5,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-10-23",
+   "period": "2026-10-23..2027-01-23",
+   "index": "TONA",
+   "rate": 0.037145,
+   "payoff": 28957.5,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-01-23",
+   "period": "2027-01-23..2027-04-23",
+   "index": "TONA",
+   "rate": 0.032063,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-03-29",
+   "period": "2027-03-29..2027-06-29",
+   "index": "TONA",
+   "rate": 0.034075,
+   "payoff": 0.0,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 2,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -2641
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 2530
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -8947
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 2297
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -18173
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -6564
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -6233
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -8221
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 4089
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 3322
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 6780
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -13577
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -8256
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -562
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -3727
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -1710
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 9499
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 4800
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 498
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 8082
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-01-21",
+  "executionTimestamp": "2026-01-21T13:35:52.190Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "G. Mendes",
+  "salesperson": null,
+  "orderId": "ORD-FC692C106E"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-01-21T12:16:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2026-01-21T12:16:00Z",
+  "lastModifiedAt": "2026-01-21T12:16:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA557657868",
+  "matched": "2026-01-21 12:32",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83FC692C106E440259EBA0",
+  "upi": "QZ50WCY9W5YD",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "RHEIGB33XXX",
+  "ssiId": "SSI-JPY-230AB8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 334643,
+  "cleanPv": 334643.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CRV-JPY-OIS",
+   "INFC-JPCPI",
+   "INF-JPCPI"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 1209
+  }
+ }
+}

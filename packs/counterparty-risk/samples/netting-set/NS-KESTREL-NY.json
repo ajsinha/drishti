@@ -62,154 +62,154 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10037",
+   "tradeId": "MX-20000037",
    "product": "Amortising swap",
    "notional": 161000000.0,
    "maturity": "2031-12-22",
    "mtm": -7815523
   },
   {
-   "tradeId": "T-10008",
+   "tradeId": "MX-20000008",
    "product": "Overnight index swap",
    "notional": 158000000.0,
    "maturity": "2030-05-01",
    "mtm": 6871958
   },
   {
-   "tradeId": "T-10079",
+   "tradeId": "MX-20000079",
    "product": "Interest rate cap",
    "notional": 190000000.0,
    "maturity": "2028-06-29",
    "mtm": -2636721
   },
   {
-   "tradeId": "T-10268",
+   "tradeId": "CLY-3000028",
    "product": "First-to-default basket",
    "notional": 155000000.0,
    "maturity": "2033-05-06",
    "mtm": 2634218
   },
   {
-   "tradeId": "T-10640",
+   "tradeId": "BBG-60000070",
    "product": "Asset-backed security",
    "notional": 158000000.0,
    "maturity": "2030-07-25",
    "mtm": -2614302
   },
   {
-   "tradeId": "T-10041",
+   "tradeId": "MX-20000041",
    "product": "Amortising swap",
    "notional": 233000000.0,
    "maturity": "2029-08-20",
    "mtm": -2563201
   },
   {
-   "tradeId": "T-10256",
+   "tradeId": "CLY-3000016",
    "product": "Index tranche",
    "notional": 137000000.0,
    "maturity": "2033-03-21",
    "mtm": -2011432
   },
   {
-   "tradeId": "T-10153",
+   "tradeId": "MX-20000153",
    "product": "Target redemption note (rates)",
    "notional": 93000000.0,
    "maturity": "2028-09-28",
    "mtm": 1991433
   },
   {
-   "tradeId": "T-10017",
+   "tradeId": "MX-20000017",
    "product": "Basis swap (float/float)",
    "notional": 189000000.0,
    "maturity": "2027-05-25",
    "mtm": 1857281
   },
   {
-   "tradeId": "T-10281",
+   "tradeId": "CLY-3000041",
    "product": "Total return swap on a loan index",
    "notional": 189000000.0,
    "maturity": "2031-03-24",
    "mtm": -1284431
   },
   {
-   "tradeId": "T-10533",
+   "tradeId": "END-1000089",
    "product": "Freight forward agreement",
    "notional": 227000000.0,
    "maturity": "2028-05-22",
    "mtm": -1248401
   },
   {
-   "tradeId": "T-10481",
+   "tradeId": "END-1000037",
    "product": "Commodity swaption",
    "notional": 153000000.0,
    "maturity": "2027-08-02",
    "mtm": -752009
   },
   {
-   "tradeId": "T-10106",
+   "tradeId": "MX-20000106",
    "product": "Bermudan swaption",
    "notional": 143000000.0,
    "maturity": "2028-10-25",
    "mtm": 514934
   },
   {
-   "tradeId": "T-10081",
+   "tradeId": "MX-20000081",
    "product": "Interest rate cap",
    "notional": 26000000.0,
    "maturity": "2027-05-14",
    "mtm": 282246
   },
   {
-   "tradeId": "T-10676",
+   "tradeId": "WSS-1500112",
    "product": "Call account",
    "notional": 125000000.0,
    "maturity": "2027-04-05",
    "mtm": 224016
   },
   {
-   "tradeId": "T-10485",
+   "tradeId": "END-1000041",
    "product": "Commodity swaption",
    "notional": 75000000.0,
    "maturity": "2027-07-08",
    "mtm": -209787
   },
   {
-   "tradeId": "T-10018",
+   "tradeId": "MX-20000018",
    "product": "Basis swap (float/float)",
    "notional": 103000000.0,
    "maturity": "2030-09-25",
    "mtm": -142545
   },
   {
-   "tradeId": "T-10109",
+   "tradeId": "MX-20000109",
    "product": "American swaption",
    "notional": 153000000.0,
    "maturity": "2026-10-07",
    "mtm": -88123
   },
   {
-   "tradeId": "T-10643",
+   "tradeId": "BBG-60000073",
    "product": "CLO tranche",
    "notional": 23000000.0,
    "maturity": "2032-06-02",
    "mtm": 86751
   },
   {
-   "tradeId": "T-10309",
+   "tradeId": "CLY-3000069",
    "product": "Unfunded risk participation",
    "notional": 128000000.0,
    "maturity": "2036-02-14",
    "mtm": 55694
   },
   {
-   "tradeId": "T-10461",
+   "tradeId": "END-1000017",
    "product": "Commodity swap",
    "notional": 57000000.0,
    "maturity": "2027-01-29",
    "mtm": 48886
   },
   {
-   "tradeId": "T-10264",
+   "tradeId": "CLY-3000024",
    "product": "CDS index option",
    "notional": 56000000.0,
    "maturity": "2027-02-24",

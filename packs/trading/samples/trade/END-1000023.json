@@ -1,0 +1,453 @@
+{
+ "tradeId": "END-1000023",
+ "sourceSystem": "Endur",
+ "sourceTradeId": "1000023",
+ "productType": "CMD_BASIS_SWAP",
+ "productName": "Commodity basis swap",
+ "assetClass": "Commodity",
+ "family": "swap",
+ "status": "Live",
+ "direction": "Receive fixed",
+ "tradeDate": "2024-08-30",
+ "effectiveDate": "2024-09-03",
+ "maturityDate": "2035-09-20",
+ "currency": "USD",
+ "notional": 217000000.0,
+ "mtm": 147584,
+ "mtmCurrency": "USD",
+ "pnl1d": 15624,
+ "counterparty": {
+  "id": "CP-MERIDIAN-RE",
+  "name": "Meridian Reinsurance Ltd"
+ },
+ "nettingSet": "NS-MERIDIAN-RE-NY",
+ "book": "BOOK-COMM-2",
+ "trader": "TRDR-TBRENNAN",
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "commodityCurve": "CMDC-SILVER",
+ "discountCurve": "CRV-USD-OIS",
+ "terms": {
+  "spread": 1.27,
+  "location": "Henry Hub vs Waha"
+ },
+ "risk": {
+  "delta": -573264
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -27298
+  },
+  {
+   "bucket": "1M",
+   "delta": -54597
+  },
+  {
+   "bucket": "3M",
+   "delta": -81895
+  },
+  {
+   "bucket": "6M",
+   "delta": -109193
+  },
+  {
+   "bucket": "1Y",
+   "delta": -136491
+  },
+  {
+   "bucket": "2Y",
+   "delta": -163790
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Receive performance",
+   "payReceive": "Receive",
+   "rateType": "Performance",
+   "index": "SILVER",
+   "rate": null,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "USD",
+   "notional": 217000000.0
+  },
+  {
+   "leg": 2,
+   "label": "Pay SOFR + spread",
+   "payReceive": "Pay",
+   "rateType": "Float",
+   "index": "SOFR",
+   "rate": 0.036215,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "USD",
+   "notional": 217000000.0
+  }
+ ],
+ "schedule": [
+  {
+   "fixingDate": "2024-12-03",
+   "period": "2024-12-03..2025-03-03",
+   "index": "SOFR",
+   "rate": 0.048902,
+   "payoff": 754183.5,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2025-03-03",
+   "period": "2025-03-03..2025-06-03",
+   "index": "SOFR",
+   "rate": 0.039524,
+   "payoff": 245427.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2025-06-03",
+   "period": "2025-06-03..2025-09-03",
+   "index": "SOFR",
+   "rate": 0.030959,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2025-09-03",
+   "period": "2025-09-03..2025-12-03",
+   "index": "SOFR",
+   "rate": 0.039507,
+   "payoff": 244504.75,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2025-12-03",
+   "period": "2025-12-03..2026-03-03",
+   "index": "SOFR",
+   "rate": 0.028392,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-03-03",
+   "period": "2026-03-03..2026-06-03",
+   "index": "SOFR",
+   "rate": 0.024361,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-06-03",
+   "period": "2026-06-03..2026-09-03",
+   "index": "SOFR",
+   "rate": 0.043281,
+   "payoff": 449244.25,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-09-03",
+   "period": "2026-09-03..2026-12-03",
+   "index": "SOFR",
+   "rate": 0.027738,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-12-03",
+   "period": "2026-12-03..2027-03-03",
+   "index": "SOFR",
+   "rate": 0.025944,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-03-03",
+   "period": "2027-03-03..2027-06-03",
+   "index": "SOFR",
+   "rate": 0.037077,
+   "payoff": 112677.25,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-06-03",
+   "period": "2027-06-03..2027-09-03",
+   "index": "SOFR",
+   "rate": 0.044796,
+   "payoff": 531433.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-09-03",
+   "period": "2027-09-03..2027-12-03",
+   "index": "SOFR",
+   "rate": 0.033935,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-12-03",
+   "period": "2027-12-03..2028-03-03",
+   "index": "SOFR",
+   "rate": 0.038493,
+   "payoff": 189495.25,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2028-03-03",
+   "period": "2028-03-03..2028-06-03",
+   "index": "SOFR",
+   "rate": 0.033434,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2028-06-03",
+   "period": "2028-06-03..2028-09-03",
+   "index": "SOFR",
+   "rate": 0.047101,
+   "payoff": 656479.25,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2028-09-03",
+   "period": "2028-09-03..2028-12-03",
+   "index": "SOFR",
+   "rate": 0.027053,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2028-12-03",
+   "period": "2028-12-03..2029-03-03",
+   "index": "SOFR",
+   "rate": 0.027034,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2029-03-03",
+   "period": "2029-03-03..2029-06-03",
+   "index": "SOFR",
+   "rate": 0.038524,
+   "payoff": 191177.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2029-06-03",
+   "period": "2029-06-03..2029-09-03",
+   "index": "SOFR",
+   "rate": 0.044009,
+   "payoff": 488738.25,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2029-09-03",
+   "period": "2029-09-03..2029-12-03",
+   "index": "SOFR",
+   "rate": 0.026117,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2029-12-03",
+   "period": "2029-12-03..2030-03-03",
+   "index": "SOFR",
+   "rate": 0.047336,
+   "payoff": 669228.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2030-03-03",
+   "period": "2030-03-03..2030-06-03",
+   "index": "SOFR",
+   "rate": 0.024216,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2030-06-03",
+   "period": "2030-06-03..2030-09-03",
+   "index": "SOFR",
+   "rate": 0.025838,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2030-09-03",
+   "period": "2030-09-03..2030-12-03",
+   "index": "SOFR",
+   "rate": 0.046548,
+   "payoff": 626479.0,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 8,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 2943
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -1937
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -4418
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 638
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 7019
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -380
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 2643
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -391
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -7239
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 1070
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -50
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 3936
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 6708
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 2480
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -3282
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 3004
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -3365
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -13022
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 3679
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -2132
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-08-30",
+  "executionTimestamp": "2024-08-30T09:08:18.460Z",
+  "venue": "ICE",
+  "venueMic": "IFEU",
+  "executionType": "Electronic",
+  "trader": "T. Brennan",
+  "salesperson": null,
+  "orderId": "ORD-C069EB5BF6"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-08-30T09:05:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2024-08-30T09:05:00Z",
+  "lastModifiedAt": "2024-08-30T09:05:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT727786425",
+  "matched": "2024-08-30 14:15",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096C069EB5BF67D73BA8E9C",
+  "upi": "QZ5W79F8AJFX",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "MERIUS33XXX",
+  "ssiId": "SSI-USD-9DC4EA",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 147584,
+  "cleanPv": 147584.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Multi-curve OIS discounting",
+  "curves": [
+   "CMDC-SILVER",
+   "CRV-USD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "endur-comm",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 2465
+  }
+ }
+}

@@ -1,0 +1,258 @@
+{
+ "tradeId": "MX-20000174",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000174",
+ "productType": "INFL_CAP_FLOOR",
+ "productName": "Inflation cap / floor",
+ "assetClass": "Inflation",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2025-09-12",
+ "effectiveDate": "2025-09-15",
+ "maturityDate": "2026-10-12",
+ "currency": "EUR",
+ "notional": 115000000.0,
+ "mtm": -318601,
+ "mtmCurrency": "USD",
+ "pnl1d": -3836,
+ "counterparty": {
+  "id": "CP-NORTHBRIDGE",
+  "name": "Northbridge Capital LLP"
+ },
+ "nettingSet": "NS-NORTHBRIDGE-LDN",
+ "book": "BOOK-INFL-2",
+ "trader": "TRDR-HOKORO",
+ "desk": "DESK-INFL",
+ "legalEntity": "LE-LDN",
+ "discountCurve": "CRV-EUR-OIS",
+ "inflationCurve": "INFC-HICPX",
+ "inflationIndex": "INF-HICPX",
+ "terms": {
+  "capFloor": "Floor",
+  "strike": 0.002882
+ },
+ "risk": {
+  "ie01": 9912,
+  "vega": 191572
+ },
+ "sensitivities": [
+  {
+   "bucket": "1Y",
+   "ie01": 9912,
+   "vega": 191572
+  }
+ ],
+ "schedule": [
+  {
+   "fixingDate": "2025-12-15",
+   "period": "2025-12-15..2026-03-15",
+   "index": "ESTR",
+   "rate": 0.03658,
+   "payoff": 45425.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-03-15",
+   "period": "2026-03-15..2026-06-15",
+   "index": "ESTR",
+   "rate": 0.029582,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-06-15",
+   "period": "2026-06-15..2026-09-15",
+   "index": "ESTR",
+   "rate": 0.04116,
+   "payoff": 177100.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-09-15",
+   "period": "2026-09-15..2026-12-15",
+   "index": "ESTR",
+   "rate": 0.042331,
+   "payoff": 210766.25,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-10-12",
+   "period": "2026-10-12..2027-01-12",
+   "index": "ESTR",
+   "rate": 0.030133,
+   "payoff": 0.0,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 4,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 522
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -8057
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -561
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -1887
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 13900
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -1451
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -7435
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -21326
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -12012
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 8486
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -16458
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -593
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -17922
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -3415
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 5356
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 5677
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 3249
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 16780
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 2962
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 8726
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-09-12",
+  "executionTimestamp": "2025-09-12T12:14:44.987Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "H. Okoro",
+  "salesperson": null,
+  "orderId": "ORD-E10B90A89F"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-09-12T12:17:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2025-09-12T12:17:00Z",
+  "lastModifiedAt": "2025-09-12T12:17:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA651434969",
+  "matched": "2025-09-12 10:25",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83E10B90A89FED6B81EFDF",
+  "upi": "QZ50WCY9W5YD",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "NORTGB33XXX",
+  "ssiId": "SSI-EUR-A0C7C2",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -318601,
+  "cleanPv": -318601.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CRV-EUR-OIS",
+   "INFC-HICPX",
+   "INF-HICPX"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 1787
+  }
+ }
+}

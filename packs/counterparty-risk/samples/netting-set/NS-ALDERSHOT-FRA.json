@@ -62,21 +62,21 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10694",
+   "tradeId": "BBG-60000094",
    "product": "Tri-party repo",
    "notional": 237000000.0,
    "maturity": "2027-02-15",
    "mtm": -708216
   },
   {
-   "tradeId": "T-10703",
+   "tradeId": "BBG-60000103",
    "product": "Securities lending",
    "notional": 43000000.0,
    "maturity": "2027-01-29",
    "mtm": 516127
   },
   {
-   "tradeId": "T-10700",
+   "tradeId": "BBG-60000100",
    "product": "Buy / sell-back",
    "notional": 125000000.0,
    "maturity": "2027-03-08",

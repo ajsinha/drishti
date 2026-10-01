@@ -1,0 +1,267 @@
+{
+ "tradeId": "BBG-60000029",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000029",
+ "productType": "CALLABLE_BOND",
+ "productName": "Callable bond",
+ "assetClass": "Fixed income",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2024-05-24",
+ "effectiveDate": "2024-05-28",
+ "maturityDate": "2026-10-07",
+ "currency": "USD",
+ "notional": 59000000.0,
+ "mtm": 1197314,
+ "mtmCurrency": "USD",
+ "pnl1d": -61282,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-2",
+ "trader": "TRDR-BADEYEMI",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-UST",
+ "benchmarkCurve": "CRV-USD-GOVT",
+ "underlyingBond": "BND-US0UST151040",
+ "swaptionVolCube": "IRV-USD",
+ "terms": {
+  "coupon": 0.059218,
+  "couponFrequency": "Annual",
+  "faceAmount": 52063796.0,
+  "cleanPrice": 103.221,
+  "yield": 0.03568,
+  "firstCall": "2028-01-25",
+  "callPrice": 102.13,
+  "oas": 236.3
+ },
+ "risk": {
+  "dv01": -10714,
+  "cs01": -9668,
+  "vega": -133903
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -1071,
+   "cs01": -967,
+   "vega": -13390
+  },
+  {
+   "bucket": "6M",
+   "dv01": -2143,
+   "cs01": -1934,
+   "vega": -26781
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -3214,
+   "cs01": -2900,
+   "vega": -40171
+  },
+  {
+   "bucket": "2Y",
+   "dv01": -4286,
+   "cs01": -3867,
+   "vega": -53561
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2025-05-28",
+   "type": "First call",
+   "strike": 0.04239,
+   "status": "Expired"
+  },
+  {
+   "date": "2026-05-28",
+   "type": "Bermudan call",
+   "strike": 0.041368,
+   "status": "Expired"
+  },
+  {
+   "date": "2026-10-07",
+   "type": "Bermudan call",
+   "strike": 0.039273,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 2,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 46513
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -42437
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 58797
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -13534
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -2052
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -5979
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 55190
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 26450
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 6808
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -52919
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -13862
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -39341
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 13280
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 370
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 26174
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 37069
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 17654
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -107610
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 27252
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -39278
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-05-24",
+  "executionTimestamp": "2024-05-24T16:47:14.162Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "B. Adeyemi",
+  "salesperson": null,
+  "orderId": "ORD-E4E2DB999C"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-05-24T12:11:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2024-05-24T12:11:00Z",
+  "lastModifiedAt": "2024-05-24T12:11:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT759664778",
+  "matched": "2024-05-24 17:38",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH3305949459",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096E4E2DB999C53EE74D281",
+  "upi": "QZHW8659J043",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMUS33XXX",
+  "ssiId": "SSI-USD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1197314,
+  "cleanPv": 1197314.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-USD-GOVT",
+   "BND-US0UST151040",
+   "IRV-USD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 2985
+  }
+ }
+}

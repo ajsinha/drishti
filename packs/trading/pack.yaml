@@ -37,8 +37,6 @@ mnemonics:
     label: Desk P&L (derived from trades)
 graph:
   id-patterns:
-  - pattern: ^T-
-    kind: trade
   - pattern: ^(MX|CLY|END|IMG|BBG|WSS)-\d+$
     kind: trade
   fields:
@@ -141,15 +139,15 @@ columns:
   - book
 console:
   examples:
-  - - TRD T-10001
+  - - TRD MX-20000001
     - Interest rate swap · legs and every cashflow
-  - - TRD T-10181
+  - - TRD WSS-1500025
     - FX option
-  - - TRD T-10241
+  - - TRD CLY-3000001
     - Single-name CDS
-  - - TRD T-10343
+  - - TRD IMG-400031
     - OTC equity option
-  - - TRD T-10379
+  - - TRD IMG-400067
     - Autocallable note · observation schedule
   help: config/help.yaml
 roles:

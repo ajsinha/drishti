@@ -39,10 +39,10 @@ class PickListScaleTest {
 
     @Test
     void aPickListFindsWhatItNamesBeyondTheScanLimit() throws Exception {
-        mvc.perform(get("/api/v1/search").param("q", "TRD T-1070")).andExpect(status().isOk())
-                .andExpect(jsonPath("$.rows[*].ref.id").value(hasItem("T-10700")))
-                .andExpect(jsonPath("$.partial").value(true));                  // T-1070 … names 11 trades; 3 are read
-        mvc.perform(get("/api/v1/search").param("q", "TRD T-10700")).andExpect(status().isOk())
-                .andExpect(jsonPath("$.rows[0].ref.id").value("T-10700")).andExpect(jsonPath("$.partial").value(false));
+        mvc.perform(get("/api/v1/search").param("q", "TRD MX-2000017")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.rows[*].ref.id").value(hasItem("MX-20000170")))
+                .andExpect(jsonPath("$.partial").value(true));                  // MX-2000017 … names 10 trades; 3 are read
+        mvc.perform(get("/api/v1/search").param("q", "TRD BBG-60000100")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.rows[0].ref.id").value("BBG-60000100")).andExpect(jsonPath("$.partial").value(false));
     }
 }

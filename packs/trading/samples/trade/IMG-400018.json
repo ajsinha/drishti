@@ -1,0 +1,232 @@
+{
+ "tradeId": "IMG-400018",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400018",
+ "productType": "EQ_FUTURE_SINGLE",
+ "productName": "Single-stock future",
+ "assetClass": "Equity",
+ "family": "future",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-07-31",
+ "effectiveDate": "2026-08-03",
+ "maturityDate": "2027-04-02",
+ "currency": "JPY",
+ "notional": 214000000.0,
+ "mtm": 54859,
+ "mtmCurrency": "USD",
+ "pnl1d": -3003,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-LDN",
+ "book": "BOOK-EQD-2",
+ "trader": "TRDR-JWEISS",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "clearingAccount": "CLR-EUREX-1",
+ "underlyingEquity": "EQ-KZNM",
+ "dividendCurve": "DIV-KZNM",
+ "terms": {
+  "contract": "SAP Z6",
+  "lots": 469
+ },
+ "risk": {
+  "delta": 484764
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 32318
+  },
+  {
+   "bucket": "1M",
+   "delta": 64635
+  },
+  {
+   "bucket": "3M",
+   "delta": 96953
+  },
+  {
+   "bucket": "6M",
+   "delta": 129270
+  },
+  {
+   "bucket": "1Y",
+   "delta": 161588
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -4005
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 732
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 4504
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 1632
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -497
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -1694
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -2180
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -774
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -80
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 643
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 3277
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 3500
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 1566
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 1676
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 1750
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 3261
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 1158
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -840
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 2092
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 926
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-07-31",
+  "executionTimestamp": "2026-07-31T16:37:33.010Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "J. Weiss",
+  "salesperson": null,
+  "orderId": "ORD-1D5E0D62AC"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-07-31T10:22:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-07-31T10:22:00Z",
+  "lastModifiedAt": "2026-07-31T10:22:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT456867145",
+  "matched": "2026-07-31 11:21",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "JSCC",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH4949860401",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q831D5E0D62AC4ED427C03C",
+  "upi": "QZHQYKZUC3BI",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-JPY-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 54859,
+  "cleanPv": 54859.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQ-KZNM",
+   "DIV-KZNM"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 2250
+  }
+ }
+}

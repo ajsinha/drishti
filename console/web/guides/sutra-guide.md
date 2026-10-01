@@ -25,19 +25,19 @@ they produce. Every example runs against sample data that ships with the packs, 
 and see the result. Keep the [Rachana reference](rachana-reference) open for the full list of keys.
 
 !!! tip "Before you start"
-    You need the trading pack enabled (it is, if `TRD T-10001` opens in the terminal) and access to **Studio**
+    You need the trading pack enabled (it is, if `TRD MX-20000001` opens in the terminal) and access to **Studio**
     (`/studio`). Previewing needs no special role; only saving does.
 
 ![A trade view built by a Sutra](/static/img/guide/view-trade.png)
 
-*`TRD T-10001`: an interest rate swap laid out by the `irs-fixfloat` Sutra. The header strip, the
+*`TRD MX-20000001`: an interest rate swap laid out by the `irs-fixfloat` Sutra. The header strip, the
 Terms and Legs panels, the cashflow ladder, the curve on the right and the function keys at the bottom all come
 from about sixty lines of Rachana.*
 
 ## 1. A first Sutra in five minutes
 
 1. Open **Studio** (`/studio`) and start a new Sutra.
-2. Set the entity to preview against to kind `trade`, id `T-10001`.
+2. Set the entity to preview against to kind `trade`, id `MX-20000001`.
 3. Select all the text in the editor and replace it with the block below. As you type, the editor completes keys,
    panel kinds and formats and marks what the grammar does not allow.
 4. Preview it.
@@ -61,7 +61,7 @@ panels:
 
 That is a complete Sutra. On the right you should see:
 
-- the title line: a *Trade* pill, **T-10001** and *Meridian Reinsurance Ltd*;
+- the title line: a *Trade* pill, **MX-20000001** and *Meridian Reinsurance Ltd*;
 - four strip figures: *Product name Interest rate swap (fixed/float)*, *Notional 242,000,000*, *Maturity date
   2032-06-25* and **MTM (USD)**, highlighted, with a `+` sign. The first three have no `label`, so they are named
   after their fields;
@@ -206,7 +206,7 @@ Packs add formats in `config/formats.yaml`; a site can override them.
 
 ### kv: fields as a grid
 
-*See it:* `TRD T-10001`, panel **Terms** (F2).
+*See it:* `TRD MX-20000001`, panel **Terms** (F2).
 
 Label/value pairs. List `columns`, or point `rows` at an object and leave `columns` out to show all its fields.
 
@@ -248,7 +248,7 @@ Label/value pairs. List `columns`, or point `rows` at an object and leave `colum
 
 ### ladder: a dated table with the row that matters highlighted
 
-*See it:* `TRD T-10001`, panel **Cashflows** (F3): `$.nextIndex` says which row is the next payment.
+*See it:* `TRD MX-20000001`, panel **Cashflows** (F3): `$.nextIndex` says which row is the next payment.
 
 ```yaml
 - id: schedule
@@ -269,7 +269,7 @@ Label/value pairs. List `columns`, or point `rows` at an object and leave `colum
 
 ### tabs: one layout per element, as tabs or side by side
 
-*See it:* `TRD T-10001`, panel **Legs**.
+*See it:* `TRD MX-20000001`, panel **Legs**.
 
 ```yaml
 - id: legs
@@ -292,7 +292,7 @@ Label/value pairs. List `columns`, or point `rows` at an object and leave `colum
 
 ### line: a curve, from the document or from a linked entity
 
-*See it:* `TRD T-10001`, right column, **Interest rate curve: Zero rates (%)** (F4).
+*See it:* `TRD MX-20000001`, right column, **Interest rate curve: Zero rates (%)** (F4).
 
 `source: link(…)` reads the points from another entity: here the trade's discount curve.
 
@@ -332,7 +332,7 @@ Label/value pairs. List `columns`, or point `rows` at an object and leave `colum
 
 ### hbar: bars scaled to the largest value
 
-*See it:* `TRD T-10001`, right column, **DV01 by bucket (USD)**.
+*See it:* `TRD MX-20000001`, right column, **DV01 by bucket (USD)**.
 
 ```yaml
 - id: sensitivities
@@ -376,7 +376,7 @@ Each row of `rows` is one point on the `y` axis; each column is one point on the
 
 ### status: operational states
 
-*Try it:* paste the example into the `panels:` list of a Sutra previewed on `trade` / `T-10001`: *Confirmed*, *MarkitWire*, *Cleared*.
+*Try it:* paste the example into the `panels:` list of a Sutra previewed on `trade` / `MX-20000001`: *Confirmed*, *MarkitWire*, *Cleared*.
 
 ```yaml
 - id: ops
@@ -413,7 +413,7 @@ The note is shown as plain text (Markdown marks are not rendered); `${…}` inse
 
 ### links: everything the document points to
 
-*See it:* `TRD T-10001`, right column, **Linked entities**.
+*See it:* `TRD MX-20000001`, right column, **Linked entities**.
 
 Found from the pack's reference fields (`nettingSet`, `book`, `discountCurve`, …), each with a badge read from
 the target (`EE 4.1m`, `81% used`). A link you may not open shows as denied.
@@ -426,7 +426,7 @@ the target (`EE 4.1m`, `81% used`). A link you may not open shows as denied.
 
 ### provenance: how this view was built
 
-*See it:* the last panel of any view, e.g. `TRD T-10001`: *Sutra irs-fixfloat v1 + inference*.
+*See it:* the last panel of any view, e.g. `TRD MX-20000001`: *Sutra irs-fixfloat v1 + inference*.
 
 The Sutra and version (or *inference only*), the data fingerprint, the source and its generation.
 
@@ -456,10 +456,10 @@ by hand for a small domain, generate them for a large one.
 
 | Command | `productType` in the document | Layout |
 |---|---|---|
-| `TRD T-10001` | `IRS_FIXFLOAT` | `Sutra irs-fixfloat v1 + inference` |
-| `TRD T-10181` | `FX_OPTION` | `Sutra fx-option v1 + inference` |
-| `TRD T-10241` | `CDS_SINGLE` | `Sutra cds-single v1 + inference` |
-| `TRD T-10379` | `AUTOCALLABLE` | `Sutra autocallable v1 + inference` |
+| `TRD MX-20000001` | `IRS_FIXFLOAT` | `Sutra irs-fixfloat v1 + inference` |
+| `TRD WSS-1500025` | `FX_OPTION` | `Sutra fx-option v1 + inference` |
+| `TRD CLY-3000001` | `CDS_SINGLE` | `Sutra cds-single v1 + inference` |
+| `TRD IMG-400067` | `AUTOCALLABLE` | `Sutra autocallable v1 + inference` |
 
 !!! note "Studio previews ignore `match`"
     A Studio preview always applies the Sutra in the editor to the entity you chose, whatever its `match` says, so

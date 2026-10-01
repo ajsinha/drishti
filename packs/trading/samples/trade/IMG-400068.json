@@ -1,0 +1,336 @@
+{
+ "tradeId": "IMG-400068",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400068",
+ "productType": "AUTOCALLABLE",
+ "productName": "Autocallable note",
+ "assetClass": "Equity",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2024-07-09",
+ "effectiveDate": "2024-07-11",
+ "maturityDate": "2027-04-19",
+ "currency": "USD",
+ "notional": 101000000.0,
+ "mtm": -1263466,
+ "mtmCurrency": "USD",
+ "pnl1d": 50367,
+ "counterparty": {
+  "id": "CP-RHEINTAL",
+  "name": "Rheintal Landesbank"
+ },
+ "nettingSet": "NS-RHEINTAL-LDN",
+ "book": "BOOK-EQD-2",
+ "trader": "TRDR-JWEISS",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingIndex": "EQX-NDX",
+ "equityVolSurface": "EQV-NDX",
+ "correlation": "CORR-EU-EQ",
+ "terms": {
+  "autocallTrigger": 0.967681,
+  "couponRate": 0.126052,
+  "knockInBarrier": 0.525648,
+  "memory": "Yes"
+ },
+ "risk": {
+  "delta": -370545,
+  "vega": -230721,
+  "gamma": 3630
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -17645,
+   "vega": -10987,
+   "gamma": 173
+  },
+  {
+   "bucket": "1M",
+   "delta": -35290,
+   "vega": -21973,
+   "gamma": 346
+  },
+  {
+   "bucket": "3M",
+   "delta": -52935,
+   "vega": -32960,
+   "gamma": 519
+  },
+  {
+   "bucket": "6M",
+   "delta": -70580,
+   "vega": -43947,
+   "gamma": 691
+  },
+  {
+   "bucket": "1Y",
+   "delta": -88225,
+   "vega": -54934,
+   "gamma": 864
+  },
+  {
+   "bucket": "2Y",
+   "delta": -105870,
+   "vega": -65920,
+   "gamma": 1037
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2024-10-11",
+   "level": 89.67,
+   "trigger": 100.0,
+   "performance": -0.1033,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-01-11",
+   "level": 85.2,
+   "trigger": 100.0,
+   "performance": -0.148,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-04-11",
+   "level": 86.91,
+   "trigger": 100.0,
+   "performance": -0.1309,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-07-11",
+   "level": 98.76,
+   "trigger": 100.0,
+   "performance": -0.0124,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-10-11",
+   "level": 91.99,
+   "trigger": 100.0,
+   "performance": -0.0801,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-01-11",
+   "level": 92.62,
+   "trigger": 100.0,
+   "performance": -0.0738,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-04-11",
+   "level": 88.02,
+   "trigger": 100.0,
+   "performance": -0.1198,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-07-11",
+   "level": 99.4,
+   "trigger": 100.0,
+   "performance": -0.006,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-10-11",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-01-11",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-04-11",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-04-19",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 8,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 36321
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -35047
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -47125
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -50141
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 5790
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 5769
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 23737
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 71317
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -49655
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -13065
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 41317
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -24675
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -46806
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -18045
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -48684
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 60684
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 6900
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -14924
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -8440
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 16988
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-07-09",
+  "executionTimestamp": "2024-07-09T12:00:12.546Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "J. Weiss",
+  "salesperson": null,
+  "orderId": "ORD-F147DEEBE8"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-07-09T09:19:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2024-07-09T09:19:00Z",
+  "lastModifiedAt": "2024-07-09T09:19:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT576700767",
+  "matched": "2024-07-09 13:33",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83F147DEEBE8C47CF3D547",
+  "upi": "QZ05XODNYFRY",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "RHEIUS33XXX",
+  "ssiId": "SSI-USD-230AB8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -1263466,
+  "cleanPv": -1263466.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "EQX-NDX",
+   "EQV-NDX",
+   "CORR-EU-EQ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 3537
+  }
+ }
+}

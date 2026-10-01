@@ -1,0 +1,319 @@
+{
+ "tradeId": "MX-20000172",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000172",
+ "productType": "INFL_CAP_FLOOR",
+ "productName": "Inflation cap / floor",
+ "assetClass": "Inflation",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2025-01-24",
+ "effectiveDate": "2025-01-27",
+ "maturityDate": "2027-12-13",
+ "currency": "EUR",
+ "notional": 35000000.0,
+ "mtm": 215279,
+ "mtmCurrency": "USD",
+ "pnl1d": -10577,
+ "counterparty": {
+  "id": "CP-AURORA",
+  "name": "Aurora Sovereign Wealth Fund"
+ },
+ "nettingSet": "NS-AURORA-LDN",
+ "book": "BOOK-INFL-2",
+ "trader": "TRDR-HOKORO",
+ "desk": "DESK-INFL",
+ "legalEntity": "LE-LDN",
+ "discountCurve": "CRV-EUR-OIS",
+ "inflationCurve": "INFC-HICPX",
+ "inflationIndex": "INF-HICPX",
+ "terms": {
+  "capFloor": "Cap",
+  "strike": 0.034325
+ },
+ "risk": {
+  "ie01": 8663,
+  "vega": 122917
+ },
+ "sensitivities": [
+  {
+   "bucket": "1Y",
+   "ie01": 2888,
+   "vega": 40972
+  },
+  {
+   "bucket": "2Y",
+   "ie01": 5775,
+   "vega": 81945
+  }
+ ],
+ "schedule": [
+  {
+   "fixingDate": "2025-04-27",
+   "period": "2025-04-27..2025-07-27",
+   "index": "ESTR",
+   "rate": 0.033998,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2025-07-27",
+   "period": "2025-07-27..2025-10-27",
+   "index": "ESTR",
+   "rate": 0.031746,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2025-10-27",
+   "period": "2025-10-27..2026-01-27",
+   "index": "ESTR",
+   "rate": 0.040873,
+   "payoff": 51388.75,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-01-27",
+   "period": "2026-01-27..2026-04-27",
+   "index": "ESTR",
+   "rate": 0.0421,
+   "payoff": 62125.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-04-27",
+   "period": "2026-04-27..2026-07-27",
+   "index": "ESTR",
+   "rate": 0.047465,
+   "payoff": 109068.75,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-07-27",
+   "period": "2026-07-27..2026-10-27",
+   "index": "ESTR",
+   "rate": 0.047936,
+   "payoff": 113190.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-10-27",
+   "period": "2026-10-27..2027-01-27",
+   "index": "ESTR",
+   "rate": 0.027634,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-01-27",
+   "period": "2027-01-27..2027-04-27",
+   "index": "ESTR",
+   "rate": 0.029615,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-04-27",
+   "period": "2027-04-27..2027-07-27",
+   "index": "ESTR",
+   "rate": 0.021693,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-07-27",
+   "period": "2027-07-27..2027-10-27",
+   "index": "ESTR",
+   "rate": 0.047789,
+   "payoff": 111903.75,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-10-27",
+   "period": "2027-10-27..2028-01-27",
+   "index": "ESTR",
+   "rate": 0.027468,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-12-13",
+   "period": "2027-12-13..2028-03-13",
+   "index": "ESTR",
+   "rate": 0.041221,
+   "payoff": 54433.75,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 6,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 3785
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -958
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -2682
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 1410
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -5314
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -9280
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 11417
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 5700
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 3046
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -9147
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -2100
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -8048
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 3907
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -7533
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -6302
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -6127
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 8629
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -4087
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -10100
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 8230
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-01-24",
+  "executionTimestamp": "2025-01-24T14:10:43.355Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "H. Okoro",
+  "salesperson": null,
+  "orderId": "ORD-3619F18639"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-01-24T12:46:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2025-01-24T12:46:00Z",
+  "lastModifiedAt": "2025-01-24T12:46:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA580889736",
+  "matched": "2025-01-24 12:38",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q833619F18639989A5879B6",
+  "upi": "QZ50WCY9W5YD",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "AUROGB33XXX",
+  "ssiId": "SSI-EUR-79DAAE",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 215279,
+  "cleanPv": 215279.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CRV-EUR-OIS",
+   "INFC-HICPX",
+   "INF-HICPX"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 781
+  }
+ }
+}

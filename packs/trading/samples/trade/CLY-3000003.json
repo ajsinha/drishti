@@ -1,0 +1,270 @@
+{
+ "tradeId": "CLY-3000003",
+ "sourceSystem": "Calypso",
+ "sourceTradeId": "3000003",
+ "productType": "CDS_SINGLE",
+ "productName": "Single-name CDS",
+ "assetClass": "Credit",
+ "family": "cds",
+ "status": "Live",
+ "direction": "Buy protection",
+ "tradeDate": "2024-06-10",
+ "effectiveDate": "2024-06-12",
+ "maturityDate": "2027-10-14",
+ "currency": "CHF",
+ "notional": 27000000.0,
+ "mtm": -182288,
+ "mtmCurrency": "USD",
+ "pnl1d": -429,
+ "counterparty": {
+  "id": "CP-MERIDIAN-RE",
+  "name": "Meridian Reinsurance Ltd"
+ },
+ "nettingSet": "NS-MERIDIAN-RE-NY",
+ "book": "BOOK-CREDIT-1",
+ "trader": "TRDR-CDUBOIS",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-LUMEN",
+ "creditCurve": "CDS-LUMEN",
+ "discountCurve": "CRV-CHF-OIS",
+ "terms": {
+  "protection": "Sold",
+  "coupon": "100",
+  "seniority": "Subordinated",
+  "docClause": "XR14",
+  "upfront": 0.069277
+ },
+ "risk": {
+  "cs01": 7802,
+  "jtd": -16200000
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 780,
+   "jtd": -1620000
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 1560,
+   "jtd": -3240000
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 2341,
+   "jtd": -4860000
+  },
+  {
+   "bucket": "3Y",
+   "cs01": 3121,
+   "jtd": -6480000
+  }
+ ],
+ "schedule": [
+  {
+   "payDate": "2025-06-12",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -71256.78,
+   "pv": 0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2026-06-12",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -63836.39,
+   "pv": 0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2027-06-12",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -66922.23,
+   "pv": -64914.56,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2027-10-14",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -56844.29,
+   "pv": -55138.96,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 2,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -1574
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 7828
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -7886
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -5249
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -7500
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 8136
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 7481
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -1658
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 13449
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -1894
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 926
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -929
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 750
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 8289
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 4179
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 12746
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -5242
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -1365
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 13757
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 1924
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-06-10",
+  "executionTimestamp": "2024-06-10T14:10:27.757Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "C. Dubois",
+  "salesperson": null,
+  "orderId": "ORD-3FB6B84AA7"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-06-10T12:27:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2024-06-10T12:27:00Z",
+  "lastModifiedAt": "2024-06-10T12:27:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA329354813",
+  "matched": "2024-06-10 14:19",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20963FB6B84AA7D43BB6077A",
+  "upi": "QZP7DHRA580X",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "MERIGB33XXX",
+  "ssiId": "SSI-CHF-9DC4EA",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -182288,
+  "cleanPv": -182288.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CDS-LUMEN",
+   "CRV-CHF-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 635
+  }
+ }
+}

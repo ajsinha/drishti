@@ -1,0 +1,231 @@
+{
+ "tradeId": "IMG-400111",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400111",
+ "productType": "CFD",
+ "productName": "Contract for difference",
+ "assetClass": "Equity",
+ "family": "linear",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2025-10-14",
+ "effectiveDate": "2025-10-16",
+ "maturityDate": "2027-05-28",
+ "currency": "EUR",
+ "notional": 168000000.0,
+ "mtm": 262724,
+ "mtmCurrency": "USD",
+ "pnl1d": 802,
+ "counterparty": {
+  "id": "CP-NORTHBRIDGE",
+  "name": "Northbridge Capital LLP"
+ },
+ "nettingSet": "NS-NORTHBRIDGE-LDN",
+ "book": "BOOK-EQD-2",
+ "trader": "TRDR-PLINDQVIST",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingEquity": "EQ-RHNB",
+ "dividendCurve": "DIV-RHNB",
+ "terms": {
+  "quantity": 23301,
+  "openPrice": 523.1
+ },
+ "risk": {
+  "delta": -886517
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -42215
+  },
+  {
+   "bucket": "1M",
+   "delta": -84430
+  },
+  {
+   "bucket": "3M",
+   "delta": -126645
+  },
+  {
+   "bucket": "6M",
+   "delta": -168860
+  },
+  {
+   "bucket": "1Y",
+   "delta": -211075
+  },
+  {
+   "bucket": "2Y",
+   "delta": -253291
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -1591
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 10584
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -1950
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -646
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -6889
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -1778
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 3417
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -11176
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -3428
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 8041
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 9342
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 8934
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -6471
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 632
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 90
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -2868
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 1976
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -1652
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 7136
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 687
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-10-14",
+  "executionTimestamp": "2025-10-14T16:17:49.568Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "P. Lindqvist",
+  "salesperson": null,
+  "orderId": "ORD-34BE22E290"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-10-14T10:39:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2025-10-14T10:39:00Z",
+  "lastModifiedAt": "2025-10-14T10:39:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT360360637",
+  "matched": "2025-10-14 16:00",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q8334BE22E2903485B080B7",
+  "upi": "QZNMUPU7P0UM",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "NORTGB33XXX",
+  "ssiId": "SSI-EUR-A0C7C2",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 262724,
+  "cleanPv": 262724.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQ-RHNB",
+   "DIV-RHNB"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 2205
+  }
+ }
+}

@@ -1,0 +1,402 @@
+{
+ "tradeId": "IMG-400082",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400082",
+ "productType": "EQ_VARIANCE_SWAP",
+ "productName": "Variance swap",
+ "assetClass": "Equity",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2024-09-06",
+ "effectiveDate": "2024-09-09",
+ "maturityDate": "2034-07-24",
+ "currency": "USD",
+ "notional": 3000000.0,
+ "mtm": -37097,
+ "mtmCurrency": "USD",
+ "pnl1d": -1254,
+ "counterparty": {
+  "id": "CP-BRAMBLE",
+  "name": "Bramble Asset Management"
+ },
+ "nettingSet": "NS-BRAMBLE-LDN",
+ "book": "BOOK-EQD-2",
+ "trader": "TRDR-PLINDQVIST",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingIndex": "EQX-NDX",
+ "equityVolSurface": "EQV-NDX",
+ "terms": {
+  "varianceStrike": 25.89,
+  "vegaNotional": 173988.0
+ },
+ "risk": {
+  "vega": -24403
+ },
+ "sensitivities": [
+  {
+   "bucket": "1M",
+   "vega": -1162
+  },
+  {
+   "bucket": "3M",
+   "vega": -2324
+  },
+  {
+   "bucket": "6M",
+   "vega": -3486
+  },
+  {
+   "bucket": "1Y",
+   "vega": -4648
+  },
+  {
+   "bucket": "2Y",
+   "vega": -5810
+  },
+  {
+   "bucket": "5Y",
+   "vega": -6972
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2024-12-09",
+   "level": 91.31,
+   "trigger": 100.0,
+   "performance": -0.0869,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-03-09",
+   "level": 91.71,
+   "trigger": 100.0,
+   "performance": -0.0829,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-06-09",
+   "level": 87.35,
+   "trigger": 100.0,
+   "performance": -0.1265,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-09-09",
+   "level": 90.34,
+   "trigger": 100.0,
+   "performance": -0.0966,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-12-09",
+   "level": 93.51,
+   "trigger": 100.0,
+   "performance": -0.0649,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-03-09",
+   "level": 91.0,
+   "trigger": 100.0,
+   "performance": -0.09,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-06-09",
+   "level": 90.28,
+   "trigger": 100.0,
+   "performance": -0.0972,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-09-09",
+   "level": 92.21,
+   "trigger": 100.0,
+   "performance": -0.0779,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-12-09",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-03-09",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-06-09",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-09-09",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-12-09",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-03-09",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-06-09",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-09-09",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-12-09",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-03-09",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-06-09",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-09-09",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-12-09",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-03-09",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-06-09",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-09-09",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 8,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -1168
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -4637
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 1171
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 1897
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 4269
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -307
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -1135
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -3537
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 1477
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 1402
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 2221
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 2253
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -513
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 731
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -151
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 239
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -723
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -293
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -3743
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -1436
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-09-06",
+  "executionTimestamp": "2024-09-06T16:02:11.901Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "P. Lindqvist",
+  "salesperson": null,
+  "orderId": "ORD-AB11F059E5"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-09-06T10:21:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2024-09-06T10:21:00Z",
+  "lastModifiedAt": "2024-09-06T10:21:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT758877315",
+  "matched": "2024-09-06 14:51",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83AB11F059E55924489A6B",
+  "upi": "QZ5YFGIJ1S34",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "BRAMUS33XXX",
+  "ssiId": "SSI-USD-1243C8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -37097,
+  "cleanPv": -37097.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "EQX-NDX",
+   "EQV-NDX"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

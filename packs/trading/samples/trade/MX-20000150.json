@@ -1,0 +1,377 @@
+{
+ "tradeId": "MX-20000150",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000150",
+ "productType": "SNOWBALL_SWAP",
+ "productName": "Snowball swap",
+ "assetClass": "Rates",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2026-03-20",
+ "effectiveDate": "2026-03-23",
+ "maturityDate": "2030-01-23",
+ "currency": "USD",
+ "notional": 123000000.0,
+ "mtm": -113420,
+ "mtmCurrency": "USD",
+ "pnl1d": -235,
+ "counterparty": {
+  "id": "CP-BRAMBLE",
+  "name": "Bramble Asset Management"
+ },
+ "nettingSet": "NS-BRAMBLE-NY",
+ "book": "BOOK-RATES-3",
+ "trader": "TRDR-MOKAFOR",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-USD-OIS",
+ "forwardCurve": "CRV-USD-PROJ",
+ "swaptionVolCube": "IRV-USD",
+ "terms": {
+  "initialCoupon": 0.055135,
+  "snowballSpread": 215.7
+ },
+ "risk": {
+  "dv01": 38089,
+  "vega": 648980
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 2539,
+   "vega": 43265
+  },
+  {
+   "bucket": "6M",
+   "dv01": 5079,
+   "vega": 86531
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 7618,
+   "vega": 129796
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 10157,
+   "vega": 173061
+  },
+  {
+   "bucket": "3Y",
+   "dv01": 12696,
+   "vega": 216327
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Pay performance",
+   "payReceive": "Pay",
+   "rateType": "Performance",
+   "index": "USCPI",
+   "rate": null,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "USD",
+   "notional": 123000000.0
+  },
+  {
+   "leg": 2,
+   "label": "Receive SOFR + spread",
+   "payReceive": "Receive",
+   "rateType": "Float",
+   "index": "SOFR",
+   "rate": 0.036215,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "USD",
+   "notional": 123000000.0
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-06-23",
+   "level": 94.65,
+   "trigger": 100.0,
+   "performance": -0.0535,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-09-23",
+   "level": 95.23,
+   "trigger": 100.0,
+   "performance": -0.0477,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-12-23",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-03-23",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-06-23",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-09-23",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-12-23",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-03-23",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-06-23",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-09-23",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-12-23",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-03-23",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-06-23",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-09-23",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-12-23",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-01-23",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 2,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 1237
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 1358
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -3167
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 413
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 3954
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -1035
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -771
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 1891
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -2942
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 753
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 1646
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -3741
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 6668
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -5441
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -1164
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -764
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 1032
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 1604
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -4766
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -4063
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-03-20",
+  "executionTimestamp": "2026-03-20T09:39:27.846Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "M. Okafor",
+  "salesperson": null,
+  "orderId": "ORD-69B34E069B"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-03-20T12:05:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2026-03-20T12:05:00Z",
+  "lastModifiedAt": "2026-03-20T12:05:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA987956891",
+  "matched": "2026-03-20 14:19",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209669B34E069BB4CC86B3B9",
+  "upi": "QZ6D20JW8FY2",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "BRAMUS33XXX",
+  "ssiId": "SSI-USD-1243C8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -113420,
+  "cleanPv": -113420.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "CRV-USD-OIS",
+   "CRV-USD-PROJ",
+   "IRV-USD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 1457
+  }
+ }
+}

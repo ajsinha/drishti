@@ -117,27 +117,27 @@ Click the command line at the top (or press `/`), type each command and press En
 
 | # | Type | You should see |
 |---|---|---|
-| 1 | `TRD T-10001` | An interest rate swap: the title `Rates · Interest rate swap (fixed/float)`, `T-10001`, `with Meridian Reinsurance Ltd`; a strip with Notional `AUD 242,000,000` and a highlighted **MTM (USD)** that ticks and flashes; panels *Terms*, *Legs*, *Cashflows*, a curve chart, *DV01 by bucket*, *Daily P&L*, *Linked entities*. |
+| 1 | `TRD MX-20000001` | An interest rate swap: the title `Rates · Interest rate swap (fixed/float)`, `MX-20000001`, `with Meridian Reinsurance Ltd`; a strip with Notional `AUD 242,000,000` and a highlighted **MTM (USD)** that ticks and flashes; panels *Terms*, *Legs*, *Cashflows*, a curve chart, *DV01 by bucket*, *Daily P&L*, *Linked entities*. |
 | 2 | `F9`, then `F7`, then `Alt+←` | `F9` opens the raw JSON (source `murex-rates`). `F7` jumps to the netting set `NS-MERIDIAN-RE-NY`. `Alt+←` comes back. The bottom bar lists every key the view has: `F2 Terms`, `F3 Cashflows`, `F4 Interest rate`, `F7 Netting set`, `F8 Impact`, `F9 Raw JSON`. |
-| 3 | `F8` (on the trade) | *Impact of T-10001*: level 1 the netting set `NS-MERIDIAN-RE-NY`, level 2 the credit limit `LIM-MERIDIAN-RE`, each with the amount at stake. |
-| 4 | `TRD T-100` | No trade has that exact id, so you get a **pick list**: `99 of 99 trades match`, with each trade's product type, direction, currency, notional, MTM, maturity and book. Use `↑` `↓` and Enter, or click an id. |
+| 3 | `F8` (on the trade) | *Impact of MX-20000001*: level 1 the netting set `NS-MERIDIAN-RE-NY`, level 2 the credit limit `LIM-MERIDIAN-RE`, each with the amount at stake. |
+| 4 | `TRD MX-200000` | No trade has that exact id, so you get a **pick list**: `99 of 99 trades match`, with each trade's product type, direction, currency, notional, MTM, maturity and book. Use `↑` `↓` and Enter, or click an id. |
 | 5 | `TRD productType=Revolver` | A pick list by field value: `6 of 750 trades match`. Case never matters (`trd producttype=revolver` works too). |
 | 6 | `CPTY north` | Exactly one counterparty's name contains "north", so it opens at once: `CP-NORTHBRIDGE`, Northbridge Capital LLP, with Rating `BB+` and its PFE peak. |
 | 7 | `TRD where mtm > 1m order by mtm desc limit 20` | A search: `163 of 750 trades match; the first 20 are shown`, largest MTM first. |
 | 8 | `NSET NS-SUMMIT-NY` | A netting set: Trades `108`, Utilisation `58%`, an exposure profile (`F2`) and the member trades (`F3`). |
 
-While you type, the dropdown suggests mnemonics and ids: type `TRD T-101` and you should see `T-10100`,
-`T-10101`, … Press `↓` to pick one, `Tab` to complete it, Enter to open it.
+While you type, the dropdown suggests mnemonics and ids: type `TRD MX-2000010` and you should see `MX-20000100`,
+`MX-20000101`, … Press `↓` to pick one, `Tab` to complete it, Enter to open it.
 
 ## 8. Look at a past business date
 
 This needs step 4.
 
-1. Open `TRD T-10001`.
+1. Open `TRD MX-20000001`.
 2. In the top bar, click the **Business date** box (it shows today's date and a green **Live**) and pick
    **29 September 2026**.
 3. The box turns amber and **Live** goes out. The MTM is that day's value and no longer ticks.
-4. Click **Compare** in the title line. You should see *What changed in T-10001* against the business day
+4. Click **Compare** in the title line. You should see *What changed in MX-20000001* against the business day
    before, field by field.
 5. Click **Live** to return to today.
 

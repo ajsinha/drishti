@@ -1,0 +1,264 @@
+{
+ "tradeId": "BBG-60000017",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000017",
+ "productType": "FRN",
+ "productName": "Floating rate note",
+ "assetClass": "Fixed income",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2024-08-07",
+ "effectiveDate": "2024-08-09",
+ "maturityDate": "2026-12-08",
+ "currency": "EUR",
+ "notional": 148000000.0,
+ "mtm": -156199,
+ "mtmCurrency": "USD",
+ "pnl1d": 13976,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-1",
+ "trader": "TRDR-BADEYEMI",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-RHEINTAL",
+ "forwardCurve": "CRV-EUR-PROJ",
+ "underlyingBond": "BND-DERHEI122872",
+ "creditCurve": "CDS-RHEINTAL",
+ "terms": {
+  "quotedMargin": 98.5,
+  "faceAmount": 39659983.0,
+  "cleanPrice": 99.145
+ },
+ "risk": {
+  "cs01": 31791,
+  "dv01": 28163
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 5298,
+   "dv01": 4694
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 10597,
+   "dv01": 9388
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 15896,
+   "dv01": 14082
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2025-02-09",
+   "rate": 0.0536,
+   "amount": 2960000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2025-08-09",
+   "rate": 0.028065,
+   "amount": 2960000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-02-09",
+   "rate": 0.045366,
+   "amount": 2960000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-08-09",
+   "rate": 0.0264,
+   "amount": 2960000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-12-08",
+   "rate": 0.040657,
+   "amount": 2960000.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 4,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 3198
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -1827
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 3788
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 5404
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 4812
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -226
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 7743
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 542
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 306
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 4869
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -421
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 5360
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -3172
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 8023
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 4253
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -2536
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 6668
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -4826
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 3073
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 2297
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-08-07",
+  "executionTimestamp": "2024-08-07T15:00:08.574Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "B. Adeyemi",
+  "salesperson": null,
+  "orderId": "ORD-87D7795F0F"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-08-07T10:17:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2024-08-07T10:17:00Z",
+  "lastModifiedAt": "2024-08-07T10:17:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT408709911",
+  "matched": "2024-08-07 11:07",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH8529069258",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209687D7795F0FE72B834A96",
+  "upi": "QZQBE9VHRFMT",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-EUR-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -156199,
+  "cleanPv": -156199.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-EUR-PROJ",
+   "BND-DERHEI122872",
+   "CDS-RHEINTAL"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 1792
+  }
+ }
+}

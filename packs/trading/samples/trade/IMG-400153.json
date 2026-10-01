@@ -1,0 +1,411 @@
+{
+ "tradeId": "IMG-400153",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400153",
+ "productType": "WORST_OF_NOTE",
+ "productName": "Worst-of note",
+ "assetClass": "Structured",
+ "family": "note",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-04-14",
+ "effectiveDate": "2026-04-16",
+ "maturityDate": "2035-01-22",
+ "currency": "GBP",
+ "notional": 41000000.0,
+ "mtm": 503987,
+ "mtmCurrency": "USD",
+ "pnl1d": -29347,
+ "counterparty": {
+  "id": "CP-LUMEN",
+  "name": "Lumen Semiconductor AG"
+ },
+ "nettingSet": "NS-LUMEN-TKY",
+ "book": "BOOK-STRUCT-3",
+ "trader": "TRDR-YTANAKA",
+ "desk": "DESK-STRUCT",
+ "legalEntity": "LE-TKY",
+ "underlyingIndex": "EQX-UKX",
+ "equityVolSurface": "EQV-UKX",
+ "correlation": "CORR-G10FX",
+ "terms": {
+  "coupon": 0.12205,
+  "basketSize": 3,
+  "barrier": 0.530888
+ },
+ "risk": {
+  "delta": 239981,
+  "vega": 352829
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 11428,
+   "vega": 16801
+  },
+  {
+   "bucket": "1M",
+   "delta": 22855,
+   "vega": 33603
+  },
+  {
+   "bucket": "3M",
+   "delta": 34283,
+   "vega": 50404
+  },
+  {
+   "bucket": "6M",
+   "delta": 45711,
+   "vega": 67206
+  },
+  {
+   "bucket": "1Y",
+   "delta": 57138,
+   "vega": 84007
+  },
+  {
+   "bucket": "2Y",
+   "delta": 68566,
+   "vega": 100808
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-07-16",
+   "level": 94.06,
+   "trigger": 100.0,
+   "performance": -0.0594,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-10-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-01-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-04-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-07-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-10-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-01-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-04-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-07-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-10-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-01-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-04-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-07-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-10-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-01-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-04-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-07-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-10-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-01-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-04-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-07-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-10-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2032-01-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2032-04-16",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 17618
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -9015
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 13974
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 44
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 2302
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -40654
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 18380
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -18213
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -36725
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 9067
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 458
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -2757
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 24043
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -43660
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -7337
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 4582
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 2039
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 13092
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -17337
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 3226
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-04-14",
+  "executionTimestamp": "2026-04-14T09:33:42.379Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "Y. Tanaka",
+  "salesperson": null,
+  "orderId": "ORD-5DF3010979"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-04-14T10:30:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2026-04-14T10:30:00Z",
+  "lastModifiedAt": "2026-04-14T10:30:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT649480698",
+  "matched": "2026-04-14 17:49",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300BLAOJ55ZE6F4745DF30109793C65DB6895",
+  "upi": "QZ1CLJD5924U",
+  "reportingRegimes": [
+   "JFSA"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Barclays Bank plc",
+  "ourAgentBic": "BARCGB22XXX",
+  "theirAgentBic": "LUMEGB33XXX",
+  "ssiId": "SSI-GBP-8CF792",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 503987,
+  "cleanPv": 503987.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQX-UKX",
+   "EQV-UKX",
+   "CORR-G10FX"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-struct",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 1418
+  }
+ }
+}

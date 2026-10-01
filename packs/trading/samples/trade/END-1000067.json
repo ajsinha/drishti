@@ -1,0 +1,271 @@
+{
+ "tradeId": "END-1000067",
+ "sourceSystem": "Endur",
+ "sourceTradeId": "1000067",
+ "productType": "GAS_SWING",
+ "productName": "Gas swing option",
+ "assetClass": "Commodity",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2025-08-13",
+ "effectiveDate": "2025-08-15",
+ "maturityDate": "2029-12-11",
+ "currency": "USD",
+ "notional": 30000000.0,
+ "mtm": 441969,
+ "mtmCurrency": "USD",
+ "pnl1d": 5498,
+ "counterparty": {
+  "id": "CP-CORAL",
+  "name": "Coral Bay Municipal Authority"
+ },
+ "nettingSet": "NS-CORAL-NY",
+ "book": "BOOK-COMM-3",
+ "trader": "TRDR-TBRENNAN",
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "commodityCurve": "CMDC-SOY",
+ "commodityVolSurface": "CMDV-SOY",
+ "terms": {
+  "hub": "NBP",
+  "minDaily": 9781,
+  "maxDaily": 29644
+ },
+ "risk": {
+  "delta": -196712,
+  "vega": -157749
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -9367,
+   "vega": -7512
+  },
+  {
+   "bucket": "1M",
+   "delta": -18734,
+   "vega": -15024
+  },
+  {
+   "bucket": "3M",
+   "delta": -28102,
+   "vega": -22536
+  },
+  {
+   "bucket": "6M",
+   "delta": -37469,
+   "vega": -30047
+  },
+  {
+   "bucket": "1Y",
+   "delta": -46836,
+   "vega": -37559
+  },
+  {
+   "bucket": "2Y",
+   "delta": -56203,
+   "vega": -45071
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-08-15",
+   "type": "First call",
+   "strike": 0.049408,
+   "status": "Expired"
+  },
+  {
+   "date": "2027-08-15",
+   "type": "Bermudan call",
+   "strike": 0.045859,
+   "status": "Pending"
+  },
+  {
+   "date": "2028-08-15",
+   "type": "Bermudan call",
+   "strike": 0.038122,
+   "status": "Pending"
+  },
+  {
+   "date": "2029-08-15",
+   "type": "Bermudan call",
+   "strike": 0.031275,
+   "status": "Pending"
+  },
+  {
+   "date": "2029-12-11",
+   "type": "Bermudan call",
+   "strike": 0.03554,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -18307
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 8255
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -25436
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 8760
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 34337
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 1103
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 27945
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 17417
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 16209
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -3769
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 8188
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 306
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 7677
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -18356
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 3980
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -5554
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -1743
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 14422
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 18049
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 30730
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-08-13",
+  "executionTimestamp": "2025-08-13T14:59:38.898Z",
+  "venue": "CME Globex",
+  "venueMic": "XCME",
+  "executionType": "Electronic",
+  "trader": "T. Brennan",
+  "salesperson": null,
+  "orderId": "ORD-54C6AFBCA8"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-08-13T11:15:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2025-08-13T11:15:00Z",
+  "lastModifiedAt": "2025-08-13T11:15:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT913058502",
+  "matched": "2025-08-13 14:43",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209654C6AFBCA850BDDFBB2A",
+  "upi": "QZG2OH1BW86N",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "CORAUS33XXX",
+  "ssiId": "SSI-USD-C31AC7",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 441969,
+  "cleanPv": 441969.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "CMDC-SOY",
+   "CMDV-SOY"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "endur-comm",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 1184
+  }
+ }
+}

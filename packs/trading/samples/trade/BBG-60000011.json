@@ -1,0 +1,296 @@
+{
+ "tradeId": "BBG-60000011",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000011",
+ "productType": "CORP_BOND",
+ "productName": "Corporate bond",
+ "assetClass": "Fixed income",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-04-10",
+ "effectiveDate": "2026-04-13",
+ "maturityDate": "2029-05-17",
+ "currency": "GBP",
+ "notional": 40000000.0,
+ "mtm": 1160530,
+ "mtmCurrency": "USD",
+ "pnl1d": 4134,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-2",
+ "trader": "TRDR-BADEYEMI",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-GILT",
+ "benchmarkCurve": "CRV-GBP-GOVT",
+ "underlyingBond": "BND-GBGILT120223",
+ "creditCurve": "CDS-GILT",
+ "terms": {
+  "coupon": 0.018488,
+  "couponFrequency": "Annual",
+  "faceAmount": 88633822.0,
+  "cleanPrice": 101.626,
+  "yield": 0.040741,
+  "zSpread": 409.6,
+  "seniority": "Senior unsecured"
+ },
+ "risk": {
+  "dv01": 11684,
+  "cs01": 10970,
+  "jtd": -24000000
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 779,
+   "cs01": 731,
+   "jtd": -1600000
+  },
+  {
+   "bucket": "6M",
+   "dv01": 1558,
+   "cs01": 1463,
+   "jtd": -3200000
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 2337,
+   "cs01": 2194,
+   "jtd": -4800000
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 3116,
+   "cs01": 2925,
+   "jtd": -6400000
+  },
+  {
+   "bucket": "3Y",
+   "dv01": 3895,
+   "cs01": 3657,
+   "jtd": -8000000
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-10-13",
+   "rate": 0.02189,
+   "amount": 800000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-04-13",
+   "rate": 0.040883,
+   "amount": 800000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-10-13",
+   "rate": 0.040225,
+   "amount": 800000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-04-13",
+   "rate": 0.032943,
+   "amount": 800000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-10-13",
+   "rate": 0.034871,
+   "amount": 800000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-04-13",
+   "rate": 0.051471,
+   "amount": 800000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2029-05-17",
+   "rate": 0.027406,
+   "amount": 800000.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 3783
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 44612
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -28991
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -36354
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 36901
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 44290
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -1154
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 18187
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 30837
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 49484
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 25570
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -9870
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -31507
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -24055
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 125771
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -30605
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 5321
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 36420
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -43785
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -65790
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-04-10",
+  "executionTimestamp": "2026-04-10T13:42:59.946Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "B. Adeyemi",
+  "salesperson": null,
+  "orderId": "ORD-6D208B8593"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-04-10T12:53:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-04-10T12:53:00Z",
+  "lastModifiedAt": "2026-04-10T12:53:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT615443822",
+  "matched": "2026-04-10 13:39",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH6611662650",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20966D208B8593B7EE8041DF",
+  "upi": "QZGYR1DXBQ3F",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Barclays Bank plc",
+  "ourAgentBic": "BARCGB22XXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-GBP-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1160530,
+  "cleanPv": 1160530.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-GBP-GOVT",
+   "BND-GBGILT120223",
+   "CDS-GILT"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 2721
+  }
+ }
+}

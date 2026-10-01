@@ -1,0 +1,233 @@
+{
+ "tradeId": "BBG-60000023",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000023",
+ "productType": "ZERO_BOND",
+ "productName": "Zero-coupon bond",
+ "assetClass": "Fixed income",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2024-11-15",
+ "effectiveDate": "2024-11-18",
+ "maturityDate": "2028-05-30",
+ "currency": "USD",
+ "notional": 208000000.0,
+ "mtm": -1773546,
+ "mtmCurrency": "USD",
+ "pnl1d": 52665,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-2",
+ "trader": "TRDR-RCASTILLO",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-UST",
+ "benchmarkCurve": "CRV-USD-GOVT",
+ "underlyingBond": "BND-US0UST151040",
+ "terms": {
+  "faceAmount": 66742048.0,
+  "cleanPrice": 79.999,
+  "yield": 0.050209
+ },
+ "risk": {
+  "dv01": -68129
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -4542
+  },
+  {
+   "bucket": "6M",
+   "dv01": -9084
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -13626
+  },
+  {
+   "bucket": "2Y",
+   "dv01": -18168
+  },
+  {
+   "bucket": "3Y",
+   "dv01": -22710
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 79853
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 27527
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -76660
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 45925
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -34951
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -93047
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 1387
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 2899
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -59838
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -47405
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -17470
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 16666
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -28181
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 38948
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -71212
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -32808
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -124154
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -85479
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 61538
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -30435
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-11-15",
+  "executionTimestamp": "2024-11-15T09:07:40.333Z",
+  "venue": "MarketAxess",
+  "venueMic": "MAEL",
+  "executionType": "Electronic",
+  "trader": "R. Castillo",
+  "salesperson": null,
+  "orderId": "ORD-3E8011DCAB"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-11-15T09:07:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2024-11-15T09:07:00Z",
+  "lastModifiedAt": "2024-11-15T09:07:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT815385911",
+  "matched": "2024-11-15 17:19",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH7452241825",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20963E8011DCAB2EE0955C9C",
+  "upi": "QZORFVQDXZD1",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMUS33XXX",
+  "ssiId": "SSI-USD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -1773546,
+  "cleanPv": -1773546.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-USD-GOVT",
+   "BND-US0UST151040"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 5627
+  }
+ }
+}

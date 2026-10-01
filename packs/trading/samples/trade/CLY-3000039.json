@@ -1,0 +1,276 @@
+{
+ "tradeId": "CLY-3000039",
+ "sourceSystem": "Calypso",
+ "sourceTradeId": "3000039",
+ "productType": "TRS_LOAN_INDEX",
+ "productName": "Total return swap on a loan index",
+ "assetClass": "Credit",
+ "family": "swap",
+ "status": "Live",
+ "direction": "Receive fixed",
+ "tradeDate": "2026-06-30",
+ "effectiveDate": "2026-07-02",
+ "maturityDate": "2028-11-08",
+ "currency": "USD",
+ "notional": 96000000.0,
+ "mtm": 1036608,
+ "mtmCurrency": "USD",
+ "pnl1d": -38118,
+ "counterparty": {
+  "id": "CP-CASCADIA",
+  "name": "Cascadia Airlines Inc."
+ },
+ "nettingSet": "NS-CASCADIA-NY",
+ "book": "BOOK-CREDIT-1",
+ "trader": "TRDR-CDUBOIS",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-USD-OIS",
+ "forwardCurve": "CRV-USD-PROJ",
+ "terms": {
+  "index": "LSTA LL100",
+  "fundingSpread": 316.0
+ },
+ "risk": {
+  "cs01": -20343
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": -3390
+  },
+  {
+   "bucket": "1Y",
+   "cs01": -6781
+  },
+  {
+   "bucket": "2Y",
+   "cs01": -10172
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Receive performance",
+   "payReceive": "Receive",
+   "rateType": "Performance",
+   "index": "USCPI",
+   "rate": null,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "USD",
+   "notional": 96000000.0
+  },
+  {
+   "leg": 2,
+   "label": "Pay SOFR + spread",
+   "payReceive": "Pay",
+   "rateType": "Float",
+   "index": "SOFR",
+   "rate": 0.036215,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "USD",
+   "notional": 96000000.0
+  }
+ ],
+ "schedule": [
+  {
+   "payDate": "2027-07-02",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -254296.31,
+   "pv": -246667.42,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2028-07-02",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -251269.09,
+   "pv": -243731.02,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2028-11-08",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -194743.93,
+   "pv": -188901.61,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 543
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -6539
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 6828
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 10781
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 50590
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 5566
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -18286
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -47516
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -35682
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -58281
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -22731
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -19090
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -1791
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -7433
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -18190
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 28298
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 6301
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -24987
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 7776
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 75310
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-06-30",
+  "executionTimestamp": "2026-06-30T15:48:49.106Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "C. Dubois",
+  "salesperson": null,
+  "orderId": "ORD-366CDC2C32"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-06-30T11:53:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2026-06-30T11:53:00Z",
+  "lastModifiedAt": "2026-06-30T11:53:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA362814008",
+  "matched": "2026-06-30 15:49",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096366CDC2C327AAC64C816",
+  "upi": "QZFCF8GWSUA7",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "CASCUS33XXX",
+  "ssiId": "SSI-USD-BC4549",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1036608,
+  "cleanPv": 1036608.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Multi-curve OIS discounting",
+  "curves": [
+   "CRV-USD-OIS",
+   "CRV-USD-PROJ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 3033
+  }
+ }
+}

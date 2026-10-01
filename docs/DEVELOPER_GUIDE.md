@@ -422,20 +422,20 @@ script applies (bars and gauges use `data-w`, see `view.js`).
 
 ## 4. How a request travels through the code
 
-This section follows `TRD T-10001 <GO>` from the keyboard to the screen, then the live updates that follow.
+This section follows `TRD MX-20000001 <GO>` from the keyboard to the screen, then the live updates that follow.
 
 ### 4.1 From the command line to a view
 
 | Step | Where | What happens |
 |---|---|---|
 | 1 | `console/web/templates/terminal/_topbar.html`, `web/static/js/command.js` | The command line is a plain form (`action="/go"`). `command.js` adds the dropdown: it calls the console's `GET /api/suggest`, which calls the server's `GET /api/v1/command/suggest` (`CommandController.suggest` → `SuggestionService`), filtered by `Entitlements.filter`. |
-| 2 | `console/routes/terminal_routes.py` `go()` | Text that looks like a search (`<MN> where …`, `order by`, `limit`) is redirected to `/s`. Otherwise `BackendClient.command()` posts `{"text": "TRD T-10001"}` to `POST /api/v1/command`. |
+| 2 | `console/routes/terminal_routes.py` `go()` | Text that looks like a search (`<MN> where …`, `order by`, `limit`) is redirected to `/s`. Otherwise `BackendClient.command()` posts `{"text": "TRD MX-20000001"}` to `POST /api/v1/command`. |
 | 3 | `console/core/backend.py` `BackendClient._send` | Every call carries the caller (`X-Drishti-User`, and `Authorization: Bearer …` when sign-in is on) and the business date (`X-Drishti-As-Of`, from `core/asof.py`, which `AuthGate` in `core/app.py` sets from the `drishti_asof` cookie). An unreachable server becomes `BackendError(503, "DRS-5003", …)`. |
 | 4 | `server.security.TokenFilter` | For every `/api/v1/**` request: with security off, the caller is `Principal.anonymous(X-Drishti-User)` with every role; with it on, the bearer token is verified (`TokenVerifier`) or the answer is `401 DRS-5010`. The principal is a request attribute (`Principal.ATTRIBUTE`). |
 | 5 | `server.api.AsOfResolver` | Gives any controller parameter of type `AsOf` the request's business date: `X-Drishti-As-Of`, else `?asOf=`, else the current business date (`BusinessDates.parse`). |
-| 6 | `server.api.CommandController.command` | `CommandParser.parse` turns the text into an `EntityRef` (`trade/T-10001`). `Entitlements.requireOpen` checks the caller's roles and active packs (`403 DRS-5002`). If the entity exists (`SourceRouter.fetchAll`), the answer is its ref; otherwise the text becomes a pick list (`SearchQuery.pick` + `StructuredSearch.run`), and exactly one match opens directly. An unreadable command is `400 DRS-4001`. |
-| 7 | `terminal_routes.go()` | Redirects (303) to `/v/trade/T-10001`, or to `/s?q=…` for a pick list. |
-| 8 | `terminal_routes.view()` | `BackendClient.view()` calls `GET /api/v1/views/trade/T-10001`. |
+| 6 | `server.api.CommandController.command` | `CommandParser.parse` turns the text into an `EntityRef` (`trade/MX-20000001`). `Entitlements.requireOpen` checks the caller's roles and active packs (`403 DRS-5002`). If the entity exists (`SourceRouter.fetchAll`), the answer is its ref; otherwise the text becomes a pick list (`SearchQuery.pick` + `StructuredSearch.run`), and exactly one match opens directly. An unreadable command is `400 DRS-4001`. |
+| 7 | `terminal_routes.go()` | Redirects (303) to `/v/trade/MX-20000001`, or to `/s?q=…` for a pick list. |
+| 8 | `terminal_routes.view()` | `BackendClient.view()` calls `GET /api/v1/views/trade/MX-20000001`. |
 | 9 | `server.api.ViewController.view` | `requireOpen` again, then `ViewPipeline.view(ref, asOf)` (timed as the `drishti.view` metric), then `Entitlements.restrict` (disables links the caller may not follow), then `RecentEntities.touch` (feeds "recent" in the dropdown). |
 | 10 | `engine.ViewPipeline` | The pipeline (below) returns a `ViewModel`. |
 | 11 | `terminal_routes.view()` | Splits the panels into `main` and `right` by `area`, renders `terminal/view.html`. Each panel is drawn by the `panel(p)` macro in `web/templates/_macros/panels.html`; `web/static/js/view.js` adds charts (vendored ECharts), tabs, F-keys and the raw-JSON drawer. |
@@ -471,7 +471,7 @@ bind". In code:
 | Step | Where | What happens |
 |---|---|---|
 | 1 | `terminal/view.html` | `live.js` is loaded only when `vm.provenance.live` is true. A picked business date is a static snapshot: no stream. |
-| 2 | `web/static/js/live.js`, `web/static/js/channel.js` | `live.js` subscribes `view:trade/T-10001` on `window.DrishtiChannel`. `channel.js` keeps **one** `EventSource` per browser tab, to the console's `GET /api/channel?s=…`, and adds or removes subscriptions with `POST /api/channel/{cid}` instead of reconnecting. Workspace panes (iframes) share their parent's channel. Browsers allow six HTTP/1.1 connections per site; a stream per view and per bell used to exhaust them and freeze the page. |
+| 2 | `web/static/js/live.js`, `web/static/js/channel.js` | `live.js` subscribes `view:trade/MX-20000001` on `window.DrishtiChannel`. `channel.js` keeps **one** `EventSource` per browser tab, to the console's `GET /api/channel?s=…`, and adds or removes subscriptions with `POST /api/channel/{cid}` instead of reconnecting. Workspace panes (iframes) share their parent's channel. Browsers allow six HTTP/1.1 connections per site; a stream per view and per bell used to exhaust them and freeze the page. |
 | 3 | `console/routes/api_routes.py` `channel()` | For each subscription it opens an upstream stream (`BackendClient.stream` → `GET /api/v1/views/{kind}/{id}/stream`; `alerts` and `monitor:<name>` go to their own server streams), in **detached** tasks, and multiplexes everything into one SSE response as `{"ch": "<subscription>", "d": …}`. Frames are rewritten by `_view_event`: each patched panel is rendered to HTML with the same `panels.html` macro as first paint (charts stay data). A watchdog ends a channel nobody has read for five seconds; a comment every ~15s keeps proxies from closing it. |
 | 4 | `server.api.StreamController.stream` | Takes a slot from `LiveStreamSlots` (cap `drishti.live.max-streams`), builds the initial view, and creates a `ViewStream`. A writer on a virtual thread sends a `view` event, then a `frame` event per frame, or a heartbeat comment (`drishti.live.heartbeat`, 15s). Each client has its own latest-wins `FrameMailbox`, so a slow client never slows others. |
 | 5 | `engine.live.TopicHub` | One topic per live entity, shared by every view of it, holding a single source subscription (`SourceRouter.subscribe` → the plugin's `subscribe`). Ticks land in a latest-wins slot and are delivered at most once per frame (`drishti.live.frame`, 50ms). The subscription closes with the last listener. |
@@ -820,13 +820,13 @@ class NdjsonSourcePluginTest {
 
     @Test
     void readsOneDocumentPerLineAndSearchesIds() throws Exception {
-        Files.writeString(root.resolve("trade.ndjson"), "{\"id\":\"T-1\",\"mtm\":5}\n\n{\"id\":\"T-2\",\"mtm\":-3}\n{\"mtm\":9}\n");
+        Files.writeString(root.resolve("trade.ndjson"), "{\"id\":\"MX-20000001\",\"mtm\":5}\n\n{\"id\":\"MX-20000002\",\"mtm\":-3}\n{\"mtm\":9}\n");
         NdjsonSourcePlugin p = new NdjsonSourcePlugin();
         p.start(DatedSourceContract.context(Map.of("root", root.toString(), "source-name", "eod-file")));
-        var doc = p.fetch(EntityRef.of("trade", "T-1")).orElseThrow();
+        var doc = p.fetch(EntityRef.of("trade", "MX-20000001")).orElseThrow();
         assertThat(doc.data().get("mtm").asDouble()).isEqualTo(5);
         assertThat(doc.provenance().source()).isEqualTo("eod-file");
-        assertThat(p.fetch(EntityRef.of("trade", "T-9"))).isEmpty();
+        assertThat(p.fetch(EntityRef.of("trade", "MX-20000009"))).isEmpty();
         assertThat(p.search("trade", "t-", 10)).hasSize(2);
         assertThat(p.health()).isEqualTo("UP");
     }
@@ -1029,14 +1029,14 @@ class MetricPanelTest {
             """, "metric-demo.sutra.yaml", "test");
 
     ViewModel.PanelView panel(String json) {
-        EntityDocument doc = new EntityDocument(EntityRef.of("trade", "T-1"), codec.read(json),
+        EntityDocument doc = new EntityDocument(EntityRef.of("trade", "MX-20000001"), codec.read(json),
                 new Provenance("test", 1, Instant.now(), false));
         return pipeline.preview(Optional.of(SUTRA), doc).panels().get(0);
     }
 
     @Test
     void showsOneFormattedTonedFigure() {
-        var p = panel("{\"tradeId\":\"T-1\",\"mtm\":-1250}");
+        var p = panel("{\"tradeId\":\"MX-20000001\",\"mtm\":-1250}");
         assertThat(p.kind()).isEqualTo("metric");
         var cell = ((PanelData.Fields) p.data()).fields().get(0);
         assertThat(cell.text()).isEqualTo("−1,250");
@@ -1046,7 +1046,7 @@ class MetricPanelTest {
 
     @Test
     void aMissingFigureIsAnEmptyPanelNotAnError() {
-        var p = panel("{\"tradeId\":\"T-1\"}");
+        var p = panel("{\"tradeId\":\"MX-20000001\"}");
         assertThat(p.empty()).isTrue();
         assertThat(p.error()).isNull();
     }
@@ -1657,13 +1657,13 @@ Habits that keep the suite fast and reliable:
 | Is the server up? | `curl -s localhost:18480/actuator/health` → `{"status":"UP",…}` (`/actuator/health/liveness` and `/readiness` for probes) |
 | Is the console up, and can it reach the server? | `curl -s localhost:17480/healthz` (the process) and `curl -s localhost:17480/readyz` (`503` while the server is unreachable) |
 | Which packs, sources and problems? | `curl -s localhost:18480/api/v1/admin/health \| python3 -m json.tool`: version, uptime, heap, every source with status, health, kinds, live/dated/search and read counts, and pack problems. *Admin → Health* shows the same. |
-| What does the server return for a view? | `curl -s localhost:18480/api/v1/views/trade/T-10001 \| python3 -m json.tool`. Add `-H 'X-Drishti-As-Of: 2026-09-29'` for a past date and `-H 'X-Drishti-User: ash'` to act as a user (security off). With security on, add `-H "Authorization: Bearer <token>"`. |
-| What did the source send? | `F9` in the view, or `curl -s localhost:18480/api/v1/entities/trade/T-10001/raw` (redacted for roles without `raw`) |
+| What does the server return for a view? | `curl -s localhost:18480/api/v1/views/trade/MX-20000001 \| python3 -m json.tool`. Add `-H 'X-Drishti-As-Of: 2026-09-29'` for a past date and `-H 'X-Drishti-User: ash'` to act as a user (security off). With security on, add `-H "Authorization: Bearer <token>"`. |
+| What did the source send? | `F9` in the view, or `curl -s localhost:18480/api/v1/entities/trade/MX-20000001/raw` (redacted for roles without `raw`) |
 | Which Sutra, how long? | The view JSON's `provenance.layout` (`Sutra irs-fixfloat v1 + inference`, or `inference only`) and `timings` (`fetch`, `layout`, `links`, `bind`, `total` in ms) |
-| What would inference do on its own? | `curl -s localhost:18480/api/v1/studio/inferred/trade/T-10001` returns the inferred Sutra as YAML (`text/yaml`, starting `rachana: 1`) |
+| What would inference do on its own? | `curl -s localhost:18480/api/v1/studio/inferred/trade/MX-20000001` returns the inferred Sutra as YAML (`text/yaml`, starting `rachana: 1`) |
 | Is a Sutra broken? | `curl -s localhost:18480/api/v1/sutras/problems` (`{}` when none); see [runbooks/sutra-broken.md](runbooks/sutra-broken.md) |
 | Which sources run? | `curl -s localhost:18480/api/v1/sources` (and `failures`) |
-| What changed between dates? | `curl -s localhost:18480/api/v1/history/trade/T-10001/diff` |
+| What changed between dates? | `curl -s localhost:18480/api/v1/history/trade/MX-20000001/diff` |
 | How are live streams doing? | `curl -s localhost:18480/api/v1/health/live` → `{"streams":…,"topics":…,"frames":…,"p50Ms":…,"p99Ms":…}` |
 | Metrics | `/actuator/metrics/drishti.view`, `/actuator/prometheus` (`drishti_view_seconds`, `drishti_live_*`) |
 | Every endpoint | `/api/docs` (OpenAPI JSON) and `/api/docs/ui` (Swagger UI). With security on, `/api/docs` needs a token and `/actuator` (except health) an admin token or `DRISHTI_METRICS_TOKEN`. |
@@ -1688,7 +1688,7 @@ The console runs Uvicorn with access logs off (`access_log=False` in `run_drisht
 3. Watch the server stream directly; you should see an `event:view` and then `event:frame` lines:
 
    ```bash
-   curl -sN localhost:18480/api/v1/views/trade/T-10001/stream | head -c 600
+   curl -sN localhost:18480/api/v1/views/trade/MX-20000001/stream | head -c 600
    ```
 
 4. In the browser's network tab there should be exactly one `/api/channel?s=…` request per tab, staying open.

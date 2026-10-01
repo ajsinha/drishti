@@ -62,126 +62,126 @@
  ],
  "trades": [
   {
-   "tradeId": "T-10052",
+   "tradeId": "MX-20000052",
    "product": "Forward-starting swap",
    "notional": 188000000.0,
    "maturity": "2037-09-28",
    "mtm": 38747885
   },
   {
-   "tradeId": "T-10010",
+   "tradeId": "MX-20000010",
    "product": "Overnight index swap",
    "notional": 134000000.0,
    "maturity": "2032-11-29",
    "mtm": 18884450
   },
   {
-   "tradeId": "T-10045",
+   "tradeId": "MX-20000045",
    "product": "Accreting swap",
    "notional": 93000000.0,
    "maturity": "2027-12-13",
    "mtm": 5256940
   },
   {
-   "tradeId": "T-10012",
+   "tradeId": "MX-20000012",
    "product": "Overnight index swap",
    "notional": 28000000.0,
    "maturity": "2035-11-21",
    "mtm": -4900418
   },
   {
-   "tradeId": "T-10065",
+   "tradeId": "MX-20000065",
    "product": "Forward rate agreement",
    "notional": 176000000.0,
    "maturity": "2026-12-30",
    "mtm": 2938696
   },
   {
-   "tradeId": "T-10303",
+   "tradeId": "CLY-3000063",
    "product": "Credit spread option",
    "notional": 147000000.0,
    "maturity": "2026-10-13",
    "mtm": -2549257
   },
   {
-   "tradeId": "T-10491",
+   "tradeId": "END-1000047",
    "product": "Commodity spread option",
    "notional": 96000000.0,
    "maturity": "2031-08-27",
    "mtm": 1874087
   },
   {
-   "tradeId": "T-10489",
+   "tradeId": "END-1000045",
    "product": "Commodity spread option",
    "notional": 195000000.0,
    "maturity": "2032-07-30",
    "mtm": 1690310
   },
   {
-   "tradeId": "T-10501",
+   "tradeId": "END-1000057",
    "product": "Commodity index swap",
    "notional": 223000000.0,
    "maturity": "2034-11-06",
    "mtm": 915725
   },
   {
-   "tradeId": "T-10669",
+   "tradeId": "WSS-1500105",
    "product": "Term deposit / placement",
    "notional": 164000000.0,
    "maturity": "2026-11-06",
    "mtm": 879743
   },
   {
-   "tradeId": "T-10477",
+   "tradeId": "END-1000033",
    "product": "Average price option (APO)",
    "notional": 55000000.0,
    "maturity": "2035-11-02",
    "mtm": -678515
   },
   {
-   "tradeId": "T-10116",
+   "tradeId": "MX-20000116",
    "product": "CMS cap / floor",
    "notional": 191000000.0,
    "maturity": "2027-09-13",
    "mtm": 479917
   },
   {
-   "tradeId": "T-10312",
+   "tradeId": "CLY-3000072",
    "product": "Unfunded risk participation",
    "notional": 93000000.0,
    "maturity": "2027-01-20",
    "mtm": -241183
   },
   {
-   "tradeId": "T-10150",
+   "tradeId": "MX-20000150",
    "product": "Snowball swap",
    "notional": 123000000.0,
    "maturity": "2030-01-23",
    "mtm": -113420
   },
   {
-   "tradeId": "T-10145",
+   "tradeId": "MX-20000145",
    "product": "Snowball swap",
    "notional": 63000000.0,
    "maturity": "2037-09-09",
    "mtm": 94876
   },
   {
-   "tradeId": "T-10255",
+   "tradeId": "CLY-3000015",
    "product": "Index tranche",
    "notional": 11000000.0,
    "maturity": "2035-10-10",
    "mtm": 92367
   },
   {
-   "tradeId": "T-10154",
+   "tradeId": "MX-20000154",
    "product": "Target redemption note (rates)",
    "notional": 7000000.0,
    "maturity": "2036-11-07",
    "mtm": -47123
   },
   {
-   "tradeId": "T-10523",
+   "tradeId": "END-1000079",
    "product": "Weather derivative (HDD/CDD)",
    "notional": 6000000.0,
    "maturity": "2030-11-05",

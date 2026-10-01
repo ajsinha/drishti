@@ -1,0 +1,267 @@
+{
+ "tradeId": "BBG-60000072",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000072",
+ "productType": "ABS",
+ "productName": "Asset-backed security",
+ "assetClass": "Fixed income",
+ "family": "securitized",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2026-09-18",
+ "effectiveDate": "2026-09-21",
+ "maturityDate": "2028-12-14",
+ "currency": "EUR",
+ "notional": 69000000.0,
+ "mtm": 1276947,
+ "mtmCurrency": "USD",
+ "pnl1d": -2584,
+ "counterparty": {
+  "id": "CP-MERIDIAN",
+  "name": "Meridian Life Assurance"
+ },
+ "nettingSet": "NS-MERIDIAN-NY",
+ "book": "BOOK-FI-3",
+ "trader": "TRDR-BADEYEMI",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-ORBITAL",
+ "benchmarkCurve": "CRV-EUR-GOVT",
+ "creditCurve": "CDS-ORBITAL",
+ "terms": {
+  "collateral": "Auto loans",
+  "tranche": "C",
+  "wal": 5.38
+ },
+ "risk": {
+  "dv01": -12644,
+  "cs01": -12872
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -1264,
+   "cs01": -1287
+  },
+  {
+   "bucket": "6M",
+   "dv01": -2529,
+   "cs01": -2574
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -3793,
+   "cs01": -3862
+  },
+  {
+   "bucket": "2Y",
+   "dv01": -5058,
+   "cs01": -5149
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2027-03-21",
+   "opening": 69000000,
+   "principal": 13800000,
+   "closing": 55200000,
+   "interest": 1380000
+  },
+  {
+   "date": "2027-09-21",
+   "opening": 55200000,
+   "principal": 13800000,
+   "closing": 41400000,
+   "interest": 1104000
+  },
+  {
+   "date": "2028-03-21",
+   "opening": 41400000,
+   "principal": 13800000,
+   "closing": 27600000,
+   "interest": 828000
+  },
+  {
+   "date": "2028-09-21",
+   "opening": 27600000,
+   "principal": 13800000,
+   "closing": 13800000,
+   "interest": 552000
+  },
+  {
+   "date": "2028-12-14",
+   "opening": 13800000,
+   "principal": 13800000,
+   "closing": 0,
+   "interest": 276000
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 14352
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 6339
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 56388
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 62423
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -5932
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 19633
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -13415
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 13383
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 71046
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 4389
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 48938
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 13250
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -68607
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 17865
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 16084
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -7751
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -52170
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -59100
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 28810
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -10084
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-09-18",
+  "executionTimestamp": "2026-09-18T14:39:27.721Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "B. Adeyemi",
+  "salesperson": null,
+  "orderId": "ORD-A136BF4135"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-09-18T11:19:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2026-09-18T11:19:00Z",
+  "lastModifiedAt": "2026-09-18T11:19:00Z",
+  "lastModifiedBy": "mo.amend"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT661511953",
+  "matched": "2026-09-18 12:31",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096A136BF413558E8A85BAF",
+  "upi": "QZO3A62SJADU",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "MERIGB33XXX",
+  "ssiId": "SSI-EUR-4D91C0",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1276947,
+  "cleanPv": 1276947.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-EUR-GOVT",
+   "CDS-ORBITAL"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 3244
+  }
+ }
+}

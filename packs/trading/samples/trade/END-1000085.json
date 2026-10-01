@@ -1,0 +1,303 @@
+{
+ "tradeId": "END-1000085",
+ "sourceSystem": "Endur",
+ "sourceTradeId": "1000085",
+ "productType": "FREIGHT_FFA",
+ "productName": "Freight forward agreement",
+ "assetClass": "Commodity",
+ "family": "linear",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2026-06-18",
+ "effectiveDate": "2026-06-22",
+ "maturityDate": "2028-04-13",
+ "currency": "USD",
+ "notional": 66000000.0,
+ "mtm": 176045,
+ "mtmCurrency": "USD",
+ "pnl1d": -11028,
+ "counterparty": {
+  "id": "CP-PINNACLE",
+  "name": "Pinnacle Credit Partners"
+ },
+ "nettingSet": "NS-PINNACLE-NY",
+ "book": "BOOK-COMM-2",
+ "trader": "TRDR-FROSSI",
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "commodityCurve": "CMDC-WTI",
+ "terms": {
+  "route": "Capesize 5TC",
+  "days": 319,
+  "fixedRate": 23774.0
+ },
+ "risk": {
+  "delta": -379274
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -18061
+  },
+  {
+   "bucket": "1M",
+   "delta": -36121
+  },
+  {
+   "bucket": "3M",
+   "delta": -54182
+  },
+  {
+   "bucket": "6M",
+   "delta": -72243
+  },
+  {
+   "bucket": "1Y",
+   "delta": -90303
+  },
+  {
+   "bucket": "2Y",
+   "delta": -108364
+  }
+ ],
+ "schedule": [
+  {
+   "fixingDate": "2026-09-22",
+   "period": "2026-09-22..2026-12-22",
+   "index": "SOFR",
+   "rate": 0.022568,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-12-22",
+   "period": "2026-12-22..2027-03-22",
+   "index": "SOFR",
+   "rate": 0.040436,
+   "payoff": 89694.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-03-22",
+   "period": "2027-03-22..2027-06-22",
+   "index": "SOFR",
+   "rate": 0.029295,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-06-22",
+   "period": "2027-06-22..2027-09-22",
+   "index": "SOFR",
+   "rate": 0.045077,
+   "payoff": 166270.5,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-09-22",
+   "period": "2027-09-22..2027-12-22",
+   "index": "SOFR",
+   "rate": 0.043771,
+   "payoff": 144721.5,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-12-22",
+   "period": "2027-12-22..2028-03-22",
+   "index": "SOFR",
+   "rate": 0.041545,
+   "payoff": 107992.5,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2028-03-22",
+   "period": "2028-03-22..2028-06-22",
+   "index": "SOFR",
+   "rate": 0.026734,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2028-04-13",
+   "period": "2028-04-13..2028-07-13",
+   "index": "SOFR",
+   "rate": 0.029238,
+   "payoff": 0.0,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -11633
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 5514
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 1939
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 5683
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 9632
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -11490
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 1964
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -3329
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 8288
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 21
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -59
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -6940
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 6981
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -3659
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -8798
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -3613
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -2571
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -4152
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -825
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 9578
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-06-18",
+  "executionTimestamp": "2026-06-18T14:05:22.024Z",
+  "venue": "ICE",
+  "venueMic": "IFEU",
+  "executionType": "Electronic",
+  "trader": "F. Rossi",
+  "salesperson": null,
+  "orderId": "ORD-6FC7392458"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-06-18T09:23:00Z",
+    "by": "fo.capture"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2026-07-01T09:23:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2026-06-18T09:23:00Z",
+  "lastModifiedAt": "2026-07-01T09:23:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT149160183",
+  "matched": "2026-06-18 14:25",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20966FC7392458964D7DD835",
+  "upi": "QZ4EH0KFS5HO",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "PINNUS33XXX",
+  "ssiId": "SSI-USD-F2BB52",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 176045,
+  "cleanPv": 176045.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CMDC-WTI"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "endur-comm",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 1012
+  }
+ }
+}

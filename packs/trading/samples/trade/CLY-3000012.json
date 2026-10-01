@@ -1,0 +1,306 @@
+{
+ "tradeId": "CLY-3000012",
+ "sourceSystem": "Calypso",
+ "sourceTradeId": "3000012",
+ "productType": "CDS_INDEX",
+ "productName": "CDS index (CDX / iTraxx)",
+ "assetClass": "Credit",
+ "family": "cds",
+ "status": "Live",
+ "direction": "Buy protection",
+ "tradeDate": "2026-03-06",
+ "effectiveDate": "2026-03-09",
+ "maturityDate": "2033-03-02",
+ "currency": "USD",
+ "notional": 143000000.0,
+ "mtm": 1209105,
+ "mtmCurrency": "USD",
+ "pnl1d": 35259,
+ "counterparty": {
+  "id": "CP-AURORA",
+  "name": "Aurora Sovereign Wealth Fund"
+ },
+ "nettingSet": "NS-AURORA-NY",
+ "book": "BOOK-CREDIT-1",
+ "trader": "TRDR-CDUBOIS",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-GRANITE",
+ "creditCurve": "CDS-GRANITE",
+ "discountCurve": "CRV-USD-OIS",
+ "terms": {
+  "protection": "Sold",
+  "index": "CDX.NA.IG S47",
+  "coupon": "100",
+  "version": 2
+ },
+ "risk": {
+  "cs01": 78032,
+  "jtd": -85800000
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 3716,
+   "jtd": -4085714
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 7432,
+   "jtd": -8171429
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 11147,
+   "jtd": -12257143
+  },
+  {
+   "bucket": "3Y",
+   "cs01": 14863,
+   "jtd": -16342857
+  },
+  {
+   "bucket": "5Y",
+   "cs01": 18579,
+   "jtd": -20428571
+  },
+  {
+   "bucket": "7Y",
+   "cs01": 22295,
+   "jtd": -24514286
+  }
+ ],
+ "schedule": [
+  {
+   "payDate": "2027-03-09",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -410499.27,
+   "pv": -398184.29,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2028-03-09",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -291680.84,
+   "pv": -282930.41,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2029-03-09",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -319756.93,
+   "pv": -310164.22,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2030-03-09",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -428090.77,
+   "pv": -415248.05,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2031-03-09",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -369291.71,
+   "pv": -358212.96,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2032-03-09",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -408620.99,
+   "pv": -396362.36,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2033-03-02",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -322011.34,
+   "pv": -312351.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 59652
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -21803
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -28945
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -15159
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -30748
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 4709
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -16025
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -911
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 56046
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -43357
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 17815
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -17546
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -19710
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 39453
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 9789
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -35791
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 20529
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 34650
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -16866
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 57200
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-03-06",
+  "executionTimestamp": "2026-03-06T15:46:13.235Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "C. Dubois",
+  "salesperson": null,
+  "orderId": "ORD-768C504797"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-03-06T12:41:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2026-03-06T12:41:00Z",
+  "lastModifiedAt": "2026-03-06T12:41:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA851226559",
+  "matched": "2026-03-06 16:06",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096768C504797C00EE8E629",
+  "upi": "QZ1QCOFWX352",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "AUROUS33XXX",
+  "ssiId": "SSI-USD-79DAAE",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1209105,
+  "cleanPv": 1209105.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CDS-GRANITE",
+   "CRV-USD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 3848
+  }
+ }
+}

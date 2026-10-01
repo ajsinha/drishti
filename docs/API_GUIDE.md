@@ -113,14 +113,14 @@ curl -s "$B/command/suggest?q=TRD%20&limit=2" | jq -c '.[] | {complete, subtitle
 ```
 
 ```
-{"complete":"TRD T-10001","subtitle":"Trade · Interest rate swap (fixed/float) · Meridian Reinsurance Ltd · AUD 242m"}
-{"complete":"TRD T-10002","subtitle":"Trade · Interest rate swap (fixed/float) · Halcyon Shipping plc · EUR 110m"}
+{"complete":"TRD MX-20000001","subtitle":"Trade · Interest rate swap (fixed/float) · Meridian Reinsurance Ltd · AUD 242m"}
+{"complete":"TRD MX-20000002","subtitle":"Trade · Interest rate swap (fixed/float) · Halcyon Shipping plc · EUR 110m"}
 ```
 
 **4. Open it.** A view is the screen the console draws, as data:
 
 ```bash
-curl -s $B/views/trade/T-10001 | jq -r '.strip[] | "\(.label): \(.text)"'
+curl -s $B/views/trade/MX-20000001 | jq -r '.strip[] | "\(.label): \(.text)"'
 ```
 
 ```
@@ -134,11 +134,11 @@ MTM (USD): +1,603,277
 **5. See the document behind it.**
 
 ```bash
-curl -s $B/entities/trade/T-10001/raw | jq '.data | {tradeId, productType, assetClass}'
+curl -s $B/entities/trade/MX-20000001/raw | jq '.data | {tradeId, productType, assetClass}'
 ```
 
 ```json
-{ "tradeId": "T-10001", "productType": "IRS_FIXFLOAT", "assetClass": "Rates" }
+{ "tradeId": "MX-20000001", "productType": "IRS_FIXFLOAT", "assetClass": "Rates" }
 ```
 
 ## Who you are: authentication
@@ -324,18 +324,18 @@ with `admin: true` (otherwise `403 DRS-5002`).
 
 | Method | Path | Notes |
 |---|---|---|
-| `POST` | `/command` | body `{"text": "TRD T-10001 <GO>"}` → `{"ref": {"kind", "id"}, "mnemonic"}`; `400 DRS-4001` if the text cannot be read; `403` if the caller may not open the kind |
+| `POST` | `/command` | body `{"text": "TRD MX-20000001 <GO>"}` → `{"ref": {"kind", "id"}, "mnemonic"}`; `400 DRS-4001` if the text cannot be read; `403` if the caller may not open the kind |
 | `GET` | `/command/suggest?q=&limit=` | as-of. Up to `limit` suggestions (default `drishti.commands.suggest-limit`, 25; at most 50), filtered to kinds the caller may open |
 
 The command is what the console's command line sends when you press Enter. The mnemonic (`TRD`) is mapped to
 a kind (`trade`); the id is matched against the configured id patterns. `<GO>` is optional.
 
 ```bash
-curl -s -X POST $B/command -H 'Content-Type: application/json' -d '{"text": "TRD T-10001 <GO>"}'
+curl -s -X POST $B/command -H 'Content-Type: application/json' -d '{"text": "TRD MX-20000001 <GO>"}'
 ```
 
 ```json
-{"ref":{"kind":"trade","id":"T-10001"},"mnemonic":"TRD"}
+{"ref":{"kind":"trade","id":"MX-20000001"},"mnemonic":"TRD"}
 ```
 
 Type-ahead: each suggestion is either a mnemonic (`id` is null) or an entity. `complete` is the text to put
@@ -363,12 +363,12 @@ Opening a view also records it in the caller's recent list. A view is formatted 
 comes as text with a tone, so all clients show `−1,403,091` the same way.
 
 ```bash
-curl -s $B/views/trade/T-10001 | jq -c '{ref, mnemonic, title, strip: .strip[0:2], provenance, timings}'
+curl -s $B/views/trade/MX-20000001 | jq -c '{ref, mnemonic, title, strip: .strip[0:2], provenance, timings}'
 ```
 
 ```json
-{"ref":{"kind":"trade","id":"T-10001"},"mnemonic":"TRD",
- "title":{"pill":"Rates · Interest rate swap (fixed/float)","id":"T-10001",
+{"ref":{"kind":"trade","id":"MX-20000001"},"mnemonic":"TRD",
+ "title":{"pill":"Rates · Interest rate swap (fixed/float)","id":"MX-20000001",
           "with":{"text":"Meridian Reinsurance Ltd","link":{"kind":"counterparty","id":"CP-MERIDIAN-RE","mnemonic":"CPTY"}}},
  "strip":[{"label":"Notional","text":"AUD 242,000,000","path":"$.currency"},
           {"label":"Direction","text":"Receive fixed","path":"$.direction"}],
@@ -380,7 +380,7 @@ curl -s $B/views/trade/T-10001 | jq -c '{ref, mnemonic, title, strip: .strip[0:2
 List the panels:
 
 ```bash
-curl -s $B/views/trade/T-10001 | jq -c '.panels[] | {id, kind, title, key, area}'
+curl -s $B/views/trade/MX-20000001 | jq -c '.panels[] | {id, kind, title, key, area}'
 ```
 
 ```
@@ -407,19 +407,19 @@ The full shape is in [The ViewModel in detail](#the-viewmodel-in-detail).
 Raw:
 
 ```bash
-curl -s $B/entities/trade/T-10001/raw | jq -c '{ref, provenance, data: (.data | {tradeId, productType})}'
+curl -s $B/entities/trade/MX-20000001/raw | jq -c '{ref, provenance, data: (.data | {tradeId, productType})}'
 ```
 
 ```json
-{"ref":{"kind":"trade","id":"T-10001"},
+{"ref":{"kind":"trade","id":"MX-20000001"},
  "provenance":{"source":"murex-rates","generation":1674,"fetchedAt":"2026-10-01T00:59:06.608972976Z","live":true,"businessDate":null},
- "data":{"tradeId":"T-10001","productType":"IRS_FIXFLOAT"}}
+ "data":{"tradeId":"MX-20000001","productType":"IRS_FIXFLOAT"}}
 ```
 
 History — what changed in the trade since yesterday:
 
 ```bash
-curl -s $B/history/trade/T-10001/diff | jq -c '{from: .from.businessDate, to: .to.businessDate, added, removed, changed, first: .changes[0:2]}'
+curl -s $B/history/trade/MX-20000001/diff | jq -c '{from: .from.businessDate, to: .to.businessDate, added, removed, changed, first: .changes[0:2]}'
 ```
 
 ```json
@@ -432,13 +432,13 @@ Each change has `kind` `added`, `removed` or `changed`; `delta` is set for numbe
 carries its `businessDate`, `knownAt` and `provenance`. Two explicit dates:
 
 ```bash
-curl -s "$B/history/trade/T-10001/diff?from=2026-09-28&to=2026-09-29" | jq -c '{from: .from.businessDate, to: .to.businessDate, changed}'
+curl -s "$B/history/trade/MX-20000001/diff?from=2026-09-28&to=2026-09-29" | jq -c '{from: .from.businessDate, to: .to.businessDate, changed}'
 ```
 
 To see a restatement — what we knew about 29 September at 18:00 versus now — fix the date and vary "known at":
 
 ```bash
-curl -s "$B/history/trade/T-10001/diff?from=2026-09-29&to=2026-09-29&fromKnownAt=2026-09-29T22:00:00Z" | jq '.changed'
+curl -s "$B/history/trade/MX-20000001/diff?from=2026-09-29&to=2026-09-29&fromKnownAt=2026-09-29T22:00:00Z" | jq '.changed'
 ```
 
 Impact — what depends on a counterparty:
@@ -475,7 +475,7 @@ curl -s -G $B/search --data-urlencode "q=TRD where mtm > 1m order by mtm desc li
 ```json
 {"kind":"trade","condition":"$.mtm > 1000000","orderBy":"$.mtm","descending":true,"limit":3,
  "columns":["$.mtm"],"labels":{"$.mtm":"MTM (USD)"},
- "rows":[{"ref":{"kind":"trade","id":"T-10043"},"title":"T-10043","values":{"$.mtm":71490903}}],
+ "rows":[{"ref":{"kind":"trade","id":"MX-20000043"},"title":"MX-20000043","values":{"$.mtm":71490903}}],
  "scanned":750,"matched":163,"partial":false,"elapsedMs":6.85}
 ```
 
@@ -510,7 +510,7 @@ every 15 s for monitors and alerts). View and monitor streams count against `dri
 (default 20000); beyond it a new stream is refused with `400 DRS-5001 too many live streams on this server`.
 
 ```bash
-curl -s -N $B/views/trade/T-10001/stream
+curl -s -N $B/views/trade/MX-20000001/stream
 ```
 
 You should see (data lines shortened):
@@ -518,7 +518,7 @@ You should see (data lines shortened):
 ```
 event:view
 id:0
-data:{"ref":{"kind":"trade","id":"T-10001"},"mnemonic":"TRD","title":{…},"strip":[…],"panels":[…],…}
+data:{"ref":{"kind":"trade","id":"MX-20000001"},"mnemonic":"TRD","title":{…},"strip":[…],"panels":[…],…}
 
 event:frame
 id:1
@@ -528,7 +528,7 @@ data:{"seq":1,"generation":1686,"patches":[{"op":"strip","index":4,"cell":{"labe
 Press Ctrl+C to stop. Snapshot of a past date — one event and the stream ends by itself:
 
 ```bash
-curl -s -N -H "X-Drishti-As-Of: 2026-09-29" $B/views/trade/T-10001/stream | head -c 300
+curl -s -N -H "X-Drishti-As-Of: 2026-09-29" $B/views/trade/MX-20000001/stream | head -c 300
 ```
 
 The server-wide live figures:
@@ -609,18 +609,18 @@ characters). Panes may not follow themselves or each other in a circle.
 ```bash
 curl -s -X PUT -H "X-Drishti-User: ash" -H 'Content-Type: application/json' $B/me/workspaces/rates \
   -d '{"layout": "2col", "panes": [
-        {"ref": {"kind": "trade", "id": "T-10001"}, "title": "Swap"},
+        {"ref": {"kind": "trade", "id": "MX-20000001"}, "title": "Swap"},
         {"ref": null, "follows": 0, "title": "Counterparty"}]}'
 ```
 
 You should see the stored workspace:
-`{"layout":"2col","panes":[{"ref":{"kind":"trade","id":"T-10001"},"follows":null,"title":"Swap"},{"ref":null,"follows":0,"title":"Counterparty"}]}`.
+`{"layout":"2col","panes":[{"ref":{"kind":"trade","id":"MX-20000001"},"follows":null,"title":"Swap"},{"ref":null,"follows":0,"title":"Counterparty"}]}`.
 
 **Monitors.**
 
 ```bash
 curl -s -X PUT -H "X-Drishti-User: ash" -H 'Content-Type: application/json' $B/me/monitors/swaps \
-  -d '{"entities": [{"kind": "trade", "id": "T-10001"}, {"kind": "trade", "id": "T-10002"}]}'
+  -d '{"entities": [{"kind": "trade", "id": "MX-20000001"}, {"kind": "trade", "id": "MX-20000002"}]}'
 curl -s -H "X-Drishti-User: ash" $B/me/monitors/swaps | jq -c '.[] | {ref, mnemonic, live, strip: (.strip | length)}'
 ```
 
@@ -632,7 +632,7 @@ does not parse). `severity` is `info`, `warn` or `critical`.
 
 ```bash
 curl -s -X PUT -H "X-Drishti-User: ash" -H 'Content-Type: application/json' $B/me/alerts/rules/mtm-drop \
-  -d '{"kind": "trade", "id": "T-10001", "when": "$.mtm < 1500000", "severity": "warn",
+  -d '{"kind": "trade", "id": "MX-20000001", "when": "$.mtm < 1500000", "severity": "warn",
        "message": "${$.tradeId}: MTM ${fmt($.mtm, '"'"'signed0'"'"')}"}'
 curl -s -H "X-Drishti-User: ash" "$B/me/alerts?limit=5"
 ```
@@ -745,13 +745,13 @@ Start a new Sutra from an entity and preview it without saving (preview does not
 server):
 
 ```bash
-curl -s "$B/studio/inferred/trade/T-10001?name=my-swap" > my-swap.v1.sutra.yaml
+curl -s "$B/studio/inferred/trade/MX-20000001?name=my-swap" > my-swap.v1.sutra.yaml
 head -6 my-swap.v1.sutra.yaml
-jq -n --rawfile y my-swap.v1.sutra.yaml '{yaml: $y, kind: "trade", id: "T-10001"}' \
+jq -n --rawfile y my-swap.v1.sutra.yaml '{yaml: $y, kind: "trade", id: "MX-20000001"}' \
   | curl -s -X POST $B/studio/preview -H 'Content-Type: application/json' -d @- | jq -c '{title, panels: [.panels[].id]}'
 ```
 
-You should see the draft begin with `# Started from what inference makes of trade T-10001. Edit freely.`, then
+You should see the draft begin with `# Started from what inference makes of trade MX-20000001. Edit freely.`, then
 `rachana: 1`, `sutra: my-swap`, `version: 1`, a `description:` line and `match: { kind: trade, priority: 1 }`;
 then the preview's title and panel ids.
 
@@ -908,7 +908,7 @@ A **Cell** is `{label?, text, tone?, link?, emphasis?, path?}`. `tone` is `pos`,
 `error` and no `data`; the rest of the view is unaffected. `empty: true` means the document lacks what the panel
 asks for.
 
-`data` by panel kind, with real examples from `T-10001`:
+`data` by panel kind, with real examples from `MX-20000001`:
 
 | Panel `kind` | `data` shape |
 |---|---|
@@ -920,7 +920,7 @@ asks for.
 | `links` | `{"links": [{"label", "text", "link", "badge", "status": "resolved" \| "pending" \| "missing" \| "denied"}]}` |
 
 ```bash
-curl -s $B/views/trade/T-10001 > t.json
+curl -s $B/views/trade/MX-20000001 > t.json
 jq -c '.panels[] | select(.id=="terms").data.fields[0:2]' t.json
 jq -c '.panels[] | select(.id=="schedule").data | {columns, numeric, row: .rows[0], total}' t.json
 jq -c '.panels[] | select(.id=="sensitivities").data.bars[0:2]' t.json
@@ -989,19 +989,19 @@ unknown `rachana:` version); see [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#pro
 **Export a strip for a list of trades as CSV.**
 
 ```bash
-for id in T-10001 T-10002 T-10003; do
+for id in MX-20000001 MX-20000002 MX-20000003; do
   curl -s $B/views/trade/$id | jq -r --arg id "$id" '[$id, (.strip[] | select(.label=="MTM (USD)") | .text)] | @csv'
 done
 ```
 
 ```
-"T-10001","+1,603,277"
-"T-10002","…"
-"T-10003","…"
+"MX-20000001","+1,603,277"
+"MX-20000002","…"
+"MX-20000003","…"
 ```
 
 For numbers rather than formatted text, read the raw document instead:
-`curl -s $B/entities/trade/T-10001/raw | jq .data.mtm`.
+`curl -s $B/entities/trade/MX-20000001/raw | jq .data.mtm`.
 
 **The ten largest exposures yesterday.**
 
@@ -1020,7 +1020,7 @@ status=$(curl -s $B/admin/health | jq -r .status)
 **Handle errors by code, not by message.**
 
 ```bash
-resp=$(curl -s -w '\n%{http_code}' $B/views/trade/T-99999)
+resp=$(curl -s -w '\n%{http_code}' $B/views/trade/MX-29999999)
 code=$(echo "$resp" | tail -1); body=$(echo "$resp" | head -n -1)
 if [ "$code" != 200 ]; then
   case $(echo "$body" | jq -r .code) in
@@ -1034,7 +1034,7 @@ fi
 **Watch one value change live.**
 
 ```bash
-curl -s -N $B/views/trade/T-10001/stream | grep --line-buffered '^data:{"seq"' \
+curl -s -N $B/views/trade/MX-20000001/stream | grep --line-buffered '^data:{"seq"' \
   | sed -u 's/^data://' | jq -r --unbuffered '.patches[] | select(.op=="strip") | .cell | "\(.label) \(.text)"'
 ```
 

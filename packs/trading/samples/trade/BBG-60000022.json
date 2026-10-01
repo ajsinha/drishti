@@ -1,0 +1,237 @@
+{
+ "tradeId": "BBG-60000022",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000022",
+ "productType": "ZERO_BOND",
+ "productName": "Zero-coupon bond",
+ "assetClass": "Fixed income",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2025-05-06",
+ "effectiveDate": "2025-05-08",
+ "maturityDate": "2031-01-28",
+ "currency": "JPY",
+ "notional": 239000000.0,
+ "mtm": 532138,
+ "mtmCurrency": "USD",
+ "pnl1d": 36189,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-1",
+ "trader": "TRDR-BADEYEMI",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-JGB",
+ "benchmarkCurve": "CRV-JPY-GOVT",
+ "underlyingBond": "BND-JP0JGB019237",
+ "terms": {
+  "faceAmount": 58927070.0,
+  "cleanPrice": 67.332,
+  "yield": 0.031431
+ },
+ "risk": {
+  "dv01": 113438
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 5402
+  },
+  {
+   "bucket": "6M",
+   "dv01": 10804
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 16205
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 21607
+  },
+  {
+   "bucket": "3Y",
+   "dv01": 27009
+  },
+  {
+   "bucket": "5Y",
+   "dv01": 32411
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -11721
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 8135
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 13047
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -16482
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 3681
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 1202
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -30876
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 23475
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 29981
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 25117
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -13177
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -7593
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 7644
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -23111
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 37103
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 9527
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 8866
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 2593
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 27004
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 7384
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-05-06",
+  "executionTimestamp": "2025-05-06T12:38:18.637Z",
+  "venue": "MarketAxess",
+  "venueMic": "MAEL",
+  "executionType": "Electronic",
+  "trader": "B. Adeyemi",
+  "salesperson": null,
+  "orderId": "ORD-B53059F551"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-05-06T10:09:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2025-05-06T10:09:00Z",
+  "lastModifiedAt": "2025-05-06T10:09:00Z",
+  "lastModifiedBy": "mo.ops"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT544143689",
+  "matched": "2025-05-06 12:26",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "JSCC",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH4017647825",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096B53059F551D2B935A2DB",
+  "upi": "QZORFVQDXZD1",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-JPY-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 532138,
+  "cleanPv": 532138.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-JPY-GOVT",
+   "BND-JP0JGB019237"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 3454
+  }
+ }
+}

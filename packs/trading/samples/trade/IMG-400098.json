@@ -1,0 +1,353 @@
+{
+ "tradeId": "IMG-400098",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400098",
+ "productType": "EQ_TRS",
+ "productName": "Equity total return swap",
+ "assetClass": "Equity",
+ "family": "swap",
+ "status": "Live",
+ "direction": "Pay fixed",
+ "tradeDate": "2024-12-13",
+ "effectiveDate": "2024-12-16",
+ "maturityDate": "2033-11-02",
+ "currency": "CAD",
+ "notional": 190000000.0,
+ "mtm": -1401680,
+ "mtmCurrency": "USD",
+ "pnl1d": -74793,
+ "counterparty": {
+  "id": "CP-HARBORPT",
+  "name": "Harbor Point Bank"
+ },
+ "nettingSet": "NS-HARBORPT-LDN",
+ "book": "BOOK-EQD-1",
+ "trader": "TRDR-JWEISS",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingEquity": "EQ-CSCA",
+ "dividendCurve": "DIV-CSCA",
+ "discountCurve": "CRV-CAD-OIS",
+ "terms": {
+  "fundingSpread": 130.1,
+  "resetFrequency": "Monthly",
+  "quantity": 28135
+ },
+ "risk": {
+  "delta": 1306063,
+  "dv01": 141946
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 62193,
+   "dv01": 6759
+  },
+  {
+   "bucket": "1M",
+   "delta": 124387,
+   "dv01": 13519
+  },
+  {
+   "bucket": "3M",
+   "delta": 186580,
+   "dv01": 20278
+  },
+  {
+   "bucket": "6M",
+   "delta": 248774,
+   "dv01": 27037
+  },
+  {
+   "bucket": "1Y",
+   "delta": 310967,
+   "dv01": 33797
+  },
+  {
+   "bucket": "2Y",
+   "delta": 373161,
+   "dv01": 40556
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Pay performance",
+   "payReceive": "Pay",
+   "rateType": "Performance",
+   "index": "CSCA",
+   "rate": null,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "CAD",
+   "notional": 190000000.0
+  },
+  {
+   "leg": 2,
+   "label": "Receive CORRA + spread",
+   "payReceive": "Receive",
+   "rateType": "Float",
+   "index": "CORRA",
+   "rate": 0.027559,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "CAD",
+   "notional": 190000000.0
+  }
+ ],
+ "schedule": [
+  {
+   "payDate": "2025-12-16",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -544807.92,
+   "pv": 0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2026-12-16",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -489023.62,
+   "pv": -474352.91,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2027-12-16",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -516611.96,
+   "pv": -501113.6,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2028-12-16",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -446801.11,
+   "pv": -433397.08,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2029-12-16",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -431914.24,
+   "pv": -418956.81,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2030-12-16",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -428794.66,
+   "pv": -415930.82,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2031-12-16",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -480615.92,
+   "pv": -466197.44,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2032-12-16",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -446403.71,
+   "pv": -433011.6,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2033-11-02",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -446550.14,
+   "pv": -433153.64,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -39983
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -49448
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -11417
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 16321
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 59611
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -41539
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -81977
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -12360
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 47882
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 6175
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -59660
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -58747
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -92564
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 62236
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -23618
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -33555
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -13945
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 59392
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 116419
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 86364
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-12-13",
+  "executionTimestamp": "2024-12-13T12:46:23.909Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "J. Weiss",
+  "salesperson": null,
+  "orderId": "ORD-C55C43FDB0"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-12-13T10:03:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2024-12-13T10:03:00Z",
+  "lastModifiedAt": "2024-12-13T10:03:00Z",
+  "lastModifiedBy": "stp.gateway"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT159620188",
+  "matched": "2024-12-13 16:22",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83C55C43FDB0E1B53D870A",
+  "upi": "QZAXHNUNR27G",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "HARBGB33XXX",
+  "ssiId": "SSI-CAD-99A301",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -1401680,
+  "cleanPv": -1401680.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Multi-curve OIS discounting",
+  "curves": [
+   "EQ-CSCA",
+   "DIV-CSCA",
+   "CRV-CAD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 4703
+  }
+ }
+}

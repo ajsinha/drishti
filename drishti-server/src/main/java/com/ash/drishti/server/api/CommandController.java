@@ -72,10 +72,10 @@ public class CommandController {
     /**
      * Resolves a command the way a Bloomberg terminal does: one entity opens it; several give a pick list.
      * <ul>
-     *   <li>{@code TRD T-10001}: that trade, when it exists;</li>
-     *   <li>{@code TRD T-100}: no such trade, so every trade whose id starts with T-100 (or whose title contains it);
+     *   <li>{@code TRD MX-20000001}: that trade, when it exists;</li>
+     *   <li>{@code TRD MX-200000}: no such trade, so every trade whose id starts with MX-200000 (or whose title contains it);
      *       exactly one opens at once;</li>
-     *   <li>{@code TRD productType=Revolver}, {@code TRD T-1* desk=rates}, {@code TRD}: always a pick list, unless
+     *   <li>{@code TRD productType=Revolver}, {@code TRD MX-2* desk=rates}, {@code TRD}: always a pick list, unless
      *       exactly one entity matches.</li>
      * </ul>
      * Case never matters.

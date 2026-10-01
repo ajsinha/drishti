@@ -1,0 +1,227 @@
+{
+ "tradeId": "END-1000008",
+ "sourceSystem": "Endur",
+ "sourceTradeId": "1000008",
+ "productType": "CMD_FORWARD",
+ "productName": "Commodity forward",
+ "assetClass": "Commodity",
+ "family": "linear",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2024-06-05",
+ "effectiveDate": "2024-06-07",
+ "maturityDate": "2026-10-07",
+ "currency": "USD",
+ "notional": 231000000.0,
+ "mtm": 2102537,
+ "mtmCurrency": "USD",
+ "pnl1d": 14805,
+ "counterparty": {
+  "id": "CP-HARBORPT",
+  "name": "Harbor Point Bank"
+ },
+ "nettingSet": "NS-HARBORPT-NY",
+ "book": "BOOK-COMM-1",
+ "trader": "TRDR-TBRENNAN",
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "commodityCurve": "CMDC-GOLD",
+ "discountCurve": "CRV-USD-OIS",
+ "terms": {
+  "forwardPrice": 482.48,
+  "quantity": 184210,
+  "deliveryMonth": "Dec 2026"
+ },
+ "risk": {
+  "delta": 1535417
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 102361
+  },
+  {
+   "bucket": "1M",
+   "delta": 204722
+  },
+  {
+   "bucket": "3M",
+   "delta": 307083
+  },
+  {
+   "bucket": "6M",
+   "delta": 409445
+  },
+  {
+   "bucket": "1Y",
+   "delta": 511806
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 21922
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -25656
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 23091
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 42144
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -55491
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -82619
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -100878
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -142760
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -13529
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -2307
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -29116
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 16533
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 57794
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 48984
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 92453
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -13274
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 21602
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 45293
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 98809
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -31761
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-06-05",
+  "executionTimestamp": "2024-06-05T11:16:27.173Z",
+  "venue": "ICE",
+  "venueMic": "IFEU",
+  "executionType": "Electronic",
+  "trader": "T. Brennan",
+  "salesperson": null,
+  "orderId": "ORD-9F1AD890AF"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-06-05T11:27:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2024-06-05T11:27:00Z",
+  "lastModifiedAt": "2024-06-05T11:27:00Z",
+  "lastModifiedBy": "fo.capture"
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT396534875",
+  "matched": "2024-06-05 13:34",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20969F1AD890AF9CAE288D6B",
+  "upi": "QZ1EEIC70TTP",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "HARBUS33XXX",
+  "ssiId": "SSI-USD-99A301",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 2102537,
+  "cleanPv": 2102537.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CMDC-GOLD",
+   "CRV-USD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "_meta": {
+  "source": "endur-comm",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 6515
+  }
+ }
+}
