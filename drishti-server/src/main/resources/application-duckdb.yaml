@@ -1,0 +1,27 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Profile `duckdb` (SPRING_PROFILES_ACTIVE=duckdb): the banking packs' data domains are read from one DuckDB file
+# (a schema per domain, <domain>.entities, loaded by tools/load-duckdb.sh) instead of Delta Lake. The six connectors
+# share one read-only DuckDB instance on the file; a load writes a new file and renames it over this one, and the
+# connectors reopen it within refresh-seconds. The packs still decide the kinds, routes, modes and promoted columns.
+drishti:
+  sources:
+    connectors:
+      reference-store:  { plugin: duckdb, settings: { path: "${DRISHTI_DUCKDB_PATH:data/duckdb/drishti.duckdb}", memory-limit: "${DRISHTI_DUCKDB_MEMORY:1GB}", table: reference.entities, pool-size: "4" } }
+      market-store:     { plugin: duckdb, settings: { path: "${DRISHTI_DUCKDB_PATH:data/duckdb/drishti.duckdb}", memory-limit: "${DRISHTI_DUCKDB_MEMORY:1GB}", table: market.entities, pool-size: "4" } }
+      trading-store:    { plugin: duckdb, settings: { path: "${DRISHTI_DUCKDB_PATH:data/duckdb/drishti.duckdb}", memory-limit: "${DRISHTI_DUCKDB_MEMORY:1GB}", table: trading.entities, pool-size: "8" } }
+      risk-store:       { plugin: duckdb, settings: { path: "${DRISHTI_DUCKDB_PATH:data/duckdb/drishti.duckdb}", memory-limit: "${DRISHTI_DUCKDB_MEMORY:1GB}", table: risk.entities, pool-size: "4" } }
+      credit-store:     { plugin: duckdb, settings: { path: "${DRISHTI_DUCKDB_PATH:data/duckdb/drishti.duckdb}", memory-limit: "${DRISHTI_DUCKDB_MEMORY:1GB}", table: credit.entities, pool-size: "4" } }
+      collateral-store: { plugin: duckdb, settings: { path: "${DRISHTI_DUCKDB_PATH:data/duckdb/drishti.duckdb}", memory-limit: "${DRISHTI_DUCKDB_MEMORY:1GB}", table: collateral.entities, pool-size: "4" } }
