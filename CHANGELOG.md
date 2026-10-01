@@ -16,6 +16,7 @@
 # Changelog
 
 ## Unreleased
+- **Every table sorts and filters.** Click a column heading to sort (numbers, amounts, percentages and dates as values; a third click restores the order). A box filters rows on any cell; `⧩` adds a filter per column, with `>`, `<`, `>=`, `<=`, `=` for numbers (`>200m`). Sort, filters, page and selection survive live updates.
 - **Command history and aliases.** `↑` in an empty command line recalls earlier commands (50, kept by the server, so they follow you between browsers). On My account → Aliases, short words stand for longer commands (`MYBOOK` → `BOOK BOOK-RATES-1`), expanded by the server before the command is read. API: `/api/v1/command/history`, `/api/v1/command/aliases`.
 - **Pack overviews.** Type a pack's code alone (`MKT <GO>`, or its name) to see every kind you may open, with its mnemonic, how many the sources hold, an example and the key fields; each mnemonic opens that kind's pick list. Every pack has a `code:` (BNK, MKT, TRDS, MRSK, CCR, LIQ, CLI, OPR, RTL, GENO, ECO, POLS, FIN, LOGI). API: `GET /api/v1/packs/{code or name}/overview`.
 - **Pick lists show key fields for every generated pack.** Climate, economics, genomics, liquidity, operational risk, politics and retail declare `columns:` for their main kinds (for example `MTG` shows borrower, balance, rate, LTV, remaining years and days past due).

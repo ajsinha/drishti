@@ -304,14 +304,25 @@ A *Title* column appears only when titles say more than the id.
 5. **CSV** downloads the list; **Watch as a monitor** turns its first 50 rows into a live watchlist
    ([Monitors](#monitors)).
 
-## Tables: paging and the keyboard
+## Tables: sorting, filtering, paging and the keyboard
 
-Every table in the console (pick lists, search results, the tables inside views, admin lists) has a pager
-under it and can be walked with the keyboard.
+Every table in the console (pick lists, search results, the tables inside views, admin lists) sorts and filters,
+has a pager under it, and can be walked with the keyboard.
 
 ```text
-«  ‹  1–25 of 99 · page 1 of 4  ›  »                         ▲  ▼  [25 rows ▾]
+«  ‹  1–21 of 21 (filtered from 100)  ›  »         [Filter rows    ]  ⧩  ▲  ▼  [25 rows ▾]
 ```
+
+- **Sort**: click a column heading (or focus it and press Enter). Once for ascending (▲), again for descending
+  (▼), a third time for the original order. Numbers, amounts (`1.5m`, `−30,205,543`), percentages and dates sort
+  as values; text alphabetically.
+- **Filter rows**: type in the box under the table; a row stays when any cell contains the text (any case).
+- **Filter by column**: `⧩` shows a box under each heading. Text matches within that column; in a number column
+  `>1m`, `<0`, `>=250k` or `=5` compare values. Example: on `TRD T-1`, type `>200m` under *Notional* to keep the 21
+  trades above 200 million.
+- A pick list or search holds the rows the server sent (100 by default); sorting and filtering work on those. For
+  all of a kind, sort or filter on the server instead: `TRD where notional > 200m order by notional desc`.
+- Live tables keep their sort and filters when they update.
 
 | Control | Does |
 |---|---|

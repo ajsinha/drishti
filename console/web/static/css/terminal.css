@@ -533,3 +533,16 @@ table.tbl:focus { outline: 1px solid var(--d-accent); outline-offset: 2px; }
 table.tbl tbody tr.tbl-sel > td { background: var(--d-accent-tint); }
 table.tbl tbody tr.tbl-sel > td:first-child { box-shadow: inset 3px 0 0 var(--d-accent); }
 @media print { .tbl-pg { display: none; } table.tbl tbody tr[hidden] { display: table-row !important; } }
+
+/* Sortable headings and filters (tables.js) */
+table.tbl th.tbl-sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+table.tbl th.tbl-sortable:hover { color: var(--d-ink); }
+table.tbl th.tbl-sortable::after { content: "↕"; margin-left: .3rem; opacity: .25; font-size: .8em; }
+table.tbl th[aria-sort="ascending"]::after { content: "▲"; opacity: .9; color: var(--d-accent); }
+table.tbl th[aria-sort="descending"]::after { content: "▼"; opacity: .9; color: var(--d-accent); }
+table.tbl tr.tbl-filter th { padding-top: .2rem; padding-bottom: .3rem; }
+table.tbl tr.tbl-filter th::after { content: none; }
+.tbl-filter-in, .tbl-pg-q { width: 100%; min-width: 4rem; background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border);
+  border-radius: 4px; font-size: .76rem; padding: .1rem .35rem; }
+.tbl-pg-q { width: 12rem; }
+.tbl-pg-b.on { color: var(--d-accent); }
