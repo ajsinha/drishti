@@ -415,7 +415,13 @@ public final class SearchPivot {
         return f != null && f.label() != null ? f.label() : label(path);
     }
 
+    /** A field's name in words; a generic last part keeps its parent ({@code counterparty.name}: Counterparty name). */
     private static String label(String path) {
-        return Semantics.humanize(path.substring(path.lastIndexOf('.') + 1));
+        String[] parts = path.split("\\.");
+        String last = Semantics.humanize(parts[parts.length - 1]);
+        if (parts.length > 1 && java.util.Set.of("name", "id", "type", "code", "value").contains(parts[parts.length - 1])) {
+            return Semantics.humanize(parts[parts.length - 2]) + " " + last.toLowerCase(java.util.Locale.ROOT);
+        }
+        return last;
     }
 }
