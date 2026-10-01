@@ -29,6 +29,7 @@ the same reads as the screen, with your roles and the same redaction. Nothing he
 from __future__ import annotations
 
 import base64
+import inspect
 import io
 import json
 import math
@@ -43,8 +44,9 @@ __all__ = ["view", "get", "search", "columns", "history", "show", "chart", "get_
 
 #: What one run may send to the page: rows per table, points per chart series, bytes in all. Beyond, output is cut with a note.
 LIMITS = {"rows": 2000, "points": 5000, "bytes": 8_000_000, "cells": 200_000}
-SYNC_HELP = ("this browser cannot pause Python while the page reads data (it lacks JavaScript Promise Integration): "
-             "write `await drishti.{name}_async(...)` instead, or use a current Chrome or Edge")
+SYNC_HELP = ("drishti.{name}() needs JavaScript Promise Integration to pause Python while the page reads, and this browser "
+             "has none: write `await drishti.{name}_async({call})` instead (the _async forms work in every browser; "
+             "view needs no read)")
 
 
 class DrishtiError(Exception):
@@ -66,10 +68,15 @@ def _decode(raw) -> object:
     return body.get("data")
 
 
-def _sync(op: str, args: dict):
+def _call(*args, **kw) -> str:
+    """The arguments of a call as the user would write them, for the message that says how to write it with await."""
+    return ", ".join([repr(a) for a in args] + [f"{k}={v!r}" for k, v in kw.items() if v is not None])
+
+
+def _sync(op: str, args: dict, call: str = "..."):
     from pyodide.ffi import can_run_sync, run_sync
     if not can_run_sync():
-        raise RuntimeError(SYNC_HELP.format(name=op))
+        raise RuntimeError(SYNC_HELP.format(name=op, call=call))
     return _decode(run_sync(_request(op, json.dumps(args, default=str))))
 
 
@@ -142,13 +149,13 @@ def _args(op, **kw):
 def get(kind: str, id: str, as_of=None) -> dict:
     """An entity's document as your role may see it (masked fields read •••), on the business date ``as_of``
     ('2026-09-25'; default: the date the screen shows)."""
-    return _sync("get", _args("get", kind=kind, id=id, asOf=_date(as_of)))
+    return _sync("get", _args("get", kind=kind, id=id, asOf=_date(as_of)), _call(kind, id, as_of=as_of))
 
 
 def search(query: str, as_of=None):
     """A structured search, as on the command line ("TRD where currency = 'EUR' and mtm > 1m order by mtm desc limit 500"),
     as a DataFrame: id, title, then the query's fields and the kind's key fields. At most 1000 rows (``limit``)."""
-    return _search_frame(_sync("search", _args("search", q=query, asOf=_date(as_of))), query)
+    return _search_frame(_sync("search", _args("search", q=query, asOf=_date(as_of)), _call(query, as_of=as_of)), query)
 
 
 def columns(kind: str, paths, as_of=None, limit: int | None = None):
@@ -156,13 +163,15 @@ def columns(kind: str, paths, as_of=None, limit: int | None = None):
     table laid out by its pack): ``columns("TRD", ["mtm", "book", "risk.dv01"])``. Indexed by id. ``columns("TRD", [])``
     lists the fields kept as columns."""
     paths = [paths] if isinstance(paths, str) else list(paths or [])
-    data = _sync("columns", _args("columns", kind=kind, paths=",".join(paths), asOf=_date(as_of), limit=limit))
+    data = _sync("columns", _args("columns", kind=kind, paths=",".join(paths), asOf=_date(as_of), limit=limit),
+                 _call(kind, paths, as_of=as_of, limit=limit))
     return data.get("available", []) if not paths else _columns_frame(data)
 
 
 def history(kind: str, id: str, field: str, days: int = 30):
     """One field of an entity over the last ``days`` business days (2-260), oldest first, indexed by date."""
-    return _history_frame(_sync("history", _args("history", kind=kind, id=id, path=field, days=int(days))), field)
+    return _history_frame(_sync("history", _args("history", kind=kind, id=id, path=field, days=int(days)),
+                                _call(kind, id, field, days)), field)
 
 
 async def get_async(kind: str, id: str, as_of=None) -> dict:
@@ -505,6 +514,8 @@ async def _run(code: str, context: str) -> str:
     _namespace.update({"view": view, "drishti": me, "show": show, "chart": chart})
     try:
         result = await eval_code_async(code, globals=_namespace, filename="<calc>")
+        if inspect.iscoroutine(result):      # a last line of drishti.get_async(...) without await: awaited for you
+            result = await result
         if result is not None and not type(result).__module__.startswith("matplotlib"):   # figures are shown below
             show(result)
         _flush_figures()
@@ -517,4 +528,6 @@ async def _run(code: str, context: str) -> str:
         message = f"{type(e).__name__}: {e}"
         if isinstance(e, ModuleNotFoundError):
             message += " (Calc has numpy, pandas, scipy, statsmodels, matplotlib and the standard library)"
+        elif "'coroutine' object" in str(e):
+            message += " (an _async read returns something to await: write `x = await drishti.get_async(...)`)"
         return json.dumps({"ok": False, "error": message, "traceback": _traceback(e), "line": _where(e)})

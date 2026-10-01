@@ -48,6 +48,8 @@
   </div>
   <div class="calc-out" data-calc-out tabindex="-1"><p class="text-muted-d calc-hint">Write Python and press <kbd>Ctrl</kbd>+<kbd>Enter</kbd>.
     <code>view</code> is this screen (<code>view.doc</code>, <code>view.tables</code>); <code>drishti.search()</code>, <code>drishti.get()</code>,
-    <code>show()</code> and <code>chart()</code> are ready. Your roles apply to every read.</p></div>
+    <code>show()</code> and <code>chart()</code> are ready. Your roles apply to every read.
+    <span data-calc-nosync hidden>This browser cannot pause Python for a read: write <code>await drishti.get_async(…)</code> and
+    <code>await drishti.search_async(…)</code> (also <code>columns_async</code>, <code>history_async</code>).</span></p></div>
   <ol class="calc-history" data-calc-history hidden></ol>
 </aside>

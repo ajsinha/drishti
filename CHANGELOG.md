@@ -16,6 +16,17 @@
 # Changelog
 
 ## Unreleased — A million trades a day, for seven years
+- **Calc without JavaScript Promise Integration, run in a real Firefox** ([PYTHON_CALC.md › Reading data](docs/guides/PYTHON_CALC.md#52-reading-data)).
+  The `_async` fallback had never run outside Chromium. Run in Firefox 155 (Playwright's build) on the sample data,
+  with JSPI on and with it switched off (`javascript.options.wasm_js_promise_integration: false`; Firefox 155 has it on
+  by default): the panel detects its absence, `view` works, the `_async` reads work, and now every starter snippet runs
+  too. Changes: the two pack snippets that read (`desk_pnl_by_book.py`, `mtm_concentration.py`, from
+  `tools/packgen/banking/calc_snippets.py`) use `await drishti.search_async(...)`, so they run in every browser; a plain
+  read without JSPI says exactly how to write it (*write `await drishti.get_async('trade', 'MX-20000001')` instead*);
+  a last line that is an un-awaited `_async` read is awaited; a "'coroutine' object" error says to add `await`; and
+  the panel says how to read before a run fails (a note beside the output tabs, and a line in its empty state).
+  A console test imports the module with Pyodide stood in as a browser without JSPI would answer, and another keeps
+  every pack snippet on the `_async` forms.
 - **A review shows moved panels as moves** ([USER_GUIDE.md › Layout mode](docs/guides/USER_GUIDE.md#layout-mode-arrange-a-view-your-way)).
   A layout promotion (Sutra version N against N+1) used to show a moved panel block as a deleted block and an added one,
   hiding the one real edit in it. The review page and the promote drawer now list each moved panel in words, *moved:

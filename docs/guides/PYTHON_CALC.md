@@ -249,11 +249,24 @@ h = drishti.history("trade", view.id, "mtm", 60)
 h["mtm"].diff().describe()
 ```
 
-**Async variants.** `get_async`, `search_async`, `columns_async` and `history_async` take the same arguments and are
-awaited: `doc = await drishti.get_async("trade", "MX-20000001")`. The plain functions pause Python while the page
-fetches, which needs JavaScript Promise Integration (Chrome and Edge 137 and later). In a browser without it, the
-status line says *reads need await*, and a plain call raises an error saying to use the `_async` form. Top-level
-`await` works in Calc.
+**Async variants: they work in every browser.** `get_async`, `search_async`, `columns_async` and `history_async`
+take the same arguments and are awaited: `doc = await drishti.get_async("trade", "MX-20000001")`. Top-level `await`
+works in Calc, and a last line that is an un-awaited read (`drishti.get_async("trade", "MX-20000001")`) is awaited for
+you. The plain functions pause Python while the page fetches, which needs JavaScript Promise Integration (JSPI):
+current Chrome, Edge and Firefox have it (verified in Firefox 155), Safari does not, and a browser can have it
+switched off. Without it:
+
+- the status line says *reads need await (see help)*, and a note beside the output tabs says *This browser cannot
+  pause Python for a read: write await drishti.get_async(…), search_async, columns_async or history_async. view works
+  as it is.*;
+- `view` (the screen's document and tables) works as it is: it is read before the code runs;
+- a plain call raises an error that spells the call out with `await`, for example *drishti.get() needs JavaScript
+  Promise Integration … write `await drishti.get_async('trade', 'MX-20000001')` instead*;
+- every starter snippet the packs ship runs: they read with the `_async` forms (a test keeps it so).
+
+This was run in a real Firefox 155 with JSPI switched off (`javascript.options.wasm_js_promise_integration: false`),
+on the sample data: the two snippets that read (`desk_pnl_by_book.py`, `mtm_concentration.py`) and the four that use
+`view` only all finished.
 
 **`drishti.help()`** prints this summary; **`drishti.LIMITS`** is the output budget (below).
 
@@ -333,9 +346,9 @@ Each runs against the sample data as shipped:
 | Pack · file | On | Does | On the samples |
 |---|---|---|---|
 | `trading` · `rate_shift.py` | `trade` | MTM after parallel moves of −100 to +100 bp from `risk.dv01`, as a table and a line; DV01 by tenor with each tenor's share | `TRD MX-20000001`: DV01 −155,245 per bp, MTM about 17.4m at −100 bp and −13.6m at +100 bp |
-| `counterparty-risk` · `mtm_concentration.py` | `netting-set`, `counterparty` | The counterparty's trades from `drishti.search()`: net and gross MTM by product and by netting set, shares of gross, Herfindahl index | `NSET NS-MERIDIAN-RE-NY`: 40 trades of `CP-MERIDIAN-RE`, OIS 49% of gross, index 0.255 |
+| `counterparty-risk` · `mtm_concentration.py` | `netting-set`, `counterparty` | The counterparty's trades from `await drishti.search_async()`: net and gross MTM by product and by netting set, shares of gross, Herfindahl index | `NSET NS-MERIDIAN-RE-NY`: 40 trades of `CP-MERIDIAN-RE`, OIS 49% of gross, index 0.255 |
 | `market-risk` · `var_es.py` | `var` | VaR 99% and ES 97.5% recomputed with numpy from `scenarioPnl`, beside the engine's; histogram | `VAR VAR-RATES`: VaR 9,611,219 (equal to the engine's) |
-| `banking-core` · `desk_pnl_by_book.py` | `desk` | MTM by book and product family (`pivot_table` with totals) from the desk's positions; 1-day P&L by book and currency from `drishti.search()` | `DESK DESK-RATES`: 3 books, MTM 132.8m in all, 156 trades |
+| `banking-core` · `desk_pnl_by_book.py` | `desk` | MTM by book and product family (`pivot_table` with totals) from the desk's positions; 1-day P&L by book and currency from `await drishti.search_async()` | `DESK DESK-RATES`: 3 books, MTM 132.8m in all, 156 trades |
 | `market-data` · `curve_tenor.py` | `ir-curve` | Zero rates at 18M, 4Y and 12Y: linear on zero rates, log-linear on discount factors, cubic spline (scipy); a matplotlib figure | `CRV CRV-USD-OIS`: 18M 3.59%, 4Y 3.66%, 12Y 3.80% |
 
 The `finance` pack (hand-written) has two inline snippets: the same rate shift on its trades (`TRD IRS-48213`), and
@@ -485,7 +498,8 @@ Speed beside native CPython 3.14 on the same machine (best of three):
 - **No network and no installs**: only the packages in [section 7](#7-packages).
 - **One run at a time** per tab; **Stop** to interrupt one.
 - **Browsers.** A current Chrome, Edge, Firefox or Safari runs Pyodide in a module worker; the plain (non-`await`)
-  reads need JavaScript Promise Integration (Chrome and Edge 137+); elsewhere use the `_async` forms.
+  reads need JavaScript Promise Integration (current Chrome, Edge and Firefox; not Safari); the `_async` forms, and
+  the starter snippets, work everywhere ([section 5.2](#52-reading-data)).
 
 ## 15. Configuration and API
 
@@ -523,7 +537,7 @@ DRS-5002`), and the runtime under `/pyodide/<version>/`.
 | *Python could not start: … Content Security Policy …* | A proxy in front of the console rewrites security headers | Let the console's own headers through for `/static/js/calc-worker.js` |
 | *Python could not start: Failed to fetch* | The runtime was upgraded while the page was open | Reload the page |
 | *No module named 'sklearn' (Calc has numpy, pandas, …)* | Only the packages of [section 7](#7-packages) exist | Use what is there, or a script with a token |
-| *this browser cannot pause Python while the page reads data …* | No JavaScript Promise Integration (Firefox, Safari) | `await drishti.get_async(...)` (and `search_async`, `columns_async`, `history_async`) |
+| *drishti.get() needs JavaScript Promise Integration … write `await drishti.get_async('trade', 'MX-20000001')` instead* | No JavaScript Promise Integration (Safari, or a browser with it switched off) | Write the call as the message says: `await drishti.get_async(...)` (and `search_async`, `columns_async`, `history_async`) |
 | `DrishtiError: DRS-5002: tina may not open var entities` | Your roles do not open that kind | As on the screen: ask for a role that opens it |
 | `DrishtiError: DRS-5001: no source of trade keeps its fields as columns here` | `drishti.columns()` needs a laid-out source (a lake) | Use `drishti.search()`, or load the lake (`tools/load-delta.sh`) |
 | `DrishtiError: DRS-5001: not kept as columns for trade: [notional]` | That field is not promoted | `drishti.columns("TRD", [])` lists those that are |

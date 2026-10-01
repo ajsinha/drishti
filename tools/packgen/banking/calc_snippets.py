@@ -43,10 +43,10 @@ if len(buckets):
     chart(buckets, kind="bar", x="bucket", y="dv01", title="DV01 by tenor")
 ''')],
     "counterparty-risk": [("mtm_concentration.py", "MTM concentration by product and netting set",
-                           "The counterparty's trades from drishti.search(): MTM by product and by netting set, each one's share of "
+                           "The counterparty's trades from drishti.search_async(): MTM by product and by netting set, each one's share of "
                            "gross MTM, and a Herfindahl index of how concentrated it is.",
                            ["netting-set", "counterparty"], '''cp = view.id if view.kind == "counterparty" else view.doc["counterparty"]
-trades = drishti.search(f"TRD where counterparty.id = '{cp}' and nettingSet != '' limit 1000")
+trades = await drishti.search_async(f"TRD where counterparty.id = '{cp}' and nettingSet != '' limit 1000")   # await: every browser
 print(f"{cp}: {len(trades)} trades, net MTM {trades['mtm'].sum():,.0f}, gross {trades['mtm'].abs().sum():,.0f}")
 
 
@@ -85,7 +85,7 @@ print(f"VaR uses {var99 / view.doc['limit']:.0%} of the limit {view.doc['limit']
 ''')],
     "banking-core": [("desk_pnl_by_book.py", "P&L by book: a pandas pivot",
                       "The desk's positions pivoted by book and product family (MTM), and today's P&L by book and currency from "
-                      "the trades themselves (drishti.search()).",
+                      "the trades themselves (drishti.search_async()).",
                       ["desk"], '''import pandas as pd
 
 pos = pd.DataFrame(view.doc["positions"])     # tradeId, book, currency, family, mtm
@@ -93,7 +93,7 @@ mtm = pos.pivot_table(index="book", columns="family", values="mtm", aggfunc="sum
                       margins=True, margins_name="Total")
 show(mtm, title=f"{view.id}: MTM by book and product family")
 
-trades = drishti.search(f"TRD where desk = '{view.id}' and pnl1d != 0 limit 1000")
+trades = await drishti.search_async(f"TRD where desk = '{view.id}' and pnl1d != 0 limit 1000")   # await: every browser
 pnl = trades.pivot_table(index="book", columns="currency", values="pnl1d", aggfunc="sum", fill_value=0,
                          margins=True, margins_name="Total")
 show(pnl, title=f"1-day P&L by book and currency ({len(trades)} trades)")

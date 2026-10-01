@@ -100,6 +100,11 @@
         var m = e.data || {};
         if (m.type === 'ready') {
           status('Python ready · Pyodide ' + m.version + ' · ' + secs(performance.now() - t0) + (m.sync ? '' : ' · reads need await (see help)'));
+          drawer.setAttribute('data-calc-sync', m.sync ? 'true' : 'false');
+          // without JavaScript Promise Integration Python cannot pause for a read: say so where the user looks, before a run fails
+          var nosync = drawer.querySelector('[data-calc-nosync]');
+          if (nosync) { nosync.hidden = !!m.sync; }
+          if (!m.sync) { say('This browser cannot pause Python for a read: write await drishti.get_async(…), search_async, columns_async or history_async. view works as it is.'); }
           drawer.setAttribute('data-calc-ready', String(Math.round(performance.now() - t0)));
           resolve(m);
         } else if (m.type === 'failed') {
