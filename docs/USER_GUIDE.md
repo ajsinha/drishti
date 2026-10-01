@@ -609,6 +609,35 @@ only one of the dates holds are marked *added* or *removed*.
 The same through the API: `GET /api/v1/history/{kind}/{id}/series?path=$.mtm&days=30` and
 `GET /api/v1/search/compare?q=…&from=2026-09-25&to=2026-09-30`.
 
+## Asking in plain words
+
+Type what you want in the command line, in words: `live trades over 5m in BOOK-RATES-3, biggest first`, and press
+Enter. When the words are not a command, Drishti shows the search they make and how it read each part; nothing runs
+until you press **Run it**. The search page has the same box, **In words**.
+
+```
+live trades over 5m in BOOK-RATES-3, biggest first
+→ TRD where status = 'Live' and mtm > 5000000 and book = 'BOOK-RATES-3' order by mtm desc
+   "trades" → Trade (TRD) · "live" → status is Live · "over 5m" → mtm > 5000000
+   "in BOOK-RATES-3" → book is BOOK-RATES-3 · "biggest first" → sorted by mtm, largest first
+```
+
+It understands:
+
+| You write | It means |
+|---|---|
+| a kind: `trades`, `counterparties`, `desk pnl`, a mnemonic | what to list |
+| `over`, `above`, `more than`, `under`, `below`, `at least`, `at most` and a number (`5m`, `2.5 bn`, `10k`, `1,000,000`) | a comparison, on the field you name or the kind's main number (MTM, notional, amount…) |
+| `between 10m and 50m` | both bounds |
+| `negative mtm`, `positive pnl` | below or above zero |
+| a value the data has: `live`, `USD`, `BOOK-RATES-3` (optionally after `in`, `for`, `with`) | that field equals it |
+| `maturing before 2028`, `traded after 2025`, `maturing in 2027`, `before 2026-12-31` | dates |
+| `biggest`, `top 10`, `smallest 5 … by notional`, `newest`, `sorted by` | the order, and how many |
+
+It is deterministic: no AI service, only the server's own vocabulary (its kinds, and each kind's fields and the
+values its documents have). Words it did not understand are listed as *Not understood, left out*, never guessed.
+Change the words, or edit the search itself.
+
 ## Search by value
 
 Add `where` after a mnemonic to find entities by what they contain.

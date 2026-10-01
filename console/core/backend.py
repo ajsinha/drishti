@@ -209,6 +209,10 @@ class BackendClient:
     async def shared_workspace(self, owner: str, name: str, ident) -> dict:
         return await self._get(f"/workspaces/shared/{quote(owner)}/{quote(name)}", ident)
 
+    async def phrase(self, text: str, ident=None) -> dict:
+        """A phrase in plain words as a structured search, with how each part was read (it does not run it)."""
+        return await self._get("/phrase", ident, text=text)
+
     # -- scheduled reports ------------------------------------------------------------------------
     async def reports(self, ident) -> list:
         return await self._get("/me/reports", ident)

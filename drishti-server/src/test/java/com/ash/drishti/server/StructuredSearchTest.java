@@ -162,4 +162,18 @@ class StructuredSearchTest {
         org.assertj.core.api.Assertions.assertThat(lines[1]).startsWith("trade,T-");
         org.assertj.core.api.Assertions.assertThat(csv).doesNotContainPattern("\\dE\\d");                // numbers in full, never 1.99E8
     }
+
+    @Test
+    void aPhraseBecomesASearchThatRuns() throws Exception {
+        String body = mvc.perform(get("/api/v1/phrase").param("text", "trades over 1m in BOOK-RATES-3, biggest first").header("Authorization", as("searcher")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.query").value("TRD where mtm > 1000000 and book = 'BOOK-RATES-3' order by mtm desc"))
+                .andExpect(jsonPath("$.steps[0].meaning").value(org.hamcrest.Matchers.containsString("TRD")))
+                .andReturn().getResponse().getContentAsString();
+        String query = new com.fasterxml.jackson.databind.ObjectMapper().readTree(body).path("query").asText();
+        mvc.perform(get("/api/v1/search").param("q", query).header("Authorization", as("searcher"))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.rows[0].values['$.mtm']").value(org.hamcrest.Matchers.greaterThan(1000000)));
+        mvc.perform(get("/api/v1/phrase").param("text", "the weather tomorrow").header("Authorization", as("searcher")))
+                .andExpect(jsonPath("$.query").doesNotExist()).andExpect(jsonPath("$.problem").exists());
+    }
 }

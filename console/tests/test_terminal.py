@@ -463,3 +463,17 @@ def test_scheduled_reports_page(client, backend):
     assert "Losers" in listed and "the business day before" in listed and "Run now" in listed
     client.post("/reports/Losers/delete")
     assert "Losers" not in backend.reports_kept
+
+
+
+def test_plain_words_show_the_search_they_make(client, backend):
+    page = client.get("/s", params={"words": "live trades over 5m for the snack desk"}).text
+    assert "Your words make this search" in page and "TRD where status = &#39;Live&#39; and mtm &gt; 5000000" in page
+    assert "“over 5m”" in page and "Not understood" in page and "snack" in page and "Run it" in page
+    assert "say what to look for" in client.get("/s", params={"words": "the weather"}).text
+
+
+def test_words_that_are_not_a_command_go_to_the_phrase_box(client):
+    r = client.get("/go", params={"q": "live trades over 5m <GO>"}, follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == "/s?words=live%20trades%20over%205m"
+    assert client.get("/go", params={"q": "NOPE <GO>"}, follow_redirects=False).headers["location"].startswith("/t?error=")

@@ -620,3 +620,6 @@ table.tbl tr.tbl-filter th::after { content: none; }
 .view .has-note::after { content: ""; position: absolute; top: 2px; right: -6px; width: 6px; height: 6px; border-radius: 50%; background: var(--d-warn, #d9a441); }
 .rpt-actions { display: flex; gap: .3rem; }
 .rpt-actions form { margin: 0; }
+.srch-words { margin-top: .4rem; }
+.phrase .phrase-q { font-size: 1rem; margin: 0 .4rem; }
+.phrase-steps { margin: .4rem 0; padding-left: 1.2rem; font-size: .88rem; }

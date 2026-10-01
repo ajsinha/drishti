@@ -16,6 +16,11 @@
 # Changelog
 
 ## Unreleased
+- **Ask in plain words.** Type a phrase into the command line (`live trades over 5m in BOOK-RATES-3, biggest first`) or the search page's **In words** box.
+  - **What you see:** the structured search it makes, how each part was read, and the words it did not understand. Nothing runs until you press **Run it**.
+  - **How it works:** it is deterministic, with no AI service. The vocabulary is the server's kinds and each kind's fields and values, learned from its documents.
+  - **API:** `GET /api/v1/phrase`.
+- **Rachana-EL: text that is not a number now orders as text**, so ISO dates compare (`$.maturityDate < '2028-01-01'`). Before, any text comparison was false. Comparisons involving numbers are unchanged.
 - **Who looked at what.** Every answered view, raw document, history read, search and CSV export is recorded with the person, the time, the entity or search, and the business date.
   - **Where to see it:** administrators see it in Admin → Access (filter by person, action, kind, id and dates) and from a view's **Viewed by**.
   - **Storage:** recording is asynchronous and batched, and it never slows a read. The log is kept 90 days (`drishti.access-log`) in the identity database (SQLite or PostgreSQL).

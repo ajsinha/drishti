@@ -122,4 +122,14 @@ class ElTest {
         assertThat(EL.compile(a + " < " + b).eval(ctx)).isEqualTo(a < b);
         assertThat(EL.compile(a + " == " + b).eval(ctx)).isEqualTo(a == b);
     }
+
+    @Test
+    void textsThatAreNotNumbersOrderAsTextSoIsoDatesCompare() {
+        assertThat(eval("'2026-01-31' < '2026-02-01'")).isEqualTo(true);
+        assertThat(eval("'2027-06-30' >= '2027-01-01'")).isEqualTo(true);
+        assertThat(eval("'2027-06-30' < '2027-01-01'")).isEqualTo(false);
+        assertThat(eval("'10' < '9'")).isEqualTo(false);                   // texts that read as numbers stay numbers
+        assertThat(eval("5 < 'abc'")).isEqualTo(false);                    // a number against text never orders
+        assertThat(eval("$.nothing < '2027-01-01'")).isEqualTo(false);     // nor does empty
+    }
 }

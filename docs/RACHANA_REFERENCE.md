@@ -1293,9 +1293,10 @@ object, or a link (from `link(...)`).
   Anything that is not a number makes the result NaN, which shows as `NaN`: wrap possibly missing values,
   `coalesce($.fee, 0) * 2`.
 - **Division and remainder by zero** give empty.
-- **Comparisons** `<` `<=` `>` `>=` are numeric only. Text that is not a number compares as NaN, so the result is
-  `false`: `'2026-01-31' < '2026-02-01'` is **false**. Dates and other text cannot be ordered; compare them with
-  `==`, or have the data carry a number or a flag (`$.nextIndex`, `@.status`).
+- **Comparisons** `<` `<=` `>` `>=` compare numbers numerically (text that reads as a number counts as one). Two
+  texts that are not numbers compare as text, character by character, so ISO dates order correctly:
+  `'2026-01-31' < '2026-02-01'` is true and `$.maturityDate < '2028-01-01'` works. A number against text that is
+  not a number, or anything against empty, is `false`. (Before 1.12 text never ordered.)
 - **Equality** `==` compares numerically when either side is a number (`1 == '1.0'` is true), otherwise as text
   (`'Live' == 'live'` is false: use `lower(...)` or `contains(...)` to ignore case). Empty equals only empty:
   `$.missing == null` is true.

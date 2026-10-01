@@ -29,6 +29,20 @@
       <input id="srchVs" name="vs" type="date" class="mono" value="{{ vs or '' }}"></label>
     <button type="submit" class="btn btn-sm btn-outline-secondary">Search</button>
   </form>
+  <form class="srch-form srch-words" method="get" action="/s">
+    <label for="srchWords" class="srch-vs">In words</label>
+    <input id="srchWords" class="srch-q" name="words" value="{{ words }}" placeholder="live trades over 5m in BOOK-RATES-3, biggest first" autocomplete="off">
+    <button type="submit" class="btn btn-sm btn-outline-secondary">Make the search</button>
+  </form>
+  {% if phrase %}<section class="pnl phrase" aria-live="polite"><div class="pnl-b">
+    {% if phrase.query %}
+    <p>Your words make this search: <a class="lnk mono phrase-q" href="/s?q={{ phrase.query | urlencode }}">{{ phrase.query }}</a>
+      <a class="btn-pill btn-accent btn-sm-pill" href="/s?q={{ phrase.query | urlencode }}">Run it</a>
+      <span class="text-muted-d">or copy it into the search box and change it.</span></p>
+    <ul class="phrase-steps">{% for s in phrase.steps %}<li><span class="mono">“{{ s.words }}”</span> → {{ s.meaning }}</li>{% endfor %}</ul>
+    {% if phrase.ignored %}<p class="t-warn">Not understood, left out: {% for w in phrase.ignored %}<span class="mono">{{ w }}</span>{% if not loop.last %}, {% endif %}{% endfor %}.</p>{% endif %}
+    {% else %}<p class="t-warn">{{ phrase.problem or 'These words do not make a search.' }}</p>{% endif %}
+  </div></section>{% endif %}
   <p class="srch-help text-muted-d">
     <span class="mono">&lt;mnemonic&gt; &lt;start of an id or a name&gt;</span> lists what it names (<span class="mono">T-1*0</span>: <span class="mono">*</span> is any text) ·
     <span class="mono">&lt;mnemonic&gt; &lt;field&gt;=&lt;value&gt;</span> lists by value · case never matters · one match opens at once.<br>

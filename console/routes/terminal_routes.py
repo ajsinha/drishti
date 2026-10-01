@@ -63,6 +63,9 @@ async def go(request: Request, q: str = ""):
     try:
         r = await request.app.state.backend.command(q, ident(request))
     except BackendError as e:
+        text = q.replace("<GO>", "").strip()
+        if len(text.split()) >= 2:          # not a command: perhaps plain words ("live trades over 5m"); show what they mean
+            return RedirectResponse(f"/s?words={quote(text)}", status_code=303)
         return RedirectResponse(f"/t?error={quote(e.detail)}", status_code=303)
     if r.get("pack"):                       # a pack's code typed alone (MKT): its overview
         return RedirectResponse(f"/p/{quote(r['pack'])}", status_code=303)
@@ -112,7 +115,13 @@ async def pack_overview(request: Request, name: str):
 
 
 @router.get("/s")
-async def search(request: Request, q: str = "", vs: str = ""):
+async def search(request: Request, q: str = "", vs: str = "", words: str = ""):
+    phrase = None
+    if words.strip():                       # plain words: show the query they make, and let the person run it
+        try:
+            phrase = await request.app.state.backend.phrase(words.strip(), ident(request))
+        except BackendError as e:
+            phrase = {"problem": e.detail, "steps": [], "ignored": []}
     """Structured search (W17): entities by field values, e.g. TRD where mtm > 1m and currency = 'EUR' order by mtm desc."""
     data, error = None, None
     if q.strip():
@@ -140,7 +149,8 @@ async def search(request: Request, q: str = "", vs: str = ""):
                     cells.append((_shown(v), isinstance(v, (int, float)) and not isinstance(v, bool)))
             rows.append({"ref": r["ref"], "title": r.get("title") or r["ref"]["id"], "cells": cells, "status": r.get("status")})
     titled = any(r["title"] != r["ref"]["id"] for r in rows)       # a title that only repeats the id is left out
-    return render(request, "terminal/search.html", q=q, vs=vs, data=data, rows=rows, error=error, titled=titled, screen="search")
+    return render(request, "terminal/search.html", q=q, vs=vs, words=words, phrase=phrase, data=data, rows=rows, error=error, titled=titled,
+                  screen="search")
 
 
 @router.post("/s/watch")

@@ -204,6 +204,16 @@ public interface Expr {
             }
             double x = Values.number(a);
             double y = Values.number(b);
+            if ((Double.isNaN(x) || Double.isNaN(y)) && Values.simplify(a) instanceof String sa && Values.simplify(b) instanceof String sb
+                    && java.util.Set.of("<", "<=", ">", ">=").contains(op)) {
+                int order = sa.compareTo(sb);                     // two texts that are not numbers order as text: ISO dates order
+                return switch (op) {
+                    case "<" -> order < 0;
+                    case "<=" -> order <= 0;
+                    case ">" -> order > 0;
+                    default -> order >= 0;
+                };
+            }
             return switch (op) {
                 case "-" -> Values.normalise(x - y);
                 case "*" -> Values.normalise(x * y);

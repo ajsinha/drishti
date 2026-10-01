@@ -1112,3 +1112,11 @@ A schedule that does not parse, a query that does not parse, or a webhook outsid
 `export`; `detail` is the search text or the history field; `from`/`to` take a date (`2026-09-30`) or an instant.
 `limit` is 1-5000 (default 200). `GET /admin/access/stats` gives `written`, `dropped`, `queued` and `keepDays`.
 
+
+
+## A phrase as a search
+
+`GET /phrase?text=live trades over 5m, biggest first` answers `{query, kind, steps: [{words, meaning}], ignored,
+problem}`: the structured search the words make (it does not run it; send `query` to `/search`), how each part was
+read, the words not understood, and `problem` when the words name no kind. The vocabulary is the kinds the caller
+may open and each kind's fields, learned from a sample of its documents (kept five minutes).

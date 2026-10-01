@@ -238,6 +238,13 @@ class FakeBackend:
     tests_saved = {}
     tokens_made = []
 
+    async def phrase(self, text, ident=None):
+        if "weather" in text:
+            return {"query": None, "steps": [], "ignored": [], "problem": "say what to look for: a kind such as ['trades']"}
+        return {"query": "TRD where status = 'Live' and mtm > 5000000 order by mtm desc", "kind": "trade",
+                "steps": [{"words": "trades", "meaning": "Trade (TRD)"}, {"words": "live", "meaning": "status is Live"},
+                          {"words": "over 5m", "meaning": "mtm > 5000000"}], "ignored": ["snack"], "problem": None}
+
     reports_kept = {}
 
     async def reports(self, ident):
