@@ -96,6 +96,8 @@ public final class KafkaSourcePlugin implements SourcePlugin {
     private final Set<String> kinds = ConcurrentHashMap.newKeySet();
     private final HitIndex index = new HitIndex();
     private final AtomicReference<String> health = new AtomicReference<>("DOWN: not started");
+    /** How long the consumer may have no broker connection before health says so (short blips are not reported). */
+    static final long BROKER_LOST_MS = 10_000;
     private final Map<String, String> kindOfTopic = new HashMap<>();
     private final Map<String, String> idFieldOfTopic = new HashMap<>();
     private volatile KafkaConsumer<String, String> consumer;   // replaced when the supervisor reconnects
@@ -250,10 +252,25 @@ public final class KafkaSourcePlugin implements SourcePlugin {
         }
         Map<TopicPartition, Long> end = c.endOffsets(parts);
         health.set(caughtUp ? "UP" : "UP (catching up)");
+        org.apache.kafka.common.Metric connections = c.metrics().entrySet().stream()
+                .filter(e -> "connection-count".equals(e.getKey().name()) && "consumer-metrics".equals(e.getKey().group()))
+                .map(Map.Entry::getValue).findFirst().orElse(null);
+        long lostSince = 0;
         while (running) {
             for (ConsumerRecord<String, String> r : c.poll(Duration.ofMillis(pollMs))) {
                 apply(r);
                 resumeAt.put(new TopicPartition(r.topic(), r.partition()), r.offset() + 1);
+            }
+            // the client rides out a broker outage inside poll() without failing, so health watches its connections:
+            // none for BROKER_LOST_MS means the broker is gone (the client keeps reconnecting by itself)
+            boolean connected = connections == null || ((Number) connections.metricValue()).doubleValue() > 0;
+            if (!connected && lostSince == 0) {
+                lostSince = System.nanoTime();
+            } else if (!connected && System.nanoTime() - lostSince > java.util.concurrent.TimeUnit.MILLISECONDS.toNanos(BROKER_LOST_MS)) {
+                health.set("DOWN: no connection to the broker (reconnecting)");
+            } else if (connected && lostSince != 0) {
+                lostSince = 0;
+                health.set(caughtUp ? "UP" : "UP (catching up)");
             }
             if (!caughtUp && end.entrySet().stream().allMatch(e -> c.position(e.getKey()) >= e.getValue())) {
                 caughtUp = true;
@@ -270,7 +287,20 @@ public final class KafkaSourcePlugin implements SourcePlugin {
      * One message. Mapped messages are indexed from their key without parsing unless someone is viewing the entity
      * or it is cached; envelopes need their kind and id, so they are parsed.
      */
+    /** The newest message's time: when the stream last brought new data. */
+    private volatile java.time.Instant lastUpdate;
+
+    @Override
+    public java.time.Instant lastUpdate() {
+        return lastUpdate;
+    }
+
     void apply(ConsumerRecord<String, String> r) {
+        java.time.Instant at = java.time.Instant.ofEpochMilli(r.timestamp());
+        java.time.Instant was = lastUpdate;
+        if (was == null || at.isAfter(was)) {
+            lastUpdate = at;                                  // one consumer thread applies records: no lost update
+        }
         String mapped = kindOfTopic.getOrDefault(r.topic(), defaultKind);
         if (mapped != null && r.key() != null) {
             EntityRef ref = EntityRef.of(mapped, r.key());

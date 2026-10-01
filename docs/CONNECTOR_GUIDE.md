@@ -670,10 +670,10 @@ DESK_DB_URL=jdbc:postgresql://localhost:5432/drishti DESK_DB_USER=drishti DESK_D
 curl -s "http://localhost:18480/api/v1/entities/trade/T-77001/raw?asOf=2026-09-30" | jq -c '{provenance, data}'
 ```
 
-You should see:
+You should see (real output; the generation is the read time):
 
 ```json
-{"provenance":{"source":"desk-db","generation":…,"fetchedAt":"…","live":false,"businessDate":"2026-09-30"},
+{"provenance":{"source":"desk-db","generation":1790828309088,"fetchedAt":"2026-10-01T04:18:29.093601107Z","live":false,"businessDate":"2026-09-30"},
  "data":{"tradeId":"T-77001","businessDate":"2026-09-30","product":"IRS","counterparty":"CP-ALDERSHOT",
          "notional":50000000,"mtm":398150.0,"currency":"USD"}}
 ```
@@ -688,15 +688,22 @@ mode cannot search); users type the id.
 
 `health` is `UP`, `DOWN: not started`, or `DOWN: <driver message> (reconnecting)` after a failed read. The
 connector starts even when the database is down: each pooled connection is opened on first use and reopened when
-broken. While the database is down, reads fail with `DRS-1003 desk-db failed reading trade/T-77001`; when it is back,
-the next read reconnects and health returns to `UP`.
+broken. While the database is down, reads fail with `DRS-1003 desk-db failed reading trade/T-77001` and health reads
+(real output):
+
+```text
+DOWN: Connection to localhost:5432 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections. (reconnecting)
+```
+
+`reads.lastError` in admin health carries the same message with the exception's name (`PSQLException: …`). When the
+database is back, the next read reconnects and health returns to `UP`.
 
 ### Common errors
 
 | You see | Cause | Fix |
 |---|---|---|
-| `jdbc plugin needs settings.url` in the log, connector under `failedToStart` | `url` empty (an unset variable with an empty default) | export the variable, or give a default |
-| `DRS-1003 … failed reading`, health `DOWN: org.postgresql.util.PSQLException: …` | SQL error, wrong credentials, unreachable host | run the statement in `psql` with the id and date substituted |
+| the connector is missing from `/sources` (and not under `failures`); the log says `source plugin desk-db is installed but not configured (jdbc needs settings.url); it stays idle` | `url` empty (an unset variable with an empty default) | export the variable, or give a default |
+| `DRS-1003 … failed reading`, health `DOWN: <driver message> (reconnecting)`, `reads.lastError` `PSQLException: …` | SQL error, wrong credentials, unreachable host | run the statement in `psql` with the id and date substituted |
 | `No suitable driver` | the database's driver is not on the class path | put the jar in `DRISHTI_PLUGIN_DIR` |
 | a picked date shows the latest data | the statement does not use `:asOf` | add the `business_date <= :asOf` condition |
 | fields named `TRADE_ID` | — | they are converted: `TRADE_ID` and `trade_id` both become `tradeId` |
@@ -801,14 +808,17 @@ You should see `"source":"trading-store"` and `"businessDate":"2026-09-29"`.
 
 ### In the terminal
 
-`TRD T-10001 <GO>`, then pick an earlier date: the trade's numbers change. `CPTY CP-NORTHBRIDGE <GO>`, then the
-*Linked entities* panel lists the trades and netting sets that mention the counterparty (reverse lookups by SQL).
+`TRD T-10001 <GO>`, then pick an earlier date: the trade's numbers change. `CPTY CP-NORTHBRIDGE <GO>` on a picked
+date: the *Netting sets* panel lists the four netting sets that mention the counterparty, and impact analysis (F8, or
+`GET /api/v1/impact/counterparty/CP-NORTHBRIDGE?asOf=2026-09-29`) lists them with its 35 trades: reverse lookups by
+SQL. (*Linked entities* shows the ids the counterparty itself refers to: its group and credit limit.)
 
 ### Health, and when the database goes down
 
 As query mode: `UP` or `DOWN: <driver message> (reconnecting)`; connections reopen by themselves. If the database is
 down when the server starts and you did not list `kinds` in the settings, the connector asks `SELECT DISTINCT kind`
-again every 10 seconds until the database answers; until then it holds nothing.
+again every 10 seconds until the database answers; until then it holds nothing, so reads of its kinds go on to the
+next connector (the samples, when they are on) until the retry after the database is back.
 
 ### Common errors
 
@@ -957,8 +967,9 @@ commit restates one document per kind), so *known at* before that commit shows t
 ### In the terminal
 
 `TRD T-10001 <GO>`; pick 29 September in the top bar and the numbers change; *Raw JSON* (F9) shows `businessDate`.
-`CPTY CP-NORTHBRIDGE <GO>` lists linked trades: the lake indexes every value that looks like an identifier (capital
-letters and digits with at least one dash, such as `CP-NORTHBRIDGE` or `NS-NORTH-01`).
+`CPTY CP-NORTHBRIDGE <GO>` on a picked date lists its netting sets (*Netting sets* panel) and F8 (impact) its trades:
+reverse lookups, for which the lake indexes every value that looks like an identifier (capital letters and digits with
+at least one dash, such as `CP-NORTHBRIDGE` or `NS-NORTH-01`).
 
 ### Keep the lake bounded: `tools/lake/maintain.py`
 
@@ -1003,7 +1014,9 @@ that fails is logged as `"event": "failed"` and the rest go on. Note that the ma
 
 `health` is `UP`, `DOWN: cannot reach <root>/<domain>` (the folder or bucket is not reachable), or
 `DOWN: no Delta tables under <root>/<domain>` (reachable, but nothing with a `_delta_log`). There is nothing
-long-lived to lose: each read goes to storage afresh, so reads recover as soon as the storage does. Cache figures:
+long-lived to lose: each read goes to storage afresh, so reads recover as soon as the storage does. While an
+`s3a://` store is unreachable, a read that is not cached ends with `DRS-1004 timed out reading …` (S3A retries for
+longer than `fetch-timeout`) or `DRS-1003`. Cache figures:
 `tables`, `partitions` (in memory) and `timeTravel` (*known at* versions held).
 
 The connector lists the domain's tables when it starts and again at every reindex (every six `refresh-seconds`, a
@@ -1137,7 +1150,9 @@ to tick as messages arrive, and the full history from the lake when a user picks
 Values are JSON text, keys are strings.
 
 **Mapped** (a kind configured for the topic): the value is the whole document. The id is the message key or, for a
-message without a key, the `id-field`. Keep the key equal to the id.
+message without a key, the `id-field`. Keep the key equal to the id. (A compacted topic, such as every topic on the
+compose broker below, refuses a message without a key: the producer gets `InvalidRecordException: Compacted topic
+cannot accept message without key`.)
 
 ```text
 topic: drishti.trading.trades
@@ -1223,17 +1238,26 @@ DRISHTI_STREAM_TRADING=true DRISHTI_DEMO_ENABLED=false DRISHTI_PACKS=counterpart
   java -jar drishti-server/target/drishti-server-*-exec.jar
 ```
 
-Send one envelope by hand (create the topic first; the connector waits for a topic that does not exist yet):
+Send one envelope by hand, to a connector reading `risk.envelopes` (such as the `risk-stream` site form above, with
+`bootstrap-servers: localhost:9092` and no `client.*` security lines). Create the topic first: on a broker that does
+not create topics by itself, the connector waits for a topic that does not exist yet. The compose broker does create
+them (Kafka's default `auto.create.topics.enable`), so a connector started first has already created its topics, and
+`--if-not-exists` keeps the command from failing with `TopicExistsException`:
 
 ```bash
 docker compose -f deploy/compose.data.yaml exec kafka /opt/kafka/bin/kafka-topics.sh \
-    --bootstrap-server localhost:9092 --create --topic risk.envelopes --config cleanup.policy=compact
+    --bootstrap-server localhost:9092 --create --if-not-exists --topic risk.envelopes --config cleanup.policy=compact
 docker compose -f deploy/compose.data.yaml exec -T kafka /opt/kafka/bin/kafka-console-producer.sh \
     --bootstrap-server localhost:9092 --topic risk.envelopes \
     --property parse.key=true --property key.separator='|' <<'EOF'
 netting-set/NS-ALDERSHOT-FRA|{"kind":"netting-set","id":"NS-ALDERSHOT-FRA","doc":{"nettingSetId":"NS-ALDERSHOT-FRA","tradeCount":3,"netMtm":-339550}}
 EOF
 ```
+
+`curl -s localhost:18480/api/v1/entities/netting-set/NS-ALDERSHOT-FRA/raw | jq -c .provenance` then shows
+`"source":"risk-stream"`, `"live":true`, `"generation":0` (the offset). A tombstone keyed the same way deletes it
+(the console producer sends one with `--property null.marker=NULL` and the line
+`netting-set/NS-ALDERSHOT-FRA|NULL`); the next read falls through to the lake (`credit-store`).
 
 ### In the terminal
 
@@ -1252,11 +1276,15 @@ sure a trade Kafka does not hold falls through to the lake rather than to a rand
 | `DOWN: not started` | the consumer has not connected yet |
 | `UP (catching up)` | reading the topic from the beginning |
 | `UP` | caught up; new messages are applied as they arrive |
-| `DOWN: IllegalStateException: topic risk.envelopes has no partitions yet (reconnecting)` | the topic does not exist |
+| `DOWN: no connection to the broker (reconnecting)` | the broker has been unreachable for 10 s while the connector ran; the Kafka client keeps reconnecting by itself |
+| `DOWN: IllegalStateException: topic risk.envelopes has no partitions yet (reconnecting)` | the topic does not exist (and the broker does not create topics automatically) |
 | `DOWN: <Exception>: <message> (reconnecting)` | the consumer gave up (broker down at start, fatal error) |
 
-Short broker blips are ridden out by the Kafka client. When it gives up, a supervisor waits (1 s, doubling to 30 s),
-creates a new consumer and **resumes at the last offset it applied** (no replay). Cache figures:
+The Kafka client rides out a broker outage by itself and carries on where it was when the broker is back (health
+returns to `UP`); blips shorter than 10 s do not show in health. When the client gives up, a supervisor waits (1 s,
+doubling to 30 s), creates a new consumer and **resumes at the last offset it applied** (no replay). While the broker
+is away, documents in the memory or disk cache still answer; others are read back from Kafka by offset, so those
+reads fail (`DRS-1004`) until it returns. Cache figures:
 `indexedEntities`, `memoryEntries`, `memoryMb`, and with the disk cache `diskMb`, `diskHits`, `diskMisses`,
 `diskClears`.
 
@@ -1390,7 +1418,8 @@ or from the web console (`http://localhost:8161/admin`, Queues → `limits` → 
 ### In the terminal
 
 `LIM LIM-ALDERSHOT <GO>`: provenance `limits-mq`, live; send another message and the view updates. The type-ahead
-lists every entity received, with the subtitle `credit-limit · limits-mq`. Pick a date: the lake (`credit-store`)
+lists every entity received; one only the queue holds has the subtitle `credit-limit · limits-mq` (an id a dated store
+also holds, such as `LIM-ALDERSHOT`, shows that store's subtitle). Pick a date: the lake (`credit-store`)
 answers, since dated connectors go first.
 
 ### Health, and when the broker goes down
@@ -1870,9 +1899,9 @@ and `secret-key` for S3 and S3A.
 
 | Field | Meaning |
 |---|---|
-| `status` | `OK`; `DEGRADED` (a connector is down, one failed to start, or a pack has problems); `DOWN` (no connector is up) |
+| `status` | `OK`; `DEGRADED` (a connector is down or stale, one failed to start, or a pack has problems); `DOWN` (no connector is up) |
 | `summary` | counts: `sources`, `sourcesDown`, `failedToStart`, `packs`, `packsWithProblems` |
-| `sources[]` | one row per running connector: `status` (`UP` when `health` starts with `UP`, else `DOWN`), `health` text, `kinds`, `live`, `dated`, `search`, `reads` (`reads`, `found`, `notHeld`, `errors`, `lastError`, `lastErrorAt`, `lastOkAt`, `p50Ms`, `p99Ms`), `cache`. Down connectors are listed first |
+| `sources[]` | one row per running connector: `status` (`UP` when `health` starts with `UP`, else `DOWN`), `health` text, `kinds`, `live`, `dated`, `search`, `reads` (`reads`, `found`, `notHeld`, `errors`, `lastError`, `lastErrorAt`, `lastOkAt`, `p50Ms`, `p99Ms`), `cache`, `lastUpdate` (when it last received new data; null for sources read on demand), `staleAfter` and `stale` (nothing new within the connector's `stale-after` setting, see [CONFIGURATION.md](CONFIGURATION.md#connector-settings-plugin-by-plugin)). Down connectors are listed first |
 | `failedToStart` | connector name → error message |
 | `packs[]` | each pack's `connectors`, `connectorsDown` (running but down), `connectorsOff` (switched off, or failed to start) |
 | `overrides` | pack definitions overridden by a child pack |
@@ -1892,7 +1921,7 @@ curl -s http://localhost:18480/api/v1/admin/health | jq '.packs[] | {name, conne
 | `jdbc` | `UP`, `DOWN: not started`, `DOWN: <error> (reconnecting)` |
 | `delta` | `UP`, `DOWN: cannot reach <root>/<domain>`, `DOWN: no Delta tables under <root>/<domain>` |
 | `aerospike` | `UP`, `DOWN: not connected to Aerospike` |
-| `kafka` | `DOWN: not started`, `UP (catching up)`, `UP`, `DOWN: <message> (retrying)`, `DOWN: <Exception>: <message> (reconnecting)` |
+| `kafka` | `DOWN: not started`, `UP (catching up)`, `UP`, `DOWN: no connection to the broker (reconnecting)`, `DOWN: <message> (retrying)`, `DOWN: <Exception>: <message> (reconnecting)` |
 | `activemq` | `DOWN: not started`, `DOWN: connecting to <broker-url>`, `UP`, `DOWN: connection to the broker lost (reconnecting)`, `DOWN: <message> (reconnecting)`, `DOWN: <Exception>: <message> (reconnecting)` |
 | `rabbitmq` | `DOWN: not started`, `DOWN: <Exception>: <message> (retrying)`, `UP`, `DOWN: connection lost (recovering)`, `DOWN: consumer cancelled on <queue>` |
 | `s3` | `UP`, `DOWN: <error> (retrying)` |
@@ -1904,14 +1933,15 @@ Every connector recovers without restarting Drishti, and every one starts even w
 ### Installed but not configured
 
 Every plugin on the class path runs as itself unless it is switched off, except one used only through named
-connectors. A plugin that cannot run without a setting (`kafka` needs `topics`, `feed` needs `feed`) then logs
+connectors. A plugin that cannot run without a setting (`kafka` needs `topics`, `feed` needs `feed`, `jdbc` needs
+`url`), as itself or as a named connector, then logs
 
 ```text
 source plugin kafka is installed but not configured (kafka needs settings.topics); it stays idle
 ```
 
-and is **not** counted as a failure. Other plugins missing a required setting (`rest` without `base-url`, `jdbc`
-without `url`, `s3` without `bucket`) fail to start and appear under `failedToStart`; the server still runs.
+and is **not** counted as a failure (nor listed under `/sources`). Other plugins missing a required setting (`rest`
+without `base-url`, `s3` without `bucket`) fail to start and appear under `failedToStart`; the server still runs.
 
 ### Caches and purging
 
@@ -2007,6 +2037,7 @@ calls.
 | *Linked entities* is empty | does any connector with `reverseLookup: true` serve the linking kinds? | reverse lookups need `delta`, `jdbc` table mode, `aerospike` (`reverse-index`), or `demo` |
 | Kafka health stays `UP (catching up)` | `jq '.sources[] \| select(.name=="trading-stream") \| .cache'`: `indexedEntities` grows | wait for the replay; a very large topic needs compaction |
 | Kafka health `DOWN: … has no partitions yet` | `kafka-topics.sh --describe --topic <topic>` | create the topic |
+| Kafka health `DOWN: no connection to the broker (reconnecting)` | `nc -z <host> <port>` for each `bootstrap-servers` address, and the broker's advertised listeners | bring the broker back; the connector carries on by itself, no restart |
 | ActiveMQ/RabbitMQ `rejected` grows | the message bodies and `id` headers | bodies must be JSON with an id (header or `id-field.<destination>`) |
 | An old entity will not go away (message queues) | `stateMb`, `entities` in the connector's cache figures | send a delete (`deleted=true`), or clear the state store (server stopped) |
 | Feed `DOWN: not fetched yet` for minutes | the server's outbound internet | a proxy rule, or `url: file://…` |

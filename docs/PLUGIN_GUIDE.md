@@ -31,7 +31,7 @@ Every connector recovers from an outage without a restart of Drishti, and starts
 | Connector | How |
 |---|---|
 | `jdbc` | a pool of lazy slots: each opens its connection on first use and reopens it when broken; table kinds are listed in the background (every 10 s) until the database answers |
-| `kafka` | a supervisor recreates the consumer after a fatal error (backoff 1 s → 30 s) and resumes at the last applied offset; short broker blips are ridden out by the Kafka client |
+| `kafka` | the Kafka client rides out a broker outage and carries on (health `DOWN: no connection to the broker (reconnecting)` after 10 s without one); a supervisor recreates the consumer after a fatal error (backoff 1 s → 30 s) and resumes at the last applied offset |
 | `aerospike` | the client tends the cluster in the background (`failIfNotConnected` off); the next rescan refills the catalogue |
 | `activemq` | the failover transport reconnects; its interruptions show in health; a supervisor rebuilds the session after any other failure |
 | `rabbitmq` | a supervisor retries until the first connection succeeds; then the client's automatic recovery reconnects and re-subscribes |
@@ -128,9 +128,9 @@ Rules worth knowing:
   `false`, *except* a plugin used by any named connector: that one runs as itself only if it is also listed under
   `plugins`. So list a plugin you use only through connectors with `enabled: false` (as `application.yaml` does for
   `delta` and `aerospike`), or leave it out; a plugin that is neither listed nor used by a connector starts with empty
-  settings. One that needs a setting (`kafka` needs `topics`, `feed` needs `feed`) then stays idle: it throws
-  `PluginNotConfigured` from `start`, the log says *installed but not configured*, and health does not count it as a
-  failure. Your own plugins should do the same when they have nothing to run with.
+  settings. One that needs a setting (`kafka` needs `topics`, `feed` needs `feed`, `jdbc` needs `url`) then stays
+  idle: it throws `PluginNotConfigured` from `start`, the log says *installed but not configured*, and health does
+  not count it as a failure. Your own plugins should do the same when they have nothing to run with.
 - **Names.** Routes, health and *How this view was built* use the connector's name. A plugin running as itself is
   known by its manifest name: `demo`, `file`, `rest` and `jdbc` always; `delta`, `aerospike`, `kafka`, `s3`, `feed`,
   `activemq` and `rabbitmq` by their `source-name` setting.
@@ -963,7 +963,8 @@ value: {"kind": "netting-set", "id": "NS-NORTH-01", "doc": {"nettingSetId": "NS-
 A **tombstone** (null value) deletes: mapped, keyed by the id; envelope, keyed `<kind>/<id>`. An envelope with
 `"doc": null` deletes too. A message that is not JSON is skipped. The generation is the offset, the fetch time the
 message timestamp, and documents are live and undated. Health is `UP (catching up)` until the end offsets seen at
-start are reached, then `UP`.
+start are reached, then `UP`; `DOWN: no connection to the broker (reconnecting)` once the broker has been unreachable
+for 10 s, and `UP` again when it is back.
 
 **Try it.**
 

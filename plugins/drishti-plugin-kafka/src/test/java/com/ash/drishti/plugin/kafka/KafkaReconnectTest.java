@@ -30,7 +30,7 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.Test;
 import org.springframework.kafka.test.EmbeddedKafkaKraftBroker;
 
-/** The Kafka source starts before its broker exists, keeps retrying, and serves the stream once the broker is up. */
+/** The Kafka source starts before its broker exists, keeps retrying, serves the stream once the broker is up, and reports the broker going away. */
 class KafkaReconnectTest {
 
     @Test
@@ -51,6 +51,7 @@ class KafkaReconnectTest {
         // broker coming up there would (the client then follows the broker's advertised address)
         int brokerPort = Integer.parseInt(broker.getBrokersAsString().replaceAll(".*:", ""));
         ServerSocket relay = relay(port, brokerPort);
+        boolean brokerUp = true;
         try {
             Properties p = new Properties();
             p.put("bootstrap.servers", broker.getBrokersAsString());
@@ -72,10 +73,18 @@ class KafkaReconnectTest {
                     return false;
                 }
             }, 30);
+
+            // the broker goes away while the connector runs: the client keeps retrying inside poll(), and health says so
+            broker.destroy();
+            brokerUp = false;
+            waitFor(() -> plugin.health().startsWith("DOWN"), 60);
+            assertThat(plugin.health()).isEqualTo("DOWN: no connection to the broker (reconnecting)");
         } finally {
             plugin.close();
             relay.close();
-            broker.destroy();
+            if (brokerUp) {
+                broker.destroy();
+            }
         }
     }
 
