@@ -21,6 +21,7 @@ from __future__ import annotations
 import csv
 import io
 import re
+import zipfile
 
 # a number as a view shows it: sign (ASCII or Unicode minus), digits with thousands separators, decimals, maybe %
 _SHOWN_NUMBER = re.compile(r"^([+\-−]?)(\d{1,3}(?:,\d{3})+|\d+)(\.\d+)?(%?)$")
@@ -121,3 +122,99 @@ def to_csv(header: list, rows: list[list]) -> bytes:
 def filename(*parts: str) -> str:
     """A safe download name from parts: letters, digits, dot, dash and underscore only."""
     return re.sub(r"[^A-Za-z0-9._-]+", "_", "-".join(p for p in parts if p)).strip("_") + ".csv"
+
+
+# ---- Excel: a grid as an .xlsx workbook (the Pivot tab's export), written with the standard library -----------------------
+_XML_BAD = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f]")
+
+
+def _xml(text) -> str:
+    s = _XML_BAD.sub("", str(text))
+    return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+
+
+def _col(i: int) -> str:
+    """0 -> A, 25 -> Z, 26 -> AA."""
+    name = ""
+    i += 1
+    while i:
+        i, r = divmod(i - 1, 26)
+        name = chr(65 + r) + name
+    return name
+
+
+def _cell(ref: str, v, style: int = 0) -> str:
+    s = f' s="{style}"' if style else ""
+    if isinstance(v, bool):
+        return f'<c r="{ref}" t="b"{s}><v>{int(v)}</v></c>'
+    if isinstance(v, (int, float)) and v == v and v not in (float("inf"), float("-inf")):
+        return f'<c r="{ref}"{s}><v>{v!r}</v></c>'
+    if v is None or v == "":
+        return ""
+    return f'<c r="{ref}" t="inlineStr"{s}><is><t xml:space="preserve">{_xml(v)}</t></is></c>'
+
+
+_XLSX_PARTS = {
+    "[Content_Types].xml": '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+    '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+    '<Default Extension="xml" ContentType="application/xml"/>'
+    '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+    '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+    '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
+    "</Types>",
+    "_rels/.rels": '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+    '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
+    "</Relationships>",
+    "xl/_rels/workbook.xml.rels": '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+    '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
+    '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
+    "</Relationships>",
+    "xl/styles.xml": '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+    '<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>'
+    '<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>'
+    '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>'
+    '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
+    '<cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'
+    '<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs>'
+    "</styleSheet>",
+}
+
+
+def to_xlsx(header: list, rows: list[list], sheet: str = "Pivot") -> bytes:
+    """One sheet: a bold header row (frozen), then the rows; numbers stay numbers, text is inline (never a formula)."""
+    lines = []
+    if header:
+        lines.append('<row r="1">' + "".join(_cell(f"{_col(i)}1", h, 1) for i, h in enumerate(header)) + "</row>")
+    start = 2 if header else 1
+    for n, r in enumerate(rows):
+        lines.append(f'<row r="{start + n}">' + "".join(_cell(f"{_col(i)}{start + n}", v) for i, v in enumerate(r)) + "</row>")
+    pane = ('<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/>'
+            '</sheetView></sheetViews>') if header else ""
+    parts = dict(_XLSX_PARTS)
+    parts["xl/workbook.xml"] = ('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                                '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
+                                'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+                                f'<sheets><sheet name="{_xml(sheet[:31])}" sheetId="1" r:id="rId1"/></sheets></workbook>')
+    parts["xl/worksheets/sheet1.xml"] = ('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                                         '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+                                         f'{pane}<sheetData>{"".join(lines)}</sheetData></worksheet>')
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        for name, text in parts.items():
+            z.writestr(name, text)
+    return buf.getvalue()
+
+
+def grid(body: dict) -> tuple[str, list, list[list]]:
+    """A grid the page posts (the Pivot tab's export): its name, header and rows, bounded, every value plain."""
+    raw_header = body.get("header") if isinstance(body.get("header"), list) else []
+    header = ["" if h is None else str(h)[:200] for h in raw_header[:2000]]
+    rows = []
+    for r in (body.get("rows") if isinstance(body.get("rows"), list) else [])[:200_000]:
+        if isinstance(r, list):
+            rows.append([v if isinstance(v, (int, float, bool)) or v is None else str(v)[:2000] for v in r[:2000]])
+    return str(body.get("name") or "pivot")[:120], header, rows

@@ -24,7 +24,7 @@ from fastapi.responses import Response
 
 from core import asof
 from core.backend import BackendError
-from core.export import filename, panel_rows, to_csv
+from core.export import filename, grid, panel_rows, plain, to_csv, to_xlsx
 from routes.common import ident
 
 router = APIRouter(include_in_schema=False)
@@ -54,6 +54,32 @@ async def search_csv(request: Request, q: str = ""):
     header = [data.get("mnemonic") or data.get("kind"), "Title"] + [labels.get(c, c) for c in cols]
     rows = [[r["ref"]["id"], r.get("title") or ""] + [r["values"].get(c) for c in cols] for r in data.get("rows", [])]
     return _csv(to_csv(header, rows), filename(data.get("kind", "search"), "search", _date()))
+
+
+async def _grid(request: Request):
+    try:
+        body = json.loads(await request.body() or b"{}")
+    except ValueError:
+        body = {}
+    return grid(body if isinstance(body, dict) else {})
+
+
+@router.post("/export/grid.csv")
+async def grid_csv(request: Request):
+    """A grid the page computed (the Pivot tab, as shown): ``{"name", "header", "rows"}`` as CSV. Text a spreadsheet would
+    run as a formula is prefixed so it stays text."""
+    name, header, rows = await _grid(request)
+    safe = [[("'" + v) if isinstance(v, str) and v[:1] in ("=", "+", "-", "@") and plain(v) == v else v for v in r] for r in rows]
+    return _csv(to_csv(header, safe), filename(name, _date()))
+
+
+@router.post("/export/grid.xlsx")
+async def grid_xlsx(request: Request):
+    """The same grid as an Excel workbook: one sheet, a bold frozen header row, numbers as numbers."""
+    name, header, rows = await _grid(request)
+    file = filename(name, _date())[:-4] + ".xlsx"
+    return Response(to_xlsx(header, rows), media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    headers={"Content-Disposition": f'attachment; filename="{file}"'})
 
 
 @router.get("/export/compare/{kind}/{id_}.csv")

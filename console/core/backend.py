@@ -216,6 +216,32 @@ class BackendClient:
         return await self._send("POST", f"/me/layouts/{quote(sutra, safe='')}/{quote(kind, safe='')}/promotion", ident,
                                 json={"note": note, "dropHidden": bool(drop_hidden)})
 
+    # -- the Pivot tab ----------------------------------------------------------------------------
+    async def panel_records(self, kind: str, id_: str, panel: str, ident) -> dict:
+        """Every row of a table or ladder whose Sutra says pivot:, as raw values of its fields."""
+        return await self._send("GET", f"/views/{quote(kind, safe='')}/{quote(id_, safe='')}/panels/{quote(panel, safe='')}/records",
+                                ident, timeout=30.0)
+
+    async def search_pivot(self, kind: str, body: dict, ident, part: str = "") -> dict:
+        """The server engine of a search's Pivot tab: the cube (part ""), a cell's entities ("drill") or a field's values."""
+        # the first read of a business day loads its columns (the server waits up to drishti.pivot.budget, 20 s)
+        return await self._send("POST", f"/search/pivot/{quote(kind, safe='')}" + (f"/{part}" if part else ""), ident, json=body,
+                                timeout=45.0)
+
+    async def pivots(self, ident) -> dict:
+        """The user's saved pivots, and whether they may promote one to a Sutra."""
+        return await self._get("/me/pivots", ident)
+
+    async def saved_pivot(self, method: str, scope: str, ident, body: dict | None = None) -> dict | None:
+        """GET, PUT or DELETE a saved pivot: scope is ``panel/<sutra>/<panel>`` or ``search/<kind>`` (already quoted)."""
+        return await self._send(method, f"/me/pivots/{scope}", ident, **({"json": body} if body is not None else {}))
+
+    async def pivot_promotion(self, scope: str, ident, note: str | None = None) -> dict:
+        """What promoting a panel's saved pivot would propose (note None), or the proposal itself."""
+        if note is None:
+            return await self._get(f"/me/pivots/{scope}/promotion", ident)
+        return await self._send("POST", f"/me/pivots/{scope}/promotion", ident, json={"note": note})
+
     # -- workspaces -------------------------------------------------------------------------------
     async def workspaces(self, ident) -> list:
         return await self._get("/me/workspaces", ident)

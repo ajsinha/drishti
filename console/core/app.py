@@ -121,7 +121,8 @@ def create_app(settings: Settings) -> FastAPI:
 
     catalogue = Servers(settings)
     from routes import (admin_routes, api_routes, asof_routes, auth_routes, calc_routes, export_routes, help_routes, home_routes,
-                        layout_routes, monitor_routes, report_routes, server_routes, studio_routes, terminal_routes, workspace_routes)
+                        layout_routes, monitor_routes, pivot_routes, report_routes, server_routes, studio_routes, terminal_routes,
+                        workspace_routes)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -185,6 +186,8 @@ def create_app(settings: Settings) -> FastAPI:
     from core.layouts import Layouts
 
     app.state.layouts = Layouts(settings)
+    from core.pivots import Pivots
+    app.state.pivots = Pivots()
     if app.state.calc.runtime.installed:          # the Python runtime of Calc, from this origin only (tools/fetch-pyodide.sh)
         app.mount(app.state.calc.runtime.base.rstrip("/"), StaticFiles(directory=str(app.state.calc.runtime.folder)), name="pyodide")
     app.include_router(home_routes.router)
@@ -202,4 +205,5 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(report_routes.router)
     app.include_router(calc_routes.router)
     app.include_router(layout_routes.router)
+    app.include_router(pivot_routes.router)
     return app

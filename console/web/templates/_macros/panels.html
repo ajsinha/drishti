@@ -48,6 +48,31 @@
 </table></div>
 {%- endmacro %}
 
+{# A table or ladder whose Sutra says pivot: a Table | Pivot switch; static/js/pivot.js builds the pivot in .pv-host when it
+   is first shown (USER_GUIDE.md, The Pivot tab). Without the option the table is drawn alone, as always. #}
+{% macro pivot_switch(id, title) -%}
+<div class="pv-switch" role="tablist" aria-label="Show {{ title }} as">
+  <button type="button" role="tab" class="on" id="pv-{{ id }}-t-table" data-pv-tab="table" aria-selected="true" aria-controls="pv-{{ id }}-table">Table</button><button type="button" role="tab"
+    id="pv-{{ id }}-t-pivot" data-pv-tab="pivot" aria-selected="false" aria-controls="pv-{{ id }}-pivot" tabindex="-1" title="Rearrange these rows as a pivot: rows, columns, values and filters">Pivot</button>
+</div>
+{%- endmacro %}
+
+{% macro pivot_host(id, spec, saved, search='', q='') -%}
+<div class="pv-host" id="pv-{{ id }}-pivot" role="tabpanel" aria-labelledby="pv-{{ id }}-t-pivot" hidden data-pivot="{{ spec | tojson | forceescape }}"
+  {%- if search %} data-pivot-search="{{ search }}" data-pivot-q="{{ q }}"{% else %} data-pivot-panel="{{ id }}"{% endif %}
+  {%- if saved %} data-pivot-saved="{{ saved | tojson | forceescape }}"{% endif %}></div>
+{%- endmacro %}
+
+{% macro pivotable(p) -%}
+{% if p.data.pivot %}
+<div class="pv-box">
+  {{ pivot_switch(p.id, p.title or p.id) }}
+  <div class="pv-pane-table" id="pv-{{ p.id }}-table" role="tabpanel" aria-labelledby="pv-{{ p.id }}-t-table">{{ table(p.data) }}</div>
+  {{ pivot_host(p.id, p.data.pivot, p.pivotSaved) }}
+</div>
+{% else %}{{ table(p.data) }}{% endif %}
+{%- endmacro %}
+
 {% macro tabs(p) -%}
 {% set d = p.data %}
 {% if d.layout == 'columns' %}
@@ -212,7 +237,7 @@
   {% if p.empty or (p.data is none and p.kind != 'provenance') %}{{ no_data(p) }}
   {% elif p.kind in ['kv', 'status'] %}{{ fields(p.data.fields, 4 if p.area == 'main' else 2) }}
   {% elif p.kind == 'provenance' %}<dl class="prov">{% for f in (p.data.fields or []) %}<div><dt>{{ f.label }}</dt><dd class="mono">{{ f.text }}</dd></div>{% endfor %}</dl>
-  {% elif p.kind in ['table', 'ladder'] %}{{ table(p.data) }}
+  {% elif p.kind in ['table', 'ladder'] %}{{ pivotable(p) }}
   {% elif p.kind == 'tabs' %}{{ tabs(p) }}
   {% elif p.kind in ['line', 'area'] %}{{ chart(p) }}
   {% elif p.kind == 'hbar' %}{{ bars(p.data) }}

@@ -18,11 +18,11 @@
 {% block title %}{{ vm.title.id }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}view{% endblock %}
 {% block body_class %}terminal{% if embed %} embed{% endif %}{% endblock %}
-{% block head %}{% if calc and calc.offered and calc.allowed %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}">{% endif %}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/pivot.css?v={{ ASSET_V }}">{% if calc and calc.offered and calc.allowed %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}">{% endif %}{% endblock %}
 {% block nav %}{% if not embed %}{% with command_text=(vm.mnemonic ~ ' ' ~ vm.ref.id ~ ' <GO>') if vm.mnemonic else vm.ref.id, live=vm.provenance.live, built_ms=vm.timings.total %}{% include "terminal/_topbar.html" %}{% endwith %}{% endif %}{% endblock %}
 {% block content %}
 <div class="view" data-view{% if embed %} data-embed{% endif %} data-kind="{{ vm.ref.kind }}" data-id="{{ vm.ref.id }}" data-label="{{ vm.title.id }}"
-     data-me="{{ me.user if me else '' }}"{% if me and me.is_admin %} data-admin{% endif %}{% if layout and layout.offered and layout.allowed %}
+     data-me="{{ me.user if me else '' }}" data-view-sutra="{{ vm.provenance.sutra or '' }}"{% if pivots and pivots.promote %} data-pivot-promote{% endif %}{% if pivots and pivots.review %} data-pivot-review{% endif %}{% if me and me.is_admin %} data-admin{% endif %}{% if layout and layout.offered and layout.allowed %}
      data-sutra="{{ layout.sutra }}" data-layout-base="{{ layout.base | tojson | forceescape }}"{% if layout.mine %} data-layout-mine{% endif %}{% endif %}>
   {% if layout and layout.offered and layout.allowed %}{% include "terminal/_layout.html" %}{% endif %}
   {% if asof != 'live' and not vm.provenance.businessDate %}
@@ -99,6 +99,9 @@
 <script src="/static/js/charts.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/command.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/view.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/pivot-engine.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/pivot-grid.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/pivot.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/history.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/notes.js?v={{ ASSET_V }}"></script>
 {% if calc and calc.offered and calc.allowed %}<script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script>
