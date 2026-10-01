@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Request
+from fastapi.responses import JSONResponse
 
 from routes.common import render
 
@@ -36,4 +37,15 @@ def landing(request: Request):
 
 @router.get("/healthz")
 def healthz():
+    """Liveness: the console process answers. Cheap on purpose; a restart would not fix a server that is down."""
     return {"status": "UP"}
+
+
+@router.get("/readyz")
+async def readyz(request: Request):
+    """Readiness: the console can reach the server (route traffic here only then). 503 while it cannot."""
+    try:
+        await request.app.state.backend.business_date()
+    except Exception as e:  # noqa: BLE001 - any failure means not ready
+        return JSONResponse({"status": "DOWN", "server": "unreachable", "detail": str(getattr(e, "detail", e))[:200]}, status_code=503)
+    return {"status": "UP", "server": "reachable"}

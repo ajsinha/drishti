@@ -115,6 +115,9 @@ drishti:
     enabled: ${DRISHTI_SECURITY_ENABLED:false}
     secret: ${DRISHTI_TOKEN_SECRET:}
     clock-skew: 30s
+    # With security on, /actuator (except /actuator/health) needs an admin token or this one, for Prometheus:
+    #   scrape_configs: [{ job_name: drishti, metrics_path: /actuator/prometheus, bearer_token: <this> }]
+    metrics-token: ${DRISHTI_METRICS_TOKEN:}
     roles:
       viewer:  { kinds: ["*"] }        # packs add domain roles (finance: trader, risk)
       author:  { kinds: ["*"], raw: true, author: true }

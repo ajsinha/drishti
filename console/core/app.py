@@ -67,11 +67,11 @@ class AuthGate(BaseHTTPMiddleware):
         request.state.asof = asof.set_current(request.query_params.get("asOf") or request.cookies.get(asof.COOKIE))
         request.state.known_at = asof.set_known(request.cookies.get(asof.KNOWN_COOKIE)) if request.state.asof != "live" else None
         request.state.business_date = None
-        if not path.startswith(("/static/", "/api/", "/healthz", "/asof")):
+        if not path.startswith(("/static/", "/api/", "/healthz", "/readyz", "/asof")):
             request.state.business_date = await request.app.state.business_dates.info(
                 request.app.state.backend, request.state.identity, request.state.asof)
         request.state.settings = None
-        if request.state.identity is not None and not path.startswith(("/static/", "/api/", "/healthz")):
+        if request.state.identity is not None and not path.startswith(("/static/", "/api/", "/healthz", "/readyz")):
             request.state.settings = await request.app.state.user_settings.get(request.app.state.backend, request.state.identity)
             try:
                 request.state.pack_switcher = await request.app.state.packs.assigned(request.app.state.backend, request.state.identity)

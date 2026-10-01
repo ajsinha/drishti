@@ -42,6 +42,17 @@ public class SecurityConfiguration {
         return r;
     }
 
+    /** Guards /actuator (except health) and /api/docs when security is on. */
+    @Bean
+    public FilterRegistrationBean<ManagementGuard> managementGuard(SecurityProperties props, TokenVerifier verifier,
+            org.springframework.core.env.Environment env) {
+        FilterRegistrationBean<ManagementGuard> r = new FilterRegistrationBean<>(
+                new ManagementGuard(props, verifier, env.getProperty("drishti.security.metrics-token", "")));
+        r.addUrlPatterns("/actuator/*", "/api/docs/*", "/api/docs");
+        r.setOrder(0);
+        return r;
+    }
+
     /** Every role: configuration and packs (built in), plus those administrators define (Admin → Roles). */
     @Bean
     public RoleCatalog roleCatalog(SecurityProperties props, com.ash.drishti.identity.RoleStore store) {

@@ -95,6 +95,10 @@ public final class SourceRegistry implements AutoCloseable {
                     LOG.info("source plugin started: {}", p.manifest().name());
                 } catch (Exception e) {
                     Throwable cause = e.getCause() == null ? e : e.getCause();
+                    if (cause instanceof com.ash.drishti.api.PluginNotConfigured) {
+                        LOG.info("source plugin {} is installed but not configured ({}); it stays idle", p.manifest().name(), cause.getMessage());
+                        continue;
+                    }
                     failures.put(p.manifest().name(), String.valueOf(cause.getMessage()));
                     LOG.error("source plugin {} failed to start", p.manifest().name(), cause);
                 }

@@ -56,6 +56,7 @@ class KafkaSourcePluginTest {
         send("trades", "T-2", "{\"tradeId\":\"T-2\",\"mtm\":5,\"nettingSet\":\"NS-9\"}");
         send("trades", "T-2", null);                                                     // tombstone: T-2 is gone
         send("entities", "netting-set/NS-1", "{\"kind\":\"netting-set\",\"id\":\"NS-1\",\"doc\":{\"nettingSetId\":\"NS-1\",\"netMtm\":2}}");
+        send("entities", "NS-2", "{\"kind\":\"netting-set\",\"id\":\"NS-2\",\"doc\":{\"nettingSetId\":\"NS-2\",\"netMtm\":7}}");  // keyed by the bare id
         send("entities", "x", "not json");                                               // skipped
         plugin = new KafkaSourcePlugin();
         plugin.start(DatedSourceContract.context(Map.of("bootstrap-servers", broker.getBrokersAsString(), "topics", "trades,entities",
@@ -90,6 +91,7 @@ class KafkaSourcePluginTest {
         assertThat(t1.provenance().source()).isEqualTo("trade-stream");
         assertThat(plugin.fetch(EntityRef.of("trade", "T-2"))).isEmpty();
         assertThat(plugin.fetch(EntityRef.of("netting-set", "NS-1")).orElseThrow().data().get("netMtm").asDouble()).isEqualTo(2);
+        assertThat(plugin.fetch(EntityRef.of("netting-set", "NS-2")).orElseThrow().data().get("netMtm").asDouble()).isEqualTo(7);
         assertThat(plugin.manifest().kinds()).contains("trade", "netting-set");
         assertThat(plugin.manifest().capabilities().live()).isTrue();
     }

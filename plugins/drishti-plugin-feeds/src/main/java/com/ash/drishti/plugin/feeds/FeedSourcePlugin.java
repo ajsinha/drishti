@@ -80,6 +80,9 @@ public final class FeedSourcePlugin implements SourcePlugin {
     @Override
     public void start(SourceContext ctx) {
         this.context = ctx;
+        if (ctx.setting("feed", "").isBlank()) {
+            throw new com.ash.drishti.api.PluginNotConfigured("feed needs settings.feed (nyfed-sofr, ecb-estr, ecb-fx, us-treasury, fred)");
+        }
         this.feed = Feeds.named(ctx.setting("feed", ""));
         this.sourceName = ctx.setting("source-name", ctx.setting("feed", "feed"));
         this.timeoutSeconds = Integer.parseInt(ctx.setting("timeout-seconds", "20"));

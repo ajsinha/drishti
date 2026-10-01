@@ -101,11 +101,7 @@ public final class SourceRouter {
             // a picked date: history comes from dated sources first; undated ones only answer what nothing dated holds
             candidates.sort(java.util.Comparator.comparing(p -> !p.manifest().capabilities().dated()));
         } else {
-            // live: sources that stream come first, so the view ticks; among them a real stream (Kafka) beats the default
-            // route (the demo samples); the stores answer what no live source holds
-            String fallback = props.defaultRoute();
-            candidates.sort(java.util.Comparator.<SourcePlugin, Boolean>comparing(p -> !p.manifest().capabilities().live())
-                    .thenComparing(p -> p.manifest().capabilities().live() && p.manifest().name().equals(fallback)));
+            liveFirst(candidates);
         }
         return CompletableFuture.supplyAsync(() -> readFirst(ref, candidates, asOf), executor)
                 .orTimeout(timeout.toMillis(), TimeUnit.MILLISECONDS)
@@ -185,15 +181,40 @@ public final class SourceRouter {
      * {@link Subscription#NONE} when no source can push it (the view then stays static).
      */
     public Subscription subscribe(EntityRef ref, java.util.function.Consumer<EntityDocument> listener) {
-        for (SourcePlugin p : candidates(ref.kind())) {
-            if (p.manifest().capabilities().live()) {
+        List<SourcePlugin> live = new ArrayList<>(candidates(ref.kind()).stream().filter(p -> p.manifest().capabilities().live()).toList());
+        liveFirst(live);
+        // ticks come from the source the view read: the first live source that holds the entity (a real stream before the
+        // demo samples, as in fetch); one that holds nothing yet is used only when none does
+        for (SourcePlugin p : live) {
+            if (holds(p, ref)) {
                 Subscription s = p.subscribe(ref, listener);
                 if (s != Subscription.NONE) {
                     return s;
                 }
             }
         }
+        for (SourcePlugin p : live) {
+            Subscription s = p.subscribe(ref, listener);
+            if (s != Subscription.NONE) {
+                return s;
+            }
+        }
         return Subscription.NONE;
+    }
+
+    /** Live: sources that stream first, so the view ticks; among them a real stream (Kafka) before the default route. */
+    private void liveFirst(List<SourcePlugin> candidates) {
+        String fallback = props.defaultRoute();
+        candidates.sort(java.util.Comparator.<SourcePlugin, Boolean>comparing(p -> !p.manifest().capabilities().live())
+                .thenComparing(p -> p.manifest().capabilities().live() && p.manifest().name().equals(fallback)));
+    }
+
+    private static boolean holds(SourcePlugin p, EntityRef ref) {
+        try {
+            return p.fetch(ref).isPresent();          // live sources answer from memory or their own store
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public List<EntityRef> reverse(EntityRef target, String kind) {

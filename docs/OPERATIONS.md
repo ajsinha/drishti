@@ -198,8 +198,9 @@ Then open `http://localhost:17480` in a browser, type `TRD IRS-48213` on the com
 is one of the `finance` pack's examples; the landing page lists the others). An interest rate swap with its legs,
 cashflows and SOFR curve should appear.
 
-`/healthz` on the console only says the console process is answering; it does not ask the server. To check the
-whole chain, open a view in the browser, or ask the server directly (section 13).
+`/healthz` on the console only says the console process is answering (liveness). `/readyz` also asks the server:
+`{"status":"UP","server":"reachable"}`, or `503` with `"server":"unreachable"` while it cannot reach it. Point a load
+balancer's readiness check at `/readyz` and a restart policy at `/healthz`.
 
 ### 3.6 Choosing packs
 
@@ -607,7 +608,7 @@ Terminate TLS at a reverse proxy in front of the **console**. Users never need t
 |---|---|---|
 | console `:17480`, everything | yes, through the proxy | the whole user interface, including its live channel |
 | server `:18480/api/v1/...` | no | the console calls it; with security off it trusts anyone |
-| server `:18480/actuator/...` | no; only to your monitoring network | health and metrics are not authenticated |
+| server `:18480/actuator/...` | no; only to your monitoring network | with security on, only `/actuator/health` is open; the rest needs an admin token or `DRISHTI_METRICS_TOKEN` |
 | server `:18480/api/docs`, `/api/docs/ui` | no (developers only) | the OpenAPI description and Swagger UI, not authenticated |
 
 To serve the actuator on a separate port that only monitoring can reach, set Spring's standard
@@ -696,7 +697,8 @@ Work through this list for every shared installation. Each item says how to chec
 9. **TLS** at the proxy, `DRISHTI_SECURE_COOKIE` left at `true`.
 10. **Backups** of `data/identity`, `data/governance`, your Sutra directories and your configuration (section 10).
 11. **Lake maintenance** scheduled (section 11).
-12. **Monitoring**: Prometheus scraping `/actuator/prometheus`, the Grafana dashboard imported, alerts set
+12. **Monitoring**: Prometheus scraping `/actuator/prometheus` with `bearer_token: <DRISHTI_METRICS_TOKEN>` (with security on, every
+    `/actuator` endpoint but health needs it, or an admin token; `/api/docs` needs any token), the Grafana dashboard imported, alerts set
     (section 13).
 13. **Secrets** only in a `0600` environment file or your secret store; never in `application.yaml` or a repository.
 
@@ -898,13 +900,14 @@ being parsed, and a later view reads that one message back by its offset.
 |---|---|---|---|
 | `GET :18480/actuator/health/liveness` | none | `{"status":"UP"}` | restart the process if it fails |
 | `GET :18480/actuator/health/readiness` | none | `{"status":"UP"}` | send traffic only when up (the image's health check) |
-| `GET :18480/actuator/info` | none | build version and time | which version is running |
-| `GET :18480/actuator/prometheus` | none | Prometheus metrics | scraping |
+| `GET :18480/actuator/info` | none (security on: admin or metrics token) | build version and time | which version is running |
+| `GET :18480/actuator/prometheus` | none (security on: `Authorization: Bearer $DRISHTI_METRICS_TOKEN`) | Prometheus metrics | scraping |
 | `GET :18480/api/v1/health/live` | token (when security is on) | live streaming numbers | quick latency check |
 | `GET :18480/api/v1/admin/health` | admin | everything in one answer | **Admin → Health** page, deep checks |
 | `GET :18480/api/v1/sources` | token | each connector and its health | which source is down |
 | `GET :18480/api/v1/sutras/problems` | token | Sutra problems, `{}` when none | broken Sutras |
-| `GET :17480/healthz` | none | `{"status":"UP"}` | the console process is answering (it does not check the server) |
+| `GET :17480/healthz` | none | `{"status":"UP"}` | the console process is answering (liveness; it does not check the server) |
+| `GET :17480/readyz` | none | `{"status":"UP","server":"reachable"}`, or `503` | the console can reach the server (readiness) |
 
 The calls that need a token work with plain `curl` only while security is off (development). In production,
 read them through the console's **Admin → Health** page, or from monitoring rely on the actuator.

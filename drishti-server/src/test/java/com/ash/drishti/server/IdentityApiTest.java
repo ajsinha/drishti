@@ -35,6 +35,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.sources.plugins.demo.settings.ticking=false", "drishti.identity.iterations=1000",
+        "drishti.security.metrics-token=scrape-token-for-tests",
         "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 class IdentityApiTest {
@@ -130,5 +131,16 @@ class IdentityApiTest {
         mvc.perform(get("/api/v1/views/fx-spot/EURUSD").header("Authorization", fiona)).andExpect(status().isForbidden());
         mvc.perform(get("/api/v1/admin/audit").param("subject", "fx-viewer").header("Authorization", admin))
                 .andExpect(jsonPath("$[*].action").value(hasItem("role-deleted")));
+    }
+
+    @Test
+    void operationalEndpointsAreGuardedWhenSecurityIsOn() throws Exception {
+        mvc.perform(get("/actuator/health")).andExpect(status().isOk());                                    // probes stay open
+        mvc.perform(get("/actuator/prometheus")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/actuator/info").header("Authorization", "Bearer scrape-token-for-tests")).andExpect(status().isOk());   // tests export no Prometheus registry
+        mvc.perform(get("/actuator/metrics").header("Authorization", as("tina", "trader"))).andExpect(status().isForbidden());
+        mvc.perform(get("/actuator/metrics").header("Authorization", as("drishti-dev-admin", "admin"))).andExpect(status().isOk());
+        mvc.perform(get("/api/docs")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/docs").header("Authorization", as("tina", "trader"))).andExpect(status().isOk());
     }
 }

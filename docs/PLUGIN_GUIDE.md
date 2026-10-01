@@ -127,8 +127,9 @@ Rules worth knowing:
   `false`, *except* a plugin used by any named connector: that one runs as itself only if it is also listed under
   `plugins`. So list a plugin you use only through connectors with `enabled: false` (as `application.yaml` does for
   `delta` and `aerospike`), or leave it out; a plugin that is neither listed nor used by a connector starts with empty
-  settings, and one that needs a setting (`kafka` needs `topics`, `feed` needs `feed`) then fails to start and is
-  listed under *failed to start* in health.
+  settings. One that needs a setting (`kafka` needs `topics`, `feed` needs `feed`) then stays idle: it throws
+  `PluginNotConfigured` from `start`, the log says *installed but not configured*, and health does not count it as a
+  failure. Your own plugins should do the same when they have nothing to run with.
 - **Names.** Routes, health and *How this view was built* use the connector's name. A plugin running as itself is
   known by its manifest name: `demo`, `file`, `rest` and `jdbc` always; `delta`, `aerospike`, `kafka`, `s3`, `feed`,
   `activemq` and `rabbitmq` by their `source-name` setting.

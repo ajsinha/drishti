@@ -128,7 +128,7 @@ public final class KafkaSourcePlugin implements SourcePlugin {
         this.sourceName = ctx.setting("source-name", "kafka");
         List<String> topics = List.of(ctx.setting("topics", "").split(",")).stream().map(String::trim).filter(s -> !s.isEmpty()).toList();
         if (topics.isEmpty()) {
-            throw new IllegalStateException("kafka plugin needs settings.topics");
+            throw new com.ash.drishti.api.PluginNotConfigured("kafka needs settings.topics");
         }
         this.defaultKind = ctx.setting("kind", null);
         this.defaultIdField = ctx.setting("id-field", "id");
@@ -352,7 +352,7 @@ public final class KafkaSourcePlugin implements SourcePlugin {
                 cache.invalidate(ref);
                 return;
             }
-            if (!ref.id().equals(r.key())) {
+            if (mapped == null || !ref.id().equals(r.key())) {   // apply() tracked only a mapped message, by its key
                 track(ref, r);
             }
             if (disk != null && mapped == null) {

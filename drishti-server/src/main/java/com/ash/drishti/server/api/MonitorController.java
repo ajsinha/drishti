@@ -136,7 +136,7 @@ public class MonitorController {
                 row.put("strip", v.strip());
                 row.put("live", v.provenance().live());
             } catch (DrishtiException e) {
-                row.put("error", e.errorCode().code() + " " + e.getMessage());
+                row.put("error", e.getMessage());                        // "DRS-1001 no source holds …": the code is in the message
             }
             out.add(row);
         }

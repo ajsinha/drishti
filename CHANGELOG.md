@@ -16,6 +16,16 @@
 # Changelog
 
 ## Unreleased
+- **Security: operational endpoints are guarded when security is on.**
+  - `/actuator/health` stays open for probes.
+  - The rest of `/actuator` (metrics, Prometheus, info) needs an admin token, or the scrape token `DRISHTI_METRICS_TOKEN` as a bearer token.
+  - `/api/docs` needs any valid token.
+- **Console readiness:** `/readyz` answers 503 while the console cannot reach the server; `/healthz` stays the cheap liveness check.
+- **Fixes:**
+  - **Kafka:** an envelope message keyed by the bare id (not `kind/id`) is now indexed, so it can be read.
+  - **Live ticks:** a live view's ticks come from the source it was read from, with a real stream before the demo samples, as reads already did.
+  - **Unconfigured plugins:** Kafka or a feed with no settings now stays idle (`PluginNotConfigured`) instead of being reported as failed.
+  - **Monitors:** monitor rows no longer repeat the error code.
 - **The product's name and legal notices come from configuration.**
   - **Server:** `drishti.branding.*` (product, tagline, owner, copyright, notice), used by the About answer and sign-in messages.
   - **Console:** `ui.*` (product, tagline, product_native, product_meaning, copyright, notice), used by every page, the footer, the landing page, About and alert notifications.

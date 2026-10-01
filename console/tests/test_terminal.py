@@ -315,3 +315,13 @@ def test_a_command_naming_several_entities_shows_a_pick_list(client, backend, mo
     assert r.status_code == 303 and r.headers["location"] == "/s?q=TRD%20T-100"
     one = client.get("/go", params={"q": "TRD T-10001"}, follow_redirects=False)
     assert one.headers["location"] == "/v/trade/T-10001"
+
+
+def test_readiness_says_whether_the_server_answers(client, backend, monkeypatch):
+    assert client.get("/readyz").json()["status"] == "UP"
+    async def down(ident=None):
+        raise BackendError(503, "DRS-5003", "backend unreachable")
+    monkeypatch.setattr(backend, "business_date", down, raising=False)
+    r = client.get("/readyz")
+    assert r.status_code == 503 and r.json()["server"] == "unreachable"
+    assert client.get("/healthz").json()["status"] == "UP"                  # liveness: the process itself
