@@ -16,6 +16,26 @@
 # Changelog
 
 ## Unreleased — A million trades a day, for seven years
+- **Delta Lake without Hadoop; Drishti on Windows** ([DELTA_CONNECTOR.md › Engines](docs/connectors/DELTA_CONNECTOR.md#16-engines-native-and-hadoop),
+  [WINDOWS.md](docs/guides/WINDOWS.md)). A new module, `drishti-deltalake`, is a Delta Kernel engine (`NativeEngine`)
+  that never touches Hadoop's file systems: local lakes through `java.nio` (drive letters, backslashes and UNC shares),
+  S3 through the AWS SDK v2, Parquet through parquet-java over its own input files (row groups pruned by statistics
+  for `id = X`, only the asked columns decoded, its own Snappy/ZSTD/GZIP page codecs, no Hadoop `Configuration`), commit
+  JSON and expressions through Kernel's Hadoop-free handlers; checkpoints, time travel and deletion vectors read as
+  before. It only reads.
+  - **The Delta connector's `engine` setting:** `native` (the default), `hadoop` (Kernel's default engine; also
+    `abfs://`, `gs://`, HDFS) or `auto` (native on Windows); `DRISHTI_DELTA_ENGINE` sets it for every connector.
+    Health says `UP (engine: native)`; the cache stats carry `engine`.
+  - **Tests:** every Delta test runs on both engines (the dated-source contract, the layout, S3 in Docker, a maintained
+    lake), plus a comparison of both engines' documents, id maps, columns, reverse lookups and time travel; deletion
+    vectors written by the protocol; and the connector run in a class loader that refuses Hadoop's `FileSystem`,
+    `Shell` and `Configuration`. Measured on a 10,000-trade lake, the native engine matches Hadoop's (a single read
+    4.4 ms against 5.6 ms median; a cold id map 225 ms against 190–285 ms).
+  - **Windows:** `tools/windows/start-server.ps1`, `start-console.ps1`, `load-delta.ps1`; a `windows` GitHub Actions
+    job (windows-latest, Temurin 25) that runs the engine's, the connector's and the server's tests and checks a view,
+    a search and a past date on a running server. Iceberg stays on Hadoop and is not supported on Windows (it is off
+    unless the `iceberg` profile is used).
+  - `DatedSourceContract` accepts a health of `UP (detail)`, as the server always has.
 - **Calc: Python on any view** ([PYTHON_CALC.md](docs/guides/PYTHON_CALC.md)). `Alt+C` opens a drawer like F9's with a
   Python editor (CodeMirror, Python mode), Run (`Ctrl+Enter`), Stop, the output and a history of runs. The code runs in
   the browser, in Pyodide 314.0.7 (CPython 3.14 on WebAssembly) inside a Web Worker, with numpy, pandas, scipy,

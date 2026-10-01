@@ -155,6 +155,7 @@ drishti/
 ├── drishti-packs/               domain pack loader (inheritance, installed and shipped packs)
 ├── drishti-diskcache/           the connectors' RocksDB disk cache
 ├── drishti-messaging/           shared support for message-queue connectors
+├── drishti-deltalake/           a Delta Kernel engine without Hadoop (local disk, Windows included, and S3)
 ├── drishti-server/              the Spring Boot application: API, security, alerts, reports, pack registry
 ├── drishti-testkit/ drishti-it/ test fixtures; architecture, licence-header and file-size gates
 ├── drishti-benchmarks/          JMH hot-path benchmarks

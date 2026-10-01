@@ -61,6 +61,7 @@ inherits from `spring-boot-starter-parent`, which aligns library versions, so th
 | `drishti-packs` | `packs` | Loads the enabled packs and turns them into the lowest-precedence property source. | `PackLoader`, `PackLineage`, `PackEnvironmentPostProcessor` (registered in `META-INF/spring.factories`) |
 | `drishti-diskcache` | `diskcache` | A disk-backed, size-bounded, self-clearing cache (RocksDB) for live connector state. | `DiskCache` |
 | `drishti-messaging` | `messaging` | The latest-state store and live fan-out shared by the ActiveMQ and RabbitMQ connectors. | `MessageStateSource` |
+| `drishti-deltalake` | `deltalake` | A Delta Kernel engine without Hadoop: local disk through `java.nio` (Windows paths included), S3 through the AWS SDK, Parquet through parquet-java with its own input files and codecs. Read-only. Its tests prove in an isolated class loader that no Hadoop `FileSystem`, `Shell` or `Configuration` loads. | `NativeEngine` |
 | `drishti-testkit` | `testkit` | Contract tests every source plugin of a kind must pass. | `DatedSourceContract`, `MessageSourceContract`, `BrokerOutage` |
 | `drishti-server` | `server` | The Spring Boot application: REST and SSE controllers, security, alerts, Sutra governance. | `DrishtiApplication`, `api.*Controller`, `security.Entitlements`, `security.TokenFilter`, `alerts.AlertEngine`, `governance.SutraGovernance` |
 | `drishti-it` | `it` | Repository-wide rules, as tests only. | `ArchitectureRulesTest`, `LicenseHeaderTest`, `SourceFileSizeTest` |
@@ -79,7 +80,7 @@ named connector (see [PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md)).
 | `drishti-plugin-file` | `file` | `<root>/<kind>/<id>.json` or `.csv`, and dated `<root>/<yyyy-MM-dd>/<kind>/<id>.json` | — |
 | `drishti-plugin-rest` | `rest` | An HTTP/JSON service | — |
 | `drishti-plugin-jdbc` | `jdbc` | A database by query, or the PostgreSQL entity-table mode | — |
-| `drishti-plugin-delta` | `delta` | Delta Lake tables through Delta Kernel (no Spark), with time travel | — |
+| `drishti-plugin-delta` | `delta` | Delta Lake tables through Delta Kernel (no Spark), with time travel; engine `native` (no Hadoop) or `hadoop` | `drishti-deltalake` |
 | `drishti-plugin-aerospike` | `aerospike` | A set per data domain: a record per entity per business date with promoted bins, an index record per entity, a record per kind (`AerospikeLayout`); `AerospikeLoader` writes it | — |
 | `drishti-plugin-feeds` | (one per feed) | Public feeds: NY Fed SOFR, ECB €STR and FX, US Treasury, FRED | — |
 | `drishti-plugin-kafka` | `kafka` | Compacted topics of entity documents | `drishti-diskcache` |
@@ -102,7 +103,8 @@ drishti-api                       (nothing internal; no Spring)
     └── drishti-testkit            (api, common)
 drishti-diskcache                 (nothing internal)
 drishti-messaging                 (api, diskcache)
-plugins/*                         (api; kafka adds diskcache; activemq and rabbitmq add messaging)
+drishti-deltalake                 (nothing internal)
+plugins/*                         (api; kafka adds diskcache; activemq and rabbitmq add messaging; delta adds deltalake)
 drishti-server                    (engine, identity, packs, and all eleven plugins)
 drishti-it                        (server, testkit)
 drishti-benchmarks                (inference)

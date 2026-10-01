@@ -57,11 +57,12 @@ about genes and variants. You choose which packs to load when you start the serv
 
 ## Step 1 · Install the prerequisites
 
-You need a Linux or macOS machine (Windows works through WSL) with:
+You need a Linux or macOS machine with the tools below. On Windows, Drishti runs natively (no WSL, no Hadoop
+`winutils.exe`): follow [WINDOWS.md](WINDOWS.md), which covers the same steps in PowerShell.
 
 | Tool | Version | Why | Check with |
 |---|---|---|---|
-| OpenJDK | **21** exactly | builds and runs the server | `java -version` |
+| OpenJDK | **25** exactly | builds and runs the server | `java -version` |
 | Python | 3.11 or newer | runs the console | `python3 --version` |
 | uv | any recent | creates the console's Python environment and builds sample history | `uv --version` |
 | git | any | downloads the code | `git --version` |
