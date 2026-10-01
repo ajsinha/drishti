@@ -79,14 +79,20 @@
     });
     if (d.limit != null && series.length) {
       series[0].markLine = { symbol: 'none', silent: true, lineStyle: { type: 'dashed', color: t.neg },
-        label: { formatter: (d.limitLabel || 'limit') + ' ' + compact(d.limit), color: t.neg, fontSize: 10 }, data: [{ yAxis: d.limit }] };
+        label: { position: 'insideEndTop', formatter: (d.limitLabel || 'limit') + ' ' + compact(d.limit), color: t.neg, fontSize: 10 }, data: [{ yAxis: d.limit }] };
     }
     var axis = { axisLine: { lineStyle: { color: t.border } }, axisLabel: { color: t.muted, fontFamily: t.mono, fontSize: 10 }, splitLine: { lineStyle: { color: t.border, opacity: .5 } } };
+    var yAxis = Object.assign({ type: 'value', scale: !area, axisLabel: { color: t.muted, fontFamily: t.mono, fontSize: 10, formatter: compact } }, { axisLine: axis.axisLine, splitLine: axis.splitLine });
+    if (typeof d.limit === 'number' && isFinite(d.limit)) {
+      // the axis reaches the limit, so its dashed line shows even when every value stays below (or above) it
+      yAxis.max = function (v) { var m = Math.max(v.max, d.limit); return m + Math.abs(m - Math.min(v.min, d.limit)) * 0.05; };
+      yAxis.min = function (v) { var m = Math.min(v.min, d.limit); return area && m >= 0 ? 0 : m - Math.abs(Math.max(v.max, d.limit) - m) * 0.05; };
+    }
     return {
       animationDuration: 500, grid: { left: 44, right: 12, top: 12, bottom: 22 },
       tooltip: { trigger: 'axis', backgroundColor: t.surface, borderColor: t.border, textStyle: { color: t.ink, fontFamily: t.mono, fontSize: 11 } },
       xAxis: Object.assign({ type: 'category', data: d.x, boundaryGap: false }, axis),
-      yAxis: Object.assign({ type: 'value', scale: !area, axisLabel: { color: t.muted, fontFamily: t.mono, fontSize: 10, formatter: compact } }, { axisLine: axis.axisLine, splitLine: axis.splitLine }),
+      yAxis: yAxis,
       series: series
     };
   }

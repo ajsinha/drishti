@@ -1140,8 +1140,8 @@ panels:
 | `limit`, `limitLabel` | An expression for the dashed line, and its legend text. |
 
 **You should see** two filled bands over `0, 1M, 3M … 10Y`, peaking at `3M` (expected exposure 379,996, PFE 878,778),
-and *Credit limit* in the legend. The vertical axis is scaled to the bands, so a limit far above them, as this
-netting set's 5,000,000, is above the plotted range: it uses less than a fifth of its limit.
+and *Credit limit* in the legend. The vertical axis always reaches the limit, so the dashed line at 5,000,000 is drawn
+(labelled *limit 5.0m*) well above the bands: the netting set uses less than a fifth of its limit.
 
 **Common mistake:** writing `y: ee` as for a line: `DRS-2023 option 'y' is not valid for 'area' panels`. An area's
 values are its `series`.
