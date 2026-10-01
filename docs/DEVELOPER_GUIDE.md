@@ -928,7 +928,8 @@ panel kind spans the grammar, the engine and the console:
 | `console/web/static/css/terminal.css` | Its styles (no `style=` attributes: the CSP forbids them). |
 | `console/core/export.py` and the `data-export-panel` list in `panels.html` | Only if its data should download as CSV. |
 | `console/tests/test_terminal.py` | `"metric"` in `KINDS`, so it is rendered with broken data. |
-| `console/web/guides/panel-kinds.md`, `RACHANA_REFERENCE.md`, `console/config/help.yaml` | Documentation (and the count: "thirteen panel kinds" is written in several places, including `PanelKind`'s Javadoc). |
+| `drishti-server/src/test/java/com/ash/drishti/server/StudioTest.java` | The schema test counts the kinds: `hasSize(13)` becomes `hasSize(14)`. |
+| `console/web/guides/panel-kinds.md`, `sutra-guide.md`, `sutra-studio.md`, `RACHANA_REFERENCE.md`, `console/config/help.yaml` | Documentation, and the count: "thirteen panel kinds" is written in several places, including `PanelKind`'s Javadoc (`grep -rni thirteen`). `console/tests/test_help.py` checks the panel-kinds guide's title (`"The thirteen panel kinds" in page`), so change it with the title. |
 
 Nothing to do for editors: the JSON Schema served at `GET /api/v1/rachana/schema` (`RachanaSchema`) is built from
 `PanelKind`, so `metric` and its options appear in Studio's completion, and in any editor that reads the schema, as
@@ -963,10 +964,19 @@ You should see `metric` at the end of the list of kinds.
     }
 ```
 
-**The macro** in `panels.html`, next to the other kinds (the `tone` and `cell_text` macros already exist there):
+**The macro** in `panels.html`: one more `elif` in the `panel(p)` macro, after the `gauge` branch and before its
+`{% endif %}` (the `tone` and `cell_text` macros already exist there):
 
 ```jinja
   {% elif p.kind == 'metric' %}{% set m = (p.data.fields or [{}])[0] %}<div class="metric"><span class="metric-v mono{{ tone(m) }}">{{ cell_text(m) }}</span>{% if m.label %}<span class="metric-l">{{ m.label }}</span>{% endif %}</div>
+```
+
+**The styles** in `terminal.css`, next to `.gauge`:
+
+```css
+.metric { display: flex; align-items: baseline; gap: .5rem; }
+.metric-v { font-size: 2rem; font-weight: 600; }
+.metric-l { color: var(--d-muted); font-size: .85rem; }
 ```
 
 **A Sutra uses it** like any other kind:
@@ -976,8 +986,10 @@ panels:
   - { id: mtm, kind: metric, title: MTM, value: $.mtm, fmt: signed0, tone: sign, label: USD }
 ```
 
-**Test the binding** through the real pipeline with a Sutra and a document supplied by the test.
-`ViewPipeline.preview(Optional<Sutra>, EntityDocument)` builds a view without any source:
+**Test the binding** through the real pipeline with a Sutra and a document supplied by the test, in
+`drishti-server/src/test/java/com/ash/drishti/server/MetricPanelTest.java`.
+`ViewPipeline.preview(Optional<Sutra>, EntityDocument)` builds a view without any source. Every Sutra starts with
+`rachana: 1` (the parser rejects one without it, `DRS-2009`):
 
 ```java
 package com.ash.drishti.server;
@@ -1006,13 +1018,14 @@ class MetricPanelTest {
     @Autowired JsonCodec codec;
 
     static final Sutra SUTRA = new SutraParser().parse("""
+            rachana: 1
             sutra: metric-demo
             version: 1
             match: { kind: trade }
             title: { pill: Trade, id: $.tradeId }
             panels:
               - { id: mtm, kind: metric, title: MTM, value: $.mtm, fmt: signed0, tone: sign, label: USD }
-            """, "metric-demo.yaml", "test");
+            """, "metric-demo.sutra.yaml", "test");
 
     ViewModel.PanelView panel(String json) {
         EntityDocument doc = new EntityDocument(EntityRef.of("trade", "T-1"), codec.read(json),
@@ -1112,6 +1125,16 @@ columns:                           # key fields shown in pick lists and searches
   wind-farm: [name, country, capacityMw, capacityFactor, status]
 roles:
   energy-analyst: { kinds: [wind-farm, turbine, ppa, counterparty], raw: true }
+console:
+  examples:
+    - ["WF WF-HORNSEA-1", "Wind farm · output, turbines, PPAs"]
+  help: config/help.yaml
+```
+
+With no `connectors` or `routes`, the demo plugin serves the pack's `samples/`. When the data lives in a store,
+declare a named connector and route kinds to it, as the banking packs do:
+
+```yaml
 connectors:                        # named connectors this pack's data comes from
   energy-store:
     plugin: delta
@@ -1120,11 +1143,11 @@ connectors:                        # named connectors this pack's data comes fro
     settings: { root: "${DRISHTI_DELTA_ROOT:./data/delta}", domain: energy }
 routes:
   wind-farm: energy-store
-console:
-  examples:
-    - ["WF WF-HORNSEA-1", "Wind farm · output, turbines, PPAs"]
-  help: config/help.yaml
 ```
+
+A routed kind is then read only from that store: until `data/delta/energy` exists the connector is `DOWN`, the
+pack's health is `DEGRADED` (it counts in `packsWithProblems`), and `WF WF-HORNSEA-1` finds nothing, because the
+samples are no longer consulted for that kind.
 
 A Sutra in `sutras/` is one YAML file named `<name>.v<N>.sutra.yaml` (ADR-017). Its first key is `rachana: 1`,
 the version of the Rachana language; `description` (one paragraph) and `notes` (as long as you like) hold the
@@ -1168,9 +1191,14 @@ for the dropdown.
 curl -s localhost:18480/api/v1/packs | python3 -c 'import json,sys; print([p["name"] for p in json.load(sys.stdin)])'
 curl -s localhost:18480/api/v1/sutras/problems
 curl -s localhost:18480/api/v1/admin/health | python3 -m json.tool | head -20
+curl -s localhost:18480/api/v1/views/wind-farm/WF-HORNSEA-1 | python3 -c 'import json,sys; v=json.load(sys.stdin); print(v["title"]["pill"], [p["id"] for p in v["panels"]])'
 ```
 
-You should see `energy` among the packs, `{}` for problems, and `"packsWithProblems":0`. Two packs that define the
+You should see `['banking-core', 'energy']`, `{}` for problems, `"packsWithProblems": 0`, and
+`Energy · Wind farm ['turbines', 'refs']`: the sample laid out by the `wind-farm` Sutra. The parent `banking-core` reads its reference data from the Delta Lake under `data/delta`, which
+is not in git: build it once (`make_data.py --lake data/delta`, see [README.md](../README.md)) or point
+`DRISHTI_DELTA_ROOT` at one; without it `banking-core` reports its `reference-store` connector `DOWN` and counts in
+`packsWithProblems`. Two packs that define the
 same mnemonic, role or connector differently without one extending the other stop the server at start-up: that is
 why `finance` and the banking packs (both define `TRD`) cannot be loaded together.
 
@@ -1260,10 +1288,20 @@ an existing table** is not added by `CREATE TABLE IF NOT EXISTS`; it needs its o
 (and a release note), so prefer new tables or nullable columns, and say in the release notes what an upgrade does.
 Hibernate validates the PostgreSQL schema at start-up, so a column the entity has and the file lacks stops the server.
 
-**4. The store**, `identity/NoticeStore.java`, in the style of `PackStateStore`: an immutable snapshot for readers,
-a lock for writers, every change in a transaction and audited:
+**4. The store**, `drishti-identity/src/main/java/com/ash/drishti/identity/NoticeStore.java`, in the style of
+`PackStateStore`: an immutable snapshot for readers, a lock for writers, every change in a transaction and audited:
 
 ```java
+package com.ash.drishti.identity;
+
+import com.ash.drishti.identity.db.IdentityRepositories;
+import com.ash.drishti.identity.db.NoticeEntity;
+import java.time.Instant;
+import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
+import org.springframework.transaction.support.TransactionTemplate;
+
+/** Site-wide notices: readers see an immutable snapshot (lock-free); changes are serialised and audited. */
 public final class NoticeStore {
 
     public record Notice(String name, String text, Instant updatedAt, String updatedBy) {}
@@ -1347,9 +1385,10 @@ Run it on both databases before you merge (Docker must be running for the Postgr
 ### 5.7 Add a configuration property
 
 **Goal:** `drishti.notices.max-length` (default 500), settable as `DRISHTI_NOTICE_MAX_LENGTH`, used by
-`NoticeStore` from the previous recipe.
+`NoticeStore` from the previous recipe (apply that one first).
 
-**1. A record** with its defaults in the compact constructor and each key documented as a `@param`:
+**1. A record** with its defaults in the compact constructor and each key documented as a `@param`, in
+`drishti-identity/src/main/java/com/ash/drishti/identity/NoticeProperties.java`:
 
 ```java
 package com.ash.drishti.identity;
@@ -1373,16 +1412,51 @@ public record NoticeProperties(Integer maxLength) {
 Boxed types (`Integer`, `Boolean`, `Duration`) let the constructor tell "not set" from a value. If a record has a
 second constructor, mark the canonical one `@ConstructorBinding`, as `SearchProperties` does.
 
-**2. Register it** on the module's configuration class and inject it where it is used:
+**2. Register it** on the module's configuration class: in `IdentityConfiguration`,
+`@EnableConfigurationProperties(IdentityProperties.class)` becomes
 
 ```java
 @EnableConfigurationProperties({IdentityProperties.class, NoticeProperties.class})
 ```
 
+and inject it where it is used. The `noticeStore` bean takes it as one more parameter:
+
+```java
+    @Bean
+    public NoticeStore noticeStore(IdentityRepositories.Notices notices, TransactionTemplate identityTransactions, JpaAuditLog auditLog,
+            NoticeProperties noticeProperties) {
+        return new NoticeStore(notices, identityTransactions, auditLog, noticeProperties.maxLength());
+    }
+```
+
+and `NoticeStore` keeps the limit and checks it first in `set` (add the imports
+`com.ash.drishti.common.DrishtiException` and `com.ash.drishti.common.ErrorCode`):
+
+```java
+    private final int maxLength;
+
+    public NoticeStore(IdentityRepositories.Notices notices, TransactionTemplate tx, AuditLog audit, int maxLength) {
+        this.notices = notices;
+        this.tx = tx;
+        this.audit = audit;
+        this.maxLength = maxLength;
+        reload();
+    }
+
+    public void set(String name, String text, boolean on, String actor) {
+        if (text.length() > maxLength) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "a notice is at most " + maxLength + " characters");
+        }
+        writes.lock();
+        // … as before …
+```
+
 To add a key to an **existing** record instead, add a component to it. Every `new XxxProperties(...)` call in tests
 then needs the extra argument (for example `ImperfectDataTest` constructs `RachanaProperties` directly).
 
-**3. Put it in `application.yaml`** with an environment override and a comment saying what it does:
+**3. Put it in `drishti-server/src/main/resources/application.yaml`** with an environment override and a comment
+saying what it does. The file has one `drishti:` block: add `notices:` inside it (for example after `identity:`), not
+a second `drishti:` key, which YAML rejects as a duplicate:
 
 ```yaml
 drishti:
@@ -1397,8 +1471,20 @@ The default in the YAML and in the record must agree: the record's default appli
 and the environment variable.
 
 **5. Test it** where the behaviour is, with the property set in the test:
-`@SpringBootTest(properties = "drishti.notices.max-length=20")`, or in the identity contract by adding
-`props.put("drishti.notices.max-length", "20")` in `open()`.
+`@SpringBootTest(properties = "drishti.notices.max-length=40")`, or in the identity contract by adding
+`props.put("drishti.notices.max-length", "40");` in `open()` (40, so the previous recipe's 23-character notice still
+fits) and a test beside `noticesRoundTripOnEveryDatabase`:
+
+```java
+    @Test
+    void aNoticeLongerThanTheConfiguredMaximumIsRefused() {
+        assertThatThrownBy(() -> bean(NoticeStore.class).set("long", "x".repeat(41), true, "drishti-dev-admin"))
+                .isInstanceOf(DrishtiException.class).hasMessageContaining("at most 40");
+    }
+```
+
+Then run `./mvnw -o -pl drishti-identity -am install` and `./mvnw -o test -pl drishti-server` (the server starts
+with the new property bound).
 
 **In the console** the pattern is the same YAML: add the key to `console/config/application.yaml` as
 `${DRISHTI_SOMETHING:default}` and read it with `settings.get("section.key", default)`. Every console key can also be
