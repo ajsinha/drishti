@@ -18,6 +18,7 @@ package com.ash.drishti.engine.source;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityHit;
@@ -32,6 +33,7 @@ import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.common.JsonCodec;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -219,5 +221,54 @@ class SourceRouterTest {
         assertThat(registry.freshness("silent").stale()).isFalse();                  // no stale-after: never stale
         assertThat(registry.freshness("silent").lastUpdate()).isNotNull();
         assertThat(registry.freshness("nobody").lastUpdate()).isNull();
+    }
+
+    /** Columns for one date only, like a store that keeps recent history. */
+    public static final class Recent implements SourcePlugin {
+        private final String name;
+        private final LocalDate holds;
+
+        public Recent(String name, LocalDate holds) {
+            this.name = name;
+            this.holds = holds;
+        }
+
+        @Override
+        public PluginManifest manifest() {
+            return new PluginManifest(name, "t", Set.of("trade"), new SourceCapabilities(false, false, false, true));
+        }
+
+        @Override
+        public void start(SourceContext c) {}
+
+        @Override
+        public Optional<EntityDocument> fetch(EntityRef ref) {
+            return Optional.empty();
+        }
+
+        @Override
+        public Set<String> columnar(String kind) {
+            return Set.of("mtm");
+        }
+
+        @Override
+        public Optional<com.ash.drishti.api.ColumnSet> columns(String kind, java.util.Collection<String> paths, AsOf asOf) {
+            if (!holds.equals(asOf.businessDate())) {
+                return Optional.empty();
+            }
+            return Optional.of(new com.ash.drishti.api.ColumnSet(new String[] {name}, Map.of("mtm", new double[] {1}), Map.of(), holds));
+        }
+    }
+
+    @Test
+    void aSearchOnADateOneStoreDoesNotHoldReadsTheNextThatDoes() {
+        LocalDate today = LocalDate.of(2026, 9, 30);
+        LocalDate old = LocalDate.of(2019, 12, 5);
+        var props = new SourcesProperties(Map.of("trade", "recent"), null, Map.of(), Duration.ofMillis(300), null, Map.of());
+        var registry = new SourceRegistry(List.of(new Recent("recent", today), new Recent("history", old)), props, new JsonCodec());
+        var router = new SourceRouter(registry, props, Executors.newVirtualThreadPerTaskExecutor());
+        assertThat(router.columns("trade", List.of("mtm"), AsOf.of(today), Duration.ofSeconds(2)).orElseThrow().ids()).containsExactly("recent");
+        assertThat(router.columns("trade", List.of("mtm"), AsOf.of(old), Duration.ofSeconds(2)).orElseThrow().ids()).containsExactly("history");
+        assertThat(router.columns("trade", List.of("mtm"), AsOf.of(LocalDate.of(2001, 1, 2)), Duration.ofSeconds(2))).isEmpty();
     }
 }

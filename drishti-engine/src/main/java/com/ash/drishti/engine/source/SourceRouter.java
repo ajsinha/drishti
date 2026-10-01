@@ -225,23 +225,31 @@ public final class SourceRouter {
         } else {
             liveFirst(candidates);
         }
-        // the first source that keeps the paths as columns (a store of record such as a Delta table); sources that
-        // only hold documents (samples, a stream of today's changes) are not asked: a search over columns reads the store
-        SourcePlugin first = candidates.stream().filter(p -> p.columnar(kind).containsAll(paths)).findFirst().orElse(null);
-        if (first == null) {
-            return Optional.empty();
-        }
-        try {
-            return CompletableFuture.supplyAsync(() -> {
-                try {
-                    return first.columns(kind, paths, asOf);
-                } catch (Exception e) {
-                    throw new CompletionException(e);
+        // sources that keep the paths as columns, in read order (a store of record such as a Delta table or an Aerospike
+        // set); sources that only hold documents (samples, a stream of today's changes) are not asked. A source that does
+        // not hold the date (recent history in Aerospike, years in Delta) answers empty and the next one is asked.
+        long deadline = System.nanoTime() + budget.toNanos();
+        for (SourcePlugin p : candidates.stream().filter(c -> c.columnar(kind).containsAll(paths)).toList()) {
+            long left = deadline - System.nanoTime();
+            if (left <= 0) {
+                return Optional.empty();
+            }
+            try {
+                Optional<com.ash.drishti.api.ColumnSet> got = CompletableFuture.supplyAsync(() -> {
+                    try {
+                        return p.columns(kind, paths, asOf);
+                    } catch (Exception e) {
+                        throw new CompletionException(e);
+                    }
+                }, executor).orTimeout(left, TimeUnit.NANOSECONDS).join();
+                if (got.isPresent()) {
+                    return got;
                 }
-            }, executor).orTimeout(budget.toMillis(), TimeUnit.MILLISECONDS).join();
-        } catch (CompletionException e) {
-            return Optional.empty();                           // too slow or failed: documents are read instead
+            } catch (CompletionException e) {
+                return Optional.empty();                       // too slow or failed: documents are read instead
+            }
         }
+        return Optional.empty();
     }
 
     /** The paths a source of the kind keeps as columns (the first that keeps any). */

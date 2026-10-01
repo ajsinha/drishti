@@ -353,6 +353,23 @@ The `postgres` profile (`application-postgres.yaml`, inside the jar) points each
 table `<domain>.entities`; the `aerospike` profile points them at a set per domain. The packs still decide the
 kinds and routes; the profile changes only the store.
 
+**Aerospike at scale, and retention.** Each domain is three sets: `<domain>` (a record per entity per business date,
+the document and the pack's promoted fields as bins), `<domain>_ix` (a record per entity listing its dates) and
+`<domain>_kinds` (the kinds' dates). Add a bulk book and a retention period to the load:
+
+```bash
+tools/load-aerospike.sh localhost:3000 test --trades 1000000 --days 3 --ttl-days 730
+```
+
+`--trades N --days D` streams `bulk_trades.py` straight into the loader (no file in between). `--ttl-days N` gives
+every record written a time to live of N days, so Aerospike expires old business dates by itself: there is no
+maintenance job, unlike the lake ([section 11](#11-the-lake-where-it-lives-and-keeping-it-bounded)). Without it,
+records never expire. In the generated book a day record takes about 7 KB of namespace storage and an index record
+about 150 bytes (`asinfo -v sets/test/trading` and `sets/test/trading_ix`: `data_used_bytes` over `objects`); size
+the namespace for trades × days kept. Drishti's memory does not grow with the days kept: it holds one id per entity in the index set and the
+days of promoted bins in use (section 12). See
+[AEROSPIKE_CONNECTOR.md](AEROSPIKE_CONNECTOR.md) for the design.
+
 ### 5.3 Live trades from Kafka
 
 ```bash
@@ -898,7 +915,7 @@ Nothing grows with the day's data without bound. Every cache has a size limit yo
 | Kafka disk cache (per connector) | every live message of the day, on local disk (RocksDB, no write-ahead log, LZ4, oldest files dropped first) | `disk-cache.max-gb` (10); cleared every night at `disk-cache.reset-at` (02:00 New York); its own directory `disk-cache.dir` (default `<disk-cache.root>/<connector>`, root `./data/cache`), so connectors never contend on one store and a busy stream can have its own disk |
 | ActiveMQ / RabbitMQ connectors | recently read documents in memory; every received message on disk | `cache-mb` (128); `state.max-gb` (10) under `state.dir` (default `./data/state/<connector>`) |
 | Delta Lake connector | table partitions read recently | `cache-mb` (512) |
-| Aerospike connector | dates, identifiers and (optionally) references learned by scanning | `reverse-index: false` for large sets |
+| Aerospike connector | the kinds' dates and the ids (from the index set), and days of promoted bins for searches, impact and reverse lookups; not the days kept | `columns-cache-mb` (1024), kept `columns-seconds` (300) |
 | PostgreSQL (JDBC table mode) | nothing: every read is a query | `pool-size` connections |
 | Engine | layouts, shape fingerprints, compiled expressions | `drishti.engine.layout-cache-size` (10,000), `fingerprint-cache-size` (100,000), `drishti.rachana.expression-cache-size` (10,000) |
 | Live views | the current document of each entity someone is watching | `drishti.live.max-streams` (20,000) |

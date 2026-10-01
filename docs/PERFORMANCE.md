@@ -41,6 +41,9 @@ anyone can check it again.
 
 ### A book of a million trades a day
 
+How the connectors achieve these figures is in [DELTA_CONNECTOR.md](DELTA_CONNECTOR.md) and, for the same book in
+Aerospike, [AEROSPIKE_CONNECTOR.md](AEROSPIKE_CONNECTOR.md).
+
 Measured 2026-10-01 on the developer workstation (24 cores, server heap 15.6 GB), the trading pack's lake laid out as
 declared ([PACKS.md](PACKS.md#large-kinds-the-lake-layout)), 1,000,000 trades a day over three business days (5.2 GB;
 `tools/samplegen/bulk_trades.py --trades 1000000 --days 3`), times over HTTP:

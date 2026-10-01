@@ -407,7 +407,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         }
         List<LocalDate> dates = candidates(kind, l.get(), asOf.businessDate());
         if (dates.isEmpty()) {
-            return Optional.of(new com.ash.drishti.api.ColumnSet(new String[0], Map.of(), Map.of(), null));
+            return Optional.empty();                           // a date this table does not hold: another source may
         }
         com.ash.drishti.api.ColumnSet all = columnSet(kind, l.get(), dates.get(0), cols);
         Map<String, double[]> nums = new LinkedHashMap<>();

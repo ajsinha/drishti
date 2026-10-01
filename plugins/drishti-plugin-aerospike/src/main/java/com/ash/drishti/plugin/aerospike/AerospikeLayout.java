@@ -48,7 +48,7 @@ import java.util.Map;
  *
  * Aerospike bin names are at most 15 characters: a promoted path is its name with dots as underscores, or, when
  * longer, its first 10 characters, an underscore and 4 hex digits of its SHA-1 ({@code counterparty.name} is
- * {@code counterpart_xxxx}). Writers and the connector share this rule.
+ * {@code counterpar_f5fe}). Writers and the connector share this rule.
  */
 public final class AerospikeLayout {
 

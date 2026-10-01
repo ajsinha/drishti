@@ -447,7 +447,7 @@ Dated sources stamp `Provenance.businessDate` and are tried first for a picked d
 | `delta` | Delta Lake through Delta Kernel: `<root>/<domain>/<kind>/business_date=yyyy-MM-dd/`; `root` may be local or object storage (`s3a://…`, through `LakeStore`); time travel answers "as known at" |
 | `file`, `s3` | dated folders `<root or prefix>/<yyyy-MM-dd>/<kind>/<id>.json`, newest on or before the date |
 | `jdbc` | a query that uses `:asOf` |
-| `aerospike` | one bin per business date in each record |
+| `aerospike` | a record per entity per business date (`kind/id/yyyyMMdd`), found through the entity's index record listing its dates ([AEROSPIKE_CONNECTOR.md](AEROSPIKE_CONNECTOR.md)) |
 | `feeds` | keeps dated observations of public feeds |
 
 ```

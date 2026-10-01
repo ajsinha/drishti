@@ -80,7 +80,7 @@ named connector (see [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md)).
 | `drishti-plugin-rest` | `rest` | An HTTP/JSON service | — |
 | `drishti-plugin-jdbc` | `jdbc` | A database by query, or the PostgreSQL entity-table mode | — |
 | `drishti-plugin-delta` | `delta` | Delta Lake tables through Delta Kernel (no Spark), with time travel | — |
-| `drishti-plugin-aerospike` | `aerospike` | A record per entity per data domain, a bin per business date | — |
+| `drishti-plugin-aerospike` | `aerospike` | A set per data domain: a record per entity per business date with promoted bins, an index record per entity, a record per kind (`AerospikeLayout`); `AerospikeLoader` writes it | — |
 | `drishti-plugin-feeds` | (one per feed) | Public feeds: NY Fed SOFR, ECB €STR and FX, US Treasury, FRED | — |
 | `drishti-plugin-kafka` | `kafka` | Compacted topics of entity documents | `drishti-diskcache` |
 | `drishti-plugin-activemq` | `activemq` | ActiveMQ queues and topics | `drishti-messaging` |

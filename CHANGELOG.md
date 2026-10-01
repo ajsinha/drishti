@@ -15,6 +15,28 @@
 -->
 # Changelog
 
+## Unreleased — A million trades a day, for seven years
+- **Delta Lake at scale** ([DELTA_CONNECTOR.md](docs/DELTA_CONNECTOR.md)). A pack declares a kind's lake layout (`layout.<kind>`: promoted columns, rows sorted by id, files of 250,000 rows, row groups of 1,000), and the writers and nightly maintenance keep it.
+  - **Reads:** the connector never loads a day. An id map per day finds an entity's file; one row group is read per entity; type-ahead comes from the id column.
+  - **Columns:** searches, pick lists, derived kinds, impact and reverse lookups read a day's promoted columns, cached and warmed for the newest day. A search over a million trades takes 120–320 ms and is exact, no longer `partial`.
+  - **Log:** statistics leave out the document, so the log stays small. Maintenance re-sorts only the days that drifted from the layout.
+- **Aerospike at scale** ([AEROSPIKE_CONNECTOR.md](docs/AEROSPIKE_CONNECTOR.md)). Data is stored as a record per entity per business day, an index record per entity and a dates record per kind, with promoted bins. This replaces a record per entity with a bin per day, which could not hold more than about four and a half years.
+  - **Reads:** two key reads per entity. Type-ahead comes from the index set.
+  - **Columns:** a day's promoted bins are read by filtered scans, run in parallel over partition ranges.
+  - **Loader and retention:** the loader streams and writes in parallel; record TTL gives retention without a maintenance job.
+- **Recent history in one store, years in another.** A search on a business day that the first store does not hold (for example, older than Aerospike's TTL) is answered by the next store that does (for example, Delta Lake).
+- **Engine:**
+  - The plugin interface gains `columnar`/`columns` (`ColumnSet`). Derived kinds aggregate over columns and serve their last result while recomputing.
+  - Impact lists 200 entities per group with a count of the rest.
+  - The type-ahead index keeps ids sorted for a million entities per kind.
+- **Booking-system trade ids.** Trades carry their booking system's id and `sourceSystem`/`sourceTradeId`: Murex `MX-`, Calypso `CLY-`, Endur `END-`, Imagine `IMG-`, Bloomberg TOMS `BBG-` and Wall Street Systems `WSS-`.
+- **Generators:**
+  - `tools/samplegen/bulk_trades.py --trades N --days D` writes a laid-out book, or JSON lines for Aerospike.
+  - `tools/load-aerospike.sh --trades N --days D --ttl-days N` streams a book into Aerospike.
+- **Fixes:**
+  - A pick list over a book larger than the scan limit no longer fails.
+  - Reverse lookups no longer merge in quadratic time.
+
 ## 1.12.0 — Derived kinds, notes, reports, plain words and a signed pack registry (2026-10-01)
 - **A signed, versioned pack registry (ADR-018).** `tools/packreg/packreg.py` makes Ed25519 keys and publishes pack folders as reproducible, signed archives with an `index.json`.
   - **Installing:** Admin → Packs → **From the registry** installs, upgrades and rolls back packs.

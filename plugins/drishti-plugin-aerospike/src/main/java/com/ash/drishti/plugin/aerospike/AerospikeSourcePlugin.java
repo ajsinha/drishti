@@ -62,8 +62,8 @@ import java.util.concurrent.TimeUnit;
  * {@code effective} kind takes the entity's last date on or before it. Type-ahead comes from the index set alone;
  * searches, pick lists, derived kinds and impact read the day's promoted bins ({@code layout.<kind>.columns}) with a
  * server-side filtered scan, kept by memory ({@code columns-cache-mb}, 1024; refreshed after {@code columns-seconds},
- * 300, for the newest day). Reverse lookups use the promoted link bins; without them a day's documents are scanned
- * only when it has at most {@code max-load-rows} (200000) entities.
+ * 300, for the newest day). Reverse lookups use the promoted link bins; without them up to {@code max-load-rows}
+ * (200000) of the day's documents are scanned.
  *
  * <p>Settings: {@code hosts} ({@code localhost:3000}), {@code namespace} ({@code test}), {@code set} (the data domain,
  * e.g. {@code trading}), {@code kinds} (default: what the kinds set lists), {@code mode.<kind>}, {@code reverse-index}
@@ -251,9 +251,12 @@ public final class AerospikeSourcePlugin implements SourcePlugin {
         }
         Optional<LocalDate> day = snapshotDate(kind, asOf.businessDate());
         if (day.isEmpty()) {
-            return Optional.of(new ColumnSet(new String[0], Map.of(), Map.of(), null));
+            return Optional.empty();                           // a date this set does not hold (older than its TTL): another source may
         }
         ColumnSet all = columnSets.get(new DayKey(kind, day.get()), k -> scanDay(kind, day.get(), promoted.get(kind)));
+        if (all.size() == 0) {
+            return Optional.empty();                           // the day's records expired (TTL): an older store may hold it
+        }
         Map<String, double[]> nums = new LinkedHashMap<>();
         Map<String, String[]> texts = new LinkedHashMap<>();
         for (String p : paths) {
@@ -390,7 +393,7 @@ public final class AerospikeSourcePlugin implements SourcePlugin {
     private Set<String> scanReferences(String kind, String target, LocalDate day, LocalDate asked) {
         ScanPolicy sp = new ScanPolicy();
         sp.concurrentNodes = true;
-        sp.maxRecords = maxLoadRows;
+        sp.maxRecords = Math.max(1, maxLoadRows / Math.max(1, scanThreads));   // each partition range scans its share
         Exp byKind = Exp.eq(Exp.stringBin(AerospikeLayout.KIND), Exp.val(kind));
         sp.filterExp = Exp.build(day != null ? Exp.and(byKind, Exp.eq(Exp.intBin(AerospikeLayout.DATE), Exp.val(AerospikeLayout.day(day))))
                 : asked == null ? byKind : Exp.and(byKind, Exp.le(Exp.intBin(AerospikeLayout.DATE), Exp.val(AerospikeLayout.day(asked)))));

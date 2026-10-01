@@ -689,16 +689,32 @@ Layout as the file connector: `<prefix><kind>/<id>.json` and `<prefix><yyyy-MM-d
 
 ### `aerospike`
 
+A data domain is three sets: `<set>` (a record per entity per business date, key `kind/id/yyyyMMdd`, bins `kind`,
+`id`, `date`, `doc` and the promoted fields), `<set>_ix` (a record per entity, key `kind/id`, bin `dates`) and
+`<set>_kinds` (a record per kind, bin `dates`). See the [connector guide](CONNECTOR_GUIDE.md#9-a-key-value-store-aerospike)
+and [AEROSPIKE_CONNECTOR.md](AEROSPIKE_CONNECTOR.md).
+
 | Setting | Default | Meaning |
 |---|---|---|
-| `hosts` | `localhost:3000` | |
+| `hosts` | `localhost:3000` | Seed hosts, `host:port`, comma-separated. |
 | `namespace` | `test` | |
-| `set` | the connector's `domain`, else `drishti` | |
-| `kinds`, `mode.<kind>`, `lookback-days` | found by scan, `snapshot`, `10` | As for Delta. |
-| `reverse-index` | `true` | Keep the reference index; turn off for very large sets. |
-| `refresh-seconds` | `60` | Re-scan interval. |
+| `set` | the connector's `domain`, else `drishti` | The domain's set; the index and kinds sets add `_ix` and `_kinds`. |
+| `kinds` | what the kinds set lists | Kinds served. |
+| `mode.<kind>` | `snapshot` | `snapshot` or `effective`, as for Delta. |
+| `lookback-days` | `10` | How far back a snapshot kind's newest date may fall. |
+| `refresh-seconds` | `60` | How often the kinds' dates and the ids (the index set) are re-read. |
+| `reverse-index` | `true` | `false` turns reverse lookups off. |
+| `layout.<kind>.columns` | none | Fields promoted to bins (usually from the pack); searches, pick lists, derived kinds, impact and reverse lookups read a day's bins instead of its documents. |
+| `scan-threads` | `8` | Partition ranges scanned at once when a day is scanned. |
+| `columns-cache-mb` | `1024` | Memory for days of promoted bins. |
+| `columns-seconds` | `300` | A day's bins are read again after this. |
+| `max-load-rows` | `200000` | Record limit of a reverse-lookup scan over documents (kinds without promoted bins). |
 | `connect-timeout-ms` | `3000` | |
-| `user`, `password` | none | |
+| `user`, `password` | none | Security-enabled clusters. |
+| `source-name` | `aerospike` (a connector: its name) | Provenance source. |
+
+Retention is the records' time to live, set by the loader (`tools/load-aerospike.sh --ttl-days N`); the connector
+has no retention setting.
 
 ### `feed` — public data feeds
 

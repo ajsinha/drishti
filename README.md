@@ -187,6 +187,7 @@ Start with the **[quickstart](docs/QUICKSTART.md)**, then the **[user guide](doc
 | you manage users, roles, single sign-on, tokens or the access log | [USER_MANAGEMENT.md](docs/USER_MANAGEMENT.md) |
 | you script against it, from Python, Excel or curl | [CLIENTS.md](docs/CLIENTS.md), [API_GUIDE.md](docs/API_GUIDE.md) |
 | you run it in production | [OPERATIONS.md](docs/OPERATIONS.md), [PERFORMANCE.md](docs/PERFORMANCE.md), [LIVE.md](docs/LIVE.md) |
+| you serve millions of entities a day for years | [DELTA_CONNECTOR.md](docs/DELTA_CONNECTOR.md), [AEROSPIKE_CONNECTOR.md](docs/AEROSPIKE_CONNECTOR.md) |
 | something is not working | [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md), [runbooks](docs/runbooks/) |
 | you change the code | [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) |
 | you want to understand the design and its decisions | [ARCHITECTURE.md](docs/ARCHITECTURE.md), [ADRs](docs/adr/README.md) |
