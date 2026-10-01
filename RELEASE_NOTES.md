@@ -13,7 +13,20 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Drishti 1.10.2 — release notes
+# Drishti 1.11.0 — release notes
+
+*2026-10-01.* **Tokens, history and freshness.**
+- **Personal API tokens:** read-only, revocable, kept only as a hash and audited. You make them under *My account*, and administrators manage them in Admin → Tokens.
+- **Clients:** a standard-library Python client (`clients/python/drishti_client.py`), searches as CSV, and Excel through Power Query (see `docs/CLIENTS.md`).
+- **Field history:** click a number in a view to see it over the last 10, 30, 90 or 250 business days, as a chart and a table. The window also shows where the value comes from: its path, connector, business date and generation.
+- **Search compare:** the search page's **Compare with** shows each number's change between two dates and marks entities added or removed.
+- **Freshness:** a view's footer says when its source last received new data. A connector's `stale-after` setting marks it behind, with a banner on views and a **Last update** column in Admin → Health, and the overall status turns `DEGRADED`.
+- **Kafka health:** it now goes `DOWN` when the broker is lost and back to `UP` when it returns.
+- **Guides:** every Developer Guide recipe and Connector Guide walkthrough was rerun against a real build and real containers, and corrected where they differed.
+
+---
+
+# Previous release: Drishti 1.10.2 — release notes
 
 *2026-09-30.* **Themes and the top bar.**
 - **Gradients:** every theme now shows its gradient. Parchment, Crimson, Crimson dark and Wall Street were too faint, so each theme now sets its own strength.
@@ -23,7 +36,7 @@
 
 ---
 
-# Previous release: Drishti 1.10.1 — release notes
+# Drishti 1.10.1 — release notes
 
 *2026-09-30.* **Kafka ticks mode works.**
 - **What changed:** a Kafka connector with `mode: ticks` keeps no state and answers no reads. It now drives the live updates of views that a lake or database answers. Such a view shows as live and repaints on every message for its entity, while reads still come from the store.

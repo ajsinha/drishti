@@ -113,7 +113,7 @@ that the server program was built:
 ls drishti-server/target/*-exec.jar
 ```
 
-You should see `drishti-server/target/drishti-server-1.10.2-exec.jar`.
+You should see `drishti-server/target/drishti-server-1.11.0-exec.jar`.
 
 > **Note:** `./mvnw -q verify` builds **and** runs every test (several minutes more). Use it when you
 > change code; for a first try, `package -DskipTests` is enough.
@@ -176,7 +176,7 @@ Open a terminal in the `drishti` folder and run:
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 export DRISHTI_PACKS=market-risk,counterparty-risk,liquidity-risk,climate-risk,operational-risk,retail-banking,genomics,politics-society,economics
 export DRISHTI_STUDIO_SAVE=true
-java -jar drishti-server/target/drishti-server-1.10.2-exec.jar
+java -jar drishti-server/target/drishti-server-1.11.0-exec.jar
 ```
 
 What the settings do:
@@ -207,7 +207,7 @@ curl -s localhost:18480/api/v1/packs | python3 -c 'import json,sys; print([p["na
 
 You should see the twelve names, starting with `banking-core`, `market-data`, `trading`.
 
-> **The smallest start.** `java -jar drishti-server/target/drishti-server-1.10.2-exec.jar` with no
+> **The smallest start.** `java -jar drishti-server/target/drishti-server-1.11.0-exec.jar` with no
 > settings loads only the `finance` pack: the four original mockups (`TRD IRS-48213`, `TRD FXS-20931`,
 > `TRD CFT-77120`, `NSET NS-NORTH-01`). Everything in this guide works the same way with those ids.
 > Do not mix `finance` with the banking packs: both define `TRD` and `CRV`.
@@ -363,7 +363,7 @@ Server terminal:
 
 ```bash
 export DRISHTI_SECURITY_ENABLED=true
-java -jar drishti-server/target/drishti-server-1.10.2-exec.jar
+java -jar drishti-server/target/drishti-server-1.11.0-exec.jar
 ```
 
 Console terminal:

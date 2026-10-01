@@ -15,7 +15,7 @@
 -->
 # Changelog
 
-## Unreleased
+## 1.11.0 — Tokens, history and freshness (2026-10-01)
 - **Data freshness.** Every view's footer says when its source last received new data ("updated 2 min ago"). A connector's `stale-after` setting marks it behind:
   - **On the view:** an amber banner.
   - **In Admin → Health:** a new **Last update** column, and the overall status turns `DEGRADED`.

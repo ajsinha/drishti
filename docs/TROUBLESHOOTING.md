@@ -114,7 +114,7 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
 - **Fix:** stop the other process, or start this one on another port and tell the console where it is:
 
   ```bash
-  DRISHTI_PORT=18481 java -jar drishti-server/target/drishti-server-1.10.2-exec.jar
+  DRISHTI_PORT=18481 java -jar drishti-server/target/drishti-server-1.11.0-exec.jar
   DRISHTI_BACKEND_URL=http://127.0.0.1:18481 console/.venv/bin/python console/run_drishti_web.py
   ```
 
@@ -132,7 +132,7 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
 
   ```bash
   DRISHTI_PACKS=trading,counterparty-risk DRISHTI_PACKS_DIR=$PWD/packs \
-    java -jar drishti-server/target/drishti-server-1.10.2-exec.jar
+    java -jar drishti-server/target/drishti-server-1.11.0-exec.jar
   ```
 
   A pack's parents load by themselves: enabling `trading` also loads `banking-core` and `market-data`. Other
@@ -153,7 +153,7 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
   expands to all of them; Java runs the **first** (the oldest, alphabetically) and ignores the rest.
 - **Check:** `curl -s http://localhost:18480/api/v1/about | python3 -c "import json,sys; print(json.load(sys.stdin)['version'])"`
   and `ls drishti-server/target/*-exec.jar`.
-- **Fix:** name the jar exactly (`drishti-server-1.10.2-exec.jar`), or delete the old ones.
+- **Fix:** name the jar exactly (`drishti-server-1.11.0-exec.jar`), or delete the old ones.
 
 ### The console will not start: `ModuleNotFoundError: No module named 'fastapi'`
 
@@ -182,7 +182,7 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
 
   ```bash
   export DRISHTI_TOKEN_SECRET='at-least-32-characters-shared-secret!!'   # same value for both
-  DRISHTI_SECURITY_ENABLED=true java -jar drishti-server/target/drishti-server-1.10.2-exec.jar
+  DRISHTI_SECURITY_ENABLED=true java -jar drishti-server/target/drishti-server-1.11.0-exec.jar
   DRISHTI_AUTH_ENABLED=true DRISHTI_SESSION_SECRET='another-secret-of-32-characters-or-more' \
     console/.venv/bin/python console/run_drishti_web.py
   ```
