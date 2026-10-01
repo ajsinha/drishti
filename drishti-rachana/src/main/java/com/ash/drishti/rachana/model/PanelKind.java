@@ -38,8 +38,12 @@ public enum PanelKind {
     GAUGE(Set.of("value"), Set.of("max", "label", "fmt")),
     /** A grid of values over two axes (volatility surfaces, correlation matrices): heatmap, or 3D on request. */
     SURFACE(Set.of("rows", "y"), Set.of("fmt", "unit", "view")),
-    /** Ordered signed steps as floating bars (P&amp;L attribution): rises up, falls down, totals as full bars. */
-    WATERFALL(Set.of("rows"), Set.of("label", "value", "total", "sum", "fmt", "unit")),
+    /**
+     * Ordered signed steps as floating bars (P&amp;L attribution): rises up, falls down, totals as full bars. Rises are
+     * the theme's good colour and falls its bad one ({@code colors: gain-loss}, the default), or its positive and
+     * negative ones ({@code colors: theme}, blue and orange, colour-blind friendly); totals are neutral.
+     */
+    WATERFALL(Set.of("rows"), Set.of("label", "value", "total", "sum", "fmt", "unit", "colors")),
     /** A distribution of numbers, binned on the server, with optional marker lines (VaR, ES, mean). */
     HISTOGRAM(Set.of("rows"), Set.of("value", "bins", "markers", "fmt", "unit")),
     /** Two measures per row as points (risk against return), optionally sized and coloured by a group. */

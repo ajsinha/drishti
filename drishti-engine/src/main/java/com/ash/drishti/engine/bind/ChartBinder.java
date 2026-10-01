@@ -109,6 +109,11 @@ final class ChartBinder {
         String value = p.option("value").orElse("value");
         String total = p.option("total").orElse("total");
         String fmt = p.option("fmt").orElse(null);
+        // gain-loss (the default): rises in the theme's good colour, falls in its bad one; theme: its positive and
+        // negative colours (colour-blind friendly). Totals are neutral either way.
+        boolean gainLoss = !"theme".equals(p.option("colors").orElse("gain-loss"));
+        String rise = gainLoss ? "ok" : "pos";
+        String fall = gainLoss ? "bad" : "neg";
         List<PanelData.Step> steps = new ArrayList<>();
         double run = 0;
         int n = Math.min(rows.size(), limits.maxPoints());
@@ -120,16 +125,16 @@ final class ChartBinder {
             }
             String l = text(field(label, row, i, c));
             if (Values.truthy(field(total, row, i, c))) {
-                steps.add(new PanelData.Step(l, v, 0, v, format(fmt, v), "link", true));
+                steps.add(new PanelData.Step(l, v, 0, v, format(fmt, v), "muted", true));
                 run = v;
             } else {
-                steps.add(new PanelData.Step(l, v, run, run + v, format(fmt, v), v < 0 ? "neg" : "pos", false));
+                steps.add(new PanelData.Step(l, v, run, run + v, format(fmt, v), v < 0 ? fall : rise, false));
                 run += v;
             }
         }
         String sum = p.option("sum").orElse(null);
         if (sum != null && !steps.isEmpty()) {
-            steps.add(new PanelData.Step(sum, run, 0, run, format(fmt, run), "link", true));
+            steps.add(new PanelData.Step(sum, run, 0, run, format(fmt, run), "muted", true));
         }
         return new PanelData.Waterfall(steps, p.option("unit").orElse(null));
     }

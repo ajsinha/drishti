@@ -44,3 +44,14 @@ def test_contrast_all_themes():
             for bg in ("bg", "surface"):
                 assert _ratio(t[fg], t[bg]) >= 4.5, (name, fg, bg, round(_ratio(t[fg], t[bg]), 2))
         assert _ratio(t["accent"], t["bg"]) >= 3.0, name
+
+
+def test_waterfall_bars_stand_out_in_every_theme():
+    """A waterfall fills its bars with ok/bad (rises green, falls red; the default), pos/neg (colors: theme) and muted
+    (totals): graphical objects need 3:1 against the panel (WCAG 1.4.11), and the two colours of a step must differ."""
+    for name in ("terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark"):
+        t = _theme(name)
+        for fill in ("ok", "bad", "pos", "neg", "muted"):
+            for bg in ("bg", "surface"):
+                assert _ratio(t[fill], t[bg]) >= 3.0, (name, fill, bg, round(_ratio(t[fill], t[bg]), 2))
+        assert t["ok"].lower() != t["bad"].lower() and t["pos"].lower() != t["neg"].lower(), name

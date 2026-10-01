@@ -452,7 +452,8 @@ horizontal axis and holds the value:
 
 **Steps from a start to an end**: a P&L explain from yesterday's MTM to today's, a book's P&L from risk factors to
 the actual figure. Each step is a bar that floats from the running total before it to the one after it: rises in
-the positive tone, falls in the negative tone, totals as full bars from zero.
+green, falls in red, totals as grey full bars from zero. `colors: theme` draws rises and falls in the theme's
+positive and negative colours instead (blue and orange in most themes), for readers who cannot tell red from green.
 
 *See it:* `TRD MX-20000001`, panel **P&L explain (USD, opening to closing MTM)** (F5). The bars run from *Opening
 MTM +1,748,877* through *Carry −11,426*, *Roll-down +11,390*, *Rates delta +132,686* and four more steps to
@@ -480,6 +481,7 @@ MTM +1,748,877* through *Carry −11,426*, *Roll-down +11,390*, *Rates delta +13
 | `total` | The field that marks a step as a total, drawn from zero; the running sum restarts there (default `total`). |
 | `sum` | The label of a closing total bar the server appends at the running sum. |
 | `fmt`, `unit` | Format of the amounts, and the axis unit. |
+| `colors` | `gain-loss` (default: rises green, falls red) or `theme` (the theme's positive and negative colours). Totals are grey either way. |
 
 ## histogram
 

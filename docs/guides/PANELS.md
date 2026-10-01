@@ -267,6 +267,7 @@ total (its amount is a level, not a move).
 | `sum` | | | Label of a closing total bar appended at the running sum. |
 | `fmt` | | six significant digits | Format of the amounts. |
 | `unit` | | | Axis unit. |
+| `colors` | | `gain-loss` | `gain-loss`: rises in the theme's good colour (green), falls in its bad colour (red). `theme`: the theme's positive and negative colours (blue and orange in most themes), which readers with red-green colour blindness tell apart. Totals are neutral (grey) either way. Any other value is `DRS-2029`. |
 
 **Banking example.** Every trade Sutra in the trading pack (`packs/trading/sutras/*/*.v1.sutra.yaml`):
 
@@ -288,18 +289,19 @@ MTM +1,875,863*, which equals the trade's MTM in the strip. The market-risk pack
 same for a book (`PNL PNL-COMM-1`, F3: nine factors ending at *Actual −180,316*).
 
 **What the server computes.** `ChartBinder.waterfall` walks the rows once, keeping a running total. A normal step
-becomes `{label, value, from: running, to: running + value, text, tone: pos|neg, total: false}`; a total step becomes
-`{from: 0, to: value, tone: link, total: true}` and resets the running total to its value; `sum` appends a total at
-the final running total. At most `drishti.panels.max-points` rows are read.
+becomes `{label, value, from: running, to: running + value, text, tone: ok|bad, total: false}` (`pos|neg` with
+`colors: theme`); a total step becomes `{from: 0, to: value, tone: muted, total: true}` and resets the running total
+to its value; `sum` appends a total at the final running total. At most `drishti.panels.max-points` rows are read.
 
 ```json
-{"steps": [{"label": "Opening MTM", "value": 1748877, "from": 0, "to": 1748877, "text": "+1,748,877", "tone": "link", "total": true},
-           {"label": "Carry", "value": -11426, "from": 1748877, "to": 1737451, "text": "−11,426", "tone": "neg", "total": false}, …]}
+{"steps": [{"label": "Opening MTM", "value": 1748877, "from": 0, "to": 1748877, "text": "+1,748,877", "tone": "muted", "total": true},
+           {"label": "Carry", "value": -11426, "from": 1748877, "to": 1737451, "text": "−11,426", "tone": "bad", "total": false}, …]}
 ```
 
 **How the console draws it.** `charts.js` draws each step as a rectangle from `from` to `to` (an ECharts custom
-series): rises in the `pos` tone, falls in `neg`, totals in `link`, each labelled with its text when there are at most
-12 steps. When large totals sit beside small moves (as with an MTM), the value axis starts near the moves instead of
+series) filled with the step's tone, so rises are green (`--d-ok`), falls red (`--d-bad`) and totals grey
+(`--d-muted`) in every theme, light and dark; with `colors: theme`, rises take `--d-pos` and falls `--d-neg`. Each bar
+is labelled with its signed text when there are at most 12 steps, so the colour is never the only cue. When large totals sit beside small moves (as with an MTM), the value axis starts near the moves instead of
 at zero and the total bars run off the bottom; their labels carry the full figure. Labels rotate 30° beyond six
 steps. The tooltip shows the step's amount and the running total after it.
 

@@ -22,7 +22,8 @@ import java.util.Set;
 
 /**
  * The values an option of a panel kind may take, where the kind restricts them: {@code agg: sum|count|avg|min|max}
- * on {@code pivot}, {@code layout: tree|force} on {@code graph}, a whole {@code bins} count on {@code histogram},
+ * on {@code pivot}, {@code layout: tree|force} on {@code graph}, {@code colors: gain-loss|theme} on {@code waterfall},
+ * a whole {@code bins} count on {@code histogram},
  * {@code markers} as a list of mappings with a {@code value}. The parser reports a value outside them as
  * {@code DRS-2029}, so a Sutra is rejected before it meets data rather than drawing something unexpected.
  */
@@ -32,12 +33,19 @@ public final class PanelOptions {
     public static final List<String> AGGREGATIONS = List.of("sum", "count", "avg", "min", "max");
     /** How a graph places its nodes. */
     public static final List<String> GRAPH_LAYOUTS = List.of("tree", "force");
+    /**
+     * How a waterfall colours its steps: {@code gain-loss} (the default) draws rises in the theme's good colour and falls
+     * in its bad one (green and red); {@code theme} uses its positive and negative colours (blue and orange in most
+     * themes, which colour-blind readers tell apart). Totals are neutral either way.
+     */
+    public static final List<String> WATERFALL_COLORS = List.of("gain-loss", "theme");
     /** The most bins a histogram may ask for. */
     public static final int MAX_BINS = 200;
 
     private static final Map<PanelKind, Map<String, List<String>>> CHOICES = Map.of(
             PanelKind.PIVOT, Map.of("agg", AGGREGATIONS),
-            PanelKind.GRAPH, Map.of("layout", GRAPH_LAYOUTS));
+            PanelKind.GRAPH, Map.of("layout", GRAPH_LAYOUTS),
+            PanelKind.WATERFALL, Map.of("colors", WATERFALL_COLORS));
     private static final Map<PanelKind, Set<String>> BOOLEANS = Map.of(PanelKind.PIVOT, Set.of("heat", "totals"));
     private static final Set<String> MARKER_KEYS = Set.of("label", "value", "tone");
 

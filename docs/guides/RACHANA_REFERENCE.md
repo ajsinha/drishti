@@ -679,7 +679,7 @@ server computes it and how the console draws it: [PANELS.md](PANELS.md)):
 | [`markdown`](#markdown) | `text` | | static text | no |
 | [`gauge`](#gauge) | `value` | `max`, `label`, `fmt` | one value as a bar against a maximum | no |
 | [`surface`](#surface) | `rows`, `y` | `fmt`, `unit`, `view` | heatmap with a 3D toggle | yes (one per x point) |
-| [`waterfall`](#waterfall) | `rows` | `label`, `value`, `total`, `sum`, `fmt`, `unit` | floating bars from a start to an end | no |
+| [`waterfall`](#waterfall) | `rows` | `label`, `value`, `total`, `sum`, `fmt`, `unit`, `colors` | floating bars from a start to an end | no |
 | [`histogram`](#histogram) | `rows` | `value`, `bins`, `markers`, `fmt`, `unit` | binned distribution with marker lines | no |
 | [`scatter`](#scatter) | `rows`, `x`, `y` | `size`, `label`, `group`, `fmt`, `xFmt`, `xLabel`, `yLabel` | one point per row | no |
 | [`candlestick`](#candlestick) | `rows` | `x`, `open`, `high`, `low`, `close`, `volume`, `fmt`, `unit` | daily bars with volume | no |
@@ -703,7 +703,7 @@ expressions and templates are compiled at load time.
 | `gauge` | `value`, `max` | | `label`, `fmt` |
 | `surface` | `rows`; `y` when it starts with `$` or `@` | `y` otherwise | `fmt`, `unit`, `view` |
 | `markdown` | | | `text` is a template |
-| `waterfall` | `rows` | `label`, `value`, `total` | `sum`, `fmt`, `unit` |
+| `waterfall` | `rows` | `label`, `value`, `total` | `sum`, `fmt`, `unit`, `colors` (`gain-loss` or `theme`) |
 | `histogram` | `rows`, each marker's `value` | `value` | `bins` (1–200), `markers[].label`, `markers[].tone`, `fmt`, `unit` |
 | `scatter` | `rows` | `x`, `y`, `size`, `label`, `group` | `fmt`, `xFmt`, `xLabel`, `yLabel` |
 | `candlestick` | `rows` | `x`, `open`, `high`, `low`, `close`, `volume` | `fmt`, `unit` |
@@ -713,7 +713,7 @@ expressions and templates are compiled at load time.
 
 For the seven kinds from `waterfall` on, a field name may also be a dotted path (`counterparty.name`) or an
 expression over the row when it starts with `@` or `$` (`y: "@.pnl / 1000"`). Values outside the allowed set
-(`agg: median`, `layout: circle`, `bins: 0`, `heat: yes`, a marker without `value`) are `DRS-2029`.
+(`agg: median`, `layout: circle`, `colors: rainbow`, `bins: 0`, `heat: yes`, a marker without `value`) are `DRS-2029`.
 
 Accepted but currently without effect (they parse, and do nothing yet): `fields` on `kv` (use `columns`),
 `link` on `table` (use `link: true` on a column), `footer` on `line`, and `label` on `gauge` (carried in the
@@ -1098,7 +1098,8 @@ across. The data is `{"x": ["80%", …], "y": ["1M", …], "z": [[43.17, …], �
 #### waterfall
 
 Ordered steps as floating bars: each step runs from the running total before it to the one after it; a total step
-(and the closing bar `sum` adds) is drawn from zero. Rises take the `pos` tone, falls `neg`, totals `link`.
+(and the closing bar `sum` adds) is drawn from zero. Rises take the `ok` tone (green), falls `bad` (red), totals
+`muted` (neutral); `colors: theme` uses `pos` and `neg` instead (blue and orange in most themes, colour-blind friendly).
 
 | Option | Required | Default | Meaning |
 |---|---|---|---|
@@ -1108,6 +1109,7 @@ Ordered steps as floating bars: each step runs from the running total before it 
 | `total` | | `total` | Field that marks a total step; the running sum restarts at its value. |
 | `sum` | | | Label of a closing total bar at the running sum. |
 | `fmt`, `unit` | | | Format of the amounts; unit of the axis. |
+| `colors` | | `gain-loss` | `gain-loss` (rises green, falls red) or `theme` (the theme's positive and negative colours); anything else is `DRS-2029`. |
 
 ```yaml
   - { id: explain, kind: waterfall, title: "P&L explain (USD)", key: F5, rows: $.pnlExplain, label: step, value: pnl, sum: Closing MTM, fmt: signed0 }
@@ -1115,7 +1117,7 @@ Ordered steps as floating bars: each step runs from the running total before it 
 
 You should see (trading pack, `TRD MX-20000001`) eight bars from *Opening MTM +1,748,877* to *Closing MTM
 +1,875,863*. The data is `{"steps": [{"label": "Opening MTM", "value": 1748877, "from": 0, "to": 1748877, "text":
-"+1,748,877", "tone": "link", "total": true}, {"label": "Carry", "value": -11426, "from": 1748877, "to": 1737451, …}, …]}`.
+"+1,748,877", "tone": "muted", "total": true}, {"label": "Carry", "value": -11426, "from": 1748877, "to": 1737451, "tone": "bad", …}, …]}`.
 
 #### histogram
 
@@ -1622,7 +1624,7 @@ A Sutra file that fails any check is not loaded (or keeps its last good version,
 | `DRS-2026` | `the strip holds at most 8 figures, found 9` | more than 8 strip items | move figures into a `kv` panel |
 | `DRS-2027` | `area must be 'main' or 'right'` | `area: left`, `area: side` | `main` or `right` |
 | `DRS-2028` | `trade-x@2 is already defined in /…/trade-x.v2.sutra.yaml` | two files define one `name@version` | raise the version, or remove the duplicate |
-| `DRS-2029` | `option 'agg' of 'pivot' panels must be one of sum, count, avg, min, max, not 'median'`, `option 'heat' of 'pivot' panels must be true or false, not 'yes'`, `option 'bins' of 'histogram' panels must be a whole number from 1 to 200, not '0'`, `each histogram marker must be a mapping with a 'value' expression …`, `option 'layout' of 'graph' panels must be one of tree, force, not 'circle'` | an option value the kind does not allow | use one of the values listed |
+| `DRS-2029` | `option 'agg' of 'pivot' panels must be one of sum, count, avg, min, max, not 'median'`, `option 'heat' of 'pivot' panels must be true or false, not 'yes'`, `option 'bins' of 'histogram' panels must be a whole number from 1 to 200, not '0'`, `each histogram marker must be a mapping with a 'value' expression …`, `option 'layout' of 'graph' panels must be one of tree, force, not 'circle'`, `option 'colors' of 'waterfall' panels must be one of gain-loss, theme, not 'rainbow'` | an option value the kind does not allow | use one of the values listed |
 | `DRS-2030` | `span must be a whole number from 1 to 12 (columns of the 12-column grid), not '13'`, `height must be a whole number from 1 to 24 (grid rows), not '30'`, `'span' sizes a whole panel: a tabs body takes the size of its panel` | a size outside the grid, not a whole number, or on a `tabs` body | a whole number in range, on the panel itself |
 | `DRS-2101` | `expression '…': DRS-2101 …`, `template '…': DRS-2101 …` | an expression or template does not compile | see [Expression errors](#expression-errors) |
 

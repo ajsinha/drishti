@@ -88,9 +88,11 @@
         renderItem: function (params, api) {
           var s = steps[params.dataIndex], a = api.coord([api.value(0), api.value(1)]), b = api.coord([api.value(0), api.value(2)]);
           var w = Math.min(46, api.size([1, 0])[0] * 0.6), top = Math.min(a[1], b[1]);
-          var fill = s.total ? t.link : s.value < 0 ? t.neg : t.pos;
+          // the server picks each step's tone: ok/bad (rises green, falls red; colors: gain-loss, the default) or pos/neg
+          // (colors: theme), totals muted; solid fills, so the theme's contrast holds
+          var fill = s.tone ? tone(t, s.tone) : s.total ? t.muted : s.value < 0 ? t.bad : t.ok;
           var kids = [{ type: 'rect', shape: { x: a[0] - w / 2, y: top, width: w, height: Math.max(1, Math.abs(b[1] - a[1])) },
-            style: { fill: fill, opacity: s.total ? 1 : .85 } }];
+            style: { fill: fill } }];
           if (steps.length <= 12) {
             kids.push({ type: 'text', style: { text: s.text, x: a[0], y: top - 3, textAlign: 'center', textVerticalAlign: 'bottom',
               fill: t.muted, font: '10px ' + t.mono } });

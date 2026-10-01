@@ -47,6 +47,7 @@ class ChartPanelsTest {
             title: { pill: Trade, id: $.tradeId }
             panels:
               - { id: explain, kind: waterfall, rows: $.explain, label: step, value: pnl, sum: Closing, fmt: signed0 }
+              - { id: explain-theme, kind: waterfall, rows: $.explain, label: step, value: pnl, sum: Closing, colors: theme }
               - id: dist
                 kind: histogram
                 rows: $.scenarios
@@ -97,10 +98,17 @@ class ChartPanelsTest {
         var rates = w.steps().get(2);
         assertThat(rates.from()).isEqualTo(1200);
         assertThat(rates.to()).isEqualTo(700);
-        assertThat(rates.tone()).isEqualTo("neg");
         assertThat(rates.text()).isEqualTo("−500");
         assertThat(w.steps().get(3).total()).isTrue();
         assertThat(w.steps().get(3).value()).isEqualTo(700);
+    }
+
+    @Test
+    void aWaterfallRisesGreenAndFallsRedByDefaultOrUsesTheThemesColoursWithNeutralTotals() {
+        var gainLoss = (PanelData.Waterfall) panel(view(DOC), "explain").data();
+        assertThat(gainLoss.steps()).extracting(PanelData.Step::tone).containsExactly("muted", "ok", "bad", "muted");
+        var theme = (PanelData.Waterfall) panel(view(DOC), "explain-theme").data();
+        assertThat(theme.steps()).extracting(PanelData.Step::tone).containsExactly("muted", "pos", "neg", "muted");
     }
 
     @Test

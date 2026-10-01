@@ -16,6 +16,12 @@
 # Changelog
 
 ## Unreleased — A million trades a day, for seven years
+- **Waterfalls rise green and fall red** ([PANELS.md › waterfall](docs/guides/PANELS.md#7-waterfall)). Steps now
+  take the theme's good and bad colours (`--d-ok`, `--d-bad`) in every theme, light and dark, and totals are a neutral
+  grey (`--d-muted`) instead of the link blue. A new option, `colors: gain-loss | theme` (default `gain-loss`), keeps
+  the theme's positive and negative colours (blue and orange, which readers with red-green colour blindness tell
+  apart). Any other value is `DRS-2029`; the Rachana schema lists both values, so Studio completes and checks them.
+  Bars are solid now, and a contrast test holds every theme's waterfall colours to 3:1 against the panel.
 - **Deletes reach open views** ([LIVE.md › Deleted entities](docs/architecture/LIVE.md#deleted-entities)). A Kafka
   tombstone (or an envelope with `"doc": null`) and an ActiveMQ or RabbitMQ delete used to remove the entity from the
   store while open views kept showing it, and Kafka kept the id in type-ahead until a restart. Now the connector pushes

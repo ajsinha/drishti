@@ -161,15 +161,17 @@ class SutraParserTest {
                   - { id: h, kind: histogram, rows: $.scenarios, bins: 0, markers: [ { label: VaR } ] }
                   - { id: g, kind: graph, nodes: $.n, layout: circle }
                   - { id: s, kind: scatter, rows: $.books, x: var }
+                  - { id: w, kind: waterfall, rows: $.explain, colors: rainbow }
                 """;
         assertThatThrownBy(() -> parser.parse(bad, "bad-charts.yaml", "x"))
                 .isInstanceOfSatisfying(SutraException.class, e -> {
-                    assertThat(e.problems()).filteredOn(p -> p.code().equals("DRS-2029")).extracting(SutraProblem::message).hasSize(5)
+                    assertThat(e.problems()).filteredOn(p -> p.code().equals("DRS-2029")).extracting(SutraProblem::message).hasSize(6)
                             .anySatisfy(m -> assertThat(m).contains("must be one of sum, count, avg, min, max, not 'median'"))
                             .anySatisfy(m -> assertThat(m).contains("'heat' of 'pivot' panels must be true or false"))
                             .anySatisfy(m -> assertThat(m).contains("'bins' of 'histogram' panels must be a whole number from 1 to 200"))
                             .anySatisfy(m -> assertThat(m).contains("each histogram marker must be a mapping with a 'value'"))
-                            .anySatisfy(m -> assertThat(m).contains("must be one of tree, force, not 'circle'"));
+                            .anySatisfy(m -> assertThat(m).contains("must be one of tree, force, not 'circle'"))
+                            .anySatisfy(m -> assertThat(m).contains("option 'colors' of 'waterfall' panels must be one of gain-loss, theme, not 'rainbow'"));
                     assertThat(e.problems()).extracting(SutraProblem::message).contains("'scatter' panel 's' needs option 'y'");
                 });
     }

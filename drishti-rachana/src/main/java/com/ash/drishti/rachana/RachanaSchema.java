@@ -124,7 +124,10 @@ public final class RachanaSchema {
         return panel;
     }
 
-    /** An option whose values the kind restricts (pivot's agg, heat and totals; histogram's bins and markers), else free text. */
+    /**
+     * An option whose values the kind restricts (pivot's agg, heat and totals; waterfall's colors; histogram's bins and
+     * markers), else free text.
+     */
     private static Map<String, Object> kindOption(PanelKind k, String o) {
         if (k == PanelKind.PIVOT && o.equals("agg")) {
             return Map.of("type", "string", "enum", com.ash.drishti.rachana.model.PanelOptions.AGGREGATIONS,
@@ -132,6 +135,11 @@ public final class RachanaSchema {
         }
         if (k == PanelKind.PIVOT && (o.equals("heat") || o.equals("totals"))) {
             return Map.of("type", "boolean", "description", o.equals("heat") ? "Colour each cell by its value" : "false hides the row and column totals");
+        }
+        if (k == PanelKind.WATERFALL && o.equals("colors")) {
+            return Map.of("type", "string", "enum", com.ash.drishti.rachana.model.PanelOptions.WATERFALL_COLORS,
+                    "description", "gain-loss (default): rises green, falls red; theme: the theme's positive and negative colours "
+                            + "(blue and orange, colour-blind friendly). Totals are neutral");
         }
         if (k == PanelKind.HISTOGRAM && o.equals("bins")) {
             return Map.of("type", "integer", "minimum", 1, "maximum", com.ash.drishti.rachana.model.PanelOptions.MAX_BINS,
