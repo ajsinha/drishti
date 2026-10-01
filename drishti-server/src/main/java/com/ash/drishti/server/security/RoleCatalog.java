@@ -41,7 +41,7 @@ public final class RoleCatalog implements RoleNames {
 
     public RoleCatalog(SecurityProperties props, RoleStore store) {
         Map<String, SecurityProperties.Role> roles = new java.util.HashMap<>(props.roles());
-        roles.putIfAbsent("admin", new SecurityProperties.Role(List.of("*"), true, true, true, false, true));
+        roles.putIfAbsent("admin", new SecurityProperties.Role(List.of("*"), true, true, true, false, true, true));
         this.builtIn = Map.copyOf(roles);
         this.store = store;
     }
@@ -49,7 +49,7 @@ public final class RoleCatalog implements RoleNames {
     public Optional<RoleDefinition> find(String name) {
         SecurityProperties.Role r = builtIn.get(name);
         if (r != null) {
-            return Optional.of(new RoleDefinition(name, "", r.kinds(), r.raw(), r.author(), r.approve(), r.admin(), r.calc(), true, null, ""));
+            return Optional.of(new RoleDefinition(name, "", r.kinds(), r.raw(), r.author(), r.approve(), r.admin(), r.calc(), r.layout(), true, null, ""));
         }
         return store.find(name);
     }

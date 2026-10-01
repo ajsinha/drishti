@@ -122,7 +122,7 @@ drishti:
     #   scrape_configs: [{ job_name: drishti, metrics_path: /actuator/prometheus, bearer_token: <this> }]
     metrics-token: ${DRISHTI_METRICS_TOKEN:}
     roles:
-      viewer:  { kinds: ["*"] }        # packs add domain roles (finance: trader, risk)
+      viewer:  { kinds: ["*"], layout: false }   # packs add domain roles (finance: trader, risk); layout: may arrange views (default true)
       author:  { kinds: ["*"], raw: true, author: true, calc: true }   # calc: may use Calc, Python in the browser (PYTHON_CALC.md)
       approver: { kinds: ["*"], raw: true, author: true, approve: true, calc: true }   # reviews proposed Sutras (admins may too)
       admin:   { kinds: ["*"], raw: true, author: true, admin: true, calc: true }
@@ -156,6 +156,8 @@ drishti:
     max-column-rows: 250000          # drishti.columns() returns at most this many entities (the browser holds them all)
     columns-budget: 20s              # how long a columns read may wait (the first read of a day loads its columns)
     max-snippet-chars: 50000         # a saved snippet's code (each user keeps at most 50 snippets)
+  layouts:                           # layout mode: each user's arrangement of a Sutra's panels (USER_GUIDE.md, Layout mode)
+    enabled: ${DRISHTI_LAYOUTS_ENABLED:true}   # also needs a role with layout (every role but viewer, unless configured)
   identity:
     # Users, roles defined in Admin → Roles, saved workspaces/monitors/settings and the audit trail live in one database
     # (JPA). SQLite by default: a single file, nothing to install. For PostgreSQL:

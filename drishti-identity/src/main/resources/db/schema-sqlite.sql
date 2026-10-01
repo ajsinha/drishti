@@ -62,7 +62,8 @@ CREATE TABLE IF NOT EXISTS drishti_role_kind (
     PRIMARY KEY (role, kind)
 );
 
--- Powers added after the first release (calc: may use Calc), one row each: a new power needs no new column.
+-- Powers added after the first release, one row each: a new power needs no new column. calc: may use Calc;
+-- no-layout: may not customise layouts (layout mode is allowed by default, so the row marks its absence).
 CREATE TABLE IF NOT EXISTS drishti_role_power (
     role  TEXT NOT NULL REFERENCES drishti_role (name) ON DELETE CASCADE,
     power TEXT NOT NULL,

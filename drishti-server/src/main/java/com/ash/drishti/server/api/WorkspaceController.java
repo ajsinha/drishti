@@ -38,8 +38,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The caller's saved workspaces: a layout and up to four panes, each showing an entity and optionally
- * following another pane's selection. Stored per user; validated so a workspace always renders.
+ * The caller's saved workspaces: a layout, where its dividers were dragged, and up to four panes, each showing an
+ * entity and optionally following another pane's selection. Stored per user; validated so a workspace always renders.
  */
 @RestController
 @RequestMapping("/api/v1/me/workspaces")
@@ -55,6 +55,12 @@ public class WorkspaceController {
         return owner + " " + name;
     }
     static final Set<String> LAYOUTS = Set.of("2col", "3col", "2x2", "1+2");
+    /** How many columns and rows each layout has: the sizes a workspace may keep for its dividers. */
+    static final java.util.Map<String, int[]> TRACKS = java.util.Map.of("2col", new int[] {2, 1}, "3col", new int[] {3, 1},
+            "2x2", new int[] {2, 2}, "1+2", new int[] {2, 2});
+    /** A column or row is kept as a weight relative to the others ({@code fr}), within these bounds. */
+    static final double MIN_WEIGHT = 0.1;
+    static final double MAX_WEIGHT = 10;
 
     private final PreferenceStore store;
     private final Entitlements entitlements;
@@ -180,6 +186,7 @@ public class WorkspaceController {
             String title = pane.path("title").asText("");
             o.put("title", title.length() > 60 ? title.substring(0, 60) : title);
         }
+        sizes(body.path("sizes"), layout, out);
         for (int i = 0; i < follows.length; i++) {
             Set<Integer> seen = new HashSet<>();
             for (int j = i; j >= 0; j = follows[j]) {
@@ -189,6 +196,42 @@ public class WorkspaceController {
             }
         }
         return out;
+    }
+
+    /**
+     * Where the dividers were dragged: {@code {"cols": [1.4, 0.6], "rows": [1, 1]}}, one weight per column and row of the
+     * layout (absent: equal). Kept with the workspace; anything else is refused.
+     */
+    private void sizes(JsonNode sizes, String layout, ObjectNode out) {
+        if (sizes.isMissingNode() || sizes.isNull()) {
+            return;
+        }
+        if (!sizes.isObject()) {
+            throw bad("sizes is {\"cols\": [...], \"rows\": [...]}");
+        }
+        int[] tracks = TRACKS.get(layout);
+        ObjectNode kept = json.createObjectNode();
+        String[] names = {"cols", "rows"};
+        for (int t = 0; t < 2; t++) {
+            JsonNode list = sizes.path(names[t]);
+            if (list.isMissingNode() || list.isNull()) {
+                continue;
+            }
+            if (!list.isArray() || list.size() != tracks[t]) {
+                throw bad("the " + layout + " layout has " + tracks[t] + " " + (t == 0 ? "column" : "row") + "(s): sizes." + names[t]
+                        + " lists one weight for each");
+            }
+            var arr = kept.putArray(names[t]);
+            for (JsonNode w : list) {
+                if (!w.isNumber() || w.asDouble() < MIN_WEIGHT || w.asDouble() > MAX_WEIGHT) {
+                    throw bad("a size is a weight from " + MIN_WEIGHT + " to " + (int) MAX_WEIGHT + ", not " + w);
+                }
+                arr.add(Math.round(w.asDouble() * 1000) / 1000.0);
+            }
+        }
+        if (!kept.isEmpty()) {
+            out.set("sizes", kept);
+        }
     }
 
     private static DrishtiException bad(String message) {

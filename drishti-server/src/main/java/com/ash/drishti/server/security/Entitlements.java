@@ -108,6 +108,20 @@ public final class Entitlements {
         }
     }
 
+    /**
+     * Layout mode and personal layouts: roles with {@code layout}, which every role has unless configured with
+     * {@code layout: false} (the built-in viewer).
+     */
+    public boolean mayLayout(Principal p) {
+        return has(p, com.ash.drishti.identity.RoleDefinition::layout);
+    }
+
+    public void requireLayout(Principal p) {
+        if (!mayLayout(p)) {
+            throw new DrishtiException(ErrorCode.FORBIDDEN, p.user() + " may not customise layouts: ask an administrator for a role with layout");
+        }
+    }
+
     /** Approvers review proposed Sutras: roles with {@code approve}, and admins. */
     public boolean mayApprove(Principal p) {
         return has(p, com.ash.drishti.identity.RoleDefinition::approve) || has(p, com.ash.drishti.identity.RoleDefinition::admin);
@@ -141,7 +155,7 @@ public final class Entitlements {
                 List<PanelData.LinkItem> items = l.links().stream().map(i -> i.link() != null && !mayOpen(p, i.link().kind())
                         ? new PanelData.LinkItem(i.label(), i.text(), null, DENIED, "denied") : i).toList();
                 panels.add(new ViewModel.PanelView(pv.id(), pv.kind(), pv.title(), pv.code(), pv.key(), pv.area(), pv.inferred(),
-                        pv.explanation(), new PanelData.Links(items), pv.error(), pv.empty()));
+                        pv.explanation(), new PanelData.Links(items), pv.error(), pv.empty(), pv.span(), pv.height()));
             } else {
                 panels.add(pv);
             }
