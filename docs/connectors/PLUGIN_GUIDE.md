@@ -31,14 +31,14 @@ Every connector recovers from an outage without a restart of Drishti, and starts
 | Connector | How |
 |---|---|
 | `jdbc` | a pool of lazy slots: each opens its connection on first use and reopens it when broken; table kinds are listed in the background (every 10 s) until the database answers |
-| `kafka` | the Kafka client rides out a broker outage and carries on (health `DOWN: no connection to the broker (reconnecting)` after 10 s without one); a supervisor recreates the consumer after a fatal error (backoff 1 s → 30 s) and resumes at the last applied offset |
+| `kafka` | the Kafka client rides out a broker outage and carries on (health `DOWN: no connection to the broker (reconnecting)` after 10 s without one); a supervisor recreates the consumer after a fatal error (backoff 1 s → 30 s) and resumes at the last applied offset (a restart of the server replays the topic from the beginning, in both modes) |
 | `iceberg` | each table's snapshot is checked every `refresh-seconds`; a failed check keeps the last one, and the next succeeds by itself |
 | `duckdb` | nothing to reconnect to: the file is read in-process. A missing or unopenable file shows `DOWN: no DuckDB file at …` or `DOWN: DuckDB file … not opened: …`; the file is checked every `refresh-seconds` and opened once it is there. A file replaced by a load is reopened as a new generation, and reads in flight finish on the old one |
 | `mongodb` | the driver connects in the background; reads of kinds not yet catalogued answer "not held"; the next refresh fills the catalogue |
 | `redis` | Lettuce reconnects by itself; the next refresh refills the catalogue and the `<domain>:changes` subscription resumes |
 | `aerospike` | the client tends the cluster in the background (`failIfNotConnected` off); the next refresh refills the catalogue |
 | `activemq` | the failover transport reconnects; its interruptions show in health; a supervisor rebuilds the session after any other failure |
-| `rabbitmq` | a supervisor retries until the first connection succeeds; then the client's automatic recovery reconnects and re-subscribes |
+| `rabbitmq` | a supervisor retries until the first connection succeeds; then the client's automatic recovery reconnects and re-subscribes (a consumer the broker cancels, `DOWN: consumer cancelled on <queue>`, is not re-subscribed until a restart) |
 | `delta`, `file`, `rest`, `s3`, feeds | nothing long-lived to lose: each call reads or connects afresh |
 
 While a store is down its reads fail (views say which source failed) and `health` reports `DOWN: … (reconnecting)`.
@@ -196,21 +196,25 @@ merges the hits; reverse lookups ask every source that declares them.
 A queue delivers each message once and keeps no history, unlike a Kafka topic. So these connectors keep the latest
 document of every entity themselves, in a **persistent state store** per connector: RocksDB on local disk
 (`state.dir`, default `<state.root>/<source-name>`, that is `./data/state/<connector>`; `state.max-gb`, 10), which
-survives restarts of Drishti, with the recent documents in a memory cache (`cache-mb`, 128). Nothing is lost while
-Drishti is down: queue messages wait in the broker, and topics are read through durable subscriptions. Messages are
-acknowledged only after they are stored, so a crash redelivers rather than loses.
+survives a clean restart of Drishti, with the recent documents in a memory cache (`cache-mb`, 128). Nothing is lost
+while Drishti is down: queue messages wait in the broker, and topics are read through durable subscriptions.
+Messages are acknowledged after they are handed to the store, which is written without a write-ahead log: a crash
+or power loss can lose acknowledged messages still in its write buffer (up to 32 MB). Rejected messages, and
+messages the store fails to write, are acknowledged and dropped (no dead-lettering).
 
 | Message | Becomes |
 |---|---|
 | a body on a destination with `kind.<destination>` (or any destination when `kind` is set) | that kind's document; the id is the `id` header, else the field `id-field.<destination>` (else `id-field`, default `id`) |
-| a body `{"kind", "id", "doc"}` on any other destination | the envelope's entity (the `id` header stands in for a missing `"id"`) |
-| `"doc": null` in an envelope, a `deleted: true` header, or an empty body on a destination with a kind and an `id` header | a delete (an empty body anywhere else is counted as rejected) |
+| a body `{"kind", "id", "doc"}` on any other destination | the envelope's entity (the envelope's `"id"` wins; the `id` header stands in for a missing `"id"`) |
+| `"doc": null` or no `"doc"` key in an envelope, a `deleted: true` header, or an empty body on a destination with a kind and an `id` header | a delete (an empty body anywhere else is counted as rejected) |
 | anything else (not JSON, no kind or id) | skipped and counted as `rejected` in the connector's cache figures |
 
-Every change is pushed to open views, search finds everything received, and a purge (Admin → Caches) clears only
-the memory cache: the state store is the only copy, so it is never purged (clear it deliberately with
-`state.reset-at`, or by deleting its folder). The store is bounded by `state.max-gb`: beyond it the oldest files are
-dropped, so size it well above what the entities need. Declare them as named connectors in a pack or site
+Every change is pushed to open views (a delete is not: an open view keeps its last document until reopened), search
+finds everything received, and a purge (Admin → Caches) clears only the memory cache: the state store is the only
+copy, so it is never purged (clear it deliberately with `state.reset-at`, which clears only the disk store, or by
+deleting its folder with the server stopped). The store is bounded by `state.max-gb` with FIFO compaction: disk grows
+with every message, not with the number of entities, and beyond the budget the oldest files are dropped, so an
+entity not updated for a long time silently disappears. Size it for the message volume. Declare them as named connectors in a pack or site
 configuration (full examples: [activemq](#activemq), [rabbitmq](#rabbitmq)):
 
 ```yaml
@@ -274,7 +278,7 @@ their health for anyone. *Admin → Caches* (`POST /api/v1/admin/caches/{name}/p
 | `aerospike` | yes | no | yes | yes, from promoted bins (`reverse-index`) | `snapshot` or `effective` per kind |
 | `kafka` | no | yes | yes (`state` mode) | no | — |
 | `activemq`, `rabbitmq` | no | yes | yes | no | — |
-| `s3` | yes | no | yes | no | as `file` |
+| `s3` | yes | no | yes | no | the newest date folder on or before the date that holds the entity (within `lookback-days`), then the undated object; no `mode.<kind>` |
 | `feed` | yes | no | yes | no | the observations on or before the date |
 
 **`snapshot` and `effective`.** A `snapshot` kind is stored in full for every business date: a read takes the newest
@@ -489,15 +493,17 @@ routes:
 | `header.<Name>` | — | request header `<Name>` |
 
 **The data.** `GET https://positions.bank.example/api/v2/positions/POS-77` with `Accept: application/json`:
-`200` with a JSON object is the document; `404` means *not held here* (the next source is tried); any other status
-of 400 or more is an error (`DRS-1003`).
+any status below 400 except `404` is the document (`200`, also `204`, other `2xx` and `3xx`: the body is parsed as
+JSON; redirects are not followed; an empty body is an empty document and counts as found); `404` means *not held
+here* (the next source is tried); any other status of 400 or more is an error (`DRS-1003`).
 
 **Try it.** Any static server works: lay out `api/position/POS-77.json` and run
 `python3 -m http.server 9000` in the parent folder, with `base-url: http://localhost:9000/api` and
 `path: /{kind}/{id}.json`, and a mnemonic for `position` in a pack.
 
 **What the user sees.** `<mnemonic> POS-77 <GO>`; provenance `positions-api`, not live, no business date. Health:
-`UP` once started (the plugin keeps no connection, so a down service shows as failed reads, not in health).
+`UP` once started (the plugin keeps no connection, so a down service shows as failed reads, not in health); a failed
+start (an empty `base-url`) is listed under `failedToStart`.
 
 ---
 
@@ -982,7 +988,7 @@ drishti:
 | `kind.<topic>` | — | mapped messages on that topic |
 | `id-field` | `id` | mapped messages: the id field, for every topic |
 | `id-field.<topic>` | — | the id field on that topic |
-| `mode` | `state` | `state` keeps an index and serves reads; `ticks` keeps nothing and serves no reads, but pushes every message to open views of its kinds that a store answers (the plugin's `pushes(ref)` is true, so those views are live; see CONNECTOR_GUIDE.md) |
+| `mode` | `state` | `state` keeps an index (about 0.4–0.5 GB of heap per million entities with type-ahead, estimated) and serves reads; `ticks` keeps nothing and serves no reads, but pushes every message to open views of its kinds that a store answers (the plugin's `pushes(ref)` is true, so those views are live; see CONNECTOR_GUIDE.md). Both modes replay the topic from the beginning at start |
 | `cache-mb` | `256` | recently read documents in memory (a miss reads the one record back from Kafka by offset) |
 | `search` | `true` | keep ids for type-ahead (`state` mode only) |
 | `poll-ms` | `200` | poll interval |
@@ -1015,11 +1021,15 @@ key:   netting-set/NS-NORTH-01
 value: {"kind": "netting-set", "id": "NS-NORTH-01", "doc": {"nettingSetId": "NS-NORTH-01", "netMtm": -1200000, …}}
 ```
 
-A **tombstone** (null value) deletes: mapped, keyed by the id; envelope, keyed `<kind>/<id>`. An envelope with
-`"doc": null` deletes too. A message that is not JSON is skipped. The generation is the offset, the fetch time the
+A **tombstone** (a null value; an empty value is not one) deletes: mapped, keyed by the id; envelope, keyed
+`<kind>/<id>`. An envelope with `"doc": null` deletes too. Deletes are not pushed to open views, and a deleted id
+stays in type-ahead until a restart. An envelope that is not JSON is skipped; a keyed mapped message that is not JSON
+is indexed by its key and reads as "not held". The generation is the offset, the fetch time the
 message timestamp, and documents are live and undated. Health is `UP (catching up)` until the end offsets seen at
 start are reached, then `UP`; `DOWN: no connection to the broker (reconnecting)` once the broker has been unreachable
-for 10 s, and `UP` again when it is back.
+for 10 s, and `UP` again when it is back; `DOWN: <message> (retrying)` only in `ticks` mode, for a client
+configuration error (in `state` mode the same error fails the start: `failedToStart`). A read that needs Kafka while
+the broker is away ends in `DRS-1004`, because the connector waits up to 5 s and `fetch-timeout` (2 s) is shorter.
 
 **Try it.**
 
@@ -1087,7 +1097,9 @@ connectors:
 | shared message settings | | `kind`, `kind.<destination>`, `id-field`, `id-field.<destination>`, `cache-mb`, `state.*`, `source-name`: [below](#shared-message-queue-settings) |
 
 ActiveMQ refuses a second connection with the same client id, so two Drishti servers reading the same broker need
-different `client-id`s (and then each has its own durable subscription).
+different `client-id`s (and then each has its own durable subscription). A durable subscription stays on the broker
+after its topic is removed from `destinations` (remove it on the broker). Destinations are polled in turn, and with
+several each idle one costs a 50 ms wait per loop.
 
 **The data.** A `TextMessage` (or `BytesMessage`, read as UTF-8) whose body is JSON; optional string properties
 `id` and `deleted`. On `orders` above (mapped):
@@ -1099,7 +1111,7 @@ body:        {"orderId": "O-55120", "side": "BUY", "instrument": "EQ-NVTK", "qty
 ```
 
 On a destination without a kind, the body is an envelope `{"kind": "order", "id": "O-55120", "doc": {…}}`. A
-message with property `deleted=true` or `"doc": null` deletes (an empty body deletes only on a destination with a kind,
+message with property `deleted=true`, `"doc": null` or no `"doc"` key deletes (an empty body deletes only on a destination with a kind,
 with the `id` header naming the entity). Generation is a counter that rises with
 every message; documents are live and undated.
 
@@ -1152,8 +1164,9 @@ connectors:
 | `heartbeat-seconds` | `20` | requested heartbeat |
 | shared message settings | | [below](#shared-message-queue-settings) |
 
-**The data.** The body is JSON (UTF-8). The id is the `id` header, else the message's `message_id` property, else
-the `id-field`; a `deleted` header of `true` deletes.
+**The data.** The body is JSON (UTF-8). On a queue with a kind, the id is the `id` header, else the message's
+`message_id` property, else the `id-field`; in an envelope the envelope's `"id"` wins over the header. A `deleted`
+header of `true` deletes. All queues are consumed on one channel.
 
 ```text
 queue:    drishti.orders
@@ -1173,7 +1186,8 @@ curl -u guest:guest -H 'content-type: application/json' -X POST \
 ```
 
 **What the user sees.** As ActiveMQ. Health: `UP`, `DOWN: connection lost (recovering)`, or
-`DOWN: consumer cancelled on <queue>` (for example, the queue was deleted).
+`DOWN: consumer cancelled on <queue>` (for example, the queue was deleted), which stays until the server restarts.
+An empty `queues` reports `UP` and consumes nothing.
 
 ### Shared message-queue settings
 
@@ -1188,8 +1202,8 @@ Read by both `activemq` and `rabbitmq` (`MessageStateSource` in `drishti-messagi
 | `cache-mb` | `128` | recent documents in memory |
 | `state.dir` | `<state.root>/<source-name>` | the RocksDB state store's folder |
 | `state.root` | `./data/state` | parent of the default folder |
-| `state.max-gb` | `10` | disk budget; beyond it the oldest files go |
-| `state.reset-at` | `never` | a daily clearing time (`HH:mm`), for state that should start empty each day |
+| `state.max-gb` | `10` | disk budget, FIFO compaction: disk grows with messages, and beyond it the oldest files go, with any entity not updated since |
+| `state.reset-at` | `never` | a daily clearing time (`HH:mm`) of the disk store only (the memory cache and type-ahead keep theirs), for state that should start empty each day |
 | `state.zone` | `America/New_York` | the zone of `state.reset-at` |
 | `source-name` | `activemq` / `rabbitmq` (a connector: its name) | provenance source; also names the default folder |
 
@@ -1233,7 +1247,7 @@ takes the same settings under `drishti.sources.plugins.s3.settings`.
 | `region` | `us-east-1` | region |
 | `endpoint` | — | an S3-compatible endpoint |
 | `path-style` | `true` | path-style addressing, with `endpoint` |
-| `access-key`, `secret-key` | — | static credentials; otherwise the AWS credential chain |
+| `access-key`, `secret-key` | — | static credentials (no session token, so not temporary STS keys); otherwise the AWS credential chain |
 | `rescan-seconds` | `60` | list kinds, ids and dated folders |
 | `cache-seconds` | `30` | how long a read (or a miss) is cached |
 | `cache-entries` | `10000` | cached objects |
@@ -1247,9 +1261,13 @@ s3://risk-docs/eod/stress-result/ST-2026-Q3.json                undated
 s3://risk-docs/eod/2026-09-30/stress-result/ST-2026-Q3.json     for 30 September
 ```
 
-Only `.json` objects; the kind is the folder, the id the file name. Dates work as in `file`. The generation is the
-object's last-modified time. The kinds served are those found by the last listing (until the first listing
-succeeds, any kind). A miss is cached too, so a new object is found within `cache-seconds`.
+Only `.json` objects; the kind is the folder, the id the file name. A date folder must be a real date (a folder
+such as `2026-13-01/` is ignored). Dates are not the `file` connector's modes, and there is no `mode.<kind>`: on a
+picked date the newest folder on or before it that holds the entity answers, so an entity missing from the newest
+folder falls back to older folders within `lookback-days`, then to the undated object. The generation is the
+object's last-modified time. The kinds served are those found by the last successful listing; until one succeeds,
+or when it finds no objects at all, that set is empty, which means **every kind**. A miss is cached too, so a new
+object is found within `cache-seconds`. Connect (5 s) and socket (20 s) timeouts are fixed in the code.
 
 **Try it.**
 
@@ -1262,7 +1280,8 @@ aws --endpoint-url http://localhost:9000 s3 cp ST-2026-Q3.json s3://risk-docs/eo
 ```
 
 **What the user sees.** `<mnemonic> ST-2026-Q3 <GO>`, dated by folder. Health: `UP` or
-`DOWN: <exception>: <message> (retrying)`; cache figures `cachedObjects`, `indexed`, `datedFolders`.
+`DOWN: <exception>: <message> (retrying)` (a listing error stays until a listing succeeds, even when reads work);
+cache figures `cachedObjects`, `indexed`, `datedFolders`.
 
 ---
 

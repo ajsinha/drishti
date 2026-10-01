@@ -472,8 +472,10 @@ Your client-onboarding system has an API that returns one counterparty as JSON:
 
 ### The data
 
-`200` with a JSON object is the document. `404` means *not held here* (the next connector is asked). Any other
-status of 400 or more, or a connection error, is a failure (`DRS-1003`).
+Any status below 400 except `404` is the document: `200`, but also `204`, other `2xx` and `3xx` answers, whose body is
+parsed as JSON (redirects are not followed, and an empty body is an empty document, *found*). `404` means *not held
+here* (the next connector is asked). Any other status of 400 or more, a connection error or a body that is not JSON
+is a failure (`DRS-1003`). Make the service answer `404` for an unknown id and point `base-url` at the final address.
 
 ```http
 GET /api/counterparty/CP-HARBOURVIEW HTTP/1.1
@@ -551,7 +553,8 @@ view says *crm-api is not a dated source: this shows its current data, not 2026-
 
 ### Health, and when the service goes down
 
-`health` is `UP` once started (`DOWN: not started` only if it never started). The plugin keeps no connection, so a
+`health` is `UP` once started. A connector whose start failed (an empty `base-url`) is listed under `failedToStart`
+instead, so `DOWN: not started` is practically never seen. The plugin keeps no connection, so a
 service that is down does **not** change health; it shows as failed reads: views say
 `DRS-1003 crm-api failed reading counterparty/CP-HARBOURVIEW`, and the connector's `reads.errors` and `lastError`
 in `/api/v1/admin/health` count them. When the service is back, the next read works.
@@ -1285,10 +1288,12 @@ to tick as messages arrive, and the full history from the lake when a user picks
 - It reads **every partition from the beginning** at start (the topic *is* the state: the latest message per entity
   wins, as with a compacted topic), then keeps reading. It uses no consumer group and commits nothing, so every
   Drishti server reads the whole topic on its own.
-- Health is `UP (catching up)` until it has reached the end offsets seen at start, then `UP`.
-- Memory stays small: it keeps *where* each entity's latest message is (tens of bytes per entity) and a cache of
-  recently read documents (`cache-mb`, 256). A document nobody has opened is read back from Kafka by its offset when
-  someone does.
+- Health is `UP (catching up)` until it has reached the end offsets seen at start, then `UP`. This is true in `ticks`
+  mode as well: it keeps nothing, but still replays the topic from the beginning at every start.
+- Memory: it keeps *where* each entity's latest message is and the id for type-ahead, about 0.4–0.5 GB of heap per
+  million entities (an estimate from the data structures: the id, the map entry and the type-ahead entry, not just
+  the position), plus a cache of recently read documents (`cache-mb`, 256). A document nobody has opened is read back
+  from Kafka by its offset when someone does.
 - Documents are **live and undated**. The generation is the message offset.
 
 ### The data: two message shapes
@@ -1318,8 +1323,12 @@ value: {"kind": "netting-set", "id": "NS-ALDERSHOT-FRA",
         "doc": {"nettingSetId": "NS-ALDERSHOT-FRA", "tradeCount": 3, "netMtm": -339550, "collateral": -229552, "pfePeak": 347288}}
 ```
 
-**Deletes.** A tombstone (null value) deletes: on a mapped topic keyed by the id, on an envelope topic keyed
-`<kind>/<id>`. An envelope with `"doc": null` deletes too. A value that is not JSON is skipped.
+**Deletes.** A tombstone (a null value, not an empty one) deletes: on a mapped topic keyed by the id, on an envelope
+topic keyed `<kind>/<id>`. An envelope with `"doc": null` deletes too. A delete is **not pushed** to open views (a
+view already open keeps its last document until it is opened again), and a deleted id stays in type-ahead until the
+server restarts; opening it answers "not held". An envelope that is not JSON is skipped. On a mapped topic, a keyed
+message whose value is not JSON is still indexed by its key, without parsing; reading that entity then fails to
+parse and answers "not held".
 
 ### Configure it
 
@@ -1420,17 +1429,20 @@ sure a trade Kafka does not hold falls through to the lake rather than to a rand
 | Health | Meaning |
 |---|---|
 | `DOWN: not started` | the consumer has not connected yet |
-| `UP (catching up)` | reading the topic from the beginning |
+| `UP (catching up)` | reading the topic from the beginning (at every start, in `ticks` mode too) |
 | `UP` | caught up; new messages are applied as they arrive |
 | `DOWN: no connection to the broker (reconnecting)` | the broker has been unreachable for 10 s while the connector ran; the Kafka client keeps reconnecting by itself |
 | `DOWN: IllegalStateException: topic risk.envelopes has no partitions yet (reconnecting)` | the topic does not exist (and the broker does not create topics automatically) |
 | `DOWN: <Exception>: <message> (reconnecting)` | the consumer gave up (broker down at start, fatal error) |
+| `DOWN: <message> (retrying)` | `ticks` mode only: the client rejected its configuration (an unresolvable `bootstrap-servers`, a malformed `client.*` property). In `state` mode the same error stops the start, and the connector is listed under `failedToStart` |
 
 The Kafka client rides out a broker outage by itself and carries on where it was when the broker is back (health
 returns to `UP`); blips shorter than 10 s do not show in health. When the client gives up, a supervisor waits (1 s,
 doubling to 30 s), creates a new consumer and **resumes at the last offset it applied** (no replay). While the broker
 is away, documents in the memory or disk cache still answer; others are read back from Kafka by offset, so those
-reads fail (`DRS-1004`) until it returns. Cache figures:
+reads fail (`DRS-1004`) until it returns. That is because the connector waits up to 5 s for Kafka, longer than
+`drishti.sources.fetch-timeout` (2 s): raise `fetch-timeout` above 5 s and such a read answers "not held" instead,
+so the next store (the lake) answers. Cache figures:
 `indexedEntities`, `memoryEntries`, `memoryMb`, and with the disk cache `diskMb`, `diskHits`, `diskMisses`,
 `diskClears`.
 
@@ -1442,7 +1454,8 @@ reads fail (`DRS-1004`) until it returns. Cache figures:
 | health stays `UP (catching up)` | a very large topic, or messages arriving faster than read | wait; watch `indexedEntities` grow |
 | the view does not tick | the trade is answered by another live source (the samples) | `DRISHTI_DEMO_ENABLED=false`, or check `provenance.source` |
 | an envelope is ignored | not JSON, or no `kind`/`id` | validate the value with `jq` |
-| a delete does not delete | envelope tombstone keyed by the bare id | key envelopes `<kind>/<id>` |
+| a delete does not delete | envelope tombstone keyed by the bare id, or an empty value instead of null | key envelopes `<kind>/<id>`; send a real null |
+| a deleted trade still shows in an open view or in type-ahead | deletes are not pushed to views; type-ahead keeps the id until a restart | reopen the view; opening the id answers "not held" |
 | `DOWN: … TimeoutException …` behind TLS/SASL | missing `client.*` security settings | copy the properties your other consumers use, prefixed `client.` |
 
 ---
@@ -1460,9 +1473,22 @@ changes. You want `LIM <id>` to show the latest version, live.
 
 A queue delivers each message **once** and keeps no history. So the connector keeps the latest document of every
 entity itself, in a **state store** on local disk (RocksDB, `./data/state/<connector>`), with recent documents in
-memory (`cache-mb`, 128). The store survives restarts. Nothing is lost while Drishti is down: queued messages wait in
-the broker, and topics are read through durable subscriptions. Each message is acknowledged **after** it is stored,
-so a crash redelivers rather than loses.
+memory (`cache-mb`, 128). The store survives a clean restart. Nothing is lost while Drishti is down: queued messages
+wait in the broker, and topics are read through durable subscriptions. Each message is acknowledged after it is
+handed to the store, but the store is written **without a write-ahead log**: a crash of the JVM or a power loss can
+lose acknowledged messages still in its write buffer (up to 32 MB), and the broker will not send them again. A
+message the connector rejects, or one the store fails to write, is acknowledged and dropped too: there is no
+dead-lettering.
+
+Three more properties of the store matter in production:
+
+- **`state.max-gb` is not a cap on entities.** The store uses FIFO compaction: every message adds to it (an update or
+  a delete does not reclaim the old copy), so disk grows with messages, not entities. Past the budget the oldest
+  files are dropped, and an entity not updated for a long time **silently disappears** from reads and from the store.
+  Size the budget for the message volume between restarts or clearings, not for the entities.
+- **`state.reset-at` clears only the disk store.** Documents still in the memory cache keep answering until evicted,
+  and type-ahead keeps every id received until the server restarts.
+- **Deletes are not pushed** to open views: a view already open keeps its last document until it is opened again.
 
 ### The data
 
@@ -1483,15 +1509,15 @@ body:        {"limitId": "LIM-ALDERSHOT", "counterparty": "CP-ALDERSHOT", "limit
 ```
 
 On a destination without a kind, the body is an envelope `{"kind": "credit-limit", "id": "LIM-ALDERSHOT", "doc": {…}}`
-(the `id` property stands in for a missing `"id"`).
+(the envelope's `"id"` wins; the `id` property only stands in for a missing `"id"`).
 
 | Message | Becomes |
 |---|---|
 | a JSON body on a mapped destination, with an id (property or field) | that kind's document, stored and pushed to open views |
 | a JSON envelope on any other destination | the envelope's entity |
-| property `deleted=true`, or an envelope with `"doc": null` | a delete |
+| property `deleted=true`, or an envelope with `"doc": null` or no `"doc"` key at all | a delete |
 | an empty body with an `id` property, on a mapped destination | a delete |
-| anything else (not JSON, no kind, no id) | skipped and counted in `rejected` |
+| anything else (not JSON, no kind, no id) | skipped, counted in `rejected`, and acknowledged: it is gone from the broker |
 
 ### Configure it
 
@@ -1538,7 +1564,10 @@ drishti:
 ```
 
 Two Drishti servers on the same broker need different `client-id`s (ActiveMQ refuses a second connection with the
-same id); each then has its own durable subscription to each topic, named `drishti-<connector>-<topic>`. Two servers
+same id); each then has its own durable subscription to each topic, named `drishti-<connector>-<topic>`. A durable
+subscription stays on the broker after its topic is removed from `destinations`, and the broker keeps queueing for
+it: remove it on the broker. With several destinations the connector polls them in turn, and each idle one costs a
+50 ms wait per loop, so a busy destination listed with idle ones is read more slowly. Two servers
 reading the same **queue** share its messages, so each would hold only part of the entities: give each server its own
 queue (or read a topic).
 
@@ -1575,7 +1604,7 @@ answers, since dated connectors go first.
 | Health | Meaning |
 |---|---|
 | `DOWN: not started` | before the first connection attempt |
-| `DOWN: connecting to failover:(tcp://localhost:61616)` | connecting (the failover transport waits for the broker) |
+| `DOWN: connecting to failover:(tcp://localhost:61616)` | connecting (the failover transport waits for the broker); the default `broker-url` is `failover:(tcp://localhost:61616)?initialReconnectDelay=1000&maxReconnectDelay=30000`, but the text names `failover:(tcp://localhost:61616)` when `broker-url` is not set |
 | `UP` | consuming |
 | `DOWN: connection to the broker lost (reconnecting)` | the failover transport lost the broker and is reconnecting |
 | `DOWN: <Exception>: <message> (reconnecting)` | any other failure; a supervisor rebuilds the session (1 s doubling to 30 s) |
@@ -1605,9 +1634,11 @@ Your collateral system publishes margin calls to the RabbitMQ exchange `collater
 
 ### The data
 
-The body is JSON (UTF-8). The id is the `id` **header**, else the message's `message_id` property, else the body's
-id field; a `deleted` header of `true` deletes. Envelopes and the rejected cases are as for
-[ActiveMQ](#11-a-message-queue-activemq).
+The body is JSON (UTF-8). On a queue with a kind, the id is the `id` **header**, else the message's `message_id`
+property, else the body's id field; in an envelope the envelope's `"id"` wins over the header. A `deleted` header of
+`true` deletes. Envelopes, the rejected cases, and the state store's limits (no write-ahead log, no dead-lettering,
+FIFO compaction, deletes not pushed) are as for [ActiveMQ](#11-a-message-queue-activemq). All queues share one
+channel.
 
 ```text
 exchange:    collateral          routing key: margin.call.new
@@ -1684,9 +1715,10 @@ updates.
 | `DOWN: <Exception>: <message> (retrying)` | the first connection has not succeeded yet; retried 1 s doubling to 30 s |
 | `UP` | consuming |
 | `DOWN: connection lost (recovering)` | the client's automatic recovery is reconnecting and re-subscribing |
-| `DOWN: consumer cancelled on drishti.margin-calls` | the broker cancelled the consumer (for example, the queue was deleted) |
+| `DOWN: consumer cancelled on drishti.margin-calls` | the broker cancelled the consumer (for example, the queue was deleted). It stays until the server restarts: nothing re-subscribes |
 
-Stored documents keep answering reads while the broker is away.
+Stored documents keep answering reads while the broker is away. An empty `queues` setting reports `UP` and consumes
+nothing.
 
 ### Common errors
 
@@ -1740,7 +1772,7 @@ connectors:
       region: us-east-1
       rescan-seconds: 60                      # list kinds, ids and date folders (for search and dates)
       cache-seconds: 30                       # how long a read, or a miss, is cached
-      lookback-days: 10                       # as file
+      lookback-days: 10                       # how far back an older date folder may answer
 ```
 
 **Site form**, an S3-compatible store with static credentials from the environment:
@@ -1778,10 +1810,16 @@ DRISHTI_RISK_DOCS=true java -jar drishti-server/target/drishti-server-*-exec.jar
 
 `STR STR-CLIMATE-2026Q3 <GO>`, dated by folder. The generation is the object's last-modified time.
 
+Dates are not the `file` connector's `snapshot` mode, and there is no `mode.<kind>`: on a picked date the newest folder
+on or before it that **holds the entity** answers, so an entity missing from the newest folder is read from an older
+one within `lookback-days`, then from the undated object (which answers for every date). To make an entity disappear
+from a date onward, stop writing it and delete its undated object.
+
 ### Health, and when the store goes down
 
-`health` is `UP`, or `DOWN: <exception>: <message> (retrying)` after a failed listing or read. Each call connects
-afresh, so it recovers by itself. Cache figures: `cachedObjects`, `indexed`, `datedFolders`; a purge empties the read
+`health` is `UP`, or `DOWN: <exception>: <message> (retrying)` after a failed listing or read. A listing error is
+reported until a listing succeeds, even when reads work; a read error until a read succeeds. Each call connects
+afresh (5 s connect and 20 s socket timeouts, fixed in the code), so it recovers by itself. Cache figures: `cachedObjects`, `indexed`, `datedFolders`; a purge empties the read
 cache.
 
 ### Common errors
@@ -1792,6 +1830,8 @@ cache.
 | `DOWN: … 403 …` | credentials or bucket policy | `aws s3 ls s3://<bucket>/<prefix>` with the same credentials |
 | a new object is not found | a miss is cached for `cache-seconds` | wait, or purge the connector's cache |
 | a new date folder is ignored | date folders are listed every `rescan-seconds` | wait, or lower it (listing large buckets costs requests) |
+| a folder such as `2026-13-01/` is never read | named like a date but not a real one, so it is ignored as a date | rename it to a real date |
+| other connectors are asked less, `notHeld` grows here | no `kinds:`, and the last listing found nothing (or none succeeded): an empty set serves every kind | give the connector `kinds:` |
 
 ---
 
@@ -2074,7 +2114,7 @@ curl -s http://localhost:18480/api/v1/admin/health | jq '.packs[] | {name, conne
 | `demo` | `UP` |
 | `derived` | `UP (nothing computed yet)`, `UP`, `DOWN: <why the last computation failed>` |
 | `file` | `UP`, `DOWN: no directory <root>` |
-| `rest` | `UP`, `DOWN: not started` |
+| `rest` | `UP` (a failed start is under `failedToStart`; `DOWN: not started` only before `start` has run) |
 | `jdbc` | `UP`, `DOWN: not started`, `DOWN: <error> (reconnecting)` |
 | `delta` | `UP`, `DOWN: cannot reach <root>/<domain>`, `DOWN: no Delta tables under <root>/<domain>` |
 | `aerospike` | `UP`, `DOWN: not connected to Aerospike` |
@@ -2135,8 +2175,11 @@ Purge after you correct data in place (a restated lake date) when you do not wan
 | `./data/cache/<connector>` (`DRISHTI_CACHE_ROOT`, `disk-cache.dir`) | Kafka disk cache | yes: it starts empty on every run anyway (the topic is replayed) |
 
 Put both on local disk, not a network share, and size them: `state.max-gb` and `disk-cache.max-gb` (10 each) are
-budgets beyond which the **oldest** files are dropped, so set the state store's budget well above what its entities
-need. `state.reset-at: "06:00"` clears a state store daily, for state that should start empty each day.
+budgets beyond which the **oldest** files are dropped (FIFO compaction). Disk grows with every message, not with the
+number of entities, so past the budget an entity not updated for a long time silently disappears from a state store:
+size its budget for the message volume. Neither store has a write-ahead log, so a crash can lose the last
+acknowledged messages of a state store. `state.reset-at: "06:00"` clears a state store's disk daily (the memory
+cache and type-ahead keep what they hold), for state that should start empty each day.
 
 ### Timeouts
 
@@ -2156,8 +2199,8 @@ it.
 
 ### Capacity tips
 
-- **Memory per connector**: `delta` `cache-mb` (512) of partitions; `kafka` `cache-mb` (256) plus tens of bytes per
-  entity for its index; `activemq`/`rabbitmq` `cache-mb` (128); `aerospike` `columns-cache-mb` (1024) of promoted
+- **Memory per connector**: `delta` `cache-mb` (512) of partitions; `kafka` `cache-mb` (256) plus about 0.4–0.5 GB
+  per million entities for its index and type-ahead (estimated); `activemq`/`rabbitmq` `cache-mb` (128); `aerospike` `columns-cache-mb` (1024) of promoted
   bins plus one id per entity in the index set (not the days kept). Add them up across connectors when sizing the heap (`-Xmx`).
 - **Database connections**: `pool-size` (4) per `jdbc` connector, per server. The `postgres` profile uses 8 for
   `trading-store`, the busiest domain.

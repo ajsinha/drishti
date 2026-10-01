@@ -99,8 +99,9 @@ The rules, as the listing in `rescan()` applies them to each key with the prefix
 | a key outside the prefix (`other/trade/T-9.json` when the prefix is `risk/`) | never listed, never read |
 
 - The kind is the folder name, the id the object name without `.json`, both case-sensitive. An id cannot contain `/`.
-- A date folder is any first-level folder whose name matches `\d{4}-\d{2}-\d{2}`. Its name must be a real date: a
-  folder such as `2026-13-01/` makes every listing fail ([section 13](#13-diagnosing)).
+- A date folder is any first-level folder whose name matches `\d{4}-\d{2}-\d{2}` and is a real date. A folder named
+  like a date that is not one, such as `2026-13-01/`, is ignored as a date: reads never look in it (its objects may
+  still be offered by type-ahead, since their keys have the dated shape), and the rest of the listing is unaffected.
 - A first-level folder that is neither a date nor a kind (one level of `.json` objects under it) is taken as a kind.
 
 ## 3. What an object holds
@@ -404,9 +405,11 @@ even when the store is unreachable.
 | a `GET` slower than the fetch timeout | the read ends with `DRS-1004 timed out reading <kind>/<id>` after `fetch-timeout` (2 s); the `GET` itself may run on up to the 20 s socket timeout | unchanged |
 | an object that is not valid JSON | that read fails (`DRS-1003`) | unchanged |
 
-`health` is exactly `"UP"` when the last error is cleared, else `"DOWN: " + <exception's simple class name> + ": " +
-<message> + " (retrying)"`. The error is cleared by the next successful listing or the next successful `GET` (a "no
-such key" answer does not clear it). Typical texts from the AWS SDK:
+`health` is exactly `"UP"` when no error is held, else `"DOWN: " + <exception's simple class name> + ": " +
+<message> + " (retrying)"`. Two errors are kept apart: the last **listing** error, cleared only by the next
+successful listing, and the last **read** error, cleared only by the next successful `GET` (a "no such key" answer
+does not clear it). While a listing error is held, health reports it, whatever reads do; otherwise it reports the
+read error. Typical texts from the AWS SDK:
 
 ```text
 DOWN: SdkClientException: Unable to execute HTTP request: Connection refused (retrying)
@@ -414,9 +417,10 @@ DOWN: S3Exception: Access Denied (Service: S3, Status Code: 403, Request ID: …
 DOWN: NoSuchBucketException: The specified bucket does not exist (Service: S3, Status Code: 404, Request ID: …) (retrying)
 ```
 
-Recovery needs nothing: the next rescan (every `rescan-seconds`) or read tries again, and health returns to `UP` on
-the first success. Because either path clears the error, health can show `UP` after a successful read while
-listings are still failing; check that `datedFolders` and `indexed` in the cache figures move.
+Recovery needs nothing: the next rescan (every `rescan-seconds`) or read tries again, and health returns to `UP` once
+each kind of error has been cleared by its own kind of success. A successful read does not hide a failing listing:
+health keeps reporting the listing error until a listing succeeds, so stale type-ahead and date folders show in
+health. A read error, on the other hand, stays until the next successful `GET`, even after a good listing.
 
 Cache figures (Admin → Caches, and `cache` in `GET /api/v1/admin/health`):
 
@@ -489,7 +493,7 @@ reads everything under its prefix, and the server decides what each user may see
 | `DOWN: S3Exception: Access Denied (… Status Code: 403 …) (retrying)` | credentials or bucket policy | `aws s3 ls s3://<bucket>/<prefix>` with the same credentials; check `s3:ListBucket` and `s3:GetObject` |
 | `DOWN: NoSuchBucketException: … (retrying)` | bucket name wrong, or the wrong `endpoint` | fix `bucket` / `endpoint` |
 | `DOWN: S3Exception: … Status Code: 301 …` | `region` is not the bucket's region | set `region` |
-| `DOWN: DateTimeParseException: Text '2026-13-01' could not be parsed … (retrying)` and type-ahead never changes | a first-level folder looks like a date but is not one; every listing fails | rename or remove that folder |
+| an object under a folder such as `2026-13-01/` is offered by type-ahead but never read | the folder is named like a date but is not one, so it is ignored as a date | rename the folder to a real date (or move the objects) |
 | a new object is not found | its miss is cached (`cache-seconds`), or, for type-ahead and a new date folder, the next rescan has not run | wait, or purge the connector's cache (reads only) |
 | a picked date shows an older `businessDate` | the folder for that date lacks the entity; an older folder within `lookback-days` answers | expected (section 6); write the entity into every day's folder |
 | the lake is never asked for an old date | an undated object exists for the entity | remove the undated object, or accept it serves every date |

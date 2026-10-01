@@ -637,11 +637,14 @@ Layout: `<root>/<kind>/<id>.json` (or `.csv`), and dated `<root>/<yyyy-MM-dd>/<k
 | `base-url` | required | `https://risk.internal/api` |
 | `path` | `/{kind}/{id}` | Appended to the base URL. |
 | `kinds` | empty = any | Comma list. |
-| `timeout-ms` | `2000` | Per request. |
+| `timeout-ms` | `2000` | Both the connect timeout and the request timeout. |
 | `generation-header` | `ETag` | A response header holding a numeric version; otherwise the fetch time. |
 | `header.<Name>` | none | Request headers, e.g. `header.Authorization: Bearer ${SERVICE_TOKEN}`. |
+| `source-name` | `rest` (a connector: its name) | The name shown in provenance and Health. |
 
-A 404 answer means "not held here".
+A 404 answer means "not held here". Any other status below 400 is the document (`204`, other `2xx` and `3xx` bodies
+are parsed; redirects are not followed; an empty body is an empty document, found); 400 or more is a failed read.
+Full detail: [REST_CONNECTOR.md](../connectors/REST_CONNECTOR.md).
 
 ### `kafka` — a live stream
 
@@ -650,7 +653,7 @@ A 404 answer means "not held here".
 | `bootstrap-servers` | `localhost:9092` | Brokers. |
 | `topics` | empty | Comma list. |
 | `kind`, `id-field` | none, `id` | Mapped messages: the whole value is the document of this kind, keyed by this field. Per topic: `kind.<topic>`, `id-field.<topic>`. Without them each message is an envelope `{"kind","id","doc"}`. |
-| `mode` | `state` | `state`: the stream is the store. `ticks`: another store serves documents and the stream only ticks open views. |
+| `mode` | `state` | `state`: the stream is the store (memory: about 0.4–0.5 GB per million entities for the index and type-ahead, estimated, plus `cache-mb`). `ticks`: another store serves documents and the stream only ticks open views; it keeps nothing, but still replays the topic from the beginning at start. |
 | `cache-mb` | `256` | Recently read documents kept in memory. |
 | `search` | `true` | Keep identifiers for type-ahead. |
 | `poll-ms` | `200` | Consumer poll interval. |
@@ -659,6 +662,11 @@ A 404 answer means "not held here".
 | `disk-cache.root` / `disk-cache.dir` | `./data/cache` / `<root>/<connector>` | Where the store lives. |
 | `disk-cache.max-gb` | `10` | Size budget. |
 | `disk-cache.reset-at` / `disk-cache.zone` | `02:00` / `America/New_York` | Nightly clearing time. |
+| `source-name` | `kafka` (a connector: its name) | The name shown in provenance and Health. |
+
+Only a null value (a tombstone), or an envelope with `"doc": null`, deletes; an empty value does not. Deletes are not
+pushed to open views, and a deleted id stays in type-ahead until a restart. Full detail:
+[KAFKA_CONNECTOR.md](../connectors/KAFKA_CONNECTOR.md).
 
 ### `activemq` and `rabbitmq` — message queues
 
@@ -667,23 +675,28 @@ message once.
 
 | Setting | Plugin | Default | Meaning |
 |---|---|---|---|
-| `broker-url` | activemq | `failover:(tcp://localhost:61616)` | The failover transport reconnects by itself. |
-| `destinations` | activemq | empty | `queue:trades,topic:quotes`; a bare name is a queue. Topics use durable subscriptions. |
+| `broker-url` | activemq | `failover:(tcp://localhost:61616)?initialReconnectDelay=1000&maxReconnectDelay=30000` | The failover transport reconnects by itself. |
+| `destinations` | activemq | empty | `queue:trades,topic:quotes`; a bare name is a queue. Topics use durable subscriptions, which stay on the broker after a topic is removed here. Each idle destination costs a 50 ms wait per polling loop. |
 | `user`, `password`, `client-id` | activemq | none, none, `drishti-<source-name>` | |
 | `uri` | rabbitmq | `amqp://guest:guest@localhost:5672/%2f` | |
-| `queues` | rabbitmq | empty | `trades,quotes` |
+| `queues` | rabbitmq | empty | `trades,quotes`, all on one channel. Empty: `UP`, consuming nothing. |
 | `declare` | rabbitmq | `true` | Declare the queues durable. |
 | `bind.<queue>` | rabbitmq | none | `exchange:routing.key` to bind a declared queue. |
 | `prefetch`, `heartbeat-seconds`, `recovery-interval-ms` | rabbitmq | `100`, `20`, `2000` | |
 | `kind`, `kind.<destination>`, `id-field`, `id-field.<destination>` | both | none, `id` | As for Kafka. |
 | `cache-mb` | both | `128` | Memory cache. |
-| `state.root` / `state.dir` | both | `./data/state` / `<root>/<source-name>` | The RocksDB store. Back it up: it survives restarts and is never cleared unless configured. |
-| `state.max-gb` | both | `10` | Size budget. |
-| `state.reset-at` / `state.zone` | both | `never` / `America/New_York` | Optional daily clearing time. |
+| `state.root` / `state.dir` | both | `./data/state` / `<root>/<source-name>` | The RocksDB store. Back it up: it survives restarts and is never cleared unless configured. It has no write-ahead log, so a crash can lose the last acknowledged messages. |
+| `state.max-gb` | both | `10` | Size budget, FIFO compaction: disk grows with messages, and past it the oldest files go, with entities not updated since. |
+| `state.reset-at` / `state.zone` | both | `never` / `America/New_York` | Optional daily clearing time; clears the disk store only. |
+| `source-name` | both | `activemq` / `rabbitmq` (a connector: its name) | The name shown in provenance and Health; names the default state folder. |
+
+Messages are acknowledged after they are handed to the state store. A message the connector rejects (not JSON, no kind
+or id), or one the store fails to write, is acknowledged and dropped: there is no dead-lettering. Full detail:
+[ACTIVEMQ_CONNECTOR.md](../connectors/ACTIVEMQ_CONNECTOR.md), [RABBITMQ_CONNECTOR.md](../connectors/RABBITMQ_CONNECTOR.md).
 
 ### `s3` — documents in S3 or an S3-compatible store
 
-Layout as the file connector: `<prefix><kind>/<id>.json` and `<prefix><yyyy-MM-dd>/<kind>/<id>.json`.
+Layout as the file connector's per-entity form: `<prefix><kind>/<id>.json` and `<prefix><yyyy-MM-dd>/<kind>/<id>.json`.
 
 | Setting | Default | Meaning |
 |---|---|---|
@@ -691,10 +704,17 @@ Layout as the file connector: `<prefix><kind>/<id>.json` and `<prefix><yyyy-MM-d
 | `prefix` | empty | e.g. `risk/` |
 | `region` | `us-east-1` | |
 | `endpoint` | empty | For S3-compatible stores (MinIO, Ceph); path-style addressing then (`path-style`, `true`). |
-| `access-key`, `secret-key` | empty | Otherwise the AWS credential chain. |
+| `path-style` | `true` | Path-style addressing, used with `endpoint`. |
+| `access-key`, `secret-key` | empty | Static credentials, with no session token (temporary STS keys do not work here); otherwise the AWS credential chain. |
 | `rescan-seconds` | `60` | How often identifiers and dates are listed. |
-| `cache-seconds`, `cache-entries` | `30`, `10000` | Read cache. |
-| `lookback-days` | `10` | |
+| `cache-seconds`, `cache-entries` | `30`, `10000` | Read cache (misses are cached too). |
+| `lookback-days` | `10` | How far back an older date folder may answer for an entity missing from newer ones. |
+| `source-name` | `s3` (a connector: its name) | The name shown in provenance and Health. |
+
+There is no `mode.<kind>`: a picked date reads the newest date folder on or before it that holds the entity (within
+`lookback-days`), then the undated object. A folder named like a date that is not a real one is ignored. Without
+`kinds`, the kinds served are those of the last successful listing, and an empty listing serves every kind. Connect
+(5 s) and socket (20 s) timeouts are fixed in the code. Full detail: [S3_CONNECTOR.md](../connectors/S3_CONNECTOR.md).
 
 ### `iceberg` — Apache Iceberg
 
@@ -751,7 +771,7 @@ sizing and measurements: [DUCKDB_CONNECTOR.md](../connectors/DUCKDB_CONNECTOR.md
 | `columns-seconds` | `300` | how long a day's columns are kept (a new file clears them at once) |
 | `max-load-rows` | `200000` | the most documents a reverse lookup reads for a kind without promoted link columns |
 | `reverse-index` | `true` | `false` turns reverse lookups off |
-| `source-name` | `duckdb` | the name shown in provenance and Health |
+| `source-name` | `duckdb` (a connector: its name) | the name shown in provenance and Health |
 
 Retention is the loader's `--keep-days N` (`tools/load-duckdb.sh`); the connector has no retention setting.
 
