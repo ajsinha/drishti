@@ -27,7 +27,7 @@ import java.util.stream.Stream;
 final class RepositoryFiles {
 
     static final Set<String> SKIP_DIRS =
-            Set.of("target", ".git", ".venv", "vendor", "recorded", "__pycache__", ".mvn", ".idea", ".pytest_cache", "requirements");
+            Set.of("target", ".git", ".claude", ".venv", "vendor", "recorded", "__pycache__", ".mvn", ".idea", ".pytest_cache", "requirements");
     static final Set<String> SKIP_FILES = Set.of("mvnw", "mvnw.cmd", "LICENSE");
 
     private RepositoryFiles() {}
