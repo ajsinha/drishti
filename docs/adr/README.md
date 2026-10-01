@@ -32,5 +32,6 @@
 | [013](013-sutras-go-live-through-review.md) | Sutras go live through review |
 | [014](014-single-sign-on-verified-by-the-server.md) | Single sign-on, verified by the server |
 | [015](015-packs-inherit.md) | Packs inherit, and the more specific pack wins |
+| [016](016-one-console-many-servers.md) | One console, many servers (proposed) |
 
 ADRs are amended, never rewritten.

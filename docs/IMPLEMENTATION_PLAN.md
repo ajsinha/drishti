@@ -208,6 +208,28 @@ What is open today. None blocks normal use; each is a candidate for a future wav
 | Several console processes | A tab's live channel lives in one console process, so a load balancer needs sticky sessions | [LIVE.md](LIVE.md) |
 | Formatting and static analysis gates | Spotless and Error Prone are deferred (ADR-007); `.editorconfig` only | [adr/007](adr/007-build-gates-in-tests.md) |
 
+## Roadmap
+
+### One console, many servers ([ADR-016](adr/016-one-console-many-servers.md), proposed)
+
+Several Drishti servers run side by side: an open one, and exclusive ones (a restricted desk, a regulator-facing
+environment, pre-production). One console serves everyone. The user picks a server, signs in to that server (its
+own users, roles, packs and single sign-on), and works on it. An exclusive server admits only its own users. The
+console never shares a session between servers.
+
+| Phase | What | Effort |
+|---|---|---|
+| M1 | A catalogue of servers in the console configuration (`servers:`; `backend.url` stays as the one-entry form). One HTTP client per server. The server id in the session cookie. Every cache and live channel scoped by (server, user) | medium |
+| M2 | A server picker before sign-in, with each server's name, state and version from a new public `/api/v1/about/public`. Sign-in and single sign-on per server. The current server in the top bar, with *Switch server* | medium |
+| M3 | Links and bookmarks that name their server. Unlisted servers reached only by link. Per-server colours and banners, so an exclusive environment is unmistakable | small |
+| M4 | Tests: two servers in one console test run (one open, one exclusive). A session on one gives nothing on the other. Switching asks and signs in again. Links route to the right server. Plus docs: OPERATIONS (deploying several servers), USER_GUIDE (switching), CONFIGURATION (`servers:`) | small |
+
+Open questions to settle before M1:
+- Should a user hold sessions on several servers at once (one per tab) or one at a time?
+- Should a workspace pane be able to show a view from another server (probably not: it mixes trust boundaries)?
+- Should the picker hide servers a user cannot enter? That needs the server to answer before sign-in, which leaks who
+  may enter, so the default is to show all listed servers.
+
 ## Risks
 
 | Risk | Mitigation |
