@@ -29,6 +29,7 @@ import com.ash.drishti.engine.view.ViewModel;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.Principal;
 import java.util.List;
+import java.util.Map;
 import java.util.Locale;
 import java.util.Optional;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -52,10 +53,13 @@ public class CommandController {
     private final SourceRouter router;
     private final SearchProperties searchProps;
     private final com.ash.drishti.server.security.PackAccess packs;
+    private final CommandMemory memory;
 
     public CommandController(CommandParser parser, SuggestionService suggestions, Mnemonics mnemonics, Entitlements entitlements,
-            StructuredSearch search, SourceRouter router, SearchProperties searchProps, com.ash.drishti.server.security.PackAccess packs) {
+            StructuredSearch search, SourceRouter router, SearchProperties searchProps, com.ash.drishti.server.security.PackAccess packs,
+            CommandMemory memory) {
         this.packs = packs;
+        this.memory = memory;
         this.parser = parser;
         this.suggestions = suggestions;
         this.mnemonics = mnemonics;
@@ -79,7 +83,14 @@ public class CommandController {
     @PostMapping
     public ApiDtos.CommandResponse command(@RequestBody ApiDtos.CommandRequest req, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
-        String text = req.text() == null ? "" : req.text().replaceAll("(?i)<\\s*GO\\s*>", " ").trim();
+        String typed = req.text() == null ? "" : req.text().replaceAll("(?i)<\\s*GO\\s*>", " ").trim();
+        String text = memory.expand(principal.user(), typed).trim();         // MYBOOK -> BOOK BOOK-RATES-1
+        ApiDtos.CommandResponse answer = resolve(text, asOf, principal);
+        memory.remember(principal.user(), typed);                            // only commands that could be read
+        return answer;
+    }
+
+    private ApiDtos.CommandResponse resolve(String text, AsOf asOf, Principal principal) {
         boolean pick = SearchQuery.looksLikePick(text);
         Optional<EntityRef> named = pick ? Optional.empty() : parser.parse(text);
         String head = text.split("\\s+", 2)[0];
@@ -122,5 +133,23 @@ public class CommandController {
     public List<Suggestion> suggest(@RequestParam(defaultValue = "") String q, @RequestParam(required = false) Integer limit, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
         return entitlements.filter(principal, suggestions.suggest(q, principal.user(), limit, asOf));
+    }
+
+    /** The caller's recent commands, newest first (↑ on the command line). */
+    @GetMapping("/history")
+    public List<String> history(@RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
+        return memory.history(principal.user());
+    }
+
+    /** The caller's aliases: short words for longer commands. */
+    @GetMapping("/aliases")
+    public Map<String, String> aliases(@RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
+        return memory.aliases(principal.user());
+    }
+
+    /** Replaces the caller's aliases ({@code {"MYBOOK": "BOOK BOOK-RATES-1"}}); a mnemonic or pack code is not free. */
+    @org.springframework.web.bind.annotation.PutMapping("/aliases")
+    public Map<String, String> setAliases(@RequestBody Map<String, String> aliases, @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
+        return memory.setAliases(principal.user(), aliases, name -> mnemonics.of(name).isPresent() || packs.byCodeOrName(name).isPresent());
     }
 }

@@ -46,6 +46,25 @@ async def suggest(request: Request, q: str = "", limit: int | None = None):
         return _problem(e)
 
 
+@router.get("/history")
+async def history(request: Request):
+    """The user's recent commands, newest first (↑ on the command line)."""
+    try:
+        return await request.app.state.backend.command_history(ident(request))
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.put("/aliases")
+async def put_aliases(request: Request):
+    """Replaces the user's aliases; the server checks names and commands."""
+    body = json.loads(await request.body() or b"{}")
+    try:
+        return await request.app.state.backend.set_aliases(body, ident(request))
+    except BackendError as e:
+        return _problem(e)
+
+
 @router.patch("/settings")
 async def patch_settings(request: Request):
     """Personal settings from the page (the theme menu); the server validates."""

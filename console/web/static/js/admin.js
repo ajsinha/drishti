@@ -36,6 +36,28 @@
     });
   }
 
+  // ---- account: aliases ------------------------------------------------------------------------
+  var al = document.querySelector('[data-aliases]');
+  if (al) {
+    al.addEventListener('click', function (e) {
+      if (e.target.closest('[data-remove]')) { e.target.closest('tr').remove(); }
+    });
+    al.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var body = {}, msg = al.querySelector('[data-msg]');
+      al.querySelectorAll('tbody tr').forEach(function (tr) {
+        var n = tr.querySelector('[name=name]').value.trim(), c = tr.querySelector('[name=body]').value.trim();
+        if (n && c) { body[n] = c; }
+      });
+      fetch('/api/aliases', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); })
+        .then(function (res) {
+          if (res.ok) { say(msg, 'Saved ' + Object.keys(res.body).length + ' aliases.'); setTimeout(function () { location.reload(); }, 500); }
+          else { say(msg, (res.body.code || 'Error') + ': ' + res.body.detail, true); }
+        });
+    });
+  }
+
   // ---- users page -------------------------------------------------------------------------------
   var root = document.querySelector('[data-admin]');
   if (!root) { return; }

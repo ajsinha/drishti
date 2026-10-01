@@ -223,6 +223,20 @@ class FakeBackend:
                 "uptimeSeconds": 3725, "sutras": ["irs-vanilla v3"], "securityEnabled": False,
                 "sources": [{"name": "demo", "version": "1.0", "kinds": [], "live": True, "search": True, "reverseLookup": True, "health": "UP"}]}
 
+    aliases_saved = {"MYBOOK": "BOOK BOOK-RATES-1"}
+
+    async def command_history(self, ident=None):
+        return ["TRD T-10001", "MKT"]
+
+    async def aliases(self, ident=None):
+        return dict(self.aliases_saved)
+
+    async def set_aliases(self, aliases, ident=None):
+        if "TRD" in {k.upper() for k in aliases}:
+            raise BackendError(400, "DRS-5001", "'TRD' is already a mnemonic or a pack code; choose another name")
+        self.aliases_saved = {k.upper(): v for k, v in aliases.items()}
+        return dict(self.aliases_saved)
+
     async def pack_overview(self, name, ident=None):
         if name.upper() not in ("MKT", "MARKET-DATA"):
             raise BackendError(400, "DRS-5001", f"no pack '{name}' is switched on")

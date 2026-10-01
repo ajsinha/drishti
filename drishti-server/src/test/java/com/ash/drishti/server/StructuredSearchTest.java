@@ -124,4 +124,21 @@ class StructuredSearchTest {
         mvc.perform(get("/api/v1/packs/trading/overview").header("Authorization", as("nothing")))
                 .andExpect(jsonPath("$.kinds").isEmpty());                                     // kinds you may not open are left out
     }
+
+    @Test
+    void aliasesExpandAndHistoryRemembersWhatWasRead() throws Exception {
+        String me = as("searcher");
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/v1/command/aliases").header("Authorization", me)
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content("{\"revs\":\"TRD productType=Revolver\",\"first\":\"TRD T-10001\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.REVS").value("TRD productType=Revolver"));
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/v1/command/aliases").header("Authorization", me)
+                .contentType(org.springframework.http.MediaType.APPLICATION_JSON).content("{\"TRD\":\"TRD T-1\"}"))
+                .andExpect(status().isBadRequest());                                                 // a mnemonic is not free
+        command("first <GO>").andExpect(jsonPath("$.ref.id").value("T-10001"));
+        command("revs").andExpect(jsonPath("$.matched").value(6));
+        java.util.concurrent.TimeUnit.MILLISECONDS.sleep(300);                                    // history is written in the background
+        mvc.perform(get("/api/v1/command/history").header("Authorization", me))
+                .andExpect(jsonPath("$[0]").value("revs")).andExpect(jsonPath("$[1]").value("first"));
+    }
 }

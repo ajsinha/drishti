@@ -126,6 +126,15 @@ class BackendClient:
     async def impact(self, kind: str, id_: str, ident=None) -> dict:
         return await self._get(f"/impact/{kind}/{quote(id_)}", ident)
 
+    async def command_history(self, ident) -> list:
+        return await self._get("/command/history", ident)
+
+    async def aliases(self, ident) -> dict:
+        return await self._get("/command/aliases", ident)
+
+    async def set_aliases(self, aliases: dict, ident) -> dict:
+        return await self._send("PUT", "/command/aliases", ident, json=aliases)
+
     async def pack_overview(self, name: str, ident=None) -> dict:
         """A pack's kinds with their mnemonics, counts, an example and key columns (MKT <GO>)."""
         return await self._get(f"/packs/{quote(name)}/overview", ident)

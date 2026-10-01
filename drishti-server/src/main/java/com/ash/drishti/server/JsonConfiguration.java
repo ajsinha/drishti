@@ -67,4 +67,9 @@ public class JsonConfiguration {
         m.addSerializer(double.class, finite);
         return m;
     }
+
+    @Bean(destroyMethod = "close")
+    public com.ash.drishti.server.api.CommandMemory commandMemory(com.ash.drishti.identity.PreferenceStore store) {
+        return new com.ash.drishti.server.api.CommandMemory(store);
+    }
 }

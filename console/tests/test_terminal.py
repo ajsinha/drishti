@@ -335,3 +335,14 @@ def test_a_packs_code_opens_its_overview(client):
     assert "Market data" in page and "FX volatility surface" in page and "1,234" in page
     assert 'href="/s?q=FXV"' in page and 'href="/v/fx-vol-surface/FXV-EURUSD"' in page and "currency, index" in page
     assert client.get("/p/astrology").status_code == 400
+
+
+
+def test_history_and_aliases(client, backend):
+    assert client.get("/api/history").json() == ["TRD T-10001", "MKT"]
+    page = client.get("/account").text
+    assert 'value="MYBOOK"' in page and 'value="BOOK BOOK-RATES-1"' in page and "data-plain" in page
+    r = client.put("/api/aliases", json={"revs": "TRD productType=Revolver"})
+    assert r.status_code == 200 and r.json() == {"REVS": "TRD productType=Revolver"}
+    bad = client.put("/api/aliases", json={"TRD": "TRD T-1"})
+    assert bad.status_code == 400 and "mnemonic" in bad.json()["detail"]

@@ -15,7 +15,7 @@
  */
 /* The command line: Bloomberg-style type-ahead. Suggestions are fetched as you type (debounced 60 ms,
    stale requests aborted), shown in an ARIA listbox, and driven from the keyboard:
-   ↑/↓ move, Tab completes, Enter opens (<GO>), Esc closes. "/" focuses the command line anywhere. */
+   ↑/↓ move (↑ in an empty box: earlier commands), Tab completes, Enter opens (<GO>), Esc closes. "/" focuses the command line anywhere. */
 (function () {
   'use strict';
   var form = document.querySelector('[data-command]');
@@ -93,10 +93,30 @@
     form.submit();
   }
 
-  input.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(fetchSuggestions, 60); });
+  // History: ↑ in an empty box (or while stepping through history, with no suggestion picked) recalls earlier commands,
+  // newest first; ↓ goes forward again. The server keeps them, so they follow you between browsers.
+  var history = null, hIdx = -1;
+  function recall(step) {
+    function show() {
+      if (!history.length) { return; }
+      hIdx = Math.max(-1, Math.min(history.length - 1, hIdx + step));
+      input.value = hIdx < 0 ? '' : history[hIdx] + ' <GO>';
+      open(false);
+    }
+    if (history) { show(); return; }
+    fetch('/api/history', { headers: { Accept: 'application/json' } })
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .then(function (h) { history = Array.isArray(h) ? h : []; show(); })
+      .catch(function () { history = []; });
+  }
+  function recalling() { return input.value.trim() === '' || hIdx >= 0; }
+
+  input.addEventListener('input', function () { hIdx = -1; clearTimeout(timer); timer = setTimeout(fetchSuggestions, 60); });
   input.addEventListener('focus', function () { input.select(); lastQ = null; fetchSuggestions(); });
   input.addEventListener('keydown', function (e) {
-    if (e.key === 'ArrowDown') { e.preventDefault(); if (list.hidden) { fetchSuggestions(); } else { select(active + 1); } }
+    if (e.key === 'ArrowUp' && active < 0 && recalling()) { e.preventDefault(); recall(1); }
+    else if (e.key === 'ArrowDown' && active < 0 && hIdx >= 0) { e.preventDefault(); recall(-1); }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); if (list.hidden) { fetchSuggestions(); } else { select(active + 1); } }
     else if (e.key === 'ArrowUp') { e.preventDefault(); select(active - 1); }
     else if (e.key === 'Tab' && !list.hidden && items.length) { e.preventDefault(); complete(active < 0 ? 0 : active); }
     else if (e.key === 'Enter') { e.preventDefault(); if (active >= 0) { go(active); } else { form.submit(); } }

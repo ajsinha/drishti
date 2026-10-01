@@ -109,8 +109,12 @@ async def account(request: Request, must: int = 0, saved: int = 0, error: str = 
         profile = await request.app.state.backend.me(me)
     except BackendError:
         profile = {"username": me.user, "displayName": me.display, "desk": me.desk, "roles": list(me.roles)}
+    try:
+        aliases = await request.app.state.backend.aliases(me)
+    except BackendError:
+        aliases = {}
     return render(request, "account.html", profile=profile, must=bool(must) or me.must_change, saved=bool(saved), error=error,
-                  zones=ZONES)
+                  zones=ZONES, aliases=aliases)
 
 
 ZONES = ["America/New_York", "America/Chicago", "America/Toronto", "America/Sao_Paulo", "Europe/London", "Europe/Frankfurt", "Europe/Paris",

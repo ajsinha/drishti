@@ -42,7 +42,7 @@
   }
 
   function enhance(t) {
-    if (t.__paged || !t.tBodies.length) { return; }
+    if (t.__paged || !t.tBodies.length || t.hasAttribute('data-plain')) { return; }   // data-plain: a form, not data
     t.__paged = true;
     var k = keyOf(t), st = state[k] || (state[k] = { page: 0, sel: -1 });
     var bar = el('div', 'tbl-pg'), info = el('span', 'tbl-pg-info mono');

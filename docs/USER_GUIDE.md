@@ -202,6 +202,16 @@ The number of suggestions is a server setting (`drishti.commands.suggest-limit`,
 `DRISHTI_SUGGEST_LIMIT`, default 25). A program can ask for a different number, up to 50:
 `curl -s 'http://localhost:18480/api/v1/command/suggest?q=TRD%20T-1&limit=50'`.
 
+### Earlier commands and your own aliases
+
+- **History.** Press `↑` in the empty command line to bring back your last command, again for the one before (up to
+  50); `↓` goes forward. The server keeps your history, so it follows you to another browser. Only commands that
+  could be read are kept.
+- **Aliases.** On **My account → Aliases**, give a command a short word: `MYBOOK` for `BOOK BOOK-RATES-1`, or `REVS`
+  for `TRD productType=Revolver`. Typing `MYBOOK <GO>` then does the same as the command; anything you add after
+  the word is kept (`MYBOOK F3`). A mnemonic or a pack code cannot be an alias. The same through the API:
+  `GET` / `PUT /api/v1/command/aliases` and `GET /api/v1/command/history`.
+
 ### When a command does not work
 
 | You see | Meaning | What to do |

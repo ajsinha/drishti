@@ -53,6 +53,21 @@
     <p class="text-muted-d adm-hint">Pin entities from their view (<i class="bi bi-pin-angle" aria-hidden="true"></i> Pin); they appear on the terminal home.</p>
     <button type="submit" class="btn-pill btn-accent">Save settings</button>
   </form>
+  <form class="login-box adm-pw" data-aliases id="aliases">
+    <h2>Aliases</h2>
+    <p class="text-muted-d adm-hint">Short words for commands you type often. Type the word on the command line instead of the
+      command; anything after it is added on (<span class="mono">MYBOOK F3</span>). Names are letters and digits; a mnemonic or a
+      pack code cannot be used.</p>
+    <table class="tbl" data-alias-table data-plain><thead><tr><th>Alias</th><th>Command</th><th></th></tr></thead><tbody>
+      {% for name, body in (aliases or {}).items() %}<tr><td><input class="cmd-input mono" name="name" value="{{ name }}" aria-label="Alias"></td>
+        <td><input class="cmd-input mono" name="body" value="{{ body }}" aria-label="Command"></td>
+        <td><button type="button" class="fk" data-remove>Remove</button></td></tr>{% endfor %}
+      <tr><td><input class="cmd-input mono" name="name" placeholder="MYBOOK" aria-label="New alias"></td>
+        <td><input class="cmd-input mono" name="body" placeholder="BOOK BOOK-RATES-1" aria-label="New command"></td><td></td></tr>
+    </tbody></table>
+    <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
+    <button type="submit" class="btn-pill btn-accent">Save aliases</button>
+  </form>
   <form class="login-box adm-pw" data-password>
     <h2>Change password</h2>
     <label for="pc">Current password</label><input id="pc" name="current" type="password" class="cmd-input" autocomplete="current-password" required>
