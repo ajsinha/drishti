@@ -62,7 +62,7 @@ class ReferenceSutrasTest {
     @Test
     void allReferenceSutrasLoadWithoutProblems() {
         assertThat(registry.problems()).isEmpty();
-        assertThat(registry.all()).hasSize(4);
+        assertThat(registry.all()).hasSize(5);                    // the four reference Sutras and book-pnl (a derived kind)
     }
 
     @Test
