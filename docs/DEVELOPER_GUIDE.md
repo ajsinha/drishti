@@ -124,7 +124,7 @@ drishti-benchmarks                (inference)
 | `tools/` (files) | `drill.sh` (verify and publish), `license_headers.py` (check or insert the copyright header), `rachana/md_to_yaml.py` (converts Markdown Sutras, `*.sutra.md`, read before 1.11, to `*.sutra.yaml`: `python3 tools/rachana/md_to_yaml.py <file-or-folder> --delete`), `load-aerospike.sh` |
 | `deploy/` | `server.Dockerfile`, `console.Dockerfile`, `compose.yaml`, `compose.data.yaml`, `lake-maintenance.yaml`, `grafana/` |
 | `config/license-header.txt` | The text of the copyright header that `license_headers.py` inserts |
-| `data/` | Runtime data, mostly git-ignored: `delta/` (sample lake), `identity/` (the SQLite database), `governance/` (Sutra proposals), `feeds/` |
+| `data/` | Runtime and generated data, all git-ignored: `delta/` (the sample lake, `make_data.py --lake`), `feeds/` (`make_data.py`), `banking.jsonl` (`make_data.py --jsonl`, for Aerospike), `identity/` (the SQLite database), `governance/` (Sutra proposals), `reports/` |
 | `docs/` | These documents, the ADRs under `adr/`, the runbooks under `runbooks/`, and the reference mockups under `requirements/` |
 | `.github/workflows/fast.yml` | CI: `./mvnw -B -q verify` and the header check on Java 21; `pytest` for the console on Python 3.13 |
 

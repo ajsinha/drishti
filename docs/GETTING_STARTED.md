@@ -147,7 +147,7 @@ under `data/delta/`. It is not in git because it is generated. Build it once:
 
 ```bash
 # banking packs: banking-core, market-data, trading, market-risk, counterparty-risk
-uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta
+uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta
 
 # the other generated packs (run the ones you want)
 uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/liquidity/make.py --lake data/delta

@@ -65,10 +65,11 @@ You should see uv list what it installed (FastAPI, Uvicorn, Jinja2, httpx, PyYAM
 ## 4. (Optional) Build the sample history
 
 Live views work without this. Past business dates and **Compare** need a small Delta Lake under
-`data/delta/` (ten business days ending 30 September 2026):
+`data/delta/` (ten business days ending 30 September 2026); the same command writes the sample feed file
+`data/feeds/fixing/SOFR-HISTORY.csv`. Nothing under `data/` is in git: it is always generated.
 
 ```bash
-uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta
+uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta
 ```
 
 ## 5. Start the server

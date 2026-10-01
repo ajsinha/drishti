@@ -12,11 +12,7 @@ __pycache__/
 .pytest_cache/
 application.local.yaml
 hs_err_pid*
-data/identity/
-data/delta/
-data/delta-*/
-data/reports/
-data/cache/
-data/state/
-data/packs/
+# everything under data/ is generated or written at run time (lake, JSON lines, feeds, identity database, reports):
+# make it with tools/packgen/banking/make_data.py, never commit it
+data/
 .claude/

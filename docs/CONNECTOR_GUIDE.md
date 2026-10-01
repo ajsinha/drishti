@@ -354,8 +354,8 @@ The kind is the folder name, the id is the file name without `.json` (or `.csv`)
 }
 ```
 
-A CSV file needs a header row and becomes `{"rows": [...]}`, numbers and booleans typed. The repository ships one:
-`data/feeds/fixing/SOFR-HISTORY.csv` starts
+A CSV file needs a header row and becomes `{"rows": [...]}`, numbers and booleans typed. `make_data.py` writes one
+(nothing under `data/` is in git): `data/feeds/fixing/SOFR-HISTORY.csv` starts
 
 ```text
 date,rate,volume_bn
@@ -956,7 +956,7 @@ drishti:
 
 ```bash
 # every banking domain (reference, market, trading, risk, credit, collateral), ten business days
-uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta --days 10
+uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta --days 10
 # or one pack's samples into one domain
 uv run --with deltalake --with pyarrow python tools/samplegen/lake.py \
     --samples packs/finance/samples --root data/delta --domain finance --days 10 [--as-of 2026-09-30] [--calendar USNY]

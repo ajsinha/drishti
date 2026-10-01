@@ -110,7 +110,7 @@ export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 ./mvnw -q package -DskipTests                 # or: ./mvnw -q verify  (also runs every test)
 
 # 2. Optional: business-day history for the banking packs, so past dates, Compare and field history work
-uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta
+uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta
 
 # 3. Start the server on :18480 with the packs to load (their parents load with them)
 DRISHTI_PACKS=market-risk,counterparty-risk DRISHTI_STUDIO_SAVE=true \

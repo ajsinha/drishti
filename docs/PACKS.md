@@ -1636,7 +1636,7 @@ To change a shipped pack for your site without touching its files at all, use on
 The banking lake is built with:
 
 ```bash
-uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta
+uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta
 ```
 
 ## What stays in the core

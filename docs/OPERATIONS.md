@@ -320,7 +320,7 @@ repository root.
 
 ```bash
 # the banking packs: data/delta/<domain>/<kind>/business_date=…/ with ten business days of history
-uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta
+uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta
 
 # the finance pack's own lake (domain "finance")
 uv run --with deltalake --with pyarrow python tools/samplegen/lake.py \

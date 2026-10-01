@@ -127,6 +127,25 @@ def sample_files(docs: dict) -> dict[Path, str]:
     return out
 
 
+# The SOFR fixing history the feed folder serves (FIX SOFR-HISTORY): business date, rate (%), volume ($bn).
+SOFR_HISTORY = [("2026-09-01", 3.95, 1910), ("2026-09-02", 3.95, 1879), ("2026-09-03", 3.95, 1996), ("2026-09-04", 3.93, 2053),
+                ("2026-09-07", 3.91, 2023), ("2026-09-08", 3.89, 1886), ("2026-09-09", 3.89, 2181), ("2026-09-10", 3.87, 1939),
+                ("2026-09-11", 3.87, 2229), ("2026-09-14", 3.87, 2009), ("2026-09-15", 3.89, 1869), ("2026-09-16", 3.9, 1966),
+                ("2026-09-17", 3.89, 1897), ("2026-09-18", 3.88, 2176), ("2026-09-21", 3.87, 2083), ("2026-09-22", 3.87, 1999),
+                ("2026-09-23", 3.87, 1875), ("2026-09-24", 3.85, 1932), ("2026-09-25", 3.86, 2021), ("2026-09-28", 3.85, 2084),
+                ("2026-09-29", 3.85, 1970), ("2026-09-30", 3.86, 2130)]
+
+
+def write_feeds(root: Path) -> Path:
+    """data/feeds (not in git, like everything under data/): the feed folder the shipped configuration serves."""
+    f = root / "fixing" / "SOFR-HISTORY.csv"
+    text = "date,rate,volume_bn\n" + "".join(f"{d},{r},{v}\n" for d, r, v in SOFR_HISTORY)
+    f.parent.mkdir(parents=True, exist_ok=True)
+    if not f.exists() or f.read_text(encoding="utf-8") != text:
+        f.write_text(text, encoding="utf-8")
+    return f
+
+
 def main() -> None:
     docs = build()
     problems = check(docs)
@@ -149,6 +168,7 @@ def main() -> None:
         if not f.exists() or f.read_text(encoding="utf-8") != t:
             f.write_text(t, encoding="utf-8")
     print(f"wrote {sum(len(v) for v in docs.values())} documents into {len(layout.PACKS)} packs' samples")
+    print(f"feeds: {write_feeds(ROOT / 'data' / 'feeds')}")
     if "--jsonl" in sys.argv:
         from samplegen.dates import Calendar
         from samplegen.lake import final_rows
