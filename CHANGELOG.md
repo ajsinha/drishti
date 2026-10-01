@@ -15,6 +15,10 @@
 -->
 # Changelog
 
+## Unreleased
+- **Fixed:** the server no longer opens an unused MongoDB client to `localhost:27017` at every start (and logs connection errors when no MongoDB runs). The MongoDB driver ships for the `mongodb` plugin, which makes its own client only when configured; Spring Boot's MongoDB auto-configuration is now excluded.
+- **Checked:** a lake maintained by `tools/lake/maintain.py` (compaction, re-sorting, checkpoints, vacuum) reads identically through the native Delta engine: the same documents and search rows as the unmaintained lake.
+
 ## 1.13.0 — A million trades a day, eight stores, Calc, pivots, twenty panel kinds and JDK 25 (2026-10-01)
 - **Fixed:** an area chart's dashed limit line was not drawn when the limit was above (or below) every value, because the axis was scaled to the series only. The axis now reaches the limit, and the label sits inside the plot.
 - **Every panel kind, by example** ([RACHANA_GUIDE.md › 10](docs/guides/RACHANA_GUIDE.md#10-every-panel-kind-by-example)).

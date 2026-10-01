@@ -24,7 +24,9 @@ import org.springframework.context.annotation.Import;
  * The Drishti backend. Drishti ships only as this Spring Boot application; it is never embedded as a library.
  * Each module contributes its beans through its own {@code @Configuration} class, imported here.
  */
-@SpringBootApplication
+// The MongoDB driver is on the class path for the mongodb plugin, which makes its own client only when configured;
+// Spring Boot's MongoDB auto-configuration would otherwise open an unused client to localhost:27017 on every start
+@SpringBootApplication(excludeName = "org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration")
 @Import({EngineConfiguration.class, com.ash.drishti.server.security.SecurityConfiguration.class,
         com.ash.drishti.identity.IdentityConfiguration.class})
 public class DrishtiApplication {
