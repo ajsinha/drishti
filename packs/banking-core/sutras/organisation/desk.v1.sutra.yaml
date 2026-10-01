@@ -51,7 +51,6 @@ panels:
   - id: tradeCount
     kind: pivot
     title: Trades by book and product family
-    area: right
     rows: $.positions
     by: book
     across: family

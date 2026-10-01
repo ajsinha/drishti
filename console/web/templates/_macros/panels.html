@@ -179,7 +179,7 @@
 {% macro pivot(d) -%}
 {% set lo, hi = d.min, d.max %}{% set span = (hi - lo) if (lo is number and hi is number and hi > lo) else 0 %}
 <div class="tbl-wrap"><table class="tbl pivot{% if d.heat %} heat{% endif %}">
-  <thead><tr><th scope="col">{{ d.by }}</th>{% for c in (d.columns or []) %}<th scope="col" class="num">{{ c }}</th>{% endfor %}{% if d.totals %}<th scope="col" class="num">Total</th>{% endif %}</tr></thead>
+  <thead><tr><th scope="col">{{ ((d.by or '')[:1] | upper) ~ (d.by or '')[1:] }}</th>{% for c in (d.columns or []) %}<th scope="col" class="num">{{ c }}</th>{% endfor %}{% if d.totals %}<th scope="col" class="num">Total</th>{% endif %}</tr></thead>
   <tbody>
   {% for r in (d.rows or []) %}<tr><th scope="row">{{ r.label }}</th>{% for c in (r.cells or []) %}{% set v = (r['values'] or [])[loop.index0] %}<td class="mono num{{ tone(c) }}{% if d.heat and v is number %} heat-{{ (((v - lo) / span * 9) | round | int) if span else 5 }}{% endif %}">{{ c.text }}</td>{% endfor %}
     {% if r.total %}<td class="mono num pv-total{{ tone(r.total) }}">{{ r.total.text }}</td>{% endif %}</tr>{% endfor %}

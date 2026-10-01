@@ -119,7 +119,7 @@ KINDS = [
          [P("table", "books", "Books", "$.books", [("Book", "@.id", None, None, False), ("Trades", "@.trades", "amount0", None, True), ("MTM", "@.mtm", "signed0", "sign", True)], key="F2"),
           P("pivot", "mtmGrid", "MTM by book and currency (USD)", "$.positions", fmt="compact", tone="sign", key="F3", code="PIV",
             opts={"by": "book", "across": "currency", "value": "mtm", "agg": "sum", "heat": True}),
-          P("pivot", "tradeCount", "Trades by book and product family", "$.positions", area="right",
+          P("pivot", "tradeCount", "Trades by book and product family", "$.positions",
             opts={"by": "book", "across": "family", "agg": "count"})],
          links={"legalEntity": ("legal-entity", "Legal entity"), "varResult": ("var", "VaR")}),
     Kind("trader", "TRDR", "TRDR-", "Trader", ORG, "A trader and their books.", "traderId",

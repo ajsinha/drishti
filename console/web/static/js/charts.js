@@ -182,7 +182,7 @@
   }
 
   // ---- graph: a layered tree from the roots (nodes nothing points to), or a force layout -----------------------------
-  function layers(nodes, edges) {
+  function layers(nodes, edges, w, h) {
     var depth = {}, incoming = {}, children = {};
     nodes.forEach(function (n) { incoming[n.id] = 0; children[n.id] = []; });
     edges.forEach(function (e) { if (children[e.from] && e.from !== e.to) { children[e.from].push(e.to); incoming[e.to]++; } });
@@ -195,16 +195,18 @@
     nodes.forEach(function (n) { if (depth[n.id] == null) { depth[n.id] = 0; } });
     var rows = {};
     nodes.forEach(function (n) { (rows[depth[n.id]] = rows[depth[n.id]] || []).push(n.id); });
-    var pos = {};
+    // positions in the panel's own pixels: a box of another shape would be stretched to fit, and the nodes with it
+    var pos = {}, deepest = Math.max(1, Object.keys(rows).length - 1);
     Object.keys(rows).forEach(function (r) {
-      rows[r].forEach(function (id, i) { pos[id] = [(i + 1) / (rows[r].length + 1) * 1000, Number(r) * 160]; });
+      rows[r].forEach(function (id, i) { pos[id] = [(i + 1) / (rows[r].length + 1) * w, Number(r) / deepest * h]; });
     });
     return pos;
   }
-  function graph(d, t) {
+  function graph(d, t, size) {
     var nodes = d.nodes || [], edges = d.edges || [], groups = [], colours = palette(t);
     nodes.forEach(function (n) { var g = n.group || ''; if (groups.indexOf(g) < 0) { groups.push(g); } });
-    var tree = d.layout !== 'force', pos = tree ? layers(nodes, edges) : {};
+    var tree = d.layout !== 'force', top = groups.length > 1 ? 40 : 24;
+    var pos = tree ? layers(nodes, edges, Math.max(200, size.width - 180), Math.max(120, size.height - top - 28)) : {};
     return {
       animationDuration: 400,
       legend: groups.length > 1 ? { top: 0, data: groups.filter(Boolean), textStyle: { color: t.muted, fontSize: 10 }, itemHeight: 8 } : undefined,
@@ -213,17 +215,16 @@
         var n = p.data.node;
         return '<b>' + esc(n.label) + '</b>' + (n.group ? ' · ' + esc(n.group) : '') + (n.link ? '<br>' + esc(n.id) + ' (click to open)' : '');
       } }),
-      series: [{ type: 'graph', layout: tree ? 'none' : 'force', roam: true, draggable: !tree, top: groups.length > 1 ? 36 : 20, bottom: 20, left: 40, right: 40,
-        force: { repulsion: 220, edgeLength: 90 }, categories: groups.map(function (g) { return { name: g }; }),
+      series: [{ type: 'graph', layout: tree ? 'none' : 'force', roam: true, draggable: !tree, top: top, bottom: 28, left: 90, right: 90,
+        force: { repulsion: 220, edgeLength: 90 }, categories: groups.map(function (g, i) { return { name: g, itemStyle: { color: colours[i % colours.length] } }; }),
         edgeSymbol: ['none', 'arrow'], edgeSymbolSize: 7, lineStyle: { color: t.faint || t.border, width: 1.2, curveness: tree ? 0 : .1 },
         label: { show: true, position: 'bottom', color: t.ink, fontSize: 10, formatter: function (p) { return p.data.node.label; } },
         edgeLabel: { show: edges.length <= 30, color: t.muted, fontSize: 9, formatter: function (p) { return p.data.text || ''; } },
         emphasis: { focus: 'adjacency' },
         data: nodes.map(function (n) {
-          var c = colours[groups.indexOf(n.group || '') % colours.length];
           var o = { id: n.id, name: n.id, category: groups.indexOf(n.group || ''), node: n, symbolSize: n.focus ? 26 : 16,
             symbol: n.link ? 'circle' : 'roundRect', cursor: n.link ? 'pointer' : 'default',
-            itemStyle: { color: c, borderColor: n.focus ? t.accent : t.surface, borderWidth: n.focus ? 3 : 1 } };
+            itemStyle: { borderColor: n.focus ? t.accent : t.surface, borderWidth: n.focus ? 3 : 1 } };
           if (tree) { o.x = pos[n.id][0]; o.y = pos[n.id][1]; }
           return o;
         }),
@@ -241,7 +242,7 @@
       try {
         d = JSON.parse(el.getAttribute('data-xchart')) || {};
         var c = window.echarts.getInstanceByDom(el) || window.echarts.init(el, null, { renderer: 'svg' });
-        c.setOption(BUILD[kind](d, t), true);
+        c.setOption(BUILD[kind](d, t, { width: el.clientWidth || 800, height: el.clientHeight || 360 }), true);
         if (charts.indexOf(c) < 0) { charts.push(c); }
         if (!el.__clicks) {
           el.__clicks = true;
@@ -266,5 +267,5 @@
     charts = charts.filter(function (c) { return !c.isDisposed(); });
     charts.forEach(function (c) { c.resize(); });
   });
-  window.drishtiCharts = { draw: draw };
+  window.drishtiCharts = { draw: draw, options: BUILD };   // options: the builders, for tests and tools
 })();
