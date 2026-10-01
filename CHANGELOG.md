@@ -16,6 +16,13 @@
 # Changelog
 
 ## Unreleased
+- **Scheduled reports.** A search can run on a schedule and deliver its results as CSV, either to the server's reports folder or to a webhook an administrator allows.
+  - **Schedules:** `business-days 18:30`, `weekdays 07:00`, `daily`, `hourly` or `cron`.
+  - **Runs:** a report runs as its owner, with their roles and redaction at the time it runs, and records each run.
+  - **In the console:** a Reports page (Views → Reports) and **Schedule…** on the search page.
+  - **API:** `/api/v1/me/reports` and `/api/v1/admin/reports`. Settings are under `drishti.reports`.
+  - **Email:** not supported yet; it needs SMTP settings.
+- **Fix:** CSV numbers are written in full (`199000000`, not `1.99E8`).
 - **Notes.** Anyone who may open an entity can leave a note on it or on one of its fields, from **Notes** in the view's header or **Add a note** in a number's history window.
   - **Who can change them:** only the author edits a note; the author or an administrator deletes it. Every change is audited.
   - **In the view:** a field with a note shows a dot.

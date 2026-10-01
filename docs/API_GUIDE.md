@@ -1091,3 +1091,17 @@ Reading and adding need the right to open the kind (`403 DRS-5003` otherwise). P
 | `GET` | `/workspaces/shared` | the workspaces shared with you: `[{owner, name, sharedAt}]` |
 | `GET` | `/workspaces/shared/{owner}/{name}` | one, as its owner keeps it now: `readOnly: true`, and panes on kinds you may not open as `{"ref": null, "hidden": true}` |
 
+## Scheduled reports
+
+| Method | Path | What it does |
+|---|---|---|
+| `GET` | `/me/reports` | your reports, each with `nextRun` and its last runs (`runs`: `at`, `trigger`, `status`, `rows`, `target` or `error`) |
+| `PUT` | `/me/reports/{name}` | saves one: `{"query": "TRD where mtm < 0", "schedule": "business-days 18:30", "deliver": "folder" \| "webhook", "webhook": "https://…", "date": "today" \| "previous", "enabled": true}` |
+| `POST` | `/me/reports/{name}/run` | runs it now; answers with the run |
+| `DELETE` | `/me/reports/{name}` | deletes it |
+| `GET` | `/admin/reports` | every report on the server (administrators) |
+| `DELETE` | `/admin/reports/{owner}/{name}` | an administrator removes someone's report |
+
+A schedule that does not parse, a query that does not parse, or a webhook outside `drishti.reports.webhooks` is
+`400 DRS-5001` with the reason. CSV numbers are written in full (`199000000`, never `1.99E8`).
+

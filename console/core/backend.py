@@ -209,6 +209,19 @@ class BackendClient:
     async def shared_workspace(self, owner: str, name: str, ident) -> dict:
         return await self._get(f"/workspaces/shared/{quote(owner)}/{quote(name)}", ident)
 
+    # -- scheduled reports ------------------------------------------------------------------------
+    async def reports(self, ident) -> list:
+        return await self._get("/me/reports", ident)
+
+    async def save_report(self, name: str, body: dict, ident) -> dict:
+        return await self._send("PUT", f"/me/reports/{quote(name)}", ident, json=body)
+
+    async def run_report(self, name: str, ident) -> dict:
+        return await self._send("POST", f"/me/reports/{quote(name)}/run", ident)
+
+    async def delete_report(self, name: str, ident) -> None:
+        return await self._send("DELETE", f"/me/reports/{quote(name)}", ident)
+
     # -- notes ------------------------------------------------------------------------------------
     async def notes(self, kind: str, id_: str, ident) -> list:
         return await self._get(f"/notes/{quote(kind)}/{quote(id_)}", ident)

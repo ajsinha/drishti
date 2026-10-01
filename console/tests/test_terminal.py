@@ -445,3 +445,21 @@ def test_workspaces_shared_with_you_and_sharing_yours(client, backend):
     r = client.post("/w/api/desk/share", json={"roles": ["risk"], "users": ["tess"]}).json()
     assert r["roles"] == ["risk"] and backend.shares["desk"]["users"] == ["tess"]
     assert client.post("/w/api/desk/share", json={"stop": True}).json() == {"shared": False} and "desk" not in backend.shares
+
+
+
+def test_scheduled_reports_page(client, backend):
+    assert "Schedule…" in client.get("/s", params={"q": "TRD where mtm < 0"}).text
+    page = client.get("/reports", params={"q": "TRD where mtm < 0"}).text
+    assert 'value="TRD where mtm &lt; 0"' in page and "business-days 18:30" in page
+    bad = client.post("/reports", content="name=x&query=TRD&schedule=every+tuesday&deliver=folder&date=today&enabled=on",
+                      headers={"Content-Type": "application/x-www-form-urlencoded"})
+    assert bad.status_code == 400 and "not a schedule" in bad.text and 'value="x"' in bad.text
+    r = client.post("/reports", content="name=Losers&query=TRD+where+mtm+%3C+0&schedule=business-days+18%3A30&deliver=folder&date=previous&enabled=on",
+                    headers={"Content-Type": "application/x-www-form-urlencoded"}, follow_redirects=False)
+    assert r.status_code == 303 and backend.reports_kept["Losers"]["date"] == "previous"
+    assert "12 rows to /data/reports/ash/x.csv" in client.post("/reports/Losers/run").text
+    listed = client.get("/reports").text
+    assert "Losers" in listed and "the business day before" in listed and "Run now" in listed
+    client.post("/reports/Losers/delete")
+    assert "Losers" not in backend.reports_kept

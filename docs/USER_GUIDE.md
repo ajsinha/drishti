@@ -726,6 +726,31 @@ Worked example: build a monitor from a search.
 The monitor is saved on the server under your account, so it follows you to any browser. All rows share
 one live connection.
 
+## Scheduled reports
+
+A report is a search that runs on its own, on a schedule, and delivers its result as a CSV file. On the search page,
+after a search, press **Schedule…** (or open **Views → Reports**). Give it a name, check the search, and say when:
+
+| When | Runs |
+|---|---|
+| `business-days 18:30` | at 18:30 on weekdays that are not holidays in the server's calendar |
+| `weekdays 07:00` | at 07:00 Monday to Friday |
+| `daily 06:00` | every day at 06:00 |
+| `hourly` | on the hour |
+| `cron 0 0 8,12,16 * * MON-FRI` | a cron expression: second, minute, hour, day, month, weekday |
+
+Times are in the business-date zone (New York by default). **Data for** chooses the current business day or the
+one before (for a morning report on yesterday's close). **Deliver to** is the server's reports folder, or a
+webhook (a URL your administrator allows; the CSV is posted with `X-Drishti-Report` and `X-Drishti-Business-Date`
+headers). Email needs SMTP settings on the server and is not offered until then.
+
+A report runs **as you**: it sees what your roles let you see when it runs, with the same redaction. If your
+account is disabled or deleted, it stops. The list shows each report's next run and its last run (rows, where the
+file went, or the error); **Run now** runs one at once. Worked example: name `Big losers`, search
+`TRD where mtm < -10000000`, when `business-days 18:30`, deliver to the folder. At 18:30 on each business day a file
+such as `data/reports/ash/Big_losers/Big_losers-2026-10-01-1830.csv` appears, starting
+`kind,id,title,MTM (USD),…`.
+
 ## Alerts
 
 An alert rule watches **one entity** and tells you when a condition becomes true.

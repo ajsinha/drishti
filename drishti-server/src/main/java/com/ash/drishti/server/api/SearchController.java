@@ -102,7 +102,9 @@ public class SearchController {
         if (v == null) {
             return "";
         }
-        String s = String.valueOf(v);
+        // numbers in full (199000000, not 1.99E8), so every spreadsheet reads them as numbers
+        String s = (v instanceof Double || v instanceof Float) && Double.isFinite(((Number) v).doubleValue())
+                ? java.math.BigDecimal.valueOf(((Number) v).doubleValue()).stripTrailingZeros().toPlainString() : String.valueOf(v);
         if (!s.isEmpty() && "=+-@".indexOf(s.charAt(0)) >= 0 && !(v instanceof Number)) {
             s = "'" + s;
         }

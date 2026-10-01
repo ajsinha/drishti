@@ -48,7 +48,7 @@ CSP = ("default-src 'self'; img-src 'self' data:; style-src 'self'; script-src '
        "font-src 'self'; connect-src 'self'; frame-src 'self'; frame-ancestors 'self'")
 
 
-PROTECTED = ("/t", "/v/", "/go", "/studio", "/api/", "/admin", "/account", "/w", "/m", "/alerts", "/impact", "/s/", "/compare/", "/export/", "/pin/", "/p/")
+PROTECTED = ("/t", "/v/", "/go", "/studio", "/api/", "/admin", "/account", "/w", "/m", "/alerts", "/impact", "/s/", "/compare/", "/export/", "/pin/", "/p/", "/reports")
 EXACT = ("/t", "/s")                        # pages whose path is a prefix of public ones (/s of /static)
 
 
@@ -113,7 +113,7 @@ def create_app(settings: Settings) -> FastAPI:
 
     catalogue = Servers(settings)
     from routes import (admin_routes, api_routes, asof_routes, auth_routes, export_routes, help_routes, home_routes, monitor_routes,
-                        server_routes, studio_routes, terminal_routes, workspace_routes)
+                        report_routes, server_routes, studio_routes, terminal_routes, workspace_routes)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -183,4 +183,5 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(asof_routes.router)
     app.include_router(export_routes.router)
     app.include_router(server_routes.router)
+    app.include_router(report_routes.router)
     return app

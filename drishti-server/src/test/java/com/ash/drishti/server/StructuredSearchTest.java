@@ -160,5 +160,6 @@ class StructuredSearchTest {
         org.assertj.core.api.Assertions.assertThat(lines[0]).startsWith("kind,id,title,");
         org.assertj.core.api.Assertions.assertThat(lines).hasSize(7);                              // a header and the 6 revolvers
         org.assertj.core.api.Assertions.assertThat(lines[1]).startsWith("trade,T-");
+        org.assertj.core.api.Assertions.assertThat(csv).doesNotContainPattern("\\dE\\d");                // numbers in full, never 1.99E8
     }
 }

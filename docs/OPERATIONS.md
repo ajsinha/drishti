@@ -32,7 +32,7 @@ when other people will use the installation.
 6. [Environment variables](#6-environment-variables)
 7. [Running as services (systemd)](#7-running-as-services-systemd)
 8. [TLS and the reverse proxy](#8-tls-and-the-reverse-proxy)
-9. [Production checklist](#9-production-checklist)
+9. [Production checklist](#9-production-checklist) · [Scheduled reports](#9a-scheduled-reports)
 10. [Backups and restore](#10-backups-and-restore)
 11. [The lake: where it lives and keeping it bounded](#11-the-lake-where-it-lives-and-keeping-it-bounded)
 12. [Memory and caches](#12-memory-and-caches)
@@ -703,6 +703,18 @@ Work through this list for every shared installation. Each item says how to chec
     `/actuator` endpoint but health needs it, or an admin token; `/api/docs` needs any token), the Grafana dashboard imported, alerts set
     (section 13).
 13. **Secrets** only in a `0600` environment file or your secret store; never in `application.yaml` or a repository.
+
+## 9a. Scheduled reports
+
+People schedule searches to be delivered as CSV (User guide, *Scheduled reports*). What operators decide:
+
+- **Where files go.** `DRISHTI_REPORTS_DIR` (default `./data/reports`), one folder per user and report. Nothing
+  prunes it: rotate it with your usual tools (`find data/reports -mtime +30 -delete`).
+- **Which webhooks are allowed.** `drishti.reports.webhooks` lists URL prefixes; empty (the default) means none.
+- **Which server schedules.** With several servers on one identity database, set `DRISHTI_REPORTS_ENABLED=false` on
+  all but one, or each report runs once per server.
+- **What is audited.** `report.save`, `report.run` (with `ok` or `failed`) and `report.delete`. Admin → Health is
+  not affected by a failing report; its owner sees the error on the Reports page.
 
 ## 10. Backups and restore
 

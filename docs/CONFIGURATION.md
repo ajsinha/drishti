@@ -448,6 +448,17 @@ Not in the bundled file; the defaults apply until you set them.
 |---|---|---|
 | `keep` | `1000` | Fired alerts kept per user, in the identity database (`drishti_alert`), so they survive restarts. Older ones are pruned as new ones arrive. |
 
+### `drishti.reports` — scheduled reports
+
+| Key | Default | Meaning |
+|---|---|---|
+| `enabled` | `true` (`DRISHTI_REPORTS_ENABLED`) | The scheduler. With several servers on one identity database, turn it on for one only, or a report runs once per server. Reports can always be run by hand. |
+| `folder` | `./data/reports` (`DRISHTI_REPORTS_DIR`) | Folder deliveries: `<folder>/<user>/<report>/<report>-<business date>-<HHmm>.csv`, written atomically. |
+| `webhooks` | `[]` | URL prefixes a report may post to (`https://hooks.bank.example/drishti/`). Empty: no webhooks. A report cannot post anywhere else, so it cannot be used to reach internal addresses. |
+| `per-user` | `20` | Reports a person may keep. |
+| `tick` | `30s` | How often the scheduler looks for due reports. |
+| `keep-runs` | `20` | Runs remembered per report (time, rows, where it went, or the error). |
+
 ### `drishti.live` — live updates
 
 | Key | Default | Meaning |

@@ -618,3 +618,5 @@ table.tbl tr.tbl-filter th::after { content: none; }
 .notes-form textarea { width: 100%; }
 .view .has-note { position: relative; }
 .view .has-note::after { content: ""; position: absolute; top: 2px; right: -6px; width: 6px; height: 6px; border-radius: 50%; background: var(--d-warn, #d9a441); }
+.rpt-actions { display: flex; gap: .3rem; }
+.rpt-actions form { margin: 0; }

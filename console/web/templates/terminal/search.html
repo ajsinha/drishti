@@ -24,6 +24,7 @@
   <form class="srch-form" method="get" action="/s" role="search">
     <label for="srchQ" class="visually-hidden">Search</label>
     <input id="srchQ" class="srch-q mono" name="q" value="{{ q }}" placeholder="TRD T-100 · TRD productType=Revolver · TRD where mtm > 1m order by mtm desc" autocomplete="off" spellcheck="false">
+    {% if q %}<a class="srch-vs lnk" href="/reports?q={{ q | urlencode }}" title="Run this search on a schedule and deliver it as CSV">Schedule…</a>{% endif %}
     <label for="srchVs" class="srch-vs" title="Run the same search on another business date: each number shows its change">Compare with
       <input id="srchVs" name="vs" type="date" class="mono" value="{{ vs or '' }}"></label>
     <button type="submit" class="btn btn-sm btn-outline-secondary">Search</button>

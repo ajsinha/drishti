@@ -238,6 +238,25 @@ class FakeBackend:
     tests_saved = {}
     tokens_made = []
 
+    reports_kept = {}
+
+    async def reports(self, ident):
+        return list(self.reports_kept.values())
+
+    async def save_report(self, name, body, ident):
+        if "every tuesday" in body.get("schedule", ""):
+            raise BackendError(400, "DRS-5001", "'every tuesday' is not a schedule: use daily HH:MM, …")
+        self.reports_kept[name] = {"name": name, **body, "nextRun": "2026-10-01T22:30:00Z", "runs": []}
+        return self.reports_kept[name]
+
+    async def run_report(self, name, ident):
+        run = {"at": "2026-10-01T09:00:00Z", "trigger": "by hand", "status": "ok", "rows": 12, "target": "/data/reports/ash/x.csv"}
+        self.reports_kept[name]["runs"].insert(0, run)
+        return run
+
+    async def delete_report(self, name, ident):
+        self.reports_kept.pop(name, None)
+
     notes_kept = []
     shares = {}
 

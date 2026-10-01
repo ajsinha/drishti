@@ -140,6 +140,13 @@ drishti:
     redact: [trader, counterpartyId, patientName]   # field names masked in raw JSON (F9) for roles without raw
   alerts:
     keep: 1000                       # fired alerts kept per user, in the identity database (they survive restarts)
+  reports:                           # scheduled reports: a search delivered as CSV on a schedule
+    enabled: ${DRISHTI_REPORTS_ENABLED:true}   # the scheduler; run it on one server of a group (reports still run by hand)
+    folder: ${DRISHTI_REPORTS_DIR:./data/reports}
+    webhooks: []                     # URL prefixes reports may post to, e.g. [https://hooks.bank.example/drishti/]; empty: none
+    per-user: 20
+    tick: 30s
+    keep-runs: 20
   identity:
     # Users, roles defined in Admin → Roles, saved workspaces/monitors/settings and the audit trail live in one database
     # (JPA). SQLite by default: a single file, nothing to install. For PostgreSQL:
