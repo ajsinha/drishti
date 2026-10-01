@@ -48,7 +48,7 @@ cd drishti
 ls drishti-server/target/*-exec.jar
 ```
 
-You should see `drishti-server/target/drishti-server-1.10.1-exec.jar`. The first build downloads its
+You should see `drishti-server/target/drishti-server-1.10.2-exec.jar`. The first build downloads its
 libraries and takes a few minutes.
 
 If the build stops with `Drishti builds and runs on OpenJDK 21.`, `JAVA_HOME` is not Java 21.
@@ -78,7 +78,7 @@ Terminal 1, from the repository root:
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 export DRISHTI_PACKS=market-risk,counterparty-risk,liquidity-risk,climate-risk,operational-risk,retail-banking,genomics,politics-society,economics
-java -jar drishti-server/target/drishti-server-1.10.1-exec.jar
+java -jar drishti-server/target/drishti-server-1.10.2-exec.jar
 ```
 
 | Variable | What it does | Default |

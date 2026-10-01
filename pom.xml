@@ -18,7 +18,7 @@
 
   <groupId>com.ash.drishti</groupId>
   <artifactId>drishti-parent</artifactId>
-  <version>1.10.1</version>
+  <version>1.10.2</version>
   <packaging>pom</packaging>
   <name>Drishti</name>
   <description>Any data. Any domain. One grammar.</description>

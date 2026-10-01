@@ -13,7 +13,17 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Drishti 1.10.1 — release notes
+# Drishti 1.10.2 — release notes
+
+*2026-09-30.* **Themes and the top bar.**
+- **Gradients:** every theme now shows its gradient. Parchment, Crimson, Crimson dark and Wall Street were too faint, so each theme now sets its own strength.
+- **Links:** links in tables are underlined, so ids read as links in every theme.
+- **Top bar:** it is one row again. The command line, business date and Live sit beside the brand, then the menus (which open leftwards and stay on screen) and the tools.
+- **Menus:** the entry for the page you are on is readable: bright text, a neutral highlight and an accent bar.
+
+---
+
+# Previous release: Drishti 1.10.1 — release notes
 
 *2026-09-30.* **Kafka ticks mode works.**
 - **What changed:** a Kafka connector with `mode: ticks` keeps no state and answers no reads. It now drives the live updates of views that a lake or database answers. Such a view shows as live and repaints on every message for its entity, while reads still come from the store.

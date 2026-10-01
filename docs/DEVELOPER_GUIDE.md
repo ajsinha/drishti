@@ -237,7 +237,7 @@ working directory):
 ```bash
 ./mvnw -q package -DskipTests
 DRISHTI_PACKS=market-risk,counterparty-risk DRISHTI_STUDIO_SAVE=true \
-  java -jar drishti-server/target/drishti-server-1.10.1-exec.jar
+  java -jar drishti-server/target/drishti-server-1.10.2-exec.jar
 ```
 
 Server settings follow the same precedence as the console: `drishti-server/src/main/resources/application.yaml`,
@@ -628,7 +628,7 @@ internal modules are for tests:
   <parent>
     <groupId>com.ash.drishti</groupId>
     <artifactId>drishti-parent</artifactId>
-    <version>1.10.1</version>
+    <version>1.10.2</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
   <artifactId>drishti-plugin-ndjson</artifactId>
@@ -1570,7 +1570,7 @@ idle (`… installed but not configured …`), failures with stack traces, the i
 with Spring's usual environment form:
 
 ```bash
-LOGGING_LEVEL_COM_ASH_DRISHTI=DEBUG java -jar drishti-server/target/drishti-server-1.10.1-exec.jar
+LOGGING_LEVEL_COM_ASH_DRISHTI=DEBUG java -jar drishti-server/target/drishti-server-1.10.2-exec.jar
 ```
 
 The console runs Uvicorn with access logs off (`access_log=False` in `run_drishti_web.py`).
@@ -1634,14 +1634,14 @@ The console runs Uvicorn with access logs off (`access_log=False` in `run_drisht
 
 ## 9. Releasing
 
-Releases are numbered `MAJOR.MINOR.PATCH` and tagged `vX.Y.Z` on `main` (`git tag` lists `v1.0.0` … `v1.10.1`).
+Releases are numbered `MAJOR.MINOR.PATCH` and tagged `vX.Y.Z` on `main` (`git tag` lists `v1.0.0` … `v1.10.2`).
 The release commit for 1.9.0 (`Release 1.9.0`) shows every file a bump touches.
 
 1. **Start clean on `develop`** with everything for the release merged and drilled.
 2. **Bump the version** everywhere it is written. Find the old version first:
 
    ```bash
-   git grep -n -F '1.10.1' -- '*pom.xml' console/core/app.py deploy README.md docs
+   git grep -n -F '1.10.2' -- '*pom.xml' console/core/app.py deploy README.md docs
    ```
 
    | File | What changes |

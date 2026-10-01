@@ -33,7 +33,7 @@ CPTY north <GO>                →  one match, so CP-NORTHBRIDGE opens at once
 
 ## Status
 
-**Drishti 1.10.1 is the current release** (see [RELEASE_NOTES.md](RELEASE_NOTES.md)). Every planned wave is
+**Drishti 1.10.2 is the current release** (see [RELEASE_NOTES.md](RELEASE_NOTES.md)). Every planned wave is
 done; [IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) maps waves to releases and lists the known gaps. It is built in waves on `develop`, each merged to `main` when its build was green.
 
 | Wave | Theme | State |
@@ -180,7 +180,7 @@ uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py
 
 # 3. Start the server on :18480 (packs to load; their parents load with them)
 DRISHTI_PACKS=market-risk,counterparty-risk DRISHTI_STUDIO_SAVE=true \
-  java -jar drishti-server/target/drishti-server-1.10.1-exec.jar
+  java -jar drishti-server/target/drishti-server-1.10.2-exec.jar
 
 # 4. In a second terminal: the console on http://localhost:17480
 uv venv console/.venv && uv pip install --python console/.venv/bin/python -r console/requirements.txt

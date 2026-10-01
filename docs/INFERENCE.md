@@ -672,7 +672,7 @@ Restart the server after changing a semantics file: hints are read once at start
    or on the command line:
 
    ```bash
-   java -jar drishti-server/target/drishti-server-1.10.1-exec.jar --drishti.inference.semantics-file=/etc/drishti/semantics.yaml
+   java -jar drishti-server/target/drishti-server-1.10.2-exec.jar --drishti.inference.semantics-file=/etc/drishti/semantics.yaml
    ```
 3. Restart the server, then check a view with no Sutra (or Studio's **Start from inference**).
 
