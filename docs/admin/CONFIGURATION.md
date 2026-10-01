@@ -728,6 +728,33 @@ loading and maintenance: [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.
 | `source-name` | the connector's name | the name shown in provenance and Health |
 | `stale-after` | none | warn when no new data arrived for this long (engine setting) |
 
+### `duckdb` — one embedded DuckDB file
+
+Every data domain in one DuckDB file (a schema per domain, `<domain>.entities`), read in-process with no database
+server; a load writes a new file and renames it over the old one while the server keeps answering. Design, loading,
+sizing and measurements: [DUCKDB_CONNECTOR.md](../connectors/DUCKDB_CONNECTOR.md).
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `path` | required | the DuckDB file; connectors naming the same path share one read-only DuckDB instance |
+| `table` | required | `schema.entities`, the data domain this connector serves |
+| `memory-limit` | `1GB` | DuckDB's memory limit for the shared instance (native memory, outside the Java heap); the first connector on a file sets it |
+| `threads` | every core | DuckDB's threads for the shared instance; the first connector on a file sets it |
+| `pool-size` | `4` | reads of this connector at once; at least `scan-threads` plus the concurrent reads you expect |
+| `kinds` | the kinds the file holds | comma list of kinds to serve |
+| `mode.<kind>` | `snapshot` | `snapshot` or `effective` |
+| `lookback-days` | `10` | how far back a snapshot read looks for the newest day on or before the date asked |
+| `layout.<kind>.columns` | none | promoted paths ([DUCKDB_CONNECTOR.md](../connectors/DUCKDB_CONNECTOR.md#3-declaring-the-promoted-columns)) |
+| `refresh-seconds` | `10` | how often the file is checked for a new load (one `stat` when nothing changed) |
+| `scan-threads` | `4` | id ranges of a day read at once |
+| `columns-cache-mb` | `1024` | memory for days of promoted columns |
+| `columns-seconds` | `300` | how long a day's columns are kept (a new file clears them at once) |
+| `max-load-rows` | `200000` | the most documents a reverse lookup reads for a kind without promoted link columns |
+| `reverse-index` | `true` | `false` turns reverse lookups off |
+| `source-name` | `duckdb` | the name shown in provenance and Health |
+
+Retention is the loader's `--keep-days N` (`tools/load-duckdb.sh`); the connector has no retention setting.
+
 ### `mongodb`
 
 A document per entity per business day, in a collection per data domain. Design, sizing and loader options:
@@ -841,7 +868,7 @@ Packs declare their connectors in `pack.yaml` with placeholders, so you switch t
 | Variable | Default | Pack | Effect |
 |---|---|---|---|
 | `DRISHTI_DELTA_ROOT` | `./data/delta` | every shipped pack | Root of every pack's Delta Lake connector. |
-| `DRISHTI_LAKE_ENABLED` | `true` | every shipped pack | Switch every pack's data connector off (the demo samples still answer). Leave it `true` with the `postgres` or `aerospike` profile: those profiles change the plugin of the same connectors, and this switch would turn them off too. |
+| `DRISHTI_LAKE_ENABLED` | `true` | every shipped pack | Switch every pack's data connector off (the demo samples still answer). Leave it `true` with the `postgres`, `aerospike` or `duckdb` profile: those profiles change the plugin of the same connectors, and this switch would turn them off too. |
 | `DRISHTI_STREAM_TRADING` | `false` | trading | Turn on the `trading-stream` Kafka connector. |
 | `DRISHTI_KAFKA_BOOTSTRAP` | `localhost:9092` | trading | Its brokers. |
 | `DRISHTI_TRADING_TOPIC` | `drishti.trading.trades` | trading | Its topic. |
@@ -861,10 +888,10 @@ DRISHTI_PACKS=finance,trading DRISHTI_STREAM_TRADING=true DRISHTI_KAFKA_BOOTSTRA
 
 `curl -s localhost:18480/api/v1/sources` should then list `trading-stream`.
 
-### Profiles: PostgreSQL or Aerospike instead of Delta Lake
+### Profiles: PostgreSQL, Aerospike or DuckDB instead of Delta Lake
 
-`SPRING_PROFILES_ACTIVE=postgres` or `aerospike` loads `application-postgres.yaml` or
-`application-aerospike.yaml`, which redefine the banking data-domain connectors (`reference-store`,
+`SPRING_PROFILES_ACTIVE=postgres`, `aerospike` or `duckdb` loads `application-postgres.yaml`,
+`application-aerospike.yaml` or `application-duckdb.yaml`, which redefine the banking data-domain connectors (`reference-store`,
 `market-store`, `trading-store`, `risk-store`, `credit-store`, `collateral-store`) to read a database instead of
 the lake. The packs still decide kinds, routes and modes.
 
@@ -872,6 +899,7 @@ the lake. The packs still decide kinds, routes and modes.
 |---|---|---|
 | `postgres` | `DRISHTI_PG_URL`, `DRISHTI_PG_USER`, `DRISHTI_PG_PASSWORD` | `jdbc:postgresql://localhost:5432/drishti`, `drishti`, `drishti` (tables `<domain>.entities`) |
 | `aerospike` | `DRISHTI_AEROSPIKE_HOSTS`, `DRISHTI_AEROSPIKE_NAMESPACE` | `localhost:3000`, `test` |
+| `duckdb` | `DRISHTI_DUCKDB_PATH`, `DRISHTI_DUCKDB_MEMORY` | `data/duckdb/drishti.duckdb`, `1GB` (one file, a schema per domain, `<domain>.entities`; `memory-limit` of the shared DuckDB instance) |
 
 ```bash
 SPRING_PROFILES_ACTIVE=postgres DRISHTI_PG_URL=jdbc:postgresql://db:5432/drishti \
@@ -888,7 +916,7 @@ SPRING_PROFILES_ACTIVE=postgres DRISHTI_PG_URL=jdbc:postgresql://db:5432/drishti
 | `server.shutdown` | `graceful` | Finish requests in flight on stop. |
 | `server.compression` | on for JSON and `text/event-stream` | |
 | `spring.threads.virtual.enabled` | `true` | Every request runs on a virtual thread. Leave it on. |
-| `spring.profiles.active` | none (`SPRING_PROFILES_ACTIVE`) | `postgres` or `aerospike`, above. |
+| `spring.profiles.active` | none (`SPRING_PROFILES_ACTIVE`) | `postgres`, `aerospike` or `duckdb`, above. |
 | `management.endpoints.web.exposure.include` | `health,info,prometheus,metrics` | Actuator endpoints: `/actuator/health` (with `/liveness` and `/readiness` probes), `/actuator/prometheus` (timer `drishti.view`, gauges `drishti.live.*`). |
 | `springdoc.api-docs.path` / `springdoc.swagger-ui.path` | `/api/docs` / `/api/docs/ui` | The OpenAPI description and its UI. |
 | `logging.level.<package>` | Spring default (`INFO`) | e.g. `--logging.level.com.ash.drishti=DEBUG` |
@@ -1029,7 +1057,7 @@ Server (S), console (C), or both.
 | `DRISHTI_OIDC_CLIENT_SECRET`, `DRISHTI_OIDC_REDIRECT_URI` | C | `auth.oidc.*` |
 | `DRISHTI_SEED_ADMIN` and other identity variables | S | see [USER_MANAGEMENT.md](USER_MANAGEMENT.md) |
 | `DRISHTI_DELTA_ROOT`, `DRISHTI_LAKE_ENABLED`, `DRISHTI_STREAM_*`, `DRISHTI_KAFKA_BOOTSTRAP`, `DRISHTI_TRADING_TOPIC`, `DRISHTI_CACHE_*`, `DRISHTI_FEED_*`, `FRED_API_KEY`, `DRISHTI_FRED_SERIES` | S (packs) | [pack connectors](#environment-variables-used-by-the-packs-and-profiles) |
-| `SPRING_PROFILES_ACTIVE`, `DRISHTI_PG_*`, `DRISHTI_AEROSPIKE_*` | S | [profiles](#profiles-postgresql-or-aerospike-instead-of-delta-lake) |
+| `SPRING_PROFILES_ACTIVE`, `DRISHTI_PG_*`, `DRISHTI_AEROSPIKE_*`, `DRISHTI_DUCKDB_PATH`, `DRISHTI_DUCKDB_MEMORY` | S | [profiles](#profiles-postgresql-aerospike-or-duckdb-instead-of-delta-lake) |
 | `DRISHTI_CONSOLE_HOST`, `DRISHTI_CONSOLE_PORT`, `DRISHTI_BACKEND_URL`, `DRISHTI_USER` | C | `server.*`, `backend.url`, `ui.user` |
 | `DRISHTI_AUTH_ENABLED`, `DRISHTI_SESSION_SECRET`, `DRISHTI_SECURE_COOKIE` | C | `auth.*` |
 | `DRISHTI_CONSOLE__<SECTION>__<KEY>` | C | any console key |

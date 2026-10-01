@@ -38,6 +38,10 @@
   - **Layout and reads:** the same as Delta Lake (promoted columns, rows sorted by id, small row groups).
   - **Correctness:** every read applies delete files; *known at* reads use snapshot time travel.
   - **Tooling:** `IcebergLoader` sorts each day externally; `IcebergMaintenance` handles retention, relayout and manifests. The `iceberg` profile and `tools/load-iceberg.sh`.
+- **DuckDB connector** ([DUCKDB_CONNECTOR.md](docs/connectors/DUCKDB_CONNECTOR.md)): one embedded file holds every data domain, read in-process with no database server.
+  - **Layout:** a schema per data domain, `<domain>.entities` with each day written sorted by id and the pack's promoted fields as columns, and `<domain>.entity_dates`.
+  - **Reads:** one read-only DuckDB instance shared by every connector on the file; type-ahead from memory; point reads pruned by zone maps; a day's columns read in parallel by id range for searches, pick lists, derived kinds, impact and reverse lookups.
+  - **Loading:** `DuckDbLoader` / `tools/load-duckdb.sh` parses in parallel, stages through the appender, writes the 1.5 storage format (documents ZSTD-compressed), replaces a day whole, keeps `--keep-days`, and renames the new file over the old one; a running server reopens it within `refresh-seconds`. The `duckdb` profile (`DRISHTI_DUCKDB_PATH`, `DRISHTI_DUCKDB_MEMORY`).
 - **MongoDB connector** ([MONGODB_CONNECTOR.md](docs/connectors/MONGODB_CONNECTOR.md)): a document per entity per business date in a collection per data domain.
   - **Storage:** a narrow `<domain>_columns` collection holds the promoted fields, so a whole day reads 3–4 times faster.
   - **Reads:** point reads by `_id`; dates and ids come from the `{kind, date, id}` index; a day's columns are read in parallel id ranges.

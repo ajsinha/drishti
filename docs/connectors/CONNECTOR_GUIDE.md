@@ -45,7 +45,7 @@ for running the server in production see [OPERATIONS.md](../admin/OPERATIONS.md)
 16. [Combining connectors](#16-combining-connectors)
 17. [Operating connectors](#17-operating-connectors)
 18. [Troubleshooting](#18-troubleshooting)
-19. [More stores: `redis`, `mongodb`, `iceberg`](#19-more-stores-redis-mongodb-iceberg)
+19. [More stores: `redis`, `mongodb`, `iceberg`, `duckdb`](#19-more-stores-redis-mongodb-iceberg-duckdb)
 
 ---
 
@@ -205,6 +205,7 @@ alike, and are how secrets stay out of files.
 | `delta` | yes (`snapshot`/`effective`, *known at*) | no | yes | yes | — | read cache in memory |
 | `aerospike` | yes (`snapshot`/`effective`) | no | yes | yes, from promoted bins (`reverse-index`) | cluster client | promoted bins cached in memory |
 | `iceberg` | yes (`snapshot`/`effective`, *known at*) | no | yes | yes, from promoted columns | — | read cache in memory |
+| `duckdb` | yes (`snapshot`/`effective`) | no | yes | yes, from promoted columns | — (the file is read in-process) | the DuckDB file; a day's promoted columns cached in memory |
 | `mongodb` | yes (`snapshot`/`effective`) | no | yes | yes, from promoted fields (`reverse-index`) | driver pool | promoted fields cached in memory |
 | `redis` | recent days (`snapshot`/`effective`) | yes (`<domain>:changes`) | yes | yes, from promoted columns | Lettuce connection | everything in Redis memory |
 | `kafka` | no | yes | yes (`state` mode) | no | consumer | optional disk cache |
@@ -2205,7 +2206,7 @@ If none of these fit, [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md) covers 
 
 ---
 
-## 19. More stores: `redis`, `mongodb`, `iceberg`
+## 19. More stores: `redis`, `mongodb`, `iceberg`, `duckdb`
 
 Each of these stores has its own design document with the layout, loading, every read path, sizing, measurements and
 settings; this chapter gets you from nothing to a running view.
@@ -2258,3 +2259,21 @@ A REST catalog instead of folders: `--catalog rest --uri https://catalog.example
 on the loader, and `catalog: rest`, `uri`, `warehouse`, `credential` on the connector. Delete files are applied by every
 read; *known at* reads the snapshot current then. Full design: [ICEBERG_CONNECTOR.md](ICEBERG_CONNECTOR.md).
 
+### DuckDB: one embedded file
+
+Use DuckDB on a desk, a laptop, for a demo or on a single server that holds a large book in one file and wants
+searches over a whole day without running a database server or a lake. One file holds every data domain (a schema per
+domain, `<domain>.entities`, each day written sorted by id with the pack's promoted fields as columns); the server
+reads it in-process, read-only, through one DuckDB instance shared by every connector on the file.
+
+```bash
+tools/load-duckdb.sh data/duckdb/drishti.duckdb                              # the samples, 10 business days
+tools/load-duckdb.sh data/duckdb/drishti.duckdb --trades 10000 --days 3      # and 10,000 trades a day for 3 days
+SPRING_PROFILES_ACTIVE=duckdb DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
+```
+
+A load writes a new file and renames it over the old one, so it can run while the server answers; the server reopens
+the file within `refresh-seconds` (10) and Health's `generation` goes up by one. `--keep-days N` drops older days.
+`DRISHTI_DUCKDB_PATH` and `DRISHTI_DUCKDB_MEMORY` (DuckDB's native memory, outside the Java heap, default `1GB`) set the
+profile's file and memory limit. Health shows `DOWN: no DuckDB file at …` until the first load. Full design:
+[DUCKDB_CONNECTOR.md](DUCKDB_CONNECTOR.md).

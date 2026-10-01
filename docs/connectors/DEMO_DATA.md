@@ -78,6 +78,19 @@ SPRING_PROFILES_ACTIVE=iceberg DRISHTI_PACKS=market-risk,counterparty-risk java 
 
 Design: [ICEBERG_CONNECTOR.md](ICEBERG_CONNECTOR.md).
 
+## DuckDB
+
+```bash
+tools/load-duckdb.sh data/duckdb/drishti.duckdb                              # small
+tools/load-duckdb.sh data/duckdb/drishti.duckdb --trades 10000 --days 3      # medium for a laptop (about 3 s for the book)
+SPRING_PROFILES_ACTIVE=duckdb DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
+```
+
+No server to run: one file holds every data domain, and the server reads it in-process. Each load writes a new file
+and renames it over the old one, so it can run while the server answers; the server picks it up within 10 s. The
+database defaults to `DRISHTI_DUCKDB_PATH`, else `data/duckdb/drishti.duckdb`. Design:
+[DUCKDB_CONNECTOR.md](DUCKDB_CONNECTOR.md).
+
 ## MongoDB
 
 ```bash
@@ -166,6 +179,7 @@ So any store a new connector adds can be loaded with the same demo data.
 | `tools/load-delta.sh [root] [--trades N] [--days D]` | `make_data.py --lake`, then `bulk_trades.py` |
 | `tools/load-postgres.sh [jdbc-url] [--trades N] [--days D] [--keep-months N] [--user U] [--password P] [--writers N]` | `make_data.py --jsonl`, then `PostgresLoader` (samples with `--recreate`), then the bulk book streamed |
 | `tools/load-iceberg.sh [root] [--trades N] [--days D] [--keep-days N] [--catalog rest --uri U --warehouse W]` | `make_data.py --jsonl`, then `IcebergLoader` (each day sorted by id), then the bulk book streamed |
+| `tools/load-duckdb.sh [database] [--trades N] [--days D] [--keep-days N] [--memory-limit M] [--parsers N] [--threads N]` | `make_data.py --jsonl`, then `DuckDbLoader` (samples with `--recreate`), then the bulk book streamed; each load builds `<database>.loading` and renames it over the database |
 | `tools/load-mongodb.sh [uri] [db] [--trades N] [--days D] [--keep-days N \| --ttl-days N] [--doc-format string\|bson]` | `make_data.py --jsonl`, then `MongoLoader`, then the bulk book streamed |
 | `tools/load-redis.sh [uri] [--trades N] [--days D] [--ttl-days N] [--publish] [--cluster]` | `make_data.py --jsonl`, then `RedisLoader`, then the bulk book streamed |
 | `tools/load-aerospike.sh [hosts] [namespace] [--trades N] [--days D] [--ttl-days N]` | `make_data.py --jsonl`, then `AerospikeLoader`, then the bulk book streamed |
