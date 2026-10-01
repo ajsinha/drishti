@@ -45,7 +45,7 @@ for running the server in production see [OPERATIONS.md](../admin/OPERATIONS.md)
 16. [Combining connectors](#16-combining-connectors)
 17. [Operating connectors](#17-operating-connectors)
 18. [Troubleshooting](#18-troubleshooting)
-19. [More stores: `redis`, `mongodb`](#19-more-stores-redis-mongodb)
+19. [More stores: `redis`, `mongodb`, `iceberg`](#19-more-stores-redis-mongodb-iceberg)
 
 ---
 
@@ -204,6 +204,7 @@ alike, and are how secrets stay out of files.
 | `jdbc` table mode | yes (`snapshot`/`effective`) | no | yes | yes | a small pool | — |
 | `delta` | yes (`snapshot`/`effective`, *known at*) | no | yes | yes | — | read cache in memory |
 | `aerospike` | yes (`snapshot`/`effective`) | no | yes | yes, from promoted bins (`reverse-index`) | cluster client | promoted bins cached in memory |
+| `iceberg` | yes (`snapshot`/`effective`, *known at*) | no | yes | yes, from promoted columns | — | read cache in memory |
 | `mongodb` | yes (`snapshot`/`effective`) | no | yes | yes, from promoted fields (`reverse-index`) | driver pool | promoted fields cached in memory |
 | `redis` | recent days (`snapshot`/`effective`) | yes (`<domain>:changes`) | yes | yes, from promoted columns | Lettuce connection | everything in Redis memory |
 | `kafka` | no | yes | yes (`state` mode) | no | consumer | optional disk cache |
@@ -2190,7 +2191,7 @@ If none of these fit, [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md) covers 
 
 ---
 
-## 19. More stores: `redis`, `mongodb`
+## 19. More stores: `redis`, `mongodb`, `iceberg`
 
 Each of these stores has its own design document with the layout, loading, every read path, sizing, measurements and
 settings; this chapter gets you from nothing to a running view.
@@ -2226,4 +2227,20 @@ SPRING_PROFILES_ACTIVE=mongodb DRISHTI_PACKS=market-risk,counterparty-risk java 
 
 `--keep-days N` deletes older days; `--ttl-days N` lets a TTL index expire them. MongoDB 8.0 does not start on some
 recent Linux kernels; `mongo:7` does. Full design: [MONGODB_CONNECTOR.md](MONGODB_CONNECTOR.md).
+
+### Apache Iceberg: the other lake format
+
+Use Iceberg when your lake is Iceberg (Snowflake, AWS Glue and Athena, Dremio, Trino, Polaris). Tables follow the same
+layout as Delta Lake: a table per kind, partitioned by business date, sorted by id, the pack's promoted columns beside
+the document.
+
+```bash
+tools/load-iceberg.sh ./data/iceberg                                   # the samples, 10 business days
+tools/load-iceberg.sh ./data/iceberg --trades 10000                    # and 10,000 trades a day for 3 days
+SPRING_PROFILES_ACTIVE=iceberg DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
+```
+
+A REST catalog instead of folders: `--catalog rest --uri https://catalog.example.com --warehouse risk --credential …`
+on the loader, and `catalog: rest`, `uri`, `warehouse`, `credential` on the connector. Delete files are applied by every
+read; *known at* reads the snapshot current then. Full design: [ICEBERG_CONNECTOR.md](ICEBERG_CONNECTOR.md).
 

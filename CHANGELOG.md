@@ -34,6 +34,10 @@
   - `ids.<kind>`: type-ahead from memory.
   - `columns.<kind>`: a day's promoted fields for searches, pick lists, derived kinds and impact.
   - `reverse.<kind>`: reverse lookups with `:target`.
+- **Apache Iceberg connector** ([ICEBERG_CONNECTOR.md](docs/connectors/ICEBERG_CONNECTOR.md)): path-based tables, or REST catalogs (Polaris, Snowflake Open Catalog, Glue).
+  - **Layout and reads:** the same as Delta Lake (promoted columns, rows sorted by id, small row groups).
+  - **Correctness:** every read applies delete files; *known at* reads use snapshot time travel.
+  - **Tooling:** `IcebergLoader` sorts each day externally; `IcebergMaintenance` handles retention, relayout and manifests. The `iceberg` profile and `tools/load-iceberg.sh`.
 - **MongoDB connector** ([MONGODB_CONNECTOR.md](docs/connectors/MONGODB_CONNECTOR.md)): a document per entity per business date in a collection per data domain.
   - **Storage:** a narrow `<domain>_columns` collection holds the promoted fields, so a whole day reads 3–4 times faster.
   - **Reads:** point reads by `_id`; dates and ids come from the `{kind, date, id}` index; a day's columns are read in parallel id ranges.

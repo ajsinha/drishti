@@ -696,6 +696,38 @@ Layout as the file connector: `<prefix><kind>/<id>.json` and `<prefix><yyyy-MM-d
 | `cache-seconds`, `cache-entries` | `30`, `10000` | Read cache. |
 | `lookback-days` | `10` | |
 
+### `iceberg` — Apache Iceberg
+
+Path-based tables or a REST catalog (Polaris, Snowflake Open Catalog, Glue), in the same layout as Delta Lake. Design,
+loading and maintenance: [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.md).
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `catalog` | `hadoop` | `hadoop` (path-based tables) or `rest` |
+| `root` | `./data/iceberg` | `hadoop`: the lake, a folder or `s3a://…` (`abfs://`, `gs://`, `hdfs://`) |
+| `domain` | empty | the data domain: the folder under `root`, or the REST namespace |
+| `namespace` | the domain | `rest`: the namespace (dots separate levels) |
+| `uri` | none | `rest`: the catalog's URI |
+| `warehouse`, `credential`, `token`, `scope`, `oauth2-server-uri`, `prefix`, `io-impl` | none | `rest`: passed to the catalog |
+| `catalog.<key>` | — | `rest`: any other catalog property (`catalog.rest.sigv4-enabled` …) |
+| `s3.endpoint`, `s3.access-key`, `s3.secret-key`, `s3.region`, `s3.path-style` | — | object storage for S3A and S3FileIO (`s3.path-style` defaults to `true` with an endpoint) |
+| `hadoop.<key>` | — | passed to Hadoop as `<key>` |
+| `kinds` | every table found (new ones too) | comma list of kinds to serve |
+| `mode.<kind>` | `snapshot` | `snapshot` or `effective` |
+| `lookback-days` | `10` | how far back a snapshot read looks for the newest day on or before the date asked |
+| `layout.<kind>.columns` | none | promoted paths ([ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.md#5-declaring-the-layout-in-a-pack)) |
+| `refresh-seconds` | `10` | how often each table's current snapshot is checked |
+| `layout-cache` | `64` | planned snapshots kept |
+| `id-map-mb` | `1024` | memory for days' id maps |
+| `columns-cache-mb` | `1024` | memory for days' column sets |
+| `doc-cache-mb` | `256` | memory for recently read documents |
+| `cache-mb` | `512` | memory for small days read whole for reverse lookups |
+| `max-concurrent-reads` | `16` | single-document reads at once |
+| `max-load-rows` | `200000` | the largest day read whole for reverse lookups when a table has no promoted columns |
+| `reverse-index` | `true` | `false` turns reverse lookups off |
+| `source-name` | the connector's name | the name shown in provenance and Health |
+| `stale-after` | none | warn when no new data arrived for this long (engine setting) |
+
 ### `mongodb`
 
 A document per entity per business day, in a collection per data domain. Design, sizing and loader options:
