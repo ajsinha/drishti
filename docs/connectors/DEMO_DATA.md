@@ -68,6 +68,17 @@ User and password come from `--user`/`--password`, else `DRISHTI_PG_USER`/`DRISH
 samples' load recreates each domain's table; a running server sees a new load within a minute. Layout and design:
 [POSTGRES_CONNECTOR.md](POSTGRES_CONNECTOR.md).
 
+## MongoDB
+
+```bash
+docker run -d --name mongo -m 2g -p 27017:27017 mongo:7 --wiredTigerCacheSizeGB 0.5
+tools/load-mongodb.sh mongodb://localhost:27017 drishti                       # small
+tools/load-mongodb.sh mongodb://localhost:27017 drishti --trades 10000        # medium for a laptop (3 s)
+SPRING_PROFILES_ACTIVE=mongodb DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
+```
+
+Design: [MONGODB_CONNECTOR.md](MONGODB_CONNECTOR.md).
+
 ## Redis
 
 ```bash
@@ -144,6 +155,7 @@ So any store a new connector adds can be loaded with the same demo data.
 | `tools/load-files.sh [root] [--trades N] [--days D]` | `make_data.py --jsonl`, then `JsonlLoader` into `<root>/<domain>/<date>/<kind>.jsonl` |
 | `tools/load-delta.sh [root] [--trades N] [--days D]` | `make_data.py --lake`, then `bulk_trades.py` |
 | `tools/load-postgres.sh [jdbc-url] [--trades N] [--days D] [--keep-months N] [--user U] [--password P] [--writers N]` | `make_data.py --jsonl`, then `PostgresLoader` (samples with `--recreate`), then the bulk book streamed |
+| `tools/load-mongodb.sh [uri] [db] [--trades N] [--days D] [--keep-days N \| --ttl-days N] [--doc-format string\|bson]` | `make_data.py --jsonl`, then `MongoLoader`, then the bulk book streamed |
 | `tools/load-redis.sh [uri] [--trades N] [--days D] [--ttl-days N] [--publish] [--cluster]` | `make_data.py --jsonl`, then `RedisLoader`, then the bulk book streamed |
 | `tools/load-aerospike.sh [hosts] [namespace] [--trades N] [--days D] [--ttl-days N]` | `make_data.py --jsonl`, then `AerospikeLoader`, then the bulk book streamed |
 | `tools/packgen/banking/make_data.py` | the samples, `--lake`, `--jsonl`, `--check` |

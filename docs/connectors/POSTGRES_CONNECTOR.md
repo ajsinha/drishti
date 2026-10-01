@@ -444,7 +444,7 @@ connectors:
       query.counterparty: SELECT * FROM counterparties WHERE id = ?
 ```
 
-Each kind has one query (one `query.<kind>` key); a connector can have as many as it serves kinds, and one query can
-join as many tables as it needs. Query mode reads one entity at a time: it has no type-ahead, searches, columns or
-reverse lookups, so it suits small kinds or a database you cannot reshape; a kind of millions a day belongs in table
-mode. See [CONNECTOR_GUIDE.md](CONNECTOR_GUIDE.md#6-a-database-your-own-schema-jdbc-query-mode).
+A kind has one main query (`query.<kind>`) and may add parts from other tables (`query.<kind>.<part>`); a connector
+serves as many kinds as it has main queries. Query mode reads one entity at a time: it has no type-ahead, searches,
+columns or reverse lookups unless you add `ids.<kind>`, `columns.<kind>` and `reverse.<kind>` queries ([JDBC_QUERIES.md](JDBC_QUERIES.md)); a
+kind of millions a day kept for years belongs in table mode. See [CONNECTOR_GUIDE.md](CONNECTOR_GUIDE.md#6-a-database-your-own-schema-jdbc-query-mode).

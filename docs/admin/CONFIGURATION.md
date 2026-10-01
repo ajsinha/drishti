@@ -591,6 +591,10 @@ The JDBC driver jar goes on the class path or in `plugin-dir`.
 | `url`, `user`, `password` | empty | Connection. Keep the password in the environment. |
 | `pool-size` | `4` | Connections kept. A broken connection is reopened; the connector starts even if the database is down. |
 | `query.<kind>` | none | Query mode: SQL with one `?` for the id, or named `:id` and `:asOf` (the business date). The first row is the document: each column a field, or a column named `json` as the whole document; optional `generation` and `business_date` columns. A `json`/`jsonb` column becomes nested data. |
+| `query.<kind>.<part>`, `part-shape.<kind>.<part>` | none, `list` | Query mode: more of the entity from other tables; its rows become the field `<part>` (a list, or with `object` the first row). Parts run at once with the entity's query. |
+| `ids.<kind>` | none | Query mode: a day's ids (and optionally a title) for type-ahead, read every `refresh-seconds`. |
+| `columns.<kind>` | none | Query mode: a day's id and promoted fields (`:asOf`), for searches, pick lists, derived kinds, impact and reverse lookups without documents. |
+| `reverse.<kind>` | none | Query mode: the ids of the kind that reference `:target`. All query-mode keys: [JDBC_QUERIES.md](../connectors/JDBC_QUERIES.md). |
 | `json-columns` | none | Query mode: comma list of text columns that hold JSON (`legs, extras`), parsed into nested data like a `json`/`jsonb` column; a cell that is not JSON stays text. |
 | `table` | empty | Table mode: every kind of a domain in one PostgreSQL table of `(kind, id, business_date, doc jsonb, <promoted columns>)` rows, partitioned by month ([POSTGRES_CONNECTOR.md](../connectors/POSTGRES_CONNECTOR.md)). |
 | `mode.<kind>` | `snapshot` | Table mode: `snapshot` or `effective`. |
@@ -691,6 +695,25 @@ Layout as the file connector: `<prefix><kind>/<id>.json` and `<prefix><yyyy-MM-d
 | `rescan-seconds` | `60` | How often identifiers and dates are listed. |
 | `cache-seconds`, `cache-entries` | `30`, `10000` | Read cache. |
 | `lookback-days` | `10` | |
+
+### `mongodb`
+
+A document per entity per business day, in a collection per data domain. Design, sizing and loader options:
+[MONGODB_CONNECTOR.md](../connectors/MONGODB_CONNECTOR.md).
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `uri` | `mongodb://localhost:27017` | connection string: hosts, replica set, credentials, TLS |
+| `database` | `drishti` | the database |
+| `collection` | the connector's `domain`, else `drishti` | the domain's collection (`<collection>_columns` beside it) |
+| `read-preference` | `primary` | `primary`, `primaryPreferred`, `secondary`, `secondaryPreferred` or `nearest` |
+| `kinds`, `mode.<kind>`, `lookback-days` | what the collection holds, `snapshot`, `10` | As for Delta. |
+| `layout.<kind>.columns` | none | the promoted fields |
+| `refresh-seconds` | `60` | how often the kinds' dates and the ids are re-read |
+| `read-threads`, `heavy-reads`, `batch-size` | `8`, `2`, `5000` | id ranges read at once for a day's columns; day reads at once; documents per cursor batch |
+| `columns-cache-mb`, `columns-seconds` | `1024`, `300` | memory for days' column sets; after this a day is re-read in the background |
+| `max-load-rows`, `reverse-index` | `200000`, `true` | the most documents a reverse lookup reads without promoted fields; `false` turns reverse lookups off |
+| `connect-timeout-ms` | `3000` | connection and server-selection timeout |
 
 ### `redis`
 

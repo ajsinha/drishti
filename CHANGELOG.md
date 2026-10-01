@@ -29,6 +29,17 @@
   - **Reads:** type-ahead comes from memory instead of a `LIKE` query per keystroke. A single read is one primary-key probe. A day's columns are read in parallel by id range.
   - **Loading and retention:** `PostgresLoader` / `tools/load-postgres.sh` uses parallel `COPY` and replaces a day whole. `--keep-months` drops old partitions.
   - **Measured:** searches over a million trades take 100–225 ms. `make_data.py --postgres` and `pgload.py` are replaced by the loader.
+- **Several queries per kind in the JDBC connector's query mode** ([JDBC_QUERIES.md](docs/connectors/JDBC_QUERIES.md)). This brings type-ahead, exact searches and reverse lookups to your own schema without reshaping it.
+  - `query.<kind>.<part>`: parts of the entity from other tables, as nested lists or objects, run at once with the entity's query.
+  - `ids.<kind>`: type-ahead from memory.
+  - `columns.<kind>`: a day's promoted fields for searches, pick lists, derived kinds and impact.
+  - `reverse.<kind>`: reverse lookups with `:target`.
+- **MongoDB connector** ([MONGODB_CONNECTOR.md](docs/connectors/MONGODB_CONNECTOR.md)): a document per entity per business date in a collection per data domain.
+  - **Storage:** a narrow `<domain>_columns` collection holds the promoted fields, so a whole day reads 3–4 times faster.
+  - **Reads:** point reads by `_id`; dates and ids come from the `{kind, date, id}` index; a day's columns are read in parallel id ranges.
+  - **Retention:** `--keep-days`, or a TTL index.
+  - **Tooling:** the `mongodb` profile and `tools/load-mongodb.sh`.
+  - **Measured at 10,000 trades a day:** searches take 7–14 ms.
 - **Redis connector** ([REDIS_CONNECTOR.md](docs/connectors/REDIS_CONNECTOR.md)): today and recent days in Redis memory, about 1 GB per million trades a day.
   - **Storage:** documents are compressed with zstd and a dictionary trained per kind, 7.4× smaller. Each day's promoted fields are stored column-wise in chunks of 10,000.
   - **Reads:** a single read takes about 5 ms. Searches over a million trades take 80–260 ms.

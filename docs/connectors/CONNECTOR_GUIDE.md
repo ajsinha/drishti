@@ -45,7 +45,7 @@ for running the server in production see [OPERATIONS.md](../admin/OPERATIONS.md)
 16. [Combining connectors](#16-combining-connectors)
 17. [Operating connectors](#17-operating-connectors)
 18. [Troubleshooting](#18-troubleshooting)
-19. [More stores: `redis`](#19-more-stores-redis)
+19. [More stores: `redis`, `mongodb`](#19-more-stores-redis-mongodb)
 
 ---
 
@@ -204,6 +204,7 @@ alike, and are how secrets stay out of files.
 | `jdbc` table mode | yes (`snapshot`/`effective`) | no | yes | yes | a small pool | — |
 | `delta` | yes (`snapshot`/`effective`, *known at*) | no | yes | yes | — | read cache in memory |
 | `aerospike` | yes (`snapshot`/`effective`) | no | yes | yes, from promoted bins (`reverse-index`) | cluster client | promoted bins cached in memory |
+| `mongodb` | yes (`snapshot`/`effective`) | no | yes | yes, from promoted fields (`reverse-index`) | driver pool | promoted fields cached in memory |
 | `redis` | recent days (`snapshot`/`effective`) | yes (`<domain>:changes`) | yes | yes, from promoted columns | Lettuce connection | everything in Redis memory |
 | `kafka` | no | yes | yes (`state` mode) | no | consumer | optional disk cache |
 | `activemq`, `rabbitmq` | no | yes | yes | no | broker connection | state store (required) |
@@ -563,6 +564,10 @@ in `/api/v1/admin/health` count them. When the service is back, the next read wo
 ---
 
 ## 6. A database, your own schema: `jdbc` query mode
+
+A kind can have several queries: the entity, its parts from other tables (`query.<kind>.<part>`), its ids for
+type-ahead (`ids.<kind>`), a day's fields for searches (`columns.<kind>`) and its reverse lookups (`reverse.<kind>`).
+[JDBC_QUERIES.md](JDBC_QUERIES.md) explains each in full; this chapter starts with the first.
 
 ### The situation
 
@@ -2185,7 +2190,7 @@ If none of these fit, [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md) covers 
 
 ---
 
-## 19. More stores: `redis`
+## 19. More stores: `redis`, `mongodb`
 
 Each of these stores has its own design document with the layout, loading, every read path, sizing, measurements and
 settings; this chapter gets you from nothing to a running view.
@@ -2205,4 +2210,20 @@ SPRING_PROFILES_ACTIVE=redis DRISHTI_PACKS=market-risk,counterparty-risk java -j
 `--ttl-days N` lets Redis expire each day; `--publish` announces each written entity, so open views update. Health shows
 `UP` with the catalogue counts, or `DOWN: <reason>` while Redis is unreachable. Full design:
 [REDIS_CONNECTOR.md](REDIS_CONNECTOR.md).
+
+### MongoDB: a document database
+
+Use MongoDB when entities already live there as documents, or when you want replica sets and sharding without a
+lake. One document per entity per business day (`_id` `trade/MX-20000001/20260930`), the pack's promoted fields beside
+it, and a narrow `<domain>_columns` copy that searches read.
+
+```bash
+docker run -d --name mongo -m 2g -p 27017:27017 mongo:7 --wiredTigerCacheSizeGB 0.5
+tools/load-mongodb.sh mongodb://localhost:27017 drishti                       # the samples, 10 business days
+tools/load-mongodb.sh mongodb://localhost:27017 drishti --trades 10000        # and 10,000 trades a day for 3 days
+SPRING_PROFILES_ACTIVE=mongodb DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
+```
+
+`--keep-days N` deletes older days; `--ttl-days N` lets a TTL index expire them. MongoDB 8.0 does not start on some
+recent Linux kernels; `mongo:7` does. Full design: [MONGODB_CONNECTOR.md](MONGODB_CONNECTOR.md).
 
