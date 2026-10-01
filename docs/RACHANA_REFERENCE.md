@@ -620,7 +620,7 @@ expressions and templates are compiled at load time.
 | Kind | Expressions (Rachana-EL) | Field names (of each row) | Plain values |
 |---|---|---|---|
 | `kv` | `rows` | | |
-| `table` | `rows`, `moreLabel` | | `limit` (integer), `totalLabel` |
+| `table` | `rows`, `moreLabel` | | `limit` (integer), `totalLabel`, `search` (`false` hides the filter) |
 | `tabs` | `each`, `tabTitle` | | `layout` |
 | `line` | `rows`, `source`, `mark` | `x`, `y` | `unit`, `fmt` |
 | `area` | `rows`, `limit` | `x`, each series' `value` | `series[].label`, `series[].tone`, `limitLabel`, `unit` |
@@ -682,6 +682,7 @@ One row per element of `rows`.
 | `moreLabel` | | `"<N> more"` | Expression for the text of the "more" line, evaluated against the document (not a row). |
 | `totalLabel` | | `Total` | Text of the total row's label cell. |
 | `link` | | | Accepted, no effect (see above). |
+| `search` | | `true` | `false` hides the filter box (and the per-column filters) in the panel's heading, for a table too small or too fixed to need one. Only table panels take it; on any other kind it is a problem (`DRS-2023`, *option 'search' applies only to table panels*). |
 
 Totals: when at least one column says `total: true`, a total row is added. It sums that column's numbers over
 **all** rows, including those hidden by `limit` (values that are not numbers count as 0), formats the sum with the

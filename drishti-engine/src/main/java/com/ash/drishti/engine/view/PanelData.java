@@ -36,7 +36,13 @@ public sealed interface PanelData {
      * @param more "N more trades", or null
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    record Table(List<String> columns, List<Boolean> numeric, List<Row> rows, Row total, String more) implements PanelData {}
+    /** {@code search}: the panel offers a filter box in its heading (Sutra option {@code search: false} turns it off). */
+    record Table(List<String> columns, List<Boolean> numeric, List<Row> rows, Row total, String more, boolean search) implements PanelData {
+
+        public Table(List<String> columns, List<Boolean> numeric, List<Row> rows, Row total, String more) {
+            this(columns, numeric, rows, total, more, true);
+        }
+    }
 
     /**
      * @param cells one per column

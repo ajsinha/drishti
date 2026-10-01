@@ -16,8 +16,10 @@
 /* Every table sorts, filters, pages and can be walked with the keyboard.
    - Sort: click a column heading (again to reverse, a third time to restore the server's order). Numbers, amounts
      (1.5m, 250k, −30,205,543), percentages and dates sort as values, text alphabetically.
-   - Filter: the box in the bar under the table matches any cell; the funnel shows a box per column, where a number
-     column also takes >, <, >= and <= (">1m").
+   - Filter: the box in the table's heading matches any cell; the funnel shows a box per column, where a number
+     column also takes >, <, >= and <= (">1m"). In a table panel the box sits in the panel's heading bar (a Sutra turns
+     it off with search: false); a table outside a panel gets a slim heading strip of its own. Other panel kinds
+     (ladders, tabs, key-value lists) have no filter: search is for tables.
    - Page: first, previous, next, last and rows per page (remembered per browser, 25 by default); ▲ ▼ move a row.
    - Keys: focus the table (or click a row), then ↑ ↓ move (turning pages), PgUp/PgDn page, Home/End jump, Enter opens.
    Tables that live updates re-render keep their sort, filters, page and selection. A table with data-plain is left as
@@ -184,9 +186,28 @@
     var down = button('▼', 'Next row (↓)', function () { select(st.sel + 1, true); t.focus(); });
     [first, prev].forEach(function (b) { b.setAttribute('data-pg', 'back'); });
     [next, last].forEach(function (b) { b.setAttribute('data-pg', 'fwd'); });
-    [first, prev, info, next, last, el('span', 'tbl-pg-gap'), quick, funnel, up, down, sizeSel].forEach(function (x) { bar.appendChild(x); });
+    [first, prev, info, next, last, el('span', 'tbl-pg-gap'), up, down, sizeSel].forEach(function (x) { bar.appendChild(x); });
     var wrap = t.closest('.tbl-wrap') || t;
     wrap.parentNode.insertBefore(bar, wrap.nextSibling);
+
+    // The filter belongs to the table's heading, where it is seen: a table panel's heading bar, or a strip above a
+    // table that has no panel heading. Panels of other kinds, and tables a Sutra marks search: false, have none.
+    var panel = t.closest('.pnl[data-kind]');
+    var searchable = !t.hasAttribute('data-no-search') && (!panel || panel.getAttribute('data-kind') === 'table');
+    if (searchable) {
+      var tools = el('span', 'tbl-search');
+      tools.appendChild(quick); tools.appendChild(funnel);
+      var head = panel && panel.querySelector(':scope > .pnl-h');
+      if (head) {
+        var old = head.querySelector('.tbl-search');
+        if (old) { old.remove(); }
+        head.insertBefore(tools, head.querySelector('.pnl-code'));
+      } else {
+        var strip = el('div', 'tbl-head');
+        strip.appendChild(tools);
+        wrap.parentNode.insertBefore(strip, wrap);
+      }
+    }
 
     quick.addEventListener('input', function () { st.q = quick.value.trim(); st.page = 0; st.sel = -1; filter(); render(); });
     sizeSel.addEventListener('change', function () {

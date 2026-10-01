@@ -25,7 +25,7 @@ import java.util.Set;
  */
 public enum PanelKind {
     KV(Set.of(), Set.of("rows", "columns", "fields")),
-    TABLE(Set.of("rows"), Set.of("totalLabel", "limit", "moreLabel", "link")),
+    TABLE(Set.of("rows"), Set.of("totalLabel", "limit", "moreLabel", "link", "search")),
     TABS(Set.of("each"), Set.of("tabTitle", "layout")),
     LINE(Set.of(), Set.of("rows", "source", "x", "y", "mark", "footer", "unit", "fmt")),
     AREA(Set.of("rows"), Set.of("x", "series", "limit", "limitLabel", "unit")),

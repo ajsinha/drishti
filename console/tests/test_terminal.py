@@ -357,3 +357,10 @@ def test_studio_keeps_test_entities_and_runs_them(client, backend):
     assert ok["ok"] is True and ok["panels"] > 0 and "ms" in ok
     bad = client.post("/studio/test", json={"yaml": "BROKEN", "kind": "trade", "id": "IRS-48213"}).json()
     assert bad["ok"] is False and bad["code"] == "DRS-2002"
+
+
+def test_a_table_panel_can_turn_its_search_off(client):
+    module = client.app.state.templates.env.get_template("_macros/panels.html").module
+    on = str(module.table({"columns": ["A"], "numeric": [False], "rows": [{"cells": [{"text": "x"}]}]}))
+    off = str(module.table({"columns": ["A"], "numeric": [False], "rows": [{"cells": [{"text": "x"}]}], "search": False}))
+    assert "data-no-search" not in on and "data-no-search" in off

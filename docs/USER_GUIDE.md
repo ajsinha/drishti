@@ -310,13 +310,18 @@ Every table in the console (pick lists, search results, the tables inside views,
 has a pager under it, and can be walked with the keyboard.
 
 ```text
-«  ‹  1–21 of 21 (filtered from 100)  ›  »         [Filter rows    ]  ⧩  ▲  ▼  [25 rows ▾]
+| Largest trades                              [Filter rows    ] ⧩   F2  ⤓  ? |   <- the panel's heading
+| Trade ↕   Product ↕   Notional ▼   Maturity ↕   MTM ↕                     |
+| …                                                                          |
+«  ‹  1–21 of 21 (filtered from 100)  ›  »                     ▲  ▼  [25 rows ▾]
 ```
 
 - **Sort**: click a column heading (or focus it and press Enter). Once for ascending (▲), again for descending
   (▼), a third time for the original order. Numbers, amounts (`1.5m`, `−30,205,543`), percentages and dates sort
   as values; text alphabetically.
-- **Filter rows**: type in the box under the table; a row stays when any cell contains the text (any case).
+- **Filter rows**: type in the box in the table's heading (a table panel's heading bar, or the strip above a pick
+  list or admin list); a row stays when any cell contains the text (any case). Only tables have it: ladders, tabs
+  and key-value panels do not, and a Sutra may turn it off for a table panel (`search: false`).
 - **Filter by column**: `⧩` shows a box under each heading. Text matches within that column; in a number column
   `>1m`, `<0`, `>=250k` or `=5` compare values. Example: on `TRD T-1`, type `>200m` under *Notional* to keep the 21
   trades above 200 million.

@@ -234,7 +234,8 @@ public final class Binder {
         if (rows.size() > limit) {
             more = p.option("moreLabel").map(m -> Values.text(eval(m, c.eval()))).orElse((rows.size() - limit) + " more");
         }
-        return new PanelData.Table(headers, numeric, out, total, more);
+        boolean search = !p.option("search").map(String::trim).filter(v -> v.equalsIgnoreCase("false") || v.equalsIgnoreCase("no")).isPresent();
+        return new PanelData.Table(headers, numeric, out, total, more, search);
     }
 
     /** Where the total label goes: the column just before the first totalled column, else the first. */

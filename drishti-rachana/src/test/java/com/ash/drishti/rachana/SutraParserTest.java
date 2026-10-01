@@ -112,4 +112,32 @@ class SutraParserTest {
                 .isInstanceOfSatisfying(SutraException.class,
                         e -> assertThat(e.problems().get(0).code()).isEqualTo("DRS-2001"));
     }
+
+    @Test
+    void aTablePanelMayTurnItsSearchOffAndOnlyTablesHaveOne() {
+        String ok = """
+                sutra: quiet-table
+                version: 1
+                match: { kind: trade }
+                panels:
+                  - id: legs
+                    kind: table
+                    rows: $.legs
+                    search: false
+                    columns:
+                      - { label: Leg, bind: "@.leg" }
+                """;
+        var s = parser.parse(ok, "quiet.yaml", "x");
+        assertThat(s.panels().get(0).option("search")).contains("false");
+        String bad = """
+                sutra: noisy-kv
+                version: 1
+                match: { kind: trade }
+                panels:
+                  - { id: terms, kind: kv, search: false }
+                """;
+        assertThatThrownBy(() -> parser.parse(bad, "noisy.yaml", "x"))
+                .isInstanceOfSatisfying(SutraException.class, e -> assertThat(e.problems()).extracting(SutraProblem::message)
+                        .anySatisfy(m -> assertThat(m).contains("'search' applies only to table panels")));
+    }
 }

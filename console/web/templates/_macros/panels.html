@@ -29,7 +29,7 @@
 {%- endmacro %}
 
 {% macro table(d) -%}
-<div class="tbl-wrap"><table class="tbl">
+<div class="tbl-wrap"><table class="tbl"{% if d.search == false %} data-no-search{% endif %}>
   <thead><tr>{% for h in (d.columns or []) %}<th{% if (d.numeric or [])[loop.index0] %} class="num"{% endif %}>{{ h }}</th>{% endfor %}</tr></thead>
   <tbody>
   {% for r in (d.rows or []) %}
