@@ -41,6 +41,13 @@ public final class Emptiness {
             case PanelData.Text t -> t.text() == null || t.text().isBlank();
             case PanelData.Gauge g -> !Double.isFinite(g.value());
             case PanelData.Surface s -> s.z() == null || s.z().stream().allMatch(r -> r == null || r.stream().noneMatch(Emptiness::finite));
+            case PanelData.Waterfall w -> w.steps() == null || w.steps().isEmpty();
+            case PanelData.Histogram h -> h.bins() == null || h.count() == 0;
+            case PanelData.Scatter s -> s.points() == null || s.points().isEmpty();
+            case PanelData.Candles c -> c.candles() == null || c.candles().isEmpty();
+            case PanelData.Graph g -> g.nodes() == null || g.nodes().isEmpty();
+            case PanelData.Timeline t -> t.events() == null || t.events().isEmpty();
+            case PanelData.Pivot p -> p.rows() == null || p.rows().isEmpty();
         };
     }
 

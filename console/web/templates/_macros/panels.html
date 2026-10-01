@@ -13,7 +13,8 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# One macro per panel kind. Each renders first paint; static/js/view.js enhances (tabs, charts, keys). #}
+{# One macro per panel kind. Each renders first paint; static/js/view.js enhances (tabs, charts, keys), static/js/charts.js draws the
+   waterfall, histogram, scatter, candlestick and graph kinds. #}
 
 {% macro cell_text(c) -%}
 {%- if c.link -%}<a class="lnk" href="/v/{{ c.link.kind }}/{{ c.link.id }}">{{ c.text }}</a>
@@ -105,6 +106,91 @@
 </ul>
 {%- endmacro %}
 
+{# ---- chart and aggregate kinds: static/js/charts.js draws data-xchart with ECharts; "Data" shows the same numbers as a
+     table (keyboard and screen readers reach it, and it is what prints), so nothing is only in the picture. ---- #}
+{% macro xchart(p, label, cls='') -%}
+<div class="chart xchart{{ cls }}" data-xchart="{{ p.data | tojson | forceescape }}" data-kind="{{ p.kind }}" role="img"
+     aria-label="{{ p.title or p.kind }}: {{ label }}"></div>
+{%- endmacro %}
+
+{% macro data_table(head, rows) -%}
+<details class="xchart-data"><summary>Data</summary><div class="tbl-wrap"><table class="tbl" data-plain>
+  <thead><tr>{% for h in head %}<th scope="col"{% if not loop.first %} class="num"{% endif %}>{{ h }}</th>{% endfor %}</tr></thead>
+  <tbody>{% for r in rows %}<tr>{% for c in r %}{% if loop.first %}<th scope="row">{{ c }}</th>{% else %}<td class="mono num">{{ c }}</td>{% endif %}{% endfor %}</tr>{% endfor %}</tbody>
+</table></div></details>
+{%- endmacro %}
+
+{% macro entity(text, link) -%}
+{%- if link and link.kind and link.id -%}<a class="lnk" href="/v/{{ link.kind }}/{{ link.id }}">{{ text }}</a>{%- else -%}{{ text }}{%- endif -%}
+{%- endmacro %}
+
+{% macro waterfall(p) -%}
+{% set d = p.data %}{% set steps = d.steps or [] %}
+{{ xchart(p, steps | length ~ ' steps' ~ ((', ending at ' ~ steps[-1].text) if steps and steps[-1].text else '')) }}
+{% set rows = [] %}{% for s in steps %}{% set _ = rows.append([s.label, s.text]) %}{% endfor %}
+{{ data_table(['Step', 'Amount' ~ ((' (' ~ d.unit ~ ')') if d.unit else '')], rows) }}
+{%- endmacro %}
+
+{% macro histogram(p) -%}
+{% set d = p.data %}{% set bins = d.bins or [] %}
+{{ xchart(p, (d.count or 0) ~ ' values in ' ~ (bins | length) ~ ' bins') }}
+<ul class="legend">{% for m in (d.markers or []) %}<li><span class="sw sw-{{ m.tone or 'accent' }}"></span>{{ m.label or 'Marker' }} <span class="mono">{{ m.text }}</span></li>{% endfor %}
+  <li class="mono">{{ d.count or 0 }} values{% if d.dropped %} · {{ d.dropped }} left out{% endif %}</li></ul>
+{% set rows = [] %}{% for b in bins %}{% set _ = rows.append([b.label, b.count]) %}{% endfor %}
+{{ data_table(['Range' ~ ((' (' ~ d.unit ~ ')') if d.unit else ''), 'Count'], rows) }}
+{%- endmacro %}
+
+{% macro scatter(p) -%}
+{% set d = p.data %}{% set pts = d.points or [] %}
+{{ xchart(p, (pts | length) ~ ' points, ' ~ (d.xLabel or 'x') ~ ' against ' ~ (d.yLabel or 'y')) }}
+{% if d.more %}<div class="chart-foot"><span>{{ d.more }} more points not drawn</span></div>{% endif %}
+<details class="xchart-data"><summary>Data</summary><div class="tbl-wrap"><table class="tbl" data-plain>
+  <thead><tr><th scope="col">Point</th>{% if d.groups %}<th scope="col">Group</th>{% endif %}<th scope="col" class="num">{{ d.xLabel }}</th><th scope="col" class="num">{{ d.yLabel }}</th></tr></thead>
+  <tbody>{% for q in pts %}<tr><th scope="row">{{ entity(q.label or loop.index, q.link) }}</th>{% if d.groups %}<td>{{ q.group or '' }}</td>{% endif %}<td class="mono num">{{ q.xText }}</td><td class="mono num">{{ q.yText }}</td></tr>{% endfor %}</tbody>
+</table></div></details>
+{%- endmacro %}
+
+{% macro candlestick(p) -%}
+{% set d = p.data %}{% set cs = d.candles or [] %}
+{{ xchart(p, (cs | length) ~ ' bars' ~ ((' from ' ~ cs[0].x ~ ' to ' ~ cs[-1].x) if cs else '') ~ ((', last ' ~ d.last) if d.last else ''), ' candles') }}
+{% if d.last %}<div class="chart-foot"><span>Last <span class="mono">{{ d.last }}</span></span><span class="mono{{ tone(d) }}">{{ d.change }}</span></div>{% endif %}
+{% set rows = [] %}{% for k in cs %}{% set _ = rows.append([k.x, k.open, k.high, k.low, k.close] + ([k.volume if k.volume is not none else ''] if d.volume else [])) %}{% endfor %}
+{{ data_table(['Date', 'Open', 'High', 'Low', 'Close'] + (['Volume'] if d.volume else []), rows) }}
+{%- endmacro %}
+
+{% macro graph(p) -%}
+{% set d = p.data %}{% set ns = d.nodes or [] %}
+{{ xchart(p, (ns | length) ~ ' entities, ' ~ ((d.edges or []) | length) ~ ' relations', ' graph') }}
+{% if d.more %}<div class="chart-foot"><span>{{ d.more }} more entities not drawn</span></div>{% endif %}
+<details class="xchart-data"><summary>Entities</summary><ul class="links">
+  {% for n in ns %}<li><span class="lk-label">{{ n.group or '' }}</span><span class="lk-target">{{ entity(n.label or n.id, n.link) }}{% if n.focus %} <span class="lk-badge">this view</span>{% endif %}</span></li>{% endfor %}
+</ul></details>
+{%- endmacro %}
+
+{% macro timeline(d) -%}
+<ol class="tl">
+  {% for e in (d.events or []) %}<li class="tl-i{{ tone(e) }}"><span class="tl-dot" aria-hidden="true"></span>
+    <div class="tl-h"><time class="mono">{{ e.date }}</time> <b>{{ e.label }}</b>{% if e.status %} <span class="tl-s{{ tone(e) }}">{{ e.status }}</span>{% endif %}</div>
+    {% if e.detail %}<p class="tl-d">{{ e.detail }}</p>{% endif %}</li>{% endfor %}
+</ol>
+{% if d.more %}<p class="pnl-note">{{ d.more }} earlier events not shown</p>{% endif %}
+{%- endmacro %}
+
+{% macro pivot(d) -%}
+{% set lo, hi = d.min, d.max %}{% set span = (hi - lo) if (lo is number and hi is number and hi > lo) else 0 %}
+<div class="tbl-wrap"><table class="tbl pivot{% if d.heat %} heat{% endif %}">
+  <thead><tr><th scope="col">{{ d.by }}</th>{% for c in (d.columns or []) %}<th scope="col" class="num">{{ c }}</th>{% endfor %}{% if d.totals %}<th scope="col" class="num">Total</th>{% endif %}</tr></thead>
+  <tbody>
+  {% for r in (d.rows or []) %}<tr><th scope="row">{{ r.label }}</th>{% for c in (r.cells or []) %}{% set v = (r['values'] or [])[loop.index0] %}<td class="mono num{{ tone(c) }}{% if d.heat and v is number %} heat-{{ (((v - lo) / span * 9) | round | int) if span else 5 }}{% endif %}">{{ c.text }}</td>{% endfor %}
+    {% if r.total %}<td class="mono num pv-total{{ tone(r.total) }}">{{ r.total.text }}</td>{% endif %}</tr>{% endfor %}
+  </tbody>
+  {% if d.totals or d.more %}<tfoot>
+    {% if d.totals %}<tr class="total"><th scope="row">Total</th>{% for c in d.totals %}<td class="mono num{{ tone(c) }}">{{ c.text }}</td>{% endfor %}</tr>{% endif %}
+    {% if d.more %}<tr class="more"><td colspan="{{ ((d.columns or []) | length) + 2 }}">{{ d.more }} more rows</td></tr>{% endif %}
+  </tfoot>{% endif %}
+</table></div>
+{%- endmacro %}
+
 {# A panel whose document lacks what its Sutra asks for (or whose data could not be read) says so, calmly. #}
 {% macro no_data(p) -%}
 <p class="pnl-empty" role="status"{% if p.error %} title="{{ p.error }}"{% endif %}>
@@ -117,7 +203,7 @@
   <header class="pnl-h"><h3 id="h-{{ p.id }}">{{ p.title or '' }}</h3>
     <span class="pnl-code">{% if p.code %}{{ p.code }}{% endif %}{% if p.code and p.key %} · {% endif %}{% if p.key %}{{ p.key }}{% endif %}
       {% if p.inferred %}<span class="inf" title="{{ p.explanation or 'completed by inference' }}">inferred</span>{% endif %}
-      {% if p.kind in ('table', 'ladder', 'kv', 'status', 'tabs', 'line', 'area', 'hbar', 'surface', 'links', 'gauge') and not p.empty %}<a class="pnl-help" data-export-panel="{{ p.id }}" hidden title="Download as CSV" aria-label="Download {{ p.title or p.id }} as CSV"><i class="bi bi-download" aria-hidden="true"></i></a>{% endif %}
+      {% if p.kind in ('table', 'ladder', 'kv', 'status', 'tabs', 'line', 'area', 'hbar', 'surface', 'links', 'gauge', 'waterfall', 'histogram', 'scatter', 'candlestick', 'graph', 'timeline', 'pivot') and not p.empty %}<a class="pnl-help" data-export-panel="{{ p.id }}" hidden title="Download as CSV" aria-label="Download {{ p.title or p.id }} as CSV"><i class="bi bi-download" aria-hidden="true"></i></a>{% endif %}
       <a class="pnl-help" href="/help/panel-kinds#{{ p.kind }}" title="What a {{ p.kind }} panel shows" aria-label="Help on {{ p.kind }} panels"><i class="bi bi-question-circle" aria-hidden="true"></i></a></span></header>
   <div class="pnl-b">
   {% if p.empty or (p.data is none and p.kind != 'provenance') %}{{ no_data(p) }}
@@ -130,6 +216,13 @@
   {% elif p.kind == 'surface' %}{{ surface(p) }}
   {% elif p.kind == 'links' %}{{ links(p.data) }}
   {% elif p.kind == 'markdown' %}<p>{{ p.data.text }}</p>
+  {% elif p.kind == 'waterfall' %}{{ waterfall(p) }}
+  {% elif p.kind == 'histogram' %}{{ histogram(p) }}
+  {% elif p.kind == 'scatter' %}{{ scatter(p) }}
+  {% elif p.kind == 'candlestick' %}{{ candlestick(p) }}
+  {% elif p.kind == 'graph' %}{{ graph(p) }}
+  {% elif p.kind == 'timeline' %}{{ timeline(p.data) }}
+  {% elif p.kind == 'pivot' %}{{ pivot(p.data) }}
   {% elif p.kind == 'gauge' %}{% set gv, gm = p.data.value, p.data.max %}<div class="gauge"><span class="bf" data-w="{{ ((gv / (gm or 1)) * 100) | round(1) if gv is number and (gm is number or gm is none) else 0 }}"></span><span class="mono">{{ p.data.text }}</span></div>
   {% endif %}
   </div>

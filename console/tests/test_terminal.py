@@ -141,10 +141,15 @@ def test_backend_calls_carry_the_business_date_header():
     assert asof.headers() == {}
 
 
-KINDS = ["kv", "status", "provenance", "table", "ladder", "tabs", "line", "area", "hbar", "links", "markdown", "gauge", "surface"]
+KINDS = ["kv", "status", "provenance", "table", "ladder", "tabs", "line", "area", "hbar", "links", "markdown", "gauge", "surface",
+         "waterfall", "histogram", "scatter", "candlestick", "graph", "timeline", "pivot"]
 BROKEN = [None, {}, {"fields": None, "rows": None, "tabs": None, "x": None, "series": None, "bars": None, "links": None},
           {"columns": ["A"], "numeric": [], "rows": [{"cells": None}], "x": ["1Y"], "series": [{"label": "s", "values": [None]}],
-           "bars": [{"label": "a", "value": None, "text": "—"}], "tabs": [{"title": "t", "fields": None}], "value": None, "max": None}]
+           "bars": [{"label": "a", "value": None, "text": "—"}], "tabs": [{"title": "t", "fields": None}], "value": None, "max": None},
+          {"steps": [{"label": None, "text": None}, {}], "bins": [{}], "markers": [{"value": None}], "points": [{"link": {}}], "groups": None,
+           "candles": [{}], "volume": True, "nodes": [{"id": None, "link": None}], "edges": None, "events": [{"date": None}, {}],
+           "rows": [{"label": "r", "cells": [{"text": "1"}], "values": [None, "x"], "total": None}], "totals": [{}], "heat": True,
+           "min": 5, "max": 1, "more": 3, "count": None, "dropped": 2}]
 
 
 def test_every_panel_kind_renders_imperfect_data_without_failing(client):
@@ -168,6 +173,36 @@ def test_a_surface_panel_renders_a_heatmap_with_a_3d_toggle(client):
     assert 'data-surface=' in out and 'data-surface-view="3d"' in out and "2 × 3 grid" in out
     empty = tpl.render(p={"id": "s", "kind": "surface", "title": "Smile", "area": "main", "empty": True, "data": {"x": [], "y": [], "z": []}})
     assert "No data available" in empty
+
+
+def _render(client, kind, data, title="X"):
+    tpl = client.app.state.templates.env.from_string('{% from "_macros/panels.html" import panel %}{{ panel(p) }}')
+    return tpl.render(p={"id": "x", "kind": kind, "title": title, "area": "main", "empty": False, "data": data})
+
+
+def test_chart_kinds_carry_their_data_for_charts_js_and_a_data_table(client):
+    w = _render(client, "waterfall", {"steps": [{"label": "Opening", "value": 100, "from": 0, "to": 100, "text": "100", "tone": "link", "total": True},
+                                                {"label": "Carry", "value": -20, "from": 100, "to": 80, "text": "−20", "tone": "neg", "total": False}]})
+    assert 'data-xchart=' in w and 'data-kind="waterfall"' in w and "2 steps, ending at −20" in w and '<th scope="row">Carry</th>' in w
+    h = _render(client, "histogram", {"bins": [{"from": -2, "to": 0, "count": 3, "label": "−2 to 0"}], "count": 3, "dropped": 1,
+                                      "markers": [{"label": "VaR 99%", "value": -1.5, "text": "−1.5", "tone": "neg"}]})
+    assert "VaR 99%" in h and "sw-neg" in h and "3 values" in h and "1 left out" in h
+    s = _render(client, "scatter", {"points": [{"x": 1, "y": 2, "xText": "1", "yText": "2", "label": "BOOK-RATES-1", "group": "Rates",
+                                                "link": {"kind": "book", "id": "BOOK-RATES-1"}}], "groups": ["Rates"], "xLabel": "VaR", "yLabel": "P&L"})
+    assert 'href="/v/book/BOOK-RATES-1"' in s and "1 points, VaR against P&amp;L" in s
+    c = _render(client, "candlestick", {"candles": [{"x": "2026-09-29", "open": 1, "high": 2, "low": 0.5, "close": 1.5, "volume": 10}],
+                                        "volume": True, "last": "1.50", "change": "+0.50 (+50.00%)", "tone": "pos"})
+    assert "chart xchart candles" in c and "Volume" in c and "t-pos" in c
+    g = _render(client, "graph", {"nodes": [{"id": "GRP-A", "label": "Group A", "group": "Group", "link": {"kind": "counterparty-group", "id": "GRP-A"}},
+                                            {"id": "CP-A", "label": "A", "group": "Counterparty", "focus": True}],
+                                  "edges": [{"from": "GRP-A", "to": "CP-A"}], "layout": "tree"})
+    assert "2 entities, 1 relations" in g and 'href="/v/counterparty-group/GRP-A"' in g and "this view" in g
+    t = _render(client, "timeline", {"events": [{"date": "2026-01-02", "label": "Booked", "status": "Done", "tone": "ok", "detail": "Captured"}], "more": 2})
+    assert 'class="tl"' in t and "tl-i t-ok" in t and "Captured" in t and "2 earlier events" in t
+    v = _render(client, "pivot", {"by": "book", "columns": ["USD", "EUR"], "agg": "sum", "heat": True, "min": 1, "max": 10,
+                                  "rows": [{"label": "B1", "cells": [{"text": "1"}, {"text": "10"}], "values": [1, 10], "total": {"text": "11"}}],
+                                  "totals": [{"text": "1"}, {"text": "10"}, {"text": "11"}]})
+    assert "pivot heat" in v and "heat-0" in v and "heat-9" in v and ">11<" in v and "Total" in v
 
 
 def test_known_at_is_set_in_the_business_zone_and_sent_only_with_a_picked_date(client):

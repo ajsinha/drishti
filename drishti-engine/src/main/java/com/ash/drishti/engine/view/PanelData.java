@@ -109,4 +109,137 @@ public sealed interface PanelData {
 
     /** {@code gauge}. */
     record Gauge(double value, double max, String text, String label) implements PanelData {}
+
+    /**
+     * {@code waterfall}: ordered steps as floating bars.
+     *
+     * @param steps in order; a total step is drawn from zero
+     * @param unit axis unit, or null
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    record Waterfall(List<Step> steps, String unit) implements PanelData {}
+
+    /**
+     * @param label {@code Carry}
+     * @param value the signed contribution, or the level of a total
+     * @param from where the bar starts (the running total before a contribution, zero for a total)
+     * @param to where the bar ends (the running total after it)
+     * @param text the value formatted
+     * @param tone {@code pos} (up), {@code neg} (down) or {@code link} (a total)
+     * @param total drawn as a full bar from zero
+     */
+    record Step(String label, double value, double from, double to, String text, String tone, boolean total) {}
+
+    /**
+     * {@code histogram}: the distribution of a list of numbers.
+     *
+     * @param bins equal-width bins from the smallest value to the largest
+     * @param markers vertical lines (VaR, expected shortfall, mean)
+     * @param count how many numbers were binned
+     * @param dropped values left out (not numbers, or beyond the configured maximum)
+     * @param fmt the format of bin edges and markers
+     * @param unit axis unit
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    record Histogram(List<Bin> bins, List<Marker> markers, int count, int dropped, String fmt, String unit) implements PanelData {}
+
+    /** One bin: {@code [from, to)}, the last one closed; {@code label} is its range formatted. */
+    record Bin(double from, double to, int count, String label) {}
+
+    /** A marker line at {@code value}, {@code text} formatted, {@code tone} its colour. */
+    record Marker(String label, double value, String text, String tone) {}
+
+    /**
+     * {@code scatter}: one point per row.
+     *
+     * @param points the points
+     * @param groups the distinct groups, in first-seen order (a colour each)
+     * @param xLabel horizontal axis title
+     * @param yLabel vertical axis title
+     * @param sized whether points carry a size
+     * @param more points left out beyond the configured maximum
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    record Scatter(List<Point> points, List<String> groups, String xLabel, String yLabel, boolean sized, int more) implements PanelData {}
+
+    /** A point: its measures and their text, an optional size, label, group and the entity the label names. */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    record Point(double x, double y, Double size, String xText, String yText, String label, String group, LinkView link) {}
+
+    /**
+     * {@code candlestick}: open, high, low and close by date, oldest first.
+     *
+     * @param candles the bars
+     * @param volume whether candles carry volume
+     * @param last the last close, formatted
+     * @param change the change over the last bar, formatted, with its {@code tone}
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    record Candles(List<Candle> candles, boolean volume, String last, String change, String tone, String fmt, String unit)
+            implements PanelData {}
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    record Candle(String x, double open, double high, double low, double close, Double volume) {}
+
+    /**
+     * {@code graph}: nodes and the edges between them.
+     *
+     * @param nodes the entities
+     * @param edges the relations; an edge to a node that is not listed is left out
+     * @param layout {@code tree} (layered from the roots) or {@code force}
+     * @param more nodes left out beyond the configured maximum
+     */
+    record Graph(List<Node> nodes, List<Edge> edges, String layout, int more) implements PanelData {}
+
+    /**
+     * @param id the node's identifier (the entity id when it names one)
+     * @param label what the node shows
+     * @param group its category (colour and legend)
+     * @param link the entity it opens, or null
+     * @param focus the node is the entity this view shows
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    record Node(String id, String label, String group, LinkView link, boolean focus) {}
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    record Edge(String from, String to, String label) {}
+
+    /** {@code timeline}: dated events, oldest first; {@code more} events left out beyond the configured maximum. */
+    record Timeline(List<Event> events, int more) implements PanelData {}
+
+    /**
+     * @param date the date or timestamp as written
+     * @param label {@code Confirmed}
+     * @param detail a short description, or null
+     * @param status the status text, or null
+     * @param tone the status tone ({@code ok}, {@code warn}, {@code bad}), or null
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    record Event(String date, String label, String detail, String status, String tone) {}
+
+    /**
+     * {@code pivot}: an aggregate of the rows by one field (down) and across another.
+     *
+     * @param by the row field's name (the corner heading)
+     * @param columns the column keys, in first-seen order
+     * @param rows one per row key, in first-seen order
+     * @param totals the column totals and the grand total (last), or null when totals are off
+     * @param agg the aggregation
+     * @param heat colour cells by value
+     * @param min the smallest cell value (heat scale)
+     * @param max the largest cell value
+     * @param more row keys left out beyond the configured maximum
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    record Pivot(String by, List<String> columns, List<PivotRow> rows, List<Cell> totals, String agg, boolean heat, Double min, Double max,
+            int more) implements PanelData {}
+
+    /**
+     * @param label the row key
+     * @param cells one per column: the aggregate formatted and toned (text empty where no row falls)
+     * @param values the aggregates (null where no row falls), for the heat scale and export
+     * @param total the row total, or null when totals are off
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    record PivotRow(String label, List<Cell> cells, List<Double> values, Cell total) {}
 }

@@ -105,7 +105,7 @@ public final class RachanaSchema {
             for (String o : opts) {
                 Object schema = o.equals("fmt") ? fmt(formats) : o.equals("tone") ? tone()
                         : o.equals("search") ? Map.of("type", "boolean", "description", "false hides the table's filter")
-                        : expr.contains(o) ? text(EL) : Map.of("description", "option of " + k.id() + " panels");
+                        : expr.contains(o) ? text(EL) : kindOption(k, o);
                 props.put(o, schema);
                 allOptions.putIfAbsent(o, schema);
             }
@@ -118,6 +118,25 @@ public final class RachanaSchema {
         panel.put("properties", allOptions);
         panel.put("allOf", perKind);
         return panel;
+    }
+
+    /** An option whose values the kind restricts (pivot's agg, heat and totals; histogram's bins and markers), else free text. */
+    private static Map<String, Object> kindOption(PanelKind k, String o) {
+        if (k == PanelKind.PIVOT && o.equals("agg")) {
+            return Map.of("type", "string", "enum", com.ash.drishti.rachana.model.PanelOptions.AGGREGATIONS,
+                    "description", "How the pivot combines the values of a cell (default sum)");
+        }
+        if (k == PanelKind.PIVOT && (o.equals("heat") || o.equals("totals"))) {
+            return Map.of("type", "boolean", "description", o.equals("heat") ? "Colour each cell by its value" : "false hides the row and column totals");
+        }
+        if (k == PanelKind.HISTOGRAM && o.equals("bins")) {
+            return Map.of("type", "integer", "minimum", 1, "maximum", com.ash.drishti.rachana.model.PanelOptions.MAX_BINS,
+                    "description", "How many bins (default: the square root of the count, 5 to 40)");
+        }
+        if (k == PanelKind.HISTOGRAM && o.equals("markers")) {
+            return Map.of("type", "array", "description", "Vertical marker lines: { label, value: <expression>, tone }");
+        }
+        return Map.of("description", "option of " + k.id() + " panels");
     }
 
     private static Map<String, Object> column(Collection<String> formats) {

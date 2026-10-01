@@ -20,7 +20,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * The thirteen panel kinds of the grammar. Each declares which options it requires and which it accepts,
+ * The twenty panel kinds of the grammar. Each declares which options it requires and which it accepts,
  * so the validator can reject a Sutra before it ever meets data.
  */
 public enum PanelKind {
@@ -37,7 +37,21 @@ public enum PanelKind {
     MARKDOWN(Set.of("text"), Set.of()),
     GAUGE(Set.of("value"), Set.of("max", "label", "fmt")),
     /** A grid of values over two axes (volatility surfaces, correlation matrices): heatmap, or 3D on request. */
-    SURFACE(Set.of("rows", "y"), Set.of("fmt", "unit", "view"));
+    SURFACE(Set.of("rows", "y"), Set.of("fmt", "unit", "view")),
+    /** Ordered signed steps as floating bars (P&amp;L attribution): rises up, falls down, totals as full bars. */
+    WATERFALL(Set.of("rows"), Set.of("label", "value", "total", "sum", "fmt", "unit")),
+    /** A distribution of numbers, binned on the server, with optional marker lines (VaR, ES, mean). */
+    HISTOGRAM(Set.of("rows"), Set.of("value", "bins", "markers", "fmt", "unit")),
+    /** Two measures per row as points (risk against return), optionally sized and coloured by a group. */
+    SCATTER(Set.of("rows", "x", "y"), Set.of("size", "label", "group", "fmt", "xFmt", "xLabel", "yLabel")),
+    /** Open, high, low and close by date, with optional volume bars. */
+    CANDLESTICK(Set.of("rows"), Set.of("x", "open", "high", "low", "close", "volume", "fmt", "unit")),
+    /** Entities and the relations between them (a legal-entity hierarchy); a node that names an entity opens it. */
+    GRAPH(Set.of("nodes"), Set.of("edges", "label", "group", "layout")),
+    /** Dated events in order, each with a status tone and a short description. */
+    TIMELINE(Set.of("rows"), Set.of("date", "label", "detail", "status", "tone")),
+    /** A two-dimensional aggregate of the rows (by one field, across another) with totals and an optional heat scale. */
+    PIVOT(Set.of("rows", "by", "across"), Set.of("value", "agg", "fmt", "tone", "heat", "totals"));
 
     private final Set<String> required;
     private final Set<String> optional;

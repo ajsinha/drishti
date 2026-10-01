@@ -53,13 +53,19 @@ public final class Binder {
     private final ReferenceCatalog catalog;
     private final BadgeRenderer badges;
     private final Mnemonics mnemonics;
+    private final ChartBinder charts;
 
     public Binder(ElCompiler el, Formats formats, ReferenceCatalog catalog, BadgeRenderer badges, Mnemonics mnemonics) {
+        this(el, formats, catalog, badges, mnemonics, PanelLimits.defaults());
+    }
+
+    public Binder(ElCompiler el, Formats formats, ReferenceCatalog catalog, BadgeRenderer badges, Mnemonics mnemonics, PanelLimits limits) {
         this.el = el;
         this.formats = formats;
         this.catalog = catalog;
         this.badges = badges;
         this.mnemonics = mnemonics;
+        this.charts = new ChartBinder(this, formats, catalog, limits);
     }
 
     public PanelView bind(Panel p, BindContext c) {
@@ -84,6 +90,13 @@ public final class Binder {
                 case MARKDOWN -> new PanelData.Text(el.template(p.option("text").orElse("")).render(c.eval()));
                 case GAUGE -> gauge(p, c);
                 case SURFACE -> surface(p, c);
+                case WATERFALL -> charts.waterfall(p, c);
+                case HISTOGRAM -> charts.histogram(p, c);
+                case SCATTER -> charts.scatter(p, c);
+                case CANDLESTICK -> charts.candlestick(p, c);
+                case GRAPH -> charts.graph(p, c);
+                case TIMELINE -> charts.timeline(p, c);
+                case PIVOT -> charts.pivot(p, c);
             };
             return new PanelView(p.id(), p.kind().id(), title, p.code(), p.key(), area(p), p.infer() || explanation != null,
                     explanation, data, null, com.ash.drishti.engine.view.Emptiness.of(data));

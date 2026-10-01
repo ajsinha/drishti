@@ -198,7 +198,11 @@
 
   /** Hooks for live.js: re-enhance a replaced panel, and move a chart to new data without re-creating it. */
   window.drishti = {
-    enhance: function (root) { widths(root); tabsIn(root); },
+    enhance: function (root) {
+      widths(root); tabsIn(root);
+      root.querySelectorAll('.surface[data-surface]').forEach(function (el) { drawSurface(el, el.getAttribute('data-view') || 'heatmap'); });
+      if (window.drishtiCharts) { window.drishtiCharts.draw(root); }
+    },
     redraw: drawCharts,
     updateChart: function (id, data) {
       var el = document.querySelector('#p-' + CSS.escape(id) + ' .chart[data-chart]');

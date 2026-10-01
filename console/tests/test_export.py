@@ -94,3 +94,17 @@ def test_the_view_offers_share_print_and_csv_and_the_share_link_reproduces_the_d
     cookies = r.headers.get_list("set-cookie")
     client.cookies.clear()                                            # the redirect set them on the shared test client
     assert r.headers["location"] == "/v/trade/IRS-48213" and any("drishti_knownat=2026-09-29T14:30:00Z" in c for c in cookies)
+
+
+def test_chart_and_aggregate_kinds_export_their_numbers():
+    pivot = {"kind": "pivot", "data": {"by": "book", "columns": ["USD"], "rows": [{"label": "B1", "cells": [{"text": "1,000"}], "values": [1000],
+                                                                                   "total": {"text": "1,000"}}], "totals": [{"text": "1,000"}, {"text": "1,000"}]}}
+    assert panel_rows(pivot) == (["book", "USD", "Total"], [["B1", 1000, 1000], ["Total", 1000, 1000]])
+    wf = {"kind": "waterfall", "data": {"steps": [{"label": "Carry", "value": -5, "total": False}]}}
+    assert panel_rows(wf) == (["Step", "Amount", "Total"], [["Carry", -5, False]])
+    tl = {"kind": "timeline", "data": {"events": [{"date": "2026-01-02", "label": "Booked", "status": "Done"}]}}
+    assert panel_rows(tl)[1] == [["2026-01-02", "Booked", "Done", ""]]
+    g = {"kind": "graph", "data": {"nodes": [{"id": "A", "label": "a"}], "edges": [{"from": "A", "to": "A"}]}}
+    assert panel_rows(g)[1] == [["node", "A", "", "a", ""], ["edge", "A", "A", "", ""]]
+    h = {"kind": "histogram", "data": {"bins": [{"from": 0, "to": 1, "count": 4}]}}
+    assert panel_rows(h) == (["From", "To", "Count"], [[0, 1, 4]])
