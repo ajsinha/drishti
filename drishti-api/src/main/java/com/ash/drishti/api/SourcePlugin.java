@@ -55,6 +55,15 @@ public interface SourcePlugin extends AutoCloseable {
         return false;
     }
 
+    /**
+     * When this source last received new data (a message, a refresh that changed something, a new table version), or
+     * null when it cannot tell (a database read on demand). Views say how old their data is from it, and a connector's
+     * {@code stale-after} setting turns it into a warning.
+     */
+    default java.time.Instant lastUpdate() {
+        return null;
+    }
+
     /** Entities of {@code kind} that reference {@code target} (for example trades in a netting set). */
     default List<EntityRef> reverse(EntityRef target, String kind) {
         return List.of();

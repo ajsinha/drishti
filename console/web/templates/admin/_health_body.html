@@ -25,11 +25,12 @@
 
 <h2 class="ws-h">Connectors</h2>
 <section class="pnl"><div class="pnl-b"><div class="tbl-wrap"><table class="tbl hl-tbl">
-  <thead><tr><th>Connector</th><th>Status</th><th>Kinds</th><th class="num">Reads</th><th class="num">Errors</th><th class="num">p50 ms</th><th class="num">p99 ms</th><th>Last error</th><th>Cache</th></tr></thead>
+  <thead><tr><th>Connector</th><th>Status</th><th>Last update</th><th>Kinds</th><th class="num">Reads</th><th class="num">Errors</th><th class="num">p50 ms</th><th class="num">p99 ms</th><th>Last error</th><th>Cache</th></tr></thead>
   <tbody>{% for s in h.sources %}{% set r = s.reads %}
     <tr class="{{ 'hl-row-down' if s.status == 'DOWN' else '' }}">
       <td class="mono">{{ s.name }}<div class="cmp-path">{{ [('live' if s.live else ''), ('dated' if s.dated else ''), ('search' if s.search else '')] | select | join(' · ') }}</div></td>
       <td><span class="hl-badge hl-{{ tone[s.status] }}">{{ s.status }}</span>{% if s.status != 'UP' %}<div class="cmp-path">{{ s.health }}</div>{% endif %}</td>
+      <td class="mono{% if s.stale %} t-warn{% endif %}" title="{% if s.staleAfter %}stale after {{ s.staleAfter }}{% else %}no stale-after set{% endif %}">{{ (s.lastUpdate or '—')[:19] | replace('T', ' ') }}{% if s.stale %}<div class="cmp-path">behind: no new data within {{ s.staleAfter }}</div>{% endif %}</td>
       <td title="{{ s.kinds | join(', ') }}">{{ s.kinds | length }}</td>
       <td class="num mono">{{ r.reads or 0 }}{% if r.reads %}<div class="cmp-path">{{ r.found }} found · {{ r.notHeld }} not held</div>{% endif %}</td>
       <td class="num mono{% if r.errors %} t-neg{% endif %}">{{ r.errors or 0 }}</td>

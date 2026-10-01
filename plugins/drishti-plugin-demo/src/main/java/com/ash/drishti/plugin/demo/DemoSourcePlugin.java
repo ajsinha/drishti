@@ -91,7 +91,16 @@ public final class DemoSourcePlugin implements SourcePlugin {
     }
 
     /** One step for every subscribed live document; runs on the single scheduler thread. */
+    /** The last tick: the demo's samples change only by ticking. */
+    private volatile java.time.Instant lastUpdate = java.time.Instant.now();
+
+    @Override
+    public java.time.Instant lastUpdate() {
+        return lastUpdate;
+    }
+
     void tick() {
+        lastUpdate = java.time.Instant.now();
         listeners.forEach((ref, subs) -> {
             if (subs.isEmpty()) {
                 return;

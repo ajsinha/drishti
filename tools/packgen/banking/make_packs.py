@@ -111,6 +111,8 @@ def manifest(name: str) -> dict:
                                              "settings": {"bootstrap-servers": "${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}",
                                                           "topics": "${DRISHTI_TRADING_TOPIC:drishti.trading.trades}",
                                                           "kind": "trade", "id-field": "tradeId",
+                                                          # a live stream with no new trade for this long is shown as behind
+                                                          "stale-after": "${DRISHTI_STREAM_STALE_AFTER:15m}",
                                                           # the day's live trades on local disk, in this connector's own RocksDB store
                                                           "disk-cache.enabled": "${DRISHTI_STREAM_DISK_CACHE:true}",
                                                           "disk-cache.root": "${DRISHTI_CACHE_ROOT:./data/cache}",
@@ -122,6 +124,7 @@ def manifest(name: str) -> dict:
             m["connectors"][f"{feed}-feed"] = {"plugin": "feed", "enabled": "${" + switch + ":false}", "kinds": kinds_,
                                                "settings": {"feed": feed,
                                                             "user-agent": "${drishti.branding.product:feed} public data feed connector",
+                                                            "stale-after": "4d",   # daily feeds: covers a weekend and a holiday
                                                             "refresh-minutes": 60, **extra}}
     if name in COLUMNS:
         m["columns"] = COLUMNS[name]

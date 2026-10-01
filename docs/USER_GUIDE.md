@@ -581,11 +581,21 @@ curl -s 'http://localhost:18480/api/v1/history/trade/T-10001/diff?from=2026-09-2
 
 It also takes `fromKnownAt` and `toKnownAt`. See [API_GUIDE.md](API_GUIDE.md).
 
+## How fresh is it
+
+The footer of every view names the source and says how long ago it last received new data: *trading-stream ·
+updated 2 min ago · gen 41*. The age keeps counting while the page is open. When a source has received nothing for
+longer than it should (its `stale-after`, set by your administrator), the view shows an amber banner at the top:
+*trading-stream is behind: its last new data was 25 min ago, and it expects some within 15m. What you see may be out
+of date.* Sources read on demand (a database) cannot tell, and show no age.
+
 ## A number over time
 
 Click a number in a view (a strip value, a field, a cell of a table) and a window shows that field over the last 30
 business days: a line chart, and the values day by day with the date the data is for and the connector it came from.
 Choose 10, 30, 90 or 250 days at the top. Links still open what they name; a number that is a link opens the link.
+The first line says where the value comes from: the path in the document, the connector, the business date the data
+is for and the source's generation, with a link to the raw document.
 
 Worked example: open `TRD T-10001`, click the MTM in the strip. You see *MTM (USD) · T-10001 over time*, a line
 over 30 business days, and below it the values, newest first, each with *Data for* and *Source* (`trading-store`).

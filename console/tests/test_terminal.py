@@ -405,3 +405,20 @@ def test_field_history_and_searches_compared_between_dates(client):
     module = client.app.state.templates.env.get_template("_macros/panels.html").module
     html = str(module.table({"columns": ["MTM"], "numeric": [True], "rows": [{"cells": [{"text": "125", "path": "$.mtm"}]}]}))
     assert 'data-path="$.mtm"' in html
+
+
+def test_a_view_says_how_fresh_its_data_is_and_warns_when_stale(client, monkeypatch):
+    import json as _json
+    from tests.conftest import FIXTURES
+    vm = _json.loads((FIXTURES / "view_trade_IRS-48213.json").read_text())
+    vm["provenance"].update({"updatedAt": "2026-09-30T20:00:00Z", "staleAfter": "PT15M", "stale": True})
+    backend = client.app.state.backend
+
+    async def stale_view(kind, id_, user):
+        return vm
+    monkeypatch.setattr(backend, "view", stale_view)
+    page = client.get("/v/trade/IRS-48213").text
+    assert "is behind" in page and "15m" in page and 'data-age="2026-09-30T20:00:00Z"' in page
+    vm["provenance"].update({"stale": False})
+    page = client.get("/v/trade/IRS-48213").text
+    assert "is behind" not in page and "updated <span data-age" in page

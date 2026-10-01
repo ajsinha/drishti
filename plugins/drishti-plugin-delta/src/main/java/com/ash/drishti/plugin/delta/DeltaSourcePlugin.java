@@ -250,12 +250,29 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     }
 
     /** Rebuilds the search index from each table's newest partition (identifiers are stable across dates). */
+    /** The newest commit time among the domain's tables (data loaded, appended or restated). */
+    private volatile java.time.Instant lastUpdate;
+    private final Map<String, Long> versions = new java.util.concurrent.ConcurrentHashMap<>();
+
+    @Override
+    public java.time.Instant lastUpdate() {
+        return lastUpdate;
+    }
+
     void reindex() {
         discoverTables();
         List<EntityHit> hits = new ArrayList<>();
         for (String kind : tables.keySet()) {
             try {
                 layout(kind, null).ifPresent(l -> {
+                    Long was = versions.put(kind, l.version());
+                    if (was == null || was != l.version()) {
+                        java.time.Instant committed = java.time.Instant.ofEpochMilli(l.timestamp());   // the version's commit time
+                        java.time.Instant before = lastUpdate;
+                        if (before == null || committed.isAfter(before)) {
+                            lastUpdate = committed;
+                        }
+                    }
                     if (!l.files().isEmpty()) {
                         part(kind, l, l.files().lastKey()).docs().keySet()
                                 .forEach(id -> hits.add(new EntityHit(EntityRef.of(kind, id), id, kind + " · " + sourceName)));

@@ -129,9 +129,28 @@ public final class FileSourcePlugin implements SourcePlugin {
         }
     }
 
+    /** The newest file's modification time: when the folder last received new data. */
+    private volatile java.time.Instant lastUpdate;
+
+    @Override
+    public java.time.Instant lastUpdate() {
+        return lastUpdate;
+    }
+
     void rescan() {
         if (!Files.isDirectory(root)) {
             return;
+        }
+        try (Stream<Path> all = Files.walk(root)) {
+            all.filter(Files::isRegularFile).map(f -> {
+                try {
+                    return Files.getLastModifiedTime(f).toInstant();
+                } catch (IOException e) {
+                    return null;
+                }
+            }).filter(java.util.Objects::nonNull).max(java.util.Comparator.naturalOrder()).ifPresent(t -> lastUpdate = t);
+        } catch (IOException | java.io.UncheckedIOException e) {
+            // the next rescan tries again
         }
         List<EntityHit> hits = new ArrayList<>();
         List<LocalDate> found = new ArrayList<>();

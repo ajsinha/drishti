@@ -17,6 +17,15 @@
    a link is under it) still follows the link. */
 (function () {
   'use strict';
+  // Ages: "updated 3 min ago" from an ISO time, kept current while the page is open.
+  function ago(iso) {
+    var s = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 1000));
+    if (isNaN(s)) { return iso; }
+    return s < 60 ? s + ' s ago' : s < 3600 ? Math.round(s / 60) + ' min ago' : s < 172800 ? Math.round(s / 3600) + ' h ago' : Math.round(s / 86400) + ' days ago';
+  }
+  function ages() { document.querySelectorAll('[data-age]').forEach(function (el) { el.textContent = ago(el.getAttribute('data-age')); }); }
+  ages();
+  setInterval(ages, 30000);
   var view = document.querySelector('[data-view]');
   if (!view || document.querySelector('[data-embed]')) { return; }
   var kind = view.getAttribute('data-kind'), id = view.getAttribute('data-id');
@@ -35,7 +44,7 @@
       + '<select data-days aria-label="Business days"><option value="10">10 days</option><option value="30" selected>30 days</option>'
       + '<option value="90">90 days</option><option value="250">250 days</option></select>'
       + '<button type="button" class="fk" data-close aria-label="Close">×</button></span></header>'
-      + '<p class="hist-msg text-muted-d" data-msg></p><div class="hist-chart" data-chart-box></div>'
+      + '<p class="hist-origin" data-origin></p><p class="hist-msg text-muted-d" data-msg></p><div class="hist-chart" data-chart-box></div>'
       + '<div class="tbl-wrap hist-tbl"><table class="tbl" data-plain><thead><tr><th>Business date</th><th class="num">Value</th>'
       + '<th>Data for</th><th>Source</th></tr></thead><tbody data-rows></tbody></table></div>';
     document.body.appendChild(dlg);
@@ -53,6 +62,14 @@
       .then(function (res) {
         if (!res.ok) { msg.textContent = (res.body.code || 'Error') + ': ' + res.body.detail; return; }
         var pts = res.body.points || [], numeric = pts.filter(function (p) { return typeof p.value === 'number'; });
+        var latest = pts[pts.length - 1] || {};
+        dlg.querySelector('[data-origin]').innerHTML = latest.source
+          ? 'Where it comes from: <b class="mono">' + esc(latest.value == null ? '—' : typeof latest.value === 'number' ? latest.value.toLocaleString() : latest.value)
+            + '</b> at <span class="mono">' + esc(res.body.path) + '</span> in ' + esc(kind) + ' <span class="mono">' + esc(id) + '</span>, from <b class="mono">'
+            + esc(latest.source) + '</b>' + (latest.dataDate ? ', data for <span class="mono">' + esc(latest.dataDate) + '</span>' : ', undated (current data)')
+            + (latest.generation != null ? ', generation <span class="mono">' + esc(latest.generation) + '</span>' : '') + '. '
+            + '<a class="lnk" href="/api/raw/' + encodeURIComponent(kind) + '/' + encodeURIComponent(id) + '" target="_blank" rel="noopener">Raw document</a>'
+          : '';
         msg.textContent = res.body.dated ? numeric.length + ' of ' + pts.length + ' business days have a value.'
           : 'No source keeps history for this entity: the value is today’s, the same every day.';
         dlg.querySelector('[data-rows]').innerHTML = pts.slice().reverse().map(function (p) {

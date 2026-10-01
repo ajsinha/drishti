@@ -142,8 +142,17 @@ public abstract class MessageStateSource implements SourcePlugin {
     }
 
     /** Applies one message: stores the entity's latest document (or removes it) and pushes it to live views. */
+    /** When the last message arrived: when this source last received new data. */
+    private volatile java.time.Instant lastUpdate;
+
+    @Override
+    public java.time.Instant lastUpdate() {
+        return lastUpdate;
+    }
+
     protected final void accept(Inbound m) {
         received.incrementAndGet();
+        lastUpdate = java.time.Instant.now();
         try {
             String kind = kindOf.getOrDefault(m.destination(), defaultKind);
             String id;

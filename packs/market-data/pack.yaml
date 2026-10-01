@@ -274,6 +274,7 @@ connectors:
     settings:
       feed: nyfed-sofr
       user-agent: ${drishti.branding.product:feed} public data feed connector
+      stale-after: 4d
       refresh-minutes: 60
   ecb-estr-feed:
     plugin: feed
@@ -283,6 +284,7 @@ connectors:
     settings:
       feed: ecb-estr
       user-agent: ${drishti.branding.product:feed} public data feed connector
+      stale-after: 4d
       refresh-minutes: 60
   ecb-fx-feed:
     plugin: feed
@@ -292,6 +294,7 @@ connectors:
     settings:
       feed: ecb-fx
       user-agent: ${drishti.branding.product:feed} public data feed connector
+      stale-after: 4d
       refresh-minutes: 60
   us-treasury-feed:
     plugin: feed
@@ -301,6 +304,7 @@ connectors:
     settings:
       feed: us-treasury
       user-agent: ${drishti.branding.product:feed} public data feed connector
+      stale-after: 4d
       refresh-minutes: 60
   fred-feed:
     plugin: feed
@@ -310,6 +314,7 @@ connectors:
     settings:
       feed: fred
       user-agent: ${drishti.branding.product:feed} public data feed connector
+      stale-after: 4d
       refresh-minutes: 60
       api-key: ${FRED_API_KEY:}
       series: ${DRISHTI_FRED_SERIES:DGS10,DFF}

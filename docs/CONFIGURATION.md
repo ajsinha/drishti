@@ -498,6 +498,22 @@ These go under `drishti.sources.plugins.<plugin>.settings` (single instance) or
 in provenance and health (default: the connector's name, or the plugin's name). Writing a plugin of your own is
 described in [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md).
 
+Every plugin also takes **`stale-after`**: a duration (`15m`, `2h`, `4d`). When the connector has received nothing new
+for longer than that, it is *stale*: Admin → Health shows it in amber and turns the overall status `DEGRADED`, and
+views of its entities show a banner saying the data may be out of date. Without it a connector is never stale. It
+only means something for sources that know when they last got data (Kafka, ActiveMQ, RabbitMQ, Delta, file, feeds,
+demo). The packs set it for the trading stream (`DRISHTI_STREAM_STALE_AFTER`, default `15m`) and the daily public
+feeds (`4d`, which covers a weekend and a holiday).
+
+```yaml
+drishti:
+  sources:
+    connectors:
+      trading-stream:
+        settings:
+          stale-after: 5m        # trades arrive all day: five quiet minutes means something is wrong
+```
+
 ### `delta` — Delta Lake
 
 Layout: `<root>/<domain>/<kind>/business_date=yyyy-MM-dd/` holding `(id, doc)` rows.

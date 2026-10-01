@@ -16,6 +16,12 @@
 # Changelog
 
 ## Unreleased
+- **Data freshness.** Every view's footer says when its source last received new data ("updated 2 min ago"). A connector's `stale-after` setting marks it behind:
+  - **On the view:** an amber banner.
+  - **In Admin → Health:** a new **Last update** column, and the overall status turns `DEGRADED`.
+  - **Sources that report it:** Kafka, ActiveMQ, RabbitMQ, Delta, file, feeds and demo.
+  - **Pack defaults:** the trading stream (15 minutes) and the daily feeds (4 days).
+  - **Where a value comes from:** the history window says which path, connector, business date and generation it came from, with a link to the raw document.
 - **Field history.**
   - **In a view:** click a number to see that field over the last 10, 30, 90 or 250 business days, as a chart and a table with the date the data is for and its connector.
   - **On the search page:** **Compare with** runs a search on two dates, showing each number's change and marking entities added or removed.

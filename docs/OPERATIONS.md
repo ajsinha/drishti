@@ -444,6 +444,7 @@ These are read by the packs' `pack.yaml` files (`connectors:` sections).
 | `DRISHTI_STREAM_TRADING` | `false` | `trading` pack, `trading-stream` | read live trades from Kafka |
 | `DRISHTI_KAFKA_BOOTSTRAP` | `localhost:9092` | `trading-stream` | Kafka bootstrap servers |
 | `DRISHTI_TRADING_TOPIC` | `drishti.trading.trades` | `trading-stream` | the topic |
+| `DRISHTI_STREAM_STALE_AFTER` | `15m` | `trading-stream` | with no new trade for this long the stream is shown as behind (`stale-after`) |
 | `DRISHTI_STREAM_DISK_CACHE` | `true` | `trading-stream` | keep the day's messages in a local RocksDB disk cache |
 | `DRISHTI_CACHE_ROOT` | `./data/cache` | `trading-stream` | parent folder of the disk caches (one sub-folder per connector) |
 | `DRISHTI_STREAM_CACHE_GB` | `10` | `trading-stream` | disk cache size limit; oldest files are dropped beyond it |
@@ -933,6 +934,7 @@ curl -s localhost:18480/api/v1/admin/health | python3 -m json.tool | head -40
         { "name": "credit-store", "version": "1.0", "status": "UP", "health": "UP",
           "kinds": ["credit-limit", "cva", "exposure-profile", "netting-set", "sa-ccr"],
           "live": false, "dated": true, "search": true,
+          "lastUpdate": "2026-09-30T21:04:11Z", "staleAfter": null, "stale": false,
           "reads": { "reads": 4, "found": 4, "notHeld": 0, "errors": 0, "lastError": null, "lastErrorAt": null,
                      "lastOkAt": "2026-10-01T00:57:54.993176502Z", "p50Ms": 11.07, "p99Ms": 18.604 },
           "cache": { "tables": 5, "partitions": 7, "timeTravel": 0 } },
@@ -950,8 +952,13 @@ curl -s localhost:18480/api/v1/admin/health | python3 -m json.tool | head -40
 
 How to read it:
 
-- **`status`**: `OK`; `DEGRADED` when any source is down, a connector failed to start (`failedToStart`) or a pack has
-  a problem; `DOWN` when no source is up at all.
+- **`status`**: `OK`; `DEGRADED` when any source is down or stale, a connector failed to start (`failedToStart`) or
+  a pack has a problem; `DOWN` when no source is up at all.
+- **`lastUpdate`** is when the connector last received new data: the newest Kafka message, ActiveMQ or RabbitMQ
+  message, Delta table commit, file in a file connector's folder, feed refresh that brought data, or demo tick. It is
+  null for sources read on demand (PostgreSQL, Aerospike, S3), which cannot tell. **`stale`** is true when nothing new
+  arrived for longer than the connector's `stale-after` setting (`staleAfter`, an ISO-8601 duration such as `PT15M`).
+  The **Last update** column shows it, in amber when stale. Views of that source's entities show a "behind" banner.
 - **A source** is `UP` or `DOWN`; `health` carries the plugin's own text (the reason, when down). `reads.errors`,
   `lastError` and `lastErrorAt` show the most recent failure; `p99Ms` its read latency.
 - **A pack** is `DEGRADED` when one of its Sutras has problems or one of its connectors is down. `connectorsOff`

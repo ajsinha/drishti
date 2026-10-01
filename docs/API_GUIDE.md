@@ -1063,3 +1063,10 @@ date), oldest first: `{ref, path, label, dated, points: [{date, value, dataDate,
 `date` means the source carried an older day; `dated: false` means no dated source holds the entity (one value).
 A path that is not an expression answers `400 DRS-5001`.
 
+## How fresh a view is
+
+Every view's `provenance` has `updatedAt` (when its source last received new data, or null when the source cannot
+tell), `staleAfter` (the source's `stale-after` as an ISO-8601 duration, or null) and `stale` (true when nothing new
+arrived within `staleAfter`; always false on a picked business date). Admin health carries the same per connector as
+`lastUpdate`, `staleAfter` and `stale`.
+

@@ -89,8 +89,9 @@ public class HistoryController {
      * @param value the field's value that day (null when the entity or the field was not there)
      * @param dataDate the business date the data is for: earlier than {@code date} when a source carried an older day
      * @param source the connector that answered
+     * @param generation the source's version of the document
      */
-    public record Point(LocalDate date, Object value, LocalDate dataDate, String source) {}
+    public record Point(LocalDate date, Object value, LocalDate dataDate, String source, Long generation) {}
 
     /** A field over business days, oldest first; {@code dated} is false when no dated source answered (one value repeated). */
     public record Series(ViewModelRef ref, String path, String label, List<Point> points, boolean dated) {}
@@ -130,7 +131,7 @@ public class HistoryController {
             try {
                 doc = reads.get(i).join();
             } catch (CompletionException e) {
-                points.add(new Point(list.get(i), null, null, null));      // not there that day
+                points.add(new Point(list.get(i), null, null, null, null));      // not there that day
                 continue;
             }
             dated |= doc.provenance().businessDate() != null;
@@ -144,7 +145,7 @@ public class HistoryController {
             } catch (RuntimeException e) {
                 v = null;
             }
-            points.add(new Point(list.get(i), v, doc.provenance().businessDate(), doc.provenance().source()));
+            points.add(new Point(list.get(i), v, doc.provenance().businessDate(), doc.provenance().source(), doc.provenance().generation()));
         }
         return new Series(new ViewModelRef(kind, id), expr, label(expr.substring(2)), points, dated);
     }

@@ -60,6 +60,7 @@ connectors:
       topics: ${DRISHTI_TRADING_TOPIC:drishti.trading.trades}
       kind: trade
       id-field: tradeId
+      stale-after: ${DRISHTI_STREAM_STALE_AFTER:15m}
       disk-cache.enabled: ${DRISHTI_STREAM_DISK_CACHE:true}
       disk-cache.root: ${DRISHTI_CACHE_ROOT:./data/cache}
       disk-cache.max-gb: ${DRISHTI_STREAM_CACHE_GB:10}

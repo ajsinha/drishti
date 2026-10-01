@@ -44,12 +44,16 @@ class HealthApiTest {
 
     @Test
     void reportsConnectorsPacksAndLiveForAdminsOnly() throws Exception {
-        mvc.perform(get("/api/v1/views/trade/IRS-48213").header("Authorization", as("admin"))).andExpect(status().isOk());
+        mvc.perform(get("/api/v1/views/trade/IRS-48213").header("Authorization", as("admin"))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.provenance.updatedAt").exists())          // how old the data is
+                .andExpect(jsonPath("$.provenance.stale").value(false));
         mvc.perform(get("/api/v1/views/trade/NOPE-1").header("Authorization", as("admin")));
         mvc.perform(get("/api/v1/admin/health").header("Authorization", as("admin")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").exists())
                 .andExpect(jsonPath("$.sources[?(@.name=='demo')].status").value(hasItem("UP")))
+                .andExpect(jsonPath("$.sources[?(@.name=='demo')].lastUpdate").value(hasItem(org.hamcrest.Matchers.notNullValue())))
+                .andExpect(jsonPath("$.sources[?(@.name=='demo')].stale").value(hasItem(false)))
                 .andExpect(jsonPath("$.sources[?(@.name=='demo')].reads.found").value(hasItem(greaterThan(0))))
                 .andExpect(jsonPath("$.sources[?(@.name=='demo')].reads.notHeld").value(hasItem(greaterThan(0))))
                 .andExpect(jsonPath("$.sources[?(@.name=='demo')].reads.p99Ms").exists())

@@ -99,8 +99,17 @@ public record ViewModel(
      * @param live whether the source pushes updates
      */
     /** @param businessDate the business date the data is for, or {@code null} when the source is not dated */
+    /**
+     * Where a view came from. {@code updatedAt}: when its source last received new data (null when it cannot tell);
+     * {@code staleAfter}: the source's threshold (ISO-8601 duration) or null; {@code stale}: older than that.
+     */
     public record Provenance(String layout, String fingerprint, String source, long generation, String fetchedAt, boolean live,
-            String businessDate) {}
+            String businessDate, String updatedAt, String staleAfter, boolean stale) {
+
+        public Provenance(String layout, String fingerprint, String source, long generation, String fetchedAt, boolean live, String businessDate) {
+            this(layout, fingerprint, source, generation, fetchedAt, live, businessDate, null, null, false);
+        }
+    }
 
     /**
      * @param id panel id

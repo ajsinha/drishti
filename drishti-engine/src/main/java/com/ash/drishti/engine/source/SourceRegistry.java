@@ -41,6 +41,18 @@ public final class SourceRegistry implements AutoCloseable {
 
     private final Map<String, SourcePlugin> plugins;
     private final Map<String, String> failures = new LinkedHashMap<>();
+    /** By connector name and by the name its documents carry (source-name): the source and its stale-after. */
+    private final Map<String, SourcePlugin> bySource = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<String, java.time.Duration> staleAfter = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /**
+     * How fresh a source's data is.
+     *
+     * @param lastUpdate when it last received new data, or null when it cannot tell
+     * @param staleAfter its {@code stale-after} setting, or null for none
+     * @param stale true when it has received nothing for longer than {@code staleAfter}
+     */
+    public record Freshness(String source, java.time.Instant lastUpdate, java.time.Duration staleAfter, boolean stale) {}
     private final ScheduledExecutorService scheduler;
 
     public SourceRegistry(List<SourcePlugin> discovered, SourcesProperties props, JsonCodec codec) {
@@ -92,6 +104,20 @@ public final class SourceRegistry implements AutoCloseable {
                 try {
                     starts.get(i).get();
                     started.put(p.manifest().name(), p);
+                    Map<String, String> own = settings.get(p);
+                    String sourceName = own.getOrDefault("source-name", p.manifest().name());
+                    bySource.put(p.manifest().name(), p);
+                    bySource.put(sourceName, p);
+                    String after = own.get("stale-after");
+                    if (after != null && !after.isBlank()) {
+                        try {
+                            java.time.Duration d = org.springframework.boot.convert.DurationStyle.detectAndParse(after.trim());
+                            staleAfter.put(p.manifest().name(), d);
+                            staleAfter.put(sourceName, d);
+                        } catch (IllegalArgumentException bad) {
+                            LOG.warn("{}: stale-after '{}' is not a duration (15m, 2h, 1d); ignored", p.manifest().name(), after);
+                        }
+                    }
                     LOG.info("source plugin started: {}", p.manifest().name());
                 } catch (Exception e) {
                     Throwable cause = e.getCause() == null ? e : e.getCause();
@@ -105,6 +131,22 @@ public final class SourceRegistry implements AutoCloseable {
             }
         }
         this.plugins = Collections.unmodifiableMap(started);
+    }
+
+    /** Freshness of the source a document names ({@code provenance.source}), as of now. */
+    public Freshness freshness(String source) {
+        SourcePlugin p = source == null ? null : bySource.get(source);
+        java.time.Instant last = null;
+        if (p != null) {
+            try {
+                last = p.lastUpdate();
+            } catch (RuntimeException e) {
+                last = null;
+            }
+        }
+        java.time.Duration after = source == null ? null : staleAfter.get(source);
+        boolean stale = after != null && last != null && java.time.Duration.between(last, java.time.Instant.now()).compareTo(after) > 0;
+        return new Freshness(source, last, after, stale);
     }
 
     public Optional<SourcePlugin> plugin(String name) {

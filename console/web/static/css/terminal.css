@@ -594,3 +594,5 @@ table.tbl tr.tbl-filter th::after { content: none; }
 .hist-tbl { max-height: 220px; overflow: auto; margin: 0 .9rem .9rem; }
 .srch-vs { display: inline-flex; align-items: center; gap: .35rem; font-size: .8rem; color: var(--d-muted); }
 .srch-vs input { background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 4px; padding: .15rem .3rem; }
+.hist-origin { margin: .55rem .9rem 0; font-size: .84rem; }
+.stale-banner { border-color: var(--d-warn, #d9a441); }

@@ -182,4 +182,42 @@ class SourceRouterTest {
         assertThat(got).singleElement().satisfies(d -> assertThat(d.data().get("from").asText()).isEqualTo("ticks"));
         assertThat(ticks.listeners).isEmpty();
     }
+
+    /** A source whose last new data is an hour old. */
+    public static final class Quiet implements SourcePlugin {
+        @Override
+        public PluginManifest manifest() {
+            return new PluginManifest("quiet", "t", Set.of("trade"), new SourceCapabilities(true, false, false));
+        }
+
+        @Override
+        public void start(SourceContext c) {}
+
+        @Override
+        public Optional<EntityDocument> fetch(EntityRef ref) {
+            return Optional.empty();
+        }
+
+        @Override
+        public java.time.Instant lastUpdate() {
+            return Instant.now().minusSeconds(3600);
+        }
+    }
+
+    @Test
+    void aSourceWithNothingNewForLongerThanItsStaleAfterIsStale() {
+        var connectors = Map.of(
+                "stream", new SourcesProperties.ConnectorSettings("quiet", true, List.of("trade"),
+                        Map.of("stale-after", "15m")),
+                "patient", new SourcesProperties.ConnectorSettings("quiet", true, List.of("trade"), Map.of("stale-after", "2h")),
+                "silent", new SourcesProperties.ConnectorSettings("quiet", true, List.of("trade"), Map.of()));
+        var props = new SourcesProperties(Map.of(), null, Map.of(), Duration.ofMillis(300), null, connectors);
+        var registry = new SourceRegistry(List.of(new Quiet()), props, new JsonCodec());
+        assertThat(registry.freshness("stream").stale()).isTrue();
+        assertThat(registry.freshness("stream").staleAfter()).isEqualTo(Duration.ofMinutes(15));
+        assertThat(registry.freshness("patient").stale()).isFalse();
+        assertThat(registry.freshness("silent").stale()).isFalse();                  // no stale-after: never stale
+        assertThat(registry.freshness("silent").lastUpdate()).isNotNull();
+        assertThat(registry.freshness("nobody").lastUpdate()).isNull();
+    }
 }

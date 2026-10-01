@@ -210,6 +210,25 @@ public final class SourceRouter {
         return Subscription.NONE;
     }
 
+    /** How fresh the named source's data is (see {@link SourceRegistry#freshness}). */
+    public SourceRegistry.Freshness freshness(String source) {
+        return registry.freshness(source);
+    }
+
+    /**
+     * How fresh a document of this kind is: the source it names when that is a connector, else the connector the kind
+     * is routed to first (documents may carry their system of record's name rather than the connector's).
+     */
+    public SourceRegistry.Freshness freshness(String kind, String source) {
+        SourceRegistry.Freshness named = registry.freshness(source);
+        if (named.lastUpdate() != null || named.staleAfter() != null) {
+            return named;
+        }
+        List<SourcePlugin> routed = candidates(kind);
+        liveFirst(routed);
+        return routed.isEmpty() ? named : registry.freshness(routed.get(0).manifest().name());
+    }
+
     /** Live: sources that stream first, so the view ticks; among them a real stream (Kafka) before the default route. */
     private void liveFirst(List<SourcePlugin> candidates) {
         String fallback = props.defaultRoute();

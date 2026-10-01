@@ -77,6 +77,11 @@ final class ConnectorInstance implements SourcePlugin {
     }
 
     @Override
+    public java.time.Instant lastUpdate() {
+        return delegate.lastUpdate();
+    }
+
+    @Override
     public boolean pushes(EntityRef ref) {
         return serves(ref.kind()) && delegate.pushes(ref);
     }

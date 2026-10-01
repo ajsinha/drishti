@@ -68,6 +68,13 @@ public final class FeedSourcePlugin implements SourcePlugin {
     private String userAgent = "public-data-feed-connector";
     private String sourceName = "feed";
     private volatile String health = "DOWN: not fetched yet";
+    /** The last refresh that brought data. */
+    private volatile java.time.Instant lastUpdate;
+
+    @Override
+    public java.time.Instant lastUpdate() {
+        return lastUpdate;
+    }
     private volatile Instant fetchedAt = Instant.EPOCH;
     private int timeoutSeconds;
 
@@ -109,6 +116,9 @@ public final class FeedSourcePlugin implements SourcePlugin {
             index.replaceAll(hits);
             fetchedAt = Instant.now();
             health = parsed.isEmpty() ? "DOWN: the feed returned no data" : "UP";
+            if (!parsed.isEmpty()) {
+                lastUpdate = java.time.Instant.now();
+            }
         } catch (Exception e) {
             health = "DOWN: " + e.getClass().getSimpleName() + ": " + e.getMessage();
         }

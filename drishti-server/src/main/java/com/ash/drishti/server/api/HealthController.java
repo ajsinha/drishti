@@ -81,6 +81,7 @@ public class HealthController {
         entitlements.requireAdmin(p);
         List<Map<String, Object>> sources = new ArrayList<>();
         int down = 0;
+        int stale = 0;
         for (SourcePlugin s : registry.plugins()) {
             var m = s.manifest();
             Map<String, Object> row = new LinkedHashMap<>();
@@ -96,6 +97,11 @@ public class HealthController {
             row.put("dated", m.capabilities().dated());
             row.put("search", m.capabilities().search());
             row.put("reads", router.stats().snapshot(m.name()));
+            var fresh = registry.freshness(m.name());
+            row.put("lastUpdate", fresh.lastUpdate());
+            row.put("staleAfter", fresh.staleAfter() == null ? null : fresh.staleAfter().toString());
+            row.put("stale", fresh.stale());
+            stale += fresh.stale() ? 1 : 0;
             try {
                 row.put("cache", s.cacheStats());
             } catch (RuntimeException e) {
@@ -109,7 +115,8 @@ public class HealthController {
         Map<String, Object> out = new LinkedHashMap<>();
         List<Map<String, Object>> packRows = packs(sources);
         long packProblems = packRows.stream().filter(r -> !"OK".equals(r.get("status"))).count();
-        String overall = sources.isEmpty() || down == sources.size() ? "DOWN" : down > 0 || !failures.isEmpty() || packProblems > 0 ? "DEGRADED" : "OK";
+        String overall = sources.isEmpty() || down == sources.size() ? "DOWN"
+                : down > 0 || stale > 0 || !failures.isEmpty() || packProblems > 0 ? "DEGRADED" : "OK";   // stale: behind its stale-after
         out.put("status", overall);
         out.put("summary", Map.of("sources", sources.size(), "sourcesDown", down, "failedToStart", failures.size(), "packs", packRows.size(),
                 "packsWithProblems", packProblems));
