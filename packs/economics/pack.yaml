@@ -16,6 +16,7 @@
 # Economics pack for Drishti.
 pack: economics
 version: 1.0.0
+code: ECO
 title: Economics
 description: Economies, macro indicators and releases, central-bank decisions, forecasts, trade flows, labour markets, fiscal positions and price
   baskets.

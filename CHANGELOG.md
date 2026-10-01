@@ -16,6 +16,7 @@
 # Changelog
 
 ## Unreleased
+- **Pack overviews.** Type a pack's code alone (`MKT <GO>`, or its name) to see every kind you may open, with its mnemonic, how many the sources hold, an example and the key fields; each mnemonic opens that kind's pick list. Every pack has a `code:` (BNK, MKT, TRDS, MRSK, CCR, LIQ, CLI, OPR, RTL, GENO, ECO, POLS, FIN, LOGI). API: `GET /api/v1/packs/{code or name}/overview`.
 - **Pick lists show key fields for every generated pack.** Climate, economics, genomics, liquidity, operational risk, politics and retail declare `columns:` for their main kinds (for example `MTG` shows borrower, balance, rate, LTV, remaining years and days past due).
 - **JDBC query mode: JSON columns become nested data.** Columns of type `json`/`jsonb`, and text columns listed in `json-columns`, are parsed, so `legs[0].rate` works in a Sutra. A cell that is not JSON stays text. A `jdbc` plugin with no `url` now stays idle (`PluginNotConfigured`) instead of failing.
 - **The lake finds new tables without a restart.** A Delta connector without a fixed `kinds` list now lists its domain's tables at every reindex (a minute by default), so a kind loaded into the lake while the server runs is served within a minute.

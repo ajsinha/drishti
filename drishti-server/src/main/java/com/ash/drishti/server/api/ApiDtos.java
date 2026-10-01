@@ -35,11 +35,16 @@ public final class ApiDtos {
      * @param mnemonic the kind's mnemonic
      * @param list the pick list to show instead ({@code /search?q=}), when {@code ref} is null
      * @param matched how many entities the pick list holds
+     * @param pack the pack whose overview to show instead (its code or name was typed alone), or null
      */
-    public record CommandResponse(ViewModel.Ref ref, String mnemonic, String list, Integer matched) {
+    public record CommandResponse(ViewModel.Ref ref, String mnemonic, String list, Integer matched, String pack) {
 
         public CommandResponse(ViewModel.Ref ref, String mnemonic) {
-            this(ref, mnemonic, null, null);
+            this(ref, mnemonic, null, null, null);
+        }
+
+        public CommandResponse(ViewModel.Ref ref, String mnemonic, String list, Integer matched) {
+            this(ref, mnemonic, list, matched, null);
         }
     }
 

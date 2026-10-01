@@ -16,6 +16,7 @@
 # Liquidity risk pack for Drishti.
 pack: liquidity-risk
 version: 1.0.0
+code: LIQ
 title: Liquidity risk
 description: LCR and NSFR by legal entity, maturity ladders, HQLA holdings, funding sources, liquidity stress survival and intraday liquidity.
 extends:

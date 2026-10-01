@@ -32,6 +32,12 @@ public record Pack(String name, String version, String title, String description
 
     /** The entity kinds this pack owns. */
     @SuppressWarnings("unchecked")
+    /** The pack's short code ({@code MKT}): typed alone on the command line it opens the pack's overview; "" when none. */
+    public String code() {
+        Object c = manifest.get("code");
+        return c == null ? "" : String.valueOf(c).trim().toUpperCase(java.util.Locale.ROOT);
+    }
+
     public java.util.List<String> kinds() {
         Object k = manifest.get("kinds");
         return k instanceof java.util.List<?> l ? l.stream().map(String::valueOf).toList() : java.util.List.of();

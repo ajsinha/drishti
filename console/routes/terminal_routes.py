@@ -64,6 +64,8 @@ async def go(request: Request, q: str = ""):
         r = await request.app.state.backend.command(q, ident(request))
     except BackendError as e:
         return RedirectResponse(f"/t?error={quote(e.detail)}", status_code=303)
+    if r.get("pack"):                       # a pack's code typed alone (MKT): its overview
+        return RedirectResponse(f"/p/{quote(r['pack'])}", status_code=303)
     if not r.get("ref"):                    # several (or no) entities: a pick list, as on a Bloomberg terminal
         return RedirectResponse(f"/s?q={quote(r.get('list') or q)}", status_code=303)
     return RedirectResponse(f"/v/{r['ref']['kind']}/{quote(r['ref']['id'])}", status_code=303)
@@ -97,6 +99,16 @@ def _delta(d) -> str:
         return ""
     text = f"{d:+,.6f}".rstrip("0").rstrip(".")
     return text.replace("-", "−")
+
+
+@router.get("/p/{name}")
+async def pack_overview(request: Request, name: str):
+    """A pack at a glance: every kind you may open, its mnemonic, how many there are, an example, the key fields."""
+    try:
+        data = await request.app.state.backend.pack_overview(name, ident(request))
+    except BackendError as e:
+        return render(request, "terminal/missing.html", status_code=e.status if e.status < 500 else 502, kind="pack", id=name, error=e)
+    return render(request, "terminal/pack.html", p=data, screen="pack")
 
 
 @router.get("/s")

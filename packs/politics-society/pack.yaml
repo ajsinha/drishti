@@ -16,6 +16,7 @@
 # Politics and society pack for Drishti.
 pack: politics-society
 version: 1.0.0
+code: POLS
 title: Politics and society
 description: Jurisdictions, parties, candidates, elections, opinion polls, bills, regions and social indicators (fictional polities).
 extends: []

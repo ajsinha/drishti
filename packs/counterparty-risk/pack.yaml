@@ -16,6 +16,7 @@
 # Counterparty credit risk pack for Drishti.
 pack: counterparty-risk
 version: 1.0.0
+code: CCR
 title: Counterparty credit risk
 description: Netting sets, exposure and PFE, CVA/XVA, SA-CCR, credit limits, collateral, margin calls and SIMM.
 extends:

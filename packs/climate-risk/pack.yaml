@@ -16,6 +16,7 @@
 # Climate risk pack for Drishti.
 pack: climate-risk
 version: 1.0.0
+code: CLI
 title: Climate risk
 description: Counterparty climate profiles, PCAF financed emissions, NGFS scenarios, climate stress, physical-risk assets and the green asset
   ratio.

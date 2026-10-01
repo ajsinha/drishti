@@ -1,0 +1,41 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}{{ p.title }} · {{ PRODUCT }}{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm search">
+  <h1>{{ p.title }}{% if p.code %} <span class="role mono">{{ p.code }}</span>{% endif %}</h1>
+  <p class="text-muted-d">{{ p.description }}{% if p.extends %} Builds on {{ p.extends | join(', ') }}.{% endif %}
+    Pick a kind to list its entities; type the mnemonic and an id (or the start of one) on the command line to go straight there.</p>
+  {% if p.kinds %}
+  <section class="pnl"><div class="pnl-b"><div class="tbl-wrap"><table class="tbl" aria-label="{{ p.title }} kinds">
+    <thead><tr><th>Mnemonic</th><th>Kind</th><th class="num">How many</th><th>Example</th><th>Key fields</th></tr></thead>
+    <tbody>{% for k in p.kinds %}
+      <tr>
+        <td><a class="lnk mono" href="/s?q={{ (k.mnemonic or k.kind) | urlencode }}">{{ k.mnemonic or '—' }}</a></td>
+        <td>{{ k.label }} <span class="text-muted-d mono">{{ k.kind }}</span></td>
+        <td class="num mono">{{ '{:,}'.format(k.count) }}{% if k.more %}+{% endif %}</td>
+        <td class="mono">{% if k.example %}<a class="lnk" href="/v/{{ k.kind }}/{{ k.example | urlencode }}">{{ (k.mnemonic ~ ' ') if k.mnemonic else '' }}{{ k.example }}</a>{% else %}—{% endif %}</td>
+        <td class="text-muted-d">{{ k.columns | join(', ') or 'the first fields of each document' }}</td>
+      </tr>
+    {% endfor %}</tbody>
+  </table></div></div></section>
+  {% else %}<p class="text-muted-d">None of this pack's kinds is open to you.</p>{% endif %}
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script>{% endblock %}

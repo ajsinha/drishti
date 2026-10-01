@@ -69,6 +69,9 @@ EXAMPLES = {  # command, what it shows (ids from make_data.py's deterministic da
 }
 TRADER_KINDS = ["trade", *layout.PACKS["market-data"]["kinds"]["market"], "counterparty", "counterparty-group", "issuer", "book", "desk",
                 "trader", "legal-entity", "calendar", "agreement", "csa", "ccp", "clearing-account"]
+# the pack's own code: typed alone it opens the pack's overview (its kinds, mnemonics and counts)
+CODES = {"banking-core": "BNK", "market-data": "MKT", "trading": "TRDS", "market-risk": "MRSK", "counterparty-risk": "CCR"}
+
 # key fields shown beside each entity in pick lists (TRD T-100, CPTY north) and searches
 COLUMNS = {"trading": {"trade": ["productType", "direction", "currency", "notional", "mtm", "maturityDate", "book"]},
            "banking-core": {"counterparty": ["name", "rating", "sector", "country", "netMtm"],
@@ -94,7 +97,7 @@ def manifest(name: str) -> dict:
     kinds = [k for ks in p["kinds"].values() for k in ks]
     specs = {k.kind: k for k in T.KINDS + [T.TRADE]}
     fields = {f: {"kind": kind, "label": label} for f, (kind, label) in T.graph_fields().items() if kind in kinds}
-    m = {"pack": name, "version": "1.0.0", "title": p["title"], "description": p["description"], "extends": p["requires"],
+    m = {"pack": name, "version": "1.0.0", "code": CODES[name], "title": p["title"], "description": p["description"], "extends": p["requires"],
          "kinds": kinds, "sutras": "sutras", "formats": "config/formats.yaml",
          **({"semantics": "config/semantics.yaml"} if name == "banking-core" else {}),
          "mnemonics": {specs[k].mnemonic: {"kind": k, "label": specs[k].label} for k in kinds},

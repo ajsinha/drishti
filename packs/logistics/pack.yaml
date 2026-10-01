@@ -15,6 +15,7 @@
 # Logistics · ocean freight pack for Drishti: proves the core carries no industry of its own.
 pack: logistics
 version: 1.0.0
+code: LOGI             # typed alone, opens this pack's overview
 title: Logistics · ocean freight
 description: >-
   Shipments, reefer containers, vessels and ports, with a shipment Sutra, logistics vocabulary for inference

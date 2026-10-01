@@ -126,6 +126,10 @@ class BackendClient:
     async def impact(self, kind: str, id_: str, ident=None) -> dict:
         return await self._get(f"/impact/{kind}/{quote(id_)}", ident)
 
+    async def pack_overview(self, name: str, ident=None) -> dict:
+        """A pack's kinds with their mnemonics, counts, an example and key columns (MKT <GO>)."""
+        return await self._get(f"/packs/{quote(name)}/overview", ident)
+
     async def packs(self, ident=None) -> list:
         return await self._get("/packs", ident)
 

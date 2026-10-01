@@ -16,6 +16,7 @@
 # Banking core pack for Drishti.
 pack: banking-core
 version: 1.0.0
+code: BNK
 title: Banking core
 description: The parties, organisation and legal agreements every banking pack builds on.
 extends: []

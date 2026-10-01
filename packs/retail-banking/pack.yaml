@@ -16,6 +16,7 @@
 # Retail banking pack for Drishti.
 pack: retail-banking
 version: 1.0.0
+code: RTL
 title: Retail banking
 description: Customers, deposit accounts, mortgages, cards, personal loans, branches, collections and IFRS 9 portfolio segments.
 extends:

@@ -54,7 +54,8 @@ class PackSpec:
     generator: str                                  # e.g. tools/packgen/liquidity/make.py
     effective_domains: set[str] = field(default_factory=set)
     roles: dict = field(default_factory=dict)
-    columns: dict[str, list[str]] = field(default_factory=dict)   # kind -> key fields shown in pick lists (pack.yaml columns:)
+    columns: dict[str, list[str]] = field(default_factory=dict)
+    code: str = ""                                  # typed alone, opens the pack's overview (pack.yaml code:)   # kind -> key fields shown in pick lists (pack.yaml columns:)
     impact: dict | None = None
     overview: str = ""                              # prose for the overview guide
     external_ids: dict[str, set[str]] = field(default_factory=dict)   # kind -> ids that live in required packs
@@ -78,7 +79,7 @@ def manifest(spec: PackSpec, known_fields: dict[str, tuple[str, str]]) -> dict:
             elif known_fields[f][0] != target:   # the field already means another kind: its links would go astray
                 raise SystemExit(f"{spec.name}: link field '{f}' of {k.kind} points at {target}, but the banking packs map it to "
                                  f"{known_fields[f][0]}; use another field name")
-    m = {"pack": spec.name, "version": "1.0.0", "title": spec.title, "description": spec.description, "extends": spec.requires,
+    m = {"pack": spec.name, "version": "1.0.0", **({"code": spec.code} if spec.code else {}), "title": spec.title, "description": spec.description, "extends": spec.requires,
          "kinds": [k.kind for k in kinds], "sutras": "sutras",
          "mnemonics": {k.mnemonic: {"kind": k.kind, "label": k.label} for k in kinds},
          "graph": {"id-patterns": [{"pattern": "^" + k.prefix, "kind": k.kind} for k in kinds], "fields": dict(sorted(fields.items()))},

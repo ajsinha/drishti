@@ -325,3 +325,13 @@ def test_readiness_says_whether_the_server_answers(client, backend, monkeypatch)
     r = client.get("/readyz")
     assert r.status_code == 503 and r.json()["server"] == "unreachable"
     assert client.get("/healthz").json()["status"] == "UP"                  # liveness: the process itself
+
+
+
+def test_a_packs_code_opens_its_overview(client):
+    r = client.get("/go", params={"q": "MKT"}, follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == "/p/market-data"
+    page = client.get("/p/market-data").text
+    assert "Market data" in page and "FX volatility surface" in page and "1,234" in page
+    assert 'href="/s?q=FXV"' in page and 'href="/v/fx-vol-surface/FXV-EURUSD"' in page and "currency, index" in page
+    assert client.get("/p/astrology").status_code == 400

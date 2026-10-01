@@ -51,9 +51,11 @@ public class CommandController {
     private final StructuredSearch search;
     private final SourceRouter router;
     private final SearchProperties searchProps;
+    private final com.ash.drishti.server.security.PackAccess packs;
 
     public CommandController(CommandParser parser, SuggestionService suggestions, Mnemonics mnemonics, Entitlements entitlements,
-            StructuredSearch search, SourceRouter router, SearchProperties searchProps) {
+            StructuredSearch search, SourceRouter router, SearchProperties searchProps, com.ash.drishti.server.security.PackAccess packs) {
+        this.packs = packs;
         this.parser = parser;
         this.suggestions = suggestions;
         this.mnemonics = mnemonics;
@@ -82,6 +84,12 @@ public class CommandController {
         Optional<EntityRef> named = pick ? Optional.empty() : parser.parse(text);
         String head = text.split("\\s+", 2)[0];
         boolean listable = mnemonics.of(head.toUpperCase(Locale.ROOT)).isPresent();
+        if (!listable && !text.contains(" ")) {                       // MKT, market-data: the pack's overview
+            Optional<String> pack = packs.byCodeOrName(text);
+            if (pack.isPresent()) {
+                return new ApiDtos.CommandResponse(null, null, null, null, pack.get());
+            }
+        }
         if (named.isPresent()) {
             EntityRef ref = named.get();
             entitlements.requireOpen(principal, ref.kind());

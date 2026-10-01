@@ -16,6 +16,7 @@
 # Market risk pack for Drishti.
 pack: market-risk
 version: 1.0.0
+code: MRSK
 title: Market risk
 description: Value at risk, stress testing, FRTB sensitivities and P&L explain.
 extends:

@@ -109,4 +109,19 @@ class StructuredSearchTest {
                 .andExpect(jsonPath("$.rows[*].ref.id", everyItem(org.hamcrest.Matchers.startsWith("T-1000"))));
         mvc.perform(get("/api/v1/search").param("q", "TRD T-10001").header("Authorization", as("nothing"))).andExpect(status().isForbidden());
     }
+
+    @Test
+    void aPacksCodeOpensItsOverview() throws Exception {
+        command("TRDS").andExpect(jsonPath("$.pack").value("trading")).andExpect(jsonPath("$.ref").doesNotExist());
+        command("trading").andExpect(jsonPath("$.pack").value("trading"));
+        mvc.perform(get("/api/v1/packs/TRDS/overview").header("Authorization", as("searcher")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("TRDS"))
+                .andExpect(jsonPath("$.kinds[0].kind").value("trade"))
+                .andExpect(jsonPath("$.kinds[0].mnemonic").value("TRD"))
+                .andExpect(jsonPath("$.kinds[0].count").value(greaterThan(100)))
+                .andExpect(jsonPath("$.kinds[0].columns[0]").value("productType"));
+        mvc.perform(get("/api/v1/packs/trading/overview").header("Authorization", as("nothing")))
+                .andExpect(jsonPath("$.kinds").isEmpty());                                     // kinds you may not open are left out
+    }
 }

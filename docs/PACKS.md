@@ -297,6 +297,7 @@ Below is the complete `packs/logistics/pack.yaml`, annotated. Then the keys only
 | Key | Read by | One-line example | What it does | Details |
 |---|---|---|---|---|
 | `pack` | server | `pack: helpdesk` | The pack's name; must equal the folder name | below |
+| `code` | server | `code: HELP` | The pack's short code: typed alone on the command line it opens the pack's overview (`/p/<pack>`). It must not equal a mnemonic (a mnemonic wins) | [Pack codes](#pack-codes) |
 | `version` | server | `version: 1.2.0` | Shown in About, Admin → Health and Admin → Packs | [Versioning](#versioning-and-upgrading-a-pack) |
 | `title`, `description` | both | `title: Help desk` | The pack's name and paragraph in menus, help and admin pages | below |
 | `extends` (or `requires`) | server | `extends: [market-data, trading]` | Inherit everything from these packs | [Inheritance](#inheritance) |
@@ -632,6 +633,25 @@ A pack's roles appear in *Admin → Roles* marked **built-in**, read-only: chang
 generated pack, in its generator). An administrator can also define new roles there without touching any pack;
 the dialog's *Add every kind of a pack* buttons fill in a pack's kinds in one click
 ([USER_GUIDE.md](USER_GUIDE.md#admin--roles-what-a-role-may-do)).
+
+## Pack codes
+
+Every shipped pack has a short `code:`; typed alone on the command line (with `<GO>`) it opens the pack's overview:
+every kind you may open, its mnemonic, how many the sources hold for the business date, an example and the key
+fields. Each row's mnemonic opens that kind's pick list. Typing the pack's name (`market-data`) works too.
+
+| Pack | Code | | Pack | Code |
+|---|---|---|---|---|
+| banking-core | `BNK` | | climate-risk | `CLI` |
+| market-data | `MKT` | | economics | `ECO` |
+| trading | `TRDS` | | genomics | `GENO` |
+| market-risk | `MRSK` | | liquidity-risk | `LIQ` |
+| counterparty-risk | `CCR` | | operational-risk | `OPR` |
+| finance | `FIN` | | politics-society | `POLS` |
+| logistics | `LOGI` | | retail-banking | `RTL` |
+
+The same answer as JSON: `curl -s localhost:18480/api/v1/packs/MKT/overview`. In a generated pack set the code in its
+generator (`CODES` in `tools/packgen/banking/make_packs.py`, or `code=` in a `PackSpec`), not in `pack.yaml`.
 
 ## Inheritance
 

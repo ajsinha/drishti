@@ -48,7 +48,7 @@ CSP = ("default-src 'self'; img-src 'self' data:; style-src 'self'; script-src '
        "font-src 'self'; connect-src 'self'; frame-src 'self'; frame-ancestors 'self'")
 
 
-PROTECTED = ("/t", "/v/", "/go", "/studio", "/api/", "/admin", "/account", "/w", "/m", "/alerts", "/impact", "/s/", "/compare/", "/export/", "/pin/")
+PROTECTED = ("/t", "/v/", "/go", "/studio", "/api/", "/admin", "/account", "/w", "/m", "/alerts", "/impact", "/s/", "/compare/", "/export/", "/pin/", "/p/")
 EXACT = ("/t", "/s")                        # pages whose path is a prefix of public ones (/s of /static)
 
 

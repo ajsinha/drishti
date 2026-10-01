@@ -16,6 +16,7 @@
 # Genomics and biology pack for Drishti.
 pack: genomics
 version: 1.0.0
+code: GENO
 title: Genomics and biology
 description: Genes, variants, proteins, pathways, sequenced samples, sequencing runs, expression studies and clinical trials.
 extends: []

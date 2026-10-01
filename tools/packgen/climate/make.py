@@ -182,6 +182,7 @@ def build(bank: dict) -> dict[str, dict[str, dict]]:
 
 def spec(bank: dict) -> PB.PackSpec:
     return PB.PackSpec(
+        code="CLI",
         columns={'climate-profile': ['counterpartyName', 'sector', 'intensity', 'transitionScore', 'physicalScore', 'netZeroTarget'], 'climate-stress': ['scenarioName', 'deskName', 'loss2030', 'loss2050', 'capitalShare'], 'financed-emissions': ['book', 'financed', 'exposure', 'intensity', 'dataQuality'], 'physical-asset': ['name', 'counterpartyName', 'country', 'value', 'worstHazard'], 'climate-scenario': ['name', 'category', 'warming', 'carbon2030', 'carbon2050'], 'taxonomy-alignment': ['legalEntityName', 'gar', 'eligible', 'covered']},  # key fields shown beside each entity in pick lists
         name="climate-risk", title="Climate risk", requires=["trading"], generator="tools/packgen/climate/make.py",
         description="Counterparty climate profiles, PCAF financed emissions, NGFS scenarios, climate stress, physical-risk assets and the green asset ratio.",

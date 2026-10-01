@@ -212,6 +212,13 @@ The number of suggestions is a server setting (`drishti.commands.suggest-limit`,
 | `DRS-4004 'XYZ' is neither a mnemonic nor a kind; type it alone to see suggestions` | A pick list or search started with an unknown word | Type the first letter and pick a mnemonic |
 | `DRS-5002 <you> may not open lcr entities` | Your roles, or the packs you have switched on, do not include that kind | Switch the pack on in the box menu; otherwise ask an administrator |
 
+### A pack at a glance
+
+Type a pack's code alone, for example `MKT <GO>`, to see what the market-data pack holds: each kind with its mnemonic
+(`CRV`, `FXV`, `IRV`, …), how many there are, an example you can open, and the fields its pick list shows. Click a
+mnemonic to list that kind. Every pack has a code (`BNK`, `MKT`, `TRDS`, `CCR`, `LIQ`, `RTL`, `GENO`, … see
+[PACKS.md](PACKS.md#pack-codes)); the pack's name (`market-data`) works too.
+
 ## Pick lists: when a command names several entities
 
 On a Bloomberg terminal, a command that matches several securities shows a list to pick from. Drishti does

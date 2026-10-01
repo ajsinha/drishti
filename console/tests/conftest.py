@@ -223,7 +223,19 @@ class FakeBackend:
                 "uptimeSeconds": 3725, "sutras": ["irs-vanilla v3"], "securityEnabled": False,
                 "sources": [{"name": "demo", "version": "1.0", "kinds": [], "live": True, "search": True, "reverseLookup": True, "health": "UP"}]}
 
+    async def pack_overview(self, name, ident=None):
+        if name.upper() not in ("MKT", "MARKET-DATA"):
+            raise BackendError(400, "DRS-5001", f"no pack '{name}' is switched on")
+        return {"name": "market-data", "code": "MKT", "title": "Market data", "description": "Curves and surfaces.", "version": "1.0.0",
+                "extends": ["banking-core"], "kinds": [
+                    {"kind": "fx-vol-surface", "mnemonic": "FXV", "label": "FX volatility surface", "count": 12, "more": False,
+                     "example": "FXV-EURUSD", "columns": []},
+                    {"kind": "ir-curve", "mnemonic": "CRV", "label": "Interest-rate curve", "count": 1234, "more": False,
+                     "example": "CRV-USD-SOFR", "columns": ["currency", "index"]}]}
+
     async def command(self, text, ident=None):
+        if text.strip().upper() == "MKT":
+            return {"ref": None, "pack": "market-data"}
         if "IRS-48213" in text.upper():
             return {"ref": {"kind": "trade", "id": "IRS-48213"}, "mnemonic": "TRD"}
         raise BackendError(400, "DRS-4001", f"cannot read command '{text}'")

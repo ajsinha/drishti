@@ -16,6 +16,7 @@
 # Operational and non-financial risk pack for Drishti.
 pack: operational-risk
 version: 1.0.0
+code: OPR
 title: Operational and non-financial risk
 description: Loss events, RCSA, key risk indicators, issues and actions, scenarios, third-party and cyber risk, and SMA operational-risk capital.
 extends:

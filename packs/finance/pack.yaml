@@ -15,6 +15,7 @@
 # Finance · capital markets pack for Drishti.
 pack: finance
 version: 1.0.0
+code: FIN             # typed alone, opens this pack's overview
 title: Finance · capital markets
 description: >-
   Trades (interest rate swaps, FX swaps, listed futures and more), netting sets, CSAs, master agreements,

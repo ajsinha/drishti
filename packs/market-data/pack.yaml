@@ -16,6 +16,7 @@
 # Market data pack for Drishti.
 pack: market-data
 version: 1.0.0
+code: MKT
 title: Market data
 description: Curves, volatility surfaces, FX, equities, credit, inflation, commodities, fixings and bonds.
 extends:

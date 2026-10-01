@@ -66,6 +66,13 @@ public final class PackAccess {
         return registry.packs().stream().map(Pack::name).toList();
     }
 
+    /** An enabled pack whose code ({@code MKT}) or name ({@code market-data}) is {@code text}, ignoring case. */
+    public java.util.Optional<String> byCodeOrName(String text) {
+        String t = text == null ? "" : text.trim();
+        return registry.packs().stream().filter(p -> states.enabled(p.name()))
+                .filter(p -> p.name().equalsIgnoreCase(t) || (!p.code().isEmpty() && p.code().equalsIgnoreCase(t))).map(Pack::name).findFirst();
+    }
+
     /** Installed packs administrators have not switched off. */
     public List<String> enabled() {
         return installed().stream().filter(states::enabled).toList();
