@@ -16,7 +16,7 @@
 # Changelog
 
 ## Unreleased
-- **All table controls sit in the table's heading:** the filter, the pager, ▲ ▼ and rows per page, in the panel's heading bar (or a strip above a table without one), never under the table; the page buttons appear when there is more than one page.
+- **All table controls sit in the table's heading:** the filter, the pager, ▲ ▼ and rows per page, in the panel's heading bar (or a strip above a table without one), never under the table; the page buttons are always shown, greyed when there is nowhere to go. Every table has the filter, ladders included; `search: false` (table and ladder panels) turns it off.
 - **The table filter sits in the table's heading.** In a table panel it is in the panel's heading bar, and above pick lists and admin lists it has a strip of its own; it is no longer under the table. Only tables have it. A Sutra turns it off for a table panel with `search: false`; on any other panel kind the option is a problem (DRS-2023).
 - **Studio keeps test entities per Sutra.** **+** keeps the entity being previewed, the list previews any of them, and **Run all** previews the Sutra in the editor against every one, listing those whose panels fail or that the Sutra cannot read. Kept per author on the server (`/api/v1/me/studio-tests/{sutra}`).
 - **Every table sorts and filters.** Click a column heading to sort (numbers, amounts, percentages and dates as values; a third click restores the order). A box filters rows on any cell; `⧩` adds a filter per column, with `>`, `<`, `>=`, `<=`, `=` for numbers (`>200m`). Sort, filters, page and selection survive live updates.

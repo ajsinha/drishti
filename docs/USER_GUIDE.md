@@ -316,15 +316,15 @@ has a pager in its heading, and can be walked with the keyboard.
 ```
 
 Every control is in the table's heading, never under the table: in a panel, its heading bar; for a pick list,
-a search or an admin list, the strip just above the table. The page buttons appear when there is more than one
-page.
+a search or an admin list, the strip just above the table. The page buttons are always there, greyed when
+there is nowhere to go.
 
 - **Sort**: click a column heading (or focus it and press Enter). Once for ascending (▲), again for descending
   (▼), a third time for the original order. Numbers, amounts (`1.5m`, `−30,205,543`), percentages and dates sort
   as values; text alphabetically.
 - **Filter rows**: type in the box in the table's heading (a table panel's heading bar, or the strip above a pick
-  list or admin list); a row stays when any cell contains the text (any case). Only tables have it: ladders, tabs
-  and key-value panels do not, and a Sutra may turn it off for a table panel (`search: false`).
+  list or admin list); a row stays when any cell contains the text (any case). Every table has it (table and
+  ladder panels too); a Sutra may turn it off for a panel (`search: false`).
 - **Filter by column**: `⧩` shows a box under each heading. Text matches within that column; in a number column
   `>1m`, `<0`, `>=250k` or `=5` compare values. Example: on `TRD T-1`, type `>200m` under *Notional* to keep the 21
   trades above 200 million.

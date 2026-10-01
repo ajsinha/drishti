@@ -220,7 +220,7 @@ final class SutraBuilder {
                     return;
                 }
                 if (!kind.accepts(opt)) {
-                    problem("DRS-2023", "search".equals(opt) ? "option 'search' applies only to table panels, not '" + kind.id() + "'"
+                    problem("DRS-2023", "search".equals(opt) ? "option 'search' applies only to panels that show a table (table, ladder), not '" + kind.id() + "'"
                             : "option '" + opt + "' is not valid for '" + kind.id() + "' panels", val);
                 } else if (val.value() != null) {
                     options.put(opt, val.isScalar() ? val.value() : plain(val));

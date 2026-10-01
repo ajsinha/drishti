@@ -625,7 +625,7 @@ expressions and templates are compiled at load time.
 | `line` | `rows`, `source`, `mark` | `x`, `y` | `unit`, `fmt` |
 | `area` | `rows`, `limit` | `x`, each series' `value` | `series[].label`, `series[].tone`, `limitLabel`, `unit` |
 | `hbar` | `rows` | `label`, `value` | `fmt`, `tone` |
-| `ladder` | `rows`, `highlight` | | `totalLabel` |
+| `ladder` | `rows`, `highlight` | | `totalLabel`, `search` (`false` hides the filter) |
 | `status` | each field's `bind` | | each field's `label`, `fmt`, `tone` |
 | `gauge` | `value`, `max` | | `label`, `fmt` |
 | `surface` | `rows`; `y` when it starts with `$` or `@` | `y` otherwise | `fmt`, `unit`, `view` |
@@ -682,7 +682,7 @@ One row per element of `rows`.
 | `moreLabel` | | `"<N> more"` | Expression for the text of the "more" line, evaluated against the document (not a row). |
 | `totalLabel` | | `Total` | Text of the total row's label cell. |
 | `link` | | | Accepted, no effect (see above). |
-| `search` | | `true` | `false` hides the filter box (and the per-column filters) in the panel's heading, for a table too small or too fixed to need one. Only table panels take it; on any other kind it is a problem (`DRS-2023`, *option 'search' applies only to table panels*). |
+| `search` | | `true` | `false` hides the filter box (and the per-column filters) in the panel's heading, for a table too small or too fixed to need one. Table and ladder panels take it; on any other kind it is a problem (`DRS-2023`, *option 'search' applies only to panels that show a table*). |
 
 Totals: when at least one column says `total: true`, a total row is added. It sums that column's numbers over
 **all** rows, including those hidden by `limit` (values that are not numbers count as 0), formats the sum with the

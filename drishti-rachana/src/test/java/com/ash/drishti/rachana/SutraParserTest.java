@@ -138,6 +138,6 @@ class SutraParserTest {
                 """;
         assertThatThrownBy(() -> parser.parse(bad, "noisy.yaml", "x"))
                 .isInstanceOfSatisfying(SutraException.class, e -> assertThat(e.problems()).extracting(SutraProblem::message)
-                        .anySatisfy(m -> assertThat(m).contains("'search' applies only to table panels")));
+                        .anySatisfy(m -> assertThat(m).contains("'search' applies only to panels that show a table")));
     }
 }

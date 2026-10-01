@@ -30,7 +30,7 @@ public enum PanelKind {
     LINE(Set.of(), Set.of("rows", "source", "x", "y", "mark", "footer", "unit", "fmt")),
     AREA(Set.of("rows"), Set.of("x", "series", "limit", "limitLabel", "unit")),
     HBAR(Set.of("rows"), Set.of("label", "value", "fmt", "tone")),
-    LADDER(Set.of("rows"), Set.of("totalLabel", "highlight")),
+    LADDER(Set.of("rows"), Set.of("totalLabel", "highlight", "search")),
     LINKS(Set.of(), Set.of()),
     STATUS(Set.of(), Set.of("fields")),
     PROVENANCE(Set.of(), Set.of()),
