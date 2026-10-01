@@ -38,7 +38,7 @@ import make_docs as MD  # noqa: E402  (the banking guides' shared sections)
 import make_sutras as MS  # noqa: E402  (the Rachana writer the banking packs use)
 from risk_model import Kind  # noqa: E402
 
-DOC_HEADER = "\n".join((ROOT / "docs" / "RACHANA_REFERENCE.md").read_text(encoding="utf-8").splitlines()[:15])
+DOC_HEADER = "\n".join((ROOT / "docs" / "guides" / "RACHANA_REFERENCE.md").read_text(encoding="utf-8").splitlines()[:15])
 YAML_HEADER = "\n".join("#" + (" " + x if x.strip() else "") for x in DOC_HEADER.splitlines()[1:14])
 PATH = re.compile(r"\$\.([A-Za-z_][A-Za-z0-9_]*)")
 

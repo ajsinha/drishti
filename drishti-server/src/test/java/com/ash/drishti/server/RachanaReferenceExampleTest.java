@@ -46,7 +46,7 @@ class RachanaReferenceExampleTest {
 
     /** The YAML block under "A complete example, annotated". */
     static String example() throws Exception {
-        List<String> lines = Files.readAllLines(Path.of("../docs/RACHANA_REFERENCE.md"));
+        List<String> lines = Files.readAllLines(Path.of("../docs/guides/RACHANA_REFERENCE.md"));
         int section = lines.indexOf("## A complete example, annotated");
         int start = -1;
         List<String> out = new ArrayList<>();
