@@ -15,7 +15,7 @@
 -->
 # Changelog
 
-## Unreleased — A million trades a day, for seven years
+## 1.13.0 — A million trades a day, eight stores, Calc, pivots, twenty panel kinds and JDK 25 (2026-10-01)
 - **Fixed:** an area chart's dashed limit line was not drawn when the limit was above (or below) every value, because the axis was scaled to the series only. The axis now reaches the limit, and the label sits inside the plot.
 - **Every panel kind, by example** ([RACHANA_GUIDE.md › 10](docs/guides/RACHANA_GUIDE.md#10-every-panel-kind-by-example)).
   The Rachana tutorial has a contents list and a new chapter with a complete, minimal Sutra for each of the twenty

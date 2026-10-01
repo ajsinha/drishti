@@ -13,7 +13,59 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Drishti 1.12.0 — release notes
+# Drishti 1.13.0 — release notes
+
+*2026-10-01.* **A million trades a day, eight stores, Calc, pivots, twenty panel kinds and JDK 25.**
+
+- **A million trades a day, for years, in eight stores.** Delta Lake, Apache Iceberg, PostgreSQL, DuckDB, MongoDB,
+  Redis, Aerospike and JSON-lines files share one design.
+  - **Layout:** a pack promotes the fields searches use, and each store keeps them beside the documents.
+  - **Speed:** type-ahead comes from memory; a single read touches one row group, row or record; searches, pick lists, desk P&L and impact read a day's columns, exact over the whole book.
+  - **Combining stores:** a store that does not hold a date passes the question to the next one, for example recent days in Redis and years in Delta Lake.
+  - Each store has its own design document under `docs/connectors/`.
+  - Measured curves from 10,000 to 50,000 trades a day are in `docs/admin/SCALE_BENCHMARK.md`, and `tools/bench/scale.sh` reruns them.
+- **Delta Lake without Hadoop.** A native engine (`drishti-deltalake`) is now the default: no Hadoop file system and no `winutils.exe`, and as fast or faster. Windows scripts and a guide are in `docs/guides/WINDOWS.md`.
+- **Calc: Python in the browser** (Alt+C). Pyodide with numpy, pandas, scipy, statsmodels and matplotlib, on the screen's data and the pack's.
+  - It ships 85 trader and quant snippets and a tested `drishti.quant` library.
+  - Only users with the `calc` power can use it.
+- **Twenty panel kinds.**
+  - **New kinds:** waterfall, histogram, scatter, candlestick, graph, timeline and pivot.
+  - **Pivot tab:** an Excel-style tab on tables and search results, wherever a Sutra or pack turns it on.
+  - **Layout mode** (Alt+L): drag and resize panels into personal layouts, and promote them to the Sutra through review.
+  - **Workspaces:** drag views into panes.
+- **Several queries per kind** in the JDBC connector's query mode: parts, type-ahead, columns and reverse lookups.
+- **Durable message state.** ActiveMQ and RabbitMQ acknowledge a message only after it is kept (synced by default), within a disk budget per connector.
+- **Deletes reach open views.** A Kafka tombstone or a queue's delete marks the view deleted and removes the entity from type-ahead.
+- **JDK 25 only**, run with `-XX:+UseCompactObjectHeaders`. Measured against JDK 21: 10–20% more requests a second and 10% less live heap.
+- **Documents by audience:** `docs/guides`, `docs/connectors`, `docs/admin` and `docs/architecture`.
+
+### Upgrading from 1.12.0
+
+- **Java:**
+  - Drishti builds and runs on **JDK 25 only**; the jars no longer run on 21.
+  - Start the server with `-XX:+UseCompactObjectHeaders`.
+  - The Docker image is `eclipse-temurin:25-jre`.
+- **Delta Lake engine:** `native` is the default.
+  - Lakes on `abfs://`, `gs://` or HDFS need `engine: hadoop` (or `DRISHTI_DELTA_ENGINE=hadoop`). The connector refuses to start with a message saying so.
+  - Parquet compressed with LZ4, Brotli or LZO also needs `engine: hadoop`.
+- **PostgreSQL table mode:**
+  - It reads a table partitioned by month with promoted columns. Reload with `tools/load-postgres.sh`; it recreates each domain's table.
+  - Tables of the earlier form are still read, but their searches read documents.
+  - `make_data.py --postgres` is removed.
+- **ActiveMQ and RabbitMQ state store:**
+  - `state.durability` defaults to `sync`, which is slower but loses nothing; `wal` and `none` are faster.
+  - The store keeps the latest value per entity.
+  - Past `state.max-gb`, `state.when-full: evict-oldest` (the default) removes the entities written longest ago and logs it; `warn` keeps everything.
+  - ActiveMQ redelivers a message the store could not keep without limit; set `max-redeliveries` for a dead-letter queue.
+- **MongoDB and Iceberg plugins** stay idle unless configured: `uri` for MongoDB, `root` or `uri` for Iceberg.
+- **Data is no longer in git.**
+  - `data/banking.jsonl` and `data/feeds/` are gone.
+  - Run `python3 tools/packgen/banking/make_data.py` once; it also writes the sample feed file. Use `tools/load-<store>.sh` for the stores.
+- **Identity database:** new role powers `calc` and `layout`, and new preference namespaces (`calc-snippets`, `layouts`, `pivots`). These are created at start, with no migration.
+- **Moved documents:** bookmarks to `docs/*.md` now point to `docs/guides/`, `docs/connectors/`, `docs/admin/` or `docs/architecture/`.
+- **New problem codes:** `DRS-2029` (a restricted option value), `DRS-2030` (`span`/`height`) and `DRS-2031` (`pivot`).
+
+# Previous release: Drishti 1.12.0 — release notes
 
 *2026-10-01.* **Derived kinds, notes, reports, plain words and a signed pack registry.**
 - **One console, many servers (ADR-016).** Configure a list of servers in the console. People pick one and sign in to it. Each server has its own session, and links carry their server.

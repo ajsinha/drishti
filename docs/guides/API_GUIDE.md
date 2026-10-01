@@ -85,8 +85,8 @@ You should see:
 ```json
 {
   "product": "Drishti",
-  "version": "1.12.0",
-  "java": "21.0.12.1 (Ubuntu)",
+  "version": "1.13.0",
+  "java": "25.0.4.1 (Ubuntu)",
   "uptimeSeconds": 6913,
   "securityEnabled": false,
   "sutras": 223
@@ -222,7 +222,7 @@ PY
 curl -s -H "Authorization: Bearer $TOKEN" $B/about | jq .version
 ```
 
-You should see the version string, for example `"1.12.0"`. The roles you put in the token decide what the
+You should see the version string, for example `"1.13.0"`. The roles you put in the token decide what the
 script may open (roles are defined under `drishti.security.roles`; see
 [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)). Keep the lifetime short.
 
@@ -925,7 +925,7 @@ curl -s $B/admin/health | jq -c '{status, summary, server, live}'
 ```json
 {"status":"OK",
  "summary":{"packsWithProblems":0,"failedToStart":0,"sourcesDown":0,"sources":18,"packs":12},
- "server":{"version":"1.12.0","uptimeSeconds":6953,"java":"21.0.12.1","heapUsedMb":146,"heapMaxMb":15640,"threads":75,"cpus":24},
+ "server":{"version":"1.13.0","uptimeSeconds":6953,"java":"25.0.4.1","heapUsedMb":146,"heapMaxMb":15640,"threads":75,"cpus":24},
  "live":{"frames":11680,"p50Ms":0.886,"streams":0,"p99Ms":1.917,"topics":0,"droppedFrames":0}}
 ```
 

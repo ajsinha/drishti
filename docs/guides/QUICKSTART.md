@@ -50,7 +50,7 @@ cd drishti
 ls drishti-server/target/*-exec.jar
 ```
 
-You should see `drishti-server/target/drishti-server-1.12.0-exec.jar`. The first build downloads its
+You should see `drishti-server/target/drishti-server-1.13.0-exec.jar`. The first build downloads its
 libraries and takes a few minutes.
 
 If the build stops with `Drishti builds and runs on OpenJDK 25.`, `JAVA_HOME` is not Java 25.
@@ -81,7 +81,7 @@ Terminal 1, from the repository root:
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
 export DRISHTI_PACKS=market-risk,counterparty-risk,liquidity-risk,climate-risk,operational-risk,retail-banking,genomics,politics-society,economics
-java -jar drishti-server/target/drishti-server-1.12.0-exec.jar
+java -jar drishti-server/target/drishti-server-1.13.0-exec.jar
 ```
 
 | Variable | What it does | Default |
