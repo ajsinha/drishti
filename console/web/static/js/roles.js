@@ -13,10 +13,28 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Admin → Roles: create, edit and delete administrators' roles through same-origin /admin/api/roles/... (the server
+/* Admin → Roles and Admin → Packs. Roles: create, edit and delete administrators' roles through same-origin /admin/api/roles/... (the server
    enforces the admin role, validates and audits); the page reloads to show the new state. */
 (function () {
   'use strict';
+  // Admin → Packs: switch a pack on or off for everyone.
+  var packs = document.querySelector('[data-pack-admin]');
+  if (packs) {
+    var pmsg = packs.querySelector('[data-msg]');
+    packs.querySelectorAll('[data-switch]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var name = b.closest('tr').getAttribute('data-pack'), on = b.getAttribute('data-switch') === 'on';
+        if (!on && !window.confirm('Switch ' + name + ' off for everyone? Its kinds cannot be opened until it is switched on again.')) { return; }
+        fetch('/admin/api/packs/' + encodeURIComponent(name), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled: on }) })
+          .then(function (r) { return r.json().then(function (body) { return { ok: r.ok, body: body }; }); })
+          .then(function (res) {
+            pmsg.textContent = res.ok ? name + ' is ' + (on ? 'on' : 'off') + '.' : (res.body.code || 'Error') + ': ' + res.body.detail;
+            pmsg.classList.toggle('t-bad', !res.ok);
+            if (res.ok) { setTimeout(function () { location.reload(); }, 400); }
+          });
+      });
+    });
+  }
   var root = document.querySelector('[data-roles]');
   if (!root) { return; }
   var msg = root.querySelector('[data-msg]'), dlg = root.querySelector('[data-dialog]'), form = root.querySelector('[data-form]');

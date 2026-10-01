@@ -96,12 +96,12 @@ public class CatalogController {
         return m;
     }
 
-    /** The enabled domain packs, with what the console needs from each (examples, workspaces, help). */
+    /** The enabled domain packs (not switched off in Admin → Packs), with what the console needs from each. */
     @GetMapping("/packs")
     public List<Map<String, Object>> packs(@RequestAttribute(value = Principal.ATTRIBUTE, required = false) Principal who) {
         List<String> assigned = who == null ? packAccess.installed() : packAccess.assigned(who.user());
         List<String> active = who == null ? packAccess.installed() : packAccess.active(who.user());
-        return packRegistry.packs().stream().map(p -> {
+        return packRegistry.packs().stream().filter(p -> packAccess.isEnabled(p.name())).map(p -> {
             Map<String, Object> m = new java.util.LinkedHashMap<>();
             m.put("name", p.name());
             m.put("version", p.version());

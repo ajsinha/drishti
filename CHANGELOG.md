@@ -16,6 +16,15 @@
 # Changelog
 
 ## Unreleased
+- **A new top bar, after MAYA's.**
+  - **Layout:** two rows. Row one: the brand with its tagline, then Views, Build, Admin and Help as mega-menu panels (each entry with an icon and a line on what it does), then quiet round tools (live, alerts, packs, theme and the user's avatar menu with desk, roles, clock, account and sign-out). Row two: the command line across the width, and the business date.
+  - **Pack menu:** it laid all packs out in one off-screen row. It now lists one pack per line, with what it covers, all/none and Apply.
+- **Admin → Packs: switch packs off and on for everyone, at once.**
+  - **Switching off:** the pack's kinds cannot be opened, its mnemonics and suggestions go, and it leaves every pack menu at the next click.
+  - **Safeguards:** a pack another pack builds on stays on until that one is off, and switching one on switches on what it builds on.
+  - **Storage:** the choice is kept in the identity database (`drishti_pack_state`), survives restarts, and is audited (`pack-enabled`, `pack-disabled`).
+  - **Not loaded:** packs on disk that the server did not load are listed with how to load them.
+  - **API:** `GET/PUT /api/v1/admin/packs[/{name}]`.
 - **Pick lists, as on a Bloomberg terminal.** A command that names one entity opens it; one that names several shows a scrollable table to pick from, with the kind's key fields beside each row.
   - `TRD T-100` lists trades whose id starts with T-100, and `CPTY north` matches titles too. `TRD T-1*0` uses `*` as a wildcard. `TRD productType=Revolver` and `TRD notional > 10m and currency = usd` list by field value. They combine (`TRD T-1* desk=rates order by mtm desc`), and `TRD` alone lists every trade.
   - Case never matters, and text `=`/`!=` ignore case in every search.

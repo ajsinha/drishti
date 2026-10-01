@@ -91,6 +91,30 @@ async def delete_role(request: Request, name: str):
     return {"ok": True}
 
 
+@router.get("/packs")
+async def packs(request: Request):
+    """Every pack on disk: loaded or not, switched on or off for everyone."""
+    me = ident(request)
+    if not me.is_admin:
+        return _forbidden(request)
+    try:
+        rows = await request.app.state.backend.admin("GET", "/packs", me)
+    except BackendError as e:
+        return render(request, "admin/forbidden.html", status_code=e.status, error=e)
+    return render(request, "admin/packs.html", packs=rows)
+
+
+@router.post("/api/packs/{name}")
+async def switch_pack(request: Request, name: str):
+    body = json.loads(await request.body() or b"{}")
+    try:
+        out = await request.app.state.backend.admin("PUT", f"/packs/{quote(name)}", ident(request), {"enabled": bool(body.get("enabled"))})
+    except BackendError as e:
+        return _problem(e)
+    request.app.state.packs.forget_all()                # every user's pack switcher changes
+    return out
+
+
 @router.get("/audit")
 async def audit(request: Request, subject: str = "", limit: int = 200):
     me = ident(request)

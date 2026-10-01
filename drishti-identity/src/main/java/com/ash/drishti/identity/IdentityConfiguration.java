@@ -52,6 +52,11 @@ public class IdentityConfiguration {
     }
 
     @Bean
+    public PackStateStore packStateStore(IdentityRepositories.PackStates states, TransactionTemplate identityTransactions, JpaAuditLog auditLog) {
+        return new PackStateStore(states, identityTransactions, auditLog);
+    }
+
+    @Bean
     public UserService userService(JpaUserStore store, JpaAuditLog auditLog, PreferenceStore preferences, IdentityProperties props,
             RoleNames roles) {
         LegacyImport.run(props, store, auditLog, preferences);

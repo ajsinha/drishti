@@ -50,10 +50,11 @@ public class SecurityConfiguration {
 
     @Bean
     public PackAccess packAccess(com.ash.drishti.packs.PackRegistry registry, com.ash.drishti.identity.UserService users,
-            com.ash.drishti.identity.PreferenceStore prefs, org.springframework.core.env.Environment env) {
+            com.ash.drishti.identity.PreferenceStore prefs, org.springframework.core.env.Environment env,
+            com.ash.drishti.identity.PackStateStore states) {
         String defaults = env.getProperty("drishti.packs.default-for-users", "");
         return new PackAccess(registry, users, prefs, java.util.Arrays.stream(defaults.split(",")).map(String::trim)
-                .filter(s -> !s.isEmpty()).toList());
+                .filter(s -> !s.isEmpty()).toList(), states);
     }
 
     @Bean

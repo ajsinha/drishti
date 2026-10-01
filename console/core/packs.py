@@ -41,6 +41,10 @@ class Packs:
     def forget(self, ident=None) -> None:
         self._cache.pop(getattr(ident, "user", ""), None)
 
+    def forget_all(self) -> None:
+        """An admin switched a pack on or off: every user's packs change."""
+        self._cache.clear()
+
     async def _fetch(self, backend, ident):
         key = getattr(ident, "user", "")
         now = time.monotonic()

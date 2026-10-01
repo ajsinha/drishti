@@ -32,7 +32,8 @@ import java.util.Set;
 
 /**
  * Which domain packs a user may use and has chosen. <b>Installed</b> packs are what the server runs;
- * <b>assigned</b> packs are those an admin gives a user (or the configured default); <b>active</b> packs are the
+ * <b>enabled</b> packs are the installed ones administrators have not switched off (Admin → Packs: for everyone, at
+ * once); <b>assigned</b> packs are those an admin gives a user (or the configured default); <b>active</b> packs are the
  * subset the user chose to see (all assigned, until they choose). A kind owned by a pack that is not active for
  * the user cannot be opened; kinds no pack owns are unaffected.
  */
@@ -45,11 +46,14 @@ public final class PackAccess {
     private final UserService users;
     private final PreferenceStore prefs;
     private final List<String> defaults;
+    private final com.ash.drishti.identity.PackStateStore states;
     private final Map<String, String> kindOwner = new HashMap<>();
     private final ObjectMapper json = new ObjectMapper();
 
-    public PackAccess(PackRegistry registry, UserService users, PreferenceStore prefs, List<String> defaults) {
+    public PackAccess(PackRegistry registry, UserService users, PreferenceStore prefs, List<String> defaults,
+            com.ash.drishti.identity.PackStateStore states) {
         this.registry = registry;
+        this.states = states;
         this.users = users;
         this.prefs = prefs;
         this.defaults = defaults == null || defaults.isEmpty() ? installed() : List.copyOf(defaults);
@@ -62,11 +66,63 @@ public final class PackAccess {
         return registry.packs().stream().map(Pack::name).toList();
     }
 
-    /** Packs an admin made available to the user, limited to what is installed. */
+    /** Installed packs administrators have not switched off. */
+    public List<String> enabled() {
+        return installed().stream().filter(states::enabled).toList();
+    }
+
+    public boolean isEnabled(String pack) {
+        return states.enabled(pack);
+    }
+
+    /** Enabled packs that extend {@code pack}, directly or not: they need it. */
+    public List<String> requiredBy(String pack) {
+        return registry.packs().stream().filter(p -> !p.name().equals(pack) && states.enabled(p.name()))
+                .filter(p -> closure(p.name()).contains(pack)).map(Pack::name).toList();
+    }
+
+    /**
+     * Switches a pack on or off for everyone. A pack another enabled pack builds on cannot be switched off (switch that
+     * one off first); switching a pack on switches on what it builds on.
+     */
+    public void setEnabled(String pack, boolean on, String actor) {
+        if (!installed().contains(pack)) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "'" + pack + "' is not loaded; installed: " + installed());
+        }
+        if (!on) {
+            List<String> needs = requiredBy(pack);
+            if (!needs.isEmpty()) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "'" + pack + "' is needed by " + needs + "; switch those off first");
+            }
+            states.set(pack, false, actor);
+            return;
+        }
+        for (String p : closure(pack)) {
+            if (!states.enabled(p) || p.equals(pack)) {
+                states.set(p, true, actor);
+            }
+        }
+    }
+
+    private Set<String> closure(String pack) {
+        Map<String, Pack> byName = new HashMap<>();
+        registry.packs().forEach(p -> byName.put(p.name(), p));
+        Set<String> out = new LinkedHashSet<>();
+        java.util.ArrayDeque<String> todo = new java.util.ArrayDeque<>(List.of(pack));
+        while (!todo.isEmpty()) {
+            String n = todo.pop();
+            if (out.add(n) && byName.containsKey(n)) {
+                todo.addAll(byName.get(n).requires());
+            }
+        }
+        return out;
+    }
+
+    /** Packs an admin made available to the user, limited to what is installed and enabled. */
     public List<String> assigned(String user) {
         Set<String> chosen = users.find(user).map(User::packs).orElse(null);
         List<String> base = chosen == null ? defaults : List.copyOf(chosen);
-        return installed().stream().filter(base::contains).toList();
+        return enabled().stream().filter(base::contains).toList();
     }
 
     /** Packs the user chose to see: the saved choice within what is assigned, or everything assigned. */
@@ -111,10 +167,13 @@ public final class PackAccess {
         return out;
     }
 
-    /** False only when the kind belongs to a pack that is neither active for the user nor required by one that is. */
+    /**
+     * False when the kind belongs to a pack that is switched off, or that is neither active for the user nor required
+     * by one that is.
+     */
     public boolean kindAllowed(String user, String kind) {
         String owner = kindOwner.get(kind);
-        return owner == null || effective(user).contains(owner);
+        return owner == null || (states.enabled(owner) && effective(user).contains(owner));
     }
 
     public void validate(Set<String> packs) {

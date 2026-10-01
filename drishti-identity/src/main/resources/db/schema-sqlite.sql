@@ -81,3 +81,10 @@ CREATE TABLE IF NOT EXISTS drishti_preference (
     updated_at TIMESTAMP NOT NULL,
     PRIMARY KEY (username, namespace, name)
 );
+
+CREATE TABLE IF NOT EXISTS drishti_pack_state (
+    name       TEXT    PRIMARY KEY,
+    enabled    INTEGER NOT NULL,
+    updated_at TIMESTAMP NOT NULL,
+    updated_by TEXT    NOT NULL DEFAULT ''
+);

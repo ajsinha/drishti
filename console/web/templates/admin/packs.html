@@ -1,0 +1,54 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Packs · {{ PRODUCT }}{% endblock %}
+{% block screen %}admin{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm" data-pack-admin>
+  <h1>Packs</h1>
+  {% with tab='packs' %}{% include "admin/_nav.html" %}{% endwith %}
+  <p class="text-muted-d">A pack brings a domain: its kinds, mnemonics, layouts and connectors. Switch a loaded pack off and, at
+    everyone's next click, its kinds cannot be opened, its mnemonics and suggestions disappear, and it leaves every pack menu.
+    Switch it on and it all returns. A pack another pack builds on stays on until that one is off; switching a pack on switches on
+    what it builds on. The choice is kept across restarts and recorded in the <a href="/admin/audit">audit log</a>.</p>
+  <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
+  <div class="tbl-wrap"><table class="tbl adm-tbl">
+    <thead><tr><th>Pack</th><th>What it brings</th><th>Builds on</th><th>Kinds</th><th>Connectors</th><th>Status</th><th>Changed</th><th></th></tr></thead>
+    <tbody>
+    {% for p in packs %}
+      <tr data-pack="{{ p.name }}">
+        <td><b>{{ p.title }}</b><div class="mono text-muted-d">{{ p.name }} {{ p.version }}</div></td>
+        <td class="pk-desc">{{ p.description }}</td>
+        <td class="mono">{{ (p.extends or []) | join(', ') or '—' }}{% if p.requiredBy %}<div class="text-muted-d">needed by {{ p.requiredBy | join(', ') }}</div>{% endif %}</td>
+        <td class="mono">{% if p.loaded %}{{ (p.kinds or []) | length }}{% if p.mnemonics %} <span class="text-muted-d">({{ p.mnemonics[:4] | join(' ') }}{{ ' …' if p.mnemonics | length > 4 }})</span>{% endif %}{% else %}—{% endif %}</td>
+        <td class="mono">{{ (p.connectors or []) | join(', ') or '—' }}</td>
+        <td>{% if not p.loaded %}<span class="st" title="Add it to drishti.packs.enabled (DRISHTI_PACKS) and restart the server to load it">not loaded</span>
+            {% elif p.enabled %}<span class="st st-ok">on</span>{% else %}<span class="st st-bad">off</span>{% endif %}</td>
+        <td class="mono">{% if p.updatedAt %}{{ p.updatedAt[:16] | replace('T', ' ') }} · {{ p.updatedBy }}{% else %}—{% endif %}</td>
+        <td class="adm-actions">{% if p.loaded %}
+          <button type="button" class="fk" data-switch="{{ 'off' if p.enabled else 'on' }}"
+            {% if p.enabled and p.requiredBy %}disabled title="Needed by {{ p.requiredBy | join(', ') }}: switch those off first"{% endif %}>{{ 'Switch off' if p.enabled else 'Switch on' }}</button>
+        {% else %}<span class="text-muted-d mono" title="Packs load when the server starts">DRISHTI_PACKS=…,{{ p.name }}</span>{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endblock %}
+{% block footer %}{% include "_footer.html" %}{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/view.js?v={{ ASSET_V }}"></script><script src="/static/js/roles.js?v={{ ASSET_V }}"></script>{% endblock %}

@@ -72,6 +72,13 @@
       .then(function (r) { if (r.ok) { location.reload(); } });
   });
 
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-packs-all], [data-packs-none]');
+    if (!b) { return; }
+    var all = b.hasAttribute('data-packs-all');
+    b.closest('[data-packs]').querySelectorAll('input[name="pack"]').forEach(function (i) { i.checked = all; });
+  });
+
   // F1: help for the screen you are on.
   document.addEventListener('keydown', function (e) {
     if (e.key === 'F1') {

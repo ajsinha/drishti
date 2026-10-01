@@ -81,3 +81,10 @@ CREATE TABLE IF NOT EXISTS drishti_preference (
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
     PRIMARY KEY (username, namespace, name)
 );
+
+CREATE TABLE IF NOT EXISTS drishti_pack_state (
+    name       VARCHAR(64)  PRIMARY KEY,
+    enabled    BOOLEAN      NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_by VARCHAR(64)  NOT NULL DEFAULT ''
+);

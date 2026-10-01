@@ -28,6 +28,8 @@ public final class IdentityRepositories {
 
     public interface Roles extends JpaRepository<RoleEntity, String> {}
 
+    public interface PackStates extends JpaRepository<PackStateEntity, String> {}
+
     public interface Audit extends JpaRepository<AuditEventEntity, Long> {
         List<AuditEventEntity> findAllByOrderByIdDesc(Pageable page);
 

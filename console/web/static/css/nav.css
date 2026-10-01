@@ -1,0 +1,107 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+
+/*
+ * The top bar, after MAYA's navigation: brand, mega-menu panels, the command line given the room, the business date,
+ * and quiet round icon tools. Loaded last; colours come from the theme tokens and its two gradient colours.
+ */
+.tbar { display: flex; flex-direction: column; align-items: stretch; gap: 0; padding: 0; }
+.tbar-row1 { display: flex; align-items: center; gap: .9rem; padding: .35rem 1rem; min-height: 52px; }
+.tbar-row2 { display: flex; align-items: center; gap: .9rem; padding: .4rem 1rem .5rem;
+  border-top: 1px solid color-mix(in srgb, var(--d-border) 55%, transparent);
+  background: color-mix(in srgb, var(--d-bg-2) 55%, transparent); }
+
+/* brand: mark, name and tagline on two lines */
+.tbar-brand { gap: .55rem; flex: 0 0 auto; margin-right: .2rem; }
+.tbar-brand .brand-mark { width: 38px; height: 23px; color: var(--d-accent); }
+.tbar-name { display: flex; flex-direction: column; line-height: 1.05; }
+.tbar-name > span { font-weight: 800; letter-spacing: .14em; text-transform: uppercase; font-size: 1rem; }
+.tbar-name small { font-size: .62rem; font-weight: 500; letter-spacing: .02em; color: var(--d-muted); -webkit-text-fill-color: var(--d-muted); }
+@media (max-width: 900px) { .tbar-name small { display: none; } }
+
+/* menus */
+.tbar-menus { display: flex; align-items: stretch; gap: .1rem; flex: 0 0 auto; }
+.tbar-menu { position: static; }
+.tbar-menu-btn { display: inline-flex; align-items: center; gap: .4rem; border: 0; background: transparent; color: var(--d-ink);
+  font-weight: 600; font-size: .86rem; padding: .5rem .7rem; border-radius: 8px; position: relative; opacity: .85; }
+.tbar-menu-btn:hover, .tbar-menu-btn.show { opacity: 1; background: color-mix(in srgb, var(--d-accent) 12%, transparent); }
+.tbar-menu-btn.active { opacity: 1; color: var(--d-accent); }
+.tbar-menu-btn.active::after, .tbar-menu-btn.show::after { content: ""; position: absolute; left: .7rem; right: .7rem; bottom: -.4rem; height: 2px;
+  border-radius: 2px; background: linear-gradient(90deg, var(--d-grad-from), var(--d-grad-to)); }
+@media (max-width: 720px) { .tbar-menu-l { display: none; } .tbar-menu-btn { padding: .5rem .55rem; font-size: 1rem; } }
+
+.mega-panel { border: 1px solid var(--d-border); border-radius: 0 0 14px 14px; padding: 1rem 1.1rem 1.1rem; margin-top: .4rem !important; z-index: 1200;
+  background: var(--d-surface); box-shadow: 0 24px 48px -20px rgba(0, 0, 0, .55); border-top: 2px solid transparent;
+  border-image: linear-gradient(90deg, var(--d-grad-from), var(--d-grad-to)) 1; }
+.mega-panel.show { display: grid; gap: 1.1rem; animation: mega-in .14s ease-out; }
+.mega-panel.cols-1.show { grid-template-columns: minmax(280px, 320px); }
+.mega-panel.cols-2.show { grid-template-columns: repeat(2, minmax(260px, 300px)); }
+.mega-panel.cols-3.show { grid-template-columns: repeat(3, minmax(240px, 280px)); }
+@keyframes mega-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.mega-title { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .09em; color: var(--d-muted); padding: 0 .5rem .45rem; }
+.mega-item { display: flex; gap: .65rem; align-items: flex-start; padding: .5rem; border-radius: 10px; color: var(--d-ink); text-decoration: none; }
+.mega-item:hover, .mega-item:focus-visible { background: var(--d-accent-tint); color: var(--d-ink); text-decoration: none; }
+.mega-item.active { background: var(--d-accent-tint); }
+.mega-item.active .mega-label { color: var(--d-accent); }
+.mega-icon { flex: 0 0 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; font-size: 1rem; color: #fff;
+  background: linear-gradient(135deg, var(--d-grad-from), var(--d-grad-to)); box-shadow: 0 6px 14px -8px var(--d-grad-from); }
+.mega-label { display: block; font-weight: 650; line-height: 1.25; font-size: .9rem; }
+.mega-desc { display: block; font-size: .76rem; color: var(--d-muted); line-height: 1.35; }
+
+/* the command line: the widest thing in the bar */
+.tbar .cmd { flex: 1 1 auto; min-width: 240px; max-width: none; }
+.tbar .cmd-box { display: flex; align-items: center; }
+.cmd-prompt { position: absolute; left: .7rem; color: var(--d-accent); font-weight: 700; pointer-events: none; }
+.tbar .cmd-input { padding-left: 1.6rem; border-radius: 999px; height: 36px; }
+
+/* the business date: compact */
+.tbar .asof { flex: 0 0 auto; }
+
+/* tools: round icon buttons, a user avatar */
+.tbar-tools { margin-left: auto; display: flex; align-items: center; gap: .3rem; flex: 0 0 auto; }
+.tbar-tools .tool { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: .4rem; min-width: 34px; height: 34px;
+  padding: 0 .45rem; border: 0; border-radius: 999px; background: transparent; color: var(--d-ink); text-decoration: none; }
+.tbar-tools .tool:hover, .tbar-tools .tool.show { background: color-mix(in srgb, var(--d-accent) 14%, transparent); }
+.tbar-tools .tool-count, .tbar-tools .bell-count { position: absolute; top: 0; right: -2px; min-width: 16px; height: 16px; padding: 0 4px;
+  border-radius: 999px; font-size: .62rem; font-weight: 700; line-height: 16px; text-align: center; color: #fff;
+  background: linear-gradient(135deg, var(--d-grad-from), var(--d-grad-to)); }
+.tbar-tools .tbar-live { min-width: 20px; }
+.tbar-tools .theme-btn { border: 0; border-radius: 999px; min-width: 34px; height: 34px; padding: 0 .45rem; color: var(--d-ink); }
+.tbar-tools .theme-btn::after, .tbar-tools .tool.dropdown-toggle::after { display: none; }
+.tbar-tools .theme-btn span { display: none !important; }
+.tbar-tools .avatar { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: .85rem; color: #fff;
+  background: linear-gradient(135deg, var(--d-grad-from), var(--d-grad-to)); }
+.tbar-tools .user { padding-right: .7rem; }
+.tbar-tools .uname { font-size: .85rem; font-weight: 600; max-width: 9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 900px) { .tbar-tools .uname { display: none; } .tbar-tools .user { padding-right: .45rem; } }
+.user-menu { min-width: 240px; }
+.user-menu-h { padding: .5rem 1rem .4rem; font-size: .85rem; }
+.user-menu-clock { margin-top: .3rem; color: var(--d-ink); font-size: .8rem; }
+
+/* the pack menu: one pack per line, with what it is, scrolling when long */
+.pack-menu { width: 360px; max-width: 92vw; padding: 0; overflow: hidden; }
+.pack-menu-h { display: flex; justify-content: space-between; align-items: baseline; padding: .65rem .9rem .4rem; font-size: .72rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: .08em; color: var(--d-muted); }
+.pack-menu-all { text-transform: none; letter-spacing: 0; font-weight: 500; }
+.pack-menu-list { max-height: min(60vh, 520px); overflow-y: auto; padding: 0 .4rem; }
+.pack-item { display: flex; gap: .6rem; align-items: flex-start; padding: .45rem .5rem; border-radius: 8px; cursor: pointer; white-space: normal; }
+.pack-item:hover { background: var(--d-accent-tint); }
+.pack-item input { margin-top: .25rem; accent-color: var(--d-accent); }
+.pack-t { display: block; font-weight: 600; font-size: .86rem; color: var(--d-ink); }
+.pack-d { display: block; font-size: .74rem; color: var(--d-muted); line-height: 1.3; }
+.pack-menu-f { display: flex; justify-content: flex-end; padding: .5rem .9rem .7rem; border-top: 1px solid var(--d-border); }
+
+/* narrow screens: the menus fold to icons; the date drops under the command line */
+@media (max-width: 720px) { .tbar-row2 { flex-wrap: wrap; } .tbar-row2 .cmd { flex: 1 1 100%; } }

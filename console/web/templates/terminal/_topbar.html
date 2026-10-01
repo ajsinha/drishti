@@ -13,18 +13,132 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
+{# The top bar, after MAYA's, on two rows. Row one: the brand, a few menus defined once as data and opened as mega-menu
+   panels, and quiet icon tools. Row two: the command line (the one thing used all day, so it gets the room) and the
+   business date.
+   Each menu: (label, icon, [(column title, [(href, icon, label, description, match)])]). #}
 {% from "_macros/ui.html" import brand_mark %}
+{% set path = request.url.path %}
+{% set MENU = [
+  ('Views', 'grid-1x2', [
+    ('Look up', [
+      ('/t', 'terminal', 'Terminal', 'Type a command or an id, then <GO>', '/t'),
+      ('/s', 'search', 'Search & pick lists', 'TRD T-100, TRD productType=Revolver, TRD where …', '/s')]),
+    ('Watch', [
+      ('/w', 'grid-1x2', 'Workspaces', 'Several live views on one screen', '/w'),
+      ('/m', 'list-columns', 'Monitors', 'Live watchlists of entities', '/m'),
+      ('/alerts', 'bell', 'Alerts', 'Rules checked on every change', '/alerts')])]),
+  ('Build', 'braces', [
+    ('Layouts', [
+      ('/studio', 'braces', 'Sutra Studio', 'Write a layout and preview it on real data', '/studio'),
+      ('/studio/reviews', 'patch-check', 'Reviews', 'Proposed Sutras waiting for approval', '/studio/reviews')]),
+    ('Learn', [
+      ('/help/sutra-guide', 'journal-code', 'Sutra guide', 'How a layout is written, by example', None),
+      ('/help/build-a-pack', 'box-seam', 'Build a pack', 'Bring a new domain in, step by step', None)])]),
+] %}
+{% if me and me.is_admin %}{% set MENU = MENU + [
+  ('Admin', 'shield-lock', [
+    ('People & access', [
+      ('/admin/users', 'people', 'Users', 'Accounts, roles and packs per person', '/admin/users'),
+      ('/admin/roles', 'shield-lock', 'Roles', 'What each role opens and may do', '/admin/roles'),
+      ('/admin/audit', 'journal-text', 'Audit log', 'Every sign-in and change, by whom', '/admin/audit')]),
+    ('Operations', [
+      ('/admin/packs', 'box-seam', 'Packs', 'Switch domain packs on and off', '/admin/packs'),
+      ('/admin/health', 'heart-pulse', 'Health', 'Connectors, packs, live streams', '/admin/health'),
+      ('/admin/caches', 'hdd-stack', 'Caches', 'What each cache holds; purge', '/admin/caches')])])] %}{% endif %}
+{% set MENU = MENU + [
+  ('Help', 'question-circle', [
+    ('Learn', [
+      ('/help', 'question-circle', 'Help centre', 'Guides, concepts and reference (F1)', '/help'),
+      ('/help/install-and-run', 'flag', 'Install and run', 'From nothing to your first view', None),
+      ('/about', 'info-circle', 'About ' ~ PRODUCT, 'Version, licence and credits', '/about')])])] %}
+{% macro _on(href, match) -%}{{ 'yes' if (path == href) or (match and path.startswith(match)) else '' }}{%- endmacro %}
+
 <header class="tbar" role="banner">
-  <a class="tbar-brand" href="/" aria-label="{{ PRODUCT }} home">{{ brand_mark("brand-mark") }}<span>{{ PRODUCT }}</span></a>
+ <div class="tbar-row1">
+  <a class="tbar-brand" href="/" aria-label="{{ PRODUCT }} home">{{ brand_mark("brand-mark") }}
+    <span class="tbar-name"><span>{{ PRODUCT }}</span>{% if TAGLINE %}<small>{{ TAGLINE }}</small>{% endif %}</span></a>
+
+  <nav class="tbar-menus" aria-label="Main">
+  {% for label, icon, columns in MENU %}
+    {% set ns = namespace(active=False) %}
+    {% for _t, items in columns %}{% for href, _i, _l, _d, match in items %}{% if _on(href, match) %}{% set ns.active = True %}{% endif %}{% endfor %}{% endfor %}
+    <div class="dropdown tbar-menu">
+      <button class="tbar-menu-btn{% if ns.active %} active{% endif %}" type="button" data-bs-toggle="dropdown" aria-expanded="false"
+              {% if ns.active %}aria-current="true"{% endif %} title="{{ label }}">
+        <i class="bi bi-{{ icon }}" aria-hidden="true"></i><span class="tbar-menu-l">{{ label }}</span></button>
+      <div class="dropdown-menu mega-panel cols-{{ columns | length }}">
+        {% for title, items in columns %}
+        <div class="mega-col">
+          <div class="mega-title">{{ title }}</div>
+          {% for href, i, l, d, match in items %}{% set on = _on(href, match) %}
+          <a class="mega-item{% if on %} active{% endif %}" href="{{ href }}"{% if on %} aria-current="page"{% endif %}>
+            <span class="mega-icon"><i class="bi bi-{{ i }}" aria-hidden="true"></i></span>
+            <span><span class="mega-label">{{ l }}</span><span class="mega-desc">{{ d }}</span></span></a>
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+  </nav>
+
+  <div class="tbar-tools">
+    {% if live is defined %}<span class="tbar-live tool" data-live-state="{{ 'live' if live else 'static' }}" title="{{ 'Live' if live else 'Static' }}{% if built_ms %}, built {{ built_ms }} ms{% endif %}"><span class="dot" aria-hidden="true"></span>
+      <span class="visually-hidden" data-live-text>{{ 'Live' if live else 'Static' }}{% if built_ms %}, built {{ built_ms }} ms{% endif %}</span></span>{% endif %}
+    <a class="tool bell" href="/alerts" title="Alerts" aria-label="Alerts" data-bell><i class="bi bi-bell" aria-hidden="true"></i><span class="bell-count" data-bell-count hidden>0</span></a>
+    {% if pack_switcher | length > 1 %}
+    {% set on = pack_switcher | selectattr('active') | map(attribute='name') | list %}
+    <div class="dropdown">
+      <button class="tool" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false"
+              title="Packs shown: {{ on | join(', ') }}" aria-label="Packs shown">
+        <i class="bi bi-box-seam" aria-hidden="true"></i><span class="tool-count">{{ on | length }}</span></button>
+      <form class="dropdown-menu dropdown-menu-end pack-menu" data-packs>
+        <div class="pack-menu-h"><span>Show these packs</span>
+          <span class="pack-menu-all"><button type="button" class="fk" data-packs-all>all</button> · <button type="button" class="fk" data-packs-none>none</button></span></div>
+        <div class="pack-menu-list">
+        {% for p in pack_switcher %}
+          <label class="pack-item"><input type="checkbox" name="pack" value="{{ p.name }}"{% if p.active %} checked{% endif %}>
+            <span><span class="pack-t">{{ p.title or p.name }}</span>{% if p.description %}<span class="pack-d">{{ p.description }}</span>{% endif %}</span></label>
+        {% endfor %}
+        </div>
+        <div class="pack-menu-f"><button type="submit" class="btn-pill btn-accent btn-sm-pill">Apply</button></div>
+      </form>
+    </div>
+    {% endif %}
+    {% include "_theme_menu.html" %}
+    <div class="dropdown">
+      {% set who = me.display if me else USER %}
+      <button class="tool user" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="{{ who }}">
+        <span class="avatar" aria-hidden="true">{{ (who or '?')[:1] | upper }}</span><span class="uname">{{ who }}</span></button>
+      <div class="dropdown-menu dropdown-menu-end user-menu">
+        <div class="user-menu-h">
+          <div class="fw-semibold">{{ who }}</div>
+          <div class="text-muted-d">{{ me.desk if me else DESK }}{% if me and me.roles %} · {{ me.roles | sort | join(', ') }}{% endif %}</div>
+          {% set zone = (settings or {}).clockZone %}
+          <div class="mono user-menu-clock" data-clock data-tz="{{ zone or CLOCK_TZ }}" data-tz-label="{{ (zone.split('/') | last | replace('_', ' ')) if zone else CLOCK_LABEL }}"></div>
+        </div>
+        <div class="dropdown-divider"></div>
+        <a class="dropdown-item" href="/account"><i class="bi bi-person-circle" aria-hidden="true"></i> My account</a>
+        <a class="dropdown-item" href="/account#settings"><i class="bi bi-sliders" aria-hidden="true"></i> Settings</a>
+        {% if AUTH_ENABLED %}<div class="dropdown-divider"></div>
+        <a class="dropdown-item" href="/logout"><i class="bi bi-box-arrow-right" aria-hidden="true"></i> Sign out</a>{% endif %}
+      </div>
+    </div>
+  </div>
+ </div>
+ <div class="tbar-row2">
   <form class="cmd" action="/go" method="get" role="search" autocomplete="off" data-command>
-    <label class="cmd-label" for="cmdInput">Command</label>
+    <label class="visually-hidden" for="cmdInput">Command</label>
     <div class="cmd-box">
+      <span class="cmd-prompt mono" aria-hidden="true">&gt;</span>
       <input id="cmdInput" name="q" class="cmd-input" type="text" spellcheck="false"
-             value="{{ command_text | default('') }}" placeholder="Command or identifier, then <GO>"
+             value="{{ command_text | default('') }}" placeholder="TRD T-10001, CPTY north, TRD productType=Revolver …  then <GO>"
              role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="cmdList">
       <ul id="cmdList" class="cmd-list" role="listbox" aria-label="Suggestions" hidden></ul>
     </div>
   </form>
+
   {% set bd = business_date or {} %}
   <form class="asof{% if asof != 'live' %} asof-past{% endif %}" action="/asof" method="get" data-asof
         title="{% if asof == 'live' %}Live: the current business date ({{ bd.calendar or 'NY' }} calendar), streaming{% else %}A picked business date: a static snapshot{% endif %}">
@@ -47,30 +161,5 @@
     <noscript><button type="submit" class="asof-go">Go</button></noscript>
     {% if asof != 'live' and bd.selected and bd.selected != asof %}<span class="asof-note mono" title="Not a business day on the {{ bd.calendar }} calendar">↩ {{ asof }}</span>{% endif %}
   </form>
-  <div class="tbar-right">
-    <a class="tbar-link" href="/help" title="Help (F1)"><i class="bi bi-question-circle" aria-hidden="true"></i><span class="d-none d-xl-inline"> Help</span></a>
-    <a class="tbar-link" href="/m" title="Monitors"><i class="bi bi-list-columns" aria-hidden="true"></i><span class="d-none d-xl-inline"> Monitors</span></a>
-    <a class="tbar-link bell" href="/alerts" title="Alerts" data-bell><i class="bi bi-bell" aria-hidden="true"></i><span class="bell-count" data-bell-count hidden>0</span></a>
-    <a class="tbar-link" href="/w" title="Workspaces"><i class="bi bi-grid-1x2" aria-hidden="true"></i><span class="d-none d-xl-inline"> Workspaces</span></a>
-    <a class="tbar-link" href="/studio" title="Sutra Studio"><i class="bi bi-braces" aria-hidden="true"></i><span class="d-none d-xl-inline"> Studio</span></a>
-    {% if pack_switcher | length > 1 %}
-    <div class="dropdown">
-      <button class="theme-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Domain packs">
-        <i class="bi bi-box-seam" aria-hidden="true"></i> {% set on = pack_switcher | selectattr('active') | map(attribute='name') | list %}<span class="d-none d-lg-inline"
-        title="{{ on | join(', ') }}">{{ on | join(' + ') if on | length <= 2 else on | length ~ ' packs' }}</span></button>
-      <form class="dropdown-menu dropdown-menu-end pack-menu" data-packs>
-        <p class="pack-menu-h">Show these packs</p>
-        {% for p in pack_switcher %}<label class="dropdown-item chk"><input type="checkbox" name="pack" value="{{ p.name }}"{% if p.active %} checked{% endif %}> {{ p.title }}</label>{% endfor %}
-        <button type="submit" class="btn-pill btn-accent btn-sm-pill">Apply</button>
-      </form>
-    </div>
-    {% endif %}
-    {% if me and me.is_admin %}<a class="tbar-link" href="/admin/users" title="User administration"><i class="bi bi-people" aria-hidden="true"></i><span class="d-none d-xl-inline"> Admin</span></a>{% endif %}
-    <span class="tbar-desk"><span class="desk-name">{{ me.desk if me else DESK }} · </span><a class="tbar-link" href="/account" title="My account">{{ me.display if me else USER }}</a>{% if AUTH_ENABLED %} · <a href="/logout">sign out</a>{% endif %}</span>
-    {% if live is defined %}<span class="tbar-live" data-live-state="{{ 'live' if live else 'static' }}" title="{{ 'Live' if live else 'Static' }}{% if built_ms %}, built {{ built_ms }} ms{% endif %}"><span class="dot" aria-hidden="true"></span>
-      <span data-live-text>{{ 'Live' if live else 'Static' }}{% if built_ms %}, built {{ built_ms }} ms{% endif %}</span></span>{% endif %}
-    {% set zone = (settings or {}).clockZone %}
-    <span class="tbar-clock mono" data-clock data-tz="{{ zone or CLOCK_TZ }}" data-tz-label="{{ (zone.split('/') | last | replace('_', ' ')) if zone else CLOCK_LABEL }}"></span>
-    {% include "_theme_menu.html" %}
-  </div>
+ </div>
 </header>

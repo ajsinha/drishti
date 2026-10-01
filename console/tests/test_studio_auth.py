@@ -87,7 +87,7 @@ def test_sign_in_goes_through_the_server(backend):
                follow_redirects=False, headers=FORM)
     assert r.status_code == 303 and r.headers["location"] == "/t"
     home = c.get("/t").text
-    assert "sign out" in home and 'href="/admin/users"' in home
+    assert "Sign out" in home and 'href="/admin/users"' in home
     ident = app.state.auth.identity(c.cookies.get(COOKIE))
     assert ident.user == "drishti-dev-admin" and ident.is_admin and ident.headers()["Authorization"].startswith("Bearer ")
     payload, sig = c.cookies.get(COOKIE).split(".")

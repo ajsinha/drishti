@@ -96,5 +96,3 @@ body {
 }
 
 /* the top bar is full at laptop widths: the clock and desk name give way first (the clock is also in the footer) */
-@media (max-width: 1500px) { .tbar-clock, .tbar [data-live-text], .theme-btn .d-md-inline { display: none !important; } }
-@media (max-width: 1400px) { .desk-name { display: none; } }
