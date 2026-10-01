@@ -623,7 +623,8 @@ routes:
 The built-in `demo` source serves every enabled pack's `samples/` folder, so a pack works with no database. The
 format:
 
-`samples/catalog.json` lists every sample. Each entry needs all four fields:
+`samples/catalog.json` lists every sample. The demo source needs only `kind` and `id`; give `title` and
+`subtitle` too, since they are what type-ahead shows:
 
 ```json
 [
@@ -652,10 +653,11 @@ format:
 | `source` | the name shown as the source system |
 | `generation` | a version number shown with the source |
 | `live` | `true`: the document ticks while someone watches it |
-| `walk` | `{ field: step }`: top-level numeric fields that random-walk by up to `step` on each tick. No code needed. |
+| `walk` | `{ field: step }`: top-level numeric fields that random-walk on each tick by a normal draw whose standard deviation is `step` (usually within a step or two, but unbounded); a step of 1 or more keeps whole numbers. No code needed. |
 
-Every catalogue entry must have its file; a missing file stops the demo source from starting. The `title` and
-`subtitle` are what the suggestions dropdown shows.
+Every catalogue entry must have its file; a missing file stops the demo source from starting. An entry whose path
+would lead outside the pack's `samples/` folder is skipped. The `title` and `subtitle` are what the suggestions
+dropdown shows.
 
 Realistic samples matter: they should look like what the real system would hold. `tools/samplegen` is a small,
 standard-library-only toolkit for that:
@@ -1070,8 +1072,8 @@ console:
 ### Step 3. Sample data
 
 The built-in `demo` source serves every loaded pack's `samples/` folder, so the pack works before you have a real
-data store. `samples/catalog.json` lists every sample; each entry needs all four fields. The `title` and
-`subtitle` are what the suggestions show.
+data store. `samples/catalog.json` lists every sample; each entry needs `kind` and `id`, and should have `title`
+and `subtitle`, which are what the suggestions show.
 
 `packs/helpdesk/samples/catalog.json`:
 
@@ -1143,7 +1145,7 @@ and `"tier": "Silver"`):
 | `source` | the source system named in *How this view was built* and in `F9` |
 | `generation` | a version number shown with the source |
 | `live` | `true`: the document ticks while someone watches it |
-| `walk` | `{ field: step }`: top-level numbers that random-walk by up to `step` on each tick (here the ticket's age) |
+| `walk` | `{ field: step }`: top-level numbers that random-walk on each tick by a normal draw with standard deviation `step`, unbounded (here the ticket's age, in whole hours) |
 
 Every catalogue entry must have its file; a missing file stops the demo source from starting.
 

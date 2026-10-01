@@ -887,6 +887,9 @@ dotted keys. Worked example: [PACKS.md](../guides/PACKS.md#derived-kinds-entitie
 | `ticking` | `true` | Live documents move while someone watches. |
 | `tick-ms` | `400` | Tick interval. |
 
+The shipped `application.yaml` sets only `drishti.sources.plugins.demo.enabled` (`DRISHTI_DEMO_ENABLED`); `ticking`
+and `tick-ms` are the code's defaults. Full detail: [DEMO_CONNECTOR.md](../connectors/DEMO_CONNECTOR.md).
+
 ---
 
 ## Environment variables used by the packs and profiles

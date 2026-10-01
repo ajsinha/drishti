@@ -305,9 +305,19 @@ drishti:
       demo:
         enabled: ${DRISHTI_DEMO_ENABLED:true}
         # settings.dirs is filled by the packs: every enabled pack's samples/ folder, comma-separated
+```
+
+The shipped file sets only `enabled`; `ticking` (`true`) and `tick-ms` (`400`) are the code's defaults. To change
+them, add for example:
+
+```yaml
+drishti:
+  sources:
+    plugins:
+      demo:
         settings:
-          ticking: true                     # false freezes the documents (golden tests)
-          tick-ms: 400                      # one random-walk step every 400 ms while someone subscribes
+          ticking: false                    # freezes the documents (golden tests)
+          tick-ms: 1000                     # one random-walk step a second while someone subscribes
 ```
 
 A pack does not declare a demo connector; it names its sample folder (`samples: samples`, the default) and the
@@ -322,6 +332,8 @@ loader adds it to `drishti.sources.plugins.demo.settings.dirs`.
 | `tick-ms` | `400` | tick interval in milliseconds |
 
 **The data.** `packs/<pack>/samples/catalog.json` lists the entities; each document lives in `<kind>/<id>.json`.
+An entry needs only `kind` and `id`; `title` and `subtitle` feed type-ahead. An entry whose path would lead outside
+the pack's samples folder is skipped.
 
 ```json
 [
@@ -347,9 +359,12 @@ optional. A finance FX spot (shortened), and `packs/trading/samples/trade/MX-200
 ```
 
 `_meta` is removed from the document. When `live` is true and someone subscribes, each tick moves the fields named in
-`walk` (`{"field": stepSize}`, top-level numbers; a step of 1 or more rounds to whole numbers), or, without `walk`,
-the finance kinds' built-in walks (`curve`, `fx-spot`, `netting-set`, `trade`). Reverse lookups find documents whose
-top-level fields (or top-level arrays) hold the target id.
+`walk` (`{"field": stepSize}`, top-level numbers) by a normal random draw whose standard deviation is the step, so a
+move is usually within the step but has no bound; a step of 1 or more rounds to whole numbers, a smaller one keeps
+its own precision (an FX spot walking by `0.0005` keeps five or more decimals). Without `walk`, the finance kinds'
+built-in walks apply (`curve`, `fx-spot`, `netting-set`, `trade`). A sample that cannot tick is skipped; the others
+go on. Reverse lookups find documents that hold the target id as a value at any depth (a trade's
+`counterparty.id` as well as its `nettingSet`), never the target itself.
 
 **Try it.** Nothing to install: start the server (`java -jar drishti-server/target/drishti-server-*-exec.jar`) with
 the default `finance` pack.
