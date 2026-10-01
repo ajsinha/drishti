@@ -229,7 +229,39 @@
   "sourceSystem": "Calypso",
   "createdAt": "2025-12-24T10:31:00Z",
   "lastModifiedAt": "2025-12-24T10:31:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2025-12-24",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Bloomberg TOMS by TRDR-RCASTILLO: short Callable bond"
+   },
+   {
+    "date": "2025-12-24",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT626192304)"
+   },
+   {
+    "date": "2025-12-25",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to JSCC"
+   },
+   {
+    "date": "2026-12-26",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2031-06-16",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -286,6 +318,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -528662,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 1656
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 436
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 18375
+  },
+  {
+   "step": "FX delta",
+   "pnl": 472
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 260
+  },
+  {
+   "step": "Theta",
+   "pnl": 157
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -621
+  }
+ ],
  "_meta": {
   "source": "summit-fi",
   "generation": 1,

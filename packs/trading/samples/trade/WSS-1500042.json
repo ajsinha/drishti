@@ -358,7 +358,33 @@
   "sourceSystem": "Murex",
   "createdAt": "2026-07-31T10:52:00Z",
   "lastModifiedAt": "2026-07-31T10:52:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2026-07-31",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Wall Street Systems by TRDR-ENOVAK: buy FX barrier option"
+   },
+   {
+    "date": "2026-07-31",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT583863996)"
+   },
+   {
+    "date": "2026-11-03",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2035-07-16",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -411,6 +437,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 267600,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 1135
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -145
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -9069
+  },
+  {
+   "step": "FX delta",
+   "pnl": -611
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 5818
+  },
+  {
+   "step": "Theta",
+   "pnl": -1617
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 115
+  }
+ ],
  "_meta": {
   "source": "calypso-fx",
   "generation": 1,

@@ -42,6 +42,23 @@ panels:
       - { label: Lots, bind: $.terms.lots, fmt: amount0 }
       - { label: Effective, bind: $.effectiveDate, fmt: date }
       - { label: Counterparty, bind: $.counterparty.name }
+  - id: explain
+    kind: waterfall
+    title: "P&L explain, opening to closing MTM (USD)"
+    code: PNLX
+    key: F5
+    rows: $.pnlExplain
+    label: step
+    value: pnl
+    sum: Closing MTM
+    fmt: signed0
+  - id: lifecycle
+    kind: timeline
+    title: Lifecycle
+    code: LIFE
+    key: F6
+    rows: $.lifecycle.timeline
+    detail: description
   - { id: built, kind: provenance, title: How this view was built }
   - id: marketData
     kind: line

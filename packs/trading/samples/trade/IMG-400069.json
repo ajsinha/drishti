@@ -355,7 +355,33 @@
   "sourceSystem": "Murex",
   "createdAt": "2025-05-12T11:35:00Z",
   "lastModifiedAt": "2025-05-12T11:35:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-05-12",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-JWEISS: sell Autocallable note"
+   },
+   {
+    "date": "2025-05-12",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT571425650)"
+   },
+   {
+    "date": "2026-11-14",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2035-04-30",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -409,6 +435,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -1034006,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -11091
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 257
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 38287
+  },
+  {
+   "step": "FX delta",
+   "pnl": 3102
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -898
+  },
+  {
+   "step": "Theta",
+   "pnl": -4019
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 1381
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

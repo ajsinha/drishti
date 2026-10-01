@@ -207,8 +207,10 @@ def market_results(trades: dict, docs: dict) -> None:
         limit = round(var99 * r.uniform(1.25, 1.8), -4)
         pnl = [{"date": iso(d), "pnl": round(r.gauss(0, var99 / 2.33))} for d in days]
         exceptions = sum(1 for p in pnl if p["pnl"] < -var99)
+        scenarios = scenario_pnl(desk, var99)
         docs["var"][f"VAR-{desk[5:]}"] = {
             "resultId": f"VAR-{desk[5:]}", "var99": var99, "es975": round(var99 * 1.13), "svar": round(var99 * 1.9), "limit": limit, "exceptions": exceptions,
+            "scenarioPnl": scenarios, "meanPnl": round(sum(scenarios) / len(scenarios)),
             "pnlSeries": pnl, "contributions": [{"book": b, "var": round(v * 0.85)} for b, v in contrib.items()], "desk": desk,
             "method": "Historical simulation, 1-day, 99%, 500 scenarios", "_meta": {"source": "var-engine", "generation": 1}}
         for scn, (name, typ, sev, shocks) in SCENARIOS.items():
@@ -235,11 +237,35 @@ def market_results(trades: dict, docs: dict) -> None:
                 "resultId": f"PNL-{b[5:]}", "date": iso(N.AS_OF), "actual": actual, "explained": explained, "unexplained": actual - explained,
                 "attribution": [{"factor": f, "pnl": round(explained * w)} for f, w in
                                 [("Rates delta", 0.42), ("FX delta", 0.12), ("Credit", 0.08), ("Vega", 0.1), ("Carry and theta", 0.2), ("New trades", 0.08)]],
+                "explainSteps": explain_steps(explained, actual),
                 "book": b, "_meta": {"source": "pnl-explain", "generation": 1}}
     for scn, (name, typ, sev, shocks) in SCENARIOS.items():
         docs["stress-scenario"][scn] = {"scenarioId": scn, "name": name, "type": typ, "severity": sev,
                                          "shocks": [{"factor": f, "shock": s} for f, s in shocks.items()], "horizon": "10 days",
                                          "_meta": {"source": "stress-engine", "generation": 1}}
+
+
+def scenario_pnl(desk: str, var99: float, n: int = 500) -> list[int]:
+    """The desk's P&L under each of the n historical scenarios the VaR is read from: fat-tailed (a scale mixture of
+    normals), scaled so the fifth worst of 500 (the 1% quantile) is minus the VaR."""
+    r = M.rng("scenarios" + desk)
+    raw = [r.gauss(0, 1) * (1.6 if r.random() < 0.08 else 1.0) for _ in range(n)]
+    q = sorted(raw)[max(0, n // 100 - 1)]
+    k = var99 / -q if q < 0 else var99 / 2.33
+    return [round(x * k) for x in raw]
+
+
+# the risk factors a book's explained P&L comes from, and their usual shares (theta costs)
+EXPLAIN_WEIGHTS = [("Carry", 0.14), ("Roll-down", 0.06), ("Rates delta", 0.42), ("FX delta", 0.12), ("Credit", 0.08), ("Vol (vega)", 0.10),
+                   ("Theta", -0.04), ("New trades", 0.12)]
+
+
+def explain_steps(explained: int, actual: int) -> list[dict]:
+    """The waterfall from zero to the actual P&L: each factor's share of the explained P&L (the last one takes the
+    rounding), then the unexplained rest."""
+    steps = [{"step": f, "pnl": round(explained * w)} for f, w in EXPLAIN_WEIGHTS]
+    steps[-1]["pnl"] += explained - sum(x["pnl"] for x in steps)
+    return steps + [{"step": "Unexplained", "pnl": actual - explained}]
 
 
 TR_CLASS = {"Rates": "GIRR", "Inflation": "GIRR", "Money market": "GIRR", "Fixed income": "CSR non-securitisation", "Securities financing": "GIRR",
@@ -252,14 +278,21 @@ def reference(trades: dict, docs: dict) -> None:
     for t in trades.values():
         books[t["book"]].append(t)
     for le, (name, country, reg) in N.LEGAL_ENTITIES.items():
+        desks = [d for d, v in N.DESKS.items() if v[1] == le]
         docs["legal-entity"][le] = {"entityId": le, "name": name, "lei": ids.lei(name), "jurisdiction": country, "regulator": reg,
-                                    "desks": [{"id": d, "name": v[0]} for d, v in N.DESKS.items() if v[1] == le], "_meta": {"source": "entity-master", "generation": 1}}
+                                    "desks": [{"id": d, "name": N.DESKS[d][0]} for d in desks],
+                                    "books": [{"book": b, "desk": N.DESKS[d][0], "var": round(book_var(books[b]) * 0.85), "pnl": round(sum(t["pnl1d"] for t in books[b])),
+                                               "mtm": round(sum(t["mtm"] for t in books[b])), "trades": len(books[b])} for d in desks for b in TR.books_of(d) if books[b]],
+                                    "_meta": {"source": "entity-master", "generation": 1}}
     for desk, (name, le, classes, head) in N.DESKS.items():
         bl = TR.books_of(desk)
         mtm = sum(t["mtm"] for b in bl for t in books[b])
         docs["desk"][desk] = {"deskId": desk, "name": name, "head": head, "books": [{"id": b, "trades": len(books[b]), "mtm": round(sum(t["mtm"] for t in books[b]))} for b in bl],
                               "var99": docs["var"].get(f"VAR-{desk[5:]}", {}).get("var99"), "mtm": round(mtm), "legalEntity": le,
-                              "varResult": f"VAR-{desk[5:]}", "assetClasses": classes, "_meta": {"source": "org-master", "generation": 1}}
+                              "varResult": f"VAR-{desk[5:]}", "assetClasses": classes,
+                              "positions": [{"tradeId": t["tradeId"], "book": b, "currency": t["currency"], "family": t["family"], "mtm": t["mtm"]}
+                                            for b in bl for t in sorted(books[b], key=lambda t: t["tradeId"])],
+                              "_meta": {"source": "org-master", "generation": 1}}
         for b in bl:
             ts = books[b]
             docs["book"][b] = {"bookId": b, "name": f"{name} · book {b[-1]}", "deskName": name, "tradeCount": len(ts),
@@ -279,7 +312,8 @@ def reference(trades: dict, docs: dict) -> None:
                "kyc": {"status": "Approved", "riskRating": "Standard" if rating[0] == "A" else "Enhanced", "lastReview": "2026-02-11",
                        "emirClassification": "FC" if typ in ("Bank", "Hedge fund", "Insurer", "Asset manager", "Pension fund") else "NFC-",
                        "pd1y": rating_pd(rating)},
-               "group": f"GRP-{grp}", "creditLimit": f"LIM-{cp}", "_meta": {"source": "counterparty-master", "generation": 1}}
+               "group": f"GRP-{grp}", "creditLimit": f"LIM-{cp}", "hierarchy": hierarchy(cp, grp, sets),
+               "_meta": {"source": "counterparty-master", "generation": 1}}
         if cp in N.ISSUERS:
             out["creditCurve"] = f"CDS-{cp}"
         docs["counterparty"][f"CP-{cp}"] = out
@@ -333,6 +367,21 @@ def reference(trades: dict, docs: dict) -> None:
                     hol.append({"date": iso(d), "name": "Public holiday"})
                 d += timedelta(days=1)
         docs["calendar"][cal] = {"calendarId": cal, "name": name, "holidays": hol, "weekend": ["Saturday", "Sunday"], "_meta": {"source": "reference-master", "generation": 1}}
+
+
+def hierarchy(cp: str, grp: str, sets: list[dict]) -> dict:
+    """The counterparty in its legal-entity hierarchy: the group (ultimate parent) over its members, and under this
+    counterparty its ISDA, the CSA that secures it and the netting sets it governs. Every node is an entity id."""
+    members = sorted(m for m, v in N.COUNTERPARTIES.items() if v[5] == grp)
+    nodes = [{"id": f"GRP-{grp}", "label": N.GROUPS.get(grp, grp), "type": "Group (ultimate parent)"}]
+    nodes += [{"id": f"CP-{m}", "label": N.COUNTERPARTIES[m][0], "type": "Counterparty"} for m in members]
+    edges = [{"from": f"GRP-{grp}", "to": f"CP-{m}", "label": "parent of"} for m in members]
+    nodes += [{"id": f"AGR-{cp}-ISDA", "label": "ISDA 2002 Master", "type": "Agreement"}, {"id": f"CSA-{cp}", "label": "Credit support annex", "type": "CSA"}]
+    edges += [{"from": f"CP-{cp}", "to": f"AGR-{cp}-ISDA", "label": "signed"}, {"from": f"AGR-{cp}-ISDA", "to": f"CSA-{cp}", "label": "secured by"}]
+    for s in sorted(sets, key=lambda x: x["nettingSetId"]):
+        nodes.append({"id": s["nettingSetId"], "label": f"{s['nettingSetId']} · {s['tradeCount']} trade{'' if s['tradeCount'] == 1 else 's'}", "type": "Netting set"})
+        edges.append({"from": f"AGR-{cp}-ISDA", "to": s["nettingSetId"], "label": "nets"})
+    return {"nodes": nodes, "edges": edges}
 
 
 def build(trades: dict) -> dict[str, dict[str, dict]]:

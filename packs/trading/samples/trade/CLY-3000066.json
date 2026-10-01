@@ -167,7 +167,27 @@
   "sourceSystem": "Murex",
   "createdAt": "2024-12-11T09:58:00Z",
   "lastModifiedAt": "2024-12-11T09:58:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2024-12-11",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Calypso by TRDR-CDUBOIS: buy Credit spread option"
+   },
+   {
+    "date": "2024-12-11",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA764102828)"
+   },
+   {
+    "date": "2027-09-30",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -220,6 +240,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -2315016,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 598
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -175
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -929
+  },
+  {
+   "step": "FX delta",
+   "pnl": 1248
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -6904
+  },
+  {
+   "step": "Theta",
+   "pnl": -7770
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 769
+  }
+ ],
  "_meta": {
   "source": "murex-credit",
   "generation": 1,

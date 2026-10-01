@@ -43,6 +43,87 @@
  },
  "group": "GRP-CASCADIA",
  "creditLimit": "LIM-CASCADIA",
+ "hierarchy": {
+  "nodes": [
+   {
+    "id": "GRP-CASCADIA",
+    "label": "Cascadia Airlines Inc.",
+    "type": "Group (ultimate parent)"
+   },
+   {
+    "id": "CP-CASCADIA",
+    "label": "Cascadia Airlines Inc.",
+    "type": "Counterparty"
+   },
+   {
+    "id": "AGR-CASCADIA-ISDA",
+    "label": "ISDA 2002 Master",
+    "type": "Agreement"
+   },
+   {
+    "id": "CSA-CASCADIA",
+    "label": "Credit support annex",
+    "type": "CSA"
+   },
+   {
+    "id": "NS-CASCADIA-FRA",
+    "label": "NS-CASCADIA-FRA · 1 trade",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-CASCADIA-LDN",
+    "label": "NS-CASCADIA-LDN · 12 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-CASCADIA-NY",
+    "label": "NS-CASCADIA-NY · 18 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-CASCADIA-TKY",
+    "label": "NS-CASCADIA-TKY · 2 trades",
+    "type": "Netting set"
+   }
+  ],
+  "edges": [
+   {
+    "from": "GRP-CASCADIA",
+    "to": "CP-CASCADIA",
+    "label": "parent of"
+   },
+   {
+    "from": "CP-CASCADIA",
+    "to": "AGR-CASCADIA-ISDA",
+    "label": "signed"
+   },
+   {
+    "from": "AGR-CASCADIA-ISDA",
+    "to": "CSA-CASCADIA",
+    "label": "secured by"
+   },
+   {
+    "from": "AGR-CASCADIA-ISDA",
+    "to": "NS-CASCADIA-FRA",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-CASCADIA-ISDA",
+    "to": "NS-CASCADIA-LDN",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-CASCADIA-ISDA",
+    "to": "NS-CASCADIA-NY",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-CASCADIA-ISDA",
+    "to": "NS-CASCADIA-TKY",
+    "label": "nets"
+   }
+  ]
+ },
  "_meta": {
   "source": "counterparty-master",
   "generation": 1

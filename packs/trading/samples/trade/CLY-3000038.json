@@ -270,7 +270,40 @@
   "sourceSystem": "Calypso",
   "createdAt": "2024-10-28T11:59:00Z",
   "lastModifiedAt": "2024-10-28T11:59:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2024-10-28",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Calypso by TRDR-CDUBOIS: pay fixed Total return swap on a loan index"
+   },
+   {
+    "date": "2024-10-28",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA132537968)"
+   },
+   {
+    "date": "2025-10-30",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "GBP payment settled",
+    "amount": -237567.45
+   },
+   {
+    "date": "2026-10-30",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2032-08-31",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -322,6 +355,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -1541627,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 19765
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -5418
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -89352
+  },
+  {
+   "step": "FX delta",
+   "pnl": 5137
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 894
+  },
+  {
+   "step": "Theta",
+   "pnl": -420
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 3520
+  }
+ ],
  "_meta": {
   "source": "murex-credit",
   "generation": 1,

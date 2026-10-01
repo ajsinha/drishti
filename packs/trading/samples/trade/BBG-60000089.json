@@ -183,7 +183,27 @@
   "sourceSystem": "Murex",
   "createdAt": "2026-08-06T12:21:00Z",
   "lastModifiedAt": "2026-08-06T12:21:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2026-08-06",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Bloomberg TOMS by TRDR-KBRANDT: repo (lend cash) Reverse repo"
+   },
+   {
+    "date": "2026-08-06",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT106020053)"
+   },
+   {
+    "date": "2026-12-22",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -236,6 +256,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 2552940,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 32506
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -793
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -148098
+  },
+  {
+   "step": "FX delta",
+   "pnl": -2233
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -86
+  },
+  {
+   "step": "Theta",
+   "pnl": 900
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -7059
+  }
+ ],
  "_meta": {
   "source": "globalone-sft",
   "generation": 1,

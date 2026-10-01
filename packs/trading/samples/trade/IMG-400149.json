@@ -354,7 +354,40 @@
   "sourceSystem": "Murex",
   "createdAt": "2024-12-11T09:28:00Z",
   "lastModifiedAt": "2024-12-11T09:28:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2024-12-11",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-VRAO: buy FX-rates hybrid (PRDC)"
+   },
+   {
+    "date": "2024-12-11",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT323207276)"
+   },
+   {
+    "date": "2025-01-27",
+    "event": "Partially terminated",
+    "status": "Done",
+    "description": "Notional reduced by 25%, unwind fee settled",
+    "amount": 44250000
+   },
+   {
+    "date": "2026-12-13",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2034-05-08",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -408,6 +441,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 405971,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -984
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -430
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -2854
+  },
+  {
+   "step": "FX delta",
+   "pnl": -87
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 757
+  },
+  {
+   "step": "Theta",
+   "pnl": -438
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -241
+  }
+ ],
  "_meta": {
   "source": "sophis-struct",
   "generation": 1,

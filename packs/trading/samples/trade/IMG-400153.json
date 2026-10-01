@@ -347,7 +347,40 @@
   "sourceSystem": "Summit",
   "createdAt": "2026-04-14T10:30:00Z",
   "lastModifiedAt": "2026-04-14T10:30:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2026-04-14",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-YTANAKA: long Worst-of note"
+   },
+   {
+    "date": "2026-04-14",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT649480698)"
+   },
+   {
+    "date": "2026-09-01",
+    "event": "Partially terminated",
+    "status": "Done",
+    "description": "Notional reduced by 40%, unwind fee settled",
+    "amount": 16400000
+   },
+   {
+    "date": "2026-10-16",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2035-01-22",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -400,6 +433,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 533334,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 9504
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 3752
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -42586
+  },
+  {
+   "step": "FX delta",
+   "pnl": 360
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 136
+  },
+  {
+   "step": "Theta",
+   "pnl": 1137
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -1650
+  }
+ ],
  "_meta": {
   "source": "sophis-struct",
   "generation": 1,

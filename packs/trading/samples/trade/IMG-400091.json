@@ -167,7 +167,34 @@
   "sourceSystem": "Calypso",
   "createdAt": "2025-07-24T09:50:00Z",
   "lastModifiedAt": "2025-07-24T09:50:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-07-24",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-PLINDQVIST: pay fixed Dividend swap"
+   },
+   {
+    "date": "2025-07-24",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT900209488)"
+   },
+   {
+    "date": "2025-08-22",
+    "event": "Partially terminated",
+    "status": "Done",
+    "description": "Notional reduced by 10%, unwind fee settled",
+    "amount": 7000000
+   },
+   {
+    "date": "2036-10-27",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -220,6 +247,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -479376,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 919
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -861
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 22913
+  },
+  {
+   "step": "FX delta",
+   "pnl": 1926
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 20
+  },
+  {
+   "step": "Theta",
+   "pnl": 259
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -1021
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

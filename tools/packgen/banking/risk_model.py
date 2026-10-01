@@ -101,7 +101,7 @@ def MD(*items: str) -> list[tuple[str, str, str]]:
 # ---- market-data, risk and reference kinds ----------------------------------------------------------------------
 @dataclass
 class Panel:
-    kind: str                         # kv | table | line | area | hbar | ladder | surface
+    kind: str                         # kv | table | line | area | hbar | ladder | surface | waterfall | histogram | scatter | candlestick | graph | timeline | pivot
     id: str
     title: str
     rows: str | None = None           # Rachana-EL path to the rows (or object for kv)
@@ -117,6 +117,17 @@ class Panel:
     area: str = "main"
     key: str | None = None
     code: str | None = None
+    opts: dict = field(default_factory=dict)             # further options, in order: scalars, or lists of mappings (markers)
+
+    def paths(self) -> list[str]:
+        """Every option that holds a document path or expression (rows, nodes, edges, marker values), for the checks."""
+        out = [self.rows] if self.rows else []
+        for v in self.opts.values():
+            if isinstance(v, str):
+                out.append(v)
+            elif isinstance(v, list):
+                out += [str(m.get("value")) for m in v if isinstance(m, dict) and m.get("value")]
+        return out
 
 
 @dataclass

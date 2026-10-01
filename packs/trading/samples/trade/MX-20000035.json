@@ -1435,7 +1435,40 @@
   "sourceSystem": "Murex",
   "createdAt": "2024-05-31T10:31:00Z",
   "lastModifiedAt": "2024-05-31T10:31:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2024-05-31",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-MOKAFOR: pay fixed Zero-coupon swap"
+   },
+   {
+    "date": "2024-05-31",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA299888100)"
+   },
+   {
+    "date": "2026-07-22",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "CHF payment settled",
+    "amount": 144623.27
+   },
+   {
+    "date": "2026-10-21",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2035-04-19",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -1487,6 +1520,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -41095648,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -147597
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -113354
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 1739916
+  },
+  {
+   "step": "FX delta",
+   "pnl": -283711
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 31956
+  },
+  {
+   "step": "Theta",
+   "pnl": 7662
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 42020
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

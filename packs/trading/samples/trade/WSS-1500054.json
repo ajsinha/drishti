@@ -347,7 +347,33 @@
   "sourceSystem": "Summit",
   "createdAt": "2024-06-18T09:44:00Z",
   "lastModifiedAt": "2024-06-18T09:44:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2024-06-18",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Wall Street Systems by TRDR-LMOREAU: sell FX one-touch / no-touch"
+   },
+   {
+    "date": "2024-06-18",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT594001116)"
+   },
+   {
+    "date": "2026-12-20",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2031-03-26",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -400,6 +426,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -73089,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -338
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 287
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 5786
+  },
+  {
+   "step": "FX delta",
+   "pnl": -258
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -1562
+  },
+  {
+   "step": "Theta",
+   "pnl": -865
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -154
+  }
+ ],
  "_meta": {
   "source": "calypso-fx",
   "generation": 1,

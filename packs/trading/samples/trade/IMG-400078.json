@@ -238,7 +238,40 @@
   "sourceSystem": "Calypso",
   "createdAt": "2026-02-06T10:30:00Z",
   "lastModifiedAt": "2026-02-06T10:30:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2026-02-06",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-JWEISS: short Reverse convertible"
+   },
+   {
+    "date": "2026-02-06",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT798317126)"
+   },
+   {
+    "date": "2026-08-09",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "EUR payment settled",
+    "amount": 940000.0
+   },
+   {
+    "date": "2027-02-09",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2030-09-09",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -292,6 +325,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -216902,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -316
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -143
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -928
+  },
+  {
+   "step": "FX delta",
+   "pnl": -106
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -31
+  },
+  {
+   "step": "Theta",
+   "pnl": 31
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 61
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

@@ -247,7 +247,33 @@
   "sourceSystem": "Endur",
   "createdAt": "2025-12-02T12:18:00Z",
   "lastModifiedAt": "2025-12-02T12:18:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2025-12-02",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Calypso by TRDR-DWHITFIELD: pay fixed Total return swap on a bond"
+   },
+   {
+    "date": "2025-12-02",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA439920114)"
+   },
+   {
+    "date": "2026-12-04",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2030-08-07",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -300,6 +326,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -1791609,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -9534
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 12524
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -110628
+  },
+  {
+   "step": "FX delta",
+   "pnl": -4421
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 4
+  },
+  {
+   "step": "Theta",
+   "pnl": 4359
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 4158
+  }
+ ],
  "_meta": {
   "source": "murex-credit",
   "generation": 1,

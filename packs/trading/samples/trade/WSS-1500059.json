@@ -349,7 +349,33 @@
   "sourceSystem": "Endur",
   "createdAt": "2026-08-19T09:06:00Z",
   "lastModifiedAt": "2026-08-19T09:06:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2026-08-19",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Wall Street Systems by TRDR-ENOVAK: sell FX average-rate option"
+   },
+   {
+    "date": "2026-08-19",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT587206495)"
+   },
+   {
+    "date": "2026-11-21",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2037-03-09",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -402,6 +428,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 919691,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 297
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -205
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 1444
+  },
+  {
+   "step": "FX delta",
+   "pnl": 360
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -68
+  },
+  {
+   "step": "Theta",
+   "pnl": -898
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -2
+  }
+ ],
  "_meta": {
   "source": "calypso-fx",
   "generation": 1,

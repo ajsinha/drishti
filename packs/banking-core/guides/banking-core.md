@@ -64,7 +64,7 @@ Load real data into each domain's folder, or point a domain at a database instea
 
 A legal entity the bank trades with: identifiers, rating, sector, country and parent group.
 
-**Fields its Sutra reads:** `name`, `lei`, `rating`, `sector`, `country`, `type`, `netMtm`, `pfePeak`, `nettingSets`, `kyc`.
+**Fields its Sutra reads:** `name`, `lei`, `rating`, `sector`, `country`, `type`, `netMtm`, `pfePeak`, `nettingSets`, `kyc`, `hierarchy`.
 
 **Links:** `group` → Group (`counterparty-group`), `creditLimit` → Credit limit (`credit-limit`), `creditCurve` → Credit curve (`credit-curve`).
 
@@ -100,7 +100,7 @@ A clearing house with its default fund and margin model.
 
 The bank's own booking entity.
 
-**Fields its Sutra reads:** `name`, `lei`, `jurisdiction`, `regulator`, `desks`.
+**Fields its Sutra reads:** `name`, `lei`, `jurisdiction`, `regulator`, `desks`, `books`.
 
 ### Book (`book`)
 
@@ -114,7 +114,7 @@ A trading book: owner desk, trades and risk.
 
 A trading desk: books, limits and risk results.
 
-**Fields its Sutra reads:** `name`, `head`, `books`, `var99`, `mtm`.
+**Fields its Sutra reads:** `name`, `head`, `books`, `var99`, `mtm`, `positions`.
 
 **Links:** `legalEntity` → Legal entity (`legal-entity`), `varResult` → VaR (`var`).
 

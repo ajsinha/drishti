@@ -327,7 +327,33 @@
   "sourceSystem": "Calypso",
   "createdAt": "2025-04-22T12:43:00Z",
   "lastModifiedAt": "2025-04-22T12:43:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-04-22",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-ASHAH: sell Target redemption note (rates)"
+   },
+   {
+    "date": "2025-04-22",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA880838463)"
+   },
+   {
+    "date": "2026-10-24",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2029-10-08",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -380,6 +406,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -1356746,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -4964
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 325
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -50745
+  },
+  {
+   "step": "FX delta",
+   "pnl": 752
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 1343
+  },
+  {
+   "step": "Theta",
+   "pnl": -2893
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -2053
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

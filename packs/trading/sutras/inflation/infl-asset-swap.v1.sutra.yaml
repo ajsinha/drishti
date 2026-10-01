@@ -70,6 +70,23 @@ panels:
       - { label: Rate, bind: "@.rate", fmt: pct4 }
       - { label: Amount, bind: "@.amount", fmt: signed0, tone: sign }
       - { label: PV, bind: "@.pv", fmt: signed0, tone: sign, total: true }
+  - id: explain
+    kind: waterfall
+    title: "P&L explain, opening to closing MTM (USD)"
+    code: PNLX
+    key: F5
+    rows: $.pnlExplain
+    label: step
+    value: pnl
+    sum: Closing MTM
+    fmt: signed0
+  - id: lifecycle
+    kind: timeline
+    title: Lifecycle
+    code: LIFE
+    key: F6
+    rows: $.lifecycle.timeline
+    detail: description
   - { id: built, kind: provenance, title: How this view was built }
   - id: marketData
     kind: line

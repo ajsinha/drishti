@@ -174,7 +174,34 @@
   "sourceSystem": "Summit",
   "createdAt": "2025-02-14T10:09:00Z",
   "lastModifiedAt": "2025-02-14T10:09:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-02-14",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-MOKAFOR: buy European swaption"
+   },
+   {
+    "date": "2025-02-14",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA967381768)"
+   },
+   {
+    "date": "2025-10-27",
+    "event": "Partially terminated",
+    "status": "Done",
+    "description": "Notional reduced by 10%, unwind fee settled",
+    "amount": 23600000
+   },
+   {
+    "date": "2027-12-03",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -227,6 +254,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 3723107,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 6626
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 4851
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 210443
+  },
+  {
+   "step": "FX delta",
+   "pnl": -16125
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 100533
+  },
+  {
+   "step": "Theta",
+   "pnl": -32771
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -10942
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

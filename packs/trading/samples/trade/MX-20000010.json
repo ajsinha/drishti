@@ -1351,7 +1351,46 @@
   "sourceSystem": "Calypso",
   "createdAt": "2024-06-18T09:37:00Z",
   "lastModifiedAt": "2024-06-18T09:37:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2024-06-18",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-ASHAH: pay fixed Overnight index swap"
+   },
+   {
+    "date": "2024-06-18",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA957760563)"
+   },
+   {
+    "date": "2024-06-20",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2026-09-02",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "USD payment settled",
+    "amount": 1265058.27
+   },
+   {
+    "date": "2026-12-02",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2032-11-29",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -1407,6 +1446,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 18891165,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 2386
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -5
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -9358
+  },
+  {
+   "step": "FX delta",
+   "pnl": -168
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -6
+  },
+  {
+   "step": "Theta",
+   "pnl": 448
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -12
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

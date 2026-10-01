@@ -154,7 +154,27 @@
   "sourceSystem": "Calypso",
   "createdAt": "2026-08-21T11:51:00Z",
   "lastModifiedAt": "2026-08-21T11:51:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2026-08-21",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Wall Street Systems by TRDR-ISCHULZ: long Certificate of deposit"
+   },
+   {
+    "date": "2026-08-21",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT668828042)"
+   },
+   {
+    "date": "2027-05-10",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -205,6 +225,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 377742,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 2211
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -4597
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 38352
+  },
+  {
+   "step": "FX delta",
+   "pnl": -5420
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 243
+  },
+  {
+   "step": "Theta",
+   "pnl": -94
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 652
+  }
+ ],
  "_meta": {
   "source": "summit-mm",
   "generation": 1,

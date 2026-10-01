@@ -291,7 +291,33 @@
   "sourceSystem": "Summit",
   "createdAt": "2026-09-11T09:18:00Z",
   "lastModifiedAt": "2026-09-11T09:18:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2026-09-11",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-VRAO: short Capital-protected note"
+   },
+   {
+    "date": "2026-09-11",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT317081706)"
+   },
+   {
+    "date": "2026-12-14",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2030-06-10",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -344,6 +370,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -173364,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -4602
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -1321
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 19563
+  },
+  {
+   "step": "FX delta",
+   "pnl": -886
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 132
+  },
+  {
+   "step": "Theta",
+   "pnl": -36
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 472
+  }
+ ],
  "_meta": {
   "source": "sophis-struct",
   "generation": 1,

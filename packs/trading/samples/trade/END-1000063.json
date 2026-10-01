@@ -359,7 +359,40 @@
   "sourceSystem": "Summit",
   "createdAt": "2025-07-17T09:09:00Z",
   "lastModifiedAt": "2025-07-17T09:09:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-07-17",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Endur by TRDR-TBRENNAN: receive fixed Power swap"
+   },
+   {
+    "date": "2025-07-17",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT354231308)"
+   },
+   {
+    "date": "2026-07-21",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "USD payment settled",
+    "amount": 676115.0
+   },
+   {
+    "date": "2026-10-21",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2030-04-22",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -411,6 +444,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -829135,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 1392
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 229
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -6872
+  },
+  {
+   "step": "FX delta",
+   "pnl": 801
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -48
+  },
+  {
+   "step": "Theta",
+   "pnl": -163
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 151
+  }
+ ],
  "_meta": {
   "source": "endur-comm",
   "generation": 1,

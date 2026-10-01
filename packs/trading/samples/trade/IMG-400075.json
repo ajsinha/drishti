@@ -268,7 +268,40 @@
   "sourceSystem": "Calypso",
   "createdAt": "2025-03-18T12:56:00Z",
   "lastModifiedAt": "2025-03-18T12:56:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-03-18",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-PLINDQVIST: short Reverse convertible"
+   },
+   {
+    "date": "2025-03-18",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT764328787)"
+   },
+   {
+    "date": "2026-09-20",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "USD payment settled",
+    "amount": 1300000.0
+   },
+   {
+    "date": "2027-03-20",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2032-05-17",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -322,6 +355,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 497111,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -3963
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 1031
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -11859
+  },
+  {
+   "step": "FX delta",
+   "pnl": -2185
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -509
+  },
+  {
+   "step": "Theta",
+   "pnl": 369
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -787
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

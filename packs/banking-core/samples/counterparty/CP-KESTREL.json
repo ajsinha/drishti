@@ -37,6 +37,77 @@
  },
  "group": "GRP-KESTREL",
  "creditLimit": "LIM-KESTREL",
+ "hierarchy": {
+  "nodes": [
+   {
+    "id": "GRP-KESTREL",
+    "label": "Kestrel Capital Group",
+    "type": "Group (ultimate parent)"
+   },
+   {
+    "id": "CP-KESTREL",
+    "label": "Kestrel Global Macro Fund",
+    "type": "Counterparty"
+   },
+   {
+    "id": "AGR-KESTREL-ISDA",
+    "label": "ISDA 2002 Master",
+    "type": "Agreement"
+   },
+   {
+    "id": "CSA-KESTREL",
+    "label": "Credit support annex",
+    "type": "CSA"
+   },
+   {
+    "id": "NS-KESTREL-FRA",
+    "label": "NS-KESTREL-FRA · 2 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-KESTREL-LDN",
+    "label": "NS-KESTREL-LDN · 14 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-KESTREL-NY",
+    "label": "NS-KESTREL-NY · 22 trades",
+    "type": "Netting set"
+   }
+  ],
+  "edges": [
+   {
+    "from": "GRP-KESTREL",
+    "to": "CP-KESTREL",
+    "label": "parent of"
+   },
+   {
+    "from": "CP-KESTREL",
+    "to": "AGR-KESTREL-ISDA",
+    "label": "signed"
+   },
+   {
+    "from": "AGR-KESTREL-ISDA",
+    "to": "CSA-KESTREL",
+    "label": "secured by"
+   },
+   {
+    "from": "AGR-KESTREL-ISDA",
+    "to": "NS-KESTREL-FRA",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-KESTREL-ISDA",
+    "to": "NS-KESTREL-LDN",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-KESTREL-ISDA",
+    "to": "NS-KESTREL-NY",
+    "label": "nets"
+   }
+  ]
+ },
  "_meta": {
   "source": "counterparty-master",
   "generation": 1

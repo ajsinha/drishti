@@ -36,7 +36,8 @@ Wall Street Systems WSS-… (FX, money markets). A clone stays in its template's
 numbering from a higher range than the samples (MX-30000000 …, CLY-4000000 …), so ids never collide; sourceSystem
 and sourceTradeId say where each trade lives. Each clone keeps its template's product, book, desk,
 counterparty, netting set and curves (so every link still opens) and scales its amounts (notional, MTM, P&L,
-DV01, cashflows) by a factor of its own between 0.2 and 5. Past business days move the market-sensitive numbers
+DV01, cashflows, the P&L explain steps and the lifecycle timeline's amounts) by a factor of its own between 0.2 and 5;
+the timeline's dates and descriptions carry no amount, so they stay true for every clone. Past business days move the market-sensitive numbers
 by the same deterministic walk as the rest of the lake. Everything is deterministic: the same arguments give the
 same lake.
 

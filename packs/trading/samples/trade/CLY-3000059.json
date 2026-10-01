@@ -167,7 +167,27 @@
   "sourceSystem": "Endur",
   "createdAt": "2025-01-17T10:45:00Z",
   "lastModifiedAt": "2025-01-17T10:45:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2025-01-17",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Calypso by TRDR-CDUBOIS: long Revolving credit facility"
+   },
+   {
+    "date": "2025-01-17",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA662451983)"
+   },
+   {
+    "date": "2030-03-06",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -220,6 +240,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 1427403,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 5996
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 7338
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -34875
+  },
+  {
+   "step": "FX delta",
+   "pnl": 1646
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -144
+  },
+  {
+   "step": "Theta",
+   "pnl": -162
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 156
+  }
+ ],
  "_meta": {
   "source": "murex-credit",
   "generation": 1,

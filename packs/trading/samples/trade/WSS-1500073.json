@@ -285,7 +285,33 @@
   "sourceSystem": "Endur",
   "createdAt": "2024-12-20T09:31:00Z",
   "lastModifiedAt": "2024-12-20T09:31:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2024-12-20",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Wall Street Systems by TRDR-ENOVAK: sell FX variance swap"
+   },
+   {
+    "date": "2024-12-20",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT250525748)"
+   },
+   {
+    "date": "2026-12-23",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2029-01-10",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -338,6 +364,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -16386,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -514
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -166
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 864
+  },
+  {
+   "step": "FX delta",
+   "pnl": -557
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 248
+  },
+  {
+   "step": "Theta",
+   "pnl": -419
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 2
+  }
+ ],
  "_meta": {
   "source": "calypso-fx",
   "generation": 1,

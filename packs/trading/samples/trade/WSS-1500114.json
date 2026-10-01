@@ -151,7 +151,27 @@
   "sourceSystem": "Endur",
   "createdAt": "2026-08-11T12:01:00Z",
   "lastModifiedAt": "2026-08-11T12:01:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2026-08-11",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Wall Street Systems by TRDR-SIYER: long Call account"
+   },
+   {
+    "date": "2026-08-11",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT821609541)"
+   },
+   {
+    "date": "2027-01-20",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -203,6 +223,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -378913,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -6946
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -783
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -5114
+  },
+  {
+   "step": "FX delta",
+   "pnl": 405
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -143
+  },
+  {
+   "step": "Theta",
+   "pnl": 33
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -544
+  }
+ ],
  "_meta": {
   "source": "summit-mm",
   "generation": 1,

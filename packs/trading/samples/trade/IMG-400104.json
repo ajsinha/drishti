@@ -254,7 +254,27 @@
   "sourceSystem": "Calypso",
   "createdAt": "2024-07-12T10:37:00Z",
   "lastModifiedAt": "2024-07-12T10:37:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2024-07-12",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-PLINDQVIST: pay fixed Portfolio (basket) swap"
+   },
+   {
+    "date": "2024-07-12",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT745410643)"
+   },
+   {
+    "date": "2028-08-23",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -308,6 +328,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -1741148,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 916
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -12985
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -101167
+  },
+  {
+   "step": "FX delta",
+   "pnl": -9470
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 680
+  },
+  {
+   "step": "Theta",
+   "pnl": 503
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -685
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

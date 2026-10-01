@@ -587,7 +587,45 @@
   "sourceSystem": "Summit",
   "createdAt": "2025-03-25T10:03:00Z",
   "lastModifiedAt": "2025-10-20T10:03:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2025-03-25",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-ASHAH: receive fixed Accreting swap"
+   },
+   {
+    "date": "2025-03-25",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA223047207)"
+   },
+   {
+    "date": "2025-03-26",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to JSCC"
+   },
+   {
+    "date": "2025-10-20",
+    "event": "Amended",
+    "status": "Done",
+    "description": "Notional corrected (version 2, by mo.amend)"
+   },
+   {
+    "date": "2027-03-27",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2027-12-13",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -643,6 +681,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 5425530,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 55743
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 48272
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -255733
+  },
+  {
+   "step": "FX delta",
+   "pnl": -10183
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 773
+  },
+  {
+   "step": "Theta",
+   "pnl": 87
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -7549
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

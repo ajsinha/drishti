@@ -172,7 +172,27 @@
   "sourceSystem": "Calypso",
   "createdAt": "2026-09-01T11:27:00Z",
   "lastModifiedAt": "2026-09-01T11:27:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2026-09-01",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-PLINDQVIST: buy Equity digital option"
+   },
+   {
+    "date": "2026-09-01",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT451724246)"
+   },
+   {
+    "date": "2028-03-02",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -226,6 +246,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 484822,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -2940
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -125
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -10499
+  },
+  {
+   "step": "FX delta",
+   "pnl": 43
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 3946
+  },
+  {
+   "step": "Theta",
+   "pnl": -1716
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -370
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

@@ -1248,7 +1248,46 @@
   "sourceSystem": "Calypso",
   "createdAt": "2024-05-14T12:00:00Z",
   "lastModifiedAt": "2024-05-14T12:00:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2024-05-14",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-MOKAFOR: pay fixed Forward-starting swap"
+   },
+   {
+    "date": "2024-05-14",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA920316601)"
+   },
+   {
+    "date": "2024-05-15",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to JSCC"
+   },
+   {
+    "date": "2026-08-07",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "JPY payment settled",
+    "amount": 258050.22
+   },
+   {
+    "date": "2026-11-09",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2032-11-05",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -1304,6 +1343,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -2988836,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -2238
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -1723
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 24279
+  },
+  {
+   "step": "FX delta",
+   "pnl": 4724
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -166
+  },
+  {
+   "step": "Theta",
+   "pnl": -183
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 990
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

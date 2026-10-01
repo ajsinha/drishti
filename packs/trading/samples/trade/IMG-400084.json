@@ -338,7 +338,40 @@
   "sourceSystem": "Murex",
   "createdAt": "2025-05-27T12:19:00Z",
   "lastModifiedAt": "2025-05-27T12:19:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2025-05-27",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-PLINDQVIST: buy Variance swap"
+   },
+   {
+    "date": "2025-05-27",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT556313377)"
+   },
+   {
+    "date": "2026-05-27",
+    "event": "Partially terminated",
+    "status": "Done",
+    "description": "Notional reduced by 20%, unwind fee settled",
+    "amount": 1600000
+   },
+   {
+    "date": "2026-11-28",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2035-03-12",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -391,6 +424,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -67066,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 184
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 18
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -285
+  },
+  {
+   "step": "FX delta",
+   "pnl": -261
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -922
+  },
+  {
+   "step": "Theta",
+   "pnl": -124
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 64
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

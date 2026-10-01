@@ -288,7 +288,47 @@
   "sourceSystem": "Calypso",
   "createdAt": "2024-12-13T10:03:00Z",
   "lastModifiedAt": "2024-12-13T10:03:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2024-12-13",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-JWEISS: pay fixed Equity total return swap"
+   },
+   {
+    "date": "2024-12-13",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT159620188)"
+   },
+   {
+    "date": "2025-12-16",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "CAD payment settled",
+    "amount": -544807.92
+   },
+   {
+    "date": "2025-12-19",
+    "event": "Partially terminated",
+    "status": "Done",
+    "description": "Notional reduced by 40%, unwind fee settled",
+    "amount": 76000000
+   },
+   {
+    "date": "2026-12-16",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2033-11-02",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -342,6 +382,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -1326887,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -8482
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -978
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -69924
+  },
+  {
+   "step": "FX delta",
+   "pnl": 2021
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -192
+  },
+  {
+   "step": "Theta",
+   "pnl": -1153
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 3915
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

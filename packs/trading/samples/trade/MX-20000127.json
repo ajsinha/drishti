@@ -171,7 +171,33 @@
   "sourceSystem": "Calypso",
   "createdAt": "2026-01-23T12:15:00Z",
   "lastModifiedAt": "2026-01-23T12:15:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2026-01-23",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-ASHAH: sell STIR future option"
+   },
+   {
+    "date": "2026-01-23",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA510240181)"
+   },
+   {
+    "date": "2026-01-26",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2028-11-20",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -227,6 +253,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 76979,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 17
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 715
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -8628
+  },
+  {
+   "step": "FX delta",
+   "pnl": 267
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 4667
+  },
+  {
+   "step": "Theta",
+   "pnl": -918
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 63
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

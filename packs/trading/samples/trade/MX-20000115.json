@@ -233,7 +233,40 @@
   "sourceSystem": "Calypso",
   "createdAt": "2025-03-25T09:43:00Z",
   "lastModifiedAt": "2025-03-25T09:43:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-03-25",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-ASHAH: sell CMS cap / floor"
+   },
+   {
+    "date": "2025-03-25",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA354939105)"
+   },
+   {
+    "date": "2026-09-27",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "USD payment settled",
+    "amount": 0.0
+   },
+   {
+    "date": "2026-12-27",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2027-01-04",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -286,6 +319,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 29679,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 197
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 201
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 2226
+  },
+  {
+   "step": "FX delta",
+   "pnl": 90
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -1255
+  },
+  {
+   "step": "Theta",
+   "pnl": -234
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 23
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

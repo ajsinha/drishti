@@ -190,7 +190,33 @@
   "sourceSystem": "Calypso",
   "createdAt": "2026-07-31T11:46:00Z",
   "lastModifiedAt": "2026-08-17T11:46:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2026-07-31",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Bloomberg TOMS by TRDR-KBRANDT: repo (lend cash) Repurchase agreement"
+   },
+   {
+    "date": "2026-07-31",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT820240872)"
+   },
+   {
+    "date": "2026-08-17",
+    "event": "Amended",
+    "status": "Done",
+    "description": "Notional corrected (version 2, by fo.capture)"
+   },
+   {
+    "date": "2027-01-11",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -243,6 +269,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 275798,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -1565
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -1266
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -2999
+  },
+  {
+   "step": "FX delta",
+   "pnl": -779
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 132
+  },
+  {
+   "step": "Theta",
+   "pnl": 548
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -126
+  }
+ ],
  "_meta": {
   "source": "globalone-sft",
   "generation": 1,

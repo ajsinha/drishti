@@ -179,7 +179,27 @@
   "sourceSystem": "Murex",
   "createdAt": "2026-04-01T12:08:00Z",
   "lastModifiedAt": "2026-04-01T12:08:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2026-04-01",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Wall Street Systems by TRDR-LMOREAU: buy Quanto option"
+   },
+   {
+    "date": "2026-04-01",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT273455999)"
+   },
+   {
+    "date": "2036-04-23",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -233,6 +253,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -201206,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -132
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -202
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 3302
+  },
+  {
+   "step": "FX delta",
+   "pnl": -865
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 248
+  },
+  {
+   "step": "Theta",
+   "pnl": -403
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -63
+  }
+ ],
  "_meta": {
   "source": "calypso-fx",
   "generation": 1,

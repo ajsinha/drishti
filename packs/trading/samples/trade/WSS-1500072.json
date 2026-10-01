@@ -269,7 +269,33 @@
   "sourceSystem": "Endur",
   "createdAt": "2025-08-12T12:49:00Z",
   "lastModifiedAt": "2025-08-12T12:49:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-08-12",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Wall Street Systems by TRDR-ENOVAK: sell FX accumulator"
+   },
+   {
+    "date": "2025-08-12",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT286441973)"
+   },
+   {
+    "date": "2026-11-14",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2028-10-13",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -322,6 +348,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -36255,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 396
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -45
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -1035
+  },
+  {
+   "step": "FX delta",
+   "pnl": -660
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 227
+  },
+  {
+   "step": "Theta",
+   "pnl": -8
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 22
+  }
+ ],
  "_meta": {
   "source": "calypso-fx",
   "generation": 1,

@@ -247,7 +247,40 @@
   "sourceSystem": "Calypso",
   "createdAt": "2025-10-20T12:23:00Z",
   "lastModifiedAt": "2025-10-20T12:23:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2025-10-20",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-PLINDQVIST: long Convertible bond"
+   },
+   {
+    "date": "2025-10-20",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT301633578)"
+   },
+   {
+    "date": "2026-04-22",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "GBP payment settled",
+    "amount": 1760000.0
+   },
+   {
+    "date": "2026-10-22",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2030-09-16",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -302,6 +335,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 1387195,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -6786
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -374
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -50430
+  },
+  {
+   "step": "FX delta",
+   "pnl": 7676
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -1518
+  },
+  {
+   "step": "Theta",
+   "pnl": 1071
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -2769
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

@@ -221,7 +221,40 @@
   "sourceSystem": "Endur",
   "createdAt": "2025-01-21T09:43:00Z",
   "lastModifiedAt": "2025-01-21T09:43:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2025-01-21",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-ASHAH: buy CMS spread option"
+   },
+   {
+    "date": "2025-01-21",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA893751561)"
+   },
+   {
+    "date": "2026-07-23",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "AUD payment settled",
+    "amount": 0.0
+   },
+   {
+    "date": "2026-10-07",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2026-10-07",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -275,6 +308,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -202066,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -1904
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -655
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 15991
+  },
+  {
+   "step": "FX delta",
+   "pnl": -160
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -2095
+  },
+  {
+   "step": "Theta",
+   "pnl": -4455
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -270
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

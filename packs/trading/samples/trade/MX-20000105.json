@@ -177,7 +177,33 @@
   "sourceSystem": "Murex",
   "createdAt": "2025-01-16T09:26:00Z",
   "lastModifiedAt": "2025-01-16T09:26:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2025-01-16",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-MOKAFOR: sell Bermudan swaption"
+   },
+   {
+    "date": "2025-01-16",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA497207131)"
+   },
+   {
+    "date": "2026-10-07",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2026-10-07",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -230,6 +256,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 35119,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 156
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -51
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 1433
+  },
+  {
+   "step": "FX delta",
+   "pnl": -194
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -214
+  },
+  {
+   "step": "Theta",
+   "pnl": -126
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -8
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

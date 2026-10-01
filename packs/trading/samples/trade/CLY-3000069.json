@@ -180,7 +180,27 @@
   "sourceSystem": "Calypso",
   "createdAt": "2024-10-24T09:10:00Z",
   "lastModifiedAt": "2024-10-24T09:10:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2024-10-24",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Calypso by TRDR-CDUBOIS: buy protection Unfunded risk participation"
+   },
+   {
+    "date": "2024-10-24",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA727099804)"
+   },
+   {
+    "date": "2036-02-14",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -232,6 +252,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 57155,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 90
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 87
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -1589
+  },
+  {
+   "step": "FX delta",
+   "pnl": 171
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -23
+  },
+  {
+   "step": "Theta",
+   "pnl": -118
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -79
+  }
+ ],
  "_meta": {
   "source": "murex-credit",
   "generation": 1,

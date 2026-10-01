@@ -169,7 +169,27 @@
   "sourceSystem": "Murex",
   "createdAt": "2026-09-09T12:25:00Z",
   "lastModifiedAt": "2026-09-09T12:25:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2026-09-09",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-PLINDQVIST: short Equity forward"
+   },
+   {
+    "date": "2026-09-09",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT794221609)"
+   },
+   {
+    "date": "2028-04-07",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -223,6 +243,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -1365035,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -366
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -293
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -2739
+  },
+  {
+   "step": "FX delta",
+   "pnl": 274
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 7
+  },
+  {
+   "step": "Theta",
+   "pnl": -47
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 62
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

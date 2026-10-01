@@ -171,7 +171,27 @@
   "sourceSystem": "Murex",
   "createdAt": "2024-07-31T10:58:00Z",
   "lastModifiedAt": "2024-07-31T10:58:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2024-07-31",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Wall Street Systems by TRDR-LMOREAU: long FX forward"
+   },
+   {
+    "date": "2024-07-31",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT644012780)"
+   },
+   {
+    "date": "2026-10-07",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -225,6 +245,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -954870,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -3073
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -10
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 19779
+  },
+  {
+   "step": "FX delta",
+   "pnl": -2883
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 106
+  },
+  {
+   "step": "Theta",
+   "pnl": 149
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -37
+  }
+ ],
  "_meta": {
   "source": "calypso-fx",
   "generation": 1,

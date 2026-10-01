@@ -172,7 +172,33 @@
   "sourceSystem": "Calypso",
   "createdAt": "2024-10-21T11:17:00Z",
   "lastModifiedAt": "2025-01-11T11:17:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2024-10-21",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-JWEISS: short Equity forward"
+   },
+   {
+    "date": "2024-10-21",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT612820472)"
+   },
+   {
+    "date": "2025-01-11",
+    "event": "Amended",
+    "status": "Done",
+    "description": "Notional corrected (version 2, by fo.capture)"
+   },
+   {
+    "date": "2026-10-07",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -226,6 +252,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 3232028,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 1072
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -186
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -6971
+  },
+  {
+   "step": "FX delta",
+   "pnl": 405
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -189
+  },
+  {
+   "step": "Theta",
+   "pnl": 37
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -250
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

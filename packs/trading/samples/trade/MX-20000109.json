@@ -161,7 +161,34 @@
   "sourceSystem": "Calypso",
   "createdAt": "2025-02-14T10:16:00Z",
   "lastModifiedAt": "2025-02-14T10:16:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2025-02-14",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-ASHAH: buy American swaption"
+   },
+   {
+    "date": "2025-02-14",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA932521125)"
+   },
+   {
+    "date": "2025-10-17",
+    "event": "Partially terminated",
+    "status": "Done",
+    "description": "Notional reduced by 40%, unwind fee settled",
+    "amount": 61200000
+   },
+   {
+    "date": "2026-10-07",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -214,6 +241,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -87737,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -251
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 8
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -187
+  },
+  {
+   "step": "FX delta",
+   "pnl": -32
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 179
+  },
+  {
+   "step": "Theta",
+   "pnl": -101
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -2
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

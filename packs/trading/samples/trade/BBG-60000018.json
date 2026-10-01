@@ -271,7 +271,53 @@
   "sourceSystem": "Murex",
   "createdAt": "2024-07-26T10:58:00Z",
   "lastModifiedAt": "2024-07-26T10:58:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2024-07-26",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Bloomberg TOMS by TRDR-BADEYEMI: long Floating rate note"
+   },
+   {
+    "date": "2024-07-26",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT347735979)"
+   },
+   {
+    "date": "2024-07-29",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2026-03-20",
+    "event": "Partially terminated",
+    "status": "Done",
+    "description": "Notional reduced by 40%, unwind fee settled",
+    "amount": 98000000
+   },
+   {
+    "date": "2026-07-29",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "GBP payment settled",
+    "amount": 4900000.0
+   },
+   {
+    "date": "2027-01-29",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2031-09-29",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -328,6 +374,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -3797255,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 5457
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -15919
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 75356
+  },
+  {
+   "step": "FX delta",
+   "pnl": -5210
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -161
+  },
+  {
+   "step": "Theta",
+   "pnl": -854
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 2799
+  }
+ ],
  "_meta": {
   "source": "summit-fi",
   "generation": 1,

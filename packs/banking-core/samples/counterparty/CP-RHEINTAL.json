@@ -43,6 +43,87 @@
  },
  "group": "GRP-RHEINTAL",
  "creditLimit": "LIM-RHEINTAL",
+ "hierarchy": {
+  "nodes": [
+   {
+    "id": "GRP-RHEINTAL",
+    "label": "Rheintal Sparkassen-Verband",
+    "type": "Group (ultimate parent)"
+   },
+   {
+    "id": "CP-RHEINTAL",
+    "label": "Rheintal Landesbank",
+    "type": "Counterparty"
+   },
+   {
+    "id": "AGR-RHEINTAL-ISDA",
+    "label": "ISDA 2002 Master",
+    "type": "Agreement"
+   },
+   {
+    "id": "CSA-RHEINTAL",
+    "label": "Credit support annex",
+    "type": "CSA"
+   },
+   {
+    "id": "NS-RHEINTAL-FRA",
+    "label": "NS-RHEINTAL-FRA · 3 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-RHEINTAL-LDN",
+    "label": "NS-RHEINTAL-LDN · 13 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-RHEINTAL-NY",
+    "label": "NS-RHEINTAL-NY · 16 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-RHEINTAL-TKY",
+    "label": "NS-RHEINTAL-TKY · 1 trade",
+    "type": "Netting set"
+   }
+  ],
+  "edges": [
+   {
+    "from": "GRP-RHEINTAL",
+    "to": "CP-RHEINTAL",
+    "label": "parent of"
+   },
+   {
+    "from": "CP-RHEINTAL",
+    "to": "AGR-RHEINTAL-ISDA",
+    "label": "signed"
+   },
+   {
+    "from": "AGR-RHEINTAL-ISDA",
+    "to": "CSA-RHEINTAL",
+    "label": "secured by"
+   },
+   {
+    "from": "AGR-RHEINTAL-ISDA",
+    "to": "NS-RHEINTAL-FRA",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-RHEINTAL-ISDA",
+    "to": "NS-RHEINTAL-LDN",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-RHEINTAL-ISDA",
+    "to": "NS-RHEINTAL-NY",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-RHEINTAL-ISDA",
+    "to": "NS-RHEINTAL-TKY",
+    "label": "nets"
+   }
+  ]
+ },
  "_meta": {
   "source": "counterparty-master",
   "generation": 1

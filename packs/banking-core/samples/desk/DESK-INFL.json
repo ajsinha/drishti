@@ -26,6 +26,260 @@
  "assetClasses": [
   "Inflation"
  ],
+ "positions": [
+  {
+   "tradeId": "MX-20000159",
+   "book": "BOOK-INFL-1",
+   "currency": "JPY",
+   "family": "swap",
+   "mtm": -14905195
+  },
+  {
+   "tradeId": "MX-20000166",
+   "book": "BOOK-INFL-1",
+   "currency": "EUR",
+   "family": "swap",
+   "mtm": -947071
+  },
+  {
+   "tradeId": "MX-20000169",
+   "book": "BOOK-INFL-1",
+   "currency": "GBP",
+   "family": "option",
+   "mtm": 2197247
+  },
+  {
+   "tradeId": "MX-20000170",
+   "book": "BOOK-INFL-1",
+   "currency": "JPY",
+   "family": "option",
+   "mtm": 334643
+  },
+  {
+   "tradeId": "MX-20000177",
+   "book": "BOOK-INFL-1",
+   "currency": "USD",
+   "family": "bond",
+   "mtm": 107397
+  },
+  {
+   "tradeId": "MX-20000179",
+   "book": "BOOK-INFL-1",
+   "currency": "EUR",
+   "family": "bond",
+   "mtm": 266856
+  },
+  {
+   "tradeId": "MX-20000181",
+   "book": "BOOK-INFL-1",
+   "currency": "JPY",
+   "family": "swap",
+   "mtm": -771745
+  },
+  {
+   "tradeId": "MX-20000182",
+   "book": "BOOK-INFL-1",
+   "currency": "JPY",
+   "family": "swap",
+   "mtm": -2304552
+  },
+  {
+   "tradeId": "MX-20000187",
+   "book": "BOOK-INFL-1",
+   "currency": "GBP",
+   "family": "swap",
+   "mtm": -115232
+  },
+  {
+   "tradeId": "MX-20000189",
+   "book": "BOOK-INFL-1",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": -4276973
+  },
+  {
+   "tradeId": "MX-20000191",
+   "book": "BOOK-INFL-1",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": 1126221
+  },
+  {
+   "tradeId": "MX-20000192",
+   "book": "BOOK-INFL-1",
+   "currency": "GBP",
+   "family": "swap",
+   "mtm": -339669
+  },
+  {
+   "tradeId": "MX-20000157",
+   "book": "BOOK-INFL-2",
+   "currency": "EUR",
+   "family": "swap",
+   "mtm": -8112592
+  },
+  {
+   "tradeId": "MX-20000161",
+   "book": "BOOK-INFL-2",
+   "currency": "JPY",
+   "family": "swap",
+   "mtm": 8195317
+  },
+  {
+   "tradeId": "MX-20000163",
+   "book": "BOOK-INFL-2",
+   "currency": "EUR",
+   "family": "swap",
+   "mtm": 35164
+  },
+  {
+   "tradeId": "MX-20000164",
+   "book": "BOOK-INFL-2",
+   "currency": "GBP",
+   "family": "swap",
+   "mtm": -4921358
+  },
+  {
+   "tradeId": "MX-20000165",
+   "book": "BOOK-INFL-2",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": 956175
+  },
+  {
+   "tradeId": "MX-20000171",
+   "book": "BOOK-INFL-2",
+   "currency": "EUR",
+   "family": "option",
+   "mtm": -100943
+  },
+  {
+   "tradeId": "MX-20000172",
+   "book": "BOOK-INFL-2",
+   "currency": "EUR",
+   "family": "option",
+   "mtm": 215279
+  },
+  {
+   "tradeId": "MX-20000173",
+   "book": "BOOK-INFL-2",
+   "currency": "USD",
+   "family": "option",
+   "mtm": 4685483
+  },
+  {
+   "tradeId": "MX-20000174",
+   "book": "BOOK-INFL-2",
+   "currency": "EUR",
+   "family": "option",
+   "mtm": -318601
+  },
+  {
+   "tradeId": "MX-20000175",
+   "book": "BOOK-INFL-2",
+   "currency": "USD",
+   "family": "bond",
+   "mtm": -116608
+  },
+  {
+   "tradeId": "MX-20000178",
+   "book": "BOOK-INFL-2",
+   "currency": "GBP",
+   "family": "bond",
+   "mtm": -992597
+  },
+  {
+   "tradeId": "MX-20000180",
+   "book": "BOOK-INFL-2",
+   "currency": "USD",
+   "family": "bond",
+   "mtm": -1106536
+  },
+  {
+   "tradeId": "MX-20000183",
+   "book": "BOOK-INFL-2",
+   "currency": "GBP",
+   "family": "swap",
+   "mtm": -497035
+  },
+  {
+   "tradeId": "MX-20000185",
+   "book": "BOOK-INFL-2",
+   "currency": "JPY",
+   "family": "swap",
+   "mtm": -2801657
+  },
+  {
+   "tradeId": "MX-20000188",
+   "book": "BOOK-INFL-2",
+   "currency": "JPY",
+   "family": "swap",
+   "mtm": -561601
+  },
+  {
+   "tradeId": "MX-20000190",
+   "book": "BOOK-INFL-2",
+   "currency": "JPY",
+   "family": "swap",
+   "mtm": -1373222
+  },
+  {
+   "tradeId": "MX-20000158",
+   "book": "BOOK-INFL-3",
+   "currency": "JPY",
+   "family": "swap",
+   "mtm": -188625
+  },
+  {
+   "tradeId": "MX-20000160",
+   "book": "BOOK-INFL-3",
+   "currency": "GBP",
+   "family": "swap",
+   "mtm": -9675629
+  },
+  {
+   "tradeId": "MX-20000162",
+   "book": "BOOK-INFL-3",
+   "currency": "EUR",
+   "family": "swap",
+   "mtm": -672060
+  },
+  {
+   "tradeId": "MX-20000167",
+   "book": "BOOK-INFL-3",
+   "currency": "JPY",
+   "family": "swap",
+   "mtm": -7337433
+  },
+  {
+   "tradeId": "MX-20000168",
+   "book": "BOOK-INFL-3",
+   "currency": "EUR",
+   "family": "swap",
+   "mtm": -1644875
+  },
+  {
+   "tradeId": "MX-20000176",
+   "book": "BOOK-INFL-3",
+   "currency": "JPY",
+   "family": "bond",
+   "mtm": -2725596
+  },
+  {
+   "tradeId": "MX-20000184",
+   "book": "BOOK-INFL-3",
+   "currency": "JPY",
+   "family": "swap",
+   "mtm": 225940
+  },
+  {
+   "tradeId": "MX-20000186",
+   "book": "BOOK-INFL-3",
+   "currency": "JPY",
+   "family": "swap",
+   "mtm": 528987
+  }
+ ],
  "_meta": {
   "source": "org-master",
   "generation": 1

@@ -214,7 +214,33 @@
   "sourceSystem": "Calypso",
   "createdAt": "2025-06-25T11:07:00Z",
   "lastModifiedAt": "2025-06-25T11:07:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2025-06-25",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Endur by TRDR-FROSSI: buy Gas swing option"
+   },
+   {
+    "date": "2025-06-25",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT508735902)"
+   },
+   {
+    "date": "2027-06-27",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2030-07-18",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -266,6 +292,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -152688,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 1746
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -433
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 15251
+  },
+  {
+   "step": "FX delta",
+   "pnl": -1185
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -2700
+  },
+  {
+   "step": "Theta",
+   "pnl": -3199
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -4
+  }
+ ],
  "_meta": {
   "source": "endur-comm",
   "generation": 1,

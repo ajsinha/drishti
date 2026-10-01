@@ -164,7 +164,27 @@
   "sourceSystem": "Calypso",
   "createdAt": "2025-01-31T09:57:00Z",
   "lastModifiedAt": "2025-01-31T09:57:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2025-01-31",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Endur by TRDR-FROSSI: short Commodity forward"
+   },
+   {
+    "date": "2025-01-31",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT400172250)"
+   },
+   {
+    "date": "2026-10-07",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -216,6 +236,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -305136,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 1263
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 135
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -4654
+  },
+  {
+   "step": "FX delta",
+   "pnl": -335
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 17
+  },
+  {
+   "step": "Theta",
+   "pnl": -258
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -14
+  }
+ ],
  "_meta": {
   "source": "endur-comm",
   "generation": 1,

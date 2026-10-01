@@ -350,7 +350,33 @@
   "sourceSystem": "Endur",
   "createdAt": "2026-02-13T12:28:00Z",
   "lastModifiedAt": "2026-02-13T12:28:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2026-02-13",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Wall Street Systems by TRDR-LMOREAU: buy FX double-barrier option"
+   },
+   {
+    "date": "2026-02-13",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT137821450)"
+   },
+   {
+    "date": "2026-11-17",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2036-06-25",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -403,6 +429,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -3373931,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -44520
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 14102
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 324573
+  },
+  {
+   "step": "FX delta",
+   "pnl": 79718
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -165678
+  },
+  {
+   "step": "Theta",
+   "pnl": -22304
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 801
+  }
+ ],
  "_meta": {
   "source": "calypso-fx",
   "generation": 1,

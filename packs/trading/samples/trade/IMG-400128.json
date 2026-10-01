@@ -229,7 +229,27 @@
   "sourceSystem": "Calypso",
   "createdAt": "2026-03-26T12:30:00Z",
   "lastModifiedAt": "2026-03-26T12:30:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2026-03-26",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-JWEISS: buy Basket option"
+   },
+   {
+    "date": "2026-03-26",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT610242590)"
+   },
+   {
+    "date": "2036-09-22",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -283,6 +303,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 854869,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -162
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -1461
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -11507
+  },
+  {
+   "step": "FX delta",
+   "pnl": 1969
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 4654
+  },
+  {
+   "step": "Theta",
+   "pnl": -6114
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -433
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

@@ -26,6 +26,128 @@
    "name": "Money markets"
   }
  ],
+ "books": [
+  {
+   "book": "BOOK-RATES-1",
+   "desk": "Rates · Swaps and options",
+   "var": 6016760,
+   "pnl": -2955541,
+   "mtm": 177368451,
+   "trades": 49
+  },
+  {
+   "book": "BOOK-RATES-2",
+   "desk": "Rates · Swaps and options",
+   "var": 5359063,
+   "pnl": 2498705,
+   "mtm": -66175404,
+   "trades": 54
+  },
+  {
+   "book": "BOOK-RATES-3",
+   "desk": "Rates · Swaps and options",
+   "var": 5239711,
+   "pnl": 2554297,
+   "mtm": 21656450,
+   "trades": 53
+  },
+  {
+   "book": "BOOK-CREDIT-1",
+   "desk": "Credit trading",
+   "var": 285977895,
+   "pnl": 145410,
+   "mtm": 2937797,
+   "trades": 19
+  },
+  {
+   "book": "BOOK-CREDIT-2",
+   "desk": "Credit trading",
+   "var": 335241113,
+   "pnl": 468506,
+   "mtm": -12037408,
+   "trades": 26
+  },
+  {
+   "book": "BOOK-CREDIT-3",
+   "desk": "Credit trading",
+   "var": 314642996,
+   "pnl": 191904,
+   "mtm": 17048067,
+   "trades": 27
+  },
+  {
+   "book": "BOOK-COMM-1",
+   "desk": "Commodities",
+   "var": 7085796,
+   "pnl": -180316,
+   "mtm": 11845271,
+   "trades": 28
+  },
+  {
+   "book": "BOOK-COMM-2",
+   "desk": "Commodities",
+   "var": 6657067,
+   "pnl": -102729,
+   "mtm": 20548795,
+   "trades": 31
+  },
+  {
+   "book": "BOOK-COMM-3",
+   "desk": "Commodities",
+   "var": 5057823,
+   "pnl": 132159,
+   "mtm": -19078473,
+   "trades": 31
+  },
+  {
+   "book": "BOOK-FI-1",
+   "desk": "Bonds and securitised",
+   "var": 31675741,
+   "pnl": -250175,
+   "mtm": -15358139,
+   "trades": 26
+  },
+  {
+   "book": "BOOK-FI-2",
+   "desk": "Bonds and securitised",
+   "var": 156953540,
+   "pnl": -20647,
+   "mtm": 8675969,
+   "trades": 29
+  },
+  {
+   "book": "BOOK-FI-3",
+   "desk": "Bonds and securitised",
+   "var": 140627333,
+   "pnl": 44957,
+   "mtm": 3704494,
+   "trades": 23
+  },
+  {
+   "book": "BOOK-MM-1",
+   "desk": "Money markets",
+   "var": 94449,
+   "pnl": -152348,
+   "mtm": 5347472,
+   "trades": 19
+  },
+  {
+   "book": "BOOK-MM-2",
+   "desk": "Money markets",
+   "var": 60011,
+   "pnl": -126457,
+   "mtm": 1765867,
+   "trades": 7
+  },
+  {
+   "book": "BOOK-MM-3",
+   "desk": "Money markets",
+   "var": 40906,
+   "pnl": -54144,
+   "mtm": 2339903,
+   "trades": 4
+  }
+ ],
  "_meta": {
   "source": "entity-master",
   "generation": 1

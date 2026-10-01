@@ -37,6 +37,87 @@
  },
  "group": "GRP-MERIDIAN",
  "creditLimit": "LIM-MERIDIAN-RE",
+ "hierarchy": {
+  "nodes": [
+   {
+    "id": "GRP-MERIDIAN",
+    "label": "Meridian Financial Group",
+    "type": "Group (ultimate parent)"
+   },
+   {
+    "id": "CP-MERIDIAN",
+    "label": "Meridian Life Assurance",
+    "type": "Counterparty"
+   },
+   {
+    "id": "CP-MERIDIAN-RE",
+    "label": "Meridian Reinsurance Ltd",
+    "type": "Counterparty"
+   },
+   {
+    "id": "AGR-MERIDIAN-RE-ISDA",
+    "label": "ISDA 2002 Master",
+    "type": "Agreement"
+   },
+   {
+    "id": "CSA-MERIDIAN-RE",
+    "label": "Credit support annex",
+    "type": "CSA"
+   },
+   {
+    "id": "NS-MERIDIAN-RE-FRA",
+    "label": "NS-MERIDIAN-RE-FRA · 5 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-MERIDIAN-RE-LDN",
+    "label": "NS-MERIDIAN-RE-LDN · 16 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-MERIDIAN-RE-NY",
+    "label": "NS-MERIDIAN-RE-NY · 19 trades",
+    "type": "Netting set"
+   }
+  ],
+  "edges": [
+   {
+    "from": "GRP-MERIDIAN",
+    "to": "CP-MERIDIAN",
+    "label": "parent of"
+   },
+   {
+    "from": "GRP-MERIDIAN",
+    "to": "CP-MERIDIAN-RE",
+    "label": "parent of"
+   },
+   {
+    "from": "CP-MERIDIAN-RE",
+    "to": "AGR-MERIDIAN-RE-ISDA",
+    "label": "signed"
+   },
+   {
+    "from": "AGR-MERIDIAN-RE-ISDA",
+    "to": "CSA-MERIDIAN-RE",
+    "label": "secured by"
+   },
+   {
+    "from": "AGR-MERIDIAN-RE-ISDA",
+    "to": "NS-MERIDIAN-RE-FRA",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-MERIDIAN-RE-ISDA",
+    "to": "NS-MERIDIAN-RE-LDN",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-MERIDIAN-RE-ISDA",
+    "to": "NS-MERIDIAN-RE-NY",
+    "label": "nets"
+   }
+  ]
+ },
  "_meta": {
   "source": "counterparty-master",
   "generation": 1

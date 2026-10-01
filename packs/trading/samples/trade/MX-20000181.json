@@ -1331,7 +1331,40 @@
   "sourceSystem": "Calypso",
   "createdAt": "2026-07-13T12:37:00Z",
   "lastModifiedAt": "2026-07-13T12:37:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2026-07-13",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-GMENDES: receive fixed Inflation asset swap"
+   },
+   {
+    "date": "2026-07-13",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA219958260)"
+   },
+   {
+    "date": "2026-08-18",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "JPY payment settled",
+    "amount": -69187.5
+   },
+   {
+    "date": "2026-11-18",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2036-02-14",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -1385,6 +1418,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -817203,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -7045
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -9266
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 56859
+  },
+  {
+   "step": "FX delta",
+   "pnl": 4411
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 156
+  },
+  {
+   "step": "Theta",
+   "pnl": 643
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -300
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

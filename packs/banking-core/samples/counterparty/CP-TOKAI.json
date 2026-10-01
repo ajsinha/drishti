@@ -43,6 +43,87 @@
  },
  "group": "GRP-TOKAI",
  "creditLimit": "LIM-TOKAI",
+ "hierarchy": {
+  "nodes": [
+   {
+    "id": "GRP-TOKAI",
+    "label": "Tokai Financial Group",
+    "type": "Group (ultimate parent)"
+   },
+   {
+    "id": "CP-TOKAI",
+    "label": "Tokai Mutual Trust Bank",
+    "type": "Counterparty"
+   },
+   {
+    "id": "AGR-TOKAI-ISDA",
+    "label": "ISDA 2002 Master",
+    "type": "Agreement"
+   },
+   {
+    "id": "CSA-TOKAI",
+    "label": "Credit support annex",
+    "type": "CSA"
+   },
+   {
+    "id": "NS-TOKAI-FRA",
+    "label": "NS-TOKAI-FRA · 4 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-TOKAI-LDN",
+    "label": "NS-TOKAI-LDN · 10 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-TOKAI-NY",
+    "label": "NS-TOKAI-NY · 15 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-TOKAI-TKY",
+    "label": "NS-TOKAI-TKY · 2 trades",
+    "type": "Netting set"
+   }
+  ],
+  "edges": [
+   {
+    "from": "GRP-TOKAI",
+    "to": "CP-TOKAI",
+    "label": "parent of"
+   },
+   {
+    "from": "CP-TOKAI",
+    "to": "AGR-TOKAI-ISDA",
+    "label": "signed"
+   },
+   {
+    "from": "AGR-TOKAI-ISDA",
+    "to": "CSA-TOKAI",
+    "label": "secured by"
+   },
+   {
+    "from": "AGR-TOKAI-ISDA",
+    "to": "NS-TOKAI-FRA",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-TOKAI-ISDA",
+    "to": "NS-TOKAI-LDN",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-TOKAI-ISDA",
+    "to": "NS-TOKAI-NY",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-TOKAI-ISDA",
+    "to": "NS-TOKAI-TKY",
+    "label": "nets"
+   }
+  ]
+ },
  "_meta": {
   "source": "counterparty-master",
   "generation": 1

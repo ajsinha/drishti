@@ -10,6 +10,32 @@
    "name": "Repo and securities lending"
   }
  ],
+ "books": [
+  {
+   "book": "BOOK-SFT-1",
+   "desk": "Repo and securities lending",
+   "var": 14855706,
+   "pnl": -327989,
+   "mtm": 8879873,
+   "trades": 17
+  },
+  {
+   "book": "BOOK-SFT-2",
+   "desk": "Repo and securities lending",
+   "var": 13325523,
+   "pnl": 54701,
+   "mtm": -8487510,
+   "trades": 14
+  },
+  {
+   "book": "BOOK-SFT-3",
+   "desk": "Repo and securities lending",
+   "var": 12886930,
+   "pnl": -136981,
+   "mtm": -633253,
+   "trades": 11
+  }
+ ],
  "_meta": {
   "source": "entity-master",
   "generation": 1

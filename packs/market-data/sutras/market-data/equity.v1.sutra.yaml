@@ -42,6 +42,15 @@ panels:
     title: Identifiers
     area: right
     rows: $.identifiers
+  - id: ohlc
+    kind: candlestick
+    title: "Daily bars, last 60 days"
+    code: OHLC
+    key: F3
+    rows: $.ohlc
+    x: date
+    fmt: price2
+    volume: volume
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
 keys: { F7: "link($.issuer, 'issuer')", F8: impact, F9: raw }

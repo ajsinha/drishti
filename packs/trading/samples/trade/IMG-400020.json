@@ -165,7 +165,33 @@
   "sourceSystem": "Murex",
   "createdAt": "2026-08-04T11:09:00Z",
   "lastModifiedAt": "2026-08-04T11:09:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2026-08-04",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-JWEISS: long Equity index future"
+   },
+   {
+    "date": "2026-08-04",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT968088188)"
+   },
+   {
+    "date": "2026-08-05",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2027-06-28",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -222,6 +248,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 231537,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 1540
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 338
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 3608
+  },
+  {
+   "step": "FX delta",
+   "pnl": 14
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -60
+  },
+  {
+   "step": "Theta",
+   "pnl": -204
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 224
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

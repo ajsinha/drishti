@@ -1089,7 +1089,46 @@
   "sourceSystem": "Murex",
   "createdAt": "2025-04-04T09:13:00Z",
   "lastModifiedAt": "2025-04-04T09:13:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-04-04",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-ASHAH: pay fixed Cross-currency swap (non-MtM)"
+   },
+   {
+    "date": "2025-04-04",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA711724053)"
+   },
+   {
+    "date": "2025-04-07",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to JSCC"
+   },
+   {
+    "date": "2026-07-01",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "JPY payment settled",
+    "amount": 179109.49
+   },
+   {
+    "date": "2026-10-01",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2032-03-29",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -1147,6 +1186,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -1304878,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 4894
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -2225
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -22413
+  },
+  {
+   "step": "FX delta",
+   "pnl": 429
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 38
+  },
+  {
+   "step": "Theta",
+   "pnl": -622
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -779
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

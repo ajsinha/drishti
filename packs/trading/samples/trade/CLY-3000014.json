@@ -262,7 +262,40 @@
   "sourceSystem": "Endur",
   "createdAt": "2024-10-17T10:26:00Z",
   "lastModifiedAt": "2024-10-17T10:26:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2024-10-17",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Calypso by TRDR-DWHITFIELD: buy protection Index tranche"
+   },
+   {
+    "date": "2024-10-17",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA653181717)"
+   },
+   {
+    "date": "2025-10-21",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "JPY payment settled",
+    "amount": -581430.81
+   },
+   {
+    "date": "2026-10-21",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2032-11-24",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -315,6 +348,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 1525713,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -11848
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -3102
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 53027
+  },
+  {
+   "step": "FX delta",
+   "pnl": 96
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 22
+  },
+  {
+   "step": "Theta",
+   "pnl": 841
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -685
+  }
+ ],
  "_meta": {
   "source": "murex-credit",
   "generation": 1,

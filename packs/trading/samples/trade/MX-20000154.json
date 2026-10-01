@@ -384,7 +384,33 @@
   "sourceSystem": "Summit",
   "createdAt": "2026-09-18T11:50:00Z",
   "lastModifiedAt": "2026-09-18T11:50:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2026-09-18",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-ASHAH: buy Target redemption note (rates)"
+   },
+   {
+    "date": "2026-09-18",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA537615401)"
+   },
+   {
+    "date": "2026-12-21",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2036-11-07",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -437,6 +463,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -45832,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -232
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 172
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 395
+  },
+  {
+   "step": "FX delta",
+   "pnl": -71
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -886
+  },
+  {
+   "step": "Theta",
+   "pnl": -640
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -29
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

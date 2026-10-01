@@ -30,6 +30,44 @@
    "pnl": -12006
   }
  ],
+ "explainSteps": [
+  {
+   "step": "Carry",
+   "pnl": -21011
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -9005
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -63033
+  },
+  {
+   "step": "FX delta",
+   "pnl": -18009
+  },
+  {
+   "step": "Credit",
+   "pnl": -12006
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -15008
+  },
+  {
+   "step": "Theta",
+   "pnl": 6003
+  },
+  {
+   "step": "New trades",
+   "pnl": -18010
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -2269
+  }
+ ],
  "book": "BOOK-MM-1",
  "_meta": {
   "source": "pnl-explain",

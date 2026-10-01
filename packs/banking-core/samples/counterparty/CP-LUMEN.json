@@ -43,6 +43,87 @@
  },
  "group": "GRP-LUMEN",
  "creditLimit": "LIM-LUMEN",
+ "hierarchy": {
+  "nodes": [
+   {
+    "id": "GRP-LUMEN",
+    "label": "Lumen Holding AG",
+    "type": "Group (ultimate parent)"
+   },
+   {
+    "id": "CP-LUMEN",
+    "label": "Lumen Semiconductor AG",
+    "type": "Counterparty"
+   },
+   {
+    "id": "AGR-LUMEN-ISDA",
+    "label": "ISDA 2002 Master",
+    "type": "Agreement"
+   },
+   {
+    "id": "CSA-LUMEN",
+    "label": "Credit support annex",
+    "type": "CSA"
+   },
+   {
+    "id": "NS-LUMEN-FRA",
+    "label": "NS-LUMEN-FRA · 2 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-LUMEN-LDN",
+    "label": "NS-LUMEN-LDN · 12 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-LUMEN-NY",
+    "label": "NS-LUMEN-NY · 15 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-LUMEN-TKY",
+    "label": "NS-LUMEN-TKY · 3 trades",
+    "type": "Netting set"
+   }
+  ],
+  "edges": [
+   {
+    "from": "GRP-LUMEN",
+    "to": "CP-LUMEN",
+    "label": "parent of"
+   },
+   {
+    "from": "CP-LUMEN",
+    "to": "AGR-LUMEN-ISDA",
+    "label": "signed"
+   },
+   {
+    "from": "AGR-LUMEN-ISDA",
+    "to": "CSA-LUMEN",
+    "label": "secured by"
+   },
+   {
+    "from": "AGR-LUMEN-ISDA",
+    "to": "NS-LUMEN-FRA",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-LUMEN-ISDA",
+    "to": "NS-LUMEN-LDN",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-LUMEN-ISDA",
+    "to": "NS-LUMEN-NY",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-LUMEN-ISDA",
+    "to": "NS-LUMEN-TKY",
+    "label": "nets"
+   }
+  ]
+ },
  "_meta": {
   "source": "counterparty-master",
   "generation": 1

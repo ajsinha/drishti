@@ -355,7 +355,33 @@
   "sourceSystem": "Endur",
   "createdAt": "2025-03-24T09:32:00Z",
   "lastModifiedAt": "2025-03-24T09:32:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2025-03-24",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-PLINDQVIST: sell Autocallable note"
+   },
+   {
+    "date": "2025-03-24",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT471321379)"
+   },
+   {
+    "date": "2026-12-26",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2034-01-17",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -409,6 +435,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -413176,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 964
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 3472
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 658
+  },
+  {
+   "step": "FX delta",
+   "pnl": -290
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -16197
+  },
+  {
+   "step": "Theta",
+   "pnl": -5191
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 585
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

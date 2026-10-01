@@ -207,7 +207,47 @@
   "sourceSystem": "Summit",
   "createdAt": "2025-05-30T11:06:00Z",
   "lastModifiedAt": "2025-05-30T11:06:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2025-05-30",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Calypso by TRDR-DWHITFIELD: buy protection Single-name CDS"
+   },
+   {
+    "date": "2025-05-30",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA898280238)"
+   },
+   {
+    "date": "2026-03-16",
+    "event": "Partially terminated",
+    "status": "Done",
+    "description": "Notional reduced by 25%, unwind fee settled",
+    "amount": 9750000
+   },
+   {
+    "date": "2026-06-02",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "CAD payment settled",
+    "amount": -111118.0
+   },
+   {
+    "date": "2027-06-02",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2028-08-15",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -259,6 +299,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 28460,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 294
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 129
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -695
+  },
+  {
+   "step": "FX delta",
+   "pnl": -156
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -12
+  },
+  {
+   "step": "Theta",
+   "pnl": 24
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -6
+  }
+ ],
  "_meta": {
   "source": "murex-credit",
   "generation": 1,

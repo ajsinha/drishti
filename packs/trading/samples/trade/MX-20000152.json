@@ -379,7 +379,33 @@
   "sourceSystem": "Endur",
   "createdAt": "2024-05-14T11:23:00Z",
   "lastModifiedAt": "2024-05-14T11:23:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2024-05-14",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-MOKAFOR: sell Target redemption note (rates)"
+   },
+   {
+    "date": "2024-05-14",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA895583238)"
+   },
+   {
+    "date": "2026-11-16",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2033-08-22",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -432,6 +458,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -32218,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 178
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 40
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -476
+  },
+  {
+   "step": "FX delta",
+   "pnl": -33
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 28
+  },
+  {
+   "step": "Theta",
+   "pnl": -199
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -15
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

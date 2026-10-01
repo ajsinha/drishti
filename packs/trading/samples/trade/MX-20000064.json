@@ -199,7 +199,33 @@
   "sourceSystem": "Endur",
   "createdAt": "2026-07-10T09:49:00Z",
   "lastModifiedAt": "2026-07-10T09:49:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2026-07-10",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-ASHAH: short Forward rate agreement"
+   },
+   {
+    "date": "2026-07-10",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA335490126)"
+   },
+   {
+    "date": "2026-10-13",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2027-08-23",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -251,6 +277,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 661276,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -6064
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 5140
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 30261
+  },
+  {
+   "step": "FX delta",
+   "pnl": -3755
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 621
+  },
+  {
+   "step": "Theta",
+   "pnl": -293
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 576
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

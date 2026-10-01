@@ -210,7 +210,40 @@
   "sourceSystem": "Endur",
   "createdAt": "2025-12-01T12:30:00Z",
   "lastModifiedAt": "2025-12-01T12:30:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2025-12-01",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Bloomberg TOMS by TRDR-BADEYEMI: long CLO tranche"
+   },
+   {
+    "date": "2025-12-01",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT512693233)"
+   },
+   {
+    "date": "2026-07-10",
+    "event": "Partially terminated",
+    "status": "Done",
+    "description": "Notional reduced by 40%, unwind fee settled",
+    "amount": 23200000
+   },
+   {
+    "date": "2026-12-03",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2028-09-21",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -262,6 +295,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 644003,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 881
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -1287
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -7401
+  },
+  {
+   "step": "FX delta",
+   "pnl": -771
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -49
+  },
+  {
+   "step": "Theta",
+   "pnl": -61
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 315
+  }
+ ],
  "_meta": {
   "source": "summit-fi",
   "generation": 1,

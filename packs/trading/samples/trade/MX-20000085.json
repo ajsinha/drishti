@@ -233,7 +233,47 @@
   "sourceSystem": "Calypso",
   "createdAt": "2025-10-31T09:44:00Z",
   "lastModifiedAt": "2025-10-31T09:44:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2025-10-31",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-MOKAFOR: sell Interest rate floor"
+   },
+   {
+    "date": "2025-10-31",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA412670379)"
+   },
+   {
+    "date": "2026-01-23",
+    "event": "Partially terminated",
+    "status": "Done",
+    "description": "Notional reduced by 10%, unwind fee settled",
+    "amount": 3000000
+   },
+   {
+    "date": "2026-08-03",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "CHF payment settled",
+    "amount": 0.0
+   },
+   {
+    "date": "2026-11-03",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2027-09-23",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -286,6 +326,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 353135,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 650
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -86
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -5849
+  },
+  {
+   "step": "FX delta",
+   "pnl": 1893
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -1547
+  },
+  {
+   "step": "Theta",
+   "pnl": -1839
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -329
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

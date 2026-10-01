@@ -183,7 +183,27 @@
   "sourceSystem": "Murex",
   "createdAt": "2026-07-31T13:00:00Z",
   "lastModifiedAt": "2026-07-31T13:00:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2026-07-31",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Bloomberg TOMS by TRDR-KBRANDT: reverse repo Reverse repo"
+   },
+   {
+    "date": "2026-07-31",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT297730110)"
+   },
+   {
+    "date": "2026-11-12",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -236,6 +256,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -732011,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 76
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -114
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 2061
+  },
+  {
+   "step": "FX delta",
+   "pnl": -56
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -78
+  },
+  {
+   "step": "Theta",
+   "pnl": -57
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -94
+  }
+ ],
  "_meta": {
   "source": "globalone-sft",
   "generation": 1,

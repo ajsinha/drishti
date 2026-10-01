@@ -225,7 +225,53 @@
   "sourceSystem": "Endur",
   "createdAt": "2026-02-02T11:10:00Z",
   "lastModifiedAt": "2026-02-02T11:10:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2026-02-02",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Bloomberg TOMS by TRDR-BADEYEMI: long Floating rate note"
+   },
+   {
+    "date": "2026-02-02",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT838936328)"
+   },
+   {
+    "date": "2026-02-03",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2026-03-04",
+    "event": "Partially terminated",
+    "status": "Done",
+    "description": "Notional reduced by 20%, unwind fee settled",
+    "amount": 7600000
+   },
+   {
+    "date": "2026-08-04",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "EUR payment settled",
+    "amount": 760000.0
+   },
+   {
+    "date": "2027-02-04",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2030-04-11",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -282,6 +328,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -217655,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 29
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 150
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -1163
+  },
+  {
+   "step": "FX delta",
+   "pnl": 47
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 16
+  },
+  {
+   "step": "Theta",
+   "pnl": 10
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 3
+  }
+ ],
  "_meta": {
   "source": "summit-fi",
   "generation": 1,

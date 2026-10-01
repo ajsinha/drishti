@@ -182,7 +182,33 @@
   "sourceSystem": "Summit",
   "createdAt": "2026-07-09T09:49:00Z",
   "lastModifiedAt": "2026-07-09T09:49:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2026-07-09",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-ASHAH: sell Bermudan swaption"
+   },
+   {
+    "date": "2026-07-09",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA373353694)"
+   },
+   {
+    "date": "2027-07-13",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2028-06-12",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -235,6 +261,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -101738,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -754
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 1012
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -539
+  },
+  {
+   "step": "FX delta",
+   "pnl": -675
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 8355
+  },
+  {
+   "step": "Theta",
+   "pnl": -1333
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -333
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

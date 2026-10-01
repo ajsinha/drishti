@@ -170,7 +170,27 @@
   "sourceSystem": "Endur",
   "createdAt": "2024-08-20T09:31:00Z",
   "lastModifiedAt": "2024-08-20T09:31:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2024-08-20",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Calypso by TRDR-DWHITFIELD: sell protection Unfunded risk participation"
+   },
+   {
+    "date": "2024-08-20",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA971815766)"
+   },
+   {
+    "date": "2029-10-05",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -222,6 +242,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 479579,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 762
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -259
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 3178
+  },
+  {
+   "step": "FX delta",
+   "pnl": 41
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 17
+  },
+  {
+   "step": "Theta",
+   "pnl": -103
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -163
+  }
+ ],
  "_meta": {
   "source": "murex-credit",
   "generation": 1,

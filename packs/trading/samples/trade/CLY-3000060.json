@@ -167,7 +167,27 @@
   "sourceSystem": "Summit",
   "createdAt": "2025-11-19T11:08:00Z",
   "lastModifiedAt": "2025-11-19T11:08:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-11-19",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Calypso by TRDR-CDUBOIS: short Revolving credit facility"
+   },
+   {
+    "date": "2025-11-19",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA396490545)"
+   },
+   {
+    "date": "2031-04-07",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -220,6 +240,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 140130,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -104
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -62
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -442
+  },
+  {
+   "step": "FX delta",
+   "pnl": 22
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -16
+  },
+  {
+   "step": "Theta",
+   "pnl": 42
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 11
+  }
+ ],
  "_meta": {
   "source": "murex-credit",
   "generation": 1,

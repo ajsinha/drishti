@@ -261,7 +261,33 @@
   "sourceSystem": "Summit",
   "createdAt": "2026-07-01T10:36:00Z",
   "lastModifiedAt": "2026-07-01T10:36:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2026-07-01",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-PLINDQVIST: pay fixed Equity total return swap"
+   },
+   {
+    "date": "2026-07-01",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT141156020)"
+   },
+   {
+    "date": "2027-07-03",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2031-10-20",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -315,6 +341,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 2420332,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -12620
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 13047
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -72554
+  },
+  {
+   "step": "FX delta",
+   "pnl": -9773
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 590
+  },
+  {
+   "step": "Theta",
+   "pnl": 1076
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 1385
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

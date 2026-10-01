@@ -166,7 +166,27 @@
   "sourceSystem": "Calypso",
   "createdAt": "2025-10-10T10:41:00Z",
   "lastModifiedAt": "2025-10-10T10:41:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-10-10",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-MOKAFOR: buy American swaption"
+   },
+   {
+    "date": "2025-10-10",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA968557867)"
+   },
+   {
+    "date": "2028-04-13",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -219,6 +239,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 458803,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 2026
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 1794
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -3477
+  },
+  {
+   "step": "FX delta",
+   "pnl": 1553
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -5489
+  },
+  {
+   "step": "Theta",
+   "pnl": -8292
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 252
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

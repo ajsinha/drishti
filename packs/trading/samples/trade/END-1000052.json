@@ -168,7 +168,33 @@
   "sourceSystem": "Summit",
   "createdAt": "2024-10-25T10:41:00Z",
   "lastModifiedAt": "2024-10-25T10:41:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2024-10-25",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Endur by TRDR-FROSSI: short Calendar spread"
+   },
+   {
+    "date": "2024-10-25",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT527645872)"
+   },
+   {
+    "date": "2024-10-28",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2026-10-07",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -223,6 +249,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 3780914,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 44007
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -10991
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -141310
+  },
+  {
+   "step": "FX delta",
+   "pnl": -8107
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -2593
+  },
+  {
+   "step": "Theta",
+   "pnl": -1246
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -3836
+  }
+ ],
  "_meta": {
   "source": "endur-comm",
   "generation": 1,

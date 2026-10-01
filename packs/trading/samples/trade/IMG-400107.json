@@ -254,7 +254,34 @@
   "sourceSystem": "Summit",
   "createdAt": "2024-12-24T10:44:00Z",
   "lastModifiedAt": "2024-12-24T10:44:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2024-12-24",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-JWEISS: pay fixed Portfolio (basket) swap"
+   },
+   {
+    "date": "2024-12-24",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT720711255)"
+   },
+   {
+    "date": "2025-04-15",
+    "event": "Partially terminated",
+    "status": "Done",
+    "description": "Notional reduced by 25%, unwind fee settled",
+    "amount": 2000000
+   },
+   {
+    "date": "2030-08-07",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -308,6 +335,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -55969,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 556
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -526
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 2223
+  },
+  {
+   "step": "FX delta",
+   "pnl": 412
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 69
+  },
+  {
+   "step": "Theta",
+   "pnl": -62
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -24
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

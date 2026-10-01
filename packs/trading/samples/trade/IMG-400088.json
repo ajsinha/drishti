@@ -338,7 +338,33 @@
   "sourceSystem": "Murex",
   "createdAt": "2025-02-14T11:34:00Z",
   "lastModifiedAt": "2025-02-14T11:34:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2025-02-14",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-PLINDQVIST: buy Volatility swap"
+   },
+   {
+    "date": "2025-02-14",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT479116862)"
+   },
+   {
+    "date": "2026-11-18",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2033-07-14",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -391,6 +417,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 522,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -386
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 1
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -35
+  },
+  {
+   "step": "FX delta",
+   "pnl": 36
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 656
+  },
+  {
+   "step": "Theta",
+   "pnl": -241
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -2
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

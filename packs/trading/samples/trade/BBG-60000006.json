@@ -294,7 +294,52 @@
   "sourceSystem": "Summit",
   "createdAt": "2024-05-17T12:13:00Z",
   "lastModifiedAt": "2024-05-21T12:13:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2024-05-17",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Bloomberg TOMS by TRDR-BADEYEMI: long Government bond"
+   },
+   {
+    "date": "2024-05-17",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT721243030)"
+   },
+   {
+    "date": "2024-05-20",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2024-05-21",
+    "event": "Amended",
+    "status": "Done",
+    "description": "Notional corrected (version 2, by mo.amend)"
+   },
+   {
+    "date": "2026-05-20",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "EUR payment settled",
+    "amount": 2820000.0
+   },
+   {
+    "date": "2026-11-20",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2032-12-22",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -350,6 +395,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 2663159,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 3665
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -935
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 14458
+  },
+  {
+   "step": "FX delta",
+   "pnl": -1568
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 330
+  },
+  {
+   "step": "Theta",
+   "pnl": -898
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -332
+  }
+ ],
  "_meta": {
   "source": "summit-fi",
   "generation": 1,

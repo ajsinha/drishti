@@ -161,7 +161,33 @@
   "sourceSystem": "Calypso",
   "createdAt": "2026-06-18T10:56:00Z",
   "lastModifiedAt": "2026-06-18T10:56:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2026-06-18",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-MOKAFOR: buy STIR future option"
+   },
+   {
+    "date": "2026-06-18",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA250016160)"
+   },
+   {
+    "date": "2026-06-22",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2027-09-27",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -217,6 +243,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 139969,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -249
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 100
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -1663
+  },
+  {
+   "step": "FX delta",
+   "pnl": 218
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -555
+  },
+  {
+   "step": "Theta",
+   "pnl": -1410
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -123
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

@@ -57,7 +57,7 @@ Load real data into each domain's folder, or point a domain at a database instea
 
 Historical VaR and ES for a desk or portfolio, with backtesting.
 
-**Fields its Sutra reads:** `var99`, `es975`, `svar`, `limit`, `exceptions`, `pnlSeries`, `contributions`.
+**Fields its Sutra reads:** `var99`, `es975`, `svar`, `limit`, `exceptions`, `pnlSeries`, `contributions`, `scenarioPnl`, `meanPnl`.
 
 **Links:** `desk` → Desk (`desk`).
 
@@ -87,7 +87,7 @@ Delta, vega and curvature by risk class and bucket (SBM).
 
 Daily P&L attributed to risk factors, new trades and residual.
 
-**Fields its Sutra reads:** `date`, `actual`, `explained`, `unexplained`, `attribution`.
+**Fields its Sutra reads:** `date`, `actual`, `explained`, `unexplained`, `attribution`, `explainSteps`.
 
 **Links:** `book` → Book (`book`).
 

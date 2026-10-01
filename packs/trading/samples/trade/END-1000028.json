@@ -185,7 +185,33 @@
   "sourceSystem": "Summit",
   "createdAt": "2026-02-20T10:52:00Z",
   "lastModifiedAt": "2026-02-20T10:52:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2026-02-20",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Endur by TRDR-FROSSI: buy Option on commodity future"
+   },
+   {
+    "date": "2026-02-20",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT464375798)"
+   },
+   {
+    "date": "2026-02-23",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2028-09-27",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -241,6 +267,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -2961595,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 61405
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -19027
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -334061
+  },
+  {
+   "step": "FX delta",
+   "pnl": -18258
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 203788
+  },
+  {
+   "step": "Theta",
+   "pnl": -34389
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 6023
+  }
+ ],
  "_meta": {
   "source": "endur-comm",
   "generation": 1,

@@ -159,7 +159,33 @@
   "sourceSystem": "Endur",
   "createdAt": "2026-09-04T11:22:00Z",
   "lastModifiedAt": "2026-09-04T11:22:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2026-09-04",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Endur by TRDR-TBRENNAN: long Emissions allowance future"
+   },
+   {
+    "date": "2026-09-04",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT402319691)"
+   },
+   {
+    "date": "2026-09-08",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2026-12-24",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -214,6 +240,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -975173,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -6675
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -151
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -11684
+  },
+  {
+   "step": "FX delta",
+   "pnl": -3617
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 396
+  },
+  {
+   "step": "Theta",
+   "pnl": 808
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 695
+  }
+ ],
  "_meta": {
   "source": "endur-comm",
   "generation": 1,

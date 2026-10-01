@@ -172,7 +172,33 @@
   "sourceSystem": "Calypso",
   "createdAt": "2024-06-25T10:29:00Z",
   "lastModifiedAt": "2025-01-26T10:29:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2024-06-25",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Calypso by TRDR-DWHITFIELD: buy protection Unfunded risk participation"
+   },
+   {
+    "date": "2024-06-25",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA703931524)"
+   },
+   {
+    "date": "2025-01-26",
+    "event": "Amended",
+    "status": "Done",
+    "description": "Notional corrected (version 2, by mo.ops)"
+   },
+   {
+    "date": "2027-01-20",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -224,6 +250,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -250140,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -546
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 2234
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 5811
+  },
+  {
+   "step": "FX delta",
+   "pnl": 1239
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -158
+  },
+  {
+   "step": "Theta",
+   "pnl": 12
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 365
+  }
+ ],
  "_meta": {
   "source": "murex-credit",
   "generation": 1,

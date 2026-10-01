@@ -175,7 +175,27 @@
   "sourceSystem": "Calypso",
   "createdAt": "2024-12-31T10:18:00Z",
   "lastModifiedAt": "2024-12-31T10:18:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2024-12-31",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Endur by TRDR-FROSSI: sell Commodity spread option"
+   },
+   {
+    "date": "2024-12-31",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT386171124)"
+   },
+   {
+    "date": "2028-04-05",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -228,6 +248,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -3131042,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 2014
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -8459
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -55994
+  },
+  {
+   "step": "FX delta",
+   "pnl": -7759
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 24555
+  },
+  {
+   "step": "Theta",
+   "pnl": -59319
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 1049
+  }
+ ],
  "_meta": {
   "source": "endur-comm",
   "generation": 1,

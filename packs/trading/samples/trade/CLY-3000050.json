@@ -285,7 +285,40 @@
   "sourceSystem": "Endur",
   "createdAt": "2026-05-29T11:28:00Z",
   "lastModifiedAt": "2026-05-29T11:28:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2026-05-29",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Calypso by TRDR-DWHITFIELD: short Term loan"
+   },
+   {
+    "date": "2026-05-29",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA243684197)"
+   },
+   {
+    "date": "2026-07-16",
+    "event": "Partially terminated",
+    "status": "Done",
+    "description": "Notional reduced by 20%, unwind fee settled",
+    "amount": 41200000
+   },
+   {
+    "date": "2026-11-29",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2033-07-04",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -338,6 +371,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -3469452,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 6936
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -5144
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 34088
+  },
+  {
+   "step": "FX delta",
+   "pnl": 1075
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 325
+  },
+  {
+   "step": "Theta",
+   "pnl": 1142
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -546
+  }
+ ],
  "_meta": {
   "source": "murex-credit",
   "generation": 1,

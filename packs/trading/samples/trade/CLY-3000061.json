@@ -162,7 +162,34 @@
   "sourceSystem": "Murex",
   "createdAt": "2025-04-29T11:20:00Z",
   "lastModifiedAt": "2025-04-29T11:20:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2025-04-29",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Calypso by TRDR-DWHITFIELD: sell Credit spread option"
+   },
+   {
+    "date": "2025-04-29",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA929450573)"
+   },
+   {
+    "date": "2025-06-26",
+    "event": "Partially terminated",
+    "status": "Done",
+    "description": "Notional reduced by 10%, unwind fee settled",
+    "amount": 900000
+   },
+   {
+    "date": "2027-10-04",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -215,6 +242,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -79245,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 197
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 66
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 445
+  },
+  {
+   "step": "FX delta",
+   "pnl": -75
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -153
+  },
+  {
+   "step": "Theta",
+   "pnl": -524
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -3
+  }
+ ],
  "_meta": {
   "source": "murex-credit",
   "generation": 1,

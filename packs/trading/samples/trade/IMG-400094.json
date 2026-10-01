@@ -167,7 +167,27 @@
   "sourceSystem": "Summit",
   "createdAt": "2025-05-27T09:57:00Z",
   "lastModifiedAt": "2025-05-27T09:57:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2025-05-27",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-JWEISS: receive fixed Dividend swap"
+   },
+   {
+    "date": "2025-05-27",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT946206424)"
+   },
+   {
+    "date": "2031-10-14",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -220,6 +240,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 452565,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 1074
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 440
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -56776
+  },
+  {
+   "step": "FX delta",
+   "pnl": 10150
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -679
+  },
+  {
+   "step": "Theta",
+   "pnl": 545
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 2505
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

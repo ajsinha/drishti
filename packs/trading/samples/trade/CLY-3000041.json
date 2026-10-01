@@ -248,7 +248,33 @@
   "sourceSystem": "Summit",
   "createdAt": "2026-02-18T12:44:00Z",
   "lastModifiedAt": "2026-02-18T12:44:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2026-02-18",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Calypso by TRDR-CDUBOIS: pay fixed Total return swap on a loan index"
+   },
+   {
+    "date": "2026-02-18",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA264238022)"
+   },
+   {
+    "date": "2027-02-20",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2031-03-24",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -300,6 +326,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -1308590,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -15013
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -6654
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 44449
+  },
+  {
+   "step": "FX delta",
+   "pnl": 1402
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -175
+  },
+  {
+   "step": "Theta",
+   "pnl": 60
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 90
+  }
+ ],
  "_meta": {
   "source": "murex-credit",
   "generation": 1,

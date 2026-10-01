@@ -1426,7 +1426,40 @@
   "sourceSystem": "Murex",
   "createdAt": "2025-07-25T12:53:00Z",
   "lastModifiedAt": "2025-07-25T12:53:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2025-07-25",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-HOKORO: receive fixed Zero-coupon inflation swap"
+   },
+   {
+    "date": "2025-07-25",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA210854209)"
+   },
+   {
+    "date": "2026-07-23",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "JPY payment settled",
+    "amount": -68087.46
+   },
+   {
+    "date": "2026-10-23",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2036-07-21",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -1480,6 +1513,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 8107171,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -27558
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 4657
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 97074
+  },
+  {
+   "step": "FX delta",
+   "pnl": 11779
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 2488
+  },
+  {
+   "step": "Theta",
+   "pnl": 2564
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -2858
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

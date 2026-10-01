@@ -270,7 +270,40 @@
   "sourceSystem": "Endur",
   "createdAt": "2025-09-26T09:50:00Z",
   "lastModifiedAt": "2025-09-26T09:50:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2025-09-26",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-PLINDQVIST: pay fixed Equity total return swap"
+   },
+   {
+    "date": "2025-09-26",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT151690908)"
+   },
+   {
+    "date": "2026-09-29",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "EUR payment settled",
+    "amount": -172619.55
+   },
+   {
+    "date": "2027-09-29",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2031-10-23",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -324,6 +357,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 694998,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 1248
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 6578
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -50259
+  },
+  {
+   "step": "FX delta",
+   "pnl": 3292
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 342
+  },
+  {
+   "step": "Theta",
+   "pnl": 2039
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -729
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

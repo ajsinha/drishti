@@ -175,7 +175,27 @@
   "sourceSystem": "Calypso",
   "createdAt": "2025-09-18T10:19:00Z",
   "lastModifiedAt": "2025-09-18T10:19:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-09-18",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Endur by TRDR-TBRENNAN: sell Commodity swaption"
+   },
+   {
+    "date": "2025-09-18",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT828293106)"
+   },
+   {
+    "date": "2027-09-09",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -227,6 +247,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -733757,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -947
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -112
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -166
+  },
+  {
+   "step": "FX delta",
+   "pnl": 275
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 346
+  },
+  {
+   "step": "Theta",
+   "pnl": -1518
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -86
+  }
+ ],
  "_meta": {
   "source": "endur-comm",
   "generation": 1,

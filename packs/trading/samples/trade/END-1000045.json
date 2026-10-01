@@ -175,7 +175,27 @@
   "sourceSystem": "Endur",
   "createdAt": "2025-11-14T10:55:00Z",
   "lastModifiedAt": "2025-11-14T10:55:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-11-14",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Endur by TRDR-TBRENNAN: sell Commodity spread option"
+   },
+   {
+    "date": "2025-11-14",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT376439707)"
+   },
+   {
+    "date": "2032-07-30",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -228,6 +248,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 1702010,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 1047
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -3695
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -15485
+  },
+  {
+   "step": "FX delta",
+   "pnl": 1029
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 6301
+  },
+  {
+   "step": "Theta",
+   "pnl": -289
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -608
+  }
+ ],
  "_meta": {
   "source": "endur-comm",
   "generation": 1,

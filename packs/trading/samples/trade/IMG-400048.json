@@ -357,7 +357,33 @@
   "sourceSystem": "Murex",
   "createdAt": "2025-12-10T09:22:00Z",
   "lastModifiedAt": "2025-12-10T09:22:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2025-12-10",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-JWEISS: sell Equity barrier option"
+   },
+   {
+    "date": "2025-12-10",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT596385583)"
+   },
+   {
+    "date": "2026-12-12",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2033-06-06",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -411,6 +437,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -803335,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 1992
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -2051
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 11125
+  },
+  {
+   "step": "FX delta",
+   "pnl": 1257
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 29734
+  },
+  {
+   "step": "Theta",
+   "pnl": -13491
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 1493
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

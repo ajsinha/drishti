@@ -232,7 +232,27 @@
   "sourceSystem": "Summit",
   "createdAt": "2024-06-07T11:09:00Z",
   "lastModifiedAt": "2024-06-07T11:09:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2024-06-07",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Calypso by TRDR-DWHITFIELD: sell protection First-to-default basket"
+   },
+   {
+    "date": "2024-06-07",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA869537752)"
+   },
+   {
+    "date": "2033-12-22",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -285,6 +305,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -607213,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 2305
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 2341
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 8474
+  },
+  {
+   "step": "FX delta",
+   "pnl": 3449
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -76
+  },
+  {
+   "step": "Theta",
+   "pnl": 753
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -453
+  }
+ ],
  "_meta": {
   "source": "murex-credit",
   "generation": 1,

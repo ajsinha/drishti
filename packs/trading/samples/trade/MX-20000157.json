@@ -1312,7 +1312,47 @@
   "sourceSystem": "Endur",
   "createdAt": "2026-01-27T09:22:00Z",
   "lastModifiedAt": "2026-01-27T09:22:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2026-01-27",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-GMENDES: pay fixed Zero-coupon inflation swap"
+   },
+   {
+    "date": "2026-01-27",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA755255631)"
+   },
+   {
+    "date": "2026-04-22",
+    "event": "Partially terminated",
+    "status": "Done",
+    "description": "Notional reduced by 40%, unwind fee settled",
+    "amount": 80000000
+   },
+   {
+    "date": "2026-07-15",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "EUR payment settled",
+    "amount": 974357.22
+   },
+   {
+    "date": "2026-10-14",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2035-07-12",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -1366,6 +1406,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -8079278,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -6523
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -949
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -24458
+  },
+  {
+   "step": "FX delta",
+   "pnl": 748
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 1362
+  },
+  {
+   "step": "Theta",
+   "pnl": -2699
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -795
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

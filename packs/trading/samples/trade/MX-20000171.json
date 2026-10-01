@@ -214,7 +214,33 @@
   "sourceSystem": "Summit",
   "createdAt": "2026-09-11T12:53:00Z",
   "lastModifiedAt": "2026-09-11T12:53:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2026-09-11",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-GMENDES: sell Inflation cap / floor"
+   },
+   {
+    "date": "2026-09-11",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA945517529)"
+   },
+   {
+    "date": "2026-12-14",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2028-03-21",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -268,6 +294,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -92328,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 469
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 693
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -8385
+  },
+  {
+   "step": "FX delta",
+   "pnl": -77
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 2034
+  },
+  {
+   "step": "Theta",
+   "pnl": -3349
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 0
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

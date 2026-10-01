@@ -203,7 +203,52 @@
   "sourceSystem": "Murex",
   "createdAt": "2025-05-30T11:30:00Z",
   "lastModifiedAt": "2025-06-15T11:30:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-05-30",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Bloomberg TOMS by TRDR-RCASTILLO: short Floating rate note"
+   },
+   {
+    "date": "2025-05-30",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT998931042)"
+   },
+   {
+    "date": "2025-06-02",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2025-06-15",
+    "event": "Amended",
+    "status": "Done",
+    "description": "Notional corrected (version 2, by mo.ops)"
+   },
+   {
+    "date": "2026-06-02",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "USD payment settled",
+    "amount": 2820000.0
+   },
+   {
+    "date": "2026-12-02",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2027-11-15",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -260,6 +305,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -795667,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -5907
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -5156
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -35557
+  },
+  {
+   "step": "FX delta",
+   "pnl": -19085
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 277
+  },
+  {
+   "step": "Theta",
+   "pnl": -1111
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 1672
+  }
+ ],
  "_meta": {
   "source": "summit-fi",
   "generation": 1,

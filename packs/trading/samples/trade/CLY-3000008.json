@@ -284,7 +284,40 @@
   "sourceSystem": "Summit",
   "createdAt": "2024-07-05T10:24:00Z",
   "lastModifiedAt": "2024-07-05T10:24:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2024-07-05",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Calypso by TRDR-CDUBOIS: sell protection CDS index (CDX / iTraxx)"
+   },
+   {
+    "date": "2024-07-05",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA241311903)"
+   },
+   {
+    "date": "2026-07-08",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "CHF payment settled",
+    "amount": -540577.62
+   },
+   {
+    "date": "2027-07-08",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2034-08-17",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -336,6 +369,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -1389445,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -3496
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -471
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -5559
+  },
+  {
+   "step": "FX delta",
+   "pnl": -3301
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 31
+  },
+  {
+   "step": "Theta",
+   "pnl": 569
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -701
+  }
+ ],
  "_meta": {
   "source": "murex-credit",
   "generation": 1,

@@ -43,6 +43,87 @@
  },
  "group": "GRP-SOLARIS",
  "creditLimit": "LIM-SOLARIS",
+ "hierarchy": {
+  "nodes": [
+   {
+    "id": "GRP-SOLARIS",
+    "label": "Solaris Energy Corp.",
+    "type": "Group (ultimate parent)"
+   },
+   {
+    "id": "CP-SOLARIS",
+    "label": "Solaris Energy Corp.",
+    "type": "Counterparty"
+   },
+   {
+    "id": "AGR-SOLARIS-ISDA",
+    "label": "ISDA 2002 Master",
+    "type": "Agreement"
+   },
+   {
+    "id": "CSA-SOLARIS",
+    "label": "Credit support annex",
+    "type": "CSA"
+   },
+   {
+    "id": "NS-SOLARIS-FRA",
+    "label": "NS-SOLARIS-FRA · 2 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-SOLARIS-LDN",
+    "label": "NS-SOLARIS-LDN · 10 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-SOLARIS-NY",
+    "label": "NS-SOLARIS-NY · 13 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-SOLARIS-TKY",
+    "label": "NS-SOLARIS-TKY · 3 trades",
+    "type": "Netting set"
+   }
+  ],
+  "edges": [
+   {
+    "from": "GRP-SOLARIS",
+    "to": "CP-SOLARIS",
+    "label": "parent of"
+   },
+   {
+    "from": "CP-SOLARIS",
+    "to": "AGR-SOLARIS-ISDA",
+    "label": "signed"
+   },
+   {
+    "from": "AGR-SOLARIS-ISDA",
+    "to": "CSA-SOLARIS",
+    "label": "secured by"
+   },
+   {
+    "from": "AGR-SOLARIS-ISDA",
+    "to": "NS-SOLARIS-FRA",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-SOLARIS-ISDA",
+    "to": "NS-SOLARIS-LDN",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-SOLARIS-ISDA",
+    "to": "NS-SOLARIS-NY",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-SOLARIS-ISDA",
+    "to": "NS-SOLARIS-TKY",
+    "label": "nets"
+   }
+  ]
+ },
  "_meta": {
   "source": "counterparty-master",
   "generation": 1

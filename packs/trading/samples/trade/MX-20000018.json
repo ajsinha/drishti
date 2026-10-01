@@ -929,7 +929,47 @@
   "sourceSystem": "Summit",
   "createdAt": "2025-01-22T12:51:00Z",
   "lastModifiedAt": "2025-01-22T12:51:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2025-01-22",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-ASHAH: pay fixed Basis swap (float/float)"
+   },
+   {
+    "date": "2025-01-22",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA898112773)"
+   },
+   {
+    "date": "2025-08-22",
+    "event": "Partially terminated",
+    "status": "Done",
+    "description": "Notional reduced by 40%, unwind fee settled",
+    "amount": 41200000
+   },
+   {
+    "date": "2026-09-29",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "USD payment settled",
+    "amount": 1003139.89
+   },
+   {
+    "date": "2026-12-30",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2030-09-25",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -982,6 +1022,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -141537,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 333
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 13
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -1348
+  },
+  {
+   "step": "FX delta",
+   "pnl": -8
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 1
+  },
+  {
+   "step": "Theta",
+   "pnl": 13
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -12
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

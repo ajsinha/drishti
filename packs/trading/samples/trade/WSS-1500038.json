@@ -358,7 +358,40 @@
   "sourceSystem": "Murex",
   "createdAt": "2025-11-07T10:07:00Z",
   "lastModifiedAt": "2025-11-07T10:07:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2025-11-07",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Wall Street Systems by TRDR-LMOREAU: buy FX barrier option"
+   },
+   {
+    "date": "2025-11-07",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT142706195)"
+   },
+   {
+    "date": "2026-09-17",
+    "event": "Partially terminated",
+    "status": "Done",
+    "description": "Notional reduced by 25%, unwind fee settled",
+    "amount": 56000000
+   },
+   {
+    "date": "2026-11-10",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2035-06-13",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -411,6 +444,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -3209195,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 24386
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 27941
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -289653
+  },
+  {
+   "step": "FX delta",
+   "pnl": 56548
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 37129
+  },
+  {
+   "step": "Theta",
+   "pnl": -71658
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 10748
+  }
+ ],
  "_meta": {
   "source": "calypso-fx",
   "generation": 1,

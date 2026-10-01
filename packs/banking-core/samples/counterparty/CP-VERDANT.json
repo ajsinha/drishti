@@ -43,6 +43,87 @@
  },
  "group": "GRP-VERDANT",
  "creditLimit": "LIM-VERDANT",
+ "hierarchy": {
+  "nodes": [
+   {
+    "id": "GRP-VERDANT",
+    "label": "Verdant Agri Holdings",
+    "type": "Group (ultimate parent)"
+   },
+   {
+    "id": "CP-VERDANT",
+    "label": "Verdant Agri Holdings",
+    "type": "Counterparty"
+   },
+   {
+    "id": "AGR-VERDANT-ISDA",
+    "label": "ISDA 2002 Master",
+    "type": "Agreement"
+   },
+   {
+    "id": "CSA-VERDANT",
+    "label": "Credit support annex",
+    "type": "CSA"
+   },
+   {
+    "id": "NS-VERDANT-FRA",
+    "label": "NS-VERDANT-FRA · 2 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-VERDANT-LDN",
+    "label": "NS-VERDANT-LDN · 8 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-VERDANT-NY",
+    "label": "NS-VERDANT-NY · 24 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-VERDANT-TKY",
+    "label": "NS-VERDANT-TKY · 1 trade",
+    "type": "Netting set"
+   }
+  ],
+  "edges": [
+   {
+    "from": "GRP-VERDANT",
+    "to": "CP-VERDANT",
+    "label": "parent of"
+   },
+   {
+    "from": "CP-VERDANT",
+    "to": "AGR-VERDANT-ISDA",
+    "label": "signed"
+   },
+   {
+    "from": "AGR-VERDANT-ISDA",
+    "to": "CSA-VERDANT",
+    "label": "secured by"
+   },
+   {
+    "from": "AGR-VERDANT-ISDA",
+    "to": "NS-VERDANT-FRA",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-VERDANT-ISDA",
+    "to": "NS-VERDANT-LDN",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-VERDANT-ISDA",
+    "to": "NS-VERDANT-NY",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-VERDANT-ISDA",
+    "to": "NS-VERDANT-TKY",
+    "label": "nets"
+   }
+  ]
+ },
  "_meta": {
   "source": "counterparty-master",
   "generation": 1

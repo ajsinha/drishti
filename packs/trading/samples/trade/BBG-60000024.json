@@ -178,7 +178,40 @@
   "sourceSystem": "Calypso",
   "createdAt": "2024-05-03T10:08:00Z",
   "lastModifiedAt": "2024-05-03T10:08:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2024-05-03",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Bloomberg TOMS by TRDR-BADEYEMI: long Zero-coupon bond"
+   },
+   {
+    "date": "2024-05-03",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT859845131)"
+   },
+   {
+    "date": "2024-05-06",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2026-01-09",
+    "event": "Partially terminated",
+    "status": "Done",
+    "description": "Notional reduced by 20%, unwind fee settled",
+    "amount": 3400000
+   },
+   {
+    "date": "2034-05-22",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -234,6 +267,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -243177,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 9980
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -913
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 8022
+  },
+  {
+   "step": "FX delta",
+   "pnl": -2178
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 180
+  },
+  {
+   "step": "Theta",
+   "pnl": 174
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -750
+  }
+ ],
  "_meta": {
   "source": "summit-fi",
   "generation": 1,

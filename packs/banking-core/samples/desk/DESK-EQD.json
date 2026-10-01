@@ -26,6 +26,932 @@
  "assetClasses": [
   "Equity"
  ],
+ "positions": [
+  {
+   "tradeId": "IMG-400003",
+   "book": "BOOK-EQD-1",
+   "currency": "JPY",
+   "family": "position",
+   "mtm": -1497978
+  },
+  {
+   "tradeId": "IMG-400011",
+   "book": "BOOK-EQD-1",
+   "currency": "CHF",
+   "family": "linear",
+   "mtm": -4487722
+  },
+  {
+   "tradeId": "IMG-400012",
+   "book": "BOOK-EQD-1",
+   "currency": "JPY",
+   "family": "linear",
+   "mtm": 3225946
+  },
+  {
+   "tradeId": "IMG-400016",
+   "book": "BOOK-EQD-1",
+   "currency": "CAD",
+   "family": "future",
+   "mtm": 430333
+  },
+  {
+   "tradeId": "IMG-400027",
+   "book": "BOOK-EQD-1",
+   "currency": "USD",
+   "family": "option",
+   "mtm": -795277
+  },
+  {
+   "tradeId": "IMG-400028",
+   "book": "BOOK-EQD-1",
+   "currency": "USD",
+   "family": "option",
+   "mtm": -211896
+  },
+  {
+   "tradeId": "IMG-400035",
+   "book": "BOOK-EQD-1",
+   "currency": "EUR",
+   "family": "option",
+   "mtm": -164052
+  },
+  {
+   "tradeId": "IMG-400038",
+   "book": "BOOK-EQD-1",
+   "currency": "USD",
+   "family": "option",
+   "mtm": -2574924
+  },
+  {
+   "tradeId": "IMG-400039",
+   "book": "BOOK-EQD-1",
+   "currency": "GBP",
+   "family": "option",
+   "mtm": -140694
+  },
+  {
+   "tradeId": "IMG-400040",
+   "book": "BOOK-EQD-1",
+   "currency": "GBP",
+   "family": "option",
+   "mtm": -692360
+  },
+  {
+   "tradeId": "IMG-400044",
+   "book": "BOOK-EQD-1",
+   "currency": "EUR",
+   "family": "exotic",
+   "mtm": 357206
+  },
+  {
+   "tradeId": "IMG-400045",
+   "book": "BOOK-EQD-1",
+   "currency": "CAD",
+   "family": "exotic",
+   "mtm": 424387
+  },
+  {
+   "tradeId": "IMG-400050",
+   "book": "BOOK-EQD-1",
+   "currency": "GBP",
+   "family": "exotic",
+   "mtm": -3224113
+  },
+  {
+   "tradeId": "IMG-400052",
+   "book": "BOOK-EQD-1",
+   "currency": "USD",
+   "family": "exotic",
+   "mtm": -3294420
+  },
+  {
+   "tradeId": "IMG-400063",
+   "book": "BOOK-EQD-1",
+   "currency": "USD",
+   "family": "exotic",
+   "mtm": -176522
+  },
+  {
+   "tradeId": "IMG-400064",
+   "book": "BOOK-EQD-1",
+   "currency": "USD",
+   "family": "exotic",
+   "mtm": 326202
+  },
+  {
+   "tradeId": "IMG-400065",
+   "book": "BOOK-EQD-1",
+   "currency": "EUR",
+   "family": "exotic",
+   "mtm": -951838
+  },
+  {
+   "tradeId": "IMG-400069",
+   "book": "BOOK-EQD-1",
+   "currency": "JPY",
+   "family": "exotic",
+   "mtm": -1006987
+  },
+  {
+   "tradeId": "IMG-400073",
+   "book": "BOOK-EQD-1",
+   "currency": "EUR",
+   "family": "note",
+   "mtm": -407954
+  },
+  {
+   "tradeId": "IMG-400080",
+   "book": "BOOK-EQD-1",
+   "currency": "EUR",
+   "family": "exotic",
+   "mtm": -18848
+  },
+  {
+   "tradeId": "IMG-400083",
+   "book": "BOOK-EQD-1",
+   "currency": "JPY",
+   "family": "exotic",
+   "mtm": -2491
+  },
+  {
+   "tradeId": "IMG-400088",
+   "book": "BOOK-EQD-1",
+   "currency": "USD",
+   "family": "exotic",
+   "mtm": 551
+  },
+  {
+   "tradeId": "IMG-400089",
+   "book": "BOOK-EQD-1",
+   "currency": "USD",
+   "family": "exotic",
+   "mtm": 145
+  },
+  {
+   "tradeId": "IMG-400091",
+   "book": "BOOK-EQD-1",
+   "currency": "EUR",
+   "family": "swap",
+   "mtm": -455221
+  },
+  {
+   "tradeId": "IMG-400093",
+   "book": "BOOK-EQD-1",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": -396916
+  },
+  {
+   "tradeId": "IMG-400094",
+   "book": "BOOK-EQD-1",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": 409824
+  },
+  {
+   "tradeId": "IMG-400098",
+   "book": "BOOK-EQD-1",
+   "currency": "CAD",
+   "family": "swap",
+   "mtm": -1401680
+  },
+  {
+   "tradeId": "IMG-400100",
+   "book": "BOOK-EQD-1",
+   "currency": "EUR",
+   "family": "swap",
+   "mtm": 2341483
+  },
+  {
+   "tradeId": "IMG-400103",
+   "book": "BOOK-EQD-1",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": -1014620
+  },
+  {
+   "tradeId": "IMG-400108",
+   "book": "BOOK-EQD-1",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": -375356
+  },
+  {
+   "tradeId": "IMG-400109",
+   "book": "BOOK-EQD-1",
+   "currency": "USD",
+   "family": "linear",
+   "mtm": 6060457
+  },
+  {
+   "tradeId": "IMG-400110",
+   "book": "BOOK-EQD-1",
+   "currency": "USD",
+   "family": "linear",
+   "mtm": -2343493
+  },
+  {
+   "tradeId": "IMG-400114",
+   "book": "BOOK-EQD-1",
+   "currency": "USD",
+   "family": "linear",
+   "mtm": 12950
+  },
+  {
+   "tradeId": "IMG-400115",
+   "book": "BOOK-EQD-1",
+   "currency": "CHF",
+   "family": "option",
+   "mtm": 544626
+  },
+  {
+   "tradeId": "IMG-400122",
+   "book": "BOOK-EQD-1",
+   "currency": "USD",
+   "family": "bond",
+   "mtm": 94323
+  },
+  {
+   "tradeId": "IMG-400127",
+   "book": "BOOK-EQD-1",
+   "currency": "GBP",
+   "family": "exotic",
+   "mtm": 1923365
+  },
+  {
+   "tradeId": "IMG-400130",
+   "book": "BOOK-EQD-1",
+   "currency": "EUR",
+   "family": "exotic",
+   "mtm": 304517
+  },
+  {
+   "tradeId": "IMG-400002",
+   "book": "BOOK-EQD-2",
+   "currency": "USD",
+   "family": "position",
+   "mtm": -259412
+  },
+  {
+   "tradeId": "IMG-400004",
+   "book": "BOOK-EQD-2",
+   "currency": "USD",
+   "family": "position",
+   "mtm": 3106156
+  },
+  {
+   "tradeId": "IMG-400006",
+   "book": "BOOK-EQD-2",
+   "currency": "USD",
+   "family": "position",
+   "mtm": 350811
+  },
+  {
+   "tradeId": "IMG-400008",
+   "book": "BOOK-EQD-2",
+   "currency": "CHF",
+   "family": "linear",
+   "mtm": -173531
+  },
+  {
+   "tradeId": "IMG-400014",
+   "book": "BOOK-EQD-2",
+   "currency": "EUR",
+   "family": "future",
+   "mtm": -631204
+  },
+  {
+   "tradeId": "IMG-400015",
+   "book": "BOOK-EQD-2",
+   "currency": "JPY",
+   "family": "future",
+   "mtm": -2220542
+  },
+  {
+   "tradeId": "IMG-400017",
+   "book": "BOOK-EQD-2",
+   "currency": "EUR",
+   "family": "future",
+   "mtm": -1322281
+  },
+  {
+   "tradeId": "IMG-400018",
+   "book": "BOOK-EQD-2",
+   "currency": "JPY",
+   "family": "future",
+   "mtm": 54859
+  },
+  {
+   "tradeId": "IMG-400020",
+   "book": "BOOK-EQD-2",
+   "currency": "USD",
+   "family": "future",
+   "mtm": 236997
+  },
+  {
+   "tradeId": "IMG-400021",
+   "book": "BOOK-EQD-2",
+   "currency": "USD",
+   "family": "future",
+   "mtm": -1127269
+  },
+  {
+   "tradeId": "IMG-400031",
+   "book": "BOOK-EQD-2",
+   "currency": "GBP",
+   "family": "option",
+   "mtm": 1634404
+  },
+  {
+   "tradeId": "IMG-400032",
+   "book": "BOOK-EQD-2",
+   "currency": "GBP",
+   "family": "option",
+   "mtm": 1219453
+  },
+  {
+   "tradeId": "IMG-400033",
+   "book": "BOOK-EQD-2",
+   "currency": "USD",
+   "family": "option",
+   "mtm": 521167
+  },
+  {
+   "tradeId": "IMG-400036",
+   "book": "BOOK-EQD-2",
+   "currency": "GBP",
+   "family": "option",
+   "mtm": -791511
+  },
+  {
+   "tradeId": "IMG-400046",
+   "book": "BOOK-EQD-2",
+   "currency": "USD",
+   "family": "exotic",
+   "mtm": 1866866
+  },
+  {
+   "tradeId": "IMG-400049",
+   "book": "BOOK-EQD-2",
+   "currency": "USD",
+   "family": "exotic",
+   "mtm": 2232719
+  },
+  {
+   "tradeId": "IMG-400053",
+   "book": "BOOK-EQD-2",
+   "currency": "USD",
+   "family": "exotic",
+   "mtm": -83827
+  },
+  {
+   "tradeId": "IMG-400054",
+   "book": "BOOK-EQD-2",
+   "currency": "USD",
+   "family": "exotic",
+   "mtm": 4285041
+  },
+  {
+   "tradeId": "IMG-400057",
+   "book": "BOOK-EQD-2",
+   "currency": "USD",
+   "family": "option",
+   "mtm": 687441
+  },
+  {
+   "tradeId": "IMG-400060",
+   "book": "BOOK-EQD-2",
+   "currency": "USD",
+   "family": "option",
+   "mtm": -1069328
+  },
+  {
+   "tradeId": "IMG-400068",
+   "book": "BOOK-EQD-2",
+   "currency": "USD",
+   "family": "exotic",
+   "mtm": -1263466
+  },
+  {
+   "tradeId": "IMG-400072",
+   "book": "BOOK-EQD-2",
+   "currency": "USD",
+   "family": "exotic",
+   "mtm": -241699
+  },
+  {
+   "tradeId": "IMG-400074",
+   "book": "BOOK-EQD-2",
+   "currency": "EUR",
+   "family": "note",
+   "mtm": -2940178
+  },
+  {
+   "tradeId": "IMG-400075",
+   "book": "BOOK-EQD-2",
+   "currency": "USD",
+   "family": "note",
+   "mtm": 479208
+  },
+  {
+   "tradeId": "IMG-400077",
+   "book": "BOOK-EQD-2",
+   "currency": "EUR",
+   "family": "note",
+   "mtm": 906822
+  },
+  {
+   "tradeId": "IMG-400078",
+   "book": "BOOK-EQD-2",
+   "currency": "EUR",
+   "family": "note",
+   "mtm": -218334
+  },
+  {
+   "tradeId": "IMG-400079",
+   "book": "BOOK-EQD-2",
+   "currency": "USD",
+   "family": "exotic",
+   "mtm": -17351
+  },
+  {
+   "tradeId": "IMG-400082",
+   "book": "BOOK-EQD-2",
+   "currency": "USD",
+   "family": "exotic",
+   "mtm": -37097
+  },
+  {
+   "tradeId": "IMG-400085",
+   "book": "BOOK-EQD-2",
+   "currency": "USD",
+   "family": "exotic",
+   "mtm": 35665
+  },
+  {
+   "tradeId": "IMG-400092",
+   "book": "BOOK-EQD-2",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": -1409108
+  },
+  {
+   "tradeId": "IMG-400101",
+   "book": "BOOK-EQD-2",
+   "currency": "EUR",
+   "family": "swap",
+   "mtm": 657509
+  },
+  {
+   "tradeId": "IMG-400104",
+   "book": "BOOK-EQD-2",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": -1863356
+  },
+  {
+   "tradeId": "IMG-400107",
+   "book": "BOOK-EQD-2",
+   "currency": "GBP",
+   "family": "swap",
+   "mtm": -53321
+  },
+  {
+   "tradeId": "IMG-400111",
+   "book": "BOOK-EQD-2",
+   "currency": "EUR",
+   "family": "linear",
+   "mtm": 262724
+  },
+  {
+   "tradeId": "IMG-400113",
+   "book": "BOOK-EQD-2",
+   "currency": "GBP",
+   "family": "linear",
+   "mtm": 207573
+  },
+  {
+   "tradeId": "IMG-400116",
+   "book": "BOOK-EQD-2",
+   "currency": "USD",
+   "family": "option",
+   "mtm": 45967
+  },
+  {
+   "tradeId": "IMG-400118",
+   "book": "BOOK-EQD-2",
+   "currency": "USD",
+   "family": "option",
+   "mtm": 3143714
+  },
+  {
+   "tradeId": "IMG-400120",
+   "book": "BOOK-EQD-2",
+   "currency": "USD",
+   "family": "option",
+   "mtm": 1693183
+  },
+  {
+   "tradeId": "IMG-400121",
+   "book": "BOOK-EQD-2",
+   "currency": "CAD",
+   "family": "bond",
+   "mtm": 3120994
+  },
+  {
+   "tradeId": "IMG-400128",
+   "book": "BOOK-EQD-2",
+   "currency": "JPY",
+   "family": "exotic",
+   "mtm": 841815
+  },
+  {
+   "tradeId": "IMG-400129",
+   "book": "BOOK-EQD-2",
+   "currency": "USD",
+   "family": "exotic",
+   "mtm": -4588
+  },
+  {
+   "tradeId": "IMG-400001",
+   "book": "BOOK-EQD-3",
+   "currency": "EUR",
+   "family": "position",
+   "mtm": 1660270
+  },
+  {
+   "tradeId": "IMG-400005",
+   "book": "BOOK-EQD-3",
+   "currency": "GBP",
+   "family": "position",
+   "mtm": -160746
+  },
+  {
+   "tradeId": "IMG-400007",
+   "book": "BOOK-EQD-3",
+   "currency": "CAD",
+   "family": "linear",
+   "mtm": -1368137
+  },
+  {
+   "tradeId": "IMG-400009",
+   "book": "BOOK-EQD-3",
+   "currency": "CAD",
+   "family": "linear",
+   "mtm": -1089396
+  },
+  {
+   "tradeId": "IMG-400010",
+   "book": "BOOK-EQD-3",
+   "currency": "USD",
+   "family": "linear",
+   "mtm": -24415
+  },
+  {
+   "tradeId": "IMG-400013",
+   "book": "BOOK-EQD-3",
+   "currency": "USD",
+   "family": "future",
+   "mtm": -567305
+  },
+  {
+   "tradeId": "IMG-400019",
+   "book": "BOOK-EQD-3",
+   "currency": "JPY",
+   "family": "future",
+   "mtm": 198569
+  },
+  {
+   "tradeId": "IMG-400022",
+   "book": "BOOK-EQD-3",
+   "currency": "GBP",
+   "family": "future",
+   "mtm": -3839873
+  },
+  {
+   "tradeId": "IMG-400023",
+   "book": "BOOK-EQD-3",
+   "currency": "GBP",
+   "family": "future",
+   "mtm": 404870
+  },
+  {
+   "tradeId": "IMG-400024",
+   "book": "BOOK-EQD-3",
+   "currency": "GBP",
+   "family": "future",
+   "mtm": 347798
+  },
+  {
+   "tradeId": "IMG-400025",
+   "book": "BOOK-EQD-3",
+   "currency": "USD",
+   "family": "option",
+   "mtm": -1590549
+  },
+  {
+   "tradeId": "IMG-400026",
+   "book": "BOOK-EQD-3",
+   "currency": "USD",
+   "family": "option",
+   "mtm": -1566065
+  },
+  {
+   "tradeId": "IMG-400029",
+   "book": "BOOK-EQD-3",
+   "currency": "CAD",
+   "family": "option",
+   "mtm": 2756929
+  },
+  {
+   "tradeId": "IMG-400030",
+   "book": "BOOK-EQD-3",
+   "currency": "USD",
+   "family": "option",
+   "mtm": -181527
+  },
+  {
+   "tradeId": "IMG-400034",
+   "book": "BOOK-EQD-3",
+   "currency": "JPY",
+   "family": "option",
+   "mtm": 780054
+  },
+  {
+   "tradeId": "IMG-400037",
+   "book": "BOOK-EQD-3",
+   "currency": "USD",
+   "family": "option",
+   "mtm": -36533
+  },
+  {
+   "tradeId": "IMG-400041",
+   "book": "BOOK-EQD-3",
+   "currency": "USD",
+   "family": "option",
+   "mtm": -4330699
+  },
+  {
+   "tradeId": "IMG-400042",
+   "book": "BOOK-EQD-3",
+   "currency": "USD",
+   "family": "option",
+   "mtm": 154046
+  },
+  {
+   "tradeId": "IMG-400043",
+   "book": "BOOK-EQD-3",
+   "currency": "CHF",
+   "family": "exotic",
+   "mtm": 3103153
+  },
+  {
+   "tradeId": "IMG-400047",
+   "book": "BOOK-EQD-3",
+   "currency": "GBP",
+   "family": "exotic",
+   "mtm": -496670
+  },
+  {
+   "tradeId": "IMG-400048",
+   "book": "BOOK-EQD-3",
+   "currency": "CHF",
+   "family": "exotic",
+   "mtm": -773276
+  },
+  {
+   "tradeId": "IMG-400051",
+   "book": "BOOK-EQD-3",
+   "currency": "USD",
+   "family": "exotic",
+   "mtm": -51366
+  },
+  {
+   "tradeId": "IMG-400055",
+   "book": "BOOK-EQD-3",
+   "currency": "USD",
+   "family": "option",
+   "mtm": 473161
+  },
+  {
+   "tradeId": "IMG-400056",
+   "book": "BOOK-EQD-3",
+   "currency": "EUR",
+   "family": "option",
+   "mtm": 159333
+  },
+  {
+   "tradeId": "IMG-400058",
+   "book": "BOOK-EQD-3",
+   "currency": "GBP",
+   "family": "option",
+   "mtm": 30068
+  },
+  {
+   "tradeId": "IMG-400059",
+   "book": "BOOK-EQD-3",
+   "currency": "EUR",
+   "family": "option",
+   "mtm": 4508571
+  },
+  {
+   "tradeId": "IMG-400061",
+   "book": "BOOK-EQD-3",
+   "currency": "USD",
+   "family": "exotic",
+   "mtm": -1004449
+  },
+  {
+   "tradeId": "IMG-400062",
+   "book": "BOOK-EQD-3",
+   "currency": "USD",
+   "family": "exotic",
+   "mtm": 141431
+  },
+  {
+   "tradeId": "IMG-400066",
+   "book": "BOOK-EQD-3",
+   "currency": "GBP",
+   "family": "exotic",
+   "mtm": -558730
+  },
+  {
+   "tradeId": "IMG-400067",
+   "book": "BOOK-EQD-3",
+   "currency": "GBP",
+   "family": "exotic",
+   "mtm": -429175
+  },
+  {
+   "tradeId": "IMG-400070",
+   "book": "BOOK-EQD-3",
+   "currency": "EUR",
+   "family": "exotic",
+   "mtm": -611105
+  },
+  {
+   "tradeId": "IMG-400071",
+   "book": "BOOK-EQD-3",
+   "currency": "JPY",
+   "family": "exotic",
+   "mtm": -1847391
+  },
+  {
+   "tradeId": "IMG-400076",
+   "book": "BOOK-EQD-3",
+   "currency": "CHF",
+   "family": "note",
+   "mtm": -4142972
+  },
+  {
+   "tradeId": "IMG-400081",
+   "book": "BOOK-EQD-3",
+   "currency": "GBP",
+   "family": "exotic",
+   "mtm": -21217
+  },
+  {
+   "tradeId": "IMG-400084",
+   "book": "BOOK-EQD-3",
+   "currency": "JPY",
+   "family": "exotic",
+   "mtm": -68392
+  },
+  {
+   "tradeId": "IMG-400086",
+   "book": "BOOK-EQD-3",
+   "currency": "EUR",
+   "family": "exotic",
+   "mtm": -25505
+  },
+  {
+   "tradeId": "IMG-400087",
+   "book": "BOOK-EQD-3",
+   "currency": "USD",
+   "family": "exotic",
+   "mtm": 139897
+  },
+  {
+   "tradeId": "IMG-400090",
+   "book": "BOOK-EQD-3",
+   "currency": "JPY",
+   "family": "exotic",
+   "mtm": 31675
+  },
+  {
+   "tradeId": "IMG-400095",
+   "book": "BOOK-EQD-3",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": 313322
+  },
+  {
+   "tradeId": "IMG-400096",
+   "book": "BOOK-EQD-3",
+   "currency": "JPY",
+   "family": "swap",
+   "mtm": -538557
+  },
+  {
+   "tradeId": "IMG-400097",
+   "book": "BOOK-EQD-3",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": -5455747
+  },
+  {
+   "tradeId": "IMG-400099",
+   "book": "BOOK-EQD-3",
+   "currency": "EUR",
+   "family": "swap",
+   "mtm": 724534
+  },
+  {
+   "tradeId": "IMG-400102",
+   "book": "BOOK-EQD-3",
+   "currency": "EUR",
+   "family": "swap",
+   "mtm": -938209
+  },
+  {
+   "tradeId": "IMG-400105",
+   "book": "BOOK-EQD-3",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": 1474051
+  },
+  {
+   "tradeId": "IMG-400106",
+   "book": "BOOK-EQD-3",
+   "currency": "JPY",
+   "family": "swap",
+   "mtm": -330164
+  },
+  {
+   "tradeId": "IMG-400112",
+   "book": "BOOK-EQD-3",
+   "currency": "USD",
+   "family": "linear",
+   "mtm": 491937
+  },
+  {
+   "tradeId": "IMG-400117",
+   "book": "BOOK-EQD-3",
+   "currency": "EUR",
+   "family": "option",
+   "mtm": 601179
+  },
+  {
+   "tradeId": "IMG-400119",
+   "book": "BOOK-EQD-3",
+   "currency": "GBP",
+   "family": "option",
+   "mtm": -403925
+  },
+  {
+   "tradeId": "IMG-400123",
+   "book": "BOOK-EQD-3",
+   "currency": "GBP",
+   "family": "bond",
+   "mtm": -3175475
+  },
+  {
+   "tradeId": "IMG-400124",
+   "book": "BOOK-EQD-3",
+   "currency": "EUR",
+   "family": "bond",
+   "mtm": 1796698
+  },
+  {
+   "tradeId": "IMG-400125",
+   "book": "BOOK-EQD-3",
+   "currency": "GBP",
+   "family": "bond",
+   "mtm": 1334065
+  },
+  {
+   "tradeId": "IMG-400126",
+   "book": "BOOK-EQD-3",
+   "currency": "CAD",
+   "family": "bond",
+   "mtm": 3067713
+  },
+  {
+   "tradeId": "IMG-400131",
+   "book": "BOOK-EQD-3",
+   "currency": "USD",
+   "family": "exotic",
+   "mtm": -51498
+  },
+  {
+   "tradeId": "IMG-400132",
+   "book": "BOOK-EQD-3",
+   "currency": "EUR",
+   "family": "exotic",
+   "mtm": 1867436
+  }
+ ],
  "_meta": {
   "source": "org-master",
   "generation": 1

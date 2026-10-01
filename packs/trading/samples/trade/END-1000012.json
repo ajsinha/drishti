@@ -164,7 +164,27 @@
   "sourceSystem": "Endur",
   "createdAt": "2024-06-14T12:53:00Z",
   "lastModifiedAt": "2024-06-14T12:53:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2024-06-14",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Endur by TRDR-TBRENNAN: long Commodity forward"
+   },
+   {
+    "date": "2024-06-14",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT899101996)"
+   },
+   {
+    "date": "2026-10-07",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -216,6 +236,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 994218,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 4307
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -3115
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 32452
+  },
+  {
+   "step": "FX delta",
+   "pnl": 8350
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 166
+  },
+  {
+   "step": "Theta",
+   "pnl": -1833
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -1111
+  }
+ ],
  "_meta": {
   "source": "endur-comm",
   "generation": 1,

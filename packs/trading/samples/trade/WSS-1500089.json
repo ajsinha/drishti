@@ -156,7 +156,33 @@
   "sourceSystem": "Calypso",
   "createdAt": "2026-09-11T11:59:00Z",
   "lastModifiedAt": "2026-09-11T11:59:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2026-09-11",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Wall Street Systems by TRDR-SIYER: short Treasury bill"
+   },
+   {
+    "date": "2026-09-11",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT215494303)"
+   },
+   {
+    "date": "2026-09-14",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2027-07-12",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -211,6 +237,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 1034327,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -22091
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 16668
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -55588
+  },
+  {
+   "step": "FX delta",
+   "pnl": -9852
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 1797
+  },
+  {
+   "step": "Theta",
+   "pnl": -846
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 2950
+  }
+ ],
  "_meta": {
   "source": "summit-mm",
   "generation": 1,

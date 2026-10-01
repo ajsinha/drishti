@@ -178,7 +178,33 @@
   "sourceSystem": "Murex",
   "createdAt": "2025-02-14T11:28:00Z",
   "lastModifiedAt": "2025-02-14T11:28:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2025-02-14",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-PLINDQVIST: sell Equity warrant"
+   },
+   {
+    "date": "2025-02-14",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT649966363)"
+   },
+   {
+    "date": "2025-02-18",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2027-09-30",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -235,6 +261,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 44596,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 625
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -151
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 2065
+  },
+  {
+   "step": "FX delta",
+   "pnl": -215
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -186
+  },
+  {
+   "step": "Theta",
+   "pnl": -803
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 36
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

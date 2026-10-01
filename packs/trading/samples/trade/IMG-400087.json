@@ -331,7 +331,33 @@
   "sourceSystem": "Summit",
   "createdAt": "2024-12-24T11:14:00Z",
   "lastModifiedAt": "2024-12-24T11:14:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2024-12-24",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-JWEISS: sell Volatility swap"
+   },
+   {
+    "date": "2024-12-24",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT390618705)"
+   },
+   {
+    "date": "2026-12-26",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2030-07-09",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -384,6 +410,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 151214,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 232
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 307
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -14826
+  },
+  {
+   "step": "FX delta",
+   "pnl": 428
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 3185
+  },
+  {
+   "step": "Theta",
+   "pnl": -592
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -51
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

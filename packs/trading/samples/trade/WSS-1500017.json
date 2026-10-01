@@ -165,7 +165,27 @@
   "sourceSystem": "Murex",
   "createdAt": "2024-11-27T09:38:00Z",
   "lastModifiedAt": "2024-11-27T09:38:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2024-11-27",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Wall Street Systems by TRDR-ENOVAK: long Non-deliverable forward"
+   },
+   {
+    "date": "2024-11-27",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT909459191)"
+   },
+   {
+    "date": "2026-10-07",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -219,6 +239,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -749203,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -331
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -542
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 2482
+  },
+  {
+   "step": "FX delta",
+   "pnl": -160
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -6
+  },
+  {
+   "step": "Theta",
+   "pnl": -46
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -10
+  }
+ ],
  "_meta": {
   "source": "calypso-fx",
   "generation": 1,

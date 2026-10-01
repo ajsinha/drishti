@@ -391,7 +391,40 @@
   "sourceSystem": "Murex",
   "createdAt": "2026-04-30T09:34:00Z",
   "lastModifiedAt": "2026-04-30T09:34:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2026-04-30",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Endur by TRDR-TBRENNAN: pay fixed Commodity swap"
+   },
+   {
+    "date": "2026-04-30",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT967608368)"
+   },
+   {
+    "date": "2026-08-04",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "USD payment settled",
+    "amount": 62982.0
+   },
+   {
+    "date": "2026-11-04",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2036-07-14",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -443,6 +476,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 135860,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -19
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -1856
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -6314
+  },
+  {
+   "step": "FX delta",
+   "pnl": -190
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -21
+  },
+  {
+   "step": "Theta",
+   "pnl": 138
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -94
+  }
+ ],
  "_meta": {
   "source": "endur-comm",
   "generation": 1,
