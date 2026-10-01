@@ -16,7 +16,7 @@
 # Changelog
 
 ## Unreleased
-- **Sutras are YAML, and only YAML (ADR-016 supersedes ADR-011).**
+- **Sutras are YAML, and only YAML (ADR-017 supersedes ADR-011).**
   - **File format:** a Sutra is one YAML file, `<name>.v<N>.sutra.yaml`, starting with `rachana: 1`, the language version (a missing or unknown version is `DRS-2009`). It can carry `description:` and `notes:` (plain text), and each panel a `description:`.
   - **Markdown removed:** Markdown Sutras are no longer read. A `.sutra.md` file, or a Sutra saved under a plain `.yaml` name, is reported in health with how to fix it (`DRS-2004`).
   - **Conversion:** all 228 shipped Sutras are converted; a one-off check proved each builds exactly the same layout as before. `tools/rachana/md_to_yaml.py` converts site Sutras. The generators write YAML.
