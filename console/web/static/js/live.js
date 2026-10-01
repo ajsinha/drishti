@@ -55,7 +55,15 @@
     var tpl = document.createElement('template');
     tpl.innerHTML = p.html.trim();
     var fresh = tpl.content.firstElementChild;
+    // the server renders the Sutra's sizes: keep the user's own (layout mode), and whether they hid the panel
+    var mine = /^(c-(span|h)-\d+|pnl-off)$/;
+    fresh.className = fresh.className.split(/\s+/).filter(function (c) { return !mine.test(c); })
+      .concat(old.className.split(/\s+/).filter(function (c) { return mine.test(c); })).join(' ');
+    fresh.setAttribute('data-span', old.getAttribute('data-span') || '12');
+    fresh.setAttribute('data-height', old.getAttribute('data-height') || '0');
+    fresh.tabIndex = old.tabIndex;
     old.replaceWith(fresh);
+    if (window.drishtiLayout) { window.drishtiLayout.decorate(fresh); }
     if (window.drishti) { window.drishti.enhance(fresh); }
     if (chosenId) { var t = document.getElementById(chosenId); if (t) { t.click(); } }
     fresh.querySelectorAll('tbody td, dd').forEach(function (td) { td.classList.add('live-cell'); });

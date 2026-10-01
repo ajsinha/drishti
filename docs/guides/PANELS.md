@@ -58,7 +58,7 @@ A panel goes through five steps between the Sutra file and the screen.
 | Parse | `SutraParser`, `SutraBuilder` | The panel's `kind` must be one of the twenty (`DRS-2021`); every option must be one the kind accepts (`DRS-2023`); every required option must be present (`DRS-2022`); restricted option values are checked (`DRS-2029`). |
 | Compile | `SutraExpressions` | The options that hold expressions (`rows`, `nodes`, `edges`, marker values, `value` on a gauge, …) are compiled, so a broken expression is `DRS-2101` when the Sutra loads, not when a user opens a view. |
 | Merge | `LayoutMerger` | The Sutra is matched to the document, and inference fills what the Sutra leaves open (`infer: true`, a `kv` with `rows` and no `columns`, the links panel). |
-| Bind | `Binder`, `ChartBinder` | Each panel is bound to the document on its own thread of the bind pool (`drishti.engine.bind-parallelism`). The result is a `PanelView`: `id`, `kind`, `title`, `code`, `key`, `area`, `inferred`, `explanation`, `data` (one record per kind), `error` and `empty`. An exception in one panel becomes that panel's `error`; the other panels and the view are unaffected. |
+| Bind | `Binder`, `ChartBinder` | Each panel is bound to the document on its own thread of the bind pool (`drishti.engine.bind-parallelism`). The result is a `PanelView`: `id`, `kind`, `title`, `code`, `key`, `area`, `inferred`, `explanation`, `data` (one record per kind), `error`, `empty`, and the Sutra's `span` and `height` when it sets them. An exception in one panel becomes that panel's `error`; the other panels and the view are unaffected. |
 | Draw | `_macros/panels.html`, `view.js`, `charts.js`, `tables.js` | The console renders each panel with one Jinja macro per kind (first paint, no JavaScript needed for text, tables and timelines) and then enhances it: tables sort and filter, charts are drawn with the vendored ECharts. |
 
 The view model is what `GET /api/v1/views/{kind}/{id}` returns. On the sample `var` entity `VAR-RATES` the whole view
@@ -96,6 +96,7 @@ same after a tick as on first paint.
 ## 3. Keys every panel takes
 
 These keys belong to every panel; they are never kind options, and any other key must be an option of the kind.
+`span` and `height` size a top-level panel only: a `tabs` body takes the size of its panel (`DRS-2030`).
 
 | Key | Required | Meaning |
 |---|---|---|
@@ -106,6 +107,8 @@ These keys belong to every panel; they are never kind options, and any other key
 | `key` | | A function key `F2`–`F12`, once per Sutra (`DRS-2025`). |
 | `code` | | A short code at the right of the heading (`PNLX`, `HIER`). |
 | `area` | | `main` (default) or `right` (`DRS-2027` otherwise). Charts and tables wider than about six columns belong in `main`. |
+| `span` | | Width in columns of a 12-column grid, a whole number from 1 to 12 (default: 12, the whole column). Panels narrower than their column sit side by side in Sutra order: `span: 8` and `span: 4` make one row. On a phone every panel takes the whole width. `DRS-2030` outside 1-12. |
+| `height` | | Height in grid rows of 2.5 rem (40 px at the usual text size), 1 to 24 (default: as tall as the content). A panel with a height scrolls inside; printing ignores it. `DRS-2030` outside 1-24. |
 | `infer` | | `true` lets inference add columns the Sutra does not list. |
 | `columns` | | For `kv`, `table`, `ladder` and `surface` (and a `tabs` body): `{label, bind, fmt, tone, total, link}`. |
 | `body` | | For `tabs` only (`DRS-2023` on any other kind). |
@@ -699,6 +702,10 @@ stopping the other charts.
 - **Themes.** Charts read their colours from the theme's tokens and are redrawn when the theme changes; the token
   contrast (text at least 4.5:1, accents at least 3:1) is checked for every theme by `test_contrast.py`.
 - **Print** uses the light print palette and prints the charts as drawn; open **Data** first to print the numbers too.
+  It keeps the order and widths of the view (the user's own layout when they keep one), leaves hidden panels out and
+  prints every panel at its full height.
+- **Layout mode** (`Alt+L`, [USER_GUIDE.md](USER_GUIDE.md#layout-mode-arrange-a-view-your-way)) lets a user move,
+  resize and hide panels for themselves from the keyboard as well as with a pointer; each change is announced.
 
 ## 17. Export
 
@@ -763,6 +770,8 @@ binds all five panels in 12.8 ms; the response is 560 kB because the scatter, ti
 | `layout: circle` on a graph | `DRS-2029 option 'layout' of 'graph' panels must be one of tree, force` | `tree` or `force` |
 | `rows: "$.legs[0"`, a marker `value: "-$.var99 +"` | `DRS-2101 expected ']' …` at load | fix the expression |
 | two panels with one id, a key used twice | `DRS-2024`, `DRS-2025` | rename, or pick another key |
+| `span: 0`, `span: 13`, `height: 30`, `span: half` | `DRS-2030 span must be a whole number from 1 to 12 (columns of the 12-column grid), not '13'` | a whole number in range |
+| `span:` on a `tabs` body | `DRS-2030 'span' sizes a whole panel: a tabs body takes the size of its panel` | put it on the `tabs` panel |
 | `label: "@.bucket"` on an `hbar` | bars without labels (no error) | `label: bucket`: hbar fields are bare names |
 | `value: "@.mtm"` on a pivot or `x: "@.var"` on a scatter | works (an expression per row), but slower on long lists | `value: mtm` |
 | a waterfall whose total rows have no flag | the opening amount is drawn as a move from zero, and every step floats from the wrong level | mark the level rows `total: true` (or name the flag field with `total:`) |

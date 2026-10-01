@@ -62,6 +62,8 @@ studio:
   enabled: true
 calc:                        # Calc: Python in the browser (docs/guides/PYTHON_CALC.md); also needs a role with calc
   enabled: ${DRISHTI_CALC_ENABLED:true}   # false: no view offers it, whatever packs and roles say
+layouts:                     # layout mode (Alt+L): each user's own arrangement of a view's panels; also needs a role with layout
+  enabled: ${DRISHTI_LAYOUTS_ENABLED:true}   # false: no view offers it and saved layouts are not applied
 help:
   docs_dir: ../docs          # the repository docs rendered as the help centre's reference section
 packs:

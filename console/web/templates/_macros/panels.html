@@ -199,7 +199,10 @@
 {%- endmacro %}
 
 {% macro panel(p) -%}
-<section class="pnl" id="p-{{ p.id }}" data-panel="{{ p.id }}" data-kind="{{ p.kind }}"{% if p.key %} data-key="{{ p.key }}"{% endif %} tabindex="-1" aria-labelledby="h-{{ p.id }}">
+{# span (1-12 columns) and height (grid rows) come from the Sutra, or the user's own layout (core/layouts.py); static/css/layout.css sizes them #}
+{% set span = p.span if (p.span is number and 1 <= p.span < 12) else none %}{% set rows = p.height if (p.height is number and 1 <= p.height <= 24) else none %}
+<section class="pnl{% if span %} c-span-{{ span }}{% endif %}{% if rows %} c-h-{{ rows }}{% endif %}{% if p.hidden %} pnl-off{% endif %}" id="p-{{ p.id }}" data-panel="{{ p.id }}" data-kind="{{ p.kind }}"{% if p.key %} data-key="{{ p.key }}"{% endif %}
+  data-span="{{ span or 12 }}" data-height="{{ rows or 0 }}" tabindex="-1" aria-labelledby="h-{{ p.id }}">
   <header class="pnl-h"><h3 id="h-{{ p.id }}">{{ p.title or '' }}</h3>
     <span class="pnl-code">{% if p.code %}{{ p.code }}{% endif %}{% if p.code and p.key %} · {% endif %}{% if p.key %}{{ p.key }}{% endif %}
       {% if p.inferred %}<span class="inf" title="{{ p.explanation or 'completed by inference' }}">inferred</span>{% endif %}

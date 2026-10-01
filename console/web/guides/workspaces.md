@@ -57,6 +57,17 @@ CRV USD-SOFR
 
 The **↗** icon in a pane's header opens that pane's view full screen in the terminal.
 
+### 3a. Or drag a view into a pane
+
+- **From the command line.** Type in the command line at the top (`TRD FXS`, `NS-HARB`, or click it with nothing typed
+  to see your recent views) and drag a suggestion onto a pane. While you drag, every pane shows *Drop to show it here*
+  and the one under the pointer lights up; let go and that pane shows the view. A suggestion you click without
+  dragging opens full screen, as anywhere else.
+- **From another pane.** Drag a pane's number (the `1`, `2`… at the left of its header) onto another pane: the other
+  pane shows the same view, which you can then follow somewhere else.
+
+`Esc` while dragging cancels. Dragging works with a mouse, a pen or a finger.
+
 ### 4. Change the layout and panes
 
 | Control | What it does |
@@ -66,10 +77,11 @@ The **↗** icon in a pane's header opens that pane's view full screen in the te
 | **×** on a pane | Removes it. |
 | *follows* menu on a pane | Chooses which pane this one follows (or *—* for none). |
 | `Alt+1` … `Alt+4` | Moves the keyboard focus to pane 1 to 4. |
+| Divider between panes | Drag it to give one column (or row) more room and its neighbour less. With the keyboard: `Tab` to the divider, then `←` `→` (or `↑` `↓` for rows) by 5 %; `Home` or a double-click makes them equal again. Changing the layout menu starts from equal sizes. |
 
 ### 5. Save it as your own
 
-- **Save** keeps the workspace under the name shown in the bar.
+- **Save** keeps the workspace under the name shown in the bar, with where you dragged its dividers.
 - **Save as…** asks for a new name (*Save workspace as:*), for example `My credit desk`, and saves a copy.
 - **Delete** (on a saved workspace) removes it.
 
@@ -110,6 +122,8 @@ With the finance pack enabled:
   four-pane workspace is no heavier on the connection than a single view.
 - **Business date.** Every pane follows the date in the top bar. Pick a date to see the whole workspace as of
   that business day; press **Live** to go back.
-- **On a phone** the panes stack in one column, each a scrollable live view.
+- **On a phone** the panes stack in one column, each a scrollable live view (dividers and their sizes apply to wider
+  screens only).
+- **Your layout of a view** ([Layout mode](layout-mode), `Alt+L` on a full view) applies inside panes too.
 
 For the rest of the console, see [Using the terminal](using-the-terminal).

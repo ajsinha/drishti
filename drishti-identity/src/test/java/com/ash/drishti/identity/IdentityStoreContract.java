@@ -159,24 +159,26 @@ abstract class IdentityStoreContract {
     void administratorsDefineRolesAndTheyAreReadFromASnapshot() {
         RoleStore roles = bean(RoleStore.class);
         roles.save(new RoleDefinition("credit-analyst", "reads credit", List.of("counterparty", "credit-curve"), false, false, false, false,
-                false, false, null, null), "drishti-dev-admin", Set.of("admin"));
+                false, false, false, null, null), "drishti-dev-admin", Set.of("admin"));
         RoleDefinition r = roles.find("credit-analyst").orElseThrow();
         assertThat(r.kinds()).containsExactly("counterparty", "credit-curve");
         assertThat(r.mayOpen("counterparty")).isTrue();
         assertThat(r.mayOpen("trade")).isFalse();
         assertThat(r.updatedBy()).isEqualTo("drishti-dev-admin");
         assertThat(r.calc()).isFalse();
+        assertThat(r.layout()).as("saved without layout: the no-layout power round-trips").isFalse();
 
-        roles.save(new RoleDefinition("credit-analyst", "reads credit and trades", List.of("*"), true, false, false, false, true, false, null, null),
+        roles.save(new RoleDefinition("credit-analyst", "reads credit and trades", List.of("*"), true, false, false, false, true, true, false, null, null),
                 "ops", Set.of("admin"));
         assertThat(roles.find("credit-analyst").orElseThrow().raw()).isTrue();
         assertThat(roles.find("credit-analyst").orElseThrow().calc()).as("the calc power round-trips (drishti_role_power)").isTrue();
         roles.refresh();
         assertThat(roles.find("credit-analyst").orElseThrow().calc()).isTrue();
+        assertThat(roles.find("credit-analyst").orElseThrow().layout()).isTrue();
         assertThat(roles.find("credit-analyst").orElseThrow().mayOpen("trade")).isTrue();
-        assertThatThrownBy(() -> roles.save(new RoleDefinition("admin", "", List.of("*"), false, false, false, false, false, false, null, null), "ops",
+        assertThatThrownBy(() -> roles.save(new RoleDefinition("admin", "", List.of("*"), false, false, false, false, false, true, false, null, null), "ops",
                 Set.of("admin"))).hasMessageContaining("built-in");
-        assertThatThrownBy(() -> roles.save(new RoleDefinition("Bad Name", "", List.of("*"), false, false, false, false, false, false, null, null), "ops",
+        assertThatThrownBy(() -> roles.save(new RoleDefinition("Bad Name", "", List.of("*"), false, false, false, false, false, true, false, null, null), "ops",
                 Set.of())).isInstanceOf(DrishtiException.class);
         assertThat(roles.delete("credit-analyst", "ops")).isTrue();
         assertThat(roles.find("credit-analyst")).isEmpty();

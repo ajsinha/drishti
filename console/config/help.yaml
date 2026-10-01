@@ -24,7 +24,8 @@ categories:
       - { slug: install-and-run, doc: guides/GETTING_STARTED.md, title: Install and run, icon: download, summary: "From nothing to your first view: build, start, sign in, and the first commands to type, step by step." }
       - { slug: impact, title: F8 · Impact, icon: diagram-3, summary: "What depends on an entity: its dependents, what they roll into, and the amount at stake." }
       - { slug: monitors-and-alerts, title: Monitors and alerts, icon: bell, summary: "Live watchlists, and rules the server checks on every change: alerted once, re-armed when clear." }
-      - { slug: workspaces, title: Workspaces, icon: grid-1x2, summary: "Several live views on one screen, panes that follow each other, saved per user." }
+      - { slug: workspaces, title: Workspaces, icon: grid-1x2, summary: "Several live views on one screen, panes that follow each other, views dragged into panes, dividers to resize, saved per user." }
+      - { slug: layout-mode, title: "Layout mode · arrange a view", icon: grid-3x3-gap, summary: "Alt+L: drag, resize and hide a view's panels for yourself, kept as your layout of its Sutra; authors promote it for review." }
       - { slug: python-calc, doc: guides/PYTHON_CALC.md, title: "Calc · Python on any view", icon: filetype-py, summary: "Alt+C: Python in your browser on the screen you are on. The drishti module, tables and charts, packs' snippets, roles, limits." }
       - { slug: using-the-terminal, doc: guides/USER_GUIDE.md, title: Using the terminal, icon: terminal, summary: "Commands, type-ahead, every key, and how to read the strip, panels, links and provenance." }
   - id: layouts

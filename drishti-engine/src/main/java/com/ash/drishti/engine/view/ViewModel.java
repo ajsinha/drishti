@@ -103,11 +103,12 @@ public record ViewModel(
      * Where a view came from. {@code updatedAt}: when its source last received new data (null when it cannot tell);
      * {@code staleAfter}: the source's threshold (ISO-8601 duration) or null; {@code stale}: older than that.
      */
+    /** {@code sutra}: the name of the Sutra that laid the view out, or null (inference alone); personal layouts are kept by it. */
     public record Provenance(String layout, String fingerprint, String source, long generation, String fetchedAt, boolean live,
-            String businessDate, String updatedAt, String staleAfter, boolean stale) {
+            String businessDate, String updatedAt, String staleAfter, boolean stale, String sutra) {
 
         public Provenance(String layout, String fingerprint, String source, long generation, String fetchedAt, boolean live, String businessDate) {
-            this(layout, fingerprint, source, generation, fetchedAt, live, businessDate, null, null, false);
+            this(layout, fingerprint, source, generation, fetchedAt, live, businessDate, null, null, false, null);
         }
     }
 
@@ -124,8 +125,18 @@ public record ViewModel(
      * @param error set when binding this panel failed; the rest of the view is unaffected
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    /** @param empty nothing to show (the document lacks what the panel asks for); the console says "No data available" */
+    /**
+     * @param empty nothing to show (the document lacks what the panel asks for); the console says "No data available"
+     * @param span the Sutra's width for the panel in columns of a 12-column grid, or null (the whole column)
+     * @param height the Sutra's height for the panel in grid rows, or null (as tall as its content)
+     */
     public record PanelView(
             String id, String kind, String title, String code, String key, String area, boolean inferred,
-            String explanation, PanelData data, String error, boolean empty) {}
+            String explanation, PanelData data, String error, boolean empty, Integer span, Integer height) {
+
+        public PanelView(String id, String kind, String title, String code, String key, String area, boolean inferred,
+                String explanation, PanelData data, String error, boolean empty) {
+            this(id, kind, title, code, key, area, inferred, explanation, data, error, empty, null, null);
+        }
+    }
 }

@@ -36,6 +36,35 @@
     a search and a past date on a running server. Iceberg stays on Hadoop and is not supported on Windows (it is off
     unless the `iceberg` profile is used).
   - `DatedSourceContract` accepts a health of `UP (detail)`, as the server always has.
+- **Layout mode: arrange a view your way** ([USER_GUIDE.md](docs/guides/USER_GUIDE.md#layout-mode-arrange-a-view-your-way)).
+  `Alt+L` (or the footer's **Layout** key) turns a view into a 12-column grid per column: drag a panel by its heading
+  to another place or the other column (a dashed placeholder shows where it lands), drag its right edge for its width
+  in columns and its bottom edge for its height in rows, hide it and show it again, reset to the Sutra's layout. Pointer
+  Events, so mouse, pen and touch alike; no drag library. Every move has a key (`↑` `↓` move, `←` `→` main or side
+  column, `Shift`+arrows size, `H` hide, `A` natural height), each announced to screen readers; `Esc` cancels,
+  `Ctrl+Enter` saves.
+  - **Personal layouts:** saved per user and Sutra (and the kind it lays out) as an overlay (order, column, `span`,
+    `height`, `hidden`), never changing the Sutra: `/api/v1/me/layouts/**` in `drishti_preference` (namespace `layouts`,
+    at most 50), validated against the Sutra's panels; when the Sutra changes, removed panels are dropped and new ones
+    appended. The console applies a layout when it draws the user's view (screen, print and workspace panes alike; the
+    server's view, live updates, exports and the API stay the Sutra's), and live updates keep the user's sizes.
+  - **Promote to Sutra:** an author turns their layout into the next version of the Sutra, written from its text (order,
+    `area: right`, `span`, `height`; comments and every other key kept), shown as the changes in words and a diff,
+    optionally without the hidden panels, and proposed through review like a Studio save. A review of a new version now
+    shows the diff against the version before it (`previousText`).
+  - **Rachana:** two optional keys every panel takes, `span` (1-12 columns of the grid) and `height` (1-24 rows of
+    2.5 rem), with problem code `DRS-2030`; in the JSON Schema, Studio's completion and checking, and the view model
+    (`PanelView.span`, `.height`; `provenance.sutra` names the Sutra). Not `rows`, which already names a panel's data.
+  - **A role power, `layout`:** on for every role unless it says `layout: false`; the bundled `viewer` does not have it.
+    Admin → Roles has a tick box (*Customise layouts*, ticked for a new role); kept as a `no-layout` row in
+    `drishti_role_power` so existing roles keep the default. Without it the key is greyed with the reason and the
+    endpoints answer `403`. `drishti.layouts.enabled` / `layouts.enabled` (`DRISHTI_LAYOUTS_ENABLED`) switch it off.
+- **Workspaces: drag and drop, and dividers** ([workspaces guide](console/web/guides/workspaces.md)). Drag a suggestion
+  (or a recent view) from the command line onto a pane, or a pane's number onto another pane, to show that view there;
+  drag the dividers between columns and rows (or move them with the arrow keys) to resize the panes. Workspaces keep
+  their `sizes` (`{"cols": [...], "rows": [...]}`, validated per layout).
+- **Fixed:** a view in a workspace pane threw a script error when it loaded its notes (the notes count is not shown in
+  panes).
 - **Calc: Python on any view** ([PYTHON_CALC.md](docs/guides/PYTHON_CALC.md)). `Alt+C` opens a drawer like F9's with a
   Python editor (CodeMirror, Python mode), Run (`Ctrl+Enter`), Stop, the output and a history of runs. The code runs in
   the browser, in Pyodide 314.0.7 (CPython 3.14 on WebAssembly) inside a Web Worker, with numpy, pandas, scipy,

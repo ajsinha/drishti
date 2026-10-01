@@ -238,6 +238,9 @@ per scalar in that object, labelled from the field names. That is quick, and it 
 source adds them; list columns when you want to choose the labels and the order (*HGNC symbol*, not *Hgnc symbol*).
 
 `key: F2` binds the F2 key to the panel: pressing it scrolls there. `area: right` puts the panel in the side column.
+Each column is a grid of 12 columns: `span: 6` would make a panel half as wide, so two such panels share a row, and
+`height: 8` would give it a fixed height of 8 rows (it scrolls inside). Both are optional; users may also arrange a view
+for themselves in layout mode (`Alt+L`), which never changes the Sutra ([reference](RACHANA_REFERENCE.md#keys-every-panel-takes)).
 
 ### Step 7: a table over a nested array, with links
 
@@ -855,6 +858,7 @@ and `GET /api/v1/sutras/problems` give `<file>:<line>:<column> <code> <message>`
 | `key: F13` | `DRS-2025 'F13' is not a function key (F1-F12)` | `F2`–`F12` |
 | nine strip items | `DRS-2026 the strip holds at most 8 figures, found 9` | move some into a `kv` panel |
 | `area: left` | `DRS-2027 area must be 'main' or 'right'` | `area: right` |
+| `span: 13` | `DRS-2030 span must be a whole number from 1 to 12 (columns of the 12-column grid), not '13'` | `span: 12` (or leave it out) |
 | saving `gene@1` from Studio | `DRS-2028 gene@1 is already defined in …/packs/genomics/…/gene.v1.sutra.yaml` | new name, or `version: 2` |
 | no `rachana:` line | `DRS-2009 missing 'rachana: 1' (the Rachana language version) at the top` | add `rachana: 1` as the first key |
 | `rachana: 2` | `DRS-2009 'rachana: 2' is not a language version this server reads (it reads 1)` | `rachana: 1` |

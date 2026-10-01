@@ -55,6 +55,22 @@ class WorkspaceApiTest {
     }
 
     @Test
+    void whereTheDividersWereDraggedIsKeptWithTheWorkspace() throws Exception {
+        String sized = CREDIT.replace("{\"layout\":\"1+2\",", "{\"layout\":\"1+2\",\"sizes\":{\"cols\":[1.6,0.4],\"rows\":[0.75,1.25]},");
+        mvc.perform(put("/api/v1/me/workspaces/Sized").header("X-Drishti-User", "ash").contentType(MediaType.APPLICATION_JSON).content(sized))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.sizes.cols[0]").value(1.6)).andExpect(jsonPath("$.sizes.rows[1]").value(1.25));
+        mvc.perform(get("/api/v1/me/workspaces/Sized").header("X-Drishti-User", "ash"))
+                .andExpect(jsonPath("$.sizes.cols[1]").value(0.4)).andExpect(jsonPath("$.layout").value("1+2"));
+        mvc.perform(put("/api/v1/me/workspaces/Plain").header("X-Drishti-User", "ash").contentType(MediaType.APPLICATION_JSON).content(CREDIT))
+                .andExpect(jsonPath("$.sizes").doesNotExist());
+        for (String bad : new String[] {"{\"cols\":[1,1,1]}", "{\"cols\":[0.01,1]}", "{\"rows\":[1,99]}", "{\"cols\":[\"wide\",1]}", "[1,2]"}) {
+            mvc.perform(put("/api/v1/me/workspaces/x").header("X-Drishti-User", "ash").contentType(MediaType.APPLICATION_JSON)
+                    .content(CREDIT.replace("{\"layout\":\"1+2\",", "{\"layout\":\"1+2\",\"sizes\":" + bad + ",")))
+                    .andExpect(status().isBadRequest());
+        }
+    }
+
+    @Test
     void invalidWorkspacesAreRefused() throws Exception {
         for (String bad : new String[] {
                 "{\"layout\":\"9x9\",\"panes\":[{}]}",

@@ -1,0 +1,50 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Layout mode (USER_GUIDE.md, Layout mode): opened with Alt+L or the footer's Layout key; static/js/layout.js drives it.
+   The bar says what can be done; the promote drawer shows the Sutra diff an author would propose. #}
+<div class="lay-bar" data-layout-bar hidden role="region" aria-label="Layout mode">
+  <strong><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i> Layout mode</strong>
+  <span class="lay-help text-muted-d" id="layoutKeys">Drag a panel by its heading; drag its right or bottom edge to resize.
+    Keys on a panel: <kbd>↑</kbd><kbd>↓</kbd> move · <kbd>←</kbd><kbd>→</kbd> main or side column · <kbd>Shift</kbd>+arrows size ·
+    <kbd>H</kbd> hide · <kbd>A</kbd> natural height</span>
+  <span class="lay-actions">
+    <button type="button" class="btn-pill btn-ghost btn-sm-pill" data-layout-reset title="Back to the Sutra's layout (Save keeps it)"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Reset to {{ layout.sutra }}</button>
+    {% if layout.promote %}<button type="button" class="btn-pill btn-ghost btn-sm-pill" data-layout-promote title="Propose this layout as the next version of {{ layout.sutra }} (saves it first)"><i class="bi bi-box-arrow-up" aria-hidden="true"></i> Promote to Sutra…</button>{% endif %}
+    <button type="button" class="btn-pill btn-ghost btn-sm-pill" data-layout-cancel title="Leave layout mode and undo the changes (Esc)">Cancel <kbd>Esc</kbd></button>
+    <button type="button" class="btn-pill btn-accent btn-sm-pill" data-layout-save title="Keep this layout for yourself (Ctrl+Enter)"><i class="bi bi-check2" aria-hidden="true"></i> Save</button>
+  </span>
+  <span class="visually-hidden" data-layout-live role="status" aria-live="polite"></span>
+  <span class="adm-msg" data-layout-msg role="status" aria-live="polite"></span>
+</div>
+{% if layout.promote %}
+<aside class="raw lay-promote" id="layoutPromote" aria-label="Promote layout to Sutra" hidden>
+  <header><strong>Promote to Sutra</strong> <span class="mono" data-promote-title>{{ layout.sutra }}</span>
+    <button type="button" class="raw-x" data-promote-close aria-label="Close">×</button></header>
+  <div class="lay-promote-body">
+    <p class="text-muted-d">Your layout becomes the next version of <b class="mono">{{ layout.sutra }}</b>, for everyone who sees it.
+      {% if layout.review %}It is a proposal: an approver reviews it before it goes live.{% else %}Review is off on this server: it goes live at once.{% endif %}</p>
+    <ul class="lay-changes" data-promote-changes></ul>
+    <label class="lay-drop"><input type="checkbox" data-promote-drop> Remove the panels I hid from the Sutra (otherwise they stay, for everyone else)</label>
+    <pre class="diff mono" data-promote-diff aria-label="Differences against the latest version">Loading…</pre>
+    <form class="lay-promote-form" data-promote-form>
+      <label for="promoteNote" class="visually-hidden">Note for the reviewer</label>
+      <input id="promoteNote" class="studio-in" name="note" maxlength="500" placeholder="Why (for the reviewer)">
+      <button type="submit" class="btn-pill btn-accent btn-sm-pill" data-promote-submit>{{ 'Submit for review' if layout.review else 'Publish' }}</button>
+      <span class="adm-msg" data-promote-msg role="status" aria-live="polite"></span>
+    </form>
+  </div>
+</aside>
+{% endif %}

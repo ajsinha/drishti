@@ -614,7 +614,10 @@ columns a label. Inference labels the fields it lays out the same way.
 ## Panels
 
 A panel is one box of the view. Panels are drawn in the order written, in the main column, or in the side
-column with `area: right`.
+column with `area: right`. Each column is a grid of 12 columns: `span` makes a panel narrower (panels narrower than
+their column sit side by side, in order) and `height` gives it a fixed height in rows. Users may rearrange a view for
+themselves in [layout mode](USER_GUIDE.md#layout-mode-arrange-a-view-your-way); that never changes the Sutra, and an
+author may promote such a layout to the Sutra's next version, written with these same keys.
 
 ### Keys every panel takes
 
@@ -626,6 +629,8 @@ column with `area: right`.
 | `key` | | none | A function key `F1`–`F12`, unique across panels and `keys` (`DRS-2025`). Pressing it scrolls to the panel and flashes it. Avoid `F1`, which the console uses for help. |
 | `code` | | none | A short tag shown at the right of the panel header (`CRV`, `SENS`). |
 | `area` | | `main` | `main` or `right` (any case; anything else is `DRS-2027`). |
+| `span` | | `12` | Width in columns of the 12-column grid of its column: a whole number from 1 to 12 (`DRS-2030` otherwise). `span: 8` and `span: 4` share a row. On a phone every panel is full width. |
+| `height` | | content | Height in grid rows of 2.5 rem: a whole number from 1 to 24 (`DRS-2030` otherwise). The panel scrolls inside; printing ignores it. Not on a `tabs` body, which takes the size of its panel (`DRS-2030`). |
 | `infer` | | `false` | Marks the panel as completed by inference (an *inferred* tag in its header). Inference fills a panel's columns whenever it states none, with or without this flag; see [Inference](../architecture/INFERENCE.md#sutra-and-inference-together). |
 | `columns` | | empty | The columns or fields; see below. Used by `kv`, `table`, `ladder`, `tabs` (in the body) and `surface`. |
 | `body` | `tabs` only | | The panel drawn once per tab. On any other kind, `DRS-2023 only 'tabs' panels take a 'body'`. |
@@ -1618,6 +1623,7 @@ A Sutra file that fails any check is not loaded (or keeps its last good version,
 | `DRS-2027` | `area must be 'main' or 'right'` | `area: left`, `area: side` | `main` or `right` |
 | `DRS-2028` | `trade-x@2 is already defined in /…/trade-x.v2.sutra.yaml` | two files define one `name@version` | raise the version, or remove the duplicate |
 | `DRS-2029` | `option 'agg' of 'pivot' panels must be one of sum, count, avg, min, max, not 'median'`, `option 'heat' of 'pivot' panels must be true or false, not 'yes'`, `option 'bins' of 'histogram' panels must be a whole number from 1 to 200, not '0'`, `each histogram marker must be a mapping with a 'value' expression …`, `option 'layout' of 'graph' panels must be one of tree, force, not 'circle'` | an option value the kind does not allow | use one of the values listed |
+| `DRS-2030` | `span must be a whole number from 1 to 12 (columns of the 12-column grid), not '13'`, `height must be a whole number from 1 to 24 (grid rows), not '30'`, `'span' sizes a whole panel: a tabs body takes the size of its panel` | a size outside the grid, not a whole number, or on a `tabs` body | a whole number in range, on the panel itself |
 | `DRS-2101` | `expression '…': DRS-2101 …`, `template '…': DRS-2101 …` | an expression or template does not compile | see [Expression errors](#expression-errors) |
 
 Other codes you may meet around Sutras:

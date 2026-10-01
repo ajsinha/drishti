@@ -31,7 +31,8 @@ import java.util.Optional;
  * @param infer let the inference engine complete this panel (columns, fields)
  * @param columns explicit columns, possibly empty
  * @param body the nested panel for {@code tabs}, or null
- * @param options kind-specific options (strings are Rachana-EL where the kind says so)
+ * @param options kind-specific options (strings are Rachana-EL where the kind says so), and the layout sizes
+ *     {@code span} and {@code height} every top-level panel may set
  * @param location where it was declared
  */
 public record Panel(
@@ -50,6 +51,23 @@ public record Panel(
     public Panel {
         columns = List.copyOf(columns);
         options = Map.copyOf(options);
+    }
+
+    /** The panel's width in columns of a 12-column grid ({@code span: 6}); absent: the whole column. */
+    public static final String SPAN = "span";
+    /** The panel's height in grid rows ({@code height: 8}); absent: as tall as its content. */
+    public static final String HEIGHT = "height";
+    public static final int MAX_SPAN = 12;
+    public static final int MAX_HEIGHT = 24;
+
+    /** {@code span} when the Sutra sets it. */
+    public Optional<Integer> span() {
+        return options.get(SPAN) instanceof Number n ? Optional.of(n.intValue()) : Optional.empty();
+    }
+
+    /** {@code height} when the Sutra sets it. */
+    public Optional<Integer> height() {
+        return options.get(HEIGHT) instanceof Number n ? Optional.of(n.intValue()) : Optional.empty();
     }
 
     public Optional<String> option(String name) {

@@ -196,6 +196,26 @@ class BackendClient:
     async def about(self, ident=None) -> dict:
         return await self._get("/about", ident)
 
+    # -- personal layouts (layout mode) ------------------------------------------------------------------
+    async def layouts(self, ident) -> dict:
+        """Whether the user may customise layouts (and promote them), and every layout they keep."""
+        return await self._get("/me/layouts", ident)
+
+    async def save_layout(self, sutra: str, kind: str, body: dict, ident) -> dict:
+        return await self._send("PUT", f"/me/layouts/{quote(sutra, safe='')}/{quote(kind, safe='')}", ident, json=body)
+
+    async def reset_layout(self, sutra: str, kind: str, ident) -> None:
+        await self._send("DELETE", f"/me/layouts/{quote(sutra, safe='')}/{quote(kind, safe='')}", ident)
+
+    async def layout_promotion(self, sutra: str, kind: str, drop_hidden: bool, ident) -> dict:
+        """The next version of the Sutra the user's layout would make, with the latest version's text."""
+        return await self._get(f"/me/layouts/{quote(sutra, safe='')}/{quote(kind, safe='')}/promotion", ident,
+                               dropHidden=str(bool(drop_hidden)).lower())
+
+    async def promote_layout(self, sutra: str, kind: str, note: str, drop_hidden: bool, ident) -> dict:
+        return await self._send("POST", f"/me/layouts/{quote(sutra, safe='')}/{quote(kind, safe='')}/promotion", ident,
+                                json={"note": note, "dropHidden": bool(drop_hidden)})
+
     # -- workspaces -------------------------------------------------------------------------------
     async def workspaces(self, ident) -> list:
         return await self._get("/me/workspaces", ident)

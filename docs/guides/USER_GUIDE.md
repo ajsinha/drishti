@@ -36,6 +36,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | [Pick lists](#pick-lists-when-a-command-names-several-entities) | `TRD MX-200000`, `CPTY north`, `TRD productType=Revolver`, `TRD` |
 | [Tables: paging and the keyboard](#tables-sorting-filtering-paging-and-the-keyboard) | The pager, ▲ ▼, and the keys that walk a table |
 | [Reading a view](#reading-a-view) | Title, strip, panels, links, provenance |
+| [Layout mode](#layout-mode-arrange-a-view-your-way) | `Alt+L`: drag, resize and hide panels for yourself; promote your layout to the Sutra |
 | [Keyboard](#keyboard) | Every key in one table |
 | [Live updates](#live-updates), [Business dates](#business-dates-live-or-a-day-in-the-past), [Compare](#compare-what-changed) | Ticking values, past dates, what changed |
 | [Search by value](#search-by-value) | `where` searches, sorting and limits |
@@ -455,6 +456,108 @@ The *How this view was built* panel answers "where did this come from?":
 The footer repeats the source and generation, and the business date when one is picked
 (`trading-store · gen 7 · as of 2026-09-29`).
 
+## Layout mode: arrange a view your way
+
+A Sutra decides where each panel of a view goes, for everyone. **Layout mode** lets you arrange the panels for
+yourself: put the panels you read first at the top, give a table more width and a chart less, move a panel between the
+main and the side column, or hide one you never read. Your arrangement is a **personal layout**: it is kept on the server
+for you, it never changes the Sutra, and nobody else sees it.
+
+A personal layout belongs to a **Sutra**, not to one entity: arrange `TRD IRS-48213` and every trade that the same Sutra
+lays out (`irs-vanilla` here) opens your way. The footer says so: its **Layout** key shows a dot (`Alt+L Layout •`)
+when you are looking at your own layout.
+
+### Turning it on
+
+Press `Alt+L` on a view (`Option+L` on a Mac), or click **Alt+L Layout** in the footer. A bar appears under the top bar
+(*Layout mode · Drag a panel by its heading …*), every panel gets a dashed outline, a size badge at its bottom right
+(`12/12`, `8/12 · 8 rows`), a **Hide** button in its heading, and two handles: one on its right edge (width) and one on
+its bottom edge (height).
+
+Each column of the view, the main one and the side one, is a **grid of 12 columns**. A panel is 1 to 12 columns wide
+(12, the whole column, is the default) and either as tall as its content (the default) or 1 to 24 **rows** of 2.5 rem
+(40 pixels at the usual text size); a panel with a set height scrolls inside.
+
+### With the mouse, a pen or a finger
+
+| Do | To |
+|---|---|
+| Drag a panel by its heading | Move it: a dashed box shows where it will land, in this column or the other one. Near the top or bottom of the window the page scrolls |
+| Drag its right edge | Make it wider or narrower, a column at a time; panels narrower than the column sit side by side |
+| Drag its bottom edge | Give it a height in rows; double-click the edge for its natural height again |
+| **Hide** / **Show** in its heading | Hide it from your view (in layout mode it stays, greyed, so you can show it again) |
+
+### With the keyboard
+
+`Tab` moves between panels (each is outlined when it has the focus). On the focused panel:
+
+| Key | Does |
+|---|---|
+| `↑` `↓` | Move it one place earlier or later in its column (in a row of narrow panels, earlier is to the left) |
+| `←` `→` | Move it to the main column or to the side column |
+| `Shift`+`←` `→` (or `-` `+`) | One column narrower or wider |
+| `Shift`+`↑` `↓` | One row shorter or taller |
+| `A` | Back to its natural height |
+| `H` (or `Delete`) | Hide it, or show it again |
+| `Ctrl`+`Enter` | Save (`Cmd`+`Enter` on a Mac) |
+| `Esc` | Cancel: leave layout mode and put everything back as it was |
+
+Every change is announced to screen readers (*Cashflows · Leg 1: 1 of 5 in the main column*, *Linked entities: 6 of
+12 columns wide, 7 rows tall*).
+
+### Save, cancel, reset
+
+- **Save** (`Ctrl+Enter`) keeps the layout and leaves layout mode. Open another trade of the same Sutra, or reload the
+  page: it is drawn your way.
+- **Cancel** (`Esc`) leaves layout mode and undoes everything since you turned it on.
+- **Reset to <Sutra>** arranges the panels as the Sutra has them; **Save** then forgets your layout.
+
+### Worked example
+
+With the `finance` pack, open `TRD IRS-48213` (Sutra `irs-vanilla`):
+
+1. Press `Alt+L`.
+2. Drag *Cashflows · Leg 1* by its heading above *Legs*, and let go: it is first in the main column.
+3. Drag its right edge to about two thirds of the column: the badge reads `8/12`. Drag its bottom edge down until the
+   badge reads `8/12 · 8 rows`.
+4. Drag *DV01 by tenor (USD)* from the side column into the main column, under *Cashflows*, and narrow it to `4/12`.
+5. Press `Tab` until *Linked entities* has the focus, press `←` (it moves to the main column), then `Shift`+`←` six
+   times (`6/12`): it now sits beside *DV01 by tenor*.
+6. Focus *How this view was built* and press `H`.
+7. Press `Ctrl+Enter`. Reload: the view keeps your layout, and **F4** (the curve) still works. The key of a panel you
+   hid is greyed (*Hidden in your layout*) until you show the panel again.
+
+### Who may, and what follows your layout
+
+- Layout mode needs a role with the **layout** power. Every role has it unless an administrator says otherwise; the
+  built-in `viewer` role does not ([Admin → Roles](#admin--roles-what-a-role-may-do)). Without it the key is greyed with
+  the reason. A view laid out by inference alone (*Layout: inference only*) has no Sutra to arrange, so the key is
+  greyed there too.
+- **Printing** follows your layout: your order and widths, hidden panels left out, every panel as tall as its content.
+- **Workspace panes** show views with your layout too (layout mode itself is offered on the full view).
+- **Live updates** keep your sizes. CSV and JSON exports, Calc and the API are unaffected: they read the data, not the
+  arrangement.
+- **When the Sutra changes**, your layout follows: panels the Sutra no longer has are dropped from it, and panels it
+  gained appear at the end of their column, as the Sutra places them.
+- You keep at most 50 layouts (one per Sutra).
+
+### Promote to Sutra: offering your layout to everyone
+
+If your role may author Sutras, the bar has **Promote to Sutra…**. It saves your layout and opens a panel that shows:
+
+- the changes in words (*'refs' moves to the main column*, *'cashflows' is 8 of 12 columns wide*, *the main column
+  reads cashflows, refs, dv01, leg2, legs, built*);
+- the diff between the latest version of the Sutra and the **next version** your layout makes: the panels in your
+  order, `area: right` where you put them in the side column, and the panel options `span` and `height`
+  ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#keys-every-panel-takes)) for your sizes. The rest of the Sutra (its
+  comments, quoting and every other key) is kept as written;
+- a tick box, **Remove the panels I hid from the Sutra**. Unticked, hidden panels stay in the Sutra for everyone else.
+
+Write a note for the reviewer and press **Submit for review**. As with a save in Studio, the new version is a
+**proposal**: an approver opens it in *Build → Reviews* (the review shows the diff against the version before), and it
+goes live only when approved ([Reviews](#reviews-approving-a-sutra)). With review switched off on the server the button
+reads **Publish** and the new version is live at once.
+
 ## Keyboard
 
 | Key | Does |
@@ -473,6 +576,7 @@ The footer repeats the source and generation, and the business date when one is 
 | `F9` | Raw JSON of the entity, with its source and generation |
 | `Alt+←` | Back |
 | `Alt+C` | Calc: Python on this view (where a pack offers it; `Option+C` on a Mac) |
+| `Alt+L` | Layout mode: arrange this view's panels for yourself (`Option+L` on a Mac); in layout mode, [its keys](#with-the-keyboard) |
 | `Ctrl+Enter` | In Calc: run the code (`Cmd+Enter` on a Mac) |
 | `Alt+1`…`Alt+4` | In a workspace: move to pane 1 to 4 |
 
@@ -869,7 +973,10 @@ Worked example (with the `finance` pack):
 | Entity for this pane | A command or id (`TRD MX-20000001`, `NS-SUMMIT-NY`), then Enter |
 | follows | Which pane this one follows, or `—` |
 | Pane / × | Add a pane (up to four) / remove one |
-| Save / Save as… / Delete | Keep it under its name / a new name / remove it |
+| Drag a suggestion onto a pane | Type in the command line (`TRD IRS`, or nothing for your recent ones), drag a suggestion onto a pane: the pane shows it. Click it without dragging to open it full screen as usual |
+| Drag a pane's number onto another pane | The other pane shows the same view |
+| Drag a divider | Share the width (or height) between two neighbouring columns (or rows); focus it with `Tab` and use the arrow keys (`Home`, or a double-click: equal) |
+| Save / Save as… / Delete | Keep it under its name, sizes included / a new name / remove it |
 | `Alt+1`…`Alt+4` | Move between panes |
 
 Workspaces are saved to your account (up to 50 each).
@@ -1082,6 +1189,7 @@ every role with its kinds (or *every kind*), its powers, how many users hold it,
 | approve Sutras | approve proposed Sutras in Reviews |
 | administer | use every admin page |
 | Calc | use Calc (`Alt+C`): Python in the browser on what the role opens ([PYTHON_CALC.md](PYTHON_CALC.md#9-roles-who-may-use-calc)) |
+| layouts | use [layout mode](#layout-mode-arrange-a-view-your-way) (`Alt+L`) and keep personal layouts. On for every role unless unticked; the built-in `viewer` role does not have it |
 
 Roles marked **built-in** come from the server's configuration and from packs (`viewer`, `author`,
 `approver`, `admin`, and pack roles such as `trader`, `credit-risk` or `retail`). They are shown read-only.

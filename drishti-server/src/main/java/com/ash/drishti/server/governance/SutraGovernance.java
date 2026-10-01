@@ -116,6 +116,18 @@ public class SutraGovernance {
         return store.require(id);
     }
 
+    /**
+     * For a proposal of a new version: the text of the latest earlier version (what the new version changes), so a
+     * reviewer sees a diff rather than the whole Sutra; empty when there is none, or the proposal changes a live version.
+     */
+    public String previousText(Proposal pr) {
+        if (!liveText(pr).isEmpty()) {
+            return "";
+        }
+        return sutras.versions(pr.name()).stream().filter(v -> v < pr.version()).max(Integer::compare)
+                .flatMap(v -> sutras.source(pr.name(), v)).orElse("");
+    }
+
     /** The live text of the proposal's Sutra now (empty when that version is new). */
     public String liveText(Proposal pr) {
         return sutras.source(pr.name(), pr.version()).orElse("");

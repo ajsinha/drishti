@@ -39,6 +39,11 @@ public final class RoleStore {
 
     /** The power that lets a role use Calc, kept in {@code drishti_role_power}. */
     static final String CALC = "calc";
+    /**
+     * Layout mode is allowed unless a role is marked otherwise: the row says the role may <em>not</em> customise layouts,
+     * so a role saved by an earlier release keeps the default (allowed) without a migration.
+     */
+    static final String NO_LAYOUT = "no-layout";
     private static final Pattern NAME = Pattern.compile("[a-z][a-z0-9-]{1,63}");
     private final IdentityRepositories.Roles roles;
     private final TransactionTemplate tx;
@@ -111,6 +116,9 @@ public final class RoleStore {
                 if (role.calc()) {
                     e.powers.add(CALC);
                 }
+                if (!role.layout()) {
+                    e.powers.add(NO_LAYOUT);
+                }
                 e.updatedAt = now;
                 e.updatedBy = actor;
                 e.kinds.clear();
@@ -148,12 +156,12 @@ public final class RoleStore {
 
     private static String describe(RoleDefinition r) {
         return "kinds=" + r.kinds() + (r.raw() ? " raw" : "") + (r.author() ? " author" : "") + (r.approve() ? " approve" : "")
-                + (r.admin() ? " admin" : "") + (r.calc() ? " calc" : "");
+                + (r.admin() ? " admin" : "") + (r.calc() ? " calc" : "") + (r.layout() ? "" : " no-layout");
     }
 
     private static RoleDefinition toDefinition(RoleEntity e) {
         return new RoleDefinition(e.name, e.description, List.copyOf(new TreeSet<>(e.kinds)), e.raw, e.author, e.approve, e.admin,
-                e.powers.contains(CALC), false,
+                e.powers.contains(CALC), !e.powers.contains(NO_LAYOUT), false,
                 e.updatedAt, e.updatedBy);
     }
 }

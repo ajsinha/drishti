@@ -42,8 +42,10 @@
   function json(r) { return r.json().then(function (b) { return { ok: r.ok, b: b }; }); }
 
   function draw(notes) {
-    count.textContent = String(notes.length);
-    count.hidden = !notes.length;
+    if (count) {                                   // no count in a workspace pane (the view's tools are left out there)
+      count.textContent = String(notes.length);
+      count.hidden = !notes.length;
+    }
     view.querySelectorAll('.has-note').forEach(function (el) { el.classList.remove('has-note'); el.removeAttribute('data-note'); });
     list.innerHTML = '';
     if (!notes.length) {

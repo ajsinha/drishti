@@ -84,7 +84,7 @@ async def review(request: Request, id_: str):
         p = await request.app.state.backend.proposal(id_, ident(request))
     except BackendError as e:
         return render(request, "studio/reviews.html", status_code=e.status, proposals=[], status="pending", error=e)
-    return render(request, "studio/review.html", p=p, diff=_diff(p.get("liveText") or "", p.get("text") or ""), error=None)
+    return render(request, "studio/review.html", p=p, diff=_diff(_against(p), p.get("text") or ""), error=None)
 
 
 @router.post("/reviews/{id_}/{action}")
@@ -96,8 +96,13 @@ async def decide(request: Request, id_: str, action: str):
         await request.app.state.backend.decide(id_, action, ident(request), comment=form.get("comment", [""])[0][:500])
     except BackendError as e:
         p = await request.app.state.backend.proposal(id_, ident(request))
-        return render(request, "studio/review.html", status_code=e.status, p=p, diff=_diff(p.get("liveText") or "", p.get("text") or ""), error=e)
+        return render(request, "studio/review.html", status_code=e.status, p=p, diff=_diff(_against(p), p.get("text") or ""), error=e)
     return RedirectResponse(f"/studio/reviews/{id_}", status_code=303)
+
+
+def _against(p: dict) -> str:
+    """What a proposal is compared with: the live text of its version, or for a new version the latest earlier one."""
+    return p.get("liveText") or p.get("previousText") or ""
 
 
 def _diff(live: str, proposed: str) -> list[tuple[str, str]]:

@@ -42,7 +42,7 @@ import java.util.regex.Pattern;
  * <p>Codes: 2001 YAML syntax, 2010 missing key, 2011 unknown key, 2012 wrong type, 2020 bad name or
  * version, 2021 unknown panel kind, 2022 missing kind option, 2023 option not valid for kind, 2024
  * duplicate panel id, 2025 duplicate or invalid function key, 2026 strip too long, 2027 bad area, 2029 an option
- * value the kind does not allow ({@link PanelOptions}).
+ * value the kind does not allow ({@link PanelOptions}), 2030 a bad layout size ({@code span} or {@code height}).
  */
 final class SutraBuilder {
 
@@ -51,7 +51,8 @@ final class SutraBuilder {
     private static final int LANGUAGE = SutraParser.LANGUAGE;
     private static final Set<String> TOP = Set.of("rachana", "sutra", "version", "domain", "match", "title", "strip", "panels", "keys",
             "description", "notes");
-    private static final Set<String> PANEL = Set.of("id", "kind", "title", "key", "code", "area", "infer", "columns", "body", "description");
+    private static final Set<String> PANEL = Set.of("id", "kind", "title", "key", "code", "area", "infer", "columns", "body", "description",
+            Panel.SPAN, Panel.HEIGHT);
     private static final Set<String> STRIP = Set.of("label", "bind", "fmt", "tone", "emphasis");
     private static final Set<String> COLUMN = Set.of("label", "bind", "fmt", "tone", "total", "link");
 
@@ -230,6 +231,8 @@ final class SutraBuilder {
             }
         }
         Map<String, Object> options = new LinkedHashMap<>();
+        size(m, Panel.SPAN, Panel.MAX_SPAN, "columns of the 12-column grid", nested, options);
+        size(m, Panel.HEIGHT, Panel.MAX_HEIGHT, "grid rows", nested, options);
         if (kind != null) {
             m.forEach((opt, val) -> {
                 if (PANEL.contains(opt)) {
@@ -252,6 +255,21 @@ final class SutraBuilder {
         }
         return new Panel(id, kind, text(m.get("title"), null), key, text(m.get("code"), null), area, bool(m.get("infer")),
                 columns, body, options, loc(n));
+    }
+
+    /** {@code span} and {@code height}: whole numbers within bounds, on top-level panels only; kept with the options. */
+    private void size(Map<String, PNode> m, String key, int max, String unit, boolean nested, Map<String, Object> options) {
+        PNode n = m.get(key);
+        if (n == null || n.value() == null) {
+            return;
+        }
+        if (nested) {
+            problem("DRS-2030", "'" + key + "' sizes a whole panel: a tabs body takes the size of its panel", n);
+        } else if (!(n.value() instanceof Long l) || l < 1 || l > max) {
+            problem("DRS-2030", key + " must be a whole number from 1 to " + max + " (" + unit + "), not '" + n.value() + "'", n);
+        } else {
+            options.put(key, l);
+        }
     }
 
     /** Converts a structured option (for example a series list) to plain maps and lists. */

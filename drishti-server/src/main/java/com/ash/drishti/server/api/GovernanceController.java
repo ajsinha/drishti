@@ -61,6 +61,7 @@ public class GovernanceController {
         out.put("text", pr.text());
         out.put("baseText", pr.baseText());
         out.put("liveText", governance.liveText(pr));
+        out.put("previousText", governance.previousText(pr));
         return out;
     }
 

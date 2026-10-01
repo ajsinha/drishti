@@ -197,7 +197,7 @@ public final class PackLoader {
                 for (int i = 0; i < kinds.size(); i++) {
                     props.put("drishti.security.roles." + e.getKey() + ".kinds[" + i + "]", kinds.get(i));
                 }
-                for (String flag : new String[] {"raw", "author", "admin", "approve", "calc"}) {
+                for (String flag : new String[] {"raw", "author", "admin", "approve", "calc", "layout"}) {
                     if (r.get(flag) != null) {
                         props.put("drishti.security.roles." + e.getKey() + "." + flag, r.get(flag));
                     }
