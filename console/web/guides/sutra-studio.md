@@ -101,8 +101,9 @@ Click a problem to jump to its line. Put the line back and preview again.
 Press **Ctrl+Enter**. A new panel shows *Confirmed*, *Cleared* and *LCH SwapClear*.
 
 **Insert…** offers a strip field and panels of twelve kinds (`kv`, `table`, `tabs`, `line`,
-`area`, `hbar`, `ladder`, `status`, `gauge`, `markdown`, `links`, `provenance`). For a `surface`, copy the example
-from [The thirteen panel kinds](panel-kinds#surface).
+`area`, `hbar`, `ladder`, `status`, `gauge`, `markdown`, `links`, `provenance`). The other kinds (`surface`, `waterfall`,
+`histogram`, `scatter`, `candlestick`, `graph`, `timeline`, `pivot`) are in the **Panel** list of the toolbar; each
+example is also in [The twenty panel kinds](panel-kinds).
 
 ## 4. Find the right path in the data
 

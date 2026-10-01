@@ -35,7 +35,7 @@ panels:
       - { label: Name, bind: "@.name" }
   - id: riskReturn
     kind: scatter
-    title: "Books: VaR against today's P&L (USD)"
+    title: "Risk and return (books: VaR against today's P&L, USD)"
     code: RR
     key: F3
     rows: $.books

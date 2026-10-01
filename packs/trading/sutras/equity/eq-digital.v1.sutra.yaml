@@ -43,7 +43,7 @@ panels:
       - { label: Counterparty, bind: $.counterparty.name }
   - id: explain
     kind: waterfall
-    title: "P&L explain, opening to closing MTM (USD)"
+    title: "P&L explain (USD, opening to closing MTM)"
     code: PNLX
     key: F5
     rows: $.pnlExplain

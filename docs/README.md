@@ -60,6 +60,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | Edit a Sutra with live preview and submit it for review | [Sutra Studio tutorial](../console/web/guides/sutra-studio.md) |
 | Lay out nested documents (lists inside lists) | [Nested documents tutorial](../console/web/guides/nested-data.md) |
 | Choose the right panel kind | [Panel kinds](../console/web/guides/panel-kinds.md) |
+| Know every panel kind in depth: data shape, options, how the server computes it, how it draws, limits, mistakes | [PANELS.md](guides/PANELS.md) |
 | Look up a key, format, expression or problem code | [RACHANA_REFERENCE.md](guides/RACHANA_REFERENCE.md) |
 | Get completion for Sutras in your own editor (the JSON Schema of the language) | [API_GUIDE.md](guides/API_GUIDE.md#catalogue-about-packs-sources-sutras) (`GET /api/v1/rachana/schema`) |
 | Convert Markdown Sutras (`*.sutra.md`) from before 1.11 | [runbooks/sutra-broken.md](admin/runbooks/sutra-broken.md#step-1a-a-sutramd-or-plain-yaml-file-drs-2004-drs-2009) |
@@ -118,6 +119,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | [PACKS.md](guides/PACKS.md) | you load, switch, assign, change, test or build a domain pack, or need any `pack.yaml` key |
 | [RACHANA_GUIDE.md](guides/RACHANA_GUIDE.md) | you are learning to write Sutras and want a tutorial that builds one up step by step |
 | [RACHANA_REFERENCE.md](guides/RACHANA_REFERENCE.md) | you are writing a Sutra and need the exact key, panel option, format, expression or problem code |
+| [PANELS.md](guides/PANELS.md) | you choose, configure or debug a panel: all twenty kinds, their data, every option, what the server computes, how the console draws them, limits and common mistakes |
 | [INFERENCE.md](architecture/INFERENCE.md) | a view looks different from what you expected and *How this view was built* says `inference` |
 | [CONNECTOR_GUIDE.md](connectors/CONNECTOR_GUIDE.md) | you are connecting your own data and want a worked, step-by-step path for your store |
 | [PLUGIN_GUIDE.md](connectors/PLUGIN_GUIDE.md) | you need every setting of a connector, the data layout it expects, or you are writing a new source plugin |

@@ -202,7 +202,7 @@ inside `{ }`. See [Tutorial 4 · Nested documents](nested-data) for trees severa
 
 Packs add formats in `config/formats.yaml`; a site can override them.
 
-## 7. The thirteen panel kinds
+## 7. The twenty panel kinds
 
 ### kv: fields as a grid
 

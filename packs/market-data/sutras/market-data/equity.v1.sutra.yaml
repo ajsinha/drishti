@@ -44,7 +44,7 @@ panels:
     rows: $.identifiers
   - id: ohlc
     kind: candlestick
-    title: "Daily bars, last 60 days"
+    title: Daily bars (last 60 days)
     code: OHLC
     key: F3
     rows: $.ohlc

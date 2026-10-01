@@ -33,7 +33,7 @@ panels:
     rows: $.spec
   - id: ohlc
     kind: candlestick
-    title: "Front month, daily bars, last 60 days"
+    title: "Front month (daily bars, last 60 days)"
     code: OHLC
     key: F3
     rows: $.ohlc

@@ -36,7 +36,7 @@ panels:
     tone: sign
   - id: explain
     kind: waterfall
-    title: "From risk factors to actual P&L (USD)"
+    title: "P&L waterfall (risk factors to actual, USD)"
     code: PNLX
     key: F3
     rows: $.explainSteps

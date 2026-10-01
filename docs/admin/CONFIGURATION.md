@@ -454,6 +454,22 @@ Not in the bundled file; the defaults apply until you set them.
 | `max-scan` | `20000` | At most this many entities of a kind are read per search; the result says when it stopped short. |
 | `budget` | `3s` | Time a search may take to list and read; slower sources are left out. |
 
+### `drishti.panels` — chart and aggregate panel limits
+
+Not in the bundled file; the defaults apply until you set them. They bound how much of one document the
+`histogram`, `pivot`, `scatter`, `candlestick`, `waterfall`, `graph` and `timeline` panels read, so a very long list
+cannot make a view slow or a page heavy. A panel that stops short says so (*N more*, *N left out*). See
+[PANELS.md](../guides/PANELS.md#18-limits).
+
+| Key | Default | Meaning |
+|---|---|---|
+| `max-values` | `100000` | Numbers a histogram bins, and rows a pivot aggregates. |
+| `max-points` | `5000` | Points a scatter draws, bars a waterfall draws, and bars a candlestick keeps (the latest). |
+| `max-nodes` | `300` | Nodes a graph draws; edges are capped at twice this. |
+| `max-events` | `500` | Events a timeline lists (the latest). |
+| `pivot-rows` | `200` | Row keys a pivot shows; the rest are counted under the table. |
+| `pivot-columns` | `40` | Column keys a pivot shows; values under further keys still count in the row totals. |
+
 ### `drishti.alerts` — alert history
 
 | Key | Default | Meaning |

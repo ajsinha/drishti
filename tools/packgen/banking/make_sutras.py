@@ -192,7 +192,7 @@ def product_yaml(p: Product) -> str:
             a(f"      - {col(label, '@.' + fld, fmt, tone, total)}")
     a("  - id: explain")
     a("    kind: waterfall")
-    a(f"    title: {q('P&L explain, opening to closing MTM (USD)')}")
+    a(f"    title: {q('P&L explain (USD, opening to closing MTM)')}")
     a("    code: PNLX")
     a("    key: F5")
     a("    rows: $.pnlExplain")

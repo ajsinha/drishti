@@ -643,7 +643,39 @@ colour; a gauge 62% full reading `62%` (the gauge formats value ÷ max, with `pc
 linked counterparty (badge `A`), netting set (badge `PFE 46.0m`), book, trader, desk and more; and the key bar
 `F2 Terms`, `F3 Legs`, `F4 Cashflows`, `F5 Discount curve`, `F7 Netting set`, `F8 Impact`, `F9 Raw JSON`.
 
-Put the blocks of 4.2 to 4.6 together under one `panels:` and you have a complete trade view. The
+### 4.7 How the P&L moved, and what happened to the trade
+
+Two more questions a trader asks of a trade: *why did the MTM move today*, and *what has happened to it so far*.
+The trade's `pnlExplain` lists yesterday's MTM and today's moves by risk factor; `lifecycle.timeline` lists dated
+events. A `waterfall` and a `timeline` answer them:
+
+```yaml
+  - id: explain
+    kind: waterfall
+    title: "P&L explain (USD, opening to closing MTM)"
+    code: PNLX
+    key: F6
+    rows: $.pnlExplain          # [{step: Opening MTM, pnl: 1748877, total: true}, {step: Carry, pnl: -11426}, …]
+    label: step
+    value: pnl
+    sum: Closing MTM
+    fmt: signed0
+  - { id: lifecycle, kind: timeline, title: Lifecycle, code: LIFE, rows: $.lifecycle.timeline, detail: description }
+```
+
+You should see eight bars: *Opening MTM +1,748,877* as a full bar, seven floating steps (*Carry −11,426* down,
+*Rates delta +132,686* up, …) and *Closing MTM +1,875,863*, which the server adds because of `sum:` and which equals
+the strip's MTM. Under it, seven events from *Booked* (2025-07-25) to *Maturity* (2032-06-25), *Next payment* in
+amber because its status is *Pending*.
+
+`label`, `value` and `detail` are field names of each row, as for `hbar`. The server does the arithmetic (the running
+total, the closing bar, the sort by date), so the console only draws. Five more kinds work the same way:
+`histogram` (a VaR scenario vector with VaR and ES lines), `scatter` (books' VaR against P&L), `candlestick` (daily
+bars), `graph` (a counterparty's group, agreement and netting sets) and `pivot` (MTM by book and currency, with
+totals). [The twenty panel kinds](../../console/web/guides/panel-kinds.md) has an example of each on a real entity, and
+[PANELS.md](PANELS.md) explains every option and what the server computes.
+
+Put the blocks of 4.2 to 4.7 together under one `panels:` and you have a complete trade view. The
 [reference's annotated example](RACHANA_REFERENCE.md#a-complete-example-annotated) is the same layout with every line
 commented, and the trading pack's `packs/trading/sutras/rates/irs-fixfloat.v1.sutra.yaml` is the one the server uses.
 
@@ -814,7 +846,7 @@ and `GET /api/v1/sutras/problems` give `<file>:<line>:<column> <code> <message>`
 | `sutra: Gene_Mine` | `DRS-2020 name 'Gene_Mine' must be lower-case kebab, 2-64 characters` | `sutra: gene-mine` |
 | no `match:` | `DRS-2010 missing 'match' mapping with at least 'kind'` | `match: { kind: gene }` |
 | `pannels:` | `DRS-2011 unknown key 'pannels' in top level` | `panels:` |
-| `kind: chart` | `DRS-2021 unknown panel kind 'chart'; expected one of kv, table, tabs, line, area, hbar, ladder, links, status, provenance, markdown, gauge, surface` | `kind: line` |
+| `kind: chart` | `DRS-2021 unknown panel kind 'chart'; expected one of kv, table, tabs, line, area, hbar, ladder, links, status, provenance, markdown, gauge, surface, waterfall, histogram, scatter, candlestick, graph, timeline, pivot` | `kind: line` |
 | a `table` without `rows` | `DRS-2022 'table' panel 'variants' needs option 'rows'` | add `rows: $.variants` |
 | `limit: 5` on a `ladder` | `DRS-2023 option 'limit' is not valid for 'ladder' panels` | use a `table`, or drop `limit` |
 | `body:` on a `kv` | `DRS-2023 only 'tabs' panels take a 'body'` | make it `kind: tabs` with `each:` |

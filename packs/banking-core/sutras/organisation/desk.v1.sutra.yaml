@@ -37,7 +37,7 @@ panels:
       - { label: MTM, bind: "@.mtm", fmt: signed0, tone: sign, total: true }
   - id: mtmGrid
     kind: pivot
-    title: MTM by book and currency (USD)
+    title: "MTM grid (by book and currency, USD)"
     code: PIV
     key: F3
     rows: $.positions

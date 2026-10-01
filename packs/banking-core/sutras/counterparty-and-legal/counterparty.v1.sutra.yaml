@@ -46,7 +46,7 @@ panels:
     rows: $.kyc
   - id: hierarchy
     kind: graph
-    title: "Group hierarchy, agreements and netting sets"
+    title: Group hierarchy (agreements and netting sets)
     code: HIER
     key: F3
     nodes: $.hierarchy.nodes

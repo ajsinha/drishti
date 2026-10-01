@@ -924,14 +924,16 @@ panel kind spans the grammar, the engine and the console:
 |---|---|
 | `drishti-rachana/.../model/PanelKind.java` | `METRIC(Set.of("value"), Set.of("label", "fmt", "tone"))`: required and accepted options. The parser rejects unknown kinds (`DRS-2021`), unknown options (`DRS-2023`) and missing required ones (`DRS-2022`). |
 | `drishti-rachana/.../SutraExpressions.java` | `Map.entry(PanelKind.METRIC, Set.of("value"))` in `EL_OPTIONS`: which options hold expressions, so they are compiled and checked when the Sutra loads. |
-| `drishti-engine/.../bind/Binder.java` | A `case METRIC -> metric(p, c);` in the `switch` in `bind` (the compiler insists: the switch over `PanelKind` must be exhaustive). |
+| `drishti-engine/.../bind/Binder.java` | A `case METRIC -> metric(p, c);` in the `switch` in `bind` (the compiler insists: the switch over `PanelKind` must be exhaustive). A kind that computes over a list (bins, running totals, aggregates) belongs in `ChartBinder.java` beside `waterfall` … `pivot`, reading at most the `PanelLimits` (`drishti.panels`) it is given. |
 | `drishti-engine/.../view/PanelData.java` and `Emptiness.java` | Only if the kind needs a new record. A new record must also be handled in `Emptiness.of`, whose `switch` over the sealed interface the compiler checks. This recipe reuses `PanelData.Fields`. |
 | `console/web/templates/_macros/panels.html` | A branch in the `panel(p)` macro. |
 | `console/web/static/css/terminal.css` | Its styles (no `style=` attributes: the CSP forbids them). |
+| `console/web/static/js/charts.js` | Only for an ECharts kind: a builder in `BUILD` that turns the view model into an ECharts option; the macro emits `data-xchart` (the `xchart` macro) and a Data table. |
+| `drishti-rachana/.../model/PanelOptions.java` | Only if an option takes a fixed set of values: the parser then reports others as `DRS-2029`. |
 | `console/core/export.py` and the `data-export-panel` list in `panels.html` | Only if its data should download as CSV. |
 | `console/tests/test_terminal.py` | `"metric"` in `KINDS`, so it is rendered with broken data. |
-| `drishti-server/src/test/java/com/ash/drishti/server/StudioTest.java` | The schema test counts the kinds: `hasSize(13)` becomes `hasSize(14)`. |
-| `console/web/guides/panel-kinds.md`, `sutra-guide.md`, `sutra-studio.md`, `RACHANA_REFERENCE.md`, `console/config/help.yaml` | Documentation, and the count: "thirteen panel kinds" is written in several places, including `PanelKind`'s Javadoc (`grep -rni thirteen`). `console/tests/test_help.py` checks the panel-kinds guide's title (`"The thirteen panel kinds" in page`), so change it with the title. |
+| `drishti-server/src/test/java/com/ash/drishti/server/StudioTest.java` | The schema test counts the kinds: `hasSize(20)` becomes `hasSize(21)`. |
+| `console/web/guides/panel-kinds.md`, `sutra-guide.md`, `sutra-studio.md`, `RACHANA_REFERENCE.md`, `console/config/help.yaml` | Documentation, and the count: "twenty panel kinds" is written in several places, including `PanelKind`'s Javadoc and the landing page's count (`grep -rni twenty`). `console/tests/test_help.py` checks the panel-kinds guide's title (`"The twenty panel kinds" in page`), so change it with the title. |
 
 Nothing to do for editors: the JSON Schema served at `GET /api/v1/rachana/schema` (`RachanaSchema`) is built from
 `PanelKind`, so `metric` and its options appear in Studio's completion, and in any editor that reads the schema, as
@@ -947,7 +949,7 @@ You should see `metric` at the end of the list of kinds.
 `Emptiness` already knows when it is empty (a dash or no text):
 
 ```java
-                case SURFACE -> surface(p, c);
+                case PIVOT -> charts.pivot(p, c);
                 case METRIC -> metric(p, c);
             };
 ```

@@ -33,9 +33,11 @@
   function compact(v) {
     if (typeof v !== 'number' || !isFinite(v)) { return ''; }
     var a = Math.abs(v), sign = v < 0 ? '−' : '';
-    if (a >= 1e9) { return sign + (a / 1e9).toFixed(1) + 'bn'; }
-    if (a >= 1e6) { return sign + (a / 1e6).toFixed(a >= 1e7 ? 0 : 1) + 'm'; }
-    if (a >= 1e4) { return sign + (a / 1e3).toFixed(a >= 1e5 ? 0 : 1) + 'k'; }
+    // two decimals at most, trailing zeros dropped, so neighbouring axis ticks (1.75m, 1.8m) stay distinct
+    var trim = function (x, dp) { return String(Number(x.toFixed(dp))); };
+    if (a >= 1e9) { return sign + trim(a / 1e9, 2) + 'bn'; }
+    if (a >= 1e6) { return sign + trim(a / 1e6, a >= 1e8 ? 0 : 2) + 'm'; }
+    if (a >= 1e4) { return sign + trim(a / 1e3, a >= 1e6 ? 0 : 1) + 'k'; }
     return sign + (Math.round(a * 100) / 100);
   }
   function num(v) { return typeof v === 'number' && isFinite(v); }
@@ -64,7 +66,14 @@
   function waterfall(d, t) {
     var steps = d.steps || [], labels = steps.map(function (s) { return s.label; }), A = axis(t);
     var data = steps.map(function (s, i) { return { value: [i, s.from, s.to], step: s }; });
-    var many = steps.length > 6;
+    var many = steps.length > 6, range = {};
+    // big totals beside small steps (yesterday's MTM, today's moves): start the axis near the steps, not at zero, and
+    // let the totals run off the bottom (their labels carry the full figure)
+    var ends = [];
+    steps.forEach(function (s) { if (s.total) { ends.push(s.value); } else { ends.push(s.from, s.to); } });
+    var lo = Math.min.apply(null, ends.length ? ends : [0]), hi = Math.max.apply(null, ends.length ? ends : [0]);
+    if (lo > 0 && hi - lo < 0.5 * hi) { range.min = Math.max(0, lo - (hi - lo) * 0.6); }
+    else if (hi < 0 && hi - lo < 0.5 * -lo) { range.max = Math.min(0, hi + (hi - lo) * 0.6); }
     return {
       animationDuration: 400, grid: { left: 52, right: 12, top: 18, bottom: many ? 58 : 26 },
       tooltip: tooltip(t, { formatter: function (p) {
@@ -73,9 +82,9 @@
       } }),
       xAxis: { type: 'category', data: labels, axisLine: A.axisLine,
         axisLabel: Object.assign({}, A.axisLabel, { interval: 0, rotate: many ? 30 : 0 }) },
-      yAxis: { type: 'value', name: d.unit || '', axisLine: A.axisLine, splitLine: A.splitLine, nameTextStyle: A.nameTextStyle,
-        axisLabel: Object.assign({}, A.axisLabel, { formatter: compact }) },
-      series: [{ type: 'custom', data: data, encode: { x: 0, y: [1, 2] },
+      yAxis: Object.assign({ type: 'value', name: d.unit || '', axisLine: A.axisLine, splitLine: A.splitLine, nameTextStyle: A.nameTextStyle,
+        axisLabel: Object.assign({}, A.axisLabel, { formatter: compact }) }, range),
+      series: [{ type: 'custom', clip: true, data: data, encode: { x: 0, y: [1, 2] },
         renderItem: function (params, api) {
           var s = steps[params.dataIndex], a = api.coord([api.value(0), api.value(1)]), b = api.coord([api.value(0), api.value(2)]);
           var w = Math.min(46, api.size([1, 0])[0] * 0.6), top = Math.min(a[1], b[1]);

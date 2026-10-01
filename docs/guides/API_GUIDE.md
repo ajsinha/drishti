@@ -707,7 +707,7 @@ curl -s $B/rachana/schema | jq -c '{title, required, kinds: (.properties.match.p
 ```
 
 You should see `"title":"Rachana Sutra, language 1"`, `"required":["rachana","sutra","version","match"]`, the
-number of entity kinds the enabled packs serve, the thirteen panel kinds (`kv`, `table`, … `surface`) and the first
+number of entity kinds the enabled packs serve, the twenty panel kinds (`kv`, `table`, … `pivot`) and the first
 functions (`abs`, `coalesce`, …). Any editor that reads JSON Schema can use it: in VS Code with the YAML
 extension, save it next to your Sutras and add `# yaml-language-server: $schema=rachana.schema.json` as the first
 line of a Sutra to get completion and checking as you type. Sutra Studio uses the same schema.

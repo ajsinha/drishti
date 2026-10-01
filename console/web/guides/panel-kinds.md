@@ -13,11 +13,13 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# The thirteen panel kinds
+# The twenty panel kinds
 
-Every box on a Drishti screen is a **panel**, and every panel is one of thirteen kinds. A Sutra names the kind
+Every box on a Drishti screen is a **panel**, and every panel is one of twenty kinds. A Sutra names the kind
 and tells it where the data is; when there is no Sutra, inference picks a kind for you. This page shows each
 kind with a real entity you can open, the Sutra lines that produce it, and the options it accepts.
+[Panels in depth](panels) goes further: the data each kind needs, how the server computes it, how the
+console draws it, its limits, and the mistakes the parser reports.
 
 ## How to read a panel header
 
@@ -55,6 +57,13 @@ Quick chooser:
 | a few labelled amounts | [hbar](#hbar) |
 | one number against a maximum | [gauge](#gauge) |
 | a grid over two axes | [surface](#surface) |
+| a start value, signed contributions and an end value (P&L attribution) | [waterfall](#waterfall) |
+| many numbers whose spread matters (scenario P&L) | [histogram](#histogram) |
+| rows with two measures to compare (risk against return) | [scatter](#scatter) |
+| prices by date with open, high, low and close | [candlestick](#candlestick) |
+| entities and how they relate (a group hierarchy) | [graph](#graph) |
+| dated events (a trade's lifecycle) | [timeline](#timeline) |
+| rows to total by one field across another (MTM by book and currency) | [pivot](#pivot) |
 | statuses (confirmed, cleared, settled) | [status](#status) |
 | references to other entities | [links](#links) (automatic) |
 | a note for the reader | [markdown](#markdown) |
@@ -439,12 +448,224 @@ horizontal axis and holds the value:
 | `view` | `heatmap` (default) or `3d`. |
 | `fmt`, `unit` | Value format and unit. |
 
+## waterfall
+
+**Steps from a start to an end**: a P&L explain from yesterday's MTM to today's, a book's P&L from risk factors to
+the actual figure. Each step is a bar that floats from the running total before it to the one after it: rises in
+the positive tone, falls in the negative tone, totals as full bars from zero.
+
+*See it:* `TRD MX-20000001`, panel **P&L explain (USD, opening to closing MTM)** (F5). The bars run from *Opening
+MTM +1,748,877* through *Carry −11,426*, *Roll-down +11,390*, *Rates delta +132,686* and four more steps to
+*Closing MTM +1,875,863*, the trade's MTM. `PNL PNL-COMM-1` (F3) shows a book's attribution ending at *Actual −180,316*.
+
+![waterfall](/static/img/guide/kind-waterfall.png)
+
+```yaml
+# waterfall: an opening total, signed steps, and a closing total the server adds up
+- id: explain
+  kind: waterfall
+  title: "P&L explain (USD, opening to closing MTM)"
+  key: F5
+  rows: $.pnlExplain          # [{step: Opening MTM, pnl: 1748877, total: true}, {step: Carry, pnl: -11426}, …]
+  label: step
+  value: pnl
+  sum: Closing MTM            # appends a total bar at the running sum
+  fmt: signed0
+```
+
+| Option | Meaning |
+|---|---|
+| `rows` (required) | The steps, in order. |
+| `label`, `value` | The fields with each step's name and amount (default `label`, `value`). |
+| `total` | The field that marks a step as a total, drawn from zero; the running sum restarts there (default `total`). |
+| `sum` | The label of a closing total bar the server appends at the running sum. |
+| `fmt`, `unit` | Format of the amounts, and the axis unit. |
+
+## histogram
+
+**How a list of numbers is spread**: a VaR scenario vector, a P&L history. The server bins the numbers (the
+square root of the count, 5 to 40 bins, unless `bins` says) and draws dashed marker lines where you ask.
+
+*See it:* `VAR VAR-RATES`, panel **Scenario P&L distribution, 500 days (USD)** (F3): 500 scenario P&Ls in 22
+bins, with *VaR 99% −9.6m*, *ES 97.5% −10.9m* and *Mean −335.2k* marked.
+
+![histogram](/static/img/guide/kind-histogram.png)
+
+```yaml
+# histogram with marker lines read from the document
+- id: scenarios
+  kind: histogram
+  title: "Scenario P&L distribution, 500 days (USD)"
+  key: F3
+  rows: $.scenarioPnl          # [-1234567, 845120, …]: numbers, or rows with `value` naming the field
+  fmt: compact
+  markers:
+    - { label: VaR 99%, value: "-$.var99", tone: neg }
+    - { label: ES 97.5%, value: "-$.es975", tone: bad }
+    - { label: Mean, value: $.meanPnl, tone: link }
+```
+
+| Option | Meaning |
+|---|---|
+| `rows` (required) | A list of numbers, or of rows. |
+| `value` | With rows, the field (or `@` expression) holding the number. |
+| `bins` | How many bins, 1 to 200. |
+| `markers` | Lines at values: each `{ label, value, tone }`, `value` an expression over the document. |
+| `fmt`, `unit` | Format of bin edges and markers, and the axis unit. |
+
+## scatter
+
+**Two measures per row**: books' VaR against their P&L, desks' DV01 against MTM. Points can be sized by a third
+field and coloured by a group; a point whose label is an entity id opens it on click.
+
+*See it:* `LE LE-NY`, panel **Risk and return (books: VaR against today's P&L, USD)** (F3): fifteen books, coloured by desk, sized
+by their trade count; *BOOK-RATES-1* sits at VaR 6.0m and P&L −2.96m.
+
+![scatter](/static/img/guide/kind-scatter.png)
+
+```yaml
+# scatter: x and y per row, sized and grouped
+- id: riskReturn
+  kind: scatter
+  title: "Risk and return (books: VaR against today's P&L, USD)"
+  key: F3
+  rows: $.books                # [{book: BOOK-RATES-1, desk: Rates · Swaps and options, var: 6016760, pnl: -2955541, trades: 49}, …]
+  x: var
+  y: pnl
+  size: trades
+  label: book
+  group: desk
+  fmt: signed0
+  xFmt: compact
+  xLabel: VaR 99% 1D (USD)
+  yLabel: P&L 1D (USD)
+```
+
+| Option | Meaning |
+|---|---|
+| `rows`, `x`, `y` (required) | The rows, and the fields (or `@` expressions) of the two measures. |
+| `size`, `label`, `group` | Point size, point label (an id opens its entity), and the category that colours it. |
+| `fmt`, `xFmt` | Formats of y and x (x defaults to `fmt`). |
+| `xLabel`, `yLabel` | Axis titles (default: the field names). |
+
+## candlestick
+
+**Daily bars**: open, high, low and close by date, with volume underneath when the rows carry it. Rising bars
+use the positive tone, falling bars the negative one. Scroll inside the chart to zoom when there are more than 60 bars.
+
+*See it:* `EQ EQ-CSCA`, panel **Daily bars (last 60 days)** (F3): the last close *21.84*, *+0.81 (+3.85%)* on the
+day. `CMD CMD-BRENT` (F3) shows the Brent front month the same way.
+
+![candlestick](/static/img/guide/kind-candlestick.png)
+
+```yaml
+# candlestick with volume
+- { id: ohlc, kind: candlestick, title: "Daily bars (last 60 days)", key: F3, rows: $.ohlc, x: date, volume: volume, fmt: price2 }
+```
+
+| Option | Meaning |
+|---|---|
+| `rows` (required) | The bars, oldest first. |
+| `x` | The date field (default `date`). |
+| `open`, `high`, `low`, `close` | The price fields (default those names). |
+| `volume` | The volume field; without it there are no volume bars. |
+| `fmt`, `unit` | Price format and unit. |
+
+## graph
+
+**Entities and how they relate**: a counterparty's group and its members, the agreement and CSA it signed, the
+netting sets they govern. With `layout: tree` (the default) the nodes nothing points to are at the top and each
+level below; `force` lets related nodes pull together. A node whose id is an entity opens it on click.
+
+*See it:* `CPTY CP-MERIDIAN`, panel **Group hierarchy (agreements and netting sets)** (F3): *Meridian Financial
+Group* over *Meridian Life Assurance* (this view, ringed) and *Meridian Reinsurance Ltd*, then the ISDA, its CSA and
+four netting sets. **Entities** under the chart lists every node as a link.
+
+![graph](/static/img/guide/kind-graph.png)
+
+```yaml
+# graph: nodes and edges from the document
+- id: hierarchy
+  kind: graph
+  title: Group hierarchy (agreements and netting sets)
+  key: F3
+  nodes: $.hierarchy.nodes     # [{id: GRP-MERIDIAN, label: Meridian Financial Group, type: Group (ultimate parent)}, …]
+  edges: $.hierarchy.edges     # [{from: GRP-MERIDIAN, to: CP-MERIDIAN, label: parent of}, …]
+  label: label
+  group: type
+  layout: tree
+```
+
+| Option | Meaning |
+|---|---|
+| `nodes` (required) | The nodes; each needs an `id`, and may say its `kind` when the id alone does not. |
+| `edges` | The relations: `from`, `to` and an optional `label`. |
+| `label`, `group` | The node fields shown and coloured by (default `label`, `type`). |
+| `layout` | `tree` (default) or `force`. |
+
+## timeline
+
+**Dated events in order**: a trade's lifecycle, a margin call's workflow. Each event has a dot toned by its status
+(green for done or settled, amber for pending, red for failed), the date, the event, the status and a short note.
+
+*See it:* `TRD MX-20000001`, panel **Lifecycle** (F6): *Booked*, *Confirmed* (Matched on MarkitWire), *Cleared*
+(LCH SwapClear), *Amended* (Notional corrected), *Cash settled*, *Next payment* (Pending) and *Maturity* in 2032.
+
+![timeline](/static/img/guide/kind-timeline.png)
+
+```yaml
+# timeline: events sorted by date on the server
+- { id: lifecycle, kind: timeline, title: Lifecycle, key: F6, rows: $.lifecycle.timeline, detail: description }
+```
+
+| Option | Meaning |
+|---|---|
+| `rows` (required) | The events, in any order: the server sorts them by date. |
+| `date`, `label`, `detail`, `status` | The fields (default `date`, `event`, `description`, `status`). |
+| `tone` | The tone of the status (default `status`; `sign` or a fixed tone also work). |
+
+## pivot
+
+**Rows totalled by one field across another**: MTM by book and currency, exposure by rating and tenor bucket.
+The server aggregates (`sum`, `count`, `avg`, `min` or `max`), adds row and column totals, and can shade each
+cell by its value. The table sorts, filters and pages like any other.
+
+*See it:* `DESK DESK-RATES`, panel **MTM grid (by book and currency, USD)** (F3): three books across seven currencies;
+*BOOK-RATES-1* totals *177.4m*, the desk *132.8m*. **Trades by book and product family** counts the same rows.
+
+![pivot](/static/img/guide/kind-pivot.png)
+
+```yaml
+# pivot: sum of mtm by book across currency, shaded
+- id: mtmGrid
+  kind: pivot
+  title: MTM grid (by book and currency, USD)
+  key: F3
+  rows: $.positions            # one row per trade: [{book: BOOK-RATES-1, currency: EUR, family: swap, mtm: 1761589}, …]
+  by: book
+  across: currency
+  value: mtm
+  agg: sum
+  heat: true
+  fmt: compact
+  tone: sign
+```
+
+| Option | Meaning |
+|---|---|
+| `rows`, `by`, `across` (required) | The rows, the field down the side, and the field across the top. |
+| `value` | The field aggregated; without it the pivot counts rows. |
+| `agg` | `sum` (default), `count`, `avg`, `min` or `max`. |
+| `heat` | `true` shades each cell by its value. |
+| `totals` | `false` hides the row and column totals. |
+| `fmt`, `tone` | Format and tone of the cells. |
+
 ## Options every panel accepts
 
 | Key | Meaning | Example |
 |---|---|---|
 | `id` | Unique within the Sutra. | `id: terms` |
-| `kind` | One of the thirteen above. | `kind: kv` |
+| `kind` | One of the twenty above. | `kind: kv` |
 | `title` | Header text; may contain `${…}`. | `title: "Cashflows · ${$.legs[0].label}"` |
 | `key` | A function key, `F2`–`F12`, unique in the Sutra. | `key: F3` |
 | `code` | A short tag at the right of the header. | `code: CRV` |
@@ -453,3 +674,4 @@ horizontal axis and holds the value:
 
 The [Sutra guide](sutra-guide) explains paths, formats and matching; the
 [Rachana reference](rachana-reference) lists every key and problem code.
+[Panels in depth](panels) covers every kind's data, options, server computation, drawing, limits and mistakes.
