@@ -99,11 +99,14 @@ public final class StructuredSearch {
         String kind = kindOf(q);
         Expr condition = compile(q.condition(), "condition");
         Expr order = compile(q.orderBy(), "order by");
-        List<EntityHit> hits = router.search(kind, "", props.maxScan() + 1, props.budget(), asOf);
-        boolean partial = hits.size() > props.maxScan();
-        if (q.idPattern() != null) {                            // a pick list: only what the word names, before any read
+        // a pick list names what it wants (TRD T-100): the sources' own indexes narrow by it, so a large book is not
+        // cut at maxScan before the match is found; a wildcard (T-1*0) is filtered here
+        String narrow = q.idPattern() != null && !q.idPattern().contains("*") ? q.idPattern() : "";
+        List<EntityHit> hits = router.search(kind, narrow, props.maxScan() + 1, props.budget(), asOf);
+        if (q.idPattern() != null) {                            // only what the word names, before any read
             hits = hits.stream().filter(h -> SearchQuery.matches(q.idPattern(), h.ref().id(), h.title())).toList();
         }
+        boolean partial = hits.size() > props.maxScan();
         if (partial) {
             hits = hits.subList(0, props.maxScan());
         }
