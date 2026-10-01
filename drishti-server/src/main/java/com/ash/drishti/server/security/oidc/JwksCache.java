@@ -85,6 +85,7 @@ public final class JwksCache {
         return matching.size() == 1 ? Optional.of(matching.get(0)) : Optional.empty();   // ambiguous without a kid: refuse
     }
 
+    @SuppressWarnings("LockNotBeforeTry")   // lock-then-unlock only waits for the refresh another caller is doing
     private void refreshIfDue() {
         if (!refresh.tryLock()) {
             refresh.lock();                                    // someone else is refreshing: wait for them, then use theirs

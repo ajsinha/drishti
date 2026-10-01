@@ -265,7 +265,8 @@ public final class JdbcSourcePlugin implements SourcePlugin {
         return withConnection(c -> {
             try (PreparedStatement ps = c.prepareStatement(sql)) {
                 java.util.List<String> names = params.get(ref.kind());
-                java.time.LocalDate date = asOf.businessDate() != null ? asOf.businessDate() : java.time.LocalDate.now();
+                java.time.LocalDate date = asOf.businessDate() != null ? asOf.businessDate()
+                        : java.time.LocalDate.now(java.time.ZoneId.of(context.setting("zone", "America/New_York")));   // the business day's zone
                 for (int i = 0; i < names.size(); i++) {
                     if ("asOf".equals(names.get(i))) {
                         ps.setObject(i + 1, java.sql.Date.valueOf(date));

@@ -67,6 +67,7 @@ public final class LayoutMerger {
         return new EffectiveLayout(effective, "Sutra " + s.name() + " v" + s.version() + (inferred ? " + inference" : ""), inferred, why);
     }
 
+    @SuppressWarnings("ReferenceEquality")   // unchanged parts are the same objects: reuse the panel as it is
     private Panel fill(Panel p, DataNode doc, Map<String, String> why) {
         Panel body = p.body() == null ? null : fillBody(p, doc, why);
         List<Column> cols = p.columns();

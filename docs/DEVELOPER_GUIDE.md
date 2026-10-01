@@ -325,6 +325,15 @@ than 1500 lines (`MAX_LINES = 1500`). UI templates, styles and scripts under `co
 approaches the limit, split it by responsibility (the banking generator, for example, is a dozen focused modules
 under `tools/packgen/banking/`).
 
+### Error Prone and Spotless
+
+- **Error Prone** checks every compile. A finding at error level stops the build with the check's name, for
+  example `[ReturnValueIgnored] Return value of 'apply' must be used`. Fix the code. If the finding is intended,
+  add `@SuppressWarnings("ReturnValueIgnored")` on the smallest element, with a comment saying why. Warnings
+  (missing `@Override`, Javadoc summaries) do not fail the build but are worth fixing when you touch the file.
+- **Spotless** runs at `verify`. On a failure it prints the diff; `./mvnw spotless:apply` fixes unused imports,
+  trailing whitespace, missing final newlines and tabs.
+
 ### 3.3 Architecture rules
 
 `drishti-it/src/test/java/com/ash/drishti/it/ArchitectureRulesTest.java` checks the compiled main code (tests are

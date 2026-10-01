@@ -81,7 +81,6 @@ public class SutraGovernance {
                 throw new DrishtiException(ErrorCode.PROPOSAL_CONFLICT, current.name() + "@" + current.version()
                         + " changed after " + id + " was proposed; reject it and propose again from the live version");
             }
-            return current;
         }, () -> save(store.require(id).text()), Proposal.APPROVED, p.user(), comment);
         users.recordAudit(p.user(), "sutra-approved", done.name() + "@" + done.version(), id + " by " + done.author());
         return done;
@@ -92,7 +91,7 @@ public class SutraGovernance {
         if (comment == null || comment.isBlank()) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "say why the proposal is rejected");
         }
-        Proposal done = store.decide(id, c -> c, () -> { }, Proposal.REJECTED, p.user(), comment);
+        Proposal done = store.decide(id, c -> { }, () -> { }, Proposal.REJECTED, p.user(), comment);
         users.recordAudit(p.user(), "sutra-rejected", done.name() + "@" + done.version(), id + ": " + comment.trim());
         return done;
     }
@@ -102,7 +101,6 @@ public class SutraGovernance {
             if (!c.author().equals(p.user()) && !entitlements.isAdmin(p)) {
                 throw new DrishtiException(ErrorCode.FORBIDDEN, "only " + c.author() + " can withdraw " + id);
             }
-            return c;
         }, () -> { }, Proposal.WITHDRAWN, p.user(), "withdrawn");
         users.recordAudit(p.user(), "sutra-withdrawn", done.name() + "@" + done.version(), id);
         return done;

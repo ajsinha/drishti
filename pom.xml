@@ -72,6 +72,8 @@
     <hdrhistogram.version>2.2.2</hdrhistogram.version>
     <archunit.version>1.5.0</archunit.version>
     <jqwik.version>1.10.1</jqwik.version>
+    <errorprone.version>2.36.0</errorprone.version>
+    <spotless.version>3.10.2</spotless.version>
     <jmh.version>1.37</jmh.version>
     <springdoc.version>2.9.1</springdoc.version>
     <delta-kernel.version>4.4.0</delta-kernel.version>
@@ -144,8 +146,36 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
           <parameters>true</parameters>
-          <compilerArgs><arg>-Xlint:all,-processing,-serial</arg></compilerArgs>
+          <!-- Error Prone (ADR-007): checks that find real bugs fail the build; style-level checks stay warnings -->
+          <compilerArgs>
+            <arg>-Xlint:all,-processing,-serial</arg>
+            <arg>-XDcompilePolicy=simple</arg>
+            <arg>--should-stop=ifError=FLOW</arg>
+            <arg>-Xplugin:ErrorProne -XepDisableWarningsInGeneratedCode -XepExcludedPaths:.*/target/.* -Xep:NonAtomicVolatileUpdate:ERROR -Xep:LockNotBeforeTry:ERROR -Xep:JavaTimeDefaultTimeZone:ERROR</arg>
+          </compilerArgs>
+          <annotationProcessorPaths>
+            <path><groupId>com.google.errorprone</groupId><artifactId>error_prone_core</artifactId><version>${errorprone.version}</version></path>
+          </annotationProcessorPaths>
         </configuration>
+      </plugin>
+      <!-- Spotless (ADR-007): what .editorconfig promises, checked at verify: no trailing whitespace, a final newline,
+           spaces not tabs, no unused imports. A full reformatter is not used: it would rewrite the code base's style. -->
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+        <version>${spotless.version}</version>
+        <configuration>
+          <java>
+            <includes><include>src/**/*.java</include></includes>
+            <removeUnusedImports/>
+            <trimTrailingWhitespace/>
+            <endWithNewline/>
+            <indent><spaces>true</spaces><spacesPerTab>4</spacesPerTab></indent>
+          </java>
+        </configuration>
+        <executions>
+          <execution><goals><goal>check</goal></goals><phase>verify</phase></execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

@@ -80,6 +80,7 @@ public final class ViewPipeline {
      */
     private record SutraIdentity(Sutra sutra) {
         @Override
+        @SuppressWarnings("ReferenceEquality")   // identity on purpose: the same compiled Sutra object, not an equal one
         public boolean equals(Object o) {
             return o instanceof SutraIdentity other && other.sutra == sutra;
         }

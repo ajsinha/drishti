@@ -35,7 +35,6 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 /**
@@ -99,14 +98,14 @@ public final class ProposalStore {
      * Applies a decision to a pending proposal: {@code check} may refuse (throw) after seeing the current record, and
      * {@code publish} runs before the new status is written (approval makes the Sutra live there). Serialised.
      */
-    public Proposal decide(String id, UnaryOperator<Proposal> check, Runnable publish, String status, String by, String comment) {
+    public Proposal decide(String id, java.util.function.Consumer<Proposal> check, Runnable publish, String status, String by, String comment) {
         lock.lock();
         try {
             Proposal current = require(id);
             if (!current.pending()) {
                 throw new DrishtiException(ErrorCode.PROPOSAL_CONFLICT, id + " is already " + current.status());
             }
-            check.apply(current);
+            check.accept(current);                          // throws when the decision is not allowed
             publish.run();
             Proposal decided = current.decided(status, by, Instant.now(), comment == null ? "" : comment.trim());
             write(decided);

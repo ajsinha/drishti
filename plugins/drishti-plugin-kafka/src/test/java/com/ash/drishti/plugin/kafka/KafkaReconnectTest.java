@@ -21,7 +21,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.testkit.DatedSourceContract;
 import java.net.ServerSocket;
-import java.time.Duration;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;

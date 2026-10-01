@@ -35,13 +35,13 @@ final class FrameMailbox {
     private final ReentrantLock lock = new ReentrantLock();
     private final Condition ready = lock.newCondition();
     private Frame pending;
-    private volatile long merged;   // written under the lock, read without it (statistics)
+    private final java.util.concurrent.atomic.AtomicLong merged = new java.util.concurrent.atomic.AtomicLong();   // statistics
 
     void offer(Frame f) {
         lock.lock();
         try {
             if (pending != null) {
-                merged++;
+                merged.incrementAndGet();
                 pending = merge(pending, f);
             } else {
                 pending = f;
@@ -69,7 +69,7 @@ final class FrameMailbox {
     }
 
     long merged() {
-        return merged;
+        return merged.get();
     }
 
     static Frame merge(Frame a, Frame b) {
