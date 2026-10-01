@@ -524,6 +524,46 @@ The server turns the manifest into ordinary settings. Knowing this helps when yo
 
 `alerts` and `console` are read directly from the manifest (by the server's alert suggestions and by the console).
 
+## Large kinds: the lake layout
+
+A kind with millions of entities a day (a bank's trades) is stored so that readers never load a whole day. The pack
+declares, on its Delta connector, which document fields are also stored as columns, and how the table is sorted:
+
+```yaml
+connectors:
+  trading-store:
+    plugin: delta
+    settings:
+      root: "${DRISHTI_DELTA_ROOT:./data/delta}"
+      domain: trading
+      layout:
+        trade:
+          columns: [tradeId, productType, productName, direction, currency, notional, mtm, pnl1d, maturityDate,
+                    tradeDate, book, desk, status, assetClass, counterparty.id, counterparty.name, nettingSet,
+                    risk.dv01, sourceSystem]
+          sort-by: id               # each business day sorted by id, cut into files of file-rows
+          file-rows: 250000
+          row-group-rows: 1000      # opening one trade decodes one row group (about 7 MB of documents)
+```
+
+- **The writers follow it.** `make_data.py --lake`, `tools/samplegen/bulk_trades.py` and any pack built with
+  `packbuild.py` write the table this way: `id`, the document (`doc`), the business date, and one column per field
+  (`counterparty.id` is the column `counterparty__id`; numbers as `float64`, everything else as text). A bank's own
+  loader (Spark, Databricks) writes the same columns; `tools/lake/maintain.py relayout` rewrites an existing table into
+  the layout, a day at a time, and leaves days already in it alone.
+- **The server uses it.** Opening a trade reads one row group of one file (the id says which). Type-ahead indexes the
+  id column alone. Searches, pick lists, derived kinds (desk P&L) and impact (F8) read the columns, over every trade
+  of the day, exactly, without parsing a document; a query that uses a field that is not a column reads documents as
+  before. Role redaction applies to column values exactly as to documents.
+- **Health tells you.** A table that lacks a declared column shows in Admin → Health:
+  `UP (not laid out as the pack declares: trade (12 of 19 columns); searches read documents)`.
+- **Choose the columns** a desk searches and lists by: the pick-list `columns:` of the kind, the fields in its
+  alerts, impact measures and derived kinds, and the link fields reverse lookups follow (`nettingSet`, `book`,
+  `counterparty.id`). Each column costs little: repeated values (books, desks, currencies) compress to almost
+  nothing.
+
+The measured effect, for 1,000,000 trades a day, is in [PERFORMANCE.md](PERFORMANCE.md#a-book-of-a-million-trades-a-day).
+
 ## Derived kinds: entities computed from other kinds
 
 A derived kind is a kind no source holds: the server computes it from another kind by grouping and adding up. A

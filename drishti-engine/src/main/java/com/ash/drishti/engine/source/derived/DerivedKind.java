@@ -46,6 +46,7 @@ import java.util.Set;
  *     mtm: sum $.mtm
  *     largest: max $.notional
  *     currencies: distinct $.currency
+ *   max-members: 1000             # members listed (and rows) at most; memberCount and the aggregates count all
  *   rows:                         # optional: one row per member, for a table (in the field `rows`, or rows-field)
  *     trade: $.tradeId
  *     mtm: $.mtm
@@ -65,25 +66,29 @@ public final class DerivedKind {
     private final String kind;
     private final String from;
     private final Expr groupBy;
+    private final String groupSource;
     private final Expr where;
     private final String idField;
     private final String membersField;
     private final List<Field> fields;
     private final Map<String, Expr> rowColumns;
     private final String rowsField;
+    private final int maxMembers;
     private final Formats formats;
 
-    private DerivedKind(String kind, String from, Expr groupBy, Expr where, String idField, String membersField, List<Field> fields,
-            Map<String, Expr> rowColumns, String rowsField, Formats formats) {
+    private DerivedKind(String kind, String from, Expr groupBy, String groupSource, Expr where, String idField, String membersField, List<Field> fields,
+            Map<String, Expr> rowColumns, String rowsField, int maxMembers, Formats formats) {
         this.kind = kind;
         this.from = from;
         this.groupBy = groupBy;
+        this.groupSource = groupSource;
         this.where = where;
         this.idField = idField;
         this.membersField = membersField;
         this.fields = fields;
         this.rowColumns = rowColumns;
         this.rowsField = rowsField;
+        this.maxMembers = maxMembers;
         this.formats = formats;
     }
 
@@ -120,9 +125,10 @@ public final class DerivedKind {
                 }
             });
             String where = settings.get(p + "where");
-            out.add(new DerivedKind(kind, from, compile(kind, "group-by", group, el), where == null || where.isBlank() ? null : compile(kind, "where", where, el),
+            out.add(new DerivedKind(kind, from, compile(kind, "group-by", group, el), group.trim(), where == null || where.isBlank() ? null : compile(kind, "where", where, el),
                     settings.getOrDefault(p + "id-field", "id"), settings.getOrDefault(p + "members", "members"), List.copyOf(fields),
-                    rowColumns, settings.getOrDefault(p + "rows-field", "rows"), formats));
+                    rowColumns, settings.getOrDefault(p + "rows-field", "rows"), Integer.parseInt(settings.getOrDefault(p + "max-members", "1000")),
+                    formats));
         }
         return out;
     }
@@ -156,6 +162,10 @@ public final class DerivedKind {
         return kind;
     }
 
+    String groupBySource() {
+        return groupSource;
+    }
+
     public String from() {
         return from;
     }
@@ -176,20 +186,149 @@ public final class DerivedKind {
 
     /** The derived entity for one group: its key, the members' ids (sorted) and each aggregate. */
     DataNode build(String key, Map<String, DataNode> members) {
+        List<String> ids = new ArrayList<>(members.keySet());
+        java.util.Collections.sort(ids);
+        Map<String, Object> aggregates = new LinkedHashMap<>();
+        for (Field f : fields) {
+            aggregates.put(f.name(), aggregate(f, ids, members));
+        }
+        return assemble(key, ids, aggregates, members::get);
+    }
+
+    /** The path a plain expression reads ({@code $.mtm} is {@code mtm}), or null for anything else. */
+    static String plainPath(String source) {
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("^\\$\\.([A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)*)$")
+                .matcher(source == null ? "" : source.trim());
+        return m.matches() ? m.group(1) : null;
+    }
+
+    private static String fieldPath(Field f) {
+        int space = f.source().indexOf(' ');
+        return space < 0 ? null : plainPath(f.source().substring(space + 1));
+    }
+
+    /**
+     * Every group from columns. Groups by the key column directly when the key is a plain path and there is no
+     * filter; aggregates straight over the column arrays when every field reads a plain path (count, sum $.mtm …);
+     * builds small documents only for the members it lists. Otherwise each member becomes a small document of the
+     * columns it reads, one group at a time.
+     */
+    Map<String, DataNode> buildAll(com.ash.drishti.api.ColumnSet c, String groupBySource) {
+        String keyPath = where == null ? plainPath(groupBySource) : null;
+        List<String> keyPaths = List.copyOf(keyPaths());
+        List<String> all = List.copyOf(paths().orElseThrow());
+        Map<String, List<Integer>> groups = new java.util.HashMap<>();
+        for (int i = 0; i < c.size(); i++) {
+            String key;
+            if (keyPath != null) {
+                Object v = c.value(keyPath, i);
+                key = v == null ? null : Values.text(v instanceof Double d ? Values.normalise(d) : v).trim();
+                key = key == null || key.isEmpty() ? null : key;
+            } else {
+                key = keyOf(rowOf(c, i, keyPaths));
+            }
+            if (key != null) {
+                groups.computeIfAbsent(key, x -> new ArrayList<>()).add(i);
+            }
+        }
+        boolean direct = fields.stream().allMatch(f -> f.op() == Op.COUNT || fieldPath(f) != null);
+        Map<String, DataNode> out = new java.util.HashMap<>();
+        groups.forEach((g, rows) -> {
+            rows.sort((a, b) -> c.ids()[a].compareTo(c.ids()[b]));
+            List<String> ids = new ArrayList<>(rows.size());
+            rows.forEach(i -> ids.add(c.ids()[i]));
+            if (!direct) {
+                Map<String, DataNode> members = new java.util.HashMap<>(rows.size() * 2);
+                rows.forEach(i -> members.put(c.ids()[i], rowOf(c, i, all)));
+                out.put(g, build(g, members));
+                return;
+            }
+            Map<String, Object> aggregates = new LinkedHashMap<>();
+            for (Field f : fields) {
+                aggregates.put(f.name(), f.op() == Op.COUNT ? (Object) (long) rows.size() : columnAggregate(f.op(), fieldPath(f), rows, c));
+            }
+            Map<String, Integer> rowOfId = new java.util.HashMap<>();
+            for (int k = 0; k < Math.min(rows.size(), maxMembers); k++) {
+                rowOfId.put(ids.get(k), rows.get(k));
+            }
+            out.put(g, assemble(g, ids, aggregates, id -> rowOf(c, rowOfId.get(id), all)));
+        });
+        return out;
+    }
+
+    private static Object columnAggregate(Op op, String path, List<Integer> rows, com.ash.drishti.api.ColumnSet c) {
+        if (op == Op.FIRST) {
+            Object v = c.value(path, rows.get(0));
+            return v instanceof Double d ? Values.normalise(d) : v;
+        }
+        if (op == Op.DISTINCT) {
+            java.util.TreeSet<String> d = new java.util.TreeSet<>();
+            rows.forEach(i -> {
+                Object v = c.value(path, i);
+                if (v != null) {
+                    d.add(Values.text(v instanceof Double x ? Values.normalise(x) : v));
+                }
+            });
+            return List.copyOf(d);
+        }
+        double[] nums = c.numbers().get(path);
+        if (nums == null) {
+            return op == Op.AVG || op == Op.MIN || op == Op.MAX ? null : Values.normalise(0);    // text column: no numbers
+        }
+        double total = 0;
+        int n = 0;
+        double best = Double.NaN;
+        for (int i : rows) {
+            double v = nums[i];
+            if (Double.isNaN(v)) {
+                continue;
+            }
+            total += v;
+            n++;
+            best = Double.isNaN(best) ? v : op == Op.MIN ? Math.min(best, v) : Math.max(best, v);
+        }
+        return switch (op) {
+            case SUM -> Values.normalise(total);
+            case AVG -> n == 0 ? null : Values.normalise(total / n);
+            case MIN, MAX -> n == 0 ? null : Values.normalise(best);
+            default -> null;
+        };
+    }
+
+    /** Row {@code i} as a document holding only the given paths. */
+    static DataNode rowOf(com.ash.drishti.api.ColumnSet c, int i, List<String> paths) {
+        Map<String, Object> root = new LinkedHashMap<>();
+        for (String path : paths) {
+            Object v = c.value(path, i);
+            if (v instanceof Double d && d == Math.rint(d) && Math.abs(d) < 1e15) {
+                v = d.longValue();
+            }
+            String[] parts = path.split("\\.");
+            Map<String, Object> at = root;
+            for (int p = 0; p < parts.length - 1; p++) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> next = (Map<String, Object>) at.computeIfAbsent(parts[p], x -> new LinkedHashMap<String, Object>());
+                at = next;
+            }
+            at.put(parts[parts.length - 1], v);
+        }
+        return DataNode.of(root);
+    }
+
+    /** The derived document: the key, its aggregates, the member count and the members it lists (with their rows). */
+    private DataNode assemble(String key, List<String> ids, Map<String, Object> aggregates, java.util.function.Function<String, DataNode> member) {
         Map<String, Object> doc = new LinkedHashMap<>();
         doc.put("id", key);                               // the entity's id, always (layouts title a view by it)
         doc.put(idField, key);
         doc.put("derivedFrom", from);
-        List<String> ids = new ArrayList<>(members.keySet());
-        java.util.Collections.sort(ids);
-        for (Field f : fields) {
-            doc.put(f.name(), aggregate(f, ids, members));
-        }
-        doc.put(membersField, ids);
+        doc.putAll(aggregates);
+        doc.put("memberCount", (long) ids.size());
+        List<String> listed = ids.size() > maxMembers ? ids.subList(0, maxMembers) : ids;   // a desk of 200,000 trades lists 1,000
+        doc.put(membersField, listed);
         if (!rowColumns.isEmpty()) {
-            List<Map<String, Object>> rows = new ArrayList<>(ids.size());
-            for (String id : ids) {
-                EvalContext c = EvalContext.of(members.get(id), formats);
+            List<Map<String, Object>> rows = new ArrayList<>(listed.size());
+            for (String id : listed) {
+                EvalContext c = EvalContext.of(member.apply(id), formats);
                 Map<String, Object> row = new LinkedHashMap<>();
                 rowColumns.forEach((col, e) -> {
                     Object v = Values.simplify(safe(e, c));
@@ -200,6 +339,38 @@ public final class DerivedKind {
             doc.put(rowsField, rows);
         }
         return DataNode.of(doc);
+    }
+
+    /**
+     * The document paths everything here reads ({@code mtm}, {@code counterparty.id}), or empty when an expression
+     * reads anything but plain paths (then members are read as documents).
+     */
+    java.util.Optional<java.util.Set<String>> paths() {
+        java.util.Set<String> raw = new java.util.LinkedHashSet<>();
+        groupBy.paths(raw::add);
+        if (where != null) {
+            where.paths(raw::add);
+        }
+        fields.stream().filter(f -> f.expr() != null).forEach(f -> f.expr().paths(raw::add));
+        rowColumns.values().forEach(e -> e.paths(raw::add));
+        java.util.Set<String> out = new java.util.LinkedHashSet<>();
+        for (String p : raw) {
+            if (!p.startsWith("$.") || p.length() < 3 || p.contains("[")) {
+                return java.util.Optional.empty();
+            }
+            out.add(p.substring(2));
+        }
+        return java.util.Optional.of(out);
+    }
+
+    /** The paths the group key and the filter read: enough to place a member in its group. */
+    java.util.Set<String> keyPaths() {
+        java.util.Set<String> out = new java.util.LinkedHashSet<>();
+        groupBy.paths(p -> out.add(p.substring(2)));
+        if (where != null) {
+            where.paths(p -> out.add(p.substring(2)));
+        }
+        return out;
     }
 
     private Object aggregate(Field f, List<String> ids, Map<String, DataNode> members) {

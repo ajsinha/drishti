@@ -30,4 +30,9 @@ public interface EntityReader {
 
     /** The documents, read concurrently; entities that cannot be read are absent. */
     Map<EntityRef, EntityDocument> read(Collection<EntityRef> refs, AsOf asOf);
+
+    /** The kind's entities with these paths as columns, when the source that serves the kind keeps them so. */
+    default java.util.Optional<ColumnSet> columns(String kind, Collection<String> paths, AsOf asOf) {
+        return java.util.Optional.empty();
+    }
 }

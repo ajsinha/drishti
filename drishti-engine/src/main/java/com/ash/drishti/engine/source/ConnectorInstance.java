@@ -82,6 +82,16 @@ final class ConnectorInstance implements SourcePlugin {
     }
 
     @Override
+    public java.util.Set<String> columnar(String kind) {
+        return delegate.columnar(kind);
+    }
+
+    @Override
+    public Optional<com.ash.drishti.api.ColumnSet> columns(String kind, java.util.Collection<String> paths, AsOf asOf) throws Exception {
+        return delegate.columns(kind, paths, asOf);
+    }
+
+    @Override
     public boolean pushes(EntityRef ref) {
         return serves(ref.kind()) && delegate.pushes(ref);
     }

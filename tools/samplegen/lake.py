@@ -16,12 +16,13 @@
 partitioned by business date, with a history of business days. Past dates vary the documents' market-sensitive
 numbers with a deterministic random walk, so moving the date in the console changes what you see.
 
-    uv run --with deltalake --with pyarrow python tools/samplegen/lake.py \\
+    uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/lake.py \\
         --samples packs/finance/samples --root data/delta --domain finance --days 10 [--as-of 2026-09-30]
 
 Layout (what the connector reads):  <root>/<domain>/<kind>/_delta_log/…
                                     <root>/<domain>/<kind>/business_date=YYYY-MM-DD/part-….parquet
-Rows: id STRING, doc STRING (the JSON document), business_date DATE (the partition).
+Rows: id STRING, doc STRING (the JSON document), business_date DATE (the partition), plus the columns of the kind's
+layout when a pack declares one for the domain (samplegen/layout.py: promoted paths, sorted by id, large files).
 The newest date is written twice: the original, then a restatement of one document, so time travel
 ("as known at") has something to show. Build-time tooling only: the console never reads the lake.
 """
@@ -38,6 +39,7 @@ from datetime import date, timedelta
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 from samplegen.dates import Calendar  # noqa: E402
+from samplegen.layout import Layout, layouts_for_domain, write_days, write_partition  # noqa: E402
 
 VARY = {"mtm", "netMtm", "dv01", "pv", "npv", "eePeak", "pfe95Peak", "pfePeak", "spot", "lastPrice", "price", "level", "mid",
         "utilisation", "used", "collateralPosted", "cva", "fixing", "rate", "zeroRate"}
@@ -108,28 +110,26 @@ def final_rows(kinds: dict[str, dict[str, dict]], end: date, days: int, cal: Cal
         yield kind, id_, d, fix[1] if fix and d == end and id_ == fix[0] else body
 
 
-def write_tables(out: pathlib.Path, kinds: dict[str, dict[str, dict]], end: date, days: int, cal: Calendar) -> int:
+def write_tables(out: pathlib.Path, kinds: dict[str, dict[str, dict]], end: date, days: int, cal: Calendar,
+                 layouts: dict[str, Layout] | None = None) -> int:
     """Writes one Delta table per kind under `out` (see history_rows), plus a restatement of the newest date's first
-    document, so time travel has something to show. Returns the number of rows written."""
-    import pyarrow as pa
-    from deltalake import write_deltalake
-
+    document, so time travel has something to show. A kind with a layout in `layouts` (layout.layouts_for_domain)
+    is written in it: promoted columns, sorted by id, files of file-rows. Returns the number of rows written."""
     total = 0
     for kind, docs in sorted(kinds.items()):
         if not docs:
             continue
-        rows = [r for r in history_rows({kind: docs}, end, days, cal)]
-        ids, days_col, bodies = [r[1] for r in rows], [r[2] for r in rows], [r[3] for r in rows]
+        lay = (layouts or {}).get(kind)
+        by_day: dict[date, list] = {}
+        for _, id_, d, body in history_rows({kind: docs}, end, days, cal):
+            by_day.setdefault(d, []).append((id_, body, json.loads(body) if lay else None))
         path = out / kind
-        write_deltalake(str(path), pa.table({"id": pa.array(ids, pa.string()), "doc": pa.array(bodies, pa.string()),
-                                             "business_date": pa.array(days_col, pa.date32())}), mode="overwrite", partition_by=["business_date"])
+        write_days(str(path), by_day, lay, "overwrite")
         first, fixed = restatement(docs, end)
-        keep = [(i, b) for i, b, d in zip(ids, bodies, days_col) if d == end and i != first] + [(first, fixed)]
-        write_deltalake(str(path), pa.table({"id": pa.array([k for k, _ in keep], pa.string()), "doc": pa.array([b for _, b in keep], pa.string()),
-                                             "business_date": pa.array([end] * len(keep), pa.date32())}),
-                        mode="overwrite", partition_by=["business_date"], predicate=f"business_date = '{end.isoformat()}'")
-        total += len(ids)
-        print(f"{path}: {len(docs)} entities x {days} business days")
+        keep = [r for r in by_day[end] if r[0] != first] + [(first, fixed, json.loads(fixed) if lay else None)]
+        write_partition(str(path), end, keep, lay, "overwrite-partition")
+        total += sum(len(r) for r in by_day.values())
+        print(f"{path}: {len(docs)} entities x {days} business days" + (f", {len(lay.columns)} promoted columns" if lay else ""))
     return total
 
 
@@ -148,7 +148,7 @@ def main():
         end -= timedelta(days=1)
     samples = pathlib.Path(a.samples)
     kinds = {d.name: {f.stem: json.loads(f.read_text()) for f in sorted(d.glob("*.json"))} for d in sorted(samples.iterdir()) if d.is_dir()}
-    total = write_tables(pathlib.Path(a.root) / a.domain, kinds, end, a.days, cal)
+    total = write_tables(pathlib.Path(a.root) / a.domain, kinds, end, a.days, cal, layouts_for_domain(a.domain))
     print(f"{total} rows ({a.calendar})")
 
 

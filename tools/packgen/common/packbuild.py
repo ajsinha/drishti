@@ -195,9 +195,10 @@ def main(spec: PackSpec, docs: dict, known_fields: dict, lake_kinds_by_domain=No
     if "--lake" in sys.argv:
         from samplegen.dates import Calendar
         from samplegen.lake import write_tables
+        from samplegen.layout import layouts_for_domain
 
         root = Path(sys.argv[sys.argv.index("--lake") + 1])
         from datetime import date
         end = date(2026, 9, 30)
         for d, ks in spec.domains.items():
-            write_tables(root / d, {k.kind: docs.get(k.kind, {}) for k in ks}, end, 10, Calendar.of("USNY"))
+            write_tables(root / d, {k.kind: docs.get(k.kind, {}) for k in ks}, end, 10, Calendar.of("USNY"), layouts_for_domain(d))

@@ -16,8 +16,9 @@
 
     python3 tools/packgen/banking/make_data.py                 write packs/<pack>/samples (the latest business date)
     python3 tools/packgen/banking/make_data.py --check         verify the data is consistent and the files are current
-    uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta [--days 10]
-                                                                also write data/delta/<domain>/<kind>/ with business-day history
+    uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta [--days 10]
+                                                                also write data/delta/<domain>/<kind>/ with business-day history,
+                                                                each kind in the layout its pack declares (the trade table's)
     uv run --with "psycopg[binary]" python tools/packgen/banking/make_data.py --postgres postgresql://drishti:drishti@localhost:5432/drishti
                                                                 also load each domain into PostgreSQL (<domain>.entities)
     python3 tools/packgen/banking/make_data.py --jsonl data/banking.jsonl   rows for tools/load-aerospike.sh
@@ -176,13 +177,14 @@ def main() -> None:
     if "--lake" in sys.argv:
         from samplegen.dates import Calendar
         from samplegen.lake import write_tables
+        from samplegen.layout import layouts_for_domain
 
         root = Path(sys.argv[sys.argv.index("--lake") + 1])
         days = int(sys.argv[sys.argv.index("--days") + 1]) if "--days" in sys.argv else 10
         rows = 0
         for domain in layout.DOMAINS:
             kinds = {k: docs.get(k, {}) for k in (x for p in layout.PACKS.values() for d, ks in p["kinds"].items() if d == domain for x in ks)}
-            rows += write_tables(root / domain, kinds, N.AS_OF, days, Calendar.of("USNY"))
+            rows += write_tables(root / domain, kinds, N.AS_OF, days, Calendar.of("USNY"), layouts_for_domain(domain))
         print(f"lake: {rows} rows under {root} ({', '.join(layout.DOMAINS)})")
 
 

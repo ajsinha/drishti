@@ -28,7 +28,7 @@
     {% if not groups %}<p class="text-muted-d">Nothing.</p>{% endif %}
     {% for g in groups %}
     <section class="pnl">
-      <header class="pnl-h"><h3>{{ g.kind | replace('-', ' ') | capitalize }} <span class="text-muted-d">· {{ g['items'] | length + g.hidden }}</span></h3>
+      <header class="pnl-h"><h3>{{ g.kind | replace('-', ' ') | capitalize }} <span class="text-muted-d">· {{ '{:,}'.format(g['items'] | length + g.hidden + (g.more or 0)) }}</span></h3>
         <span class="pnl-code">{% if g.total %}total {{ g.total }}{% endif %}{% if g.mnemonic %} · {{ g.mnemonic }}{% endif %}</span></header>
       <div class="pnl-b">
         {% if g['items'] %}<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Entity</th>{% if level == 2 %}<th>Via</th>{% endif %}<th class="num">Measure</th></tr></thead><tbody>
@@ -37,6 +37,7 @@
             {% if level == 2 %}<td class="mono">{{ it.via }}</td>{% endif %}
             <td class="num mono{% if it.measure and it.measure.startswith('−') %} t-neg{% elif it.measure and it.measure.startswith('+') %} t-pos{% endif %}">{{ it.measure or '' }}</td></tr>{% endfor %}
         </tbody></table></div>{% endif %}
+        {% if g.more %}<p class="text-muted-d">and {{ '{:,}'.format(g.more) }} more {{ g.kind | replace('-', ' ') }}s, counted in the total but not listed.</p>{% endif %}
         {% if g.hidden %}<p class="lk-denied"><i class="bi bi-lock" aria-hidden="true"></i> {{ g.hidden }} {{ g.kind | replace('-', ' ') }}{{ '' if g.hidden == 1 else 's' }} you do not have access to.</p>{% endif %}
       </div>
     </section>

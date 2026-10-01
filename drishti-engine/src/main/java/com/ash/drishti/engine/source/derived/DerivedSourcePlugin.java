@@ -171,6 +171,17 @@ public final class DerivedSourcePlugin implements SourcePlugin {
         LocalDate dataDate = null;
         Map<String, Map<EntityRef, EntityDocument>> read = new HashMap<>();   // one read per source kind, shared by the derived kinds on it
         for (DerivedKind k : kinds) {
+            Optional<java.util.Set<String>> paths = k.paths();
+            Optional<com.ash.drishti.api.ColumnSet> cols = paths.isEmpty() ? Optional.empty() : reader.columns(k.from(), paths.get(), asOf);
+            if (cols.isPresent()) {                       // every member, from columns: no document is read
+                com.ash.drishti.api.ColumnSet c = cols.get();
+                byKind.put(k.kind(), k.buildAll(c, k.groupBySource()));
+                scanned.put(k.kind(), c.size());
+                if (c.businessDate() != null && (dataDate == null || c.businessDate().isAfter(dataDate))) {
+                    dataDate = c.businessDate();
+                }
+                continue;
+            }
             Map<EntityRef, EntityDocument> members = read.computeIfAbsent(k.from(), from -> reader.read(reader.list(from, asOf, maxScan), asOf));
             Map<String, Map<String, DataNode>> groups = new HashMap<>();
             for (EntityDocument d : members.values()) {

@@ -161,4 +161,70 @@ class DerivedSourcePluginTest {
                 .hasMessageContaining("needs an expression");
         assertThatThrownBy(() -> started(Map.of("x.from", "trade", "x.group-by", "$.a +"), r)).hasMessageContaining("is not an expression");
     }
+
+    /** 2,500 trades served as columns only: reading a document would fail the test. */
+    static final class Columns implements EntityReader {
+        int documentReads;
+
+        @Override
+        public List<EntityRef> list(String kind, AsOf asOf, int limit) {
+            documentReads++;
+            return List.of();
+        }
+
+        @Override
+        public Map<EntityRef, EntityDocument> read(Collection<EntityRef> refs, AsOf asOf) {
+            documentReads++;
+            return Map.of();
+        }
+
+        @Override
+        public java.util.Optional<com.ash.drishti.api.ColumnSet> columns(String kind, Collection<String> paths, AsOf asOf) {
+            int n = 2500;
+            String[] ids = new String[n];
+            String[] books = new String[n];
+            double[] mtm = new double[n];
+            String[] ccy = new String[n];
+            for (int i = 0; i < n; i++) {
+                ids[i] = String.format("MX-%08d", 30_000_000 + i);
+                books[i] = i % 2 == 0 ? "RATES-1" : "FX-1";
+                mtm[i] = i % 10 == 0 ? Double.NaN : 1;                // every tenth trade has no MTM
+                ccy[i] = i % 3 == 0 ? "EUR" : "USD";
+            }
+            Map<String, double[]> nums = new LinkedHashMap<>();
+            Map<String, String[]> texts = new LinkedHashMap<>();
+            for (String p : paths) {
+                switch (p) {
+                    case "book" -> texts.put(p, books);
+                    case "mtm" -> nums.put(p, mtm);
+                    case "currency" -> texts.put(p, ccy);
+                    case "status" -> texts.put(p, new String[n]);
+                    default -> { }
+                }
+            }
+            return java.util.Optional.of(new com.ash.drishti.api.ColumnSet(ids, nums, texts, LocalDate.of(2026, 9, 30)));
+        }
+    }
+
+    @Test
+    void aBookOfAnySizeIsAggregatedFromColumnsAndListsAtMostItsLimit() throws Exception {
+        Map<String, String> s = new LinkedHashMap<>();
+        s.put("book-pnl.from", "trade");
+        s.put("book-pnl.group-by", "$.book");
+        s.put("book-pnl.max-members", "100");
+        s.put("book-pnl.fields.n", "count");
+        s.put("book-pnl.fields.mtm", "sum $.mtm");
+        s.put("book-pnl.fields.currencies", "distinct $.currency");
+        s.put("book-pnl.rows.mtm", "$.mtm");
+        Columns cols = new Columns();
+        DerivedSourcePlugin p = started(s, cols);
+        DataNode book = p.fetch(EntityRef.of("book-pnl", "RATES-1"), AsOf.of(LocalDate.of(2026, 9, 30))).orElseThrow().data();
+        assertThat(book.get("n").asDouble()).isEqualTo(1250);
+        assertThat(book.get("memberCount").asDouble()).isEqualTo(1250);
+        assertThat(book.get("mtm").asDouble()).isEqualTo(1000);                // 1250 trades, 250 without an MTM
+        assertThat(book.get("currencies").unwrap()).isEqualTo(List.of("EUR", "USD"));
+        assertThat(book.get("members").size()).isEqualTo(100);
+        assertThat(book.get("rows").size()).isEqualTo(100);
+        assertThat(cols.documentReads).isZero();
+    }
 }

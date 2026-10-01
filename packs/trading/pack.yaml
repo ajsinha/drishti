@@ -59,6 +59,31 @@ connectors:
     settings:
       root: ${DRISHTI_DELTA_ROOT:./data/delta}
       domain: trading
+      layout:
+        trade:
+          columns:
+          - tradeId
+          - productType
+          - productName
+          - direction
+          - currency
+          - notional
+          - mtm
+          - pnl1d
+          - maturityDate
+          - tradeDate
+          - book
+          - desk
+          - status
+          - assetClass
+          - counterparty.id
+          - counterparty.name
+          - nettingSet
+          - risk.dv01
+          - sourceSystem
+          sort-by: id
+          file-rows: 250000
+          row-group-rows: 1000
   trading-stream:
     plugin: kafka
     enabled: ${DRISHTI_STREAM_TRADING:false}
@@ -86,6 +111,7 @@ connectors:
         group-by: $.desk
         id-field: desk
         members: tradeIds
+        max-members: 250
         fields:
           tradeCount: count
           mtm: sum $.mtm

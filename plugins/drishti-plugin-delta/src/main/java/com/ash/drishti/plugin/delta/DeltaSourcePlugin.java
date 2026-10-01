@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -59,7 +60,14 @@ import java.util.concurrent.TimeUnit;
  * {@code kinds} (comma list; default: every table found), {@code mode.<kind>} ({@code snapshot}|{@code effective}),
  * {@code lookback-days} (10), {@code id-column} ({@code id}), {@code doc-column} ({@code doc}), {@code date-column}
  * ({@code business_date}), {@code refresh-seconds} (10: how often a table's latest version is checked),
- * {@code cache-mb} (512: partitions kept in memory, by size), {@code source-name} ({@code delta}).
+ * {@code cache-mb} (512: whole partitions of small tables kept in memory, by size), {@code source-name} ({@code delta}).
+ *
+ * <p>Large tables (millions of entities a day) are read without loading a day: a date's ids come from the id column
+ * alone (an id map, {@code id-map-mb}, 1024), one entity from the one file and row group that hold it
+ * ({@code doc-cache-mb}, 256, keeps recent documents), and searches and aggregates from the columns a pack's
+ * {@code layout.<kind>.columns} promotes beside the document ({@code columns-cache-mb}, 1024). Reverse lookups use the
+ * promoted columns; without them a day is loaded only when it has at most {@code max-load-rows} (200000) rows. At most
+ * {@code max-concurrent-reads} (16) single-entity reads run at once (each decodes one row group of documents).
  */
 public final class DeltaSourcePlugin implements SourcePlugin {
 
@@ -85,6 +93,14 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     private AsyncCache<String, DeltaTable.Layout> latest;
     private AsyncCache<String, DeltaTable.Layout> travelled;
     private AsyncCache<PartKey, Part> parts;
+    private AsyncCache<PartKey, DeltaTable.IdMap> idMaps;
+    private AsyncCache<PartKey, com.ash.drishti.api.ColumnSet> columnSets;
+    private com.github.benmanes.caffeine.cache.Cache<String, String> docs;
+    /** Kind to the document paths its pack promotes to columns ({@code layout.<kind>.columns}). */
+    private final Map<String, List<String>> promoted = new java.util.concurrent.ConcurrentHashMap<>();
+    private int maxLoadRows;
+    /** Single-entity reads decode a row group each: bounded, so a burst of them cannot exhaust memory. */
+    private java.util.concurrent.Semaphore docReads;
     private SourceContext context;
     private String sourceName;
     private int lookbackDays;
@@ -118,6 +134,19 @@ public final class DeltaSourcePlugin implements SourcePlugin {
                 .weigher((PartKey k, Part v) -> (int) Math.min(Integer.MAX_VALUE,
                         64L + v.docs().values().stream().mapToLong(d -> 2L * d.length() + 64).sum() + 48L * v.refs().size()))
                 .buildAsync();
+        this.idMaps = Caffeine.newBuilder().executor(loaders).maximumWeight(Long.parseLong(ctx.setting("id-map-mb", "1024")) * 1024 * 1024)
+                .weigher((PartKey k, DeltaTable.IdMap v) -> (int) Math.min(Integer.MAX_VALUE, v.bytes())).buildAsync();
+        this.columnSets = Caffeine.newBuilder().executor(loaders).maximumWeight(Long.parseLong(ctx.setting("columns-cache-mb", "1024")) * 1024 * 1024)
+                .weigher((PartKey k, com.ash.drishti.api.ColumnSet v) -> (int) Math.min(Integer.MAX_VALUE, weight(v))).buildAsync();
+        this.docs = Caffeine.newBuilder().maximumWeight(Long.parseLong(ctx.setting("doc-cache-mb", "256")) * 1024 * 1024)
+                .weigher((String k, String v) -> 2 * (k.length() + v.length()) + 64).build();
+        this.maxLoadRows = Integer.parseInt(ctx.setting("max-load-rows", "200000"));
+        this.docReads = new java.util.concurrent.Semaphore(Integer.parseInt(ctx.setting("max-concurrent-reads", "16")));
+        ctx.settings().forEach((k, v) -> {
+            if (k.startsWith("layout.") && k.endsWith(".columns")) {
+                promoted.put(k.substring(7, k.length() - 8), java.util.Arrays.stream(v.split(",")).map(String::trim).filter(x -> !x.isEmpty()).toList());
+            }
+        });
         reindex();
         ctx.scheduler().scheduleWithFixedDelay(this::reindex, refresh * 6, refresh * 6, TimeUnit.SECONDS);
     }
@@ -159,6 +188,31 @@ public final class DeltaSourcePlugin implements SourcePlugin {
             return Optional.ofNullable(join(latest.get(kind, k -> t.layout(null).orElse(null))));
         }
         return Optional.ofNullable(join(travelled.get(kind + "@" + knownAt.toEpochMilli(), k -> t.layout(knownAt).orElse(null))));
+    }
+
+    private static long weight(com.ash.drishti.api.ColumnSet c) {
+        long w = 64L + 48L * c.size();
+        for (String id : c.ids()) {
+            w += 2L * id.length();
+        }
+        w += 8L * c.size() * c.numbers().size() + 8L * c.size() * c.texts().size();
+        return w;
+    }
+
+    private DeltaTable.IdMap idMap(String kind, DeltaTable.Layout l, LocalDate date) {
+        return join(idMaps.get(new PartKey(kind, l.version(), date), k -> tables.get(kind).ids(l, date)));
+    }
+
+    /** The promoted paths the table really has as columns (a pack may declare more than a writer wrote). */
+    private Map<String, String> promotedColumns(String kind, DeltaTable.Layout l) {
+        Map<String, String> out = new LinkedHashMap<>();
+        for (String path : promoted.getOrDefault(kind, List.of())) {
+            String column = path.replace(".", "__");
+            if (l.schema().indexOf(column) >= 0) {
+                out.put(path, column);
+            }
+        }
+        return out;
     }
 
     private Part part(String kind, DeltaTable.Layout l, LocalDate date) {
@@ -214,7 +268,24 @@ public final class DeltaSourcePlugin implements SourcePlugin {
             return Optional.empty();
         }
         for (LocalDate d : candidates(ref.kind(), l.get(), asOf.businessDate())) {
-            String json = part(ref.kind(), l.get(), d).docs().get(ref.id());
+            // the id map says which file holds the entity; only that file's matching row group is read
+            int file = idMap(ref.kind(), l.get(), d).file(ref.id());
+            if (file < 0) {
+                continue;
+            }
+            String key = ref.kind() + "\u001f" + l.get().version() + "\u001f" + d + "\u001f" + ref.id();
+            String json = docs.getIfPresent(key);
+            if (json == null) {
+                docReads.acquireUninterruptibly();
+                try {
+                    json = tables.get(ref.kind()).doc(l.get(), d, file, ref.id()).orElse(null);
+                } finally {
+                    docReads.release();
+                }
+                if (json != null) {
+                    docs.put(key, json);
+                }
+            }
             if (json != null) {
                 DataNode doc = context.parseJson(new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8)));
                 return Optional.of(new EntityDocument(ref, doc, new Provenance(sourceName, l.get().version(), Instant.now(), false,
@@ -235,9 +306,24 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         for (String k : kind == null ? tables.keySet() : List.of(kind)) {
             layout(k, asOf.knownAt()).ifPresent(l -> {
                 Set<String> seen = new HashSet<>();
+                Map<String, String> cols = promotedColumns(k, l);
                 for (LocalDate d : candidates(k, l, asOf.businessDate())) {
-                    part(k, l, d).refs().getOrDefault(target.id(), Set.of()).stream().filter(seen::add).sorted()
-                            .forEach(id -> out.add(EntityRef.of(k, id)));
+                    if (!cols.isEmpty() && !l.deletionVectors()) {
+                        // promoted link columns (book, nettingSet, counterparty.id …): no document is read
+                        com.ash.drishti.api.ColumnSet c = columnSet(k, l, d, cols);
+                        List<String> found = new ArrayList<>();
+                        c.texts().values().forEach(values -> {
+                            for (int i = 0; i < values.length; i++) {
+                                if (target.id().equals(values[i])) {
+                                    found.add(c.ids()[i]);
+                                }
+                            }
+                        });
+                        found.stream().filter(seen::add).sorted().forEach(id -> out.add(EntityRef.of(k, id)));
+                    } else if (idMap(k, l, d).ids().length <= maxLoadRows) {
+                        part(k, l, d).refs().getOrDefault(target.id(), Set.of()).stream().filter(seen::add).sorted()
+                                .forEach(id -> out.add(EntityRef.of(k, id)));
+                    }
                 }
             });
         }
@@ -273,9 +359,21 @@ public final class DeltaSourcePlugin implements SourcePlugin {
                             lastUpdate = committed;
                         }
                     }
-                    if (!l.files().isEmpty()) {
-                        part(kind, l, l.files().lastKey()).docs().keySet()
-                                .forEach(id -> hits.add(new EntityHit(EntityRef.of(kind, id), id, kind + " · " + sourceName)));
+                    if (!l.files().isEmpty()) {                 // ids from the id column alone: no document is read
+                        String subtitle = kind + " · " + sourceName;
+                        for (String id : idMap(kind, l, l.files().lastKey()).ids()) {
+                            hits.add(new EntityHit(EntityRef.of(kind, id), id, subtitle));
+                        }
+                        Map<String, String> cols = promotedColumns(kind, l);
+                        if (!cols.isEmpty() && !l.deletionVectors()) {   // the newest day's columns, ready before the first search
+                            loaders.execute(() -> {
+                                try {
+                                    columnSet(kind, l, l.files().lastKey(), cols);
+                                } catch (RuntimeException e) {
+                                    // the first search loads them instead
+                                }
+                            });
+                        }
                     }
                 });
             } catch (RuntimeException e) {
@@ -286,9 +384,59 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     }
 
     @Override
+    public Set<String> columnar(String kind) {
+        if (!promoted.containsKey(kind) || "effective".equals(modes.get(kind))) {
+            return Set.of();                                   // effective tables need each entity's latest row: documents
+        }
+        try {
+            return layout(kind, null).filter(l -> !l.deletionVectors()).map(l -> promotedColumns(kind, l).keySet()).orElse(Set.of());
+        } catch (RuntimeException e) {
+            return Set.of();
+        }
+    }
+
+    @Override
+    public Optional<com.ash.drishti.api.ColumnSet> columns(String kind, java.util.Collection<String> paths, AsOf asOf) {
+        Optional<DeltaTable.Layout> l = layout(kind, asOf.knownAt());
+        if (l.isEmpty() || l.get().deletionVectors()) {
+            return Optional.empty();
+        }
+        Map<String, String> cols = promotedColumns(kind, l.get());
+        if (!cols.keySet().containsAll(paths)) {
+            return Optional.empty();
+        }
+        List<LocalDate> dates = candidates(kind, l.get(), asOf.businessDate());
+        if (dates.isEmpty()) {
+            return Optional.of(new com.ash.drishti.api.ColumnSet(new String[0], Map.of(), Map.of(), null));
+        }
+        com.ash.drishti.api.ColumnSet all = columnSet(kind, l.get(), dates.get(0), cols);
+        Map<String, double[]> nums = new LinkedHashMap<>();
+        Map<String, String[]> texts = new LinkedHashMap<>();
+        for (String p : paths) {
+            if (all.numbers().containsKey(p)) {
+                nums.put(p, all.numbers().get(p));
+            } else {
+                texts.put(p, all.texts().get(p));
+            }
+        }
+        return Optional.of(new com.ash.drishti.api.ColumnSet(all.ids(), nums, texts, all.businessDate()));
+    }
+
+    /** Every promoted column of one date, read once and kept (by memory), shared by searches and aggregates. */
+    private com.ash.drishti.api.ColumnSet columnSet(String kind, DeltaTable.Layout l, LocalDate date, Map<String, String> cols) {
+        return join(columnSets.get(new PartKey(kind, l.version(), date), k -> {
+            Map<String, Boolean> numeric = new LinkedHashMap<>();
+            cols.forEach((path, column) -> numeric.put(path,
+                    l.schema().get(column).getDataType() instanceof io.delta.kernel.types.DoubleType));
+            return tables.get(kind).columns(l, date, cols, numeric);
+        }));
+    }
+
+    @Override
     public Map<String, Object> cacheStats() {
         return Map.of("partitions", parts.synchronous().estimatedSize(), "tables", latest.synchronous().estimatedSize(),
-                "timeTravel", travelled.synchronous().estimatedSize());
+                "timeTravel", travelled.synchronous().estimatedSize(), "idMaps", idMaps.synchronous().estimatedSize(),
+                "columnSets", columnSets.synchronous().estimatedSize(), "documents", docs.estimatedSize());
     }
 
     @Override
@@ -296,6 +444,9 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         parts.synchronous().invalidateAll();
         latest.synchronous().invalidateAll();
         travelled.synchronous().invalidateAll();
+        idMaps.synchronous().invalidateAll();
+        columnSets.synchronous().invalidateAll();
+        docs.invalidateAll();
     }
 
     @Override
@@ -308,6 +459,23 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         if (!lake.reachable()) {
             return "DOWN: cannot reach " + lake.describe();
         }
-        return tables.isEmpty() ? "DOWN: no Delta tables under " + lake.describe() : "UP";
+        if (tables.isEmpty()) {
+            return "DOWN: no Delta tables under " + lake.describe();
+        }
+        // a pack declared a layout the table does not have: it works, but searches over it read documents
+        List<String> notLaidOut = new ArrayList<>();
+        promoted.forEach((kind, paths) -> {
+            try {
+                layout(kind, null).ifPresent(l -> {
+                    int have = promotedColumns(kind, l).size();
+                    if (have < paths.size()) {
+                        notLaidOut.add(kind + " (" + have + " of " + paths.size() + " columns)");
+                    }
+                });
+            } catch (RuntimeException e) {
+                // reported by reads
+            }
+        });
+        return notLaidOut.isEmpty() ? "UP" : "UP (not laid out as the pack declares: " + String.join(", ", notLaidOut) + "; searches read documents)";
     }
 }

@@ -64,6 +64,22 @@ public interface SourcePlugin extends AutoCloseable {
         return null;
     }
 
+    /**
+     * The document paths this source keeps as columns for the kind (a Delta table's promoted columns), so searches and
+     * aggregates can read them without documents; empty when it keeps none.
+     */
+    default java.util.Set<String> columnar(String kind) {
+        return java.util.Set.of();
+    }
+
+    /**
+     * Every entity of the kind on the business date with these paths, column by column; empty when the source cannot
+     * answer them as columns (then documents are read). Only called with paths {@link #columnar} lists.
+     */
+    default Optional<ColumnSet> columns(String kind, java.util.Collection<String> paths, AsOf asOf) throws Exception {
+        return Optional.empty();
+    }
+
     /** Entities of {@code kind} that reference {@code target} (for example trades in a netting set). */
     default List<EntityRef> reverse(EntityRef target, String kind) {
         return List.of();

@@ -16,6 +16,7 @@
 package com.ash.drishti.engine.search;
 
 import com.ash.drishti.api.AsOf;
+import com.ash.drishti.api.ColumnSet;
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityHit;
@@ -36,6 +37,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.UnaryOperator;
 
 /**
@@ -99,6 +101,10 @@ public final class StructuredSearch {
         String kind = kindOf(q);
         Expr condition = compile(q.condition(), "condition");
         Expr order = compile(q.orderBy(), "order by");
+        Optional<Result> fast = columnar(q, kind, condition, order, asOf, redact, t0);
+        if (fast.isPresent()) {
+            return fast.get();
+        }
         // a pick list names what it wants (TRD T-100): the sources' own indexes narrow by it, so a large book is not
         // cut at maxScan before the match is found; a wildcard (T-1*0) is filtered here
         String narrow = q.idPattern() != null && !q.idPattern().contains("*") ? q.idPattern() : "";
@@ -148,6 +154,140 @@ public final class StructuredSearch {
     }
 
     /**
+     * The search over columns, when the source that serves the kind keeps every field the query and its result
+     * columns read as columns (a Delta table laid out by its pack): every entity of the date is considered, exactly,
+     * without reading a document. Empty when it cannot be answered so (the documents are read instead).
+     */
+    private Optional<Result> columnar(SearchQuery q, String kind, Expr condition, Expr order, AsOf asOf, UnaryOperator<DataNode> redact, long t0) {
+        List<String> shown = new ArrayList<>(new java.util.LinkedHashSet<>(columnsFor(q, kind, List.of(), redact)));
+        java.util.LinkedHashSet<String> needed = new java.util.LinkedHashSet<>(shown);
+        if (condition != null) {
+            condition.paths(needed::add);
+        }
+        if (order != null) {
+            order.paths(needed::add);
+        }
+        if (shown.isEmpty() || needed.stream().anyMatch(p -> !p.startsWith("$.") || p.length() < 3)) {
+            return Optional.empty();
+        }
+        List<String> plain = needed.stream().map(p -> p.substring(2)).toList();
+        if (!router.columnar(kind).containsAll(plain)) {
+            return Optional.empty();
+        }
+        // a business day's columns load once and are kept: the first search of a day may wait for them
+        Optional<ColumnSet> got = router.columns(kind, plain, asOf, props.budget().compareTo(COLUMNS_BUDGET) > 0 ? props.budget() : COLUMNS_BUDGET);
+        if (got.isEmpty()) {
+            return Optional.empty();
+        }
+        ColumnSet c = got.get();
+        Map<String, Object> masked = masks(plain, redact);           // what the caller's role may not see, per path
+        List<String> conditionPaths = new ArrayList<>();
+        if (condition != null) {
+            condition.paths(p -> conditionPaths.add(p.substring(2)));
+        }
+        List<String> orderPaths = new ArrayList<>();
+        if (order != null) {
+            order.paths(p -> orderPaths.add(p.substring(2)));
+        }
+        List<Match> matches = new ArrayList<>();
+        for (int i = 0; i < c.size(); i++) {
+            if (q.idPattern() != null && !SearchQuery.matches(q.idPattern(), c.ids()[i], null)) {
+                continue;
+            }
+            if (condition != null) {
+                EvalContext ctx = EvalContext.of(row(c, i, conditionPaths, masked), formats);
+                boolean keep;
+                try {
+                    keep = Values.truthy(condition.eval(ctx));
+                } catch (RuntimeException ex) {
+                    keep = false;
+                }
+                if (!keep) {
+                    continue;
+                }
+            }
+            Object key = null;
+            if (order != null) {
+                key = leaf(safe(order, EvalContext.of(row(c, i, orderPaths, masked), formats)));
+            }
+            matches.add(new Match(new Row(EntityRef.of(kind, c.ids()[i]), c.ids()[i], Map.of("__row", i)), key));
+        }
+        if (order != null) {
+            int sign = q.descending() ? -1 : 1;
+            matches.sort((a, b) -> a.key() == null || b.key() == null
+                    ? (a.key() == null ? 1 : 0) - (b.key() == null ? 1 : 0)
+                    : sign * compare(a.key(), b.key()));
+        } else {
+            matches.sort(Comparator.comparing(m -> m.row().ref().id()));
+        }
+        List<Row> rows = new ArrayList<>();
+        for (Match m : matches.subList(0, Math.min(q.limit(), matches.size()))) {
+            int i = (Integer) m.row().values().get("__row");
+            Map<String, Object> values = new LinkedHashMap<>();
+            for (String path : shown) {
+                String plainPath = path.substring(2);
+                values.put(path, masked.containsKey(plainPath) ? masked.get(plainPath) : number(c.value(plainPath, i)));
+            }
+            rows.add(new Row(m.row().ref(), m.row().title(), values));
+        }
+        return Optional.of(new Result(kind, q.condition(), q.orderBy(), shown, rows, c.size(), matches.size(), false,
+                Math.round((System.nanoTime() - t0) / 1e4) / 100.0));
+    }
+
+    /** A whole number read from a float64 column shows as one (1875863, not 1875863.0). */
+    private static Object number(Object v) {
+        return v instanceof Double d && d == Math.rint(d) && Math.abs(d) < 1e15 ? (Object) d.longValue() : v;
+    }
+
+    /** One row as a small document holding only the given paths, for the expression to read. */
+    private static DataNode row(ColumnSet c, int i, List<String> paths, Map<String, Object> masked) {
+        Map<String, Object> root = new LinkedHashMap<>();
+        for (String path : paths) {
+            Object v = masked.containsKey(path) ? masked.get(path) : number(c.value(path, i));
+            String[] parts = path.split("\\.");
+            Map<String, Object> at = root;
+            for (int p = 0; p < parts.length - 1; p++) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> next = (Map<String, Object>) at.computeIfAbsent(parts[p], k -> new LinkedHashMap<String, Object>());
+                at = next;
+            }
+            at.put(parts[parts.length - 1], v);
+        }
+        return DataNode.of(root);
+    }
+
+    /**
+     * The paths the caller's role would see masked, with what it would see instead: a probe document holding every
+     * path is put through the same redaction as documents are.
+     */
+    private static Map<String, Object> masks(List<String> paths, UnaryOperator<DataNode> redact) {
+        Map<String, Object> root = new LinkedHashMap<>();
+        for (String path : paths) {
+            String[] parts = path.split("\\.");
+            Map<String, Object> at = root;
+            for (int p = 0; p < parts.length - 1; p++) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> next = (Map<String, Object>) at.computeIfAbsent(parts[p], k -> new LinkedHashMap<String, Object>());
+                at = next;
+            }
+            at.put(parts[parts.length - 1], "\u0000probe");
+        }
+        DataNode seen = redact.apply(DataNode.of(root));
+        Map<String, Object> out = new LinkedHashMap<>();
+        for (String path : paths) {
+            DataNode n = seen;
+            for (String part : path.split("\\.")) {
+                n = n.get(part);
+            }
+            Object v = n.isNull() ? null : n.unwrap();
+            if (!"\u0000probe".equals(v)) {
+                out.put(path, v);
+            }
+        }
+        return out;
+    }
+
+    /**
      * The columns: the fields the query reads, then the kind's key fields from its pack. A kind whose pack names none
      * shows the first few plain fields of its documents, so a pick list always says more than the id.
      */
@@ -168,6 +308,7 @@ public final class StructuredSearch {
     }
 
     private static final int AUTO_COLUMNS = 6;
+    private static final java.time.Duration COLUMNS_BUDGET = java.time.Duration.ofSeconds(20);
 
     private Expr compile(String source, String what) {
         if (source == null) {

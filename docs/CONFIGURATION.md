@@ -558,7 +558,13 @@ Layout: `<root>/<domain>/<kind>/business_date=yyyy-MM-dd/` holding `(id, doc)` r
 | `lookback-days` | `10` | How far back a snapshot read looks for the latest partition. |
 | `id-column` / `doc-column` / `date-column` | `id` / `doc` / `business_date` | Column names. |
 | `refresh-seconds` | `10` | How often each table's latest version is checked. |
-| `cache-mb` | `512` | Partitions kept in memory, by size. |
+| `cache-mb` | `512` | Whole days kept in memory, by size, for small tables that are not laid out. |
+| `layout.<kind>.columns` | none | Document paths stored as columns beside the document (see [PACKS.md](PACKS.md#large-kinds-the-lake-layout)); searches, pick lists, derived kinds and impact read them instead of documents. `layout.<kind>.sort-by`, `file-rows`, `row-group-rows` tell the writers how to lay the table out. |
+| `id-map-mb` | `1024` | Each day's ids and the file each is in, read from the id column alone, kept by size. |
+| `doc-cache-mb` | `256` | Single documents read recently. |
+| `columns-cache-mb` | `1024` | A day's promoted columns, read once and kept by size (the newest day is loaded in the background). |
+| `max-concurrent-reads` | `16` | Single-document reads at once (each decodes one row group). |
+| `max-load-rows` | `200000` | A table without columns has a whole day loaded for reverse lookups only up to this many rows. |
 | `s3.endpoint`, `s3.access-key`, `s3.secret-key`, `s3.region`, `s3.path-style` | empty, empty, empty, empty, `true` | Shorthands for an `s3a://` root. Without keys the AWS chain is used (environment, profile, instance role). |
 | `hadoop.<key>` | none | Passed to Hadoop as `<key>` (any `fs.s3a.*` option). |
 

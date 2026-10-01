@@ -14,13 +14,19 @@
 
 """A large trading book for scale tests: N trades over D business days, as a Delta Lake the server reads.
 
-    uv run --with deltalake --with pyarrow python tools/samplegen/bulk_trades.py              # 500,000 trades, 3 days
-    uv run --with deltalake --with pyarrow python tools/samplegen/bulk_trades.py --trades 1000000 --days 5
+    uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py      # 500,000 trades, 3 days
+    uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py --trades 1000000 --days 5
 
 It replaces the trade table of the lake the server reads (data/delta/trading/trade) and leaves every other table
 as it is; a running server picks the new trades up within a minute (its search index is rebuilt every minute).
 To go back to the 750 sample trades over 10 days: python3 tools/packgen/banking/make_data.py --lake data/delta
-(with uv run --with deltalake --with pyarrow), which rewrites the whole lake as it was.
+(with uv run --with deltalake --with pyarrow --with pyyaml), which rewrites the whole lake as it was.
+
+The table follows the layout the trading pack declares for trades (packs/trading/pack.yaml, settings.layout.trade;
+see samplegen/layout.py): the promoted columns beside id and doc, each business date sorted by id and cut into
+files of file-rows trades (--file-rows overrides it), row groups of row-group-rows. All trade ids are listed and
+sorted first; the workers build each file's documents in slices, and the main process writes one file at a time
+(one append each), so memory holds about two files' rows whatever the size of the book.
 
 The trades are the trading pack's 750 sample trades (packs/trading/samples/trade, written by make_data.py), kept
 as they are, and clones of them booked in six trading systems, in turn, each numbering its trades its own way:
@@ -43,8 +49,9 @@ same lake.
 The rest of the lake (market data, reference data, risk …) must already be there (make_data.py --lake). Netting
 sets still carry the net MTM of the 750 templates only: a scale test, not a consistent book.
 
-Rough size: about 1.1 KB per trade per day on disk (500,000 trades x 3 days is about 1.6 GB) and one to two
-minutes per million trade-days on 24 cores.
+Rough size: about 1.7 KB per trade per day on disk (1,000,000 trades x 3 days is about 5.1 GB: four files of
+250,000 trades a day, 25 row groups each) and about 30 seconds per million trade-days on 24 cores; the main
+process peaks at about 9.5 GB with 250,000-trade files, whatever the number of trades.
 """
 from __future__ import annotations
 
@@ -58,6 +65,8 @@ import re
 import shutil
 import sys
 import time
+from collections import deque
+from dataclasses import replace
 from datetime import date
 from pathlib import Path
 
@@ -66,6 +75,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 from samplegen.dates import Calendar  # noqa: E402
 from samplegen.lake import business_days, walk  # noqa: E402
+from samplegen.layout import Layout, arrow_table, infer_types, layouts_for_domain, promote, write_file  # noqa: E402
 
 TEMPLATES = ROOT / "packs" / "trading" / "samples" / "trade"
 AS_OF = date(2026, 9, 30)                      # the banking lake's newest business date (data_names.AS_OF)
@@ -75,6 +85,8 @@ SCALE = {"notional", "mtm", "pnl1d", "pnl", "dv01", "pv01", "cs01", "vega", "del
          "accrued", "marketValue", "exposure", "premium", "principal", "quantity", "collateral", "margin"}
 
 _templates: list[tuple[str, str]] = []         # (template id, document JSON with its id replaced by PLACEHOLDER)
+_layout: Layout = Layout()                     # the trade table's layout (trading pack.yaml), in each worker
+_types: dict[str, str] = {}                    # its columns' types, fixed for the whole run
 
 
 def load_templates() -> list[tuple[str, str]]:
@@ -120,8 +132,8 @@ def scaled(doc, factor: float):
     return doc
 
 
-def build(i: int, day: date, steps: int) -> tuple[str, str]:
-    """Trade number i on one business day: (id, document JSON)."""
+def document(i: int, day: date, steps: int) -> tuple[str, dict]:
+    """Trade number i on one business day: (id, document)."""
     tid, text = _templates[i % len(_templates)]
     new_id, system, native = trade_id(i, _templates)
     doc = json.loads(text.replace(PLACEHOLDER, new_id))
@@ -134,18 +146,38 @@ def build(i: int, day: date, steps: int) -> tuple[str, str]:
         rnd = random.Random(int(hashlib.sha256(f"trade/{new_id}".encode()).hexdigest()[:12], 16))
         doc = walk(doc, new_id, steps, rnd)
     doc["businessDate"] = day.isoformat()
+    return new_id, doc
+
+
+def build(i: int, day: date, steps: int) -> tuple[str, str]:
+    """Trade number i on one business day: (id, document JSON)."""
+    new_id, doc = document(i, day, steps)
     return new_id, json.dumps(doc, ensure_ascii=False)
 
 
-def _init(templates):
-    global _templates
-    _templates = templates
+def _init(templates, lay, types):
+    global _templates, _layout, _types
+    _templates, _layout, _types = templates, lay, types
 
 
-def _chunk(job):
-    start, end, day, steps = job
-    rows = [build(i, day, steps) for i in range(start, end)]
-    return day, [r[0] for r in rows], [r[1] for r in rows]
+def _piece(job):
+    """Rows of one file's slice, in the order given (sorted by id), as Arrow: id, doc, business_date, promoted columns."""
+    indices, day, steps = job
+    ids, texts, cols = [], [], {n: [] for n in _layout.names}
+    for i in indices:
+        new_id, doc = document(i, day, steps)
+        ids.append(new_id)
+        texts.append(json.dumps(doc, ensure_ascii=False))
+        for n, v in promote(doc, _layout).items():
+            cols[n].append(v)
+    return arrow_table(day, ids, texts, cols, _types)
+
+
+def plan(trades: int, templates: list, file_rows: int) -> list[list[int]]:
+    """Trade numbers in id order, cut into files of file_rows: each file holds its own contiguous id range."""
+    ids = [trade_id(i, templates)[0] for i in range(trades)]
+    order = sorted(range(trades), key=ids.__getitem__)
+    return [order[s:s + file_rows] for s in range(0, trades, file_rows)]
 
 
 def main(argv: list[str]) -> int:
@@ -155,15 +187,20 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--root", default="data/delta", help="the lake whose trade table is replaced (default data/delta)")
     ap.add_argument("--as-of", default=AS_OF.isoformat(), help=f"the newest business date (default {AS_OF})")
     ap.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1))
-    ap.add_argument("--batch", type=int, default=20_000, help="trades per Parquet file (default 20000)")
+    ap.add_argument("--file-rows", type=int, default=None, help="trades per Parquet file (default: the trading pack's layout, file-rows)")
     a = ap.parse_args(argv)
     if a.trades < 1 or a.days < 1:
         raise SystemExit("--trades and --days must be at least 1")
 
     import pyarrow as pa
-    from deltalake import write_deltalake
 
+    lay = layouts_for_domain("trading").get("trade") or Layout()
+    if a.file_rows:
+        lay = replace(lay, file_rows=a.file_rows)
     templates = load_templates()
+    _init(templates, lay, {})
+    sample = [document(i, AS_OF, 0)[1] for i in range(min(a.trades, len(templates) + len(SYSTEMS)))]
+    types = infer_types({n: [promote(d, lay)[n] for d in sample] for n in lay.names})
     root = Path(a.root)
     days = business_days(date.fromisoformat(a.as_of), a.days, Calendar.of("USNY"))
     t0 = time.time()
@@ -174,18 +211,32 @@ def main(argv: list[str]) -> int:
     if table.exists():
         shutil.rmtree(table)
     table.parent.mkdir(parents=True, exist_ok=True)
-    jobs = [(s, min(s + a.batch, a.trades), d, len(days) - 1 - n) for n, d in enumerate(days) for s in range(0, a.trades, a.batch)]
-    written = 0
-    with multiprocessing.Pool(a.workers, initializer=_init, initargs=(templates,)) as pool:
-        for day, ids, bodies in pool.imap_unordered(_chunk, jobs):
-            write_deltalake(str(table), pa.table({"id": pa.array(ids, pa.string()), "doc": pa.array(bodies, pa.string()),
-                                                  "business_date": pa.array([day] * len(ids), pa.date32())}),
-                            mode="append", partition_by=["business_date"])
-            written += len(ids)
-            print(f"\r{written:,} of {a.trades * len(days):,} trade-days written ({time.time() - t0:,.0f} s)", end="", flush=True)
+    files = plan(a.trades, templates, lay.file_rows)
+    piece = max(1, min(5_000, -(-lay.file_rows // (2 * a.workers))))
+    # one job per slice of a file; the main process writes each file once its slices are in, while the workers
+    # build the next one (about two files in memory)
+    jobs = [[(chunk[s:s + piece], d, len(days) - 1 - n) for s in range(0, len(chunk), piece)] for n, d in enumerate(days) for chunk in files]
+    written, window = 0, -(-lay.file_rows // piece)
+    with multiprocessing.Pool(a.workers, initializer=_init, initargs=(templates, lay, types)) as pool:
+        pending: deque = deque()
+        queue = deque((k, len(slices), job) for slices in jobs for k, job in enumerate(slices))
+        current: list = []
+        while queue or pending:
+            while queue and len(pending) < window:
+                k, count, job = queue.popleft()
+                pending.append((k, count, pool.apply_async(_piece, (job,))))
+            k, count, result = pending.popleft()
+            current.append(result.get())
+            if k == count - 1:
+                rows = pa.concat_tables(current).combine_chunks()
+                current = []
+                write_file(str(table), rows, lay, "append")
+                written += rows.num_rows
+                del rows
+                print(f"\r{written:,} of {a.trades * len(days):,} trade-days written ({time.time() - t0:,.0f} s)", end="", flush=True)
     size = sum(f.stat().st_size for f in table.rglob("*") if f.is_file())
-    print(f"\n{table}: {a.trades:,} trades x {len(days)} business days ({days[0]} to {days[-1]}), {size / 1e9:,.2f} GB, "
-          f"{time.time() - t0:,.0f} s")
+    print(f"\n{table}: {a.trades:,} trades x {len(days)} business days ({days[0]} to {days[-1]}), {len(files)} files a day, "
+          f"{size / 1e9:,.2f} GB, {time.time() - t0:,.0f} s")
     print("a running server reading this lake picks the trades up within a minute")
     return 0
 

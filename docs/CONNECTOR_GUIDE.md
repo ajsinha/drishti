@@ -973,6 +973,21 @@ commit restates one document per kind), so *known at* before that commit shows t
 reverse lookups, for which the lake indexes every value that looks like an identifier (capital letters and digits with
 at least one dash, such as `CP-NORTHBRIDGE` or `NS-NORTH-01`).
 
+### Millions of entities a day: the layout
+
+A table of a few thousand entities a day can be read any way. For a book of a million trades a day, kept for years,
+declare a layout on the connector ([PACKS.md, Large kinds](PACKS.md#large-kinds-the-lake-layout)). The connector then
+reads:
+
+| What | How |
+|---|---|
+| one trade (a view) | the day's id map (from the id column) says which file; Parquet skips to the one row group whose id range holds it |
+| type-ahead | the newest day's ids, sorted in memory: a prefix is a binary search |
+| searches, pick lists, desk P&L, impact | the day's promoted columns, read once, kept (`columns-cache-mb`), the newest day loaded in the background |
+| reverse lookups (linked entities) | the promoted link columns (`nettingSet`, `book`, `counterparty.id`) |
+
+Without a layout everything still works, but a day is read whole, and a large day exceeds the read deadline.
+
 ### Keep the lake bounded: `tools/lake/maintain.py`
 
 Drishti only reads the lake. A scheduled job keeps it from growing for ever: it deletes business dates older than
@@ -1007,6 +1022,11 @@ You should see one line of JSON per table (real output):
 ```json
 {"at": "2026-09-30T21:57:32-04:00", "event": "maintained", "dry_run": true, "table": "data/delta/civic/bill", "before": {"files": 10, "mb": 0.03}, "retention": {"cutoff": "2024-10-02", "would_remove_files": 0}, "vacuum": {"files": 0, "dry_run": true}, "after": {"files": 10, "mb": 0.03}}
 ```
+
+For a laid-out table, `compact` re-sorts only the business days that drifted from the layout (an intraday load
+appended a small file, so ids overlap) and keeps file statistics on the id, the date and the promoted columns only,
+so the log stays small over years of daily files. For seven years of history set `keep-business-days: 1800`.
+`maintain.py relayout --root data/delta --domain trading` lays out a table written another way.
 
 Run it for real with `--once` (from cron), or keep it running with `--daemon` (every day at `schedule.at`). A table
 that fails is logged as `"event": "failed"` and the rest go on. Note that the maintenance job uses `s3://` URIs

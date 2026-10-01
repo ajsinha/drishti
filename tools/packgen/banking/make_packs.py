@@ -81,6 +81,14 @@ ROLES = {"trading": {"trader": {"kinds": TRADER_KINDS}}, "market-risk": {"market
          "counterparty-risk": {"credit-risk": {"kinds": ["*"], "raw": True}}}
 
 
+# how the Delta connector's tables are laid out (tools/samplegen/layout.py): the trade table holds a million trades
+# a business day, so the fields its pick lists, searches and screens filter on get columns of their own
+LAYOUTS = {"trading": {"trade": {"columns": ["tradeId", "productType", "productName", "direction", "currency", "notional", "mtm", "pnl1d", "maturityDate",
+                                             "tradeDate", "book", "desk", "status", "assetClass", "counterparty.id", "counterparty.name",
+                                             "nettingSet", "risk.dv01", "sourceSystem"],
+                                 "sort-by": "id", "file-rows": 250000, "row-group-rows": 1000}}}
+
+
 def domain_kinds(domain: str) -> list[str]:
     return [k for p in layout.PACKS.values() for d, ks in p["kinds"].items() if d == domain for k in ks]
 
@@ -89,6 +97,8 @@ def connector(domain: str) -> dict:
     settings = {"root": "${DRISHTI_DELTA_ROOT:./data/delta}", "domain": domain}
     if domain in EFFECTIVE_DOMAINS:
         settings.update({f"mode.{k}": "effective" for k in domain_kinds(domain)})
+    if domain in LAYOUTS:
+        settings["layout"] = LAYOUTS[domain]
     return {"plugin": "delta", "enabled": "${DRISHTI_LAKE_ENABLED:true}", "kinds": domain_kinds(domain), "settings": settings}
 
 
@@ -127,7 +137,7 @@ def manifest(name: str) -> dict:
         m["graph"]["fields"]["tradeIds"] = {"kind": "trade", "label": "Trade"}
         m["connectors"]["desk-totals"] = {"plugin": "derived", "kinds": ["desk-pnl"], "settings": {
             "refresh": "60s",
-            "desk-pnl": {"from": "trade", "group-by": "$.desk", "id-field": "desk", "members": "tradeIds",
+            "desk-pnl": {"from": "trade", "group-by": "$.desk", "id-field": "desk", "members": "tradeIds", "max-members": 250,
                          "fields": {"tradeCount": "count", "mtm": "sum $.mtm", "pnl1d": "sum $.pnl1d", "dv01": "sum $.risk.dv01",
                                     "worstMtm": "min $.mtm", "books": "distinct $.book", "currencies": "distinct $.currency"},
                          "rows": {"trade": "$.tradeId", "product": "$.productName", "book": "$.book", "currency": "$.currency",

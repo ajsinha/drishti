@@ -817,6 +817,12 @@ drishti:
 The layout is `<root>/<domain>/<kind>/business_date=YYYY-MM-DD/`. See [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md) for every
 Delta setting.
 
+**Sizing.** A laid-out trade table takes about 1.7 KB per trade per business day (Parquet, compressed): 1,000,000
+trades a day is about 1.6 GB a day, 35 GB a month, 2.8 TB for seven years. The server's memory does not grow with
+history: it keeps the days in use (their ids and columns, a few hundred MB a day for a million trades) and a document
+cache, all bounded (`id-map-mb`, `columns-cache-mb`, `doc-cache-mb`). Give the server a heap of 8 GB or more for a
+million trades a day.
+
 ### 11.2 Maintenance
 
 Drishti's server only reads the lake. Writers leave small files every day, and Delta keeps old files for time

@@ -39,6 +39,30 @@ anyone can check it again.
 | Pick list `TRD productType=Revolver` (6 of 750) | — | 5.9 ms (`elapsedMs`) | same; a field condition reads every trade |
 | Command-line suggestions over HTTP | 30 ms budget per source | p50 5.2 ms, p99 8.0 ms (25 entries) | the `curl` loop in method 6, 2026-09-30, on a busy workstation |
 
+### A book of a million trades a day
+
+Measured 2026-10-01 on the developer workstation (24 cores, server heap 15.6 GB), the trading pack's lake laid out as
+declared ([PACKS.md](PACKS.md#large-kinds-the-lake-layout)), 1,000,000 trades a day over three business days (5.2 GB;
+`tools/samplegen/bulk_trades.py --trades 1000000 --days 3`), times over HTTP:
+
+| What | Time |
+|---|---|
+| Type-ahead `TRD CLY-40834` | 29 ms |
+| Open a trade (first read of it / cached) | 137–157 ms / 48 ms |
+| Open a trade on a past business date (that day's id map is read first) | 288 ms |
+| Search over all 1,000,000 trades: `TRD where mtm < -50m order by mtm` | 134 ms (2,017 matches) |
+| `TRD where currency = 'USD' and notional > 500m order by notional desc` | 322 ms (13,640 matches) |
+| `TRD book=BOOK-RATES-3` | 123 ms (70,702 matches) |
+| Pick list `TRD END-1100` | 41 ms |
+| A search on another business date, the first time (its columns are read) / after | 6.6 s / 306 ms |
+| Desk P&L of every desk from 1,000,000 trades / another desk | 327 ms / 48 ms |
+| Impact (F8) of a netting set with 143,982 trades | 716–881 ms |
+| Server heap in use | 2–3.5 GB |
+
+Seven years of history (1,800 business days, 7,200 files, a 7.2 MB log with a checkpoint): the connector lists the
+files in 84 ms (every `refresh-seconds`), and a trade on a 2019 date opens in 22 ms. Before the layout the same
+book could not be served: every read loaded a whole day (gigabytes of documents) and timed out.
+
 The first live implementation delayed every tick by a whole frame (p50 52 ms). Switching to a leading-edge
 throttle (send at once after a quiet frame, coalesce inside a busy one) brought p50 to 2.4 ms.
 

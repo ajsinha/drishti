@@ -211,6 +211,44 @@ public final class SourceRouter {
         return Subscription.NONE;
     }
 
+    /**
+     * The kind's entities with these paths as columns, from the source a read of the kind would ask first, when it keeps
+     * them as columns; empty otherwise (the caller then reads documents). Within {@code budget}.
+     */
+    public Optional<com.ash.drishti.api.ColumnSet> columns(String kind, java.util.Collection<String> paths, AsOf asOf, Duration budget) {
+        List<SourcePlugin> candidates = candidates(kind);
+        if (candidates.isEmpty()) {
+            return Optional.empty();
+        }
+        if (!asOf.live()) {
+            candidates.sort(java.util.Comparator.comparing(p -> !p.manifest().capabilities().dated()));
+        } else {
+            liveFirst(candidates);
+        }
+        // the first source that keeps the paths as columns (a store of record such as a Delta table); sources that
+        // only hold documents (samples, a stream of today's changes) are not asked: a search over columns reads the store
+        SourcePlugin first = candidates.stream().filter(p -> p.columnar(kind).containsAll(paths)).findFirst().orElse(null);
+        if (first == null) {
+            return Optional.empty();
+        }
+        try {
+            return CompletableFuture.supplyAsync(() -> {
+                try {
+                    return first.columns(kind, paths, asOf);
+                } catch (Exception e) {
+                    throw new CompletionException(e);
+                }
+            }, executor).orTimeout(budget.toMillis(), TimeUnit.MILLISECONDS).join();
+        } catch (CompletionException e) {
+            return Optional.empty();                           // too slow or failed: documents are read instead
+        }
+    }
+
+    /** The paths a source of the kind keeps as columns (the first that keeps any). */
+    public java.util.Set<String> columnar(String kind) {
+        return candidates(kind).stream().map(p -> p.columnar(kind)).filter(s -> !s.isEmpty()).findFirst().orElse(java.util.Set.of());
+    }
+
     /** How fresh the named source's data is (see {@link SourceRegistry#freshness}). */
     public SourceRegistry.Freshness freshness(String source) {
         return registry.freshness(source);
@@ -266,12 +304,12 @@ public final class SourceRouter {
     }
 
     public List<EntityRef> reverse(EntityRef target, String kind, AsOf asOf) {
-        List<EntityRef> out = new ArrayList<>();
+        java.util.LinkedHashSet<EntityRef> out = new java.util.LinkedHashSet<>();     // tens of thousands of referrers: a set, not a list
         for (SourcePlugin p : registry.plugins()) {
             if (p.manifest().capabilities().reverseLookup()) {
-                (p.manifest().capabilities().dated() ? p.reverse(target, kind, asOf) : p.reverse(target, kind)).stream().filter(r -> !out.contains(r)).forEach(out::add);
+                out.addAll(p.manifest().capabilities().dated() ? p.reverse(target, kind, asOf) : p.reverse(target, kind));
             }
         }
-        return out;
+        return List.copyOf(out);
     }
 }
