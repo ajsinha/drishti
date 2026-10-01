@@ -1861,7 +1861,8 @@ DRISHTI_FEED_NYFED_SOFR=true DRISHTI_FEED_ECB_FX=true DRISHTI_FEED_US_TREASURY=t
   java -jar drishti-server/target/drishti-server-*-exec.jar
 ```
 
-Each feed is fetched at start and every `refresh-minutes` (60), and keeps its recent history for picked dates.
+Each feed is fetched at start and every `refresh-minutes` (60). Its history for picked dates is the window the last
+fetch returned (the 60 fixings, the 90 days): each successful fetch replaces it, nothing older is accumulated.
 
 ### The configuration, as shipped
 
@@ -1919,10 +1920,21 @@ In the terminal: `FIX FIX-SOFR-NYFED <GO>`, `FX FX-EURUSD-ECB <GO>`, `CRV CRV-US
 
 ### Health, and when the feed is unreachable
 
-`DOWN: not fetched yet`, `UP`, `DOWN: the feed returned no data`, or `DOWN: <Exception>: <message>` (for example
-`HTTP 503 from markets.newyorkfed.org`). A failed fetch **keeps the last good data**, so views go on working; the next
-refresh tries again. Cache figures (real): `{"series": 10, "observations": 640, "fetchedAt": "2026-10-01T01:35:09.770409225Z"}`
-for `ecb-fx-feed`. A purge (Admin → Caches) clears and refetches at once.
+`UP`, `DOWN: <Exception>: <message>` (for example `DOWN: IllegalStateException: HTTP 503 from markets.newyorkfed.org`,
+or `DOWN: ConnectException: …` / `DOWN: HttpTimeoutException: …` when the server cannot reach the publisher),
+`DOWN: the feed returned no data (serving the last data)` when an answer yields no series at all (in practice only
+`ecb-fx`, with no day holding a pair's two currencies), or `DOWN: the feed returned no data` when that happens and
+nothing was ever fetched. A failed fetch, or one that yields no series, **keeps the last good data**, so views go on
+working; the next refresh tries again. A SOFR, €STR, FRED or Treasury answer that parses but holds no rows is not
+caught: it replaces the series with no observations, health stays `UP`, and reads answer *not held*. The first fetch runs inside the
+connector's start, so `DOWN: not fetched yet` is never seen on a running connector. The connect timeout is 10 s,
+fixed in the code; `timeout-seconds` (20) bounds each request. Cache figures (real): `{"series": 10, "observations": 640, "fetchedAt": "2026-10-01T01:35:09.770409225Z"}`
+for `ecb-fx-feed`. A purge (Admin → Caches) clears the data first and then refetches: if that fetch fails, the
+feed serves nothing until the next good refresh.
+
+`stale-after` (the packs set `4d`) does not catch a publisher that stopped publishing: every successful parse counts
+as new data, even when it brings no new observation. Watch the newest observation date (`businessDate` on Live)
+instead.
 
 In `GET /api/v1/admin/health`, a feed you have not switched on is listed under its pack's `connectorsOff`
 (`"connectorsOff": ["ecb-estr-feed", "fred-feed"]`), not as a failure.
@@ -2122,7 +2134,7 @@ curl -s http://localhost:18480/api/v1/admin/health | jq '.packs[] | {name, conne
 | `activemq` | `DOWN: not started`, `DOWN: connecting to <broker-url>`, `UP`, `DOWN: connection to the broker lost (reconnecting)`, `DOWN: <message> (reconnecting)`, `DOWN: <Exception>: <message> (reconnecting)` |
 | `rabbitmq` | `DOWN: not started`, `DOWN: <Exception>: <message> (retrying)`, `UP`, `DOWN: connection lost (recovering)`, `DOWN: consumer cancelled on <queue>` |
 | `s3` | `UP`, `DOWN: <error> (retrying)` |
-| `feed` | `DOWN: not fetched yet`, `UP`, `DOWN: the feed returned no data`, `DOWN: <Exception>: <message>` |
+| `feed` | `UP`, `DOWN: <Exception>: <message>`, `DOWN: the feed returned no data (serving the last data)`, `DOWN: the feed returned no data` (`DOWN: not fetched yet` only before `start` has run: the first fetch is inside it) |
 
 Every connector recovers without restarting Drishti, and every one starts even when its store is down (see
 [Reconnecting](PLUGIN_GUIDE.md#reconnecting)).
@@ -2163,7 +2175,7 @@ depends on the connector:
 | `activemq`, `rabbitmq` | drops the memory cache only: the state store is the only copy and is never purged |
 | `aerospike` | forgets the days of promoted bins and re-reads the kinds' dates and the ids now |
 | `s3` | drops cached reads and misses |
-| `feed` | clears and refetches now |
+| `feed` | clears the data, then refetches now (a failed refetch leaves nothing to serve until the next good refresh) |
 
 Purge after you correct data in place (a restated lake date) when you do not want to wait for `refresh-seconds`.
 
@@ -2240,7 +2252,7 @@ calls.
 | Kafka health `DOWN: no connection to the broker (reconnecting)` | `nc -z <host> <port>` for each `bootstrap-servers` address, and the broker's advertised listeners | bring the broker back; the connector carries on by itself, no restart |
 | ActiveMQ/RabbitMQ `rejected` grows | the message bodies and `id` headers | bodies must be JSON with an id (header or `id-field.<destination>`) |
 | An old entity will not go away (message queues) | `stateMb`, `entities` in the connector's cache figures | send a delete (`deleted=true`), or clear the state store (server stopped) |
-| Feed `DOWN: not fetched yet` for minutes | the server's outbound internet | a proxy rule, or `url: file://…` |
+| Feed `DOWN: ConnectException: …` or `DOWN: HttpTimeoutException: …` | the server's outbound internet (or a proxy) | a proxy rule, or `url: file://…` |
 | The overall status is `DEGRADED` | `curl -s $B/admin/health \| jq '{summary, failedToStart, packs: [.packs[] \| select(.status!="OK") \| {name, connectorsDown, sutraProblems}]}'` | fix what is listed; a switched-off connector does not degrade |
 | Admin health answers `403` | the caller is not an administrator | use `/api/v1/sources` (anyone), or an admin token |
 

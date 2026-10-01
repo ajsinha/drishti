@@ -850,9 +850,17 @@ One connector per feed (the market-data pack declares them, all off by default).
 |---|---|---|
 | `feed` | required | `nyfed-sofr`, `ecb-estr`, `ecb-fx`, `us-treasury`, `fred` |
 | `refresh-minutes` | `60` | |
-| `timeout-seconds` | `20` | |
+| `timeout-seconds` | `20` | Request timeout. The connect timeout is 10 s, fixed in the code. |
 | `url` | the feed's own | Override; `file:` URLs are read directly. |
 | `api-key`, `series` | empty, `DGS10,DFF` | FRED only. |
+| `user-agent` | `public-data-feed-connector` | The `User-Agent` header; the market-data pack sets `<product> public data feed connector`. |
+| `source-name` | the feed's name (a connector: its name) | The name shown in provenance and Health. |
+
+The history for picked dates is the window the last fetch returned. A failed fetch, or one that yields no series at all,
+keeps the last good data (`DOWN: the feed returned no data (serving the last data)`); a single-series feed answering
+with no rows replaces its data with none and stays `UP`. A purge clears the data, then
+refetches. `stale-after` does not notice a publisher that stopped publishing, since every successful parse counts as
+new data. Full detail: [FEEDS_CONNECTOR.md](../connectors/FEEDS_CONNECTOR.md).
 
 ### `derived` — kinds computed from other kinds
 

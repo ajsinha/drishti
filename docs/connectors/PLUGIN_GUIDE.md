@@ -1288,8 +1288,8 @@ cache figures `cachedObjects`, `indexed`, `datedFolders`.
 ## feed
 
 **What it is for.** Real public market data next to the samples: NY Fed SOFR, ECB €STR, ECB reference FX rates, US
-Treasury par yields and FRED series. Each feed is one connector, fetched at start and every `refresh-minutes`, with
-its recent history kept for picked dates. Entity ids name the feed, so real data never collides with sample ids.
+Treasury par yields and FRED series. Each feed is one connector, fetched at start and every `refresh-minutes`; the
+window the last fetch returned is its history for picked dates. Entity ids name the feed, so real data never collides with sample ids.
 
 **Configuration.** `packs/market-data/pack.yaml` declares all five, each off until its variable is set:
 
@@ -1347,7 +1347,8 @@ drishti:
 |---|---|---|
 | `feed` | — (required) | `nyfed-sofr`, `ecb-estr`, `ecb-fx`, `us-treasury`, `fred` |
 | `refresh-minutes` | `60` | refetch interval |
-| `timeout-seconds` | `20` | HTTP request timeout |
+| `timeout-seconds` | `20` | HTTP request timeout (the connect timeout is 10 s, fixed in the code) |
+| `user-agent` | `public-data-feed-connector` | the `User-Agent` header sent with each request (the market-data pack sets `<product> public data feed connector`) |
 | `url` | the public URL | override; `file:` URLs are read directly; for `us-treasury` and `fred`, a comma list (one per month or series) |
 | `api-key` | empty | FRED |
 | `series` | `DGS10,DFF` | FRED series, in the same order as a `url` list |
@@ -1374,8 +1375,11 @@ A `rate-fixing` document (SOFR) as of a date holds up to the 20 most recent fixi
 An `fx-spot` document has `pair`, `pairName`, `mid` (also as `bid` and `ask`), `change1d`, `spotDate`, 30 days of
 `history` and `conventions`; the `ir-curve` document has `curveId`, `tenY`, `slope2s10s` (bp), `asOf` and `points`
 (`tenor`, `maturity`, `quote`, `zeroRate`, `df`) from 1M to 30Y. The business date of a document is its latest
-observation on or before the date asked; a date before the history kept is *not held* (the next source answers). A
-failed fetch keeps the last good data.
+observation on or before the date asked; a date before the history kept is *not held* (the next source answers). The
+history is only the last fetch's window: each successful fetch replaces it. A failed fetch, or an answer that yields
+no series at all (in practice `ecb-fx` with no usable day), keeps the last good data; a SOFR, €STR, FRED or Treasury
+answer with no rows replaces the series with none, and health stays `UP`. `stale-after` does not catch a publisher that stopped publishing: every
+successful parse counts as new data.
 
 **Try it.**
 
@@ -1388,8 +1392,11 @@ DRISHTI_PACKS=market-data DRISHTI_FEED_NYFED_SOFR=true DRISHTI_FEED_ECB_FX=true 
 **What the user sees.** `FIX FIX-SOFR-NYFED <GO>`, `FX FX-EURUSD-ECB <GO>`, `CRV CRV-USD-UST <GO>` (the market-data
 pack's mnemonics). `rate-fixing`, `fx-spot` and `ir-curve` are routed to `market-store`; neither the lake nor
 the samples hold these ids, so the read passes on until the feed connector answers. Search lists them with the
-subtitle `<kind> · <connector> (public feed)`. Health: `UP`, `DOWN: not fetched yet`, `DOWN: the feed returned no
-data`, or `DOWN: <exception>`; cache figures `series`, `observations`, `fetchedAt`; a purge refetches.
+subtitle `<kind> · <connector> (public feed)`. Health: `UP`, `DOWN: <Exception>: <message>` (an offline server shows `ConnectException` or
+`HttpTimeoutException`), `DOWN: the feed returned no data (serving the last data)` (an answer with no series), or `DOWN: the feed
+returned no data` when nothing was ever fetched. The first fetch runs inside start, so `DOWN: not fetched yet` is not seen on a
+running connector. Cache figures `series`, `observations`, `fetchedAt`; a purge clears the data first, then
+refetches.
 
 ---
 
