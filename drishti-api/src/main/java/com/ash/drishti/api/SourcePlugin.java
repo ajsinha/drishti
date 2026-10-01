@@ -46,6 +46,15 @@ public interface SourcePlugin extends AutoCloseable {
         throw new UnsupportedOperationException(manifest().name() + " is not live");
     }
 
+    /**
+     * True when this source pushes updates for the entity even though another source answers its reads: a stream that
+     * keeps no state (a Kafka connector in {@code ticks} mode) driving views a lake or database serves. A live view of
+     * the entity then subscribes here. The default is false: a live source normally pushes what it also serves.
+     */
+    default boolean pushes(EntityRef ref) {
+        return false;
+    }
+
     /** Entities of {@code kind} that reference {@code target} (for example trades in a netting set). */
     default List<EntityRef> reverse(EntityRef target, String kind) {
         return List.of();

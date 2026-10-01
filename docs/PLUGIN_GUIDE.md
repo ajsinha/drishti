@@ -53,6 +53,7 @@ public interface SourcePlugin extends AutoCloseable {
     default List<EntityHit> search(String kind, String text, int limit)        // command type-ahead
     default List<EntityHit> search(String kind, String text, int limit, AsOf asOf)
     default String health()
+    default boolean pushes(EntityRef ref)                                       // ticks a kind another source serves
 }
 ```
 
@@ -925,7 +926,7 @@ drishti:
 | `kind.<topic>` | — | mapped messages on that topic |
 | `id-field` | `id` | mapped messages: the id field, for every topic |
 | `id-field.<topic>` | — | the id field on that topic |
-| `mode` | `state` | `state` keeps an index and serves reads; `ticks` keeps nothing. Keep `state`: a view opens a live stream only when a live source answered its read, so a `ticks` connector behind a lake has nothing to tick (see CONNECTOR_GUIDE.md) |
+| `mode` | `state` | `state` keeps an index and serves reads; `ticks` keeps nothing and serves no reads, but pushes every message to open views of its kinds that a store answers (the plugin's `pushes(ref)` is true, so those views are live; see CONNECTOR_GUIDE.md) |
 | `cache-mb` | `256` | recently read documents in memory (a miss reads the one record back from Kafka by offset) |
 | `search` | `true` | keep ids for type-ahead (`state` mode only) |
 | `poll-ms` | `200` | poll interval |

@@ -228,7 +228,8 @@ public final class ViewPipeline {
         var pv = doc.provenance();
         return new ViewModel(new ViewModel.Ref(ref.kind(), ref.id()), mnemonics.codeFor(ref.kind()), title, strip, panels,
                 keys(s, panels, eval), new ViewModel.Provenance(layout.label(), fp.shortForm(), pv.source(), pv.generation(),
-                        pv.fetchedAt().toString(), pv.live() && current, pv.businessDate() == null ? null : pv.businessDate().toString()), timings);
+                        pv.fetchedAt().toString(), (pv.live() || router.pushes(ref)) && current,   // a ticks-only stream makes a stored entity live
+                        pv.businessDate() == null ? null : pv.businessDate().toString()), timings);
     }
 
     private EntityDocument fetch(EntityRef ref, AsOf asOf) {

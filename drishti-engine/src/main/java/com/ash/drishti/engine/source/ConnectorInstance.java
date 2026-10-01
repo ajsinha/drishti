@@ -77,6 +77,11 @@ final class ConnectorInstance implements SourcePlugin {
     }
 
     @Override
+    public boolean pushes(EntityRef ref) {
+        return serves(ref.kind()) && delegate.pushes(ref);
+    }
+
+    @Override
     public List<EntityRef> reverse(EntityRef target, String kind) {
         return serves(kind) ? delegate.reverse(target, kind) : List.of();
     }

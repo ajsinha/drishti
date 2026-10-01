@@ -138,4 +138,48 @@ class SourceRouterTest {
         assertThat(r.search(null, "", 10, Duration.ofMillis(50))).extracting(EntityHit::title).containsExactly("T1");
         assertThat((System.nanoTime() - t0) / 1_000_000).isLessThan(500);
     }
+
+    /** A stream that keeps nothing (Kafka in ticks mode): it serves no read but pushes every update for its kind. */
+    static final class Ticks implements SourcePlugin {
+        final java.util.List<java.util.function.Consumer<EntityDocument>> listeners = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+        public PluginManifest manifest() {
+            return new PluginManifest("ticks", "t", Set.of("trade"), new SourceCapabilities(true, false, false));
+        }
+
+        public void start(SourceContext c) {}
+
+        public Optional<EntityDocument> fetch(EntityRef ref) {
+            return Optional.empty();
+        }
+
+        @Override
+        public boolean pushes(EntityRef ref) {
+            return ref.kind().equals("trade");
+        }
+
+        @Override
+        public com.ash.drishti.api.Subscription subscribe(EntityRef ref, java.util.function.Consumer<EntityDocument> l) {
+            listeners.add(l);
+            return () -> listeners.remove(l);
+        }
+    }
+
+    @Test
+    void aTicksOnlyStreamMakesAStoredEntityLiveAndDrivesItsTicks() {
+        Ticks ticks = new Ticks();
+        var r = router(Map.of(), new Fake("lake", Set.of("trade"), Set.of("T-1"), 0), ticks);
+        EntityRef t1 = EntityRef.of("trade", "T-1");
+        assertThat(r.fetch(t1).join().data().get("from").asText()).isEqualTo("lake");        // the store answers the read
+        assertThat(r.pushes(t1)).isTrue();                                                    // and the stream makes it live
+        assertThat(r.pushes(EntityRef.of("curve", "C-1"))).isFalse();
+        java.util.List<EntityDocument> got = new java.util.ArrayList<>();
+        try (var sub = r.subscribe(t1, got::add)) {
+            assertThat(ticks.listeners).hasSize(1);
+            ticks.listeners.forEach(l -> l.accept(new EntityDocument(t1, DataNode.of(Map.of("from", "ticks")),
+                    new Provenance("ticks", 2, Instant.now(), true))));
+        }
+        assertThat(got).singleElement().satisfies(d -> assertThat(d.data().get("from").asText()).isEqualTo("ticks"));
+        assertThat(ticks.listeners).isEmpty();
+    }
 }

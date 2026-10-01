@@ -15,6 +15,12 @@
 -->
 # Changelog
 
+## Unreleased
+- **Kafka `mode: ticks` works.**
+  - **Behaviour:** a connector that keeps no state now drives the ticks of views a lake or database answers. Such a view is live (the green dot), subscribes to the stream, and repaints on each message, while reads still come from the store.
+  - **API:** a new SPI method, `SourcePlugin.pushes(ref)` (default false). A plugin answers true for entities it pushes but does not serve.
+  - **Before:** a view opened a live stream only when the document that answered was live.
+
 ## 1.10.0 — Banking and domain packs, users in a database, pick lists, a new top bar (2026-09-30)
 - **Documentation, expanded with worked examples throughout.**
   - **New guides:** QUICKSTART.md (ten minutes to a live view), DEVELOPER_GUIDE.md (repository map, building and testing, project rules, the request path, recipes for endpoints, plugins, panel kinds, packs, pages, database tables and settings), RACHANA_GUIDE.md (a tutorial from a first Sutra to a full view) and CONNECTOR_GUIDE.md (getting your data in, a worked set-up per connector).

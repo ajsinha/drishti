@@ -193,6 +193,14 @@ public final class SourceRouter {
                 }
             }
         }
+        for (SourcePlugin p : live) {                 // a stream that keeps no state but ticks what a store serves
+            if (pushes(p, ref)) {
+                Subscription s = p.subscribe(ref, listener);
+                if (s != Subscription.NONE) {
+                    return s;
+                }
+            }
+        }
         for (SourcePlugin p : live) {
             Subscription s = p.subscribe(ref, listener);
             if (s != Subscription.NONE) {
@@ -207,6 +215,22 @@ public final class SourceRouter {
         String fallback = props.defaultRoute();
         candidates.sort(java.util.Comparator.<SourcePlugin, Boolean>comparing(p -> !p.manifest().capabilities().live())
                 .thenComparing(p -> p.manifest().capabilities().live() && p.manifest().name().equals(fallback)));
+    }
+
+    /**
+     * True when some live source pushes updates for {@code ref} although another answers its reads (a Kafka connector
+     * in ticks mode behind a lake): the view is live even though the document that answered is not.
+     */
+    public boolean pushes(EntityRef ref) {
+        return candidates(ref.kind()).stream().anyMatch(p -> p.manifest().capabilities().live() && pushes(p, ref));
+    }
+
+    private static boolean pushes(SourcePlugin p, EntityRef ref) {
+        try {
+            return p.pushes(ref);
+        } catch (RuntimeException e) {
+            return false;
+        }
     }
 
     private static boolean holds(SourcePlugin p, EntityRef ref) {

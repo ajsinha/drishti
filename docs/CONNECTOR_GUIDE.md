@@ -1740,11 +1740,25 @@ which serves every kind). Then:
 | a picked date | `trading-store` (dated first) → `file` → `trading-stream` | the lake, for that date; a static snapshot |
 | a date the lake does not hold | as above | `file` if it has a dated folder; else Kafka's current document, with the banner *trading-stream is not a dated source* |
 
-**Keep the stream in `state` mode (the default).** The Kafka plugin also has `mode: ticks`, which keeps no index and
-answers no reads, meant only to push ticks to views another store serves. In this version a view opens its live
-stream only when the document that answered is live (`StreamController`), so a view the lake answers (`live: false`)
-never subscribes, and a `ticks` connector has nothing to tick. Use the default `state` mode, in which Kafka answers
-Live reads itself and ticks them.
+**`state` or `ticks`.** In `state` mode (the default) Kafka keeps an index of the topic and answers Live reads
+itself, as above. With `mode: ticks` it keeps nothing (no index, no cache, no disk) and answers no reads: the lake
+or database answers every read, and Kafka only pushes each new message to the views that are open. Use it when the
+store already has the day's data and the topic is just the change feed, or the topic is too large to index:
+
+```yaml
+drishti:
+  sources:
+    connectors:
+      trading-stream:
+        plugin: kafka
+        settings: { mode: ticks, bootstrap-servers: "${DRISHTI_KAFKA_BOOTSTRAP}", topics: drishti.trading.trades,
+                    kind: trade, id-field: tradeId }
+```
+
+The view is live because a connector *pushes* the kind (the plugin answers `pushes(ref)` with true in ticks mode),
+not because the document that answered is live: `TRD T-10001` reads from `trading-store` (its provenance names the
+lake), shows the green live dot, and each message for T-10001 on the topic repaints it within a frame. A picked
+business date stays a static snapshot either way.
 
 ### Several domains
 
@@ -1975,7 +1989,7 @@ calls.
 | Health `DOWN: no Delta tables under ./data/delta/<domain>` | `ls data/delta/<domain>/*/_delta_log` | build the lake or set `DRISHTI_DELTA_ROOT`; restart |
 | A picked date shows *… is not a dated source: this shows its current data* | `curl -s "$B/entities/<kind>/<id>/raw?asOf=<date>" \| jq .provenance` | the dated store does not hold that date (`lookback-days`, history kept); load it |
 | A picked date shows *Latest data on or before … is from …* | — | expected: the store's newest date on or before the one picked |
-| Live view does not tick | `jq .provenance` of the raw read: `live` must be `true` | the answering connector is not live; switch the stream on, the demo off |
+| Live view does not tick | `jq .provenance` of the view (`/api/v1/views/<kind>/<id>`): `live` must be `true` | no live connector answers or pushes the kind: switch the stream on (`state` or `ticks` mode), the demo off |
 | Live view ticks from samples, not Kafka | `provenance.source` is a sample name (`murex-rates`) | `DRISHTI_DEMO_ENABLED=false` |
 | Type-ahead does not offer an id | `curl -s "$B/command/suggest?q=<MNEMONIC>%20<id-prefix>"` | `rest` and `jdbc` query mode cannot search; others list ids every `rescan-seconds`/`refresh-seconds` |
 | *Linked entities* is empty | does any connector with `reverseLookup: true` serve the linking kinds? | reverse lookups need `delta`, `jdbc` table mode, `aerospike` (`reverse-index`), or `demo` |

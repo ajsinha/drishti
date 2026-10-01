@@ -169,4 +169,25 @@ class KafkaSourcePluginTest {
             ticks.close();
         }
     }
+
+    @Test
+    void inTicksModeItServesNoReadsButPushesEveryUpdateForItsKinds() throws Exception {
+        KafkaSourcePlugin ticks = new KafkaSourcePlugin();
+        ticks.start(DatedSourceContract.context(Map.of("bootstrap-servers", broker.getBrokersAsString(), "topics", "trades",
+                "kind", "trade", "id-field", "tradeId", "mode", "ticks", "source-name", "ticks")));
+        try {
+            waitFor(() -> "UP".equals(ticks.health()), 30);
+            assertThat(ticks.fetch(EntityRef.of("trade", "T-1"))).isEmpty();                   // keeps nothing: the lake answers reads
+            assertThat(ticks.pushes(EntityRef.of("trade", "T-1"))).isTrue();
+            assertThat(ticks.pushes(EntityRef.of("curve", "C-1"))).isFalse();
+            assertThat(plugin.pushes(EntityRef.of("trade", "T-1"))).isFalse();                // state mode serves what it pushes
+            CompletableFuture<EntityDocument> pushed = new CompletableFuture<>();
+            try (var sub = ticks.subscribe(EntityRef.of("trade", "T-44"), pushed::complete)) {
+                send("trades", "T-44", "{\"tradeId\":\"T-44\",\"mtm\":9}");
+                assertThat(pushed.get(15, TimeUnit.SECONDS).data().get("mtm").asDouble()).isEqualTo(9);
+            }
+        } finally {
+            ticks.close();
+        }
+    }
 }

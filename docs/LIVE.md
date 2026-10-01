@@ -574,7 +574,9 @@ connectors:
 
 Other shapes: without `kind`/`id-field` the connector expects **envelopes**,
 `{"kind": "trade", "id": "T-1", "doc": {…}}`, and a tombstone's key is `kind/id`. `mode: ticks` keeps nothing in
-memory and only drives the ticks of open views while a store (Delta Lake, a database) serves the documents.
+memory and only drives the ticks of open views while a store (Delta Lake, a database) serves the documents: such a
+view is live although its document came from the store, because a live connector declares that it pushes the kind
+(`SourcePlugin.pushes`), and it subscribes there.
 See [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md) for every Kafka setting.
 
 ## The demo source

@@ -480,6 +480,12 @@ public final class KafkaSourcePlugin implements SourcePlugin {
         }
     }
 
+    /** In ticks mode this connector keeps nothing but pushes every message for its kinds to the views another store serves. */
+    @Override
+    public boolean pushes(EntityRef ref) {
+        return ticksOnly && manifest().kinds().contains(ref.kind());
+    }
+
     @Override
     public Subscription subscribe(EntityRef ref, Consumer<EntityDocument> listener) {
         listeners.compute(ref, (r, subs) -> {
