@@ -16,6 +16,20 @@
 # Changelog
 
 ## Unreleased
+- **Pick lists, as on a Bloomberg terminal.** A command that names one entity opens it; one that names several shows a scrollable table to pick from, with the kind's key fields beside each row.
+  - `TRD T-100` lists trades whose id starts with T-100, and `CPTY north` matches titles too. `TRD T-1*0` uses `*` as a wildcard. `TRD productType=Revolver` and `TRD notional > 10m and currency = usd` list by field value. They combine (`TRD T-1* desk=rates order by mtm desc`), and `TRD` alone lists every trade.
+  - Case never matters, and text `=`/`!=` ignore case in every search.
+  - Packs declare each kind's key fields under `columns:` in pack.yaml (trade, counterparty and book have them). Other kinds show their first plain fields.
+  - `not status = matured` now means "not (status = matured)", and an unknown mnemonic in a search says so.
+- **Every table pages and walks with the keyboard.**
+  - **Pager:** first/previous/next/last, 25/50/100/250 rows per page (remembered), and ▲ ▼ buttons.
+  - **Keys:** ↑ ↓ move the selection across pages, PgUp/PgDn page, Home/End jump, and Enter opens the row.
+  - **Live updates:** tables that re-render keep their place.
+- **Ids in tables are links.** A column bound to an id field (`tradeId`, `counterpartyId`, `bookRef`) links to the entity, so the trades in a book open with a click.
+- **The command line's dropdown shows 25 suggestions** (`drishti.commands.suggest-limit`, `DRISHTI_SUGGEST_LIMIT`, up to 50), and the list scrolls.
+- **Docs: every guide rewritten to be example-led.**
+  - **New:** GETTING_STARTED.md, a from-zero walkthrough, also in the help centre as *Install and run*.
+  - **Rewritten:** README quick start, the doc map, USER_GUIDE, PACKS, INFERENCE, TROUBLESHOOTING, OPERATIONS, CONFIGURATION (every setting), API_GUIDE (every endpoint, with curl), LIVE, PERFORMANCE, ARCHITECTURE, the runbooks, and the in-app guides.
 - **Users, roles and saved documents in a database (JPA).**
   - **What moved:** users, their roles and packs, roles defined by administrators, saved workspaces, monitors, alert rules and settings, and the audit log now live in one database. It is reached only through JPA entities and Spring Data repositories (Hibernate), with no SQL in code.
   - **Databases:** SQLite is the default (one file, nothing to install); PostgreSQL is chosen with `DRISHTI_IDENTITY_DB_URL`.

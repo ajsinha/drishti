@@ -29,7 +29,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Structured search (W17): {@code GET /api/v1/search?q=TRD where mtm > 1m order by mtm desc limit 20}. The caller must
+ * Structured search (W17) and pick lists: {@code GET /api/v1/search?q=TRD where mtm > 1m order by mtm desc limit 20},
+ * {@code q=TRD T-100}, {@code q=TRD productType=Revolver} (see {@link SearchQuery#pick}). The caller must
  * be allowed to open the kind; the condition is evaluated on each document as the caller may see it (redacted), so
  * hidden fields cannot be probed. Follows the business date and "known at" of the request like every read.
  */
@@ -49,7 +50,7 @@ public class SearchController {
 
     @GetMapping
     public Map<String, Object> search(@RequestParam String q, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
-        SearchQuery query = SearchQuery.parse(q);
+        SearchQuery query = SearchQuery.pick(q);           // TRD where …, TRD T-100, TRD productType=Revolver, TRD
         String kind = search.kindOf(query);
         entitlements.requireOpen(principal, kind);
         StructuredSearch.Result r = search.run(query, asOf, data -> entitlements.redact(principal, data));

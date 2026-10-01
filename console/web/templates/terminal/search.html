@@ -19,14 +19,17 @@
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 <div class="adm search">
-  <h1>Search by value</h1>
+  {% set picking = q and ' where ' not in (' ' ~ (q | lower) ~ ' ') %}
+  <h1>{% if picking and data %}Pick {{ 'an' if (data.kind or 'x')[0] in 'aeiou' else 'a' }} {{ data.kind | replace('-', ' ') }}{% else %}Search by value{% endif %}</h1>
   <form class="srch-form" method="get" action="/s" role="search">
     <label for="srchQ" class="visually-hidden">Search</label>
-    <input id="srchQ" class="srch-q mono" name="q" value="{{ q }}" placeholder="TRD where mtm > 1m and currency = 'EUR' order by mtm desc limit 50" autocomplete="off" spellcheck="false">
+    <input id="srchQ" class="srch-q mono" name="q" value="{{ q }}" placeholder="TRD T-100 · TRD productType=Revolver · TRD where mtm > 1m order by mtm desc" autocomplete="off" spellcheck="false">
     <button type="submit" class="btn btn-sm btn-outline-secondary">Search</button>
   </form>
   <p class="srch-help text-muted-d">
-    <span class="mono">&lt;mnemonic&gt; where &lt;condition&gt; [order by &lt;field&gt; [desc]] [limit N]</span> · fields by name or path
+    <span class="mono">&lt;mnemonic&gt; &lt;start of an id or a name&gt;</span> lists what it names (<span class="mono">T-1*0</span>: <span class="mono">*</span> is any text) ·
+    <span class="mono">&lt;mnemonic&gt; &lt;field&gt;=&lt;value&gt;</span> lists by value · case never matters · one match opens at once.<br>
+    <span class="mono">&lt;mnemonic&gt; [where] &lt;condition&gt; [order by &lt;field&gt; [desc]] [limit N]</span> · fields by name or path
     (<span class="mono">counterparty.name</span>, <span class="mono">legs[0].rate</span>) · <span class="mono">= != &lt; &lt;= &gt; &gt;=</span>
     · <span class="mono">and or not</span> · <span class="mono">contains</span> · <span class="mono">startswith</span> · amounts <span class="mono">250k 1.5m 2bn</span>.
     It follows the date in the top bar.</p>
@@ -58,7 +61,8 @@
   {% else %}
     <h2 class="ws-h">Examples</h2>
     <ul class="srch-ex">
-      {% for ex in ["TRD where notional >= 250m and assetClass = 'Rates' order by mtm desc limit 20",
+      {% for ex in ["TRD T-100", "TRD productType=Revolver", "TRD T-10* currency=usd order by notional desc", "CPTY north",
+                    "TRD where notional >= 250m and assetClass = 'Rates' order by mtm desc limit 20",
                     "TRD where counterparty.name contains 'Meridian'",
                     "TRD where mtm < 0 and maturityDate < '2027-01-01' order by mtm",
                     "LIM where utilisation > 0.8 order by utilisation desc"] %}

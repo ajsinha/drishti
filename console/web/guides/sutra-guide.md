@@ -21,7 +21,12 @@ It is written in **Rachana**, Drishti's screen grammar, inside an ordinary Markd
 and no pixels, so a Sutra is short, reviewable and safe, and one Sutra serves every document that matches it.
 
 This guide goes from a first Sutra to every panel kind, with real examples from the banking packs and the views
-they produce. Keep the [Rachana reference](rachana-reference) open for the full list of keys.
+they produce. Every example runs against sample data that ships with the packs, so you can paste it into Studio
+and see the result. Keep the [Rachana reference](rachana-reference) open for the full list of keys.
+
+!!! tip "Before you start"
+    You need the trading pack enabled (it is, if `TRD T-10001` opens in the terminal) and access to **Studio**
+    (`/studio`). Previewing needs no special role; only saving does.
 
 ![A trade view built by a Sutra](/static/img/guide/view-trade.png)
 
@@ -31,8 +36,11 @@ from about sixty lines of Rachana.*
 
 ## 1. A first Sutra in five minutes
 
-Open **Studio** (`/studio`), choose *New Sutra…*, set the entity to `trade` / `T-10001`, paste this and press
-**Ctrl+Enter**:
+1. Open **Studio** (`/studio`).
+2. Choose *New Sutra…* in the picker.
+3. Type `trade` in the first small box and `T-10001` in the second.
+4. Select all the text in the editor and replace it with the block below.
+5. Press **Ctrl+Enter**.
 
 ```sutra
 sutra: my-first-trade
@@ -50,9 +58,25 @@ panels:
   - { id: refs, kind: links, title: Linked entities, area: right }
 ```
 
-That is a complete Sutra. The header shows four figures (three of them named after their fields, because they
-have no `label`), a *Terms* panel lists every field of the trade's `terms` object, and *Linked entities* finds
-every book, curve and netting set the trade points to. Everything else on the screen is filled by inference.
+That is a complete Sutra. On the right you should see:
+
+- the title line: a *Trade* pill, **T-10001** and *Meridian Reinsurance Ltd*;
+- four strip figures: *Product name Interest rate swap (fixed/float)*, *Notional 242,000,000*, *Maturity date
+  2032-06-25* and **MTM (USD)**, highlighted, with a `+` sign. The first three have no `label`, so they are named
+  after their fields;
+- a **Terms** panel listing every field of the trade's `terms` object (fixed rate, pay frequency *Annual*, day
+  count *ACT/365F*, business day *Following*);
+- **Linked entities** on the right: the counterparty, netting set, book, trader, desk, curves and fixing index the
+  trade points to.
+
+Now change something and press **Ctrl+Enter** again. Some things to try:
+
+| Change | What happens |
+|---|---|
+| `fmt: amount0` → `fmt: compact` on the notional | *242.0m* |
+| add `- { label: DV01, bind: $.risk.dv01, fmt: signed0, tone: sign }` to the strip | a fifth figure, *−155,245*, in the negative colour |
+| `kind: kv` → `kind: gauge` on *Terms* | problems `DRS-2022` (a gauge needs `value`) and `DRS-2023` (`rows` is not a gauge option), with their line |
+| remove the `refs` panel | *Linked entities* disappears |
 
 ## 2. The file: Markdown around one `sutra` block
 
@@ -165,6 +189,8 @@ Packs add formats in `config/formats.yaml`; a site can override them.
 
 ### kv: fields as a grid
 
+*See it:* `TRD T-10001`, panel **Terms** (F2).
+
 Label/value pairs. List `columns`, or point `rows` at an object and leave `columns` out to show all its fields.
 
 ```yaml
@@ -182,6 +208,8 @@ Label/value pairs. List `columns`, or point `rows` at an object and leave `colum
 ![kv](/static/img/guide/kind-kv.png)
 
 ### table: rows with columns, totals and "N more"
+
+*See it:* `NSET NS-SUMMIT-NY`, panel **Member trades** (F3).
 
 ```yaml
 - id: trades
@@ -203,6 +231,8 @@ Label/value pairs. List `columns`, or point `rows` at an object and leave `colum
 
 ### ladder: a dated table with the row that matters highlighted
 
+*See it:* `TRD T-10001`, panel **Cashflows** (F3): `$.nextIndex` says which row is the next payment.
+
 ```yaml
 - id: schedule
   kind: ladder
@@ -221,6 +251,8 @@ Label/value pairs. List `columns`, or point `rows` at an object and leave `colum
 ![ladder](/static/img/guide/kind-ladder.png)
 
 ### tabs: one layout per element, as tabs or side by side
+
+*See it:* `TRD T-10001`, panel **Legs**.
 
 ```yaml
 - id: legs
@@ -243,6 +275,8 @@ Label/value pairs. List `columns`, or point `rows` at an object and leave `colum
 
 ### line: a curve, from the document or from a linked entity
 
+*See it:* `TRD T-10001`, right column, **Interest rate curve: Zero rates (%)** (F4).
+
 `source: link(…)` reads the points from another entity: here the trade's discount curve.
 
 ```yaml
@@ -262,6 +296,8 @@ Label/value pairs. List `columns`, or point `rows` at an object and leave `colum
 
 ### area: exposure bands against a limit
 
+*See it:* `NSET NS-SUMMIT-NY`, panel **Exposure profile** (F2).
+
 ```yaml
 - id: exposure
   kind: area
@@ -279,6 +315,8 @@ Label/value pairs. List `columns`, or point `rows` at an object and leave `colum
 
 ### hbar: bars scaled to the largest value
 
+*See it:* `TRD T-10001`, right column, **DV01 by bucket (USD)**.
+
 ```yaml
 - id: sensitivities
   kind: hbar
@@ -294,6 +332,8 @@ Label/value pairs. List `columns`, or point `rows` at an object and leave `colum
 ![hbar](/static/img/guide/kind-hbar.png)
 
 ### surface: a grid over two axes, heatmap or 3D
+
+*See it:* `FXV FXV-EURUSD`, panel **Smile surface (vol %)** (F4); the example below is the equity version (`EQV EQV-CSCA`).
 
 Each row of `rows` is one point on the `y` axis; each column is one point on the x axis and holds the value.
 **3D** turns the heatmap into a surface you can rotate and zoom.
@@ -319,6 +359,8 @@ Each row of `rows` is one point on the `y` axis; each column is one point on the
 
 ### status: operational states
 
+*Try it:* paste the example into the `panels:` list of a Sutra previewed on `trade` / `T-10001`: *Confirmed*, *MarkitWire*, *Cleared*.
+
 ```yaml
 - id: ops
   kind: status
@@ -334,6 +376,8 @@ Each row of `rows` is one point on the `y` axis; each column is one point on the
 
 ### gauge: one number against a maximum
 
+*Try it:* in Studio on `netting-set` / `NS-CASCADIA-TKY` (utilisation 0.7969) the gauge shows *80%*.
+
 ```yaml
 - { id: usage, kind: gauge, title: Limit utilisation, value: $.utilisation, max: 1, fmt: pct0 }
 ```
@@ -342,6 +386,8 @@ Each row of `rows` is one point on the `y` axis; each column is one point on the
 
 ### markdown: a note
 
+The note is shown as plain text (Markdown marks are not rendered); `${…}` inserts values from the document.
+
 ```yaml
 - { id: notes, kind: markdown, title: Desk note, text: "Hedges the ${$.counterparty.name} liability book." }
 ```
@@ -349,6 +395,8 @@ Each row of `rows` is one point on the `y` axis; each column is one point on the
 ![markdown](/static/img/guide/kind-markdown.png)
 
 ### links: everything the document points to
+
+*See it:* `TRD T-10001`, right column, **Linked entities**.
 
 Found from the pack's reference fields (`nettingSet`, `book`, `discountCurve`, …), each with a badge read from
 the target (`EE 4.1m`, `81% used`). A link you may not open shows as denied.
@@ -360,6 +408,8 @@ the target (`EE 4.1m`, `81% used`). A link you may not open shows as denied.
 ![links](/static/img/guide/kind-links.png)
 
 ### provenance: how this view was built
+
+*See it:* the last panel of any view, e.g. `TRD T-10001`: *Sutra irs-fixfloat v1 + inference*.
 
 The Sutra and version (or *inference only*), the data fingerprint, the source and its generation.
 
@@ -384,6 +434,20 @@ match: { kind: trade, where: "$.productType == 'IRS_FIXFLOAT'", priority: 10 }
 
 The banking packs generate 125 product Sutras this way from one taxonomy (`tools/packgen/banking/`); write them
 by hand for a small domain, generate them for a large one.
+
+**See which Sutra won.** Open a few trades and read the last panel, *How this view was built*:
+
+| Command | `productType` in the document | Layout |
+|---|---|---|
+| `TRD T-10001` | `IRS_FIXFLOAT` | `Sutra irs-fixfloat v1 + inference` |
+| `TRD T-10181` | `FX_OPTION` | `Sutra fx-option v1 + inference` |
+| `TRD T-10241` | `CDS_SINGLE` | `Sutra cds-single v1 + inference` |
+| `TRD T-10379` | `AUTOCALLABLE` | `Sutra autocallable v1 + inference` |
+
+!!! note "Studio previews ignore `match`"
+    A Studio preview always applies the Sutra in the editor to the entity you chose, whatever its `match` says, so
+    you can try a layout on any document. `match` and `priority` decide which documents use the Sutra once it is
+    published. To check them, publish (or review and approve) and open the entities in the terminal.
 
 ## 9. Sutra and inference together
 
@@ -412,7 +476,8 @@ A Sutra says what matters; inference fills the rest.
 
 1. Start from a Sutra that works, or **Start from inference** on a real entity.
 2. Edit; **Ctrl+Enter** previews against the entity, or against JSON you paste in *Sample JSON*.
-3. **Insert…** adds any panel kind already shaped; **Jump to…** moves around long documents.
+3. **Insert…** adds a panel of any kind except `surface`, already shaped; **Jump to…** moves around long
+   documents.
 4. Problems are listed with their line; click one to go there.
 5. **Submit for review** (authors, where saving is on): an approver approves it and it goes live; or commit the file
    to the pack's `sutras/` directory through version control.

@@ -521,3 +521,15 @@ button.tbar-link { background: none; border: 0; padding: 0 .35rem; font: inherit
 .hl-row-down td { background: color-mix(in srgb, var(--d-bad) 7%, transparent); }
 .hl-err { font-size: .78rem; color: var(--d-muted); max-width: 26rem; overflow-wrap: anywhere; }
 .hl-tbl td { vertical-align: top; }
+
+/* Paged tables (tables.js): a pager under every table, a selected row, keyboard focus. */
+.tbl-pg { display: flex; align-items: center; gap: .35rem; flex-wrap: wrap; padding: .4rem 0 .1rem; font-size: .8rem; color: var(--d-muted); }
+.tbl-pg-b { min-width: 1.9rem; padding: .1rem .45rem; }
+.tbl-pg-b:disabled { opacity: .35; cursor: default; }
+.tbl-pg-info { padding: 0 .4rem; }
+.tbl-pg-gap { flex: 1; }
+.tbl-pg-size { background: var(--d-surface); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 4px; font-size: .78rem; padding: .05rem .3rem; }
+table.tbl:focus { outline: 1px solid var(--d-accent); outline-offset: 2px; }
+table.tbl tbody tr.tbl-sel > td { background: var(--d-accent-tint); }
+table.tbl tbody tr.tbl-sel > td:first-child { box-shadow: inset 3px 0 0 var(--d-accent); }
+@media print { .tbl-pg { display: none; } table.tbl tbody tr[hidden] { display: table-row !important; } }

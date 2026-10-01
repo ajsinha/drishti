@@ -160,6 +160,15 @@ public final class PackLoader {
             map(impact.get("formats")).forEach((kind, fmt) -> p.put("drishti.graph.impact.formats." + kind, fmt));
             map(graph.get("badges")).forEach((kind, expr) ->
                     offer(claims, overrides, lineage, "badge " + kind, pack.name(), Map.of("drishti.graph.badges." + kind, expr)));
+            // columns: a kind's key fields, shown in pick lists (TRD T-100) and searches beside each entity
+            for (Map.Entry<String, Object> e : map(m.get("columns")).entrySet()) {
+                List<Object> cols = e.getValue() instanceof List<?> l ? (List<Object>) l : List.of();
+                Map<String, Object> props = new LinkedHashMap<>();
+                for (int i = 0; i < cols.size(); i++) {
+                    props.put("drishti.search.columns." + e.getKey() + "[" + i + "]", String.valueOf(cols.get(i)));
+                }
+                offer(claims, overrides, lineage, "columns " + e.getKey(), pack.name(), props);
+            }
             for (Map.Entry<String, Object> e : map(m.get("roles")).entrySet()) {
                 Map<String, Object> r = map(e.getValue());
                 Map<String, Object> props = new LinkedHashMap<>();

@@ -185,6 +185,9 @@ routes:
   calendar: reference-store
   csa: reference-store
   clearing-account: reference-store
+columns:                       # key fields shown beside each entity in pick lists (CPTY north) and searches
+  counterparty: [name, rating, sector, country, netMtm]
+  book: [name, deskName, tradeCount, mtm, dv01]
 console:
   examples:
   - - CPTY CP-NORTHBRIDGE

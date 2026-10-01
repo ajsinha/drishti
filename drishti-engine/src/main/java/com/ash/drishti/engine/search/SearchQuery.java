@@ -27,11 +27,13 @@ import java.util.regex.Pattern;
 
 /**
  * A structured search as typed on the command line:
- * {@code TRD where mtm > 1m and counterparty.name contains 'Meridian' order by mtm desc limit 50}.
+ * {@code TRD where mtm > 1m and counterparty.name contains 'Meridian' order by mtm desc limit 50}, or as a pick list
+ * ({@link #pick}): {@code TRD T-100}, {@code TRD productType=Revolver}, {@code TRD T-1* desk=rates}.
  * The head is a mnemonic or a kind. The condition is friendly Rachana-EL: {@code and}, {@code or}, {@code not},
  * {@code =} for equality, {@code x contains 'y'} and {@code x startswith 'y'}, amounts with {@code k}, {@code m} or
- * {@code bn}, and bare field paths, which are read from the document ({@code mtm} is {@code $.mtm}). Anything
- * Rachana-EL accepts is accepted too. Immutable.
+ * {@code bn}, and bare field paths, which are read from the document ({@code mtm} is {@code $.mtm}). A bare word
+ * after a comparison is a value ({@code productType = Revolver}). Text comparisons ignore case. Anything Rachana-EL
+ * accepts is accepted too. Immutable.
  *
  * @param head the mnemonic or kind as typed
  * @param condition the condition as Rachana-EL, or null for every entity
@@ -39,8 +41,14 @@ import java.util.regex.Pattern;
  * @param descending sort order
  * @param limit at most this many results
  * @param fields the document paths the query reads, in order of appearance (the result columns)
+ * @param idPattern only entities this word names (see {@link #pick}), or null
  */
-public record SearchQuery(String head, String condition, String orderBy, boolean descending, int limit, List<String> fields) {
+public record SearchQuery(String head, String condition, String orderBy, boolean descending, int limit, List<String> fields,
+        String idPattern) {
+
+    public SearchQuery(String head, String condition, String orderBy, boolean descending, int limit, List<String> fields) {
+        this(head, condition, orderBy, descending, limit, fields, null);
+    }
 
     public static final int DEFAULT_LIMIT = 100;
     public static final int MAX_LIMIT = 1000;
@@ -55,6 +63,90 @@ public record SearchQuery(String head, String condition, String orderBy, boolean
     /** True when the text is a structured search rather than an entity to open. */
     public static boolean looksLikeSearch(String text) {
         return text != null && text.matches("(?is)^\\s*\\S+\\s+(where|order\\s+by|limit)\\s+.+");
+    }
+
+    private static final Pattern OPERATOR = Pattern.compile("(?i)(!=|<>|<=|>=|==|=|<|>|\\scontains\\s|\\sstartswith\\s)");
+    private static final Pattern STARTS_WITH_OPERATOR = Pattern.compile("(?i)^(!=|<>|<=|>=|==|=|<|>|contains\\s|startswith\\s)");
+    private static final Pattern SUFFIX = Pattern.compile("(?i)^(order\\s+by|limit)\\s.*");
+
+    /**
+     * A command that lists entities to pick from, as a Bloomberg terminal does:
+     * <ul>
+     *   <li>{@code TRD T-100}: trades whose id starts with T-100 (ignoring case); {@code TRD *100*}: ids containing 100;</li>
+     *   <li>{@code TRD productType=Revolver}, {@code TRD notional > 10m and currency = usd}: trades whose fields match;</li>
+     *   <li>{@code TRD T-1* desk=Rates order by mtm desc}: both, sorted;</li>
+     *   <li>{@code TRD where …}: the structured search ({@link #parse});</li>
+     *   <li>{@code TRD}: every trade.</li>
+     * </ul>
+     * A word without {@code *} matches ids that start with it and titles that contain it ({@code CPTY northbridge});
+     * with {@code *} it is a wildcard on the id. Case never matters.
+     */
+    public static SearchQuery pick(String text) {
+        if (text == null || text.isBlank()) {
+            throw bad("an empty search");
+        }
+        String t = text.replace("<GO>", "").trim();
+        if (looksLikeSearch(t)) {
+            return parse(t);
+        }
+        int sp = indexOfSpace(t, 0);
+        if (sp < 0) {
+            return parse(t);                                              // TRD <GO>: every trade
+        }
+        String head = t.substring(0, sp);
+        String rest = t.substring(sp).trim();
+        int end = indexOfSpace(rest, 0);
+        String first = end < 0 ? rest : rest.substring(0, end);
+        String after = end < 0 ? "" : rest.substring(end).trim();
+        String pattern = null;
+        String tail = rest;
+        boolean condition = first.equalsIgnoreCase("not") || first.startsWith("(");
+        if (!condition && !OPERATOR.matcher(" " + first + " ").find() && !STARTS_WITH_OPERATOR.matcher(after).find()) {
+            pattern = first;                                               // the first word names entities: see matches
+            tail = after;
+        }
+        SearchQuery q = tail.isEmpty() ? parse(head) : SUFFIX.matcher(tail).matches() ? parse(head + " " + tail) : parse(head + " where " + tail);
+        return new SearchQuery(q.head(), q.condition(), q.orderBy(), q.descending(), q.limit(), q.fields(), pattern);
+    }
+
+    /** True when the text lists entities rather than naming one: a field condition or an id pattern with {@code *}. */
+    public static boolean looksLikePick(String text) {
+        if (text == null) {
+            return false;
+        }
+        String t = text.replace("<GO>", "").trim();
+        int sp = indexOfSpace(t, 0);
+        if (sp < 0) {
+            return false;
+        }
+        String rest = t.substring(sp).trim();
+        return looksLikeSearch(t) || rest.contains("*") || OPERATOR.matcher(" " + rest + " ").find() || indexOfSpace(rest, 0) >= 0;
+    }
+
+    /** Whether an entity matches a pick pattern (see {@link #pick}), ignoring case. */
+    public static boolean matches(String pattern, String id, String title) {
+        if (pattern == null) {
+            return true;
+        }
+        if (!pattern.contains("*")) {
+            String p = pattern.toLowerCase(Locale.ROOT);
+            return id.toLowerCase(Locale.ROOT).startsWith(p) || (title != null && title.toLowerCase(Locale.ROOT).contains(p));
+        }
+        StringBuilder re = new StringBuilder("(?is)");
+        for (String part : pattern.split("\\*", -1)) {
+            re.append(Pattern.quote(part)).append(".*");
+        }
+        re.setLength(re.length() - 2);
+        return id.matches(re.toString());
+    }
+
+    private static int indexOfSpace(String s, int from) {
+        for (int i = from; i < s.length(); i++) {
+            if (Character.isWhitespace(s.charAt(i))) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     public static SearchQuery parse(String text) {
@@ -96,6 +188,19 @@ public record SearchQuery(String head, String condition, String orderBy, boolean
             if (Character.isWhitespace(c)) {
                 i++;
                 continue;
+            }
+            if (expectsValue(out) && (Character.isLetter(c) || c == '_')) {   // productType = Revolver: a value, not a field
+                int j = i;
+                while (j < s.length() && !Character.isWhitespace(s.charAt(j)) && s.charAt(j) != ')') {
+                    j++;
+                }
+                String word = s.substring(i, j);
+                String lower = word.toLowerCase(Locale.ROOT);
+                if (!KEYWORDS.contains(lower) && !lower.equals("not") && !word.startsWith("$") && !word.contains("(")) {
+                    out.add("'" + word.replace("'", "\\'") + "'");
+                    i = j;
+                    continue;
+                }
             }
             if (c == '\'' || c == '"') {                     // a string: kept, always single-quoted
                 int j = i + 1;
@@ -208,6 +313,16 @@ public record SearchQuery(String head, String condition, String orderBy, boolean
         return join(out);
     }
 
+    private static final Set<String> COMPARISONS = Set.of("==", "!=", "<", ">", "<=", ">=");
+
+    private static boolean expectsValue(List<String> out) {
+        if (out.isEmpty()) {
+            return false;
+        }
+        String last = out.get(out.size() - 1);
+        return COMPARISONS.contains(last) || last.startsWith("\u0000");
+    }
+
     /** Rewrites the previous operand and the next one into {@code fn(a, b)}: marks it; resolved in join. */
     private static void infix(List<String> out, String fn) {
         out.add("\u0000" + fn);
@@ -227,7 +342,26 @@ public record SearchQuery(String head, String condition, String orderBy, boolean
                 k--;
             }
         }
+        for (int k = 1; k + 1 < t.size(); k++) {             // text equality ignores case: currency = usd
+            String op = t.get(k);
+            if ((op.equals("==") || op.equals("!=")) && (t.get(k - 1).startsWith("'") || t.get(k + 1).startsWith("'"))
+                    && single(t.get(k - 1)) && single(t.get(k + 1))) {
+                t.set(k - 1, "lower(" + t.get(k - 1) + ")");
+                t.set(k + 1, "lower(" + t.get(k + 1) + ")");
+            }
+        }
+        for (int k = 0; k + 3 < t.size(); k++) {             // not status = 'Matured' means not (status = 'Matured')
+            if (t.get(k).equals("!") && COMPARISONS.contains(t.get(k + 2)) && !t.get(k + 1).equals("(")) {
+                t.set(k + 1, "(" + t.get(k + 1));
+                t.set(k + 3, t.get(k + 3) + ")");
+            }
+        }
         return String.join(" ", t);                          // Rachana-EL ignores whitespace
+    }
+
+    /** One operand (a field path or a literal), not part of a larger expression. */
+    private static boolean single(String token) {
+        return token.startsWith("'") || token.startsWith("$.") || token.startsWith("@");
     }
 
     private static boolean outsideQuotes(String s, int at) {

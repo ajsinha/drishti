@@ -31,10 +31,17 @@ public final class ApiDtos {
     public record CommandRequest(String text) {}
 
     /**
-     * @param ref the entity the command opens
-     * @param mnemonic its mnemonic
+     * @param ref the entity the command opens; null when the command names several (or none)
+     * @param mnemonic the kind's mnemonic
+     * @param list the pick list to show instead ({@code /search?q=}), when {@code ref} is null
+     * @param matched how many entities the pick list holds
      */
-    public record CommandResponse(ViewModel.Ref ref, String mnemonic) {}
+    public record CommandResponse(ViewModel.Ref ref, String mnemonic, String list, Integer matched) {
+
+        public CommandResponse(ViewModel.Ref ref, String mnemonic) {
+            this(ref, mnemonic, null, null);
+        }
+    }
 
     /**
      * @param ref the entity

@@ -175,7 +175,7 @@ drishti:
     default-for-users: ${DRISHTI_DEFAULT_PACKS:}
   commands:
     # Mnemonics come from the enabled packs; add or override site mnemonics under `mnemonics:`.
-    suggest-limit: 10
+    suggest-limit: ${DRISHTI_SUGGEST_LIMIT:25}   # entries in the command line's dropdown (the list scrolls)
     suggest-budget: 30ms            # type-ahead answers with what the sources returned by then
     recent-size: 20
   live:

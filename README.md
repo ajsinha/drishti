@@ -145,15 +145,35 @@ terminal does.
 
 ## Try it
 
-```bash
-export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64      # OpenJDK 21 is required (enforced)
-./mvnw -q verify                                         # all modules and tests
-java -jar drishti-server/target/drishti-server-*-exec.jar # backend on :18480 (actuator at /actuator/health)
+New to Drishti? **[docs/GETTING_STARTED.md](docs/GETTING_STARTED.md)** walks you through every step from a
+clean machine, with what you should see at each one. The short version, from the repository root:
 
+```bash
+# 1. Build (OpenJDK 21 is required and enforced; Maven comes with the repository)
+export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+./mvnw -q package -DskipTests                 # or: ./mvnw -q verify  (also runs every test)
+
+# 2. Optional: business-day history for the banking packs, so past dates and Compare work
+uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta
+
+# 3. Start the server on :18480 (packs to load; their parents load with them)
+DRISHTI_PACKS=market-risk,counterparty-risk DRISHTI_STUDIO_SAVE=true \
+  java -jar drishti-server/target/drishti-server-1.9.0-exec.jar
+
+# 4. In a second terminal: the console on http://localhost:17480
 uv venv console/.venv && uv pip install --python console/.venv/bin/python -r console/requirements.txt
-console/.venv/bin/python console/run_drishti_web.py      # console on http://localhost:17480
-console/.venv/bin/python -m pytest -q console/tests
+console/.venv/bin/python console/run_drishti_web.py
 ```
+
+Open http://localhost:17480/t, type `TRD T-10001` and press Enter. Without `DRISHTI_PACKS` the server
+loads only the small `finance` pack; then try `TRD IRS-48213`.
+
+Sign-in is off for local development (you act as a user with every role). To turn it on, and to sign in
+as the development admin **`drishti-dev-admin` / `drishti-dev-admin123`**, see
+[GETTING_STARTED.md, Step 13](docs/GETTING_STARTED.md#step-13--optional-turn-on-sign-in-and-change-the-admin-password).
+
+Checks: `curl -s localhost:18480/actuator/health` (server) and `curl -s localhost:17480/healthz` (console)
+both answer `{"status":"UP"…}`. Console tests: `console/.venv/bin/python -m pytest -q console/tests`.
 
 `tools/drill.sh` runs every check, then pushes `develop` and merges it into `main`.
 
@@ -176,38 +196,37 @@ drishti/
 ├── drishti-identity/            users, passwords, roles, lockout, audit, per-user preferences
 ├── drishti-packs/               domain pack loader
 ├── drishti-engine/              sources, view pipeline, binder, ViewModel, commands, type-ahead
+├── drishti-diskcache/ drishti-messaging/   connector disk cache; shared messaging-connector support
 ├── drishti-benchmarks/          JMH hot-path benchmarks
 ├── drishti-server/              the Spring Boot application
 ├── drishti-testkit/ drishti-it/ fixtures; architecture, licence-header and file-size gates
-├── plugins/drishti-plugin-{demo,file,rest,jdbc}/
+├── plugins/drishti-plugin-*/     demo, file, rest, jdbc, delta, aerospike, feeds, kafka, activemq, rabbitmq, s3
 ├── console/                     FastAPI + Jinja2 web UI (routes/, core/, web/templates, web/static)
-├── packs/finance/, packs/logistics/   domain packs: Sutras, vocabulary, links, roles, samples, guides
+├── packs/<name>/                domain packs (14): pack.yaml, Sutras, vocabulary, links, roles, samples, guides
 ├── sutras/                      site Sutras (optional; packs carry their own)
 ├── deploy/                      Dockerfiles, compose, Grafana dashboard
-├── tools/                       license_headers.py, drill.sh
+├── tools/                       packgen/ and samplegen/ (pack data and lake), lake/ (maintenance), drill.sh, license_headers.py
 └── docs/                        architecture, plan, references, ADRs
 ```
 
 ## Documentation
 
-| Document | What it is |
+Start with **[GETTING_STARTED.md](docs/GETTING_STARTED.md)**, then the **[user guide](docs/USER_GUIDE.md)**.
+The **[documentation map](docs/README.md)** lists every document by what you want to do.
+
+| If you want to… | Read |
 |---|---|
-| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | **The design.** Pipeline, Sutra, inference, type-ahead, live updates, modules, API, UX. |
-| [IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) | **The waves.** W1–W10 with exit gates. |
-| [RACHANA_REFERENCE.md](docs/RACHANA_REFERENCE.md) | **The screen grammar.** Keys, panel kinds, formats, Rachana-EL, problem codes. |
-| [INFERENCE.md](docs/INFERENCE.md) | **Layouts from shape.** Rules, packing, merging, semantic hints. |
-| [PLUGIN_GUIDE.md](docs/PLUGIN_GUIDE.md) | **Bringing data in.** The source SPI, routing and configuration. |
-| [USER_GUIDE.md](docs/USER_GUIDE.md) | **Using the terminal.** Commands, suggestions, keyboard, reading a view. |
-| [API_GUIDE.md](docs/API_GUIDE.md) | **The REST API** and the ViewModel contract. |
-| [CONFIGURATION.md](docs/CONFIGURATION.md) | **Every setting**, server and console. |
-| [LIVE.md](docs/LIVE.md) | **Live updates.** Topics, frames, patches, slow clients, reconnects. |
-| [PERFORMANCE.md](docs/PERFORMANCE.md) | **Measured numbers.** JMH hot paths and the end-to-end latency gate. |
-| [adr/](docs/adr/README.md) | Architecture decision records. |
-| [PACKS.md](docs/PACKS.md) | **Industries.** Domain packs: what they contain, enabling them, writing your own. |
-| [USER_MANAGEMENT.md](docs/USER_MANAGEMENT.md) | **Users and roles.** The seeded admin, admin pages, password rules, audit, API. |
-| [OPERATIONS.md](docs/OPERATIONS.md) | **Running it.** Deploy, security checklist, monitoring, runbooks. |
-| [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Symptoms, causes and fixes. |
-| [CHANGELOG.md](CHANGELOG.md) · [RELEASE_NOTES.md](RELEASE_NOTES.md) | What changed, wave by wave; what 1.0.0 is. |
+| Install, start and try Drishti, step by step | [GETTING_STARTED.md](docs/GETTING_STARTED.md) |
+| Use every console feature, with worked examples | [USER_GUIDE.md](docs/USER_GUIDE.md) |
+| Know the packs, their commands, and write your own | [PACKS.md](docs/PACKS.md) |
+| Write or change a screen layout (Sutra) | [RACHANA_REFERENCE.md](docs/RACHANA_REFERENCE.md) and the in-app Sutra guide |
+| Manage users, roles and passwords | [USER_MANAGEMENT.md](docs/USER_MANAGEMENT.md) |
+| Connect your own data | [PLUGIN_GUIDE.md](docs/PLUGIN_GUIDE.md) and [CONFIGURATION.md](docs/CONFIGURATION.md) |
+| Run it in production | [OPERATIONS.md](docs/OPERATIONS.md) |
+| Fix a problem | [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) |
+| Understand the design | [ARCHITECTURE.md](docs/ARCHITECTURE.md), [adr/](docs/adr/README.md) |
+| Call the REST API | [API_GUIDE.md](docs/API_GUIDE.md) |
+| See what changed | [CHANGELOG.md](CHANGELOG.md) · [RELEASE_NOTES.md](RELEASE_NOTES.md) |
 
 ## Contributing rules
 

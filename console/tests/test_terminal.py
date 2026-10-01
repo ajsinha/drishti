@@ -303,3 +303,15 @@ def test_a_channel_takes_new_subscriptions_without_reconnecting(client):
     finally:
         api_routes.CHANNELS.pop("c1", None)
         api_routes.CHANNELS.pop("c2", None)
+
+
+def test_a_command_naming_several_entities_shows_a_pick_list(client, backend, monkeypatch):
+    async def command(text, ident=None):
+        if text.strip() == "TRD T-100":
+            return {"ref": None, "mnemonic": "TRD", "list": "TRD T-100", "matched": 12}
+        return {"ref": {"kind": "trade", "id": "T-10001"}, "mnemonic": "TRD"}
+    monkeypatch.setattr(backend, "command", command, raising=False)
+    r = client.get("/go", params={"q": "TRD T-100"}, follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == "/s?q=TRD%20T-100"
+    one = client.get("/go", params={"q": "TRD T-10001"}, follow_redirects=False)
+    assert one.headers["location"] == "/v/trade/T-10001"

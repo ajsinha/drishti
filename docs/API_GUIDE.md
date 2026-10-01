@@ -15,100 +15,1001 @@
 -->
 # API guide
 
-The Drishti server exposes REST endpoints under `/api/v1`. The OpenAPI document is at `/api/docs`
-and the Swagger UI at `/api/docs/ui`. Every error is RFC 7807 `problem+json` with a stable `code`
-(`DRS-nnnn`). With security on (`drishti.security.enabled`), every call needs `Authorization: Bearer <HS256 token>`
-minted by the console; the token's subject and roles decide what the caller may see. With security
-off (local development), `X-Drishti-User` names the caller for the "recent" suggestions. User and
-admin endpoints are in USER_MANAGEMENT.md; live streaming is in LIVE.md.
+This guide is for anyone who wants to call the Drishti server directly: to script a report, feed another
+tool, check a deployment, or simply understand what the console does behind the scenes. Every endpoint the
+server has is listed here, grouped by what it is for, with a `curl` command you can paste and an abbreviated
+copy of a real answer.
 
-**Business date.** Every read endpoint takes the business date from the `X-Drishti-As-Of: 2026-09-29` header
-(or `?asOf=2026-09-29`); without it, or with `live`, it is live: the current business date, streaming. A picked
-date is a static snapshot: views report `provenance.live = false`, and streams send one view and close. Weekends and
-holidays roll back to the previous business day; a future date or one before the history window is
-`400 DRS-4003`. `X-Drishti-Known-At` / `?knownAt=` (an ISO instant) asks for the data as known then (Delta time
-travel). Views carry `provenance.businessDate`, which is empty when the source is not dated.
+Live streaming is covered briefly here and in depth in [LIVE.md](LIVE.md). Users, roles and sign-in are
+covered in depth in [USER_MANAGEMENT.md](USER_MANAGEMENT.md).
 
-| Method | Path | Returns |
-|---|---|---|
-| `POST` | `/command` `{"text": "TRD IRS-48213 <GO>"}` | `{"ref": {"kind","id"}, "mnemonic"}`; `400 DRS-4001` if the command can't be read |
-| `GET` | `/command/suggest?q=TRD%20IRS-4&limit=10` | `[{"type","mnemonic","kind","id","title","subtitle","complete"}]` |
-| `GET` | `/business-date` | `{current, selected, live, knownAt, previous, earliest, calendar, zone, holidays}`: today's business date, the date this request resolves to, the zone "known at" times are read in, and the holidays for the picker |
-| `GET` | `/admin/health` | admins: overall `status` (OK, DEGRADED, DOWN), each connector (status, kinds, reads, errors, p50/p99, last error, cache), each pack (Sutras, problems, connectors), live and server figures |
-| `GET` · `PATCH` | `/me/settings` | the caller's settings `{theme, landing, clockZone, density, flash, searchLimit, pinned}`; a patch changes only the fields it names (`null` resets one); every value is validated (`400` otherwise) |
-| `POST` | `/auth/oidc` `{"idToken", "nonce"}` | single sign-on (console service identity only): the server verifies the provider's ID token, maps groups to roles and returns the user; `401 DRS-6004` when refused |
-| `POST` | `/sutras?note=` (body: the Sutra) | with review on, `202 {"proposal": {id, name, version, status}}`; otherwise the saved Sutra |
-| `GET` | `/sutras/proposals?status=&name=` · `/sutras/proposals/{id}` | proposals (authors and approvers); one proposal with its text, the base text and the live text |
-| `POST` | `/sutras/proposals/{id}/approve` · `/reject` · `/withdraw` `{"comment"}` | decide: approve publishes the Sutra; reject needs a comment; the author withdraws |
-| `GET` | `/sutras/{name}/history` | every proposal for a Sutra, newest first |
-| `GET` | `/search?q=TRD where mtm > 1m order by mtm desc limit 20` | `{kind, mnemonic, condition, orderBy, columns, labels, rows: [{ref, title, values}], scanned, matched, partial, elapsedMs}`: entities of a kind by value. The condition runs on each document as the caller may see it; `403` if the caller may not open the kind; `400 DRS-4004` if the query cannot be read |
-| `GET` | `/history/{kind}/{id}/diff?from=&to=&fromKnownAt=&toKnownAt=` | `{from, to, changes: [{path, label, kind: added\|removed\|changed, before, after, delta}], added, removed, changed, truncated}`: what changed between two business dates or "known at" instants (ISO-8601). `to` defaults to the request's as-of, `from` to the business day before it; both sides are redacted for the caller; at most 2,000 changes |
-| `GET` | `/views/{kind}/{id}` | `ViewModel` (below); `404 DRS-1001`, `504 DRS-1004`. Each panel has `empty: true` when the document lacks what it asks for |
-| `GET` | `/entities/{kind}/{id}/raw` | `{"ref","provenance","data"}`: the document as the source produced it |
-| `GET` | `/sources` | the plugins, their capabilities and health, and any start failures |
-| `GET` | `/sutras` · `/sutras/{name}/{version}` · `/sutras/problems` | the Sutra catalogue, one Sutra, and the load problems |
-| `GET` | `/about` | version, build, Java, uptime, loaded Sutras, sources, security mode |
-| `GET` / `PUT` / `DELETE` | `/me/monitors[/{name}]` | watchlists `{entities: [{kind, id}]}` (1–50); `GET /me/monitors/{name}` returns each row's title and strip |
-| `GET` | `/me/monitors/{name}/stream` | SSE: one `row` event per changed entity (strip patches), multiplexed over one connection |
-| `GET` / `PUT` / `DELETE` | `/me/alerts/rules[/{name}]` | alert rules `{kind, id, when, severity, message, enabled}`; `when` and `message` are Rachana-EL, checked on save (`DRS-2101`) |
-| `GET` | `/me/alerts` · `/me/alerts/stream` · `/me/alerts/suggestions/{kind}` | fired alerts (newest first) · SSE `alert` events · the packs' suggested rules for a kind |
-| `GET` | `/packs` | installed packs, each with `kinds` and, for the caller, `assigned` and `active` |
-| `GET` / `PUT` | `/me/packs` `{active: [...]}` | the caller's assigned and active packs; choose among the assigned (`DRS-5002` otherwise) |
-| `GET` | `/impact/{kind}/{id}` | F8: `{ref, groups: [{level, kind, mnemonic, items: [{ref, via, measure}], hidden, total}], elapsedMs}`; level 1 = dependents, level 2 = what they roll into; kinds the caller may not open are only counted |
-| `GET` / `PUT` / `DELETE` | `/me/workspaces[/{name}]` | the caller's workspaces: `{layout, panes: [{ref, follows, title}]}`; validated (known layout, 1–4 panes, entities the caller may open, no follow cycles) |
+## Contents
+
+1. [Before you start](#before-you-start)
+2. [Your first five calls](#your-first-five-calls)
+3. [Who you are: authentication](#who-you-are-authentication)
+4. [Which day: the business date](#which-day-the-business-date)
+5. [When something goes wrong: errors](#when-something-goes-wrong-errors)
+6. [Endpoint reference](#endpoint-reference)
+   - [Command line and type-ahead](#command-line-and-type-ahead)
+   - [Views](#views)
+   - [Raw documents, history and impact](#raw-documents-history-and-impact)
+   - [Structured search](#structured-search)
+   - [Live streams](#live-streams)
+   - [Personal: settings, packs, workspaces, monitors, alerts](#personal-settings-packs-workspaces-monitors-alerts)
+   - [Catalogue: about, packs, sources, Sutras](#catalogue-about-packs-sources-sutras)
+   - [Sutra Studio and governance](#sutra-studio-and-governance)
+   - [Sign-in and user administration](#sign-in-and-user-administration)
+   - [Administration: health and caches](#administration-health-and-caches)
+   - [Outside /api/v1: OpenAPI and actuator](#outside-apiv1-openapi-and-actuator)
+7. [The ViewModel in detail](#the-viewmodel-in-detail)
+8. [Error code table](#error-code-table)
+9. [Scripting recipes](#scripting-recipes)
+
+## Before you start
+
+| What | Value |
+|---|---|
+| Server base URL | `http://localhost:18480` (port set by `server.port`) |
+| API prefix | `/api/v1` — every path in this guide is under it unless it says otherwise |
+| Format | JSON in and out (`application/json`), except Sutra text (`text/markdown`) and live streams (`text/event-stream`) |
+| Errors | RFC 7807 `application/problem+json` with a stable `code` such as `DRS-1001` |
+| OpenAPI document | `http://localhost:18480/api/docs` |
+| Swagger UI (try calls in a browser) | `http://localhost:18480/api/docs/ui` |
+
+You need `curl`. `jq` is optional but makes the output readable; every example below pipes through it. On
+Ubuntu/Debian: `sudo apt install curl jq`.
+
+To save typing, set a variable once in your shell:
 
 ```bash
-curl -s localhost:18480/api/v1/views/trade/IRS-48213 | jq '.strip[] | "\(.label): \(.text)"'
-curl -s "localhost:18480/api/v1/command/suggest?q=NS-N" | jq '.[].complete'
+B=http://localhost:18480/api/v1
 ```
 
-## The ViewModel
+All examples below use `$B`. They were captured against a development server with security off and the
+banking packs installed; your ids, numbers and times will differ.
 
-The server returns **formatted text and a tone** for every value, never raw numbers to format, so all
-clients show `−412,580` identically.
+## Your first five calls
 
-```jsonc
+Work through these in order. If all five answer, the API is working for you.
+
+**1. Is the server up and what is it running?**
+
+```bash
+curl -s $B/about | jq '{product, version, java, uptimeSeconds, securityEnabled, sutras: (.sutras | length)}'
+```
+
+You should see:
+
+```json
 {
-  "ref": {"kind": "trade", "id": "IRS-48213"}, "mnemonic": "TRD",
-  "title": {"pill": "Trade · Interest rate swap", "id": "IRS-48213",
-            "with": {"text": "Northbridge Capital LLP", "link": {"kind": "counterparty", "id": "CP-NORTHBRIDGE"}}},
-  "strip": [{"label": "MTM (USD)", "text": "−412,580", "tone": "neg", "emphasis": true, "path": "$.mtm"}, …],
-  "panels": [{"id": "cashflows", "kind": "table", "title": "Cashflows · Leg 1", "code": "CF · ladder", "key": "F3",
-              "area": "main", "data": {"columns": […], "numeric": […], "rows": [{"cells": […], "path": "$.legs[0].cashflows[0]"}],
-                                       "total": {…}}}, …],
-  "keys": [{"key": "F7", "label": "Netting set", "action": "link", "link": {"kind": "netting-set", "id": "NS-NORTH-01", "mnemonic": "NSET"}}],
-  "provenance": {"layout": "Sutra irs-vanilla v3 + inference", "fingerprint": "5343…eaf1", "source": "aero-risk", "generation": 1742, "live": true},
-  "timings": {"fetch": 0.3, "layout": 0.1, "links": 1.2, "bind": 0.9, "total": 2.6}
+  "product": "Drishti",
+  "version": "1.9.0",
+  "java": "21.0.12.1 (Ubuntu)",
+  "uptimeSeconds": 6913,
+  "securityEnabled": false,
+  "sutras": 223
 }
 ```
 
-| `data` by panel kind | Shape |
+If `securityEnabled` is `true`, read [Who you are](#who-you-are-authentication) first: every call needs a token.
+
+**2. What is "today"?**
+
+```bash
+curl -s $B/business-date | jq '{current, selected, live, previous, calendar, zone}'
+```
+
+```json
+{ "current": "2026-09-30", "selected": "2026-09-30", "live": true,
+  "previous": "2026-09-29", "calendar": "USNY", "zone": "America/New_York" }
+```
+
+**3. Find something to look at.** The type-ahead takes what you would type in the console's command line.
+`TRD ` (with a trailing space) lists trades:
+
+```bash
+curl -s "$B/command/suggest?q=TRD%20&limit=2" | jq -c '.[] | {complete, subtitle}'
+```
+
+```
+{"complete":"TRD T-10001","subtitle":"Trade · Interest rate swap (fixed/float) · Meridian Reinsurance Ltd · AUD 242m"}
+{"complete":"TRD T-10002","subtitle":"Trade · Interest rate swap (fixed/float) · Halcyon Shipping plc · EUR 110m"}
+```
+
+**4. Open it.** A view is the screen the console draws, as data:
+
+```bash
+curl -s $B/views/trade/T-10001 | jq -r '.strip[] | "\(.label): \(.text)"'
+```
+
+```
+Notional: AUD 242,000,000
+Direction: Receive fixed
+Trade date: 2025-07-25
+…
+MTM (USD): +1,603,277
+```
+
+**5. See the document behind it.**
+
+```bash
+curl -s $B/entities/trade/T-10001/raw | jq '.data | {tradeId, productType, assetClass}'
+```
+
+```json
+{ "tradeId": "T-10001", "productType": "IRS_FIXFLOAT", "assetClass": "Rates" }
+```
+
+## Who you are: authentication
+
+Every request under `/api/v1/` passes through the server's token filter (`TokenFilter`). What it does
+depends on one setting, `drishti.security.enabled` (environment variable `DRISHTI_SECURITY_ENABLED`,
+default `false`).
+
+### Security off (local development)
+
+No token is needed. The caller's name is taken from the optional `X-Drishti-User` header (default
+`anonymous`), and that caller has every role. The name only matters for per-user data: settings,
+workspaces, monitors, alerts, recent entities in the type-ahead, and chosen packs.
+
+```bash
+curl -s -H "X-Drishti-User: ash" $B/me/settings
+```
+
+Pack choices still apply with security off: a kind whose pack is not active for the named user is refused
+with `403 DRS-5002`.
+
+### Security on (production)
+
+Every `/api/v1/` call must carry `Authorization: Bearer <token>`. The token is a compact JWT signed with
+**HS256** using the shared secret `drishti.security.secret` (environment variable `DRISHTI_TOKEN_SECRET`, at
+least 32 bytes; the server refuses to start with a shorter one). The server checks:
+
+| Check | Refusal (`detail`) |
+|---|---|
+| header present and starts with `Bearer ` | `missing bearer token` |
+| three dot-separated parts | `malformed token` |
+| header `alg` is exactly `HS256` (`none` and every other algorithm are rejected) | `unsupported token algorithm` |
+| signature matches (constant-time compare) | `bad token signature` |
+| `exp` is present and not past (plus `drishti.security.clock-skew`, default 30 s) | `token expired` |
+| `sub` is not empty | `token has no subject` |
+| anything unreadable | `unreadable token` |
+
+The claims the server reads are `sub` (the user name), `roles` (a list of role names) and `exp` (expiry,
+seconds since the epoch). A refusal is a `401` answered by the filter itself:
+
+```json
+{"title":"unauthenticated","status":401,"code":"DRS-5010","detail":"DRS-5010 missing bearer token"}
+```
+
+### How the console does it
+
+The console never forwards the user's password or a long-lived credential. In `console/core/auth.py`:
+
+1. The user signs in on the console. The console verifies the password by calling `POST /api/v1/auth/login`
+   with its own **service** identity (user `console`, role `service`) — the only identity allowed to call
+   that endpoint (or `POST /auth/oidc` for single sign-on).
+2. The console keeps the user's name, display name, desk and roles in a signed cookie (`drishti_session`,
+   HMAC-SHA256 with `auth.session_secret`). Nothing is stored server-side.
+3. For **every** backend call it mints a fresh token with `auth.token_secret` (the same value as the server's
+   `drishti.security.secret`), lifetime `auth.token_ttl_seconds` (default 300), and sends two headers:
+
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqZG9lIiwicm9sZXMiOlsidHJhZGVyIl0sImV4cCI6MTc5MDAwMDAwMH0.…
+X-Drishti-User: jdoe
+```
+
+   (With security on, the server ignores `X-Drishti-User`; the token's `sub` decides.) It also sends
+   `X-Drishti-As-Of` and, when set, `X-Drishti-Known-At` — see the next section.
+
+### Minting a token for a script
+
+When security is on, a script can mint its own token exactly as the console does. This needs the shared
+secret, so run it only where that secret is legitimately available:
+
+```bash
+TOKEN=$(DRISHTI_TOKEN_SECRET="$DRISHTI_TOKEN_SECRET" python3 - <<'PY'
+import base64, hashlib, hmac, json, os, time
+b = lambda d: base64.urlsafe_b64encode(d).rstrip(b"=").decode()
+h = b(json.dumps({"alg": "HS256", "typ": "JWT"}, separators=(",", ":")).encode())
+c = b(json.dumps({"sub": "report-bot", "roles": ["viewer"], "exp": int(time.time()) + 300}, separators=(",", ":")).encode())
+s = b(hmac.new(os.environ["DRISHTI_TOKEN_SECRET"].encode(), f"{h}.{c}".encode(), hashlib.sha256).digest())
+print(f"{h}.{c}.{s}")
+PY
+)
+curl -s -H "Authorization: Bearer $TOKEN" $B/about | jq .version
+```
+
+You should see the version string, for example `"1.9.0"`. The roles you put in the token decide what the
+script may open (roles are defined under `drishti.security.roles`; see
+[USER_MANAGEMENT.md](USER_MANAGEMENT.md)). Keep the lifetime short.
+
+### What roles allow
+
+| Ability | Granted by |
+|---|---|
+| open entities of a kind | a role whose `kinds` lists the kind or `*`, **and** the kind's pack active for the user |
+| unredacted raw JSON (fields in `drishti.security.redact` shown as `•••` otherwise) | a role with `raw: true` |
+| save Sutras from Studio | a role with `author: true` (and `drishti.rachana.studio-save: true`) |
+| approve or reject Sutra proposals | a role with `approve: true`, or an admin |
+| user administration, audit log, health, caches | a role with `admin: true` |
+| `POST /auth/login`, `POST /auth/oidc` | the `service` role (the console) |
+| everything | the role `*` (what every caller gets with security off) |
+
+## Which day: the business date
+
+Every **read** (views, raw, search, history, impact, suggestions, monitors and streams) answers for a
+business date. You choose it with a header or a query parameter:
+
+| Header | Query parameter | Value | Meaning |
+|---|---|---|---|
+| `X-Drishti-As-Of` | `asOf` | `live` or empty (default) | today's business date, streaming |
+| `X-Drishti-As-Of` | `asOf` | `2026-09-29` | that date, as a static snapshot |
+| `X-Drishti-Known-At` | `knownAt` | `2026-09-29T21:00:00Z` (ISO instant) | the data as it was known at that instant (Delta time travel) |
+
+The header wins when both are given. Rules:
+
+- A weekend or holiday rolls back to the previous business day of the calendar.
+- A picked date is a snapshot: views say `provenance.live = false`, and a stream sends one `view` event and closes.
+- A future date, or one before the history window (`earliest`), is `400 DRS-4003`.
+- `provenance.businessDate` in a view is the date the source actually read; it is `null` for sources that are not dated.
+
+Try it — Sunday 27 September rolls back to Friday 25 September:
+
+```bash
+curl -s -H "X-Drishti-As-Of: 2026-09-27" $B/business-date | jq -c '{current, selected, live}'
+```
+
+```json
+{"current":"2026-09-30","selected":"2026-09-25","live":false}
+```
+
+With a "known at" instant, as query parameters this time:
+
+```bash
+curl -s "$B/business-date?asOf=2026-09-29&knownAt=2026-09-29T21:00:00Z" | jq -c '{selected, live, knownAt}'
+```
+
+```json
+{"selected":"2026-09-29","live":false,"knownAt":"2026-09-29T21:00:00Z"}
+```
+
+A date in the future:
+
+```bash
+curl -s -H "X-Drishti-As-Of: 2030-01-01" $B/business-date
+```
+
+```json
+{"type":"about:blank","title":"bad business date","status":400,
+ "detail":"DRS-4003 business date 2030-01-01 is in the future","instance":"/api/v1/business-date","code":"DRS-4003"}
+```
+
+## When something goes wrong: errors
+
+Every error is RFC 7807 `application/problem+json`. The fields:
+
+| Field | Meaning |
+|---|---|
+| `status` | the HTTP status, repeated in the body |
+| `title` | the error's name in words (`entity not found`, `bad search`, …) |
+| `code` | the stable Drishti code, `DRS-nnnn` — match on this in scripts, never on `detail` |
+| `detail` | a human explanation; it starts with the code |
+| `instance` | the path that was called |
+| `problems` | only for Sutra errors: the list of problems, each `{code, message, location: {file, line, column}}` |
+
+Example — an id no source knows:
+
+```bash
+curl -s -i $B/views/trade/IRS-99999 | sed -n '1p;/^{/p'
+```
+
+```
+HTTP/1.1 404
+{"type":"about:blank","title":"entity not found","status":404,"detail":"DRS-1001 no source holds trade/IRS-99999","instance":"/api/v1/views/trade/IRS-99999","code":"DRS-1001"}
+```
+
+Two catch-alls are worth knowing: a bad argument anywhere (`IllegalArgumentException`) becomes
+`400 DRS-5001`, and a request with no caller attached becomes `401 DRS-5010`. Server errors (`5xx`) are also
+logged on the server with the stack trace. The full list is in the [error code table](#error-code-table).
+
+## Endpoint reference
+
+Conventions in the tables: `{kind}` is an entity kind such as `trade` or `counterparty`; `{id}` is its id;
+"as-of" means the endpoint follows the business date described above; "admin" means the caller needs a role
+with `admin: true` (otherwise `403 DRS-5002`).
+
+### Command line and type-ahead
+
+| Method | Path | Notes |
+|---|---|---|
+| `POST` | `/command` | body `{"text": "TRD T-10001 <GO>"}` → `{"ref": {"kind", "id"}, "mnemonic"}`; `400 DRS-4001` if the text cannot be read; `403` if the caller may not open the kind |
+| `GET` | `/command/suggest?q=&limit=` | as-of. Up to `limit` suggestions (default `drishti.commands.suggest-limit`, 25; at most 50), filtered to kinds the caller may open |
+
+The command is what the console's command line sends when you press Enter. The mnemonic (`TRD`) is mapped to
+a kind (`trade`); the id is matched against the configured id patterns. `<GO>` is optional.
+
+```bash
+curl -s -X POST $B/command -H 'Content-Type: application/json' -d '{"text": "TRD T-10001 <GO>"}'
+```
+
+```json
+{"ref":{"kind":"trade","id":"T-10001"},"mnemonic":"TRD"}
+```
+
+Type-ahead: each suggestion is either a mnemonic (`id` is null) or an entity. `complete` is the text to put
+in the command line when the user picks it.
+
+```bash
+curl -s "$B/command/suggest?q=trd&limit=3" | jq -c '.[]'
+```
+
+```
+{"type":"mnemonic","mnemonic":"TRD","kind":"trade","id":null,"title":"TRD","subtitle":"Trade","complete":"TRD "}
+{"type":"mnemonic","mnemonic":"TRDR","kind":"trader","id":null,"title":"TRDR","subtitle":"Trader","complete":"TRDR "}
+{"type":"entity","mnemonic":"TRDR","kind":"trader","id":"TRDR-ASHAH","title":"TRDR-ASHAH","subtitle":"Trader · A. Shah","complete":"TRDR TRDR-ASHAH"}
+```
+
+Entities the caller opened recently (per `X-Drishti-User` or token subject) are offered first.
+
+### Views
+
+| Method | Path | Notes |
+|---|---|---|
+| `GET` | `/views/{kind}/{id}` | as-of. The `ViewModel`; `404 DRS-1001` (no such entity), `404 DRS-1002` (no source serves the kind), `502 DRS-1003` (source failed), `504 DRS-1004` (source timed out); `403 DRS-5002` if the caller may not open the kind |
+
+Opening a view also records it in the caller's recent list. A view is formatted for display: every value
+comes as text with a tone, so all clients show `−1,403,091` the same way.
+
+```bash
+curl -s $B/views/trade/T-10001 | jq -c '{ref, mnemonic, title, strip: .strip[0:2], provenance, timings}'
+```
+
+```json
+{"ref":{"kind":"trade","id":"T-10001"},"mnemonic":"TRD",
+ "title":{"pill":"Rates · Interest rate swap (fixed/float)","id":"T-10001",
+          "with":{"text":"Meridian Reinsurance Ltd","link":{"kind":"counterparty","id":"CP-MERIDIAN-RE","mnemonic":"CPTY"}}},
+ "strip":[{"label":"Notional","text":"AUD 242,000,000","path":"$.currency"},
+          {"label":"Direction","text":"Receive fixed","path":"$.direction"}],
+ "provenance":{"layout":"Sutra irs-fixfloat v1 + inference","fingerprint":"b7df…1372","source":"murex-rates",
+               "generation":1674,"fetchedAt":"2026-10-01T00:58:57.229603068Z","live":true,"businessDate":null},
+ "timings":{"fetch":0.15,"layout":0.11,"links":0.15,"bind":0.22,"total":0.64}}
+```
+
+List the panels:
+
+```bash
+curl -s $B/views/trade/T-10001 | jq -c '.panels[] | {id, kind, title, key, area}'
+```
+
+```
+{"id":"terms","kind":"kv","title":"Terms","key":"F2","area":"main"}
+{"id":"legs","kind":"tabs","title":"Legs","key":null,"area":"main"}
+{"id":"schedule","kind":"ladder","title":"Cashflows","key":"F3","area":"main"}
+{"id":"built","kind":"provenance","title":"How this view was built","key":null,"area":"main"}
+{"id":"marketData","kind":"line","title":"Interest rate curve: Zero rates (%)","key":"F4","area":"right"}
+{"id":"sensitivities","kind":"hbar","title":"DV01 by bucket (USD)","key":null,"area":"right"}
+{"id":"pnl","kind":"line","title":"Daily P&L, last 20 days (USD)","key":null,"area":"right"}
+{"id":"refs","kind":"links","title":"Linked entities","key":null,"area":"right"}
+```
+
+The full shape is in [The ViewModel in detail](#the-viewmodel-in-detail).
+
+### Raw documents, history and impact
+
+| Method | Path | Notes |
+|---|---|---|
+| `GET` | `/entities/{kind}/{id}/raw` | as-of. `{ref, provenance, data}`: the document as the source produced it (F9 in the console). Fields listed in `drishti.security.redact` read `•••` unless the caller has `raw` |
+| `GET` | `/history/{kind}/{id}/diff?from=&to=&fromKnownAt=&toKnownAt=` | what changed between two points. `to` defaults to the request's as-of; `from` to the business day before `to`. At most 2,000 changes (`truncated: true` beyond) |
+| `GET` | `/impact/{kind}/{id}` | as-of. F8: what depends on the entity, grouped by level and kind |
+
+Raw:
+
+```bash
+curl -s $B/entities/trade/T-10001/raw | jq -c '{ref, provenance, data: (.data | {tradeId, productType})}'
+```
+
+```json
+{"ref":{"kind":"trade","id":"T-10001"},
+ "provenance":{"source":"murex-rates","generation":1674,"fetchedAt":"2026-10-01T00:59:06.608972976Z","live":true,"businessDate":null},
+ "data":{"tradeId":"T-10001","productType":"IRS_FIXFLOAT"}}
+```
+
+History — what changed in the trade since yesterday:
+
+```bash
+curl -s $B/history/trade/T-10001/diff | jq -c '{from: .from.businessDate, to: .to.businessDate, added, removed, changed, first: .changes[0:2]}'
+```
+
+```json
+{"from":"2026-09-29","to":"2026-09-30","added":0,"removed":1,"changed":137,
+ "first":[{"path":"mtm","label":"MTM (USD)","kind":"changed","before":1886961,"after":1603277,"delta":-283684.0},
+          {"path":"risk.dv01","label":"DV01","kind":"changed","before":-156726,"after":-155245,"delta":1481.0}]}
+```
+
+Each change has `kind` `added`, `removed` or `changed`; `delta` is set for numbers. Each side (`from`, `to`)
+carries its `businessDate`, `knownAt` and `provenance`. Two explicit dates:
+
+```bash
+curl -s "$B/history/trade/T-10001/diff?from=2026-09-28&to=2026-09-29" | jq -c '{from: .from.businessDate, to: .to.businessDate, changed}'
+```
+
+To see a restatement — what we knew about 29 September at 18:00 versus now — fix the date and vary "known at":
+
+```bash
+curl -s "$B/history/trade/T-10001/diff?from=2026-09-29&to=2026-09-29&fromKnownAt=2026-09-29T22:00:00Z" | jq '.changed'
+```
+
+Impact — what depends on a counterparty:
+
+```bash
+curl -s $B/impact/counterparty/CP-MERIDIAN-RE | jq -c '{groups: [.groups[0:2][] | {level, kind, mnemonic, first: .items[0].ref, hidden}], elapsedMs}'
+```
+
+```json
+{"groups":[{"level":1,"kind":"agreement","mnemonic":"AGR","first":{"kind":"agreement","id":"AGR-MERIDIAN-RE-ISDA"},"hidden":0},
+           {"level":1,"kind":"climate-profile","mnemonic":"CLIM","first":{"kind":"climate-profile","id":"CLIM-MERIDIAN-RE"},"hidden":0}],
+ "elapsedMs":105.93}
+```
+
+Level 1 is what refers to the entity directly; level 2 is what those roll into. Each item is
+`{ref, via, measure}`. Kinds the caller may not open are not listed, only counted in `hidden`.
+
+### Structured search
+
+| Method | Path | Notes |
+|---|---|---|
+| `GET` | `/search?q=` | as-of. `q` is `<MNEMONIC or kind> [where <condition>] [order by <field> [asc\|desc]] [limit n]`. Default limit 100, maximum 1000. `400 DRS-4004` if `q` cannot be read; `403` if the caller may not open the kind |
+
+The condition runs on each document *as the caller may see it* (redacted), so hidden fields cannot be probed.
+Numbers accept `k`, `m` and `bn` (or `b`) suffixes (`1m` = 1,000,000). URL-encode `q`; `curl -G --data-urlencode` does it for you:
+
+```bash
+curl -s -G $B/search --data-urlencode "q=TRD where mtm > 1m order by mtm desc limit 3" \
+  | jq -c '{kind, condition, orderBy, descending, limit, columns, labels, rows: .rows[0:1], scanned, matched, partial, elapsedMs}'
+```
+
+```json
+{"kind":"trade","condition":"$.mtm > 1000000","orderBy":"$.mtm","descending":true,"limit":3,
+ "columns":["$.mtm"],"labels":{"$.mtm":"MTM (USD)"},
+ "rows":[{"ref":{"kind":"trade","id":"T-10043"},"title":"T-10043","values":{"$.mtm":71490903}}],
+ "scanned":750,"matched":163,"partial":false,"elapsedMs":6.85}
+```
+
+`scanned` is how many documents were read, `matched` how many passed, and `partial: true` means a source
+could not be read completely, so the answer may be missing rows. A condition that does not parse:
+
+```bash
+curl -s -G $B/search --data-urlencode "q=TRD where mtm >"
+```
+
+```json
+{"type":"about:blank","title":"bad search","status":400,
+ "detail":"DRS-4004 cannot read the condition: DRS-2101 unexpected '' at 7","instance":"/api/v1/search","code":"DRS-4004"}
+```
+
+The condition language is Rachana-EL; see [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md).
+
+### Live streams
+
+All three are Server-Sent Events (`text/event-stream`). Use `curl -N` (no buffering). Details, event
+shapes and reconnection rules are in [LIVE.md](LIVE.md).
+
+| Method | Path | Events |
+|---|---|---|
+| `GET` | `/views/{kind}/{id}/stream` | as-of. `view` (the full ViewModel, id `0`), then `frame` (patches, id = sequence). For a past date or a non-live source: one `view`, then the stream closes |
+| `GET` | `/me/monitors/{name}/stream` | as-of. `hello` `{rows}`, then one `row` event `{kind, id, patches, p99Ms}` per changed entity (strip patches only) |
+| `GET` | `/me/alerts/stream` | `hello` `{user}`, then `alert` events (id = sequence) |
+| `GET` | `/health/live` | not a stream: `{streams, topics, frames, p50Ms, p99Ms}` for the whole server |
+
+All three send a comment line `:hb` when quiet (every `drishti.live.heartbeat`, default 15 s, for views;
+every 15 s for monitors and alerts). View and monitor streams count against `drishti.live.max-streams`
+(default 20000); beyond it a new stream is refused with `400 DRS-5001 too many live streams on this server`.
+
+```bash
+curl -s -N $B/views/trade/T-10001/stream
+```
+
+You should see (data lines shortened):
+
+```
+event:view
+id:0
+data:{"ref":{"kind":"trade","id":"T-10001"},"mnemonic":"TRD","title":{…},"strip":[…],"panels":[…],…}
+
+event:frame
+id:1
+data:{"seq":1,"generation":1686,"patches":[{"op":"strip","index":4,"cell":{"label":"MTM (USD)","text":"+1,595,251","tone":"pos","emphasis":true,"path":"$.mtm"}},{"op":"panel",…},{"op":"provenance",…}],"latencyMs":…,"p99Ms":…}
+```
+
+Press Ctrl+C to stop. Snapshot of a past date — one event and the stream ends by itself:
+
+```bash
+curl -s -N -H "X-Drishti-As-Of: 2026-09-29" $B/views/trade/T-10001/stream | head -c 300
+```
+
+The server-wide live figures:
+
+```bash
+curl -s $B/health/live
+```
+
+```json
+{"streams":0,"topics":0,"frames":11680,"p50Ms":0.886,"p99Ms":1.917}
+```
+
+### Personal: settings, packs, workspaces, monitors, alerts
+
+Everything under `/me` belongs to the caller (the token's subject, or `X-Drishti-User` with security off).
+It is kept on the server, so it follows the user to any browser.
+
+| Method | Path | Notes |
+|---|---|---|
+| `GET` | `/me/settings` | `{theme, landing, clockZone, density, flash, searchLimit, pinned}` with defaults filled in |
+| `PATCH` | `/me/settings` | change only the fields named; `null` resets one; unknown field or bad value → `400 DRS-5001` |
+| `GET` | `/me/packs` | `{assigned, active}` |
+| `PUT` | `/me/packs` | body `{"active": [...]}`; must be a non-empty subset of `assigned` (`403 DRS-5002` otherwise) |
+| `GET` | `/me/workspaces` | names of saved workspaces |
+| `GET` · `PUT` · `DELETE` | `/me/workspaces/{name}` | one workspace `{layout, panes}`; `404 DRS-1001` if missing; `DELETE` answers `204` |
+| `GET` | `/me/monitors` | names of saved monitors (watchlists) |
+| `PUT` · `DELETE` | `/me/monitors/{name}` | body `{"entities": [{"kind","id"}, …]}`, 1 to 50 entities; `DELETE` answers `204` |
+| `GET` | `/me/monitors/{name}` | as-of. One row per entity: `{ref, mnemonic, title, strip, live}` or `{ref, error}` |
+| `GET` | `/me/alerts/rules` | the caller's alert rules |
+| `PUT` · `DELETE` | `/me/alerts/rules/{name}` | body `{kind, id, when, severity, message, enabled}`; `kind`, `id`, `when` required; `severity` defaults to `warn`; `enabled` to `true`; `DELETE` answers `204` |
+| `GET` | `/me/alerts?limit=50` | alerts that fired for the caller, newest first |
+| `GET` | `/me/alerts/suggestions/{kind}` | rules the installed packs suggest for a kind |
+
+**Settings.** The values allowed:
+
+| Field | Default | Allowed values |
+|---|---|---|
+| `theme` | `null` (console default) | `terminal`, `light`, `wallstreet`, `blue`, `green`, `crimson`, `crimson-dark` |
+| `landing` | `/t` | `/t`, `/help`, `/w/<workspace>`, `/m/<monitor>`, `/v/<kind>/<id>` |
+| `clockZone` | `null` | any Java time-zone id, e.g. `Europe/London` |
+| `density` | `comfortable` | `comfortable`, `compact` |
+| `flash` | `true` | `true`, `false` |
+| `searchLimit` | `100` | 10 to 1000 |
+| `pinned` | `[]` | up to 20 `{"kind","id"}` |
+
+```bash
+curl -s -H "X-Drishti-User: ash" $B/me/settings
+```
+
+```json
+{"theme":null,"landing":"/t","clockZone":null,"density":"comfortable","flash":true,"searchLimit":100,"pinned":[]}
+```
+
+Change two settings and reset the clock zone (this writes; run it against your own account):
+
+```bash
+curl -s -X PATCH -H "X-Drishti-User: ash" -H 'Content-Type: application/json' $B/me/settings \
+  -d '{"theme": "light", "density": "compact", "clockZone": null}'
+```
+
+You should see the full settings back, with `"theme":"light"` and `"density":"compact"`. A bad value:
+`{"theme": "pink"}` → `400` with `detail` `DRS-5001 theme is one of [blue, crimson, crimson-dark, green, light, terminal, wallstreet]`.
+
+**Packs.**
+
+```bash
+curl -s $B/me/packs | jq -c .
+```
+
+```json
+{"assigned":["banking-core","market-data","trading","market-risk", …],"active":["banking-core","market-data","trading","market-risk", …]}
+```
+
+**Workspaces.** A layout (`2col`, `3col`, `2x2` or `1+2`) and 1 to 4 panes. Each pane has `ref` (an entity or
+`null`), `follows` (the index of another pane whose selection it follows, or `null`) and `title` (cut to 60
+characters). Panes may not follow themselves or each other in a circle.
+
+```bash
+curl -s -X PUT -H "X-Drishti-User: ash" -H 'Content-Type: application/json' $B/me/workspaces/rates \
+  -d '{"layout": "2col", "panes": [
+        {"ref": {"kind": "trade", "id": "T-10001"}, "title": "Swap"},
+        {"ref": null, "follows": 0, "title": "Counterparty"}]}'
+```
+
+You should see the stored workspace:
+`{"layout":"2col","panes":[{"ref":{"kind":"trade","id":"T-10001"},"follows":null,"title":"Swap"},{"ref":null,"follows":0,"title":"Counterparty"}]}`.
+
+**Monitors.**
+
+```bash
+curl -s -X PUT -H "X-Drishti-User: ash" -H 'Content-Type: application/json' $B/me/monitors/swaps \
+  -d '{"entities": [{"kind": "trade", "id": "T-10001"}, {"kind": "trade", "id": "T-10002"}]}'
+curl -s -H "X-Drishti-User: ash" $B/me/monitors/swaps | jq -c '.[] | {ref, mnemonic, live, strip: (.strip | length)}'
+```
+
+Each row is the entity's title and strip; a row that cannot be built carries `error` (a string that starts with
+the error code, for example `DRS-1001` for an entity no source holds) and the other rows are unaffected.
+
+**Alerts.** `when` and `message` are Rachana-EL, checked when the rule is saved (`422 DRS-2101` if `when`
+does not parse). `severity` is `info`, `warn` or `critical`.
+
+```bash
+curl -s -X PUT -H "X-Drishti-User: ash" -H 'Content-Type: application/json' $B/me/alerts/rules/mtm-drop \
+  -d '{"kind": "trade", "id": "T-10001", "when": "$.mtm < 1500000", "severity": "warn",
+       "message": "${$.tradeId}: MTM ${fmt($.mtm, '"'"'signed0'"'"')}"}'
+curl -s -H "X-Drishti-User: ash" "$B/me/alerts?limit=5"
+```
+
+A fired alert looks like `{"seq", "at", "user", "rule", "kind", "id", "severity", "message", "generation"}`.
+Suggestions come from the `alerts:` list in installed packs' `pack.yaml`; for example the finance pack
+suggests, for `trade`:
+`{"kind":"trade","name":"MTM below −450k","when":"$.mtm < -450000","severity":"warn","message":"${$.tradeId}: MTM ${fmt($.mtm, 'signed0')}"}`.
+The answer is `[]` when no installed pack suggests rules for the kind.
+
+### Catalogue: about, packs, sources, Sutras
+
+| Method | Path | Notes |
+|---|---|---|
+| `GET` | `/about` | `{product, version, built, java, uptimeSeconds, sutras, sources, securityEnabled, packs, copyright}` |
+| `GET` | `/packs` | every installed pack `{name, version, title, description, console, kinds, assigned, active}` (assigned/active for the caller) |
+| `GET` | `/sources` | `{sources: [{name, version, kinds, live, search, reverseLookup, health}], failures: {name: reason}}`; `kinds: []` means the source serves any kind |
+| `GET` | `/sutras` | every loaded Sutra `{name, latest, versions, domain, kind, where, priority}` |
+| `GET` | `/sutras/{name}/{version}` | one parsed Sutra as JSON `{name, version, domain, match, title, strip, panels, keys, location}`; `404 DRS-2003` |
+| `GET` | `/sutras/{name}/{version}/source` | the Sutra file as written (`text/markdown`); `404 DRS-2003` |
+| `GET` | `/sutras/problems` | `{file: [{code, message, location}]}` for Sutras that failed to load; `{}` when all is well |
+
+```bash
+curl -s $B/packs | jq -c '.[0:2][] | {name, version, title, kinds: .kinds[0:3], assigned, active}'
+```
+
+```
+{"name":"banking-core","version":"1.0.0","title":"Banking core","kinds":["counterparty","counterparty-group","issuer"],"assigned":true,"active":true}
+{"name":"market-data","version":"1.0.0","title":"Market data","kinds":["ir-curve","repo-curve","fx-spot"],"assigned":true,"active":true}
+```
+
+```bash
+curl -s $B/sources | jq -c '.sources[0:2][], .failures'
+```
+
+```
+{"name":"demo","version":"1.0","kinds":[],"live":true,"search":true,"reverseLookup":true,"health":"UP"}
+{"name":"file","version":"1.0","kinds":[],"live":false,"search":true,"reverseLookup":false,"health":"UP"}
+{}
+```
+
+```bash
+curl -s $B/sutras | jq -c 'length, .[0]'
+```
+
+```
+223
+{"name":"abs","latest":1,"versions":[1],"domain":"fixed-income","kind":"trade","where":"$.productType == 'ABS'","priority":10}
+```
+
+```bash
+curl -s $B/sutras/irs-fixfloat/1/source | sed -n '16,20p'
+```
+
+```
+<!-- Generated by tools/packgen/banking/make_sutras.py from the taxonomy. Edit the taxonomy, not this file. -->
+# Interest rate swap (fixed/float) (`irs-fixfloat` v1)
+
+Exchanges fixed for floating RFR-compounded payments.
+```
+
+### Sutra Studio and governance
+
+| Method | Path | Notes |
+|---|---|---|
+| `GET` | `/studio/settings` | `{save, review, approve}`: may the caller save, is review on, may the caller approve |
+| `POST` | `/studio/preview` | as-of. Body `{yaml, kind, id}` renders an unsaved Sutra against a real entity; or `{yaml, kind, id, document}` against pasted JSON. Answers a `ViewModel`; `422 DRS-2001`/`DRS-2002` with `problems` if the Sutra is bad |
+| `GET` | `/studio/inferred/{kind}/{id}?name=` | as-of. A starter Sutra (`text/markdown`) from what inference makes of the entity; name defaults to `<kind>-custom` |
+| `POST` | `/studio/inferred` | body `{kind, id, document, name}`: the same from pasted JSON (`422 DRS-1005` if `document` is not a JSON object) |
+| `POST` | `/sutras?note=` | body: the Sutra text, `Content-Type: text/markdown` (or `text/yaml`, `text/plain`). Needs `drishti.rachana.studio-save: true` and an `author` role (`403` otherwise). With governance on: `202 {"proposal": {id, name, version, status}}`; off: `200` with the saved Sutra's `{name, latest, versions, …}` |
+| `GET` | `/sutras/proposals?status=&name=` | `{enabled, proposals: [...]}` visible to the caller |
+| `GET` | `/sutras/proposals/{id}` | one proposal plus `text` (proposed), `baseText` (what it was based on) and `liveText` (live now); `404 DRS-2005` |
+| `POST` | `/sutras/proposals/{id}/approve` | body `{"comment": "..."}` optional. Publishes the Sutra. `403 DRS-2007` for your own proposal (four eyes); `409 DRS-2006` if already decided or the live Sutra changed since |
+| `POST` | `/sutras/proposals/{id}/reject` | body `{"comment": "..."}` — comment required |
+| `POST` | `/sutras/proposals/{id}/withdraw` | the author withdraws a pending proposal |
+| `GET` | `/sutras/{name}/history` | every proposal for a Sutra, newest first |
+
+A proposal summary: `{id, name, version, note, author, createdAt, status, reviewer, reviewedAt, comment,
+newVersion, stale, mayApprove, mayWithdraw}`. `stale: true` means the live Sutra changed after it was proposed.
+
+```bash
+curl -s $B/studio/settings; echo
+curl -s $B/sutras/proposals | jq -c .
+```
+
+```
+{"approve":true,"review":true,"save":true}
+{"enabled":true,"proposals":[]}
+```
+
+Start a new Sutra from an entity and preview it without saving (preview does not change anything on the
+server):
+
+```bash
+curl -s "$B/studio/inferred/trade/T-10001?name=my-swap" > my-swap.sutra.md
+jq -n --rawfile y my-swap.sutra.md '{yaml: $y, kind: "trade", id: "T-10001"}' \
+  | curl -s -X POST $B/studio/preview -H 'Content-Type: application/json' -d @- | jq -c '{title, panels: [.panels[].id]}'
+```
+
+Propose it (with governance on, an approver then approves it in Studio → Review):
+
+```bash
+curl -s -X POST "$B/sutras?note=first%20draft" -H 'Content-Type: text/markdown' --data-binary @my-swap.sutra.md
+```
+
+You should see `{"proposal":{"id":"…","name":"my-swap","version":1,"status":"…"}}` with HTTP `202`.
+
+### Sign-in and user administration
+
+These are summarised here; [USER_MANAGEMENT.md](USER_MANAGEMENT.md) explains users, roles, password rules,
+lockout and the audit log in full. User records are held by the server's identity store; the console never
+sees password hashes.
+
+| Method | Path | Who | Notes |
+|---|---|---|---|
+| `POST` | `/auth/login` | console service only | body `{username, password}` → the user; `401 DRS-6004` wrong credentials, `423 DRS-6005` locked |
+| `POST` | `/auth/oidc` | console service only | body `{idToken, nonce}`: single sign-on; the server verifies the provider's token and maps groups to roles; `401 DRS-6004` when refused; `403` if SSO is off |
+| `GET` | `/auth/me` | any signed-in user | the caller's own record; `404 DRS-6001` if the caller has no user record (e.g. `anonymous` with security off) |
+| `POST` | `/auth/password` | any signed-in user | body `{current, next}`; `422 DRS-6003` if `next` is too weak |
+| `GET` | `/admin/users?q=` | admin | users, optionally filtered |
+| `POST` | `/admin/users` | admin | body `{username, displayName, email, desk, roles, enabled, password, mustChangePassword, packs}` → `201`; `409 DRS-6002` exists |
+| `GET` · `PUT` · `DELETE` | `/admin/users/{username}` | admin | read, update the profile, delete (`204`; `409 DRS-6006` for the last admin) |
+| `POST` | `/admin/users/{username}/enabled` | admin | body `{"enabled": false}` |
+| `POST` | `/admin/users/{username}/password` | admin | body `{"password": "..."}` |
+| `GET` | `/admin/audit?limit=200&subject=` | admin | audit events `{at, actor, action, subject, detail}`, newest first |
+| `GET` | `/admin/roles` | admin | role names users may be given |
+| `GET` | `/admin/status` | admin | `{defaultAdminPasswordInUse, users, forceChangeOnCreate, installedPacks}` |
+
+A user record looks like:
+
+```json
+{"username":"drishti-dev-admin","displayName":"Drishti dev admin","email":"","desk":"Administration","roles":["admin"],
+ "enabled":true,"mustChangePassword":false,"locked":false,"createdAt":"2026-09-30T17:45:57.569465251Z",
+ "updatedAt":"2026-09-30T17:45:57.569465251Z","lastLoginAt":null,"passwordChangedAt":"2026-09-30T17:45:57.569465251Z","packs":null}
+```
+
+```bash
+curl -s $B/admin/status | jq -c .
+```
+
+```json
+{"forceChangeOnCreate":false,"installedPacks":["banking-core","market-data","trading", …],"defaultAdminPasswordInUse":true,"users":1}
+```
+
+`defaultAdminPasswordInUse: true` is a warning: change the seeded admin's password before production.
+
+### Administration: health and caches
+
+| Method | Path | Notes |
+|---|---|---|
+| `GET` | `/admin/health` | admin. Everything Drishti depends on, in one answer. Cheap enough to poll every few seconds |
+| `GET` | `/admin/caches` | admin. Each cache: `{name, type, stats}` — `engine` (layouts and shape fingerprints) and every connector that caches |
+| `POST` | `/admin/caches/{name}/purge` | admin. Purge one cache by name, or every cache with `all`; `{purged, elapsedMs}`; `404 DRS-5004` for an unknown name. Recorded in the audit log |
+
+`status` is `OK`, `DEGRADED` (a source is down, a plugin failed to start, or a pack has broken Sutras or a down
+connector) or `DOWN` (no source is up). Sources that are down are listed first.
+
+```bash
+curl -s $B/admin/health | jq -c '{status, summary, server, live}'
+```
+
+```json
+{"status":"OK",
+ "summary":{"packsWithProblems":0,"failedToStart":0,"sourcesDown":0,"sources":18,"packs":12},
+ "server":{"version":"1.9.0","uptimeSeconds":6953,"java":"21.0.12.1","heapUsedMb":146,"heapMaxMb":15640,"threads":75,"cpus":24},
+ "live":{"frames":11680,"p50Ms":0.886,"streams":0,"p99Ms":1.917,"topics":0,"droppedFrames":0}}
+```
+
+One source row and one pack row:
+
+```bash
+curl -s $B/admin/health | jq -c '.sources[0], .packs[0]'
+```
+
+```
+{"name":"civic-store","version":"1.0","status":"UP","health":"UP","kinds":["bill","candidate","election", …],"live":false,"dated":true,"search":true,"reads":{"reads":0},"cache":{"tables":8,"partitions":8,"timeTravel":0}}
+{"name":"banking-core","title":"Banking core","version":"1.0.0","extends":[],"overrides":[],"kinds":12,"sutras":12,"sutraProblems":[],"connectors":["reference-store"],"connectorsDown":[],"connectorsOff":[],"status":"OK"}
+```
+
+A source's `reads` grows read counts, errors, p50/p99 and the last error once it has served traffic.
+`connectorsOff` lists connectors a pack expects that are disabled or failed to start.
+
+Caches:
+
+```bash
+curl -s $B/admin/caches | jq -c '.[0:2][]'
+```
+
+```
+{"name":"engine","type":"Layouts and shape fingerprints","stats":{"layouts":24,"fingerprints":8818,"layoutHitRate":0.999}}
+{"name":"market-store","type":"Connector","stats":{"tables":20,"partitions":24,"timeTravel":0}}
+```
+
+Purging (writes; do it when a source's data changed under the server and you want it re-read now):
+
+```bash
+curl -s -X POST $B/admin/caches/market-store/purge
+```
+
+You should see `{"purged":["market-store"],"elapsedMs":…}`.
+
+### Outside /api/v1: OpenAPI and actuator
+
+These paths are not under `/api/v1/`, so the token filter does not apply to them. Protect them at the
+network or reverse-proxy level in production.
+
+| Path | What |
+|---|---|
+| `/api/docs` | the OpenAPI 3 document (JSON) for every endpoint |
+| `/api/docs/ui` | Swagger UI (redirects to the UI page) |
+| `/actuator/health` | `{"status":"UP","groups":["liveness","readiness"]}`; probes at `/actuator/health/liveness` and `/actuator/health/readiness` |
+| `/actuator/info` | build information |
+| `/actuator/metrics` · `/actuator/metrics/{name}` | Micrometer metrics |
+| `/actuator/prometheus` | the same in Prometheus text format |
+
+```bash
+curl -s http://localhost:18480/actuator/prometheus | grep -E '^drishti_(view|live)'
+```
+
+```
+drishti_live_frames_total 11680.0
+drishti_live_latency_p99_milliseconds 0.0
+drishti_live_streams 0.0
+drishti_live_topics 0.0
+drishti_view_seconds{quantile="0.5"} 0.0
+drishti_view_seconds{quantile="0.99"} 0.0
+drishti_view_seconds_count 129
+drishti_view_seconds_sum 0.324467028
+drishti_view_seconds_max 0.017122086
+```
+
+## The ViewModel in detail
+
+The server returns **formatted text and a tone** for every value, never raw numbers to format, so every
+client shows `−1,403,091` identically. The top level:
+
+| Field | Meaning |
+|---|---|
+| `ref` | `{kind, id}` |
+| `mnemonic` | the kind's command-line code (`TRD`) |
+| `title` | `{pill, id, with}` — `with` is an optional related entity `{text, link}` |
+| `strip` | the headline values: a list of `Cell` |
+| `panels` | the panels: `{id, kind, title, code, key, area, inferred, explanation?, data, error?, empty}` |
+| `keys` | function keys: `{key, label, action, panel?, link?}`; `action` is `panel` (jump to a panel), `link` (open another entity) or `denied` |
+| `provenance` | `{layout, fingerprint, source, generation, fetchedAt, live, businessDate}` — which Sutra (or inference) laid it out, which source, which version of the data |
+| `timings` | milliseconds for `fetch`, `layout`, `links`, `bind` and `total` |
+
+A **Cell** is `{label?, text, tone?, link?, emphasis?, path?}`. `tone` is `pos`, `neg` or another named tone;
+`path` (a JSON path such as `$.mtm`) is what live `frame` patches address. A panel whose binding failed carries
+`error` and no `data`; the rest of the view is unaffected. `empty: true` means the document lacks what the panel
+asks for.
+
+`data` by panel kind, with real examples from `T-10001`:
+
+| Panel `kind` | `data` shape |
 |---|---|
 | `kv`, `status`, `provenance` | `{"fields": [Cell]}` |
 | `table`, `ladder` | `{"columns", "numeric", "rows": [{"cells", "highlight", "path"}], "total", "more"}` |
 | `tabs` | `{"layout": "tabs" \| "columns", "tabs": [{"title", "fields": [Cell]}]}` |
 | `line`, `area` | `{"x", "series": [{"label", "values", "tone"}], "mark", "markText", "limit", "limitLabel", "source"}` |
 | `hbar` | `{"bars": [{"label", "value", "text", "tone"}]}` |
-| `links` | `{"links": [{"label", "text", "link", "badge", "status": "resolved" \| "pending" \| "missing"}]}` |
+| `links` | `{"links": [{"label", "text", "link", "badge", "status": "resolved" \| "pending" \| "missing" \| "denied"}]}` |
 
-A `Cell` is `{label?, text, tone?, link?, emphasis?, path?}`. The `path` fields let live updates
-patch single values. A panel whose binding failed carries `error` and no `data`; the rest
-of the view is unaffected.
+```bash
+curl -s $B/views/trade/T-10001 > t.json
+jq -c '.panels[] | select(.id=="terms").data.fields[0:2]' t.json
+jq -c '.panels[] | select(.id=="schedule").data | {columns, numeric, row: .rows[0], total}' t.json
+jq -c '.panels[] | select(.id=="sensitivities").data.bars[0:2]' t.json
+jq -c '.panels[] | select(.id=="refs").data.links[0:2]' t.json
+```
 
-## Error codes
+```
+[{"label":"Fixed rate","text":"4.0829%","path":"$.terms.fixedRate"},{"label":"Pay frequency","text":"Annual","path":"$.terms.payFrequency"}]
+{"columns":["Pay date","Leg","Type","Rate","Amount","PV"],"numeric":[false,false,false,true,true,true],
+ "row":{"cells":[{"label":"Pay date","text":"2025-09-29"},{"label":"Leg","text":"2"},{"label":"Type","text":"Float"},{"label":"Rate","text":"3.5377%"},{"label":"Amount","text":"−1,403,091","tone":"neg"},{"label":"PV","text":"0"}],"highlight":false,"path":"$.schedule[0]"},
+ "total":{"cells":[{},{},{},{},{"text":"Total"},{"text":"+1,875,863","tone":"pos"}],"highlight":false,"path":null}}
+[{"label":"3M","value":-5544.0,"text":"−5,544","tone":"neg"},{"label":"6M","value":-11089.0,"text":"−11,089","tone":"neg"}]
+[{"label":"Counterparty","text":"CP-MERIDIAN-RE","link":{"kind":"counterparty","id":"CP-MERIDIAN-RE","mnemonic":"CPTY"},"badge":"A","status":"resolved"},
+ {"label":"Netting set","text":"NS-MERIDIAN-RE-NY","link":{"kind":"netting-set","id":"NS-MERIDIAN-RE-NY","mnemonic":"NSET"},"badge":"PFE 46.0m","status":"resolved"}]
+```
 
-| Code | HTTP | Meaning |
-|---|---|---|
-| DRS-1001 | 404 | no source holds the entity |
-| DRS-1002 | 404 | no source serves the kind |
-| DRS-1003 | 502 | the source failed |
-| DRS-1004 | 504 | the source timed out |
-| DRS-2xxx | 422 | a Sutra problem (see RACHANA_REFERENCE.md) |
-| DRS-4001 | 400 | the command could not be read |
-| DRS-4003 | 400 | the business date is unreadable, in the future, or before the history window |
-| DRS-4004 | 400 | a structured search cannot be read (the detail says where) |
-| DRS-2005 | 404 | no such Sutra proposal |
-| DRS-2006 | 409 | the proposal was already decided, or the live Sutra changed after it was proposed |
-| DRS-2007 | 403 | four eyes: the author may not approve their own proposal |
-| DRS-5001 | 400 | bad request |
-| DRS-5004 | 404 | no cache by that name (admin cache purge) |
+**Entitlements in a view.** If the caller may not open a linked kind, the link is still shown but disabled:
+in a `links` panel the item has `status: "denied"` and `badge: "no access"`; a function key's label gets
+` (no access)` and `action: "denied"`; the title's `with` loses its link. People learn the entity exists
+without seeing it.
+
+## Error code table
+
+The complete list (from `ErrorCode` in `drishti-common`). The first digit groups them: 1 sources and data,
+2 Sutras and expressions, 3 inference, 4 engine, 5 API, 6 identity. Codes are never reused.
+
+| Code | HTTP | Name (`title`) | When you see it |
+|---|---|---|---|
+| DRS-1001 | 404 | entity not found | no source holds the entity; also a missing workspace, monitor or alert rule |
+| DRS-1002 | 404 | no source for kind | no source serves the kind |
+| DRS-1003 | 502 | source failed | the source answered with an error or could not be reached |
+| DRS-1004 | 504 | source timeout | the source took longer than `drishti.sources.fetch-timeout` (default 2 s) |
+| DRS-1005 | 422 | invalid json | a document (e.g. sample JSON pasted into Studio) is not valid JSON or not an object |
+| DRS-1006 | 500 | plugin load failed | a connector plugin could not be loaded (see `/sources` → `failures`) |
+| DRS-2001 | 422 | sutra parse | the Sutra text cannot be parsed |
+| DRS-2002 | 422 | sutra invalid | the Sutra parsed but has problems (listed in `problems`) |
+| DRS-2003 | 404 | sutra not found | no Sutra with that name and version |
+| DRS-2005 | 404 | proposal not found | no Sutra proposal with that id |
+| DRS-2006 | 409 | proposal conflict | the proposal was already decided, or the live Sutra changed after it was proposed |
+| DRS-2007 | 403 | four eyes | the author may not approve their own proposal |
+| DRS-2101 | 422 | el syntax | a Rachana-EL expression does not parse (alert rules, Sutra expressions, search conditions) |
+| DRS-2102 | 422 | el eval | a Rachana-EL expression failed while evaluating |
+| DRS-3001 | 500 | inference failed | inference could not lay out the document |
+| DRS-4001 | 400 | command unknown | the command line text cannot be read |
+| DRS-4002 | 500 | view failed | building the view failed unexpectedly |
+| DRS-4003 | 400 | bad business date | unreadable, in the future, or before the history window |
+| DRS-4004 | 400 | bad search | a structured search cannot be read (`detail` says where) |
+| DRS-5001 | 400 | bad request | an invalid argument or body; also "too many live streams on this server" |
+| DRS-5002 | 403 | forbidden | the caller lacks the role, the pack is not active for them, or the feature is off |
+| DRS-5004 | 404 | cache not found | no cache by that name (cache purge) |
+| DRS-5010 | 401 | unauthenticated | missing, bad or expired bearer token |
+| DRS-6001 | 404 | user not found | no such user |
+| DRS-6002 | 409 | user exists | a user with that name already exists |
+| DRS-6003 | 422 | weak password | the password does not meet the password rules |
+| DRS-6004 | 401 | bad credentials | wrong user name or password, or single sign-on refused |
+| DRS-6005 | 423 | account locked | too many failed sign-ins; locked for a while |
+| DRS-6006 | 409 | last admin | the change would leave no enabled administrator |
+| DRS-6007 | 422 | invalid user | a user record is invalid (for example an unknown pack) |
+
+Sutra load problems listed by `/sutras/problems` and in `problems` use their own finer `DRS-2xxx` codes;
+see [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md).
+
+## Scripting recipes
+
+**Export a strip for a list of trades as CSV.**
+
+```bash
+for id in T-10001 T-10002 T-10003; do
+  curl -s $B/views/trade/$id | jq -r --arg id "$id" '[$id, (.strip[] | select(.label=="MTM (USD)") | .text)] | @csv'
+done
+```
+
+```
+"T-10001","+1,603,277"
+"T-10002","…"
+"T-10003","…"
+```
+
+For numbers rather than formatted text, read the raw document instead:
+`curl -s $B/entities/trade/T-10001/raw | jq .data.mtm`.
+
+**The ten largest exposures yesterday.**
+
+```bash
+curl -s -G -H "X-Drishti-As-Of: 2026-09-29" $B/search \
+  --data-urlencode "q=TRD where mtm > 0 order by mtm desc limit 10" | jq -r '.rows[] | "\(.ref.id)\t\(.values["$.mtm"])"'
+```
+
+**Fail a deployment check when anything is unhealthy.**
+
+```bash
+status=$(curl -s $B/admin/health | jq -r .status)
+[ "$status" = "OK" ] || { echo "Drishti is $status"; exit 1; }
+```
+
+**Handle errors by code, not by message.**
+
+```bash
+resp=$(curl -s -w '\n%{http_code}' $B/views/trade/T-99999)
+code=$(echo "$resp" | tail -1); body=$(echo "$resp" | head -n -1)
+if [ "$code" != 200 ]; then
+  case $(echo "$body" | jq -r .code) in
+    DRS-1001) echo "no such trade" ;;
+    DRS-1004) echo "source slow; retry later" ;;
+    *)        echo "failed: $(echo "$body" | jq -r .detail)" ;;
+  esac
+fi
+```
+
+**Watch one value change live.**
+
+```bash
+curl -s -N $B/views/trade/T-10001/stream | grep --line-buffered '^data:{"seq"' \
+  | sed -u 's/^data://' | jq -r --unbuffered '.patches[] | select(.op=="strip") | .cell | "\(.label) \(.text)"'
+```
+
+You should see a line such as `MTM (USD) +1,595,251` each time the value ticks.

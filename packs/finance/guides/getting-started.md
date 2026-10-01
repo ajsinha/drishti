@@ -18,6 +18,21 @@
 In ten minutes you will open an interest rate swap, follow it to its netting set, watch it tick, and
 see exactly where every number came from.
 
+## Try it
+
+These commands open the finance pack's samples. The tutorial below walks through the first one.
+
+| Command | Shows |
+|---|---|
+| `TRD IRS-48213 <GO>` | interest rate swap: legs, cashflows, the SOFR curve, DV01 |
+| `TRD FXS-20931 <GO>` | FX swap: near and far legs, forward points |
+| `TRD CFT-77120 <GO>` | commodity future: settlements and variation margin |
+| `NSET NS-NORTH-01 <GO>` | netting set: exposure profile, member trades, CSA |
+| `TRD IRS-47102 <GO>` | a trade with no Sutra, laid out by inference alone |
+| `CRV USD-SOFR <GO>` | a curve (inferred) |
+| `CPTY CP-NORTHBRIDGE <GO>` | the counterparty Northbridge Capital LLP |
+| `TRD where mtm < 0 order by mtm <GO>` | a search: the trades with a negative MTM, worst first |
+
 ## 1. Open the terminal
 
 Go to **/t**, or choose **Open the terminal** on the landing page. The amber box at the top is the

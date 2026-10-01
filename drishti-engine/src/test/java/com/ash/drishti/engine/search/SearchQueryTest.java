@@ -38,7 +38,7 @@ class SearchQueryTest {
     void friendlySyntaxBecomesRachanaEl() {
         SearchQuery q = SearchQuery.parse("TRD where mtm > 1.5m and currency = 'EUR' or not live order by mtm desc limit 20");
         assertThat(q.head()).isEqualTo("TRD");
-        assertThat(q.condition()).isEqualTo("$.mtm > 1500000 && $.currency == 'EUR' || ! $.live");
+        assertThat(q.condition()).isEqualTo("$.mtm > 1500000 && lower($.currency) == lower('EUR') || ! $.live");
         assertThat(q.orderBy()).isEqualTo("$.mtm");
         assertThat(q.descending()).isTrue();
         assertThat(q.limit()).isEqualTo(20);
@@ -71,5 +71,43 @@ class SearchQueryTest {
         assertThatThrownBy(() -> SearchQuery.parse("TRD where name = 'open")).isInstanceOf(DrishtiException.class).hasMessageContaining("not closed");
         assertThatThrownBy(() -> SearchQuery.parse("TRD where mtm > 5zz")).hasMessageContaining("suffix");
         assertThat(SearchQuery.parse("TRD where x > 1 limit 99999").limit()).isEqualTo(SearchQuery.MAX_LIMIT);
+    }
+
+    @Test
+    void pickListsNameEntitiesByIdOrTitleOrByFieldValues() {
+        SearchQuery prefix = SearchQuery.pick("TRD T-100 <GO>");
+        assertThat(prefix.head()).isEqualTo("TRD");
+        assertThat(prefix.idPattern()).isEqualTo("T-100");
+        assertThat(prefix.condition()).isNull();
+        assertThat(SearchQuery.matches("t-100", "T-10042", "Swap")).isTrue();
+        assertThat(SearchQuery.matches("t-100", "T-20042", "Swap")).isFalse();
+        assertThat(SearchQuery.matches("north", "CP-NORTHBRIDGE", "Northbridge Capital")).isTrue();    // the title
+        assertThat(SearchQuery.matches("*100*", "X-21004", null)).isTrue();
+        assertThat(SearchQuery.matches("T-1*2", "T-10042", null)).isTrue();
+        assertThat(SearchQuery.matches("T-1*2", "T-10043", null)).isFalse();
+
+        SearchQuery byValue = SearchQuery.pick("TRD productType=Revolver");
+        assertThat(byValue.idPattern()).isNull();
+        assertThat(byValue.condition()).isEqualTo("lower($.productType) == lower('Revolver')");      // case never matters
+        assertThat(byValue.fields()).containsExactly("$.productType");
+        assertThat(SearchQuery.pick("TRD productType = REVOLVER").condition()).isEqualTo("lower($.productType) == lower('REVOLVER')");
+        assertThat(SearchQuery.pick("TRD notional > 10m and currency = usd").condition())
+                .isEqualTo("$.notional > 10000000 && lower($.currency) == lower('usd')");
+
+        SearchQuery both = SearchQuery.pick("TRD T-1* desk=rates order by mtm desc limit 7");
+        assertThat(both.idPattern()).isEqualTo("T-1*");
+        assertThat(both.condition()).isEqualTo("lower($.desk) == lower('rates')");
+        assertThat(both.orderBy()).isEqualTo("$.mtm");
+        assertThat(both.descending()).isTrue();
+        assertThat(both.limit()).isEqualTo(7);
+        assertThat(SearchQuery.pick("TRD T-100 limit 5").limit()).isEqualTo(5);
+        assertThat(SearchQuery.pick("TRD").idPattern()).isNull();                                      // every trade
+        assertThat(SearchQuery.pick("TRD where mtm > 1m").condition()).isEqualTo("$.mtm > 1000000");
+
+        assertThat(SearchQuery.looksLikePick("TRD T-10001")).isFalse();                                // one entity: opened if it exists
+        assertThat(SearchQuery.looksLikePick("TRD T-1*")).isTrue();
+        assertThat(SearchQuery.looksLikePick("TRD productType=Revolver")).isTrue();
+        assertThat(SearchQuery.looksLikePick("TRD")).isFalse();
+        assertThat(SearchQuery.pick("TRD not status = matured").condition()).isEqualTo("! (lower($.status) == lower('matured'))");
     }
 }

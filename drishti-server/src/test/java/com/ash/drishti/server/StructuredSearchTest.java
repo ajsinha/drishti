@@ -84,4 +84,29 @@ class StructuredSearchTest {
         mvc.perform(get("/api/v1/search").param("q", "TRD where name = 'open").header("Authorization", as("searcher")))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("not closed")));
     }
+
+    private org.springframework.test.web.servlet.ResultActions command(String text) throws Exception {
+        return mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/v1/command")
+                .header("Authorization", as("searcher")).contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .content("{\"text\":\"" + text + "\"}")).andExpect(status().isOk());
+    }
+
+    @Test
+    void oneMatchOpensAndSeveralGiveAPickList() throws Exception {
+        command("TRD T-10001 <GO>").andExpect(jsonPath("$.ref.id").value("T-10001"));                    // exists: opened
+        command("trd t-10001").andExpect(jsonPath("$.ref.id").value("T-10001"));                          // case never matters
+        command("TRD T-100").andExpect(jsonPath("$.ref").doesNotExist())                                 // T-10001 … T-10099: pick one
+                .andExpect(jsonPath("$.list").value("TRD T-100")).andExpect(jsonPath("$.matched").value(greaterThan(1)));
+        command("TRD productType=revolver").andExpect(jsonPath("$.ref").doesNotExist()).andExpect(jsonPath("$.matched").value(6));
+        command("TRD productType=revolver and direction=nobody").andExpect(jsonPath("$.matched").value(0));
+
+        mvc.perform(get("/api/v1/search").param("q", "TRD productType=Revolver").header("Authorization", as("searcher")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rows", hasSize(6)))
+                .andExpect(jsonPath("$.rows[*].values['$.productType']", everyItem(org.hamcrest.Matchers.is("REVOLVER"))))
+                .andExpect(jsonPath("$.columns", org.hamcrest.Matchers.hasItems("$.productType", "$.notional", "$.mtm", "$.book")));  // the pack's key fields
+        mvc.perform(get("/api/v1/search").param("q", "TRD T-1000").header("Authorization", as("searcher")))
+                .andExpect(jsonPath("$.rows[*].ref.id", everyItem(org.hamcrest.Matchers.startsWith("T-1000"))));
+        mvc.perform(get("/api/v1/search").param("q", "TRD T-10001").header("Authorization", as("nothing"))).andExpect(status().isForbidden());
+    }
 }

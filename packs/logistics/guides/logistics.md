@@ -18,12 +18,32 @@
 The logistics pack shows Drishti on a second industry. The same engine, grammar and terminal cover
 ocean freight, with no code changes: only this pack's configuration.
 
-| Mnemonic | Opens | Example |
+## Try it
+
+Type each command in the terminal (`/t`) and press `Enter`:
+
+| Command | Shows |
+|---|---|
+| `SHP SHP-10042 <GO>` | a shipment in transit, Singapore to Rotterdam: laid out by the `shipment` Sutra, its delay ticking |
+| `SHP SHP-10077 <GO>` | a delivered shipment: no Sutra matches, so inference lays it out |
+| `CTR CTR-MSKU1234567 <GO>` | the reefer container, with its temperature readings (inferred) |
+| `VSL VSL-9811000 <GO>` | the vessel (inferred) |
+| `PORT PORT-NLRTM <GO>` | the port of Rotterdam; also `PORT-SGSIN`, `PORT-LKCMB`, `PORT-EGPSD` |
+| `SHP-10042 <GO>` | a bare identifier works too: `SHP-` tells Drishti it is a shipment |
+
+Then:
+
+- **Workspaces → Shipment tracker** puts the shipment, its container and its vessel side by side.
+- **Monitors** (`/m`) → *Starters* → **Fleet watch** is a live watchlist of the shipment, container, vessel and Rotterdam.
+- **Alert** on `SHP-10042` offers *Delayed more than 12 h*; on the container, *Reefer out of range*
+  (below 2 °C or above 8 °C).
+
+| Mnemonic | Opens | Identifiers |
 |---|---|---|
-| `SHP` | a shipment | `SHP SHP-10042 <GO>` |
-| `CTR` | a container | `CTR CTR-MSKU1234567 <GO>` |
-| `VSL` | a vessel | `VSL VSL-9811000 <GO>` |
-| `PORT` | a port | `PORT PORT-NLRTM <GO>` |
+| `SHP` | a shipment | `SHP-…` |
+| `CTR` | a container | `CTR-…` |
+| `VSL` | a vessel | `VSL-…` |
+| `PORT` | a port | `PORT-…` |
 
 ## What you will see
 
@@ -40,9 +60,5 @@ vessel's speed and each port's berth wait.
 lays it out from the pack's vocabulary instead: weights, temperatures and delays are recognised and
 formatted.
 
-## Try the workspace
-
-**Workspaces → Shipment tracker** puts the shipment, its container and its vessel side by side.
-
 !!! note "Turning the pack on or off"
-    `DRISHTI_PACKS=finance,logistics` (the default is `finance`). See the Packs guide.
+    `DRISHTI_PACKS=finance,logistics` (the default is `finance`). See [Domain packs](../../../docs/PACKS.md).

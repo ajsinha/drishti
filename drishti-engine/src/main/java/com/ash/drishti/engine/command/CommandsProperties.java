@@ -32,7 +32,7 @@ public record CommandsProperties(Map<String, Mnemonic> mnemonics, Integer sugges
 
     public CommandsProperties {
         mnemonics = mnemonics == null ? Map.of() : Map.copyOf(mnemonics);
-        suggestLimit = suggestLimit == null ? 10 : suggestLimit;
+        suggestLimit = suggestLimit == null ? 25 : suggestLimit;
         suggestBudget = suggestBudget == null ? Duration.ofMillis(30) : suggestBudget;
         recentSize = recentSize == null ? 20 : recentSize;
     }

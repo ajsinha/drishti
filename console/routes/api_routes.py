@@ -38,7 +38,8 @@ def _problem(e: BackendError) -> JSONResponse:
 
 
 @router.get("/suggest")
-async def suggest(request: Request, q: str = "", limit: int = 10):
+async def suggest(request: Request, q: str = "", limit: int | None = None):
+    """The command line's dropdown; without a limit the server's own (drishti.commands.suggest-limit, 25) applies."""
     try:
         return await request.app.state.backend.suggest(q, ident(request), limit)
     except BackendError as e:

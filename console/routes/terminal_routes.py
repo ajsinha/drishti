@@ -64,6 +64,8 @@ async def go(request: Request, q: str = ""):
         r = await request.app.state.backend.command(q, ident(request))
     except BackendError as e:
         return RedirectResponse(f"/t?error={quote(e.detail)}", status_code=303)
+    if not r.get("ref"):                    # several (or no) entities: a pick list, as on a Bloomberg terminal
+        return RedirectResponse(f"/s?q={quote(r.get('list') or q)}", status_code=303)
     return RedirectResponse(f"/v/{r['ref']['kind']}/{quote(r['ref']['id'])}", status_code=303)
 
 

@@ -68,7 +68,7 @@
     lastQ = q;
     if (ctrl) { ctrl.abort(); }
     ctrl = window.AbortController ? new AbortController() : null;
-    fetch('/api/suggest?limit=10&q=' + encodeURIComponent(q), { signal: ctrl ? ctrl.signal : undefined, headers: { Accept: 'application/json' } })
+    fetch('/api/suggest?q=' + encodeURIComponent(q), { signal: ctrl ? ctrl.signal : undefined, headers: { Accept: 'application/json' } })
       .then(function (r) { return r.ok ? r.json() : []; })
       .then(function (data) { items = Array.isArray(data) ? data : []; active = -1; render(q); })
       .catch(function () { /* aborted or offline: keep the current list */ });

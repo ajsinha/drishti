@@ -15,67 +15,196 @@
 -->
 # Tutorial 3 · Sutra Studio
 
-Studio (`/studio`) is where layouts are written. You edit a Sutra on the left and see it applied to a
-real entity on the right. Nothing is saved until you press **Save**.
+Studio (`/studio`) is where screen layouts are written. You edit a Sutra on the left and see it applied to a
+real entity on the right, in the same renderer the terminal uses. Nothing is saved until you press **Save** (or
+**Submit for review**), so you can experiment freely.
 
-A Sutra is a **Markdown document**: prose for people and AI assistants, with the layout in one fenced
-block marked `sutra`. The engine reads only that block (see the Rachana reference, *File format*).
+This tutorial takes about fifteen minutes. It uses the trading pack's interest rate swap `T-10001`; any entity
+works.
 
-## 1. Start from something that works
+## The screen at a glance
 
-Choose a Sutra in the picker, or type an entity (`trade` / `IRS-47102`) and press **Start from
-inference**. Studio loads what inference makes of that entity as an editable Sutra, so you begin
-from a working layout.
+| Where | What it is |
+|---|---|
+| Top left: **Sutra picker** | *New Sutra…*, or an existing Sutra such as `irs-fixfloat v1 · trade`. |
+| Top left: two small boxes | The **kind** and **id** of the entity to preview against (`trade`, `T-10001`). |
+| **Preview** (Ctrl+Enter) | Renders the Sutra against that entity. |
+| **Start from inference** | Replaces the editor with what inference makes of the entity, as an editable Sutra. |
+| **Save** / **Submit for review** | Only where saving is switched on and you are an author (see step 7). |
+| Toolbar | Markdown buttons, **Insert…**, **Jump to…**, **Wrap**. |
+| Editor | The Sutra: a Markdown document with one fenced `sutra` block. |
+| Problems list | Under the editor: each problem with its code and line. |
+| Right: **Preview**, **Document**, **Sample JSON** tabs | The rendered view; the Sutra rendered as a page; the data. |
 
-## 2. Edit and preview
+## 1. Open an existing Sutra
 
-Change a title, a format or a panel `kind`, then press **Ctrl+Enter**. The preview takes tens of
-milliseconds and uses the same renderer as the terminal. Keys, fields and expressions are highlighted.
+Go to:
 
-## 3. Write it like a document
+```text
+# Studio with the swap Sutra and T-10001 already chosen
+/studio?sutra=irs-fixfloat@1&kind=trade&id=T-10001
+```
 
-The editor is a Markdown editor. The toolbar (and Ctrl+B, Ctrl+I, Ctrl+K) adds headings, bold,
-italics, code, links, lists, quotes and tables. Inside the `sutra` block, Rachana is highlighted.
+Or choose `irs-fixfloat v1 · trade` in the picker and type `trade` and `T-10001` in the two boxes. Press
+**Ctrl+Enter**.
 
-- **Insert…** adds a `sutra` block, a strip field, or a panel of any of the thirteen kinds, already
-  shaped correctly, at the right place in the block.
-- **Jump to…** lists the headings and the `sutra` block; long documents stay easy to move around.
-- **Wrap** turns soft wrapping on or off.
-- The **Document** tab shows the Sutra rendered as a page: what the help centre and a Git host show.
+You should see the swap on the right exactly as the terminal shows it: the title *Rates · Interest rate swap
+(fixed/float) T-10001 with Meridian Reinsurance Ltd*, eight strip figures, *Terms*, *Legs*, *Cashflows*, the
+curve and the DV01 bars.
 
-Explain the *why*: what the reader looks at first, which mockup the layout follows, what each panel
-answers. The next author, or an AI assistant asked to change the layout, starts from that.
+## 2. Make a change and preview it
 
-## 4. Fix problems by line
+In the editor, find the strip line for DV01:
 
-If something is wrong, the list under the editor shows each problem with its code and line (for
-example `DRS-2101 line 12: expression … does not compile`). Click a problem to jump to its line.
+```yaml
+  - { label: DV01 (USD), bind: $.risk.dv01, fmt: signed0, tone: sign }
+```
 
-## 5. See and paste the data
+Change it to:
 
-The **Sample JSON** tab shows the document the Sutra works on:
-- **Load entity JSON** fills it with the chosen entity's document, exactly as the source sent it. The
-  Sutra's `$.…` paths address this document.
-- **Paste** any JSON object there and tick **Preview against this JSON**. The preview then renders
-  your document instead of fetching one. This is how to design a layout before a source is
-  connected. **Start from inference** uses the pasted document too.
+```yaml
+  - { label: DV01, bind: $.risk.dv01, fmt: compact, tone: sign, emphasis: true }
+```
 
-Inside the `sutra` block the syntax is YAML. The values of `bind`, `where`, `rows` and so on are
-Rachana-EL expressions. Line numbers in problems are the Markdown file's.
+Press **Ctrl+Enter**. The strip now reads *DV01 −155.2k*, highlighted. A preview takes tens of milliseconds.
 
-## 6. Submit for review
+Now break something on purpose: change `label:` to `labell:` on that line and preview. The **problems list**
+under the editor names the problem with its code and line, for example:
 
-Where saving is switched on (`DRISHTI_STUDIO_SAVE=true`), authors (`author` or `admin` role) see **Submit for
-review**. Write a short note for the reviewer (*What changed?*) and submit: Studio checks the Sutra and records it
-as a proposal. Nobody sees it yet.
+```text
+# What a problem looks like
+DRS-2011 line 37: unknown key 'labell' in strip item
+```
 
-An approver (a role with `approve`, or an admin) opens **Reviews**, reads the change as a diff against the live
-Sutra, and either **approves** it, which publishes it (`<domain>/<name>.v<N>.sutra.md`) so views use it at once,
-or **rejects** it with a reason. Nobody approves their own proposal. If the live Sutra changed after you proposed,
-approval is refused: propose again from the live version. You can **withdraw** your own proposal while it waits.
+Try a broken expression too, such as `bind: "$.risk.dv01 +"`: you get `DRS-2101` (the expression does not
+compile).
 
-Sites that do not want review switch it off (`DRISHTI_SUTRA_REVIEW=false`); **Save** then publishes directly.
+Click a problem to jump to its line. Put the line back and preview again.
+
+## 3. Add a panel with Insert…
+
+1. Put the cursor on a new line at the end of the `panels:` list.
+2. Choose **Insert… → status**. A correctly shaped `status` panel appears.
+3. Edit it to read as below.
+
+```yaml
+# the status panel, at the end of panels:
+  - id: ops
+    kind: status
+    title: Confirmation and clearing
+    fields:
+      - { label: Confirmation, bind: $.confirmation.status, tone: status }
+      - { label: Clearing, bind: $.clearing.status, tone: status }
+      - { label: CCP, bind: $.clearing.ccp }
+```
+
+Press **Ctrl+Enter**. A new panel shows *Confirmed*, *Cleared* and *LCH SwapClear*.
+
+**Insert…** offers a `sutra` block, a strip field, and panels of twelve kinds (`kv`, `table`, `tabs`, `line`,
+`area`, `hbar`, `ladder`, `status`, `gauge`, `markdown`, `links`, `provenance`). For a `surface`, copy the example
+from [The thirteen panel kinds](panel-kinds#surface).
+
+## 4. Find the right path in the data
+
+Open the **Sample JSON** tab and press **Load entity JSON**. You should see the trade's document, exactly as the
+source sent it:
+
+```json
+{
+  "tradeId": "T-10001",
+  "productType": "IRS_FIXFLOAT",
+  "counterparty": { "id": "CP-MERIDIAN-RE", "name": "Meridian Reinsurance Ltd" },
+  "execution": { "venue": "Voice", "venueMic": "XOFF", "orderId": "ORD-C00C6EF736", … },
+  …
+}
+```
+
+A path is the keys joined with dots: `$.execution.venue` reads *Voice*; `$.counterparty.name` reads *Meridian
+Reinsurance Ltd*. Add a strip figure to prove it:
+
+```yaml
+  - { label: Venue, bind: "$.execution.venue + ' (' + $.execution.venueMic + ')'" }
+```
+
+Preview: the strip shows *Venue Voice (XOFF)*. (A strip holds at most eight figures; remove one first, or you get
+`DRS-2026`.)
+
+## 5. Design against data you paste
+
+You can design a layout before any source is connected:
+
+```json
+{"tradeId": "T-1", "notional": 5000000, "mtm": -12500,
+ "legs": [{"leg": 1, "rate": 0.031}, {"leg": 2, "index": "SOFR"}]}
+```
+
+1. In **Sample JSON**, replace the document with your own, such as the one above.
+2. Tick **Preview against this JSON**.
+3. Press **Ctrl+Enter**. The preview renders your document instead of fetching `T-10001`.
+
+**Start from inference** also uses the pasted document when the box is ticked, so you can get a first layout for
+data Drishti has never seen.
+
+## 6. Start a new Sutra from inference
+
+1. Choose *New Sutra…* in the picker.
+2. Type `netting-set` and `NS-SUMMIT-NY` in the two boxes.
+3. Press **Start from inference**.
+
+The editor fills with a Sutra named `netting-set-custom`, with `match: { kind: netting-set, priority: 1 }`, a strip
+and one panel per thing inference found: *Profile*, *Trades*, *By asset*, *How this view was built* and *Linked
+entities*. Delete what you do not need, rename panels, add `key: F2` to the most important one, and write a few
+lines of prose above the `sutra` block saying who the layout is for.
+
+!!! tip "Write it like a document"
+    The editor is a Markdown editor. The toolbar (and **Ctrl+B**, **Ctrl+I**, **Ctrl+K**) adds headings, bold,
+    italics, code, links, lists, quotes and tables. **Jump to…** lists the headings and the `sutra` block;
+    **Wrap** turns soft wrapping on or off. The **Document** tab shows the Sutra as the help centre will show it.
+    Explain *why* the layout is what it is: the next author, or an AI assistant asked to change it, starts from
+    that.
+
+## 7. Save, or submit for review
+
+Saving needs two things:
+
+- the server started with `DRISHTI_STUDIO_SAVE=true` (it is off by default, and **Save** is then disabled with
+  the hint *Saving is off here, or you are not an author*);
+- a role that may author: `author`, `approver` or `admin`.
+
+What the button does depends on review, which is **on** by default:
+
+| Review | Button | What happens |
+|---|---|---|
+| on (default) | **Submit for review** | Studio checks the Sutra and records a *proposal*. Nobody sees it yet. Write a note for the reviewer in *What changed?* first. |
+| off (`DRISHTI_SUTRA_REVIEW=false`) | **Save** | The Sutra is written at once to the site Sutra directory as `<domain>/<name>.v<N>.sutra.md` (by default under `./sutras`), and views use it immediately. |
+
+If the same `name@version` is already defined in another file (a pack's Sutra, for example), the save is refused
+with `DRS-2028`. To change an existing Sutra, raise its `version` (`version: 2`): views pick the new version
+straight away, and the old one stays loadable for history.
+
+### Reviewing a proposal
+
+1. An approver (role `approver`, or an admin) clicks **Reviews** in Studio (`/studio/reviews`). The button shows
+   how many proposals are waiting.
+2. Opening a proposal shows the author's note and the change as a **diff** against the live Sutra.
+3. **Approve** (with an optional comment) publishes it, and views use it at once. **Reject** requires a reason,
+   which is kept with the proposal for the author to read.
+4. While it waits, the author can **Withdraw** it.
+
+Rules that keep this safe:
+
+- **Four eyes.** With sign-in switched on, nobody approves their own proposal.
+- **No stale approvals.** If the live Sutra changed after the proposal was made, approval is refused; propose again
+  from the live version.
+- **Audited.** Every proposal, approval, rejection and withdrawal is recorded in the audit log.
 
 !!! note "In production"
-    Most teams keep saving off and move Sutras through version control. Studio is then a safe place to
-    try changes: previews never affect anyone else.
+    Many teams keep saving off in production and move Sutras through version control (a pull request that adds
+    the file to the pack's `sutras/` directory). Studio is then a safe place to try changes: previews never
+    affect anyone else.
+
+## Where to go next
+
+- [The Sutra guide](sutra-guide): every part of a Sutra, with examples.
+- [Tutorial 4 · Nested documents](nested-data): paths of any depth, and a complete operations Sutra to paste.
+- [Rachana reference](rachana-reference): every key and problem code.

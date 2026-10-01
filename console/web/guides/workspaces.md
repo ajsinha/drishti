@@ -15,34 +15,101 @@
 -->
 # Workspaces
 
-A workspace puts several live views on one screen. Every pane is a full Drishti view, with its own
-live updates, links and keys, and a pane can **follow** another. For example, pick a member trade in
-the netting-set pane, and the pane that follows it opens that trade.
+A workspace puts up to four live views on one screen. Each pane is a full Drishti view, with its own live
+updates, links and function keys. A pane can **follow** another pane: click a trade in a netting set's member
+list, and the following pane opens that trade.
 
-## Open one
+## Tutorial: a credit desk on one screen
 
-Choose **Workspaces** in the top bar (`/w`). Your saved workspaces are listed first, then the
-starters:
+The starter workspaces come from the **finance** pack. If **Workspaces** shows no starters, ask your administrator
+to enable or assign the finance pack (see [Domain packs](packs)).
 
-| Starter | Layout | Panes |
+### 1. Open a starter
+
+1. Click **Workspaces** in the top bar (or go to `/w`).
+2. Under **Starters**, click **Credit desk**.
+
+You should see three panes in the *one large, two stacked* layout:
+
+| Pane | Shows | Follows |
 |---|---|---|
-| Credit desk | one large, two stacked | a netting set; the trade you pick in it (follows pane 1); the discount curve |
-| Rates | two columns | a swap; the linked entity you pick in it (follows pane 1) |
-| Cross-asset | two by two | the four reference views at once |
+| 1 (large, left) | netting set `NS-NORTH-01` | — |
+| 2 (top right) | trade `IRS-48213` | pane 1 |
+| 3 (bottom right) | curve `USD-SOFR` | — |
 
-## Change it
+### 2. Watch a pane follow
 
-- **Layout:** two columns, three columns, two by two, or one large pane with two stacked.
-- **What a pane shows:** type a command or identifier in the pane's box (`TRD FXS-20931`, `NS-NORTH-01`)
-  and press Enter.
-- **Follows:** choose which pane this one follows. A link clicked in the followed pane opens here.
-  A pane that nobody follows navigates in place.
-- **Panes:** add up to four; `×` removes one. `Alt+1`…`Alt+4` moves between panes.
+In pane 1, click another trade in the *Member trades* table, for example `IRS-47102`. Pane 2 opens it.
+Pane 1 stays where it is, so you can click your way through the members one by one.
 
-## Save it
+A pane that nobody follows navigates in place when you click a link inside it.
 
-**Save** keeps it under its name, and **Save as…** under a new one. Workspaces are saved to your
-account on the server, so they follow you to any browser. Each user has up to 50 workspaces.
+### 3. Change what a pane shows
 
-!!! note "On a phone"
-    Panes stack in one column, each a scrollable live view.
+Each pane has a box in its header. Type a command or a bare identifier and press Enter:
+
+```text
+# Any of these work in a pane's box
+TRD CFT-77120
+NS-HARB-02
+CRV USD-SOFR
+```
+
+The **↗** icon in a pane's header opens that pane's view full screen in the terminal.
+
+### 4. Change the layout and panes
+
+| Control | What it does |
+|---|---|
+| Layout menu | *Two columns*, *Three columns*, *Two by two*, or *One large, two stacked*. |
+| **+ Pane** | Adds a pane (at most four). |
+| **×** on a pane | Removes it. |
+| *follows* menu on a pane | Chooses which pane this one follows (or *—* for none). |
+| `Alt+1` … `Alt+4` | Moves the keyboard focus to pane 1 to 4. |
+
+### 5. Save it as your own
+
+- **Save** keeps the workspace under the name shown in the bar.
+- **Save as…** asks for a new name (*Save workspace as:*), for example `My credit desk`, and saves a copy.
+- **Delete** (on a saved workspace) removes it.
+
+Your saved workspaces are listed under **Yours** on `/w`, and open at `/w/<name>`, for example
+`/w/My credit desk`. They are saved to your account on the server, so they follow you to any browser. You can
+keep up to 50.
+
+!!! tip "Open a workspace when you sign in"
+    In *My account → Settings*, set **After signing in, open** to `/w/My credit desk`, and that workspace opens
+    every time you sign in.
+
+## The starters
+
+| Starter | Pack | Layout | Panes |
+|---|---|---|---|
+| Credit desk | finance | one large, two stacked | netting set `NS-NORTH-01`; the trade you pick in it (`IRS-48213` at first, follows pane 1); discount curve `USD-SOFR` |
+| Rates | finance | two columns | swap `IRS-48213`; the linked entity you pick in it (`USD-SOFR` at first, follows pane 1) |
+| Cross-asset | finance | two by two | the four reference views: `IRS-48213`, `FXS-20931`, `CFT-77120`, `NS-NORTH-01` |
+| Shipment tracker | logistics | one large, two stacked | shipment `SHP-10042`; the container you pick (follows pane 1); vessel `VSL-9811000` |
+
+Opening a starter does not change it for anyone else: you get a copy, and **Save** stores that copy under your
+account.
+
+## Worked idea: rates trade and its market data
+
+With the finance pack enabled:
+
+1. Open the **Rates** starter.
+2. In pane 1, the swap `IRS-48213`, click the discount curve in *Linked entities*. Pane 2 shows the curve.
+3. Click the netting set link in pane 1. Pane 2 now shows the netting set.
+4. Change the layout to *Three columns*, press **+ Pane**, and type `CRV USD-SOFR` in pane 3, so the curve stays in
+   view while pane 2 follows your clicks.
+5. Press **Save as…** and call it `Rates and curve`.
+
+## Things to know
+
+- **Live updates.** All panes tick. The panes share the page's one live connection to the server, so a
+  four-pane workspace is no heavier on the connection than a single view.
+- **Business date.** Every pane follows the date in the top bar. Pick a date to see the whole workspace as of
+  that business day; press **Live** to go back.
+- **On a phone** the panes stack in one column, each a scrollable live view.
+
+For the rest of the console, see [Using the terminal](using-the-terminal).

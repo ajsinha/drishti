@@ -83,7 +83,15 @@ public final class StructuredSearch {
 
     /** The kind a query's head names: a mnemonic ({@code TRD}) or a kind ({@code trade}). */
     public String kindOf(SearchQuery q) {
-        return mnemonics.of(q.head().toUpperCase(Locale.ROOT)).map(m -> m.kind()).orElse(q.head().toLowerCase(Locale.ROOT));
+        var m = mnemonics.of(q.head().toUpperCase(Locale.ROOT));
+        if (m.isPresent()) {
+            return m.get().kind();
+        }
+        String kind = q.head().toLowerCase(Locale.ROOT);
+        if (mnemonics.all().values().stream().noneMatch(x -> x.kind().equals(kind))) {
+            throw new DrishtiException(ErrorCode.BAD_SEARCH, "'" + q.head() + "' is neither a mnemonic nor a kind; type it alone to see suggestions");
+        }
+        return kind;
     }
 
     public Result run(SearchQuery q, AsOf asOf, UnaryOperator<DataNode> redact) {
@@ -93,6 +101,9 @@ public final class StructuredSearch {
         Expr order = compile(q.orderBy(), "order by");
         List<EntityHit> hits = router.search(kind, "", props.maxScan() + 1, props.budget(), asOf);
         boolean partial = hits.size() > props.maxScan();
+        if (q.idPattern() != null) {                            // a pick list: only what the word names, before any read
+            hits = hits.stream().filter(h -> SearchQuery.matches(q.idPattern(), h.ref().id(), h.title())).toList();
+        }
         if (partial) {
             hits = hits.subList(0, props.maxScan());
         }
@@ -100,7 +111,8 @@ public final class StructuredSearch {
         hits.forEach(h -> titles.put(h.ref(), h.title()));
         Map<EntityRef, EntityDocument> docs = router.fetchAll(titles.keySet(), props.budget(), asOf);
         partial |= docs.size() < titles.size();
-        List<Expr> columns = q.fields().stream().map(el::compile).toList();
+        List<String> paths = columnsFor(q, kind, docs.values(), redact);
+        List<Expr> columns = paths.stream().map(el::compile).toList();
         List<Match> matches = new ArrayList<>();
         for (Map.Entry<EntityRef, EntityDocument> e : docs.entrySet()) {
             EvalContext ctx = EvalContext.of(redact.apply(e.getValue().data()), formats);
@@ -115,7 +127,7 @@ public final class StructuredSearch {
             }
             Map<String, Object> values = new LinkedHashMap<>();
             for (int i = 0; i < columns.size(); i++) {
-                values.put(q.fields().get(i), leaf(safe(columns.get(i), ctx)));
+                values.put(paths.get(i), leaf(safe(columns.get(i), ctx)));
             }
             matches.add(new Match(new Row(e.getKey(), titles.get(e.getKey()), values), order == null ? null : leaf(safe(order, ctx))));
         }
@@ -128,9 +140,31 @@ public final class StructuredSearch {
             matches.sort(Comparator.comparing(m -> m.row().ref().id()));
         }
         List<Row> rows = matches.stream().limit(q.limit()).map(Match::row).toList();
-        return new Result(kind, q.condition(), q.orderBy(), q.fields(), rows, docs.size(), matches.size(), partial,
+        return new Result(kind, q.condition(), q.orderBy(), paths, rows, docs.size(), matches.size(), partial,
                 Math.round((System.nanoTime() - t0) / 1e4) / 100.0);
     }
+
+    /**
+     * The columns: the fields the query reads, then the kind's key fields from its pack. A kind whose pack names none
+     * shows the first few plain fields of its documents, so a pick list always says more than the id.
+     */
+    private List<String> columnsFor(SearchQuery q, String kind, java.util.Collection<EntityDocument> docs, UnaryOperator<DataNode> redact) {
+        java.util.LinkedHashSet<String> out = new java.util.LinkedHashSet<>(q.fields());
+        List<String> key = props.columnsOf(kind);
+        out.addAll(key);
+        if (key.isEmpty() && !docs.isEmpty()) {
+            DataNode first = redact.apply(docs.iterator().next().data());
+            if (first instanceof DataNode.Obj o) {
+                o.fields().entrySet().stream()
+                        .filter(e -> e.getValue() instanceof DataNode.Val && !e.getKey().startsWith("_") && !e.getKey().equalsIgnoreCase("id"))
+                        .limit(Math.max(0, AUTO_COLUMNS - out.size()))
+                        .forEach(e -> out.add("$." + e.getKey()));
+            }
+        }
+        return List.copyOf(out);
+    }
+
+    private static final int AUTO_COLUMNS = 6;
 
     private Expr compile(String source, String what) {
         if (source == null) {

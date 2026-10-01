@@ -79,8 +79,8 @@ class BackendClient:
     async def raw(self, kind: str, id_: str, ident=None) -> dict:
         return await self._get(f"/entities/{kind}/{id_}/raw", ident)
 
-    async def suggest(self, q: str, ident, limit: int = 10) -> list:
-        return await self._get("/command/suggest", ident, q=q, limit=limit)
+    async def suggest(self, q: str, ident, limit: int | None = None) -> list:
+        return await self._get("/command/suggest", ident, q=q, **({"limit": limit} if limit else {}))
 
     async def command(self, text: str, ident=None) -> dict:
         return await self._send("POST", "/command", ident, json={"text": text})

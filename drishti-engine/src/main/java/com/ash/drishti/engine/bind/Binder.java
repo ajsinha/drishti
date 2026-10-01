@@ -117,11 +117,23 @@ public final class Binder {
         Expr e = el.compile(col.bind());
         Object v = e.eval(ctx);
         Cell cell = cell(col.label(), v, col.fmt(), col.tone(), false, path);
-        if (col.link() && cell.link() == null && !Values.isNull(v)) {
+        if ((col.link() || namesAnId(col.bind())) && cell.link() == null && !Values.isNull(v)) {
             String id = Values.text(v);
             cell = new Cell(cell.label(), cell.text(), cell.tone(), catalog.kindOf(id).map(k -> linkView(k, id)).orElse(null), false, path);
         }
         return cell;
+    }
+
+    /**
+     * A column bound to an identifier field ({@code @.tradeId}, {@code $.counterpartyId}, {@code @.bookRef}) links its
+     * value when the value is an id a pack recognises, without {@code link: true}: an id in a table opens its entity.
+     */
+    static boolean namesAnId(String bind) {
+        if (bind == null || !bind.matches("[@$](\\.[A-Za-z_][A-Za-z0-9_]*|\\[\\d+\\])+")) {
+            return false;
+        }
+        String last = bind.substring(bind.lastIndexOf('.') + 1);
+        return last.length() > 2 && (last.endsWith("Id") || last.endsWith("Ref") || last.endsWith("_id"));
     }
 
     public LinkView linkView(Link l) {

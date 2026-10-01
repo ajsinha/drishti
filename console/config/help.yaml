@@ -20,6 +20,7 @@ categories:
     icon: flag
     blurb: Open your first view, learn the command line and the keys, and read what a view is telling you.
     guides:
+      - { slug: install-and-run, doc: GETTING_STARTED.md, title: Install and run, icon: download, summary: "From nothing to your first view: build, start, sign in, and the first commands to type, step by step." }
       - { slug: impact, title: F8 · Impact, icon: diagram-3, summary: "What depends on an entity: its dependents, what they roll into, and the amount at stake." }
       - { slug: monitors-and-alerts, title: Monitors and alerts, icon: bell, summary: "Live watchlists, and rules the server checks on every change: alerted once, re-armed when clear." }
       - { slug: workspaces, title: Workspaces, icon: grid-1x2, summary: "Several live views on one screen, panes that follow each other, saved per user." }
