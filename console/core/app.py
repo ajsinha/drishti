@@ -30,7 +30,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from core.config import Settings
 
 WEB = Path(__file__).resolve().parent.parent / "web"
-ASSET_VERSION = "1.10.0"
+ASSET_VERSION = "1.10.1"
 
 
 def asset_fingerprint() -> str:

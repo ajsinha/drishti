@@ -501,7 +501,7 @@ drishti:
     max-streams: 5000
 ```
 
-Or for one run: `java -jar drishti-server-1.10.0-exec.jar --drishti.live.frame=100ms`.
+Or for one run: `java -jar drishti-server-1.10.1-exec.jar --drishti.live.frame=100ms`.
 
 Behind a reverse proxy, turn off response buffering for SSE (`proxy_buffering off;` in nginx; the console
 already sends `X-Accel-Buffering: no`) and set the read timeout above the heartbeat interval. See

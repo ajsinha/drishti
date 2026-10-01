@@ -8,7 +8,7 @@
 
 *Revision 1.1 · 2026-09-30 · Author: Ashutosh Sinha · Companion to [ARCHITECTURE.md](ARCHITECTURE.md)*
 
-**Where things stand.** Every wave in this plan is done. The current release is **1.10.0**
+**Where things stand.** Every wave in this plan is done. The current release is **1.10.1**
 ([CHANGELOG.md](../CHANGELOG.md), [RELEASE_NOTES.md](../RELEASE_NOTES.md)). The table below maps each release to
 the waves it shipped; [What shipped after the waves](#what-shipped-after-the-waves-1100) lists the work done since
 the last numbered wave, and [Known gaps](#known-gaps) lists what is still open. The wave sections themselves are

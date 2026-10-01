@@ -13,7 +13,16 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Drishti 1.10.0 — release notes
+# Drishti 1.10.1 — release notes
+
+*2026-09-30.* **Kafka ticks mode works.**
+- **What changed:** a Kafka connector with `mode: ticks` keeps no state and answers no reads. It now drives the live updates of views that a lake or database answers. Such a view shows as live and repaints on every message for its entity, while reads still come from the store.
+- **API:** plugins gain `SourcePlugin.pushes(ref)` (default false) for this case.
+- **Upgrading:** nothing else changes from 1.10.0.
+
+---
+
+# Previous release: Drishti 1.10.0 — release notes
 
 *2026-09-30.* **Fourteen domain packs, users in a database, and a terminal that behaves like one.**
 

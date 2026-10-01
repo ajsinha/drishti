@@ -15,7 +15,7 @@
 -->
 # Changelog
 
-## Unreleased
+## 1.10.1 — Kafka ticks mode (2026-09-30)
 - **Kafka `mode: ticks` works.**
   - **Behaviour:** a connector that keeps no state now drives the ticks of views a lake or database answers. Such a view is live (the green dot), subscribes to the stream, and repaints on each message, while reads still come from the store.
   - **API:** a new SPI method, `SourcePlugin.pushes(ref)` (default false). A plugin answers true for entities it pushes but does not serve.

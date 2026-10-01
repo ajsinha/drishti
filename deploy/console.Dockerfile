@@ -1,5 +1,5 @@
 # Drishti console image (all front-end assets are vendored; no network needed at runtime).
-#   docker build -f deploy/console.Dockerfile -t drishti-console:1.10.0 .
+#   docker build -f deploy/console.Dockerfile -t drishti-console:1.10.1 .
 FROM python:3.13-slim
 RUN useradd --system --uid 10001 drishti
 WORKDIR /opt/drishti/console
