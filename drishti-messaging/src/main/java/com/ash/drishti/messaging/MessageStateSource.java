@@ -130,7 +130,11 @@ public abstract class MessageStateSource implements SourcePlugin {
                 "never".equals(reset) ? null : LocalTime.parse(reset), ZoneId.of(ctx.setting("state.zone", "America/New_York")),
                 ctx.scheduler(), Clock.systemUTC(), true,
                 com.ash.drishti.diskcache.DiskCache.Durability.parse(ctx.setting("state.durability", "sync")));
-        this.evictWhenFull = !"warn".equalsIgnoreCase(ctx.setting("state.when-full", "evict-oldest").trim());
+        String whenFull = ctx.setting("state.when-full", "evict-oldest").trim().toLowerCase(java.util.Locale.ROOT);
+        if (!whenFull.equals("evict-oldest") && !whenFull.equals("warn")) {
+            throw new IllegalArgumentException("state.when-full is evict-oldest or warn, not " + whenFull);   // a typo must not evict
+        }
+        this.evictWhenFull = whenFull.equals("evict-oldest");
         if (ctx.scheduler() != null) {
             long every = Long.parseLong(ctx.setting("state.check-seconds", "60"));
             ctx.scheduler().scheduleWithFixedDelay(this::keepWithinBudget, every, every, java.util.concurrent.TimeUnit.SECONDS);
@@ -347,8 +351,9 @@ public abstract class MessageStateSource implements SourcePlugin {
         }
         String h = health.get();
         if (store != null && store.overBudget() && h.startsWith("UP")) {
-            return h + " (state store over its budget: " + Math.round(store.sizeOnDisk() / 1e8) / 10.0 + " of "
-                    + Math.round(store.budget() / 1e8) / 10.0 + " GB; " + (evictWhenFull ? "the oldest entities are being evicted)" : "nothing is dropped: raise state.max-gb or add disk)");
+            double gib = 1024.0 * 1024 * 1024;                // the unit of state.max-gb
+            return h + " (state store over its budget: " + Math.round(store.sizeOnDisk() / gib * 10) / 10.0 + " of "
+                    + Math.round(store.budget() / gib * 10) / 10.0 + " GB; " + (evictWhenFull ? "the oldest entities are being evicted)" : "nothing is dropped: raise state.max-gb or add disk)");
         }
         return h;
     }

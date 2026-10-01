@@ -356,7 +356,7 @@ with the budget, and `state.when-full` decides what happens past it:
 
 | `state.when-full` | Past the budget |
 |---|---|
-| `evict-oldest` (default; any value other than `warn`) | the entities **written longest ago** are removed until the store is estimated to be under 90% of the budget (from the average size of an entity), then the store is compacted so the disk gives the space back. If it is still over, the next check removes more. Each eviction is logged at WARN (`margin-mq: state store over its budget (20500 MB of 20480 MB): evicted the 41250 entities written longest ago (now 18300 MB)`) and counted in `evicted`. Health reads `UP (state store over its budget: X of Y GB; the oldest entities are being evicted)` until the store is back under |
+| `evict-oldest` (default) | the entities **written longest ago** are removed until the store is estimated to be under 90% of the budget (from the average size of an entity), then the store is compacted so the disk gives the space back. If it is still over, the next check removes more. Each eviction is logged at WARN (`margin-mq: state store over its budget (20500 MB of 20480 MB): evicted the 41250 entities written longest ago (now 18300 MB)`) and counted in `evicted`. Health reads `UP (state store over its budget: X of Y GB; the oldest entities are being evicted)` until the store is back under |
 | `warn` | nothing is removed. Health reads `UP (state store over its budget: X of Y GB; nothing is dropped: raise state.max-gb or add disk)` while the store is over. Size it before the disk fills: a full disk makes writes fail ([section 6.2](#62-when-the-store-cannot-keep-a-message)) |
 
 "Written longest ago" is the time of the entity's last message in this run. Entities found in the store at start
@@ -364,8 +364,9 @@ count as older than anything this run writes, and among themselves go in key ord
 does not record when they were written. An evicted entity is gone from the store, the memory cache and type-ahead,
 exactly as if a delete had arrived (an open view keeps its last document); its next message brings it back.
 
-The health text gives sizes in decimal gigabytes while `state.max-gb` counts binary ones, so a budget of `10` shows as
-`10.7 GB`. `budgetMb` in the cache figures is the budget in MB (`10240` for `10`).
+The health text gives sizes in the same gigabytes as `state.max-gb` (1,024³ bytes), so a budget of `10` shows as
+`10.0 GB`. `budgetMb` in the cache figures is the budget in MB (`10240` for `10`). Any `state.when-full` other than
+`evict-oldest` or `warn` stops the connector at start (`failedToStart`), so a typo never evicts.
 
 ### 6.4 Sizing the disk
 

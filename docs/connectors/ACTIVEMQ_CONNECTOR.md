@@ -358,10 +358,9 @@ IO error: No space left on device … (messages are not acknowledged and come ag
 Free the disk (or raise the budget, [section 7.3](#73-the-disk-budget-per-connector)) and the connector carries on
 by itself; nothing is lost while the broker holds the messages.
 
-The ActiveMQ client's redelivery policy still applies to these redeliveries: by default a message redelivered more
-than six times is sent by the broker to its dead-letter queue (`ActiveMQ.DLQ`). To keep retrying through a longer
-disk outage, add `jms.redeliveryPolicy.maximumRedeliveries=-1` (no limit) to `broker-url`, for example
-`failover:(tcp://mq1:61616)?jms.redeliveryPolicy.maximumRedeliveries=-1`.
+The connector redelivers without limit (`max-redeliveries: -1`, the default), so a long disk outage loses nothing: the
+ActiveMQ client's own default would give up after six redeliveries and send the message to the broker's dead-letter
+queue (`ActiveMQ.DLQ`). Set `max-redeliveries` to a number when a dead-letter queue is wanted instead.
 
 Unreadable messages are a different case: they are acknowledged and counted in `rejected`
 ([section 4.5](#45-rejected-messages)).
@@ -374,7 +373,7 @@ with the budget, and `state.when-full` decides what happens past it:
 
 | `state.when-full` | Past the budget |
 |---|---|
-| `evict-oldest` (default; any value other than `warn`) | the entities **written longest ago** are removed until the store is estimated to be under 90% of the budget (from the average size of an entity), then the store is compacted so the disk gives the space back. If it is still over, the next check removes more. Each eviction is logged at WARN (`limits-mq: state store over its budget (20500 MB of 20480 MB): evicted the 41250 entities written longest ago (now 18300 MB)`) and counted in `evicted`. Health reads `UP (state store over its budget: X of Y GB; the oldest entities are being evicted)` until the store is back under |
+| `evict-oldest` (default) | the entities **written longest ago** are removed until the store is estimated to be under 90% of the budget (from the average size of an entity), then the store is compacted so the disk gives the space back. If it is still over, the next check removes more. Each eviction is logged at WARN (`limits-mq: state store over its budget (20500 MB of 20480 MB): evicted the 41250 entities written longest ago (now 18300 MB)`) and counted in `evicted`. Health reads `UP (state store over its budget: X of Y GB; the oldest entities are being evicted)` until the store is back under |
 | `warn` | nothing is removed. Health reads `UP (state store over its budget: X of Y GB; nothing is dropped: raise state.max-gb or add disk)` while the store is over. Size it before the disk fills: a full disk makes writes fail ([section 7.2](#72-when-the-store-cannot-keep-a-message)) |
 
 "Written longest ago" is the time of the entity's last message in this run. Entities found in the store at start
@@ -382,8 +381,9 @@ count as older than anything this run writes, and among themselves go in key ord
 does not record when they were written. An evicted entity is gone from the store, the memory cache and type-ahead,
 exactly as if a delete had arrived (an open view keeps its last document); its next message brings it back.
 
-The health text gives sizes in decimal gigabytes while `state.max-gb` counts binary ones, so a budget of `10` shows as
-`10.7 GB`. `budgetMb` in the cache figures is the budget in MB (`10240` for `10`).
+The health text gives sizes in the same gigabytes as `state.max-gb` (1,024³ bytes), so a budget of `10` shows as
+`10.0 GB`. `budgetMb` in the cache figures is the budget in MB (`10240` for `10`). Any `state.when-full` other than
+`evict-oldest` or `warn` stops the connector at start (`failedToStart`), so a typo never evicts.
 
 ### 7.4 Sizing the disk
 
@@ -622,8 +622,8 @@ last message received, rejected messages included.
 | entities are split between two servers | both read the same queue | a topic, or a queue per server |
 | a deleted entity still shows | the view was open: deletes are not pushed | reopen the view |
 | an old entity will not go away | no delete was ever sent | send a delete; or `state.reset-at`; or stop the server and delete the state folder |
-| `DOWN: … (messages are not acknowledged and come again)` | the state store cannot write: the disk is full, or an I/O error | free or grow the disk (`df -h` on `state.root`); the connector resumes by itself and the broker redelivers. For long outages set `jms.redeliveryPolicy.maximumRedeliveries=-1` on `broker-url` so messages do not go to `ActiveMQ.DLQ` |
-| messages in `ActiveMQ.DLQ` after a disk problem | the client's redelivery limit (six by default) was reached while the store could not write | move them back to the queue from the web console; set `jms.redeliveryPolicy.maximumRedeliveries=-1` |
+| `DOWN: … (messages are not acknowledged and come again)` | the state store cannot write: the disk is full, or an I/O error | free or grow the disk (`df -h` on `state.root`); the connector resumes by itself and the broker redelivers, without limit unless `max-redeliveries` is set |
+| messages in `ActiveMQ.DLQ` after a disk problem | `max-redeliveries` was set to a number and was reached while the store could not write | move them back to the queue from the broker console; leave `max-redeliveries` at `-1` |
 | entities vanished without deletes; `evicted` grows; WARN `state store over its budget … evicted …` | `state.max-gb` reached: `evict-oldest` removed the entities written longest ago | raise `state.max-gb` (and the disk); or `state.when-full: warn`; have producers resend full state |
 | `UP (state store over its budget: … nothing is dropped …)` | `state.when-full: warn` and the store is past `state.max-gb` | raise `state.max-gb` or add disk before it fills; or switch to `evict-oldest` |
 | messages arrive slowly, the disk is busy | `state.durability: sync` waits for a disk sync per message | a faster disk (an SSD with power-loss protection); or `wal` if losing the last moments before a power loss is acceptable |
@@ -641,6 +641,7 @@ On an `activemq` connector (`drishti.sources.connectors.<name>.settings`, or `dr
 | Setting | Default | Meaning |
 |---|---|---|
 | `broker-url` | `failover:(tcp://localhost:61616)?initialReconnectDelay=1000&maxReconnectDelay=30000` (health shows `failover:(tcp://localhost:61616)`) | OpenWire URL; `failover:(…)` reconnects by itself |
+| `max-redeliveries` | `-1` | redeliveries of a message the state store could not keep before the broker dead-letters it; `-1`: without limit |
 | `user` | none | broker user |
 | `password` | none | broker password |
 | `destinations` | empty (required: the connector stays `DOWN` without it) | comma list: `queue:<name>`, `topic:<name>`, or `<name>` (a queue) |
@@ -685,5 +686,5 @@ The plugin is built against `activemq-client` 6.3.2 (Jakarta JMS) and tested aga
 9. Set `stale-after` to the longest quiet period that is normal, so a silent producer shows in Admin → Health.
 10. Watch `rejected`, `stateMb` against `budgetMb`, and `evicted` in Admin → Caches after go-live; alert on a health
     that ends `(messages are not acknowledged and come again)`.
-11. For long disk outages, add `jms.redeliveryPolicy.maximumRedeliveries=-1` to `broker-url` so unkept messages are
-    retried rather than dead-lettered after six redeliveries.
+11. Keep `max-redeliveries` at `-1` (the default) so messages the store could not keep are retried through a disk
+    outage rather than dead-lettered.

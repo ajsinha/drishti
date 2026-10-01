@@ -1485,8 +1485,7 @@ in the broker, and topics are read through durable subscriptions.
 | `none` | no: up to the 32 MB write buffer of acknowledged messages is lost | no | the fastest |
 
 If the store cannot keep a message (disk full, an I/O error), the message is **not** acknowledged: ActiveMQ redelivers
-it a second later (`session.recover()`; after six redeliveries the client's default policy sends it to `ActiveMQ.DLQ`,
-so add `jms.redeliveryPolicy.maximumRedeliveries=-1` to `broker-url` for long outages), RabbitMQ requeues it, and
+it a second later (`session.recover()`, without limit unless `max-redeliveries` sets one), RabbitMQ requeues it, and
 health reads `DOWN: <reason> (messages are not acknowledged and come again)` until one is kept again. A message the
 connector cannot read (not JSON, not a document) is acknowledged and counted in `rejected`, since it would otherwise
 come back forever: there is no dead-lettering of those.
@@ -2284,7 +2283,7 @@ calls.
 | Kafka health `DOWN: no connection to the broker (reconnecting)` | `nc -z <host> <port>` for each `bootstrap-servers` address, and the broker's advertised listeners | bring the broker back; the connector carries on by itself, no restart |
 | ActiveMQ/RabbitMQ `rejected` grows | the message bodies and `id` headers | bodies must be JSON with an id (header or `id-field.<destination>`) |
 | An old entity will not go away (message queues) | `stateMb`, `entities` in the connector's cache figures | send a delete (`deleted=true`), or clear the state store (server stopped) |
-| ActiveMQ/RabbitMQ health `DOWN: … (messages are not acknowledged and come again)` | `df -h` on `state.root`; the server log | the state store cannot write: free or grow the disk; the connector resumes by itself and the broker redelivers (ActiveMQ: see `jms.redeliveryPolicy.maximumRedeliveries`) |
+| ActiveMQ/RabbitMQ health `DOWN: … (messages are not acknowledged and come again)` | `df -h` on `state.root`; the server log | the state store cannot write: free or grow the disk; the connector resumes by itself and the broker redelivers (ActiveMQ without limit unless `max-redeliveries` is set) |
 | ActiveMQ/RabbitMQ entities gone without deletes | `evicted` in the cache figures; WARN `state store over its budget` in the log | the store passed `state.max-gb` with `evict-oldest`: raise the budget and the disk, or `state.when-full: warn` |
 | ActiveMQ/RabbitMQ health `UP (state store over its budget: …)` | `stateMb` against `budgetMb` | raise `state.max-gb` or add disk (`warn`), or let `evict-oldest` finish |
 | Feed `DOWN: ConnectException: …` or `DOWN: HttpTimeoutException: …` | the server's outbound internet (or a proxy) | a proxy rule, or `url: file://…` |

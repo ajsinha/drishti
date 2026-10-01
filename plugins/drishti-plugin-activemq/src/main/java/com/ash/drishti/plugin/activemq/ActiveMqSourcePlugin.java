@@ -82,6 +82,9 @@ public final class ActiveMqSourcePlugin extends MessageStateSource {
         health.set("DOWN: connecting to " + context.setting("broker-url", "failover:(tcp://localhost:61616)"));
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(context.setting("user", null), context.setting("password", null),
                 context.setting("broker-url", "failover:(tcp://localhost:61616)?initialReconnectDelay=1000&maxReconnectDelay=30000"));
+        // a message the state store could not keep is redelivered until it is kept (the client's default gives up after
+        // 6 and moves it to ActiveMQ.DLQ); max-redeliveries sets a limit when a dead-letter queue is wanted
+        cf.getRedeliveryPolicy().setMaximumRedeliveries(Integer.parseInt(context.setting("max-redeliveries", "-1")));
         Connection c = cf.createConnection();
         connection = c;
         if (c instanceof org.apache.activemq.ActiveMQConnection amq) {

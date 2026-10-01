@@ -692,6 +692,7 @@ message once.
 | Setting | Plugin | Default | Meaning |
 |---|---|---|---|
 | `broker-url` | activemq | `failover:(tcp://localhost:61616)?initialReconnectDelay=1000&maxReconnectDelay=30000` | The failover transport reconnects by itself. |
+| `max-redeliveries` | activemq | `-1` | Redeliveries of a message the state store could not keep before the broker dead-letters it; `-1` is without limit. |
 | `destinations` | activemq | empty | `queue:trades,topic:quotes`; a bare name is a queue. Topics use durable subscriptions, which stay on the broker after a topic is removed here. Each idle destination costs a 50 ms wait per polling loop. |
 | `user`, `password`, `client-id` | activemq | none, none, `drishti-<source-name>` | |
 | `uri` | rabbitmq | `amqp://guest:guest@localhost:5672/%2f` | |
@@ -704,15 +705,14 @@ message once.
 | `state.root` / `state.dir` | both | `./data/state` / `<root>/<source-name>` | The RocksDB store, one per connector. Back it up: it survives restarts and is never cleared unless configured. It keeps the latest value of each entity (level compaction), so its size follows the entities held, not the messages. |
 | `state.durability` | both | `sync` | How a write is kept before the message is acknowledged. `sync`: the write-ahead log is synced on every write, so neither a crash nor a power loss loses an acknowledged message (one disk sync per message: typically thousands a second on an SSD). `wal`: the log is not synced (survives a crash of the process; a power loss can lose the last moments). `none`: no log (fastest; a crash can lose up to the 32 MB write buffer). Any other value fails the connector's start. |
 | `state.max-gb` | both | `10` | This connector's disk budget (decimal allowed), compared with the store's size (`stateMb`: table files plus write buffers). Each connector has its own. |
-| `state.when-full` | both | `evict-oldest` | Past the budget. `evict-oldest`: the entities written longest ago are removed until the store is under 90% of the budget, then it is compacted; each eviction is logged at WARN and counted (`evicted`). `warn`: nothing is removed; health reads `UP (state store over its budget: X of Y GB; nothing is dropped: raise state.max-gb or add disk)`. Any value other than `warn` means `evict-oldest`. |
+| `state.when-full` | both | `evict-oldest` | Past the budget. `evict-oldest`: the entities written longest ago are removed until the store is under 90% of the budget, then it is compacted; each eviction is logged at WARN and counted (`evicted`). `warn`: nothing is removed; health reads `UP (state store over its budget: X of Y GB; nothing is dropped: raise state.max-gb or add disk)`. Any other value stops the connector at start (`failedToStart`), so a typo never evicts. |
 | `state.check-seconds` | both | `60` | How often the store's size is checked against the budget. |
 | `state.reset-at` / `state.zone` | both | `never` / `America/New_York` | Optional daily clearing time; clears the disk store only. |
 | `source-name` | both | `activemq` / `rabbitmq` (a connector: its name) | The name shown in provenance and Health; names the default state folder. |
 
 A message is acknowledged only after the state store has kept it. A message the store cannot keep (disk full, an I/O
-error) is not acknowledged: RabbitMQ requeues it and ActiveMQ redelivers it a second later (the ActiveMQ client's
-default redelivery policy sends a message to `ActiveMQ.DLQ` after six redeliveries; add
-`jms.redeliveryPolicy.maximumRedeliveries=-1` to `broker-url` to retry without limit), and health reads
+error) is not acknowledged: RabbitMQ requeues it and ActiveMQ redelivers it a second later (without limit: `max-redeliveries`, `-1`; a number
+sends the message to `ActiveMQ.DLQ` after that many), and health reads
 `DOWN: <reason> (messages are not acknowledged and come again)` until one is kept again. A message the connector
 cannot read (not JSON, no kind or id) is acknowledged, counted in `rejected` and dropped: there is no dead-lettering.
 Cache figures add `durability`, `budgetMb` and `evicted`. Full detail:
