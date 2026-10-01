@@ -224,6 +224,14 @@ class FakeBackend:
                 "sources": [{"name": "demo", "version": "1.0", "kinds": [], "live": True, "search": True, "reverseLookup": True, "health": "UP"}]}
 
     aliases_saved = {"MYBOOK": "BOOK BOOK-RATES-1"}
+    tests_saved = {}
+
+    async def studio_tests(self, sutra, ident=None):
+        return list(self.tests_saved.get(sutra, []))
+
+    async def set_studio_tests(self, sutra, entities, ident=None):
+        self.tests_saved[sutra] = list(entities)
+        return list(entities)
 
     async def command_history(self, ident=None):
         return ["TRD T-10001", "MKT"]

@@ -163,6 +163,18 @@ lines of prose above the `sutra` block saying who the layout is for.
     Explain *why* the layout is what it is: the next author, or an AI assistant asked to change it, starts from
     that.
 
+## Try a change on all your test entities
+
+A layout has to work for every entity it matches, not just the one on screen. Keep a few typical and awkward ones:
+
+1. Type a kind and an id (for example `trade` and `T-10044`) and press **Preview**.
+2. Press **+** next to *Test entities*: the entity is kept for this Sutra (by its `name:`), for you, on the server.
+3. Keep as many as you need (up to 30): one of each product the Sutra matches, one with missing fields, one large.
+4. After a change, press **Run all**. Every kept entity is previewed with the Sutra as it is in the editor. The
+   status line says *All 5 test entities render without problems*, or lists each one with a problem below, such as
+   `trade T-10044 — legs: path $.legs[2].rate not found`.
+5. Pick one from *Test entities* to preview it on its own.
+
 ## 7. Save, or submit for review
 
 Saving needs two things:

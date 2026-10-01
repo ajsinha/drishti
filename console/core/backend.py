@@ -126,6 +126,12 @@ class BackendClient:
     async def impact(self, kind: str, id_: str, ident=None) -> dict:
         return await self._get(f"/impact/{kind}/{quote(id_)}", ident)
 
+    async def studio_tests(self, sutra: str, ident) -> list:
+        return await self._get(f"/me/studio-tests/{quote(sutra)}", ident)
+
+    async def set_studio_tests(self, sutra: str, entities: list, ident) -> list:
+        return await self._send("PUT", f"/me/studio-tests/{quote(sutra)}", ident, json=entities)
+
     async def command_history(self, ident) -> list:
         return await self._get("/command/history", ident)
 

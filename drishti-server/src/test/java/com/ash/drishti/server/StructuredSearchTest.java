@@ -141,4 +141,14 @@ class StructuredSearchTest {
         mvc.perform(get("/api/v1/command/history").header("Authorization", me))
                 .andExpect(jsonPath("$[0]").value("revs")).andExpect(jsonPath("$[1]").value("first"));
     }
+
+    @Test
+    void authorsKeepTestEntitiesPerSutra() throws Exception {
+        var put = org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/v1/me/studio-tests/irs-fixfloat")
+                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .content("[{\"kind\":\"trade\",\"id\":\"T-10001\"},{\"kind\":\"trade\",\"id\":\"T-10001\"},{\"kind\":\"trade\",\"id\":\"T-10044\"}]");
+        mvc.perform(put.header("Authorization", as("admin"))).andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(2)));   // duplicates once
+        mvc.perform(get("/api/v1/me/studio-tests/irs-fixfloat").header("Authorization", as("admin"))).andExpect(jsonPath("$[1].id").value("T-10044"));
+        mvc.perform(get("/api/v1/me/studio-tests/irs-fixfloat").header("Authorization", as("searcher"))).andExpect(status().isForbidden());
+    }
 }

@@ -31,6 +31,12 @@
       <label for="refKind" class="visually-hidden">Kind</label><input id="refKind" class="studio-in mono" value="{{ ref_kind }}" data-kind aria-label="Entity kind">
       <label for="refId" class="visually-hidden">Id</label><input id="refId" class="studio-in mono" value="{{ ref_id }}" data-id aria-label="Entity id">
       <button type="button" class="btn-pill btn-accent" data-preview title="Ctrl+Enter"><i class="bi bi-play" aria-hidden="true"></i> Preview</button>
+      <span class="studio-tests" data-tests>
+        <label for="testPick" class="visually-hidden">Test entities</label>
+        <select id="testPick" class="studio-select" data-test-pick title="Entities you keep for trying this Sutra"><option value="">Test entities…</option></select>
+        <button type="button" class="btn-pill btn-ghost" data-test-add title="Keep this kind and id as a test entity of this Sutra"><i class="bi bi-plus-lg" aria-hidden="true"></i></button>
+        <button type="button" class="btn-pill btn-ghost" data-test-run title="Preview every test entity and report problems"><i class="bi bi-check2-all" aria-hidden="true"></i> Run all</button>
+      </span>
       <button type="button" class="btn-pill btn-ghost" data-infer title="Load what inference makes of this entity as a new Sutra"><i class="bi bi-stars" aria-hidden="true"></i> Start from inference</button>
       {% if review and can_save %}<label for="saveNote" class="visually-hidden">What changed</label>
       <input id="saveNote" class="studio-in" data-note placeholder="What changed? (for the reviewer)" maxlength="300">{% endif %}

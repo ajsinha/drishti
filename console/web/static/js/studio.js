@@ -146,5 +146,67 @@
         else { problems(res.body.problems); say((res.body.code || 'Error') + ': ' + res.body.detail, true); }
       });
   });
+  // ---- test entities: the entities this author keeps for trying the Sutra ---------------------------------------
+  var testPick = root.querySelector('[data-test-pick]'), tests = [], testsFor = '';
+  function sutraName() {
+    var m = text().match(/^\s*name:\s*["']?([A-Za-z0-9._-]+)/m);
+    return m ? m[1] : '';
+  }
+  function showTests() {
+    testPick.innerHTML = '<option value="">Test entities (' + tests.length + ')…</option>' + tests.map(function (t, i) {
+      return '<option value="' + i + '">' + t.kind.replace(/[<&"]/g, '') + ' · ' + t.id.replace(/[<&"]/g, '') + '</option>';
+    }).join('');
+  }
+  function loadTests() {
+    var name = sutraName();
+    if (!name || name === testsFor) { return; }
+    testsFor = name;
+    fetch('/studio/tests/' + encodeURIComponent(name)).then(function (r) { return r.ok ? r.json() : []; })
+      .then(function (l) { tests = Array.isArray(l) ? l : []; showTests(); }).catch(function () { tests = []; showTests(); });
+  }
+  function saveTests() {
+    return fetch('/studio/tests/' + encodeURIComponent(testsFor), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(tests) })
+      .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); });
+  }
+  testPick.addEventListener('change', function () {
+    var t = tests[+testPick.value];
+    if (!t) { return; }
+    kindIn.value = t.kind; idIn.value = t.id; testPick.value = ''; preview();
+  });
+  root.querySelector('[data-test-add]').addEventListener('click', function () {
+    loadTests();
+    var k = kindIn.value.trim(), id = idIn.value.trim();
+    if (!testsFor) { say('Give the Sutra a name first (name: in the sutra block).', true); return; }
+    if (!k || !id) { say('Type a kind and an id to keep.', true); return; }
+    if (tests.some(function (t) { return t.kind === k && t.id === id; })) { say(id + ' is already a test entity.'); return; }
+    tests.push({ kind: k, id: id });
+    saveTests().then(function (res) {
+      if (res.ok) { tests = res.body; showTests(); say('Kept ' + id + ' as a test entity of ' + testsFor + ' (' + tests.length + ').'); }
+      else { tests.pop(); say((res.body.code || 'Error') + ': ' + res.body.detail, true); }
+    });
+  });
+  root.querySelector('[data-test-run]').addEventListener('click', function () {
+    loadTests();
+    if (!tests.length) { say('No test entities yet: preview an entity and press + to keep it.', true); return; }
+    say('Running ' + tests.length + ' test entities…');
+    var yaml = text();
+    Promise.all(tests.map(function (t) {
+      return fetch('/studio/test', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ yaml: yaml, kind: t.kind, id: t.id }) })
+        .then(function (r) { return r.json(); }).then(function (res) { res.entity = t; return res; })
+        .catch(function (e) { return { ok: false, entity: t, detail: String(e) }; });
+    })).then(function (results) {
+      var bad = results.filter(function (r) { return !r.ok; });
+      problems(bad.map(function (r) {
+        var why = r.failed && r.failed.length ? r.failed.map(function (f) { return f.panel + ': ' + f.error; }).join('; ')
+          : (r.problems && r.problems.length ? r.problems.length + ' problem(s) in the Sutra' : (r.code ? r.code + ' ' : '') + (r.detail || 'failed'));
+        return { code: 'TEST', location: { line: 0 }, message: r.entity.kind + ' ' + r.entity.id + ' — ' + why };
+      }));
+      say(bad.length ? bad.length + ' of ' + results.length + ' test entities have problems (below).'
+        : 'All ' + results.length + ' test entities render without problems (' + Math.round(results.reduce(function (a, r) { return a + (r.ms || 0); }, 0)) + ' ms in all).', !!bad.length);
+    });
+  });
+  if (editor) { editor.on('blur', loadTests); }
+  setTimeout(loadTests, 300);
+
   preview();
 })();

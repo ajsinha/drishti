@@ -346,3 +346,14 @@ def test_history_and_aliases(client, backend):
     assert r.status_code == 200 and r.json() == {"REVS": "TRD productType=Revolver"}
     bad = client.put("/api/aliases", json={"TRD": "TRD T-1"})
     assert bad.status_code == 400 and "mnemonic" in bad.json()["detail"]
+
+
+
+def test_studio_keeps_test_entities_and_runs_them(client, backend):
+    assert client.get("/studio/tests/irs-fixfloat").json() == []
+    saved = client.put("/studio/tests/irs-fixfloat", json=[{"kind": "trade", "id": "IRS-48213"}])
+    assert saved.status_code == 200 and client.get("/studio/tests/irs-fixfloat").json() == [{"kind": "trade", "id": "IRS-48213"}]
+    ok = client.post("/studio/test", json={"yaml": "sutra: x", "kind": "trade", "id": "IRS-48213"}).json()
+    assert ok["ok"] is True and ok["panels"] > 0 and "ms" in ok
+    bad = client.post("/studio/test", json={"yaml": "BROKEN", "kind": "trade", "id": "IRS-48213"}).json()
+    assert bad["ok"] is False and bad["code"] == "DRS-2002"

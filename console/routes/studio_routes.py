@@ -140,6 +140,41 @@ async def preview(request: Request):
     return HTMLResponse(html)
 
 
+@router.get("/tests/{sutra}")
+async def tests(request: Request, sutra: str):
+    """The entities this author keeps for trying the Sutra."""
+    try:
+        return await request.app.state.backend.studio_tests(sutra, ident(request))
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.put("/tests/{sutra}")
+async def save_tests(request: Request, sutra: str):
+    try:
+        return await request.app.state.backend.set_studio_tests(sutra, json.loads(await request.body() or b"[]"), ident(request))
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.post("/test")
+async def run_test(request: Request):
+    """Previews the Sutra on one entity and says how it went: problems in the Sutra, or panels that could not bind."""
+    import time
+
+    body = json.loads(await request.body() or b"{}")
+    t0 = time.perf_counter()
+    try:
+        vm = await request.app.state.backend.preview(body.get("yaml", ""), body.get("kind", ""), body.get("id", ""), ident(request))
+    except BackendError as e:
+        return {"ok": False, "code": e.code, "detail": e.detail, "problems": getattr(e, "problems", []),
+                "ms": round((time.perf_counter() - t0) * 1000, 1)}
+    failed = [{"panel": p.get("id"), "error": p.get("error")} for p in vm.get("panels", []) if p.get("error")]
+    empty = [p.get("id") for p in vm.get("panels", []) if p.get("empty") and not p.get("error")]
+    return {"ok": not failed, "panels": len(vm.get("panels", [])), "failed": failed, "empty": empty,
+            "layout": (vm.get("provenance") or {}).get("layout"), "ms": round((time.perf_counter() - t0) * 1000, 1)}
+
+
 @router.post("/render")
 async def render_doc(request: Request):
     """The Document tab: the Markdown Sutra rendered as a page, with its outline."""
