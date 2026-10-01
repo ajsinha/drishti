@@ -28,7 +28,7 @@ from fastapi.responses import JSONResponse
 from core.backend import BackendError
 from core.pivots import ARRANGEMENT
 from routes.common import ident
-from routes.studio_routes import _diff
+from core import sutra_diff
 
 router = APIRouter(prefix="/api/pivot", include_in_schema=False)
 SEARCH_KEYS = ("q", "documents", "cell", "offset", "size", "field") + ARRANGEMENT
@@ -154,8 +154,10 @@ async def promotion(request: Request, sutra: str, panel: str):
         p = await request.app.state.backend.pivot_promotion(_panel(sutra, panel), ident(request))
     except BackendError as e:
         return _problem(e)
+    d = sutra_diff.review(p.get("base") or "", p.get("text") or "")
     return {"sutra": p.get("sutra"), "panel": p.get("panel"), "fromVersion": p.get("fromVersion"), "version": p.get("version"),
-            "review": p.get("review"), "changes": p.get("changes") or [], "diff": _diff(p.get("base") or "", p.get("text") or "")}
+            "review": p.get("review"), "changes": p.get("changes") or [], "moves": [m["text"] for m in d["moves"]], "edits": d["edits"],
+            "diff": d["full"]}
 
 
 @router.post("/saved/panel/{sutra}/{panel}/promotion")
