@@ -35,6 +35,14 @@ public interface SourceContext {
     /** A shared scheduler for polling or ticking; tasks must be short and non-blocking. */
     ScheduledExecutorService scheduler();
 
+    /**
+     * Reads other kinds through the server's routing (for a connector built on others, such as a derived kind). Usable
+     * once the server has started, not inside {@link SourcePlugin#start}.
+     */
+    default EntityReader reader() {
+        throw new UnsupportedOperationException("this host does not let connectors read other kinds");
+    }
+
     default String setting(String key, String fallback) {
         String v = settings().get(key);
         return v == null || v.isBlank() ? fallback : v;

@@ -76,8 +76,13 @@ public interface SourcePlugin extends AutoCloseable {
   calls optional methods that a plugin declares.
 - **Kinds.** `PluginManifest.kinds` lists the kinds the plugin serves; an empty set means *any kind*, so the plugin
   is a candidate for every read (it answers "not held" for what it does not have).
+- **Reading other kinds.** `SourceContext.reader()` reads other kinds through the server's routing: `list(kind,
+  asOf, limit)` and `read(refs, asOf)` (concurrent). It is for connectors built on others, such as `derived`; use
+  it when serving reads, not inside `start` (the router is built after the plugins start). It applies no
+  entitlements: the server redacts what it serves.
 - **Settings.** `SourceContext.settings()` is a flat `Map<String, String>`; `setting(key, fallback)` returns the
-  fallback for a missing or blank value. Prefix families (`query.<kind>`, `mode.<kind>`, `header.<Name>`,
+  fallback for a missing or blank value. A pack may nest settings for readability; nested maps arrive as dotted keys
+  (`book-pnl.fields.mtm`) and lists as comma lists. Prefix families (`query.<kind>`, `mode.<kind>`, `header.<Name>`,
   `client.<property>`) are read by iterating the map.
 
 ## Registration
@@ -175,6 +180,7 @@ merges the hits; reverse lookups ask every source that declares them.
 | `rest` | An HTTP/JSON service: `base-url` + `path` per kind | Headers from settings; the generation from a response header. [Example](#rest) |
 | `s3` | Documents in Amazon S3 or any S3-compatible store (MinIO, Ceph, on-prem): `<prefix><kind>/<id>.json` and dated `<prefix><yyyy-MM-dd>/<kind>/<id>.json` | `bucket`, `prefix`, `region`, `endpoint` (S3-compatible stores, path-style), `access-key`/`secret-key` or the AWS credential chain (environment, profile, instance role). Identifiers and dates are listed every `rescan-seconds` for search; reads are cached `cache-seconds`. Only the SDK's S3 module and the JDK HTTP client (about 9 MB). [Example](#s3) |
 | `activemq` | Live entities from ActiveMQ Classic queues and topics (`destinations: queue:trades,topic:quotes`) | Topics through durable subscriptions. Each message is acknowledged after it is stored. See *Message queues* below. [Example](#activemq) |
+| `derived` | Kinds computed from other kinds: members grouped by an expression, with `count`, `sum`, `avg`, `min`, `max`, `distinct`, `first` and per-member rows | Built into the engine. Reads its members through the routing, so it works over any source; a picked date is computed from that date's members. Recomputed at most every `refresh` per date. See [PACKS.md](PACKS.md#derived-kinds-entities-computed-from-other-kinds). |
 | `rabbitmq` | Live entities from RabbitMQ queues (`queues: trades,quotes`; `bind.<queue>: exchange:routing.key`) | Queues declared durable unless `declare: false`; manual acknowledgement after storing; `prefetch` 100. See *Message queues* below. [Example](#rabbitmq) |
 
 ### Message queues (ActiveMQ, RabbitMQ)

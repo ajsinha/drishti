@@ -189,6 +189,7 @@ alike, and are how secrets stay out of files.
 | on ActiveMQ queues or topics | [`activemq`](#11-a-message-queue-activemq) | live; the connector keeps the latest document per entity on local disk | a queue delivers once: the local state store is the only copy |
 | on RabbitMQ queues | [`rabbitmq`](#12-a-message-queue-rabbitmq) | as ActiveMQ, AMQP 0-9-1 | as ActiveMQ |
 | JSON objects in a bucket (S3, MinIO, Ceph) | [`s3`](#13-an-object-store-s3) | the `file` layout in object storage, dated by folder | cost of listing large buckets; reads cached `cache-seconds` |
+| a total or summary of another kind (a book's P&L from its trades) | `derived` ([PACKS.md](PACKS.md#derived-kinds-entities-computed-from-other-kinds)) | computed by the server from the other kind, through whichever connectors serve it | reads every member once per `refresh`; keep `max-scan` above the member count |
 | public rates and FX | [`feed`](#14-public-market-data-feed) | NY Fed SOFR, ECB €STR and FX, US Treasury curve, FRED; switched on by one variable each | needs internet (or a mirror); FRED needs a free key |
 
 ### What each connector can do
@@ -206,6 +207,7 @@ alike, and are how secrets stay out of files.
 | `activemq`, `rabbitmq` | no | yes | yes | no | broker connection | state store (required) |
 | `s3` | yes, by folder | no | yes | no | — | — |
 | `feed` | yes, recent history | no | yes | no | — | — |
+| `derived` | yes, wherever its members have it | no | yes | no | — | computations cached per date |
 
 **Rules of thumb.**
 
@@ -1916,6 +1918,7 @@ curl -s http://localhost:18480/api/v1/admin/health | jq '.packs[] | {name, conne
 | Connector | Health texts |
 |---|---|
 | `demo` | `UP` |
+| `derived` | `UP (nothing computed yet)`, `UP`, `DOWN: <why the last computation failed>` |
 | `file` | `UP`, `DOWN: no directory <root>` |
 | `rest` | `UP`, `DOWN: not started` |
 | `jdbc` | `UP`, `DOWN: not started`, `DOWN: <error> (reconnecting)` |

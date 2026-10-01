@@ -197,7 +197,7 @@ public final class PackLoader {
                 for (int i = 0; i < ck.size(); i++) {
                     props.put(base + ".kinds[" + i + "]", ck.get(i));
                 }
-                map(c.get("settings")).forEach((k, v) -> props.put(base + ".settings." + k, String.valueOf(v)));
+                flatten(base + ".settings.", map(c.get("settings")), props);
                 offer(claims, overrides, lineage, "connector " + e.getKey(), pack.name(), props);
             }
             // routes: which connector answers each of the pack's kinds (the query inside a pack picks the connector)
@@ -221,6 +221,23 @@ public final class PackLoader {
         }
         p.put("drishti.packs.loaded", String.join(",", packs.stream().map(Pack::name).toList()));
         return p;
+    }
+
+    /**
+     * Connector settings are flat strings; a pack may nest them for readability ({@code book-pnl: {from: trade}} is
+     * {@code book-pnl.from: trade}). Lists become comma lists.
+     */
+    @SuppressWarnings("unchecked")
+    static void flatten(String prefix, Map<String, Object> settings, Map<String, Object> out) {
+        settings.forEach((k, v) -> {
+            if (v instanceof Map<?, ?> nested) {
+                flatten(prefix + k + ".", (Map<String, Object>) nested, out);
+            } else if (v instanceof List<?> list) {
+                out.put(prefix + k, String.join(",", list.stream().map(String::valueOf).toList()));
+            } else {
+                out.put(prefix + k, String.valueOf(v));
+            }
+        });
     }
 
     /**

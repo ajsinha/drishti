@@ -16,6 +16,13 @@
 # Changelog
 
 ## Unreleased
+- **Derived kinds.** A pack can declare a kind computed from another, using the new built-in `derived` connector.
+  - **How it works:** members are grouped by an expression, with `count`, `sum`, `avg`, `min`, `max`, `distinct` and `first`, and optional rows per member.
+  - **Dates:** a picked date is computed from that date's members.
+  - **Caching:** results are cached per date for a configurable `refresh`.
+  - **Example:** the finance pack ships `book-pnl` (`BPNL RATES-NY-3`), a book's P&L summed from its trades, with a Sutra.
+  - **Pack files:** connector settings in `pack.yaml` may be nested.
+  - **Plugin API:** connectors can read other kinds through the routing with `SourceContext.reader()`.
 - **One console, many servers (ADR-016).** List servers under `servers:` in the console's configuration, and people pick one and sign in to it.
   - **Sessions:** each server has its own session cookie, bound to that server. Switching keeps the others, and signing out ends only the current one.
   - **Top bar:** shows the current server and a menu to switch. `/servers` lists each server's state.

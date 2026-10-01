@@ -524,6 +524,59 @@ The server turns the manifest into ordinary settings. Knowing this helps when yo
 
 `alerts` and `console` are read directly from the manifest (by the server's alert suggestions and by the console).
 
+## Derived kinds: entities computed from other kinds
+
+A derived kind is a kind no source holds: the server computes it from another kind by grouping and adding up. A
+book's P&L from its trades, a currency's exposure, a desk's count of open tickets. A pack declares one as a
+connector of the built-in plugin `derived` and routes the kind to it. The finance pack ships one, `book-pnl`
+(`BPNL RATES-NY-3 <GO>`):
+
+```yaml
+connectors:
+  book-totals:
+    plugin: derived
+    kinds: [book-pnl]
+    settings:
+      refresh: 30s              # recomputed at most this often per business date (default 30s)
+      max-scan: 50000           # members read at most (default 50000)
+      book-pnl:
+        from: trade             # the kind it is built from (read through the normal routing)
+        group-by: $.book        # Rachana-EL over a member: its group, which is the derived entity's id
+        where: $.mtm != null    # optional: which members count
+        id-field: book          # a field holding the key besides `id` (default: id only)
+        members: tradeIds       # the members' ids, sorted (default: members)
+        fields:
+          tradeCount: count
+          mtm: sum $.mtm
+          dv01: sum $.dv01
+          largestNotional: max $.notional
+          worstMtm: min $.mtm
+          currencies: distinct $.currency
+        rows:                   # optional: one row per member, for a table (field `rows`, or set rows-field)
+          trade: $.tradeId
+          mtm: $.mtm
+routes:
+  book-pnl: book-totals
+```
+
+- **Keys.** Each value of `group-by` is one entity (a member whose `group-by` is empty, or whose `where` is false,
+  counts in no group). The entity's id is the key; the document has `id`, the `id-field`, `derivedFrom`, each field,
+  the members' ids, and `rows` when declared.
+- **Fields.** `count`; `sum`, `avg`, `min`, `max` over an expression (values that are missing or not numbers are
+  skipped); `distinct` (the sorted distinct values); `first` (the first member's value, members in id order).
+- **Links.** Declare the members field under `graph.fields` (`tradeIds: { kind: trade, label: Trade }`) and the
+  members show as links; an `id-field` that is already a link field (`book`) links the derived entity to its key's.
+- **Business dates.** A picked date is computed from that date's members, so a derived kind has history wherever its
+  members do, and *Data for* says which day.
+- **Cost.** One computation reads every member (up to `max-scan`) once per `refresh` per business date, and is shared
+  by every reader and by all the derived kinds of the connector built on the same kind. Health shows `DOWN` with the
+  reason when a computation fails; Admin → Caches → Purge recomputes.
+- **Everything else is a kind like any other.** Give it a mnemonic, a Sutra (or let inference lay it out), roles,
+  alerts and pick-list columns as usual. It shows in search (`BPNL where mtm < 0`) and the type-ahead.
+- **Mistakes fail the start.** A missing `group-by`, an unknown aggregate, a field without its expression, an
+  expression that does not parse or a kind built from itself puts the connector under *failed to start* in Admin →
+  Health, with the reason.
+
 ## Samples
 
 The built-in `demo` source serves every enabled pack's `samples/` folder, so a pack works with no database. The

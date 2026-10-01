@@ -675,6 +675,23 @@ One connector per feed (the market-data pack declares them, all off by default).
 | `url` | the feed's own | Override; `file:` URLs are read directly. |
 | `api-key`, `series` | empty, `DGS10,DFF` | FRED only. |
 
+### `derived` — kinds computed from other kinds
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `<kind>.from` | required | The kind it is built from. One `<kind>.from` per derived kind the connector serves. |
+| `<kind>.group-by` | required | Rachana-EL over a member: its group (the derived entity's id). |
+| `<kind>.where` | none | Rachana-EL: only members for which it is true count. |
+| `<kind>.id-field` | `id` | A field that holds the key besides `id`. |
+| `<kind>.members` | `members` | The field listing the members' ids. |
+| `<kind>.fields.<name>` | none | `count`, or `sum`/`avg`/`min`/`max`/`distinct`/`first` followed by an expression. |
+| `<kind>.rows.<column>` | none | One row per member with these columns (field `rows`, or `<kind>.rows-field`). |
+| `refresh` | `30s` | How long a computation is reused per business date. |
+| `max-scan` | `50000` | Members read at most. |
+
+In a pack the settings may be nested (`book-pnl: { from: trade, fields: { mtm: sum $.mtm } }`): nested maps become
+dotted keys. Worked example: [PACKS.md](PACKS.md#derived-kinds-entities-computed-from-other-kinds).
+
 ### `demo` — sample data
 
 | Setting | Default | Meaning |

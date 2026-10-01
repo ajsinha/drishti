@@ -42,7 +42,7 @@ class DrishtiApplicationTest {
     @Test
     void loadsTheReferenceSutras() {
         assertThat(sutras.all()).extracting(s -> s.id())
-                .containsExactlyInAnyOrder("fx-swap@2", "irs-vanilla@3", "listed-future@1", "netting-set@1");
+                .containsExactlyInAnyOrder("book-pnl@1", "fx-swap@2", "irs-vanilla@3", "listed-future@1", "netting-set@1");
         assertThat(sutras.problems()).isEmpty();
     }
 

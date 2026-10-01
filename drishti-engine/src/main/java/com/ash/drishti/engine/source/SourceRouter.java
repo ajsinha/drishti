@@ -57,6 +57,7 @@ public final class SourceRouter {
         this.registry = registry;
         this.props = props;
         this.executor = virtualExecutor;
+        registry.attach(this);
     }
 
     /** Plugins to try for {@code kind}, in order. */

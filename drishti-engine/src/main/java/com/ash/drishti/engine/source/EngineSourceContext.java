@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 
 /** The engine's implementation of {@link SourceContext}, one per plugin. */
-record EngineSourceContext(Map<String, String> settings, JsonCodec codec, ScheduledExecutorService scheduler)
+record EngineSourceContext(Map<String, String> settings, JsonCodec codec, ScheduledExecutorService scheduler, com.ash.drishti.api.EntityReader reader)
         implements SourceContext {
 
     @Override

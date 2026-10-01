@@ -1,0 +1,44 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+rachana: 1
+rachana: 1
+sutra: book-pnl
+version: 1
+description: A book's P&L, derived from its trades by the book-totals connector (a derived kind; see PACKS.md).
+match: { kind: book-pnl, priority: 10 }
+title: { pill: Book P&L, id: $.book }
+strip:
+  - { label: Trades, bind: $.tradeCount }
+  - { label: MTM (USD), bind: $.mtm, fmt: signed0, tone: sign, emphasis: true }
+  - { label: DV01 (USD), bind: $.dv01, fmt: signed0, tone: sign }
+  - { label: Worst trade MTM, bind: $.worstMtm, fmt: signed0, tone: sign }
+  - { label: Largest notional, bind: $.largestNotional, fmt: compact }
+  - { label: Currencies, bind: "size($.currencies)" }
+panels:
+  - id: trades
+    kind: table
+    title: Trades in the book
+    code: TRD
+    key: F2
+    rows: $.rows
+    totalLabel: Total
+    columns:
+      - { label: Trade, bind: "@.trade", link: true }
+      - { label: Product, bind: "@.product" }
+      - { label: Currency, bind: "@.currency" }
+      - { label: Notional, bind: "@.notional", fmt: amount0 }
+      - { label: MTM (USD), bind: "@.mtm", fmt: signed0, tone: sign, total: true }
+  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+keys: { F7: "link($.book, 'book')", F9: raw }

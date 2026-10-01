@@ -53,6 +53,38 @@ public final class SourceRegistry implements AutoCloseable {
      * @param stale true when it has received nothing for longer than {@code staleAfter}
      */
     public record Freshness(String source, java.time.Instant lastUpdate, java.time.Duration staleAfter, boolean stale) {}
+
+    /** Reads through the router, which is built after the registry: bound by {@link #attach}. */
+    private final RouterReader reader = new RouterReader();
+
+    static final class RouterReader implements com.ash.drishti.api.EntityReader {
+        private static final java.time.Duration BUDGET = java.time.Duration.ofSeconds(20);
+        private volatile SourceRouter router;
+
+        private SourceRouter router() {
+            SourceRouter r = router;
+            if (r == null) {
+                throw new IllegalStateException("the server is still starting: other kinds cannot be read yet");
+            }
+            return r;
+        }
+
+        @Override
+        public List<com.ash.drishti.api.EntityRef> list(String kind, com.ash.drishti.api.AsOf asOf, int limit) {
+            return router().search(kind, "", limit, BUDGET, asOf).stream().map(com.ash.drishti.api.EntityHit::ref).toList();
+        }
+
+        @Override
+        public Map<com.ash.drishti.api.EntityRef, com.ash.drishti.api.EntityDocument> read(Collection<com.ash.drishti.api.EntityRef> refs,
+                com.ash.drishti.api.AsOf asOf) {
+            return router().fetchAll(refs, BUDGET, asOf);
+        }
+    }
+
+    /** Called by the router once it exists, so connectors may read other kinds through it. */
+    void attach(SourceRouter router) {
+        reader.router = router;
+    }
     private final ScheduledExecutorService scheduler;
 
     public SourceRegistry(List<SourcePlugin> discovered, SourcesProperties props, JsonCodec codec) {
@@ -93,7 +125,7 @@ public final class SourceRegistry implements AutoCloseable {
         try (var exec = Executors.newVirtualThreadPerTaskExecutor()) {
             List<Future<?>> starts = new ArrayList<>();
             for (SourcePlugin p : enabled) {
-                var ctx = new EngineSourceContext(settings.get(p), codec, scheduler);
+                var ctx = new EngineSourceContext(settings.get(p), codec, scheduler, reader);
                 starts.add(exec.submit(() -> {
                     p.start(ctx);
                     return null;

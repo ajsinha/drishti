@@ -19,9 +19,9 @@ code: FIN             # typed alone, opens this pack's overview
 title: Finance · capital markets
 description: >-
   Trades (interest rate swaps, FX swaps, listed futures and more), netting sets, CSAs, master agreements,
-  curves, credit limits, clearing accounts and books, with the four reference Sutras, finance vocabulary for
+  curves, credit limits, clearing accounts and books (and a book P&L derived from the trades), with the four reference Sutras, finance vocabulary for
   inference, and live sample data behind the mockups.
-kinds: [trade, netting-set, csa, agreement, curve, counterparty, credit-limit, clearing-account, contract-spec, index, fx-spot, book, fixing]
+kinds: [trade, netting-set, csa, agreement, curve, counterparty, credit-limit, clearing-account, contract-spec, index, fx-spot, book, fixing, book-pnl]
 sutras: sutras
 formats: config/formats.yaml
 semantics: config/semantics.yaml
@@ -40,6 +40,7 @@ mnemonics:                      # <MNEMONIC> <ID> <GO>
   FXS:  { kind: fx-spot, label: FX spot }
   BOOK: { kind: book, label: Book }
   FIX:  { kind: fixing, label: Rate fixings (feed file) }
+  BPNL: { kind: book-pnl, label: Book P&L (derived from trades) }
 graph:
   id-patterns:                  # identifiers whose kind is not stated
     - { pattern: "^(IRS|FXS|CFT|XCS|SWPT)-\\d+$", kind: trade }
@@ -62,6 +63,7 @@ graph:
     clearingAccount: { kind: clearing-account, label: Clearing account }
     contractSpec:    { kind: contract-spec, label: Contract spec }
     book:            { kind: book, label: Book }
+    tradeIds:        { kind: trade, label: Trade }
   impact:                       # F8: what depends on an entity
     follow: [nettingSet, creditLimit]          # roll dependents up into their netting sets and limits
     measures: { trade: "$.mtm", netting-set: "$.netMtm", credit-limit: "$.limit" }
@@ -79,8 +81,33 @@ connectors:                     # history for the business-date picker (build it
     plugin: delta
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     settings: { root: "${DRISHTI_DELTA_ROOT:./data/delta}", domain: finance, lookback-days: 10 }
+  book-totals:                  # a derived kind: computed from the trades, wherever they come from (see PACKS.md)
+    plugin: derived
+    kinds: [book-pnl]
+    settings:
+      refresh: 30s              # recomputed at most this often per business date
+      book-pnl:
+        from: trade             # the kind it is built from
+        group-by: $.book        # one book-pnl per book
+        id-field: book          # the key, in the field `book` (a link to the book)
+        members: tradeIds       # the member trades, as links
+        fields:
+          tradeCount: count
+          mtm: sum $.mtm
+          dv01: sum $.dv01
+          largestNotional: max $.notional
+          worstMtm: min $.mtm
+          currencies: distinct $.currency
+        rows:                   # one row per member trade, for the Sutra's table
+          trade: $.tradeId
+          product: $.product
+          currency: $.currency
+          notional: $.notional
+          mtm: $.mtm
+routes:
+  book-pnl: book-totals
 roles:
-  trader: { kinds: [trade, curve, fx-spot, index, book, contract-spec, clearing-account, counterparty, fixing] }
+  trader: { kinds: [trade, curve, fx-spot, index, book, contract-spec, clearing-account, counterparty, fixing, book-pnl] }
   risk:   { kinds: ["*"], raw: true }
 alerts:                         # suggested alert rules, offered per kind
   - { kind: netting-set, name: "PFE near limit", when: "$.utilisation > 0.8", severity: warn, message: "${$.nettingSetId}: utilisation ${fmt($.utilisation, 'pct0')} of limit" }
@@ -96,6 +123,7 @@ console:                        # read by the console
     - ["TRD IRS-47102", "A trade with no Sutra · laid out by inference alone"]
     - ["CRV USD-SOFR", "A curve · inferred"]
     - ["FIX SOFR-HISTORY", "A feed file (CSV) · inferred"]
+    - ["BPNL RATES-NY-3", "A derived kind · a book's P&L summed from its trades"]
   workspaces: config/workspaces.yaml
   help: config/help.yaml
   monitors:
