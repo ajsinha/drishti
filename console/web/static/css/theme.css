@@ -90,6 +90,8 @@ a:hover { text-decoration: underline; }
 .lp-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--d-border);
   border: 1px solid var(--d-border); border-radius: 14px; overflow: hidden; margin: 3rem auto; }
 .lp-stats div { background: var(--d-surface); padding: 1.3rem 1rem; text-align: center; }
+.lp-stats a.lp-stat-link { color: inherit; text-decoration: none; display: block; }
+.lp-stats a.lp-stat-link:hover span { text-decoration: underline; }
 .lp-stats b { display: block; font-size: 1.9rem; font-family: var(--d-font-mono); color: var(--d-accent); }
 .lp-stats span { color: var(--d-muted); font-size: .88rem; }
 
