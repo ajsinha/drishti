@@ -462,6 +462,7 @@ Level 1 is what refers to the entity directly; level 2 is what those roll into. 
 |---|---|---|
 | `GET` | `/search?q=` | as-of. `q` is `<MNEMONIC or kind> [where <condition>] [order by <field> [asc\|desc]] [limit n]`. Default limit 100, maximum 1000. `400 DRS-4004` if `q` cannot be read; `403` if the caller may not open the kind |
 | `GET` | `/search/csv?q=` | the same as CSV for spreadsheets: `kind,id,title`, then the columns' labels; values unformatted; formula-like text prefixed with `'` |
+| `GET` | `/search/compare?q=&from=&to=` | the search on two business dates: the later date's entities, each column as `{from, to, delta}` (delta for numbers), entities on one date only marked `added` or `removed` |
 
 The condition runs on each document *as the caller may see it* (redacted), so hidden fields cannot be probed.
 Numbers accept `k`, `m` and `bn` (or `b`) suffixes (`1m` = 1,000,000). URL-encode `q`; `curl -G --data-urlencode` does it for you:
@@ -1053,4 +1054,12 @@ and packs at the time of each call), only while the owner is enabled, and only f
 | `DELETE` | `/me/tokens/{id}` | revokes yours |
 | `GET` | `/admin/tokens` | (admin) everyone's |
 | `DELETE` | `/admin/tokens/{id}` | (admin) revokes anyone's |
+
+## A field over time
+
+`GET /api/v1/history/{kind}/{id}/series?path=$.mtm&days=30[&to=2026-09-30]`: the field (any Rachana-EL expression
+over the document) on each of the last `days` business days (2–260) up to `to` (default: the request's business
+date), oldest first: `{ref, path, label, dated, points: [{date, value, dataDate, source}]}`. `dataDate` earlier than
+`date` means the source carried an older day; `dated: false` means no dated source holds the entity (one value).
+A path that is not an expression answers `400 DRS-5001`.
 

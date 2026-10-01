@@ -34,7 +34,7 @@
   <tbody>
   {% for r in (d.rows or []) %}
     <tr{% if r.highlight %} class="hl"{% endif %}{% if r.path %} data-path="{{ r.path }}"{% endif %}>
-      {% for c in (r.cells or []) %}<td class="mono{% if (d.numeric or [])[loop.index0] %} num{% endif %}{{ tone(c) }}">{{ cell_text(c) }}</td>{% endfor %}
+      {% for c in (r.cells or []) %}<td class="mono{% if (d.numeric or [])[loop.index0] %} num{% endif %}{{ tone(c) }}"{% if c.path %} data-path="{{ c.path }}"{% endif %}>{{ cell_text(c) }}</td>{% endfor %}
     </tr>
   {% endfor %}
   </tbody>

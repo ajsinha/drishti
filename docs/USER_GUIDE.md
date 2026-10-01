@@ -581,6 +581,24 @@ curl -s 'http://localhost:18480/api/v1/history/trade/T-10001/diff?from=2026-09-2
 
 It also takes `fromKnownAt` and `toKnownAt`. See [API_GUIDE.md](API_GUIDE.md).
 
+## A number over time
+
+Click a number in a view (a strip value, a field, a cell of a table) and a window shows that field over the last 30
+business days: a line chart, and the values day by day with the date the data is for and the connector it came from.
+Choose 10, 30, 90 or 250 days at the top. Links still open what they name; a number that is a link opens the link.
+
+Worked example: open `TRD T-10001`, click the MTM in the strip. You see *MTM (USD) · T-10001 over time*, a line
+over 30 business days, and below it the values, newest first, each with *Data for* and *Source* (`trading-store`).
+A *Data for* date in amber is earlier than the day it is listed under: the source carried its last value forward
+(no data that day). An entity no dated source holds shows today's value with a note, since no history is kept.
+
+**A pick list or search on two dates.** On the search page, set **Compare with** to an earlier business date and
+press Search: each row shows today's value of every number with its change in brackets (`125  (+25)`), and entities
+only one of the dates holds are marked *added* or *removed*.
+
+The same through the API: `GET /api/v1/history/{kind}/{id}/series?path=$.mtm&days=30` and
+`GET /api/v1/search/compare?q=…&from=2026-09-25&to=2026-09-30`.
+
 ## Search by value
 
 Add `where` after a mnemonic to find entities by what they contain.

@@ -16,6 +16,10 @@
 # Changelog
 
 ## Unreleased
+- **Field history.**
+  - **In a view:** click a number to see that field over the last 10, 30, 90 or 250 business days, as a chart and a table with the date the data is for and its connector.
+  - **On the search page:** **Compare with** runs a search on two dates, showing each number's change and marking entities added or removed.
+  - **API:** `GET /api/v1/history/{kind}/{id}/series` and `GET /api/v1/search/compare`.
 - **Personal API tokens, a Python client, and Excel.**
   - **Tokens:** made on My account → API tokens. A token is `drk_<id>_<secret>`, shown once and stored only as a SHA-256 hash. It reads as its owner (their current roles and packs), only while they are enabled, and never writes. It can have an expiry and a last-used time, and can be revoked. Admin → Tokens lists and revokes anyone's; every change is audited.
   - **CSV search:** `GET /api/v1/search/csv` returns any search as CSV for spreadsheets, with formula-like text neutralised.

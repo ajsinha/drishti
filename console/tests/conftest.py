@@ -238,6 +238,17 @@ class FakeBackend:
     tests_saved = {}
     tokens_made = []
 
+    async def series(self, kind, id_, path, days, ident=None):
+        return {"ref": {"kind": kind, "id": id_}, "path": path, "label": "MTM", "dated": True,
+                "points": [{"date": "2026-09-29", "value": 110, "dataDate": "2026-09-29", "source": "lake"},
+                           {"date": "2026-09-30", "value": 125, "dataDate": "2026-09-30", "source": "lake"}]}
+
+    async def search_compare(self, q, from_, to, ident=None):
+        return {"kind": "trade", "mnemonic": "TRD", "columns": ["$.mtm"], "labels": {"$.mtm": "MTM"}, "matched": 2, "scanned": 2,
+                "elapsedMs": 1, "partial": False, "from": from_, "to": "2026-09-30",
+                "rows": [{"ref": {"kind": "trade", "id": "T-1"}, "title": "T-1", "status": None, "values": {"$.mtm": {"from": 100, "to": 125, "delta": 25.0}}},
+                         {"ref": {"kind": "trade", "id": "T-7"}, "title": "T-7", "status": "added", "values": {"$.mtm": {"from": None, "to": 5}}}]}
+
     async def my_tokens(self, ident=None):
         return [{"id": "abc123def456", "user": "drishti-dev-admin", "name": "Risk notebook", "createdAt": "2026-10-01T09:00:00Z",
                  "expiresAt": None, "lastUsedAt": None, "revokedAt": None, "active": True}]

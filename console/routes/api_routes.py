@@ -68,6 +68,15 @@ async def revoke_token(request: Request, id_: str):
     return {"ok": True}
 
 
+@router.get("/series/{kind}/{id_}")
+async def series(request: Request, kind: str, id_: str, path: str, days: int = 30):
+    """A field's history for the chart that opens when a value is clicked."""
+    try:
+        return await request.app.state.backend.series(kind, id_, path, max(2, min(days, 260)), ident(request))
+    except BackendError as e:
+        return _problem(e)
+
+
 @router.get("/history")
 async def history(request: Request):
     """The user's recent commands, newest first (↑ on the command line)."""

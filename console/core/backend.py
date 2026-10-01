@@ -72,6 +72,14 @@ class BackendClient:
         """Structured search: TRD where mtm > 1m order by mtm desc limit 50."""
         return await self._get("/search", ident, q=q)
 
+    async def series(self, kind: str, id_: str, path: str, days: int, ident=None) -> dict:
+        """One field over the last ``days`` business days (oldest first)."""
+        return await self._get(f"/history/{quote(kind)}/{quote(id_)}/series", ident, path=path, days=days)
+
+    async def search_compare(self, q: str, from_: str, to: str, ident=None) -> dict:
+        """A search on two business dates, side by side, with the change of every number."""
+        return await self._get("/search/compare", ident, q=q, **{"from": from_}, **({"to": to} if to else {}))
+
     async def history_diff(self, kind: str, id_: str, ident=None, **params: str) -> dict:
         """What changed between two dates (or two "known at" times); blank parameters take the server's defaults."""
         return await self._get(f"/history/{kind}/{id_}/diff", ident, **{k: v for k, v in params.items() if v})

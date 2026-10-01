@@ -112,24 +112,35 @@ async def pack_overview(request: Request, name: str):
 
 
 @router.get("/s")
-async def search(request: Request, q: str = ""):
+async def search(request: Request, q: str = "", vs: str = ""):
     """Structured search (W17): entities by field values, e.g. TRD where mtm > 1m and currency = 'EUR' order by mtm desc."""
     data, error = None, None
     if q.strip():
         limit = (getattr(request.state, "settings", None) or {}).get("searchLimit") or 100
         asked = q if re.search(r"(?i)\slimit\s+\d+\s*$", q) else f"{q.rstrip()} limit {limit}"   # the user's default size
         try:
-            data = await request.app.state.backend.search(asked, ident(request))
+            if vs:     # the same search on another business date, side by side: each number with its change
+                data = await request.app.state.backend.search_compare(asked, vs, "", ident(request))
+            else:
+                data = await request.app.state.backend.search(asked, ident(request))
         except BackendError as e:
             error = e
     rows = []
     if data:
         for r in data.get("rows", []):
-            rows.append({"ref": r["ref"], "title": r.get("title") or r["ref"]["id"],
-                         "cells": [(_shown(r["values"].get(c)), isinstance(r["values"].get(c), (int, float)) and not isinstance(r["values"].get(c), bool))
-                                   for c in data.get("columns", [])]})
+            cells = []
+            for c in data.get("columns", []):
+                v = r["values"].get(c)
+                if vs and isinstance(v, dict):            # compared: the later value, and its change
+                    to, delta = v.get("to"), v.get("delta")
+                    num = isinstance(to, (int, float)) and not isinstance(to, bool)
+                    text = _shown(to) + (f"  ({_delta(delta)})" if delta not in (None, 0, 0.0) else "")
+                    cells.append((text, num))
+                else:
+                    cells.append((_shown(v), isinstance(v, (int, float)) and not isinstance(v, bool)))
+            rows.append({"ref": r["ref"], "title": r.get("title") or r["ref"]["id"], "cells": cells, "status": r.get("status")})
     titled = any(r["title"] != r["ref"]["id"] for r in rows)       # a title that only repeats the id is left out
-    return render(request, "terminal/search.html", q=q, data=data, rows=rows, error=error, titled=titled, screen="search")
+    return render(request, "terminal/search.html", q=q, vs=vs, data=data, rows=rows, error=error, titled=titled, screen="search")
 
 
 @router.post("/s/watch")

@@ -70,11 +70,83 @@ public class HistoryController {
     private final BusinessDates dates;
     private final Entitlements entitlements;
     private final DocumentDiff differ = new DocumentDiff(LIMIT);
+    private final com.ash.drishti.rachana.el.ElCompiler el;
+    private final com.ash.drishti.rachana.format.Formats formats;
 
-    public HistoryController(SourceRouter router, BusinessDates dates, Entitlements entitlements) {
+    public HistoryController(SourceRouter router, BusinessDates dates, Entitlements entitlements, com.ash.drishti.rachana.el.ElCompiler el,
+            com.ash.drishti.rachana.format.Formats formats) {
         this.router = router;
         this.dates = dates;
         this.entitlements = entitlements;
+        this.el = el;
+        this.formats = formats;
+    }
+
+    /**
+     * One point of a field's history.
+     *
+     * @param date the business date asked for
+     * @param value the field's value that day (null when the entity or the field was not there)
+     * @param dataDate the business date the data is for: earlier than {@code date} when a source carried an older day
+     * @param source the connector that answered
+     */
+    public record Point(LocalDate date, Object value, LocalDate dataDate, String source) {}
+
+    /** A field over business days, oldest first; {@code dated} is false when no dated source answered (one value repeated). */
+    public record Series(ViewModelRef ref, String path, String label, List<Point> points, boolean dated) {}
+
+    static final int MAX_DAYS = 260;
+
+    /**
+     * One field's value on each of the last {@code days} business days up to {@code to} (default: the request's date),
+     * read through the normal routing for each day, as the caller may see it. {@code path} is any Rachana-EL expression
+     * over the document ({@code $.mtm}, {@code $.legs[0].rate}).
+     */
+    @GetMapping("/{kind}/{id}/series")
+    public Series series(@PathVariable String kind, @PathVariable String id, @RequestParam String path,
+            @RequestParam(defaultValue = "30") int days, @RequestParam(required = false) String to, AsOf current,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
+        entitlements.requireOpen(principal, kind);
+        String expr = path.startsWith("$") ? path : "$." + path;
+        com.ash.drishti.rachana.el.Expr compiled;
+        try {
+            compiled = el.compile(expr);
+        } catch (RuntimeException e) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "cannot read the path '" + path + "': " + e.getMessage());
+        }
+        int n = Math.max(2, Math.min(MAX_DAYS, days));
+        LocalDate last = to == null ? (current.businessDate() == null ? dates.current() : current.businessDate()) : LocalDate.parse(to);
+        java.util.ArrayDeque<LocalDate> wanted = new java.util.ArrayDeque<>();
+        for (LocalDate d = last; wanted.size() < n && !d.isBefore(dates.earliest()); d = dates.calendar().previous(d)) {
+            wanted.addFirst(d);
+        }
+        EntityRef ref = EntityRef.of(kind, id);
+        List<LocalDate> list = List.copyOf(wanted);
+        List<CompletableFuture<EntityDocument>> reads = list.stream().map(d -> router.fetch(ref, AsOf.of(d))).toList();
+        List<Point> points = new java.util.ArrayList<>();
+        boolean dated = false;
+        for (int i = 0; i < list.size(); i++) {
+            EntityDocument doc;
+            try {
+                doc = reads.get(i).join();
+            } catch (CompletionException e) {
+                points.add(new Point(list.get(i), null, null, null));      // not there that day
+                continue;
+            }
+            dated |= doc.provenance().businessDate() != null;
+            Object v;
+            try {
+                v = com.ash.drishti.rachana.el.Values.simplify(compiled.eval(com.ash.drishti.rachana.el.EvalContext.of(
+                        entitlements.redact(principal, doc.data()), formats)));
+                if (v instanceof com.ash.drishti.api.DataNode node) {
+                    v = node.isNull() ? null : node.unwrap();
+                }
+            } catch (RuntimeException e) {
+                v = null;
+            }
+            points.add(new Point(list.get(i), v, doc.provenance().businessDate(), doc.provenance().source()));
+        }
+        return new Series(new ViewModelRef(kind, id), expr, label(expr.substring(2)), points, dated);
     }
 
     /**

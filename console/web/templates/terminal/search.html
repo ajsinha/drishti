@@ -24,6 +24,8 @@
   <form class="srch-form" method="get" action="/s" role="search">
     <label for="srchQ" class="visually-hidden">Search</label>
     <input id="srchQ" class="srch-q mono" name="q" value="{{ q }}" placeholder="TRD T-100 · TRD productType=Revolver · TRD where mtm > 1m order by mtm desc" autocomplete="off" spellcheck="false">
+    <label for="srchVs" class="srch-vs" title="Run the same search on another business date: each number shows its change">Compare with
+      <input id="srchVs" name="vs" type="date" class="mono" value="{{ vs or '' }}"></label>
     <button type="submit" class="btn btn-sm btn-outline-secondary">Search</button>
   </form>
   <p class="srch-help text-muted-d">
@@ -52,7 +54,7 @@
       <thead><tr><th>{{ data.mnemonic or data.kind }}</th>{% if titled %}<th>Title</th>{% endif %}
         {% for c in data.columns %}<th class="{{ 'num' if rows and rows[0].cells[loop.index0][1] else '' }}" title="{{ c }}">{{ data.labels[c] }}</th>{% endfor %}</tr></thead>
       <tbody>{% for r in rows %}
-        <tr><td><a class="lnk mono" href="/v/{{ r.ref.kind }}/{{ r.ref.id | urlencode }}">{{ r.ref.id }}</a></td>{% if titled %}<td>{{ r.title }}</td>{% endif %}
+        <tr{% if r.status %} class="cmp-{{ r.status }}" title="{{ 'only on the later date' if r.status == 'added' else 'only on ' ~ vs }}"{% endif %}><td><a class="lnk mono" href="/v/{{ r.ref.kind }}/{{ r.ref.id | urlencode }}">{{ r.ref.id }}</a>{% if r.status %} <span class="st">{{ r.status }}</span>{% endif %}</td>{% if titled %}<td>{{ r.title }}</td>{% endif %}
           {% for text, number in r.cells %}<td class="{{ 'num ' if number else '' }}mono">{{ text }}</td>{% endfor %}</tr>
       {% endfor %}</tbody></table></div></div></section>
     {% else %}

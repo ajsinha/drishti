@@ -95,4 +95,25 @@ class BusinessDateTest {
                 .andExpect(jsonPath("$.changes[0].before").value(100))
                 .andExpect(jsonPath("$.changes[0].after").value(110));
     }
+
+    @Test
+    void aFieldsSeriesReadsEachBusinessDay() throws Exception {
+        mvc.perform(get("/api/v1/history/trade/T-1/series").param("path", "mtm").param("days", "3").param("to", "2026-09-30"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.path").value("$.mtm"))
+                .andExpect(jsonPath("$.dated").value(true))
+                .andExpect(jsonPath("$.points[*].date").value(org.hamcrest.Matchers.contains("2026-09-28", "2026-09-29", "2026-09-30")))
+                .andExpect(jsonPath("$.points[*].value").value(org.hamcrest.Matchers.contains(100, 110, 125)))
+                .andExpect(jsonPath("$.points[2].source").value("finance-lake"));
+        mvc.perform(get("/api/v1/history/trade/T-1/series").param("path", "mtm +").param("days", "3"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void aSearchComparedBetweenTwoDatesShowsTheChange() throws Exception {
+        mvc.perform(get("/api/v1/search/compare").param("q", "TRD where mtm > 0").param("from", "2026-09-28").param("to", "2026-09-30"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.from").value("2026-09-28"))
+                .andExpect(jsonPath("$.rows[?(@.ref.id=='T-1')].values['$.mtm'].delta").value(hasItem(25.0)));
+    }
 }

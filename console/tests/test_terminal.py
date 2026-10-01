@@ -393,3 +393,15 @@ def test_people_make_and_revoke_api_tokens(client, backend):
     assert client.post("/api/tokens", json={"name": " "}).status_code == 400
     assert client.post("/api/tokens", json={"name": "x", "days": "soon"}).status_code == 400
     assert client.delete("/api/tokens/abc123def456").json()["ok"] is True
+
+
+
+def test_field_history_and_searches_compared_between_dates(client):
+    r = client.get("/api/series/trade/T-1", params={"path": "$.mtm", "days": 30}).json()
+    assert [p["value"] for p in r["points"]] == [110, 125]
+    page = client.get("/s", params={"q": "TRD where mtm > 0", "vs": "2026-09-28"}).text
+    assert "125  (+25)" in page and "added" in page and 'value="2026-09-28"' in page
+    assert "history.js" in client.get("/v/trade/IRS-48213").text
+    module = client.app.state.templates.env.get_template("_macros/panels.html").module
+    html = str(module.table({"columns": ["MTM"], "numeric": [True], "rows": [{"cells": [{"text": "125", "path": "$.mtm"}]}]}))
+    assert 'data-path="$.mtm"' in html

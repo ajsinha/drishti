@@ -108,4 +108,59 @@ public class SearchController {
         }
         return s.contains(",") || s.contains("\"") || s.contains("\n") || s.contains("\r") ? '"' + s.replace("\"", "\"\"") + '"' : s;
     }
+
+    /**
+     * A search on two business dates, side by side ({@code GET /api/v1/search/compare?q=TRD T-1&from=2026-09-25&to=2026-09-30}):
+     * the entities of the later date, each column with its value on both dates and, for numbers, the change. An entity
+     * only one date holds is marked {@code added} or {@code removed}.
+     */
+    @GetMapping("/compare")
+    public Map<String, Object> compare(@RequestParam String q, @RequestParam String from, @RequestParam(required = false) String to,
+            AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
+        AsOf later = to == null || to.isBlank() ? asOf : AsOf.of(java.time.LocalDate.parse(to));
+        AsOf earlier = AsOf.of(java.time.LocalDate.parse(from));
+        Map<String, Object> b = search(q, later, principal);
+        Map<String, Object> a = search(q, earlier, principal);
+        @SuppressWarnings("unchecked")
+        java.util.List<String> columns = (java.util.List<String>) b.get("columns");
+        @SuppressWarnings("unchecked")
+        java.util.List<StructuredSearch.Row> before = (java.util.List<StructuredSearch.Row>) a.get("rows");
+        @SuppressWarnings("unchecked")
+        java.util.List<StructuredSearch.Row> after = (java.util.List<StructuredSearch.Row>) b.get("rows");
+        Map<com.ash.drishti.api.EntityRef, StructuredSearch.Row> old = new java.util.LinkedHashMap<>();
+        before.forEach(r -> old.put(r.ref(), r));
+        java.util.List<Map<String, Object>> rows = new java.util.ArrayList<>();
+        for (StructuredSearch.Row r : after) {
+            StructuredSearch.Row was = old.remove(r.ref());
+            rows.add(compared(r, was, columns, was == null ? "added" : null));
+        }
+        old.values().forEach(r -> rows.add(compared(null, r, columns, "removed")));
+        Map<String, Object> out = new java.util.LinkedHashMap<>(b);
+        out.put("from", earlier.businessDate());
+        out.put("to", later.businessDate());
+        out.put("rows", rows);
+        return out;
+    }
+
+    private static Map<String, Object> compared(StructuredSearch.Row now, StructuredSearch.Row was, java.util.List<String> columns, String status) {
+        StructuredSearch.Row any = now != null ? now : was;
+        Map<String, Object> row = new java.util.LinkedHashMap<>();
+        row.put("ref", Map.of("kind", any.ref().kind(), "id", any.ref().id()));
+        row.put("title", any.title());
+        row.put("status", status);
+        Map<String, Object> values = new java.util.LinkedHashMap<>();
+        for (String c : columns) {
+            Object x = was == null ? null : was.values().get(c);
+            Object y = now == null ? null : now.values().get(c);
+            Map<String, Object> v = new java.util.LinkedHashMap<>();
+            v.put("from", x);
+            v.put("to", y);
+            if (x instanceof Number nx && y instanceof Number ny) {
+                v.put("delta", ny.doubleValue() - nx.doubleValue());
+            }
+            values.put(c, v);
+        }
+        row.put("values", values);
+        return row;
+    }
 }

@@ -578,3 +578,19 @@ table.tbl tr.tbl-filter th::after { content: none; }
 .token-new label { display: flex; flex-direction: column; font-size: .8rem; gap: .2rem; }
 .token-secret { margin-top: .6rem; padding: .6rem .8rem; border: 1px solid var(--d-accent); border-radius: 6px; background: var(--d-accent-tint); }
 .token-secret code { word-break: break-all; }
+
+/* Field history (history.js): numbers in a view open their history */
+.view [data-path] { cursor: pointer; }
+.view a [data-path], .view [data-path] a { cursor: pointer; }
+.view dd[data-path]:hover, .view td[data-path]:hover { text-decoration: underline dotted; text-underline-offset: 3px; }
+.hist-dlg { width: min(860px, 94vw); border: 1px solid var(--d-border); border-radius: 10px; background: var(--d-surface); color: var(--d-ink); padding: 0; }
+.hist-dlg::backdrop { background: rgba(0, 0, 0, .45); }
+.hist-h { display: flex; justify-content: space-between; align-items: center; padding: .6rem .9rem; border-bottom: 1px solid var(--d-border); }
+.hist-h h3 { margin: 0; font-size: 1rem; }
+.hist-tools { display: inline-flex; gap: .5rem; align-items: center; }
+.hist-tools select { background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 4px; }
+.hist-msg { margin: .5rem .9rem 0; font-size: .82rem; }
+.hist-chart { height: 260px; margin: .3rem .6rem; }
+.hist-tbl { max-height: 220px; overflow: auto; margin: 0 .9rem .9rem; }
+.srch-vs { display: inline-flex; align-items: center; gap: .35rem; font-size: .8rem; color: var(--d-muted); }
+.srch-vs input { background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 4px; padding: .15rem .3rem; }
