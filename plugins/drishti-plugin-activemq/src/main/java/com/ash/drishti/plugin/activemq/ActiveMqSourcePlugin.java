@@ -133,7 +133,7 @@ public final class ActiveMqSourcePlugin extends MessageStateSource {
                 if (m != null) {
                     any = true;
                     accept(new Inbound(names.get(i), property(m, "id"), body(m), flag(m, "deleted")));
-                    m.acknowledge();                          // after it is stored: a crash redelivers, never loses
+                    m.acknowledge();                          // after it is stored: a broker outage redelivers (the store has no write-ahead log)
                 }
             }
             if (!any && consumers.size() > 1) {

@@ -57,7 +57,7 @@ import org.apache.kafka.common.serialization.StringDeserializer;
  * commits are made, so every server builds the same state independently.
  *
  * <p><b>Memory stays bounded.</b> In {@code state} mode (default) the plugin keeps an index of where each entity's
- * latest message is (partition and offset, tens of bytes per entity) and a cache of recently read documents limited
+ * latest message is (partition and offset: with its id and map entry, about 0.4–0.5 GB per million entities) and a cache of recently read documents limited
  * by size ({@code cache-mb}, 256): a miss reads that one record back from Kafka by its offset. Messages for entities
  * nobody is viewing are not even parsed. In {@code ticks} mode it keeps nothing: a store (Delta Lake, a database)
  * serves the entities and the stream only drives the ticks of open views. Reverse lookups are left to the stores.

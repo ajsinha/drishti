@@ -500,11 +500,10 @@ Typical exception texts:
 - **A server started without internet** starts normally, with health `DOWN: <Exception>: …`, and holds nothing:
   reads answer *not held* (`DRS-1001` if nothing else holds the id). Data arrives with the first refresh that
   succeeds, up to `refresh-minutes` later; a purge (below) fetches at once.
-- **A response that parses but is empty** is not a failure: a SOFR or €STR answer with no rows replaces the entity's
-  observations with none, so its reads answer *not held* while health stays `UP` (the same holds for a FRED series or
-  the Treasury curve with no rows). An answer that yields no series at all (an `ecb-fx` file with no usable day)
-  keeps the last good data, reads and type-ahead alike, and health says
-  `DOWN: the feed returned no data (serving the last data)`.
+- **A response that parses but holds no rows** (a SOFR, €STR, FRED or Treasury answer with no observations, an
+  `ecb-fx` file with no usable day) keeps the last good data, reads and type-ahead alike, and health says
+  `DOWN: the feed returned no data (serving the last data)`, or `DOWN: the feed returned no data` when nothing was ever
+  fetched. A series without a single observation is ignored; the others of the same answer are taken.
 - **A purge** (Admin → Caches, or `POST /api/v1/admin/caches/<connector>/purge`) clears the data and refetches at
   once, on the caller's request. If that fetch fails, the data is gone until the next good refresh: do not purge a
   feed while its publisher is unreachable.

@@ -1391,9 +1391,9 @@ An `fx-spot` document has `pair`, `pairName`, `mid` (also as `bid` and `ask`), `
 `history` and `conventions`; the `ir-curve` document has `curveId`, `tenY`, `slope2s10s` (bp), `asOf` and `points`
 (`tenor`, `maturity`, `quote`, `zeroRate`, `df`) from 1M to 30Y. The business date of a document is its latest
 observation on or before the date asked; a date before the history kept is *not held* (the next source answers). The
-history is only the last fetch's window: each successful fetch replaces it. A failed fetch, or an answer that yields
-no series at all (in practice `ecb-fx` with no usable day), keeps the last good data; a SOFR, €STR, FRED or Treasury
-answer with no rows replaces the series with none, and health stays `UP`. `stale-after` does not catch a publisher that stopped publishing: every
+history is only the last fetch's window: each successful fetch replaces it. A failed fetch, or an answer with no rows
+(no series, or series without a single observation), keeps the last good data, and health says
+`DOWN: the feed returned no data (serving the last data)`. `stale-after` does not catch a publisher that stopped publishing: every
 successful parse counts as new data.
 
 **Try it.**

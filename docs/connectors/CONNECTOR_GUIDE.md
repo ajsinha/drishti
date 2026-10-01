@@ -1924,9 +1924,8 @@ In the terminal: `FIX FIX-SOFR-NYFED <GO>`, `FX FX-EURUSD-ECB <GO>`, `CRV CRV-US
 or `DOWN: ConnectException: …` / `DOWN: HttpTimeoutException: …` when the server cannot reach the publisher),
 `DOWN: the feed returned no data (serving the last data)` when an answer yields no series at all (in practice only
 `ecb-fx`, with no day holding a pair's two currencies), or `DOWN: the feed returned no data` when that happens and
-nothing was ever fetched. A failed fetch, or one that yields no series, **keeps the last good data**, so views go on
-working; the next refresh tries again. A SOFR, €STR, FRED or Treasury answer that parses but holds no rows is not
-caught: it replaces the series with no observations, health stays `UP`, and reads answer *not held*. The first fetch runs inside the
+nothing was ever fetched. A failed fetch, or an answer with no rows (no series, or series without a single observation), **keeps the last good
+data**, so views go on working; the next refresh tries again. The first fetch runs inside the
 connector's start, so `DOWN: not fetched yet` is never seen on a running connector. The connect timeout is 10 s,
 fixed in the code; `timeout-seconds` (20) bounds each request. Cache figures (real): `{"series": 10, "observations": 640, "fetchedAt": "2026-10-01T01:35:09.770409225Z"}`
 for `ecb-fx-feed`. A purge (Admin → Caches) clears the data first and then refetches: if that fetch fails, the

@@ -29,7 +29,8 @@ import java.util.Map;
  * {@code bind.<queue>} ({@code exchange:routing.key} to bind a declared queue), {@code prefetch} (100), and the shared
  * message settings (see {@link MessageStateSource}). The client's automatic recovery reconnects and re-subscribes
  * after an outage; a supervisor keeps trying until the first connection succeeds. Each message is acknowledged after
- * it is stored, so an outage redelivers rather than loses.
+ * it is stored, so a broker outage redelivers rather than loses (the local store runs without a write-ahead log, so a
+ * crash of this process can lose what it acknowledged since its last flush).
  */
 public final class RabbitMqSourcePlugin extends MessageStateSource {
 

@@ -107,6 +107,7 @@ public final class FeedSourcePlugin implements SourcePlugin {
                 bodies.add(get(url));
             }
             List<Feed.Series> parsed = feed.parse(bodies, context.settings());
+            parsed = parsed.stream().filter(x -> !x.observations().isEmpty()).toList();   // a series without a single row is no answer
             if (parsed.isEmpty()) {                            // an answer with no rows: keep serving the last good data
                 health = series.isEmpty() ? "DOWN: the feed returned no data" : "DOWN: the feed returned no data (serving the last data)";
                 return;
