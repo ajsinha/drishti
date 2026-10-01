@@ -29,7 +29,7 @@ def block(style):
 
 
 STYLES = {".java": "java", ".js": "java", ".css": "java", ".py": "hash", ".yaml": "hash", ".yml": "hash",
-          ".properties": "hash", ".sh": "hash", ".xml": "xml", ".md": "xml", ".svg": None, ".html": "jinja",
+          ".properties": "hash", ".sh": "hash", ".ps1": "hash", ".xml": "xml", ".md": "xml", ".svg": None, ".html": "jinja",
           ".json": None, ".txt": None}
 
 

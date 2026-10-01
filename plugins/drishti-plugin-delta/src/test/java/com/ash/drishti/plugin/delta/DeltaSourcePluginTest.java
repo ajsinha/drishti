@@ -32,12 +32,18 @@ import org.junit.jupiter.api.Test;
 
 /**
  * The Delta Lake connector over the fixture lake (written by delta-rs with the contract's rows), plus what only a
- * versioned store can do: read data as known before a later correction.
+ * versioned store can do: read data as known before a later correction. Run with the native engine here and with
+ * Hadoop's in {@link DeltaSourcePluginHadoopTest}.
  */
 class DeltaSourcePluginTest extends DatedSourceContract {
 
     static final Instant T0 = Instant.parse("2026-09-30T20:00:00Z");
-    private static DeltaSourcePlugin plugin;
+    private static final Map<String, DeltaSourcePlugin> PLUGINS = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** The Delta engine these tests read with. */
+    protected String engine() {
+        return "native";
+    }
 
     /**
      * Delta time travel for these tables resolves instants against the commit files' modification times, which a
@@ -46,8 +52,9 @@ class DeltaSourcePluginTest extends DatedSourceContract {
      */
     @Override
     protected synchronized SourcePlugin plugin() throws Exception {
-        if (plugin != null) {
-            return plugin;
+        DeltaSourcePlugin cached = PLUGINS.get(engine());
+        if (cached != null) {
+            return cached;
         }
         Path root = Files.createTempDirectory("drishti-lake");
         Path src = Path.of("src/test/resources/lake");
@@ -70,8 +77,9 @@ class DeltaSourcePluginTest extends DatedSourceContract {
             }
         }
         DeltaSourcePlugin p = new DeltaSourcePlugin();
-        p.start(context(Map.of("root", root.toString(), "domain", "desk", "mode.counterparty", "effective", "source-name", "lake")));
-        plugin = p;
+        p.start(context(Map.of("root", root.toString(), "domain", "desk", "mode.counterparty", "effective", "source-name", "lake",
+                "engine", engine())));
+        PLUGINS.put(engine(), p);
         return p;
     }
 
@@ -111,7 +119,7 @@ class DeltaSourcePluginTest extends DatedSourceContract {
         Path src = Path.of("src/test/resources/lake/desk");
         copy(src.resolve("trade"), root.resolve("desk").resolve("trade"));
         DeltaSourcePlugin p = new DeltaSourcePlugin();
-        p.start(context(Map.of("root", root.toString(), "domain", "desk", "source-name", "growing")));
+        p.start(context(Map.of("root", root.toString(), "domain", "desk", "source-name", "growing", "engine", engine())));
         try {
             assertThat(p.manifest().kinds()).containsExactly("trade");
             copy(src.resolve("counterparty"), root.resolve("desk").resolve("counterparty"));     // loaded while running
@@ -121,5 +129,11 @@ class DeltaSourcePluginTest extends DatedSourceContract {
         } finally {
             p.close();
         }
+    }
+
+    @Test
+    void healthAndCacheStatsNameTheEngine() throws Exception {
+        assertThat(plugin().health()).isEqualTo("UP (engine: " + engine() + ")");
+        assertThat(plugin().cacheStats()).containsEntry("engine", engine());
     }
 }

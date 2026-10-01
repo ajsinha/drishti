@@ -44,6 +44,7 @@ storage: [AEROSPIKE_CONNECTOR.md](AEROSPIKE_CONNECTOR.md).
 13. [Diagnosing](#13-diagnosing)
 14. [Settings](#14-settings)
 15. [Checklist for production](#15-checklist-for-production)
+16. [Engines: native and Hadoop](#16-engines-native-and-hadoop)
 
 ---
 
@@ -288,7 +289,7 @@ anything else (including a column with no values yet) is text. Once a table exis
 ## 6. How the connector reads
 
 The connector (`plugins/drishti-plugin-delta`) reads through Delta Kernel, the Delta project's Java library, without
-Spark. Each read path below uses only what it needs.
+Spark, and, by default, without Hadoop (the native engine, [section 16](#16-engines-native-and-hadoop)). Each read path below uses only what it needs.
 
 ### 6.1 The table's file list
 
@@ -515,13 +516,13 @@ Writing: `bulk_trades.py` writes a million trades a day for three days in 82–1
 **Admin → Health** shows the connector's state and, for a pack-declared layout the table does not have, says so:
 
 ```
-trading-store   UP (not laid out as the pack declares: trade (12 of 19 columns); searches read documents)
+trading-store   UP (engine: native; not laid out as the pack declares: trade (12 of 19 columns); searches read documents)
 ```
 
 `GET /api/v1/admin/health` lists the connector's caches:
 
 ```json
-"cache": {"partitions": 0, "tables": 1, "idMaps": 2, "columnSets": 1, "documents": 3, "timeTravel": 0}
+"cache": {"engine": "native", "partitions": 0, "tables": 1, "idMaps": 2, "columnSets": 1, "documents": 3, "timeTravel": 0}
 ```
 
 `partitions` (whole days loaded) stays at 0 for a laid-out table; `idMaps` and `columnSets` count the days in memory.
@@ -545,6 +546,7 @@ On a Delta connector (`drishti.sources.connectors.<name>.settings`, or the conne
 | Setting | Default | Meaning |
 |---|---|---|
 | `root` | `./data/delta` | the lake: a local folder or `s3a://bucket/path` |
+| `engine` | `DRISHTI_DELTA_ENGINE`, else `native` | `native` (no Hadoop; Windows), `hadoop` (also `abfs://`, `gs://`) or `auto` ([section 16](#16-engines-native-and-hadoop)) |
 | `domain` | empty | the data-domain folder under the root |
 | `kinds` | every table found | comma list of kinds to serve |
 | `mode.<kind>` | `snapshot` | `snapshot` (every entity every day) or `effective` (a row when an entity changes) |
@@ -573,3 +575,52 @@ On a Delta connector (`drishti.sources.connectors.<name>.settings`, or the conne
 5. Give the server at least 8 GB of heap per million entities a day.
 6. Measure on your data: `GET /api/v1/search?q=…` reports `elapsedMs`, `scanned` and `partial`; a view reports its
    `timings`.
+
+## 16. Engines: native and Hadoop
+
+Delta Kernel does no I/O itself: an *engine* lists the log, reads the commit JSON and the Parquet files, and evaluates
+expressions. The connector has two, chosen by its `engine` setting (or `DRISHTI_DELTA_ENGINE` for every connector):
+
+| `engine` | What reads the lake | Reads | Use it for |
+|---|---|---|---|
+| `native` (default) | `NativeEngine` (module `drishti-deltalake`): `java.nio` for local disk, the AWS SDK v2 for S3, parquet-java over its own input files | local paths and `file:` URIs (Windows drive letters, backslashes, UNC shares), `s3://`, `s3a://` | everything, and Windows, where Hadoop's local file system needs `winutils.exe` |
+| `hadoop` | Kernel's default engine over Hadoop's `FileSystem` | the above (S3 through S3A), plus `abfs://`, `gs://`, HDFS | lakes in Azure, Google Cloud Storage or HDFS |
+| `auto` | `native` on Windows, `hadoop` elsewhere | | a configuration shared by Windows and Linux machines that wants Hadoop on Linux |
+
+**What the native engine is.** It implements Kernel's `Engine` with its own file-system client (sorted listings,
+path resolution, byte ranges), Kernel's own JSON handler and expression evaluator (their classes use no Hadoop), and
+its own Parquet handler: the footer is read once, the predicate Kernel passes (`id = X`) prunes row groups by their
+statistics, only the asked columns are decoded (by Kernel's own column readers), and pages are decompressed by its own
+codecs (Snappy, ZSTD, GZIP; delta-rs writes Snappy). No Hadoop `FileSystem`, `Shell` (which looks for `winutils.exe`)
+or `Configuration` is loaded: a test runs the whole connector in a class loader that refuses them. Hadoop's jars stay
+on the class path only because parquet-java names a few of its types in method signatures. The engine only reads;
+Drishti's loaders write with delta-rs.
+
+**What both read the same.** Checkpoints, time travel (*known at*), deletion vectors (Kernel reads them through the
+engine's byte ranges), partition values, the single-row-group reads of [section 6.3](#63-opening-one-entity), id maps
+and column sets. Every Delta test runs on both engines, and a test compares their answers on the fixture lakes.
+
+**Speed.** On a lake of 10,000 trades a day over three days (`tools/load-delta.sh <root> --trades 10000 --days 3`,
+one file a day, row groups of 1,000), a cold JVM, the two engines, two runs each (2026-10-01, a 24-core workstation):
+
+| | native | hadoop |
+|---|---|---|
+| the table's file list, first / again | 204–210 ms / 8 ms | 442–574 ms / 9–11 ms |
+| a day's id map (10,000 ids), cold / again | 225–228 ms / 15–16 ms | 190–285 ms / 14–25 ms |
+| a day's 15 promoted columns, cold / again | 58–61 ms / 40–45 ms | 53–67 ms / 32–34 ms |
+| one trade (one row group), first / warm median / p95 | 20 ms / 4.3–4.5 ms / 8.2–8.4 ms | 17–18 ms / 5.5–5.7 ms / 9.4–10.3 ms |
+| over HTTP: a trade on a past date, cold / again | 43 ms / 6 ms | 116 ms / 11 ms |
+| over HTTP: `TRD where mtm < -50m` on a past date, cold / again | 43 ms / 9 ms | 75 ms / 14 ms |
+
+The two are the same within noise for reads; the native engine starts the first read of a table faster (no Hadoop
+`FileSystem` to start).
+
+**S3.** Both engines take the same `s3.*` settings. The native engine uses one pooled AWS client per connector,
+lists with `ListObjectsV2`, and reads with ranged GETs: a small read (a footer, a deletion vector) fetches at least
+`s3.read-block-kb` (1 MiB) and serves the next small reads from it; a column chunk is one GET of its range. Checksums
+are only those the store requires, so MinIO, Ceph and S3Mock work.
+
+**Limits.** The native engine reads local disk and S3 only; a connector with `engine: native` and an `abfs://` or
+`gs://` root refuses to start with a message saying to use `hadoop`. It does not decompress LZ4, Brotli or LZO Parquet
+pages (no Delta writer Drishti uses writes them); such a table needs `hadoop`. **Iceberg** is not part of this: its
+connector reads through Hadoop, so it is not supported on Windows (it is off unless the `iceberg` profile is used).

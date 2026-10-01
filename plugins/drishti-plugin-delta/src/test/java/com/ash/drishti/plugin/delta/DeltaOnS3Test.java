@@ -34,7 +34,8 @@ import software.amazon.awssdk.services.s3.S3Client;
 
 /**
  * The same contract as the local lake, with the lake in object storage: the fixture lake is uploaded to an S3 API
- * server (Adobe S3Mock) in Docker and read through {@code s3a://}. Skipped where Docker is not reachable.
+ * server (Adobe S3Mock) in Docker and read through {@code s3a://}, by the native engine (AWS SDK) here and by Hadoop's
+ * S3A in {@link DeltaOnS3HadoopTest}. Skipped where Docker is not reachable.
  */
 @Testcontainers(disabledWithoutDocker = true)
 class DeltaOnS3Test extends DatedSourceContract {
@@ -44,18 +45,26 @@ class DeltaOnS3Test extends DatedSourceContract {
             "adobe/s3mock@sha256:ab01a6946750f451ca215a47e91030695b260e4003b8a5a6201d25029b8fca92")
             .withExposedPorts(9090).waitingFor(Wait.forHttp("/").forPort(9090).forStatusCodeMatching(c -> c < 500));
 
-    private static DeltaSourcePlugin plugin;
+    private static final java.util.Map<String, DeltaSourcePlugin> PLUGINS = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** The Delta engine these tests read with. */
+    protected String engine() {
+        return "native";
+    }
 
     @Override
     protected synchronized SourcePlugin plugin() throws Exception {
-        if (plugin != null) {
-            return plugin;
+        DeltaSourcePlugin cached = PLUGINS.get(engine());
+        if (cached != null) {
+            return cached;
         }
         String endpoint = "http://" + S3.getHost() + ":" + S3.getMappedPort(9090);
         try (S3Client c = S3Client.builder().endpointOverride(URI.create(endpoint)).forcePathStyle(true).region(Region.US_EAST_1)
                 .httpClient(ApacheHttpClient.create())
                 .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create("k", "s"))).build()) {
-            c.createBucket(b -> b.bucket("lakes"));
+            if (c.listBuckets().buckets().stream().noneMatch(b -> b.name().equals("lakes"))) {
+                c.createBucket(b -> b.bucket("lakes"));
+            }
             Path src = Path.of("src/test/resources/lake");
             try (var files = Files.walk(src)) {
                 for (Path f : files.filter(Files::isRegularFile).toList()) {
@@ -66,8 +75,8 @@ class DeltaOnS3Test extends DatedSourceContract {
         }
         DeltaSourcePlugin p = new DeltaSourcePlugin();
         p.start(context(Map.of("root", "s3a://lakes/banking", "domain", "desk", "mode.counterparty", "effective", "source-name", "s3-lake",
-                "s3.endpoint", endpoint, "s3.access-key", "k", "s3.secret-key", "s", "s3.region", "us-east-1")));
-        plugin = p;
+                "s3.endpoint", endpoint, "s3.access-key", "k", "s3.secret-key", "s", "s3.region", "us-east-1", "engine", engine())));
+        PLUGINS.put(engine(), p);
         return p;
     }
 }

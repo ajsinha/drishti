@@ -47,6 +47,7 @@
     <module>drishti-testkit</module>
     <module>drishti-diskcache</module>
     <module>drishti-messaging</module>
+    <module>drishti-deltalake</module>
     <module>plugins/drishti-plugin-demo</module>
     <module>plugins/drishti-plugin-file</module>
     <module>plugins/drishti-plugin-rest</module>
@@ -93,6 +94,8 @@
     <!-- 1.10.x reads and writes Parquet 1.16, the version Delta Kernel uses: one Parquet on the server's classpath -->
     <iceberg.version>1.10.1</iceberg.version>
     <parquet.version>1.16.0</parquet.version>
+    <!-- the Snappy that hadoop-client-api brings: Parquet pages written by delta-rs are Snappy by default -->
+    <snappy-java.version>1.1.10.4</snappy-java.version>
     <duckdb.version>1.5.6.0</duckdb.version>
   </properties>
 
@@ -126,6 +129,7 @@
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-diskcache</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-messaging</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-deltalake</artifactId><version>${project.version}</version></dependency>
       <!-- pinned here: Spring Boot's dependency management would otherwise pick older clients -->
       <dependency><groupId>com.rabbitmq</groupId><artifactId>amqp-client</artifactId><version>${rabbitmq.version}</version></dependency>
       <dependency><groupId>org.apache.activemq</groupId><artifactId>activemq-client</artifactId><version>${activemq.version}</version></dependency>

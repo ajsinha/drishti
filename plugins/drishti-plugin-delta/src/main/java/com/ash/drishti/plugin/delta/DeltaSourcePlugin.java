@@ -28,7 +28,6 @@ import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
 import com.github.benmanes.caffeine.cache.AsyncCache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import io.delta.kernel.defaults.engine.DefaultEngine;
 import io.delta.kernel.engine.Engine;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -60,7 +59,9 @@ import java.util.concurrent.TimeUnit;
  * {@code kinds} (comma list; default: every table found), {@code mode.<kind>} ({@code snapshot}|{@code effective}),
  * {@code lookback-days} (10), {@code id-column} ({@code id}), {@code doc-column} ({@code doc}), {@code date-column}
  * ({@code business_date}), {@code refresh-seconds} (10: how often a table's latest version is checked),
- * {@code cache-mb} (512: whole partitions of small tables kept in memory, by size), {@code source-name} ({@code delta}).
+ * {@code cache-mb} (512: whole partitions of small tables kept in memory, by size), {@code source-name} ({@code delta}),
+ * {@code engine} ({@code native}: Delta Kernel without Hadoop, the one that works on Windows; {@code hadoop}; or
+ * {@code auto}, native on Windows; default from {@code DRISHTI_DELTA_ENGINE}, else {@code native}).
  *
  * <p>Large tables (millions of entities a day) are read without loading a day: a date's ids come from the id column
  * alone (an id map, {@code id-map-mb}, 1024), one entity from the one file and row group that hold it
@@ -116,9 +117,10 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         this.context = ctx;
         this.sourceName = ctx.setting("source-name", "delta");
         this.lookbackDays = Integer.parseInt(ctx.setting("lookback-days", "10"));
-        // local disk or object storage (s3a://, abfs://, gs://): the rest of the connector does not know which
+        // local disk or object storage (s3a://, abfs://, gs://), read by the native engine or Hadoop's (`engine`): the
+        // rest of the connector does not know which
         this.lake = LakeStore.of(ctx.setting("root", "./data/delta"), ctx.setting("domain", ""), ctx.settings());
-        this.engine = DefaultEngine.create(lake.hadoop());
+        this.engine = lake.engine();
         this.idColumn = ctx.setting("id-column", "id");
         this.docColumn = ctx.setting("doc-column", "doc");
         this.dateColumn = ctx.setting("date-column", "business_date");
@@ -434,9 +436,9 @@ public final class DeltaSourcePlugin implements SourcePlugin {
 
     @Override
     public Map<String, Object> cacheStats() {
-        return Map.of("partitions", parts.synchronous().estimatedSize(), "tables", latest.synchronous().estimatedSize(),
-                "timeTravel", travelled.synchronous().estimatedSize(), "idMaps", idMaps.synchronous().estimatedSize(),
-                "columnSets", columnSets.synchronous().estimatedSize(), "documents", docs.estimatedSize());
+        return Map.of("engine", lake.engineName(), "partitions", parts.synchronous().estimatedSize(), "tables",
+                latest.synchronous().estimatedSize(), "timeTravel", travelled.synchronous().estimatedSize(), "idMaps",
+                idMaps.synchronous().estimatedSize(), "columnSets", columnSets.synchronous().estimatedSize(), "documents", docs.estimatedSize());
     }
 
     @Override
@@ -452,15 +454,19 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     @Override
     public void close() {
         loaders.shutdownNow();               // loads in flight are abandoned; their callers get an error, not a hang
+        if (lake != null) {
+            lake.close();                    // the native engine's S3 connections
+        }
     }
 
     @Override
     public String health() {
+        String engineName = "engine: " + lake.engineName();
         if (!lake.reachable()) {
-            return "DOWN: cannot reach " + lake.describe();
+            return "DOWN: cannot reach " + lake.describe() + " (" + engineName + ")";
         }
         if (tables.isEmpty()) {
-            return "DOWN: no Delta tables under " + lake.describe();
+            return "DOWN: no Delta tables under " + lake.describe() + " (" + engineName + ")";
         }
         // a pack declared a layout the table does not have: it works, but searches over it read documents
         List<String> notLaidOut = new ArrayList<>();
@@ -476,6 +482,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
                 // reported by reads
             }
         });
-        return notLaidOut.isEmpty() ? "UP" : "UP (not laid out as the pack declares: " + String.join(", ", notLaidOut) + "; searches read documents)";
+        return notLaidOut.isEmpty() ? "UP (" + engineName + ")"
+                : "UP (" + engineName + "; not laid out as the pack declares: " + String.join(", ", notLaidOut) + "; searches read documents)";
     }
 }

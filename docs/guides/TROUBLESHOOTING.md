@@ -108,6 +108,12 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
 - **Fix:** run the jar with Java 25: `/usr/lib/jvm/java-25-openjdk-amd64/bin/java -XX:+UseCompactObjectHeaders -jar …`,
   or put that JDK first on your `PATH`.
 
+### On Windows: `HADOOP_HOME and hadoop.home.dir are unset` or `Could not locate executable winutils.exe`
+
+A Delta connector is running on Hadoop's engine, which needs Hadoop's `winutils.exe` on Windows. Use the native
+engine: unset `DRISHTI_DELTA_ENGINE` (it defaults to `native`) or set it to `native`, and remove any `engine: hadoop`
+from the connector's settings. Admin → Health then shows `UP (engine: native)`. See [WINDOWS.md](WINDOWS.md).
+
 ### "Web server failed to start. Port 18480 was already in use."
 
 - **Check:** who holds the port: `ss -ltnp | grep 18480` (or `lsof -i :18480`). Often it is an earlier Drishti

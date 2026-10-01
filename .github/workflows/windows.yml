@@ -1,0 +1,86 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+name: windows
+# Drishti on Windows with the native Delta engine (no Hadoop, no winutils.exe): build, the Delta engine's, the Delta
+# connector's and the server's tests, then a server started on a generated lake and asked for a view, a search and a
+# past business date. Testcontainers tests skip themselves (no Docker on Windows runners).
+on:
+  push: { branches: [develop, main] }
+  pull_request:
+  workflow_dispatch:
+jobs:
+  native-delta:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      DRISHTI_DELTA_ENGINE: native
+      DRISHTI_PORT: '18480'
+    defaults:
+      run: { shell: pwsh }
+    steps:
+      # LF in the checkout, as on Linux: commit JSON, Parquet fixtures and Spotless see the same bytes
+      - run: git config --global core.autocrlf false
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '25', cache: maven }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.13' }
+      - name: Build (no tests)
+        run: ./mvnw.cmd -B -q install -DskipTests
+      - name: Tests of the native engine, the Delta connector and the server
+        run: ./mvnw.cmd -B verify -pl drishti-deltalake,plugins/drishti-plugin-delta,drishti-server
+      - name: A small lake (the banking packs' samples, ten business days)
+        run: |
+          python -m pip install --quiet deltalake pyarrow pyyaml
+          python tools/packgen/banking/make_data.py --lake data/delta
+          if (-not (Test-Path data/delta/trading/trade/_delta_log)) { throw 'no trade table was written' }
+      - name: The server on the lake, asked for a view, a search and a past date
+        env:
+          DRISHTI_PACKS: market-risk
+        run: |
+          $jar = (Get-ChildItem drishti-server/target/drishti-server-*-exec.jar | Select-Object -First 1).FullName
+          New-Item -ItemType Directory -Force -Path data/logs | Out-Null
+          $server = Start-Process -FilePath java -ArgumentList '-XX:+UseCompactObjectHeaders', '-Xmx1g', '-jar', $jar -PassThru `
+            -RedirectStandardOutput data/logs/server.log -RedirectStandardError data/logs/server.err.log
+          try {
+            $b = 'http://localhost:18480'
+            $up = $false
+            for ($i = 0; $i -lt 90 -and -not $up; $i++) {
+              Start-Sleep -Seconds 2
+              if ($server.HasExited) { throw 'the server stopped' }
+              try { $up = (Invoke-RestMethod "$b/actuator/health" -TimeoutSec 2).status -eq 'UP' } catch { }
+            }
+            if (-not $up) { throw 'the server did not come up' }
+            Start-Sleep -Seconds 5                                   # the lake's first index
+            $health = Invoke-RestMethod "$b/api/v1/admin/health"
+            $lake = $health.sources | Where-Object { $_.name -eq 'trading-store' }
+            Write-Host "trading-store: $($lake.health) $($lake.cache | ConvertTo-Json -Compress)"
+            if ($lake.health -notlike 'UP (engine: native*') { throw "trading-store is not up on the native engine: $($lake.health)" }
+            $view = Invoke-RestMethod "$b/api/v1/views/trade/MX-20000001"
+            Write-Host "view: $($view.title) from $($view.provenance | ConvertTo-Json -Compress)"
+            if (-not $view.strip) { throw 'the view has no strip' }
+            $q = [uri]::EscapeDataString('TRD where mtm > 1m order by mtm desc limit 3')
+            $search = Invoke-RestMethod "$b/api/v1/search?q=$q"
+            Write-Host "search: matched $($search.matched) of $($search.scanned), partial $($search.partial)"
+            if ($search.matched -lt 1) { throw 'the search matched nothing' }
+            $past = Invoke-RestMethod "$b/api/v1/entities/trade/MX-20000001/raw" -Headers @{ 'X-Drishti-As-Of' = '2026-09-29' }
+            Write-Host "past: $($past.provenance | ConvertTo-Json -Compress)"
+            if ($past.provenance.businessDate -ne '2026-09-29') { throw "the past date read $($past.provenance.businessDate), not 2026-09-29" }
+          } finally {
+            Stop-Process -Id $server.Id -ErrorAction SilentlyContinue
+          }
+      - name: Server log
+        if: always()
+        run: if (Test-Path data/logs/server.log) { Get-Content data/logs/server.log -Tail 200 }

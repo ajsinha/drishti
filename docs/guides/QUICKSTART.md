@@ -24,10 +24,12 @@ In these docs, `<GO>` means "press Enter".
 
 | Tool | Version | Check with | You should see |
 |---|---|---|---|
-| OpenJDK | **21** (the build refuses any other) | `java -version` | `openjdk version "21.…` |
+| OpenJDK | **25** (the build refuses any other) | `java -version` | `openjdk version "25.…` |
 | Python | 3.11 or newer | `python3 --version` | `Python 3.11` or later |
 | uv | any recent | `uv --version` | `uv 0.…` |
 | git | any | `git --version` | `git version …` |
+
+On Windows, follow [WINDOWS.md](WINDOWS.md) instead: the same steps in PowerShell.
 
 You do not need Maven: the repository has its own (`./mvnw`). Point `JAVA_HOME` at Java 25 in
 **every** terminal you use (this is the Ubuntu path; adjust it for your system):

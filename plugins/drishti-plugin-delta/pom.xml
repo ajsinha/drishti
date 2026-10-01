@@ -29,6 +29,8 @@
   <description>Delta Lake source: dated entity tables read with Delta Kernel (no Spark), with time travel</description>
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
+    <!-- the Hadoop-free engine (engine: native, the default); Hadoop's stays for engine: hadoop and abfs:// or gs:// lakes -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-deltalake</artifactId></dependency>
     <dependency><groupId>io.delta</groupId><artifactId>delta-kernel-api</artifactId><version>${delta-kernel.version}</version></dependency>
     <dependency>
       <groupId>io.delta</groupId><artifactId>delta-kernel-defaults</artifactId><version>${delta-kernel.version}</version>
