@@ -1,0 +1,68 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# title: Option P&L across spot and vol (full revaluation)
+# description: The option's P&L on a grid of spot moves (-20% to +20%) and vol moves (-10 to +10 points), by full Black-Scholes revaluation at zero rates and carry (a scenario shape, not a booking price), against the delta-gamma approximation along the spot axis; a heatmap. Works for equity, index, FX and commodity options; a strike far from spot (as in parts of the samples) is priced at the money instead, and says so.
+# kinds: trade
+# example: TRD IMG-400032
+
+from datetime import date
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from drishti import quant as q
+
+doc, t = view.doc, view.doc.get("terms") or {}
+if "strike" not in t or "expiryDate" not in t:
+    raise ValueError(f"{view.id} ({doc.get('productType')}) is not an option with a strike and an expiry")
+if doc.get("underlyingEquity"):
+    S = (await drishti.get_async("equity", doc["underlyingEquity"]))["price"]
+    vol = (await drishti.get_async("equity-vol-surface", doc["equityVolSurface"]))["atm1y"] / 100 if doc.get("equityVolSurface") else 0.25
+elif doc.get("underlyingIndex"):
+    S = (await drishti.get_async("equity-index", doc["underlyingIndex"]))["level"]
+    vol = (await drishti.get_async("equity-vol-surface", doc["equityVolSurface"]))["atm1y"] / 100 if doc.get("equityVolSurface") else 0.2
+elif doc.get("fxSpot"):
+    S = (await drishti.get_async("fx-spot", doc["fxSpot"]))["mid"]
+    vol = (await drishti.get_async("fx-vol-surface", doc["fxVolSurface"]))["atm1y"] / 100
+elif doc.get("commodityCurve"):
+    S = (await drishti.get_async("commodity-curve", doc["commodityCurve"]))["front"]
+    vol = (await drishti.get_async("commodity-vol-surface", doc["commodityVolSurface"]))["atmFront"] / 100
+else:
+    raise ValueError(f"{view.id}: no underlying this snippet knows")
+K = t["strike"]
+if not 0.25 < K / S < 4:
+    print(f"The booked strike {K:g} is {K / S:.1f}x the underlying {S:g} (sample data): priced at the money instead")
+    K = S
+T = max((date.fromisoformat(t["expiryDate"]) - date.fromisoformat(view.business_date or "2026-09-30")).days / 365, 1 / 365)
+call = t.get("optionType", "Call") == "Call"
+units = (t.get("quantity") or doc["notional"] / S) * (1 if doc["direction"] in ("Buy", "Long") else -1)
+
+base = q.bs_greeks(S, K, T, 0.0, vol, 0.0, call)
+spot_moves = np.round(np.arange(-0.20, 0.2001, 0.05), 2)
+vol_moves = np.round(np.arange(-0.10, 0.1001, 0.05), 2)
+grid = np.array([[(q.black_scholes(S * (1 + ds), K, T, 0.0, max(vol + dv, 0.01), 0.0, call) - base["price"]) * units
+                  for ds in spot_moves] for dv in vol_moves])
+table = pd.DataFrame(grid, index=[f"vol {dv * 100:+.0f}" for dv in vol_moves], columns=[f"{ds * 100 + 0:+.0f}%" for ds in spot_moves]).rename_axis("vol move")
+show(table, title=f"{view.id}: P&L of {units:,.0f} units, {t.get('optionType')} K {K:g}, S {S:g}, vol {vol:.1%}, {T:.2f}y")
+approx = pd.DataFrame({"spot move %": spot_moves * 100, "full revaluation": grid[int(np.argmin(np.abs(vol_moves)))],
+                       "delta-gamma": [(base["delta"] * S * d + 0.5 * base["gamma"] * (S * d) ** 2) * units for d in spot_moves]})
+chart(approx, kind="line", x="spot move %", y=["full revaluation", "delta-gamma"], title="Spot ladder at today's vol")
+
+fig, ax = plt.subplots(figsize=(7, 3.2))
+lim = np.abs(grid).max()
+im = ax.imshow(grid, cmap="RdYlGn", vmin=-lim, vmax=lim, aspect="auto")
+ax.set_xticks(range(len(spot_moves)), table.columns)
+ax.set_yticks(range(len(vol_moves)), table.index)
+fig.colorbar(im, ax=ax, shrink=0.8)
+ax.set_title(f"{view.id}: P&L by spot and vol move")

@@ -1,0 +1,48 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# title: Collateral: haircuts, concentration and a haircut stress
+# description: The collateral balance's positions: market value, haircut and value after haircut (checked against the booked value), concentration of the collateral by asset (HHI), collateral issued by the counterparty itself (wrong-way collateral), and the collateral value when haircuts double and triple and market values fall 5%, against what the netting set's CSA requires (net MTM less the counterparty's threshold): the shortfall a stress would leave.
+# kinds: collateral-balance
+# example: COLL COLL-HALCYON-NY
+
+import pandas as pd
+from drishti import quant as q
+
+doc = view.doc
+pos = pd.DataFrame(doc["positions"])
+pos["value (recomputed)"] = pos["marketValue"] * (1 - pos["haircut"])
+pos["difference"] = pos["value (recomputed)"] - pos["value"]
+pos["share of value"] = pos["value"] / pos["value"].sum()
+show(pos, title=f"{view.id}: held {doc.get('held', 0):,.0f}, posted {doc.get('posted', 0):,.0f}, net {doc.get('net', 0):,.0f}")
+print(f"Concentration by asset: HHI {q.hhi(pos['value']):.2f} ({len(pos)} assets); largest "
+      f"{pos.loc[pos['value'].idxmax(), 'asset']} at {pos['share of value'].max():.0%}")
+
+ns = await drishti.get_async("netting-set", doc["nettingSet"])
+cp_name = (await drishti.get_async("counterparty", ns["counterparty"]))["name"]
+own = pos[pos["asset"].str.startswith(cp_name.split()[0])]               # collateral issued by the counterparty itself
+if len(own):
+    print(f"Wrong-way collateral: {', '.join(own['asset'])} is issued by {cp_name}, the counterparty that posted it "
+          f"({own['value'].sum() / pos['value'].sum():.0%} of the value)")
+csa = await drishti.get_async("csa", doc["csa"]) if doc.get("csa") else {}
+required = max(ns.get("netMtm", 0) - (csa.get("thresholdThem") or 0), 0) + (csa.get("independentAmount") or 0)
+held = pos[pos["direction"] == "Held"]
+rows = []
+for name, hc_mult, mv_move in [("as booked", 1, 0.0), ("haircuts x2", 2, 0.0), ("haircuts x3", 3, 0.0),
+                               ("haircuts x2, prices -5%", 2, -0.05), ("haircuts x3, prices -10%", 3, -0.10)]:
+    value = (held["marketValue"] * (1 + mv_move) * (1 - (held["haircut"] * hc_mult).clip(upper=1))).sum()
+    rows.append({"scenario": name, "collateral value": value, "required": required, "shortfall": max(required - value, 0)})
+stress = pd.DataFrame(rows)
+show(stress, title=f"Haircut stress against the CSA requirement ({doc['nettingSet']}, net MTM {ns.get('netMtm', 0):,.0f})")
+chart(stress, kind="bar", x="scenario", y=["collateral value", "required"], title="Collateral against requirement")

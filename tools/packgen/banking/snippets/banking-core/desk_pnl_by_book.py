@@ -1,0 +1,31 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# title: P&L by book: a pandas pivot
+# description: The desk's positions pivoted by book and product family (MTM), and today's P&L by book and currency from the trades themselves (drishti.search_async()).
+# kinds: desk
+# example: DESK DESK-RATES
+
+import pandas as pd
+
+pos = pd.DataFrame(view.doc["positions"])     # tradeId, book, currency, family, mtm
+mtm = pos.pivot_table(index="book", columns="family", values="mtm", aggfunc="sum", fill_value=0,
+                      margins=True, margins_name="Total")
+show(mtm, title=f"{view.id}: MTM by book and product family")
+
+trades = await drishti.search_async(f"TRD where desk = '{view.id}' and pnl1d != 0 limit 1000")
+pnl = trades.pivot_table(index="book", columns="currency", values="pnl1d", aggfunc="sum", fill_value=0,
+                         margins=True, margins_name="Total")
+show(pnl, title=f"1-day P&L by book and currency ({len(trades)} trades)")
+chart(trades.groupby("book", as_index=False)["pnl1d"].sum(), kind="bar", x="book", y="pnl1d", title="1-day P&L by book")

@@ -67,7 +67,7 @@ CDN = re.compile(r"https?://|cdn\.jsdelivr|unpkg\.com|cdnjs\.|//cdn\.", re.I)
 def test_calc_code_names_no_other_origin():
     """The page, the worker and the drishti module contain no URL at all: every load and every read is same-origin."""
     for f in [WEB / "static/js/calc.js", WEB / "static/js/calc-worker.js", WEB / "static/calc/drishti.py",
-              WEB / "templates/terminal/_calc.html"]:
+              WEB / "static/calc/quant.py", WEB / "templates/terminal/_calc.html"]:
         text = "\n".join(line for line in f.read_text(encoding="utf-8").splitlines() if "Copyright" not in line)
         assert not CDN.search(text), f
 

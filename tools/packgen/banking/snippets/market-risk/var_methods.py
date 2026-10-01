@@ -1,0 +1,57 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# title: VaR four ways, with a bootstrap interval
+# description: The scenario P&Ls turned into VaR and ES four ways: historical simulation, normal (parametric), Cornish-Fisher (normal adjusted for skew and kurtosis) and age-weighted historical simulation (Boudoukh-Richardson-Whitelaw, lambda 0.99, reading the scenarios as oldest first, an assumption); and a 90% bootstrap interval for the historical VaR (1,000 resamples, a fixed seed).
+# kinds: var
+# example: VAR VAR-RATES
+
+import numpy as np
+import pandas as pd
+from scipy import stats
+from drishti import quant as q
+
+doc = view.doc
+pnl = np.asarray(doc["scenarioPnl"], dtype=float)
+n, mu, sd = len(pnl), pnl.mean(), pnl.std(ddof=1)
+s, kx = stats.skew(pnl), stats.kurtosis(pnl)                         # excess kurtosis
+
+
+def cornish_fisher(c):
+    z = q.norm_ppf(1 - c)
+    zcf = z + (z * z - 1) * s / 6 + (z ** 3 - 3 * z) * kx / 24 - (2 * z ** 3 - 5 * z) * s * s / 36
+    return -(mu + zcf * sd)
+
+
+def age_weighted(c, lam=0.99):                                       # weights fall geometrically with a scenario's age
+    w = lam ** np.arange(n)[::-1] * (1 - lam) / (1 - lam ** n)
+    order = np.argsort(pnl)
+    cum = np.cumsum(w[order])
+    return -pnl[order][np.searchsorted(cum, 1 - c)]
+
+
+rows = []
+for c in (0.99, 0.975):
+    rows.append({"confidence": f"{c:.1%}", "historical": q.historical_var(pnl, c), "normal": q.parametric_var(sd, c, mu),
+                 "Cornish-Fisher": cornish_fisher(c), "age-weighted HS": age_weighted(c),
+                 "ES historical": q.expected_shortfall(pnl, c)})
+show(pd.DataFrame(rows).set_index("confidence"),
+     title=f"{view.id}: {n} scenarios, skew {s:.2f}, excess kurtosis {kx:.2f} (engine VaR 99% {doc.get('var99'):,.0f})")
+
+rng = np.random.default_rng(20260930)                                # fixed seed: the same interval every run
+boot = np.array([q.historical_var(rng.choice(pnl, n, replace=True), 0.99) for _ in range(1000)])
+lo, hi = np.percentile(boot, [5, 95])
+print(f"Historical VaR 99% {q.historical_var(pnl, 0.99):,.0f}; 90% bootstrap interval {lo:,.0f} to {hi:,.0f} "
+      f"({(hi - lo) / q.historical_var(pnl, 0.99):.0%} of the estimate): five tail scenarios make it noisy")
+chart(pd.DataFrame({"bootstrap VaR 99%": boot}), kind="hist", y="bootstrap VaR 99%", bins=30, title="Bootstrap distribution of VaR 99%")

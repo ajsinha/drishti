@@ -1,0 +1,58 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# title: Hazard rates, survival and default probabilities
+# description: From the CDS spreads: hazard rates by the credit triangle (spread over one minus recovery, an approximation) beside the curve's term hazards, the forward (piecewise-flat) hazards between tenors, survival probabilities, and cumulative, period and conditional default probabilities, year by year.
+# kinds: credit-curve
+# example: CDS CDS-GRANITE
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from drishti import quant as q
+
+doc = view.doc
+R = doc.get("recovery", 0.4)
+pts = pd.DataFrame(doc["points"])
+pts["years"] = pts["tenor"].map(q.tenor_years)
+t = pts["years"].to_numpy()
+pts["triangle hazard"] = q.hazard_from_spread(pts["spread"].to_numpy(), R)   # s / (1 - R), each tenor on its own
+
+# the curve's hazards are term hazards (flat to each tenor: S = exp(-h t)); forward hazards apply between tenors
+fwd = q.forward_hazards(t, pts["hazard"].to_numpy())
+pts["forward hazard"] = fwd
+pts["survival (recomputed)"] = q.survival(t, t, fwd)
+pts["cumulative PD"] = 1 - pts["survival (recomputed)"]
+prev = np.concatenate([[1.0], pts["survival (recomputed)"].to_numpy()[:-1]])
+pts["PD in period"] = prev - pts["survival (recomputed)"]
+pts["PD in period | alive"] = pts["PD in period"] / prev          # conditional on surviving to the period's start
+show(pts, title=f"{view.id}: {doc.get('issuerName', '')}, recovery {R:.0%}, {doc.get('seniority', '')}")
+
+yearly = pd.DataFrame({"year": np.arange(1, int(t.max()) + 1)})
+yearly["survival"] = q.survival(yearly["year"].to_numpy(), t, fwd)
+yearly["annual PD | alive"] = 1 - yearly["survival"] / yearly["survival"].shift(1, fill_value=1.0)
+show(yearly, title="Year by year")
+print(f"1Y PD: the curve says {doc.get('pd1y', float('nan')):.4%}, recomputed {1 - q.survival(1.0, t, fwd):.4%}; "
+      f"largest survival difference {np.max(np.abs(pts['survival (recomputed)'] - pts['survival'])):.1e}")
+
+fig, ax = plt.subplots(1, 2, figsize=(8, 3))
+ax[0].plot(t, pts["hazard"] * 1e4, "o-", label="term hazard (curve)")
+ax[0].step(t, fwd * 1e4, where="pre", label="forward hazard")
+ax[0].plot(t, pts["triangle hazard"] * 1e4, "s--", label="credit triangle", ms=3)
+ax[0].set_title("hazard rate, bp")
+ax[0].legend(fontsize=7)
+ax[1].plot(yearly["year"], yearly["survival"], "o-")
+ax[1].set_title("survival probability")
+for a in ax:
+    a.set_xlabel("years")

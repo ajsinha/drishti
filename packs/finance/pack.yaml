@@ -149,4 +149,4 @@ python:                         # Calc on this pack's kinds (Alt+C on a view); s
       code: |
         trades = view.tables["Member trades"]          # the panel, as you see it, as a DataFrame
         show(trades.groupby("Product", as_index=False)["MTM (USD)"].sum(), title="MTM by product")
-        trades.sort_values("MTM (USD)").head(5)
+        show(trades.sort_values("MTM (USD)").head(5).reset_index(drop=True), title="Five most negative positions")

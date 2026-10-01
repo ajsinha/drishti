@@ -1,0 +1,44 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# title: Par swap rates, annuities and curve slopes
+# description: Par fixed rates and PV01 annuities of spot-starting swaps from 1Y to 30Y off the curve (single-curve, annual fixed leg), the par curve against the zero curve, and the 2s10s, 5s30s slopes and the 2s5s10s butterfly in bp.
+# kinds: ir-curve
+# example: CRV CRV-USD-OIS
+
+import pandas as pd
+from drishti import quant as q
+
+curve = q.ZeroCurve.from_points(view.doc["points"])      # log-linear on discount factors, as the curve is built
+FREQ = 1                                                 # fixed-leg payments a year: 1 annual, 2 semi-annual
+NOTIONAL = 100e6
+
+rows = []
+for T in [1, 2, 3, 4, 5, 7, 10, 12, 15, 20, 25, 30]:
+    if T > curve.times[-1] + 1e-9:
+        break
+    par = q.par_swap_rate(curve, T, FREQ)                # (1 - df(T)) / annuity: the float leg is worth par
+    ann = q.annuity(curve, T, FREQ)                      # sum of year fraction x discount factor
+    rows.append({"tenor": f"{T}Y", "years": T, "par %": par * 100, "zero %": curve.zero(T) * 100,
+                 "par - zero bp": (par - curve.zero(T)) * 1e4, "annuity": ann,
+                 "PV01 per 100m": ann * NOTIONAL / 1e4})  # value of 1 bp on the fixed rate
+swaps = pd.DataFrame(rows).set_index("tenor")
+show(swaps, title=f"{view.id}: par swap rates ({FREQ}x a year fixed, single curve)")
+chart(swaps.reset_index(), kind="line", x="years", y=["par %", "zero %"], title="Par swap curve and zero curve")
+
+par = swaps["par %"]
+slopes = {"2s10s": (par["10Y"] - par["2Y"]) * 100, "5s30s": (par.get("30Y", float("nan")) - par["5Y"]) * 100,
+          "2s5s10s fly": (2 * par["5Y"] - par["2Y"] - par["10Y"]) * 100}
+show(pd.DataFrame({"measure": list(slopes), "bp": list(slopes.values())}), title="Slopes of the par curve")
+print(f"The curve itself says 2s10s {view.doc.get('slope2s10s')} bp (on zero rates); the par curve says {slopes['2s10s']:.1f} bp")

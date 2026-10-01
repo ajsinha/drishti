@@ -1,0 +1,53 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# title: Credit limit utilisation heatmap
+# description: Every credit limit read in full: utilisation by counterparty and tenor bucket as a table and a heatmap (matplotlib), the buckets in breach (100% or more) or early warning (80% or more), headroom by bucket, and where this limit stands; limits sorted by their worst bucket.
+# kinds: credit-limit, counterparty
+# example: LIM LIM-SUMMIT
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+found = await drishti.search_async("LIM where utilisation > -1 and counterpartyName != '' limit 1000")
+rows = []
+for lid in found["id"]:
+    d = await drishti.get_async("credit-limit", lid)
+    for b in d.get("buckets") or []:
+        rows.append({"limit": lid, "counterparty": d.get("counterpartyName"), "bucket": b["bucket"], "limit amount": b["limit"],
+                     "used": b["used"], "utilisation": b["utilisation"], "headroom": b["limit"] - b["used"]})
+df = pd.DataFrame(rows)
+buckets = list(dict.fromkeys(df["bucket"]))                                # in the order the limits list them
+util = df.pivot_table(index="limit", columns="bucket", values="utilisation").reindex(columns=buckets)
+util = util.loc[util.max(axis=1).sort_values(ascending=False).index]
+show(util, title=f"Utilisation by tenor bucket, {len(util)} limits (sorted by the worst bucket)")
+
+alerts = df[df["utilisation"] >= 0.8].assign(status=lambda d: np.where(d["utilisation"] >= 1, "breach", "early warning"))
+show(alerts.sort_values("utilisation", ascending=False).reset_index(drop=True), title=f"{len(alerts)} buckets at 80% or more")
+me = view.id if view.kind == "credit-limit" else view.doc.get("creditLimit")
+if me in util.index:
+    rank = list(util.index).index(me) + 1
+    print(f"{me}: worst bucket {util.loc[me].idxmax()} at {util.loc[me].max():.0%}; rank {rank} of {len(util)}; "
+          f"headroom {df[df['limit'] == me]['headroom'].min():,.0f} in its tightest bucket")
+
+fig, ax = plt.subplots(figsize=(7, max(3, 0.28 * len(util))))
+im = ax.imshow(util.to_numpy() * 100, cmap="RdYlGn_r", vmin=0, vmax=110, aspect="auto")
+ax.set_xticks(range(len(buckets)), buckets)
+ax.set_yticks(range(len(util)), [i.replace("LIM-", "") for i in util.index], fontsize=7)
+for (i, j), v in np.ndenumerate(util.to_numpy()):
+    if not np.isnan(v):
+        ax.text(j, i, f"{v:.0%}", ha="center", va="center", fontsize=6)
+ax.set_title("Credit limit utilisation")
+fig.colorbar(im, ax=ax, shrink=0.8, label="%")

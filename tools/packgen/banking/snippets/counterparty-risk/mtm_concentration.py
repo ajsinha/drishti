@@ -1,0 +1,36 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# title: MTM concentration by product and netting set
+# description: The counterparty's trades from drishti.search_async(): MTM by product and by netting set, each one's share of gross MTM, and a Herfindahl index of how concentrated it is.
+# kinds: netting-set, counterparty
+# example: NSET NS-MERIDIAN-RE-NY
+
+cp = view.id if view.kind == "counterparty" else view.doc["counterparty"]
+trades = await drishti.search_async(f"TRD where counterparty.id = '{cp}' and nettingSet != '' limit 1000")
+print(f"{cp}: {len(trades)} trades, net MTM {trades['mtm'].sum():,.0f}, gross {trades['mtm'].abs().sum():,.0f}")
+
+
+def concentration(by):
+    g = trades.groupby(by)["mtm"].agg(trades="count", net="sum", gross=lambda s: s.abs().sum())
+    g["share"] = g["gross"] / g["gross"].sum()
+    return g.sort_values("gross", ascending=False)
+
+
+by_product = concentration("productType")
+show(by_product, title="By product (share of gross MTM)")
+chart(by_product, kind="bar", y="gross", title="Gross MTM by product")
+show(concentration("nettingSet"), title="By netting set")
+hhi = (by_product["share"] ** 2).sum()
+print(f"Herfindahl index by product: {hhi:.3f} (1: all in one product; 1/{len(by_product)}: spread evenly)")

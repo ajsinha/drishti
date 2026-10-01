@@ -95,10 +95,16 @@ class PackPythonTest {
         Map<String, List<String>> titles = new java.util.TreeMap<>();
         packs.forEach(p -> titles.put(p.name(), PackPython.of(p).snippets().stream().map(PackPython.Snippet::title).toList()));
         assertThat(packs).allMatch(p -> PackPython.of(p).enabled());
-        assertThat(titles).containsEntry("market-risk", List.of("VaR and expected shortfall from the scenario P&L"))
-                .containsEntry("trading", List.of("MTM under parallel rate moves"))
-                .containsEntry("banking-core", List.of("P&L by book: a pandas pivot"))
-                .containsEntry("market-data", List.of("Interpolate the curve at any tenor"))
-                .containsEntry("counterparty-risk", List.of("MTM concentration by product and netting set"));
+        // the library of tools/packgen/banking/snippets: each pack's starter among at least ten (PYTHON_CALC.md, Snippet catalogue)
+        assertThat(titles.get("market-risk"))
+                .contains("VaR and expected shortfall from the scenario P&L", "VaR backtest: exceptions, Kupiec and the traffic light")
+                .hasSizeGreaterThanOrEqualTo(10);
+        assertThat(titles.get("trading")).contains("MTM under parallel rate moves", "FX option: Garman-Kohlhagen price and Greeks")
+                .hasSizeGreaterThanOrEqualTo(10);
+        assertThat(titles.get("banking-core")).contains("P&L by book: a pandas pivot").hasSizeGreaterThanOrEqualTo(10);
+        assertThat(titles.get("market-data")).contains("Interpolate the curve at any tenor", "Key-rate DV01 by bump and reprice")
+                .hasSizeGreaterThanOrEqualTo(20);
+        assertThat(titles.get("counterparty-risk")).contains("MTM concentration by product and netting set").hasSizeGreaterThanOrEqualTo(10);
+        assertThat(titles.values()).allSatisfy(t -> assertThat(t).doesNotHaveDuplicates());
     }
 }

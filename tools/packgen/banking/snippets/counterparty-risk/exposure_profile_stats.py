@@ -1,0 +1,49 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# title: Exposure profile: EPE, effective EE and EEPE
+# description: From the simulated profile: expected exposure (EE), negative exposure and PFE at 95% and 99% by tenor; EPE (the time-weighted average of EE over the first year), effective EE (EE never allowed to fall, the Basel rule) and effective EPE (its average over the first year), the peak PFE and its tenor, set beside the engine's own figures, and the profile drawn.
+# kinds: exposure-profile
+# example: EXP EXP-SUMMIT-NY
+
+import numpy as np
+import pandas as pd
+from drishti import quant as q
+
+doc = view.doc
+b = pd.DataFrame(doc["buckets"])
+b["years"] = b["tenor"].map(q.tenor_years)
+b = b.sort_values("years").reset_index(drop=True)
+b["effective EE"] = np.maximum.accumulate(b["ee"])                     # non-decreasing EE: the Basel effective EE
+
+
+def time_average(col, horizon=1.0):
+    """Average of a step-wise profile over [0, horizon]: each value held until the next tenor (trapezoids would also do)."""
+    t = np.clip(b["years"].to_numpy(), 0, horizon)
+    dt = np.diff(np.append(t, horizon))
+    return float(np.sum(b[col].to_numpy() * dt) / horizon)
+
+
+epe, eepe = time_average("ee"), time_average("effective EE")
+peak = b.loc[b["pfe99"].idxmax()]
+show(pd.DataFrame({
+    "measure": ["EPE (1Y average of EE)", "EPE (engine)", "effective EPE (1Y average of effective EE)", "EEPE (engine)",
+                "peak EE", "peak PFE 95%", "peak PFE 95% (engine)", "peak PFE 99%", "at tenor", "PFE 99 / PFE 95 at the peak"],
+    "value": [epe, doc.get("epe"), eepe, doc.get("eepe"), b["ee"].max(), b["pfe95"].max(), doc.get("pfePeak"),
+              peak["pfe99"], peak["tenor"], peak["pfe99"] / peak["pfe95"]],
+}), title=f"{view.id}: {doc.get('nettingSet', '')}, {doc.get('paths', '')} paths ({doc.get('model', '')})")
+show(b, title="Profile by tenor")
+chart(b.set_index("tenor")[["ee", "effective EE", "pfe95", "pfe99", "ene"]], kind="line", title="Exposure profile")
+print("Regulatory EAD under the internal model method would be alpha x EEPE = "
+      f"1.4 x {eepe:,.0f} = {1.4 * eepe:,.0f} (before any collateral or maturity adjustment)")
