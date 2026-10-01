@@ -461,6 +461,8 @@ up at the next rescan.
 
 ## 5. An HTTP service: `rest`
 
+[REST_CONNECTOR.md](REST_CONNECTOR.md) explains the connector in full: requests and responses, headers, generations, timeouts, failure and every setting.
+
 ### The situation
 
 Your client-onboarding system has an API that returns one counterparty as JSON:
@@ -1270,6 +1272,8 @@ catalogue. Cache figures: `kinds`, `datesIndexed`, `ids` and `columnSets` (days 
 
 ## 10. An event stream: `kafka`
 
+[KAFKA_CONNECTOR.md](KAFKA_CONNECTOR.md) explains the connector in full: `state` and `ticks` modes, the index and disk cache, offsets, ordering, restarts, reconnection and every setting.
+
 ### The situation
 
 Your trading system publishes each trade's latest state to a Kafka topic whenever it changes. You want trade views
@@ -1444,6 +1448,8 @@ reads fail (`DRS-1004`) until it returns. Cache figures:
 
 ## 11. A message queue: `activemq`
 
+[ACTIVEMQ_CONNECTOR.md](ACTIVEMQ_CONNECTOR.md) explains the connector in full: queues and durable topics, the state store, acknowledgement, failover and every setting.
+
 ### The situation
 
 Your limit-management system publishes each credit limit to the ActiveMQ Classic queue `limits` whenever it
@@ -1589,6 +1595,8 @@ Cache figures: `entities`, `memoryEntries`, `stateMb`, `received`, `rejected`.
 
 ## 12. A message queue: `rabbitmq`
 
+[RABBITMQ_CONNECTOR.md](RABBITMQ_CONNECTOR.md) explains the connector in full: queues and bindings, prefetch and acknowledgement, the state store, recovery and every setting.
+
 ### The situation
 
 Your collateral system publishes margin calls to the RabbitMQ exchange `collateral` with routing keys like
@@ -1692,6 +1700,8 @@ Stored documents keep answering reads while the broker is away.
 
 ## 13. An object store: `s3`
 
+[S3_CONNECTOR.md](S3_CONNECTOR.md) explains the connector in full: the key layout, listing and caching, credentials, cost and every setting.
+
 ### The situation
 
 Your risk engine writes each stress result as a JSON object to a bucket, one folder per business date. You want
@@ -1785,6 +1795,8 @@ cache.
 ---
 
 ## 14. Public market data: `feed`
+
+[FEEDS_CONNECTOR.md](FEEDS_CONNECTOR.md) explains each feed in full: the source it calls, the entities it makes, schedules, history, offline use and every setting.
 
 ### The situation
 
@@ -1886,6 +1898,8 @@ In `GET /api/v1/admin/health`, a feed you have not switched on is listed under i
 ---
 
 ## 15. The sample data: `demo`
+
+[DEMO_CONNECTOR.md](DEMO_CONNECTOR.md) explains the connector in full: where samples come from, live ticks, routing, memory and every setting.
 
 The `demo` plugin serves every enabled pack's `samples/` folder, live: documents tick while someone watches (fields
 named in each sample's `_meta.walk` random-walk every `tick-ms`, 400). It is the `default-route`, serves every kind,

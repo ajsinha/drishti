@@ -89,11 +89,14 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | Serve millions of entities a day for years from Delta Lake | [DELTA_CONNECTOR.md](connectors/DELTA_CONNECTOR.md) |
 | Serve millions of entities a day from Aerospike, with recent history there and years in Delta Lake | [AEROSPIKE_CONNECTOR.md](connectors/AEROSPIKE_CONNECTOR.md) |
 | Serve millions of entities a day from PostgreSQL | [POSTGRES_CONNECTOR.md](connectors/POSTGRES_CONNECTOR.md) |
-| Serve data from plain JSON-lines files, the simplest store | [JDBC_QUERIES.md](connectors/JDBC_QUERIES.md) | you read your own schema with SQL: the entity, its parts, ids, columns and reverse queries, parameters, naming, performance |
-| [ICEBERG_CONNECTOR.md](connectors/ICEBERG_CONNECTOR.md) | you run Drishti over Apache Iceberg: the layout, path-based and REST catalogs, delete files, time travel, the loader and maintenance, sizing, measurements |
-| [MONGODB_CONNECTOR.md](connectors/MONGODB_CONNECTOR.md) | you run Drishti on MongoDB: a document per entity per day, the narrow columns collection, indexes, parallel day reads, retention, sharding, measurements |
-| [REDIS_CONNECTOR.md](connectors/REDIS_CONNECTOR.md) | you run Drishti on Redis: key layout, zstd dictionaries, column chunks, live pub/sub, TTL, sizing, measurements |
-| [FILE_CONNECTOR.md](connectors/FILE_CONNECTOR.md) |
+| Serve data from plain JSON-lines files, the simplest store | [FILE_CONNECTOR.md](connectors/FILE_CONNECTOR.md) |
+| Serve documents kept as JSON objects in S3, MinIO or another S3-compatible store | [S3_CONNECTOR.md](connectors/S3_CONNECTOR.md) |
+| Read entities from an in-house HTTP/JSON service, one request per view | [REST_CONNECTOR.md](connectors/REST_CONNECTOR.md) |
+| Show live entities from Kafka topics, with history from a lake | [KAFKA_CONNECTOR.md](connectors/KAFKA_CONNECTOR.md) |
+| Show live entities from ActiveMQ queues or topics | [ACTIVEMQ_CONNECTOR.md](connectors/ACTIVEMQ_CONNECTOR.md) |
+| Show live entities from RabbitMQ queues | [RABBITMQ_CONNECTOR.md](connectors/RABBITMQ_CONNECTOR.md) |
+| Serve public rates and FX (NY Fed SOFR, ECB €STR and FX, US Treasury, FRED) | [FEEDS_CONNECTOR.md](connectors/FEEDS_CONNECTOR.md) |
+| Understand the sample data every pack ships, and its live ticks | [DEMO_CONNECTOR.md](connectors/DEMO_CONNECTOR.md) |
 | Read your own database with your own SQL: several queries per kind | [JDBC_QUERIES.md](connectors/JDBC_QUERIES.md) |
 | Serve millions of entities a day from Apache Iceberg (Snowflake, Glue, Polaris, Trino) | [ICEBERG_CONNECTOR.md](connectors/ICEBERG_CONNECTOR.md) |
 | Serve entities from MongoDB documents | [MONGODB_CONNECTOR.md](connectors/MONGODB_CONNECTOR.md) |
@@ -137,6 +140,17 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | [POSTGRES_CONNECTOR.md](connectors/POSTGRES_CONNECTOR.md) | you run Drishti on PostgreSQL at scale: partitioned table, promoted columns, COPY loader, monthly retention, sizing, measurements |
 | [DEMO_DATA.md](connectors/DEMO_DATA.md) | you need demo data in Delta Lake, PostgreSQL or Aerospike, small for a laptop or a million trades a day |
 | [AEROSPIKE_CONNECTOR.md](connectors/AEROSPIKE_CONNECTOR.md) | you run Drishti on Aerospike at scale: record layout, loader, partition-parallel scans, TTL retention, sizing, measurements |
+| [JDBC_QUERIES.md](connectors/JDBC_QUERIES.md) | you read your own schema with SQL: the entity, its parts, ids, columns and reverse queries, parameters, naming, performance |
+| [ICEBERG_CONNECTOR.md](connectors/ICEBERG_CONNECTOR.md) | you run Drishti over Apache Iceberg: the layout, path-based and REST catalogs, delete files, time travel, the loader and maintenance, sizing, measurements |
+| [MONGODB_CONNECTOR.md](connectors/MONGODB_CONNECTOR.md) | you run Drishti on MongoDB: a document per entity per day, the narrow columns collection, indexes, parallel day reads, retention, sharding, measurements |
+| [REDIS_CONNECTOR.md](connectors/REDIS_CONNECTOR.md) | you run Drishti on Redis: key layout, zstd dictionaries, column chunks, live pub/sub, TTL, sizing, measurements |
+| [S3_CONNECTOR.md](connectors/S3_CONNECTOR.md) | you serve documents from S3 or an S3-compatible store: the key layout, listing and caching, credentials, cost of large buckets |
+| [REST_CONNECTOR.md](connectors/REST_CONNECTOR.md) | you read entities from an HTTP/JSON service: paths, headers, generations, timeouts, what it cannot do, load on the service |
+| [KAFKA_CONNECTOR.md](connectors/KAFKA_CONNECTOR.md) | you serve live entities from Kafka: state and ticks modes, the index and disk cache, offsets, ordering, restarts, reconnection, pairing with a lake |
+| [ACTIVEMQ_CONNECTOR.md](connectors/ACTIVEMQ_CONNECTOR.md) | you serve live entities from ActiveMQ: queues and durable topics, the state store, acknowledgement, failover, sizing |
+| [RABBITMQ_CONNECTOR.md](connectors/RABBITMQ_CONNECTOR.md) | you serve live entities from RabbitMQ: queues and bindings, prefetch and acknowledgement, the state store, recovery, sizing |
+| [FEEDS_CONNECTOR.md](connectors/FEEDS_CONNECTOR.md) | you switch on the public feeds: each source's URL and parsing, entities and ids, schedules, history, offline mirrors |
+| [DEMO_CONNECTOR.md](connectors/DEMO_CONNECTOR.md) | you want to know what the sample connector serves, how it ticks, how packs supply samples, and how to switch it off |
 | [TROUBLESHOOTING.md](guides/TROUBLESHOOTING.md) | something is not working: each problem has what you see, how to check and the fix |
 | [DEVELOPER_GUIDE.md](guides/DEVELOPER_GUIDE.md) | you change Drishti's code: layout, build, tests, gates, and recipes |
 | [ARCHITECTURE.md](architecture/ARCHITECTURE.md) | you want to understand how the pieces fit: pipeline, grammar, inference, graph, modules |
