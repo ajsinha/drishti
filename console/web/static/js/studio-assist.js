@@ -24,7 +24,7 @@
 (function () {
   'use strict';
   var Y = window.drishtiYaml;
-  var PANEL_BASE = ['id', 'kind', 'title', 'description', 'key', 'code', 'area', 'infer', 'columns', 'body'];
+  var PANEL_BASE = ['id', 'kind', 'title', 'description', 'key', 'code', 'area', 'span', 'height', 'infer', 'columns', 'body'];
   var FN_ARGS = {
     abs: ['number'], coalesce: ['a', 'b', '…'], contains: ['textOrList', 'value'], first: ['list'], fmt: ['value', "'format'"],
     last: ['list'], link: ['id', "'kind'", 'label'], lower: ['text'], max: ['a', '…'], min: ['a', '…'], size: ['listOrText'],
@@ -92,6 +92,7 @@
     var bits = [n.description || ''];
     if (n['enum']) { bits.push('One of: ' + n['enum'].slice(0, 16).join(', ') + (n['enum'].length > 16 ? ', …' : '')); }
     if (n.type === 'boolean') { bits.push('true or false'); }
+    if (n.type === 'integer' && n.minimum != null) { bits.push('A whole number from ' + n.minimum + ' to ' + n.maximum); }
     if (inPanel && this.optionKinds[key] && PANEL_BASE.indexOf(key) < 0) { bits.push('Panel option of: ' + this.optionKinds[key].join(', ') + (kind ? ' (this panel is ' + kind + ')' : '')); }
     return bits.filter(Boolean).join(' · ');
   };
@@ -147,6 +148,9 @@
       }
       if (s.type === 'boolean' && node.t === 'scalar' && typeof node.v !== 'boolean') { add(node, String(node.raw).length, label + ' is true or false'); }
       if (s.type === 'integer' && node.t === 'scalar' && typeof node.v !== 'number') { add(node, String(node.raw).length, label + ' is a whole number'); }
+      else if (s.type === 'integer' && node.t === 'scalar' && (node.v % 1 !== 0 || (s.minimum != null && node.v < s.minimum) || (s.maximum != null && node.v > s.maximum))) {
+        add(node, String(node.raw).length, label + ' is a whole number' + (s.minimum != null ? ' from ' + s.minimum + ' to ' + s.maximum : ''));
+      }
       if (s.type === 'array' && node.t !== 'seq') { if (node.t !== 'scalar' || node.v !== '') { add(node, 1, label + ' is a list'); } return; }
       if (s.type === 'array' && s.maxItems && node.items.length > s.maxItems) { add(node, 1, label + ' holds at most ' + s.maxItems); }
       if (node.t === 'seq') { node.items.forEach(function (it, i) { visit(it, s.items, label + '[' + i + ']', key); }); return; }

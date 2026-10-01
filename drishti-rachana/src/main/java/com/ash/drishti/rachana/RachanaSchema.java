@@ -92,6 +92,10 @@ public final class RachanaSchema {
         common.put("key", Map.of("type", "string", "enum", KEYS));
         common.put("code", text("A short code at the heading's right (CRV, REFS)"));
         common.put("area", Map.of("type", "string", "enum", List.of("main", "right")));
+        common.put("span", Map.of("type", "integer", "minimum", 1, "maximum", com.ash.drishti.rachana.model.Panel.MAX_SPAN,
+                "description", "Width in columns of a 12-column grid (default: the whole column)"));
+        common.put("height", Map.of("type", "integer", "minimum", 1, "maximum", com.ash.drishti.rachana.model.Panel.MAX_HEIGHT,
+                "description", "Height in grid rows of 2.5rem (default: as tall as the content)"));
         common.put("infer", Map.of("type", "boolean", "description", "Let inference fill the columns"));
         common.put("columns", Map.of("type", "array", "items", Map.of("$ref", "#/$defs/column")));
         common.put("body", Map.of("$ref", "#/$defs/panel"));

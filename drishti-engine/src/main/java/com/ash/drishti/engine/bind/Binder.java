@@ -99,11 +99,11 @@ public final class Binder {
                 case PIVOT -> charts.pivot(p, c);
             };
             return new PanelView(p.id(), p.kind().id(), title, p.code(), p.key(), area(p), p.infer() || explanation != null,
-                    explanation, data, null, com.ash.drishti.engine.view.Emptiness.of(data));
+                    explanation, data, null, com.ash.drishti.engine.view.Emptiness.of(data), p.span().orElse(null), p.height().orElse(null));
         } catch (RuntimeException e) {
             // one panel whose data does not fit its Sutra must never take the view down
             return new PanelView(p.id(), p.kind().id(), title, p.code(), p.key(), area(p), p.infer(), explanation, null,
-                    String.valueOf(e.getMessage()), true);
+                    String.valueOf(e.getMessage()), true, p.span().orElse(null), p.height().orElse(null));
         }
     }
 

@@ -233,7 +233,8 @@ public final class ViewPipeline {
                         pv.fetchedAt().toString(), (pv.live() || router.pushes(ref)) && current,   // a ticks-only stream makes a stored entity live
                         pv.businessDate() == null ? null : pv.businessDate().toString(),
                         fresh.lastUpdate() == null ? null : fresh.lastUpdate().toString(),
-                        fresh.staleAfter() == null ? null : fresh.staleAfter().toString(), fresh.stale() && current), timings);
+                        fresh.staleAfter() == null ? null : fresh.staleAfter().toString(), fresh.stale() && current,
+                        s.version() > 0 ? s.name() : null), timings);
     }
 
     private EntityDocument fetch(EntityRef ref, AsOf asOf) {
