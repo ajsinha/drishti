@@ -28,7 +28,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * With security on, the operational endpoints are not open to anyone who can reach the server:
  * <ul>
  *   <li>{@code /actuator/health/**} stays open (load balancers and Kubernetes probes);</li>
- *   <li>the rest of {@code /actuator} (metrics, Prometheus, info) needs an admin token, or the scrape token
+ *   <li>the rest of {@code /actuator} (metrics, Prometheus, info) needs a token whose roles give the admin power (the
+ *       built-in {@code admin}, or a role defined in Admin → Roles with it), or the scrape token
  *       {@code drishti.security.metrics-token} ({@code DRISHTI_METRICS_TOKEN}) as a bearer token;</li>
  *   <li>the API description ({@code /api/docs}) needs any valid token.</li>
  * </ul>
@@ -39,10 +40,12 @@ public final class ManagementGuard extends OncePerRequestFilter {
     private final SecurityProperties props;
     private final TokenVerifier verifier;
     private final byte[] metricsToken;
+    private final java.util.function.Predicate<Principal> isAdmin;
 
-    public ManagementGuard(SecurityProperties props, TokenVerifier verifier, String metricsToken) {
+    public ManagementGuard(SecurityProperties props, TokenVerifier verifier, String metricsToken, java.util.function.Predicate<Principal> isAdmin) {
         this.props = props;
         this.verifier = verifier;
+        this.isAdmin = isAdmin;
         this.metricsToken = metricsToken == null || metricsToken.isBlank() ? null : metricsToken.getBytes(StandardCharsets.UTF_8);
     }
 
@@ -65,7 +68,7 @@ public final class ManagementGuard extends OncePerRequestFilter {
             }
             try {
                 Principal p = verifier.verify(token);
-                if (docs || p.roles().contains("admin")) {
+                if (docs || isAdmin.test(p)) {
                     chain.doFilter(req, res);
                     return;
                 }

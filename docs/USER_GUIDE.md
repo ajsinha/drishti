@@ -705,8 +705,8 @@ on the Alerts page and fill the form when clicked.
 > **Tip:** a condition that cannot be evaluated (a misspelled field, say) is skipped, not alerted.
 > Check a field's exact name with `F9` first.
 
-Rules are kept with your account; the most recent 200 alerts per user are kept in the server's memory,
-so a server restart clears the alert history but not the rules. More in the
+Rules are kept with your account, and so are the alerts they fire: the newest 1,000 per user
+(`drishti.alerts.keep`) are kept in the identity database, so they are still there after a server restart. More in the
 [Monitors and alerts guide](../console/web/guides/monitors-and-alerts.md).
 
 ## Workspaces

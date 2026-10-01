@@ -45,9 +45,10 @@ public class SecurityConfiguration {
     /** Guards /actuator (except health) and /api/docs when security is on. */
     @Bean
     public FilterRegistrationBean<ManagementGuard> managementGuard(SecurityProperties props, TokenVerifier verifier,
-            org.springframework.core.env.Environment env) {
-        FilterRegistrationBean<ManagementGuard> r = new FilterRegistrationBean<>(
-                new ManagementGuard(props, verifier, env.getProperty("drishti.security.metrics-token", "")));
+            org.springframework.core.env.Environment env, org.springframework.beans.factory.ObjectProvider<Entitlements> entitlements) {
+        // admin power from any role (built-in or defined in Admin → Roles), resolved when a request needs it
+        FilterRegistrationBean<ManagementGuard> r = new FilterRegistrationBean<>(new ManagementGuard(props, verifier,
+                env.getProperty("drishti.security.metrics-token", ""), p -> entitlements.getObject().isAdmin(p)));
         r.addUrlPatterns("/actuator/*", "/api/docs/*", "/api/docs");
         r.setOrder(0);
         return r;

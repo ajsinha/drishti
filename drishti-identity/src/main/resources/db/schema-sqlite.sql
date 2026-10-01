@@ -88,3 +88,16 @@ CREATE TABLE IF NOT EXISTS drishti_pack_state (
     updated_at TIMESTAMP NOT NULL,
     updated_by TEXT    NOT NULL DEFAULT ''
 );
+
+CREATE TABLE IF NOT EXISTS drishti_alert (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    username   TEXT    NOT NULL,
+    at         TIMESTAMP NOT NULL,
+    rule       TEXT    NOT NULL,
+    kind       TEXT    NOT NULL,
+    entity_id  TEXT    NOT NULL,
+    severity   TEXT    NOT NULL,
+    message    TEXT    NOT NULL,
+    generation INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS drishti_alert_user ON drishti_alert (username, id);

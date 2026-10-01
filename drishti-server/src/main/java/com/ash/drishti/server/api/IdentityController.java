@@ -75,9 +75,11 @@ public class IdentityController {
     private final Entitlements entitlements;
     private final com.ash.drishti.identity.PreferenceStore preferences;
     private final com.ash.drishti.server.security.PackAccess packAccess;
+    private final com.ash.drishti.identity.AlertHistory alerts;
 
     public IdentityController(UserService users, Entitlements entitlements, com.ash.drishti.identity.PreferenceStore preferences,
-            com.ash.drishti.server.security.PackAccess packAccess) {
+            com.ash.drishti.server.security.PackAccess packAccess, com.ash.drishti.identity.AlertHistory alerts) {
+        this.alerts = alerts;
         this.packAccess = packAccess;
         this.users = users;
         this.entitlements = entitlements;
@@ -155,6 +157,7 @@ public class IdentityController {
         entitlements.requireAdmin(p);
         users.delete(p.user(), username);
         preferences.forget(username);
+        alerts.forget(username);
     }
 
     @GetMapping("/admin/audit")

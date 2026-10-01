@@ -438,7 +438,7 @@ off; `X-Drishti-User` says whose monitor it is (with security on, your token doe
    ```
 
    It does not fire again while MTM stays above 2.1 m. When MTM falls below and rises above again, it fires again.
-5. Recent alerts (the last 200 per user, kept in memory) are listed by
+5. Recent alerts (the newest `drishti.alerts.keep`, 1,000, per user, kept in the identity database across restarts) are listed by
    `curl -s -H 'X-Drishti-User: ash' 'http://localhost:18480/api/v1/me/alerts?limit=10'`; the bell in the console
    shows the same. Delete the rule with `curl -s -X DELETE -H 'X-Drishti-User: ash' http://localhost:18480/api/v1/me/alerts/rules/mtm-above-2-1m`.
 

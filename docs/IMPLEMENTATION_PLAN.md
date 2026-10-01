@@ -205,7 +205,6 @@ What is open today. None blocks normal use; each is a candidate for a future wav
 
 | Gap | Today | Where it shows |
 |---|---|---|
-| Alert history | Rules are stored; the last 200 alerts per user are kept in memory, so a restart clears the history | [USER_GUIDE.md](USER_GUIDE.md#alerts) |
 | Several console processes | A tab's live channel lives in one console process, so a load balancer needs sticky sessions | [LIVE.md](LIVE.md) |
 | Formatting and static analysis gates | Spotless and Error Prone are deferred (ADR-007); `.editorconfig` only | [adr/007](adr/007-build-gates-in-tests.md) |
 

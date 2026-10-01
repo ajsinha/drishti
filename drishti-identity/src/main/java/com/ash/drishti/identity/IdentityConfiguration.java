@@ -51,6 +51,13 @@ public class IdentityConfiguration {
         return new RoleStore(roles, identityTransactions, auditLog);
     }
 
+    /** Fired alerts, the newest {@code drishti.alerts.keep} (1000) per user. */
+    @Bean
+    public AlertHistory alertHistory(IdentityRepositories.Alerts alerts, TransactionTemplate identityTransactions,
+            org.springframework.core.env.Environment env) {
+        return new AlertHistory(alerts, identityTransactions, Integer.parseInt(env.getProperty("drishti.alerts.keep", "1000")));
+    }
+
     @Bean
     public PackStateStore packStateStore(IdentityRepositories.PackStates states, TransactionTemplate identityTransactions, JpaAuditLog auditLog) {
         return new PackStateStore(states, identityTransactions, auditLog);

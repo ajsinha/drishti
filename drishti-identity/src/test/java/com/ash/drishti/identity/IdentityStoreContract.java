@@ -59,6 +59,7 @@ abstract class IdentityStoreContract {
         java.util.Map<String, Object> props = new java.util.HashMap<>(database());
         props.put("drishti.identity.iterations", "1000");
         props.put("drishti.identity.seed-admin", "true");
+        props.put("drishti.alerts.keep", "60");
         props.put("drishti.identity.users-file", "target/no-legacy-" + System.nanoTime() + "/users.json");
         c.getEnvironment().getPropertySources().addFirst(new MapPropertySource("test", props));
         c.registerBean(RoleNames.class, () -> RoleNames.of(Set.of("admin", "trader", "risk")));
@@ -207,5 +208,27 @@ abstract class IdentityStoreContract {
             assertThat(users.list(null)).extracting(User::username).contains("conc" + i);
             assertThat(prefs.keys("conc" + i, "monitors")).hasSize(5);
         }
+    }
+
+    @Test
+    void firedAlertsAreKeptNewestFirstAndPrunedPerUser() {
+        AlertHistory h = bean(AlertHistory.class);
+        Instant t = Instant.parse("2026-09-30T14:00:00Z");
+        AlertHistory.Alert first = h.record(t, "al", "big-mtm", "trade", "T-1", "warn", "MTM above 1m", 7);
+        AlertHistory.Alert second = h.record(t.plusSeconds(1), "al", "big-mtm", "trade", "T-2", "critical", "MTM above 5m", 8);
+        assertThat(second.seq()).isGreaterThan(first.seq());
+        assertThat(h.recent("al", 10)).extracting(AlertHistory.Alert::id).containsExactly("T-2", "T-1");
+        assertThat(h.recent("al", 1).get(0).severity()).isEqualTo("critical");
+        assertThat(h.recent("nobody", 10)).isEmpty();
+
+        for (int i = 0; i < 120; i++) {
+            h.record(t.plusSeconds(10 + i), "bo", "r", "trade", "T-" + i, "info", "m" + i, i);
+        }
+        List<AlertHistory.Alert> kept = h.recent("bo", 1000);
+        assertThat(kept.size()).isBetween(60, 60 + 49);                           // pruned to the newest 60 every 50 inserts
+        assertThat(kept.get(0).message()).isEqualTo("m119");
+        h.forget("bo");
+        assertThat(h.recent("bo", 10)).isEmpty();
+        assertThat(h.recent("al", 10)).hasSize(2);
     }
 }

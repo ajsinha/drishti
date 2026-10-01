@@ -135,6 +135,8 @@ drishti:
       roles-from-provider: true        # the provider's groups replace the roles at every sign-in
       algorithms: [RS256, ES256]
     redact: [trader, counterpartyId, patientName]   # field names masked in raw JSON (F9) for roles without raw
+  alerts:
+    keep: 1000                       # fired alerts kept per user, in the identity database (they survive restarts)
   identity:
     # Users, roles defined in Admin → Roles, saved workspaces/monitors/settings and the audit trail live in one database
     # (JPA). SQLite by default: a single file, nothing to install. For PostgreSQL:

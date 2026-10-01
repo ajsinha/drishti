@@ -220,6 +220,8 @@ column, if they do not.
 | `drishti_role` · `drishti_role_kind` | roles defined in Admin → Roles, and the kinds each opens |
 | `drishti_preference` | (user, namespace, name) → a JSON document: workspaces, monitors, alert rules, settings |
 | `drishti_audit` | one row per audited action, numbered in order |
+| `drishti_alert` | every alert a user's rules fired: when, rule, entity, severity, message (the newest `drishti.alerts.keep`, 1,000, per user) |
+| `drishti_pack_state` | packs an admin switched off or on (Admin → Packs) |
 
 Deleting a user removes their role and pack rows with them (`ON DELETE CASCADE`), and their saved documents too.
 

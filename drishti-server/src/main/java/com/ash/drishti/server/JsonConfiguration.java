@@ -37,8 +37,9 @@ public class JsonConfiguration {
     @Bean(destroyMethod = "close")
     public com.ash.drishti.server.alerts.AlertEngine alertEngine(com.ash.drishti.identity.PreferenceStore store,
             com.ash.drishti.engine.live.TopicHub hub, com.ash.drishti.engine.source.SourceRouter router,
-            com.ash.drishti.rachana.el.ElCompiler el, com.ash.drishti.rachana.format.Formats formats) {
-        return new com.ash.drishti.server.alerts.AlertEngine(store, hub, router, el, formats);
+            com.ash.drishti.rachana.el.ElCompiler el, com.ash.drishti.rachana.format.Formats formats,
+            com.ash.drishti.identity.AlertHistory history) {
+        return new com.ash.drishti.server.alerts.AlertEngine(store, hub, router, el, formats, history);
     }
 
     @Bean

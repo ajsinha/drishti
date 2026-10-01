@@ -140,6 +140,9 @@ class IdentityApiTest {
         mvc.perform(get("/actuator/info").header("Authorization", "Bearer scrape-token-for-tests")).andExpect(status().isOk());   // tests export no Prometheus registry
         mvc.perform(get("/actuator/metrics").header("Authorization", as("tina", "trader"))).andExpect(status().isForbidden());
         mvc.perform(get("/actuator/metrics").header("Authorization", as("drishti-dev-admin", "admin"))).andExpect(status().isOk());
+        mvc.perform(put("/api/v1/admin/role-definitions/ops-admin").header("Authorization", as("drishti-dev-admin", "admin"))
+                .contentType(MediaType.APPLICATION_JSON).content("{\"kinds\":[\"*\"],\"admin\":true}")).andExpect(status().isOk());
+        mvc.perform(get("/actuator/metrics").header("Authorization", as("olga", "ops-admin"))).andExpect(status().isOk());  // a defined role with the admin power
         mvc.perform(get("/api/docs")).andExpect(status().isUnauthorized());
         mvc.perform(get("/api/docs").header("Authorization", as("tina", "trader"))).andExpect(status().isOk());
     }

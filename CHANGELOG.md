@@ -15,6 +15,13 @@
 -->
 # Changelog
 
+## Unreleased
+- **Alert history survives restarts.**
+  - **Storage:** fired alerts are kept in the identity database (`drishti_alert`): the newest `drishti.alerts.keep` (1,000) per user, pruned as they arrive.
+  - **Numbering:** an alert's number is its row id, so it stays stable across restarts.
+  - **Deleting a user:** removes their alerts.
+- **Operational endpoints accept any role with the admin power.** That includes a role defined in Admin → Roles, not only the built-in `admin`.
+
 ## 1.10.2 — Themes and the top bar (2026-09-30)
 - **The top bar is one row again.** Beside the brand come the command line, the business date and Live. Then the Views, Build, Admin and Help menus, which open leftwards so they stay on screen and keep their labels down to 1280 px. Then the tools. Below 1100 px the command line moves to a line of its own.
 - **Fix: the active menu entry was hard to read** (accent text on an accent tint, such as *Terminal* in the Views menu on the terminal page). The page you are on now has bright text, a neutral highlight and an accent bar. The active menu button keeps its text colour and is marked by its underline.

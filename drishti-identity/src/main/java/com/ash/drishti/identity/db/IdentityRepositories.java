@@ -30,6 +30,16 @@ public final class IdentityRepositories {
 
     public interface PackStates extends JpaRepository<PackStateEntity, String> {}
 
+    public interface Alerts extends JpaRepository<AlertEntity, Long> {
+        List<AlertEntity> findByUsernameOrderByIdDesc(String username, Pageable page);
+
+        long countByUsername(String username);
+
+        void deleteByUsernameAndIdLessThan(String username, Long id);
+
+        void deleteByUsername(String username);
+    }
+
     public interface Audit extends JpaRepository<AuditEventEntity, Long> {
         List<AuditEventEntity> findAllByOrderByIdDesc(Pageable page);
 

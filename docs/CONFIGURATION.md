@@ -442,6 +442,12 @@ Not in the bundled file; the defaults apply until you set them.
 | `max-scan` | `20000` | At most this many entities of a kind are read per search; the result says when it stopped short. |
 | `budget` | `3s` | Time a search may take to list and read; slower sources are left out. |
 
+### `drishti.alerts` — alert history
+
+| Key | Default | Meaning |
+|---|---|---|
+| `keep` | `1000` | Fired alerts kept per user, in the identity database (`drishti_alert`), so they survive restarts. Older ones are pruned as new ones arrive. |
+
 ### `drishti.live` — live updates
 
 | Key | Default | Meaning |
