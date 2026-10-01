@@ -39,6 +39,8 @@ graph:
   id-patterns:
   - pattern: ^T-
     kind: trade
+  - pattern: ^(MX|CLY|END|IMG|BBG|WSS)-\d+$
+    kind: trade
   fields:
     tradeIds:
       kind: trade

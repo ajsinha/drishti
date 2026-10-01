@@ -23,7 +23,18 @@ To go back to the 750 sample trades over 10 days: python3 tools/packgen/banking/
 (with uv run --with deltalake --with pyarrow), which rewrites the whole lake as it was.
 
 The trades are the trading pack's 750 sample trades (packs/trading/samples/trade, written by make_data.py), kept
-as they are, and clones of them: T-1000001, T-1000002, … Each clone keeps its template's product, book, desk,
+as they are, and clones of them booked in six trading systems, in turn, each numbering its trades its own way:
+
+    Murex (MX.3)             MX-30000000 …    trade number                  sourceSystem: Murex
+    Calypso                  CLY-4000000 …    trade id                      sourceSystem: Calypso
+    Endur (Openlink)         END-1100000 …    deal tracking number          sourceSystem: Endur
+    Imagine Trading System   IMG-500000 …     trade id                      sourceSystem: Imagine
+    Bloomberg (TOMS)         BBG-70000000 …   ticket number                 sourceSystem: Bloomberg TOMS
+    Wall Street Systems      WSS-2000000 …    deal number                   sourceSystem: Wall Street Systems
+
+Each system keys trades by a number it generates (sourceTradeId); the prefix keeps the ids unique across systems,
+as a firm's trade store does when it lands several systems in one book. The ranges are illustrative: real
+installations start and format their numbers as they are configured. Each clone keeps its template's product, book, desk,
 counterparty, netting set and curves (so every link still opens) and scales its amounts (notional, MTM, P&L,
 DV01, cashflows) by a factor of its own between 0.2 and 5. Past business days move the market-sensitive numbers
 by the same deterministic walk as the rest of the lake. Everything is deterministic: the same arguments give the
@@ -79,9 +90,20 @@ def load_templates() -> list[tuple[str, str]]:
     return out
 
 
-def trade_id(i: int, templates: list) -> str:
-    """The first len(templates) trades keep their ids (T-10001 …); the rest are T-1000001 onwards."""
-    return templates[i][0] if i < len(templates) else f"T-{1_000_000 + i - len(templates) + 1}"
+# (system, prefix, first number): each system numbers its own trades, in turn across the clones
+SYSTEMS = [("Murex", "MX", 30_000_000), ("Calypso", "CLY", 4_000_000), ("Endur", "END", 1_100_000),
+           ("Imagine", "IMG", 500_000), ("Bloomberg TOMS", "BBG", 70_000_000), ("Wall Street Systems", "WSS", 2_000_000)]
+
+
+def trade_id(i: int, templates: list) -> tuple[str, str | None, str | None]:
+    """(id, source system, the system's own number): the first len(templates) trades keep their ids (T-10001 …);
+    the rest are booked in the six systems in turn."""
+    if i < len(templates):
+        return templates[i][0], None, None
+    k = i - len(templates)
+    system, prefix, first = SYSTEMS[k % len(SYSTEMS)]
+    native = str(first + k // len(SYSTEMS))
+    return f"{prefix}-{native}", system, native
 
 
 def scaled(doc, factor: float):
@@ -101,9 +123,11 @@ def scaled(doc, factor: float):
 def build(i: int, day: date, steps: int) -> tuple[str, str]:
     """Trade number i on one business day: (id, document JSON)."""
     tid, text = _templates[i % len(_templates)]
-    new_id = trade_id(i, _templates)
+    new_id, system, native = trade_id(i, _templates)
     doc = json.loads(text.replace(PLACEHOLDER, new_id))
-    if i >= len(_templates):
+    if system is not None:
+        doc["sourceSystem"] = system
+        doc["sourceTradeId"] = native
         factor = random.Random(f"size/{new_id}").lognormvariate(0, 0.6)
         scaled(doc, min(5.0, max(0.2, factor)))
     if steps:                                   # the same walk, with the same seed, as samplegen/lake.py's history

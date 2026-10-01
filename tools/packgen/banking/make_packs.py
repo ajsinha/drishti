@@ -119,6 +119,8 @@ def manifest(name: str) -> dict:
                                                           "disk-cache.max-gb": "${DRISHTI_STREAM_CACHE_GB:10}",
                                                           "disk-cache.reset-at": "${DRISHTI_CACHE_RESET_AT:02:00}",
                                                           "disk-cache.zone": "America/New_York"}}
+        # trades booked in other systems keep their system's numbering behind a prefix (tools/samplegen/bulk_trades.py)
+        m["graph"]["id-patterns"].append({"pattern": "^(MX|CLY|END|IMG|BBG|WSS)-\\d+$", "kind": "trade"})
         # a derived kind: each desk's P&L, computed from the trades wherever they come from (PACKS.md, Derived kinds)
         m["kinds"].append("desk-pnl")
         m["mnemonics"]["DPNL"] = {"kind": "desk-pnl", "label": "Desk P&L (derived from trades)"}
