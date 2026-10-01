@@ -73,8 +73,15 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     /** One partition in memory: documents by id, and a reverse index (referenced id to referring ids). */
     private record Part(Map<String, String> docs, Map<String, Set<String>> refs) {}
 
-    private final Map<String, DeltaTable> tables = new LinkedHashMap<>();
-    private final Map<String, String> modes = new HashMap<>();
+    // concurrent: a reindex adds tables that appeared in the lake while reads go on
+    private final Map<String, DeltaTable> tables = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<String, String> modes = new java.util.concurrent.ConcurrentHashMap<>();
+    private Engine engine;
+    private String idColumn;
+    private String docColumn;
+    private String dateColumn;
+    /** True when no {@code kinds} are configured: every table in the domain is served, including new ones. */
+    private boolean discover;
     private final HitIndex index = new HitIndex();
     // Async caches: a load (the Delta log, a Parquet partition) runs on a virtual thread, and callers wanting the same
     // key wait on its future without holding any lock. A synchronous Caffeine load would run inside the map's
@@ -100,13 +107,13 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         this.lookbackDays = Integer.parseInt(ctx.setting("lookback-days", "10"));
         // local disk or object storage (s3a://, abfs://, gs://): the rest of the connector does not know which
         this.lake = LakeStore.of(ctx.setting("root", "./data/delta"), ctx.setting("domain", ""), ctx.settings());
-        Engine engine = DefaultEngine.create(lake.hadoop());
-        String id = ctx.setting("id-column", "id");
-        String doc = ctx.setting("doc-column", "doc");
-        String date = ctx.setting("date-column", "business_date");
+        this.engine = DefaultEngine.create(lake.hadoop());
+        this.idColumn = ctx.setting("id-column", "id");
+        this.docColumn = ctx.setting("doc-column", "doc");
+        this.dateColumn = ctx.setting("date-column", "business_date");
+        this.discover = ctx.setting("kinds", "").isBlank();
         for (String kind : kinds(ctx.setting("kinds", ""))) {
-            tables.put(kind, new DeltaTable(engine, lake.table(kind), id, doc, date));
-            modes.put(kind, ctx.setting("mode." + kind, "snapshot"));
+            add(kind);
         }
         long refresh = Long.parseLong(ctx.setting("refresh-seconds", "10"));
         this.latest = Caffeine.newBuilder().executor(loaders).expireAfterWrite(Duration.ofSeconds(refresh)).buildAsync();
@@ -118,6 +125,27 @@ public final class DeltaSourcePlugin implements SourcePlugin {
                 .buildAsync();
         reindex();
         ctx.scheduler().scheduleWithFixedDelay(this::reindex, refresh * 6, refresh * 6, TimeUnit.SECONDS);
+    }
+
+    private void add(String kind) {
+        modes.put(kind, context.setting("mode." + kind, "snapshot"));
+        tables.putIfAbsent(kind, new DeltaTable(engine, lake.table(kind), idColumn, docColumn, dateColumn));
+    }
+
+    /** New tables in the domain (a kind loaded after start) are served from the next reindex, without a restart. */
+    private void discoverTables() {
+        if (!discover) {
+            return;
+        }
+        try {
+            for (String kind : lake.tables()) {
+                if (!tables.containsKey(kind)) {
+                    add(kind);                                 // shows in /api/v1/sources and Admin → Health
+                }
+            }
+        } catch (IOException | RuntimeException e) {
+            // the lake is unreachable for now: health says so, and the next reindex tries again
+        }
     }
 
     private List<String> kinds(String configured) throws IOException {
@@ -228,6 +256,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
 
     /** Rebuilds the search index from each table's newest partition (identifiers are stable across dates). */
     void reindex() {
+        discoverTables();
         List<EntityHit> hits = new ArrayList<>();
         for (String kind : tables.keySet()) {
             try {

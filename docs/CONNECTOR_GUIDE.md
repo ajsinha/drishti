@@ -995,14 +995,15 @@ that fails is logged as `"event": "failed"` and the rest go on. Note that the ma
 long-lived to lose: each read goes to storage afresh, so reads recover as soon as the storage does. Cache figures:
 `tables`, `partitions` (in memory) and `timeTravel` (*known at* versions held).
 
-The connector lists the domain's tables **when it starts** (unless `kinds` is given in its *settings*). A kind added
-to the lake later is served after a restart.
+The connector lists the domain's tables when it starts and again at every reindex (every six `refresh-seconds`, a
+minute by default), unless `kinds` is given in its *settings*. A table added to the lake while the server runs is
+served from the next reindex, with no restart: check with `curl -s $B/sources | jq '.sources[] | select(.name=="trading-store").kinds'`.
 
 ### Common errors
 
 | You see | Cause | Fix |
 |---|---|---|
-| views say *No data available*; health `DOWN: no Delta tables under ./data/delta/trading` | the lake was not built, or `DRISHTI_DELTA_ROOT` points elsewhere | build it (above) or set `DRISHTI_DELTA_ROOT`; restart |
+| views say *No data available*; health `DOWN: no Delta tables under ./data/delta/trading` | the lake was not built, or `DRISHTI_DELTA_ROOT` points elsewhere | build it (above), or set `DRISHTI_DELTA_ROOT` and restart; tables built while the server runs are found within a minute |
 | `domain escapes the Delta root` under `failedToStart` | `domain` contains `..` or starts with `/` | a plain folder name |
 | an old picked date falls back to the samples | the date is more than `lookback-days` past the newest partition on or before it | load that date, or raise `lookback-days` |
 | *known at* shows the latest data | the lake was copied without keeping file times (Delta resolves instants against `_delta_log` modification times) | copy with `cp -p` / `rsync -t`; for S3, times are upload times |

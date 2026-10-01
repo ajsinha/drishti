@@ -91,4 +91,35 @@ class DeltaSourcePluginTest extends DatedSourceContract {
         EntityDocument later = plugin().fetch(t1, new AsOf(d, java.time.Instant.parse("2099-01-01T00:00:00Z"))).orElseThrow();
         assertThat(later.data().get("mtm").asDouble()).isEqualTo(125);                            // as known now
     }
+
+    private static void copy(Path from, Path to) throws java.io.IOException {
+        try (var files = Files.walk(from)) {
+            for (Path f : files.toList()) {
+                Path t = to.resolve(from.relativize(f).toString());
+                if (Files.isDirectory(f)) {
+                    Files.createDirectories(t);
+                } else {
+                    Files.copy(f, t);
+                }
+            }
+        }
+    }
+
+    @Test
+    void aTableAddedToTheLakeIsServedFromTheNextReindexWithoutARestart() throws Exception {
+        Path root = Files.createTempDirectory("drishti-lake-grow");
+        Path src = Path.of("src/test/resources/lake/desk");
+        copy(src.resolve("trade"), root.resolve("desk").resolve("trade"));
+        DeltaSourcePlugin p = new DeltaSourcePlugin();
+        p.start(context(Map.of("root", root.toString(), "domain", "desk", "source-name", "growing")));
+        try {
+            assertThat(p.manifest().kinds()).containsExactly("trade");
+            copy(src.resolve("counterparty"), root.resolve("desk").resolve("counterparty"));     // loaded while running
+            p.reindex();
+            assertThat(p.manifest().kinds()).containsExactlyInAnyOrder("trade", "counterparty");
+            assertThat(p.search("counterparty", "", 10)).isNotEmpty();
+        } finally {
+            p.close();
+        }
+    }
 }

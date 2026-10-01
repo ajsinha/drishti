@@ -16,6 +16,7 @@
 # Changelog
 
 ## Unreleased
+- **The lake finds new tables without a restart.** A Delta connector without a fixed `kinds` list now lists its domain's tables at every reindex (a minute by default), so a kind loaded into the lake while the server runs is served within a minute.
 - **Alert history survives restarts.**
   - **Storage:** fired alerts are kept in the identity database (`drishti_alert`): the newest `drishti.alerts.keep` (1,000) per user, pruned as they arrive.
   - **Numbering:** an alert's number is its row id, so it stays stable across restarts.
