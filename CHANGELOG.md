@@ -16,6 +16,9 @@
 # Changelog
 
 ## Unreleased
+- **Who looked at what.** Every answered view, raw document, history read, search and CSV export is recorded with the person, the time, the entity or search, and the business date.
+  - **Where to see it:** administrators see it in Admin → Access (filter by person, action, kind, id and dates) and from a view's **Viewed by**.
+  - **Storage:** recording is asynchronous and batched, and it never slows a read. The log is kept 90 days (`drishti.access-log`) in the identity database (SQLite or PostgreSQL).
 - **Scheduled reports.** A search can run on a schedule and deliver its results as CSV, either to the server's reports folder or to a webhook an administrator allows.
   - **Schedules:** `business-days 18:30`, `weekdays 07:00`, `daily`, `hourly` or `cron`.
   - **Runs:** a report runs as its owner, with their roles and redaction at the time it runs, and records each run.

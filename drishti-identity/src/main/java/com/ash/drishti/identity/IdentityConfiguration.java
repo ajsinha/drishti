@@ -56,6 +56,14 @@ public class IdentityConfiguration {
         return new ApiTokenStore(tokens, identityTransactions, auditLog);
     }
 
+    /** Who read what ({@code drishti.access-log.keep-days}, 90; {@code queue}, 100000 events waiting at most). */
+    @Bean(destroyMethod = "close")
+    public AccessLog accessLog(IdentityRepositories.Access access, TransactionTemplate identityTransactions,
+            @org.springframework.beans.factory.annotation.Value("${drishti.access-log.keep-days:90}") int keepDays,
+            @org.springframework.beans.factory.annotation.Value("${drishti.access-log.queue:100000}") int queue) {
+        return new AccessLog(access, identityTransactions, keepDays, queue);
+    }
+
     @Bean
     public NoteStore noteStore(IdentityRepositories.Notes notes, TransactionTemplate identityTransactions, JpaAuditLog auditLog) {
         return new NoteStore(notes, identityTransactions, auditLog);

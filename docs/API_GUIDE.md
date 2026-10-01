@@ -1105,3 +1105,10 @@ Reading and adding need the right to open the kind (`403 DRS-5003` otherwise). P
 A schedule that does not parse, a query that does not parse, or a webhook outside `drishti.reports.webhooks` is
 `400 DRS-5001` with the reason. CSV numbers are written in full (`199000000`, never `1.99E8`).
 
+## The access log (administrators)
+
+`GET /admin/access?user=&action=&kind=&id=&from=&to=&limit=` lists answered reads, newest first:
+`[{at, user, action, kind, entityId, detail, businessDate}]`. `action` is `view`, `raw`, `history`, `search` or
+`export`; `detail` is the search text or the history field; `from`/`to` take a date (`2026-09-30`) or an instant.
+`limit` is 1-5000 (default 200). `GET /admin/access/stats` gives `written`, `dropped`, `queued` and `keepDays`.
+

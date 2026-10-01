@@ -32,7 +32,7 @@ when other people will use the installation.
 6. [Environment variables](#6-environment-variables)
 7. [Running as services (systemd)](#7-running-as-services-systemd)
 8. [TLS and the reverse proxy](#8-tls-and-the-reverse-proxy)
-9. [Production checklist](#9-production-checklist) · [Scheduled reports](#9a-scheduled-reports)
+9. [Production checklist](#9-production-checklist) · [Scheduled reports](#9a-scheduled-reports) · [The access log](#9b-the-access-log)
 10. [Backups and restore](#10-backups-and-restore)
 11. [The lake: where it lives and keeping it bounded](#11-the-lake-where-it-lives-and-keeping-it-bounded)
 12. [Memory and caches](#12-memory-and-caches)
@@ -715,6 +715,15 @@ People schedule searches to be delivered as CSV (User guide, *Scheduled reports*
   all but one, or each report runs once per server.
 - **What is audited.** `report.save`, `report.run` (with `ok` or `failed`) and `report.delete`. Admin → Health is
   not affected by a failing report; its owner sees the error on the Reports page.
+
+## 9b. The access log
+
+Every answered read is a row in `drishti_access` (about 150 bytes). A desk of 200 people opening 300 views a day each
+adds about 60,000 rows a day, 5.4 million over the default 90 days (roughly 1 to 2 GB on PostgreSQL with its indexes). For
+heavier use put the identity database on PostgreSQL, or shorten `drishti.access-log.keep-days`. If writes fall
+behind (the database is down), events queue in memory (`drishti.access-log.queue`, 100,000) and beyond that are
+dropped and counted; Admin → Access shows the count. To keep it longer, export it on a schedule
+(`GET /api/v1/admin/access?from=…&limit=5000`) before it is pruned.
 
 ## 10. Backups and restore
 

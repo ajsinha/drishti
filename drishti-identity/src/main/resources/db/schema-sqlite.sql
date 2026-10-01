@@ -125,3 +125,17 @@ CREATE TABLE IF NOT EXISTS drishti_note (
     updated_at TIMESTAMP NOT NULL
 );
 CREATE INDEX IF NOT EXISTS drishti_note_entity ON drishti_note (kind, entity_id);
+
+CREATE TABLE IF NOT EXISTS drishti_access (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    at            TIMESTAMP NOT NULL,
+    username      TEXT NOT NULL,
+    action        TEXT NOT NULL,
+    kind          TEXT,
+    entity_id     TEXT,
+    detail        TEXT,
+    business_date TEXT
+);
+CREATE INDEX IF NOT EXISTS drishti_access_entity ON drishti_access (kind, entity_id, at);
+CREATE INDEX IF NOT EXISTS drishti_access_user ON drishti_access (username, at);
+CREATE INDEX IF NOT EXISTS drishti_access_at ON drishti_access (at);

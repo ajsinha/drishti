@@ -38,6 +38,13 @@ public final class IdentityRepositories {
         void deleteByUsername(String username);
     }
 
+    public interface Access extends JpaRepository<AccessEntity, Long>,
+            org.springframework.data.jpa.repository.JpaSpecificationExecutor<AccessEntity> {
+        @org.springframework.data.jpa.repository.Modifying
+        @org.springframework.data.jpa.repository.Query("delete from AccessEntity a where a.at < :before")
+        int deleteOlderThan(@org.springframework.data.repository.query.Param("before") java.time.Instant before);
+    }
+
     public interface Notes extends JpaRepository<NoteEntity, Long> {
         List<NoteEntity> findByKindAndEntityIdOrderByIdAsc(String kind, String entityId);
 

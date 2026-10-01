@@ -128,6 +128,24 @@ async def load_pack(request: Request, name: str, action: str):
     return out
 
 
+@router.get("/access")
+async def access(request: Request, user: str = "", action: str = "", kind: str = "", id: str = "", to: str = "", limit: int = 200):
+    """Who looked at what: views, raw documents, history, searches and CSV exports, newest first."""
+    me = ident(request)
+    if not me.is_admin:
+        return _forbidden(request)
+    f = {"user": user, "action": action, "kind": kind, "id": id, "from": request.query_params.get("from", ""), "to": to,
+         "limit": max(1, min(limit, 5000))}
+    params = {k: v for k, v in f.items() if v not in ("", None)}
+    error, rows, stats = None, [], {}
+    try:
+        rows = await request.app.state.backend.admin("GET", "/access", me, **params)
+        stats = await request.app.state.backend.admin("GET", "/access/stats", me)
+    except BackendError as e:
+        error = e
+    return render(request, "admin/access.html", rows=rows, f=f, stats=stats, error=error)
+
+
 @router.get("/tokens")
 async def tokens(request: Request):
     """Every personal API token (never a secret), with revoke."""

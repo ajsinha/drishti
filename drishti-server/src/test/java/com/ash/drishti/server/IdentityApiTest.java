@@ -225,4 +225,23 @@ class IdentityApiTest {
         mvc.perform(get("/api/v1/workspaces/shared").header("Authorization", ravi)).andExpect(jsonPath("$.length()").value(0));
         mvc.perform(get("/api/v1/me/workspaces/desk/share").header("Authorization", ada)).andExpect(status().isNotFound());
     }
+
+    @Test
+    void readsAreRecordedAndOnlyAdministratorsSeeWhoReadWhat() throws Exception {
+        String tess = as("tess", "trader");
+        String ada = as("ada", "admin");
+        mvc.perform(get("/api/v1/views/trade/IRS-48213").header("Authorization", tess)).andExpect(status().isOk());
+        mvc.perform(get("/api/v1/entities/trade/IRS-48213/raw").header("Authorization", tess).header("X-Drishti-As-Of", "2026-09-29"));
+        mvc.perform(get("/api/v1/search").param("q", "TRD where mtm < 0").header("Authorization", tess)).andExpect(status().isOk());
+        mvc.perform(get("/api/v1/views/netting-set/NS-NORTH-01").header("Authorization", tess)).andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/admin/access").param("user", "tess").header("Authorization", ada)).andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].action").value("search"))
+                .andExpect(jsonPath("$[0].detail").value("TRD where mtm < 0"))
+                .andExpect(jsonPath("$[?(@.action=='view')].entityId").value(org.hamcrest.Matchers.hasItem("IRS-48213")))
+                .andExpect(jsonPath("$[?(@.entityId=='NS-NORTH-01')]").isEmpty());          // a refused read is not a read
+        mvc.perform(get("/api/v1/admin/access").param("kind", "trade").param("id", "IRS-48213").param("action", "raw").header("Authorization", ada))
+                .andExpect(jsonPath("$[0].user").value("tess"));
+        mvc.perform(get("/api/v1/admin/access").header("Authorization", tess)).andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/admin/access").param("from", "yesterday").header("Authorization", ada)).andExpect(status().isBadRequest());
+    }
 }

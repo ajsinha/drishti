@@ -272,4 +272,23 @@ abstract class IdentityStoreContract {
         assertThat(bean(JpaAuditLog.class).recent(50, "trade/T-NOTE-1")).extracting(AuditLog.Event::action)
                 .contains("note.add", "note.edit", "note.delete");
     }
+
+    @Test
+    void theAccessLogRecordsReadsAndFindsThemByEntityUserAndTime() {
+        AccessLog log = bean(AccessLog.class);
+        java.time.Instant t0 = java.time.Instant.parse("2026-09-30T14:00:00Z");
+        log.record(new AccessLog.Event(t0, "tess", "view", "trade", "T-ACC-1", null, null));
+        log.record(new AccessLog.Event(t0.plusSeconds(60), "ravi", "raw", "trade", "T-ACC-1", null, "2026-09-29"));
+        log.record(new AccessLog.Event(t0.plusSeconds(120), "tess", "search", "trade", null, "TRD where mtm < 0", null));
+        log.record(new AccessLog.Event(java.time.Instant.now().minus(java.time.Duration.ofDays(400)), "old", "view", "trade", "T-ACC-1", null, null));
+        log.flush();
+        assertThat(log.find(new AccessLog.Filter(null, null, "trade", "T-ACC-1", t0.minusSeconds(1), null, 50)))
+                .extracting(AccessLog.Event::user).containsExactly("ravi", "tess");                 // newest first
+        assertThat(log.find(new AccessLog.Filter("tess", "search", null, null, null, null, 50))).singleElement()
+                .satisfies(e -> assertThat(e.detail()).isEqualTo("TRD where mtm < 0"));
+        assertThat(log.find(new AccessLog.Filter("ravi", null, null, null, null, null, 50)).get(0).businessDate()).isEqualTo("2026-09-29");
+        assertThat(log.prune()).isGreaterThanOrEqualTo(1);                                         // older than the retention
+        assertThat(log.find(new AccessLog.Filter("old", null, null, null, null, null, 50))).isEmpty();
+        assertThat(log.stats()).containsEntry("dropped", 0L);
+    }
 }

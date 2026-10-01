@@ -448,6 +448,14 @@ Not in the bundled file; the defaults apply until you set them.
 |---|---|---|
 | `keep` | `1000` | Fired alerts kept per user, in the identity database (`drishti_alert`), so they survive restarts. Older ones are pruned as new ones arrive. |
 
+### `drishti.access-log` — who looked at what
+
+| Key | Default | Meaning |
+|---|---|---|
+| `enabled` | `true` (`DRISHTI_ACCESS_LOG`) | Record every answered view, raw document, history read, search and CSV export in `drishti_access` (Admin → Access). |
+| `keep-days` | `90` | Older events are pruned once a day. |
+| `queue` | `100000` | Events waiting to be written. Recording never slows a read: events are written in batches every second, and when the queue is full they are dropped and counted (Admin → Access says how many). |
+
 ### `drishti.reports` — scheduled reports
 
 | Key | Default | Meaning |

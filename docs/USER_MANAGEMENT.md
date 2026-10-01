@@ -195,6 +195,19 @@ tokens** ([CLIENTS.md](CLIENTS.md)). What an administrator needs to know:
 - Secrets are never stored, only their SHA-256; nobody, administrators included, can see a secret after it is made.
 - `token-created` and `token-revoked` are in the audit log.
 
+## Who looked at what: the access log
+
+Every read that was answered is recorded: a view, a raw document (F9), a history or compare read, a search and a
+CSV export, with the person, the time, the entity (or the search text) and the business date asked for (blank for
+live). Refused reads are not recorded (they returned nothing). Administrators see it in **Admin → Access**, filtered
+by person, action, kind, id and dates; a view's **Viewed by** (administrators only) opens the list for that entity.
+Worked example: "who looked at T-10001 last week" is Access with kind `trade`, id `T-10001`, from and until.
+
+It is in the identity database (`drishti_access`), kept `drishti.access-log.keep-days` (90) days. Recording is
+asynchronous and never slows a read; if the database cannot keep up, events are dropped and the page says how
+many. The console's own service identity is not recorded. Through the API:
+`GET /api/v1/admin/access?user=&action=&kind=&id=&from=&to=&limit=`.
+
 ## Notes and shared workspaces
 
 - **Notes** (see the User guide): anyone who may open a kind reads and adds notes on its entities; only the author
@@ -243,6 +256,7 @@ column, if they do not.
 | `drishti_alert` | every alert a user's rules fired: when, rule, entity, severity, message (the newest `drishti.alerts.keep`, 1,000, per user) |
 | `drishti_pack_state` | packs an admin switched off or on (Admin → Packs) |
 | `drishti_api_token` | personal API tokens: owner, name, a SHA-256 of the secret (never the secret), created, expires, last used, revoked |
+| `drishti_access` | the access log: when, who, action (view, raw, history, search, export), kind, id, search text or field, business date |
 | `drishti_note` | notes on entities and their fields: entity, field path, author, text, created, edited. Kept when their author is deleted |
 
 Deleting a user removes their role and pack rows with them (`ON DELETE CASCADE`), and their saved documents too.

@@ -190,3 +190,26 @@ def test_packs_page_loads_and_unloads(client, backend):
     assert client.post("/admin/api/packs/genomics/load").json()["restarting"] is True
     assert ("POST", "/packs/genomics/load") in calls
     assert client.post("/admin/api/packs/genomics/explode").status_code == 400
+
+
+
+def test_the_access_log_page(client, backend):
+    calls = []
+
+    async def admin(method, path, ident, body=None, **params):
+        calls.append((path, params))
+        if path == "/access/stats":
+            return {"written": 3, "dropped": 0, "queued": 0, "keepDays": 90}
+        return [{"at": "2026-10-01T09:00:00Z", "user": "tess", "action": "view", "kind": "trade", "entityId": "IRS-48213",
+                 "detail": None, "businessDate": "2026-09-29"},
+                {"at": "2026-10-01T08:59:00Z", "user": "tess", "action": "search", "kind": "TRD", "entityId": None,
+                 "detail": "TRD where mtm < 0", "businessDate": None}]
+    original = backend.admin
+    backend.admin = admin
+    try:
+        page = client.get("/admin/access", params={"kind": "trade", "id": "IRS-48213", "from": "2026-09-30"}).text
+    finally:
+        backend.admin = original
+    assert "Who looked at what" in page and "IRS-48213" in page and "TRD where mtm &lt; 0" in page and "2026-09-29" in page
+    assert calls[0] == ("/access", {"kind": "trade", "id": "IRS-48213", "from": "2026-09-30", "limit": 200})
+    assert "Viewed by" in client.get("/v/trade/IRS-48213").text

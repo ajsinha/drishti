@@ -140,6 +140,10 @@ drishti:
     redact: [trader, counterpartyId, patientName]   # field names masked in raw JSON (F9) for roles without raw
   alerts:
     keep: 1000                       # fired alerts kept per user, in the identity database (they survive restarts)
+  access-log:                        # who looked at what: views, raw, history, searches, CSV (Admin → Access)
+    enabled: ${DRISHTI_ACCESS_LOG:true}
+    keep-days: 90                    # older events are pruned once a day
+    queue: 100000                    # events waiting to be written at most; beyond it they are dropped and counted
   reports:                           # scheduled reports: a search delivered as CSV on a schedule
     enabled: ${DRISHTI_REPORTS_ENABLED:true}   # the scheduler; run it on one server of a group (reports still run by hand)
     folder: ${DRISHTI_REPORTS_DIR:./data/reports}

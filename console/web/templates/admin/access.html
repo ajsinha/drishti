@@ -1,0 +1,52 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Access · {{ PRODUCT }}{% endblock %}
+{% block screen %}admin{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm">
+  <h1>Who looked at what</h1>
+  {% with tab='access' %}{% include "admin/_nav.html" %}{% endwith %}
+  <p class="text-muted-d">Every view, raw document, history, search and CSV export that was answered, by whom and for which business day
+    (blank: live). Refused reads are not here: they are refused. Kept {{ stats.keepDays or 90 }} days.
+    {% if stats.dropped %}<b class="t-warn">{{ stats.dropped }} events were dropped</b> because the database could not keep up.{% endif %}</p>
+  {% if error %}<p class="pnl-err" role="alert">{{ error.code }} {{ error.detail }}</p>{% endif %}
+  <form class="alert-form" method="get" action="/admin/access">
+    <label>Person<input name="user" class="studio-in mono" value="{{ f.user }}"></label>
+    <label>What<select name="action" class="studio-select"><option value="">anything</option>
+      {% for a in ['view', 'raw', 'history', 'search', 'export'] %}<option{% if f.action == a %} selected{% endif %}>{{ a }}</option>{% endfor %}</select></label>
+    <label>Kind<input name="kind" class="studio-in mono" value="{{ f.kind }}" placeholder="trade, or TRD for searches"></label>
+    <label>Id<input name="id" class="studio-in mono" value="{{ f.id }}"></label>
+    <label>From<input name="from" type="date" class="studio-in mono" value="{{ f['from'] }}"></label>
+    <label>Until<input name="to" type="date" class="studio-in mono" value="{{ f.to }}"></label>
+    <button type="submit" class="btn-pill btn-accent">Show</button>
+  </form>
+  <div class="tbl-wrap"><table class="tbl adm-tbl">
+    <thead><tr><th>When (UTC)</th><th>Person</th><th>What</th><th>Entity or search</th><th>Business day</th></tr></thead>
+    <tbody>{% for r in rows %}
+      <tr><td class="mono">{{ r.at[:19] | replace('T', ' ') }}</td>
+        <td><a class="lnk mono" href="/admin/access?user={{ r.user | urlencode }}">{{ r.user }}</a></td><td>{{ r.action }}</td>
+        <td>{% if r.entityId %}<a class="lnk mono" href="/v/{{ r.kind }}/{{ r.entityId | urlencode }}">{{ r.kind }} {{ r.entityId }}</a>
+          <a class="text-muted-d" href="/admin/access?kind={{ r.kind | urlencode }}&id={{ r.entityId | urlencode }}" title="Everyone who looked at it">(all)</a>
+          {% if r.detail %}<span class="mono text-muted-d">{{ r.detail }}</span>{% endif %}
+          {% else %}<span class="mono">{{ r.detail or r.kind or '' }}</span>{% endif %}</td>
+        <td class="mono">{{ r.businessDate or '' }}</td></tr>
+    {% else %}<tr><td colspan="5" class="text-muted-d">Nothing matches.</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div>
+{% endblock %}
