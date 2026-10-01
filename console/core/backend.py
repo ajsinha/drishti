@@ -188,6 +188,40 @@ class BackendClient:
     async def delete_workspace(self, name: str, ident) -> None:
         return await self._send("DELETE", f"/me/workspaces/{quote(name)}", ident)
 
+    async def workspace_share(self, name: str, ident) -> dict | None:
+        """Who this workspace is shared with, or None when it is not shared."""
+        try:
+            return await self._get(f"/me/workspaces/{quote(name)}/share", ident)
+        except BackendError as e:
+            if e.status == 404:
+                return None
+            raise
+
+    async def share_workspace(self, name: str, body: dict, ident) -> dict:
+        return await self._send("PUT", f"/me/workspaces/{quote(name)}/share", ident, json=body)
+
+    async def unshare_workspace(self, name: str, ident) -> None:
+        return await self._send("DELETE", f"/me/workspaces/{quote(name)}/share", ident)
+
+    async def shared_workspaces(self, ident) -> list:
+        return await self._get("/workspaces/shared", ident)
+
+    async def shared_workspace(self, owner: str, name: str, ident) -> dict:
+        return await self._get(f"/workspaces/shared/{quote(owner)}/{quote(name)}", ident)
+
+    # -- notes ------------------------------------------------------------------------------------
+    async def notes(self, kind: str, id_: str, ident) -> list:
+        return await self._get(f"/notes/{quote(kind)}/{quote(id_)}", ident)
+
+    async def add_note(self, kind: str, id_: str, body: str, path: str | None, ident) -> dict:
+        return await self._send("POST", f"/notes/{quote(kind)}/{quote(id_)}", ident, json={"body": body, "path": path})
+
+    async def edit_note(self, note_id: int, body: str, ident) -> dict:
+        return await self._send("PUT", f"/notes/{int(note_id)}", ident, json={"body": body})
+
+    async def delete_note(self, note_id: int, ident) -> None:
+        return await self._send("DELETE", f"/notes/{int(note_id)}", ident)
+
     # -- monitors and alerts ----------------------------------------------------------------------
     async def mine(self, method: str, path: str, ident, body=None, **params):
         """Calls under /me (monitors, alerts) for the signed-in user."""

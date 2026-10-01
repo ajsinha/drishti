@@ -528,8 +528,9 @@ The server turns the manifest into ordinary settings. Knowing this helps when yo
 
 A derived kind is a kind no source holds: the server computes it from another kind by grouping and adding up. A
 book's P&L from its trades, a currency's exposure, a desk's count of open tickets. A pack declares one as a
-connector of the built-in plugin `derived` and routes the kind to it. The finance pack ships one, `book-pnl`
-(`BPNL RATES-NY-3 <GO>`):
+connector of the built-in plugin `derived` and routes the kind to it. The finance pack ships `book-pnl`
+(`BPNL RATES-NY-3 <GO>`), and the trading pack `desk-pnl`, each desk's MTM, one-day P&L and DV01 from its trades
+(`DPNL DESK-RATES <GO>`). The finance one:
 
 ```yaml
 connectors:

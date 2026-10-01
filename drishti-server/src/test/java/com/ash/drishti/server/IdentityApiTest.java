@@ -179,4 +179,50 @@ class IdentityApiTest {
         mvc.perform(get("/api/v1/admin/audit").param("subject", "nora").header("Authorization", admin))
                 .andExpect(jsonPath("$[*].action").value(hasItem("token-created")));
     }
+
+    @Test
+    void notesAreReadByWhoeverMayOpenTheKindAndChangedByTheirAuthor() throws Exception {
+        String tess = as("tess", "trader");
+        String ravi = as("ravi", "viewer");
+        String created = mvc.perform(post("/api/v1/notes/trade/IRS-48213").header("Authorization", tess).contentType("application/json")
+                .content("{\"body\": \"Restated after the fixing correction\", \"path\": \"$.mtm\"}"))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.author").value("tess")).andReturn().getResponse().getContentAsString();
+        long id = Long.parseLong(created.replaceAll(".*\"id\":(\\d+).*", "$1"));
+        mvc.perform(get("/api/v1/notes/trade/IRS-48213").header("Authorization", ravi)).andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].path").value("$.mtm"));
+        mvc.perform(put("/api/v1/notes/" + id).header("Authorization", ravi).contentType("application/json").content("{\"body\": \"no\"}"))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/notes/netting-set/NS-NORTH-01").header("Authorization", tess)).andExpect(status().isForbidden());
+        mvc.perform(delete("/api/v1/notes/" + id).header("Authorization", ravi)).andExpect(status().isForbidden());
+        mvc.perform(delete("/api/v1/notes/" + id).header("Authorization", as("ada", "admin"))).andExpect(status().isNoContent());
+        mvc.perform(get("/api/v1/notes/trade/IRS-48213").header("Authorization", ravi)).andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void aSharedWorkspaceIsReadOnlyAndHidesPanesTheReaderMayNotOpen() throws Exception {
+        String ada = as("ada", "admin");
+        String tess = as("tess", "trader");
+        String ravi = as("ravi", "viewer");
+        String ws = "{\"layout\": \"2col\", \"panes\": [{\"ref\": {\"kind\": \"trade\", \"id\": \"IRS-48213\"}},"
+                + " {\"ref\": {\"kind\": \"netting-set\", \"id\": \"NS-NORTH-01\"}}]}";
+        mvc.perform(put("/api/v1/me/workspaces/desk").header("Authorization", ada).contentType("application/json").content(ws))
+                .andExpect(status().isOk());
+        mvc.perform(put("/api/v1/me/workspaces/desk/share").header("Authorization", ada).contentType("application/json").content("{}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(put("/api/v1/me/workspaces/desk/share").header("Authorization", ada).contentType("application/json")
+                .content("{\"roles\": [\"trader\"]}")).andExpect(status().isOk());
+        mvc.perform(get("/api/v1/workspaces/shared").header("Authorization", tess)).andExpect(jsonPath("$[0].owner").value("ada"));
+        mvc.perform(get("/api/v1/workspaces/shared/ada/desk").header("Authorization", tess)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.readOnly").value(true))
+                .andExpect(jsonPath("$.panes[0].ref.id").value("IRS-48213"))
+                .andExpect(jsonPath("$.panes[1].hidden").value(true));                   // a trader may not open netting sets
+        mvc.perform(get("/api/v1/workspaces/shared").header("Authorization", ravi)).andExpect(jsonPath("$.length()").value(0));
+        mvc.perform(get("/api/v1/workspaces/shared/ada/desk").header("Authorization", ravi)).andExpect(status().isNotFound());
+        mvc.perform(put("/api/v1/me/workspaces/desk/share").header("Authorization", ada).contentType("application/json")
+                .content("{\"everyone\": true}")).andExpect(status().isOk());
+        mvc.perform(get("/api/v1/workspaces/shared/ada/desk").header("Authorization", ravi)).andExpect(jsonPath("$.panes[1].ref.id").value("NS-NORTH-01"));
+        mvc.perform(delete("/api/v1/me/workspaces/desk").header("Authorization", ada)).andExpect(status().isNoContent());
+        mvc.perform(get("/api/v1/workspaces/shared").header("Authorization", ravi)).andExpect(jsonPath("$.length()").value(0));
+        mvc.perform(get("/api/v1/me/workspaces/desk/share").header("Authorization", ada)).andExpect(status().isNotFound());
+    }
 }

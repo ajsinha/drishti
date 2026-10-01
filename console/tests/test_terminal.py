@@ -422,3 +422,26 @@ def test_a_view_says_how_fresh_its_data_is_and_warns_when_stale(client, monkeypa
     vm["provenance"].update({"stale": False})
     page = client.get("/v/trade/IRS-48213").text
     assert "is behind" not in page and "updated <span data-age" in page
+
+
+
+def test_notes_on_an_entity_and_its_fields(client, backend):
+    page = client.get("/v/trade/IRS-48213").text
+    assert "data-notes-open" in page and "notes.js" in page and 'data-me="' in page
+    r = client.post("/api/notes/trade/IRS-48213", json={"body": "Restated after the fixing", "path": "$.mtm"}).json()
+    assert r["author"] and r["path"] == "$.mtm"
+    assert [n["body"] for n in client.get("/api/notes/trade/IRS-48213").json()] == ["Restated after the fixing"]
+    assert client.put(f"/api/notes/{r['id']}", json={"body": "Restated twice"}).json()["body"] == "Restated twice"
+    assert client.delete(f"/api/notes/{r['id']}").json() == {"ok": True}
+    assert client.get("/api/notes/trade/IRS-48213").json() == []
+
+
+def test_workspaces_shared_with_you_and_sharing_yours(client, backend):
+    index = client.get("/w").text
+    assert "Shared with you" in index and "/w/shared/ravi/Rates%20desk" in index
+    shared = client.get("/w/shared/ravi/Rates%20desk").text
+    assert "shared by ravi · read-only" in shared and "data-readonly" in shared and "Save a copy" in shared and "data-save>" not in shared
+    assert client.get("/w/shared/ravi/nope").status_code == 404
+    r = client.post("/w/api/desk/share", json={"roles": ["risk"], "users": ["tess"]}).json()
+    assert r["roles"] == ["risk"] and backend.shares["desk"]["users"] == ["tess"]
+    assert client.post("/w/api/desk/share", json={"stop": True}).json() == {"shared": False} and "desk" not in backend.shares

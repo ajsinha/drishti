@@ -113,3 +113,15 @@ CREATE TABLE IF NOT EXISTS drishti_api_token (
     revoked_at   TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS drishti_api_token_user ON drishti_api_token (username);
+
+CREATE TABLE IF NOT EXISTS drishti_note (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    kind       TEXT NOT NULL,
+    entity_id  TEXT NOT NULL,
+    path       TEXT,
+    username   TEXT NOT NULL,
+    body       TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL
+);
+CREATE INDEX IF NOT EXISTS drishti_note_entity ON drishti_note (kind, entity_id);

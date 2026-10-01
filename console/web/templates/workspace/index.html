@@ -25,6 +25,9 @@
   <h2 class="ws-h">Yours</h2>
   {% if mine %}<ul class="ws-list">{% for n in mine %}<li><a href="/w/{{ n | urlencode }}"><i class="bi bi-grid-1x2" aria-hidden="true"></i> {{ n }}</a></li>{% endfor %}</ul>
   {% else %}<p class="text-muted-d">None saved yet. Open a starter below, change it, and save it under your own name.</p>{% endif %}
+  {% if shared %}<h2 class="ws-h">Shared with you</h2>
+  <ul class="ws-list">{% for s in shared %}<li><a href="/w/shared/{{ s.owner | urlencode }}/{{ s.name | urlencode }}"><i class="bi bi-people" aria-hidden="true"></i> {{ s.name }}</a>
+    <span class="text-muted-d">by {{ s.owner }}</span></li>{% endfor %}</ul>{% endif %}
   <h2 class="ws-h">Starters</h2>
   <div class="help-cards">
     {% for n, t in templates.items() %}

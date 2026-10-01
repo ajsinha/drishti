@@ -238,6 +238,47 @@ class FakeBackend:
     tests_saved = {}
     tokens_made = []
 
+    notes_kept = []
+    shares = {}
+
+    async def notes(self, kind, id_, ident):
+        return [n for n in self.notes_kept if (n["kind"], n["entityId"]) == (kind, id_)]
+
+    async def add_note(self, kind, id_, body, path, ident):
+        n = {"id": len(self.notes_kept) + 1, "kind": kind, "entityId": id_, "path": path, "author": ident.user, "body": body,
+             "createdAt": "2026-10-01T09:00:00Z", "updatedAt": "2026-10-01T09:00:00Z"}
+        self.notes_kept.append(n)
+        return n
+
+    async def edit_note(self, note_id, body, ident):
+        n = next(n for n in self.notes_kept if n["id"] == note_id)
+        n["body"] = body
+        return n
+
+    async def delete_note(self, note_id, ident):
+        self.notes_kept[:] = [n for n in self.notes_kept if n["id"] != note_id]
+
+    async def workspace_share(self, name, ident):
+        return self.shares.get(name)
+
+    async def share_workspace(self, name, body, ident):
+        self.shares[name] = {"owner": ident.user, "name": name, "everyone": bool(body.get("everyone")),
+                             "roles": body.get("roles", []), "users": body.get("users", [])}
+        return self.shares[name]
+
+    async def unshare_workspace(self, name, ident):
+        self.shares.pop(name, None)
+
+    async def shared_workspaces(self, ident):
+        return [{"owner": "ravi", "name": "Rates desk", "sharedAt": "2026-10-01T09:00:00Z"}]
+
+    async def shared_workspace(self, owner, name, ident):
+        if (owner, name) != ("ravi", "Rates desk"):
+            raise BackendError(404, "DRS-1001", "not shared")
+        return {"layout": "2col", "owner": owner, "name": name, "readOnly": True,
+                "panes": [{"ref": {"kind": "trade", "id": "IRS-48213"}, "follows": None, "title": ""},
+                          {"ref": None, "hidden": True, "follows": None, "title": ""}]}
+
     async def series(self, kind, id_, path, days, ident=None):
         return {"ref": {"kind": kind, "id": id_}, "path": path, "label": "MTM", "dated": True,
                 "points": [{"date": "2026-09-29", "value": 110, "dataDate": "2026-09-29", "source": "lake"},

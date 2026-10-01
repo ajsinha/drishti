@@ -38,6 +38,12 @@ public final class IdentityRepositories {
         void deleteByUsername(String username);
     }
 
+    public interface Notes extends JpaRepository<NoteEntity, Long> {
+        List<NoteEntity> findByKindAndEntityIdOrderByIdAsc(String kind, String entityId);
+
+        long countByKindAndEntityId(String kind, String entityId);
+    }
+
     public interface Alerts extends JpaRepository<AlertEntity, Long> {
         List<AlertEntity> findByUsernameOrderByIdDesc(String username, Pageable page);
 

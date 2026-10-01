@@ -46,6 +46,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class WorkspaceController {
 
     static final String NS = "workspaces";
+    /** Shares are kept under an owner no user can have (user names start with a letter or digit). */
+    static final String SHARES_OWNER = "_shared";
+    static final String SHARES = "workspace-shares";
+
+    /** A share's key: owner and workspace name (user names have no spaces, so the first space separates them). */
+    static String shareKey(String owner, String name) {
+        return owner + " " + name;
+    }
     static final Set<String> LAYOUTS = Set.of("2col", "3col", "2x2", "1+2");
 
     private final PreferenceStore store;
@@ -80,6 +88,58 @@ public class WorkspaceController {
         if (!store.delete(p.user(), NS, name)) {
             throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no workspace '" + name + "'");
         }
+        store.delete(SHARES_OWNER, SHARES, shareKey(p.user(), name));           // a deleted workspace is no longer shared
+    }
+
+    /** Who a workspace is shared with, or 404 when it is not shared. */
+    @GetMapping("/{name}/share")
+    public JsonNode share(@PathVariable String name, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return store.get(SHARES_OWNER, SHARES, shareKey(p.user(), name))
+                .orElseThrow(() -> new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "workspace '" + name + "' is not shared"));
+    }
+
+    /**
+     * Shares a workspace: {@code {"everyone": true}} or {@code {"roles": ["risk"], "users": ["ravi"]}}. Those it is
+     * shared with see it as it is now and as the owner changes it (read-only; they may copy it into their own). Panes
+     * on kinds a reader may not open stay hidden from that reader.
+     */
+    @PutMapping("/{name}/share")
+    public JsonNode share(@PathVariable String name, @RequestBody JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        get(name, p);                                                          // it must exist
+        ObjectNode s = json.createObjectNode().put("owner", p.user()).put("name", name)
+                .put("everyone", body.path("everyone").asBoolean(false)).put("sharedAt", java.time.Instant.now().toString());
+        s.set("roles", names(body.path("roles"), "roles"));
+        s.set("users", names(body.path("users"), "users"));
+        if (!s.path("everyone").asBoolean() && s.path("roles").isEmpty() && s.path("users").isEmpty()) {
+            throw bad("share with everyone, or name roles or users");
+        }
+        store.put(SHARES_OWNER, SHARES, shareKey(p.user(), name), s);
+        return s;
+    }
+
+    @DeleteMapping("/{name}/share")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void unshare(@PathVariable String name, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        if (!store.delete(SHARES_OWNER, SHARES, shareKey(p.user(), name))) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "workspace '" + name + "' is not shared");
+        }
+    }
+
+    private com.fasterxml.jackson.databind.node.ArrayNode names(JsonNode list, String what) {
+        var out = json.createArrayNode();
+        if (list.isArray()) {
+            if (list.size() > 50) {
+                throw bad("at most 50 " + what);
+            }
+            list.forEach(n -> {
+                String v = n.asText("").trim();
+                if (!v.matches("[A-Za-z0-9][A-Za-z0-9._-]{0,63}")) {
+                    throw bad("'" + v + "' is not a valid name in " + what);
+                }
+                out.add(v);
+            });
+        }
+        return out;
     }
 
     /** A workspace with a known layout, 1-4 panes, entities the caller may open, and acyclic follows. */

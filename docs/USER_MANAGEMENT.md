@@ -195,6 +195,15 @@ tokens** ([CLIENTS.md](CLIENTS.md)). What an administrator needs to know:
 - Secrets are never stored, only their SHA-256; nobody, administrators included, can see a secret after it is made.
 - `token-created` and `token-revoked` are in the audit log.
 
+## Notes and shared workspaces
+
+- **Notes** (see the User guide): anyone who may open a kind reads and adds notes on its entities; only the author
+  edits; the author or an administrator deletes. `note.add`, `note.edit` and `note.delete` are in the audit log.
+  A deleted user's notes stay (they are about the data, not the person).
+- **Shared workspaces**: a workspace's owner shares it with everyone, roles or named people. Readers see it
+  read-only; panes on kinds a reader's roles may not open stay hidden. Share records are kept with the preferences
+  (`drishti_preference`, namespace `workspace-shares`).
+
 ## 4. Where it is stored: the identity database
 
 Everything in this guide is in **one database**:
@@ -234,6 +243,7 @@ column, if they do not.
 | `drishti_alert` | every alert a user's rules fired: when, rule, entity, severity, message (the newest `drishti.alerts.keep`, 1,000, per user) |
 | `drishti_pack_state` | packs an admin switched off or on (Admin → Packs) |
 | `drishti_api_token` | personal API tokens: owner, name, a SHA-256 of the secret (never the secret), created, expires, last used, revoked |
+| `drishti_note` | notes on entities and their fields: entity, field path, author, text, created, edited. Kept when their author is deleted |
 
 Deleting a user removes their role and pack rows with them (`ON DELETE CASCADE`), and their saved documents too.
 

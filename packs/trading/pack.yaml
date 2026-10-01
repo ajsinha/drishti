@@ -25,17 +25,24 @@ extends:
 - market-data
 kinds:
 - trade
+- desk-pnl
 sutras: sutras
 formats: config/formats.yaml
 mnemonics:
   TRD:
     kind: trade
     label: Trade
+  DPNL:
+    kind: desk-pnl
+    label: Desk P&L (derived from trades)
 graph:
   id-patterns:
   - pattern: ^T-
     kind: trade
-  fields: {}
+  fields:
+    tradeIds:
+      kind: trade
+      label: Trade
   impact:
     measures:
       trade: $.mtm
@@ -66,8 +73,35 @@ connectors:
       disk-cache.max-gb: ${DRISHTI_STREAM_CACHE_GB:10}
       disk-cache.reset-at: ${DRISHTI_CACHE_RESET_AT:02:00}
       disk-cache.zone: America/New_York
+  desk-totals:
+    plugin: derived
+    kinds:
+    - desk-pnl
+    settings:
+      refresh: 60s
+      desk-pnl:
+        from: trade
+        group-by: $.desk
+        id-field: desk
+        members: tradeIds
+        fields:
+          tradeCount: count
+          mtm: sum $.mtm
+          pnl1d: sum $.pnl1d
+          dv01: sum $.risk.dv01
+          worstMtm: min $.mtm
+          books: distinct $.book
+          currencies: distinct $.currency
+        rows:
+          trade: $.tradeId
+          product: $.productName
+          book: $.book
+          currency: $.currency
+          mtm: $.mtm
+          pnl1d: $.pnl1d
 routes:
   trade: trading-store
+  desk-pnl: desk-totals
 columns:
   trade:
   - productType
@@ -126,3 +160,4 @@ roles:
     - csa
     - ccp
     - clearing-account
+    - desk-pnl

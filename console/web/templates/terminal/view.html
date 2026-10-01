@@ -20,7 +20,8 @@
 {% block body_class %}terminal{% if embed %} embed{% endif %}{% endblock %}
 {% block nav %}{% if not embed %}{% with command_text=(vm.mnemonic ~ ' ' ~ vm.ref.id ~ ' <GO>') if vm.mnemonic else vm.ref.id, live=vm.provenance.live, built_ms=vm.timings.total %}{% include "terminal/_topbar.html" %}{% endwith %}{% endif %}{% endblock %}
 {% block content %}
-<div class="view" data-view{% if embed %} data-embed{% endif %} data-kind="{{ vm.ref.kind }}" data-id="{{ vm.ref.id }}" data-label="{{ vm.title.id }}">
+<div class="view" data-view{% if embed %} data-embed{% endif %} data-kind="{{ vm.ref.kind }}" data-id="{{ vm.ref.id }}" data-label="{{ vm.title.id }}"
+     data-me="{{ me.user if me else '' }}"{% if me and me.is_admin %} data-admin{% endif %}>
   {% if asof != 'live' and not vm.provenance.businessDate %}
   <p class="asof-banner" role="status"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
     <b>{{ vm.provenance.source }}</b> is not a dated source: this shows its current data, not {{ (business_date or {}).selected or asof }}.</p>
@@ -46,6 +47,7 @@
         <button type="button" class="tbar-link vhead-alert" data-share="{{ share_url }}" title="Copy a link that opens this view as you see it{% if asof != 'live' %} ({{ asof }}{% if known_at %}, known at {{ known_local(known_at, (business_date or {}).zone) | replace('T', ' ') }}{% endif %}){% endif %}"><i class="bi bi-link-45deg" aria-hidden="true"></i> <span data-share-label>Share</span></button>
         <a class="tbar-link vhead-alert" href="/export/{{ vm.ref.kind }}/{{ vm.ref.id | urlencode }}.json" title="Download the document as JSON (as your role may see it)"><i class="bi bi-filetype-json" aria-hidden="true"></i> JSON</a>
         <button type="button" class="tbar-link vhead-alert" data-print title="Print, or save as PDF"><i class="bi bi-printer" aria-hidden="true"></i> Print</button>
+        <button type="button" class="tbar-link vhead-alert" data-notes-open title="Notes on {{ vm.title.id }} and its fields"><i class="bi bi-sticky" aria-hidden="true"></i> Notes <span class="tool-count" data-notes-count hidden>0</span></button>
       </span>
       {% if vm.provenance.businessDate %}<a class="tbar-link vhead-alert" href="/compare/{{ vm.ref.kind }}/{{ vm.ref.id | urlencode }}" title="What changed since the previous business day, or between any two dates"><i class="bi bi-arrow-left-right" aria-hidden="true"></i> Compare</a>{% endif %}{% endif %}
     </div>
@@ -59,6 +61,18 @@
     <aside class="vright" aria-label="Context">{% for p in right %}{{ panel(p) }}{% endfor %}</aside>
   </div>
 </div>
+<aside class="raw notes-drawer" id="notesDrawer" aria-label="Notes" hidden>
+  <header><strong>Notes</strong> <span class="mono">{{ vm.title.id }}</span><button type="button" class="raw-x" data-notes-close aria-label="Close">×</button></header>
+  <div class="notes-body">
+    <ol class="notes-list" data-notes-list></ol>
+    <form class="notes-form" data-notes-form>
+      <label>About <select class="studio-select" name="path" data-notes-path><option value="">{{ vm.title.id }} as a whole</option></select></label>
+      <textarea class="studio-in" name="body" rows="3" maxlength="2000" placeholder="What should the next reader know?" required></textarea>
+      <button type="submit" class="btn-pill btn-accent btn-sm-pill">Add note</button>
+      <span class="adm-msg" data-notes-msg role="status" aria-live="polite"></span>
+    </form>
+  </div>
+</aside>
 <aside class="raw" id="rawDrawer" aria-label="Raw JSON" hidden>
   <header><strong>Raw JSON</strong> <span class="mono" data-raw-meta></span><button type="button" class="raw-x" data-raw-close aria-label="Close">×</button></header>
   <pre class="mono" data-raw-body>Loading…</pre>
@@ -78,5 +92,6 @@
 <script src="/static/js/command.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/view.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/history.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/notes.js?v={{ ASSET_V }}"></script>
 {% if vm.provenance.live %}<script src="/static/js/live.js?v={{ ASSET_V }}"></script>{% endif %}
 {% endblock %}

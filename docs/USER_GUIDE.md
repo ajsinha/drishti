@@ -819,6 +819,26 @@ templates:
 
 `follows: 0` means "follow the first pane". See the [Workspaces guide](../console/web/guides/workspaces.md).
 
+### Sharing a workspace
+
+Open one of your saved workspaces and press **Share…**. Tick **Everyone**, or name roles (`risk, trader`) and people
+(`ravi, tess`), and press **Share**. They find it on their Workspaces page under **Shared with you**, marked
+*shared by you · read-only*. They see it as you keep it: when you change and save it, they see the change. Panes on
+kinds a reader may not open stay hidden from that reader. A reader who wants to change it presses **Save a copy…**,
+which makes it their own. **Stop sharing** (or deleting the workspace) takes it away from everyone.
+
+## Notes
+
+Anyone who may open an entity can leave a note on it, for the next reader: *Restated on 28 Sep after the SOFR
+fixing correction*, *Novation pending legal sign-off*. Press **Notes** in the view's header. The drawer lists the
+notes, oldest first, with their author and time; **About** chooses the whole entity or one of its fields. A field
+with a note shows a small amber dot. From the history window of a number (click the number), **Add a note** writes
+about that field.
+
+Only a note's author can edit it. Its author or an administrator can delete it. Every note, edit and deletion is
+in the audit log (Admin → Audit). Notes are kept in the server's identity database, so everyone on that server sees
+the same notes; another server has its own.
+
 ## Working with several servers
 
 Your organisation may run more than one Drishti server: an open one most people use, and others for a restricted desk

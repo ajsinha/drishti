@@ -603,3 +603,18 @@ table.tbl tr.tbl-filter th::after { content: none; }
 .srv-name { font-size: .8rem; max-width: 10rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .srv-current td { background: var(--d-bg-2); }
 .login-srv { margin: -.2rem 0 .6rem; font-size: .88rem; }
+.ws-share { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; padding: .5rem .8rem; border-bottom: 1px solid var(--d-border); font-size: .85rem; }
+.ws-share label { display: inline-flex; align-items: center; gap: .35rem; }
+.ws-share .studio-in { width: 12rem; }
+
+/* Notes (notes.js) */
+.notes-drawer .notes-body { padding: .6rem .9rem; overflow: auto; }
+.notes-list { list-style: none; padding: 0; margin: 0 0 .8rem; }
+.note { border-bottom: 1px solid var(--d-border); padding: .5rem 0; }
+.note-h { font-size: .78rem; color: var(--d-muted); }
+.note-b { margin: .2rem 0; white-space: pre-wrap; }
+.note-tools { display: flex; gap: .4rem; }
+.notes-form { display: grid; gap: .45rem; }
+.notes-form textarea { width: 100%; }
+.view .has-note { position: relative; }
+.view .has-note::after { content: ""; position: absolute; top: 2px; right: -6px; width: 6px; height: 6px; border-radius: 50%; background: var(--d-warn, #d9a441); }

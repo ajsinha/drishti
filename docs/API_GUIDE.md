@@ -1070,3 +1070,24 @@ tell), `staleAfter` (the source's `stale-after` as an ISO-8601 duration, or null
 arrived within `staleAfter`; always false on a picked business date). Admin health carries the same per connector as
 `lastUpdate`, `staleAfter` and `stale`.
 
+## Notes
+
+| Method | Path | What it does |
+|---|---|---|
+| `GET` | `/notes/{kind}/{id}` | the entity's notes, oldest first: `[{id, kind, entityId, path, author, body, createdAt, updatedAt}]` |
+| `POST` | `/notes/{kind}/{id}` | adds one: `{"body": "…", "path": "$.mtm"}` (`path` optional; at most 2000 characters, 200 notes per entity); `201` |
+| `PUT` | `/notes/{noteId}` | edits the text: the author only (`403` otherwise) |
+| `DELETE` | `/notes/{noteId}` | the author or an administrator; `204` |
+
+Reading and adding need the right to open the kind (`403 DRS-5003` otherwise). Personal API tokens only read.
+
+## Shared workspaces
+
+| Method | Path | What it does |
+|---|---|---|
+| `PUT` | `/me/workspaces/{name}/share` | shares one of yours: `{"everyone": true}` or `{"roles": ["risk"], "users": ["ravi"]}` |
+| `GET` | `/me/workspaces/{name}/share` | who it is shared with, or `404` |
+| `DELETE` | `/me/workspaces/{name}/share` | stops sharing (deleting the workspace does too) |
+| `GET` | `/workspaces/shared` | the workspaces shared with you: `[{owner, name, sharedAt}]` |
+| `GET` | `/workspaces/shared/{owner}/{name}` | one, as its owner keeps it now: `readOnly: true`, and panes on kinds you may not open as `{"ref": null, "hidden": true}` |
+

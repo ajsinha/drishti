@@ -68,7 +68,7 @@ EXAMPLES = {  # command, what it shows (ids from make_data.py's deterministic da
                           ("CVA CVA-SUMMIT-NY", "CVA / XVA"), ("SACCR SACCR-SUMMIT-NY", "SA-CCR exposure at default")],
 }
 TRADER_KINDS = ["trade", *layout.PACKS["market-data"]["kinds"]["market"], "counterparty", "counterparty-group", "issuer", "book", "desk",
-                "trader", "legal-entity", "calendar", "agreement", "csa", "ccp", "clearing-account"]
+                "trader", "legal-entity", "calendar", "agreement", "csa", "ccp", "clearing-account", "desk-pnl"]
 # the pack's own code: typed alone it opens the pack's overview (its kinds, mnemonics and counts)
 CODES = {"banking-core": "BNK", "market-data": "MKT", "trading": "TRDS", "market-risk": "MRSK", "counterparty-risk": "CCR"}
 
@@ -119,6 +119,18 @@ def manifest(name: str) -> dict:
                                                           "disk-cache.max-gb": "${DRISHTI_STREAM_CACHE_GB:10}",
                                                           "disk-cache.reset-at": "${DRISHTI_CACHE_RESET_AT:02:00}",
                                                           "disk-cache.zone": "America/New_York"}}
+        # a derived kind: each desk's P&L, computed from the trades wherever they come from (PACKS.md, Derived kinds)
+        m["kinds"].append("desk-pnl")
+        m["mnemonics"]["DPNL"] = {"kind": "desk-pnl", "label": "Desk P&L (derived from trades)"}
+        m["graph"]["fields"]["tradeIds"] = {"kind": "trade", "label": "Trade"}
+        m["connectors"]["desk-totals"] = {"plugin": "derived", "kinds": ["desk-pnl"], "settings": {
+            "refresh": "60s",
+            "desk-pnl": {"from": "trade", "group-by": "$.desk", "id-field": "desk", "members": "tradeIds",
+                         "fields": {"tradeCount": "count", "mtm": "sum $.mtm", "pnl1d": "sum $.pnl1d", "dv01": "sum $.risk.dv01",
+                                    "worstMtm": "min $.mtm", "books": "distinct $.book", "currencies": "distinct $.currency"},
+                         "rows": {"trade": "$.tradeId", "product": "$.productName", "book": "$.book", "currency": "$.currency",
+                                  "mtm": "$.mtm", "pnl1d": "$.pnl1d"}}}}
+        m["routes"]["desk-pnl"] = "desk-totals"
     if name == "market-data":
         for feed, (switch, kinds_, extra, _) in FEEDS.items():
             m["connectors"][f"{feed}-feed"] = {"plugin": "feed", "enabled": "${" + switch + ":false}", "kinds": kinds_,

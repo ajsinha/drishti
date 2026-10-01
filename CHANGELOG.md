@@ -16,6 +16,14 @@
 # Changelog
 
 ## Unreleased
+- **Notes.** Anyone who may open an entity can leave a note on it or on one of its fields, from **Notes** in the view's header or **Add a note** in a number's history window.
+  - **Who can change them:** only the author edits a note; the author or an administrator deletes it. Every change is audited.
+  - **In the view:** a field with a note shows a dot.
+  - **Storage and API:** notes live in the identity database (SQLite or PostgreSQL), under `/api/v1/notes`.
+- **Shared workspaces.** Share one of your workspaces with everyone, or with chosen roles and people.
+  - **For readers:** they see it read-only, as you keep it, under **Shared with you**. Panes they may not open stay hidden, and they can save a copy as their own.
+  - **API:** `/api/v1/me/workspaces/{name}/share` and `/api/v1/workspaces/shared`.
+- **The trading pack's desk P&L** (`DPNL DESK-RATES`): a derived kind summing each desk's trades.
 - **Derived kinds.** A pack can declare a kind computed from another, using the new built-in `derived` connector.
   - **How it works:** members are grouped by an expression, with `count`, `sum`, `avg`, `min`, `max`, `distinct` and `first`, and optional rows per member.
   - **Dates:** a picked date is computed from that date's members.

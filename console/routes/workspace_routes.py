@@ -47,7 +47,22 @@ async def index(request: Request):
         mine = await request.app.state.backend.workspaces(ident(request))
     except BackendError:
         mine = []
-    return render(request, "workspace/index.html", mine=mine, templates=await _templates(request), screen="workspace")
+    try:
+        shared = await request.app.state.backend.shared_workspaces(ident(request))
+    except BackendError:
+        shared = []
+    return render(request, "workspace/index.html", mine=mine, shared=shared, templates=await _templates(request), screen="workspace")
+
+
+@router.get("/shared/{owner}/{name}")
+async def shared(request: Request, owner: str, name: str):
+    """A workspace someone shared: read-only, as its owner keeps it; Save as copies it into yours."""
+    try:
+        ws = await request.app.state.backend.shared_workspace(owner, name, ident(request))
+    except BackendError:
+        return render(request, "workspace/index.html", status_code=404, mine=[], shared=[], templates=await _templates(request),
+                      missing=f"{name} (shared by {owner})", screen="workspace")
+    return render(request, "workspace/workspace.html", name=name, ws=ws, saved=False, owner=owner, readonly=True, screen="workspace")
 
 
 @router.get("/{name}")
@@ -63,7 +78,13 @@ async def workspace(request: Request, name: str, template: str = ""):
     if ws is None:
         return render(request, "workspace/index.html", status_code=404, mine=[], templates=await _templates(request), missing=name,
                       screen="workspace")
-    return render(request, "workspace/workspace.html", name=name, ws=ws, saved=saved, screen="workspace")
+    share = None
+    if saved:
+        try:
+            share = await request.app.state.backend.workspace_share(name, ident(request))
+        except BackendError:
+            share = None
+    return render(request, "workspace/workspace.html", name=name, ws=ws, saved=saved, share=share, screen="workspace")
 
 
 @router.post("/api/{name}")
@@ -71,6 +92,18 @@ async def save(request: Request, name: str):
     body = json.loads(await request.body() or b"{}")
     try:
         return await request.app.state.backend.save_workspace(name, body, ident(request))
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.post("/api/{name}/share")
+async def share(request: Request, name: str):
+    body = json.loads(await request.body() or b"{}")
+    try:
+        if body.get("stop"):
+            await request.app.state.backend.unshare_workspace(name, ident(request))
+            return {"shared": False}
+        return await request.app.state.backend.share_workspace(name, body, ident(request))
     except BackendError as e:
         return _problem(e)
 

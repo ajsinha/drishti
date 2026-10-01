@@ -18,21 +18,31 @@
 {% block body_class %}terminal ws-page{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
-<div class="ws" data-ws data-name="{{ name }}" data-saved="{{ 'true' if saved else 'false' }}" data-json="{{ ws | tojson | forceescape }}">
+<div class="ws" data-ws data-name="{{ name }}" data-saved="{{ 'true' if saved else 'false' }}" data-json="{{ ws | tojson | forceescape }}"{% if readonly %} data-readonly{% endif %}>
   <header class="ws-bar">
     <a href="/w" class="tbar-link"><i class="bi bi-grid-1x2" aria-hidden="true"></i> Workspaces</a>
     <strong class="ws-name">{{ name }}</strong>
+    {% if readonly %}<span class="badge-kind" title="Shared by {{ owner }}: you see it as they keep it">shared by {{ owner }} · read-only</span>{% endif %}
     <label class="visually-hidden" for="wsLayout">Layout</label>
     <select id="wsLayout" class="studio-select" data-layout>
       <option value="2col">Two columns</option><option value="3col">Three columns</option>
       <option value="2x2">Two by two</option><option value="1+2">One large, two stacked</option>
     </select>
-    <button type="button" class="btn-pill btn-ghost" data-add><i class="bi bi-plus-lg" aria-hidden="true"></i> Pane</button>
-    <button type="button" class="btn-pill btn-accent" data-save><i class="bi bi-save" aria-hidden="true"></i> Save</button>
-    <button type="button" class="btn-pill btn-ghost" data-saveas>Save as…</button>
-    <button type="button" class="btn-pill btn-ghost" data-delete{% if not saved %} hidden{% endif %}>Delete</button>
+    {% if not readonly %}<button type="button" class="btn-pill btn-ghost" data-add><i class="bi bi-plus-lg" aria-hidden="true"></i> Pane</button>
+    <button type="button" class="btn-pill btn-accent" data-save><i class="bi bi-save" aria-hidden="true"></i> Save</button>{% endif %}
+    <button type="button" class="btn-pill btn-ghost" data-saveas>{{ 'Save a copy…' if readonly else 'Save as…' }}</button>
+    {% if not readonly %}<button type="button" class="btn-pill btn-ghost" data-delete{% if not saved %} hidden{% endif %}>Delete</button>
+    <button type="button" class="btn-pill btn-ghost" data-share-open{% if not saved %} hidden{% endif %}><i class="bi bi-people" aria-hidden="true"></i> {{ 'Shared' if share else 'Share…' }}</button>{% endif %}
     <span class="adm-msg" data-msg role="status" aria-live="polite"></span>
   </header>
+  {% if not readonly %}<form class="ws-share" data-share-form hidden>
+    <label><input type="checkbox" name="everyone"{% if share and share.everyone %} checked{% endif %}> Everyone</label>
+    <label>Roles <input class="studio-in mono" name="roles" placeholder="risk, trader" value="{{ (share.roles if share else []) | join(', ') }}"></label>
+    <label>People <input class="studio-in mono" name="users" placeholder="ravi, tess" value="{{ (share.users if share else []) | join(', ') }}"></label>
+    <button type="submit" class="btn-pill btn-accent btn-sm-pill">Share</button>
+    <button type="button" class="btn-pill btn-ghost btn-sm-pill" data-share-stop{% if not share %} hidden{% endif %}>Stop sharing</button>
+    <span class="text-muted-d">They see it as you keep it, read-only, and only the panes they may open.</span>
+  </form>{% endif %}
   <div class="ws-grid" data-grid></div>
 </div>
 <template id="paneTpl">

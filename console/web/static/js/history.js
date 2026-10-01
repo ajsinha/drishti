@@ -43,12 +43,17 @@
     dlg.innerHTML = '<header class="hist-h"><h3 data-h></h3><span class="hist-tools">'
       + '<select data-days aria-label="Business days"><option value="10">10 days</option><option value="30" selected>30 days</option>'
       + '<option value="90">90 days</option><option value="250">250 days</option></select>'
+      + '<button type="button" class="fk" data-note title="Write a note about this field">Add a note</button>'
       + '<button type="button" class="fk" data-close aria-label="Close">×</button></span></header>'
       + '<p class="hist-origin" data-origin></p><p class="hist-msg text-muted-d" data-msg></p><div class="hist-chart" data-chart-box></div>'
       + '<div class="tbl-wrap hist-tbl"><table class="tbl" data-plain><thead><tr><th>Business date</th><th class="num">Value</th>'
       + '<th>Data for</th><th>Source</th></tr></thead><tbody data-rows></tbody></table></div>';
     document.body.appendChild(dlg);
     dlg.querySelector('[data-close]').addEventListener('click', function () { dlg.close(); });
+    dlg.querySelector('[data-note]').addEventListener('click', function () {
+      dlg.close();
+      if (window.drishtiNotes) { window.drishtiNotes.open(current.path); }
+    });
     dlg.querySelector('[data-days]').addEventListener('change', function () { load(); });
     dlg.addEventListener('close', function () { if (chart) { chart.dispose(); chart = null; } });
   }

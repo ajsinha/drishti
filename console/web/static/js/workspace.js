@@ -23,7 +23,10 @@
   var ws = JSON.parse(root.getAttribute('data-json'));
   var grid = root.querySelector('[data-grid]'), tpl = document.getElementById('paneTpl'), msg = root.querySelector('[data-msg]');
   var layoutSel = root.querySelector('[data-layout]');
+  var readonly = root.hasAttribute('data-readonly');           // shared with you: look, navigate, save a copy
   var frames = [];
+  function on(sel, ev, fn) { var el = root.querySelector(sel); if (el) { el.addEventListener(ev, fn); } return el; }
+  if (readonly) { layoutSel.disabled = true; }
 
   function say(t, bad) { msg.textContent = t; msg.classList.toggle('t-bad', !!bad); }
   function src(ref) { return ref ? '/v/' + encodeURIComponent(ref.kind) + '/' + encodeURIComponent(ref.id) + '?embed=1' : 'about:blank'; }
@@ -38,6 +41,8 @@
       node.querySelector('.ws-num').textContent = String(i + 1);
       var input = node.querySelector('[data-pane-input]');
       input.value = p.ref ? p.ref.id : '';
+      if (p.hidden) { input.placeholder = 'Not shown: you may not open this'; input.disabled = true; }
+      if (readonly) { node.querySelector('[data-remove]').hidden = true; }
       input.setAttribute('aria-label', 'Entity for pane ' + (i + 1));
       var follows = node.querySelector('[data-follows]');
       ws.panes.forEach(function (q, j) {
@@ -84,25 +89,53 @@
   });
 
   layoutSel.addEventListener('change', function () { ws.layout = layoutSel.value; render(); });
-  root.querySelector('[data-add]').addEventListener('click', function () {
+  on('[data-add]', 'click', function () {
     if (ws.panes.length >= 4) { say('A workspace has at most four panes.', true); return; }
     ws.panes.push({ ref: null, follows: null, title: '' });
     render();
   });
   function save(name) {
-    return fetch('/w/api/' + encodeURIComponent(name), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(ws) })
+    var body = { layout: ws.layout, panes: ws.panes.map(function (p) { return { ref: p.ref, follows: p.follows, title: p.title || '' }; }) };
+    return fetch('/w/api/' + encodeURIComponent(name), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, b: b }; }); })
       .then(function (res) {
         if (res.ok) { say('Saved “' + name + '”.'); if (name !== root.dataset.name) { location.href = '/w/' + encodeURIComponent(name); } }
         else { say((res.b.code || 'Error') + ': ' + res.b.detail, true); }
       });
   }
-  root.querySelector('[data-save]').addEventListener('click', function () { save(root.dataset.name); });
-  root.querySelector('[data-saveas]').addEventListener('click', function () {
-    var n = window.prompt('Save workspace as:', root.dataset.name);
+  on('[data-save]', 'click', function () { save(root.dataset.name); });
+  on('[data-saveas]', 'click', function () {
+    var n = window.prompt(readonly ? 'Save a copy as (your own workspace):' : 'Save workspace as:', root.dataset.name);
     if (n) { save(n.trim()); }
   });
-  root.querySelector('[data-delete]').addEventListener('click', function () {
+  // sharing (the owner): everyone, or roles and people; they see it as it is kept, read-only
+  var shareForm = root.querySelector('[data-share-form]');
+  on('[data-share-open]', 'click', function () { shareForm.hidden = !shareForm.hidden; });
+  function list(v) { return v.split(',').map(function (x) { return x.trim(); }).filter(Boolean); }
+  function share(body) {
+    return fetch('/w/api/' + encodeURIComponent(root.dataset.name) + '/share', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, b: b }; }); });
+  }
+  if (shareForm) {
+    shareForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      share({ everyone: shareForm.everyone.checked, roles: list(shareForm.roles.value), users: list(shareForm.users.value) }).then(function (res) {
+        if (!res.ok) { say((res.b.code || 'Error') + ': ' + res.b.detail, true); return; }
+        say('Shared “' + root.dataset.name + '”' + (res.b.everyone ? ' with everyone.' : '.'));
+        root.querySelector('[data-share-stop]').hidden = false;
+        root.querySelector('[data-share-open]').textContent = 'Shared';
+      });
+    });
+    on('[data-share-stop]', 'click', function () {
+      share({ stop: true }).then(function (res) {
+        if (!res.ok) { say((res.b.code || 'Error') + ': ' + res.b.detail, true); return; }
+        say('No longer shared.');
+        root.querySelector('[data-share-stop]').hidden = true;
+        root.querySelector('[data-share-open]').textContent = 'Share…';
+      });
+    });
+  }
+  on('[data-delete]', 'click', function () {
     if (!window.confirm('Delete workspace “' + root.dataset.name + '”?')) { return; }
     fetch('/w/api/' + encodeURIComponent(root.dataset.name) + '/delete', { method: 'POST' }).then(function () { location.href = '/w'; });
   });

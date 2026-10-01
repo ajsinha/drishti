@@ -68,6 +68,41 @@ async def revoke_token(request: Request, id_: str):
     return {"ok": True}
 
 
+@router.get("/notes/{kind}/{id_}")
+async def notes(request: Request, kind: str, id_: str):
+    try:
+        return await request.app.state.backend.notes(kind, id_, ident(request))
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.post("/notes/{kind}/{id_}")
+async def add_note(request: Request, kind: str, id_: str):
+    body = await request.json()
+    try:
+        return await request.app.state.backend.add_note(kind, id_, str(body.get("body") or ""), body.get("path") or None, ident(request))
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.put("/notes/{note_id}")
+async def edit_note(request: Request, note_id: int):
+    body = await request.json()
+    try:
+        return await request.app.state.backend.edit_note(note_id, str(body.get("body") or ""), ident(request))
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.delete("/notes/{note_id}")
+async def delete_note(request: Request, note_id: int):
+    try:
+        await request.app.state.backend.delete_note(note_id, ident(request))
+        return {"ok": True}
+    except BackendError as e:
+        return _problem(e)
+
+
 @router.get("/series/{kind}/{id_}")
 async def series(request: Request, kind: str, id_: str, path: str, days: int = 30):
     """A field's history for the chart that opens when a value is clicked."""
