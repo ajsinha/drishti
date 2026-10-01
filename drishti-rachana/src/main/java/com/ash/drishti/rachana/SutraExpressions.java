@@ -88,6 +88,8 @@ public final class SutraExpressions {
                 }
             }
         }
+        // an interactive pivot's fields: the expressions it reads per row
+        p.pivot().ifPresent(spec -> spec.fields().forEach(f -> expr(f.bind(), p.location(), out)));
         if (p.kind() == PanelKind.HISTOGRAM && p.options().get("markers") instanceof List<?> markers) {
             for (Object mk : markers) {
                 if (mk instanceof Map<?, ?> m && m.get("value") != null) {

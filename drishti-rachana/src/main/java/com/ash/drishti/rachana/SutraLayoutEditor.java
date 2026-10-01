@@ -173,9 +173,9 @@ public final class SutraLayoutEditor {
     // ---- the panels' text -------------------------------------------------------------------------------------
 
     /** The lines of the panel list: where it starts and ends, each item's lines, and the column of its dashes. */
-    private record Blocks(int start, int end, int dash, List<List<String>> items) {}
+    record Blocks(int start, int end, int dash, List<List<String>> items) {}
 
-    private static Blocks blocks(List<String> lines, PNode root) {
+    static Blocks blocks(List<String> lines, PNode root) {
         PNode panels = root.map().get("panels");
         if (panels == null || panels.list().isEmpty()) {
             throw new IllegalArgumentException("the Sutra has no panels");
@@ -243,7 +243,7 @@ public final class SutraLayoutEditor {
         return line.strip().startsWith("#");
     }
 
-    private static int indent(String line) {
+    static int indent(String line) {
         int i = 0;
         while (i < line.length() && line.charAt(i) == ' ') {
             i++;
@@ -419,7 +419,7 @@ public final class SutraLayoutEditor {
         return text.substring(0, endOfLast) + ", " + key + ": " + value + text.substring(endOfLast);
     }
 
-    private static int bumpVersion(List<String> out, PNode root) {
+    static int bumpVersion(List<String> out, PNode root) {
         PNode v = root.map().get("version");
         int now = v != null && v.value() instanceof Long l ? l.intValue() : 0;
         for (int i = 0; i < out.size(); i++) {
