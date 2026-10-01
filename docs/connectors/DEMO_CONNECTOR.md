@@ -232,13 +232,13 @@ seen only after a restart.
 | a picked business date | the same document: the connector is not dated, so the date is ignored | as above; the console says the source is not dated ([section 8](#8-its-place-in-routing)) |
 | type-ahead (`TRD IRS-4`) | `HitIndex`: ids that start with the text (a binary search of each kind's sorted ids), then ids that contain it, then titles and subtitles that contain it, case-insensitive, up to the limit | the prefix step is a binary search; the "contains" steps scan the kind's entries (or every kind when none is given) until the limit is reached |
 | a search, a pick list, a derived kind, impact | the engine lists the kind through the same index (`search(kind, "", max-scan + 1)`) and reads each document; the connector keeps no promoted columns | one map lookup per entity; bounded by `drishti.search.max-scan` (20,000) and `budget` (3 s) |
-| reverse lookup (*Linked entities*: trades of `NS-NORTH-01`) | every document held is checked: is it of the kind asked, and does a **top-level** field, or an element of a top-level array, equal the target id as text? Matches come back sorted by id | a scan of every sample (2,546 with every pack on) per call |
+| reverse lookup (*Linked entities*: trades of `NS-NORTH-01`) | every document held is checked: is it of the kind asked, is it not the target itself, and does a value **at any depth** (a field, a nested object's field, an array element) equal the target id as text? Matches come back sorted by id | a scan of every sample (2,546 with every pack on) per call |
 | live updates | [section 7](#7-live-ticks) | a timer task every `tick-ms` |
 
-Reverse lookups look only at the top level. In the trading samples `"nettingSet": "NS-CASCADIA-NY"` is found, but
-`"counterparty": {"id": "CP-…"}` is not, because the id is inside an object. Linked entities that depend on nested ids
-come from the other connectors that declare reverse lookups (Delta Lake, PostgreSQL table mode, Aerospike and the rest),
-which the router asks as well.
+Reverse lookups look at every depth. In the trading samples both `"nettingSet": "NS-CASCADIA-NY"` and
+`"counterparty": {"id": "CP-…"}` are found, so a counterparty's *Linked entities* lists its sample trades. The entity
+itself is never listed as its own referrer. The other connectors that declare reverse lookups (Delta Lake, PostgreSQL
+table mode, Aerospike and the rest) are asked as well, and their referrers are added.
 
 Dated reads are not supported: the manifest declares `live`, `reverseLookup` and `search`, not `dated`, so the router
 calls the undated `fetch`, `search` and `reverse`, and the documents carry no `businessDate`.
@@ -275,9 +275,10 @@ The steps are random draws from a normal distribution (Box–Muller over a `Spli
 the whole connector, so a run's sequence of draws is repeatable but depends on which entities are watched).
 
 **With `walk`** (`{"mtm": 1258}`): each named field that is a **top-level number** gets `value + N(0, step)` (the step
-is the standard deviation, not a bound). A step of 1 or more rounds the result to a whole number; a smaller step rounds
-it to **two decimal places**. A named field that is missing or not a number is left alone. Nested fields cannot be
-walked.
+is the standard deviation, not a bound). A step of 1 or more rounds the result to a whole number; a smaller step keeps
+the step's own precision: the result is rounded to two more decimal places than the step has (at least two), so a step
+of 0.0004 keeps six decimals and a step of 0.3 keeps three. A named field that is missing or not a number is left
+alone. Nested fields cannot be walked.
 
 **Without `walk`**, four kinds have built-in walks (written for the finance pack's mockups):
 
@@ -293,10 +294,8 @@ Any other kind without `walk` ticks with an unchanged document and a higher gene
 
 **Two consequences of the rounding rule** worth knowing when you write samples:
 
-- the market-data FX spots walk `mid` with a step of 0.0004; since that is below 1, each tick rounds `mid` to two
-  decimals, so `FX-EURGBP` moves from 0.871 to 0.87 on its first tick and then stays there (a step of 0.0004
-  practically never reaches the 0.005 needed to round to another value). Use a field scaled to whole numbers (pips)
-  or a step of 1 or more if the decimals matter;
+- the market-data FX spots walk `mid` with a step of 0.0004, and keep six decimals, so `FX-EURGBP` moves from 0.871 by
+  typically about 0.0004 a tick, as a spot should;
 - whole-number fields with a fractional step (`speedKnots: 0.3`) become decimals after the first tick.
 
 ## 8. Its place in routing
@@ -355,7 +354,8 @@ There is no store to lose: after start the connector reads nothing from disk or 
 | a catalogue entry has no `title` or `subtitle` | it loads; the dropdown shows empty text |
 | a sample has no `_meta` | it loads, not live, with an empty source name |
 | a subscriber throws while being handed a tick | ignored; the others still receive it |
-| the built-in walk of a `curve` meets a curve without `points` | the tick task throws, and a fixed-rate task that throws is not run again: ticking stops for every entity until restart. Give such samples a `walk`, or `live: false` |
+| a sample cannot tick (the built-in walk of a `curve` meets a curve without `points`) | that sample is skipped on every tick and keeps its document; every other entity goes on ticking. Give such samples a `walk`, or `live: false` |
+| a catalogue entry whose kind or id would lead outside the folder (`../`) | skipped: nothing outside the pack's samples folder is read |
 
 **Health.** The connector does not override health, so it is always `UP` while running. It reports no cache figures and a purge
 does nothing. `lastUpdate` is the time of the last tick (or of start,
@@ -370,8 +370,8 @@ with `ticking: false`), so a `stale-after` set on it only fires when ticking is 
 - **Entitlements still apply.** Samples pass through the same role and redaction rules as any other source; the
   connector applies none of its own.
 - **No credentials, no network, no TLS.** It reads only the folders in `dirs`, and only the files a catalogue lists
-  (`<dir>/<kind>/<id>.json`, with kind and id taken from the catalogue: keep catalogues under your own control, since
-  the connector does not check that a kind or id cannot name a path outside the folder).
+  (`<dir>/<kind>/<id>.json`, with kind and id taken from the catalogue). An entry whose kind or id would name a path
+  outside its folder is skipped, so a catalogue cannot make the connector read other files.
 
 ## 12. Limits and trade-offs
 
@@ -379,7 +379,7 @@ with `ticking: false`), so a `stale-after` set on it only fires when ticking is 
 - **Undated.** Every business date gets the same document; there is no `snapshot`/`effective` behaviour and no
   *known at*.
 - **No promoted columns.** Searches and aggregates read documents, within `max-scan` (20,000) per kind.
-- **Reverse lookups only at the top level** of a document.
+- **Reverse lookups scan every document** of the kind asked, at every depth: fine for samples, not for a large book.
 - **Ticks drift without bound** and persist until restart; values never return to the file's.
 - **One tick rate** for every sample (`tick-ms`).
 - **Runs only as itself**: there is one demo connector per server, fed by every enabled pack.
@@ -405,10 +405,8 @@ curl -s "$B/command/suggest?q=TRD%20IRS" | jq .
 | a parent's sample shows instead of the child's (or the reverse) | the later folder in `dirs` wins; folders run from most general to most specific | put the override in the more specific pack |
 | a live view does not tick | the sample's `_meta.live` is false; or `ticking: false`; or a real stream holds the entity and ticks instead | set `live: true`; check the settings; check `provenance.source` |
 | a walked field does not move | it is nested, or not a number, or the sample is not live | walk top-level numbers only |
-| a walked decimal stops moving | a step below 1 rounds to two decimals ([section 7.3](#73-how-a-field-moves)) | use a step of 1 or more on a scaled field |
-| nothing ticks any more, anywhere | the tick task stopped after an exception (a `curve` sample without `points` and without `walk`) | fix the sample; restart |
+| one sample never ticks, the others do | it cannot tick (a `curve` without `points` and without `walk`) and is skipped | fix the sample, or give it a `walk`; restart |
 | real ids answer with sample data, or a picked old date shows a sample | the demo is on beside real stores | `DRISHTI_DEMO_ENABLED=false` |
-| *Linked entities* misses a sample referrer | the reference is nested (`counterparty.id`) | reverse lookups read top-level fields only; use a store with promoted link fields |
 | `DRS-1002 no source serves kind 'x'` after switching it off | the demo (and `file`) served that kind | configure a connector for the kind |
 
 ## 14. Settings

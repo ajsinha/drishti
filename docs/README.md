@@ -100,6 +100,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | Understand the sample data every pack ships, and its live ticks | [DEMO_CONNECTOR.md](connectors/DEMO_CONNECTOR.md) |
 | Read your own database with your own SQL: several queries per kind | [JDBC_QUERIES.md](connectors/JDBC_QUERIES.md) |
 | Serve millions of entities a day from Apache Iceberg (Snowflake, Glue, Polaris, Trino) | [ICEBERG_CONNECTOR.md](connectors/ICEBERG_CONNECTOR.md) |
+| Serve a large book from one embedded DuckDB file, with no database server | [DUCKDB_CONNECTOR.md](connectors/DUCKDB_CONNECTOR.md) |
 | Serve entities from MongoDB documents | [MONGODB_CONNECTOR.md](connectors/MONGODB_CONNECTOR.md) |
 | Serve today and recent days from Redis memory, with live updates | [REDIS_CONNECTOR.md](connectors/REDIS_CONNECTOR.md) |
 | Build demo data in any store, small to a million trades a day | [DEMO_DATA.md](connectors/DEMO_DATA.md) |
@@ -144,6 +145,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | [AEROSPIKE_CONNECTOR.md](connectors/AEROSPIKE_CONNECTOR.md) | you run Drishti on Aerospike at scale: record layout, loader, partition-parallel scans, TTL retention, sizing, measurements |
 | [JDBC_QUERIES.md](connectors/JDBC_QUERIES.md) | you read your own schema with SQL: the entity, its parts, ids, columns and reverse queries, parameters, naming, performance |
 | [ICEBERG_CONNECTOR.md](connectors/ICEBERG_CONNECTOR.md) | you run Drishti over Apache Iceberg: the layout, path-based and REST catalogs, delete files, time travel, the loader and maintenance, sizing, measurements |
+| [DUCKDB_CONNECTOR.md](connectors/DUCKDB_CONNECTOR.md) | you run Drishti on one embedded DuckDB file: the layout, the loader and its file swap, the shared read-only instance, read paths, retention, sizing, memory, measurements |
 | [MONGODB_CONNECTOR.md](connectors/MONGODB_CONNECTOR.md) | you run Drishti on MongoDB: a document per entity per day, the narrow columns collection, indexes, parallel day reads, retention, sharding, measurements |
 | [REDIS_CONNECTOR.md](connectors/REDIS_CONNECTOR.md) | you run Drishti on Redis: key layout, zstd dictionaries, column chunks, live pub/sub, TTL, sizing, measurements |
 | [S3_CONNECTOR.md](connectors/S3_CONNECTOR.md) | you serve documents from S3 or an S3-compatible store: the key layout, listing and caching, credentials, cost of large buckets |

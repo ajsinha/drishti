@@ -568,13 +568,15 @@ connectors:
 5. Publish the same trade again with `"mtm":13750`. Within a frame (50 ms) the stream sends
    `event:frame` with a `strip` patch for `MTM (USD)` (`+13,750`) and the provenance's new generation, and the
    cell flashes in the browser.
-6. Publish `MX-29000001|` with an empty value (a *tombstone*; with `kafka-console-producer` use
-   `--property null.marker=NULL` and send `MX-29000001|NULL`): the trade is deleted from the connector, and a new view
-   of it is `DRS-1001`.
+6. Publish a *tombstone*: a **null** value, not an empty one (an empty value is not a delete). With
+   `kafka-console-producer` use `--property null.marker=NULL` and send `MX-29000001|NULL`. The trade is deleted from
+   the connector, and a new view of it is `DRS-1001`. The delete is not pushed: a view already open keeps showing the
+   last document until it is opened again, and the id stays in type-ahead until the server restarts.
 
 Other shapes: without `kind`/`id-field` the connector expects **envelopes**,
 `{"kind": "trade", "id": "MX-20000001", "doc": {…}}`, and a tombstone's key is `kind/id`. `mode: ticks` keeps nothing in
-memory and only drives the ticks of open views while a store (Delta Lake, a database) serves the documents: such a
+memory (although it still replays the topic from the beginning at start, `UP (catching up)`) and only drives the
+ticks of open views while a store (Delta Lake, a database) serves the documents: such a
 view is live although its document came from the store, because a live connector declares that it pushes the kind
 (`SourcePlugin.pushes`), and it subscribes there.
 See [PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md) for every Kafka setting.

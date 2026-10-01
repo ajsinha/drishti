@@ -405,8 +405,9 @@ until the next restart. (Derived from the client's documented behaviour; the con
 Estimated from the data structures (not measured): each entity costs an index entry (its id string, an `EntityRef`,
 a position record and a hash-map node, about 150–200 bytes for an 11-character id) and a type-ahead entry (the id
 lowercased and its label text, about 200–250 bytes), so roughly **0.4–0.5 GB of heap per million entities**, plus the
-memory cache (`cache-mb`, weighed by message text) and the Kafka client's fetch buffers. Earlier guides say "tens of
-bytes per entity" for the index alone; that counts only the position, not the id and map overhead.
+memory cache (`cache-mb`, weighed by message text) and the Kafka client's fetch buffers. The class comment in
+`KafkaSourcePlugin` says "tens of bytes per entity" for the index alone; that counts only the position, not the id
+and map overhead.
 
 ### 10.2 Throughput and catching up
 

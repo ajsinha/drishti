@@ -351,8 +351,12 @@ A refresh:
 1. fetches every URL in turn (a `file:` URL is read from disk), with a 10-second connect timeout and a
    `timeout-seconds` (20) request timeout, following redirects except from HTTPS to HTTP;
 2. parses all responses; any exception stops the refresh before anything is replaced;
-3. replaces each entity's observations, and replaces the type-ahead index with the entities just parsed;
-4. sets `fetchedAt`, the health, and (when something was parsed) the time of the last update.
+3. if the responses yield no series at all, stops there too: nothing is replaced, and health says
+   `DOWN: the feed returned no data (serving the last data)` (or `DOWN: the feed returned no data` when nothing was
+   ever fetched);
+4. otherwise replaces each parsed entity's observations, and replaces the type-ahead index with the entities just
+   parsed;
+5. sets `fetchedAt`, health `UP`, and the time of the last update.
 
 Connectors start in parallel, but the server waits for every `start`, so an unreachable feed can lengthen server start
 by up to its timeouts (two requests for `us-treasury`, one per series for `fred`).
@@ -474,7 +478,8 @@ A route is per kind: with this route the other `rate-fixing` ids (the samples, `
 |---|---|
 | `DOWN: not fetched yet` | before the first refresh completes; since that refresh runs inside `start`, a running connector is not normally seen in this state |
 | `UP` | the last refresh parsed at least one entity |
-| `DOWN: the feed returned no data` | the last refresh parsed no entity at all; in practice only `ecb-fx`, when the file has no day with a pair's two currencies |
+| `DOWN: the feed returned no data (serving the last data)` | the last refresh parsed no entity at all, and the data of an earlier refresh is still served; in practice only `ecb-fx`, when the file has no day with a pair's two currencies |
+| `DOWN: the feed returned no data` | the same, but no refresh ever brought data, so nothing is served |
 | `DOWN: <Exception>: <message>` | the last refresh failed; `<Exception>` is the Java class's simple name |
 
 Typical exception texts:
@@ -496,8 +501,10 @@ Typical exception texts:
   reads answer *not held* (`DRS-1001` if nothing else holds the id). Data arrives with the first refresh that
   succeeds, up to `refresh-minutes` later; a purge (below) fetches at once.
 - **A response that parses but is empty** is not a failure: a SOFR or €STR answer with no rows replaces the entity's
-  observations with none, so its reads answer *not held* while health stays `UP`. An `ecb-fx` answer with no usable
-  day leaves the reads on the old data, but empties type-ahead.
+  observations with none, so its reads answer *not held* while health stays `UP` (the same holds for a FRED series or
+  the Treasury curve with no rows). An answer that yields no series at all (an `ecb-fx` file with no usable day)
+  keeps the last good data, reads and type-ahead alike, and health says
+  `DOWN: the feed returned no data (serving the last data)`.
 - **A purge** (Admin → Caches, or `POST /api/v1/admin/caches/<connector>/purge`) clears the data and refetches at
   once, on the caller's request. If that fetch fails, the data is gone until the next good refresh: do not purge a
   feed while its publisher is unreachable.

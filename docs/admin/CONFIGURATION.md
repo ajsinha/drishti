@@ -653,11 +653,14 @@ Layout: `<root>/<kind>/<id>.json` (or `.csv`), and dated `<root>/<yyyy-MM-dd>/<k
 | `base-url` | required | `https://risk.internal/api` |
 | `path` | `/{kind}/{id}` | Appended to the base URL. |
 | `kinds` | empty = any | Comma list. |
-| `timeout-ms` | `2000` | Per request. |
+| `timeout-ms` | `2000` | Both the connect timeout and the request timeout. |
 | `generation-header` | `ETag` | A response header holding a numeric version; otherwise the fetch time. |
 | `header.<Name>` | none | Request headers, e.g. `header.Authorization: Bearer ${SERVICE_TOKEN}`. |
+| `source-name` | `rest` (a connector: its name) | The name shown in provenance and Health. |
 
-A 404 answer means "not held here".
+A 404 answer means "not held here". Any other status below 400 is the document (`204`, other `2xx` and `3xx` bodies
+are parsed; redirects are not followed; an empty body is an empty document, found); 400 or more is a failed read.
+Full detail: [REST_CONNECTOR.md](../connectors/REST_CONNECTOR.md).
 
 ### `kafka` — a live stream
 
@@ -666,7 +669,7 @@ A 404 answer means "not held here".
 | `bootstrap-servers` | `localhost:9092` | Brokers. |
 | `topics` | empty | Comma list. |
 | `kind`, `id-field` | none, `id` | Mapped messages: the whole value is the document of this kind, keyed by this field. Per topic: `kind.<topic>`, `id-field.<topic>`. Without them each message is an envelope `{"kind","id","doc"}`. |
-| `mode` | `state` | `state`: the stream is the store. `ticks`: another store serves documents and the stream only ticks open views. |
+| `mode` | `state` | `state`: the stream is the store (memory: about 0.4–0.5 GB per million entities for the index and type-ahead, estimated, plus `cache-mb`). `ticks`: another store serves documents and the stream only ticks open views; it keeps nothing, but still replays the topic from the beginning at start. |
 | `cache-mb` | `256` | Recently read documents kept in memory. |
 | `search` | `true` | Keep identifiers for type-ahead. |
 | `poll-ms` | `200` | Consumer poll interval. |
@@ -675,6 +678,11 @@ A 404 answer means "not held here".
 | `disk-cache.root` / `disk-cache.dir` | `./data/cache` / `<root>/<connector>` | Where the store lives. |
 | `disk-cache.max-gb` | `10` | Size budget. |
 | `disk-cache.reset-at` / `disk-cache.zone` | `02:00` / `America/New_York` | Nightly clearing time. |
+| `source-name` | `kafka` (a connector: its name) | The name shown in provenance and Health. |
+
+Only a null value (a tombstone), or an envelope with `"doc": null`, deletes; an empty value does not. Deletes are not
+pushed to open views, and a deleted id stays in type-ahead until a restart. Full detail:
+[KAFKA_CONNECTOR.md](../connectors/KAFKA_CONNECTOR.md).
 
 ### `activemq` and `rabbitmq` — message queues
 
@@ -683,23 +691,28 @@ message once.
 
 | Setting | Plugin | Default | Meaning |
 |---|---|---|---|
-| `broker-url` | activemq | `failover:(tcp://localhost:61616)` | The failover transport reconnects by itself. |
-| `destinations` | activemq | empty | `queue:trades,topic:quotes`; a bare name is a queue. Topics use durable subscriptions. |
+| `broker-url` | activemq | `failover:(tcp://localhost:61616)?initialReconnectDelay=1000&maxReconnectDelay=30000` | The failover transport reconnects by itself. |
+| `destinations` | activemq | empty | `queue:trades,topic:quotes`; a bare name is a queue. Topics use durable subscriptions, which stay on the broker after a topic is removed here. Each idle destination costs a 50 ms wait per polling loop. |
 | `user`, `password`, `client-id` | activemq | none, none, `drishti-<source-name>` | |
 | `uri` | rabbitmq | `amqp://guest:guest@localhost:5672/%2f` | |
-| `queues` | rabbitmq | empty | `trades,quotes` |
+| `queues` | rabbitmq | empty | `trades,quotes`, all on one channel. Empty: `UP`, consuming nothing. |
 | `declare` | rabbitmq | `true` | Declare the queues durable. |
 | `bind.<queue>` | rabbitmq | none | `exchange:routing.key` to bind a declared queue. |
 | `prefetch`, `heartbeat-seconds`, `recovery-interval-ms` | rabbitmq | `100`, `20`, `2000` | |
 | `kind`, `kind.<destination>`, `id-field`, `id-field.<destination>` | both | none, `id` | As for Kafka. |
 | `cache-mb` | both | `128` | Memory cache. |
-| `state.root` / `state.dir` | both | `./data/state` / `<root>/<source-name>` | The RocksDB store. Back it up: it survives restarts and is never cleared unless configured. |
-| `state.max-gb` | both | `10` | Size budget. |
-| `state.reset-at` / `state.zone` | both | `never` / `America/New_York` | Optional daily clearing time. |
+| `state.root` / `state.dir` | both | `./data/state` / `<root>/<source-name>` | The RocksDB store. Back it up: it survives restarts and is never cleared unless configured. It has no write-ahead log, so a crash can lose the last acknowledged messages. |
+| `state.max-gb` | both | `10` | Size budget, FIFO compaction: disk grows with messages, and past it the oldest files go, with entities not updated since. |
+| `state.reset-at` / `state.zone` | both | `never` / `America/New_York` | Optional daily clearing time; clears the disk store only. |
+| `source-name` | both | `activemq` / `rabbitmq` (a connector: its name) | The name shown in provenance and Health; names the default state folder. |
+
+Messages are acknowledged after they are handed to the state store. A message the connector rejects (not JSON, no kind
+or id), or one the store fails to write, is acknowledged and dropped: there is no dead-lettering. Full detail:
+[ACTIVEMQ_CONNECTOR.md](../connectors/ACTIVEMQ_CONNECTOR.md), [RABBITMQ_CONNECTOR.md](../connectors/RABBITMQ_CONNECTOR.md).
 
 ### `s3` — documents in S3 or an S3-compatible store
 
-Layout as the file connector: `<prefix><kind>/<id>.json` and `<prefix><yyyy-MM-dd>/<kind>/<id>.json`.
+Layout as the file connector's per-entity form: `<prefix><kind>/<id>.json` and `<prefix><yyyy-MM-dd>/<kind>/<id>.json`.
 
 | Setting | Default | Meaning |
 |---|---|---|
@@ -707,10 +720,17 @@ Layout as the file connector: `<prefix><kind>/<id>.json` and `<prefix><yyyy-MM-d
 | `prefix` | empty | e.g. `risk/` |
 | `region` | `us-east-1` | |
 | `endpoint` | empty | For S3-compatible stores (MinIO, Ceph); path-style addressing then (`path-style`, `true`). |
-| `access-key`, `secret-key` | empty | Otherwise the AWS credential chain. |
+| `path-style` | `true` | Path-style addressing, used with `endpoint`. |
+| `access-key`, `secret-key` | empty | Static credentials, with no session token (temporary STS keys do not work here); otherwise the AWS credential chain. |
 | `rescan-seconds` | `60` | How often identifiers and dates are listed. |
-| `cache-seconds`, `cache-entries` | `30`, `10000` | Read cache. |
-| `lookback-days` | `10` | |
+| `cache-seconds`, `cache-entries` | `30`, `10000` | Read cache (misses are cached too). |
+| `lookback-days` | `10` | How far back an older date folder may answer for an entity missing from newer ones. |
+| `source-name` | `s3` (a connector: its name) | The name shown in provenance and Health. |
+
+There is no `mode.<kind>`: a picked date reads the newest date folder on or before it that holds the entity (within
+`lookback-days`), then the undated object. A folder named like a date that is not a real one is ignored. Without
+`kinds`, the kinds served are those of the last successful listing, and an empty listing serves every kind. Connect
+(5 s) and socket (20 s) timeouts are fixed in the code. Full detail: [S3_CONNECTOR.md](../connectors/S3_CONNECTOR.md).
 
 ### `iceberg` — Apache Iceberg
 
@@ -743,6 +763,33 @@ loading and maintenance: [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.
 | `reverse-index` | `true` | `false` turns reverse lookups off |
 | `source-name` | the connector's name | the name shown in provenance and Health |
 | `stale-after` | none | warn when no new data arrived for this long (engine setting) |
+
+### `duckdb` — one embedded DuckDB file
+
+Every data domain in one DuckDB file (a schema per domain, `<domain>.entities`), read in-process with no database
+server; a load writes a new file and renames it over the old one while the server keeps answering. Design, loading,
+sizing and measurements: [DUCKDB_CONNECTOR.md](../connectors/DUCKDB_CONNECTOR.md).
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `path` | required | the DuckDB file; connectors naming the same path share one read-only DuckDB instance |
+| `table` | required | `schema.entities`, the data domain this connector serves |
+| `memory-limit` | `1GB` | DuckDB's memory limit for the shared instance (native memory, outside the Java heap); the first connector on a file sets it |
+| `threads` | every core | DuckDB's threads for the shared instance; the first connector on a file sets it |
+| `pool-size` | `4` | reads of this connector at once; at least `scan-threads` plus the concurrent reads you expect |
+| `kinds` | the kinds the file holds | comma list of kinds to serve |
+| `mode.<kind>` | `snapshot` | `snapshot` or `effective` |
+| `lookback-days` | `10` | how far back a snapshot read looks for the newest day on or before the date asked |
+| `layout.<kind>.columns` | none | promoted paths ([DUCKDB_CONNECTOR.md](../connectors/DUCKDB_CONNECTOR.md#3-declaring-the-promoted-columns)) |
+| `refresh-seconds` | `10` | how often the file is checked for a new load (one `stat` when nothing changed) |
+| `scan-threads` | `4` | id ranges of a day read at once |
+| `columns-cache-mb` | `1024` | memory for days of promoted columns |
+| `columns-seconds` | `300` | how long a day's columns are kept (a new file clears them at once) |
+| `max-load-rows` | `200000` | the most documents a reverse lookup reads for a kind without promoted link columns |
+| `reverse-index` | `true` | `false` turns reverse lookups off |
+| `source-name` | `duckdb` (a connector: its name) | the name shown in provenance and Health |
+
+Retention is the loader's `--keep-days N` (`tools/load-duckdb.sh`); the connector has no retention setting.
 
 ### `mongodb`
 
@@ -819,9 +866,17 @@ One connector per feed (the market-data pack declares them, all off by default).
 |---|---|---|
 | `feed` | required | `nyfed-sofr`, `ecb-estr`, `ecb-fx`, `us-treasury`, `fred` |
 | `refresh-minutes` | `60` | |
-| `timeout-seconds` | `20` | |
+| `timeout-seconds` | `20` | Request timeout. The connect timeout is 10 s, fixed in the code. |
 | `url` | the feed's own | Override; `file:` URLs are read directly. |
 | `api-key`, `series` | empty, `DGS10,DFF` | FRED only. |
+| `user-agent` | `public-data-feed-connector` | The `User-Agent` header; the market-data pack sets `<product> public data feed connector`. |
+| `source-name` | the feed's name (a connector: its name) | The name shown in provenance and Health. |
+
+The history for picked dates is the window the last fetch returned. A failed fetch, or one that yields no series at all,
+keeps the last good data (`DOWN: the feed returned no data (serving the last data)`); a single-series feed answering
+with no rows replaces its data with none and stays `UP`. A purge clears the data, then
+refetches. `stale-after` does not notice a publisher that stopped publishing, since every successful parse counts as
+new data. Full detail: [FEEDS_CONNECTOR.md](../connectors/FEEDS_CONNECTOR.md).
 
 ### `derived` — kinds computed from other kinds
 
@@ -848,6 +903,9 @@ dotted keys. Worked example: [PACKS.md](../guides/PACKS.md#derived-kinds-entitie
 | `ticking` | `true` | Live documents move while someone watches. |
 | `tick-ms` | `400` | Tick interval. |
 
+The shipped `application.yaml` sets only `drishti.sources.plugins.demo.enabled` (`DRISHTI_DEMO_ENABLED`); `ticking`
+and `tick-ms` are the code's defaults. Full detail: [DEMO_CONNECTOR.md](../connectors/DEMO_CONNECTOR.md).
+
 ---
 
 ## Environment variables used by the packs and profiles
@@ -857,7 +915,7 @@ Packs declare their connectors in `pack.yaml` with placeholders, so you switch t
 | Variable | Default | Pack | Effect |
 |---|---|---|---|
 | `DRISHTI_DELTA_ROOT` | `./data/delta` | every shipped pack | Root of every pack's Delta Lake connector. |
-| `DRISHTI_LAKE_ENABLED` | `true` | every shipped pack | Switch every pack's data connector off (the demo samples still answer). Leave it `true` with the `postgres` or `aerospike` profile: those profiles change the plugin of the same connectors, and this switch would turn them off too. |
+| `DRISHTI_LAKE_ENABLED` | `true` | every shipped pack | Switch every pack's data connector off (the demo samples still answer). Leave it `true` with the `postgres`, `aerospike` or `duckdb` profile: those profiles change the plugin of the same connectors, and this switch would turn them off too. |
 | `DRISHTI_STREAM_TRADING` | `false` | trading | Turn on the `trading-stream` Kafka connector. |
 | `DRISHTI_KAFKA_BOOTSTRAP` | `localhost:9092` | trading | Its brokers. |
 | `DRISHTI_TRADING_TOPIC` | `drishti.trading.trades` | trading | Its topic. |
@@ -877,10 +935,10 @@ DRISHTI_PACKS=finance,trading DRISHTI_STREAM_TRADING=true DRISHTI_KAFKA_BOOTSTRA
 
 `curl -s localhost:18480/api/v1/sources` should then list `trading-stream`.
 
-### Profiles: PostgreSQL or Aerospike instead of Delta Lake
+### Profiles: PostgreSQL, Aerospike or DuckDB instead of Delta Lake
 
-`SPRING_PROFILES_ACTIVE=postgres` or `aerospike` loads `application-postgres.yaml` or
-`application-aerospike.yaml`, which redefine the banking data-domain connectors (`reference-store`,
+`SPRING_PROFILES_ACTIVE=postgres`, `aerospike` or `duckdb` loads `application-postgres.yaml`,
+`application-aerospike.yaml` or `application-duckdb.yaml`, which redefine the banking data-domain connectors (`reference-store`,
 `market-store`, `trading-store`, `risk-store`, `credit-store`, `collateral-store`) to read a database instead of
 the lake. The packs still decide kinds, routes and modes.
 
@@ -888,6 +946,7 @@ the lake. The packs still decide kinds, routes and modes.
 |---|---|---|
 | `postgres` | `DRISHTI_PG_URL`, `DRISHTI_PG_USER`, `DRISHTI_PG_PASSWORD` | `jdbc:postgresql://localhost:5432/drishti`, `drishti`, `drishti` (tables `<domain>.entities`) |
 | `aerospike` | `DRISHTI_AEROSPIKE_HOSTS`, `DRISHTI_AEROSPIKE_NAMESPACE` | `localhost:3000`, `test` |
+| `duckdb` | `DRISHTI_DUCKDB_PATH`, `DRISHTI_DUCKDB_MEMORY` | `data/duckdb/drishti.duckdb`, `1GB` (one file, a schema per domain, `<domain>.entities`; `memory-limit` of the shared DuckDB instance) |
 
 ```bash
 SPRING_PROFILES_ACTIVE=postgres DRISHTI_PG_URL=jdbc:postgresql://db:5432/drishti \
@@ -904,7 +963,7 @@ SPRING_PROFILES_ACTIVE=postgres DRISHTI_PG_URL=jdbc:postgresql://db:5432/drishti
 | `server.shutdown` | `graceful` | Finish requests in flight on stop. |
 | `server.compression` | on for JSON and `text/event-stream` | |
 | `spring.threads.virtual.enabled` | `true` | Every request runs on a virtual thread. Leave it on. |
-| `spring.profiles.active` | none (`SPRING_PROFILES_ACTIVE`) | `postgres` or `aerospike`, above. |
+| `spring.profiles.active` | none (`SPRING_PROFILES_ACTIVE`) | `postgres`, `aerospike` or `duckdb`, above. |
 | `management.endpoints.web.exposure.include` | `health,info,prometheus,metrics` | Actuator endpoints: `/actuator/health` (with `/liveness` and `/readiness` probes), `/actuator/prometheus` (timer `drishti.view`, gauges `drishti.live.*`). |
 | `springdoc.api-docs.path` / `springdoc.swagger-ui.path` | `/api/docs` / `/api/docs/ui` | The OpenAPI description and its UI. |
 | `logging.level.<package>` | Spring default (`INFO`) | e.g. `--logging.level.com.ash.drishti=DEBUG` |
@@ -1045,7 +1104,7 @@ Server (S), console (C), or both.
 | `DRISHTI_OIDC_CLIENT_SECRET`, `DRISHTI_OIDC_REDIRECT_URI` | C | `auth.oidc.*` |
 | `DRISHTI_SEED_ADMIN` and other identity variables | S | see [USER_MANAGEMENT.md](USER_MANAGEMENT.md) |
 | `DRISHTI_DELTA_ROOT`, `DRISHTI_LAKE_ENABLED`, `DRISHTI_STREAM_*`, `DRISHTI_KAFKA_BOOTSTRAP`, `DRISHTI_TRADING_TOPIC`, `DRISHTI_CACHE_*`, `DRISHTI_FEED_*`, `FRED_API_KEY`, `DRISHTI_FRED_SERIES` | S (packs) | [pack connectors](#environment-variables-used-by-the-packs-and-profiles) |
-| `SPRING_PROFILES_ACTIVE`, `DRISHTI_PG_*`, `DRISHTI_AEROSPIKE_*` | S | [profiles](#profiles-postgresql-or-aerospike-instead-of-delta-lake) |
+| `SPRING_PROFILES_ACTIVE`, `DRISHTI_PG_*`, `DRISHTI_AEROSPIKE_*`, `DRISHTI_DUCKDB_PATH`, `DRISHTI_DUCKDB_MEMORY` | S | [profiles](#profiles-postgresql-aerospike-or-duckdb-instead-of-delta-lake) |
 | `DRISHTI_CONSOLE_HOST`, `DRISHTI_CONSOLE_PORT`, `DRISHTI_BACKEND_URL`, `DRISHTI_USER` | C | `server.*`, `backend.url`, `ui.user` |
 | `DRISHTI_AUTH_ENABLED`, `DRISHTI_SESSION_SECRET`, `DRISHTI_SECURE_COOKIE` | C | `auth.*` |
 | `DRISHTI_CONSOLE__<SECTION>__<KEY>` | C | any console key |

@@ -911,9 +911,9 @@ Nothing grows with the day's data without bound. Every cache has a size limit yo
 
 | Where | Holds | Limit (setting) |
 |---|---|---|
-| Kafka connector | the index of where each entity's latest message is (tens of bytes each) and recently read documents | `cache-mb` (256); `mode: ticks` keeps nothing (a store serves entities, the stream only ticks); `search: false` drops the identifier index |
+| Kafka connector | the index of where each entity's latest message is, with each id for type-ahead (about 0.4–0.5 GB per million entities, estimated), and recently read documents | `cache-mb` (256); `mode: ticks` keeps nothing (a store serves entities, the stream only ticks); `search: false` drops the identifier index |
 | Kafka disk cache (per connector) | every live message of the day, on local disk (RocksDB, no write-ahead log, LZ4, oldest files dropped first) | `disk-cache.max-gb` (10); cleared every night at `disk-cache.reset-at` (02:00 New York); its own directory `disk-cache.dir` (default `<disk-cache.root>/<connector>`, root `./data/cache`), so connectors never contend on one store and a busy stream can have its own disk |
-| ActiveMQ / RabbitMQ connectors | recently read documents in memory; every received message on disk | `cache-mb` (128); `state.max-gb` (10) under `state.dir` (default `./data/state/<connector>`) |
+| ActiveMQ / RabbitMQ connectors | recently read documents in memory; every received message on disk (RocksDB, no write-ahead log: a crash can lose the last acknowledged messages; FIFO compaction: past the budget the oldest files go, with any entity not updated since) | `cache-mb` (128); `state.max-gb` (10) under `state.dir` (default `./data/state/<connector>`) |
 | Delta Lake connector | table partitions read recently | `cache-mb` (512) |
 | Aerospike connector | the kinds' dates and the ids (from the index set), and days of promoted bins for searches, impact and reverse lookups; not the days kept | `columns-cache-mb` (1024), kept `columns-seconds` (300) |
 | PostgreSQL (JDBC table mode) | nothing: every read is a query | `pool-size` connections |
