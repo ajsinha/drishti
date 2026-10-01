@@ -63,6 +63,18 @@
       });
     });
   }
+  var tadm = document.querySelector('[data-token-admin]');
+  if (tadm) {
+    tadm.querySelectorAll('[data-revoke-any]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var id = b.closest('tr').getAttribute('data-token');
+        if (!window.confirm('Revoke token ' + id + '? Anything using it stops working at once.')) { return; }
+        fetch('/admin/api/tokens/' + encodeURIComponent(id) + '/revoke', { method: 'POST' }).then(function (r) {
+          if (r.ok) { location.reload(); } else { r.json().then(function (body) { tadm.querySelector('[data-msg]').textContent = (body.code || 'Error') + ': ' + body.detail; }); }
+        });
+      });
+    });
+  }
   var root = document.querySelector('[data-roles]');
   if (!root) { return; }
   var msg = root.querySelector('[data-msg]'), dlg = root.querySelector('[data-dialog]'), form = root.querySelector('[data-form]');

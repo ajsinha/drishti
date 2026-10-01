@@ -51,6 +51,11 @@ public class IdentityConfiguration {
         return new RoleStore(roles, identityTransactions, auditLog);
     }
 
+    @Bean
+    public ApiTokenStore apiTokenStore(IdentityRepositories.ApiTokens tokens, TransactionTemplate identityTransactions, JpaAuditLog auditLog) {
+        return new ApiTokenStore(tokens, identityTransactions, auditLog);
+    }
+
     /** Fired alerts, the newest {@code drishti.alerts.keep} (1000) per user. */
     @Bean
     public AlertHistory alertHistory(IdentityRepositories.Alerts alerts, TransactionTemplate identityTransactions,

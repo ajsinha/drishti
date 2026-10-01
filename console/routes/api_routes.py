@@ -46,6 +46,28 @@ async def suggest(request: Request, q: str = "", limit: int | None = None):
         return _problem(e)
 
 
+@router.post("/tokens")
+async def create_token(request: Request):
+    """A personal API token for a script or spreadsheet; the answer holds the secret, shown once."""
+    body = json.loads(await request.body() or b"{}")
+    days = body.get("days")
+    try:
+        return await request.app.state.backend.create_token(body.get("name", ""), int(days) if days else None, ident(request))
+    except (BackendError, ValueError) as e:
+        if isinstance(e, ValueError):
+            return JSONResponse({"code": "DRS-5001", "detail": "days is a number"}, status_code=400)
+        return _problem(e)
+
+
+@router.delete("/tokens/{id_}")
+async def revoke_token(request: Request, id_: str):
+    try:
+        await request.app.state.backend.revoke_token(id_, ident(request))
+    except BackendError as e:
+        return _problem(e)
+    return {"ok": True}
+
+
 @router.get("/history")
 async def history(request: Request):
     """The user's recent commands, newest first (↑ on the command line)."""

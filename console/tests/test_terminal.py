@@ -382,3 +382,14 @@ def test_packs_survive_a_server_restart(client, backend):
     asyncio.run(packs.assigned(backend, None))                              # no knowledge: the fallback, not cached
     assert packs._cache == {}
     backend.packs = real
+
+
+
+def test_people_make_and_revoke_api_tokens(client, backend):
+    page = client.get("/account").text
+    assert "API tokens" in page and "Risk notebook" in page and 'data-token="abc123def456"' in page
+    made = client.post("/api/tokens", json={"name": "Excel", "days": "90"}).json()
+    assert made["secret"].startswith("drk_") and backend.tokens_made[-1] == ("Excel", 90)
+    assert client.post("/api/tokens", json={"name": " "}).status_code == 400
+    assert client.post("/api/tokens", json={"name": "x", "days": "soon"}).status_code == 400
+    assert client.delete("/api/tokens/abc123def456").json()["ok"] is True

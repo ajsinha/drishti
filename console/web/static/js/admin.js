@@ -36,6 +36,38 @@
     });
   }
 
+  // ---- account: API tokens ---------------------------------------------------------------------
+  var tk = document.querySelector('[data-tokens]');
+  if (tk) {
+    var tmsg = tk.querySelector('[data-msg]');
+    tk.querySelector('[data-token-new]').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var f = e.target.elements;
+      fetch('/api/tokens', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: f.name.value, days: f.days.value || null }) })
+        .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); })
+        .then(function (res) {
+          if (!res.ok) { say(tmsg, (res.body.code || 'Error') + ': ' + res.body.detail, true); return; }
+          tk.querySelector('[data-secret-text]').textContent = res.body.secret;
+          tk.querySelector('[data-secret]').hidden = false;
+          say(tmsg, 'Created ' + res.body.token.name + '. Reload the page to see it in the list, after copying the secret.');
+          e.target.reset();
+        });
+    });
+    tk.querySelector('[data-copy-secret]').addEventListener('click', function () {
+      var t = tk.querySelector('[data-secret-text]').textContent;
+      if (navigator.clipboard) { navigator.clipboard.writeText(t).then(function () { say(tmsg, 'Copied.'); }); }
+    });
+    tk.querySelectorAll('[data-revoke]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var id = b.closest('tr').getAttribute('data-token');
+        if (!window.confirm('Revoke this token? Anything using it stops working at once.')) { return; }
+        fetch('/api/tokens/' + encodeURIComponent(id), { method: 'DELETE' }).then(function (r) {
+          if (r.ok) { location.reload(); } else { r.json().then(function (b) { say(tmsg, (b.code || 'Error') + ': ' + b.detail, true); }); }
+        });
+      });
+    });
+  }
+
   // ---- account: aliases ------------------------------------------------------------------------
   var al = document.querySelector('[data-aliases]');
   if (al) {

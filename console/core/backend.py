@@ -136,6 +136,15 @@ class BackendClient:
     async def set_studio_tests(self, sutra: str, entities: list, ident) -> list:
         return await self._send("PUT", f"/me/studio-tests/{quote(sutra)}", ident, json=entities)
 
+    async def my_tokens(self, ident) -> list:
+        return await self._get("/me/tokens", ident)
+
+    async def create_token(self, name: str, days, ident) -> dict:
+        return await self._send("POST", "/me/tokens", ident, json={"name": name, "days": days})
+
+    async def revoke_token(self, id_: str, ident) -> None:
+        return await self._send("DELETE", f"/me/tokens/{quote(id_)}", ident)
+
     async def command_history(self, ident) -> list:
         return await self._get("/command/history", ident)
 

@@ -72,6 +72,7 @@ categories:
     blurb: The API, the design, and why it is the way it is.
     guides:
       - { slug: connectors, doc: CONNECTOR_GUIDE.md, title: Connector guide, icon: plug, summary: "Get your data in: which connector to use, a worked set-up for each, routing, reconnecting, health and troubleshooting." }
+      - { slug: clients, doc: CLIENTS.md, title: Scripts, notebooks and Excel, icon: filetype-py, summary: "Personal API tokens, the Python client, and Excel through Power Query: read anything you may open, from code." }
       - { slug: developer-guide, doc: DEVELOPER_GUIDE.md, title: Developer guide, icon: tools, summary: "Repository map, building and testing, project rules, the request path, and recipes for endpoints, plugins, panel kinds, packs and pages." }
       - { slug: api, doc: API_GUIDE.md, title: API guide, icon: braces-asterisk, summary: "REST endpoints, the ViewModel contract and error codes." }
       - { slug: architecture, doc: ARCHITECTURE.md, title: Architecture, icon: diagram-2, summary: "The pipeline, grammar, inference, live updates, modules and UX." }

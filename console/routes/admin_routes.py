@@ -128,6 +128,28 @@ async def load_pack(request: Request, name: str, action: str):
     return out
 
 
+@router.get("/tokens")
+async def tokens(request: Request):
+    """Every personal API token (never a secret), with revoke."""
+    me = ident(request)
+    if not me.is_admin:
+        return _forbidden(request)
+    try:
+        rows = await request.app.state.backend.admin("GET", "/tokens", me)
+    except BackendError as e:
+        return render(request, "admin/forbidden.html", status_code=e.status, error=e)
+    return render(request, "admin/tokens.html", tokens=rows)
+
+
+@router.post("/api/tokens/{id_}/revoke")
+async def revoke_any_token(request: Request, id_: str):
+    try:
+        await request.app.state.backend.admin("DELETE", f"/tokens/{quote(id_)}", ident(request))
+    except BackendError as e:
+        return _problem(e)
+    return {"ok": True}
+
+
 @router.get("/audit")
 async def audit(request: Request, subject: str = "", limit: int = 200):
     me = ident(request)

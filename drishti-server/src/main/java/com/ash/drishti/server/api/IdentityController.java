@@ -76,9 +76,11 @@ public class IdentityController {
     private final com.ash.drishti.identity.PreferenceStore preferences;
     private final com.ash.drishti.server.security.PackAccess packAccess;
     private final com.ash.drishti.identity.AlertHistory alerts;
+    private final com.ash.drishti.identity.ApiTokenStore apiTokens;
 
     public IdentityController(UserService users, Entitlements entitlements, com.ash.drishti.identity.PreferenceStore preferences,
-            com.ash.drishti.server.security.PackAccess packAccess, com.ash.drishti.identity.AlertHistory alerts) {
+            com.ash.drishti.server.security.PackAccess packAccess, com.ash.drishti.identity.AlertHistory alerts, com.ash.drishti.identity.ApiTokenStore apiTokens) {
+        this.apiTokens = apiTokens;
         this.alerts = alerts;
         this.packAccess = packAccess;
         this.users = users;
@@ -158,6 +160,7 @@ public class IdentityController {
         users.delete(p.user(), username);
         preferences.forget(username);
         alerts.forget(username);
+        apiTokens.forget(username);
     }
 
     @GetMapping("/admin/audit")

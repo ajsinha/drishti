@@ -35,8 +35,14 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public FilterRegistrationBean<TokenFilter> tokenFilter(SecurityProperties props, TokenVerifier verifier) {
-        FilterRegistrationBean<TokenFilter> r = new FilterRegistrationBean<>(new TokenFilter(props, verifier));
+    public FilterRegistrationBean<TokenFilter> tokenFilter(SecurityProperties props, TokenVerifier verifier,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.identity.ApiTokenStore> tokens,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.identity.UserService> users) {
+        // an API token stands for its user as they are now: their roles, and only while the account is enabled
+        java.util.function.Function<String, java.util.Optional<Principal>> apiTokens = bearer -> tokens.getObject().verify(bearer)
+                .flatMap(u -> users.getObject().find(u)).filter(com.ash.drishti.identity.User::enabled)
+                .map(u -> new Principal(u.username(), java.util.List.copyOf(u.roles())));
+        FilterRegistrationBean<TokenFilter> r = new FilterRegistrationBean<>(new TokenFilter(props, verifier, apiTokens));
         r.addUrlPatterns("/api/*");
         r.setOrder(1);
         return r;

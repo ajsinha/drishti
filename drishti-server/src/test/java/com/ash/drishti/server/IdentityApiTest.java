@@ -146,4 +146,37 @@ class IdentityApiTest {
         mvc.perform(get("/api/docs")).andExpect(status().isUnauthorized());
         mvc.perform(get("/api/docs").header("Authorization", as("tina", "trader"))).andExpect(status().isOk());
     }
+
+    @Test
+    void personalApiTokensReadAsTheirUserAndNeverWrite() throws Exception {
+        String admin = as("drishti-dev-admin", "admin");
+        mvc.perform(post("/api/v1/admin/users").header("Authorization", admin).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"username\":\"nora\",\"roles\":[\"trader\"],\"password\":\"trader-pass-12\"}")).andExpect(status().isCreated());
+        String body = mvc.perform(post("/api/v1/me/tokens").header("Authorization", as("nora", "trader")).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Risk notebook\",\"days\":30}"))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.token.active").value(true)).andReturn().getResponse().getContentAsString();
+        String secret = new com.fasterxml.jackson.databind.ObjectMapper().readTree(body).path("secret").asText();
+        String id = new com.fasterxml.jackson.databind.ObjectMapper().readTree(body).at("/token/id").asText();
+        org.assertj.core.api.Assertions.assertThat(secret).startsWith("drk_" + id + "_");
+        String bearer = "Bearer " + secret;
+
+        mvc.perform(get("/api/v1/auth/me").header("Authorization", bearer)).andExpect(jsonPath("$.username").value("nora"));
+        mvc.perform(post("/api/v1/me/tokens").header("Authorization", bearer).contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"x\"}"))
+                .andExpect(status().isForbidden());                                                           // tokens only read
+        mvc.perform(get("/api/v1/me/tokens").header("Authorization", as("nora", "trader")))
+                .andExpect(jsonPath("$[0].name").value("Risk notebook")).andExpect(jsonPath("$[0].secretHash").doesNotExist());
+        mvc.perform(get("/api/v1/auth/me").header("Authorization", "Bearer " + secret.substring(0, secret.length() - 2) + "xx"))
+                .andExpect(status().isUnauthorized());                                                        // a wrong secret
+
+        mvc.perform(post("/api/v1/admin/users/nora/enabled").header("Authorization", admin).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"enabled\":false}")).andExpect(status().isOk());
+        mvc.perform(get("/api/v1/auth/me").header("Authorization", bearer)).andExpect(status().isUnauthorized());   // a disabled user's token
+        mvc.perform(post("/api/v1/admin/users/nora/enabled").header("Authorization", admin).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"enabled\":true}")).andExpect(status().isOk());
+        mvc.perform(get("/api/v1/admin/tokens").header("Authorization", admin)).andExpect(jsonPath("$[*].user").value(hasItem("nora")));
+        mvc.perform(delete("/api/v1/admin/tokens/" + id).header("Authorization", admin)).andExpect(status().isNoContent());
+        mvc.perform(get("/api/v1/auth/me").header("Authorization", bearer)).andExpect(status().isUnauthorized());   // revoked
+        mvc.perform(get("/api/v1/admin/audit").param("subject", "nora").header("Authorization", admin))
+                .andExpect(jsonPath("$[*].action").value(hasItem("token-created")));
+    }
 }

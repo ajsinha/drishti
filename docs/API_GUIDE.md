@@ -461,6 +461,7 @@ Level 1 is what refers to the entity directly; level 2 is what those roll into. 
 | Method | Path | Notes |
 |---|---|---|
 | `GET` | `/search?q=` | as-of. `q` is `<MNEMONIC or kind> [where <condition>] [order by <field> [asc\|desc]] [limit n]`. Default limit 100, maximum 1000. `400 DRS-4004` if `q` cannot be read; `403` if the caller may not open the kind |
+| `GET` | `/search/csv?q=` | the same as CSV for spreadsheets: `kind,id,title`, then the columns' labels; values unformatted; formula-like text prefixed with `'` |
 
 The condition runs on each document *as the caller may see it* (redacted), so hidden fields cannot be probed.
 Numbers accept `k`, `m` and `bn` (or `b`) suffixes (`1m` = 1,000,000). URL-encode `q`; `curl -G --data-urlencode` does it for you:
@@ -1037,3 +1038,19 @@ curl -s -N $B/views/trade/T-10001/stream | grep --line-buffered '^data:{"seq"' \
 ```
 
 You should see a line such as `MTM (USD) +1,595,251` each time the value ticks.
+
+## Personal API tokens
+
+A person makes tokens on **My account → API tokens** for scripts, notebooks and spreadsheets
+([CLIENTS.md](CLIENTS.md)). Send one as `Authorization: Bearer drk_<id>_<secret>`. It acts as its owner (their roles
+and packs at the time of each call), only while the owner is enabled, and only for `GET`: any other method answers
+`403 DRS-5002 API tokens only read`. An unknown, wrong, revoked or expired token answers `401`.
+
+| Method | Path | Does |
+|---|---|---|
+| `GET` | `/me/tokens` | your tokens: id, name, created, expires, last used, revoked, active (never the secret) |
+| `POST` | `/me/tokens` `{name, days}` | makes one; `201` with `{token, secret}`: the secret appears only here. `days` 1–366 or null; at most 20 active per person |
+| `DELETE` | `/me/tokens/{id}` | revokes yours |
+| `GET` | `/admin/tokens` | (admin) everyone's |
+| `DELETE` | `/admin/tokens/{id}` | (admin) revokes anyone's |
+

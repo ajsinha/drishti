@@ -184,6 +184,17 @@ A pack's role is still needed to open its kinds. Giving Priya the *trading* pack
 
 ---
 
+## API tokens
+
+People read Drishti from scripts, notebooks and Excel with personal API tokens they make on **My account → API
+tokens** ([CLIENTS.md](CLIENTS.md)). What an administrator needs to know:
+
+- A token acts as its owner, with the owner's roles and packs at the time of each call, and **only reads**.
+- Disabling a user stops their tokens at once; deleting a user deletes them.
+- **Admin → Tokens** lists every token (owner, name, created, expires, last used) and revokes any of them.
+- Secrets are never stored, only their SHA-256; nobody, administrators included, can see a secret after it is made.
+- `token-created` and `token-revoked` are in the audit log.
+
 ## 4. Where it is stored: the identity database
 
 Everything in this guide is in **one database**:
@@ -222,6 +233,7 @@ column, if they do not.
 | `drishti_audit` | one row per audited action, numbered in order |
 | `drishti_alert` | every alert a user's rules fired: when, rule, entity, severity, message (the newest `drishti.alerts.keep`, 1,000, per user) |
 | `drishti_pack_state` | packs an admin switched off or on (Admin → Packs) |
+| `drishti_api_token` | personal API tokens: owner, name, a SHA-256 of the secret (never the secret), created, expires, last used, revoked |
 
 Deleting a user removes their role and pack rows with them (`ON DELETE CASCADE`), and their saved documents too.
 

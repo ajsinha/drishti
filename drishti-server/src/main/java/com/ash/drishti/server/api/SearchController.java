@@ -72,4 +72,40 @@ public class SearchController {
         out.put("elapsedMs", r.elapsedMs());
         return out;
     }
+
+    /**
+     * The same search as CSV, for spreadsheets ({@code GET /api/v1/search/csv?q=TRD productType=Revolver}): a header row
+     * (kind, id, title, then the columns' labels) and one row per entity, values unformatted.
+     */
+    @GetMapping(path = "/csv", produces = "text/csv")
+    public String csv(@RequestParam String q, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
+        Map<String, Object> r = search(q, asOf, principal);
+        @SuppressWarnings("unchecked")
+        java.util.List<String> columns = (java.util.List<String>) r.get("columns");
+        @SuppressWarnings("unchecked")
+        Map<String, String> labels = (Map<String, String>) r.get("labels");
+        StringBuilder out = new StringBuilder("kind,id,title");
+        columns.forEach(c -> out.append(',').append(cell(labels.getOrDefault(c, c))));
+        out.append("\r\n");
+        @SuppressWarnings("unchecked")
+        java.util.List<StructuredSearch.Row> rows = (java.util.List<StructuredSearch.Row>) r.get("rows");
+        for (StructuredSearch.Row row : rows) {
+            out.append(cell(row.ref().kind())).append(',').append(cell(row.ref().id())).append(',').append(cell(row.title()));
+            columns.forEach(c -> out.append(',').append(cell(row.values().get(c))));
+            out.append("\r\n");
+        }
+        return out.toString();
+    }
+
+    /** RFC 4180 quoting; a value that a spreadsheet would run as a formula is prefixed so it stays text. */
+    private static String cell(Object v) {
+        if (v == null) {
+            return "";
+        }
+        String s = String.valueOf(v);
+        if (!s.isEmpty() && "=+-@".indexOf(s.charAt(0)) >= 0 && !(v instanceof Number)) {
+            s = "'" + s;
+        }
+        return s.contains(",") || s.contains("\"") || s.contains("\n") || s.contains("\r") ? '"' + s.replace("\"", "\"\"") + '"' : s;
+    }
 }

@@ -101,3 +101,15 @@ CREATE TABLE IF NOT EXISTS drishti_alert (
     generation BIGINT       NOT NULL
 );
 CREATE INDEX IF NOT EXISTS drishti_alert_user ON drishti_alert (username, id);
+
+CREATE TABLE IF NOT EXISTS drishti_api_token (
+    id           VARCHAR(24)  PRIMARY KEY,
+    username     VARCHAR(64)  NOT NULL,
+    name         VARCHAR(100) NOT NULL,
+    secret_hash  VARCHAR(64)  NOT NULL,
+    created_at   TIMESTAMP WITH TIME ZONE NOT NULL,
+    expires_at   TIMESTAMP WITH TIME ZONE,
+    last_used_at TIMESTAMP WITH TIME ZONE,
+    revoked_at   TIMESTAMP WITH TIME ZONE
+);
+CREATE INDEX IF NOT EXISTS drishti_api_token_user ON drishti_api_token (username);

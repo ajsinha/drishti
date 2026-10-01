@@ -113,8 +113,12 @@ async def account(request: Request, must: int = 0, saved: int = 0, error: str = 
         aliases = await request.app.state.backend.aliases(me)
     except BackendError:
         aliases = {}
+    try:
+        tokens = await request.app.state.backend.my_tokens(me)
+    except BackendError:
+        tokens = []
     return render(request, "account.html", profile=profile, must=bool(must) or me.must_change, saved=bool(saved), error=error,
-                  zones=ZONES, aliases=aliases)
+                  zones=ZONES, aliases=aliases, tokens=tokens, api_base=request.app.state.settings.get("backend.url"))
 
 
 ZONES = ["America/New_York", "America/Chicago", "America/Toronto", "America/Sao_Paulo", "Europe/London", "Europe/Frankfurt", "Europe/Paris",

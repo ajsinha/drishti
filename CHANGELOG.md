@@ -16,6 +16,11 @@
 # Changelog
 
 ## Unreleased
+- **Personal API tokens, a Python client, and Excel.**
+  - **Tokens:** made on My account → API tokens. A token is `drk_<id>_<secret>`, shown once and stored only as a SHA-256 hash. It reads as its owner (their current roles and packs), only while they are enabled, and never writes. It can have an expiry and a last-used time, and can be revoked. Admin → Tokens lists and revokes anyone's; every change is audited.
+  - **CSV search:** `GET /api/v1/search/csv` returns any search as CSV for spreadsheets, with formula-like text neutralised.
+  - **Python client:** `clients/python/drishti_client.py` uses the standard library only, with `field`, `document`, `view`, `search`, `diff` and `to_pandas`, plus a CSV command line.
+  - **Docs:** `docs/CLIENTS.md` covers Python, Power Query for Excel, and curl.
 - **Sutra Studio is a YAML editor with completion.**
   - **Completion** comes from the served schema, by where the cursor is (Ctrl+Space, or as you type):
     - keys valid at that point (a panel's common keys plus its kind's options);

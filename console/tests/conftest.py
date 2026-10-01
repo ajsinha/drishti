@@ -236,6 +236,20 @@ class FakeBackend:
 
     aliases_saved = {"MYBOOK": "BOOK BOOK-RATES-1"}
     tests_saved = {}
+    tokens_made = []
+
+    async def my_tokens(self, ident=None):
+        return [{"id": "abc123def456", "user": "drishti-dev-admin", "name": "Risk notebook", "createdAt": "2026-10-01T09:00:00Z",
+                 "expiresAt": None, "lastUsedAt": None, "revokedAt": None, "active": True}]
+
+    async def create_token(self, name, days, ident=None):
+        if not name.strip():
+            raise BackendError(400, "DRS-5001", "give the token a name of 1-100 characters (what uses it)")
+        self.tokens_made.append((name, days))
+        return {"token": {"id": "xyz987xyz987", "name": name, "active": True}, "secret": "drk_xyz987xyz987_" + "s" * 43}
+
+    async def revoke_token(self, id_, ident=None):
+        return None
 
     async def studio_tests(self, sutra, ident=None):
         return list(self.tests_saved.get(sutra, []))

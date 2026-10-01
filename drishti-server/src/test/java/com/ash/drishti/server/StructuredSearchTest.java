@@ -151,4 +151,14 @@ class StructuredSearchTest {
         mvc.perform(get("/api/v1/me/studio-tests/irs-fixfloat").header("Authorization", as("admin"))).andExpect(jsonPath("$[1].id").value("T-10044"));
         mvc.perform(get("/api/v1/me/studio-tests/irs-fixfloat").header("Authorization", as("searcher"))).andExpect(status().isForbidden());
     }
+
+    @Test
+    void searchesComeAsCsvForSpreadsheets() throws Exception {
+        String csv = mvc.perform(get("/api/v1/search/csv").param("q", "TRD productType=Revolver").header("Authorization", as("searcher")))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        String[] lines = csv.split("\r\n");
+        org.assertj.core.api.Assertions.assertThat(lines[0]).startsWith("kind,id,title,");
+        org.assertj.core.api.Assertions.assertThat(lines).hasSize(7);                              // a header and the 6 revolvers
+        org.assertj.core.api.Assertions.assertThat(lines[1]).startsWith("trade,T-");
+    }
 }

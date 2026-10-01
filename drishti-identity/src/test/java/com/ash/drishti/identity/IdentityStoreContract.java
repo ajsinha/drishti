@@ -231,4 +231,24 @@ abstract class IdentityStoreContract {
         assertThat(h.recent("bo", 10)).isEmpty();
         assertThat(h.recent("al", 10)).hasSize(2);
     }
+
+    @Test
+    void apiTokensKeepOnlyAHashAndStopWhenRevoked() {
+        ApiTokenStore t = bean(ApiTokenStore.class);
+        ApiTokenStore.Created c = t.create("tess", "Notebook", 7);
+        assertThat(c.secret()).matches("drk_[A-Za-z0-9]{12}_[A-Za-z0-9_-]{43}");
+        assertThat(t.verify(c.secret())).contains("tess");
+        assertThat(t.verify(c.secret() + "x")).isEmpty();
+        assertThat(t.verify("drk_nothing")).isEmpty();
+        assertThat(t.of("tess")).singleElement().satisfies(v -> {
+            assertThat(v.name()).isEqualTo("Notebook");
+            assertThat(v.expiresAt()).isAfter(v.createdAt());
+            assertThat(v.active()).isTrue();
+        });
+        assertThat(t.revoke(c.token().id(), "someone-else", "x")).isFalse();      // only its owner (or an admin)
+        assertThat(t.revoke(c.token().id(), "tess", "tess")).isTrue();
+        assertThat(t.verify(c.secret())).isEmpty();
+        assertThatThrownBy(() -> t.create("tess", " ", null)).isInstanceOf(DrishtiException.class);
+        assertThatThrownBy(() -> t.create("tess", "x", 999)).isInstanceOf(DrishtiException.class);
+    }
 }

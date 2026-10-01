@@ -1,0 +1,42 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}API tokens · {{ PRODUCT }}{% endblock %}
+{% block screen %}admin{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm" data-token-admin>
+  <h1>API tokens</h1>
+  {% with tab='tokens' %}{% include "admin/_nav.html" %}{% endwith %}
+  <p class="text-muted-d">Tokens people made on <em>My account</em> for scripts, notebooks and spreadsheets. Each reads as its owner
+    (their roles and packs at the time) and never changes anything; a disabled user's tokens stop at once. Secrets are never stored,
+    only their hashes. Every creation and revocation is in the <a href="/admin/audit">audit log</a>.</p>
+  <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
+  <div class="tbl-wrap"><table class="tbl adm-tbl">
+    <thead><tr><th>Owner</th><th>Name</th><th>Id</th><th>Created</th><th>Expires</th><th>Last used</th><th>Status</th><th></th></tr></thead>
+    <tbody>{% for t in tokens %}
+      <tr data-token="{{ t.id }}"><td class="mono">{{ t.user }}</td><td>{{ t.name }}</td><td class="mono">{{ t.id }}</td>
+        <td class="mono">{{ (t.createdAt or '')[:10] }}</td><td class="mono">{{ (t.expiresAt or 'never')[:10] }}</td>
+        <td class="mono">{{ (t.lastUsedAt or '—')[:16] | replace('T', ' ') }}</td>
+        <td>{% if t.active %}<span class="st st-ok">active</span>{% elif t.revokedAt %}<span class="st">revoked</span>{% else %}<span class="st st-warn">expired</span>{% endif %}</td>
+        <td class="adm-actions">{% if t.active %}<button type="button" class="fk" data-revoke-any>Revoke</button>{% endif %}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+</div>
+{% endblock %}
+{% block footer %}{% include "_footer.html" %}{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/view.js?v={{ ASSET_V }}"></script><script src="/static/js/roles.js?v={{ ASSET_V }}"></script>{% endblock %}

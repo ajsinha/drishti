@@ -27,6 +27,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](DEVEL
 | Get it running in ten minutes | [QUICKSTART.md](QUICKSTART.md) |
 | Install and start it with every step explained | [GETTING_STARTED.md](GETTING_STARTED.md) |
 | Find your way around the top bar and its menus | [USER_GUIDE.md › The top bar](USER_GUIDE.md#the-top-bar) |
+| Read Drishti from a script, a notebook or Excel with a personal API token | [CLIENTS.md](CLIENTS.md) |
 | Open a view, and learn the command line and keys | [USER_GUIDE.md › The command line](USER_GUIDE.md#the-command-line), [Keyboard](USER_GUIDE.md#keyboard) |
 | List entities to pick from (`TRD T-100`, `CPTY north`, `TRD productType=Revolver`) | [USER_GUIDE.md › Pick lists](USER_GUIDE.md#pick-lists-when-a-command-names-several-entities) |
 | Page through a table, or walk it with the keyboard | [USER_GUIDE.md › Tables](USER_GUIDE.md#tables-paging-and-the-keyboard) |
