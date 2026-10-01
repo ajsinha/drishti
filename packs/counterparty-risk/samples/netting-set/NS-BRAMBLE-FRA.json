@@ -64,22 +64,34 @@
   {
    "tradeId": "BBG-60000090",
    "product": "Reverse repo",
+   "assetClass": "Securities financing",
+   "currency": "USD",
+   "book": "BOOK-SFT-1",
    "notional": 223000000.0,
    "maturity": "2026-11-09",
+   "maturityBucket": "0-1Y",
    "mtm": 1817034
   },
   {
    "tradeId": "BBG-60000093",
    "product": "Tri-party repo",
+   "assetClass": "Securities financing",
+   "currency": "EUR",
+   "book": "BOOK-SFT-1",
    "notional": 114000000.0,
    "maturity": "2027-01-13",
+   "maturityBucket": "0-1Y",
    "mtm": 1780029
   },
   {
    "tradeId": "BBG-60000081",
    "product": "Repurchase agreement",
+   "assetClass": "Securities financing",
+   "currency": "USD",
+   "book": "BOOK-SFT-1",
    "notional": 178000000.0,
    "maturity": "2027-01-04",
+   "maturityBucket": "0-1Y",
    "mtm": 396058
   }
  ],

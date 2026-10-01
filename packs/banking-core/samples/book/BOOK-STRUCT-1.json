@@ -9,71 +9,111 @@
   {
    "tradeId": "IMG-400133",
    "product": "Range accrual note",
+   "assetClass": "Structured",
+   "currency": "USD",
+   "book": "BOOK-STRUCT-1",
    "notional": 186000000.0,
    "maturity": "2035-02-22",
+   "maturityBucket": "5-10Y",
    "mtm": 3526766
   },
   {
    "tradeId": "IMG-400147",
    "product": "FX-rates hybrid (PRDC)",
+   "assetClass": "Structured",
+   "currency": "USD",
+   "book": "BOOK-STRUCT-1",
    "notional": 153000000.0,
    "maturity": "2033-01-28",
+   "maturityBucket": "5-10Y",
    "mtm": 2602465
   },
   {
    "tradeId": "IMG-400148",
    "product": "FX-rates hybrid (PRDC)",
+   "assetClass": "Structured",
+   "currency": "USD",
+   "book": "BOOK-STRUCT-1",
    "notional": 149000000.0,
    "maturity": "2032-02-02",
+   "maturityBucket": "5-10Y",
    "mtm": 1945606
   },
   {
    "tradeId": "IMG-400157",
    "product": "Credit basket note",
+   "assetClass": "Structured",
+   "currency": "CHF",
+   "book": "BOOK-STRUCT-1",
    "notional": 250000000.0,
    "maturity": "2027-11-18",
+   "maturityBucket": "1-2Y",
    "mtm": -1748235
   },
   {
    "tradeId": "IMG-400140",
    "product": "Capital-protected note",
+   "assetClass": "Structured",
+   "currency": "USD",
+   "book": "BOOK-STRUCT-1",
    "notional": 180000000.0,
    "maturity": "2031-10-27",
+   "maturityBucket": "5-10Y",
    "mtm": -1683078
   },
   {
    "tradeId": "IMG-400146",
    "product": "FX-rates hybrid (PRDC)",
+   "assetClass": "Structured",
+   "currency": "USD",
+   "book": "BOOK-STRUCT-1",
    "notional": 85000000.0,
    "maturity": "2029-10-11",
+   "maturityBucket": "2-5Y",
    "mtm": 917810
   },
   {
    "tradeId": "IMG-400156",
    "product": "Worst-of note",
+   "assetClass": "Structured",
+   "currency": "USD",
+   "book": "BOOK-STRUCT-1",
    "notional": 214000000.0,
    "maturity": "2028-09-12",
+   "maturityBucket": "1-2Y",
    "mtm": 765390
   },
   {
    "tradeId": "IMG-400134",
    "product": "Range accrual note",
+   "assetClass": "Structured",
+   "currency": "EUR",
+   "book": "BOOK-STRUCT-1",
    "notional": 89000000.0,
    "maturity": "2035-10-05",
+   "maturityBucket": "5-10Y",
    "mtm": 587235
   },
   {
    "tradeId": "IMG-400139",
    "product": "Capital-protected note",
+   "assetClass": "Structured",
+   "currency": "GBP",
+   "book": "BOOK-STRUCT-1",
    "notional": 118000000.0,
    "maturity": "2028-12-18",
+   "maturityBucket": "2-5Y",
    "mtm": 566929
   },
   {
    "tradeId": "IMG-400137",
    "product": "Range accrual note",
+   "assetClass": "Structured",
+   "currency": "USD",
+   "book": "BOOK-STRUCT-1",
    "notional": 113000000.0,
    "maturity": "2034-06-05",
+   "maturityBucket": "5-10Y",
    "mtm": 330790
   }
  ],

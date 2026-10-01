@@ -9,57 +9,89 @@
   {
    "tradeId": "MX-20000160",
    "product": "Zero-coupon inflation swap",
+   "assetClass": "Inflation",
+   "currency": "GBP",
+   "book": "BOOK-INFL-3",
    "notional": 188000000.0,
    "maturity": "2036-07-28",
+   "maturityBucket": "5-10Y",
    "mtm": -9675629
   },
   {
    "tradeId": "MX-20000167",
    "product": "Year-on-year inflation swap",
+   "assetClass": "Inflation",
+   "currency": "JPY",
+   "book": "BOOK-INFL-3",
    "notional": 210000000.0,
    "maturity": "2028-04-14",
+   "maturityBucket": "1-2Y",
    "mtm": -7337433
   },
   {
    "tradeId": "MX-20000176",
    "product": "Inflation-linked bond",
+   "assetClass": "Inflation",
+   "currency": "JPY",
+   "book": "BOOK-INFL-3",
    "notional": 145000000.0,
    "maturity": "2027-09-27",
+   "maturityBucket": "0-1Y",
    "mtm": -2725596
   },
   {
    "tradeId": "MX-20000168",
    "product": "Year-on-year inflation swap",
+   "assetClass": "Inflation",
+   "currency": "EUR",
+   "book": "BOOK-INFL-3",
    "notional": 65000000.0,
    "maturity": "2036-06-02",
+   "maturityBucket": "5-10Y",
    "mtm": -1644875
   },
   {
    "tradeId": "MX-20000162",
    "product": "Zero-coupon inflation swap",
+   "assetClass": "Inflation",
+   "currency": "EUR",
+   "book": "BOOK-INFL-3",
    "notional": 25000000.0,
    "maturity": "2030-01-28",
+   "maturityBucket": "2-5Y",
    "mtm": -672060
   },
   {
    "tradeId": "MX-20000186",
    "product": "Inflation asset swap",
+   "assetClass": "Inflation",
+   "currency": "JPY",
+   "book": "BOOK-INFL-3",
    "notional": 124000000.0,
    "maturity": "2033-05-23",
+   "maturityBucket": "5-10Y",
    "mtm": 528987
   },
   {
    "tradeId": "MX-20000184",
    "product": "Inflation asset swap",
+   "assetClass": "Inflation",
+   "currency": "JPY",
+   "book": "BOOK-INFL-3",
    "notional": 131000000.0,
    "maturity": "2034-07-31",
+   "maturityBucket": "5-10Y",
    "mtm": 225940
   },
   {
    "tradeId": "MX-20000158",
    "product": "Zero-coupon inflation swap",
+   "assetClass": "Inflation",
+   "currency": "JPY",
+   "book": "BOOK-INFL-3",
    "notional": 6000000.0,
    "maturity": "2028-08-25",
+   "maturityBucket": "1-2Y",
    "mtm": -188625
   }
  ],

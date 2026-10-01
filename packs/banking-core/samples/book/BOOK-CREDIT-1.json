@@ -9,71 +9,111 @@
   {
    "tradeId": "CLY-3000048",
    "product": "Credit-linked note",
+   "assetClass": "Credit",
+   "currency": "AUD",
+   "book": "BOOK-CREDIT-1",
    "notional": 231000000.0,
    "maturity": "2030-03-11",
+   "maturityBucket": "2-5Y",
    "mtm": 3195037
   },
   {
    "tradeId": "CLY-3000066",
    "product": "Credit spread option",
+   "assetClass": "Credit",
+   "currency": "USD",
+   "book": "BOOK-CREDIT-1",
    "notional": 198000000.0,
    "maturity": "2027-09-30",
+   "maturityBucket": "1-2Y",
    "mtm": -2328179
   },
   {
    "tradeId": "CLY-3000016",
    "product": "Index tranche",
+   "assetClass": "Credit",
+   "currency": "USD",
+   "book": "BOOK-CREDIT-1",
    "notional": 137000000.0,
    "maturity": "2033-03-21",
+   "maturityBucket": "5-10Y",
    "mtm": -2011432
   },
   {
    "tradeId": "CLY-3000047",
    "product": "Credit-linked note",
+   "assetClass": "Credit",
+   "currency": "JPY",
+   "book": "BOOK-CREDIT-1",
    "notional": 176000000.0,
    "maturity": "2030-07-16",
+   "maturityBucket": "2-5Y",
    "mtm": 1743748
   },
   {
    "tradeId": "CLY-3000052",
    "product": "Term loan",
+   "assetClass": "Credit",
+   "currency": "JPY",
+   "book": "BOOK-CREDIT-1",
    "notional": 108000000.0,
    "maturity": "2028-11-17",
+   "maturityBucket": "2-5Y",
    "mtm": -1725172
   },
   {
    "tradeId": "CLY-3000057",
    "product": "Revolving credit facility",
+   "assetClass": "Credit",
+   "currency": "AUD",
+   "book": "BOOK-CREDIT-1",
    "notional": 156000000.0,
    "maturity": "2036-10-03",
+   "maturityBucket": "10Y+",
    "mtm": 1498057
   },
   {
    "tradeId": "CLY-3000021",
    "product": "CDS index option",
+   "assetClass": "Credit",
+   "currency": "USD",
+   "book": "BOOK-CREDIT-1",
    "notional": 75000000.0,
    "maturity": "2026-10-07",
+   "maturityBucket": "0-1Y",
    "mtm": -1261668
   },
   {
    "tradeId": "CLY-3000012",
    "product": "CDS index (CDX / iTraxx)",
+   "assetClass": "Credit",
+   "currency": "USD",
+   "book": "BOOK-CREDIT-1",
    "notional": 143000000.0,
    "maturity": "2033-03-02",
+   "maturityBucket": "5-10Y",
    "mtm": 1209105
   },
   {
    "tradeId": "CLY-3000064",
    "product": "Credit spread option",
+   "assetClass": "Credit",
+   "currency": "JPY",
+   "book": "BOOK-CREDIT-1",
    "notional": 201000000.0,
    "maturity": "2026-10-07",
+   "maturityBucket": "0-1Y",
    "mtm": 1037396
   },
   {
    "tradeId": "CLY-3000039",
    "product": "Total return swap on a loan index",
+   "assetClass": "Credit",
+   "currency": "USD",
+   "book": "BOOK-CREDIT-1",
    "notional": 96000000.0,
    "maturity": "2028-11-08",
+   "maturityBucket": "2-5Y",
    "mtm": 1036608
   }
  ],

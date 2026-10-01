@@ -55,6 +55,24 @@ panels:
     by: book
     across: family
     agg: count
+  - id: positions
+    kind: table
+    title: Trades by book
+    code: TRD
+    key: F4
+    rows: $.positions
+    pivot:
+      rows: [book]
+      columns: [currency]
+      values: [{ field: mtm, agg: sum }]
+      filters: [family]
+      heat: true
+    columns:
+      - { label: Trade, bind: "@.tradeId" }
+      - { label: Book, bind: "@.book" }
+      - { label: Currency, bind: "@.currency" }
+      - { label: Family, bind: "@.family" }
+      - { label: MTM, bind: "@.mtm", fmt: signed0, tone: sign, total: true }
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
 keys: { F7: "link($.legalEntity, 'legal-entity')", F8: impact, F9: raw }

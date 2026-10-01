@@ -9,29 +9,45 @@
   {
    "tradeId": "WSS-1500109",
    "product": "Call account",
+   "assetClass": "Money market",
+   "currency": "USD",
+   "book": "BOOK-MM-3",
    "notional": 117000000.0,
    "maturity": "2027-07-29",
+   "maturityBucket": "0-1Y",
    "mtm": 2344329
   },
   {
    "tradeId": "WSS-1500098",
    "product": "Certificate of deposit",
+   "assetClass": "Money market",
+   "currency": "AUD",
+   "book": "BOOK-MM-3",
    "notional": 214000000.0,
    "maturity": "2027-03-22",
+   "maturityBucket": "0-1Y",
    "mtm": 1716643
   },
   {
    "tradeId": "WSS-1500102",
    "product": "Certificate of deposit",
+   "assetClass": "Money market",
+   "currency": "EUR",
+   "book": "BOOK-MM-3",
    "notional": 74000000.0,
    "maturity": "2026-12-18",
+   "maturityBucket": "0-1Y",
    "mtm": -1329064
   },
   {
    "tradeId": "WSS-1500114",
    "product": "Call account",
+   "assetClass": "Money market",
+   "currency": "GBP",
+   "book": "BOOK-MM-3",
    "notional": 30000000.0,
    "maturity": "2027-01-20",
+   "maturityBucket": "0-1Y",
    "mtm": -392005
   }
  ],

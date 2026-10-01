@@ -137,6 +137,34 @@ columns:
   - mtm
   - maturityDate
   - book
+pivot:
+  trade:
+    fields:
+    - book
+    - desk
+    - currency
+    - assetClass
+    - productType
+    - direction
+    - status
+    - counterparty.name
+    - nettingSet
+    - sourceSystem
+    - maturityDate
+    - notional
+    - mtm
+    - pnl1d
+    - risk.dv01
+    rows:
+    - book
+    columns:
+    - currency
+    values:
+    - field: mtm
+      agg: sum
+    filters:
+    - assetClass
+    - status
 console:
   examples:
   - - TRD MX-20000001

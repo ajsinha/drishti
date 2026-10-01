@@ -9,71 +9,111 @@
   {
    "tradeId": "MX-20000161",
    "product": "Zero-coupon inflation swap",
+   "assetClass": "Inflation",
+   "currency": "JPY",
+   "book": "BOOK-INFL-2",
    "notional": 47000000.0,
    "maturity": "2036-07-21",
+   "maturityBucket": "5-10Y",
    "mtm": 8195317
   },
   {
    "tradeId": "MX-20000157",
    "product": "Zero-coupon inflation swap",
+   "assetClass": "Inflation",
+   "currency": "EUR",
+   "book": "BOOK-INFL-2",
    "notional": 200000000.0,
    "maturity": "2035-07-12",
+   "maturityBucket": "5-10Y",
    "mtm": -8112592
   },
   {
    "tradeId": "MX-20000164",
    "product": "Year-on-year inflation swap",
+   "assetClass": "Inflation",
+   "currency": "GBP",
+   "book": "BOOK-INFL-2",
    "notional": 243000000.0,
    "maturity": "2026-11-05",
+   "maturityBucket": "0-1Y",
    "mtm": -4921358
   },
   {
    "tradeId": "MX-20000173",
    "product": "Inflation cap / floor",
+   "assetClass": "Inflation",
+   "currency": "USD",
+   "book": "BOOK-INFL-2",
    "notional": 171000000.0,
    "maturity": "2026-10-07",
+   "maturityBucket": "0-1Y",
    "mtm": 4685483
   },
   {
    "tradeId": "MX-20000185",
    "product": "Inflation asset swap",
+   "assetClass": "Inflation",
+   "currency": "JPY",
+   "book": "BOOK-INFL-2",
    "notional": 237000000.0,
    "maturity": "2031-05-13",
+   "maturityBucket": "2-5Y",
    "mtm": -2801657
   },
   {
    "tradeId": "MX-20000190",
    "product": "Limited price index swap",
+   "assetClass": "Inflation",
+   "currency": "JPY",
+   "book": "BOOK-INFL-2",
    "notional": 173000000.0,
    "maturity": "2027-05-26",
+   "maturityBucket": "0-1Y",
    "mtm": -1373222
   },
   {
    "tradeId": "MX-20000180",
    "product": "Inflation-linked bond",
+   "assetClass": "Inflation",
+   "currency": "USD",
+   "book": "BOOK-INFL-2",
    "notional": 57000000.0,
    "maturity": "2027-05-24",
+   "maturityBucket": "0-1Y",
    "mtm": -1106536
   },
   {
    "tradeId": "MX-20000178",
    "product": "Inflation-linked bond",
+   "assetClass": "Inflation",
+   "currency": "GBP",
+   "book": "BOOK-INFL-2",
    "notional": 192000000.0,
    "maturity": "2034-10-04",
+   "maturityBucket": "5-10Y",
    "mtm": -992597
   },
   {
    "tradeId": "MX-20000165",
    "product": "Year-on-year inflation swap",
+   "assetClass": "Inflation",
+   "currency": "USD",
+   "book": "BOOK-INFL-2",
    "notional": 249000000.0,
    "maturity": "2028-04-24",
+   "maturityBucket": "1-2Y",
    "mtm": 956175
   },
   {
    "tradeId": "MX-20000188",
    "product": "Limited price index swap",
+   "assetClass": "Inflation",
+   "currency": "JPY",
+   "book": "BOOK-INFL-2",
    "notional": 71000000.0,
    "maturity": "2031-07-28",
+   "maturityBucket": "2-5Y",
    "mtm": -561601
   }
  ],

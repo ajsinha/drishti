@@ -64,22 +64,34 @@
   {
    "tradeId": "BBG-60000086",
    "product": "Reverse repo",
+   "assetClass": "Securities financing",
+   "currency": "EUR",
+   "book": "BOOK-SFT-1",
    "notional": 161000000.0,
    "maturity": "2026-10-07",
+   "maturityBucket": "0-1Y",
    "mtm": 3324957
   },
   {
    "tradeId": "BBG-60000112",
    "product": "Securities borrowing",
+   "assetClass": "Securities financing",
+   "currency": "GBP",
+   "book": "BOOK-SFT-2",
    "notional": 157000000.0,
    "maturity": "2027-02-04",
+   "maturityBucket": "0-1Y",
    "mtm": -511456
   },
   {
    "tradeId": "BBG-60000083",
    "product": "Repurchase agreement",
+   "assetClass": "Securities financing",
+   "currency": "EUR",
+   "book": "BOOK-SFT-3",
    "notional": 230000000.0,
    "maturity": "2027-01-11",
+   "maturityBucket": "0-1Y",
    "mtm": 269743
   }
  ],

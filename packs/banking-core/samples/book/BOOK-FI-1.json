@@ -9,71 +9,111 @@
   {
    "tradeId": "BBG-60000018",
    "product": "Floating rate note",
+   "assetClass": "Fixed income",
+   "currency": "GBP",
+   "book": "BOOK-FI-1",
    "notional": 245000000.0,
    "maturity": "2031-09-29",
+   "maturityBucket": "5-10Y",
    "mtm": -3735787
   },
   {
    "tradeId": "BBG-60000050",
    "product": "Municipal bond",
+   "assetClass": "Fixed income",
+   "currency": "USD",
+   "book": "BOOK-FI-1",
    "notional": 194000000.0,
    "maturity": "2036-05-05",
+   "maturityBucket": "5-10Y",
    "mtm": -3693532
   },
   {
    "tradeId": "BBG-60000037",
    "product": "Amortising bond",
+   "assetClass": "Fixed income",
+   "currency": "USD",
+   "book": "BOOK-FI-1",
    "notional": 204000000.0,
    "maturity": "2034-08-14",
+   "maturityBucket": "5-10Y",
    "mtm": -3664626
   },
   {
    "tradeId": "BBG-60000030",
    "product": "Callable bond",
+   "assetClass": "Fixed income",
+   "currency": "EUR",
+   "book": "BOOK-FI-1",
    "notional": 241000000.0,
    "maturity": "2032-08-16",
+   "maturityBucket": "5-10Y",
    "mtm": 3201249
   },
   {
    "tradeId": "BBG-60000048",
    "product": "Covered bond",
+   "assetClass": "Fixed income",
+   "currency": "CAD",
+   "book": "BOOK-FI-1",
    "notional": 158000000.0,
    "maturity": "2035-11-29",
+   "maturityBucket": "5-10Y",
    "mtm": 2694900
   },
   {
    "tradeId": "BBG-60000060",
    "product": "Agency MBS pass-through",
+   "assetClass": "Fixed income",
+   "currency": "CAD",
+   "book": "BOOK-FI-1",
    "notional": 211000000.0,
    "maturity": "2031-01-23",
+   "maturityBucket": "2-5Y",
    "mtm": -2303954
   },
   {
    "tradeId": "BBG-60000063",
    "product": "CMO tranche",
+   "assetClass": "Fixed income",
+   "currency": "EUR",
+   "book": "BOOK-FI-1",
    "notional": 214000000.0,
    "maturity": "2034-05-05",
+   "maturityBucket": "5-10Y",
    "mtm": -2085900
   },
   {
    "tradeId": "BBG-60000038",
    "product": "Amortising bond",
+   "assetClass": "Fixed income",
+   "currency": "GBP",
+   "book": "BOOK-FI-1",
    "notional": 164000000.0,
    "maturity": "2032-05-20",
+   "maturityBucket": "5-10Y",
    "mtm": -1645510
   },
   {
    "tradeId": "BBG-60000003",
    "product": "Government bond",
+   "assetClass": "Fixed income",
+   "currency": "EUR",
+   "book": "BOOK-FI-1",
    "notional": 105000000.0,
    "maturity": "2034-10-31",
+   "maturityBucket": "5-10Y",
    "mtm": -1569609
   },
   {
    "tradeId": "BBG-60000026",
    "product": "Callable bond",
+   "assetClass": "Fixed income",
+   "currency": "JPY",
+   "book": "BOOK-FI-1",
    "notional": 115000000.0,
    "maturity": "2034-02-28",
+   "maturityBucket": "5-10Y",
    "mtm": -1530581
   }
  ],

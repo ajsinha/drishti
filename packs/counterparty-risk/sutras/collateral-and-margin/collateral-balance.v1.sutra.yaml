@@ -30,6 +30,10 @@ panels:
     title: Positions
     key: F2
     rows: $.positions
+    pivot:
+      rows: [direction]
+      values: [{ field: marketValue, agg: sum }, { field: value, agg: sum }]
+      filters: [asset]
     columns:
       - { label: Asset, bind: "@.asset" }
       - { label: Direction, bind: "@.direction" }

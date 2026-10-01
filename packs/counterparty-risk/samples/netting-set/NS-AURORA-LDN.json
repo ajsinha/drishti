@@ -64,85 +64,133 @@
   {
    "tradeId": "WSS-1500044",
    "product": "FX double-barrier option",
+   "assetClass": "FX",
+   "currency": "USD",
+   "book": "BOOK-FX-3",
    "notional": 89000000.0,
    "maturity": "2030-08-22",
+   "maturityBucket": "2-5Y",
    "mtm": 2041598
   },
   {
    "tradeId": "WSS-1500052",
    "product": "FX one-touch / no-touch",
+   "assetClass": "FX",
+   "currency": "USD",
+   "book": "BOOK-FX-1",
    "notional": 117000000.0,
    "maturity": "2032-06-21",
+   "maturityBucket": "5-10Y",
    "mtm": -1806756
   },
   {
    "tradeId": "IMG-400092",
    "product": "Dividend swap",
+   "assetClass": "Equity",
+   "currency": "USD",
+   "book": "BOOK-EQD-2",
    "notional": 220000000.0,
    "maturity": "2037-01-16",
+   "maturityBucket": "10Y+",
    "mtm": -1409108
   },
   {
    "tradeId": "WSS-1500023",
    "product": "FX swap",
+   "assetClass": "FX",
+   "currency": "USD",
+   "book": "BOOK-FX-2",
    "notional": 130000000.0,
    "maturity": "2035-07-06",
+   "maturityBucket": "5-10Y",
    "mtm": 1276114
   },
   {
    "tradeId": "MX-20000188",
    "product": "Limited price index swap",
+   "assetClass": "Inflation",
+   "currency": "JPY",
+   "book": "BOOK-INFL-2",
    "notional": 71000000.0,
    "maturity": "2031-07-28",
+   "maturityBucket": "2-5Y",
    "mtm": -561601
   },
   {
    "tradeId": "IMG-400108",
    "product": "Portfolio (basket) swap",
+   "assetClass": "Equity",
+   "currency": "USD",
+   "book": "BOOK-EQD-1",
    "notional": 157000000.0,
    "maturity": "2028-12-13",
+   "maturityBucket": "2-5Y",
    "mtm": -375356
   },
   {
    "tradeId": "WSS-1500025",
    "product": "FX vanilla option",
+   "assetClass": "FX",
+   "currency": "USD",
+   "book": "BOOK-FX-2",
    "notional": 50000000.0,
    "maturity": "2028-06-07",
+   "maturityBucket": "1-2Y",
    "mtm": -355449
   },
   {
    "tradeId": "IMG-400072",
    "product": "Autocallable note",
+   "assetClass": "Equity",
+   "currency": "USD",
+   "book": "BOOK-EQD-2",
    "notional": 70000000.0,
    "maturity": "2033-11-14",
+   "maturityBucket": "5-10Y",
    "mtm": -241699
   },
   {
    "tradeId": "MX-20000172",
    "product": "Inflation cap / floor",
+   "assetClass": "Inflation",
+   "currency": "EUR",
+   "book": "BOOK-INFL-2",
    "notional": 35000000.0,
    "maturity": "2027-12-13",
+   "maturityBucket": "1-2Y",
    "mtm": 215279
   },
   {
    "tradeId": "IMG-400056",
    "product": "Equity digital option",
+   "assetClass": "Equity",
+   "currency": "EUR",
+   "book": "BOOK-EQD-3",
    "notional": 225000000.0,
    "maturity": "2027-09-23",
+   "maturityBucket": "0-1Y",
    "mtm": 159333
   },
   {
    "tradeId": "MX-20000175",
    "product": "Inflation-linked bond",
+   "assetClass": "Inflation",
+   "currency": "USD",
+   "book": "BOOK-INFL-2",
    "notional": 11000000.0,
    "maturity": "2037-09-18",
+   "maturityBucket": "10Y+",
    "mtm": -116608
   },
   {
    "tradeId": "IMG-400085",
    "product": "Volatility swap",
+   "assetClass": "Equity",
+   "currency": "USD",
+   "book": "BOOK-EQD-2",
    "notional": 4000000.0,
    "maturity": "2035-01-29",
+   "maturityBucket": "5-10Y",
    "mtm": 35665
   }
  ],

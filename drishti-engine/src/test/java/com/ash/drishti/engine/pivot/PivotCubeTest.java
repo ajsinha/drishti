@@ -61,7 +61,7 @@ class PivotCubeTest {
                 Map.of("field", "mtm", "agg", "sum"), Map.of("field", "mtm", "agg", "count"), Map.of("field", "mtm", "agg", "avg"),
                 Map.of("field", "mtm", "agg", "min"), Map.of("field", "mtm", "agg", "max"), Map.of("field", "id", "agg", "distinct"))));
         var cube = run(a, 100, 100);
-        assertThat(cube.get("rowKeys")).isEqualTo(List.of(List.of("B10"), List.of("B2")));     // text order, any case
+        assertThat(cube.get("rowKeys")).isEqualTo(List.of(List.of("B2"), List.of("B10")));     // natural order: B2 before B10
         assertThat(cube.get("columnKeys")).isEqualTo(List.of(List.of("EUR"), List.of("USD")));
         assertThat(cell(cube, "", "")).containsExactly(11.5, 3L, 11.5 / 3, -4L, 10L, 4L);         // the grand total
         assertThat(cell(cube, "B2", "")).containsExactly(6L, 2L, 3L, -4L, 10L, 2L);               // a row's total
@@ -97,6 +97,9 @@ class PivotCubeTest {
         assertThat(PivotCube.compareKey("9", "10")).isNegative();
         assertThat(PivotCube.compareKey("(blank)", "a")).isPositive();
         assertThat(PivotCube.compareKey("2", "a")).isNegative();
+        assertThat(PivotCube.compareKey("2-5Y", "10Y+")).isNegative();                           // natural order of buckets
+        assertThat(PivotCube.compareKey("0-1Y", "1-2Y")).isNegative();
+        assertThat(PivotCube.compareKey("BOOK-9", "book-10")).isNegative();
         assertThat(PivotCube.key(3.0)).isEqualTo("3");
         assertThat(PivotCube.key(null)).isEqualTo("(blank)");
         assertThat(PivotCube.key("")).isEqualTo("(blank)");

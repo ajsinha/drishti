@@ -64,85 +64,133 @@
   {
    "tradeId": "IMG-400059",
    "product": "Equity digital option",
+   "assetClass": "Equity",
+   "currency": "EUR",
+   "book": "BOOK-EQD-3",
    "notional": 232000000.0,
    "maturity": "2027-11-25",
+   "maturityBucket": "1-2Y",
    "mtm": 4508571
   },
   {
    "tradeId": "IMG-400121",
    "product": "Convertible bond",
+   "assetClass": "Equity",
+   "currency": "CAD",
+   "book": "BOOK-EQD-2",
    "notional": 214000000.0,
    "maturity": "2031-07-28",
+   "maturityBucket": "2-5Y",
    "mtm": 3120994
   },
   {
    "tradeId": "WSS-1500039",
    "product": "FX barrier option",
+   "assetClass": "FX",
+   "currency": "JPY",
+   "book": "BOOK-FX-3",
    "notional": 191000000.0,
    "maturity": "2029-10-22",
+   "maturityBucket": "2-5Y",
    "mtm": -2456557
   },
   {
    "tradeId": "WSS-1500046",
    "product": "FX double-barrier option",
+   "assetClass": "FX",
+   "currency": "CAD",
+   "book": "BOOK-FX-3",
    "notional": 138000000.0,
    "maturity": "2029-04-09",
+   "maturityBucket": "2-5Y",
    "mtm": -2103691
   },
   {
    "tradeId": "IMG-400007",
    "product": "Equity forward",
+   "assetClass": "Equity",
+   "currency": "CAD",
+   "book": "BOOK-EQD-3",
    "notional": 230000000.0,
    "maturity": "2028-04-07",
+   "maturityBucket": "1-2Y",
    "mtm": -1368137
   },
   {
    "tradeId": "WSS-1500084",
    "product": "Quanto option",
+   "assetClass": "FX",
+   "currency": "JPY",
+   "book": "BOOK-FX-2",
    "notional": 202000000.0,
    "maturity": "2031-10-31",
+   "maturityBucket": "5-10Y",
    "mtm": -1346075
   },
   {
    "tradeId": "WSS-1500058",
    "product": "FX average-rate option",
+   "assetClass": "FX",
+   "currency": "CAD",
+   "book": "BOOK-FX-2",
    "notional": 53000000.0,
    "maturity": "2032-01-21",
+   "maturityBucket": "5-10Y",
    "mtm": -1068715
   },
   {
    "tradeId": "WSS-1500011",
    "product": "FX forward",
+   "assetClass": "FX",
+   "currency": "USD",
+   "book": "BOOK-FX-3",
    "notional": 114000000.0,
    "maturity": "2026-10-07",
+   "maturityBucket": "0-1Y",
    "mtm": -940839
   },
   {
    "tradeId": "IMG-400033",
    "product": "OTC equity option",
+   "assetClass": "Equity",
+   "currency": "USD",
+   "book": "BOOK-EQD-2",
    "notional": 97000000.0,
    "maturity": "2026-10-07",
+   "maturityBucket": "0-1Y",
    "mtm": 521167
   },
   {
    "tradeId": "MX-20000183",
    "product": "Inflation asset swap",
+   "assetClass": "Inflation",
+   "currency": "GBP",
+   "book": "BOOK-INFL-2",
    "notional": 46000000.0,
    "maturity": "2037-05-26",
+   "maturityBucket": "10Y+",
    "mtm": -497035
   },
   {
    "tradeId": "IMG-400130",
    "product": "Basket option",
+   "assetClass": "Equity",
+   "currency": "EUR",
+   "book": "BOOK-EQD-1",
    "notional": 98000000.0,
    "maturity": "2037-06-23",
+   "maturityBucket": "10Y+",
    "mtm": 304517
   },
   {
    "tradeId": "IMG-400080",
    "product": "Variance swap",
+   "assetClass": "Equity",
+   "currency": "EUR",
+   "book": "BOOK-EQD-1",
    "notional": 3000000.0,
    "maturity": "2029-10-22",
+   "maturityBucket": "2-5Y",
    "mtm": -18848
   }
  ],

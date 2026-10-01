@@ -335,8 +335,31 @@ public final class PivotCube {
         if (x != null || y != null) {
             return x != null ? -1 : 1;
         }
-        int c = a.toLowerCase(Locale.ROOT).compareTo(b.toLowerCase(Locale.ROOT));
+        int c = natural(a.toLowerCase(Locale.ROOT), b.toLowerCase(Locale.ROOT));
         return c != 0 ? c : a.compareTo(b);
+    }
+
+    private static final java.util.regex.Pattern RUNS = java.util.regex.Pattern.compile("\\d+|\\D+");
+
+    /** Text in natural order: runs of digits by value, the rest as text ("2-5Y" before "10Y+"), as pivot-engine.js sorts. */
+    static int natural(String a, String b) {
+        java.util.regex.Matcher x = RUNS.matcher(a);
+        java.util.regex.Matcher y = RUNS.matcher(b);
+        while (true) {
+            boolean hx = x.find();
+            boolean hy = y.find();
+            if (!hx || !hy) {
+                return hx ? 1 : hy ? -1 : 0;
+            }
+            String p = x.group();
+            String q = y.group();
+            boolean dx = Character.isDigit(p.charAt(0));
+            boolean dy = Character.isDigit(q.charAt(0));
+            int c = dx && dy ? new java.math.BigInteger(p).compareTo(new java.math.BigInteger(q)) : p.compareTo(q);
+            if (c != 0) {
+                return c;
+            }
+        }
     }
 
     private static Double number(String s) {

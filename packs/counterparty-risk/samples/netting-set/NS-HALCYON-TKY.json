@@ -64,15 +64,23 @@
   {
    "tradeId": "IMG-400133",
    "product": "Range accrual note",
+   "assetClass": "Structured",
+   "currency": "USD",
+   "book": "BOOK-STRUCT-1",
    "notional": 186000000.0,
    "maturity": "2035-02-22",
+   "maturityBucket": "5-10Y",
    "mtm": 3526766
   },
   {
    "tradeId": "IMG-400138",
    "product": "Range accrual note",
+   "assetClass": "Structured",
+   "currency": "CAD",
+   "book": "BOOK-STRUCT-3",
    "notional": 145000000.0,
    "maturity": "2035-02-06",
+   "maturityBucket": "5-10Y",
    "mtm": -1227669
   }
  ],

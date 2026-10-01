@@ -64,22 +64,34 @@
   {
    "tradeId": "BBG-60000094",
    "product": "Tri-party repo",
+   "assetClass": "Securities financing",
+   "currency": "JPY",
+   "book": "BOOK-SFT-1",
    "notional": 237000000.0,
    "maturity": "2027-02-15",
+   "maturityBucket": "0-1Y",
    "mtm": -708216
   },
   {
    "tradeId": "BBG-60000103",
    "product": "Securities lending",
+   "assetClass": "Securities financing",
+   "currency": "EUR",
+   "book": "BOOK-SFT-2",
    "notional": 43000000.0,
    "maturity": "2027-01-29",
+   "maturityBucket": "0-1Y",
    "mtm": 516127
   },
   {
    "tradeId": "BBG-60000100",
    "product": "Buy / sell-back",
+   "assetClass": "Securities financing",
+   "currency": "USD",
+   "book": "BOOK-SFT-2",
    "notional": 125000000.0,
    "maturity": "2027-03-08",
+   "maturityBucket": "0-1Y",
    "mtm": -147461
   }
  ],

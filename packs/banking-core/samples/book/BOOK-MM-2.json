@@ -9,50 +9,78 @@
   {
    "tradeId": "WSS-1500101",
    "product": "Certificate of deposit",
+   "assetClass": "Money market",
+   "currency": "EUR",
+   "book": "BOOK-MM-2",
    "notional": 241000000.0,
    "maturity": "2027-08-06",
+   "maturityBucket": "0-1Y",
    "mtm": 3225400
   },
   {
    "tradeId": "WSS-1500088",
    "product": "Treasury bill",
+   "assetClass": "Money market",
+   "currency": "CAD",
+   "book": "BOOK-MM-2",
    "notional": 215000000.0,
    "maturity": "2026-12-11",
+   "maturityBucket": "0-1Y",
    "mtm": -1859294
   },
   {
    "tradeId": "WSS-1500096",
    "product": "Commercial paper",
+   "assetClass": "Money market",
+   "currency": "CAD",
+   "book": "BOOK-MM-2",
    "notional": 157000000.0,
    "maturity": "2027-01-08",
+   "maturityBucket": "0-1Y",
    "mtm": -996256
   },
   {
    "tradeId": "WSS-1500105",
    "product": "Term deposit / placement",
+   "assetClass": "Money market",
+   "currency": "USD",
+   "book": "BOOK-MM-2",
    "notional": 164000000.0,
    "maturity": "2026-11-06",
+   "maturityBucket": "0-1Y",
    "mtm": 879743
   },
   {
    "tradeId": "WSS-1500112",
    "product": "Call account",
+   "assetClass": "Money market",
+   "currency": "USD",
+   "book": "BOOK-MM-2",
    "notional": 125000000.0,
    "maturity": "2027-04-05",
+   "maturityBucket": "0-1Y",
    "mtm": 224016
   },
   {
    "tradeId": "WSS-1500108",
    "product": "Term deposit / placement",
+   "assetClass": "Money market",
+   "currency": "JPY",
+   "book": "BOOK-MM-2",
    "notional": 32000000.0,
    "maturity": "2027-04-08",
+   "maturityBucket": "0-1Y",
    "mtm": 221400
   },
   {
    "tradeId": "WSS-1500104",
    "product": "Term deposit / placement",
+   "assetClass": "Money market",
+   "currency": "AUD",
+   "book": "BOOK-MM-2",
    "notional": 36000000.0,
    "maturity": "2026-12-28",
+   "maturityBucket": "0-1Y",
    "mtm": 70858
   }
  ],

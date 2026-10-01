@@ -18,6 +18,14 @@ from risk_model import Kind, Panel as P
 CP, COL, EXP, MR, ORG = "Counterparty and legal", "Collateral and margin", "Exposure and capital", "Market risk", "Organisation"
 TRADE_COLS = [("Trade", "@.tradeId", None, None, False), ("Product", "@.product", None, None, False), ("Notional", "@.notional", "compact", None, False),
               ("Maturity", "@.maturity", "date", None, False), ("MTM", "@.mtm", "signed0", "sign", True)]
+# The Pivot tab of a trade list (a netting set's, a book's, a clearing account's): the fields a trader slices by, opening on
+# notional by product and remaining maturity, or MTM by product and currency
+TRADE_FIELDS = ["product", "assetClass", "currency", "book", "maturityBucket", {"field": "maturity", "label": "Maturity date"},
+                {"field": "notional", "fmt": "compact"}, {"field": "mtm", "label": "MTM (USD)", "fmt": "signed0"}, "tradeId"]
+NOTIONAL_BY_MATURITY = {"fields": TRADE_FIELDS, "rows": ["product"], "columns": ["maturityBucket"],
+                        "values": [{"field": "notional", "agg": "sum"}], "filters": ["currency", "assetClass"]}
+MTM_BY_CURRENCY = {"fields": TRADE_FIELDS, "rows": ["product"], "columns": ["currency"], "values": [{"field": "mtm", "agg": "sum"}],
+                   "filters": ["assetClass", "maturityBucket"], "heat": True}
 
 KINDS = [
     Kind("counterparty", "CPTY", "CP-", "Counterparty", CP, "A legal entity the bank trades with: identifiers, rating, sector, country and parent group.", "counterpartyId",
@@ -49,14 +57,15 @@ KINDS = [
     Kind("netting-set", "NSET", "NS-", "Netting set", EXP, "Trades that net on close-out under one agreement and CSA, with exposure and collateral.", "nettingSetId",
          [("Trades", "$.tradeCount", None, None, False), ("Net MTM", "$.netMtm", "signed0", "sign", False), ("Collateral", "$.collateral", "signed0", None, False), ("EE peak", "$.eePeak", "compact", None, False), ("PFE 95 peak", "$.pfePeak", "compact", None, True), ("Limit", "$.limit", "compact", None, False), ("Utilisation", "$.utilisation", "pct0", None, False), ("CVA", "$.cva", "signed0", "sign", False)],
          [P("area", "exposure", "Exposure profile", "$.profile", x="tenor", series=[("Expected exposure", "ee", "link"), ("PFE 95", "pfe", "accent")], limit="$.limit", key="F2", code="EXP"),
-          P("table", "trades", "Member trades", "$.trades", TRADE_COLS, key="F3", code="TRD"),
+          P("table", "trades", "Member trades", "$.trades", TRADE_COLS, key="F3", code="TRD", pivot=NOTIONAL_BY_MATURITY),
           P("hbar", "byAsset", "Net MTM by asset class", "$.byAsset", label="asset", value="mtm", fmt="signed0", tone="sign", area="right")],
          links={"counterparty": ("counterparty", "Counterparty"), "agreement": ("agreement", "Agreement"), "csa": ("csa", "CSA"), "creditLimit": ("credit-limit", "Credit limit"),
                 "exposureProfile": ("exposure-profile", "Exposure profile"), "cvaResult": ("cva", "CVA"), "saccr": ("sa-ccr", "SA-CCR"), "simm": ("simm", "SIMM"), "collateralBalance": ("collateral-balance", "Collateral")},
          badge="'PFE ' + fmt($.pfePeak, 'compact')", live={"netMtm": 25000}),
     Kind("collateral-balance", "COLL", "COLL-", "Collateral balance", COL, "Collateral held and posted under a CSA, by asset, after haircuts.", "balanceId",
          [("Held", "$.held", "compact", None, False), ("Posted", "$.posted", "compact", None, False), ("Net", "$.net", "signed0", "sign", True), ("As of", "$.asOf", "date", None, False)],
-         [P("table", "positions", "Positions", "$.positions", [("Asset", "@.asset", None, None, False), ("Direction", "@.direction", None, None, False), ("Market value", "@.marketValue", "amount0", None, True), ("Haircut", "@.haircut", "pct2", None, False), ("Collateral value", "@.value", "amount0", None, True)], key="F2")],
+         [P("table", "positions", "Positions", "$.positions", [("Asset", "@.asset", None, None, False), ("Direction", "@.direction", None, None, False), ("Market value", "@.marketValue", "amount0", None, True), ("Haircut", "@.haircut", "pct2", None, False), ("Collateral value", "@.value", "amount0", None, True)], key="F2",
+           pivot={"rows": ["direction"], "values": [{"field": "marketValue", "agg": "sum"}, {"field": "value", "agg": "sum"}], "filters": ["asset"]})],
          links={"csa": ("csa", "CSA"), "nettingSet": ("netting-set", "Netting set")}),
     Kind("margin-call", "MC", "MC-", "Margin call", COL, "A variation or initial margin call and its settlement status.", "callId",
          [("Date", "$.callDate", "date", None, False), ("Type", "$.marginType", None, None, False), ("Direction", "$.direction", None, None, False), ("Amount", "$.amount", "amount0", None, True), ("Status", "$.status", None, "status", False), ("Dispute", "$.disputeAmount", "amount0", None, False)],
@@ -113,14 +122,18 @@ KINDS = [
             code="PNLX", opts={"sum": "Actual", "unit": "USD"})], links={"book": ("book", "Book")}),
     Kind("book", "BOOK", "BOOK-", "Book", ORG, "A trading book: owner desk, trades and risk.", "bookId",
          [("Name", "$.name", None, None, False), ("Desk", "$.deskName", None, None, False), ("Trades", "$.tradeCount", None, None, False), ("MTM", "$.mtm", "signed0", "sign", True), ("DV01", "$.dv01", "signed0", "sign", False)],
-         [P("table", "trades", "Largest trades", "$.topTrades", TRADE_COLS, key="F2")], links={"desk": ("desk", "Desk")}),
+         [P("table", "trades", "Largest trades", "$.topTrades", TRADE_COLS, key="F2", pivot=MTM_BY_CURRENCY)], links={"desk": ("desk", "Desk")}),
     Kind("desk", "DESK", "DESK-", "Desk", ORG, "A trading desk: books, limits and risk results.", "deskId",
          [("Name", "$.name", None, None, False), ("Head", "$.head", None, None, False), ("Books", "size($.books)", None, None, False), ("VaR", "$.var99", "compact", None, True), ("MTM", "$.mtm", "signed0", "sign", False)],
          [P("table", "books", "Books", "$.books", [("Book", "@.id", None, None, False), ("Trades", "@.trades", "amount0", None, True), ("MTM", "@.mtm", "signed0", "sign", True)], key="F2"),
           P("pivot", "mtmGrid", "MTM grid (by book and currency, USD)", "$.positions", fmt="compact", tone="sign", key="F3", code="PIV",
             opts={"by": "book", "across": "currency", "value": "mtm", "agg": "sum", "heat": True}),
           P("pivot", "tradeCount", "Trades by book and product family", "$.positions",
-            opts={"by": "book", "across": "family", "agg": "count"})],
+            opts={"by": "book", "across": "family", "agg": "count"}),
+          P("table", "positions", "Trades by book", "$.positions",
+            [("Trade", "@.tradeId", None, None, False), ("Book", "@.book", None, None, False), ("Currency", "@.currency", None, None, False),
+             ("Family", "@.family", None, None, False), ("MTM", "@.mtm", "signed0", "sign", True)], key="F4", code="TRD",
+            pivot={"rows": ["book"], "columns": ["currency"], "values": [{"field": "mtm", "agg": "sum"}], "filters": ["family"], "heat": True})],
          links={"legalEntity": ("legal-entity", "Legal entity"), "varResult": ("var", "VaR")}),
     Kind("trader", "TRDR", "TRDR-", "Trader", ORG, "A trader and their books.", "traderId",
          [("Name", "$.name", None, None, False), ("Desk", "$.deskName", None, None, False), ("Trades", "$.tradeCount", None, None, True)],
@@ -130,5 +143,6 @@ KINDS = [
          [P("table", "accounts", "Clearing accounts", "$.accounts", [("Account", "@.id", None, None, False), ("IM", "@.im", "compact", None, True)], key="F2")]),
     Kind("clearing-account", "CLR", "CLR-", "Clearing account", COL, "An account at a CCP holding cleared trades and margin.", "accountId",
          [("CCP", "$.ccpName", None, None, False), ("IM", "$.im", "compact", None, True), ("VM today", "$.vmToday", "signed0", "sign", False), ("Excess", "$.excess", "compact", None, False)],
-         [P("table", "trades", "Cleared trades", "$.trades", TRADE_COLS, key="F2")], links={"ccp": ("ccp", "CCP")}, badge="'IM ' + fmt($.im, 'compact')"),
+         [P("table", "trades", "Cleared trades", "$.trades", TRADE_COLS, key="F2", pivot=NOTIONAL_BY_MATURITY)], links={"ccp": ("ccp", "CCP")},
+         badge="'IM ' + fmt($.im, 'compact')"),
 ]

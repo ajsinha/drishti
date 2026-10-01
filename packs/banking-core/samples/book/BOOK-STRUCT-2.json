@@ -9,57 +9,89 @@
   {
    "tradeId": "IMG-400159",
    "product": "Credit basket note",
+   "assetClass": "Structured",
+   "currency": "USD",
+   "book": "BOOK-STRUCT-2",
    "notional": 180000000.0,
    "maturity": "2035-09-20",
+   "maturityBucket": "5-10Y",
    "mtm": 3228356
   },
   {
    "tradeId": "IMG-400143",
    "product": "Capital-protected note",
+   "assetClass": "Structured",
+   "currency": "USD",
+   "book": "BOOK-STRUCT-2",
    "notional": 151000000.0,
    "maturity": "2034-05-22",
+   "maturityBucket": "5-10Y",
    "mtm": 2529887
   },
   {
    "tradeId": "IMG-400162",
    "product": "Credit basket note",
+   "assetClass": "Structured",
+   "currency": "USD",
+   "book": "BOOK-STRUCT-2",
    "notional": 140000000.0,
    "maturity": "2034-12-04",
+   "maturityBucket": "5-10Y",
    "mtm": 1658792
   },
   {
    "tradeId": "IMG-400152",
    "product": "Worst-of note",
+   "assetClass": "Structured",
+   "currency": "JPY",
+   "book": "BOOK-STRUCT-2",
    "notional": 108000000.0,
    "maturity": "2038-01-29",
+   "maturityBucket": "10Y+",
    "mtm": -1328010
   },
   {
    "tradeId": "IMG-400161",
    "product": "Credit basket note",
+   "assetClass": "Structured",
+   "currency": "USD",
+   "book": "BOOK-STRUCT-2",
    "notional": 184000000.0,
    "maturity": "2032-04-26",
+   "maturityBucket": "5-10Y",
    "mtm": 772409
   },
   {
    "tradeId": "IMG-400136",
    "product": "Range accrual note",
+   "assetClass": "Structured",
+   "currency": "AUD",
+   "book": "BOOK-STRUCT-2",
    "notional": 155000000.0,
    "maturity": "2029-09-24",
+   "maturityBucket": "2-5Y",
    "mtm": 660652
   },
   {
    "tradeId": "IMG-400149",
    "product": "FX-rates hybrid (PRDC)",
+   "assetClass": "Structured",
+   "currency": "USD",
+   "book": "BOOK-STRUCT-2",
    "notional": 177000000.0,
    "maturity": "2034-05-08",
+   "maturityBucket": "5-10Y",
    "mtm": 401694
   },
   {
    "tradeId": "IMG-400160",
    "product": "Credit basket note",
+   "assetClass": "Structured",
+   "currency": "USD",
+   "book": "BOOK-STRUCT-2",
    "notional": 38000000.0,
    "maturity": "2035-10-19",
+   "maturityBucket": "5-10Y",
    "mtm": 190559
   }
  ],

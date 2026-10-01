@@ -9,71 +9,111 @@
   {
    "tradeId": "END-1000014",
    "product": "Commodity swap",
+   "assetClass": "Commodity",
+   "currency": "USD",
+   "book": "BOOK-COMM-1",
    "notional": 231000000.0,
    "maturity": "2034-07-03",
+   "maturityBucket": "5-10Y",
    "mtm": 4646776
   },
   {
    "tradeId": "END-1000052",
    "product": "Calendar spread",
+   "assetClass": "Commodity",
+   "currency": "USD",
+   "book": "BOOK-COMM-1",
    "notional": 143000000.0,
    "maturity": "2026-10-07",
+   "maturityBucket": "0-1Y",
    "mtm": 3656838
   },
   {
    "tradeId": "END-1000029",
    "product": "Option on commodity future",
+   "assetClass": "Commodity",
+   "currency": "USD",
+   "book": "BOOK-COMM-1",
    "notional": 145000000.0,
    "maturity": "2026-10-07",
+   "maturityBucket": "0-1Y",
    "mtm": -2435043
   },
   {
    "tradeId": "END-1000031",
    "product": "Average price option (APO)",
+   "assetClass": "Commodity",
+   "currency": "USD",
+   "book": "BOOK-COMM-1",
    "notional": 230000000.0,
    "maturity": "2029-12-28",
+   "maturityBucket": "2-5Y",
    "mtm": 2118063
   },
   {
    "tradeId": "END-1000008",
    "product": "Commodity forward",
+   "assetClass": "Commodity",
+   "currency": "USD",
+   "book": "BOOK-COMM-1",
    "notional": 231000000.0,
    "maturity": "2026-10-07",
+   "maturityBucket": "0-1Y",
    "mtm": 2102537
   },
   {
    "tradeId": "END-1000035",
    "product": "Average price option (APO)",
+   "assetClass": "Commodity",
+   "currency": "USD",
+   "book": "BOOK-COMM-1",
    "notional": 156000000.0,
    "maturity": "2033-01-05",
+   "maturityBucket": "5-10Y",
    "mtm": -2061219
   },
   {
    "tradeId": "END-1000045",
    "product": "Commodity spread option",
+   "assetClass": "Commodity",
+   "currency": "USD",
+   "book": "BOOK-COMM-1",
    "notional": 195000000.0,
    "maturity": "2032-07-30",
+   "maturityBucket": "5-10Y",
    "mtm": 1690310
   },
   {
    "tradeId": "END-1000056",
    "product": "Commodity index swap",
+   "assetClass": "Commodity",
+   "currency": "USD",
+   "book": "BOOK-COMM-1",
    "notional": 243000000.0,
    "maturity": "2034-04-28",
+   "maturityBucket": "5-10Y",
    "mtm": 1673731
   },
   {
    "tradeId": "END-1000027",
    "product": "Option on commodity future",
+   "assetClass": "Commodity",
+   "currency": "USD",
+   "book": "BOOK-COMM-1",
    "notional": 198000000.0,
    "maturity": "2028-02-14",
+   "maturityBucket": "1-2Y",
    "mtm": -1422464
   },
   {
    "tradeId": "END-1000042",
    "product": "Commodity swaption",
+   "assetClass": "Commodity",
+   "currency": "USD",
+   "book": "BOOK-COMM-1",
    "notional": 204000000.0,
    "maturity": "2027-12-13",
+   "maturityBucket": "1-2Y",
    "mtm": 1250345
   }
  ],

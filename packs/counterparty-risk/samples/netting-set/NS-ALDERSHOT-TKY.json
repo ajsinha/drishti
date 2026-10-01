@@ -64,8 +64,12 @@
   {
    "tradeId": "IMG-400158",
    "product": "Credit basket note",
+   "assetClass": "Structured",
+   "currency": "AUD",
+   "book": "BOOK-STRUCT-3",
    "notional": 139000000.0,
    "maturity": "2036-04-02",
+   "maturityBucket": "5-10Y",
    "mtm": 566863
   }
  ],

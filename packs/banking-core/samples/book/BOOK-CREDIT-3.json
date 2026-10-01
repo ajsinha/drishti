@@ -9,71 +9,111 @@
   {
    "tradeId": "CLY-3000065",
    "product": "Credit spread option",
+   "assetClass": "Credit",
+   "currency": "USD",
+   "book": "BOOK-CREDIT-3",
    "notional": 244000000.0,
    "maturity": "2028-10-24",
+   "maturityBucket": "2-5Y",
    "mtm": 4754624
   },
   {
    "tradeId": "CLY-3000034",
    "product": "Total return swap on a bond",
+   "assetClass": "Credit",
+   "currency": "EUR",
+   "book": "BOOK-CREDIT-3",
    "notional": 238000000.0,
    "maturity": "2030-07-08",
+   "maturityBucket": "2-5Y",
    "mtm": 4717154
   },
   {
    "tradeId": "CLY-3000013",
    "product": "Index tranche",
+   "assetClass": "Credit",
+   "currency": "CAD",
+   "book": "BOOK-CREDIT-3",
    "notional": 242000000.0,
    "maturity": "2034-02-14",
+   "maturityBucket": "5-10Y",
    "mtm": 3988071
   },
   {
    "tradeId": "CLY-3000055",
    "product": "Revolving credit facility",
+   "assetClass": "Credit",
+   "currency": "CAD",
+   "book": "BOOK-CREDIT-3",
    "notional": 202000000.0,
    "maturity": "2032-04-16",
+   "maturityBucket": "5-10Y",
    "mtm": 3459176
   },
   {
    "tradeId": "CLY-3000063",
    "product": "Credit spread option",
+   "assetClass": "Credit",
+   "currency": "EUR",
+   "book": "BOOK-CREDIT-3",
    "notional": 147000000.0,
    "maturity": "2026-10-13",
+   "maturityBucket": "0-1Y",
    "mtm": -2549257
   },
   {
    "tradeId": "CLY-3000036",
    "product": "Total return swap on a bond",
+   "assetClass": "Credit",
+   "currency": "EUR",
+   "book": "BOOK-CREDIT-3",
    "notional": 130000000.0,
    "maturity": "2030-08-07",
+   "maturityBucket": "2-5Y",
    "mtm": -1895147
   },
   {
    "tradeId": "CLY-3000040",
    "product": "Total return swap on a loan index",
+   "assetClass": "Credit",
+   "currency": "CAD",
+   "book": "BOOK-CREDIT-3",
    "notional": 178000000.0,
    "maturity": "2035-07-02",
+   "maturityBucket": "5-10Y",
    "mtm": 1798395
   },
   {
    "tradeId": "CLY-3000023",
    "product": "CDS index option",
+   "assetClass": "Credit",
+   "currency": "USD",
+   "book": "BOOK-CREDIT-3",
    "notional": 147000000.0,
    "maturity": "2026-10-07",
+   "maturityBucket": "0-1Y",
    "mtm": 1786443
   },
   {
    "tradeId": "CLY-3000020",
    "product": "CDS index option",
+   "assetClass": "Credit",
+   "currency": "USD",
+   "book": "BOOK-CREDIT-3",
    "notional": 247000000.0,
    "maturity": "2027-01-25",
+   "maturityBucket": "0-1Y",
    "mtm": 1574254
   },
   {
    "tradeId": "CLY-3000014",
    "product": "Index tranche",
+   "assetClass": "Credit",
+   "currency": "JPY",
+   "book": "BOOK-CREDIT-3",
    "notional": 202000000.0,
    "maturity": "2032-11-24",
+   "maturityBucket": "5-10Y",
    "mtm": 1564064
   }
  ],

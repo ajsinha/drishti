@@ -31,6 +31,13 @@ panels:
     title: Largest trades
     key: F2
     rows: $.topTrades
+    pivot:
+      fields: [product, assetClass, currency, book, maturityBucket, { field: maturity, label: Maturity date }, { field: notional, fmt: compact }, { field: mtm, label: MTM (USD), fmt: signed0 }, tradeId]
+      rows: [product]
+      columns: [currency]
+      values: [{ field: mtm, agg: sum }]
+      filters: [assetClass, maturityBucket]
+      heat: true
     columns:
       - { label: Trade, bind: "@.tradeId" }
       - { label: Product, bind: "@.product" }

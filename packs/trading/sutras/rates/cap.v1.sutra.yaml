@@ -46,6 +46,10 @@ panels:
     code: FIX
     key: F3
     rows: $.schedule
+    pivot:
+      rows: [status]
+      values: [{ field: payoff, agg: sum }, { field: payoff, agg: count }]
+      filters: [index]
     columns:
       - { label: Fixing date, bind: "@.fixingDate", fmt: date }
       - { label: Period, bind: "@.period" }

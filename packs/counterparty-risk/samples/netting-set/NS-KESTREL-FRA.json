@@ -64,15 +64,23 @@
   {
    "tradeId": "BBG-60000120",
    "product": "Margin loan",
+   "assetClass": "Securities financing",
+   "currency": "USD",
+   "book": "BOOK-SFT-1",
    "notional": 52000000.0,
    "maturity": "2027-02-25",
+   "maturityBucket": "0-1Y",
    "mtm": 1594435
   },
   {
    "tradeId": "BBG-60000079",
    "product": "Repurchase agreement",
+   "assetClass": "Securities financing",
+   "currency": "JPY",
+   "book": "BOOK-SFT-2",
    "notional": 180000000.0,
    "maturity": "2026-10-07",
+   "maturityBucket": "0-1Y",
    "mtm": -271929
   }
  ],
