@@ -436,7 +436,707 @@ The Sutra and version (or *inference only*), the data fingerprint, the source an
 
 ![provenance](/static/img/guide/kind-provenance.png)
 
-## 8. One product family, many Sutras: `match`, `where` and `priority`
+### waterfall: steps from a start to an end
+
+*See it:* `TRD MX-20000001`, panel **P&L explain (USD, opening to closing MTM)** (F5), or `PNL PNL-COMM-1` (F3).
+
+Each step floats from the running total before it to the one after it: rises green, falls red, totals grey.
+`sum:` adds a closing total bar; `colors: theme` uses the theme's positive and negative colours instead.
+
+```yaml
+- id: explain
+  kind: waterfall
+  title: "P&L explain (USD, opening to closing MTM)"
+  key: F5
+  rows: $.pnlExplain
+  label: step
+  value: pnl
+  sum: Closing MTM
+  fmt: signed0
+```
+
+![waterfall](/static/img/guide/kind-waterfall.png)
+
+### histogram: how a list of numbers is spread
+
+*See it:* `VAR VAR-RATES`, panel **Scenario P&L distribution, 500 days (USD)** (F3).
+
+The server bins the numbers (`bins:` 1 to 200, or the square root of the count) and draws a dashed line per marker.
+
+```yaml
+- id: scenarios
+  kind: histogram
+  title: "Scenario P&L distribution, 500 days (USD)"
+  key: F3
+  rows: $.scenarioPnl
+  fmt: compact
+  markers:
+    - { label: VaR 99%, value: "-$.var99", tone: neg }
+    - { label: ES 97.5%, value: "-$.es975", tone: bad }
+```
+
+![histogram](/static/img/guide/kind-histogram.png)
+
+### scatter: two measures per row
+
+*See it:* `LE LE-NY`, panel **Risk and return (books: VaR against today's P&L, USD)** (F3).
+
+`x` and `y` are field names of each row; `size`, `label` and `group` size, name and colour the points, and a label
+that is an entity id opens it.
+
+```yaml
+- { id: riskReturn, kind: scatter, title: "Books: VaR against P&L", key: F3, rows: $.books, x: var, y: pnl, size: trades, label: book, group: desk, fmt: signed0, xFmt: compact }
+```
+
+![scatter](/static/img/guide/kind-scatter.png)
+
+### candlestick: daily bars with volume
+
+*See it:* `EQ EQ-CSCA`, panel **Daily bars (last 60 days)** (F3), or `CMD CMD-BRENT` (F3).
+
+```yaml
+- { id: ohlc, kind: candlestick, title: "Daily bars (last 60 days)", key: F3, rows: $.ohlc, x: date, volume: volume, fmt: price2 }
+```
+
+![candlestick](/static/img/guide/kind-candlestick.png)
+
+### graph: entities and how they relate
+
+*See it:* `CPTY CP-MERIDIAN`, panel **Group hierarchy (agreements and netting sets)** (F3).
+
+Nodes need an `id`; a node that is an entity opens it, and the one you are viewing is ringed. `layout: tree` (the
+default) or `force`.
+
+```yaml
+- id: hierarchy
+  kind: graph
+  title: Group hierarchy (agreements and netting sets)
+  key: F3
+  nodes: $.hierarchy.nodes
+  edges: $.hierarchy.edges
+  layout: tree
+```
+
+![graph](/static/img/guide/kind-graph.png)
+
+### timeline: dated events in order
+
+*See it:* `TRD MX-20000001`, panel **Lifecycle** (F6).
+
+The server sorts the events by date; each status is toned (green done, amber pending, red failed).
+
+```yaml
+- { id: lifecycle, kind: timeline, title: Lifecycle, key: F6, rows: $.lifecycle.timeline, detail: description }
+```
+
+![timeline](/static/img/guide/kind-timeline.png)
+
+### pivot: rows totalled by one field across another
+
+*See it:* `DESK DESK-RATES`, panel **MTM grid (by book and currency, USD)** (F3).
+
+The server aggregates (`agg: sum`, `count`, `avg`, `min` or `max`) and adds row and column totals; `heat: true` shades
+the cells.
+
+```yaml
+- { id: mtmGrid, kind: pivot, title: "MTM grid (by book and currency, USD)", key: F3, rows: $.positions, by: book, across: currency, value: mtm, heat: true, fmt: compact, tone: sign }
+```
+
+![pivot](/static/img/guide/kind-pivot.png)
+
+## 8. Every panel kind as a complete Sutra
+
+Section 7 shows each kind as a panel inside a pack's Sutra. Here each kind is a whole Sutra on its own, short enough to
+paste into Studio as it stands: open Studio on the entity named, replace the editor's text, and press **Ctrl+Enter**.
+Each one was previewed against its sample entity with no problems and no empty panel. The examples match their kind
+with no `priority`, so saving one does not displace the pack's own layout.
+
+[The twenty panel kinds](panel-kinds) explains each kind's options with a screenshot;
+[Rachana, step by step](rachana-guide#10-every-panel-kind-by-example) goes through the same twenty Sutras option by
+option, with the mistake each kind invites and its problem code.
+
+### kv on a bond trade
+
+`TRD BBG-60000001`: *Bond terms* (`Coupon 1.6708%`, `Yield 3.4159%`, …) and, on the right, every field of the
+settlement instructions.
+
+```yaml
+rachana: 1
+sutra: kind-kv
+version: 1
+match: { kind: trade }
+panels:
+  - id: terms
+    kind: kv
+    title: Bond terms
+    columns:
+      - { label: Coupon, bind: $.terms.coupon, fmt: pct4 }
+      - { label: Frequency, bind: $.terms.couponFrequency }
+      - { label: Face amount, bind: $.terms.faceAmount, fmt: amount0 }
+      - { label: Clean price, bind: $.terms.cleanPrice, fmt: price2 }
+      - { label: Yield, bind: $.terms.yield, fmt: pct4 }
+  - { id: ssi, kind: kv, title: Settlement instructions, area: right, rows: $.settlementInstructions }
+```
+
+### table on a netting set
+
+`NSET NS-NORTHBRIDGE-FRA`: three of five member trades, a `Net +2,816,262` row over all five, and `2 more trades`.
+
+```yaml
+rachana: 1
+sutra: kind-table
+version: 1
+match: { kind: netting-set }
+panels:
+  - id: trades
+    kind: table
+    title: Member trades
+    rows: $.trades
+    limit: 3
+    moreLabel: "(size($.trades) - 3) + ' more trades'"
+    totalLabel: Net
+    columns:
+      - { label: Trade, bind: "@.tradeId" }
+      - { label: Product, bind: "@.product" }
+      - { label: Notional, bind: "@.notional", fmt: compact }
+      - { label: Maturity, bind: "@.maturity", fmt: date }
+      - { label: MTM, bind: "@.mtm", fmt: signed0, tone: sign, total: true }
+```
+
+### tabs on a counterparty
+
+`CPTY CP-NORTHBRIDGE`: one tab per netting set, `NS-NORTHBRIDGE-FRA` to `NS-NORTHBRIDGE-TKY`.
+
+```yaml
+rachana: 1
+sutra: kind-tabs
+version: 1
+match: { kind: counterparty }
+panels:
+  - id: sets
+    kind: tabs
+    title: Netting sets
+    each: $.nettingSets
+    tabTitle: "@.id"
+    body:
+      kind: kv
+      columns:
+        - { label: Agreement, bind: "@.agreement", link: true }
+        - { label: Trades, bind: "@.trades" }
+        - { label: Net MTM, bind: "@.netMtm", fmt: signed0, tone: sign }
+```
+
+### line from the document and from a linked curve
+
+`TRD BBG-60000001`: twenty days of P&L with the last marked, and the CHF government curve read from `CRV-CHF-GOVT`.
+
+```yaml
+rachana: 1
+sutra: kind-line
+version: 1
+match: { kind: trade }
+panels:
+  - id: pnl
+    kind: line
+    title: Daily P&L (USD)
+    rows: $.pnlHistory
+    x: date
+    y: pnl
+    mark: $.valuation.asOf
+    fmt: signed0
+  - id: curve
+    kind: line
+    title: Benchmark curve (zero rate, %)
+    area: right
+    source: "link($.benchmarkCurve, 'ir-curve')"
+    rows: $.points
+    x: tenor
+    y: zeroRate
+```
+
+### area against a limit
+
+`NSET NS-NORTHBRIDGE-FRA`: expected exposure and PFE by tenor, peaking at `3M`, under a 5,000,000 credit limit.
+
+```yaml
+rachana: 1
+sutra: kind-area
+version: 1
+match: { kind: netting-set }
+panels:
+  - id: exposure
+    kind: area
+    title: Exposure profile (USD)
+    rows: $.profile
+    x: tenor
+    series:
+      - { label: Expected exposure, value: ee, tone: link }
+      - { label: PFE 95, value: pfe, tone: accent }
+    limit: $.limit
+    limitLabel: Credit limit
+```
+
+### hbar of sensitivities
+
+`TRD BBG-60000001`: eight DV01 bars from `3M −5,289` to `10Y −42,311`.
+
+```yaml
+rachana: 1
+sutra: kind-hbar
+version: 1
+match: { kind: trade }
+panels:
+  - id: dv01
+    kind: hbar
+    title: DV01 by bucket (USD)
+    rows: $.sensitivities
+    label: bucket
+    value: dv01
+    fmt: signed0
+    tone: sign
+```
+
+### ladder with the next coupon lit
+
+`TRD BBG-60000001`: 24 coupons, the next one (`2027-03-02`) highlighted, totalling `95,040,000`.
+
+```yaml
+rachana: 1
+sutra: kind-ladder
+version: 1
+match: { kind: trade }
+panels:
+  - id: coupons
+    kind: ladder
+    title: Coupon schedule
+    rows: $.schedule
+    highlight: "#index == $.nextIndex"
+    totalLabel: All coupons
+    columns:
+      - { label: Pay date, bind: "@.date", fmt: date }
+      - { label: Rate, bind: "@.rate", fmt: pct4 }
+      - { label: Amount, bind: "@.amount", fmt: amount0, total: true }
+      - { label: Status, bind: "@.status", tone: status }
+```
+
+### links
+
+`TRD BBG-60000001`: ten linked entities with badges, from `CP-SUMMIT` (`A-`) to `BND-CHLUME169114` (`112.96`).
+
+```yaml
+rachana: 1
+sutra: kind-links
+version: 1
+match: { kind: trade }
+panels:
+  - { id: refs, kind: links, title: Linked entities }
+```
+
+### status
+
+`TRD BBG-60000001`: `Confirmed · DTCC CTM`, `Cleared at LCH SwapClear`, `Accepted`, `Official EOD`, all green.
+
+```yaml
+rachana: 1
+sutra: kind-status
+version: 1
+match: { kind: trade }
+panels:
+  - id: ops
+    kind: status
+    title: Operations
+    fields:
+      - { label: Confirmation, bind: "$.confirmation.status + ' · ' + $.confirmation.method", tone: status }
+      - { label: Clearing, bind: "$.clearing.status + ' at ' + $.clearing.ccp", tone: status }
+      - { label: Reporting, bind: $.regulatory.reportingStatus, tone: status }
+      - { label: Valuation, bind: $.valuation.status, tone: status }
+```
+
+### provenance
+
+`TRD BBG-60000001`: `Sutra kind-provenance v1`, the fingerprint, and `summit-fi, gen 1`.
+
+```yaml
+rachana: 1
+sutra: kind-provenance
+version: 1
+match: { kind: trade }
+panels:
+  - { id: built, kind: provenance, title: How this view was built }
+```
+
+### markdown
+
+`TRD BBG-60000001`: *A short government bond position in CHF, booked in BOOK-FI-3. MTM and P&L are in USD.*
+
+```yaml
+rachana: 1
+sutra: kind-markdown
+version: 1
+match: { kind: trade }
+panels:
+  - id: note
+    kind: markdown
+    title: Reading this view
+    text: "A ${lower($.direction)} ${lower($.productName)} position in ${$.currency}, booked in ${$.book}. MTM and P&L are in ${$.mtmCurrency}."
+```
+
+### gauge of VaR against its limit
+
+`VAR VAR-COMM`: `58%` (VaR 10,959,317 of an 18,940,000 limit).
+
+```yaml
+rachana: 1
+sutra: kind-gauge
+version: 1
+match: { kind: var }
+panels:
+  - { id: usage, kind: gauge, title: VaR 99% used of the desk limit, value: $.var99, max: $.limit }
+```
+
+### surface of a volatility smile
+
+`CMDV CMDV-BRENT`: eight contract months by three strikes, from `27.26` to `32.82`.
+
+```yaml
+rachana: 1
+sutra: kind-surface
+version: 1
+match: { kind: commodity-vol-surface }
+panels:
+  - id: smile
+    kind: surface
+    title: Implied vol by contract month and moneyness (%)
+    rows: $.grid
+    y: month
+    fmt: price2
+    columns:
+      - { label: 90%, bind: "@.m90" }
+      - { label: ATM, bind: "@.m100" }
+      - { label: 110%, bind: "@.m110" }
+```
+
+### waterfall from risk factors to the actual P&L
+
+`PNL PNL-COMM-1`: nine steps and a closing `Actual −180,316` bar the server adds.
+
+```yaml
+rachana: 1
+sutra: kind-waterfall
+version: 1
+match: { kind: pnl-explain }
+panels:
+  - id: explain
+    kind: waterfall
+    title: P&L from risk factors to actual (USD)
+    rows: $.explainSteps
+    label: step
+    value: pnl
+    sum: Actual
+    fmt: signed0
+```
+
+### histogram with VaR, ES and mean
+
+`VAR VAR-COMM`: 500 scenario P&Ls in 30 bins, with `VaR 99% −11.0m`, `ES 97.5% −12.4m` and `Mean −49.8k` marked.
+
+```yaml
+rachana: 1
+sutra: kind-histogram
+version: 1
+match: { kind: var }
+panels:
+  - id: scenarios
+    kind: histogram
+    title: Scenario P&L, 500 days (USD)
+    rows: $.scenarioPnl
+    bins: 30
+    fmt: compact
+    markers:
+      - { label: VaR 99%, value: "-$.var99", tone: neg }
+      - { label: ES 97.5%, value: "-$.es975", tone: bad }
+      - { label: Mean, value: $.meanPnl, tone: link }
+```
+
+### scatter of books
+
+`LE LE-FRA`: three books, VaR across and P&L up, sized by their trade counts; each point opens its book.
+
+```yaml
+rachana: 1
+sutra: kind-scatter
+version: 1
+match: { kind: legal-entity }
+panels:
+  - id: books
+    kind: scatter
+    title: Books, VaR against today's P&L (USD)
+    rows: $.books
+    x: var
+    y: pnl
+    size: trades
+    label: book
+    group: desk
+    fmt: signed0
+    xFmt: compact
+    xLabel: VaR 99% 1D
+    yLabel: P&L 1D
+```
+
+### candlestick with volume
+
+`CMD CMD-BRENT`: 60 daily bars and volume, `Last 74.60`, `+1.12 (+1.52%)`.
+
+```yaml
+rachana: 1
+sutra: kind-candlestick
+version: 1
+match: { kind: commodity }
+panels:
+  - id: bars
+    kind: candlestick
+    title: Front month, last 60 days
+    rows: $.ohlc
+    x: date
+    volume: volume
+    fmt: price2
+    unit: USD/bbl
+```
+
+### graph of a counterparty's group
+
+`CPTY CP-NORTHBRIDGE`: the group over the counterparty (ringed), its ISDA, CSA and four netting sets.
+
+```yaml
+rachana: 1
+sutra: kind-graph
+version: 1
+match: { kind: counterparty }
+panels:
+  - id: group
+    kind: graph
+    title: Group, agreements and netting sets
+    nodes: $.hierarchy.nodes
+    edges: $.hierarchy.edges
+    label: label
+    group: type
+    layout: tree
+```
+
+### timeline of a trade's lifecycle
+
+`TRD BBG-60000001`: five events from *Booked* to *Maturity*, *Next payment* in amber.
+
+```yaml
+rachana: 1
+sutra: kind-timeline
+version: 1
+match: { kind: trade }
+panels:
+  - { id: life, kind: timeline, title: Lifecycle, rows: $.lifecycle.timeline, label: event, detail: description }
+```
+
+### pivot of a desk's positions
+
+`DESK DESK-COMM`: three books across five product families, with totals; the desk's `13.3m` at the bottom right.
+
+```yaml
+rachana: 1
+sutra: kind-pivot
+version: 1
+match: { kind: desk }
+panels:
+  - id: grid
+    kind: pivot
+    title: MTM by book and product family (USD)
+    rows: $.positions
+    by: book
+    across: family
+    value: mtm
+    agg: sum
+    heat: true
+    fmt: compact
+    tone: sign
+```
+
+### All together, arranged with `area`, `span` and `height`
+
+`span` (1–12) sets a panel's width on its column's 12-column grid, so `span: 8` and `span: 4` share a row; `height`
+(1–24) fixes its height in rows, and the panel scrolls inside; `area: right` moves it to the side column. One bond
+trade carries the data for twelve kinds:
+
+```yaml
+rachana: 1
+sutra: bond-desk
+version: 1
+description: A government bond position on one screen, using every panel kind the trade's data supports.
+match: { kind: trade, where: "$.productType == 'GOVT_BOND'", priority: 20 }
+title:
+  pill: "${$.assetClass} · ${$.productName}"
+  id: $.tradeId
+  with: "link($.counterparty.id, 'counterparty', $.counterparty.name)"
+strip:
+  - { label: Notional, bind: "$.currency + ' ' + fmt($.notional, 'amount0')" }
+  - { label: Direction, bind: $.direction }
+  - { label: Maturity, bind: $.maturityDate, fmt: date }
+  - { label: MTM (USD), bind: $.mtm, fmt: signed0, tone: sign, emphasis: true }
+  - { label: 1-day P&L, bind: $.pnl1d, fmt: signed0, tone: sign }
+  - { label: DV01 (USD), bind: $.risk.dv01, fmt: signed0, tone: sign }
+panels:
+  # Main column, row 1: the terms (8 of 12 columns) beside the operational states (4)
+  - id: terms
+    kind: kv
+    title: Bond terms
+    key: F2
+    span: 8
+    columns:
+      - { label: Coupon, bind: $.terms.coupon, fmt: pct4 }
+      - { label: Frequency, bind: $.terms.couponFrequency }
+      - { label: Face amount, bind: $.terms.faceAmount, fmt: amount0 }
+      - { label: Clean price, bind: $.terms.cleanPrice, fmt: price2 }
+      - { label: Yield, bind: $.terms.yield, fmt: pct4 }
+      - { label: Underlying, bind: "link($.underlyingBond, 'bond')" }
+  - id: ops
+    kind: status
+    title: Operations
+    span: 4
+    fields:
+      - { label: Confirmation, bind: $.confirmation.status, tone: status }
+      - { label: Clearing, bind: $.clearing.status, tone: status }
+      - { label: Reporting, bind: $.regulatory.reportingStatus, tone: status }
+  # Row 2: two charts of equal width and a fixed height of 9 rows
+  - id: explain
+    kind: waterfall
+    title: P&L explain (USD)
+    key: F3
+    span: 6
+    height: 9
+    rows: $.pnlExplain
+    label: step
+    value: pnl
+    sum: Closing MTM
+    fmt: signed0
+  - id: pnl
+    kind: line
+    title: Daily P&L (USD)
+    span: 6
+    height: 9
+    rows: $.pnlHistory
+    x: date
+    y: pnl
+    fmt: signed0
+  # Row 3: the coupon ladder, full width, scrolling inside 8 rows
+  - id: coupons
+    kind: ladder
+    title: Coupon schedule
+    key: F4
+    height: 8
+    rows: $.schedule
+    highlight: "#index == $.nextIndex"
+    columns:
+      - { label: Pay date, bind: "@.date", fmt: date }
+      - { label: Rate, bind: "@.rate", fmt: pct4 }
+      - { label: Amount, bind: "@.amount", fmt: amount0, total: true }
+      - { label: Status, bind: "@.status", tone: status }
+  # Row 4: what happened to the trade, as a timeline and as the audit table
+  - { id: life, kind: timeline, title: Lifecycle, key: F5, span: 7, rows: $.lifecycle.timeline, detail: description }
+  - id: versions
+    kind: table
+    title: Versions
+    span: 5
+    search: false
+    rows: $.lifecycle.events
+    columns:
+      - { label: "#", bind: "@.version" }
+      - { label: Event, bind: "@.event" }
+      - { label: Reason, bind: "@.reason" }
+      - { label: By, bind: "@.by" }
+  - { id: built, kind: provenance, title: How this view was built }
+  # Side column: a note, a gauge and the bucketed risk, then every linked entity
+  - id: note
+    kind: markdown
+    title: Reading this view
+    area: right
+    text: "A ${lower($.direction)} position in ${$.currency}; MTM, P&L and DV01 are in ${$.mtmCurrency}."
+  - { id: dv01use, kind: gauge, title: DV01 used of the 250k guideline, area: right, value: "abs($.risk.dv01)", max: "250000" }
+  - { id: dv01, kind: hbar, title: DV01 by bucket (USD), area: right, rows: $.sensitivities, label: bucket, value: dv01, fmt: signed0, tone: sign }
+  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right, height: 10 }
+keys: { F7: "link($.nettingSet, 'netting-set')", F8: impact, F9: raw }
+```
+
+![The bond-desk Sutra on TRD BBG-60000001: twelve panel kinds arranged with span and height](/static/img/guide/sutra-bond-desk.png)
+
+*`TRD BBG-60000001` laid out by `bond-desk`: terms beside operations, the P&L waterfall beside the daily P&L, the
+coupon ladder at a fixed height, the lifecycle beside the versions table; a note, a gauge, the DV01 bars and the links
+on the right.*
+
+The other eight kinds live on other entities. Grouped by entity:
+
+```yaml
+rachana: 1
+sutra: counterparty-desk
+version: 1
+description: A counterparty with its netting sets as tabs and its group as a graph.
+match: { kind: counterparty, priority: 20 }
+title: { pill: "Counterparty · ${$.type}", id: $.counterpartyId, with: $.name }
+strip:
+  - { label: Rating, bind: $.rating, emphasis: true }
+  - { label: Net MTM (USD), bind: $.netMtm, fmt: signed0, tone: sign }
+  - { label: PFE peak (USD), bind: $.pfePeak, fmt: compact }
+panels:
+  - id: sets
+    kind: tabs
+    title: Netting sets
+    key: F2
+    span: 7
+    each: $.nettingSets
+    tabTitle: "@.id"
+    body:
+      kind: kv
+      columns:
+        - { label: Agreement, bind: "@.agreement", link: true }
+        - { label: Trades, bind: "@.trades" }
+        - { label: Net MTM, bind: "@.netMtm", fmt: signed0, tone: sign }
+  - id: kyc
+    kind: kv
+    title: KYC
+    span: 5
+    columns:
+      - { label: Status, bind: $.kyc.status }
+      - { label: Risk rating, bind: $.kyc.riskRating }
+      - { label: Last review, bind: $.kyc.lastReview, fmt: date }
+      - { label: PD 1Y, bind: $.kyc.pd1y, fmt: pct2 }
+  - { id: group, kind: graph, title: "Group, agreements and netting sets", key: F3, height: 12, nodes: $.hierarchy.nodes, edges: $.hierarchy.edges }
+  - { id: built, kind: provenance, title: How this view was built }
+  - { id: refs, kind: links, title: Linked entities, area: right }
+```
+
+![The counterparty-desk Sutra on CPTY CP-NORTHBRIDGE: netting sets as tabs and the group as a graph](/static/img/guide/sutra-counterparty-desk.png)
+
+```yaml
+rachana: 1
+sutra: risk-desk
+version: 1
+description: A trading desk's MTM by book and family, its books, and its VaR result's P&L read from another entity.
+match: { kind: desk, priority: 20 }
+title: { pill: Desk, id: $.deskId, with: $.name }
+strip:
+  - { label: MTM (USD), bind: $.mtm, fmt: signed0, tone: sign, emphasis: true }
+  - { label: VaR 99% (USD), bind: $.var99, fmt: compact }
+panels:
+  - { id: grid, kind: pivot, title: MTM by book and product family (USD), key: F2, rows: $.positions, by: book, across: family, value: mtm, heat: true, fmt: compact, tone: sign }
+  - { id: books, kind: scatter, title: "Books, MTM and trade count", span: 6, height: 9, rows: $.books, x: mtm, y: trades, label: id, xFmt: compact, xLabel: MTM (USD), yLabel: Trades }
+  - { id: varPnl, kind: line, title: P&L series of the desk's VaR result (USD), span: 6, height: 9, source: "link($.varResult, 'var')", rows: $.pnlSeries, x: date, y: pnl }
+  - { id: built, kind: provenance, title: How this view was built }
+  - { id: refs, kind: links, title: Linked entities, area: right }
+```
+
+![The risk-desk Sutra on DESK DESK-COMM: a pivot, a scatter and a line read from the desk's VaR result](/static/img/guide/sutra-risk-desk.png)
+
+The `area`, `histogram`, `candlestick` and `surface` screens, on a netting set, a VaR result, a commodity and a
+volatility surface, are in [Rachana, step by step](rachana-guide#1022-all-twenty-kinds-on-real-screens).
+
+## 9. One product family, many Sutras: `match`, `where` and `priority`
 
 Every trade has `kind: trade`; the document says which product it is. A Sutra per product matches on it:
 
@@ -466,7 +1166,7 @@ by hand for a small domain, generate them for a large one.
     you can try a layout on any document. `match` and `priority` decide which documents use the Sutra once it is
     published. To check them, publish (or review and approve) and open the entities in the terminal.
 
-## 9. Sutra and inference together
+## 10. Sutra and inference together
 
 A Sutra says what matters; inference fills the rest.
 
@@ -476,7 +1176,7 @@ A Sutra says what matters; inference fills the rest.
   *inferred* tag on a panel says why.
 - A document no Sutra matches is still shown: inference lays it out entirely (*inference only*).
 
-## 10. Dates, live data and imperfect data: nothing to write
+## 11. Dates, live data and imperfect data: nothing to write
 
 - **Business dates.** The top bar's date applies to every read. A Sutra never mentions dates: the same layout
   shows today's live data or any past business day's snapshot, and the footer says which.
@@ -487,7 +1187,7 @@ A Sutra says what matters; inference fills the rest.
 - **Imperfect data.** Missing fields show a dash; a panel with no data says *No data available*; wrong types
   are shown as text. A Sutra never breaks a screen.
 
-## 11. Writing Sutras in Studio
+## 12. Writing Sutras in Studio
 
 ![Studio: the Sutra editor with a live preview](/static/img/guide/studio.png)
 
@@ -500,7 +1200,7 @@ A Sutra says what matters; inference fills the rest.
 5. **Submit for review** (authors, where saving is on): an approver approves it and it goes live; or commit the file
    to the pack's `sutras/` directory through version control.
 
-## 12. Checklist
+## 13. Checklist
 
 - `match.where` is specific enough, and `priority` is higher than any general Sutra for the kind.
 - The strip leads with what the reader checks first, and has at most eight figures.
