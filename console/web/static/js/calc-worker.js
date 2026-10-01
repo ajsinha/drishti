@@ -16,8 +16,9 @@
 /* Calc's Python: Pyodide (CPython on WebAssembly) in a dedicated module worker, so a long calculation never freezes
    the page; Stop ends this worker and the page starts a fresh one. Everything is loaded from this origin: the runtime
    from /pyodide/<version>/ (index, packages, lock file and standard library named explicitly, so Pyodide has no reason
-   to look anywhere else), the drishti module from /static/calc/. The worker holds no credential: when Python reads
-   data, it asks the page (postMessage), and the page fetches with the user's session.
+   to look anywhere else), the drishti module from /static/calc/, and drishti.quant (the snippets' pricing maths) from the
+   same folder the first time a cell names it. The worker holds no credential: when Python reads data, it asks the page
+   (postMessage), and the page fetches with the user's session.
 
    page -> worker  {type: 'init', base, module}  {type: 'run', id, code, context}  {type: 'reply', rid, body}
    worker -> page  {type: 'ready', version, ms, sync}  {type: 'status', text}  {type: 'stdout'|'stderr', id, text}
@@ -26,12 +27,16 @@
 'use strict';
 
 let pyodide = null;
+let moduleBase = null;
+let quantLoaded = false;
 let current = null;
 let seq = 0;
 const pending = new Map();
 const CORE = ['numpy', 'pandas'];
 // code that will want numpy and pandas: they load before it runs ("numpy/pandas on first use"), once per worker
-const DATA = /\b(pandas|pd|numpy|np|DataFrame|view\s*\.\s*(tables|table)|(search|columns|history)(_async)?|show|chart)\b/;
+const DATA = /\b(pandas|pd|numpy|np|DataFrame|view\s*\.\s*(tables|table)|(search|columns|history)(_async)?|show|chart|quant)\b/;
+// drishti.quant: fetched and written beside drishti.py the first time a cell names it (it needs numpy, loaded by DATA)
+const QUANT = /\bquant\b/;
 
 function post(msg) { self.postMessage(msg); }
 
@@ -55,9 +60,11 @@ async function init(path, moduleUrl) {
     }),
     emit: (item) => post({ type: 'output', id: current, item: String(item) })
   });
-  const source = await (await fetch(moduleUrl, { credentials: 'same-origin' })).text();
+  moduleBase = new URL(moduleUrl, self.location.origin).href;
+  const source = await (await fetch(moduleBase, { credentials: 'same-origin' })).text();
   pyodide.FS.mkdirTree('/home/pyodide');
   pyodide.FS.writeFile('/home/pyodide/drishti.py', source);
+  pyodide.FS.mkdirTree('/home/pyodide/drishti_pkg');           // drishti's __path__: its submodules (quant) go here
   await pyodide.runPythonAsync('import sys\nsys.path.insert(0, "/home/pyodide")\nimport drishti');
   // run_sync (drishti.get() without await) needs JavaScript Promise Integration, and a cell is run the same way as this
   const sync = (await pyodide.runPythonAsync('from pyodide.ffi import can_run_sync\ncan_run_sync()')) ? true : false;
@@ -71,6 +78,13 @@ async function packagesFor(code) {
   const messages = (m) => { if (/^Loading /.test(m)) { post({ type: 'status', text: m }); } };
   const problems = (m) => post({ type: 'stderr', id: current, text: m + '\n' });
   if (wanted.length) { await pyodide.loadPackage(wanted, { messageCallback: messages, errorCallback: problems }); }
+  if (!quantLoaded && QUANT.test(code)) {
+    const r = await fetch(new URL('quant.py', moduleBase).href, { credentials: 'same-origin' });
+    if (r.ok) {
+      pyodide.FS.writeFile('/home/pyodide/drishti_pkg/quant.py', await r.text());
+      quantLoaded = true;
+    }
+  }
   await pyodide.loadPackagesFromImports(code, { messageCallback: messages, errorCallback: problems });
   return Math.round(performance.now() - t0);
 }

@@ -16,6 +16,32 @@
 # Changelog
 
 ## Unreleased — A million trades a day, for seven years
+- **A library of Calc snippets for the banking packs, and `drishti.quant`** ([PYTHON_CALC.md › Snippet catalogue](docs/guides/PYTHON_CALC.md#18-snippet-catalogue)).
+  85 snippets where there were 7: 75 in the banking packs (27 `market-data`, 13 `trading`, 13 `market-risk`, 12
+  `counterparty-risk`, 10 `banking-core`) and 10 in `finance`, each at most 60 lines, written as a trader or a quant
+  would use the screen: curves (forwards, par swaps, key-rate DV01 by bump and reprice, parallel/twist/butterfly
+  scenarios, carry and roll-down, swap spreads), credit (hazards, survival, CDS par spreads and upfronts, the CDS-bond
+  basis), FX (forward points and basis, cross-rate arbitrage, PCA of returns, smiles from delta quotes, vanilla
+  structures), vol surfaces (calendar and butterfly arbitrage checks, SVI fits), equities and commodities (realised
+  volatility three ways, beta with statsmodels, drawdown, futures roll yield, Black-76 strips), bonds (yield,
+  duration, convexity, Z-spread, scenarios), rates vol (swaptions and caps with Bachelier), trades (swap legs
+  repriced, Garman-Kohlhagen, Black-Scholes with the surface, CDS marks, FX forwards, option scenario grids), VaR
+  (backtest with Kupiec, four methods with a bootstrap, firm-wide component VaR, tails, factor regression, limits),
+  P&L explain, FRTB (a GIRR delta charge from the book's trades, charges across books), stress (rebuilt from trade
+  sensitivities, the scenario-desk matrix), exposure (EPE/EEPE, CVA from EE, a collateral Monte Carlo with threshold,
+  MTA and MPoR, netting, wrong-way flags, HHI, limit heatmap, SA-CCR rebuilt, SIMM, margin calls, haircut stress) and
+  desks, books, traders, groups and issuers (top movers, Sharpe, maturity ladders, par-swap hedges, IRB capital).
+  Each reads with the `_async` forms, so it runs in every browser, and was run in headless Chrome against the samples.
+  - **`drishti.quant`** (`console/web/static/calc/quant.py`, numpy only): tenors and day counts, Brent and Newton,
+    the normal distribution, `ZeroCurve` (log-linear, linear, natural cubic; scenarios and key-rate bumps), par rates,
+    annuities, swap PVs, a bootstrap, bond price/yield/duration/convexity/Z-spread, Black-Scholes, Black-76,
+    Garman-Kohlhagen and Bachelier with Greeks, implied vol, FX delta strikes, SVI, realised-vol estimators, VaR, ES,
+    Kupiec, drawdown, Sharpe, HHI, hazard rates, survival, CVA and the FRTB aggregation formulas. The worker fetches it
+    the first time a cell names `quant` (`from drishti import quant as q`); `console/tests/test_quant.py` checks it
+    against textbook values (it needs numpy, so the console's own run skips it).
+  - **Generator:** snippet sources are files, `tools/packgen/banking/snippets/<pack>/*.py` with `title`,
+    `description`, `kinds` and `example` lines; `make_packs.py` refuses one over 60 lines and `--check` also fails on a
+    generated snippet whose source is gone.
 - **Delta Lake without Hadoop; Drishti on Windows** ([DELTA_CONNECTOR.md › Engines](docs/connectors/DELTA_CONNECTOR.md#16-engines-native-and-hadoop),
   [WINDOWS.md](docs/guides/WINDOWS.md)). A new module, `drishti-deltalake`, is a Delta Kernel engine (`NativeEngine`)
   that never touches Hadoop's file systems: local lakes through `java.nio` (drive letters, backslashes and UNC shares),

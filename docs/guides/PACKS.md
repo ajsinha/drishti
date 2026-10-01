@@ -773,10 +773,12 @@ pnl = np.asarray(view.doc["scenarioPnl"], dtype=float)
 | When changes apply | at the server's next start (the pack model reads them once; `GET /api/v1/packs` carries them to the console) |
 | Roles | give the pack's analyst roles `calc: true` ([Roles](#roles)); a pack that enables Calc without such a role offers it only to roles that have it elsewhere |
 
-The banking packs enable Calc with one starter each (the trade rate shift, MTM concentration on netting sets and
-counterparties, VaR and ES from the scenario P&L, a desk's P&L pivot, curve interpolation), written by their
-generator from `tools/packgen/banking/calc_snippets.py`; `finance` has two inline ones. The table of what each does
-on the sample data is in [PYTHON_CALC.md](PYTHON_CALC.md#the-banking-packs-starters).
+The banking packs enable Calc with a library of 75 snippets (27 in `market-data`, 13 each in `trading` and
+`market-risk`, 12 in `counterparty-risk`, 10 in `banking-core`): curves, FX, vol surfaces, options, bonds, credit,
+VaR and its backtest, stress, FRTB, exposure, CVA, collateral, SA-CCR, desks, books and counterparties. Their
+generator writes them from `tools/packgen/banking/snippets/<pack>/*.py` (read by `calc_snippets.py`); `finance` has
+two inline ones and eight files. They share the pricing maths of `drishti.quant`. Every one, with the sample entity it
+runs on, is in [PYTHON_CALC.md › Snippet catalogue](PYTHON_CALC.md#18-snippet-catalogue).
 
 ## A signed pack registry: publishing and installing
 
@@ -1620,7 +1622,7 @@ help cards from one description. Each generated file says so in a comment near t
 
 | Packs | Generator |
 |---|---|
-| `banking-core`, `market-data`, `trading`, `market-risk`, `counterparty-risk` | `tools/packgen/banking/`: `make_packs.py` the manifests and the Calc snippets (`python/*.py`, from `calc_snippets.py`), `make_sutras.py` the 170 Sutras, `make_docs.py` the guides, `make_data.py` the documents and the lake |
+| `banking-core`, `market-data`, `trading`, `market-risk`, `counterparty-risk` | `tools/packgen/banking/`: `make_packs.py` the manifests and the Calc snippets (`python/*.py`, from `snippets/<pack>/*.py` through `calc_snippets.py`), `make_sutras.py` the 170 Sutras, `make_docs.py` the guides, `make_data.py` the documents and the lake |
 | `liquidity-risk`, `climate-risk`, `operational-risk`, `retail-banking`, `genomics`, `politics-society`, `economics` | `tools/packgen/<area>/make.py` (`liquidity`, `climate`, `oprisk`, `retail`, `genomics`, `politics`, `economics`), all on the common builder `tools/packgen/common/packbuild.py` |
 | `finance`, `logistics` | hand-written; their samples come from `packs/<name>/tools/` |
 

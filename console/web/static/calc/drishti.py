@@ -25,6 +25,7 @@ the same reads as the screen, with your roles and the same redaction. Nothing he
     history(kind, id, field, days)   one field over the last business days as a DataFrame
     show(x, title=None)     a table (paged like Drishti's), a figure, or text
     chart(df, kind="line", x=None, y=None)   a line, bar, scatter or hist chart, drawn by the page in its theme
+    quant                   pricing and risk maths: Black-Scholes, curves, bonds, VaR, CVA, ... (``from drishti import quant``)
 """
 from __future__ import annotations
 
@@ -40,6 +41,17 @@ from _drishti_bridge import emit as _emit, request as _request   # registered by
 
 __all__ = ["view", "get", "search", "columns", "history", "show", "chart", "get_async", "search_async", "columns_async",
            "history_async", "help", "DrishtiError", "LIMITS"]
+
+# drishti is also a package: its submodules (quant.py, the snippets' pricing maths) are written here by calc-worker.js the
+# first time a cell names them, so `from drishti import quant`, `import drishti.quant` and `drishti.quant` all work.
+__path__ = ["/home/pyodide/drishti_pkg"]
+
+
+def __getattr__(name):
+    if name == "quant":
+        import importlib
+        return importlib.import_module(__name__ + ".quant")
+    raise AttributeError(f"module 'drishti' has no attribute {name!r}")
 
 #: What one run may send to the page: rows per table, points per chart series, bytes in all. Beyond, output is cut with a note.
 LIMITS = {"rows": 2000, "points": 5000, "bytes": 8_000_000, "cells": 200_000}

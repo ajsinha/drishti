@@ -1,0 +1,51 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# title: Firm-wide VaR, diversification and component VaR by desk
+# description: Every desk's scenario P&L vector (one search, then each VaR result), summed scenario by scenario into a firm-wide historical VaR (the scenarios are read as the same dates for every desk, an assumption); stand-alone VaRs and the diversification benefit; component VaR by the Euler allocation (each desk's average loss in the scenarios around the firm's VaR scenario, which adds up to the firm VaR), and incremental VaR (the firm without the desk).
+# kinds: var
+# example: VAR VAR-RATES
+
+import numpy as np
+import pandas as pd
+from drishti import quant as q
+
+found = await drishti.search_async("VAR where var99 > 0 and desk != '' limit 100")
+vectors = {}
+for vid, desk in zip(found["id"], found["desk"]):
+    vectors[desk] = np.asarray((await drishti.get_async("var", vid))["scenarioPnl"], dtype=float)
+n = min(len(v) for v in vectors.values())
+P = pd.DataFrame({d: v[:n] for d, v in vectors.items()})          # scenarios x desks
+firm = P.sum(axis=1).to_numpy()
+C = 0.99
+k = int(np.floor(n * (1 - C)))                                     # the VaR scenario is the k-th worst
+firm_var = q.historical_var(firm, C)
+order = np.argsort(firm)
+window = order[max(k - 3, 0): k + 2]                               # five scenarios around the firm's VaR scenario
+comp = -P.iloc[window].mean()                                      # Euler: each desk's average loss there
+comp *= firm_var / comp.sum()                                      # scaled so the components add to the firm VaR
+
+rows = []
+for d in P.columns:
+    rows.append({"desk": d, "stand-alone VaR": q.historical_var(P[d], C), "component VaR": comp[d],
+                 "share of firm VaR": comp[d] / firm_var, "incremental VaR": firm_var - q.historical_var(firm - P[d], C)})
+out = pd.DataFrame(rows).set_index("desk").sort_values("component VaR", ascending=False)
+standalone = out["stand-alone VaR"].sum()
+show(out, title=f"Firm-wide VaR 99% {firm_var:,.0f} from {len(P.columns)} desks x {n} scenarios")
+print(f"Sum of stand-alone VaRs {standalone:,.0f}; firm VaR {firm_var:,.0f}; diversification benefit "
+      f"{standalone - firm_var:,.0f} ({1 - firm_var / standalone:.0%})")
+chart(out.reset_index(), kind="bar", x="desk", y=["stand-alone VaR", "component VaR"], title="Stand-alone against component VaR")
+me = view.doc.get("desk")
+if me in out.index:
+    print(f"{me}: {out.loc[me, 'share of firm VaR']:.1%} of firm VaR; removing it changes firm VaR by {out.loc[me, 'incremental VaR']:,.0f}")

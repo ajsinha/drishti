@@ -1,0 +1,41 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# title: Currency exposure and maturity ladder
+# description: The desk's or book's trades from one search, pivoted by currency and product family: MTM and notional; notional by currency and maturity bucket (a maturity ladder, 0-1Y to 30Y+), the notional-weighted average maturity per currency, and DV01 by currency where the trades carry it.
+# kinds: desk, book, legal-entity
+# example: BOOK BOOK-RATES-1
+
+import numpy as np
+import pandas as pd
+
+field = {"desk": "desk", "book": "book", "legal-entity": "legalEntity"}[view.kind]
+t = await drishti.search_async(f"TRD where {field} = '{view.id}' and family != '' and risk.dv01 != 0 and maturityDate != '' limit 1000")
+t["risk.dv01"] = pd.to_numeric(t["risk.dv01"], errors="coerce").fillna(0.0)
+asof = pd.Timestamp(view.business_date or "2026-09-30")
+t["years"] = (pd.to_datetime(t["maturityDate"]) - asof).dt.days / 365.25
+edges = [-np.inf, 1, 2, 5, 10, 30, np.inf]
+labels = ["0-1Y", "1-2Y", "2-5Y", "5-10Y", "10-30Y", "30Y+"]
+t["bucket"] = pd.cut(t["years"], edges, labels=labels)
+
+show(t.pivot_table(index="currency", columns="family", values="mtm", aggfunc="sum", fill_value=0, margins=True, margins_name="Total"),
+     title=f"{view.id}: MTM by currency and product family ({len(t)} trades)")
+ladder = t.pivot_table(index="currency", columns="bucket", values="notional", aggfunc="sum", fill_value=0, observed=False)
+show(ladder, title="Notional by currency and maturity bucket")
+chart(ladder.T, kind="bar", title="Maturity ladder: notional by bucket")
+summary = t.groupby("currency").apply(lambda g: pd.Series({
+    "trades": len(g), "notional": g["notional"].sum(), "MTM": g["mtm"].sum(), "DV01": g["risk.dv01"].sum(),
+    "avg maturity (notional-weighted)": np.average(g["years"].clip(lower=0), weights=g["notional"].abs()) if g["notional"].abs().sum() else 0,
+}), include_groups=False)
+show(summary.sort_values("notional", ascending=False), title="By currency")
