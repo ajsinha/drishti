@@ -28,3 +28,6 @@ Drishti is proprietary. It bundles or builds with these third-party components u
 | Bootstrap, Bootstrap Icons (console, vendored) | MIT |
 | Apache ECharts (console, vendored) | Apache-2.0 |
 | FastAPI, Starlette, Jinja2, Uvicorn, httpx, PyYAML (console) | MIT / BSD |
+| CodeMirror 5 and its Python mode (console, vendored) | MIT |
+| Pyodide (console, Calc; installed by `tools/fetch-pyodide.sh`, not in the repository) | MPL-2.0 |
+| CPython, numpy, pandas, scipy, statsmodels, matplotlib and their dependencies (inside Pyodide) | PSF-2.0, BSD-3-Clause, BSD-3-Clause, BSD-3-Clause, BSD-3-Clause, PSF-based (matplotlib); see each package |

@@ -116,13 +116,13 @@ drishti-benchmarks                (inference)
 | Folder | What is in it |
 |---|---|
 | `console/` | The web console: `run_drishti_web.py` (entry point), `core/` (app factory, backend client, auth, business date, packs, config loader), `routes/` (one router per area), `web/templates/` (Jinja2, with `_macros/panels.html` holding one macro per panel kind), `web/static/` (`js/`, `css/`, `img/`, and third-party code under `vendor/`), `web/guides/` (in-app guides), `config/` (`application.yaml`, `help.yaml`, `workspaces.yaml`, `competitive.yaml`), `tests/` (pytest, with a fake backend in `conftest.py`) |
-| `packs/<name>/` | One domain pack: `pack.yaml`, `sutras/`, `samples/`, `config/` (formats, semantics, help, workspaces), `guides/`. Fourteen ship. |
-| `tools/packgen/` | Pack generators: `banking/` (five banking packs from one taxonomy), `common/packbuild.py` (the shared builder), and one `make.py` per other generated pack (`climate`, `economics`, `genomics`, `liquidity`, `oprisk`, `politics`, `retail`) |
+| `packs/<name>/` | One domain pack: `pack.yaml`, `sutras/`, `samples/`, `config/` (formats, semantics, help, workspaces), `guides/`, and `python/` (Calc snippets). Fourteen ship. |
+| `tools/packgen/` | Pack generators: `banking/` (five banking packs from one taxonomy, with their Calc snippets from `calc_snippets.py`), `common/packbuild.py` (the shared builder), and one `make.py` per other generated pack (`climate`, `economics`, `genomics`, `liquidity`, `oprisk`, `politics`, `retail`) |
 | `tools/load-delta.sh`, `tools/load-postgres.sh`, `tools/load-aerospike.sh` | Build or load the demo data in each store, small (the samples) to a million trades a day (`--trades N --days D`); see [DEMO_DATA.md](../connectors/DEMO_DATA.md) |
 | `tools/samplegen/` | Sample-history helpers: `lake.py` (Delta Lake writer), `layout.py` (the pack-declared lake layout: promoted columns, sorted files), `bulk_trades.py` (a large trading book for scale tests: `--trades`, `--days`), `stream.py` (Kafka ticker), plus `test_samplegen.py` and `test_layout.py` |
 | `tools/lake/` | `maintain.py`: Delta Lake retention, compaction (layout-preserving for laid-out tables), checkpoints, vacuum and `relayout`; `test_maintain.py` |
 | `tools/packreg/` | `packreg.py`: signing keys, publishing packs to a signed registry, verifying one (ADR-018); `test_packreg.py` |
-| `tools/` (files) | `drill.sh` (verify and publish), `license_headers.py` (check or insert the copyright header), `rachana/md_to_yaml.py` (converts Markdown Sutras, `*.sutra.md`, read before 1.11, to `*.sutra.yaml`: `python3 tools/rachana/md_to_yaml.py <file-or-folder> --delete`), `load-aerospike.sh` |
+| `tools/` (files) | `drill.sh` (verify and publish), `fetch-pyodide.sh` (installs Calc's Python runtime, pinned and verified, into `console/web/static/vendor/pyodide/`), `license_headers.py` (check or insert the copyright header), `rachana/md_to_yaml.py` (converts Markdown Sutras, `*.sutra.md`, read before 1.11, to `*.sutra.yaml`: `python3 tools/rachana/md_to_yaml.py <file-or-folder> --delete`), `load-aerospike.sh` |
 | `deploy/` | `server.Dockerfile`, `console.Dockerfile`, `compose.yaml`, `compose.data.yaml`, `lake-maintenance.yaml`, `grafana/` |
 | `config/license-header.txt` | The text of the copyright header that `license_headers.py` inserts |
 | `data/` | Runtime and generated data, all git-ignored: `delta/` (the sample lake, `make_data.py --lake`), `feeds/` (`make_data.py`), `banking.jsonl` (`make_data.py --jsonl`, for Aerospike), `identity/` (the SQLite database), `governance/` (Sutra proposals), `reports/` |
@@ -216,6 +216,10 @@ console/.venv/bin/python console/run_drishti_web.py
 You should see `Uvicorn running on http://127.0.0.1:17480`. `console/requirements.txt` holds FastAPI, Uvicorn,
 Jinja2, httpx, PyYAML, Markdown and pytest. Without uv, `python3 -m venv console/.venv` and
 `console/.venv/bin/pip install -r console/requirements.txt` do the same.
+
+For Calc (Python on a view, `Alt+C`), install its runtime once: `tools/fetch-pyodide.sh` (about 340 MB downloaded to
+`~/.cache/drishti/`, 53 MB kept; see [PYTHON_CALC.md](PYTHON_CALC.md#12-installing-the-python-runtime)). Without it the
+console runs as before and the Calc panel says how to install it.
 
 The console reads `console/config/application.yaml`, then `console/config/application.local.yaml` if present
 (git-ignored), then environment variables, then `--key=value` arguments:
@@ -399,14 +403,20 @@ The identity database (`drishti-identity`) is reached only through Spring Data J
 
 ### 3.6 The front end is vendored
 
-The console uses Bootstrap, Bootstrap Icons, ECharts (and ECharts GL) and CodeMirror, copied under
-`console/web/static/vendor/`. There is no npm, no build step and no CDN (ADR-006). The Content Security Policy in
-`console/core/app.py` is:
+The console uses Bootstrap, Bootstrap Icons, ECharts (and ECharts GL) and CodeMirror (with its Python mode), copied
+under `console/web/static/vendor/`. There is no npm, no build step and no CDN (ADR-006). The Content Security Policy
+in `console/core/app.py` is:
 
 ```text
 default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; font-src 'self';
-connect-src 'self'; frame-src 'self'; frame-ancestors 'self'
+connect-src 'self'; frame-src 'self'; worker-src 'self'; frame-ancestors 'self'
 ```
+
+One file has its own policy: Calc's worker, `/static/js/calc-worker.js`, is served with
+`default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self'`, so it alone may compile WebAssembly
+(Pyodide). Pyodide itself is the one vendored component **not in git** (53 MB): `tools/fetch-pyodide.sh` downloads a
+pinned release, checks its SHA-256 and unpacks what Calc needs into `console/web/static/vendor/pyodide/`
+(git-ignored); the console serves it at `/pyodide/<version>/` ([PYTHON_CALC.md](PYTHON_CALC.md#12-installing-the-python-runtime)).
 
 So templates may not contain inline `<script>` blocks, `on…=` handlers or `style=` attributes, and nothing may load
 from another origin. `console/tests/test_assets_policy.py` checks all of this. Behaviour goes in a file under

@@ -39,6 +39,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | [Keyboard](#keyboard) | Every key in one table |
 | [Live updates](#live-updates), [Business dates](#business-dates-live-or-a-day-in-the-past), [Compare](#compare-what-changed) | Ticking values, past dates, what changed |
 | [Search by value](#search-by-value) | `where` searches, sorting and limits |
+| [Calc: Python on a view](#altc--calc-python-on-a-view) | `Alt+C`: Python in your browser on what you are looking at |
 | [Export, print and share](#export-print-and-share) | CSV, JSON, PDF and links |
 | [Monitors](#monitors), [Alerts](#alerts), [Workspaces](#workspaces) | Watching many entities at once |
 | [Your settings](#your-settings), [Themes](#themes), [Domain packs](#domain-packs-choosing-what-you-see) | Making the console yours |
@@ -464,13 +465,15 @@ The footer repeats the source and generation, and the business date when one is 
 | `Enter` | Open the highlighted suggestion, or run the command (`<GO>`). In a table: open the selected row |
 | `PgUp` `PgDn` | In a selected table: move the selection a page up or down |
 | `Home` `End` | In a selected table: select the first or last row |
-| `Esc` | Close the suggestions, a menu, or the raw JSON drawer |
+| `Esc` | Close the suggestions, a menu, the raw JSON drawer or Calc |
 | `F1` | Help for the page you are on |
 | `F2`–`F6` | Jump to the panel that shows that key in its header |
 | `F7` | Open the main linked entity (for a trade: its netting set) |
 | `F8` | Impact: what depends on this entity |
 | `F9` | Raw JSON of the entity, with its source and generation |
 | `Alt+←` | Back |
+| `Alt+C` | Calc: Python on this view (where a pack offers it; `Option+C` on a Mac) |
+| `Ctrl+Enter` | In Calc: run the code (`Cmd+Enter` on a Mac) |
 | `Alt+1`…`Alt+4` | In a workspace: move to pane 1 to 4 |
 
 The keys a view offers are also buttons along the bottom of the screen, so you can click them.
@@ -480,6 +483,20 @@ The keys a view offers are also buttons along the bottom of the screen, so you c
 Press `F9` in `TRD MX-20000001`. A drawer opens on the right with the full document, starting
 `{"tradeId": "MX-20000001", "productType": "IRS_FIXFLOAT", …}`, and its source and generation. Press `Esc`
 to close it. If your role does not have raw access, fields such as `trader` are masked.
+
+### Alt+C · Calc: Python on a view
+
+Press `Alt+C` on `VAR VAR-RATES`. A panel slides in from the right, like F9's, with a Python editor. The first time
+in a tab, Python starts (*Python ready*, about a second). Pick **VaR and expected shortfall from the scenario P&L**
+in **Snippets ▾** and press `Ctrl+Enter`: a table shows the VaR recomputed from the 500 scenario P&Ls
+(**9,611,219**, the same as the strip), the expected shortfall, and a histogram. `view` is the screen (`view.doc` its
+document, `view.tables` its tables as pandas DataFrames); `drishti.search("TRD where …")`, `drishti.get(kind, id)`,
+`show()` and `chart()` are ready.
+
+The code runs in your browser, never on a server, and reads only what you could open by clicking. The key is offered
+where a pack switches Calc on (the banking packs and `finance` do) and needs a role with the `calc` power; without
+one it is shown greyed, with the reason. Everything about it, from the `drishti` module to the limits, is in
+[PYTHON_CALC.md](PYTHON_CALC.md).
 
 ### F8 · Impact
 
@@ -1064,6 +1081,7 @@ every role with its kinds (or *every kind*), its powers, how many users hold it,
 | author Sutras | use Sutra Studio |
 | approve Sutras | approve proposed Sutras in Reviews |
 | administer | use every admin page |
+| Calc | use Calc (`Alt+C`): Python in the browser on what the role opens ([PYTHON_CALC.md](PYTHON_CALC.md#9-roles-who-may-use-calc)) |
 
 Roles marked **built-in** come from the server's configuration and from packs (`viewer`, `author`,
 `approver`, `admin`, and pack roles such as `trader`, `credit-risk` or `retail`). They are shown read-only.

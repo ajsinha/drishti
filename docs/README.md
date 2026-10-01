@@ -37,6 +37,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | Install and start it with every step explained | [GETTING_STARTED.md](guides/GETTING_STARTED.md) |
 | Find your way around the top bar and its menus | [USER_GUIDE.md › The top bar](guides/USER_GUIDE.md#the-top-bar) |
 | Read Drishti from a script, a notebook or Excel with a personal API token | [CLIENTS.md](guides/CLIENTS.md) |
+| Run Python on the view you are looking at (`Alt+C`): re-price, recompute, pivot, chart | [PYTHON_CALC.md](guides/PYTHON_CALC.md) |
 | Open a view, and learn the command line and keys | [USER_GUIDE.md › The command line](guides/USER_GUIDE.md#the-command-line), [Keyboard](guides/USER_GUIDE.md#keyboard) |
 | List entities to pick from (`TRD MX-200000`, `CPTY north`, `TRD productType=Revolver`) | [USER_GUIDE.md › Pick lists](guides/USER_GUIDE.md#pick-lists-when-a-command-names-several-entities) |
 | Page through a table, or walk it with the keyboard | [USER_GUIDE.md › Tables](guides/USER_GUIDE.md#tables-sorting-filtering-paging-and-the-keyboard) |
@@ -84,6 +85,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | Create users, give roles and packs, read the audit log | [USER_MANAGEMENT.md](admin/USER_MANAGEMENT.md) |
 | Define roles, or switch a pack off for everyone | [USER_GUIDE.md › Administration](guides/USER_GUIDE.md#administration) |
 | Look up any setting and its environment variable | [CONFIGURATION.md](admin/CONFIGURATION.md) |
+| Install Calc's Python runtime, offline too, and decide who may use it | [PYTHON_CALC.md › Installing](guides/PYTHON_CALC.md#12-installing-the-python-runtime), [Roles](guides/PYTHON_CALC.md#9-roles-who-may-use-calc) |
 | Deploy, secure and monitor it; keep the lake bounded | [OPERATIONS.md](admin/OPERATIONS.md) |
 | Fix something that is not working | [TROUBLESHOOTING.md](guides/TROUBLESHOOTING.md), then the runbooks below |
 | Know how fast it is, and how that is measured | [PERFORMANCE.md](admin/PERFORMANCE.md) |
@@ -127,6 +129,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | [GETTING_STARTED.md](guides/GETTING_STARTED.md) | you are installing for the first time and want each step explained, with what you should see |
 | [USER_GUIDE.md](guides/USER_GUIDE.md) | you use the console: top bar, command line, pick lists, tables, views, dates, search, export, monitors, alerts, workspaces, settings, Studio, administration |
 | [PACKS.md](guides/PACKS.md) | you load, switch, assign, change, test or build a domain pack, or need any `pack.yaml` key |
+| [PYTHON_CALC.md](guides/PYTHON_CALC.md) | you run Python on a view (`Alt+C`): the `drishti` module, output, packs' snippets, roles, the security model, installing the runtime, measured sizes and speed, limits |
 | [RACHANA_GUIDE.md](guides/RACHANA_GUIDE.md) | you are learning to write Sutras and want a tutorial that builds one up step by step |
 | [RACHANA_REFERENCE.md](guides/RACHANA_REFERENCE.md) | you are writing a Sutra and need the exact key, panel option, format, expression or problem code |
 | [PANELS.md](guides/PANELS.md) | you choose, configure or debug a panel: all twenty kinds, their data, every option, what the server computes, how the console draws them, limits and common mistakes |

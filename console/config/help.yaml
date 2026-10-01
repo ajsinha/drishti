@@ -25,6 +25,7 @@ categories:
       - { slug: impact, title: F8 · Impact, icon: diagram-3, summary: "What depends on an entity: its dependents, what they roll into, and the amount at stake." }
       - { slug: monitors-and-alerts, title: Monitors and alerts, icon: bell, summary: "Live watchlists, and rules the server checks on every change: alerted once, re-armed when clear." }
       - { slug: workspaces, title: Workspaces, icon: grid-1x2, summary: "Several live views on one screen, panes that follow each other, saved per user." }
+      - { slug: python-calc, doc: guides/PYTHON_CALC.md, title: "Calc · Python on any view", icon: filetype-py, summary: "Alt+C: Python in your browser on the screen you are on. The drishti module, tables and charts, packs' snippets, roles, limits." }
       - { slug: using-the-terminal, doc: guides/USER_GUIDE.md, title: Using the terminal, icon: terminal, summary: "Commands, type-ahead, every key, and how to read the strip, panels, links and provenance." }
   - id: layouts
     name: Layouts, Rachana and Sutras

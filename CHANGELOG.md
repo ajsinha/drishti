@@ -16,6 +16,32 @@
 # Changelog
 
 ## Unreleased — A million trades a day, for seven years
+- **Calc: Python on any view** ([PYTHON_CALC.md](docs/guides/PYTHON_CALC.md)). `Alt+C` opens a drawer like F9's with a
+  Python editor (CodeMirror, Python mode), Run (`Ctrl+Enter`), Stop, the output and a history of runs. The code runs in
+  the browser, in Pyodide 314.0.7 (CPython 3.14 on WebAssembly) inside a Web Worker, with numpy, pandas, scipy,
+  statsmodels and matplotlib; nothing runs on the server.
+  - **The `drishti` module:** `view` (the screen: `doc`, `tables` as DataFrames for every panel that holds rows,
+    `panels`, `business_date`), `get`, `search`, `columns` (whole columns of a day) and `history`, each an ordinary read
+    with the user's session (roles and masking apply), with `_async` forms for browsers without JavaScript Promise
+    Integration; `show()` (tables paged like Drishti's), `chart()` (ECharts in the theme), matplotlib figures as PNG;
+    output capped per run.
+  - **Packs opt in:** `python: { enabled: true, snippets: [...] }` in `pack.yaml` and `python/*.py` files; the server's
+    pack model reads them and `/packs` carries them. The five banking packs ship starters (rate shift on a trade, MTM
+    concentration on netting sets and counterparties, VaR and ES from the scenario P&L, a desk's P&L pivot, curve
+    interpolation), generated from `tools/packgen/banking/calc_snippets.py`; `finance` has two inline ones.
+  - **A role power, `calc`:** granted to `author`, `approver`, `admin` and the analysts' roles of the packs that offer
+    Calc (`trader`, `risk`, `market-risk`, `credit-risk`), not to `viewer`; Admin → Roles has a tick box. Kept in a new
+    table, `drishti_role_power`, created at start on existing databases.
+  - **Server:** `GET /api/v1/calc/settings`, the user's snippets (`/api/v1/me/calc-snippets`, at most 50, in
+    `drishti_preference`), and `GET /api/v1/search/columns/{kind}?paths=` (a day's promoted columns, redacted as a search,
+    access-logged); `drishti.calc.*` settings.
+  - **The runtime is not in git:** `tools/fetch-pyodide.sh` downloads the pinned release once, checks its SHA-256 and
+    keeps only what Calc needs (53 MB); the console serves it at `/pyodide/<version>/` (cached for good), the console
+    image installs it at build time, and `/healthz` and About say whether it is there. Only the Calc worker may compile
+    WebAssembly (`'wasm-unsafe-eval'`, its own Content Security Policy); the page adds `worker-src 'self'`.
+  - **Measured:** first open 1.3 s, first run with pandas about 2 s, later runs 5–100 ms; no request leaves the origin.
+- **A number over time works again:** clicking a value on a view drew no chart, because the console's client sent the
+  field (`path`) in a way that collided with its own argument (`/api/series` answered 500).
 - **JDK 25 only.** Drishti builds with JDK 25 and produces Java 25 bytecode (the enforcer accepts only 25).
   - **Running:** run the server with `-XX:+UseCompactObjectHeaders`. Measured against JDK 21: 10–20% more requests a second, and 10% less live heap.
   - **Everywhere else:** the Docker image is `eclipse-temurin:25-jre` with compact object headers; CI, `.java-version`, the scripts and the documents say 25.

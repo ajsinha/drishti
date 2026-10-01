@@ -352,6 +352,7 @@ Check: `curl -s localhost:18480/api/v1/studio/settings` returns `{"approve":…,
 | `roles.<role>.author` | `false` | May save Sutras from Studio (a proposal when governance is on). |
 | `roles.<role>.approve` | `false` | May approve or reject proposed Sutras. |
 | `roles.<role>.admin` | `false` | May manage users, read the audit log, approve Sutras. |
+| `roles.<role>.calc` | `false` | May use Calc, Python in the browser on what the role opens ([PYTHON_CALC.md](../guides/PYTHON_CALC.md#9-roles-who-may-use-calc)). |
 | `redact` | `[trader, counterpartyId, patientName]` | Field names masked in raw JSON for roles without `raw`. |
 
 The bundled roles; packs add domain roles (finance: `trader`, `risk`; logistics: `ops`):
@@ -361,9 +362,9 @@ drishti:
   security:
     roles:
       viewer:   { kinds: ["*"] }
-      author:   { kinds: ["*"], raw: true, author: true }
-      approver: { kinds: ["*"], raw: true, author: true, approve: true }
-      admin:    { kinds: ["*"], raw: true, author: true, admin: true }
+      author:   { kinds: ["*"], raw: true, author: true, calc: true }
+      approver: { kinds: ["*"], raw: true, author: true, approve: true, calc: true }
+      admin:    { kinds: ["*"], raw: true, author: true, admin: true, calc: true }
 ```
 
 Example: a role that sees only trades and books, with no raw access.
@@ -453,6 +454,21 @@ Not in the bundled file; the defaults apply until you set them.
 |---|---|---|
 | `max-scan` | `20000` | At most this many entities of a kind are read per search; the result says when it stopped short. |
 | `budget` | `3s` | Time a search may take to list and read; slower sources are left out. |
+
+### `drishti.calc` — Python in the browser
+
+Calc ([PYTHON_CALC.md](../guides/PYTHON_CALC.md)) runs Python in the user's browser; the server never runs the code. It
+decides who may use it (roles with `calc`), keeps each user's snippets, and serves whole columns of a day.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `enabled` | `true` (`DRISHTI_CALC_ENABLED`) | Calc at all. Off: nobody may use it, and its endpoints refuse with `403 DRS-5002`. The console has its own switch, `calc.enabled`, read from the same variable. |
+| `max-column-rows` | `250000` | `drishti.columns()` (`GET /api/v1/search/columns/{kind}`) returns at most this many entities, the first by id; the browser holds them all. |
+| `columns-budget` | `20s` | How long a columns read may wait for its source (the first read of a business day loads its columns). |
+| `max-snippet-chars` | `50000` | A saved snippet's code, at most (never more than 60,000: a saved document is at most 64 KB). Each user keeps at most 50 snippets. |
+
+Which views offer Calc is a pack's choice (`python: { enabled: true }` in `pack.yaml`), not configuration; see
+[PACKS.md](../guides/PACKS.md#calc-python-snippets).
 
 ### `drishti.panels` — chart and aggregate panel limits
 
@@ -1088,6 +1104,16 @@ read by both programs, so one set of variables configures both halves.
 The file also holds `studio.enabled: true`, which the current console does not read; whether Studio can save
 is decided by the server (`drishti.rachana.studio-save`).
 
+### `calc`
+
+| Key | Default | Meaning |
+|---|---|---|
+| `calc.enabled` | `true` (`DRISHTI_CALC_ENABLED`) | Off: no view offers Calc and the console's `/api/calc/*` routes refuse, whatever packs and roles say ([PYTHON_CALC.md](../guides/PYTHON_CALC.md)). |
+
+The Python runtime is a folder, not a setting: `console/web/static/vendor/pyodide/`, installed by
+`tools/fetch-pyodide.sh` and served at `/pyodide/<version>/` when present
+([PYTHON_CALC.md](../guides/PYTHON_CALC.md#12-installing-the-python-runtime)).
+
 ---
 
 ## Environment variable index
@@ -1111,6 +1137,7 @@ Server (S), console (C), or both.
 | `DRISHTI_STUDIO_SAVE` | S | `drishti.rachana.studio-save` |
 | `DRISHTI_SUTRA_REVIEW`, `DRISHTI_SUTRA_FOUR_EYES`, `DRISHTI_GOVERNANCE_DIR` | S | `drishti.governance.*` |
 | `DRISHTI_SECURITY_ENABLED` | S | `drishti.security.enabled` |
+| `DRISHTI_CALC_ENABLED` | S, C | `drishti.calc.enabled`, `calc.enabled` |
 | `DRISHTI_TOKEN_SECRET` | S, C | `drishti.security.secret`, `auth.token_secret` |
 | `DRISHTI_OIDC_ENABLED`, `DRISHTI_OIDC_ISSUER`, `DRISHTI_OIDC_CLIENT_ID` | S, C | `drishti.security.oidc.*`, `auth.oidc.*` |
 | `DRISHTI_OIDC_CLIENT_SECRET`, `DRISHTI_OIDC_REDIRECT_URI` | C | `auth.oidc.*` |

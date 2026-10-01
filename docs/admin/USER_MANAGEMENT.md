@@ -58,7 +58,7 @@ Go to **Admin → Roles** and click **New role**. Fill in:
 | Name | `credit-analyst` |
 | Description | `Reads counterparties and credit curves` |
 | Kinds it opens | `counterparty` and `credit-curve` (one per line) |
-| Powers | leave all four unticked |
+| Powers | leave all five unticked |
 
 Click **Save**. You should see *Created credit-analyst.* The row shows the two kinds, *0* users, and who
 changed it and when.
@@ -105,7 +105,7 @@ filter to see only what concerns her.
 A role says two things:
 
 1. **Which kinds of entity** its holders may open (`trade`, `counterparty`, … or `*` for every kind).
-2. **Four powers**:
+2. **Five powers**:
 
    | Power | Lets the holder |
    |---|---|
@@ -113,6 +113,7 @@ A role says two things:
    | `author` | write and preview Sutras in Studio, and propose them (where Studio saving is on) |
    | `approve` | approve or reject proposed Sutras, but never their own (four eyes) |
    | `admin` | everything in this guide: users, roles, caches, health, audit |
+   | `calc` | use Calc (`Alt+C`): Python run in their own browser on the views a pack offers it, reading only what their roles open ([PYTHON_CALC.md](../guides/PYTHON_CALC.md)) |
 
 A person may hold several roles. They may open a kind if **any** of their roles allows it, and they have a power if
 **any** of their roles grants it.
@@ -128,15 +129,17 @@ A person may hold several roles. They may open a kind if **any** of their roles 
 
 Configuration ships with these:
 
-| Role | Opens | Raw JSON | Author | Approve | Admin |
-|---|---|---|---|---|---|
-| `viewer` | everything | masked | — | — | — |
-| `author` | everything | yes | yes | — | — |
-| `approver` | everything | yes | yes | yes | — |
-| `admin` | everything | yes | yes | — | yes (and admins may approve) |
+| Role | Opens | Raw JSON | Author | Approve | Admin | Calc |
+|---|---|---|---|---|---|---|
+| `viewer` | everything | masked | — | — | — | — |
+| `author` | everything | yes | yes | — | — | yes |
+| `approver` | everything | yes | yes | yes | — | yes |
+| `admin` | everything | yes | yes | — | yes (and admins may approve) | yes |
 
 Packs add their own: for example `trader` (finance), `credit-risk` (counterparty-risk), `market-risk`,
-`climate-analyst`, `retail`, `oprisk`, `scientist` and `economist`. A pack declares one like this:
+`climate-analyst`, `retail`, `oprisk`, `scientist` and `economist`. The analysts' roles of the packs that offer Calc
+hold `calc`: `trader` and `risk` (finance), `trader` (trading), `market-risk` and `credit-risk`. Roles of packs that do
+not offer Calc do not ([PYTHON_CALC.md](../guides/PYTHON_CALC.md#9-roles-who-may-use-calc)). A pack declares one like this:
 
 ```yaml
 # packs/climate-risk/pack.yaml
@@ -208,6 +211,20 @@ asynchronous and never slows a read; if the database cannot keep up, events are 
 many. The console's own service identity is not recorded. Through the API:
 `GET /api/v1/admin/access?user=&action=&kind=&id=&from=&to=&limit=`.
 
+## Calc
+
+Calc ([PYTHON_CALC.md](../guides/PYTHON_CALC.md)) runs Python in the user's browser on the view they are looking at.
+What an administrator needs to know:
+
+- **Who:** holders of a role with `calc`. Tick *Use Calc* in the role's dialog (Admin → Roles), or `calc: true` in
+  configuration or a pack. The default grants are in [section 2](#2-roles).
+- **What it reads:** only what the user could open by clicking. Every read goes through the console with the user's
+  session; roles, packs and masking apply call by call. Nothing runs on the server.
+- **Where:** on views of kinds whose pack enables Calc (`python.enabled` in `pack.yaml`).
+- **What is kept:** each user's own snippets (`drishti_preference`, namespace `calc-snippets`, at most 50), deleted
+  with the user. Reads are in the access log like any read (`drishti.columns()` as a `search`).
+- **Switched off for everyone:** `DRISHTI_CALC_ENABLED=false` (server and console).
+
 ## Notes and shared workspaces
 
 - **Notes** (see the User guide): anyone who may open a kind reads and adds notes on its entities; only the author
@@ -250,8 +267,8 @@ column, if they do not.
 | `drishti_user` | one row per person: name, email, desk, password hash, enabled, lockout, timestamps |
 | `drishti_user_role` | (user, role) pairs |
 | `drishti_user_pack` | (user, pack) pairs; `drishti_user.packs_assigned` says whether they apply or the defaults do |
-| `drishti_role` · `drishti_role_kind` | roles defined in Admin → Roles, and the kinds each opens |
-| `drishti_preference` | (user, namespace, name) → a JSON document: workspaces, monitors, alert rules, settings |
+| `drishti_role` · `drishti_role_kind` · `drishti_role_power` | roles defined in Admin → Roles, the kinds each opens, and powers added since the first release (`calc`), one row each |
+| `drishti_preference` | (user, namespace, name) → a JSON document: workspaces, monitors, alert rules, settings, Calc snippets (`calc-snippets`) |
 | `drishti_audit` | one row per audited action, numbered in order |
 | `drishti_alert` | every alert a user's rules fired: when, rule, entity, severity, message (the newest `drishti.alerts.keep`, 1,000, per user) |
 | `drishti_pack_state` | packs an admin switched off or on (Admin → Packs) |
@@ -448,7 +465,7 @@ curl -s 'localhost:18480/api/v1/admin/audit?subject=priya&limit=20'
 | `POST` | `/admin/users/{u}/enabled` `{enabled}` | enable or disable |
 | `POST` | `/admin/users/{u}/password` `{password}` | reset a password (also clears a lockout) |
 | `GET` | `/admin/roles` | every role name a user may be given |
-| `GET` | `/admin/role-definitions` | every role: kinds, powers, built-in or not, holders |
+| `GET` | `/admin/role-definitions` | every role: kinds, powers (`raw`, `author`, `approve`, `admin`, `calc`), built-in or not, holders |
 | `GET` / `PUT` / `DELETE` | `/admin/role-definitions/{name}` | read / create or replace / delete a role you defined |
 | `GET` | `/admin/audit?limit=&subject=` | audit events, newest first; `subject` matches who did it or to whom |
 | `GET` | `/admin/status` | the default-password warning, user count, installed packs |

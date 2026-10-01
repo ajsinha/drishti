@@ -32,7 +32,8 @@ This guide explains, with examples:
 
 ## What a pack is
 
-A pack is configuration and content only. It contains no Java and no Python that the server runs. Here is the
+A pack is configuration and content only. It contains no Java and no Python that the server runs (its Calc snippets,
+`python/*.py`, run in the user's browser; see [Calc](#calc-python-snippets)). Here is the
 smallest complete pack in the repository, `packs/logistics/`:
 
 ```text
@@ -309,6 +310,7 @@ Below is the complete `packs/logistics/pack.yaml`, annotated. Then the keys only
 | `graph.impact` | server | `follow: [assignee]`, `measures: { ticket: "$.ageHours" }` | What F8 rolls up and sums | below |
 | `columns` | server | `ticket: [subject, status, priority]` | Key fields in pick lists and searches | [columns](#columns-the-key-fields-of-a-pick-list) |
 | `roles` | server | `support: { kinds: [ticket, agent] }` | Roles this pack adds | [Roles](#roles) |
+| `python` | server | `python: { enabled: true }` | Calc (Python in the browser, `Alt+C`) on this pack's kinds, and starter snippets (also `python/*.py`) | [Calc](#calc-python-snippets) |
 | `connectors` | server | `helpdesk-store: { plugin: file, … }` | Named data sources | [below](#keys-for-packs-that-inherit-and-read-real-data) |
 | `routes` | server | `ticket: helpdesk-store` | Which connector answers a kind | [below](#keys-for-packs-that-inherit-and-read-real-data) |
 | `alerts` | server | `- { kind: ticket, name: …, when: "$.ageHours > 24" }` | Suggested alert rules | below |
@@ -360,7 +362,7 @@ graph:                          # how entities link to each other
     vessel: "fmt($.speedKnots, 'knots1')"           # a link to a vessel shows "18.5 kn"
     port: "'wait ' + $.berthWaitHours + ' h'"       # a link to a port shows "wait 6 h"
 
-roles:                          # roles this pack adds. ROLE: { kinds, raw?, author?, approve?, admin? }
+roles:                          # roles this pack adds. ROLE: { kinds, raw?, author?, approve?, admin?, calc? }
   ops: { kinds: [shipment, container, vessel, port] }   # "*" means every kind; raw: true lets F9 show unredacted JSON
 
 alerts:                         # suggested alert rules, offered in the Alert dialog for that kind
@@ -720,6 +722,7 @@ roles:
 | `author` | may use Sutra Studio |
 | `approve` | may approve Sutra proposals |
 | `admin` | may administer users |
+| `calc` | may use Calc, Python in the browser on what the role opens ([PYTHON_CALC.md](PYTHON_CALC.md#9-roles-who-may-use-calc)) |
 
 The core always has `viewer`, `author`, `approver` and `admin`. Roles are given to users by an administrator; see
 [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md). Security is off by default for local development; roles take effect when
@@ -729,6 +732,51 @@ A pack's roles appear in *Admin → Roles* marked **built-in**, read-only: chang
 generated pack, in its generator). An administrator can also define new roles there without touching any pack;
 the dialog's *Add every kind of a pack* buttons fill in a pack's kinds in one click
 ([USER_GUIDE.md](USER_GUIDE.md#admin--roles-what-a-role-may-do)).
+
+## Calc: Python snippets
+
+Calc is a Python panel on any view (`Alt+C`): code that runs in the user's browser, reads the screen and Drishti with
+the user's own rights, and draws tables and charts ([PYTHON_CALC.md](PYTHON_CALC.md)). A pack decides whether its
+kinds offer it, and may ship starter code:
+
+```yaml
+python:
+  enabled: true                 # Calc on the views of this pack's kinds
+  snippets:                     # optional starters, offered in the panel's Snippets list
+    - title: Member trades, summed from the screen
+      description: The netting set's member trades as a DataFrame, MTM by product.
+      kinds: [netting-set]      # where it is offered; none: every kind of this pack
+      code: |
+        trades = view.tables["Member trades"]
+        trades.groupby("Product", as_index=False)["MTM (USD)"].sum()
+  dir: python                   # optional: the folder of snippet files (default python/)
+```
+
+Longer snippets read better as files: `packs/<pack>/python/<name>.py`, in name order after the inline ones, each
+starting with three comment lines (after the copyright header, which is not shown to the user):
+
+```python
+# title: VaR and expected shortfall from the scenario P&L
+# description: Historical-simulation VaR (99%) and ES (97.5%) recomputed with numpy from the scenario P&Ls.
+# kinds: var
+
+import numpy as np
+pnl = np.asarray(view.doc["scenarioPnl"], dtype=float)
+...
+```
+
+| Rule | |
+|---|---|
+| Where Calc is offered | on a view whose kind is owned by a pack with `python.enabled: true`, to users with a role with `calc` |
+| Which snippets a view lists | from every active pack that enables Calc: those naming the view's kind in `kinds`, and those naming no kind from the pack that owns it |
+| Limits | a file over 64 KB is skipped; at most 100 snippets a pack |
+| When changes apply | at the server's next start (the pack model reads them once; `GET /api/v1/packs` carries them to the console) |
+| Roles | give the pack's analyst roles `calc: true` ([Roles](#roles)); a pack that enables Calc without such a role offers it only to roles that have it elsewhere |
+
+The banking packs enable Calc with one starter each (the trade rate shift, MTM concentration on netting sets and
+counterparties, VaR and ES from the scenario P&L, a desk's P&L pivot, curve interpolation), written by their
+generator from `tools/packgen/banking/calc_snippets.py`; `finance` has two inline ones. The table of what each does
+on the sample data is in [PYTHON_CALC.md](PYTHON_CALC.md#the-banking-packs-starters).
 
 ## A signed pack registry: publishing and installing
 
@@ -1572,7 +1620,7 @@ help cards from one description. Each generated file says so in a comment near t
 
 | Packs | Generator |
 |---|---|
-| `banking-core`, `market-data`, `trading`, `market-risk`, `counterparty-risk` | `tools/packgen/banking/`: `make_packs.py` the manifests, `make_sutras.py` the 170 Sutras, `make_docs.py` the guides, `make_data.py` the documents and the lake |
+| `banking-core`, `market-data`, `trading`, `market-risk`, `counterparty-risk` | `tools/packgen/banking/`: `make_packs.py` the manifests and the Calc snippets (`python/*.py`, from `calc_snippets.py`), `make_sutras.py` the 170 Sutras, `make_docs.py` the guides, `make_data.py` the documents and the lake |
 | `liquidity-risk`, `climate-risk`, `operational-risk`, `retail-banking`, `genomics`, `politics-society`, `economics` | `tools/packgen/<area>/make.py` (`liquidity`, `climate`, `oprisk`, `retail`, `genomics`, `politics`, `economics`), all on the common builder `tools/packgen/common/packbuild.py` |
 | `finance`, `logistics` | hand-written; their samples come from `packs/<name>/tools/` |
 
@@ -1646,5 +1694,7 @@ uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/bankin
 - The engine: sources, the view pipeline, Rachana and Rachana-EL, inference, the entity graph, live updates, identity.
 - Neutral formats (amounts, signed, percent, compact, dates) and neutral semantic roles (amount, value, count,
   rate, date, label).
-- The `viewer`, `author`, `approver` and `admin` roles.
+- The `viewer`, `author`, `approver` and `admin` roles, and the powers a role can hold (`raw`, `author`, `approve`,
+  `admin`, `calc`).
+- Calc's runtime and its `drishti` module; packs only switch it on and ship snippets.
 - The generic help: using the terminal, panel kinds, Studio, workspaces, and every reference.
