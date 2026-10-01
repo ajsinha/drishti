@@ -24,13 +24,9 @@ import com.ash.drishti.api.SourceCapabilities;
 import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
 import java.io.ByteArrayInputStream;
-import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -52,30 +48,39 @@ import java.util.concurrent.TimeUnit;
  * WHERE trade_id = :id AND business_date <= :asOf)}. The first row becomes the document: each column is a field,
  * except a column named {@code json}, whose JSON text is used as the whole document. A column named
  * {@code generation}, if present, is the version; {@code business_date}, if present, is the date the row is for.
+ * More queries per kind ({@code query.<kind>.<part>} for nested parts, {@code ids.<kind>} for type-ahead,
+ * {@code columns.<kind>} for searches over a day's promoted fields, {@code reverse.<kind>} for reverse lookups) are
+ * described in {@link QueryMode} and {@code docs/connectors/JDBC_QUERIES.md}.
  * Connections are pooled in a small bounded queue of slots, each opened on first use and reopened whenever it is
  * found broken, so the connector starts while the database is down and recovers by itself when it comes back.
  *
  * <p><b>Table mode</b> ({@code table: reference.entities}): every kind of a data domain in one PostgreSQL table of
  * {@code (kind, id, business_date, doc jsonb)} rows, dated, with search and reverse lookups; {@code mode.<kind>}
- * is {@code snapshot} (default) or {@code effective}. See {@link EntityTable} and {@code tools/samplegen/pgload.py}.
+ * is {@code snapshot} (default) or {@code effective}, partitioned by month for scale. See {@link PostgresLayout},
+ * {@link TableCatalog} and {@code docs/connectors/POSTGRES_CONNECTOR.md}.
  */
 public final class JdbcSourcePlugin implements SourcePlugin {
 
-    private static final java.util.regex.Pattern NAMED = java.util.regex.Pattern.compile(":(id|asOf)\\b");
-    private final Map<String, String> queries = new LinkedHashMap<>();
+    private QueryMode queryMode;
     private EntityTable table;
     private TableCatalog catalog;
     private final Map<String, String> modes = new LinkedHashMap<>();
     private int maxLoadRows = 200_000;
     private boolean reverseIndex = true;
     private volatile java.util.List<String> tableKinds = java.util.List.of();   // discovered later when the database starts after us
-    private final Map<String, java.util.List<String>> params = new LinkedHashMap<>();
     /** A pool slot: its connection is opened lazily and replaced when broken; only its borrower touches it. */
     private static final class Slot {
         Connection connection;
     }
 
     private BlockingQueue<Slot> pool;
+    /** The pool, for the table catalogue and query mode. */
+    private final TableCatalog.Db db = new TableCatalog.Db() {
+        @Override
+        public <T> T with(TableCatalog.Work<T> work) throws Exception {
+            return withConnection(work::run);
+        }
+    };
     private volatile String lastError;
     private SourceContext context;
     private String url;
@@ -88,8 +93,11 @@ public final class JdbcSourcePlugin implements SourcePlugin {
         if (table != null) {
             return new PluginManifest("jdbc", "1.0", new java.util.HashSet<>(tableKinds), new SourceCapabilities(false, true, true, true));
         }
-        boolean dated = params.values().stream().anyMatch(l -> l.contains("asOf"));
-        return new PluginManifest("jdbc", "1.0", queries.keySet(), new SourceCapabilities(false, false, false, dated));
+        if (queryMode == null) {
+            return new PluginManifest("jdbc", "1.0", java.util.Set.of(), new SourceCapabilities(false, false, false, false));
+        }
+        return new PluginManifest("jdbc", "1.0", queryMode.kinds(),
+                new SourceCapabilities(false, queryMode.reverses(), queryMode.searches(), queryMode.dated()));
     }
 
     /**
@@ -151,11 +159,22 @@ public final class JdbcSourcePlugin implements SourcePlugin {
 
     @Override
     public java.util.List<com.ash.drishti.api.EntityRef> reverse(EntityRef target, String kind, com.ash.drishti.api.AsOf asOf) {
-        if (table == null) {
-            return java.util.List.of();
-        }
         if (!reverseIndex) {
             return java.util.List.of();
+        }
+        if (table == null) {
+            if (queryMode == null) {
+                return java.util.List.of();
+            }
+            java.util.List<EntityRef> out = new java.util.ArrayList<>();
+            for (String k : kind == null ? queryMode.reverseKinds() : java.util.Set.of(kind)) {
+                try {
+                    queryMode.reverse(k, target.id(), asOf.businessDate()).forEach(i -> out.add(EntityRef.of(k, i)));
+                } catch (Exception e) {
+                    // no referrers from here, not an error page
+                }
+            }
+            return out;
         }
         java.util.List<EntityRef> out = new java.util.ArrayList<>();
         for (String k : kind == null ? tableKinds : java.util.List.of(kind)) {
@@ -178,7 +197,7 @@ public final class JdbcSourcePlugin implements SourcePlugin {
     @Override
     public java.util.List<com.ash.drishti.api.EntityHit> search(String kind, String text, int limit) {
         if (table == null) {
-            return java.util.List.of();
+            return queryMode == null ? java.util.List.of() : queryMode.search(kind, text, limit);
         }
         return catalog.search(kind, text, limit);               // in memory: the newest day's ids, never a query per keystroke
     }
@@ -190,32 +209,26 @@ public final class JdbcSourcePlugin implements SourcePlugin {
         if (url.isEmpty()) {
             throw new com.ash.drishti.api.PluginNotConfigured("jdbc needs settings.url");
         }
-        for (String c : ctx.setting("json-columns", "").split(",")) {
-            if (!c.isBlank()) {
-                jsonColumns.add(c.trim().toLowerCase(java.util.Locale.ROOT));
-            }
-        }
         this.user = ctx.setting("user", "");
         this.password = ctx.setting("password", "");
         this.sourceName = ctx.setting("source-name", "jdbc");
-        ctx.settings().forEach((k, v) -> {
-            if (k.startsWith("query.")) {
-                java.util.List<String> names = new java.util.ArrayList<>();
-                var m = NAMED.matcher(v);
-                while (m.find()) {
-                    names.add(m.group(1));
-                }
-                queries.put(k.substring(6), names.isEmpty() ? v : m.replaceAll("?"));
-                params.put(k.substring(6), names.isEmpty() ? java.util.List.of("id") : names);
-            }
-        });
         int size = Integer.parseInt(ctx.setting("pool-size", "4"));
         this.pool = new ArrayBlockingQueue<>(size);
         for (int i = 0; i < size; i++) {
             pool.add(new Slot());                    // connected on first use: the database may still be starting
         }
         String t = ctx.setting("table", "");
-        if (!t.isBlank()) {
+        if (t.isBlank()) {
+            // query mode: your own SQL, several queries per kind; type-ahead ids now and every refresh-seconds
+            queryMode = new QueryMode(ctx, db, sourceName);
+            if (queryMode.searches()) {
+                Thread.ofVirtual().name("jdbc-ids-" + sourceName).start(queryMode::refreshIds);
+                long every = Long.parseLong(ctx.setting("refresh-seconds", "60"));
+                if (ctx.scheduler() != null) {
+                    ctx.scheduler().scheduleWithFixedDelay(queryMode::refreshIds, every, every, TimeUnit.SECONDS);
+                }
+            }
+        } else {
             ctx.settings().forEach((k, v) -> {
                 if (k.startsWith("mode.")) {
                     modes.put(k.substring(5), v);
@@ -232,12 +245,7 @@ public final class JdbcSourcePlugin implements SourcePlugin {
             });
             this.maxLoadRows = Integer.parseInt(ctx.setting("max-load-rows", "200000"));
             this.reverseIndex = Boolean.parseBoolean(ctx.setting("reverse-index", "true"));
-            catalog = new TableCatalog(table, new TableCatalog.Db() {
-                @Override
-                public <T> T with(TableCatalog.Work<T> work) throws Exception {
-                    return withConnection(work::run);
-                }
-            }, sourceName, k -> "effective".equals(modes.get(k)), Integer.parseInt(ctx.setting("lookback-days", "10")), promoted,
+            catalog = new TableCatalog(table, db, sourceName, k -> "effective".equals(modes.get(k)), Integer.parseInt(ctx.setting("lookback-days", "10")), promoted,
                     Integer.parseInt(ctx.setting("scan-threads", "4")), Long.parseLong(ctx.setting("columns-cache-mb", "1024")),
                     java.time.Duration.ofSeconds(Long.parseLong(ctx.setting("columns-seconds", "300"))));
             String configured = ctx.setting("kinds", "");
@@ -266,12 +274,13 @@ public final class JdbcSourcePlugin implements SourcePlugin {
 
     @Override
     public java.util.Set<String> columnar(String kind) {
-        return catalog == null ? java.util.Set.of() : catalog.columnar(kind);
+        return catalog != null ? catalog.columnar(kind) : queryMode != null ? queryMode.columnar(kind) : java.util.Set.of();
     }
 
     @Override
     public Optional<com.ash.drishti.api.ColumnSet> columns(String kind, java.util.Collection<String> paths, com.ash.drishti.api.AsOf asOf) {
-        return catalog == null ? Optional.empty() : catalog.columns(kind, paths, asOf.businessDate());
+        return catalog != null ? catalog.columns(kind, paths, asOf.businessDate())
+                : queryMode != null ? queryMode.columns(kind, paths, asOf.businessDate()) : Optional.empty();
     }
 
     @Override
@@ -281,13 +290,16 @@ public final class JdbcSourcePlugin implements SourcePlugin {
 
     @Override
     public Map<String, Object> cacheStats() {
-        return catalog == null ? Map.of() : catalog.stats();
+        return catalog != null ? catalog.stats() : queryMode != null ? queryMode.stats() : Map.of();
     }
 
     @Override
     public void purgeCaches() {
         if (catalog != null) {
             catalog.clear();
+        }
+        if (queryMode != null) {
+            queryMode.clear();
         }
     }
 
@@ -320,105 +332,7 @@ public final class JdbcSourcePlugin implements SourcePlugin {
             return Optional.of(new EntityDocument(ref, d, new Provenance(sourceName, hit.get().date().toEpochDay(), Instant.now(), false,
                     hit.get().date())));
         }
-        String sql = queries.get(ref.kind());
-        if (sql == null) {
-            return Optional.empty();
-        }
-        return withConnection(c -> {
-            try (PreparedStatement ps = c.prepareStatement(sql)) {
-                java.util.List<String> names = params.get(ref.kind());
-                java.time.LocalDate date = asOf.businessDate() != null ? asOf.businessDate()
-                        : java.time.LocalDate.now(java.time.ZoneId.of(context.setting("zone", "America/New_York")));   // the business day's zone
-                for (int i = 0; i < names.size(); i++) {
-                    if ("asOf".equals(names.get(i))) {
-                        ps.setObject(i + 1, java.sql.Date.valueOf(date));
-                    } else {
-                        ps.setString(i + 1, ref.id());
-                    }
-                }
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (!rs.next()) {
-                        return Optional.empty();
-                    }
-                    return Optional.of(toDocument(ref, rs, names.contains("asOf") ? date : null));
-                }
-            }
-        });
-    }
-
-    private final java.util.Set<String> jsonColumns = java.util.concurrent.ConcurrentHashMap.newKeySet();
-
-    private EntityDocument toDocument(EntityRef ref, ResultSet rs, java.time.LocalDate asked) throws Exception {
-        java.time.LocalDate businessDate = asked;
-        ResultSetMetaData md = rs.getMetaData();
-        Map<String, Object> fields = new LinkedHashMap<>();
-        DataNode doc = null;
-        long generation = System.currentTimeMillis();
-        for (int i = 1; i <= md.getColumnCount(); i++) {
-            String name = md.getColumnLabel(i);
-            Object v = rs.getObject(i);
-            if ("json".equalsIgnoreCase(name) && v != null) {
-                doc = context.parseJson(new ByteArrayInputStream(v.toString().getBytes(StandardCharsets.UTF_8)));
-            } else if ("generation".equalsIgnoreCase(name) && v instanceof Number n) {
-                generation = n.longValue();
-            } else if ("business_date".equalsIgnoreCase(name) && v instanceof java.sql.Date d) {
-                businessDate = d.toLocalDate();
-                fields.put("businessDate", businessDate.toString());
-            } else if (v != null && isJson(md.getColumnTypeName(i), name)) {
-                fields.put(camel(name), nested(v instanceof byte[] b ? new String(b, StandardCharsets.UTF_8) : v.toString()));  // nested, not text
-            } else {
-                fields.put(camel(name), plain(v));
-            }
-        }
-        return new EntityDocument(ref, doc != null ? doc : DataNode.of(fields), new Provenance(sourceName, generation, Instant.now(), false, businessDate));
-    }
-
-    /** A json/jsonb column (PostgreSQL, MySQL), or one named in {@code json-columns} (JSON kept in a text column). */
-    private boolean isJson(String typeName, String column) {
-        if (typeName != null && (typeName.equalsIgnoreCase("json") || typeName.equalsIgnoreCase("jsonb"))) {
-            return true;
-        }
-        return jsonColumns.contains(column.toLowerCase(java.util.Locale.ROOT));
-    }
-
-    /** Parsed JSON; a value that is not JSON stays as its text, so one bad cell never fails the document. */
-    private Object nested(String text) {
-        try {
-            return context.parseJson(new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8)));
-        } catch (Exception e) {
-            return text;
-        }
-    }
-
-    private static Object plain(Object v) {
-        if (v instanceof BigDecimal b) {
-            return b.scale() <= 0 ? (Object) b.longValue() : (Object) b.doubleValue();
-        }
-        if (v instanceof java.sql.Date d) {
-            return d.toLocalDate().toString();
-        }
-        if (v instanceof java.sql.Timestamp t) {
-            return t.toInstant().toString();
-        }
-        return v instanceof Number || v instanceof Boolean || v == null ? v : v.toString();
-    }
-
-    /** {@code TRADE_ID} and {@code trade_id} become {@code tradeId}. */
-    static String camel(String column) {
-        if (!column.contains("_") && !column.equals(column.toUpperCase())) {
-            return column;
-        }
-        StringBuilder sb = new StringBuilder();
-        boolean up = false;
-        for (char ch : column.toLowerCase().toCharArray()) {
-            if (ch == '_') {
-                up = true;
-            } else {
-                sb.append(up ? Character.toUpperCase(ch) : ch);
-                up = false;
-            }
-        }
-        return sb.toString();
+        return queryMode == null ? Optional.empty() : queryMode.fetch(ref, asOf.businessDate());
     }
 
     @Override
