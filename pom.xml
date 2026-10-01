@@ -54,6 +54,7 @@
     <module>plugins/drishti-plugin-delta</module>
     <module>plugins/drishti-plugin-aerospike</module>
     <module>plugins/drishti-plugin-redis</module>
+    <module>plugins/drishti-plugin-mongodb</module>
     <module>plugins/drishti-plugin-feeds</module>
     <module>plugins/drishti-plugin-kafka</module>
     <module>plugins/drishti-plugin-activemq</module>
@@ -107,6 +108,7 @@
       <!-- Redis: Lettuce on Netty 4.1 (the line Spring Boot 3.5 manages); zstd for compressed documents and columns -->
       <dependency><groupId>io.lettuce</groupId><artifactId>lettuce-core</artifactId><version>${lettuce.version}</version></dependency>
       <dependency><groupId>com.github.luben</groupId><artifactId>zstd-jni</artifactId><version>${zstd-jni.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-mongodb</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-feeds</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-kafka</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-rest</artifactId><version>${project.version}</version></dependency>

@@ -1,0 +1,25 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+# Profile `mongodb` (SPRING_PROFILES_ACTIVE=mongodb): the banking packs' data domains are read from MongoDB
+# (a collection per domain in database `drishti`, loaded by tools/load-mongodb.sh) instead of Delta Lake. The packs still
+# decide the kinds, routes and modes of each <domain>-store connector; the collection is the connector's domain.
+drishti:
+  sources:
+    connectors:
+      reference-store:  { plugin: mongodb, settings: { uri: "${DRISHTI_MONGODB_URI:mongodb://localhost:27017}", database: "${DRISHTI_MONGODB_DATABASE:drishti}" } }
+      market-store:     { plugin: mongodb, settings: { uri: "${DRISHTI_MONGODB_URI:mongodb://localhost:27017}", database: "${DRISHTI_MONGODB_DATABASE:drishti}" } }
+      trading-store:    { plugin: mongodb, settings: { uri: "${DRISHTI_MONGODB_URI:mongodb://localhost:27017}", database: "${DRISHTI_MONGODB_DATABASE:drishti}" } }
+      risk-store:       { plugin: mongodb, settings: { uri: "${DRISHTI_MONGODB_URI:mongodb://localhost:27017}", database: "${DRISHTI_MONGODB_DATABASE:drishti}" } }
+      credit-store:     { plugin: mongodb, settings: { uri: "${DRISHTI_MONGODB_URI:mongodb://localhost:27017}", database: "${DRISHTI_MONGODB_DATABASE:drishti}" } }
+      collateral-store: { plugin: mongodb, settings: { uri: "${DRISHTI_MONGODB_URI:mongodb://localhost:27017}", database: "${DRISHTI_MONGODB_DATABASE:drishti}" } }
