@@ -272,6 +272,7 @@ connectors:
     - rate-fixing
     settings:
       feed: nyfed-sofr
+      user-agent: ${drishti.branding.product:feed} public data feed connector
       refresh-minutes: 60
   ecb-estr-feed:
     plugin: feed
@@ -280,6 +281,7 @@ connectors:
     - rate-fixing
     settings:
       feed: ecb-estr
+      user-agent: ${drishti.branding.product:feed} public data feed connector
       refresh-minutes: 60
   ecb-fx-feed:
     plugin: feed
@@ -288,6 +290,7 @@ connectors:
     - fx-spot
     settings:
       feed: ecb-fx
+      user-agent: ${drishti.branding.product:feed} public data feed connector
       refresh-minutes: 60
   us-treasury-feed:
     plugin: feed
@@ -296,6 +299,7 @@ connectors:
     - ir-curve
     settings:
       feed: us-treasury
+      user-agent: ${drishti.branding.product:feed} public data feed connector
       refresh-minutes: 60
   fred-feed:
     plugin: feed
@@ -304,6 +308,7 @@ connectors:
     - rate-fixing
     settings:
       feed: fred
+      user-agent: ${drishti.branding.product:feed} public data feed connector
       refresh-minutes: 60
       api-key: ${FRED_API_KEY:}
       series: ${DRISHTI_FRED_SERIES:DGS10,DFF}

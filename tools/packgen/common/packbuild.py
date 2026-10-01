@@ -34,6 +34,7 @@ ROOT = Path(__file__).resolve().parents[3]
 PACKS = ROOT / "packs"
 sys.path.insert(0, str(ROOT / "tools" / "packgen" / "banking"))
 sys.path.insert(0, str(ROOT / "tools"))
+import make_docs as MD  # noqa: E402  (the banking guides' shared sections)
 import make_sutras as MS  # noqa: E402  (the Rachana writer the banking packs use)
 from risk_model import Kind  # noqa: E402
 
@@ -108,24 +109,21 @@ def overview(spec: PackSpec, docs: dict) -> str:
     lines = [DOC_HEADER, "<!-- " + _generated(spec, "file") + " -->", f"# {spec.title} pack", "", spec.description, ""]
     if spec.overview:
         lines += [spec.overview.strip(), ""]
-    lines += [f"**Extends:** {', '.join(f'`{r}`' for r in spec.requires) or 'nothing'} · **Kinds:** {len(spec.kinds)} · "
-              f"**Sample documents:** {sum(len(docs.get(k.kind, {})) for k in spec.kinds):,}", "",
-              f"Enable it with `DRISHTI_PACKS={spec.name}` (the packs it extends come with it).", "", "## Try it", ""]
-    lines += t(["Command", "Shows"], [[f"`{c} <GO>`", s] for c, s in spec.examples])
+    lines += [f"**Extends:** {', '.join(f'`{r}`' for r in spec.requires) or 'nothing'} · **Kinds:** {len(spec.kinds)}", "",
+              f"Enable it with `DRISHTI_PACKS={spec.name}` (the packs it extends come with it).", ""]
+    first = spec.kinds[0]
+    lines += MD.finding(first.mnemonic, first.label, first.prefix)
     lines += ["## Where the data comes from", ""]
     lines += t(["Connector", "Folder", "Kinds"], [[f"`{d}-store`", f"`data/delta/{d}/`", ", ".join(f"`{k.kind}`" for k in ks)]
                                                   for d, ks in spec.domains.items()])
     lines += ["## Kinds", ""]
-    lines += t(["Kind", "Name", "Mnemonic", "Identifiers", "Samples", "What it is"],
-               [[f"`{k.kind}`", k.label, f"`{k.mnemonic}`", f"`{k.prefix}…`", len(docs.get(k.kind, {})), k.desc] for k in spec.kinds])
+    lines += t(["Kind", "Name", "Mnemonic", "Identifiers", "What it is"],
+               [[f"`{k.kind}`", k.label, f"`{k.mnemonic}`", f"`{k.prefix}…`", k.desc] for k in spec.kinds])
     for k in spec.kinds:
         fs = list(dict.fromkeys(PATH.findall(" ".join(s[1] for s in k.strip) + " " + " ".join(p.rows or "" for p in k.panels))))
         lines += [f"### {k.label} (`{k.kind}`)", "", k.desc, "", "**Fields its Sutra reads:** " + ", ".join(f"`{f}`" for f in fs) + ".", ""]
         if k.links:
             lines += ["**Links:** " + ", ".join(f"`{f}` → {lab} (`{kind}`)" for f, (kind, lab) in k.links.items()) + ".", ""]
-        ex = next(iter(sorted(docs.get(k.kind, {}))), None)
-        if ex:
-            lines += [f"**Example:** `{k.mnemonic} {ex} <GO>`", ""]
     return "\n".join(lines).rstrip() + "\n"
 
 

@@ -64,7 +64,7 @@
     {% set ns = namespace(active=False) %}
     {% for _t, items in columns %}{% for href, _i, _l, _d, match in items %}{% if _on(href, match) %}{% set ns.active = True %}{% endif %}{% endfor %}{% endfor %}
     <div class="dropdown tbar-menu">
-      <button class="tbar-menu-btn{% if ns.active %} active{% endif %}" type="button" data-bs-toggle="dropdown" aria-expanded="false"
+      <button class="tbar-menu-btn{% if ns.active %} active{% endif %}" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false"
               {% if ns.active %}aria-current="true"{% endif %} title="{{ label }}">
         <i class="bi bi-{{ icon }}" aria-hidden="true"></i><span class="tbar-menu-l">{{ label }}</span></button>
       <div class="dropdown-menu mega-panel cols-{{ columns | length }}">

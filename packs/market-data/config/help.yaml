@@ -25,4 +25,4 @@ guides:
   title: Market-data catalogue
   icon: list-ul
   file: guides/market-data-catalogue.md
-  summary: Every curve, surface, spot and fixing in the samples, and how products select them.
+  summary: Every curve, surface, spot and fixing the pack defines, and how products select them.

@@ -79,7 +79,7 @@ panels:
 ## 4. Save and open
 
 Save the file under `sutras/`. The server reloads it within a quarter of a second, and
-`TRD IRS-48213 <GO>` now uses your Sutra. If the file has a mistake, the previous version stays live,
+any interest rate swap (`TRD <trade id> <GO>`) now uses your Sutra. If the file has a mistake, the previous version stays live,
 and `/api/v1/sutras/problems` lists each problem with its line and column.
 
 !!! warning "Test in Studio first"

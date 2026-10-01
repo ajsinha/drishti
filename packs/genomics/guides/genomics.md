@@ -18,22 +18,22 @@
 
 Genes, variants, proteins, pathways, sequenced samples, sequencing runs, expression studies and clinical trials.
 
-Gene coordinates (GRCh38), UniProt accessions, variant names and dbSNP ids are public reference facts; samples, runs, studies, trials, frequencies and expression values are synthetic. A gene links to its protein and pathway, a variant to its gene, a sample to the run that sequenced it and the trial it was screened for, and a trial to its target gene and biomarker variant.
+Genes carry GRCh38 coordinates, proteins UniProt accessions and variants dbSNP ids. A gene links to its protein and pathway, a variant to its gene, a sample to the run that sequenced it and the trial it was screened for, and a trial to its target gene and biomarker variant.
 
-**Extends:** nothing · **Kinds:** 8 · **Sample documents:** 58
+**Extends:** nothing · **Kinds:** 8
 
 Enable it with `DRISHTI_PACKS=genomics` (the packs it extends come with it).
 
-## Try it
+## Finding things
 
-| Command | Shows |
+Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start of one, or a search, then `<GO>`. Shown here for genes; the same works for every mnemonic.
+
+| Command | Does |
 |---|---|
-| `GENE GENE-TP53 <GO>` | Gene · GRCh38 location, expression by tissue, known variants |
-| `VRNT VRNT-BRAF-V600E <GO>` | Variant · significance, population frequencies |
-| `PROT PROT-P00533 <GO>` | Protein · EGFR domains |
-| `SMPL SMPL-104120 <GO>` | Tumour sample · variant calls with VAF and depth |
-| `SEQ SEQ-2026-0917-B <GO>` | Sequencing run · quality by cycle |
-| `TRIAL TRIAL-ONC-101 <GO>` | Clinical trial · enrolment and arms |
+| `GENE <id> <GO>` | Opens that gene. A bare identifier works too: its prefix (`GENE-…`) tells Drishti the kind. |
+| `GENE <start of an id> <GO>` | A pick list: one match opens, several give a table with the kind's key fields. `*` is a wildcard, and case never matters. |
+| `GENE <field>=<value> <GO>` | Lists by field value. Compare with `<` and `>`, combine with `and`, sort with `order by <field> desc`. |
+| `GENE <GO>` | Lists every gene. |
 
 ## Where the data comes from
 
@@ -43,16 +43,16 @@ Enable it with `DRISHTI_PACKS=genomics` (the packs it extends come with it).
 
 ## Kinds
 
-| Kind | Name | Mnemonic | Identifiers | Samples | What it is |
-|---|---|---|---|---|---|
-| `gene` | Gene | `GENE` | `GENE-…` | 8 | A human gene: location on GRCh38, transcripts, expression by tissue and its known variants. |
-| `variant` | Variant | `VRNT` | `VRNT-…` | 8 | A sequence variant: HGVS names, consequence, clinical significance and population frequencies. |
-| `protein` | Protein | `PROT` | `PROT-…` | 8 | A protein (UniProt): length, mass, domains and where it acts. |
-| `pathway` | Pathway | `PWY` | `PWY-…` | 6 | A biological pathway and the genes that take part in it. |
-| `sample` | Sample | `SMPL` | `SMPL-…` | 18 | A sequenced specimen: tissue, diagnosis, variants called with allele fraction and depth, and QC. |
-| `sequencing-run` | Sequencing run | `SEQ` | `SEQ-…` | 4 | An instrument run: yield, quality by cycle, and the samples it carried. |
-| `expression-study` | Expression study | `EXPR` | `EXPR-…` | 2 | A differential-expression (RNA-seq) comparison: fold changes and adjusted p-values. |
-| `clinical-trial` | Clinical trial | `TRIAL` | `TRIAL-…` | 4 | A targeted-therapy trial: phase, biomarker, arms and enrolment against target. |
+| Kind | Name | Mnemonic | Identifiers | What it is |
+|---|---|---|---|---|
+| `gene` | Gene | `GENE` | `GENE-…` | A human gene: location on GRCh38, transcripts, expression by tissue and its known variants. |
+| `variant` | Variant | `VRNT` | `VRNT-…` | A sequence variant: HGVS names, consequence, clinical significance and population frequencies. |
+| `protein` | Protein | `PROT` | `PROT-…` | A protein (UniProt): length, mass, domains and where it acts. |
+| `pathway` | Pathway | `PWY` | `PWY-…` | A biological pathway and the genes that take part in it. |
+| `sample` | Sample | `SMPL` | `SMPL-…` | A sequenced specimen: tissue, diagnosis, variants called with allele fraction and depth, and QC. |
+| `sequencing-run` | Sequencing run | `SEQ` | `SEQ-…` | An instrument run: yield, quality by cycle, and the samples it carried. |
+| `expression-study` | Expression study | `EXPR` | `EXPR-…` | A differential-expression (RNA-seq) comparison: fold changes and adjusted p-values. |
+| `clinical-trial` | Clinical trial | `TRIAL` | `TRIAL-…` | A targeted-therapy trial: phase, biomarker, arms and enrolment against target. |
 
 ### Gene (`gene`)
 
@@ -62,8 +62,6 @@ A human gene: location on GRCh38, transcripts, expression by tissue and its know
 
 **Links:** `protein` → Protein (`protein`), `pathway` → Pathway (`pathway`).
 
-**Example:** `GENE GENE-APOE <GO>`
-
 ### Variant (`variant`)
 
 A sequence variant: HGVS names, consequence, clinical significance and population frequencies.
@@ -71,8 +69,6 @@ A sequence variant: HGVS names, consequence, clinical significance and populatio
 **Fields its Sutra reads:** `geneSymbol`, `proteinChange`, `hgvsC`, `consequence`, `significance`, `rsid`, `frequencies`, `evidence`, `annotation`.
 
 **Links:** `gene` → Gene (`gene`).
-
-**Example:** `VRNT VRNT-APOE-E4 <GO>`
 
 ### Protein (`protein`)
 
@@ -82,15 +78,11 @@ A protein (UniProt): length, mass, domains and where it acts.
 
 **Links:** `gene` → Gene (`gene`).
 
-**Example:** `PROT PROT-P00533 <GO>`
-
 ### Pathway (`pathway`)
 
 A biological pathway and the genes that take part in it.
 
 **Fields its Sutra reads:** `name`, `category`, `geneCount`, `members`.
-
-**Example:** `PWY PWY-HR <GO>`
 
 ### Sample (`sample`)
 
@@ -100,23 +92,17 @@ A sequenced specimen: tissue, diagnosis, variants called with allele fraction an
 
 **Links:** `sequencingRun` → Sequencing run (`sequencing-run`), `trial` → Trial (`clinical-trial`).
 
-**Example:** `SMPL SMPL-104120 <GO>`
-
 ### Sequencing run (`sequencing-run`)
 
 An instrument run: yield, quality by cycle, and the samples it carried.
 
 **Fields its Sutra reads:** `instrument`, `flowcell`, `yieldGb`, `q30`, `clustersPf`, `status`, `qualityByCycle`, `samples`.
 
-**Example:** `SEQ SEQ-2026-0903-A <GO>`
-
 ### Expression study (`expression-study`)
 
 A differential-expression (RNA-seq) comparison: fold changes and adjusted p-values.
 
 **Fields its Sutra reads:** `title`, `comparison`, `sampleCount`, `significant`, `results`.
-
-**Example:** `EXPR EXPR-001 <GO>`
 
 ### Clinical trial (`clinical-trial`)
 
@@ -125,5 +111,3 @@ A targeted-therapy trial: phase, biomarker, arms and enrolment against target.
 **Fields its Sutra reads:** `title`, `phase`, `status`, `enrolled`, `target`, `biomarkerName`, `enrolment`, `arms`.
 
 **Links:** `gene` → Target gene (`gene`), `biomarker` → Biomarker (`variant`).
-
-**Example:** `TRIAL TRIAL-GEN-045 <GO>`

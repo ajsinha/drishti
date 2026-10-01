@@ -20,19 +20,20 @@ LCR and NSFR by legal entity, maturity ladders, HQLA holdings, funding sources, 
 
 Liquidity figures are computed per legal entity from the same entities, counterparties and bonds as the banking packs: HQLA holdings are the sovereign and corporate bonds of the market-data pack, funding sources are the banking-core counterparties.
 
-**Extends:** `trading` · **Kinds:** 7 · **Sample documents:** 104
+**Extends:** `trading` · **Kinds:** 7
 
 Enable it with `DRISHTI_PACKS=liquidity-risk` (the packs it extends come with it).
 
-## Try it
+## Finding things
 
-| Command | Shows |
+Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start of one, or a search, then `<GO>`. Shown here for liquidity coverage ratios; the same works for every mnemonic.
+
+| Command | Does |
 |---|---|
-| `LCR LCR-NY <GO>` | Liquidity coverage ratio · HQLA by level, outflows, 30-day trend |
-| `NSFR NSFR-LDN <GO>` | Net stable funding ratio |
-| `MLAD MLAD-LDN-GBP <GO>` | Maturity ladder · net gap by bucket |
-| `LST LST-COMB-NY <GO>` | Liquidity stress · survival horizon |
-| `IDL IDL-NY-USD <GO>` | Intraday liquidity · usage through the day |
+| `LCR <id> <GO>` | Opens that liquidity coverage ratio. A bare identifier works too: its prefix (`LCR-…`) tells Drishti the kind. |
+| `LCR <start of an id> <GO>` | A pick list: one match opens, several give a table with the kind's key fields. `*` is a wildcard, and case never matters. |
+| `LCR <field>=<value> <GO>` | Lists by field value. Compare with `<` and `>`, combine with `and`, sort with `order by <field> desc`. |
+| `LCR <GO>` | Lists every liquidity coverage ratio. |
 
 ## Where the data comes from
 
@@ -42,15 +43,15 @@ Enable it with `DRISHTI_PACKS=liquidity-risk` (the packs it extends come with it
 
 ## Kinds
 
-| Kind | Name | Mnemonic | Identifiers | Samples | What it is |
-|---|---|---|---|---|---|
-| `lcr` | Liquidity coverage ratio | `LCR` | `LCR-…` | 4 | Basel III LCR: high-quality liquid assets against 30-day stressed net outflows. |
-| `nsfr` | Net stable funding ratio | `NSFR` | `NSFR-…` | 4 | Basel III NSFR: available against required stable funding over one year. |
-| `maturity-ladder` | Maturity ladder | `MLAD` | `MLAD-…` | 8 | Contractual inflows and outflows by time bucket for one entity and currency, with the cumulative gap. |
-| `hqla-holding` | HQLA holding | `HQLA` | `HQLA-…` | 36 | A security held in the liquidity buffer: its HQLA level, haircut and liquidity value. |
-| `funding-source` | Funding source | `FUND` | `FUND-…` | 34 | A source of funding: deposits, repo or issuance, with its LCR run-off assumption. |
-| `liquidity-stress` | Liquidity stress result | `LST` | `LST-…` | 12 | How long an entity survives a liquidity stress, day by day. |
-| `intraday-liquidity` | Intraday liquidity | `IDL` | `IDL-…` | 6 | Intraday use of liquidity in a payment system: usage through the day and the largest payments. |
+| Kind | Name | Mnemonic | Identifiers | What it is |
+|---|---|---|---|---|
+| `lcr` | Liquidity coverage ratio | `LCR` | `LCR-…` | Basel III LCR: high-quality liquid assets against 30-day stressed net outflows. |
+| `nsfr` | Net stable funding ratio | `NSFR` | `NSFR-…` | Basel III NSFR: available against required stable funding over one year. |
+| `maturity-ladder` | Maturity ladder | `MLAD` | `MLAD-…` | Contractual inflows and outflows by time bucket for one entity and currency, with the cumulative gap. |
+| `hqla-holding` | HQLA holding | `HQLA` | `HQLA-…` | A security held in the liquidity buffer: its HQLA level, haircut and liquidity value. |
+| `funding-source` | Funding source | `FUND` | `FUND-…` | A source of funding: deposits, repo or issuance, with its LCR run-off assumption. |
+| `liquidity-stress` | Liquidity stress result | `LST` | `LST-…` | How long an entity survives a liquidity stress, day by day. |
+| `intraday-liquidity` | Intraday liquidity | `IDL` | `IDL-…` | Intraday use of liquidity in a payment system: usage through the day and the largest payments. |
 
 ### Liquidity coverage ratio (`lcr`)
 
@@ -60,8 +61,6 @@ Basel III LCR: high-quality liquid assets against 30-day stressed net outflows.
 
 **Links:** `legalEntity` → Legal entity (`legal-entity`).
 
-**Example:** `LCR LCR-FRA <GO>`
-
 ### Net stable funding ratio (`nsfr`)
 
 Basel III NSFR: available against required stable funding over one year.
@@ -69,8 +68,6 @@ Basel III NSFR: available against required stable funding over one year.
 **Fields its Sutra reads:** `legalEntityName`, `nsfr`, `asfTotal`, `rsfTotal`, `minimum`, `asf`, `rsf`.
 
 **Links:** `legalEntity` → Legal entity (`legal-entity`).
-
-**Example:** `NSFR NSFR-FRA <GO>`
 
 ### Maturity ladder (`maturity-ladder`)
 
@@ -80,8 +77,6 @@ Contractual inflows and outflows by time bucket for one entity and currency, wit
 
 **Links:** `legalEntity` → Legal entity (`legal-entity`).
 
-**Example:** `MLAD MLAD-FRA-EUR <GO>`
-
 ### HQLA holding (`hqla-holding`)
 
 A security held in the liquidity buffer: its HQLA level, haircut and liquidity value.
@@ -89,8 +84,6 @@ A security held in the liquidity buffer: its HQLA level, haircut and liquidity v
 **Fields its Sutra reads:** `security`, `level`, `marketValue`, `haircut`, `liquidityValue`, `encumbered`, `details`.
 
 **Links:** `bond` → Bond (`bond`), `legalEntity` → Legal entity (`legal-entity`).
-
-**Example:** `HQLA HQLA-FRA-01 <GO>`
 
 ### Funding source (`funding-source`)
 
@@ -100,8 +93,6 @@ A source of funding: deposits, repo or issuance, with its LCR run-off assumption
 
 **Links:** `counterparty` → Counterparty (`counterparty`), `legalEntity` → Legal entity (`legal-entity`).
 
-**Example:** `FUND FUND-ALDERSHOT-1 <GO>`
-
 ### Liquidity stress result (`liquidity-stress`)
 
 How long an entity survives a liquidity stress, day by day.
@@ -110,8 +101,6 @@ How long an entity survives a liquidity stress, day by day.
 
 **Links:** `legalEntity` → Legal entity (`legal-entity`).
 
-**Example:** `LST LST-COMB-FRA <GO>`
-
 ### Intraday liquidity (`intraday-liquidity`)
 
 Intraday use of liquidity in a payment system: usage through the day and the largest payments.
@@ -119,5 +108,3 @@ Intraday use of liquidity in a payment system: usage through the day and the lar
 **Fields its Sutra reads:** `legalEntityName`, `currency`, `peakUsage`, `available`, `usagePct`, `usage`, `largePayments`.
 
 **Links:** `legalEntity` → Legal entity (`legal-entity`).
-
-**Example:** `IDL IDL-FRA-EUR <GO>`

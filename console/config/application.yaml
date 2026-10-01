@@ -24,8 +24,14 @@ backend:
   pool_size: 64
 ui:
   default_theme: terminal        # terminal | light | wallstreet | blue | green | crimson | crimson-dark
-  product: Drishti
+  # The product's name and legal notices on every page; nothing user-visible names them in code. The server has the
+  # same under drishti.branding.
+  product: ${DRISHTI_PRODUCT:Drishti}
   tagline: Any data. Any domain. One grammar.
+  product_native: दृष्टि             # the name in its own script, beside it on the About page (blank for none)
+  product_meaning: Drishti (दृष्टि) means <em>sight</em>.
+  copyright: Copyright © 2026 Ashutosh Sinha. All rights reserved. Proprietary and confidential.
+  notice: Unauthorised copying, use or distribution is prohibited.
   user: ${DRISHTI_USER:ash}          # acting user until sign-in lands (Wave 10)
   user_display: Ash
   desk: Rates desk

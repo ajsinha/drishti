@@ -258,8 +258,8 @@ def spec() -> PB.PackSpec:
         examples=[("JUR JUR-VAL", "Jurisdiction · seats in the legislature"), ("ELEC ELEC-KES-2025", "Election · first-past-the-post result"),
                   ("POLL POLL-VAL-019", "Opinion poll · shares with margins of error"), ("PARTY PARTY-VAL-GRN", "Party · polling trend"),
                   ("BILL BILL-VAL-2026-011", "Bill · stages and votes"), ("SOCI SOCI-KES-TIP", "Social indicator · trust in parliament")],
-        overview="Valdoria and Kestria are fictional, so nothing here describes real parties or people. The mechanics are real: Valdoria's seats are "
-                 "allocated by D'Hondt with a 5% threshold, Kestria's by first past the post; poll margins of error are 95% intervals for the sample size.",
+        overview="Seats are allocated by each jurisdiction's electoral system (proportional by D'Hondt with a threshold, or first past the post), "
+                 "and a poll's margin of error is the 95% interval for its sample size.",
         roles={"analyst": {"kinds": [k.kind for k in KINDS], "raw": True}})
 
 

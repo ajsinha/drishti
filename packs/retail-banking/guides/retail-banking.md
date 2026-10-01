@@ -20,20 +20,20 @@ Customers, deposit accounts, mortgages, cards, personal loans, branches, collect
 
 Retail customers belong to branches, and branches and portfolio segments to the banking-core legal entities. A customer view lists every product the customer holds; each product links back to its holder, and delinquent cards and loans open collections cases.
 
-**Extends:** `banking-core` · **Kinds:** 8 · **Sample documents:** 147
+**Extends:** `banking-core` · **Kinds:** 8
 
 Enable it with `DRISHTI_PACKS=retail-banking` (the packs it extends come with it).
 
-## Try it
+## Finding things
 
-| Command | Shows |
+Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start of one, or a search, then `<GO>`. Shown here for customers; the same works for every mnemonic.
+
+| Command | Does |
 |---|---|
-| `CUST CUST-100231 <GO>` | Customer · products held and profile |
-| `ACCT ACCT-100231-CUR <GO>` | Current account · transactions (live) |
-| `MTG MTG-100231 <GO>` | Mortgage · amortisation, property, payments |
-| `CARD CARD-100238 <GO>` | Credit card · spend by category, statements |
-| `BRN BRN-LDN-CITY <GO>` | Branch · product mix and NPS |
-| `RPF RPF-US-CARD <GO>` | IFRS 9 · ECL by stage, delinquency |
+| `CUST <id> <GO>` | Opens that customer. A bare identifier works too: its prefix (`CUST-…`) tells Drishti the kind. |
+| `CUST <start of an id> <GO>` | A pick list: one match opens, several give a table with the kind's key fields. `*` is a wildcard, and case never matters. |
+| `CUST <field>=<value> <GO>` | Lists by field value. Compare with `<` and `>`, combine with `and`, sort with `order by <field> desc`. |
+| `CUST <GO>` | Lists every customer. |
 
 ## Where the data comes from
 
@@ -43,16 +43,16 @@ Enable it with `DRISHTI_PACKS=retail-banking` (the packs it extends come with it
 
 ## Kinds
 
-| Kind | Name | Mnemonic | Identifiers | Samples | What it is |
-|---|---|---|---|---|---|
-| `customer` | Customer | `CUST` | `CUST-…` | 32 | A retail customer: segment, products held, KYC risk and total relationship. |
-| `deposit-account` | Deposit account | `ACCT` | `ACCT-…` | 53 | A current or savings account: balance, rate, recent transactions and balance history. |
-| `mortgage` | Mortgage | `MTG` | `MTG-…` | 16 | A residential mortgage: balance, rate, loan-to-value, amortisation and arrears. |
-| `card-account` | Card account | `CARD` | `CARD-…` | 22 | A credit card: limit, utilisation, spend by category and statements. |
-| `personal-loan` | Personal loan | `PLN` | `PLN-…` | 8 | An unsecured instalment loan: purpose, instalments and remaining balance. |
-| `branch` | Branch | `BRN` | `BRN-…` | 6 | A branch: customers, deposits and lending, product mix and service scores. |
-| `collections-case` | Collections case | `COLC` | `COLC-…` | 6 | A delinquent account in collections: arrears, stage, strategy and contact history. |
-| `retail-portfolio` | Retail portfolio (IFRS 9) | `RPF` | `RPF-…` | 4 | A retail portfolio segment: exposure and expected credit loss by IFRS 9 stage, and delinquency. |
+| Kind | Name | Mnemonic | Identifiers | What it is |
+|---|---|---|---|---|
+| `customer` | Customer | `CUST` | `CUST-…` | A retail customer: segment, products held, KYC risk and total relationship. |
+| `deposit-account` | Deposit account | `ACCT` | `ACCT-…` | A current or savings account: balance, rate, recent transactions and balance history. |
+| `mortgage` | Mortgage | `MTG` | `MTG-…` | A residential mortgage: balance, rate, loan-to-value, amortisation and arrears. |
+| `card-account` | Card account | `CARD` | `CARD-…` | A credit card: limit, utilisation, spend by category and statements. |
+| `personal-loan` | Personal loan | `PLN` | `PLN-…` | An unsecured instalment loan: purpose, instalments and remaining balance. |
+| `branch` | Branch | `BRN` | `BRN-…` | A branch: customers, deposits and lending, product mix and service scores. |
+| `collections-case` | Collections case | `COLC` | `COLC-…` | A delinquent account in collections: arrears, stage, strategy and contact history. |
+| `retail-portfolio` | Retail portfolio (IFRS 9) | `RPF` | `RPF-…` | A retail portfolio segment: exposure and expected credit loss by IFRS 9 stage, and delinquency. |
 
 ### Customer (`customer`)
 
@@ -62,8 +62,6 @@ A retail customer: segment, products held, KYC risk and total relationship.
 
 **Links:** `branch` → Home branch (`branch`).
 
-**Example:** `CUST CUST-100231 <GO>`
-
 ### Deposit account (`deposit-account`)
 
 A current or savings account: balance, rate, recent transactions and balance history.
@@ -71,8 +69,6 @@ A current or savings account: balance, rate, recent transactions and balance his
 **Fields its Sutra reads:** `type`, `holderName`, `balance`, `currency`, `rate`, `status`, `transactions`, `history`.
 
 **Links:** `customer` → Holder (`customer`).
-
-**Example:** `ACCT ACCT-100231-CUR <GO>`
 
 ### Mortgage (`mortgage`)
 
@@ -82,8 +78,6 @@ A residential mortgage: balance, rate, loan-to-value, amortisation and arrears.
 
 **Links:** `customer` → Borrower (`customer`).
 
-**Example:** `MTG MTG-100231 <GO>`
-
 ### Card account (`card-account`)
 
 A credit card: limit, utilisation, spend by category and statements.
@@ -91,8 +85,6 @@ A credit card: limit, utilisation, spend by category and statements.
 **Fields its Sutra reads:** `holderName`, `product`, `balance`, `limit`, `utilisation`, `apr`, `status`, `spend`, `statements`.
 
 **Links:** `customer` → Holder (`customer`).
-
-**Example:** `CARD CARD-100231 <GO>`
 
 ### Personal loan (`personal-loan`)
 
@@ -102,8 +94,6 @@ An unsecured instalment loan: purpose, instalments and remaining balance.
 
 **Links:** `customer` → Borrower (`customer`).
 
-**Example:** `PLN PLN-100238 <GO>`
-
 ### Branch (`branch`)
 
 A branch: customers, deposits and lending, product mix and service scores.
@@ -111,8 +101,6 @@ A branch: customers, deposits and lending, product mix and service scores.
 **Fields its Sutra reads:** `name`, `city`, `customers`, `deposits`, `lending`, `nps`, `productMix`, `npsHistory`.
 
 **Links:** `legalEntity` → Legal entity (`legal-entity`).
-
-**Example:** `BRN BRN-FRA-MAIN <GO>`
 
 ### Collections case (`collections-case`)
 
@@ -122,8 +110,6 @@ A delinquent account in collections: arrears, stage, strategy and contact histor
 
 **Links:** `customer` → Customer (`customer`), `loan` → Loan (`personal-loan`), `card` → Card (`card-account`).
 
-**Example:** `COLC COLC-2601 <GO>`
-
 ### Retail portfolio (IFRS 9) (`retail-portfolio`)
 
 A retail portfolio segment: exposure and expected credit loss by IFRS 9 stage, and delinquency.
@@ -131,5 +117,3 @@ A retail portfolio segment: exposure and expected credit loss by IFRS 9 stage, a
 **Fields its Sutra reads:** `name`, `exposure`, `ecl`, `coverage`, `dpd30`, `stages`, `delinquency`.
 
 **Links:** `legalEntity` → Legal entity (`legal-entity`).
-
-**Example:** `RPF RPF-UK-MORT <GO>`

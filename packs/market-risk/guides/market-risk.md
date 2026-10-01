@@ -18,18 +18,20 @@
 
 Value at risk, stress testing, FRTB sensitivities and P&L explain.
 
-**Extends:** `market-data`, `trading` · **Extended by:** none · **Kinds:** 5 · **Sample documents:** 158
+**Extends:** `market-data`, `trading` · **Extended by:** none · **Kinds:** 5
 
 Enable it with `DRISHTI_PACKS=market-risk` (the packs it extends come with it; where they differ, the more specific wins).
 
-## Try it
+## Finding things
 
-| Command | Shows |
+Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start of one, or a search, then `<GO>`. Shown here for VaR / expected shortfalls; the same works for every mnemonic.
+
+| Command | Does |
 |---|---|
-| `VAR VAR-RATES <GO>` | Rates desk VaR · P&L series, contributions |
-| `STR STR-GFC2008-RATES <GO>` | Stress · 2008 crisis on the rates desk |
-| `PNL PNL-RATES-1 <GO>` | P&L explain |
-| `FRTB FRTB-RATES-1 <GO>` | FRTB sensitivities and charges |
+| `VAR <id> <GO>` | Opens that VaR / expected shortfall. A bare identifier works too: its prefix (`VAR-…`) tells Drishti the kind. |
+| `VAR <start of an id> <GO>` | A pick list: one match opens, several give a table with the kind's key fields. `*` is a wildcard, and case never matters. |
+| `VAR <field>=<value> <GO>` | Lists by field value. Compare with `<` and `>`, combine with `and`, sort with `order by <field> desc`. |
+| `VAR <GO>` | Lists every VaR / expected shortfall. |
 
 ## Where the data comes from
 
@@ -39,17 +41,17 @@ Each kind is read from the Delta Lake folder of its **data domain** (`data/delta
 |---|---|---|---|---|
 | `risk-store` | `data/delta/risk/` | Market-risk results: VaR, stress, FRTB, P&L explain | snapshot (every business date) | `var`, `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain` |
 
-Build the lake with `uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta`. Point a domain at a database instead by overriding its connector in the site configuration.
+Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the site configuration. For a demonstration lake built from the generated samples, run `uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta`.
 
 ## Kinds
 
-| Kind | Name | Mnemonic | Identifiers | Id field | Samples | What it is |
-|---|---|---|---|---|---|---|
-| `var` | VaR / expected shortfall | `VAR` | `VAR-…` | `resultId` | 10 | Historical VaR and ES for a desk or portfolio, with backtesting. |
-| `stress-scenario` | Stress scenario | `SCN` | `SCN-…` | `scenarioId` | 8 | A named historical or hypothetical shock set. |
-| `stress-result` | Stress result | `STR` | `STR-…` | `resultId` | 80 | P&L of a desk under a scenario, by book. |
-| `frtb-sensitivity` | FRTB sensitivities | `FRTB` | `FRTB-…` | `resultId` | 30 | Delta, vega and curvature by risk class and bucket (SBM). |
-| `pnl-explain` | P&L explain | `PNL` | `PNL-…` | `resultId` | 30 | Daily P&L attributed to risk factors, new trades and residual. |
+| Kind | Name | Mnemonic | Identifiers | Id field | What it is |
+|---|---|---|---|---|---|
+| `var` | VaR / expected shortfall | `VAR` | `VAR-…` | `resultId` | Historical VaR and ES for a desk or portfolio, with backtesting. |
+| `stress-scenario` | Stress scenario | `SCN` | `SCN-…` | `scenarioId` | A named historical or hypothetical shock set. |
+| `stress-result` | Stress result | `STR` | `STR-…` | `resultId` | P&L of a desk under a scenario, by book. |
+| `frtb-sensitivity` | FRTB sensitivities | `FRTB` | `FRTB-…` | `resultId` | Delta, vega and curvature by risk class and bucket (SBM). |
+| `pnl-explain` | P&L explain | `PNL` | `PNL-…` | `resultId` | Daily P&L attributed to risk factors, new trades and residual. |
 
 ### VaR / expected shortfall (`var`)
 
@@ -59,15 +61,11 @@ Historical VaR and ES for a desk or portfolio, with backtesting.
 
 **Links:** `desk` → Desk (`desk`).
 
-**Example:** `VAR VAR-COMM <GO>`
-
 ### Stress scenario (`stress-scenario`)
 
 A named historical or hypothetical shock set.
 
 **Fields its Sutra reads:** `name`, `type`, `severity`, `shocks`.
-
-**Example:** `SCN SCN-COVID2020 <GO>`
 
 ### Stress result (`stress-result`)
 
@@ -77,8 +75,6 @@ P&L of a desk under a scenario, by book.
 
 **Links:** `scenario` → Scenario (`stress-scenario`), `desk` → Desk (`desk`).
 
-**Example:** `STR STR-COVID2020-COMM <GO>`
-
 ### FRTB sensitivities (`frtb-sensitivity`)
 
 Delta, vega and curvature by risk class and bucket (SBM).
@@ -87,8 +83,6 @@ Delta, vega and curvature by risk class and bucket (SBM).
 
 **Links:** `book` → Book (`book`).
 
-**Example:** `FRTB FRTB-COMM-1 <GO>`
-
 ### P&L explain (`pnl-explain`)
 
 Daily P&L attributed to risk factors, new trades and residual.
@@ -96,8 +90,6 @@ Daily P&L attributed to risk factors, new trades and residual.
 **Fields its Sutra reads:** `date`, `actual`, `explained`, `unexplained`, `attribution`.
 
 **Links:** `book` → Book (`book`).
-
-**Example:** `PNL PNL-COMM-1 <GO>`
 
 ## Who can see it
 

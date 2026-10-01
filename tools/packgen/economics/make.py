@@ -246,7 +246,7 @@ def spec() -> PB.PackSpec:
         examples=[("ECON ECON-US", "Economy · growth path, output by sector"), ("MACRO MACRO-EA-CPI", "Indicator · history and release surprises"),
                   ("CBD CBD-FED-2026-09", "Central-bank decision · rate path and guidance"), ("FCST FCST-UK-2026Q3", "Forecast · baseline, upside and downside"),
                   ("TFLOW TFLOW-US-CN", "Trade flow · balance and main exports"), ("CPIB CPIB-JP", "Consumer prices · contributions by component")],
-        overview="The economies are real; the figures are illustrative, not official statistics. An economy links to its central bank's latest decision, "
+        overview="An economy links to its central bank's latest decision, "
                  "labour market, fiscal position, price basket and forecast; indicators, decisions and trade flows link back to their economies. "
                  "For real rates, the market-data pack's feeds (SOFR, €STR, Treasury curve, FRED) can run alongside.",
         roles={"economist": {"kinds": [k.kind for k in KINDS], "raw": True}})

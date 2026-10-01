@@ -56,8 +56,10 @@ public class OidcController {
     private final UserService users;
     private final Entitlements entitlements;
     private final SecurityProperties security;
+    private final com.ash.drishti.common.Branding branding;
 
-    public OidcController(OidcProperties props, IdTokenVerifier verifier, UserService users, Entitlements entitlements, SecurityProperties security) {
+    public OidcController(OidcProperties props, IdTokenVerifier verifier, UserService users, Entitlements entitlements, SecurityProperties security, com.ash.drishti.common.Branding branding) {
+        this.branding = branding;
         this.props = props;
         this.verifier = verifier;
         this.users = users;
@@ -82,8 +84,8 @@ public class OidcController {
         String username = firstText(claims, props.usernameClaim(), "email", "sub");
         Set<String> roles = roles(claims);
         if (roles.isEmpty()) {
-            users.recordAudit("system", "login-sso-refused", username, "no Drishti role for the provider's groups");
-            throw new DrishtiException(ErrorCode.BAD_CREDENTIALS, "your account has no role in Drishti; ask an administrator");
+            users.recordAudit("system", "login-sso-refused", username, "no " + branding.productOr("application") + " role for the provider's groups");
+            throw new DrishtiException(ErrorCode.BAD_CREDENTIALS, "your account has no role in " + branding.productOr("this application") + "; ask an administrator");
         }
         User u = users.federated(username, firstText(claims, props.displayClaim(), "name"), claims.path("email").asText(""), roles,
                 props.rolesFromProvider(), props.issuer());

@@ -22,7 +22,7 @@
 <div class="adm health" data-health data-refresh="5000">
   <h1>Health</h1>
   {% with tab='health' %}{% include "admin/_nav.html" %}{% endwith %}
-  <p class="text-muted-d">Every connector and pack Drishti depends on. Refreshes every 5 seconds; connectors that are down reconnect by themselves.
+  <p class="text-muted-d">Every connector and pack {{ PRODUCT }} depends on. Refreshes every 5 seconds; connectors that are down reconnect by themselves.
     The same figures are at <span class="mono">GET /api/v1/admin/health</span> for external monitoring.</p>
   <div data-health-body>{% include "admin/_health_body.html" %}</div>
 </div>

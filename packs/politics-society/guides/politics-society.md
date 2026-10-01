@@ -18,22 +18,22 @@
 
 Jurisdictions, parties, candidates, elections, opinion polls, bills, regions and social indicators (fictional polities).
 
-Valdoria and Kestria are fictional, so nothing here describes real parties or people. The mechanics are real: Valdoria's seats are allocated by D'Hondt with a 5% threshold, Kestria's by first past the post; poll margins of error are 95% intervals for the sample size.
+Seats are allocated by each jurisdiction's electoral system (proportional by D'Hondt with a threshold, or first past the post), and a poll's margin of error is the 95% interval for its sample size.
 
-**Extends:** nothing · **Kinds:** 8 · **Sample documents:** 96
+**Extends:** nothing · **Kinds:** 8
 
 Enable it with `DRISHTI_PACKS=politics-society` (the packs it extends come with it).
 
-## Try it
+## Finding things
 
-| Command | Shows |
+Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start of one, or a search, then `<GO>`. Shown here for jurisdictions; the same works for every mnemonic.
+
+| Command | Does |
 |---|---|
-| `JUR JUR-VAL <GO>` | Jurisdiction · seats in the legislature |
-| `ELEC ELEC-KES-2025 <GO>` | Election · first-past-the-post result |
-| `POLL POLL-VAL-019 <GO>` | Opinion poll · shares with margins of error |
-| `PARTY PARTY-VAL-GRN <GO>` | Party · polling trend |
-| `BILL BILL-VAL-2026-011 <GO>` | Bill · stages and votes |
-| `SOCI SOCI-KES-TIP <GO>` | Social indicator · trust in parliament |
+| `JUR <id> <GO>` | Opens that jurisdiction. A bare identifier works too: its prefix (`JUR-…`) tells Drishti the kind. |
+| `JUR <start of an id> <GO>` | A pick list: one match opens, several give a table with the kind's key fields. `*` is a wildcard, and case never matters. |
+| `JUR <field>=<value> <GO>` | Lists by field value. Compare with `<` and `>`, combine with `and`, sort with `order by <field> desc`. |
+| `JUR <GO>` | Lists every jurisdiction. |
 
 ## Where the data comes from
 
@@ -43,16 +43,16 @@ Enable it with `DRISHTI_PACKS=politics-society` (the packs it extends come with 
 
 ## Kinds
 
-| Kind | Name | Mnemonic | Identifiers | Samples | What it is |
-|---|---|---|---|---|---|
-| `jurisdiction` | Jurisdiction | `JUR` | `JUR-…` | 2 | A country: electoral system, legislature, government and headline social indicators. |
-| `party` | Party | `PARTY` | `PARTY-…` | 9 | A political party: position, leader, seats, and its polling trend. |
-| `candidate` | Candidate | `CAND` | `CAND-…` | 18 | A candidate or office holder: party, constituency, results and legislative record. |
-| `election` | Election | `ELEC` | `ELEC-…` | 2 | A general election: turnout, votes and seats by party, and the regional result. |
-| `poll` | Opinion poll | `POLL` | `POLL-…` | 38 | A voting-intention poll: fieldwork, sample, method and shares with margins of error. |
-| `bill` | Bill | `BILL` | `BILL-…` | 10 | A bill in the legislature: sponsor, stage, votes at each reading, and its fiscal cost. |
-| `region` | Region | `REGN` | `REGN-…` | 9 | A region: population, income, unemployment, education, health and how it voted. |
-| `social-indicator` | Social indicator | `SOCI` | `SOCI-…` | 8 | A social statistic by region over time: poverty, trust, housing, education. |
+| Kind | Name | Mnemonic | Identifiers | What it is |
+|---|---|---|---|---|
+| `jurisdiction` | Jurisdiction | `JUR` | `JUR-…` | A country: electoral system, legislature, government and headline social indicators. |
+| `party` | Party | `PARTY` | `PARTY-…` | A political party: position, leader, seats, and its polling trend. |
+| `candidate` | Candidate | `CAND` | `CAND-…` | A candidate or office holder: party, constituency, results and legislative record. |
+| `election` | Election | `ELEC` | `ELEC-…` | A general election: turnout, votes and seats by party, and the regional result. |
+| `poll` | Opinion poll | `POLL` | `POLL-…` | A voting-intention poll: fieldwork, sample, method and shares with margins of error. |
+| `bill` | Bill | `BILL` | `BILL-…` | A bill in the legislature: sponsor, stage, votes at each reading, and its fiscal cost. |
+| `region` | Region | `REGN` | `REGN-…` | A region: population, income, unemployment, education, health and how it voted. |
+| `social-indicator` | Social indicator | `SOCI` | `SOCI-…` | A social statistic by region over time: poverty, trust, housing, education. |
 
 ### Jurisdiction (`jurisdiction`)
 
@@ -62,8 +62,6 @@ A country: electoral system, legislature, government and headline social indicat
 
 **Links:** `lastElection` → Last election (`election`), `latestPoll` → Latest poll (`poll`).
 
-**Example:** `JUR JUR-KES <GO>`
-
 ### Party (`party`)
 
 A political party: position, leader, seats, and its polling trend.
@@ -71,8 +69,6 @@ A political party: position, leader, seats, and its polling trend.
 **Fields its Sutra reads:** `name`, `position`, `leaderName`, `seats`, `polling`, `members`, `trend`, `platform`.
 
 **Links:** `jurisdiction` → Jurisdiction (`jurisdiction`), `leader` → Leader (`candidate`).
-
-**Example:** `PARTY PARTY-KES-CON <GO>`
 
 ### Candidate (`candidate`)
 
@@ -82,8 +78,6 @@ A candidate or office holder: party, constituency, results and legislative recor
 
 **Links:** `party` → Party (`party`).
 
-**Example:** `CAND CAND-KES-001 <GO>`
-
 ### Election (`election`)
 
 A general election: turnout, votes and seats by party, and the regional result.
@@ -91,8 +85,6 @@ A general election: turnout, votes and seats by party, and the regional result.
 **Fields its Sutra reads:** `title`, `date`, `turnout`, `system`, `winner`, `majority`, `results`, `turnoutByRegion`.
 
 **Links:** `jurisdiction` → Jurisdiction (`jurisdiction`).
-
-**Example:** `ELEC ELEC-KES-2025 <GO>`
 
 ### Opinion poll (`poll`)
 
@@ -102,8 +94,6 @@ A voting-intention poll: fieldwork, sample, method and shares with margins of er
 
 **Links:** `jurisdiction` → Jurisdiction (`jurisdiction`).
 
-**Example:** `POLL POLL-KES-001 <GO>`
-
 ### Bill (`bill`)
 
 A bill in the legislature: sponsor, stage, votes at each reading, and its fiscal cost.
@@ -111,8 +101,6 @@ A bill in the legislature: sponsor, stage, votes at each reading, and its fiscal
 **Fields its Sutra reads:** `title`, `sponsorName`, `stage`, `introduced`, `costM`, `stages`, `summary`.
 
 **Links:** `sponsor` → Sponsor (`candidate`), `jurisdiction` → Jurisdiction (`jurisdiction`).
-
-**Example:** `BILL BILL-KES-2026-011 <GO>`
 
 ### Region (`region`)
 
@@ -122,8 +110,6 @@ A region: population, income, unemployment, education, health and how it voted.
 
 **Links:** `jurisdiction` → Jurisdiction (`jurisdiction`).
 
-**Example:** `REGN REGN-KES-HIGHLA <GO>`
-
 ### Social indicator (`social-indicator`)
 
 A social statistic by region over time: poverty, trust, housing, education.
@@ -131,5 +117,3 @@ A social statistic by region over time: poverty, trust, housing, education.
 **Fields its Sutra reads:** `name`, `latest`, `unit`, `change5y`, `sourceName`, `series`, `byRegion`.
 
 **Links:** `jurisdiction` → Jurisdiction (`jurisdiction`).
-
-**Example:** `SOCI SOCI-KES-HCO <GO>`

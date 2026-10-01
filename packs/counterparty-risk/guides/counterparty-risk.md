@@ -18,18 +18,20 @@
 
 Netting sets, exposure and PFE, CVA/XVA, SA-CCR, credit limits, collateral, margin calls and SIMM.
 
-**Extends:** `market-data`, `trading` · **Extended by:** none · **Kinds:** 8 · **Sample documents:** 498
+**Extends:** `market-data`, `trading` · **Extended by:** none · **Kinds:** 8
 
 Enable it with `DRISHTI_PACKS=counterparty-risk` (the packs it extends come with it; where they differ, the more specific wins).
 
-## Try it
+## Finding things
 
-| Command | Shows |
+Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start of one, or a search, then `<GO>`. Shown here for netting sets; the same works for every mnemonic.
+
+| Command | Does |
 |---|---|
-| `NSET NS-SUMMIT-NY <GO>` | Netting set · 108 trades, exposure, CVA |
-| `LIM LIM-SUMMIT <GO>` | Credit limit · utilisation by tenor |
-| `CVA CVA-SUMMIT-NY <GO>` | CVA / XVA |
-| `SACCR SACCR-SUMMIT-NY <GO>` | SA-CCR exposure at default |
+| `NSET <id> <GO>` | Opens that netting set. A bare identifier works too: its prefix (`NS-…`) tells Drishti the kind. |
+| `NSET <start of an id> <GO>` | A pick list: one match opens, several give a table with the kind's key fields. `*` is a wildcard, and case never matters. |
+| `NSET <field>=<value> <GO>` | Lists by field value. Compare with `<` and `>`, combine with `and`, sort with `order by <field> desc`. |
+| `NSET <GO>` | Lists every netting set. |
 
 ## Where the data comes from
 
@@ -40,20 +42,20 @@ Each kind is read from the Delta Lake folder of its **data domain** (`data/delta
 | `credit-store` | `data/delta/credit/` | Counterparty-credit results: exposure, CVA, SA-CCR, limits | snapshot (every business date) | `netting-set`, `credit-limit`, `exposure-profile`, `cva`, `sa-ccr` |
 | `collateral-store` | `data/delta/collateral/` | Collateral and margin: balances, calls, SIMM | snapshot (every business date) | `collateral-balance`, `margin-call`, `simm` |
 
-Build the lake with `uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta`. Point a domain at a database instead by overriding its connector in the site configuration.
+Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the site configuration. For a demonstration lake built from the generated samples, run `uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta`.
 
 ## Kinds
 
-| Kind | Name | Mnemonic | Identifiers | Id field | Samples | What it is |
-|---|---|---|---|---|---|---|
-| `netting-set` | Netting set | `NSET` | `NS-…` | `nettingSetId` | 66 | Trades that net on close-out under one agreement and CSA, with exposure and collateral. |
-| `credit-limit` | Credit limit | `LIM` | `LIM-…` | `limitId` | 18 | PFE limit by tenor bucket for a counterparty, with utilisation. |
-| `exposure-profile` | Exposure profile | `EXP` | `EXP-…` | `profileId` | 66 | Simulated EE, EPE, ENE and PFE by time bucket for a netting set. |
-| `cva` | CVA / XVA | `CVA` | `CVA-…` | `resultId` | 66 | Credit, debit and funding valuation adjustments with sensitivities. |
-| `sa-ccr` | SA-CCR exposure | `SACCR` | `SACCR-…` | `calcId` | 66 | Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier. |
-| `collateral-balance` | Collateral balance | `COLL` | `COLL-…` | `balanceId` | 66 | Collateral held and posted under a CSA, by asset, after haircuts. |
-| `margin-call` | Margin call | `MC` | `MC-…` | `callId` | 132 | A variation or initial margin call and its settlement status. |
-| `simm` | ISDA SIMM initial margin | `SIMM` | `SIMM-…` | `calcId` | 18 | Initial margin by risk class and product class. |
+| Kind | Name | Mnemonic | Identifiers | Id field | What it is |
+|---|---|---|---|---|---|
+| `netting-set` | Netting set | `NSET` | `NS-…` | `nettingSetId` | Trades that net on close-out under one agreement and CSA, with exposure and collateral. |
+| `credit-limit` | Credit limit | `LIM` | `LIM-…` | `limitId` | PFE limit by tenor bucket for a counterparty, with utilisation. |
+| `exposure-profile` | Exposure profile | `EXP` | `EXP-…` | `profileId` | Simulated EE, EPE, ENE and PFE by time bucket for a netting set. |
+| `cva` | CVA / XVA | `CVA` | `CVA-…` | `resultId` | Credit, debit and funding valuation adjustments with sensitivities. |
+| `sa-ccr` | SA-CCR exposure | `SACCR` | `SACCR-…` | `calcId` | Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier. |
+| `collateral-balance` | Collateral balance | `COLL` | `COLL-…` | `balanceId` | Collateral held and posted under a CSA, by asset, after haircuts. |
+| `margin-call` | Margin call | `MC` | `MC-…` | `callId` | A variation or initial margin call and its settlement status. |
+| `simm` | ISDA SIMM initial margin | `SIMM` | `SIMM-…` | `calcId` | Initial margin by risk class and product class. |
 
 ### Netting set (`netting-set`)
 
@@ -63,8 +65,6 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 
 **Links:** `counterparty` → Counterparty (`counterparty`), `agreement` → Agreement (`agreement`), `csa` → CSA (`csa`), `creditLimit` → Credit limit (`credit-limit`), `exposureProfile` → Exposure profile (`exposure-profile`), `cvaResult` → CVA (`cva`), `saccr` → SA-CCR (`sa-ccr`), `simm` → SIMM (`simm`), `collateralBalance` → Collateral (`collateral-balance`).
 
-**Example:** `NSET NS-ALDERSHOT-FRA <GO>`
-
 ### Credit limit (`credit-limit`)
 
 PFE limit by tenor bucket for a counterparty, with utilisation.
@@ -72,8 +72,6 @@ PFE limit by tenor bucket for a counterparty, with utilisation.
 **Fields its Sutra reads:** `counterpartyName`, `measure`, `limit`, `used`, `utilisation`, `status`, `buckets`.
 
 **Links:** `counterparty` → Counterparty (`counterparty`).
-
-**Example:** `LIM LIM-ALDERSHOT <GO>`
 
 ### Exposure profile (`exposure-profile`)
 
@@ -83,8 +81,6 @@ Simulated EE, EPE, ENE and PFE by time bucket for a netting set.
 
 **Links:** `nettingSet` → Netting set (`netting-set`).
 
-**Example:** `EXP EXP-ALDERSHOT-FRA <GO>`
-
 ### CVA / XVA (`cva`)
 
 Credit, debit and funding valuation adjustments with sensitivities.
@@ -92,8 +88,6 @@ Credit, debit and funding valuation adjustments with sensitivities.
 **Fields its Sutra reads:** `cva`, `dva`, `fva`, `kva`, `cs01`, `components`, `sensitivities`.
 
 **Links:** `nettingSet` → Netting set (`netting-set`), `creditCurve` → Counterparty curve (`credit-curve`).
-
-**Example:** `CVA CVA-ALDERSHOT-FRA <GO>`
 
 ### SA-CCR exposure (`sa-ccr`)
 
@@ -103,8 +97,6 @@ Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier.
 
 **Links:** `nettingSet` → Netting set (`netting-set`).
 
-**Example:** `SACCR SACCR-ALDERSHOT-FRA <GO>`
-
 ### Collateral balance (`collateral-balance`)
 
 Collateral held and posted under a CSA, by asset, after haircuts.
@@ -112,8 +104,6 @@ Collateral held and posted under a CSA, by asset, after haircuts.
 **Fields its Sutra reads:** `held`, `posted`, `net`, `asOf`, `positions`.
 
 **Links:** `csa` → CSA (`csa`), `nettingSet` → Netting set (`netting-set`).
-
-**Example:** `COLL COLL-ALDERSHOT-FRA <GO>`
 
 ### Margin call (`margin-call`)
 
@@ -123,8 +113,6 @@ A variation or initial margin call and its settlement status.
 
 **Links:** `nettingSet` → Netting set (`netting-set`), `csa` → CSA (`csa`).
 
-**Example:** `MC MC-ALDERSHOT-FRA-1 <GO>`
-
 ### ISDA SIMM initial margin (`simm`)
 
 Initial margin by risk class and product class.
@@ -132,8 +120,6 @@ Initial margin by risk class and product class.
 **Fields its Sutra reads:** `total`, `posted`, `received`, `version`, `riskClasses`.
 
 **Links:** `nettingSet` → Netting set (`netting-set`).
-
-**Example:** `SIMM SIMM-ALDERSHOT <GO>`
 
 ## Who can see it
 

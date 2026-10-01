@@ -16,6 +16,6 @@
 <footer class="site-footer">
   <div class="inner">
     <span>{{ COPYRIGHT }} · <a href="/help">Help</a> · <a href="/about">About</a></span>
-    <span>{{ PRODUCT }} · {{ TAGLINE }} · Unauthorised copying, use or distribution is prohibited.</span>
+    <span>{{ PRODUCT }} · {{ TAGLINE }}{% if NOTICE %} · {{ NOTICE }}{% endif %}</span>
   </div>
 </footer>

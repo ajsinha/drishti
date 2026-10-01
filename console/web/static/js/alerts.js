@@ -34,7 +34,7 @@
     tray.appendChild(t);
     setTimeout(function () { t.remove(); }, 9000);
     if (window.Notification && Notification.permission === 'granted') {
-      try { new Notification('Drishti · ' + a.severity, { body: a.id + ': ' + a.message }); } catch (err) { /* not available */ }
+      try { new Notification((document.body.getAttribute('data-product') || document.title) + ' · ' + a.severity, { body: a.id + ': ' + a.message }); } catch (err) { /* not available */ }
     }
   }
   bell.addEventListener('click', function () {

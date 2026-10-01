@@ -21,9 +21,9 @@
 {% block content %}
 <section class="help-hero about-hero">
   {{ brand_mark("about-mark") }}
-  <h1>{{ PRODUCT }} <span class="lp-grad">दृष्टि</span></h1>
+  <h1>{{ PRODUCT }}{% if PRODUCT_NATIVE %} <span class="lp-grad">{{ PRODUCT_NATIVE }}</span>{% endif %}</h1>
   <p class="about-tag">{{ TAGLINE }}</p>
-  <p>Drishti (<em>sight</em>) is a live, keyboard-driven terminal. It renders any entity from any system as a
+  <p>{{ PRODUCT }} is a live, keyboard-driven terminal. It renders any entity from any system as a
      dense, linked, ticking view without a coded screen per product: <b>Rachana</b>, a declarative screen grammar,
      describes views; each product family gets a <b>Sutra</b> written in it; <b>inference</b> fills whatever a Sutra leaves out.</p>
 </section>

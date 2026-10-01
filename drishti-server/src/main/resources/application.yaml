@@ -43,6 +43,14 @@ management:
         enabled: true
 
 drishti:
+  branding:
+    # The product's name and legal notices, wherever people see them (pages, the About answer, messages). Change them
+    # here, not in code; the console has the same keys under ui: in console/config/application.yaml.
+    product: ${DRISHTI_PRODUCT:Drishti}
+    tagline: Any data. Any domain. One grammar.
+    owner: Ashutosh Sinha
+    copyright: Copyright (c) 2026 Ashutosh Sinha. All rights reserved. Proprietary and confidential.
+    notice: Unauthorised copying, use or distribution is prohibited.
   sources:
     # Longest a single source read may take before the view shows the entity as unavailable.
     fetch-timeout: 2s
@@ -149,6 +157,7 @@ drishti:
     seed-username: drishti-dev-admin
     seed-password: drishti-dev-admin123
     seed-roles: [admin]
+    seed-display-name: Drishti dev admin
   rachana:
     # Site Sutra directories, scanned recursively, in addition to the enabled packs' Sutras.
     dirs: ${DRISHTI_SUTRAS:./sutras}

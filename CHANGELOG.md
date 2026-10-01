@@ -16,6 +16,16 @@
 # Changelog
 
 ## Unreleased
+- **The product's name and legal notices come from configuration.**
+  - **Server:** `drishti.branding.*` (product, tagline, owner, copyright, notice), used by the About answer and sign-in messages.
+  - **Console:** `ui.*` (product, tagline, product_native, product_meaning, copyright, notice), used by every page, the footer, the landing page, About and alert notifications.
+  - **Other settings:** the seeded admin's display name (`seed-display-name`) and the feed connectors' user agent (a pack setting) are configured too.
+  - **What stays:** source-file legal headers.
+- **Fix: menus jumped from the left edge of the screen when opened.** The opening animation used `transform`, which Bootstrap also uses to place menus. Panels now sit under their button, set in CSS, and fade in using `translate`.
+- **Pack guides describe domains, not sample records.**
+  - **Removed:** "Try it" tables, sample counts and lists of sample ids.
+  - **Added:** a "Finding things" section with generic commands (`<MN> <id>`, pick lists, `<MN> <field>=<value>`).
+  - **Generators:** they produce the same output.
 - **A new top bar, after MAYA's.**
   - **Layout:** two rows. Row one: the brand with its tagline, then Views, Build, Admin and Help as mega-menu panels (each entry with an icon and a line on what it does), then quiet round tools (live, alerts, packs, theme and the user's avatar menu with desk, roles, clock, account and sign-out). Row two: the command line across the width, and the business date.
   - **Pack menu:** it laid all packs out in one off-screen row. It now lists one pack per line, with what it covers, all/none and Apply.

@@ -18,22 +18,22 @@
 
 Economies, macro indicators and releases, central-bank decisions, forecasts, trade flows, labour markets, fiscal positions and price baskets.
 
-The economies are real; the figures are illustrative, not official statistics. An economy links to its central bank's latest decision, labour market, fiscal position, price basket and forecast; indicators, decisions and trade flows link back to their economies. For real rates, the market-data pack's feeds (SOFR, €STR, Treasury curve, FRED) can run alongside.
+An economy links to its central bank's latest decision, labour market, fiscal position, price basket and forecast; indicators, decisions and trade flows link back to their economies. For real rates, the market-data pack's feeds (SOFR, €STR, Treasury curve, FRED) can run alongside.
 
-**Extends:** nothing · **Kinds:** 8 · **Sample documents:** 77
+**Extends:** nothing · **Kinds:** 8
 
 Enable it with `DRISHTI_PACKS=economics` (the packs it extends come with it).
 
-## Try it
+## Finding things
 
-| Command | Shows |
+Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start of one, or a search, then `<GO>`. Shown here for economies; the same works for every mnemonic.
+
+| Command | Does |
 |---|---|
-| `ECON ECON-US <GO>` | Economy · growth path, output by sector |
-| `MACRO MACRO-EA-CPI <GO>` | Indicator · history and release surprises |
-| `CBD CBD-FED-2026-09 <GO>` | Central-bank decision · rate path and guidance |
-| `FCST FCST-UK-2026Q3 <GO>` | Forecast · baseline, upside and downside |
-| `TFLOW TFLOW-US-CN <GO>` | Trade flow · balance and main exports |
-| `CPIB CPIB-JP <GO>` | Consumer prices · contributions by component |
+| `ECON <id> <GO>` | Opens that economy. A bare identifier works too: its prefix (`ECON-…`) tells Drishti the kind. |
+| `ECON <start of an id> <GO>` | A pick list: one match opens, several give a table with the kind's key fields. `*` is a wildcard, and case never matters. |
+| `ECON <field>=<value> <GO>` | Lists by field value. Compare with `<` and `>`, combine with `and`, sort with `order by <field> desc`. |
+| `ECON <GO>` | Lists every economy. |
 
 ## Where the data comes from
 
@@ -43,16 +43,16 @@ Enable it with `DRISHTI_PACKS=economics` (the packs it extends come with it).
 
 ## Kinds
 
-| Kind | Name | Mnemonic | Identifiers | Samples | What it is |
-|---|---|---|---|---|---|
-| `economy` | Economy | `ECON` | `ECON-…` | 7 | An economy: output, growth, prices, jobs, policy rate and debt, and output by sector. |
-| `macro-indicator` | Macro indicator | `MACRO` | `MACRO-…` | 28 | A released statistic: history and the release calendar with consensus and surprise. |
-| `central-bank-decision` | Central-bank decision | `CBD` | `CBD-…` | 7 | A monetary-policy decision: the rate, the vote, the guidance, and the path of past decisions. |
-| `economic-forecast` | Economic forecast | `FCST` | `FCST-…` | 7 | A forecast for the next two years with baseline, upside and downside scenarios. |
-| `trade-flow` | Trade flow | `TFLOW` | `TFLOW-…` | 7 | Goods trade between two economies: exports, imports, balance and the main products. |
-| `labour-market` | Labour market | `LABR` | `LABR-…` | 7 | Employment, participation, wages and vacancies, and jobs by sector. |
-| `fiscal-position` | Fiscal position | `FISC` | `FISC-…` | 7 | Government revenue, spending, deficit and debt, and spending by function. |
-| `price-basket` | Consumer-price basket | `CPIB` | `CPIB-…` | 7 | Headline and core inflation and each basket component's weight, inflation and contribution. |
+| Kind | Name | Mnemonic | Identifiers | What it is |
+|---|---|---|---|---|
+| `economy` | Economy | `ECON` | `ECON-…` | An economy: output, growth, prices, jobs, policy rate and debt, and output by sector. |
+| `macro-indicator` | Macro indicator | `MACRO` | `MACRO-…` | A released statistic: history and the release calendar with consensus and surprise. |
+| `central-bank-decision` | Central-bank decision | `CBD` | `CBD-…` | A monetary-policy decision: the rate, the vote, the guidance, and the path of past decisions. |
+| `economic-forecast` | Economic forecast | `FCST` | `FCST-…` | A forecast for the next two years with baseline, upside and downside scenarios. |
+| `trade-flow` | Trade flow | `TFLOW` | `TFLOW-…` | Goods trade between two economies: exports, imports, balance and the main products. |
+| `labour-market` | Labour market | `LABR` | `LABR-…` | Employment, participation, wages and vacancies, and jobs by sector. |
+| `fiscal-position` | Fiscal position | `FISC` | `FISC-…` | Government revenue, spending, deficit and debt, and spending by function. |
+| `price-basket` | Consumer-price basket | `CPIB` | `CPIB-…` | Headline and core inflation and each basket component's weight, inflation and contribution. |
 
 ### Economy (`economy`)
 
@@ -62,8 +62,6 @@ An economy: output, growth, prices, jobs, policy rate and debt, and output by se
 
 **Links:** `centralBank` → Last policy decision (`central-bank-decision`), `labour` → Labour market (`labour-market`), `fiscal` → Fiscal position (`fiscal-position`), `basket` → Consumer prices (`price-basket`), `outlook` → Forecast (`economic-forecast`).
 
-**Example:** `ECON ECON-BR <GO>`
-
 ### Macro indicator (`macro-indicator`)
 
 A released statistic: history and the release calendar with consensus and surprise.
@@ -71,8 +69,6 @@ A released statistic: history and the release calendar with consensus and surpri
 **Fields its Sutra reads:** `name`, `latest`, `unit`, `previous`, `nextRelease`, `history`, `releases`.
 
 **Links:** `economy` → Economy (`economy`).
-
-**Example:** `MACRO MACRO-BR-CPI <GO>`
 
 ### Central-bank decision (`central-bank-decision`)
 
@@ -82,8 +78,6 @@ A monetary-policy decision: the rate, the vote, the guidance, and the path of pa
 
 **Links:** `economy` → Economy (`economy`).
 
-**Example:** `CBD CBD-BCB-2026-09 <GO>`
-
 ### Economic forecast (`economic-forecast`)
 
 A forecast for the next two years with baseline, upside and downside scenarios.
@@ -91,8 +85,6 @@ A forecast for the next two years with baseline, upside and downside scenarios.
 **Fields its Sutra reads:** `economyName`, `vintage`, `growth2027`, `inflation2027`, `recessionProbability`, `scenarios`, `path`.
 
 **Links:** `economy` → Economy (`economy`).
-
-**Example:** `FCST FCST-BR-2026Q3 <GO>`
 
 ### Trade flow (`trade-flow`)
 
@@ -102,8 +94,6 @@ Goods trade between two economies: exports, imports, balance and the main produc
 
 **Links:** `economy` → Reporter (`economy`), `partner` → Partner (`economy`).
 
-**Example:** `TFLOW TFLOW-BR-CN <GO>`
-
 ### Labour market (`labour-market`)
 
 Employment, participation, wages and vacancies, and jobs by sector.
@@ -111,8 +101,6 @@ Employment, participation, wages and vacancies, and jobs by sector.
 **Fields its Sutra reads:** `economyName`, `unemployment`, `participation`, `wageGrowth`, `vacancyRatio`, `unemploymentPath`, `bySector`.
 
 **Links:** `economy` → Economy (`economy`).
-
-**Example:** `LABR LABR-BR <GO>`
 
 ### Fiscal position (`fiscal-position`)
 
@@ -122,8 +110,6 @@ Government revenue, spending, deficit and debt, and spending by function.
 
 **Links:** `economy` → Economy (`economy`).
 
-**Example:** `FISC FISC-BR <GO>`
-
 ### Consumer-price basket (`price-basket`)
 
 Headline and core inflation and each basket component's weight, inflation and contribution.
@@ -131,5 +117,3 @@ Headline and core inflation and each basket component's weight, inflation and co
 **Fields its Sutra reads:** `economyName`, `headline`, `core`, `services`, `goods`, `components`.
 
 **Links:** `economy` → Economy (`economy`).
-
-**Example:** `CPIB CPIB-BR <GO>`

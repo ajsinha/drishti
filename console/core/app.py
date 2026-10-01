@@ -110,19 +110,22 @@ def create_app(settings: Settings) -> FastAPI:
         if close:
             await close()
 
-    app = FastAPI(title="Drishti console", docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
+    app = FastAPI(title=f"{settings.get('ui.product', '')} console".strip(), docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
     app.state.backend = None
     templates = Jinja2Templates(directory=str(WEB / "templates"))
     templates.env.globals.update(
         ASSET_V=f"{ASSET_VERSION}-{asset_fingerprint()}",
-        PRODUCT=settings.get("ui.product", "Drishti"),
+        PRODUCT=settings.get("ui.product", ""),
+        PRODUCT_MEANING=settings.get("ui.product_meaning", ""),
+        PRODUCT_NATIVE=settings.get("ui.product_native", ""),
+        NOTICE=settings.get("ui.notice", ""),
         TAGLINE=settings.get("ui.tagline", ""),
         DEFAULT_THEME=settings.get("ui.default_theme", "terminal"),
         DESK=settings.get("ui.desk", "Rates desk"),
         USER=settings.get("ui.user_display", "Ash"),
         CLOCK_TZ=settings.get("ui.clock_tz", "America/New_York"),
         CLOCK_LABEL=settings.get("ui.clock_label", "NY"),
-        COPYRIGHT="Copyright © 2026 Ashutosh Sinha. All rights reserved. Proprietary and confidential.",
+        COPYRIGHT=settings.get("ui.copyright", ""),
     )
     from core.asof import to_local
 

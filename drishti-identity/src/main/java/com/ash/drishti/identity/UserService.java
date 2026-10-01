@@ -92,7 +92,7 @@ public final class UserService {
             return false;
         }
         Instant now = Instant.now();
-        store.put(new User(props.seedUsername(), "Drishti dev admin", "", "Administration", new LinkedHashSet<>(props.seedRoles()),
+        store.put(new User(props.seedUsername(), props.seedDisplayName(), "", "Administration", new LinkedHashSet<>(props.seedRoles()),
                 true, false, hasher.hash(props.seedPassword()), 0, null, now, now, null, now, null));
         audit.record("system", "user-seeded", props.seedUsername(), "development admin created because the user store was empty");
         LOG.warn("Created development admin '{}' with the default password. Change it before any shared use.", props.seedUsername());

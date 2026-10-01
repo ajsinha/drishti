@@ -20,20 +20,20 @@ Counterparty climate profiles, PCAF financed emissions, NGFS scenarios, climate 
 
 Climate figures reuse the banking packs' counterparties, books, desks and legal entities: a counterparty's climate profile follows its sector, financed emissions attribute its emissions to the books that trade with it, and climate stress runs on each desk.
 
-**Extends:** `trading` · **Kinds:** 6 · **Sample documents:** 93
+**Extends:** `trading` · **Kinds:** 6
 
 Enable it with `DRISHTI_PACKS=climate-risk` (the packs it extends come with it).
 
-## Try it
+## Finding things
 
-| Command | Shows |
+Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start of one, or a search, then `<GO>`. Shown here for climate profiles; the same works for every mnemonic.
+
+| Command | Does |
 |---|---|
-| `CLIM CLIM-SOLARIS <GO>` | Climate profile · emissions by scope, transition and physical risk |
-| `FE FE-RATES-1 <GO>` | Financed emissions of a book |
-| `NGFS NGFS-DELAYED <GO>` | NGFS scenario · carbon price path, sector shocks |
-| `CST CST-DELAYED-COMM <GO>` | Climate stress on the commodities desk |
-| `PHY PHY-002 <GO>` | Physical risk · hazards at a refinery |
-| `GAR GAR-FRA <GO>` | EU taxonomy green asset ratio |
+| `CLIM <id> <GO>` | Opens that climate profile. A bare identifier works too: its prefix (`CLIM-…`) tells Drishti the kind. |
+| `CLIM <start of an id> <GO>` | A pick list: one match opens, several give a table with the kind's key fields. `*` is a wildcard, and case never matters. |
+| `CLIM <field>=<value> <GO>` | Lists by field value. Compare with `<` and `>`, combine with `and`, sort with `order by <field> desc`. |
+| `CLIM <GO>` | Lists every climate profile. |
 
 ## Where the data comes from
 
@@ -43,14 +43,14 @@ Enable it with `DRISHTI_PACKS=climate-risk` (the packs it extends come with it).
 
 ## Kinds
 
-| Kind | Name | Mnemonic | Identifiers | Samples | What it is |
-|---|---|---|---|---|---|
-| `climate-profile` | Climate profile | `CLIM` | `CLIM-…` | 18 | A counterparty's emissions, targets and transition and physical risk scores. |
-| `financed-emissions` | Financed emissions | `FE` | `FE-…` | 30 | PCAF financed emissions of a book: each exposure's share of its counterparty's emissions. |
-| `climate-scenario` | Climate scenario | `NGFS` | `NGFS-…` | 3 | An NGFS climate scenario: carbon price path, warming and sector shocks. |
-| `climate-stress` | Climate stress result | `CST` | `CST-…` | 30 | Expected credit loss on a desk's portfolio under a climate scenario, by sector and horizon. |
-| `physical-asset` | Physical-risk asset | `PHY` | `PHY-…` | 8 | A counterparty's physical asset and its exposure to floods, heat, storms and wildfire. |
-| `taxonomy-alignment` | Green asset ratio | `GAR` | `GAR-…` | 4 | EU taxonomy alignment of a legal entity's balance sheet: eligible and aligned assets by objective. |
+| Kind | Name | Mnemonic | Identifiers | What it is |
+|---|---|---|---|---|
+| `climate-profile` | Climate profile | `CLIM` | `CLIM-…` | A counterparty's emissions, targets and transition and physical risk scores. |
+| `financed-emissions` | Financed emissions | `FE` | `FE-…` | PCAF financed emissions of a book: each exposure's share of its counterparty's emissions. |
+| `climate-scenario` | Climate scenario | `NGFS` | `NGFS-…` | An NGFS climate scenario: carbon price path, warming and sector shocks. |
+| `climate-stress` | Climate stress result | `CST` | `CST-…` | Expected credit loss on a desk's portfolio under a climate scenario, by sector and horizon. |
+| `physical-asset` | Physical-risk asset | `PHY` | `PHY-…` | A counterparty's physical asset and its exposure to floods, heat, storms and wildfire. |
+| `taxonomy-alignment` | Green asset ratio | `GAR` | `GAR-…` | EU taxonomy alignment of a legal entity's balance sheet: eligible and aligned assets by objective. |
 
 ### Climate profile (`climate-profile`)
 
@@ -60,8 +60,6 @@ A counterparty's emissions, targets and transition and physical risk scores.
 
 **Links:** `counterparty` → Counterparty (`counterparty`).
 
-**Example:** `CLIM CLIM-ALDERSHOT <GO>`
-
 ### Financed emissions (`financed-emissions`)
 
 PCAF financed emissions of a book: each exposure's share of its counterparty's emissions.
@@ -70,15 +68,11 @@ PCAF financed emissions of a book: each exposure's share of its counterparty's e
 
 **Links:** `book` → Book (`book`).
 
-**Example:** `FE FE-COMM-1 <GO>`
-
 ### Climate scenario (`climate-scenario`)
 
 An NGFS climate scenario: carbon price path, warming and sector shocks.
 
 **Fields its Sutra reads:** `name`, `category`, `warming`, `carbon2030`, `carbon2050`, `carbonPath`, `shocks`.
-
-**Example:** `NGFS NGFS-CURRENTPOLICIES <GO>`
 
 ### Climate stress result (`climate-stress`)
 
@@ -88,8 +82,6 @@ Expected credit loss on a desk's portfolio under a climate scenario, by sector a
 
 **Links:** `climateScenario` → Scenario (`climate-scenario`), `desk` → Desk (`desk`).
 
-**Example:** `CST CST-CURRENTPOLICIES-COMM <GO>`
-
 ### Physical-risk asset (`physical-asset`)
 
 A counterparty's physical asset and its exposure to floods, heat, storms and wildfire.
@@ -98,8 +90,6 @@ A counterparty's physical asset and its exposure to floods, heat, storms and wil
 
 **Links:** `counterparty` → Counterparty (`counterparty`).
 
-**Example:** `PHY PHY-001 <GO>`
-
 ### Green asset ratio (`taxonomy-alignment`)
 
 EU taxonomy alignment of a legal entity's balance sheet: eligible and aligned assets by objective.
@@ -107,5 +97,3 @@ EU taxonomy alignment of a legal entity's balance sheet: eligible and aligned as
 **Fields its Sutra reads:** `legalEntityName`, `gar`, `eligible`, `covered`, `objectives`.
 
 **Links:** `legalEntity` → Legal entity (`legal-entity`).
-
-**Example:** `GAR GAR-FRA <GO>`

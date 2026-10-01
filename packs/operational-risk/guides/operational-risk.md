@@ -20,20 +20,20 @@ Loss events, RCSA, key risk indicators, issues and actions, scenarios, third-par
 
 Operational risk is organised by the banking-core desks and legal entities: losses, controls and indicators belong to desks, capital and scenarios to legal entities. A loss links to the control that failed, and issues and cyber incidents link to the losses they caused.
 
-**Extends:** `banking-core` · **Kinds:** 8 · **Sample documents:** 136
+**Extends:** `banking-core` · **Kinds:** 8
 
 Enable it with `DRISHTI_PACKS=operational-risk` (the packs it extends come with it).
 
-## Try it
+## Finding things
 
-| Command | Shows |
+Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start of one, or a search, then `<GO>`. Shown here for operational loss events; the same works for every mnemonic.
+
+| Command | Does |
 |---|---|
-| `LOSS LOSS-2025-0001 <GO>` | Operational loss event · timeline and failed control |
-| `KRI KRI-RATES-1 <GO>` | Key risk indicator against its thresholds |
-| `RCSA RCSA-FX-2 <GO>` | Risk and control self-assessment |
-| `ISSUE ISSUE-101 <GO>` | Issue and actions |
-| `VEND VEND-001 <GO>` | Critical vendor · services, exit plans, incidents |
-| `OPCAP OPCAP-LDN <GO>` | SMA operational-risk capital |
+| `LOSS <id> <GO>` | Opens that operational loss event. A bare identifier works too: its prefix (`LOSS-…`) tells Drishti the kind. |
+| `LOSS <start of an id> <GO>` | A pick list: one match opens, several give a table with the kind's key fields. `*` is a wildcard, and case never matters. |
+| `LOSS <field>=<value> <GO>` | Lists by field value. Compare with `<` and `>`, combine with `and`, sort with `order by <field> desc`. |
+| `LOSS <GO>` | Lists every operational loss event. |
 
 ## Where the data comes from
 
@@ -43,16 +43,16 @@ Enable it with `DRISHTI_PACKS=operational-risk` (the packs it extends come with 
 
 ## Kinds
 
-| Kind | Name | Mnemonic | Identifiers | Samples | What it is |
-|---|---|---|---|---|---|
-| `loss-event` | Operational loss event | `LOSS` | `LOSS-…` | 24 | An operational loss: Basel event type, business line, gross loss, recoveries and its timeline. |
-| `risk-control` | Risk and control assessment | `RCSA` | `RCSA-…` | 40 | A risk, its inherent rating, the controls against it and the residual rating (RCSA). |
-| `key-risk-indicator` | Key risk indicator | `KRI` | `KRI-…` | 40 | A metric watched against amber and red thresholds, with its recent history. |
-| `issue` | Issue and action | `ISSUE` | `ISSUE-…` | 12 | An audit, regulatory or self-identified issue, its owner, due date and actions. |
-| `oprisk-scenario` | Operational-risk scenario | `OPSCN` | `OPSCN-…` | 5 | A severe-but-plausible scenario with frequency and severity estimates. |
-| `third-party` | Third-party (vendor) | `VEND` | `VEND-…` | 5 | An outsourced service provider: criticality, services, concentration and incidents. |
-| `cyber-incident` | Cyber incident | `CYBER` | `CYBER-…` | 6 | A cyber-security incident: severity, systems, detection and containment times, data affected. |
-| `oprisk-capital` | Operational-risk capital | `OPCAP` | `OPCAP-…` | 4 | Basel III standardised approach (SMA): business indicator, loss component and capital. |
+| Kind | Name | Mnemonic | Identifiers | What it is |
+|---|---|---|---|---|
+| `loss-event` | Operational loss event | `LOSS` | `LOSS-…` | An operational loss: Basel event type, business line, gross loss, recoveries and its timeline. |
+| `risk-control` | Risk and control assessment | `RCSA` | `RCSA-…` | A risk, its inherent rating, the controls against it and the residual rating (RCSA). |
+| `key-risk-indicator` | Key risk indicator | `KRI` | `KRI-…` | A metric watched against amber and red thresholds, with its recent history. |
+| `issue` | Issue and action | `ISSUE` | `ISSUE-…` | An audit, regulatory or self-identified issue, its owner, due date and actions. |
+| `oprisk-scenario` | Operational-risk scenario | `OPSCN` | `OPSCN-…` | A severe-but-plausible scenario with frequency and severity estimates. |
+| `third-party` | Third-party (vendor) | `VEND` | `VEND-…` | An outsourced service provider: criticality, services, concentration and incidents. |
+| `cyber-incident` | Cyber incident | `CYBER` | `CYBER-…` | A cyber-security incident: severity, systems, detection and containment times, data affected. |
+| `oprisk-capital` | Operational-risk capital | `OPCAP` | `OPCAP-…` | Basel III standardised approach (SMA): business indicator, loss component and capital. |
 
 ### Operational loss event (`loss-event`)
 
@@ -62,8 +62,6 @@ An operational loss: Basel event type, business line, gross loss, recoveries and
 
 **Links:** `desk` → Desk (`desk`), `legalEntity` → Legal entity (`legal-entity`), `rootCauseControl` → Failed control (`risk-control`).
 
-**Example:** `LOSS LOSS-2025-0001 <GO>`
-
 ### Risk and control assessment (`risk-control`)
 
 A risk, its inherent rating, the controls against it and the residual rating (RCSA).
@@ -71,8 +69,6 @@ A risk, its inherent rating, the controls against it and the residual rating (RC
 **Fields its Sutra reads:** `risk`, `deskName`, `inherent`, `effectiveness`, `residual`, `nextReview`, `controls`.
 
 **Links:** `desk` → Desk (`desk`).
-
-**Example:** `RCSA RCSA-COMM-1 <GO>`
 
 ### Key risk indicator (`key-risk-indicator`)
 
@@ -82,8 +78,6 @@ A metric watched against amber and red thresholds, with its recent history.
 
 **Links:** `desk` → Desk (`desk`).
 
-**Example:** `KRI KRI-COMM-1 <GO>`
-
 ### Issue and action (`issue`)
 
 An audit, regulatory or self-identified issue, its owner, due date and actions.
@@ -91,8 +85,6 @@ An audit, regulatory or self-identified issue, its owner, due date and actions.
 **Fields its Sutra reads:** `title`, `source`, `severity`, `owner`, `due`, `status`, `actions`.
 
 **Links:** `desk` → Desk (`desk`), `relatedLoss` → Related loss (`loss-event`).
-
-**Example:** `ISSUE ISSUE-101 <GO>`
 
 ### Operational-risk scenario (`oprisk-scenario`)
 
@@ -102,15 +94,11 @@ A severe-but-plausible scenario with frequency and severity estimates.
 
 **Links:** `legalEntity` → Legal entity (`legal-entity`).
 
-**Example:** `OPSCN OPSCN-01 <GO>`
-
 ### Third-party (vendor) (`third-party`)
 
 An outsourced service provider: criticality, services, concentration and incidents.
 
 **Fields its Sutra reads:** `name`, `criticality`, `serviceCount`, `annualSpend`, `lastAssessed`, `slaBreaches`, `services`, `incidents`.
-
-**Example:** `VEND VEND-001 <GO>`
 
 ### Cyber incident (`cyber-incident`)
 
@@ -120,8 +108,6 @@ A cyber-security incident: severity, systems, detection and containment times, d
 
 **Links:** `legalEntity` → Legal entity (`legal-entity`), `relatedLoss` → Related loss (`loss-event`).
 
-**Example:** `CYBER CYBER-001 <GO>`
-
 ### Operational-risk capital (`oprisk-capital`)
 
 Basel III standardised approach (SMA): business indicator, loss component and capital.
@@ -129,5 +115,3 @@ Basel III standardised approach (SMA): business indicator, loss component and ca
 **Fields its Sutra reads:** `legalEntityName`, `bi`, `bic`, `ilm`, `capital`, `rwa`, `components`, `annualLosses`.
 
 **Links:** `legalEntity` → Legal entity (`legal-entity`).
-
-**Example:** `OPCAP OPCAP-FRA <GO>`

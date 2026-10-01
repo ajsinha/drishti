@@ -18,18 +18,20 @@
 
 The parties, organisation and legal agreements every banking pack builds on.
 
-**Extends:** nothing (it is the base) · **Extended by:** `market-data`, `trading` · **Kinds:** 12 · **Sample documents:** 165
+**Extends:** nothing (it is the base) · **Extended by:** `market-data`, `trading` · **Kinds:** 12
 
 Enable it with `DRISHTI_PACKS=banking-core` (the packs it extends come with it; where they differ, the more specific wins).
 
-## Try it
+## Finding things
 
-| Command | Shows |
+Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start of one, or a search, then `<GO>`. Shown here for counterparties; the same works for every mnemonic.
+
+| Command | Does |
 |---|---|
-| `CPTY CP-NORTHBRIDGE <GO>` | Counterparty · netting sets, KYC, rating |
-| `AGR AGR-NORTHBRIDGE-ISDA <GO>` | ISDA master agreement · elections |
-| `BOOK BOOK-RATES-1 <GO>` | Book · top trades, MTM, DV01 |
-| `DESK DESK-RATES <GO>` | Desk · books, VaR |
+| `CPTY <id> <GO>` | Opens that counterparty. A bare identifier works too: its prefix (`CP-…`) tells Drishti the kind. |
+| `CPTY <start of an id> <GO>` | A pick list: one match opens, several give a table with the kind's key fields. `*` is a wildcard, and case never matters. |
+| `CPTY <field>=<value> <GO>` | Lists by field value. Compare with `<` and `>`, combine with `and`, sort with `order by <field> desc`. |
+| `CPTY <GO>` | Lists every counterparty. |
 
 ## Where the data comes from
 
@@ -39,24 +41,24 @@ Each kind is read from the Delta Lake folder of its **data domain** (`data/delta
 |---|---|---|---|---|
 | `reference-store` | `data/delta/reference/` | Reference data: parties, organisation, legal agreements, calendars | effective (a row when an entity changes) | `counterparty`, `counterparty-group`, `issuer`, `agreement`, `ccp`, `legal-entity`, `book`, `desk`, `trader`, `calendar`, `csa`, `clearing-account` |
 
-Build the lake with `uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta`. Point a domain at a database instead by overriding its connector in the site configuration.
+Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the site configuration. For a demonstration lake built from the generated samples, run `uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta`.
 
 ## Kinds
 
-| Kind | Name | Mnemonic | Identifiers | Id field | Samples | What it is |
-|---|---|---|---|---|---|---|
-| `counterparty` | Counterparty | `CPTY` | `CP-…` | `counterpartyId` | 18 | A legal entity the bank trades with: identifiers, rating, sector, country and parent group. |
-| `counterparty-group` | Counterparty group | `GRP` | `GRP-…` | `groupId` | 17 | Economic group of related counterparties (obligor group). |
-| `issuer` | Issuer | `ISS` | `ISS-…` | `issuerId` | 16 | Issuer of bonds and reference entity for CDS. |
-| `agreement` | Master agreement | `AGR` | `AGR-…` | `agreementId` | 18 | ISDA, GMRA or GMSLA master agreement with its key elections. |
-| `ccp` | Central counterparty | `CCP` | `CCP-…` | `ccpId` | 5 | A clearing house with its default fund and margin model. |
-| `legal-entity` | Bank legal entity | `LE` | `LE-…` | `entityId` | 4 | The bank's own booking entity. |
-| `book` | Book | `BOOK` | `BOOK-…` | `bookId` | 30 | A trading book: owner desk, trades and risk. |
-| `desk` | Desk | `DESK` | `DESK-…` | `deskId` | 10 | A trading desk: books, limits and risk results. |
-| `trader` | Trader | `TRDR` | `TRDR-…` | `traderId` | 20 | A trader and their books. |
-| `calendar` | Holiday calendar | `CAL` | `CAL-…` | `calendarId` | 4 | Business-day calendar (USNY, TARGET, GBLO, JPTO…). |
-| `csa` | Credit support annex | `CSA` | `CSA-…` | `csaId` | 18 | Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts. |
-| `clearing-account` | Clearing account | `CLR` | `CLR-…` | `accountId` | 5 | An account at a CCP holding cleared trades and margin. |
+| Kind | Name | Mnemonic | Identifiers | Id field | What it is |
+|---|---|---|---|---|---|
+| `counterparty` | Counterparty | `CPTY` | `CP-…` | `counterpartyId` | A legal entity the bank trades with: identifiers, rating, sector, country and parent group. |
+| `counterparty-group` | Counterparty group | `GRP` | `GRP-…` | `groupId` | Economic group of related counterparties (obligor group). |
+| `issuer` | Issuer | `ISS` | `ISS-…` | `issuerId` | Issuer of bonds and reference entity for CDS. |
+| `agreement` | Master agreement | `AGR` | `AGR-…` | `agreementId` | ISDA, GMRA or GMSLA master agreement with its key elections. |
+| `ccp` | Central counterparty | `CCP` | `CCP-…` | `ccpId` | A clearing house with its default fund and margin model. |
+| `legal-entity` | Bank legal entity | `LE` | `LE-…` | `entityId` | The bank's own booking entity. |
+| `book` | Book | `BOOK` | `BOOK-…` | `bookId` | A trading book: owner desk, trades and risk. |
+| `desk` | Desk | `DESK` | `DESK-…` | `deskId` | A trading desk: books, limits and risk results. |
+| `trader` | Trader | `TRDR` | `TRDR-…` | `traderId` | A trader and their books. |
+| `calendar` | Holiday calendar | `CAL` | `CAL-…` | `calendarId` | Business-day calendar (USNY, TARGET, GBLO, JPTO…). |
+| `csa` | Credit support annex | `CSA` | `CSA-…` | `csaId` | Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts. |
+| `clearing-account` | Clearing account | `CLR` | `CLR-…` | `accountId` | An account at a CCP holding cleared trades and margin. |
 
 ### Counterparty (`counterparty`)
 
@@ -66,15 +68,11 @@ A legal entity the bank trades with: identifiers, rating, sector, country and pa
 
 **Links:** `group` → Group (`counterparty-group`), `creditLimit` → Credit limit (`credit-limit`), `creditCurve` → Credit curve (`credit-curve`).
 
-**Example:** `CPTY CP-ALDERSHOT <GO>`
-
 ### Counterparty group (`counterparty-group`)
 
 Economic group of related counterparties (obligor group).
 
 **Fields its Sutra reads:** `name`, `members`, `limit`, `utilisation`.
-
-**Example:** `GRP GRP-ALDERSHOT <GO>`
 
 ### Issuer (`issuer`)
 
@@ -84,8 +82,6 @@ Issuer of bonds and reference entity for CDS.
 
 **Links:** `creditCurve` → Credit curve (`credit-curve`), `equity` → Equity (`equity`).
 
-**Example:** `ISS ISS-BUND <GO>`
-
 ### Master agreement (`agreement`)
 
 ISDA, GMRA or GMSLA master agreement with its key elections.
@@ -94,23 +90,17 @@ ISDA, GMRA or GMSLA master agreement with its key elections.
 
 **Links:** `counterparty` → Counterparty (`counterparty`), `csa` → CSA (`csa`).
 
-**Example:** `AGR AGR-ALDERSHOT-ISDA <GO>`
-
 ### Central counterparty (`ccp`)
 
 A clearing house with its default fund and margin model.
 
 **Fields its Sutra reads:** `name`, `defaultFund`, `imPosted`, `marginModel`, `accounts`.
 
-**Example:** `CCP CCP-CME <GO>`
-
 ### Bank legal entity (`legal-entity`)
 
 The bank's own booking entity.
 
 **Fields its Sutra reads:** `name`, `lei`, `jurisdiction`, `regulator`, `desks`.
-
-**Example:** `LE LE-FRA <GO>`
 
 ### Book (`book`)
 
@@ -120,8 +110,6 @@ A trading book: owner desk, trades and risk.
 
 **Links:** `desk` → Desk (`desk`).
 
-**Example:** `BOOK BOOK-COMM-1 <GO>`
-
 ### Desk (`desk`)
 
 A trading desk: books, limits and risk results.
@@ -129,8 +117,6 @@ A trading desk: books, limits and risk results.
 **Fields its Sutra reads:** `name`, `head`, `books`, `var99`, `mtm`.
 
 **Links:** `legalEntity` → Legal entity (`legal-entity`), `varResult` → VaR (`var`).
-
-**Example:** `DESK DESK-COMM <GO>`
 
 ### Trader (`trader`)
 
@@ -140,15 +126,11 @@ A trader and their books.
 
 **Links:** `desk` → Desk (`desk`).
 
-**Example:** `TRDR TRDR-ASHAH <GO>`
-
 ### Holiday calendar (`calendar`)
 
 Business-day calendar (USNY, TARGET, GBLO, JPTO…).
 
 **Fields its Sutra reads:** `name`, `holidays`.
-
-**Example:** `CAL CAL-EUTA <GO>`
 
 ### Credit support annex (`csa`)
 
@@ -158,8 +140,6 @@ Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts
 
 **Links:** `agreement` → Agreement (`agreement`), `counterparty` → Counterparty (`counterparty`).
 
-**Example:** `CSA CSA-ALDERSHOT <GO>`
-
 ### Clearing account (`clearing-account`)
 
 An account at a CCP holding cleared trades and margin.
@@ -167,8 +147,6 @@ An account at a CCP holding cleared trades and margin.
 **Fields its Sutra reads:** `ccpName`, `im`, `vmToday`, `excess`, `trades`.
 
 **Links:** `ccp` → CCP (`ccp`).
-
-**Example:** `CLR CLR-CME-1 <GO>`
 
 ## Who can see it
 

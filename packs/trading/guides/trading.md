@@ -18,19 +18,20 @@
 
 Trades in 125 products across rates, FX, credit, equity, commodities, inflation, fixed income, securities financing, money markets and structured products.
 
-**Extends:** `banking-core`, `market-data` · **Extended by:** `market-risk`, `counterparty-risk` · **Kinds:** 1 · **Sample documents:** 750
+**Extends:** `banking-core`, `market-data` · **Extended by:** `market-risk`, `counterparty-risk` · **Kinds:** 1
 
 Enable it with `DRISHTI_PACKS=trading` (the packs it extends come with it; where they differ, the more specific wins).
 
-## Try it
+## Finding things
 
-| Command | Shows |
+Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start of one, or a search, then `<GO>`. Shown here for trades; the same works for every mnemonic.
+
+| Command | Does |
 |---|---|
-| `TRD T-10001 <GO>` | Interest rate swap · legs and every cashflow |
-| `TRD T-10181 <GO>` | FX option |
-| `TRD T-10241 <GO>` | Single-name CDS |
-| `TRD T-10343 <GO>` | OTC equity option |
-| `TRD T-10379 <GO>` | Autocallable note · observation schedule |
+| `TRD <id> <GO>` | Opens that trade. A bare identifier works too: its prefix (`T-…`) tells Drishti the kind. |
+| `TRD <start of an id> <GO>` | A pick list: one match opens, several give a table with the kind's key fields. `*` is a wildcard, and case never matters. |
+| `TRD <field>=<value> <GO>` | Lists by field value, for example `TRD productType=IRS_FIXFLOAT`. Compare with `<` and `>`, combine with `and`, sort with `order by <field> desc`. |
+| `TRD <GO>` | Lists every trade. |
 
 ## Where the data comes from
 
@@ -40,13 +41,13 @@ Each kind is read from the Delta Lake folder of its **data domain** (`data/delta
 |---|---|---|---|---|
 | `trading-store` | `data/delta/trading/` | Trades in every product | snapshot (every business date) | `trade` |
 
-Build the lake with `uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta`. Point a domain at a database instead by overriding its connector in the site configuration.
+Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the site configuration. For a demonstration lake built from the generated samples, run `uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta`.
 
 ## Kinds
 
-| Kind | Name | Mnemonic | Identifiers | Id field | Samples | What it is |
-|---|---|---|---|---|---|---|
-| `trade` | Trade | `TRD` | `T-…` | `tradeId` | 750 | A trade in any of the pack's products; its productType selects its Sutra. |
+| Kind | Name | Mnemonic | Identifiers | Id field | What it is |
+|---|---|---|---|---|---|
+| `trade` | Trade | `TRD` | `T-…` | `tradeId` | A trade in any of the pack's products; its productType selects its Sutra. |
 
 ### Trade (`trade`)
 

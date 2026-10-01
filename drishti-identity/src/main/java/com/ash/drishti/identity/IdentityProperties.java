@@ -32,6 +32,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param seedUsername development admin user name
  * @param seedPassword development admin password (development only; change it after first sign-in)
  * @param seedRoles development admin roles
+ * @param seedDisplayName development admin display name
  * @param forcePasswordChangeOnCreate new users must change their password at first sign-in, unless the admin
  *     says otherwise for that user (default false)
  * @param forcePasswordChangeOnReset users must change a password an admin reset for them (default false)
@@ -46,7 +47,7 @@ public record IdentityProperties(
         String usersFile, String auditFile, Integer iterations, Integer minPasswordLength, Integer maxFailedAttempts,
         Duration lockout, Boolean seedAdmin, String seedUsername, String seedPassword, List<String> seedRoles,
         Boolean forcePasswordChangeOnCreate, Boolean forcePasswordChangeOnReset, String preferencesDir,
-        String databaseUrl, String databaseUser, String databasePassword, Integer databasePoolSize) {
+        String databaseUrl, String databaseUser, String databasePassword, Integer databasePoolSize, String seedDisplayName) {
 
     public IdentityProperties {
         usersFile = usersFile == null ? "./data/identity/users.json" : usersFile;
@@ -66,6 +67,7 @@ public record IdentityProperties(
         databaseUser = databaseUser == null ? "" : databaseUser;
         databasePassword = databasePassword == null ? "" : databasePassword;
         databasePoolSize = databasePoolSize == null ? 8 : databasePoolSize;
+        seedDisplayName = seedDisplayName == null || seedDisplayName.isBlank() ? "Development admin" : seedDisplayName;
     }
 
     /** True for SQLite, false for PostgreSQL. */

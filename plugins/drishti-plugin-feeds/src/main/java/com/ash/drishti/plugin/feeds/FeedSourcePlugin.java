@@ -65,6 +65,7 @@ public final class FeedSourcePlugin implements SourcePlugin {
     private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).followRedirects(HttpClient.Redirect.NORMAL).build();
     private Feed feed;
     private SourceContext context;
+    private String userAgent = "public-data-feed-connector";
     private String sourceName = "feed";
     private volatile String health = "DOWN: not fetched yet";
     private volatile Instant fetchedAt = Instant.EPOCH;
@@ -82,6 +83,7 @@ public final class FeedSourcePlugin implements SourcePlugin {
         this.feed = Feeds.named(ctx.setting("feed", ""));
         this.sourceName = ctx.setting("source-name", ctx.setting("feed", "feed"));
         this.timeoutSeconds = Integer.parseInt(ctx.setting("timeout-seconds", "20"));
+        this.userAgent = ctx.setting("user-agent", userAgent);       // the pack sets it (product name and version)
         refresh();
         long every = Long.parseLong(ctx.setting("refresh-minutes", "60"));
         ctx.scheduler().scheduleWithFixedDelay(this::refresh, every, every, TimeUnit.MINUTES);
@@ -114,7 +116,7 @@ public final class FeedSourcePlugin implements SourcePlugin {
             return Files.readString(Path.of(URI.create(url)));
         }
         HttpRequest req = HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofSeconds(timeoutSeconds))
-                .header("User-Agent", "Drishti/1.9 (public data feed connector)").GET().build();
+                .header("User-Agent", userAgent).GET().build();
         HttpResponse<String> r = http.send(req, HttpResponse.BodyHandlers.ofString());
         if (r.statusCode() / 100 != 2) {
             throw new IllegalStateException("HTTP " + r.statusCode() + " from " + URI.create(url).getHost());

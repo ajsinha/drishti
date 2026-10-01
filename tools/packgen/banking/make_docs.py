@@ -57,6 +57,23 @@ def fields_of(k) -> list[str]:
     return list(dict.fromkeys(names))
 
 
+def finding(mnemonic: str, label: str, prefix: str, field_example: str = "") -> list[str]:
+    """How to open and search a pack's documents, with placeholders rather than sample ids: the guides describe the
+    pack, and the documents a site holds are its own."""
+    what = label if any(c.isupper() for c in label.split()[0][1:]) else label[:1].lower() + label[1:]
+    whats = what[:-1] + "ies" if what.endswith("y") and what[-2:-1] not in "aeiou" else what + "es" if what.endswith(("s", "x", "ch", "sh")) else what + "s"
+    by_field = "Lists by field value" + (f", for example `{mnemonic} {field_example}`" if field_example else "") + \
+        ". Compare with `<` and `>`, combine with `and`, sort with `order by <field> desc`."
+    return ["## Finding things", "",
+            f"Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start of one, or a search, then `<GO>`. "
+            f"Shown here for {whats}; the same works for every mnemonic.", ""] + table(["Command", "Does"], [
+        [f"`{mnemonic} <id> <GO>`", f"Opens that {what}. A bare identifier works too: its prefix (`{prefix}…`) tells Drishti the kind."],
+        [f"`{mnemonic} <start of an id> <GO>`", "A pick list: one match opens, several give a table with the kind's key fields. "
+                                                 "`*` is a wildcard, and case never matters."],
+        [f"`{mnemonic} <field>=<value> <GO>`", by_field],
+        [f"`{mnemonic} <GO>`", f"Lists every {what}."]])
+
+
 def overview(name: str, docs: dict) -> str:
     p = layout.PACKS[name]
     kinds = [k for ks in p["kinds"].values() for k in ks]
@@ -65,10 +82,10 @@ def overview(name: str, docs: dict) -> str:
     needed_by = [n for n, q in layout.PACKS.items() if name in q["requires"]]
     lines += [f"**Extends:** {', '.join(f'`{r}`' for r in req) if req else 'nothing (it is the base)'} · "
               f"**Extended by:** {', '.join(f'`{r}`' for r in needed_by) or 'none'} · "
-              f"**Kinds:** {len(kinds)} · **Sample documents:** {sum(len(docs.get(k, {})) for k in kinds):,}", "",
+              f"**Kinds:** {len(kinds)}", "",
               "Enable it with `DRISHTI_PACKS=" + name + "` (the packs it extends come with it; where they differ, the more specific wins).", ""]
-    lines += ["## Try it", ""]
-    lines += table(["Command", "Shows"], [[f"`{c} <GO>`", s] for c, s in make_packs.EXAMPLES[name]])
+    first = SPEC["trade"] if "trade" in kinds else SPEC[kinds[0]]
+    lines += finding(first.mnemonic, first.label, first.prefix, "productType=IRS_FIXFLOAT" if first.kind == "trade" else "")
     lines += ["## Where the data comes from", "",
               "Each kind is read from the Delta Lake folder of its **data domain** (`data/delta/<domain>/<kind>/`, partitioned by "
               "business date). Pick a date in the top bar to see that day; **Live** reads the streaming source first.", ""]
@@ -80,18 +97,19 @@ def overview(name: str, docs: dict) -> str:
     if name == "market-data":
         lines += ["### Public data feeds", "", "Real market data from public sources, each its own connector and **off by default**. Switch one "
                   "on with its environment variable (or `drishti.sources.connectors.<name>.enabled: true` in the site configuration). "
-                  "Feed data has its own identifiers, so it is never mistaken for the samples, and it keeps its history, so a picked "
+                  "Feed data has its own identifiers, so it never collides with the bank's own, and it keeps its history, so a picked "
                   "date shows that day's value.", ""]
         lines += table(["Connector", "Switch", "Kind", "What"], [[f"`{f}-feed`", f"`{sw}=true`", ", ".join(f"`{k}`" for k in ks), what]
                                                                  for f, (sw, ks, _, what) in make_packs.FEEDS.items()])
-    lines += ["Build the lake with `uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta`. "
-              "Point a domain at a database instead by overriding its connector in the site configuration.", ""]
+    lines += ["Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the "
+              "site configuration. For a demonstration lake built from the generated samples, run "
+              "`uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta`.", ""]
     lines += ["## Kinds", ""]
     rows = []
     for k in kinds:
         s = SPEC[k]
-        rows.append([f"`{k}`", s.label, f"`{s.mnemonic}`", f"`{s.prefix}…`", f"`{s.id_field}`", len(docs.get(k, {})), s.desc])
-    lines += table(["Kind", "Name", "Mnemonic", "Identifiers", "Id field", "Samples", "What it is"], rows)
+        rows.append([f"`{k}`", s.label, f"`{s.mnemonic}`", f"`{s.prefix}…`", f"`{s.id_field}`", s.desc])
+    lines += table(["Kind", "Name", "Mnemonic", "Identifiers", "Id field", "What it is"], rows)
     for k in kinds:
         s = SPEC[k]
         if k == "trade":
@@ -102,9 +120,6 @@ def overview(name: str, docs: dict) -> str:
             lines += ["**Fields its Sutra reads:** " + ", ".join(f"`{f}`" for f in fs) + ".", ""]
         if s.links:
             lines += ["**Links:** " + ", ".join(f"`{f}` → {lab} (`{kind}`)" for f, (kind, lab) in s.links.items()) + ".", ""]
-        sample = next(iter(sorted(docs.get(k, {}))), None)
-        if sample:
-            lines += [f"**Example:** `{s.mnemonic} {sample} <GO>`", ""]
     if name == "trading":
         lines += ["### Trade (`trade`)", "", T.TRADE.desc, "", "Every trade shares the fields below; `productType` chooses its Sutra "
                   "(one per product, see *Trading products*).", "", "```text", S.__doc__.split("\n\n")[1].strip(), "```", ""]
@@ -122,22 +137,19 @@ def overview(name: str, docs: dict) -> str:
 def products(docs: dict) -> str:
     lines = [HEADER, GENERATED, "# Trading products", "",
              f"The trading pack covers **{len(T.PRODUCTS)} products** in ten asset classes. Each has its own Sutra, matched on the trade's "
-             "`productType`, with the product's terms, legs or schedule, the market data it is valued with, and its risk measures.", ""]
+             "`productType`, with the product's terms, legs or schedule, the market data it is valued with, and its risk measures. "
+             "`TRD productType=<productType> <GO>` lists the trades in one product.", ""]
     by = defaultdict(list)
     for p in T.PRODUCTS:
         by[p.asset].append(p)
     lines += table(["Asset class", "Products"], [[a, len(ps)] for a, ps in by.items()])
-    counts = defaultdict(int)
-    for t in docs.get("trade", {}).values():
-        counts[t["productType"]] += 1
     for a, ps in by.items():
         lines += [f"## {a}", ""]
         rows = []
         for p in ps:
-            example = next((t for t in sorted(docs.get("trade", {})) if docs["trade"][t]["productType"] == p.code), "")
             rows.append([p.name, f"`{p.code}`", p.family, p.schedule or "—", ", ".join(f"`{k}`" for _, k, _ in p.md) or "—",
-                         ", ".join(S.RISK_LABELS[r] for r in p.risk) or "—", f"`TRD {example}`" if example else ""])
-        lines += table(["Product", "productType", "Family", "Schedule", "Market data", "Risk", "Example"], rows)
+                         ", ".join(S.RISK_LABELS[r] for r in p.risk) or "—"])
+        lines += table(["Product", "productType", "Family", "Schedule", "Market data", "Risk"], rows)
         for p in ps:
             lines += [f"**{p.name}** (`{p.code}`): {p.desc} Terms: " + ", ".join(f"`{f.name}` ({f.label})" for f in p.terms) + ".", ""]
     return "\n".join(lines)
@@ -145,12 +157,15 @@ def products(docs: dict) -> str:
 
 def market(docs: dict) -> str:
     lines = [HEADER, GENERATED, "# Market-data catalogue", "",
-             "Every market-data object in the samples, by kind. Trades link to them through their market-data fields "
-             "(`discountCurve`, `fxVolSurface`, …), which is how F8 impact on a curve finds every trade valued with it.", ""]
+             "The market-data kinds and how trades use them. Trades link to market data through their market-data fields "
+             "(`discountCurve`, `fxVolSurface`, …), which is how F8 impact on a curve finds every trade valued with it. "
+             "`<mnemonic> <GO>` lists every object of a kind, and `<mnemonic> <id> <GO>` opens one.", ""]
     for k in layout.PACKS["market-data"]["kinds"]["market"]:
         s = SPEC[k]
-        ids = sorted(docs.get(k, {}))
-        lines += [f"## {s.label} (`{k}`)", "", s.desc, "", f"`{s.mnemonic}` · {len(ids)} objects: " + ", ".join(f"`{i}`" for i in ids), ""]
+        lines += [f"## {s.label} (`{k}`)", "", s.desc, "", f"**Mnemonic:** `{s.mnemonic}` · **Identifiers:** `{s.prefix}…` · **Id field:** `{s.id_field}`", ""]
+        fs = fields_of(s)
+        if fs:
+            lines += ["**Fields its Sutra reads:** " + ", ".join(f"`{f}`" for f in fs) + ".", ""]
     lines += ["## How products select market data", ""]
     rows = sorted({(f, k, sel) for p in T.PRODUCTS for f, k, sel in p.md})
     lines += table(["Trade field", "Kind", "Selected by"], [[f"`{f}`", f"`{k}`", f"`{sel}`"] for f, k, sel in rows])
@@ -183,7 +198,7 @@ GUIDES = {
     "banking-core": [("banking-core", "Banking core pack", "The base: parties, organisation, agreements and calendars, and how to use them.", "building", overview),
                      ("banking-data-model", "The banking data model", "How counterparties, trades, netting sets, market data and risk results refer to each other.", "diagram-3", None)],
     "market-data": [("market-data", "Market data pack", "Curves, surfaces, prices and fixings: kinds, connectors and examples.", "graph-up", overview),
-                    ("market-data-catalogue", "Market-data catalogue", "Every curve, surface, spot and fixing in the samples, and how products select them.", "list-ul", None)],
+                    ("market-data-catalogue", "Market-data catalogue", "Every curve, surface, spot and fixing the pack defines, and how products select them.", "list-ul", None)],
     "trading": [("trading", "Trading pack", "Trades in 125 products: what a trade holds, its connectors and examples.", "arrow-left-right", overview),
                 ("trading-products", "Trading products", "All 125 products by asset class: terms, schedules, market data and risk.", "collection", None)],
     "market-risk": [("market-risk", "Market risk pack", "VaR, stress testing, FRTB and P&L explain: kinds, connectors and examples.", "activity", overview)],

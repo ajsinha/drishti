@@ -18,19 +18,20 @@
 
 Curves, volatility surfaces, FX, equities, credit, inflation, commodities, fixings and bonds.
 
-**Extends:** `banking-core` · **Extended by:** `trading`, `market-risk`, `counterparty-risk` · **Kinds:** 20 · **Sample documents:** 220
+**Extends:** `banking-core` · **Extended by:** `trading`, `market-risk`, `counterparty-risk` · **Kinds:** 20
 
 Enable it with `DRISHTI_PACKS=market-data` (the packs it extends come with it; where they differ, the more specific wins).
 
-## Try it
+## Finding things
 
-| Command | Shows |
+Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start of one, or a search, then `<GO>`. Shown here for interest rate curves; the same works for every mnemonic.
+
+| Command | Does |
 |---|---|
-| `CRV CRV-USD-OIS <GO>` | SOFR discount curve · zero rates, pillars, forwards |
-| `FXV FXV-EURUSD <GO>` | EUR/USD vol surface · smile by expiry |
-| `EQ EQ-NVTK <GO>` | Equity · price history, identifiers |
-| `CDS CDS-SOLARIS <GO>` | Credit curve · spreads, hazard rates |
-| `CMDC CMDC-WTI <GO>` | WTI futures curve · backwardation |
+| `CRV <id> <GO>` | Opens that interest rate curve. A bare identifier works too: its prefix (`CRV-…`) tells Drishti the kind. |
+| `CRV <start of an id> <GO>` | A pick list: one match opens, several give a table with the kind's key fields. `*` is a wildcard, and case never matters. |
+| `CRV <field>=<value> <GO>` | Lists by field value. Compare with `<` and `>`, combine with `and`, sort with `order by <field> desc`. |
+| `CRV <GO>` | Lists every interest rate curve. |
 
 ## Where the data comes from
 
@@ -42,7 +43,7 @@ Each kind is read from the Delta Lake folder of its **data domain** (`data/delta
 
 ### Public data feeds
 
-Real market data from public sources, each its own connector and **off by default**. Switch one on with its environment variable (or `drishti.sources.connectors.<name>.enabled: true` in the site configuration). Feed data has its own identifiers, so it is never mistaken for the samples, and it keeps its history, so a picked date shows that day's value.
+Real market data from public sources, each its own connector and **off by default**. Switch one on with its environment variable (or `drishti.sources.connectors.<name>.enabled: true` in the site configuration). Feed data has its own identifiers, so it never collides with the bank's own, and it keeps its history, so a picked date shows that day's value.
 
 | Connector | Switch | Kind | What |
 |---|---|---|---|
@@ -52,32 +53,32 @@ Real market data from public sources, each its own connector and **off by defaul
 | `us-treasury-feed` | `DRISHTI_FEED_US_TREASURY=true` | `ir-curve` | US Treasury daily par yield curve: CRV-USD-UST |
 | `fred-feed` | `DRISHTI_FEED_FRED=true` | `rate-fixing` | FRED series (needs FRED_API_KEY): FIX-FRED-DGS10, FIX-FRED-DFF |
 
-Build the lake with `uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta`. Point a domain at a database instead by overriding its connector in the site configuration.
+Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the site configuration. For a demonstration lake built from the generated samples, run `uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta`.
 
 ## Kinds
 
-| Kind | Name | Mnemonic | Identifiers | Id field | Samples | What it is |
-|---|---|---|---|---|---|---|
-| `ir-curve` | Interest rate curve | `CRV` | `CRV-…` | `curveId` | 28 | Discounting (OIS), projection (IBOR/term RFR), government or basis curve for a currency. |
-| `repo-curve` | Repo curve | `REPO` | `REPO-…` | `curveId` | 7 | General-collateral or specials repo rates by term. |
-| `fx-spot` | FX spot rate | `FX` | `FX-…` | `pair` | 12 | Spot rate for a currency pair with bid/ask. |
-| `fx-forward-curve` | FX forward curve | `FXF` | `FXF-…` | `curveId` | 12 | Forward points by tenor for a pair. |
-| `fx-vol-surface` | FX volatility surface | `FXV` | `FXV-…` | `surfaceId` | 12 | Implied vols by expiry and delta (ATM, 25D RR/BF). |
-| `ir-vol-cube` | Swaption volatility cube | `IRV` | `IRV-…` | `cubeId` | 7 | Normal (bp) swaption vols by expiry × tenor. |
-| `cap-vol-surface` | Cap/floor volatility surface | `CPV` | `CPV-…` | `surfaceId` | 7 | Cap vols by maturity and strike. |
-| `equity` | Equity | `EQ` | `EQ-…` | `ticker` | 10 | A listed stock: price, dividends, sector and identifiers. |
-| `equity-index` | Equity index | `EQX` | `EQX-…` | `indexId` | 5 | Index level with its largest constituents. |
-| `dividend-curve` | Dividend curve | `DIV` | `DIV-…` | `curveId` | 15 | Expected dividends by year (implied from dividend futures and forwards). |
-| `equity-vol-surface` | Equity volatility surface | `EQV` | `EQV-…` | `surfaceId` | 15 | Implied vols by expiry and moneyness. |
-| `credit-curve` | Credit curve | `CDS` | `CDS-…` | `curveId` | 16 | CDS par spreads by tenor, recovery and implied default probabilities. |
-| `inflation-index` | Inflation index | `INF` | `INF-…` | `indexId` | 4 | Published CPI fixings (US CPI-U NSA, HICPxT, UK RPI…). |
-| `inflation-curve` | Inflation curve | `INFC` | `INFC-…` | `curveId` | 4 | Zero-coupon breakevens by tenor, with monthly seasonality. |
-| `commodity` | Commodity | `CMD` | `CMD-…` | `commodityId` | 8 | A traded commodity with its benchmark, unit and venue. |
-| `commodity-curve` | Commodity forward curve | `CMDC` | `CMDC-…` | `curveId` | 8 | Futures settlement prices by delivery month. |
-| `commodity-vol-surface` | Commodity volatility surface | `CMDV` | `CMDV-…` | `surfaceId` | 8 | Implied vols by delivery month and moneyness. |
-| `rate-fixing` | Rate index fixings | `FIX` | `FIX-…` | `indexId` | 7 | Published overnight and term rate fixings (SOFR, €STR, SONIA…). |
-| `bond` | Bond (security master) | `BND` | `BND-…` | `isin` | 32 | A listed bond: terms, price, yield, spreads and analytics. |
-| `correlation-matrix` | Correlation matrix | `CORR` | `CORR-…` | `matrixId` | 3 | Pairwise correlations used by basket, quanto and spread products. |
+| Kind | Name | Mnemonic | Identifiers | Id field | What it is |
+|---|---|---|---|---|---|
+| `ir-curve` | Interest rate curve | `CRV` | `CRV-…` | `curveId` | Discounting (OIS), projection (IBOR/term RFR), government or basis curve for a currency. |
+| `repo-curve` | Repo curve | `REPO` | `REPO-…` | `curveId` | General-collateral or specials repo rates by term. |
+| `fx-spot` | FX spot rate | `FX` | `FX-…` | `pair` | Spot rate for a currency pair with bid/ask. |
+| `fx-forward-curve` | FX forward curve | `FXF` | `FXF-…` | `curveId` | Forward points by tenor for a pair. |
+| `fx-vol-surface` | FX volatility surface | `FXV` | `FXV-…` | `surfaceId` | Implied vols by expiry and delta (ATM, 25D RR/BF). |
+| `ir-vol-cube` | Swaption volatility cube | `IRV` | `IRV-…` | `cubeId` | Normal (bp) swaption vols by expiry × tenor. |
+| `cap-vol-surface` | Cap/floor volatility surface | `CPV` | `CPV-…` | `surfaceId` | Cap vols by maturity and strike. |
+| `equity` | Equity | `EQ` | `EQ-…` | `ticker` | A listed stock: price, dividends, sector and identifiers. |
+| `equity-index` | Equity index | `EQX` | `EQX-…` | `indexId` | Index level with its largest constituents. |
+| `dividend-curve` | Dividend curve | `DIV` | `DIV-…` | `curveId` | Expected dividends by year (implied from dividend futures and forwards). |
+| `equity-vol-surface` | Equity volatility surface | `EQV` | `EQV-…` | `surfaceId` | Implied vols by expiry and moneyness. |
+| `credit-curve` | Credit curve | `CDS` | `CDS-…` | `curveId` | CDS par spreads by tenor, recovery and implied default probabilities. |
+| `inflation-index` | Inflation index | `INF` | `INF-…` | `indexId` | Published CPI fixings (US CPI-U NSA, HICPxT, UK RPI…). |
+| `inflation-curve` | Inflation curve | `INFC` | `INFC-…` | `curveId` | Zero-coupon breakevens by tenor, with monthly seasonality. |
+| `commodity` | Commodity | `CMD` | `CMD-…` | `commodityId` | A traded commodity with its benchmark, unit and venue. |
+| `commodity-curve` | Commodity forward curve | `CMDC` | `CMDC-…` | `curveId` | Futures settlement prices by delivery month. |
+| `commodity-vol-surface` | Commodity volatility surface | `CMDV` | `CMDV-…` | `surfaceId` | Implied vols by delivery month and moneyness. |
+| `rate-fixing` | Rate index fixings | `FIX` | `FIX-…` | `indexId` | Published overnight and term rate fixings (SOFR, €STR, SONIA…). |
+| `bond` | Bond (security master) | `BND` | `BND-…` | `isin` | A listed bond: terms, price, yield, spreads and analytics. |
+| `correlation-matrix` | Correlation matrix | `CORR` | `CORR-…` | `matrixId` | Pairwise correlations used by basket, quanto and spread products. |
 
 ### Interest rate curve (`ir-curve`)
 
@@ -87,15 +88,11 @@ Discounting (OIS), projection (IBOR/term RFR), government or basis curve for a c
 
 **Links:** `calendar` → Calendar (`calendar`), `fixingIndex` → Fixing index (`rate-fixing`).
 
-**Example:** `CRV CRV-AUD-BASIS <GO>`
-
 ### Repo curve (`repo-curve`)
 
 General-collateral or specials repo rates by term.
 
 **Fields its Sutra reads:** `currency`, `collateral`, `overnight`, `asOf`, `points`.
-
-**Example:** `REPO REPO-AUD <GO>`
 
 ### FX spot rate (`fx-spot`)
 
@@ -105,8 +102,6 @@ Spot rate for a currency pair with bid/ask.
 
 **Links:** `fxForwardCurve` → Forward curve (`fx-forward-curve`), `fxVolSurface` → Vol surface (`fx-vol-surface`).
 
-**Example:** `FX FX-AUDUSD <GO>`
-
 ### FX forward curve (`fx-forward-curve`)
 
 Forward points by tenor for a pair.
@@ -114,8 +109,6 @@ Forward points by tenor for a pair.
 **Fields its Sutra reads:** `pair`, `spot`, `points3m`, `points1y`, `points`.
 
 **Links:** `fxSpot` → Spot (`fx-spot`).
-
-**Example:** `FXF FXF-AUDUSD <GO>`
 
 ### FX volatility surface (`fx-vol-surface`)
 
@@ -125,23 +118,17 @@ Implied vols by expiry and delta (ATM, 25D RR/BF).
 
 **Links:** `fxSpot` → Spot (`fx-spot`).
 
-**Example:** `FXV FXV-AUDUSD <GO>`
-
 ### Swaption volatility cube (`ir-vol-cube`)
 
 Normal (bp) swaption vols by expiry × tenor.
 
 **Fields its Sutra reads:** `currency`, `model`, `v1y10y`, `v5y5y`, `grid`.
 
-**Example:** `IRV IRV-AUD <GO>`
-
 ### Cap/floor volatility surface (`cap-vol-surface`)
 
 Cap vols by maturity and strike.
 
 **Fields its Sutra reads:** `currency`, `atm5y`, `grid`.
-
-**Example:** `CPV CPV-AUD <GO>`
 
 ### Equity (`equity`)
 
@@ -151,8 +138,6 @@ A listed stock: price, dividends, sector and identifiers.
 
 **Links:** `issuer` → Issuer (`issuer`), `equityVolSurface` → Vol surface (`equity-vol-surface`), `dividendCurve` → Dividends (`dividend-curve`), `equityIndex` → Index (`equity-index`).
 
-**Example:** `EQ EQ-CSCA <GO>`
-
 ### Equity index (`equity-index`)
 
 Index level with its largest constituents.
@@ -160,8 +145,6 @@ Index level with its largest constituents.
 **Fields its Sutra reads:** `name`, `level`, `change1d`, `constituentCount`, `currency`, `constituents`, `history`.
 
 **Links:** `equityVolSurface` → Vol surface (`equity-vol-surface`), `dividendCurve` → Dividends (`dividend-curve`).
-
-**Example:** `EQX EQX-NDX <GO>`
 
 ### Dividend curve (`dividend-curve`)
 
@@ -171,15 +154,11 @@ Expected dividends by year (implied from dividend futures and forwards).
 
 **Links:** `underlyingEquity` → Underlier (`equity`), `underlyingIndex` → Underlier (`equity-index`).
 
-**Example:** `DIV DIV-CSCA <GO>`
-
 ### Equity volatility surface (`equity-vol-surface`)
 
 Implied vols by expiry and moneyness.
 
 **Fields its Sutra reads:** `underlier`, `atm1m`, `atm1y`, `skew1y`, `grid`.
-
-**Example:** `EQV EQV-CSCA <GO>`
 
 ### Credit curve (`credit-curve`)
 
@@ -189,8 +168,6 @@ CDS par spreads by tenor, recovery and implied default probabilities.
 
 **Links:** `issuer` → Reference entity (`issuer`).
 
-**Example:** `CDS CDS-BUND <GO>`
-
 ### Inflation index (`inflation-index`)
 
 Published CPI fixings (US CPI-U NSA, HICPxT, UK RPI…).
@@ -198,8 +175,6 @@ Published CPI fixings (US CPI-U NSA, HICPxT, UK RPI…).
 **Fields its Sutra reads:** `name`, `latest`, `yoy`, `lag`, `fixings`.
 
 **Links:** `inflationCurve` → Inflation curve (`inflation-curve`).
-
-**Example:** `INF INF-HICPX <GO>`
 
 ### Inflation curve (`inflation-curve`)
 
@@ -209,8 +184,6 @@ Zero-coupon breakevens by tenor, with monthly seasonality.
 
 **Links:** `inflationIndex` → Index (`inflation-index`).
 
-**Example:** `INFC INFC-HICPX <GO>`
-
 ### Commodity (`commodity`)
 
 A traded commodity with its benchmark, unit and venue.
@@ -218,8 +191,6 @@ A traded commodity with its benchmark, unit and venue.
 **Fields its Sutra reads:** `name`, `front`, `unit`, `exchange`, `sector`, `spec`.
 
 **Links:** `commodityCurve` → Forward curve (`commodity-curve`), `commodityVolSurface` → Vol surface (`commodity-vol-surface`).
-
-**Example:** `CMD CMD-BRENT <GO>`
 
 ### Commodity forward curve (`commodity-curve`)
 
@@ -229,23 +200,17 @@ Futures settlement prices by delivery month.
 
 **Links:** `commodityRef` → Commodity (`commodity`).
 
-**Example:** `CMDC CMDC-BRENT <GO>`
-
 ### Commodity volatility surface (`commodity-vol-surface`)
 
 Implied vols by delivery month and moneyness.
 
 **Fields its Sutra reads:** `commodity`, `atmFront`, `grid`.
 
-**Example:** `CMDV CMDV-BRENT <GO>`
-
 ### Rate index fixings (`rate-fixing`)
 
 Published overnight and term rate fixings (SOFR, €STR, SONIA…).
 
 **Fields its Sutra reads:** `name`, `latest`, `administrator`, `tenor`, `fixings`.
-
-**Example:** `FIX FIX-AONIA <GO>`
 
 ### Bond (security master) (`bond`)
 
@@ -255,15 +220,11 @@ A listed bond: terms, price, yield, spreads and analytics.
 
 **Links:** `issuer` → Issuer (`issuer`), `benchmarkCurve` → Benchmark curve (`ir-curve`).
 
-**Example:** `BND BND-BRVERD054608 <GO>`
-
 ### Correlation matrix (`correlation-matrix`)
 
 Pairwise correlations used by basket, quanto and spread products.
 
 **Fields its Sutra reads:** `name`, `factors`, `average`, `pairs`.
-
-**Example:** `CORR CORR-EU-EQ <GO>`
 
 ## Who can see it
 

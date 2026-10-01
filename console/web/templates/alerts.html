@@ -20,7 +20,7 @@
 {% block content %}
 <div class="adm" data-alerts>
   <h1>Alerts</h1>
-  <p class="text-muted-d">A rule watches one entity. The server checks it on every change, even when nobody has Drishti open, and alerts once when it becomes true; it re-arms when it turns false again.</p>
+  <p class="text-muted-d">A rule watches one entity. The server checks it on every change, even when nobody has {{ PRODUCT }} open, and alerts once when it becomes true; it re-arms when it turns false again.</p>
   <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
   <section class="pnl"><header class="pnl-h"><h3>New rule</h3><span class="pnl-code">RULE</span></header><div class="pnl-b">
     <form class="alert-form" data-rule-form>

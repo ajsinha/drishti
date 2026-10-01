@@ -38,7 +38,7 @@ class UserServiceTest {
 
     private UserService service(boolean forceOnReset) {
         IdentityProperties p = new IdentityProperties(dir.resolve("users.json").toString(), dir.resolve("audit.jsonl").toString(),
-                1000, 10, 3, Duration.ofMinutes(15), true, null, null, null, false, forceOnReset, dir.resolve("prefs").toString(), null, null, null, null);
+                1000, 10, 3, Duration.ofMinutes(15), true, null, null, null, false, forceOnReset, dir.resolve("prefs").toString(), null, null, null, null, null);
         return new UserService(new FileUserStore(Path.of(p.usersFile())), new PasswordHasher(1000), new FileAuditLog(Path.of(p.auditFile())), p,
                 Set.of("admin", "trader", "risk", "author"));
     }

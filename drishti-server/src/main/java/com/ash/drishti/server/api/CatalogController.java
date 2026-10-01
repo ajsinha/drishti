@@ -52,11 +52,13 @@ public class CatalogController {
     private final com.ash.drishti.server.security.SecurityProperties security;
     private final com.ash.drishti.packs.PackRegistry packRegistry;
     private final com.ash.drishti.server.security.PackAccess packAccess;
+    private final com.ash.drishti.common.Branding branding;
 
     public CatalogController(SourceRouter router, SourceRegistry sources, SutraRegistry sutras, Entitlements entitlements,
             org.springframework.beans.factory.ObjectProvider<org.springframework.boot.info.BuildProperties> build,
             com.ash.drishti.server.security.SecurityProperties security, com.ash.drishti.packs.PackRegistry packRegistry,
-            com.ash.drishti.server.security.PackAccess packAccess) {
+            com.ash.drishti.server.security.PackAccess packAccess, com.ash.drishti.common.Branding branding) {
+        this.branding = branding;
         this.packAccess = packAccess;
         this.packRegistry = packRegistry;
         this.entitlements = entitlements;
@@ -83,7 +85,9 @@ public class CatalogController {
     @GetMapping("/about")
     public Map<String, Object> about() {
         Map<String, Object> m = new java.util.LinkedHashMap<>();
-        m.put("product", "Drishti");
+        m.put("product", branding.product());
+        m.put("tagline", branding.tagline());
+        m.put("owner", branding.owner());
         m.put("version", build.map(b -> b.getVersion()).orElse("dev"));
         m.put("built", build.map(b -> String.valueOf(b.getTime())).orElse(""));
         m.put("java", System.getProperty("java.version") + " (" + System.getProperty("java.vendor") + ")");
@@ -92,7 +96,8 @@ public class CatalogController {
         m.put("sources", sources().sources());
         m.put("securityEnabled", security.enabled());
         m.put("packs", packs(null));
-        m.put("copyright", "Copyright (c) 2026 Ashutosh Sinha. All rights reserved. Proprietary and confidential.");
+        m.put("copyright", branding.copyright());
+        m.put("notice", branding.notice());
         return m;
     }
 
