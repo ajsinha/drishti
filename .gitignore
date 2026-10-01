@@ -14,6 +14,8 @@ application.local.yaml
 hs_err_pid*
 data/identity/
 data/delta/
+data/delta-*/
+data/reports/
 data/cache/
 data/state/
 data/packs/
