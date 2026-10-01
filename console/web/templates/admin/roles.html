@@ -1,0 +1,75 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Roles · {{ PRODUCT }}{% endblock %}
+{% block screen %}admin{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm" data-roles>
+  <h1>Roles</h1>
+  {% with tab='roles' %}{% include "admin/_nav.html" %}{% endwith %}
+  <p class="text-muted-d">A role says which kinds of entity its users may open and what else they may do. Give roles to people on the
+    <a href="/admin/users">Users</a> page; choose which packs each person sees there too. Built-in roles come from configuration and
+    packs and cannot be changed here. Changes apply at the user's next request and are in the <a href="/admin/audit">audit log</a>.</p>
+  <div class="adm-bar">
+    <button type="button" class="btn-pill btn-accent" data-new><i class="bi bi-shield-plus" aria-hidden="true"></i> New role</button>
+  </div>
+  <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
+  <div class="tbl-wrap"><table class="tbl adm-tbl">
+    <thead><tr><th>Role</th><th>Description</th><th>Opens</th><th>Powers</th><th>Users</th><th>Changed</th><th></th></tr></thead>
+    <tbody>
+    {% for r in roles %}
+      <tr data-role="{{ r.name }}" data-json="{{ r | tojson | forceescape }}">
+        <td class="mono">{{ r.name }}{% if r.builtIn %} <span class="st">built-in</span>{% endif %}</td>
+        <td>{{ r.description }}</td>
+        <td>{% if '*' in r.kinds %}<span class="role">every kind</span>{% else %}{% for k in r.kinds %}<span class="role">{{ k }}</span>{% endfor %}{% endif %}</td>
+        <td>{% for f, label in [('raw', 'raw JSON'), ('author', 'author Sutras'), ('approve', 'approve Sutras'), ('admin', 'administer')] %}{% if r[f] %}<span class="st st-ok">{{ label }}</span>{% endif %}{% endfor %}</td>
+        <td class="mono"><a href="/admin/users?q={{ r.name }}">{{ r.users }}</a></td>
+        <td class="mono">{% if r.updatedAt %}{{ r.updatedAt[:16] | replace('T', ' ') }} · {{ r.updatedBy }}{% else %}—{% endif %}</td>
+        <td class="adm-actions">{% if not r.builtIn %}
+          <button type="button" class="fk" data-edit>Edit</button>
+          <button type="button" class="fk" data-delete{% if r.users %} disabled title="Held by {{ r.users }} user(s): take it away from them first"{% endif %}>Delete</button>
+        {% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+
+  <dialog class="adm-dialog" data-dialog aria-labelledby="roleTitle">
+    <form method="dialog" data-form>
+      <h2 id="roleTitle" data-title>New role</h2>
+      <label>Name<input name="name" class="studio-in" required pattern="[a-z][a-z0-9-]{1,63}" autocomplete="off" placeholder="credit-analyst"></label>
+      <label>Description<input name="description" class="studio-in" placeholder="Reads counterparties and credit curves"></label>
+      <label class="chk"><input type="checkbox" name="all"> Opens every kind</label>
+      <label data-kinds>Kinds it opens (one per line, or pick by pack below)
+        <textarea name="kinds" class="studio-in" rows="4" placeholder="counterparty&#10;credit-curve"></textarea></label>
+      <fieldset data-kinds><legend>Add every kind of a pack</legend>
+        {% for p in packs %}<button type="button" class="fk" data-pack-kinds="{{ (p.kinds or []) | join(' ') }}">{{ p.title or p.name }}</button>{% endfor %}</fieldset>
+      <fieldset><legend>Powers</legend>
+        <label class="chk"><input type="checkbox" name="raw"> See raw JSON unredacted</label>
+        <label class="chk"><input type="checkbox" name="author"> Author Sutras in Studio</label>
+        <label class="chk"><input type="checkbox" name="approve"> Approve proposed Sutras</label>
+        <label class="chk"><input type="checkbox" name="admin"> Administer users, roles and caches</label></fieldset>
+      <p class="adm-msg" data-dlg-msg role="alert"></p>
+      <div class="adm-dlg-actions"><button type="button" class="btn-pill btn-ghost" data-cancel>Cancel</button>
+        <button type="submit" class="btn-pill btn-accent">Save</button></div>
+    </form>
+  </dialog>
+</div>
+{% endblock %}
+{% block footer %}{% include "_footer.html" %}{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/view.js?v={{ ASSET_V }}"></script><script src="/static/js/roles.js?v={{ ASSET_V }}"></script>{% endblock %}

@@ -125,7 +125,15 @@ drishti:
       algorithms: [RS256, ES256]
     redact: [trader, counterpartyId, patientName]   # field names masked in raw JSON (F9) for roles without raw
   identity:
-    # Users and the audit log; written atomically, owner-only permissions. Keep ./data out of version control.
+    # Users, roles defined in Admin → Roles, saved workspaces/monitors/settings and the audit trail live in one database
+    # (JPA). SQLite by default: a single file, nothing to install. For PostgreSQL:
+    #   DRISHTI_IDENTITY_DB_URL=jdbc:postgresql://db:5432/drishti DRISHTI_IDENTITY_DB_USER=drishti DRISHTI_IDENTITY_DB_PASSWORD=...
+    # The schema (drishti-identity: db/schema-sqlite.sql, db/schema-postgres.sql) is applied at start; no migrations.
+    database-url: ${DRISHTI_IDENTITY_DB_URL:jdbc:sqlite:./data/identity/drishti.db}
+    database-user: ${DRISHTI_IDENTITY_DB_USER:}
+    database-password: ${DRISHTI_IDENTITY_DB_PASSWORD:}
+    database-pool-size: 8
+    # The files of releases before 1.10, imported once into an empty database and renamed *.imported.
     users-file: ${DRISHTI_USERS_FILE:./data/identity/users.json}
     audit-file: ${DRISHTI_AUDIT_FILE:./data/identity/audit.jsonl}
     iterations: 240000              # PBKDF2-HMAC-SHA256

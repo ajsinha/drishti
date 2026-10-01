@@ -103,6 +103,18 @@ class FakeBackend:
             return list(self.users.values())
         if path == "/roles":
             return ["admin", "author", "risk", "trader"]
+        if path == "/role-definitions":
+            return [{"name": "admin", "description": "", "kinds": ["*"], "raw": True, "author": True, "approve": False, "admin": True,
+                     "builtIn": True, "updatedAt": None, "updatedBy": "", "users": 1},
+                    {"name": "credit-analyst", "description": "Reads credit", "kinds": ["counterparty", "credit-curve"], "raw": False,
+                     "author": False, "approve": False, "admin": False, "builtIn": False, "updatedAt": "2026-09-30T12:00:00Z",
+                     "updatedBy": "drishti-dev-admin", "users": 0}]
+        if path.startswith("/role-definitions/") and method == "PUT":
+            if not body.get("kinds"):
+                raise BackendError(400, "DRS-5001", "a role opens at least one kind (or * for all)")
+            return {"name": path.rsplit("/", 1)[1], **body}
+        if path == "/role-definitions/admin" and method == "DELETE":
+            raise BackendError(400, "DRS-5001", "'admin' is a built-in role")
         if path == "/status":
             return {"defaultAdminPasswordInUse": True, "users": 1, "forceChangeOnCreate": False}
         if path == "/caches":

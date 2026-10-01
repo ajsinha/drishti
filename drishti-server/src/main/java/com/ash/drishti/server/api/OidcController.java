@@ -100,9 +100,9 @@ public class OidcController {
             out.addAll(props.defaultRoles());
         }
         out.removeIf(r -> {
-            boolean unknown = security.enabled() && !security.roles().containsKey(r);
+            boolean unknown = security.enabled() && !users.knownRoles().contains(r);
             if (unknown) {
-                LOG.warn("drishti.security.oidc.role-map names role '{}', which drishti.security.roles does not define", r);
+                LOG.warn("drishti.security.oidc.role-map names role '{}', which is neither a built-in role nor one defined in Admin → Roles", r);
             }
             return unknown;
         });

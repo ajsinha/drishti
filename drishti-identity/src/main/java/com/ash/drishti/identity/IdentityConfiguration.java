@@ -15,31 +15,47 @@
  */
 package com.ash.drishti.identity;
 
-import java.nio.file.Path;
-import java.util.Set;
-import org.springframework.beans.factory.annotation.Qualifier;
+import com.ash.drishti.identity.db.IdentityRepositories;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.transaction.support.TransactionTemplate;
 
-/** Beans contributed by {@code drishti-identity}. The set of known role names is supplied by the server. */
+/**
+ * Beans contributed by {@code drishti-identity}: users, roles, preferences and the audit trail, all in the identity
+ * database ({@link IdentityDatabase}). The server supplies {@link RoleNames}: built-in roles plus administrators' roles.
+ */
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(IdentityProperties.class)
+@Import(IdentityDatabase.class)
 public class IdentityConfiguration {
 
     @Bean
-    public UserStore userStore(IdentityProperties props) {
-        return new FileUserStore(Path.of(props.usersFile()));
+    public JpaAuditLog auditLog(IdentityRepositories.Audit audit) {
+        return new JpaAuditLog(audit);
     }
 
     @Bean
-    public PreferenceStore preferenceStore(IdentityProperties props) {
-        return new PreferenceStore(Path.of(props.preferencesDir()), 64 * 1024, 50);
+    public JpaUserStore userStore(IdentityRepositories.Users users, TransactionTemplate identityTransactions) {
+        return new JpaUserStore(users, identityTransactions);
     }
 
     @Bean
-    public UserService userService(UserStore store, IdentityProperties props, @Qualifier("drishtiRoleNames") Set<String> roles) {
-        UserService s = new UserService(store, new PasswordHasher(props.iterations()), new AuditLog(Path.of(props.auditFile())), props, roles);
+    public PreferenceStore preferenceStore(IdentityRepositories.Preferences prefs, TransactionTemplate identityTransactions) {
+        return new JpaPreferenceStore(prefs, identityTransactions, 64 * 1024, 50);
+    }
+
+    @Bean
+    public RoleStore roleStore(IdentityRepositories.Roles roles, TransactionTemplate identityTransactions, JpaAuditLog auditLog) {
+        return new RoleStore(roles, identityTransactions, auditLog);
+    }
+
+    @Bean
+    public UserService userService(JpaUserStore store, JpaAuditLog auditLog, PreferenceStore preferences, IdentityProperties props,
+            RoleNames roles) {
+        LegacyImport.run(props, store, auditLog, preferences);
+        UserService s = new UserService(store, new PasswordHasher(props.iterations()), auditLog, props, roles);
         s.seedIfEmpty();
         return s;
     }

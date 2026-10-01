@@ -42,12 +42,10 @@ public class SecurityConfiguration {
         return r;
     }
 
-    /** Role names users may be given: the configured roles. */
+    /** Every role: configuration and packs (built in), plus those administrators define (Admin → Roles). */
     @Bean
-    public java.util.Set<String> drishtiRoleNames(SecurityProperties props) {
-        java.util.Set<String> names = new java.util.TreeSet<>(props.roles().keySet());
-        names.add("admin");
-        return java.util.Set.copyOf(names);
+    public RoleCatalog roleCatalog(SecurityProperties props, com.ash.drishti.identity.RoleStore store) {
+        return new RoleCatalog(props, store);
     }
 
     @Bean
@@ -59,7 +57,7 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public Entitlements entitlements(SecurityProperties props, PackAccess packAccess) {
-        return new Entitlements(props, packAccess);
+    public Entitlements entitlements(SecurityProperties props, PackAccess packAccess, RoleCatalog roles) {
+        return new Entitlements(props, packAccess, roles);
     }
 }

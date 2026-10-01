@@ -57,6 +57,40 @@ async def users(request: Request, q: str = ""):
     return render(request, "admin/users.html", users=rows, roles=roles, q=q, status=await _status(request))
 
 
+@router.get("/roles")
+async def roles(request: Request):
+    """Every role and what it allows; administrators add their own (built-in roles come from configuration and packs)."""
+    me = ident(request)
+    if not me.is_admin:
+        return _forbidden(request)
+    backend = request.app.state.backend
+    try:
+        rows = await backend.admin("GET", "/role-definitions", me)
+        packs = await backend.packs(me)
+    except BackendError as e:
+        return render(request, "admin/forbidden.html", status_code=e.status, error=e)
+    kinds = sorted({k for p in packs for k in (p.get("kinds") or [])})
+    return render(request, "admin/roles.html", roles=rows, kinds=kinds, packs=packs)
+
+
+@router.post("/api/roles/{name}")
+async def save_role(request: Request, name: str):
+    body = json.loads(await request.body() or b"{}")
+    try:
+        return await request.app.state.backend.admin("PUT", f"/role-definitions/{quote(name)}", ident(request), body)
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.post("/api/roles/{name}/delete")
+async def delete_role(request: Request, name: str):
+    try:
+        await request.app.state.backend.admin("DELETE", f"/role-definitions/{quote(name)}", ident(request))
+    except BackendError as e:
+        return _problem(e)
+    return {"ok": True}
+
+
 @router.get("/audit")
 async def audit(request: Request, subject: str = "", limit: int = 200):
     me = ident(request)

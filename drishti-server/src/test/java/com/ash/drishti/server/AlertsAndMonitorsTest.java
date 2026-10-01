@@ -40,7 +40,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
         "drishti.sources.plugins.demo.settings.tick-ms=40", "drishti.live.frame=20ms", "drishti.packs.enabled=finance,logistics",
-        "drishti.identity.preferences-dir=target/prefs-alerts-${random.uuid}"})
+        "drishti.identity.database-url=jdbc:sqlite:target/prefs-alerts-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 class AlertsAndMonitorsTest {
 

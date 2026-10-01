@@ -35,8 +35,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.sources.plugins.demo.settings.ticking=false", "drishti.identity.iterations=1000",
-        "drishti.identity.users-file=target/identity-${random.uuid}/users.json",
-        "drishti.identity.audit-file=target/identity-${random.uuid}/audit.jsonl"})
+        "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 class IdentityApiTest {
 
@@ -100,5 +99,36 @@ class IdentityApiTest {
         mvc.perform(post("/api/v1/auth/password").header("Authorization", rita).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"current\":\"risk-pass-123\",\"next\":\"new-risk-pass-9\"}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.mustChangePassword").value(false));
+    }
+
+    @Test
+    void adminsDefineRolesThatTakeEffectAtOnceAndCannotDeleteOnesInUse() throws Exception {
+        String admin = as("drishti-dev-admin", "admin");
+        mvc.perform(put("/api/v1/admin/role-definitions/fx-viewer").header("Authorization", admin).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"description\":\"FX spot only\",\"kinds\":[\"fx-spot\"]}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.builtIn").value(false)).andExpect(jsonPath("$.updatedBy").value("drishti-dev-admin"));
+        mvc.perform(put("/api/v1/admin/role-definitions/admin").header("Authorization", admin).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"kinds\":[\"*\"]}")).andExpect(status().isBadRequest());
+        mvc.perform(put("/api/v1/admin/role-definitions/x2").header("Authorization", as("tina", "trader")).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"kinds\":[\"*\"]}")).andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/admin/role-definitions").header("Authorization", admin))
+                .andExpect(jsonPath("$[?(@.name=='admin')].builtIn").value(hasItem(true)))
+                .andExpect(jsonPath("$[?(@.name=='fx-viewer')].kinds[0]").value(hasItem("fx-spot")));
+        mvc.perform(get("/api/v1/admin/roles").header("Authorization", admin)).andExpect(jsonPath("$").value(hasItem("fx-viewer")));
+
+        mvc.perform(post("/api/v1/admin/users").header("Authorization", admin).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"username\":\"fiona\",\"roles\":[\"fx-viewer\"],\"password\":\"fx-viewer-pass-1\"}")).andExpect(status().isCreated());
+        String fiona = as("fiona", "fx-viewer");
+        mvc.perform(get("/api/v1/views/fx-spot/EURUSD").header("Authorization", fiona)).andExpect(status().isOk());
+        mvc.perform(get("/api/v1/views/trade/IRS-48213").header("Authorization", fiona)).andExpect(status().isForbidden());
+
+        mvc.perform(delete("/api/v1/admin/role-definitions/fx-viewer").header("Authorization", admin))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("DRS-6009"));
+        mvc.perform(put("/api/v1/admin/users/fiona").header("Authorization", admin).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"roles\":[\"viewer\"]}")).andExpect(status().isOk());
+        mvc.perform(delete("/api/v1/admin/role-definitions/fx-viewer").header("Authorization", admin)).andExpect(status().isNoContent());
+        mvc.perform(get("/api/v1/views/fx-spot/EURUSD").header("Authorization", fiona)).andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/admin/audit").param("subject", "fx-viewer").header("Authorization", admin))
+                .andExpect(jsonPath("$[*].action").value(hasItem("role-deleted")));
     }
 }

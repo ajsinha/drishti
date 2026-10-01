@@ -49,7 +49,9 @@ public enum ErrorCode {
     BAD_CREDENTIALS("DRS-6004", 401),
     ACCOUNT_LOCKED("DRS-6005", 423),
     LAST_ADMIN("DRS-6006", 409),
-    INVALID_USER("DRS-6007", 422);
+    INVALID_USER("DRS-6007", 422),
+    ROLE_NOT_FOUND("DRS-6008", 404),
+    ROLE_IN_USE("DRS-6009", 409);
 
     private final String code;
     private final int httpStatus;

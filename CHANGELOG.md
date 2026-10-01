@@ -16,6 +16,14 @@
 # Changelog
 
 ## Unreleased
+- **Users, roles and saved documents in a database (JPA).**
+  - **What moved:** users, their roles and packs, roles defined by administrators, saved workspaces, monitors, alert rules and settings, and the audit log now live in one database. It is reached only through JPA entities and Spring Data repositories (Hibernate), with no SQL in code.
+  - **Databases:** SQLite is the default (one file, nothing to install); PostgreSQL is chosen with `DRISHTI_IDENTITY_DB_URL`.
+  - **Schema:** one schema file per database (`db/schema-sqlite.sql`, `db/schema-postgres.sql`), applied idempotently at start, with no migrations. On PostgreSQL, Hibernate checks the entities against it.
+  - **Upgrading:** 1.9 files are imported once and renamed `*.imported`.
+  - **Tests:** the same tests run against both databases.
+- **Admin → Roles.** Define roles in the browser: the kinds a role opens, plus raw JSON, author, approve and admin powers. Changes apply at the next request and are audited. Built-in roles from configuration and packs are shown read-only, and a role someone holds cannot be deleted (`DRS-6009`). There is an API at `/api/v1/admin/role-definitions`.
+- **Docs:** USER_MANAGEMENT.md is rewritten as a step-by-step guide. PLUGIN_GUIDE.md now has a working example of every connector: settings tables taken from the code, data layouts, pack declarations, and how routing works.
 - **Fix: the UI could freeze.** The page stayed on screen but typing did nothing and no suggestions appeared.
   - **Browser cause:** every view and the alerts bell held its own connection, and browsers allow six per site over HTTP/1.1. With three tabs (or a workspace and a tab) every other request waited forever.
   - **Browser fix:** each tab now opens one live channel carrying its views, workspace panes, bell and monitors. Subscriptions are added to it without reconnecting, and a tab hidden for 10 s gives its connection back.

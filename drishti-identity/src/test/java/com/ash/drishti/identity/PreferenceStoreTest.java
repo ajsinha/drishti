@@ -32,7 +32,7 @@ class PreferenceStoreTest {
 
     @Test
     void storesPerUserAndNamespaceWithLimits() throws Exception {
-        PreferenceStore s = new PreferenceStore(dir, 200, 2);
+        PreferenceStore s = new FilePreferenceStore(dir, 200, 2);
         s.put("ash", "workspaces", "Credit desk", json.readTree("{\"layout\":\"2col\"}"));
         s.put("ash", "workspaces", "Rates", json.readTree("{\"layout\":\"2x2\"}"));
         s.put("tina", "workspaces", "Mine", json.readTree("{}"));
@@ -44,7 +44,7 @@ class PreferenceStoreTest {
         assertThatThrownBy(() -> s.put("ash", "workspaces", "Rates", json.readTree("{\"x\":\"" + "y".repeat(300) + "\"}")))
                 .hasMessageContaining("larger");
         assertThat(s.delete("ash", "workspaces", "Rates")).isTrue();
-        assertThat(new PreferenceStore(dir, 200, 2).keys("ash", "workspaces")).containsExactly("Credit desk");
+        assertThat(new FilePreferenceStore(dir, 200, 2).keys("ash", "workspaces")).containsExactly("Credit desk");
         s.forget("tina");
         assertThat(s.keys("tina", "workspaces")).isEmpty();
     }

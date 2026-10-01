@@ -64,6 +64,7 @@ class ArchitectureRulesTest {
     @ArchTest
     static final ArchRule noSerializable = noClasses()
             .that().areNotEnums().and().areNotAssignableTo(Throwable.class)
+            .and().areNotAnnotatedWith(jakarta.persistence.Embeddable.class)   // JPA requires composite keys to be Serializable
             .should().implement(java.io.Serializable.class)
             .allowEmptyShould(true);
 }

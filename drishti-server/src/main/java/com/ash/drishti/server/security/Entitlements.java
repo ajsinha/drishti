@@ -36,10 +36,12 @@ public final class Entitlements {
     public static final String DENIED = "no access";
     private final SecurityProperties props;
     private final PackAccess packs;
+    private final RoleCatalog roles;
 
-    public Entitlements(SecurityProperties props, PackAccess packs) {
+    public Entitlements(SecurityProperties props, PackAccess packs, RoleCatalog roles) {
         this.props = props;
         this.packs = packs;
+        this.roles = roles;
     }
 
     /** The user's roles allow the kind, and the kind's pack is active for the user. */
@@ -52,8 +54,7 @@ public final class Entitlements {
             return true;
         }
         for (String r : p.roles()) {
-            SecurityProperties.Role role = props.roles().get(r);
-            if (role != null && (role.kinds().contains("*") || role.kinds().contains(kind))) {
+            if (roles.find(r).map(role -> role.mayOpen(kind)).orElse(false)) {
                 return true;
             }
         }
@@ -66,18 +67,18 @@ public final class Entitlements {
         }
     }
 
-    private boolean has(Principal p, java.util.function.Predicate<SecurityProperties.Role> test) {
+    private boolean has(Principal p, java.util.function.Predicate<com.ash.drishti.identity.RoleDefinition> test) {
         if (!props.enabled() || p.roles().contains("*")) {
             return true;
         }
-        return p.roles().stream().map(props.roles()::get).anyMatch(r -> r != null && test.test(r));
+        return p.roles().stream().map(roles::find).anyMatch(r -> r.isPresent() && test.test(r.get()));
     }
 
     /** The console's own identity, used only to verify sign-ins. */
     public static final String SERVICE = "service";
 
     public boolean isAdmin(Principal p) {
-        return has(p, SecurityProperties.Role::admin);
+        return has(p, com.ash.drishti.identity.RoleDefinition::admin);
     }
 
     public void requireAdmin(Principal p) {
@@ -93,16 +94,16 @@ public final class Entitlements {
     }
 
     public boolean mayAuthor(Principal p) {
-        return has(p, SecurityProperties.Role::author);
+        return has(p, com.ash.drishti.identity.RoleDefinition::author);
     }
 
     /** Approvers review proposed Sutras: roles with {@code approve}, and admins. */
     public boolean mayApprove(Principal p) {
-        return has(p, SecurityProperties.Role::approve) || has(p, SecurityProperties.Role::admin);
+        return has(p, com.ash.drishti.identity.RoleDefinition::approve) || has(p, com.ash.drishti.identity.RoleDefinition::admin);
     }
 
     public DataNode redact(Principal p, DataNode data) {
-        return has(p, SecurityProperties.Role::raw) || props.redact().isEmpty() ? data : mask(data);
+        return has(p, com.ash.drishti.identity.RoleDefinition::raw) || props.redact().isEmpty() ? data : mask(data);
     }
 
     private DataNode mask(DataNode n) {

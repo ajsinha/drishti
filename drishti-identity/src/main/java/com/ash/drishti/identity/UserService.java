@@ -67,17 +67,22 @@ public final class UserService {
     private final PasswordHasher hasher;
     private final AuditLog audit;
     private final IdentityProperties props;
-    private final Set<String> knownRoles;
+    private final RoleNames knownRoles;
     private final String dummyHash;
     private final ReentrantLock adminLock = new ReentrantLock();
     private final ConcurrentHashMap<String, ReentrantLock> userLocks = new ConcurrentHashMap<>();
 
     public UserService(UserStore store, PasswordHasher hasher, AuditLog audit, IdentityProperties props, Set<String> knownRoles) {
+        this(store, hasher, audit, props, RoleNames.of(knownRoles));
+    }
+
+    /** {@code knownRoles} is asked at every change, so roles administrators add are usable at once. */
+    public UserService(UserStore store, PasswordHasher hasher, AuditLog audit, IdentityProperties props, RoleNames knownRoles) {
         this.store = store;
         this.hasher = hasher;
         this.audit = audit;
         this.props = props;
-        this.knownRoles = Set.copyOf(knownRoles);
+        this.knownRoles = knownRoles;
         this.dummyHash = hasher.hash("timing-equaliser");
     }
 
@@ -333,7 +338,7 @@ public final class UserService {
     }
 
     public Set<String> knownRoles() {
-        return knownRoles;
+        return knownRoles.get();
     }
 
     // ---- locking -------------------------------------------------------------------------------
@@ -373,9 +378,10 @@ public final class UserService {
 
     private void validate(Profile p) {
         if (p.roles() != null) {
+            Set<String> known = knownRoles.get();
             for (String r : p.roles()) {
-                if (!knownRoles.contains(r)) {
-                    throw new DrishtiException(ErrorCode.INVALID_USER, "unknown role '" + r + "'; known: " + knownRoles);
+                if (!known.contains(r)) {
+                    throw new DrishtiException(ErrorCode.INVALID_USER, "unknown role '" + r + "'; known: " + new java.util.TreeSet<>(known));
                 }
             }
         }

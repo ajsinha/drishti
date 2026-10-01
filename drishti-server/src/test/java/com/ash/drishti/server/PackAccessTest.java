@@ -34,8 +34,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance,logistics",
-        "drishti.identity.users-file=target/packaccess-${random.uuid}/users.json",
-        "drishti.identity.preferences-dir=target/packaccess-${random.uuid}/prefs"})
+        "drishti.identity.database-url=jdbc:sqlite:target/packaccess-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 class PackAccessTest {
 

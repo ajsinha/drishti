@@ -108,6 +108,19 @@ def test_admin_pages_and_actions(client, backend):
     assert client.post("/admin/api/users/tina/nonsense", json={}).status_code == 400
 
 
+def test_roles_page_defines_and_deletes_roles(client, backend):
+    page = client.get("/admin/roles")
+    assert page.status_code == 200 and "credit-analyst" in page.text and "built-in" in page.text and "every kind" in page.text
+    assert 'href="/admin/roles"' in client.get("/admin/users").text            # in the admin tabs
+    saved = client.post("/admin/api/roles/fx-viewer", json={"kinds": ["fx-spot"], "raw": False})
+    assert saved.status_code == 200 and saved.json()["name"] == "fx-viewer"
+    assert ("admin", "PUT", "/role-definitions/fx-viewer", {"kinds": ["fx-spot"], "raw": False}) in backend.calls
+    bad = client.post("/admin/api/roles/empty", json={"kinds": []})
+    assert bad.status_code == 400 and bad.json()["code"] == "DRS-5001"
+    assert client.post("/admin/api/roles/credit-analyst/delete").json()["ok"]
+    assert client.post("/admin/api/roles/admin/delete").status_code == 400
+
+
 def test_account_page_and_password_change(client):
     assert "Change password" in client.get("/account").text
     assert client.post("/account/password", json={"current": "wrong", "next": "x"}).status_code == 401

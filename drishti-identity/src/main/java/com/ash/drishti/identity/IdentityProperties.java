@@ -22,8 +22,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * {@code drishti.identity.*}.
  *
- * @param usersFile where users are kept (JSON, written atomically)
- * @param auditFile append-only audit log (JSON lines)
+ * @param usersFile the users file of releases before 1.10, imported into the database once (when it holds no users)
+ * @param auditFile the audit file of releases before 1.10, imported with the users
  * @param iterations PBKDF2 iterations for new hashes
  * @param minPasswordLength shortest accepted password
  * @param maxFailedAttempts failed sign-ins before a lockout
@@ -35,13 +35,18 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param forcePasswordChangeOnCreate new users must change their password at first sign-in, unless the admin
  *     says otherwise for that user (default false)
  * @param forcePasswordChangeOnReset users must change a password an admin reset for them (default false)
- * @param preferencesDir per-user documents (workspaces, settings)
+ * @param preferencesDir per-user documents of releases before 1.10, imported with the users
+ * @param databaseUrl the identity database: {@code jdbc:sqlite:<file>} (default) or {@code jdbc:postgresql://...}
+ * @param databaseUser database user (PostgreSQL)
+ * @param databasePassword database password (PostgreSQL)
+ * @param databasePoolSize connections in the pool (SQLite allows one writer at a time whatever the size)
  */
 @ConfigurationProperties("drishti.identity")
 public record IdentityProperties(
         String usersFile, String auditFile, Integer iterations, Integer minPasswordLength, Integer maxFailedAttempts,
         Duration lockout, Boolean seedAdmin, String seedUsername, String seedPassword, List<String> seedRoles,
-        Boolean forcePasswordChangeOnCreate, Boolean forcePasswordChangeOnReset, String preferencesDir) {
+        Boolean forcePasswordChangeOnCreate, Boolean forcePasswordChangeOnReset, String preferencesDir,
+        String databaseUrl, String databaseUser, String databasePassword, Integer databasePoolSize) {
 
     public IdentityProperties {
         usersFile = usersFile == null ? "./data/identity/users.json" : usersFile;
@@ -57,5 +62,14 @@ public record IdentityProperties(
         forcePasswordChangeOnCreate = forcePasswordChangeOnCreate != null && forcePasswordChangeOnCreate;
         forcePasswordChangeOnReset = forcePasswordChangeOnReset != null && forcePasswordChangeOnReset;
         preferencesDir = preferencesDir == null ? "./data/identity/preferences" : preferencesDir;
+        databaseUrl = databaseUrl == null || databaseUrl.isBlank() ? "jdbc:sqlite:./data/identity/drishti.db" : databaseUrl;
+        databaseUser = databaseUser == null ? "" : databaseUser;
+        databasePassword = databasePassword == null ? "" : databasePassword;
+        databasePoolSize = databasePoolSize == null ? 8 : databasePoolSize;
+    }
+
+    /** True for SQLite, false for PostgreSQL. */
+    public boolean sqlite() {
+        return databaseUrl.startsWith("jdbc:sqlite:");
     }
 }
