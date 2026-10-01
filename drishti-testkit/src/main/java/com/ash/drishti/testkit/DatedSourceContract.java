@@ -96,7 +96,7 @@ public abstract class DatedSourceContract {
     void isDatedAndServesTheKindsItHolds() throws Exception {
         assertThat(plugin().manifest().capabilities().dated()).isTrue();
         assertThat(plugin().manifest().kinds()).contains("trade", "counterparty");
-        assertThat(plugin().health()).isEqualTo("UP");
+        assertThat(plugin().health()).startsWith("UP");                // "UP", or "UP (detail)": the server reads it so
     }
 
     @Test

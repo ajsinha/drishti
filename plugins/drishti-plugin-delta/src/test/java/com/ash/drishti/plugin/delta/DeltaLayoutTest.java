@@ -35,7 +35,8 @@ import org.junit.jupiter.api.Test;
  * A table laid out as a pack declares (src/test/resources/lake-layout, written by tools/samplegen/layout.py: 40
  * trades a day over two days, sorted by id into files of 15 rows, row groups of 4, with mtm, book, nettingSet and
  * counterparty.id promoted beside the document). The fast paths (one file and row group per read, ids from the id
- * column, columns for searches and reverse lookups) answer exactly what the documents say.
+ * column, columns for searches and reverse lookups) answer exactly what the documents say. Native engine here,
+ * Hadoop's in {@link DeltaLayoutHadoopTest}.
  */
 class DeltaLayoutTest {
 
@@ -58,8 +59,13 @@ class DeltaLayoutTest {
         }
     }
 
-    private static DeltaSourcePlugin plugin(boolean laidOut, String... extra) throws Exception {
-        Map<String, String> s = new HashMap<>(Map.of("root", root.toString(), "domain", "desk", "source-name", "lake"));
+    /** The Delta engine these tests read with. */
+    protected String engine() {
+        return "native";
+    }
+
+    private DeltaSourcePlugin plugin(boolean laidOut, String... extra) throws Exception {
+        Map<String, String> s = new HashMap<>(Map.of("root", root.toString(), "domain", "desk", "source-name", "lake", "engine", engine()));
         if (laidOut) {
             s.put("layout.trade.columns", String.join(",", PROMOTED) + (extra.length > 0 ? "," + String.join(",", extra) : ""));
         }
@@ -118,7 +124,8 @@ class DeltaLayoutTest {
 
     @Test
     void healthSaysWhenATableIsNotLaidOutAsDeclared() throws Exception {
-        assertThat(plugin(true).health()).isEqualTo("UP");
-        assertThat(plugin(true, "notional").health()).contains("not laid out as the pack declares: trade (4 of 5 columns)");
+        assertThat(plugin(true).health()).isEqualTo("UP (engine: " + engine() + ")");
+        assertThat(plugin(true, "notional").health()).contains("not laid out as the pack declares: trade (4 of 5 columns)")
+                .startsWith("UP (engine: " + engine() + "; ");
     }
 }
