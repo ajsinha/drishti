@@ -35,6 +35,34 @@
       });
     });
   }
+  if (packs) {
+    var lmsg = packs.querySelector('[data-msg]');
+    packs.querySelectorAll('[data-load]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var name = b.closest('tr').getAttribute('data-pack'), action = b.getAttribute('data-load');
+        if (!window.confirm((action === 'load' ? 'Load ' : 'Unload ') + name + '? The server restarts in place: a few seconds without data.')) { return; }
+        lmsg.classList.remove('t-bad');
+        lmsg.textContent = (action === 'load' ? 'Checking ' : 'Unloading ') + name + '…';
+        fetch('/admin/api/packs/' + encodeURIComponent(name) + '/' + action, { method: 'POST' })
+          .then(function (r) { return r.json().then(function (body) { return { ok: r.ok, body: body }; }); })
+          .then(function (res) {
+            if (!res.ok) { lmsg.textContent = (res.body.code || 'Error') + ': ' + res.body.detail; lmsg.classList.add('t-bad'); return; }
+            lmsg.textContent = res.body.note;
+            if (!res.body.restarting) { return; }
+            // wait for the server to go and come back, then show the new state
+            var seenDown = false, started = Date.now();
+            (function poll() {
+              fetch('/readyz', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (s) {
+                if (s.status !== 'UP') { seenDown = true; }
+                if (s.status === 'UP' && (seenDown || Date.now() - started > 15000)) { location.reload(); return; }
+                lmsg.textContent = 'Restarting the server… ' + Math.round((Date.now() - started) / 1000) + ' s';
+                setTimeout(poll, 1000);
+              }).catch(function () { seenDown = true; setTimeout(poll, 1000); });
+            })();
+          });
+      });
+    });
+  }
   var root = document.querySelector('[data-roles]');
   if (!root) { return; }
   var msg = root.querySelector('[data-msg]'), dlg = root.querySelector('[data-dialog]'), form = root.querySelector('[data-form]');

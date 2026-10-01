@@ -155,3 +155,20 @@ def test_gauge_without_numbers_renders_empty(client):
     for data in ({"value": "—", "max": "—", "text": "—"}, {"value": 5, "max": None, "text": "5"}):
         out = tpl.render(p={"id": "g", "kind": "gauge", "title": "G", "area": "right", "data": data})
         assert 'class="gauge"' in out
+
+
+def test_packs_page_loads_and_unloads(client, backend):
+    calls = []
+    async def admin(method, path, ident, body=None, **params):
+        calls.append((method, path))
+        if path == "/packs":
+            return [{"name": "trading", "title": "Trading", "description": "", "version": "1", "loaded": True, "added": True, "enabled": True,
+                     "extends": [], "requiredBy": [], "kinds": ["trade"], "connectors": [], "mnemonics": ["TRD"]},
+                    {"name": "genomics", "title": "Genomics", "description": "", "version": "1", "loaded": False, "enabled": False}]
+        return {"name": path.split("/")[2], "added": [], "restarting": True, "note": "The server restarts in place now."}
+    backend.admin = admin
+    page = client.get("/admin/packs").text
+    assert 'data-load="load"' in page and 'data-load="unload"' in page
+    assert client.post("/admin/api/packs/genomics/load").json()["restarting"] is True
+    assert ("POST", "/packs/genomics/load") in calls
+    assert client.post("/admin/api/packs/genomics/explode").status_code == 400

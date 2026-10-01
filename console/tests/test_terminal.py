@@ -364,3 +364,21 @@ def test_a_table_panel_can_turn_its_search_off(client):
     on = str(module.table({"columns": ["A"], "numeric": [False], "rows": [{"cells": [{"text": "x"}]}]}))
     off = str(module.table({"columns": ["A"], "numeric": [False], "rows": [{"cells": [{"text": "x"}]}], "search": False}))
     assert "data-no-search" not in on and "data-no-search" in off
+
+
+def test_packs_survive_a_server_restart(client, backend):
+    import asyncio
+    from core.backend import BackendError as BE
+    packs = client.app.state.packs
+    packs.forget_all()
+    first = asyncio.run(packs.assigned(backend, None))
+    real = backend.packs
+    async def down(ident=None):
+        raise BE(503, "DRS-5003", "backend unreachable")
+    backend.packs = down
+    packs._cache = {k: (0, v[1], v[2]) for k, v in packs._cache.items()}   # expired: a fetch is due
+    assert asyncio.run(packs.assigned(backend, None)) == first             # the server is away: keep what was known
+    packs.forget_all()
+    asyncio.run(packs.assigned(backend, None))                              # no knowledge: the fallback, not cached
+    assert packs._cache == {}
+    backend.packs = real

@@ -29,7 +29,27 @@ import org.springframework.context.annotation.Import;
         com.ash.drishti.identity.IdentityConfiguration.class})
 public class DrishtiApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(DrishtiApplication.class, args);
+    /**
+     * Runs the server; when an administrator loads or unloads a pack ({@link Restarter}), closes it and runs it again in
+     * the same process, so the new configuration (the pack overlay) is read as at start-up.
+     */
+    public static void main(String[] args) throws InterruptedException {
+        Restarter.enable();
+        while (true) {
+            org.springframework.context.ConfigurableApplicationContext ctx;
+            try {
+                ctx = SpringApplication.run(DrishtiApplication.class, args);
+            } catch (RuntimeException e) {
+                Runnable undo = Restarter.takeUndo();         // a restart that failed: put the configuration back, start again
+                if (undo == null) {
+                    throw e;
+                }
+                undo.run();
+                continue;
+            }
+            Restarter.takeUndo();                           // started: the change is kept
+            Restarter.await();
+            ctx.close();
+        }
     }
 }

@@ -1001,10 +1001,12 @@ Worked example: take operational risk away for everyone.
 4. Open *Admin → Audit log*: the newest line is `pack-disabled operational-risk` by you.
 5. Click **Switch on** to bring it back.
 
-**Not loaded** packs are folders on disk that the server did not load at start-up. They cannot be switched
-on here, because packs load only when the server starts. The row shows what to do, for example
-`DRISHTI_PACKS=…,logistics`: add the pack to `DRISHTI_PACKS` and restart the server. See
-[PACKS.md](PACKS.md#switching-packs-off-and-on-admin--packs).
+**Not loaded** packs are folders on disk that the server did not load at start-up. Press **Load**: the server
+first checks the pack together with the loaded ones (a clash, such as `finance` with the banking packs, is refused
+with the reason and nothing changes), then records it and restarts in its own process. The page says *Restarting
+the server… 4 s* and refreshes when it is back; signed-in users stay signed in and live views reconnect. A pack
+loaded this way shows **Unload**, which takes it back the same way. See
+[PACKS.md](PACKS.md#loading-a-pack-while-the-server-runs).
 
 ### Admin → Health: is everything up?
 

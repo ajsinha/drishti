@@ -34,7 +34,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance,logistics",
-        "drishti.identity.database-url=jdbc:sqlite:target/packaccess-${random.uuid}/identity.db"})
+        "drishti.identity.database-url=jdbc:sqlite:target/packaccess-${random.uuid}/identity.db",
+        "drishti.packs.overlay=target/packaccess-overlay/added.yaml"})
 @AutoConfigureMockMvc
 class PackAccessTest {
 
@@ -96,5 +97,26 @@ class PackAccessTest {
                 .content("{\"enabled\":true}")).andExpect(status().isBadRequest());
         mvc.perform(get("/api/v1/admin/audit").param("subject", "logistics").header("Authorization", admin))
                 .andExpect(jsonPath("$[*].action").value(hasItem("pack-disabled")));
+    }
+
+    @Test
+    void adminsLoadAndUnloadPacksThroughTheOverlay() throws Exception {
+        String admin = as("drishti-dev-admin", "admin");
+        java.nio.file.Files.deleteIfExists(java.nio.file.Path.of("target/packaccess-overlay/added.yaml"));
+        mvc.perform(post("/api/v1/admin/packs/genomics/load").header("Authorization", admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.added[0]").value("genomics"))
+                .andExpect(jsonPath("$.restarting").value(false));                    // tests do not restart: next start
+        org.assertj.core.api.Assertions.assertThat(java.nio.file.Files.readString(java.nio.file.Path.of("target/packaccess-overlay/added.yaml")))
+                .contains("added:", "- genomics");
+        mvc.perform(post("/api/v1/admin/packs/finance/load").header("Authorization", admin)).andExpect(status().isBadRequest());     // loaded
+        mvc.perform(post("/api/v1/admin/packs/astrology/load").header("Authorization", admin)).andExpect(status().isBadRequest());   // no such pack
+        mvc.perform(post("/api/v1/admin/packs/trading/load").header("Authorization", admin))                                   // clashes with finance
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("defined by both")));
+        mvc.perform(post("/api/v1/admin/packs/finance/unload").header("Authorization", admin)).andExpect(status().isBadRequest());   // site config
+        mvc.perform(post("/api/v1/admin/packs/genomics/load").header("Authorization", as("lena", "ops"))).andExpect(status().isForbidden());
+        mvc.perform(post("/api/v1/admin/packs/genomics/unload").header("Authorization", admin)).andExpect(jsonPath("$.added").isEmpty());
+        mvc.perform(get("/api/v1/admin/audit").param("subject", "genomics").header("Authorization", admin))
+                .andExpect(jsonPath("$[*].action").value(hasItem("pack-loaded")));
     }
 }

@@ -55,11 +55,16 @@ class Packs:
             rows = await backend.packs(ident)
             active = [r["name"] for r in rows if r.get("active", True)]
             assigned = [(r["name"], bool(r.get("active", True))) for r in rows if r.get("assigned", True)]
+            fresh = True
         except Exception:  # noqa: BLE001 - any backend failure means "use the configured list"
+            if hit:                          # the server is away for a moment (restarting): keep what we knew
+                return hit[1], hit[2]
             active, assigned = self.fallback, [(n, True) for n in self.fallback]
+            fresh = False
         packs = [p for p in (self._load(n) for n in active) if p]
         switcher = [{**p, "active": a} for p, a in ((self._load(n), a) for n, a in assigned) if p]
-        self._cache[key] = (now, packs, switcher)
+        if fresh:                            # a fallback is never cached, so the real list returns at the next request
+            self._cache[key] = (now, packs, switcher)
         return packs, switcher
 
     def _load(self, name: str) -> dict | None:

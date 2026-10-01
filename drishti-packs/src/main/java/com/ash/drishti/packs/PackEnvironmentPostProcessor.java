@@ -24,9 +24,10 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 
 /**
- * Loads the enabled packs ({@code drishti.packs.enabled}, from {@code drishti.packs.dir}) before any bean is
- * built and adds their content as the lowest-precedence property source, so the site's own configuration
- * always wins over a pack. The core modules only read ordinary properties and never depend on this module.
+ * Loads the enabled packs ({@code drishti.packs.enabled}, plus {@code drishti.packs.added}: the packs an administrator
+ * loaded from Admin → Packs, kept in the overlay file), from {@code drishti.packs.dir}, before any bean is built, and
+ * adds their content as the lowest-precedence property source, so the site's own configuration always wins over a
+ * pack. The core modules only read ordinary properties and never depend on this module.
  */
 public final class PackEnvironmentPostProcessor implements EnvironmentPostProcessor {
 
@@ -36,9 +37,13 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
     public void postProcessEnvironment(ConfigurableEnvironment env, SpringApplication app) {
         String dir = env.getProperty("drishti.packs.dir", "./packs");
         String enabled = env.getProperty("drishti.packs.enabled", "finance");
-        List<String> names = Arrays.stream(enabled.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList();
+        java.util.LinkedHashSet<String> names = new java.util.LinkedHashSet<>(
+                Arrays.stream(enabled.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList());
+        names.addAll(org.springframework.boot.context.properties.bind.Binder.get(env)
+                .bind("drishti.packs.added", org.springframework.boot.context.properties.bind.Bindable.listOf(String.class))
+                .orElse(List.of()));
         PackLoader loader = new PackLoader();
-        List<Pack> packs = loader.load(Path.of(dir).toAbsolutePath().normalize(), names);
+        List<Pack> packs = loader.load(Path.of(dir).toAbsolutePath().normalize(), List.copyOf(names));
         env.getPropertySources().addLast(new MapPropertySource(SOURCE, loader.properties(packs)));
     }
 }

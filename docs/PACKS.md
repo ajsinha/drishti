@@ -182,7 +182,7 @@ console (`/admin/packs`).
 |---|---|---|
 | **on** | Loaded and in use | **Switch off** (unless another switched-on pack needs it) |
 | **off** | Loaded, but switched off for everyone | **Switch on** |
-| **not loaded** | A folder under `packs/` that `DRISHTI_PACKS` did not name | Nothing here: add it to `DRISHTI_PACKS` and restart. The row shows the hint `DRISHTI_PACKS=…,<name>` |
+| **not loaded** | A folder under `packs/` that `DRISHTI_PACKS` did not name | **Load** (below) |
 
 What switching off does, at every user's next click:
 
@@ -633,6 +633,32 @@ A pack's roles appear in *Admin → Roles* marked **built-in**, read-only: chang
 generated pack, in its generator). An administrator can also define new roles there without touching any pack;
 the dialog's *Add every kind of a pack* buttons fill in a pack's kinds in one click
 ([USER_GUIDE.md](USER_GUIDE.md#admin--roles-what-a-role-may-do)).
+
+## Loading a pack while the server runs
+
+Admin → Packs → **Load** brings in a pack that is on disk but not loaded, without anyone touching the machine:
+
+1. The server runs the same check it runs at start-up on the loaded packs plus the new one (inheritance, clashes, the
+   manifest). A pack that would not load is refused with the reason, and nothing changes.
+2. It records the pack in the **pack overlay**, `data/packs/added.yaml` (`DRISHTI_PACKS_OVERLAY`), a small
+   configuration file the server imports at every start:
+
+   ```yaml
+   drishti:
+     packs:
+       added:
+         - logistics
+   ```
+
+3. It restarts **inside its own process**: the Spring context closes (connectors, caches and live streams too) and
+   is built again from configuration, with the overlay's packs added to `drishti.packs.enabled`. The process id does
+   not change. Sessions survive (they are signed tokens), and open views reconnect by themselves.
+4. If the server cannot start with the new configuration, it puts the overlay back and starts as it was.
+
+**Unload** does the same in reverse for a pack loaded here; packs named in `DRISHTI_PACKS` stay. Both are audited
+(`pack-loaded`, `pack-unloaded`). The API: `POST /api/v1/admin/packs/{name}/load` and `…/unload`; the answer says
+whether the server is restarting (`"restarting": true`). Only a server started by its `main` (the jar, the
+container) restarts in place; elsewhere (tests) the change waits for the next start.
 
 ## Pack codes
 

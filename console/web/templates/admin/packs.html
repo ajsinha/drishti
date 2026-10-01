@@ -25,7 +25,10 @@
   <p class="text-muted-d">A pack brings a domain: its kinds, mnemonics, layouts and connectors. Switch a loaded pack off and, at
     everyone's next click, its kinds cannot be opened, its mnemonics and suggestions disappear, and it leaves every pack menu.
     Switch it on and it all returns. A pack another pack builds on stays on until that one is off; switching a pack on switches on
-    what it builds on. The choice is kept across restarts and recorded in the <a href="/admin/audit">audit log</a>.</p>
+    what it builds on. The choice is kept across restarts and recorded in the <a href="/admin/audit">audit log</a>.
+    <b>Load</b> brings in a pack that is on disk but not loaded: it is checked with the loaded packs first, then the server restarts
+    in its own process (a few seconds; signed-in users stay signed in and live views reconnect). <b>Unload</b> takes back a pack
+    loaded here.</p>
   <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
   <div class="tbl-wrap"><table class="tbl adm-tbl">
     <thead><tr><th>Pack</th><th>What it brings</th><th>Builds on</th><th>Kinds</th><th>Connectors</th><th>Status</th><th>Changed</th><th></th></tr></thead>
@@ -37,13 +40,14 @@
         <td class="mono">{{ (p.extends or []) | join(', ') or '—' }}{% if p.requiredBy %}<div class="text-muted-d">needed by {{ p.requiredBy | join(', ') }}</div>{% endif %}</td>
         <td class="mono">{% if p.loaded %}{{ (p.kinds or []) | length }}{% if p.mnemonics %} <span class="text-muted-d">({{ p.mnemonics[:4] | join(' ') }}{{ ' …' if p.mnemonics | length > 4 }})</span>{% endif %}{% else %}—{% endif %}</td>
         <td class="mono">{{ (p.connectors or []) | join(', ') or '—' }}</td>
-        <td>{% if not p.loaded %}<span class="st" title="Add it to drishti.packs.enabled (DRISHTI_PACKS) and restart the server to load it">not loaded</span>
+        <td>{% if not p.loaded %}<span class="st" title="On disk; Load it from here, or name it in drishti.packs.enabled (DRISHTI_PACKS)">not loaded</span>
             {% elif p.enabled %}<span class="st st-ok">on</span>{% else %}<span class="st st-bad">off</span>{% endif %}</td>
         <td class="mono">{% if p.updatedAt %}{{ p.updatedAt[:16] | replace('T', ' ') }} · {{ p.updatedBy }}{% else %}—{% endif %}</td>
         <td class="adm-actions">{% if p.loaded %}
           <button type="button" class="fk" data-switch="{{ 'off' if p.enabled else 'on' }}"
             {% if p.enabled and p.requiredBy %}disabled title="Needed by {{ p.requiredBy | join(', ') }}: switch those off first"{% endif %}>{{ 'Switch off' if p.enabled else 'Switch on' }}</button>
-        {% else %}<span class="text-muted-d mono" title="Packs load when the server starts">DRISHTI_PACKS=…,{{ p.name }}</span>{% endif %}</td>
+          {% if p.added %}<button type="button" class="fk" data-load="unload" title="Loaded from this page: unload it (the server restarts in place)">Unload</button>{% endif %}
+        {% else %}<button type="button" class="fk" data-load="load" title="Check the pack, then restart the server in place to load it">Load</button>{% endif %}</td>
       </tr>
     {% endfor %}
     </tbody>

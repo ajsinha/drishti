@@ -23,7 +23,10 @@ spring:
   main:
     banner-mode: off
   config:
-    import: optional:file:./application.local.yaml
+    import:
+      - optional:file:./application.local.yaml
+      # packs an administrator loaded from Admin → Packs (drishti.packs.added); written by the server, not by hand
+      - optional:file:${DRISHTI_PACKS_OVERLAY:./data/packs/added.yaml}
 
 server:
   port: ${DRISHTI_PORT:18480}
@@ -185,6 +188,8 @@ drishti:
     # Domain packs (packs/<name>/pack.yaml): Sutras, mnemonics, links, badges, roles, vocabulary, samples.
     # Site settings below always override what a pack contributes.
     dir: ${DRISHTI_PACKS_DIR:./packs}
+    # Packs loaded from Admin → Packs are listed here (drishti.packs.added) and read at every start; see spring.config.import.
+    overlay: ${DRISHTI_PACKS_OVERLAY:./data/packs/added.yaml}
     enabled: ${DRISHTI_PACKS:finance}
     # Packs new users get until an admin says otherwise (empty: every installed pack).
     default-for-users: ${DRISHTI_DEFAULT_PACKS:}

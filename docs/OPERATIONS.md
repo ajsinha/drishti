@@ -397,6 +397,7 @@ Defined in `drishti-server/src/main/resources/application.yaml`.
 | `DRISHTI_OIDC_CLIENT_ID` | empty | `drishti.security.oidc.client-id` | the client id the ID token is issued to |
 | `DRISHTI_CALENDAR` | `USNY` | `drishti.business-date.calendar` | holiday calendar for the default business date: `USNY`, `GBLO`, `EUTA`, `JPTO`, or joint such as `USNY+GBLO` |
 | `DRISHTI_PACKS` | `finance` | `drishti.packs.enabled` | comma-separated packs to enable |
+| `DRISHTI_PACKS_OVERLAY` | `./data/packs/added.yaml` | `drishti.packs.overlay` | packs loaded from Admin → Packs (written by the server, read at every start); back it up with `data/` |
 | `DRISHTI_PACKS_DIR` | `./packs` | `drishti.packs.dir` | where the packs are. The console reads the same variable, but resolves a relative value from `console/`; use an absolute path if you set it |
 | `DRISHTI_DEFAULT_PACKS` | empty (every installed pack) | `drishti.packs.default-for-users` | packs new users get until an admin changes them |
 | `DRISHTI_SUTRAS` | `./sutras` | `drishti.rachana.dirs` | your own Sutra directories, scanned recursively, in addition to the packs' Sutras |

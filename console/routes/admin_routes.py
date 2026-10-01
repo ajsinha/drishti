@@ -115,6 +115,19 @@ async def switch_pack(request: Request, name: str):
     return out
 
 
+@router.post("/api/packs/{name}/{action}")
+async def load_pack(request: Request, name: str, action: str):
+    """Loads or unloads a pack: the server checks it, records it, and restarts in place."""
+    if action not in ("load", "unload"):
+        return JSONResponse({"code": "DRS-5001", "detail": "unknown action"}, status_code=400)
+    try:
+        out = await request.app.state.backend.admin("POST", f"/packs/{quote(name)}/{action}", ident(request))
+    except BackendError as e:
+        return _problem(e)
+    request.app.state.packs.forget_all()
+    return out
+
+
 @router.get("/audit")
 async def audit(request: Request, subject: str = "", limit: int = 200):
     me = ident(request)
