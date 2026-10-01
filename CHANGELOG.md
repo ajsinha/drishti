@@ -16,6 +16,18 @@
 # Changelog
 
 ## Unreleased — A million trades a day, for seven years
+- **Every panel kind, by example** ([RACHANA_GUIDE.md › 10](docs/guides/RACHANA_GUIDE.md#10-every-panel-kind-by-example)).
+  The Rachana tutorial has a contents list and a new chapter with a complete, minimal Sutra for each of the twenty
+  panel kinds, each on a sample entity that ships with the banking packs (`TRD BBG-60000001`, `NSET NS-NORTHBRIDGE-FRA`,
+  `CPTY CP-NORTHBRIDGE`, `VAR VAR-COMM`, `CMDV CMDV-BRENT`, `PNL PNL-COMM-1`, `LE LE-FRA`, `CMD CMD-BRENT`,
+  `DESK DESK-COMM`): what the kind is for, each option it uses, what you should see (read from the server), and one
+  common mistake with its problem code. Then the layout keys (`area`, `span`, `height`, and the comma trap in a
+  one-line panel), and the twenty kinds together on seven screens, the largest a government bond trade with twelve
+  kinds arranged on the grid. The in-app Sutra guide's *The twenty panel kinds* gains the seven newer kinds it lacked
+  and a new section 8 with each kind as a complete Sutra and three screenshots of the combined screens. Every example
+  was previewed through Studio on a scratch server with no problem and no empty panel, and `DocumentedSutrasTest`
+  checks them all. The reference now says 20 kinds where it said 13, and that `heat: "yes"` (not an unquoted `yes`,
+  which YAML reads as `true`) is `DRS-2029`.
 - **Calc without JavaScript Promise Integration, run in a real Firefox** ([PYTHON_CALC.md › Reading data](docs/guides/PYTHON_CALC.md#52-reading-data)).
   The `_async` fallback had never run outside Chromium. Run in Firefox 155 (Playwright's build) on the sample data,
   with JSPI on and with it switched off (`javascript.options.wasm_js_promise_integration: false`; Firefox 155 has it on

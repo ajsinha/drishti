@@ -624,7 +624,7 @@ author may promote such a layout to the Sutra's next version, written with these
 | Key | Required | Default | Meaning |
 |---|---|---|---|
 | `id` | yes (except a `tabs` body) | | Unique within the Sutra (`DRS-2024`). Used by function keys, live patches and CSV export. Any text; keep it short and kebab or camel case. |
-| `kind` | yes | | One of the 13 [panel kinds](#panel-kinds) (`DRS-2021` otherwise). |
+| `kind` | yes | | One of the 20 [panel kinds](#panel-kinds) (`DRS-2021` otherwise). |
 | `title` | | none | A template: `"Cashflows · ${$.legs[0].label}"`. If it cannot be rendered for a document it is shown as written. |
 | `key` | | none | A function key `F1`–`F12`, unique across panels and `keys` (`DRS-2025`). Pressing it scrolls to the panel and flashes it. Avoid `F1`, which the console uses for help. |
 | `code` | | none | A short tag shown at the right of the panel header (`CRV`, `SENS`). |
@@ -713,7 +713,7 @@ expressions and templates are compiled at load time.
 
 For the seven kinds from `waterfall` on, a field name may also be a dotted path (`counterparty.name`) or an
 expression over the row when it starts with `@` or `$` (`y: "@.pnl / 1000"`). Values outside the allowed set
-(`agg: median`, `layout: circle`, `colors: rainbow`, `bins: 0`, `heat: yes`, a marker without `value`) are `DRS-2029`.
+(`agg: median`, `layout: circle`, `colors: rainbow`, `bins: 0`, `heat: "yes"` (an unquoted `yes` is YAML for `true`), a marker without `value`) are `DRS-2029`.
 
 Accepted but currently without effect (they parse, and do nothing yet): `fields` on `kv` (use `columns`),
 `link` on `table` (use `link: true` on a column), `footer` on `line`, and `label` on `gauge` (carried in the
