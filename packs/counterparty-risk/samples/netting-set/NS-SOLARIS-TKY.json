@@ -64,22 +64,34 @@
   {
    "tradeId": "IMG-400145",
    "product": "FX-rates hybrid (PRDC)",
+   "assetClass": "Structured",
+   "currency": "USD",
+   "book": "BOOK-STRUCT-3",
    "notional": 216000000.0,
    "maturity": "2036-08-18",
+   "maturityBucket": "5-10Y",
    "mtm": 4057279
   },
   {
    "tradeId": "IMG-400147",
    "product": "FX-rates hybrid (PRDC)",
+   "assetClass": "Structured",
+   "currency": "USD",
+   "book": "BOOK-STRUCT-1",
    "notional": 153000000.0,
    "maturity": "2033-01-28",
+   "maturityBucket": "5-10Y",
    "mtm": 2602465
   },
   {
    "tradeId": "IMG-400154",
    "product": "Worst-of note",
+   "assetClass": "Structured",
+   "currency": "USD",
+   "book": "BOOK-STRUCT-3",
    "notional": 118000000.0,
    "maturity": "2028-05-15",
+   "maturityBucket": "1-2Y",
    "mtm": -809315
   }
  ],

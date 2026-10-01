@@ -9,71 +9,111 @@
   {
    "tradeId": "WSS-1500113",
    "product": "Call account",
+   "assetClass": "Money market",
+   "currency": "USD",
+   "book": "BOOK-MM-1",
    "notional": 204000000.0,
    "maturity": "2027-08-04",
+   "maturityBucket": "0-1Y",
    "mtm": 4542888
   },
   {
    "tradeId": "WSS-1500090",
    "product": "Treasury bill",
+   "assetClass": "Money market",
+   "currency": "USD",
+   "book": "BOOK-MM-1",
    "notional": 226000000.0,
    "maturity": "2027-06-14",
+   "maturityBucket": "0-1Y",
    "mtm": -2467214
   },
   {
    "tradeId": "WSS-1500111",
    "product": "Call account",
+   "assetClass": "Money market",
+   "currency": "USD",
+   "book": "BOOK-MM-1",
    "notional": 249000000.0,
    "maturity": "2027-01-25",
+   "maturityBucket": "0-1Y",
    "mtm": -2192641
   },
   {
    "tradeId": "WSS-1500106",
    "product": "Term deposit / placement",
+   "assetClass": "Money market",
+   "currency": "EUR",
+   "book": "BOOK-MM-1",
    "notional": 229000000.0,
    "maturity": "2027-01-29",
+   "maturityBucket": "0-1Y",
    "mtm": 2024594
   },
   {
    "tradeId": "WSS-1500103",
    "product": "Term deposit / placement",
+   "assetClass": "Money market",
+   "currency": "AUD",
+   "book": "BOOK-MM-1",
    "notional": 131000000.0,
    "maturity": "2026-10-28",
+   "maturityBucket": "0-1Y",
    "mtm": 1944745
   },
   {
    "tradeId": "WSS-1500110",
    "product": "Call account",
+   "assetClass": "Money market",
+   "currency": "CAD",
+   "book": "BOOK-MM-1",
    "notional": 234000000.0,
    "maturity": "2027-04-12",
+   "maturityBucket": "0-1Y",
    "mtm": -1837797
   },
   {
    "tradeId": "WSS-1500087",
    "product": "Treasury bill",
+   "assetClass": "Money market",
+   "currency": "USD",
+   "book": "BOOK-MM-1",
    "notional": 51000000.0,
    "maturity": "2026-11-16",
+   "maturityBucket": "0-1Y",
    "mtm": 1540400
   },
   {
    "tradeId": "WSS-1500092",
    "product": "Commercial paper",
+   "assetClass": "Money market",
+   "currency": "CHF",
+   "book": "BOOK-MM-1",
    "notional": 99000000.0,
    "maturity": "2027-06-25",
+   "maturityBucket": "0-1Y",
    "mtm": 1053527
   },
   {
    "tradeId": "WSS-1500089",
    "product": "Treasury bill",
+   "assetClass": "Money market",
+   "currency": "USD",
+   "book": "BOOK-MM-1",
    "notional": 98000000.0,
    "maturity": "2027-07-12",
+   "maturityBucket": "0-1Y",
    "mtm": 967365
   },
   {
    "tradeId": "WSS-1500100",
    "product": "Certificate of deposit",
+   "assetClass": "Money market",
+   "currency": "EUR",
+   "book": "BOOK-MM-1",
    "notional": 86000000.0,
    "maturity": "2027-04-08",
+   "maturityBucket": "0-1Y",
    "mtm": 809738
   }
  ],

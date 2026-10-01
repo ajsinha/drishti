@@ -141,6 +141,9 @@ public final class RachanaSchema {
                     "description", "gain-loss (default): rises green, falls red; theme: the theme's positive and negative colours "
                             + "(blue and orange, colour-blind friendly). Totals are neutral");
         }
+        if (o.equals(com.ash.drishti.rachana.model.Panel.PIVOT)) {
+            return pivot();
+        }
         if (k == PanelKind.HISTOGRAM && o.equals("bins")) {
             return Map.of("type", "integer", "minimum", 1, "maximum", com.ash.drishti.rachana.model.PanelOptions.MAX_BINS,
                     "description", "How many bins (default: the square root of the count, 5 to 40)");
@@ -149,6 +152,48 @@ public final class RachanaSchema {
             return Map.of("type", "array", "description", "Vertical marker lines: { label, value: <expression>, tone }");
         }
         return Map.of("description", "option of " + k.id() + " panels");
+    }
+
+    /** {@code pivot}: true, or the fields a user may pivot by and the arrangement the Pivot tab opens with. */
+    private static Map<String, Object> pivot() {
+        List<String> aggs = com.ash.drishti.rachana.model.PivotSpec.AGGREGATIONS;
+        Map<String, Object> field = new LinkedHashMap<>();
+        field.put("field", text("The field's name (a row path, or any name with a bind)"));
+        field.put("bind", text(EL + " over the row (@), for a field that is not a plain path"));
+        field.put("label", text("Defaults to the field's name"));
+        field.put("fmt", text("A number or date format"));
+        Map<String, Object> value = new LinkedHashMap<>();
+        value.put("field", text("A field named in fields"));
+        value.put("agg", Map.of("type", "string", "enum", aggs, "description", "How a cell combines its rows (default sum)"));
+        value.put("show", Map.of("type", "string", "enum", com.ash.drishti.rachana.model.PivotSpec.SHOWS,
+                "description", "As the value itself, or as a share of its row, column or the total"));
+        Map<String, Object> filter = new LinkedHashMap<>();
+        filter.put("field", text("A field named in fields"));
+        filter.put("values", Map.of("type", "array", "description", "The values kept"));
+        filter.put("min", Map.of("description", "Lowest kept (a number or a date)"));
+        filter.put("max", Map.of("description", "Highest kept (a number or a date)"));
+        Map<String, Object> props = new LinkedHashMap<>();
+        props.put("fields", Map.of("type", "array", "maxItems", com.ash.drishti.rachana.model.PivotSpec.MAX_FIELDS,
+                "description", "The fields a user may pivot by: row paths, or { field, bind, label, fmt } (default: the panel's columns)",
+                "items", Map.of("type", List.of("string", "object"), "properties", field, "additionalProperties", false)));
+        props.put("rows", Map.of("type", "array", "maxItems", com.ash.drishti.rachana.model.PivotSpec.MAX_LEVELS,
+                "description", "Fields down the side, outermost first"));
+        props.put("columns", Map.of("type", "array", "maxItems", com.ash.drishti.rachana.model.PivotSpec.MAX_LEVELS,
+                "description", "Fields across the top, outermost first"));
+        props.put("values", Map.of("type", "array", "maxItems", com.ash.drishti.rachana.model.PivotSpec.MAX_VALUES,
+                "description", "The numbers in the cells: { field, agg, show }", "items", object(value, List.of("field"))));
+        props.put("filters", Map.of("type", "array", "description", "Fields to filter by: names, or { field, values } / { field, min, max }",
+                "items", Map.of("type", List.of("string", "object"), "properties", filter, "additionalProperties", false)));
+        props.put("heat", Map.of("type", "boolean", "description", "Shade each cell by its value"));
+        props.put("chart", Map.of("type", "string", "enum", com.ash.drishti.rachana.model.PivotSpec.CHARTS,
+                "description", "Open with a chart of the result"));
+        props.put("totals", Map.of("type", "boolean", "description", "false hides subtotals and grand totals"));
+        Map<String, Object> o = new LinkedHashMap<>();
+        o.put("type", List.of("boolean", "object"));
+        o.put("description", "Offer a Pivot tab: true (by the panel's columns), or { fields, rows, columns, values, filters, heat, chart }");
+        o.put("properties", props);
+        o.put("additionalProperties", false);
+        return o;
     }
 
     private static Map<String, Object> column(Collection<String> formats) {

@@ -22,6 +22,7 @@ import com.ash.drishti.rachana.model.Match;
 import com.ash.drishti.rachana.model.Panel;
 import com.ash.drishti.rachana.model.PanelKind;
 import com.ash.drishti.rachana.model.PanelOptions;
+import com.ash.drishti.rachana.model.PivotSpec;
 import com.ash.drishti.rachana.model.SourceLocation;
 import com.ash.drishti.rachana.model.StripItem;
 import com.ash.drishti.rachana.model.Sutra;
@@ -239,8 +240,14 @@ final class SutraBuilder {
                     return;
                 }
                 if (!kind.accepts(opt)) {
-                    problem("DRS-2023", "search".equals(opt) ? "option 'search' applies only to panels that show a table (table, ladder), not '" + kind.id() + "'"
+                    problem("DRS-2023", "search".equals(opt) || Panel.PIVOT.equals(opt)
+                            ? "option '" + opt + "' applies only to panels that show a table (table, ladder), not '" + kind.id() + "'"
                             : "option '" + opt + "' is not valid for '" + kind.id() + "' panels", val);
+                } else if (Panel.PIVOT.equals(opt)) {
+                    Object v = val.isScalar() ? val.value() : plain(val);
+                    PivotSpec.parse(v, PivotSpec.Mode.PANEL, PivotSpec.fromColumns(columns)).problems()
+                            .forEach(why -> problem("DRS-2031", why, val));
+                    options.put(opt, v);
                 } else if (val.value() != null) {
                     Object v = val.isScalar() ? val.value() : plain(val);
                     PanelOptions.problem(kind, opt, v).ifPresent(why -> problem("DRS-2029", why, val));

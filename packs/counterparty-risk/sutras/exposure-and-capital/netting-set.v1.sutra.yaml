@@ -46,6 +46,12 @@ panels:
     code: TRD
     key: F3
     rows: $.trades
+    pivot:
+      fields: [product, assetClass, currency, book, maturityBucket, { field: maturity, label: Maturity date }, { field: notional, fmt: compact }, { field: mtm, label: MTM (USD), fmt: signed0 }, tradeId]
+      rows: [product]
+      columns: [maturityBucket]
+      values: [{ field: notional, agg: sum }]
+      filters: [currency, assetClass]
     columns:
       - { label: Trade, bind: "@.tradeId" }
       - { label: Product, bind: "@.product" }

@@ -9,71 +9,111 @@
   {
    "tradeId": "BBG-60000086",
    "product": "Reverse repo",
+   "assetClass": "Securities financing",
+   "currency": "EUR",
+   "book": "BOOK-SFT-1",
    "notional": 161000000.0,
    "maturity": "2026-10-07",
+   "maturityBucket": "0-1Y",
    "mtm": 3324957
   },
   {
    "tradeId": "BBG-60000089",
    "product": "Reverse repo",
+   "assetClass": "Securities financing",
+   "currency": "USD",
+   "book": "BOOK-SFT-1",
    "notional": 214000000.0,
    "maturity": "2026-12-22",
+   "maturityBucket": "0-1Y",
    "mtm": 2428077
   },
   {
    "tradeId": "BBG-60000107",
    "product": "Securities lending",
+   "assetClass": "Securities financing",
+   "currency": "USD",
+   "book": "BOOK-SFT-1",
    "notional": 243000000.0,
    "maturity": "2027-01-15",
+   "maturityBucket": "0-1Y",
    "mtm": 2398191
   },
   {
    "tradeId": "BBG-60000111",
    "product": "Securities borrowing",
+   "assetClass": "Securities financing",
+   "currency": "GBP",
+   "book": "BOOK-SFT-1",
    "notional": 126000000.0,
    "maturity": "2026-10-12",
+   "maturityBucket": "0-1Y",
    "mtm": -1901921
   },
   {
    "tradeId": "BBG-60000090",
    "product": "Reverse repo",
+   "assetClass": "Securities financing",
+   "currency": "USD",
+   "book": "BOOK-SFT-1",
    "notional": 223000000.0,
    "maturity": "2026-11-09",
+   "maturityBucket": "0-1Y",
    "mtm": 1817034
   },
   {
    "tradeId": "BBG-60000093",
    "product": "Tri-party repo",
+   "assetClass": "Securities financing",
+   "currency": "EUR",
+   "book": "BOOK-SFT-1",
    "notional": 114000000.0,
    "maturity": "2027-01-13",
+   "maturityBucket": "0-1Y",
    "mtm": 1780029
   },
   {
    "tradeId": "BBG-60000120",
    "product": "Margin loan",
+   "assetClass": "Securities financing",
+   "currency": "USD",
+   "book": "BOOK-SFT-1",
    "notional": 52000000.0,
    "maturity": "2027-02-25",
+   "maturityBucket": "0-1Y",
    "mtm": 1594435
   },
   {
    "tradeId": "BBG-60000104",
    "product": "Securities lending",
+   "assetClass": "Securities financing",
+   "currency": "CHF",
+   "book": "BOOK-SFT-1",
    "notional": 92000000.0,
    "maturity": "2027-01-13",
+   "maturityBucket": "0-1Y",
    "mtm": -1421662
   },
   {
    "tradeId": "BBG-60000113",
    "product": "Securities borrowing",
+   "assetClass": "Securities financing",
+   "currency": "EUR",
+   "book": "BOOK-SFT-1",
    "notional": 156000000.0,
    "maturity": "2026-11-27",
+   "maturityBucket": "0-1Y",
    "mtm": -1189358
   },
   {
    "tradeId": "BBG-60000116",
    "product": "Margin loan",
+   "assetClass": "Securities financing",
+   "currency": "JPY",
+   "book": "BOOK-SFT-1",
    "notional": 96000000.0,
    "maturity": "2026-11-16",
+   "maturityBucket": "0-1Y",
    "mtm": 709577
   }
  ],

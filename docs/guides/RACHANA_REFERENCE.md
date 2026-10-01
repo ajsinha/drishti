@@ -667,12 +667,12 @@ server computes it and how the console draws it: [PANELS.md](PANELS.md)):
 | Kind | Required options | Optional options | Renders | Uses `columns` |
 |---|---|---|---|---|
 | [`kv`](#kv) | | `rows`, `columns`, `fields` | label/value grid | yes |
-| [`table`](#table) | `rows` | `totalLabel`, `limit`, `moreLabel`, `link` | table with optional total row and "N more" | yes |
+| [`table`](#table) | `rows` | `totalLabel`, `limit`, `moreLabel`, `link`, `search`, [`pivot`](#pivot-a-pivot-tab-on-a-table-or-ladder) | table with optional total row and "N more" | yes |
 | [`tabs`](#tabs) | `each` | `tabTitle`, `layout` | one sub-panel per element, as tabs or side by side | in `body` |
 | [`line`](#line) | | `rows`, `source`, `x`, `y`, `mark`, `footer`, `unit`, `fmt` | line chart | no |
 | [`area`](#area) | `rows` | `x`, `series`, `limit`, `limitLabel`, `unit` | area chart, several series, dashed limit | no |
 | [`hbar`](#hbar) | `rows` | `label`, `value`, `fmt`, `tone` | horizontal bars | no |
-| [`ladder`](#ladder) | `rows` | `totalLabel`, `highlight` | table with highlighted rows | yes |
+| [`ladder`](#ladder) | `rows` | `totalLabel`, `highlight`, `search`, [`pivot`](#pivot-a-pivot-tab-on-a-table-or-ladder) | table with highlighted rows | yes |
 | [`links`](#links-panel) | | | linked entities with badges | no |
 | [`status`](#status) | | `fields` | label/value grid, coloured by meaning | no (uses `fields`) |
 | [`provenance`](#provenance) | | | how the view was built | no |
@@ -693,12 +693,12 @@ expressions and templates are compiled at load time.
 | Kind | Expressions (Rachana-EL) | Field names (of each row) | Plain values |
 |---|---|---|---|
 | `kv` | `rows` | | |
-| `table` | `rows`, `moreLabel` | | `limit` (integer), `totalLabel`, `search` (`false` hides the filter) |
+| `table` | `rows`, `moreLabel`, each `pivot` field's `bind` | each `pivot` field written as a path | `limit` (integer), `totalLabel`, `search` (`false` hides the filter), the rest of `pivot` |
 | `tabs` | `each`, `tabTitle` | | `layout` |
 | `line` | `rows`, `source`, `mark` | `x`, `y` | `unit`, `fmt` |
 | `area` | `rows`, `limit` | `x`, each series' `value` | `series[].label`, `series[].tone`, `limitLabel`, `unit` |
 | `hbar` | `rows` | `label`, `value` | `fmt`, `tone` |
-| `ladder` | `rows`, `highlight` | | `totalLabel`, `search` (`false` hides the filter) |
+| `ladder` | `rows`, `highlight`, each `pivot` field's `bind` | each `pivot` field written as a path | `totalLabel`, `search` (`false` hides the filter), the rest of `pivot` |
 | `status` | each field's `bind` | | each field's `label`, `fmt`, `tone` |
 | `gauge` | `value`, `max` | | `label`, `fmt` |
 | `surface` | `rows`; `y` when it starts with `$` or `@` | `y` otherwise | `fmt`, `unit`, `view` |
@@ -767,6 +767,7 @@ One row per element of `rows`.
 | `totalLabel` | | `Total` | Text of the total row's label cell. |
 | `link` | | | Accepted, no effect (see above). |
 | `search` | | `true` | `false` hides the filter box (and the per-column filters) in the panel's heading, for a table too small or too fixed to need one. Table and ladder panels take it; on any other kind it is a problem (`DRS-2023`, *option 'search' applies only to panels that show a table*). |
+| `pivot` | | none | Offers a **Pivot** tab beside the table: `true`, or the fields a user may pivot by and the arrangement it opens with ([below](#pivot-a-pivot-tab-on-a-table-or-ladder)). Without it there is no Pivot tab. |
 
 Totals: when at least one column says `total: true`, a total row is added. It sums that column's numbers over
 **all** rows, including those hidden by `limit` (values that are not numbers count as 0), formats the sum with the
@@ -796,6 +797,90 @@ netting set `NS-MERIDIAN-RE-NY`, rows such as
 `MX-20000007 · Overnight index swap · 199.0m · 2034-06-26 · −68,527,810`, the trade ids as links, a `Net` row, and
 the "more trades" line. The data is
 `{"columns": [...], "numeric": [false, false, true, false, true], "rows": [{"cells": [...], "highlight": false, "path": "$.trades[0]"}], "total": {...}, "more": "…"}`.
+
+#### `pivot`: a Pivot tab on a table or ladder
+
+A table or ladder may offer its rows as an interactive, Excel-style pivot: a **Table | Pivot** switch in the panel,
+where a user drags fields into rows, columns, values and filters, with subtotals, totals, a chart, a drill-down to the
+rows under any cell, and export ([USER_GUIDE.md](USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way)). It is **opt-in**:
+only a panel whose Sutra says `pivot:` has the tab, and only the fields the Sutra offers can be used. Every other
+table stays a table.
+
+```yaml
+pivot: true                     # the panel's own columns are the fields; the tab opens with nothing arranged
+pivot: false                    # the same as leaving it out: no Pivot tab
+pivot:                          # the fields on offer, and the arrangement the tab opens with
+  fields: [product, currency, maturityBucket, { field: maturity, label: Maturity date }, notional, mtm, tradeId]
+  rows: [product]
+  columns: [maturityBucket]
+  values: [{ field: notional, agg: sum }]
+  filters: [currency]
+  heat: true
+  chart: bar
+```
+
+| Key | Default | Meaning |
+|---|---|---|
+| `fields` | the panel's columns | The fields a user may pivot by, at most 40, in the order the field list shows them. A field is a **path over the row** (`currency`, `counterparty.name`; `@.currency` is the same), or a mapping `{ field, bind, label, fmt }`: `field` is its name (letters, digits, `_`, `.` and `-`), `bind` an expression over the row (`@`) for a field that is not a plain path, `label` and `fmt` how it is shown. A field without a label takes the label of a column bound to the same expression, else its name in words; likewise its `fmt`. A field need not be a column: a table can show five columns and offer ten fields. |
+| `rows` | none | Field names down the side, outermost first; at most 4. |
+| `columns` | none | Field names across the top, outermost first; at most 4. A field may not be in both. |
+| `values` | none | The numbers in the cells, at most 6, each `{ field, agg, show }`. `agg`: `sum` (the default), `count` (rows with a value), `avg`, `min`, `max` or `distinct` (how many different values). `show`: `value` (the default), `pctRow`, `pctColumn` or `pctTotal` (the cell as a share of its row's total, its column's total or the grand total). |
+| `filters` | none | Fields offered as filters: a name (every value kept), `{ field, values: [USD, EUR] }` (only those values) or `{ field, min, max }` (an inclusive range of numbers, or of ISO dates written as text). Not both `values` and a range. |
+| `heat` | `false` | Open with the cells shaded by their value. |
+| `chart` | none | Open with a `bar`, `line` or `heatmap` chart of the result. |
+| `totals` | `true` | `false` opens without subtotals and grand totals. |
+
+With `pivot: true`, or a mapping without `fields`, the fields are the panel's columns: a column bound to a row path
+(`"@.mtm"`) is named by the path (`mtm`); any other column by its label in kebab case (`Notional in USD` is
+`notional-in-usd`, `col3` when the label gives nothing), and a repeated name gets `-2`. Write `rows`, `columns`,
+`values` and `filters` with those names.
+
+Group keys are values as text (`(blank)` for a missing one) in natural order: numbers by value, and text with numbers
+in it by those numbers (`2-5Y` before `10Y+`, `BOOK-9` before `BOOK-10`).
+
+What a user arranges is kept for them (per Sutra and panel) and never changes the Sutra; an author may **promote** it,
+which writes this option into the Sutra's next version through review: only that panel's `pivot:` key is rewritten
+(as a block mapping), its `fields` and `totals` stay as written, and every other line and comment of the file is kept.
+
+The pivot reads **every row** of the panel (the browser receives them when the tab is first shown, up to
+`drishti.pivot.max-records`, 50,000), not only the first `limit` the table shows. It sees what the table sees: the same
+document, business date and Sutra.
+
+```yaml
+  - id: trades
+    kind: table
+    title: Member trades
+    rows: $.trades
+    limit: 4
+    pivot:
+      fields: [product, assetClass, currency, maturityBucket, { field: notional, fmt: compact },
+               { field: mtm, label: MTM (USD), fmt: signed0 }, tradeId]
+      rows: [product]
+      columns: [maturityBucket]
+      values: [{ field: notional, agg: sum }]
+      filters: [currency, assetClass]
+    columns:
+      - { label: Trade, bind: "@.tradeId" }
+      - { label: Product, bind: "@.product" }
+      - { label: Notional, bind: "@.notional", fmt: compact }
+      - { label: MTM, bind: "@.mtm", fmt: signed0, tone: sign, total: true }
+```
+
+You should see, for netting set `NS-ALDERSHOT-LDN` (counterparty-risk pack), the table as before with a **Table |
+Pivot** switch above it; **Pivot** shows notional by product down the side and `0-1Y`, `1-2Y`, `2-5Y`, `5-10Y`,
+`10Y+` across, with row and column totals, over all the netting set's trades. In the view JSON the table's data
+carries the offer: `"pivot": {"fields": [{"name": "product", "label": "Product", "numeric": false, "fmt": null}, …],
+"rows": ["product"], "columns": ["maturityBucket"], "values": [{"field": "notional", "agg": "sum"}], "filters": [...],
+"heat": false, "chart": null, "totals": true, "maxRows": 50000}`.
+
+Mistakes are `DRS-2031` with the reason (*pivot rows name 'desk', which is not one of its fields (currency, mtm,
+product)*, *pivot value 'agg' must be one of sum, count, avg, min, max, distinct, not 'median'*, *a pivot has at most 4
+row fields and 4 column fields*); `pivot` on any kind but `table` and `ladder` is `DRS-2023`; a field's `bind` that does
+not compile is `DRS-2101` when the Sutra loads. The JSON Schema describes the option, so Studio completes its keys,
+`agg`, `show` and `chart` and checks them as you type.
+
+A pack opts a kind's **search results and pick lists** into the same Pivot tab with `pivot:` beside `columns:` in
+`pack.yaml` ([PACKS.md](PACKS.md#pivot-a-pivot-tab-on-search-results)).
 
 #### tabs
 
@@ -939,6 +1024,8 @@ A table whose rows can be highlighted: settlement ladders, lifecycle events, the
 | `columns` | | inferred | As for `table`. |
 | `highlight` | | none | Expression evaluated per row (`@`, `#index` available); rows where it is truthy are highlighted. |
 | `totalLabel` | | `Total` | As for `table`; columns with `total: true` are summed. |
+| `search` | | `true` | As for `table`. |
+| `pivot` | | none | As for `table`: a [Pivot tab](#pivot-a-pivot-tab-on-a-table-or-ladder) over the ladder's rows. |
 
 A ladder does not accept `limit` or `moreLabel` (`DRS-2023`): it always shows every row.
 
@@ -1618,7 +1705,7 @@ A Sutra file that fails any check is not loaded (or keeps its last good version,
 | `DRS-2020` | `name 'IRS_Vanilla' must be lower-case kebab, 2-64 characters`, `version must be a positive integer` | bad name or version | `irs-vanilla`; `version: 3` unquoted |
 | `DRS-2021` | `unknown panel kind 'chart'; expected one of kv, table, tabs, line, area, hbar, ladder, links, status, provenance, markdown, gauge, surface, waterfall, histogram, scatter, candlestick, graph, timeline, pivot` | a kind that does not exist | use one of the 20 kinds |
 | `DRS-2022` | `'table' panel 'flows' needs option 'rows'` | a required option is missing | add it (see each kind's table) |
-| `DRS-2023` | `option 'limit' is not valid for 'ladder' panels`, `only 'tabs' panels take a 'body'` | an option the kind does not accept | remove it, or change the kind |
+| `DRS-2023` | `option 'limit' is not valid for 'ladder' panels`, `only 'tabs' panels take a 'body'`, `option 'pivot' applies only to panels that show a table (table, ladder), not 'kv'` | an option the kind does not accept | remove it, or change the kind |
 | `DRS-2024` | `duplicate panel id 'legs'` | two panels with one id | rename one |
 | `DRS-2025` | `'F13' is not a function key (F1-F12)`, `function key F2 is used twice` | a bad or repeated key | use `F1`–`F12` once each, across panels and `keys` |
 | `DRS-2026` | `the strip holds at most 8 figures, found 9` | more than 8 strip items | move figures into a `kv` panel |
@@ -1626,6 +1713,7 @@ A Sutra file that fails any check is not loaded (or keeps its last good version,
 | `DRS-2028` | `trade-x@2 is already defined in /…/trade-x.v2.sutra.yaml` | two files define one `name@version` | raise the version, or remove the duplicate |
 | `DRS-2029` | `option 'agg' of 'pivot' panels must be one of sum, count, avg, min, max, not 'median'`, `option 'heat' of 'pivot' panels must be true or false, not 'yes'`, `option 'bins' of 'histogram' panels must be a whole number from 1 to 200, not '0'`, `each histogram marker must be a mapping with a 'value' expression …`, `option 'layout' of 'graph' panels must be one of tree, force, not 'circle'`, `option 'colors' of 'waterfall' panels must be one of gain-loss, theme, not 'rainbow'` | an option value the kind does not allow | use one of the values listed |
 | `DRS-2030` | `span must be a whole number from 1 to 12 (columns of the 12-column grid), not '13'`, `height must be a whole number from 1 to 24 (grid rows), not '30'`, `'span' sizes a whole panel: a tabs body takes the size of its panel` | a size outside the grid, not a whole number, or on a `tabs` body | a whole number in range, on the panel itself |
+| `DRS-2031` | `'pivot' is true, false, or a mapping of fields, rows, columns, values, filters, heat, chart, totals; not 'yes please'`, `pivot rows name 'desk', which is not one of its fields (currency, mtm, product)`, `pivot value 'agg' must be one of sum, count, avg, min, max, distinct, not 'median'`, `pivot value 'show' must be one of value, pctRow, pctColumn, pctTotal, not 'pctBook'`, `pivot field 'a' is in both rows and columns`, `a pivot has at most 4 row fields and 4 column fields`, `a pivot shows at most 6 values, found 7`, `pivot field '$.book' is not a field path (letters, digits, _ and dots); for an expression write { field: name, bind: <expression> }`, `pivot field 'a' is listed twice`, `unknown key 'colour' in pivot`, `pivot 'chart' must be one of bar, line, heatmap, not 'pie'`, `pivot 'heat' is true or false, not 'maybe'`, `a pivot filter keeps either 'values' or a range ('min', 'max'), not both`, `pivot 'fields' is a non-empty list of field paths (or { field, bind, label, fmt })` | a `pivot:` the Pivot tab cannot use | use the names its fields have, the values listed, or `pivot: true` ([the option](#pivot-a-pivot-tab-on-a-table-or-ladder)) |
 | `DRS-2101` | `expression '…': DRS-2101 …`, `template '…': DRS-2101 …` | an expression or template does not compile | see [Expression errors](#expression-errors) |
 
 Other codes you may meet around Sutras:

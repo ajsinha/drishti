@@ -64,8 +64,12 @@
   {
    "tradeId": "BBG-60000091",
    "product": "Tri-party repo",
+   "assetClass": "Securities financing",
+   "currency": "USD",
+   "book": "BOOK-SFT-2",
    "notional": 113000000.0,
    "maturity": "2026-10-07",
+   "maturityBucket": "0-1Y",
    "mtm": -135470
   }
  ],

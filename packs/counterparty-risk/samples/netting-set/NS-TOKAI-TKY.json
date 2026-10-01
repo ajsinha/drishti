@@ -64,15 +64,23 @@
   {
    "tradeId": "IMG-400157",
    "product": "Credit basket note",
+   "assetClass": "Structured",
+   "currency": "CHF",
+   "book": "BOOK-STRUCT-1",
    "notional": 250000000.0,
    "maturity": "2027-11-18",
+   "maturityBucket": "1-2Y",
    "mtm": -1748235
   },
   {
    "tradeId": "IMG-400137",
    "product": "Range accrual note",
+   "assetClass": "Structured",
+   "currency": "USD",
+   "book": "BOOK-STRUCT-1",
    "notional": 113000000.0,
    "maturity": "2034-06-05",
+   "maturityBucket": "5-10Y",
    "mtm": 330790
   }
  ],

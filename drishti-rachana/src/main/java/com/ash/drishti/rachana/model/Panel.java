@@ -60,6 +60,21 @@ public record Panel(
     public static final int MAX_SPAN = 12;
     public static final int MAX_HEIGHT = 24;
 
+    /** The interactive pivot a table or ladder opts into ({@code pivot: true} or a mapping); see {@link PivotSpec}. */
+    public static final String PIVOT = "pivot";
+
+    /**
+     * The panel's pivot, read against its columns: empty when the panel does not opt in (no {@code pivot}, or
+     * {@code pivot: false}) or the option cannot be read (the Sutra would not have loaded).
+     */
+    public Optional<PivotSpec> pivot() {
+        Object raw = options.get(PIVOT);
+        if (raw == null) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(PivotSpec.parse(raw, PivotSpec.Mode.PANEL, PivotSpec.fromColumns(columns)).spec());
+    }
+
     /** {@code span} when the Sutra sets it. */
     public Optional<Integer> span() {
         return options.get(SPAN) instanceof Number n ? Optional.of(n.intValue()) : Optional.empty();

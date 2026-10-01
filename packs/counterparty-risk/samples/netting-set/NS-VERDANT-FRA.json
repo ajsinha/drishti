@@ -64,15 +64,23 @@
   {
    "tradeId": "BBG-60000085",
    "product": "Reverse repo",
+   "assetClass": "Securities financing",
+   "currency": "CHF",
+   "book": "BOOK-SFT-2",
    "notional": 210000000.0,
    "maturity": "2026-12-23",
+   "maturityBucket": "0-1Y",
    "mtm": -2160188
   },
   {
    "tradeId": "BBG-60000096",
    "product": "Tri-party repo",
+   "assetClass": "Securities financing",
+   "currency": "EUR",
+   "book": "BOOK-SFT-2",
    "notional": 111000000.0,
    "maturity": "2026-10-07",
+   "maturityBucket": "0-1Y",
    "mtm": 1265588
   }
  ],

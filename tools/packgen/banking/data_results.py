@@ -43,8 +43,19 @@ def years(d: str) -> float:
     return max((date.fromisoformat(d) - N.AS_OF).days / 365, 0.0)
 
 
+BUCKETS = [(1, "0-1Y"), (2, "1-2Y"), (5, "2-5Y"), (10, "5-10Y")]
+
+
+def maturity_bucket(d: str) -> str:
+    """A trade's remaining maturity as a desk buckets it (natural order: 0-1Y, 1-2Y, 2-5Y, 5-10Y, 10Y+)."""
+    y = years(d)
+    return next((label for top, label in BUCKETS if y < top), "10Y+")
+
+
 def trade_row(t: dict) -> dict:
-    return {"tradeId": t["tradeId"], "product": t["productName"], "notional": t["notional"], "maturity": t["maturityDate"], "mtm": t["mtm"]}
+    """A trade as a row of another entity's trade list: the columns shown, and what its Pivot tab groups by."""
+    return {"tradeId": t["tradeId"], "product": t["productName"], "assetClass": t["assetClass"], "currency": t["currency"], "book": t["book"],
+            "notional": t["notional"], "maturity": t["maturityDate"], "maturityBucket": maturity_bucket(t["maturityDate"]), "mtm": t["mtm"]}
 
 
 def rating_pd(rating: str) -> float:

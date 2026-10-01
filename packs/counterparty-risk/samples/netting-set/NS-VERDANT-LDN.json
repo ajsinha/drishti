@@ -64,57 +64,89 @@
   {
    "tradeId": "MX-20000161",
    "product": "Zero-coupon inflation swap",
+   "assetClass": "Inflation",
+   "currency": "JPY",
+   "book": "BOOK-INFL-2",
    "notional": 47000000.0,
    "maturity": "2036-07-21",
+   "maturityBucket": "5-10Y",
    "mtm": 8195317
   },
   {
    "tradeId": "WSS-1500079",
    "product": "Quanto option",
+   "assetClass": "FX",
+   "currency": "GBP",
+   "book": "BOOK-FX-2",
    "notional": 245000000.0,
    "maturity": "2033-05-16",
+   "maturityBucket": "5-10Y",
    "mtm": 2783757
   },
   {
    "tradeId": "WSS-1500035",
    "product": "FX digital option",
+   "assetClass": "FX",
+   "currency": "USD",
+   "book": "BOOK-FX-1",
    "notional": 146000000.0,
    "maturity": "2029-02-05",
+   "maturityBucket": "2-5Y",
    "mtm": 2716990
   },
   {
    "tradeId": "IMG-400125",
    "product": "Convertible bond",
+   "assetClass": "Equity",
+   "currency": "GBP",
+   "book": "BOOK-EQD-3",
    "notional": 88000000.0,
    "maturity": "2030-09-16",
+   "maturityBucket": "2-5Y",
    "mtm": 1334065
   },
   {
    "tradeId": "MX-20000186",
    "product": "Inflation asset swap",
+   "assetClass": "Inflation",
+   "currency": "JPY",
+   "book": "BOOK-INFL-3",
    "notional": 124000000.0,
    "maturity": "2033-05-23",
+   "maturityBucket": "5-10Y",
    "mtm": 528987
   },
   {
    "tradeId": "IMG-400112",
    "product": "Contract for difference",
+   "assetClass": "Equity",
+   "currency": "USD",
+   "book": "BOOK-EQD-3",
    "notional": 91000000.0,
    "maturity": "2026-10-07",
+   "maturityBucket": "0-1Y",
    "mtm": 491937
   },
   {
    "tradeId": "WSS-1500081",
    "product": "Quanto option",
+   "assetClass": "FX",
+   "currency": "USD",
+   "book": "BOOK-FX-2",
    "notional": 237000000.0,
    "maturity": "2036-04-23",
+   "maturityBucket": "5-10Y",
    "mtm": -199321
   },
   {
    "tradeId": "IMG-400107",
    "product": "Portfolio (basket) swap",
+   "assetClass": "Equity",
+   "currency": "GBP",
+   "book": "BOOK-EQD-2",
    "notional": 8000000.0,
    "maturity": "2030-08-07",
+   "maturityBucket": "2-5Y",
    "mtm": -53321
   }
  ],

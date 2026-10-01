@@ -14,8 +14,10 @@
   See the LICENSE file in the root of this repository for the full terms.
 #}
 {% extends "base.html" %}
+{% from "_macros/panels.html" import pivot_switch, pivot_host %}
 {% block title %}Search · {{ PRODUCT }}{% endblock %}
 {% block body_class %}terminal{% endblock %}
+{% block head %}{% if data and data.pivot and not vs %}<link rel="stylesheet" href="/static/css/pivot.css?v={{ ASSET_V }}">{% endif %}{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 <div class="adm search">
@@ -65,13 +67,16 @@
       {% if data.partial %}<span class="text-muted-d"><i class="bi bi-exclamation-circle" aria-hidden="true"></i> not every source answered in time, or the scan limit was reached: results may be incomplete</span>{% endif %}
     </div>
     {% if rows %}
-    <section class="pnl"><div class="pnl-b"><div class="tbl-wrap"><table class="tbl">
+    {% set pv = data.pivot if (data.pivot and not vs) else none %}
+    <section class="pnl"><div class="pnl-b">{% if pv %}<div class="pv-box pv-search-box">{{ pivot_switch('search', 'the results') }}
+      <div class="pv-pane-table" id="pv-search-table" role="tabpanel" aria-labelledby="pv-search-t-table">{% endif %}<div class="tbl-wrap"><table class="tbl">
       <thead><tr><th>{{ data.mnemonic or data.kind }}</th>{% if titled %}<th>Title</th>{% endif %}
         {% for c in data.columns %}<th class="{{ 'num' if rows and rows[0].cells[loop.index0][1] else '' }}" title="{{ c }}">{{ data.labels[c] }}</th>{% endfor %}</tr></thead>
       <tbody>{% for r in rows %}
         <tr{% if r.status %} class="cmp-{{ r.status }}" title="{{ 'only on the later date' if r.status == 'added' else 'only on ' ~ vs }}"{% endif %}><td><a class="lnk mono" href="/v/{{ r.ref.kind }}/{{ r.ref.id | urlencode }}">{{ r.ref.id }}</a>{% if r.status %} <span class="st">{{ r.status }}</span>{% endif %}</td>{% if titled %}<td>{{ r.title }}</td>{% endif %}
           {% for text, number in r.cells %}<td class="{{ 'num ' if number else '' }}mono">{{ text }}</td>{% endfor %}</tr>
-      {% endfor %}</tbody></table></div></div></section>
+      {% endfor %}</tbody></table></div>{% if pv %}</div>
+      {{ pivot_host('search', pv, pivot_saved, data.kind, q) }}</div>{% endif %}</div></section>
     {% else %}
       <p class="text-muted-d">Nothing matches.</p>
     {% endif %}
@@ -88,4 +93,8 @@
   {% endif %}
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script>
+{% if data and data.pivot and not vs %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/pivot-engine.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/pivot-grid.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/pivot.js?v={{ ASSET_V }}"></script>{% endif %}{% endblock %}

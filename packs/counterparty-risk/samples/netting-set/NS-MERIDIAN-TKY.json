@@ -64,22 +64,34 @@
   {
    "tradeId": "IMG-400134",
    "product": "Range accrual note",
+   "assetClass": "Structured",
+   "currency": "EUR",
+   "book": "BOOK-STRUCT-1",
    "notional": 89000000.0,
    "maturity": "2035-10-05",
+   "maturityBucket": "5-10Y",
    "mtm": 587235
   },
   {
    "tradeId": "IMG-400149",
    "product": "FX-rates hybrid (PRDC)",
+   "assetClass": "Structured",
+   "currency": "USD",
+   "book": "BOOK-STRUCT-2",
    "notional": 177000000.0,
    "maturity": "2034-05-08",
+   "maturityBucket": "5-10Y",
    "mtm": 401694
   },
   {
    "tradeId": "IMG-400144",
    "product": "Capital-protected note",
+   "assetClass": "Structured",
+   "currency": "USD",
+   "book": "BOOK-STRUCT-1",
    "notional": 118000000.0,
    "maturity": "2030-06-10",
+   "maturityBucket": "2-5Y",
    "mtm": -160042
   }
  ],

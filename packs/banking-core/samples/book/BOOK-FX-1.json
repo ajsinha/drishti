@@ -9,71 +9,111 @@
   {
    "tradeId": "WSS-1500065",
    "product": "FX target redemption forward",
+   "assetClass": "FX",
+   "currency": "USD",
+   "book": "BOOK-FX-1",
    "notional": 217000000.0,
    "maturity": "2031-12-29",
+   "maturityBucket": "5-10Y",
    "mtm": 3921080
   },
   {
    "tradeId": "WSS-1500063",
    "product": "FX target redemption forward",
+   "assetClass": "FX",
+   "currency": "GBP",
+   "book": "BOOK-FX-1",
    "notional": 216000000.0,
    "maturity": "2034-07-10",
+   "maturityBucket": "5-10Y",
    "mtm": -3824878
   },
   {
    "tradeId": "WSS-1500045",
    "product": "FX double-barrier option",
+   "assetClass": "FX",
+   "currency": "USD",
+   "book": "BOOK-FX-1",
    "notional": 237000000.0,
    "maturity": "2036-06-25",
+   "maturityBucket": "5-10Y",
    "mtm": -3187239
   },
   {
    "tradeId": "WSS-1500035",
    "product": "FX digital option",
+   "assetClass": "FX",
+   "currency": "USD",
+   "book": "BOOK-FX-1",
    "notional": 146000000.0,
    "maturity": "2029-02-05",
+   "maturityBucket": "2-5Y",
    "mtm": 2716990
   },
   {
    "tradeId": "WSS-1500021",
    "product": "FX swap",
+   "assetClass": "FX",
+   "currency": "USD",
+   "book": "BOOK-FX-1",
    "notional": 127000000.0,
    "maturity": "2035-11-13",
+   "maturityBucket": "5-10Y",
    "mtm": 1986020
   },
   {
    "tradeId": "WSS-1500052",
    "product": "FX one-touch / no-touch",
+   "assetClass": "FX",
+   "currency": "USD",
+   "book": "BOOK-FX-1",
    "notional": 117000000.0,
    "maturity": "2032-06-21",
+   "maturityBucket": "5-10Y",
    "mtm": -1806756
   },
   {
    "tradeId": "WSS-1500030",
    "product": "FX vanilla option",
+   "assetClass": "FX",
+   "currency": "USD",
+   "book": "BOOK-FX-1",
    "notional": 67000000.0,
    "maturity": "2027-11-24",
+   "maturityBucket": "1-2Y",
    "mtm": -1313627
   },
   {
    "tradeId": "WSS-1500018",
    "product": "Non-deliverable forward",
+   "assetClass": "FX",
+   "currency": "USD",
+   "book": "BOOK-FX-1",
    "notional": 47000000.0,
    "maturity": "2026-10-07",
+   "maturityBucket": "0-1Y",
    "mtm": -708903
   },
   {
    "tradeId": "WSS-1500022",
    "product": "FX swap",
+   "assetClass": "FX",
+   "currency": "GBP",
+   "book": "BOOK-FX-1",
    "notional": 98000000.0,
    "maturity": "2030-06-25",
+   "maturityBucket": "2-5Y",
    "mtm": 620224
   },
   {
    "tradeId": "WSS-1500015",
    "product": "Non-deliverable forward",
+   "assetClass": "FX",
+   "currency": "USD",
+   "book": "BOOK-FX-1",
    "notional": 79000000.0,
    "maturity": "2026-10-07",
+   "maturityBucket": "0-1Y",
    "mtm": -606269
   }
  ],

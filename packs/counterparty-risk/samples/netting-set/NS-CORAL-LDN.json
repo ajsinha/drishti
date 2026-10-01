@@ -64,64 +64,100 @@
   {
    "tradeId": "MX-20000185",
    "product": "Inflation asset swap",
+   "assetClass": "Inflation",
+   "currency": "JPY",
+   "book": "BOOK-INFL-2",
    "notional": 237000000.0,
    "maturity": "2031-05-13",
+   "maturityBucket": "2-5Y",
    "mtm": -2801657
   },
   {
    "tradeId": "WSS-1500019",
    "product": "FX swap",
+   "assetClass": "FX",
+   "currency": "USD",
+   "book": "BOOK-FX-2",
    "notional": 98000000.0,
    "maturity": "2037-05-15",
+   "maturityBucket": "10Y+",
    "mtm": -1679905
   },
   {
    "tradeId": "MX-20000180",
    "product": "Inflation-linked bond",
+   "assetClass": "Inflation",
+   "currency": "USD",
+   "book": "BOOK-INFL-2",
    "notional": 57000000.0,
    "maturity": "2027-05-24",
+   "maturityBucket": "0-1Y",
    "mtm": -1106536
   },
   {
    "tradeId": "MX-20000165",
    "product": "Year-on-year inflation swap",
+   "assetClass": "Inflation",
+   "currency": "USD",
+   "book": "BOOK-INFL-2",
    "notional": 249000000.0,
    "maturity": "2028-04-24",
+   "maturityBucket": "1-2Y",
    "mtm": 956175
   },
   {
    "tradeId": "MX-20000192",
    "product": "Limited price index swap",
+   "assetClass": "Inflation",
+   "currency": "GBP",
+   "book": "BOOK-INFL-1",
    "notional": 171000000.0,
    "maturity": "2034-07-12",
+   "maturityBucket": "5-10Y",
    "mtm": -339669
   },
   {
    "tradeId": "IMG-400078",
    "product": "Reverse convertible",
+   "assetClass": "Equity",
+   "currency": "EUR",
+   "book": "BOOK-EQD-2",
    "notional": 47000000.0,
    "maturity": "2030-09-09",
+   "maturityBucket": "2-5Y",
    "mtm": -218334
   },
   {
    "tradeId": "IMG-400087",
    "product": "Volatility swap",
+   "assetClass": "Equity",
+   "currency": "USD",
+   "book": "BOOK-EQD-3",
    "notional": 7000000.0,
    "maturity": "2030-07-09",
+   "maturityBucket": "2-5Y",
    "mtm": 139897
   },
   {
    "tradeId": "IMG-400090",
    "product": "Volatility swap",
+   "assetClass": "Equity",
+   "currency": "JPY",
+   "book": "BOOK-EQD-3",
    "notional": 8000000.0,
    "maturity": "2028-11-07",
+   "maturityBucket": "2-5Y",
    "mtm": 31675
   },
   {
    "tradeId": "IMG-400089",
    "product": "Volatility swap",
+   "assetClass": "Equity",
+   "currency": "USD",
+   "book": "BOOK-EQD-1",
    "notional": 10000000.0,
    "maturity": "2036-09-29",
+   "maturityBucket": "10Y+",
    "mtm": 145
   }
  ],

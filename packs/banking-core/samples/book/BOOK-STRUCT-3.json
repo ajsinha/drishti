@@ -9,71 +9,111 @@
   {
    "tradeId": "IMG-400145",
    "product": "FX-rates hybrid (PRDC)",
+   "assetClass": "Structured",
+   "currency": "USD",
+   "book": "BOOK-STRUCT-3",
    "notional": 216000000.0,
    "maturity": "2036-08-18",
+   "maturityBucket": "5-10Y",
    "mtm": 4057279
   },
   {
    "tradeId": "IMG-400141",
    "product": "Capital-protected note",
+   "assetClass": "Structured",
+   "currency": "USD",
+   "book": "BOOK-STRUCT-3",
    "notional": 135000000.0,
    "maturity": "2034-08-07",
+   "maturityBucket": "5-10Y",
    "mtm": -2117461
   },
   {
    "tradeId": "IMG-400155",
    "product": "Worst-of note",
+   "assetClass": "Structured",
+   "currency": "GBP",
+   "book": "BOOK-STRUCT-3",
    "notional": 134000000.0,
    "maturity": "2029-10-19",
+   "maturityBucket": "2-5Y",
    "mtm": -2097100
   },
   {
    "tradeId": "IMG-400142",
    "product": "Capital-protected note",
+   "assetClass": "Structured",
+   "currency": "EUR",
+   "book": "BOOK-STRUCT-3",
    "notional": 64000000.0,
    "maturity": "2030-08-27",
+   "maturityBucket": "2-5Y",
    "mtm": 1294522
   },
   {
    "tradeId": "IMG-400138",
    "product": "Range accrual note",
+   "assetClass": "Structured",
+   "currency": "CAD",
+   "book": "BOOK-STRUCT-3",
    "notional": 145000000.0,
    "maturity": "2035-02-06",
+   "maturityBucket": "5-10Y",
    "mtm": -1227669
   },
   {
    "tradeId": "IMG-400154",
    "product": "Worst-of note",
+   "assetClass": "Structured",
+   "currency": "USD",
+   "book": "BOOK-STRUCT-3",
    "notional": 118000000.0,
    "maturity": "2028-05-15",
+   "maturityBucket": "1-2Y",
    "mtm": -809315
   },
   {
    "tradeId": "IMG-400158",
    "product": "Credit basket note",
+   "assetClass": "Structured",
+   "currency": "AUD",
+   "book": "BOOK-STRUCT-3",
    "notional": 139000000.0,
    "maturity": "2036-04-02",
+   "maturityBucket": "5-10Y",
    "mtm": 566863
   },
   {
    "tradeId": "IMG-400153",
    "product": "Worst-of note",
+   "assetClass": "Structured",
+   "currency": "GBP",
+   "book": "BOOK-STRUCT-3",
    "notional": 41000000.0,
    "maturity": "2035-01-22",
+   "maturityBucket": "5-10Y",
    "mtm": 503987
   },
   {
    "tradeId": "IMG-400151",
    "product": "Worst-of note",
+   "assetClass": "Structured",
+   "currency": "USD",
+   "book": "BOOK-STRUCT-3",
    "notional": 113000000.0,
    "maturity": "2030-12-09",
+   "maturityBucket": "2-5Y",
    "mtm": -196197
   },
   {
    "tradeId": "IMG-400150",
    "product": "FX-rates hybrid (PRDC)",
+   "assetClass": "Structured",
+   "currency": "JPY",
+   "book": "BOOK-STRUCT-3",
    "notional": 27000000.0,
    "maturity": "2038-01-11",
+   "maturityBucket": "10Y+",
    "mtm": 115182
   }
  ],

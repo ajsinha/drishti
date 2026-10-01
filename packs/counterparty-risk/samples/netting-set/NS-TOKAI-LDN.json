@@ -64,71 +64,111 @@
   {
    "tradeId": "WSS-1500051",
    "product": "FX one-touch / no-touch",
+   "assetClass": "FX",
+   "currency": "USD",
+   "book": "BOOK-FX-2",
    "notional": 227000000.0,
    "maturity": "2030-10-29",
+   "maturityBucket": "2-5Y",
    "mtm": -1462679
   },
   {
    "tradeId": "WSS-1500009",
    "product": "FX forward",
+   "assetClass": "FX",
+   "currency": "USD",
+   "book": "BOOK-FX-2",
    "notional": 102000000.0,
    "maturity": "2026-10-07",
+   "maturityBucket": "0-1Y",
    "mtm": -1066636
   },
   {
    "tradeId": "WSS-1500059",
    "product": "FX average-rate option",
+   "assetClass": "FX",
+   "currency": "JPY",
+   "book": "BOOK-FX-3",
    "notional": 218000000.0,
    "maturity": "2037-03-09",
+   "maturityBucket": "10Y+",
    "mtm": 920619
   },
   {
    "tradeId": "WSS-1500064",
    "product": "FX target redemption forward",
+   "assetClass": "FX",
+   "currency": "CHF",
+   "book": "BOOK-FX-2",
    "notional": 50000000.0,
    "maturity": "2034-09-21",
+   "maturityBucket": "5-10Y",
    "mtm": 850141
   },
   {
    "tradeId": "IMG-400034",
    "product": "OTC equity option",
+   "assetClass": "Equity",
+   "currency": "JPY",
+   "book": "BOOK-EQD-3",
    "notional": 223000000.0,
    "maturity": "2027-05-26",
+   "maturityBucket": "0-1Y",
    "mtm": 780054
   },
   {
    "tradeId": "IMG-400075",
    "product": "Reverse convertible",
+   "assetClass": "Equity",
+   "currency": "USD",
+   "book": "BOOK-EQD-2",
    "notional": 65000000.0,
    "maturity": "2032-05-17",
+   "maturityBucket": "5-10Y",
    "mtm": 479208
   },
   {
    "tradeId": "MX-20000179",
    "product": "Inflation-linked bond",
+   "assetClass": "Inflation",
+   "currency": "EUR",
+   "book": "BOOK-INFL-1",
    "notional": 69000000.0,
    "maturity": "2032-06-07",
+   "maturityBucket": "5-10Y",
    "mtm": 266856
   },
   {
    "tradeId": "MX-20000187",
    "product": "Limited price index swap",
+   "assetClass": "Inflation",
+   "currency": "GBP",
+   "book": "BOOK-INFL-1",
    "notional": 223000000.0,
    "maturity": "2036-09-19",
+   "maturityBucket": "5-10Y",
    "mtm": -115232
   },
   {
    "tradeId": "IMG-400051",
    "product": "Equity Asian option",
+   "assetClass": "Equity",
+   "currency": "USD",
+   "book": "BOOK-EQD-3",
    "notional": 155000000.0,
    "maturity": "2035-05-29",
+   "maturityBucket": "5-10Y",
    "mtm": -51366
   },
   {
    "tradeId": "IMG-400079",
    "product": "Variance swap",
+   "assetClass": "Equity",
+   "currency": "USD",
+   "book": "BOOK-EQD-2",
    "notional": 2000000.0,
    "maturity": "2035-09-10",
+   "maturityBucket": "5-10Y",
    "mtm": -17351
   }
  ],

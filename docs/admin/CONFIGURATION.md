@@ -455,6 +455,8 @@ Not in the bundled file; the defaults apply until you set them.
 |---|---|---|
 | `max-scan` | `20000` | At most this many entities of a kind are read per search; the result says when it stopped short. |
 | `budget` | `3s` | Time a search may take to list and read; slower sources are left out. |
+| `columns.<kind>` | from packs | A kind's key fields in pick lists and searches (`columns:` in `pack.yaml`). |
+| `pivot.<kind>` | from packs | A Pivot tab on the kind's results: `true`, or the pivot as a JSON string (`pivot:` in `pack.yaml`, [PACKS.md](../guides/PACKS.md#pivot-a-pivot-tab-on-search-results)). |
 
 ### `drishti.calc` — Python in the browser
 
@@ -483,6 +485,23 @@ applied by the console when it draws that user's views. Who may is a role power 
 
 Promoting a layout to a Sutra also needs `drishti.rachana.studio-save: true` and a role with `author`; it is reviewed
 as any Studio save (`drishti.governance`).
+
+### `drishti.pivot` — the Pivot tab
+
+The Pivot tab ([USER_GUIDE.md](../guides/USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way)) appears only where a
+Sutra (`pivot:` on a table or ladder) or a pack (`pivot:` beside a kind's `columns:`) opts in; these keys bound it.
+There is no role power: anyone who may open a kind may pivot and save; promoting a pivot to a Sutra needs `author`,
+`drishti.rachana.studio-save` and goes through review. Saved pivots live in the preference store (namespace `pivots`).
+
+| Key | Default | Meaning |
+|---|---|---|
+| `enabled` | `true` (`DRISHTI_PIVOT_ENABLED`) | Off: no Pivot tab anywhere (the view's table data and search results no longer carry `pivot`), and `/api/v1/views/…/records`, `/api/v1/search/pivot/**` and `/api/v1/me/pivots/**` refuse. |
+| `max-records` | `50000` | Rows of one panel sent to the browser to pivot, whatever the table's `limit`; beyond it the pivot says *the first 50000 of N rows*. |
+| `max-row-keys` | `2000` | Innermost row groups a pivot shows; further groups are left out of the grid but counted in the totals (`moreRows`). |
+| `max-column-keys` | `200` | Column groups a pivot shows (`moreColumns`). |
+| `document-scan` | `20000` | Entities a search pivot reads as documents, when a field is not kept as a column and the user asks for a document read; more makes the result partial. |
+| `drill-page` | `200` | Underlying entities one drill-down page of a search pivot returns, at most. |
+| `budget` | `20s` | How long a search pivot waits for a business day's columns (the first read of a day loads them) or for its documents. |
 
 ### `drishti.panels` — chart and aggregate panel limits
 

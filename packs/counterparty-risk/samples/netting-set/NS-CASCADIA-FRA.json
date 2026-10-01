@@ -64,8 +64,12 @@
   {
    "tradeId": "BBG-60000119",
    "product": "Margin loan",
+   "assetClass": "Securities financing",
+   "currency": "JPY",
+   "book": "BOOK-SFT-3",
    "notional": 79000000.0,
    "maturity": "2026-11-04",
+   "maturityBucket": "0-1Y",
    "mtm": 1033179
   }
  ],

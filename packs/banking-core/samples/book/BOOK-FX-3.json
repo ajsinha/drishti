@@ -9,71 +9,111 @@
   {
    "tradeId": "WSS-1500056",
    "product": "FX average-rate option",
+   "assetClass": "FX",
+   "currency": "USD",
+   "book": "BOOK-FX-3",
    "notional": 218000000.0,
    "maturity": "2032-10-22",
+   "maturityBucket": "5-10Y",
    "mtm": -4103348
   },
   {
    "tradeId": "WSS-1500039",
    "product": "FX barrier option",
+   "assetClass": "FX",
+   "currency": "JPY",
+   "book": "BOOK-FX-3",
    "notional": 191000000.0,
    "maturity": "2029-10-22",
+   "maturityBucket": "2-5Y",
    "mtm": -2456557
   },
   {
    "tradeId": "WSS-1500046",
    "product": "FX double-barrier option",
+   "assetClass": "FX",
+   "currency": "CAD",
+   "book": "BOOK-FX-3",
    "notional": 138000000.0,
    "maturity": "2029-04-09",
+   "maturityBucket": "2-5Y",
    "mtm": -2103691
   },
   {
    "tradeId": "WSS-1500044",
    "product": "FX double-barrier option",
+   "assetClass": "FX",
+   "currency": "USD",
+   "book": "BOOK-FX-3",
    "notional": 89000000.0,
    "maturity": "2030-08-22",
+   "maturityBucket": "2-5Y",
    "mtm": 2041598
   },
   {
    "tradeId": "WSS-1500041",
    "product": "FX barrier option",
+   "assetClass": "FX",
+   "currency": "USD",
+   "book": "BOOK-FX-3",
    "notional": 202000000.0,
    "maturity": "2033-04-13",
+   "maturityBucket": "5-10Y",
    "mtm": 2035982
   },
   {
    "tradeId": "WSS-1500008",
    "product": "FX forward",
+   "assetClass": "FX",
+   "currency": "JPY",
+   "book": "BOOK-FX-3",
    "notional": 89000000.0,
    "maturity": "2026-10-07",
+   "maturityBucket": "0-1Y",
    "mtm": 1722945
   },
   {
    "tradeId": "WSS-1500011",
    "product": "FX forward",
+   "assetClass": "FX",
+   "currency": "USD",
+   "book": "BOOK-FX-3",
    "notional": 114000000.0,
    "maturity": "2026-10-07",
+   "maturityBucket": "0-1Y",
    "mtm": -940839
   },
   {
    "tradeId": "WSS-1500061",
    "product": "FX target redemption forward",
+   "assetClass": "FX",
+   "currency": "USD",
+   "book": "BOOK-FX-3",
    "notional": 177000000.0,
    "maturity": "2029-03-21",
+   "maturityBucket": "2-5Y",
    "mtm": -930931
   },
   {
    "tradeId": "WSS-1500059",
    "product": "FX average-rate option",
+   "assetClass": "FX",
+   "currency": "JPY",
+   "book": "BOOK-FX-3",
    "notional": 218000000.0,
    "maturity": "2037-03-09",
+   "maturityBucket": "10Y+",
    "mtm": 920619
   },
   {
    "tradeId": "WSS-1500010",
    "product": "FX forward",
+   "assetClass": "FX",
+   "currency": "USD",
+   "book": "BOOK-FX-3",
    "notional": 78000000.0,
    "maturity": "2027-03-22",
+   "maturityBucket": "0-1Y",
    "mtm": 808778
   }
  ],

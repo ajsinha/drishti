@@ -38,15 +38,18 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class AccessRecorder implements WebMvcConfigurer, HandlerInterceptor {
 
     /** Route pattern to the action recorded. */
-    static final Map<String, String> ACTIONS = Map.of(
-            "/api/v1/views/{kind}/{id}", "view",                    // its live stream is the same look: not recorded again
-            "/api/v1/entities/{kind}/{id}/raw", "raw",
-            "/api/v1/history/{kind}/{id}/diff", "history",
-            "/api/v1/history/{kind}/{id}/series", "history",
-            "/api/v1/search", "search",
-            "/api/v1/search/compare", "search",
-            "/api/v1/search/columns/{kind}", "search",              // Calc's drishti.columns(): the fields read are the detail
-            "/api/v1/search/csv", "export");
+    static final Map<String, String> ACTIONS = Map.ofEntries(
+            Map.entry("/api/v1/views/{kind}/{id}", "view"),                    // its live stream is the same look: not recorded again
+            Map.entry("/api/v1/views/{kind}/{id}/panels/{panel}/records", "view"),   // a panel's rows for its Pivot tab
+            Map.entry("/api/v1/entities/{kind}/{id}/raw", "raw"),
+            Map.entry("/api/v1/history/{kind}/{id}/diff", "history"),
+            Map.entry("/api/v1/history/{kind}/{id}/series", "history"),
+            Map.entry("/api/v1/search", "search"),
+            Map.entry("/api/v1/search/compare", "search"),
+            Map.entry("/api/v1/search/columns/{kind}", "search"),              // Calc's drishti.columns(): the fields read are the detail
+            Map.entry("/api/v1/search/pivot/{kind}", "search"),                // a search's Pivot tab, and its drill-downs
+            Map.entry("/api/v1/search/pivot/{kind}/drill", "search"),
+            Map.entry("/api/v1/search/csv", "export"));
 
     private final ObjectProvider<AccessLog> log;
     private final boolean enabled;

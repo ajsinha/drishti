@@ -56,7 +56,7 @@ import org.springframework.context.annotation.Import;
 @Import({CommonConfiguration.class, RachanaConfiguration.class, InferenceConfiguration.class, GraphConfiguration.class})
 @EnableConfigurationProperties({SourcesProperties.class, EngineProperties.class, CommandsProperties.class, LiveProperties.class,
         com.ash.drishti.engine.time.BusinessDateProperties.class, com.ash.drishti.engine.search.SearchProperties.class,
-        com.ash.drishti.engine.bind.PanelLimits.class})
+        com.ash.drishti.engine.bind.PanelLimits.class, com.ash.drishti.engine.pivot.PivotProperties.class})
 public class EngineConfiguration {
 
     /**
@@ -116,6 +116,14 @@ public class EngineConfiguration {
         return new com.ash.drishti.engine.search.StructuredSearch(router, mnemonics, el, formats, props);
     }
 
+    /** The server engine of the Pivot tab on search results (kinds whose pack says pivot:). */
+    @Bean
+    public com.ash.drishti.engine.search.SearchPivot searchPivot(SourceRouter router, com.ash.drishti.engine.search.StructuredSearch search,
+            ElCompiler el, Formats formats, com.ash.drishti.engine.search.SearchProperties props,
+            com.ash.drishti.engine.pivot.PivotProperties pivot) {
+        return new com.ash.drishti.engine.search.SearchPivot(router, search, el, formats, props, pivot);
+    }
+
     @Bean
     public com.ash.drishti.engine.impact.ImpactService impactService(SourceRouter router, Mnemonics mnemonics, ReferenceCatalog catalog,
             GraphProperties graph, ElCompiler el, Formats formats, ExecutorService drishtiVirtualExecutor) {
@@ -124,8 +132,8 @@ public class EngineConfiguration {
 
     @Bean
     public Binder binder(ElCompiler el, Formats formats, ReferenceCatalog catalog, BadgeRenderer badges, Mnemonics mnemonics,
-            com.ash.drishti.engine.bind.PanelLimits panelLimits) {
-        return new Binder(el, formats, catalog, badges, mnemonics, panelLimits);
+            com.ash.drishti.engine.bind.PanelLimits panelLimits, com.ash.drishti.engine.pivot.PivotProperties pivot) {
+        return new Binder(el, formats, catalog, badges, mnemonics, panelLimits, pivot);
     }
 
     @Bean

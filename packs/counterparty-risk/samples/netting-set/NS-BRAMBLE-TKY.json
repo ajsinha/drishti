@@ -64,15 +64,23 @@
   {
    "tradeId": "IMG-400139",
    "product": "Capital-protected note",
+   "assetClass": "Structured",
+   "currency": "GBP",
+   "book": "BOOK-STRUCT-1",
    "notional": 118000000.0,
    "maturity": "2028-12-18",
+   "maturityBucket": "2-5Y",
    "mtm": 566929
   },
   {
    "tradeId": "IMG-400150",
    "product": "FX-rates hybrid (PRDC)",
+   "assetClass": "Structured",
+   "currency": "JPY",
+   "book": "BOOK-STRUCT-3",
    "notional": 27000000.0,
    "maturity": "2038-01-11",
+   "maturityBucket": "10Y+",
    "mtm": 115182
   }
  ],

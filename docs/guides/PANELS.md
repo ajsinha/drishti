@@ -171,7 +171,7 @@ source with its generation. No options. Never empty.
 ### table
 
 **For** a list of similar rows. **Options**: `rows` (required), `columns` (inferred when absent: scalar fields present
-in at least 60% of rows, up to 9), `limit`, `moreLabel`, `totalLabel`, `search`. **Server**: one row of formatted
+in at least 60% of rows, up to 9), `limit`, `moreLabel`, `totalLabel`, `search`, `pivot`. **Server**: one row of formatted
 cells per element; a total row sums `total: true` columns over **all** rows, including those beyond `limit`; the
 "more" line counts the rest. A column bound to a field ending in `Id`, `Ref` or `_id` links automatically.
 **Console**: `tables.js` sorts by any heading (numbers, amounts such as `1.5m`, percentages and dates as values),
@@ -181,11 +181,24 @@ per browser) and walks with the keyboard. `search: false` hides the filter.
 On netting set `NS-MERIDIAN-RE-NY`, *Member trades* lists the trades with their MTM and a total. Data:
 `{"columns": […], "numeric": […], "rows": [{"cells": […], "highlight": false, "path": "$.trades[0]"}], "total": {…}, "more": "…", "search": true}`.
 
+**The Pivot tab (`pivot:`).** A table or ladder whose Sutra says `pivot: true`, or `pivot: { fields, rows, columns,
+values, filters, heat, chart }` ([reference](RACHANA_REFERENCE.md#pivot-a-pivot-tab-on-a-table-or-ladder)), gets a **Table | Pivot** switch; no option, no switch. The data
+then also carries `"pivot": {"fields": [{"name", "label", "numeric", "fmt"}, …], "rows", "columns", "values",
+"filters", "heat", "chart", "totals", "maxRows"}`: the fields on offer and the arrangement the tab opens with. The rows
+themselves are not in the view: when a user first shows the tab, the console asks
+`GET /api/v1/views/{kind}/{id}/panels/{panel}/records` for **every** row of the panel as raw values of those fields
+(beyond the table's `limit`, up to `drishti.pivot.max-records`, 50,000; *truncated* says when it stopped short), with
+`"kind"` on a field whose values are entity ids, and aggregates them in the browser (`pivot-engine.js`): groups at
+every level with subtotals and totals, six aggregations, shares of row, column or total, filters, drill-down, a chart,
+CSV and Excel ([USER_GUIDE.md](USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way)). The records are bound by `PivotBinder` with the same document, Sutra and business
+date as the view. `drishti.pivot.enabled: false` removes every Pivot tab.
+
 ### ladder
 
 **For** a list where some rows matter more: a schedule with the next payment lit. Like `table` without `limit` or
 `moreLabel` (`DRS-2023`: a ladder shows every row); `highlight` is an expression per row (`@`, `#index`).
-`highlight: "#index == $.nextIndex"` on `MX-20000001` lights the 2026-12-30 cashflow.
+`highlight: "#index == $.nextIndex"` on `MX-20000001` lights the 2026-12-30 cashflow. A ladder takes `search` and
+`pivot` as a table does: the banking packs' cash-flow ladders open their Pivot tab on PV by flow type and leg.
 
 ### tabs
 
@@ -582,7 +595,9 @@ tag in its tone, and the note below. When events were left out, *N earlier event
 exposure by rating and tenor bucket, trade counts by book and product family.
 
 **Choose it over** a `table` with totals when the rows must be aggregated along two dimensions, and over `surface`
-when the grid is not already in the document.
+when the grid is not already in the document. When users should choose the dimensions themselves, give a `table` the
+[`pivot` option](RACHANA_REFERENCE.md#pivot-a-pivot-tab-on-a-table-or-ladder) instead: the `pivot` kind is a fixed grid the Sutra designs, the option an interactive one
+the user arranges.
 
 **Options.**
 
@@ -708,6 +723,10 @@ stopping the other charts.
   prints every panel at its full height.
 - **Layout mode** (`Alt+L`, [USER_GUIDE.md](USER_GUIDE.md#layout-mode-arrange-a-view-your-way)) lets a user move,
   resize and hide panels for themselves from the keyboard as well as with a pointer; each change is announced.
+- **The Pivot tab** of a table or ladder ([USER_GUIDE.md](USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way)) is a tab list (←, → switch); its fields move between
+  zones by drag or by key (R, C, V, F, Delete, Alt+arrows), its grid is walked with the arrows and Enter drills down; each
+  change is announced. Heat shades are scaled per theme so the text keeps 4.5:1 (`test_pivot.py`). Its **Print** prints
+  the pivot and its chart alone.
 
 ## 17. Export
 
@@ -732,6 +751,11 @@ than as the view formats them.
 | `timeline` | Date, Event, Status, Detail |
 | `pivot` | the `by` field, one column per column key, Total; then the Total row |
 
+The Pivot tab of a table or ladder exports what it shows instead, from its own **CSV** and **Excel** buttons
+(`POST /export/grid.csv`, `POST /export/grid.xlsx`): the row-level labels, then one column per column key and value,
+subtotal and total rows labelled, numbers as numbers; the workbook has a bold, frozen header row and never a formula.
+
+
 ## 18. Limits
 
 Every kind reads one document that is already in memory, so binding is fast; the limits exist so that one very long
@@ -746,6 +770,11 @@ list cannot make a view slow to build or heavy to draw. `drishti.panels` sets th
 | `max-events` | 500 | events a `timeline` lists (the latest) | *N earlier events not shown* |
 | `pivot-rows` | 200 | row keys a `pivot` shows | *N more rows* |
 | `pivot-columns` | 40 | column keys a `pivot` shows | still counted in the row and grand totals |
+
+The Pivot tab of a table or ladder has its own limits, `drishti.pivot` ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtipivot--the-pivot-tab)):
+`max-records` (rows of a panel sent to the browser, 50,000), `max-row-keys` (innermost row groups shown, 2,000) and
+`max-column-keys` (column groups shown, 200); groups beyond them are left out of the grid but still counted in the
+totals, and the status line says so.
 
 Other limits that shape panels: a `table`'s `limit` (rows shown; totals still cover all rows),
 `drishti.graph.link-budget` (how long `line` with `source:` and `links` wait for linked entities, default 40 ms) and
@@ -774,6 +803,9 @@ binds all five panels in 12.8 ms; the response is 560 kB because the scatter, ti
 | two panels with one id, a key used twice | `DRS-2024`, `DRS-2025` | rename, or pick another key |
 | `span: 0`, `span: 13`, `height: 30`, `span: half` | `DRS-2030 span must be a whole number from 1 to 12 (columns of the 12-column grid), not '13'` | a whole number in range |
 | `span:` on a `tabs` body | `DRS-2030 'span' sizes a whole panel: a tabs body takes the size of its panel` | put it on the `tabs` panel |
+| `pivot: yes`, `pivot: { rows: [desk] }` when no field is called `desk` | `DRS-2031 'pivot' is true, false, or a mapping …`, `DRS-2031 pivot rows name 'desk', which is not one of its fields (…)` | `pivot: true`, or name one of its fields ([reference](RACHANA_REFERENCE.md#pivot-a-pivot-tab-on-a-table-or-ladder)) |
+| `pivot:` on a `kv`, a chart or a `pivot` panel | `DRS-2023 option 'pivot' applies only to panels that show a table (table, ladder), not 'kv'` | put it on a `table` or `ladder` |
+| `pivot: { fields: ["$.book"] }` | `DRS-2031 pivot field '$.book' is not a field path …` | `book` (row paths), or `{ field: book, bind: $.book }` for the document's |
 | `label: "@.bucket"` on an `hbar` | bars without labels (no error) | `label: bucket`: hbar fields are bare names |
 | `value: "@.mtm"` on a pivot or `x: "@.var"` on a scatter | works (an expression per row), but slower on long lists | `value: mtm` |
 | a waterfall whose total rows have no flag | the opening amount is drawn as a move from zero, and every step floats from the wrong level | mark the level rows `total: true` (or name the flag field with `total:`) |
@@ -787,7 +819,8 @@ binds all five panels in 12.8 ms; the response is 560 kB because the scatter, ti
 | What | Where |
 |---|---|
 | The kinds and their options | `drishti-rachana/.../model/PanelKind.java`; restricted values in `PanelOptions.java` |
-| Parsing and option checks | `drishti-rachana/.../parse/SutraBuilder.java` (`DRS-2021`, `-2022`, `-2023`, `-2029`) |
+| Parsing and option checks | `drishti-rachana/.../parse/SutraBuilder.java` (`DRS-2021`, `-2022`, `-2023`, `-2029`, `-2031`); the `pivot` option in `model/PivotSpec.java` |
+| The Pivot tab | `drishti-engine/.../bind/PivotBinder.java` (the offer and the records), `.../pivot/PivotCube.java` (aggregation), `.../search/SearchPivot.java` (search results); `console/web/static/js/pivot-engine.js`, `pivot-grid.js`, `pivot.js`; promotion in `drishti-rachana/.../SutraPivotEditor.java` |
 | Which options are expressions | `drishti-rachana/.../SutraExpressions.java` (`EL_OPTIONS`) |
 | The JSON Schema (Studio and editor completion) | `drishti-rachana/.../RachanaSchema.java`, served at `GET /api/v1/rachana/schema` |
 | Binding | `drishti-engine/.../bind/Binder.java` (the first thirteen kinds), `ChartBinder.java` (the seven from `waterfall` on), limits in `PanelLimits.java` |

@@ -64,8 +64,12 @@
   {
    "tradeId": "BBG-60000080",
    "product": "Repurchase agreement",
+   "assetClass": "Securities financing",
+   "currency": "USD",
+   "book": "BOOK-SFT-2",
    "notional": 85000000.0,
    "maturity": "2026-12-21",
+   "maturityBucket": "0-1Y",
    "mtm": 122689
   }
  ],

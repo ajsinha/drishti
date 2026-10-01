@@ -44,6 +44,19 @@ class PackLoaderTest {
         assertThat(p.get("drishti.rachana.pack-dirs[1]").toString()).endsWith("logistics/sutras");
         assertThat(p.get("drishti.sources.plugins.demo.settings.dirs").toString()).contains("finance/samples").contains("logistics/samples");
         assertThat(p.keySet()).anyMatch(k -> k.startsWith("drishti.graph.id-patterns[") && k.endsWith("].kind"));
+        // pivot: a kind's search results opt into a Pivot tab; kept as JSON for the search engine to read
+        assertThat(p.get("drishti.search.pivot.trade").toString()).startsWith("{\"fields\":[\"book\",").contains("\"rows\":[\"book\"]")
+                .contains("\"values\":[{\"field\":\"mtm\",\"agg\":\"sum\"}]");
+    }
+
+    @Test
+    void aPivotIsTrueFalseOrAMapping(@TempDir Path dir) throws Exception {
+        Files.createDirectories(dir.resolve("a"));
+        Files.writeString(dir.resolve("a").resolve("pack.yaml"), "pack: a\nkinds: [thing]\npivot:\n  thing: true\n");
+        PackLoader l = new PackLoader();
+        assertThat(l.properties(l.load(dir, List.of("a")))).containsEntry("drishti.search.pivot.thing", "true");
+        Files.writeString(dir.resolve("a").resolve("pack.yaml"), "pack: a\nkinds: [thing]\npivot:\n  thing: [book]\n");
+        assertThatThrownBy(() -> l.properties(l.load(dir, List.of("a")))).hasMessageContaining("pivot of thing is true, false or a mapping");
     }
 
     @Test

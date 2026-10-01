@@ -54,18 +54,35 @@ public final class Binder {
     private final BadgeRenderer badges;
     private final Mnemonics mnemonics;
     private final ChartBinder charts;
+    private final PivotBinder pivots;
 
     public Binder(ElCompiler el, Formats formats, ReferenceCatalog catalog, BadgeRenderer badges, Mnemonics mnemonics) {
         this(el, formats, catalog, badges, mnemonics, PanelLimits.defaults());
     }
 
     public Binder(ElCompiler el, Formats formats, ReferenceCatalog catalog, BadgeRenderer badges, Mnemonics mnemonics, PanelLimits limits) {
+        this(el, formats, catalog, badges, mnemonics, limits, com.ash.drishti.engine.pivot.PivotProperties.defaults());
+    }
+
+    public Binder(ElCompiler el, Formats formats, ReferenceCatalog catalog, BadgeRenderer badges, Mnemonics mnemonics, PanelLimits limits,
+            com.ash.drishti.engine.pivot.PivotProperties pivot) {
         this.el = el;
         this.formats = formats;
         this.catalog = catalog;
         this.badges = badges;
         this.mnemonics = mnemonics;
         this.charts = new ChartBinder(this, formats, catalog, limits);
+        this.pivots = new PivotBinder(el, catalog, this, pivot);
+    }
+
+    /**
+     * A table's or ladder's rows as raw values of its pivot's fields, for the Pivot tab (every row up to
+     * {@code drishti.pivot.max-records}, whatever the table's {@code limit}).
+     *
+     * @throws IllegalArgumentException when the panel offers no pivot
+     */
+    public PivotBinder.Records records(Panel p, BindContext c) {
+        return pivots.records(p, c);
     }
 
     public PanelView bind(Panel p, BindContext c) {
@@ -248,7 +265,7 @@ public final class Binder {
             more = p.option("moreLabel").map(m -> Values.text(eval(m, c.eval()))).orElse((rows.size() - limit) + " more");
         }
         boolean search = !p.option("search").map(String::trim).filter(v -> v.equalsIgnoreCase("false") || v.equalsIgnoreCase("no")).isPresent();
-        return new PanelData.Table(headers, numeric, out, total, more, search);
+        return new PanelData.Table(headers, numeric, out, total, more, search, pivots.view(p).orElse(null));
     }
 
     /** Where the total label goes: the column just before the first totalled column, else the first. */

@@ -240,7 +240,7 @@ public final class StructuredSearch {
     }
 
     /** One row as a small document holding only the given paths, for the expression to read. */
-    private static DataNode row(ColumnSet c, int i, List<String> paths, Map<String, Object> masked) {
+    static DataNode row(ColumnSet c, int i, List<String> paths, Map<String, Object> masked) {
         Map<String, Object> root = new LinkedHashMap<>();
         for (String path : paths) {
             Object v = masked.containsKey(path) ? masked.get(path) : number(c.value(path, i));

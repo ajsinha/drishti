@@ -64,6 +64,22 @@ def col(label, bind, fmt=None, tone=None, total=False) -> str:
     return flow({"label": label, "bind": bind, "fmt": fmt, "tone": tone, "total": total or None})
 
 
+def yflow(v) -> str:
+    """Any value as YAML flow text: lists in brackets, mappings in braces, scalars as q() writes them."""
+    if isinstance(v, list):
+        return "[" + ", ".join(yflow(x) for x in v) + "]"
+    if isinstance(v, dict):
+        return "{ " + ", ".join(f"{k}: {yflow(x)}" for k, x in v.items()) + " }"
+    return q(v)
+
+
+def pivot_lines(pivot: dict, indent: str = "    ") -> list[str]:
+    """A table's pivot: option as a block mapping, one key a line (Studio and SutraPivotEditor read and write it so)."""
+    if pivot is True:
+        return [f"{indent}pivot: true"]
+    return [f"{indent}pivot:"] + [f"{indent}  {k}: {yflow(v)}" for k, v in pivot.items()]
+
+
 class Writer:
     """Builds one Sutra's YAML block line by line."""
 
@@ -95,6 +111,9 @@ class Writer:
                     a(f"      - {flow(item)}")
             else:
                 a(f"    {k}: {q(v)}")
+        if p.pivot:
+            for line in pivot_lines(p.pivot):
+                a(line)
         if p.series:
             a("    series:")
             for label, fld, tone in p.series:
@@ -119,6 +138,16 @@ def md_table(head: list[str], rows: list[list[str]]) -> list[str]:
 
 
 # ---- products ------------------------------------------------------------------------------------------------
+# The Pivot tab on a trade's schedule, over its own columns: what a trader asks of a cash-flow ladder (PV by flow type and
+# leg), of fixings (payoff by period and status) and of amortisation (principal and interest by date).
+SCHEDULE_PIVOTS = {
+    "cashflows": {"rows": ["type"], "columns": ["leg"], "values": [{"field": "pv", "agg": "sum"}, {"field": "amount", "agg": "sum"}],
+                  "filters": ["payDate"]},
+    "fixings": {"rows": ["status"], "values": [{"field": "payoff", "agg": "sum"}, {"field": "payoff", "agg": "count"}], "filters": ["index"]},
+    "amortization": {"rows": ["date"], "values": [{"field": "principal", "agg": "sum"}, {"field": "interest", "agg": "sum"}]},
+}
+
+
 def product_name(p: Product) -> str:
     n = slug(p.code)
     return n + "-trade" if n in T.KIND else n
@@ -187,6 +216,9 @@ def product_yaml(p: Product) -> str:
         a("    rows: $.schedule")
         if kind == "ladder":
             a("    highlight: \"#index == $.nextIndex\"")
+        if p.schedule in SCHEDULE_PIVOTS:     # a Pivot tab over the schedule's own columns (named by their fields)
+            for line in pivot_lines(SCHEDULE_PIVOTS[p.schedule]):
+                a(line)
         a("    columns:")
         for label, fld, fmt, tone, total in cols:
             a(f"      - {col(label, '@.' + fld, fmt, tone, total)}")
@@ -294,6 +326,34 @@ def kind_doc(k: Kind) -> str:
     return sutra_file(kind_yaml(k))
 
 
+def desk_pnl_yaml() -> str:
+    """The trading pack's derived desk P&L (DPNL DESK-RATES): its totals, and every trade of the desk as a table whose
+    Pivot tab opens on MTM by book and currency (make_packs.py derives the kind from the trades)."""
+    w = Writer()
+    a = w.add
+    a("sutra: desk-pnl")
+    a("version: 1")
+    a(f"description: {q('A desk’s P&L derived from its trades: totals, and every trade with a Pivot tab (MTM by book and currency).')}")
+    a("match: { kind: desk-pnl, priority: 10 }")
+    a("title: { pill: Desk P&L, id: $.desk }")
+    a("strip:")
+    for label, bind, fmt, tone, emph in [("Trades", "$.tradeCount", None, None, False), ("MTM (USD)", "$.mtm", "signed0", "sign", True),
+                                         ("P&L 1D (USD)", "$.pnl1d", "signed0", "sign", False), ("DV01 (USD)", "$.dv01", "signed0", "sign", False),
+                                         ("Worst trade MTM", "$.worstMtm", "signed0", "sign", False), ("Books", "size($.books)", None, None, False),
+                                         ("Currencies", "size($.currencies)", None, None, False)]:
+        a(f"  - {flow({'label': label, 'bind': bind, 'fmt': fmt, 'tone': tone, 'emphasis': emph or None})}")
+    a("panels:")
+    w.panel(Panel("table", "trades", "Trades on the desk", "$.rows",
+                  [("Trade", "@.trade", None, None, False), ("Product", "@.product", None, None, False), ("Book", "@.book", None, None, False),
+                   ("Currency", "@.currency", None, None, False), ("MTM (USD)", "@.mtm", "signed0", "sign", True),
+                   ("P&L 1D (USD)", "@.pnl1d", "signed0", "sign", True)], key="F2", code="TRD",
+                  pivot={"rows": ["book"], "columns": ["currency"], "values": [{"field": "mtm", "agg": "sum"}], "filters": ["product"],
+                         "heat": True}))
+    a("  - { id: built, kind: provenance, title: How this view was built }")
+    a("keys: { F7: \"link($.desk, 'desk')\", F9: raw }")
+    return w.text()
+
+
 # ---- output --------------------------------------------------------------------------------------------------
 def files() -> dict[Path, str]:
     out: dict[Path, str] = {}
@@ -301,6 +361,7 @@ def files() -> dict[Path, str]:
         out[PACKS / "trading" / "sutras" / slug(p.asset) / f"{product_name(p)}.v1.sutra.yaml"] = product_doc(p)
     for k in T.KINDS:
         out[PACKS / layout.pack_of(k.kind) / "sutras" / slug(k.group) / f"{k.kind}.v1.sutra.yaml"] = kind_doc(k)
+    out[PACKS / "trading" / "sutras" / "desks" / "desk-pnl.v1.sutra.yaml"] = sutra_file(desk_pnl_yaml())
     names = [f.name for f in out]
     dupes = {n for n in names if names.count(n) > 1}
     if dupes:

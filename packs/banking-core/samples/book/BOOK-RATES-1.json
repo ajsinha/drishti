@@ -9,71 +9,111 @@
   {
    "tradeId": "MX-20000043",
    "product": "Accreting swap",
+   "assetClass": "Rates",
+   "currency": "CHF",
+   "book": "BOOK-RATES-1",
    "notional": 172000000.0,
    "maturity": "2035-02-05",
+   "maturityBucket": "5-10Y",
    "mtm": 71490903
   },
   {
    "tradeId": "MX-20000011",
    "product": "Overnight index swap",
+   "assetClass": "Rates",
+   "currency": "CHF",
+   "book": "BOOK-RATES-1",
    "notional": 199000000.0,
    "maturity": "2031-06-23",
+   "maturityBucket": "2-5Y",
    "mtm": 36805234
   },
   {
    "tradeId": "MX-20000003",
    "product": "Interest rate swap (fixed/float)",
+   "assetClass": "Rates",
+   "currency": "USD",
+   "book": "BOOK-RATES-1",
    "notional": 204000000.0,
    "maturity": "2036-05-13",
+   "maturityBucket": "5-10Y",
    "mtm": 36329052
   },
   {
    "tradeId": "MX-20000036",
    "product": "Zero-coupon swap",
+   "assetClass": "Rates",
+   "currency": "JPY",
+   "book": "BOOK-RATES-1",
    "notional": 175000000.0,
    "maturity": "2035-06-11",
+   "maturityBucket": "5-10Y",
    "mtm": -30205543
   },
   {
    "tradeId": "MX-20000044",
    "product": "Accreting swap",
+   "assetClass": "Rates",
+   "currency": "AUD",
+   "book": "BOOK-RATES-1",
    "notional": 224000000.0,
    "maturity": "2035-03-07",
+   "maturityBucket": "5-10Y",
    "mtm": 25398239
   },
   {
    "tradeId": "MX-20000049",
    "product": "Forward-starting swap",
+   "assetClass": "Rates",
+   "currency": "USD",
+   "book": "BOOK-RATES-1",
    "notional": 177000000.0,
    "maturity": "2033-03-14",
+   "maturityBucket": "5-10Y",
    "mtm": 23383110
   },
   {
    "tradeId": "MX-20000010",
    "product": "Overnight index swap",
+   "assetClass": "Rates",
+   "currency": "USD",
+   "book": "BOOK-RATES-1",
    "notional": 134000000.0,
    "maturity": "2032-11-29",
+   "maturityBucket": "5-10Y",
    "mtm": 18884450
   },
   {
    "tradeId": "MX-20000040",
    "product": "Amortising swap",
+   "assetClass": "Rates",
+   "currency": "CAD",
+   "book": "BOOK-RATES-1",
    "notional": 163000000.0,
    "maturity": "2036-06-12",
+   "maturityBucket": "5-10Y",
    "mtm": 14300779
   },
   {
    "tradeId": "MX-20000055",
    "product": "Constant maturity swap",
+   "assetClass": "Rates",
+   "currency": "USD",
+   "book": "BOOK-RATES-1",
    "notional": 245000000.0,
    "maturity": "2036-09-15",
+   "maturityBucket": "5-10Y",
    "mtm": 9246729
   },
   {
    "tradeId": "MX-20000033",
    "product": "Zero-coupon swap",
+   "assetClass": "Rates",
+   "currency": "GBP",
+   "book": "BOOK-RATES-1",
    "notional": 126000000.0,
    "maturity": "2030-08-27",
+   "maturityBucket": "2-5Y",
    "mtm": -6203686
   }
  ],

@@ -9,71 +9,111 @@
   {
    "tradeId": "IMG-400097",
    "product": "Equity total return swap",
+   "assetClass": "Equity",
+   "currency": "USD",
+   "book": "BOOK-EQD-3",
    "notional": 243000000.0,
    "maturity": "2028-11-24",
+   "maturityBucket": "2-5Y",
    "mtm": -5455747
   },
   {
    "tradeId": "IMG-400059",
    "product": "Equity digital option",
+   "assetClass": "Equity",
+   "currency": "EUR",
+   "book": "BOOK-EQD-3",
    "notional": 232000000.0,
    "maturity": "2027-11-25",
+   "maturityBucket": "1-2Y",
    "mtm": 4508571
   },
   {
    "tradeId": "IMG-400041",
    "product": "Index option",
+   "assetClass": "Equity",
+   "currency": "USD",
+   "book": "BOOK-EQD-3",
    "notional": 211000000.0,
    "maturity": "2026-10-07",
+   "maturityBucket": "0-1Y",
    "mtm": -4330699
   },
   {
    "tradeId": "IMG-400076",
    "product": "Reverse convertible",
+   "assetClass": "Equity",
+   "currency": "CHF",
+   "book": "BOOK-EQD-3",
    "notional": 181000000.0,
    "maturity": "2038-02-01",
+   "maturityBucket": "10Y+",
    "mtm": -4142972
   },
   {
    "tradeId": "IMG-400022",
    "product": "Equity index future",
+   "assetClass": "Equity",
+   "currency": "GBP",
+   "book": "BOOK-EQD-3",
    "notional": 242000000.0,
    "maturity": "2027-09-23",
+   "maturityBucket": "0-1Y",
    "mtm": -3839873
   },
   {
    "tradeId": "IMG-400123",
    "product": "Convertible bond",
+   "assetClass": "Equity",
+   "currency": "GBP",
+   "book": "BOOK-EQD-3",
    "notional": 198000000.0,
    "maturity": "2033-09-21",
+   "maturityBucket": "5-10Y",
    "mtm": -3175475
   },
   {
    "tradeId": "IMG-400043",
    "product": "Equity barrier option",
+   "assetClass": "Equity",
+   "currency": "CHF",
+   "book": "BOOK-EQD-3",
    "notional": 146000000.0,
    "maturity": "2034-04-03",
+   "maturityBucket": "5-10Y",
    "mtm": 3103153
   },
   {
    "tradeId": "IMG-400126",
    "product": "Convertible bond",
+   "assetClass": "Equity",
+   "currency": "CAD",
+   "book": "BOOK-EQD-3",
    "notional": 241000000.0,
    "maturity": "2032-11-24",
+   "maturityBucket": "5-10Y",
    "mtm": 3067713
   },
   {
    "tradeId": "IMG-400029",
    "product": "Listed equity option",
+   "assetClass": "Equity",
+   "currency": "CAD",
+   "book": "BOOK-EQD-3",
    "notional": 193000000.0,
    "maturity": "2027-01-25",
+   "maturityBucket": "0-1Y",
    "mtm": 2756929
   },
   {
    "tradeId": "IMG-400132",
    "product": "Basket option",
+   "assetClass": "Equity",
+   "currency": "EUR",
+   "book": "BOOK-EQD-3",
    "notional": 136000000.0,
    "maturity": "2032-02-25",
+   "maturityBucket": "5-10Y",
    "mtm": 1867436
   }
  ],

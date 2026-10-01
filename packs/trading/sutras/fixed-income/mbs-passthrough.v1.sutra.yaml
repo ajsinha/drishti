@@ -48,6 +48,9 @@ panels:
     code: AMT
     key: F3
     rows: $.schedule
+    pivot:
+      rows: [date]
+      values: [{ field: principal, agg: sum }, { field: interest, agg: sum }]
     columns:
       - { label: Date, bind: "@.date", fmt: date }
       - { label: Opening notional, bind: "@.opening", fmt: amount0 }

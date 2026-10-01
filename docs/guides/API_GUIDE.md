@@ -35,6 +35,7 @@ covered in depth in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
    - [Views](#views)
    - [Raw documents, history and impact](#raw-documents-history-and-impact)
    - [Structured search](#structured-search)
+   - [The Pivot tab: panel rows, search pivots, saved pivots](#the-pivot-tab-panel-rows-search-pivots-saved-pivots)
    - [Live streams](#live-streams)
    - [Personal: settings, packs, workspaces, monitors, alerts](#personal-settings-packs-workspaces-monitors-alerts)
    - [Catalogue: about, packs, sources, Sutras](#catalogue-about-packs-sources-sutras)
@@ -358,6 +359,7 @@ Entities the caller opened recently (per `X-Drishti-User` or token subject) are 
 | Method | Path | Notes |
 |---|---|---|
 | `GET` | `/views/{kind}/{id}` | as-of. The `ViewModel`; `404 DRS-1001` (no such entity), `404 DRS-1002` (no source serves the kind), `502 DRS-1003` (source failed), `504 DRS-1004` (source timed out); `403 DRS-5002` if the caller may not open the kind |
+| `GET` | `/views/{kind}/{id}/panels/{panel}/records` | as-of. Every row of a table or ladder whose Sutra says `pivot:`, as raw values of its pivot's fields, for the [Pivot tab](#the-pivot-tab-panel-rows-search-pivots-saved-pivots); `404 DRS-1001` when the view has no such panel or the panel offers no pivot |
 
 Opening a view also records it in the caller's recent list. A view is formatted for display: every value
 comes as text with a tone, so all clients show `−1,403,091` the same way.
@@ -493,6 +495,104 @@ curl -s -G $B/search --data-urlencode "q=TRD where mtm >"
 ```
 
 The condition language is Rachana-EL; see [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md).
+
+When the kind's pack opts its results into a Pivot tab (`pivot:` in `pack.yaml`), the answer also carries `"pivot"`: the
+fields on offer, each with `label`, `fmt` and `promoted` (whether a source keeps it as a column, so the server can
+pivot it from columns), the arrangement it opens with, and the limits (`maxRowKeys`, `maxColumnKeys`,
+`documentScan`). For other kinds `"pivot"` is `null`.
+
+### The Pivot tab: panel rows, search pivots, saved pivots
+
+The console's Pivot tab ([USER_GUIDE.md](USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way)) is offered only where a
+Sutra (`pivot:` on a table or ladder) or a pack (`pivot:` beside a kind's `columns:`) says so, and these endpoints refuse
+anything else. All follow the business date (`X-Drishti-As-Of`), and the caller must be able to open the kind
+(`403 DRS-5002`). `drishti.pivot.enabled: false` switches them all off.
+
+| Method | Path | Notes |
+|---|---|---|
+| `GET` | `/views/{kind}/{id}/panels/{panel}/records` | as-of. The panel's rows as raw values (below), up to `drishti.pivot.max-records` |
+| `POST` | `/search/pivot/{kind}` | as-of. The cube of a search's matches: body `{"q", "rows", "columns", "values", "filters", "documents"}` |
+| `POST` | `/search/pivot/{kind}/drill` | as-of. The entities behind one cell, a page at a time: the same body plus `"cell": {"rows": [...], "columns": [...]}`, `"offset"`, `"size"` (at most `drishti.pivot.drill-page`) |
+| `POST` | `/search/pivot/{kind}/values` | as-of. A field's values among the matches, with counts (a filter's pick list): `{"q", "field", "documents"}` |
+| `GET` | `/me/pivots` | the caller's saved pivots `{enabled, promote, review, pivots}`; each still valid against its Sutra or pack; `promote` is `author` with Studio saving on |
+| `GET` · `PUT` · `DELETE` | `/me/pivots/panel/{sutra}/{panel}` | the caller's arrangement of a panel's pivot. `PUT` body `{"rows", "columns", "values", "filters", "heat", "chart"}`, checked against the fields the Sutra offers (`400 DRS-5001` with the reason); `DELETE` (back to the Sutra's) answers `204`; `GET` `404 DRS-1001` when none |
+| `GET` · `PUT` · `DELETE` | `/me/pivots/search/{kind}` | the same for a kind's search results (`{kind}` may be a mnemonic) |
+| `GET` | `/me/pivots/panel/{sutra}/{panel}/promotion` | what promoting the saved pivot would propose: `{sutra, panel, kind, fromVersion, version, base, text, changes, review}`, the next version with only the panel's `pivot:` rewritten. Needs `author` and `drishti.rachana.studio-save` |
+| `POST` | `/me/pivots/panel/{sutra}/{panel}/promotion` | body `{"note": "…"}`: proposes it for review (`202` `{proposal}`), or with review off saves it (`200` `{saved}`) |
+
+There is no separate power: keeping a pivot needs only the right to open the kind.
+
+**A panel's rows.** The table data of a view carries the offer (`"pivot": {"fields": [...], "rows": [...], …,
+"maxRows": 50000}`); the rows come separately, all of them, whatever the table's `limit`:
+
+```bash
+curl -s $B/views/netting-set/NS-NORTH-01/panels/trades/records | jq -c '.rows |= .[0:2]'
+```
+
+```json
+{"panel":"trades","fields":[{"name":"product","label":"Product","fmt":null},{"name":"currency","label":"Currency","fmt":null},
+  {"name":"maturity","label":"Maturity","fmt":"date"},{"name":"notional","label":"Notional","fmt":null},
+  {"name":"mtm","label":"MTM (USD)","fmt":"signed0"},{"name":"trade","label":"Trade","fmt":null,"kind":"trade"}],
+ "rows":[["Interest rate swap","USD","2031-10-02",50000000,-412580,"IRS-48213"],
+         ["Interest rate swap","USD","2033-03-15",80000000,1106420,"IRS-47102"]],
+ "total":14,"truncated":false,"limit":50000}
+```
+
+(finance pack). `kind` on a field says which entity its values open.
+
+**A search's cube.** The server aggregates every entity the search matches on the date (not only a page; `limit`
+and `order by` in `q` are ignored), over the day's promoted columns, and returns only the cells (a laid-out test table of 40 trades; numbers abridged):
+
+```bash
+curl -s $B/search/pivot/TRD -H 'Content-Type: application/json' -d '{"q": "TRD where mtm != null",
+  "rows": ["book"], "columns": ["currency"], "values": [{"field": "mtm", "agg": "sum"}, {"field": "book", "agg": "count"}]}'
+```
+
+```json
+{"rows":["book"],"columns":["currency"],
+ "values":[{"field":"mtm","agg":"sum","show":"value","label":"Sum of MTM (USD)"},{"field":"book","agg":"count","show":"value","label":"Count of Book"}],
+ "rowKeys":[["BOOK-A"],["BOOK-B"]],"columnKeys":[["EUR"],["USD"]],
+ "cells":{"\u001e":[-1240500,40],"BOOK-A\u001e":[-18900,19],"BOOK-A\u001eEUR":[402100,6],"BOOK-A\u001eUSD":[-421000,13],
+          "\u001eEUR":[…],"\u001eUSD":[…],"BOOK-B\u001e":[…],"BOOK-B\u001eEUR":[…],"BOOK-B\u001eUSD":[…]},
+ "count":40,"total":40,"partial":false,"moreRows":false,"moreColumns":false,"masked":[],"source":"columns","elapsedMs":3.1}
+```
+
+- `rowKeys` and `columnKeys` are the innermost groups, full depth, in natural order (numbers by value, `2-5Y` before
+  `10Y+`, `(blank)` last). Keys are text; a missing value is `(blank)`.
+- `cells` has one entry for **every** combination of a row-key prefix and a column-key prefix, so subtotals and totals
+  are there too: the key is the row keys joined by U+001F, then U+001E, then the column keys joined by U+001F
+  (`"\u001e"` alone is the grand total, `"BOOK-A\u001e"` the row total of `BOOK-A`). Each holds one number per value
+  (`null` when no row had a number). `agg` is `sum`, `count` (rows with a value), `avg`, `min`, `max` or `distinct`;
+  `show` (`value`, `pctRow`, `pctColumn`, `pctTotal`) is applied by the client from these cells.
+- `filters` are `{"field", "values": [...]}` (keys kept) or `{"field", "min", "max"}` (inclusive; numbers, or ISO
+  dates as text); a bare field name keeps everything.
+- At most `drishti.pivot.max-row-keys` (2,000) innermost row groups and `max-column-keys` (200) column groups are
+  returned (`moreRows`, `moreColumns`); further groups still count in the totals.
+- `masked` lists the fields the caller's role sees masked, as in a search: they group under `•••` and are never added up.
+- A field that no source keeps as a column is refused, unless the body says `"documents": true`:
+
+```json
+{"type":"about:blank","title":"bad request","status":400,"code":"DRS-5001",
+ "detail":"DRS-5001 not kept as columns for trade: [productType]; these are: [book, counterparty.id, mtm, nettingSet]. Ask for a document read (documents: true) to read up to 20000 trade documents instead; the result is then partial if there are more"}
+```
+
+  With `"documents": true` the documents are read (at most `drishti.pivot.document-scan`), `source` is `documents`
+  and `partial` is `true` when there were more. An arrangement naming a field the pack does not offer is
+  `400 DRS-5001 pivot rows name 'desk', which is not one of its fields (…)`; a kind whose pack offers no pivot is
+  `400 DRS-5001 … search results do not offer a pivot`.
+
+**A cell's entities.** `POST /search/pivot/TRD/drill` with `"cell": {"rows": ["BOOK-A"], "columns": []}` (empty
+prefixes are totals), `"offset": 0`, `"size": 50`:
+
+```json
+{"fields":["book","mtm","nettingSet","counterparty.id"],"labels":{"book":"Book","mtm":"MTM (USD)","nettingSet":"Netting set","counterparty.id":"Counterparty id"},
+ "rows":[{"id":"T-001","kind":"trade","values":{"book":"BOOK-A","mtm":-18900,"nettingSet":"NS-1","counterparty.id":"CP-1"}}, …],
+ "total":20,"offset":0,"size":50,"partial":false,"masked":[],"source":"columns"}
+```
+
+**A field's values.** `POST /search/pivot/TRD/values` with `{"q": "TRD", "field": "currency"}` answers
+`{"field": "currency", "values": [{"value": "EUR", "count": 14}, …], "more": false, "numeric": false, "min": null,
+"max": null, "partial": false, "source": "columns"}` (at most 500 values; `min` and `max` for numbers).
 
 ### Live streams
 

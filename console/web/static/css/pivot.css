@@ -1,0 +1,155 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* The Pivot tab (static/js/pivot.js): the Table | Pivot switch, the field list and its four zones, the grid, heat
+   shading (theme tokens mixed at most 38% into the surface, so text keeps its contrast), the drill-down dialog and print. */
+
+/* ---- the switch ---- */
+.pv-switch { display: inline-flex; gap: 0; margin: 0 0 .5rem; border: 1px solid var(--d-border); border-radius: 999px; overflow: hidden; }
+.pv-switch [role=tab] { background: transparent; color: var(--d-muted); border: 0; padding: .18rem .8rem; font-size: .78rem; font-weight: 600; cursor: pointer; }
+.pv-switch [role=tab] + [role=tab] { border-left: 1px solid var(--d-border); }
+.pv-switch [role=tab][aria-selected=true] { background: var(--d-accent-tint); color: var(--d-ink); }
+.pv-switch [role=tab]:focus-visible { outline: 2px solid var(--d-accent); outline-offset: -2px; }
+.pnl.pv-on > .pnl-h .tbl-pg { display: none; }
+.pv-host { font-size: .85rem; }
+.pv-search-box { margin-bottom: .6rem; }
+
+/* ---- fields and zones ---- */
+.pv-top { display: grid; grid-template-columns: minmax(10rem, 1fr) 3fr; gap: .6rem; }
+.pv-zones { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
+.pv-zone { border: 1px dashed var(--d-border); border-radius: 6px; padding: .35rem .45rem; min-height: 3.2rem; background: var(--d-bg-2); }
+.pv-fields { border-style: solid; }
+.pv-zone.pv-over { border-color: var(--d-accent); background: var(--d-accent-tint); }
+.pv-zh { margin: 0 0 .3rem; font-size: .7rem; letter-spacing: .06em; text-transform: uppercase; color: var(--d-muted); font-weight: 600; }
+.pv-chips { display: flex; flex-wrap: wrap; gap: .3rem; align-items: center; }
+.pv-fields .pv-chips { max-height: 14rem; overflow: auto; }
+.pv-empty { font-size: .75rem; }
+.pv-chip { display: inline-flex; align-items: center; gap: .3rem; padding: .15rem .55rem; border-radius: 999px; border: 1px solid var(--d-border);
+  background: var(--d-surface); color: var(--d-ink); font-size: .78rem; cursor: grab; touch-action: none; user-select: none; }
+.pv-chip.pv-in { border-color: var(--d-link); }
+.pv-chip:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 1px; }
+.pv-chip.pv-ins { box-shadow: -3px 0 0 var(--d-accent); }
+.pv-chip.pv-dragging { opacity: .4; }
+.pv-ghost { position: fixed; z-index: 1400; pointer-events: none; cursor: grabbing; box-shadow: var(--d-shadow); opacity: .92; }
+.pv-drag-on, .pv-drag-on * { cursor: grabbing; }
+.pv-badge { font-size: .62rem; color: var(--d-muted); border: 1px solid var(--d-border); border-radius: 4px; padding: 0 .2rem; line-height: 1.3; }
+.pv-doc { color: var(--d-warn); border-color: var(--d-warn); }
+.pv-val { display: inline-flex; align-items: center; gap: .25rem; flex-wrap: wrap; }
+.pv-val .studio-select { padding: .1rem .3rem; font-size: .75rem; }
+.pv-help { font-size: .72rem; margin: .35rem 0 .3rem; }
+
+/* ---- the filter popover ---- */
+.pv-pop { border: 1px solid var(--d-border); border-radius: 8px; background: var(--d-surface); padding: .5rem .6rem; margin: .4rem 0; box-shadow: var(--d-shadow); max-width: 34rem; }
+.pv-pop-h { display: flex; justify-content: space-between; align-items: center; gap: .5rem; margin-bottom: .3rem; }
+.pv-pop-tools { display: flex; gap: .35rem; align-items: center; flex-wrap: wrap; margin: .3rem 0; }
+.pv-pop .studio-in { width: 11rem; }
+.pv-pick { display: flex; flex-direction: column; max-height: 14rem; overflow: auto; border: 1px solid var(--d-border); border-radius: 5px; padding: .25rem .4rem; }
+.pv-pick-i { font-size: .8rem; }
+.pv-range { display: flex; gap: .35rem; align-items: center; margin-top: .35rem; font-size: .8rem; }
+.pv-range .studio-in { width: 9rem; }
+
+/* ---- toolbar, status ---- */
+.pv-bar { display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; margin: .3rem 0; }
+.pv-bar .pv-btn { padding: .15rem .65rem; font-size: .76rem; }
+.pv-bar .studio-select { padding: .12rem .35rem; font-size: .76rem; }
+.pv-check { font-size: .78rem; color: var(--d-ink); display: inline-flex; gap: .2rem; align-items: center; margin-right: .2rem; }
+.pv-status { font-size: .72rem; margin: .2rem 0; }
+.pv-msg { font-size: .8rem; margin: .2rem 0; }
+.pv-msg:empty { display: none; }
+
+/* ---- the grid ---- */
+.pv-wrap { max-height: 32rem; overflow: auto; }
+.pv-grid th, .pv-grid td { white-space: nowrap; }
+.pv-grid thead th { position: sticky; top: 0; background: var(--d-surface); z-index: 1; }
+.pv-grid .pv-corner { color: var(--d-muted); font-weight: 500; font-size: .74rem; }
+.pv-grid .pv-ch { text-align: center; }
+.pv-grid .pv-vh { text-align: right; font-size: .74rem; }
+.pv-grid .pv-sortable { cursor: pointer; }
+.pv-grid .pv-sortable[aria-sort=ascending]::after { content: " ▲"; color: var(--d-accent); }
+.pv-grid .pv-sortable[aria-sort=descending]::after { content: " ▼"; color: var(--d-accent); }
+.pv-grid .pv-rh { font-weight: 500; text-align: left; }
+.pv-grid .pv-tot { font-weight: 600; }
+.pv-grid tr.pv-sub > *, .pv-grid tr.pv-grand > * { font-weight: 600; border-top: 1px solid var(--d-border); }
+.pv-grid tr.pv-grand > * { background: var(--d-bg-2); }
+.pv-grid td.pv-c { cursor: pointer; }
+.pv-grid td.pv-c:hover { outline: 1px solid var(--d-border); }
+.pv-grid td.pv-c:focus { outline: 2px solid var(--d-accent); outline-offset: -2px; }
+.pv-tog { background: none; border: 0; color: var(--d-muted); padding: 0 .25rem 0 0; font-size: .8rem; cursor: pointer; }
+.pv-tog:focus-visible { outline: 2px solid var(--d-accent); }
+/* Heat: ten steps up to 38% of the tone over the surface, scaled per theme so the ink keeps 4.5:1 on the strongest step
+   (wallstreet's orange ink on its amber accent allows about 24%; test_pivot.py computes it for every theme). */
+:root { --pv-heat: 1; }
+:root[data-theme="wallstreet"] { --pv-heat: .6; }
+.pv-heat td.pv-heat-0 { background: color-mix(in srgb, var(--d-accent) calc(2% * var(--pv-heat)), var(--d-surface)); }
+.pv-heat td.pv-heat-1 { background: color-mix(in srgb, var(--d-accent) calc(6% * var(--pv-heat)), var(--d-surface)); }
+.pv-heat td.pv-heat-2 { background: color-mix(in srgb, var(--d-accent) calc(10% * var(--pv-heat)), var(--d-surface)); }
+.pv-heat td.pv-heat-3 { background: color-mix(in srgb, var(--d-accent) calc(14% * var(--pv-heat)), var(--d-surface)); }
+.pv-heat td.pv-heat-4 { background: color-mix(in srgb, var(--d-accent) calc(18% * var(--pv-heat)), var(--d-surface)); }
+.pv-heat td.pv-heat-5 { background: color-mix(in srgb, var(--d-accent) calc(22% * var(--pv-heat)), var(--d-surface)); }
+.pv-heat td.pv-heat-6 { background: color-mix(in srgb, var(--d-accent) calc(26% * var(--pv-heat)), var(--d-surface)); }
+.pv-heat td.pv-heat-7 { background: color-mix(in srgb, var(--d-accent) calc(30% * var(--pv-heat)), var(--d-surface)); }
+.pv-heat td.pv-heat-8 { background: color-mix(in srgb, var(--d-accent) calc(34% * var(--pv-heat)), var(--d-surface)); }
+.pv-heat td.pv-heat-9 { background: color-mix(in srgb, var(--d-accent) calc(38% * var(--pv-heat)), var(--d-surface)); }
+.pv-heat td.pv-hpos.pv-heat-0 { background: color-mix(in srgb, var(--d-pos) calc(2% * var(--pv-heat)), var(--d-surface)); }
+.pv-heat td.pv-hpos.pv-heat-1 { background: color-mix(in srgb, var(--d-pos) calc(6% * var(--pv-heat)), var(--d-surface)); }
+.pv-heat td.pv-hpos.pv-heat-2 { background: color-mix(in srgb, var(--d-pos) calc(10% * var(--pv-heat)), var(--d-surface)); }
+.pv-heat td.pv-hpos.pv-heat-3 { background: color-mix(in srgb, var(--d-pos) calc(14% * var(--pv-heat)), var(--d-surface)); }
+.pv-heat td.pv-hpos.pv-heat-4 { background: color-mix(in srgb, var(--d-pos) calc(18% * var(--pv-heat)), var(--d-surface)); }
+.pv-heat td.pv-hpos.pv-heat-5 { background: color-mix(in srgb, var(--d-pos) calc(22% * var(--pv-heat)), var(--d-surface)); }
+.pv-heat td.pv-hpos.pv-heat-6 { background: color-mix(in srgb, var(--d-pos) calc(26% * var(--pv-heat)), var(--d-surface)); }
+.pv-heat td.pv-hpos.pv-heat-7 { background: color-mix(in srgb, var(--d-pos) calc(30% * var(--pv-heat)), var(--d-surface)); }
+.pv-heat td.pv-hpos.pv-heat-8 { background: color-mix(in srgb, var(--d-pos) calc(34% * var(--pv-heat)), var(--d-surface)); }
+.pv-heat td.pv-hpos.pv-heat-9 { background: color-mix(in srgb, var(--d-pos) calc(38% * var(--pv-heat)), var(--d-surface)); }
+.pv-heat td.pv-hneg.pv-heat-0 { background: color-mix(in srgb, var(--d-neg) calc(2% * var(--pv-heat)), var(--d-surface)); }
+.pv-heat td.pv-hneg.pv-heat-1 { background: color-mix(in srgb, var(--d-neg) calc(6% * var(--pv-heat)), var(--d-surface)); }
+.pv-heat td.pv-hneg.pv-heat-2 { background: color-mix(in srgb, var(--d-neg) calc(10% * var(--pv-heat)), var(--d-surface)); }
+.pv-heat td.pv-hneg.pv-heat-3 { background: color-mix(in srgb, var(--d-neg) calc(14% * var(--pv-heat)), var(--d-surface)); }
+.pv-heat td.pv-hneg.pv-heat-4 { background: color-mix(in srgb, var(--d-neg) calc(18% * var(--pv-heat)), var(--d-surface)); }
+.pv-heat td.pv-hneg.pv-heat-5 { background: color-mix(in srgb, var(--d-neg) calc(22% * var(--pv-heat)), var(--d-surface)); }
+.pv-heat td.pv-hneg.pv-heat-6 { background: color-mix(in srgb, var(--d-neg) calc(26% * var(--pv-heat)), var(--d-surface)); }
+.pv-heat td.pv-hneg.pv-heat-7 { background: color-mix(in srgb, var(--d-neg) calc(30% * var(--pv-heat)), var(--d-surface)); }
+.pv-heat td.pv-hneg.pv-heat-8 { background: color-mix(in srgb, var(--d-neg) calc(34% * var(--pv-heat)), var(--d-surface)); }
+.pv-heat td.pv-hneg.pv-heat-9 { background: color-mix(in srgb, var(--d-neg) calc(38% * var(--pv-heat)), var(--d-surface)); }
+/* shaded cells keep the ink colour: a toned figure on a tint of its own tone would lose contrast */
+.pv-heat td.pv-hpos, .pv-heat td.pv-hneg, .pv-heat td[class*=pv-heat-] { color: var(--d-ink); }
+.pv-chart { height: 340px; margin-top: .5rem; }
+
+/* ---- drill-down dialog ---- */
+.pv-shade { position: fixed; inset: 0; z-index: 1300; background: rgba(0, 0, 0, .45); display: flex; align-items: flex-start; justify-content: center; padding: 6vh 1rem; }
+.pv-dlg { background: var(--d-surface); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 10px; box-shadow: var(--d-shadow);
+  width: min(1000px, 96vw); max-height: 86vh; display: flex; flex-direction: column; }
+.pv-dlg-h { display: flex; align-items: center; gap: .7rem; padding: .6rem .9rem; border-bottom: 1px solid var(--d-border); }
+.pv-dlg-h .raw-x { margin-left: auto; }
+.pv-dlg-sub { font-size: .78rem; }
+.pv-dlg-note { margin: .4rem .9rem 0; font-size: .78rem; }
+.pv-dlg-b { overflow: auto; padding: .4rem .9rem .8rem; }
+.pv-pager { display: flex; gap: .4rem; margin-top: .4rem; }
+.pv-promote { z-index: 1250; }
+
+@media (max-width: 760px) {
+  .pv-top { grid-template-columns: 1fr; }
+  .pv-zones { grid-template-columns: 1fr; }
+}
+
+/* ---- print: Print in the pivot prints the pivot alone; printing the page prints whichever tab is shown ---- */
+@media print {
+  .pv-switch, .pv-top, .pv-help, .pv-bar, .pv-pop, .pv-tog { display: none !important; }
+  .pv-wrap { max-height: none; overflow: visible; }
+  .pv-grid thead th { position: static; }
+  body.pv-printing * { visibility: hidden; }
+  body.pv-printing .pv-print-this, body.pv-printing .pv-print-this * { visibility: visible; }
+  body.pv-printing .pv-print-this { position: absolute; left: 0; top: 0; width: 100%; }
+  body.pv-printing .pv-print-this .pv-pane-table { display: none; }
+}

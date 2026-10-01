@@ -79,6 +79,13 @@ COLUMNS = {"trading": {"trade": ["productType", "direction", "currency", "notion
            "banking-core": {"counterparty": ["name", "rating", "sector", "country", "netMtm"],
                             "book": ["name", "deskName", "tradeCount", "mtm", "dv01"]}}
 
+# a Pivot tab on the results and pick lists of these kinds (USER_GUIDE.md, The Pivot tab): fields the trade table keeps as
+# columns (LAYOUTS below), so the server pivots a whole book of the day from them; opens on MTM by book and currency
+PIVOTS = {"trading": {"trade": {"fields": ["book", "desk", "currency", "assetClass", "productType", "direction", "status", "counterparty.name",
+                                           "nettingSet", "sourceSystem", "maturityDate", "notional", "mtm", "pnl1d", "risk.dv01"],
+                                "rows": ["book"], "columns": ["currency"], "values": [{"field": "mtm", "agg": "sum"}],
+                                "filters": ["assetClass", "status"]}}}
+
 # calc: may use Calc, Python in the browser on what the role opens (PYTHON_CALC.md)
 ROLES = {"trading": {"trader": {"kinds": TRADER_KINDS, "calc": True}}, "market-risk": {"market-risk": {"kinds": ["*"], "raw": True, "calc": True}},
          "counterparty-risk": {"credit-risk": {"kinds": ["*"], "raw": True, "calc": True}}}
@@ -153,6 +160,8 @@ def manifest(name: str) -> dict:
                                                             "refresh-minutes": 60, **extra}}
     if name in COLUMNS:
         m["columns"] = COLUMNS[name]
+    if name in PIVOTS:
+        m["pivot"] = PIVOTS[name]
     m["console"] = {"examples": [list(e) for e in EXAMPLES[name]], "help": "config/help.yaml"}
     if calc_snippets.SNIPPETS.get(name):    # Calc on the pack's kinds, with its snippets under python/ (calc_snippets.py)
         m["python"] = {"enabled": True}

@@ -118,6 +118,7 @@ class Panel:
     key: str | None = None
     code: str | None = None
     opts: dict = field(default_factory=dict)             # further options, in order: scalars, or lists of mappings (markers)
+    pivot: dict | None = None                            # a table's Pivot tab: { fields, rows, columns, values, filters, heat }
 
     def paths(self) -> list[str]:
         """Every option that holds a document path or expression (rows, nodes, edges, marker values), for the checks."""

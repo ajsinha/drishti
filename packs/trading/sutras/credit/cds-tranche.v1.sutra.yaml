@@ -48,6 +48,11 @@ panels:
     key: F3
     rows: $.schedule
     highlight: "#index == $.nextIndex"
+    pivot:
+      rows: [type]
+      columns: [leg]
+      values: [{ field: pv, agg: sum }, { field: amount, agg: sum }]
+      filters: [payDate]
     columns:
       - { label: Pay date, bind: "@.payDate", fmt: date }
       - { label: Leg, bind: "@.leg" }

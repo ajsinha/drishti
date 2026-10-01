@@ -49,6 +49,13 @@ panels:
     limit: 4
     moreLabel: "(size($.memberTrades) - 4) + ' more trades'"
     totalLabel: Net
+    # the Pivot tab: every member trade (not only the first four), MTM by product and currency to start with
+    pivot:
+      fields: [product, currency, maturity, notional, mtm, trade]
+      rows: [product]
+      columns: [currency]
+      values: [{ field: mtm, agg: sum }]
+      filters: [currency]
     columns:
       - { label: Trade, bind: "@.trade", link: true }
       - { label: Product, bind: "@.product" }

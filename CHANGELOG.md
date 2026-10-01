@@ -100,6 +100,37 @@
   - **Generator:** snippet sources are files, `tools/packgen/banking/snippets/<pack>/*.py` with `title`,
     `description`, `kinds` and `example` lines; `make_packs.py` refuses one over 60 lines and `--check` also fails on a
     generated snippet whose source is gone.
+- **The Pivot tab: an Excel-style pivot, only where a Sutra or pack asks for it**
+  ([USER_GUIDE.md](docs/guides/USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way)). A **Table | Pivot** switch on the
+  tables and ladders whose Sutra says `pivot:`, and on the search results and pick lists of kinds whose pack says
+  `pivot:`; nowhere else. A field list and four zones, Rows, Columns (several levels each), Values (sum, count, avg,
+  min, max, distinct count; shown as the value or % of row, column or total) and Filters (a pick list of values, or a
+  range for numbers and dates), by Pointer Events drag (no library) or by key (`R` `C` `V` `F`, `Delete`, `Alt`+arrows,
+  `Enter`), every change announced. A grid with subtotals and grand totals, collapsible row and column groups, sort by
+  any value, heat shading from the theme's tokens (scaled per theme so text keeps 4.5:1), groups in natural order
+  (`2-5Y` before `10Y+`), drill-down from any cell to the rows behind it, an ECharts bar, line or heatmap of the
+  result, CSV and Excel export (`/export/grid.csv`, `/export/grid.xlsx`, written with the standard library) and print.
+  - **Rachana:** the `pivot` option of `table` and `ladder` panels, `true` or `{ fields, rows, columns, values, filters,
+    heat, chart, totals }` (fields as row paths or `{ field, bind, label, fmt }`), with problem code `DRS-2031`
+    (`DRS-2023` on other kinds); in the JSON Schema, so Studio completes and checks it
+    ([reference](docs/guides/RACHANA_REFERENCE.md#pivot-a-pivot-tab-on-a-table-or-ladder)).
+  - **Engines:** a panel's pivot runs in the browser over **all** its rows (`GET /api/v1/views/{kind}/{id}/panels/{panel}/records`,
+    beyond the table's `limit`, up to `drishti.pivot.max-records`); a search's pivot runs on the server over every
+    match of the business date from the day's promoted columns (`POST /api/v1/search/pivot/{kind}`, `/drill`,
+    `/values`), masked exactly as a search, returning only the cells; a field that is not a column is refused with the
+    reason, or read from documents on request (at most `drishti.pivot.document-scan`, marked partial).
+  - **Saved pivots** per (Sutra, panel) and per kind (`/api/v1/me/pivots`, preference namespace `pivots`); no new
+    power: opening the kind is enough. **Promote to Sutra:** an author's pivot becomes the panel's `pivot:` in the
+    Sutra's next version (only that key rewritten, shown as the changes and a diff), proposed through review.
+  - **Packs:** `pivot:` per kind in `pack.yaml` (`drishti.search.pivot.<kind>`, [PACKS.md](docs/guides/PACKS.md#pivot-a-pivot-tab-on-search-results)).
+    The banking generators opt in a netting set's and a clearing account's trades (notional by product and maturity
+    bucket), a book's largest trades (MTM by product and currency), a desk's new *Trades by book* table and the trading
+    pack's new desk P&L Sutra (MTM by book and currency), collateral positions, a trade's cash flows (PV by type and
+    leg), fixings and amortisation, and trade searches (MTM by book and currency, over the trade table's columns); a
+    trade row in another entity's list now carries its asset class, currency, book and maturity bucket. The finance
+    pack opts in its netting set's member trades, its book P&L and its trade searches.
+  - `drishti.pivot.*` settings (`enabled`/`DRISHTI_PIVOT_ENABLED`, `max-records`, `max-row-keys`, `max-column-keys`,
+    `document-scan`, `drill-page`, `budget`); the access log records the new reads.
 - **Delta Lake without Hadoop; Drishti on Windows** ([DELTA_CONNECTOR.md › Engines](docs/connectors/DELTA_CONNECTOR.md#16-engines-native-and-hadoop),
   [WINDOWS.md](docs/guides/WINDOWS.md)). A new module, `drishti-deltalake`, is a Delta Kernel engine (`NativeEngine`)
   that never touches Hadoop's file systems: local lakes through `java.nio` (drive letters, backslashes and UNC shares),

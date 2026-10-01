@@ -9,71 +9,111 @@
   {
    "tradeId": "IMG-400109",
    "product": "Contract for difference",
+   "assetClass": "Equity",
+   "currency": "USD",
+   "book": "BOOK-EQD-1",
    "notional": 176000000.0,
    "maturity": "2027-03-08",
+   "maturityBucket": "0-1Y",
    "mtm": 6060457
   },
   {
    "tradeId": "IMG-400011",
    "product": "Equity forward",
+   "assetClass": "Equity",
+   "currency": "CHF",
+   "book": "BOOK-EQD-1",
    "notional": 240000000.0,
    "maturity": "2027-02-19",
+   "maturityBucket": "0-1Y",
    "mtm": -4487722
   },
   {
    "tradeId": "IMG-400052",
    "product": "Equity Asian option",
+   "assetClass": "Equity",
+   "currency": "USD",
+   "book": "BOOK-EQD-1",
    "notional": 168000000.0,
    "maturity": "2037-04-13",
+   "maturityBucket": "10Y+",
    "mtm": -3294420
   },
   {
    "tradeId": "IMG-400012",
    "product": "Equity forward",
+   "assetClass": "Equity",
+   "currency": "JPY",
+   "book": "BOOK-EQD-1",
    "notional": 248000000.0,
    "maturity": "2026-10-07",
+   "maturityBucket": "0-1Y",
    "mtm": 3225946
   },
   {
    "tradeId": "IMG-400050",
    "product": "Equity Asian option",
+   "assetClass": "Equity",
+   "currency": "GBP",
+   "book": "BOOK-EQD-1",
    "notional": 167000000.0,
    "maturity": "2036-04-07",
+   "maturityBucket": "5-10Y",
    "mtm": -3224113
   },
   {
    "tradeId": "IMG-400038",
    "product": "Index option",
+   "assetClass": "Equity",
+   "currency": "USD",
+   "book": "BOOK-EQD-1",
    "notional": 159000000.0,
    "maturity": "2027-05-27",
+   "maturityBucket": "0-1Y",
    "mtm": -2574924
   },
   {
    "tradeId": "IMG-400110",
    "product": "Contract for difference",
+   "assetClass": "Equity",
+   "currency": "USD",
+   "book": "BOOK-EQD-1",
    "notional": 196000000.0,
    "maturity": "2028-01-14",
+   "maturityBucket": "1-2Y",
    "mtm": -2343493
   },
   {
    "tradeId": "IMG-400100",
    "product": "Equity total return swap",
+   "assetClass": "Equity",
+   "currency": "EUR",
+   "book": "BOOK-EQD-1",
    "notional": 195000000.0,
    "maturity": "2031-10-20",
+   "maturityBucket": "5-10Y",
    "mtm": 2341483
   },
   {
    "tradeId": "IMG-400127",
    "product": "Basket option",
+   "assetClass": "Equity",
+   "currency": "GBP",
+   "book": "BOOK-EQD-1",
    "notional": 97000000.0,
    "maturity": "2031-11-03",
+   "maturityBucket": "5-10Y",
    "mtm": 1923365
   },
   {
    "tradeId": "IMG-400003",
    "product": "Equity position",
+   "assetClass": "Equity",
+   "currency": "JPY",
+   "book": "BOOK-EQD-1",
    "notional": 149000000.0,
    "maturity": "2026-10-07",
+   "maturityBucket": "0-1Y",
    "mtm": -1497978
   }
  ],

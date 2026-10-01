@@ -264,6 +264,21 @@ that opens `VRNT VRNT-BRCA1-185DELAG`.
 whose field name ends in `Id`, `Ref` or `_id` (`@.variantId`) would be linked without it; `@.id` is too short a
 name for that rule, so it needs `link: true`.
 
+A table can also offer its rows as an interactive pivot. Add one line, `pivot: true`, and the panel gets a
+**Table | Pivot** switch: under **Pivot**, a reader drags the table's columns into rows, columns, values and filters,
+with totals, a chart and a drill-down to the rows under any cell
+([USER_GUIDE.md](USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way)). To choose the fields and how it opens:
+
+```yaml
+    pivot:
+      fields: [significance, protein, id]      # row paths; they need not be columns
+      rows: [significance]
+      values: [{ field: id, agg: count }]
+```
+
+Without `pivot:` there is no switch: a Sutra decides where a pivot helps
+([reference](RACHANA_REFERENCE.md#pivot-a-pivot-tab-on-a-table-or-ladder)).
+
 ### Step 8: a chart
 
 Expression by tissue is a label and a number per row, which is what horizontal bars are for:
@@ -861,6 +876,7 @@ and `GET /api/v1/sutras/problems` give `<file>:<line>:<column> <code> <message>`
 | nine strip items | `DRS-2026 the strip holds at most 8 figures, found 9` | move some into a `kv` panel |
 | `area: left` | `DRS-2027 area must be 'main' or 'right'` | `area: right` |
 | `span: 13` | `DRS-2030 span must be a whole number from 1 to 12 (columns of the 12-column grid), not '13'` | `span: 12` (or leave it out) |
+| `pivot: { rows: [desk] }` with no field `desk` | `DRS-2031 pivot rows name 'desk', which is not one of its fields (…)` | use one of the names the message lists, or add the field to `fields` |
 | saving `gene@1` from Studio | `DRS-2028 gene@1 is already defined in …/packs/genomics/…/gene.v1.sutra.yaml` | new name, or `version: 2` |
 | no `rachana:` line | `DRS-2009 missing 'rachana: 1' (the Rachana language version) at the top` | add `rachana: 1` as the first key |
 | `rachana: 2` | `DRS-2009 'rachana: 2' is not a language version this server reads (it reads 1)` | `rachana: 1` |

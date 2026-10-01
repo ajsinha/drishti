@@ -41,6 +41,7 @@ import java.util.Map;
 public final class PackLoader {
 
     private final ObjectMapper yaml = new ObjectMapper(new YAMLFactory());
+    private static final ObjectMapper JSON = new ObjectMapper();
 
     /**
      * The enabled packs and everything they require, dependencies first (a pack that {@code requires:} another
@@ -189,6 +190,21 @@ public final class PackLoader {
                     props.put("drishti.search.columns." + e.getKey() + "[" + i + "]", String.valueOf(cols.get(i)));
                 }
                 offer(claims, overrides, lineage, "columns " + e.getKey(), pack.name(), props);
+            }
+            // pivot: the kinds whose search results and pick lists offer a Pivot tab (true, or { fields, rows, columns,
+            // values, filters, heat, chart }); kept as JSON, read and checked by the search engine (SearchProperties#pivotOf)
+            for (Map.Entry<String, Object> e : map(m.get("pivot")).entrySet()) {
+                Object v = e.getValue();
+                if (!(v instanceof Boolean) && !(v instanceof Map<?, ?>)) {
+                    throw new IllegalStateException("pack '" + pack.name() + "': pivot of " + e.getKey() + " is true, false or a mapping, not '" + v + "'");
+                }
+                String text;
+                try {
+                    text = v instanceof Boolean b ? b.toString() : JSON.writeValueAsString(v);
+                } catch (IOException x) {
+                    throw new UncheckedIOException(x);
+                }
+                offer(claims, overrides, lineage, "pivot " + e.getKey(), pack.name(), Map.of("drishti.search.pivot." + e.getKey(), text));
             }
             for (Map.Entry<String, Object> e : map(m.get("roles")).entrySet()) {
                 Map<String, Object> r = map(e.getValue());

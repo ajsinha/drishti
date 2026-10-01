@@ -149,8 +149,12 @@ async def search(request: Request, q: str = "", vs: str = "", words: str = ""):
                     cells.append((_shown(v), isinstance(v, (int, float)) and not isinstance(v, bool)))
             rows.append({"ref": r["ref"], "title": r.get("title") or r["ref"]["id"], "cells": cells, "status": r.get("status")})
     titled = any(r["title"] != r["ref"]["id"] for r in rows)       # a title that only repeats the id is left out
+    pivot_saved = None
+    if data and data.get("pivot") and not vs:                      # the kind's pack opts its results into a Pivot tab
+        state = await request.app.state.pivots.state(request.app.state.backend, ident(request))
+        pivot_saved = request.app.state.pivots.saved_search(state, data.get("kind", ""))
     return render(request, "terminal/search.html", q=q, vs=vs, words=words, phrase=phrase, data=data, rows=rows, error=error, titled=titled,
-                  screen="search")
+                  screen="search", pivot_saved=pivot_saved)
 
 
 @router.post("/s/watch")
@@ -202,11 +206,12 @@ async def view(request: Request, kind: str, id_: str, embed: int = 0):
         return render(request, "terminal/missing.html", status_code=e.status if e.status < 500 else 502,
                       kind=kind, id=id_, error=e, embed=bool(embed))
     layout = await request.app.state.layouts.context(request, vm, bool(embed))      # the user's own arrangement, if any
-    main = [p for p in layout["panels"] if p.get("area") != "right"]
-    right = [p for p in layout["panels"] if p.get("area") == "right"]
+    panels, pivots = await request.app.state.pivots.view(request, vm, layout["panels"])   # each Pivot tab as the user saved it
+    main = [p for p in panels if p.get("area") != "right"]
+    right = [p for p in panels if p.get("area") == "right"]
     calc = {"offered": False} if embed else await request.app.state.calc.context(request, await packs(request), vm["ref"]["kind"])
     return render(request, "terminal/view.html", vm=vm, main=main, right=right, embed=bool(embed), share_url=share_url(request, kind, id_),
-                  calc=calc, layout=layout, hidden_ids=[p["id"] for p in layout["panels"] if p.get("hidden")])
+                  calc=calc, layout=layout, pivots=pivots, hidden_ids=[p["id"] for p in layout["panels"] if p.get("hidden")])
 
 
 def share_url(request: Request, kind: str, id_: str) -> str:

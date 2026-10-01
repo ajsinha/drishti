@@ -64,8 +64,12 @@
   {
    "tradeId": "IMG-400142",
    "product": "Capital-protected note",
+   "assetClass": "Structured",
+   "currency": "EUR",
+   "book": "BOOK-STRUCT-3",
    "notional": 64000000.0,
    "maturity": "2030-08-27",
+   "maturityBucket": "2-5Y",
    "mtm": 1294522
   }
  ],
