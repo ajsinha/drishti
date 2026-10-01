@@ -231,10 +231,41 @@ On 2026-10-01, a developer workstation, the banking packs' samples plus 10,000 t
 
 Every search answered over all 10,000 trades (`partial: false`).
 
+**The scaling curve, measured with the scale benchmark (2026-10-01).** `tools/bench/scale.sh`
+([SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md)) loaded 10,000, 25,000 and 50,000 trades a day over three business
+days (plus the banking samples) and asked the same questions over HTTP each time: a 24-thread laptop shared with other
+work, a Drishti server with `-Xmx2g`, the `files` profile. Medians of 25 requests; every search exact (`partial: false`,
+`scanned` equal to the trades a day). The last column carries a straight-line fit (R² beside it) to a million trades a
+day: **an extrapolation from the measured points, not a measurement**; "flat" means the measure does not grow with the
+book. This store has not been measured at a million trades a day; the last column is the best figure there is, and only
+an order of magnitude.
+
+| | 10,000 | 25,000 | 50,000 | R² | 1,000,000 (**extrapolated**) |
+|---|---|---|---|---|---|
+| type-ahead `TRD CLY-400` (ms) | 8.7 | 8.9 | 7.8 | 0.01 | flat, about 8.2 ms |
+| open a trade (view), first time (ms) | 3.5 | 3.4 | 4.3 | 0.00 | flat, about 4.1 ms |
+| a trade's document, today (ms) | 2.0 | 2.4 | 1.1 | 0.39 | flat, about 1.8 ms |
+| a trade's document, a past day (ms) | 1.1 | 0.9 | 2.7 | 0.77 | 40.4 ms |
+| `TRD where mtm < -50m order by mtm` (ms) | 1.1 | 2.1 | 4.0 | 0.99 | 69.7 ms |
+| `TRD where currency = 'USD' and notional > 500m …` (ms) | 1.6 | 3.9 | 7.8 | 1.00 | 154 ms |
+| `TRD book=BOOK-RATES-3` (ms) | 1.8 | 4.3 | 7.7 | 0.95 | 131 ms |
+| pick list `TRD END-1100` (ms) | 0.8 | 2.0 | 3.2 | 0.98 | 55.4 ms |
+| desk P&L `DESK-RATES` (ms) | 4.8 | 5.2 | 3.5 | 0.73 | flat, about 4.8 ms |
+| impact of `NS-SUMMIT-NY` (ms) | 16.8 | 19.0 | 17.1 | 0.08 | flat, about 17.9 ms |
+| a search on another day, first (ms) | 192 | 213 | 353 | 0.47 | 2,904 ms (weak fit) |
+| a search on another day, again (ms) | 1.1 | 2.3 | 4.8 | 0.99 | 87.5 ms |
+| load (the whole script) (s) | 9.2 | 11.2 | 15.4 | 1.00 | 164 s |
+| store size (MB) | 310 | 688 | 1,322 | 1.00 | 25,362 MB |
+| server live heap after a full GC (MB) | 88.9 | 102 | 122 | 1.00 | 893 MB |
+
+Run-to-run variance, requests per second with 8 clients, server start and the other stores side by side:
+[SCALE_BENCHMARK.md › Results](../admin/SCALE_BENCHMARK.md#4-results).
+
 ## 10. Limits and trade-offs
 
-- **The first read of a day indexes it**: a moment for a small day, tens of seconds for a million lines. The newest
-  day is indexed in the background; older days on first use.
+- **The first read of a day indexes it**: a moment for a small day, tens of seconds for a million lines (an estimate;
+  0.2–0.35 s for 10,000 to 50,000 lines in the scale benchmark). The newest day is indexed in the background; older days
+  on first use.
 - **One process writes.** Files have no transactions: write a day to a temporary name and rename it, as the loader
   does.
 - **No compression on disk** (offsets must address the plain file); a large book takes several times the disk of

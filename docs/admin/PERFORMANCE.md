@@ -21,6 +21,9 @@ This document answers three questions:
 2. **How do I measure it on my installation?** [Eight ways, from a single `curl` to JMH](#how-to-measure).
 3. **What can I change when it is slow?** [The tuning knobs](#tuning-knobs), each with an example.
 
+How the stores compare, and how each scales with the size of the book, is measured separately by the scale benchmark:
+[SCALE_BENCHMARK.md](SCALE_BENCHMARK.md).
+
 Every number below was measured, not estimated. Each row names the date, the machine and the command, so
 anyone can check it again.
 
@@ -68,6 +71,25 @@ book could not be served: every read loaded a whole day (gigabytes of documents)
 
 The first live implementation delayed every tick by a whole frame (p50 52 ms). Switching to a leading-edge
 throttle (send at once after a quiet frame, coalesce inside a busy one) brought p50 to 2.4 ms.
+
+### Every store, from 10,000 to 50,000 trades a day
+
+The scale benchmark (`tools/bench/scale.sh`, [SCALE_BENCHMARK.md](SCALE_BENCHMARK.md)) loads the same book into each of
+the eight stores at 10,000, 25,000 and 50,000 trades a day and asks the questions above over HTTP. Measured on
+2026-10-01 at 50,000 trades a day (server `-Xmx2g`, containers capped at 2 GB), every search exact:
+
+| What | Range across the eight stores |
+|---|---|
+| Type-ahead `TRD CLY-400` | 6.3–10.4 ms |
+| Open a trade (first time) | 4.1–6.6 ms |
+| `TRD where mtm < -50m order by mtm` | 3.6–7.9 ms |
+| `TRD where currency = 'USD' and notional > 500m order by notional desc limit 20` | 7.7–10.6 ms |
+| A search on another business date, first / again | 46–426 ms / 4.1–17.6 ms |
+| Server live heap after a full GC | 114–174 MB |
+
+Its linear fits carried to a million trades a day are extrapolations, labelled as such, and were checked against the
+measurements above: store sizes within about 25%, searches mostly within a factor of two, impact not at all
+([SCALE_BENCHMARK.md › How good is the straight line](SCALE_BENCHMARK.md#53-how-good-is-the-straight-line-checked-against-the-real-million)).
 
 ## How to measure
 

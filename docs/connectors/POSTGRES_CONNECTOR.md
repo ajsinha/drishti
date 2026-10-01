@@ -335,6 +335,8 @@ the middle of a load. The test server ran with 12 GB of memory and those setting
 
 ## 9. Measured results
 
+**Measured at a million trades a day, by hand, on 2026-10-01.**
+
 On 2026-10-01, a developer workstation (24 cores), PostgreSQL 18 in Docker (12 GB memory limit, `shared_buffers`
 3 GB), 1,000,000 trades a day over three business days plus the banking samples (3,017,910 rows), a Drishti server with
 the `postgres` profile and `-Xmx8g`, times over HTTP:
@@ -358,6 +360,36 @@ the `postgres` profile and `-Xmx8g`, times over HTTP:
 Every search answered over all 1,000,000 trades (`partial: false`), with the same matches as the Delta Lake and
 Aerospike connectors on the same book. Loading a smaller demo book is quick: the samples plus 20,000 trades a day for two
 days load in 12 s.
+
+**The scaling curve, measured with the scale benchmark (2026-10-01).** `tools/bench/scale.sh`
+([SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md)) loaded 10,000, 25,000 and 50,000 trades a day over three business
+days (plus the banking samples) and asked the same questions over HTTP each time: a 24-thread laptop shared with other
+work, a Drishti server with `-Xmx2g`, PostgreSQL 18 in Docker capped at 2 GB, default settings. Medians of 25 requests;
+every search exact (`partial: false`, `scanned` equal to the trades a day). The last column carries a straight-line fit
+(R² beside it) to a million trades a day: **an extrapolation from the measured points, not a measurement**; "flat" means
+the measure does not grow with the book. The million-trade measurement above is the real figure; where the line and it
+differ, trust the measurement.
+
+| | 10,000 | 25,000 | 50,000 | R² | 1,000,000 (**extrapolated**) |
+|---|---|---|---|---|---|
+| type-ahead `TRD CLY-400` (ms) | 7.3 | 7.2 | 9.0 | 0.84 | 50.2 ms |
+| open a trade (view), first time (ms) | 4.8 | 3.9 | 5.6 | 0.51 | 39.4 ms |
+| a trade's document, today (ms) | 3.0 | 1.8 | 4.0 | 0.45 | 40.1 ms (weak fit) |
+| a trade's document, a past day (ms) | 2.1 | 2.8 | 7.1 | 0.95 | 131 ms |
+| `TRD where mtm < -50m order by mtm` (ms) | 2.1 | 2.6 | 6.2 | 0.94 | 113 ms |
+| `TRD where currency = 'USD' and notional > 500m …` (ms) | 1.9 | 4.0 | 8.7 | 1.00 | 172 ms |
+| `TRD book=BOOK-RATES-3` (ms) | 1.8 | 5.5 | 6.9 | 0.88 | 132 ms |
+| pick list `TRD END-1100` (ms) | 1.3 | 1.7 | 1.8 | 0.71 | 17.4 ms |
+| desk P&L `DESK-RATES` (ms) | 3.0 | 3.1 | 4.6 | 0.90 | 43.0 ms |
+| impact of `NS-SUMMIT-NY` (ms) | 19.2 | 23.0 | 20.7 | 0.28 | 91.5 ms (weak fit) |
+| a search on another day, first (ms) | 26.2 | 44.2 | 148 | 0.92 | 2,863 ms |
+| a search on another day, again (ms) | 1.2 | 2.3 | 11.3 | 0.93 | 248 ms |
+| load (the whole script) (s) | 14.4 | 14.1 | 22.3 | 0.88 | 236 s |
+| store size (MB) | 192 | 397 | 739 | 1.00 | 13,737 MB |
+| server live heap after a full GC (MB) | 89.8 | 99.4 | 116 | 1.00 | 736 MB |
+
+Run-to-run variance, requests per second with 8 clients, server start and the other stores side by side:
+[SCALE_BENCHMARK.md › Results](../admin/SCALE_BENCHMARK.md#4-results).
 
 ## 10. Limits and trade-offs
 

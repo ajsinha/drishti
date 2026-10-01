@@ -470,6 +470,8 @@ the log still points to and break the table.
 
 ## 11. Measured results
 
+**Measured at a million trades a day, by hand, on 2026-10-01.**
+
 On 2026-10-01, a developer workstation (24 cores, server heap limit 15.6 GB), the trading pack's lake with 1,000,000
 trades a day over three business days, times over HTTP from the same machine:
 
@@ -490,6 +492,36 @@ trades a day over three business days, times over HTTP from the same machine:
 
 Writing: `bulk_trades.py` writes a million trades a day for three days in 82–125 s (about 28 s per million trade-days),
 4.85–5.2 GB.
+
+**The scaling curve, measured with the scale benchmark (2026-10-01).** `tools/bench/scale.sh`
+([SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md)) loaded 10,000, 25,000 and 50,000 trades a day over three business
+days (plus the banking samples) and asked the same questions over HTTP each time: a 24-thread laptop shared with other
+work, a Drishti server with `-Xmx2g`, the default profile with the engine `native`. Medians of 25 requests; every search
+exact (`partial: false`, `scanned` equal to the trades a day). The last column carries a straight-line fit (R² beside
+it) to a million trades a day: **an extrapolation from the measured points, not a measurement**; "flat" means the
+measure does not grow with the book. The million-trade measurement above is the real figure; where the line and it
+differ, trust the measurement.
+
+| | 10,000 | 25,000 | 50,000 | R² | 1,000,000 (**extrapolated**) |
+|---|---|---|---|---|---|
+| type-ahead `TRD CLY-400` (ms) | 5.6 | 8.0 | 6.3 | 0.11 | flat, about 7.4 ms |
+| open a trade (view), first time (ms) | 5.0 | 4.4 | 5.1 | 0.14 | 11.3 ms (weak fit) |
+| a trade's document, today (ms) | 14.6 | 12.0 | 12.6 | 0.48 | flat, about 13.3 ms |
+| a trade's document, a past day (ms) | 8.8 | 8.8 | 17.0 | 0.89 | 237 ms |
+| `TRD where mtm < -50m order by mtm` (ms) | 1.9 | 2.2 | 6.0 | 0.91 | 101 ms |
+| `TRD where currency = 'USD' and notional > 500m …` (ms) | 2.5 | 4.5 | 7.7 | 0.98 | 142 ms |
+| `TRD book=BOOK-RATES-3` (ms) | 1.8 | 4.5 | 7.2 | 0.98 | 131 ms |
+| pick list `TRD END-1100` (ms) | 0.9 | 1.3 | 3.1 | 0.95 | 53.5 ms |
+| desk P&L `DESK-RATES` (ms) | 3.2 | 4.7 | 4.9 | 0.77 | 49.7 ms |
+| impact of `NS-SUMMIT-NY` (ms) | 14.0 | 16.4 | 17.3 | 0.73 | 78.5 ms |
+| a search on another day, first (ms) | 33.3 | 103 | 156 | 0.96 | 3,049 ms |
+| a search on another day, again (ms) | 1.7 | 2.3 | 10.4 | 0.92 | 219 ms |
+| load (the whole script) (s) | 7.2 | 7.8 | 10.2 | 0.92 | 74.4 s |
+| store size (MB) | 57.3 | 137 | 270 | 1.00 | 5,311 MB |
+| server live heap after a full GC (MB) | 99.0 | 110 | 129 | 1.00 | 840 MB |
+
+Run-to-run variance, requests per second with 8 clients, server start and the other stores side by side:
+[SCALE_BENCHMARK.md › Results](../admin/SCALE_BENCHMARK.md#4-results).
 
 ## 12. Limits and trade-offs
 

@@ -119,7 +119,7 @@ final class DayColumns {
         }
         Map<String, Boolean> types = new LinkedHashMap<>();
         columns.forEach((path, c) -> types.put(path, c.texts == null && c.numbers != null));
-        int chunks = Math.max(1, -(-rows / chunkRows));
+        int chunks = Math.max(1, Math.ceilDiv(rows, chunkRows));   // the last chunk may be partial (25,000 rows: 3 chunks)
         Map<String, byte[]> fields = new LinkedHashMap<>();
         for (int k = 0; k < chunks; k++) {
             int from = k * chunkRows;

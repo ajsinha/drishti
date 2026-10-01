@@ -453,6 +453,8 @@ server at least 4 GB of heap per million entities a day, 8 GB to keep several da
 
 ## 9. Measured results
 
+**Measured at a million trades a day, by hand, on 2026-10-01.**
+
 On 2026-10-01, a developer workstation (24 cores), one Redis 8.2 instance in Docker (`maxmemory 11gb`, no persistence),
 1,000,000 trades a day over two business days plus the banking samples (3,018,045 keys, `used_memory` 2.06 GB), a
 Drishti server with the `redis` profile and `-Xmx8g`, times over HTTP:
@@ -489,6 +491,36 @@ without a pool or pinned carrier threads (Jedis blocks inside `synchronized` cod
 before Java 24). Jedis pipelines write faster from one thread, but the loader is bound by its input (the generator wrote
 12,000 to 20,000 trades a second, and the loader kept up) and sends two commands a trade without a TTL, four with one:
 at most about 80,000 commands a second, under a third of what Lettuce sustains. Lettuce also gives Redis Cluster, TLS and pub/sub with one API.
+
+**The scaling curve, measured with the scale benchmark (2026-10-01).** `tools/bench/scale.sh`
+([SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md)) loaded 10,000, 25,000 and 50,000 trades a day over three business
+days (plus the banking samples) and asked the same questions over HTTP each time: a 24-thread laptop shared with other
+work, a Drishti server with `-Xmx2g`, Redis 8.2 in Docker capped at 2 GB (`maxmemory` 1.5 GB). Medians of 25 requests;
+every search exact (`partial: false`, `scanned` equal to the trades a day). The last column carries a straight-line fit
+(R² beside it) to a million trades a day: **an extrapolation from the measured points, not a measurement**; "flat" means
+the measure does not grow with the book. The million-trade measurement above is the real figure; where the line and it
+differ, trust the measurement.
+
+| | 10,000 | 25,000 | 50,000 | R² | 1,000,000 (**extrapolated**) |
+|---|---|---|---|---|---|
+| type-ahead `TRD CLY-400` (ms) | 7.2 | 7.3 | 10.4 | 0.33 | 56.5 ms (weak fit) |
+| open a trade (view), first time (ms) | 6.0 | 6.9 | 6.6 | 0.01 | 8.7 ms (weak fit) |
+| a trade's document, today (ms) | 1.1 | 1.5 | 2.3 | 0.98 | 33.0 ms |
+| a trade's document, a past day (ms) | 1.1 | 1.6 | 6.7 | 0.91 | 137 ms |
+| `TRD where mtm < -50m order by mtm` (ms) | 2.0 | 3.1 | 7.9 | 0.97 | 155 ms |
+| `TRD where currency = 'USD' and notional > 500m …` (ms) | 1.7 | 7.2 | 10.6 | 0.94 | 225 ms |
+| `TRD book=BOOK-RATES-3` (ms) | 1.5 | 5.7 | 8.4 | 0.92 | 154 ms |
+| pick list `TRD END-1100` (ms) | 0.6 | 1.4 | 2.9 | 0.94 | 50.1 ms |
+| desk P&L `DESK-RATES` (ms) | 5.5 | 3.5 | 4.9 | 0.05 | 15.9 ms (weak fit) |
+| impact of `NS-SUMMIT-NY` (ms) | 25.0 | 31.4 | 30.9 | 0.59 | 231 ms |
+| a search on another day, first (ms) | 17.6 | 9.4 | 46.2 | 0.66 | 702 ms |
+| a search on another day, again (ms) | 1.9 | 3.5 | 17.6 | 0.91 | 378 ms |
+| load (the whole script) (s) | 13.4 | 17.2 | 20.2 | 0.96 | 169 s |
+| Redis `used_memory` (MB) | 46.2 | 97.9 | 183 | 1.00 | 3,446 MB |
+| server live heap after a full GC (MB) | 106 | 116 | 132 | 1.00 | 754 MB |
+
+Run-to-run variance, requests per second with 8 clients, server start and the other stores side by side:
+[SCALE_BENCHMARK.md › Results](../admin/SCALE_BENCHMARK.md#4-results).
 
 ## 10. Limits and trade-offs
 
