@@ -187,20 +187,26 @@ merges the hits; reverse lookups ask every source that declares them.
 | `kafka` | Live entities from Kafka topics: an envelope `{kind, id, doc}`, or whole-document messages with `kind` and `id-field` | Reads every partition from the beginning (the topic is the state: the latest message per entity), then pushes each new message to open views. Tombstones delete. No consumer-group commits. The trading pack declares `trading-stream`, off until `DRISHTI_STREAM_TRADING=true`; `tools/samplegen/stream.py` replays and ticks the samples. [Example](#kafka) |
 | `rest` | An HTTP/JSON service: `base-url` + `path` per kind | Headers from settings; the generation from a response header. [Example](#rest) |
 | `s3` | Documents in Amazon S3 or any S3-compatible store (MinIO, Ceph, on-prem): `<prefix><kind>/<id>.json` and dated `<prefix><yyyy-MM-dd>/<kind>/<id>.json` | `bucket`, `prefix`, `region`, `endpoint` (S3-compatible stores, path-style), `access-key`/`secret-key` or the AWS credential chain (environment, profile, instance role). Identifiers and dates are listed every `rescan-seconds` for search; reads are cached `cache-seconds`. Only the SDK's S3 module and the JDK HTTP client (about 9 MB). [Example](#s3) |
-| `activemq` | Live entities from ActiveMQ Classic queues and topics (`destinations: queue:trades,topic:quotes`) | Topics through durable subscriptions. Each message is acknowledged after it is stored. See *Message queues* below. [Example](#activemq) |
+| `activemq` | Live entities from ActiveMQ Classic queues and topics (`destinations: queue:trades,topic:quotes`) | Topics through durable subscriptions. Each message is acknowledged only after the state store has kept it (synced to disk by default). See *Message queues* below. [Example](#activemq) |
 | `derived` | Kinds computed from other kinds: members grouped by an expression, with `count`, `sum`, `avg`, `min`, `max`, `distinct`, `first` and per-member rows | Built into the engine. Reads its members through the routing, so it works over any source; a picked date is computed from that date's members. Recomputed at most every `refresh` per date. See [PACKS.md](../guides/PACKS.md#derived-kinds-entities-computed-from-other-kinds). |
-| `rabbitmq` | Live entities from RabbitMQ queues (`queues: trades,quotes`; `bind.<queue>: exchange:routing.key`) | Queues declared durable unless `declare: false`; manual acknowledgement after storing; `prefetch` 100. See *Message queues* below. [Example](#rabbitmq) |
+| `rabbitmq` | Live entities from RabbitMQ queues (`queues: trades,quotes`; `bind.<queue>: exchange:routing.key`) | Queues declared durable unless `declare: false`; manual acknowledgement once the state store has kept the message (requeued when it cannot); `prefetch` 100. See *Message queues* below. [Example](#rabbitmq) |
 
 ### Message queues (ActiveMQ, RabbitMQ)
 
 A queue delivers each message once and keeps no history, unlike a Kafka topic. So these connectors keep the latest
 document of every entity themselves, in a **persistent state store** per connector: RocksDB on local disk
-(`state.dir`, default `<state.root>/<source-name>`, that is `./data/state/<connector>`; `state.max-gb`, 10), which
-survives a clean restart of Drishti, with the recent documents in a memory cache (`cache-mb`, 128). Nothing is lost
-while Drishti is down: queue messages wait in the broker, and topics are read through durable subscriptions.
-Messages are acknowledged after they are handed to the store, which is written without a write-ahead log: a crash
-or power loss can lose acknowledged messages still in its write buffer (up to 32 MB). Rejected messages, and
-messages the store fails to write, are acknowledged and dropped (no dead-lettering).
+(`state.dir`, default `<state.root>/<source-name>`, that is `./data/state/<connector>`), which survives restarts of
+Drishti, with the recent documents in a memory cache (`cache-mb`, 128). Nothing is lost while Drishti is down: queue
+messages wait in the broker, and topics are read through durable subscriptions.
+
+A message is acknowledged only after the store has kept it, written with `state.durability`: `sync` (the default:
+the write-ahead log is synced on every write, so neither a crash nor a power loss loses an acknowledged message; one
+disk sync per message bounds a connector at typically thousands of messages a second on an SSD), `wal` (not synced:
+survives a crash of the process, a power loss can lose the last moments) or `none` (no log: fastest, a crash can lose
+up to the 32 MB write buffer). A message the store cannot keep (disk full, an I/O error) is **not** acknowledged:
+RabbitMQ requeues it and ActiveMQ redelivers it a second later, and health reads `DOWN: <reason> (messages are not
+acknowledged and come again)` until one is kept again. Unreadable messages (not JSON, not a document) are acknowledged
+and counted as `rejected`, since they would otherwise come back forever (no dead-lettering).
 
 | Message | Becomes |
 |---|---|
@@ -212,10 +218,14 @@ messages the store fails to write, are acknowledged and dropped (no dead-letteri
 Every change is pushed to open views (a delete is not: an open view keeps its last document until reopened), search
 finds everything received, and a purge (Admin → Caches) clears only the memory cache: the state store is the only
 copy, so it is never purged (clear it deliberately with `state.reset-at`, which clears only the disk store, or by
-deleting its folder with the server stopped). The store is bounded by `state.max-gb` with FIFO compaction: disk grows
-with every message, not with the number of entities, and beyond the budget the oldest files are dropped, so an
-entity not updated for a long time silently disappears. Size it for the message volume. Declare them as named connectors in a pack or site
-configuration (full examples: [activemq](#activemq), [rabbitmq](#rabbitmq)):
+deleting its folder with the server stopped). The store keeps only the latest value of each entity (level
+compaction), so its size follows the number of live entities, not the messages received. Each connector has its own
+budget, `state.max-gb` (10): every `state.check-seconds` (60) the store is checked, and past the budget
+`state.when-full: evict-oldest` (the default) removes the entities written longest ago until it is under 90% of the
+budget, compacts, logs each eviction at WARN and counts it in `evicted`; `warn` removes nothing and says so in health.
+Declare them as named connectors in a pack or site configuration (full examples: [activemq](#activemq),
+[rabbitmq](#rabbitmq)); everything about the store is in [ACTIVEMQ_CONNECTOR.md](ACTIVEMQ_CONNECTOR.md#7-durability-and-disk-budget)
+and [RABBITMQ_CONNECTOR.md](RABBITMQ_CONNECTOR.md#6-durability-and-disk-budget):
 
 ```yaml
 drishti:
@@ -1139,8 +1149,9 @@ docker run -d --name amq -p 61616:61616 -p 8161:8161 apache/activemq-classic
 ```
 
 **What the user sees.** `<mnemonic for order> O-55120 <GO>`, live; the view updates on every message. Health:
-`UP`, `DOWN: connection to the broker lost (reconnecting)`; cache figures `entities`, `memoryEntries`, `stateMb`,
-`received`, `rejected`.
+`UP`, `DOWN: connection to the broker lost (reconnecting)`, `DOWN: <reason> (messages are not acknowledged and come
+again)` when the state store cannot write, `UP (state store over its budget: …)` past `state.max-gb`; cache figures
+`entities`, `memoryEntries`, `stateMb`, `durability`, `budgetMb`, `evicted`, `received`, `rejected`.
 
 ---
 
@@ -1201,8 +1212,8 @@ curl -u guest:guest -H 'content-type: application/json' -X POST \
 ```
 
 **What the user sees.** As ActiveMQ. Health: `UP`, `DOWN: connection lost (recovering)`, or
-`DOWN: consumer cancelled on <queue>` (for example, the queue was deleted), which stays until the server restarts.
-An empty `queues` reports `UP` and consumes nothing.
+`DOWN: consumer cancelled on <queue>` (for example, the queue was deleted), which stays until the server restarts;
+the state store's texts are as for ActiveMQ. An empty `queues` reports `UP` and consumes nothing.
 
 ### Shared message-queue settings
 
@@ -1217,7 +1228,10 @@ Read by both `activemq` and `rabbitmq` (`MessageStateSource` in `drishti-messagi
 | `cache-mb` | `128` | recent documents in memory |
 | `state.dir` | `<state.root>/<source-name>` | the RocksDB state store's folder |
 | `state.root` | `./data/state` | parent of the default folder |
-| `state.max-gb` | `10` | disk budget, FIFO compaction: disk grows with messages, and beyond it the oldest files go, with any entity not updated since |
+| `state.durability` | `sync` | `sync`: write-ahead log synced on every write (no acknowledged message lost on a crash or a power loss; one disk sync per message); `wal`: not synced (survives a crash of the process; a power loss can lose the last moments); `none`: no log (fastest; a crash can lose up to the 32 MB write buffer) |
+| `state.max-gb` | `10` | this connector's disk budget (the store keeps the latest value of each entity, so it follows the entities held) |
+| `state.when-full` | `evict-oldest` | past the budget: `evict-oldest` removes the entities written longest ago until under 90% of it and compacts (logged at WARN, counted in `evicted`); `warn` removes nothing and says so in health |
+| `state.check-seconds` | `60` | how often the store's size is checked against the budget |
 | `state.reset-at` | `never` | a daily clearing time (`HH:mm`) of the disk store only (the memory cache and type-ahead keep theirs), for state that should start empty each day |
 | `state.zone` | `America/New_York` | the zone of `state.reset-at` |
 | `source-name` | `activemq` / `rabbitmq` (a connector: its name) | provenance source; also names the default folder |

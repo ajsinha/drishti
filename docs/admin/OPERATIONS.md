@@ -83,7 +83,7 @@ Things worth knowing before you plan an installation:
 | Python | 3.13 (the console image uses `python:3.13-slim`) | runs the console |
 | `uv` (recommended) | any recent | creates the console's virtual environment and runs the data tools with their libraries |
 | Docker and Docker Compose | any recent | only for the container installation and the sample databases |
-| Disk | a few GB, plus the lake and the Kafka disk cache (up to `disk-cache.max-gb`, 10 GB per stream connector) | |
+| Disk | a few GB, plus the lake, the Kafka disk cache (up to `disk-cache.max-gb`, 10 GB per stream connector) and each ActiveMQ or RabbitMQ connector's state store (budget `state.max-gb`, 10 GB each; plan about twice that) | an SSD for the state stores: they sync every write by default |
 | Memory | 2 GB for the server is plenty for the sample packs; see section 12 for what grows | |
 
 Check Java:
@@ -714,7 +714,9 @@ Work through this list for every shared installation. Each item says how to chec
 8. **Network.** Only the proxy reaches the console; only the console reaches the server's `/api`; only monitoring
    reaches `/actuator`. `SERVER_ADDRESS=127.0.0.1` when they share a host.
 9. **TLS** at the proxy, `DRISHTI_SECURE_COOKIE` left at `true`.
-10. **Backups** of `data/identity`, `data/governance`, your Sutra directories and your configuration (section 10).
+10. **Backups** of `data/identity`, `data/governance`, your Sutra directories and your configuration (section 10),
+    and of `data/state/<connector>` if you run ActiveMQ or RabbitMQ connectors (their only copy of what the queues
+    delivered; copied with the server stopped).
 11. **Lake maintenance** scheduled (section 11).
 12. **Monitoring**: Prometheus scraping `/actuator/prometheus` with `bearer_token: <DRISHTI_METRICS_TOKEN>` (with security on, every
     `/actuator` endpoint but health needs it, or an admin token; `/api/docs` needs any token), the Grafana dashboard imported, alerts set
@@ -761,7 +763,7 @@ working directory unless you changed them.
 | `data/governance/` (`DRISHTI_GOVERNANCE_DIR`) | Sutra proposals, approvals and their history | **yes, daily** | copy the directory |
 | `sutras/` (`DRISHTI_SUTRAS`) | your own Sutras, and what Studio saves | **yes**, preferably in version control | git, or copy |
 | `application.local.yaml`, `console/config/application.local.yaml`, `/etc/drishti/drishti.env` | your configuration and secrets | **yes**, securely | copy |
-| `data/state/<connector>/` | ActiveMQ and RabbitMQ connectors' received messages (RocksDB). A queue does not send a message twice, so this is the only copy Drishti has | yes, if you use those connectors | stop the server, copy, start; or rely on the source system to re-send |
+| `data/state/<connector>/` | ActiveMQ and RabbitMQ connectors' latest document of each entity received (RocksDB, with its write-ahead log). A queue does not send a message twice, so this is the only copy Drishti has | yes, if you use those connectors | stop the server, copy the whole folder (the write-ahead log with the table files), start; or rely on the source system to re-send. A copy taken while the server runs is not consistent |
 | `data/cache/<connector>/` | the Kafka connectors' disk cache | no | rebuilt from the topic; cleared every night anyway |
 | `data/delta/` (`DRISHTI_DELTA_ROOT`) | the lake | by its owner | Drishti only reads it; back it up with your data platform's policy |
 | `data/feeds/` (`DRISHTI_FEEDS`) | files for the file connector | by whoever writes them | |
@@ -790,6 +792,10 @@ tar tzf /backup/drishti/drishti-20261001-0130.tgz | head
 ```
 
 You should see `data/identity/...`, `data/governance/...` and your Sutras.
+
+The script leaves out `data/state/`, the ActiveMQ and RabbitMQ state stores: RocksDB files copied while the server
+writes them are not a consistent copy. Back those up with the server stopped (`systemctl stop drishti-server`, `tar
+czf … data/state`, start), in a maintenance window; the messages that arrive meanwhile wait in the broker.
 
 ### 10.2 Restore
 
@@ -913,7 +919,7 @@ Nothing grows with the day's data without bound. Every cache has a size limit yo
 |---|---|---|
 | Kafka connector | the index of where each entity's latest message is, with each id for type-ahead (about 0.4–0.5 GB per million entities, estimated), and recently read documents | `cache-mb` (256); `mode: ticks` keeps nothing (a store serves entities, the stream only ticks); `search: false` drops the identifier index |
 | Kafka disk cache (per connector) | every live message of the day, on local disk (RocksDB, no write-ahead log, LZ4, oldest files dropped first) | `disk-cache.max-gb` (10); cleared every night at `disk-cache.reset-at` (02:00 New York); its own directory `disk-cache.dir` (default `<disk-cache.root>/<connector>`, root `./data/cache`), so connectors never contend on one store and a busy stream can have its own disk |
-| ActiveMQ / RabbitMQ connectors | recently read documents in memory; every received message on disk (RocksDB, no write-ahead log: a crash can lose the last acknowledged messages; FIFO compaction: past the budget the oldest files go, with any entity not updated since) | `cache-mb` (128); `state.max-gb` (10) under `state.dir` (default `./data/state/<connector>`) |
+| ActiveMQ / RabbitMQ connectors | recently read documents in memory; the latest document of every entity on disk (RocksDB, LZ4, level compaction: size follows the entities held, not the messages). Writes are kept per `state.durability`: `sync` (default; write-ahead log synced, no acknowledged message lost on a crash or power loss), `wal` or `none`; a message the store cannot keep is not acknowledged and comes again | `cache-mb` (128); `state.max-gb` (10) per connector under `state.dir` (default `./data/state/<connector>`); past it `state.when-full: evict-oldest` (default) removes the entities written longest ago, logged and counted in `evicted`, or `warn` only says so in health |
 | Delta Lake connector | table partitions read recently | `cache-mb` (512) |
 | Aerospike connector | the kinds' dates and the ids (from the index set), and days of promoted bins for searches, impact and reverse lookups; not the days kept | `columns-cache-mb` (1024), kept `columns-seconds` (300) |
 | PostgreSQL (JDBC table mode) | nothing: every read is a query | `pool-size` connections |
@@ -926,6 +932,15 @@ space is reclaimed in three ways: the oldest files go once the store passes `dis
 deleted at the nightly `reset-at`; and an admin purge does the same at once. In between, deleted and overwritten
 entries still take space, never beyond `max-gb`. Clearing and purging are safe under load: the new store takes
 over at once and the old one is closed only after its last reader has finished.
+
+**Disk space in a message-queue state store.** The ActiveMQ and RabbitMQ state stores use level compaction instead:
+overwritten and deleted values are merged away, so a store holds about the compressed latest document of each entity,
+plus values not yet compacted and a write-ahead log of at most 64 MB. Every `state.check-seconds` (60) each store is
+compared with its own `state.max-gb`; with `state.when-full: evict-oldest` (the default) the entities written longest
+ago are removed until it is under 90% of the budget and the store is compacted at once to give the space back. The
+compaction writes new files before deleting old ones, so plan about twice `state.max-gb` of disk per connector. A
+full disk does not lose messages: they are not acknowledged and come again once there is room, and health says
+`DOWN: … (messages are not acknowledged and come again)` meanwhile.
 
 **Seeing and purging caches.** **Admin → Caches** lists every cache with its statistics and a purge button for each
 one or all. The same list from the server:
@@ -1077,6 +1092,8 @@ frames per second, and JVM heap used.
 | Broken Sutra | `/api/v1/sutras/problems` not `{}` | [a Sutra is broken](runbooks/sutra-broken.md) |
 | Heap high | `sum(jvm_memory_used_bytes{area="heap"}) / sum(jvm_memory_max_bytes{area="heap"}) > 0.9` for 10 min | section 12 |
 | Lake maintenance failed | the job's exit code is 1, or a `"event": "failed"` line | the `error` in that line |
+| Message state store cannot write | an ActiveMQ or RabbitMQ connector's health ends `(messages are not acknowledged and come again)` | free or grow the disk under `state.root` |
+| Message state store full | a health `UP (state store over its budget: …)`, or `evicted` rising in Admin → Caches | raise `state.max-gb` and the disk |
 
 ## 14. Logs
 
@@ -1140,6 +1157,10 @@ Measured on a developer workstation; see [PERFORMANCE.md](PERFORMANCE.md) for ho
 - One topic fans out to 10,000 listeners.
 - Live streams are capped per server by `drishti.live.max-streams` (20,000). Each browser tab uses one connection to
   the console, whatever it shows.
+- An ActiveMQ or RabbitMQ connector applies one message at a time; with `state.durability: sync` (the default) each
+  waits for a disk sync, so a connector runs at about one message per sync of its disk, typically thousands a second
+  on an SSD (not measured here). Split a heavy feed over several connectors, or use `wal` where losing the last
+  moments before a power loss is acceptable. Disk: about twice `state.max-gb` per connector.
 
 ## 17. Runbooks
 

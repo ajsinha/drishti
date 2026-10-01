@@ -151,8 +151,8 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | [S3_CONNECTOR.md](connectors/S3_CONNECTOR.md) | you serve documents from S3 or an S3-compatible store: the key layout, listing and caching, credentials, cost of large buckets |
 | [REST_CONNECTOR.md](connectors/REST_CONNECTOR.md) | you read entities from an HTTP/JSON service: paths, headers, generations, timeouts, what it cannot do, load on the service |
 | [KAFKA_CONNECTOR.md](connectors/KAFKA_CONNECTOR.md) | you serve live entities from Kafka: state and ticks modes, the index and disk cache, offsets, ordering, restarts, reconnection, pairing with a lake |
-| [ACTIVEMQ_CONNECTOR.md](connectors/ACTIVEMQ_CONNECTOR.md) | you serve live entities from ActiveMQ: queues and durable topics, the state store, acknowledgement, failover, sizing |
-| [RABBITMQ_CONNECTOR.md](connectors/RABBITMQ_CONNECTOR.md) | you serve live entities from RabbitMQ: queues and bindings, prefetch and acknowledgement, the state store, recovery, sizing |
+| [ACTIVEMQ_CONNECTOR.md](connectors/ACTIVEMQ_CONNECTOR.md) | you serve live entities from ActiveMQ: queues and durable topics, the state store, its durability and disk budget, acknowledgement, failover, sizing |
+| [RABBITMQ_CONNECTOR.md](connectors/RABBITMQ_CONNECTOR.md) | you serve live entities from RabbitMQ: queues and bindings, prefetch and acknowledgement, the state store, its durability and disk budget, recovery, sizing |
 | [FEEDS_CONNECTOR.md](connectors/FEEDS_CONNECTOR.md) | you switch on the public feeds: each source's URL and parsing, entities and ids, schedules, history, offline mirrors |
 | [DEMO_CONNECTOR.md](connectors/DEMO_CONNECTOR.md) | you want to know what the sample connector serves, how it ticks, how packs supply samples, and how to switch it off |
 | [TROUBLESHOOTING.md](guides/TROUBLESHOOTING.md) | something is not working: each problem has what you see, how to check and the fix |

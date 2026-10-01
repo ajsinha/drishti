@@ -1473,19 +1473,33 @@ changes. You want `LIM <id>` to show the latest version, live.
 
 A queue delivers each message **once** and keeps no history. So the connector keeps the latest document of every
 entity itself, in a **state store** on local disk (RocksDB, `./data/state/<connector>`), with recent documents in
-memory (`cache-mb`, 128). The store survives a clean restart. Nothing is lost while Drishti is down: queued messages
-wait in the broker, and topics are read through durable subscriptions. Each message is acknowledged after it is
-handed to the store, but the store is written **without a write-ahead log**: a crash of the JVM or a power loss can
-lose acknowledged messages still in its write buffer (up to 32 MB), and the broker will not send them again. A
-message the connector rejects, or one the store fails to write, is acknowledged and dropped too: there is no
-dead-lettering.
+memory (`cache-mb`, 128). The store survives restarts. Nothing is lost while Drishti is down: queued messages wait
+in the broker, and topics are read through durable subscriptions.
+
+**A message is acknowledged only once the store has kept it.** How a write is kept is `state.durability`:
+
+| `state.durability` | Survives a crash of the JVM | Survives a power loss | Cost |
+|---|---|---|---|
+| `sync` (default) | yes | yes: no acknowledged message is lost | one disk sync per message: typically thousands of messages a second on an SSD |
+| `wal` | yes | no: the last moments can be lost | close to `none` |
+| `none` | no: up to the 32 MB write buffer of acknowledged messages is lost | no | the fastest |
+
+If the store cannot keep a message (disk full, an I/O error), the message is **not** acknowledged: ActiveMQ redelivers
+it a second later (`session.recover()`; after six redeliveries the client's default policy sends it to `ActiveMQ.DLQ`,
+so add `jms.redeliveryPolicy.maximumRedeliveries=-1` to `broker-url` for long outages), RabbitMQ requeues it, and
+health reads `DOWN: <reason> (messages are not acknowledged and come again)` until one is kept again. A message the
+connector cannot read (not JSON, not a document) is acknowledged and counted in `rejected`, since it would otherwise
+come back forever: there is no dead-lettering of those.
 
 Three more properties of the store matter in production:
 
-- **`state.max-gb` is not a cap on entities.** The store uses FIFO compaction: every message adds to it (an update or
-  a delete does not reclaim the old copy), so disk grows with messages, not entities. Past the budget the oldest
-  files are dropped, and an entity not updated for a long time **silently disappears** from reads and from the store.
-  Size the budget for the message volume between restarts or clearings, not for the entities.
+- **The store keeps the latest value of each entity**, so its size follows the entities held, not the messages
+  received. **`state.max-gb` (10) is each connector's own budget.** Every `state.check-seconds` (60) the store is
+  checked; past the budget, `state.when-full: evict-oldest` (the default) removes the entities written longest ago
+  until it is under 90% of the budget, compacts, logs each eviction at WARN and counts it (`evicted`); `warn` removes
+  nothing and says so in health (`UP (state store over its budget: X of Y GB; nothing is dropped: raise state.max-gb
+  or add disk)`). Size the budget for the entities held, with a margin
+  ([ACTIVEMQ_CONNECTOR.md](ACTIVEMQ_CONNECTOR.md#7-durability-and-disk-budget)).
 - **`state.reset-at` clears only the disk store.** Documents still in the memory cache keep answering until evicted,
   and type-ahead keeps every id received until the server restarts.
 - **Deletes are not pushed** to open views: a view already open keeps its last document until it is opened again.
@@ -1539,7 +1553,8 @@ connectors:
       kind.limit-breaches: credit-limit
       id-field.limit-breaches: limitId
       client-id: drishti-prod-1-limits-mq                     # unique per server; durable topic subscriptions use it
-      state.max-gb: 20                                        # disk budget of the state store
+      state.max-gb: 20                                        # this connector's disk budget (evict-oldest past it)
+      state.durability: sync                                  # the default: synced on every write
 ```
 
 **Site form**, the same under `drishti.sources.connectors` (bracket and quote a key that has characters other than
@@ -1608,9 +1623,12 @@ answers, since dated connectors go first.
 | `UP` | consuming |
 | `DOWN: connection to the broker lost (reconnecting)` | the failover transport lost the broker and is reconnecting |
 | `DOWN: <Exception>: <message> (reconnecting)` | any other failure; a supervisor rebuilds the session (1 s doubling to 30 s) |
+| `DOWN: <reason> (messages are not acknowledged and come again)` | the state store cannot keep messages (disk full, an I/O error); they are redelivered |
+| `UP (state store over its budget: X of Y GB; …)` | the store is past `state.max-gb`: `the oldest entities are being evicted` (`evict-oldest`) or `nothing is dropped: raise state.max-gb or add disk` (`warn`) |
 
 While the broker is down, views keep showing the stored documents (the state store answers reads) and stop ticking.
-Cache figures: `entities`, `memoryEntries`, `stateMb`, `received`, `rejected`.
+Cache figures: `entities`, `memoryEntries`, `stateMb` (table files plus write buffers), `durability`, `budgetMb`,
+`evicted`, `received`, `rejected`.
 
 ### Common errors
 
@@ -1620,6 +1638,8 @@ Cache figures: `entities`, `memoryEntries`, `stateMb`, `received`, `rejected`.
 | `rejected` grows | bodies that are not JSON, or no id (no `id` property and no id field) | check `id-field.<destination>` matches the body |
 | `DOWN: … InvalidClientIDException …` | another server uses the same `client-id` | a unique `client-id` per server |
 | old entities still shown | the state store keeps them until a delete arrives | send deletes; or `state.reset-at` (daily clearing), or stop the server and delete `data/state/<connector>` |
+| `DOWN: … (messages are not acknowledged and come again)` | the state store's disk is full or failing | free or grow the disk; the connector resumes by itself |
+| entities gone without deletes, `evicted` grows | the store passed `state.max-gb` and `evict-oldest` removed the entities written longest ago | raise `state.max-gb` (and the disk), or `state.when-full: warn` |
 
 ---
 
@@ -1636,9 +1656,10 @@ Your collateral system publishes margin calls to the RabbitMQ exchange `collater
 
 The body is JSON (UTF-8). On a queue with a kind, the id is the `id` **header**, else the message's `message_id`
 property, else the body's id field; in an envelope the envelope's `"id"` wins over the header. A `deleted` header of
-`true` deletes. Envelopes, the rejected cases, and the state store's limits (no write-ahead log, no dead-lettering,
-FIFO compaction, deletes not pushed) are as for [ActiveMQ](#11-a-message-queue-activemq). All queues share one
-channel.
+`true` deletes. Envelopes, the rejected cases, and the state store (acknowledged only once kept, `state.durability`
+`sync` by default, the per-connector budget with `state.when-full`, deletes not pushed) are as for
+[ActiveMQ](#11-a-message-queue-activemq); a message the store cannot keep is requeued (`basicNack` with requeue, a
+second later). All queues share one channel.
 
 ```text
 exchange:    collateral          routing key: margin.call.new
@@ -1716,6 +1737,8 @@ updates.
 | `UP` | consuming |
 | `DOWN: connection lost (recovering)` | the client's automatic recovery is reconnecting and re-subscribing |
 | `DOWN: consumer cancelled on drishti.margin-calls` | the broker cancelled the consumer (for example, the queue was deleted). It stays until the server restarts: nothing re-subscribes |
+| `DOWN: <reason> (messages are not acknowledged and come again)` | the state store cannot keep messages; they are requeued until it can |
+| `UP (state store over its budget: X of Y GB; …)` | the store is past `state.max-gb` (as for ActiveMQ) |
 
 Stored documents keep answering reads while the broker is away. An empty `queues` setting reports `UP` and consumes
 nothing.
@@ -2130,8 +2153,8 @@ curl -s http://localhost:18480/api/v1/admin/health | jq '.packs[] | {name, conne
 | `delta` | `UP`, `DOWN: cannot reach <root>/<domain>`, `DOWN: no Delta tables under <root>/<domain>` |
 | `aerospike` | `UP`, `DOWN: not connected to Aerospike` |
 | `kafka` | `DOWN: not started`, `UP (catching up)`, `UP`, `DOWN: no connection to the broker (reconnecting)`, `DOWN: <message> (retrying)`, `DOWN: <Exception>: <message> (reconnecting)` |
-| `activemq` | `DOWN: not started`, `DOWN: connecting to <broker-url>`, `UP`, `DOWN: connection to the broker lost (reconnecting)`, `DOWN: <message> (reconnecting)`, `DOWN: <Exception>: <message> (reconnecting)` |
-| `rabbitmq` | `DOWN: not started`, `DOWN: <Exception>: <message> (retrying)`, `UP`, `DOWN: connection lost (recovering)`, `DOWN: consumer cancelled on <queue>` |
+| `activemq` | `DOWN: not started`, `DOWN: connecting to <broker-url>`, `UP`, `DOWN: connection to the broker lost (reconnecting)`, `DOWN: <message> (reconnecting)`, `DOWN: <Exception>: <message> (reconnecting)`, `DOWN: <reason> (messages are not acknowledged and come again)`, `UP (state store over its budget: X of Y GB; the oldest entities are being evicted)`, `UP (state store over its budget: X of Y GB; nothing is dropped: raise state.max-gb or add disk)` |
+| `rabbitmq` | `DOWN: not started`, `DOWN: <Exception>: <message> (retrying)`, `UP`, `DOWN: connection lost (recovering)`, `DOWN: consumer cancelled on <queue>`, and the same three state-store texts as `activemq` |
 | `s3` | `UP`, `DOWN: <error> (retrying)` |
 | `feed` | `UP`, `DOWN: <Exception>: <message>`, `DOWN: the feed returned no data (serving the last data)`, `DOWN: the feed returned no data` (`DOWN: not fetched yet` only before `start` has run: the first fetch is inside it) |
 
@@ -2185,12 +2208,17 @@ Purge after you correct data in place (a restated lake date) when you do not wan
 | `./data/state/<connector>` (`state.root`, `state.dir`) | ActiveMQ and RabbitMQ state stores | only deliberately, server stopped: it is the only copy of what the queues delivered |
 | `./data/cache/<connector>` (`DRISHTI_CACHE_ROOT`, `disk-cache.dir`) | Kafka disk cache | yes: it starts empty on every run anyway (the topic is replayed) |
 
-Put both on local disk, not a network share, and size them: `state.max-gb` and `disk-cache.max-gb` (10 each) are
-budgets beyond which the **oldest** files are dropped (FIFO compaction). Disk grows with every message, not with the
-number of entities, so past the budget an entity not updated for a long time silently disappears from a state store:
-size its budget for the message volume. Neither store has a write-ahead log, so a crash can lose the last
-acknowledged messages of a state store. `state.reset-at: "06:00"` clears a state store's disk daily (the memory
-cache and type-ahead keep what they hold), for state that should start empty each day.
+Put both on local disk, not a network share, and size them; the two work differently:
+
+| | State store (ActiveMQ, RabbitMQ) | Kafka disk cache |
+|---|---|---|
+| What it keeps | the latest value of each entity (level compaction): size follows the entities held | every message of the day (FIFO compaction): size follows the messages |
+| Budget | `state.max-gb` (10), per connector; past it `state.when-full`: `evict-oldest` (default) removes the entities written longest ago until under 90%, logged and counted in `evicted`; `warn` keeps everything and says so in health | `disk-cache.max-gb` (10); past it the oldest files are dropped |
+| After a crash | nothing acknowledged is lost with `state.durability: sync` (default); `wal` can lose the last moments on a power loss; `none` up to the 32 MB write buffer | refilled from the topic (no write-ahead log) |
+| Disk to plan | about twice `state.max-gb` (a compaction after an eviction briefly needs room), plus the 64 MB write-ahead log | `disk-cache.max-gb` |
+
+`state.reset-at: "06:00"` clears a state store's disk daily (the memory cache and type-ahead keep what they hold), for
+state that should start empty each day.
 
 ### Timeouts
 
@@ -2211,7 +2239,8 @@ it.
 ### Capacity tips
 
 - **Memory per connector**: `delta` `cache-mb` (512) of partitions; `kafka` `cache-mb` (256) plus about 0.4–0.5 GB
-  per million entities for its index and type-ahead (estimated); `activemq`/`rabbitmq` `cache-mb` (128); `aerospike` `columns-cache-mb` (1024) of promoted
+  per million entities for its index and type-ahead (estimated); `activemq`/`rabbitmq` `cache-mb` (128) plus a few
+  hundred bytes per entity held (estimated); `aerospike` `columns-cache-mb` (1024) of promoted
   bins plus one id per entity in the index set (not the days kept). Add them up across connectors when sizing the heap (`-Xmx`).
 - **Database connections**: `pool-size` (4) per `jdbc` connector, per server. The `postgres` profile uses 8 for
   `trading-store`, the busiest domain.
@@ -2222,6 +2251,10 @@ it.
   the order means it is being asked for kinds or ids it does not have: give it `kinds:`.
 - **Several servers** each read every Kafka topic in full and each need their own `client-id` (ActiveMQ) and their own
   queues (both message brokers).
+- **Message-queue throughput**: with `state.durability: sync` (the default) each message waits for a disk sync, so a
+  connector applies about one message per sync, typically thousands a second on an SSD. Put `state.root` on an SSD,
+  split a heavy feed over several connectors (each has its own store), or use `wal` where the last moments before a
+  power loss may be lost.
 
 ---
 
@@ -2251,6 +2284,9 @@ calls.
 | Kafka health `DOWN: no connection to the broker (reconnecting)` | `nc -z <host> <port>` for each `bootstrap-servers` address, and the broker's advertised listeners | bring the broker back; the connector carries on by itself, no restart |
 | ActiveMQ/RabbitMQ `rejected` grows | the message bodies and `id` headers | bodies must be JSON with an id (header or `id-field.<destination>`) |
 | An old entity will not go away (message queues) | `stateMb`, `entities` in the connector's cache figures | send a delete (`deleted=true`), or clear the state store (server stopped) |
+| ActiveMQ/RabbitMQ health `DOWN: … (messages are not acknowledged and come again)` | `df -h` on `state.root`; the server log | the state store cannot write: free or grow the disk; the connector resumes by itself and the broker redelivers (ActiveMQ: see `jms.redeliveryPolicy.maximumRedeliveries`) |
+| ActiveMQ/RabbitMQ entities gone without deletes | `evicted` in the cache figures; WARN `state store over its budget` in the log | the store passed `state.max-gb` with `evict-oldest`: raise the budget and the disk, or `state.when-full: warn` |
+| ActiveMQ/RabbitMQ health `UP (state store over its budget: …)` | `stateMb` against `budgetMb` | raise `state.max-gb` or add disk (`warn`), or let `evict-oldest` finish |
 | Feed `DOWN: ConnectException: …` or `DOWN: HttpTimeoutException: …` | the server's outbound internet (or a proxy) | a proxy rule, or `url: file://…` |
 | The overall status is `DEGRADED` | `curl -s $B/admin/health \| jq '{summary, failedToStart, packs: [.packs[] \| select(.status!="OK") \| {name, connectorsDown, sutraProblems}]}'` | fix what is listed; a switched-off connector does not degrade |
 | Admin health answers `403` | the caller is not an administrator | use `/api/v1/sources` (anyone), or an admin token |

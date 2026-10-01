@@ -701,13 +701,21 @@ message once.
 | `prefetch`, `heartbeat-seconds`, `recovery-interval-ms` | rabbitmq | `100`, `20`, `2000` | |
 | `kind`, `kind.<destination>`, `id-field`, `id-field.<destination>` | both | none, `id` | As for Kafka. |
 | `cache-mb` | both | `128` | Memory cache. |
-| `state.root` / `state.dir` | both | `./data/state` / `<root>/<source-name>` | The RocksDB store. Back it up: it survives restarts and is never cleared unless configured. It has no write-ahead log, so a crash can lose the last acknowledged messages. |
-| `state.max-gb` | both | `10` | Size budget, FIFO compaction: disk grows with messages, and past it the oldest files go, with entities not updated since. |
+| `state.root` / `state.dir` | both | `./data/state` / `<root>/<source-name>` | The RocksDB store, one per connector. Back it up: it survives restarts and is never cleared unless configured. It keeps the latest value of each entity (level compaction), so its size follows the entities held, not the messages. |
+| `state.durability` | both | `sync` | How a write is kept before the message is acknowledged. `sync`: the write-ahead log is synced on every write, so neither a crash nor a power loss loses an acknowledged message (one disk sync per message: typically thousands a second on an SSD). `wal`: the log is not synced (survives a crash of the process; a power loss can lose the last moments). `none`: no log (fastest; a crash can lose up to the 32 MB write buffer). Any other value fails the connector's start. |
+| `state.max-gb` | both | `10` | This connector's disk budget (decimal allowed), compared with the store's size (`stateMb`: table files plus write buffers). Each connector has its own. |
+| `state.when-full` | both | `evict-oldest` | Past the budget. `evict-oldest`: the entities written longest ago are removed until the store is under 90% of the budget, then it is compacted; each eviction is logged at WARN and counted (`evicted`). `warn`: nothing is removed; health reads `UP (state store over its budget: X of Y GB; nothing is dropped: raise state.max-gb or add disk)`. Any value other than `warn` means `evict-oldest`. |
+| `state.check-seconds` | both | `60` | How often the store's size is checked against the budget. |
 | `state.reset-at` / `state.zone` | both | `never` / `America/New_York` | Optional daily clearing time; clears the disk store only. |
 | `source-name` | both | `activemq` / `rabbitmq` (a connector: its name) | The name shown in provenance and Health; names the default state folder. |
 
-Messages are acknowledged after they are handed to the state store. A message the connector rejects (not JSON, no kind
-or id), or one the store fails to write, is acknowledged and dropped: there is no dead-lettering. Full detail:
+A message is acknowledged only after the state store has kept it. A message the store cannot keep (disk full, an I/O
+error) is not acknowledged: RabbitMQ requeues it and ActiveMQ redelivers it a second later (the ActiveMQ client's
+default redelivery policy sends a message to `ActiveMQ.DLQ` after six redeliveries; add
+`jms.redeliveryPolicy.maximumRedeliveries=-1` to `broker-url` to retry without limit), and health reads
+`DOWN: <reason> (messages are not acknowledged and come again)` until one is kept again. A message the connector
+cannot read (not JSON, no kind or id) is acknowledged, counted in `rejected` and dropped: there is no dead-lettering.
+Cache figures add `durability`, `budgetMb` and `evicted`. Full detail:
 [ACTIVEMQ_CONNECTOR.md](../connectors/ACTIVEMQ_CONNECTOR.md), [RABBITMQ_CONNECTOR.md](../connectors/RABBITMQ_CONNECTOR.md).
 
 ### `s3` — documents in S3 or an S3-compatible store
