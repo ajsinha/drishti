@@ -32,11 +32,9 @@
     {% if diff.moves %}<ul class="diff-moves" aria-label="Panels moved">{% for m in diff.moves %}
       <li><i class="bi bi-arrows-move" aria-hidden="true"></i> {{ m.text }}</li>{% endfor %}</ul>
     <p class="diff-cap text-muted-d">{{ 'Other edits' if diff.edits else 'No other edits: only panels moved.' }}</p>{% endif %}
-    {% if diff.edits or not diff.moves %}<pre class="diff mono" aria-label="{{ 'Edits besides the moves' if diff.moves else 'Differences' }}">{% for kind, line in diff.edits %}<span class="d-{{ kind }}">{{ line }}</span>
-{% endfor %}{% if not diff.full %}<span class="d-ctx">No differences.</span>{% endif %}</pre>{% endif %}
+    {% if diff.edits or not diff.moves %}<pre class="diff mono" aria-label="{{ 'Edits besides the moves' if diff.moves else 'Differences' }}">{% for kind, line in diff.edits %}<span class="d-{{ kind }}">{{ line }}</span>{% endfor %}{% if not diff.full %}<span class="d-ctx">No differences.</span>{% endif %}</pre>{% endif %}
     {% if diff.moves %}<details class="diff-full"><summary>Full line diff (moves as deleted and added lines)</summary>
-      <pre class="diff mono" aria-label="Full line diff">{% for kind, line in diff.full %}<span class="d-{{ kind }}">{{ line }}</span>
-{% endfor %}</pre></details>{% endif %}
+      <pre class="diff mono" aria-label="Full line diff">{% for kind, line in diff.full %}<span class="d-{{ kind }}">{{ line }}</span>{% endfor %}</pre></details>{% endif %}
   </div></section>
   <p><a class="lnk" href="/studio?sutra={{ p.name }}@{{ p.version }}">Open the live version in Studio</a></p>
   {% if p.status == 'pending' %}

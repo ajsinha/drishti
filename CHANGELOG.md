@@ -35,7 +35,7 @@
   blocks by id (with the comments above them), finds the ones out of order with a longest common subsequence per
   column, and diffs the old text with its blocks in the new order. A Sutra it cannot read as a panel list (a flow
   list, duplicate ids) gets the full diff, so nothing is hidden. `GET /api/layout/{sutra}/{kind}/promotion` adds
-  `moves` and `edits` beside `diff`.
+  `moves` and `edits` beside `diff`. The review's diff no longer shows a blank line between every two lines.
 - **Waterfalls rise green and fall red** ([PANELS.md › waterfall](docs/guides/PANELS.md#7-waterfall)). Steps now
   take the theme's good and bad colours (`--d-ok`, `--d-bad`) in every theme, light and dark, and totals are a neutral
   grey (`--d-muted`) instead of the link blue. A new option, `colors: gain-loss | theme` (default `gain-loss`), keeps
