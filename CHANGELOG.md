@@ -15,6 +15,13 @@
 -->
 # Changelog
 
+## Unreleased
+- **Every theme shows its gradient.**
+  - **What was wrong:** each theme mixes its two gradient colours into the chrome, but at one fixed strength. On Parchment, Crimson, Crimson dark and Wall Street that was too faint to see.
+  - **Per-theme strengths:** each theme now sets its own (`--g-page`, `--g-bar`, `--g-head`, `--g-pnl`), and the light and crimson themes mix in more.
+  - **Command line:** its row in the top bar is graded too.
+- **Table links:** links inside tables are underlined (dotted), so ids read as links in every theme.
+
 ## 1.10.1 — Kafka ticks mode (2026-09-30)
 - **Kafka `mode: ticks` works.**
   - **Behaviour:** a connector that keeps no state now drives the ticks of views a lake or database answers. Such a view is live (the green dot), subscribes to the stream, and repaints on each message, while reads still come from the store.

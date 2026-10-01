@@ -21,16 +21,16 @@
 /* the page: a soft diagonal wash from one theme colour to the other */
 body {
   background:
-    radial-gradient(1200px 600px at 0% 0%, color-mix(in srgb, var(--d-grad-from) 18%, transparent), transparent 62%),
-    radial-gradient(1000px 700px at 100% 100%, color-mix(in srgb, var(--d-grad-to) 18%, transparent), transparent 62%),
+    radial-gradient(1200px 600px at 0% 0%, color-mix(in srgb, var(--d-grad-from) var(--g-page, 18%), transparent), transparent 62%),
+    radial-gradient(1000px 700px at 100% 100%, color-mix(in srgb, var(--d-grad-to) var(--g-page, 18%), transparent), transparent 62%),
     var(--d-bg);
   background-attachment: fixed;
 }
 
 /* the top bar: glass over the wash, with a thin gradient rule underneath */
 .tbar {
-  background: linear-gradient(90deg, color-mix(in srgb, var(--d-grad-from) 22%, var(--d-bg)), var(--d-bg) 45%,
-    color-mix(in srgb, var(--d-grad-to) 22%, var(--d-bg)));
+  background: linear-gradient(90deg, color-mix(in srgb, var(--d-grad-from) var(--g-bar, 22%), var(--d-bg)), var(--d-bg) 45%,
+    color-mix(in srgb, var(--d-grad-to) var(--g-bar, 22%), var(--d-bg)));
   border-bottom: 0;
   box-shadow: 0 1px 0 color-mix(in srgb, var(--d-border) 60%, transparent);
 }
@@ -46,12 +46,12 @@ body {
 
 /* the view header and panel headers: a tint that fades out, over solid surfaces */
 .vhead {
-  background: linear-gradient(120deg, color-mix(in srgb, var(--d-grad-from) 16%, var(--d-bg-2)), var(--d-bg-2) 55%,
-    color-mix(in srgb, var(--d-grad-to) 16%, var(--d-bg-2)));
+  background: linear-gradient(120deg, color-mix(in srgb, var(--d-grad-from) var(--g-head, 16%), var(--d-bg-2)), var(--d-bg-2) 55%,
+    color-mix(in srgb, var(--d-grad-to) var(--g-head, 16%), var(--d-bg-2)));
 }
 .pnl { box-shadow: 0 1px 0 color-mix(in srgb, var(--d-grad-to) 12%, transparent), 0 8px 24px -18px color-mix(in srgb, var(--d-grad-from) 40%, transparent); }
 .pnl-h {
-  background: linear-gradient(90deg, color-mix(in srgb, var(--d-grad-from) 14%, var(--d-surface)), color-mix(in srgb, var(--d-grad-to) 4%, var(--d-surface)) 75%);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--d-grad-from) var(--g-pnl, 14%), var(--d-surface)), color-mix(in srgb, var(--d-grad-to) 4%, var(--d-surface)) 75%);
   border-top-left-radius: 6px; border-top-right-radius: 6px;
 }
 .pnl-h h3::before {
@@ -96,3 +96,21 @@ body {
 }
 
 /* the top bar is full at laptop widths: the clock and desk name give way first (the clock is also in the footer) */
+
+/* How strongly each theme mixes its gradient colours into the chrome. A light page needs more of a colour to show it,
+   and so do near-black themes whose colours are dark; the defaults above suit the blue-black themes. */
+:root[data-theme="light"], :root[data-theme="crimson"] { --g-page: 30%; --g-bar: 34%; --g-head: 26%; --g-pnl: 22%; }
+:root[data-theme="crimson-dark"] { --g-page: 36%; --g-bar: 42%; --g-head: 32%; --g-pnl: 26%; }
+:root[data-theme="wallstreet"] { --g-page: 22%; --g-bar: 28%; --g-head: 22%; --g-pnl: 18%; }
+
+/* the command line's row: the same gradient as the bar, a shade deeper */
+.tbar-row2 {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--d-grad-from) calc(var(--g-bar, 22%) * .6), var(--d-bg-2)), var(--d-bg-2) 50%,
+    color-mix(in srgb, var(--d-grad-to) calc(var(--g-bar, 22%) * .6), var(--d-bg-2)));
+}
+
+/* Links inside tables are underlined (dotted), so an id that opens its entity reads as a link in every theme, also
+   where the theme's link colour sits close to its text colour (crimson). */
+.tbl td a.lnk, .tbl td a[href^="/v/"] { text-decoration: underline dotted; text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, currentColor 55%, transparent); }
+.tbl td a.lnk:hover, .tbl td a[href^="/v/"]:hover { text-decoration-style: solid; }
