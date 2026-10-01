@@ -45,6 +45,7 @@ for running the server in production see [OPERATIONS.md](../admin/OPERATIONS.md)
 16. [Combining connectors](#16-combining-connectors)
 17. [Operating connectors](#17-operating-connectors)
 18. [Troubleshooting](#18-troubleshooting)
+19. [More stores: `redis`](#19-more-stores-redis)
 
 ---
 
@@ -203,6 +204,7 @@ alike, and are how secrets stay out of files.
 | `jdbc` table mode | yes (`snapshot`/`effective`) | no | yes | yes | a small pool | — |
 | `delta` | yes (`snapshot`/`effective`, *known at*) | no | yes | yes | — | read cache in memory |
 | `aerospike` | yes (`snapshot`/`effective`) | no | yes | yes, from promoted bins (`reverse-index`) | cluster client | promoted bins cached in memory |
+| `redis` | recent days (`snapshot`/`effective`) | yes (`<domain>:changes`) | yes | yes, from promoted columns | Lettuce connection | everything in Redis memory |
 | `kafka` | no | yes | yes (`state` mode) | no | consumer | optional disk cache |
 | `activemq`, `rabbitmq` | no | yes | yes | no | broker connection | state store (required) |
 | `s3` | yes, by folder | no | yes | no | — | — |
@@ -2180,3 +2182,27 @@ calls.
 
 If none of these fit, [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md) covers the server and console generally, and
 [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md) has every setting of every plugin and the contract for writing your own.
+
+---
+
+## 19. More stores: `redis`
+
+Each of these stores has its own design document with the layout, loading, every read path, sizing, measurements and
+settings; this chapter gets you from nothing to a running view.
+
+### Redis: today and recent days in memory, live
+
+Use Redis for the newest business days and live updates, with Delta Lake behind it for history: a read or a search on a
+day Redis does not hold goes to the next store for the kind.
+
+```bash
+docker run -d --name redis -m 2g -p 6379:6379 redis:8 --maxmemory 1gb
+tools/load-redis.sh redis://localhost:6379                         # the samples, 10 business days
+tools/load-redis.sh redis://localhost:6379 --trades 10000          # and 10,000 trades a day for 3 days
+SPRING_PROFILES_ACTIVE=redis DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
+```
+
+`--ttl-days N` lets Redis expire each day; `--publish` announces each written entity, so open views update. Health shows
+`UP` with the catalogue counts, or `DOWN: <reason>` while Redis is unreachable. Full design:
+[REDIS_CONNECTOR.md](REDIS_CONNECTOR.md).
+

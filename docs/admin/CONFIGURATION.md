@@ -692,6 +692,25 @@ Layout as the file connector: `<prefix><kind>/<id>.json` and `<prefix><yyyy-MM-d
 | `cache-seconds`, `cache-entries` | `30`, `10000` | Read cache. |
 | `lookback-days` | `10` | |
 
+### `redis`
+
+Today and recent days in memory, with live updates; history behind it in Delta Lake. Design, sizing and every option:
+[REDIS_CONNECTOR.md](../connectors/REDIS_CONNECTOR.md).
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `uri` | none (required; the plugin stays idle without it) | `redis://host:6379`; `rediss://` for TLS; credentials in the URI; several comma-separated for Cluster seeds |
+| `cluster` | `false` | Redis Cluster |
+| `user`, `password` | none | credentials (override the URI's) |
+| `domain` | `drishti` | the data domain: the key prefix |
+| `kinds`, `mode.<kind>`, `lookback-days` | what `<domain>:kinds` lists, `snapshot`, `10` | As for Delta. |
+| `layout.<kind>.columns` | none | the promoted fields, read from each day's column hash |
+| `refresh-seconds` | `60` | how often the kinds' days and the ids are re-read |
+| `columns-cache-mb`, `heavy-reads` | `1024`, `2` | memory for days' column sets; days read at once |
+| `max-load-rows`, `reverse-index` | `200000`, `true` | the most documents a reverse lookup reads without promoted fields; `false` turns reverse lookups off |
+| `live` | `true` | subscribe to `<domain>:changes` and push changed entities to open views |
+| `timeout-ms` | `5000` | connect and command timeout |
+
 ### `aerospike`
 
 A data domain is three sets: `<set>` (a record per entity per business date, key `kind/id/yyyyMMdd`, bins `kind`,

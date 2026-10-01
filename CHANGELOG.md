@@ -29,6 +29,12 @@
   - **Reads:** type-ahead comes from memory instead of a `LIKE` query per keystroke. A single read is one primary-key probe. A day's columns are read in parallel by id range.
   - **Loading and retention:** `PostgresLoader` / `tools/load-postgres.sh` uses parallel `COPY` and replaces a day whole. `--keep-months` drops old partitions.
   - **Measured:** searches over a million trades take 100–225 ms. `make_data.py --postgres` and `pgload.py` are replaced by the loader.
+- **Redis connector** ([REDIS_CONNECTOR.md](docs/connectors/REDIS_CONNECTOR.md)): today and recent days in Redis memory, about 1 GB per million trades a day.
+  - **Storage:** documents are compressed with zstd and a dictionary trained per kind, 7.4× smaller. Each day's promoted fields are stored column-wise in chunks of 10,000.
+  - **Reads:** a single read takes about 5 ms. Searches over a million trades take 80–260 ms.
+  - **Live and retention:** open views update through `<domain>:changes`; `--ttl-days` sets retention.
+  - **Older days** go to the next store, Delta Lake.
+  - **Tooling:** the `redis` profile and `tools/load-redis.sh`.
 - **The file connector reads JSON lines** ([FILE_CONNECTOR.md](docs/connectors/FILE_CONNECTOR.md)): one file per kind per business day (`<root>/<domain>/<date>/<kind>.jsonl`), each line the loaders' row or a plain document. A day is indexed once, in parallel segments: ids with byte offsets, and the promoted fields as columns. A read is one positioned read, and searches read the columns. `tools/load-files.sh` writes the files and a `files` profile serves them. Type-ahead over many files is no longer quadratic.
 - **Documents by audience**: `docs/guides`, `docs/connectors`, `docs/admin` (with the runbooks) and `docs/architecture` (with the ADRs).
 - **The landing page** counts 13 panel kinds (it said 12) and links to their guide.

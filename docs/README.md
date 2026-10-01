@@ -89,7 +89,9 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | Serve millions of entities a day for years from Delta Lake | [DELTA_CONNECTOR.md](connectors/DELTA_CONNECTOR.md) |
 | Serve millions of entities a day from Aerospike, with recent history there and years in Delta Lake | [AEROSPIKE_CONNECTOR.md](connectors/AEROSPIKE_CONNECTOR.md) |
 | Serve millions of entities a day from PostgreSQL | [POSTGRES_CONNECTOR.md](connectors/POSTGRES_CONNECTOR.md) |
-| Serve data from plain JSON-lines files, the simplest store | [FILE_CONNECTOR.md](connectors/FILE_CONNECTOR.md) |
+| Serve data from plain JSON-lines files, the simplest store | [REDIS_CONNECTOR.md](connectors/REDIS_CONNECTOR.md) | you run Drishti on Redis: key layout, zstd dictionaries, column chunks, live pub/sub, TTL, sizing, measurements |
+| [FILE_CONNECTOR.md](connectors/FILE_CONNECTOR.md) |
+| Serve today and recent days from Redis memory, with live updates | [REDIS_CONNECTOR.md](connectors/REDIS_CONNECTOR.md) |
 | Build demo data in any store, small to a million trades a day | [DEMO_DATA.md](connectors/DEMO_DATA.md) |
 
 ### Develop on it
