@@ -26,6 +26,9 @@ def render(request: Request, template: str, status_code: int = 200, **context: A
     context.setdefault("me", getattr(request.state, "identity", None))
     context.setdefault("pack_switcher", getattr(request.state, "pack_switcher", []))
     context.setdefault("AUTH_ENABLED", request.app.state.auth.enabled)
+    catalogue = request.app.state.servers
+    context.setdefault("SERVER", catalogue.get(getattr(request.state, "server", None) and request.state.server.id) or catalogue.get(catalogue.default))
+    context.setdefault("SERVERS", catalogue.listed() if len(catalogue) > 1 else [])
     context.setdefault("asof", getattr(request.state, "asof", "live"))
     context.setdefault("known_at", getattr(request.state, "known_at", None))
     context.setdefault("settings", getattr(request.state, "settings", None) or {})

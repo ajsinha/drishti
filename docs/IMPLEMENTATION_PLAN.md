@@ -209,6 +209,9 @@ Work after 1.11.0, in [CHANGELOG.md](../CHANGELOG.md) under *Unreleased*.
 | Sutras are YAML only | One file per Sutra, `<name>.v<N>.sutra.yaml`, starting with `rachana: 1` (missing or unknown: `DRS-2009`); `description`, `notes` and a per-panel `description` for prose; Markdown Sutras no longer read (`DRS-2004`, converted by `tools/rachana/md_to_yaml.py`); all 228 shipped Sutras converted and the generators write YAML; the JSON Schema of the language at `GET /api/v1/rachana/schema`; Studio a YAML editor with completion (ADR-017, superseding ADR-011) | [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md), [adr/017](adr/017-sutras-are-yaml.md) |
 | Build gates | Error Prone in every compile and Spotless at `verify` (ADR-007 amended) | [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) |
 | Packs while running | Admin → Packs → Load / Unload a pack without a restart of the process (pack overlay, rollback) | [PACKS.md](PACKS.md) |
+| API tokens and clients | Personal read-only API tokens, searches as CSV, a Python client, Excel through Power Query | [CLIENTS.md](CLIENTS.md) |
+| History and freshness | A field over business days, searches compared between two dates, freshness and `stale-after` per connector | [USER_GUIDE.md](USER_GUIDE.md) |
+| One console, many servers | `servers:` in the console; a session per server; picker, `/connect/<id>`, `?srv=` links; public `/public/about` (ADR-016) | [CONFIGURATION.md](CONFIGURATION.md), [adr/016](adr/016-one-console-many-servers.md) |
 
 ## Known gaps
 
@@ -220,25 +223,16 @@ What is open today. None blocks normal use; each is a candidate for a future wav
 
 ## Roadmap
 
-### One console, many servers ([ADR-016](adr/016-one-console-many-servers.md), proposed)
+Next, in this order:
 
-Several Drishti servers run side by side: an open one, and exclusive ones (a restricted desk, a regulator-facing
-environment, pre-production). One console serves everyone. The user picks a server, signs in to that server (its
-own users, roles, packs and single sign-on), and works on it. An exclusive server admits only its own users. The
-console never shares a session between servers.
-
-| Phase | What | Effort |
-|---|---|---|
-| M1 | A catalogue of servers in the console configuration (`servers:`; `backend.url` stays as the one-entry form). One HTTP client per server. The server id in the session cookie. Every cache and live channel scoped by (server, user) | medium |
-| M2 | A server picker before sign-in, with each server's name, state and version from a new public `/api/v1/about/public`. Sign-in and single sign-on per server. The current server in the top bar, with *Switch server* | medium |
-| M3 | Links and bookmarks that name their server. Unlisted servers reached only by link. Per-server colours and banners, so an exclusive environment is unmistakable | small |
-| M4 | Tests: two servers in one console test run (one open, one exclusive). A session on one gives nothing on the other. Switching asks and signs in again. Links route to the right server. Plus docs: OPERATIONS (deploying several servers), USER_GUIDE (switching), CONFIGURATION (`servers:`) | small |
-
-Open questions to settle before M1:
-- Should a user hold sessions on several servers at once (one per tab) or one at a time?
-- Should a workspace pane be able to show a view from another server (probably not: it mixes trust boundaries)?
-- Should the picker hide servers a user cannot enter? That needs the server to answer before sign-in, which leaks who
-  may enter, so the default is to show all listed servers.
+| Item | What |
+|---|---|
+| Derived kinds | Aggregate and derived kinds declared in packs (sums, groupings over other kinds) |
+| Annotations and shared workspaces | Notes on entities and fields; workspaces shared with a team |
+| Scheduled reports | A saved search delivered as CSV to a folder or a webhook on a schedule (email once SMTP is configured) |
+| Who viewed what | An audit of views and searches, for exclusive servers |
+| Phrase command bar | Plain phrases ("trades with Acme over 5m") parsed to a query, the query shown before it runs (no external AI) |
+| Pack registry | Signed, versioned packs fetched from a registry |
 
 ## Risks
 

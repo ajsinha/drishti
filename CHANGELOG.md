@@ -15,6 +15,14 @@
 -->
 # Changelog
 
+## Unreleased
+- **One console, many servers (ADR-016).** List servers under `servers:` in the console's configuration, and people pick one and sign in to it.
+  - **Sessions:** each server has its own session cookie, bound to that server. Switching keeps the others, and signing out ends only the current one.
+  - **Top bar:** shows the current server and a menu to switch. `/servers` lists each server's state.
+  - **Links:** `?srv=` and `/connect/<id>` open a link on its own server, and unlisted servers are reached only this way.
+  - **Server:** a new public `GET /public/about` gives the picker the name, version and sign-in methods, and nothing about the data.
+  - **Compatibility:** without `servers:`, nothing changes.
+
 ## 1.11.0 — Tokens, history and freshness (2026-10-01)
 - **Data freshness.** Every view's footer says when its source last received new data ("updated 2 min ago"). A connector's `stale-after` setting marks it behind:
   - **On the view:** an amber banner.

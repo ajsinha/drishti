@@ -21,6 +21,7 @@ import time
 from pathlib import Path
 
 import yaml
+from core.servers import scoped
 
 
 class Packs:
@@ -39,14 +40,14 @@ class Packs:
         return (await self._fetch(backend, ident))[1]
 
     def forget(self, ident=None) -> None:
-        self._cache.pop(getattr(ident, "user", ""), None)
+        self._cache.pop(scoped(getattr(ident, "user", "")), None)
 
     def forget_all(self) -> None:
         """An admin switched a pack on or off: every user's packs change."""
         self._cache.clear()
 
     async def _fetch(self, backend, ident):
-        key = getattr(ident, "user", "")
+        key = scoped(getattr(ident, "user", ""))
         now = time.monotonic()
         hit = self._cache.get(key)
         if hit and now - hit[0] < 60:

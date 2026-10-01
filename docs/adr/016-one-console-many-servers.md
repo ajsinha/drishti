@@ -17,7 +17,7 @@
 
 | Status | Date | Decider |
 |---|---|---|
-| Proposed (roadmap) | 2026-09-30 | Ashutosh Sinha |
+| Accepted (built in 1.12) | 2026-10-01 | Ashutosh Sinha |
 
 ## Context
 Today one console talks to exactly one server: `backend.url`, one token secret shared with that server, and caches
@@ -26,7 +26,7 @@ an open one most staff use, and exclusive ones (a restricted desk's data, a regu
 pre-production copy) that only some people may enter. The console (the user experience) should stay open to all;
 each server decides who gets in.
 
-## Decision (proposed)
+## Decision
 1. **A catalogue of servers in the console's configuration** (`servers:`): for each, an id, a name and description,
    its URL, its own token secret (from the environment), its own OpenID Connect settings if any, and a `listed`
    flag (an unlisted server is reachable only by a direct link, `/connect/<id>`). The single `backend.url` becomes
@@ -67,3 +67,17 @@ each server decides who gets in.
   which servers exist.
 - **One server with exclusive packs.** Admin → Packs and roles already restrict what people see on one server, but
   the data, configuration and operators stay shared; it does not isolate a restricted environment.
+
+## As built (2026-10-01)
+- `servers:` in the console's configuration, as above; without it `backend.url` is the one server, `default`.
+- The chosen server is kept **per browser** (cookie `drishti_server`), not per tab: the console renders its pages on
+  the server side and a cookie is shared by all tabs. Links name their server instead: `/connect/<id>?next=…` and
+  `?srv=<id>` on any page, so a shared link opens on the right server.
+- Each server's session lives in its own cookie (`drishti_session_<id>`, signed with the server id inside, so it
+  cannot be moved to another server). Switching therefore does not end the other sessions: switching back needs no
+  new sign-in. Signing out ends the current server's session only.
+- The server's public `GET /public/about` (outside `/api/v1`, no token) gives name, version, notice and sign-in
+  methods, and nothing about data, packs or users. The picker (`/servers`) reads it from every server concurrently.
+- In the console, `app.state.backend` and `app.state.auth` are switches resolved per request from a context
+  variable, and the per-user caches key by (server, user); routes did not change.
+

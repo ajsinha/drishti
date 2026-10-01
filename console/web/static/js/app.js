@@ -93,3 +93,11 @@
   });
   apply(root.getAttribute('data-theme') || root.getAttribute('data-default-theme') || 'terminal');
 })();
+
+/* Server colours (ADR-016): set from data attributes, since the content security policy allows no inline styles. */
+(function () {
+  'use strict';
+  document.querySelectorAll('[data-srv-color]').forEach(function (el) {
+    el.style.setProperty('--srv', el.getAttribute('data-srv-color'));
+  });
+})();

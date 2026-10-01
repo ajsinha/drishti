@@ -21,6 +21,7 @@ from __future__ import annotations
 import contextvars
 import re
 import time
+from core.servers import scoped
 
 COOKIE = "drishti_asof"
 HEADER = "X-Drishti-As-Of"
@@ -108,7 +109,7 @@ class BusinessDates:
         self._cache: dict[str, tuple[float, dict]] = {}
 
     async def info(self, backend, ident, selected: str) -> dict:
-        hit = self._cache.get(selected)
+        hit = self._cache.get(scoped(selected))
         if hit and time.monotonic() - hit[0] < self.ttl:
             return hit[1]
         try:
@@ -116,5 +117,5 @@ class BusinessDates:
         except Exception:  # noqa: BLE001 - the picker degrades to a plain date box; pages still render
             data = {"current": None, "selected": None if selected == "live" else selected, "live": selected == "live",
                     "holidays": [], "earliest": None, "calendar": "", "error": True}
-        self._cache[selected] = (time.monotonic(), data)
+        self._cache[scoped(selected)] = (time.monotonic(), data)
         return data

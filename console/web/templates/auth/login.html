@@ -19,6 +19,8 @@
 <div class="login">
   <form method="post" action="/login" class="login-box" autocomplete="on">
     <h1>Sign in</h1>
+    {% if SERVERS %}<p class="login-srv"><span class="srv-dot" data-srv-color="{{ SERVER.color or 'var(--d-link)' }}" aria-hidden="true"></span>
+      to <b>{{ SERVER.name }}</b> · <a class="lnk" href="/servers">another server</a></p>{% endif %}
     {% if error %}<p class="pnl-err" role="alert">{{ error }}</p>{% endif %}
     <input type="hidden" name="next" value="{{ next }}">
     <label for="lu">User</label><input id="lu" name="user" class="cmd-input" autocomplete="username" required autofocus>

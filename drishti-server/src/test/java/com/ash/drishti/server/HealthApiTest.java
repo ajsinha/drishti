@@ -66,4 +66,13 @@ class HealthApiTest {
                 .andExpect(jsonPath("$.live.streams").exists());
         mvc.perform(get("/api/v1/admin/health").header("Authorization", as("trader"))).andExpect(status().isForbidden());
     }
+
+    @Test
+    void thePublicAboutNeedsNoSignInAndSaysNothingAboutTheData() throws Exception {
+        mvc.perform(get("/public/about")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.version").exists())
+                .andExpect(jsonPath("$.signIn.password").value(true))
+                .andExpect(jsonPath("$.packs").doesNotExist())
+                .andExpect(jsonPath("$.sources").doesNotExist());
+    }
 }

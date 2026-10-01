@@ -22,6 +22,11 @@ backend:
   url: ${DRISHTI_BACKEND_URL:http://127.0.0.1:18480}
   timeout_seconds: 5
   pool_size: 64
+# Several servers (ADR-016): list them and people pick one, then sign in to it. Without this list, backend.url is the
+# one server. See docs/CONFIGURATION.md, "servers".
+# servers:
+#   - { id: open, name: Drishti, url: "http://127.0.0.1:18480", color: "#2a9d8f" }
+#   - { id: rates-desk, name: Rates desk, url: "http://127.0.0.1:18481", token_secret: "${DRISHTI_TOKEN_SECRET_RATES:}" }
 ui:
   default_theme: terminal        # terminal | light | wallstreet | blue | green | crimson | crimson-dark
   # The product's name and legal notices on every page; nothing user-visible names them in code. The server has the

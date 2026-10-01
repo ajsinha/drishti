@@ -22,7 +22,6 @@ import httpx
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from core.auth import COOKIE
 from core.backend import BackendError
 from core.oidc import COOKIE as OIDC_COOKIE
 from core.oidc import TTL as OIDC_TTL
@@ -55,7 +54,7 @@ async def login(request: Request):
             e.code, "Unknown user or wrong password." if e.status in (401, 404) else f"Sign-in unavailable: {e.detail}")
         return render(request, "auth/login.html", status_code=401 if e.status < 500 else 503, next=target, error=msg)
     r = RedirectResponse("/account?must=1" if profile.get("mustChangePassword") else await _landing(request, profile, target), status_code=303)
-    r.set_cookie(COOKIE, auth.session_for(profile), httponly=True, samesite="lax", secure=auth.secure_cookie, max_age=auth.session_ttl)
+    r.set_cookie(auth.cookie, auth.session_for(profile), httponly=True, samesite="lax", secure=auth.secure_cookie, max_age=auth.session_ttl)
     return r
 
 
@@ -91,14 +90,15 @@ async def oidc_callback(request: Request, code: str = "", state: str = "", error
                       error=e.detail if e.status < 500 else f"Sign-in unavailable: {e.detail}")
     r = RedirectResponse(await _landing(request, profile, _safe_next(target)), status_code=303)
     r.delete_cookie(OIDC_COOKIE, path="/auth/oidc")
-    r.set_cookie(COOKIE, auth.session_for(profile), httponly=True, samesite="lax", secure=auth.secure_cookie, max_age=auth.session_ttl)
+    r.set_cookie(auth.cookie, auth.session_for(profile), httponly=True, samesite="lax", secure=auth.secure_cookie, max_age=auth.session_ttl)
     return r
 
 
 @router.get("/logout")
-async def logout():
+async def logout(request: Request):
+    """Signs out of the current server only; sessions on other servers stay."""
     r = RedirectResponse("/", status_code=303)
-    r.delete_cookie(COOKIE)
+    r.delete_cookie(request.app.state.auth.cookie)
     return r
 
 
@@ -164,6 +164,6 @@ async def change_password(request: Request):
         return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.status)
     r = JSONResponse({"ok": True})
     if request.app.state.auth.enabled:
-        r.set_cookie(COOKIE, request.app.state.auth.session_for(profile), httponly=True, samesite="lax",
+        r.set_cookie(request.app.state.auth.cookie, request.app.state.auth.session_for(profile), httponly=True, samesite="lax",
                      secure=request.app.state.auth.secure_cookie, max_age=request.app.state.auth.session_ttl)
     return r

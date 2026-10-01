@@ -73,10 +73,15 @@ def mint_token(sub: str, roles, secret: str, ttl: int) -> str:
 class Auth:
     """Sessions and tokens for one console process."""
 
-    def __init__(self, settings):
+    def __init__(self, settings, server=None):
+        """``server``: the :class:`core.servers.Server` this Auth signs in to (its own token secret and session cookie);
+        None for the one server of a console without ``servers:``."""
         self.enabled = bool(settings.get("auth.enabled", False))
         self.session_secret = str(settings.get("auth.session_secret") or "")
-        self.token_secret = str(settings.get("auth.token_secret") or "")
+        self.token_secret = str(settings.get("auth.token_secret") or "") if server is None else server.token_secret
+        self.server = "default" if server is None else server.id
+        # one session per server, side by side: signing in to one server leaves the others as they were
+        self.cookie = COOKIE if self.server == "default" else f"{COOKIE}_{self.server}"
         self.token_ttl = int(settings.get("auth.token_ttl_seconds", 300))
         self.session_ttl = int(settings.get("auth.session_hours", 10)) * 3600
         self.secure_cookie = bool(settings.get("auth.secure_cookie", True))
@@ -97,7 +102,7 @@ class Auth:
         """A signed cookie value for a user the server has just verified."""
         body = {"u": user["username"], "d": user.get("displayName") or user["username"], "k": user.get("desk") or "",
                 "r": sorted(user.get("roles") or []), "m": bool(user.get("mustChangePassword")),
-                "x": int(time.time()) + self.session_ttl}
+                "x": int(time.time()) + self.session_ttl, "s": self.server}
         payload = _b64(json.dumps(body, separators=(",", ":")).encode())
         return f"{payload}.{self._sign(payload)}"
 
@@ -113,8 +118,8 @@ class Auth:
             body = json.loads(_unb64(payload))
         except ValueError:
             return None
-        if int(body.get("x", 0)) < time.time():
-            return None
+        if int(body.get("x", 0)) < time.time() or body.get("s", "default") != self.server:
+            return None                                  # expired, or a session for another server
         return self._with_token(Identity(body["u"], body["d"], body["k"], tuple(body["r"]), must_change=bool(body.get("m"))))
 
     def _with_token(self, ident: Identity) -> Identity:

@@ -56,10 +56,16 @@ class AuthGate(BaseHTTPMiddleware):
     """Resolves the caller's identity; with auth on, protected paths need a valid session."""
 
     async def dispatch(self, request, call_next):
-        from core.auth import COOKIE
+        from core import servers
 
+        catalogue = request.app.state.servers
+        asked = request.query_params.get("srv")          # a shared link names its server
+        picked = asked if catalogue.get(asked) else None
+        servers.CURRENT.set(picked or catalogue.choose(request.cookies.get(servers.COOKIE)))
+        request.state.server = catalogue.get(servers.current())
+        request.state.servers = catalogue
         auth = request.app.state.auth
-        request.state.identity = auth.identity(request.cookies.get(COOKIE))
+        request.state.identity = auth.identity(request.cookies.get(auth.cookie))
         request.state.pack_switcher = []
         path = request.url.path
         from core import asof
@@ -80,8 +86,14 @@ class AuthGate(BaseHTTPMiddleware):
         if request.state.identity is None and (path in EXACT or path.startswith(PROTECTED[1:])):
             if path.startswith("/api/"):
                 return JSONResponse({"code": "DRS-5010", "detail": "sign in first"}, status_code=401)
-            return RedirectResponse(f"/login?next={quote(str(request.url.path))}", status_code=303)
-        return await call_next(request)
+            response = RedirectResponse(f"/login?next={quote(str(request.url.path))}", status_code=303)
+        else:
+            response = await call_next(request)
+        if picked and picked != request.cookies.get(servers.COOKIE):
+            from routes.server_routes import choose
+
+            choose(response, request, picked)
+        return response
 
 
 class SecurityHeaders(BaseHTTPMiddleware):
@@ -97,18 +109,23 @@ class SecurityHeaders(BaseHTTPMiddleware):
 def create_app(settings: Settings) -> FastAPI:
     from core.backend import BackendClient
     from core.auth import Auth
+    from core.servers import Servers, Switch
+
+    catalogue = Servers(settings)
     from routes import (admin_routes, api_routes, asof_routes, auth_routes, export_routes, help_routes, home_routes, monitor_routes,
-                        studio_routes, terminal_routes, workspace_routes)
+                        server_routes, studio_routes, terminal_routes, workspace_routes)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        if getattr(app.state, "backend", None) is None:
-            app.state.backend = BackendClient(settings.get("backend.url"), float(settings.get("backend.timeout_seconds", 5)),
-                                              int(settings.get("backend.pool_size", 64)))
+        if getattr(app.state, "backend", None) is None:      # one pooled client per server (tests bring their own)
+            app.state.backend = Switch({s.id: BackendClient(s.url, float(settings.get("backend.timeout_seconds", 5)),
+                                                            int(settings.get("backend.pool_size", 64))) for s in catalogue.all()},
+                                       catalogue.default)
         yield
-        close = getattr(app.state.backend, "aclose", None)
-        if close:
-            await close()
+        for client in (app.state.backend.each() if isinstance(app.state.backend, Switch) else [app.state.backend]):
+            close = getattr(client, "aclose", None)
+            if close:
+                await close()
 
     app = FastAPI(title=f"{settings.get('ui.product', '')} console".strip(), docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
     app.state.backend = None
@@ -131,7 +148,9 @@ def create_app(settings: Settings) -> FastAPI:
 
     templates.env.globals["known_local"] = to_local
     app.state.settings = settings
-    app.state.auth = Auth(settings)
+    app.state.servers = catalogue
+    app.state.auth = (Auth(settings) if len(catalogue) == 1 and catalogue.default == "default"
+                      else Switch({s.id: Auth(settings, s) for s in catalogue.all()}, catalogue.default))
     from core.oidc import Oidc
 
     app.state.oidc = Oidc(settings, app.state.auth)
@@ -163,4 +182,5 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(monitor_routes.router)
     app.include_router(asof_routes.router)
     app.include_router(export_routes.router)
+    app.include_router(server_routes.router)
     return app

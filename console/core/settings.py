@@ -19,6 +19,7 @@ the user changes them."""
 from __future__ import annotations
 
 import time
+from core.servers import scoped
 
 DEFAULTS = {"theme": None, "landing": "/t", "clockZone": None, "density": "comfortable", "flash": True, "searchLimit": 100, "pinned": []}
 
@@ -31,18 +32,18 @@ class UserSettings:
     async def get(self, backend, ident) -> dict:
         if ident is None:
             return dict(DEFAULTS)
-        hit = self._cache.get(ident.user)
+        hit = self._cache.get(scoped(ident.user))
         if hit and time.monotonic() - hit[0] < self.ttl:
             return hit[1]
         try:
             data = {**DEFAULTS, **(await backend.settings(ident))}
         except Exception:  # noqa: BLE001 - settings are a convenience; a page never fails for them
             return dict(DEFAULTS)
-        self._cache[ident.user] = (time.monotonic(), data)
+        self._cache[scoped(ident.user)] = (time.monotonic(), data)
         return data
 
     def forget(self, user: str) -> None:
-        self._cache.pop(user, None)
+        self._cache.pop(scoped(user), None)
 
 
 def is_pinned(settings: dict, kind: str, id_: str) -> bool:

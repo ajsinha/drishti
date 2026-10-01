@@ -122,6 +122,19 @@
   <div class="tbar-tools">
     {% if live is defined %}<span class="tbar-live tool" data-live-state="{{ 'live' if live else 'static' }}" title="{{ 'Live' if live else 'Static' }}{% if built_ms %}, built {{ built_ms }} ms{% endif %}"><span class="dot" aria-hidden="true"></span>
       <span class="visually-hidden" data-live-text>{{ 'Live' if live else 'Static' }}{% if built_ms %}, built {{ built_ms }} ms{% endif %}</span></span>{% endif %}
+    {% if SERVERS %}
+    <div class="dropdown">
+      <button class="tool srv-chip" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Server: {{ SERVER.name }} ({{ SERVER.url }})">
+        <span class="srv-dot" data-srv-color="{{ SERVER.color or 'var(--d-link)' }}" aria-hidden="true"></span><span class="srv-name">{{ SERVER.name }}</span></button>
+      <div class="dropdown-menu dropdown-menu-end">
+        <h6 class="dropdown-header">Work with server</h6>
+        {% for s in SERVERS %}<a class="dropdown-item{% if s.id == SERVER.id %} active{% endif %}" href="/connect/{{ s.id }}?next=/t">
+          <span class="srv-dot" data-srv-color="{{ s.color or 'var(--d-link)' }}" aria-hidden="true"></span> {{ s.name }}</a>{% endfor %}
+        <div class="dropdown-divider"></div>
+        <a class="dropdown-item" href="/servers"><i class="bi bi-hdd-stack" aria-hidden="true"></i> All servers…</a>
+      </div>
+    </div>
+    {% endif %}
     <a class="tool bell" href="/alerts" title="Alerts" aria-label="Alerts" data-bell><i class="bi bi-bell" aria-hidden="true"></i><span class="bell-count" data-bell-count hidden>0</span></a>
     {% if pack_switcher | length > 1 %}
     {% set on = pack_switcher | selectattr('active') | map(attribute='name') | list %}

@@ -770,7 +770,45 @@ You should see uvicorn report `Uvicorn running on http://127.0.0.1:17481`.
 | `server.port` | `17480` (`DRISHTI_CONSOLE_PORT`) | Listening port. |
 | `backend.url` | `http://127.0.0.1:18480` (`DRISHTI_BACKEND_URL`) | The Drishti server. |
 | `backend.timeout_seconds` | `5` | Per call to the server. |
-| `backend.pool_size` | `64` | Pooled HTTP connections to the server. |
+| `backend.pool_size` | `64` | Pooled HTTP connections to the server (per server, when there are several). |
+
+### `servers` — one console, many servers
+
+Leave it out and the console has one server, `backend.url`. List several and people pick one, then sign in to it
+(ADR-016). Each server keeps its own users, roles, packs and data: a session on one gives nothing on another, and
+each server trusts only tokens signed with its own secret.
+
+```yaml
+servers:
+  - id: open                       # lower-case letters, digits, dashes; appears in links (/connect/open, ?srv=open)
+    name: Drishti
+    url: http://drishti-a:18480
+    description: Everyone's server
+    color: "#2a9d8f"               # the dot beside the name in the top bar
+    token_secret: ${DRISHTI_TOKEN_SECRET_OPEN:}     # that server's drishti.security.secret (default: auth.token_secret)
+  - id: rates-desk
+    name: Rates desk
+    url: https://drishti-rates.internal:18480
+    color: "#e76f51"
+    token_secret: ${DRISHTI_TOKEN_SECRET_RATES:}
+  - id: preprod
+    name: Pre-production
+    url: http://drishti-pre:18480
+    listed: false                  # not in the picker; reachable by the link /connect/preprod
+```
+
+| Key | Default | Meaning |
+|---|---|---|
+| `servers[].id` | required | Its name in links and cookies. Only ids in this list are ever reached: a link cannot point the console at another address. |
+| `servers[].name`, `description`, `color` | id, empty, the link colour | What the picker shows. |
+| `servers[].url` | required | The server's address. |
+| `servers[].token_secret` | `auth.token_secret` | The secret shared with that server (`drishti.security.secret` there). Give each server its own: a leaked secret then opens one server, not all. |
+| `servers[].listed` | `true` | `false` hides it from the picker; `/connect/<id>` still reaches it. |
+
+The first server is the default for a browser that has not chosen one. The choice is kept per browser (cookie
+`drishti_server`, a year), and each server's session in its own cookie (`drishti_session_<id>`), so you can stay
+signed in to several and switch without signing in again. Signing out signs out of the current server only. Single
+sign-on settings (`auth.oidc`) apply to every server; each server verifies the ID token itself.
 
 ### `ui`
 

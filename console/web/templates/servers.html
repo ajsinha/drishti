@@ -1,0 +1,40 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Servers · {{ PRODUCT }}{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% if me %}{% include "terminal/_topbar.html" %}{% else %}{% include "_nav_public.html" %}{% endif %}{% endblock %}
+{% block content %}
+<div class="adm">
+  <h1>Servers</h1>
+  <p class="text-muted-d">This console can work with several {{ PRODUCT }} servers. Each keeps its own users, roles, packs and data:
+    you sign in to each one separately, and a session on one gives nothing on another. Pick one to work with it; the choice is
+    remembered in this browser.</p>
+  {% if error %}<p class="pnl-err" role="alert">{{ error }}</p>{% endif %}
+  <section class="pnl"><div class="pnl-b"><div class="tbl-wrap"><table class="tbl srv-tbl" data-plain>
+    <thead><tr><th>Server</th><th>State</th><th>Version</th><th>Sign-in</th><th>You</th><th></th></tr></thead>
+    <tbody>{% for r in rows %}{% set s = r.server %}{% set st = r.state %}
+      <tr{% if r.current %} class="srv-current"{% endif %}>
+        <td><span class="srv-dot" data-srv-color="{{ s.color or 'var(--d-link)' }}" aria-hidden="true"></span> <b>{{ s.name }}</b>
+          <span class="mono text-muted-d">{{ s.id }}</span>{% if s.description %}<div class="cmp-path">{{ s.description }}</div>{% endif %}</td>
+        <td>{% if st.up %}<span class="hl-badge hl-ok">UP</span>{% else %}<span class="hl-badge hl-bad" title="{{ st.error }}">DOWN</span>{% endif %}</td>
+        <td class="mono">{{ st.version or '—' }}</td>
+        <td>{% if st.signIn %}{{ 'password' if st.signIn.password }}{% if st.signIn.singleSignOn %} · single sign-on{% endif %}{% if not st.signIn.required %} · open{% endif %}{% else %}—{% endif %}</td>
+        <td>{{ 'signed in' if r.signed_in else 'not signed in' }}</td>
+        <td>{% if r.current %}<span class="text-muted-d">current</span>{% else %}<a class="btn-pill btn-accent btn-sm-pill" href="/connect/{{ s.id }}?next=/t">Use</a>{% endif %}</td>
+      </tr>{% endfor %}</tbody></table></div></div></section>
+</div>
+{% endblock %}

@@ -819,6 +819,18 @@ templates:
 
 `follows: 0` means "follow the first pane". See the [Workspaces guide](../console/web/guides/workspaces.md).
 
+## Working with several servers
+
+Your organisation may run more than one Drishti server: an open one most people use, and others for a restricted desk
+or a pre-production copy. When the console knows of several, the top bar shows the current one as a coloured dot and
+a name. Click it to switch, or choose **All servers…** to see each one's state, version, how you sign in to it, and
+whether you are signed in there.
+
+Each server has its own users and data, so you sign in to each separately. You can be signed in to several at once and
+switch without signing in again. **Sign out** signs you out of the current server only. A link someone shares opens on
+the server it was made on (it carries `?srv=…`). A server not shown in the list can still be reached with the link
+`/connect/<its id>` if you were given one.
+
 ## Your settings
 
 *My account* (`/account`) shows your profile and roles, your settings, and a form to change your password.
