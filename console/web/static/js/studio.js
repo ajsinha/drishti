@@ -13,44 +13,62 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Sutra Studio: a Markdown editor for Sutras with live preview (md-editor.js adds the toolbar, snippets and
-   outline; the Document tab renders the prose). Ctrl+Enter previews the unsaved Sutra against the
-   chosen entity; problems list their line (click to jump); "Start from inference" loads what inference
-   makes of the entity as an editable Sutra; Save writes the file (authors, where enabled). */
+/* Sutra Studio: a YAML editor for Sutras (Rachana 1) with live preview. studio-assist.js completes keys, values,
+   functions and document fields, checks the YAML against the server's Rachana schema while you type and shows
+   field help; the Summary tab reads the Sutra back as a page. Ctrl+Enter previews the unsaved Sutra against the
+   chosen entity (or pasted JSON); problems list their line (click to jump); "Start from inference" loads what
+   inference makes of the entity as an editable Sutra; Save writes the file (authors, where enabled). */
 (function () {
   'use strict';
   var root = document.querySelector('[data-studio]');
   if (!root) { return; }
   var ta = root.querySelector('[data-src]'), out = root.querySelector('[data-out]'), status = root.querySelector('[data-status]');
   var list = root.querySelector('[data-problems]'), kindIn = root.querySelector('[data-kind]'), idIn = root.querySelector('[data-id]');
-  var editor = window.CodeMirror ? window.CodeMirror.fromTextArea(ta, { mode: modeFor(ta.value), lineNumbers: true, indentUnit: 2, tabSize: 2,
-    extraKeys: { 'Ctrl-Enter': preview, 'Cmd-Enter': preview, Tab: function (cm) { cm.replaceSelection('  '); } } }) : null;
-  function modeFor(t) { return /^\s*(```|~~~)\s*sutra\s*$/m.test(t) || !/^sutra:/m.test(t) ? 'sutra-markdown' : 'rachana-yaml'; }
-  if (editor && window.drishtiMd) { window.drishtiMd.attach(editor, root, function (m, bad) { say(m, bad); }); }
-  if (editor) { editor.on('change', function () { var m = modeFor(editor.getValue()); if (editor.getOption('mode') !== m) { editor.setOption('mode', m); } }); }
+  var jsonTa = root.querySelector('[data-json]'), useJson = root.querySelector('[data-use-json]');
+  var editor = window.CodeMirror ? window.CodeMirror.fromTextArea(ta, { mode: 'rachana-yaml', lineNumbers: true, indentUnit: 2, tabSize: 2,
+    gutters: ['studio-gutter', 'CodeMirror-linenumbers'],
+    extraKeys: { 'Ctrl-Enter': preview, 'Cmd-Enter': preview, Tab: function (cm) { cm.replaceSelection('  '); }, Enter: newline } }) : null;
+  /** Enter keeps YAML's indentation: under "- key: v" at the key, after "key:" one level deeper. */
+  function newline(cm) {
+    var c = cm.getCursor(), before = cm.getLine(c.line).slice(0, c.ch).replace(/\s+#.*$/, '');
+    var m = before.match(/^(\s*)((?:-\s+)*)/), n = m[1].length + m[2].length, rest = before.slice(n);
+    if (m[2] && (/^[{["']/.test(rest) || !/^[^\s#][^:#]*:(\s|$)/.test(rest))) { n = m[1].length; } // "- { … }" or "- scalar": the next item
+    if (/^\s*(?:-\s+)*[^\s#][^:#]*:\s*([|>][-+0-9]*)?\s*$/.test(before) && !/[{[]/.test(before)) { n += 2; }
+    cm.replaceSelection('\n' + ' '.repeat(n), 'end', '+input');
+  }
+  var serverProblems = [], liveProblems = [];
+  var assist = editor && window.drishtiAssist ? window.drishtiAssist.attach(editor, {
+    say: function (m, bad) { say(m, bad); },
+    helpEl: root.querySelector('[data-field-help]'),
+    getDoc: sampleDoc,
+    onCheck: function (ps) { liveProblems = ps; showProblems(); }
+  }) : null;
   function text() { return editor ? editor.getValue() : ta.value; }
   function setText(t) { if (editor) { editor.setValue(t); } else { ta.value = t; } }
   function say(msg, bad) { status.textContent = msg; status.classList.toggle('t-bad', !!bad); }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
-  function problems(ps) {
-    list.innerHTML = (ps || []).map(function (p) {
-      var line = p.location ? p.location.line : 0;
-      return '<li data-line="' + line + '"><span class="mono">' + esc(p.code) + '</span> line ' + line + ': ' + esc(p.message) + '</li>';
+  function problems(ps) { serverProblems = ps || []; showProblems(); }
+  function showProblems() {
+    list.innerHTML = serverProblems.concat(liveProblems).map(function (p) {
+      var line = p.location ? p.location.line : 0, live = p.code === 'CHECK';
+      return '<li data-line="' + line + '" data-col="' + (p.location && p.location.column ? p.location.column : 1) + '" class="' + (live ? 'pr-check' : 'pr-server') + '">' +
+        '<span class="mono">' + esc(live ? 'check' : p.code) + '</span> ' + (line ? 'line ' + line + ': ' : '') + esc(p.message) + '</li>';
     }).join('');
   }
   list.addEventListener('click', function (e) {
     var li = e.target.closest('[data-line]');
-    if (li && editor) { var l = Math.max(0, +li.dataset.line - 1); editor.focus(); editor.setCursor({ line: l, ch: 0 }); }
+    if (li && editor && +li.dataset.line > 0) {
+      var l = +li.dataset.line - 1; editor.focus(); editor.setCursor({ line: l, ch: Math.max(0, +li.dataset.col - 1) }); editor.scrollIntoView(null, 80);
+    }
   });
 
   // ---- sample JSON pane ---------------------------------------------------------------------------
-  var jsonTa = root.querySelector('[data-json]'), useJson = root.querySelector('[data-use-json]');
   root.querySelectorAll('[data-tab]').forEach(function (t) {
     t.addEventListener('click', function () {
       root.querySelectorAll('[data-tab]').forEach(function (x) { x.classList.toggle('on', x === t); x.setAttribute('aria-selected', x === t ? 'true' : 'false'); });
       root.querySelectorAll('[data-pane]').forEach(function (p) { p.hidden = p.getAttribute('data-pane') !== t.getAttribute('data-tab'); });
-      if (t.getAttribute('data-tab') === 'doc') { renderDoc(); }
+      if (t.getAttribute('data-tab') === 'summary') { renderSummary(); }
     });
   });
   function pastedDocument() {
@@ -68,24 +86,31 @@
   });
   useJson.addEventListener('change', function () { preview(); });
 
-  var docPane = root.querySelector('[data-doc]');
-  function renderDoc() {
-    fetch('/studio/render', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ yaml: text() }) })
+  // the document the field completions read: the pasted JSON when ticked, else the chosen entity's
+  var docCache = { key: null, p: null };
+  function sampleDoc() {
+    if (useJson.checked) { try { return Promise.resolve(JSON.parse(jsonTa.value)); } catch (e) { return Promise.resolve(undefined); } }
+    var key = kindIn.value.trim() + '/' + idIn.value.trim();
+    if (docCache.key !== key) {
+      docCache = { key: key, p: fetch('/api/raw/' + encodeURIComponent(kindIn.value.trim()) + '/' + encodeURIComponent(idIn.value.trim()))
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) { if (!d) { docCache.key = null; return undefined; } return d.data !== undefined ? d.data : d; })
+        .catch(function () { docCache.key = null; return undefined; }) };
+    }
+    return docCache.p;
+  }
+
+  // ---- Summary tab: the Sutra read back as a page ------------------------------------------------------------
+  var sumPane = root.querySelector('[data-summary]');
+  function renderSummary() {
+    fetch('/studio/summary', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ yaml: text() }) })
       .then(function (r) { return r.json(); })
-      .then(function (d) {
-        docPane.innerHTML = d.html || '<p class="text-muted-d">Nothing to show yet: write some Markdown around the sutra block.</p>';
-        docPane.querySelectorAll('a[href^="#"]').forEach(function (a) {
-          a.addEventListener('click', function (e) {
-            var el = docPane.querySelector('[id="' + a.getAttribute('href').slice(1) + '"]');
-            if (el) { e.preventDefault(); el.scrollIntoView({ block: 'start' }); }
-          });
-        });
-      })
-      .catch(function (e) { say('Could not render the document: ' + e, true); });
+      .then(function (d) { sumPane.innerHTML = d.html || ''; })
+      .catch(function (e) { say('Could not summarise the Sutra: ' + e, true); });
   }
 
   function preview() {
-    if (!docPane.hidden) { renderDoc(); }
+    if (!sumPane.hidden) { renderSummary(); }
     say('Previewing…');
     var t0 = performance.now();
     var doc;
@@ -149,7 +174,7 @@
   // ---- test entities: the entities this author keeps for trying the Sutra ---------------------------------------
   var testPick = root.querySelector('[data-test-pick]'), tests = [], testsFor = '';
   function sutraName() {
-    var m = text().match(/^\s*name:\s*["']?([A-Za-z0-9._-]+)/m);
+    var m = text().match(/^sutra:\s*["']?([A-Za-z0-9._-]+)/m);
     return m ? m[1] : '';
   }
   function showTests() {
@@ -176,7 +201,7 @@
   root.querySelector('[data-test-add]').addEventListener('click', function () {
     loadTests();
     var k = kindIn.value.trim(), id = idIn.value.trim();
-    if (!testsFor) { say('Give the Sutra a name first (name: in the sutra block).', true); return; }
+    if (!testsFor) { say('Give the Sutra a name first (sutra: at the top).', true); return; }
     if (!k || !id) { say('Type a kind and an id to keep.', true); return; }
     if (tests.some(function (t) { return t.kind === k && t.id === id; })) { say(id + ' is already a test entity.'); return; }
     tests.push({ kind: k, id: id });
@@ -207,6 +232,94 @@
   });
   if (editor) { editor.on('blur', loadTests); }
   setTimeout(loadTests, 300);
+
+  // ---- the editor's tools: Insert…, Jump to…, Complete, Wrap -------------------------------------------------------
+  var PANELS = {
+    kv: '- id: details\n  kind: kv\n  title: Details\n  columns:\n    - { label: Name, bind: $.name }\n',
+    table: '- id: rows\n  kind: table\n  title: Rows\n  rows: $.items\n  columns:\n    - { label: Name, bind: "@.name" }\n    - { label: Amount, bind: "@.amount", fmt: amount0, total: true }\n',
+    tabs: '- id: legs\n  kind: tabs\n  title: Legs\n  each: $.legs\n  tabTitle: "@.label"\n  body:\n    kind: kv\n    columns:\n      - { label: Currency, bind: "@.currency" }\n',
+    line: '- id: curve\n  kind: line\n  title: Curve\n  area: right\n  rows: $.points\n  x: tenor\n  y: value\n',
+    area: '- id: profile\n  kind: area\n  title: Profile\n  rows: $.profile\n  x: tenor\n  series:\n    - { label: Expected, value: ee, tone: link }\n',
+    hbar: '- id: bars\n  kind: hbar\n  title: By bucket\n  area: right\n  rows: $.buckets\n  label: bucket\n  value: amount\n  fmt: signed0\n',
+    ladder: '- id: ladder\n  kind: ladder\n  title: Schedule\n  rows: $.schedule\n  highlight: "#index == 0"\n  columns:\n    - { label: Date, bind: "@.date", fmt: date }\n',
+    status: '- id: ops\n  kind: status\n  title: Status\n  fields:\n    - { label: Status, bind: $.status, tone: status }\n',
+    gauge: '- { id: usage, kind: gauge, title: Utilisation, area: right, value: $.used, max: $.limit, fmt: pct2 }\n',
+    markdown: '- { id: notes, kind: markdown, title: Notes, text: "Static notes for the reader." }\n',
+    links: '- { id: refs, kind: links, title: Linked entities, area: right }\n',
+    provenance: '- { id: built, kind: provenance, title: How this view was built }\n',
+    surface: '- id: grid\n  kind: surface\n  title: Surface\n  rows: $.points\n  y: tenor\n'
+  };
+  var SNIPPETS = { strip: ['strip', '- { label: Label, bind: $.field }\n'], key: ['keys', "F5: link($.field, 'kind')\n"],
+    description: ['description', null], notes: ['notes', null] };
+  var TOP = /^[A-Za-z_][\w-]*\s*:/;
+  /** The lines of a top-level key's block: [from, to) with to after its last non-blank line. */
+  function block(key) {
+    var n = editor.lineCount(), from = -1;
+    for (var i = 0; i < n; i++) { if (new RegExp('^' + key + '\\s*:').test(editor.getLine(i))) { from = i; break; } }
+    if (from < 0) { return null; }
+    var to = from + 1;
+    while (to < n && !TOP.test(editor.getLine(to))) { to++; }
+    while (to > from + 1 && /^\s*(#.*)?$/.test(editor.getLine(to - 1))) { to--; }
+    return { from: from, to: to, inline: editor.getLine(from).replace(/^[^:]*:\s*/, '').replace(/\s+#.*$/, '').trim() };
+  }
+  function indentOf(b) {
+    for (var i = b.from + 1; i < b.to; i++) { var m = editor.getLine(i).match(/^(\s*)\S/); if (m) { return m[1]; } }
+    return '  ';
+  }
+  function put(lineNo, textToInsert) {
+    if (lineNo >= editor.lineCount()) { var last = editor.lineCount() - 1; editor.replaceRange('\n' + textToInsert.replace(/\n$/, ''), { line: last, ch: editor.getLine(last).length }); lineNo = last + 1; }
+    else { editor.replaceRange(textToInsert, { line: lineNo, ch: 0 }); }
+    editor.focus();
+    editor.setCursor({ line: lineNo, ch: editor.getLine(lineNo).length });
+    editor.scrollIntoView(null, 80);
+  }
+  function insert(what) {
+    if (!editor) { return; }
+    var key, body;
+    if (what.indexOf('panel:') === 0) { key = 'panels'; body = PANELS[what.slice(6)]; } else { key = SNIPPETS[what][0]; body = SNIPPETS[what][1]; }
+    var b = block(key);
+    if (body === null) {
+      if (b) { editor.focus(); editor.setCursor({ line: b.from, ch: editor.getLine(b.from).length }); say('This Sutra already has ' + key + ' (line ' + (b.from + 1) + ').'); return; }
+      var at = block('match') || block('version');
+      put(at ? at.to : editor.lineCount(), key + ': ' + (key === 'notes' ? '|\n  Notes for authors and reviewers.\n' : 'What this layout shows, and for which entities.\n'));
+      return;
+    }
+    if (b && b.inline) { say(key + ' is written inline on line ' + (b.from + 1) + ': add the entry there.', true); editor.focus(); editor.setCursor({ line: b.from, ch: 0 }); return; }
+    if (b) { var pad = indentOf(b); put(b.to, body.replace(/^(?=.)/gm, pad)); return; }
+    var before = key === 'strip' ? block('panels') || block('keys') : key === 'panels' ? block('keys') : null;
+    var textToInsert = key + ':\n' + body.replace(/^(?=.)/gm, '  ');
+    put(before ? before.from : editor.lineCount(), textToInsert);
+  }
+  var ins = root.querySelector('[data-insert]');
+  if (ins) { ins.addEventListener('change', function () { if (ins.value) { insert(ins.value); } ins.value = ''; }); }
+  var jump = root.querySelector('[data-outline]');
+  function outline() {
+    var html = '<option value="">Jump to…</option>', inPanels = false, item = 0;
+    for (var i = 0; editor && i < editor.lineCount(); i++) {
+      var t = editor.getLine(i), top = t.match(/^([A-Za-z_][\w-]*)\s*:/);
+      if (top) { inPanels = top[1] === 'panels'; item = -1; html += '<option value="' + i + '">' + esc(top[1]) + '</option>'; continue; }
+      var it = inPanels && t.match(/^(\s*)-\s+(?:\{.*?\bid:\s*([^,}]+)|id:\s*(.+))/);
+      if (it && (item < 0 || it[1].length === item)) {
+        item = it[1].length;
+        var kind = (t.match(/kind:\s*([\w-]+)/) || editor.getLine(i + 1).match(/^\s*kind:\s*([\w-]+)/) || [])[1];
+        html += '<option value="' + i + '">  ' + esc((it[2] || it[3]).trim()) + (kind ? ' · ' + esc(kind) : '') + '</option>';
+      }
+    }
+    jump.innerHTML = html;
+  }
+  if (jump) {
+    jump.addEventListener('focus', outline);
+    jump.addEventListener('mousedown', outline);
+    jump.addEventListener('change', function () {
+      if (jump.value !== '' && editor) { var l = +jump.value; editor.focus(); editor.setCursor({ line: l, ch: 0 }); editor.scrollIntoView({ line: l, ch: 0 }, 80); }
+      jump.value = '';
+    });
+    outline();
+  }
+  var completeBtn = root.querySelector('[data-complete]');
+  if (completeBtn && assist) { completeBtn.addEventListener('click', function () { editor.focus(); assist.complete(); }); }
+  var wrapBox = root.querySelector('[data-wrap]');
+  if (wrapBox && editor) { editor.setOption('lineWrapping', wrapBox.checked); wrapBox.addEventListener('change', function () { editor.setOption('lineWrapping', wrapBox.checked); }); }
 
   preview();
 })();

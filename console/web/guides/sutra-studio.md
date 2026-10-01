@@ -31,10 +31,10 @@ works.
 | **Preview** (Ctrl+Enter) | Renders the Sutra against that entity. |
 | **Start from inference** | Replaces the editor with what inference makes of the entity, as an editable Sutra. |
 | **Save** / **Submit for review** | Only where saving is switched on and you are an author (see step 7). |
-| Toolbar | Markdown buttons, **Insert…**, **Jump to…**, **Wrap**. |
-| Editor | The Sutra: a Markdown document with one fenced `sutra` block. |
-| Problems list | Under the editor: each problem with its code and line. |
-| Right: **Preview**, **Document**, **Sample JSON** tabs | The rendered view; the Sutra rendered as a page; the data. |
+| Toolbar | **Insert…** and the other editing helpers. |
+| Editor | The Sutra: one YAML document that starts with `rachana: 1`. It completes keys, panel kinds, options, formats and entity kinds as you type, from the language's schema (`GET /api/v1/rachana/schema`). |
+| Problems list | Under the editor: each problem with its code and line, checked as you type. |
+| Right: **Preview**, **Summary**, **Sample JSON** tabs | The rendered view; what the Sutra is (its description and notes, what it matches, its panels and keys); the data. |
 
 ## 1. Open an existing Sutra
 
@@ -100,7 +100,7 @@ Click a problem to jump to its line. Put the line back and preview again.
 
 Press **Ctrl+Enter**. A new panel shows *Confirmed*, *Cleared* and *LCH SwapClear*.
 
-**Insert…** offers a `sutra` block, a strip field, and panels of twelve kinds (`kv`, `table`, `tabs`, `line`,
+**Insert…** offers a strip field and panels of twelve kinds (`kv`, `table`, `tabs`, `line`,
 `area`, `hbar`, `ladder`, `status`, `gauge`, `markdown`, `links`, `provenance`). For a `surface`, copy the example
 from [The thirteen panel kinds](panel-kinds#surface).
 
@@ -153,15 +153,21 @@ data Drishti has never seen.
 
 The editor fills with a Sutra named `netting-set-custom`, with `match: { kind: netting-set, priority: 1 }`, a strip
 and one panel per thing inference found: *Profile*, *Trades*, *By asset*, *How this view was built* and *Linked
-entities*. Delete what you do not need, rename panels, add `key: F2` to the most important one, and write a few
-lines of prose above the `sutra` block saying who the layout is for.
+entities*. Delete what you do not need, rename panels, add `key: F2` to the most important one, and replace the
+`description:` line with one paragraph saying who the layout is for:
 
-!!! tip "Write it like a document"
-    The editor is a Markdown editor. The toolbar (and **Ctrl+B**, **Ctrl+I**, **Ctrl+K**) adds headings, bold,
-    italics, code, links, lists, quotes and tables. **Jump to…** lists the headings and the `sutra` block;
-    **Wrap** turns soft wrapping on or off. The **Document** tab shows the Sutra as the help centre will show it.
-    Explain *why* the layout is what it is: the next author, or an AI assistant asked to change it, starts from
-    that.
+```yaml
+description: Netting sets for the credit desk, exposure first.
+notes: |
+  Started from inference on NS-SUMMIT-NY.
+  Trades and By asset are kept; the PFE profile leads because limits are checked against it.
+```
+
+!!! tip "Say why, in the file"
+    A Sutra explains itself in two plain-text keys. `description` is one paragraph: what the layout shows and for
+    which entities. `notes` is longer, a YAML block (`notes: |` and indented lines) for the next author and for
+    reviewers: why the layout is what it is, what was tried. A panel can have its own `description`. None of them
+    change the view, and the **Summary** tab shows them. They are plain text, not Markdown.
 
 ## Try a change on all your test entities
 
@@ -188,7 +194,7 @@ What the button does depends on review, which is **on** by default:
 | Review | Button | What happens |
 |---|---|---|
 | on (default) | **Submit for review** | Studio checks the Sutra and records a *proposal*. Nobody sees it yet. Write a note for the reviewer in *What changed?* first. |
-| off (`DRISHTI_SUTRA_REVIEW=false`) | **Save** | The Sutra is written at once to the site Sutra directory as `<domain>/<name>.v<N>.sutra.md` (by default under `./sutras`), and views use it immediately. |
+| off (`DRISHTI_SUTRA_REVIEW=false`) | **Save** | The Sutra is written at once to the site Sutra directory as `<domain>/<name>.v<N>.sutra.yaml` (by default under `./sutras`), and views use it immediately. |
 
 If the same `name@version` is already defined in another file (a pack's Sutra, for example), the save is refused
 with `DRS-2028`. To change an existing Sutra, raise its `version` (`version: 2`): views pick the new version
@@ -214,6 +220,9 @@ Rules that keep this safe:
     Many teams keep saving off in production and move Sutras through version control (a pull request that adds
     the file to the pack's `sutras/` directory). Studio is then a safe place to try changes: previews never
     affect anyone else.
+    Outside Studio, any editor that reads JSON Schema completes and checks Sutras the same way: point it at
+    `/api/v1/rachana/schema` (with the YAML extension of VS Code, a first line
+    `# yaml-language-server: $schema=http://localhost:18480/api/v1/rachana/schema`).
 
 ## Where to go next
 

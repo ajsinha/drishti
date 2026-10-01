@@ -12,8 +12,8 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Sutra Studio: a Markdown editor for Sutras. Edit, preview against any entity or pasted JSON, read the rendered
-document, start from inference, save (authors)."""
+"""Sutra Studio: a YAML editor for Sutras (Rachana 1). Edit with completion and checks from the server's Rachana
+schema, preview against any entity or pasted JSON, read the Summary, start from inference, save (authors)."""
 from __future__ import annotations
 
 import difflib
@@ -24,30 +24,21 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse
 
 from core.backend import BackendError
-from core import sutra_doc
+from core import sutra_summary
 from routes.common import ident, render
 
 router = APIRouter(prefix="/studio", include_in_schema=False)
 
-NEW_SUTRA = """# My layout (`my-layout` v1)
-
-What this layout is for, and who reads it. The engine reads only the `sutra` block below; everything
-else is documentation for people and AI assistants.
-
-```sutra
+NEW_SUTRA = """rachana: 1
 sutra: my-layout
 version: 1
+description: What this layout shows, and for which entities.
 match: { kind: trade, where: "$.productType == 'IRS'" }
 title: { pill: "Trade", id: $.tradeId }
 strip:
   - { label: MTM (USD), bind: $.mtm, fmt: signed0, tone: sign, emphasis: true }
 panels:
   - { id: refs, kind: links, title: Linked entities, area: right }
-```
-
-## Why this layout
-
-- The strip leads with the number the reader checks first.
 """
 
 
@@ -175,11 +166,24 @@ async def run_test(request: Request):
             "layout": (vm.get("provenance") or {}).get("layout"), "ms": round((time.perf_counter() - t0) * 1000, 1)}
 
 
-@router.post("/render")
-async def render_doc(request: Request):
-    """The Document tab: the Markdown Sutra rendered as a page, with its outline."""
+@router.post("/summary")
+async def summary(request: Request):
+    """The Summary tab: the YAML Sutra read back as a page (derived, read-only)."""
     body = json.loads(await request.body() or b"{}")
-    return JSONResponse(sutra_doc.render(body.get("yaml", "")))
+    tpl = request.app.state.templates.get_template("studio/_summary.html")
+    try:
+        return JSONResponse({"html": tpl.render(s=sutra_summary.summarize(str(body.get("yaml", ""))), error=None)})
+    except ValueError as e:
+        return JSONResponse({"html": tpl.render(s=None, error=str(e)), "error": str(e)})
+
+
+@router.get("/schema")
+async def schema(request: Request):
+    """The Rachana language's JSON Schema with this server's kinds, formats and functions (for completion and checks)."""
+    try:
+        return JSONResponse(await request.app.state.backend.rachana_schema(ident(request)), headers={"Cache-Control": "private, max-age=60"})
+    except BackendError as e:
+        return _problem(e)
 
 
 @router.get("/inferred/{kind}/{id_}")

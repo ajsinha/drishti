@@ -51,6 +51,8 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](DEVEL
 | Lay out nested documents (lists inside lists) | [Nested documents tutorial](../console/web/guides/nested-data.md) |
 | Choose the right panel kind | [Panel kinds](../console/web/guides/panel-kinds.md) |
 | Look up a key, format, expression or problem code | [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md) |
+| Get completion for Sutras in your own editor (the JSON Schema of the language) | [API_GUIDE.md](API_GUIDE.md#catalogue-about-packs-sources-sutras) (`GET /api/v1/rachana/schema`) |
+| Convert Markdown Sutras (`*.sutra.md`) from before 1.11 | [runbooks/sutra-broken.md](runbooks/sutra-broken.md#step-1a-a-sutramd-or-plain-yaml-file-drs-2004-drs-2009) |
 | Understand the screens Drishti draws with no Sutra | [INFERENCE.md](INFERENCE.md) |
 
 ### Add an industry or data
@@ -139,7 +141,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](DEVEL
 
 | Folder | Read this when… |
 |---|---|
-| [adr/](adr/README.md) | you want the reason behind a design decision (fifteen records) |
+| [adr/](adr/README.md) | you want the reason behind a design decision (seventeen records; ADR-017 made Sutras YAML only) |
 | [requirements/](requirements/) | you want the four reference mockups the first views reproduced |
 
 ## Words you will meet
@@ -152,7 +154,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](DEVEL
 | **View** | The screen for one entity: title, strip, panels, links |
 | **Strip** | The row of key figures under a view's title |
 | **Panel** | One box in a view: a table, a chart, label/value pairs |
-| **Sutra** | A layout for one kind of entity, written as a Markdown document with a `sutra` block |
+| **Sutra** | A layout for one kind of entity: one YAML file, `<name>.v<N>.sutra.yaml`, starting with `rachana: 1` |
 | **Rachana** | The grammar Sutras are written in; **Rachana-EL** is its expression language (`$.mtm > 0`) |
 | **Inference** | Drishti laying out a view by itself from the shape of the data |
 | **Pack** | An industry's commands, layouts, links, roles and sample data, in `packs/<name>/` |

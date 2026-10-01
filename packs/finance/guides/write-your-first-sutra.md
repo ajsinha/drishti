@@ -20,19 +20,26 @@ swaps with a header strip, a cashflow table and a curve: about a dozen lines, an
 
 ## 0. The file
 
-A Sutra is a Markdown file, `sutras/rates/my-swap.v1.sutra.md`. Write whatever helps the next reader
-(what the layout is for, why the panels are in that order) and put the layout itself in one fenced
-block marked `sutra`:
+A Sutra is one YAML file, `sutras/rates/my-swap.v1.sutra.yaml`. Its first line is always `rachana: 1`, the
+version of the Rachana language it is written in (without it the file is refused with `DRS-2009`). What the
+layout is for, and why, goes in the file too, as plain text in `description` (one paragraph) and `notes`
+(longer, a YAML block):
 
 ```yaml
+# The top of the file
 rachana: 1
 sutra: my-swap
 version: 1
-...
+description: Interest rate swaps for the rates desk.
 notes: |
-  Swaps for the rates desk: the strip leads with MTM because that is what traders check first.
+  The strip leads with MTM because that is what traders check first.
+  The cashflow table lets inference choose its columns.
+# … match, title, strip and panels follow
 ```
-The engine reads only the `sutra` block. The snippets below are its contents.
+
+The sections below add the rest, one part at a time; the [whole file](#the-whole-file) is at the end.
+Any editor that reads JSON Schema completes and checks it as you type when pointed at
+`/api/v1/rachana/schema` on the server.
 
 ## 1. Name it and say what it matches
 
@@ -63,7 +70,7 @@ strip:
 ```yaml
 # A table whose columns inference fills in, and a curve from a linked entity
 panels:
-  - { id: flows, kind: table, title: Cashflows, key: F2, rows: $.legs[0].cashflows, infer: true }
+  - { id: flows, kind: table, title: Cashflows, key: F2, rows: "$.legs[0].cashflows", infer: true }
   - { id: curve, kind: line, title: Discount curve, area: right, source: "link($.discountCurve, 'curve')",
       rows: points, x: tenor, y: rate, mark: $.maturityTenor }
   - { id: refs, kind: links, title: Linked entities, area: right }
@@ -72,9 +79,32 @@ panels:
 `infer: true` lets inference choose the table's columns. The view's label then says
 `Sutra my-swap v1 + inference`.
 
+## The whole file
+
+```yaml
+rachana: 1
+sutra: my-swap
+version: 1
+description: Interest rate swaps for the rates desk.
+notes: |
+  The strip leads with MTM because that is what traders check first.
+  The cashflow table lets inference choose its columns.
+match: { kind: trade, where: "$.productType == 'IRS'", priority: 20 }
+title: { pill: "Trade · My swap", id: $.tradeId, with: "link($.counterparty.id, 'counterparty', $.counterparty.name)" }
+strip:
+  - { label: Notional (USD), bind: $.notional, fmt: amount0 }
+  - { label: MTM (USD), bind: $.mtm, fmt: signed0, tone: sign, emphasis: true }
+  - { label: Maturity, bind: $.maturityDate, fmt: date }
+panels:
+  - { id: flows, kind: table, title: Cashflows, key: F2, rows: "$.legs[0].cashflows", infer: true }
+  - { id: curve, kind: line, title: Discount curve, area: right, source: "link($.discountCurve, 'curve')",
+      rows: points, x: tenor, y: rate, mark: $.maturityTenor }
+  - { id: refs, kind: links, title: Linked entities, area: right }
+```
+
 ## 4. Save and open
 
-Save the file under `sutras/`. The server reloads it within a quarter of a second, and
+Save the file as `sutras/rates/my-swap.v1.sutra.yaml`. The server reloads it within a quarter of a second, and
 any interest rate swap (`TRD <trade id> <GO>`) now uses your Sutra. If the file has a mistake, the previous version stays live,
 and `/api/v1/sutras/problems` lists each problem with its line and column.
 

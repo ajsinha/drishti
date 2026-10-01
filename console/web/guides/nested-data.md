@@ -149,9 +149,10 @@ You should see two columns. *Leg 1 · Receive fixed 4.0829%*: Index *Fixed*, Per
 
 ## 6. A whole Sutra over a nested trade
 
-This Markdown Sutra is an operations view of any trade: who, where, what the regulator sees, where cash settles,
-and every version of the trade. In Studio, choose *New Sutra…*, replace the editor's text with the document
-below, keep `trade` / `T-10001`, and press **Ctrl+Enter**.
+This Sutra is an operations view of any trade: who, where, what the regulator sees, where cash settles,
+and every version of the trade. In Studio, start a new Sutra, replace the editor's text with the YAML below, keep
+`trade` / `T-10001` as the entity to preview against, and preview it. `description` and `notes` at the top and
+bottom are plain text for the people who maintain the layout; they do not change the view.
 
 ```yaml
 rachana: 1
@@ -215,8 +216,10 @@ panels:
   - { id: built, kind: provenance, title: How this view was built }
 keys: { F7: "link($.nettingSet, 'netting-set')", F9: raw }
 notes: |
-  An operations view of any trade, read from its nested execution, lifecycle, regulatory and settlement blocks.
+  Priority 1, so any product's own Sutra wins; this one is for operations staff who open a trade by hand.
+  Every path reaches into a nested block; a trade without one of them shows a dash, not an error.
 ```
+
 You should see:
 
 - the strip: *Product Interest rate swap (fixed/float)*, *Venue Voice (XOFF)*, *Version 2*, *Confirmation

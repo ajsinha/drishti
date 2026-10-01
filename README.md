@@ -72,6 +72,7 @@ done; [IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) maps waves to releas
 | 19 | Sutra governance: a Studio save is a proposal; approvers review the diff and approve (it goes live) or reject; four eyes; stale approvals refused; audited (ADR-013) | ✅ done |
 | 20 | Single sign-on (OIDC, ADR-014): code flow with PKCE in the console; the server verifies the ID token with JDK cryptography, maps groups to roles, provisions users; local disables win | ✅ done |
 | 21 | Personal settings: theme, landing page, clock zone, density, change-flash, pinned entities, search size; kept on the server, so they follow you | ✅ done |
+| 1.11 | Sutras are YAML only (ADR-017): `*.sutra.yaml` with `rachana: 1`, `description` and `notes`; all 228 shipped Sutras converted; the language's JSON Schema at `GET /api/v1/rachana/schema`; Studio as a YAML editor with completion | ✅ done |
 | 1.10 | Pack inheritance; ActiveMQ, RabbitMQ, S3 and Delta-on-S3 connectors that reconnect by themselves; Admin → Health; users, roles and audit in a JPA database with Admin → Roles; Admin → Packs; pick lists, paged tables, linked id columns; the two-row top bar; guarded `/actuator`; console `/readyz` | ✅ done |
 
 ## What works today
@@ -116,12 +117,15 @@ done; [IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) maps waves to releas
 - **Live.** Views of live entities tick over server-sent events: MTM, curves, exposure and settlements
   move in place, changed values flash, and a dot in the top bar shows the live state (the server's measured
   p99, about 11 ms, is at `GET /api/v1/health/live`).
-- **Sutras are Markdown.** A Sutra is a `*.sutra.md` document: prose that explains the layout, with the
-  layout itself in one fenced `sutra` block (ADR-011). Plain YAML Sutras still load.
-- **Sutra Studio.** At `/studio` a Markdown editor with a toolbar, Rachana highlighting inside the
-  `sutra` block, panel snippets for all thirteen kinds, a heading outline and a rendered *Document* tab.
-  Ctrl+Enter previews against any entity or pasted JSON, problems are listed by line, and a new Sutra can
-  start from what inference makes of an entity.
+- **Sutras are YAML.** A Sutra is one YAML file, `<name>.v<N>.sutra.yaml`, that starts with `rachana: 1` (the
+  version of the Rachana language). `description:` and `notes:` hold the prose that explains the layout, and each
+  panel may carry a `description:` (ADR-017, which replaced Markdown Sutras). `GET /api/v1/rachana/schema` serves the
+  JSON Schema of the language, so any editor that reads JSON Schema completes and checks Sutras.
+  `tools/rachana/md_to_yaml.py` converts Markdown Sutras written before 1.11.
+- **Sutra Studio.** At `/studio` a YAML editor that completes keys, panel kinds, options, formats and kinds from
+  that schema and checks the Sutra as you type, with a summary of the layout. Ctrl+Enter previews against any
+  entity or pasted JSON, test entities are kept per Sutra, problems are listed by line, and a new Sutra can start
+  from what inference makes of an entity.
 - **Security.** Sign-in, per-role entitlements (denied links are shown disabled with the reason),
   raw JSON redaction, and signed tokens between the console and the server. It is off by default for
   local development.

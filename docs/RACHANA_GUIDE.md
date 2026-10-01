@@ -36,9 +36,14 @@ The `curl` commands assume security is off. With security on, add `-H "Authoriza
 
 ## 1. What a Sutra is, and when one applies
 
-A **Sutra** is a Markdown file that holds one layout in a fenced `sutra` block: which panels to draw, in which
-order, bound to which parts of a JSON document. It says nothing about pixels or code. One Sutra lays out a
-whole *family* of entities, for example every gene, or every fixed/float swap.
+A **Sutra** is one YAML file, `<name>.v<N>.sutra.yaml`, that holds one layout: which panels to draw, in which
+order, bound to which parts of a JSON document. Its first key is always `rachana: 1`, the version of the Rachana
+language it is written in. It says nothing about pixels or code. One Sutra lays out a whole *family* of entities,
+for example every gene, or every fixed/float swap.
+
+Because a Sutra is ordinary YAML, ordinary YAML tools work on it: any editor that reads JSON Schema can complete and
+check it against the schema the server publishes (`GET /api/v1/rachana/schema`, see
+[Editing outside Studio](#editing-outside-studio)), and linters and diff tools need nothing special.
 
 When you open an entity (`GENE GENE-BRCA1 <GO>` in the terminal), Drishti:
 
@@ -105,8 +110,8 @@ Read it the way a Sutra will: `$` is this whole document, `$.symbol` is `BRCA1`,
 
 ### Step 2: the smallest Sutra that works
 
-A Sutra needs three things: a name (`sutra:`), a version, and a `match` with a `kind`. Here is the smallest
-useful one, with a single panel:
+A Sutra needs four things: the language version (`rachana: 1`), a name (`sutra:`), a version, and a `match`
+with a `kind`. Here is the smallest useful one, with a single panel:
 
 ```yaml
 rachana: 1
@@ -120,9 +125,11 @@ panels:
     columns:
       - { label: Symbol, bind: $.symbol }
       - { label: Location, bind: $.location }
-notes: |
-  A first Sutra for genes.
 ```
+
+- `rachana: 1` comes first in every Sutra. It names the version of the language, so that a later version of
+  Rachana can change the grammar without misreading today's files. Leave it out and you get
+  `DRS-2009 missing 'rachana: 1' (the Rachana language version) at the top`.
 - `sutra: gene-mine` is the name: lower-case letters, digits and hyphens, starting with a letter.
 - `version: 1` is a plain integer. Later you publish `version: 2` and keep version 1 on disk.
 - `match: { kind: gene, priority: 20 }` applies it to every gene, ahead of the pack's `gene` Sutra (priority 10).
@@ -132,7 +139,7 @@ notes: |
 
 1. Open `http://localhost:17480/studio?kind=gene&id=GENE-BRCA1`. The two boxes in the top bar hold the entity to
    preview against: kind `gene`, id `GENE-BRCA1`.
-2. Replace the editor's text with the Markdown above.
+2. Replace the editor's text with the YAML above.
 3. Press **Ctrl+Enter** (or **Preview**).
 
 You should see, in the *Preview* tab, a view titled `GENE-BRCA1` with one panel, *Basics*, showing
@@ -154,6 +161,27 @@ title: { pill: "Gene · ${$.symbol}", id: $.geneId }
 
 `pill` is a **template**: text in which `${…}` is replaced by the value of an expression. You should see the
 title `[Gene · BRCA1] GENE-BRCA1`.
+
+### Step 4b: say what it is for: `description` and `notes`
+
+A Sutra carries its own explanation in two optional plain-text keys, so the file is the whole story and nothing
+else needs to be kept in step with it:
+
+```yaml
+description: Genes for the research desk.
+notes: |
+  Where the gene is, where it is expressed, and its known variants.
+  Priority 20 puts it ahead of the genomics pack's own gene Sutra (priority 10).
+```
+
+- `description` is one paragraph: what the layout shows and for which entities. Studio and the catalogue show it.
+- `notes` is longer text for the next author and for reviewers: why the panels are in this order, what was
+  tried and dropped. Write it as a YAML block (`notes: |` and the lines indented under it); the line breaks are
+  kept. It is plain text, not Markdown.
+- A panel can have its own `description` too (`- { id: basics, kind: kv, description: The gene at a glance, … }`)
+  to say what that one panel is for.
+
+None of these change the view. They must be text: `notes: 3` is `DRS-2012 'notes' is plain text`.
 
 ### Step 5: a strip of headline figures
 
@@ -322,8 +350,10 @@ panels:
     rows: $.identifiers
 keys: { F7: "link($.protein, 'protein')", F8: impact, F9: raw }
 notes: |
-  Genes for the research desk: where the gene is, where it is expressed, and its known variants.
+  Where the gene is, where it is expressed, and its known variants.
+  Priority 20 puts it ahead of the genomics pack's own gene Sutra (priority 10).
 ```
+
 You should see the strip end with `Expressed in 5 of 8 tissues` (Brain, Liver, Colon, Breast and Pancreas are
 above 10 TPM), and the key bar `F2 Position on`, `F3 Known variants`, `F4 Tissue expression`, `F7 Protein`,
 `F8 Impact`, `F9 Raw JSON`. Preview it against `GENE-TP53` too (change the id box): the same layout serves every
@@ -428,6 +458,7 @@ Now a bigger layout: the swap `T-10001`. Open Studio on it
 ### 4.1 Identity, title and strip
 
 ```yaml
+rachana: 1
 sutra: swap-desk
 version: 1
 description: Fixed/float swaps for the rates desk.
@@ -614,7 +645,7 @@ linked counterparty (badge `A`), netting set (badge `PFE 46.0m`), book, trader, 
 
 Put the blocks of 4.2 to 4.6 together under one `panels:` and you have a complete trade view. The
 [reference's annotated example](RACHANA_REFERENCE.md#a-complete-example-annotated) is the same layout with every line
-commented, and the trading pack's `packs/trading/sutras/rates/irs-fixfloat.v1.sutra.md` is the one the server uses.
+commented, and the trading pack's `packs/trading/sutras/rates/irs-fixfloat.v1.sutra.yaml` is the one the server uses.
 
 ## 5. Matching several Sutras
 
@@ -627,13 +658,13 @@ There is no automatic "most specific wins": a longer `where` does not win by its
 higher priority:
 
 ```yaml
-# irs-matured.v1.sutra.md: matured swaps get a short layout
+# irs-matured.v1.sutra.yaml: matured swaps get a short layout
 match: { kind: trade, where: "$.productType == 'IRS_FIXFLOAT' && $.status == 'Matured'", priority: 30 }
 
-# swap-desk.v1.sutra.md: every other fixed/float swap
+# swap-desk.v1.sutra.yaml: every other fixed/float swap
 match: { kind: trade, where: "$.productType == 'IRS_FIXFLOAT'", priority: 20 }
 
-# trade-fallback.v1.sutra.md: any trade at all
+# trade-fallback.v1.sutra.yaml: any trade at all
 match: { kind: trade, priority: 0 }
 ```
 
@@ -659,7 +690,7 @@ You should see `10 gene None`: one Sutra for genes, applying to all of them. Aft
 ### Versions
 
 `name@version` identifies a Sutra. To change a published Sutra, publish the next version
-(`swap-desk.v2.sutra.md` with `version: 2`); keep version 1 on disk. Matching uses only the **latest** version of
+(`swap-desk.v2.sutra.yaml` with `version: 2`); keep version 1 on disk. Matching uses only the **latest** version of
 each name; the older one stays readable (`GET /api/v1/sutras/swap-desk/1/source`), so you can compare or roll back
 by removing version 2. Two files may not define the same `name@version` (`DRS-2028`).
 
@@ -681,8 +712,8 @@ You should see `{"save":true,"review":true,"approve":true}` (`approve` is whethe
 3. With security on and `drishti.governance.four-eyes: true` (the default), the author cannot approve their own
    proposal (`DRS-2007`). If someone changed the live Sutra after you proposed, approval is refused (`DRS-2006`):
    propose again from the live version.
-4. On approval the file is written to `<first site Sutra directory>/<domain>/<name>.v<N>.sutra.md` (here
-   `./sutras/studio/gene-mine.v1.sutra.md`, unless the Sutra says `domain:`) and goes live at once.
+4. On approval the file is written to `<first site Sutra directory>/<domain>/<name>.v<N>.sutra.yaml` (here
+   `./sutras/studio/gene-mine.v1.sutra.yaml`, unless the Sutra says `domain:`) and goes live at once.
 
 Every step is recorded in the audit log. With governance off, the button reads **Save** and publishes directly.
 
@@ -696,6 +727,40 @@ curl -s http://localhost:18480/api/v1/sutras/problems
 
 You should see `{}` when everything loaded.
 
+Only files named `*.sutra.yaml` are Sutras. Any other `.yaml` or `.yml` file in a Sutra directory, and any old
+Markdown Sutra (`*.sutra.md`, the format before Drishti 1.11), is reported as `DRS-2004` with the fix: rename the
+YAML file, or convert the Markdown one, which keeps its comments and turns its prose into `notes:`:
+
+```bash
+python3 tools/rachana/md_to_yaml.py sutras/ --delete
+```
+
+`--delete` removes each `.sutra.md` once its `.sutra.yaml` is written; leave it out to keep both and compare first
+(the `.md` is still reported until you remove it).
+
+### Editing outside Studio
+
+Any editor that reads JSON Schema can complete and check a Sutra as you type. The server publishes the schema of
+the language, with this server's entity kinds and format names filled in:
+
+```bash
+curl -s http://localhost:18480/api/v1/rachana/schema | python3 -c "
+import json, sys
+s = json.load(sys.stdin)
+print(s['title']); print(s['required']); print(len(s['properties']['match']['properties']['kind']['enum']), 'kinds')"
+```
+
+You should see `Rachana Sutra, language 1`, `['rachana', 'sutra', 'version', 'match']` and the number of kinds the
+enabled packs serve. With the YAML extension of VS Code, for example, a first line
+
+```text
+# yaml-language-server: $schema=http://localhost:18480/api/v1/rachana/schema
+```
+
+gives completion of keys, panel kinds, options, formats and kinds, and marks unknown keys before you save. The
+schema is generated from the grammar, so it never disagrees with the parser, but the server's checks (expressions,
+duplicate ids and keys) remain the final word: `GET /api/v1/sutras/problems` after you save.
+
 ## 7. How packs ship Sutras
 
 A pack is a folder under `packs/` with a `pack.yaml`. Its Sutras live in `sutras/` (or the folder its `sutras:` key
@@ -707,8 +772,8 @@ packs/genomics/
   config/semantics.yaml             # optional: inference hints (roles, acronyms, labels)
   config/formats.yaml               # optional: named formats
   sutras/genomics-and-biology/
-    gene.v1.sutra.md
-    variant.v1.sutra.md
+    gene.v1.sutra.yaml
+    variant.v1.sutra.yaml
     …
   samples/gene/GENE-BRCA1.json      # sample documents for the demo source
 ```
@@ -729,8 +794,8 @@ See [PACKS.md](PACKS.md) for writing a pack.
   spell acronyms (`dv01ByTenor` → *DV01 by tenor*).
 - **A field missing from one document is not an error.** The cell is empty; a panel whose data is missing says
   *No data available*. One Sutra can serve documents with optional parts.
-- **A markdown panel shows plain text.** `**bold**` is not rendered inside a panel; long explanations belong in the
-  Markdown around the `sutra` block, which the help centre and Studio render.
+- **A markdown panel shows plain text.** `**bold**` is not rendered inside a panel. Explanations for the people
+  who maintain the layout belong in `description` and `notes`, not in a panel.
 - **Sizes are not fixed.** `highlight: "#index == size($.history) - 1"` lights the last row of any length;
   `#index == 19` lights row 20 only.
 - **Options that are field names take no `@.`:** `x: tenor`, `label: bucket`, `value: dv01`. Options that are
@@ -758,8 +823,12 @@ and `GET /api/v1/sutras/problems` give `<file>:<line>:<column> <code> <message>`
 | `key: F13` | `DRS-2025 'F13' is not a function key (F1-F12)` | `F2`–`F12` |
 | nine strip items | `DRS-2026 the strip holds at most 8 figures, found 9` | move some into a `kv` panel |
 | `area: left` | `DRS-2027 area must be 'main' or 'right'` | `area: right` |
-| saving `gene@1` from Studio | `DRS-2028 gene@1 is already defined in …/packs/genomics/…/gene.v1.sutra.md` | new name, or `version: 2` |
-| two ```` ```sutra ```` blocks in one file | `DRS-2004 a Markdown Sutra needs exactly one closed ```sutra block` | one block per file |
+| saving `gene@1` from Studio | `DRS-2028 gene@1 is already defined in …/packs/genomics/…/gene.v1.sutra.yaml` | new name, or `version: 2` |
+| no `rachana:` line | `DRS-2009 missing 'rachana: 1' (the Rachana language version) at the top` | add `rachana: 1` as the first key |
+| `rachana: 2` | `DRS-2009 'rachana: 2' is not a language version this server reads (it reads 1)` | `rachana: 1` |
+| `notes:` followed by a list | `DRS-2012 'notes' is plain text` | `notes: \|` and indented text |
+| `gene-mine.v1.sutra.md` (an old Markdown Sutra) | `DRS-2004 Markdown Sutras are no longer read (Sutras are YAML since 1.11): convert it with python3 tools/rachana/md_to_yaml.py … --delete` | run the converter |
+| `gene-mine.yaml` in a Sutra folder | `DRS-2004 a Sutra file is named <name>.v<N>.sutra.yaml; rename gene-mine.yaml` | `gene-mine.v1.sutra.yaml` |
 | `bind: "size($.legs, 'pv')"` | `DRS-2101 expression 'size($.legs, 'pv')': DRS-2101 size takes 1 argument(s), got 2 at 0` | `sum($.legs, 'pv')` |
 | `bind: "round($.mtm)"` | `DRS-2101 expression 'round($.mtm)': DRS-2101 unknown function 'round'; known: [size, upper, sum, …] at 0` | `fmt: amount0` does the rounding |
 | `title: "Legs ${size($.legs)"` | `DRS-2101 template 'Legs ${size($.legs)': DRS-2101 unclosed '${' at 5` | close the brace |

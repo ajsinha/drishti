@@ -106,6 +106,10 @@ class BackendClient:
     async def inferred(self, kind: str, id_: str, name: str, ident=None) -> str:
         return await self._get(f"/studio/inferred/{kind}/{id_}", ident, name=name)
 
+    async def rachana_schema(self, ident=None) -> dict:
+        """The Rachana JSON Schema, generated from the grammar with this server's kinds, formats and functions."""
+        return await self._get("/rachana/schema", ident)
+
     async def studio_settings(self, ident=None) -> dict:
         return await self._get("/studio/settings", ident)
 

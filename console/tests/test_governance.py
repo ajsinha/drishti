@@ -19,8 +19,8 @@
 def _proposal(**over):
     p = {"id": "P-000007", "name": "irs-vanilla", "version": 3, "note": "clearer title", "author": "ana", "createdAt": "2026-09-30T14:02:11Z",
          "status": "pending", "reviewer": None, "reviewedAt": None, "comment": None, "newVersion": False, "stale": False,
-         "mayApprove": True, "mayWithdraw": False, "text": "# IRS\n\n```sutra\nsutra: irs-vanilla\nversion: 3\ntitle: new\n```\n",
-         "baseText": "", "liveText": "# IRS\n\n```sutra\nsutra: irs-vanilla\nversion: 3\ntitle: old\n```\n"}
+         "mayApprove": True, "mayWithdraw": False, "text": "rachana: 1\nsutra: irs-vanilla\nversion: 3\ndescription: new\n",
+         "baseText": "", "liveText": "rachana: 1\nsutra: irs-vanilla\nversion: 3\ndescription: old\n"}
     p.update(over)
     return p
 
@@ -59,7 +59,7 @@ def test_reviews_list_diff_and_decisions(client, backend):
     page = client.get("/studio/reviews").text
     assert "P-000007" in page and "clearer title" in page and "Waiting" in page
     review = client.get("/studio/reviews/P-000007").text
-    assert '<span class="d-del">-title: old</span>' in review and '<span class="d-add">+title: new</span>' in review
+    assert '<span class="d-del">-description: old</span>' in review and '<span class="d-add">+description: new</span>' in review
     assert "Approve and publish" in review and "Reject" in review
     r = client.post("/studio/reviews/P-000007/approve", data={"comment": "ok"}, follow_redirects=False)
     assert r.status_code == 303 and decided == {"id": "P-000007", "action": "approve", "comment": "ok"}

@@ -31,7 +31,7 @@ same machine. Replace `localhost` if yours run elsewhere.
 | [Pick lists and tables](#pick-lists-and-tables) | a pick list instead of the entity, only ids in the list, only 25 rows, keys do nothing |
 | [Live and dates](#live-updates-and-business-dates) | view does not tick, not a dated source, DRS-4003, known at has no effect |
 | [Search](#search) | DRS-4004, empty results, partial results |
-| [Studio and Sutras](#studio-and-sutras) | Save disabled, an edit has no effect, approval refused |
+| [Studio and Sutras](#studio-and-sutras) | Save disabled, an edit has no effect, `.sutra.md` files after an upgrade, approval refused |
 | [Packs](#packs) | mnemonics missing, a pack switched off, *not loaded*, cannot switch off, generated files out of date |
 | [Connectors](#connectors) | a connector is idle, a connector failed to start |
 | [Monitoring endpoints](#monitoring-endpoints) | `/actuator/prometheus` answers 401 or 403, `/api/docs` answers 401 |
@@ -489,11 +489,22 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
 ### A Sutra edit has no effect
 
 - **Check:** `curl -s http://localhost:18480/api/v1/sutras/problems` should print `{}`. Anything else lists the
-  file, line, column and code (`DRS-2001` parse error, `DRS-2002` invalid, `DRS-2101` expression syntax).
+  file, line, column and code (`DRS-2001` YAML syntax, `DRS-2009` no `rachana: 1`, `DRS-2010`–`DRS-2028` grammar, `DRS-2101` expression syntax).
 - **Cause and fix:** an invalid edit keeps the **last good version** live. Fix the reported line (Studio's
   Ctrl+Enter lists problems by line). With review on (the default), a saved Sutra is only a **proposal** until an
   approver approves it in **Studio → Reviews**. *How this view was built* shows the version actually used. See
   [runbooks/sutra-broken.md](runbooks/sutra-broken.md).
+
+### After upgrading, Sutras are missing and `problems` lists `.sutra.md` files
+
+- **Cause:** since 1.11 a Sutra is a YAML file, `<name>.v<N>.sutra.yaml`, starting with `rachana: 1` (ADR-017).
+  Markdown Sutras (`*.sutra.md`) in a site folder are no longer read; each is reported as `DRS-2004`, and so is a
+  plain `.yaml` or `.yml` file in a Sutra folder. Its entities fall back to inference (or to a pack's Sutra).
+- **Check:** `curl -s http://localhost:18480/api/v1/sutras/problems` names each file with the command that fixes it.
+- **Fix:** convert them, from the repository root: `python3 tools/rachana/md_to_yaml.py ./sutras --delete` (a file or
+  a folder). You should see one `… .sutra.md -> … .sutra.yaml` line per file, then `{}` from `problems`. Rename a
+  plain YAML Sutra to `<name>.v<N>.sutra.yaml`; move other YAML files out of the folder. A file without `rachana: 1`
+  at the top is `DRS-2009`: add it. See [runbooks/sutra-broken.md](runbooks/sutra-broken.md).
 
 ### Approving fails with `DRS-2007` or `DRS-2006`
 

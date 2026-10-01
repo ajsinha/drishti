@@ -16,7 +16,8 @@
 # Runbook: a Sutra is broken, or an edit does not show
 
 A *Sutra* is the file that lays out the view of one family of entities, for example
-`packs/trading/sutras/commodity/cmd-forward.v1.sutra.md` for commodity forwards. Sutras are read from the
+`packs/trading/sutras/commodity/cmd-forward.v1.sutra.yaml` for commodity forwards. A Sutra is one YAML file, `<name>.v<N>.sutra.yaml`, whose
+first key is `rachana: 1` (the Rachana language version). Sutras are read from the
 enabled packs' `sutras/` folders and from the site directory (`drishti.rachana.dirs`, default `./sutras`,
 environment `DRISHTI_SUTRAS`). The grammar is in [RACHANA_REFERENCE.md](../RACHANA_REFERENCE.md).
 
@@ -36,6 +37,7 @@ Any of these:
 - A view's *How this view was built* panel shows `inference` only, where you expected a Sutra.
 - The server log has lines starting `sutra problem`.
 - Saving in Studio fails with a `DRS-2xxx` message.
+- After an upgrade to 1.11, `problems` lists `.sutra.md` files (`DRS-2004`): Markdown Sutras are no longer read.
 
 ## Diagnosis
 
@@ -55,11 +57,11 @@ Otherwise each file with problems is listed with its problems, for example:
 
 ```json
 {
-    "packs/trading/sutras/commodity/cmd-forward.v1.sutra.md": [
+    "packs/trading/sutras/commodity/cmd-forward.v1.sutra.yaml": [
         {
             "code": "DRS-2021",
             "message": "unknown panel kind 'tabel'",
-            "location": {"file": "packs/trading/sutras/commodity/cmd-forward.v1.sutra.md", "line": 41, "column": 11}
+            "location": {"file": "packs/trading/sutras/commodity/cmd-forward.v1.sutra.yaml", "line": 41, "column": 11}
         }
     ]
 }
@@ -69,7 +71,7 @@ The same appears in the server log as a warning, one line per problem, in the fo
 `sutra problem <file>:<line>:<column> <code> <message>`:
 
 ```text
-sutra problem packs/trading/sutras/commodity/cmd-forward.v1.sutra.md:41:11 DRS-2021 unknown panel kind 'tabel'
+sutra problem packs/trading/sutras/commodity/cmd-forward.v1.sutra.yaml:41:11 DRS-2021 unknown panel kind 'tabel'
 ```
 
 Common codes:
@@ -77,20 +79,65 @@ Common codes:
 | Code | Meaning | Typical fix |
 |---|---|---|
 | `DRS-2001` | The file cannot be read or parsed (YAML syntax). | Fix indentation, quotes or colons at the reported line. |
-| `DRS-2004` | A Markdown Sutra needs exactly one closed ` ```sutra ` block. | Close the block, or remove the second one. |
+| `DRS-2004` | A file in a Sutra folder is not a Sutra file: a `.sutra.md` (Markdown Sutras are no longer read) or a plain `.yaml`/`.yml`. | Convert a `.sutra.md` (below); rename a YAML Sutra to `<name>.v<N>.sutra.yaml`; move any other YAML file out of the folder. |
+| `DRS-2009` | `rachana:` is missing, or names a language version this server does not read. | Put `rachana: 1` as the first key. |
 | `DRS-2010` | A required key is missing (`missing '<key>'`). | Add the key. |
 | `DRS-2011` | Unknown key (often a typo). | Correct the key's spelling. |
-| `DRS-2012` | A key must be text. | Quote the value. |
-| `DRS-2020` | Bad domain or name, or no site directory to save into. | Use plain names; set `drishti.rachana.dirs`. |
+| `DRS-2012` | A value has the wrong type (text, list or mapping expected; `description` and `notes` must be text). | Quote the value, or give the shape the message names. |
+| `DRS-2020` | Bad name or version, or no site directory to save into. | Lower-case kebab names, `version` a positive integer; set `drishti.rachana.dirs`. |
 | `DRS-2021` | Unknown panel kind. | Use one of the kinds in RACHANA_REFERENCE.md. |
 | `DRS-2022` | A panel lacks a required option. | Add the option named in the message. |
-| `DRS-2023` | `body` on a panel that is not `tabs`. | Move the content into a `tabs` panel. |
+| `DRS-2023` | An option the panel kind does not take (`body` outside `tabs`, `search` outside `table`/`ladder`, …). | Remove it, or use a kind that takes it. |
 | `DRS-2024` | Duplicate panel id. | Rename one panel. |
-| `DRS-2025` | An action key is not F1–F12. | Use a function key. |
-| `DRS-2026` | Too many figures in the strip. | Remove some; the message says the maximum. |
+| `DRS-2025` | A key is not F1–F12, or one function key is used twice. | Use a free function key. |
+| `DRS-2026` | Too many figures in the strip. | Remove some; the message says the maximum (8). |
 | `DRS-2027` | `area` is not `main` or `right`. | Correct it. |
 | `DRS-2028` | The same name and version is defined in two files. | Give one file a new version, or delete the duplicate. |
 | `DRS-2101` | An expression does not compile. | Fix the Rachana-EL at the reported place. |
+
+### Step 1a. A `.sutra.md` or plain `.yaml` file (`DRS-2004`, `DRS-2009`)
+
+Since 1.11 Sutras are YAML only (ADR-017). A Markdown Sutra left in a site folder is reported, not loaded:
+
+```json
+{
+    "sutras/rates/my-swap.v1.sutra.md": [
+        {
+            "code": "DRS-2004",
+            "message": "Markdown Sutras are no longer read (Sutras are YAML since 1.11): convert it with python3 tools/rachana/md_to_yaml.py sutras/rates/my-swap.v1.sutra.md --delete",
+            "location": {"file": "sutras/rates/my-swap.v1.sutra.md", "line": 1, "column": 1}
+        }
+    ]
+}
+```
+
+Run the command the message gives, from the repository root. It accepts files or folders, so one run converts a
+whole site directory:
+
+```bash
+python3 tools/rachana/md_to_yaml.py sutras --delete
+```
+
+You should see one line per file, such as
+`sutras/rates/my-swap.v1.sutra.md -> sutras/rates/my-swap.v1.sutra.yaml`. The converter keeps the `sutra` block
+unchanged (comments included), adds `rachana: 1` at the top, and turns the prose around it into `notes:` (dropping
+the tables and lines that only restated the layout). Leave out `--delete` to keep the `.md` files while you compare;
+the YAML loads at once, and each `.md` stays reported (`DRS-2004`) until you delete it. Within about 250 ms, `GET /api/v1/sutras/problems` no longer lists
+the file and the converted Sutra is live.
+
+For a plain `.yaml` file the message is `a Sutra file is named <name>.v<N>.sutra.yaml; rename <file>`. If it is a
+Sutra, rename it (and add `rachana: 1` at the top if it lacks it); if it is some other YAML file, move it out of the
+Sutra folder.
+
+`DRS-2009` means the file has no `rachana: 1`, or a version this server does not read, for example
+`'rachana: 2' is not a language version this server reads (it reads 1)`. Add or correct the first key:
+
+```yaml
+rachana: 1
+sutra: my-swap
+version: 1
+match: { kind: trade, where: "$.productType == 'IRS_FIXFLOAT'" }
+```
 
 ### Step 2. Check which version a view uses
 
@@ -176,7 +223,7 @@ this) instead of editing the pack.
 Things to know:
 
 - Studio checks the Sutra before saving, so an invalid Sutra is never written.
-- It saves into the first site Sutra directory (`./sutras/<domain>/<name>.v<version>.sutra.md`). A pack's own
+- It saves into the first site Sutra directory (`./sutras/<domain>/<name>.v<version>.sutra.yaml`). A pack's own
   Sutra cannot be overwritten under the same name and version (`DRS-2028`). Raise `version` (for example to 2); the
   highest version wins, and the pack file stays as it was.
 - With review on (`drishti.governance.enabled`, default `true`), the save becomes a proposal. Someone with the

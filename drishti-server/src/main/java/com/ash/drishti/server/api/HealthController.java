@@ -166,7 +166,7 @@ public class HealthController {
             return 0;
         }
         try (Stream<Path> s = Files.walk(dir)) {
-            return s.filter(f -> f.toString().endsWith(".sutra.md") || f.toString().endsWith(".yaml")).count();
+            return s.filter(f -> f.toString().endsWith(".sutra.yaml")).count();
         } catch (IOException e) {
             return -1;
         }

@@ -43,42 +43,36 @@
       <button type="button" class="btn-pill btn-ghost" data-save {% if not can_save %}disabled title="Saving is off here, or you are not an author"{% elif review %}title="Submit for review: an approver makes it live"{% endif %}><i class="bi bi-{{ 'send' if review else 'save' }}" aria-hidden="true"></i> {{ 'Submit for review' if review else 'Save' }}</button>
       {% if review %}<a class="btn-pill btn-ghost" href="/studio/reviews" title="Sutras waiting for review"><i class="bi bi-check2-square" aria-hidden="true"></i> Reviews{% if pending %} <span class="bell-count">{{ pending }}</span>{% endif %}</a>{% endif %}
     </header>
-    <div class="md-bar" role="toolbar" aria-label="Markdown">
-      <button type="button" class="md-btn" data-md="h2" title="Heading"><i class="bi bi-type-h2" aria-hidden="true"></i><span class="visually-hidden">Heading</span></button>
-      <button type="button" class="md-btn" data-md="bold" title="Bold (Ctrl+B)"><i class="bi bi-type-bold" aria-hidden="true"></i><span class="visually-hidden">Bold</span></button>
-      <button type="button" class="md-btn" data-md="italic" title="Italic (Ctrl+I)"><i class="bi bi-type-italic" aria-hidden="true"></i><span class="visually-hidden">Italic</span></button>
-      <button type="button" class="md-btn" data-md="code" title="Inline code"><i class="bi bi-code" aria-hidden="true"></i><span class="visually-hidden">Code</span></button>
-      <button type="button" class="md-btn" data-md="link" title="Link (Ctrl+K)"><i class="bi bi-link-45deg" aria-hidden="true"></i><span class="visually-hidden">Link</span></button>
-      <button type="button" class="md-btn" data-md="ul" title="Bulleted list"><i class="bi bi-list-ul" aria-hidden="true"></i><span class="visually-hidden">Bulleted list</span></button>
-      <button type="button" class="md-btn" data-md="ol" title="Numbered list"><i class="bi bi-list-ol" aria-hidden="true"></i><span class="visually-hidden">Numbered list</span></button>
-      <button type="button" class="md-btn" data-md="quote" title="Quote"><i class="bi bi-quote" aria-hidden="true"></i><span class="visually-hidden">Quote</span></button>
-      <button type="button" class="md-btn" data-md="table" title="Table"><i class="bi bi-table" aria-hidden="true"></i><span class="visually-hidden">Table</span></button>
-      <span class="md-sep" aria-hidden="true"></span>
-      <label for="mdInsert" class="visually-hidden">Insert into the Sutra</label>
-      <select id="mdInsert" class="studio-select md-select" data-insert title="Insert into the sutra block">
+    <div class="studio-tools" role="toolbar" aria-label="Sutra editor">
+      <label for="sutraInsert" class="visually-hidden">Insert into the Sutra</label>
+      <select id="sutraInsert" class="studio-select studio-tool-select" data-insert title="Insert a YAML snippet where it belongs">
         <option value="">Insert…</option>
-        <option value="block">sutra block</option>
         <option value="strip">strip field</option>
+        <option value="key">function key</option>
+        <option value="description">description</option>
+        <option value="notes">notes</option>
         <optgroup label="Panel">
-          {% for k in ["kv", "table", "tabs", "line", "area", "hbar", "ladder", "status", "gauge", "markdown", "links", "provenance"] %}<option value="panel:{{ k }}">{{ k }}</option>{% endfor %}
+          {% for k in ["kv", "table", "tabs", "line", "area", "hbar", "ladder", "status", "gauge", "markdown", "links", "provenance", "surface"] %}<option value="panel:{{ k }}">{{ k }}</option>{% endfor %}
         </optgroup>
       </select>
-      <label for="mdOutline" class="visually-hidden">Jump to</label>
-      <select id="mdOutline" class="studio-select md-select" data-outline title="Jump to a heading or the sutra block"><option value="">Jump to…</option></select>
-      <label class="chk md-wrap"><input type="checkbox" data-wrap checked> Wrap</label>
+      <label for="sutraOutline" class="visually-hidden">Jump to</label>
+      <select id="sutraOutline" class="studio-select studio-tool-select" data-outline title="Jump to a top-level key or a panel"><option value="">Jump to…</option></select>
+      <button type="button" class="studio-tool-btn" data-complete title="Complete (Ctrl+Space)"><i class="bi bi-lightning" aria-hidden="true"></i> Complete</button>
+      <label class="chk studio-wrap"><input type="checkbox" data-wrap checked> Wrap</label>
     </div>
-    <textarea id="sutraSrc" class="studio-src mono" spellcheck="false" data-src aria-label="Markdown Sutra">{{ source }}</textarea>
+    <textarea id="sutraSrc" class="studio-src mono" spellcheck="false" data-src aria-label="Sutra (YAML)">{{ source }}</textarea>
+    <div class="studio-field-help" data-field-help aria-live="polite" hidden></div>
     <ul class="studio-problems" data-problems aria-live="polite"></ul>
   </section>
   <section class="studio-right" aria-label="Preview and sample data">
     <div class="tab-heads studio-tabs" role="tablist">
       <button type="button" role="tab" class="tab-head on" aria-selected="true" data-tab="preview">Preview</button>
-      <button type="button" role="tab" class="tab-head" aria-selected="false" data-tab="doc">Document</button>
+      <button type="button" role="tab" class="tab-head" aria-selected="false" data-tab="summary">Summary</button>
       <button type="button" role="tab" class="tab-head" aria-selected="false" data-tab="json">Sample JSON</button>
     </div>
-    <div class="studio-status mono" data-status>Ctrl+Enter previews. A Sutra is Markdown: prose for people, the layout in the <code>sutra</code> block. Nothing is saved until you press Save.</div>
+    <div class="studio-status mono" data-status>Ctrl+Enter previews, Ctrl+Space completes. A Sutra is one YAML document (<code>rachana: 1</code>); it is checked as you type. Nothing is saved until you press Save.</div>
     <div class="studio-preview" data-out data-pane="preview"></div>
-    <article class="studio-doc help-article" data-doc data-pane="doc" hidden></article>
+    <article class="studio-summary" data-summary data-pane="summary" hidden></article>
     <div class="studio-json" data-pane="json" hidden>
       <div class="studio-bar">
         <button type="button" class="btn-pill btn-ghost" data-load-json title="Show the chosen entity's document"><i class="bi bi-download" aria-hidden="true"></i> Load entity JSON</button>
@@ -95,8 +89,8 @@
 {% block scripts %}
 <script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/cm-yaml.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/cm-sutra-md.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/md-editor.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/studio-yaml.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/studio-assist.js?v={{ ASSET_V }}"></script>
 <script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/command.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/view.js?v={{ ASSET_V }}"></script>

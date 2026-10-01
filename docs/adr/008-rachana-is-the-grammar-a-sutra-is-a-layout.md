@@ -28,3 +28,5 @@ The product concept names the declarative screen grammar **Rachana** (रचन�
 
 ## Consequences
 Both names mean what the concept and the mockups say. The views keep the mockups' wording (`Sutra irs-vanilla v3 + inference`). Renaming touched only module, package, configuration and document names; no behaviour changed.
+
+**Amended by [ADR-017](017-sutras-are-yaml.md):** the file is `sutras/<domain>/<name>.v<N>.sutra.yaml`, one YAML document starting with `rachana: 1`; the Markdown form of ADR-011 is no longer read.

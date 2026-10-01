@@ -311,7 +311,7 @@ The pack loader also writes some keys for the rest of the server (`drishti.packs
 
 | Key | Default | Meaning |
 |---|---|---|
-| `dirs` | `./sutras` (`DRISHTI_SUTRAS`) | Site Sutra directories, scanned recursively for `*.yaml`, in addition to the packs' Sutras. Several: `DRISHTI_SUTRAS=/srv/sutras,/srv/more`. |
+| `dirs` | `./sutras` (`DRISHTI_SUTRAS`) | Site Sutra directories, scanned recursively for `*.sutra.yaml`, in addition to the packs' Sutras (any other `.yaml`, `.yml` or `.sutra.md` file there is reported as `DRS-2004`). Studio saves into the first one, as `<domain>/<name>.v<N>.sutra.yaml`. Several: `DRISHTI_SUTRAS=/srv/sutras,/srv/more`. |
 | `hot-reload` | `true` | Watch the directories; an edited Sutra is used by the next view. An invalid edit keeps the last good version. |
 | `reload-debounce` | `250ms` | Quiet time after a burst of file events before one reload. |
 | `formats-file` | none | A site file that overrides or adds named formats (on top of the packs' `config/formats.yaml`). |

@@ -54,7 +54,18 @@ class FakeBackend:
         return [{"name": "irs-vanilla", "latest": 3, "versions": [3], "domain": "rates", "kind": "trade", "where": None, "priority": 10}]
 
     async def sutra_source(self, name, version, ident=None):
-        return "sutra: irs-vanilla\nversion: 3\n"
+        return "rachana: 1\nsutra: irs-vanilla\nversion: 3\n"
+
+    async def rachana_schema(self, ident=None):
+        return {"$schema": "https://json-schema.org/draft/2020-12/schema", "type": "object", "required": ["rachana", "sutra", "version", "match"],
+                "additionalProperties": False,
+                "properties": {"rachana": {"const": 1}, "sutra": {"type": "string"}, "version": {"type": "integer"},
+                               "match": {"type": "object", "properties": {"kind": {"enum": ["trade"]}}},
+                               "panels": {"type": "array", "items": {"$ref": "#/$defs/panel"}}},
+                "$defs": {"panel": {"type": "object", "required": ["id", "kind"], "properties": {"id": {}, "kind": {"enum": ["table"]}, "rows": {}},
+                                    "allOf": [{"if": {"properties": {"kind": {"const": "table"}}},
+                                               "then": {"required": ["rows"], "x-rachana-options": ["rows"]}}]}},
+                "x-rachana-functions": {"size": {"min": 1, "max": 1}}}
 
     async def settings(self, ident=None):
         return {}

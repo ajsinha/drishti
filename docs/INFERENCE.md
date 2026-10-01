@@ -192,10 +192,12 @@ ignoring the pack's own Sutra:
 curl -s "http://localhost:18480/api/v1/studio/inferred/climate-scenario/NGFS-DELAYED?name=my-scenario"
 ```
 
-You should see a Markdown Sutra; its `sutra` block is (option lines inside a panel, such as `rows`, `label` and
-`value` here, may come in a different order from one run to the next):
+You should see a complete YAML Sutra, ready to save as `my-scenario.v1.sutra.yaml` (option lines inside a
+panel, such as `rows`, `label` and `value` here, may come in a different order from one run to the next):
 
 ```yaml
+# Started from what inference makes of climate-scenario NGFS-DELAYED. Edit freely.
+rachana: 1
 sutra: my-scenario
 version: 1
 description: Started from inference for climate-scenario. Edit freely.
@@ -247,7 +249,7 @@ Reading it against the rules:
 - `shock` values such as `-0.0164` get `amount0` and would show as `-0`: nothing tells inference they are
   percentages.
 
-The pack's hand-written Sutra (`packs/climate-risk/sutras/climate/climate-scenario.v1.sutra.md`) fixes each
+The pack's hand-written Sutra (`packs/climate-risk/sutras/climate/climate-scenario.v1.sutra.yaml`) fixes each
 of these: it titles the view by `$.scenarioId`, draws the carbon path as a **line** over `year`, and shows the
 shocks with `fmt: pct0, tone: sign`. That is the normal workflow: start from inference, then correct what a
 person knows better. Open `NGFS NGFS-DELAYED <GO>` in the terminal to see the result.
@@ -323,9 +325,11 @@ Ask what inference alone makes of it (the pack's own Sutra is ignored):
 curl -s "http://localhost:18480/api/v1/studio/inferred/key-risk-indicator/KRI-COMM-1?name=kri-draft"
 ```
 
-You should see this `sutra` block (option lines inside a panel may come in a different order):
+You should see this Sutra (option lines inside a panel may come in a different order):
 
 ```yaml
+# Started from what inference makes of key-risk-indicator KRI-COMM-1. Edit freely.
+rachana: 1
 sutra: kri-draft
 version: 1
 description: Started from inference for key-risk-indicator. Edit freely.
@@ -433,11 +437,12 @@ The usual way to write a Sutra for a new kind is to start from inference and cor
 1. **Get the draft.** In Studio, enter the kind and id and press **Start from inference**, or fetch it:
 
    ```bash
-   curl -s "http://localhost:18480/api/v1/studio/inferred/key-risk-indicator/KRI-COMM-1?name=kri-mine" > kri-mine.v1.sutra.md
+   curl -s "http://localhost:18480/api/v1/studio/inferred/key-risk-indicator/KRI-COMM-1?name=kri-mine" > kri-mine.v1.sutra.yaml
    ```
 
-   The draft is a complete Markdown Sutra with `priority: 1`, so it loses to any pack Sutra at the normal 10
-   until you raise it.
+   The draft is a complete YAML Sutra (it starts with `rachana: 1`) with `priority: 1`, so it loses to any pack
+   Sutra at the normal 10 until you raise it. Replace its `description:` with one sentence about the layout, and
+   put anything longer (why a panel is there, what to check) in `notes: |`.
 2. **Fix the identity.** Title the view by its real identifier and say what it is:
    `title: { pill: Operational risk · Key risk indicator, id: $.kriId }`.
 3. **Fix the formats inference could not know.** `value`, `amber` and `red` are measurements, not money:
@@ -463,7 +468,7 @@ The usual way to write a Sutra for a new kind is to start from inference and cor
    file in a Sutra directory (`drishti.rachana.dirs`, or a pack's `sutras/` folder); it loads at once.
 
 After these steps you have, nearly line for line, the operational-risk pack's own
-`packs/operational-risk/sutras/operational-and-non-financial-risk/key-risk-indicator.v1.sutra.md`. Check the
+`packs/operational-risk/sutras/operational-and-non-financial-risk/key-risk-indicator.v1.sutra.yaml`. Check the
 result:
 
 ```bash
@@ -525,7 +530,7 @@ The Sutra always wins. Inference only fills in:
 - the `kv` body of a `tabs` panel whose body states no columns (the fields of the first element);
 - labels nobody wrote: `bind: "@.payDate"` with no `label` reads **Pay date**.
 
-**Example (real).** The counterparty Sutra in `packs/banking-core/sutras/counterparty-and-legal/counterparty.v1.sutra.md`
+**Example (real).** The counterparty Sutra in `packs/banking-core/sutras/counterparty-and-legal/counterparty.v1.sutra.yaml`
 declares its KYC panel without columns:
 
 ```yaml

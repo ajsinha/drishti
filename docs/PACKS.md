@@ -39,7 +39,7 @@ smallest complete pack in the repository, `packs/logistics/`:
 packs/logistics/
 ├── pack.yaml                    the manifest: kinds, commands, links, roles, alerts, console extras
 ├── sutras/
-│   └── shipment.v1.sutra.md     one layout (a Sutra), for shipments in transit
+│   └── shipment.v1.sutra.yaml   one layout (a Sutra, in YAML), for shipments in transit
 ├── config/
 │   ├── semantics.yaml           field-name hints for inference ("etaDelayHours" is a delay, in hours)
 │   ├── formats.yaml             extra number formats (temp1 → "4.2 °C", knots1 → "18.5 kn")
@@ -65,7 +65,7 @@ Words used below:
 | **kind** | a type of entity | `shipment`, `trade`, `netting-set` |
 | **mnemonic** | the short command for a kind | `SHP` opens a `shipment` |
 | **id** | one entity's identifier | `SHP-10042` |
-| **Sutra** | a layout for a kind, written in Rachana | `sutras/shipment.v1.sutra.md` |
+| **Sutra** | a layout for a kind, written in Rachana: one YAML file starting `rachana: 1` | `sutras/shipment.v1.sutra.yaml` |
 | **connector** | a named data source a pack reads from | `credit-store` (a Delta Lake folder) |
 | **route** | which connector answers a kind | `netting-set: credit-store` |
 
@@ -390,7 +390,7 @@ is used when the key is absent. A folder or file that does not exist is simply s
 
 | Key | Default | What is there |
 |---|---|---|
-| `sutras` | `sutras` | Sutras (`*.sutra.md`, or plain YAML), scanned recursively |
+| `sutras` | `sutras` | Sutras (`*.sutra.yaml`), scanned recursively; any other `.yaml`, `.yml` or `.sutra.md` file there is reported (`DRS-2004`) |
 | `formats` | `config/formats.yaml` | extra named formats (`formats: { temp1: { type: number, decimals: 1, suffix: " °C" } }`) |
 | `semantics` | `config/semantics.yaml` | inference hints: `roles:` (a field-name regex → format, tone, strip weight) and `idFields:` |
 | `samples` | `samples` | sample documents for the built-in `demo` source |
@@ -868,7 +868,7 @@ packs/helpdesk/
 │   ├── semantics.yaml  formats.yaml  step 10
 │   ├── help.yaml  workspaces.yaml     step 12
 ├── sutras/
-│   └── ticket.v1.sutra.md            step 11
+│   └── ticket.v1.sutra.yaml          step 11
 └── guides/
     └── helpdesk.md                   step 12
 ```
@@ -1138,8 +1138,10 @@ and *Agent*. Labels are optional: a field without one is humanised (`openTickets
 
 ### Step 11. A Sutra: the layout you want
 
-Inference is a good start; a **Sutra** fixes the layout. Create `packs/helpdesk/sutras/ticket.v1.sutra.md`
-(header comment first, then prose, then exactly one `sutra` block):
+Inference is a good start; a **Sutra** fixes the layout. Create `packs/helpdesk/sutras/ticket.v1.sutra.yaml`.
+It is one YAML document: the copyright header as `#` comments, then `rachana: 1` (the version of the Rachana
+language), the name, the version and the layout. Say what the layout is for in `description:` (one paragraph) and
+anything a reviewer should know in `notes:`; neither changes the view.
 
 ```yaml
 rachana: 1
@@ -1170,7 +1172,8 @@ panels:
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
 keys: { F7: "link($.assignee, 'agent')", F9: raw }
 notes: |
-  A support ticket: its status, age and agent in the strip, its history as a ladder.
+  The strip leads with status and age, the two things an agent triages by.
+  The history is a ladder with the latest event lit, so a stalled ticket stands out.
 ```
 Pack Sutras are watched: the server picks the file up within about a second, without a restart. Check:
 
@@ -1185,7 +1188,8 @@ keeps the last good version: see [runbooks/sutra-broken.md](runbooks/sutra-broke
 
 Writing Sutras is taught in the [Sutra guide](../console/web/guides/sutra-guide.md) and
 [RACHANA_GUIDE.md](RACHANA_GUIDE.md); every key is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md). Studio's
-**Start from inference** turns the inferred view into a Sutra you can edit.
+**Start from inference** turns the inferred view into a Sutra you can edit, and its editor completes keys,
+panel kinds, options, formats and the kinds this server serves from the schema at `GET /api/v1/rachana/schema`.
 
 ### Step 12. Guide, help card, starters
 
@@ -1335,7 +1339,7 @@ copy a server runs:
 curl -s http://localhost:18480/api/v1/packs | python3 -c 'import json,sys; [print(p["name"], p["version"]) for p in json.load(sys.stdin)]'
 ```
 
-**Sutras carry their own versions** (`version: 2` inside the `sutra` block, and `ticket.v2.sutra.md` as the
+**Sutras carry their own versions** (`version: 2` inside the file, and `ticket.v2.sutra.yaml` as the
 file name by convention). The highest version of each Sutra name is the one used. Keep the old file while
 views may still need it to compare, or delete it; a name and version defined twice is an error (`DRS-2028`).
 

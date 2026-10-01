@@ -39,7 +39,7 @@ class PackSutrasTest {
     void packSutrasLoadWithoutProblems(Path pack) throws Exception {
         long files;
         try (Stream<Path> s = Files.walk(pack.resolve("sutras"))) {
-            files = s.filter(p -> p.toString().endsWith(".sutra.md") || p.toString().endsWith(".yaml")).count();
+            files = s.filter(p -> p.toString().endsWith(".sutra.yaml")).count();
         }
         try (SutraRegistry r = new SutraRegistry(new RachanaProperties(List.of(pack.resolve("sutras").toString()), false,
                 null, null, null, null, null, null), new ElCompiler())) {

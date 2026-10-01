@@ -29,3 +29,5 @@ Sutra files are YAML. Bindings use Rachana-EL, a closed, side-effect-free expres
 Layouts are reviewable, diffable and safe. Adding a function needs an ADR amendment.
 
 **Amended by ADR-011:** the YAML now lives in the `sutra` block of a Markdown Sutra (`*.sutra.md`).
+
+**Amended by [ADR-017](017-sutras-are-yaml.md):** the Markdown wrapper of ADR-011 is gone; a Sutra is again one YAML file (`<name>.v<N>.sutra.yaml`), now starting with `rachana: 1`.

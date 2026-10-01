@@ -25,8 +25,9 @@ kept as they were planned, with notes where the delivery differed.
 | 1.6.0 | W14 monitors and alerts |
 | 1.7.0 | W15 F8 impact |
 | 1.8.0 | W13c packs per user |
-| 1.9.0 | W22 business dates and Delta Lake; R1–R2 risk taxonomy and Sutras; Markdown Sutras |
+| 1.9.0 | W22 business dates and Delta Lake; R1–R2 risk taxonomy and Sutras; Markdown Sutras (replaced in 1.11: Sutras are YAML only, ADR-017) |
 | 1.10.0 | B0, R3–R5, P2–P8 (all domain packs); W16–W21; and the work [below](#what-shipped-after-the-waves-1100) |
+| 1.11 (unreleased) | Sutras are YAML only ([below](#since-110)) |
 
 ## Working agreement
 
@@ -83,7 +84,7 @@ The first ten waves (plus W11, user management, after 1.0.0); all are done. Each
 
 ## W4 — Sutra grammar
 - `drishti-rachana` model records: `Sutra`, `Match`, `Title`, `Strip`, `Panel`, `KeyMap`.
-- YAML parser with source positions; `sutra.schema.json`; validator emitting `DRS-2nnn` with line/column.
+- YAML parser with source positions; `sutra.schema.json` (since 1.11 the schema is generated from the grammar and served at `GET /api/v1/rachana/schema`); validator emitting `DRS-2nnn` with line/column.
 - `SutraRegistry`: versions, lookup by `name@version`, `WatchService` hot reload.
 - Docs: `docs/RACHANA_REFERENCE.md` (keys, panel kinds, versioning).
 - Tests: parse round-trip, schema negatives, reload races.
@@ -91,7 +92,7 @@ The first ten waves (plus W11, user management, after 1.0.0); all are done. Each
 ## W5 — Rachana-EL & reference Sutras
 - Rachana-EL: lexer → parser → AST → compiled closures (paths, `[?x]` filters, ternary, `link()`, `size()`, arithmetic, concat); EBNF in the reference doc.
 - `Formats` (bundled `formats.yaml`, site override file) and `Tones`; `SutraMatcher` (the Sutra `match` block is the classifier).
-- `packs/finance/sutras/rates/irs-vanilla.v3.sutra.md`, `packs/finance/sutras/fx/fx-swap.v2.sutra.md`, `packs/finance/sutras/commodities/listed-future.v1.sutra.md`, `packs/finance/sutras/credit/netting-set.v1.sutra.md`.
+- `packs/finance/sutras/rates/irs-vanilla.v3.sutra.md`, `packs/finance/sutras/fx/fx-swap.v2.sutra.md`, `packs/finance/sutras/commodities/listed-future.v1.sutra.md`, `packs/finance/sutras/credit/netting-set.v1.sutra.md` (all `.sutra.yaml` since 1.11).
 - Tests: jqwik property tests for EL; golden `Layout` JSON per reference Sutra.
 
 ## W6 — Inference engine
@@ -166,7 +167,7 @@ The first ten waves (plus W11, user management, after 1.0.0); all are done. Each
 |---|---|---|
 | W13c ✅ | Per-user packs | admins assign packs to users; users choose active packs; kinds owned by one pack; enforced server-side (1.8.0) |
 | R1 ✅ | **risk**: taxonomy | 125 products in ten asset classes, 21 market-data kinds, 24 risk and reference kinds, one source of truth (`tools/packgen/banking/taxonomy.py`) with uniqueness checks |
-| R2 ✅ | risk: Sutras | `make_sutras.py` writes 170 Markdown Sutras (125 products, 45 kinds) that double as the data dictionary; `trade_shape.py` is the trade-document contract; every pack's Sutras load with zero problems (`PackSutrasTest`); drill fails if generated files drift |
+| R2 ✅ | risk: Sutras | `make_sutras.py` writes 170 Markdown Sutras (125 products, 45 kinds) that double as the data dictionary (YAML Sutras with `description` and `notes` since 1.11, ADR-017); `trade_shape.py` is the trade-document contract; every pack's Sutras load with zero problems (`PackSutrasTest`); drill fails if generated files drift |
 | B0 ✅ | banking packs split | `requires:`, `connectors:` and `routes:` in pack.yaml; data domains and packs many-to-many; five packs (banking-core, market-data, trading, market-risk, counterparty-risk) generated from the taxonomy (`tools/packgen/banking/`) |
 | R3 ✅ | risk: data | `make_data.py`: thousands of consistent JSON documents (counterparties → netting sets → trades → market data; exposure, CVA, SA-CCR, SIMM, VaR, stress, FRTB, P&L) and a consistency checker |
 | R4 ✅ | risk: connector and docs | Delta Lake connector (W22) and named connector instances; pack manifests; `make_docs.py` guides |
@@ -199,6 +200,16 @@ Work done after the last numbered wave, grouped by theme. Each item is in [CHANG
 | Console chrome | A two-row top bar after MAYA's: Views, Build, Admin and Help mega menus; round tools (live, alerts, packs, theme, user menu); gradient themes; one live channel per tab (the freeze fix) | [USER_GUIDE.md](USER_GUIDE.md#the-top-bar) |
 | Documentation | Every guide rewritten example-first; a 10-minute quickstart, a developer guide, a Rachana tutorial and a connector guide | [README.md](README.md) |
 
+## Since 1.10
+
+Work after 1.10.2, in [CHANGELOG.md](../CHANGELOG.md) under *Unreleased*.
+
+| Theme | Delivered | Where to read |
+|---|---|---|
+| Sutras are YAML only | One file per Sutra, `<name>.v<N>.sutra.yaml`, starting with `rachana: 1` (missing or unknown: `DRS-2009`); `description`, `notes` and a per-panel `description` for prose; Markdown Sutras no longer read (`DRS-2004`, converted by `tools/rachana/md_to_yaml.py`); all 228 shipped Sutras converted and the generators write YAML; the JSON Schema of the language at `GET /api/v1/rachana/schema`; Studio a YAML editor with completion (ADR-017, superseding ADR-011) | [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md), [adr/017](adr/017-sutras-are-yaml.md) |
+| Build gates | Error Prone in every compile and Spotless at `verify` (ADR-007 amended) | [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) |
+| Packs while running | Admin → Packs → Load / Unload a pack without a restart of the process (pack overlay, rollback) | [PACKS.md](PACKS.md) |
+
 ## Known gaps
 
 What is open today. None blocks normal use; each is a candidate for a future wave.
@@ -206,7 +217,6 @@ What is open today. None blocks normal use; each is a candidate for a future wav
 | Gap | Today | Where it shows |
 |---|---|---|
 | Several console processes | A tab's live channel lives in one console process, so a load balancer needs sticky sessions | [LIVE.md](LIVE.md) |
-| Formatting and static analysis gates | Spotless and Error Prone are deferred (ADR-007); `.editorconfig` only | [adr/007](adr/007-build-gates-in-tests.md) |
 
 ## Roadmap
 

@@ -135,19 +135,37 @@ def test_non_admins_do_not_see_admin_pages(backend):
     assert 'href="/admin/users"' not in c.get("/t").text
 
 
-def test_studio_is_a_markdown_editor(client):
+def test_studio_is_a_yaml_editor(client):
     page = client.get("/studio", params={"sutra": ""}).text
-    for marker in ("data-insert", "data-outline", 'data-md="bold"', 'data-tab="doc"', "cm-sutra-md.js", "md-editor.js"):
+    for marker in ("data-insert", "data-outline", "data-complete", "data-field-help", 'data-tab="summary"', "studio-yaml.js", "studio-assist.js"):
         assert marker in page
-    assert "```sutra" in page  # the new-Sutra template is a Markdown Sutra
+    for gone in ("data-md=", 'data-tab="doc"', "cm-sutra-md.js", "md-editor.js"):
+        assert gone not in page
+    assert "rachana: 1\nsutra: my-layout\nversion: 1" in page and "```" not in page  # the new-Sutra skeleton is YAML
+    assert client.get("/static/js/cm-sutra-md.js").status_code == 404 and client.get("/static/js/md-editor.js").status_code == 404
+    assert client.post("/studio/render", json={"yaml": "x"}).status_code in (404, 405)
 
 
-def test_studio_renders_the_document_safely(client):
-    md = "<!-- header -->\n# Title\n\nSome *prose*. <script>alert(1)</script> [x](javascript:alert(1)) [y](#title)\n\n```sutra\nsutra: a\n```\n"
-    d = client.post("/studio/render", json={"yaml": md}).json()
-    assert "<script>" not in d["html"] and "javascript:" not in d["html"] and "header" not in d["html"]
-    assert 'class="sutra-block"' in d["html"] and 'href="#title"' in d["html"]
-    assert d["outline"][0]["name"] == "Title" and d["block"] == {"from": 6, "to": 8}
+def test_studio_proxies_the_rachana_schema(client):
+    r = client.get("/studio/schema")
+    assert r.status_code == 200 and r.json()["properties"]["rachana"] == {"const": 1}
+    assert r.json()["x-rachana-functions"]["size"] == {"min": 1, "max": 1}
+
+
+def test_studio_summary_reads_the_yaml_back_safely(client):
+    y = ("rachana: 1\nsutra: demo\nversion: 2\ndescription: Shows <script>alert(1)</script> trades\nnotes: |\n  line one\n  line two\n"
+         "match: { kind: trade, where: \"$.x == 1\" }\nstrip:\n  - { label: MTM, bind: $.mtm, fmt: signed0 }\n"
+         "panels:\n  - id: legs\n    kind: tabs\n    title: Legs\n    description: Each leg\n    each: $.legs\n    body:\n      kind: kv\n"
+         "      columns:\n        - { label: Currency, bind: \"@.currency\" }\nkeys: { F5: \"link($.book, 'book')\" }\n")
+    d = client.post("/studio/summary", json={"yaml": y}).json()
+    h = d["html"]
+    assert "<script>" not in h and "&lt;script&gt;" in h
+    assert "demo" in h and "v2" in h and "line one" in h and "$.x == 1" in h and "MTM" in h
+    assert "Legs" in h and "Each leg" in h and "tabs · kv" in h and "Currency" in h and "F5" in h
+    bad = client.post("/studio/summary", json={"yaml": "a: [1, 2\nb: c"}).json()
+    assert bad["error"] and "cannot be read" in bad["html"]
+    assert "rachana: 1" in client.post("/studio/summary", json={"yaml": "sutra: x"}).json()["html"]  # nudges for the language key
+    assert client.post("/studio/summary", json={"yaml": "- 1\n- 2"}).json()["error"]
 
 
 def test_gauge_without_numbers_renders_empty(client):

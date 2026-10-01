@@ -17,7 +17,7 @@
 
 **Rachana** (रचना, *composition*) is Drishti's declarative screen grammar. Because of it, no product
 ever gets its own coded screen. A **Sutra** (सूत्र, *thread*) is one layout written in Rachana: a
-versioned file that describes how to lay out one family of entities. The *How this view was built* panel
+versioned YAML file (`<name>.v<N>.sutra.yaml`, starting `rachana: 1`) that describes how to lay out one family of entities. The *How this view was built* panel
 reads, for example, `Sutra irs-fixfloat v1 + inference`, meaning the Sutra `irs-fixfloat`, version 1,
 completed by inference.
 
@@ -34,6 +34,7 @@ This page is the authoritative reference. Everything in it was checked against t
 | see a whole Sutra with every line explained | [A complete example, annotated](#a-complete-example-annotated) |
 | copy a working pattern | [Recipes](#recipes) |
 | look up one panel kind | [Panel kinds](#panel-kinds) |
+| get completion and checking in your editor | [Completion and checking in your editor](#completion-and-checking-in-your-editor) |
 | look up a function or an operator | [Rachana-EL](#rachana-el-expressions) |
 | understand an error such as `DRS-2023` | [Problem codes](#problem-codes) |
 | know what happens when you save a file or press Save in Studio | [Hot reload, Studio and governance](#hot-reload-studio-and-governance) |
@@ -62,54 +63,120 @@ curl -s http://localhost:18480/api/v1/views/trade/T-10001 | python3 -m json.tool
 You should see `ref`, `mnemonic`, `title`, `strip`, `panels`, `keys`, `provenance` and `timings`, with
 `"layout": "Sutra irs-fixfloat v1 + inference"` under `provenance`.
 
-## File format: Markdown Sutras
+## File format: one YAML file
 
-The standard format is a **Markdown Sutra**, `sutras/<domain>/<name>.v<N>.sutra.md`: an ordinary
-Markdown document that people and AI assistants can read, with exactly one fenced `sutra` block that
-holds the layout in Rachana (YAML syntax, with Rachana-EL expressions in string values).
+A Sutra is **one YAML file**, `sutras/<domain>/<name>.v<N>.sutra.yaml`, whose first key is
+`rachana: 1`, the version of the Rachana language it is written in. Values are plain YAML; strings may hold
+Rachana-EL expressions. That is the only format: there is no second dialect to learn, and any YAML tool
+(syntax highlighting, linters, JSON Schema completion, `yq`, code review diffs) works on a Sutra as it is.
 
 ```yaml
 rachana: 1
 sutra: irs-vanilla
 version: 3
-match: { kind: trade, where: "$.product == 'IRS'" }
+description: Vanilla fixed/float interest rate swaps, with the legs one key away.
+match: { kind: trade, where: "$.productType == 'IRS'" }
 panels:
-  - { id: legs, kind: kv, title: Legs, key: F2, rows: $.legs }
+  - id: legs
+    kind: table
+    title: Legs
+    key: F2
+    rows: $.legs
+    description: One row per leg; the rate is the fixed rate or the current fixing.
+    columns:
+      - { label: Leg, bind: "@.label" }
+      - { label: Rate, bind: "@.rate", fmt: pct4 }
 notes: |
-  Fixed-for-floating swaps. The strip leads with MTM and DV01; F2 shows the legs.
-```
-What the parser does with a file, in order (`SutraParser`, `SutraMarkdown`, `SutraBuilder`):
+  Written for the rates desk. The strip is left to inference on purpose:
+  the desk wants every headline field, in the document's order.
 
-1. If the file name ends in `.sutra.md`, **or** the text has a line that is exactly ```` ```sutra ```` or
-   `~~~sutra` (spaces around `sutra` allowed), it is a Markdown Sutra. Every line outside the fence is
-   replaced by an empty line, so line numbers in problems stay those of the Markdown file.
-2. A Markdown Sutra must have exactly one fence, and it must be closed by the same marker
-   (```` ``` ```` or `~~~`) on a line of its own. Otherwise: `DRS-2004`.
-3. The block is read as YAML, keeping the line and column of every node. Bad YAML: `DRS-2001`.
-4. The YAML is checked against the grammar below. Every problem is collected (not just the first) with its
-   location: `DRS-2010` to `DRS-2027`.
+  Version 3 moved the legs from a kv panel to a table (review 2026-09).
+```
+
+The prose has a place of its own, inside the file, as plain text:
+
+| Key | Where | What to write |
+|---|---|---|
+| `description` | top level | One paragraph: what this layout shows and for which entities. |
+| `notes` | top level | Longer notes for authors and reviewers: why the layout is what it is, what changed in each version, who asked for it. Use a YAML block (`notes: \|`) for several lines. |
+| `description` | any panel | One or two sentences on what the panel shows. |
+
+They are plain text: nothing in them is evaluated, and the engine does not use them to build the view (they are
+not part of the ViewModel). They travel with the file, so they are in Studio, in a code review diff and in
+`GET /api/v1/sutras/{name}/{version}/source`, and nothing has to be kept in step with them.
+`description` and `notes` must be text (`DRS-2012 'notes' is plain text` otherwise).
+
+What the server does with a file, in order (`SutraRegistry`, `SutraParser`, `SutraBuilder`):
+
+1. Only files named `*.sutra.yaml` are Sutras. Any other `.yaml`, `.yml` or `.sutra.md` file in a Sutra
+   directory is reported as `DRS-2004` with the fix (see [Problem codes](#problem-codes)) and is not loaded.
+2. The file is read as YAML, keeping the line and column of every node. Bad YAML: `DRS-2001`.
+3. `rachana:` must be present and be a language version this server reads (today: `1`). Otherwise `DRS-2009`.
+4. The rest is checked against the grammar below. Every problem is collected (not just the first) with its
+   location: `DRS-2010` to `DRS-2027`. Parsing is strict: an unknown key is an error (`DRS-2011`), never
+   silently ignored, so a typo such as `pannels:` cannot pass unnoticed.
 5. Every Rachana-EL expression and template is compiled. A typo is `DRS-2101`, reported against the file at
    load time, not when someone opens a view.
 6. The Sutra is registered under `name@version`; a second file defining the same pair is `DRS-2028`.
 
 Rules that follow from this:
 
-- The engine reads only the `sutra` block. Everything else is documentation: headings, prose, tables,
-  links, images. Write down *why* the layout is what it is; the help centre and Studio render it.
-- Problem locations use the line numbers of the Markdown file, so an error at line 14 is at line 14 in
-  your editor.
-- The file name is a convention, not a rule: the name and version come from the block (`sutra:`,
-  `version:`), and the parser does not compare them with the file name. Keep them in step anyway; Studio
-  saves to `<domain>/<name>.v<N>.sutra.md`.
-- Plain YAML Sutras still load (the block's content on its own), for tools that emit YAML.
-  `tools/sutra_to_md.py` converts them. Note that **every** `*.yaml` and `*.yml` file under a Sutra directory
-  is read as a Sutra, so keep other YAML files out of those directories or they are reported as problems.
-- Editors can validate the block against `drishti-rachana/src/main/resources/sutra.schema.json`, but
-  the authoritative checks are the parser's.
+- Problem locations are the file's own line and column, so an error at line 14 is at line 14 in your editor.
+- The file name is a convention, not a rule: the name and version come from `sutra:` and `version:`, and the
+  parser does not compare them with the file name. Keep them in step anyway; Studio saves to
+  `<domain>/<name>.v<N>.sutra.yaml`.
+- `#` comments are kept in the file (Studio and `GET /api/v1/sutras/{name}/{version}/source` return the text
+  exactly as written) but mean nothing to the engine. Use `notes` for anything a reviewer should read.
+- Keep other YAML files out of Sutra directories; they are reported as `DRS-2004`.
+- A Sutra from before Drishti 1.11 (`*.sutra.md`, a Markdown document with one ```` ```sutra ```` block)
+  converts in one step; the block becomes the file, `rachana: 1` is added, and the prose becomes `notes`:
+
+  ```bash
+  python3 tools/rachana/md_to_yaml.py packs/my-pack/sutras --delete
+  ```
+
+  You should see one line per file, such as
+  `packs/my-pack/sutras/rates/irs-x.v1.sutra.md -> packs/my-pack/sutras/rates/irs-x.v1.sutra.yaml`. Without
+  `--delete` the `.sutra.md` files stay beside the new ones (and are reported as `DRS-2004` until you remove
+  them). The lines that only restated the layout (the "Applies to" line, the "Panels" table) are dropped,
+  since tools derive them from the YAML.
 - YAML quoting: a value that starts with `$`, `@` or a letter can usually stay bare (`bind: $.tradeId`).
   Quote any value that contains `: `, ` #`, `{`, `}`, `[`, `]`, `,` at the start, or begins with `'`, `*`,
   `&`, `!`, `%`, `@` followed by a space, or `#`: for example `bind: "@.leg == 1 ? 'Fixed' : 'Float'"`
   and `highlight: "#index == 0"` (unquoted, `#index` would be a YAML comment).
+
+### Completion and checking in your editor
+
+`GET /api/v1/rachana/schema` returns the JSON Schema (draft 2020-12) of the language, generated from the
+grammar itself: every key, the panel kinds and the options each takes, which values are Rachana-EL, the tones,
+and **this server's** entity kinds and format names (core and enabled packs). `x-rachana-functions` lists the
+expression functions. Because it is generated from the parser's own tables, it never disagrees with the parser.
+
+```bash
+curl -s http://localhost:18480/api/v1/rachana/schema | python3 -c "
+import json, sys
+s = json.load(sys.stdin)
+print(s['title']); print(s['required']); print(sorted(s['properties']))"
+```
+
+You should see:
+
+```text
+Rachana Sutra, language 1
+['rachana', 'sutra', 'version', 'match']
+['description', 'domain', 'keys', 'match', 'notes', 'panels', 'rachana', 'strip', 'sutra', 'title', 'version']
+```
+
+Sutra Studio uses it for completion and live checking. Any editor that reads JSON Schema can too; for
+example, with the YAML language server (VS Code's YAML extension, and others) put this comment on the first
+line of a Sutra:
+
+```yaml
+# yaml-language-server: $schema=http://localhost:18480/api/v1/rachana/schema
+```
+
+The schema catches most mistakes while you type; the parser remains the authority (it also compiles every
+expression, which a schema cannot).
 
 ## A complete example, annotated
 
@@ -196,6 +263,7 @@ panels:
     title: Terms
     key: F2                                      # F2 jumps here (keys are unique across the Sutra)
     code: TRM                                    # a short tag at the right of the panel header
+    description: The economic terms, as agreed at trade date.   # plain text for authors; not shown in the view
     columns:
       - { label: Trade date, bind: $.tradeDate, fmt: date }
       - { label: Effective, bind: $.effectiveDate, fmt: date }
@@ -344,8 +412,13 @@ keys:
   F7: "link($.nettingSet, 'netting-set')"        # F7 opens the netting set
   F8: impact                                     # F8: what depends on this trade
   F9: raw                                        # F9: the raw JSON (redacted for roles without raw)
+
+# ---- Notes for authors and reviewers (plain text; the engine ignores them) ------------------------------------
 notes: |
-  Prose around the block is documentation: the help centre and Studio render it, and the engine ignores it.
+  Written to show the grammar, not for a desk. The priority is 50 so that a preview
+  of T-10001 picks this layout over the trading pack's irs-fixfloat.
+
+  description (top) and notes are prose for people; a panel's description says what that panel shows.
 ```
 What each part does when the view is built:
 
@@ -374,9 +447,11 @@ You should see, previewing this block against `T-10001` in Studio:
 
 | Key | Required | Type | Default | Meaning |
 |---|---|---|---|---|
+| `rachana` | yes | integer | | The Rachana language version: `1`. Missing or another number is `DRS-2009`. Write it first. |
 | `sutra` | yes | text | | Name: lower-case kebab matching `[a-z][a-z0-9-]{1,63}` (2–64 characters, starting with a letter), e.g. `irs-vanilla`. |
 | `version` | yes | integer ≥ 1 | | `name@version` is unique across all directories (`DRS-2028`). `version: "3"` (quoted) is text and is refused (`DRS-2020`). |
-| `description` | | text | | Free text, shown in Studio and the catalogue. |
+| `description` | | text | | One paragraph for people: what the layout shows and for which entities. Not used to build the view. |
+| `notes` | | text | | Longer plain-text notes for authors and reviewers (`notes: \|` for several lines). Not used to build the view. |
 | `domain` | | text | the parent folder's name | Grouping in Studio and the catalogue, and the folder Studio saves into. |
 | `match` | yes | mapping | | `{kind, where?, priority?}`; see [Matching](#matching-choosing-a-sutra-for-a-document). |
 | `title` | | mapping | `{id: $.id}` | `{pill?, id?, with?}`; see [Title](#title). |
@@ -391,8 +466,8 @@ view then shows the title and strip only.
 
 - A Sutra is identified by `name@version`, for example `irs-fixfloat@1`. Studio, the API
   (`GET /api/v1/sutras/irs-fixfloat/1`) and the governance log all use this pair.
-- **Several versions of one name can be loaded at once** (`irs-vanilla.v2.sutra.md` and
-  `irs-vanilla.v3.sutra.md`). Only the **latest** version of each name takes part in matching; older versions
+- **Several versions of one name can be loaded at once** (`irs-vanilla.v2.sutra.yaml` and
+  `irs-vanilla.v3.sutra.yaml`). Only the **latest** version of each name takes part in matching; older versions
   stay available by `name@version` (Studio, `GET /api/v1/sutras/{name}/{version}`), so a reference to an
   older layout can still be reproduced. To roll back, delete or rename the newer file, or publish a higher
   version with the old content.
@@ -407,7 +482,7 @@ view then shows the title and strip only.
 
   You should see entries such as
   `{'name': 'irs-fixfloat', 'latest': 1, 'versions': [1], 'domain': 'rates', 'kind': 'trade', 'where': "$.productType == 'IRS_FIXFLOAT'", 'priority': 10}`.
-- `GET /api/v1/sutras/{name}/{version}/source` returns the file's text (Markdown) exactly as loaded.
+- `GET /api/v1/sutras/{name}/{version}/source` returns the file's YAML (`text/yaml`), comments included, exactly as loaded.
 - The **domain** defaults to the name of the folder holding the file (`packs/trading/sutras/rates/…` → `rates`).
 
 ### Where Sutras come from, and who wins
@@ -457,10 +532,10 @@ Recommended priorities, as the shipped packs use them:
 Example: two layouts for swaps, one for matured trades.
 
 ```yaml
-# irs-matured.v1.sutra.md                      # tried first (priority 20)
+# irs-matured.v1.sutra.yaml                    # tried first (priority 20)
 match: { kind: trade, where: "$.productType == 'IRS_FIXFLOAT' && $.status == 'Matured'", priority: 20 }
 
-# irs-fixfloat.v1.sutra.md (trading pack)      # tried second (priority 10)
+# irs-fixfloat.v1.sutra.yaml (trading pack)    # tried second (priority 10)
 match: { kind: trade, where: "$.productType == 'IRS_FIXFLOAT'", priority: 10 }
 ```
 
@@ -554,6 +629,7 @@ column with `area: right`.
 | `infer` | | `false` | Marks the panel as completed by inference (an *inferred* tag in its header). Inference fills a panel's columns whenever it states none, with or without this flag; see [Inference](INFERENCE.md#sutra-and-inference-together). |
 | `columns` | | empty | The columns or fields; see below. Used by `kv`, `table`, `ladder`, `tabs` (in the body) and `surface`. |
 | `body` | `tabs` only | | The panel drawn once per tab. On any other kind, `DRS-2023 only 'tabs' panels take a 'body'`. |
+| `description` | | none | Plain text for authors: what the panel shows. Not shown in the view. |
 
 Every other key of a panel is a **kind option**. Each kind accepts a fixed set (tables below); any other key
 is `DRS-2023 option 'x' is not valid for 'kv' panels`, and a missing required option is
@@ -924,8 +1000,9 @@ Static text for the reader.
 | `text` | yes | A template: `${expression}` parts are evaluated against the document. |
 
 The text is shown as one plain paragraph: Markdown syntax (`**bold**`, lists) is **not** rendered inside the
-panel, and line breaks become spaces. Put longer explanations in the prose around the `sutra` block, where
-the help centre and Studio render real Markdown.
+panel, and line breaks become spaces. The `markdown` panel is for the people who *read* the view; notes for the
+people who *maintain* the Sutra belong in its top-level `notes` (or a panel's `description`), which are never
+shown in the view.
 
 ```yaml
   - id: notes
@@ -1356,11 +1433,12 @@ A Sutra file that fails any check is not loaded (or keeps its last good version,
 
 | Code | Message (exact form) | Cause | Fix |
 |---|---|---|---|
-| `DRS-2001` | `YAML syntax: <parser message>` | the block is not valid YAML (bad indentation, a `:` or `#` in an unquoted value, a tab) | fix the YAML; quote values with `: `, ` #`, or a leading `#`, `@`, `*`, `&` |
-| `DRS-2004` | `a Markdown Sutra needs exactly one closed ```sutra block` | a `.sutra.md` file with no ```` ```sutra ```` fence, two of them, or one not closed | keep exactly one fence, closed by the same marker |
+| `DRS-2001` | `YAML syntax: <parser message>` | the file is not valid YAML (bad indentation, a `:` or `#` in an unquoted value, a tab) | fix the YAML; quote values with `: `, ` #`, or a leading `#`, `@`, `*`, `&` |
+| `DRS-2004` | `Markdown Sutras are no longer read (Sutras are YAML since 1.11): convert it with python3 tools/rachana/md_to_yaml.py <file> --delete`, or `a Sutra file is named <name>.v<N>.sutra.yaml; rename <file>` | a `.sutra.md` file, or a plain `.yaml`/`.yml` file, in a Sutra directory | convert it with `python3 tools/rachana/md_to_yaml.py <file-or-folder> --delete`, or rename it to `<name>.v<N>.sutra.yaml` (or move a YAML file that is not a Sutra out of the directory) |
+| `DRS-2009` | `missing 'rachana: 1' (the Rachana language version) at the top`, `'rachana: 2' is not a language version this server reads (it reads 1)` | no `rachana:` key, or a version this server does not know | put `rachana: 1` first in the file |
 | `DRS-2010` | `missing 'sutra'`, `missing 'version'`, `missing 'kind'`, `missing 'id'`, `missing 'bind'`, `missing 'match' mapping with at least 'kind'` | a required key is absent | add it |
 | `DRS-2011` | `unknown key 'pannels' in top level` (also `in match`, `in title`, `in strip item`, `in column`) | a misspelt or unsupported key | fix the spelling; panel options are reported as `DRS-2023` instead |
-| `DRS-2012` | `'panels' must be a list`, `'keys' must be a mapping of F-key to action`, `a column must be a mapping (label, bind, fmt, tone, total, link)`, `'kind' must be text`, `action for F7 must be text` | a value of the wrong shape | write the shape shown in the message |
+| `DRS-2012` | `'panels' must be a list`, `'keys' must be a mapping of F-key to action`, `a column must be a mapping (label, bind, fmt, tone, total, link)`, `'kind' must be text`, `action for F7 must be text`, `'notes' is plain text` | a value of the wrong shape | write the shape shown in the message |
 | `DRS-2020` | `name 'IRS_Vanilla' must be lower-case kebab, 2-64 characters`, `version must be a positive integer` | bad name or version | `irs-vanilla`; `version: 3` unquoted |
 | `DRS-2021` | `unknown panel kind 'chart'; expected one of kv, table, tabs, line, area, hbar, ladder, links, status, provenance, markdown, gauge, surface` | a kind that does not exist | use one of the 13 kinds |
 | `DRS-2022` | `'table' panel 'flows' needs option 'rows'` | a required option is missing | add it (see each kind's table) |
@@ -1369,7 +1447,7 @@ A Sutra file that fails any check is not loaded (or keeps its last good version,
 | `DRS-2025` | `'F13' is not a function key (F1-F12)`, `function key F2 is used twice` | a bad or repeated key | use `F1`–`F12` once each, across panels and `keys` |
 | `DRS-2026` | `the strip holds at most 8 figures, found 9` | more than 8 strip items | move figures into a `kv` panel |
 | `DRS-2027` | `area must be 'main' or 'right'` | `area: left`, `area: side` | `main` or `right` |
-| `DRS-2028` | `trade-x@2 is already defined in /…/trade-x.v2.sutra.md` | two files define one `name@version` | raise the version, or remove the duplicate |
+| `DRS-2028` | `trade-x@2 is already defined in /…/trade-x.v2.sutra.yaml` | two files define one `name@version` | raise the version, or remove the duplicate |
 | `DRS-2101` | `expression '…': DRS-2101 …`, `template '…': DRS-2101 …` | an expression or template does not compile | see [Expression errors](#expression-errors) |
 
 Other codes you may meet around Sutras:
@@ -1382,7 +1460,8 @@ Other codes you may meet around Sutras:
 | `DRS-2006` | 409 | a proposal's Sutra changed after it was proposed: reject it and propose again from the live version |
 | `DRS-2007` | 403 | four eyes: the author of a proposal cannot approve it |
 
-Not validated (so check them in a preview): format and tone names, field names used as `x`, `y`, `label`,
+Not validated by the parser (so check them in a preview; the [schema](#completion-and-checking-in-your-editor)
+offers the valid format and tone names as you type): format and tone names, field names used as `x`, `y`, `label`,
 `value`, series `value`s, panel ids used as `keys` actions, `layout` and `view` values, the keys inside status
 `fields`, and the type of `limit`.
 
@@ -1395,9 +1474,9 @@ curl -s http://localhost:18480/api/v1/sutras/problems
 You should see `{}` when every file is valid, otherwise a map from file to its problems:
 
 ```json
-{"/srv/drishti/sutras/rates/swap-x.v1.sutra.md": [
+{"/srv/drishti/sutras/rates/swap-x.v1.sutra.yaml": [
   {"code": "DRS-2023", "message": "option 'limit' is not valid for 'ladder' panels",
-   "location": {"file": "swap-x.v1.sutra.md", "line": 31, "column": 12}}]}
+   "location": {"file": "swap-x.v1.sutra.yaml", "line": 31, "column": 12}}]}
 ```
 
 The same list appears in the server log (`sutra problem …`), on the server health page, and in Studio when you
@@ -1540,17 +1619,23 @@ You should see `Notional AUD 242,000,000`, `MTM (USD) +1,875,863` highlighted, `
 
 ### Studio
 
-Studio (`/studio` in the console) edits a Sutra in a Markdown editor with a live preview:
+Studio (`/studio` in the console) is a YAML editor for Sutras with a live preview. It completes keys, panel
+kinds, options, formats, tones and this server's entity kinds from the
+[schema](#completion-and-checking-in-your-editor), and checks the text as you type, showing each problem at
+its line. Alongside the editor it summarises the Sutra you are writing and previews it against test entities.
 
-1. Pick a Sutra to start from (or press **Start from inference**, which loads
-   `GET /api/v1/studio/inferred/{kind}/{id}?name=…` as a new Markdown Sutra at `priority: 1`).
-2. Set the entity to preview against (kind and id), or paste sample JSON and tick *Preview against this JSON*.
-3. Press **Ctrl+Enter** (or *Preview*). The console sends the text to `POST /api/v1/studio/preview`, which
-   parses and checks it (`SutraRegistry.check`, problems located in `studio.yaml`) and builds the view with
-   the unsaved Sutra, bypassing the layout cache and the matcher: the preview always uses your Sutra, whatever its
-   `match` says. Nothing is written.
-4. Press **Save**. This needs `drishti.rachana.studio-save: true` (off by default) and a role that may author
-   Sutras.
+1. Pick a Sutra to start from, or start from inference: Studio loads
+   `GET /api/v1/studio/inferred/{kind}/{id}?name=…` (or `POST /api/v1/studio/inferred` with pasted sample JSON),
+   which returns a new YAML Sutra (`rachana: 1`, a `description`, `priority: 1`) holding what inference made of
+   that entity.
+2. Choose the entity to preview against (kind and id), or paste sample JSON.
+3. Preview. The console sends the text to `POST /api/v1/studio/preview`, which parses and checks it
+   (`SutraRegistry.check`, problems located in `studio.sutra.yaml`) and builds the view with the unsaved Sutra,
+   bypassing the layout cache and the matcher: the preview always uses your Sutra, whatever its `match` says.
+   Nothing is written.
+4. Save. This needs `drishti.rachana.studio-save: true` (off by default) and a role that may author Sutras. The
+   text is sent as YAML (`POST /api/v1/sutras`, `Content-Type: text/yaml`) and, with governance on, becomes a
+   proposal for review.
 
 ### Governance
 
@@ -1567,8 +1652,8 @@ With `drishti.governance.enabled: true` (the default), Save does not publish: it
 Every step is audited (`sutra-proposed`, `sutra-approved`, …). `GET /api/v1/sutras/{name}/history` lists a
 Sutra's proposals. With governance off, Save writes at once.
 
-Where a save writes: `<first directory of drishti.rachana.dirs>/<domain>/<name>.v<N>.sutra.md` (or `.yaml` for
-plain YAML text), then reloads. A `name@version` already defined by another file (for example by a pack) is
+Where a save (or an approval) writes: `<first directory of drishti.rachana.dirs>/<domain>/<name>.v<N>.sutra.yaml`,
+exactly the text you wrote, comments included; then it reloads. A `name@version` already defined by another file (for example by a pack) is
 refused with `DRS-2028`: to change a pack's Sutra from Studio, save it as a **new version**; the latest version
 wins matching.
 
@@ -1576,13 +1661,13 @@ wins matching.
 
 | File | Entity | Notes |
 |---|---|---|
-| `packs/trading/sutras/rates/irs-fixfloat.v1.sutra.md` | `TRD T-10001` | kv, tabs (columns), ladder, line from a curve, hbar, links |
-| `packs/counterparty-risk/sutras/exposure-and-capital/netting-set.v1.sutra.md` | `NSET NS-MERIDIAN-RE-NY` | area with limit, table with totals and automatic id links |
-| `packs/market-data/sutras/market-data/equity-vol-surface.v1.sutra.md` | `EQV EQV-CSCA` | surface, table, line |
-| `packs/finance/sutras/rates/irs-vanilla.v3.sutra.md` | `TRD IRS-48213` | line with `mark` (finance pack; enabled by default with `DRISHTI_PACKS=finance`) |
-| `packs/finance/sutras/fx/fx-swap.v2.sutra.md` | `TRD FXS-20931` | finance pack |
-| `packs/finance/sutras/commodities/listed-future.v1.sutra.md` | `TRD CFT-77120` | finance pack |
-| `packs/finance/sutras/credit/netting-set.v1.sutra.md` | `NSET NS-NORTH-01` | `link: true` columns, kv with inferred fields |
+| `packs/trading/sutras/rates/irs-fixfloat.v1.sutra.yaml` | `TRD T-10001` | kv, tabs (columns), ladder, line from a curve, hbar, links |
+| `packs/counterparty-risk/sutras/exposure-and-capital/netting-set.v1.sutra.yaml` | `NSET NS-MERIDIAN-RE-NY` | area with limit, table with totals and automatic id links |
+| `packs/market-data/sutras/market-data/equity-vol-surface.v1.sutra.yaml` | `EQV EQV-CSCA` | surface, table, line |
+| `packs/finance/sutras/rates/irs-vanilla.v3.sutra.yaml` | `TRD IRS-48213` | line with `mark` (finance pack; enabled by default with `DRISHTI_PACKS=finance`) |
+| `packs/finance/sutras/fx/fx-swap.v2.sutra.yaml` | `TRD FXS-20931` | finance pack |
+| `packs/finance/sutras/commodities/listed-future.v1.sutra.yaml` | `TRD CFT-77120` | finance pack |
+| `packs/finance/sutras/credit/netting-set.v1.sutra.yaml` | `NSET NS-NORTH-01` | `link: true` columns, kv with inferred fields |
 
 For a guided, step-by-step introduction, see [RACHANA_GUIDE.md](RACHANA_GUIDE.md). For how inference fills
 what a Sutra leaves out, see [INFERENCE.md](INFERENCE.md).

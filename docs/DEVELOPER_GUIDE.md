@@ -53,7 +53,7 @@ inherits from `spring-boot-starter-parent`, which aligns library versions, so th
 |---|---|---|---|
 | `drishti-api` | `api` | The plugin SPI and data model. **No Spring**, no internal dependencies. | `SourcePlugin`, `PluginManifest`, `SourceCapabilities`, `SourceContext`, `EntityRef`, `EntityDocument`, `Provenance`, `AsOf`, `DataNode`, `HitIndex`, `PluginNotConfigured` |
 | `drishti-common` | `common` | Error codes, the exception type, JSON, shape fingerprints, business calendars, branding. | `ErrorCode`, `DrishtiException`, `JsonCodec`, `ShapeFingerprinter`, `BusinessCalendar` |
-| `drishti-rachana` | `rachana` | The Rachana grammar: the Sutra model, the Markdown/YAML parser, the registry with hot reload, Rachana-EL, formats and tones. | `SutraRegistry`, `SutraMatcher`, `parse.SutraParser`, `parse.SutraBuilder`, `model.PanelKind`, `el.ElCompiler`, `el.Functions`, `format.Formats` |
+| `drishti-rachana` | `rachana` | The Rachana grammar: the Sutra model, the YAML parser (`*.sutra.yaml`, `rachana: 1`), the registry with hot reload, the JSON Schema of the language, Rachana-EL, formats and tones. | `SutraRegistry`, `SutraMatcher`, `parse.SutraParser`, `parse.SutraBuilder`, `RachanaSchema`, `model.PanelKind`, `el.ElCompiler`, `el.Functions`, `format.Formats` |
 | `drishti-inference` | `inference` | Layout inference: semantic hints, rules, the merge of a Sutra with inferred panels. | `InferenceEngine`, `Rules`, `Semantics`, `LayoutMerger`, `EffectiveLayout` |
 | `drishti-graph` | `graph` | Entity references: which fields link to which kinds, and link badges. | `ReferenceCatalog`, `BadgeRenderer`, `GraphProperties` |
 | `drishti-engine` | `engine` | Sources and routing, the view pipeline, binding, the ViewModel, commands and type-ahead, search, history, impact, business dates, live topics. | `ViewPipeline`, `source.SourceRegistry`, `source.SourceRouter`, `bind.Binder`, `view.ViewModel`, `view.PanelData`, `live.TopicHub`, `live.ViewStream`, `command.CommandParser`, `search.StructuredSearch` |
@@ -120,7 +120,7 @@ drishti-benchmarks                (inference)
 | `tools/packgen/` | Pack generators: `banking/` (five banking packs from one taxonomy), `common/packbuild.py` (the shared builder), and one `make.py` per other generated pack (`climate`, `economics`, `genomics`, `liquidity`, `oprisk`, `politics`, `retail`) |
 | `tools/samplegen/` | Sample-history helpers: `lake.py` (Delta Lake writer), `pgload.py` (PostgreSQL loader), `stream.py` (Kafka ticker), plus `test_samplegen.py` |
 | `tools/lake/` | `maintain.py`: Delta Lake retention, compaction, checkpoints and vacuum; `test_maintain.py` |
-| `tools/` (files) | `drill.sh` (verify and publish), `license_headers.py` (check or insert the copyright header), `rachana/md_to_yaml.py` (a Markdown Sutra of before 1.11 to a YAML Sutra), `load-aerospike.sh` |
+| `tools/` (files) | `drill.sh` (verify and publish), `license_headers.py` (check or insert the copyright header), `rachana/md_to_yaml.py` (converts Markdown Sutras, `*.sutra.md`, read before 1.11, to `*.sutra.yaml`: `python3 tools/rachana/md_to_yaml.py <file-or-folder> --delete`), `load-aerospike.sh` |
 | `deploy/` | `server.Dockerfile`, `console.Dockerfile`, `compose.yaml`, `compose.data.yaml`, `lake-maintenance.yaml`, `grafana/` |
 | `config/license-header.txt` | The text of the copyright header that `license_headers.py` inserts |
 | `data/` | Runtime data, mostly git-ignored: `delta/` (sample lake), `identity/` (the SQLite database), `governance/` (Sutra proposals), `feeds/` |
@@ -922,15 +922,23 @@ panel kind spans the grammar, the engine and the console:
 |---|---|
 | `drishti-rachana/.../model/PanelKind.java` | `METRIC(Set.of("value"), Set.of("label", "fmt", "tone"))`: required and accepted options. The parser rejects unknown kinds (`DRS-2021`), unknown options (`DRS-2023`) and missing required ones (`DRS-2022`). |
 | `drishti-rachana/.../SutraExpressions.java` | `Map.entry(PanelKind.METRIC, Set.of("value"))` in `EL_OPTIONS`: which options hold expressions, so they are compiled and checked when the Sutra loads. |
-| `drishti-rachana/src/main/resources/sutra.schema.json` | `"metric"` in the panel `kind` enum (for editors). |
 | `drishti-engine/.../bind/Binder.java` | A `case METRIC -> metric(p, c);` in the `switch` in `bind` (the compiler insists: the switch over `PanelKind` must be exhaustive). |
 | `drishti-engine/.../view/PanelData.java` and `Emptiness.java` | Only if the kind needs a new record. A new record must also be handled in `Emptiness.of`, whose `switch` over the sealed interface the compiler checks. This recipe reuses `PanelData.Fields`. |
 | `console/web/templates/_macros/panels.html` | A branch in the `panel(p)` macro. |
 | `console/web/static/css/terminal.css` | Its styles (no `style=` attributes: the CSP forbids them). |
 | `console/core/export.py` and the `data-export-panel` list in `panels.html` | Only if its data should download as CSV. |
-| `console/web/static/js/md-editor.js` | A snippet for Studio's toolbar. |
 | `console/tests/test_terminal.py` | `"metric"` in `KINDS`, so it is rendered with broken data. |
 | `console/web/guides/panel-kinds.md`, `RACHANA_REFERENCE.md`, `console/config/help.yaml` | Documentation (and the count: "thirteen panel kinds" is written in several places, including `PanelKind`'s Javadoc). |
+
+Nothing to do for editors: the JSON Schema served at `GET /api/v1/rachana/schema` (`RachanaSchema`) is built from
+`PanelKind`, so `metric` and its options appear in Studio's completion, and in any editor that reads the schema, as
+soon as the server runs the new code. Check it:
+
+```bash
+curl -s localhost:18480/api/v1/rachana/schema | python3 -c 'import json,sys; print(json.load(sys.stdin)["$defs"]["panel"]["properties"]["kind"]["enum"])'
+```
+
+You should see `metric` at the end of the list of kinds.
 
 **The binding** reuses `Binder.cell` (formatting, tones and links) and wraps the cell in `PanelData.Fields`, so
 `Emptiness` already knows when it is empty (a dash or no text):
@@ -1062,7 +1070,7 @@ python3 tools/packgen/climate/make.py --check        # what the drill runs: "cli
 
 **A new generated pack** describes itself in Python with a `PackSpec` and calls the common builder
 (`tools/packgen/common/packbuild.py`), which checks the data (every id field matches its document, every link
-resolves, every path a Sutra's header reads is present) before it writes `pack.yaml`, one Markdown Sutra per kind,
+resolves, every path a Sutra's header reads is present) before it writes `pack.yaml`, one YAML Sutra (`<kind>.v1.sutra.yaml`) per kind,
 the samples and `catalog.json`, a guide and `config/help.yaml`, and, with `--lake <dir>`, the Delta Lake history.
 The in-app tutorial `console/web/guides/build-a-pack.md` walks through one.
 
@@ -1071,7 +1079,7 @@ The in-app tutorial `console/web/guides/build-a-pack.md` walks through one.
 ```text
 packs/energy/
 ├── pack.yaml
-├── sutras/            wind-farm.v1.sutra.md, …   one Markdown Sutra per layout
+├── sutras/            wind-farm.v1.sutra.yaml, …   one YAML Sutra per layout
 ├── samples/           catalog.json, wind-farm/WF-HORNSEA-1.json, …   served by the demo plugin
 ├── config/            formats.yaml, semantics.yaml, help.yaml, workspaces.yaml
 └── guides/            energy.md   the pack's page in the help centre
@@ -1118,12 +1126,15 @@ console:
   help: config/help.yaml
 ```
 
-A Sutra file in `sutras/` is Markdown with exactly one `sutra` block (ADR-011):
+A Sutra in `sutras/` is one YAML file named `<name>.v<N>.sutra.yaml` (ADR-017). Its first key is `rachana: 1`,
+the version of the Rachana language; `description` (one paragraph) and `notes` (as long as you like) hold the
+prose a reviewer needs, and each panel may have a `description` too. `sutras/wind-farm.v1.sutra.yaml`:
 
 ```yaml
 rachana: 1
 sutra: wind-farm
 version: 1
+description: One wind farm, its capacity and output, and its turbines.
 match: { kind: wind-farm, priority: 10 }
 title: { pill: "Energy · Wind farm", id: $.farmId, with: $.name }
 strip:
@@ -1140,10 +1151,13 @@ panels:
       - { label: Turbine, bind: "@.turbineId" }
       - { label: Output (MW), bind: "@.outputMw", fmt: amount0 }
   - { id: refs, kind: links, title: Linked entities, area: right }
-# … more panels as you need them
 notes: |
-  One wind farm: capacity, output and its turbines.
+  Capacity factor is the headline figure, so it is emphasised in the strip.
+  Add a line chart of output once the samples carry an output history.
 ```
+
+Any other file in `sutras/` is reported (`DRS-2004`): a leftover `.sutra.md` (convert it with
+`tools/rachana/md_to_yaml.py`) or a plain `.yaml`/`.yml` (rename it, or keep it out of the folder).
 Each sample document may carry a `_meta` block (`source`, `generation`, `live`, and `walk` for the demo plugin's
 random-walk ticks), which becomes the view's provenance; `samples/catalog.json` lists `{kind, id, title, subtitle}`
 for the dropdown.
@@ -1161,7 +1175,7 @@ same mnemonic, role or connector differently without one extending the other sto
 why `finance` and the banking packs (both define `TRD`) cannot be loaded together.
 
 **Tests that cover packs:** `PackLoaderTest` (manifests become properties; clashes are errors), `PackSutrasTest`
-(every pack Sutra loads with no problems), `DocumentedSutrasTest` (the `sutra` blocks in pack guides parse),
+(every pack Sutra loads with no problems), `DocumentedSutrasTest` (the complete Sutras in pack guides parse),
 `ImperfectDataTest`, and for generated packs `DomainPacksTest`, which opens every example command in
 `console.examples` and expects a Sutra layout with every panel filled. Add your pack's name to the list in
 `DomainPacksTest` when it should be held to that.
@@ -1527,7 +1541,7 @@ console/.venv/bin/python -m pytest -q console/tests/test_sources.py -k connector
 | Whole pipeline | `drishti-server` | `ViewPipeline` from the context, real packs | `ViewPipelineTest` (the four mockups, value by value), `BankingPacksTest`, `DomainPacksTest`, `ImperfectDataTest`, `BusinessDateTest` |
 | Real services | plugins, identity | Testcontainers, skipped without Docker ([§2.3](#23-tests-that-need-docker)) | `PostgresIdentityStoreTest`, `AerospikeSourcePluginTest`, `RabbitMqOutageTest` |
 | Repository rules | `drishti-it` | ArchUnit and file walks | `ArchitectureRulesTest`, `LicenseHeaderTest`, `SourceFileSizeTest` |
-| Documentation | rachana, server | the docs are parsed as code | `DocumentedSutrasTest` (every `sutra` block in `docs/`, `console/web/guides/` and pack guides), `RachanaReferenceExampleTest` (the annotated example in `RACHANA_REFERENCE.md` previews as described), `PackSutrasTest` |
+| Documentation | rachana, server | the docs are parsed as code | `DocumentedSutrasTest` (every complete Sutra, a ```` ```yaml ```` block starting `rachana:`, in `docs/`, `console/web/guides/` and pack guides), `RachanaReferenceExampleTest` (the annotated example in `RACHANA_REFERENCE.md` previews as described), `PackSutrasTest` |
 | Performance gate | `drishti-server` | timed in the test | `ViewPipelineTest.warmViewsStayWellUnderFiftyMillisecondsAtP99`: 300 warm-up views, then 2000 timed; p99 must be under 50ms and the layout cache hit rate above 0.99 |
 | Micro-benchmarks | `drishti-benchmarks` | JMH, run by hand | `HotPathBenchmark` ([PERFORMANCE.md](PERFORMANCE.md) has the commands) |
 | Console | `console/tests` | pytest with `FakeBackend`; fixtures in `tests/fixtures/` are ViewModels captured from the real server | `test_terminal.py` (every panel kind with broken data), `test_assets_policy.py` (no CDN, no inline code, Python size), `test_contrast.py` (theme contrast), `test_help.py` (every catalogued guide renders) |
@@ -1559,7 +1573,7 @@ Habits that keep the suite fast and reliable:
 | What does the server return for a view? | `curl -s localhost:18480/api/v1/views/trade/T-10001 \| python3 -m json.tool`. Add `-H 'X-Drishti-As-Of: 2026-09-29'` for a past date and `-H 'X-Drishti-User: ash'` to act as a user (security off). With security on, add `-H "Authorization: Bearer <token>"`. |
 | What did the source send? | `F9` in the view, or `curl -s localhost:18480/api/v1/entities/trade/T-10001/raw` (redacted for roles without `raw`) |
 | Which Sutra, how long? | The view JSON's `provenance.layout` (`Sutra irs-fixfloat v1 + inference`, or `inference only`) and `timings` (`fetch`, `layout`, `links`, `bind`, `total` in ms) |
-| What would inference do on its own? | `curl -s localhost:18480/api/v1/studio/inferred/trade/T-10001` returns the inferred Sutra as Markdown |
+| What would inference do on its own? | `curl -s localhost:18480/api/v1/studio/inferred/trade/T-10001` returns the inferred Sutra as YAML (`text/yaml`, starting `rachana: 1`) |
 | Is a Sutra broken? | `curl -s localhost:18480/api/v1/sutras/problems` (`{}` when none); see [runbooks/sutra-broken.md](runbooks/sutra-broken.md) |
 | Which sources run? | `curl -s localhost:18480/api/v1/sources` (and `failures`) |
 | What changed between dates? | `curl -s localhost:18480/api/v1/history/trade/T-10001/diff` |
@@ -1612,9 +1626,10 @@ The console runs Uvicorn with access logs off (`access_log=False` in `run_drisht
    next generator run, and the drill's `--check` rejects a hand edit. The generated pack manifests even copy their
    header from lines 2–14 of `docs/RACHANA_REFERENCE.md` (`make_packs.py`), so editing that document's header makes
    them stale too.
-4. **`sutra` blocks in documentation are compiled.** `DocumentedSutrasTest` parses every fenced block marked
-   `sutra` in `docs/`, `console/web/guides/` and pack guides. Use `yaml` fences for fragments, or put `…` in a block
-   that is deliberately abridged (such blocks are skipped).
+4. **Sutras in documentation are compiled.** `DocumentedSutrasTest` parses every ```` ```yaml ```` block whose first
+   line after any comments is `rachana:` in `docs/`, `console/web/guides/` and pack guides, and compiles its
+   expressions. Such a block must be a complete, valid Sutra. A fragment (a panel, a strip) is a `yaml` block without
+   `rachana:`; a block that is deliberately abridged contains `…` and is skipped.
 5. **Environment variables leak into tests.** See [§2.2](#22-maven-commands): unset `DRISHTI_*` before running Maven.
 6. **A page that is public by accident.** New console paths must be added to `PROTECTED` in `console/core/app.py`.
    `/t` and `/s` are matched exactly (they are prefixes of public paths such as `/static`); the rest by prefix.

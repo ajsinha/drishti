@@ -261,20 +261,26 @@ curl -s http://localhost:18480/api/v1/health/live
 
 ## 6. Rachana — the screen grammar — and Sutras written in it
 
-Rachana is the grammar; each Sutra is a Markdown document written around it: one fenced `sutra` block holds the
-layout and the prose explains it (ADR-011). Files are named `<name>.v<N>.sutra.md` (plain `.yaml` still loads) and are
-found by scanning, recursively, the site directories (`drishti.rachana.dirs`, default `./sutras`) and every enabled
+Rachana is the grammar; each Sutra is one YAML document written in it (ADR-017, which supersedes ADR-011's
+Markdown Sutras). The first key, `rachana: 1`, is the language version, so the grammar can evolve without
+misreading old files; `description`, `notes` and a per-panel `description` carry the prose. Files are named
+`<name>.v<N>.sutra.yaml` and are found by scanning, recursively, the site directories (`drishti.rachana.dirs`, default `./sutras`) and every enabled
 pack's `sutras/` folder (`packs/<pack>/sutras/<area>/…`). `SutraBuilder` validates each one at load against the panel
 kinds' required and allowed options and reports problems with line and column (codes `DRS-2001`, `DRS-2002`; the
-detailed checks are 2010–2027). With `hot-reload` on, a `WatchService` reloads changed files (debounced 250 ms); an
+detailed checks are 2009–2027). Any other file in a Sutra folder (a `.sutra.md` from before 1.11, a plain `.yaml`)
+is reported as `DRS-2004` with the fix. Because the grammar is plain YAML, `RachanaSchema` generates a JSON Schema of
+it from `PanelKind`, the formats and the served kinds, served at `GET /api/v1/rachana/schema`; Studio's editor and
+any schema-aware editor complete and check Sutras with it. With `hot-reload` on, a `WatchService` reloads changed files (debounced 250 ms); an
 invalid edit keeps the last good version and is listed at `GET /api/v1/sutras/problems`. Bindings use a small,
 compiled, side-effect-free expression language (**Rachana-EL**) — not scripting.
 
-A real Sutra, abbreviated (`packs/finance/sutras/rates/irs-vanilla.v3.sutra.md`):
+A real Sutra, abbreviated (`packs/finance/sutras/rates/irs-vanilla.v3.sutra.yaml`, after its copyright comment):
 
 ```yaml
+rachana: 1
 sutra: irs-vanilla
 version: 3
+description: Vanilla fixed/float interest rate swap (mockup drishti-irs.png).
 match: { kind: trade, where: "$.productType == 'IRS' && size($.legs) == 2", priority: 10 }
 title: { pill: "Trade · Interest rate swap", id: $.tradeId, with: "link($.counterparty.id, 'counterparty', $.counterparty.name)" }
 strip:                                   # header key figures (at most 8)
@@ -503,7 +509,7 @@ Maven multi-module reactor on `spring-boot-starter-parent`, `groupId com.ash.dri
 |---|---|---|
 | `drishti-api` | Plugin SPI: `SourcePlugin`, `PluginManifest`, `SourceCapabilities`, `DataNode`, `EntityRef`, `EntityDocument`, `Provenance`, `AsOf`, `HitIndex`, `Subscription` (no Spring, so plugins stay light) | – |
 | `drishti-common` | Error codes (`ErrorCode`, `DRS-nnnn`), `DrishtiException`, JSON codec, `ShapeFingerprinter`, `BusinessCalendar` | `CommonConfiguration` |
-| `drishti-rachana` | Sutra model, Markdown/YAML parser and validator, Rachana-EL compiler, formats and tones, `SutraRegistry` + hot reload, `SutraMatcher` | `RachanaConfiguration` |
+| `drishti-rachana` | Sutra model, YAML parser and validator, the language's JSON Schema (`RachanaSchema`), Rachana-EL compiler, formats and tones, `SutraRegistry` + hot reload, `SutraMatcher` | `RachanaConfiguration` |
 | `drishti-inference` | Shape analysis, semantic hints, rules, scorer, packer, `LayoutMerger` (Sutra ⊕ inference) | `InferenceConfiguration` |
 | `drishti-graph` | `ReferenceCatalog` (identifier patterns, reference fields), badges | `GraphConfiguration` |
 | `drishti-engine` | `ViewPipeline`, `Binder`, caches, `SourceRouter`, `SourceRegistry`, `PluginDiscovery`, `TopicHub`, `ViewStream`, `PatchDiffer`, suggestions, structured search, impact, business dates | `EngineConfiguration` |
@@ -574,6 +580,7 @@ The main endpoints; [API_GUIDE.md](API_GUIDE.md) lists every one with examples. 
 | `GET` | `/search?q=` | structured search across entities |
 | `GET` | `/impact/{kind}/{id}` · `/history/{kind}/{id}/diff` | F8 impact · what changed between dates |
 | `GET` | `/sutras` · `/sutras/{name}/{version}` · `/sutras/problems` | registry listing · one Sutra · load problems |
+| `GET` | `/rachana/schema` | the JSON Schema of a Sutra (Rachana language 1), with this server's kinds and formats, for editors |
 | `POST` | `/studio/preview` · `/sutras` | ViewModel from an unsaved Sutra · save (a proposal when review is on) |
 | `GET` | `/sutras/proposals` (+ `approve`/`reject`/`withdraw`) | Sutra governance |
 | `GET` | `/sources` · `/packs` · `/about` · `/business-date` | plugins and health · packs · build info · resolved date |
@@ -693,7 +700,7 @@ one panel, updates strip cells in place, and hands chart panels new data — so 
 |---|---|---|
 | D1 | Backend is one Spring Boot application (never an embedded library); Python console | Single deployable, Spring wiring/config/observability everywhere; domain objects still testable without a context |
 | D2 | Layout = Sutra ⊕ inference, cached by shape fingerprint | Unknown data renders immediately; cost paid once per shape |
-| D3 | Sutras are Markdown documents with a YAML `sutra` block and a compiled, side-effect-free EL | Reviewable, diffable, safe; no scripting in layouts |
+| D3 | Sutras are YAML files (`*.sutra.yaml`, `rachana: 1`) with a compiled, side-effect-free EL (ADR-003, ADR-017) | Reviewable, diffable, safe; ordinary YAML tooling and a served JSON Schema; no scripting in layouts |
 | D4 | Server returns ViewModel, not HTML | Same model feeds console, API clients and golden tests |
 | D5 | SSE (not WebSocket) for live, one channel per browser tab | One-way and proxy-friendly; a reconnect simply receives a fresh `view` event, so nothing is replayed; one channel keeps a tab within the browser's six connections |
 | D6 | Vendored front-end assets, no build pipeline | Air-gapped desks; MAYA/Pravaha practice |

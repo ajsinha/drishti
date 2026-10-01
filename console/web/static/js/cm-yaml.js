@@ -34,7 +34,6 @@
         if (stream.match(/^[$@][\w.[\]?-]*/) || stream.match(/^#index/)) { return 'variable-2'; }
         if (stream.match(/^F([1-9]|1[0-2])\b/)) { return 'def'; }
         if (stream.match(/^[A-Za-z_][\w-]*/)) { return null; }
-        if (stream.match(/^[A-Za-z_][\w-]*/)) { return null; }
         stream.next();
         return null;
       },

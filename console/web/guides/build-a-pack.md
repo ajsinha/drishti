@@ -202,8 +202,8 @@ uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/librar
 ```text
 packs/library/
   pack.yaml                            kinds, mnemonics, id patterns, link fields, badges, roles, connector, routes, examples
-  sutras/library/book-title.v1.sutra.md   one Markdown Sutra per kind, with prose
-  sutras/library/author.v1.sutra.md
+  sutras/library/book-title.v1.sutra.yaml   one YAML Sutra per kind (rachana: 1, with a description)
+  sutras/library/author.v1.sutra.yaml
   samples/book-title/TITLE-0001.json   the documents, for the built-in demo source
   samples/author/AUTH-001.json
   samples/catalog.json                 the list the demo source and suggestions read

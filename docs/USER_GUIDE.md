@@ -863,8 +863,9 @@ are switched on for everyone ([Admin → Packs](#admin--packs-switching-a-pack-o
 
 ## Sutra Studio: changing how a screen looks
 
-A **Sutra** is a layout, written as a Markdown document with the layout itself in one fenced `sutra`
-block. **Studio** (`/studio`, *Build → Sutra Studio* in the top bar) is the editor. You need the *author* role; saving must be
+A **Sutra** is a layout: one YAML file (`<name>.v<N>.sutra.yaml`) that starts with `rachana: 1`, the version of
+the layout language, followed by the layout. It may say what it is for in `description:` and carry longer notes for
+reviewers in `notes:`; neither changes the screen. **Studio** (`/studio`, *Build → Sutra Studio* in the top bar) is the editor. You need the *author* role; saving must be
 switched on for the server (`DRISHTI_STUDIO_SAVE=true`).
 
 The Studio page has:
@@ -872,16 +873,19 @@ The Studio page has:
 - a **Sutra** picker (every loaded Sutra, `irs-fixfloat v1 · trade`, or *New Sutra…*);
 - **Kind** and **Id** of the entity to preview against;
 - **Preview** (or `Ctrl+Enter`), **Start from inference**, and **Save** (or **Submit for review**);
-- an editor with a toolbar, **Insert…** (a sutra block, a strip field, or any panel kind) and **Jump to…**;
-- on the right, the **Preview**, the rendered **Document**, and **Sample JSON** (paste your own document and
-  tick *Preview against this JSON*);
-- a list of **problems** by line number when the Sutra has mistakes.
+- a **YAML editor** that completes as you type: keys, panel kinds and the options each kind takes, formats, tones,
+  entity kinds and expression functions, all taken from the server's schema of the language
+  (`GET /api/v1/rachana/schema`);
+- **live checking**: problems are listed by line number while you type, before you preview or save;
+- a **Summary** of the layout (what it matches, the strip, the panels and their keys), read from the YAML;
+- the **Preview**, and **Sample JSON** (paste your own document and preview against it);
+- **test entities** kept for each Sutra, so you can preview against several entities in turn.
 
 Worked example: add a one-day P&L figure to the swap's strip.
 
 1. Open `/studio?sutra=irs-fixfloat@1&kind=trade&id=T-10001`. The editor shows the Sutra; the preview
    shows `T-10001`.
-2. In the `sutra` block, change `version: 1` to `version: 2`.
+2. Near the top, under `rachana: 1` and `sutra: irs-fixfloat`, change `version: 1` to `version: 2`.
 3. Under `strip:`, after the `MTM (USD)` line, add the line shown below this list
    (same indentation as the other strip lines).
 4. Press `Ctrl+Enter`. The preview's strip now has **P&L 1D (USD)**, and the status line says
@@ -898,7 +902,7 @@ The line to add in step 3:
 ```
 
 Bump the version whenever you change a Sutra that is already live. The saved file goes into the site
-Sutra folder (`./sutras/…/irs-fixfloat.v2.sutra.md`), and views use the highest version.
+Sutra folder (`./sutras/…/irs-fixfloat.v2.sutra.yaml`), and views use the highest version.
 
 **Start from inference** turns what Drishti infers for the entity into an editable Sutra: a quick
 start for a kind that has no Sutra.

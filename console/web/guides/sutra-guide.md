@@ -17,7 +17,7 @@
 
 A **Sutra** is the layout of one family of screens: every interest rate swap, every netting set, every
 volatility surface. It says which figures lead the header, which panels show what, and which keys open what.
-It is written in **Rachana**, Drishti's screen grammar, inside an ordinary Markdown document. It holds no code
+It is written in **Rachana**, Drishti's screen grammar, as one ordinary YAML file. It holds no code
 and no pixels, so a Sutra is short, reviewable and safe, and one Sutra serves every document that matches it.
 
 This guide goes from a first Sutra to every panel kind, with real examples from the banking packs and the views
@@ -36,11 +36,11 @@ from about sixty lines of Rachana.*
 
 ## 1. A first Sutra in five minutes
 
-1. Open **Studio** (`/studio`).
-2. Choose *New Sutra…* in the picker.
-3. Type `trade` in the first small box and `T-10001` in the second.
-4. Select all the text in the editor and replace it with the block below.
-5. Press **Ctrl+Enter**.
+1. Open **Studio** (`/studio`) and start a new Sutra.
+2. Set the entity to preview against to kind `trade`, id `T-10001`.
+3. Select all the text in the editor and replace it with the block below. As you type, the editor completes keys,
+   panel kinds and formats and marks what the grammar does not allow.
+4. Preview it.
 
 ```yaml
 rachana: 1
@@ -70,7 +70,7 @@ That is a complete Sutra. On the right you should see:
 - **Linked entities** on the right: the counterparty, netting set, book, trader, desk, curves and fixing index the
   trade points to.
 
-Now change something and press **Ctrl+Enter** again. Some things to try:
+Now change something and preview again. Some things to try:
 
 | Change | What happens |
 |---|---|
@@ -79,27 +79,48 @@ Now change something and press **Ctrl+Enter** again. Some things to try:
 | `kind: kv` → `kind: gauge` on *Terms* | problems `DRS-2022` (a gauge needs `value`) and `DRS-2023` (`rows` is not a gauge option), with their line |
 | remove the `refs` panel | *Linked entities* disappears |
 
-## 2. The file: Markdown around one `sutra` block
+## 2. The file: one YAML document
 
-A Sutra lives in `sutras/<domain>/<name>.v<N>.sutra.md`, inside a pack or a site directory. The file is
-Markdown: write what the layout is for and why, for the next person and for AI assistants. The engine reads only
-the fenced block marked `sutra`:
+A Sutra lives in `sutras/<domain>/<name>.v<N>.sutra.yaml`, inside a pack or a site directory. The whole file is
+the Sutra, and it starts with `rachana: 1`, the version of the Rachana language it is written in. What the layout
+is for, and why, goes in the file too, in two plain-text keys:
 
 ```yaml
 rachana: 1
 sutra: irs-fixfloat
 version: 1
-...
+description: Fixed/float interest rate swaps for the rates desk.
 notes: |
-  Swaps for the rates desk. The strip leads with MTM and DV01 because that is what traders check first.
+  The strip leads with MTM and DV01 because that is what traders check first.
+  The cashflow ladder lights the next payment; the curve on the right is the discount curve.
+match: { kind: trade, where: "$.productType == 'IRS_FIXFLOAT'", priority: 10 }
+panels:
+  - id: terms
+    kind: kv
+    title: Terms
+    description: The economic terms as booked.
+    rows: $.terms
 ```
-- One `sutra` block per file (problem `DRS-2004` otherwise). Problems report the Markdown file's line numbers.
+
+- `rachana: 1` comes first. Without it, or with a version this server does not read, the file is refused with
+  `DRS-2009`.
+- `description` is one paragraph: what the layout shows and for which entities. `notes` is longer text for the next
+  author and for reviewers, written as a YAML block (`notes: |` and indented lines, line breaks kept). A panel can
+  have its own `description`. All three are plain text (not Markdown) and never change the view.
 - `name@version` is unique. Keep old versions: saved views and history reproduce with the version they used.
-- Studio edits the whole document; its **Document** tab shows the prose as the help centre renders it.
+- Problems report the file's own line and column.
+- Only `*.sutra.yaml` files are read. An old Markdown Sutra (`*.sutra.md`) or any other `.yaml` file in a Sutra
+  folder is reported as `DRS-2004`. Convert old files with
+  `python3 tools/rachana/md_to_yaml.py <file-or-folder> --delete` (their prose becomes `notes:`), or rename.
+- Because a Sutra is plain YAML, any editor that reads JSON Schema can complete and check it: point it at
+  `/api/v1/rachana/schema` on the server (for example, with the YAML extension of VS Code, a first line
+  `# yaml-language-server: $schema=http://localhost:18480/api/v1/rachana/schema`). The schema lists this server's
+  entity kinds and formats, so completion offers exactly what will work here.
 
 ## 3. Anatomy
 
 ```yaml
+rachana: 1                           # the language version, always first
 sutra: irs-fixfloat                  # name: lower-case kebab
 version: 1
 description: Exchanges fixed for floating RFR-compounded payments.
@@ -113,6 +134,8 @@ keys: { F7: "link($.nettingSet, 'netting-set')", F8: impact, F9: raw }
 
 | Part | What it does |
 |---|---|
+| `rachana` | The Rachana language version: `1`. |
+| `description`, `notes` | Plain text for people: one paragraph, and longer notes. The view ignores them. |
 | `match` | Which documents this Sutra lays out: a `kind`, an optional `where` condition over the document, and a `priority`. The highest-priority Sutra whose `where` holds wins; none means inference alone. |
 | `title` | The title line: a `pill`, the identifier (`id`), and `with` (usually the counterparty, as a link). |
 | `strip` | The header figures, at most eight. `emphasis: true` highlights the one the desk watches. |
@@ -466,13 +489,14 @@ A Sutra says what matters; inference fills the rest.
 
 ## 11. Writing Sutras in Studio
 
-![Studio: the Markdown editor with a live preview](/static/img/guide/studio.png)
+![Studio: the Sutra editor with a live preview](/static/img/guide/studio.png)
 
 1. Start from a Sutra that works, or **Start from inference** on a real entity.
-2. Edit; **Ctrl+Enter** previews against the entity, or against JSON you paste in *Sample JSON*.
-3. **Insert…** adds a panel of any kind except `surface`, already shaped; **Jump to…** moves around long
-   documents.
-4. Problems are listed with their line; click one to go there.
+2. Edit the YAML. The editor completes keys, panel kinds, options, formats and entity kinds from the language's
+   schema, and checks the text as you type.
+3. Preview against the entity, against one of the test entities, or against JSON you paste in.
+4. Problems are listed with their line; click one to go there. The summary shows what the Sutra matches and
+   which panels and keys it defines.
 5. **Submit for review** (authors, where saving is on): an approver approves it and it goes live; or commit the file
    to the pack's `sutras/` directory through version control.
 
@@ -483,11 +507,12 @@ A Sutra says what matters; inference fills the rest.
 - Every panel a user reaches often has a `key` (F2–F6); F7 opens the parent entity, F8 impact, F9 raw JSON.
 - Money has `fmt: signed0` or `amount0`, and `tone: sign` where the sign matters.
 - Labels are left to the taxonomy unless the Sutra needs different words.
-- The prose says why the layout is what it is.
+- `description` says what the layout is for; `notes` say why it is what it is.
 - Preview against a thin document and a rich one (Sample JSON) before saving.
 
-**Problem codes** you may meet: `DRS-2001` YAML syntax, `DRS-2004` no or several `sutra` blocks, `DRS-2010`
-missing key, `DRS-2011` unknown key, `DRS-2021` unknown panel kind, `DRS-2022`/`2023` panel options, `DRS-2024`
-duplicate panel id, `DRS-2025` function key clash, `DRS-2026` strip longer than 8, `DRS-2028` `name@version`
-defined twice, `DRS-2101` an expression that does not compile. The [Rachana reference](rachana-reference) lists
-them all.
+**Problem codes** you may meet: `DRS-2001` YAML syntax, `DRS-2004` a file in a Sutra folder that is not a
+`*.sutra.yaml` (an old `.sutra.md`, or a plain `.yaml`: convert or rename), `DRS-2009` missing or unknown
+`rachana:` version, `DRS-2010` missing key, `DRS-2011` unknown key, `DRS-2012` wrong type, `DRS-2020` bad name or
+version, `DRS-2021` unknown panel kind, `DRS-2022`/`2023` panel options, `DRS-2024` duplicate panel id, `DRS-2025`
+function key clash, `DRS-2026` strip longer than 8, `DRS-2027` bad area, `DRS-2028` `name@version` defined twice,
+`DRS-2101` an expression that does not compile. The [Rachana reference](rachana-reference) lists them all.

@@ -17,7 +17,7 @@
 
 | Status | Date | Decider |
 |---|---|---|
-| Accepted | 2026-09-30 | Ashutosh Sinha |
+| Superseded by ADR-017 | 2026-09-30 | Ashutosh Sinha |
 
 ## Context
 A Sutra's YAML says *what* the layout is but not *why*: why the strip leads with MTM, why a panel sits on
@@ -37,3 +37,5 @@ Each Sutra carries its own documentation, rendered in Studio and readable on any
 unchanged, so existing tooling, the JSON schema and ADR-003 still hold for the block. Rendered prose is
 authored content: the console renders it without raw HTML and with only safe links. Amends ADR-003 and
 ADR-008 (file name).
+
+**Superseded by [ADR-017](017-sutras-are-yaml.md) (2026-09-30):** Sutras are YAML only (`<name>.v<N>.sutra.yaml`, starting `rachana: 1`, prose in `description` and `notes`); Markdown Sutras are no longer read and `tools/rachana/md_to_yaml.py` converts them.

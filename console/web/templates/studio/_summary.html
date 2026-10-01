@@ -1,0 +1,38 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% if error %}<p class="sm-error">The YAML cannot be read yet: {{ error }}</p>{% else %}
+<h2 class="mono">{{ s.sutra or "(no name)" }}{% if s.version %} v{{ s.version }}{% endif %}</h2>
+{% if s.rachana != "1" %}<p class="sm-error">The first key should be <code>rachana: 1</code>.</p>{% endif %}
+{% if s.description %}<p class="sm-desc">{{ s.description }}</p>{% else %}<p class="text-muted-d">No description yet: add <code>description:</code> (one paragraph: what this layout shows, and for which entities).</p>{% endif %}
+{% if s.notes %}<div class="sm-notes">{{ s.notes }}</div>{% endif %}
+<h3>Applies to</h3>
+<p><b>{{ s.match.kind or "?" }}</b> entities{% if s.match.where %} where <code>{{ s.match.where }}</code>{% endif %}{% if s.match.priority %} · priority {{ s.match.priority }}{% endif %}{% if s.domain %} · domain {{ s.domain }}{% endif %}.</p>
+{% if s.title.pill or s.title.id %}<p class="text-muted-d">Title: {{ s.title.pill }} <code>{{ s.title.id }}</code>{% if s.title.with %} with <code>{{ s.title.with }}</code>{% endif %}</p>{% endif %}
+{% if s.strip %}<h3>Strip ({{ s.strip|length }})</h3>
+<div class="sm-wrap"><table class="sm-tbl"><thead><tr><th>Label</th><th>Bind</th><th>Format</th></tr></thead><tbody>
+{% for f in s.strip %}<tr><td>{{ f.label }}</td><td><code>{{ f.bind }}</code></td><td>{{ f.fmt }}</td></tr>{% endfor %}
+</tbody></table></div>{% endif %}
+<h3>Panels ({{ s.panels|length }})</h3>
+{% for p in s.panels %}<div class="sm-panel">
+  <div class="sm-panel-h"><b>{{ p.title or p.id }}</b> <span class="sm-tag mono">{{ p.kind }}{% if p.body %} · {{ p.body }}{% endif %}</span>
+    <span class="sm-tag">{{ p.area }}</span>{% if p.key %}<span class="sm-tag mono">{{ p.key }}</span>{% endif %}<span class="text-muted-d mono">{{ p.id }}</span></div>
+  {% if p.description %}<div>{{ p.description }}</div>{% endif %}
+  {% if p.rows %}<div class="sm-cols">rows <code>{{ p.rows }}</code></div>{% endif %}
+  {% if p.columns %}<div class="sm-cols">{{ p.columns|join(" · ") }}</div>{% endif %}
+</div>{% else %}<p class="text-muted-d">No panels yet: Insert… → Panel.</p>{% endfor %}
+{% if s.fkeys %}<h3>Function keys</h3>
+<ul>{% for k in s.fkeys %}<li><b class="mono">{{ k.key }}</b> <code>{{ k.action }}</code></li>{% endfor %}</ul>{% endif %}
+{% endif %}
