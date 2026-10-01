@@ -262,7 +262,40 @@
   "sourceSystem": "Murex",
   "createdAt": "2025-12-15T12:01:00Z",
   "lastModifiedAt": "2025-12-15T12:01:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2025-12-15",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-MOKAFOR: buy Interest rate cap"
+   },
+   {
+    "date": "2025-12-15",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA507196821)"
+   },
+   {
+    "date": "2026-09-17",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "JPY payment settled",
+    "amount": 214130.0
+   },
+   {
+    "date": "2026-12-17",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2028-06-29",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -315,6 +348,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -2720719,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 5199
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 4260
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -14988
+  },
+  {
+   "step": "FX delta",
+   "pnl": 4702
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 97560
+  },
+  {
+   "step": "Theta",
+   "pnl": -11476
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -1259
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

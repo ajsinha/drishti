@@ -31,6 +31,67 @@
  },
  "group": "GRP-SUMMIT",
  "creditLimit": "LIM-SUMMIT",
+ "hierarchy": {
+  "nodes": [
+   {
+    "id": "GRP-SUMMIT",
+    "label": "Summit Holdings Inc.",
+    "type": "Group (ultimate parent)"
+   },
+   {
+    "id": "CP-SUMMIT",
+    "label": "Summit Clearing LLC",
+    "type": "Counterparty"
+   },
+   {
+    "id": "AGR-SUMMIT-ISDA",
+    "label": "ISDA 2002 Master",
+    "type": "Agreement"
+   },
+   {
+    "id": "CSA-SUMMIT",
+    "label": "Credit support annex",
+    "type": "CSA"
+   },
+   {
+    "id": "NS-SUMMIT-LDN",
+    "label": "NS-SUMMIT-LDN · 30 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-SUMMIT-NY",
+    "label": "NS-SUMMIT-NY · 108 trades",
+    "type": "Netting set"
+   }
+  ],
+  "edges": [
+   {
+    "from": "GRP-SUMMIT",
+    "to": "CP-SUMMIT",
+    "label": "parent of"
+   },
+   {
+    "from": "CP-SUMMIT",
+    "to": "AGR-SUMMIT-ISDA",
+    "label": "signed"
+   },
+   {
+    "from": "AGR-SUMMIT-ISDA",
+    "to": "CSA-SUMMIT",
+    "label": "secured by"
+   },
+   {
+    "from": "AGR-SUMMIT-ISDA",
+    "to": "NS-SUMMIT-LDN",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-SUMMIT-ISDA",
+    "to": "NS-SUMMIT-NY",
+    "label": "nets"
+   }
+  ]
+ },
  "_meta": {
   "source": "counterparty-master",
   "generation": 1

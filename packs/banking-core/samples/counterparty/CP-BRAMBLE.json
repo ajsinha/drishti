@@ -43,6 +43,87 @@
  },
  "group": "GRP-BRAMBLE",
  "creditLimit": "LIM-BRAMBLE",
+ "hierarchy": {
+  "nodes": [
+   {
+    "id": "GRP-BRAMBLE",
+    "label": "Bramble Holdings plc",
+    "type": "Group (ultimate parent)"
+   },
+   {
+    "id": "CP-BRAMBLE",
+    "label": "Bramble Asset Management",
+    "type": "Counterparty"
+   },
+   {
+    "id": "AGR-BRAMBLE-ISDA",
+    "label": "ISDA 2002 Master",
+    "type": "Agreement"
+   },
+   {
+    "id": "CSA-BRAMBLE",
+    "label": "Credit support annex",
+    "type": "CSA"
+   },
+   {
+    "id": "NS-BRAMBLE-FRA",
+    "label": "NS-BRAMBLE-FRA · 3 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-BRAMBLE-LDN",
+    "label": "NS-BRAMBLE-LDN · 15 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-BRAMBLE-NY",
+    "label": "NS-BRAMBLE-NY · 18 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-BRAMBLE-TKY",
+    "label": "NS-BRAMBLE-TKY · 2 trades",
+    "type": "Netting set"
+   }
+  ],
+  "edges": [
+   {
+    "from": "GRP-BRAMBLE",
+    "to": "CP-BRAMBLE",
+    "label": "parent of"
+   },
+   {
+    "from": "CP-BRAMBLE",
+    "to": "AGR-BRAMBLE-ISDA",
+    "label": "signed"
+   },
+   {
+    "from": "AGR-BRAMBLE-ISDA",
+    "to": "CSA-BRAMBLE",
+    "label": "secured by"
+   },
+   {
+    "from": "AGR-BRAMBLE-ISDA",
+    "to": "NS-BRAMBLE-FRA",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-BRAMBLE-ISDA",
+    "to": "NS-BRAMBLE-LDN",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-BRAMBLE-ISDA",
+    "to": "NS-BRAMBLE-NY",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-BRAMBLE-ISDA",
+    "to": "NS-BRAMBLE-TKY",
+    "label": "nets"
+   }
+  ]
+ },
  "_meta": {
   "source": "counterparty-master",
   "generation": 1

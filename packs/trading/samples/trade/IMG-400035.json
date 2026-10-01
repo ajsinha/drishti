@@ -186,7 +186,27 @@
   "sourceSystem": "Summit",
   "createdAt": "2025-02-28T12:08:00Z",
   "lastModifiedAt": "2025-02-28T12:08:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2025-02-28",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-PLINDQVIST: buy OTC equity option"
+   },
+   {
+    "date": "2025-02-28",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT599678008)"
+   },
+   {
+    "date": "2026-10-07",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -241,6 +261,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -169233,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 610
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 14
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 1762
+  },
+  {
+   "step": "FX delta",
+   "pnl": 769
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 2161
+  },
+  {
+   "step": "Theta",
+   "pnl": -185
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 50
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

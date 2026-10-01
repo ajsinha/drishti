@@ -262,7 +262,33 @@
   "sourceSystem": "Summit",
   "createdAt": "2025-12-31T10:51:00Z",
   "lastModifiedAt": "2025-12-31T10:51:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-12-31",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Calypso by TRDR-DWHITFIELD: sell protection Index tranche"
+   },
+   {
+    "date": "2025-12-31",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA593659012)"
+   },
+   {
+    "date": "2027-01-02",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2034-02-14",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -315,6 +341,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 4007168,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -1606
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -1984
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -19269
+  },
+  {
+   "step": "FX delta",
+   "pnl": 1645
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 277
+  },
+  {
+   "step": "Theta",
+   "pnl": 1551
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 289
+  }
+ ],
  "_meta": {
   "source": "murex-credit",
   "generation": 1,

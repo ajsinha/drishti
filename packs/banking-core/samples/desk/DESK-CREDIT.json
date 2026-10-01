@@ -26,6 +26,512 @@
  "assetClasses": [
   "Credit"
  ],
+ "positions": [
+  {
+   "tradeId": "CLY-3000003",
+   "book": "BOOK-CREDIT-1",
+   "currency": "CHF",
+   "family": "cds",
+   "mtm": -182288
+  },
+  {
+   "tradeId": "CLY-3000007",
+   "book": "BOOK-CREDIT-1",
+   "currency": "USD",
+   "family": "cds",
+   "mtm": 21107
+  },
+  {
+   "tradeId": "CLY-3000012",
+   "book": "BOOK-CREDIT-1",
+   "currency": "USD",
+   "family": "cds",
+   "mtm": 1209105
+  },
+  {
+   "tradeId": "CLY-3000016",
+   "book": "BOOK-CREDIT-1",
+   "currency": "USD",
+   "family": "cds",
+   "mtm": -2011432
+  },
+  {
+   "tradeId": "CLY-3000021",
+   "book": "BOOK-CREDIT-1",
+   "currency": "USD",
+   "family": "option",
+   "mtm": -1261668
+  },
+  {
+   "tradeId": "CLY-3000025",
+   "book": "BOOK-CREDIT-1",
+   "currency": "GBP",
+   "family": "cds",
+   "mtm": 1940
+  },
+  {
+   "tradeId": "CLY-3000030",
+   "book": "BOOK-CREDIT-1",
+   "currency": "USD",
+   "family": "cds",
+   "mtm": 730145
+  },
+  {
+   "tradeId": "CLY-3000033",
+   "book": "BOOK-CREDIT-1",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": -871754
+  },
+  {
+   "tradeId": "CLY-3000039",
+   "book": "BOOK-CREDIT-1",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": 1036608
+  },
+  {
+   "tradeId": "CLY-3000042",
+   "book": "BOOK-CREDIT-1",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": -6560
+  },
+  {
+   "tradeId": "CLY-3000047",
+   "book": "BOOK-CREDIT-1",
+   "currency": "JPY",
+   "family": "note",
+   "mtm": 1743748
+  },
+  {
+   "tradeId": "CLY-3000048",
+   "book": "BOOK-CREDIT-1",
+   "currency": "AUD",
+   "family": "note",
+   "mtm": 3195037
+  },
+  {
+   "tradeId": "CLY-3000052",
+   "book": "BOOK-CREDIT-1",
+   "currency": "JPY",
+   "family": "loan",
+   "mtm": -1725172
+  },
+  {
+   "tradeId": "CLY-3000057",
+   "book": "BOOK-CREDIT-1",
+   "currency": "AUD",
+   "family": "loan",
+   "mtm": 1498057
+  },
+  {
+   "tradeId": "CLY-3000060",
+   "book": "BOOK-CREDIT-1",
+   "currency": "CAD",
+   "family": "loan",
+   "mtm": 139581
+  },
+  {
+   "tradeId": "CLY-3000062",
+   "book": "BOOK-CREDIT-1",
+   "currency": "USD",
+   "family": "option",
+   "mtm": 229074
+  },
+  {
+   "tradeId": "CLY-3000064",
+   "book": "BOOK-CREDIT-1",
+   "currency": "JPY",
+   "family": "option",
+   "mtm": 1037396
+  },
+  {
+   "tradeId": "CLY-3000066",
+   "book": "BOOK-CREDIT-1",
+   "currency": "USD",
+   "family": "option",
+   "mtm": -2328179
+  },
+  {
+   "tradeId": "CLY-3000068",
+   "book": "BOOK-CREDIT-1",
+   "currency": "USD",
+   "family": "cds",
+   "mtm": 483052
+  },
+  {
+   "tradeId": "CLY-3000002",
+   "book": "BOOK-CREDIT-2",
+   "currency": "USD",
+   "family": "cds",
+   "mtm": 149463
+  },
+  {
+   "tradeId": "CLY-3000006",
+   "book": "BOOK-CREDIT-2",
+   "currency": "GBP",
+   "family": "cds",
+   "mtm": 8248
+  },
+  {
+   "tradeId": "CLY-3000008",
+   "book": "BOOK-CREDIT-2",
+   "currency": "CHF",
+   "family": "cds",
+   "mtm": -1402373
+  },
+  {
+   "tradeId": "CLY-3000009",
+   "book": "BOOK-CREDIT-2",
+   "currency": "JPY",
+   "family": "cds",
+   "mtm": 1066256
+  },
+  {
+   "tradeId": "CLY-3000010",
+   "book": "BOOK-CREDIT-2",
+   "currency": "JPY",
+   "family": "cds",
+   "mtm": 1013301
+  },
+  {
+   "tradeId": "CLY-3000011",
+   "book": "BOOK-CREDIT-2",
+   "currency": "CHF",
+   "family": "cds",
+   "mtm": 644269
+  },
+  {
+   "tradeId": "CLY-3000015",
+   "book": "BOOK-CREDIT-2",
+   "currency": "CAD",
+   "family": "cds",
+   "mtm": 92367
+  },
+  {
+   "tradeId": "CLY-3000022",
+   "book": "BOOK-CREDIT-2",
+   "currency": "USD",
+   "family": "option",
+   "mtm": 75526
+  },
+  {
+   "tradeId": "CLY-3000027",
+   "book": "BOOK-CREDIT-2",
+   "currency": "JPY",
+   "family": "cds",
+   "mtm": -2867075
+  },
+  {
+   "tradeId": "CLY-3000028",
+   "book": "BOOK-CREDIT-2",
+   "currency": "JPY",
+   "family": "cds",
+   "mtm": 2634218
+  },
+  {
+   "tradeId": "CLY-3000029",
+   "book": "BOOK-CREDIT-2",
+   "currency": "JPY",
+   "family": "cds",
+   "mtm": -3938043
+  },
+  {
+   "tradeId": "CLY-3000031",
+   "book": "BOOK-CREDIT-2",
+   "currency": "JPY",
+   "family": "swap",
+   "mtm": -409806
+  },
+  {
+   "tradeId": "CLY-3000032",
+   "book": "BOOK-CREDIT-2",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": -529235
+  },
+  {
+   "tradeId": "CLY-3000035",
+   "book": "BOOK-CREDIT-2",
+   "currency": "GBP",
+   "family": "swap",
+   "mtm": -5751547
+  },
+  {
+   "tradeId": "CLY-3000038",
+   "book": "BOOK-CREDIT-2",
+   "currency": "GBP",
+   "family": "swap",
+   "mtm": -1607501
+  },
+  {
+   "tradeId": "CLY-3000045",
+   "book": "BOOK-CREDIT-2",
+   "currency": "AUD",
+   "family": "note",
+   "mtm": 2791987
+  },
+  {
+   "tradeId": "CLY-3000046",
+   "book": "BOOK-CREDIT-2",
+   "currency": "EUR",
+   "family": "note",
+   "mtm": -490007
+  },
+  {
+   "tradeId": "CLY-3000050",
+   "book": "BOOK-CREDIT-2",
+   "currency": "EUR",
+   "family": "loan",
+   "mtm": -3431576
+  },
+  {
+   "tradeId": "CLY-3000051",
+   "book": "BOOK-CREDIT-2",
+   "currency": "CAD",
+   "family": "loan",
+   "mtm": -333574
+  },
+  {
+   "tradeId": "CLY-3000053",
+   "book": "BOOK-CREDIT-2",
+   "currency": "CAD",
+   "family": "loan",
+   "mtm": -2592887
+  },
+  {
+   "tradeId": "CLY-3000056",
+   "book": "BOOK-CREDIT-2",
+   "currency": "GBP",
+   "family": "loan",
+   "mtm": 1256638
+  },
+  {
+   "tradeId": "CLY-3000058",
+   "book": "BOOK-CREDIT-2",
+   "currency": "EUR",
+   "family": "loan",
+   "mtm": 1220418
+  },
+  {
+   "tradeId": "CLY-3000067",
+   "book": "BOOK-CREDIT-2",
+   "currency": "JPY",
+   "family": "cds",
+   "mtm": 177423
+  },
+  {
+   "tradeId": "CLY-3000069",
+   "book": "BOOK-CREDIT-2",
+   "currency": "GBP",
+   "family": "cds",
+   "mtm": 55694
+  },
+  {
+   "tradeId": "CLY-3000070",
+   "book": "BOOK-CREDIT-2",
+   "currency": "CAD",
+   "family": "cds",
+   "mtm": 371591
+  },
+  {
+   "tradeId": "CLY-3000072",
+   "book": "BOOK-CREDIT-2",
+   "currency": "AUD",
+   "family": "cds",
+   "mtm": -241183
+  },
+  {
+   "tradeId": "CLY-3000001",
+   "book": "BOOK-CREDIT-3",
+   "currency": "CAD",
+   "family": "cds",
+   "mtm": 28038
+  },
+  {
+   "tradeId": "CLY-3000004",
+   "book": "BOOK-CREDIT-3",
+   "currency": "USD",
+   "family": "cds",
+   "mtm": 645
+  },
+  {
+   "tradeId": "CLY-3000005",
+   "book": "BOOK-CREDIT-3",
+   "currency": "CHF",
+   "family": "cds",
+   "mtm": -287615
+  },
+  {
+   "tradeId": "CLY-3000013",
+   "book": "BOOK-CREDIT-3",
+   "currency": "CAD",
+   "family": "cds",
+   "mtm": 3988071
+  },
+  {
+   "tradeId": "CLY-3000014",
+   "book": "BOOK-CREDIT-3",
+   "currency": "JPY",
+   "family": "cds",
+   "mtm": 1564064
+  },
+  {
+   "tradeId": "CLY-3000017",
+   "book": "BOOK-CREDIT-3",
+   "currency": "CHF",
+   "family": "cds",
+   "mtm": -257129
+  },
+  {
+   "tradeId": "CLY-3000018",
+   "book": "BOOK-CREDIT-3",
+   "currency": "EUR",
+   "family": "cds",
+   "mtm": -1480347
+  },
+  {
+   "tradeId": "CLY-3000019",
+   "book": "BOOK-CREDIT-3",
+   "currency": "AUD",
+   "family": "option",
+   "mtm": -244202
+  },
+  {
+   "tradeId": "CLY-3000020",
+   "book": "BOOK-CREDIT-3",
+   "currency": "USD",
+   "family": "option",
+   "mtm": 1574254
+  },
+  {
+   "tradeId": "CLY-3000023",
+   "book": "BOOK-CREDIT-3",
+   "currency": "USD",
+   "family": "option",
+   "mtm": 1786443
+  },
+  {
+   "tradeId": "CLY-3000024",
+   "book": "BOOK-CREDIT-3",
+   "currency": "GBP",
+   "family": "option",
+   "mtm": -4024
+  },
+  {
+   "tradeId": "CLY-3000026",
+   "book": "BOOK-CREDIT-3",
+   "currency": "JPY",
+   "family": "cds",
+   "mtm": -590420
+  },
+  {
+   "tradeId": "CLY-3000034",
+   "book": "BOOK-CREDIT-3",
+   "currency": "EUR",
+   "family": "swap",
+   "mtm": 4717154
+  },
+  {
+   "tradeId": "CLY-3000036",
+   "book": "BOOK-CREDIT-3",
+   "currency": "EUR",
+   "family": "swap",
+   "mtm": -1895147
+  },
+  {
+   "tradeId": "CLY-3000037",
+   "book": "BOOK-CREDIT-3",
+   "currency": "GBP",
+   "family": "swap",
+   "mtm": -1076104
+  },
+  {
+   "tradeId": "CLY-3000040",
+   "book": "BOOK-CREDIT-3",
+   "currency": "CAD",
+   "family": "swap",
+   "mtm": 1798395
+  },
+  {
+   "tradeId": "CLY-3000041",
+   "book": "BOOK-CREDIT-3",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": -1284431
+  },
+  {
+   "tradeId": "CLY-3000043",
+   "book": "BOOK-CREDIT-3",
+   "currency": "JPY",
+   "family": "note",
+   "mtm": 868056
+  },
+  {
+   "tradeId": "CLY-3000044",
+   "book": "BOOK-CREDIT-3",
+   "currency": "CAD",
+   "family": "note",
+   "mtm": -498458
+  },
+  {
+   "tradeId": "CLY-3000049",
+   "book": "BOOK-CREDIT-3",
+   "currency": "JPY",
+   "family": "loan",
+   "mtm": 37332
+  },
+  {
+   "tradeId": "CLY-3000054",
+   "book": "BOOK-CREDIT-3",
+   "currency": "USD",
+   "family": "loan",
+   "mtm": 414255
+  },
+  {
+   "tradeId": "CLY-3000055",
+   "book": "BOOK-CREDIT-3",
+   "currency": "CAD",
+   "family": "loan",
+   "mtm": 3459176
+  },
+  {
+   "tradeId": "CLY-3000059",
+   "book": "BOOK-CREDIT-3",
+   "currency": "CAD",
+   "family": "loan",
+   "mtm": 1407358
+  },
+  {
+   "tradeId": "CLY-3000061",
+   "book": "BOOK-CREDIT-3",
+   "currency": "GBP",
+   "family": "option",
+   "mtm": -79292
+  },
+  {
+   "tradeId": "CLY-3000063",
+   "book": "BOOK-CREDIT-3",
+   "currency": "EUR",
+   "family": "option",
+   "mtm": -2549257
+  },
+  {
+   "tradeId": "CLY-3000065",
+   "book": "BOOK-CREDIT-3",
+   "currency": "USD",
+   "family": "option",
+   "mtm": 4754624
+  },
+  {
+   "tradeId": "CLY-3000071",
+   "book": "BOOK-CREDIT-3",
+   "currency": "USD",
+   "family": "cds",
+   "mtm": 896628
+  }
+ ],
  "_meta": {
   "source": "org-master",
   "generation": 1

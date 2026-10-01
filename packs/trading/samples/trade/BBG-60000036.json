@@ -234,7 +234,39 @@
   "sourceSystem": "Murex",
   "createdAt": "2025-11-06T11:06:00Z",
   "lastModifiedAt": "2025-11-06T11:06:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2025-11-06",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Bloomberg TOMS by TRDR-BADEYEMI: long Puttable bond"
+   },
+   {
+    "date": "2025-11-06",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT429666116)"
+   },
+   {
+    "date": "2025-11-07",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2026-11-10",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2031-11-24",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -291,6 +323,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -46882,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 114
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 74
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -1960
+  },
+  {
+   "step": "FX delta",
+   "pnl": 364
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 31
+  },
+  {
+   "step": "Theta",
+   "pnl": 21
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 51
+  }
+ ],
  "_meta": {
   "source": "summit-fi",
   "generation": 1,

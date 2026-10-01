@@ -26,6 +26,218 @@
  "assetClasses": [
   "Structured"
  ],
+ "positions": [
+  {
+   "tradeId": "IMG-400133",
+   "book": "BOOK-STRUCT-1",
+   "currency": "USD",
+   "family": "note",
+   "mtm": 3526766
+  },
+  {
+   "tradeId": "IMG-400134",
+   "book": "BOOK-STRUCT-1",
+   "currency": "EUR",
+   "family": "note",
+   "mtm": 587235
+  },
+  {
+   "tradeId": "IMG-400135",
+   "book": "BOOK-STRUCT-1",
+   "currency": "USD",
+   "family": "note",
+   "mtm": -71936
+  },
+  {
+   "tradeId": "IMG-400137",
+   "book": "BOOK-STRUCT-1",
+   "currency": "USD",
+   "family": "note",
+   "mtm": 330790
+  },
+  {
+   "tradeId": "IMG-400139",
+   "book": "BOOK-STRUCT-1",
+   "currency": "GBP",
+   "family": "note",
+   "mtm": 566929
+  },
+  {
+   "tradeId": "IMG-400140",
+   "book": "BOOK-STRUCT-1",
+   "currency": "USD",
+   "family": "note",
+   "mtm": -1683078
+  },
+  {
+   "tradeId": "IMG-400144",
+   "book": "BOOK-STRUCT-1",
+   "currency": "USD",
+   "family": "note",
+   "mtm": -160042
+  },
+  {
+   "tradeId": "IMG-400146",
+   "book": "BOOK-STRUCT-1",
+   "currency": "USD",
+   "family": "exotic",
+   "mtm": 917810
+  },
+  {
+   "tradeId": "IMG-400147",
+   "book": "BOOK-STRUCT-1",
+   "currency": "USD",
+   "family": "exotic",
+   "mtm": 2602465
+  },
+  {
+   "tradeId": "IMG-400148",
+   "book": "BOOK-STRUCT-1",
+   "currency": "USD",
+   "family": "exotic",
+   "mtm": 1945606
+  },
+  {
+   "tradeId": "IMG-400156",
+   "book": "BOOK-STRUCT-1",
+   "currency": "USD",
+   "family": "note",
+   "mtm": 765390
+  },
+  {
+   "tradeId": "IMG-400157",
+   "book": "BOOK-STRUCT-1",
+   "currency": "CHF",
+   "family": "note",
+   "mtm": -1748235
+  },
+  {
+   "tradeId": "IMG-400136",
+   "book": "BOOK-STRUCT-2",
+   "currency": "AUD",
+   "family": "note",
+   "mtm": 660652
+  },
+  {
+   "tradeId": "IMG-400143",
+   "book": "BOOK-STRUCT-2",
+   "currency": "USD",
+   "family": "note",
+   "mtm": 2529887
+  },
+  {
+   "tradeId": "IMG-400149",
+   "book": "BOOK-STRUCT-2",
+   "currency": "USD",
+   "family": "exotic",
+   "mtm": 401694
+  },
+  {
+   "tradeId": "IMG-400152",
+   "book": "BOOK-STRUCT-2",
+   "currency": "JPY",
+   "family": "note",
+   "mtm": -1328010
+  },
+  {
+   "tradeId": "IMG-400159",
+   "book": "BOOK-STRUCT-2",
+   "currency": "USD",
+   "family": "note",
+   "mtm": 3228356
+  },
+  {
+   "tradeId": "IMG-400160",
+   "book": "BOOK-STRUCT-2",
+   "currency": "USD",
+   "family": "note",
+   "mtm": 190559
+  },
+  {
+   "tradeId": "IMG-400161",
+   "book": "BOOK-STRUCT-2",
+   "currency": "USD",
+   "family": "note",
+   "mtm": 772409
+  },
+  {
+   "tradeId": "IMG-400162",
+   "book": "BOOK-STRUCT-2",
+   "currency": "USD",
+   "family": "note",
+   "mtm": 1658792
+  },
+  {
+   "tradeId": "IMG-400138",
+   "book": "BOOK-STRUCT-3",
+   "currency": "CAD",
+   "family": "note",
+   "mtm": -1227669
+  },
+  {
+   "tradeId": "IMG-400141",
+   "book": "BOOK-STRUCT-3",
+   "currency": "USD",
+   "family": "note",
+   "mtm": -2117461
+  },
+  {
+   "tradeId": "IMG-400142",
+   "book": "BOOK-STRUCT-3",
+   "currency": "EUR",
+   "family": "note",
+   "mtm": 1294522
+  },
+  {
+   "tradeId": "IMG-400145",
+   "book": "BOOK-STRUCT-3",
+   "currency": "USD",
+   "family": "exotic",
+   "mtm": 4057279
+  },
+  {
+   "tradeId": "IMG-400150",
+   "book": "BOOK-STRUCT-3",
+   "currency": "JPY",
+   "family": "exotic",
+   "mtm": 115182
+  },
+  {
+   "tradeId": "IMG-400151",
+   "book": "BOOK-STRUCT-3",
+   "currency": "USD",
+   "family": "note",
+   "mtm": -196197
+  },
+  {
+   "tradeId": "IMG-400153",
+   "book": "BOOK-STRUCT-3",
+   "currency": "GBP",
+   "family": "note",
+   "mtm": 503987
+  },
+  {
+   "tradeId": "IMG-400154",
+   "book": "BOOK-STRUCT-3",
+   "currency": "USD",
+   "family": "note",
+   "mtm": -809315
+  },
+  {
+   "tradeId": "IMG-400155",
+   "book": "BOOK-STRUCT-3",
+   "currency": "GBP",
+   "family": "note",
+   "mtm": -2097100
+  },
+  {
+   "tradeId": "IMG-400158",
+   "book": "BOOK-STRUCT-3",
+   "currency": "AUD",
+   "family": "note",
+   "mtm": 566863
+  }
+ ],
  "_meta": {
   "source": "org-master",
   "generation": 1

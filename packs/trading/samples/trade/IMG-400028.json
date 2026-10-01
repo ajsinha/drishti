@@ -193,7 +193,33 @@
   "sourceSystem": "Calypso",
   "createdAt": "2025-06-25T11:37:00Z",
   "lastModifiedAt": "2025-06-25T11:37:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2025-06-25",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-PLINDQVIST: buy Listed equity option"
+   },
+   {
+    "date": "2025-06-25",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT687804712)"
+   },
+   {
+    "date": "2025-06-26",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2028-03-09",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -251,6 +277,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -207704,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -100
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -41
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -4419
+  },
+  {
+   "step": "FX delta",
+   "pnl": 34
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 514
+  },
+  {
+   "step": "Theta",
+   "pnl": -395
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 215
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

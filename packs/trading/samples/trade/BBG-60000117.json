@@ -187,7 +187,27 @@
   "sourceSystem": "Murex",
   "createdAt": "2026-09-07T10:58:00Z",
   "lastModifiedAt": "2026-09-07T10:58:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2026-09-07",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Bloomberg TOMS by TRDR-NFAROUK: reverse repo Margin loan"
+   },
+   {
+    "date": "2026-09-07",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT696942650)"
+   },
+   {
+    "date": "2026-10-23",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -240,6 +260,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 1915997,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -42784
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -723
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 105636
+  },
+  {
+   "step": "FX delta",
+   "pnl": 17035
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 500
+  },
+  {
+   "step": "Theta",
+   "pnl": 2154
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -4212
+  }
+ ],
  "_meta": {
   "source": "globalone-sft",
   "generation": 1,

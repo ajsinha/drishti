@@ -247,7 +247,14 @@
     markdown: '- { id: notes, kind: markdown, title: Notes, text: "Static notes for the reader." }\n',
     links: '- { id: refs, kind: links, title: Linked entities, area: right }\n',
     provenance: '- { id: built, kind: provenance, title: How this view was built }\n',
-    surface: '- id: grid\n  kind: surface\n  title: Surface\n  rows: $.points\n  y: tenor\n'
+    surface: '- id: grid\n  kind: surface\n  title: Surface\n  rows: $.points\n  y: tenor\n',
+    waterfall: '- id: explain\n  kind: waterfall\n  title: P&L explain\n  rows: $.pnlExplain\n  label: step\n  value: pnl\n  sum: Closing\n  fmt: signed0\n',
+    histogram: '- id: dist\n  kind: histogram\n  title: Distribution\n  rows: $.scenarioPnl\n  markers:\n    - { label: VaR 99%, value: "-$.var99", tone: neg }\n',
+    scatter: '- id: riskReturn\n  kind: scatter\n  title: Risk against return\n  rows: $.books\n  x: var\n  y: pnl\n  label: book\n  group: desk\n',
+    candlestick: '- id: ohlc\n  kind: candlestick\n  title: Price\n  rows: $.ohlc\n  x: date\n  volume: volume\n  fmt: price2\n',
+    graph: '- id: tree\n  kind: graph\n  title: Hierarchy\n  nodes: $.hierarchy.nodes\n  edges: $.hierarchy.edges\n  layout: tree\n',
+    timeline: '- id: events\n  kind: timeline\n  title: Lifecycle\n  rows: $.lifecycle.timeline\n  date: date\n  label: event\n',
+    pivot: '- id: grid\n  kind: pivot\n  title: By book and currency\n  rows: $.positions\n  by: book\n  across: currency\n  value: mtm\n  agg: sum\n  heat: true\n'
   };
   var SNIPPETS = { strip: ['strip', '- { label: Label, bind: $.field }\n'], key: ['keys', "F5: link($.field, 'kind')\n"],
     description: ['description', null], notes: ['notes', null] };

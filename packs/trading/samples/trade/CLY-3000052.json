@@ -219,7 +219,33 @@
   "sourceSystem": "Calypso",
   "createdAt": "2025-09-15T12:19:00Z",
   "lastModifiedAt": "2025-09-15T12:19:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-09-15",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Calypso by TRDR-CDUBOIS: short Term loan"
+   },
+   {
+    "date": "2025-09-15",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA671917406)"
+   },
+   {
+    "date": "2027-03-17",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2028-11-17",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -272,6 +298,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -1742606,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 6119
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 2086
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 8654
+  },
+  {
+   "step": "FX delta",
+   "pnl": -1292
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 41
+  },
+  {
+   "step": "Theta",
+   "pnl": 1449
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 377
+  }
+ ],
  "_meta": {
   "source": "murex-credit",
   "generation": 1,

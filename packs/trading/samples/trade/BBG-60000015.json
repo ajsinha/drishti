@@ -330,7 +330,46 @@
   "sourceSystem": "Summit",
   "createdAt": "2025-08-26T09:26:00Z",
   "lastModifiedAt": "2025-08-26T09:26:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-08-26",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Bloomberg TOMS by TRDR-BADEYEMI: long Floating rate note"
+   },
+   {
+    "date": "2025-08-26",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT784454391)"
+   },
+   {
+    "date": "2025-08-27",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to JSCC"
+   },
+   {
+    "date": "2026-08-28",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "JPY payment settled",
+    "amount": 4380000.0
+   },
+   {
+    "date": "2027-02-28",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2037-03-25",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -387,6 +426,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 903150,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -13356
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 1826
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 32770
+  },
+  {
+   "step": "FX delta",
+   "pnl": 3168
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 724
+  },
+  {
+   "step": "Theta",
+   "pnl": 225
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 1236
+  }
+ ],
  "_meta": {
   "source": "summit-fi",
   "generation": 1,

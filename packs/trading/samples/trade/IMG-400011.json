@@ -165,7 +165,27 @@
   "sourceSystem": "Summit",
   "createdAt": "2026-03-24T10:54:00Z",
   "lastModifiedAt": "2026-03-24T10:54:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2026-03-24",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-JWEISS: long Equity forward"
+   },
+   {
+    "date": "2026-03-24",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT197360912)"
+   },
+   {
+    "date": "2027-02-19",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -219,6 +239,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -4647576,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -3420
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -7357
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 189736
+  },
+  {
+   "step": "FX delta",
+   "pnl": -15278
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 2235
+  },
+  {
+   "step": "Theta",
+   "pnl": 1450
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -7512
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

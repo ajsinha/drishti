@@ -167,7 +167,27 @@
   "sourceSystem": "Endur",
   "createdAt": "2025-11-14T09:12:00Z",
   "lastModifiedAt": "2025-11-14T09:12:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2025-11-14",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Calypso by TRDR-DWHITFIELD: long Revolving credit facility"
+   },
+   {
+    "date": "2025-11-14",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA813239563)"
+   },
+   {
+    "date": "2032-04-16",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -220,6 +240,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 3208229,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -100996
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -37132
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 376003
+  },
+  {
+   "step": "FX delta",
+   "pnl": 8465
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 11258
+  },
+  {
+   "step": "Theta",
+   "pnl": 1301
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -7952
+  }
+ ],
  "_meta": {
   "source": "murex-credit",
   "generation": 1,

@@ -253,7 +253,33 @@
   "sourceSystem": "Calypso",
   "createdAt": "2026-04-27T11:38:00Z",
   "lastModifiedAt": "2026-04-27T11:38:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2026-04-27",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-JWEISS: long Convertible bond"
+   },
+   {
+    "date": "2026-04-27",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT604369818)"
+   },
+   {
+    "date": "2026-10-29",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2031-07-28",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -308,6 +334,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 3247922,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -48297
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -31795
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -38566
+  },
+  {
+   "step": "FX delta",
+   "pnl": -12087
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 1420
+  },
+  {
+   "step": "Theta",
+   "pnl": 314
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 2083
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

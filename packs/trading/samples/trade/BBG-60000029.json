@@ -199,7 +199,39 @@
   "sourceSystem": "Murex",
   "createdAt": "2024-05-24T12:11:00Z",
   "lastModifiedAt": "2024-05-24T12:11:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2024-05-24",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Bloomberg TOMS by TRDR-BADEYEMI: short Callable bond"
+   },
+   {
+    "date": "2024-05-24",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT759664778)"
+   },
+   {
+    "date": "2024-05-28",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2026-10-07",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2026-10-07",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -256,6 +288,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 1258596,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -21590
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -12484
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -25172
+  },
+  {
+   "step": "FX delta",
+   "pnl": -1888
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 1379
+  },
+  {
+   "step": "Theta",
+   "pnl": -3854
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 2327
+  }
+ ],
  "_meta": {
   "source": "summit-fi",
   "generation": 1,

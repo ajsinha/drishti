@@ -350,7 +350,33 @@
   "sourceSystem": "Summit",
   "createdAt": "2025-01-29T10:28:00Z",
   "lastModifiedAt": "2025-01-29T10:28:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2025-01-29",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Wall Street Systems by TRDR-ENOVAK: sell FX double-barrier option"
+   },
+   {
+    "date": "2025-01-29",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT830361393)"
+   },
+   {
+    "date": "2026-10-30",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2031-06-09",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -403,6 +429,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -447963,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -5868
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -932
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 34944
+  },
+  {
+   "step": "FX delta",
+   "pnl": -1855
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 32361
+  },
+  {
+   "step": "Theta",
+   "pnl": -17229
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 164
+  }
+ ],
  "_meta": {
   "source": "calypso-fx",
   "generation": 1,

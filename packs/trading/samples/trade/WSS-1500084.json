@@ -179,7 +179,34 @@
   "sourceSystem": "Endur",
   "createdAt": "2024-11-05T10:09:00Z",
   "lastModifiedAt": "2024-11-05T10:09:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2024-11-05",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Wall Street Systems by TRDR-ENOVAK: sell Quanto option"
+   },
+   {
+    "date": "2024-11-05",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT750545668)"
+   },
+   {
+    "date": "2025-10-24",
+    "event": "Partially terminated",
+    "status": "Done",
+    "description": "Notional reduced by 40%, unwind fee settled",
+    "amount": 80800000
+   },
+   {
+    "date": "2031-10-31",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -233,6 +260,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -1450382,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 4186
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 9854
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 126271
+  },
+  {
+   "step": "FX delta",
+   "pnl": -65015
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 31967
+  },
+  {
+   "step": "Theta",
+   "pnl": -1936
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -1020
+  }
+ ],
  "_meta": {
   "source": "calypso-fx",
   "generation": 1,

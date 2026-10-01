@@ -372,7 +372,40 @@
   "sourceSystem": "Murex",
   "createdAt": "2024-10-15T10:33:00Z",
   "lastModifiedAt": "2024-10-15T10:33:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2024-10-15",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Endur by TRDR-TBRENNAN: sell Average price option (APO)"
+   },
+   {
+    "date": "2024-10-15",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT806663032)"
+   },
+   {
+    "date": "2026-07-17",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "USD payment settled",
+    "amount": 0.0
+   },
+   {
+    "date": "2026-10-17",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2035-11-02",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -424,6 +457,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -693316,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -10136
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 3905
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 21417
+  },
+  {
+   "step": "FX delta",
+   "pnl": -793
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 1131
+  },
+  {
+   "step": "Theta",
+   "pnl": -39
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -684
+  }
+ ],
  "_meta": {
   "source": "endur-comm",
   "generation": 1,

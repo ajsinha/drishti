@@ -293,7 +293,33 @@
   "sourceSystem": "Summit",
   "createdAt": "2025-11-26T12:58:00Z",
   "lastModifiedAt": "2025-11-26T12:58:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-11-26",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Calypso by TRDR-DWHITFIELD: buy protection CDS index (CDX / iTraxx)"
+   },
+   {
+    "date": "2025-11-26",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA674166601)"
+   },
+   {
+    "date": "2026-11-28",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2037-10-06",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -345,6 +371,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 657944,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -6295
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -534
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -6538
+  },
+  {
+   "step": "FX delta",
+   "pnl": 302
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 211
+  },
+  {
+   "step": "Theta",
+   "pnl": -37
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -784
+  }
+ ],
  "_meta": {
   "source": "murex-credit",
   "generation": 1,

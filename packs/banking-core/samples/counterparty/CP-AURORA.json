@@ -37,6 +37,77 @@
  },
  "group": "GRP-AURORA",
  "creditLimit": "LIM-AURORA",
+ "hierarchy": {
+  "nodes": [
+   {
+    "id": "GRP-AURORA",
+    "label": "Aurora Sovereign Wealth Fund",
+    "type": "Group (ultimate parent)"
+   },
+   {
+    "id": "CP-AURORA",
+    "label": "Aurora Sovereign Wealth Fund",
+    "type": "Counterparty"
+   },
+   {
+    "id": "AGR-AURORA-ISDA",
+    "label": "ISDA 2002 Master",
+    "type": "Agreement"
+   },
+   {
+    "id": "CSA-AURORA",
+    "label": "Credit support annex",
+    "type": "CSA"
+   },
+   {
+    "id": "NS-AURORA-FRA",
+    "label": "NS-AURORA-FRA · 2 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-AURORA-LDN",
+    "label": "NS-AURORA-LDN · 12 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-AURORA-NY",
+    "label": "NS-AURORA-NY · 21 trades",
+    "type": "Netting set"
+   }
+  ],
+  "edges": [
+   {
+    "from": "GRP-AURORA",
+    "to": "CP-AURORA",
+    "label": "parent of"
+   },
+   {
+    "from": "CP-AURORA",
+    "to": "AGR-AURORA-ISDA",
+    "label": "signed"
+   },
+   {
+    "from": "AGR-AURORA-ISDA",
+    "to": "CSA-AURORA",
+    "label": "secured by"
+   },
+   {
+    "from": "AGR-AURORA-ISDA",
+    "to": "NS-AURORA-FRA",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-AURORA-ISDA",
+    "to": "NS-AURORA-LDN",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-AURORA-ISDA",
+    "to": "NS-AURORA-NY",
+    "label": "nets"
+   }
+  ]
+ },
  "_meta": {
   "source": "counterparty-master",
   "generation": 1

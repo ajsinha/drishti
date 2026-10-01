@@ -199,7 +199,33 @@
   "sourceSystem": "Summit",
   "createdAt": "2026-07-21T10:40:00Z",
   "lastModifiedAt": "2026-07-21T10:40:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2026-07-21",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-MOKAFOR: short Forward rate agreement"
+   },
+   {
+    "date": "2026-07-21",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA498907634)"
+   },
+   {
+    "date": "2026-10-23",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2027-09-13",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -251,6 +277,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 4967019,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 9235
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -31921
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -173863
+  },
+  {
+   "step": "FX delta",
+   "pnl": -37216
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -8255
+  },
+  {
+   "step": "Theta",
+   "pnl": 8538
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -14806
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

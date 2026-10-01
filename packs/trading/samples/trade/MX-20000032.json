@@ -1277,7 +1277,46 @@
   "sourceSystem": "Murex",
   "createdAt": "2024-05-17T10:56:00Z",
   "lastModifiedAt": "2024-05-17T10:56:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2024-05-17",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-ASHAH: receive fixed Zero-coupon swap"
+   },
+   {
+    "date": "2024-05-17",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA791804380)"
+   },
+   {
+    "date": "2024-05-20",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2026-08-10",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "CHF payment settled",
+    "amount": -70010.72
+   },
+   {
+    "date": "2026-11-10",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2033-05-06",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -1333,6 +1372,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 22609562,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -43489
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -3425
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 238958
+  },
+  {
+   "step": "FX delta",
+   "pnl": -17192
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -1878
+  },
+  {
+   "step": "Theta",
+   "pnl": 4184
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -8832
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

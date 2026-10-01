@@ -191,7 +191,27 @@
   "sourceSystem": "Endur",
   "createdAt": "2024-04-17T09:41:00Z",
   "lastModifiedAt": "2024-04-17T09:41:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2024-04-17",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-PLINDQVIST: buy Index option"
+   },
+   {
+    "date": "2024-04-17",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT579767137)"
+   },
+   {
+    "date": "2027-04-09",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -244,6 +264,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -142855,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 105
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -687
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 4252
+  },
+  {
+   "step": "FX delta",
+   "pnl": -257
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -825
+  },
+  {
+   "step": "Theta",
+   "pnl": -408
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -19
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

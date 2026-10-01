@@ -339,7 +339,33 @@
   "sourceSystem": "Summit",
   "createdAt": "2026-06-18T12:37:00Z",
   "lastModifiedAt": "2026-06-18T12:37:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2026-06-18",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Endur by TRDR-TBRENNAN: buy Weather derivative (HDD/CDD)"
+   },
+   {
+    "date": "2026-06-18",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT687795693)"
+   },
+   {
+    "date": "2026-12-22",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2035-03-19",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -390,6 +416,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -25923,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 153
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 430
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -2252
+  },
+  {
+   "step": "FX delta",
+   "pnl": -128
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 646
+  },
+  {
+   "step": "Theta",
+   "pnl": -264
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 12
+  }
+ ],
  "_meta": {
   "source": "endur-comm",
   "generation": 1,

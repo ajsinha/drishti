@@ -361,7 +361,39 @@
   "sourceSystem": "Murex",
   "createdAt": "2024-10-04T10:21:00Z",
   "lastModifiedAt": "2024-10-04T10:21:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2024-10-04",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Bloomberg TOMS by TRDR-BADEYEMI: short Agency MBS pass-through"
+   },
+   {
+    "date": "2024-10-04",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT322918003)"
+   },
+   {
+    "date": "2024-10-07",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to JSCC"
+   },
+   {
+    "date": "2026-10-07",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2036-05-19",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -418,6 +450,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 129428,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -219
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 1511
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 5088
+  },
+  {
+   "step": "FX delta",
+   "pnl": -863
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -89
+  },
+  {
+   "step": "Theta",
+   "pnl": 141
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -225
+  }
+ ],
  "_meta": {
   "source": "summit-fi",
   "generation": 1,

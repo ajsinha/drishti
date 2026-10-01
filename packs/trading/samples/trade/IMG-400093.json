@@ -174,7 +174,33 @@
   "sourceSystem": "Murex",
   "createdAt": "2025-07-25T09:18:00Z",
   "lastModifiedAt": "2025-11-21T09:18:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-07-25",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-PLINDQVIST: receive fixed Dividend swap"
+   },
+   {
+    "date": "2025-07-25",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT176171631)"
+   },
+   {
+    "date": "2025-11-21",
+    "event": "Amended",
+    "status": "Done",
+    "description": "Notional corrected (version 2, by mo.ops)"
+   },
+   {
+    "date": "2031-07-08",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -227,6 +253,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -390794,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 217
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -1289
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -4794
+  },
+  {
+   "step": "FX delta",
+   "pnl": 24
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -218
+  },
+  {
+   "step": "Theta",
+   "pnl": 79
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -141
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

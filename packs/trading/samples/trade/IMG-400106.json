@@ -254,7 +254,27 @@
   "sourceSystem": "Murex",
   "createdAt": "2025-01-30T09:34:00Z",
   "lastModifiedAt": "2025-01-30T09:34:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-01-30",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-PLINDQVIST: pay fixed Portfolio (basket) swap"
+   },
+   {
+    "date": "2025-01-30",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT591736983)"
+   },
+   {
+    "date": "2035-09-03",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -308,6 +328,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -329917,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -372
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -5
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 218
+  },
+  {
+   "step": "FX delta",
+   "pnl": -88
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -22
+  },
+  {
+   "step": "Theta",
+   "pnl": 7
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 15
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

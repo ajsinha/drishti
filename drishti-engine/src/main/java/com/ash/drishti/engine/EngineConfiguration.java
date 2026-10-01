@@ -55,7 +55,8 @@ import org.springframework.context.annotation.Import;
 @Configuration(proxyBeanMethods = false)
 @Import({CommonConfiguration.class, RachanaConfiguration.class, InferenceConfiguration.class, GraphConfiguration.class})
 @EnableConfigurationProperties({SourcesProperties.class, EngineProperties.class, CommandsProperties.class, LiveProperties.class,
-        com.ash.drishti.engine.time.BusinessDateProperties.class, com.ash.drishti.engine.search.SearchProperties.class})
+        com.ash.drishti.engine.time.BusinessDateProperties.class, com.ash.drishti.engine.search.SearchProperties.class,
+        com.ash.drishti.engine.bind.PanelLimits.class})
 public class EngineConfiguration {
 
     /**
@@ -122,8 +123,9 @@ public class EngineConfiguration {
     }
 
     @Bean
-    public Binder binder(ElCompiler el, Formats formats, ReferenceCatalog catalog, BadgeRenderer badges, Mnemonics mnemonics) {
-        return new Binder(el, formats, catalog, badges, mnemonics);
+    public Binder binder(ElCompiler el, Formats formats, ReferenceCatalog catalog, BadgeRenderer badges, Mnemonics mnemonics,
+            com.ash.drishti.engine.bind.PanelLimits panelLimits) {
+        return new Binder(el, formats, catalog, badges, mnemonics, panelLimits);
     }
 
     @Bean

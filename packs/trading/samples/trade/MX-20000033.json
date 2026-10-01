@@ -805,7 +805,46 @@
   "sourceSystem": "Summit",
   "createdAt": "2025-12-11T12:02:00Z",
   "lastModifiedAt": "2025-12-11T12:02:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-12-11",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-ASHAH: receive fixed Zero-coupon swap"
+   },
+   {
+    "date": "2025-12-11",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA940674034)"
+   },
+   {
+    "date": "2025-12-12",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2026-09-01",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "GBP payment settled",
+    "amount": -1215356.8
+   },
+   {
+    "date": "2026-12-01",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2030-08-27",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -861,6 +900,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -6475348,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -75438
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -2942
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 312463
+  },
+  {
+   "step": "FX delta",
+   "pnl": 40368
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 5274
+  },
+  {
+   "step": "Theta",
+   "pnl": -6511
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -1552
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

@@ -346,7 +346,33 @@
   "sourceSystem": "Endur",
   "createdAt": "2025-01-31T09:15:00Z",
   "lastModifiedAt": "2025-01-31T09:15:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2025-01-31",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Wall Street Systems by TRDR-ENOVAK: sell FX target redemption forward"
+   },
+   {
+    "date": "2025-01-31",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT241322528)"
+   },
+   {
+    "date": "2026-11-03",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2033-04-22",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -399,6 +425,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -4281583,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -9460
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 5837
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -19338
+  },
+  {
+   "step": "FX delta",
+   "pnl": 8459
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -9874
+  },
+  {
+   "step": "Theta",
+   "pnl": -8284
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -1995
+  }
+ ],
  "_meta": {
   "source": "calypso-fx",
   "generation": 1,

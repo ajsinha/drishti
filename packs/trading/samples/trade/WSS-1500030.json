@@ -186,7 +186,27 @@
   "sourceSystem": "Summit",
   "createdAt": "2026-04-10T10:51:00Z",
   "lastModifiedAt": "2026-04-10T10:51:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2026-04-10",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Wall Street Systems by TRDR-ENOVAK: buy FX vanilla option"
+   },
+   {
+    "date": "2026-04-10",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT205288078)"
+   },
+   {
+    "date": "2027-11-24",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -240,6 +260,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -1434755,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -26585
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 34401
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 244353
+  },
+  {
+   "step": "FX delta",
+   "pnl": 14788
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -112714
+  },
+  {
+   "step": "Theta",
+   "pnl": -27281
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -5834
+  }
+ ],
  "_meta": {
   "source": "calypso-fx",
   "generation": 1,

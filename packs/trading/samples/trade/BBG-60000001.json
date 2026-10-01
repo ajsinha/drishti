@@ -327,7 +327,39 @@
   "sourceSystem": "Calypso",
   "createdAt": "2026-08-31T10:10:00Z",
   "lastModifiedAt": "2026-08-31T10:10:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2026-08-31",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Bloomberg TOMS by TRDR-RCASTILLO: short Government bond"
+   },
+   {
+    "date": "2026-08-31",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT970090920)"
+   },
+   {
+    "date": "2026-09-01",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2027-03-02",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2038-04-30",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -383,6 +415,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -955004,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -8220
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 3173
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -19524
+  },
+  {
+   "step": "FX delta",
+   "pnl": 778
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 764
+  },
+  {
+   "step": "Theta",
+   "pnl": -696
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 351
+  }
+ ],
  "_meta": {
   "source": "summit-fi",
   "generation": 1,

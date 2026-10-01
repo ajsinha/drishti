@@ -256,7 +256,46 @@
   "sourceSystem": "Summit",
   "createdAt": "2025-05-28T10:28:00Z",
   "lastModifiedAt": "2025-12-07T10:28:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2025-05-28",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-MOKAFOR: buy Interest rate cap"
+   },
+   {
+    "date": "2025-05-28",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA789357422)"
+   },
+   {
+    "date": "2025-12-07",
+    "event": "Amended",
+    "status": "Done",
+    "description": "Notional corrected (version 2, by mo.amend)"
+   },
+   {
+    "date": "2026-08-28",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "EUR payment settled",
+    "amount": 0.0
+   },
+   {
+    "date": "2026-11-28",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2027-09-09",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -309,6 +348,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 1874290,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 20854
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 10410
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -78480
+  },
+  {
+   "step": "FX delta",
+   "pnl": -4597
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 40146
+  },
+  {
+   "step": "Theta",
+   "pnl": -43067
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 1942
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

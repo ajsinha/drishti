@@ -26,6 +26,554 @@
  "assetClasses": [
   "Fixed income"
  ],
+ "positions": [
+  {
+   "tradeId": "BBG-60000003",
+   "book": "BOOK-FI-1",
+   "currency": "EUR",
+   "family": "bond",
+   "mtm": -1569609
+  },
+  {
+   "tradeId": "BBG-60000007",
+   "book": "BOOK-FI-1",
+   "currency": "USD",
+   "family": "bond",
+   "mtm": -78300
+  },
+  {
+   "tradeId": "BBG-60000017",
+   "book": "BOOK-FI-1",
+   "currency": "EUR",
+   "family": "bond",
+   "mtm": -156199
+  },
+  {
+   "tradeId": "BBG-60000018",
+   "book": "BOOK-FI-1",
+   "currency": "GBP",
+   "family": "bond",
+   "mtm": -3735787
+  },
+  {
+   "tradeId": "BBG-60000019",
+   "book": "BOOK-FI-1",
+   "currency": "USD",
+   "family": "bond",
+   "mtm": 418522
+  },
+  {
+   "tradeId": "BBG-60000021",
+   "book": "BOOK-FI-1",
+   "currency": "CHF",
+   "family": "bond",
+   "mtm": -1467679
+  },
+  {
+   "tradeId": "BBG-60000022",
+   "book": "BOOK-FI-1",
+   "currency": "JPY",
+   "family": "bond",
+   "mtm": 532138
+  },
+  {
+   "tradeId": "BBG-60000026",
+   "book": "BOOK-FI-1",
+   "currency": "JPY",
+   "family": "bond",
+   "mtm": -1530581
+  },
+  {
+   "tradeId": "BBG-60000030",
+   "book": "BOOK-FI-1",
+   "currency": "EUR",
+   "family": "bond",
+   "mtm": 3201249
+  },
+  {
+   "tradeId": "BBG-60000036",
+   "book": "BOOK-FI-1",
+   "currency": "GBP",
+   "family": "bond",
+   "mtm": -48187
+  },
+  {
+   "tradeId": "BBG-60000037",
+   "book": "BOOK-FI-1",
+   "currency": "USD",
+   "family": "bond",
+   "mtm": -3664626
+  },
+  {
+   "tradeId": "BBG-60000038",
+   "book": "BOOK-FI-1",
+   "currency": "GBP",
+   "family": "bond",
+   "mtm": -1645510
+  },
+  {
+   "tradeId": "BBG-60000040",
+   "book": "BOOK-FI-1",
+   "currency": "USD",
+   "family": "bond",
+   "mtm": 598736
+  },
+  {
+   "tradeId": "BBG-60000045",
+   "book": "BOOK-FI-1",
+   "currency": "EUR",
+   "family": "bond",
+   "mtm": 38025
+  },
+  {
+   "tradeId": "BBG-60000048",
+   "book": "BOOK-FI-1",
+   "currency": "CAD",
+   "family": "bond",
+   "mtm": 2694900
+  },
+  {
+   "tradeId": "BBG-60000049",
+   "book": "BOOK-FI-1",
+   "currency": "CAD",
+   "family": "bond",
+   "mtm": 398064
+  },
+  {
+   "tradeId": "BBG-60000050",
+   "book": "BOOK-FI-1",
+   "currency": "USD",
+   "family": "bond",
+   "mtm": -3693532
+  },
+  {
+   "tradeId": "BBG-60000051",
+   "book": "BOOK-FI-1",
+   "currency": "CAD",
+   "family": "bond",
+   "mtm": -98879
+  },
+  {
+   "tradeId": "BBG-60000053",
+   "book": "BOOK-FI-1",
+   "currency": "EUR",
+   "family": "bond",
+   "mtm": -1016551
+  },
+  {
+   "tradeId": "BBG-60000054",
+   "book": "BOOK-FI-1",
+   "currency": "USD",
+   "family": "bond",
+   "mtm": 129572
+  },
+  {
+   "tradeId": "BBG-60000059",
+   "book": "BOOK-FI-1",
+   "currency": "GBP",
+   "family": "securitized",
+   "mtm": -464682
+  },
+  {
+   "tradeId": "BBG-60000060",
+   "book": "BOOK-FI-1",
+   "currency": "CAD",
+   "family": "securitized",
+   "mtm": -2303954
+  },
+  {
+   "tradeId": "BBG-60000061",
+   "book": "BOOK-FI-1",
+   "currency": "JPY",
+   "family": "securitized",
+   "mtm": -188070
+  },
+  {
+   "tradeId": "BBG-60000063",
+   "book": "BOOK-FI-1",
+   "currency": "EUR",
+   "family": "securitized",
+   "mtm": -2085900
+  },
+  {
+   "tradeId": "BBG-60000069",
+   "book": "BOOK-FI-1",
+   "currency": "USD",
+   "family": "securitized",
+   "mtm": 191276
+  },
+  {
+   "tradeId": "BBG-60000075",
+   "book": "BOOK-FI-1",
+   "currency": "EUR",
+   "family": "securitized",
+   "mtm": 187425
+  },
+  {
+   "tradeId": "BBG-60000002",
+   "book": "BOOK-FI-2",
+   "currency": "EUR",
+   "family": "bond",
+   "mtm": -214795
+  },
+  {
+   "tradeId": "BBG-60000004",
+   "book": "BOOK-FI-2",
+   "currency": "EUR",
+   "family": "bond",
+   "mtm": -536601
+  },
+  {
+   "tradeId": "BBG-60000010",
+   "book": "BOOK-FI-2",
+   "currency": "USD",
+   "family": "bond",
+   "mtm": -1502288
+  },
+  {
+   "tradeId": "BBG-60000011",
+   "book": "BOOK-FI-2",
+   "currency": "GBP",
+   "family": "bond",
+   "mtm": 1160530
+  },
+  {
+   "tradeId": "BBG-60000013",
+   "book": "BOOK-FI-2",
+   "currency": "CAD",
+   "family": "bond",
+   "mtm": 1050186
+  },
+  {
+   "tradeId": "BBG-60000016",
+   "book": "BOOK-FI-2",
+   "currency": "EUR",
+   "family": "bond",
+   "mtm": -218563
+  },
+  {
+   "tradeId": "BBG-60000020",
+   "book": "BOOK-FI-2",
+   "currency": "JPY",
+   "family": "bond",
+   "mtm": 3464598
+  },
+  {
+   "tradeId": "BBG-60000023",
+   "book": "BOOK-FI-2",
+   "currency": "USD",
+   "family": "bond",
+   "mtm": -1773546
+  },
+  {
+   "tradeId": "BBG-60000024",
+   "book": "BOOK-FI-2",
+   "currency": "USD",
+   "family": "bond",
+   "mtm": -228662
+  },
+  {
+   "tradeId": "BBG-60000025",
+   "book": "BOOK-FI-2",
+   "currency": "JPY",
+   "family": "bond",
+   "mtm": -507927
+  },
+  {
+   "tradeId": "BBG-60000027",
+   "book": "BOOK-FI-2",
+   "currency": "EUR",
+   "family": "bond",
+   "mtm": 3432773
+  },
+  {
+   "tradeId": "BBG-60000028",
+   "book": "BOOK-FI-2",
+   "currency": "CHF",
+   "family": "bond",
+   "mtm": 412203
+  },
+  {
+   "tradeId": "BBG-60000029",
+   "book": "BOOK-FI-2",
+   "currency": "USD",
+   "family": "bond",
+   "mtm": 1197314
+  },
+  {
+   "tradeId": "BBG-60000031",
+   "book": "BOOK-FI-2",
+   "currency": "EUR",
+   "family": "bond",
+   "mtm": -77849
+  },
+  {
+   "tradeId": "BBG-60000032",
+   "book": "BOOK-FI-2",
+   "currency": "USD",
+   "family": "bond",
+   "mtm": -98062
+  },
+  {
+   "tradeId": "BBG-60000034",
+   "book": "BOOK-FI-2",
+   "currency": "GBP",
+   "family": "bond",
+   "mtm": -149583
+  },
+  {
+   "tradeId": "BBG-60000035",
+   "book": "BOOK-FI-2",
+   "currency": "JPY",
+   "family": "bond",
+   "mtm": -942555
+  },
+  {
+   "tradeId": "BBG-60000042",
+   "book": "BOOK-FI-2",
+   "currency": "JPY",
+   "family": "bond",
+   "mtm": 283194
+  },
+  {
+   "tradeId": "BBG-60000043",
+   "book": "BOOK-FI-2",
+   "currency": "EUR",
+   "family": "bond",
+   "mtm": 116910
+  },
+  {
+   "tradeId": "BBG-60000044",
+   "book": "BOOK-FI-2",
+   "currency": "EUR",
+   "family": "bond",
+   "mtm": 518908
+  },
+  {
+   "tradeId": "BBG-60000052",
+   "book": "BOOK-FI-2",
+   "currency": "GBP",
+   "family": "bond",
+   "mtm": 1977148
+  },
+  {
+   "tradeId": "BBG-60000055",
+   "book": "BOOK-FI-2",
+   "currency": "GBP",
+   "family": "securitized",
+   "mtm": -385913
+  },
+  {
+   "tradeId": "BBG-60000057",
+   "book": "BOOK-FI-2",
+   "currency": "USD",
+   "family": "securitized",
+   "mtm": 1211464
+  },
+  {
+   "tradeId": "BBG-60000062",
+   "book": "BOOK-FI-2",
+   "currency": "USD",
+   "family": "securitized",
+   "mtm": -3032972
+  },
+  {
+   "tradeId": "BBG-60000064",
+   "book": "BOOK-FI-2",
+   "currency": "CHF",
+   "family": "securitized",
+   "mtm": -3222264
+  },
+  {
+   "tradeId": "BBG-60000067",
+   "book": "BOOK-FI-2",
+   "currency": "GBP",
+   "family": "securitized",
+   "mtm": 4905373
+  },
+  {
+   "tradeId": "BBG-60000071",
+   "book": "BOOK-FI-2",
+   "currency": "GBP",
+   "family": "securitized",
+   "mtm": 691482
+  },
+  {
+   "tradeId": "BBG-60000074",
+   "book": "BOOK-FI-2",
+   "currency": "USD",
+   "family": "securitized",
+   "mtm": 2819294
+  },
+  {
+   "tradeId": "BBG-60000078",
+   "book": "BOOK-FI-2",
+   "currency": "EUR",
+   "family": "securitized",
+   "mtm": -1673828
+  },
+  {
+   "tradeId": "BBG-60000001",
+   "book": "BOOK-FI-3",
+   "currency": "CHF",
+   "family": "bond",
+   "mtm": -978378
+  },
+  {
+   "tradeId": "BBG-60000005",
+   "book": "BOOK-FI-3",
+   "currency": "EUR",
+   "family": "bond",
+   "mtm": -2577766
+  },
+  {
+   "tradeId": "BBG-60000006",
+   "book": "BOOK-FI-3",
+   "currency": "EUR",
+   "family": "bond",
+   "mtm": 2677879
+  },
+  {
+   "tradeId": "BBG-60000008",
+   "book": "BOOK-FI-3",
+   "currency": "CHF",
+   "family": "bond",
+   "mtm": -380672
+  },
+  {
+   "tradeId": "BBG-60000009",
+   "book": "BOOK-FI-3",
+   "currency": "USD",
+   "family": "bond",
+   "mtm": -230040
+  },
+  {
+   "tradeId": "BBG-60000012",
+   "book": "BOOK-FI-3",
+   "currency": "EUR",
+   "family": "bond",
+   "mtm": 2211267
+  },
+  {
+   "tradeId": "BBG-60000014",
+   "book": "BOOK-FI-3",
+   "currency": "USD",
+   "family": "bond",
+   "mtm": -860534
+  },
+  {
+   "tradeId": "BBG-60000015",
+   "book": "BOOK-FI-3",
+   "currency": "JPY",
+   "family": "bond",
+   "mtm": 929743
+  },
+  {
+   "tradeId": "BBG-60000033",
+   "book": "BOOK-FI-3",
+   "currency": "JPY",
+   "family": "bond",
+   "mtm": 4750454
+  },
+  {
+   "tradeId": "BBG-60000039",
+   "book": "BOOK-FI-3",
+   "currency": "USD",
+   "family": "bond",
+   "mtm": -1903497
+  },
+  {
+   "tradeId": "BBG-60000041",
+   "book": "BOOK-FI-3",
+   "currency": "USD",
+   "family": "bond",
+   "mtm": -566957
+  },
+  {
+   "tradeId": "BBG-60000046",
+   "book": "BOOK-FI-3",
+   "currency": "USD",
+   "family": "bond",
+   "mtm": -686061
+  },
+  {
+   "tradeId": "BBG-60000047",
+   "book": "BOOK-FI-3",
+   "currency": "GBP",
+   "family": "bond",
+   "mtm": -63418
+  },
+  {
+   "tradeId": "BBG-60000056",
+   "book": "BOOK-FI-3",
+   "currency": "EUR",
+   "family": "securitized",
+   "mtm": 298826
+  },
+  {
+   "tradeId": "BBG-60000058",
+   "book": "BOOK-FI-3",
+   "currency": "JPY",
+   "family": "securitized",
+   "mtm": 134772
+  },
+  {
+   "tradeId": "BBG-60000065",
+   "book": "BOOK-FI-3",
+   "currency": "USD",
+   "family": "securitized",
+   "mtm": 173547
+  },
+  {
+   "tradeId": "BBG-60000066",
+   "book": "BOOK-FI-3",
+   "currency": "USD",
+   "family": "securitized",
+   "mtm": -21778
+  },
+  {
+   "tradeId": "BBG-60000068",
+   "book": "BOOK-FI-3",
+   "currency": "EUR",
+   "family": "securitized",
+   "mtm": -756700
+  },
+  {
+   "tradeId": "BBG-60000070",
+   "book": "BOOK-FI-3",
+   "currency": "GBP",
+   "family": "securitized",
+   "mtm": -2614302
+  },
+  {
+   "tradeId": "BBG-60000072",
+   "book": "BOOK-FI-3",
+   "currency": "EUR",
+   "family": "securitized",
+   "mtm": 1276947
+  },
+  {
+   "tradeId": "BBG-60000073",
+   "book": "BOOK-FI-3",
+   "currency": "USD",
+   "family": "securitized",
+   "mtm": 86751
+  },
+  {
+   "tradeId": "BBG-60000076",
+   "book": "BOOK-FI-3",
+   "currency": "USD",
+   "family": "securitized",
+   "mtm": 2168781
+  },
+  {
+   "tradeId": "BBG-60000077",
+   "book": "BOOK-FI-3",
+   "currency": "JPY",
+   "family": "securitized",
+   "mtm": 635630
+  }
+ ],
  "_meta": {
   "source": "org-master",
   "generation": 1

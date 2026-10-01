@@ -1503,7 +1503,47 @@
   "sourceSystem": "Murex",
   "createdAt": "2024-10-04T09:26:00Z",
   "lastModifiedAt": "2024-10-04T09:26:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2024-10-04",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-HOKORO: receive fixed Zero-coupon inflation swap"
+   },
+   {
+    "date": "2024-10-04",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA315594761)"
+   },
+   {
+    "date": "2025-05-23",
+    "event": "Partially terminated",
+    "status": "Done",
+    "description": "Notional reduced by 20%, unwind fee settled",
+    "amount": 37600000
+   },
+   {
+    "date": "2026-07-30",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "GBP payment settled",
+    "amount": -1836211.14
+   },
+   {
+    "date": "2026-10-30",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2036-07-28",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -1557,6 +1597,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -9477413,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 77244
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 3665
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -281980
+  },
+  {
+   "step": "FX delta",
+   "pnl": 6302
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 664
+  },
+  {
+   "step": "Theta",
+   "pnl": 5259
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -9370
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

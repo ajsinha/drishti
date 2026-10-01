@@ -347,7 +347,40 @@
   "sourceSystem": "Murex",
   "createdAt": "2026-03-18T09:25:00Z",
   "lastModifiedAt": "2026-03-18T09:25:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2026-03-18",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-VRAO: short Worst-of note"
+   },
+   {
+    "date": "2026-03-18",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT871477344)"
+   },
+   {
+    "date": "2026-07-22",
+    "event": "Partially terminated",
+    "status": "Done",
+    "description": "Notional reduced by 40%, unwind fee settled",
+    "amount": 43200000
+   },
+   {
+    "date": "2026-12-20",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2038-01-29",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -400,6 +433,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -1354644,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 8673
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -1203
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 17663
+  },
+  {
+   "step": "FX delta",
+   "pnl": 2418
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -940
+  },
+  {
+   "step": "Theta",
+   "pnl": 25
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -2
+  }
+ ],
  "_meta": {
   "source": "sophis-struct",
   "generation": 1,

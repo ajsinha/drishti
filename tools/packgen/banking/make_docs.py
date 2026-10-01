@@ -52,8 +52,8 @@ def fields_of(k) -> list[str]:
     for s in k.strip:
         names += re.findall(r"\$\.([A-Za-z0-9_]+)", s[1])
     for p in k.panels:
-        if p.rows:
-            names += re.findall(r"\$\.([A-Za-z0-9_]+)", p.rows)
+        for path in p.paths():
+            names += re.findall(r"\$\.([A-Za-z0-9_]+)", path)
     return list(dict.fromkeys(names))
 
 

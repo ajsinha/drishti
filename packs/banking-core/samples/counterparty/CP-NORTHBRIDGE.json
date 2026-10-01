@@ -43,6 +43,87 @@
  },
  "group": "GRP-NORTHBRIDGE",
  "creditLimit": "LIM-NORTHBRIDGE",
+ "hierarchy": {
+  "nodes": [
+   {
+    "id": "GRP-NORTHBRIDGE",
+    "label": "Northbridge Capital Holdings",
+    "type": "Group (ultimate parent)"
+   },
+   {
+    "id": "CP-NORTHBRIDGE",
+    "label": "Northbridge Capital LLP",
+    "type": "Counterparty"
+   },
+   {
+    "id": "AGR-NORTHBRIDGE-ISDA",
+    "label": "ISDA 2002 Master",
+    "type": "Agreement"
+   },
+   {
+    "id": "CSA-NORTHBRIDGE",
+    "label": "Credit support annex",
+    "type": "CSA"
+   },
+   {
+    "id": "NS-NORTHBRIDGE-FRA",
+    "label": "NS-NORTHBRIDGE-FRA · 5 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-NORTHBRIDGE-LDN",
+    "label": "NS-NORTHBRIDGE-LDN · 16 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-NORTHBRIDGE-NY",
+    "label": "NS-NORTHBRIDGE-NY · 13 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-NORTHBRIDGE-TKY",
+    "label": "NS-NORTHBRIDGE-TKY · 1 trade",
+    "type": "Netting set"
+   }
+  ],
+  "edges": [
+   {
+    "from": "GRP-NORTHBRIDGE",
+    "to": "CP-NORTHBRIDGE",
+    "label": "parent of"
+   },
+   {
+    "from": "CP-NORTHBRIDGE",
+    "to": "AGR-NORTHBRIDGE-ISDA",
+    "label": "signed"
+   },
+   {
+    "from": "AGR-NORTHBRIDGE-ISDA",
+    "to": "CSA-NORTHBRIDGE",
+    "label": "secured by"
+   },
+   {
+    "from": "AGR-NORTHBRIDGE-ISDA",
+    "to": "NS-NORTHBRIDGE-FRA",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-NORTHBRIDGE-ISDA",
+    "to": "NS-NORTHBRIDGE-LDN",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-NORTHBRIDGE-ISDA",
+    "to": "NS-NORTHBRIDGE-NY",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-NORTHBRIDGE-ISDA",
+    "to": "NS-NORTHBRIDGE-TKY",
+    "label": "nets"
+   }
+  ]
+ },
  "_meta": {
   "source": "counterparty-master",
   "generation": 1

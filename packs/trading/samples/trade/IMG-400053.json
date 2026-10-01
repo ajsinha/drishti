@@ -349,7 +349,33 @@
   "sourceSystem": "Endur",
   "createdAt": "2025-03-25T11:16:00Z",
   "lastModifiedAt": "2025-03-25T11:16:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2025-03-25",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-PLINDQVIST: sell Equity Asian option"
+   },
+   {
+    "date": "2025-03-25",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT180145513)"
+   },
+   {
+    "date": "2026-12-27",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2035-11-28",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -403,6 +429,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -80204,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 1775
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 613
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -5074
+  },
+  {
+   "step": "FX delta",
+   "pnl": -84
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 63
+  },
+  {
+   "step": "Theta",
+   "pnl": -951
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 35
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

@@ -753,7 +753,33 @@
   "sourceSystem": "Murex",
   "createdAt": "2026-04-02T09:14:00Z",
   "lastModifiedAt": "2026-04-02T09:14:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2026-04-02",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-MOKAFOR: pay fixed Amortising swap"
+   },
+   {
+    "date": "2026-04-02",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA298578514)"
+   },
+   {
+    "date": "2026-10-07",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2031-11-10",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -805,6 +831,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -538855,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 3340
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 950
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 2802
+  },
+  {
+   "step": "FX delta",
+   "pnl": 7
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -30
+  },
+  {
+   "step": "Theta",
+   "pnl": 913
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -190
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

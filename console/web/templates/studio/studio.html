@@ -52,7 +52,7 @@
         <option value="description">description</option>
         <option value="notes">notes</option>
         <optgroup label="Panel">
-          {% for k in ["kv", "table", "tabs", "line", "area", "hbar", "ladder", "status", "gauge", "markdown", "links", "provenance", "surface"] %}<option value="panel:{{ k }}">{{ k }}</option>{% endfor %}
+          {% for k in ["kv", "table", "tabs", "line", "area", "hbar", "ladder", "status", "gauge", "markdown", "links", "provenance", "surface", "waterfall", "histogram", "scatter", "candlestick", "graph", "timeline", "pivot"] %}<option value="panel:{{ k }}">{{ k }}</option>{% endfor %}
         </optgroup>
       </select>
       <label for="sutraOutline" class="visually-hidden">Jump to</label>
@@ -92,6 +92,7 @@
 <script src="/static/js/studio-yaml.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/studio-assist.js?v={{ ASSET_V }}"></script>
 <script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/charts.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/command.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/view.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/studio.js?v={{ ASSET_V }}"></script>

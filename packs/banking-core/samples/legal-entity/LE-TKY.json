@@ -10,6 +10,32 @@
    "name": "Structured products"
   }
  ],
+ "books": [
+  {
+   "book": "BOOK-STRUCT-1",
+   "desk": "Structured products",
+   "var": 178425180,
+   "pnl": -201629,
+   "mtm": 7579700,
+   "trades": 12
+  },
+  {
+   "book": "BOOK-STRUCT-2",
+   "desk": "Structured products",
+   "var": 210989556,
+   "pnl": 61554,
+   "mtm": 8114339,
+   "trades": 8
+  },
+  {
+   "book": "BOOK-STRUCT-3",
+   "desk": "Structured products",
+   "var": 99419905,
+   "pnl": -62682,
+   "mtm": 90091,
+   "trades": 10
+  }
+ ],
  "_meta": {
   "source": "entity-master",
   "generation": 1

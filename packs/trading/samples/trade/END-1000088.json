@@ -226,7 +226,40 @@
   "sourceSystem": "Summit",
   "createdAt": "2025-05-23T11:23:00Z",
   "lastModifiedAt": "2025-05-23T11:23:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2025-05-23",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Endur by TRDR-TBRENNAN: long Freight forward agreement"
+   },
+   {
+    "date": "2025-05-23",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT908885316)"
+   },
+   {
+    "date": "2026-08-27",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "USD payment settled",
+    "amount": 128138.0
+   },
+   {
+    "date": "2026-11-27",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2027-01-06",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -277,6 +310,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 823923,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -4096
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -3625
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 29266
+  },
+  {
+   "step": "FX delta",
+   "pnl": 1573
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 575
+  },
+  {
+   "step": "Theta",
+   "pnl": 1133
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -947
+  }
+ ],
  "_meta": {
   "source": "endur-comm",
   "generation": 1,

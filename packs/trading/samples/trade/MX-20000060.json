@@ -813,7 +813,46 @@
   "sourceSystem": "Endur",
   "createdAt": "2024-06-26T12:25:00Z",
   "lastModifiedAt": "2024-06-26T12:25:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2024-06-26",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-MOKAFOR: pay fixed Constant maturity swap"
+   },
+   {
+    "date": "2024-06-26",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA333089475)"
+   },
+   {
+    "date": "2024-06-27",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2026-07-31",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "GBP payment settled",
+    "amount": 1857549.63
+   },
+   {
+    "date": "2026-11-02",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2029-01-29",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -870,6 +909,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -4382349,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 1626
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 6604
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 162434
+  },
+  {
+   "step": "FX delta",
+   "pnl": -39409
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -166
+  },
+  {
+   "step": "Theta",
+   "pnl": -5222
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 5434
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

@@ -312,7 +312,33 @@
   "sourceSystem": "Murex",
   "createdAt": "2026-04-01T10:23:00Z",
   "lastModifiedAt": "2026-04-01T10:23:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2026-04-01",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-YTANAKA: short Capital-protected note"
+   },
+   {
+    "date": "2026-04-01",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT389583790)"
+   },
+   {
+    "date": "2026-10-07",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2030-08-27",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -365,6 +391,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 1331058,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -7659
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 6208
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -42181
+  },
+  {
+   "step": "FX delta",
+   "pnl": 6424
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -399
+  },
+  {
+   "step": "Theta",
+   "pnl": 2139
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -1068
+  }
+ ],
  "_meta": {
   "source": "sophis-struct",
   "generation": 1,

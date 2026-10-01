@@ -1250,7 +1250,47 @@
   "sourceSystem": "Murex",
   "createdAt": "2026-07-31T10:52:00Z",
   "lastModifiedAt": "2026-07-31T10:52:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2026-07-31",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-HOKORO: receive fixed Limited price index swap"
+   },
+   {
+    "date": "2026-07-31",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA406302652)"
+   },
+   {
+    "date": "2026-08-26",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "USD payment settled",
+    "amount": -460219.03
+   },
+   {
+    "date": "2026-09-18",
+    "event": "Partially terminated",
+    "status": "Done",
+    "description": "Notional reduced by 10%, unwind fee settled",
+    "amount": 21700000
+   },
+   {
+    "date": "2026-11-25",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2035-02-22",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -1304,6 +1344,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 1135369,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 1040
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -76
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -12353
+  },
+  {
+   "step": "FX delta",
+   "pnl": 1572
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -40
+  },
+  {
+   "step": "Theta",
+   "pnl": 290
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 419
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

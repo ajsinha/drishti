@@ -134,7 +134,7 @@ Cap vols by maturity and strike.
 
 A listed stock: price, dividends, sector and identifiers.
 
-**Fields its Sutra reads:** `name`, `price`, `change1d`, `marketCap`, `sector`, `exchange`, `currency`, `beta`, `history`, `identifiers`.
+**Fields its Sutra reads:** `name`, `price`, `change1d`, `marketCap`, `sector`, `exchange`, `currency`, `beta`, `history`, `identifiers`, `ohlc`.
 
 **Links:** `issuer` → Issuer (`issuer`), `equityVolSurface` → Vol surface (`equity-vol-surface`), `dividendCurve` → Dividends (`dividend-curve`), `equityIndex` → Index (`equity-index`).
 
@@ -188,7 +188,7 @@ Zero-coupon breakevens by tenor, with monthly seasonality.
 
 A traded commodity with its benchmark, unit and venue.
 
-**Fields its Sutra reads:** `name`, `front`, `unit`, `exchange`, `sector`, `spec`.
+**Fields its Sutra reads:** `name`, `front`, `unit`, `exchange`, `sector`, `spec`, `ohlc`.
 
 **Links:** `commodityCurve` → Forward curve (`commodity-curve`), `commodityVolSurface` → Vol surface (`commodity-vol-surface`).
 

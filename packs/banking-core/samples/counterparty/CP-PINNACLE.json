@@ -43,6 +43,87 @@
  },
  "group": "GRP-PINNACLE",
  "creditLimit": "LIM-PINNACLE",
+ "hierarchy": {
+  "nodes": [
+   {
+    "id": "GRP-PINNACLE",
+    "label": "Pinnacle Partners LP",
+    "type": "Group (ultimate parent)"
+   },
+   {
+    "id": "CP-PINNACLE",
+    "label": "Pinnacle Credit Partners",
+    "type": "Counterparty"
+   },
+   {
+    "id": "AGR-PINNACLE-ISDA",
+    "label": "ISDA 2002 Master",
+    "type": "Agreement"
+   },
+   {
+    "id": "CSA-PINNACLE",
+    "label": "Credit support annex",
+    "type": "CSA"
+   },
+   {
+    "id": "NS-PINNACLE-FRA",
+    "label": "NS-PINNACLE-FRA · 1 trade",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-PINNACLE-LDN",
+    "label": "NS-PINNACLE-LDN · 13 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-PINNACLE-NY",
+    "label": "NS-PINNACLE-NY · 23 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-PINNACLE-TKY",
+    "label": "NS-PINNACLE-TKY · 5 trades",
+    "type": "Netting set"
+   }
+  ],
+  "edges": [
+   {
+    "from": "GRP-PINNACLE",
+    "to": "CP-PINNACLE",
+    "label": "parent of"
+   },
+   {
+    "from": "CP-PINNACLE",
+    "to": "AGR-PINNACLE-ISDA",
+    "label": "signed"
+   },
+   {
+    "from": "AGR-PINNACLE-ISDA",
+    "to": "CSA-PINNACLE",
+    "label": "secured by"
+   },
+   {
+    "from": "AGR-PINNACLE-ISDA",
+    "to": "NS-PINNACLE-FRA",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-PINNACLE-ISDA",
+    "to": "NS-PINNACLE-LDN",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-PINNACLE-ISDA",
+    "to": "NS-PINNACLE-NY",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-PINNACLE-ISDA",
+    "to": "NS-PINNACLE-TKY",
+    "label": "nets"
+   }
+  ]
+ },
  "_meta": {
   "source": "counterparty-master",
   "generation": 1

@@ -154,7 +154,27 @@
   "sourceSystem": "Murex",
   "createdAt": "2026-09-22T10:05:00Z",
   "lastModifiedAt": "2026-09-22T10:05:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2026-09-22",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Wall Street Systems by TRDR-SIYER: long Certificate of deposit"
+   },
+   {
+    "date": "2026-09-22",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT402659181)"
+   },
+   {
+    "date": "2027-04-20",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -205,6 +225,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 279648,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 304
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -303
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 1951
+  },
+  {
+   "step": "FX delta",
+   "pnl": 183
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 2
+  },
+  {
+   "step": "Theta",
+   "pnl": -141
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 7
+  }
+ ],
  "_meta": {
   "source": "summit-mm",
   "generation": 1,

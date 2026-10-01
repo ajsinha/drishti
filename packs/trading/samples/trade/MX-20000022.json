@@ -1256,7 +1256,39 @@
   "sourceSystem": "Calypso",
   "createdAt": "2026-08-27T12:31:00Z",
   "lastModifiedAt": "2026-08-27T12:31:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2026-08-27",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-ASHAH: receive fixed Cross-currency swap (non-MtM)"
+   },
+   {
+    "date": "2026-08-27",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA629740871)"
+   },
+   {
+    "date": "2026-08-28",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2026-11-04",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2035-02-01",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -1314,6 +1346,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 406034,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 6569
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -2934
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -21633
+  },
+  {
+   "step": "FX delta",
+   "pnl": -8403
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -336
+  },
+  {
+   "step": "Theta",
+   "pnl": -164
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -534
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

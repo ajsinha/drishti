@@ -233,7 +233,46 @@
   "sourceSystem": "Endur",
   "createdAt": "2024-04-24T09:37:00Z",
   "lastModifiedAt": "2024-09-30T09:37:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2024-04-24",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Calypso by TRDR-DWHITFIELD: receive fixed Total return swap on a loan index"
+   },
+   {
+    "date": "2024-04-24",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA381433016)"
+   },
+   {
+    "date": "2024-09-30",
+    "event": "Amended",
+    "status": "Done",
+    "description": "Notional corrected (version 2, by mo.ops)"
+   },
+   {
+    "date": "2026-04-26",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "GBP payment settled",
+    "amount": -135172.97
+   },
+   {
+    "date": "2027-04-26",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2028-02-01",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -285,6 +324,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -1044243,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -12435
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 1633
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -23682
+  },
+  {
+   "step": "FX delta",
+   "pnl": 2227
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -108
+  },
+  {
+   "step": "Theta",
+   "pnl": -315
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 819
+  }
+ ],
  "_meta": {
   "source": "murex-credit",
   "generation": 1,

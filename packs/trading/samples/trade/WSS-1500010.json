@@ -171,7 +171,27 @@
   "sourceSystem": "Endur",
   "createdAt": "2026-02-10T12:46:00Z",
   "lastModifiedAt": "2026-02-10T12:46:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2026-02-10",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Wall Street Systems by TRDR-ENOVAK: long FX forward"
+   },
+   {
+    "date": "2026-02-10",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT422209944)"
+   },
+   {
+    "date": "2027-03-22",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -225,6 +245,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 841525,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -5154
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 3051
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -25488
+  },
+  {
+   "step": "FX delta",
+   "pnl": -4979
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -713
+  },
+  {
+   "step": "Theta",
+   "pnl": -720
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 1256
+  }
+ ],
  "_meta": {
   "source": "calypso-fx",
   "generation": 1,

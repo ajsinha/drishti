@@ -249,7 +249,40 @@
   "sourceSystem": "Murex",
   "createdAt": "2024-06-13T10:58:00Z",
   "lastModifiedAt": "2024-06-13T10:58:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2024-06-13",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-MOKAFOR: sell CMS cap / floor"
+   },
+   {
+    "date": "2024-06-13",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA263646244)"
+   },
+   {
+    "date": "2026-09-17",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "GBP payment settled",
+    "amount": 333084.5
+   },
+   {
+    "date": "2026-10-07",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2026-10-07",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -302,6 +335,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 1420108,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -35767
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 3184
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 28643
+  },
+  {
+   "step": "FX delta",
+   "pnl": 10326
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -62115
+  },
+  {
+   "step": "Theta",
+   "pnl": -30085
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 3106
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

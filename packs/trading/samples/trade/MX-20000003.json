@@ -1722,7 +1722,39 @@
   "sourceSystem": "Summit",
   "createdAt": "2026-09-18T11:14:00Z",
   "lastModifiedAt": "2026-09-18T11:14:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2026-09-18",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-MOKAFOR: pay fixed Interest rate swap (fixed/float)"
+   },
+   {
+    "date": "2026-09-18",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA692518522)"
+   },
+   {
+    "date": "2026-09-21",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2026-11-17",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2036-05-13",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -1779,6 +1811,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 36508837,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 28275
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -30924
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -153759
+  },
+  {
+   "step": "FX delta",
+   "pnl": -10921
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -2453
+  },
+  {
+   "step": "Theta",
+   "pnl": -5900
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -4103
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

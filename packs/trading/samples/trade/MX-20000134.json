@@ -276,7 +276,39 @@
   "sourceSystem": "Calypso",
   "createdAt": "2026-07-29T10:19:00Z",
   "lastModifiedAt": "2026-08-24T10:19:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2026-07-29",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-MOKAFOR: sell Callable swap"
+   },
+   {
+    "date": "2026-07-29",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA751509204)"
+   },
+   {
+    "date": "2026-08-24",
+    "event": "Amended",
+    "status": "Done",
+    "description": "Notional corrected (version 2, by mo.ops)"
+   },
+   {
+    "date": "2027-07-31",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2035-01-04",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -329,6 +361,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 130999,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 3303
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -840
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -4946
+  },
+  {
+   "step": "FX delta",
+   "pnl": 137
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -1562
+  },
+  {
+   "step": "Theta",
+   "pnl": -1782
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -16
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

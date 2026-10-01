@@ -43,6 +43,87 @@
  },
  "group": "GRP-CORAL",
  "creditLimit": "LIM-CORAL",
+ "hierarchy": {
+  "nodes": [
+   {
+    "id": "GRP-CORAL",
+    "label": "Coral Bay Municipal Authority",
+    "type": "Group (ultimate parent)"
+   },
+   {
+    "id": "CP-CORAL",
+    "label": "Coral Bay Municipal Authority",
+    "type": "Counterparty"
+   },
+   {
+    "id": "AGR-CORAL-ISDA",
+    "label": "ISDA 2002 Master",
+    "type": "Agreement"
+   },
+   {
+    "id": "CSA-CORAL",
+    "label": "Credit support annex",
+    "type": "CSA"
+   },
+   {
+    "id": "NS-CORAL-FRA",
+    "label": "NS-CORAL-FRA · 3 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-CORAL-LDN",
+    "label": "NS-CORAL-LDN · 9 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-CORAL-NY",
+    "label": "NS-CORAL-NY · 25 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-CORAL-TKY",
+    "label": "NS-CORAL-TKY · 3 trades",
+    "type": "Netting set"
+   }
+  ],
+  "edges": [
+   {
+    "from": "GRP-CORAL",
+    "to": "CP-CORAL",
+    "label": "parent of"
+   },
+   {
+    "from": "CP-CORAL",
+    "to": "AGR-CORAL-ISDA",
+    "label": "signed"
+   },
+   {
+    "from": "AGR-CORAL-ISDA",
+    "to": "CSA-CORAL",
+    "label": "secured by"
+   },
+   {
+    "from": "AGR-CORAL-ISDA",
+    "to": "NS-CORAL-FRA",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-CORAL-ISDA",
+    "to": "NS-CORAL-LDN",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-CORAL-ISDA",
+    "to": "NS-CORAL-NY",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-CORAL-ISDA",
+    "to": "NS-CORAL-TKY",
+    "label": "nets"
+   }
+  ]
+ },
  "_meta": {
   "source": "counterparty-master",
   "generation": 1

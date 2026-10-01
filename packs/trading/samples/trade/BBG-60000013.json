@@ -219,7 +219,46 @@
   "sourceSystem": "Calypso",
   "createdAt": "2024-07-18T09:22:00Z",
   "lastModifiedAt": "2024-07-18T09:22:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2024-07-18",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Bloomberg TOMS by TRDR-BADEYEMI: long Floating rate note"
+   },
+   {
+    "date": "2024-07-18",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT200449259)"
+   },
+   {
+    "date": "2024-07-19",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2026-07-22",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "CAD payment settled",
+    "amount": 1760000.0
+   },
+   {
+    "date": "2027-01-22",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2028-06-08",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -276,6 +315,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 1023600,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 12169
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -2666
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 14765
+  },
+  {
+   "step": "FX delta",
+   "pnl": 1447
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 1345
+  },
+  {
+   "step": "Theta",
+   "pnl": 519
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -993
+  }
+ ],
  "_meta": {
   "source": "summit-fi",
   "generation": 1,

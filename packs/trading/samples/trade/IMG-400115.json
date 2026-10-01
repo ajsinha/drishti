@@ -178,7 +178,33 @@
   "sourceSystem": "Calypso",
   "createdAt": "2025-04-25T11:21:00Z",
   "lastModifiedAt": "2025-04-25T11:21:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2025-04-25",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-JWEISS: buy Equity warrant"
+   },
+   {
+    "date": "2025-04-25",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT748047715)"
+   },
+   {
+    "date": "2025-04-28",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2027-12-24",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -235,6 +261,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 534967,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 120
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 1505
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 13522
+  },
+  {
+   "step": "FX delta",
+   "pnl": 1065
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -3522
+  },
+  {
+   "step": "Theta",
+   "pnl": -3232
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 201
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

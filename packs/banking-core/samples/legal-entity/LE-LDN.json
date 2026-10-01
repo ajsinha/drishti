@@ -18,6 +18,80 @@
    "name": "Inflation"
   }
  ],
+ "books": [
+  {
+   "book": "BOOK-FX-1",
+   "desk": "G10 and EM FX",
+   "var": 10115470,
+   "pnl": 735199,
+   "mtm": -1650999,
+   "trades": 22
+  },
+  {
+   "book": "BOOK-FX-2",
+   "desk": "G10 and EM FX",
+   "var": 13940985,
+   "pnl": 210972,
+   "mtm": -12267806,
+   "trades": 31
+  },
+  {
+   "book": "BOOK-FX-3",
+   "desk": "G10 and EM FX",
+   "var": 11081682,
+   "pnl": 113931,
+   "mtm": -1840614,
+   "trades": 31
+  },
+  {
+   "book": "BOOK-EQD-1",
+   "desk": "Equity derivatives",
+   "var": 6569139,
+   "pnl": -292506,
+   "mtm": -9179047,
+   "trades": 37
+  },
+  {
+   "book": "BOOK-EQD-2",
+   "desk": "Equity derivatives",
+   "var": 9267988,
+   "pnl": -852796,
+   "mtm": 11863685,
+   "trades": 41
+  },
+  {
+   "book": "BOOK-EQD-3",
+   "desk": "Equity derivatives",
+   "var": 9339401,
+   "pnl": -265895,
+   "mtm": -9118308,
+   "trades": 54
+  },
+  {
+   "book": "BOOK-INFL-1",
+   "desk": "Inflation",
+   "var": 3687925,
+   "pnl": -254320,
+   "mtm": -19628073,
+   "trades": 12
+  },
+  {
+   "book": "BOOK-INFL-2",
+   "desk": "Inflation",
+   "var": 1473873,
+   "pnl": -27077,
+   "mtm": -6815332,
+   "trades": 16
+  },
+  {
+   "book": "BOOK-INFL-3",
+   "desk": "Inflation",
+   "var": 680590,
+   "pnl": -359336,
+   "mtm": -21489291,
+   "trades": 8
+  }
+ ],
  "_meta": {
   "source": "entity-master",
   "generation": 1

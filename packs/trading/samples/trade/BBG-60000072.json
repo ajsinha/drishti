@@ -204,7 +204,33 @@
   "sourceSystem": "Murex",
   "createdAt": "2026-09-18T11:19:00Z",
   "lastModifiedAt": "2026-09-18T11:19:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2026-09-18",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Bloomberg TOMS by TRDR-BADEYEMI: short Asset-backed security"
+   },
+   {
+    "date": "2026-09-18",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT661511953)"
+   },
+   {
+    "date": "2027-03-21",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2028-12-14",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -256,6 +282,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 1279531,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -931
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 407
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -1667
+  },
+  {
+   "step": "FX delta",
+   "pnl": -440
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 38
+  },
+  {
+   "step": "Theta",
+   "pnl": -128
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 137
+  }
+ ],
  "_meta": {
   "source": "summit-fi",
   "generation": 1,

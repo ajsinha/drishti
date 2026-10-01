@@ -346,7 +346,33 @@
   "sourceSystem": "Murex",
   "createdAt": "2026-08-31T11:55:00Z",
   "lastModifiedAt": "2026-08-31T11:55:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2026-08-31",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Wall Street Systems by TRDR-ENOVAK: buy FX target redemption forward"
+   },
+   {
+    "date": "2026-08-31",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT363310738)"
+   },
+   {
+    "date": "2026-12-02",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2034-09-21",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -399,6 +425,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 837917,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 2537
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -120
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 23713
+  },
+  {
+   "step": "FX delta",
+   "pnl": -67
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -2980
+  },
+  {
+   "step": "Theta",
+   "pnl": -11489
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 630
+  }
+ ],
  "_meta": {
   "source": "calypso-fx",
   "generation": 1,

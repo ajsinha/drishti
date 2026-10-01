@@ -251,7 +251,40 @@
   "sourceSystem": "Calypso",
   "createdAt": "2025-11-14T11:11:00Z",
   "lastModifiedAt": "2025-11-14T11:11:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2025-11-14",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-HOKORO: short Inflation-linked bond"
+   },
+   {
+    "date": "2025-11-14",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA308998745)"
+   },
+   {
+    "date": "2026-05-17",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "EUR payment settled",
+    "amount": 1380000.0
+   },
+   {
+    "date": "2026-11-17",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2032-06-07",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -305,6 +338,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 244533,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 248
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -1132
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 25983
+  },
+  {
+   "step": "FX delta",
+   "pnl": 395
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -510
+  },
+  {
+   "step": "Theta",
+   "pnl": -1594
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -1067
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

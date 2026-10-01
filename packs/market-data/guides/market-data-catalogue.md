@@ -80,7 +80,7 @@ A listed stock: price, dividends, sector and identifiers.
 
 **Mnemonic:** `EQ` · **Identifiers:** `EQ-…` · **Id field:** `ticker`
 
-**Fields its Sutra reads:** `name`, `price`, `change1d`, `marketCap`, `sector`, `exchange`, `currency`, `beta`, `history`, `identifiers`.
+**Fields its Sutra reads:** `name`, `price`, `change1d`, `marketCap`, `sector`, `exchange`, `currency`, `beta`, `history`, `identifiers`, `ohlc`.
 
 ## Equity index (`equity-index`)
 
@@ -136,7 +136,7 @@ A traded commodity with its benchmark, unit and venue.
 
 **Mnemonic:** `CMD` · **Identifiers:** `CMD-…` · **Id field:** `commodityId`
 
-**Fields its Sutra reads:** `name`, `front`, `unit`, `exchange`, `sector`, `spec`.
+**Fields its Sutra reads:** `name`, `front`, `unit`, `exchange`, `sector`, `spec`, `ohlc`.
 
 ## Commodity forward curve (`commodity-curve`)
 

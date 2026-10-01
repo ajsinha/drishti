@@ -26,6 +26,302 @@
  "assetClasses": [
   "Securities financing"
  ],
+ "positions": [
+  {
+   "tradeId": "BBG-60000081",
+   "book": "BOOK-SFT-1",
+   "currency": "USD",
+   "family": "sft",
+   "mtm": 396058
+  },
+  {
+   "tradeId": "BBG-60000086",
+   "book": "BOOK-SFT-1",
+   "currency": "EUR",
+   "family": "sft",
+   "mtm": 3324957
+  },
+  {
+   "tradeId": "BBG-60000088",
+   "book": "BOOK-SFT-1",
+   "currency": "USD",
+   "family": "sft",
+   "mtm": 319538
+  },
+  {
+   "tradeId": "BBG-60000089",
+   "book": "BOOK-SFT-1",
+   "currency": "USD",
+   "family": "sft",
+   "mtm": 2428077
+  },
+  {
+   "tradeId": "BBG-60000090",
+   "book": "BOOK-SFT-1",
+   "currency": "USD",
+   "family": "sft",
+   "mtm": 1817034
+  },
+  {
+   "tradeId": "BBG-60000093",
+   "book": "BOOK-SFT-1",
+   "currency": "EUR",
+   "family": "sft",
+   "mtm": 1780029
+  },
+  {
+   "tradeId": "BBG-60000094",
+   "book": "BOOK-SFT-1",
+   "currency": "JPY",
+   "family": "sft",
+   "mtm": -708216
+  },
+  {
+   "tradeId": "BBG-60000098",
+   "book": "BOOK-SFT-1",
+   "currency": "GBP",
+   "family": "sft",
+   "mtm": -453412
+  },
+  {
+   "tradeId": "BBG-60000101",
+   "book": "BOOK-SFT-1",
+   "currency": "JPY",
+   "family": "sft",
+   "mtm": 23832
+  },
+  {
+   "tradeId": "BBG-60000104",
+   "book": "BOOK-SFT-1",
+   "currency": "CHF",
+   "family": "sft",
+   "mtm": -1421662
+  },
+  {
+   "tradeId": "BBG-60000105",
+   "book": "BOOK-SFT-1",
+   "currency": "JPY",
+   "family": "sft",
+   "mtm": 116927
+  },
+  {
+   "tradeId": "BBG-60000107",
+   "book": "BOOK-SFT-1",
+   "currency": "USD",
+   "family": "sft",
+   "mtm": 2398191
+  },
+  {
+   "tradeId": "BBG-60000111",
+   "book": "BOOK-SFT-1",
+   "currency": "GBP",
+   "family": "sft",
+   "mtm": -1901921
+  },
+  {
+   "tradeId": "BBG-60000113",
+   "book": "BOOK-SFT-1",
+   "currency": "EUR",
+   "family": "sft",
+   "mtm": -1189358
+  },
+  {
+   "tradeId": "BBG-60000115",
+   "book": "BOOK-SFT-1",
+   "currency": "USD",
+   "family": "sft",
+   "mtm": -354213
+  },
+  {
+   "tradeId": "BBG-60000116",
+   "book": "BOOK-SFT-1",
+   "currency": "JPY",
+   "family": "sft",
+   "mtm": 709577
+  },
+  {
+   "tradeId": "BBG-60000120",
+   "book": "BOOK-SFT-1",
+   "currency": "USD",
+   "family": "sft",
+   "mtm": 1594435
+  },
+  {
+   "tradeId": "BBG-60000079",
+   "book": "BOOK-SFT-2",
+   "currency": "JPY",
+   "family": "sft",
+   "mtm": -271929
+  },
+  {
+   "tradeId": "BBG-60000080",
+   "book": "BOOK-SFT-2",
+   "currency": "USD",
+   "family": "sft",
+   "mtm": 122689
+  },
+  {
+   "tradeId": "BBG-60000085",
+   "book": "BOOK-SFT-2",
+   "currency": "CHF",
+   "family": "sft",
+   "mtm": -2160188
+  },
+  {
+   "tradeId": "BBG-60000091",
+   "book": "BOOK-SFT-2",
+   "currency": "USD",
+   "family": "sft",
+   "mtm": -135470
+  },
+  {
+   "tradeId": "BBG-60000095",
+   "book": "BOOK-SFT-2",
+   "currency": "JPY",
+   "family": "sft",
+   "mtm": -1727235
+  },
+  {
+   "tradeId": "BBG-60000096",
+   "book": "BOOK-SFT-2",
+   "currency": "EUR",
+   "family": "sft",
+   "mtm": 1265588
+  },
+  {
+   "tradeId": "BBG-60000099",
+   "book": "BOOK-SFT-2",
+   "currency": "EUR",
+   "family": "sft",
+   "mtm": -127858
+  },
+  {
+   "tradeId": "BBG-60000100",
+   "book": "BOOK-SFT-2",
+   "currency": "USD",
+   "family": "sft",
+   "mtm": -147461
+  },
+  {
+   "tradeId": "BBG-60000103",
+   "book": "BOOK-SFT-2",
+   "currency": "EUR",
+   "family": "sft",
+   "mtm": 516127
+  },
+  {
+   "tradeId": "BBG-60000108",
+   "book": "BOOK-SFT-2",
+   "currency": "GBP",
+   "family": "sft",
+   "mtm": -362786
+  },
+  {
+   "tradeId": "BBG-60000109",
+   "book": "BOOK-SFT-2",
+   "currency": "CAD",
+   "family": "sft",
+   "mtm": -2184430
+  },
+  {
+   "tradeId": "BBG-60000110",
+   "book": "BOOK-SFT-2",
+   "currency": "CHF",
+   "family": "sft",
+   "mtm": -562899
+  },
+  {
+   "tradeId": "BBG-60000112",
+   "book": "BOOK-SFT-2",
+   "currency": "GBP",
+   "family": "sft",
+   "mtm": -511456
+  },
+  {
+   "tradeId": "BBG-60000114",
+   "book": "BOOK-SFT-2",
+   "currency": "EUR",
+   "family": "sft",
+   "mtm": -2200202
+  },
+  {
+   "tradeId": "BBG-60000082",
+   "book": "BOOK-SFT-3",
+   "currency": "EUR",
+   "family": "sft",
+   "mtm": 4140501
+  },
+  {
+   "tradeId": "BBG-60000083",
+   "book": "BOOK-SFT-3",
+   "currency": "EUR",
+   "family": "sft",
+   "mtm": 269743
+  },
+  {
+   "tradeId": "BBG-60000084",
+   "book": "BOOK-SFT-3",
+   "currency": "USD",
+   "family": "sft",
+   "mtm": -422916
+  },
+  {
+   "tradeId": "BBG-60000087",
+   "book": "BOOK-SFT-3",
+   "currency": "USD",
+   "family": "sft",
+   "mtm": -730273
+  },
+  {
+   "tradeId": "BBG-60000092",
+   "book": "BOOK-SFT-3",
+   "currency": "EUR",
+   "family": "sft",
+   "mtm": -4913363
+  },
+  {
+   "tradeId": "BBG-60000097",
+   "book": "BOOK-SFT-3",
+   "currency": "USD",
+   "family": "sft",
+   "mtm": 119432
+  },
+  {
+   "tradeId": "BBG-60000102",
+   "book": "BOOK-SFT-3",
+   "currency": "USD",
+   "family": "sft",
+   "mtm": -2924657
+  },
+  {
+   "tradeId": "BBG-60000106",
+   "book": "BOOK-SFT-3",
+   "currency": "CHF",
+   "family": "sft",
+   "mtm": 103775
+  },
+  {
+   "tradeId": "BBG-60000117",
+   "book": "BOOK-SFT-3",
+   "currency": "EUR",
+   "family": "sft",
+   "mtm": 1993603
+  },
+  {
+   "tradeId": "BBG-60000118",
+   "book": "BOOK-SFT-3",
+   "currency": "USD",
+   "family": "sft",
+   "mtm": 697723
+  },
+  {
+   "tradeId": "BBG-60000119",
+   "book": "BOOK-SFT-3",
+   "currency": "JPY",
+   "family": "sft",
+   "mtm": 1033179
+  }
+ ],
  "_meta": {
   "source": "org-master",
   "generation": 1

@@ -125,4 +125,52 @@ class SutraParserTest {
                 .isInstanceOfSatisfying(SutraException.class, e -> assertThat(e.problems()).extracting(SutraProblem::message)
                         .anySatisfy(m -> assertThat(m).contains("'search' applies only to panels that show a table")));
     }
+
+    @Test
+    void theChartAndAggregateKindsParseAndRejectValuesTheyDoNotAllow() {
+        String ok = """
+                rachana: 1
+                sutra: chart-kinds
+                version: 1
+                match: { kind: trade }
+                panels:
+                  - { id: w, kind: waterfall, rows: $.explain, label: step, value: pnl, sum: Closing }
+                  - id: h
+                    kind: histogram
+                    rows: $.scenarios
+                    bins: 30
+                    markers:
+                      - { label: VaR 99%, value: "-$.var99", tone: neg }
+                  - { id: s, kind: scatter, rows: $.books, x: var, y: pnl, group: desk }
+                  - { id: c, kind: candlestick, rows: $.ohlc, volume: volume }
+                  - { id: g, kind: graph, nodes: $.tree.nodes, edges: $.tree.edges, layout: force }
+                  - { id: t, kind: timeline, rows: $.events }
+                  - { id: p, kind: pivot, rows: $.positions, by: book, across: currency, value: mtm, agg: avg, heat: true }
+                """;
+        var s = parser.parse(ok, "charts.yaml", "x");
+        assertThat(s.panels()).extracting(x -> x.kind().id())
+                .containsExactly("waterfall", "histogram", "scatter", "candlestick", "graph", "timeline", "pivot");
+        assertThat(s.panels().get(1).options().get("markers")).isInstanceOf(List.class);
+        String bad = """
+                rachana: 1
+                sutra: bad-charts
+                version: 1
+                match: { kind: trade }
+                panels:
+                  - { id: p, kind: pivot, rows: $.positions, by: book, across: currency, agg: median, heat: yes please }
+                  - { id: h, kind: histogram, rows: $.scenarios, bins: 0, markers: [ { label: VaR } ] }
+                  - { id: g, kind: graph, nodes: $.n, layout: circle }
+                  - { id: s, kind: scatter, rows: $.books, x: var }
+                """;
+        assertThatThrownBy(() -> parser.parse(bad, "bad-charts.yaml", "x"))
+                .isInstanceOfSatisfying(SutraException.class, e -> {
+                    assertThat(e.problems()).filteredOn(p -> p.code().equals("DRS-2029")).extracting(SutraProblem::message).hasSize(5)
+                            .anySatisfy(m -> assertThat(m).contains("must be one of sum, count, avg, min, max, not 'median'"))
+                            .anySatisfy(m -> assertThat(m).contains("'heat' of 'pivot' panels must be true or false"))
+                            .anySatisfy(m -> assertThat(m).contains("'bins' of 'histogram' panels must be a whole number from 1 to 200"))
+                            .anySatisfy(m -> assertThat(m).contains("each histogram marker must be a mapping with a 'value'"))
+                            .anySatisfy(m -> assertThat(m).contains("must be one of tree, force, not 'circle'"));
+                    assertThat(e.problems()).extracting(SutraProblem::message).contains("'scatter' panel 's' needs option 'y'");
+                });
+    }
 }

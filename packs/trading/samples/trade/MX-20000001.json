@@ -1088,7 +1088,52 @@
   "sourceSystem": "Summit",
   "createdAt": "2025-07-25T09:24:00Z",
   "lastModifiedAt": "2025-08-07T09:24:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2025-07-25",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-ASHAH: receive fixed Interest rate swap (fixed/float)"
+   },
+   {
+    "date": "2025-07-25",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA416540959)"
+   },
+   {
+    "date": "2025-07-28",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2025-08-07",
+    "event": "Amended",
+    "status": "Done",
+    "description": "Notional corrected (version 2, by mo.amend)"
+   },
+   {
+    "date": "2026-09-29",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "AUD payment settled",
+    "amount": -2232213.38
+   },
+   {
+    "date": "2026-12-30",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2032-06-25",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -1145,6 +1190,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 1748877,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -11426
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 11390
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 132686
+  },
+  {
+   "step": "FX delta",
+   "pnl": -2391
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 5004
+  },
+  {
+   "step": "Theta",
+   "pnl": -8685
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 408
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

@@ -697,7 +697,40 @@
   "sourceSystem": "Murex",
   "createdAt": "2024-10-11T12:31:00Z",
   "lastModifiedAt": "2024-10-11T12:31:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2024-10-11",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-GMENDES: pay fixed Zero-coupon inflation swap"
+   },
+   {
+    "date": "2024-10-11",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA732906889)"
+   },
+   {
+    "date": "2026-08-27",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "JPY payment settled",
+    "amount": 7893.6
+   },
+   {
+    "date": "2026-11-27",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2028-08-25",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -751,6 +784,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -185409,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -204
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 922
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -3692
+  },
+  {
+   "step": "FX delta",
+   "pnl": -388
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 42
+  },
+  {
+   "step": "Theta",
+   "pnl": 108
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -4
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

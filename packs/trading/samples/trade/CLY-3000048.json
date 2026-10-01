@@ -221,7 +221,33 @@
   "sourceSystem": "Murex",
   "createdAt": "2026-04-21T12:34:00Z",
   "lastModifiedAt": "2026-04-21T12:34:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2026-04-21",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Calypso by TRDR-DWHITFIELD: long Credit-linked note"
+   },
+   {
+    "date": "2026-04-21",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA649446469)"
+   },
+   {
+    "date": "2026-10-23",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2030-03-11",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -273,6 +299,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 3116890,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 38139
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -12537
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 43509
+  },
+  {
+   "step": "FX delta",
+   "pnl": 2311
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 1374
+  },
+  {
+   "step": "Theta",
+   "pnl": 3791
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 1560
+  }
+ ],
  "_meta": {
   "source": "murex-credit",
   "generation": 1,

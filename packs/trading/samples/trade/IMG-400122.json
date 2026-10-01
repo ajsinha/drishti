@@ -295,7 +295,40 @@
   "sourceSystem": "Murex",
   "createdAt": "2024-08-27T09:03:00Z",
   "lastModifiedAt": "2024-08-27T09:03:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2024-08-27",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-JWEISS: long Convertible bond"
+   },
+   {
+    "date": "2024-08-27",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT696920634)"
+   },
+   {
+    "date": "2026-08-28",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "USD payment settled",
+    "amount": 280000.0
+   },
+   {
+    "date": "2027-02-28",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2033-03-09",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -350,6 +383,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 90030,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 581
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 214
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 3110
+  },
+  {
+   "step": "FX delta",
+   "pnl": 270
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -132
+  },
+  {
+   "step": "Theta",
+   "pnl": 274
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -24
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

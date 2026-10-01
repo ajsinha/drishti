@@ -102,7 +102,7 @@ def check(docs: dict) -> list[str]:
         if total != d["netMtm"]:
             problems.append(f"netting-set/{ns}: netMtm {d['netMtm']} != sum of trades {total}")
     for spec in T.KINDS:
-        need = {m for s in spec.strip for m in PATH.findall(s[1])} | {m for p in spec.panels if p.rows for m in PATH.findall(p.rows)}
+        need = {m for s in spec.strip for m in PATH.findall(s[1])} | {m for p in spec.panels for path in p.paths() for m in PATH.findall(path)}
         for id_, d in docs.get(spec.kind, {}).items():
             missing = [f for f in sorted(need) if f not in d]
             if missing:

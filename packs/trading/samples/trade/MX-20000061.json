@@ -227,7 +227,40 @@
   "sourceSystem": "Calypso",
   "createdAt": "2024-10-18T09:46:00Z",
   "lastModifiedAt": "2024-10-18T09:46:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2024-10-18",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-MOKAFOR: short Forward rate agreement"
+   },
+   {
+    "date": "2024-10-18",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA963239515)"
+   },
+   {
+    "date": "2026-07-21",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "GBP payment settled",
+    "amount": 0.0
+   },
+   {
+    "date": "2026-10-07",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2026-10-07",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -279,6 +312,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -4825257,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -52430
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 10840
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -148132
+  },
+  {
+   "step": "FX delta",
+   "pnl": 20844
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -3567
+  },
+  {
+   "step": "Theta",
+   "pnl": 3889
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -10149
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

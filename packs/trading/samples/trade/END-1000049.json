@@ -168,7 +168,33 @@
   "sourceSystem": "Calypso",
   "createdAt": "2025-01-10T12:16:00Z",
   "lastModifiedAt": "2025-01-10T12:16:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-01-10",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Endur by TRDR-TBRENNAN: long Calendar spread"
+   },
+   {
+    "date": "2025-01-10",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT556568461)"
+   },
+   {
+    "date": "2025-01-13",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2027-01-06",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -223,6 +249,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 828809,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -4534
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 8256
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -18537
+  },
+  {
+   "step": "FX delta",
+   "pnl": 583
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 279
+  },
+  {
+   "step": "Theta",
+   "pnl": -234
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -726
+  }
+ ],
  "_meta": {
   "source": "endur-comm",
   "generation": 1,

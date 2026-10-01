@@ -354,7 +354,33 @@
   "sourceSystem": "Calypso",
   "createdAt": "2024-05-31T12:19:00Z",
   "lastModifiedAt": "2024-05-31T12:19:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2024-05-31",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-YTANAKA: sell FX-rates hybrid (PRDC)"
+   },
+   {
+    "date": "2024-05-31",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT962705812)"
+   },
+   {
+    "date": "2026-12-03",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2032-02-02",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -408,6 +434,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 1898839,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 5316
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -2589
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 92765
+  },
+  {
+   "step": "FX delta",
+   "pnl": 2787
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -17648
+  },
+  {
+   "step": "Theta",
+   "pnl": -35040
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 1176
+  }
+ ],
  "_meta": {
   "source": "sophis-struct",
   "generation": 1,

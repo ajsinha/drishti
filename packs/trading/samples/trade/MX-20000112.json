@@ -163,7 +163,33 @@
   "sourceSystem": "Summit",
   "createdAt": "2026-09-22T10:38:00Z",
   "lastModifiedAt": "2026-09-26T10:38:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2026-09-22",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-ASHAH: buy American swaption"
+   },
+   {
+    "date": "2026-09-22",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA323745370)"
+   },
+   {
+    "date": "2026-09-26",
+    "event": "Amended",
+    "status": "Done",
+    "description": "Notional corrected (version 2, by stp.gateway)"
+   },
+   {
+    "date": "2027-02-26",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -216,6 +242,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 1892608,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 739
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 19826
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -70759
+  },
+  {
+   "step": "FX delta",
+   "pnl": 4786
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -6956
+  },
+  {
+   "step": "Theta",
+   "pnl": -7215
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -1377
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

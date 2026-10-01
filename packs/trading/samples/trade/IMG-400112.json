@@ -163,7 +163,27 @@
   "sourceSystem": "Calypso",
   "createdAt": "2025-09-30T11:40:00Z",
   "lastModifiedAt": "2025-09-30T11:40:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-09-30",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-JWEISS: long Contract for difference"
+   },
+   {
+    "date": "2025-09-30",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT409545636)"
+   },
+   {
+    "date": "2026-10-07",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -216,6 +236,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 482373,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 356
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -2016
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 10345
+  },
+  {
+   "step": "FX delta",
+   "pnl": 257
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -24
+  },
+  {
+   "step": "Theta",
+   "pnl": 140
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 506
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

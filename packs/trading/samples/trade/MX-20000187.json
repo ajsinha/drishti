@@ -1377,7 +1377,40 @@
   "sourceSystem": "Murex",
   "createdAt": "2026-09-08T10:08:00Z",
   "lastModifiedAt": "2026-09-08T10:08:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2026-09-08",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-HOKORO: pay fixed Limited price index swap"
+   },
+   {
+    "date": "2026-09-08",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA813713453)"
+   },
+   {
+    "date": "2026-09-23",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "GBP payment settled",
+    "amount": 259915.79
+   },
+   {
+    "date": "2026-12-23",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2036-09-19",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -1431,6 +1464,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -121823,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -89
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -1776
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 8107
+  },
+  {
+   "step": "FX delta",
+   "pnl": 15
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 13
+  },
+  {
+   "step": "Theta",
+   "pnl": 90
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 231
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

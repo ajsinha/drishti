@@ -187,7 +187,27 @@
   "sourceSystem": "Endur",
   "createdAt": "2026-09-14T12:16:00Z",
   "lastModifiedAt": "2026-09-14T12:16:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2026-09-14",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Bloomberg TOMS by TRDR-NFAROUK: repo (lend cash) Margin loan"
+   },
+   {
+    "date": "2026-09-14",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT363219640)"
+   },
+   {
+    "date": "2027-01-11",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -240,6 +260,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -365124,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 936
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -2056
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 13338
+  },
+  {
+   "step": "FX delta",
+   "pnl": -666
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 96
+  },
+  {
+   "step": "Theta",
+   "pnl": -367
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -370
+  }
+ ],
  "_meta": {
   "source": "globalone-sft",
   "generation": 1,

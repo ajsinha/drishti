@@ -333,7 +333,39 @@
   "sourceSystem": "Calypso",
   "createdAt": "2024-10-11T11:28:00Z",
   "lastModifiedAt": "2024-10-11T11:28:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2024-10-11",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Bloomberg TOMS by TRDR-BADEYEMI: long Agency MBS pass-through"
+   },
+   {
+    "date": "2024-10-11",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT834357398)"
+   },
+   {
+    "date": "2024-10-14",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2026-10-14",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2034-08-30",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -390,6 +422,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -360683,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -10224
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -113
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -14319
+  },
+  {
+   "step": "FX delta",
+   "pnl": -247
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -105
+  },
+  {
+   "step": "Theta",
+   "pnl": 1195
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -1417
+  }
+ ],
  "_meta": {
   "source": "summit-fi",
   "generation": 1,

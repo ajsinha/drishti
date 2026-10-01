@@ -269,7 +269,47 @@
   "sourceSystem": "Calypso",
   "createdAt": "2025-02-14T09:15:00Z",
   "lastModifiedAt": "2025-02-14T09:15:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2025-02-14",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Calypso by TRDR-DWHITFIELD: long Credit-linked note"
+   },
+   {
+    "date": "2025-02-14",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA722144044)"
+   },
+   {
+    "date": "2025-04-04",
+    "event": "Partially terminated",
+    "status": "Done",
+    "description": "Notional reduced by 25%, unwind fee settled",
+    "amount": 36500000
+   },
+   {
+    "date": "2026-08-17",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "AUD payment settled",
+    "amount": 2920000.0
+   },
+   {
+    "date": "2027-02-17",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2031-12-03",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -321,6 +361,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 2604315,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -18325
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 19093
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 175364
+  },
+  {
+   "step": "FX delta",
+   "pnl": 17472
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -2696
+  },
+  {
+   "step": "Theta",
+   "pnl": 4505
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -7741
+  }
+ ],
  "_meta": {
   "source": "murex-credit",
   "generation": 1,

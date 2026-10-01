@@ -155,7 +155,27 @@
   "sourceSystem": "Calypso",
   "createdAt": "2026-09-10T12:02:00Z",
   "lastModifiedAt": "2026-09-10T12:02:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2026-09-10",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Wall Street Systems by TRDR-ISCHULZ: long Commercial paper"
+   },
+   {
+    "date": "2026-09-10",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT610153357)"
+   },
+   {
+    "date": "2026-11-18",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -207,6 +227,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 143916,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 1216
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 485
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 2384
+  },
+  {
+   "step": "FX delta",
+   "pnl": -361
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -20
+  },
+  {
+   "step": "Theta",
+   "pnl": -147
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -140
+  }
+ ],
  "_meta": {
   "source": "summit-mm",
   "generation": 1,

@@ -26,6 +26,1100 @@
  "assetClasses": [
   "Rates"
  ],
+ "positions": [
+  {
+   "tradeId": "MX-20000002",
+   "book": "BOOK-RATES-1",
+   "currency": "EUR",
+   "family": "swap",
+   "mtm": 1761589
+  },
+  {
+   "tradeId": "MX-20000003",
+   "book": "BOOK-RATES-1",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": 36329052
+  },
+  {
+   "tradeId": "MX-20000010",
+   "book": "BOOK-RATES-1",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": 18884450
+  },
+  {
+   "tradeId": "MX-20000011",
+   "book": "BOOK-RATES-1",
+   "currency": "CHF",
+   "family": "swap",
+   "mtm": 36805234
+  },
+  {
+   "tradeId": "MX-20000016",
+   "book": "BOOK-RATES-1",
+   "currency": "GBP",
+   "family": "swap",
+   "mtm": -5361207
+  },
+  {
+   "tradeId": "MX-20000018",
+   "book": "BOOK-RATES-1",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": -142545
+  },
+  {
+   "tradeId": "MX-20000020",
+   "book": "BOOK-RATES-1",
+   "currency": "JPY",
+   "family": "swap",
+   "mtm": -1325556
+  },
+  {
+   "tradeId": "MX-20000022",
+   "book": "BOOK-RATES-1",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": 378599
+  },
+  {
+   "tradeId": "MX-20000027",
+   "book": "BOOK-RATES-1",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": 318993
+  },
+  {
+   "tradeId": "MX-20000033",
+   "book": "BOOK-RATES-1",
+   "currency": "GBP",
+   "family": "swap",
+   "mtm": -6203686
+  },
+  {
+   "tradeId": "MX-20000036",
+   "book": "BOOK-RATES-1",
+   "currency": "JPY",
+   "family": "swap",
+   "mtm": -30205543
+  },
+  {
+   "tradeId": "MX-20000038",
+   "book": "BOOK-RATES-1",
+   "currency": "GBP",
+   "family": "swap",
+   "mtm": -531063
+  },
+  {
+   "tradeId": "MX-20000040",
+   "book": "BOOK-RATES-1",
+   "currency": "CAD",
+   "family": "swap",
+   "mtm": 14300779
+  },
+  {
+   "tradeId": "MX-20000043",
+   "book": "BOOK-RATES-1",
+   "currency": "CHF",
+   "family": "swap",
+   "mtm": 71490903
+  },
+  {
+   "tradeId": "MX-20000044",
+   "book": "BOOK-RATES-1",
+   "currency": "AUD",
+   "family": "swap",
+   "mtm": 25398239
+  },
+  {
+   "tradeId": "MX-20000047",
+   "book": "BOOK-RATES-1",
+   "currency": "AUD",
+   "family": "swap",
+   "mtm": 2201547
+  },
+  {
+   "tradeId": "MX-20000048",
+   "book": "BOOK-RATES-1",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": -1191935
+  },
+  {
+   "tradeId": "MX-20000049",
+   "book": "BOOK-RATES-1",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": 23383110
+  },
+  {
+   "tradeId": "MX-20000055",
+   "book": "BOOK-RATES-1",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": 9246729
+  },
+  {
+   "tradeId": "MX-20000060",
+   "book": "BOOK-RATES-1",
+   "currency": "GBP",
+   "family": "swap",
+   "mtm": -4251048
+  },
+  {
+   "tradeId": "MX-20000061",
+   "book": "BOOK-RATES-1",
+   "currency": "GBP",
+   "family": "linear",
+   "mtm": -5003962
+  },
+  {
+   "tradeId": "MX-20000071",
+   "book": "BOOK-RATES-1",
+   "currency": "JPY",
+   "family": "future",
+   "mtm": 337713
+  },
+  {
+   "tradeId": "MX-20000073",
+   "book": "BOOK-RATES-1",
+   "currency": "GBP",
+   "family": "future",
+   "mtm": -4816627
+  },
+  {
+   "tradeId": "MX-20000076",
+   "book": "BOOK-RATES-1",
+   "currency": "AUD",
+   "family": "future",
+   "mtm": -2629986
+  },
+  {
+   "tradeId": "MX-20000078",
+   "book": "BOOK-RATES-1",
+   "currency": "USD",
+   "family": "future",
+   "mtm": 511374
+  },
+  {
+   "tradeId": "MX-20000081",
+   "book": "BOOK-RATES-1",
+   "currency": "AUD",
+   "family": "option",
+   "mtm": 282246
+  },
+  {
+   "tradeId": "MX-20000083",
+   "book": "BOOK-RATES-1",
+   "currency": "EUR",
+   "family": "option",
+   "mtm": 1821498
+  },
+  {
+   "tradeId": "MX-20000085",
+   "book": "BOOK-RATES-1",
+   "currency": "CHF",
+   "family": "option",
+   "mtm": 346028
+  },
+  {
+   "tradeId": "MX-20000086",
+   "book": "BOOK-RATES-1",
+   "currency": "JPY",
+   "family": "option",
+   "mtm": -1130652
+  },
+  {
+   "tradeId": "MX-20000090",
+   "book": "BOOK-RATES-1",
+   "currency": "JPY",
+   "family": "option",
+   "mtm": -1266905
+  },
+  {
+   "tradeId": "MX-20000091",
+   "book": "BOOK-RATES-1",
+   "currency": "JPY",
+   "family": "option",
+   "mtm": -242239
+  },
+  {
+   "tradeId": "MX-20000092",
+   "book": "BOOK-RATES-1",
+   "currency": "USD",
+   "family": "option",
+   "mtm": 2233273
+  },
+  {
+   "tradeId": "MX-20000097",
+   "book": "BOOK-RATES-1",
+   "currency": "USD",
+   "family": "option",
+   "mtm": -2322720
+  },
+  {
+   "tradeId": "MX-20000102",
+   "book": "BOOK-RATES-1",
+   "currency": "USD",
+   "family": "option",
+   "mtm": -1632251
+  },
+  {
+   "tradeId": "MX-20000106",
+   "book": "BOOK-RATES-1",
+   "currency": "USD",
+   "family": "option",
+   "mtm": 514934
+  },
+  {
+   "tradeId": "MX-20000111",
+   "book": "BOOK-RATES-1",
+   "currency": "CHF",
+   "family": "option",
+   "mtm": -1663906
+  },
+  {
+   "tradeId": "MX-20000113",
+   "book": "BOOK-RATES-1",
+   "currency": "USD",
+   "family": "option",
+   "mtm": 447170
+  },
+  {
+   "tradeId": "MX-20000115",
+   "book": "BOOK-RATES-1",
+   "currency": "USD",
+   "family": "option",
+   "mtm": 30927
+  },
+  {
+   "tradeId": "MX-20000120",
+   "book": "BOOK-RATES-1",
+   "currency": "GBP",
+   "family": "option",
+   "mtm": -1401622
+  },
+  {
+   "tradeId": "MX-20000122",
+   "book": "BOOK-RATES-1",
+   "currency": "AUD",
+   "family": "option",
+   "mtm": 1603140
+  },
+  {
+   "tradeId": "MX-20000123",
+   "book": "BOOK-RATES-1",
+   "currency": "AUD",
+   "family": "option",
+   "mtm": -195614
+  },
+  {
+   "tradeId": "MX-20000130",
+   "book": "BOOK-RATES-1",
+   "currency": "EUR",
+   "family": "option",
+   "mtm": 740481
+  },
+  {
+   "tradeId": "MX-20000134",
+   "book": "BOOK-RATES-1",
+   "currency": "USD",
+   "family": "exotic",
+   "mtm": 125293
+  },
+  {
+   "tradeId": "MX-20000136",
+   "book": "BOOK-RATES-1",
+   "currency": "CAD",
+   "family": "exotic",
+   "mtm": -4572
+  },
+  {
+   "tradeId": "MX-20000140",
+   "book": "BOOK-RATES-1",
+   "currency": "USD",
+   "family": "exotic",
+   "mtm": -404709
+  },
+  {
+   "tradeId": "MX-20000144",
+   "book": "BOOK-RATES-1",
+   "currency": "USD",
+   "family": "exotic",
+   "mtm": 482103
+  },
+  {
+   "tradeId": "MX-20000145",
+   "book": "BOOK-RATES-1",
+   "currency": "JPY",
+   "family": "exotic",
+   "mtm": 94876
+  },
+  {
+   "tradeId": "MX-20000146",
+   "book": "BOOK-RATES-1",
+   "currency": "JPY",
+   "family": "exotic",
+   "mtm": -813046
+  },
+  {
+   "tradeId": "MX-20000147",
+   "book": "BOOK-RATES-1",
+   "currency": "GBP",
+   "family": "exotic",
+   "mtm": 39565
+  },
+  {
+   "tradeId": "MX-20000004",
+   "book": "BOOK-RATES-2",
+   "currency": "CAD",
+   "family": "swap",
+   "mtm": -18800709
+  },
+  {
+   "tradeId": "MX-20000008",
+   "book": "BOOK-RATES-2",
+   "currency": "AUD",
+   "family": "swap",
+   "mtm": 6871958
+  },
+  {
+   "tradeId": "MX-20000009",
+   "book": "BOOK-RATES-2",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": 449731
+  },
+  {
+   "tradeId": "MX-20000012",
+   "book": "BOOK-RATES-2",
+   "currency": "JPY",
+   "family": "swap",
+   "mtm": -4900418
+  },
+  {
+   "tradeId": "MX-20000015",
+   "book": "BOOK-RATES-2",
+   "currency": "GBP",
+   "family": "swap",
+   "mtm": 1992970
+  },
+  {
+   "tradeId": "MX-20000017",
+   "book": "BOOK-RATES-2",
+   "currency": "GBP",
+   "family": "swap",
+   "mtm": 1857281
+  },
+  {
+   "tradeId": "MX-20000021",
+   "book": "BOOK-RATES-2",
+   "currency": "CHF",
+   "family": "swap",
+   "mtm": 204436
+  },
+  {
+   "tradeId": "MX-20000024",
+   "book": "BOOK-RATES-2",
+   "currency": "CAD",
+   "family": "swap",
+   "mtm": 5804007
+  },
+  {
+   "tradeId": "MX-20000025",
+   "book": "BOOK-RATES-2",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": -71768
+  },
+  {
+   "tradeId": "MX-20000028",
+   "book": "BOOK-RATES-2",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": -417694
+  },
+  {
+   "tradeId": "MX-20000035",
+   "book": "BOOK-RATES-2",
+   "currency": "CHF",
+   "family": "swap",
+   "mtm": -39818756
+  },
+  {
+   "tradeId": "MX-20000039",
+   "book": "BOOK-RATES-2",
+   "currency": "GBP",
+   "family": "swap",
+   "mtm": -29328960
+  },
+  {
+   "tradeId": "MX-20000045",
+   "book": "BOOK-RATES-2",
+   "currency": "JPY",
+   "family": "swap",
+   "mtm": 5256940
+  },
+  {
+   "tradeId": "MX-20000050",
+   "book": "BOOK-RATES-2",
+   "currency": "AUD",
+   "family": "swap",
+   "mtm": -526108
+  },
+  {
+   "tradeId": "MX-20000051",
+   "book": "BOOK-RATES-2",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": 1000230
+  },
+  {
+   "tradeId": "MX-20000053",
+   "book": "BOOK-RATES-2",
+   "currency": "JPY",
+   "family": "swap",
+   "mtm": -2963153
+  },
+  {
+   "tradeId": "MX-20000054",
+   "book": "BOOK-RATES-2",
+   "currency": "CAD",
+   "family": "swap",
+   "mtm": -8928821
+  },
+  {
+   "tradeId": "MX-20000057",
+   "book": "BOOK-RATES-2",
+   "currency": "CAD",
+   "family": "swap",
+   "mtm": -2176599
+  },
+  {
+   "tradeId": "MX-20000059",
+   "book": "BOOK-RATES-2",
+   "currency": "CAD",
+   "family": "swap",
+   "mtm": 8653471
+  },
+  {
+   "tradeId": "MX-20000064",
+   "book": "BOOK-RATES-2",
+   "currency": "CHF",
+   "family": "linear",
+   "mtm": 687762
+  },
+  {
+   "tradeId": "MX-20000065",
+   "book": "BOOK-RATES-2",
+   "currency": "USD",
+   "family": "linear",
+   "mtm": 2938696
+  },
+  {
+   "tradeId": "MX-20000066",
+   "book": "BOOK-RATES-2",
+   "currency": "USD",
+   "family": "linear",
+   "mtm": 4718731
+  },
+  {
+   "tradeId": "MX-20000067",
+   "book": "BOOK-RATES-2",
+   "currency": "GBP",
+   "family": "future",
+   "mtm": 197399
+  },
+  {
+   "tradeId": "MX-20000069",
+   "book": "BOOK-RATES-2",
+   "currency": "AUD",
+   "family": "future",
+   "mtm": -945874
+  },
+  {
+   "tradeId": "MX-20000070",
+   "book": "BOOK-RATES-2",
+   "currency": "USD",
+   "family": "future",
+   "mtm": 2387948
+  },
+  {
+   "tradeId": "MX-20000074",
+   "book": "BOOK-RATES-2",
+   "currency": "USD",
+   "family": "future",
+   "mtm": -164331
+  },
+  {
+   "tradeId": "MX-20000075",
+   "book": "BOOK-RATES-2",
+   "currency": "CHF",
+   "family": "future",
+   "mtm": -34975
+  },
+  {
+   "tradeId": "MX-20000077",
+   "book": "BOOK-RATES-2",
+   "currency": "EUR",
+   "family": "future",
+   "mtm": -8726
+  },
+  {
+   "tradeId": "MX-20000080",
+   "book": "BOOK-RATES-2",
+   "currency": "AUD",
+   "family": "option",
+   "mtm": -2197753
+  },
+  {
+   "tradeId": "MX-20000082",
+   "book": "BOOK-RATES-2",
+   "currency": "GBP",
+   "family": "option",
+   "mtm": 453010
+  },
+  {
+   "tradeId": "MX-20000084",
+   "book": "BOOK-RATES-2",
+   "currency": "EUR",
+   "family": "option",
+   "mtm": 3578990
+  },
+  {
+   "tradeId": "MX-20000088",
+   "book": "BOOK-RATES-2",
+   "currency": "CHF",
+   "family": "option",
+   "mtm": 203454
+  },
+  {
+   "tradeId": "MX-20000096",
+   "book": "BOOK-RATES-2",
+   "currency": "AUD",
+   "family": "option",
+   "mtm": 247681
+  },
+  {
+   "tradeId": "MX-20000098",
+   "book": "BOOK-RATES-2",
+   "currency": "USD",
+   "family": "option",
+   "mtm": -2691901
+  },
+  {
+   "tradeId": "MX-20000099",
+   "book": "BOOK-RATES-2",
+   "currency": "GBP",
+   "family": "option",
+   "mtm": 3985722
+  },
+  {
+   "tradeId": "MX-20000100",
+   "book": "BOOK-RATES-2",
+   "currency": "AUD",
+   "family": "option",
+   "mtm": 348358
+  },
+  {
+   "tradeId": "MX-20000103",
+   "book": "BOOK-RATES-2",
+   "currency": "AUD",
+   "family": "option",
+   "mtm": -198183
+  },
+  {
+   "tradeId": "MX-20000107",
+   "book": "BOOK-RATES-2",
+   "currency": "CHF",
+   "family": "option",
+   "mtm": 244842
+  },
+  {
+   "tradeId": "MX-20000110",
+   "book": "BOOK-RATES-2",
+   "currency": "AUD",
+   "family": "option",
+   "mtm": 644255
+  },
+  {
+   "tradeId": "MX-20000114",
+   "book": "BOOK-RATES-2",
+   "currency": "GBP",
+   "family": "option",
+   "mtm": -260656
+  },
+  {
+   "tradeId": "MX-20000116",
+   "book": "BOOK-RATES-2",
+   "currency": "EUR",
+   "family": "option",
+   "mtm": 479917
+  },
+  {
+   "tradeId": "MX-20000117",
+   "book": "BOOK-RATES-2",
+   "currency": "CAD",
+   "family": "option",
+   "mtm": 73781
+  },
+  {
+   "tradeId": "MX-20000119",
+   "book": "BOOK-RATES-2",
+   "currency": "JPY",
+   "family": "option",
+   "mtm": -596746
+  },
+  {
+   "tradeId": "MX-20000124",
+   "book": "BOOK-RATES-2",
+   "currency": "CHF",
+   "family": "option",
+   "mtm": -301692
+  },
+  {
+   "tradeId": "MX-20000127",
+   "book": "BOOK-RATES-2",
+   "currency": "USD",
+   "family": "option",
+   "mtm": 73162
+  },
+  {
+   "tradeId": "MX-20000128",
+   "book": "BOOK-RATES-2",
+   "currency": "CAD",
+   "family": "option",
+   "mtm": 136287
+  },
+  {
+   "tradeId": "MX-20000131",
+   "book": "BOOK-RATES-2",
+   "currency": "USD",
+   "family": "option",
+   "mtm": -848339
+  },
+  {
+   "tradeId": "MX-20000138",
+   "book": "BOOK-RATES-2",
+   "currency": "AUD",
+   "family": "exotic",
+   "mtm": -1611444
+  },
+  {
+   "tradeId": "MX-20000141",
+   "book": "BOOK-RATES-2",
+   "currency": "USD",
+   "family": "exotic",
+   "mtm": -453923
+  },
+  {
+   "tradeId": "MX-20000142",
+   "book": "BOOK-RATES-2",
+   "currency": "GBP",
+   "family": "exotic",
+   "mtm": 1349732
+  },
+  {
+   "tradeId": "MX-20000148",
+   "book": "BOOK-RATES-2",
+   "currency": "EUR",
+   "family": "exotic",
+   "mtm": 243660
+  },
+  {
+   "tradeId": "MX-20000149",
+   "book": "BOOK-RATES-2",
+   "currency": "USD",
+   "family": "exotic",
+   "mtm": -1550182
+  },
+  {
+   "tradeId": "MX-20000154",
+   "book": "BOOK-RATES-2",
+   "currency": "AUD",
+   "family": "exotic",
+   "mtm": -47123
+  },
+  {
+   "tradeId": "MX-20000155",
+   "book": "BOOK-RATES-2",
+   "currency": "CHF",
+   "family": "exotic",
+   "mtm": -1414981
+  },
+  {
+   "tradeId": "MX-20000001",
+   "book": "BOOK-RATES-3",
+   "currency": "AUD",
+   "family": "swap",
+   "mtm": 1875863
+  },
+  {
+   "tradeId": "MX-20000005",
+   "book": "BOOK-RATES-3",
+   "currency": "GBP",
+   "family": "swap",
+   "mtm": -12009546
+  },
+  {
+   "tradeId": "MX-20000006",
+   "book": "BOOK-RATES-3",
+   "currency": "AUD",
+   "family": "swap",
+   "mtm": -7039033
+  },
+  {
+   "tradeId": "MX-20000007",
+   "book": "BOOK-RATES-3",
+   "currency": "CHF",
+   "family": "swap",
+   "mtm": -68527810
+  },
+  {
+   "tradeId": "MX-20000013",
+   "book": "BOOK-RATES-3",
+   "currency": "EUR",
+   "family": "swap",
+   "mtm": -21546
+  },
+  {
+   "tradeId": "MX-20000014",
+   "book": "BOOK-RATES-3",
+   "currency": "EUR",
+   "family": "swap",
+   "mtm": 489888
+  },
+  {
+   "tradeId": "MX-20000019",
+   "book": "BOOK-RATES-3",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": 4154362
+  },
+  {
+   "tradeId": "MX-20000023",
+   "book": "BOOK-RATES-3",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": 1359599
+  },
+  {
+   "tradeId": "MX-20000026",
+   "book": "BOOK-RATES-3",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": -146693
+  },
+  {
+   "tradeId": "MX-20000029",
+   "book": "BOOK-RATES-3",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": 395535
+  },
+  {
+   "tradeId": "MX-20000030",
+   "book": "BOOK-RATES-3",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": 4820300
+  },
+  {
+   "tradeId": "MX-20000031",
+   "book": "BOOK-RATES-3",
+   "currency": "CAD",
+   "family": "swap",
+   "mtm": 2484165
+  },
+  {
+   "tradeId": "MX-20000032",
+   "book": "BOOK-RATES-3",
+   "currency": "CHF",
+   "family": "swap",
+   "mtm": 22777888
+  },
+  {
+   "tradeId": "MX-20000034",
+   "book": "BOOK-RATES-3",
+   "currency": "EUR",
+   "family": "swap",
+   "mtm": 48834493
+  },
+  {
+   "tradeId": "MX-20000037",
+   "book": "BOOK-RATES-3",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": -7815523
+  },
+  {
+   "tradeId": "MX-20000041",
+   "book": "BOOK-RATES-3",
+   "currency": "EUR",
+   "family": "swap",
+   "mtm": -2563201
+  },
+  {
+   "tradeId": "MX-20000042",
+   "book": "BOOK-RATES-3",
+   "currency": "USD",
+   "family": "swap",
+   "mtm": -6638895
+  },
+  {
+   "tradeId": "MX-20000046",
+   "book": "BOOK-RATES-3",
+   "currency": "EUR",
+   "family": "swap",
+   "mtm": 2239408
+  },
+  {
+   "tradeId": "MX-20000052",
+   "book": "BOOK-RATES-3",
+   "currency": "EUR",
+   "family": "swap",
+   "mtm": 38747885
+  },
+  {
+   "tradeId": "MX-20000056",
+   "book": "BOOK-RATES-3",
+   "currency": "JPY",
+   "family": "swap",
+   "mtm": 4123460
+  },
+  {
+   "tradeId": "MX-20000058",
+   "book": "BOOK-RATES-3",
+   "currency": "JPY",
+   "family": "swap",
+   "mtm": -468454
+  },
+  {
+   "tradeId": "MX-20000062",
+   "book": "BOOK-RATES-3",
+   "currency": "AUD",
+   "family": "linear",
+   "mtm": -5476015
+  },
+  {
+   "tradeId": "MX-20000063",
+   "book": "BOOK-RATES-3",
+   "currency": "USD",
+   "family": "linear",
+   "mtm": 467887
+  },
+  {
+   "tradeId": "MX-20000068",
+   "book": "BOOK-RATES-3",
+   "currency": "USD",
+   "family": "future",
+   "mtm": -79707
+  },
+  {
+   "tradeId": "MX-20000072",
+   "book": "BOOK-RATES-3",
+   "currency": "EUR",
+   "family": "future",
+   "mtm": 1126695
+  },
+  {
+   "tradeId": "MX-20000079",
+   "book": "BOOK-RATES-3",
+   "currency": "JPY",
+   "family": "option",
+   "mtm": -2636721
+  },
+  {
+   "tradeId": "MX-20000087",
+   "book": "BOOK-RATES-3",
+   "currency": "AUD",
+   "family": "option",
+   "mtm": -1482791
+  },
+  {
+   "tradeId": "MX-20000089",
+   "book": "BOOK-RATES-3",
+   "currency": "AUD",
+   "family": "option",
+   "mtm": -1112942
+  },
+  {
+   "tradeId": "MX-20000093",
+   "book": "BOOK-RATES-3",
+   "currency": "USD",
+   "family": "option",
+   "mtm": 798724
+  },
+  {
+   "tradeId": "MX-20000094",
+   "book": "BOOK-RATES-3",
+   "currency": "CHF",
+   "family": "option",
+   "mtm": -1819636
+  },
+  {
+   "tradeId": "MX-20000095",
+   "book": "BOOK-RATES-3",
+   "currency": "GBP",
+   "family": "option",
+   "mtm": 1471835
+  },
+  {
+   "tradeId": "MX-20000101",
+   "book": "BOOK-RATES-3",
+   "currency": "EUR",
+   "family": "option",
+   "mtm": -2063151
+  },
+  {
+   "tradeId": "MX-20000104",
+   "book": "BOOK-RATES-3",
+   "currency": "CAD",
+   "family": "option",
+   "mtm": -1238173
+  },
+  {
+   "tradeId": "MX-20000105",
+   "book": "BOOK-RATES-3",
+   "currency": "EUR",
+   "family": "option",
+   "mtm": 36115
+  },
+  {
+   "tradeId": "MX-20000108",
+   "book": "BOOK-RATES-3",
+   "currency": "USD",
+   "family": "option",
+   "mtm": -96005
+  },
+  {
+   "tradeId": "MX-20000109",
+   "book": "BOOK-RATES-3",
+   "currency": "CAD",
+   "family": "option",
+   "mtm": -88123
+  },
+  {
+   "tradeId": "MX-20000112",
+   "book": "BOOK-RATES-3",
+   "currency": "JPY",
+   "family": "option",
+   "mtm": 1831652
+  },
+  {
+   "tradeId": "MX-20000118",
+   "book": "BOOK-RATES-3",
+   "currency": "GBP",
+   "family": "option",
+   "mtm": 1337400
+  },
+  {
+   "tradeId": "MX-20000121",
+   "book": "BOOK-RATES-3",
+   "currency": "JPY",
+   "family": "option",
+   "mtm": 34663
+  },
+  {
+   "tradeId": "MX-20000125",
+   "book": "BOOK-RATES-3",
+   "currency": "EUR",
+   "family": "option",
+   "mtm": 375784
+  },
+  {
+   "tradeId": "MX-20000126",
+   "book": "BOOK-RATES-3",
+   "currency": "USD",
+   "family": "option",
+   "mtm": 567048
+  },
+  {
+   "tradeId": "MX-20000129",
+   "book": "BOOK-RATES-3",
+   "currency": "JPY",
+   "family": "option",
+   "mtm": 1184715
+  },
+  {
+   "tradeId": "MX-20000132",
+   "book": "BOOK-RATES-3",
+   "currency": "USD",
+   "family": "option",
+   "mtm": -131346
+  },
+  {
+   "tradeId": "MX-20000133",
+   "book": "BOOK-RATES-3",
+   "currency": "CHF",
+   "family": "exotic",
+   "mtm": -432768
+  },
+  {
+   "tradeId": "MX-20000135",
+   "book": "BOOK-RATES-3",
+   "currency": "AUD",
+   "family": "exotic",
+   "mtm": -34155
+  },
+  {
+   "tradeId": "MX-20000137",
+   "book": "BOOK-RATES-3",
+   "currency": "EUR",
+   "family": "exotic",
+   "mtm": -263623
+  },
+  {
+   "tradeId": "MX-20000139",
+   "book": "BOOK-RATES-3",
+   "currency": "CAD",
+   "family": "exotic",
+   "mtm": -910777
+  },
+  {
+   "tradeId": "MX-20000143",
+   "book": "BOOK-RATES-3",
+   "currency": "USD",
+   "family": "exotic",
+   "mtm": 1047452
+  },
+  {
+   "tradeId": "MX-20000150",
+   "book": "BOOK-RATES-3",
+   "currency": "USD",
+   "family": "exotic",
+   "mtm": -113420
+  },
+  {
+   "tradeId": "MX-20000151",
+   "book": "BOOK-RATES-3",
+   "currency": "CHF",
+   "family": "exotic",
+   "mtm": -309129
+  },
+  {
+   "tradeId": "MX-20000152",
+   "book": "BOOK-RATES-3",
+   "currency": "JPY",
+   "family": "exotic",
+   "mtm": -32695
+  },
+  {
+   "tradeId": "MX-20000153",
+   "book": "BOOK-RATES-3",
+   "currency": "CAD",
+   "family": "exotic",
+   "mtm": 1991433
+  },
+  {
+   "tradeId": "MX-20000156",
+   "book": "BOOK-RATES-3",
+   "currency": "AUD",
+   "family": "exotic",
+   "mtm": 634079
+  }
+ ],
  "_meta": {
   "source": "org-master",
   "generation": 1

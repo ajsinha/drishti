@@ -379,7 +379,33 @@
   "sourceSystem": "Murex",
   "createdAt": "2024-06-07T12:20:00Z",
   "lastModifiedAt": "2024-06-07T12:20:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2024-06-07",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-ASHAH: sell Snowball swap"
+   },
+   {
+    "date": "2024-06-07",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA538752809)"
+   },
+   {
+    "date": "2026-12-10",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2032-02-23",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -432,6 +458,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 35406,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -151
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 485
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 6160
+  },
+  {
+   "step": "FX delta",
+   "pnl": 395
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -1627
+  },
+  {
+   "step": "Theta",
+   "pnl": -1082
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -21
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

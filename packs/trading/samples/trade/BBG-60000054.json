@@ -262,7 +262,39 @@
   "sourceSystem": "Endur",
   "createdAt": "2026-08-31T12:17:00Z",
   "lastModifiedAt": "2026-08-31T12:17:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2026-08-31",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Bloomberg TOMS by TRDR-BADEYEMI: short Municipal bond"
+   },
+   {
+    "date": "2026-08-31",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT800761474)"
+   },
+   {
+    "date": "2026-09-01",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2027-03-02",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2032-11-12",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -318,6 +350,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 121861,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -1862
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -1047
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 11671
+  },
+  {
+   "step": "FX delta",
+   "pnl": -123
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 176
+  },
+  {
+   "step": "Theta",
+   "pnl": -645
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -459
+  }
+ ],
  "_meta": {
   "source": "summit-fi",
   "generation": 1,

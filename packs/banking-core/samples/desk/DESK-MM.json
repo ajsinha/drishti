@@ -26,6 +26,218 @@
  "assetClasses": [
   "Money market"
  ],
+ "positions": [
+  {
+   "tradeId": "WSS-1500085",
+   "book": "BOOK-MM-1",
+   "currency": "EUR",
+   "family": "money",
+   "mtm": -500692
+  },
+  {
+   "tradeId": "WSS-1500086",
+   "book": "BOOK-MM-1",
+   "currency": "USD",
+   "family": "money",
+   "mtm": -77145
+  },
+  {
+   "tradeId": "WSS-1500087",
+   "book": "BOOK-MM-1",
+   "currency": "USD",
+   "family": "money",
+   "mtm": 1540400
+  },
+  {
+   "tradeId": "WSS-1500089",
+   "book": "BOOK-MM-1",
+   "currency": "USD",
+   "family": "money",
+   "mtm": 967365
+  },
+  {
+   "tradeId": "WSS-1500090",
+   "book": "BOOK-MM-1",
+   "currency": "USD",
+   "family": "money",
+   "mtm": -2467214
+  },
+  {
+   "tradeId": "WSS-1500091",
+   "book": "BOOK-MM-1",
+   "currency": "USD",
+   "family": "money",
+   "mtm": -567489
+  },
+  {
+   "tradeId": "WSS-1500092",
+   "book": "BOOK-MM-1",
+   "currency": "CHF",
+   "family": "money",
+   "mtm": 1053527
+  },
+  {
+   "tradeId": "WSS-1500093",
+   "book": "BOOK-MM-1",
+   "currency": "CAD",
+   "family": "money",
+   "mtm": 147333
+  },
+  {
+   "tradeId": "WSS-1500094",
+   "book": "BOOK-MM-1",
+   "currency": "USD",
+   "family": "money",
+   "mtm": 15029
+  },
+  {
+   "tradeId": "WSS-1500095",
+   "book": "BOOK-MM-1",
+   "currency": "JPY",
+   "family": "money",
+   "mtm": -703947
+  },
+  {
+   "tradeId": "WSS-1500097",
+   "book": "BOOK-MM-1",
+   "currency": "USD",
+   "family": "money",
+   "mtm": 281651
+  },
+  {
+   "tradeId": "WSS-1500099",
+   "book": "BOOK-MM-1",
+   "currency": "JPY",
+   "family": "money",
+   "mtm": 409089
+  },
+  {
+   "tradeId": "WSS-1500100",
+   "book": "BOOK-MM-1",
+   "currency": "EUR",
+   "family": "money",
+   "mtm": 809738
+  },
+  {
+   "tradeId": "WSS-1500103",
+   "book": "BOOK-MM-1",
+   "currency": "AUD",
+   "family": "money",
+   "mtm": 1944745
+  },
+  {
+   "tradeId": "WSS-1500106",
+   "book": "BOOK-MM-1",
+   "currency": "EUR",
+   "family": "money",
+   "mtm": 2024594
+  },
+  {
+   "tradeId": "WSS-1500107",
+   "book": "BOOK-MM-1",
+   "currency": "EUR",
+   "family": "money",
+   "mtm": -41962
+  },
+  {
+   "tradeId": "WSS-1500110",
+   "book": "BOOK-MM-1",
+   "currency": "CAD",
+   "family": "money",
+   "mtm": -1837797
+  },
+  {
+   "tradeId": "WSS-1500111",
+   "book": "BOOK-MM-1",
+   "currency": "USD",
+   "family": "money",
+   "mtm": -2192641
+  },
+  {
+   "tradeId": "WSS-1500113",
+   "book": "BOOK-MM-1",
+   "currency": "USD",
+   "family": "money",
+   "mtm": 4542888
+  },
+  {
+   "tradeId": "WSS-1500088",
+   "book": "BOOK-MM-2",
+   "currency": "CAD",
+   "family": "money",
+   "mtm": -1859294
+  },
+  {
+   "tradeId": "WSS-1500096",
+   "book": "BOOK-MM-2",
+   "currency": "CAD",
+   "family": "money",
+   "mtm": -996256
+  },
+  {
+   "tradeId": "WSS-1500101",
+   "book": "BOOK-MM-2",
+   "currency": "EUR",
+   "family": "money",
+   "mtm": 3225400
+  },
+  {
+   "tradeId": "WSS-1500104",
+   "book": "BOOK-MM-2",
+   "currency": "AUD",
+   "family": "money",
+   "mtm": 70858
+  },
+  {
+   "tradeId": "WSS-1500105",
+   "book": "BOOK-MM-2",
+   "currency": "USD",
+   "family": "money",
+   "mtm": 879743
+  },
+  {
+   "tradeId": "WSS-1500108",
+   "book": "BOOK-MM-2",
+   "currency": "JPY",
+   "family": "money",
+   "mtm": 221400
+  },
+  {
+   "tradeId": "WSS-1500112",
+   "book": "BOOK-MM-2",
+   "currency": "USD",
+   "family": "money",
+   "mtm": 224016
+  },
+  {
+   "tradeId": "WSS-1500098",
+   "book": "BOOK-MM-3",
+   "currency": "AUD",
+   "family": "money",
+   "mtm": 1716643
+  },
+  {
+   "tradeId": "WSS-1500102",
+   "book": "BOOK-MM-3",
+   "currency": "EUR",
+   "family": "money",
+   "mtm": -1329064
+  },
+  {
+   "tradeId": "WSS-1500109",
+   "book": "BOOK-MM-3",
+   "currency": "USD",
+   "family": "money",
+   "mtm": 2344329
+  },
+  {
+   "tradeId": "WSS-1500114",
+   "book": "BOOK-MM-3",
+   "currency": "GBP",
+   "family": "money",
+   "mtm": -392005
+  }
+ ],
  "_meta": {
   "source": "org-master",
   "generation": 1

@@ -361,7 +361,33 @@
   "sourceSystem": "Murex",
   "createdAt": "2026-05-21T10:32:00Z",
   "lastModifiedAt": "2026-05-21T10:32:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2026-05-21",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-MOKAFOR: sell Range accrual swap"
+   },
+   {
+    "date": "2026-05-21",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA657676974)"
+   },
+   {
+    "date": "2026-11-26",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2031-10-27",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -414,6 +440,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 1106777,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -11138
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -7764
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -23950
+  },
+  {
+   "step": "FX delta",
+   "pnl": 1916
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -766
+  },
+  {
+   "step": "Theta",
+   "pnl": -14077
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -3546
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

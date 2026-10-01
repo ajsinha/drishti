@@ -40,7 +40,11 @@ public final class SutraExpressions {
             Map.entry(PanelKind.AREA, Set.of("rows", "limit")), Map.entry(PanelKind.HBAR, Set.of("rows")),
             Map.entry(PanelKind.LADDER, Set.of("rows", "highlight")), Map.entry(PanelKind.GAUGE, Set.of("value", "max")),
             Map.entry(PanelKind.LINKS, Set.of()), Map.entry(PanelKind.STATUS, Set.of()),
-            Map.entry(PanelKind.PROVENANCE, Set.of()), Map.entry(PanelKind.MARKDOWN, Set.of()), Map.entry(PanelKind.SURFACE, Set.of("rows")));
+            Map.entry(PanelKind.PROVENANCE, Set.of()), Map.entry(PanelKind.MARKDOWN, Set.of()), Map.entry(PanelKind.SURFACE, Set.of("rows")),
+            Map.entry(PanelKind.WATERFALL, Set.of("rows")), Map.entry(PanelKind.HISTOGRAM, Set.of("rows")),
+            Map.entry(PanelKind.SCATTER, Set.of("rows")), Map.entry(PanelKind.CANDLESTICK, Set.of("rows")),
+            Map.entry(PanelKind.GRAPH, Set.of("nodes", "edges")), Map.entry(PanelKind.TIMELINE, Set.of("rows")),
+            Map.entry(PanelKind.PIVOT, Set.of("rows")));
 
     private final ElCompiler compiler;
 
@@ -81,6 +85,13 @@ public final class SutraExpressions {
             for (Object f : fields) {
                 if (f instanceof Map<?, ?> m && m.get("bind") != null) {
                     expr(m.get("bind").toString(), p.location(), out);
+                }
+            }
+        }
+        if (p.kind() == PanelKind.HISTOGRAM && p.options().get("markers") instanceof List<?> markers) {
+            for (Object mk : markers) {
+                if (mk instanceof Map<?, ?> m && m.get("value") != null) {
+                    expr(m.get("value").toString(), p.location(), out);
                 }
             }
         }

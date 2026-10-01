@@ -656,7 +656,8 @@ Any other key in a column is `DRS-2011 unknown key 'x' in column`.
 
 ### Panel kinds
 
-There are 13 kinds (`PanelKind`). Required and accepted options, at a glance:
+There are 20 kinds (`PanelKind`). Required and accepted options, at a glance (each kind in depth, with how the
+server computes it and how the console draws it: [PANELS.md](PANELS.md)):
 
 | Kind | Required options | Optional options | Renders | Uses `columns` |
 |---|---|---|---|---|
@@ -673,6 +674,13 @@ There are 13 kinds (`PanelKind`). Required and accepted options, at a glance:
 | [`markdown`](#markdown) | `text` | | static text | no |
 | [`gauge`](#gauge) | `value` | `max`, `label`, `fmt` | one value as a bar against a maximum | no |
 | [`surface`](#surface) | `rows`, `y` | `fmt`, `unit`, `view` | heatmap with a 3D toggle | yes (one per x point) |
+| [`waterfall`](#waterfall) | `rows` | `label`, `value`, `total`, `sum`, `fmt`, `unit` | floating bars from a start to an end | no |
+| [`histogram`](#histogram) | `rows` | `value`, `bins`, `markers`, `fmt`, `unit` | binned distribution with marker lines | no |
+| [`scatter`](#scatter) | `rows`, `x`, `y` | `size`, `label`, `group`, `fmt`, `xFmt`, `xLabel`, `yLabel` | one point per row | no |
+| [`candlestick`](#candlestick) | `rows` | `x`, `open`, `high`, `low`, `close`, `volume`, `fmt`, `unit` | daily bars with volume | no |
+| [`graph`](#graph) | `nodes` | `edges`, `label`, `group`, `layout` | nodes and edges, nodes open their entity | no |
+| [`timeline`](#timeline) | `rows` | `date`, `label`, `detail`, `status`, `tone` | dated events with toned status | no |
+| [`pivot`](#pivot) | `rows`, `by`, `across` | `value`, `agg`, `fmt`, `tone`, `heat`, `totals` | aggregate table with totals and heat | no |
 
 Which option values are expressions, which are field names, and which are plain text matters: only
 expressions and templates are compiled at load time.
@@ -690,6 +698,17 @@ expressions and templates are compiled at load time.
 | `gauge` | `value`, `max` | | `label`, `fmt` |
 | `surface` | `rows`; `y` when it starts with `$` or `@` | `y` otherwise | `fmt`, `unit`, `view` |
 | `markdown` | | | `text` is a template |
+| `waterfall` | `rows` | `label`, `value`, `total` | `sum`, `fmt`, `unit` |
+| `histogram` | `rows`, each marker's `value` | `value` | `bins` (1–200), `markers[].label`, `markers[].tone`, `fmt`, `unit` |
+| `scatter` | `rows` | `x`, `y`, `size`, `label`, `group` | `fmt`, `xFmt`, `xLabel`, `yLabel` |
+| `candlestick` | `rows` | `x`, `open`, `high`, `low`, `close`, `volume` | `fmt`, `unit` |
+| `graph` | `nodes`, `edges` | `label`, `group` (of each node) | `layout` (`tree` or `force`) |
+| `timeline` | `rows` | `date`, `label`, `detail`, `status` | `tone` |
+| `pivot` | `rows` | `by`, `across`, `value` | `agg` (`sum`, `count`, `avg`, `min`, `max`), `heat`, `totals` (`true`/`false`), `fmt`, `tone` |
+
+For the seven kinds from `waterfall` on, a field name may also be a dotted path (`counterparty.name`) or an
+expression over the row when it starts with `@` or `$` (`y: "@.pnl / 1000"`). Values outside the allowed set
+(`agg: median`, `layout: circle`, `bins: 0`, `heat: yes`, a marker without `value`) are `DRS-2029`.
 
 Accepted but currently without effect (they parse, and do nothing yet): `fields` on `kv` (use `columns`),
 `link` on `table` (use `link: true` on a column), `footer` on `line`, and `label` on `gauge` (carried in the
@@ -1071,6 +1090,155 @@ each column one x point. Drawn as a heatmap, with a button that turns it into a 
 You should see (market-data pack, `EQV EQV-CSCA`) a heatmap with expiries `1M … 5Y` down the side and moneyness
 across. The data is `{"x": ["80%", …], "y": ["1M", …], "z": [[43.17, …], …], "min": 33.42, "max": 43.17, "view": "heatmap"}`.
 
+#### waterfall
+
+Ordered steps as floating bars: each step runs from the running total before it to the one after it; a total step
+(and the closing bar `sum` adds) is drawn from zero. Rises take the `pos` tone, falls `neg`, totals `link`.
+
+| Option | Required | Default | Meaning |
+|---|---|---|---|
+| `rows` | yes | | Expression giving the steps, in order. |
+| `label` | | `label` | Field with the step's name. |
+| `value` | | `value` | Field with the signed amount (for a total, the level). Rows without a number are left out. |
+| `total` | | `total` | Field that marks a total step; the running sum restarts at its value. |
+| `sum` | | | Label of a closing total bar at the running sum. |
+| `fmt`, `unit` | | | Format of the amounts; unit of the axis. |
+
+```yaml
+  - { id: explain, kind: waterfall, title: "P&L explain (USD)", key: F5, rows: $.pnlExplain, label: step, value: pnl, sum: Closing MTM, fmt: signed0 }
+```
+
+You should see (trading pack, `TRD MX-20000001`) eight bars from *Opening MTM +1,748,877* to *Closing MTM
++1,875,863*. The data is `{"steps": [{"label": "Opening MTM", "value": 1748877, "from": 0, "to": 1748877, "text":
+"+1,748,877", "tone": "link", "total": true}, {"label": "Carry", "value": -11426, "from": 1748877, "to": 1737451, …}, …]}`.
+
+#### histogram
+
+The distribution of a list of numbers in equal-width bins from the smallest to the largest, with marker lines.
+
+| Option | Required | Default | Meaning |
+|---|---|---|---|
+| `rows` | yes | | Expression giving a list of numbers, or of rows. |
+| `value` | | | With rows, the field (or `@` expression) holding the number. Non-numbers are counted as dropped. |
+| `bins` | | √count, 5 to 40 | Number of bins, 1 to 200. |
+| `markers` | | | List of `{ label, value, tone }`; `value` is an expression over the document, `tone` defaults to `accent`. A marker whose value is missing is left out. |
+| `fmt`, `unit` | | | Format of bin edges and markers; unit of the axis. |
+
+```yaml
+  - id: scenarios
+    kind: histogram
+    title: "Scenario P&L distribution, 500 days (USD)"
+    rows: $.scenarioPnl
+    fmt: compact
+    markers:
+      - { label: VaR 99%, value: "-$.var99", tone: neg }
+```
+
+You should see (market-risk pack, `VAR VAR-RATES`) 22 bins over 500 values and a dashed line at *VaR 99% −9.6m*.
+The data is `{"bins": [{"from": -13525866, "to": -12415029.5, "count": 2, "label": "−13.5m to −12.4m"}, …],
+"markers": [{"label": "VaR 99%", "value": -9611219, "text": "−9.6m", "tone": "neg"}], "count": 500, "dropped": 0}`.
+
+#### scatter
+
+One point per row with two numbers; rows without both are left out.
+
+| Option | Required | Default | Meaning |
+|---|---|---|---|
+| `rows` | yes | | Expression giving the rows. |
+| `x`, `y` | yes | | Fields (or `@` expressions) of the two measures. |
+| `size` | | | Field that sizes the point (by its absolute value, area-proportional). |
+| `label` | | | Field that labels the point; an id a pack recognises (or a `link(…)`) makes the point open that entity. |
+| `group` | | | Field whose value colours the point; one legend entry per group, in first-seen order. |
+| `fmt`, `xFmt` | | `xFmt` = `fmt` | Formats of y and x in tooltips and the data table. |
+| `xLabel`, `yLabel` | | the field names | Axis titles. |
+
+```yaml
+  - { id: riskReturn, kind: scatter, title: "Books: VaR against P&L", rows: $.books, x: var, y: pnl, size: trades, label: book, group: desk, fmt: signed0, xFmt: compact }
+```
+
+You should see (banking-core pack, `LE LE-NY`) fifteen points in five colours; each opens its book.
+
+#### candlestick
+
+Open, high, low and close by date, oldest first, with volume bars under the prices when the rows carry volume.
+
+| Option | Required | Default | Meaning |
+|---|---|---|---|
+| `rows` | yes | | Expression giving the bars. The latest `drishti.panels.max-points` are kept. |
+| `x` | | `date` | Field with the bar's date. |
+| `open`, `high`, `low`, `close` | | those names | Price fields; a bar without all four is left out. |
+| `volume` | | | Volume field; no volume bars without it. |
+| `fmt`, `unit` | | | Price format and unit. |
+
+```yaml
+  - { id: ohlc, kind: candlestick, title: "Daily bars (last 60 days)", rows: $.ohlc, volume: volume, fmt: price2 }
+```
+
+You should see (market-data pack, `EQ EQ-CSCA`) 60 bars and *Last 21.84* with *+0.81 (+3.85%)* under the chart.
+
+#### graph
+
+Nodes and the edges between them. Each node needs an `id`; a node whose id a pack recognises (or that names its
+`kind`) is a link. The node whose id is the viewed entity is ringed.
+
+| Option | Required | Default | Meaning |
+|---|---|---|---|
+| `nodes` | yes | | Expression giving the nodes (`id`, optional `kind`, and the fields below). |
+| `edges` | | | Expression giving the edges: `from`, `to` (node ids), optional `label`. Edges to unknown nodes are left out. |
+| `label` | | `label` | Node field shown under the node. |
+| `group` | | `type` | Node field that colours it (and the legend). |
+| `layout` | | `tree` | `tree` (levels from the nodes nothing points to) or `force`. |
+
+```yaml
+  - { id: hierarchy, kind: graph, title: Group hierarchy, nodes: $.hierarchy.nodes, edges: $.hierarchy.edges, layout: tree }
+```
+
+You should see (banking-core pack, `CPTY CP-MERIDIAN`) the group over two counterparties, then the ISDA, its CSA
+and four netting sets.
+
+#### timeline
+
+Dated events, sorted by date on the server (ISO dates and timestamps sort as written), drawn as a vertical list.
+
+| Option | Required | Default | Meaning |
+|---|---|---|---|
+| `rows` | yes | | Expression giving the events. |
+| `date` | | `date` | Field with the date or timestamp. |
+| `label` | | `event` | Field with the event's name. |
+| `detail` | | `description` | Field with a short note. |
+| `status` | | `status` | Field with the status shown beside the event. |
+| `tone` | | `status` | Tone applied to the status (see [Tones](#tones)). |
+
+```yaml
+  - { id: lifecycle, kind: timeline, title: Lifecycle, rows: $.lifecycle.timeline, detail: description }
+```
+
+You should see (trading pack, `TRD MX-20000001`) seven events from *Booked* on 2025-07-25 to *Maturity* on
+2032-06-25; *Next payment* is amber (Pending), the rest green.
+
+#### pivot
+
+The rows aggregated by one field (down the side) across another (along the top), with row and column totals.
+Totals are aggregates of the underlying rows (an `avg` total is the average of all its rows, not of the cells).
+
+| Option | Required | Default | Meaning |
+|---|---|---|---|
+| `rows` | yes | | Expression giving the rows. |
+| `by` | yes | | Field whose values are the row keys (first-seen order). |
+| `across` | yes | | Field whose values are the column keys (first-seen order). |
+| `value` | | | Field aggregated; without it the pivot counts rows. Rows whose value is not a number are left out. |
+| `agg` | | `sum` | `sum`, `count`, `avg`, `min` or `max`. |
+| `fmt`, `tone` | | | Format and tone of every cell (counts are shown as whole numbers). |
+| `heat` | | `false` | Shade each cell by its value, from the smallest to the largest. |
+| `totals` | | `true` | `false` hides the total column and row. |
+
+```yaml
+  - { id: mtmGrid, kind: pivot, title: MTM by book and currency, rows: $.positions, by: book, across: currency, value: mtm, agg: sum, heat: true, fmt: compact, tone: sign }
+```
+
+You should see (banking-core pack, `DESK DESK-RATES`) three books across seven currencies, *BOOK-RATES-1* totalling
+*177.4m* and the desk *132.8m*.
+
 ## Function keys
 
 Function keys come from two places:
@@ -1441,7 +1609,7 @@ A Sutra file that fails any check is not loaded (or keeps its last good version,
 | `DRS-2011` | `unknown key 'pannels' in top level` (also `in match`, `in title`, `in strip item`, `in column`) | a misspelt or unsupported key | fix the spelling; panel options are reported as `DRS-2023` instead |
 | `DRS-2012` | `'panels' must be a list`, `'keys' must be a mapping of F-key to action`, `a column must be a mapping (label, bind, fmt, tone, total, link)`, `'kind' must be text`, `action for F7 must be text`, `'notes' is plain text` | a value of the wrong shape | write the shape shown in the message |
 | `DRS-2020` | `name 'IRS_Vanilla' must be lower-case kebab, 2-64 characters`, `version must be a positive integer` | bad name or version | `irs-vanilla`; `version: 3` unquoted |
-| `DRS-2021` | `unknown panel kind 'chart'; expected one of kv, table, tabs, line, area, hbar, ladder, links, status, provenance, markdown, gauge, surface` | a kind that does not exist | use one of the 13 kinds |
+| `DRS-2021` | `unknown panel kind 'chart'; expected one of kv, table, tabs, line, area, hbar, ladder, links, status, provenance, markdown, gauge, surface, waterfall, histogram, scatter, candlestick, graph, timeline, pivot` | a kind that does not exist | use one of the 20 kinds |
 | `DRS-2022` | `'table' panel 'flows' needs option 'rows'` | a required option is missing | add it (see each kind's table) |
 | `DRS-2023` | `option 'limit' is not valid for 'ladder' panels`, `only 'tabs' panels take a 'body'` | an option the kind does not accept | remove it, or change the kind |
 | `DRS-2024` | `duplicate panel id 'legs'` | two panels with one id | rename one |
@@ -1449,6 +1617,7 @@ A Sutra file that fails any check is not loaded (or keeps its last good version,
 | `DRS-2026` | `the strip holds at most 8 figures, found 9` | more than 8 strip items | move figures into a `kv` panel |
 | `DRS-2027` | `area must be 'main' or 'right'` | `area: left`, `area: side` | `main` or `right` |
 | `DRS-2028` | `trade-x@2 is already defined in /…/trade-x.v2.sutra.yaml` | two files define one `name@version` | raise the version, or remove the duplicate |
+| `DRS-2029` | `option 'agg' of 'pivot' panels must be one of sum, count, avg, min, max, not 'median'`, `option 'heat' of 'pivot' panels must be true or false, not 'yes'`, `option 'bins' of 'histogram' panels must be a whole number from 1 to 200, not '0'`, `each histogram marker must be a mapping with a 'value' expression …`, `option 'layout' of 'graph' panels must be one of tree, force, not 'circle'` | an option value the kind does not allow | use one of the values listed |
 | `DRS-2101` | `expression '…': DRS-2101 …`, `template '…': DRS-2101 …` | an expression or template does not compile | see [Expression errors](#expression-errors) |
 
 Other codes you may meet around Sutras:

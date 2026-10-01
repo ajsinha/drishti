@@ -24,7 +24,8 @@ import re
 
 # a number as a view shows it: sign (ASCII or Unicode minus), digits with thousands separators, decimals, maybe %
 _SHOWN_NUMBER = re.compile(r"^([+\-−]?)(\d{1,3}(?:,\d{3})+|\d+)(\.\d+)?(%?)$")
-EXPORTABLE = {"table", "ladder", "kv", "status", "tabs", "line", "area", "hbar", "surface", "links", "gauge"}
+EXPORTABLE = {"table", "ladder", "kv", "status", "tabs", "line", "area", "hbar", "surface", "links", "gauge",
+              "waterfall", "histogram", "scatter", "candlestick", "graph", "timeline", "pivot"}
 
 
 def plain(text):
@@ -47,6 +48,8 @@ def panel_rows(panel: dict) -> tuple[list[str], list[list]]:
     kind = panel.get("kind")
     if not isinstance(d, dict) or panel.get("empty") or kind not in EXPORTABLE:
         return [], []
+    if kind in _CHARTS:
+        return _CHARTS[kind](d)
     if "columns" in d and "rows" in d:                                   # table, ladder
         rows = [[plain(c.get("text")) for c in r.get("cells", [])] for r in d.get("rows", [])]
         if d.get("total"):
@@ -70,6 +73,40 @@ def panel_rows(panel: dict) -> tuple[list[str], list[list]]:
     if "value" in d and "max" in d:                                      # gauge
         return ["Label", "Value", "Limit"], [[d.get("label") or "", d.get("value"), d.get("max")]]
     return [], []
+
+
+def _pivot(d: dict) -> tuple[list[str], list[list]]:
+    cols = list(d.get("columns") or [])
+    totals = d.get("totals")
+    header = [d.get("by") or ""] + cols + (["Total"] if totals else [])
+    rows = [[r.get("label", "")] + list(r.get("values") or []) + ([plain((r.get("total") or {}).get("text"))] if totals else [])
+            for r in d.get("rows") or []]
+    if totals:
+        rows.append(["Total"] + [plain(c.get("text")) for c in totals])
+    return header, rows
+
+
+def _graph(d: dict) -> tuple[list[str], list[list]]:
+    nodes = [["node", n.get("id", ""), "", n.get("label", ""), n.get("group") or ""] for n in d.get("nodes") or []]
+    edges = [["edge", e.get("from", ""), e.get("to", ""), e.get("label") or "", ""] for e in d.get("edges") or []]
+    return ["Type", "Id or from", "To", "Label", "Group"], nodes + edges
+
+
+# the chart and aggregate kinds: their own columns, numbers as numbers (not as the chart shows them)
+_CHARTS = {
+    "waterfall": lambda d: (["Step", "Amount", "Total"], [[s.get("label", ""), s.get("value"), bool(s.get("total"))] for s in d.get("steps") or []]),
+    "histogram": lambda d: (["From", "To", "Count"], [[b.get("from"), b.get("to"), b.get("count")] for b in d.get("bins") or []]),
+    "scatter": lambda d: (["Label", "Group", d.get("xLabel") or "x", d.get("yLabel") or "y", "Size"],
+                          [[q.get("label") or "", q.get("group") or "", q.get("x"), q.get("y"), q.get("size") if q.get("size") is not None else ""]
+                           for q in d.get("points") or []]),
+    "candlestick": lambda d: (["Date", "Open", "High", "Low", "Close", "Volume"],
+                              [[c.get("x"), c.get("open"), c.get("high"), c.get("low"), c.get("close"),
+                                c.get("volume") if c.get("volume") is not None else ""] for c in d.get("candles") or []]),
+    "graph": _graph,
+    "timeline": lambda d: (["Date", "Event", "Status", "Detail"],
+                           [[e.get("date", ""), e.get("label", ""), e.get("status") or "", e.get("detail") or ""] for e in d.get("events") or []]),
+    "pivot": _pivot,
+}
 
 
 def to_csv(header: list, rows: list[list]) -> bytes:

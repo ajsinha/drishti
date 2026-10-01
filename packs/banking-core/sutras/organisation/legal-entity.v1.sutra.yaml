@@ -33,5 +33,20 @@ panels:
     columns:
       - { label: Desk, bind: "@.id" }
       - { label: Name, bind: "@.name" }
+  - id: riskReturn
+    kind: scatter
+    title: "Risk and return (books: VaR against today's P&L, USD)"
+    code: RR
+    key: F3
+    rows: $.books
+    x: var
+    y: pnl
+    label: book
+    fmt: signed0
+    size: trades
+    group: desk
+    xFmt: compact
+    xLabel: VaR 99% 1D (USD)
+    yLabel: "P&L 1D (USD)"
   - { id: built, kind: provenance, title: How this view was built }
 keys: { F8: impact, F9: raw }

@@ -185,7 +185,33 @@
   "sourceSystem": "Murex",
   "createdAt": "2025-08-08T11:55:00Z",
   "lastModifiedAt": "2025-08-08T11:55:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2025-08-08",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Endur by TRDR-TBRENNAN: sell Option on commodity future"
+   },
+   {
+    "date": "2025-08-08",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT466132938)"
+   },
+   {
+    "date": "2025-08-11",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2028-02-14",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -241,6 +267,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -1450905,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -6957
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 289
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 41211
+  },
+  {
+   "step": "FX delta",
+   "pnl": 963
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -7391
+  },
+  {
+   "step": "Theta",
+   "pnl": -393
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 719
+  }
+ ],
  "_meta": {
   "source": "endur-comm",
   "generation": 1,

@@ -204,7 +204,33 @@
   "sourceSystem": "Endur",
   "createdAt": "2025-02-19T12:17:00Z",
   "lastModifiedAt": "2025-02-19T12:17:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-02-19",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Bloomberg TOMS by TRDR-RCASTILLO: long CMO tranche"
+   },
+   {
+    "date": "2025-02-19",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT140127120)"
+   },
+   {
+    "date": "2027-02-21",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2027-06-21",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -257,6 +283,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -21483,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -117
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 281
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -308
+  },
+  {
+   "step": "FX delta",
+   "pnl": -195
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -17
+  },
+  {
+   "step": "Theta",
+   "pnl": 50
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 11
+  }
+ ],
  "_meta": {
   "source": "summit-fi",
   "generation": 1,

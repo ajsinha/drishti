@@ -267,7 +267,39 @@
   "sourceSystem": "Murex",
   "createdAt": "2025-06-04T09:19:00Z",
   "lastModifiedAt": "2025-06-04T09:19:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2025-06-04",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Bloomberg TOMS by TRDR-RCASTILLO: long Agency MBS pass-through"
+   },
+   {
+    "date": "2025-06-04",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT305437715)"
+   },
+   {
+    "date": "2025-06-05",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2026-12-06",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2031-01-23",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -324,6 +356,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -2232730,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 7931
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 14526
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -104193
+  },
+  {
+   "step": "FX delta",
+   "pnl": 13211
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -1965
+  },
+  {
+   "step": "Theta",
+   "pnl": 2979
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -3713
+  }
+ ],
  "_meta": {
   "source": "summit-fi",
   "generation": 1,

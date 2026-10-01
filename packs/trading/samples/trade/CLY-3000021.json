@@ -151,7 +151,27 @@
   "sourceSystem": "Summit",
   "createdAt": "2024-07-24T12:11:00Z",
   "lastModifiedAt": "2024-07-24T12:11:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2024-07-24",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Calypso by TRDR-DWHITFIELD: sell CDS index option"
+   },
+   {
+    "date": "2024-07-24",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA316842522)"
+   },
+   {
+    "date": "2026-10-07",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -203,6 +223,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -1274951,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 1895
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 497
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 6877
+  },
+  {
+   "step": "FX delta",
+   "pnl": -1278
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 6316
+  },
+  {
+   "step": "Theta",
+   "pnl": -742
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -282
+  }
+ ],
  "_meta": {
   "source": "murex-credit",
   "generation": 1,

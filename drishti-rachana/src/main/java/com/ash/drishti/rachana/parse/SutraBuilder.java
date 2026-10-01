@@ -21,6 +21,7 @@ import com.ash.drishti.rachana.model.Column;
 import com.ash.drishti.rachana.model.Match;
 import com.ash.drishti.rachana.model.Panel;
 import com.ash.drishti.rachana.model.PanelKind;
+import com.ash.drishti.rachana.model.PanelOptions;
 import com.ash.drishti.rachana.model.SourceLocation;
 import com.ash.drishti.rachana.model.StripItem;
 import com.ash.drishti.rachana.model.Sutra;
@@ -40,7 +41,8 @@ import java.util.regex.Pattern;
  *
  * <p>Codes: 2001 YAML syntax, 2010 missing key, 2011 unknown key, 2012 wrong type, 2020 bad name or
  * version, 2021 unknown panel kind, 2022 missing kind option, 2023 option not valid for kind, 2024
- * duplicate panel id, 2025 duplicate or invalid function key, 2026 strip too long, 2027 bad area.
+ * duplicate panel id, 2025 duplicate or invalid function key, 2026 strip too long, 2027 bad area, 2029 an option
+ * value the kind does not allow ({@link PanelOptions}).
  */
 final class SutraBuilder {
 
@@ -237,7 +239,9 @@ final class SutraBuilder {
                     problem("DRS-2023", "search".equals(opt) ? "option 'search' applies only to panels that show a table (table, ladder), not '" + kind.id() + "'"
                             : "option '" + opt + "' is not valid for '" + kind.id() + "' panels", val);
                 } else if (val.value() != null) {
-                    options.put(opt, val.isScalar() ? val.value() : plain(val));
+                    Object v = val.isScalar() ? val.value() : plain(val);
+                    PanelOptions.problem(kind, opt, v).ifPresent(why -> problem("DRS-2029", why, val));
+                    options.put(opt, v);
                 }
             });
             for (String req : kind.required()) {

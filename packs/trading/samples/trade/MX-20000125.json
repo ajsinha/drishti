@@ -242,7 +242,40 @@
   "sourceSystem": "Summit",
   "createdAt": "2024-09-13T09:07:00Z",
   "lastModifiedAt": "2024-09-13T09:07:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2024-09-13",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-MOKAFOR: sell CMS spread option"
+   },
+   {
+    "date": "2024-09-13",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA887599799)"
+   },
+   {
+    "date": "2026-09-16",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "EUR payment settled",
+    "amount": 0.0
+   },
+   {
+    "date": "2026-10-07",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2026-10-07",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -296,6 +329,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 338763,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 11582
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 3928
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 35114
+  },
+  {
+   "step": "FX delta",
+   "pnl": -8565
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -4619
+  },
+  {
+   "step": "Theta",
+   "pnl": -1732
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 1313
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

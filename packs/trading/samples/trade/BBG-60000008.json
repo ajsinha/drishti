@@ -258,7 +258,46 @@
   "sourceSystem": "Murex",
   "createdAt": "2024-04-12T10:56:00Z",
   "lastModifiedAt": "2024-04-12T10:56:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2024-04-12",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Bloomberg TOMS by TRDR-RCASTILLO: short Corporate bond"
+   },
+   {
+    "date": "2024-04-12",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT300462066)"
+   },
+   {
+    "date": "2024-04-15",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2026-04-15",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "CHF payment settled",
+    "amount": 1340000.0
+   },
+   {
+    "date": "2026-10-15",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2029-06-18",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -315,6 +354,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -370315,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 4317
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -848
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -13797
+  },
+  {
+   "step": "FX delta",
+   "pnl": -93
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -281
+  },
+  {
+   "step": "Theta",
+   "pnl": 153
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 192
+  }
+ ],
  "_meta": {
   "source": "summit-fi",
   "generation": 1,

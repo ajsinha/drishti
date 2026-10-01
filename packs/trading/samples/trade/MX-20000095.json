@@ -195,7 +195,40 @@
   "sourceSystem": "Endur",
   "createdAt": "2025-11-26T09:32:00Z",
   "lastModifiedAt": "2025-11-26T09:32:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-11-26",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-ASHAH: sell Interest rate collar"
+   },
+   {
+    "date": "2025-11-26",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA925095971)"
+   },
+   {
+    "date": "2026-08-28",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "GBP payment settled",
+    "amount": 917892.5
+   },
+   {
+    "date": "2026-10-16",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2026-10-16",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -248,6 +281,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 1466591,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 721
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -1183
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 7862
+  },
+  {
+   "step": "FX delta",
+   "pnl": -536
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 95
+  },
+  {
+   "step": "Theta",
+   "pnl": -1670
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -45
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

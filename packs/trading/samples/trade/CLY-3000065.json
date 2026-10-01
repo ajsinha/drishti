@@ -162,7 +162,27 @@
   "sourceSystem": "Murex",
   "createdAt": "2026-05-01T11:13:00Z",
   "lastModifiedAt": "2026-05-01T11:13:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2026-05-01",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Calypso by TRDR-DWHITFIELD: buy Credit spread option"
+   },
+   {
+    "date": "2026-05-01",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA574492200)"
+   },
+   {
+    "date": "2028-10-24",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -215,6 +235,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 4665411,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -17982
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 19871
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 161851
+  },
+  {
+   "step": "FX delta",
+   "pnl": -1928
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -38485
+  },
+  {
+   "step": "Theta",
+   "pnl": -29180
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -4934
+  }
+ ],
  "_meta": {
   "source": "murex-credit",
   "generation": 1,

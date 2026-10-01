@@ -357,7 +357,33 @@
   "sourceSystem": "Summit",
   "createdAt": "2025-10-30T09:15:00Z",
   "lastModifiedAt": "2025-10-30T09:15:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-10-30",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-JWEISS: buy Equity barrier option"
+   },
+   {
+    "date": "2025-10-30",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT939377604)"
+   },
+   {
+    "date": "2026-11-03",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2037-02-17",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -411,6 +437,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 1882208,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 2892
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 1054
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -16435
+  },
+  {
+   "step": "FX delta",
+   "pnl": -1080
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 9028
+  },
+  {
+   "step": "Theta",
+   "pnl": -10308
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -493
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

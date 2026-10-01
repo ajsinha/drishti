@@ -184,7 +184,27 @@
   "sourceSystem": "Murex",
   "createdAt": "2026-02-27T09:52:00Z",
   "lastModifiedAt": "2026-02-27T09:52:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2026-02-27",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-PLINDQVIST: buy Index option"
+   },
+   {
+    "date": "2026-02-27",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT276822233)"
+   },
+   {
+    "date": "2027-08-10",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -237,6 +257,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 143099,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 1479
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 352
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 11084
+  },
+  {
+   "step": "FX delta",
+   "pnl": 1253
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -918
+  },
+  {
+   "step": "Theta",
+   "pnl": -2329
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 26
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

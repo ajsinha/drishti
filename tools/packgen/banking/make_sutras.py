@@ -88,6 +88,13 @@ class Writer:
         for k in ("x", "y", "label", "value", "fmt", "tone", "limit"):
             if getattr(p, k):
                 a(f"    {k}: {q(getattr(p, k))}")
+        for k, v in p.opts.items():
+            if isinstance(v, list):
+                a(f"    {k}:")
+                for item in v:
+                    a(f"      - {flow(item)}")
+            else:
+                a(f"    {k}: {q(v)}")
         if p.series:
             a("    series:")
             for label, fld, tone in p.series:
@@ -183,6 +190,23 @@ def product_yaml(p: Product) -> str:
         a("    columns:")
         for label, fld, fmt, tone, total in cols:
             a(f"      - {col(label, '@.' + fld, fmt, tone, total)}")
+    a("  - id: explain")
+    a("    kind: waterfall")
+    a(f"    title: {q('P&L explain (USD, opening to closing MTM)')}")
+    a("    code: PNLX")
+    a("    key: F5")
+    a("    rows: $.pnlExplain")
+    a("    label: step")
+    a("    value: pnl")
+    a("    sum: Closing MTM")
+    a("    fmt: signed0")
+    a("  - id: lifecycle")
+    a("    kind: timeline")
+    a("    title: Lifecycle")
+    a("    code: LIFE")
+    a("    key: F6")
+    a("    rows: $.lifecycle.timeline")
+    a("    detail: description")
     a("  - { id: built, kind: provenance, title: How this view was built }")
     chart = chart_from_market_data(p)
     if chart:

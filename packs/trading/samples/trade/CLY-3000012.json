@@ -243,7 +243,33 @@
   "sourceSystem": "Murex",
   "createdAt": "2026-03-06T12:41:00Z",
   "lastModifiedAt": "2026-03-06T12:41:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2026-03-06",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Calypso by TRDR-CDUBOIS: buy protection CDS index (CDX / iTraxx)"
+   },
+   {
+    "date": "2026-03-06",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA851226559)"
+   },
+   {
+    "date": "2027-03-09",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2033-03-02",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -295,6 +321,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 1173846,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 6439
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 1430
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 25971
+  },
+  {
+   "step": "FX delta",
+   "pnl": -1631
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 72
+  },
+  {
+   "step": "Theta",
+   "pnl": 2491
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 487
+  }
+ ],
  "_meta": {
   "source": "murex-credit",
   "generation": 1,

@@ -460,6 +460,43 @@ body.embed .vhead { padding: .6rem .8rem; }
 .surface-tools { display: flex; gap: .3rem; justify-content: flex-end; margin-bottom: .3rem; }
 .surface-tools .md-btn[aria-pressed="true"] { color: var(--d-accent); border-color: var(--d-accent); }
 .chart.surface { height: 340px; }
+
+/* ---- waterfall, histogram, scatter, candlestick, graph (static/js/charts.js), timeline and pivot ---- */
+.chart.xchart { height: 240px; }
+.vmain .chart.xchart { height: 270px; }
+.chart.candles { height: 300px; }
+.chart.graph { height: 360px; }
+.xchart-data { margin-top: .3rem; font-size: .82rem; }
+.xchart-data summary { color: var(--d-muted); cursor: pointer; width: max-content; }
+.xchart-data summary:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 2px; }
+.xchart-data .tbl-wrap { max-height: 260px; overflow: auto; margin-top: .3rem; }
+.sw-pos { background: var(--d-pos); } .sw-neg { background: var(--d-neg); } .sw-link { background: var(--d-link); }
+.sw-ok { background: var(--d-ok); } .sw-warn { background: var(--d-warn); } .sw-bad { background: var(--d-bad); }
+.legend .mono { color: var(--d-ink); }
+.pnl-note { margin: .3rem 0 0; color: var(--d-muted); font-size: .8rem; }
+.tl { list-style: none; margin: 0; padding: 0 0 0 .2rem; }
+.tl-i { position: relative; padding: 0 0 .7rem 1.3rem; border-left: 2px solid var(--d-border); margin-left: .35rem; color: var(--d-ink) !important; }
+.tl-i:last-child { border-left-color: transparent; padding-bottom: 0; }
+.tl-dot { position: absolute; left: -.42rem; top: .2rem; width: .7rem; height: .7rem; border-radius: 50%; background: var(--d-surface);
+  border: 2px solid var(--d-muted); }
+.tl-i.t-ok .tl-dot { border-color: var(--d-ok); background: var(--d-ok); } .tl-i.t-warn .tl-dot { border-color: var(--d-warn); }
+.tl-i.t-bad .tl-dot { border-color: var(--d-bad); background: var(--d-bad); }
+.tl-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; }
+.tl-h time { color: var(--d-muted); font-size: .8rem; }
+.tl-s { font-size: .75rem; border: 1px solid currentColor; border-radius: 3px; padding: 0 .3rem; }
+.tl-d { margin: .15rem 0 0; color: var(--d-muted); font-size: .84rem; }
+.pivot th[scope="row"] { font-weight: 600; white-space: nowrap; }
+.pivot .pv-total, .pivot tfoot td { font-weight: 600; }
+.pivot.heat td.heat-0 { background: color-mix(in srgb, var(--d-accent) 2%, transparent); }
+.pivot.heat td.heat-1 { background: color-mix(in srgb, var(--d-accent) 6%, transparent); }
+.pivot.heat td.heat-2 { background: color-mix(in srgb, var(--d-accent) 10%, transparent); }
+.pivot.heat td.heat-3 { background: color-mix(in srgb, var(--d-accent) 14%, transparent); }
+.pivot.heat td.heat-4 { background: color-mix(in srgb, var(--d-accent) 18%, transparent); }
+.pivot.heat td.heat-5 { background: color-mix(in srgb, var(--d-accent) 22%, transparent); }
+.pivot.heat td.heat-6 { background: color-mix(in srgb, var(--d-accent) 26%, transparent); }
+.pivot.heat td.heat-7 { background: color-mix(in srgb, var(--d-accent) 30%, transparent); }
+.pivot.heat td.heat-8 { background: color-mix(in srgb, var(--d-accent) 34%, transparent); }
+.pivot.heat td.heat-9 { background: color-mix(in srgb, var(--d-accent) 38%, transparent); }
 .cache-stat { display: inline-block; margin-right: .9rem; color: var(--d-muted); font-size: .8rem; }
 .cache-stat b { color: var(--d-ink); font-weight: 600; }
 .adm-status { min-height: 1.2rem; color: var(--d-ok); font-size: .82rem; }

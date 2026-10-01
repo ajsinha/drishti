@@ -346,7 +346,33 @@
   "sourceSystem": "Summit",
   "createdAt": "2025-06-25T10:07:00Z",
   "lastModifiedAt": "2025-06-25T10:07:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-06-25",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-PLINDQVIST: sell Cliquet (ratchet)"
+   },
+   {
+    "date": "2025-06-25",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT821020853)"
+   },
+   {
+    "date": "2026-12-27",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2031-04-16",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -399,6 +425,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -163252,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 522
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -1964
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -4162
+  },
+  {
+   "step": "FX delta",
+   "pnl": -108
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -2806
+  },
+  {
+   "step": "Theta",
+   "pnl": -4516
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -236
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

@@ -182,7 +182,34 @@
   "sourceSystem": "Endur",
   "createdAt": "2026-07-31T12:51:00Z",
   "lastModifiedAt": "2026-07-31T12:51:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2026-07-31",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Bloomberg TOMS by TRDR-NFAROUK: reverse repo Buy / sell-back"
+   },
+   {
+    "date": "2026-07-31",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT343327147)"
+   },
+   {
+    "date": "2026-09-04",
+    "event": "Partially terminated",
+    "status": "Done",
+    "description": "Notional reduced by 10%, unwind fee settled",
+    "amount": 8800000
+   },
+   {
+    "date": "2027-01-13",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -235,6 +262,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 125596,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -1457
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 636
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -4433
+  },
+  {
+   "step": "FX delta",
+   "pnl": -862
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 43
+  },
+  {
+   "step": "Theta",
+   "pnl": 255
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -346
+  }
+ ],
  "_meta": {
   "source": "globalone-sft",
   "generation": 1,

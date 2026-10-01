@@ -382,7 +382,33 @@
   "sourceSystem": "Summit",
   "createdAt": "2026-09-25T11:10:00Z",
   "lastModifiedAt": "2026-09-25T11:10:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2026-09-25",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Endur by TRDR-TBRENNAN: pay fixed Commodity basis swap"
+   },
+   {
+    "date": "2026-09-25",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT286294492)"
+   },
+   {
+    "date": "2026-12-28",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2032-05-19",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -434,6 +460,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 941504,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 2755
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -1983
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -19364
+  },
+  {
+   "step": "FX delta",
+   "pnl": -1362
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 327
+  },
+  {
+   "step": "Theta",
+   "pnl": -262
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -451
+  }
+ ],
  "_meta": {
   "source": "endur-comm",
   "generation": 1,

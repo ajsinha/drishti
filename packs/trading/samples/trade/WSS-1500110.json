@@ -155,7 +155,27 @@
   "sourceSystem": "Endur",
   "createdAt": "2026-08-31T12:53:00Z",
   "lastModifiedAt": "2026-08-31T12:53:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2026-08-31",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Wall Street Systems by TRDR-ISCHULZ: long Call account"
+   },
+   {
+    "date": "2026-08-31",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT361837742)"
+   },
+   {
+    "date": "2027-04-12",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -207,6 +227,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -1998765,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -58264
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -15350
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 218447
+  },
+  {
+   "step": "FX delta",
+   "pnl": 22466
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -243
+  },
+  {
+   "step": "Theta",
+   "pnl": -6885
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 797
+  }
+ ],
  "_meta": {
   "source": "summit-mm",
   "generation": 1,

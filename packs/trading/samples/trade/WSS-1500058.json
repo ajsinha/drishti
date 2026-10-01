@@ -349,7 +349,33 @@
   "sourceSystem": "Calypso",
   "createdAt": "2025-05-06T11:30:00Z",
   "lastModifiedAt": "2025-05-06T11:30:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2025-05-06",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Wall Street Systems by TRDR-LMOREAU: buy FX average-rate option"
+   },
+   {
+    "date": "2025-05-06",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT373520113)"
+   },
+   {
+    "date": "2026-11-08",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2032-01-21",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -402,6 +428,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -1069892,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 329
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 10
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -230
+  },
+  {
+   "step": "FX delta",
+   "pnl": -144
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 1796
+  },
+  {
+   "step": "Theta",
+   "pnl": -652
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 68
+  }
+ ],
  "_meta": {
   "source": "calypso-fx",
   "generation": 1,

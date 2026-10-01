@@ -186,7 +186,33 @@
   "sourceSystem": "Calypso",
   "createdAt": "2026-08-20T11:38:00Z",
   "lastModifiedAt": "2026-08-20T11:38:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2026-08-20",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-JWEISS: sell Listed equity option"
+   },
+   {
+    "date": "2026-08-20",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT426057772)"
+   },
+   {
+    "date": "2026-08-21",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2027-12-06",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -244,6 +270,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -1515709,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -23620
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 3838
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -41474
+  },
+  {
+   "step": "FX delta",
+   "pnl": 7296
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 10188
+  },
+  {
+   "step": "Theta",
+   "pnl": -3858
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -2726
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

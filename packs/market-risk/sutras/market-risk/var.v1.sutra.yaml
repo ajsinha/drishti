@@ -42,6 +42,18 @@ panels:
     label: book
     value: var
     fmt: compact
+  - id: scenarios
+    kind: histogram
+    title: "Scenario P&L distribution, 500 days (USD)"
+    code: DIST
+    key: F3
+    rows: $.scenarioPnl
+    fmt: compact
+    unit: USD
+    markers:
+      - { label: VaR 99%, value: "-$.var99", tone: neg }
+      - { label: ES 97.5%, value: "-$.es975", tone: bad }
+      - { label: Mean, value: $.meanPnl, tone: link }
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
 keys: { F7: "link($.desk, 'desk')", F8: impact, F9: raw }

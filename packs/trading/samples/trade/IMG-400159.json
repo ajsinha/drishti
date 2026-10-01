@@ -233,7 +233,27 @@
   "sourceSystem": "Summit",
   "createdAt": "2025-10-31T09:57:00Z",
   "lastModifiedAt": "2025-10-31T09:57:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2025-10-31",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-VRAO: long Credit basket note"
+   },
+   {
+    "date": "2025-10-31",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT988852697)"
+   },
+   {
+    "date": "2035-09-20",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -286,6 +306,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 3201007,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 1466
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -4903
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 31324
+  },
+  {
+   "step": "FX delta",
+   "pnl": -2304
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 848
+  },
+  {
+   "step": "Theta",
+   "pnl": -440
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 1358
+  }
+ ],
  "_meta": {
   "source": "sophis-struct",
   "generation": 1,

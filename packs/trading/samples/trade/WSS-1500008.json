@@ -171,7 +171,27 @@
   "sourceSystem": "Calypso",
   "createdAt": "2024-09-19T10:17:00Z",
   "lastModifiedAt": "2024-09-19T10:17:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2024-09-19",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Wall Street Systems by TRDR-LMOREAU: short FX forward"
+   },
+   {
+    "date": "2024-09-19",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT495692202)"
+   },
+   {
+    "date": "2026-10-07",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -225,6 +245,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 1758798,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -5456
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -2843
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -20119
+  },
+  {
+   "step": "FX delta",
+   "pnl": -4582
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -678
+  },
+  {
+   "step": "Theta",
+   "pnl": -1007
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -1168
+  }
+ ],
  "_meta": {
   "source": "calypso-fx",
   "generation": 1,

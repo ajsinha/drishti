@@ -288,7 +288,40 @@
   "sourceSystem": "Endur",
   "createdAt": "2025-03-03T09:09:00Z",
   "lastModifiedAt": "2025-03-03T09:09:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-03-03",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Endur by TRDR-FROSSI: pay fixed Commodity index swap"
+   },
+   {
+    "date": "2025-03-03",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT538411396)"
+   },
+   {
+    "date": "2026-03-05",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "USD payment settled",
+    "amount": -668525.64
+   },
+   {
+    "date": "2027-03-05",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2034-11-06",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -340,6 +373,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 919151,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -438
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 98
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -2635
+  },
+  {
+   "step": "FX delta",
+   "pnl": -213
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -73
+  },
+  {
+   "step": "Theta",
+   "pnl": -156
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -9
+  }
+ ],
  "_meta": {
   "source": "endur-comm",
   "generation": 1,

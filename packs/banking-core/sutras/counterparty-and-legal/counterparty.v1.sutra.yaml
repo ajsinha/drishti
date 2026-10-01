@@ -44,6 +44,16 @@ panels:
     title: KYC and classification
     area: right
     rows: $.kyc
+  - id: hierarchy
+    kind: graph
+    title: Group hierarchy (agreements and netting sets)
+    code: HIER
+    key: F3
+    nodes: $.hierarchy.nodes
+    edges: $.hierarchy.edges
+    label: label
+    group: type
+    layout: tree
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
 keys: { F7: "link($.group, 'counterparty-group')", F8: impact, F9: raw }

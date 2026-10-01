@@ -57,6 +57,21 @@ def history(key: str, last: float, vol: float, n: int = 30, dp: int = 4, field: 
     return list(reversed(out))
 
 
+def ohlc(key: str, last: float, vol: float, volume: float, n: int = 60) -> list[dict]:
+    """n business days of daily bars that close on the same walk as history(key, ...) (so the last 30 closes are the
+    line chart's), with an open near the previous close, a high and a low around both, and a volume."""
+    closes = history(key, last, vol, n=n, dp=6)
+    r, out, prev = rng(key + "ohlc"), [], None
+    for row in closes:
+        c = row["close"]
+        o = c * (1 + r.gauss(0, vol * 0.6)) if prev is None else prev * (1 + r.gauss(0, vol * 0.25))
+        hi, lo = max(o, c) * (1 + abs(r.gauss(0, vol * 0.5))), min(o, c) * (1 - abs(r.gauss(0, vol * 0.5)))
+        out.append({"date": row["date"], "open": round(o, 2), "high": round(hi, 2), "low": round(lo, 2), "close": round(c, 2),
+                    "volume": int(volume * r.uniform(0.5, 1.8))})
+        prev = c
+    return out
+
+
 # ---- ids a trade's market-data selectors resolve to ------------------------------------------------------------
 RFR_FIX = {c: f"FIX-{v[3]}" for c, v in N.CCY.items()}
 
@@ -180,7 +195,7 @@ def equity(t: str) -> dict:
     shares = rng("sh" + t).randint(300, 4000) * 1e6
     out = {"ticker": f"EQ-{t}", "name": name, "price": px, "change1d": round(hist[-1]["close"] / hist[-2]["close"] - 1, 5),
            "marketCap": round(px * shares * (N.FX.get(ccy + "USD", 1 / N.FX.get("USD" + ccy, 1)) if ccy != "USD" else 1)),
-           "sector": sector, "exchange": exch, "currency": ccy, "beta": beta, "history": hist,
+           "sector": sector, "exchange": exch, "currency": ccy, "beta": beta, "history": hist, "ohlc": ohlc("eq" + t, px, 0.017, shares * 0.004),
            "identifiers": {"isin": ids.isin({"USD": "US", "EUR": "FR", "GBP": "GB", "JPY": "JP", "CHF": "CH", "CAD": "CA"}[ccy], t + "0001"),
                            "bloomberg": f"{t} {exch[:2].upper()} Equity", "ric": f"{t}.{exch[:1]}", "figi": "BBG" + hashlib.sha1(t.encode()).hexdigest()[:9].upper()},
            "issuer": f"ISS-{iss}", "equityVolSurface": f"EQV-{t}", "dividendCurve": f"DIV-{t}"}
@@ -258,6 +273,7 @@ def inflation_curve(k: str) -> dict:
 def commodity(c: str) -> dict:
     name, unit, exch, sector, px, vol = N.COMMODITIES[c]
     return {"commodityId": f"CMD-{c}", "name": name, "front": px, "unit": unit, "exchange": exch, "sector": sector,
+            "ohlc": ohlc("cmd" + c, px, vol / 100 / 16, 250000),
             "spec": {"contract": c, "unit": unit, "exchange": exch, "settlement": "Physical" if sector != "Metals" else "Physical (vault)",
                      "listing": "Monthly", "tickSize": 0.01, "tradingHours": "Sun-Fri 18:00-17:00 ET"},
             "commodityCurve": f"CMDC-{c}", "commodityVolSurface": f"CMDV-{c}"}

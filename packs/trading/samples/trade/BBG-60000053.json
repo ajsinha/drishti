@@ -303,7 +303,46 @@
   "sourceSystem": "Murex",
   "createdAt": "2025-05-02T10:26:00Z",
   "lastModifiedAt": "2025-05-02T10:26:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-05-02",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Bloomberg TOMS by TRDR-BADEYEMI: long Municipal bond"
+   },
+   {
+    "date": "2025-05-02",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT970380041)"
+   },
+   {
+    "date": "2025-05-05",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2026-05-05",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "EUR payment settled",
+    "amount": 4720000.0
+   },
+   {
+    "date": "2026-11-05",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2034-06-13",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -359,6 +398,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -1007209,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -1378
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 2018
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -8066
+  },
+  {
+   "step": "FX delta",
+   "pnl": -1402
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -215
+  },
+  {
+   "step": "Theta",
+   "pnl": -212
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -87
+  }
+ ],
  "_meta": {
   "source": "summit-fi",
   "generation": 1,

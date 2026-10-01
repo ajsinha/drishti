@@ -247,7 +247,39 @@
   "sourceSystem": "Summit",
   "createdAt": "2025-08-07T10:50:00Z",
   "lastModifiedAt": "2025-08-07T10:50:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-08-07",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Bloomberg TOMS by TRDR-RCASTILLO: long Callable bond"
+   },
+   {
+    "date": "2025-08-07",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT138787771)"
+   },
+   {
+    "date": "2025-08-08",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2027-08-11",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2032-08-16",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -304,6 +336,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 3229618,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -1975
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 3167
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -29772
+  },
+  {
+   "step": "FX delta",
+   "pnl": -414
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -213
+  },
+  {
+   "step": "Theta",
+   "pnl": 1456
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -618
+  }
+ ],
  "_meta": {
   "source": "summit-fi",
   "generation": 1,

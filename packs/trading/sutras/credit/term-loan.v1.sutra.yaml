@@ -52,6 +52,23 @@ panels:
       - { label: Principal, bind: "@.principal", fmt: amount0, total: true }
       - { label: Closing notional, bind: "@.closing", fmt: amount0 }
       - { label: Interest, bind: "@.interest", fmt: amount0, total: true }
+  - id: explain
+    kind: waterfall
+    title: "P&L explain (USD, opening to closing MTM)"
+    code: PNLX
+    key: F5
+    rows: $.pnlExplain
+    label: step
+    value: pnl
+    sum: Closing MTM
+    fmt: signed0
+  - id: lifecycle
+    kind: timeline
+    title: Lifecycle
+    code: LIFE
+    key: F6
+    rows: $.lifecycle.timeline
+    detail: description
   - { id: built, kind: provenance, title: How this view was built }
   - id: marketData
     kind: line

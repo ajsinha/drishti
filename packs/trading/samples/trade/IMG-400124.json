@@ -301,7 +301,40 @@
   "sourceSystem": "Murex",
   "createdAt": "2024-08-16T12:54:00Z",
   "lastModifiedAt": "2024-08-16T12:54:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2024-08-16",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-PLINDQVIST: long Convertible bond"
+   },
+   {
+    "date": "2024-08-16",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT262724519)"
+   },
+   {
+    "date": "2026-08-19",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "EUR payment settled",
+    "amount": 2480000.0
+   },
+   {
+    "date": "2027-02-19",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2033-09-08",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -356,6 +389,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 1886040,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -2037
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -2247
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -92204
+  },
+  {
+   "step": "FX delta",
+   "pnl": 7155
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 3046
+  },
+  {
+   "step": "Theta",
+   "pnl": 1871
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -4926
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

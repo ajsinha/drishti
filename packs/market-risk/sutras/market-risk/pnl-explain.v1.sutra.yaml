@@ -34,6 +34,17 @@ panels:
     value: pnl
     fmt: signed0
     tone: sign
+  - id: explain
+    kind: waterfall
+    title: "P&L waterfall (risk factors to actual, USD)"
+    code: PNLX
+    key: F3
+    rows: $.explainSteps
+    label: step
+    value: pnl
+    fmt: signed0
+    sum: Actual
+    unit: USD
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
 keys: { F7: "link($.book, 'book')", F8: impact, F9: raw }

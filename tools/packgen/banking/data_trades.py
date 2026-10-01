@@ -262,6 +262,64 @@ def sensitivities(p, risk: dict, years: float) -> list[dict]:
     return rows
 
 
+# the risk factors a day's P&L is explained by, before what is left unexplained
+EXPLAIN = ["Carry", "Roll-down", "Rates delta", "FX delta", "Vol (vega)", "Theta"]
+
+
+def pnl_explain(tid: str, mtm: float, pnl1d: float, p) -> list[dict]:
+    """Yesterday's MTM, today's P&L by risk factor and the unexplained rest: the steps add up to today's MTM (the
+    waterfall's closing bar). Options carry vega and theta, linear products mostly carry, roll-down and delta."""
+    r = M.rng(tid + "explain")
+    scale = max(abs(pnl1d), 1000.0)
+    optional = p.family in ("option", "exotic")
+    weights = {"Carry": 0.25, "Roll-down": 0.15, "Rates delta": 0.6, "FX delta": 0.3 if p.asset == "FX" else 0.12,
+               "Vol (vega)": 0.5 if optional else 0.02, "Theta": 0.35 if optional else 0.04}
+    unexplained = round(pnl1d * r.uniform(-0.06, 0.06))
+    steps = [{"step": f, "pnl": round(r.gauss(0, scale * weights[f]))} for f in EXPLAIN]
+    if optional:
+        steps[-1]["pnl"] = -abs(steps[-1]["pnl"])                 # an option holder pays theta
+    steps[2]["pnl"] += round(pnl1d - unexplained - sum(x["pnl"] for x in steps))   # rates delta takes the balance
+    return [{"step": "Opening MTM", "pnl": round(mtm - pnl1d), "total": True}] + steps + [{"step": "Unexplained", "pnl": unexplained}]
+
+
+def timeline(tid: str, doc: dict, cal: Calendar, mat: date, cleared: bool) -> list[dict]:
+    """The trade's life as dated events, oldest first: booked, confirmed, cleared, amended, partially terminated,
+    cash settled, the next payment and maturity, each with a status the timeline tones (Done, Matched and Settled are
+    fine, Pending is a warning)."""
+    r = M.rng(tid + "timeline")
+    trade_date = date.fromisoformat(doc["tradeDate"])
+    out = [{"date": doc["tradeDate"], "event": "Booked", "status": "Done",
+            "description": f"Captured in {doc['sourceSystem']} by {doc['trader']}: {doc['direction'].lower()} {doc['productName']}"}]
+    conf = doc["confirmation"]
+    out.append({"date": conf["matched"][:10], "event": "Confirmed", "status": "Matched", "description": f"Matched on {conf['method']} ({conf['platformId']})"})
+    if cleared:
+        out.append({"date": iso(cal.add_business_days(trade_date, 1)), "event": "Cleared", "status": "Done",
+                    "description": f"Novated to {doc['clearing'].get('ccp', 'the CCP')}"})
+    for e in doc["lifecycle"]["events"][1:]:
+        out.append({"date": e["at"][:10], "event": "Amended", "status": "Done", "description": f"{e['reason']} (version {e['version']}, by {e['by']})"})
+    days = (min(mat, N.AS_OF) - trade_date).days
+    if mat > N.AS_OF and days > 60 and r.random() < 0.12:
+        d = trade_date + timedelta(days=r.randint(30, days - 10))
+        cut = r.choice([10, 20, 25, 40])
+        out.append({"date": iso(cal.adjust(d, "PRECEDING")), "event": "Partially terminated", "status": "Done",
+                    "description": f"Notional reduced by {cut}%, unwind fee settled", "amount": round(doc["notional"] * cut / 100)})
+    rows = doc.get("schedule") or []
+    when = [(x.get("payDate") or x.get("date") or x.get("fixingDate"), x) for x in rows]
+    paid = [(d, x) for d, x in when if d and d <= iso(N.AS_OF) and isinstance(x.get("amount", x.get("payoff")), (int, float))]
+    if paid:
+        d, x = paid[-1]
+        out.append({"date": d, "event": "Cash settled", "status": "Settled", "description": f"{doc['currency']} payment settled",
+                    "amount": x.get("amount", x.get("payoff"))})
+    upcoming = [d for d, x in when if d and d > iso(N.AS_OF)]
+    if upcoming:
+        out.append({"date": upcoming[0], "event": "Next payment", "status": "Pending", "description": "Scheduled; settlement instructions confirmed"})
+    if mat <= N.AS_OF:
+        out.append({"date": iso(mat), "event": "Matured", "status": "Done", "description": "Final payment settled, trade closed"})
+    else:
+        out.append({"date": iso(mat), "event": "Maturity", "status": "Scheduled", "description": "Final payment and close-out"})
+    return sorted(out, key=lambda e: e["date"])
+
+
 def build() -> dict[str, dict]:
     trades = {}
     booked: dict[str, int] = {}                  # trades so far per booking system
@@ -339,6 +397,8 @@ def build() -> dict[str, dict]:
                 "valuation": B.valuation(N.AS_OF, mtm, "USD", {"swap": "Multi-curve OIS discounting", "option": "Black / Bachelier",
                                                               "exotic": "Local-stochastic volatility Monte Carlo"}.get(p.family, "Discounted cashflows"),
                                          [v for f, v in resolve_md(p, ctx).items()])})
+            doc["pnlExplain"] = pnl_explain(tid, mtm, doc["pnl1d"], p)
+            doc["lifecycle"]["timeline"] = timeline(tid, doc, cal, mat, cleared)
             doc["_meta"] = {"source": SOURCE[p.asset], "generation": 1, "live": p.family in ("swap", "future", "option", "linear"),
                             "walk": {"mtm": max(500, round(abs(mtm) * 0.002 + notional * 1e-5))}}
             trades[tid] = doc

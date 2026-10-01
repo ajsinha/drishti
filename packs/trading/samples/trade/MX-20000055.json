@@ -1490,7 +1490,46 @@
   "sourceSystem": "Calypso",
   "createdAt": "2025-05-30T12:06:00Z",
   "lastModifiedAt": "2025-05-30T12:06:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2025-05-30",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-MOKAFOR: receive fixed Constant maturity swap"
+   },
+   {
+    "date": "2025-05-30",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA672489740)"
+   },
+   {
+    "date": "2025-06-02",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2026-09-17",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "USD payment settled",
+    "amount": -2014262.06
+   },
+   {
+    "date": "2026-12-17",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2036-09-15",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -1547,6 +1586,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 8881399,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 30733
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 8455
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 365465
+  },
+  {
+   "step": "FX delta",
+   "pnl": -33555
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 4510
+  },
+  {
+   "step": "Theta",
+   "pnl": -20714
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 10436
+  }
+ ],
  "_meta": {
   "source": "murex-rates",
   "generation": 1,

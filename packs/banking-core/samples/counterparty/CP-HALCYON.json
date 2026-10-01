@@ -37,6 +37,77 @@
  },
  "group": "GRP-HALCYON",
  "creditLimit": "LIM-HALCYON",
+ "hierarchy": {
+  "nodes": [
+   {
+    "id": "GRP-HALCYON",
+    "label": "Halcyon Maritime Group",
+    "type": "Group (ultimate parent)"
+   },
+   {
+    "id": "CP-HALCYON",
+    "label": "Halcyon Shipping plc",
+    "type": "Counterparty"
+   },
+   {
+    "id": "AGR-HALCYON-ISDA",
+    "label": "ISDA 2002 Master",
+    "type": "Agreement"
+   },
+   {
+    "id": "CSA-HALCYON",
+    "label": "Credit support annex",
+    "type": "CSA"
+   },
+   {
+    "id": "NS-HALCYON-LDN",
+    "label": "NS-HALCYON-LDN · 14 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-HALCYON-NY",
+    "label": "NS-HALCYON-NY · 24 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-HALCYON-TKY",
+    "label": "NS-HALCYON-TKY · 2 trades",
+    "type": "Netting set"
+   }
+  ],
+  "edges": [
+   {
+    "from": "GRP-HALCYON",
+    "to": "CP-HALCYON",
+    "label": "parent of"
+   },
+   {
+    "from": "CP-HALCYON",
+    "to": "AGR-HALCYON-ISDA",
+    "label": "signed"
+   },
+   {
+    "from": "AGR-HALCYON-ISDA",
+    "to": "CSA-HALCYON",
+    "label": "secured by"
+   },
+   {
+    "from": "AGR-HALCYON-ISDA",
+    "to": "NS-HALCYON-LDN",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-HALCYON-ISDA",
+    "to": "NS-HALCYON-NY",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-HALCYON-ISDA",
+    "to": "NS-HALCYON-TKY",
+    "label": "nets"
+   }
+  ]
+ },
  "_meta": {
   "source": "counterparty-master",
   "generation": 1

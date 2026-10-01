@@ -339,7 +339,33 @@
   "sourceSystem": "Murex",
   "createdAt": "2024-10-07T11:51:00Z",
   "lastModifiedAt": "2024-10-07T11:51:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2024-10-07",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Endur by TRDR-FROSSI: buy Weather derivative (HDD/CDD)"
+   },
+   {
+    "date": "2024-10-07",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT552613846)"
+   },
+   {
+    "date": "2026-10-09",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2034-06-22",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -390,6 +416,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -20654,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -563
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -113
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -240
+  },
+  {
+   "step": "FX delta",
+   "pnl": -66
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 372
+  },
+  {
+   "step": "Theta",
+   "pnl": -612
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -67
+  }
+ ],
  "_meta": {
   "source": "endur-comm",
   "generation": 1,

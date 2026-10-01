@@ -166,7 +166,27 @@
   "sourceSystem": "Calypso",
   "createdAt": "2026-07-24T10:54:00Z",
   "lastModifiedAt": "2026-07-24T10:54:00Z",
-  "lastModifiedBy": "mo.amend"
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2026-07-24",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Calypso by TRDR-CDUBOIS: sell CDS index option"
+   },
+   {
+    "date": "2026-07-24",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA352018076)"
+   },
+   {
+    "date": "2029-05-10",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -218,6 +238,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 72631,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 1855
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 64
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 2807
+  },
+  {
+   "step": "FX delta",
+   "pnl": -115
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -842
+  },
+  {
+   "step": "Theta",
+   "pnl": -876
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 2
+  }
+ ],
  "_meta": {
   "source": "murex-credit",
   "generation": 1,

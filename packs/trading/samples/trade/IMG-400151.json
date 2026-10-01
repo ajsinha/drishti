@@ -326,7 +326,33 @@
   "sourceSystem": "Calypso",
   "createdAt": "2025-10-09T09:16:00Z",
   "lastModifiedAt": "2025-10-09T09:16:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2025-10-09",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-VRAO: long Worst-of note"
+   },
+   {
+    "date": "2025-10-09",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT470270504)"
+   },
+   {
+    "date": "2026-10-14",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2030-12-09",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -379,6 +405,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -193325,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 109
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 37
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -3090
+  },
+  {
+   "step": "FX delta",
+   "pnl": 200
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 28
+  },
+  {
+   "step": "Theta",
+   "pnl": -122
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -34
+  }
+ ],
  "_meta": {
   "source": "sophis-struct",
   "generation": 1,

@@ -164,7 +164,40 @@
   "sourceSystem": "Endur",
   "createdAt": "2026-07-31T10:22:00Z",
   "lastModifiedAt": "2026-07-31T10:22:00Z",
-  "lastModifiedBy": "stp.gateway"
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2026-07-31",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-JWEISS: long Single-stock future"
+   },
+   {
+    "date": "2026-07-31",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT456867145)"
+   },
+   {
+    "date": "2026-08-03",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to JSCC"
+   },
+   {
+    "date": "2026-09-04",
+    "event": "Partially terminated",
+    "status": "Done",
+    "description": "Notional reduced by 40%, unwind fee settled",
+    "amount": 85600000
+   },
+   {
+    "date": "2027-04-02",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -221,6 +254,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 57862,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 1126
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -134
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -4531
+  },
+  {
+   "step": "FX delta",
+   "pnl": 564
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -56
+  },
+  {
+   "step": "Theta",
+   "pnl": -107
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 135
+  }
+ ],
  "_meta": {
   "source": "sophis-eqd",
   "generation": 1,

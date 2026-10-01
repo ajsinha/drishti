@@ -170,7 +170,33 @@
   "sourceSystem": "Endur",
   "createdAt": "2025-05-06T10:09:00Z",
   "lastModifiedAt": "2025-05-06T10:09:00Z",
-  "lastModifiedBy": "mo.ops"
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-05-06",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Bloomberg TOMS by TRDR-BADEYEMI: long Zero-coupon bond"
+   },
+   {
+    "date": "2025-05-06",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT544143689)"
+   },
+   {
+    "date": "2025-05-07",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to JSCC"
+   },
+   {
+    "date": "2031-01-28",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -226,6 +252,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 495949,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 15712
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 4410
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 11913
+  },
+  {
+   "step": "FX delta",
+   "pnl": 1844
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 1647
+  },
+  {
+   "step": "Theta",
+   "pnl": -540
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 1203
+  }
+ ],
  "_meta": {
   "source": "summit-fi",
   "generation": 1,

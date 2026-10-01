@@ -290,7 +290,46 @@
   "sourceSystem": "Calypso",
   "createdAt": "2025-11-13T09:13:00Z",
   "lastModifiedAt": "2025-11-13T09:13:00Z",
-  "lastModifiedBy": "fo.capture"
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2025-11-13",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Bloomberg TOMS by TRDR-RCASTILLO: short Covered bond"
+   },
+   {
+    "date": "2025-11-13",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT502105423)"
+   },
+   {
+    "date": "2025-11-14",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2026-05-17",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "EUR payment settled",
+    "amount": 1680000.0
+   },
+   {
+    "date": "2026-11-17",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2034-04-26",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
  },
  "confirmation": {
   "status": "Confirmed",
@@ -346,6 +385,41 @@
   "status": "Official EOD",
   "runId": "EOD-20260930-01"
  },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 114714,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -1167
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 167
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 3125
+  },
+  {
+   "step": "FX delta",
+   "pnl": -85
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -50
+  },
+  {
+   "step": "Theta",
+   "pnl": 105
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 101
+  }
+ ],
  "_meta": {
   "source": "summit-fi",
   "generation": 1,
