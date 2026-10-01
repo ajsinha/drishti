@@ -20,7 +20,8 @@
      column also takes >, <, >= and <= (">1m"). In a table panel the box sits in the panel's heading bar (a Sutra turns
      it off with search: false); a table outside a panel gets a slim heading strip of its own. Other panel kinds
      (ladders, tabs, key-value lists) have no filter: search is for tables.
-   - Page: first, previous, next, last and rows per page (remembered per browser, 25 by default); ▲ ▼ move a row.
+   - Page: first, previous, next, last (shown when there is more than one page) and rows per page (remembered per
+     browser, 25 by default); ▲ ▼ move a row. All of these sit in the heading too, never under the table.
    - Keys: focus the table (or click a row), then ↑ ↓ move (turning pages), PgUp/PgDn page, Home/End jump, Enter opens.
    Tables that live updates re-render keep their sort, filters, page and selection. A table with data-plain is left as
    it is (a form laid out as a table). */
@@ -163,8 +164,8 @@
       var total = all().length, from = vis.length ? st.page * per + 1 : 0, to = Math.min(vis.length, (st.page + 1) * per);
       info.textContent = from + '–' + to + ' of ' + vis.length + (vis.length !== total ? ' (filtered from ' + total + ')' : '')
         + (n > 1 ? ' · page ' + (st.page + 1) + ' of ' + n : '');
-      bar.querySelectorAll('[data-pg=back]').forEach(function (b) { b.disabled = st.page === 0; });
-      bar.querySelectorAll('[data-pg=fwd]').forEach(function (b) { b.disabled = st.page >= n - 1; });
+      bar.querySelectorAll('[data-pg=back]').forEach(function (b) { b.disabled = st.page === 0; b.hidden = n < 2; });
+      bar.querySelectorAll('[data-pg=fwd]').forEach(function (b) { b.disabled = st.page >= n - 1; b.hidden = n < 2; });
     }
     function go(p) { st.page = p; render(); }
     function select(i, scroll) {
@@ -186,27 +187,24 @@
     var down = button('▼', 'Next row (↓)', function () { select(st.sel + 1, true); t.focus(); });
     [first, prev].forEach(function (b) { b.setAttribute('data-pg', 'back'); });
     [next, last].forEach(function (b) { b.setAttribute('data-pg', 'fwd'); });
-    [first, prev, info, next, last, el('span', 'tbl-pg-gap'), up, down, sizeSel].forEach(function (x) { bar.appendChild(x); });
-    var wrap = t.closest('.tbl-wrap') || t;
-    wrap.parentNode.insertBefore(bar, wrap.nextSibling);
-
-    // The filter belongs to the table's heading, where it is seen: a table panel's heading bar, or a strip above a
-    // table that has no panel heading. Panels of other kinds, and tables a Sutra marks search: false, have none.
+    // Every control belongs to the table's heading, where it is seen: the panel's heading bar, or a strip above a
+    // table that has no panel heading. The filter is for tables only: panels of other kinds, and tables a Sutra
+    // marks search: false, page and sort but have no filter.
     var panel = t.closest('.pnl[data-kind]');
     var searchable = !t.hasAttribute('data-no-search') && (!panel || panel.getAttribute('data-kind') === 'table');
-    if (searchable) {
-      var tools = el('span', 'tbl-search');
-      tools.appendChild(quick); tools.appendChild(funnel);
-      var head = panel && panel.querySelector(':scope > .pnl-h');
-      if (head) {
-        var old = head.querySelector('.tbl-search');
-        if (old) { old.remove(); }
-        head.insertBefore(tools, head.querySelector('.pnl-code'));
-      } else {
-        var strip = el('div', 'tbl-head');
-        strip.appendChild(tools);
-        wrap.parentNode.insertBefore(strip, wrap);
-      }
+    var nav = el('span', 'tbl-pg-nav');
+    [first, prev, info, next, last].forEach(function (x) { nav.appendChild(x); });
+    if (searchable) { bar.appendChild(quick); bar.appendChild(funnel); }
+    [nav, up, down, sizeSel].forEach(function (x) { bar.appendChild(x); });
+    var wrap = t.closest('.tbl-wrap') || t;
+    var head = panel && panel.querySelector(':scope > .pnl-h');
+    if (head && panel.querySelectorAll('table.tbl').length === 1) {
+      var old = head.querySelector('.tbl-pg');
+      if (old) { old.remove(); }
+      bar.classList.add('in-head');
+      head.insertBefore(bar, head.querySelector('.pnl-code'));
+    } else {
+      wrap.parentNode.insertBefore(bar, wrap);      // a strip above the table (pick lists, admin lists, tabs)
     }
 
     quick.addEventListener('input', function () { st.q = quick.value.trim(); st.page = 0; st.sel = -1; filter(); render(); });

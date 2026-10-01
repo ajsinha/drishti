@@ -307,14 +307,17 @@ A *Title* column appears only when titles say more than the id.
 ## Tables: sorting, filtering, paging and the keyboard
 
 Every table in the console (pick lists, search results, the tables inside views, admin lists) sorts and filters,
-has a pager under it, and can be walked with the keyboard.
+has a pager in its heading, and can be walked with the keyboard.
 
 ```text
-| Largest trades                              [Filter rows    ] ⧩   F2  ⤓  ? |   <- the panel's heading
-| Trade ↕   Product ↕   Notional ▼   Maturity ↕   MTM ↕                     |
-| …                                                                          |
-«  ‹  1–21 of 21 (filtered from 100)  ›  »                     ▲  ▼  [25 rows ▾]
+| Largest trades     [Filter rows   ] ⧩  « ‹ 1–25 of 49 · page 1 of 2 › »  ▲ ▼ [25 rows ▾]  F2 ⤓ ? |  <- the heading
+| Trade ↕   Product ↕   Notional ▼   Maturity ↕   MTM ↕                                          |
+| …                                                                                               |
 ```
+
+Every control is in the table's heading, never under the table: in a panel, its heading bar; for a pick list,
+a search or an admin list, the strip just above the table. The page buttons appear when there is more than one
+page.
 
 - **Sort**: click a column heading (or focus it and press Enter). Once for ascending (▲), again for descending
   (▼), a third time for the original order. Numbers, amounts (`1.5m`, `−30,205,543`), percentages and dates sort

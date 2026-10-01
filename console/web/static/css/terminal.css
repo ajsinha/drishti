@@ -547,8 +547,9 @@ table.tbl tr.tbl-filter th::after { content: none; }
 .tbl-pg-q { width: 12rem; }
 .tbl-pg-b.on { color: var(--d-accent); }
 
-/* The table filter in the heading: in a table panel's heading bar, or a strip above a table without one. */
-.tbl-search { display: inline-flex; align-items: center; gap: .3rem; margin-left: auto; }
-.pnl-h .tbl-search { align-self: center; }
-.pnl-h .tbl-pg-q { width: 11rem; }
-.tbl-head { display: flex; justify-content: flex-end; padding: 0 0 .4rem; }
+/* Table controls in the heading: the panel's heading bar, or a strip above a table without one. */
+.tbl-pg { display: flex; align-items: center; gap: .3rem; flex-wrap: wrap; justify-content: flex-end; padding: 0 0 .45rem; }
+.tbl-pg.in-head { padding: 0; margin-left: auto; font-weight: 400; }
+.tbl-pg-nav { display: inline-flex; align-items: center; gap: .1rem; }
+.tbl-pg.in-head .tbl-pg-q { width: 10rem; }
+.pnl-h:has(.tbl-pg.in-head) { align-items: center; flex-wrap: wrap; row-gap: .35rem; }
