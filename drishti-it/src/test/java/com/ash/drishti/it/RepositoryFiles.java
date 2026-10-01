@@ -43,10 +43,30 @@ final class RepositoryFiles {
         return p;
     }
 
+    /** Files git ignores (runtime data such as data/identity, data/packs): not source. Empty when git is unavailable. */
+    static Set<Path> ignored(Path root) {
+        try {
+            Process p = new ProcessBuilder("git", "ls-files", "--others", "--ignored", "--exclude-standard").directory(root.toFile())
+                    .redirectErrorStream(true).start();
+            java.util.Set<Path> out = new java.util.HashSet<>();
+            try (var r = new java.io.BufferedReader(new java.io.InputStreamReader(p.getInputStream(), java.nio.charset.StandardCharsets.UTF_8))) {
+                r.lines().filter(l -> !l.isBlank()).forEach(l -> out.add(root.resolve(l).normalize()));
+            }
+            return p.waitFor() == 0 ? out : Set.of();
+        } catch (IOException e) {
+            return Set.of();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return Set.of();
+        }
+    }
+
     static List<Path> withSuffixes(Set<String> suffixes) {
         Path root = root();
+        Set<Path> skip = ignored(root);
         try (Stream<Path> s = Files.walk(root)) {
             return s.filter(Files::isRegularFile)
+                    .filter(p -> !skip.contains(p.normalize()))
                     .filter(p -> root.relativize(p).getNameCount() > 0)
                     .filter(p -> {
                         for (Path part : root.relativize(p)) {
