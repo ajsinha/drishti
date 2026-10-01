@@ -15,7 +15,6 @@
  */
 package com.ash.drishti.packs;
 
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import org.springframework.boot.SpringApplication;
@@ -43,7 +42,8 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
                 .bind("drishti.packs.added", org.springframework.boot.context.properties.bind.Bindable.listOf(String.class))
                 .orElse(List.of()));
         PackLoader loader = new PackLoader();
-        List<Pack> packs = loader.load(Path.of(dir).toAbsolutePath().normalize(), List.copyOf(names));
+        List<Pack> packs = loader.load(PackLoader.dirs(dir, env.getProperty("drishti.packs.installed-dir", "./data/packs/installed")),
+                List.copyOf(names));
         env.getPropertySources().addLast(new MapPropertySource(SOURCE, loader.properties(packs)));
     }
 }

@@ -32,7 +32,7 @@ when other people will use the installation.
 6. [Environment variables](#6-environment-variables)
 7. [Running as services (systemd)](#7-running-as-services-systemd)
 8. [TLS and the reverse proxy](#8-tls-and-the-reverse-proxy)
-9. [Production checklist](#9-production-checklist) · [Scheduled reports](#9a-scheduled-reports) · [The access log](#9b-the-access-log)
+9. [Production checklist](#9-production-checklist) · [Scheduled reports](#9a-scheduled-reports) · [The access log](#9b-the-access-log) · [Pack registry keys](#9c-pack-registry-keys)
 10. [Backups and restore](#10-backups-and-restore)
 11. [The lake: where it lives and keeping it bounded](#11-the-lake-where-it-lives-and-keeping-it-bounded)
 12. [Memory and caches](#12-memory-and-caches)
@@ -724,6 +724,14 @@ heavier use put the identity database on PostgreSQL, or shorten `drishti.access-
 behind (the database is down), events queue in memory (`drishti.access-log.queue`, 100,000) and beyond that are
 dropped and counted; Admin → Access shows the count. To keep it longer, export it on a schedule
 (`GET /api/v1/admin/access?from=…&limit=5000`) before it is pruned.
+
+## 9c. Pack registry keys
+
+The private key that signs packs (`tools/packreg/packreg.py keygen`) is the one secret of the registry: keep it
+off servers, in your secrets store, with access for release managers only. Servers hold only public keys
+(`drishti.packs.registry.trusted-keys`). To rotate: make a new key, add its public key to every server, republish
+the packs with it, then remove the old key. To stop trusting a publisher at once, remove its key: installed packs
+keep working, nothing new from it installs. Back up `data/packs/installed/` with the rest of `data/`.
 
 ## 10. Backups and restore
 

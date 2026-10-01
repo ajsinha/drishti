@@ -37,13 +37,18 @@
   }
   if (packs) {
     var lmsg = packs.querySelector('[data-msg]');
-    packs.querySelectorAll('[data-load]').forEach(function (b) {
+    packs.querySelectorAll('[data-load], [data-registry]').forEach(function (b) {
       b.addEventListener('click', function () {
-        var name = b.closest('tr').getAttribute('data-pack'), action = b.getAttribute('data-load');
-        if (!window.confirm((action === 'load' ? 'Load ' : 'Unload ') + name + '? The server restarts in place: a few seconds without data.')) { return; }
+        var row = b.closest('tr'), name = row.getAttribute('data-pack'), version = row.getAttribute('data-version');
+        var action = b.getAttribute('data-load') || b.getAttribute('data-registry');
+        var url = b.hasAttribute('data-registry')
+          ? '/admin/api/registry/' + encodeURIComponent(name) + (action === 'install' ? '/' + encodeURIComponent(version) + '/install' : '/rollback')
+          : '/admin/api/packs/' + encodeURIComponent(name) + '/' + action;
+        var verb = { load: 'Load ', unload: 'Unload ', install: 'Install ', rollback: 'Roll back ' }[action];
+        if (!window.confirm(verb + name + (action === 'install' ? ' ' + version : '') + '? The server restarts in place: a few seconds without data.')) { return; }
         lmsg.classList.remove('t-bad');
-        lmsg.textContent = (action === 'load' ? 'Checking ' : 'Unloading ') + name + '…';
-        fetch('/admin/api/packs/' + encodeURIComponent(name) + '/' + action, { method: 'POST' })
+        lmsg.textContent = (action === 'unload' ? 'Unloading ' : 'Checking ') + name + '…';
+        fetch(url, { method: 'POST' })
           .then(function (r) { return r.json().then(function (body) { return { ok: r.ok, body: body }; }); })
           .then(function (res) {
             if (!res.ok) { lmsg.textContent = (res.body.code || 'Error') + ': ' + res.body.detail; lmsg.classList.add('t-bad'); return; }

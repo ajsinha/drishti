@@ -16,6 +16,11 @@
 # Changelog
 
 ## Unreleased
+- **A signed, versioned pack registry (ADR-018).** `tools/packreg/packreg.py` makes Ed25519 keys and publishes pack folders as reproducible, signed archives with an `index.json`.
+  - **Installing:** Admin → Packs → **From the registry** installs, upgrades and rolls back packs.
+  - **Checks before installing:** the SHA-256, the signature by a trusted publisher (`drishti.packs.registry.trusted-keys`), that files stay inside the pack with sizes bounded, and that `pack.yaml` names the same pack and version.
+  - **Where installs go:** `data/packs/installed/`, which takes precedence over the shipped packs.
+  - **Auditing:** installs, upgrades and rollbacks are audited with the publisher and hash.
 - **Ask in plain words.** Type a phrase into the command line (`live trades over 5m in BOOK-RATES-3, biggest first`) or the search page's **In words** box.
   - **What you see:** the structured search it makes, how each part was read, and the words it did not understand. Nothing runs until you press **Run it**.
   - **How it works:** it is deterministic, with no AI service. The vocabulary is the server's kinds and each kind's fields and values, learned from its documents.

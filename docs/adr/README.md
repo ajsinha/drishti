@@ -34,5 +34,6 @@
 | [015](015-packs-inherit.md) | Packs inherit, and the more specific pack wins |
 | [016](016-one-console-many-servers.md) | One console, many servers |
 | [017](017-sutras-are-yaml.md) | Sutras are YAML, through and through (supersedes 011) |
+| [018](018-signed-pack-registry.md) | Packs come from a signed, versioned registry |
 
 ADRs are amended, never rewritten.

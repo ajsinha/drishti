@@ -212,6 +212,9 @@ Work after 1.11.0, in [CHANGELOG.md](../CHANGELOG.md) under *Unreleased*.
 | API tokens and clients | Personal read-only API tokens, searches as CSV, a Python client, Excel through Power Query | [CLIENTS.md](CLIENTS.md) |
 | History and freshness | A field over business days, searches compared between two dates, freshness and `stale-after` per connector | [USER_GUIDE.md](USER_GUIDE.md) |
 | One console, many servers | `servers:` in the console; a session per server; picker, `/connect/<id>`, `?srv=` links; public `/public/about` (ADR-016) | [CONFIGURATION.md](CONFIGURATION.md), [adr/016](adr/016-one-console-many-servers.md) |
+| Derived kinds, notes, shared workspaces | Kinds computed from others (`derived`), notes on entities and fields, workspaces shared read-only | [PACKS.md](PACKS.md), [USER_GUIDE.md](USER_GUIDE.md) |
+| Reports, access log, plain words | Scheduled CSV reports, who-viewed-what, a deterministic phrase parser | [USER_GUIDE.md](USER_GUIDE.md), [USER_MANAGEMENT.md](USER_MANAGEMENT.md) |
+| Signed pack registry | Ed25519-signed, versioned packs installed and rolled back from Admin → Packs (ADR-018) | [PACKS.md](PACKS.md), [adr/018](adr/018-signed-pack-registry.md) |
 
 ## Known gaps
 
@@ -223,16 +226,10 @@ What is open today. None blocks normal use; each is a candidate for a future wav
 
 ## Roadmap
 
-Next, in this order:
-
-| Item | What |
-|---|---|
-| Derived kinds | Aggregate and derived kinds declared in packs (sums, groupings over other kinds) |
-| Annotations and shared workspaces | Notes on entities and fields; workspaces shared with a team |
-| Scheduled reports | A saved search delivered as CSV to a folder or a webhook on a schedule (email once SMTP is configured) |
-| Who viewed what | An audit of views and searches, for exclusive servers |
-| Phrase command bar | Plain phrases ("trades with Acme over 5m") parsed to a query, the query shown before it runs (no external AI) |
-| Pack registry | Signed, versioned packs fetched from a registry |
+Every item planned after 1.11 is built (see *Unreleased* in the changelog): field history, freshness, many servers,
+derived kinds, notes and shared workspaces, scheduled reports, the access log, plain-word search and the signed pack
+registry. Candidates next: email delivery for reports (SMTP), several console processes behind one load balancer
+without sticky sessions, and per-field history charts on derived kinds over long ranges (a summary table).
 
 ## Risks
 

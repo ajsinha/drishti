@@ -183,6 +183,8 @@ def test_packs_page_loads_and_unloads(client, backend):
             return [{"name": "trading", "title": "Trading", "description": "", "version": "1", "loaded": True, "added": True, "enabled": True,
                      "extends": [], "requiredBy": [], "kinds": ["trade"], "connectors": [], "mnemonics": ["TRD"]},
                     {"name": "genomics", "title": "Genomics", "description": "", "version": "1", "loaded": False, "enabled": False}]
+        if path == "/registry":
+            return {"url": "", "configured": False, "packs": []}
         return {"name": path.split("/")[2], "added": [], "restarting": True, "note": "The server restarts in place now."}
     backend.admin = admin
     page = client.get("/admin/packs").text
@@ -213,3 +215,32 @@ def test_the_access_log_page(client, backend):
     assert "Who looked at what" in page and "IRS-48213" in page and "TRD where mtm &lt; 0" in page and "2026-09-29" in page
     assert calls[0] == ("/access", {"kind": "trade", "id": "IRS-48213", "from": "2026-09-30", "limit": 200})
     assert "Viewed by" in client.get("/v/trade/IRS-48213").text
+
+
+
+def test_the_registry_on_the_packs_page(client, backend):
+    calls = []
+
+    async def admin(method, path, ident, body=None, **params):
+        calls.append((method, path))
+        if path == "/registry":
+            return {"url": "https://packs.example/registry", "configured": True, "packs": [
+                {"name": "widgets", "version": "1.1.0", "title": "Widgets", "description": "", "requires": [], "publisher": "acme",
+                 "trusted": True, "installedVersion": "1.0.0", "loadedVersion": "1.0.0"},
+                {"name": "widgets", "version": "1.0.0", "title": "Widgets", "description": "", "requires": [], "publisher": "acme",
+                 "trusted": True, "installedVersion": "1.0.0", "loadedVersion": "1.0.0"},
+                {"name": "rogue", "version": "9.9.9", "title": "Rogue", "description": "", "requires": [], "publisher": "nobody",
+                 "trusted": False, "installedVersion": None, "loadedVersion": None}]}
+        if path.endswith("/install"):
+            return {"installed": "1.1.0", "replaced": "1.0.0", "restarting": False, "note": "Saved; it takes effect when the server next starts."}
+        return []
+    original = backend.admin
+    backend.admin = admin
+    try:
+        page = client.get("/admin/packs").text
+        out = client.post("/admin/api/registry/widgets/1.1.0/install").json()
+    finally:
+        backend.admin = original
+    assert "From the registry" in page and "packs.example" in page and "Install this version" in page and "Roll back" in page
+    assert "not trusted" in page and page.count('data-registry="install"') == 1        # only the trusted, not-installed version
+    assert out["replaced"] == "1.0.0" and ("POST", "/registry/widgets/1.1.0/install") in calls

@@ -688,6 +688,64 @@ generated pack, in its generator). An administrator can also define new roles th
 the dialog's *Add every kind of a pack* buttons fill in a pack's kinds in one click
 ([USER_GUIDE.md](USER_GUIDE.md#admin--roles-what-a-role-may-do)).
 
+## A signed pack registry: publishing and installing
+
+Packs can be published to a **registry** and installed from Admin → Packs, with a version history and a rollback.
+Every archive is signed; a server installs only what a publisher it trusts signed (ADR-018).
+
+**1. Make a signing key (once per publisher).**
+
+```bash
+python3 tools/packreg/packreg.py keygen --out ~/.drishti/acme
+```
+
+You should see the private key's file (`~/.drishti/acme.pem`, keep it secret) and the public key, a line like
+`MCowBQYDK2VwAyEAgL7g…`.
+
+**2. Publish a pack.** The registry is a folder (put it on a web server, or a shared drive):
+
+```bash
+python3 tools/packreg/packreg.py publish packs/trading --registry /srv/drishti-registry \
+    --key ~/.drishti/acme.pem --publisher acme
+```
+
+You should see `published trading 1.0.0 (… bytes, sha256 …) signed by acme`. The folder now has
+`trading-1.0.0.zip` and `index.json`. Publishing the same folder again makes the same archive, byte for byte. Bump
+`version:` in `pack.yaml` for each release; old versions stay in the registry.
+
+**3. Trust the publisher on a server**, and point it at the registry:
+
+```yaml
+drishti:
+  packs:
+    registry:
+      url: https://packs.bank.example/drishti/     # or a folder: /srv/drishti-registry
+      trusted-keys:
+        acme: MCowBQYDK2VwAyEAgL7gT+jpnB5N0yEJH8tUzAdrHC0gkN7EfmtNZPB8lHs=
+```
+
+**4. Install.** Admin → Packs shows **From the registry**: every pack version, its publisher (*trusted* or *not
+trusted*), and what is installed and loaded here. **Install** downloads the archive and checks its SHA-256, its
+signature, that its files stay inside the pack, and that its `pack.yaml` names the same pack and version. Only then
+is it unpacked into `data/packs/installed/<name>/` and loaded (the server restarts in place). Installing another
+version upgrades; the replaced version is kept and **Roll back** puts it back.
+
+Installed packs are looked for before the shipped ones (`drishti.packs.dir`), so an installed `trading` 1.1.0
+replaces the shipped `trading`. Check a registry from the command line:
+
+```bash
+python3 tools/packreg/packreg.py verify --registry /srv/drishti-registry --publisher acme --public-key MCowBQYDK2Vw…
+```
+
+| Refused because | Message (Admin → Packs) |
+|---|---|
+| the publisher's key is not in `trusted-keys` | `refused to install 'x': its publisher 'y' is not trusted on this server` |
+| the archive changed after it was indexed | `… its SHA-256 is …, the index says …` |
+| it was signed with another key | `… its signature does not verify with y's key` |
+| a file would land outside the pack (`../`) | `… it has a file outside the pack: …` |
+| `pack.yaml` names another pack or version | `… its pack.yaml says …, the index says …` |
+| the registry is plain `http:` | `plain http registries are refused` |
+
 ## Loading a pack while the server runs
 
 Admin → Packs → **Load** brings in a pack that is on disk but not loaded, without anyone touching the machine:

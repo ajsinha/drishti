@@ -201,6 +201,13 @@ drishti:
     dir: ${DRISHTI_PACKS_DIR:./packs}
     # Packs loaded from Admin → Packs are listed here (drishti.packs.added) and read at every start; see spring.config.import.
     overlay: ${DRISHTI_PACKS_OVERLAY:./data/packs/added.yaml}
+    # Packs installed from a signed registry (Admin → Packs → From the registry); looked in before dir, so they win.
+    installed-dir: ${DRISHTI_PACKS_INSTALLED:./data/packs/installed}
+    registry:
+      url: ${DRISHTI_PACK_REGISTRY:}         # a folder, file: or https: URL with index.json; empty: no registry
+      trusted-keys: {}                       # publisher -> Ed25519 public key (tools/packreg keygen prints it)
+      max-archive-mb: 50
+      max-unpacked-mb: 200
     enabled: ${DRISHTI_PACKS:finance}
     # Packs new users get until an admin says otherwise (empty: every installed pack).
     default-for-users: ${DRISHTI_DEFAULT_PACKS:}

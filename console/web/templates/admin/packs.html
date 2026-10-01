@@ -52,6 +52,30 @@
     {% endfor %}
     </tbody>
   </table></div>
+  {% if registry and registry.configured %}
+  <h2 class="ws-h" id="registry">From the registry</h2>
+  <p class="text-muted-d">Packs offered by <span class="mono">{{ registry.url }}</span>. Each archive is checked before anything changes:
+    its SHA-256, its Ed25519 signature by a publisher this server trusts, that its files stay inside the pack, and that its
+    <span class="mono">pack.yaml</span> names the same pack and version. The version it replaces is kept for <b>Roll back</b>.</p>
+  {% if registry.error %}<p class="pnl-err" role="alert">The registry cannot be read: {{ registry.error }}</p>{% endif %}
+  <div class="tbl-wrap"><table class="tbl adm-tbl" data-plain>
+    <thead><tr><th>Pack</th><th>Version</th><th>Publisher</th><th>Here</th><th></th></tr></thead>
+    <tbody>{% for r in registry.packs %}
+      <tr data-pack="{{ r.name }}" data-version="{{ r.version }}">
+        <td><b>{{ r.title or r.name }}</b> <span class="mono text-muted-d">{{ r.name }}</span>{% if r.description %}<div class="cmp-path">{{ r.description }}</div>{% endif %}
+          {% if r.requires %}<div class="cmp-path">needs {{ r.requires | join(', ') }}</div>{% endif %}</td>
+        <td class="mono">{{ r.version }}</td>
+        <td>{{ r.publisher }} {% if r.trusted %}<span class="st st-ok" title="Its key is in drishti.packs.registry.trusted-keys">trusted</span>
+          {% else %}<span class="st st-warn" title="Not in drishti.packs.registry.trusted-keys: it cannot be installed">not trusted</span>{% endif %}</td>
+        <td class="mono">{% if r.installedVersion %}installed {{ r.installedVersion }}{% endif %}{% if r.loadedVersion %}<div class="cmp-path">loaded {{ r.loadedVersion }}</div>{% endif %}</td>
+        <td class="adm-actions">
+          {% if r.installedVersion == r.version %}<span class="text-muted-d">this version</span>
+            <button type="button" class="fk" data-registry="rollback" title="Go back to the version installed before this one">Roll back</button>
+          {% elif r.trusted %}<button type="button" class="fk" data-registry="install">{{ 'Install this version' if r.installedVersion else 'Install' }}</button>{% endif %}</td>
+      </tr>
+    {% else %}<tr><td colspan="5" class="text-muted-d">The registry offers no packs.</td></tr>{% endfor %}</tbody>
+  </table></div>
+  {% endif %}
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}

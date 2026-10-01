@@ -101,13 +101,41 @@ public class PackAdminController {
         return change(added, "pack-unloaded", name, p);
     }
 
+    /**
+     * After a loaded pack's files changed (a registry upgrade or rollback): the same check as at start, then a restart
+     * in place; {@code undo} puts the files back if the check fails or the server cannot start with them.
+     */
+    public Map<String, Object> reload(String action, String name, Principal p, Runnable undo) {
+        java.util.LinkedHashSet<String> names = new java.util.LinkedHashSet<>(java.util.Arrays.stream(
+                env.getProperty("drishti.packs.enabled", "finance").split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList());
+        names.addAll(overlay.added());
+        try {
+            com.ash.drishti.packs.PackLoader loader = new com.ash.drishti.packs.PackLoader();
+            loader.properties(loader.load(com.ash.drishti.packs.PackLoader.dirs(dir.toString(),
+                    env.getProperty("drishti.packs.installed-dir", "./data/packs/installed")), List.copyOf(names)));
+        } catch (RuntimeException e) {
+            undo.run();
+            throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.BAD_REQUEST, "cannot use '" + name + "': " + e.getMessage());
+        }
+        audit.record(p.user(), action, name, "");
+        boolean restarting = com.ash.drishti.server.Restarter.available();
+        com.ash.drishti.server.Restarter.request(action + " " + name + " by " + p.user(), 750, undo);
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("name", name);
+        out.put("restarting", restarting);
+        out.put("note", restarting ? "The server restarts in place now; live views reconnect by themselves."
+                : "Saved; it takes effect when the server next starts.");
+        return out;
+    }
+
     private Map<String, Object> change(List<String> added, String action, String name, Principal p) {
         java.util.LinkedHashSet<String> names = new java.util.LinkedHashSet<>(java.util.Arrays.stream(
                 env.getProperty("drishti.packs.enabled", "finance").split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList());
         names.addAll(added);
         try {                                                   // the same check the server does at start, before anything changes
             com.ash.drishti.packs.PackLoader loader = new com.ash.drishti.packs.PackLoader();
-            loader.properties(loader.load(dir.toAbsolutePath().normalize(), List.copyOf(names)));
+            loader.properties(loader.load(com.ash.drishti.packs.PackLoader.dirs(dir.toString(),
+                    env.getProperty("drishti.packs.installed-dir", "./data/packs/installed")), List.copyOf(names)));
         } catch (RuntimeException e) {
             throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.BAD_REQUEST,
                     "cannot " + (action.equals("pack-loaded") ? "load" : "unload") + " '" + name + "': " + e.getMessage());
@@ -163,12 +191,26 @@ public class PackAdminController {
         return Map.of("name", name, "enabled", access.isEnabled(name), "enabledPacks", access.enabled());
     }
 
+    /** Packs on disk: installed from a registry first (they win), then the shipped ones. */
     private List<Map<String, Object>> onDisk() {
         List<Map<String, Object>> out = new ArrayList<>();
-        if (!Files.isDirectory(dir)) {
+        Set<String> seen = new java.util.HashSet<>();
+        for (Path d : com.ash.drishti.packs.PackLoader.dirs(dir.toString(), env.getProperty("drishti.packs.installed-dir", "./data/packs/installed"))) {
+            for (Map<String, Object> m : onDisk(d)) {
+                if (seen.add((String) m.get("name"))) {
+                    out.add(m);
+                }
+            }
+        }
+        return out;
+    }
+
+    private List<Map<String, Object>> onDisk(Path folder) {
+        List<Map<String, Object>> out = new ArrayList<>();
+        if (!Files.isDirectory(folder)) {
             return out;
         }
-        try (Stream<Path> s = Files.list(dir)) {
+        try (Stream<Path> s = Files.list(folder)) {
             s.filter(d -> Files.isRegularFile(d.resolve("pack.yaml"))).sorted().forEach(d -> {
                 try (InputStream in = Files.newInputStream(d.resolve("pack.yaml"))) {
                     Map<String, Object> y = map(new Yaml().load(in));

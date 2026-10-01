@@ -47,17 +47,35 @@ public final class PackLoader {
      * loads after it). A missing pack or a cycle stops the server with a clear message.
      */
     public List<Pack> load(Path dir, List<String> enabled) {
+        return load(List.of(dir), enabled);
+    }
+
+    /**
+     * As {@link #load(Path, List)}, looking for each pack in the folders in order: the first that has
+     * {@code <name>/pack.yaml} wins (packs installed from a registry come before the shipped ones).
+     */
+    public List<Pack> load(List<Path> dirs, List<String> enabled) {
         Map<String, Pack> done = new LinkedHashMap<>();
         for (String name : enabled) {
             String n = name.trim();
             if (!n.isEmpty()) {
-                visit(dir, n, done, new java.util.ArrayDeque<>());
+                visit(dirs, n, done, new java.util.ArrayDeque<>());
             }
         }
         return new ArrayList<>(done.values());
     }
 
-    private void visit(Path dir, String name, Map<String, Pack> done, java.util.Deque<String> path) {
+    /** The folders packs are looked for in: installed ones ({@code drishti.packs.installed-dir}) first, if it exists. */
+    public static List<Path> dirs(String packsDir, String installedDir) {
+        List<Path> out = new ArrayList<>();
+        if (installedDir != null && !installedDir.isBlank() && Files.isDirectory(Path.of(installedDir))) {
+            out.add(Path.of(installedDir).toAbsolutePath().normalize());
+        }
+        out.add(Path.of(packsDir).toAbsolutePath().normalize());
+        return out;
+    }
+
+    private void visit(List<Path> dirs, String name, Map<String, Pack> done, java.util.Deque<String> path) {
         if (done.containsKey(name)) {
             return;
         }
@@ -65,9 +83,12 @@ public final class PackLoader {
             throw new IllegalStateException("packs require each other in a cycle: " + String.join(" -> ", path) + " -> " + name);
         }
         path.addLast(name);
-        Pack p = read(dir, name, path.size() > 1 ? path.toArray(new String[0])[path.size() - 2] : null);
+        String requiredBy = path.size() > 1 ? path.toArray(new String[0])[path.size() - 2] : null;
+        Path dir = dirs.stream().filter(d -> Files.isRegularFile(d.resolve(name).normalize().resolve("pack.yaml"))).findFirst()
+                .orElse(dirs.get(dirs.size() - 1));
+        Pack p = read(dir, name, requiredBy);
         for (String r : p.parents()) {
-            visit(dir, r.trim(), done, path);
+            visit(dirs, r.trim(), done, path);
         }
         path.removeLast();
         done.put(name, p);

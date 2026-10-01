@@ -101,7 +101,11 @@ async def packs(request: Request):
         rows = await request.app.state.backend.admin("GET", "/packs", me)
     except BackendError as e:
         return render(request, "admin/forbidden.html", status_code=e.status, error=e)
-    return render(request, "admin/packs.html", packs=rows)
+    try:                                        # the signed registry, when one is configured
+        registry = await request.app.state.backend.admin("GET", "/registry", me)
+    except BackendError as e:
+        registry = {"configured": True, "error": e.detail, "packs": []}
+    return render(request, "admin/packs.html", packs=rows, registry=registry)
 
 
 @router.post("/api/packs/{name}")
@@ -112,6 +116,27 @@ async def switch_pack(request: Request, name: str):
     except BackendError as e:
         return _problem(e)
     request.app.state.packs.forget_all()                # every user's pack switcher changes
+    return out
+
+
+@router.post("/api/registry/{name}/{version}/install")
+async def install_pack(request: Request, name: str, version: str):
+    """Installs a pack version from the signed registry (the server verifies it), then loads or reloads it."""
+    try:
+        out = await request.app.state.backend.admin("POST", f"/registry/{quote(name)}/{quote(version)}/install", ident(request))
+    except BackendError as e:
+        return _problem(e)
+    request.app.state.packs.forget_all()
+    return out
+
+
+@router.post("/api/registry/{name}/rollback")
+async def rollback_pack(request: Request, name: str):
+    try:
+        out = await request.app.state.backend.admin("POST", f"/registry/{quote(name)}/rollback", ident(request))
+    except BackendError as e:
+        return _problem(e)
+    request.app.state.packs.forget_all()
     return out
 
 

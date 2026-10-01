@@ -307,6 +307,18 @@ The pack loader also writes some keys for the rest of the server (`drishti.packs
 `drishti.rachana.pack-formats-files`, `drishti.inference.pack-semantics-files`,
 `drishti.sources.plugins.demo.settings.dirs`). Do not set them yourself. See [PACKS.md](PACKS.md).
 
+### `drishti.packs.registry` — the signed pack registry
+
+| Key | Default | Meaning |
+|---|---|---|
+| `drishti.packs.installed-dir` | `./data/packs/installed` (`DRISHTI_PACKS_INSTALLED`) | Where registry installs go; packs here win over `drishti.packs.dir`. Replaced versions are kept under `.previous/`. |
+| `url` | empty (`DRISHTI_PACK_REGISTRY`) | A folder, `file:` or `https:` URL holding `index.json` and the archives. Empty: no registry. |
+| `trusted-keys.<publisher>` | none | The publisher's Ed25519 public key (base64 DER, as `tools/packreg/packreg.py keygen` prints it). Packs signed by anyone else are refused. |
+| `max-archive-mb` / `max-unpacked-mb` | `50` / `200` | Size limits for an archive and for what it unpacks to. |
+| `allow-http` | `false` | Accept plain `http:` registries. For tests only. |
+
+See [PACKS.md](PACKS.md#a-signed-pack-registry-publishing-and-installing).
+
 ### `drishti.rachana` — Sutras
 
 | Key | Default | Meaning |
