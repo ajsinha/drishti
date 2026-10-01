@@ -106,7 +106,14 @@ connectors:                     # history for the business-date picker (build it
           mtm: $.mtm
 routes:
   book-pnl: book-totals
-roles:                          # calc: may use Calc, Python in the browser (docs/guides/PYTHON_CALC.md)
+pivot:                          # a Pivot tab on search results and pick lists of these kinds (USER_GUIDE.md, The Pivot tab)
+  trade:
+    fields: [book, desk, productType, currency, maturityTenor, counterparty.name, nettingSet, notional, mtm, risk.dv01]
+    rows: [book]
+    columns: [currency]
+    values: [{ field: mtm, agg: sum }]
+    filters: [productType]
+roles:                         # calc: may use Calc, Python in the browser (docs/guides/PYTHON_CALC.md)
   trader: { kinds: [trade, curve, fx-spot, index, book, contract-spec, clearing-account, counterparty, fixing, book-pnl], calc: true }
   risk:   { kinds: ["*"], raw: true, calc: true }
 alerts:                         # suggested alert rules, offered per kind

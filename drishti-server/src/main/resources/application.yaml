@@ -158,6 +158,15 @@ drishti:
     max-snippet-chars: 50000         # a saved snippet's code (each user keeps at most 50 snippets)
   layouts:                           # layout mode: each user's arrangement of a Sutra's panels (USER_GUIDE.md, Layout mode)
     enabled: ${DRISHTI_LAYOUTS_ENABLED:true}   # also needs a role with layout (every role but viewer, unless configured)
+  pivot:                             # the Pivot tab (USER_GUIDE.md, The Pivot tab): only where a Sutra (pivot: on a table or
+                                     # ladder) or a pack (pivot: beside a kind's columns:) opts in
+    enabled: ${DRISHTI_PIVOT_ENABLED:true}     # false hides every Pivot tab, whatever Sutras and packs say
+    max-records: 50000               # rows of a panel sent to the browser to pivot (the table's limit does not apply)
+    max-row-keys: 2000               # innermost row groups shown (further ones still count in the totals)
+    max-column-keys: 200             # column groups shown
+    document-scan: 20000             # entities a search pivot reads as documents, when asked to, for fields that are not columns
+    drill-page: 200                  # underlying rows per drill-down page at most
+    budget: 20s                      # how long a search pivot waits for a day's columns or documents
   identity:
     # Users, roles defined in Admin → Roles, saved workspaces/monitors/settings and the audit trail live in one database
     # (JPA). SQLite by default: a single file, nothing to install. For PostgreSQL:

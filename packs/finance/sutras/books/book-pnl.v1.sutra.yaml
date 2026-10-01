@@ -34,6 +34,7 @@ panels:
     key: F2
     rows: $.rows
     totalLabel: Total
+    pivot: { rows: [product], columns: [currency], values: [{ field: mtm, agg: sum }, { field: trade, agg: count }] }
     columns:
       - { label: Trade, bind: "@.trade", link: true }
       - { label: Product, bind: "@.product" }

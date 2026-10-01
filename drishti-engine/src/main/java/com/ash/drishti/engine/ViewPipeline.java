@@ -171,6 +171,26 @@ public final class ViewPipeline {
         return build(doc, t0, System.nanoTime(), matcher.match(doc.ref().kind(), doc.data()), true, asOf);
     }
 
+    /**
+     * The rows of one table or ladder of {@code ref}'s view, as raw values of its pivot's fields (the Pivot tab): the same
+     * document, Sutra and business date as the view, every row up to {@code drishti.pivot.max-records}.
+     *
+     * @throws DrishtiException {@code DRS-1001} when the view has no such panel or the panel offers no pivot
+     */
+    public com.ash.drishti.engine.bind.PivotBinder.Records records(EntityRef ref, AsOf asOf, String panelId) {
+        EntityDocument doc = fetch(ref, asOf);
+        Optional<Sutra> sutra = matcher.match(ref.kind(), doc.data());
+        Fingerprint fp = fingerprints.get(new GenKey(ref, doc.provenance().generation(), doc.provenance().businessDate()),
+                k -> fingerprinter.fingerprint(doc.data()));
+        EffectiveLayout layout = layouts.get(new LayoutKey(sutra.<Object>map(SutraIdentity::new).orElse("-"), ref.kind(), fp),
+                k -> merger.merge(sutra, doc.data(), ref.kind()));
+        Panel panel = layout.sutra().panels().stream().filter(p -> p.id().equals(panelId) && p.pivot().isPresent()).findFirst()
+                .orElseThrow(() -> new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "the view of " + ref.id() + " has no panel '" + panelId
+                        + "' that offers a pivot"));
+        BindContext ctx = new BindContext(doc, layout, fp, EvalContext.of(doc.data(), formats), List.of(), Map.of(), Set.of());
+        return binder.records(panel, ctx);
+    }
+
     /** Builds a view from a document already in hand (live updates re-enter here; live is always current). */
     public ViewModel build(EntityDocument doc, long t0, long tFetched) {
         return build(doc, t0, tFetched, matcher.match(doc.ref().kind(), doc.data()), true, AsOf.LATEST);

@@ -41,11 +41,14 @@ public class SearchController {
     private final StructuredSearch search;
     private final Entitlements entitlements;
     private final Mnemonics mnemonics;
+    private final com.ash.drishti.engine.search.SearchPivot pivot;
 
-    public SearchController(StructuredSearch search, Entitlements entitlements, Mnemonics mnemonics) {
+    public SearchController(StructuredSearch search, Entitlements entitlements, Mnemonics mnemonics,
+            com.ash.drishti.engine.search.SearchPivot pivot) {
         this.search = search;
         this.entitlements = entitlements;
         this.mnemonics = mnemonics;
+        this.pivot = pivot;
     }
 
     @GetMapping
@@ -70,7 +73,18 @@ public class SearchController {
         out.put("matched", r.matched());
         out.put("partial", r.partial());
         out.put("elapsedMs", r.elapsedMs());
+        out.put("pivot", offered(r.kind()));               // the Pivot tab, when the kind's pack opts in (null otherwise)
         return out;
+    }
+
+    /** What the Pivot tab of this kind's results offers; null when its pack does not opt in (or says what cannot be read). */
+    private Map<String, Object> offered(String kind) {
+        try {
+            return pivot.describe(kind).orElse(null);
+        } catch (IllegalArgumentException e) {
+            org.slf4j.LoggerFactory.getLogger(SearchController.class).warn("no Pivot tab for {}: {}", kind, e.getMessage());
+            return null;
+        }
     }
 
     /**

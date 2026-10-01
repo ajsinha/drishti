@@ -34,13 +34,19 @@ public sealed interface PanelData {
      * @param rows the rows
      * @param total total row, or null
      * @param more "N more trades", or null
+     * @param search the panel offers a filter box in its heading (Sutra option {@code search: false} turns it off)
+     * @param pivot the Pivot tab the Sutra opts into ({@code pivot:}): its fields and the arrangement it opens with; null without one
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    /** {@code search}: the panel offers a filter box in its heading (Sutra option {@code search: false} turns it off). */
-    record Table(List<String> columns, List<Boolean> numeric, List<Row> rows, Row total, String more, boolean search) implements PanelData {
+    record Table(List<String> columns, List<Boolean> numeric, List<Row> rows, Row total, String more, boolean search,
+            java.util.Map<String, Object> pivot) implements PanelData {
 
         public Table(List<String> columns, List<Boolean> numeric, List<Row> rows, Row total, String more) {
-            this(columns, numeric, rows, total, more, true);
+            this(columns, numeric, rows, total, more, true, null);
+        }
+
+        public Table(List<String> columns, List<Boolean> numeric, List<Row> rows, Row total, String more, boolean search) {
+            this(columns, numeric, rows, total, more, search, null);
         }
     }
 
