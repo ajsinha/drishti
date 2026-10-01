@@ -53,6 +53,7 @@
     <module>plugins/drishti-plugin-jdbc</module>
     <module>plugins/drishti-plugin-delta</module>
     <module>plugins/drishti-plugin-aerospike</module>
+    <module>plugins/drishti-plugin-iceberg</module>
     <module>plugins/drishti-plugin-feeds</module>
     <module>plugins/drishti-plugin-kafka</module>
     <module>plugins/drishti-plugin-activemq</module>
@@ -84,6 +85,9 @@
     <awssdk.version>2.55.9</awssdk.version>
     <rocksdb.version>11.0.4</rocksdb.version>
     <aerospike.version>10.5.0</aerospike.version>
+    <!-- 1.10.x reads and writes Parquet 1.16, the version Delta Kernel uses: one Parquet on the server's classpath -->
+    <iceberg.version>1.10.1</iceberg.version>
+    <parquet.version>1.16.0</parquet.version>
   </properties>
 
   <dependencyManagement>
@@ -100,6 +104,7 @@
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-file</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-delta</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-aerospike</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-iceberg</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-feeds</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-kafka</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-rest</artifactId><version>${project.version}</version></dependency>
