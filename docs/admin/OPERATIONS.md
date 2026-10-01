@@ -57,7 +57,7 @@ Drishti is two processes. Users only ever talk to the console; the console talks
 
 | Process | Default port | Health check | Metrics | Started by |
 |---|---|---|---|---|
-| `drishti-server` (Spring Boot, OpenJDK 21) | 18480 | `/actuator/health/liveness`, `/actuator/health/readiness` | `/actuator/prometheus` | `java -jar drishti-server-<version>-exec.jar` |
+| `drishti-server` (Spring Boot, OpenJDK 21 or 25) | 18480 | `/actuator/health/liveness`, `/actuator/health/readiness` | `/actuator/prometheus` | `java -jar drishti-server-<version>-exec.jar` |
 | `console` (FastAPI on uvicorn, Python) | 17480 | `/healthz` | none | `python console/run_drishti_web.py` |
 
 Things worth knowing before you plan an installation:

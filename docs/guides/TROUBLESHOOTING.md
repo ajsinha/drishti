@@ -90,10 +90,11 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
 
 ## Building and starting
 
-### The build fails with "Drishti builds and runs on OpenJDK 21"
+### The build fails with "Drishti builds on OpenJDK 21 or 25"
 
-- **Check:** `./mvnw -v` prints the Java version Maven uses.
-- **Fix:** point Maven at JDK 21 and build again:
+- **Check:** `./mvnw -v` prints the Java version Maven uses: it must be 21 or 25 (a JDK, not only a JRE: the build
+  needs `javac`).
+- **Fix:** point Maven at JDK 21 (or 25) and build again:
 
   ```bash
   export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
@@ -104,8 +105,8 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
 
 - **Cause:** `java` on your `PATH` is older than 21.
 - **Check:** `java -version`.
-- **Fix:** run the jar with JDK 21: `/usr/lib/jvm/java-21-openjdk-amd64/bin/java -jar …`, or put that JDK first on
-  your `PATH`.
+- **Fix:** run the jar with Java 21 or later (21 and 25 are tested): `/usr/lib/jvm/java-21-openjdk-amd64/bin/java -jar …`,
+  or put that JDK first on your `PATH`.
 
 ### "Web server failed to start. Port 18480 was already in use."
 

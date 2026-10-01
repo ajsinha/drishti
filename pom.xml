@@ -155,7 +155,7 @@
           <execution>
             <id>enforce-java</id>
             <goals><goal>enforce</goal></goals>
-            <configuration><rules><requireJavaVersion><version>[21,22)</version><message>Drishti builds and runs on OpenJDK 21.</message></requireJavaVersion></rules></configuration>
+            <configuration><rules><requireJavaVersion><version>[21,22),[25,26)</version><message>Drishti builds on OpenJDK 21 or 25 (bytecode for 21; runs on 21 and later).</message></requireJavaVersion></rules></configuration>
           </execution>
         </executions>
       </plugin>

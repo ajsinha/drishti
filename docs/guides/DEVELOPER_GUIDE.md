@@ -137,7 +137,7 @@ drishti-benchmarks                (inference)
 
 | Tool | Version | Notes |
 |---|---|---|
-| OpenJDK | 21 | The enforcer rule in `pom.xml` (`requireJavaVersion [21,22)`) stops any other version with `Drishti builds and runs on OpenJDK 21.` `.java-version` says `21`. |
+| OpenJDK | 21 or 25 | The enforcer rule in `pom.xml` (`requireJavaVersion [21,22),[25,26)`) stops any other version with `Drishti builds on OpenJDK 21 or 25 (bytecode for 21; runs on 21 and later).` The bytecode targets 21 (`maven.compiler.release`), so a jar built on 25 runs on 21. `.java-version` says `21`. Every test passes built and run on either. |
 | Python | 3.11 or newer | The console and the tools. CI uses 3.13. |
 | uv | any recent | Creates the console's environment, and runs the lake tools with `uv run --with …` so nothing is installed globally. |
 | Docker | optional | Only for the Testcontainers tests (PostgreSQL, Aerospike, ActiveMQ, RabbitMQ, MinIO) and `deploy/compose.yaml`. |

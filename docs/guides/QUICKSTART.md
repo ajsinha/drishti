@@ -29,8 +29,8 @@ In these docs, `<GO>` means "press Enter".
 | uv | any recent | `uv --version` | `uv 0.…` |
 | git | any | `git --version` | `git version …` |
 
-You do not need Maven: the repository has its own (`./mvnw`). Point `JAVA_HOME` at Java 21 in **every**
-terminal you use (this is the Ubuntu path; adjust it for your system):
+You do not need Maven: the repository has its own (`./mvnw`). Point `JAVA_HOME` at Java 21 (or 25) in
+**every** terminal you use (this is the Ubuntu path for 21; adjust it for your system):
 
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
@@ -51,7 +51,7 @@ ls drishti-server/target/*-exec.jar
 You should see `drishti-server/target/drishti-server-1.12.0-exec.jar`. The first build downloads its
 libraries and takes a few minutes.
 
-If the build stops with `Drishti builds and runs on OpenJDK 21.`, `JAVA_HOME` is not Java 21.
+If the build stops with `Drishti builds on OpenJDK 21 or 25 (bytecode for 21; runs on 21 and later).`, `JAVA_HOME` is not Java 21 or 25.
 
 ## 3. Set up the console
 
