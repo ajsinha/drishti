@@ -103,11 +103,6 @@ body {
 :root[data-theme="crimson-dark"] { --g-page: 36%; --g-bar: 42%; --g-head: 32%; --g-pnl: 26%; }
 :root[data-theme="wallstreet"] { --g-page: 22%; --g-bar: 28%; --g-head: 22%; --g-pnl: 18%; }
 
-/* the command line's row: the same gradient as the bar, a shade deeper */
-.tbar-row2 {
-  background: linear-gradient(90deg, color-mix(in srgb, var(--d-grad-from) calc(var(--g-bar, 22%) * .6), var(--d-bg-2)), var(--d-bg-2) 50%,
-    color-mix(in srgb, var(--d-grad-to) calc(var(--g-bar, 22%) * .6), var(--d-bg-2)));
-}
 
 /* Links inside tables are underlined (dotted), so an id that opens its entity reads as a link in every theme, also
    where the theme's link colour sits close to its text colour (crimson). */

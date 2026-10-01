@@ -18,9 +18,9 @@
  * and quiet round icon tools. Loaded last; colours come from the theme tokens and its two gradient colours.
  */
 .tbar { display: flex; flex-direction: column; align-items: stretch; gap: 0; padding: 0; }
-.tbar-row1 { display: flex; align-items: center; gap: .9rem; padding: .35rem 1rem; min-height: 52px; }
-.tbar-row2 { display: flex; align-items: center; gap: .9rem; padding: .4rem 1rem .5rem;
-  border-top: 1px solid color-mix(in srgb, var(--d-border) 55%, transparent); }   /* graded in gradients.css */
+.tbar-row1 { display: flex; align-items: center; gap: .9rem; padding: .4rem 1rem; min-height: 56px; }
+/* beside the brand: the command line (it takes the free space), the business date and Live */
+.tbar-find { display: flex; align-items: center; gap: .6rem; flex: 1 1 auto; min-width: 0; }
 
 /* brand: mark, name and tagline on two lines */
 .tbar-brand { gap: .55rem; flex: 0 0 auto; margin-right: .2rem; }
@@ -39,7 +39,7 @@
 .tbar-menu-btn.active { opacity: 1; color: var(--d-ink); }                 /* the underline marks it; the text stays readable */
 .tbar-menu-btn.active::after, .tbar-menu-btn.show::after { content: ""; position: absolute; left: .7rem; right: .7rem; bottom: -.4rem; height: 2px;
   border-radius: 2px; background: linear-gradient(90deg, var(--d-grad-from), var(--d-grad-to)); }
-@media (max-width: 720px) { .tbar-menu-l { display: none; } .tbar-menu-btn { padding: .5rem .55rem; font-size: 1rem; } }
+@media (max-width: 1280px) { .tbar-menu-l { display: none; } .tbar-menu-btn { padding: .5rem .55rem; font-size: 1rem; } }
 
 .mega-panel { border: 1px solid var(--d-border); border-radius: 0 0 14px 14px; padding: 1rem 1.1rem 1.1rem; margin-top: .4rem !important; z-index: 1200;
   background: var(--d-surface); box-shadow: 0 24px 48px -20px rgba(0, 0, 0, .55); border-top: 2px solid transparent;
@@ -66,7 +66,7 @@
 .mega-desc { display: block; font-size: .76rem; color: var(--d-muted); line-height: 1.35; }
 
 /* the command line: the widest thing in the bar */
-.tbar .cmd { flex: 1 1 auto; min-width: 240px; max-width: none; }
+.tbar .cmd { flex: 1 1 auto; min-width: 200px; max-width: 680px; }
 .tbar .cmd-box { display: flex; align-items: center; }
 .cmd-prompt { position: absolute; left: .7rem; color: var(--d-accent); font-weight: 700; pointer-events: none; }
 .tbar .cmd-input { padding-left: 1.6rem; border-radius: 999px; height: 36px; }
@@ -108,5 +108,13 @@
 .pack-d { display: block; font-size: .74rem; color: var(--d-muted); line-height: 1.3; }
 .pack-menu-f { display: flex; justify-content: flex-end; padding: .5rem .9rem .7rem; border-top: 1px solid var(--d-border); }
 
-/* narrow screens: the menus fold to icons; the date drops under the command line */
-@media (max-width: 720px) { .tbar-row2 { flex-wrap: wrap; } .tbar-row2 .cmd { flex: 1 1 100%; } }
+/* narrow screens: the command line and date move to a line of their own under the brand, menus and tools */
+@media (max-width: 1100px) {
+  .tbar-row1 { flex-wrap: wrap; row-gap: .4rem; }
+  .tbar-find { order: 10; flex: 1 1 100%; }
+  .tbar .cmd { max-width: none; }
+}
+
+/* The menus sit on the right of the bar, right of the command line, so each opens leftwards from its button's right
+   edge and stays on screen. */
+.tbar-menus .mega-panel { left: auto; right: 0; }

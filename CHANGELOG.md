@@ -16,6 +16,7 @@
 # Changelog
 
 ## Unreleased
+- **The top bar is one row again.** Beside the brand come the command line, the business date and Live. Then the Views, Build, Admin and Help menus, which open leftwards so they stay on screen and keep their labels down to 1280 px. Then the tools. Below 1100 px the command line moves to a line of its own.
 - **Fix: the active menu entry was hard to read** (accent text on an accent tint, such as *Terminal* in the Views menu on the terminal page). The page you are on now has bright text, a neutral highlight and an accent bar. The active menu button keeps its text colour and is marked by its underline.
 - **Every theme shows its gradient.**
   - **What was wrong:** each theme mixes its two gradient colours into the chrome, but at one fixed strength. On Parchment, Crimson, Crimson dark and Wall Street that was too faint to see.

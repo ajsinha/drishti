@@ -66,14 +66,17 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 
 ## The top bar
 
-Every page after the landing page has the same top bar, on two rows.
+Every page after the landing page has the same top bar, on one row.
 
 ```text
-Row 1:  ◉ Drishti   Views ▾  Build ▾  Admin ▾  Help ▾          ●  [bell]  [box 12]  [palette]  (A) Ash ▾
-Row 2:  > TRD T-10001, CPTY north, TRD productType=Revolver …  then <GO>        [2026-09-30]  ● Live
+◉ Drishti  > TRD T-10001, CPTY north …  [2026-09-30] ● Live   Views ▾  Build ▾  Admin ▾  Help ▾   ● [bell] [box 12] [palette] (A) Ash ▾
 ```
 
-**Row one, on the left:** the brand (click it to go back to `/`), then four menus. Each opens a wide panel
+**Beside the brand** (click it to go back to `/`) are the [command line](#the-command-line), which takes the
+free space, and the [business date](#business-dates-live-or-a-day-in-the-past) box with its **Live** button.
+Below 1100 pixels wide they move to a line of their own.
+
+**Then four menus.** Below 1280 pixels they show as icons only. Each opens a wide panel
 (a *mega menu*) in which every entry has an icon and one line saying what it does. The menu holding the page
 you are on is highlighted.
 
@@ -87,7 +90,7 @@ you are on is highlighted.
 | | Operations | *Packs*, *Health*, *Caches* |
 | **Help** | Learn | *Help centre* (`/help`, also `F1`), *Install and run*, *About* |
 
-**Row one, on the right:** round tools, from left to right.
+**On the right:** round tools, from left to right.
 
 | Tool | Looks like | What it does |
 |---|---|---|
@@ -96,9 +99,6 @@ you are on is highlighted.
 | Packs | a box with a number | Appears when you may use more than one pack. The number is how many you have switched on; hover to read their names ([Domain packs](#domain-packs-choosing-what-you-see)) |
 | Theme | a palette | Seven themes ([Themes](#themes)) |
 | You | a round avatar with your initial and name | A menu: your name, desk and roles, a clock in your time zone (`NY` by default), **My account**, **Settings**, and **Sign out** when sign-in is on |
-
-**Row two** is the [command line](#the-command-line), across the width of the screen, and the
-[business date](#business-dates-live-or-a-day-in-the-past) box with its **Live** button.
 
 Worked example: find the audit log without typing an address.
 
@@ -111,7 +111,7 @@ If you do not see **Admin**, your account has no admin role; ask an administrato
 
 ## The command line
 
-The command line is the box on the second row of the top bar. Press `/` anywhere to jump to it.
+The command line is the box beside the brand in the top bar. Press `/` anywhere to jump to it.
 
 ### The form of a command
 

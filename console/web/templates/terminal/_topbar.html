@@ -13,9 +13,9 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# The top bar, after MAYA's, on two rows. Row one: the brand, a few menus defined once as data and opened as mega-menu
-   panels, and quiet icon tools. Row two: the command line (the one thing used all day, so it gets the room) and the
-   business date.
+{# The top bar, after MAYA's, on one row: the brand; beside it the command line (the one thing used all day, so it
+   gets the room), the business date and Live; then a few menus defined once as data and opened as mega-menu panels;
+   then quiet icon tools.
    Each menu: (label, icon, [(column title, [(href, icon, label, description, match)])]). #}
 {% from "_macros/ui.html" import brand_mark %}
 {% set path = request.url.path %}
@@ -58,6 +58,42 @@
  <div class="tbar-row1">
   <a class="tbar-brand" href="/" aria-label="{{ PRODUCT }} home">{{ brand_mark("brand-mark") }}
     <span class="tbar-name"><span>{{ PRODUCT }}</span>{% if TAGLINE %}<small>{{ TAGLINE }}</small>{% endif %}</span></a>
+
+  <div class="tbar-find">
+  <form class="cmd" action="/go" method="get" role="search" autocomplete="off" data-command>
+    <label class="visually-hidden" for="cmdInput">Command</label>
+    <div class="cmd-box">
+      <span class="cmd-prompt mono" aria-hidden="true">&gt;</span>
+      <input id="cmdInput" name="q" class="cmd-input" type="text" spellcheck="false"
+             value="{{ command_text | default('') }}" placeholder="TRD T-10001, CPTY north, TRD productType=Revolver …  then <GO>"
+             role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="cmdList">
+      <ul id="cmdList" class="cmd-list" role="listbox" aria-label="Suggestions" hidden></ul>
+    </div>
+  </form>
+
+  {% set bd = business_date or {} %}
+  <form class="asof{% if asof != 'live' %} asof-past{% endif %}" action="/asof" method="get" data-asof
+        title="{% if asof == 'live' %}Live: the current business date ({{ bd.calendar or 'NY' }} calendar), streaming{% else %}A picked business date: a static snapshot{% endif %}">
+    <input type="hidden" name="next" value="{{ request.url.path }}">
+    <label for="asofDate" class="visually-hidden">Business date</label>
+    <input id="asofDate" class="asof-date mono" type="date" name="d" value="{{ bd.selected or (asof if asof != 'live' else bd.current) or '' }}"
+           {% if bd.earliest %}min="{{ bd.earliest }}"{% endif %} {% if bd.current %}max="{{ bd.current }}"{% endif %}
+           data-holidays="{{ (bd.holidays or []) | join(',') }}" data-current="{{ bd.current or '' }}">
+    <a href="/asof?d=live&amp;next={{ request.url.path | urlencode }}" class="asof-live{% if asof == 'live' %} on{% endif %}"
+       title="Back to live: today's business date, streaming" data-asof-live><span class="dot" aria-hidden="true"></span> Live</a>
+    {% if asof != 'live' %}
+    <label for="asofKnown" class="visually-hidden">Known at</label>
+    <span class="asof-known{% if known_at %} on{% endif %}" title="Time travel: show this date as it was known at a time ({{ bd.zone or 'America/New_York' }}). Blank for the latest.">
+      <button type="button" class="asof-known-btn" data-known-toggle aria-label="Known at: time travel"{% if known_at %} hidden{% endif %}><i class="bi bi-clock-history" aria-hidden="true"></i></button>
+      {% if known_at %}<i class="bi bi-clock-history" aria-hidden="true"></i>{% endif %}
+      <input id="asofKnown" class="asof-known-in mono" type="datetime-local" name="k" value="{{ known_local(known_at, bd.zone) }}" data-asof-known{% if not known_at %} hidden{% endif %}>
+      {% if known_at %}<a class="asof-known-x" href="/asof?d={{ asof }}&amp;k=&amp;next={{ request.url.path | urlencode }}" title="Latest knowledge" aria-label="Clear known at">×</a>{% endif %}
+    </span>
+    {% endif %}
+    <noscript><button type="submit" class="asof-go">Go</button></noscript>
+    {% if asof != 'live' and bd.selected and bd.selected != asof %}<span class="asof-note mono" title="Not a business day on the {{ bd.calendar }} calendar">↩ {{ asof }}</span>{% endif %}
+  </form>
+  </div>
 
   <nav class="tbar-menus" aria-label="Main">
   {% for label, icon, columns in MENU %}
@@ -126,40 +162,5 @@
       </div>
     </div>
   </div>
- </div>
- <div class="tbar-row2">
-  <form class="cmd" action="/go" method="get" role="search" autocomplete="off" data-command>
-    <label class="visually-hidden" for="cmdInput">Command</label>
-    <div class="cmd-box">
-      <span class="cmd-prompt mono" aria-hidden="true">&gt;</span>
-      <input id="cmdInput" name="q" class="cmd-input" type="text" spellcheck="false"
-             value="{{ command_text | default('') }}" placeholder="TRD T-10001, CPTY north, TRD productType=Revolver …  then <GO>"
-             role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="cmdList">
-      <ul id="cmdList" class="cmd-list" role="listbox" aria-label="Suggestions" hidden></ul>
-    </div>
-  </form>
-
-  {% set bd = business_date or {} %}
-  <form class="asof{% if asof != 'live' %} asof-past{% endif %}" action="/asof" method="get" data-asof
-        title="{% if asof == 'live' %}Live: the current business date ({{ bd.calendar or 'NY' }} calendar), streaming{% else %}A picked business date: a static snapshot{% endif %}">
-    <input type="hidden" name="next" value="{{ request.url.path }}">
-    <label for="asofDate" class="visually-hidden">Business date</label>
-    <input id="asofDate" class="asof-date mono" type="date" name="d" value="{{ bd.selected or (asof if asof != 'live' else bd.current) or '' }}"
-           {% if bd.earliest %}min="{{ bd.earliest }}"{% endif %} {% if bd.current %}max="{{ bd.current }}"{% endif %}
-           data-holidays="{{ (bd.holidays or []) | join(',') }}" data-current="{{ bd.current or '' }}">
-    <a href="/asof?d=live&amp;next={{ request.url.path | urlencode }}" class="asof-live{% if asof == 'live' %} on{% endif %}"
-       title="Back to live: today's business date, streaming" data-asof-live><span class="dot" aria-hidden="true"></span> Live</a>
-    {% if asof != 'live' %}
-    <label for="asofKnown" class="visually-hidden">Known at</label>
-    <span class="asof-known{% if known_at %} on{% endif %}" title="Time travel: show this date as it was known at a time ({{ bd.zone or 'America/New_York' }}). Blank for the latest.">
-      <button type="button" class="asof-known-btn" data-known-toggle aria-label="Known at: time travel"{% if known_at %} hidden{% endif %}><i class="bi bi-clock-history" aria-hidden="true"></i></button>
-      {% if known_at %}<i class="bi bi-clock-history" aria-hidden="true"></i>{% endif %}
-      <input id="asofKnown" class="asof-known-in mono" type="datetime-local" name="k" value="{{ known_local(known_at, bd.zone) }}" data-asof-known{% if not known_at %} hidden{% endif %}>
-      {% if known_at %}<a class="asof-known-x" href="/asof?d={{ asof }}&amp;k=&amp;next={{ request.url.path | urlencode }}" title="Latest knowledge" aria-label="Clear known at">×</a>{% endif %}
-    </span>
-    {% endif %}
-    <noscript><button type="submit" class="asof-go">Go</button></noscript>
-    {% if asof != 'live' and bd.selected and bd.selected != asof %}<span class="asof-note mono" title="Not a business day on the {{ bd.calendar }} calendar">↩ {{ asof }}</span>{% endif %}
-  </form>
  </div>
 </header>
