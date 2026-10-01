@@ -39,13 +39,18 @@ def asset_fingerprint() -> str:
     import hashlib
 
     h = hashlib.sha1()
-    for folder in ("js", "css"):
+    for folder in ("js", "css", "calc"):
         for f in sorted((WEB / "static" / folder).glob("*")):
             st = f.stat()
             h.update(f"{f.name}:{st.st_size}:{st.st_mtime_ns};".encode())
     return h.hexdigest()[:8]
 CSP = ("default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; "
-       "font-src 'self'; connect-src 'self'; frame-src 'self'; frame-ancestors 'self'")
+       "font-src 'self'; connect-src 'self'; frame-src 'self'; worker-src 'self'; frame-ancestors 'self'")
+# Calc's Web Worker, and only it, may compile WebAssembly (Pyodide is CPython compiled to it): 'wasm-unsafe-eval', never
+# 'unsafe-eval'. It loads scripts and data from this origin only, has no DOM, and reaches the page only by messages.
+WORKER_CSP = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self'"
+WORKER = "/static/js/calc-worker.js"
+PYODIDE = "/pyodide/"
 
 
 PROTECTED = ("/t", "/v/", "/go", "/studio", "/api/", "/admin", "/account", "/w", "/m", "/alerts", "/impact", "/s/", "/compare/", "/export/", "/pin/", "/p/", "/reports")
@@ -73,11 +78,11 @@ class AuthGate(BaseHTTPMiddleware):
         request.state.asof = asof.set_current(request.query_params.get("asOf") or request.cookies.get(asof.COOKIE))
         request.state.known_at = asof.set_known(request.cookies.get(asof.KNOWN_COOKIE)) if request.state.asof != "live" else None
         request.state.business_date = None
-        if not path.startswith(("/static/", "/api/", "/healthz", "/readyz", "/asof")):
+        if not path.startswith(("/static/", PYODIDE, "/api/", "/healthz", "/readyz", "/asof")):
             request.state.business_date = await request.app.state.business_dates.info(
                 request.app.state.backend, request.state.identity, request.state.asof)
         request.state.settings = None
-        if request.state.identity is not None and not path.startswith(("/static/", "/api/", "/healthz", "/readyz")):
+        if request.state.identity is not None and not path.startswith(("/static/", PYODIDE, "/api/", "/healthz", "/readyz")):
             request.state.settings = await request.app.state.user_settings.get(request.app.state.backend, request.state.identity)
             try:
                 request.state.pack_switcher = await request.app.state.packs.assigned(request.app.state.backend, request.state.identity)
@@ -99,7 +104,10 @@ class AuthGate(BaseHTTPMiddleware):
 class SecurityHeaders(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         response = await call_next(request)
-        response.headers.setdefault("Content-Security-Policy", CSP)
+        path = request.url.path
+        response.headers.setdefault("Content-Security-Policy", WORKER_CSP if path == WORKER else CSP)
+        if path.startswith(PYODIDE) and response.status_code == 200:
+            response.headers["Cache-Control"] = "public, max-age=31536000, immutable"   # the URL names the version
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("Referrer-Policy", "same-origin")
         response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
@@ -112,8 +120,8 @@ def create_app(settings: Settings) -> FastAPI:
     from core.servers import Servers, Switch
 
     catalogue = Servers(settings)
-    from routes import (admin_routes, api_routes, asof_routes, auth_routes, export_routes, help_routes, home_routes, monitor_routes,
-                        report_routes, server_routes, studio_routes, terminal_routes, workspace_routes)
+    from routes import (admin_routes, api_routes, asof_routes, auth_routes, calc_routes, export_routes, help_routes, home_routes,
+                        monitor_routes, report_routes, server_routes, studio_routes, terminal_routes, workspace_routes)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -171,6 +179,11 @@ def create_app(settings: Settings) -> FastAPI:
     app.add_middleware(AuthGate)
     app.add_middleware(SecurityHeaders)
     app.mount("/static", StaticFiles(directory=str(WEB / "static")), name="static")
+    from core.calc import Calc
+
+    app.state.calc = Calc(settings, WEB)
+    if app.state.calc.runtime.installed:          # the Python runtime of Calc, from this origin only (tools/fetch-pyodide.sh)
+        app.mount(app.state.calc.runtime.base.rstrip("/"), StaticFiles(directory=str(app.state.calc.runtime.folder)), name="pyodide")
     app.include_router(home_routes.router)
     app.include_router(terminal_routes.router)
     app.include_router(api_routes.router)
@@ -184,4 +197,5 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(export_routes.router)
     app.include_router(server_routes.router)
     app.include_router(report_routes.router)
+    app.include_router(calc_routes.router)
     return app

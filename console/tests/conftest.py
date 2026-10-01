@@ -191,9 +191,38 @@ class FakeBackend:
         else:
             yield "row", json.dumps({"kind": "trade", "id": "IRS-48213", "patches": [], "p99Ms": 3})
 
+    python = {}                     # pack -> what it offers Calc ({"enabled": True, "snippets": [...]}), as the server says
+
     async def packs(self, ident=None):
         return [{"name": n, "version": "1.0.0", "title": n.title(), "description": "", "console": {}, "assigned": True,
-                 "active": n in self.enabled_packs} for n in ["finance", "logistics"] if n in self.enabled_packs or self.enabled_packs]
+                 "active": n in self.enabled_packs, **({"python": self.python[n]} if n in self.python else {})}
+                for n in ["finance", "logistics"] if n in self.enabled_packs or self.enabled_packs]
+
+    calc_allowed = True
+    calc_kept = {}
+
+    async def calc_settings(self, ident=None):
+        return {"enabled": True, "allowed": self.calc_allowed, "maxColumnRows": 250000, "maxSnippetChars": 50000}
+
+    async def calc_snippets(self, ident=None):
+        return [dict(v) for _, v in sorted(self.calc_kept.items())]
+
+    async def save_calc_snippet(self, name, body, ident=None):
+        if not body.get("code", "").strip():
+            raise BackendError(400, "DRS-5001", "a snippet has code")
+        self.calc_kept[name] = {"name": name, **body, "updatedAt": "2026-10-01T09:00:00Z"}
+        return self.calc_kept[name]
+
+    async def delete_calc_snippet(self, name, ident=None):
+        if self.calc_kept.pop(name, None) is None:
+            raise BackendError(404, "DRS-1001", f"no snippet '{name}'")
+
+    async def columns(self, kind, paths, limit, ident=None):
+        self.calls.append(("columns", kind, paths, limit))
+        if not paths:
+            return {"kind": "trade", "available": ["book", "mtm"]}
+        return {"kind": "trade", "businessDate": "2026-09-30", "paths": paths.split(","), "ids": ["T-1", "T-2"],
+                "values": {p: [1, 2] for p in paths.split(",")}, "rows": 2, "total": 2, "truncated": False, "masked": []}
 
     chosen = None
 

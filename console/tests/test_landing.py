@@ -40,4 +40,5 @@ def test_static_assets_served(client):
 
 
 def test_health(client):
-    assert client.get("/healthz").json() == {"status": "UP"}
+    health = client.get("/healthz").json()
+    assert health["status"] == "UP" and "pythonRuntime" in health          # Calc's runtime: a version, or how to install it

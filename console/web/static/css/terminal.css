@@ -660,3 +660,48 @@ table.tbl tr.tbl-filter th::after { content: none; }
 .srch-words { margin-top: .4rem; }
 .phrase .phrase-q { font-size: 1rem; margin: 0 .4rem; }
 .phrase-steps { margin: .4rem 0; padding-left: 1.2rem; font-size: .88rem; }
+
+/* Calc (calc.js): Python on a view, in a drawer like F9's, wider for code and its output */
+.calc-drawer { width: min(940px, 96vw); }
+.calc-drawer header { flex-wrap: wrap; }
+.calc-status { color: var(--d-muted); font-size: .75rem; flex: 1 1 12rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.calc-missing { margin: .6rem .9rem 0; color: var(--d-warn); font-size: .88rem; }
+.calc-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem .8rem; padding: .5rem .9rem; border-bottom: 1px solid var(--d-border); }
+.calc-keys { font-size: .74rem; margin-left: auto; }
+.calc-editor { border-bottom: 1px solid var(--d-border); }
+.calc-editor textarea { width: 100%; height: 34vh; border: 0; background: var(--d-bg-2); color: var(--d-ink); font: .82rem/1.5 var(--d-font-mono); padding: .5rem; }
+.calc-editor .CodeMirror { height: 34vh; min-height: 150px; background: var(--d-bg-2); color: var(--d-ink); font: .82rem/1.5 var(--d-font-mono); }
+.calc-editor .CodeMirror-gutters { background: var(--d-bg); border-right: 1px solid var(--d-border); }
+.calc-editor .CodeMirror-linenumber { color: var(--d-faint); }
+.calc-editor .CodeMirror-cursor { border-left-color: var(--d-accent); }
+.calc-editor .CodeMirror-selected, .calc-editor .CodeMirror-focused .CodeMirror-selected { background: var(--d-accent-tint); }
+.calc-editor .cm-s-default .cm-keyword { color: var(--d-accent); } .calc-editor .cm-s-default .cm-string { color: var(--d-link); }
+.calc-editor .cm-s-default .cm-comment { color: var(--d-faint); font-style: italic; }
+.calc-editor .cm-s-default .cm-number, .calc-editor .cm-s-default .cm-atom { color: var(--d-pos); }
+.calc-editor .cm-s-default .cm-builtin, .calc-editor .cm-s-default .cm-variable-2 { color: var(--d-ok); }
+.calc-editor .cm-s-default .cm-def { color: var(--d-warn); } .calc-editor .cm-s-default .cm-property { color: var(--d-ink); }
+.calc-editor .cm-s-default .cm-operator, .calc-editor .cm-s-default .cm-bracket { color: var(--d-muted); }
+.calc-editor .calc-err-line { background: var(--d-emph-bg); }
+.calc-tabs { display: flex; gap: .2rem; align-items: center; padding: .25rem .9rem 0; border-bottom: 1px solid var(--d-border); }
+.calc-tab { background: none; border: 0; border-bottom: 2px solid transparent; color: var(--d-muted); padding: .3rem .6rem; font-size: .82rem; }
+.calc-tab.on { color: var(--d-ink); border-bottom-color: var(--d-accent); }
+.calc-msg { margin-left: auto; font-size: .78rem; }
+.calc-out, .calc-history { flex: 1; min-height: 0; overflow: auto; padding: .6rem .9rem; margin: 0; }
+.calc-hint { font-size: .82rem; } .calc-hint code { color: var(--d-accent); }
+.calc-drawer .calc-text { white-space: pre-wrap; font-size: .8rem; margin: 0 0 .5rem; padding: 0; overflow: visible; color: var(--d-ink); }
+.calc-drawer .calc-stderr { color: var(--d-warn); }
+.calc-note { font-size: .78rem; color: var(--d-muted); margin: .2rem 0 .5rem; }
+.calc-h { font-size: .86rem; font-weight: 600; margin: .8rem 0 .3rem; color: var(--d-ink); }
+.calc-foot { font-size: .72rem; margin: .2rem 0 .6rem; }
+.calc-chart { height: 280px; width: 100%; }
+.calc-img { max-width: 100%; background: #fff; border-radius: 4px; padding: 4px; margin-bottom: .6rem; }
+.calc-err { border-left: 3px solid var(--d-bad); padding: .45rem .75rem; background: var(--d-bg-2); margin: .5rem 0; }
+.calc-err strong { color: var(--d-bad); font-weight: 600; }
+.calc-drawer .calc-err pre { white-space: pre-wrap; font-size: .78rem; margin: .4rem 0 0; padding: 0; overflow: visible; color: var(--d-ink); }
+.calc-history { list-style: none; }
+.calc-run-b { display: grid; grid-template-columns: 6.5rem 1rem minmax(0, 1fr) auto; gap: .5rem; width: 100%; text-align: left; background: none; border: 0;
+  border-bottom: 1px solid var(--d-border); padding: .35rem .2rem; color: var(--d-ink); font-size: .8rem; }
+.calc-run-b:hover { background: var(--d-accent-tint); }
+.calc-run-code { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.calc-run-where { font-size: .74rem; white-space: nowrap; }
+@media (max-width: 640px) { .calc-keys { display: none; } .calc-editor .CodeMirror { height: 28vh; } }

@@ -42,8 +42,8 @@ class BackendClient:
             base_url=base_url.rstrip("/"), timeout=timeout,
             limits=httpx.Limits(max_connections=pool, max_keepalive_connections=pool))
 
-    async def _get(self, path: str, ident=None, **params: Any) -> Any:
-        return await self._send("GET", path, ident, params=params)
+    async def _get(self, url: str, ident=None, **params: Any) -> Any:
+        return await self._send("GET", url, ident, params=params)
 
     async def _send(self, method: str, path: str, ident, **kw: Any) -> Any:
         headers = dict(ident.headers()) if ident is not None else {}
@@ -83,6 +83,27 @@ class BackendClient:
     async def history_diff(self, kind: str, id_: str, ident=None, **params: str) -> dict:
         """What changed between two dates (or two "known at" times); blank parameters take the server's defaults."""
         return await self._get(f"/history/{kind}/{id_}/diff", ident, **{k: v for k, v in params.items() if v})
+
+    async def calc_settings(self, ident) -> dict:
+        """Whether the user may use Calc (a role with calc), and its limits."""
+        return await self._get("/calc/settings", ident)
+
+    async def calc_snippets(self, ident) -> list:
+        return await self._get("/me/calc-snippets", ident)
+
+    async def save_calc_snippet(self, name: str, body: dict, ident) -> dict:
+        return await self._send("PUT", f"/me/calc-snippets/{quote(name, safe='')}", ident, json=body)
+
+    async def delete_calc_snippet(self, name: str, ident) -> None:
+        await self._send("DELETE", f"/me/calc-snippets/{quote(name, safe='')}", ident)
+
+    async def columns(self, kind: str, paths: str, limit: int | None, ident=None) -> dict:
+        """Whole columns of a kind on the business date (Calc's drishti.columns())."""
+        params = {"paths": paths} if paths else {}
+        if limit:
+            params["limit"] = limit
+        # the first read of a business day loads its columns (the server waits up to drishti.calc.columns-budget, 20 s)
+        return await self._send("GET", f"/search/columns/{quote(kind, safe='')}", ident, params=params, timeout=45.0)
 
     async def raw(self, kind: str, id_: str, ident=None) -> dict:
         return await self._get(f"/entities/{kind}/{id_}/raw", ident)

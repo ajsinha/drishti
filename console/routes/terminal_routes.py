@@ -203,7 +203,9 @@ async def view(request: Request, kind: str, id_: str, embed: int = 0):
                       kind=kind, id=id_, error=e, embed=bool(embed))
     main = [p for p in vm["panels"] if p.get("area") != "right"]
     right = [p for p in vm["panels"] if p.get("area") == "right"]
-    return render(request, "terminal/view.html", vm=vm, main=main, right=right, embed=bool(embed), share_url=share_url(request, kind, id_))
+    calc = {"offered": False} if embed else await request.app.state.calc.context(request, await packs(request), vm["ref"]["kind"])
+    return render(request, "terminal/view.html", vm=vm, main=main, right=right, embed=bool(embed), share_url=share_url(request, kind, id_),
+                  calc=calc)
 
 
 def share_url(request: Request, kind: str, id_: str) -> str:

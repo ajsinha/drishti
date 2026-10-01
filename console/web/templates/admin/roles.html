@@ -37,7 +37,7 @@
         <td class="mono">{{ r.name }}{% if r.builtIn %} <span class="st">built-in</span>{% endif %}</td>
         <td>{{ r.description }}</td>
         <td>{% if '*' in r.kinds %}<span class="role">every kind</span>{% else %}{% for k in r.kinds %}<span class="role">{{ k }}</span>{% endfor %}{% endif %}</td>
-        <td>{% for f, label in [('raw', 'raw JSON'), ('author', 'author Sutras'), ('approve', 'approve Sutras'), ('admin', 'administer')] %}{% if r[f] %}<span class="st st-ok">{{ label }}</span>{% endif %}{% endfor %}</td>
+        <td>{% for f, label in [('raw', 'raw JSON'), ('author', 'author Sutras'), ('approve', 'approve Sutras'), ('admin', 'administer'), ('calc', 'Calc')] %}{% if r[f] %}<span class="st st-ok">{{ label }}</span>{% endif %}{% endfor %}</td>
         <td class="mono"><a href="/admin/users?q={{ r.name }}">{{ r.users }}</a></td>
         <td class="mono">{% if r.updatedAt %}{{ r.updatedAt[:16] | replace('T', ' ') }} · {{ r.updatedBy }}{% else %}—{% endif %}</td>
         <td class="adm-actions">{% if not r.builtIn %}
@@ -63,7 +63,8 @@
         <label class="chk"><input type="checkbox" name="raw"> See raw JSON unredacted</label>
         <label class="chk"><input type="checkbox" name="author"> Author Sutras in Studio</label>
         <label class="chk"><input type="checkbox" name="approve"> Approve proposed Sutras</label>
-        <label class="chk"><input type="checkbox" name="admin"> Administer users, roles and caches</label></fieldset>
+        <label class="chk"><input type="checkbox" name="admin"> Administer users, roles and caches</label>
+        <label class="chk"><input type="checkbox" name="calc"> Use Calc: Python in the browser on what the role opens</label></fieldset>
       <p class="adm-msg" data-dlg-msg role="alert"></p>
       <div class="adm-dlg-actions"><button type="button" class="btn-pill btn-ghost" data-cancel>Cancel</button>
         <button type="submit" class="btn-pill btn-accent">Save</button></div>

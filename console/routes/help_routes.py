@@ -78,4 +78,5 @@ async def about(request: Request):
         info = {"error": f"{e.code} {e.detail}"}
     licence = _read(ROOT / "LICENSE")
     return render(request, "help/about.html", info=info, licence_intro="\n".join(licence.splitlines()[:5]),
-                  notices=(await library(request)).guides.get("notices"), packs=await packs(request), screen="about")
+                  notices=(await library(request)).guides.get("notices"), packs=await packs(request), screen="about",
+                  python_runtime=request.app.state.calc.runtime.describe())

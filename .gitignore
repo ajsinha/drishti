@@ -16,3 +16,5 @@ hs_err_pid*
 # make it with tools/packgen/banking/make_data.py, never commit it
 data/
 .claude/
+# the Python runtime of Calc: installed by tools/fetch-pyodide.sh (pinned and verified), never committed
+console/web/static/vendor/pyodide/

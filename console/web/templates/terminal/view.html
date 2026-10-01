@@ -18,6 +18,7 @@
 {% block title %}{{ vm.title.id }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}view{% endblock %}
 {% block body_class %}terminal{% if embed %} embed{% endif %}{% endblock %}
+{% block head %}{% if calc and calc.offered and calc.allowed %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}">{% endif %}{% endblock %}
 {% block nav %}{% if not embed %}{% with command_text=(vm.mnemonic ~ ' ' ~ vm.ref.id ~ ' <GO>') if vm.mnemonic else vm.ref.id, live=vm.provenance.live, built_ms=vm.timings.total %}{% include "terminal/_topbar.html" %}{% endwith %}{% endif %}{% endblock %}
 {% block content %}
 <div class="view" data-view{% if embed %} data-embed{% endif %} data-kind="{{ vm.ref.kind }}" data-id="{{ vm.ref.id }}" data-label="{{ vm.title.id }}"
@@ -78,13 +79,15 @@
   <header><strong>Raw JSON</strong> <span class="mono" data-raw-meta></span><button type="button" class="raw-x" data-raw-close aria-label="Close">×</button></header>
   <pre class="mono" data-raw-body>Loading…</pre>
 </aside>
+{% if calc and calc.offered and calc.allowed %}{% include "terminal/_calc.html" %}{% endif %}
 {% endblock %}
 {% block footer %}{% if not embed %}
 <footer class="fkeys" aria-label="Function keys">
   <nav>{% for k in vm['keys'] %}<button type="button" class="fk" data-fkey="{{ k.key }}" data-action="{{ k.action }}"{% if k.action == 'denied' %} disabled title="You do not have access"{% endif %}
       {% if k.panel %}data-target="{{ k.panel }}"{% endif %}{% if k.link %}data-href="/v/{{ k.link.kind }}/{{ k.link.id }}"{% endif %}>
       <b>{{ k.key }}</b> {{ k.label }}</button>{% endfor %}
-    <button type="button" class="fk" data-fkey="Alt+ArrowLeft" data-action="back"><b>Alt+←</b> Back</button></nav>
+    <button type="button" class="fk" data-fkey="Alt+ArrowLeft" data-action="back"><b>Alt+←</b> Back</button>
+    {% if calc and calc.offered %}<button type="button" class="fk" data-calc-open{% if not calc.allowed %} disabled title="You do not have access: Calc needs a role with calc (ask an administrator)"{% else %} title="Calc: Python on this view (Alt+C)"{% endif %}><b>Alt+C</b> Calc</button>{% endif %}</nav>
   <span class="fk-note">{{ vm.provenance.source }}{% if vm.provenance.updatedAt %} · updated <span data-age="{{ vm.provenance.updatedAt }}"{% if vm.provenance.stale %} class="t-warn"{% endif %} title="{{ vm.provenance.updatedAt }}">{{ vm.provenance.updatedAt[:16] | replace('T', ' ') }}</span>{% endif %} · gen {{ vm.provenance.generation }}{% if vm.provenance.businessDate %} · as of {{ vm.provenance.businessDate }}{% endif %} · {{ COPYRIGHT }}</span>
 </footer>
 {% endif %}{% endblock %}
@@ -95,5 +98,8 @@
 <script src="/static/js/view.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/history.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/notes.js?v={{ ASSET_V }}"></script>
+{% if calc and calc.offered and calc.allowed %}<script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script>
+<script src="/static/vendor/codemirror/mode/python/python.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/calc.js?v={{ ASSET_V }}"></script>{% endif %}
 {% if vm.provenance.live %}<script src="/static/js/live.js?v={{ ASSET_V }}"></script>{% endif %}
 {% endblock %}

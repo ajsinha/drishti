@@ -54,6 +54,7 @@ class Packs:
             return hit[1], hit[2]
         try:
             rows = await backend.packs(ident)
+            served = {r["name"]: r for r in rows}
             active = [r["name"] for r in rows if r.get("active", True)]
             assigned = [(r["name"], bool(r.get("active", True))) for r in rows if r.get("assigned", True)]
             fresh = True
@@ -61,12 +62,21 @@ class Packs:
             if hit:                          # the server is away for a moment (restarting): keep what we knew
                 return hit[1], hit[2]
             active, assigned = self.fallback, [(n, True) for n in self.fallback]
+            served = {}
             fresh = False
-        packs = [p for p in (self._load(n) for n in active) if p]
+        packs = [self._served(p, served) for p in (self._load(n) for n in active) if p]
         switcher = [{**p, "active": a} for p, a in ((self._load(n), a) for n, a in assigned) if p]
         if fresh:                            # a fallback is never cached, so the real list returns at the next request
             self._cache[key] = (now, packs, switcher)
         return packs, switcher
+
+    @staticmethod
+    def _served(pack: dict, served: dict) -> dict:
+        """What the server says of a pack beside its files: the kinds it owns and what it offers Calc (``python``: enabled,
+        snippets from pack.yaml and the pack's python/ folder, read by the server's pack model)."""
+        row = served.get(pack["name"]) or {}
+        return {**pack, "kinds": row.get("kinds") or pack.get("kinds") or [],
+                "python": row.get("python") or {"enabled": False, "snippets": []}}
 
     def _load(self, name: str) -> dict | None:
         pdir = (self.dir / name).resolve()
@@ -77,7 +87,7 @@ class Packs:
         console = m.get("console", {}) or {}
         out = {"name": name, "title": m.get("title", name), "version": m.get("version", ""), "description": m.get("description", ""),
                "dir": pdir, "examples": console.get("examples", []), "workspaces": {}, "guides": [], "contextual": {},
-               "monitors": console.get("monitors", {}) or {}, "alerts": m.get("alerts", []) or []}
+               "monitors": console.get("monitors", {}) or {}, "alerts": m.get("alerts", []) or [], "kinds": m.get("kinds", []) or []}
         if console.get("workspaces") and (pdir / console["workspaces"]).exists():
             out["workspaces"] = (yaml.safe_load((pdir / console["workspaces"]).read_text()) or {}).get("templates", {}) or {}
         if console.get("help") and (pdir / console["help"]).exists():

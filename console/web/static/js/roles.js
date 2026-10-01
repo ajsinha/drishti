@@ -103,7 +103,7 @@
       form.elements.description.value = role.description || '';
       form.elements.all.checked = role.kinds.indexOf('*') >= 0;
       form.elements.kinds.value = role.kinds.filter(function (k) { return k !== '*'; }).join('\n');
-      ['raw', 'author', 'approve', 'admin'].forEach(function (f) { form.elements[f].checked = !!role[f]; });
+      ['raw', 'author', 'approve', 'admin', 'calc'].forEach(function (f) { form.elements[f].checked = !!role[f]; });
     }
     kindsVisible();
     dlg.showModal();
@@ -125,7 +125,7 @@
     var body = {
       description: f.description.value.trim(),
       kinds: f.all.checked ? ['*'] : f.kinds.value.split(/[\s,]+/).filter(Boolean),
-      raw: f.raw.checked, author: f.author.checked, approve: f.approve.checked, admin: f.admin.checked
+      raw: f.raw.checked, author: f.author.checked, approve: f.approve.checked, admin: f.admin.checked, calc: f.calc.checked
     };
     post('/admin/api/roles/' + encodeURIComponent(f.name.value.trim()), body).then(function (res) {
       if (res.ok) { dlg.close(); say(msg, (editing ? 'Saved ' : 'Created ') + res.body.name + '.'); setTimeout(function () { location.reload(); }, 400); }

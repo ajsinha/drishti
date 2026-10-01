@@ -36,9 +36,11 @@ def landing(request: Request):
 
 
 @router.get("/healthz")
-def healthz():
-    """Liveness: the console process answers. Cheap on purpose; a restart would not fix a server that is down."""
-    return {"status": "UP"}
+def healthz(request: Request):
+    """Liveness: the console process answers. Cheap on purpose; a restart would not fix a server that is down. Says too
+    whether Calc's Python runtime is installed (it is optional: views work without it)."""
+    runtime = request.app.state.calc.runtime
+    return {"status": "UP", "pythonRuntime": runtime.version if runtime.installed else "not installed: run tools/fetch-pyodide.sh"}
 
 
 @router.get("/readyz")

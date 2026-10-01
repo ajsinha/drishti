@@ -60,6 +60,8 @@ auth:
     redirect_uri: ${DRISHTI_OIDC_REDIRECT_URI:}     # default: <console>/auth/oidc/callback
 studio:
   enabled: true
+calc:                        # Calc: Python in the browser (docs/guides/PYTHON_CALC.md); also needs a role with calc
+  enabled: ${DRISHTI_CALC_ENABLED:true}   # false: no view offers it, whatever packs and roles say
 help:
   docs_dir: ../docs          # the repository docs rendered as the help centre's reference section
 packs:

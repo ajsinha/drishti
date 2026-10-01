@@ -1,0 +1,53 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Calc: Python in the browser (docs/guides/PYTHON_CALC.md). A slide-in drawer like F9's, opened with Alt+C. The code
+   runs in Pyodide inside a Web Worker (calc-worker.js); reads go through this page with the user's session. #}
+<aside class="raw calc-drawer" id="calcDrawer" aria-label="Calc: Python" hidden
+       data-calc data-kind="{{ vm.ref.kind }}" data-id="{{ vm.ref.id }}" data-label="{{ vm.title.id }}"
+       data-runtime="{{ calc.runtime.base if calc.runtime.installed else '' }}"
+       data-runtime-version="{{ calc.runtime.version or '' }}"
+       data-worker="/static/js/calc-worker.js?v={{ ASSET_V }}"
+       data-module="/static/calc/drishti.py?v={{ ASSET_V }}"
+       data-max-rows="{{ calc.maxColumnRows or '' }}">
+  <header><strong>Calc</strong> <span class="mono">Python · {{ vm.title.id }}</span>
+    <span class="calc-status mono" data-calc-status role="status" aria-live="polite">{% if not calc.runtime.installed %}{{ calc.runtime.message }}{% else %}Python not started{% endif %}</span>
+    <a class="tbar-link" href="/help/python-calc" title="How Calc works: the drishti module, keys, limits"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
+    <button type="button" class="raw-x" data-calc-close aria-label="Close">×</button></header>
+  {% if not calc.runtime.installed %}
+  <p class="calc-missing" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ calc.runtime.message }}
+    <span class="text-muted-d">An administrator installs it once on the console (no internet is needed afterwards).</span></p>
+  {% endif %}
+  <div class="calc-bar">
+    <button type="button" class="btn-pill btn-accent btn-sm-pill" data-calc-run title="Run (Ctrl+Enter)"{% if not calc.runtime.installed %} disabled{% endif %}><i class="bi bi-play-fill" aria-hidden="true"></i> Run</button>
+    <button type="button" class="btn-pill btn-sm-pill" data-calc-stop title="Stop: ends the Python worker and starts a fresh one" disabled><i class="bi bi-stop-fill" aria-hidden="true"></i> Stop</button>
+    <label class="calc-pick"><span class="visually-hidden">Snippets</span>
+      <select class="studio-select" data-calc-snippets aria-label="Snippets"><option value="">Snippets…</option></select></label>
+    <button type="button" class="fk" data-calc-save title="Save this code as one of your snippets"><i class="bi bi-save" aria-hidden="true"></i> Save</button>
+    <button type="button" class="fk" data-calc-delete title="Delete the selected snippet of yours" hidden><i class="bi bi-trash" aria-hidden="true"></i> Delete</button>
+    <button type="button" class="fk" data-calc-clear title="Clear the output"><i class="bi bi-eraser" aria-hidden="true"></i> Clear</button>
+    <span class="calc-keys text-muted-d"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> run · <kbd>Esc</kbd> close</span>
+  </div>
+  <div class="calc-editor"><textarea data-calc-code aria-label="Python code" spellcheck="false"></textarea></div>
+  <div class="calc-tabs" role="tablist">
+    <button type="button" role="tab" class="calc-tab on" aria-selected="true" data-calc-tab="out">Output</button>
+    <button type="button" role="tab" class="calc-tab" aria-selected="false" data-calc-tab="history">History</button>
+    <span class="calc-msg adm-msg" data-calc-msg role="status" aria-live="polite"></span>
+  </div>
+  <div class="calc-out" data-calc-out tabindex="-1"><p class="text-muted-d calc-hint">Write Python and press <kbd>Ctrl</kbd>+<kbd>Enter</kbd>.
+    <code>view</code> is this screen (<code>view.doc</code>, <code>view.tables</code>); <code>drishti.search()</code>, <code>drishti.get()</code>,
+    <code>show()</code> and <code>chart()</code> are ready. Your roles apply to every read.</p></div>
+  <ol class="calc-history" data-calc-history hidden></ol>
+</aside>
