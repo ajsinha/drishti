@@ -33,9 +33,21 @@ STYLES = {".java": "java", ".js": "java", ".css": "java", ".py": "hash", ".yaml"
           ".json": None, ".txt": None}
 
 
+def ignored():
+    """Files git ignores (runtime data such as data/identity, data/packs): not source, so no header."""
+    import subprocess
+    try:
+        out = subprocess.run(["git", "ls-files", "--others", "--ignored", "--exclude-standard"], cwd=ROOT,
+                             capture_output=True, text=True, timeout=30).stdout
+    except (OSError, subprocess.SubprocessError):
+        return set()
+    return {ROOT / line for line in out.splitlines() if line}
+
+
 def files():
+    skip = ignored()
     for p in ROOT.rglob("*"):
-        if p.is_file() and not (set(p.relative_to(ROOT).parts) & SKIP_DIRS) and p.name not in SKIP_FILES:
+        if p.is_file() and not (set(p.relative_to(ROOT).parts) & SKIP_DIRS) and p.name not in SKIP_FILES and p not in skip:
             if STYLES.get(p.suffix):
                 yield p
 
