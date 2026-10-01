@@ -44,10 +44,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A disk-backed cache for live data: RocksDB on local disk, between a connector's in-memory cache and its source.
- * Bounded by size (FIFO compaction drops the oldest files once {@code maxBytes} is reached), written without a
- * write-ahead log (it is a cache: after a crash the connector refills it), and cleared every day at a configured
- * time in a configured zone. Clearing swaps in a fresh, empty store, so readers never wait.
+ * RocksDB on local disk, in one of two roles.
+ *
+ * <p><b>A cache</b> (not persistent): between a connector's in-memory cache and its source. Bounded by size (FIFO
+ * compaction drops the oldest files once {@code maxBytes} is reached), written without a write-ahead log (after a crash
+ * the connector refills it), and cleared every day at a configured time in a configured zone. Clearing swaps in a
+ * fresh, empty store, so readers never wait.
+ *
+ * <p><b>A store</b> (persistent): the latest state of sources that cannot replay their history (message queues). It
+ * keeps the latest value of every key (level compaction: nothing is dropped for size; {@link #overBudget()} reports a
+ * store past {@code maxBytes}), reopens what the previous run stored, and writes with the chosen {@link Durability}.
+ * {@link #store} and {@link #remove} fail loudly, so a caller acknowledges a message only once it is kept.
  *
  * <p>Thread safety: any number of threads may read and write at once (RocksDB handles are thread-safe). Each store
  * generation is reference counted: a call enters the current generation before touching it and leaves after, and
@@ -58,6 +65,21 @@ import org.slf4j.LoggerFactory;
 public final class DiskCache implements AutoCloseable {
 
     private static final Logger LOG = LoggerFactory.getLogger(DiskCache.class);
+
+    /** How a write survives a failure. */
+    public enum Durability {
+        /** No write-ahead log: fastest; a crash loses what was written since the last flush of the 32 MB buffer. */
+        NONE,
+        /** Write-ahead log, not synced: survives a crash of the process; a power loss can lose the last moments. */
+        WAL,
+        /** Write-ahead log synced on every write: survives a crash and a power loss. */
+        SYNC;
+
+        /** {@code none}, {@code wal} or {@code sync} (any case). */
+        public static Durability parse(String text) {
+            return valueOf(text.trim().toUpperCase(java.util.Locale.ROOT));
+        }
+    }
 
     static {
         RocksDB.loadLibrary();
@@ -71,15 +93,16 @@ public final class DiskCache implements AutoCloseable {
         final Path dir;
         final RocksDB db;
         final Options options;
-        final CompactionOptionsFIFO fifo;
-        final WriteOptions write = new WriteOptions().setDisableWAL(true);
+        final CompactionOptionsFIFO fifo;                       // null for a persistent store
+        final WriteOptions write;
         final AtomicInteger users = new AtomicInteger(1);
 
-        Store(Path dir, RocksDB db, Options options, CompactionOptionsFIFO fifo) {
+        Store(Path dir, RocksDB db, Options options, CompactionOptionsFIFO fifo, Durability durability) {
             this.dir = dir;
             this.db = db;
             this.options = options;
             this.fifo = fifo;
+            this.write = new WriteOptions().setDisableWAL(durability == Durability.NONE).setSync(durability == Durability.SYNC);
         }
 
         /** Enters unless the generation is already being closed. */
@@ -104,7 +127,9 @@ public final class DiskCache implements AutoCloseable {
             write.close();
             db.close();
             options.close();
-            fifo.close();
+            if (fifo != null) {
+                fifo.close();
+            }
             if (!keepFiles) {
                 deleteTree(dir);
             }
@@ -117,6 +142,7 @@ public final class DiskCache implements AutoCloseable {
     private final ReentrantLock lifecycle = new ReentrantLock();   // clear and close; not synchronized, so virtual threads never pin
     private volatile boolean closed;
     private final boolean persistent;       // closing keeps the files, for the next run
+    private final Durability durability;
     private final ScheduledExecutorService scheduler;
     private final AtomicLong generation = new AtomicLong();
     private final AtomicLong hits = new AtomicLong();
@@ -140,6 +166,16 @@ public final class DiskCache implements AutoCloseable {
      */
     public DiskCache(Path root, long maxBytes, LocalTime resetAt, ZoneId zone, ScheduledExecutorService scheduler, Clock clock,
             boolean persistent) throws IOException {
+        this(root, maxBytes, resetAt, zone, scheduler, clock, persistent, persistent ? Durability.SYNC : Durability.NONE);
+    }
+
+    /**
+     * @param durability how writes survive a failure; a cache is {@link Durability#NONE}, a store {@link Durability#SYNC}
+     *     unless the caller chooses otherwise
+     */
+    public DiskCache(Path root, long maxBytes, LocalTime resetAt, ZoneId zone, ScheduledExecutorService scheduler, Clock clock,
+            boolean persistent, Durability durability) throws IOException {
+        this.durability = durability;
         this.root = root.toAbsolutePath().normalize();
         this.maxBytes = maxBytes;
         this.scheduler = scheduler;
@@ -175,14 +211,24 @@ public final class DiskCache implements AutoCloseable {
 
     private Store open(Path dir) throws IOException {
         Files.createDirectories(dir);
-        CompactionOptionsFIFO fifo = new CompactionOptionsFIFO().setMaxTableFilesSize(maxBytes);
+        // a cache drops its oldest files past the budget; a store keeps the latest value of every key, whatever its size
+        CompactionOptionsFIFO fifo = persistent ? null : new CompactionOptionsFIFO().setMaxTableFilesSize(maxBytes);
         Options o = new Options().setCreateIfMissing(true).setCompressionType(CompressionType.LZ4_COMPRESSION)
-                .setCompactionStyle(CompactionStyle.FIFO).setWriteBufferSize(32L * 1024 * 1024).setCompactionOptionsFIFO(fifo);
+                .setWriteBufferSize(32L * 1024 * 1024);
+        if (fifo != null) {
+            o.setCompactionStyle(CompactionStyle.FIFO).setCompactionOptionsFIFO(fifo);
+        } else {
+            // the latest value of each key: overwrites and deletes are compacted away, so the files follow the live
+            // entities, not the messages received; the write-ahead log is capped so it never grows past 64 MB
+            o.setCompactionStyle(CompactionStyle.LEVEL).setLevelCompactionDynamicLevelBytes(true).setMaxTotalWalSize(64L * 1024 * 1024);
+        }
         try {
-            return new Store(dir, RocksDB.open(o, dir.toString()), o, fifo);
+            return new Store(dir, RocksDB.open(o, dir.toString()), o, fifo, durability);
         } catch (RocksDBException e) {
             o.close();
-            fifo.close();
+            if (fifo != null) {
+                fifo.close();
+            }
             throw new IOException("cannot open disk cache at " + dir + ": " + e.getMessage(), e);
         }
     }
@@ -260,6 +306,64 @@ public final class DiskCache implements AutoCloseable {
         }
     }
 
+    /** Writes {@code value} as {@link #put} does, but fails when it is not kept (a closed store, a disk error). */
+    public void store(String key, byte[] value) throws IOException {
+        Store s = enter();
+        if (s == null) {
+            throw new IOException("the store is closed");
+        }
+        try {
+            s.db.put(s.write, key.getBytes(StandardCharsets.UTF_8), value);
+        } catch (RocksDBException e) {
+            throw new IOException("state store write failed: " + e.getMessage(), e);
+        } finally {
+            leave(s);
+        }
+    }
+
+    /** Deletes {@code key} as {@link #delete} does, but fails when the deletion is not kept. */
+    public void remove(String key) throws IOException {
+        Store s = enter();
+        if (s == null) {
+            throw new IOException("the store is closed");
+        }
+        try {
+            s.db.delete(s.write, key.getBytes(StandardCharsets.UTF_8));
+        } catch (RocksDBException e) {
+            throw new IOException("state store delete failed: " + e.getMessage(), e);
+        } finally {
+            leave(s);
+        }
+    }
+
+    /** True when a persistent store's files are past its budget (nothing is dropped; the operator decides). */
+    public boolean overBudget() {
+        return persistent && sizeOnDisk() > maxBytes;
+    }
+
+    /** Compacts the whole store, so deleted and overwritten values give their space back now. */
+    public void compact() {
+        Store s = enter();
+        if (s == null) {
+            return;
+        }
+        try {
+            s.db.compactRange();
+        } catch (RocksDBException e) {
+            LOG.debug("compaction skipped: {}", e.getMessage());
+        } finally {
+            leave(s);
+        }
+    }
+
+    public long budget() {
+        return maxBytes;
+    }
+
+    public Durability durability() {
+        return durability;
+    }
+
     public void delete(String key) {
         Store s = enter();
         if (s == null) {
@@ -330,14 +434,15 @@ public final class DiskCache implements AutoCloseable {
         }
     }
 
-    /** Bytes on disk, as RocksDB reports its table files; -1 once closed. */
+    /** Bytes the store holds: its table files and its write buffers (mirrored by the write-ahead log); -1 once closed. */
     public long sizeOnDisk() {
         Store s = enter();
         if (s == null) {
             return -1;
         }
         try {
-            return s.db.getLongProperty("rocksdb.total-sst-files-size");
+            // the table files, and what is still in memory (its write-ahead log is on disk too)
+            return s.db.getLongProperty("rocksdb.total-sst-files-size") + s.db.getLongProperty("rocksdb.cur-size-all-mem-tables");
         } catch (RocksDBException e) {
             return -1;
         } finally {

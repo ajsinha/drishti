@@ -213,4 +213,62 @@ class DiskCacheTest {
             sched.shutdownNow();
         }
     }
+
+    @Test
+    void aPersistentStoreKeepsEveryKeyPastItsBudgetAndSaysSo() throws Exception {
+        ScheduledExecutorService sched = Executors.newSingleThreadScheduledExecutor();
+        byte[] big = new byte[64 * 1024];
+        new java.util.Random(7).nextBytes(big);                               // incompressible: the files really grow
+        try {
+            try (DiskCache c = new DiskCache(dir, 1024 * 1024, null, NY, sched, Clock.systemUTC(), true, DiskCache.Durability.WAL)) {
+                for (int i = 0; i < 400; i++) {                                // 25 MB into a 1 MB budget
+                    c.store("trade/T-" + i, big);
+                }
+                c.remove("trade/T-399");
+            }
+            try (DiskCache c = new DiskCache(dir, 1024 * 1024, null, NY, sched, Clock.systemUTC(), true, DiskCache.Durability.WAL)) {
+                List<String> keys = new ArrayList<>();
+                c.forEach((k, v) -> keys.add(k));
+                assertThat(keys).as("nothing dropped for size").hasSize(399).doesNotContain("trade/T-399");
+                assertThat(c.get("trade/T-0")).isEqualTo(big);
+                assertThat(c.overBudget()).isTrue();
+            }
+        } finally {
+            sched.shutdownNow();
+        }
+    }
+
+    @Test
+    void everyDurabilityKeepsWhatAStoreWroteAcrossARestart() throws Exception {
+        ScheduledExecutorService sched = Executors.newSingleThreadScheduledExecutor();
+        try {
+            for (DiskCache.Durability d : DiskCache.Durability.values()) {
+                Path sub = dir.resolve(d.name());
+                try (DiskCache c = new DiskCache(sub, 64L * 1024 * 1024, null, NY, sched, Clock.systemUTC(), true, d)) {
+                    c.store("trade/T-1", new byte[] {1});
+                    assertThat(c.durability()).isEqualTo(d);
+                }
+                try (DiskCache c = new DiskCache(sub, 64L * 1024 * 1024, null, NY, sched, Clock.systemUTC(), true, d)) {
+                    assertThat(c.get("trade/T-1")).as(d.name()).containsExactly(1);
+                }
+            }
+            assertThat(DiskCache.Durability.parse(" Sync ")).isEqualTo(DiskCache.Durability.SYNC);
+        } finally {
+            sched.shutdownNow();
+        }
+    }
+
+    @Test
+    void aClosedStoreRefusesWritesLoudly() throws Exception {
+        ScheduledExecutorService sched = Executors.newSingleThreadScheduledExecutor();
+        try {
+            DiskCache c = new DiskCache(dir, 64L * 1024 * 1024, null, NY, sched, Clock.systemUTC(), true);
+            assertThat(c.durability()).as("a store syncs by default").isEqualTo(DiskCache.Durability.SYNC);
+            c.close();
+            org.assertj.core.api.Assertions.assertThatThrownBy(() -> c.store("trade/T-1", new byte[] {1})).isInstanceOf(java.io.IOException.class);
+            org.assertj.core.api.Assertions.assertThatThrownBy(() -> c.remove("trade/T-1")).isInstanceOf(java.io.IOException.class);
+        } finally {
+            sched.shutdownNow();
+        }
+    }
 }

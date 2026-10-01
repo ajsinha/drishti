@@ -29,8 +29,8 @@ import java.util.Map;
  * {@code bind.<queue>} ({@code exchange:routing.key} to bind a declared queue), {@code prefetch} (100), and the shared
  * message settings (see {@link MessageStateSource}). The client's automatic recovery reconnects and re-subscribes
  * after an outage; a supervisor keeps trying until the first connection succeeds. Each message is acknowledged after
- * it is stored, so a broker outage redelivers rather than loses (the local store runs without a write-ahead log, so a
- * crash of this process can lose what it acknowledged since its last flush).
+ * it is kept in the local state store with {@code state.durability} ({@code sync} by default: synced to disk, so neither a
+ * crash nor a power loss loses an acknowledged message); a message the store cannot keep is requeued.
  */
 public final class RabbitMqSourcePlugin extends MessageStateSource {
 
@@ -94,9 +94,18 @@ public final class RabbitMqSourcePlugin extends MessageStateSource {
                 AMQP.BasicProperties p = delivery.getProperties();
                 Map<String, Object> h = p.getHeaders() == null ? Map.of() : p.getHeaders();
                 String body = delivery.getBody() == null ? null : new String(delivery.getBody(), StandardCharsets.UTF_8);
-                accept(new Inbound(queue, h.get("id") == null ? p.getMessageId() : String.valueOf(h.get("id")), body,
+                boolean kept = accept(new Inbound(queue, h.get("id") == null ? p.getMessageId() : String.valueOf(h.get("id")), body,
                         Boolean.parseBoolean(String.valueOf(h.get("deleted")))));
-                ch.basicAck(delivery.getEnvelope().getDeliveryTag(), false);   // after it is stored
+                if (kept) {
+                    ch.basicAck(delivery.getEnvelope().getDeliveryTag(), false);   // after it is kept (state.durability, sync by default)
+                } else {
+                    try {
+                        Thread.sleep(1000);                   // the state store could not keep it: back on the queue, a second later
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                    ch.basicNack(delivery.getEnvelope().getDeliveryTag(), false, true);
+                }
             }, tag -> health.set("DOWN: consumer cancelled on " + queue));
         }
         health.set("UP");

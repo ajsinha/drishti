@@ -132,8 +132,17 @@ public final class ActiveMqSourcePlugin extends MessageStateSource {
                 Message m = consumers.get(i).receive(consumers.size() == 1 ? 500 : 50);
                 if (m != null) {
                     any = true;
-                    accept(new Inbound(names.get(i), property(m, "id"), body(m), flag(m, "deleted")));
-                    m.acknowledge();                          // after it is stored: a broker outage redelivers (the store has no write-ahead log)
+                    if (accept(new Inbound(names.get(i), property(m, "id"), body(m), flag(m, "deleted")))) {
+                        m.acknowledge();                      // after it is kept (state.durability, sync by default)
+                    } else {
+                        try {
+                            Thread.sleep(1000);               // the state store could not keep it: not acknowledged,
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                            return;
+                        }
+                        session.recover();                    // delivered again, a second later
+                    }
                 }
             }
             if (!any && consumers.size() > 1) {

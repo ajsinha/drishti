@@ -128,20 +128,26 @@ public abstract class MessageStateSource implements SourcePlugin {
         String reset = ctx.setting("state.reset-at", "never");
         this.store = new DiskCache(Path.of(dir), (long) (Double.parseDouble(ctx.setting("state.max-gb", "10")) * 1024 * 1024 * 1024),
                 "never".equals(reset) ? null : LocalTime.parse(reset), ZoneId.of(ctx.setting("state.zone", "America/New_York")),
-                ctx.scheduler(), Clock.systemUTC(), true);
+                ctx.scheduler(), Clock.systemUTC(), true,
+                com.ash.drishti.diskcache.DiskCache.Durability.parse(ctx.setting("state.durability", "sync")));
+        this.evictWhenFull = !"warn".equalsIgnoreCase(ctx.setting("state.when-full", "evict-oldest").trim());
+        if (ctx.scheduler() != null) {
+            long every = Long.parseLong(ctx.setting("state.check-seconds", "60"));
+            ctx.scheduler().scheduleWithFixedDelay(this::keepWithinBudget, every, every, java.util.concurrent.TimeUnit.SECONDS);
+        }
         store.forEach((key, value) -> {                   // what earlier runs received: the queue will not send it again
             String[] kv = key.split("/", 2);
             if (kv.length == 2) {
                 EntityRef ref = EntityRef.of(kv[0], kv[1]);
                 known.add(ref);
                 kinds.add(ref.kind());
+                updated.put(ref, Long.MIN_VALUE / 2 + updated.size());   // older than anything this run writes
             }
         });
         rebuildIndex();
         connect();
     }
 
-    /** Applies one message: stores the entity's latest document (or removes it) and pushes it to live views. */
     /** When the last message arrived: when this source last received new data. */
     private volatile java.time.Instant lastUpdate;
 
@@ -150,7 +156,12 @@ public abstract class MessageStateSource implements SourcePlugin {
         return lastUpdate;
     }
 
-    protected final void accept(Inbound m) {
+    /**
+     * Applies one message. Returns true when the message is done with (kept, deleted, or rejected as unreadable: a
+     * message that can never be read must not come back forever) and may be acknowledged; false when the state store
+     * could not keep it, so the caller must not acknowledge it and the broker delivers it again.
+     */
+    protected final boolean accept(Inbound m) {
         received.incrementAndGet();
         lastUpdate = java.time.Instant.now();
         try {
@@ -165,7 +176,7 @@ public abstract class MessageStateSource implements SourcePlugin {
                 JsonNode env = blank ? null : JSON.readTree(m.body());
                 if (env == null) {
                     rejected.incrementAndGet();
-                    return;
+                    return true;
                 }
                 kind = env.path("kind").asText(null);
                 id = env.path("id").asText(m.id());
@@ -173,19 +184,21 @@ public abstract class MessageStateSource implements SourcePlugin {
             }
             if (kind == null || id == null || id.isBlank()) {
                 rejected.incrementAndGet();
-                return;
+                return true;
             }
             EntityRef ref = EntityRef.of(kind, id);
             if (m.deleted() || doc == null || doc.isNull()) {
-                store.delete(key(ref));
+                store.remove(key(ref));
+                updated.remove(ref);
                 memory.invalidate(ref);
                 if (known.remove(ref)) {
                     rebuildIndex();
                 }
-                return;
+                return true;
             }
             byte[] bytes = JSON.writeValueAsBytes(doc);
-            store.put(key(ref), bytes);
+            store.store(key(ref), bytes);                 // kept on disk (with the chosen durability) before it is acknowledged
+            updated.put(ref, System.nanoTime());
             kinds.add(kind);
             EntityDocument d = document(ref, bytes);
             weights.put(ref, bytes.length * 2 + 64);
@@ -203,8 +216,18 @@ public abstract class MessageStateSource implements SourcePlugin {
                     }
                 });
             }
+            storeProblem = null;
+            return true;
+        } catch (java.io.IOException e) {
+            if (e instanceof com.fasterxml.jackson.core.JsonProcessingException) {
+                rejected.incrementAndGet();               // not JSON: skipped, counted
+                return true;
+            }
+            storeProblem = e.getMessage();                // not kept: not acknowledged, delivered again
+            return false;
         } catch (Exception e) {
-            rejected.incrementAndGet();                   // not JSON, or not a document: skipped, counted
+            rejected.incrementAndGet();                   // not a document: skipped, counted
+            return true;
         }
     }
 
@@ -257,6 +280,9 @@ public abstract class MessageStateSource implements SourcePlugin {
         out.put("entities", known.size());
         out.put("memoryEntries", memory.estimatedSize());
         out.put("stateMb", Math.round(store.sizeOnDisk() / 1048576.0 * 10) / 10.0);
+        out.put("durability", store.durability().name().toLowerCase(java.util.Locale.ROOT));
+        out.put("budgetMb", store.budget() / 1_048_576);
+        out.put("evicted", evicted.get());
         out.put("received", received.get());
         out.put("rejected", rejected.get());
         return out;
@@ -268,9 +294,63 @@ public abstract class MessageStateSource implements SourcePlugin {
         memory.invalidateAll();
     }
 
+    /** When each entity was last written (this run; entities from earlier runs count as written at start). */
+    private final Map<EntityRef, Long> updated = new java.util.concurrent.ConcurrentHashMap<>();
+    private boolean evictWhenFull;
+    private final java.util.concurrent.atomic.AtomicLong evicted = new java.util.concurrent.atomic.AtomicLong();
+    private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(MessageStateSource.class);
+
+    /**
+     * Keeps the state store within {@code state.max-gb}: with {@code state.when-full: evict-oldest} (the default) the
+     * entities written longest ago are removed until the store is under 90% of its budget, then the store is compacted
+     * so the disk gives the space back; each eviction is logged and counted ({@code evicted}). With {@code warn} nothing
+     * is removed and health says the store is over its budget.
+     */
+    void keepWithinBudget() {
+        if (store == null || !store.overBudget() || !evictWhenFull) {
+            return;
+        }
+        long size = store.sizeOnDisk();
+        int entities = updated.size();
+        if (size <= 0 || entities == 0) {
+            return;
+        }
+        int remove = (int) Math.ceil(entities * (1 - 0.9 * store.budget() / (double) size));
+        List<EntityRef> oldest = updated.entrySet().stream().sorted(Map.Entry.comparingByValue()).limit(Math.max(1, remove))
+                .map(Map.Entry::getKey).toList();
+        for (EntityRef ref : oldest) {
+            try {
+                store.remove(key(ref));
+            } catch (java.io.IOException e) {
+                storeProblem = e.getMessage();
+                return;
+            }
+            updated.remove(ref);
+            memory.invalidate(ref);
+            known.remove(ref);
+        }
+        rebuildIndex();
+        store.compact();
+        evicted.addAndGet(oldest.size());
+        LOG.warn("{}: state store over its budget ({} MB of {} MB): evicted the {} entities written longest ago (now {} MB)", sourceName,
+                size / 1_048_576, store.budget() / 1_048_576, oldest.size(), store.sizeOnDisk() / 1_048_576);
+    }
+
+    /** Why the state store last failed to keep a message, until one is kept again. */
+    private volatile String storeProblem;
+
     @Override
     public String health() {
-        return health.get();
+        String problem = storeProblem;
+        if (problem != null) {
+            return "DOWN: " + problem + " (messages are not acknowledged and come again)";
+        }
+        String h = health.get();
+        if (store != null && store.overBudget() && h.startsWith("UP")) {
+            return h + " (state store over its budget: " + Math.round(store.sizeOnDisk() / 1e8) / 10.0 + " of "
+                    + Math.round(store.budget() / 1e8) / 10.0 + " GB; " + (evictWhenFull ? "the oldest entities are being evicted)" : "nothing is dropped: raise state.max-gb or add disk)");
+        }
+        return h;
     }
 
     /** Closes the state store; subclasses close their connection first, then call this. */
