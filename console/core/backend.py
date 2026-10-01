@@ -111,7 +111,7 @@ class BackendClient:
 
     async def save_sutra(self, yaml_text: str, ident=None, note: str = "") -> dict:
         """Saves a Sutra; with review on, the answer is {"proposal": {...}} and the Sutra is not live yet."""
-        return await self._send("POST", "/sutras", ident, content=yaml_text.encode(), headers={"Content-Type": "text/markdown"},
+        return await self._send("POST", "/sutras", ident, content=yaml_text.encode(), headers={"Content-Type": "text/yaml"},
                                 params={"note": note} if note else None)
 
     async def proposals(self, ident=None, status: str = "", name: str = "") -> dict:

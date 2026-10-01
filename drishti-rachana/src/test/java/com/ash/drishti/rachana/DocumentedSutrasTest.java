@@ -32,14 +32,15 @@ import org.junit.jupiter.api.Test;
 /** Every complete Sutra shown in the documentation and tutorials parses and compiles, so readers can paste it. */
 class DocumentedSutrasTest {
 
-    static final Pattern BLOCK = Pattern.compile("(?ms)^```sutra\\s*$\\n(.*?)^```\\s*$");
+    /** A complete Sutra in a document: a {@code ```yaml} block whose first line (after comments) is {@code rachana: 1}. */
+    static final Pattern BLOCK = Pattern.compile("(?ms)^```yaml\\s*$\\n((?:#[^\\n]*\\n|\\s*\\n)*rachana:.*?)^```\\s*$");
 
     @Test
     void sutraExamplesInDocsAndTutorialsAreValid() throws Exception {
         List<Path> files = new ArrayList<>();
         for (String dir : List.of("../docs", "../console/web/guides", "../packs")) {
             try (Stream<Path> s = Files.walk(Path.of(dir))) {
-                s.filter(p -> p.toString().endsWith(".md") && !p.toString().endsWith(".sutra.md") && !p.toString().contains("/sutras/"))
+                s.filter(p -> p.toString().endsWith(".md") && !p.toString().contains("/sutras/"))
                         .forEach(files::add);
             }
         }
@@ -53,7 +54,7 @@ class DocumentedSutrasTest {
                 if (yaml.contains("...") || yaml.contains("…")) {
                     continue;   // an abridged illustration, not a Sutra to paste
                 }
-                Sutra s = parser.parse(yaml, f.getFileName().toString(), "docs");
+                Sutra s = parser.parse(yaml, f.getFileName().toString().replace(".md", ".sutra.yaml"), "docs");
                 assertThat(check.check(s)).as(f + " " + s.id()).isEmpty();
                 checked++;
             }

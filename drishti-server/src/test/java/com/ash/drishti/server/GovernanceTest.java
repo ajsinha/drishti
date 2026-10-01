@@ -48,11 +48,11 @@ class GovernanceTest {
     }
 
     private static String sutra(String name, String title) {
-        return "# " + title + "\n\n```sutra\nsutra: " + name + "\nversion: 1\nmatch: { kind: trade }\ntitle: { id: $.tradeId }\n```\n";
+        return "# " + title + "\nrachana: 1\nsutra: " + name + "\nversion: 1\nmatch: { kind: trade }\ntitle: { id: $.tradeId }\n";
     }
 
     private String propose(String text, String by) throws Exception {
-        String body = mvc.perform(post("/api/v1/sutras").param("note", "clearer title").contentType("text/markdown").content(text)
+        String body = mvc.perform(post("/api/v1/sutras").param("note", "clearer title").contentType("text/yaml").content(text)
                         .header("Authorization", as(by, "author")))
                 .andExpect(status().isAccepted()).andExpect(jsonPath("$.proposal.status").value("pending"))
                 .andReturn().getResponse().getContentAsString();

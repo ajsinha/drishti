@@ -42,7 +42,8 @@ from about sixty lines of Rachana.*
 4. Select all the text in the editor and replace it with the block below.
 5. Press **Ctrl+Enter**.
 
-```sutra
+```yaml
+rachana: 1
 sutra: my-first-trade
 version: 1
 description: A first look at any trade.
@@ -84,21 +85,14 @@ A Sutra lives in `sutras/<domain>/<name>.v<N>.sutra.md`, inside a pack or a site
 Markdown: write what the layout is for and why, for the next person and for AI assistants. The engine reads only
 the fenced block marked `sutra`:
 
-````markdown
-# Interest rate swap (`irs-fixfloat` v1)
-
-Swaps for the rates desk. The strip leads with MTM and DV01 because that is what traders check first.
-
-```sutra
+```yaml
+rachana: 1
 sutra: irs-fixfloat
 version: 1
 ...
+notes: |
+  Swaps for the rates desk. The strip leads with MTM and DV01 because that is what traders check first.
 ```
-
-## Why these panels
-F3 is the cashflow ladder with the next payment highlighted, because operations asked for it.
-````
-
 - One `sutra` block per file (problem `DRS-2004` otherwise). Problems report the Markdown file's line numbers.
 - `name@version` is unique. Keep old versions: saved views and history reproduce with the version they used.
 - Studio edits the whole document; its **Document** tab shows the prose as the help centre renders it.

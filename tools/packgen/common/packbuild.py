@@ -105,7 +105,7 @@ def manifest(spec: PackSpec, known_fields: dict[str, tuple[str, str]]) -> dict:
 
 
 def sutra(spec: PackSpec, k: Kind) -> str:
-    return MS.kind_doc(k).replace(MS.GENERATED, "<!-- " + _generated(spec, "file") + " -->")
+    return MS.kind_doc(k).replace(MS.GENERATED, "# " + _generated(spec, "file"))
 
 
 def overview(spec: PackSpec, docs: dict) -> str:
@@ -156,7 +156,7 @@ def files(spec: PackSpec, docs: dict, known_fields: dict) -> dict[Path, str]:
     out[base / "pack.yaml"] = (f"{YAML_HEADER}\n\n# {_generated(spec, 'file')}\n# {spec.title} pack for Drishti.\n"
                                + yaml.safe_dump(manifest(spec, known_fields), sort_keys=False, allow_unicode=True, width=140))
     for k in spec.kinds:
-        out[base / "sutras" / MS.slug(k.group) / f"{k.kind}.v1.sutra.md"] = sutra(spec, k)
+        out[base / "sutras" / MS.slug(k.group) / f"{k.kind}.v1.sutra.yaml"] = sutra(spec, k)
     catalog = []
     for k in spec.kinds:
         for id_, d in sorted(docs.get(k.kind, {}).items()):

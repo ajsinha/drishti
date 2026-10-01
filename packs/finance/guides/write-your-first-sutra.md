@@ -24,18 +24,14 @@ A Sutra is a Markdown file, `sutras/rates/my-swap.v1.sutra.md`. Write whatever h
 (what the layout is for, why the panels are in that order) and put the layout itself in one fenced
 block marked `sutra`:
 
-````markdown
-# My swap (`my-swap` v1)
-
-Swaps for the rates desk: the strip leads with MTM because that is what traders check first.
-
-```sutra
+```yaml
+rachana: 1
 sutra: my-swap
 version: 1
 ...
+notes: |
+  Swaps for the rates desk: the strip leads with MTM because that is what traders check first.
 ```
-````
-
 The engine reads only the `sutra` block. The snippets below are its contents.
 
 ## 1. Name it and say what it matches

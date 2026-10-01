@@ -20,7 +20,6 @@ import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.rachana.el.ElCompiler;
 import com.ash.drishti.rachana.model.SourceLocation;
 import com.ash.drishti.rachana.model.Sutra;
-import com.ash.drishti.rachana.parse.SutraMarkdown;
 import com.ash.drishti.rachana.parse.SutraParser;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -121,8 +120,7 @@ public final class SutraRegistry implements AutoCloseable {
     }
 
     /**
-     * Validates and writes a Sutra into the first Sutra directory ({@code <domain>/<name>.v<N>.sutra.md}, or
-     * {@code .yaml} for plain YAML text), then
+     * Validates and writes a Sutra into the first Sutra directory ({@code <domain>/<name>.v<N>.sutra.yaml}), then
      * reloads. Refuses a {@code name@version} that another file already defines.
      *
      * @return the written Sutra
@@ -137,7 +135,7 @@ public final class SutraRegistry implements AutoCloseable {
     }
 
     private Sutra save0(String yaml) throws IOException {
-        Sutra s = parser.parse(yaml, "studio.yaml", "studio");
+        Sutra s = parser.parse(yaml, SutraParser.STUDIO, "studio");
         List<SutraProblem> problems = expressions.check(s);
         if (!problems.isEmpty()) {
             throw new SutraException(problems);
@@ -146,7 +144,7 @@ public final class SutraRegistry implements AutoCloseable {
             throw new SutraException(List.of(new SutraProblem("DRS-2020", "no site Sutra directory to save into (drishti.rachana.dirs)", s.location())));
         }
         Path dir = Path.of(props.dirs().get(0)).toAbsolutePath().normalize();
-        Path target = dir.resolve(s.domain()).resolve(s.name() + ".v" + s.version() + (SutraMarkdown.isMarkdown(yaml) ? ".sutra.md" : ".yaml")).normalize();
+        Path target = dir.resolve(s.domain()).resolve(s.name() + ".v" + s.version() + ".sutra.yaml").normalize();
         if (!target.startsWith(dir)) {
             throw new SutraException(List.of(new SutraProblem("DRS-2020", "bad domain or name", s.location())));
         }
@@ -162,7 +160,7 @@ public final class SutraRegistry implements AutoCloseable {
 
     /** Parses and checks {@code yaml} without saving it, for Studio previews. */
     public Sutra check(String yaml) {
-        Sutra s = parser.parse(yaml, "studio.yaml", "studio");
+        Sutra s = parser.parse(yaml, SutraParser.STUDIO, "studio");
         List<SutraProblem> problems = expressions.check(s);
         if (!problems.isEmpty()) {
             throw new SutraException(problems);
@@ -200,6 +198,14 @@ public final class SutraRegistry implements AutoCloseable {
         lastGood.keySet().retainAll(files);
         for (Path f : files) {
             Sutra s;
+            String fname = f.getFileName().toString();
+            if (!fname.endsWith(".sutra.yaml")) {                     // a file in a Sutra folder that is not a Sutra file
+                problems.put(f.toString(), List.of(new SutraProblem("DRS-2004", fname.endsWith(".sutra.md")
+                        ? "Markdown Sutras are no longer read (Sutras are YAML since 1.11): convert it with "
+                                + "python3 tools/rachana/md_to_yaml.py " + f + " --delete"
+                        : "a Sutra file is named <name>.v<N>.sutra.yaml; rename " + fname, new SourceLocation(f.toString(), 1, 1))));
+                continue;
+            }
             try {
                 String domain = f.getParent() == null ? "" : f.getParent().getFileName().toString();
                 s = parser.parse(Files.readString(f, StandardCharsets.UTF_8), f.getFileName().toString(), domain);
@@ -289,7 +295,9 @@ public final class SutraRegistry implements AutoCloseable {
                 continue;
             }
             try (Stream<Path> s = Files.walk(dir)) {
-                s.filter(p -> SutraMarkdown.isFile(p.toString()) || p.toString().endsWith(".yaml") || p.toString().endsWith(".yml")).sorted().forEach(out::add);
+                // *.sutra.yaml are Sutras; *.sutra.md and other YAML files are listed only to be reported (convert or rename)
+                s.filter(p -> p.toString().endsWith(".sutra.yaml") || p.toString().endsWith(".sutra.md") || p.toString().endsWith(".yaml")
+                        || p.toString().endsWith(".yml")).sorted().forEach(out::add);
             } catch (IOException e) {
                 LOG.warn("cannot scan {}", dir, e);
             }

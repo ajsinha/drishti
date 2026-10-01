@@ -39,7 +39,7 @@ class SutraParserTest {
 
     @Test
     void referenceSutrasParse() throws Exception {
-        Sutra irs = load("rates/irs-vanilla.v3.sutra.md");
+        Sutra irs = load("rates/irs-vanilla.v3.sutra.yaml");
         assertThat(irs.id()).isEqualTo("irs-vanilla@3");
         assertThat(irs.domain()).isEqualTo("rates");
         assertThat(irs.strip()).hasSize(8);
@@ -47,45 +47,28 @@ class SutraParserTest {
         assertThat(irs.panels().get(0).body().kind()).isEqualTo(PanelKind.KV);
         assertThat(irs.panels().get(4).area()).isEqualTo(Area.RIGHT);
         assertThat(irs.keys()).containsKeys("F7", "F8", "F9");
-        for (String f : List.of("fx/fx-swap.v2.sutra.md", "commodities/listed-future.v1.sutra.md", "credit/netting-set.v1.sutra.md")) {
+        for (String f : List.of("fx/fx-swap.v2.sutra.yaml", "commodities/listed-future.v1.sutra.yaml", "credit/netting-set.v1.sutra.yaml")) {
             assertThat(load(f).panels()).isNotEmpty();
         }
-        assertThat(load("credit/netting-set.v1.sutra.md").panels().get(0).options().get("series")).isInstanceOf(List.class);
+        assertThat(load("credit/netting-set.v1.sutra.yaml").panels().get(0).options().get("series")).isInstanceOf(List.class);
     }
 
     @Test
-    void markdownSutraReadsOnlyTheBlockAndKeepsMarkdownLineNumbers() {
-        String md = """
-                # My layout
-
-                Prose with `code`, a table and *emphasis*; the engine ignores it.
-
-                ```sutra
-                sutra: md-layout
-                version: 2
-                match: { kind: trade }
-                colour: red
-                ```
-
-                ## Why
-                ```yaml
-                not: read
-                ```
-                """;
-        assertThatThrownBy(() -> parser.parse(md, "x.v2.sutra.md", "rates"))
-                .isInstanceOf(SutraException.class)
-                .satisfies(e -> assertThat(((SutraException) e).problems().get(0).location().line()).isEqualTo(9));
-        Sutra ok = parser.parse(md.replace("colour: red\n", ""), "x.v2.sutra.md", "rates");
-        assertThat(ok.id()).isEqualTo("md-layout@2");
-        assertThatThrownBy(() -> parser.parse("# no block\n", "y.v1.sutra.md", "rates"))
-                .satisfies(e -> assertThat(((SutraException) e).problems().get(0).code()).isEqualTo("DRS-2004"));
-        assertThatThrownBy(() -> parser.parse("```sutra\nsutra: a\n", "z.v1.sutra.md", "rates"))
-                .satisfies(e -> assertThat(((SutraException) e).problems().get(0).code()).isEqualTo("DRS-2004"));
+    void everySutraDeclaresTheLanguageVersionItIsWrittenIn() {
+        String body = "sutra: v-check\nversion: 1\nmatch: { kind: trade }\n";
+        assertThat(parser.parse("rachana: 1\n" + body, "v.sutra.yaml", "rates").id()).isEqualTo("v-check@1");
+        assertThatThrownBy(() -> parser.parse(body, "v.sutra.yaml", "rates"))
+                .satisfies(e -> assertThat(((SutraException) e).problems()).extracting(SutraProblem::code).contains("DRS-2009"));
+        assertThatThrownBy(() -> parser.parse("rachana: 2\n" + body, "v.sutra.yaml", "rates"))
+                .satisfies(e -> assertThat(((SutraException) e).problems().get(0).message()).contains("not a language version this server reads"));
+        assertThatThrownBy(() -> parser.parse("rachana: 1\nnotes: [a, b]\n" + body, "v.sutra.yaml", "rates"))
+                .satisfies(e -> assertThat(((SutraException) e).problems()).extracting(SutraProblem::message).anySatisfy(m -> assertThat(m).contains("'notes' is plain text")));
     }
 
     @Test
     void reportsEveryProblemWithLineAndColumn() {
         String yaml = """
+                rachana: 1
                 sutra: Bad_Name
                 version: 0
                 match: { kind: trade }
@@ -102,13 +85,13 @@ class SutraParserTest {
                     assertThat(e.problems()).extracting(SutraProblem::code).contains(
                             "DRS-2020", "DRS-2011", "DRS-2010", "DRS-2022", "DRS-2021", "DRS-2023", "DRS-2025");
                     assertThat(e.problems()).filteredOn(p -> p.code().equals("DRS-2011"))
-                            .first().satisfies(p -> assertThat(p.location().line()).isEqualTo(4));
+                            .first().satisfies(p -> assertThat(p.location().line()).isEqualTo(5));
                 });
     }
 
     @Test
     void yamlSyntaxErrorsHaveAPosition() {
-        assertThatThrownBy(() -> parser.parse("sutra: x\n  version: [1,\n", "broken.yaml", "x"))
+        assertThatThrownBy(() -> parser.parse("rachana: 1\nsutra: x\n  version: [1,\n", "broken.yaml", "x"))
                 .isInstanceOfSatisfying(SutraException.class,
                         e -> assertThat(e.problems().get(0).code()).isEqualTo("DRS-2001"));
     }
@@ -116,6 +99,7 @@ class SutraParserTest {
     @Test
     void aTablePanelMayTurnItsSearchOffAndOnlyTablesHaveOne() {
         String ok = """
+                rachana: 1
                 sutra: quiet-table
                 version: 1
                 match: { kind: trade }
@@ -130,6 +114,7 @@ class SutraParserTest {
         var s = parser.parse(ok, "quiet.yaml", "x");
         assertThat(s.panels().get(0).option("search")).contains("false");
         String bad = """
+                rachana: 1
                 sutra: noisy-kv
                 version: 1
                 match: { kind: trade }

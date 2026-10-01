@@ -32,6 +32,7 @@ public final class SutraWriter {
 
     public String write(Sutra s, String name, int version) {
         StringBuilder y = new StringBuilder();
+        y.append("rachana: ").append(com.ash.drishti.rachana.parse.SutraParser.LANGUAGE).append('\n');
         y.append("sutra: ").append(name).append('\n');
         y.append("version: ").append(version).append('\n');
         y.append("description: Started from inference for ").append(s.match().kind()).append(". Edit freely.\n");

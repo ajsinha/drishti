@@ -73,7 +73,7 @@ class StudioTest {
 
     @Test
     void previewAndInferAgainstPastedJson() throws Exception {
-        String yaml = "sutra: pasted\nversion: 1\nmatch: { kind: widget }\ntitle: { pill: Widget, id: $.code }\n"
+        String yaml = "rachana: 1\nsutra: pasted\nversion: 1\nmatch: { kind: widget }\ntitle: { pill: Widget, id: $.code }\n"
                 + "strip:\n  - { label: Price, bind: $.price, fmt: amount2 }\npanels:\n  - { id: refs, kind: links, title: Links }\n";
         String doc = "{\"code\":\"W-1\",\"price\":1234.5,\"parts\":[{\"name\":\"a\",\"qty\":2},{\"name\":\"b\",\"qty\":3}]}";
         mvc.perform(post("/api/v1/studio/preview").contentType(MediaType.APPLICATION_JSON)
@@ -84,7 +84,7 @@ class StudioTest {
         String inferred = mvc.perform(post("/api/v1/studio/inferred").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"kind\":\"widget\",\"id\":\"W-1\",\"name\":\"widget\",\"document\":" + doc + "}"))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
-        assertThat(inferred).contains("sutra: widget").contains("$.parts");
+        assertThat(inferred).contains("rachana: 1\nsutra: widget").contains("$.parts");
         mvc.perform(post("/api/v1/studio/preview").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"yaml\":" + json.writeValueAsString(yaml) + ",\"kind\":\"widget\",\"document\":[1,2]}"))
                 .andExpect(status().isUnprocessableEntity());
@@ -93,8 +93,20 @@ class StudioTest {
     @Test
     void savingIsOffUnlessEnabled() throws Exception {
         mvc.perform(get("/api/v1/studio/settings")).andExpect(jsonPath("$.save").value(false));
-        mvc.perform(post("/api/v1/sutras").contentType("text/yaml").content("sutra: x\nversion: 1\nmatch: { kind: trade }\n"))
+        mvc.perform(post("/api/v1/sutras").contentType("text/yaml").content("rachana: 1\nsutra: x\nversion: 1\nmatch: { kind: trade }\n"))
                 .andExpect(status().isForbidden());
         assertThat(Files.exists(Path.of("../sutras/studio"))).isFalse();
+    }
+
+    @Test
+    void theRachanaSchemaComesFromTheGrammarAndThisServersKindsAndFormats() throws Exception {
+        String body = mvc.perform(get("/api/v1/rachana/schema")).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        var schema = new com.fasterxml.jackson.databind.ObjectMapper().readTree(body);
+        org.assertj.core.api.Assertions.assertThat(schema.path("required").toString()).contains("rachana", "sutra", "version", "match");
+        org.assertj.core.api.Assertions.assertThat(schema.at("/properties/rachana/const").asInt()).isEqualTo(1);
+        org.assertj.core.api.Assertions.assertThat(schema.at("/properties/match/properties/kind/enum").toString()).contains("trade");
+        org.assertj.core.api.Assertions.assertThat(schema.at("/$defs/panel/properties/kind/enum")).hasSize(13);
+        org.assertj.core.api.Assertions.assertThat(schema.at("/$defs/column/properties/fmt/enum").toString()).contains("signed0", "date");
+        org.assertj.core.api.Assertions.assertThat(schema.path("x-rachana-functions").has("link")).isTrue();
     }
 }

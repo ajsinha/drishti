@@ -24,6 +24,9 @@ import com.ash.drishti.rachana.el.Values;
  */
 public final class Tones {
 
+    /** Every tone a Sutra may name. */
+    public static final java.util.List<String> NAMES = java.util.List.of("sign", "status", "pos", "neg", "link", "accent", "ok", "warn", "bad");
+
     private Tones() {}
 
     public static String resolve(String tone, Object value) {

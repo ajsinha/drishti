@@ -51,6 +51,11 @@ public enum PanelKind {
         return required;
     }
 
+    /** Options this kind accepts but does not require. */
+    public Set<String> optional() {
+        return optional;
+    }
+
     public boolean accepts(String option) {
         return required.contains(option) || optional.contains(option);
     }

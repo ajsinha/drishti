@@ -1141,12 +1141,8 @@ and *Agent*. Labels are optional: a field without one is humanised (`openTickets
 Inference is a good start; a **Sutra** fixes the layout. Create `packs/helpdesk/sutras/ticket.v1.sutra.md`
 (header comment first, then prose, then exactly one `sutra` block):
 
-````markdown
-# Ticket (`ticket` v1)
-
-A support ticket: its status, age and agent in the strip, its history as a ladder.
-
-```sutra
+```yaml
+rachana: 1
 sutra: ticket
 version: 1
 description: A support ticket with its history, agent and client.
@@ -1173,9 +1169,9 @@ panels:
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
 keys: { F7: "link($.assignee, 'agent')", F9: raw }
+notes: |
+  A support ticket: its status, age and agent in the strip, its history as a ladder.
 ```
-````
-
 Pack Sutras are watched: the server picks the file up within about a second, without a restart. Check:
 
 ```bash

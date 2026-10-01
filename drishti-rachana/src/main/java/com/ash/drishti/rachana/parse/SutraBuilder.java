@@ -46,8 +46,10 @@ final class SutraBuilder {
 
     private static final Pattern NAME = Pattern.compile("[a-z][a-z0-9-]{1,63}");
     private static final Pattern FKEY = Pattern.compile("F([1-9]|1[0-2])");
-    private static final Set<String> TOP = Set.of("sutra", "version", "domain", "match", "title", "strip", "panels", "keys", "description");
-    private static final Set<String> PANEL = Set.of("id", "kind", "title", "key", "code", "area", "infer", "columns", "body");
+    private static final int LANGUAGE = SutraParser.LANGUAGE;
+    private static final Set<String> TOP = Set.of("rachana", "sutra", "version", "domain", "match", "title", "strip", "panels", "keys",
+            "description", "notes");
+    private static final Set<String> PANEL = Set.of("id", "kind", "title", "key", "code", "area", "infer", "columns", "body", "description");
     private static final Set<String> STRIP = Set.of("label", "bind", "fmt", "tone", "emphasis");
     private static final Set<String> COLUMN = Set.of("label", "bind", "fmt", "tone", "total", "link");
 
@@ -69,6 +71,18 @@ final class SutraBuilder {
         }
         Map<String, PNode> m = root.map();
         unknownKeys(m, TOP, "top level");
+        PNode lang = m.get("rachana");
+        if (lang == null) {
+            problem("DRS-2009", "missing 'rachana: " + LANGUAGE + "' (the Rachana language version) at the top", root);
+        } else if (!(lang.value() instanceof Long l) || l != LANGUAGE) {
+            problem("DRS-2009", "'rachana: " + lang.value() + "' is not a language version this server reads (it reads " + LANGUAGE + ")", lang);
+        }
+        for (String doc : new String[] {"description", "notes"}) {
+            PNode d = m.get(doc);
+            if (d != null && !(d.value() instanceof String)) {
+                problem("DRS-2012", "'" + doc + "' is plain text", d);
+            }
+        }
         String name = requiredText(m, "sutra", root);
         if (name != null && !NAME.matcher(name).matches()) {
             problem("DRS-2020", "name '" + name + "' must be lower-case kebab, 2-64 characters", m.get("sutra"));

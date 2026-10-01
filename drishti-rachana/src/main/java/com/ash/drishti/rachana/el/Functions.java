@@ -62,6 +62,11 @@ public final class Functions {
         return !Values.isNull(where) && Values.text(where).toLowerCase(Locale.ROOT).contains(p);
     }
 
+    /** Every function of Rachana-EL with its argument count: {name: [min, max]}. */
+    public static java.util.Map<String, int[]> arity() {
+        return ARITY;
+    }
+
     static ElFunction get(String name) {
         return FUNCTIONS.get(name);
     }

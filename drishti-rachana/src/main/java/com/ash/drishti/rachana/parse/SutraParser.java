@@ -23,26 +23,27 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.IOException;
 import java.util.List;
 
-/** Parses and validates a Sutra: a Markdown Sutra ({@link SutraMarkdown}) or plain YAML. Stateless and thread-safe. */
+/**
+ * Parses and validates a Sutra: one YAML document ({@code <name>.v<N>.sutra.yaml}) that starts with {@code rachana: 1}.
+ * Stateless and thread-safe.
+ */
 public final class SutraParser {
+
+    /** The Rachana language version this parser reads; every Sutra declares it ({@code rachana: 1}). */
+    public static final int LANGUAGE = 1;
+
+    /** The file name used for text that comes from Studio rather than from a file. */
+    public static final String STUDIO = "studio.sutra.yaml";
 
     private final PositionalYamlReader reader = new PositionalYamlReader();
 
     /**
-     * @param yaml the file content: Markdown with one {@code ```sutra} block, or plain YAML
+     * @param yaml the file content: the Sutra YAML
      * @param file the file name used in problem locations
      * @param domain the default domain (the parent folder name)
      * @throws SutraException listing every problem found
      */
     public Sutra parse(String yaml, String file, String domain) {
-        if (SutraMarkdown.isFile(file) || SutraMarkdown.isMarkdown(yaml)) {
-            String inner = SutraMarkdown.yaml(yaml);
-            if (inner == null) {
-                throw new SutraException(List.of(new SutraProblem("DRS-2004",
-                        "a Markdown Sutra needs exactly one closed ```sutra block", new SourceLocation(file, 1, 1))));
-            }
-            yaml = inner;
-        }
         PNode root;
         try {
             root = reader.read(yaml);

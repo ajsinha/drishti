@@ -68,23 +68,16 @@ The standard format is a **Markdown Sutra**, `sutras/<domain>/<name>.v<N>.sutra.
 Markdown document that people and AI assistants can read, with exactly one fenced `sutra` block that
 holds the layout in Rachana (YAML syntax, with Rachana-EL expressions in string values).
 
-````markdown
-# Vanilla interest-rate swap (`irs-vanilla` v3)
-
-Fixed-for-floating swaps. The strip leads with MTM and DV01; F2 shows the legs.
-
-```sutra
+```yaml
+rachana: 1
 sutra: irs-vanilla
 version: 3
 match: { kind: trade, where: "$.product == 'IRS'" }
 panels:
   - { id: legs, kind: kv, title: Legs, key: F2, rows: $.legs }
+notes: |
+  Fixed-for-floating swaps. The strip leads with MTM and DV01; F2 shows the legs.
 ```
-
-## Why these panels
-Traders asked for the legs first …
-````
-
 What the parser does with a file, in order (`SutraParser`, `SutraMarkdown`, `SutraBuilder`):
 
 1. If the file name ends in `.sutra.md`, **or** the text has a line that is exactly ```` ```sutra ```` or
@@ -161,12 +154,8 @@ The fragment of the document that the Sutra reads looks like this (abridged; the
 }
 ```
 
-````markdown
-# Vanilla swap, annotated (`swap-annotated` v1)
-
-Prose around the block is documentation: the help centre and Studio render it, and the engine ignores it.
-
-```sutra
+```yaml
+rachana: 1
 # ---- Identity -----------------------------------------------------------------------------------------
 sutra: swap-annotated            # the name: lower-case kebab, 2-64 characters
 version: 1                       # name@version is unique; old versions stay loadable, so saved views reproduce
@@ -355,14 +344,9 @@ keys:
   F7: "link($.nettingSet, 'netting-set')"        # F7 opens the netting set
   F8: impact                                     # F8: what depends on this trade
   F9: raw                                        # F9: the raw JSON (redacted for roles without raw)
+notes: |
+  Prose around the block is documentation: the help centre and Studio render it, and the engine ignores it.
 ```
-
-## Why these panels
-
-The strip leads with what a trader checks first (MTM, P&L); settlement detail sits lower, and the risk
-charts go in the side column.
-````
-
 What each part does when the view is built:
 
 | Part | What happens |

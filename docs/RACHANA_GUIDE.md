@@ -108,12 +108,8 @@ Read it the way a Sutra will: `$` is this whole document, `$.symbol` is `BRCA1`,
 A Sutra needs three things: a name (`sutra:`), a version, and a `match` with a `kind`. Here is the smallest
 useful one, with a single panel:
 
-````markdown
-# My gene view (`gene-mine` v1)
-
-A first Sutra for genes.
-
-```sutra
+```yaml
+rachana: 1
 sutra: gene-mine
 version: 1
 match: { kind: gene, priority: 20 }
@@ -124,9 +120,9 @@ panels:
     columns:
       - { label: Symbol, bind: $.symbol }
       - { label: Location, bind: $.location }
+notes: |
+  A first Sutra for genes.
 ```
-````
-
 - `sutra: gene-mine` is the name: lower-case letters, digits and hyphens, starting with a letter.
 - `version: 1` is a plain integer. Later you publish `version: 2` and keep version 1 on disk.
 - `match: { kind: gene, priority: 20 }` applies it to every gene, ahead of the pack's `gene` Sutra (priority 10).
@@ -275,12 +271,8 @@ keys: { F7: "link($.protein, 'protein')", F8: impact, F9: raw }
 
 ### The whole gene Sutra
 
-````markdown
-# My gene view (`gene-mine` v1)
-
-Genes for the research desk: where the gene is, where it is expressed, and its known variants.
-
-```sutra
+```yaml
+rachana: 1
 sutra: gene-mine
 version: 1
 description: Genes for the research desk.
@@ -329,13 +321,9 @@ panels:
     area: right
     rows: $.identifiers
 keys: { F7: "link($.protein, 'protein')", F8: impact, F9: raw }
+notes: |
+  Genes for the research desk: where the gene is, where it is expressed, and its known variants.
 ```
-
-## Notes
-
-The strip's *Expressed in* counts tissues above 10 TPM. Variants link to their own views.
-````
-
 You should see the strip end with `Expressed in 5 of 8 tissues` (Brain, Liver, Colon, Breast and Pancreas are
 above 10 TPM), and the key bar `F2 Position on`, `F3 Known variants`, `F4 Tissue expression`, `F7 Protein`,
 `F8 Impact`, `F9 Raw JSON`. Preview it against `GENE-TP53` too (change the id box): the same layout serves every

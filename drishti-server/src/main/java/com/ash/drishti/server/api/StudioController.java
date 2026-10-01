@@ -23,7 +23,6 @@ import com.ash.drishti.engine.ViewPipeline;
 import com.ash.drishti.engine.view.ViewModel;
 import com.ash.drishti.rachana.RachanaProperties;
 import com.ash.drishti.rachana.SutraRegistry;
-import com.ash.drishti.rachana.parse.SutraMarkdown;
 import com.ash.drishti.rachana.SutraWriter;
 import com.ash.drishti.rachana.model.Sutra;
 import com.ash.drishti.server.security.Entitlements;
@@ -90,7 +89,7 @@ public class StudioController {
         this.entitlements = entitlements;
     }
 
-    @GetMapping(path = "/sutras/{name}/{version}/source", produces = "text/markdown")
+    @GetMapping(path = "/sutras/{name}/{version}/source", produces = "text/yaml")
     public String source(@PathVariable String name, @PathVariable int version) {
         return sutras.source(name, version)
                 .orElseThrow(() -> new DrishtiException(ErrorCode.SUTRA_NOT_FOUND, name + "@" + version));
@@ -106,21 +105,21 @@ public class StudioController {
         return entitlements.restrict(principal, pipeline.preview(s, EntityRef.of(req.kind(), req.id()), asOf));
     }
 
-    @GetMapping(path = "/studio/inferred/{kind}/{id}", produces = "text/markdown")
+    @GetMapping(path = "/studio/inferred/{kind}/{id}", produces = "text/yaml")
     public String inferred(@PathVariable String kind, @PathVariable String id, @RequestParam(defaultValue = "") String name, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
         entitlements.requireOpen(principal, kind);
         String n = name.isBlank() ? kind + "-custom" : name;
-        return SutraMarkdown.wrap(n, 1, "Started from what inference makes of " + kind + " " + id + ".",
-                writer.write(pipeline.inferred(EntityRef.of(kind, id), asOf), n, 1));
+        return "# Started from what inference makes of " + kind + " " + id + ". Edit freely.\n"
+                + writer.write(pipeline.inferred(EntityRef.of(kind, id), asOf), n, 1);
     }
 
-    @PostMapping(path = "/studio/inferred", produces = "text/markdown")
+    @PostMapping(path = "/studio/inferred", produces = "text/yaml")
     public String inferredFromSample(@RequestBody InferRequest req, @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
         entitlements.requireOpen(principal, req.kind());
         String n = req.name() == null || req.name().isBlank() ? req.kind() + "-custom" : req.name();
-        return SutraMarkdown.wrap(n, 1, "Started from what inference makes of a pasted " + req.kind() + " document.",
-                writer.write(pipeline.inferred(pasted(req.kind(), req.id(), req.document())), n, 1));
+        return "# Started from what inference makes of a pasted " + req.kind() + " document. Edit freely.\n"
+                + writer.write(pipeline.inferred(pasted(req.kind(), req.id(), req.document())), n, 1);
     }
 
     @GetMapping("/studio/settings")
@@ -133,7 +132,7 @@ public class StudioController {
      * Saves a Sutra from Studio. With governance on (the default) it becomes a proposal for review ({@code 202} with the
      * proposal); otherwise it is written and goes live at once.
      */
-    @PostMapping(path = "/sutras", consumes = {"text/markdown", "text/yaml", MediaType.TEXT_PLAIN_VALUE})
+    @PostMapping(path = "/sutras", consumes = {"text/yaml", "application/yaml", MediaType.TEXT_PLAIN_VALUE})
     public org.springframework.http.ResponseEntity<?> save(@RequestBody String yaml, @RequestParam(required = false) String note,
             @RequestAttribute(Principal.ATTRIBUTE) Principal principal) throws IOException {
         if (!props.studioSave()) {

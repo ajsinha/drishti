@@ -16,6 +16,11 @@
 # Changelog
 
 ## Unreleased
+- **Sutras are YAML, and only YAML (ADR-016 supersedes ADR-011).**
+  - **File format:** a Sutra is one YAML file, `<name>.v<N>.sutra.yaml`, starting with `rachana: 1`, the language version (a missing or unknown version is `DRS-2009`). It can carry `description:` and `notes:` (plain text), and each panel a `description:`.
+  - **Markdown removed:** Markdown Sutras are no longer read. A `.sutra.md` file, or a Sutra saved under a plain `.yaml` name, is reported in health with how to fix it (`DRS-2004`).
+  - **Conversion:** all 228 shipped Sutras are converted; a one-off check proved each builds exactly the same layout as before. `tools/rachana/md_to_yaml.py` converts site Sutras. The generators write YAML.
+  - **Schema:** `GET /api/v1/rachana/schema` returns the JSON Schema of a Sutra, generated from the grammar with this server's kinds and formats, for editor completion and checking.
 - **Build gates: Error Prone and Spotless (ADR-007 amended).** Error Prone runs in every compile; its error-level checks and three more (non-atomic volatile updates, locks taken outside `try`, the default time zone) fail the build. Spotless checks unused imports, trailing whitespace, final newlines and indentation at `verify` (`./mvnw spotless:apply` fixes it). Fixed what they found: a validation callback whose result was discarded, a statistics counter updated non-atomically, a JDBC default date in the machine's time zone.
 - **Fix: the packs menu could vanish for a minute after a server restart.** The console cached its one-pack fallback while the server was away; it now keeps the last list it knew, and never caches the fallback.
 - **Load a pack while the server runs.** Admin → Packs → **Load** checks a pack that is on disk but not loaded (with the same checks as start-up; a clash is refused and nothing changes), records it in the pack overlay (`data/packs/added.yaml`, `DRISHTI_PACKS_OVERLAY`), and restarts the server inside its own process: sessions survive and live views reconnect. If the server cannot start with it, the overlay is put back. **Unload** takes back a pack loaded this way. API: `POST /api/v1/admin/packs/{name}/load|unload`.

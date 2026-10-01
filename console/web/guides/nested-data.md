@@ -153,12 +153,8 @@ This Markdown Sutra is an operations view of any trade: who, where, what the reg
 and every version of the trade. In Studio, choose *New Sutra…*, replace the editor's text with the document
 below, keep `trade` / `T-10001`, and press **Ctrl+Enter**.
 
-````markdown
-# Trade operations (`trade-operations` v1)
-
-An operations view of any trade, read from its nested execution, lifecycle, regulatory and settlement blocks.
-
-```sutra
+```yaml
+rachana: 1
 sutra: trade-operations
 version: 1
 description: Operations view of any trade, read from its nested execution, lifecycle, regulatory and settlement blocks.
@@ -218,14 +214,9 @@ panels:
       - { label: SSI, bind: $.settlementInstructions.ssiId }
   - { id: built, kind: provenance, title: How this view was built }
 keys: { F7: "link($.nettingSet, 'netting-set')", F9: raw }
+notes: |
+  An operations view of any trade, read from its nested execution, lifecycle, regulatory and settlement blocks.
 ```
-
-## Why these panels
-
-Operations staff check where a trade was executed, whether it is confirmed, cleared and reported, and how cash
-settles. The lifecycle ladder highlights the latest version.
-````
-
 You should see:
 
 - the strip: *Product Interest rate swap (fixed/float)*, *Venue Voice (XOFF)*, *Version 2*, *Confirmation

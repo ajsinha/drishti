@@ -120,7 +120,7 @@ class ImperfectDataTest {
     @Test
     void theNestedDocumentsTutorialWorksOnARealTrade() throws Exception {
         String guide = Files.readString(Path.of("../console/web/guides/nested-data.md"));
-        var m = java.util.regex.Pattern.compile("(?ms)^```sutra\\s*$\\n(.*?)^```\\s*$").matcher(guide);
+        var m = java.util.regex.Pattern.compile("(?ms)^```yaml\\s*$\\n((?:#[^\\n]*\\n|\\s*\\n)*rachana:.*?)^```\\s*$").matcher(guide);
         assertThat(m.find()).isTrue();
         Sutra s = new com.ash.drishti.rachana.parse.SutraParser().parse(m.group(1), "nested-data.md", "docs");
         DataNode trade = codec.read(Files.readString(Path.of("../packs/trading/samples/trade/T-10001.json")));

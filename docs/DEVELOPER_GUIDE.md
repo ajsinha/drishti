@@ -120,7 +120,7 @@ drishti-benchmarks                (inference)
 | `tools/packgen/` | Pack generators: `banking/` (five banking packs from one taxonomy), `common/packbuild.py` (the shared builder), and one `make.py` per other generated pack (`climate`, `economics`, `genomics`, `liquidity`, `oprisk`, `politics`, `retail`) |
 | `tools/samplegen/` | Sample-history helpers: `lake.py` (Delta Lake writer), `pgload.py` (PostgreSQL loader), `stream.py` (Kafka ticker), plus `test_samplegen.py` |
 | `tools/lake/` | `maintain.py`: Delta Lake retention, compaction, checkpoints and vacuum; `test_maintain.py` |
-| `tools/` (files) | `drill.sh` (verify and publish), `license_headers.py` (check or insert the copyright header), `sutra_to_md.py` (YAML Sutra to Markdown Sutra), `load-aerospike.sh` |
+| `tools/` (files) | `drill.sh` (verify and publish), `license_headers.py` (check or insert the copyright header), `rachana/md_to_yaml.py` (a Markdown Sutra of before 1.11 to a YAML Sutra), `load-aerospike.sh` |
 | `deploy/` | `server.Dockerfile`, `console.Dockerfile`, `compose.yaml`, `compose.data.yaml`, `lake-maintenance.yaml`, `grafana/` |
 | `config/license-header.txt` | The text of the copyright header that `license_headers.py` inserts |
 | `data/` | Runtime data, mostly git-ignored: `delta/` (sample lake), `identity/` (the SQLite database), `governance/` (Sutra proposals), `feeds/` |
@@ -1120,12 +1120,8 @@ console:
 
 A Sutra file in `sutras/` is Markdown with exactly one `sutra` block (ADR-011):
 
-````markdown
-# Wind farm (`wind-farm` v1)
-
-One wind farm: capacity, output and its turbines.
-
-```sutra
+```yaml
+rachana: 1
 sutra: wind-farm
 version: 1
 match: { kind: wind-farm, priority: 10 }
@@ -1145,9 +1141,9 @@ panels:
       - { label: Output (MW), bind: "@.outputMw", fmt: amount0 }
   - { id: refs, kind: links, title: Linked entities, area: right }
 # … more panels as you need them
+notes: |
+  One wind farm: capacity, output and its turbines.
 ```
-````
-
 Each sample document may carry a `_meta` block (`source`, `generation`, `live`, and `walk` for the demo plugin's
 random-walk ticks), which becomes the view's provenance; `samples/catalog.json` lists `{kind, id, title, subtitle}`
 for the dropdown.

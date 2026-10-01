@@ -1,0 +1,98 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+rachana: 1
+sutra: irs-vanilla
+version: 3
+description: Vanilla fixed/float interest rate swap (mockup drishti-irs.png).
+match: { kind: trade, where: "$.productType == 'IRS' && size($.legs) == 2", priority: 10 }
+title: { pill: "Trade · Interest rate swap", id: $.tradeId, with: "link($.counterparty.id, 'counterparty', $.counterparty.name)" }
+strip:
+  - { label: Notional (USD), bind: $.notional, fmt: amount0 }
+  - { label: Direction, bind: "$.direction == 'PAY_FIXED' ? 'Pay fixed' : 'Receive fixed'" }
+  - { label: Effective, bind: $.effectiveDate, fmt: date }
+  - { label: Maturity, bind: $.maturityDate, fmt: date }
+  - { label: Fixed rate, bind: $.fixedRate, fmt: pct4 }
+  - { label: MTM (USD), bind: $.mtm, fmt: signed0, tone: sign, emphasis: true }
+  - { label: DV01 (USD), bind: $.dv01, fmt: signed0, tone: sign }
+  - { label: Book, bind: "link($.book, 'book')" }
+panels:
+  - id: legs
+    kind: tabs
+    title: Legs
+    key: F2
+    each: $.legs
+    tabTitle: "'Leg ' + @.leg + ' · ' + @.label"
+    body:
+      kind: kv
+      columns:
+        - { label: Currency, bind: "@.currency" }
+        - { label: Notional, bind: "@.notional", fmt: amount0 }
+        - { label: Rate, bind: "@.type == 'FIXED' ? fmt(@.rate, 'pct4') + ' fixed' : @.index + ' compounded'" }
+        - { label: Day count, bind: "@.dayCount" }
+        - { label: Frequency, bind: "@.frequency" }
+        - { label: Business day, bind: "@.businessDay" }
+        - { label: Calendar, bind: "@.calendar" }
+        - { label: Payment lag, bind: "@.paymentLag" }
+  - id: cashflows
+    kind: table
+    title: Cashflows · Leg 1
+    code: CF · ladder
+    key: F3
+    rows: $.legs[0].cashflows
+    totalLabel: Total
+    columns:
+      - { label: "#", bind: "@.n" }
+      - { label: Accrual start, bind: "@.accrualStart", fmt: date }
+      - { label: Accrual end, bind: "@.accrualEnd", fmt: date }
+      - { label: Pay date, bind: "@.payDate", fmt: date }
+      - { label: Notional, bind: "@.notional", fmt: amount0 }
+      - { label: Rate, bind: "@.rate", fmt: pct4 }
+      - { label: Amount (USD), bind: "@.amount", fmt: signed2, tone: sign, total: true }
+      - { label: DF, bind: "@.df", fmt: df4 }
+      - { label: PV (USD), bind: "@.pv", fmt: signed2, tone: sign, total: true }
+  - id: leg2
+    kind: kv
+    title: "Leg 2 · ${$.legs[1].label}"
+    code: collapsed
+    columns:
+      - { label: Projected flows, bind: "$.legs[1].projectedFlows" }
+      - { label: Spread, bind: "$.legs[1].spread", fmt: pct4 }
+      - { label: Next reset, bind: "$.legs[1].nextReset", fmt: date }
+      - { label: PV (USD), bind: "$.legs[1].pv", fmt: signed2, tone: sign }
+  - { id: built, kind: provenance, title: How this view was built }
+  - id: curve
+    kind: line
+    title: USD-SOFR curve
+    code: CRV
+    key: F4
+    area: right
+    source: "link($.discountCurve, 'curve')"
+    rows: points
+    x: tenor
+    y: rate
+    fmt: price2
+    unit: "%"
+    mark: "$.maturityTenor"
+  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - id: dv01
+    kind: hbar
+    title: DV01 by tenor (USD)
+    code: SENS
+    area: right
+    rows: $.dv01ByTenor
+    label: tenor
+    value: dv01
+    fmt: signed0
+keys: { F7: "link($.nettingSet, 'netting-set')", F8: impact, F9: raw }

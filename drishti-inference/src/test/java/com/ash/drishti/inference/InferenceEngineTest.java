@@ -125,6 +125,7 @@ class InferenceEngineTest {
         assertThat(LayoutMerger.labelOf("link($.nettingSet, 'netting-set')")).isEqualTo("Netting set");
         assertThat(LayoutMerger.labelOf("fmt($.dv01ByTenor, 'x')")).isEqualTo("DV01 by tenor");
         var parsed = new com.ash.drishti.rachana.parse.SutraParser().parse("""
+                rachana: 1
                 sutra: no-labels
                 version: 1
                 match: { kind: trade }

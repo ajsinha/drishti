@@ -44,16 +44,16 @@ class RachanaReferenceExampleTest {
     @Autowired MockMvc mvc;
     final ObjectMapper json = new ObjectMapper();
 
-    /** The four-backtick Markdown block under "A complete example, annotated". */
+    /** The YAML block under "A complete example, annotated". */
     static String example() throws Exception {
         List<String> lines = Files.readAllLines(Path.of("../docs/RACHANA_REFERENCE.md"));
         int section = lines.indexOf("## A complete example, annotated");
         int start = -1;
         List<String> out = new ArrayList<>();
         for (int i = section; i < lines.size(); i++) {
-            if (start < 0 && lines.get(i).equals("````markdown")) {
+            if (start < 0 && lines.get(i).equals("```yaml")) {
                 start = i;
-            } else if (start >= 0 && lines.get(i).equals("````")) {
+            } else if (start >= 0 && lines.get(i).equals("```")) {
                 return String.join("\n", out) + "\n";
             } else if (start >= 0) {
                 out.add(lines.get(i));
