@@ -23,12 +23,21 @@ import org.springframework.core.env.Environment;
 public final class PackRegistry {
 
     private final List<Pack> packs;
+    private final java.util.Map<String, PackPython> python;
 
     public PackRegistry(Environment env) {
         String loaded = env.getProperty("drishti.packs.loaded", "");
         List<String> names = Arrays.stream(loaded.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList();
         this.packs = new PackLoader().load(PackLoader.dirs(env.getProperty("drishti.packs.dir", "./packs"),
                 env.getProperty("drishti.packs.installed-dir", "./data/packs/installed")), names);
+        java.util.Map<String, PackPython> py = new java.util.LinkedHashMap<>();
+        packs.forEach(p -> py.put(p.name(), PackPython.of(p)));
+        this.python = java.util.Collections.unmodifiableMap(py);
+    }
+
+    /** What a pack offers Calc (read once, at start-up, like the rest of the pack). */
+    public PackPython python(String pack) {
+        return python.getOrDefault(pack, PackPython.NONE);
     }
 
     public List<Pack> packs() {

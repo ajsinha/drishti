@@ -154,8 +154,11 @@ console:
   - - SACCR SACCR-SUMMIT-NY
     - SA-CCR exposure at default
   help: config/help.yaml
+python:
+  enabled: true
 roles:
   credit-risk:
     kinds:
     - '*'
     raw: true
+    calc: true

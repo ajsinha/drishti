@@ -27,6 +27,7 @@ from pathlib import Path
 import yaml
 
 import booking as BK
+import calc_snippets
 import layout
 import taxonomy as T
 
@@ -78,8 +79,9 @@ COLUMNS = {"trading": {"trade": ["productType", "direction", "currency", "notion
            "banking-core": {"counterparty": ["name", "rating", "sector", "country", "netMtm"],
                             "book": ["name", "deskName", "tradeCount", "mtm", "dv01"]}}
 
-ROLES = {"trading": {"trader": {"kinds": TRADER_KINDS}}, "market-risk": {"market-risk": {"kinds": ["*"], "raw": True}},
-         "counterparty-risk": {"credit-risk": {"kinds": ["*"], "raw": True}}}
+# calc: may use Calc, Python in the browser on what the role opens (PYTHON_CALC.md)
+ROLES = {"trading": {"trader": {"kinds": TRADER_KINDS, "calc": True}}, "market-risk": {"market-risk": {"kinds": ["*"], "raw": True, "calc": True}},
+         "counterparty-risk": {"credit-risk": {"kinds": ["*"], "raw": True, "calc": True}}}
 
 
 # how the Delta connector's tables are laid out (tools/samplegen/layout.py): the trade table holds a million trades
@@ -152,6 +154,8 @@ def manifest(name: str) -> dict:
     if name in COLUMNS:
         m["columns"] = COLUMNS[name]
     m["console"] = {"examples": [list(e) for e in EXAMPLES[name]], "help": "config/help.yaml"}
+    if calc_snippets.SNIPPETS.get(name):    # Calc on the pack's kinds, with its snippets under python/ (calc_snippets.py)
+        m["python"] = {"enabled": True}
     if name in IMPACT:
         m["graph"]["impact"] = IMPACT[name]
     if name in ROLES:
@@ -168,6 +172,9 @@ def files() -> dict[Path, str]:
         out[PACKS / name / "pack.yaml"] = f"{HEADER}\n\n{GENERATED}\n# {layout.PACKS[name]['title']} pack for Drishti.\n{body}"
         out[PACKS / name / "config" / "formats.yaml"] = (f"{HEADER}\n\n{GENERATED}\n# Number formats the banking packs share.\n"
                                                          + yaml.safe_dump({"formats": FORMATS}, sort_keys=False))
+        for file, title, description, kinds, code in calc_snippets.SNIPPETS.get(name, []):
+            meta = f"# title: {title}\n# description: {description}\n# kinds: {', '.join(kinds)}\n"
+            out[PACKS / name / "python" / file] = f"{HEADER}\n\n{GENERATED.replace('from the taxonomy', 'from calc_snippets.py')}\n{meta}\n{code}"
         if name == "banking-core":   # every banking pack requires banking-core, so its vocabulary covers them all
             out[PACKS / name / "config" / "semantics.yaml"] = (f"{HEADER}\n\n{GENERATED}\n# How banking field names read as labels.\n"
                                                                + yaml.safe_dump({"acronyms": ACRONYMS, "labels": {"tradeId": "Trade", "mtm": "MTM (USD)"}},

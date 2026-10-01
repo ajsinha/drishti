@@ -97,8 +97,11 @@ console:
   - - FRTB FRTB-RATES-1
     - FRTB sensitivities and charges
   help: config/help.yaml
+python:
+  enabled: true
 roles:
   market-risk:
     kinds:
     - '*'
     raw: true
+    calc: true

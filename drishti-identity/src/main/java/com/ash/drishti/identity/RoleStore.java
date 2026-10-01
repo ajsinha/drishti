@@ -37,6 +37,8 @@ import org.springframework.transaction.support.TransactionTemplate;
  */
 public final class RoleStore {
 
+    /** The power that lets a role use Calc, kept in {@code drishti_role_power}. */
+    static final String CALC = "calc";
     private static final Pattern NAME = Pattern.compile("[a-z][a-z0-9-]{1,63}");
     private final IdentityRepositories.Roles roles;
     private final TransactionTemplate tx;
@@ -105,6 +107,10 @@ public final class RoleStore {
                 e.author = role.author();
                 e.approve = role.approve();
                 e.admin = role.admin();
+                e.powers.clear();
+                if (role.calc()) {
+                    e.powers.add(CALC);
+                }
                 e.updatedAt = now;
                 e.updatedBy = actor;
                 e.kinds.clear();
@@ -142,11 +148,12 @@ public final class RoleStore {
 
     private static String describe(RoleDefinition r) {
         return "kinds=" + r.kinds() + (r.raw() ? " raw" : "") + (r.author() ? " author" : "") + (r.approve() ? " approve" : "")
-                + (r.admin() ? " admin" : "");
+                + (r.admin() ? " admin" : "") + (r.calc() ? " calc" : "");
     }
 
     private static RoleDefinition toDefinition(RoleEntity e) {
-        return new RoleDefinition(e.name, e.description, List.copyOf(new TreeSet<>(e.kinds)), e.raw, e.author, e.approve, e.admin, false,
+        return new RoleDefinition(e.name, e.description, List.copyOf(new TreeSet<>(e.kinds)), e.raw, e.author, e.approve, e.admin,
+                e.powers.contains(CALC), false,
                 e.updatedAt, e.updatedBy);
     }
 }

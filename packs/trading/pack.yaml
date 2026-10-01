@@ -150,6 +150,8 @@ console:
   - - TRD IMG-400067
     - Autocallable note · observation schedule
   help: config/help.yaml
+python:
+  enabled: true
 roles:
   trader:
     kinds:
@@ -187,3 +189,4 @@ roles:
     - ccp
     - clearing-account
     - desk-pnl
+    calc: true

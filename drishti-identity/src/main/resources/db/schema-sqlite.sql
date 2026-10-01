@@ -62,6 +62,13 @@ CREATE TABLE IF NOT EXISTS drishti_role_kind (
     PRIMARY KEY (role, kind)
 );
 
+-- Powers added after the first release (calc: may use Calc), one row each: a new power needs no new column.
+CREATE TABLE IF NOT EXISTS drishti_role_power (
+    role  TEXT NOT NULL REFERENCES drishti_role (name) ON DELETE CASCADE,
+    power TEXT NOT NULL,
+    PRIMARY KEY (role, power)
+);
+
 CREATE TABLE IF NOT EXISTS drishti_audit (
     id      INTEGER PRIMARY KEY AUTOINCREMENT,
     at      TIMESTAMP NOT NULL,

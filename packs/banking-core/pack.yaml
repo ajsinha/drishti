@@ -210,3 +210,5 @@ console:
   - - DESK DESK-RATES
     - Desk · books, VaR
   help: config/help.yaml
+python:
+  enabled: true

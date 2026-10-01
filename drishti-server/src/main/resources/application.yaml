@@ -123,9 +123,9 @@ drishti:
     metrics-token: ${DRISHTI_METRICS_TOKEN:}
     roles:
       viewer:  { kinds: ["*"] }        # packs add domain roles (finance: trader, risk)
-      author:  { kinds: ["*"], raw: true, author: true }
-      approver: { kinds: ["*"], raw: true, author: true, approve: true }   # reviews proposed Sutras (admins may too)
-      admin:   { kinds: ["*"], raw: true, author: true, admin: true }
+      author:  { kinds: ["*"], raw: true, author: true, calc: true }   # calc: may use Calc, Python in the browser (PYTHON_CALC.md)
+      approver: { kinds: ["*"], raw: true, author: true, approve: true, calc: true }   # reviews proposed Sutras (admins may too)
+      admin:   { kinds: ["*"], raw: true, author: true, admin: true, calc: true }
     oidc:                              # single sign-on (W20): the console runs the flow, the server verifies the ID token
       enabled: ${DRISHTI_OIDC_ENABLED:false}
       issuer: ${DRISHTI_OIDC_ISSUER:}
@@ -151,6 +151,11 @@ drishti:
     per-user: 20
     tick: 30s
     keep-runs: 20
+  calc:                              # Calc: Python in the browser (docs/guides/PYTHON_CALC.md); the server never runs the code
+    enabled: ${DRISHTI_CALC_ENABLED:true}   # also needs a role with calc, and a pack that enables it for the view's kind
+    max-column-rows: 250000          # drishti.columns() returns at most this many entities (the browser holds them all)
+    columns-budget: 20s              # how long a columns read may wait (the first read of a day loads its columns)
+    max-snippet-chars: 50000         # a saved snippet's code (each user keeps at most 50 snippets)
   identity:
     # Users, roles defined in Admin → Roles, saved workspaces/monitors/settings and the audit trail live in one database
     # (JPA). SQLite by default: a single file, nothing to install. For PostgreSQL:

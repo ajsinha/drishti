@@ -352,3 +352,5 @@ console:
   - - CMDC CMDC-WTI
     - WTI futures curve · backwardation
   help: config/help.yaml
+python:
+  enabled: true

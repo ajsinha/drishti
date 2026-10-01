@@ -106,9 +106,9 @@ connectors:                     # history for the business-date picker (build it
           mtm: $.mtm
 routes:
   book-pnl: book-totals
-roles:
-  trader: { kinds: [trade, curve, fx-spot, index, book, contract-spec, clearing-account, counterparty, fixing, book-pnl] }
-  risk:   { kinds: ["*"], raw: true }
+roles:                          # calc: may use Calc, Python in the browser (docs/guides/PYTHON_CALC.md)
+  trader: { kinds: [trade, curve, fx-spot, index, book, contract-spec, clearing-account, counterparty, fixing, book-pnl], calc: true }
+  risk:   { kinds: ["*"], raw: true, calc: true }
 alerts:                         # suggested alert rules, offered per kind
   - { kind: netting-set, name: "PFE near limit", when: "$.utilisation > 0.8", severity: warn, message: "${$.nettingSetId}: utilisation ${fmt($.utilisation, 'pct0')} of limit" }
   - { kind: netting-set, name: "Net MTM below −1.5m", when: "$.netMtm < -1500000", severity: warn, message: "${$.nettingSetId}: net MTM ${fmt($.netMtm, 'signed0')}" }
@@ -128,3 +128,25 @@ console:                        # read by the console
   help: config/help.yaml
   monitors:
     Credit watch: [ { kind: netting-set, id: NS-NORTH-01 }, { kind: netting-set, id: NS-HARB-02 }, { kind: trade, id: IRS-48213 }, { kind: trade, id: FXS-20931 }, { kind: trade, id: CFT-77120 } ]
+python:                         # Calc on this pack's kinds (Alt+C on a view); snippets here and in python/*.py
+  enabled: true
+  snippets:
+    - title: MTM under parallel rate moves
+      description: The swap's MTM after parallel moves of -100 to +100 bp from its DV01, and DV01 by tenor.
+      kinds: [trade]
+      code: |
+        import pandas as pd
+
+        mtm, dv01 = view.doc["mtm"], view.doc["risk"]["dv01"]
+        moves = pd.DataFrame({"shift_bp": [-100, -50, -25, -10, 0, 10, 25, 50, 100]})
+        moves["mtm"] = mtm + moves["shift_bp"] * dv01      # DV01: the change in value for +1 bp
+        show(moves, title=f"{view.id}: MTM {mtm:,.0f}, DV01 {dv01:,.0f} per bp")
+        chart(moves, kind="line", x="shift_bp", y="mtm", title="MTM after a parallel move (bp)")
+        chart(pd.DataFrame(view.doc.get("dv01ByTenor") or []), kind="bar", x="tenor", y="dv01", title="DV01 by tenor")
+    - title: Member trades, summed from the screen
+      description: The netting set's member trades as a DataFrame (view.tables), MTM by product, and the largest positions.
+      kinds: [netting-set]
+      code: |
+        trades = view.tables["Member trades"]          # the panel, as you see it, as a DataFrame
+        show(trades.groupby("Product", as_index=False)["MTM (USD)"].sum(), title="MTM by product")
+        trades.sort_values("MTM (USD)").head(5)

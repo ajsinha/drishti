@@ -97,6 +97,17 @@ public final class Entitlements {
         return has(p, com.ash.drishti.identity.RoleDefinition::author);
     }
 
+    /** Calc (Python in the browser): roles with {@code calc}. What the code reads is still checked call by call. */
+    public boolean mayCalc(Principal p) {
+        return has(p, com.ash.drishti.identity.RoleDefinition::calc);
+    }
+
+    public void requireCalc(Principal p) {
+        if (!mayCalc(p)) {
+            throw new DrishtiException(ErrorCode.FORBIDDEN, p.user() + " may not use Calc: ask an administrator for a role with calc");
+        }
+    }
+
     /** Approvers review proposed Sutras: roles with {@code approve}, and admins. */
     public boolean mayApprove(Principal p) {
         return has(p, com.ash.drishti.identity.RoleDefinition::approve) || has(p, com.ash.drishti.identity.RoleDefinition::admin);

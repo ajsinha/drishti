@@ -45,6 +45,7 @@ public class AccessRecorder implements WebMvcConfigurer, HandlerInterceptor {
             "/api/v1/history/{kind}/{id}/series", "history",
             "/api/v1/search", "search",
             "/api/v1/search/compare", "search",
+            "/api/v1/search/columns/{kind}", "search",              // Calc's drishti.columns(): the fields read are the detail
             "/api/v1/search/csv", "export");
 
     private final ObjectProvider<AccessLog> log;
@@ -79,7 +80,8 @@ public class AccessRecorder implements WebMvcConfigurer, HandlerInterceptor {
         Map<String, String> vars = (Map<String, String>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
         String kind = vars == null ? null : vars.get("kind");
         String id = vars == null ? null : vars.get("id");
-        String detail = action.equals("history") ? request.getParameter("path") : request.getParameter("q");
+        String detail = action.equals("history") ? request.getParameter("path")
+                : request.getParameter("q") != null ? request.getParameter("q") : request.getParameter("paths");
         String date = request.getHeader(AsOfResolver.HEADER);
         if (date == null || date.isBlank()) {
             date = request.getParameter("asOf");

@@ -46,14 +46,16 @@ public record SecurityProperties(Boolean enabled, String secret, Duration clockS
      * @param author may save Sutras from Studio (with governance on, a save is a proposal for review)
      * @param admin may manage users and read the audit log; also approves Sutras
      * @param approve may approve or reject proposed Sutras (never their own, with four-eyes on)
+     * @param calc may use Calc: Python in the browser over what the role may open (PYTHON_CALC.md)
      */
-    public record Role(List<String> kinds, Boolean raw, Boolean author, Boolean admin, Boolean approve) {
+    public record Role(List<String> kinds, Boolean raw, Boolean author, Boolean admin, Boolean approve, Boolean calc) {
         public Role {
             kinds = kinds == null ? List.of() : List.copyOf(kinds);
             raw = raw != null && raw;
             author = author != null && author;
             admin = admin != null && admin;
             approve = approve != null && approve;
+            calc = calc != null && calc;
         }
     }
 }

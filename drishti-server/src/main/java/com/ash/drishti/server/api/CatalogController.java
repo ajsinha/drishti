@@ -114,6 +114,7 @@ public class CatalogController {
             m.put("description", p.description());
             m.put("console", p.manifest().getOrDefault("console", Map.of()));
             m.put("kinds", p.kinds());
+            m.put("python", packRegistry.python(p.name()));        // Calc: enabled, and starter snippets (PYTHON_CALC.md)
             m.put("assigned", assigned.contains(p.name()));
             m.put("active", active.contains(p.name()));
             return m;

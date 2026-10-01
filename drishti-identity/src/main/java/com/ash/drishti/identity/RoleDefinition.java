@@ -28,12 +28,13 @@ import java.util.List;
  * @param author may write Sutras in Studio
  * @param approve may approve proposed Sutras
  * @param admin may administer users, roles, caches and packs
+ * @param calc may use Calc: Python run in the browser on what the holder may open (PYTHON_CALC.md)
  * @param builtIn defined in configuration or a pack (read-only in the UI) rather than by an administrator
  * @param updatedAt last change (null for built-in roles)
  * @param updatedBy who made it (empty for built-in roles)
  */
 public record RoleDefinition(String name, String description, List<String> kinds, boolean raw, boolean author, boolean approve,
-        boolean admin, boolean builtIn, Instant updatedAt, String updatedBy) {
+        boolean admin, boolean calc, boolean builtIn, Instant updatedAt, String updatedBy) {
 
     public RoleDefinition {
         description = description == null ? "" : description;

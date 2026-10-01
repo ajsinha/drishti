@@ -235,7 +235,7 @@ public final class StructuredSearch {
     }
 
     /** A whole number read from a float64 column shows as one (1875863, not 1875863.0). */
-    private static Object number(Object v) {
+    static Object number(Object v) {
         return v instanceof Double d && d == Math.rint(d) && Math.abs(d) < 1e15 ? (Object) d.longValue() : v;
     }
 
@@ -260,7 +260,7 @@ public final class StructuredSearch {
      * The paths the caller's role would see masked, with what it would see instead: a probe document holding every
      * path is put through the same redaction as documents are.
      */
-    private static Map<String, Object> masks(List<String> paths, UnaryOperator<DataNode> redact) {
+    static Map<String, Object> masks(List<String> paths, UnaryOperator<DataNode> redact) {
         Map<String, Object> root = new LinkedHashMap<>();
         for (String path : paths) {
             String[] parts = path.split("\\.");

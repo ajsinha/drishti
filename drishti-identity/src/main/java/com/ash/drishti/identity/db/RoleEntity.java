@@ -68,4 +68,13 @@ public class RoleEntity {
     @CollectionTable(name = "drishti_role_kind", joinColumns = @JoinColumn(name = "role"))
     @Column(name = "kind")
     public Set<String> kinds = new LinkedHashSet<>();
+
+    /**
+     * Powers added after the first release ({@code drishti_role_power}): a table of their own, so a database made by an
+     * earlier release gains them without a migration. {@code calc}: may use Calc.
+     */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "drishti_role_power", joinColumns = @JoinColumn(name = "role"))
+    @Column(name = "power")
+    public Set<String> powers = new LinkedHashSet<>();
 }

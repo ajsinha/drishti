@@ -37,15 +37,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Roles (Admin → Roles): every role with what it allows, and the ones administrators define. Built-in roles come from
- * configuration and packs and are read-only here. Each role lists the kinds it opens and four powers: raw JSON,
- * authoring Sutras, approving them, administering. Changes take effect at the next request; all are audited.
+ * configuration and packs and are read-only here. Each role lists the kinds it opens and five powers: raw JSON,
+ * authoring Sutras, approving them, administering, and Calc. Changes take effect at the next request; all are audited.
  */
 @RestController
 @RequestMapping("/api/v1/admin/role-definitions")
 public class RoleController {
 
     /** A role as an administrator writes it. */
-    public record RoleRequest(String description, List<String> kinds, Boolean raw, Boolean author, Boolean approve, Boolean admin) {}
+    public record RoleRequest(String description, List<String> kinds, Boolean raw, Boolean author, Boolean approve, Boolean admin, Boolean calc) {}
 
     private final RoleCatalog roles;
     private final UserService users;
@@ -71,6 +71,7 @@ public class RoleController {
             m.put("author", r.author());
             m.put("approve", r.approve());
             m.put("admin", r.admin());
+            m.put("calc", r.calc());
             m.put("builtIn", r.builtIn());
             m.put("updatedAt", r.updatedAt());
             m.put("updatedBy", r.updatedBy());
@@ -90,7 +91,7 @@ public class RoleController {
         entitlements.requireAdmin(p);
         List<String> kinds = r.kinds() == null ? List.of() : r.kinds().stream().map(String::trim).filter(k -> !k.isEmpty()).distinct().toList();
         return roles.save(new RoleDefinition(name, r.description(), kinds, Boolean.TRUE.equals(r.raw()), Boolean.TRUE.equals(r.author()),
-                Boolean.TRUE.equals(r.approve()), Boolean.TRUE.equals(r.admin()), false, null, ""), p.user());
+                Boolean.TRUE.equals(r.approve()), Boolean.TRUE.equals(r.admin()), Boolean.TRUE.equals(r.calc()), false, null, ""), p.user());
     }
 
     @DeleteMapping("/{name}")
