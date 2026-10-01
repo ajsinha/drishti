@@ -41,7 +41,7 @@ panels:
     key: F2
     rows: $.topTrades
     columns:
-      - { label: Trade, bind: "@.tradeId", link: true }
+      - { label: Trade, bind: "@.tradeId" }
       - { label: Product, bind: "@.product" }
       - { label: Notional, bind: "@.notional", fmt: compact }
       - { label: Maturity, bind: "@.maturity", fmt: date }
