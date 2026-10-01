@@ -90,7 +90,7 @@
       var head = view.querySelector('.vhead');
       view.insertBefore(banner, head || view.firstChild);
     }
-    banner.innerHTML = '<i class="bi bi-trash3" aria-hidden="true"></i> <b class="mono">' + esc(view.dataset.label || view.dataset.id) +
+    banner.innerHTML = '<i class="bi bi-trash" aria-hidden="true"></i> <b class="mono">' + esc(view.dataset.label || view.dataset.id) +
       '</b> was deleted at <time class="mono" datetime="' + esc(deletedAt) + '">' + esc(when(deletedAt)) +
       '</time> by its source. What you see is its last state; it no longer updates.';
     view.querySelectorAll('.pnl, .strip').forEach(function (el) { el.setAttribute('aria-disabled', 'true'); });
@@ -110,8 +110,8 @@
     },
     frame: onFrame,
     gone: function () { off(); if (!deletedAt) { state('static', 'Static'); } },
-    error: function () { state('reconnecting', 'Reconnecting…'); },
-    paused: function () { state('reconnecting', 'Paused while hidden'); }
+    error: function () { if (!deletedAt) { state('reconnecting', 'Reconnecting…'); } },
+    paused: function () { if (!deletedAt) { state('reconnecting', 'Paused while hidden'); } }
   });
   function onFrame(f) {
     for (var i = 0; i < f.patches.length; i++) {

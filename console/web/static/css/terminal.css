@@ -644,7 +644,7 @@ table.tbl tr.tbl-filter th::after { content: none; }
 /* A live view whose entity the source deleted (live.js): a banner says when, the last state stays, greyed. */
 .deleted-banner { border-color: var(--d-bad); }
 .deleted-banner i { color: var(--d-bad); }
-.view-deleted .pnl, .view-deleted .strip { filter: grayscale(1); opacity: .55; transition: opacity .3s, filter .3s; }
+.view-deleted .pnl, .view-deleted .strip { filter: grayscale(1); opacity: .55; }
 .tbar-live[data-live-state="deleted"] .dot { background: var(--d-bad); }
 
 /* One console, many servers (ADR-016) */

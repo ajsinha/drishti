@@ -91,6 +91,8 @@ const out = { deleted: view.classes.has('view-deleted'), at: view.getAttribute('
 handlers.frame({ seq: 8, generation: 43, p99Ms: 3, patches: [{ op: 'strip', index: 0, cell: { text: 'x' } }] });
 out.stillDeleted = live.getAttribute('data-live-state') === 'deleted';
 handlers.gone({});
+handlers.error({});
+handlers.paused({});
 out.afterGone = live.getAttribute('data-live-state');
 handlers.frame({ seq: 9, generation: 44, p99Ms: 3, patches: [{ op: 'restored' }] });
 out.reloaded = reloaded;
@@ -111,5 +113,5 @@ def test_live_js_shows_when_the_entity_was_deleted_and_repaints_when_it_comes_ba
     assert "2026" in out["banner"]                       # the time, in the reader's own locale
     assert out["state"] == "deleted" and out["text"] == "Deleted" and out["panelDisabled"] == "true"
     assert out["stillDeleted"]                           # later patches do not repaint a deleted view
-    assert out["afterGone"] == "deleted"                 # nor does the stream ending (the entity is gone: 404 upstream)
+    assert out["afterGone"] == "deleted"                 # nor does the stream ending (404 upstream), an error or a pause
     assert out["reloaded"]                               # restored: the view is repainted from the server
