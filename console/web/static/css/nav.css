@@ -36,7 +36,7 @@
 .tbar-menu-btn { display: inline-flex; align-items: center; gap: .4rem; border: 0; background: transparent; color: var(--d-ink);
   font-weight: 600; font-size: .86rem; padding: .5rem .7rem; border-radius: 8px; position: relative; opacity: .85; }
 .tbar-menu-btn:hover, .tbar-menu-btn.show { opacity: 1; background: color-mix(in srgb, var(--d-accent) 12%, transparent); }
-.tbar-menu-btn.active { opacity: 1; color: var(--d-accent); }
+.tbar-menu-btn.active { opacity: 1; color: var(--d-ink); }                 /* the underline marks it; the text stays readable */
 .tbar-menu-btn.active::after, .tbar-menu-btn.show::after { content: ""; position: absolute; left: .7rem; right: .7rem; bottom: -.4rem; height: 2px;
   border-radius: 2px; background: linear-gradient(90deg, var(--d-grad-from), var(--d-grad-to)); }
 @media (max-width: 720px) { .tbar-menu-l { display: none; } .tbar-menu-btn { padding: .5rem .55rem; font-size: 1rem; } }
@@ -55,9 +55,11 @@
 @keyframes mega-in { from { opacity: 0; translate: 0 -6px; } to { opacity: 1; translate: 0 0; } }
 .mega-title { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .09em; color: var(--d-muted); padding: 0 .5rem .45rem; }
 .mega-item { display: flex; gap: .65rem; align-items: flex-start; padding: .5rem; border-radius: 10px; color: var(--d-ink); text-decoration: none; }
-.mega-item:hover, .mega-item:focus-visible { background: var(--d-accent-tint); color: var(--d-ink); text-decoration: none; }
-.mega-item.active { background: var(--d-accent-tint); }
-.mega-item.active .mega-label { color: var(--d-accent); }
+.mega-item:hover, .mega-item:focus-visible { background: color-mix(in srgb, var(--d-ink) 8%, transparent); color: var(--d-ink); text-decoration: none; }
+/* The page you are on: a neutral highlight and an accent bar. Accent text on an accent tint was hard to read. */
+.mega-item.active { background: color-mix(in srgb, var(--d-ink) 7%, transparent); box-shadow: inset 3px 0 0 var(--d-accent); }
+.mega-item.active .mega-label { color: var(--d-ink); }
+.mega-item .mega-desc { color: color-mix(in srgb, var(--d-ink) 72%, var(--d-surface)); }
 .mega-icon { flex: 0 0 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; font-size: 1rem; color: #fff;
   background: linear-gradient(135deg, var(--d-grad-from), var(--d-grad-to)); box-shadow: 0 6px 14px -8px var(--d-grad-from); }
 .mega-label { display: block; font-weight: 650; line-height: 1.25; font-size: .9rem; }
