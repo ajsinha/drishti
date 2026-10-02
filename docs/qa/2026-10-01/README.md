@@ -48,9 +48,9 @@ permissions, and masks are not applied on every path.
 | Id | Finding |
 |---|---|
 | [SEC-01](security/FINDINGS.md) | Disabling or demoting a user does not end their console session (roles carried in the cookie for 10 h; the server trusts token roles without a lookup). API tokens are cut off at once. |
-| [DATA-01](data/FINDINGS.md) | A source that fails or times out while listing makes a search look exact and empty (`partial: false`, 0 matches); a failed reindex drops the kind from type-ahead. |
+| [DATA-01](data/FINDINGS.md) | A source that fails or times out while listing makes a search look exact and empty (`partial: false`, 0 matches); a failed reindex drops the kind from type-ahead. **Fixed** in c00488a, 724328b (SearchFailuresTest, DeltaUnreadableTest.aFailedReindexKeepsThePreviousIdsAndHealthRecoversWhenTheTableReadsAgain) |
 | [DATA-02](data/FINDINGS.md) | One unreadable line (truncated, NaN, a 25 MB document) silently erases a whole JSON-lines day; nothing is logged. |
-| [DATA-03](data/FINDINGS.md) | A failing store counts as "not held", so the next store silently answers with different data; view and search then disagree. |
+| [DATA-03](data/FINDINGS.md) | A failing store counts as "not held", so the next store silently answers with different data; view and search then disagree. **Fixed** in 8514970, c00488a (FileReadFailureTest, JdbcNotReachedTest, MongoNotReachedTest, DuckDbSourcePluginTest.aMissingFileIsDownUntilALoadWritesIt, SourceRouterTest.aFailingStoreStopsTheReadNamingItAndTheNextStoreIsNotAsked) |
 | [DATA-04](data/FINDINGS.md) | PostgresLoader is not atomic: a killed or concurrent reload leaves days empty or half-loaded, and searches report them as exact. |
 | [DATA-05](data/FINDINGS.md) | One future-dated row with retention (`--keep-months`, `--keep-days`) irreversibly drops all history. |
 | [DATA-06](data/FINDINGS.md) | JSON-lines rows with `doc` as an object and no `columns` get every promoted column null: searches, pick lists and desk P&L silently empty. |
@@ -73,7 +73,7 @@ permissions, and masks are not applied on every path.
 | DATA-10 | A read racing an atomic JSON-lines replace can fail (502), using old offsets on the new file. |
 | DATA-11 | RedisLoader merges into a day instead of replacing it; an interrupted load leaves views and searches disagreeing. |
 | DATA-12 | Multi-store fall-through brings back an entity the recent store dropped. |
-| DATA-13 | LZ4 Parquet: unclear 502, health UP, and the documented advice ("use hadoop") does not work. |
+| DATA-13 | LZ4 Parquet: unclear 502, health UP, and the documented advice ("use hadoop") does not work. **Fixed** in 724328b (DeltaUnreadableTest.lz4PagesFailTheReadWithTheCodecAndWhatToDoAndHealthNamesTheDate, DeltaUnreadableTest.lz4FromArrowUnderTheHadoopEngineSaysWhatToDo) |
 | DATA-14 | `quant.year_fraction`: 30E/360 computed as US 30/360; ACT/ACT ISDA as days/365.25. |
 | DATA-15 | `knownAt` silently ignored by stores without time travel. |
 | GRAM-03 | Very deep or long expressions: the view returns HTTP 500 without a problem code. |
@@ -99,7 +99,7 @@ permissions, and masks are not applied on every path.
 Lows and infos are in each area's findings: inconsistent error responses (SEC-10, GRAM-06..08, UX-10..13), CSRF
 protection relies on SameSite only (SEC-08), type-ahead reveals masked names (SEC-07), readiness probe always DOWN with
 security on (SEC-12), absolute paths in Sutra problems (SEC-11), tie order under limits (DATA-17), health UP for
-unreadable tables (DATA-18), quant edge cases (DATA-20), layout and Studio polish (UX-14..18), documentation mismatches
+unreadable tables (DATA-18, **Fixed** in 724328b, 7de60f8: DeltaUnreadableTest, RedisOutageHealthTest), quant edge cases (DATA-20), layout and Studio polish (UX-14..18), documentation mismatches
 (DOC-04..22), and risky development defaults that are already documented (SEC-16).
 
 ## What held up
