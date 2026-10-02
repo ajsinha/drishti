@@ -25,6 +25,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | [guides/](guides/) | getting started, the user, developer, API and Rachana guides, packs, clients and troubleshooting |
 | [connectors/](connectors/) | connecting your data: the connector and plugin guides, a design document per store (Delta Lake, PostgreSQL, Aerospike, files …) and demo data |
 | [admin/](admin/) | running Drishti: operations, configuration, users and roles, performance, and the runbooks |
+| [qa/](qa/) | quality assurance runs: each with its activity logs, findings by severity, and the scripts that reproduce them |
 | [architecture/](architecture/) | how Drishti is built: the architecture, design notes (inference, live updates), the implementation plan and the decision records (ADRs) |
 
 ## If you want to…
@@ -166,6 +167,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | [DEMO_CONNECTOR.md](connectors/DEMO_CONNECTOR.md) | you want to know what the sample connector serves, how it ticks, how packs supply samples, and how to switch it off |
 | [TROUBLESHOOTING.md](guides/TROUBLESHOOTING.md) | something is not working: each problem has what you see, how to check and the fix |
 | [DEVELOPER_GUIDE.md](guides/DEVELOPER_GUIDE.md) | you change Drishti's code: layout, build, tests, gates, and recipes |
+| [qa/2026-10-01](qa/2026-10-01/README.md) | you want the adversarial QA of 1.13.0: what was tested, every finding by severity with reproduction steps, what held up, and the proposed fix order |
 | [QUANT_SERVICE.md](architecture/QUANT_SERVICE.md) | you want to know how server-side pricing (QuantLib) will work with Drishti and reach the screen: the design and phases (proposed, on the roadmap) |
 | [ARCHITECTURE.md](architecture/ARCHITECTURE.md) | you want to understand how the pieces fit: pipeline, grammar, inference, graph, modules |
 | [API_GUIDE.md](guides/API_GUIDE.md) | you call the REST API from a program, or need the ViewModel contract |

@@ -16,6 +16,7 @@
 # Changelog
 
 ## Unreleased
+- **Adversarial QA of 1.13.0** ([docs/qa/2026-10-01](docs/qa/2026-10-01/README.md)): security and access control, data correctness and connectors, UX, grammar and documentation; 10 high, 33 medium, 36 low and 15 informational findings with activity logs, reproduction scripts and a proposed fix order. Nothing fixed yet.
 - **Roadmap: server-side pricing.** A design for a QuantLib pricing service behind the Drishti server ([QUANT_SERVICE.md](docs/architecture/QUANT_SERVICE.md), [ADR-019](docs/architecture/adr/019-pricing-is-a-quantlib-service-behind-the-server.md), proposed), now first on the roadmap in [IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md#roadmap).
 - **Fixed:** the server no longer opens an unused MongoDB client to `localhost:27017` at every start (and logs connection errors when no MongoDB runs). The MongoDB driver ships for the `mongodb` plugin, which makes its own client only when configured; Spring Boot's MongoDB auto-configuration is now excluded.
 - **Checked:** a lake maintained by `tools/lake/maintain.py` (compaction, re-sorting, checkpoints, vacuum) reads identically through the native Delta engine: the same documents and search rows as the unmaintained lake.
