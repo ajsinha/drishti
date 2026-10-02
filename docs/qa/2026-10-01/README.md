@@ -77,8 +77,8 @@ permissions, and masks are not applied on every path.
 | DATA-14 | `quant.year_fraction`: 30E/360 computed as US 30/360; ACT/ACT ISDA as days/365.25. |
 | DATA-15 | `knownAt` silently ignored by stores without time travel. |
 | GRAM-03 | Very deep or long expressions: the view returns HTTP 500 without a problem code. **Fixed** in c1ace31 (ElLimitsTest.longChainsThatWouldOverflowEvaluationAreRefusedAtCompileTime, PathologicalExpressionsTest.LiftedLimits.anOverflowIsAPanelProblemOrAFileProblemNeverA500) |
-| GRAM-04 | "Case never matters" is false for field names; unknown fields silently match nothing. |
-| GRAM-05 | Many invalid Sutra inputs are silently accepted (duplicate keys, wrong types, extra YAML documents, unknown tags). |
+| GRAM-04 | "Case never matters" is false for field names; unknown fields silently match nothing. **Fixed** in 4ffeef1 (SearchFieldNamesTest.fieldNamesIgnoreCaseAsTheGuidesPromise, SearchFieldNamesTest.anUnknownFieldIsAProblemWithTheClosestNames) |
+| GRAM-05 | Many invalid Sutra inputs are silently accepted (duplicate keys, wrong types, extra YAML documents, unknown tags). **Fixed** in 9db82fa (StrictSutraTest: ambiguousYamlIsAProblemWithItsLine, headerValuesOfTheWrongShape, panelOptionsOfTheWrongType) |
 | UX-02 | At phone width 77 of 85 pages scroll sideways; header items clipped. |
 | UX-03 | Help-centre screenshots overflow the page. |
 | UX-04 | Faint text fails WCAG contrast in six of seven themes; the contrast test misses it. |
@@ -96,7 +96,7 @@ permissions, and masks are not applied on every path.
 | DOC-16 | Several settings read by the code are documented nowhere. |
 | DOC-18 | About 88 in-app help links go nowhere. |
 
-Lows and infos are in each area's findings: inconsistent error responses (SEC-10, GRAM-06..08, UX-10..13), CSRF
+Lows and infos are in each area's findings: inconsistent error responses (SEC-10, UX-10..13; GRAM-06..08 **Fixed** in 4ffeef1, 9db82fa, ee8b39e, c007e5b, cc386d6: see ux/FINDINGS.md), refused business dates stored in the as-of cookie (GRAM-09, **Fixed** in cc386d6: test_gram_inputs.py), CSRF
 protection relies on SameSite only (SEC-08, **Fixed** in 6f886ab: test_sessions.py: test_cross_site_writes_and_json_as_text_are_refused, test_configured_origins_are_allowed, test_sign_out_is_a_post_and_get_only_asks), type-ahead reveals masked names (SEC-07, **Fixed** in 43075d9: FieldMaskingTest.typeAheadNeitherShowsNorMatchesMaskedValues), readiness probe always DOWN with
 security on (SEC-12), absolute paths in Sutra problems (SEC-11), tie order under limits (DATA-17), health UP for
 unreadable tables (DATA-18, **Fixed** in 724328b, 7de60f8: DeltaUnreadableTest, RedisOutageHealthTest), quant edge cases (DATA-20), layout and Studio polish (UX-14..18), documentation mismatches
