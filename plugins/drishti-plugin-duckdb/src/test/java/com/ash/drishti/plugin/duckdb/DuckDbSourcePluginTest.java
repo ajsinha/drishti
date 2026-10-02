@@ -16,6 +16,7 @@
 package com.ash.drishti.plugin.duckdb;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.ColumnSet;
@@ -243,10 +244,35 @@ class DuckDbSourcePluginTest extends DatedSourceContract {
         Path db = DIR.resolve("hist.duckdb");
         String old = "{\"domain\":\"hist\",\"kind\":\"trade\",\"id\":\"T-9\",\"date\":\"%s\",\"doc\":\"{}\"}";
         load(db, List.of(old.formatted("2026-06-15"), old.formatted("2026-09-03")));
-        load(db, List.of(old.formatted("2026-09-30")), "--keep-days", "30");
+        load(db, List.of(old.formatted("2026-09-30")), "--keep-days", "30", "--as-of", "2026-09-30");
         assertThat(query(db, "SELECT string_agg(CAST(business_date AS VARCHAR), ',' ORDER BY business_date) FROM hist.entities"))
                 .isEqualTo("2026-09-03,2026-09-30");
         assertThat(query(db, "SELECT count(*) FROM hist.entity_dates")).isEqualTo("2");
+    }
+
+    @Test
+    void aFutureDatedRowIsNotLoadedAndCannotMoveTheRetentionCutOff() throws Exception {
+        Path db = DIR.resolve("future.duckdb");
+        String row = "{\"domain\":\"future\",\"kind\":\"trade\",\"id\":\"%s\",\"date\":\"%s\",\"doc\":\"{}\"}";
+        load(db, List.of(row.formatted("T-1", "2026-09-03"), row.formatted("T-1", "2026-09-30")));
+        assertThatThrownBy(() -> load(db, List.of(row.formatted("T-TYPO", "2099-03-01")), "--keep-days", "30", "--as-of", "2026-09-30"))
+                .hasMessageContaining("1 rows not loaded").hasMessageContaining("business date is after");
+        assertThat(query(db, "SELECT string_agg(CAST(business_date AS VARCHAR), ',' ORDER BY business_date) FROM future.entities"))
+                .as("history stays: thirty days back from 2026-09-30, the typo not loaded").isEqualTo("2026-09-03,2026-09-30");
+    }
+
+    @Test
+    void retentionThatWouldDropMostOfADomainNeedsForceDrop() throws Exception {
+        Path db = DIR.resolve("share.duckdb");
+        String row = "{\"domain\":\"share\",\"kind\":\"trade\",\"id\":\"%s\",\"date\":\"%s\",\"doc\":\"{}\"}";
+        load(db, List.of(row.formatted("T-1", "2026-06-15"), row.formatted("T-2", "2026-06-15"), row.formatted("T-3", "2026-06-15"),
+                row.formatted("T-1", "2026-09-30")));
+        assertThatThrownBy(() -> load(db, List.of(row.formatted("T-1", "2026-09-30")), "--keep-days", "30", "--as-of", "2026-09-30"))
+                .hasMessageContaining("would drop 3 of 4 rows").hasMessageContaining("--force-drop");
+        assertThat(query(db, "SELECT count(*) FROM share.entities")).as("the file is as it was").isEqualTo("4");
+        assertThat(Files.exists(DIR.resolve("share.duckdb.loading"))).isFalse();
+        load(db, List.of(row.formatted("T-1", "2026-09-30")), "--keep-days", "30", "--as-of", "2026-09-30", "--force-drop");
+        assertThat(query(db, "SELECT count(*) FROM share.entities")).isEqualTo("1");
     }
 
     @Test

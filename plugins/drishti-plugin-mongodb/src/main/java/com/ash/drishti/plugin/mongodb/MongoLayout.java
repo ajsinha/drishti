@@ -82,6 +82,11 @@ public final class MongoLayout {
     public static final String TTL_INDEX = "expire_at";
     /** The suffix of the collection holding only the promoted fields. */
     public static final String COLUMNS_SUFFIX = "_columns";
+    /**
+     * The suffix of the collection of the business days a load is writing for the first time ({@code _id}
+     * {@code kind/yyyyMMdd}): the connector does not show such a day until the load that writes it has finished.
+     */
+    public static final String LOADING_SUFFIX = "_loading";
 
     /** How the entity's document is stored. */
     public enum DocFormat {
@@ -143,6 +148,16 @@ public final class MongoLayout {
     /** The collection holding only the promoted fields of {@code collection}. */
     public static String columnsCollection(String collection) {
         return collection + COLUMNS_SUFFIX;
+    }
+
+    /** The collection of the new days loads are writing ({@link #LOADING_SUFFIX}). */
+    public static String loadingCollection(String collection) {
+        return collection + LOADING_SUFFIX;
+    }
+
+    /** A day in {@link #loadingCollection}: {@code kind/yyyyMMdd}. */
+    public static String loadingKey(String kind, LocalDate date) {
+        return kind + "/" + day(date);
     }
 
     /** The narrow copy of a {@link #record}: its key, kind, id, date, promoted fields and expiry, without the document. */

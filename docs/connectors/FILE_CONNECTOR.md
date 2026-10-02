@@ -156,6 +156,9 @@ into `<root>/<domain>/<date>/<kind>.jsonl`:
 
 - **A file the stream reaches is replaced whole.** Its lines go to `<kind>.jsonl.tmp` beside it, moved into place in
   one atomic rename at the end, so a running server never reads half a day.
+- **Dates are guarded.** A row dated after tomorrow in the business zone (`--future-days N`, 1; `--zone Z`, else
+  `DRISHTI_BUSINESS_ZONE`, else `America/New_York`) is not written; the first few are named on standard error and the
+  load ends with an error once the other files are in place.
 - **At most 256 files are open at once**; a file closed early is reopened for appending.
 - A row that would land outside the root (a domain or kind like `../x`) is refused.
 
@@ -350,7 +353,7 @@ The same is logged once, as a warning, each time such a file is indexed.
 | `max-nesting-depth` | `1000` | the deepest nesting of objects and arrays in a line; a deeper line is skipped and counted |
 | `source-name` | `file` | the name shown in provenance and Health |
 
-`JsonlLoader` takes the input (`FILE` or `-`) and the root; `tools/load-files.sh [root] [--trades N] [--days D]` runs
+`JsonlLoader` takes the input (`FILE` or `-`), the root, `--future-days N` and `--zone Z`; `tools/load-files.sh [root] [--trades N] [--days D]` runs
 it.
 
 ## 13. The older layout: a file per entity

@@ -854,7 +854,8 @@ configured by `deploy/lake-maintenance.yaml`:
 
 | Step | Setting (per lake) | Default in the tool | What it does |
 |---|---|---|---|
-| retention | `keep-business-days` (the shipped file: 520, about two years; `null` keeps all) | `null` | deletes business dates older than the window |
+| retention | `keep-business-days` (the shipped file: 520, about two years; `null` keeps all) | `null` | deletes business dates older than the window, counted back from today in `schedule.zone` (or `--as-of`), never from the newest date in the table |
+| retention guard | `max-drop-share` | `0.5` | a table whose retention would delete more than this share of its rows is left as it is and reported `failed`; `--force-drop` deletes anyway |
 | compaction | `compact`, `target-file-mb` | `true`, `128` | merges each day's small files |
 | checkpoint | `checkpoint` | `true` | writes a Delta checkpoint, so readers replay a short log |
 | vacuum | `vacuum-hours` | `168` | removes files unreferenced for longer than this; *known at* (time travel) reaches back this far |

@@ -75,6 +75,9 @@ first `{` and `}` live in the same slot, on the same node.
 | `trading:trade:{MX-20000017}:20260930` | STRING | the entity's document that day, compressed |
 | `{trading:trade:20260930}:cols` | HASH | the day's ids and promoted fields, column-wise in chunks |
 | `{trading:trade:20260930}:cols:staging` | HASH | a loader's copy, renamed over the one above when complete |
+| `{trading:trade:20260930}:cols:loading:<load>` | SET | the ids a running load wrote documents for on the day, until the day's columns list them |
+| `trading:loading` | SET | the days loads started and have not finished (`load TAB kind TAB yyyyMMdd`) |
+| `trading:loader:<load>` | STRING | present while that load runs (a 90-second expiry it renews) |
 | `trading:trade:dict` | STRING | the id (hex) of the kind's current zstd dictionary |
 | `trading:dict:<id>` | STRING | a zstd dictionary (about 112 KB) |
 | `trading:updated` | STRING | when a loader last finished (epoch milliseconds) |
@@ -217,9 +220,10 @@ How the loader works:
   output, piped straight into the loader (`RedisLoader -` reads standard input), so a million-trade book never sits in a
   file of gigabytes.
 - **Documents stream.** The main thread reads lines; worker threads (`--threads`, the cores less two) parse and compress
-  each and send its commands without waiting: `SET` of the document (with `EX` when `--ttl-days` is given) and `ZADD`
-  of the day to the entity's days (with `EXPIRE` and `ZREMRANGEBYSCORE` of days older than the retention). At most
-  `--in-flight` lines (2,000) are unanswered at once; all commands go over one Lettuce connection, pipelined.
+  each and send its commands without waiting: `SADD` of the id to the day's journal, then, once Redis has it, `SET` of
+  the document (with `EX` when `--ttl-days` is given) and `ZADD` of the day to the entity's days (with `EXPIRE` and
+  `ZREMRANGEBYSCORE` of days older than the retention). At most `--in-flight` lines (2,000) are unanswered at once; all
+  commands go over one Lettuce connection, pipelined.
 - **A kind's dictionary** is trained on its first `--dict-samples` documents (2,000), held back meanwhile, unless Redis
   already has one for the kind. A kind with fewer documents is trained on what it has (64 at least, else plain zstd).
 - **Columns are gathered per kind and day** in compact arrays (`double[]` for numbers, shared strings for texts; about
@@ -230,7 +234,20 @@ How the loader works:
 - **Days merge.** Before writing a day's columns the loader reads what Redis already holds for that day and keeps every
   row this load did not write. A day can be loaded in parts (one booking system at a time, or intraday corrections), and
   loading the same lines twice changes nothing. A one-trade correction to a day of a million trades took 3.5 s, almost
-  all of it reading and rewriting the day's 16 MB of columns.
+  all of it reading and rewriting the day's 16 MB of columns. The other side of merging: a trade dropped from the book
+  stays in the day until the day expires.
+- **`--replace`** makes each day the stream reaches exactly what the stream holds: the entities it does not carry
+  leave the day's columns, and their documents of that day are deleted (after the columns are renamed). Use it for a
+  full end-of-day book; keep the default for loads in parts and intraday corrections.
+- **A load that dies half way leaves no document the day's columns do not list.** Each id goes into the day's journal
+  before its document is written; the day's journal goes once its columns are in place. The first time a load reaches
+  a domain it deletes what dead loads left (entries whose loader key has expired): the documents of journaled ids that
+  the day's columns do not list, and that day in those entities' days. A load that fails in the process does the same
+  for itself. Documents of ids the columns do list were replaced by the dead load and stay so until the day is loaded
+  again (the columns then agree). The journal costs one `SADD` per document and, until the day's columns are written,
+  a set of the day's ids in Redis (about 60 MB per million trades).
+- **Dates are guarded.** A row dated after tomorrow in the business zone (`--future-days`, `--zone`) is not loaded;
+  the first few are named on standard error and the load ends with an error once the other rows are in.
 - **`--publish`** announces every written entity on `<domain>:changes`, so open views of it refresh at once
   ([section 5.7](#57-live-updates)). It is meant for intraday updates; a bulk load announces only its days.
 - **`--codec`** chooses `zstd-dict` (default), `zstd`, `deflate` or `none`; `--level` the compression level (3).
@@ -348,9 +365,11 @@ changed meanwhile refreshes when it is opened again.
 ## 6. Retention: TTL on every key
 
 Load with `--ttl-days N` and every key the loader writes expires N days after it is written: the documents with `SET …
-EX`, the entity's days and the day's column hash with `EXPIRE`. The entity's days also lose days older than N days
-before the business day loaded (`ZREMRANGEBYSCORE`), and so does the kind's days. An entity no longer loaded disappears
-N days after its last write. No job runs; Redis expires keys by itself.
+EX`, the entity's days and the day's column hash with `EXPIRE`. The entity's days also lose days more than N days
+before `--as-of` (default: today in the business zone; never the newest date loaded) (`ZREMRANGEBYSCORE`), and so do
+the days of each kind loaded, once every day is written. When that would take more than `--max-drop-share` (0.5) of a
+kind's days, nothing is taken from the kind's days and the load fails, unless `--force-drop`. An entity no longer
+loaded disappears N days after its last write. No job runs; Redis expires keys by itself.
 
 A day whose keys have expired but which a list still names answers "not held": a read finds no document, a search finds
 no column hash, and the router asks the next store. The dictionaries have no TTL (a few hundred kilobytes a kind).
@@ -597,7 +616,13 @@ On a Redis connector (`drishti.sources.connectors.<name>.settings`):
 | Option | Default | Meaning |
 |---|---|---|
 | `--cluster` | off | Redis Cluster |
-| `--ttl-days N` | none (no expiry) | every key expires N days after it is written |
+| `--ttl-days N` | none (no expiry) | every key expires N days after it is written; the kinds' days keep N days back from `--as-of` |
+| `--replace` | off (merge) | each day loaded holds exactly the stream's entities |
+| `--as-of yyyy-MM-dd` | today in the business zone | the date retention counts back from |
+| `--future-days N` | `1` | how many days after today a business date may be |
+| `--zone Z` | `DRISHTI_BUSINESS_ZONE`, else `America/New_York` | the business zone |
+| `--max-drop-share F` | `0.5` | the largest share of a kind's days one run may drop |
+| `--force-drop` | off | drop even more than that |
 | `--codec` | `zstd-dict` | `zstd-dict`, `zstd`, `deflate` or `none` |
 | `--level N` | `3` | compression level |
 | `--chunk-rows N` | `10000` | values per column chunk |

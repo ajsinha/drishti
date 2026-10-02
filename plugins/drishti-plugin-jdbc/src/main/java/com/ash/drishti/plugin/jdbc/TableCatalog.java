@@ -83,6 +83,7 @@ final class TableCatalog {
     private volatile Map<String, NavigableSet<LocalDate>> dates = Map.of();
     private volatile Map<String, Boolean> present = Map.of();          // promoted column -> number
     private volatile Instant loadedAt;
+    private volatile boolean keepsDates;                               // the loader's dates table is there
     private volatile String problem;
     /** True once a refresh has read the catalogue: until then the connector cannot tell what it holds. */
     private volatile boolean catalogued;
@@ -111,6 +112,7 @@ final class TableCatalog {
         try {
             Object[] got = db.with(c -> {
                 boolean keeps = table.hasDates(c);
+                keepsDates = keeps;
                 Map<String, NavigableSet<LocalDate>> d = table.dates(c, keeps, configuredKinds.isEmpty() ? table.kinds(c) : configuredKinds);
                 return new Object[] {d, keeps ? table.loadedAt(c) : null, PostgresLayout.columns(c, table.schema(), table.name())};
             });
@@ -317,15 +319,38 @@ final class TableCatalog {
 
     /**
      * A day's ids and promoted columns: the day's ids are cut into {@code scan-threads} ranges at percentiles read from
-     * the index, and the ranges are read at once on as many connections, at most two days at a time.
+     * the index, and the ranges are read at once on as many connections, at most two days at a time. The ranges are
+     * read in transactions of their own, so a load that publishes the day meanwhile could mix the old day and the new:
+     * when the loader's dates table says the day was loaded again during the read, it is read again.
      */
     private ColumnSet readDay(String kind, LocalDate day, List<String> paths) {
+        dayReads.acquireUninterruptibly();
+        try {
+            for (int attempt = 1; ; attempt++) {
+                Instant before = keepsDates ? db.with(c -> table.dayLoadedAt(c, kind, day)) : null;
+                ColumnSet read = readRanges(kind, day, paths);
+                Instant after = keepsDates ? db.with(c -> table.dayLoadedAt(c, kind, day)) : null;
+                if (Objects.equals(before, after)) {
+                    return read;
+                }
+                if (attempt == 3) {
+                    throw new IllegalStateException("the day was loaded again three times while it was read");
+                }
+                LOG.log(System.Logger.Level.INFO, "{0}: {1} {2} was loaded again while its columns were read: reading it again", sourceName, kind, day);
+            }
+        } catch (Exception e) {
+            throw new IllegalStateException("reading " + kind + " columns of " + day + ": " + e.getMessage(), e);
+        } finally {
+            dayReads.release();
+        }
+    }
+
+    private ColumnSet readRanges(String kind, LocalDate day, List<String> paths) throws Exception {
         List<String> numberPaths = paths.stream().filter(p -> Boolean.TRUE.equals(present.get(PostgresLayout.column(p)))).toList();
         List<String> textPaths = paths.stream().filter(p -> !numberPaths.contains(p)).toList();
         List<String> columns = new ArrayList<>();
         numberPaths.forEach(p -> columns.add(PostgresLayout.column(p)));
         textPaths.forEach(p -> columns.add(PostgresLayout.column(p)));
-        dayReads.acquireUninterruptibly();
         try (var pool = java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()) {
             List<String> cuts = db.with(c -> table.boundaries(c, kind, day, scanThreads));
             List<Future<Chunk>> parts = new ArrayList<>();
@@ -344,10 +369,6 @@ final class TableCatalog {
                 chunks.add(f.get());
             }
             return assemble(chunks, numberPaths, textPaths, day);
-        } catch (Exception e) {
-            throw new IllegalStateException("reading " + kind + " columns of " + day + ": " + e.getMessage(), e);
-        } finally {
-            dayReads.release();
         }
     }
 

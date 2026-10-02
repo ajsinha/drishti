@@ -32,6 +32,9 @@ import java.time.LocalDate;
  * trading:dict:&lt;id&gt;                           STRING  a zstd dictionary (never expires: documents written with it name it)
  * trading:updated                            STRING  when a loader last wrote (epoch milliseconds)
  * trading:changes                            channel what a loader wrote: "kind TAB id TAB yyyyMMdd" (id * for a day's columns)
+ * {trading:trade:20260930}:cols:loading:&lt;load&gt;  SET  ids a running load wrote documents for on the day ({@link RedisLoadJournal})
+ * trading:loading                            SET     the days loads started and have not finished: "load TAB kind TAB yyyyMMdd"
+ * trading:loader:&lt;load&gt;                       STRING  present while that load runs (a short expiry it renews)
  * </pre>
  *
  * <p>The braces are Redis Cluster hash tags: an entity's days and its documents share a slot (so one script reads both
@@ -76,6 +79,24 @@ public final class RedisLayout {
     /** The staging copy a loader fills before renaming it over {@link #columns} (same hash tag, same slot). */
     public static String columnsStaging(String domain, String kind, LocalDate date) {
         return columns(domain, kind, date) + ":staging";
+    }
+
+    /**
+     * The ids a running load has written documents for on a day, before the day's columns list them (a SET; same hash
+     * tag as the day's columns): what the next load deletes when the load that wrote them died.
+     */
+    public static String journal(String domain, String kind, LocalDate date, String load) {
+        return columns(domain, kind, date) + ":loading:" + load;
+    }
+
+    /** The days loads have started and not finished: members {@code load TAB kind TAB yyyyMMdd} (a SET). */
+    public static String loads(String domain) {
+        return domain + ":loading";
+    }
+
+    /** Present while a load runs (it renews the key's short expiry): {@code <domain>:loader:<load>}. */
+    public static String loader(String domain, String load) {
+        return domain + ":loader:" + load;
     }
 
     public static String dictionaryOf(String domain, String kind) {

@@ -19,6 +19,7 @@ import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.Host;
 import com.aerospike.client.policy.ClientPolicy;
 import com.aerospike.client.policy.WritePolicy;
+import com.ash.drishti.api.LoadGuard;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -40,12 +41,14 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Loads rows into Aerospike in {@link AerospikeLayout}: {@code java -cp <plugin classpath>
- * com.ash.drishti.plugin.aerospike.AerospikeLoader FILE|- [hosts] [namespace] [--ttl-days N]}. Each line is
+ * com.ash.drishti.plugin.aerospike.AerospikeLoader FILE|- [hosts] [namespace] [--ttl-days N] [--future-days N] [--zone Z]}. Each line is
  * {@code {"domain", "kind", "id", "date", "doc", "columns": {path: value}}} ({@code columns}, the fields the pack
  * promotes, is optional), as {@code make_data.py --jsonl} and {@code bulk_trades.py --jsonl} write it; {@code -} reads
  * a stream, so a book of millions loads without a file. Up to 128 writes are in flight; each kind's business dates are
  * recorded once at the end. {@code --ttl-days} lets Aerospike expire each day's documents after that long (history
- * retention without a maintenance job). {@code tools/load-aerospike.sh} runs it.
+ * retention without a maintenance job; counted from when each document is written, never from a business date). A row
+ * dated after tomorrow in the business zone is not loaded, and the load ends with an error naming it ({@link LoadGuard}).
+ * {@code tools/load-aerospike.sh} runs it.
  */
 public final class AerospikeLoader {
 
@@ -57,6 +60,7 @@ public final class AerospikeLoader {
         String hosts = args.length > 1 && !args[1].startsWith("--") ? args[1] : "localhost:3000";
         String namespace = args.length > 2 && !args[2].startsWith("--") ? args[2] : "test";
         int ttlDays = 0;
+        LoadGuard guard = LoadGuard.fromArgs(args);
         for (int i = 0; i < args.length - 1; i++) {
             if (args[i].equals("--ttl-days")) {
                 ttlDays = Integer.parseInt(args[i + 1]);
@@ -83,6 +87,9 @@ public final class AerospikeLoader {
                     continue;
                 }
                 Row row = parse(json, line);
+                if (!guard.accept(row.date(), row.domain() + " " + row.kind() + " " + row.id())) {
+                    continue;
+                }
                 dates.computeIfAbsent(row.domain() + "\u001f" + row.kind(), k -> ConcurrentHashMap.newKeySet()).add(row.date());
                 inFlight.acquire();
                 writers.execute(() -> {
@@ -109,6 +116,7 @@ public final class AerospikeLoader {
             });
         }
         System.out.printf("aerospike: loaded %,d rows into namespace %s in %,.0f s%n", n.get(), namespace, (System.nanoTime() - t0) / 1e9);
+        guard.finish();
     }
 
     private record Row(String domain, String kind, String id, LocalDate date, String doc, Map<String, Object> columns) {}

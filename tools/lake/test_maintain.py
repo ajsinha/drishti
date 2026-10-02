@@ -56,7 +56,7 @@ class MaintainTest(unittest.TestCase):
             uri = self.lake(Path(tmp))
             files_before = len(maintain.add_actions(DeltaTable(uri)))
             self.assertEqual(files_before, 90)
-            config = {"lakes": [{"root": tmp, "keep-business-days": 10, "compact": True, "checkpoint": True, "vacuum-hours": 0}]}
+            config = {"lakes": [{"root": tmp, "keep-business-days": 10, "max-drop-share": 0.7, "compact": True, "checkpoint": True, "vacuum-hours": 0}]}
             self.assertEqual(maintain.run(config, dry_run=True, today=date(2026, 9, 30)), 0)
             self.assertEqual(len(maintain.add_actions(DeltaTable(uri))), 90)        # a dry run changes nothing
             self.assertEqual(maintain.run(config, dry_run=False, today=date(2026, 9, 30)), 0)
@@ -72,6 +72,29 @@ class MaintainTest(unittest.TestCase):
             parquet_on_disk = list(Path(uri).rglob("*.parquet"))
             self.assertLessEqual(len([p for p in parquet_on_disk if "_delta_log" not in str(p)]), 11)  # vacuumed
             self.assertTrue(any(Path(uri, "_delta_log").glob("*.checkpoint.parquet")))
+
+    def test_retention_that_would_delete_most_of_a_table_needs_force_drop(self):
+        from deltalake import DeltaTable
+        with tempfile.TemporaryDirectory() as tmp:
+            uri = self.lake(Path(tmp))
+            config = {"lakes": [{"root": tmp, "keep-business-days": 10, "compact": False, "checkpoint": False, "vacuum-hours": None}]}
+            self.assertEqual(maintain.run(config, dry_run=False, today=date(2026, 9, 30)), 1)      # 19 of 30 days: refused
+            self.assertEqual(len(maintain.add_actions(DeltaTable(uri))), 90)                       # nothing deleted
+            self.assertEqual(maintain.run(config, dry_run=False, today=date(2026, 9, 30), force_drop=True), 0)
+            self.assertEqual(len({a["partition.business_date"] for a in maintain.add_actions(DeltaTable(uri))}), 11)
+
+    def test_retention_counts_back_from_today_never_from_a_future_date_in_the_table(self):
+        import pyarrow as pa
+        from deltalake import DeltaTable, write_deltalake
+        with tempfile.TemporaryDirectory() as tmp:
+            uri = self.lake(Path(tmp))
+            write_deltalake(uri, pa.table({"id": ["T-TYPO"], "doc": ["{}"], "business_date": pa.array([date(2099, 3, 1)], pa.date32())}),
+                            mode="append", partition_by=["business_date"])
+            config = {"lakes": [{"root": tmp, "keep-business-days": 25, "compact": False, "checkpoint": False, "vacuum-hours": None}]}
+            self.assertEqual(maintain.run(config, dry_run=False, today=date(2026, 9, 30)), 0)
+            dates = {str(a["partition.business_date"]) for a in maintain.add_actions(DeltaTable(uri))}
+            self.assertEqual(len(dates), 27)                     # 25 business days back from today, the cutoff day, and the typo
+            self.assertIn("2099-03-01", dates)
 
     def test_a_failing_table_does_not_stop_the_others(self):
         with tempfile.TemporaryDirectory() as tmp:

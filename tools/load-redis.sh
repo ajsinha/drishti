@@ -31,7 +31,9 @@ URI="redis://localhost:6379"; OPTS=(); TRADES=""; DAYS="1"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --ttl-days|--codec|--level|--chunk-rows|--in-flight|--threads) OPTS+=("$1" "$2"); shift 2 ;;
-    --cluster|--publish|--retrain) OPTS+=("$1"); shift ;;
+    --cluster|--publish|--retrain|--replace) OPTS+=("$1"); shift ;;
+    --as-of|--future-days|--zone|--max-drop-share) OPTS+=("$1" "$2"); shift 2 ;;
+    --force-drop) OPTS+=("$1"); shift ;;
     --trades) TRADES="$2"; shift 2 ;;
     --days) DAYS="$2"; shift 2 ;;
     *) echo "unknown option $1" >&2; exit 2 ;;

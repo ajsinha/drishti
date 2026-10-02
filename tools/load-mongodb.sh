@@ -19,7 +19,7 @@
 #   tools/load-mongodb.sh [uri] [database] [--keep-days N | --ttl-days N] [--doc-format string|bson] [--trades N --days D]
 #   tools/load-mongodb.sh mongodb://localhost:27017 drishti                           the 1,791 sample documents x 10 business days
 #   tools/load-mongodb.sh mongodb://localhost:27017 drishti --trades 1000000 --days 3  and a book of a million trades, streamed
-# --keep-days N deletes, after loading, every business day of each kind older than its N newest;
+# --keep-days N deletes, after loading, every business day of each kind older than its N newest on or before today;
 # --ttl-days N lets MongoDB delete each day's documents N days after their business date (a TTL index on expireAt).
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -30,6 +30,8 @@ URI="mongodb://localhost:27017"; DB="drishti"; OPTS=(); TRADES=""; DAYS="3"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --keep-days|--ttl-days|--doc-format|--batch|--in-flight) OPTS+=("$1" "$2"); shift 2 ;;
+    --as-of|--future-days|--zone|--max-drop-share) OPTS+=("$1" "$2"); shift 2 ;;
+    --force-drop) OPTS+=("$1"); shift ;;
     --trades) TRADES="$2"; shift 2 ;;
     --days) DAYS="$2"; shift 2 ;;
     *) echo "unknown option $1" >&2; exit 2 ;;

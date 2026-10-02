@@ -1032,6 +1032,7 @@ lakes:
   - root: ./data/delta           # a local lake: every domain, every table
     domains: ["*"]
     keep-business-days: 520      # about two years; older partitions are deleted (null keeps all)
+    max-drop-share: 0.5          # a run that would delete more of a table deletes nothing (--force-drop overrides)
     compact: true                # merge each day's small files
     target-file-mb: 128
     checkpoint: true             # readers replay a short log

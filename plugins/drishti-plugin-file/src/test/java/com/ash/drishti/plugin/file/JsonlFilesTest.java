@@ -16,6 +16,7 @@
 package com.ash.drishti.plugin.file;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.ColumnSet;
@@ -66,6 +67,17 @@ class JsonlFilesTest extends DatedSourceContract {
                 "layout.trade.columns", "mtm,nettingSet")));
         plugin = p;
         return p;
+    }
+
+    @Test
+    void aFutureDatedRowIsNotWritten() throws Exception {
+        Path into = Files.createTempDirectory("jsonl-future");
+        Path in = Files.createTempFile("rows", ".jsonl");
+        Files.write(in, List.of("{\"domain\":\"desk\",\"kind\":\"trade\",\"id\":\"T-1\",\"date\":\"2026-09-30\",\"doc\":\"{}\"}",
+                "{\"domain\":\"desk\",\"kind\":\"trade\",\"id\":\"T-TYPO\",\"date\":\"2099-03-01\",\"doc\":\"{}\"}"), StandardCharsets.UTF_8);
+        assertThatThrownBy(() -> JsonlLoader.main(new String[] {in.toString(), into.toString()})).hasMessageContaining("1 rows not loaded");
+        assertThat(into.resolve("desk/2026-09-30/trade.jsonl")).exists();
+        assertThat(into.resolve("desk/2099-03-01")).doesNotExist();
     }
 
     @Test

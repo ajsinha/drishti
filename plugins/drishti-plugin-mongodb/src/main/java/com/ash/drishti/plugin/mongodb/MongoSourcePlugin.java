@@ -203,9 +203,14 @@ public final class MongoSourcePlugin implements SourcePlugin {
             missingIndexes = missing;
             reader = narrow ? narrowReader : documentReader;
             List<String> kinds = configuredKinds.isEmpty() ? rows.distinct(MongoLayout.KIND, String.class).into(new ArrayList<>()) : configuredKinds;
+            // new days a load is still writing are not shown (MongoLoader records them)
+            java.util.Set<String> loading = new java.util.HashSet<>();
+            database.getCollection(MongoLayout.loadingCollection(collection), BsonDocument.class).find().forEach(d -> loading.add(d.getString(MongoLayout.KEY)
+                    .getValue()));
             for (String kind : kinds) {
                 NavigableSet<LocalDate> ds = new TreeSet<>();
                 rows.distinct(MongoLayout.DATE, Filters.eq(MongoLayout.KIND, kind), Integer.class).forEach(d -> ds.add(MongoLayout.date(d)));
+                ds.removeIf(d -> loading.contains(MongoLayout.loadingKey(kind, d)));
                 if (ds.isEmpty()) {
                     continue;
                 }

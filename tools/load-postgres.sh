@@ -19,8 +19,13 @@
 #   tools/load-postgres.sh [jdbc-url] [--user U] [--password P] [--keep-months N] [--trades N --days D]
 #   tools/load-postgres.sh jdbc:postgresql://localhost:5432/drishti                     the 1,791 sample documents x 10 business days
 #   tools/load-postgres.sh jdbc:postgresql://localhost:5432/drishti --trades 1000000 --days 3   and a book of a million trades, streamed
-# The samples replace each domain's table (--recreate); a bulk book replaces the trade days it covers. --keep-months N
-# drops the monthly partitions older than the newest N months (history retention: dropping a table, not deleting rows).
+# The samples replace each domain's table (--recreate, swapped in in one transaction); a bulk book replaces the trade
+# days it covers, each day in one transaction (readers never see a day missing or half loaded; a killed load changes
+# nothing). --keep-months N drops the monthly partitions older than the newest N months counted back from today
+# (history retention: dropping a table, not deleting rows).
+# Dates are guarded (LoadGuard): a row dated after tomorrow in the business zone is not loaded (--future-days N, --zone Z)
+# and the load ends with an error naming it; retention counts back from --as-of (today), never from the newest date
+# loaded, and dropping more than --max-drop-share (0.5) of a table needs --force-drop.
 # User and password default to DRISHTI_PG_USER / DRISHTI_PG_PASSWORD, else drishti / drishti.
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -29,7 +34,9 @@ URL="${DRISHTI_PG_URL:-jdbc:postgresql://localhost:5432/drishti}"; OPTS=(); TRAD
 [[ $# -gt 0 && "$1" != --* ]] && { URL="$1"; shift; }
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --user|--password|--keep-months|--writers) OPTS+=("$1" "$2"); shift 2 ;;
+    --user|--password|--keep-months|--writers|--batch) OPTS+=("$1" "$2"); shift 2 ;;
+    --as-of|--future-days|--zone|--max-drop-share) OPTS+=("$1" "$2"); shift 2 ;;
+    --force-drop) OPTS+=("$1"); shift ;;
     --trades) TRADES="$2"; shift 2 ;;
     --days) DAYS="$2"; shift 2 ;;
     *) echo "unknown option $1" >&2; exit 2 ;;

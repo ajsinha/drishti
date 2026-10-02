@@ -21,8 +21,10 @@
 #   tools/load-duckdb.sh data/duckdb/drishti.duckdb --trades 10000 --days 3  and a generated book of 10,000 trades, streamed
 # The samples replace each domain they reach (--recreate); a bulk book replaces the trade days it covers. Each load
 # writes <database>.loading and renames it over <database>, so a running Drishti server keeps reading the old file
-# until it reopens the new one. --keep-days N drops the business dates more than N calendar days older than each
-# domain's newest. The database defaults to DRISHTI_DUCKDB_PATH, else data/duckdb/drishti.duckdb.
+# until it reopens the new one. --keep-days N drops the business dates more than N calendar days before today.
+# Dates are guarded (LoadGuard): a row dated after tomorrow in the business zone is not loaded (--future-days N, --zone Z)
+# and the load ends with an error naming it; retention counts back from --as-of (today), never from the newest date
+# loaded, and dropping more than --max-drop-share (0.5) of a table needs --force-drop. The database defaults to DRISHTI_DUCKDB_PATH, else data/duckdb/drishti.duckdb.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-25-openjdk-amd64}"
@@ -31,6 +33,8 @@ DB="${DRISHTI_DUCKDB_PATH:-data/duckdb/drishti.duckdb}"; OPTS=(); TRADES=""; DAY
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --keep-days|--memory-limit|--parsers|--threads) OPTS+=("$1" "$2"); shift 2 ;;
+    --as-of|--future-days|--zone|--max-drop-share) OPTS+=("$1" "$2"); shift 2 ;;
+    --force-drop) OPTS+=("$1"); shift ;;
     --trades) TRADES="$2"; shift 2 ;;
     --days) DAYS="$2"; shift 2 ;;
     *) echo "unknown option $1" >&2; exit 2 ;;

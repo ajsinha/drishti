@@ -191,6 +191,17 @@ final class EntityTable {
         }
     }
 
+    /** When a kind's business date was last loaded (the dates table), or null when it is not recorded. */
+    java.time.Instant dayLoadedAt(Connection c, String k, LocalDate day) throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement("SELECT loaded_at FROM " + schema() + "." + PostgresLayout.DATES + " WHERE kind = ? AND business_date = ?")) {
+            ps.setString(1, k);
+            ps.setDate(2, Date.valueOf(day));
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() && rs.getTimestamp(1) != null ? rs.getTimestamp(1).toInstant() : null;
+            }
+        }
+    }
+
     /** One entity on a known business date: a primary-key lookup in that date's partition. */
     Optional<Hit> fetchOn(Connection c, String k, String entity, LocalDate day) throws SQLException {
         try (PreparedStatement ps = c.prepareStatement("SELECT " + doc + "::text FROM " + table + " WHERE " + kind + " = ? AND " + id + " = ? AND "

@@ -449,7 +449,8 @@ schedule:
 lakes:
   - root: ./data/delta                # or s3://risk-lake/banking with storage-options
     domains: ["*"]
-    keep-business-days: 1800          # about seven years; older business days are deleted
+    keep-business-days: 1800          # about seven years back from today; older business days are deleted
+    max-drop-share: 0.5               # deleting more of a table in one run needs --force-drop
     compact: true                     # laid-out tables: re-sort drifted days; others: merge small files
     target-file-mb: 128
     checkpoint: true                  # readers replay a short log

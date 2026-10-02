@@ -27,6 +27,7 @@ HOSTS="localhost:3000"; NS="test"; TTL=(); TRADES=""; DAYS="3"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --ttl-days) TTL=(--ttl-days "$2"); shift 2 ;;
+    --future-days|--zone) TTL+=("$1" "$2"); shift 2 ;;
     --trades) TRADES="$2"; shift 2 ;;
     --days) DAYS="$2"; shift 2 ;;
     *) echo "unknown option $1" >&2; exit 2 ;;

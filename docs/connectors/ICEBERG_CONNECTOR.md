@@ -258,8 +258,12 @@ How the loader works:
   partition (`OverwriteFiles` with `business_date = d`). The smaller days of a table are committed together in one
   overwrite of exactly those days, so 46 small tables of 10 days each take 46 commits, not 460. Commits to one table are
   serialised. Loading a day again replaces it: the load is idempotent, and a reader sees the old day or the new one.
-- **`--keep-days N`** then removes the business days older than each table's newest N and expires snapshots older than a
-  week ([section 9](#9-retention-and-maintenance)).
+- **`--keep-days N`** then removes the business days older than each table's newest N on or before `--as-of` (default:
+  today in the business zone; a day after it is neither counted nor removed) and expires snapshots older than a week
+  ([section 9](#9-retention-and-maintenance)). Removing more than `--max-drop-share` (0.5) of a table's rows fails,
+  removing nothing, unless `--force-drop`.
+- **Dates are guarded**: a row dated after tomorrow in the business zone is not loaded; the first few are named on
+  standard error and the load ends with an error once the other rows are in.
 
 **Estimate for a million trades a day.** A trial before the test limits wrote a day of 1,000,000 trades in about 40 s on
 one writer thread (4 files, 0.70–0.75 GB); the load of three such days was bound by the generator (about 64 s per million
@@ -379,7 +383,7 @@ java -cp <plugin classpath> com.ash.drishti.plugin.iceberg.IcebergMaintenance ./
 
 | Option | What it does |
 |---|---|
-| `--keep-days N` | deletes the business days older than the table's newest N: a metadata-only delete of whole partitions |
+| `--keep-days N` | deletes the business days older than the table's newest N on or before `--as-of` (today): a metadata-only delete of whole partitions; more than `--max-drop-share` (0.5) of a table's rows needs `--force-drop` |
 | `--relayout` | rewrites, sorted into files of the table's `file-rows`, only days that drifted: files whose id ranges overlap (an append out of order), a file over `file-rows`, more files than needed, delete files, a promoted column missing from a file; one `RewriteFiles` commit per day, validated against the snapshot it read |
 | `--force` | with `--relayout`: every day |
 | `--columns kind:path,path` | adds promoted columns (types inferred from the newest documents) and rewrites every day, filling them from the documents |
@@ -575,8 +579,8 @@ On an Iceberg connector (`drishti.sources.connectors.<name>.settings`, or the co
 | `stale-after` | none | warn when no new data arrived for this long (engine setting) |
 
 Loader options (`IcebergLoader FILE|- [root]`): `--file-rows` (250000), `--row-group-mb` (1), `--buffer-mb` (1024),
-`--threads` (half the cores, at most 8), `--spill-dir` (the system temp folder), `--keep-days`, `--catalog`, `--uri`,
-`--warehouse`, `--credential`, `--token`, `--set key=value`.
+`--threads` (half the cores, at most 8), `--spill-dir` (the system temp folder), `--keep-days`, `--as-of yyyy-MM-dd` (today in the business zone), `--future-days N` (1), `--zone Z` (`DRISHTI_BUSINESS_ZONE`, else `America/New_York`), `--max-drop-share F` (0.5), `--force-drop`, `--catalog`,
+`--uri`, `--warehouse`, `--credential`, `--token`, `--set key=value`.
 
 ## 16. Checklist for production
 

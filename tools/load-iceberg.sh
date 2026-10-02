@@ -21,7 +21,11 @@
 #   tools/load-iceberg.sh ./data/iceberg                                   the 1,791 sample documents x 10 business days
 #   tools/load-iceberg.sh ./data/iceberg --trades 1000000 --days 3         and a book of a million trades, streamed
 #   tools/load-iceberg.sh s3a://risk-lake/iceberg --set s3.endpoint=http://localhost:9000 --set s3.access-key=K ...
-# --keep-days N removes each loaded table's business days older than its newest N (and expires week-old snapshots).
+# --keep-days N removes each loaded table's business days older than its newest N on or before today (and expires
+# week-old snapshots).
+# Dates are guarded (LoadGuard): a row dated after tomorrow in the business zone is not loaded (--future-days N, --zone Z)
+# and the load ends with an error naming it; retention counts back from --as-of (today), never from the newest date
+# loaded, and dropping more than --max-drop-share (0.5) of a table needs --force-drop.
 # The loader sorts each day by id with an external sort: its run files go to --spill-dir (default: the system temp
 # folder) and take about the size of the loaded JSON; put them on a disk, not a memory-backed /tmp, for a large book.
 set -euo pipefail
@@ -35,6 +39,8 @@ while [[ $# -gt 0 ]]; do
     --days) DAYS="$2"; shift 2 ;;
     --catalog|--uri|--warehouse|--credential|--token|--keep-days|--spill-dir|--set|--threads|--buffer-mb|--file-rows|--row-group-mb)
       OPTS+=("$1" "$2"); shift 2 ;;
+    --as-of|--future-days|--zone|--max-drop-share) OPTS+=("$1" "$2"); shift 2 ;;
+    --force-drop) OPTS+=("$1"); shift ;;
     *) echo "unknown option $1" >&2; exit 2 ;;
   esac
 done

@@ -175,7 +175,10 @@ How the loader works:
 - **Up to 128 writes are in flight**, on virtual threads; the client allows 256 connections per node (Aerospike's
   default of 100 is too few for this). It loads about 20,000 rows a second against one local node, including the index
   operations.
-- **`--ttl-days N`** gives every day's record an expiry ([section 6](#6-retention-ttl-instead-of-a-maintenance-job)).
+- **`--ttl-days N`** gives every day's record an expiry ([section 6](#6-retention-ttl-instead-of-a-maintenance-job)),
+  counted from when it is written.
+- **Dates are guarded**: a row dated after tomorrow in the business zone (`--future-days N`, 1; `--zone Z`) is not
+  loaded; the first few are named on standard error and the load ends with an error once the other rows are in.
 - **Writes are idempotent**: loading a day again replaces its records; a date is added to an index only once.
 
 **Your own loader** (a Kafka consumer, a batch job) writes the same three things with the Aerospike client: the day's

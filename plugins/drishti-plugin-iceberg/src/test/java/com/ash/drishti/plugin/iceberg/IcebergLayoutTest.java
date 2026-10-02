@@ -16,6 +16,7 @@
 package com.ash.drishti.plugin.iceberg;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.ColumnSet;
@@ -93,11 +94,13 @@ class IcebergLayoutTest {
         return l.toString();
     }
 
-    void load(List<String> lines) throws Exception {
+    void load(List<String> lines, String... options) throws Exception {
         Path f = Files.createTempFile(root, "rows", ".jsonl");
         Files.write(f, lines);
-        IcebergLoader.main(new String[] {f.toString(), root.toString(), "--file-rows", "15", "--row-group-mb", "0.0001", "--buffer-mb", "0",
-            "--threads", "3", "--spill-dir", root.resolve("spill").toString()});
+        List<String> args = new ArrayList<>(List.of(f.toString(), root.toString(), "--file-rows", "15", "--row-group-mb", "0.0001", "--buffer-mb", "0",
+            "--threads", "3", "--spill-dir", root.resolve("spill").toString()));
+        args.addAll(List.of(options));
+        IcebergLoader.main(args.toArray(new String[0]));
     }
 
     @BeforeEach
@@ -308,6 +311,40 @@ class IcebergLayoutTest {
         assertThat(p.columns("trade", List.of("mtm"), AsOf.of(D1))).isEmpty();  // not held: the next store is asked
         t.refresh();
         assertThat(t.snapshots()).hasSize(1);
+    }
+
+    @Test
+    void aFutureDatedRowIsNotLoadedAndCannotMoveTheRetentionCutOff() throws Exception {
+        LocalDate typo = LocalDate.of(2099, 3, 1);
+        List<String> lines = new ArrayList<>(List.of(line(1, typo, doc(1, typo))));
+        for (int i = 1; i <= 40; i++) {
+            lines.add(line(i, D2, doc(i, D2)));                              // the newest day again, and one row dated by mistake
+        }
+        assertThatThrownBy(() -> load(lines, "--keep-days", "2", "--as-of", "2026-09-30")).hasMessageContaining("1 rows not loaded");
+        Table t = table();
+        try (var pool = IcebergTable.virtualPool()) {
+            assertThat(new IcebergTable(t, pool).layout(t.currentSnapshot().snapshotId(), false).days().keySet()).as("two days back from 2026-09-30")
+                    .containsExactly(D1, D2);
+        }
+        assertThat(rows(t)).isEqualTo(80);
+    }
+
+    @Test
+    void retentionThatWouldDropMostOfATableNeedsForceDrop() throws Exception {
+        LocalDate d0 = D1.minusDays(1);
+        List<String> lines = new ArrayList<>();
+        for (int i = 1; i <= 40; i++) {
+            lines.add(line(i, d0, doc(i, d0)));
+        }
+        load(lines);
+        List<String> again = new ArrayList<>();
+        for (int i = 1; i <= 40; i++) {
+            again.add(line(i, D2, doc(i, D2)));
+        }
+        assertThatThrownBy(() -> load(again, "--keep-days", "1", "--as-of", "2026-09-30")).hasMessageContaining("would drop 80 of 120 rows");
+        assertThat(rows(table())).isEqualTo(120);
+        load(again, "--keep-days", "1", "--as-of", "2026-09-30", "--force-drop");
+        assertThat(rows(table())).isEqualTo(40);
     }
 
     @Test
