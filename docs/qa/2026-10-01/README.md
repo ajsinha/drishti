@@ -54,8 +54,8 @@ permissions, and masks are not applied on every path.
 | [DATA-04](data/FINDINGS.md) | PostgresLoader is not atomic: a killed or concurrent reload leaves days empty or half-loaded, and searches report them as exact. |
 | [DATA-05](data/FINDINGS.md) | One future-dated row with retention (`--keep-months`, `--keep-days`) irreversibly drops all history. |
 | [DATA-06](data/FINDINGS.md) | JSON-lines rows with `doc` as an object and no `columns` get every promoted column null: searches, pick lists and desk P&L silently empty. |
-| [GRAM-01](ux/FINDINGS.md) | A Sutra with a deeply nested expression (~800 parentheses) stops the server from starting (`StackOverflowError`). |
-| [GRAM-02](ux/FINDINGS.md) | The same file silently kills Sutra hot reload; later valid Sutras never load. |
+| [GRAM-01](ux/FINDINGS.md) | A Sutra with a deeply nested expression (~800 parentheses) stops the server from starting (`StackOverflowError`). **Fixed** in c1ace31 (SutraRegistryTest.aDeeplyNestedSutraIsAProblemNotAFailedStart, PathologicalExpressionsTest.DefaultLimits.theServerStartsAndListsBothFilesAsProblems) |
+| [GRAM-02](ux/FINDINGS.md) | The same file silently kills Sutra hot reload; later valid Sutras never load. **Fixed** in c1ace31 (SutraRegistryTest.hotReloadSurvivesADeeplyNestedSutraAndKeepsLoadingLaterOnes, SutraRegistryTest.anyFailureLoadingOneFileIsThatFilesProblem) |
 | [UX-01](ux/FINDINGS.md) | Six visible tabs on live views freeze a seventh page (one live connection per tab; browsers allow six per host). |
 
 ## Medium
@@ -76,7 +76,7 @@ permissions, and masks are not applied on every path.
 | DATA-13 | LZ4 Parquet: unclear 502, health UP, and the documented advice ("use hadoop") does not work. |
 | DATA-14 | `quant.year_fraction`: 30E/360 computed as US 30/360; ACT/ACT ISDA as days/365.25. |
 | DATA-15 | `knownAt` silently ignored by stores without time travel. |
-| GRAM-03 | Very deep or long expressions: the view returns HTTP 500 without a problem code. |
+| GRAM-03 | Very deep or long expressions: the view returns HTTP 500 without a problem code. **Fixed** in c1ace31 (ElLimitsTest.longChainsThatWouldOverflowEvaluationAreRefusedAtCompileTime, PathologicalExpressionsTest.LiftedLimits.anOverflowIsAPanelProblemOrAFileProblemNeverA500) |
 | GRAM-04 | "Case never matters" is false for field names; unknown fields silently match nothing. |
 | GRAM-05 | Many invalid Sutra inputs are silently accepted (duplicate keys, wrong types, extra YAML documents, unknown tags). |
 | UX-02 | At phone width 77 of 85 pages scroll sideways; header items clipped. |
