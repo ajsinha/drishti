@@ -167,7 +167,7 @@ Each command prints what it wrote, for example `lake: … rows under data/delta 
 The sample history holds ten business days, ending on **30 September 2026**.
 
 > **Skip this step** if you only want to look around. Live views work without it; a view on a picked
-> date then says "*… is not a dated source: this shows its current data*".
+> date then says "*No data held for <date>*" and shows the current data, as a still snapshot.
 
 ## Step 6 · Start the server
 
@@ -324,7 +324,8 @@ today, streaming.
    from the business day before, such as **MTM (USD)** and the **DV01** of each tenor, with the change.
 5. Click **Live** in the top bar to return to today.
 
-If you skipped Step 5, the view instead says the source is not a dated source, and there is no Compare.
+If you skipped Step 5, the view instead says *No data held for* the date (it shows the current data, which does not
+update), and there is no Compare.
 
 ## Step 12 · Set an alert and watch a list
 

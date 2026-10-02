@@ -22,6 +22,10 @@ real entity on the right, in the same renderer the terminal uses. Nothing is sav
 This tutorial takes about fifteen minutes. It uses the trading pack's interest rate swap `MX-20000001`; any entity
 works.
 
+Opened as plain `/studio`, Studio previews the first example entity of your packs (the first example on the
+terminal's home page, `/t`) with a Sutra of its kind. When none of your packs names an example, it opens empty, and
+the status line says to type a kind and an id (or paste a document under **Sample JSON**) and press **Preview**.
+
 ## The screen at a glance
 
 | Where | What it is |

@@ -161,7 +161,7 @@ You should see:
 - **29 September**: dated sources go first, so the lake (`trading-store`) answers, with `businessDate`.
 - **1 August**: before the lake's first date (the sample lake holds ten business days), so the lake does not hold it
   and the undated samples answer. The console says so above the view:
-  *murex-rates is not a dated source: this shows its current data, not 2026-08-01.*
+  *No data held for 2026-08-01: the current data of murex-rates, a source that keeps no dates*
 
 ### Where configuration goes
 
@@ -444,8 +444,8 @@ Enter (or type `LIM LIM-HARBOURVIEW <GO>`). *How this view was built* names `lim
 pick 29 September in the top bar and the 29 September file answers. Had the 30 September folder lacked the file, a
 read for 30 September would take 29 September's, and the view would say *Latest data on or before 2026-09-30 is from
 2026-09-29.* For a date with no date folder on or before it within `lookback-days`, the undated `credit-limit/`
-folder answers (if it has the file), and the view says *limits-drop is not a dated source: this shows its current
-data, not …*, because that document has no business date.
+folder answers (if it has the file), and the view says *No data held for …: the current data of
+limits-drop, a source that keeps no dates*, because that document has no business date.
 
 ### Health, and when the folder goes away
 
@@ -555,7 +555,7 @@ You should see `"source":"crm-api"`, `"live":false`, `"businessDate":null` and t
 
 `CPTY CP-HARBOURVIEW <GO>`. The type-ahead does **not** offer the id (a REST connector cannot search). Live: the
 demo samples and the reference lake do not hold `CP-HARBOURVIEW`, so the read reaches `crm-api`. Pick a date and the
-view says *crm-api is not a dated source: this shows its current data, not 2026-09-29.*
+view says *No data held for 2026-09-29: the current data of crm-api, a source that keeps no dates*
 
 ### Health, and when the service goes down
 
@@ -2016,7 +2016,7 @@ which serves every kind). Then:
 |---|---|---|
 | Live | `trading-stream` (live first) → `trading-store` → `file` | Kafka; the view ticks from Kafka. A trade Kafka does not hold (matured, compacted away) falls through to the lake's newest date |
 | a picked date | `trading-store` (dated first) → `file` → `trading-stream` | the lake, for that date; a static snapshot |
-| a date the lake does not hold | as above | `file` if it has a dated folder; else Kafka's current document, with the banner *trading-stream is not a dated source* |
+| a date the lake does not hold | as above | `file` if it has a dated folder; else Kafka's current document, with the banner *No data held for <date>* (the current data of trading-stream) |
 
 **`state` or `ticks`.** In `state` mode (the default) Kafka keeps an index of the topic and answers Live reads
 itself, as above. With `mode: ticks` it keeps nothing (no index, no cache, no disk) and answers no reads: the lake
@@ -2280,7 +2280,7 @@ calls.
 | `failedToStart` shows `no plugin named 'null'` | the connector name in `application.local.yaml` | a typo: no pack declares that name, so it has no `plugin` |
 | `failedToStart` shows `no plugin named 'x'` | `ls drishti-server/target/*exec.jar`; `DRISHTI_PLUGIN_DIR` | misspelt plugin name (`postgres` is not a plugin; it is `jdbc`) |
 | Health `DOWN: no Delta tables under ./data/delta/<domain>` | `ls data/delta/<domain>/*/_delta_log` | build the lake or set `DRISHTI_DELTA_ROOT`; restart |
-| A picked date shows *… is not a dated source: this shows its current data* | `curl -s "$B/entities/<kind>/<id>/raw?asOf=<date>" \| jq .provenance` | the dated store does not hold that date (`lookback-days`, history kept); load it |
+| A picked date shows *No data held for <date>* (the current data of an undated source) | `curl -s "$B/entities/<kind>/<id>/raw?asOf=<date>" \| jq .provenance` | the dated store does not hold that date (`lookback-days`, history kept); load it |
 | A picked date shows *Latest data on or before … is from …* | — | expected: the store's newest date on or before the one picked |
 | Live view does not tick | `jq .provenance` of the view (`/api/v1/views/<kind>/<id>`): `live` must be `true` | no live connector answers or pushes the kind: switch the stream on (`state` or `ticks` mode), the demo off |
 | Live view ticks from samples, not Kafka | `provenance.source` is a sample name (`murex-rates`) | `DRISHTI_DEMO_ENABLED=false` |

@@ -29,7 +29,7 @@ same machine. Replace `localhost` if yours run elsewhere.
 | [The console and the server](#the-console-and-the-server) | backend unreachable, `/readyz` says 503, the live dot is amber, typing does nothing |
 | [Commands and views](#commands-and-views) | cannot read command, *Nothing matches*, DRS-1001, may not open, no suggestions, No data available, pending links, blank charts |
 | [Pick lists and tables](#pick-lists-and-tables) | a pick list instead of the entity, only ids in the list, only 25 rows, keys do nothing |
-| [Live and dates](#live-updates-and-business-dates) | view does not tick, not a dated source, DRS-4003, known at has no effect |
+| [Live and dates](#live-updates-and-business-dates) | view does not tick, no data held for a date, DRS-4003, known at has no effect |
 | [Search](#search) | DRS-4004, empty results, partial results |
 | [Studio and Sutras](#studio-and-sutras) | Save disabled, an edit has no effect, `.sutra.md` files after an upgrade, approval refused |
 | [Packs](#packs) | mnemonics missing, a pack switched off, *not loaded*, cannot switch off, generated files out of date |
@@ -296,7 +296,10 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 
 ## Commands and views
 
-### "DRS-4001 cannot read command '…'; try <MNEMONIC> <ID> <GO>"
+### "DRS-4001 cannot read command '…'; type <MNEMONIC> <ID> <GO> with a mnemonic such as …"
+
+The message names up to six of the mnemonics the server has loaded (from its packs), and how many there are in all.
+"*… but no mnemonics are configured: is a pack loaded?*" means no pack defines any.
 
 - **Cause:** the first word is not a known mnemonic, or you typed a mnemonic with no identifier, or a bare
   identifier whose pattern no pack recognises.
@@ -439,10 +442,12 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
   documents marked live in the `demo` source tick; the trading pack's Kafka stream needs
   `DRISHTI_STREAM_TRADING=true`). See [LIVE.md](../architecture/LIVE.md).
 
-### "… is not a dated source: this shows its current data, not 2026-08-03"
+### "No data held for 2026-08-03: no dated store has … for that date"
 
-- **Cause:** for the date you picked, the entity came from a source that keeps no history (for example the
-  `demo` source), so you see its current data.
+- **Cause:** no dated store (the lake, a dated folder) holds the entity for the date you picked, often because the
+  history does not reach back that far, so a source that keeps no history answered (for example the `demo` source).
+  The view shows that source's current data as a still snapshot: it does not update, and the top bar does not say
+  *Live*.
 - **Check:** `ls data/delta/<domain>/<kind>/` lists the dates the lake has (`business_date=2026-09-30`, …).
 - **Fix:** pick a date the lake covers, or build more history:
 

@@ -291,7 +291,7 @@ catch-up type-ahead from this connector is empty. `search: false` turns it off (
 
 The connector is undated. For a picked business date the router asks the dated connectors first (the lake), and asks
 Kafka only when none holds the entity on that date; Kafka then answers its current document, and the console says
-*trading-stream is not a dated source: this shows its current data, not 2026-08-01.* A picked date is always a static
+*No data held for 2026-08-01: the current data of trading-stream, a source that keeps no dates*. A picked date is always a static
 snapshot: no ticks.
 
 ### 6.4 Reverse lookups
@@ -445,7 +445,7 @@ The connector is undated. Configure the same kind on a dated store as well, and 
 | The user asks for | Order tried | Who answers |
 |---|---|---|
 | Live | `trading-stream` (live first) → `trading-store` → `file` | Kafka; a trade Kafka does not hold (matured, deleted) falls through to the lake's newest date |
-| a picked date | `trading-store` (dated first) → `file` → `trading-stream` | the lake for that date; when the lake does not hold the date, the next store is asked, and Kafka's current document comes last, with the *not a dated source* banner |
+| a picked date | `trading-store` (dated first) → `file` → `trading-stream` | the lake for that date; when the lake does not hold the date, the next store is asked, and Kafka's current document comes last, with the *No data held for <date>* banner |
 
 With `mode: ticks` the lake answers every read and Kafka only ticks the open views. Seven years of history in the lake
 is described in [DELTA_CONNECTOR.md, section 8](DELTA_CONNECTOR.md#8-seven-years-of-history).

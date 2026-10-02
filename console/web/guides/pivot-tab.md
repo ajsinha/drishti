@@ -55,7 +55,8 @@ Every change is read out by screen readers.
 - **Values**: sum, count, average, min, max or distinct count, each shown as the value or as a share of its row, its
   column or the total.
 - **Grid**: subtotals and grand totals (untick **Totals** to hide them), groups that close to their total (▾, **Collapse
-  all**), sort by any value, **Heat** shading, groups in natural order (`2-5Y` before `10Y+`).
+  all**), sort by any value, **Heat** shading, groups in natural order (`2-5Y` before `10Y+`); a number as a group is
+  written plainly (`42408726.01`).
 - **Chart** (bar, line, heatmap), **CSV**, **Excel**, **Print**.
 - **Save** keeps your arrangement per Sutra and panel (per kind for searches); **Reset** goes back to the default.
   Nobody else's screen changes. No special power is needed.

@@ -473,7 +473,7 @@ The router orders candidates by the date asked ([CONNECTOR_GUIDE.md, section 1](
 |---|---|---|
 | Live | `margin-mq` (live) → `collateral-store` (the route, dated) → others | RabbitMQ, if it has received the entity; else the lake's newest date |
 | a picked date | `collateral-store` (dated first) → … → `margin-mq` | the lake, for that date |
-| a date the lake does not hold | as above | `margin-mq`'s current document, with the banner *margin-mq is not a dated source: this shows its current data, not <date>* |
+| a date the lake does not hold | as above | `margin-mq`'s current document, with the banner *No data held for <date>: the current data of margin-mq, a source that keeps no dates* |
 
 The counterparty-risk pack routes `margin-call` to `collateral-store` (Delta Lake). Adding `margin-mq` serving
 `margin-call` needs no route change: Live reads go to the live connector first, picked dates to the lake. Each

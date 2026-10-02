@@ -223,7 +223,7 @@ The number of suggestions is a server setting (`drishti.commands.suggest-limit`,
 
 | You see | Meaning | What to do |
 |---|---|---|
-| `DRS-4001 cannot read command 'XYZ MX-20000001'; try <MNEMONIC> <ID> <GO>, for example TRD IRS-48213 <GO>` on the terminal page | The first word is not a mnemonic, and the text is not an id any pack recognises | Type the first letter and pick from the suggestions; check the pack is switched on ([Domain packs](#domain-packs-choosing-what-you-see)) |
+| `DRS-4001 cannot read command 'XYZ MX-20000001'; type <MNEMONIC> <ID> <GO> with a mnemonic such as AGR, BOOK, CPTY, …` on the terminal page (the mnemonics are those of the packs loaded) | The first word is not a mnemonic, and the text is not an id any pack recognises | Type the first letter and pick from the suggestions; check the pack is switched on ([Domain packs](#domain-packs-choosing-what-you-see)) |
 | A page headed *Pick a trade* that says `0 of 0 trades match` and *Nothing matches.* | The mnemonic is fine, but no trade's id starts with what you typed (`TRD MX-29999999`) and no title contains it | Type less of the id (`TRD MX-2`) and pick from the list |
 | `DRS-1001 no source holds trade/MX-29999999` | You opened an address such as `/v/trade/MX-29999999` directly, and no source has that id | Check the id; use the command line to find it |
 | `DRS-4004 'XYZ' is neither a mnemonic nor a kind; type it alone to see suggestions` | A pick list or search started with an unknown word | Type the first letter and pick a mnemonic |
@@ -633,7 +633,9 @@ first*).
 - **Groups open and close.** ▾ beside a group closes it to its total (▸ opens it); **Collapse all** and **Expand all**.
 - **Sort.** Click a value's heading: within each group the rows are sorted by it, largest first or smallest first.
 - **Group order.** Groups come in natural order: numbers by value, and `0-1Y`, `1-2Y`, `2-5Y`, `5-10Y`, `10Y+`,
-  `BOOK-9` before `BOOK-10`; a missing value is *(blank)*, last.
+  `BOOK-9` before `BOOK-10`; a missing value is *(blank)*, last. A number used as a group (a notional in Rows, say) is
+  written plainly, as `42408726.01`, never `4.240872601E7`, and to at most 15 significant digits, the same in a panel's
+  pivot and a search's.
 - **Heat.** Tick **Heat** to shade each cell by its value: one colour for a range of positive numbers, two (gains and
   losses in the theme's colours) when the values have both signs. The number is always written; the shades keep the
   text readable in every theme.
@@ -734,7 +736,8 @@ keys than shown*); a search's drill-down shows 50 rows a page. An administrator 
 | `Alt+L` | Layout mode: arrange this view's panels for yourself (`Option+L` on a Mac); in layout mode, [its keys](#with-the-keyboard) |
 | `R` `C` `V` `F`, `Delete`, `Alt+↑` `↓` | On a field of a [Pivot tab](#the-pivot-tab-slice-a-table-your-way): move it to Rows, Columns, Values or Filters, remove it, reorder it ([all its keys](#fields-and-zones-with-the-keyboard)) |
 | `Ctrl+Enter` | In Calc: run the code (`Cmd+Enter` on a Mac) |
-| `Alt+1`…`Alt+4` | In a workspace: move to pane 1 to 4 |
+| `Alt+1`…`Alt+4` | In a workspace: move to pane 1 to 4, also while the focus is inside a pane |
+| `Alt+0` | In a workspace: from a pane back to the workspace's bar |
 
 The keys a view offers are also buttons along the bottom of the screen, so you can click them.
 
@@ -832,7 +835,7 @@ What the banners mean:
 
 | Banner | Meaning |
 |---|---|
-| *… is not a dated source: this shows its current data, not 2026-09-29* | The source keeps no history (for example, the history lake was not built) |
+| *No data held for 2026-09-29: no dated store has … for that date. Shown instead: the current data of …* | No dated store holds the entity for the day you picked (for example, the history lake was not built, or does not reach back that far), so a source that keeps no dates answered. Its current data is shown as a still snapshot: it does not update and the top bar does not say *Live* |
 | *Latest data on or before 2026-09-29 is from 2026-09-25* | Nothing was written for the day you picked; you see the last earlier day |
 
 ### Known at: time travel
@@ -1142,6 +1145,11 @@ in the followed pane opens in the following pane.
 define them (`finance`: *Credit desk*, *Rates*, *Cross-asset*; `logistics`: one more) and from
 `console/config/workspaces.yaml`.
 
+With any packs, start a blank workspace: type a name under **New workspace** on `/w` and press **Create** (or open
+`/w/<name>` for a name you have not used and click **Create it**). It opens with two empty panes (the `blank` entry of
+`console/config/workspaces.yaml`); type a command in each pane's box, then **Save**. When your packs bring no
+starters, *Starters* says so.
+
 Worked example (with the `finance` pack):
 
 1. Open `/w` and click **Credit desk**. You see three panes: the netting set `NS-NORTH-01` (large), the
@@ -1162,11 +1170,13 @@ Worked example (with the `finance` pack):
 | Drag a pane's number onto another pane | The other pane shows the same view |
 | Drag a divider | Share the width (or height) between two neighbouring columns (or rows); focus it with `Tab` and use the arrow keys (`Home`, or a double-click: equal) |
 | Save / Save as… / Delete | Keep it under its name, sizes included / a new name / remove it |
-| `Alt+1`…`Alt+4` | Move between panes |
+| `Alt+1`…`Alt+4` | Move to pane 1 to 4, from anywhere: the workspace's bar or inside a pane (an empty pane: its box) |
+| `Alt+0` | Back from a pane to the workspace's bar |
 
 Workspaces are saved to your account (up to 50 each).
 
-**If no starters are listed** (the banking packs ship none), an administrator can add one for everybody
+**If no starters are listed** (the banking packs ship none: *Starters* then says so), start a blank workspace as above,
+or an administrator can add one for everybody
 to `console/config/workspaces.yaml`; it appears after the console restarts:
 
 ```yaml
@@ -1312,6 +1322,9 @@ The Studio page has:
 - a **Summary** of the layout (what it matches, the strip, the panels and their keys), read from the YAML;
 - the **Preview**, and **Sample JSON** (paste your own document and preview against it);
 - **test entities** kept for each Sutra, so you can preview against several entities in turn.
+
+Plain `/studio` opens on the first example entity of your packs (the first example on `/t`) with a Sutra of its
+kind; when none of your packs names an example, it opens empty and the status line says what to type.
 
 Worked example: add a one-day P&L figure to the swap's strip.
 

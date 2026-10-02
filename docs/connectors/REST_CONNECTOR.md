@@ -250,7 +250,7 @@ REST connector its kinds.**
 | linked entities shown in a view (a trade's counterparty, a counterparty's parent) | yes, each through the router | one `GET` per linked entity of a REST-served kind, in parallel, within `drishti.graph.link-budget` (40 ms) before the link shows as *pending* |
 | type-ahead under the command line | no (`search: false`) | none; the id is not offered: users type it whole, or another connector (Delta Lake, files) lists the kind's ids |
 | structured search (`CPTY where rating = 'A'`), pick lists | no | none; answered only by connectors that hold the kind's columns |
-| a picked business date | no (undated) | tried after every dated connector; when it answers, the view says *crm-api is not a dated source: this shows its current data, not 2026-09-29* |
+| a picked business date | no (undated) | tried after every dated connector; when it answers, the view says *No data held for 2026-09-29: the current data of crm-api, a source that keeps no dates* |
 | reverse lookups (*Linked entities*, impact F8) | no | none. Other connectors may still answer "what refers to `CP-HARBOURVIEW`" (trades in a lake that name it) |
 | live push | no | none; views of REST-served entities do not tick (unless a live connector pushes the kind, as a Kafka connector in `ticks` mode does) |
 | derived kinds over a REST kind | members are listed by search, which this connector cannot do | the members' documents can be read from the service only if another connector lists their ids |
@@ -288,7 +288,7 @@ drishti:
 |---|---|---|
 | Live | `demo` (live) → `crm-api` (the route) → `reference-store` | the samples if they hold the id, else the service; a `404` falls through to the lake's newest date |
 | a picked date | `reference-store` (dated) → `crm-api` → `demo` | the lake, for that date |
-| a date the lake does not hold | as above | the service's current answer, with the *not a dated source* banner |
+| a date the lake does not hold | as above | the service's current answer, with the *No data held for <date>* banner |
 
 With `routes: { counterparty: reference-store }` instead, Live reads come from the lake's newest date and the service
 is asked only for counterparties the lake does not hold. Switch the samples off (`DRISHTI_DEMO_ENABLED=false`) when
@@ -404,7 +404,7 @@ is down does not stop the connector from starting.
 | the view always shows the lake's data, never the service's | the kind's route names the lake | route the kind to the REST connector (section 6) |
 | the view shows a sample, not the service | the demo samples are live and hold the same id | `DRISHTI_DEMO_ENABLED=false` |
 | type-ahead does not offer the id | the connector cannot search | type the whole id, or load the kind's ids into a dated store |
-| *crm-api is not a dated source* on a picked date | no dated store holds the entity for that date | expected; load history into a dated store if it is needed |
+| *No data held for <date>* (the current data of crm-api) on a picked date | no dated store holds the entity for that date | expected; load history into a dated store if it is needed |
 | the same entity shows a new generation on every read | no numeric version header | set `generation-header` to the service's version header |
 | `%2F` ids give `404` or `400` | the service or a proxy refuses encoded slashes in paths | put the id in the query string (`path: /lookup?key={id}`) |
 

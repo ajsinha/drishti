@@ -1133,6 +1133,8 @@ sign-on settings (`auth.oidc`) apply to every server; each server verifies the I
 | `product` / `tagline` | `Drishti` / `Any data. Any domain. One grammar.` | Shown in the top bar and sign-in page. |
 | `user`, `user_display`, `desk` | `ash` (`DRISHTI_USER`), `Ash`, `Rates desk` | The acting user when `auth.enabled` is false (local development only). |
 | `clock_tz` / `clock_label` | `America/New_York` / `NY` | The top-bar clock. |
+| `landing_examples` | `4` | How many example commands the landing page plays. They are the example commands (`console.examples`) of the packs switched on, so the landing page never names an entity of a pack that is not installed; with none, it shows the form `<MNEMONIC> <ID> <GO>`. Studio's first preview is the first of these examples too. |
+| `showcase` | four finance-pack screenshots | The landing page's pictures: `{slug, title, cmd, sutra}` each, the image being `web/static/img/shot-<slug>.png`. A caption names its `cmd` only when that command is one of the packs' examples. |
 
 ### `auth`
 
@@ -1165,6 +1167,10 @@ read by both programs, so one set of variables configures both halves.
 | `packs.dir` | `../packs` (`DRISHTI_PACKS_DIR`), relative to `console/` | Where pack content (examples, guides) is read. |
 | `packs.enabled` | `finance` | Used only when the server cannot be asked which packs are enabled. |
 | `help.docs_dir` | `../docs` | The documents rendered in the help centre's reference section. |
+
+`config/workspaces.yaml` holds the console's own starter workspaces (`templates`, none by default; packs add theirs)
+and `blank`, what a new workspace starts as (*New workspace* on `/w`): a `layout` (`2col`, `3col`, `2x2`, `1+2`) and one
+to four empty `panes`.
 
 The file also holds `studio.enabled: true`, which the current console does not read; whether Studio can save
 is decided by the server (`drishti.rachana.studio-save`).

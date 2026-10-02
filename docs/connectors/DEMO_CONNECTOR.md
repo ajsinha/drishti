@@ -307,7 +307,7 @@ manifest lists no kinds, so it is a candidate for **every** kind, and answers "n
 | The user asks for | Where the demo stands | Effect |
 |---|---|---|
 | Live | live sources first, and among live sources the `default-route` last: a real stream (Kafka, ActiveMQ, RabbitMQ, Redis) before the samples, then the samples, then non-live stores | with no stream for the kind, a sample **answers before** the lake or database for an id both hold |
-| a picked date | dated sources first, then undated ones (the demo among them) | the stores answer for dates they hold; for a date older than every store's history, the sample answers, with the banner *murex-rates is not a dated source: this shows its current data, not 2026-08-01.* (the name is the sample's `_meta.source`) |
+| a picked date | dated sources first, then undated ones (the demo among them) | the stores answer for dates they hold; for a date older than every store's history, the sample answers, with the banner *No data held for 2026-08-01: the current data of murex-rates, a source that keeps no dates* (the name is the sample's `_meta.source`) |
 | ticks | the first live source that **holds** the entity, in live order | a view read from a real stream ticks from the stream; one read from a sample ticks from the sample |
 | type-ahead, search | every search-capable source is asked and hits are merged | samples appear beside the stores' ids |
 | reverse lookups | every source that declares them | sample referrers are added to the stores' |
@@ -366,7 +366,7 @@ with `ticking: false`), so a `stale-after` set on it only fires when ticking is 
 - **It serves made-up data under real-looking names.** Samples carry system names (`murex-rates`, `aero-risk`), LEIs
   with valid check digits and plausible amounts. On a production server, a user who types an id that the real store
   does not hold, or picks a date older than its history, can be shown a sample as if it were real (with only the
-  *not a dated source* banner on picked dates). Switch it off: `DRISHTI_DEMO_ENABLED=false`.
+  *No data held for <date>* banner on picked dates). Switch it off: `DRISHTI_DEMO_ENABLED=false`.
 - **Entitlements still apply.** Samples pass through the same role and redaction rules as any other source; the
   connector applies none of its own.
 - **No credentials, no network, no TLS.** It reads only the folders in `dirs`, and only the files a catalogue lists

@@ -72,7 +72,7 @@ browser tab, with that tab's memory, and it reads what you could read by clickin
   drawer is closed, and your variables are kept until you press **Stop** or leave the page.
 
 `Alt+C` is chosen because the function keys belong to each view: a Sutra may bind any of `F2`–`F12` to its panels and
-links (see [Keyboard](USER_GUIDE.md#keyboard)), and `Alt+` keys are the terminal's own (`Alt+←` back, `Alt+1`…`Alt+4`
+links (see [Keyboard](USER_GUIDE.md#keyboard)), and `Alt+` keys are the terminal's own (`Alt+←` back, `Alt+0`…`Alt+4`
 workspace panes).
 
 A view offers Calc when both hold:

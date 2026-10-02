@@ -407,7 +407,7 @@ The connector declares `SourceCapabilities(live = true, reverseLookup = false, s
 |---|---|---|
 | one entity (`LIM LIM-ALDERSHOT <GO>`, `GET /api/v1/views/{kind}/{id}`) | the memory cache; on a miss, one RocksDB `get` of `<kind>/<id>` and a JSON parse, then cached | from memory: no I/O; from disk: one key lookup (LZ4 block read) and a parse |
 | type-ahead | the in-memory `HitIndex` of every id received: id prefix first (binary search over sorted ids), then substring | memory only; subtitle `<kind> · <source-name>` |
-| a picked business date | not dated: ignores the date and returns the current document; dated connectors serving the kind are asked first | the console shows *… is not a dated source: this shows its current data, not <date>* |
+| a picked business date | not dated: ignores the date and returns the current document; dated connectors serving the kind are asked first | the console shows *No data held for <date>: the current data of …, a source that keeps no dates* |
 | *known at* | not supported | — |
 | structured search (`LIM where utilisation > 0.9`) and pick lists | no columns: the engine lists the kind's ids from the type-ahead index and reads documents, at most `drishti.search.max-scan` (20,000) within `budget` (3 s); beyond that the result says `partial: true` ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtisearch--structured-search)) | one read per entity, mostly from memory |
 | derived kinds, impact (F8) over a kind served here | through the routing, document by document, as for searches | as above |
@@ -530,7 +530,7 @@ routes:
 |---|---|---|
 | Live | `limits-mq` (live first) → `credit-store` | the queue's latest document, ticking; an entity the queue has not delivered falls through to the lake's newest date |
 | a picked date | `credit-store` (dated first) → `limits-mq` | the lake, for that date; static |
-| a date the lake does not hold | as above | the queue's current document, with the banner *limits-mq is not a dated source: this shows its current data, not <date>* |
+| a date the lake does not hold | as above | the queue's current document, with the banner *No data held for <date>: the current data of limits-mq, a source that keeps no dates* |
 
 The same holds for any dated store (PostgreSQL, Aerospike, files, S3). The broker covers today as it happens; the
 nightly load into the dated store covers history. See

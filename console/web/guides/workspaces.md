@@ -19,10 +19,20 @@ A workspace puts up to four live views on one screen. Each pane is a full Drisht
 updates, links and function keys. A pane can **follow** another pane: click a trade in a netting set's member
 list, and the following pane opens that trade.
 
+## Start a blank workspace
+
+Any packs will do. On `/w`, type a name under **New workspace** (for example `Morning desk`) and press **Create**,
+or open `/w/<name>` for a name you have not used: the page says there is no such workspace and offers **Create it**.
+A new workspace opens with two empty panes side by side. Type a command or an identifier in each pane's box and
+press Enter (step 3 below), change the layout if you like (step 4), then **Save** (step 5).
+
+When none of your packs brings starter workspaces, *Starters* says so: start a blank one instead.
+
 ## Tutorial: a credit desk on one screen
 
-The starter workspaces come from the **finance** pack. If **Workspaces** shows no starters, ask your administrator
-to enable or assign the finance pack (see [Domain packs](packs)).
+The starter workspaces in this tutorial come from the **finance** pack (the logistics pack has one too). If
+**Workspaces** says there are no starters, start a blank workspace (above), or ask your administrator to enable or
+assign the finance pack (see [Domain packs](packs)).
 
 ### 1. Open a starter
 
@@ -76,7 +86,8 @@ The **↗** icon in a pane's header opens that pane's view full screen in the te
 | **+ Pane** | Adds a pane (at most four). |
 | **×** on a pane | Removes it. |
 | *follows* menu on a pane | Chooses which pane this one follows (or *—* for none). |
-| `Alt+1` … `Alt+4` | Moves the keyboard focus to pane 1 to 4. |
+| `Alt+1` … `Alt+4` | Moves the keyboard focus to pane 1 to 4 (to its box while it is empty), wherever the focus is, inside a pane too. |
+| `Alt+0` | Moves the keyboard focus from a pane back to the workspace's bar (*Workspaces*, the layout menu, **Save**…). |
 | Divider between panes | Drag it to give one column (or row) more room and its neighbour less. With the keyboard: `Tab` to the divider, then `←` `→` (or `↑` `↓` for rows) by 5 %; `Home` or a double-click makes them equal again. Changing the layout menu starts from equal sizes. |
 
 ### 5. Save it as your own

@@ -144,14 +144,17 @@ This needs step 4.
    before, field by field.
 5. Click **Live** to return to today.
 
-Without the sample history, the view says the source is not a dated source and there is no **Compare**.
+Without the sample history, the view says *No data held for* the date and shows the current data as a still
+snapshot, and there is no **Compare**.
 
 ## 9. Try a workspace (optional)
 
 **Workspaces** in the top bar (`/w`) puts up to four live views on one screen, and a pane can follow
-another. The starter workspaces come from the `finance` and `logistics` packs: restart the server with
-`DRISHTI_PACKS=finance`, open `/w`, and click **Credit desk** under *Starters*. The
-[workspaces guide](../../console/web/guides/workspaces.md) walks through it.
+another. With the packs above there are no starter workspaces (*Starters* says so): type a name under
+**New workspace**, press **Create**, then type `TRD MX-20000001` in the first pane's box and `CPTY CP-NORTHBRIDGE` in
+the second, and press **Save**. `Alt+1` and `Alt+2` move between the panes, `Alt+0` back to the bar. The starters
+come from the `finance` and `logistics` packs (restart the server with `DRISHTI_PACKS=finance` to try **Credit desk**).
+The [workspaces guide](../../console/web/guides/workspaces.md) walks through both.
 
 ## If something goes wrong
 

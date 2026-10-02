@@ -32,7 +32,7 @@ partitions and versions, a database has a date column, a feed drops a folder per
 - **One SPI type.** `AsOf(businessDate, knownAt, live)` reaches every read: `fetch`, `reverse` and `search` have
   dated overloads that default to the undated methods, so existing plugins keep working. A source declares
   `SourceCapabilities.dated`. Dated sources stamp `Provenance.businessDate`; undated ones leave it empty, and the
-  view says "not a dated source" instead of passing current data off as history.
+  view says "No data held for <date>" instead of passing current data off as history.
 - **Routing.** For a picked date, dated sources are tried first; for live, the configured order stands (so live
   ticks come from live sources and history comes from the lake).
 - **Delta Lake through Delta Kernel** (Java, no Spark), the `delta` plugin: `<root>/<domain>/<kind>/`, one table
