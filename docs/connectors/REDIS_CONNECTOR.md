@@ -71,26 +71,30 @@ first `{` and `}` live in the same slot, on the same node.
 |---|---|---|
 | `trading:kinds` | SET | the kinds the domain holds |
 | `trading:trade:days` | ZSET | the kind's business days (member and score `yyyyMMdd`) |
-| `trading:trade:{MX-20000017}` | ZSET | the entity's business days |
-| `trading:trade:{MX-20000017}:20260930` | STRING | the entity's document that day, compressed |
-| `{trading:trade:20260930}:cols` | HASH | the day's ids and promoted fields, column-wise in chunks |
-| `{trading:trade:20260930}:cols:staging` | HASH | a loader's copy, renamed over the one above when complete |
+| `{trading:trade:days}:gens` | HASH | each day's current generation (`yyyyMMdd` → `<g>`); a day without one uses the keys without a suffix |
+| `trading:trade:{MX-20000017}` | ZSET | the entity's business days (a hint: a day counts where its generation holds the entity's document) |
+| `trading:trade:{MX-20000017}:20260930.<g>` | STRING | the entity's document that day in generation `<g>`, compressed (`…:20260930` without a generation) |
+| `{trading:trade:20260930}:cols:<g>` | HASH | the day's ids and promoted fields in generation `<g>`, column-wise in chunks (`…:cols` without one) |
+| `{trading:trade:20260930}:cols:<g>:staging` | HASH | a loader's copy, renamed over the one above when complete |
 | `{trading:trade:20260930}:cols:loading:<load>` | SET | the ids a running load wrote documents for on the day, until the day's columns list them |
-| `trading:loading` | SET | the days loads started and have not finished (`load TAB kind TAB yyyyMMdd`) |
+| `trading:loading` | SET | the days loads started and have not finished (`load TAB kind TAB yyyyMMdd TAB generation`) |
 | `trading:loader:<load>` | STRING | present while that load runs (a 90-second expiry it renews) |
 | `trading:trade:dict` | STRING | the id (hex) of the kind's current zstd dictionary |
 | `trading:dict:<id>` | STRING | a zstd dictionary (about 112 KB) |
 | `trading:updated` | STRING | when a loader last finished (epoch milliseconds) |
 | `trading:changes` | channel | what a loader wrote: `kind TAB id TAB yyyyMMdd`, id `*` for a day's columns |
 
-For one trade on one day:
+For one trade on one day (generation `9c41e07a2b5d13f0`, the load that last replaced the day):
 
 ```
+{trading:trade:days}:gens              HASH   20260929 → 5e0a…, 20260930 → 9c41e07a2b5d13f0
 trading:trade:{MX-20000017}            ZSET   20260929 → 20260929, 20260930 → 20260930
-trading:trade:{MX-20000017}:20260930   STRING 0x03 <4-byte dictionary id> <zstd frame>          about 820 bytes
+trading:trade:{MX-20000017}:20260930.9c41e07a2b5d13f0
+                                       STRING 0x03 <4-byte dictionary id> <zstd frame>          about 820 bytes
                                               (6,300 bytes of JSON: {"tradeId":"MX-20000017","sourceSystem":"Murex",…})
 
-{trading:trade:20260930}:cols          HASH
+{trading:trade:20260930}:cols:9c41e07a2b5d13f0
+                                       HASH
   meta                 "version 1790857967807\nrows 1000000\nchunk-rows 10000\nchunks 100\n
                         text tradeId\ntext productType\n…\nnumber notional\nnumber mtm\n…\ntext sourceSystem\n"
   #id:0 … #id:99       the ids, sorted, 10,000 per chunk
@@ -105,13 +109,21 @@ Why each part is shaped this way:
   ([section 6](#6-retention-ttl-on-every-key)); a read is one `GET`.
 - **The entity's days** (a small sorted set; for a few days Redis keeps it as a compact listpack of about 80 bytes)
   answer "the latest day on or before D" with `ZREVRANGEBYSCORE … LIMIT 0 1`, which is what an `effective` kind needs.
-- **The hash tag on the id** puts an entity's days and its documents in one slot, so a small Lua script reads both in one
-  round trip, also on Redis Cluster ([section 5.2](#52-opening-one-entity)).
+- **The hash tag on the id** puts an entity's days and its documents in one slot, so the documents of its candidate
+  days are read with one `MGET`, also on Redis Cluster ([section 5.2](#52-opening-one-entity)).
+- **Generations** make replacing a day atomic for readers. A load writes the day's documents and columns under a
+  generation of its own (the load's id), which no reader looks at, then switches the day with one script that sets
+  the day's generation and adds the day to the kind's days (`{trading:trade:days}:gens` and `trading:trade:days`
+  share a slot: the first key's hash tag is the second key's name). A reader therefore sees the whole old day or the
+  whole new one, never new documents with old columns. The replaced generation expires a little later
+  (`--keep-replaced-seconds`, 120), so a reader that has not yet learned of the switch still reads a whole old day.
+  A day with no generation recorded (loaded before generations, or only ever merged into) uses the keys without a
+  suffix.
 - **The kind's days** tell the connector which business days exist: a `snapshot` kind is read on its newest day on or
   before the date asked (within `lookback-days`) with a single `GET`, without consulting the entity's days.
 - **The day's column hash** lets searches, pick lists, derived kinds, impact and reverse lookups read a day's few narrow
   fields with one `HMGET` per field, never a million keys. Its own hash tag keeps it and its staging copy in one slot,
-  so the loader replaces a day's columns with one atomic `RENAME`.
+  so a loader writes a generation's columns with one atomic `RENAME`.
 - **The meta's version** (when the loader wrote it) lets the connector keep a day's columns in memory and check with
   one `HGET` whether they changed.
 
@@ -201,6 +213,7 @@ the plugin):
 ```bash
 tools/load-redis.sh redis://localhost:6379                                  # the samples: 1,791 documents x 10 days
 tools/load-redis.sh redis://localhost:6379 --trades 1000000 --days 2       # and a book of a million trades, streamed
+tools/load-redis.sh redis://localhost:6379 --merge                         # add to the days instead of replacing them
 tools/load-redis.sh redis://localhost:6379 --ttl-days 7                    # every key expires 7 days after it is written
 tools/load-redis.sh rediss://loader:secret@redis.internal:6380 --cluster   # TLS, credentials, Redis Cluster
 ```
@@ -212,6 +225,9 @@ redis: loaded 17,910 rows into redis://localhost:26479 in 4 s; documents 54 MB a
 redis: trading:trade 2026-09-30: 1,000,000 rows, 19 columns in 2,000 chunks of 15,809,834 bytes
 redis: loaded 1,000,000 rows into redis://localhost:26479 in 81 s; documents 6,021 MB as JSON, 811 MB stored (7.4 times smaller)
 ```
+
+With `--trades`, the script merges the samples (`--merge`) and the bulk book, which starts with the 750 sample trades,
+replaces the trade days it covers.
 
 How the loader works:
 
@@ -228,28 +244,42 @@ How the loader works:
   already has one for the kind. A kind with fewer documents is trained on what it has (64 at least, else plain zstd).
 - **Columns are gathered per kind and day** in compact arrays (`double[]` for numbers, shared strings for texts; about
   230 MB of loader heap per million trades with nineteen fields) and written when the input ends: sorted by id, cut into
-  chunks of `--chunk-rows` (10,000), written to the staging hash, given the TTL, and renamed over the day's hash in one
-  step. Only then is the day added to the kind's days and announced on `<domain>:changes`. **A reader switches to a new
-  day only once all of its documents and columns are in.**
-- **Days merge.** Before writing a day's columns the loader reads what Redis already holds for that day and keeps every
-  row this load did not write. A day can be loaded in parts (one booking system at a time, or intraday corrections), and
-  loading the same lines twice changes nothing. A one-trade correction to a day of a million trades took 3.5 s, almost
-  all of it reading and rewriting the day's 16 MB of columns. The other side of merging: a trade dropped from the book
-  stays in the day until the day expires.
-- **`--replace`** makes each day the stream reaches exactly what the stream holds: the entities it does not carry
-  leave the day's columns, and their documents of that day are deleted (after the columns are renamed). Use it for a
-  full end-of-day book; keep the default for loads in parts and intraday corrections.
+  chunks of `--chunk-rows` (10,000), written to the staging hash, given the TTL, and renamed over the generation's
+  hash in one step.
+- **Days are replaced (the default since this release; loads merged before).** Each day the stream reaches then holds
+  exactly the stream's entities, as with the PostgreSQL, DuckDB and file loaders. The documents and columns go under
+  the load's own generation; once every day's columns are in, each day is switched to it in one step (one script),
+  announced on `<domain>:changes`, and the replaced generation's documents and columns expire
+  `--keep-replaced-seconds` (120) later; entities the stream does not carry lose the day from their days. **Readers
+  see the old day or the new one, never a mix**, and a new day appears only once all of its documents and columns are
+  in. The QA's case: the 10,000-trade book, then the 8,000-trade book, leaves 8,000 trades on the day (it left 10,000).
+  Memory: until the replaced generation expires, the day is held twice.
+- **A replacement that would drop most of a day is refused.** When the stream lacks more than `--max-drop-share`
+  (0.5) of the entities a day holds, the load ends with an error before switching any day (`replacing the day would
+  remove 9 of its 10 entities …; to add to the day, load with --merge; to replace it anyway, pass --force-drop`), and
+  what it wrote is deleted. A part of a day loaded without `--merge` is therefore not mistaken for the whole book.
+- **`--merge`** keeps the behaviour from before: the load writes into the day's current generation in place, and the
+  day's columns keep every row Redis holds that this load did not write. A day can be loaded in parts (one booking
+  system at a time, or intraday corrections), and loading the same lines twice changes nothing. A one-trade correction
+  to a day of a million trades took 3.5 s, almost all of it reading and rewriting the day's 16 MB of columns. Merged
+  documents are visible as they arrive (a correction reaches reads at once and searches when the load ends), and a
+  trade dropped from the book stays in the day until the day expires. `--merge` and `--replace` together are refused;
+  `--replace` alone states the default.
+- **Do not run two loads of the same day at once**: the last switch wins, and a merge into a day that another load
+  replaces meanwhile writes into the generation being retired.
 - **A load that dies half way leaves no document the day's columns do not list.** Each id goes into the day's journal
   before its document is written; the day's journal goes once its columns are in place. The first time a load reaches
-  a domain it deletes what dead loads left (entries whose loader key has expired): the documents of journaled ids that
-  the day's columns do not list, and that day in those entities' days. A load that fails in the process does the same
-  for itself. Documents of ids the columns do list were replaced by the dead load and stay so until the day is loaded
-  again (the columns then agree). The journal costs one `SADD` per document and, until the day's columns are written,
-  a set of the day's ids in Redis (about 60 MB per million trades).
+  a domain it deletes what dead loads left (entries whose loader key has expired): for a load that was replacing the
+  day and never switched it, every document it wrote and its columns (readers never saw them); for a `--merge` load,
+  the documents of journaled ids that the day's columns do not list, and that day in those entities' days. A load that
+  fails in the process does the same for itself. A dead `--merge` load's documents of ids the columns do list were
+  replaced in place and stay so until the day is loaded again. The journal costs one `SADD` per document and, until
+  the day's columns are written, a set of the day's ids in Redis (about 60 MB per million trades).
 - **Dates are guarded.** A row dated after tomorrow in the business zone (`--future-days`, `--zone`) is not loaded;
   the first few are named on standard error and the load ends with an error once the other rows are in.
 - **`--publish`** announces every written entity on `<domain>:changes`, so open views of it refresh at once
-  ([section 5.7](#57-live-updates)). It is meant for intraday updates; a bulk load announces only its days.
+  ([section 5.7](#57-live-updates)): as it is written with `--merge`, once its day is switched when replacing. It is
+  meant for intraday updates (`--merge --publish`); a bulk load announces only its days.
 - **`--codec`** chooses `zstd-dict` (default), `zstd`, `deflate` or `none`; `--level` the compression level (3).
 - **Credentials**: in the URI (`redis://user:secret@host:6379`), or `DRISHTI_REDIS_USER` and `DRISHTI_REDIS_PASSWORD`;
   `rediss://` for TLS.
@@ -259,8 +289,11 @@ two days in one run (each day's columns are held until the input ends).
 
 **Your own loader** (a Kafka consumer, a batch job) writes the same keys: the document (compressed or plain JSON), the
 `ZADD` to the entity's days, the day's column hash (the encoding is in `ColumnCodec` and `DayColumns` and can be called
-from Java), the `ZADD` to the kind's days and the `SADD` to the domain's kinds. A writer that does not maintain the
-column hash still serves documents; searches over that day then read documents instead.
+from Java), the `ZADD` to the kind's days and the `SADD` to the domain's kinds. Writing into the day's current
+generation (none: the keys without a suffix) merges; to replace a day atomically, write a new generation's keys and
+switch the day as `RedisLoader` does (`HSET {<domain>:<kind>:days}:gens yyyyMMdd <g>` with the `ZADD`, in one
+script). A writer that does not maintain the column hash still serves documents; searches over that day then read
+documents instead.
 
 **Redis must not evict.** Set `maxmemory` with `maxmemory-policy noeviction` (the default): a full instance then refuses
 writes and the loader stops with the error, instead of Redis silently dropping trades.
@@ -271,7 +304,7 @@ writes and the loader stops with the error, instead of Redis silently dropping t
 
 Every `refresh-seconds` (60), and whenever a loader announces a day, the connector reads:
 
-- `trading:kinds` and each kind's days (a few small keys);
+- `trading:kinds`, each kind's days and the days' generations (a few small keys);
 - `trading:updated` (when data last changed: the view's freshness);
 - for each kind, the newest day's `meta`; only when its version changed, the day's `#id:*` chunks: every id, for
   type-ahead. A million ids are 100 chunks of about 90 KB, read with one `HMGET` and decoded in a few hundred
@@ -286,19 +319,16 @@ are loaded in the background ([section 5.4](#54-a-days-columns)).
 `TRD MX-20000017` on 2026-09-30:
 
 - **A `snapshot` kind** (trades): the kind's newest day on or before the date asked, within `lookback-days`, from the
-  catalogue; then one `GET trading:trade:{MX-20000017}:20260930`. No document that day means the trade is gone that day
-  (or expired), and the router asks the next store.
-- **An `effective` kind** (a record only when the entity changes), or a kind whose days are not known yet: one small
-  Lua script, sent by its SHA (`EVALSHA`, loaded with `EVAL` the first time a node does not know it), which reads the
-  entity's latest day on or before the date and that day's document in one round trip:
+  catalogue; then one `GET trading:trade:{MX-20000017}:20260930.<g>` in the day's generation. No document that day
+  means the trade is gone that day (or expired), and the router asks the next store; the connector first asks once
+  (`HGET {trading:trade:days}:gens 20260930`) whether the day was switched to a generation it has not seen yet.
+- **An `effective` kind** (a record only when the entity changes), or a kind whose days are not known yet: the entity's
+  latest days on or before the date (`ZREVRANGEBYSCORE … LIMIT 0 8`), then their documents in their days'
+  generations with one `MGET` (same slot); the newest found wins. Two round trips.
 
-```lua
-local d = redis.call('ZREVRANGEBYSCORE', KEYS[1], ARGV[1], '-inf', 'LIMIT', 0, 1)
-if #d == 0 then return false end
-local v = redis.call('GET', KEYS[1] .. ':' .. d[1])
-if not v then return {d[1]} end
-return {d[1], v}
-```
+The connector learns that a day was switched from the loader's announcement (at once), from its catalogue refresh, or
+from a read that finds nothing in the generation it knows; until then it reads the whole old day, which stays for
+`--keep-replaced-seconds`.
 
 The document is decompressed (the dictionary from memory) and parsed. The provenance carries the business day it is
 for, `live` when the date asked is the live one, and a generation that changes when the stored document does.
@@ -319,8 +349,8 @@ time) with a million ids.
 Searches, pick lists, derived kinds, impact and reverse lookups need a few fields of every trade of a day. The connector
 reads them as a **column set**:
 
-1. `HGET {trading:trade:20260930}:cols meta`: rows, chunks, columns, version.
-2. If the version is the one held in memory, that column set answers.
+1. `HGET {trading:trade:20260930}:cols:<g> meta` in the day's generation: rows, chunks, columns, version.
+2. If the generation and version are the ones held in memory, that column set answers.
 3. Otherwise one `HMGET` per column (the ids and each promoted path), each naming all of the column's chunks, all sent
    at once: twenty commands, 16 MB, one round trip. Each column is decoded on its own virtual thread.
 
@@ -367,7 +397,7 @@ changed meanwhile refreshes when it is opened again.
 Load with `--ttl-days N` and every key the loader writes expires N days after it is written: the documents with `SET …
 EX`, the entity's days and the day's column hash with `EXPIRE`. The entity's days also lose days more than N days
 before `--as-of` (default: today in the business zone; never the newest date loaded) (`ZREMRANGEBYSCORE`), and so do
-the days of each kind loaded, once every day is written. When that would take more than `--max-drop-share` (0.5) of a
+the days of each kind loaded (with their generations), once every day is written. When that would take more than `--max-drop-share` (0.5) of a
 kind's days, nothing is taken from the kind's days and the load fails, unless `--force-drop`. An entity no longer
 loaded disappears N days after its last write. No job runs; Redis expires keys by itself.
 
@@ -411,15 +441,15 @@ Keep `maxmemory` at about 70 % of the machine's RAM with persistence, 85 % witho
 Set `cluster: true` (or give several URIs) on the connector and `--cluster` to the loader. Lettuce discovers the
 topology from the seed nodes and refreshes it every minute and on every redirect. The layout is made for it:
 
-- an entity's days and documents share a slot (tag `{MX-20000017}`), so the read script runs on one node; documents of
-  a day spread evenly over every node;
+- an entity's days and documents share a slot (tag `{MX-20000017}`), so the `MGET` of its documents runs on one
+  node; documents of a day spread evenly over every node;
+- a kind's days and their generations share a slot, so the loader's switch script runs on one node;
 - a day's column hash is one key on one node (16 MB per million trades), read with twenty `HMGET`s;
 - the catalogue keys (`kinds`, `<kind>:days`, `updated`) are small;
 - pub/sub reaches every node's subscribers (`PUBLISH` is propagated across the cluster).
 
 Three primaries with 16 GB each hold about 30 business days of a million trades a day with room to spare; add a replica
-per primary for failover. Note that the script reads a document key it computes from its declared key (same slot):
-Redis Cluster permits this, but a proxy that routes scripts by declared keys only may not.
+per primary for failover. The loader's switch script declares both keys it touches.
 
 ### 7.3 Recent days in Redis, history in Delta Lake
 
@@ -482,7 +512,7 @@ Drishti server with the `redis` profile and `-Xmx8g`, times over HTTP:
 |---|---|
 | load the samples (17,910 documents) | 4 s |
 | load 1,000,000 trade-days / 2,000,000 trade-days (streamed from the generator) | 81 s / 97 s |
-| a one-trade intraday correction with `--publish` (merging the day's columns) | 3.5 s |
+| a one-trade intraday correction with `--merge --publish` (merging the day's columns) | 3.5 s |
 | server start, with a million ids and the newest day's columns ready | 9.6 s |
 | type-ahead `TRD CLY-40834`, first / again | 93 ms / 26 ms |
 | open a trade (view), first / again | 81 ms / 33 ms |
@@ -549,17 +579,20 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
 - **Only promoted fields are fast.** Searches on other fields read documents (20,000 at most, `partial`).
 - **Effective-mode kinds** are not read as columns (each entity's latest day would have to be resolved); they are small
   and read as documents. Their type-ahead reads every day's ids.
-- **A day's columns are written at the end of a load.** Documents of a new day are in Redis while it loads, but readers
-  switch to the day only after its columns are written; a correction to an existing day is visible to reads at once and
-  to searches when that load ends. An intraday writer should load in batches (one per minute, say): each batch rereads
-  and rewrites the day's columns (about 3 s per million trades).
+- **A day's columns are written at the end of a load.** A replacing load's documents are in Redis while it loads,
+  under a generation readers do not look at; readers switch to the whole day at the end. With `--merge` a correction
+  to an existing day is visible to reads at once and to searches when that load ends. An intraday writer should load
+  in batches with `--merge` (one per minute, say): each batch rereads and rewrites the day's columns (about 3 s per
+  million trades).
+- **Replacing a day holds it twice for a while** (`--keep-replaced-seconds`, 120): size Redis for one more day than
+  you keep, or lower it (0 deletes the replaced generation at once; a reader that has not seen the switch then finds
+  the old day gone and reads the new one).
 - **The loader's heap grows with the days in one input** (about 230 MB per million trades per day): load a long history
   one day per run.
 - **Pub/sub is not durable.** A missed change is caught at the next refresh for days and ids; an open view of a changed
   entity refreshes when reopened.
 - **A dictionary is per kind.** Documents of a kind whose shape changes a lot compress less until `--retrain`.
-- **Redis Cluster is supported but was not part of the measured run** (one instance); the read script relies on a
-  computed key in the same slot as its declared key.
+- **Redis Cluster is supported but was not part of the measured run** (one instance).
 
 ## 11. Diagnosing
 
@@ -575,9 +608,11 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
 |---|---|---|
 | the plugin is listed as installed but not configured | a Redis plugin on the class path with no `uri` (for example no `redis` profile) | nothing to do: it stays idle; set `uri` on a connector to use it |
 | `DOWN: cannot reach Redis at redis://…` | Redis unreachable, wrong URI or credentials | check `uri`, `user`/`password`, TLS (`rediss://`); the connector retries every refresh |
-| `DOWN: lost the connection to Redis at redis://… (reconnecting)` or `DOWN: reads fail: …` | Redis went away or rejects commands; health says so at once, not at the next refresh | the connection reconnects by itself; health is `UP` again after the next successful read or refresh |
+| `DOWN: lost the connection to Redis at redis://… (reconnecting)` or `DOWN: reads fail: …` | Redis went away or rejects commands; health says so at once, not at the next refresh | the connection reconnects by itself; while health is `DOWN` reads fail at once (`fail-fast`) instead of each waiting `timeout-ms`, and one check every `recheck-ms` (1 s) asks Redis again: health is `UP` and reads resume as soon as it answers |
+| `…; reads fail at once until it answers (checked every 1000 ms)` | the breaker is open: Redis is known to be down | users see `DRS-1003 … the Redis store is not reachable …` at once and searches are `partial`; fix Redis, the connector recovers by itself |
+| loader: `replacing the day would remove N of its M entities …` | the stream lacks most of a day Redis holds: a part of a day loaded without `--merge`, or a truncated input | `--merge` to add to the day; `--force-drop` if the day really shrank |
 | `UP (not laid out as the pack declares: trade (12 of 19 columns) …)` | the day was loaded without some declared fields | load lines whose `columns` carry every declared path |
-| a trade is in type-ahead but does not open on a date | its key for that day expired or was never loaded | `ZRANGE trading:trade:{ID} 0 -1`, `EXISTS trading:trade:{ID}:yyyyMMdd`; with Delta Lake behind, older days come from there |
+| a trade is in type-ahead but does not open on a date | its key for that day expired or was never loaded | `ZRANGE trading:trade:{ID} 0 -1`, `HGET {trading:trade:days}:gens yyyyMMdd`, `EXISTS trading:trade:{ID}:yyyyMMdd.<g>`; with Delta Lake behind, older days come from there |
 | a new day is not served | its load has not finished (columns are written at the end) | wait for the loader's last line; the day joins `trading:trade:days` then |
 | `zstd dictionary … is missing` | a dictionary key was deleted | never delete `<domain>:dict:*`; reload the affected days |
 | searches say `partial: true` | a field the query reads is not promoted | add it to `layout.<kind>.columns` and reload |
@@ -586,7 +621,8 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
 | open views do not tick | the writer does not `--publish`, or `live: false` | publish changes on `<domain>:changes` |
 
 Useful commands: `INFO memory` (`used_memory`, `mem_fragmentation_ratio`), `MEMORY USAGE <key>`,
-`HGET {trading:trade:20260930}:cols meta`, `ZRANGE trading:trade:days 0 -1`, `SUBSCRIBE trading:changes`.
+`HGETALL {trading:trade:days}:gens`, `HGET {trading:trade:20260930}:cols:<g> meta`, `ZRANGE trading:trade:days 0 -1`,
+`SUBSCRIBE trading:changes`.
 
 ## 12. Settings
 
@@ -609,6 +645,8 @@ On a Redis connector (`drishti.sources.connectors.<name>.settings`):
 | `reverse-index` | `true` | `false` turns reverse lookups off |
 | `live` | `true` | subscribe to `<domain>:changes` and push changed entities to open views |
 | `timeout-ms` | `5000` | connect and command timeout |
+| `fail-fast` | `true` | while health says Redis is down, reads and column reads fail at once (`DRS-1003`, a message without host or credentials) instead of each waiting `timeout-ms`; `false` to always wait |
+| `recheck-ms` | `1000` | how often a down Redis is asked again (`PING`); reads resume at its first answer |
 | `source-name` | the connector's name | the name shown in provenance and Health |
 
 `RedisLoader <file|-> [uri]` options:
@@ -617,11 +655,13 @@ On a Redis connector (`drishti.sources.connectors.<name>.settings`):
 |---|---|---|
 | `--cluster` | off | Redis Cluster |
 | `--ttl-days N` | none (no expiry) | every key expires N days after it is written; the kinds' days keep N days back from `--as-of` |
-| `--replace` | off (merge) | each day loaded holds exactly the stream's entities |
+| `--replace` | on (the default) | each day loaded holds exactly the stream's entities, switched atomically |
+| `--merge` | off | add to each day instead: keep the entities the stream does not carry, write in place (before this release, the default) |
+| `--keep-replaced-seconds N` | `120` | how long a replaced day's generation stays readable (0: deleted at once) |
 | `--as-of yyyy-MM-dd` | today in the business zone | the date retention counts back from |
 | `--future-days N` | `1` | how many days after today a business date may be |
 | `--zone Z` | `DRISHTI_BUSINESS_ZONE`, else `America/New_York` | the business zone |
-| `--max-drop-share F` | `0.5` | the largest share of a kind's days one run may drop |
+| `--max-drop-share F` | `0.5` | the largest share of a kind's days one run may drop, and of a day's entities a replacement may drop |
 | `--force-drop` | off | drop even more than that |
 | `--codec` | `zstd-dict` | `zstd-dict`, `zstd`, `deflate` or `none` |
 | `--level N` | `3` | compression level |
@@ -640,8 +680,10 @@ On a Redis connector (`drishti.sources.connectors.<name>.settings`):
    `maxmemory` and keep `maxmemory-policy noeviction`.
 3. Choose the days Redis keeps and load with `--ttl-days`.
 4. Put a Delta Lake (or Iceberg) connector behind it for the full history, with the same layout.
-5. Use TLS (`rediss://`) and an ACL user with only the commands the connector needs (`GET`, `HGET`, `HMGET`, `SMEMBERS`,
-   `ZRANGE`, `ZREVRANGEBYSCORE`, `EVAL`, `EVALSHA`, `SUBSCRIBE`) and a separate one for the loader.
-6. For live views, have the intraday writer load in small batches with `--publish`.
+5. Use TLS (`rediss://`) and an ACL user with only the commands the connector needs (`GET`, `MGET`, `HGET`, `HMGET`,
+   `HGETALL`, `SMEMBERS`, `ZRANGE`, `ZREVRANGEBYSCORE`, `PING`, `SUBSCRIBE`) and a separate one for the loader (which
+   also needs `EVAL` for the day switch).
+6. For live views, have the intraday writer load in small batches with `--merge --publish`; load each full book
+   without `--merge` (each day replaced).
 7. Give the server at least 4 GB of heap per million entities a day.
 8. Check Admin → Health, then measure on your data (`elapsedMs`, `scanned` and `partial` of a search).

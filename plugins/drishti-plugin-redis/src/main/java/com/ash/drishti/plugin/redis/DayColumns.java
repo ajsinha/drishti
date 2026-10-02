@@ -106,6 +106,11 @@ final class DayColumns {
         return rowOf.containsKey(id);
     }
 
+    /** The ids, in the order they arrived. */
+    synchronized List<String> ids() {
+        return List.of(Arrays.copyOf(ids, rows));
+    }
+
     /** The ids and columns in id order, cut into chunks of {@code chunkRows}: what the day's column hash holds. */
     synchronized Chunks chunks(int chunkRows, long version) {
         Integer[] boxed = new Integer[rows];

@@ -111,8 +111,8 @@ tools/load-redis.sh redis://localhost:6379 --trades 10000        # medium for a 
 SPRING_PROFILES_ACTIVE=redis DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
 ```
 
-Redis holds everything in memory: about 1 GB per million trades a day, so keep large books for a server. Design:
-[REDIS_CONNECTOR.md](REDIS_CONNECTOR.md).
+Redis holds everything in memory: about 1 GB per million trades a day, so keep large books for a server. Each load
+replaces the business days it carries (`--merge` adds to them instead). Design: [REDIS_CONNECTOR.md](REDIS_CONNECTOR.md).
 
 ## Aerospike
 
@@ -181,7 +181,7 @@ So any store a new connector adds can be loaded with the same demo data.
 | `tools/load-iceberg.sh [root] [--trades N] [--days D] [--keep-days N] [--catalog rest --uri U --warehouse W]` | `make_data.py --jsonl`, then `IcebergLoader` (each day sorted by id), then the bulk book streamed |
 | `tools/load-duckdb.sh [database] [--trades N] [--days D] [--keep-days N] [--memory-limit M] [--parsers N] [--threads N]` | `make_data.py --jsonl`, then `DuckDbLoader` (samples with `--recreate`), then the bulk book streamed; each load builds `<database>.loading` and renames it over the database |
 | `tools/load-mongodb.sh [uri] [db] [--trades N] [--days D] [--keep-days N \| --ttl-days N] [--doc-format string\|bson]` | `make_data.py --jsonl`, then `MongoLoader`, then the bulk book streamed |
-| `tools/load-redis.sh [uri] [--trades N] [--days D] [--ttl-days N] [--publish] [--cluster]` | `make_data.py --jsonl`, then `RedisLoader`, then the bulk book streamed |
+| `tools/load-redis.sh [uri] [--trades N] [--days D] [--ttl-days N] [--merge] [--publish] [--cluster]` | `make_data.py --jsonl`, then `RedisLoader`, then the bulk book streamed |
 | `tools/load-aerospike.sh [hosts] [namespace] [--trades N] [--days D] [--ttl-days N]` | `make_data.py --jsonl`, then `AerospikeLoader`, then the bulk book streamed |
 | `tools/packgen/banking/make_data.py` | the samples, `--lake`, `--jsonl`, `--check` |
 | `tools/samplegen/bulk_trades.py` | a large trade book, into the lake or as JSON lines |

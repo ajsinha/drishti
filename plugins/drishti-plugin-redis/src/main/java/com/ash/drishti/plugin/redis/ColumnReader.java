@@ -43,20 +43,31 @@ final class ColumnReader {
     private ColumnReader() {
     }
 
-    /** The day's description, or empty when Redis does not hold the day (never loaded, or expired). */
-    static Optional<ColumnCodec.Meta> meta(RedisClusterAsyncCommands<byte[], byte[]> redis, String domain, String kind, LocalDate day, Duration timeout)
-            throws Exception {
-        byte[] m = await(redis.hget(RedisLayout.bytes(RedisLayout.columns(domain, kind, day)), RedisLayout.bytes(RedisLayout.META)), timeout);
+    /**
+     * The description of the day's columns in generation {@code gen} ({@code ""}: none), or empty when Redis does not
+     * hold them (never loaded, expired, or replaced and gone).
+     */
+    static Optional<ColumnCodec.Meta> meta(RedisClusterAsyncCommands<byte[], byte[]> redis, String domain, String kind, LocalDate day, String gen,
+            Duration timeout) throws Exception {
+        byte[] m = await(redis.hget(RedisLayout.bytes(RedisLayout.columns(domain, kind, day, gen)), RedisLayout.bytes(RedisLayout.META)), timeout);
         return m == null ? Optional.empty() : Optional.of(ColumnCodec.Meta.decode(m));
     }
 
+    /** The day's current generation ({@code ""}: none recorded, the keys without a suffix). */
+    static String generation(RedisClusterAsyncCommands<byte[], byte[]> redis, String domain, String kind, LocalDate day, Duration timeout)
+            throws Exception {
+        byte[] g = await(redis.hget(RedisLayout.bytes(RedisLayout.generations(domain, kind)), RedisLayout.bytes(String.valueOf(RedisLayout.day(day)))),
+                timeout);
+        return g == null ? "" : new String(g, java.nio.charset.StandardCharsets.UTF_8);
+    }
+
     /**
-     * The day's ids and the promoted {@code paths} the meta lists (all of them when null), in id order; empty when the
-     * hash changed or went while it was read (the caller reads the meta again).
+     * The day's ids and the promoted {@code paths} the meta lists (all of them when null), in id order, from generation
+     * {@code gen}; empty when the hash changed or went while it was read (the caller reads the meta again).
      */
-    static Optional<ColumnSet> read(RedisClusterAsyncCommands<byte[], byte[]> redis, String domain, String kind, LocalDate day, ColumnCodec.Meta meta,
-            List<String> paths, Duration timeout) throws Exception {
-        byte[] key = RedisLayout.bytes(RedisLayout.columns(domain, kind, day));
+    static Optional<ColumnSet> read(RedisClusterAsyncCommands<byte[], byte[]> redis, String domain, String kind, LocalDate day, String gen,
+            ColumnCodec.Meta meta, List<String> paths, Duration timeout) throws Exception {
+        byte[] key = RedisLayout.bytes(RedisLayout.columns(domain, kind, day, gen));
         List<String> wanted = new ArrayList<>();
         wanted.add(RedisLayout.IDS);
         (paths == null ? meta.columns().keySet() : paths).stream().filter(meta.columns()::containsKey).forEach(wanted::add);

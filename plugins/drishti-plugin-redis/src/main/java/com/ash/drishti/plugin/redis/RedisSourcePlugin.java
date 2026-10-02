@@ -29,15 +29,14 @@ import com.ash.drishti.api.SourcePlugin;
 import com.ash.drishti.api.Subscription;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import io.lettuce.core.RedisNoScriptException;
-import io.lettuce.core.ScriptOutputType;
+import io.lettuce.core.KeyValue;
+import io.lettuce.core.Limit;
+import io.lettuce.core.Range;
 import io.lettuce.core.cluster.api.async.RedisClusterAsyncCommands;
 import io.lettuce.core.pubsub.RedisPubSubAdapter;
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -46,7 +45,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,7 +53,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Future;
@@ -71,8 +68,10 @@ import java.util.function.Consumer;
  * ({@link RedisLayout}, written by {@link RedisLoader}) keeps a compressed document per entity per business date, each
  * entity's days, each kind's days, and each day's ids and promoted fields column-wise in chunks. A {@code snapshot}
  * read is one {@code GET} of the kind's newest day on or before the date asked (within {@code lookback-days}); an
- * {@code effective} read is one small script that finds the entity's latest day on or before it and returns that day's
- * document, in one round trip. Type-ahead comes from the newest day's ids; searches, pick lists, derived kinds, impact
+ * {@code effective} read finds the entity's latest days on or before it and reads their documents (two round trips).
+ * A day is read in its current generation ({@link RedisLayout}): a loader that replaces a day switches it whole, and
+ * the connector learns the switch from the day's announcement, from its catalogue refresh, or when a read of the
+ * generation it knows finds nothing. Type-ahead comes from the newest day's ids; searches, pick lists, derived kinds, impact
  * and reverse lookups read a day's column hash ({@link ColumnReader}), kept by memory ({@code columns-cache-mb}, 1024)
  * and re-read only when a loader has rewritten it. With {@code live} (true) the connector listens on
  * {@code <domain>:changes} and pushes changed entities to open views.
@@ -81,27 +80,22 @@ import java.util.function.Consumer;
  * {@code user}/{@code password}; several URIs or {@code cluster: true} for Redis Cluster), {@code domain} (the data
  * domain, e.g. {@code trading}), {@code kinds}, {@code mode.<kind>}, {@code layout.<kind>.columns}, {@code lookback-days}
  * (10), {@code refresh-seconds} (60), {@code columns-cache-mb} (1024), {@code heavy-reads} (2), {@code max-load-rows}
- * (200000), {@code reverse-index} (true), {@code live} (true), {@code timeout-ms} (5000), {@code source-name}.
+ * (200000), {@code reverse-index} (true), {@code live} (true), {@code timeout-ms} (5000), {@code fail-fast} (true: while
+ * the store is known to be down, reads fail at once instead of waiting for {@code timeout-ms}; {@link FailFast}),
+ * {@code recheck-ms} (1000: how often a down store is asked again), {@code source-name}.
  */
 public final class RedisSourcePlugin implements SourcePlugin {
 
     private record DayKey(String kind, LocalDate date) {}
 
-    /** A day's columns as read, with the version of the hash they came from. */
-    private record Loaded(long version, ColumnSet columns) {}
+    /** A day's columns as read, with the generation and version of the hash they came from. */
+    private record Loaded(String gen, long version, ColumnSet columns) {}
 
     /** What a read found: the business day and the stored value. */
     private record Found(LocalDate day, byte[] value) {}
 
-    /** The latest day on or before ARGV[1] of the entity KEYS[1], and that day's document (same hash tag: same slot). */
-    private static final String FLOOR = """
-            local d = redis.call('ZREVRANGEBYSCORE', KEYS[1], ARGV[1], '-inf', 'LIMIT', 0, 1)
-            if #d == 0 then return false end
-            local v = redis.call('GET', KEYS[1] .. ':' .. d[1])
-            if not v then return {d[1]} end
-            return {d[1], v}
-            """;
-    private static final String FLOOR_SHA = sha1(FLOOR);
+    /** The entity's days an effective read considers, newest first: the newest with a document in its day's generation wins. */
+    private static final int CANDIDATE_DAYS = 8;
 
     private final Map<String, String> modes = new HashMap<>();
     private final Map<String, List<String>> promoted = new ConcurrentHashMap<>();
@@ -114,6 +108,8 @@ public final class RedisSourcePlugin implements SourcePlugin {
     private final ReentrantLock connecting = new ReentrantLock();
     private final AtomicBoolean refreshQueued = new AtomicBoolean();
     private volatile Map<String, NavigableSet<LocalDate>> kindDates = Map.of();
+    private volatile Map<String, Map<LocalDate, String>> generations = Map.of();   // kind → day → current generation
+    private FailFast failFast;
     private volatile RedisConnection redis;
     private volatile StatefulRedisPubSubConnection<String, String> pubSub;
     private volatile String problem = "not connected yet";
@@ -162,6 +158,8 @@ public final class RedisSourcePlugin implements SourcePlugin {
         this.live = Boolean.parseBoolean(ctx.setting("live", "true"));
         this.timeout = Duration.ofMillis(Long.parseLong(ctx.setting("timeout-ms", "5000")));
         this.heavy = new Semaphore(Integer.parseInt(ctx.setting("heavy-reads", "2")));
+        this.failFast = new FailFast(Boolean.parseBoolean(ctx.setting("fail-fast", "true")),
+                Duration.ofMillis(Long.parseLong(ctx.setting("recheck-ms", "1000"))), this::down, this::recheck, sourceName);
         String kinds = ctx.setting("kinds", "");
         this.configuredKinds = kinds.isBlank() ? List.of() : Arrays.stream(kinds.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList();
         ctx.settings().forEach((k, v) -> {
@@ -251,6 +249,7 @@ public final class RedisSourcePlugin implements SourcePlugin {
         try {
             RedisClusterAsyncCommands<byte[], byte[]> r = redis();
             Map<String, NavigableSet<LocalDate>> dates = new ConcurrentHashMap<>();
+            Map<String, Map<LocalDate, String>> gens = new ConcurrentHashMap<>();
             for (byte[] k : ColumnReader.await(r.smembers(RedisLayout.bytes(RedisLayout.kinds(domain))), timeout)) {
                 String kind = new String(k, StandardCharsets.UTF_8);
                 NavigableSet<LocalDate> ds = new TreeSet<>();
@@ -258,6 +257,10 @@ public final class RedisSourcePlugin implements SourcePlugin {
                     ds.add(RedisLayout.date(Long.parseLong(new String(d, StandardCharsets.UTF_8))));
                 }
                 dates.put(kind, ds);
+                Map<LocalDate, String> g = new ConcurrentHashMap<>();
+                ColumnReader.await(r.hgetall(RedisLayout.bytes(RedisLayout.generations(domain, kind))), timeout)
+                        .forEach((d, v) -> g.put(RedisLayout.date(Long.parseLong(new String(d, StandardCharsets.UTF_8))), new String(v, StandardCharsets.UTF_8)));
+                gens.put(kind, g);
             }
             byte[] updated = ColumnReader.await(r.get(RedisLayout.bytes(RedisLayout.updated(domain))), timeout);
             if (updated != null) {
@@ -266,6 +269,7 @@ public final class RedisSourcePlugin implements SourcePlugin {
                     lastUpdate = at;
                 }
             }
+            generations = gens;
             kindDates = dates;
             problem = null;
             commandFailure = null;                             // the store answered
@@ -290,10 +294,11 @@ public final class RedisSourcePlugin implements SourcePlugin {
             long version = 0;
             Map<LocalDate, ColumnCodec.Meta> metas = new LinkedHashMap<>();
             for (LocalDate d : days) {
-                Optional<ColumnCodec.Meta> m = ColumnReader.meta(redis(), domain, kind, d, timeout);
+                String gen = generation(kind, d);
+                Optional<ColumnCodec.Meta> m = ColumnReader.meta(redis(), domain, kind, d, gen, timeout);
                 if (m.isPresent()) {
                     metas.put(d, m.get());
-                    version = version * 31 + m.get().version() + d.toEpochDay();
+                    version = version * 31 + m.get().version() + d.toEpochDay() + gen.hashCode();
                 }
             }
             if (Long.valueOf(version).equals(indexed.get(kind))) {
@@ -301,7 +306,8 @@ public final class RedisSourcePlugin implements SourcePlugin {
             }
             Set<String> ids = new TreeSet<>();
             for (Map.Entry<LocalDate, ColumnCodec.Meta> m : metas.entrySet()) {
-                ColumnReader.read(redis(), domain, kind, m.getKey(), m.getValue(), List.of(), Duration.ofMinutes(2)).ifPresent(c -> ids.addAll(Arrays.asList(c.ids())));
+                ColumnReader.read(redis(), domain, kind, m.getKey(), generation(kind, m.getKey()), m.getValue(), List.of(), Duration.ofMinutes(2))
+                        .ifPresent(c -> ids.addAll(Arrays.asList(c.ids())));
             }
             List<EntityHit> hits = new ArrayList<>(ids.size());
             ids.forEach(id -> hits.add(new EntityHit(EntityRef.of(kind, id), id, kind + " · " + sourceName)));
@@ -367,13 +373,13 @@ public final class RedisSourcePlugin implements SourcePlugin {
         if (!configuredKinds.isEmpty() && !configuredKinds.contains(ref.kind())) {
             return Optional.empty();
         }
+        failFast.check();
         Optional<Found> found;
         try {
             found = ColumnReader.await(read(ref, asOf), timeout);
             commandFailure = null;
         } catch (Exception e) {
-            // health says so at once, not at the next refresh: the store is down or rejecting commands
-            commandFailure = "reads fail: " + e.getClass().getSimpleName() + (e.getMessage() == null ? "" : ": " + e.getMessage());
+            failed(e);
             throw e;
         }
         if (found.isEmpty()) {
@@ -387,7 +393,8 @@ public final class RedisSourcePlugin implements SourcePlugin {
 
     /**
      * The stored value of the entity on the date asked, without waiting: for a snapshot kind one {@code GET} of the
-     * kind's day; for an effective kind (or before the kinds are known) the {@code FLOOR} script.
+     * kind's day in its generation; for an effective kind (or before the kinds are known) the entity's latest days on or
+     * before the date, then their documents in one {@code MGET}, the newest found winning.
      */
     private CompletableFuture<Optional<Found>> read(EntityRef ref, AsOf asOf) {
         RedisClusterAsyncCommands<byte[], byte[]> r = redis();
@@ -397,33 +404,102 @@ public final class RedisSourcePlugin implements SourcePlugin {
             if (day.isEmpty()) {
                 return CompletableFuture.completedFuture(Optional.empty());
             }
-            return r.get(RedisLayout.bytes(RedisLayout.doc(domain, ref.kind(), ref.id(), day.get()))).toCompletableFuture()
-                    .thenApply(v -> v == null ? Optional.empty() : Optional.of(new Found(day.get(), v)));
+            LocalDate d = day.get();
+            String gen = generation(ref.kind(), d);
+            return get(r, ref, d, gen).thenCompose(found -> found.isPresent() ? CompletableFuture.completedFuture(found)
+                    // nothing in the generation known here: the day may have been switched since; ask once
+                    : currentGeneration(r, ref.kind(), List.of(d)).thenCompose(now -> now.get(0).equals(gen)
+                            ? CompletableFuture.completedFuture(Optional.<Found>empty()) : get(r, ref, d, now.get(0))));
         }
-        byte[][] keys = {RedisLayout.bytes(RedisLayout.entity(domain, ref.kind(), ref.id()))};
-        byte[] bound = RedisLayout.bytes(asked == null ? "+inf" : String.valueOf(RedisLayout.day(asked)));
-        return script(r, keys, bound).thenApply(out -> {
-            if (out == null || out.size() < 2 || out.get(1) == null) {
-                return Optional.empty();
+        byte[] entity = RedisLayout.bytes(RedisLayout.entity(domain, ref.kind(), ref.id()));
+        Range<Long> upTo = asked == null ? Range.unbounded() : Range.from(Range.Boundary.unbounded(), Range.Boundary.including(RedisLayout.day(asked)));
+        return r.zrevrangebyscore(entity, upTo, Limit.create(0, CANDIDATE_DAYS)).toCompletableFuture().thenCompose(members -> {
+            List<LocalDate> days = members.stream().map(m -> RedisLayout.date(Long.parseLong(new String(m, StandardCharsets.UTF_8)))).toList();
+            if (days.isEmpty()) {
+                return CompletableFuture.completedFuture(Optional.empty());
             }
-            LocalDate day = RedisLayout.date(Long.parseLong(new String((byte[]) out.get(0), StandardCharsets.UTF_8)));
-            return Optional.of(new Found(day, (byte[]) out.get(1)));
+            List<String> known = days.stream().map(d -> generation(ref.kind(), d)).toList();
+            return newest(r, ref, days, known).thenCompose(found -> found.isPresent() ? CompletableFuture.completedFuture(found)
+                    : currentGeneration(r, ref.kind(), days).thenCompose(now -> now.equals(known)
+                            ? CompletableFuture.completedFuture(Optional.<Found>empty()) : newest(r, ref, days, now)));
         });
     }
 
-    /** The FLOOR script by its digest, sent with EVAL (which loads it) the first time a node does not know it. */
-    private static CompletableFuture<List<Object>> script(RedisClusterAsyncCommands<byte[], byte[]> r, byte[][] keys, byte[] bound) {
-        CompletableFuture<List<Object>> sha = r.<List<Object>>evalsha(FLOOR_SHA, ScriptOutputType.MULTI, keys, bound).toCompletableFuture();
-        return sha.handle((v, e) -> {
-            if (e == null) {
-                return CompletableFuture.completedFuture(v);
+    private CompletableFuture<Optional<Found>> get(RedisClusterAsyncCommands<byte[], byte[]> r, EntityRef ref, LocalDate day, String gen) {
+        return r.get(RedisLayout.bytes(RedisLayout.doc(domain, ref.kind(), ref.id(), day, gen))).toCompletableFuture()
+                .thenApply(v -> v == null ? Optional.<Found>empty() : Optional.of(new Found(day, v)));
+    }
+
+    /** The newest of the entity's documents on {@code days} (newest first) in their generations (same hash tag: one MGET). */
+    private CompletableFuture<Optional<Found>> newest(RedisClusterAsyncCommands<byte[], byte[]> r, EntityRef ref, List<LocalDate> days, List<String> gens) {
+        byte[][] keys = new byte[days.size()][];
+        for (int i = 0; i < keys.length; i++) {
+            keys[i] = RedisLayout.bytes(RedisLayout.doc(domain, ref.kind(), ref.id(), days.get(i), gens.get(i)));
+        }
+        return r.mget(keys).toCompletableFuture().thenApply(values -> {
+            for (int i = 0; i < values.size(); i++) {
+                KeyValue<byte[], byte[]> kv = values.get(i);
+                if (kv.hasValue()) {
+                    return Optional.of(new Found(days.get(i), kv.getValue()));
+                }
             }
-            Throwable cause = e instanceof CompletionException && e.getCause() != null ? e.getCause() : e;
-            if (cause instanceof RedisNoScriptException) {
-                return r.<List<Object>>eval(FLOOR, ScriptOutputType.MULTI, keys, bound).toCompletableFuture();
+            return Optional.<Found>empty();
+        });
+    }
+
+    /** The days' current generations, as Redis has them now (remembered for the next reads). */
+    private CompletableFuture<List<String>> currentGeneration(RedisClusterAsyncCommands<byte[], byte[]> r, String kind, List<LocalDate> days) {
+        byte[][] fields = days.stream().map(d -> RedisLayout.bytes(String.valueOf(RedisLayout.day(d)))).toArray(byte[][]::new);
+        return r.hmget(RedisLayout.bytes(RedisLayout.generations(domain, kind)), fields).toCompletableFuture().thenApply(values -> {
+            List<String> out = new ArrayList<>(days.size());
+            for (int i = 0; i < days.size(); i++) {
+                String gen = values.get(i).hasValue() ? new String(values.get(i).getValue(), StandardCharsets.UTF_8) : "";
+                remember(kind, days.get(i), gen);
+                out.add(gen);
             }
-            return CompletableFuture.<List<Object>>failedFuture(cause);
-        }).thenCompose(f -> f);
+            return out;
+        });
+    }
+
+    /** The day's current generation as last read ({@code ""}: none, the keys without a suffix). */
+    private String generation(String kind, LocalDate day) {
+        Map<LocalDate, String> g = generations.get(kind);
+        String gen = g == null ? null : g.get(day);
+        return gen == null ? "" : gen;
+    }
+
+    private void remember(String kind, LocalDate day, String gen) {
+        Map<LocalDate, String> g = generations.get(kind);
+        if (g != null) {
+            g.put(day, gen);
+        }
+    }
+
+    /** A read failed: health says DOWN at once (not at the next refresh), and the breaker opens. */
+    private void failed(Exception e) {
+        commandFailure = "reads fail: " + e.getClass().getSimpleName() + (e.getMessage() == null ? "" : ": " + e.getMessage());
+        failFast.startRecheck();
+    }
+
+    /** True while health says the store is down: what opens the breaker. */
+    private boolean down() {
+        RedisConnection c = redis;
+        return problem != null || commandFailure != null || c != null && !c.isOpen();
+    }
+
+    /** The breaker's check: a {@code PING} on a live connection (or a new connection); when it answers, health is UP again. */
+    private void recheck() throws Exception {
+        RedisConnection c = redis;
+        if (c == null) {
+            refresh();                                            // opens the connection, reads the catalogue
+            return;
+        }
+        if (!c.isOpen()) {
+            return;                                               // Lettuce is still reconnecting
+        }
+        ColumnReader.await(c.async().ping(), failFast.recheck());
+        commandFailure = null;
+        refresh();
     }
 
     /** A stored value's JSON; a dictionary is read from Redis once and kept. */
@@ -448,11 +524,18 @@ public final class RedisSourcePlugin implements SourcePlugin {
         if (!columnar(kind).containsAll(paths)) {
             return Optional.empty();
         }
+        failFast.check();
         Optional<LocalDate> day = snapshotDate(kind, asOf.businessDate());
         if (day.isEmpty()) {
             return Optional.empty();                           // a date Redis does not hold: the next store for the kind is asked
         }
-        Optional<ColumnSet> all = day(kind, day.get());
+        Optional<ColumnSet> all;
+        try {
+            all = day(kind, day.get());
+        } catch (Exception e) {
+            failed(e);
+            throw e;
+        }
         if (all.isEmpty() || !paths.stream().allMatch(all.get()::has)) {
             return Optional.empty();                           // expired, or loaded without some of the fields: documents are read
         }
@@ -474,32 +557,43 @@ public final class RedisSourcePlugin implements SourcePlugin {
      */
     private Optional<ColumnSet> day(String kind, LocalDate date) throws Exception {
         DayKey key = new DayKey(kind, date);
-        Optional<ColumnCodec.Meta> meta = ColumnReader.meta(redis(), domain, kind, date, timeout);
+        String gen = generation(kind, date);
+        Optional<ColumnCodec.Meta> meta = ColumnReader.meta(redis(), domain, kind, date, gen, timeout);
+        if (meta.isEmpty()) {
+            String now = ColumnReader.generation(redis(), domain, kind, date, timeout);   // switched since the catalogue was read?
+            if (!now.equals(gen)) {
+                remember(kind, date, now);
+                gen = now;
+                meta = ColumnReader.meta(redis(), domain, kind, date, gen, timeout);
+            }
+        }
         if (meta.isEmpty()) {
             columnSets.invalidate(key);
             return Optional.empty();
         }
         Loaded have = columnSets.getIfPresent(key);
-        if (have != null && have.version() == meta.get().version()) {
+        if (have != null && have.gen().equals(gen) && have.version() == meta.get().version()) {
             return Optional.of(have.columns());
         }
         ReentrantLock lock = loading.computeIfAbsent(key, k -> new ReentrantLock());
         lock.lock();
         try {
             have = columnSets.getIfPresent(key);
-            if (have != null && have.version() == meta.get().version()) {
+            if (have != null && have.gen().equals(gen) && have.version() == meta.get().version()) {
                 return Optional.of(have.columns());
             }
             heavy.acquire();
             try {
                 for (int attempt = 0; attempt < 3; attempt++) {
-                    Optional<ColumnSet> read = ColumnReader.read(redis(), domain, kind, date, meta.get(), promoted.getOrDefault(kind, List.of()),
+                    Optional<ColumnSet> read = ColumnReader.read(redis(), domain, kind, date, gen, meta.get(), promoted.getOrDefault(kind, List.of()),
                             Duration.ofMinutes(2));
                     if (read.isPresent()) {
-                        columnSets.put(key, new Loaded(meta.get().version(), read.get()));
+                        columnSets.put(key, new Loaded(gen, meta.get().version(), read.get()));
                         return read;
                     }
-                    meta = ColumnReader.meta(redis(), domain, kind, date, timeout);   // rewritten while read: read the new one
+                    gen = ColumnReader.generation(redis(), domain, kind, date, timeout);    // rewritten or switched while read: read the new one
+                    remember(kind, date, gen);
+                    meta = ColumnReader.meta(redis(), domain, kind, date, gen, timeout);
                     if (meta.isEmpty()) {
                         return Optional.empty();
                     }
@@ -521,8 +615,8 @@ public final class RedisSourcePlugin implements SourcePlugin {
 
     @Override
     public List<EntityRef> reverse(EntityRef target, String kind, AsOf asOf) {
-        if (!reverseIndex) {
-            return List.of();
+        if (!reverseIndex || failFast.open()) {
+            return List.of();                                  // the store is down: no referrers from here, at once
         }
         List<EntityRef> out = new ArrayList<>();
         for (String k : kind == null ? kindDates.keySet() : Set.of(kind)) {
@@ -566,9 +660,10 @@ public final class RedisSourcePlugin implements SourcePlugin {
     private Set<String> scanReferences(String kind, String target, Collection<LocalDate> days, AsOf asOf) throws Exception {
         Set<String> ids = new TreeSet<>();
         for (LocalDate d : days) {
-            Optional<ColumnCodec.Meta> m = ColumnReader.meta(redis(), domain, kind, d, timeout);
+            String gen = generation(kind, d);
+            Optional<ColumnCodec.Meta> m = ColumnReader.meta(redis(), domain, kind, d, gen, timeout);
             if (m.isPresent()) {
-                ColumnReader.read(redis(), domain, kind, d, m.get(), List.of(), Duration.ofMinutes(2)).ifPresent(c -> ids.addAll(Arrays.asList(c.ids())));
+                ColumnReader.read(redis(), domain, kind, d, gen, m.get(), List.of(), Duration.ofMinutes(2)).ifPresent(c -> ids.addAll(Arrays.asList(c.ids())));
             }
             if (ids.size() >= maxLoadRows) {
                 break;
@@ -655,19 +750,9 @@ public final class RedisSourcePlugin implements SourcePlugin {
 
     @Override
     public String health() {
-        String p = problem;
-        if (p != null) {
-            return "DOWN: " + p;
-        }
-        RedisConnection c = redis;
-        if (c != null && !c.isOpen()) {
-            // Lettuce marks the connection inactive the moment it drops (it reconnects by itself): DOWN now, not at the
-            // next refresh
-            return "DOWN: lost the connection to Redis at " + c.describe() + " (reconnecting)";
-        }
-        String failed = commandFailure;
-        if (failed != null) {
-            return "DOWN: " + failed;
+        String down = downHealth();
+        if (down != null) {
+            return failFast.open() ? down + "; reads fail at once until it answers (checked every " + failFast.recheck().toMillis() + " ms)" : down;
         }
         // a pack declared fields the newest day was loaded without: it works, but searches over them read documents
         List<String> notLaidOut = new ArrayList<>();
@@ -684,8 +769,27 @@ public final class RedisSourcePlugin implements SourcePlugin {
         return notLaidOut.isEmpty() ? "UP" : "UP (not laid out as the pack declares: " + String.join(", ", notLaidOut) + "; searches read documents)";
     }
 
+    /** Health when the store is down, else null. */
+    private String downHealth() {
+        String p = problem;
+        if (p != null) {
+            return "DOWN: " + p;
+        }
+        RedisConnection c = redis;
+        if (c != null && !c.isOpen()) {
+            // Lettuce marks the connection inactive the moment it drops (it reconnects by itself): DOWN now, not at the
+            // next refresh
+            return "DOWN: lost the connection to Redis at " + c.describe() + " (reconnecting)";
+        }
+        String failed = commandFailure;
+        return failed == null ? null : "DOWN: " + failed;
+    }
+
     @Override
     public void close() {
+        if (failFast != null) {
+            failFast.close();
+        }
         StatefulRedisPubSubConnection<String, String> ps = pubSub;
         if (ps != null) {
             ps.close();
@@ -693,14 +797,6 @@ public final class RedisSourcePlugin implements SourcePlugin {
         RedisConnection c = redis;
         if (c != null) {
             c.close();
-        }
-    }
-
-    private static String sha1(String script) {
-        try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-1").digest(script.getBytes(StandardCharsets.UTF_8)));
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
         }
     }
 }
