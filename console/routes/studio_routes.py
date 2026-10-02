@@ -181,7 +181,7 @@ async def schema(request: Request):
         return _problem(e)
 
 
-@router.get("/inferred/{kind}/{id_}")
+@router.get("/inferred/{kind}/{id_:path}")
 async def inferred(request: Request, kind: str, id_: str, name: str = ""):
     try:
         return PlainTextResponse(await request.app.state.backend.inferred(kind, id_, name, ident(request)))

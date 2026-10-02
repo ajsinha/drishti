@@ -34,6 +34,16 @@ class BackendError(Exception):
         self.detail = detail
 
 
+def entity_path(kind: str, id_: str) -> tuple[str, dict]:
+    """``kind/id`` for a server path, and the query it needs. An id a path cannot carry (one with ``/`` or ``\\``, or
+    ``.``, ``..`` or ``~``) goes in the query as ``id``, with ``~`` in its place in the path, which every ``{kind}/{id}``
+    endpoint of the server accepts (QA 2026-10-01, DATA-21); any other id is percent-encoded into the path."""
+    k = quote(kind, safe="")
+    if "/" in id_ or "\\" in id_ or id_ in (".", "..", "~"):
+        return f"{k}/~", {"id": id_}
+    return f"{k}/{quote(id_, safe='')}", {}
+
+
 class BackendClient:
     """Thin, typed-by-convention wrapper over ``/api/v1``. Safe to share across requests."""
 
@@ -66,7 +76,8 @@ class BackendClient:
         return r.json() if "json" in r.headers.get("content-type", "") else r.text
 
     async def view(self, kind: str, id_: str, ident) -> dict:
-        return await self._get(f"/views/{kind}/{id_}", ident)
+        where, q = entity_path(kind, id_)
+        return await self._get(f"/views/{where}", ident, **q)
 
     async def search(self, q: str, ident=None) -> dict:
         """Structured search: TRD where mtm > 1m order by mtm desc limit 50."""
@@ -74,7 +85,8 @@ class BackendClient:
 
     async def series(self, kind: str, id_: str, path: str, days: int, ident=None) -> dict:
         """One field over the last ``days`` business days (oldest first)."""
-        return await self._get(f"/history/{quote(kind)}/{quote(id_)}/series", ident, path=path, days=days)
+        where, q = entity_path(kind, id_)
+        return await self._get(f"/history/{where}/series", ident, path=path, days=days, **q)
 
     async def search_compare(self, q: str, from_: str, to: str, ident=None) -> dict:
         """A search on two business dates, side by side, with the change of every number."""
@@ -82,7 +94,8 @@ class BackendClient:
 
     async def history_diff(self, kind: str, id_: str, ident=None, **params: str) -> dict:
         """What changed between two dates (or two "known at" times); blank parameters take the server's defaults."""
-        return await self._get(f"/history/{kind}/{id_}/diff", ident, **{k: v for k, v in params.items() if v})
+        where, q = entity_path(kind, id_)
+        return await self._get(f"/history/{where}/diff", ident, **{k: v for k, v in params.items() if v}, **q)
 
     async def calc_settings(self, ident) -> dict:
         """Whether the user may use Calc (a role with calc), and its limits."""
@@ -106,7 +119,8 @@ class BackendClient:
         return await self._send("GET", f"/search/columns/{quote(kind, safe='')}", ident, params=params, timeout=45.0)
 
     async def raw(self, kind: str, id_: str, ident=None) -> dict:
-        return await self._get(f"/entities/{kind}/{id_}/raw", ident)
+        where, q = entity_path(kind, id_)
+        return await self._get(f"/entities/{where}/raw", ident, **q)
 
     async def suggest(self, q: str, ident, limit: int | None = None) -> list:
         return await self._get("/command/suggest", ident, q=q, **({"limit": limit} if limit else {}))
@@ -133,7 +147,8 @@ class BackendClient:
         return await self._send("POST", "/studio/inferred", ident, json={"kind": kind, "id": id_, "name": name, "document": document})
 
     async def inferred(self, kind: str, id_: str, name: str, ident=None) -> str:
-        return await self._get(f"/studio/inferred/{kind}/{id_}", ident, name=name)
+        where, q = entity_path(kind, id_)
+        return await self._get(f"/studio/inferred/{where}", ident, name=name, **q)
 
     async def rachana_schema(self, ident=None) -> dict:
         """The Rachana JSON Schema, generated from the grammar with this server's kinds, formats and functions."""
@@ -157,7 +172,8 @@ class BackendClient:
         return await self._send("POST", f"/sutras/proposals/{id_}/{action}", ident, json={"comment": comment})
 
     async def impact(self, kind: str, id_: str, ident=None) -> dict:
-        return await self._get(f"/impact/{kind}/{quote(id_)}", ident)
+        where, q = entity_path(kind, id_)
+        return await self._get(f"/impact/{where}", ident, **q)
 
     async def studio_tests(self, sutra: str, ident) -> list:
         return await self._get(f"/me/studio-tests/{quote(sutra)}", ident)
@@ -219,8 +235,8 @@ class BackendClient:
     # -- the Pivot tab ----------------------------------------------------------------------------
     async def panel_records(self, kind: str, id_: str, panel: str, ident) -> dict:
         """Every row of a table or ladder whose Sutra says pivot:, as raw values of its fields."""
-        return await self._send("GET", f"/views/{quote(kind, safe='')}/{quote(id_, safe='')}/panels/{quote(panel, safe='')}/records",
-                                ident, timeout=30.0)
+        where, q = entity_path(kind, id_)
+        return await self._send("GET", f"/views/{where}/panels/{quote(panel, safe='')}/records", ident, params=q, timeout=30.0)
 
     async def search_pivot(self, kind: str, body: dict, ident, part: str = "") -> dict:
         """The server engine of a search's Pivot tab: the cube (part ""), a cell's entities ("drill") or a field's values."""
@@ -295,10 +311,12 @@ class BackendClient:
 
     # -- notes ------------------------------------------------------------------------------------
     async def notes(self, kind: str, id_: str, ident) -> list:
-        return await self._get(f"/notes/{quote(kind)}/{quote(id_)}", ident)
+        where, q = entity_path(kind, id_)
+        return await self._get(f"/notes/{where}", ident, **q)
 
     async def add_note(self, kind: str, id_: str, body: str, path: str | None, ident) -> dict:
-        return await self._send("POST", f"/notes/{quote(kind)}/{quote(id_)}", ident, json={"body": body, "path": path})
+        where, q = entity_path(kind, id_)
+        return await self._send("POST", f"/notes/{where}", ident, params=q, json={"body": body, "path": path})
 
     async def edit_note(self, note_id: int, body: str, ident) -> dict:
         return await self._send("PUT", f"/notes/{int(note_id)}", ident, json={"body": body})
@@ -379,7 +397,8 @@ class BackendClient:
     async def stream(self, kind: str, id_: str, ident=None, opened: list | None = None):
         """Yields ``(event, data)`` pairs from the server's SSE stream for a view, until it ends (see ``sse`` for ``opened``)."""
         headers = {"Accept": "text/event-stream", **(ident.headers() if ident is not None else {}), **asof.headers()}
-        async with self._client.stream("GET", f"/api/v1/views/{kind}/{id_}/stream", timeout=None, headers=headers) as r:
+        where, q = entity_path(kind, id_)
+        async with self._client.stream("GET", f"/api/v1/views/{where}/stream", params=q, timeout=None, headers=headers) as r:
             if opened is not None:
                 opened.append(r)
             if r.status_code >= 400:

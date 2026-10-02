@@ -37,7 +37,7 @@ async def home(request: Request, error: str | None = None):
     return render(request, "terminal/home.html", examples=examples, packs=current, error=error, pinned=pinned)
 
 
-@router.post("/pin/{kind}/{id_}")
+@router.post("/pin/{kind}/{id_:path}")
 async def pin(request: Request, kind: str, id_: str):
     """Pins an entity to the terminal home, or unpins it (W21)."""
     me = ident(request)
@@ -74,7 +74,7 @@ async def go(request: Request, q: str = ""):
     return RedirectResponse(f"/v/{r['ref']['kind']}/{quote(r['ref']['id'])}", status_code=303)
 
 
-@router.get("/impact/{kind}/{id_}")
+@router.get("/impact/{kind}/{id_:path}")
 async def impact(request: Request, kind: str, id_: str):
     try:
         data = await request.app.state.backend.impact(kind, id_, ident(request))
@@ -175,7 +175,7 @@ async def watch_search(request: Request):
     return RedirectResponse(f"/m/{quote(name)}", status_code=303)
 
 
-@router.get("/compare/{kind}/{id_}")
+@router.get("/compare/{kind}/{id_:path}")
 async def compare(request: Request, kind: str, id_: str, from_: str = Query("", alias="from"), to: str = "",
                   fromKnownAt: str = "", only: str = ""):
     """History (W16): what changed in an entity between two business dates, or since what was known at a time."""
@@ -198,7 +198,7 @@ async def compare(request: Request, kind: str, id_: str, from_: str = Query("", 
                   from_known=fromKnownAt)
 
 
-@router.get("/v/{kind}/{id_}")
+@router.get("/v/{kind}/{id_:path}")
 async def view(request: Request, kind: str, id_: str, embed: int = 0):
     try:
         vm = await request.app.state.backend.view(kind, id_, ident(request))
