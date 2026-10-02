@@ -126,10 +126,28 @@ def test_the_business_date_is_chosen_in_the_top_bar_and_sent_to_the_server(clien
     try:
         past = client.get("/v/trade/IRS-48213").text
         assert "asof-past" in past and 'value="2026-09-25"' in past and "↩ 2026-09-26" in past
-        assert "is not a dated source" in past                       # the fixture has no business date
+        assert "No data held for 2026-09-25" in past                 # the fixture has no business date
     finally:
         client.cookies.delete("drishti_asof")
     assert client.get("/asof", params={"d": "live", "next": "//evil.example"}, follow_redirects=False).headers["location"] == "/t"
+
+
+def test_a_past_date_no_store_holds_says_so_and_does_not_pass_current_data_off_as_live(client):
+    """UX-08: a date missing from the dated store showed the undated source's current data, ticking, under "aero-risk is
+    not a dated source": the date is simply not held. The view says so, is a still snapshot, and never shows Live."""
+    client.cookies.set("drishti_asof", "2026-09-26")
+    try:
+        for params in ({}, {"embed": 1}):                            # the page, and a workspace pane (no top bar)
+            past = client.get("/v/trade/IRS-48213", params=params).text
+            assert "is not a dated source" not in past
+            assert "No data held for 2026-09-25" in past and "no dated store has IRS-48213 for that date" in past
+            assert "the current data of <b>aero-risk</b>" in past and "does not update" in past
+            assert re.search(r'<div class="view"[^>]*\bdata-static\b', past), "a picked date is a still snapshot, in a pane too"
+            assert 'data-live-state="live"' not in past
+    finally:
+        client.cookies.delete("drishti_asof")
+    live = client.get("/v/trade/IRS-48213").text
+    assert "No data held" not in live and 'data-live-state="live"' in live and not re.search(r'<div class="view"[^>]*\bdata-static\b', live)
 
 
 def test_backend_calls_carry_the_business_date_header():

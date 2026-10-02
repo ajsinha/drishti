@@ -19,15 +19,19 @@
 {% block screen %}view{% endblock %}
 {% block body_class %}terminal{% if embed %} embed{% endif %}{% endblock %}
 {% block head %}<link rel="stylesheet" href="/static/css/pivot.css?v={{ ASSET_V }}">{% if calc and calc.offered and calc.allowed %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}">{% endif %}{% endblock %}
-{% block nav %}{% if not embed %}{% with command_text=(vm.mnemonic ~ ' ' ~ vm.ref.id ~ ' <GO>') if vm.mnemonic else vm.ref.id, live=vm.provenance.live, built_ms=vm.timings.total %}{% include "terminal/_topbar.html" %}{% endwith %}{% endif %}{% endblock %}
+{% block nav %}{% if not embed %}{% with command_text=(vm.mnemonic ~ ' ' ~ vm.ref.id ~ ' <GO>') if vm.mnemonic else vm.ref.id, live=(vm.provenance.live and asof == 'live'), built_ms=vm.timings.total %}{% include "terminal/_topbar.html" %}{% endwith %}{% endif %}{% endblock %}
 {% block content %}
-<div class="view" data-view{% if embed %} data-embed{% endif %} data-kind="{{ vm.ref.kind }}" data-id="{{ vm.ref.id }}" data-label="{{ vm.title.id }}"
+<div class="view" data-view{% if embed %} data-embed{% endif %}{% if asof != 'live' %} data-static{% endif %} data-kind="{{ vm.ref.kind }}" data-id="{{ vm.ref.id }}" data-label="{{ vm.title.id }}"
      data-me="{{ me.user if me else '' }}" data-view-sutra="{{ vm.provenance.sutra or '' }}"{% if pivots and pivots.promote %} data-pivot-promote{% endif %}{% if pivots and pivots.review %} data-pivot-review{% endif %}{% if me and me.is_admin %} data-admin{% endif %}{% if layout and layout.offered and layout.allowed %}
      data-sutra="{{ layout.sutra }}" data-layout-base="{{ layout.base | tojson | forceescape }}"{% if layout.mine %} data-layout-mine{% endif %}{% endif %}>
   {% if layout and layout.offered and layout.allowed %}{% include "terminal/_layout.html" %}{% endif %}
   {% if asof != 'live' and not vm.provenance.businessDate %}
-  <p class="asof-banner" role="status"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
-    <b>{{ vm.provenance.source }}</b> is not a dated source: this shows its current data, not {{ (business_date or {}).selected or asof }}.</p>
+  {# The router asks dated stores first and an undated source only when none holds the entity for the date (UX-08) #}
+  {% set picked = (business_date or {}).selected or asof %}
+  <p class="asof-banner asof-unheld" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+    <b>No data held for {{ picked }}</b>: no dated store has {{ vm.ref.id }} for that date. Shown instead:
+    the current data of <b>{{ vm.provenance.source }}</b>, a source that keeps no dates, as a still snapshot that does not update.
+    {% if not embed %}<a href="/asof?d=live&amp;next={{ request.url.path | urlencode }}">Back to live</a>{% endif %}</p>
   {% elif asof != 'live' and vm.provenance.businessDate and vm.provenance.businessDate != (business_date or {}).selected %}
   <p class="asof-banner" role="status"><i class="bi bi-calendar2-week" aria-hidden="true"></i>
     Latest data on or before {{ (business_date or {}).selected }} is from <b class="mono">{{ vm.provenance.businessDate }}</b>.</p>
@@ -107,6 +111,6 @@
 {% if calc and calc.offered and calc.allowed %}<script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script>
 <script src="/static/vendor/codemirror/mode/python/python.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/calc.js?v={{ ASSET_V }}"></script>{% endif %}
-{% if vm.provenance.live %}<script src="/static/js/live.js?v={{ ASSET_V }}"></script>{% endif %}
+{% if vm.provenance.live and asof == 'live' %}<script src="/static/js/live.js?v={{ ASSET_V }}"></script>{% endif %}
 {% if layout and layout.offered and layout.allowed %}<script src="/static/js/layout.js?v={{ ASSET_V }}"></script>{% endif %}
 {% endblock %}
