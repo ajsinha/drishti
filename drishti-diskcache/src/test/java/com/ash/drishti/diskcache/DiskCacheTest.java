@@ -64,6 +64,44 @@ class DiskCacheTest {
         }
     }
 
+    /**
+     * A cleared generation is disposed of on the scheduler. When that task had not run yet (a busy scheduler) close()
+     * returned with the old generation's RocksDB still open, its background threads still writing into its directory,
+     * and the task then ran (or was dropped by shutdownNow) while the caller deleted the directory: "Failed to delete
+     * temp directory … gen-…" in storesReadsDeletesAndClears, 3 runs in 4 on a loaded machine. close() now disposes
+     * of every retired generation nobody is inside before it returns.
+     */
+    @Test
+    void closeDisposesOfClearedGenerationsBeforeReturning() throws Exception {
+        ScheduledExecutorService sched = Executors.newSingleThreadScheduledExecutor();
+        CountDownLatch release = new CountDownLatch(1);
+        try {
+            sched.execute(() -> {
+                try {
+                    release.await();                       // the scheduler is busy until the cache is closed
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            });
+            DiskCache c = new DiskCache(dir, 64L * 1024 * 1024, null, NY, sched, Clock.systemUTC());
+            c.put("trade/T-1", new byte[] {1});
+            c.clear();
+            c.put("trade/T-2", new byte[] {2});
+            c.clear();
+            c.close();
+            try (Stream<Path> left = Files.list(dir)) {
+                assertThat(left.toList()).as("generations left after close").isEmpty();
+            }
+        } finally {
+            release.countDown();
+            sched.shutdown();
+            assertThat(sched.awaitTermination(10, TimeUnit.SECONDS)).isTrue();
+        }
+        try (Stream<Path> left = Files.list(dir)) {
+            assertThat(left.toList()).as("generations left once the queued disposals ran").isEmpty();
+        }
+    }
+
     @Test
     void aRestartStartsEmpty() throws Exception {
         ScheduledExecutorService sched = Executors.newSingleThreadScheduledExecutor();

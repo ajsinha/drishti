@@ -178,6 +178,27 @@ class BulkTrades(unittest.TestCase):
             self.assertEqual(json.loads(got["MX-30000000"]["doc"])["sourceTradeId"], "30000000")
             self.assertEqual(got["MX-30000000"]["notional"], float(json.loads(got["MX-30000000"]["doc"])["notional"]))
 
+    def test_workers_are_spawned_not_forked_from_a_threaded_process(self):
+        # deltalake and pyarrow start thread pools; os.fork() then copies their locks held by threads that do not exist in
+        # the child, which can hang the workers for good (once: 30 minutes, 63 threads in futex wait). Workers must be
+        # started without fork, and so without the "os.fork() was called ... multi-threaded" DeprecationWarning.
+        import threading
+        import warnings
+        stop = threading.Event()
+        holder = threading.Thread(target=stop.wait, daemon=True)        # a thread alive in the parent, as deltalake's are
+        holder.start()
+        try:
+            with tempfile.TemporaryDirectory() as tmp, contextlib.redirect_stdout(io.StringIO()), \
+                    contextlib.redirect_stderr(io.StringIO()), warnings.catch_warnings(record=True) as seen:
+                warnings.simplefilter("always")
+                (pathlib.Path(tmp) / "reference").mkdir()
+                self.assertEqual(bulk_trades.main(["--trades", "200", "--days", "1", "--root", tmp, "--file-rows", "100", "--workers", "2"]), 0)
+                self.assertEqual(bulk_trades.main(["--trades", "50", "--days", "1", "--jsonl", str(pathlib.Path(tmp) / "t.jsonl"), "--workers", "2"]), 0)
+        finally:
+            stop.set()
+        self.assertEqual([str(w.message) for w in seen if "fork" in str(w.message)], [])
+        self.assertNotEqual(bulk_trades.POOL_CONTEXT.get_start_method(), "fork")
+
 
 if __name__ == "__main__":
     unittest.main()

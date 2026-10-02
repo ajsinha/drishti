@@ -86,6 +86,12 @@ _layout: Layout = Layout()                     # the trade table's layout (tradi
 _types: dict[str, str] = {}                    # its columns' types, fixed for the whole run
 
 
+# Workers are spawned, never forked: the main process runs pyarrow and deltalake, whose thread pools hold locks that a
+# forked child inherits with no thread left to release them (a fork after threads can hang the workers for good; Python
+# warns "os.fork() was called ... multi-threaded"). Spawned workers start clean and get what they need from _init.
+POOL_CONTEXT = multiprocessing.get_context("spawn")
+
+
 def load_templates() -> list[tuple[str, str, str]]:
     out = []
     for f in sorted(TEMPLATES.glob("*.json")):
@@ -237,7 +243,7 @@ def main(argv: list[str]) -> int:
         out = sys.stdout if a.jsonl == "-" else open(a.jsonl, "w", encoding="utf-8")
         jobs = [(list(range(s, min(s + 5_000, a.trades))), d, len(days) - 1 - n) for n, d in enumerate(days) for s in range(0, a.trades, 5_000)]
         written = 0
-        with multiprocessing.Pool(a.workers, initializer=_init, initargs=(templates, lay, types)) as pool:
+        with POOL_CONTEXT.Pool(a.workers, initializer=_init, initargs=(templates, lay, types)) as pool:
             for lines in pool.imap_unordered(_lines, jobs):
                 out.write("\n".join(lines) + "\n")
                 written += len(lines)
@@ -259,7 +265,7 @@ def main(argv: list[str]) -> int:
     # build the next one (about two files in memory)
     jobs = [[(chunk[s:s + piece], d, len(days) - 1 - n) for s in range(0, len(chunk), piece)] for n, d in enumerate(days) for chunk in files]
     written, window = 0, -(-lay.file_rows // piece)
-    with multiprocessing.Pool(a.workers, initializer=_init, initargs=(templates, lay, types)) as pool:
+    with POOL_CONTEXT.Pool(a.workers, initializer=_init, initargs=(templates, lay, types)) as pool:
         pending: deque = deque()
         queue = deque((k, len(slices), job) for slices in jobs for k, job in enumerate(slices))
         current: list = []

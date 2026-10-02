@@ -18,6 +18,8 @@ package com.ash.drishti.plugin.redis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.ash.drishti.api.AsOf;
+import com.ash.drishti.api.EntityRef;
 import io.lettuce.core.cluster.api.async.RedisClusterAsyncCommands;
 import java.io.BufferedReader;
 import java.io.OutputStream;
@@ -36,8 +38,9 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
  * What a {@link RedisLoader} leaves when a load fails or is killed half way (no document the day's columns do not
- * list), {@code --replace}, and the date guard: a future-dated row is not loaded and cannot move the {@code --ttl-days}
- * cut-off, and dropping most of a kind's days needs {@code --force-drop}. Skipped where Docker is not reachable.
+ * list), replacing each day (the default, atomic for readers) or {@code --merge}, and the date guard: a future-dated row
+ * is not loaded and cannot move the {@code --ttl-days} cut-off, and dropping most of a kind's days, or of a day's
+ * entities, needs {@code --force-drop}. Skipped where Docker is not reachable.
  */
 @Testcontainers(disabledWithoutDocker = true)
 class RedisLoaderReplaceTest {
@@ -90,17 +93,31 @@ class RedisLoaderReplaceTest {
         }
     }
 
-    /** The ids the day's columns list. */
+    /** The ids the day's columns list, in its current generation. */
     private static List<String> listed(String domain, LocalDate day) throws Exception {
         return redis(r -> {
-            var meta = ColumnReader.meta(r, domain, "trade", day, TIMEOUT).orElseThrow();
-            return List.of(ColumnReader.read(r, domain, "trade", day, meta, List.of(), TIMEOUT).orElseThrow().ids());
+            String gen = ColumnReader.generation(r, domain, "trade", day, TIMEOUT);
+            var meta = ColumnReader.meta(r, domain, "trade", day, gen, TIMEOUT).orElseThrow();
+            return List.of(ColumnReader.read(r, domain, "trade", day, gen, meta, List.of(), TIMEOUT).orElseThrow().ids());
         });
     }
 
-    /** The documents Redis holds for the day whose ids start with {@code prefix}. */
+    /** The documents Redis holds for the day whose ids start with {@code prefix}, in any generation. */
     private static long documents(String domain, String prefix, LocalDate day) throws Exception {
-        return redis(r -> (long) ColumnReader.await(r.keys(RedisLayout.bytes(domain + ":trade:{" + prefix + "*}:" + RedisLayout.day(day))), TIMEOUT).size());
+        return redis(r -> (long) ColumnReader.await(r.keys(RedisLayout.bytes(domain + ":trade:{" + prefix + "*}:" + RedisLayout.day(day) + "*")), TIMEOUT)
+                .size());
+    }
+
+    /** A plugin over the test domain, its trades' {@code mtm} promoted. */
+    private static RedisSourcePlugin plugin(String domain) {
+        RedisSourcePlugin p = new RedisSourcePlugin();
+        p.start(com.ash.drishti.testkit.DatedSourceContract.context(java.util.Map.of("uri", uri(), "domain", domain, "layout.trade.columns", "mtm",
+                "refresh-seconds", "3600")));
+        return p;
+    }
+
+    private static double mtm(RedisSourcePlugin p, String id) throws Exception {
+        return p.fetch(EntityRef.of("trade", id), AsOf.of(D3)).orElseThrow().data().get("mtm").asDouble();
     }
 
     private static List<String> days(String domain) throws Exception {
@@ -157,16 +174,109 @@ class RedisLoaderReplaceTest {
         assertThat(unfinished).as("days of unfinished loads").isZero();
     }
 
+    /**
+     * DATA-11: the QA's case. The 10,000-trade book then the 8,000-trade book left 10,000 trades on the day (loads merged
+     * by default): a trade dropped from the book could never be removed by reloading. A load now replaces each day.
+     */
     @Test
-    void replaceMakesADayExactlyWhatTheStreamHolds() throws Exception {
-        load(rows("replaced", "X-", 3, D3), "--codec", "zstd");
-        load(List.of(row("replaced", "X-0001", D3, 10), row("replaced", "X-0003", D3, 30)), "--codec", "zstd", "--replace");
-        assertThat(listed("replaced", D3)).containsExactly("X-0001", "X-0003");
-        assertThat(documents("replaced", "X-", D3)).isEqualTo(2);
-        int daysOfX0 = redis(r -> ColumnReader.await(r.zrange(RedisLayout.bytes(RedisLayout.entity("replaced", "trade", "X-0000")), 0, -1), TIMEOUT).size());
-        assertThat(daysOfX0).as("the days of the entity the stream no longer carries").isZero();
-        load(List.of(row("replaced", "X-0004", D3, 40)), "--codec", "zstd");                    // without --replace a load merges
-        assertThat(listed("replaced", D3)).containsExactly("X-0001", "X-0003", "X-0004");
+    void aLoadReplacesEachDayByDefault() throws Exception {
+        load(rows("book", "X-", 10, D3), "--codec", "zstd");
+        load(rows("book", "X-", 8, D3), "--codec", "zstd", "--keep-replaced-seconds", "0");
+        assertThat(listed("book", D3)).hasSize(8).doesNotContain("X-0008", "X-0009");
+        assertThat(documents("book", "X-", D3)).as("the replaced generation's documents (kept 0 s)").isEqualTo(8);
+        int daysOfX9 = redis(r -> ColumnReader.await(r.zrange(RedisLayout.bytes(RedisLayout.entity("book", "trade", "X-0009")), 0, -1), TIMEOUT).size());
+        assertThat(daysOfX9).as("the days of the entity the stream no longer carries").isZero();
+        RedisSourcePlugin p = plugin("book");
+        try {
+            assertThat(p.fetch(EntityRef.of("trade", "X-0009"), AsOf.of(D3))).isEmpty();
+            assertThat(p.columns("trade", List.of("mtm"), AsOf.of(D3)).orElseThrow().size()).isEqualTo(8);
+            assertThat(p.search("trade", "x-0009", 5)).isEmpty();
+        } finally {
+            p.close();
+        }
+    }
+
+    @Test
+    void mergeAddsToADayAndKeepsWhatTheStreamDoesNotCarry() throws Exception {
+        load(rows("merged", "X-", 3, D3), "--codec", "zstd");
+        load(List.of(row("merged", "X-0001", D3, 10), row("merged", "X-0004", D3, 40)), "--codec", "zstd", "--merge");
+        assertThat(listed("merged", D3)).containsExactly("X-0000", "X-0001", "X-0002", "X-0004");
+        assertThat(documents("merged", "X-", D3)).isEqualTo(4);
+        RedisSourcePlugin p = plugin("merged");
+        try {
+            assertThat(mtm(p, "X-0001")).isEqualTo(10.0);
+            assertThat(mtm(p, "X-0002")).isEqualTo(2.0);
+        } finally {
+            p.close();
+        }
+        assertThatThrownBy(() -> RedisLoader.Options.parse(new String[] {"-", uri(), "--merge", "--replace"})).hasMessageContaining("contradict");
+    }
+
+    /** Replacing a day with a stream that drops most of it is a mistake until proven otherwise (a part meant to be merged). */
+    @Test
+    void replacingADayWithAFewOfItsEntitiesNeedsForceDrop() throws Exception {
+        load(rows("partial", "X-", 10, D3), "--codec", "zstd");
+        assertThatThrownBy(() -> load(List.of(row("partial", "X-0001", D3, 99)), "--codec", "zstd")).hasMessageContaining("would remove 9 of its 10 entities")
+                .hasMessageContaining("--merge");
+        assertThat(listed("partial", D3)).hasSize(10);
+        assertThat(documents("partial", "X-", D3)).as("the refused load's documents are gone").isEqualTo(10);
+        RedisSourcePlugin p = plugin("partial");
+        try {
+            assertThat(mtm(p, "X-0001")).isEqualTo(1.0);
+        } finally {
+            p.close();
+        }
+        load(List.of(row("partial", "X-0001", D3, 99)), "--codec", "zstd", "--force-drop");
+        assertThat(listed("partial", D3)).containsExactly("X-0001");
+    }
+
+    /**
+     * Atomic from the reader's view, as the PostgreSQL, DuckDB and file loaders are: while a replacing load runs, a
+     * reader sees the whole old day (documents and columns), then the whole new day; never new documents with the old
+     * columns. Before, documents were overwritten as they arrived.
+     */
+    @Test
+    void whileADayIsReplacedReadersSeeTheOldDayThenTheNewOneNeverAMix() throws Exception {
+        load(rows("swap", "X-", 4, D3), "--codec", "zstd");
+        RedisSourcePlugin p = plugin("swap");
+        java.io.PipedWriter feed = new java.io.PipedWriter();
+        java.io.PipedReader in = new java.io.PipedReader(feed, 1 << 16);
+        java.util.concurrent.CompletableFuture<Void> running = java.util.concurrent.CompletableFuture.runAsync(() -> {
+            try {
+                RedisLoader.Options o = RedisLoader.Options.parse(new String[] {"-", uri(), "--codec", "zstd", "--threads", "1"});
+                try (RedisConnection c = RedisConnection.open(o.uri(), false, null, null, TIMEOUT)) {
+                    new RedisLoader(o, c).load(new BufferedReader(in));
+                }
+            } catch (Exception e) {
+                throw new java.util.concurrent.CompletionException(e);
+            }
+        });
+        try {
+            for (int i = 0; i < 3; i++) {                               // X-0000..X-0002 with new values; X-0003 dropped
+                feed.write(row("swap", "X-%04d".formatted(i), D3, 100 + i) + "\n");
+            }
+            feed.flush();
+            long until = System.nanoTime() + TimeUnit.SECONDS.toNanos(30);
+            while (documents("swap", "X-", D3) < 7 && System.nanoTime() < until) {
+                Thread.sleep(20);                                       // the new documents are in Redis
+            }
+            assertThat(documents("swap", "X-", D3)).isEqualTo(7);
+            assertThat(mtm(p, "X-0001")).as("mid-load: the old day's document").isEqualTo(1.0);
+            assertThat(p.fetch(EntityRef.of("trade", "X-0003"), AsOf.of(D3))).as("mid-load: the old day still holds X-0003").isPresent();
+            assertThat(p.columns("trade", List.of("mtm"), AsOf.of(D3)).orElseThrow().size()).isEqualTo(4);
+            feed.close();
+            running.get(60, TimeUnit.SECONDS);
+            until = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
+            while (mtm(p, "X-0001") != 101.0 && System.nanoTime() < until) {
+                Thread.sleep(20);                                       // the day's announcement reaches the connector
+            }
+            assertThat(mtm(p, "X-0001")).as("after the switch: the new day's document").isEqualTo(101.0);
+            assertThat(p.fetch(EntityRef.of("trade", "X-0003"), AsOf.of(D3))).isEmpty();
+            assertThat(p.columns("trade", List.of("mtm"), AsOf.of(D3)).orElseThrow().ids()).containsExactly("X-0000", "X-0001", "X-0002");
+        } finally {
+            feed.close();
+            p.close();
+        }
     }
 
     @Test

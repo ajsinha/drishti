@@ -24,6 +24,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,17 +39,19 @@ import java.util.concurrent.TimeUnit;
  *
  * <ul>
  *   <li>Before the first document of a (kind, day), the load records the day in {@code <domain>:loading} as
- *       {@code load TAB kind TAB yyyyMMdd}; before each document, the entity's id goes into the day's journal
+ *       {@code load TAB kind TAB yyyyMMdd TAB generation} (the generation its documents go to); before each document, the entity's id goes into the day's journal
  *       ({@code {<domain>:<kind>:<yyyyMMdd>}:cols:loading:<load>}), and the document is sent only once Redis has it.</li>
  *   <li>Once the day's columns are renamed into place, its journal and its entry go.</li>
  *   <li>While it runs, the load renews {@code <domain>:loader:<load>} (expiring after 90 seconds). The first time a
  *       load reaches a domain, it clears what dead loads left: for each entry whose loader key is gone, the documents
- *       of journaled ids that the day's columns do not list are deleted, with the day in the entity's days. A load
- *       that fails in the process clears its own entries the same way.</li>
+ *       of journaled ids that the day's columns do not list are deleted, with the day in the entity's days. When the
+ *       entry's generation is not the day's current one (a replacing load that died before it switched the day), every
+ *       journaled document of that generation goes, and its columns. A load that fails in the process clears its own
+ *       entries the same way.</li>
  * </ul>
  *
- * <p>A document of an id the day's columns do list was replaced by the dead load and stays (loads merge: see
- * {@link RedisLoader}); loading the day again makes the two agree.
+ * <p>A dead {@code --merge} load's document of an id the day's columns do list was replaced in place and stays;
+ * loading the day again makes the two agree. A dead replacing load changed nothing readers see.
  */
 final class RedisLoadJournal implements AutoCloseable {
 
@@ -58,7 +61,7 @@ final class RedisLoadJournal implements AutoCloseable {
     private final Duration timeout;
     private final String load = Long.toHexString(ThreadLocalRandom.current().nextLong() | Long.MIN_VALUE);
     private final Set<String> domains = ConcurrentHashMap.newKeySet();
-    private final Set<String> entries = ConcurrentHashMap.newKeySet();      // domain TAB kind TAB yyyyMMdd
+    private final Map<String, String> entries = new ConcurrentHashMap<>();   // domain TAB kind TAB yyyyMMdd → the member in <domain>:loading
     private final ScheduledExecutorService renew = Executors.newSingleThreadScheduledExecutor(r -> Thread.ofPlatform().daemon().name("redis-loader-alive")
             .unstarted(r));
 
@@ -91,12 +94,17 @@ final class RedisLoadJournal implements AutoCloseable {
         }
     }
 
-    /** Before the first document of a (kind, day): the day recorded as being loaded. */
-    void day(String domain, String kind, LocalDate date) throws Exception {
+    /** Before the first document of a (kind, day): the day recorded as being loaded, into generation {@code gen}. */
+    void day(String domain, String kind, LocalDate date, String gen) throws Exception {
         String entry = domain + "\t" + kind + "\t" + RedisLayout.day(date);
-        if (entries.add(entry)) {
-            ColumnReader.await(redis.sadd(RedisLayout.bytes(RedisLayout.loads(domain)), RedisLayout.bytes(load + "\t" + kind + "\t" + RedisLayout.day(date))),
-                    timeout);
+        if (!entries.containsKey(entry)) {
+            synchronized (this) {
+                if (!entries.containsKey(entry)) {
+                    String member = load + "\t" + kind + "\t" + RedisLayout.day(date) + "\t" + gen;
+                    ColumnReader.await(redis.sadd(RedisLayout.bytes(RedisLayout.loads(domain)), RedisLayout.bytes(member)), timeout);
+                    entries.put(entry, member);
+                }
+            }
         }
     }
 
@@ -108,9 +116,10 @@ final class RedisLoadJournal implements AutoCloseable {
     /** The day's columns are in place: its journal and entry go. */
     void done(String domain, String kind, LocalDate date) throws Exception {
         ColumnReader.await(redis.del(key(domain, kind, date)), timeout);
-        ColumnReader.await(redis.srem(RedisLayout.bytes(RedisLayout.loads(domain)), RedisLayout.bytes(load + "\t" + kind + "\t" + RedisLayout.day(date))),
-                timeout);
-        entries.remove(domain + "\t" + kind + "\t" + RedisLayout.day(date));
+        String member = entries.remove(domain + "\t" + kind + "\t" + RedisLayout.day(date));
+        if (member != null) {
+            ColumnReader.await(redis.srem(RedisLayout.bytes(RedisLayout.loads(domain)), RedisLayout.bytes(member)), timeout);
+        }
     }
 
     /** After this load failed in the process: its unfinished days cleared as a dead load's would be. */
@@ -133,24 +142,35 @@ final class RedisLoadJournal implements AutoCloseable {
         long deleted = 0;
         byte[] loadsKey = RedisLayout.bytes(RedisLayout.loads(domain));
         for (byte[] m : ColumnReader.await(redis.smembers(loadsKey), timeout)) {
-            String[] e = new String(m, StandardCharsets.UTF_8).split("\t", 3);
-            if (e.length != 3 || own != e[0].equals(load)
+            String[] e = new String(m, StandardCharsets.UTF_8).split("\t", 4);
+            if (e.length < 3 || own != e[0].equals(load)
                     || !own && ColumnReader.await(redis.exists(RedisLayout.bytes(RedisLayout.loader(domain, e[0]))), timeout) > 0) {
                 continue;                                               // another load, still running
             }
             String kind = e[1];
             LocalDate date = RedisLayout.date(Long.parseLong(e[2]));
+            String gen = e.length == 4 ? e[3] : "";                     // entries from before generations: the plain keys
+            String current = ColumnReader.generation(redis, domain, kind, date, timeout);
+            // the load wrote into the day's current generation (a merge, or a replace that switched the day): what the
+            // day's columns do not list goes. Into another one (a replace that never switched): all of it goes.
+            boolean live = gen.equals(current);
             byte[] journal = RedisLayout.bytes(RedisLayout.journal(domain, kind, date, e[0]));
-            Set<String> listed = listed(domain, kind, date);
+            Set<String> listed = listed(domain, kind, date, current);
             List<RedisFuture<?>> sent = new ArrayList<>();
             byte[] day = RedisLayout.bytes(String.valueOf(RedisLayout.day(date)));
             for (byte[] idBytes : ColumnReader.await(redis.smembers(journal), timeout)) {
                 String id = new String(idBytes, StandardCharsets.UTF_8);
-                if (!listed.contains(id)) {
-                    sent.add(redis.del(RedisLayout.bytes(RedisLayout.doc(domain, kind, id, date))));
-                    sent.add(redis.zrem(RedisLayout.bytes(RedisLayout.entity(domain, kind, id)), day));
+                if (!live || !listed.contains(id)) {
+                    sent.add(redis.del(RedisLayout.bytes(RedisLayout.doc(domain, kind, id, date, gen))));
                     deleted++;
                 }
+                if (!listed.contains(id)) {
+                    sent.add(redis.zrem(RedisLayout.bytes(RedisLayout.entity(domain, kind, id)), day));
+                }
+            }
+            if (!live) {
+                sent.add(redis.del(RedisLayout.bytes(RedisLayout.columns(domain, kind, date, gen))));
+                sent.add(redis.del(RedisLayout.bytes(RedisLayout.columnsStaging(domain, kind, date, gen))));
             }
             for (RedisFuture<?> f : sent) {
                 ColumnReader.await(f, timeout);
@@ -161,14 +181,14 @@ final class RedisLoadJournal implements AutoCloseable {
         return deleted;
     }
 
-    /** The ids the day's columns list (none when the day was never written or expired). */
-    private Set<String> listed(String domain, String kind, LocalDate date) throws Exception {
+    /** The ids the day's columns list in generation {@code gen} (none when the day was never written or expired). */
+    private Set<String> listed(String domain, String kind, LocalDate date, String gen) throws Exception {
         for (int attempt = 0; attempt < 3; attempt++) {
-            Optional<ColumnCodec.Meta> meta = ColumnReader.meta(redis, domain, kind, date, timeout);
+            Optional<ColumnCodec.Meta> meta = ColumnReader.meta(redis, domain, kind, date, gen, timeout);
             if (meta.isEmpty()) {
                 return Set.of();
             }
-            var read = ColumnReader.read(redis, domain, kind, date, meta.get(), List.of(), timeout);
+            var read = ColumnReader.read(redis, domain, kind, date, gen, meta.get(), List.of(), timeout);
             if (read.isPresent()) {
                 return new HashSet<>(List.of(read.get().ids()));
             }

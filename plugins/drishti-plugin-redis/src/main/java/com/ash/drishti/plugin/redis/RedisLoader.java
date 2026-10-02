@@ -22,6 +22,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import io.lettuce.core.Range;
 import io.lettuce.core.RedisFuture;
+import io.lettuce.core.ScriptOutputType;
 import io.lettuce.core.SetArgs;
 import io.lettuce.core.cluster.api.async.RedisClusterAsyncCommands;
 import java.io.BufferedReader;
@@ -50,26 +51,35 @@ import java.util.concurrent.atomic.AtomicReference;
  * {@code make_data.py --jsonl} and {@code bulk_trades.py --jsonl -}).
  *
  * <pre>
- *   RedisLoader &lt;file | -&gt; [uri] [--cluster] [--replace] [--ttl-days N] [--codec zstd-dict|zstd|deflate|none] [--level N]
- *               [--chunk-rows N] [--in-flight N] [--threads N] [--publish] [--retrain] [--dict-samples N] [--dict-kb N]
- *               [--as-of yyyy-MM-dd] [--future-days N] [--zone Z] [--max-drop-share F] [--force-drop]
+ *   RedisLoader &lt;file | -&gt; [uri] [--cluster] [--merge | --replace] [--keep-replaced-seconds N] [--ttl-days N]
+ *               [--codec zstd-dict|zstd|deflate|none] [--level N] [--chunk-rows N] [--in-flight N] [--threads N] [--publish]
+ *               [--retrain] [--dict-samples N] [--dict-kb N] [--as-of yyyy-MM-dd] [--future-days N] [--zone Z]
+ *               [--max-drop-share F] [--force-drop]
  * </pre>
  *
  * <p>Documents stream: worker threads parse and compress each line and send its commands without waiting (the
  * document's {@code SET}, the entity's days {@code ZADD}, their expiry), at most {@code --in-flight} lines (2,000)
  * unanswered at once. A kind's first {@code --dict-samples} documents (2,000) train its zstd dictionary unless Redis
  * already has one for the kind (then later loads reuse it; {@code --retrain} trains anew). Promoted values are gathered
- * per kind and day ({@link DayColumns}, about 230 MB per million trades) and written column-wise when the input ends,
- * into a staging hash renamed over the day's in one step, after which the day joins the kind's days. A reader therefore
- * switches to a new day only once its every document and column is in.
+ * per kind and day ({@link DayColumns}, about 230 MB per million trades) and written column-wise when the input ends.
  *
- * <p>A load <b>merges</b> into a day by default: the day's columns keep the entities Redis already holds for it that
- * the stream does not carry (so a day can be loaded in parts, and loading the same rows twice changes nothing), and a
- * trade dropped from the book stays until the day expires. {@code --replace} makes each day the stream reaches exactly
- * what the stream holds: the entities it does not carry leave the day's columns, and their documents of that day are
- * deleted. Either way a load that dies half way leaves no document the day's columns do not list: each document's id
- * is journaled first, and the next load of the domain (or the failing load itself) deletes what a dead load wrote and
- * no column lists ({@link RedisLoadJournal}); documents it replaced stay replaced until the day is loaded again.
+ * <p>A load <b>replaces</b> each day the stream reaches, by default, as the PostgreSQL, DuckDB and file loaders do:
+ * the day then holds exactly the stream's entities, and readers see the old day or the new one, never a mix. The
+ * documents and columns are written under a generation of this load that no reader looks at; once every day's columns
+ * are in, each day is switched to it in one step (one script sets the day's generation and adds the day to the kind's
+ * days), and the replaced generation's documents and columns expire {@code --keep-replaced-seconds} (120) later, so a
+ * reader that has not yet seen the switch still reads a whole old day ({@link RedisLayout}). An entity the stream does
+ * not carry leaves the day. Replacing a day with a stream that drops more than {@code --max-drop-share} (0.5) of its
+ * entities is refused (nothing is switched) unless {@code --force-drop}: a partial stream meant to be merged is not
+ * mistaken for the whole book.
+ *
+ * <p>{@code --merge} keeps the old behaviour: the load writes into the day's current generation in place, and the
+ * day's columns keep the entities Redis already holds that the stream does not carry (a day loaded in parts, intraday
+ * corrections with {@code --publish}); documents change one by one as they arrive, and a trade dropped from the book
+ * stays until the day expires. Either way a load that dies half way leaves no document the day's columns do not list:
+ * each document's id is journaled first, and the next load of the domain (or the failing load itself) deletes what a
+ * dead load wrote and no column lists ({@link RedisLoadJournal}); a replacing load that dies never switched a day, so
+ * all it wrote goes.
  *
  * <p>A row dated after tomorrow in the business zone is not loaded, and the load ends with an error naming it
  * ({@link LoadGuard}). {@code --ttl-days N} expires every key N days after it is written, and drops from each kind's
@@ -82,9 +92,22 @@ public final class RedisLoader {
 
     private static final JsonFactory JSON = new JsonFactory();
 
+    /**
+     * Switches a day to a generation: KEYS[1] the kind's generations, KEYS[2] the kind's days (one slot: the first's
+     * hash tag is the second's name); ARGV[1] the day, ARGV[2] the generation. Returns the generation replaced ("" for
+     * none). One script, so a reader finds the day with its new generation, or neither change.
+     */
+    private static final String SWITCH = """
+            local was = redis.call('HGET', KEYS[1], ARGV[1])
+            redis.call('HSET', KEYS[1], ARGV[1], ARGV[2])
+            redis.call('ZADD', KEYS[2], tonumber(ARGV[1]), ARGV[1])
+            if was then return was end
+            return ''
+            """;
+
     /** The loader's settings, from the command line. */
     record Options(String uri, boolean cluster, int ttlDays, DocCodec.Kind codec, int level, int chunkRows, int inFlight, int threads, boolean publish,
-            boolean retrain, int dictSamples, int dictKb, String user, String password, boolean replace, LoadGuard guard) {
+            boolean retrain, int dictSamples, int dictKb, String user, String password, boolean replace, int keepReplacedSeconds, LoadGuard guard) {
 
         static Options parse(String[] args) {
             String uri = args.length > 1 && !args[1].startsWith("--") ? args[1] : "redis://localhost:6379";
@@ -101,7 +124,15 @@ public final class RedisLoader {
                     Integer.parseInt(flags.getOrDefault("threads", String.valueOf(Math.max(2, Runtime.getRuntime().availableProcessors() - 2)))),
                     flags.containsKey("publish"), flags.containsKey("retrain"), Integer.parseInt(flags.getOrDefault("dict-samples", "2000")),
                     Integer.parseInt(flags.getOrDefault("dict-kb", "112")), System.getenv("DRISHTI_REDIS_USER"), System.getenv("DRISHTI_REDIS_PASSWORD"),
-                    flags.containsKey("replace"), LoadGuard.fromArgs(args));
+                    replace(flags), Integer.parseInt(flags.getOrDefault("keep-replaced-seconds", "120")), LoadGuard.fromArgs(args));
+        }
+
+        /** Replacing each day is the default; {@code --merge} opts into merging (both at once is a mistake). */
+        private static boolean replace(Map<String, String> flags) {
+            if (flags.containsKey("merge") && flags.containsKey("replace")) {
+                throw new IllegalArgumentException("--merge and --replace contradict each other: a load replaces each day (the default) or merges into it");
+            }
+            return !flags.containsKey("merge");
         }
 
         long ttlSeconds() {
@@ -127,6 +158,7 @@ public final class RedisLoader {
     private final Semaphore inFlight;
     private final Map<String, KindState> kinds = new ConcurrentHashMap<>();
     private final Map<DayKey, DayColumns> days = new ConcurrentHashMap<>();
+    private final Map<DayKey, String> targets = new ConcurrentHashMap<>();   // the generation each day's documents go to
     private final AtomicReference<Throwable> failed = new AtomicReference<>();
     private final AtomicLong rows = new AtomicLong();
     private final AtomicLong rawBytes = new AtomicLong();
@@ -143,7 +175,8 @@ public final class RedisLoader {
 
     public static void main(String[] args) throws Exception {
         if (args.length == 0) {
-            System.err.println("usage: RedisLoader <file|-> [uri] [--cluster] [--ttl-days N] [--codec zstd-dict|zstd|deflate|none] [--publish] …");
+            System.err.println("usage: RedisLoader <file|-> [uri] [--cluster] [--merge] [--ttl-days N] [--codec zstd-dict|zstd|deflate|none] [--publish] …"
+                    + " (each day the stream reaches is replaced; --merge adds to it instead)");
             System.exit(2);
         }
         Options o = Options.parse(args);
@@ -206,8 +239,18 @@ public final class RedisLoader {
         inFlight.acquire(options.inFlight());                          // every document answered
         inFlight.release(options.inFlight());
         rethrow();
-        for (Map.Entry<DayKey, DayColumns> e : days.entrySet()) {
-            flush(e.getKey(), e.getValue());
+        if (options.replace()) {
+            Map<DayKey, Previous> previous = new LinkedHashMap<>();
+            for (Map.Entry<DayKey, DayColumns> e : days.entrySet()) {          // every day checked before any is switched
+                previous.put(e.getKey(), previous(e.getKey(), e.getValue()));
+            }
+            for (Map.Entry<DayKey, DayColumns> e : days.entrySet()) {
+                replace(e.getKey(), e.getValue(), previous.get(e.getKey()));
+            }
+        } else {
+            for (Map.Entry<DayKey, DayColumns> e : days.entrySet()) {
+                merge(e.getKey(), e.getValue());
+            }
         }
         Map<String, Boolean> domains = new LinkedHashMap<>();
         days.keySet().forEach(k -> domains.put(k.domain(), true));
@@ -233,7 +276,9 @@ public final class RedisLoader {
             return;
         }
         journal.begin(row.domain());
-        days.computeIfAbsent(new DayKey(row.domain(), row.kind(), row.date()), k -> new DayColumns()).put(row.id(), row.columns());
+        DayKey day = new DayKey(row.domain(), row.kind(), row.date());
+        target(day);
+        days.computeIfAbsent(day, k -> new DayColumns()).put(row.id(), row.columns());
         String key = row.domain() + ":" + row.kind();
         KindState state = kinds.computeIfAbsent(key, k -> initial(row.domain(), row.kind()));
         DocCodec codec = state.codec;
@@ -258,6 +303,20 @@ public final class RedisLoader {
             return;
         }
         write(row, codec);
+    }
+
+    /**
+     * The generation the day's documents go to: this load's own when it replaces the day (no reader looks at it until
+     * the switch), the day's current one when it merges (written in place, as before generations).
+     */
+    private String target(DayKey k) throws Exception {
+        String gen = targets.get(k);
+        if (gen != null) {
+            return gen;
+        }
+        String chosen = options.replace() ? journal.load() : ColumnReader.generation(async, k.domain(), k.kind(), k.date(), Duration.ofSeconds(60));
+        String was = targets.putIfAbsent(k, chosen);
+        return was == null ? chosen : was;
     }
 
     /** A kind's codec when no training is needed: the codec asked for, or the kind's dictionary Redis already holds. */
@@ -317,33 +376,34 @@ public final class RedisLoader {
         byte[] value = codec.encode(json);
         rawBytes.addAndGet(json.length);
         storedBytes.addAndGet(value.length);
-        journal.day(row.domain(), row.kind(), row.date());
+        String gen = target(new DayKey(row.domain(), row.kind(), row.date()));
+        journal.day(row.domain(), row.kind(), row.date(), gen);
         inFlight.acquire();
         async.sadd(journal.key(row.domain(), row.kind(), row.date()), RedisLayout.bytes(row.id())).whenComplete((v, e) -> {
             if (e != null) {
                 failed.compareAndSet(null, e);
                 inFlight.release();
             } else {
-                send(row, value);
+                send(row, value, gen);
             }
         });
     }
 
-    private void send(Row row, byte[] value) {
+    private void send(Row row, byte[] value, String gen) {
         byte[] entity = RedisLayout.bytes(RedisLayout.entity(row.domain(), row.kind(), row.id()));
         long day = RedisLayout.day(row.date());
         byte[] dayBytes = RedisLayout.bytes(String.valueOf(day));
         List<RedisFuture<?>> sent = new ArrayList<>(5);
         long ttl = options.ttlSeconds();
-        sent.add(ttl > 0 ? async.set(RedisLayout.bytes(RedisLayout.doc(row.domain(), row.kind(), row.id(), row.date())), value, SetArgs.Builder.ex(ttl))
-                : async.set(RedisLayout.bytes(RedisLayout.doc(row.domain(), row.kind(), row.id(), row.date())), value));
+        byte[] doc = RedisLayout.bytes(RedisLayout.doc(row.domain(), row.kind(), row.id(), row.date(), gen));
+        sent.add(ttl > 0 ? async.set(doc, value, SetArgs.Builder.ex(ttl)) : async.set(doc, value));
         sent.add(async.zadd(entity, day, dayBytes));
         if (ttl > 0) {
             // the entity forgets days older than the retention, and goes itself when nothing is written for that long
             sent.add(async.zremrangebyscore(entity, before(options.guard().asOf().minusDays(options.ttlDays()))));
             sent.add(async.expire(entity, ttl));
         }
-        if (options.publish()) {
+        if (options.publish() && !options.replace()) {          // a replaced day's entities are announced once it is switched
             sent.add(async.publish(RedisLayout.bytes(RedisLayout.changes(row.domain())), RedisLayout.bytes(RedisLayout.change(row.kind(), row.id(), row.date()))));
         }
         RedisFuture<?> last = sent.get(sent.size() - 1);
@@ -363,23 +423,125 @@ public final class RedisLoader {
         }
     }
 
+    /** What a day held before this load replaces it: its generation and ids (none when Redis did not hold the day). */
+    private record Previous(String gen, List<String> ids) {}
+
     /**
-     * A day's columns: merged with what Redis holds for the day (rows this load did not write are kept; with
-     * {@code --replace} they go, and their documents of the day after the rename), written to a staging hash and
-     * renamed over the day's; then the day joins the kind's days and is announced, and its journal goes.
+     * The day as Redis holds it now, and the guard: replacing it with a stream that drops more than
+     * {@code --max-drop-share} of its entities is refused unless {@code --force-drop} (nothing is switched).
      */
-    private void flush(DayKey k, DayColumns cols) throws Exception {
+    private Previous previous(DayKey k, DayColumns cols) throws Exception {
         Duration timeout = Duration.ofMinutes(5);
-        Optional<ColumnCodec.Meta> old = ColumnReader.meta(async, k.domain(), k.kind(), k.date(), timeout);
-        List<String> removed = new ArrayList<>();
+        String gen = ColumnReader.generation(async, k.domain(), k.kind(), k.date(), timeout);
+        List<String> ids = ids(k, gen, timeout);
+        long dropping = ids.stream().filter(id -> !cols.has(id)).count();
+        try {
+            options.guard().checkDrop(k.domain() + ":" + k.kind() + " " + k.date(), dropping, ids.size(), "entities");
+        } catch (IllegalStateException e) {
+            throw new IllegalStateException(String.format(java.util.Locale.ROOT,
+                    "%s:%s %s: replacing the day would remove %,d of its %,d entities (the stream carries %,d; more than --max-drop-share); "
+                            + "no day was switched. To add to the day, load with --merge; to replace it anyway, pass --force-drop.",
+                    k.domain(), k.kind(), k.date(), dropping, ids.size(), cols.rows()), e);
+        }
+        return new Previous(gen, ids);
+    }
+
+    /** The ids the day's columns list in generation {@code gen} (none when Redis does not hold them). */
+    private List<String> ids(DayKey k, String gen, Duration timeout) throws Exception {
+        for (int attempt = 0; attempt < 3; attempt++) {
+            Optional<ColumnCodec.Meta> meta = ColumnReader.meta(async, k.domain(), k.kind(), k.date(), gen, timeout);
+            if (meta.isEmpty()) {
+                return List.of();
+            }
+            Optional<ColumnSet> read = ColumnReader.read(async, k.domain(), k.kind(), k.date(), gen, meta.get(), List.of(), timeout);
+            if (read.isPresent()) {
+                return List.of(read.get().ids());
+            }
+        }
+        throw new IllegalStateException("the columns of " + k.domain() + ":" + k.kind() + " " + k.date() + " kept changing while they were read");
+    }
+
+    /**
+     * Replaces a day: its columns written under this load's generation (beside its documents, which no reader looks at
+     * yet), then the day switched to the generation in one step; then the replaced generation retired and the day
+     * announced.
+     */
+    private void replace(DayKey k, DayColumns cols, Previous before) throws Exception {
+        Duration timeout = Duration.ofMinutes(5);
+        String gen = targets.get(k);
+        DayColumns.Chunks chunks = writeColumns(k, gen, cols, timeout);
+        byte[] was = ColumnReader.await(async.<byte[]>eval(SWITCH, ScriptOutputType.VALUE,
+                new byte[][] {RedisLayout.bytes(RedisLayout.generations(k.domain(), k.kind())), RedisLayout.bytes(RedisLayout.days(k.domain(), k.kind()))},
+                RedisLayout.bytes(String.valueOf(RedisLayout.day(k.date()))), RedisLayout.bytes(gen)), timeout);
+        String replaced = was == null ? "" : new String(was, StandardCharsets.UTF_8);
+        // another load may have switched the day since it was read: what this switch replaced is retired
+        Previous retired = replaced.equals(before.gen()) ? before : new Previous(replaced, ids(k, replaced, timeout));
+        if (!replaced.equals(gen)) {
+            retire(k, retired, cols, timeout);
+        }
+        journal.done(k.domain(), k.kind(), k.date());
+        announce(k, chunks, timeout);
+        if (options.publish()) {                                       // every entity of the day, now that readers see them
+            List<RedisFuture<?>> sent = new ArrayList<>();
+            byte[] channel = RedisLayout.bytes(RedisLayout.changes(k.domain()));
+            for (String id : cols.ids()) {
+                sent.add(async.publish(channel, RedisLayout.bytes(RedisLayout.change(k.kind(), id, k.date()))));
+            }
+            for (RedisFuture<?> f : sent) {
+                ColumnReader.await(f, timeout);
+            }
+        }
+    }
+
+    /**
+     * The replaced generation of a day: its documents and columns expire {@code --keep-replaced-seconds} later (a
+     * reader that has not yet seen the switch still reads a whole old day), and the entities the new day does not
+     * hold lose the day from their days.
+     */
+    private void retire(DayKey k, Previous old, DayColumns cols, Duration timeout) throws Exception {
+        long keep = options.keepReplacedSeconds();
+        byte[] dayBytes = RedisLayout.bytes(String.valueOf(RedisLayout.day(k.date())));
+        List<RedisFuture<?>> sent = new ArrayList<>();
+        long removed = 0;
+        for (String id : old.ids()) {
+            byte[] doc = RedisLayout.bytes(RedisLayout.doc(k.domain(), k.kind(), id, k.date(), old.gen()));
+            sent.add(keep > 0 ? async.expire(doc, keep) : async.del(doc));
+            if (!cols.has(id)) {
+                sent.add(async.zrem(RedisLayout.bytes(RedisLayout.entity(k.domain(), k.kind(), id)), dayBytes));
+                removed++;
+            }
+            if (sent.size() >= options.inFlight()) {
+                for (RedisFuture<?> f : sent) {
+                    ColumnReader.await(f, timeout);
+                }
+                sent.clear();
+            }
+        }
+        byte[] columns = RedisLayout.bytes(RedisLayout.columns(k.domain(), k.kind(), k.date(), old.gen()));
+        sent.add(keep > 0 ? async.expire(columns, keep) : async.del(columns));
+        for (RedisFuture<?> f : sent) {
+            ColumnReader.await(f, timeout);
+        }
+        if (removed > 0) {
+            System.err.printf("redis: %s:%s %s: replaced; %,d entities the stream does not carry left the day%n", k.domain(), k.kind(), k.date(), removed);
+        }
+    }
+
+    /**
+     * {@code --merge}: the day's columns in its current generation, merged with what Redis holds for it (rows this
+     * load did not write are kept), written to a staging hash and renamed over the day's; then the day joins the
+     * kind's days and is announced, and its journal goes.
+     */
+    private void merge(DayKey k, DayColumns cols) throws Exception {
+        Duration timeout = Duration.ofMinutes(5);
+        String gen = targets.get(k);
+        Optional<ColumnCodec.Meta> old = ColumnReader.meta(async, k.domain(), k.kind(), k.date(), gen, timeout);
         if (old.isPresent()) {
-            Optional<ColumnSet> was = ColumnReader.read(async, k.domain(), k.kind(), k.date(), old.get(), null, timeout);
+            Optional<ColumnSet> was = ColumnReader.read(async, k.domain(), k.kind(), k.date(), gen, old.get(), null, timeout);
             if (was.isPresent()) {
                 ColumnSet c = was.get();
                 for (int i = 0; i < c.size(); i++) {
-                    if (options.replace() && !cols.has(c.ids()[i])) {
-                        removed.add(c.ids()[i]);
-                    } else if (!cols.has(c.ids()[i])) {
+                    if (!cols.has(c.ids()[i])) {
                         Map<String, Object> values = new LinkedHashMap<>();
                         for (String p : old.get().columns().keySet()) {
                             values.put(p, c.value(p, i));
@@ -389,9 +551,18 @@ public final class RedisLoader {
                 }
             }
         }
+        DayColumns.Chunks chunks = writeColumns(k, gen, cols, timeout);
+        long day = RedisLayout.day(k.date());
+        ColumnReader.await(async.zadd(RedisLayout.bytes(RedisLayout.days(k.domain(), k.kind())), day, RedisLayout.bytes(String.valueOf(day))), timeout);
+        journal.done(k.domain(), k.kind(), k.date());
+        announce(k, chunks, timeout);
+    }
+
+    /** The day's columns in generation {@code gen}: a staging hash, given the TTL, renamed over the generation's in one step. */
+    private DayColumns.Chunks writeColumns(DayKey k, String gen, DayColumns cols, Duration timeout) throws Exception {
         DayColumns.Chunks chunks = cols.chunks(options.chunkRows(), System.currentTimeMillis());
-        byte[] staging = RedisLayout.bytes(RedisLayout.columnsStaging(k.domain(), k.kind(), k.date()));
-        byte[] target = RedisLayout.bytes(RedisLayout.columns(k.domain(), k.kind(), k.date()));
+        byte[] staging = RedisLayout.bytes(RedisLayout.columnsStaging(k.domain(), k.kind(), k.date(), gen));
+        byte[] target = RedisLayout.bytes(RedisLayout.columns(k.domain(), k.kind(), k.date(), gen));
         ColumnReader.await(async.del(staging), timeout);
         List<RedisFuture<?>> sent = new ArrayList<>();
         for (Map.Entry<String, byte[]> f : chunks.fields().entrySet()) {
@@ -405,21 +576,11 @@ public final class RedisLoader {
             ColumnReader.await(async.expire(staging, options.ttlSeconds()), timeout);
         }
         ColumnReader.await(async.rename(staging, target), timeout);
-        long day = RedisLayout.day(k.date());
-        ColumnReader.await(async.zadd(RedisLayout.bytes(RedisLayout.days(k.domain(), k.kind())), day, RedisLayout.bytes(String.valueOf(day))), timeout);
-        if (!removed.isEmpty()) {                                       // --replace: entities the stream no longer carries leave the day
-            List<RedisFuture<?>> gone = new ArrayList<>();
-            byte[] dayBytes = RedisLayout.bytes(String.valueOf(day));
-            for (String id : removed) {
-                gone.add(async.del(RedisLayout.bytes(RedisLayout.doc(k.domain(), k.kind(), id, k.date()))));
-                gone.add(async.zrem(RedisLayout.bytes(RedisLayout.entity(k.domain(), k.kind(), id)), dayBytes));
-            }
-            for (RedisFuture<?> f : gone) {
-                ColumnReader.await(f, timeout);
-            }
-            System.err.printf("redis: %s:%s %s: %,d entities the stream does not carry removed (--replace)%n", k.domain(), k.kind(), k.date(), removed.size());
-        }
-        journal.done(k.domain(), k.kind(), k.date());
+        return chunks;
+    }
+
+    /** The kind joins the domain's kinds and the day is announced on the domain's changes. */
+    private void announce(DayKey k, DayColumns.Chunks chunks, Duration timeout) throws Exception {
         ColumnReader.await(async.sadd(RedisLayout.bytes(RedisLayout.kinds(k.domain())), RedisLayout.bytes(k.kind())), timeout);
         ColumnReader.await(async.publish(RedisLayout.bytes(RedisLayout.changes(k.domain())), RedisLayout.bytes(RedisLayout.change(k.kind(), "*", k.date()))), timeout);
         if (chunks.meta().rows() >= 100_000) {
@@ -444,7 +605,10 @@ public final class RedisLoader {
             long dropping = ColumnReader.await(async.zcount(e.getValue(), old), timeout);
             if (dropping > 0) {
                 options.guard().checkDrop(e.getKey(), dropping, ColumnReader.await(async.zcard(e.getValue()), timeout), "business days");
+                List<byte[]> gone = ColumnReader.await(async.zrangebyscore(e.getValue(), old), timeout);
                 ColumnReader.await(async.zremrangebyscore(e.getValue(), old), timeout);
+                String[] dk = e.getKey().split(":", 2);
+                ColumnReader.await(async.hdel(RedisLayout.bytes(RedisLayout.generations(dk[0], dk[1])), gone.toArray(byte[][]::new)), timeout);
             }
         }
     }

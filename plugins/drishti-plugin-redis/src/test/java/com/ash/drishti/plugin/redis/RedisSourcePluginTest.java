@@ -145,7 +145,7 @@ class RedisSourcePluginTest extends DatedSourceContract {
             LocalDateRows update = new LocalDateRows();
             update.add("trade", "X-2", "{\"tradeId\":\"X-2\",\"mtm\":20,\"nettingSet\":\"NS-X\"}");
             update.add("trade", "X-3", "{\"tradeId\":\"X-3\",\"mtm\":3,\"nettingSet\":\"NS-Y\"}");
-            loadInto("merge", update.rows, "--publish");
+            loadInto("merge", update.rows, "--merge", "--publish");
             ColumnSet c = p.columns("trade", List.of("mtm", "nettingSet"), AsOf.LATEST).orElseThrow();
             assertThat(c.ids()).containsExactly("X-1", "X-2", "X-3");                // X-1 kept from the first load
             assertThat(c.value("mtm", 1)).isEqualTo(20.0);

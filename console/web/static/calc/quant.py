@@ -72,7 +72,8 @@ def tenor_years(tenor) -> float:
 
 def month_code_years(code: str, as_of: date | str) -> float:
     """A futures contract month code (``'X6'``: November 2026, ``'Z27'``) as years from ``as_of`` to the middle of that
-    month. The decade is the one that puts the contract on or after ``as_of``."""
+    month. The decade is the one that puts the contract on or after ``as_of``. In the contract month itself, once its
+    middle has passed, the contract is in delivery: 0 (never negative)."""
     as_of = date.fromisoformat(str(as_of)[:10]) if not isinstance(as_of, date) else as_of
     m = re.fullmatch(r"([FGHJKMNQUVXZ])(\d{1,2})", str(code).strip().upper())
     if not m:
@@ -82,25 +83,51 @@ def month_code_years(code: str, as_of: date | str) -> float:
     year = 2000 + int(digits) if len(digits) == 2 else (as_of.year // 10) * 10 + int(digits)
     if len(digits) == 1 and date(year, month, 28) < as_of:
         year += 10
-    return (date(year, month, 15) - as_of).days / 365.0
+    years = (date(year, month, 15) - as_of).days / 365.0
+    return max(years, 0.0) if (year, month) == (as_of.year, as_of.month) else years
+
+
+def _days_in_year(year: int) -> int:
+    return 366 if year % 4 == 0 and (year % 100 != 0 or year % 400 == 0) else 365
+
+
+def _act_act_isda(d1: date, d2: date) -> float:
+    """ACT/ACT ISDA (ISDA 2006 4.16(b)): the days of the period in each calendar year over that year's length (365 or
+    366), summed."""
+    if d2 < d1:
+        return -_act_act_isda(d2, d1)
+    if d1.year == d2.year:
+        return (d2 - d1).days / _days_in_year(d1.year)
+    first = (date(d1.year + 1, 1, 1) - d1).days / _days_in_year(d1.year)
+    last = (d2 - date(d2.year, 1, 1)).days / _days_in_year(d2.year)
+    return first + (d2.year - d1.year - 1) + last
 
 
 def year_fraction(start, end, basis: str = "ACT/365F") -> float:
-    """The year fraction between two dates (``date`` or ISO text) by ``basis``: ACT/365F, ACT/360, 30/360 (bond basis)
-    or ACT/ACT (simplified: actual days over 365.25)."""
+    """The year fraction between two dates (``date`` or ISO text) by ``basis`` (ISDA 2006 section 4.16):
+
+    * ACT/365F (``ACT/365``, ``A365F``) and ACT/360 (``A360``): actual days over 365 or 360;
+    * 30/360 (``BOND``, US bond basis, 4.16(f)): D1 31 becomes 30; D2 31 becomes 30 only when D1 is 30 or 31;
+    * 30E/360 (``EUROBOND``, 4.16(g)): D1 and D2 31 both become 30 (2026-01-15 to 2026-03-31 is 75/360);
+    * ACT/ACT ISDA (``ACT/ACT``, ``ACT/ACT ISDA``, ``AA``, 4.16(b)): the days in each calendar year over that year's
+      length, 365 or 366 (2026-01-01 to 2027-01-01 is exactly 1.0)."""
     d1 = start if isinstance(start, date) else date.fromisoformat(str(start)[:10])
     d2 = end if isinstance(end, date) else date.fromisoformat(str(end)[:10])
-    b = basis.upper().replace(" ", "")
+    b = basis.upper().replace(" ", "").replace("(", "").replace(")", "")
     days = (d2 - d1).days
     if b in ("ACT/365F", "ACT/365", "A365F"):
         return days / 365.0
     if b in ("ACT/360", "A360"):
         return days / 360.0
-    if b in ("30/360", "30E/360", "BOND"):
-        dd1, dd2 = min(d1.day, 30), d2.day if not (d2.day == 31 and d1.day >= 30) else 30
+    if b in ("30/360", "BOND"):
+        dd1 = min(d1.day, 30)
+        dd2 = 30 if d2.day == 31 and dd1 == 30 else d2.day
+        return (360 * (d2.year - d1.year) + 30 * (d2.month - d1.month) + (dd2 - dd1)) / 360.0
+    if b in ("30E/360", "EUROBOND"):
+        dd1, dd2 = min(d1.day, 30), min(d2.day, 30)
         return (360 * (d2.year - d1.year) + 30 * (d2.month - d1.month) + (dd2 - dd1)) / 360.0
     if b in ("ACT/ACT", "ACT/ACTISDA", "AA"):
-        return days / 365.25
+        return _act_act_isda(d1, d2)
     raise ValueError(f"unknown day count {basis!r}")
 
 
@@ -194,8 +221,11 @@ def _horner(coef, x):
 
 
 def norm_ppf(p):
-    """The standard normal quantile (inverse CDF): Acklam's rational approximation polished by one Halley step
-    (error below 1e-14). ``norm_ppf(0.99)`` 2.3263."""
+    """The standard normal quantile (inverse CDF): Acklam's rational approximation polished by one Halley step, the
+    step's residual taken on the near tail (``1 - p`` above 0.5) so it does not cancel. Measured against 60-digit values
+    (mpmath) from 1e-300 to ``1 - 1e-16``: relative error below 1e-15 outside 0.4..0.6, absolute error below 1e-14
+    everywhere (near 0.5 the quantile is near 0 and the input's own rounding bounds the relative error).
+    ``norm_ppf(0.99)`` 2.3263."""
     a = (-3.969683028665376e+01, 2.209460984245205e+02, -2.759285104469687e+02, 1.383577518672690e+02,
          -3.066479806614716e+01, 2.506628277459239e+00)
     b = (-5.447609879822406e+01, 1.615858368580409e+02, -1.556989798598866e+02, 6.680131188771972e+01, -1.328068155288572e+01)
@@ -218,7 +248,10 @@ def norm_ppf(p):
             q = p - 0.5
             r = q * q
             x = _horner(a, r) * q / (_horner(b, r) * r + 1)
-        e = 0.5 * math.erfc(-x / _SQRT2) - p                       # one Halley step
+        if p > 0.5:                                                # one Halley step; residual CDF(x) - p, taken as
+            e = (1 - p) - 0.5 * math.erfc(x / _SQRT2)              # (1-p) - SF(x) above 0.5: 1 - p is exact there
+        else:                                                      # (Sterbenz) and SF(x) is accurate, so no cancellation
+            e = 0.5 * math.erfc(-x / _SQRT2) - p
         u = e * math.sqrt(2 * math.pi) * math.exp(x * x / 2)
         return x - u / (1 + x * u / 2)
 
@@ -463,9 +496,14 @@ def z_spread(dirty_price: float, times, amounts, curve: ZeroCurve) -> float:
 # ---- options -----------------------------------------------------------------------------------------------------------
 
 def _d12(F, K, T, sigma):
+    """d1, d2 and the total standard deviation. With no deviation left (T = 0 or sigma = 0) d1 = d2 = +-inf by the sign
+    of ln(F/K), and +inf at the money: N(d1) - N(d2) then prices the intrinsic value of the forward (0 at the money),
+    the limit of the formula, instead of 0/0 = NaN."""
     F, K, T, sigma = (np.asarray(v, dtype=float) for v in (F, K, T, sigma))
     sd = sigma * np.sqrt(T)
-    d1 = (np.log(F / K) + 0.5 * sd * sd) / sd
+    with np.errstate(divide="ignore", invalid="ignore"):
+        d1 = (np.log(F / K) + 0.5 * sd * sd) / sd
+        d1 = np.where(sd > 0, d1, np.where(F < K, -np.inf, np.inf))
     return d1, d1 - sd, sd
 
 
@@ -540,7 +578,8 @@ def bachelier(F, K, T, sigma_n, df=1.0, call=True):
     a year): ``df x [(F-K) N(d) + sigma_n sqrt(T) n(d)]`` for a call."""
     F_, K_, T_, s_ = (np.asarray(v, dtype=float) for v in (F, K, T, sigma_n))
     sd = s_ * np.sqrt(T_)
-    d = (F_ - K_) / sd
+    with np.errstate(divide="ignore", invalid="ignore"):    # no deviation left (T = 0 or sigma = 0): intrinsic value
+        d = np.where(sd > 0, (F_ - K_) / sd, np.where(F_ < K_, -np.inf, np.inf))
     c = np.asarray(df) * ((F_ - K_) * norm_cdf(d) + sd * norm_pdf(d))
     p = c - np.asarray(df) * (F_ - K_)
     return _out(np.where(call, c, p), F, K, T, sigma_n, df, call)

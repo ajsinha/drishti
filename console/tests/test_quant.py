@@ -65,6 +65,32 @@ def test_day_counts():
     assert close(q.year_fraction("2026-01-01", "2026-07-02"), 182 / 365)
 
 
+def test_30e_360_moves_the_31st_to_the_30th_on_both_dates():
+    # 30E/360 (ISDA 2006 4.16(g), Eurobond basis): D1 and D2 both capped at 30, whatever the other date is.
+    assert q.year_fraction("2026-01-15", "2026-03-31", "30E/360") == 75 / 360
+    assert q.year_fraction("2026-02-28", "2026-08-31", "30E/360") == 182 / 360
+    assert q.year_fraction("2026-02-28", "2026-08-31", "EUROBOND") == 182 / 360
+    # 30/360 (bond basis, 4.16(f)) keeps the 31st unless D1 is the 30th or 31st.
+    assert q.year_fraction("2026-01-15", "2026-03-31", "30/360") == 76 / 360
+    assert q.year_fraction("2026-02-28", "2026-08-31", "30/360") == 183 / 360
+
+
+def test_act_act_isda_splits_the_period_by_calendar_year():
+    for basis in ("ACT/ACT", "ACT/ACT ISDA", "ACT/ACT (ISDA)", "AA"):
+        assert q.year_fraction("2026-01-01", "2027-01-01", basis) == 1.0
+    assert close(q.year_fraction("2027-07-01", "2028-07-01", "ACT/ACT ISDA"), 184 / 365 + 182 / 366, 1e-15)
+    # the ISDA 2006 example: 2003-11-01 to 2004-05-01 is 61/365 + 121/366
+    assert close(q.year_fraction("2003-11-01", "2004-05-01", "ACT/ACT ISDA"), 61 / 365 + 121 / 366, 1e-15)
+    assert close(q.year_fraction("2024-01-01", "2028-03-01", "ACT/ACT ISDA"), 4 + 60 / 366, 1e-15)
+    assert q.year_fraction("2026-05-05", "2026-05-05", "ACT/ACT ISDA") == 0.0
+    assert close(q.year_fraction("2028-07-01", "2027-07-01", "ACT/ACT ISDA"), -(184 / 365 + 182 / 366), 1e-15)
+
+
+def test_a_month_code_for_the_current_month_is_never_negative():
+    assert q.month_code_years("V6", "2026-10-20") == 0.0     # October 2026, after its 15th
+    assert close(q.month_code_years("V6", "2026-10-01"), 14 / 365)
+
+
 def test_brent_and_newton_find_the_classic_root():
     f = lambda x: x ** 3 - 2 * x - 5                      # noqa: E731 - Wallis's example
     assert close(q.brent(f, 2, 3), 2.0945514815423265, 1e-12)
@@ -84,6 +110,13 @@ def test_the_normal_distribution():
         assert np.allclose(q.norm_pdf(xs), _stats.norm.pdf(xs), atol=1e-15)
 
 
+def test_norm_ppf_is_accurate_in_the_far_tails():
+    # reference values from mpmath at 40 digits (sqrt(2) erfinv(2p - 1))
+    for p, exact in ((1 - 1e-12, 7.0344869100478356), (1 - 1e-9, 5.9978070196016375), (1 - 1e-15, 7.941444487415978),
+                     (1e-12, -7.034483825301132), (0.9, 1.2815515655446006), (0.97575, 1.972961051311885)):
+        assert abs(q.norm_ppf(p) - exact) <= 1e-14 * abs(exact), (p, q.norm_ppf(p), exact)
+
+
 # ---- options ------------------------------------------------------------------------------------------------------------
 
 def test_black_scholes_textbook_prices():
@@ -91,6 +124,22 @@ def test_black_scholes_textbook_prices():
     assert close(q.black_scholes(100, 100, 1, 0.05, 0.2, call=False), 5.573526022256971, 1e-10)
     assert round(q.black_scholes(42, 40, 0.5, 0.10, 0.2), 2) == 4.76                 # Hull, Example 15.6
     assert round(q.black_scholes(42, 40, 0.5, 0.10, 0.2, call=False), 2) == 0.81
+
+
+def test_options_at_expiry_or_zero_vol_are_worth_their_intrinsic_value():
+    # at the money with no time or no vol: nothing to gain, worth 0 (was NaN: 0/0 in d1)
+    assert q.black_scholes(100, 100, 0.0, 0.05, 0.2) == 0.0
+    assert q.black_scholes(100, 100, 1.0, 0.0, 0.0) == 0.0
+    assert q.black76(100, 100, 0.0, 0.05, 0.2, call=False) == 0.0
+    assert q.bachelier(0.03, 0.03, 0.0, 0.01) == 0.0
+    # in the money: the (discounted) intrinsic value of the forward
+    assert close(q.black_scholes(110, 100, 0.0, 0.05, 0.2), 10.0, 1e-15)
+    assert close(q.black_scholes(100, 100, 1.0, 0.05, 0.0), 100 - 100 * math.exp(-0.05), 1e-14)
+    assert close(q.black76(90, 100, 0.5, 0.04, 0.0, call=False), 10 * math.exp(-0.02), 1e-14)
+    assert close(q.bachelier(0.035, 0.03, 1.0, 0.0, df=0.97), 0.97 * 0.005, 1e-14)
+    # arrays: a NaN-free mix of expired and live options
+    out = q.black_scholes(np.array([100.0, 100.0, 110.0]), 100, np.array([0.0, 1.0, 0.0]), 0.05, 0.2)
+    assert not np.isnan(out).any() and out[0] == 0.0 and close(out[1], 10.450583572185565, 1e-10) and close(out[2], 10.0)
 
 
 def test_put_call_parity_with_a_dividend_yield():

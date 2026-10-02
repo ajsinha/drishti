@@ -1049,7 +1049,8 @@ How to read it:
   `DEGRADED` means it serves, but some of its data cannot be read: a Delta connector names each table and date whose
   last read failed (a truncated Parquet file, pages in a codec its engine does not decompress, a table log missing a
   commit) and why, until a read of it succeeds or the table gets a new version. A Redis connector is `DOWN` as soon
-  as its connection drops or a read fails, not at its next refresh. `reads.errors`, `lastError` and `lastErrorAt`
+  as its connection drops or a read fails, not at its next refresh; while it is down its reads fail at once instead of
+  each waiting for the timeout, and it is `UP` again within a second of Redis answering (`fail-fast`, `recheck-ms`). `reads.errors`, `lastError` and `lastErrorAt`
   show the most recent failure; `p99Ms` its read latency.
 - **A pack** is `DEGRADED` when one of its Sutras has problems or one of its connectors is down. `connectorsOff`
   lists connectors switched off by configuration (for example a feed you did not enable): not a fault.
