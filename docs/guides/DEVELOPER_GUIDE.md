@@ -485,7 +485,7 @@ bind". In code:
 | Step | Where | What happens |
 |---|---|---|
 | 1 | `terminal/view.html` | `live.js` is loaded only when `vm.provenance.live` is true. A picked business date is a static snapshot: no stream. |
-| 2 | `web/static/js/live.js`, `web/static/js/channel.js` | `live.js` subscribes `view:trade/MX-20000001` on `window.DrishtiChannel`. `channel.js` keeps **one** `EventSource` per browser tab, to the console's `GET /api/channel?s=…`, and adds or removes subscriptions with `POST /api/channel/{cid}` instead of reconnecting. Workspace panes (iframes) share their parent's channel. Browsers allow six HTTP/1.1 connections per site; a stream per view and per bell used to exhaust them and freeze the page. |
+| 2 | `web/static/js/live.js`, `web/static/js/channel.js`, `web/static/js/live-hub.js` | `live.js` subscribes `view:trade/MX-20000001` on `window.DrishtiChannel`. `channel.js` hands every tab's subscriptions to one hub per browser (`live-hub.js`, in a SharedWorker, or in a tab elected with a Web Lock that relays over a BroadcastChannel), which keeps **one** `EventSource` for the whole browser, to the console's `GET /api/channel?s=…`, and adds or removes subscriptions with `POST /api/channel/{cid}` instead of reconnecting. Workspace panes (iframes) share their parent's subscriptions. Browsers allow six HTTP/1.1 connections per site; a stream per view, and later a channel per tab, used to exhaust them and freeze the next page (UX-01). Tests: `tests/test_live_hub.py` (the protocol, in Node), `tests/test_live_tabs_browser.py` (Chromium, skipped without Playwright). |
 | 3 | `console/routes/api_routes.py` `channel()` | For each subscription it opens an upstream stream (`BackendClient.stream` → `GET /api/v1/views/{kind}/{id}/stream`; `alerts` and `monitor:<name>` go to their own server streams), in **detached** tasks, and multiplexes everything into one SSE response as `{"ch": "<subscription>", "d": …}`. Frames are rewritten by `_view_event`: each patched panel is rendered to HTML with the same `panels.html` macro as first paint (charts stay data). A watchdog ends a channel nobody has read for five seconds; a comment every ~15s keeps proxies from closing it. |
 | 4 | `server.api.StreamController.stream` | Takes a slot from `LiveStreamSlots` (cap `drishti.live.max-streams`), builds the initial view, and creates a `ViewStream`. A writer on a virtual thread sends a `view` event, then a `frame` event per frame, or a heartbeat comment (`drishti.live.heartbeat`, 15s). Each client has its own latest-wins `FrameMailbox`, so a slow client never slows others. |
 | 5 | `engine.live.TopicHub` | One topic per live entity, shared by every view of it, holding a single source subscription (`SourceRouter.subscribe` → the plugin's `subscribe`). Ticks land in a latest-wins slot and are delivered at most once per frame (`drishti.live.frame`, 50ms). The subscription closes with the last listener. |
@@ -1713,7 +1713,9 @@ The console runs Uvicorn with access logs off (`access_log=False` in `run_drisht
    curl -sN localhost:18480/api/v1/views/trade/MX-20000001/stream | head -c 600
    ```
 
-4. In the browser's network tab there should be exactly one `/api/channel?s=…` request per tab, staying open.
+4. There should be exactly one `/api/channel?s=…` request for the whole browser, staying open: in the network panel
+   of the SharedWorker (`chrome://inspect/#workers`), or of the leader tab when there is no SharedWorker.
+   `DrishtiChannel.transport()` in a tab's console says which (`shared-worker`, `leader`, `follower`).
 5. If ticks arrive but the page does not change, check the browser console for errors in `live.js`.
 
 ---

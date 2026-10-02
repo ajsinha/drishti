@@ -165,12 +165,17 @@ A healthy server with some viewers:
    In nginx, set `proxy_buffering off;` and `proxy_read_timeout` above 15 s for the console's `/api/channel`.
    See [OPERATIONS.md](../OPERATIONS.md).
 
-3. The tab says `Paused while hidden`: the tab was hidden for 10 s and gave its connection back. It reconnects
-   when shown. This is expected.
+3. The tab says `Paused while hidden`: the tab was hidden for 10 s and gave its subscriptions back. It takes them
+   again when shown. This is expected.
 
-4. Several console processes behind a load balancer, and panes of a workspace never start ticking: sessions are
-   not sticky. A page adds subscriptions to its channel with `POST /api/channel/{id}`, and only the process that
-   holds the channel knows it. Turn on sticky sessions (Fix E).
+4. Several console processes behind a load balancer, and panes of a workspace (or further tabs) never start
+   ticking: sessions are not sticky. Each browser holds one channel for all its tabs and adds subscriptions to it
+   with `POST /api/channel/{id}`, and only the process that holds the channel knows it. Turn on sticky sessions
+   (Fix E).
+
+5. One view says `Static` while the same view ticks elsewhere, in a browser with very many live tabs: that browser
+   reached `live.max_subscriptions` (32, console configuration). See
+   [LIVE.md](../../architecture/LIVE.md#settings).
 
 ## Fixes
 

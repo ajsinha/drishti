@@ -637,8 +637,9 @@ To serve the actuator on a separate port that only monitoring can reach, set Spr
 
 ### 8.2 Live updates through a proxy
 
-Each browser tab holds one long-lived Server-Sent Events connection to the console (`/api/channel`). For it to work
-through a proxy:
+Each browser holds one long-lived Server-Sent Events connection to the console (`/api/channel`), shared by all its
+tabs and workspace panes (from a SharedWorker, or from one tab elected by the others). For it to work through a
+proxy:
 
 - the proxy must **not buffer** responses (the console sends `X-Accel-Buffering: no`, which nginx honours);
 - the proxy's **read timeout** must be well above the heartbeat (the console sends a comment line about every 15

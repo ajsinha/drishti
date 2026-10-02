@@ -263,20 +263,36 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 
 - **What you see:** the dot among the round tools of the top bar turns amber, and values stop changing.
   Hover over it, or use a screen reader, to read *Reconnecting…*.
-- **Cause:** the live stream dropped (server restarted, network blip).
+- **Cause:** the live stream dropped (server restarted, network blip), or could not be opened within 10 seconds.
+  The page itself keeps working: it never waits for live updates.
 - **Fix:** nothing to do: the browser reconnects by itself and repaints from a fresh view. If it never
-  recovers, run the first checks.
+  recovers, run the first checks. If only an older tab stays amber after you signed in again (or picked another
+  server) in another tab, that tab belongs to the previous session: reload it.
 
 ### The live dot is amber after the tab was in the background ("Paused while hidden")
 
-- **Cause:** the tab was hidden for 10 seconds and gave its connection back, to save resources.
-- **Fix:** show the tab: it reconnects and repaints.
+- **Cause:** the tab was hidden for 10 seconds and gave its live subscriptions back, to save resources.
+- **Fix:** show the tab: it takes them back and repaints.
 
-### The page looks fine but typing does nothing (no suggestions), often with several tabs open
+### A view says "Static" although it ticks in other tabs, with very many tabs open
 
-- **Cause:** before 1.10, each view and the alerts bell held its own connection, and browsers allow only six per
-  site. Each tab now uses one live connection (see [LIVE.md](../architecture/LIVE.md)).
-- **Fix:** hard-refresh old tabs once (**Ctrl+Shift+R**) so they load the new scripts.
+- **Cause:** one browser follows at most `live.max_subscriptions` (32) live things at once, across all its tabs and
+  panes; a view open in several tabs counts once. The one over the limit is told so (`DRS-5003 this browser
+  already follows 32 live subscriptions`) and shows `Static`.
+- **Fix:** close some live tabs or panes and reload it, or raise `live.max_subscriptions` in the console's
+  configuration (keep it well below `backend.pool_size`).
+
+### Pages do not load at all, or typing does nothing (no suggestions), with several live tabs open
+
+- **What you see:** with several tabs on live views (several screens on a desk), a new tab of the console never
+  loads, with no message, or the command line shows no suggestions; closing one live tab frees it at once.
+- **Cause:** browsers open at most six connections to a site over HTTP/1.1, and older consoles held one live
+  connection per tab (before 1.10, one per view and one for the bell). Now each **browser** holds one live
+  connection, shared by all its tabs and panes (see [LIVE.md](../architecture/LIVE.md#one-connection-per-browser)).
+- **Fix:** hard-refresh old tabs once (**Ctrl+Shift+R**) so they load the new scripts. To check, run
+  `DrishtiChannel.transport()` in the browser console of any tab: `shared-worker`, `leader` or `follower` means the
+  tab shares the browser's connection; the network panel shows a single `/api/channel?s=…` request for the whole
+  browser (in the SharedWorker's own panel, `chrome://inspect/#workers`, when it runs there).
 
 ## Commands and views
 

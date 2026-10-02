@@ -142,7 +142,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | [INFERENCE.md](architecture/INFERENCE.md) | a view looks different from what you expected and *How this view was built* says `inference` |
 | [CONNECTOR_GUIDE.md](connectors/CONNECTOR_GUIDE.md) | you are connecting your own data and want a worked, step-by-step path for your store |
 | [PLUGIN_GUIDE.md](connectors/PLUGIN_GUIDE.md) | you need every setting of a connector, the data layout it expects, or you are writing a new source plugin |
-| [LIVE.md](architecture/LIVE.md) | you need to know how values tick: streams, frames, coalescing, reconnects, one channel per tab |
+| [LIVE.md](architecture/LIVE.md) | you need to know how values tick: streams, frames, coalescing, reconnects, one channel per browser, shared by its tabs |
 | [USER_MANAGEMENT.md](admin/USER_MANAGEMENT.md) | you create users, define roles, assign packs, reset passwords, set up single sign-on or read the audit log |
 | [CONFIGURATION.md](admin/CONFIGURATION.md) | you need a setting's name, default and environment variable |
 | [OPERATIONS.md](admin/OPERATIONS.md) | you deploy, secure, monitor, back up or upgrade a server and console |

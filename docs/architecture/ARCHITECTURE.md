@@ -59,7 +59,7 @@ default):
                 ┌────────────────────────── Users (browser) ──────────────────────────┐
                 │  Landing · Terminal · Views · Workspaces · Monitors · Studio · Help │
                 └───────────────────────────────┬─────────────────────────────────────┘
-                                                │ HTTP(S): HTML pages + ONE SSE channel per tab
+                                                │ HTTP(S): HTML pages + ONE SSE channel per browser
                                    ┌────────────▼────────────┐
                                    │  drishti console        │  Python · FastAPI · Jinja2
                                    │  (port 17480)           │  vendored Bootstrap/ECharts
@@ -218,7 +218,8 @@ badges from the pack's `badges:` expressions. The console renders the panels wit
 `web/templates/_macros/panels.html`, main-area panels on the left and `area: right` panels on the right.
 
 **4. The page goes live.** The page does not open its own stream. `live.js` subscribes `view:trade/MX-20000001` on the
-tab's single channel (`channel.js` → console `GET /api/channel?s=view:trade/MX-20000001&s=alerts`). The console opens
+browser's single channel (`channel.js` → the hub in `live-hub.js`, a SharedWorker shared by every tab → console
+`GET /api/channel?s=view:trade/MX-20000001&s=alerts`). The console opens
 the server stream for that subscription and relays its events, each wrapped with its subscription
 (`{"ch": "view:trade/MX-20000001", "d": …}`). Directly against the server:
 
@@ -418,12 +419,17 @@ As in the Bloomberg terminal, the command line suggests while the user types, in
   ends; no live slot is held.
 - **Capacity.** `drishti.live.max-streams` (20,000) caps view and monitor streams together; the slot is taken
   atomically before any work. Over the cap the request is refused with `DRS-5001` ("too many live streams on this server").
-- **One channel per browser tab.** Browsers allow six connections per site over HTTP/1.1, so the console never lets
-  a page open its own `EventSource`. Views, the alerts bell, monitors and every workspace pane subscribe on the tab's
-  single channel (`/api/channel?s=view:trade/MX-20000001&s=alerts&s=monitor:<name>`, at most 32 subscriptions); later
-  subscriptions are added to the open channel with `POST /api/channel/{id}`. A tab hidden for 10 s gives its
-  connection back and repaints from fresh data when shown. The console closes each upstream server stream within
-  seconds of the tab going away. Details in [LIVE.md](LIVE.md).
+- **One channel per browser.** Browsers allow six connections per site over HTTP/1.1, shared by all its tabs, so the
+  number of live connections must not grow with tabs or panes (a channel per tab froze a seventh tab, UX-01). No page
+  opens its own `EventSource`: views, the alerts bell, monitors and every workspace pane subscribe through
+  `channel.js` to one hub per browser (`live-hub.js`, in a SharedWorker; without one, in a tab elected with a Web Lock
+  that relays over a BroadcastChannel), which holds the browser's single channel
+  (`/api/channel?s=view:trade/MX-20000001&s=alerts&s=monitor:<name>`, at most `live.max_subscriptions`, 32). A key
+  held by several tabs is subscribed once; later subscriptions are added to the open channel with
+  `POST /api/channel/{id}`. Frames are still built per signed-in user: the hub only serves tabs whose session
+  fingerprint (`<meta name="drishti-live">`) matches the channel's (`who`). A tab hidden for 10 s gives its
+  subscriptions back and repaints from fresh data when shown. Page loads never wait for the channel. The console
+  closes each upstream server stream within seconds of the browser going away. Details in [LIVE.md](LIVE.md).
 - **Latency.** The top bar's `Live, p99 N ms` is a rolling (30 s) HdrHistogram of source tick → frame built,
   published at `GET /api/v1/health/live` and as the Prometheus gauge `drishti_live_latency_p99_milliseconds`.
 - **Alerts and monitors.** The alert engine (`drishti-server`, `AlertEngine`) subscribes to the topics of every
@@ -632,7 +638,7 @@ mirrored in `localStorage['drishti.theme']` for first paint. Contrast is checked
 | `/about` | Version and build, Java, uptime, loaded Sutras, source health, licence and notices |
 | `/account` | Own profile, settings and password |
 | `/admin/users`, `/admin/audit`, `/admin/health`, `/admin/caches` | User administration, audit log, health of everything, caches |
-| `/api/channel` | The tab's single live channel (section 10) |
+| `/api/channel` | The browser's single live channel, shared by its tabs (section 10); `/api/channel/who` the session it carries |
 
 **Phones and tablets.** The console is responsive down to 360 px, with no separate app: views stack into one
 column and the strip shows two figures per row; tables scroll inside their panel; F-keys become a swipeable row of
@@ -713,7 +719,7 @@ one panel, updates strip cells in place, and hands chart panels new data — so 
 | D2 | Layout = Sutra ⊕ inference, cached by shape fingerprint | Unknown data renders immediately; cost paid once per shape |
 | D3 | Sutras are YAML files (`*.sutra.yaml`, `rachana: 1`) with a compiled, side-effect-free EL (ADR-003, ADR-017) | Reviewable, diffable, safe; ordinary YAML tooling and a served JSON Schema; no scripting in layouts |
 | D4 | Server returns ViewModel, not HTML | Same model feeds console, API clients and golden tests |
-| D5 | SSE (not WebSocket) for live, one channel per browser tab | One-way and proxy-friendly; a reconnect simply receives a fresh `view` event, so nothing is replayed; one channel keeps a tab within the browser's six connections |
+| D5 | SSE (not WebSocket) for live, one channel per browser (shared by its tabs through a SharedWorker or an elected tab) | One-way and proxy-friendly; a reconnect simply receives a fresh `view` event, so nothing is replayed; one channel per browser leaves five of the browser's six connections to pages, however many tabs are open |
 | D6 | Vendored front-end assets, no build pipeline | Air-gapped desks; MAYA/Pravaha practice |
 | D7 | Industries are packs that inherit; users live in the server | Neutral core; any number of consoles share users (ADR-009, ADR-010, ADR-015) |
 

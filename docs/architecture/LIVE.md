@@ -37,8 +37,8 @@ If you only want to *use* live views, read the first section and stop. Operators
    |---|---|
    | `Live` | The stream is open; no frame has arrived yet. |
    | `Live, p99 2 ms` | Frames are arriving. |
-   | `Reconnecting…` | The connection dropped; the browser is reconnecting by itself. |
-   | `Paused while hidden` | The tab has been hidden for 10 seconds and gave its connection back. It reconnects and repaints when you return. |
+   | `Reconnecting…` | The connection dropped, or could not be opened within 10 s; the browser keeps trying by itself. The page itself works meanwhile. |
+   | `Paused while hidden` | The tab has been hidden for 10 seconds and gave its subscriptions back. It takes them again and repaints when you return. |
    | `Static` | This view does not tick: the source is not live, or you picked a past business date. |
    | `Deleted` (red dot) | The source deleted the entity. A banner over the view says when; see [Deleted entities](#deleted-entities). |
 
@@ -118,8 +118,9 @@ The same figures appear under `live` in `GET /api/v1/admin/health` (Admin → He
 
 ### 4. Watch what the browser receives
 
-The web console does not let each panel open its own stream. Each browser tab opens **one** channel to the
-console, which relays the server's streams and turns panel patches into ready HTML:
+The web console does not let each panel, or each tab, open its own stream. Each **browser** opens **one** channel
+to the console, shared by all its tabs and workspace panes, which relays the server's streams and turns panel
+patches into ready HTML:
 
 ```bash
 curl -N "http://localhost:17480/api/channel?s=view:trade/END-1000008&s=alerts"
@@ -129,7 +130,7 @@ curl -N "http://localhost:17480/api/channel?s=view:trade/END-1000008&s=alerts"
 
 ```text
 event: channel
-data: {"ch": "", "d": {"id": "NavddrgbWaTX_LlT", "subs": ["view:trade/END-1000008", "alerts"]}}
+data: {"ch": "", "d": {"id": "NavddrgbWaTX_LlT", "subs": ["view:trade/END-1000008", "alerts"], "who": "5f0c9e2a7d1b4c3e8a6f2d10"}}
 
 event: hello
 data: {"ch": "alerts", "d": {"user": "ash"}}
@@ -141,8 +142,10 @@ event: frame
 data: {"ch": "view:trade/END-1000008", "d": {"seq": 1, "generation": 19, "patches": [{"op": "strip", "index": 4, "cell": {"label": "MTM (USD)", "text": "+2,110,140", …}}, {"op": "panel", "panel": {"id": "built", "kind": "provenance"}, "html": "<section class=…"}, …]}}
 ```
 
-Every event says which subscription it belongs to (`ch`). The first `channel` event carries the channel id.
-The relayed `view` event carries only the generation, because the page was already painted by the console.
+Every event says which subscription it belongs to (`ch`). The first `channel` event carries the channel id and
+`who`, a fingerprint of the server, user and sign-in session the channel runs as (pages carry the same value in
+`<meta name="drishti-live">`). The relayed `view` event carries only the generation, because the page was already
+painted by the console.
 
 ## Event reference
 
@@ -198,7 +201,7 @@ data:{"seq":12,"at":"2026-09-30T14:02:11.120Z","user":"ash","rule":"mtm-limit","
 
 The alerts stream does not count against `drishti.live.max-streams`.
 
-### Console: the tab's channel (`GET /api/channel?s=...`)
+### Console: the browser's channel (`GET /api/channel?s=...`)
 
 | Subscription `s=` | Relays |
 |---|---|
@@ -206,10 +209,16 @@ The alerts stream does not count against `drishti.live.max-streams`.
 | `alerts` | The alerts stream. |
 | `monitor:<name>` | A monitor's stream. |
 
-Up to 32 subscriptions per channel (more are ignored). Events: `channel` (first; carries the id and the
-subscriptions it opened with), the relayed events wrapped as `{"ch": "<subscription>", "d": <data>}`, `gone`
-(`{"code", "detail"}` when one subscription fails; the others carry on), `end` (every subscription has finished;
-the browser then closes instead of reconnecting) and a `: hb` comment about every 14 s when nothing else is sent.
+Up to `live.max_subscriptions` (32) subscriptions per channel, that is per browser: a view open in several tabs
+counts once. One more is answered at once with `gone`, `DRS-5003` "this browser already follows 32 live
+subscriptions (live.max_subscriptions): close some tabs or panes", and the view shows `Static`. Events: `channel`
+(first; carries the id, the subscriptions it opened with and `who`), the relayed events wrapped as
+`{"ch": "<subscription>", "d": <data>}`, `gone` (`{"code", "detail"}` when one subscription fails; the others carry
+on), `end` (every subscription has finished; the browser then closes instead of reconnecting) and a `: hb` comment
+about every 14 s when nothing else is sent.
+
+`GET /api/channel/who` answers `{"who": "…"}`: the fingerprint of the session the browser's cookies carry now. The
+browser's hub asks it when a page of another session joins (see [One connection per browser](#one-connection-per-browser)).
 
 `gone` does not pass the server's own error code through: a view the server refuses (an entity that does not
 exist, `DRS-1001` on the server; a kind you may not open, `DRS-5002`) arrives as `DRS-5003 stream refused`, and a
@@ -233,7 +242,7 @@ answers `404` with `"code":"DRS-1001"` and `no source holds trade/NOPE-1`.
 subscriptions of an open channel and answers `{"ok": true}`. A workspace uses it as its panes load one by one.
 It answers `404` with `DRS-5001` "no such channel: open a new one" when the channel has closed or belongs to
 another user. Removing a subscription closes its upstream stream on the server; adding one that is already
-there, or beyond 32, does nothing.
+there does nothing, and one beyond the limit is answered with `gone` as above.
 
 The console also keeps `GET /api/stream/{kind}/{id}` (one view, same relaying) for API clients. Pages do not use it.
 
@@ -251,9 +260,11 @@ SourcePlugin.subscribe ─► TopicHub topic (one per entity, one source subscri
                               ▼
             SSE  /api/v1/views/{kind}/{id}/stream   event: view (full ViewModel), then event: frame (patches)
                               │
-            console /api/channel: ONE stream per browser tab carrying all its views (every workspace pane),
-                              │ the alerts bell and monitors; panels re-rendered to HTML with the same Jinja
-                              │ macros; charts sent as data
+            console /api/channel: ONE stream per BROWSER carrying the views of all its tabs (every workspace
+                              │ pane), the alerts bell and monitors; panels re-rendered to HTML with the same
+                              │ Jinja macros; charts sent as data
+                              ▼
+            live-hub.js (a SharedWorker, or the leader tab): routes each event to the tabs that subscribed
                               ▼
             channel.js → live.js: strip cells updated in place, panels swapped, charts moved; changes flash
 ```
@@ -271,23 +282,76 @@ Step by step, for one tick of END-1000008:
    doubling to 30 s, and any new tick retries at once.
 4. The frame goes into that client's **FrameMailbox**. The client's writer (a virtual thread) takes it and
    writes `event:frame`.
-5. The console's channel relays it to the tab, rendering the `built` panel to HTML.
-6. In the browser, `channel.js` routes it by `ch` to `live.js`, which swaps the strip cell and the panel and
-   flashes the change.
+5. The console's channel relays it to the browser, rendering the `built` panel to HTML.
+6. In the browser, the hub (`live-hub.js`) passes it to every tab that subscribed to `ch`, and each tab's
+   `channel.js` hands it to `live.js`, which swaps the strip cell and the panel and flashes the change.
 
-### One connection per tab
+### One connection per browser
 
-Browsers open at most six connections to one site over HTTP/1.1. A stream per view and one for the alerts bell
-used them up with three tabs open (or a workspace and a tab), and every other request, the command line's
-suggestions included, then waited forever: the page looked alive but did nothing. So each tab opens **one**
-channel (`/api/channel?s=view:trade/MX-20000001&s=alerts`), a workspace's panes share their page's channel, and
-subscriptions that arrive later are added to the open channel (`POST /api/channel/{id}`) instead of reconnecting.
-A tab hidden for 10 s gives its connection back and reconnects, repainting from fresh data, when shown.
+Browsers open at most six connections to one site over HTTP/1.1, shared by all the site's tabs. A stream per view
+and one for the alerts bell used them up with three tabs open; a channel per tab used them up with six tabs on
+live views (several screens on a desk), and after that **no** page of the console loaded at all, with no message
+(QA finding UX-01). So the number of live connections no longer grows with tabs or panes: each browser holds
+**one** channel (`/api/channel?s=view:trade/MX-20000001&s=alerts`), shared by all its tabs, and a workspace's panes
+share their page's subscriptions. Subscriptions that arrive later are added to the open channel
+(`POST /api/channel/{id}`) instead of reconnecting. Five of the six connections are always left for pages,
+searches and suggestions, however many tabs are open.
+
+The channel is held by a **hub**, `console/web/static/js/live-hub.js`:
+
+1. In a **SharedWorker** that can hold an `EventSource` (Chrome, Edge and Firefox on the desktop): one worker per
+   console origin and browser profile, started by the first tab and ended by the browser when the last tab closes.
+2. Where there is no SharedWorker, or it cannot hold an `EventSource` (Chrome on Android, for example): the tabs
+   elect a **leader** with the Web Lock `drishti-live|<version>`. The leader holds the channel and relays to the
+   other tabs over a `BroadcastChannel` of the same name. When the leader closes, the browser hands the lock to
+   another tab, which opens a new channel; the other tabs register with it and their views repaint.
+3. In a browser with neither (very old ones): a hub inside each tab, so one channel per tab, as before.
+
+A view open in several tabs is subscribed **once**; a tab that subscribes later is first given what a stream of its
+own would have opened with (the view's generation, the alerts `hello`, a deleted entity's `deleted` frame, a
+`gone`), then the frames as they come. A tab hidden for 10 s gives its subscriptions back (and the hub closes
+the channel when no tab holds any); shown again, it takes them back and its views repaint from fresh data.
+
+**Sessions.** The hub serves only the tabs of one browser (one origin, one browser profile), which share the
+cookies the channel was opened with. Every frame is still built by the console for the signed-in user of that
+channel, with that user's permissions and field masks. Pages carry the fingerprint of their session in
+`<meta name="drishti-live" content="…">` (server, user and session, hashed; never the session id), and the
+channel's first event says which session it runs as (`who`). The hub sends a channel's events only to tabs
+with the same fingerprint. When a page of another session joins (someone signed in again, or picked another
+server, in another tab), the hub asks `GET /api/channel/who` which session the browser has now: if it is the new
+page's, the channel is reopened as it; pages of any other session are told they are stale and get nothing more
+(their Live pill says `Reconnecting…` until reloaded).
+
+**A page never waits for live updates.** Pages load without a live connection; the hub is started after the page
+and connects in the background. When the channel cannot be opened within 10 s, or a tab cannot reach the hub
+within 5 s, each view says `Reconnecting…` rather than waiting silently, and the hub keeps trying (after a
+refusal, again after 2 s, doubling up to 30 s).
 
 Upstream, the console reads the server's streams through its pooled HTTP client and closes each one within
-seconds of the tab going away, busy or quiet: it closes the HTTP response itself from a task outside the
+seconds of the browser going away, busy or quiet: it closes the HTTP response itself from a task outside the
 request's cancel scope, because Starlette's scope cancels every clean-up await of a finished request. A test
-guards that no page opens its own `EventSource`.
+guards that no page opens its own `EventSource` (only `live-hub.js` does), and
+`console/tests/test_live_tabs_browser.py` opens eight live tabs and a four-pane workspace in Chromium and checks
+that the next page loads at once and every tab and pane keeps ticking.
+
+#### Hub protocol
+
+Tabs talk to the hub with small messages (over the worker's port, or the `BroadcastChannel`):
+
+| From a tab | Meaning |
+|---|---|
+| `{t: "hello", tab, who}` | register (again), with the page's session fingerprint; followed by a `sub` per key |
+| `{t: "sub", tab, key}` / `{t: "unsub", tab, key}` | take or give back one subscription |
+| `{t: "ping", tab}` | every 10 s; a tab silent for 45 s (closed without a word) is dropped |
+| `{t: "bye", tab}` | the page is going away |
+
+| From the hub | Meaning |
+|---|---|
+| `{t: "hi"}` | registered |
+| `{t: "ev", key, type, d}` | one event of one subscription (`view`, `frame`, `gone`, `alert`, `row`, `hello`) |
+| `{t: "error"}` | the channel dropped or cannot be opened; it keeps trying |
+| `{t: "stale"}` | the page belongs to another session than the browser's current one |
+| `{t: "who"}` | the hub does not know this tab (a new leader, or it was dropped): say hello again |
 
 #### In the browser: `channel.js`
 
@@ -299,25 +363,30 @@ var off = window.DrishtiChannel.subscribe('view:trade/END-1000008', {
   view:   function (d) { /* first event: d.generation */ },
   frame:  function (f) { /* f.patches, f.p99Ms */ },
   gone:   function (d) { /* d.code, d.detail: this subscription ended */ },
-  error:  function () { /* the connection dropped; it reconnects by itself */ },
-  paused: function () { /* the tab was hidden for 10 s and gave its connection back */ }
+  error:  function () { /* the connection dropped, or cannot be had; it keeps trying by itself */ },
+  paused: function () { /* the tab was hidden for 10 s and gave its subscriptions back */ }
 });
 ```
 
 Handlers for `alert`, `row` and `hello` work the same way. `live.js` (entity views), `alerts.js` (the bell) and
-`monitor.js` (monitor pages) are its only users. How it behaves:
+`monitor.js` (monitor pages) are its only users. `DrishtiChannel.transport()` says how the tab reaches the hub:
+`shared-worker`, `leader`, `follower`, `tab` (a hub of its own) or `none`. How it behaves:
 
-| Situation | What `channel.js` does |
+| Situation | What happens |
 |---|---|
-| the first subscriptions of a page | waits 60 ms so that subscriptions made together open **one** `EventSource` on `/api/channel?s=…&s=…` (keys sorted) |
-| a subscription added later (a workspace pane loading) | `POST /api/channel/{id}` with `add`, on the open connection; no reconnect |
-| the last handler of a key unsubscribes | `POST … {"remove": [key]}` after 60 ms; when no keys are left, the connection is closed |
-| two handlers for one key (two panes of one entity) | one subscription on the server; both handlers receive every event |
+| the first subscriptions of the browser | the hub waits 60 ms so that subscriptions made together open **one** `EventSource` on `/api/channel?s=…&s=…` (keys sorted) |
+| a subscription added later (another tab, a workspace pane loading) | `POST /api/channel/{id}` with `add`, on the open connection; no reconnect |
+| a key another tab already holds | nothing on the server; the tab gets the key's opening events from the hub at once |
+| the last tab holding a key gives it back | `POST … {"remove": [key]}` after 60 ms; when no keys are left, the connection is closed |
+| two handlers for one key (two panes of one entity) | one subscription; both handlers receive every event |
 | a `POST` answered `404` (the console restarted, or another process holds the channel) | closes and opens a new channel with every current key |
-| `end` | closes, so the browser does not reconnect to a channel with nothing left |
-| a dropped connection | every handler's `error`; the browser reconnects; the new `channel` event carries a new id, and `channel.js` re-sends anything subscribed meanwhile |
-| tab hidden for 10 s | closes the connection and calls `paused`; when the tab is shown again it reopens, and each view reloads from fresh data |
-| inside a workspace pane (an iframe of the same site) | uses the parent window's `DrishtiChannel`, so a workspace of six panes still holds one connection |
+| `end` | closes, so the browser does not reconnect to a channel with nothing left; a new subscription opens a new one |
+| a dropped connection | every tab's handlers get `error`; the browser reconnects; the new `channel` event carries a new id, and the hub re-sends anything subscribed meanwhile; the new stream's `view` makes each view reload |
+| a refused connection (the browser gave up) | `error`, then the hub opens it again after 2 s, doubling up to 30 s |
+| no `channel` event within 10 s | `error` (the Live pill says `Reconnecting…`); still trying |
+| tab hidden for 10 s | the tab gives its keys back and calls `paused`; when shown again it takes them back, and each view reloads from fresh data |
+| inside a workspace pane (an iframe of the same site) | uses the parent window's `DrishtiChannel`, so a workspace of four panes is one tab to the hub |
+| a page of another session | `GET /api/channel/who`; the channel follows the browser's current session, and other pages get `stale` |
 
 #### In the console: lifetime of a channel
 
@@ -327,8 +396,8 @@ the browser disconnects, when nothing has read the channel for 5 s (a browser th
 or after `end`. A channel opened with no subscriptions stays open, waiting for `POST … add`.
 
 Open channels live in the memory of the console process that served them. If you run several console
-processes behind a load balancer, make sessions sticky, so that a page's `POST /api/channel/{id}` reaches the
-process holding its channel. Otherwise it gets `404` and the page reopens its channel.
+processes behind a load balancer, make sessions sticky, so that the browser's `POST /api/channel/{id}` reaches the
+process holding its channel. Otherwise it gets `404` and the browser's hub reopens its channel.
 
 ## Guarantees and limits
 
@@ -532,6 +601,12 @@ drishti:
 ```
 
 Or for one run: `java -jar drishti-server-1.13.0-exec.jar --drishti.live.frame=100ms`.
+
+The console has one live setting, in `console/config/application.yaml`:
+
+| Key | Default | Effect |
+|---|---|---|
+| `live.max_subscriptions` (`DRISHTI_LIVE_MAX_SUBSCRIPTIONS`) | `32` | Subscriptions one browser's channel carries at most: views across all its tabs and workspace panes, the alerts bell, monitors (a view open in several tabs counts once). Each holds one stream to the server from the console's pool (`backend.pool_size`, 64), so keep it well below that. One more is answered with `gone`, `DRS-5003`, and the view shows `Static`. |
 
 Behind a reverse proxy, turn off response buffering for SSE (`proxy_buffering off;` in nginx; the console
 already sends `X-Accel-Buffering: no`) and set the read timeout above the heartbeat interval. See

@@ -792,11 +792,15 @@ Views of live entities tick: figures change in place and flash briefly. Open `TR
 
 - The **live dot** among the round tools of the top bar glows while the view streams. Hover over it to read
   how long the view took to build (`Live, built 1.92 ms`).
-- All views, panes, the bell and monitors in one browser tab share **one** connection.
-- The dot turns **amber** when the connection dropped (*Reconnecting…*): the page reconnects and repaints by
-  itself.
-- It also turns amber when the tab was in the background for 10 seconds and gave its connection back
-  (*Paused while hidden*). Show the tab and it resumes.
+- All views, panes, the bell and monitors in **all the tabs of one browser** share **one** connection, so you can
+  keep as many live tabs and workspaces open as you like (one per screen, say): new pages still load at once.
+  A view open in several tabs is followed once. One browser follows at most 32 live things at a time; a view over
+  that says *Static*, and why.
+- The dot turns **amber** when the connection dropped or cannot be had (*Reconnecting…*): the page reconnects and
+  repaints by itself, and everything else on the page keeps working meanwhile.
+- It also turns amber when the tab was in the background for 10 seconds and gave its live updates back
+  (*Paused while hidden*). Show the tab and it resumes. A tab left from before you signed in again (or picked
+  another server) stays amber: reload it.
 - It is **grey** on a view of a picked past date, which never ticks: it is a snapshot.
 
 Screen readers hear the full state, including the server's rolling p99 (`Live, p99 2 ms`). To see the same
