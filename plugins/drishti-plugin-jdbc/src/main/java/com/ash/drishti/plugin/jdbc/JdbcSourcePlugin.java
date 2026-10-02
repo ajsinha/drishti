@@ -132,7 +132,8 @@ public final class JdbcSourcePlugin implements SourcePlugin {
         } catch (SQLException e) {
             // the connection died mid-call, or its cached plans predate a table that was dropped and recreated (a reload,
             // SQL state 0A000 "cached plan must not change result type"): reconnect next time
-            if (s.connection != null && ("0A000".equals(e.getSQLState()) || !s.connection.isValid(1))) {
+            boolean broken = s.connection == null || !s.connection.isValid(1);
+            if (s.connection != null && ("0A000".equals(e.getSQLState()) || broken)) {
                 try {
                     s.connection.close();
                 } catch (SQLException ignored) {
@@ -140,7 +141,11 @@ public final class JdbcSourcePlugin implements SourcePlugin {
                 }
                 s.connection = null;
             }
-            lastError = e.getMessage();
+            if (broken) {
+                lastError = e.getMessage();   // the database went away: DOWN until a call succeeds
+            }
+            // else a statement failed on a live connection (bad SQL, a missing table): the caller reports it; the source
+            // is not down
             throw e;
         } finally {
             pool.offer(s);
@@ -351,6 +356,11 @@ public final class JdbcSourcePlugin implements SourcePlugin {
         }
         if (catalog != null && catalog.problem() != null) {
             return "UP (" + catalog.problem() + ")";
+        }
+        String queries = queryMode == null ? null : queryMode.problem();
+        if (queries != null) {
+            // a failing query fails every read of its kind: DEGRADED; ids repeated by a columns query are a warning
+            return queryMode.degraded() ? "DEGRADED: " + queries : "UP (" + queries + ")";
         }
         java.util.List<String> notLaidOut = catalog == null ? java.util.List.of() : catalog.notLaidOut();
         return notLaidOut.isEmpty() ? "UP" : "UP (not laid out as the pack declares: " + String.join(", ", notLaidOut) + "; searches read documents)";

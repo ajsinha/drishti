@@ -152,6 +152,12 @@ The document gains a field per part, named after it:
   you expect at once.
 - A part's columns follow the same naming and JSON rules as the entity's.
 - A part replaces a field of the same name from the entity's query.
+- **A part that fails fails the view**, with an error that names it: `DRS-1003 qa-db failed reading trade/MX-1: trade
+  MX-1 cannot be read: its query query.trade.legs failed (SQL state 42703); Admin → Health and the server log say
+  more`. The SQL and the database's own message are not shown to the reader (they can reveal the schema or values);
+  the server log has them, and Health shows `DEGRADED: query.trade.legs failed: SQL state 42703: <message>` until the
+  query runs again. The entity's own query (`query.trade`) is named the same way. A document without one of its parts
+  is never shown as if it were whole.
 
 Sutras address parts like any nested data: `legs[0].fixedRate`, a table panel over `cashflows`, a `kv` of
 `counterparty.legalName`.
@@ -194,6 +200,11 @@ layout.trade.columns: productType, direction, currency, notional, mtm, pnl1d, ma
   Lake, for example).
 - A search is answered from columns only when every field it reads is one of these columns; otherwise it reads
   documents.
+- **One row per entity.** An id the query returns more than once (a join with a child table: trades × legs) is
+  counted once, with its first row, and the connector says so in the server log and in Health:
+  `UP (columns.trade returned 11,866 rows for 8,000 entities on 2026-09-30: 3,866 ids more than once (MX-30000001,
+  …); each is counted once, with its first row. Return one row per entity …)`. Fix the query: an inner join also
+  drops the entities without children (trades without legs), which nothing can detect.
 
 At a million rows a day the result is about 230 MB in memory for 19 fields, read in seconds by a database with an index
 on `business_date`; see [section 11](#11-performance-at-scale).
@@ -296,7 +307,8 @@ The connector's tests (`QueryModeTest`) run this shape against an in-memory data
 
 - **Select columns, not `*`,** in `columns.<kind>` and parts: every column is read for every row.
 - **One row per entity** in `columns.<kind>` and `ids.<kind>`; a join that multiplies rows (trades × legs) repeats
-  ids and doubles sums. Aggregate in SQL if you must join.
+  ids (the connector counts each once and warns, [section 7](#7-searches-and-aggregates-columnskind)) and an inner
+  join drops entities without children. Aggregate in SQL if you must join.
 - **Keep business logic out**: fields as stored, so the Sutra and the pack decide how to show them.
 - **Name columns as fields**: alias to the pack's paths (`dv01 AS risk_dv01`) rather than renaming in Sutras.
 - **Bound reverse queries by date**: without `business_date = :asOf` a reverse lookup reads every day of history.
@@ -307,12 +319,13 @@ The connector's tests (`QueryModeTest`) run this shape against an in-memory data
 | Symptom | Likely cause | What to do |
 |---|---|---|
 | `DOWN: <driver message> (reconnecting)` | the database is unreachable or the credentials are wrong | check `url`, `user`, `password`; connections reopen by themselves |
-| a view fails with a SQL error | a query does not run as written | run it in a client with the parameters filled in |
+| a view fails with `… its query query.<kind>.<part> failed (SQL state …)`, Health `DEGRADED: query.<kind>.<part> failed: …` | that query does not run as written | Health and the server log have the database's message; run the query in a client with the parameters filled in |
 | no suggestions for a kind | no `ids.<kind>`, or it failed | add it; check the server log |
 | searches say `partial: true` | no `columns.<kind>`, a field the search reads is not a column, or a column did not match a declared path | add the column, alias it to the path |
 | a part is missing from the document | its query returned no rows (a list part is `[]`, an object part `null`) | check the join and the date |
 | views wait, then `no free connection in … pool` | `pool-size` too small for parts and concurrent views | raise it |
-| desk P&L sums are too large | `columns.<kind>` returns an entity more than once | make it one row per entity |
+| Health `UP (columns.<kind> returned N rows for M entities …)` | `columns.<kind>` returns an entity more than once (a join); each is counted once, with its first row | make it one row per entity |
+| entities missing from searches | `columns.<kind>` joins a child table with an inner join | select from the entity's table alone, or use a left join |
 
 `GET /api/v1/admin/health` lists `kinds`, `parts`, `ids` and `columnSets` for the connector.
 

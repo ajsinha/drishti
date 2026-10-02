@@ -23,6 +23,7 @@ import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.api.HitIndex;
 import com.ash.drishti.api.Provenance;
 import com.ash.drishti.api.SourceContext;
+import com.ash.drishti.api.UnreadableData;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import java.io.ByteArrayInputStream;
@@ -49,6 +50,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -71,8 +73,17 @@ import java.util.regex.Pattern;
  *
  * Named parameters: {@code :id}, {@code :asOf} (the business date, a SQL {@code DATE}) and {@code :target}; a query
  * with none takes the id as its only {@code ?}.
+ *
+ * <p>A query that fails fails the read with an error that names it ({@code query.trade.legs}) and the SQL state, never
+ * its SQL or the database's message (those go to the log and to health, for administrators); health is
+ * {@code DEGRADED} naming it until it runs again. A {@code columns.<kind>} query that returns an id more than once (a
+ * join with a child table) has each id counted once, its first row, and says so in the log and in health.
  */
 final class QueryMode {
+
+    private static final System.Logger LOG = System.getLogger(QueryMode.class.getName());
+    /** Ids named when a columns query repeats them. */
+    private static final int EXAMPLES = 3;
 
     /** SQL with named parameters replaced by {@code ?}, and the names in order. */
     record NamedSql(String sql, List<String> names) {
@@ -130,6 +141,8 @@ final class QueryMode {
     private final String sourceName;
     private final java.time.ZoneId zone;
     private final Cache<DayKey, ColumnSet> columnSets;
+    private final Map<String, String> failing = new ConcurrentHashMap<>();    // query setting -> why it last failed
+    private final Map<String, String> repeating = new ConcurrentHashMap<>();  // columns.<kind> -> the ids it repeated
 
     QueryMode(SourceContext ctx, TableCatalog.Db db, String sourceName) {
         this.context = ctx;
@@ -208,14 +221,22 @@ final class QueryMode {
         try (var pool = java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()) {
             // the parts run at once with the main query, each on its own pooled connection
             extra.forEach((part, sql) -> running.put(part, pool.submit(() -> db.with(c -> part(c, sql, ref, date, objectParts.getOrDefault(ref.kind() + "." + part, false))))));
-            Optional<EntityDocument> doc = db.with(c -> {
-                try (PreparedStatement ps = c.prepareStatement(q.sql())) {
-                    q.bind(ps, ref.id(), date, null);
-                    try (ResultSet rs = ps.executeQuery()) {
-                        return rs.next() ? Optional.of(toDocument(ref, rs, q.dated() ? date : null)) : Optional.<EntityDocument>empty();
+            String mainName = "query." + ref.kind();
+            Optional<EntityDocument> doc;
+            try {
+                doc = db.with(c -> {
+                    try (PreparedStatement ps = c.prepareStatement(q.sql())) {
+                        q.bind(ps, ref.id(), date, null);
+                        try (ResultSet rs = ps.executeQuery()) {
+                            return rs.next() ? Optional.of(toDocument(ref, rs, q.dated() ? date : null)) : Optional.<EntityDocument>empty();
+                        }
                     }
-                }
-            });
+                });
+                succeeded(mainName);
+            } catch (Exception e) {
+                running.values().forEach(f -> f.cancel(true));
+                throw failed(mainName, ref, e);
+            }
             if (doc.isEmpty() || running.isEmpty()) {
                 running.values().forEach(f -> f.cancel(true));
                 return doc;
@@ -225,10 +246,57 @@ final class QueryMode {
                 m.forEach((k, v) -> merged.put(String.valueOf(k), v));
             }
             for (var e : running.entrySet()) {
-                merged.put(e.getKey(), e.getValue().get());
+                String name = mainName + "." + e.getKey();
+                try {
+                    merged.put(e.getKey(), e.getValue().get());
+                    succeeded(name);
+                } catch (ExecutionException ex) {
+                    running.values().forEach(f -> f.cancel(true));
+                    throw failed(name, ref, ex.getCause() == null ? ex : ex.getCause());
+                }
             }
             return Optional.of(new EntityDocument(ref, DataNode.of(merged), doc.get().provenance()));
         }
+    }
+
+    /**
+     * A query of the entity failed: remembered for health and logged in full; the error the reader gets names the query
+     * and the SQL state only (its SQL and the database's message can show schema, hosts or values).
+     */
+    private UnreadableData failed(String name, EntityRef ref, Throwable e) {
+        Throwable root = e;
+        while (root.getCause() != null && root.getCause() != root && !(root instanceof SQLException)) {
+            root = root.getCause();
+        }
+        String state = root instanceof SQLException sql && sql.getSQLState() != null ? "SQL state " + sql.getSQLState() : root.getClass().getSimpleName();
+        String detail = root.getMessage() == null ? state : state + ": " + root.getMessage();
+        if (!detail.equals(failing.put(name, detail))) {
+            LOG.log(System.Logger.Level.WARNING, "{0}: {1} failed for {2}: {3}", sourceName, name, ref, detail);
+        }
+        return new UnreadableData(ref.kind() + " " + ref.id() + " cannot be read: its query " + name + " failed (" + state
+                + "); Admin → Health and the server log say more", e);
+    }
+
+    private void succeeded(String name) {
+        if (!failing.isEmpty()) {
+            failing.remove(name);
+        }
+    }
+
+    /**
+     * What health reports for query mode, or null when all is well: the queries that last failed ({@code DEGRADED}),
+     * then the columns queries that repeat ids.
+     */
+    String problem() {
+        List<String> out = new ArrayList<>();
+        new TreeMap<>(failing).forEach((name, why) -> out.add(name + " failed: " + why));
+        new TreeMap<>(repeating).forEach((name, what) -> out.add(name + " " + what));
+        return out.isEmpty() ? null : String.join("; ", out);
+    }
+
+    /** True when a query of an entity failed the last time it ran: views of the kind fail. */
+    boolean degraded() {
+        return !failing.isEmpty();
     }
 
     /** One part of an entity: its rows as a list of objects, or the first as an object. */
@@ -461,9 +529,18 @@ final class QueryMode {
                         Map<Integer, double[]> nums = new TreeMap<>();
                         Map<Integer, List<String>> texts = new TreeMap<>();
                         Map<String, String> shared = new HashMap<>();
+                        Set<String> seen = new java.util.HashSet<>();
+                        Set<String> repeated = new TreeSet<>();
+                        int read = 0;
                         int row = 0;
                         while (rs.next()) {
-                            idList.add(rs.getString(1));
+                            read++;
+                            String id = rs.getString(1);
+                            if (!seen.add(id)) {
+                                repeated.add(id);              // a join multiplied the entity's rows: its first row counts
+                                continue;
+                            }
+                            idList.add(id);
                             for (int i = 2; i <= n; i++) {
                                 if (path[i] == null) {
                                     continue;
@@ -488,6 +565,7 @@ final class QueryMode {
                         Map<String, String[]> words = new LinkedHashMap<>();
                         nums.forEach((i, col) -> numbers.put(path[i], java.util.Arrays.copyOf(col, size)));
                         texts.forEach((i, col) -> words.put(path[i], col.toArray(new String[0])));
+                        repeats(kind, date, read, size, repeated);
                         for (int i = 2; i <= n; i++) {                 // a day with no rows still knows its columns
                             if (path[i] != null && !numbers.containsKey(path[i]) && !words.containsKey(path[i])) {
                                 if (number[i]) {
@@ -503,6 +581,21 @@ final class QueryMode {
             });
         } catch (Exception e) {
             throw new IllegalStateException("columns." + kind + " for " + date + ": " + e.getMessage(), e);
+        }
+    }
+
+    /** A columns query that returns ids more than once: reported in the log (once per day) and in health until it does not. */
+    private void repeats(String kind, LocalDate date, int rows, int entities, Set<String> repeated) {
+        String name = "columns." + kind;
+        if (repeated.isEmpty()) {
+            repeating.remove(name);
+            return;
+        }
+        String what = String.format(Locale.ROOT, "returned %,d rows for %,d entities on %s: %,d ids more than once (%s%s); each is counted once, "
+                + "with its first row. Return one row per entity (a join with a child table multiplies rows)", rows, entities, date, repeated.size(),
+                String.join(", ", repeated.stream().limit(EXAMPLES).toList()), repeated.size() > EXAMPLES ? ", …" : "");
+        if (!what.equals(repeating.put(name, what))) {
+            LOG.log(System.Logger.Level.WARNING, "{0}: {1} {2}", sourceName, name, what);
         }
     }
 
