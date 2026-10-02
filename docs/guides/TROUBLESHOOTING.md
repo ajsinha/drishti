@@ -460,6 +460,9 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 - **Cause:** dates may go back 5 years (`drishti.business-date.history`, `P5Y`), and must be `yyyy-MM-dd`.
 - **Check:** `curl -s http://localhost:18480/api/v1/business-date` shows `earliest`, `current` and the calendar.
 - **Fix:** pick a date inside the window. Weekends and holidays roll back to the business day before.
+- **In the console** such a date is never taken: the top bar says *Pick a business date from <earliest> to today* and
+  stays on the date you had. A date remembered from an earlier visit that the server no longer accepts is forgotten
+  (the page is live and says so), so it cannot break every page until its cookie expires.
 
 ### "Known at" changes nothing
 
@@ -485,13 +488,31 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
   TRD where mtm > 1m order by mtm desc limit 50
   ```
 
+### "DRS-4004 the condition ends early: something is missing after '>'"
+
+- **Cause:** the condition stops where a value is still needed (`TRD where mtm >`).
+- **Fix:** finish it: `TRD where mtm > 1m`.
+
+### "DRS-4004 no trade has a field 'nosuchfield'; did you mean …?"
+
+- **Cause:** the search names a field that no entity of the kind has. Case does not matter (`producttype` is
+  `productType`); spelling does. The names come from the kind's columns and key fields and from the documents the
+  search read. When the scan was cut short (*results may be incomplete*) a name it did not meet is not reported.
+- **Fix:** use a name the message suggests, or press **F9** on one entity of that kind and copy the path
+  (`counterparty.name`, `legs[0].rate`).
+
+### "DRS-4004 limit must be a whole number from 1 to 1000, not '0'"
+
+- **Cause:** `limit` outside 1 to 1000 (`limit 0`, `limit 5000`, `limit many`).
+- **Fix:** a number in range; without `limit` the page shows your default size (*My account → Settings*).
+
 ### A search returns nothing
 
-- **Check:** the field name: press **F9** on one entity of that kind and copy the path exactly
-  (`counterparty.name`, `legs[0].rate`). A field that does not exist is simply never true. A masked field
-  (and any field under it) never matches, for any condition, `!` included. (An unknown mnemonic is an error, not an empty result:
-  `DRS-4004 'XYZ' is neither a mnemonic nor a kind; type it alone to see suggestions`.)
-- **Fix:** correct the path. Text matching with `=`, `!=`, `contains` and `startswith` ignores case, so
+- **Check:** a masked field (and any field under it) never matches, for any condition, `!` included. A field the kind
+  does not have is an error, not an empty result (above), as is an unknown mnemonic
+  (`DRS-4004 'XYZ' is neither a mnemonic nor a kind; type it alone to see suggestions`). A field some entities lack
+  (an optional field) is never true on those.
+- **Fix:** check the value. Text matching with `=`, `!=`, `contains` and `startswith` ignores case, so
   `currency = usd` finds `USD`.
 
 ### "… results may be incomplete"
@@ -521,14 +542,26 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 ### A Sutra edit has no effect
 
 - **Check:** `curl -s http://localhost:18480/api/v1/sutras/problems` should print `{}`. Anything else lists the
-  file, line, column and code (`DRS-2001` YAML syntax, `DRS-2009` no `rachana: 1`, `DRS-2010`–`DRS-2028` grammar, `DRS-2032` the file
-  could not be read at all, `DRS-2101` expression syntax or an expression past the size limits).
+  file, line, column and code (`DRS-2001` YAML syntax, `DRS-2009` no `rachana: 1`, `DRS-2010`–`DRS-2031` grammar, `DRS-2032` the file
+  could not be read at all, `DRS-2033` a key written twice, a second YAML document or a YAML tag, `DRS-2101` expression
+  syntax or an expression past the size limits).
 - **Check:** as an admin, `GET /api/v1/admin/health` should show `"sutras": {"hotReload": "WATCHING", …}`. `STOPPED: <reason>`
   means the file watcher has ended (the log says why): restart the server to pick up edits again.
 - **Cause and fix:** an invalid edit keeps the **last good version** live. Fix the reported line (Studio's
   Ctrl+Enter lists problems by line). With review on (the default), a saved Sutra is only a **proposal** until an
   approver approves it in **Studio → Reviews**. *How this view was built* shows the version actually used. See
   [runbooks/sutra-broken.md](../admin/runbooks/sutra-broken.md).
+
+### Studio says "line 7 is indented with a tab"
+
+- **Cause:** YAML indents with spaces only; a tab at the start of a line is a syntax error (`DRS-2001`).
+- **Fix:** replace the tab with spaces (two per level, as the rest of the file).
+
+### "DRS-2033 duplicate key 'version' (first written at line 3)"
+
+- **Cause:** YAML that would be read in a way you may not mean: a key written twice in one mapping (YAML keeps only the
+  last), a second document after `---` (it would be ignored), or a YAML tag such as `!panel`.
+- **Fix:** write each key once, keep one document per file, and drop the tag.
 
 ### "expression nested deeper than 200 levels" or "expression is longer than 10000 characters"
 
@@ -704,6 +737,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 | `DRS-2001` / `DRS-2002` / `DRS-2003` | Sutra parse error / invalid / not found |
 | `DRS-2005` / `DRS-2006` / `DRS-2007` | proposal not found / stale / four eyes |
 | `DRS-2032` | a Sutra file could not be read at all (the log has the stack trace); the rest load |
+| `DRS-2033` | a Sutra's YAML has a key written twice, a second document or a tag |
 | `DRS-2101` / `DRS-2102` | expression syntax (or past the size limits) / evaluation error |
 | `DRS-4001` | command not understood |
 | `DRS-4003` | bad business date |

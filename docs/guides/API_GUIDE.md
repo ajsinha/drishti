@@ -343,8 +343,9 @@ HTTP/1.1 404
 {"type":"about:blank","title":"entity not found","status":404,"detail":"DRS-1001 no source holds trade/IRS-99999","instance":"/api/v1/views/trade/IRS-99999","code":"DRS-1001"}
 ```
 
-Two catch-alls are worth knowing: a bad argument anywhere (`IllegalArgumentException`) becomes
-`400 DRS-5001`, and a request with no caller attached becomes `401 DRS-5010`. Server errors (`5xx`) are also
+Three catch-alls are worth knowing: a bad argument anywhere (`IllegalArgumentException`) becomes
+`400 DRS-5001`; a body that is not JSON, is empty, or is JSON of the wrong shape (a list for an object) is
+`400 DRS-5001` (`the request body is not valid JSON`, …); and a request with no caller attached becomes `401 DRS-5010`. Server errors (`5xx`) are also
 logged on the server with the stack trace. The full list is in the [error code table](#error-code-table).
 
 ## Endpoint reference
@@ -536,8 +537,13 @@ curl -s -G $B/search --data-urlencode "q=TRD where mtm >"
 
 ```json
 {"type":"about:blank","title":"bad search","status":400,
- "detail":"DRS-4004 cannot read the condition: DRS-2101 unexpected '' at 7","instance":"/api/v1/search","code":"DRS-4004"}
+ "detail":"DRS-4004 the condition ends early: something is missing after '>' (for example mtm > 1m)","instance":"/api/v1/search","code":"DRS-4004"}
 ```
+
+Field names are read in any case (`producttype` is `productType`). A field no entity of the kind has is
+`400 DRS-4004 no trade has a field 'nosuchfield'; did you mean …?` (names are checked against the kind's columns and
+key fields, then the documents the search read; when the scan was partial a name it did not meet is not reported). A
+`limit` outside 1 to 1000 is `400 DRS-4004 limit must be a whole number from 1 to 1000, not '0'`.
 
 The condition language is Rachana-EL; see [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md).
 
@@ -868,7 +874,7 @@ line of a Sutra to get completion and checking as you type. Sutra Studio uses th
 | Method | Path | Notes |
 |---|---|---|
 | `GET` | `/studio/settings` | `{save, review, approve}`: may the caller save, is review on, may the caller approve |
-| `POST` | `/studio/preview` | as-of. Body `{yaml, kind, id}` renders an unsaved Sutra against a real entity; or `{yaml, kind, id, document}` against pasted JSON. Answers a `ViewModel`; `422 DRS-2001`/`DRS-2002` with `problems` if the Sutra is bad |
+| `POST` | `/studio/preview` | as-of. Body `{yaml, kind, id}` renders an unsaved Sutra against a real entity; or `{yaml, kind, id, document}` against pasted JSON. Answers a `ViewModel`; `422 DRS-2001`/`DRS-2002` with `problems` if the Sutra is bad; `400 DRS-5001` when `yaml` or `kind` is missing or not text, `id` is missing without a `document`, or the body is not a JSON object |
 | `GET` | `/studio/inferred/{kind}/{id}?name=` | as-of. A starter Sutra (`text/yaml`, beginning `rachana: 1`) from what inference makes of the entity; name defaults to `<kind>-custom` |
 | `POST` | `/studio/inferred` | body `{kind, id, document, name}`: the same (`text/yaml`) from pasted JSON (`422 DRS-1005` if `document` is not a JSON object) |
 | `POST` | `/sutras?note=` | body: the Sutra YAML, `Content-Type: text/yaml` (or `application/yaml`, `text/plain`). It is saved as `<domain>/<name>.v<N>.sutra.yaml`. Needs `drishti.rachana.studio-save: true` and an `author` role (`403` otherwise). With governance on: `202 {"proposal": {id, name, version, status}}`; off: `200` with the saved Sutra's `{name, latest, versions, …}` |
@@ -1128,7 +1134,7 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-4001 | 400 | command unknown | the command line text cannot be read |
 | DRS-4002 | 500 | view failed | building the view failed unexpectedly |
 | DRS-4003 | 400 | bad business date | unreadable, in the future, or before the history window |
-| DRS-4004 | 400 | bad search | a structured search cannot be read (`detail` says where) |
+| DRS-4004 | 400 | bad search | a structured search cannot be read (`detail` says where), names a field the kind does not have, or has a `limit` outside 1 to 1000 |
 | DRS-5001 | 400 | bad request | an invalid argument or body; a path not written plainly (`;`, a needless `%`-escape, a dot or empty segment); also "too many live streams on this server" |
 | DRS-5002 | 403 | forbidden | the caller lacks the role, the pack is not active for them, or the feature is off |
 | DRS-5004 | 404 | cache not found | no cache by that name (cache purge) |
