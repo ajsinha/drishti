@@ -240,7 +240,7 @@ recent days can come from files and older ones from Delta Lake. A date a dated s
 the files are authoritative for it: an entity that day's file does not list is gone on that date, and the store
 behind is not asked for it (a trade the recent files dropped is not brought back from the lake; the view gives
 `DRS-1001` naming the connector, as a search of the date gives no match). `effective` kinds, undated files and the
-older per-entity layout cannot tell what a date holds, so an entity they do not have passes to the next store.
+older per-entity layout cannot tell what a date holds, so an entity they do not have passes to the next store. A kind the connector has no file or folder of at all is not held on any date (the shipped `file` connector serves every kind until files appear, and is passed over).
 
 ## 8. Memory and size
 

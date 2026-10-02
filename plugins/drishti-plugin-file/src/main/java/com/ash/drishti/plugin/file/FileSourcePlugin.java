@@ -320,12 +320,16 @@ public final class FileSourcePlugin implements SourcePlugin {
      * A kind kept as dated JSON-lines snapshots (every entity every day) is held for a date when a day's file serves it
      * (the newest on or before the date, within {@code lookback-days}): an entity that file does not list is not held
      * then, and no store behind this one is asked (DATA-12). With no such file, and no feed folder the date could be
-     * read from, the date is not held. Undated files, {@code effective} kinds (a line only when an entity changes) and
-     * feed folders cannot tell.
+     * read from, the date is not held; nor is any date of a kind the connector has no file or folder of (the shipped
+     * {@code file} connector serves every kind until files appear). Undated files, {@code effective} kinds (a line only
+     * when an entity changes) and feed folders cannot tell.
      */
     @Override
     public DateCoverage coverage(String kind, AsOf asOf) {
-        if (!jsonl.containsKey(kind) || effective(kind)) {
+        if (!jsonl.containsKey(kind)) {                 // per-entity files only, or nothing of the kind at all
+            return feedFolders(kind, asOf.businessDate()) ? DateCoverage.UNKNOWN : DateCoverage.NOT_HELD;
+        }
+        if (effective(kind)) {
             return DateCoverage.UNKNOWN;
         }
         Optional<LocalDate> d = snapshotDay(kind, asOf.businessDate());

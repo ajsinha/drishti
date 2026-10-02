@@ -64,6 +64,9 @@ class FileCoverageTest {
         assertThat(p.coverage("counterparty", AsOf.of(LocalDate.of(2026, 9, 30)))).isEqualTo(DateCoverage.UNKNOWN);   // effective
         assertThat(p.coverage("book", AsOf.of(LocalDate.of(2026, 9, 30)))).isEqualTo(DateCoverage.UNKNOWN);          // undated file
         assertThat(p.coverage("curve", AsOf.of(LocalDate.of(2026, 9, 30)))).isEqualTo(DateCoverage.UNKNOWN);         // feed folder
+        assertThat(p.coverage("curve", AsOf.of(LocalDate.of(2026, 9, 1)))).isEqualTo(DateCoverage.NOT_HELD);         // none that date
+        // a kind it has nothing of is not held, so a "known at" read passes it by for a store with time travel
+        assertThat(p.coverage("netting-set", AsOf.of(LocalDate.of(2026, 9, 30)))).isEqualTo(DateCoverage.NOT_HELD);
         assertThat(p.timeTravel()).isFalse();
     }
 }
