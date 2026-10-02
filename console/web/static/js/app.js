@@ -94,6 +94,21 @@
   apply(root.getAttribute('data-theme') || root.getAttribute('data-default-theme') || 'terminal');
 })();
 
+/* In a workspace pane (an embedded page): Alt+0..4 belong to the workspace, which moves the focus between its panes and
+   its toolbar (workspace.js). The pane's document has the keys while it has the focus, so it hands them up, to its own
+   origin only; the workspace acts only on messages from its own panes (UX-07). */
+(function () {
+  'use strict';
+  if (window.parent === window || !document.body.classList.contains('embed')) { return; }
+  document.addEventListener('keydown', function (e) {
+    if (!e.altKey || e.ctrlKey || e.metaKey) { return; }
+    var m = /^Digit([0-4])$/.exec(e.code || '') || /^([0-4])$/.exec(e.key || '');
+    if (!m) { return; }
+    e.preventDefault();
+    try { window.parent.postMessage({ type: 'drishti:key', n: +m[1] }, location.origin); } catch (err) { /* not ours */ }
+  }, true);
+})();
+
 /* Server colours (ADR-016): set from data attributes, since the content security policy allows no inline styles. */
 (function () {
   'use strict';

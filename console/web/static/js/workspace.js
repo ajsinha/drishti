@@ -15,9 +15,9 @@
  */
 /* Workspaces: panes are same-origin embedded views (each keeps its own live stream and keys). A link clicked in
    a pane arrives here as a message; if another pane follows that pane, the follower opens the entity, otherwise
-   the pane itself navigates. Alt+1..4 focuses a pane. A view is dragged into a pane from the command line's
-   suggestions (recent ones included) or from another pane's number; the dividers between panes are dragged (or moved
-   with the arrow keys) to resize them. Save stores the workspace, sizes included, for the signed-in user. */
+   the pane itself navigates. Alt+1..4 focuses a pane and Alt+0 the toolbar, also from inside a pane. A view is dragged
+   into a pane from the command line's suggestions (recent ones included) or from another pane's number; the dividers
+   between panes are dragged (or moved with the arrow keys) to resize them. Save stores the workspace, sizes included, for the signed-in user. */
 (function () {
   'use strict';
   var root = document.querySelector('[data-ws]');
@@ -87,9 +87,14 @@
   }
 
   window.addEventListener('message', function (e) {
-    if (e.origin !== location.origin || !e.data || e.data.type !== 'drishti:select') { return; }
+    // only this workspace's own panes (same origin, and the sender is one of its frames) may select or move the focus
+    if (e.origin !== location.origin || !e.data || (e.data.type !== 'drishti:select' && e.data.type !== 'drishti:key')) { return; }
     var from = frames.findIndex(function (f) { return f.contentWindow === e.source; });
     if (from < 0) { return; }
+    if (e.data.type === 'drishti:key') {                  // Alt+0..4 pressed inside a pane (app.js hands it here)
+      if (typeof e.data.n === 'number' && e.data.n >= 0 && e.data.n <= 4) { toPane(e.data.n); }
+      return;
+    }
     var ref = { kind: e.data.kind, id: e.data.id };
     var followers = ws.panes.map(function (p, j) { return p.follows === from ? j : -1; }).filter(function (j) { return j >= 0; });
     if (followers.length) { followers.forEach(function (j) { open(j, ref); }); } else { open(from, ref); }
@@ -147,12 +152,27 @@
     if (!window.confirm('Delete workspace “' + root.dataset.name + '”?')) { return; }
     fetch('/w/api/' + encodeURIComponent(root.dataset.name) + '/delete', { method: 'POST' }).then(function () { location.href = '/w'; });
   });
-  document.addEventListener('keydown', function (e) {
-    if (e.altKey && /^[1-4]$/.test(e.key) && frames[+e.key - 1]) {
-      e.preventDefault();
-      grid.children[+e.key - 1].focus();
-      frames[+e.key - 1].focus();
+  // ---- keys: Alt+1..4 moves to a pane, Alt+0 back to the toolbar, wherever the focus is (UX-07). Inside a pane the keys
+  // reach the pane's own document, which hands them here (app.js, a same-origin message checked above).
+  function toPane(n) {
+    if (n === 0) {
+      var first = root.querySelector('.ws-bar a[href], .ws-bar button:not([hidden]):not([disabled]), .ws-bar select');
+      if (first) { first.focus(); announce('Workspace toolbar'); }
+      return !!first;
     }
+    var pane = grid.querySelectorAll(':scope > .ws-pane')[n - 1];
+    if (!pane) { return false; }
+    var input = pane.querySelector('[data-pane-input]');
+    if (ws.panes[n - 1] && ws.panes[n - 1].ref) { pane.focus(); frames[n - 1].focus(); }
+    else if (input && !input.disabled) { input.focus(); }      // an empty pane: where its command is typed
+    else { pane.focus(); }
+    announce('Pane ' + n + (ws.panes[n - 1] && ws.panes[n - 1].title ? ': ' + ws.panes[n - 1].title : ''));
+    return true;
+  }
+  document.addEventListener('keydown', function (e) {
+    if (!e.altKey || e.ctrlKey || e.metaKey) { return; }
+    var m = /^Digit([0-4])$/.exec(e.code || '') || /^([0-4])$/.exec(e.key || '');   // e.code: Alt+digit types a symbol on a Mac
+    if (m && toPane(+m[1])) { e.preventDefault(); }
   });
 
   // ---- dividers: drag (or arrow keys) to share the width or height between two neighbouring columns or rows ----------

@@ -15,7 +15,7 @@
 #}
 {% extends "base.html" %}
 {% block title %}{{ id }} · {{ PRODUCT }}{% endblock %}
-{% block body_class %}terminal{% endblock %}
+{% block body_class %}terminal{% if embed %} embed{% endif %}{% endblock %}
 {% block nav %}{% if not embed %}{% with command_text=id %}{% include "terminal/_topbar.html" %}{% endwith %}{% endif %}{% endblock %}
 {% block content %}
 <div class="thome">
