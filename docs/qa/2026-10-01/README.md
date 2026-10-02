@@ -71,10 +71,10 @@ permissions, and masks are not applied on every path.
 | DATA-08 | File connector reverse lookups skip effective-mode kinds (Impact misses groups other stores show). |
 | DATA-09 | Duplicate ids in a JSON-lines day are counted twice (desk P&L wrong). **Fixed** in 5ecce29 (JsonlHostileLinesTest.aDuplicateIdKeepsItsLastLineEverywhere) |
 | DATA-10 | A read racing an atomic JSON-lines replace can fail (502), using old offsets on the new file. **Fixed** in 5ecce29 (JsonlHostileLinesTest: readsRacingAnAtomicReplaceNeverFailOrReturnAnotherEntity, anIndexOverAFileRewrittenInPlaceNeverReturnsAnotherEntitysLine) |
-| DATA-11 | RedisLoader merges into a day instead of replacing it; an interrupted load leaves views and searches disagreeing. |
+| DATA-11 | RedisLoader merges into a day instead of replacing it; an interrupted load leaves views and searches disagreeing. **Fixed** in f047e6a (RedisLoaderReplaceTest.aLoadReplacesEachDayByDefault, whileADayIsReplacedReadersSeeTheOldDayThenTheNewOneNeverAMix; replacing each day is now the default, `--merge` opts in) |
 | DATA-12 | Multi-store fall-through brings back an entity the recent store dropped. |
 | DATA-13 | LZ4 Parquet: unclear 502, health UP, and the documented advice ("use hadoop") does not work. **Fixed** in 724328b (DeltaUnreadableTest.lz4PagesFailTheReadWithTheCodecAndWhatToDoAndHealthNamesTheDate, DeltaUnreadableTest.lz4FromArrowUnderTheHadoopEngineSaysWhatToDo) |
-| DATA-14 | `quant.year_fraction`: 30E/360 computed as US 30/360; ACT/ACT ISDA as days/365.25. |
+| DATA-14 | `quant.year_fraction`: 30E/360 computed as US 30/360; ACT/ACT ISDA as days/365.25. **Fixed** in 891bc73 (test_quant.py: test_30e_360_moves_the_31st_to_the_30th_on_both_dates, test_act_act_isda_splits_the_period_by_calendar_year) |
 | DATA-15 | `knownAt` silently ignored by stores without time travel. |
 | GRAM-03 | Very deep or long expressions: the view returns HTTP 500 without a problem code. **Fixed** in c1ace31 (ElLimitsTest.longChainsThatWouldOverflowEvaluationAreRefusedAtCompileTime, PathologicalExpressionsTest.LiftedLimits.anOverflowIsAPanelProblemOrAFileProblemNeverA500) |
 | GRAM-04 | "Case never matters" is false for field names; unknown fields silently match nothing. |
@@ -99,7 +99,7 @@ permissions, and masks are not applied on every path.
 Lows and infos are in each area's findings: inconsistent error responses (SEC-10, GRAM-06..08, UX-10..13), CSRF
 protection relies on SameSite only (SEC-08, **Fixed** in 6f886ab: test_sessions.py: test_cross_site_writes_and_json_as_text_are_refused, test_configured_origins_are_allowed, test_sign_out_is_a_post_and_get_only_asks), type-ahead reveals masked names (SEC-07, **Fixed** in 43075d9: FieldMaskingTest.typeAheadNeitherShowsNorMatchesMaskedValues), readiness probe always DOWN with
 security on (SEC-12), absolute paths in Sutra problems (SEC-11), tie order under limits (DATA-17), health UP for
-unreadable tables (DATA-18, **Fixed** in 724328b, 7de60f8: DeltaUnreadableTest, RedisOutageHealthTest), quant edge cases (DATA-20), layout and Studio polish (UX-14..18), documentation mismatches
+unreadable tables (DATA-18, **Fixed** in 724328b, 7de60f8: DeltaUnreadableTest, RedisOutageHealthTest), quant edge cases (DATA-20, **Fixed** in 891bc73 (test_quant.py: test_options_at_expiry_or_zero_vol_are_worth_their_intrinsic_value, test_norm_ppf_is_accurate_in_the_far_tails, test_a_month_code_for_the_current_month_is_never_negative)), layout and Studio polish (UX-14..18), documentation mismatches
 (DOC-04..22), and risky development defaults that are already documented (SEC-16).
 
 ## What held up
@@ -123,7 +123,7 @@ unreadable tables (DATA-18, **Fixed** in 724328b, 7de60f8: DeltaUnreadableTest, 
   images; keyboard and ARIA basics in place; Calc survives hostile code (loops with Stop, memory bombs, huge output).
 - **Docs:** QUICKSTART and GETTING_STARTED commands and outputs match from a fresh clone (apart from DOC-01/02);
   about 250 settings match their code defaults.
-- **drishti.quant:** 109 checks against scipy and textbook values pass (apart from DATA-14 and DATA-20).
+- **drishti.quant:** 109 checks against scipy and textbook values pass (apart from DATA-14 and DATA-20, both since fixed in 891bc73).
 
 ## Proposed fix order
 
