@@ -23,7 +23,7 @@ a:hover { text-decoration: underline; }
 .text-muted-d { color: var(--d-muted) !important; }
 .text-accent { color: var(--d-accent) !important; }
 .skip-link { position: absolute; left: -999px; top: 0; }
-.skip-link:focus { left: 8px; top: 8px; z-index: 2000; background: var(--d-accent); color: #111; padding: 6px 10px; }
+.skip-link:focus { left: 8px; top: 8px; z-index: 2000; background: var(--d-accent); color: var(--d-on-accent); padding: 6px 10px; }
 :focus-visible { outline: 2px solid var(--d-accent); outline-offset: 2px; }
 
 /* ---- Bootstrap bridge ---- */
@@ -31,7 +31,14 @@ a:hover { text-decoration: underline; }
   --bs-body-bg: var(--d-bg); --bs-body-color: var(--d-ink); --bs-border-color: var(--d-border);
   --bs-link-color: var(--d-link); --bs-secondary-color: var(--d-muted);
   --bs-dropdown-bg: var(--d-surface); --bs-dropdown-color: var(--d-ink);
+  --bs-code-color: var(--d-accent);                     /* Bootstrap's pink reads below 4.5:1 on the light grounds */
 }
+/* Placeholders in the theme's faint text colour, which reads at 4.5:1 (the browser's grey does not on dark grounds) */
+::placeholder { color: var(--d-faint); opacity: 1; }
+/* Bootstrap's grey outline button (#6c757d) reads below 4.5:1 on the dark themes: it takes the theme's colours instead */
+.btn-outline-secondary { --bs-btn-color: var(--d-muted); --bs-btn-border-color: var(--d-border); --bs-btn-hover-color: var(--d-ink);
+  --bs-btn-hover-bg: var(--d-highlight); --bs-btn-hover-border-color: var(--d-accent); --bs-btn-active-color: var(--d-ink);
+  --bs-btn-active-bg: var(--d-highlight); --bs-btn-active-border-color: var(--d-accent); --bs-btn-disabled-color: var(--d-muted); }
 .dropdown-menu { background: var(--d-surface); border-color: var(--d-border); box-shadow: var(--d-shadow); }
 .dropdown-item { color: var(--d-ink); }
 .dropdown-item:hover, .dropdown-item:focus { background: var(--d-highlight); color: var(--d-ink); }
@@ -63,8 +70,8 @@ a:hover { text-decoration: underline; }
 
 /* ---- Buttons ---- */
 .btn-pill { border-radius: 999px; padding: .6rem 1.35rem; font-weight: 600; border: 1px solid transparent; }
-.btn-accent { background: var(--d-accent); color: #14100a; }
-.btn-accent:hover { background: var(--d-accent-strong); color: #14100a; text-decoration: none; }
+.btn-accent { background: var(--d-accent); color: var(--d-on-accent); }
+.btn-accent:hover { background: var(--d-accent-strong); color: var(--d-on-accent); text-decoration: none; }
 .btn-ghost { border-color: var(--d-border); color: var(--d-ink); background: transparent; }
 .btn-ghost:hover { border-color: var(--d-accent); color: var(--d-ink); text-decoration: none; }
 

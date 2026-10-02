@@ -16,7 +16,10 @@
 /* Drishti design tokens. Colours are defined here and nowhere else.
    Themes: terminal (default, navy + amber as in the reference mockups), light (parchment), wallstreet, blue,
    green, crimson and crimson-dark (the Maya palette).
-   Selected by data-theme on <html>; "terminal" also answers prefers-color-scheme: dark. */
+   Selected by data-theme on <html>; "terminal" also answers prefers-color-scheme: dark.
+   Every colour used for text (ink, muted, faint, link, accent, accent-strong, pos, neg, ok, warn, bad) reads at 4.5:1 or
+   more on every ground of its theme (bg, bg-2, surface, surface-2), and --d-on-accent on the accent fills (WCAG AA;
+   computed by tests/test_contrast.py). */
 :root,
 :root[data-theme="terminal"] {
   --d-bg: #0e1628;
@@ -26,10 +29,11 @@
   --d-border: #26345a;
   --d-ink: #e7ecf5;
   --d-muted: #93a0b8;
-  --d-faint: #5d6a85;
+  --d-faint: #8490a9;
   --d-accent: #e8a33a;          /* amber: brand, commands, emphasis */
   --d-accent-strong: #f2b453;
   --d-accent-tint: rgba(232, 163, 58, .14);
+  --d-on-accent: #14100a;       /* a label on an accent fill (buttons) */
   --d-link: #7fb2ff;            /* blue: links, positive values */
   --d-pos: #7fb2ff;
   --d-neg: #f2955a;
@@ -57,14 +61,15 @@
   --d-border: #e2dcd0;
   --d-ink: #172440;
   --d-muted: #55607a;
-  --d-faint: #8a93a6;
-  --d-accent: #b86e0c;
-  --d-accent-strong: #945605;
+  --d-faint: #60697e;
+  --d-accent: #985b0a;
+  --d-accent-strong: #7c4805;
   --d-accent-tint: rgba(184, 110, 12, .10);
+  --d-on-accent: #ffffff;
   --d-link: #1f5fc4;
   --d-pos: #1f5fc4;
   --d-neg: #b4491a;
-  --d-ok: #1c7c4f;
+  --d-ok: #1b784c;
   --d-warn: #8a6100;
   --d-bad: #b42323;
   --d-highlight: rgba(31, 95, 196, .06);
@@ -85,7 +90,7 @@
   --d-border: #23407a;
   --d-ink: #e8f0ff;
   --d-muted: #9db1d6;
-  --d-faint: #6177a3;
+  --d-faint: #8697b8;
   --d-accent: #5cc8ff;
   --d-accent-strong: #8ad8ff;
   --d-accent-tint: rgba(92, 200, 255, .14);
@@ -108,7 +113,7 @@
   --d-border: #24483f;
   --d-ink: #e6f4ef;
   --d-muted: #9dbdb3;
-  --d-faint: #5f8579;
+  --d-faint: #789f93;
   --d-accent: #4fd6a0;
   --d-accent-strong: #7be6bb;
   --d-accent-tint: rgba(79, 214, 160, .14);
@@ -133,7 +138,7 @@
   --d-border: #3a3a3a;
   --d-ink: #fb8b1e;             /* amber data text */
   --d-muted: #c9c9c9;           /* white-grey labels */
-  --d-faint: #7a7a7a;
+  --d-faint: #808080;
   --d-accent: #ffd400;          /* yellow: command line, function keys */
   --d-accent-strong: #ffe14d;
   --d-accent-tint: rgba(255, 212, 0, .12);
@@ -162,10 +167,11 @@
   --d-border: #e3ded7;
   --d-ink: #1a1a1a;
   --d-muted: #5c6470;
-  --d-faint: #8d949d;
+  --d-faint: #636a73;
   --d-accent: #a51c30;
   --d-accent-strong: #8a1626;
   --d-accent-tint: rgba(165, 28, 48, .08);
+  --d-on-accent: #ffffff;
   --d-link: #293352;
   --d-pos: #293352;
   --d-neg: #a51c30;
@@ -190,7 +196,7 @@
   --d-border: #34343a;
   --d-ink: #ececef;
   --d-muted: #97a2ab;
-  --d-faint: #6f7a85;
+  --d-faint: #858f99;
   --d-accent: #de6b81;
   --d-accent-strong: #e07a8e;
   --d-accent-tint: rgba(222, 107, 129, .14);
@@ -213,7 +219,8 @@
 @media (prefers-color-scheme: light) {
   :root:not([data-theme]) {
     --d-bg: #f7f5f0; --d-bg-2: #efebe3; --d-surface: #ffffff; --d-surface-2: #faf8f4; --d-border: #e2dcd0;
-    --d-ink: #172440; --d-muted: #55607a; --d-faint: #8a93a6; --d-accent: #b86e0c; --d-link: #1f5fc4;
+    --d-ink: #172440; --d-muted: #55607a; --d-faint: #60697e; --d-accent: #985b0a; --d-on-accent: #ffffff; --d-link: #1f5fc4;
+    --d-accent-strong: #7c4805; --d-ok: #1b784c; --d-warn: #8a6100; --d-bad: #b42323;
     --d-pos: #1f5fc4; --d-neg: #b4491a; --d-nav: rgba(247, 245, 240, .9);
     color-scheme: light;
   }
