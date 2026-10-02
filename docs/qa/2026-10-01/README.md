@@ -51,8 +51,8 @@ permissions, and masks are not applied on every path.
 | [DATA-01](data/FINDINGS.md) | A source that fails or times out while listing makes a search look exact and empty (`partial: false`, 0 matches); a failed reindex drops the kind from type-ahead. |
 | [DATA-02](data/FINDINGS.md) | One unreadable line (truncated, NaN, a 25 MB document) silently erases a whole JSON-lines day; nothing is logged. |
 | [DATA-03](data/FINDINGS.md) | A failing store counts as "not held", so the next store silently answers with different data; view and search then disagree. |
-| [DATA-04](data/FINDINGS.md) | PostgresLoader is not atomic: a killed or concurrent reload leaves days empty or half-loaded, and searches report them as exact. |
-| [DATA-05](data/FINDINGS.md) | One future-dated row with retention (`--keep-months`, `--keep-days`) irreversibly drops all history. |
+| [DATA-04](data/FINDINGS.md) | PostgresLoader is not atomic: a killed or concurrent reload leaves days empty or half-loaded, and searches report them as exact. **Fixed** in 1420ab6 (PostgresLoaderReplaceTest; also 2cd7aa7 Redis, 6de321d MongoDB) |
+| [DATA-05](data/FINDINGS.md) | One future-dated row with retention (`--keep-months`, `--keep-days`) irreversibly drops all history. **Fixed** in 1420ab6, 9b2099d, 2cd7aa7 (LoadGuardTest; aFutureDatedRowIsNotLoadedAndCannotMoveTheRetentionCutOff and retentionThatWouldDropMost… in each loader’s tests) |
 | [DATA-06](data/FINDINGS.md) | JSON-lines rows with `doc` as an object and no `columns` get every promoted column null: searches, pick lists and desk P&L silently empty. |
 | [GRAM-01](ux/FINDINGS.md) | A Sutra with a deeply nested expression (~800 parentheses) stops the server from starting (`StackOverflowError`). |
 | [GRAM-02](ux/FINDINGS.md) | The same file silently kills Sutra hot reload; later valid Sutras never load. |
