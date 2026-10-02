@@ -82,11 +82,11 @@ permissions, and masks are not applied on every path.
 | UX-02 | At phone width 77 of 85 pages scroll sideways; header items clipped. |
 | UX-03 | Help-centre screenshots overflow the page. |
 | UX-04 | Faint text fails WCAG contrast in six of seven themes; the contrast test misses it. |
-| UX-05 | With the packs QUICKSTART recommends, Studio opens on an error; landing examples use ids that do not exist. |
-| UX-06 | Workspaces cannot be created without the finance or logistics packs. |
-| UX-07 | Alt+1..4 stops working once a workspace pane has focus. |
-| UX-08 | A past date missing from the dated store silently shows live data, with a wrong reason. |
-| UX-09 | Pivot row keys shown in scientific notation. |
+| UX-05 | With the packs QUICKSTART recommends, Studio opens on an error; landing examples use ids that do not exist. **Fixed** in 6966b08 (test_samples.py: test_studio_opens_on_an_entity_of_an_installed_pack, test_studio_without_any_example_opens_empty_with_a_hint, test_landing_commands_come_from_the_installed_packs, test_landing_without_packs_names_no_entity; CommandParserTest.anUnreadableCommandIsToldTheConfiguredMnemonicsNotAPackSample) |
+| UX-06 | Workspaces cannot be created without the finance or logistics packs. **Fixed** in ac21b62 (test_workspaces.py: test_without_starters_the_index_says_so_and_offers_a_blank_workspace, test_an_unknown_name_offers_to_create_it) |
+| UX-07 | Alt+1..4 stops working once a workspace pane has focus. **Fixed** in 1598327 (test_workspace_keys_browser.py: test_alt_keys_move_between_panes_even_from_inside_a_pane, test_a_blank_pane_takes_the_focus_on_its_command_input, test_a_message_from_elsewhere_moves_nothing) |
+| UX-08 | A past date missing from the dated store silently shows live data, with a wrong reason. **Fixed** in 9a33cce (test_terminal.py: test_a_past_date_no_store_holds_says_so_and_does_not_pass_current_data_off_as_live) |
+| UX-09 | Pivot row keys shown in scientific notation. **Fixed** in ef0b0be (PivotCubeTest.numericKeysArePlainWithoutExponentOrFloatNoise; test_pivot.py: test_client_engine_writes_numeric_keys_as_the_server_does) |
 | DOC-01 | GETTING_STARTED expects Java 21's version string. |
 | DOC-02 | Calc is dead after the quickstart: installing the Python runtime (`tools/fetch-pyodide.sh`) is not mentioned. |
 | DOC-03 | DEMO_DATA's `--trades N` replaces the whole trade table, not "the days it covers". |
