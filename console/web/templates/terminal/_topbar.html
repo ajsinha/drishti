@@ -81,7 +81,7 @@
            {% if bd.earliest %}min="{{ bd.earliest }}"{% endif %} {% if bd.current %}max="{{ bd.current }}"{% endif %}
            data-holidays="{{ (bd.holidays or []) | join(',') }}" data-current="{{ bd.current or '' }}">
     <a href="/asof?d=live&amp;next={{ request.url.path | urlencode }}" class="asof-live{% if asof == 'live' %} on{% endif %}"
-       title="Back to live: today's business date, streaming" data-asof-live><span class="dot" aria-hidden="true"></span> Live</a>
+       title="Back to live: today's business date, streaming" data-asof-live><span class="dot" aria-hidden="true"></span> <span class="asof-live-l">Live</span></a>
     {% if asof != 'live' %}
     <label for="asofKnown" class="visually-hidden">Known at</label>
     <span class="asof-known{% if known_at %} on{% endif %}" title="Time travel: show this date as it was known at a time ({{ bd.zone or 'America/New_York' }}). Blank for the latest.">

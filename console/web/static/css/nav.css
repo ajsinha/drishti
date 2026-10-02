@@ -118,3 +118,22 @@
 /* The menus sit on the right of the bar, right of the command line, so each opens leftwards from its button's right
    edge and stays on screen. */
 .tbar-menus .mega-panel { left: auto; right: 0; }
+
+/* A phone (UX-02): the bar fits the screen and the page never scrolls sideways. The brand keeps its mark, the menus and
+   tools their icons, and the command line and business date share the second line: the command line shrinks first, the
+   date input is compact and Live shows its dot (its name stays for screen readers). */
+@media (max-width: 640px) {
+  .tbar-row1 { gap: .35rem; padding: .35rem .6rem; }
+  .tbar-find { gap: .4rem; flex-wrap: wrap; }
+  .tbar .cmd { min-width: 0; flex: 1 1 9rem; }
+  .tbar .asof { gap: .25rem; flex-wrap: wrap; white-space: normal; }
+  .asof-date { width: 8.4rem; padding: .2rem .3rem; font-size: .78rem; }
+  .asof-live .asof-live-l { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .asof-live { padding: .35rem .45rem; }
+  .tbar-menu-btn { padding: .45rem .45rem; }
+  .tbar-tools { gap: .1rem; }
+  .tbar-tools .tool, .tbar-tools .theme-btn { min-width: 30px; padding: 0 .3rem; }
+}
+@media (max-width: 480px) {
+  .tbar-name { display: none; }
+}
