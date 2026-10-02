@@ -113,4 +113,6 @@ It is plain HTTP and JSON; the [API guide](API_GUIDE.md) lists every endpoint. T
 | a pack's kinds | `/api/v1/packs/{code}/overview` |
 
 Add `X-Drishti-As-Of: 2026-09-29` for a past business date and `X-Drishti-Known-At: 2026-09-29T14:30:00Z` for the
-data as known at an instant.
+data as known at an instant (stores with time travel only; others answer `DRS-1007`). For an id with a `/` (or `\`),
+put `~` in its place and the id in the query: `/api/v1/entities/trade/~/raw?id=sl%2Fash-6`; the Python client does
+this by itself.

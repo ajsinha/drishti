@@ -71,6 +71,15 @@ public final class DerivedSourcePlugin implements SourcePlugin {
                 new SourceCapabilities(false, false, true, true));
     }
 
+    /**
+     * A derived kind is computed from the kinds it groups, read through the router with the same {@code knownAt}: their
+     * stores answer it or refuse it themselves.
+     */
+    @Override
+    public boolean timeTravel() {
+        return true;
+    }
+
     @Override
     public void start(SourceContext context) {
         kinds = DerivedKind.parse(context.settings(), new ElCompiler(), Formats.defaults());

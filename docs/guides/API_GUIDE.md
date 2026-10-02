@@ -279,11 +279,14 @@ business date. You choose it with a header or a query parameter:
 |---|---|---|---|
 | `X-Drishti-As-Of` | `asOf` | `live` or empty (default) | today's business date, streaming |
 | `X-Drishti-As-Of` | `asOf` | `2026-09-29` | that date, as a static snapshot |
-| `X-Drishti-Known-At` | `knownAt` | `2026-09-29T21:00:00Z` (ISO instant) | the data as it was known at that instant (Delta time travel) |
+| `X-Drishti-Known-At` | `knownAt` | `2026-09-29T21:00:00Z` (ISO instant) | the data as it was known at that instant (Delta Lake and Iceberg time travel) |
 
 The header wins when both are given. Rules:
 
 - A weekend or holiday rolls back to the previous business day of the calendar.
+- `knownAt` is answered only by stores that keep versions (Delta Lake, Iceberg). A dated store without them that may
+  hold the date answers `400 DRS-1007` naming the connector, never today's data; a search names it in `failed` and is
+  `partial`. Undated sources have one version and answer as usual.
 - A picked date is a snapshot: views say `provenance.live = false`, and a stream sends one `view` event and closes.
 - A future date, or one before the history window (`earliest`), is `400 DRS-4003`.
 - `provenance.businessDate` in a view is the date the source actually read; it is `null` for sources that are not dated.
@@ -353,6 +356,19 @@ logged on the server with the stack trace. The full list is in the [error code t
 Conventions in the tables: `{kind}` is an entity kind such as `trade` or `counterparty`; `{id}` is its id;
 "as-of" means the endpoint follows the business date described above; "admin" means the caller needs a role
 with `admin: true` (otherwise `403 DRS-5002`).
+
+**An id a path cannot carry.** Every endpoint that names an entity as `{kind}/{id}` (views and their panel
+records and streams, raw documents, history, impact, notes, Studio's inferred Sutra) also takes `~` in place of the id
+and the id as the `id` query parameter. Use it for an id with a `/` or `\` (the server refuses them percent-encoded in a
+path, as `%2F`, and so do servlet containers), or an id that is `.` or `..`; any id works this way:
+
+```bash
+curl -s -G "$B/entities/trade/~/raw" --data-urlencode "id=sl/ash-6" | jq -c .ref     # {"kind":"trade","id":"sl/ash-6"}
+curl -s -G "$B/views/trade/~" --data-urlencode "id=sl/ash-6" | jq -c .ref
+```
+
+`~` without an `id` parameter is the id `~` itself. The console and the Python client switch to this form by
+themselves when an id needs it.
 
 ### Command line and type-ahead
 
@@ -502,6 +518,9 @@ Level 1 is what refers to the entity directly; level 2 is what those roll into. 
 
 The condition runs on each document *as the caller may see it* ([field masks](#field-masks)), so a masked field
 cannot be probed: a condition on it is never true, ordering by it does not order.
+`order by` sorts numbers by value and text ignoring case, numbers before text, and entities without the field last
+in either direction; equal values are ordered by id, so `limit` keeps the same rows on every store and every run.
+Without `order by`, rows come in id order.
 Numbers accept `k`, `m` and `bn` (or `b`) suffixes (`1m` = 1,000,000). URL-encode `q`; `curl -G --data-urlencode` does it for you:
 
 ```bash
@@ -1116,12 +1135,13 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 
 | Code | HTTP | Name (`title`) | When you see it |
 |---|---|---|---|
-| DRS-1001 | 404 | entity not found | no source holds the entity; also a missing workspace, monitor or alert rule |
+| DRS-1001 | 404 | entity not found | no source holds the entity; also a missing workspace, monitor or alert rule. A store that holds the date and does not list the entity is named (`DRS-1001 recent-files holds trade for 2026-09-29 and does not list trade/MX-30000006`): the stores behind it are not asked |
 | DRS-1002 | 404 | no source for kind | no source serves the kind |
 | DRS-1003 | 502 | source failed | the source answered with an error, could not be reached, or holds the data but cannot read it; `detail` names the connector (`DRS-1003 trading-store failed reading trade/MX-1`) and, when the connector says what to do, why (`…: trade 2026-09-30 cannot be read: the native Delta engine does not decompress LZ4 Parquet pages …`). The next connector is not asked: another store's data is never shown in place of a failing store's |
 | DRS-1004 | 504 | source timeout | the source took longer than `drishti.sources.fetch-timeout` (default 2 s) |
 | DRS-1005 | 422 | invalid json | a document (e.g. sample JSON pasted into Studio) is not valid JSON or not an object |
 | DRS-1006 | 500 | plugin load failed | a connector plugin could not be loaded (see `/sources` → `failures`) |
+| DRS-1007 | 400 | no time travel | `knownAt` asked of a dated store that keeps no earlier versions (only Delta Lake and Iceberg do); `detail` names the connector (`DRS-1007 recent-files keeps no earlier versions, so a read 'as known at' an instant cannot be answered from it …`). Today's data is never shown in its place; a structured search names it in `failed` and is `partial` |
 | DRS-2001 | 422 | sutra parse | the Sutra text cannot be parsed |
 | DRS-2002 | 422 | sutra invalid | the Sutra parsed but has problems (listed in `problems`) |
 | DRS-2003 | 404 | sutra not found | no Sutra with that name and version |

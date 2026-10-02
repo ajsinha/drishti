@@ -29,7 +29,7 @@ same machine. Replace `localhost` if yours run elsewhere.
 | [The console and the server](#the-console-and-the-server) | backend unreachable, `/readyz` says 503, the live dot is amber, typing does nothing |
 | [Commands and views](#commands-and-views) | cannot read command, *Nothing matches*, DRS-1001, may not open, no suggestions, No data available, pending links, blank charts |
 | [Pick lists and tables](#pick-lists-and-tables) | a pick list instead of the entity, only ids in the list, only 25 rows, keys do nothing |
-| [Live and dates](#live-updates-and-business-dates) | view does not tick, no data held for a date, DRS-4003, known at has no effect |
+| [Live and dates](#live-updates-and-business-dates) | view does not tick, no data held for a date, DRS-4003, known at has no effect, DRS-1007, DRS-1001 naming a store that holds the date |
 | [Search](#search) | DRS-4004, empty results, partial results |
 | [Studio and Sutras](#studio-and-sutras) | Save disabled, an edit has no effect, `.sutra.md` files after an upgrade, approval refused |
 | [Packs](#packs) | mnemonics missing, a pack switched off, *not loaded*, cannot switch off, generated files out of date |
@@ -471,9 +471,23 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 
 ### "Known at" changes nothing
 
-- **Cause:** only sources that keep versions (Delta Lake) honour it; others have one version. Delta resolves times
-  from the `_delta_log` files' modification times, so a lake copied without preserving times loses its history.
+- **Cause:** only sources that keep versions (Delta Lake, Iceberg) honour it; undated sources have one version. Delta
+  resolves times from the `_delta_log` files' modification times, so a lake copied without preserving times loses its
+  history.
 - **Fix:** copy lakes with `cp -p` or `rsync -t`. See [PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md).
+
+### "DRS-1007 <connector> keeps no earlier versions"
+
+- **Cause:** a *known at* time was given, and the connector that holds the date (files, PostgreSQL, DuckDB, Redis,
+  MongoDB …) keeps only the current version. It refuses rather than show today's data as what was known then. A search
+  is `partial` and names it in `failed`.
+- **Fix:** clear *known at*, or route the kind's history to a store with time travel (Delta Lake, Iceberg).
+
+### "DRS-1001 <connector> holds trade for <date> and does not list …"
+
+- **Cause:** the store first in line holds that date and does not list the entity (it was dropped there). A store
+  that holds a date is authoritative for it: the stores behind it are not asked, so the view agrees with a search.
+- **Fix:** none needed if the drop was intended; otherwise reload that day into the first store.
 
 ## Search
 

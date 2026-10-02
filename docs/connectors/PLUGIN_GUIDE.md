@@ -58,6 +58,8 @@ public interface SourcePlugin extends AutoCloseable {
     default List<EntityHit> search(String kind, String text, int limit, AsOf asOf)
     default String health()
     default boolean pushes(EntityRef ref)                                       // ticks a kind another source serves
+    default DateCoverage coverage(String kind, AsOf asOf)                       // HELD: authoritative for the date
+    default boolean timeTravel()                                                // answers AsOf.knownAt (Delta, Iceberg)
 }
 ```
 
@@ -164,6 +166,14 @@ manifest serves the kind. That list is then re-ordered, keeping the order within
 The first source that holds the entity answers; a source that does not hold it passes to the next. A source that
 *fails* (an exception) ends the read with `DRS-1003`; a read that takes longer than `fetch-timeout` ends with
 `DRS-1004`; no source holding it is `DRS-1001`; no source serving the kind at all is `DRS-1002`.
+
+A dated plugin that can tell which dates it holds says so through `coverage(kind, asOf)` (`DateCoverage.HELD`,
+`NOT_HELD`, or `UNKNOWN`, the default; it must be cheap, no remote call). A source that holds the date is
+authoritative for it: an entity it does not list then is not held, the read stops with `DRS-1001` naming it, the
+sources behind it are not asked, and a structured search lists the kind only up to it, so views and searches agree.
+Only a date it does not hold passes on. A plugin that keeps earlier versions and honours `AsOf.knownAt` overrides
+`timeTravel()` to return true (Delta Lake, Iceberg); a read *as known at* an instant is never put to a dated plugin
+that does not and may hold the date: it ends with `DRS-1007` (400) naming the source, and a search is partial.
 
 So a plugin returns `Optional.empty()` **only** when it knows it does not hold the entity (no row, no key, a date
 outside what it keeps). Anything else throws: the store is down, a file is there but cannot be read, a line does not

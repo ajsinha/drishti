@@ -99,7 +99,7 @@ The top bar of the console has a business date. By default it shows **Live** (th
 version): views can tick as new data arrives. When a user picks an earlier date, or the current date explicitly, the
 view is a **static snapshot** for that date. API callers choose the same way with `X-Drishti-As-Of: 2026-09-29` or
 `?asOf=2026-09-29`; `X-Drishti-Known-At` / `?knownAt=` asks for the data *as it was known* at an instant (before
-later corrections; Delta Lake only).
+later corrections; Delta Lake and Iceberg only: other dated connectors refuse it with `DRS-1007`).
 
 A **live** connector pushes changes to open views (Kafka, ActiveMQ, RabbitMQ, and the demo samples). The others are
 read when a view opens.
@@ -122,21 +122,35 @@ Then it re-orders the list, keeping the order inside each group:
   rest.
 
 Drishti asks the candidates one by one. A connector that does not hold the entity says so and the next is asked. The
-first that holds it answers. A connector that **fails** (the database is down, the service answers 500, a file or
+first that holds it answers. A connector that **holds the date** is authoritative for it: an entity it does not list
+for that date is not held, and the connectors behind it are not asked (`DRS-1001 recent-files holds trade for
+2026-09-29 and does not list trade/MX-30000006`). A recent store that dropped a trade is not overruled by the lake
+behind it, and the view agrees with a search of the same date. Only a date the connector does not hold passes on (a
+recent store of the last weeks in front of years in a lake). Which connectors can tell: the file connector over dated
+JSON-lines snapshots (a date is held when a day's file serves it, within `lookback-days`); others cannot yet tell, and
+an entity they do not hold passes to the next as before (see `SourcePlugin.coverage` in PLUGIN_GUIDE). A connector
+that **fails** (the database is down, the service answers 500, a file or
 table it holds cannot be read, a store it has not reached yet so it cannot tell what it holds) stops the read with
 `DRS-1003 <connector> failed reading <kind>/<id>`: Drishti does not silently show you another store's data instead.
 When the connector says what to do (a Delta date in a codec its engine does not read), the error says so too
 (`…: trade 2026-09-30 cannot be read: …; rewrite the date with Snappy or ZSTD …`). The whole read must finish
 within `drishti.sources.fetch-timeout` (2 s) or it ends with `DRS-1004`. If nobody holds the entity the answer is
 `DRS-1001`; if no connector serves the kind at all, `DRS-1002` (rare, because `demo` and `file` serve every kind).
+A read *as known at* an instant (`knownAt`) is only put to connectors that keep earlier versions (Delta Lake,
+Iceberg). A dated connector without them that may hold the date stops the read with `DRS-1007` (400) naming it
+(`recent-files keeps no earlier versions, so a read 'as known at' an instant cannot be answered from it …`), rather
+than showing today's data as if it were what was known then; one that does not hold the date is passed over.
+Undated connectors have one version and are read as usual (the view says the data is current).
 
 Live updates follow the read: the ticks come from the first live connector that holds the entity, in the same order
 (a real stream before the samples). So if a trade comes from Kafka, it ticks from Kafka.
 
 Search (the type-ahead under the command line) asks every connector that supports search and merges the hits.
-A structured search (`TRD where …`) lists the kind the same way and reads what it lists; a connector that fails, does
-not answer within the search budget, or says its list of the kind is incomplete (a table it could not index) makes
-the answer `partial: true` and is named in it with why (`failed`), so a failure never reads as "nothing matched".
+A structured search (`TRD where …`) lists the kind the same way and reads what it lists, in read order up to the
+first connector that holds the date (the ones behind it are not listed, as they are not read); a connector that fails, does
+not answer within the search budget, says its list of the kind is incomplete (a table it could not index), or cannot
+answer a *known at* search, makes the answer `partial: true` and is named in it with why (`failed`), so a failure
+never reads as "nothing matched".
 Reverse lookups (what refers to this entity) ask every connector that supports them.
 
 **A real example.** On a server running the trading pack with its Delta Lake and the demo samples on (and the Kafka

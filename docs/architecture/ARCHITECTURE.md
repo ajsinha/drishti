@@ -141,8 +141,11 @@ Notes on each stage, checked against the code:
 - **Fetch order.** `SourceRouter` tries the plugin routed for the kind (`drishti.sources.routes`), then
   `default-route`, then every other plugin that serves the kind. For **Live**, plugins that stream come first (and a
   real stream before the `demo` samples); for a **picked business date**, dated plugins come first. The first one
-  that holds the entity answers. Nobody serving the kind is `DRS-1002`; nobody holding it is `DRS-1001`; a source
-  error is `DRS-1003`; running out of time is `DRS-1004`.
+  that holds the entity answers. A dated plugin that holds the date (`SourcePlugin.coverage` is `HELD`) is
+  authoritative for it: an entity it does not list is not held and the plugins behind it are not asked (searches list
+  the kind only up to it). Nobody serving the kind is `DRS-1002`; nobody holding it is `DRS-1001`; a source error is
+  `DRS-1003`; running out of time is `DRS-1004`; a *known at* read of a dated plugin without time travel
+  (`SourcePlugin.timeTravel`) that may hold the date is `DRS-1007`.
 - **Links before binding.** Linked entities (counterparty, netting set, the curve behind a chart) are fetched in
   parallel within `link-budget`. Those that miss it are marked `pending` in the `Linked entities` panel; a later
   rebuild (the next tick, or a reload) fills them in.

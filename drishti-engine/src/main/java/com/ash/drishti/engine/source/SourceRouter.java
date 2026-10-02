@@ -16,6 +16,7 @@
 package com.ash.drishti.engine.source;
 
 import com.ash.drishti.api.AsOf;
+import com.ash.drishti.api.DateCoverage;
 import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityHit;
 import com.ash.drishti.api.EntityRef;
@@ -100,12 +101,7 @@ public final class SourceRouter {
             return CompletableFuture.failedFuture(
                     new DrishtiException(ErrorCode.NO_SOURCE_FOR_KIND, "no source serves kind '" + ref.kind() + "'"));
         }
-        if (!asOf.live()) {
-            // a picked date: history comes from dated sources first; undated ones only answer what nothing dated holds
-            candidates.sort(java.util.Comparator.comparing(p -> !p.manifest().capabilities().dated()));
-        } else {
-            liveFirst(candidates);
-        }
+        readOrder(candidates, asOf);
         AtomicReference<String> asking = new AtomicReference<>();
         return CompletableFuture.supplyAsync(() -> readFirst(ref, candidates, asOf, asking), executor)
                 .orTimeout(timeout.toMillis(), TimeUnit.MILLISECONDS)
@@ -113,10 +109,50 @@ public final class SourceRouter {
     }
 
     /**
-     * The first candidate that holds {@code ref} answers. One that does not hold it (an empty answer) passes to the next;
-     * one that fails (throws) stops the read with {@code DRS-1003} naming it: another store's data is never shown in
-     * place of the data a failing store holds. The error says why only when the source says so with an
-     * {@link UnreadableData} (an unsupported codec, and what to do); other causes go to the log and Admin → Health.
+     * The order sources are asked in: for a picked date, dated sources first (history comes from them; undated ones only
+     * answer what nothing dated holds); for live data, sources that stream first.
+     */
+    private void readOrder(List<SourcePlugin> candidates, AsOf asOf) {
+        if (!asOf.live()) {
+            candidates.sort(java.util.Comparator.comparing(p -> !p.manifest().capabilities().dated()));
+        } else {
+            liveFirst(candidates);
+        }
+    }
+
+    /** Whether a dated source holds the kind for the date ({@link SourcePlugin#coverage}); undecided when it cannot say. */
+    private static DateCoverage coverage(SourcePlugin p, String kind, AsOf asOf) {
+        if (!p.manifest().capabilities().dated()) {
+            return DateCoverage.UNKNOWN;
+        }
+        try {
+            DateCoverage c = p.coverage(kind, asOf);
+            return c == null ? DateCoverage.UNKNOWN : c;
+        } catch (RuntimeException e) {
+            return DateCoverage.UNKNOWN;                    // its read says what is wrong
+        }
+    }
+
+    /**
+     * True when a read "as known at" an instant cannot be put to this source: it is dated, keeps no earlier versions
+     * ({@link SourcePlugin#timeTravel}) and may hold the date. It would answer with today's data (DATA-15).
+     */
+    private static boolean refusesKnownAt(SourcePlugin p, AsOf asOf, DateCoverage coverage) {
+        return asOf.knownAt() != null && p.manifest().capabilities().dated() && !p.timeTravel() && coverage != DateCoverage.NOT_HELD;
+    }
+
+    /** Why a source cannot answer a read "as known at" an instant, as shown with the error and with a partial search. */
+    static final String NO_VERSIONS = "keeps no earlier versions, so a read 'as known at' an instant cannot be answered from it "
+            + "(only stores with time travel, such as Delta Lake or Iceberg, can)";
+
+    /**
+     * The first candidate that holds {@code ref} answers. One that does not hold it (an empty answer) passes to the next,
+     * unless it holds the date ({@link DateCoverage#HELD}): a store that holds a date is authoritative for it, so an
+     * entity it does not list then is not held and the read stops with {@code DRS-1001} naming it (DATA-12). One that
+     * fails (throws) stops the read with {@code DRS-1003} naming it: another store's data is never shown in place of the
+     * data a failing store holds. The error says why only when the source says so with an {@link UnreadableData} (an
+     * unsupported codec, and what to do); other causes go to the log and Admin → Health. A read "as known at" an instant
+     * stops with {@code DRS-1007} at a dated store without time travel that may hold the date (DATA-15).
      */
     private EntityDocument readFirst(EntityRef ref, List<SourcePlugin> candidates, AsOf asOf, AtomicReference<String> asking) {
         for (SourcePlugin p : candidates) {
@@ -124,6 +160,11 @@ public final class SourceRouter {
             boolean dated = p.manifest().capabilities().dated();
             String name = p.manifest().name();
             asking.set(name);
+            DateCoverage coverage = coverage(p, ref.kind(), asOf);
+            if (refusesKnownAt(p, asOf, coverage)) {
+                throw new SourceFailure(ErrorCode.NO_TIME_TRAVEL, name, NO_VERSIONS,
+                        name + " " + NO_VERSIONS + "; " + ref + " was asked for as known at " + asOf.knownAt(), null);
+            }
             long t0 = System.nanoTime();
             try {
                 d = dated ? p.fetch(ref, asOf) : p.fetch(ref);
@@ -138,6 +179,10 @@ public final class SourceRouter {
                 return d.get();
             }
             stats.notHeld(name, System.nanoTime() - t0);
+            if (coverage == DateCoverage.HELD) {
+                throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, name + " holds " + ref.kind()
+                        + (asOf.businessDate() == null ? "" : " for " + asOf.businessDate()) + " and does not list " + ref);
+            }
         }
         throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no source holds " + ref);
     }
@@ -201,10 +246,14 @@ public final class SourceRouter {
      */
     public Listing list(String kind, String text, int limit, Duration budget, AsOf asOf, SourceFailures failures) {
         List<CompletableFuture<List<EntityHit>>> parts = new ArrayList<>();
+        java.util.Set<String> asked = kind == null ? null : listed(kind, asOf, failures);
         for (SourcePlugin p : registry.plugins()) {
             if (p.manifest().capabilities().search() && (kind == null || p.manifest().serves(kind))) {
                 boolean dated = p.manifest().capabilities().dated();
                 String name = p.manifest().name();
+                if (asked != null && !asked.contains(name)) {
+                    continue;
+                }
                 parts.add(CompletableFuture.supplyAsync(() -> {
                     List<EntityHit> hits = dated ? p.search(kind, text, limit, asOf) : p.search(kind, text, limit);
                     if (kind != null) {
@@ -220,6 +269,30 @@ public final class SourceRouter {
         Map<EntityRef, EntityHit> merged = new LinkedHashMap<>();
         parts.forEach(f -> f.join().forEach(h -> merged.putIfAbsent(h.ref(), h)));
         return new Listing(merged.values().stream().limit(limit).toList(), failures.asMap());
+    }
+
+    /**
+     * The sources whose listing of the kind counts for {@code asOf}, as a read would ask them: in read order, up to and
+     * including the first that holds the date (what it does not list then is not held, so the stores behind it are not
+     * listed: a search agrees with the views, DATA-12). For a read "as known at" an instant, a dated source without time
+     * travel that may hold the date is left out and added to {@code failures} (DATA-15).
+     */
+    private java.util.Set<String> listed(String kind, AsOf asOf, SourceFailures failures) {
+        List<SourcePlugin> ordered = candidates(kind);
+        readOrder(ordered, asOf);
+        java.util.Set<String> out = new java.util.HashSet<>();
+        for (SourcePlugin p : ordered) {
+            DateCoverage coverage = coverage(p, kind, asOf);
+            if (refusesKnownAt(p, asOf, coverage)) {
+                failures.add(p.manifest().name(), NO_VERSIONS);
+            } else {
+                out.add(p.manifest().name());
+            }
+            if (coverage == DateCoverage.HELD) {
+                break;
+            }
+        }
+        return out;
     }
 
     /**
@@ -274,16 +347,25 @@ public final class SourceRouter {
         if (candidates.isEmpty()) {
             return Optional.empty();
         }
-        if (!asOf.live()) {
-            candidates.sort(java.util.Comparator.comparing(p -> !p.manifest().capabilities().dated()));
-        } else {
-            liveFirst(candidates);
-        }
+        readOrder(candidates, asOf);
         // sources that keep the paths as columns, in read order (a store of record such as a Delta table or an Aerospike
         // set); sources that only hold documents (samples, a stream of today's changes) are not asked. A source that does
-        // not hold the date (recent history in Aerospike, years in Delta) answers empty and the next one is asked.
+        // not hold the date (recent history in Aerospike, years in Delta) answers empty and the next one is asked; one that
+        // holds it is authoritative (DATA-12): without the paths as columns, documents are read rather than the columns of
+        // a store behind it. A read "as known at" an instant is not put to a dated source without time travel (DATA-15).
         long deadline = System.nanoTime() + budget.toNanos();
-        for (SourcePlugin p : candidates.stream().filter(c -> c.columnar(kind).containsAll(paths)).toList()) {
+        for (SourcePlugin p : candidates) {
+            DateCoverage coverage = coverage(p, kind, asOf);
+            if (refusesKnownAt(p, asOf, coverage)) {
+                failures.add(p.manifest().name(), NO_VERSIONS);
+                return Optional.empty();
+            }
+            if (!p.columnar(kind).containsAll(paths)) {
+                if (coverage == DateCoverage.HELD) {
+                    return Optional.empty();
+                }
+                continue;
+            }
             long left = deadline - System.nanoTime();
             if (left <= 0) {
                 return Optional.empty();

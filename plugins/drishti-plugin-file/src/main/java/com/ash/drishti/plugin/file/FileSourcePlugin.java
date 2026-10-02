@@ -17,6 +17,7 @@ package com.ash.drishti.plugin.file;
 
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.DataNode;
+import com.ash.drishti.api.DateCoverage;
 import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityHit;
 import com.ash.drishti.api.EntityRef;
@@ -315,6 +316,47 @@ public final class FileSourcePlugin implements SourcePlugin {
         }
     }
 
+    /**
+     * A kind kept as dated JSON-lines snapshots (every entity every day) is held for a date when a day's file serves it
+     * (the newest on or before the date, within {@code lookback-days}): an entity that file does not list is not held
+     * then, and no store behind this one is asked (DATA-12). With no such file, and no feed folder the date could be
+     * read from, the date is not held; nor is any date of a kind the connector has no file or folder of (the shipped
+     * {@code file} connector serves every kind until files appear). Undated files, {@code effective} kinds (a line only
+     * when an entity changes) and feed folders cannot tell.
+     */
+    @Override
+    public DateCoverage coverage(String kind, AsOf asOf) {
+        if (!jsonl.containsKey(kind)) {                 // per-entity files only, or nothing of the kind at all
+            return feedFolders(kind, asOf.businessDate()) ? DateCoverage.UNKNOWN : DateCoverage.NOT_HELD;
+        }
+        if (effective(kind)) {
+            return DateCoverage.UNKNOWN;
+        }
+        Optional<LocalDate> d = snapshotDay(kind, asOf.businessDate());
+        if (d.isPresent()) {
+            return d.get().equals(UNDATED) ? DateCoverage.UNKNOWN : DateCoverage.HELD;
+        }
+        return feedFolders(kind, asOf.businessDate()) ? DateCoverage.UNKNOWN : DateCoverage.NOT_HELD;
+    }
+
+    /** True when a feed folder ({@code <root>/<date>/<kind>/} within the lookback, or {@code <root>/<kind>/}) may hold the kind. */
+    private boolean feedFolders(String kind, LocalDate want) {
+        Path undated = root.resolve(kind).normalize();
+        if (undated.startsWith(root) && Files.isDirectory(undated)) {
+            return true;
+        }
+        for (LocalDate d : dates) {
+            if (want != null && (d.isAfter(want) || d.isBefore(want.minusDays(lookbackDays)))) {
+                continue;
+            }
+            Path dir = root.resolve(d.toString()).resolve(kind).normalize();
+            if (dir.startsWith(root) && Files.isDirectory(dir)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public Set<String> columnar(String kind) {
         return effective(kind) || !jsonl.containsKey(kind) ? Set.of() : Set.copyOf(promoted.getOrDefault(kind, List.of()));
@@ -335,18 +377,10 @@ public final class FileSourcePlugin implements SourcePlugin {
             // its place; the search says partial and names this connector (DATA-03)
             throw new IOException(sourceName + " cannot read " + where(new DayKey(kind, d.get())) + ": " + index.report().failure());
         }
-        com.ash.drishti.api.ColumnSet all = index.columns();
-        java.util.Map<String, double[]> nums = new java.util.LinkedHashMap<>();
-        java.util.Map<String, String[]> texts = new java.util.LinkedHashMap<>();
-        for (String p : paths) {
-            if (all.numbers().containsKey(p)) {
-                nums.put(p, all.numbers().get(p));
-            } else if (all.texts().containsKey(p)) {
-                texts.put(p, all.texts().get(p));
-            }
-        }
+        com.ash.drishti.api.ColumnSet all = index.columns().select(paths);
         // a day with unreadable lines answers what it holds and says why it may be missing some, for a partial answer
-        return Optional.of(new com.ash.drishti.api.ColumnSet(all.ids(), nums, texts, all.businessDate(), incomplete(new DayKey(kind, d.get()), index)));
+        return Optional.of(new com.ash.drishti.api.ColumnSet(all.ids(), all.numbers(), all.texts(), all.businessDate(),
+                incomplete(new DayKey(kind, d.get()), index), all.mixed()));
     }
 
     @Override
@@ -358,7 +392,11 @@ public final class FileSourcePlugin implements SourcePlugin {
     public List<EntityRef> reverse(EntityRef target, String kind, AsOf asOf) {
         List<EntityRef> out = new ArrayList<>();
         for (String k : kind == null ? jsonl.keySet() : Set.of(kind)) {
-            Optional<LocalDate> d = effective(k) ? Optional.empty() : snapshotDay(k, asOf.businessDate());
+            if (effective(k)) {
+                effectiveReverse(target, k, asOf.businessDate()).forEach(i -> out.add(EntityRef.of(k, i)));
+                continue;
+            }
+            Optional<LocalDate> d = snapshotDay(k, asOf.businessDate());
             if (d.isEmpty()) {
                 continue;
             }
@@ -368,7 +406,9 @@ public final class FileSourcePlugin implements SourcePlugin {
                 if (!columnar(k).isEmpty()) {                       // promoted link columns: no line is read
                     found = new java.util.TreeSet<>();
                     com.ash.drishti.api.ColumnSet c = index.columns();
-                    for (String[] values : c.texts().values()) {
+                    List<Object[]> columns = new ArrayList<>(c.texts().values());
+                    columns.addAll(c.mixed().values());
+                    for (Object[] values : columns) {
                         for (int i = 0; i < values.length; i++) {
                             if (target.id().equals(values[i])) {
                                 found.add(c.ids()[i]);
@@ -384,6 +424,33 @@ public final class FileSourcePlugin implements SourcePlugin {
             }
         }
         return out;
+    }
+
+    /**
+     * Entities of a kind kept in {@code effective} mode whose version on {@code asked} (their newest line on or before
+     * it, as {@link #fetch} reads them) mentions the target (DATA-08): the days are read newest first and each entity
+     * only in its newest line, at most {@code max-load-rows} lines in all. A day that cannot be read ends the lookup
+     * there, so an older version never stands in for a newer one.
+     */
+    private List<String> effectiveReverse(EntityRef target, String kind, LocalDate asked) {
+        java.util.NavigableSet<LocalDate> ds = jsonl.get(kind);
+        List<String> found = new ArrayList<>();
+        if (ds == null) {
+            return found;
+        }
+        Set<String> seen = new java.util.HashSet<>();
+        for (LocalDate d : (asked == null ? ds : ds.headSet(asked, true)).descendingSet()) {
+            int left = maxLoadRows - seen.size();
+            if (left <= 0) {
+                break;
+            }
+            try {
+                found.addAll(day(kind, d).mentioning(target.id(), left, seen));
+            } catch (IOException | RuntimeException e) {
+                break;                                             // no referrers from here, not an error page
+            }
+        }
+        return found;
     }
 
     @Override

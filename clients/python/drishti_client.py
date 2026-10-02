@@ -47,6 +47,15 @@ class DrishtiError(Exception):
         self.status, self.code, self.detail = status, code, detail
 
 
+def _entity(kind: str, id_: str) -> tuple[str, dict]:
+    """``kind/id`` for a path, and its query: an id a path cannot carry (with ``/`` or ``\\``, or ``.``, ``..``, ``~``)
+    goes in the query as ``id`` with ``~`` in its place, as every ``{kind}/{id}`` endpoint accepts (API_GUIDE)."""
+    k = urllib.parse.quote(kind, safe="")
+    if "/" in id_ or "\\" in id_ or id_ in (".", "..", "~"):
+        return f"{k}/~", {"id": id_}
+    return f"{k}/{urllib.parse.quote(id_, safe='')}", {}
+
+
 class Drishti:
     def __init__(self, url: str | None = None, token: str | None = None, timeout: float = 30.0):
         self.url = (url or os.environ.get("DRISHTI_URL") or "http://localhost:18480").rstrip("/")
@@ -77,7 +86,8 @@ class Drishti:
     # ---- reads --------------------------------------------------------------------------------------------------
     def document(self, kind: str, id_: str, as_of: str | None = None) -> dict:
         """The entity's document as its source holds it (fields you may not see are masked)."""
-        return self._get(f"/entities/{urllib.parse.quote(kind)}/{urllib.parse.quote(id_)}/raw", as_of)["data"]
+        where, q = _entity(kind, id_)
+        return self._get(f"/entities/{where}/raw", as_of, **q)["data"]
 
     def field(self, kind: str, id_: str, path: str, as_of: str | None = None):
         """One value by path: "mtm", "counterparty.name", "legs[0].rate"."""
@@ -90,7 +100,8 @@ class Drishti:
 
     def view(self, kind: str, id_: str, as_of: str | None = None) -> dict:
         """The view model: strip, panels and provenance, as the console shows them."""
-        return self._get(f"/views/{urllib.parse.quote(kind)}/{urllib.parse.quote(id_)}", as_of)
+        where, q = _entity(kind, id_)
+        return self._get(f"/views/{where}", as_of, **q)
 
     def search(self, query: str, as_of: str | None = None) -> list[dict]:
         """A pick list or search (TRD MX-200000, TRD productType=Revolver, TRD where …): one dict per entity."""
@@ -104,7 +115,8 @@ class Drishti:
 
     def diff(self, kind: str, id_: str, date_from: str, date_to: str) -> dict:
         """What changed in an entity between two business dates."""
-        return self._get(f"/history/{urllib.parse.quote(kind)}/{urllib.parse.quote(id_)}/diff", None, **{"from": date_from, "to": date_to})
+        where, q = _entity(kind, id_)
+        return self._get(f"/history/{where}/diff", None, **{"from": date_from, "to": date_to}, **q)
 
     def to_pandas(self, query: str, as_of: str | None = None):
         """The search as a pandas DataFrame (needs pandas)."""

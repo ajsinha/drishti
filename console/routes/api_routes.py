@@ -70,7 +70,7 @@ async def revoke_token(request: Request, id_: str):
     return {"ok": True}
 
 
-@router.get("/notes/{kind}/{id_}")
+@router.get("/notes/{kind}/{id_:path}")
 async def notes(request: Request, kind: str, id_: str):
     try:
         return await request.app.state.backend.notes(kind, id_, ident(request))
@@ -78,7 +78,7 @@ async def notes(request: Request, kind: str, id_: str):
         return _problem(e)
 
 
-@router.post("/notes/{kind}/{id_}")
+@router.post("/notes/{kind}/{id_:path}")
 async def add_note(request: Request, kind: str, id_: str):
     body = await json_body(request)
     try:
@@ -105,7 +105,7 @@ async def delete_note(request: Request, note_id: int):
         return _problem(e)
 
 
-@router.get("/series/{kind}/{id_}")
+@router.get("/series/{kind}/{id_:path}")
 async def series(request: Request, kind: str, id_: str, path: str, days: int = 30):
     """A field's history for the chart that opens when a value is clicked."""
     try:
@@ -170,7 +170,7 @@ async def resolve(request: Request):
         return _problem(e)
 
 
-@router.get("/raw/{kind}/{id_}")
+@router.get("/raw/{kind}/{id_:path}")
 async def raw(request: Request, kind: str, id_: str):
     try:
         return await request.app.state.backend.raw(kind, id_, ident(request))
@@ -178,7 +178,7 @@ async def raw(request: Request, kind: str, id_: str):
         return _problem(e)
 
 
-@router.get("/view/{kind}/{id_}")
+@router.get("/view/{kind}/{id_:path}")
 async def view(request: Request, kind: str, id_: str):
     try:
         return await request.app.state.backend.view(kind, id_, ident(request))
@@ -211,7 +211,7 @@ def _view_event(request: Request, event: str, data: str) -> str:
     return data
 
 
-@router.get("/stream/{kind}/{id_}")
+@router.get("/stream/{kind}/{id_:path}")
 async def stream(request: Request, kind: str, id_: str):
     """Relays one view's live stream (kept for API clients; pages use /api/channel)."""
     backend = request.app.state.backend

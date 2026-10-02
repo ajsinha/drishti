@@ -852,7 +852,9 @@ With a date picked, the clock field beside it (**Known at**) asks *as known when
 are left out. The **×** clears it and returns to the latest knowledge.
 
 Use it to answer "what did we report at 6 pm, before the restatement?". Sources that keep versions
-(Delta Lake) honour it; others have only one version and show it.
+(Delta Lake, Iceberg) honour it. A dated store that keeps no versions (files, a database, Redis …) says so
+instead (`DRS-1007 … keeps no earlier versions`) rather than showing today's data as if it were what was known then;
+a search names it and says *partial*. Undated sources have only one version and show it.
 
 ## Compare: what changed
 
@@ -977,7 +979,7 @@ open it, or walk the table with the keyboard ([Tables](#tables-sorting-filtering
 | Combine | `and`, `or`, `not`, brackets. `not` applies to the comparison after it | `mtm > 1m and not status = 'Matured'` |
 | Amounts | `k` thousand, `m` million, `bn` billion | `250k`, `1.5m`, `2bn` |
 | Text values | in single quotes; a single word may go without | `'Early warning'`, `Rates` |
-| Sort | `order by <field>`, add `desc` for largest first | `order by mtm desc` |
+| Sort | `order by <field>`, add `desc` for largest first. Equal values come in id order and entities without the field last, so a `limit` keeps the same rows every time | `order by mtm desc` |
 | Size | `limit N`, a whole number from 1 to 1000; anything else (`limit 0`, `limit 5000`) is an error that gives the range | `limit 20` |
 
 Without `limit`, a search shows the number of results set in *My account → Settings* (100 unless you

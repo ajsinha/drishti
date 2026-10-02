@@ -83,7 +83,7 @@ async def grid_xlsx(request: Request):
                     headers={"Content-Disposition": f'attachment; filename="{file}"'})
 
 
-@router.get("/export/compare/{kind}/{id_}.csv")
+@router.get("/export/compare/{kind}/{id_:path}.csv")
 async def compare_csv(request: Request, kind: str, id_: str):
     params = {k: v for k, v in request.query_params.items() if k in ("from", "to", "fromKnownAt", "toKnownAt") and v}
     if params.get("fromKnownAt"):
@@ -98,7 +98,7 @@ async def compare_csv(request: Request, kind: str, id_: str):
     return _csv(to_csv(["Field", "Path", "Change", f, t, "Difference"], rows), filename(id_, "changes", f, t))
 
 
-@router.get("/export/{kind}/{id_}/{panel}.csv")
+@router.get("/export/{kind}/{id_:path}/{panel}.csv")
 async def panel_csv(request: Request, kind: str, id_: str, panel: str):
     try:
         vm = await request.app.state.backend.view(kind, id_, ident(request))
@@ -113,7 +113,7 @@ async def panel_csv(request: Request, kind: str, id_: str, panel: str):
     return _csv(to_csv(header, rows), filename(id_, panel, _date()))
 
 
-@router.get("/export/{kind}/{id_}.json")
+@router.get("/export/{kind}/{id_:path}.json")
 async def entity_json(request: Request, kind: str, id_: str):
     try:
         raw = await request.app.state.backend.raw(kind, id_, ident(request))

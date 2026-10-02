@@ -60,7 +60,7 @@ def _search(kind: str) -> str:
 
 
 # ---- the browser's engine: a panel's rows ------------------------------------------------------------------------
-@router.get("/records/{kind}/{id_}/{panel}")
+@router.get("/records/{kind}/{id_:path}/{panel}")
 async def records(request: Request, kind: str, id_: str, panel: str):
     """Every row of a table or ladder whose Sutra says pivot: (beyond the table's limit, up to the server's cap)."""
     try:
