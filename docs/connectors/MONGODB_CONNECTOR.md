@@ -210,7 +210,15 @@ How the loader works:
 - **Each line becomes a replace-or-insert by `_id`** in the domain's collection and, when it has promoted fields, another in
   `<domain>_columns`. Writes go in unordered bulk writes of `--batch` (1,000) operations, at most `--in-flight` (16)
   batches at once on virtual threads; the connection pool is sized above that.
-- **Idempotent**: loading the same rows again replaces each document with itself; a restated day replaces that day.
+- **Idempotent, and merging**: loading the same rows again replaces each document with itself; a restated entity
+  replaces its document of that day. Nothing is deleted: an entity the stream no longer carries keeps its document of
+  the day (delete it, or let retention take the day). A load killed half way leaves a day it reloads partly new and
+  partly as it was: load the day again to finish it.
+- **A new day is not shown half written**: a (kind, day) the collection does not hold yet is recorded in
+  `<domain>_loading` before its first document, and the record goes when the load has written every document; the
+  connector leaves such days out of its catalogue. A day a killed load began stays hidden until a load of it finishes.
+- **Dates are guarded**: a row dated after tomorrow in the business zone is not loaded; the first few are named on
+  standard error and the load ends with an error once the other rows are in.
 - **Collections are prepared on first use**: created with zstd compression when absent, with the `day_ids` index (and the
   TTL index with `--ttl-days`). Creating an index that exists does nothing.
 - **Throughput**: 30,000 trade-days in 3 s (10,000 a second, the generator included); during development 100,000 trade
@@ -306,7 +314,10 @@ netting set `NS-SUMMIT-NY` **33–59 ms**.
 Two ways, both set at load time; the connector has no retention setting.
 
 **`--keep-days N`**: after loading, for every kind of every domain collection in the database, the loader finds the
-kind's dates (a distinct scan) and deletes the days older than its N newest from both collections:
+kind's dates (a distinct scan) and deletes the days older than its N newest on or before `--as-of` (default: today in
+the business zone; a day after it is neither counted nor deleted) from both collections. Every kind is checked first:
+when one would lose more than `--max-drop-share` (0.5) of its days, nothing is deleted and the load fails, unless
+`--force-drop`. The delete is
 `deleteMany({kind, date: {$lt: cutoff}})`, a range of the `day_ids` index. Measured: 21,787 documents (one trade day and
 the samples' older days, plus their `_columns` copies) in **386 ms**. A million-trade day is **estimated** at 20–40 s of
 deletes once a day; run it outside business hours, as part of the nightly load.
@@ -517,7 +528,7 @@ On a MongoDB connector (`drishti.sources.connectors.<name>.settings`):
 | `source-name` | `mongodb` (a connector: its name) | the name shown in provenance and Health |
 
 Loader options (`tools/load-mongodb.sh` and `MongoLoader`): `--keep-days N`, `--ttl-days N`, `--doc-format string|bson`
-(`string`), `--batch N` (1000), `--in-flight N` (16), `--trades N --days D` (the script only).
+(`string`), `--batch N` (1000), `--in-flight N` (16), `--as-of yyyy-MM-dd` (today in the business zone), `--future-days N` (1), `--zone Z` (`DRISHTI_BUSINESS_ZONE`, else `America/New_York`), `--max-drop-share F` (0.5), `--force-drop`, `--trades N --days D` (the script only).
 
 ## 13. Checklist for production
 

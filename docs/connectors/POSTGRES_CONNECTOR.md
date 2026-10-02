@@ -178,18 +178,29 @@ How the loader works:
   value}}`, the same as the Aerospike loader's. `make_data.py --jsonl` writes the samples; `bulk_trades.py --jsonl -`
   streams a generated book to standard output, piped into the loader (`PostgresLoader -` reads standard input), so a
   million-trade book never sits in a file of tens of gigabytes.
-- **`COPY`, in parallel.** Rows are sent with PostgreSQL's `COPY` in batches of 2,000 on `--writers` connections at
-  once (8). With a million trades the generator, not the database, sets the pace: 3,000,000 rows took 172 s, of which
-  156 s was generating them.
+- **`COPY`, in parallel, into a stage.** Rows are sent with PostgreSQL's `COPY` in batches of `--batch` (2,000) on
+  `--writers` connections at once (8), into a stage table nobody reads (`<schema>.entities_load_<token>`, unlogged,
+  without indexes). With a million trades the generator, not the database, sets the pace: 3,000,000 rows took 172 s,
+  of which 156 s was generating them.
 - **The table is made as needed**: the schema, the partitioned table, its indexes and `entity_dates` when missing; a
   month's partition the first time a date in it arrives; a promoted column the first time a path arrives with a value
   (`ALTER TABLE … ADD COLUMN`, which rewrites nothing).
-- **A day is replaced whole**: the first time the stream reaches a (kind, business date), that day's existing rows are
-  deleted, so loading a day again never duplicates it. `--recreate` drops each domain's table first (the samples' load
-  uses it).
-- **At the end** each kind's dates and row counts are recorded in `entity_dates`, and every partition written is
-  vacuumed and analysed: the visibility map lets type-ahead read a day's ids from the index alone, and the planner has
-  fresh statistics.
+- **A day is replaced whole, in one transaction.** Once the stream has ended, each staged (kind, business date) is
+  published in a transaction of its own (up to `--writers` at once): the day's rows deleted, the staged rows inserted,
+  the day and its row count recorded in `entity_dates`. Readers see the old day or the new one, never an empty or a
+  half day, and the catalogue learns of the day only when it is complete. Two loads of the same day are serialised (a
+  transaction-scoped advisory lock): the later one replaces the earlier one whole.
+- **A load that fails or is killed changes nothing** a reader sees: every day stays as it was. A failing load drops
+  its stage; a killed load's stage is dropped by the next load of the domain (a stage is marked alive by a session
+  advisory lock, which goes with the dead loader's connection).
+- **`--recreate`** builds each domain the stream reaches anew in a shadow schema (`<schema>__load_<token>`: the
+  layout's tables, partitions and indexes) and swaps it in in one transaction (the old tables dropped, the new ones
+  moved into the schema); until then readers see the old domain. The samples' load uses it.
+- **Dates are guarded.** A row dated after tomorrow in the business zone (`--future-days`, 1; `--zone`, else
+  `DRISHTI_BUSINESS_ZONE`, else `America/New_York`) is not loaded; the first few are named on standard error and the
+  load ends with an error once the other rows are in.
+- **At the end** every partition written is vacuumed and analysed: the visibility map lets type-ahead read a day's ids
+  from the index alone, and the planner has fresh statistics.
 - **A table of the earlier form** (not partitioned) is refused with `… is a plain table of the old layout: load with
   --recreate`.
 
@@ -224,7 +235,9 @@ At start, and every `refresh-seconds` (60), the connector reads:
   ids of every day.
 
 When the last load time changes, the days of columns in memory are dropped and the newest day's columns are read
-again in the background.
+again in the background. A day's id ranges are read on several connections, each in its own transaction; when
+`entity_dates` says the day was loaded again while it was read, it is read again, so a search never counts half the
+old day and half the new.
 
 ### 5.2 Opening one entity
 
@@ -284,12 +297,18 @@ computed in the background after start and kept), impact of a netting set with 1
 
 ## 6. Retention: dropping months
 
-`--keep-months N` on the loader drops every monthly partition older than the newest N months and removes their dates
-from `entity_dates`:
+`--keep-months N` on the loader drops every monthly partition older than the N newest months, counted back from
+`--as-of` (default: today in the business zone) and never from the newest date in the load, and removes their dates
+from `entity_dates`, in one transaction:
 
 ```
-postgres: dropped trading.entities_y2019m09
+postgres: dropped trading.entities_y2019m09 (keeping from 2019-10-01)
 ```
+
+A run that would drop more than `--max-drop-share` (0.5) of a domain's rows drops nothing and fails (`… retention would
+drop … rows (more than --max-drop-share 0.50) …; nothing was dropped`); `--force-drop` overrides it, for a deliberate
+first cut of a long history. One mis-dated row can therefore never take the history with it: it is not loaded, and the
+cut-off does not depend on it.
 
 Dropping a partition is a catalogue change: instant, no rows deleted, nothing to vacuum, the space returned to the
 operating system at once. Run it with each load, or from cron. Seven years is `--keep-months 84`.
@@ -400,8 +419,12 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
   and read as documents.
 - **A load is seen within `refresh-seconds`** (60): until the catalogue refresh, type-ahead and searches answer from
   the previous load.
-- **A table being recreated** (`--recreate`) is briefly missing: reads during that moment fail and the catalogue keeps
-  its last state until the next refresh. Recreate only for a fresh start.
+- **A domain being recreated** (`--recreate`) is swapped in in one transaction: reads wait for that moment and then
+  see the new tables. The catalogue keeps its last state until the next refresh.
+- **Publishing a day costs a second write.** The stage is `COPY`ed in parallel, then each day is inserted from it in
+  one transaction (one connection a day). At 10,000 trades × 3 days (Testcontainers PostgreSQL 18, 8 writers) a reload
+  of the three days takes 1.65–1.96 s against 1.52–1.81 s when rows went straight into the table (about a tenth more),
+  and a first load 1.59–1.91 s against 1.71–1.95 s (the stage has no indexes to keep).
 - **Table and column names** must be plain SQL identifiers; the connector refuses anything else, so a setting cannot
   carry SQL.
 
@@ -446,7 +469,9 @@ On a `jdbc` connector in table mode (`drishti.sources.connectors.<name>.settings
 | `source-name` | `jdbc` | the name shown in provenance and Health |
 
 Loader options (`PostgresLoader`, through `tools/load-postgres.sh`): `--user`, `--password` (default
-`DRISHTI_PG_USER`/`DRISHTI_PG_PASSWORD`, else `drishti`), `--writers` (8), `--recreate`, `--keep-months N`.
+`DRISHTI_PG_USER`/`DRISHTI_PG_PASSWORD`, else `drishti`), `--writers` (8), `--batch` (2,000), `--recreate`,
+`--keep-months N`, `--as-of yyyy-MM-dd` (today), `--future-days N` (1), `--zone Z`, `--max-drop-share F` (0.5),
+`--force-drop`.
 
 ## 13. Checklist for production
 

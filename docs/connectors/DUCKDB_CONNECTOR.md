@@ -341,12 +341,18 @@ Desk P&L and impact work from the column set as on Delta Lake and PostgreSQL: de
 
 ## 6. Retention: dropping days
 
-`--keep-days N` on the loader drops every business date more than N calendar days older than the domain's newest day,
-and their dates, while it builds the new file:
+`--keep-days N` on the loader drops every business date more than N calendar days before `--as-of` (default: today
+in the business zone), never counted from the newest date in the file or the load, and their dates, while it builds the
+new file:
 
 ```
 duckdb: hist: dropped 1 business dates before 2026-09-01
 ```
+
+A run that would drop more than `--max-drop-share` (0.5) of a domain's rows fails before the new file replaces the old
+one (`… retention would drop … rows …; nothing was dropped`), and the current file stays as it was; `--force-drop`
+overrides it. A row dated after tomorrow in the business zone is not loaded at all, and the load ends with an error
+naming it, so one mis-dated row can neither appear as the newest day nor move the cut-off.
 
 Because the new file is written from scratch, dropped days leave no free space behind: the file shrinks at once, with
 no `VACUUM` or compaction step. Seven years is `--keep-days 2557`. Retention applies to every kind of the domain,
@@ -528,7 +534,7 @@ The `duckdb` profile reads `DRISHTI_DUCKDB_PATH` (default `data/duckdb/drishti.d
 (default `1GB`).
 
 Loader options (`DuckDbLoader FILE|- DATABASE`, through `tools/load-duckdb.sh [database]`): `--recreate`,
-`--keep-days N` (0: keep everything), `--parsers N` (8, or the cores if fewer), `--memory-limit` (`2GB`),
+`--keep-days N` (0: keep everything), `--as-of yyyy-MM-dd` (today in the business zone), `--future-days N` (1), `--zone Z` (`DRISHTI_BUSINESS_ZONE`, else `America/New_York`), `--max-drop-share F` (0.5), `--force-drop`, `--parsers N` (8, or the cores if fewer), `--memory-limit` (`2GB`),
 `--threads N` (every core). The script also takes `--trades N --days D` for a generated book.
 
 ## 13. Checklist for production
