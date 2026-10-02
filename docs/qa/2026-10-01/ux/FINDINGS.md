@@ -67,7 +67,7 @@ docaudit/). Totals: 3 high, 19 medium, 23 low, 5 info.
 | UX-17 | The function-key bar truncates panel titles. |
 | UX-18 | The release-notes guide has 16 `<h1>` elements. |
 | DOC-04 | QUICKSTART's "every key" list misses F5, F6, Alt+C and Alt+L. |
-| DOC-05 | Docs say expression evaluation is total (GRAM-03 shows it is not). |
+| DOC-05 | Docs say expression evaluation is total (GRAM-03 shows it is not). **Fixed** in c1ace31 (RACHANA_REFERENCE: size limits; evaluation is total and explained). |
 | DOC-10 | DRS-3001 documented but never thrown. |
 | DOC-11 | TROUBLESHOOTING's code table has gaps. |
 | DOC-12 | RACHANA_REFERENCE gives the problem-code range as 2010–2027 instead of –2031. |
