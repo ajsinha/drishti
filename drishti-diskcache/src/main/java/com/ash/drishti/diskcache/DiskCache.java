@@ -25,9 +25,13 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Comparator;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -60,11 +64,17 @@ import org.slf4j.LoggerFactory;
  * generation is reference counted: a call enters the current generation before touching it and leaves after, and
  * a retired generation is closed only when its last caller has left. So a clear or a close never frees native
  * memory under a running call, however long that call is delayed. Clearing and closing are serialised by a lock
- * (never held during reads or writes). After {@link #close()} reads miss and writes are dropped.
+ * (never held during reads or writes). After {@link #close()} reads miss and writes are dropped. A generation is
+ * disposed of exactly once, by whichever comes first: the scheduler (after a clear) or {@link #close()}, which disposes
+ * of every retired generation nobody is inside before it returns, so no RocksDB of the cache still writes into its
+ * directory once close has returned.
  */
 public final class DiskCache implements AutoCloseable {
 
     private static final Logger LOG = LoggerFactory.getLogger(DiskCache.class);
+
+    /** How long close() waits for a generation another thread is closing (RocksDB finishing a flush or compaction). */
+    private static final long DISPOSE_WAIT_SECONDS = 30;
 
     /** How a write survives a failure. */
     public enum Durability {
@@ -123,7 +133,29 @@ public final class DiskCache implements AutoCloseable {
         /** Set when a persistent cache closes: the files stay for the next run, whoever disposes of the store. */
         volatile boolean keepFiles;
 
-        void dispose() {
+        private final AtomicBoolean disposing = new AtomicBoolean();
+        private final CountDownLatch disposed = new CountDownLatch(1);
+
+        /** Closes and deletes the generation unless another thread has started to; returns once it is done either way. */
+        void disposeOnce() {
+            if (disposing.compareAndSet(false, true)) {
+                try {
+                    dispose();
+                } finally {
+                    disposed.countDown();
+                }
+                return;
+            }
+            try {
+                if (!disposed.await(DISPOSE_WAIT_SECONDS, TimeUnit.SECONDS)) {
+                    LOG.warn("disk cache generation {} still closing after {} s", dir, DISPOSE_WAIT_SECONDS);
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        private void dispose() {
             write.close();
             db.close();
             options.close();
@@ -139,6 +171,7 @@ public final class DiskCache implements AutoCloseable {
     private final Path root;
     private final long maxBytes;
     private final AtomicReference<Store> store = new AtomicReference<>();
+    private final Set<Store> retired = ConcurrentHashMap.newKeySet();   // cleared generations not yet disposed of
     private final ReentrantLock lifecycle = new ReentrantLock();   // clear and close; not synchronized, so virtual threads never pin
     private volatile boolean closed;
     private final boolean persistent;       // closing keeps the files, for the next run
@@ -387,6 +420,7 @@ public final class DiskCache implements AutoCloseable {
             }
             Store old = store.getAndSet(open());
             resets.incrementAndGet();
+            retired.add(old);
             leave(old);                       // drop the cache's own reference
             LOG.info("disk cache {} cleared", root);
         } catch (IOException e) {
@@ -399,10 +433,15 @@ public final class DiskCache implements AutoCloseable {
     /** Closes and deletes a generation off the caller's thread when the scheduler still runs. */
     private void dispose(Store s) {
         try {
-            scheduler.execute(s::dispose);
+            scheduler.execute(() -> disposeRetired(s));
         } catch (RejectedExecutionException e) {
-            s.dispose();
+            disposeRetired(s);
         }
+    }
+
+    private void disposeRetired(Store s) {
+        s.disposeOnce();
+        retired.remove(s);
     }
 
     private void deleteGenerations() throws IOException {
@@ -485,7 +524,15 @@ public final class DiskCache implements AutoCloseable {
             if (s != null) {
                 s.keepFiles = persistent;
                 if (s.leave()) {
-                    s.dispose();              // nobody inside: close here (a plain cache's files are gone when close returns)
+                    s.disposeOnce();          // nobody inside: close here (a plain cache's files are gone when close returns)
+                }
+            }
+            // cleared generations whose disposal is still queued on the scheduler (or was dropped by its shutdown):
+            // dispose of them now, so none still writes into the cache's directory once close returns. A generation a
+            // caller is still inside is disposed of by its last caller, as before.
+            for (Store r : retired) {
+                if (r.users.get() == 0) {
+                    disposeRetired(r);
                 }
             }
         } finally {
