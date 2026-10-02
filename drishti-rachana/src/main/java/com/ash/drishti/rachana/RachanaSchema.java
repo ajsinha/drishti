@@ -65,7 +65,7 @@ public final class RachanaSchema {
                 "where", text(EL + " that must be true for the Sutra to apply"),
                 "priority", Map.of("type", "integer", "description", "Higher wins when several Sutras match")), List.of("kind")));
         p.put("title", object(Map.of("pill", text("The pill before the id (may hold ${…})"), "id", text(EL + " for the id shown"),
-                "with", text(EL + ": the counterparty or other entity named after the id")), List.of()));
+                "with", text(EL + ": the counterparty or other entity named after the id")), List.of("id")));
         p.put("strip", Map.of("type", "array", "maxItems", 8, "description", "Up to eight fields in the header strip",
                 "items", object(Map.of("label", text("Defaults to the field's name"), "bind", text(EL),
                         "fmt", fmt(formats), "tone", tone(), "emphasis", Map.of("type", "boolean")), List.of("bind"))));
@@ -147,6 +147,12 @@ public final class RachanaSchema {
         if (k == PanelKind.HISTOGRAM && o.equals("bins")) {
             return Map.of("type", "integer", "minimum", 1, "maximum", com.ash.drishti.rachana.model.PanelOptions.MAX_BINS,
                     "description", "How many bins (default: the square root of the count, 5 to 40)");
+        }
+        if (k == PanelKind.TABLE && o.equals("limit")) {
+            return Map.of("type", "integer", "minimum", 1, "description", "Rows shown; the rest are counted in the more line");
+        }
+        if ((k == PanelKind.KV || k == PanelKind.STATUS) && o.equals("fields") || k == PanelKind.AREA && o.equals("series")) {
+            return Map.of("type", "array", "description", o.equals("series") ? "The series: { label, value, tone }" : "The fields: { label, bind, fmt, tone }");
         }
         if (k == PanelKind.HISTOGRAM && o.equals("markers")) {
             return Map.of("type", "array", "description", "Vertical marker lines: { label, value: <expression>, tone }");

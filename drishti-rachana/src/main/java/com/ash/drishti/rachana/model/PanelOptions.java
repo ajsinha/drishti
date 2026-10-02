@@ -23,7 +23,9 @@ import java.util.Set;
 /**
  * The values an option of a panel kind may take, where the kind restricts them: {@code agg: sum|count|avg|min|max}
  * on {@code pivot}, {@code layout: tree|force} on {@code graph}, {@code colors: gain-loss|theme} on {@code waterfall},
- * a whole {@code bins} count on {@code histogram},
+ * a whole {@code bins} count on {@code histogram}, a whole {@code limit} on {@code table}, {@code search} true or false,
+ * {@code rows}, {@code each}, {@code nodes}, {@code edges} and {@code source} as expression text, {@code markdown} text
+ * as text, {@code fields} ({@code kv}, {@code status}) and {@code series} ({@code area}) as lists,
  * {@code markers} as a list of mappings with a {@code value}. The parser reports a value outside them as
  * {@code DRS-2029}, so a Sutra is rejected before it meets data rather than drawing something unexpected.
  */
@@ -46,7 +48,15 @@ public final class PanelOptions {
             PanelKind.PIVOT, Map.of("agg", AGGREGATIONS),
             PanelKind.GRAPH, Map.of("layout", GRAPH_LAYOUTS),
             PanelKind.WATERFALL, Map.of("colors", WATERFALL_COLORS));
-    private static final Map<PanelKind, Set<String>> BOOLEANS = Map.of(PanelKind.PIVOT, Set.of("heat", "totals"));
+    private static final Map<PanelKind, Set<String>> BOOLEANS = Map.of(PanelKind.PIVOT, Set.of("heat", "totals"),
+            PanelKind.TABLE, Set.of("search"), PanelKind.LADDER, Set.of("search"));
+    /** Options that name a list (or one object) by an expression: a number, a truth value or a YAML list never is one. */
+    private static final Set<String> LIST_EXPRESSIONS = Set.of("rows", "each", "nodes", "edges", "source");
+    /** Options written as a YAML list of mappings, with the keys each item takes. */
+    private static final Map<PanelKind, Map<String, String>> LISTS = Map.of(
+            PanelKind.KV, Map.of("fields", "{ label, bind, fmt, tone }"),
+            PanelKind.STATUS, Map.of("fields", "{ label, bind, fmt, tone }"),
+            PanelKind.AREA, Map.of("series", "{ label, value, tone }"));
     private static final Set<String> MARKER_KEYS = Set.of("label", "value", "tone");
 
     private PanelOptions() {}
@@ -58,6 +68,20 @@ public final class PanelOptions {
 
     /** Why {@code value} is not valid for {@code option} of {@code kind} panels; empty when it is. */
     public static Optional<String> problem(PanelKind kind, String option, Object value) {
+        String what = "option '" + option + "' of '" + kind.id() + "' panels";
+        if (LIST_EXPRESSIONS.contains(option) && !(value instanceof String)) {
+            return Optional.of(what + " is an expression written as text (such as $.cashflows), not '" + value + "'");
+        }
+        if (kind == PanelKind.MARKDOWN && option.equals("text") && !(value instanceof String)) {
+            return Optional.of(what + " is text (a template with ${expression} parts), not '" + value + "'");
+        }
+        if (kind == PanelKind.TABLE && option.equals("limit") && !(value instanceof Long n && n >= 1 && n <= Integer.MAX_VALUE)) {
+            return Optional.of(what + " must be a whole number of rows, 1 or more, not '" + value + "'");
+        }
+        String items = LISTS.getOrDefault(kind, Map.of()).get(option);
+        if (items != null && !(value instanceof List<?>)) {
+            return Optional.of(what + " must be a list of " + items + ", not '" + value + "'");
+        }
         List<String> allowed = choices(kind, option);
         if (!allowed.isEmpty() && !allowed.contains(String.valueOf(value))) {
             return Optional.of("option '" + option + "' of '" + kind.id() + "' panels must be one of " + String.join(", ", allowed)

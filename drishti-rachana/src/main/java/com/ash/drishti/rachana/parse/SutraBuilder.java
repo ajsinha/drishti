@@ -95,8 +95,8 @@ final class SutraBuilder {
         PNode v = m.get("version");
         if (v == null) {
             problem("DRS-2010", "missing 'version'", root);
-        } else if (!(v.value() instanceof Long l) || l < 1) {
-            problem("DRS-2020", "version must be a positive integer", v);
+        } else if (!(v.value() instanceof Long l) || l < 1 || l > Integer.MAX_VALUE) {
+            problem("DRS-2020", "version must be a positive integer up to " + Integer.MAX_VALUE + ", not '" + v.value() + "'", v);
         } else {
             version = l.intValue();
         }
@@ -150,9 +150,23 @@ final class SutraBuilder {
         }
         unknownKeys(n.map(), Set.of("kind", "where", "priority"), "match");
         String kind = requiredText(n.map(), "kind", n);
+        if (kind != null && !(n.map().get("kind").value() instanceof String)) {
+            problem("DRS-2012", "'kind' in match is an entity kind written as text (such as trade), not '" + kind + "'", n.map().get("kind"));
+        }
+        PNode where = n.map().get("where");
+        if (where != null && where.value() != null && !(where.value() instanceof String)) {
+            problem("DRS-2012", "'where' in match is an expression written as text, not '" + plain(where) + "'", where);
+        }
         PNode pr = n.map().get("priority");
-        int priority = pr != null && pr.value() instanceof Long l ? l.intValue() : 0;
-        return new Match(kind, text(n.map().get("where"), null), priority);
+        int priority = 0;
+        if (pr != null && pr.value() != null) {
+            if (pr.value() instanceof Long l && l >= Integer.MIN_VALUE && l <= Integer.MAX_VALUE) {
+                priority = l.intValue();
+            } else {
+                problem("DRS-2012", "'priority' in match must be a whole number (higher is tried first), not '" + plain(pr) + "'", pr);
+            }
+        }
+        return new Match(kind, text(where, null), priority);
     }
 
     private Title title(PNode n) {
@@ -164,6 +178,10 @@ final class SutraBuilder {
             return null;
         }
         unknownKeys(n.map(), Set.of("pill", "id", "with"), "title");
+        if (n.map().get("id") == null || n.map().get("id").value() == null) {
+            // without 'title' the default is { id: $.id }; a title written out says which expression is the identifier
+            problem("DRS-2010", "missing 'id' in title: the expression for the large identifier, such as $.tradeId", n);
+        }
         return new Title(text(n.map().get("pill"), null), text(n.map().get("id"), "$.id"), text(n.map().get("with"), null));
     }
 

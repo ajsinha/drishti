@@ -13,7 +13,6 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 rachana: 1
-rachana: 1
 sutra: book-pnl
 version: 1
 description: A book's P&L, derived from its trades by the book-totals connector (a derived kind; see PACKS.md).
