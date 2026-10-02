@@ -55,3 +55,56 @@ def test_waterfall_bars_stand_out_in_every_theme():
             for bg in ("bg", "surface"):
                 assert _ratio(t[fill], t[bg]) >= 3.0, (name, fill, bg, round(_ratio(t[fill], t[bg]), 2))
         assert t["ok"].lower() != t["bad"].lower() and t["pos"].lower() != t["neg"].lower(), name
+
+
+THEMES = ("terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark")
+# Every token the console's CSS sets as a text colour, and every ground text sits on: the page, the second ground
+# (inputs, the command line), panels and the second surface (code, headers).
+TEXT_TOKENS = ("ink", "muted", "faint", "link", "accent", "accent-strong", "pos", "neg", "ok", "warn", "bad")
+GROUNDS = ("bg", "bg-2", "surface", "surface-2")
+CSS = Path(__file__).resolve().parent.parent / "web" / "static" / "css"
+
+
+def test_every_text_colour_reads_on_every_ground_in_every_theme():
+    """UX-04: faint text ("No data available", the footer, placeholders, key notes) and accent used as text (example
+    commands, inline code, kickers) need 4.5:1 like any text (WCAG 1.4.3), on every ground, in all seven themes."""
+    low = []
+    for name in THEMES:
+        t = _theme(name)
+        for fg in TEXT_TOKENS:
+            for bg in GROUNDS:
+                r = _ratio(t[fg], t[bg])
+                if r < 4.5:
+                    low.append(f"{name}: --d-{fg} {t[fg]} on --d-{bg} {t[bg]} is {r:.2f}:1")
+    assert not low, "\n".join(low)
+
+
+def test_labels_on_accent_fills_read_in_every_theme():
+    """Accent buttons and the skip link put --d-on-accent on the accent (and accent-strong on hover): dark on the bright
+    accents, white on the light theme's amber and on crimson."""
+    for name in THEMES:
+        t = _theme(name)
+        for fill in ("accent", "accent-strong"):
+            assert _ratio(t["on-accent"], t[fill]) >= 4.5, (name, fill, round(_ratio(t["on-accent"], t[fill]), 2))
+
+
+def test_the_css_colours_text_only_with_checked_tokens():
+    """A text colour taken from a token outside TEXT_TOKENS would escape the checks above: every `color:` in the
+    console's CSS is one of them or --d-on-accent (or a fixed colour on a fixed ground, such as white on a badge)."""
+    used = set()
+    for f in CSS.glob("*.css"):
+        if f.name == "tokens.css":
+            continue
+        used |= set(re.findall(r"(?<![-\w])color:\s*var\(--d-([a-z0-9-]+)\)", f.read_text()))
+    checked = set(TEXT_TOKENS) | {"on-accent"}
+    assert {"faint", "accent"} <= used <= checked, sorted(used - checked)
+
+
+def test_the_light_fallback_is_the_light_theme():
+    """With no theme chosen and a light system preference the console uses a copy of the light theme's colours: the
+    copy has every text and ground colour, and none drifts from the checked light theme."""
+    block = re.search(r"@media \(prefers-color-scheme: light\)\s*\{\s*:root:not\(\[data-theme\]\)\s*\{([^}]*)\}", TOKENS).group(1)
+    light = _theme("light")
+    fallback = {k: v.lower() for k, v in re.findall(r"--d-([a-z0-9-]+):\s*(#[0-9a-fA-F]{6})", block)}
+    assert set(TEXT_TOKENS) | set(GROUNDS) | {"on-accent"} <= set(fallback)
+    assert fallback == {k: light[k].lower() for k in fallback}

@@ -59,13 +59,13 @@
     <p class="text-muted-d adm-hint">Short words for commands you type often. Type the word on the command line instead of the
       command; anything after it is added on (<span class="mono">MYBOOK F3</span>). Names are letters and digits; a mnemonic or a
       pack code cannot be used.</p>
-    <table class="tbl" data-alias-table data-plain><thead><tr><th>Alias</th><th>Command</th><th></th></tr></thead><tbody>
+    <div class="tbl-wrap"><table class="tbl" data-alias-table data-plain><thead><tr><th>Alias</th><th>Command</th><th></th></tr></thead><tbody>
       {% for name, body in (aliases or {}).items() %}<tr><td><input class="cmd-input mono" name="name" value="{{ name }}" aria-label="Alias"></td>
         <td><input class="cmd-input mono" name="body" value="{{ body }}" aria-label="Command"></td>
         <td><button type="button" class="fk" data-remove>Remove</button></td></tr>{% endfor %}
       <tr><td><input class="cmd-input mono" name="name" placeholder="MYBOOK" aria-label="New alias"></td>
         <td><input class="cmd-input mono" name="body" placeholder="BOOK BOOK-RATES-1" aria-label="New command"></td><td></td></tr>
-    </tbody></table>
+    </tbody></table></div>
     <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
     <button type="submit" class="btn-pill btn-accent">Save aliases</button>
   </form>
@@ -74,14 +74,14 @@
     <p class="text-muted-d adm-hint">For scripts, notebooks and spreadsheets: a token reads what you may read, as you, and never changes
       anything. Send it as <span class="mono">Authorization: Bearer drk_…</span> to <span class="mono">{{ api_base }}/api/v1/…</span>
       (see the <a href="/help/api">API guide</a>). The secret is shown once; revoke a token you no longer use.</p>
-    <table class="tbl" data-plain><thead><tr><th>Name</th><th>Created</th><th>Expires</th><th>Last used</th><th>Status</th><th></th></tr></thead><tbody>
+    <div class="tbl-wrap"><table class="tbl" data-plain><thead><tr><th>Name</th><th>Created</th><th>Expires</th><th>Last used</th><th>Status</th><th></th></tr></thead><tbody>
       {% for t in tokens or [] %}<tr data-token="{{ t.id }}"><td>{{ t.name }} <span class="mono text-muted-d">{{ t.id }}</span></td>
         <td class="mono">{{ (t.createdAt or '')[:10] }}</td><td class="mono">{{ (t.expiresAt or 'never')[:10] }}</td>
         <td class="mono">{{ (t.lastUsedAt or '—')[:16] | replace('T', ' ') }}</td>
         <td>{% if t.active %}<span class="st st-ok">active</span>{% elif t.revokedAt %}<span class="st">revoked</span>{% else %}<span class="st st-warn">expired</span>{% endif %}</td>
         <td>{% if t.active %}<button type="button" class="fk" data-revoke>Revoke</button>{% endif %}</td></tr>
       {% else %}<tr><td colspan="6" class="text-muted-d">No tokens yet.</td></tr>{% endfor %}
-    </tbody></table>
+    </tbody></table></div>
     <form data-token-new class="token-new">
       <label>Name <input name="name" class="cmd-input" maxlength="100" placeholder="Risk notebook" required></label>
       <label>Days <input name="days" class="cmd-input mono" type="number" min="1" max="366" placeholder="90 (blank: no expiry)"></label>

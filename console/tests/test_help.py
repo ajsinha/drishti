@@ -93,3 +93,15 @@ def test_the_sutra_guide_is_a_help_card_with_screenshots(client):
     import re
     for src in set(re.findall(r'src="(/static/img/guide/[^"]+)"', page)):
         assert client.get(src).status_code == 200, src
+
+
+def test_guide_screenshots_fit_their_column_and_open_full_size(client):
+    """UX-03: a guide's screenshots are wrapped in a link to the image itself, and help.css fits them to the column."""
+    import re
+    page = client.get("/help/sutra-guide").text
+    imgs = re.findall(r'(<a [^>]*>)?\s*<img [^>]*src="(/static/img/guide/[^"]+)"', page)
+    assert len(imgs) >= 15
+    for link, src in imgs:
+        assert f'href="{src}"' in link and 'target="_blank"' in link and 'class="help-shot"' in link, (src, link)
+    css = client.get("/static/css/help.css").text
+    assert re.search(r"\.help-article img \{[^}]*max-width: 100%;[^}]*height: auto;", css)

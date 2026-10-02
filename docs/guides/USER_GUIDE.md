@@ -1286,6 +1286,9 @@ bodies, tables and figures stay on solid colours so they read clearly. If your s
 contrast or less transparency, the solid look is used. Signed in, your choice is saved to your account;
 otherwise the browser remembers it.
 
+Every theme meets WCAG AA contrast: all text, including faint notes, the footer and placeholders, reads at
+4.5:1 or more on its background, and buttons in the accent colour carry a label that reads on them.
+
 ## Domain packs: choosing what you see
 
 A pack brings one domain: its mnemonics, layouts and data. If you may use more than one pack, the round
@@ -1523,6 +1526,10 @@ full-screen at the terminal.
   **F7 Netting set**, **← Back**.
 - **Command line:** type a command and tap a suggestion.
 - **Layout:** panels stack in one column, the strip shows two figures per row, and wide tables scroll
-  sideways inside their panel. Workspace panes stack too.
+  sideways inside their panel. Workspace panes stack too. No page scrolls sideways on a screen 360 px wide or
+  wider.
+- **Top bar:** the menus and tools keep their icons on the first line (below 480 px the brand shows its mark
+  only); the command line and the business date share the second, and **Live** shows as its dot.
+- **Help:** screenshots fit the screen; tap one to open it full size.
 - **Live values** keep ticking.
 - **Studio** is left out on phones; everything else, including help and administration, works.

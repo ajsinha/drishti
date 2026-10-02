@@ -620,7 +620,9 @@ Python 3.12, FastAPI + Jinja2: `core/` (app, settings, auth, backend client, bus
 (Bloomberg Terminal colours: black ground, amber data, yellow commands, green/red ticks, blue highlight — colours
 only, not fonts), `blue`, `green`, `crimson` and `crimson-dark`. The choice is saved to the user's account and
 mirrored in `localStorage['drishti.theme']` for first paint. Contrast is checked by `console/tests/test_contrast.py`
-(≥ 4.5:1 text, ≥ 3:1 non-text).
+(≥ 4.5:1 for every token used as text — ink, muted, faint, link, accent, accent-strong, pos, neg, ok, warn, bad — on
+bg, bg-2, surface and surface-2, and for `--d-on-accent` on accent fills; ≥ 3:1 non-text). Layout is checked at 390,
+1600 and 2560 px by `console/tests/test_page_widths_browser.py` (no page scrolls sideways; images fit their column).
 
 **Pages**
 

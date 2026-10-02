@@ -717,7 +717,8 @@ stopping the other charts.
 - **Colour is never alone.** Tones always accompany a sign or text: a negative amount carries its minus sign, a
   timeline status its word, a heat cell its number.
 - **Themes.** Charts read their colours from the theme's tokens and are redrawn when the theme changes; the token
-  contrast (text at least 4.5:1, accents at least 3:1) is checked for every theme by `test_contrast.py`.
+  contrast (every text colour, faint and accent included, at least 4.5:1 on every background; accents and chart
+  fills at least 3:1) is checked for every theme by `test_contrast.py`.
 - **Print** uses the light print palette and prints the charts as drawn; open **Data** first to print the numbers too.
   It keeps the order and widths of the view (the user's own layout when they keep one), leaves hidden panels out and
   prints every panel at its full height.

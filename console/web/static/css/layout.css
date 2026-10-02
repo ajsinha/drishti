@@ -97,7 +97,7 @@
 .lh-s::after { left: calc(50% - 14px); top: 4px; height: 4px; width: 28px; }
 .lh-e:hover::after, .lh-s:hover::after, .resizing .lh-e::after, .resizing .lh-s::after { opacity: 1; }
 .lay-size { display: none; position: absolute; right: .5rem; bottom: .35rem; z-index: 4; padding: 0 .35rem; border-radius: 3px;
-  background: var(--d-accent); color: #111; font: .72rem var(--d-font-mono); pointer-events: none; }
+  background: var(--d-accent); color: var(--d-on-accent); font: .72rem var(--d-font-mono); pointer-events: none; }
 .layout-on .lay-size { display: block; }
 .fk-mine { color: var(--d-accent); }
 .lay-promote { width: min(760px, 96vw); }
