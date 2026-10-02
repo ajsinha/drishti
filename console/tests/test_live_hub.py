@@ -1,3 +1,17 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
 """The browser's live hub (live-hub.js, UX-01): every tab of a browser subscribes through one hub that holds ONE channel
 to the console. These run the hub in Node with a stand-in EventSource, fetch and clock, and check the protocol: keys
 shared by tabs are subscribed once, later tabs get what a fresh stream starts with, changes go over the open channel,
