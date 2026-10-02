@@ -473,7 +473,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 
 - **Check:** the field name: press **F9** on one entity of that kind and copy the path exactly
   (`counterparty.name`, `legs[0].rate`). A field that does not exist is simply never true. A masked field
-  never matches. (An unknown mnemonic is an error, not an empty result:
+  (and any field under it) never matches, for any condition, `!` included. (An unknown mnemonic is an error, not an empty result:
   `DRS-4004 'XYZ' is neither a mnemonic nor a kind; type it alone to see suggestions`.)
 - **Fix:** correct the path. Text matching with `=`, `!=`, `contains` and `startswith` ignores case, so
   `currency = usd` finds `USD`.

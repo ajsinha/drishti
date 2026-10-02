@@ -67,7 +67,8 @@ Every change is read out by screen readers.
 `TRD where mtm > 0` (where the pack offers it): the server pivots **every** matching trade of the day, from the fields
 its store keeps as columns, and sends only the cells. A field marked **doc** is not a column: the server says so, and
 **Read documents instead** reads up to 20,000 documents (marked *partial* if there were more). Fields your role may not
-see stay masked (`•••`), never added up.
+see stay masked (`•••`), never added up, here and on a panel's rows alike; a field under a masked one
+(`counterparty.name` when `counterparty` is masked) groups under `•••` too.
 
 ![The Pivot tab on a trade search: MTM by book and currency over every matching trade](/static/img/guide/pivot-search.png)
 

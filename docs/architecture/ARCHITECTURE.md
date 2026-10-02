@@ -578,7 +578,7 @@ The main endpoints; [API_GUIDE.md](../guides/API_GUIDE.md) lists every one with 
 | `GET` | `/command/suggest?q=&limit=` | type-ahead entries (mnemonics, recents, entity hits) |
 | `GET` | `/views/{kind}/{id}` | `ViewModel` |
 | `GET` | `/views/{kind}/{id}/stream` | SSE: one `view` event, then `frame` events |
-| `GET` | `/entities/{kind}/{id}/raw` | source document + provenance (F9), redacted for roles without `raw` |
+| `GET` | `/entities/{kind}/{id}/raw` | source document + provenance (F9), field masks applied for roles without `raw` |
 | `GET` | `/search?q=` | structured search across entities |
 | `GET` | `/impact/{kind}/{id}` · `/history/{kind}/{id}/diff` | F8 impact · what changed between dates |
 | `GET` | `/sutras` · `/sutras/{name}/{version}` · `/sutras/problems` | registry listing · one Sutra · load problems |
@@ -668,7 +668,13 @@ one panel, updates strip cells in place, and hands chart panels new data — so 
   provisions the user. The token boundary is unchanged.
 - **Entitlements** per role and kind (`drishti.security.roles`) and per user pack (section 12). Links to entities the
   user cannot open stay visible but disabled, with the reason (MAYA rule: *visible, not hidden*).
-- **Raw JSON** (F9) masks the fields in `drishti.security.redact` for roles without `raw`.
+- **Field masks.** For roles without `raw`, the fields in `drishti.security.redact` read `•••` on every path where
+  their value could be seen or inferred: raw JSON (F9), search, CSV, compare, history, Calc, pivots, views (strip,
+  title, tables and totals, panel records, values derived from them), the live stream, monitors, Studio previews,
+  Impact, the type-ahead, phrase search and alert rules. One function (`Entitlements.redactor`) masks the documents
+  before anything reads them; Rachana-EL carries the mask through (a value computed from it is masked, a condition on
+  it is never true), so a masked field can be neither seen nor probed
+  ([CONFIGURATION.md](../admin/CONFIGURATION.md#field-masks)).
 - **Console** CSP without `unsafe-inline`; all assets same-origin.
 
 ---

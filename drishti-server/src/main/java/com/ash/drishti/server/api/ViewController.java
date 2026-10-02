@@ -54,7 +54,7 @@ public class ViewController {
             @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
         entitlements.requireOpen(principal, kind);
         EntityRef ref = EntityRef.of(kind, id);
-        ViewModel v = entitlements.restrict(principal, timer.record(() -> pipeline.view(ref, asOf)));
+        ViewModel v = entitlements.restrict(principal, timer.record(() -> pipeline.view(ref, asOf, entitlements.redactor(principal))));
         String subtitle = v.title().pill() == null ? kind : v.title().pill().replace("Trade · ", "")
                 + (v.title().with() == null ? "" : " · " + v.title().with().text());
         recents.touch(principal.user(), new EntityHit(ref, v.title().id(), subtitle));
@@ -64,12 +64,13 @@ public class ViewController {
     /**
      * A table's or ladder's rows as raw values of the fields its Sutra's {@code pivot:} offers, for the console's Pivot tab
      * ({@code GET /api/v1/views/trade/X/panels/cashflows/records}): every row up to {@code drishti.pivot.max-records}, even
-     * when the table shows only its first {@code limit}. The same document, Sutra and business date as the view.
+     * when the table shows only its first {@code limit}. The same document, Sutra and business date as the view, and the
+     * same field masks (a masked field reads {@code •••}).
      */
     @GetMapping("/{kind}/{id}/panels/{panel}/records")
     public com.ash.drishti.engine.bind.PivotBinder.Records records(@PathVariable String kind, @PathVariable String id, @PathVariable String panel,
             AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
         entitlements.requireOpen(principal, kind);
-        return pipeline.records(EntityRef.of(kind, id), asOf, panel);
+        return pipeline.records(EntityRef.of(kind, id), asOf, panel, entitlements.redactor(principal));
     }
 }

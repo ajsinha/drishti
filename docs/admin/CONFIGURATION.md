@@ -342,7 +342,7 @@ See [PACKS.md](../guides/PACKS.md#a-signed-pack-registry-publishing-and-installi
 
 Check: `curl -s localhost:18480/api/v1/studio/settings` returns `{"approve":…,"review":…,"save":…}`.
 
-### `drishti.security` — tokens, roles, redaction
+### `drishti.security` — tokens, roles, field masks
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -350,13 +350,13 @@ Check: `curl -s localhost:18480/api/v1/studio/settings` returns `{"approve":…,
 | `secret` | empty (`DRISHTI_TOKEN_SECRET`) | The HS256 key, shared with the console's `auth.token_secret`. At least 32 bytes when security is on. |
 | `clock-skew` | `30s` | Tolerated clock difference when checking a token's expiry. |
 | `roles.<role>.kinds` | see below | Entity kinds the role may open; `"*"` means all. |
-| `roles.<role>.raw` | `false` | May see raw JSON unredacted. |
+| `roles.<role>.raw` | `false` | Sees every field: nothing in `redact` is masked for the role, anywhere. |
 | `roles.<role>.author` | `false` | May save Sutras from Studio (a proposal when governance is on). |
 | `roles.<role>.approve` | `false` | May approve or reject proposed Sutras. |
 | `roles.<role>.admin` | `false` | May manage users, read the audit log, approve Sutras. |
 | `roles.<role>.calc` | `false` | May use Calc, Python in the browser on what the role opens ([PYTHON_CALC.md](../guides/PYTHON_CALC.md#9-roles-who-may-use-calc)). |
 | `roles.<role>.layout` | `true` | May customise layouts: layout mode (`Alt+L`) and personal layouts ([USER_GUIDE.md](../guides/USER_GUIDE.md#layout-mode-arrange-a-view-your-way)). On unless set to `false`; the bundled `viewer` sets it to `false`. |
-| `redact` | `[trader, counterpartyId, patientName]` | Field names masked in raw JSON for roles without `raw`. |
+| `redact` | `[trader, counterpartyId, patientName]` | Field names masked for roles without `raw`, on every path that shows or reads their values ([field masks](#field-masks)). |
 
 The bundled roles; packs add domain roles (finance: `trader`, `risk`; logistics: `ops`):
 
@@ -378,6 +378,31 @@ drishti:
     roles:
       sales: { kinds: [trade, book] }
 ```
+
+#### Field masks
+
+For a role without `raw`, every field named in `redact` reads `•••` wherever the user could see or infer its value.
+A name matches at any depth (`trader` masks `$.trader` and `$.confirmation.trader`), and the mask covers everything
+under the field (with `counterparty` listed, `counterparty.name` and `counterparty.id` read `•••` too). The masking is
+done once, on the server, before anything reads the document, so it is the same on every path:
+
+- raw JSON (`F9`), search rows, search CSV, compare, history and its diff, Calc's columns and documents;
+- pivots: a masked field groups under `•••` and is never added up;
+- views: the header strip, the title, tables and their totals, key/value panels, tabs, charts, links and function keys,
+  the panel records behind the Pivot tab, and any value a Sutra computes from a masked field (`fmt($.mtm, …)`,
+  `$.mtm / 1e6`, a link built from a masked id); a chart leaves masked points out;
+- the live stream, monitors, the console's panel CSV export and Sutra Studio previews;
+- Impact (`F8`): an entity tied to the analysed one only through a masked field is not listed (a search on that field
+  finds nothing either); a masked measure and the total of a group that holds one read `•••`;
+- the type-ahead: entities are described from their view title as the user sees it, and a masked value is neither
+  shown nor matched; phrase search names no values of a masked field;
+- alert rules: a rule sees the document as its owner may (owner's current roles), so a rule on a masked field never
+  fires and a message shows `•••`.
+
+A masked field cannot be probed: a condition on it is never true (`mtm > 0` and `!(mtm > 0)` alike), ordering by it
+does not order, and the type-ahead does not match it. A mask hides the field it names, nothing else: a value the
+document also holds under another name (cash-flow PVs that add up to a masked MTM, say) stays visible unless that field
+is listed too.
 
 ### `drishti.security.oidc` — single sign-on
 

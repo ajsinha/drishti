@@ -100,9 +100,10 @@ public class StudioController {
         entitlements.requireOpen(principal, req.kind());
         Sutra s = sutras.check(req.yaml());
         if (req.document() != null && !req.document().isNull()) {
-            return entitlements.restrict(principal, pipeline.preview(java.util.Optional.of(s), pasted(req.kind(), req.id(), req.document())));
+            return entitlements.restrict(principal, pipeline.preview(java.util.Optional.of(s), pasted(req.kind(), req.id(), req.document()),
+                    entitlements.redactor(principal)));
         }
-        return entitlements.restrict(principal, pipeline.preview(s, EntityRef.of(req.kind(), req.id()), asOf));
+        return entitlements.restrict(principal, pipeline.preview(s, EntityRef.of(req.kind(), req.id()), asOf, entitlements.redactor(principal)));
     }
 
     @GetMapping(path = "/studio/inferred/{kind}/{id}", produces = "text/yaml")

@@ -116,12 +116,15 @@ final class ChartBinder {
         String fall = gainLoss ? "bad" : "neg";
         List<PanelData.Step> steps = new ArrayList<>();
         double run = 0;
+        boolean masked = false;
         int n = Math.min(rows.size(), limits.maxPoints());
         for (int i = 0; i < n; i++) {
             DataNode row = rows.get(i);
-            double v = Values.number(field(value, row, i, c));
+            Object x = field(value, row, i, c);
+            masked |= Values.masked(x);
+            double v = Values.number(x);
             if (!Double.isFinite(v)) {
-                continue;   // a step without a number is not a bar
+                continue;   // a step without a number is not a bar (nor a masked one: it is never added up)
             }
             String l = text(field(label, row, i, c));
             if (Values.truthy(field(total, row, i, c))) {
@@ -134,7 +137,7 @@ final class ChartBinder {
         }
         String sum = p.option("sum").orElse(null);
         if (sum != null && !steps.isEmpty()) {
-            steps.add(new PanelData.Step(sum, run, 0, run, format(fmt, run), "muted", true));
+            steps.add(new PanelData.Step(sum, run, 0, run, masked ? DataNode.MASK : format(fmt, run), "muted", true));
         }
         return new PanelData.Waterfall(steps, p.option("unit").orElse(null));
     }
@@ -403,9 +406,13 @@ final class ChartBinder {
         Map<String, Acc> colAcc = new LinkedHashMap<>();
         Acc all = new Acc();
         int n = Math.min(rows.size(), limits.maxValues());
+        boolean masked = false;
         for (int i = 0; i < n; i++) {
             DataNode row = rows.get(i);
-            double v = value == null ? 1 : Values.number(field(value, row, i, c));
+            Object x = value == null ? 1 : field(value, row, i, c);
+            boolean hidden = Values.masked(x);
+            masked |= hidden;
+            double v = hidden ? 0 : Values.number(x);         // its group still shows; the values are masked below
             if (!Double.isFinite(v)) {
                 continue;
             }
@@ -453,8 +460,23 @@ final class ChartBinder {
             }
             foot.add(cell(all.get(agg), fmt, tone));
         }
+        if (masked) {
+            return maskedPivot(by, columns, out, foot, agg, rowAcc.size());
+        }
         return new PanelData.Pivot(by, columns, out, foot, agg, heat, Double.isFinite(lo) ? lo : null, Double.isFinite(hi) ? hi : null,
                 rowAcc.size() - out.size());
+    }
+
+    /** A pivot whose value field is masked: the groups stay, every value and total reads the mask (never added up). */
+    private static PanelData maskedPivot(String by, List<String> columns, List<PanelData.PivotRow> rows, List<Cell> foot, String agg,
+            int groups) {
+        Cell mask = Cell.of(null, DataNode.MASK);
+        List<PanelData.PivotRow> out = new ArrayList<>(rows.size());
+        List<Cell> cells = java.util.Collections.nCopies(columns.size(), mask);
+        List<Double> values = java.util.Collections.nCopies(columns.size(), (Double) null);
+        rows.forEach(r -> out.add(new PanelData.PivotRow(r.label(), cells, values, r.total() == null ? null : mask)));
+        List<Cell> footer = foot == null ? null : java.util.Collections.nCopies(foot.size(), mask);
+        return new PanelData.Pivot(by, columns, out, footer, agg, false, null, null, groups - out.size());
     }
 
     private static String key(Object v) {

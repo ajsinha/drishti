@@ -54,10 +54,12 @@ public class CommandController {
     private final SearchProperties searchProps;
     private final com.ash.drishti.server.security.PackAccess packs;
     private final CommandMemory memory;
+    private final SuggestionMasks masks;
 
     public CommandController(CommandParser parser, SuggestionService suggestions, Mnemonics mnemonics, Entitlements entitlements,
             StructuredSearch search, SourceRouter router, SearchProperties searchProps, com.ash.drishti.server.security.PackAccess packs,
-            CommandMemory memory) {
+            CommandMemory memory, SuggestionMasks masks) {
+        this.masks = masks;
         this.packs = packs;
         this.memory = memory;
         this.parser = parser;
@@ -129,10 +131,11 @@ public class CommandController {
         return router.fetchAll(List.of(ref), searchProps.budget(), asOf).containsKey(ref);
     }
 
+    /** The type-ahead: kinds the caller may not open left out, and for a caller with field masks no masked value shown or matched. */
     @GetMapping("/suggest")
     public List<Suggestion> suggest(@RequestParam(defaultValue = "") String q, @RequestParam(required = false) Integer limit, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
-        return entitlements.filter(principal, suggestions.suggest(q, principal.user(), limit, asOf));
+        return masks.apply(principal, q, entitlements.filter(principal, suggestions.suggest(q, principal.user(), limit, asOf)), asOf);
     }
 
     /** The caller's recent commands, newest first (↑ on the command line). */

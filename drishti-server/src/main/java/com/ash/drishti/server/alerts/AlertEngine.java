@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.alerts;
 
+import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.api.Subscription;
@@ -41,6 +42,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +53,9 @@ import org.slf4j.LoggerFactory;
  * so a condition that stays true alerts once. Rules are compiled when saved; fired alerts are kept in the identity
  * database ({@link AlertHistory}: the newest {@code drishti.alerts.keep} per user, across restarts) and pushed to that
  * user's open streams.
+ *
+ * <p>Each user's rules see the document as that user may see it ({@code masks}: the user's field masks), so a rule on a
+ * masked field never fires and a message never shows a masked value: an alert cannot probe what the user may not see.
  */
 public final class AlertEngine implements AutoCloseable {
 
@@ -71,8 +77,16 @@ public final class AlertEngine implements AutoCloseable {
     /** Serialises rule changes: store write, re-read, publish, resubscribe. A ReentrantLock: it spans file I/O and subscribes. */
     private final java.util.concurrent.locks.ReentrantLock rules = new java.util.concurrent.locks.ReentrantLock();
     private final Map<String, List<Consumer<AlertEvent>>> listeners = new ConcurrentHashMap<>();
+    private final Function<String, UnaryOperator<DataNode>> masks;
 
     public AlertEngine(PreferenceStore store, TopicHub hub, SourceRouter router, ElCompiler el, Formats formats, AlertHistory history) {
+        this(store, hub, router, el, formats, history, user -> UnaryOperator.identity());
+    }
+
+    /** @param masks each user's field masks (the server's entitlements for the user's current roles) */
+    public AlertEngine(PreferenceStore store, TopicHub hub, SourceRouter router, ElCompiler el, Formats formats, AlertHistory history,
+            Function<String, UnaryOperator<DataNode>> masks) {
+        this.masks = masks;
         this.store = store;
         this.history = history;
         this.hub = hub;
@@ -165,11 +179,14 @@ public final class AlertEngine implements AutoCloseable {
         if (doc.deleted()) {
             return;                                   // a deleted entity has no values to cross a threshold with
         }
-        EvalContext ctx = EvalContext.of(doc.data(), formats);
         rulesByUser.forEach((user, rules) -> {
+            EvalContext ctx = null;                       // the document as this user may see it, made once per user
             for (AlertRule r : rules) {
                 if (!r.enabled() || !r.ref().equals(doc.ref())) {
                     continue;
+                }
+                if (ctx == null) {
+                    ctx = EvalContext.of(masks.apply(user).apply(doc.data()), formats);
                 }
                 boolean now;
                 try {

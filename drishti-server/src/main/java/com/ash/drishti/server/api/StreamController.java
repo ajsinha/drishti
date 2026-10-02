@@ -91,9 +91,10 @@ public class StreamController {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "too many live streams on this server");
         }
         EntityRef ref = EntityRef.of(kind, id);
+        var redact = entitlements.redactor(principal);           // the first view and every rebuild: as the caller may see it
         ViewModel initial;
         try {
-            initial = pipeline.view(ref, asOf);
+            initial = pipeline.view(ref, asOf, redact);
         } catch (RuntimeException e) {
             slot.release();
             throw e;
@@ -120,7 +121,7 @@ public class StreamController {
                     recents.forget(ref);              // the command line stops offering a deleted entity as recent
                 }
                 box.offer(f);
-            });
+            }, redact);
         } catch (RuntimeException e) {
             slot.release();
             throw e;

@@ -51,9 +51,15 @@ public final class ReferenceCatalog {
         return Optional.empty();
     }
 
+    /** The configured fields that name entities of {@code kind} ({@code counterparty} for counterparties), sorted. */
+    public List<String> fieldsNaming(String kind) {
+        return fields.entrySet().stream().filter(e -> kind.equals(e.getValue().kind())).map(Map.Entry::getKey).sorted().toList();
+    }
+
     /**
      * References in {@code doc}: configured fields holding an id (a string, an array of strings, or an
-     * object with {@code id}), in document order, without duplicates and without {@code self}.
+     * object with {@code id}), in document order, without duplicates and without {@code self}. A masked value
+     * ({@link DataNode#MASK}) is no reference.
      */
     public List<LinkRef> discover(DataNode doc, EntityRef self) {
         List<LinkRef> out = new ArrayList<>();
@@ -80,6 +86,9 @@ public final class ReferenceCatalog {
     }
 
     private static void add(List<LinkRef> out, Set<EntityRef> seen, String label, String kind, DataNode v, String path) {
+        if (v.isMasked() || v.get("id").isMasked()) {
+            return;                                    // a masked reference names nothing the caller may see
+        }
         String id = v instanceof DataNode.Obj ? v.get("id").asText() : v.asText();
         if (id.isEmpty()) {
             return;

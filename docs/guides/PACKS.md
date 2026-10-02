@@ -364,7 +364,7 @@ graph:                          # how entities link to each other
     port: "'wait ' + $.berthWaitHours + ' h'"       # a link to a port shows "wait 6 h"
 
 roles:                          # roles this pack adds. ROLE: { kinds, raw?, author?, approve?, admin?, calc? }
-  ops: { kinds: [shipment, container, vessel, port] }   # "*" means every kind; raw: true lets F9 show unredacted JSON
+  ops: { kinds: [shipment, container, vessel, port] }   # "*" means every kind; raw: true: no field is masked for the role
 
 alerts:                         # suggested alert rules, offered in the Alert dialog for that kind
   - kind: shipment
@@ -540,7 +540,7 @@ routes:                         # KIND: CONNECTOR — which connector answers ea
   # … one line per kind
 
 roles:
-  credit-risk: { kinds: ["*"], raw: true }   # may open every kind and see raw JSON unredacted
+  credit-risk: { kinds: ["*"], raw: true }   # may open every kind and sees every field unmasked
 ```
 
 - **Connectors are per data domain, not per pack.** The lake is laid out as `data/delta/<domain>/<kind>/`. Several
@@ -602,7 +602,7 @@ connectors:
 - **The server uses it.** Opening a trade reads one row group of one file (the id says which). Type-ahead indexes the
   id column alone. Searches, pick lists, derived kinds (desk P&L) and impact (F8) read the columns, over every trade
   of the day, exactly, without parsing a document; a query that uses a field that is not a column reads documents as
-  before. Role redaction applies to column values exactly as to documents.
+  before. Field masks apply to column values exactly as to documents.
 - **Health tells you.** A table that lacks a declared column shows in Admin → Health:
   `UP (not laid out as the pack declares: trade (12 of 19 columns); searches read documents)`.
 - **Choose the columns** a desk searches and lists by: the pick-list `columns:` of the kind, the fields in its
@@ -764,7 +764,7 @@ roles:
 | Field | Meaning |
 |---|---|
 | `kinds` | the kinds the role may open; `"*"` means all. Links to other kinds show disabled, with the reason. |
-| `raw` | may see the raw JSON (`F9`) without redaction |
+| `raw` | sees every field: nothing in `drishti.security.redact` is masked for the role (otherwise those fields read `•••` in raw JSON, views, search, Impact and the type-ahead) |
 | `author` | may use Sutra Studio |
 | `approve` | may approve Sutra proposals |
 | `admin` | may administer users |
@@ -1347,7 +1347,7 @@ and the age for each ticket. Try `TKT status=open`: one match, so `TKT-1001` ope
 ```yaml
 roles:
   support: { kinds: [ticket, agent, client] }           # opens the pack's kinds, nothing else
-  support-lead: { kinds: [ticket, agent, client], raw: true }   # and sees F9 unmasked
+  support-lead: { kinds: [ticket, agent, client], raw: true }   # and sees every field unmasked
 
 alerts:
   - kind: ticket

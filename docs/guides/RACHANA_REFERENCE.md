@@ -415,7 +415,7 @@ panels:
 keys:
   F7: "link($.nettingSet, 'netting-set')"        # F7 opens the netting set
   F8: impact                                     # F8: what depends on this trade
-  F9: raw                                        # F9: the raw JSON (redacted for roles without raw)
+  F9: raw                                        # F9: the raw JSON (field masks for roles without raw)
 
 # ---- Notes for authors and reviewers (plain text; the engine ignores them) ------------------------------------
 notes: |
@@ -1349,7 +1349,7 @@ Function keys come from two places:
 keys:
   F7: "link($.nettingSet, 'netting-set')"   # open another entity
   F8: impact                                # what depends on this entity
-  F9: raw                                   # the raw JSON drawer (redacted for roles without raw access)
+  F9: raw                                   # the raw JSON drawer (field masks for roles without raw access)
   F10: schedule                             # any other text: the id of a panel to scroll to
 ```
 
@@ -1568,8 +1568,14 @@ object, or a link (from `link(...)`).
 - **Equality** `==` compares numerically when either side is a number (`1 == '1.0'` is true), otherwise as text
   (`'Live' == 'live'` is false: use `lower(...)` or `contains(...)` to ignore case). Empty equals only empty:
   `$.missing == null` is true.
-- **`&&` and `||`** short-circuit and always give `true` or `false`. For a default value use `coalesce`, not `||`:
+- **`&&` and `||`** short-circuit and give `true` or `false` (or `•••` when a masked value decides). For a default value use `coalesce`, not `||`:
   `$.nick || 'n/a'` gives `true`, `coalesce($.nick, 'n/a')` gives the nickname or `n/a`.
+- **Masked values.** A field the viewer's role sees masked (`drishti.security.redact`, roles without `raw`) is the
+  value `•••`, and it carries through: a path under it is `•••` (`$.counterparty.name` when `counterparty` is masked),
+  and so is any operator, comparison, `?:` or function given it (`fmt($.mtm, 'signed0')`, `$.mtm / 1e6`,
+  `link($.counterparty.id, …)`, `sum($.trades, 'mtm')` when one element's `mtm` is masked). `•••` is never truthy, so
+  a condition on a masked field is never true, `!` included; `coalesce` passes it on only when it is the first
+  non-empty value, and `a || b` is still `true` when its other side is. Every format shows it as `•••`.
 - **Whole numbers** print without decimals: `1 + 1` → `2`, `0.5 * 4` → `2`.
 - **Lists and objects** print as `[n]` and `{n}` (their size) when shown as text; use `size(...)` or a panel.
 - **Compiled once.** Expressions are compiled once, cached by source text (`drishti.rachana.expression-cache-size`,

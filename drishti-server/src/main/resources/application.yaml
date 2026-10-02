@@ -137,7 +137,7 @@ drishti:
       default-roles: []                # roles when no group maps; empty refuses such users
       roles-from-provider: true        # the provider's groups replace the roles at every sign-in
       algorithms: [RS256, ES256]
-    redact: [trader, counterpartyId, patientName]   # field names masked in raw JSON (F9) for roles without raw
+    redact: [trader, counterpartyId, patientName]   # fields masked (•••) for roles without raw: raw JSON, views, search, Impact, type-ahead, alerts
   alerts:
     keep: 1000                       # fired alerts kept per user, in the identity database (they survive restarts)
   access-log:                        # who looked at what: views, raw, history, searches, CSV (Admin → Access)

@@ -85,6 +85,23 @@ public sealed interface DataNode permits DataNode.Obj, DataNode.Arr, DataNode.Va
         return Val.NULL;
     }
 
+    /**
+     * The text a masked field reads ({@code drishti.security.redact}, for roles without {@code raw}). The mask stands for
+     * the whole field: navigating into it ({@code counterparty.name} when {@code counterparty} is masked) gives the mask
+     * again, never a missing value, so a field under a masked parent reads masked too.
+     */
+    String MASK = "\u2022\u2022\u2022";
+
+    /** The masked value: what a field the caller may not see reads. */
+    static DataNode masked() {
+        return Val.MASKED;
+    }
+
+    /** True for the masked value ({@link #MASK}). */
+    default boolean isMasked() {
+        return false;
+    }
+
     static DataNode of(Object value) {
         if (value instanceof DataNode n) {
             return n;
@@ -167,6 +184,7 @@ public sealed interface DataNode permits DataNode.Obj, DataNode.Arr, DataNode.Va
     /** A scalar: string, number, boolean or null. */
     record Val(Object value) implements DataNode {
         static final Val NULL = new Val(null);
+        static final Val MASKED = new Val(MASK);
         static final Val TRUE = new Val(Boolean.TRUE);
         static final Val FALSE = new Val(Boolean.FALSE);
 
@@ -182,6 +200,22 @@ public sealed interface DataNode permits DataNode.Obj, DataNode.Arr, DataNode.Va
                 return NodeType.BOOLEAN;
             }
             return NodeType.STRING;
+        }
+
+        @Override
+        public boolean isMasked() {
+            return MASK.equals(value);
+        }
+
+        /** A masked value stands for the whole field: whatever lies under it is masked too. */
+        @Override
+        public DataNode get(String field) {
+            return isMasked() ? this : Missing.INSTANCE;
+        }
+
+        @Override
+        public DataNode get(int index) {
+            return isMasked() ? this : Missing.INSTANCE;
         }
 
         @Override

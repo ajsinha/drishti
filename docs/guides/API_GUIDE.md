@@ -251,12 +251,24 @@ script may open (roles are defined under `drishti.security.roles`; see
 | Ability | Granted by |
 |---|---|
 | open entities of a kind | a role whose `kinds` lists the kind or `*`, **and** the kind's pack active for the user |
-| unredacted raw JSON (fields in `drishti.security.redact` shown as `•••` otherwise) | a role with `raw: true` |
+| every field unmasked (otherwise the fields in `drishti.security.redact` read `•••` on every endpoint: see below) | a role with `raw: true` |
 | save Sutras from Studio | a role with `author: true` (and `drishti.rachana.studio-save: true`) |
 | approve or reject Sutra proposals | a role with `approve: true`, or an admin |
 | user administration, audit log, health, caches | a role with `admin: true` |
 | `POST /auth/login`, `POST /auth/oidc`, `/auth/sessions` | the `service` role (the console) |
 | everything | the role `*` (what every caller gets with security off) |
+
+### Field masks
+
+For a caller without `raw`, every field named in `drishti.security.redact` (at any depth, and everything under it)
+reads `•••` in every answer that shows or is computed from its value: `/entities/…/raw`, `/search` (rows, CSV,
+compare), `/history`, `/search/columns`, the search pivot endpoints, `/views/{kind}/{id}` (strip, title, every panel,
+table totals, keys and links, values a Sutra computes from the field), `/views/…/panels/…/records`, the view and
+monitor streams, `/me/monitors/{name}`, `/studio/preview`, `/impact/{kind}/{id}`, `/command/suggest` and `/phrase`;
+alert rules are evaluated on the document as their owner may see it. The server masks the documents in one place
+(`Entitlements.redactor`) before anything reads them, so nothing about a masked field can be probed: a condition on
+it is never true, ordering by it does not order, the type-ahead does not match it, Impact does not list entities
+tied to the analysed one only through it, and a total over it reads `•••`.
 
 ## Which day: the business date
 
@@ -346,7 +358,7 @@ with `admin: true` (otherwise `403 DRS-5002`).
 | Method | Path | Notes |
 |---|---|---|
 | `POST` | `/command` | body `{"text": "TRD MX-20000001 <GO>"}` → `{"ref": {"kind", "id"}, "mnemonic"}`; `400 DRS-4001` if the text cannot be read; `403` if the caller may not open the kind |
-| `GET` | `/command/suggest?q=&limit=` | as-of. Up to `limit` suggestions (default `drishti.commands.suggest-limit`, 25; at most 50), filtered to kinds the caller may open |
+| `GET` | `/command/suggest?q=&limit=` | as-of. Up to `limit` suggestions (default `drishti.commands.suggest-limit`, 25; at most 50), filtered to kinds the caller may open. For a caller with [field masks](#field-masks), each entity's `title` and `subtitle` are its view title as the caller sees it (`Rates · Interest rate swap (fixed/float) · •••`), and an entity is offered only when the text typed is in its id or in that subtitle |
 
 The command is what the console's command line sends when you press Enter. The mnemonic (`TRD`) is mapped to
 a kind (`trade`); the id is matched against the configured id patterns. `<GO>` is optional.
@@ -378,8 +390,8 @@ Entities the caller opened recently (per `X-Drishti-User` or token subject) are 
 
 | Method | Path | Notes |
 |---|---|---|
-| `GET` | `/views/{kind}/{id}` | as-of. The `ViewModel`; `404 DRS-1001` (no such entity), `404 DRS-1002` (no source serves the kind), `502 DRS-1003` (source failed), `504 DRS-1004` (source timed out); `403 DRS-5002` if the caller may not open the kind |
-| `GET` | `/views/{kind}/{id}/panels/{panel}/records` | as-of. Every row of a table or ladder whose Sutra says `pivot:`, as raw values of its pivot's fields, for the [Pivot tab](#the-pivot-tab-panel-rows-search-pivots-saved-pivots); `404 DRS-1001` when the view has no such panel or the panel offers no pivot |
+| `GET` | `/views/{kind}/{id}` | as-of. The `ViewModel`, with the caller's [field masks](#field-masks) (`"text":"•••"`); `404 DRS-1001` (no such entity), `404 DRS-1002` (no source serves the kind), `502 DRS-1003` (source failed), `504 DRS-1004` (source timed out); `403 DRS-5002` if the caller may not open the kind |
+| `GET` | `/views/{kind}/{id}/panels/{panel}/records` | as-of. Every row of a table or ladder whose Sutra says `pivot:`, as raw values of its pivot's fields (masked fields `"•••"`), for the [Pivot tab](#the-pivot-tab-panel-rows-search-pivots-saved-pivots); `404 DRS-1001` when the view has no such panel or the panel offers no pivot |
 
 Opening a view also records it in the caller's recent list. A view is formatted for display: every value
 comes as text with a tone, so all clients show `−1,403,091` the same way.
@@ -425,7 +437,7 @@ The full shape is in [The ViewModel in detail](#the-viewmodel-in-detail).
 |---|---|---|
 | `GET` | `/entities/{kind}/{id}/raw` | as-of. `{ref, provenance, data}`: the document as the source produced it (F9 in the console). Fields listed in `drishti.security.redact` read `•••` unless the caller has `raw` |
 | `GET` | `/history/{kind}/{id}/diff?from=&to=&fromKnownAt=&toKnownAt=` | what changed between two points. `to` defaults to the request's as-of; `from` to the business day before `to`. At most 2,000 changes (`truncated: true` beyond) |
-| `GET` | `/impact/{kind}/{id}` | as-of. F8: what depends on the entity, grouped by level and kind |
+| `GET` | `/impact/{kind}/{id}` | as-of. F8: what depends on the entity, grouped by level and kind. With [field masks](#field-masks): entities tied in only through a masked field are left out; a masked measure (`measure`) and its group's `total` read `•••` |
 
 Raw:
 
@@ -487,7 +499,8 @@ Level 1 is what refers to the entity directly; level 2 is what those roll into. 
 | `GET` | `/search/csv?q=` | the same as CSV for spreadsheets: `kind,id,title`, then the columns' labels; values unformatted; formula-like text prefixed with `'` |
 | `GET` | `/search/compare?q=&from=&to=` | the search on two business dates: the later date's entities, each column as `{from, to, delta}` (delta for numbers), entities on one date only marked `added` or `removed` |
 
-The condition runs on each document *as the caller may see it* (redacted), so hidden fields cannot be probed.
+The condition runs on each document *as the caller may see it* ([field masks](#field-masks)), so a masked field
+cannot be probed: a condition on it is never true, ordering by it does not order.
 Numbers accept `k`, `m` and `bn` (or `b`) suffixes (`1m` = 1,000,000). URL-encode `q`; `curl -G --data-urlencode` does it for you:
 
 ```bash
@@ -600,7 +613,8 @@ curl -s $B/search/pivot/TRD -H 'Content-Type: application/json' -d '{"q": "TRD w
   dates as text); a bare field name keeps everything.
 - At most `drishti.pivot.max-row-keys` (2,000) innermost row groups and `max-column-keys` (200) column groups are
   returned (`moreRows`, `moreColumns`); further groups still count in the totals.
-- `masked` lists the fields the caller's role sees masked, as in a search: they group under `•••` and are never added up.
+- `masked` lists the fields the caller's role sees masked, as in a search (a field under a masked one too:
+  `counterparty.name` when `counterparty` is masked): they group under `•••` and are never added up.
 - A field that no source keeps as a column is refused, unless the body says `"documents": true`:
 
 ```json
@@ -633,7 +647,7 @@ shapes and reconnection rules are in [LIVE.md](../architecture/LIVE.md).
 
 | Method | Path | Events |
 |---|---|---|
-| `GET` | `/views/{kind}/{id}/stream` | as-of. `view` (the full ViewModel, id `0`), then `frame` (patches, id = sequence). For a past date or a non-live source: one `view`, then the stream closes |
+| `GET` | `/views/{kind}/{id}/stream` | as-of. `view` (the full ViewModel, id `0`), then `frame` (patches, id = sequence), both with the caller's [field masks](#field-masks). For a past date or a non-live source: one `view`, then the stream closes |
 | `GET` | `/me/monitors/{name}/stream` | as-of. `hello` `{rows}`, then one `row` event `{kind, id, patches, p99Ms}` per changed entity (strip patches only) |
 | `GET` | `/me/alerts/stream` | `hello` `{user}`, then `alert` events (id = sequence) |
 | `GET` | `/health/live` | not a stream: `{streams, topics, frames, p50Ms, p99Ms}` for the whole server |

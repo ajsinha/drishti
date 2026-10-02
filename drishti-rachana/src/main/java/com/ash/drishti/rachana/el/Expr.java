@@ -78,7 +78,7 @@ public interface Expr {
     record Field(Expr target, String name, String rootPath) implements Expr {
         public Object eval(EvalContext c) {
             Object t = c == null ? null : target.eval(c);
-            return t instanceof DataNode n ? n.get(name) : DataNode.missing();
+            return t instanceof DataNode n ? n.get(name) : Values.masked(t) ? Values.mask() : DataNode.missing();
         }
 
         public void paths(Consumer<String> sink) {
@@ -93,10 +93,16 @@ public interface Expr {
     record At(Expr target, Expr index, String rootPath) implements Expr {
         public Object eval(EvalContext c) {
             Object t = target.eval(c);
+            if (Values.masked(t)) {
+                return Values.mask();
+            }
             if (!(t instanceof DataNode n)) {
                 return DataNode.missing();
             }
             Object i = Values.simplify(index.eval(c));
+            if (Values.masked(i)) {
+                return Values.mask();
+            }
             return i instanceof Number num ? n.get(num.intValue()) : n.get(Values.text(i));
         }
 
@@ -114,6 +120,9 @@ public interface Expr {
     record Filter(Expr target, Expr predicate) implements Expr {
         public Object eval(EvalContext c) {
             Object t = target.eval(c);
+            if (Values.masked(t)) {
+                return Values.mask();
+            }
             if (!(t instanceof DataNode.Arr a)) {
                 return DataNode.missing();
             }
@@ -133,7 +142,8 @@ public interface Expr {
 
     record Not(Expr e) implements Expr {
         public Object eval(EvalContext c) {
-            return !Values.truthy(e.eval(c));
+            Object v = e.eval(c);
+            return Values.masked(v) ? Values.mask() : (Object) !Values.truthy(v);
         }
 
         public void paths(Consumer<String> sink) {
@@ -143,7 +153,8 @@ public interface Expr {
 
     record Neg(Expr e) implements Expr {
         public Object eval(EvalContext c) {
-            return Values.normalise(-Values.number(e.eval(c)));
+            Object v = e.eval(c);
+            return Values.masked(v) ? Values.mask() : Values.normalise(-Values.number(v));
         }
 
         public void paths(Consumer<String> sink) {
@@ -153,7 +164,15 @@ public interface Expr {
 
     record And(Expr l, Expr r) implements Expr {
         public Object eval(EvalContext c) {
-            return Values.truthy(l.eval(c)) && Values.truthy(r.eval(c));
+            Object a = l.eval(c);
+            if (Values.masked(a)) {
+                return Values.mask();
+            }
+            if (!Values.truthy(a)) {
+                return false;
+            }
+            Object b = r.eval(c);
+            return Values.masked(b) ? Values.mask() : (Object) Values.truthy(b);
         }
 
         public void paths(Consumer<String> sink) {
@@ -164,7 +183,15 @@ public interface Expr {
 
     record Or(Expr l, Expr r) implements Expr {
         public Object eval(EvalContext c) {
-            return Values.truthy(l.eval(c)) || Values.truthy(r.eval(c));
+            Object a = l.eval(c);
+            if (Values.truthy(a)) {
+                return true;
+            }
+            Object b = r.eval(c);
+            if (Values.truthy(b)) {
+                return true;
+            }
+            return Values.masked(a) || Values.masked(b) ? Values.mask() : (Object) false;   // unknown, never true
         }
 
         public void paths(Consumer<String> sink) {
@@ -175,7 +202,11 @@ public interface Expr {
 
     record Ternary(Expr cond, Expr then, Expr otherwise) implements Expr {
         public Object eval(EvalContext c) {
-            return Values.truthy(cond.eval(c)) ? then.eval(c) : otherwise.eval(c);
+            Object v = cond.eval(c);
+            if (Values.masked(v)) {
+                return Values.mask();                                 // either branch would tell what the value is
+            }
+            return Values.truthy(v) ? then.eval(c) : otherwise.eval(c);
         }
 
         public void paths(Consumer<String> sink) {
@@ -189,6 +220,9 @@ public interface Expr {
         public Object eval(EvalContext c) {
             Object a = l.eval(c);
             Object b = r.eval(c);
+            if (Values.masked(a) || Values.masked(b)) {
+                return Values.mask();                                 // derived from a masked field: masked, and never true
+            }
             switch (op) {
                 case "==":
                     return Values.equal(a, b);
@@ -236,10 +270,14 @@ public interface Expr {
     record Call(String name, ElFunction fn, List<Expr> args) implements Expr {
         public Object eval(EvalContext c) {
             List<Object> values = new ArrayList<>(args.size());
+            boolean masked = false;
             for (Expr a : args) {
-                values.add(a.eval(c));
+                Object v = a.eval(c);
+                masked |= Values.masked(v);
+                values.add(v);
             }
-            return fn.apply(values, c);
+            // a function of a masked value is masked (coalesce only passes it on when it is the first value it has)
+            return masked && !"coalesce".equals(name) ? Values.mask() : fn.apply(values, c);
         }
 
         public void paths(Consumer<String> sink) {

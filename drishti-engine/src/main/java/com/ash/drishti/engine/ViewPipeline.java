@@ -16,6 +16,7 @@
 package com.ash.drishti.engine;
 
 import com.ash.drishti.api.AsOf;
+import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.engine.time.BusinessDates;
@@ -61,11 +62,18 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
+import java.util.function.UnaryOperator;
 
 /**
  * The seven-stage view pipeline (ARCHITECTURE §4): command → fetch → classify → fingerprint → layout →
  * link → bind. Layouts are cached per (Sutra version, kind, shape), so the cold cost of inference is
  * paid once per shape; linked entities are fetched in parallel within a budget; panels bind in parallel.
+ *
+ * <p>Field masks: every method that serves a caller takes the caller's redaction ({@code redact}, from the server's
+ * entitlements). The Sutra and the layout are chosen from the document as stored (its shape, not its values); every
+ * value is bound from the document and the linked documents as the caller may see them, so a masked field reads
+ * {@link DataNode#MASK} wherever the view shows it or a value derived from it (strip, title, tables and their totals,
+ * keys, links, panel records, live patches). The overloads without {@code redact} mask nothing.
  * Thread-safe.
  */
 public final class ViewPipeline {
@@ -134,15 +142,25 @@ public final class ViewPipeline {
     }
 
     public ViewModel preview(Sutra sutra, EntityRef ref, AsOf asOf) {
+        return preview(sutra, ref, asOf, UnaryOperator.identity());
+    }
+
+    /** A view of a stored entity with an unsaved Sutra, as the caller may see it. */
+    public ViewModel preview(Sutra sutra, EntityRef ref, AsOf asOf, UnaryOperator<DataNode> redact) {
         long t0 = System.nanoTime();
         EntityDocument doc = fetch(ref, asOf);
-        return build(doc, t0, System.nanoTime(), Optional.of(sutra), false, asOf);
+        return build(doc, t0, System.nanoTime(), Optional.of(sutra), false, asOf, redact);
     }
 
     /** A view of a document supplied by the caller (Studio sample JSON), with a given or matched Sutra. */
     public ViewModel preview(Optional<Sutra> sutra, EntityDocument doc) {
+        return preview(sutra, doc, UnaryOperator.identity());
+    }
+
+    /** A view of a supplied document; linked entities read from the sources are masked for the caller. */
+    public ViewModel preview(Optional<Sutra> sutra, EntityDocument doc, UnaryOperator<DataNode> redact) {
         long t0 = System.nanoTime();
-        return build(doc, t0, t0, sutra.isPresent() ? sutra : matcher.match(doc.ref().kind(), doc.data()), false, AsOf.LATEST);
+        return build(doc, t0, t0, sutra.isPresent() ? sutra : matcher.match(doc.ref().kind(), doc.data()), false, AsOf.LATEST, redact);
     }
 
     /** The layout inference alone would give {@code ref}, in Sutra form (Studio "start from inference"). */
@@ -166,9 +184,14 @@ public final class ViewPipeline {
 
     /** The view of {@code ref} as of a business date: the entity and every linked entity are read for that date. */
     public ViewModel view(EntityRef ref, AsOf asOf) {
+        return view(ref, asOf, UnaryOperator.identity());
+    }
+
+    /** The view of {@code ref} as the caller may see it: {@code redact} masks what the caller's role may not see. */
+    public ViewModel view(EntityRef ref, AsOf asOf, UnaryOperator<DataNode> redact) {
         long t0 = System.nanoTime();
         EntityDocument doc = fetch(ref, asOf);
-        return build(doc, t0, System.nanoTime(), matcher.match(doc.ref().kind(), doc.data()), true, asOf);
+        return build(doc, t0, System.nanoTime(), matcher.match(doc.ref().kind(), doc.data()), true, asOf, redact);
     }
 
     /**
@@ -178,6 +201,11 @@ public final class ViewPipeline {
      * @throws DrishtiException {@code DRS-1001} when the view has no such panel or the panel offers no pivot
      */
     public com.ash.drishti.engine.bind.PivotBinder.Records records(EntityRef ref, AsOf asOf, String panelId) {
+        return records(ref, asOf, panelId, UnaryOperator.identity());
+    }
+
+    /** A panel's rows as the caller may see them: masked fields read {@link DataNode#MASK}. */
+    public com.ash.drishti.engine.bind.PivotBinder.Records records(EntityRef ref, AsOf asOf, String panelId, UnaryOperator<DataNode> redact) {
         EntityDocument doc = fetch(ref, asOf);
         Optional<Sutra> sutra = matcher.match(ref.kind(), doc.data());
         Fingerprint fp = fingerprints.get(new GenKey(ref, doc.provenance().generation(), doc.provenance().businessDate()),
@@ -187,16 +215,43 @@ public final class ViewPipeline {
         Panel panel = layout.sutra().panels().stream().filter(p -> p.id().equals(panelId) && p.pivot().isPresent()).findFirst()
                 .orElseThrow(() -> new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "the view of " + ref.id() + " has no panel '" + panelId
                         + "' that offers a pivot"));
-        BindContext ctx = new BindContext(doc, layout, fp, EvalContext.of(doc.data(), formats), List.of(), Map.of(), Set.of());
+        EntityDocument seen = seen(doc, redact);
+        BindContext ctx = new BindContext(seen, layout, fp, EvalContext.of(seen.data(), formats), List.of(), Map.of(), Set.of());
         return binder.records(panel, ctx);
     }
 
     /** Builds a view from a document already in hand (live updates re-enter here; live is always current). */
     public ViewModel build(EntityDocument doc, long t0, long tFetched) {
-        return build(doc, t0, tFetched, matcher.match(doc.ref().kind(), doc.data()), true, AsOf.LATEST);
+        return build(doc, t0, tFetched, UnaryOperator.identity());
     }
 
-    private ViewModel build(EntityDocument doc, long t0, long tFetched, Optional<Sutra> sutra, boolean cached, AsOf asOf) {
+    /** Builds a view from a document already in hand, as the caller may see it. */
+    public ViewModel build(EntityDocument doc, long t0, long tFetched, UnaryOperator<DataNode> redact) {
+        return build(doc, t0, tFetched, matcher.match(doc.ref().kind(), doc.data()), true, AsOf.LATEST, redact);
+    }
+
+    /**
+     * The title of {@code doc}'s view as the caller may see it: the matched Sutra's (or the inferred layout's) title bound
+     * to the document with the caller's field masks. The type-ahead describes entities with it for callers with masks.
+     */
+    public ViewModel.TitleView title(EntityDocument doc, UnaryOperator<DataNode> redact) {
+        EntityRef ref = doc.ref();
+        Optional<Sutra> sutra = matcher.match(ref.kind(), doc.data());
+        Fingerprint fp = fingerprints.get(new GenKey(ref, doc.provenance().generation(), doc.provenance().businessDate()),
+                k -> fingerprinter.fingerprint(doc.data()));
+        EffectiveLayout layout = layouts.get(new LayoutKey(sutra.<Object>map(SutraIdentity::new).orElse("-"), ref.kind(), fp),
+                k -> merger.merge(sutra, doc.data(), ref.kind()));
+        return title(layout.sutra(), EvalContext.of(redact.apply(doc.data()), formats), ref);
+    }
+
+    /** The document as the caller may see it (the same object when nothing is masked). */
+    private static EntityDocument seen(EntityDocument doc, UnaryOperator<DataNode> redact) {
+        DataNode data = redact.apply(doc.data());
+        return data == doc.data() ? doc : new EntityDocument(doc.ref(), data, doc.provenance(), doc.deleted());
+    }
+
+    private ViewModel build(EntityDocument doc, long t0, long tFetched, Optional<Sutra> sutra, boolean cached, AsOf asOf,
+            UnaryOperator<DataNode> redact) {
         EntityRef ref = doc.ref();
         boolean current = dates.isCurrent(asOf);
         Fingerprint fp = fingerprints.get(new GenKey(ref, doc.provenance().generation(), doc.provenance().businessDate()),
@@ -206,8 +261,9 @@ public final class ViewPipeline {
                 : merger.merge(sutra, doc.data(), ref.kind());
         long tLayout = System.nanoTime();
 
-        EvalContext eval = EvalContext.of(doc.data(), formats);
-        List<LinkRef> links = catalog.discover(doc.data(), ref);
+        EntityDocument seen = seen(doc, redact);                      // values: as the caller may see them
+        EvalContext eval = EvalContext.of(seen.data(), formats);
+        List<LinkRef> links = catalog.discover(seen.data(), ref);
         Set<EntityRef> wanted = new LinkedHashSet<>();
         links.forEach(l -> wanted.add(l.target()));
         for (Panel p : layout.sutra().panels()) {
@@ -216,11 +272,16 @@ public final class ViewPipeline {
             }
         }
         Map<EntityRef, EntityDocument> linked = wanted.isEmpty() ? Map.of() : router.fetchAll(wanted, graph.linkBudget(), asOf.businessDate() == null ? dates.resolve(asOf) : asOf);
+        if (!linked.isEmpty()) {
+            Map<EntityRef, EntityDocument> masked = new LinkedHashMap<>();
+            linked.forEach((r, d) -> masked.put(r, seen(d, redact)));
+            linked = masked;
+        }
         Set<EntityRef> pending = new HashSet<>(wanted);
         pending.removeAll(linked.keySet());
         long tLinks = System.nanoTime();
 
-        BindContext ctx = new BindContext(doc, layout, fp, eval, links, linked, pending);
+        BindContext ctx = new BindContext(seen, layout, fp, eval, links, linked, pending);
         List<CompletableFuture<PanelView>> futures = new ArrayList<>();
         for (Panel p : layout.sutra().panels()) {
             futures.add(CompletableFuture.supplyAsync(() -> binder.bind(p, ctx), bindPool));

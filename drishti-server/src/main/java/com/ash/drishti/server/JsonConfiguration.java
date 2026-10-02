@@ -38,8 +38,15 @@ public class JsonConfiguration {
     public com.ash.drishti.server.alerts.AlertEngine alertEngine(com.ash.drishti.identity.PreferenceStore store,
             com.ash.drishti.engine.live.TopicHub hub, com.ash.drishti.engine.source.SourceRouter router,
             com.ash.drishti.rachana.el.ElCompiler el, com.ash.drishti.rachana.format.Formats formats,
-            com.ash.drishti.identity.AlertHistory history) {
-        return new com.ash.drishti.server.alerts.AlertEngine(store, hub, router, el, formats, history);
+            com.ash.drishti.identity.AlertHistory history, com.ash.drishti.identity.UserService users,
+            com.ash.drishti.server.security.Entitlements entitlements) {
+        // a rule sees what its owner may see now: the owner's current roles (none for an unknown or disabled user), looked
+        // up at most once a minute per user
+        com.github.benmanes.caffeine.cache.LoadingCache<String, java.util.function.UnaryOperator<DataNode>> masks =
+                com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumSize(10_000).expireAfterWrite(java.time.Duration.ofMinutes(1))
+                        .build(user -> entitlements.redactor(new com.ash.drishti.server.security.Principal(user, users.find(user)
+                                .filter(com.ash.drishti.identity.User::enabled).map(u -> java.util.List.copyOf(u.roles())).orElse(java.util.List.of()))));
+        return new com.ash.drishti.server.alerts.AlertEngine(store, hub, router, el, formats, history, masks::get);
     }
 
     @Bean

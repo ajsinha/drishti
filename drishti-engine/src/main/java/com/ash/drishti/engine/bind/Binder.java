@@ -233,11 +233,14 @@ public final class Binder {
         String highlight = p.option("highlight").orElse(null);
         List<PanelData.Row> out = new ArrayList<>();
         double[] totals = new double[cols.size()];
+        boolean[] masked = new boolean[cols.size()];          // a column with a masked value is never added up
         for (int i = 0; i < rows.size(); i++) {
             EvalContext rc = c.eval().withRow(rows.get(i), i);
             for (int k = 0; k < cols.size(); k++) {
-                if (cols.get(k).total()) {
-                    double v = Values.number(el.compile(cols.get(k).bind()).eval(rc));
+                if (cols.get(k).total() && !masked[k]) {
+                    Object x = el.compile(cols.get(k).bind()).eval(rc);
+                    masked[k] = Values.masked(x);
+                    double v = Values.number(x);
                     totals[k] += Double.isNaN(v) ? 0 : v;
                 }
             }
@@ -257,7 +260,8 @@ public final class Binder {
             List<Cell> cells = new ArrayList<>();
             for (int k = 0; k < cols.size(); k++) {
                 Column col = cols.get(k);
-                cells.add(col.total() ? cell(null, Values.normalise(totals[k]), col.fmt(), col.tone(), false, null) : Cell.of(null, ""));
+                Object sum = masked[k] ? Values.mask() : Values.normalise(totals[k]);
+                cells.add(col.total() ? cell(null, sum, col.fmt(), col.tone(), false, null) : Cell.of(null, ""));
             }
             String label = p.option("totalLabel").orElse("Total");
             int at = firstBlankBefore(cols);
@@ -401,11 +405,12 @@ public final class Binder {
     }
 
     private PanelData gauge(Panel p, BindContext c) {
-        double v = Values.number(eval(p.option("value").orElseThrow(), c.eval()));
+        Object value = eval(p.option("value").orElseThrow(), c.eval());
+        double v = Values.number(value);
         double max = p.option("max").map(m -> Values.number(eval(m, c.eval()))).filter(Double::isFinite).orElse(1.0);
         String fmt = p.option("fmt").orElse("pct0");
         if (!Double.isFinite(v)) {
-            return new PanelData.Gauge(Double.NaN, max, "—", p.option("label").orElse(null));
+            return new PanelData.Gauge(Double.NaN, max, Values.masked(value) ? DataNode.MASK : "—", p.option("label").orElse(null));
         }
         return new PanelData.Gauge(v, max, formats.format(fmt, v / (max == 0 ? 1 : max)), p.option("label").orElse(null));
     }
