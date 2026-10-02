@@ -17,6 +17,7 @@ package com.ash.drishti.plugin.file;
 
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.DataNode;
+import com.ash.drishti.api.DateCoverage;
 import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityHit;
 import com.ash.drishti.api.EntityRef;
@@ -313,6 +314,43 @@ public final class FileSourcePlugin implements SourcePlugin {
             return Optional.of(new EntityDocument(ref, format.read(doc.get()),
                     new Provenance(sourceName, index.modified(), Instant.now(), false, d.equals(UNDATED) ? null : d)));
         }
+    }
+
+    /**
+     * A kind kept as dated JSON-lines snapshots (every entity every day) is held for a date when a day's file serves it
+     * (the newest on or before the date, within {@code lookback-days}): an entity that file does not list is not held
+     * then, and no store behind this one is asked (DATA-12). With no such file, and no feed folder the date could be
+     * read from, the date is not held. Undated files, {@code effective} kinds (a line only when an entity changes) and
+     * feed folders cannot tell.
+     */
+    @Override
+    public DateCoverage coverage(String kind, AsOf asOf) {
+        if (!jsonl.containsKey(kind) || effective(kind)) {
+            return DateCoverage.UNKNOWN;
+        }
+        Optional<LocalDate> d = snapshotDay(kind, asOf.businessDate());
+        if (d.isPresent()) {
+            return d.get().equals(UNDATED) ? DateCoverage.UNKNOWN : DateCoverage.HELD;
+        }
+        return feedFolders(kind, asOf.businessDate()) ? DateCoverage.UNKNOWN : DateCoverage.NOT_HELD;
+    }
+
+    /** True when a feed folder ({@code <root>/<date>/<kind>/} within the lookback, or {@code <root>/<kind>/}) may hold the kind. */
+    private boolean feedFolders(String kind, LocalDate want) {
+        Path undated = root.resolve(kind).normalize();
+        if (undated.startsWith(root) && Files.isDirectory(undated)) {
+            return true;
+        }
+        for (LocalDate d : dates) {
+            if (want != null && (d.isAfter(want) || d.isBefore(want.minusDays(lookbackDays)))) {
+                continue;
+            }
+            Path dir = root.resolve(d.toString()).resolve(kind).normalize();
+            if (dir.startsWith(root) && Files.isDirectory(dir)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

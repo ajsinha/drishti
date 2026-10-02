@@ -120,6 +120,12 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         return new PluginManifest(sourceName == null ? "iceberg" : sourceName, "1.0", tables.keySet(), new SourceCapabilities(false, true, true, true));
     }
 
+    /** A table's snapshots answer {@code knownAt}. */
+    @Override
+    public boolean timeTravel() {
+        return true;
+    }
+
     @Override
     public void start(SourceContext ctx) throws IOException {
         if (ctx.setting("root", "").isBlank() && ctx.setting("uri", "").isBlank()) {

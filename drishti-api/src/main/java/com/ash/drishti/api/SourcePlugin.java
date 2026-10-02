@@ -42,6 +42,25 @@ public interface SourcePlugin extends AutoCloseable {
     }
 
     /**
+     * Whether this dated source holds the kind's data for {@code asOf}'s business date (its latest when the date is
+     * null). One that does is authoritative for the date: an entity it does not list then is not held, and the router
+     * asks no later source for it. Must be cheap (no remote call per read). The default, {@link DateCoverage#UNKNOWN},
+     * keeps the router asking the next source when this one does not hold an entity.
+     */
+    default DateCoverage coverage(String kind, AsOf asOf) {
+        return DateCoverage.UNKNOWN;
+    }
+
+    /**
+     * True when this source answers {@link AsOf#knownAt()} (it keeps earlier versions: Delta Lake, Iceberg). A dated
+     * source that does not is never asked for a read with {@code knownAt} for a date it may hold: the read fails with
+     * {@code DRS-1007} naming it, instead of showing today's data as if it were what was known then.
+     */
+    default boolean timeTravel() {
+        return false;
+    }
+
+    /**
      * Pushes each new generation of the entity to {@code listener} until the subscription is closed. A source that
      * learns the entity was deleted (a Kafka tombstone, a queue's delete message) pushes
      * {@link EntityDocument#deleted(EntityRef, Provenance)} through the same listener, so a delete and a later

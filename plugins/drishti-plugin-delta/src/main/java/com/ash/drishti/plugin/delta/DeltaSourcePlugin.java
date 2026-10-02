@@ -114,6 +114,12 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         return new PluginManifest(sourceName == null ? "delta" : sourceName, "1.0", tables.keySet(), new SourceCapabilities(false, true, true, true));
     }
 
+    /** A table's versions answer {@code knownAt}. */
+    @Override
+    public boolean timeTravel() {
+        return true;
+    }
+
     @Override
     public void start(SourceContext ctx) throws IOException {
         this.context = ctx;

@@ -72,6 +72,16 @@ final class ConnectorInstance implements SourcePlugin {
     }
 
     @Override
+    public com.ash.drishti.api.DateCoverage coverage(String kind, AsOf asOf) {
+        return serves(kind) ? delegate.coverage(kind, asOf) : com.ash.drishti.api.DateCoverage.NOT_HELD;
+    }
+
+    @Override
+    public boolean timeTravel() {
+        return delegate.timeTravel();
+    }
+
+    @Override
     public Subscription subscribe(EntityRef ref, Consumer<EntityDocument> listener) {
         return serves(ref.kind()) ? delegate.subscribe(ref, listener) : Subscription.NONE;
     }

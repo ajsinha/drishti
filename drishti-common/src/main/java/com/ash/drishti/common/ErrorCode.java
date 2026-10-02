@@ -26,6 +26,8 @@ public enum ErrorCode {
     SOURCE_TIMEOUT("DRS-1004", 504),
     INVALID_JSON("DRS-1005", 422),
     PLUGIN_LOAD_FAILED("DRS-1006", 500),
+    /** A read "as known at" an instant from a store that keeps no earlier versions (it would show today's data). */
+    NO_TIME_TRAVEL("DRS-1007", 400),
     SUTRA_PARSE("DRS-2001", 422),
     SUTRA_INVALID("DRS-2002", 422),
     SUTRA_NOT_FOUND("DRS-2003", 404),
