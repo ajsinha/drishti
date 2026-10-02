@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.rachana.format;
 
+import com.ash.drishti.api.DataNode;
 import com.ash.drishti.rachana.el.Link;
 import com.ash.drishti.rachana.el.Values;
 import java.math.BigDecimal;
@@ -44,6 +45,9 @@ public record FormatSpec(String type, int decimals, boolean grouping, String sig
         }
         if (v instanceof Link l) {
             return l.display();
+        }
+        if (Values.masked(v)) {
+            return DataNode.MASK;                 // a masked value reads as the mask in every format
         }
         return switch (type) {
             case "date" -> date(Values.text(v));

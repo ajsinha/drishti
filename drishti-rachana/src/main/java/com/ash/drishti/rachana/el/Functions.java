@@ -96,7 +96,11 @@ public final class Functions {
         String field = a.size() > 1 ? Values.text(a.get(1)) : null;
         double total = 0;
         for (DataNode e : arr.elements()) {
-            double v = field == null ? e.asDouble() : e.get(field).asDouble();
+            DataNode x = field == null ? e : e.get(field);
+            if (x.isMasked()) {
+                return Values.mask();                 // a masked value is never added up: the sum is masked
+            }
+            double v = x.asDouble();
             if (!Double.isNaN(v)) {
                 total += v;
             }
@@ -108,6 +112,9 @@ public final class Functions {
         Iterable<?> items = a.size() == 1 && a.get(0) instanceof DataNode.Arr arr ? arr.elements() : a;
         Double best = null;
         for (Object o : items) {
+            if (Values.masked(o)) {
+                return Values.mask();
+            }
             double v = Values.number(o);
             if (!Double.isNaN(v) && (best == null || (min ? v < best : v > best))) {
                 best = v;

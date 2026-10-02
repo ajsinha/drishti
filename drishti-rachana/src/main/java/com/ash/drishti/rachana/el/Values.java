@@ -38,6 +38,20 @@ public final class Values {
         return v;
     }
 
+    /**
+     * True for the masked value ({@link DataNode#MASK}): a field the caller's role may not see, or anything computed from
+     * one. Expressions carry the mask through (arithmetic, comparisons, functions), so a value derived from a masked field
+     * is masked too, and a condition on one is never true.
+     */
+    public static boolean masked(Object v) {
+        return v instanceof DataNode n ? n.isMasked() : DataNode.MASK.equals(v);
+    }
+
+    /** The masked value, as an expression result. */
+    public static DataNode mask() {
+        return DataNode.masked();
+    }
+
     public static boolean isNull(Object v) {
         return simplify(v) == null;
     }
@@ -83,7 +97,7 @@ public final class Values {
 
     public static boolean truthy(Object v) {
         Object s = simplify(v);
-        if (s == null) {
+        if (s == null || masked(s)) {
             return false;
         }
         if (s instanceof Boolean b) {
