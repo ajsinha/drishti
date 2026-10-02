@@ -42,6 +42,16 @@ ui:
   desk: Rates desk
   clock_tz: America/New_York
   clock_label: NY
+  # The public landing page. Its example commands (the hero animation, "Keyboard first") are the example commands of the
+  # packs switched on (each pack's console.examples), so they only name entities that exist; landing_examples caps them.
+  # The showcase is the four screenshots under web/static/img/shot-<slug>.png; a caption names its command only when that
+  # command is one of the packs' examples (the pictured pack is installed).
+  landing_examples: 4
+  showcase:
+    - { slug: irs, title: Interest rate swap, cmd: TRD IRS-48213, sutra: irs-vanilla v3 }
+    - { slug: fx-swap, title: FX swap, cmd: TRD FXS-20931, sutra: fx-swap v2 }
+    - { slug: commodity-future, title: Commodity future, cmd: TRD CFT-77120, sutra: listed-future v1 }
+    - { slug: netting-set, title: Netting set, cmd: NSET NS-NORTH-01, sutra: netting-set v1 }
 auth:
   enabled: ${DRISHTI_AUTH_ENABLED:false}      # off for local development
   session_secret: ${DRISHTI_SESSION_SECRET:}  # >= 32 characters; from the environment only

@@ -18,21 +18,24 @@ from __future__ import annotations
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
-from routes.common import render
+from core.packs import samples
+from routes.common import packs, render
 
 router = APIRouter(include_in_schema=False)
 
-SHOWCASE = [
-    {"slug": "irs", "title": "Interest rate swap", "cmd": "TRD IRS-48213", "sutra": "irs-vanilla v3"},
-    {"slug": "fx-swap", "title": "FX swap", "cmd": "TRD FXS-20931", "sutra": "fx-swap v2"},
-    {"slug": "commodity-future", "title": "Commodity future", "cmd": "TRD CFT-77120", "sutra": "listed-future v1"},
-    {"slug": "netting-set", "title": "Netting set", "cmd": "NSET NS-NORTH-01", "sutra": "netting-set v1"},
-]
+GENERIC = "<MNEMONIC> <ID> <GO>"
 
 
 @router.get("/")
-def landing(request: Request):
-    return render(request, "landing.html", showcase=SHOWCASE)
+async def landing(request: Request):
+    """The public landing page. Its example commands come from the packs switched on, never from a pack that may be
+    absent (UX-05); with no examples it shows the command's form instead of an entity."""
+    settings = request.app.state.settings
+    current = samples(await packs(request))
+    commands = [s["cmd"] + " <GO>" for s in current][: int(settings.get("ui.landing_examples", 4) or 4)] or [GENERIC]
+    known = {s["cmd"].upper() for s in current}
+    showcase = [{**s, "cmd": s.get("cmd") if str(s.get("cmd", "")).upper() in known else ""} for s in settings.get("ui.showcase") or []]
+    return render(request, "landing.html", showcase=showcase, commands=commands)
 
 
 @router.get("/healthz")

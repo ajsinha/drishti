@@ -29,7 +29,9 @@
     '"counterparty": "Northbridge"', '"mtm": -412580', '"nettingSet": "NS-NORTH-01"', '"dv01": 22310',
     '"ccy": "USD"', '"payDate": "2027-10-06"', '"df": 0.9632', '"csa": "CSA-VM-0417"', '"pair": "EUR/USD"',
     '"lots": 150', '"settle": 71.15', '"pfe95": 9800000', '{', '}', '[', ']'];
-  var COMMANDS = ['TRD IRS-48213 <GO>', 'TRD FXS-20931 <GO>', 'TRD CFT-77120 <GO>', 'NSET NS-NORTH-01 <GO>'];
+  var COMMANDS = [];                // the example commands of the packs switched on (the page puts them on the canvas)
+  try { COMMANDS = JSON.parse(canvas.getAttribute('data-commands') || '[]'); } catch (e) { COMMANDS = []; }
+  if (!COMMANDS.length && clock) { COMMANDS = [clock.textContent]; }
   var BUILD = 9.0;                 // seconds until the view is fully assembled
   var W = 0, H = 0, dpr = 1, C = {};
   var tokens = [], start = 0, last = 0, running = false, visible = false, raf = 0, seed = 7;

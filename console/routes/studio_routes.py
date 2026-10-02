@@ -24,7 +24,8 @@ from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, Red
 from core.csrf import json_body
 from core.backend import BackendError
 from core import sutra_diff, sutra_summary
-from routes.common import ident, render
+from core.packs import samples
+from routes.common import ident, packs, render
 
 router = APIRouter(prefix="/studio", include_in_schema=False)
 
@@ -32,13 +33,17 @@ NEW_SUTRA = """rachana: 1
 sutra: my-layout
 version: 1
 description: What this layout shows, and for which entities.
-match: { kind: trade, where: "$.productType == 'IRS'" }
-title: { pill: "Trade", id: $.tradeId }
-strip:
-  - { label: MTM (USD), bind: $.mtm, fmt: signed0, tone: sign, emphasis: true }
+match: {{ kind: {kind} }}
+title: {{ pill: "{label}" }}
 panels:
-  - { id: refs, kind: links, title: Linked entities, area: right }
+  - {{ id: refs, kind: links, title: Linked entities, area: right }}
 """
+
+
+def _new_sutra(kind: str) -> str:
+    """The starting text of a new Sutra: for the kind being previewed, binding no field (no pack's field names)."""
+    kind = kind if kind.replace("-", "").isalnum() else "trade"
+    return NEW_SUTRA.format(kind=kind, label=kind.replace("-", " ").capitalize())
 
 
 def _problem(e: BackendError) -> JSONResponse:
@@ -46,11 +51,22 @@ def _problem(e: BackendError) -> JSONResponse:
 
 
 @router.get("")
-async def studio(request: Request, sutra: str = "irs-vanilla@3", kind: str = "trade", id: str = "IRS-48213"):
+async def studio(request: Request, sutra: str | None = None, kind: str = "", id: str = ""):
+    """Opens on the entity asked for, else on the first example entity of the user's packs (with a Sutra of its kind,
+    unless a Sutra, or ``sutra=`` for a new one, is asked for), else empty with a hint: never on a sample of a pack that
+    may not be installed (UX-05)."""
     backend, me = request.app.state.backend, ident(request)
     sutras = await backend.sutras(me)
-    source, picked = NEW_SUTRA, ""
-    if "@" in sutra:
+    if not id.strip():
+        current = await packs(request)
+        sample = next(iter(samples(current)), None)
+        if sample:
+            kind, id = sample["kind"], sample["id"]
+            sutra = sutra if sutra is not None else next((f"{s['name']}@{s['latest']}" for s in sutras if s.get("kind") == kind), "")
+        else:
+            kind, id = kind or next((k for p in current for k in p.get("kinds") or []), ""), ""
+    source, picked = _new_sutra(kind or "trade"), ""
+    if sutra and "@" in sutra:
         name, _, version = sutra.partition("@")
         try:
             source, picked = await backend.sutra_source(name, int(version), me), sutra

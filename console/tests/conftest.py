@@ -470,3 +470,15 @@ def client(backend):
     app = create_app(load_settings(CONSOLE / "config"))
     app.state.backend = backend
     return TestClient(app)
+
+
+@pytest.fixture
+def with_packs(client, backend, monkeypatch):
+    """Switches the stand-in server to the given packs (as DRISHTI_PACKS would), for one test."""
+    def use(*names):
+        async def packs(ident=None):
+            return [{"name": n, "version": "1.0.0", "title": n.title(), "description": "", "assigned": True, "active": True} for n in names]
+        monkeypatch.setattr(backend, "packs", packs)
+        client.app.state.packs.forget_all()
+    yield use
+    client.app.state.packs.forget_all()

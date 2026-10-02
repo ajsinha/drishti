@@ -70,7 +70,7 @@
       <button type="button" role="tab" class="tab-head" aria-selected="false" data-tab="summary">Summary</button>
       <button type="button" role="tab" class="tab-head" aria-selected="false" data-tab="json">Sample JSON</button>
     </div>
-    <div class="studio-status mono" data-status>Ctrl+Enter previews, Ctrl+Space completes. A Sutra is one YAML document (<code>rachana: 1</code>); it is checked as you type. Nothing is saved until you press Save.</div>
+    <div class="studio-status mono" data-status{% if not ref_id %} data-studio-empty{% endif %}>{% if not ref_id %}Type a kind and an id above (or paste a document under <b>Sample JSON</b>), then press <b>Preview</b>. None of your packs names an example entity. {% endif %}Ctrl+Enter previews, Ctrl+Space completes. A Sutra is one YAML document (<code>rachana: 1</code>); it is checked as you type. Nothing is saved until you press Save.</div>
     <div class="studio-preview" data-out data-pane="preview"></div>
     <article class="studio-summary" data-summary data-pane="summary" hidden></article>
     <div class="studio-json" data-pane="json" hidden>

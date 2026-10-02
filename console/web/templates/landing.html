@@ -29,9 +29,9 @@
       <a class="btn-pill btn-ghost" href="#grammar">How the grammar works</a>
     </div>
     <div class="lp-stage">
-      <canvas id="lpHero" aria-label="Raw JSON records flow into the {{ PRODUCT }} eye and come out as live terminal panels" role="img"></canvas>
+      <canvas id="lpHero" data-commands="{{ commands | tojson | forceescape }}" aria-label="Raw JSON records flow into the {{ PRODUCT }} eye and come out as live terminal panels" role="img"></canvas>
       <div class="lp-stage-caption"><span>raw JSON → fingerprint → Rachana (Sutra ⊕ inference) → view</span>
-        <span><span id="lpHeroClock">TRD IRS-48213 &lt;GO&gt;</span>
+        <span><span id="lpHeroClock">{{ commands[0] }}</span>
         <button type="button" class="lp-replay" data-replay="lpHero"><i class="bi bi-arrow-repeat" aria-hidden="true"></i> Replay</button></span></div>
     </div>
   </div>
@@ -100,7 +100,7 @@
     <div class="lp-kicker">What you get</div>
     <h2 class="lp-h2">Built for people who read numbers for a living.</h2>
     <div class="lp-cards">
-      {{ card("keyboard", "Keyboard first", "TRD IRS-48213 <GO>. Function keys per view, Alt+← to go back, F9 for the raw JSON — always.") }}
+      {{ card("keyboard", "Keyboard first", commands[0] ~ ". Function keys per view, Alt+← to go back, F9 for the raw JSON — always.") }}
       {{ card("diagram-3", "Linked", "Every identifier opens another view: netting set, CSA, agreement, curve. A breadcrumb trail shows how you got there.") }}
       {{ card("activity", "Live", "Views tick over server-sent events. Only the changed cells repaint, and the top bar shows the measured p99 latency.") }}
       {{ card("plug", "Any source, any industry", "Plugins bring the data (caches, REST, JDBC, feed files); domain packs bring the vocabulary: finance and logistics ship, and yours is configuration only.") }}
@@ -118,7 +118,7 @@
       {% for s in showcase %}
       <figure class="lp-shot">
         <img src="/static/img/shot-{{ s.slug }}.png" alt="{{ s.title }} view" loading="lazy">
-        <figcaption class="meta"><span class="cmd">{{ s.cmd }} &lt;GO&gt;</span><span class="text-muted-d">{{ s.title }} · Sutra {{ s.sutra }}</span></figcaption>
+        <figcaption class="meta">{% if s.cmd %}<span class="cmd">{{ s.cmd }} &lt;GO&gt;</span>{% endif %}<span class="text-muted-d">{{ s.title }} · Sutra {{ s.sutra }}</span></figcaption>
       </figure>
       {% endfor %}
     </div>

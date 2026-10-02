@@ -328,5 +328,5 @@
   var wrapBox = root.querySelector('[data-wrap]');
   if (wrapBox && editor) { editor.setOption('lineWrapping', wrapBox.checked); wrapBox.addEventListener('change', function () { editor.setOption('lineWrapping', wrapBox.checked); }); }
 
-  preview();
+  if (idIn.value.trim()) { preview(); }      // nothing to preview yet: the status line says how to start
 })();

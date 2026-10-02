@@ -87,7 +87,9 @@ class Packs:
         console = m.get("console", {}) or {}
         out = {"name": name, "title": m.get("title", name), "version": m.get("version", ""), "description": m.get("description", ""),
                "dir": pdir, "examples": console.get("examples", []), "workspaces": {}, "guides": [], "contextual": {},
-               "monitors": console.get("monitors", {}) or {}, "alerts": m.get("alerts", []) or [], "kinds": m.get("kinds", []) or []}
+               "monitors": console.get("monitors", {}) or {}, "alerts": m.get("alerts", []) or [], "kinds": m.get("kinds", []) or [],
+               "mnemonics": {str(code).upper(): str((d or {}).get("kind", "")) for code, d in (m.get("mnemonics") or {}).items()
+                             if isinstance(d, dict) and d.get("kind")}}
         if console.get("workspaces") and (pdir / console["workspaces"]).exists():
             out["workspaces"] = (yaml.safe_load((pdir / console["workspaces"]).read_text()) or {}).get("templates", {}) or {}
         if console.get("help") and (pdir / console["help"]).exists():
@@ -95,3 +97,23 @@ class Packs:
             out["guides"] = [{**g, "path": pdir / g["file"], "pack": name} for g in h.get("guides", [])]
             out["contextual"] = h.get("contextual", {}) or {}
         return out
+
+
+def samples(packs: list[dict]) -> list[dict]:
+    """The example commands of the given packs (their ``console.examples``) whose mnemonic one of them defines, as
+    ``{cmd, what, kind, id, pack}`` in pack order. Pages that show an example entity (Studio's first preview, the landing
+    page) take it from here, so they name only entities of packs that are installed and switched on."""
+    kinds: dict[str, str] = {}
+    for p in packs:
+        for code, kind in (p.get("mnemonics") or {}).items():
+            kinds.setdefault(code, kind)
+    out = []
+    for p in packs:
+        for ex in p.get("examples") or []:
+            if not isinstance(ex, (list, tuple)) or not ex:
+                continue
+            parts = str(ex[0]).split()
+            if len(parts) == 2 and parts[0].upper() in kinds:
+                out.append({"cmd": str(ex[0]), "what": str(ex[1]) if len(ex) > 1 else "", "kind": kinds[parts[0].upper()],
+                            "id": parts[1], "pack": p.get("title", p.get("name", ""))})
+    return out

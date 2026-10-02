@@ -23,10 +23,13 @@ import java.util.Locale;
 import java.util.Optional;
 
 /**
- * Parses {@code TRD IRS-48213 <GO>}, {@code nset ns-north-01}, or a bare {@code IRS-48213} (the kind is then
+ * Parses {@code TRD MX-20000001 <GO>}, {@code nset ns-north-01}, or a bare {@code MX-20000001} (the kind is then
  * taken from the identifier patterns). {@code <GO>} and case in the mnemonic are ignored.
  */
 public final class CommandParser {
+
+    /** Most mnemonics an unreadable command's message names. */
+    private static final int HINT_MNEMONICS = 6;
 
     private final Mnemonics mnemonics;
     private final ReferenceCatalog catalog;
@@ -55,6 +58,20 @@ public final class CommandParser {
 
     public EntityRef require(String text) {
         return parse(text).orElseThrow(() -> new DrishtiException(ErrorCode.COMMAND_UNKNOWN,
-                "cannot read command '" + text + "'; try <MNEMONIC> <ID> <GO>, for example TRD IRS-48213 <GO>"));
+                "cannot read command '" + (text == null ? "" : text) + "'; " + hint()));
+    }
+
+    /**
+     * How to write a command, with the mnemonics configured here (from the packs loaded), never an entity of a pack that
+     * may not be installed.
+     */
+    private String hint() {
+        var codes = mnemonics.all().keySet();
+        if (codes.isEmpty()) {
+            return "type <MNEMONIC> <ID> <GO>, but no mnemonics are configured: is a pack loaded?";
+        }
+        String some = String.join(", ", codes.stream().limit(HINT_MNEMONICS).toList());
+        return "type <MNEMONIC> <ID> <GO> with a mnemonic such as " + some
+                + (codes.size() > HINT_MNEMONICS ? " (" + codes.size() + " in all; type a letter for suggestions)" : "");
     }
 }
