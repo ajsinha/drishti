@@ -117,6 +117,8 @@ public final class RedisSourcePlugin implements SourcePlugin {
     private volatile RedisConnection redis;
     private volatile StatefulRedisPubSubConnection<String, String> pubSub;
     private volatile String problem = "not connected yet";
+    /** Why the last read failed, until one succeeds (null when it did): health reflects a failing store at once. */
+    private volatile String commandFailure;
     private volatile Instant lastUpdate;
     private SourceContext context;
     private String uri;
@@ -266,6 +268,7 @@ public final class RedisSourcePlugin implements SourcePlugin {
             }
             kindDates = dates;
             problem = null;
+            commandFailure = null;                             // the store answered
             reindex(dates);
             warm(dates);
         } catch (Exception e) {
@@ -364,7 +367,15 @@ public final class RedisSourcePlugin implements SourcePlugin {
         if (!configuredKinds.isEmpty() && !configuredKinds.contains(ref.kind())) {
             return Optional.empty();
         }
-        Optional<Found> found = ColumnReader.await(read(ref, asOf), timeout);
+        Optional<Found> found;
+        try {
+            found = ColumnReader.await(read(ref, asOf), timeout);
+            commandFailure = null;
+        } catch (Exception e) {
+            // health says so at once, not at the next refresh: the store is down or rejecting commands
+            commandFailure = "reads fail: " + e.getClass().getSimpleName() + (e.getMessage() == null ? "" : ": " + e.getMessage());
+            throw e;
+        }
         if (found.isEmpty()) {
             return Optional.empty();
         }
@@ -647,6 +658,16 @@ public final class RedisSourcePlugin implements SourcePlugin {
         String p = problem;
         if (p != null) {
             return "DOWN: " + p;
+        }
+        RedisConnection c = redis;
+        if (c != null && !c.isOpen()) {
+            // Lettuce marks the connection inactive the moment it drops (it reconnects by itself): DOWN now, not at the
+            // next refresh
+            return "DOWN: lost the connection to Redis at " + c.describe() + " (reconnecting)";
+        }
+        String failed = commandFailure;
+        if (failed != null) {
+            return "DOWN: " + failed;
         }
         // a pack declared fields the newest day was loaded without: it works, but searches over them read documents
         List<String> notLaidOut = new ArrayList<>();

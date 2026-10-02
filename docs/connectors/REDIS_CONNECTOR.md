@@ -556,6 +556,7 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
 |---|---|---|
 | the plugin is listed as installed but not configured | a Redis plugin on the class path with no `uri` (for example no `redis` profile) | nothing to do: it stays idle; set `uri` on a connector to use it |
 | `DOWN: cannot reach Redis at redis://…` | Redis unreachable, wrong URI or credentials | check `uri`, `user`/`password`, TLS (`rediss://`); the connector retries every refresh |
+| `DOWN: lost the connection to Redis at redis://… (reconnecting)` or `DOWN: reads fail: …` | Redis went away or rejects commands; health says so at once, not at the next refresh | the connection reconnects by itself; health is `UP` again after the next successful read or refresh |
 | `UP (not laid out as the pack declares: trade (12 of 19 columns) …)` | the day was loaded without some declared fields | load lines whose `columns` carry every declared path |
 | a trade is in type-ahead but does not open on a date | its key for that day expired or was never loaded | `ZRANGE trading:trade:{ID} 0 -1`, `EXISTS trading:trade:{ID}:yyyyMMdd`; with Delta Lake behind, older days come from there |
 | a new day is not served | its load has not finished (columns are written at the end) | wait for the loader's last line; the day joins `trading:trade:days` then |
