@@ -112,6 +112,11 @@ the entity is counted once. The ids repeated are counted (`duplicateIds` in the 
 JSON does not allow. The connector reads them and takes them as **no value**: a promoted number is empty (as a missing
 field is, so `mtm < 0` does not match it and sums leave it out), and the document opened holds `null` there.
 
+**A promoted field of mixed types.** A field that is a number on most lines and text on others (`"mtm": "N/A"`) keeps
+each value as the document holds it: numbers as numbers (`1e20` stays `1e20`, it is not clamped to a long), text as
+text. A search answered from the columns therefore orders and compares it exactly as one that reads documents
+(numbers in order, then text; `mtm > 10000000000000000000` matches the huge numbers and not `"N/A"`), and sums leave the text out.
+
 **Lines that cannot be read** are skipped, not the day: a truncated line, a line that is not a JSON object, a line
 without an id, a line longer than `max-document-mb` (64 MB), or a line nested deeper than `max-nesting-depth`
 (1000). Each is counted with its line number and why, logged once per version of the file, and shown in Health; the
@@ -218,7 +223,10 @@ in its place.
 
 "Which trades reference netting set `NS-SUMMIT-NY`?" comes from the promoted text columns: every value equal to the id.
 A kind without promoted fields is answered by reading its lines, at most `max-load-rows` (200,000), and matching the id
-as a JSON string.
+as a JSON string. A kind in `effective` mode (counterparties, credit limits) is looked up in each entity's version on
+the date, as a read shows it: the days on or before the date are read newest first and each entity only in its newest
+line, at most `max-load-rows` lines in all. Impact (F8) on a netting set therefore lists its counterparty and
+credit-limit groups from files as from any other store.
 
 ## 7. Dates: snapshot and effective kinds
 
@@ -228,7 +236,11 @@ as a JSON string.
 | `effective` | a line only when an entity changes | the entity's line in the newest file on or before the date that holds it |
 
 A date older than every file (or beyond the lookback) is not held, so the next store configured for the kind is asked:
-recent days can come from files and older ones from Delta Lake.
+recent days can come from files and older ones from Delta Lake. A date a dated snapshot file serves **is** held, and
+the files are authoritative for it: an entity that day's file does not list is gone on that date, and the store
+behind is not asked for it (a trade the recent files dropped is not brought back from the lake; the view gives
+`DRS-1001` naming the connector, as a search of the date gives no match). `effective` kinds, undated files and the
+older per-entity layout cannot tell what a date holds, so an entity they do not have passes to the next store.
 
 ## 8. Memory and size
 
@@ -304,7 +316,8 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
 - **No compression on disk** (offsets must address the plain file); a large book takes several times the disk of
   Delta Lake or PostgreSQL.
 - **Only promoted fields are fast** for searches; others read documents (20,000 at most, `partial`).
-- **No time travel** (*known at*): a rewritten file replaces the day.
+- **No time travel** (*known at*): a rewritten file replaces the day. A read *as known at* an instant of a date the
+  files may hold is refused with `DRS-1007` (400) naming the connector, never answered with today's file.
 
 ## 11. Diagnosing
 
