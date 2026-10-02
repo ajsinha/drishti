@@ -70,7 +70,7 @@ class SearchQueryTest {
         assertThat(SearchQuery.looksLikeSearch("TRD IRS-48213")).isFalse();
         assertThatThrownBy(() -> SearchQuery.parse("TRD where name = 'open")).isInstanceOf(DrishtiException.class).hasMessageContaining("not closed");
         assertThatThrownBy(() -> SearchQuery.parse("TRD where mtm > 5zz")).hasMessageContaining("suffix");
-        assertThat(SearchQuery.parse("TRD where x > 1 limit 99999").limit()).isEqualTo(SearchQuery.MAX_LIMIT);
+        assertThatThrownBy(() -> SearchQuery.parse("TRD where x > 1 limit 99999")).hasMessageContaining("from 1 to " + SearchQuery.MAX_LIMIT);
     }
 
     @Test
