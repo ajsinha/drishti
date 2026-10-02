@@ -1,0 +1,122 @@
+/home/ashutosh/IdeaProjects/drishti/.claude/worktrees/agent-a3a597410e145c292/console/web/static/calc/quant.py:468: RuntimeWarning: invalid value encountered in scalar divide
+  d1 = (np.log(F / K) + 0.5 * sd * sd) / sd
+/home/ashutosh/IdeaProjects/drishti/.claude/worktrees/agent-a3a597410e145c292/console/web/static/calc/quant.py:468: RuntimeWarning: divide by zero encountered in scalar divide
+  d1 = (np.log(F / K) + 0.5 * sd * sd) / sd
+PASS norm_cdf(-38): got 2.88542835e-316 expected np.float64(0.0)
+PASS norm_cdf(-10): got 7.619853024160595e-24 expected np.float64(7.61985302416047e-24)
+PASS norm_cdf(-5): got 2.8665157187919455e-07 expected np.float64(2.866515718791933e-07)
+PASS norm_cdf(-1.5): got 0.06680720126885809 expected np.float64(0.06680720126885807)
+PASS norm_cdf(0): got 0.5 expected np.float64(0.5)
+PASS norm_cdf(0.3): got 0.6179114221889527 expected np.float64(0.6179114221889526)
+PASS norm_cdf(2.326): got 0.9899907246591323 expected np.float64(0.9899907246591323)
+PASS norm_cdf(8): got 0.9999999999999993 expected np.float64(0.9999999999999993)
+PASS norm_ppf(1e-300): got -37.0470962993612 expected np.float64(-37.0470962993612)
+PASS norm_ppf(1e-12): got -7.034483825301132 expected np.float64(-7.034483825301131)
+PASS norm_ppf(1e-06): got -4.7534243088229 expected np.float64(-4.753424308822899)
+PASS norm_ppf(0.001): got -3.0902323061678136 expected np.float64(-3.090232306167813)
+PASS norm_ppf(0.02425): got -1.972961051311885 expected np.float64(-1.972961051311885)
+PASS norm_ppf(0.025): got -1.9599639845400545 expected np.float64(-1.9599639845400545)
+PASS norm_ppf(0.5): got 0.0 expected np.float64(0.0)
+PASS norm_ppf(0.975): got 1.9599639845400538 expected np.float64(1.959963984540054)
+PASS norm_ppf(0.99): got 2.326347874040841 expected np.float64(2.3263478740408408)
+PASS norm_ppf(0.999999): got 4.753424308827578 expected np.float64(4.753424308817087)
+FAIL norm_ppf(0.999999999999): got 7.0344869026843035 expected np.float64(7.0344869100478356)
+PASS norm_ppf(0) is -inf: got True expected True
+PASS norm_ppf(1.5): raised ValueError: norm_ppf: p must lie in (0, 1)
+PASS norm_ppf(nan) is nan or raises: got 0 expected 0
+PASS BS call Hull 15.6: got 4.76 expected 4.76
+PASS BS put Hull 15.6: got 0.81 expected 0.81
+PASS BS vs reference, 2000 random, max abs diff < 1e-9: got np.True_ expected True
+PASS delta FD: got 0.6557903489514839 expected np.float64(0.6557903489579076)
+PASS gamma FD: got 0.01678353017585801 expected np.float64(0.016783530085717757)
+PASS vega FD: got 31.469119079733765 expected np.float64(31.46911883945336)
+PASS theta FD (per year, -dV/dT): got -6.200980200366439 expected np.float64(-6.200980211552576)
+PASS rho FD: got 40.297934234057394 expected np.float64(40.29793392799519)
+PASS put delta FD: got -0.3367377058676545 expected np.float64(-0.33673770587938634)
+PASS put theta FD: got -4.40691722918457 expected np.float64(-4.4069172403382595)
+PASS put rho FD: got -29.366841415967823 expected np.float64(-29.366841787457076)
+PASS Black76 put Hull: got 1.12 expected 1.12
+PASS B76 delta FD: got 0.3566830636431811 expected np.float64(0.35668306364533553)
+PASS B76 theta FD: got -1.5100655424645648 expected np.float64(-1.5100655475880354)
+PASS B76 vega FD: got 5.187835556969152 expected np.float64(5.187835501195837)
+PASS GK call vs BSM with q=rf: got 0.06388572206673677 expected np.float64(0.06388572206673682)
+PASS Bachelier call vs integral: got 0.007447253450154777 expected 0.007447253448868052
+PASS Bachelier put parity: got 0.0024472534501547797 expected 0.0024472534488680546
+PASS implied_vol roundtrip 0.05: got 0.049999999998238065 expected 0.05
+PASS implied_vol roundtrip 0.2: got 0.20000000000084153 expected 0.2
+PASS implied_vol roundtrip 1.0: got 0.9999999999993182 expected 1.0
+PASS implied_vol roundtrip 3.0: got 2.9999999999999996 expected 3.0
+PASS implied_vol below intrinsic: raised ValueError: brent: f(0.0001) and f(5) have the same sign (49, 147.483): widen the bracket
+FAIL black_scholes(100, 100, 0.0, 0.05, 0.2) (expiry/zero vol) = intrinsic: got nan expected 0.0
+PASS black_scholes(110, 100, 0.0, 0.05, 0.2) (expiry/zero vol) = intrinsic: got 10.0 expected 10.0
+FAIL black_scholes(100, 100, 1.0, 0.0, 0.0) (expiry/zero vol) = intrinsic: got nan expected 0.0
+PASS black_scholes(100, 90, 1.0, 0.0, 0.0) (expiry/zero vol) = intrinsic: got 10.0 expected 10.0
+PASS par bond price: got 100.00000000000014 expected 100.0
+PASS bond_yield roundtrip y=-0.01: got np.float64(-0.01000000000000006) expected -0.01
+PASS bond_yield roundtrip y=0.0: got np.float64(-5.06204487288208e-17) expected 0.0
+PASS bond_yield roundtrip y=0.02: got np.float64(0.020000000000018635) expected 0.02
+PASS bond_yield roundtrip y=0.07: got np.float64(0.0699999999999997) expected 0.07
+PASS bond_yield roundtrip y=0.15: got np.float64(0.15000000000000002) expected 0.15
+PASS modified duration FD: got 7.794581142823408 expected 7.7945811423774
+PASS convexity FD: got 73.62873142656363 expected 73.62873799365833
+PASS dv01 FD: got 0.07794581142823419 expected 0.07794582406617678
+PASS accrued at 10.25y (half of a 2.5 coupon): got np.float64(1.25) expected 1.25
+PASS loglinear df(3) = interpolated -z t: got 0.9039330328858641 expected 0.9039330328858641
+PASS flat extrapolation beyond 10y zero: got 0.037 expected 0.037
+PASS flat before 1y zero: got 0.03 expected 0.03
+PASS cubic zero(1.5) vs scipy natural spline: got 0.031044747899159664 expected 0.031044747899159664
+PASS cubic zero(3.3) vs scipy natural spline: got 0.03376106666666667 expected 0.03376106666666667
+PASS cubic zero(7.7) vs scipy natural spline: got 0.0362171418487395 expected 0.0362171418487395
+PASS cubic8 zero(0.7) vs scipy: got 0.030435713923662875 expected 0.03043571392366287
+PASS cubic8 zero(2.5) vs scipy: got 0.03271299727367411 expected 0.032712997273674105
+PASS cubic8 zero(6) vs scipy: got 0.03550201117589397 expected 0.035502011175893966
+PASS cubic8 zero(15) vs scipy: got 0.038002592945248846 expected 0.038002592945248846
+PASS cubic8 zero(25) vs scipy: got 0.038858994960892033 expected 0.038858994960892033
+PASS bootstrap par rate 1y reprices: got 0.029999999999999985 expected 0.03
+PASS bootstrap par rate 2y reprices: got 0.03099999999999997 expected 0.031
+PASS bootstrap par rate 3y reprices: got 0.03200000000000001 expected 0.032
+PASS bootstrap par rate 5y reprices: got 0.03400000000000001 expected 0.034
+PASS bootstrap par rate 7y reprices: got 0.034999999999999996 expected 0.035
+PASS bootstrap par rate 10y reprices: got 0.036 expected 0.036
+PASS swap_pv at par is 0: got -3.15354321997323e-11 expected 0.0
+PASS 30/360 US 2026-01-15..2026-03-31: got 0.2111111111111111 expected 0.2111111111111111
+FAIL 30E/360 2026-01-15..2026-03-31 (Eurobond: D2 31->30): got 0.2111111111111111 expected 0.20833333333333334
+FAIL 30E/360 2026-02-28..2026-08-31: got 0.5083333333333333 expected 0.5055555555555555
+FAIL ACT/ACT ISDA 2026-01-01..2027-01-01: got 0.999315537303217 expected 1.0
+FAIL ACT/ACT ISDA 2027-07-01..2028-07-01 (leap): got 1.002053388090349 expected 1.0013773486039375
+PASS tenor 1Y6M: got 1.5 expected 1.5
+PASS tenor 18m lower: got 1.5 expected 1.5
+PASS tenor 3X: raised ValueError: not a tenor: '3X' (try '3M', '10Y', '1W', 'ON')
+FAIL month code V6 from 2026-10-20 (Oct 2026 contract) non-negative: got False expected True
+PASS historical_var 99% of 500 = -5th worst: got 2455619.09688668 expected np.float64(2455619.09688668)
+PASS expected_shortfall 97.5% of 500 = mean of 13 worst: got 2272362.172545557 expected np.float64(2272362.172545557)
+PASS historical_var 99% of 250 (k=floor(2.5)=2): got 2486530.2744169366 expected np.float64(2486530.2744169366)
+PASS parametric_var: got 7256557.911859555 expected np.float64(7256557.911859553)
+PASS kupiec LR 0/250: got 5.025167926750226 expected 5.025167926750726
+PASS kupiec p-value 0/250: got 0.024981503053456915 expected np.float64(0.02498150305344973)
+PASS kupiec LR 4/250: got 0.7691383643858458 expected 0.7691383643858458
+PASS kupiec p-value 4/250: got 0.380483738238954 expected np.float64(0.380483738238954)
+PASS kupiec LR 8/250: got 7.7335507244945205 expected 7.7335507244945205
+PASS kupiec p-value 8/250: got 0.0054204051941277925 expected np.float64(0.0054204051941277994)
+PASS kupiec LR 17/250: got 37.04195695973132 expected 37.04195695973132
+PASS kupiec p-value 17/250: got 1.1561449420422667e-09 expected np.float64(1.1561449420422715e-09)
+PASS kupiec LR 3/1000: got 6.825541879450618 expected 6.825541879450618
+PASS kupiec p-value 3/1000: got 0.008986328738176024 expected np.float64(0.00898632873817602)
+PASS kupiec light 4/250: got 'green' expected 'green'
+PASS kupiec light 5/250: got 'amber' expected 'amber'
+PASS kupiec light 10/250: got 'red' expected 'red'
+PASS max_drawdown: got -50.0 expected -50.0
+PASS max_drawdown peak index: got 3 expected 3
+PASS max_drawdown trough index: got 4 expected 4
+PASS sharpe: got 4.824506406770077 expected np.float64(4.824506406770077)
+PASS hhi equal 4: got 0.25 expected 0.25
+PASS close_to_close_vol: got 0.3262314251417777 expected np.float64(0.3262314251417777)
+PASS hazard_from_spread 120bp R40: got 0.02 expected 0.02
+PASS survival matches term at 1: got 0.9900498337491681 expected 0.9900498337491681
+PASS survival matches term at 3: got 0.9559974818331 expected 0.9559974818331
+PASS survival matches term at 5: got 0.9048374180359595 expected 0.9048374180359595
+PASS survival beyond last knot: got 0.8564151774836135 expected 0.8564151774836135
+PASS cva simple: got 2.3526336508606094 expected 2.3526336508606094
+PASS frtb bucket 2 sens rho .5: got 6.082762530298219 expected 6.082762530298219
+PASS frtb across alt cap: got 1.0 expected 1.0
+FAILS 8
