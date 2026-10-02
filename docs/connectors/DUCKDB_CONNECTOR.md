@@ -491,7 +491,7 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
 
 | Symptom | Likely cause | What to do |
 |---|---|---|
-| `DOWN: no DuckDB file at …` | the file was never loaded, or `path` is wrong | run `tools/load-duckdb.sh`; the connector opens the file within `refresh-seconds` once it exists |
+| `DOWN: no DuckDB file at …` | the file was never loaded, or `path` is wrong | run `tools/load-duckdb.sh`; the connector opens the file within `refresh-seconds` once it exists. Until then reads fail with `DRS-1003` (the connector cannot tell what it holds, so it does not let another store answer instead) |
 | `DOWN: DuckDB file … not opened: …` | the file is locked by a writer, damaged, or of a newer DuckDB | do not open the file read-write while the server runs; load through the loader's swap |
 | `UP (catalogue not refreshed: trading.entities is not in …)` | the file has no such domain | check `table`, or load that domain |
 | `UP (not laid out as the pack declares: trade (0 of 19 columns); searches read documents)` | the file lacks the promoted columns (written another way) | reload with the loader, with the `columns` in each row |

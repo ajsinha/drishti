@@ -104,6 +104,9 @@ public final class MongoSourcePlugin implements SourcePlugin {
     private final Map<String, List<String>> boundaries = new ConcurrentHashMap<>();
     private final HitIndex index = new HitIndex();
     private volatile Map<String, NavigableSet<LocalDate>> kindDates = Map.of();
+    /** True once a refresh has read the collection's kinds and dates; until then what it holds is unknown. */
+    private volatile boolean catalogued;
+    private volatile String refreshProblem;
     private volatile List<String> missingIndexes = List.of();
     private volatile Instant lastUpdate;
     private final AtomicLong reads = new AtomicLong();
@@ -219,8 +222,11 @@ public final class MongoSourcePlugin implements SourcePlugin {
                 }
             }
         } catch (MongoException e) {
+            refreshProblem = e.getMessage();
             return;   // keep the last catalogue; health reports the connection
         }
+        catalogued = true;
+        refreshProblem = null;
         if (!dates.equals(kindDates) || hits.size() != index.size()) {
             lastUpdate = Instant.now();
         }
@@ -307,7 +313,12 @@ public final class MongoSourcePlugin implements SourcePlugin {
     @Override
     public Optional<EntityDocument> fetch(EntityRef ref, AsOf asOf) throws Exception {
         if (configuredKinds.isEmpty() ? !kindDates.containsKey(ref.kind()) : !configuredKinds.contains(ref.kind())) {
-            return Optional.empty();                           // a kind this collection does not hold (or MongoDB not reached yet)
+            if (configuredKinds.isEmpty() && !catalogued) {
+                // MongoDB not reached yet: whether it holds the kind is unknown, so this is a failure (DRS-1003), not
+                // "not held" (which would let another store answer with other data)
+                throw new IllegalStateException(sourceName + " has not reached MongoDB yet" + (refreshProblem == null ? "" : ": " + refreshProblem));
+            }
+            return Optional.empty();                           // a kind this collection does not hold
         }
         reads.incrementAndGet();
         LocalDate asked = asOf.businessDate();

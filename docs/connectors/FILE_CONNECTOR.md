@@ -286,6 +286,7 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
 | `DOWN: no directory …` | the root (or `<root>/<domain>`) does not exist | create it, or fix `root`/`DRISHTI_FILES_ROOT` |
 | a new file is not served | the next rescan has not run | wait `rescan-seconds` (30) |
 | a kind is missing from type-ahead | its file has unreadable lines, or no id field | check the file; set `id-field` for plain documents |
+| views of a date fail with `DRS-1003 <connector> failed reading …` | that day's file is there but cannot be read (permissions, an I/O error, a file the index cannot parse) | fix the file; the read is not passed to a store behind this one, whose data may differ. A day's file that is gone is "not held" and the next store answers |
 | searches say `partial: true` | a field the query reads is not promoted | add it to `layout.<kind>.columns`, and to the rows' `columns` |
 | the first read of an old day is slow | the day is being indexed | expected once; raise `index-cache-mb` to keep more days |
 

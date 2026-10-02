@@ -195,6 +195,11 @@ final class DuckDbCatalog {
         return problem;
     }
 
+    /** True once a refresh has read the catalogue of an open file (the kinds and dates it holds). */
+    boolean catalogued() {
+        return readGeneration != 0;
+    }
+
     Instant loadedAt() {
         return loadedAt;
     }

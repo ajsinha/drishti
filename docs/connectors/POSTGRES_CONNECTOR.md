@@ -415,7 +415,7 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
 
 | Symptom | Likely cause | What to do |
 |---|---|---|
-| `DOWN: <driver message> (reconnecting)` | the database is unreachable | check `url`; connections reopen by themselves |
+| `DOWN: <driver message> (reconnecting)` | the database is unreachable | check `url`; connections reopen by themselves. Reads fail with `DRS-1003` meanwhile (a connector without `kinds` that has not read its table since start: `… has not read its table yet`), never "not held" |
 | `UP (not laid out as the pack declares: trade (0 of 19 columns); searches read documents)` | the table lacks the promoted columns (an earlier table, or written another way) | reload with `tools/load-postgres.sh`, or add the columns and fill them |
 | `UP (catalogue not refreshed: …)` | the last catalogue refresh failed (database restarting, table being recreated) | it retries every `refresh-seconds`; the message clears on success |
 | searches say `partial: true` | a field the query reads is not promoted | add it to `layout.<kind>.columns` and reload |

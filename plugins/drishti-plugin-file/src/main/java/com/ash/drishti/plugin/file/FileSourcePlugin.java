@@ -226,7 +226,12 @@ public final class FileSourcePlugin implements SourcePlugin {
             try {
                 index = day(ref.kind(), d);
             } catch (java.io.UncheckedIOException e) {
-                continue;                                          // the file went away: the next rescan forgets it
+                if (e.getCause() instanceof java.nio.file.NoSuchFileException || !Files.exists(jsonlFile(ref.kind(), d))) {
+                    continue;                                      // the file went away: the next rescan forgets it
+                }
+                // the file is there but cannot be read (permissions, a line that is not JSON): a failure, which stops the
+                // read with DRS-1003, not "not held", which would let another store answer with other data
+                throw e.getCause();
             }
             Optional<byte[]> doc = index.document(ref.id());
             if (doc.isPresent()) {

@@ -84,6 +84,8 @@ final class TableCatalog {
     private volatile Map<String, Boolean> present = Map.of();          // promoted column -> number
     private volatile Instant loadedAt;
     private volatile String problem;
+    /** True once a refresh has read the catalogue: until then the connector cannot tell what it holds. */
+    private volatile boolean catalogued;
 
     TableCatalog(EntityTable table, Db db, String sourceName, Predicate<String> effective, int lookbackDays, Map<String, List<String>> promoted,
             int scanThreads, long columnsCacheMb, Duration columnsTtl) {
@@ -133,6 +135,7 @@ final class TableCatalog {
         dates = ds;
         loadedAt = loaded;
         problem = null;
+        catalogued = true;
         boolean changed = false;
         for (var e : ds.entrySet()) {
             String kind = e.getKey();
@@ -197,6 +200,11 @@ final class TableCatalog {
     /** Why the last refresh failed, or null. */
     String problem() {
         return problem;
+    }
+
+    /** True once a refresh has read the catalogue (the dates and kinds the table holds). */
+    boolean catalogued() {
+        return catalogued;
     }
 
     Instant loadedAt() {

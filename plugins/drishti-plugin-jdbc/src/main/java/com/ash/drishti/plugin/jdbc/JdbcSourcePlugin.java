@@ -312,6 +312,11 @@ public final class JdbcSourcePlugin implements SourcePlugin {
     public Optional<EntityDocument> fetch(EntityRef ref, com.ash.drishti.api.AsOf asOf) throws Exception {
         if (table != null) {
             if (!tableKinds.contains(ref.kind())) {
+                if (!catalog.catalogued()) {
+                    // the database has not answered yet: whether it holds the kind is unknown, so this is a failure
+                    // (DRS-1003), not "not held" (which would let another store answer with other data)
+                    throw new java.sql.SQLException(sourceName + " has not read its table yet: " + catalog.problem());
+                }
                 return Optional.empty();
             }
             Optional<EntityTable.Hit> hit;

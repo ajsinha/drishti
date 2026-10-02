@@ -190,9 +190,18 @@ class DuckDbSourcePluginTest extends DatedSourceContract {
         p.start(context(settings(later, "table", "hist.entities", "refresh-seconds", "1", "layout.trade.columns", "")));
         try {
             assertThat(p.health()).startsWith("DOWN: no DuckDB file at");
-            assertThat(p.fetch(EntityRef.of("trade", "T-9"))).isEmpty();
+            // DATA-03: what the missing file holds is unknown, so a read fails (DRS-1003) rather than passing to another store
+            org.assertj.core.api.Assertions.assertThatThrownBy(() -> p.fetch(EntityRef.of("trade", "T-9")))
+                    .isInstanceOf(java.sql.SQLException.class).hasMessageContaining("has not read its catalogue yet: no DuckDB file at");
             load(later, List.of("{\"domain\":\"hist\",\"kind\":\"trade\",\"id\":\"T-9\",\"date\":\"2026-09-30\",\"doc\":\"{}\"}"));
-            waitFor(() -> p.fetch(EntityRef.of("trade", "T-9")).isPresent());
+            waitFor(() -> {
+                try {
+                    return p.fetch(EntityRef.of("trade", "T-9")).isPresent();
+                } catch (java.sql.SQLException e) {
+                    return false;                                  // not read yet
+                }
+            });
+            assertThat(p.fetch(EntityRef.of("trade", "T-8"))).as("not held, once the file is read").isEmpty();
             assertThat(p.health()).isEqualTo("UP");
         } finally {
             p.close();

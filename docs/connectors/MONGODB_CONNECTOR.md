@@ -482,7 +482,7 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
 
 | Symptom | Likely cause | What to do |
 |---|---|---|
-| `DOWN: cannot reach MongoDB (…)` | wrong `uri`, credentials, or the server is down | check `uri`; the driver reconnects by itself |
+| `DOWN: cannot reach MongoDB (…)` | wrong `uri`, credentials, or the server is down | check `uri`; the driver reconnects by itself. A connector without `kinds` that has not reached MongoDB since start fails reads (`DRS-1003 … has not reached MongoDB yet`) rather than letting another store answer |
 | `DOWN: no documents in drishti.trading` | nothing loaded, or the wrong `database`/`collection` | load with `tools/load-mongodb.sh`; check the connector's `domain` |
 | `UP (not laid out: missing index day_ids …)` | the collection was written by another tool | `db.trading.createIndex({kind: 1, date: 1, id: 1}, {name: "day_ids"})` (and on `trading_columns`) |
 | `UP (no trading_columns collection: …)` | a writer that does not write the narrow copy | write `MongoLayout.columnsRecord` too, or reload with the loader |

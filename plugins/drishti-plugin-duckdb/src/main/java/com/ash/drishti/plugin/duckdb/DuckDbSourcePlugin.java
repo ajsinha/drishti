@@ -154,6 +154,7 @@ public final class DuckDbSourcePlugin implements SourcePlugin {
     @Override
     public Optional<EntityDocument> fetch(EntityRef ref, AsOf asOf) throws Exception {
         if (!kinds.contains(ref.kind())) {
+            requireCatalogue();
             return Optional.empty();
         }
         Optional<Object[]> hit;
@@ -161,6 +162,7 @@ public final class DuckDbSourcePlugin implements SourcePlugin {
             // the snapshot date from memory, then one row: the zone maps of (kind, business_date, id) leave one row group to read
             Optional<LocalDate> day = catalog.snapshotDate(ref.kind(), asOf.businessDate());
             if (day.isEmpty()) {
+                requireCatalogue();
                 return Optional.empty();
             }
             hit = with(c -> one(c, "SELECT doc, CAST(business_date AS VARCHAR) FROM " + catalog.table()
@@ -176,6 +178,17 @@ public final class DuckDbSourcePlugin implements SourcePlugin {
         LocalDate date = LocalDate.parse((String) hit.get()[1]);
         DataNode d = context.parseJson(new ByteArrayInputStream(((String) hit.get()[0]).getBytes(StandardCharsets.UTF_8)));
         return Optional.of(new EntityDocument(ref, d, new Provenance(sourceName, date.toEpochDay(), Instant.now(), false, date)));
+    }
+
+    /**
+     * Until the file has been opened and its catalogue read (missing, locked, corrupt), the connector cannot tell what
+     * it holds: a read is a failure (DRS-1003), not "not held", which would let another store answer with other data.
+     */
+    private void requireCatalogue() throws SQLException {
+        if (!catalog.catalogued()) {
+            String why = catalog.problem() != null ? catalog.problem() : file.problem();
+            throw new SQLException(sourceName + " has not read its catalogue yet: " + (why != null ? why : "no DuckDB file at " + file.path()));
+        }
     }
 
     private static Optional<Object[]> one(Connection c, String sql, String... params) throws SQLException {
