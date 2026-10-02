@@ -335,6 +335,11 @@ trade (`TRD` alone) lists the first ids in order without sorting a million entri
 stopping once the limit is reached. New entities from a live source are added to a small pending list and folded into
 the sorted arrays in batches. Measured: **29 ms** over HTTP with a million ids.
 
+When a kind's table log or newest day cannot be read at a rebuild, the kind keeps the ids it listed before (none, if
+it never could), the failure is logged and shown in Health, and searches of the kind are reported partial with the
+reason ("its list of trade entities could not be rebuilt (…); it lists those of 2026-10-01T…"); the next rebuild tries
+again.
+
 ### 6.5 The column set of a day
 
 The first search of a business day reads the day's **column set**: the id and every promoted column, nothing else.
@@ -570,6 +575,9 @@ when it was; a document search says `"partial": true` with a smaller `scanned`.
 | Health: `not laid out as the pack declares` | the writer did not write the promoted columns | `maintain.py relayout --root … --domain …` |
 | `DRS-1004 timed out` on a single read | the read deadline (2 s) passed: very large row groups, or object storage far away | smaller row groups; check `p99Ms` in Health; `drishti.sources.fetch-timeout` |
 | the log directory grows by megabytes a day | statistics include the document | `maintain.py` sets `delta.dataSkippingStatsColumns`; or set it yourself |
+| Health: `DEGRADED: cannot read trade 2026-09-30: …` | the last read of that table and date failed: pages in a codec the engine does not decompress, a truncated or missing Parquet file, or (`trade log`) a log missing a commit | the reason says which; LZ4: [section 16](#16-engines-native-and-hadoop); a damaged file: restore it or rewrite the date. Health turns `UP` once a read of the date succeeds or the table gets a new version |
+| a view fails with `DRS-1003 … failed reading` while other dates open | that date's files cannot be read (see the row above); the view does not fall back to another store's data | as above |
+| searches say `partial: true` with `failed: [{"source": "trading-store", …}]` | a date or the table's ids could not be read; the type-ahead keeps the ids it listed before | as above; the reason is in the answer and in Health |
 
 ## 14. Settings
 
@@ -653,6 +661,23 @@ lists with `ListObjectsV2`, and reads with ranged GETs: a small read (a footer, 
 are only those the store requires, so MinIO, Ceph and S3Mock work.
 
 **Limits.** The native engine reads local disk and S3 only; a connector with `engine: native` and an `abfs://` or
-`gs://` root refuses to start with a message saying to use `hadoop`. It does not decompress LZ4, Brotli or LZO Parquet
-pages (no Delta writer Drishti uses writes them); such a table needs `hadoop`. **Iceberg** is not part of this: its
+`gs://` root refuses to start with a message saying to use `hadoop`. It does not decompress LZ4, LZ4_RAW, Brotli or
+LZO Parquet pages (Drishti's loaders write Snappy). **The `hadoop` engine is not the way out for LZ4**: parquet-java
+reads Hadoop-framed `LZ4` and `LZ4_RAW`, but delta-rs and Arrow (pyarrow, Polars, `deltalake` in Python) frame their
+`LZ4` pages otherwise, and the `hadoop` engine fails on them too (`LZ4Exception: Malformed input`). Tested with a date
+rewritten by delta-rs (parquet-rs 59) with `compression="LZ4"`: both engines fail; with `"LZ4_RAW"`: `hadoop` reads it, `native`
+does not. Rewrite such a date with Snappy (or ZSTD), which both engines read:
+
+```bash
+uv run --with deltalake --with pyarrow --with pyyaml python tools/lake/maintain.py relayout --root data/delta \
+    --domain trading --kind trade --dates 2026-09-30 --force
+```
+
+(`--force`: a date already in the pack's layout is otherwise skipped, whatever its codec; the rewrite is a new table
+version, so readers pick it up at their next refresh.) Until then reads of that date fail with `DRS-1003 trading-store
+failed reading trade/MX-1: trade 2026-09-30 cannot be read: the native Delta engine does not decompress LZ4 Parquet
+pages …; rewrite the date with Snappy or ZSTD (tools/lake/maintain.py relayout --force --dates <date>)` (the same
+advice on `hadoop`), searches over the date say `partial: true` and name the connector and reason, the type-ahead keeps
+the ids it listed before, and **Admin → Health** shows the connector `DEGRADED: cannot read trade 2026-09-30: …`.
+**Iceberg** is not part of this: its
 connector reads through Hadoop, so it is not supported on Windows (it is off unless the `iceberg` profile is used).

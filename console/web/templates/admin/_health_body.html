@@ -17,6 +17,7 @@
 <div class="hl-sum">
   <span class="hl-badge hl-{{ tone[h.status] }}"><i class="bi bi-{{ 'check-circle' if h.status == 'OK' else 'exclamation-triangle' }}" aria-hidden="true"></i> {{ h.status }}</span>
   <span><b>{{ h.summary.sources - h.summary.sourcesDown }}</b> of {{ h.summary.sources }} connectors up</span>
+  {% if h.summary.sourcesDegraded %}<span class="t-warn"><b>{{ h.summary.sourcesDegraded }}</b> degraded (some data unreadable)</span>{% endif %}
   {% if h.summary.failedToStart %}<span class="t-neg"><b>{{ h.summary.failedToStart }}</b> failed to start</span>{% endif %}
   <span><b>{{ h.summary.packs - h.summary.packsWithProblems }}</b> of {{ h.summary.packs }} packs healthy</span>
   <span class="text-muted-d mono">v{{ h.server.version }} · up {{ (h.server.uptimeSeconds // 3600) }}h {{ (h.server.uptimeSeconds % 3600) // 60 }}m ·

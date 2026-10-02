@@ -994,7 +994,7 @@ curl -s localhost:18480/api/v1/admin/health | python3 -m json.tool | head -40
 ```json
 {
     "status": "OK",
-    "summary": { "packsWithProblems": 0, "failedToStart": 0, "sourcesDown": 0, "sources": 18, "packs": 12 },
+    "summary": { "packsWithProblems": 0, "failedToStart": 0, "sourcesDown": 0, "sourcesDegraded": 0, "sources": 18, "packs": 12 },
     "server": { "version": "1.13.0", "uptimeSeconds": 6916, "java": "25.0.4.1", "heapUsedMb": 121,
                 "heapMaxMb": 15640, "threads": 75, "cpus": 24 },
     "sources": [
@@ -1019,15 +1019,19 @@ curl -s localhost:18480/api/v1/admin/health | python3 -m json.tool | head -40
 
 How to read it:
 
-- **`status`**: `OK`; `DEGRADED` when any source is down or stale, a connector failed to start (`failedToStart`) or
-  a pack has a problem; `DOWN` when no source is up at all.
+- **`status`**: `OK`; `DEGRADED` when any source is down, degraded or stale, a connector failed to start
+  (`failedToStart`) or a pack has a problem; `DOWN` when no source is up at all.
 - **`lastUpdate`** is when the connector last received new data: the newest Kafka message, ActiveMQ or RabbitMQ
   message, Delta table commit, file in a file connector's folder, feed refresh that brought data, or demo tick. It is
   null for sources read on demand (PostgreSQL, Aerospike, S3), which cannot tell. **`stale`** is true when nothing new
   arrived for longer than the connector's `stale-after` setting (`staleAfter`, an ISO-8601 duration such as `PT15M`).
   The **Last update** column shows it, in amber when stale. Views of that source's entities show a "behind" banner.
-- **A source** is `UP` or `DOWN`; `health` carries the plugin's own text (the reason, when down). `reads.errors`,
-  `lastError` and `lastErrorAt` show the most recent failure; `p99Ms` its read latency.
+- **A source** is `UP`, `DEGRADED` or `DOWN`; `health` carries the plugin's own text (the reason, when not up).
+  `DEGRADED` means it serves, but some of its data cannot be read: a Delta connector names each table and date whose
+  last read failed (a truncated Parquet file, pages in a codec its engine does not decompress, a table log missing a
+  commit) and why, until a read of it succeeds or the table gets a new version. A Redis connector is `DOWN` as soon
+  as its connection drops or a read fails, not at its next refresh. `reads.errors`, `lastError` and `lastErrorAt`
+  show the most recent failure; `p99Ms` its read latency.
 - **A pack** is `DEGRADED` when one of its Sutras has problems or one of its connectors is down. `connectorsOff`
   lists connectors switched off by configuration (for example a feed you did not enable): not a fault.
 

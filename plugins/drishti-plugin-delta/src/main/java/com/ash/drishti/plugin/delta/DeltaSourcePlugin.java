@@ -106,6 +106,8 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     private String sourceName;
     private int lookbackDays;
     private LakeStore lake;
+    /** What cannot be read right now (a date's files, a table's log, a kind's ids): health and searches say so. */
+    private volatile TableProblems problems = new TableProblems("delta");
 
     @Override
     public PluginManifest manifest() {
@@ -116,6 +118,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     public void start(SourceContext ctx) throws IOException {
         this.context = ctx;
         this.sourceName = ctx.setting("source-name", "delta");
+        this.problems = new TableProblems(sourceName);
         this.lookbackDays = Integer.parseInt(ctx.setting("lookback-days", "10"));
         // local disk or object storage (s3a://, abfs://, gs://), read by the native engine or Hadoop's (`engine`): the
         // rest of the connector does not know which
@@ -263,38 +266,62 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         return fetch(ref, AsOf.LATEST);
     }
 
+    /** The table's layout, recording a log that cannot be read (health says so) and rethrowing: a failure, not "not held". */
+    private Optional<DeltaTable.Layout> readableLayout(String kind, Instant knownAt) {
+        try {
+            return layout(kind, knownAt);
+        } catch (RuntimeException e) {
+            throw problems.failed(kind, TableProblems.LOG, -1, e);
+        }
+    }
+
     @Override
     public Optional<EntityDocument> fetch(EntityRef ref, AsOf asOf) throws IOException {
-        Optional<DeltaTable.Layout> l = layout(ref.kind(), asOf.knownAt());
+        Optional<DeltaTable.Layout> l = readableLayout(ref.kind(), asOf.knownAt());
         if (l.isEmpty()) {
             return Optional.empty();
         }
         for (LocalDate d : candidates(ref.kind(), l.get(), asOf.businessDate())) {
-            // the id map says which file holds the entity; only that file's matching row group is read
-            int file = idMap(ref.kind(), l.get(), d).file(ref.id());
-            if (file < 0) {
+            String json;
+            try {
+                json = doc(ref, l.get(), d);
+            } catch (RuntimeException e) {
+                // the date's files cannot be read (truncated, a codec the engine does not decompress): the read fails
+                // naming them, rather than looking as if the table did not hold the entity
+                throw problems.failed(ref.kind(), d.toString(), l.get().version(), e);
+            }
+            problems.ok(ref.kind(), d.toString());           // the date's files were read
+            if (json == null) {
                 continue;
             }
-            String key = ref.kind() + "\u001f" + l.get().version() + "\u001f" + d + "\u001f" + ref.id();
-            String json = docs.getIfPresent(key);
-            if (json == null) {
-                docReads.acquireUninterruptibly();
-                try {
-                    json = tables.get(ref.kind()).doc(l.get(), d, file, ref.id()).orElse(null);
-                } finally {
-                    docReads.release();
-                }
-                if (json != null) {
-                    docs.put(key, json);
-                }
-            }
-            if (json != null) {
-                DataNode doc = context.parseJson(new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8)));
-                return Optional.of(new EntityDocument(ref, doc, new Provenance(sourceName, l.get().version(), Instant.now(), false,
-                        d == LocalDate.MIN ? null : d)));
-            }
+            DataNode doc = context.parseJson(new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8)));
+            return Optional.of(new EntityDocument(ref, doc, new Provenance(sourceName, l.get().version(), Instant.now(), false,
+                    d == LocalDate.MIN ? null : d)));
         }
         return Optional.empty();
+    }
+
+    /** The entity's document on one date, or null when that date's files do not hold it. */
+    private String doc(EntityRef ref, DeltaTable.Layout l, LocalDate d) {
+        // the id map says which file holds the entity; only that file's matching row group is read
+        int file = idMap(ref.kind(), l, d).file(ref.id());
+        if (file < 0) {
+            return null;
+        }
+        String key = ref.kind() + "\u001f" + l.version() + "\u001f" + d + "\u001f" + ref.id();
+        String json = docs.getIfPresent(key);
+        if (json == null) {
+            docReads.acquireUninterruptibly();
+            try {
+                json = tables.get(ref.kind()).doc(l, d, file, ref.id()).orElse(null);
+            } finally {
+                docReads.release();
+            }
+            if (json != null) {
+                docs.put(key, json);
+            }
+        }
+        return json;
     }
 
     @Override
@@ -346,43 +373,85 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         return lastUpdate;
     }
 
-    /** Rebuilds the search index from each table's newest partition (identifiers are stable across dates). */
+    /**
+     * Rebuilds the search index from each table's newest partition (identifiers are stable across dates). A table whose
+     * log or newest ids cannot be read keeps the ids it listed before (type-ahead still finds them), says so to searches
+     * ({@link #listingProblem}) and to health, and is tried again at the next reindex.
+     */
     void reindex() {
         discoverTables();
-        List<EntityHit> hits = new ArrayList<>();
         for (String kind : tables.keySet()) {
+            String where = TableProblems.LOG;
+            long version = -1;
             try {
-                layout(kind, null).ifPresent(l -> {
-                    Long was = versions.put(kind, l.version());
-                    if (was == null || was != l.version()) {
-                        java.time.Instant committed = java.time.Instant.ofEpochMilli(l.timestamp());   // the version's commit time
-                        java.time.Instant before = lastUpdate;
-                        if (before == null || committed.isAfter(before)) {
-                            lastUpdate = committed;
-                        }
-                    }
-                    if (!l.files().isEmpty()) {                 // ids from the id column alone: no document is read
-                        String subtitle = kind + " · " + sourceName;
-                        for (String id : idMap(kind, l, l.files().lastKey()).ids()) {
-                            hits.add(new EntityHit(EntityRef.of(kind, id), id, subtitle));
-                        }
-                        Map<String, String> cols = promotedColumns(kind, l);
-                        if (!cols.isEmpty() && !l.deletionVectors()) {   // the newest day's columns, ready before the first search
-                            loaders.execute(() -> {
-                                try {
-                                    columnSet(kind, l, l.files().lastKey(), cols);
-                                } catch (RuntimeException e) {
-                                    // the first search loads them instead
-                                }
-                            });
-                        }
-                    }
-                });
+                Optional<DeltaTable.Layout> layout = layout(kind, null);
+                problems.ok(kind, TableProblems.LOG);
+                if (layout.isEmpty()) {
+                    listed.remove(kind);
+                    problems.listingOk(kind);
+                    continue;
+                }
+                version = layout.get().version();
+                problems.version(kind, version);
+                if (!layout.get().files().isEmpty()) {
+                    where = layout.get().files().lastKey().toString();
+                }
+                listed.put(kind, new Listed(hits(kind, layout.get()), Instant.now()));
+                problems.ok(kind, where);
+                problems.listingOk(kind);
             } catch (RuntimeException e) {
-                // a table being rewritten is indexed next time
+                // a table being rewritten, a broken log, an unreadable newest day: the previous ids stay listed
+                RuntimeException why = problems.failed(kind, where, version, e);
+                Listed kept = listed.get(kind);
+                problems.listingFailed(kind, why instanceof com.ash.drishti.api.UnreadableData ? why.getMessage()
+                        : TableProblems.LOG.equals(where) ? "the table's log cannot be read" : "its " + where + " files cannot be read",
+                        kept == null ? null : kept.at());
             }
         }
+        listed.keySet().retainAll(tables.keySet());
+        List<EntityHit> hits = new ArrayList<>();
+        listed.values().forEach(l -> hits.addAll(l.hits()));
         index.replaceAll(hits);
+    }
+
+    /** The ids a kind listed at the last reindex that could read them, and when. */
+    private record Listed(List<EntityHit> hits, Instant at) {}
+
+    private final Map<String, Listed> listed = new java.util.concurrent.ConcurrentHashMap<>();
+
+    @Override
+    public Optional<String> listingProblem(String kind) {
+        return problems.listing(kind);
+    }
+
+    /** The kind's ids on its newest date, for type-ahead; warms that date's columns for the first search. */
+    private List<EntityHit> hits(String kind, DeltaTable.Layout l) {
+        List<EntityHit> hits = new ArrayList<>();
+        Long was = versions.put(kind, l.version());
+        if (was == null || was != l.version()) {
+            Instant committed = Instant.ofEpochMilli(l.timestamp());   // the version's commit time
+            Instant before = lastUpdate;
+            if (before == null || committed.isAfter(before)) {
+                lastUpdate = committed;
+            }
+        }
+        if (!l.files().isEmpty()) {                             // ids from the id column alone: no document is read
+            String subtitle = kind + " · " + sourceName;
+            for (String id : idMap(kind, l, l.files().lastKey()).ids()) {
+                hits.add(new EntityHit(EntityRef.of(kind, id), id, subtitle));
+            }
+            Map<String, String> cols = promotedColumns(kind, l);
+            if (!cols.isEmpty() && !l.deletionVectors()) {       // the newest day's columns, ready before the first search
+                loaders.execute(() -> {
+                    try {
+                        columnSet(kind, l, l.files().lastKey(), cols);
+                    } catch (RuntimeException e) {
+                        // the first search loads them instead
+                    }
+                });
+            }
+        }
+        return hits;
     }
 
     @Override
@@ -399,7 +468,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
 
     @Override
     public Optional<com.ash.drishti.api.ColumnSet> columns(String kind, java.util.Collection<String> paths, AsOf asOf) {
-        Optional<DeltaTable.Layout> l = layout(kind, asOf.knownAt());
+        Optional<DeltaTable.Layout> l = readableLayout(kind, asOf.knownAt());
         if (l.isEmpty() || l.get().deletionVectors()) {
             return Optional.empty();
         }
@@ -411,7 +480,13 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         if (dates.isEmpty()) {
             return Optional.empty();                           // a date this table does not hold: another source may
         }
-        com.ash.drishti.api.ColumnSet all = columnSet(kind, l.get(), dates.get(0), cols);
+        com.ash.drishti.api.ColumnSet all;
+        try {
+            all = columnSet(kind, l.get(), dates.get(0), cols);
+        } catch (RuntimeException e) {
+            throw problems.failed(kind, dates.get(0).toString(), l.get().version(), e);
+        }
+        problems.ok(kind, dates.get(0).toString());
         Map<String, double[]> nums = new LinkedHashMap<>();
         Map<String, String[]> texts = new LinkedHashMap<>();
         for (String p : paths) {
@@ -482,7 +557,11 @@ public final class DeltaSourcePlugin implements SourcePlugin {
                 // reported by reads
             }
         });
-        return notLaidOut.isEmpty() ? "UP (" + engineName + ")"
-                : "UP (" + engineName + "; not laid out as the pack declares: " + String.join(", ", notLaidOut) + "; searches read documents)";
+        String laidOut = notLaidOut.isEmpty() ? "" : "; not laid out as the pack declares: " + String.join(", ", notLaidOut) + "; searches read documents";
+        if (!problems.isEmpty()) {
+            // it serves, but reads of these tables and dates failed the last time they were tried: say which, and why
+            return "DEGRADED: cannot read " + problems.summary(5) + " (" + engineName + laidOut + ")";
+        }
+        return "UP (" + engineName + laidOut + ")";
     }
 }

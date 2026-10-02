@@ -46,3 +46,21 @@ def test_the_health_page_shows_connectors_packs_and_live(client, backend, monkey
     body = client.get("/admin/health", params={"partial": 1}).text
     assert "<html" not in body and "trading-store" in body
     assert "data-health-body" not in body and "setInterval" in client.get("/static/js/admin.js").text
+
+
+def test_a_degraded_connector_is_shown_with_what_it_cannot_read(client, backend, monkeypatch):
+    """DATA-18: a connector that serves but cannot read a table says which, in amber."""
+    data = {"status": "DEGRADED", "summary": {"sources": 1, "sourcesDown": 0, "sourcesDegraded": 1, "failedToStart": 0, "packs": 0,
+                                              "packsWithProblems": 0},
+            "server": {"version": "1.13.0", "uptimeSeconds": 60, "java": "25", "heapUsedMb": 300, "heapMaxMb": 4000, "threads": 60, "cpus": 8},
+            "sources": [{"name": "trading-store", "status": "DEGRADED", "health": "DEGRADED: cannot read trade 2026-09-30: LZ4 (engine: native)",
+                         "kinds": ["trade"], "live": False, "dated": True, "search": True, "reads": {"reads": 0}, "cache": {}}],
+            "failedToStart": {}, "packs": [], "overrides": [],
+            "live": {"streams": 0, "topics": 0, "frames": 0, "droppedFrames": 0, "p50Ms": 0, "p99Ms": 0}}
+
+    async def admin(method, path, ident, body=None, **params):
+        return data
+    monkeypatch.setattr(backend, "admin", admin)
+    page = client.get("/admin/health").text
+    assert "hl-warn" in page and "cannot read trade 2026-09-30" in page
+    assert "1 degraded" in page.replace("<b>", "").replace("</b>", "")

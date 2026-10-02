@@ -129,7 +129,7 @@ There is no endpoint that dumps the configuration, but most settings show up som
 | Studio save, governance | `curl -s localhost:18480/api/v1/studio/settings` | `{"approve":true,"review":true,"save":true}` |
 | which sources and connectors started | `curl -s localhost:18480/api/v1/sources` | one entry per started plugin or connector, with `"health":"UP"` |
 | packs loaded | `curl -s localhost:18480/api/v1/packs` | one entry per pack |
-| everything at once | `curl -s localhost:18480/api/v1/admin/health` (admin only when security is on) | `"summary":{"packsWithProblems":0,"failedToStart":0,"sourcesDown":0,…}` |
+| everything at once | `curl -s localhost:18480/api/v1/admin/health` (admin only when security is on) | `"summary":{"packsWithProblems":0,"failedToStart":0,"sourcesDown":0,"sourcesDegraded":0,…}` |
 
 A connector that failed to start appears in the `failedToStart` map, name to reason (for example
 `"ops-lake": "no plugin named 'delta2'"`), which is usually a mistyped plugin name or setting.

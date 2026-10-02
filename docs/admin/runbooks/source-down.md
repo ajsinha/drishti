@@ -44,9 +44,9 @@ d = json.load(sys.stdin)
 print("status:", d["status"], d["summary"])
 print("failed to start:", d["failedToStart"])
 for s in d["sources"]:
-    if s["status"] != "UP": print("DOWN:", s["name"], s["health"], s["kinds"])
+    if s["status"] != "UP": print(s["status"] + ":", s["name"], s["health"], s["kinds"])
 for p in d["packs"]:
-    if p["connectorsDown"] or p["connectorsOff"]: ../../runbooks/print("pack", p["name"], "down:", p["connectorsDown"], "off:", p["connectorsOff"])'
+    if p["connectorsDown"] or p["connectorsOff"]: print("pack", p["name"], "down:", p["connectorsDown"], "off:", p["connectorsOff"])'
 ```
 
 On a healthy server you should see:
@@ -65,6 +65,7 @@ How to read it:
 | `status` | `OK`; `DEGRADED` (something is down, failed to start, or a pack has problems); `DOWN` (every source is down). | — |
 | `failedToStart` | `{"<source>": "<reason>"}` for plugins that threw while starting. They serve nothing until the server restarts. | Step 2 |
 | a source with `status: DOWN` | It started but its health check fails now. `health` holds the reason the plugin gave. | Step 3 |
+| a source with `status: DEGRADED` | It serves, but some of its data cannot be read: `health` names each table and date and why (a Delta date in LZ4, a truncated Parquet file, a table log missing a commit). Reads of those dates fail with `DRS-1003`; searches over them say `partial: true` and name the source. | fix the data ([DELTA_CONNECTOR.md](../../connectors/DELTA_CONNECTOR.md) §13, §16) |
 | `connectorsDown` of a pack | Connectors of that pack that are `DOWN`. | Step 3 |
 | `connectorsOff` of a pack | Connectors the pack declares that are not running: switched off (for example `trading-stream` until `DRISHTI_STREAM_TRADING=true`), idle because not configured (below), or failed to start. Off by design is normal. | Step 2 if you expected it on |
 

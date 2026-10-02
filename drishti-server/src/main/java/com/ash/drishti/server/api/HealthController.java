@@ -81,16 +81,19 @@ public class HealthController {
         entitlements.requireAdmin(p);
         List<Map<String, Object>> sources = new ArrayList<>();
         int down = 0;
+        int degraded = 0;
         int stale = 0;
         for (SourcePlugin s : registry.plugins()) {
             var m = s.manifest();
             Map<String, Object> row = new LinkedHashMap<>();
             String health = safeHealth(s);
-            boolean up = health.startsWith("UP");
-            down += up ? 0 : 1;
+            // "UP …"; "DEGRADED: …" (it serves, but some of its data cannot be read: the tables it names); else down
+            String status = health.startsWith("UP") ? "UP" : health.startsWith("DEGRADED") ? "DEGRADED" : "DOWN";
+            down += "DOWN".equals(status) ? 1 : 0;
+            degraded += "DEGRADED".equals(status) ? 1 : 0;
             row.put("name", m.name());
             row.put("version", m.version());
-            row.put("status", up ? "UP" : "DOWN");
+            row.put("status", status);
             row.put("health", health);
             row.put("kinds", m.kinds().stream().sorted().toList());
             row.put("live", m.capabilities().live());
@@ -109,17 +112,18 @@ public class HealthController {
             }
             sources.add(row);
         }
-        sources.sort((a, b) -> a.get("status").equals(b.get("status")) ? String.valueOf(a.get("name")).compareTo(String.valueOf(b.get("name")))
-                : "DOWN".equals(a.get("status")) ? -1 : 1);                     // what needs attention first
+        List<String> attention = List.of("DOWN", "DEGRADED", "UP");                // what needs attention first
+        sources.sort(java.util.Comparator.<Map<String, Object>>comparingInt(r -> attention.indexOf(String.valueOf(r.get("status"))))
+                .thenComparing(r -> String.valueOf(r.get("name"))));
         Map<String, String> failures = registry.failures();
         Map<String, Object> out = new LinkedHashMap<>();
         List<Map<String, Object>> packRows = packs(sources);
         long packProblems = packRows.stream().filter(r -> !"OK".equals(r.get("status"))).count();
         String overall = sources.isEmpty() || down == sources.size() ? "DOWN"
-                : down > 0 || stale > 0 || !failures.isEmpty() || packProblems > 0 ? "DEGRADED" : "OK";   // stale: behind its stale-after
+                : down > 0 || degraded > 0 || stale > 0 || !failures.isEmpty() || packProblems > 0 ? "DEGRADED" : "OK";   // stale: behind its stale-after
         out.put("status", overall);
-        out.put("summary", Map.of("sources", sources.size(), "sourcesDown", down, "failedToStart", failures.size(), "packs", packRows.size(),
-                "packsWithProblems", packProblems));
+        out.put("summary", Map.of("sources", sources.size(), "sourcesDown", down, "sourcesDegraded", degraded, "failedToStart", failures.size(),
+                "packs", packRows.size(), "packsWithProblems", packProblems));
         out.put("server", server());
         out.put("sources", sources);
         out.put("failedToStart", failures);

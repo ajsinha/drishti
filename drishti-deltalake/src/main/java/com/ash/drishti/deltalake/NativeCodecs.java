@@ -50,8 +50,7 @@ final class NativeCodecs implements CompressionCodecFactory {
             case SNAPPY -> Codec.SNAPPY;
             case ZSTD -> Codec.ZSTD;
             case GZIP -> Codec.GZIP;
-            default -> throw new UnsupportedOperationException("the native Delta engine does not decompress " + codecName
-                    + " Parquet pages (Snappy, ZSTD and GZIP it does); rewrite the table with one of those or set engine: hadoop");
+            default -> throw new UnsupportedCodec(codecName.name());
         };
     }
 
