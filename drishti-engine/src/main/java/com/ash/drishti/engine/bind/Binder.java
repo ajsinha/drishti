@@ -26,6 +26,7 @@ import com.ash.drishti.engine.view.ViewModel.PanelView;
 import com.ash.drishti.graph.BadgeRenderer;
 import com.ash.drishti.graph.LinkRef;
 import com.ash.drishti.graph.ReferenceCatalog;
+import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.rachana.el.ElCompiler;
 import com.ash.drishti.rachana.el.EvalContext;
 import com.ash.drishti.rachana.el.Expr;
@@ -89,7 +90,7 @@ public final class Binder {
         String title;
         try {
             title = p.title() == null ? null : el.template(p.title()).render(c.eval());
-        } catch (RuntimeException e) {
+        } catch (RuntimeException | StackOverflowError e) {
             title = p.title();   // a title that cannot be rendered from this document shows as written
         }
         String explanation = c.layout().explanations().get(p.id());
@@ -117,10 +118,13 @@ public final class Binder {
             };
             return new PanelView(p.id(), p.kind().id(), title, p.code(), p.key(), area(p), p.infer() || explanation != null,
                     explanation, data, null, com.ash.drishti.engine.view.Emptiness.of(data), p.span().orElse(null), p.height().orElse(null));
-        } catch (RuntimeException e) {
-            // one panel whose data does not fit its Sutra must never take the view down
+        } catch (RuntimeException | StackOverflowError e) {
+            // one panel whose data does not fit its Sutra must never take the view down; nor one whose expressions
+            // are too deep to evaluate (bounded at load by drishti.rachana.max-expression-depth, so only if lifted)
+            String error = e instanceof StackOverflowError ? ErrorCode.EL_EVAL.code() + " an expression of this panel is nested too "
+                    + "deeply to evaluate (drishti.rachana.max-expression-depth)" : String.valueOf(e.getMessage());
             return new PanelView(p.id(), p.kind().id(), title, p.code(), p.key(), area(p), p.infer(), explanation, null,
-                    String.valueOf(e.getMessage()), true, p.span().orElse(null), p.height().orElse(null));
+                    error, true, p.span().orElse(null), p.height().orElse(null));
         }
     }
 

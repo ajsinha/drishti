@@ -116,8 +116,12 @@ What the server does with a file, in order (`SutraRegistry`, `SutraParser`, `Sut
    location: `DRS-2010` to `DRS-2027`. Parsing is strict: an unknown key is an error (`DRS-2011`), never
    silently ignored, so a typo such as `pannels:` cannot pass unnoticed.
 5. Every Rachana-EL expression and template is compiled. A typo is `DRS-2101`, reported against the file at
-   load time, not when someone opens a view.
+   load time, not when someone opens a view. So is an expression beyond the [size limits](#size-limits) (nested
+   deeper than 200 levels, or longer than 10,000 characters).
 6. The Sutra is registered under `name@version`; a second file defining the same pair is `DRS-2028`.
+
+Whatever goes wrong while one file is read, it is that file's problem and never stops the server or hot reload:
+a failure none of the checks above foresee is `DRS-2032` (and is logged with its stack trace).
 
 Rules that follow from this:
 
@@ -1477,7 +1481,9 @@ without `tone` colours by sign.
 Bindings, conditions and templates are written in **Rachana-EL**, a small expression language. It is closed
 (no loops, no assignment, no access to anything but the document), side-effect free and **total**: evaluating
 an expression never throws on odd data. A missing field, a wrong type or a division by zero gives an empty
-value, never an error page.
+value, never an error page. Expressions are bounded in size ([size limits](#size-limits)), so evaluation cannot
+run out of stack either; and should one panel's expression still fail, that panel shows the problem and the rest of
+the view renders.
 
 ### Where expressions appear
 
@@ -1570,6 +1576,8 @@ object, or a link (from `link(...)`).
   10,000), and shared across threads.
 - **Checked at load.** Every expression in a Sutra is compiled when the file loads, so a typo is reported against the
   file (`DRS-2101`), not at view time. Field names are not checked: a misspelt field is simply empty.
+- **Bounded.** An expression may nest at most 200 levels and be at most 10,000 characters long; see
+  [Size limits](#size-limits).
 - **Dependency paths.** Each compiled expression reports the document paths it reads (`$.legs[0].rate`). Cells carry
   that path so live updates can flash exactly what changed.
 
@@ -1667,12 +1675,29 @@ primary  = number | string | "true" | "false" | "null" | "$" | "@" | "#index"
          | ident "(" [ expr { "," expr } ] ")" | ident | "(" expr ")" ;
 ```
 
+### Size limits
+
+Parsing and evaluation are recursive, so an expression's size is bounded; within the bounds both are safe on any
+thread, and beyond them the expression does not compile (`DRS-2101`, with the position where the bound was passed).
+The same bounds hold wherever Rachana-EL is read: Sutras (at load and in Studio preview), alert rules, search
+conditions (`TRD where …`), history paths and derived kinds.
+
+| Bound | Default | Setting | Message |
+|---|---|---|---|
+| nesting depth | 200 | `drishti.rachana.max-expression-depth` | `expression nested deeper than 200 levels (drishti.rachana.max-expression-depth) at <offset>` |
+| length | 10,000 characters | `drishti.rachana.max-expression-length` | `expression is longer than 10000 characters (drishti.rachana.max-expression-length) at 10000` |
+
+Every level of nesting counts: a parenthesis, a `[…]` index or filter, a function call, a unary `!` or `-`, a branch
+of `?:`, a `.field` step, and each operand of a chain of binary operators (`$.a + $.b + $.c` is three levels deep,
+since it is evaluated as `($.a + $.b) + $.c`). Real Sutras stay far below 200; a chain of hundreds of terms is
+better written with `sum(list, 'field')`. A template's `${…}` parts are bounded one by one.
+
 ### Expression errors
 
 | Code | When | Example message |
 |---|---|---|
-| `DRS-2101` | an expression or template does not compile (at load, in Studio preview, or when saving an alert rule) | `expression '$.legs[0': DRS-2101 expected ']' but found '' at 8` |
-| `DRS-2102` | evaluation error | reserved: evaluation is total, so a well-formed expression never raises it in practice |
+| `DRS-2101` | an expression or template does not compile (at load, in Studio preview, or when saving an alert rule), including one beyond the [size limits](#size-limits) | `expression '$.legs[0': DRS-2101 expected ']' but found '' at 8` |
+| `DRS-2102` | evaluation error | evaluation is total, so a well-formed expression within the size limits never raises it; if one does (the limits raised far beyond the default), the panel shows `DRS-2102 an expression of this panel is nested too deeply to evaluate …` and the rest of the view renders |
 
 The problem's message is `expression '<source>': DRS-2101 <reason> at <offset>` (or `template '<source>': …`),
 where the offset is the 0-based character position inside the expression. Common reasons:
@@ -1687,6 +1712,8 @@ where the offset is the 0-based character position inside the expression. Common
 | `fmt takes 2 argument(s), got 1 at 0` | `fmt($.x)` | `fmt($.x, 'amount0')` |
 | `unexpected 'b' at 4` | two values with no operator between them (`'a' 'b'`) | join with `+` |
 | `unclosed '${' at 4` | a template part not closed | add `}` |
+| `expression nested deeper than 200 levels (drishti.rachana.max-expression-depth) at 1203` | an expression nested past the [size limits](#size-limits), or a very long chain of `+`, `&&`, `\|\|`, … | simplify it: `sum(...)` for long sums, a shorter condition; raise the setting only if you must |
+| `expression is longer than 10000 characters (drishti.rachana.max-expression-length) at 10000` | a generated or pasted expression too long | shorten it, or raise the setting |
 
 ## Problem codes
 
@@ -1714,7 +1741,8 @@ A Sutra file that fails any check is not loaded (or keeps its last good version,
 | `DRS-2029` | `option 'agg' of 'pivot' panels must be one of sum, count, avg, min, max, not 'median'`, `option 'heat' of 'pivot' panels must be true or false, not 'yes'`, `option 'bins' of 'histogram' panels must be a whole number from 1 to 200, not '0'`, `each histogram marker must be a mapping with a 'value' expression …`, `option 'layout' of 'graph' panels must be one of tree, force, not 'circle'`, `option 'colors' of 'waterfall' panels must be one of gain-loss, theme, not 'rainbow'` | an option value the kind does not allow | use one of the values listed |
 | `DRS-2030` | `span must be a whole number from 1 to 12 (columns of the 12-column grid), not '13'`, `height must be a whole number from 1 to 24 (grid rows), not '30'`, `'span' sizes a whole panel: a tabs body takes the size of its panel` | a size outside the grid, not a whole number, or on a `tabs` body | a whole number in range, on the panel itself |
 | `DRS-2031` | `'pivot' is true, false, or a mapping of fields, rows, columns, values, filters, heat, chart, totals; not 'yes please'`, `pivot rows name 'desk', which is not one of its fields (currency, mtm, product)`, `pivot value 'agg' must be one of sum, count, avg, min, max, distinct, not 'median'`, `pivot value 'show' must be one of value, pctRow, pctColumn, pctTotal, not 'pctBook'`, `pivot field 'a' is in both rows and columns`, `a pivot has at most 4 row fields and 4 column fields`, `a pivot shows at most 6 values, found 7`, `pivot field '$.book' is not a field path (letters, digits, _ and dots); for an expression write { field: name, bind: <expression> }`, `pivot field 'a' is listed twice`, `unknown key 'colour' in pivot`, `pivot 'chart' must be one of bar, line, heatmap, not 'pie'`, `pivot 'heat' is true or false, not 'maybe'`, `a pivot filter keeps either 'values' or a range ('min', 'max'), not both`, `pivot 'fields' is a non-empty list of field paths (or { field, bind, label, fmt })` | a `pivot:` the Pivot tab cannot use | use the names its fields have, the values listed, or `pivot: true` ([the option](#pivot-a-pivot-tab-on-a-table-or-ladder)) |
-| `DRS-2101` | `expression '…': DRS-2101 …`, `template '…': DRS-2101 …` | an expression or template does not compile | see [Expression errors](#expression-errors) |
+| `DRS-2032` | `the file could not be loaded: <reason>` (for example `it is nested too deeply to read (StackOverflowError)`) | a failure while reading the file that none of the other checks foresee; the server log has the stack trace | simplify the file; if it looks valid, report the log entry. The other Sutras load and hot reload carries on |
+| `DRS-2101` | `expression '…': DRS-2101 …`, `template '…': DRS-2101 …` | an expression or template does not compile, or is beyond the [size limits](#size-limits) | see [Expression errors](#expression-errors) |
 
 Other codes you may meet around Sutras:
 
@@ -1881,6 +1909,11 @@ You should see `Notional AUD 242,000,000`, `MTM (USD) +1,875,863` highlighted, `
   load, a refresh, or the next live tick) uses the new Sutra. Open live views pick it up on their next tick.
 - Directories are registered with the watcher at start-up. Files in a folder created later are loaded at the
   next reload (any change in a watched folder triggers a full rescan) or at restart.
+- No file can stop the watcher: anything that goes wrong reading one file is that file's problem (`DRS-2032` when
+  no other check names it), and the next edit is picked up as usual. `GET /api/v1/admin/health` shows
+  `"sutras": {"hotReload": "WATCHING", "problemFiles": 0}`; `OFF` means hot reload is turned off, and
+  `STOPPED: <reason>` (with the overall status `DEGRADED` and an error in the log) means the watcher has ended
+  unexpectedly and edits are not picked up until a restart.
 - Formats and semantic hints are read at start-up only; Sutras are the only thing that hot-reloads.
 
 ### Studio

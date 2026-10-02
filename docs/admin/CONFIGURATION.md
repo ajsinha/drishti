@@ -328,6 +328,8 @@ See [PACKS.md](../guides/PACKS.md#a-signed-pack-registry-publishing-and-installi
 | `reload-debounce` | `250ms` | Quiet time after a burst of file events before one reload. |
 | `formats-file` | none | A site file that overrides or adds named formats (on top of the packs' `config/formats.yaml`). |
 | `expression-cache-size` | `10000` | Compiled Rachana-EL expressions kept in memory. |
+| `max-expression-depth` | `200` | The deepest a Rachana-EL expression may nest (parentheses, calls, and each operand of a chain such as `a + b + c`). Deeper is `DRS-2101`: a Sutra is not loaded, an alert rule or search condition is refused. It keeps parsing and evaluation within the stack; raise it only for a real need. Applies to Sutras, alert rules, search conditions, history paths and derived kinds. |
+| `max-expression-length` | `10000` | The longest a Rachana-EL expression may be, in characters. Longer is `DRS-2101`. |
 | `studio-save` | `false` (`DRISHTI_STUDIO_SAVE`) | Let Sutra Studio save files (authors only). Turn on in authoring environments. With it off, a save returns 403 `saving from Studio is disabled (drishti.rachana.studio-save)`. |
 
 ### `drishti.governance` — reviewing Sutra changes

@@ -496,11 +496,26 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 ### A Sutra edit has no effect
 
 - **Check:** `curl -s http://localhost:18480/api/v1/sutras/problems` should print `{}`. Anything else lists the
-  file, line, column and code (`DRS-2001` YAML syntax, `DRS-2009` no `rachana: 1`, `DRS-2010`–`DRS-2028` grammar, `DRS-2101` expression syntax).
+  file, line, column and code (`DRS-2001` YAML syntax, `DRS-2009` no `rachana: 1`, `DRS-2010`–`DRS-2028` grammar, `DRS-2032` the file
+  could not be read at all, `DRS-2101` expression syntax or an expression past the size limits).
+- **Check:** as an admin, `GET /api/v1/admin/health` should show `"sutras": {"hotReload": "WATCHING", …}`. `STOPPED: <reason>`
+  means the file watcher has ended (the log says why): restart the server to pick up edits again.
 - **Cause and fix:** an invalid edit keeps the **last good version** live. Fix the reported line (Studio's
   Ctrl+Enter lists problems by line). With review on (the default), a saved Sutra is only a **proposal** until an
   approver approves it in **Studio → Reviews**. *How this view was built* shows the version actually used. See
   [runbooks/sutra-broken.md](../admin/runbooks/sutra-broken.md).
+
+### "expression nested deeper than 200 levels" or "expression is longer than 10000 characters"
+
+- **Cause:** a Rachana-EL expression (in a Sutra, an alert rule or a search condition) is past the size limits:
+  nested more than `drishti.rachana.max-expression-depth` (200) levels, or longer than
+  `drishti.rachana.max-expression-length` (10,000 characters). Each operand of a chain counts as a level, so a sum of
+  hundreds of terms is "deep" too. The limits keep parsing and evaluation from running out of stack: in 1.13 and earlier such
+  a Sutra stopped the server from starting, killed hot reload, or made its view fail with HTTP 500.
+- **Fix:** simplify the expression (`sum($.legs, 'pv')` instead of a long `+` chain; fewer nested parentheses). Raise
+  the settings only for a real need: within the defaults evaluation is safe on any thread. A Sutra past the limits
+  is reported (`DRS-2101`) and not loaded; the others load, and its kind's views fall back to the next Sutra or to
+  inference. See [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#size-limits).
 
 ### After upgrading, Sutras are missing and `problems` lists `.sutra.md` files
 
@@ -655,7 +670,8 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 | `DRS-1003` / `DRS-1004` | a source failed / timed out |
 | `DRS-2001` / `DRS-2002` / `DRS-2003` | Sutra parse error / invalid / not found |
 | `DRS-2005` / `DRS-2006` / `DRS-2007` | proposal not found / stale / four eyes |
-| `DRS-2101` / `DRS-2102` | expression syntax / evaluation error |
+| `DRS-2032` | a Sutra file could not be read at all (the log has the stack trace); the rest load |
+| `DRS-2101` / `DRS-2102` | expression syntax (or past the size limits) / evaluation error |
 | `DRS-4001` | command not understood |
 | `DRS-4003` | bad business date |
 | `DRS-4004` | bad search |

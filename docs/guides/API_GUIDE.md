@@ -915,8 +915,9 @@ curl -s $B/admin/status | jq -c .
 | `GET` | `/admin/caches` | admin. Each cache: `{name, type, stats}` — `engine` (layouts and shape fingerprints) and every connector that caches |
 | `POST` | `/admin/caches/{name}/purge` | admin. Purge one cache by name, or every cache with `all`; `{purged, elapsedMs}`; `404 DRS-5004` for an unknown name. Recorded in the audit log |
 
-`status` is `OK`, `DEGRADED` (a source is down, a plugin failed to start, or a pack has broken Sutras or a down
-connector) or `DOWN` (no source is up). Sources that are down are listed first.
+`status` is `OK`, `DEGRADED` (a source is down, a plugin failed to start, a pack has broken Sutras or a down
+connector, or the Sutra watcher has stopped) or `DOWN` (no source is up). Sources that are down are listed first.
+`sutras` is `{"hotReload": "WATCHING" | "OFF" | "STOPPED: <reason>", "problemFiles": <n>}`.
 
 ```bash
 curl -s $B/admin/health | jq -c '{status, summary, server, live}'

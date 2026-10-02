@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.rachana;
 
+import com.ash.drishti.rachana.el.ElLimits;
 import java.time.Duration;
 import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -30,11 +31,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param studioSave allow Sutra Studio to write Sutra files (off by default; turn on for authoring environments)
  * @param packDirs Sutra directories contributed by enabled packs (set by the pack loader)
  * @param packFormatsFiles format files contributed by enabled packs
+ * @param maxExpressionDepth the deepest a Rachana-EL expression may nest (default 200); deeper is {@code DRS-2101}
+ * @param maxExpressionLength the longest a Rachana-EL expression may be, in characters (default 10000); longer is
+ *     {@code DRS-2101}
  */
 @ConfigurationProperties("drishti.rachana")
 public record RachanaProperties(
         List<String> dirs, Boolean hotReload, Duration reloadDebounce, String formatsFile, Long expressionCacheSize, Boolean studioSave,
-        List<String> packDirs, List<String> packFormatsFiles) {
+        List<String> packDirs, List<String> packFormatsFiles, Integer maxExpressionDepth, Integer maxExpressionLength) {
 
     public RachanaProperties {
         dirs = dirs == null ? List.of("./sutras") : List.copyOf(dirs);
@@ -44,6 +48,13 @@ public record RachanaProperties(
         studioSave = studioSave != null && studioSave;
         packDirs = packDirs == null ? List.of() : List.copyOf(packDirs);
         packFormatsFiles = packFormatsFiles == null ? List.of() : List.copyOf(packFormatsFiles);
+        maxExpressionDepth = maxExpressionDepth == null ? ElLimits.DEFAULTS.maxDepth() : maxExpressionDepth;
+        maxExpressionLength = maxExpressionLength == null ? ElLimits.DEFAULTS.maxLength() : maxExpressionLength;
+    }
+
+    /** The bounds on every Rachana-EL expression (Sutras, alert rules, search conditions). */
+    public ElLimits expressionLimits() {
+        return new ElLimits(maxExpressionDepth, maxExpressionLength);
     }
 
     /** Site directories, then pack directories. */

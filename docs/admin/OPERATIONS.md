@@ -1013,14 +1013,18 @@ curl -s localhost:18480/api/v1/admin/health | python3 -m json.tool | head -40
           "connectorsDown": [], "connectorsOff": ["ecb-estr-feed", "fred-feed"], "status": "OK", ... },
         ...
     ],
+    "sutras": { "hotReload": "WATCHING", "problemFiles": 0 },
     "live": { "frames": 11660, "p50Ms": 0.809, "streams": 0, "p99Ms": 1.198, "topics": 0, "droppedFrames": 0 }
 }
 ```
 
 How to read it:
 
-- **`status`**: `OK`; `DEGRADED` when any source is down or stale, a connector failed to start (`failedToStart`) or
-  a pack has a problem; `DOWN` when no source is up at all.
+- **`status`**: `OK`; `DEGRADED` when any source is down or stale, a connector failed to start (`failedToStart`),
+  a pack has a problem or the Sutra watcher has stopped; `DOWN` when no source is up at all.
+- **`sutras`**: `hotReload` is `WATCHING` (edits to Sutra files are picked up), `OFF` (`drishti.rachana.hot-reload:
+  false`) or `STOPPED: <reason>` (the watcher ended unexpectedly; the log has the error; restart to pick up edits
+  again). `problemFiles` counts the files listed by `GET /api/v1/sutras/problems`, site and pack.
 - **`lastUpdate`** is when the connector last received new data: the newest Kafka message, ActiveMQ or RabbitMQ
   message, Delta table commit, file in a file connector's folder, feed refresh that brought data, or demo tick. It is
   null for sources read on demand (PostgreSQL, Aerospike, S3), which cannot tell. **`stale`** is true when nothing new

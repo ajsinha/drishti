@@ -200,6 +200,9 @@ drishti:
     # Edit a Sutra and the next view uses it; an invalid edit keeps the last good version.
     hot-reload: true
     reload-debounce: 250ms
+    # Bounds on every Rachana-EL expression (Sutras, alert rules, search conditions): deeper or longer is DRS-2101.
+    max-expression-depth: 200
+    max-expression-length: 10000
     # Let Sutra Studio save files (authors only). Off by default; turn on in authoring environments.
     studio-save: ${DRISHTI_STUDIO_SAVE:false}
   governance:

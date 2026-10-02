@@ -115,8 +115,10 @@ public class HealthController {
         Map<String, Object> out = new LinkedHashMap<>();
         List<Map<String, Object>> packRows = packs(sources);
         long packProblems = packRows.stream().filter(r -> !"OK".equals(r.get("status"))).count();
+        String hotReload = sutras.hotReload();          // STOPPED: the Sutra watcher ended, edits are not picked up until a restart
         String overall = sources.isEmpty() || down == sources.size() ? "DOWN"
-                : down > 0 || stale > 0 || !failures.isEmpty() || packProblems > 0 ? "DEGRADED" : "OK";   // stale: behind its stale-after
+                : down > 0 || stale > 0 || !failures.isEmpty() || packProblems > 0 || hotReload.startsWith("STOPPED") ? "DEGRADED"
+                : "OK";   // stale: behind its stale-after
         out.put("status", overall);
         out.put("summary", Map.of("sources", sources.size(), "sourcesDown", down, "failedToStart", failures.size(), "packs", packRows.size(),
                 "packsWithProblems", packProblems));
@@ -124,6 +126,7 @@ public class HealthController {
         out.put("sources", sources);
         out.put("failedToStart", failures);
         out.put("packs", packRows);
+        out.put("sutras", Map.of("hotReload", hotReload, "problemFiles", sutras.problems().size()));
         out.put("overrides", overrides);
         out.put("live", Map.of("streams", slots.open(), "topics", hub.topicCount(), "frames", live.frames(), "droppedFrames", live.droppedFrames(),
                 "p50Ms", live.percentile(50), "p99Ms", live.percentile(99)));

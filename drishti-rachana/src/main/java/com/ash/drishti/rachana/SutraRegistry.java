@@ -52,6 +52,11 @@ import org.slf4j.LoggerFactory;
  * Holds every loaded Sutra by {@code name@version}. Readers see an immutable snapshot swapped atomically,
  * so lookups never lock. With hot reload on, a watcher thread reloads on file changes; a file that
  * becomes invalid keeps its last good Sutras and reports its problems.
+ *
+ * <p>One file never takes the registry down: whatever goes wrong while loading it (a problem in the file, an I/O
+ * error, a bug or a stack overflow in a parser) becomes that file's problem, at start-up and on every hot reload.
+ * Only an {@link OutOfMemoryError} or other {@link VirtualMachineError} propagates, logged, since the JVM itself is
+ * then unwell. {@link #hotReload()} says whether the watcher is still running.
  */
 public final class SutraRegistry implements AutoCloseable {
 
@@ -72,6 +77,8 @@ public final class SutraRegistry implements AutoCloseable {
     private volatile Snapshot snapshot = new Snapshot(Map.of(), Map.of(), Map.of(), Map.of());
     private volatile WatchService watcher;
     private Thread watchThread;
+    /** {@code OFF}, {@code WATCHING}, or {@code STOPPED: <reason>} once the watcher has ended unexpectedly. */
+    private volatile String hotReload = "OFF";
 
     public SutraRegistry(RachanaProperties props, ElCompiler compiler) {
         this.props = props;
@@ -173,6 +180,15 @@ public final class SutraRegistry implements AutoCloseable {
         return snapshot.problems();
     }
 
+    /**
+     * The state of hot reload, for health checks: {@code OFF} (turned off, or no watchable directory), {@code WATCHING},
+     * or {@code STOPPED: <reason>} when the watcher thread has ended unexpectedly (edits are then not picked up until
+     * a restart).
+     */
+    public String hotReload() {
+        return hotReload;
+    }
+
     /** Called with the ids ({@code name@version}) that changed after each reload. */
     public void onChange(Consumer<Set<String>> listener) {
         listeners.add(listener);
@@ -220,6 +236,12 @@ public final class SutraRegistry implements AutoCloseable {
             } catch (IOException e) {
                 problems.put(f.toString(), List.of(new SutraProblem("DRS-2001", e.getMessage(), new SourceLocation(f.toString(), 0, 0))));
                 s = lastGood.get(f);
+            } catch (RuntimeException | StackOverflowError e) {
+                // anything else while loading one file is that file's problem: never a failed start or a dead watcher
+                LOG.error("sutra file {} could not be loaded", f, e);
+                problems.put(f.toString(), List.of(new SutraProblem("DRS-2032", "the file could not be loaded: " + describe(e),
+                        new SourceLocation(f.toString(), 1, 1))));
+                s = lastGood.get(f);
             }
             if (s == null) {
                 continue;
@@ -254,6 +276,11 @@ public final class SutraRegistry implements AutoCloseable {
         if (!changed.isEmpty()) {
             listeners.forEach(l -> l.accept(changed));
         }
+    }
+
+    private static String describe(Throwable e) {
+        return e instanceof StackOverflowError ? "it is nested too deeply to read (" + e.getClass().getSimpleName() + ")"
+                : e.getClass().getSimpleName() + (e.getMessage() == null ? "" : ": " + e.getMessage());
     }
 
     private static Set<String> changedIds(Snapshot a, Snapshot b) {
@@ -323,11 +350,14 @@ public final class SutraRegistry implements AutoCloseable {
             LOG.warn("sutra hot reload disabled", e);
             return;
         }
+        hotReload = "WATCHING";
         watchThread = Thread.ofVirtual().name("drishti-rachana-watch").start(this::watchLoop);
     }
 
     private void watchLoop() {
         long debounce = props.reloadDebounce().toMillis();
+        boolean closing = false;
+        Throwable cause = null;
         try {
             while (!Thread.currentThread().isInterrupted()) {
                 WatchKey key = watcher.take();
@@ -340,13 +370,23 @@ public final class SutraRegistry implements AutoCloseable {
                 }
                 try {
                     reload();
-                } catch (RuntimeException e) {
+                } catch (RuntimeException | StackOverflowError e) {
                     // keep watching: one bad reload (or a failing listener) must not end hot reload silently
                     LOG.error("sutra reload failed; the last good Sutras stay live", e);
                 }
             }
+            closing = true;
         } catch (InterruptedException | ClosedWatchServiceException e) {
+            closing = true;
             Thread.currentThread().interrupt();
+        } catch (RuntimeException | Error e) {
+            cause = e;
+            throw e;
+        } finally {
+            hotReload = closing ? "OFF" : "STOPPED: " + (cause == null ? "unknown" : describe(cause));
+            if (!closing) {
+                LOG.error("sutra hot reload stopped: edits to Sutra files are not picked up until a restart", cause);
+            }
         }
     }
 
