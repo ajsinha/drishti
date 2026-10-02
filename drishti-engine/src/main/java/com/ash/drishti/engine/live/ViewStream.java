@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.engine.live;
 
+import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.api.Subscription;
@@ -31,6 +32,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
 
 /**
  * One live view for one client. It listens to the entity's topic and to the topics of the entities its
@@ -41,6 +43,9 @@ import java.util.function.Consumer;
  * <p>When the source pushes the entity's deletion ({@link EntityDocument#deleted()}), the client gets one frame with a
  * {@code deleted} patch carrying when it was deleted, and nothing is rebuilt while it stays deleted; if the entity
  * comes back, the next frame starts with a {@code restored} patch.
+ *
+ * <p>Every rebuild is made as the client may see it ({@code redact}, the client's field masks), so patches carry masked
+ * values exactly as the first view did.
  */
 public final class ViewStream implements AutoCloseable {
 
@@ -50,6 +55,7 @@ public final class ViewStream implements AutoCloseable {
     private final ExecutorService executor;
     private final LiveMetrics metrics;
     private final Consumer<Frame> sink;
+    private final UnaryOperator<DataNode> redact;
     private final List<Subscription> subscriptions = new ArrayList<>();
     private final AtomicReference<ViewModel> shown = new AtomicReference<>();
     private final AtomicReference<EntityDocument> latestMain = new AtomicReference<>();
@@ -61,7 +67,14 @@ public final class ViewStream implements AutoCloseable {
 
     public ViewStream(EntityRef ref, ViewModel initial, List<EntityRef> sources, TopicHub hub, ViewPipeline pipeline,
             ExecutorService executor, LiveMetrics metrics, Consumer<Frame> sink) {
+        this(ref, initial, sources, hub, pipeline, executor, metrics, sink, UnaryOperator.identity());
+    }
+
+    /** A live view rebuilt as the client may see it: {@code redact} masks what the client's role may not see. */
+    public ViewStream(EntityRef ref, ViewModel initial, List<EntityRef> sources, TopicHub hub, ViewPipeline pipeline,
+            ExecutorService executor, LiveMetrics metrics, Consumer<Frame> sink, UnaryOperator<DataNode> redact) {
         this.ref = ref;
+        this.redact = redact;
         this.pipeline = pipeline;
         this.executor = executor;
         this.metrics = metrics;
@@ -109,7 +122,8 @@ public final class ViewStream implements AutoCloseable {
                     }
                     continue;
                 }
-                ViewModel next = main != null ? pipeline.build(main, System.nanoTime(), System.nanoTime()) : pipeline.view(ref);
+                ViewModel next = main != null ? pipeline.build(main, System.nanoTime(), System.nanoTime(), redact)
+                        : pipeline.view(ref, com.ash.drishti.api.AsOf.LATEST, redact);
                 ViewModel before = shown.getAndSet(next);
                 List<Patch> patches = differ.diff(before, next);
                 if (gone) {

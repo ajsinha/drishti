@@ -26,7 +26,10 @@ import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** F8 Impact: what depends on an entity, grouped by kind and level, within what the caller may open. */
+/**
+ * F8 Impact: what depends on an entity, grouped by kind and level, within what the caller may open and as the caller may
+ * see it: nothing tied in only through a masked field, masked measures and their totals read {@code •••}.
+ */
 @RestController
 @RequestMapping("/api/v1/impact")
 public class ImpactController {
@@ -42,6 +45,6 @@ public class ImpactController {
     @GetMapping("/{kind}/{id}")
     public ImpactService.Impact analyse(@PathVariable String kind, @PathVariable String id, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireOpen(p, kind);
-        return impact.analyse(EntityRef.of(kind, id), k -> entitlements.mayOpen(p, k), asOf);
+        return impact.analyse(EntityRef.of(kind, id), k -> entitlements.mayOpen(p, k), asOf, entitlements.redactor(p));
     }
 }

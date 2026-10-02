@@ -28,7 +28,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param secret HS256 key shared with the console (at least 32 bytes)
  * @param clockSkew tolerated clock difference when checking expiry
  * @param roles role name to what it may see and do
- * @param redact field names masked in raw JSON (F9) for roles without {@code raw}
+ * @param redact field names masked for roles without {@code raw}, on every path that shows or reads a value (Entitlements)
  */
 @ConfigurationProperties("drishti.security")
 public record SecurityProperties(Boolean enabled, String secret, Duration clockSkew, Map<String, Role> roles, List<String> redact) {
@@ -42,7 +42,7 @@ public record SecurityProperties(Boolean enabled, String secret, Duration clockS
 
     /**
      * @param kinds entity kinds the role may open; {@code *} for all
-     * @param raw may see unredacted raw JSON
+     * @param raw sees every field: nothing in {@code redact} is masked for the role, anywhere
      * @param author may save Sutras from Studio (with governance on, a save is a proposal for review)
      * @param admin may manage users and read the audit log; also approves Sutras
      * @param approve may approve or reject proposed Sutras (never their own, with four-eyes on)

@@ -24,7 +24,7 @@ import java.util.List;
  * @param name the role name users are given ({@code [a-z][a-z0-9-]{1,63}})
  * @param description what it is for
  * @param kinds kinds it may open; {@code *} is every kind
- * @param raw may see unredacted raw JSON
+ * @param raw sees every field: nothing in {@code drishti.security.redact} is masked for the role, on any path
  * @param author may write Sutras in Studio
  * @param approve may approve proposed Sutras
  * @param admin may administer users, roles, caches and packs

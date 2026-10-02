@@ -90,6 +90,19 @@ public final class SuggestionService {
         return cap(out, max);
     }
 
+    /**
+     * The text entity suggestions for {@code query} are matched against: what follows a mnemonic ({@code TRD MX-2} gives
+     * {@code MX-2}), nothing for a mnemonic alone or an empty query, else the word typed.
+     */
+    public String matchText(String query) {
+        String trimmed = (query == null ? "" : query.replaceAll("(?i)<\\s*GO\\s*>", "")).trim();
+        if (trimmed.isEmpty()) {
+            return "";
+        }
+        String[] parts = trimmed.split("\\s+", 2);
+        return mnemonics.of(parts[0]).isPresent() ? (parts.length > 1 ? parts[1] : "") : trimmed;
+    }
+
     private static boolean matches(EntityHit h, String text) {
         String t = text.toLowerCase(Locale.ROOT);
         return t.isEmpty() || h.ref().id().toLowerCase(Locale.ROOT).contains(t) || h.subtitle().toLowerCase(Locale.ROOT).contains(t);

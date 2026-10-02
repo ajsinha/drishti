@@ -25,11 +25,19 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.UnaryOperator;
 
 /**
  * What a principal may see. Denied entities are refused with 403; links to them stay visible but
  * disabled, with the reason, so people learn what exists without seeing it (the MAYA rule: visible, not
- * hidden). Raw JSON is redacted for roles without {@code raw}.
+ * hidden).
+ *
+ * <p>Field masks: for roles without {@code raw}, every field named in {@code drishti.security.redact} reads
+ * {@link DataNode#MASK} wherever the caller can see or infer its value. This class is the one place that decides what is
+ * masked ({@link #redactor}); every path that serves documents or values computed from them (raw JSON, search, CSV,
+ * compare, history, Calc columns, pivots, views and their panel records, live streams, monitors, Studio previews, Impact,
+ * the type-ahead, alerts) applies that same function to the documents before it reads them, so a masked field shows as the
+ * mask and cannot be probed by a condition, an ordering or a type-ahead match.
  */
 public final class Entitlements {
 
@@ -128,13 +136,26 @@ public final class Entitlements {
     }
 
     public DataNode redact(Principal p, DataNode data) {
-        return has(p, com.ash.drishti.identity.RoleDefinition::raw) || props.redact().isEmpty() ? data : mask(data);
+        return redactor(p).apply(data);
+    }
+
+    /** True when the principal sees some fields masked: a role without {@code raw} while {@code redact} names fields. */
+    public boolean masks(Principal p) {
+        return !props.redact().isEmpty() && !has(p, com.ash.drishti.identity.RoleDefinition::raw);
+    }
+
+    /**
+     * The principal's field masks as a function on documents: the identity when nothing is masked for them, else a copy of
+     * the document with every field named in {@code redact} (at any depth) replaced by {@link DataNode#masked()}.
+     */
+    public UnaryOperator<DataNode> redactor(Principal p) {
+        return masks(p) ? this::mask : UnaryOperator.identity();
     }
 
     private DataNode mask(DataNode n) {
         if (n instanceof DataNode.Obj o) {
             Map<String, DataNode> out = new LinkedHashMap<>();
-            o.fields().forEach((k, v) -> out.put(k, props.redact().contains(k) ? new DataNode.Val("•••") : mask(v)));
+            o.fields().forEach((k, v) -> out.put(k, props.redact().contains(k) ? DataNode.masked() : mask(v)));
             return new DataNode.Obj(out);
         }
         if (n instanceof DataNode.Arr a) {

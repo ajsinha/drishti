@@ -272,7 +272,7 @@ public final class StructuredSearch {
      * The paths the caller's role would see masked, with what it would see instead: a probe document holding every
      * path is put through the same redaction as documents are.
      */
-    static Map<String, Object> masks(List<String> paths, UnaryOperator<DataNode> redact) {
+    public static Map<String, Object> masks(List<String> paths, UnaryOperator<DataNode> redact) {
         Map<String, Object> root = new LinkedHashMap<>();
         for (String path : paths) {
             String[] parts = path.split("\\.");

@@ -82,9 +82,22 @@ public class PhraseController {
 
             @Override
             public List<PhraseParser.Field> fields(String kind) {
-                return fieldsOf(kind);
+                return masked(fieldsOf(kind), p);
             }
         }).parse(text.length() > 300 ? text.substring(0, 300) : text);
+    }
+
+    /**
+     * The vocabulary as the caller may see it: a field the caller sees masked keeps its name and type but names no values,
+     * so a phrase cannot reveal or match a masked value.
+     */
+    private List<PhraseParser.Field> masked(List<PhraseParser.Field> fields, Principal p) {
+        if (!entitlements.masks(p)) {
+            return fields;
+        }
+        Map<String, Object> hidden = com.ash.drishti.engine.search.StructuredSearch.masks(fields.stream().map(PhraseParser.Field::path).toList(),
+                entitlements.redactor(p));
+        return fields.stream().map(f -> hidden.containsKey(f.path()) ? new PhraseParser.Field(f.path(), f.label(), f.type(), Map.of()) : f).toList();
     }
 
     /** The kind's fields, from a sample of its documents (cached {@link #KEEP}). */
