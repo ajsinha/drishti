@@ -67,15 +67,15 @@ permissions, and masks are not applied on every path.
 | SEC-04 | Impact (F8) applies no masks (masked values and relationships shown). **Fixed** in 43075d9 (FieldMaskingTest.impactNeitherListsWhatOnlyAMaskedFieldTiesInNorShowsAMaskedMeasure) |
 | SEC-05 | Sign-out only deletes the browser cookie; a copied cookie keeps working. **Fixed** in 6f886ab (test_sessions.py::test_sign_out_ends_the_session_on_the_server; IdentityApiTest.consoleSessionsFollowTheUser) |
 | SEC-06 | "Change password at first sign-in" is not enforced. **Fixed** in 6f886ab (test_sessions.py::test_a_password_change_asked_for_is_enforced) |
-| DATA-07 | A promoted field with mixed types: the columns path orders text lexicographically and clamps huge numbers, disagreeing with documents. |
-| DATA-08 | File connector reverse lookups skip effective-mode kinds (Impact misses groups other stores show). |
+| DATA-07 | A promoted field with mixed types: the columns path orders text lexicographically and clamps huge numbers, disagreeing with documents. **Fixed** in 494741c (JsonlMixedColumnsTest.aFieldWithNumbersAndTextKeepsEachValueAsTheDocumentHoldsIt, SearchOrderTest.aFieldWithNumbersAndTextOrdersAndComparesTheSameFromColumnsAndDocuments) |
+| DATA-08 | File connector reverse lookups skip effective-mode kinds (Impact misses groups other stores show). **Fixed** in 494741c (FileEffectiveReverseTest.anEffectiveKindIsLookedUpInEachEntitysVersionOnTheDate) |
 | DATA-09 | Duplicate ids in a JSON-lines day are counted twice (desk P&L wrong). **Fixed** in 5ecce29 (JsonlHostileLinesTest.aDuplicateIdKeepsItsLastLineEverywhere) |
 | DATA-10 | A read racing an atomic JSON-lines replace can fail (502), using old offsets on the new file. **Fixed** in 5ecce29 (JsonlHostileLinesTest: readsRacingAnAtomicReplaceNeverFailOrReturnAnotherEntity, anIndexOverAFileRewrittenInPlaceNeverReturnsAnotherEntitysLine) |
 | DATA-11 | RedisLoader merges into a day instead of replacing it; an interrupted load leaves views and searches disagreeing. |
-| DATA-12 | Multi-store fall-through brings back an entity the recent store dropped. |
+| DATA-12 | Multi-store fall-through brings back an entity the recent store dropped. **Fixed** in 8dbec96 (StoreAuthorityTest.anEntityTheStoreHoldingTheDateDoesNotListIsNotHeldAndTheLakeIsNotAsked, FileCoverageTest, RecentStoreApiTest.anEntityTheRecentStoreDroppedIsNotHeldOnItsDates) |
 | DATA-13 | LZ4 Parquet: unclear 502, health UP, and the documented advice ("use hadoop") does not work. **Fixed** in 724328b (DeltaUnreadableTest.lz4PagesFailTheReadWithTheCodecAndWhatToDoAndHealthNamesTheDate, DeltaUnreadableTest.lz4FromArrowUnderTheHadoopEngineSaysWhatToDo) |
 | DATA-14 | `quant.year_fraction`: 30E/360 computed as US 30/360; ACT/ACT ISDA as days/365.25. |
-| DATA-15 | `knownAt` silently ignored by stores without time travel. |
+| DATA-15 | `knownAt` silently ignored by stores without time travel. **Fixed** in 8dbec96, a9dc80a (StoreAuthorityTest.knownAtOnAStoreWithoutTimeTravelFailsNamingItNeverWithTodaysData, RecentStoreApiTest.knownAtOnAStoreWithoutTimeTravelIsRefusedNamingIt) |
 | GRAM-03 | Very deep or long expressions: the view returns HTTP 500 without a problem code. **Fixed** in c1ace31 (ElLimitsTest.longChainsThatWouldOverflowEvaluationAreRefusedAtCompileTime, PathologicalExpressionsTest.LiftedLimits.anOverflowIsAPanelProblemOrAFileProblemNeverA500) |
 | GRAM-04 | "Case never matters" is false for field names; unknown fields silently match nothing. |
 | GRAM-05 | Many invalid Sutra inputs are silently accepted (duplicate keys, wrong types, extra YAML documents, unknown tags). |
@@ -98,7 +98,7 @@ permissions, and masks are not applied on every path.
 
 Lows and infos are in each area's findings: inconsistent error responses (SEC-10, GRAM-06..08, UX-10..13), CSRF
 protection relies on SameSite only (SEC-08, **Fixed** in 6f886ab: test_sessions.py: test_cross_site_writes_and_json_as_text_are_refused, test_configured_origins_are_allowed, test_sign_out_is_a_post_and_get_only_asks), type-ahead reveals masked names (SEC-07, **Fixed** in 43075d9: FieldMaskingTest.typeAheadNeitherShowsNorMatchesMaskedValues), readiness probe always DOWN with
-security on (SEC-12), absolute paths in Sutra problems (SEC-11), tie order under limits (DATA-17), health UP for
+security on (SEC-12), absolute paths in Sutra problems (SEC-11), tie order under limits (DATA-17, **Fixed** in 494741c: SearchOrderTest.tiesAreBrokenByIdOnTheColumnsAndTheDocumentsPath, SearchOrderTest.entitiesWithNoSortValueComeLastInIdOrder), health UP for
 unreadable tables (DATA-18, **Fixed** in 724328b, 7de60f8: DeltaUnreadableTest, RedisOutageHealthTest), quant edge cases (DATA-20), layout and Studio polish (UX-14..18), documentation mismatches
 (DOC-04..22), and risky development defaults that are already documented (SEC-16).
 
