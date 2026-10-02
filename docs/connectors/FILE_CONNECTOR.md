@@ -92,7 +92,8 @@ A line is one JSON object. Two forms are read, and a file may mix them:
 ```
 
 `doc` is the entity's document, as a JSON string or as an object; `columns` carries the pack's promoted fields, so the
-connector can index them without reading the document.
+connector can index them without reading the document. A row without `columns` has its promoted fields read from
+`doc`, in either form.
 
 **A plain document per line**, the simplest file anyone can write:
 
@@ -102,6 +103,21 @@ connector can index them without reading the document.
 ```
 
 The id is the field named by `id-field` (`id` by default); promoted fields are read from the document by their paths.
+
+**One line per id.** When an id appears on several lines of a day's file, its **last** line is the entity, as a reload
+of the file would leave it: the view, searches, pick lists, derived kinds and reverse lookups all read that line, and
+the entity is counted once. The ids repeated are counted (`duplicateIds` in the cache statistics) and named in Health.
+
+**`NaN` and `Infinity`.** Python's `json.dumps` writes `NaN`, `Infinity` and `-Infinity` by default, which strict
+JSON does not allow. The connector reads them and takes them as **no value**: a promoted number is empty (as a missing
+field is, so `mtm < 0` does not match it and sums leave it out), and the document opened holds `null` there.
+
+**Lines that cannot be read** are skipped, not the day: a truncated line, a line that is not a JSON object, a line
+without an id, a line longer than `max-document-mb` (64 MB), or a line nested deeper than `max-nesting-depth`
+(1000). Each is counted with its line number and why, logged once per version of the file, and shown in Health; the
+rest of the day is served. A search answered from such a day carries the reason (see 6.5). (A row with `columns` is
+indexed without parsing its `doc`; if that document itself breaks a limit, its columns serve searches and opening it
+fails with the limit named.)
 
 ## 4. Declaring promoted fields
 
@@ -163,13 +179,23 @@ The first time a day's file is needed, the connector reads it once and keeps an 
 
 The file is cut at line ends into up to 8 segments (one per 64 MB) indexed at once on as many threads, each reading
 4 MB blocks; a line's envelope is parsed without parsing its document. Indexes are kept by memory (`index-cache-mb`,
-1024) and rebuilt when a file's size or modification time changes. The newest day of every kind is indexed during the
-rescan, in the background, so type-ahead and the first search find it ready.
+1024) and rebuilt when the file is replaced or its size or modification time changes. The newest day of every kind is
+indexed during the rescan, in the background, so type-ahead and the first search find it ready.
+
+An index is kept even when its file had unreadable lines, or could not be opened at all (an empty day that Health
+names, for example a file without read permission): the file is read again when it changes, not on every request.
+`purgeCaches` forgets every index.
 
 ### 6.3 Opening one entity
 
 `TRD MX-20000017`: a binary search of the day's sorted ids gives the line's offset and length, and one positioned read
 returns exactly that line. No other line is read, however large the file.
+
+The index keeps its file open, so a read always uses offsets into the file the index was built from: a file replaced
+by a rename (as the loader does) is still served whole from the old file until the next read sees the change and builds
+a new index. A file rewritten in place is caught by checking that the line read is the id asked for; the index is then
+built again and the read repeated. A day therefore holds one open file while its index is cached (each day counts at
+least 1 MB against `index-cache-mb`, so at most 1,024 files are open by default).
 
 ### 6.4 Type-ahead
 
@@ -179,7 +205,10 @@ index.
 ### 6.5 Searches, pick lists, derived kinds and impact
 
 From the day's promoted columns in the index, exactly as on Delta Lake: a search is exact over every entity of the day
-(`partial: false`) and reads no document.
+(`partial: false`) and reads no document. When the day's file had unreadable lines, the columns say so
+(`ColumnSet.incomplete()`: "1 unreadable line in trading/2026-09-30/trade.jsonl (line 201: …)"), for the answer to say
+`partial` with that reason. A day whose file cannot be read at all holds no columns, so the next store, or the
+documents, are asked.
 
 ### 6.6 Reverse lookups
 
@@ -278,14 +307,27 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
 `GET /api/v1/admin/health`:
 
 ```json
-{"name": "trading-store", "health": "UP", "cache": {"jsonlKinds": 1, "jsonlDays": 10, "indexedDays": 1, "ids": 10000}}
+{"name": "trading-store", "health": "UP", "cache": {"jsonlKinds": 1, "jsonlDays": 10, "indexedDays": 1, "ids": 10000,
+ "indexBuilds": 1, "unreadableLines": 0, "duplicateIds": 0, "unreadableFiles": 0}}
 ```
+
+A file with problems keeps the connector UP and names the file (the three newest such files, then a count):
+
+```
+UP (1 unreadable line in trading/2026-09-30/trade.jsonl (line 201: Unexpected end-of-input in VALUE_STRING);
+    3 duplicate ids in trading/2026-09-29/trade.jsonl, the last line of each kept (MX-1, MX-2, MX-3))
+```
+
+The same is logged once, as a warning, each time such a file is indexed.
 
 | Symptom | Likely cause | What to do |
 |---|---|---|
 | `DOWN: no directory …` | the root (or `<root>/<domain>`) does not exist | create it, or fix `root`/`DRISHTI_FILES_ROOT` |
 | a new file is not served | the next rescan has not run | wait `rescan-seconds` (30) |
-| a kind is missing from type-ahead | its file has unreadable lines, or no id field | check the file; set `id-field` for plain documents |
+| a kind is missing from type-ahead | its file cannot be read, or its lines have no id field | see Health; set `id-field` for plain documents |
+| Health: `unreadable lines in …` | lines truncated, not JSON objects, without an id, or beyond `max-document-mb`/`max-nesting-depth` | fix or rewrite those lines; raise the limit for large documents |
+| Health: `duplicate ids in …` | an id on several lines of one day | the last line is served; write each id once |
+| Health: `unreadable file …` | the file cannot be opened (permissions) | fix it; it is read again when it changes |
 | searches say `partial: true` | a field the query reads is not promoted | add it to `layout.<kind>.columns`, and to the rows' `columns` |
 | the first read of an old day is slow | the day is being indexed | expected once; raise `index-cache-mb` to keep more days |
 
@@ -302,6 +344,8 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
 | `rescan-seconds` | `30` | how often the folders are listed again |
 | `index-cache-mb` | `1024` | memory for days' indexes |
 | `max-load-rows` | `200000` | lines a reverse lookup reads for a kind without promoted link fields |
+| `max-document-mb` | `64` | the longest line (and so document, or string in it); a longer line is skipped and counted |
+| `max-nesting-depth` | `1000` | the deepest nesting of objects and arrays in a line; a deeper line is skipped and counted |
 | `source-name` | `file` | the name shown in provenance and Health |
 
 `JsonlLoader` takes the input (`FILE` or `-`) and the root; `tools/load-files.sh [root] [--trades N] [--days D]` runs
