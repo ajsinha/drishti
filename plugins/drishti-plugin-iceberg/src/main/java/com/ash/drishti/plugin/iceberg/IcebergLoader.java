@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+import com.ash.drishti.api.LoadGuard;
 import com.ash.drishti.plugin.iceberg.IcebergLayout.Row;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
@@ -59,8 +60,11 @@ import org.apache.iceberg.Table;
  *
  * <p>Options: {@code --catalog rest --uri U --warehouse W --credential C --token T} for a REST catalog (the domain is
  * the namespace), {@code --set key=value} for any connector setting ({@code s3.endpoint}, {@code hadoop.…}),
- * {@code --keep-days N} to remove each loaded table's business days older than its newest N afterwards and expire the
- * snapshots that referenced them ({@link IcebergMaintenance}). {@code tools/load-iceberg.sh} runs it.
+ * {@code --keep-days N} to remove each loaded table's business days older than its newest N on or before
+ * {@code --as-of} (today) afterwards and expire the snapshots that referenced them ({@link IcebergMaintenance}; more
+ * than {@code --max-drop-share} of a table's rows needs {@code --force-drop}). A row dated after tomorrow in the
+ * business zone ({@code --future-days}, {@code --zone}) is not loaded, and the load ends with an error naming it
+ * ({@link LoadGuard}). {@code tools/load-iceberg.sh} runs it.
  */
 public final class IcebergLoader {
 
@@ -102,8 +106,8 @@ public final class IcebergLoader {
             }
             i++;
         }
-        new IcebergLoader.Run(settings, fileRows, rowGroupBytes, budget, threads, spill.resolve("drishti-iceberg-" + ProcessHandle.current().pid()))
-                .load(file, keepDays);
+        new IcebergLoader.Run(settings, fileRows, rowGroupBytes, budget, threads, spill.resolve("drishti-iceberg-" + ProcessHandle.current().pid()),
+                LoadGuard.fromArgs(args)).load(file, keepDays);
     }
 
     /** One load: the read and sort phase, then the write phase. */
@@ -114,6 +118,7 @@ public final class IcebergLoader {
         private final long budget;
         private final int threads;
         private final Path spillDir;
+        private final LoadGuard guard;
         private final Map<Bucket, SortedRuns> buckets = new LinkedHashMap<>();
         /** Per domain and kind, per promoted path: 1 when a number was seen, 2 when text was. */
         private final Map<String, Map<String, Integer>> seen = new HashMap<>();
@@ -122,8 +127,9 @@ public final class IcebergLoader {
         /** Per table, its days of fewer than {@link #SMALL_DAY} rows, committed together once all are written. */
         private final Map<String, Map<LocalDate, List<DataFile>>> smallDays = new ConcurrentHashMap<>();
 
-        Run(Map<String, String> settings, int fileRows, long rowGroupBytes, long budget, int threads, Path spillDir) {
+        Run(Map<String, String> settings, int fileRows, long rowGroupBytes, long budget, int threads, Path spillDir, LoadGuard guard) {
             this.settings = settings;
+            this.guard = guard;
             this.fileRows = fileRows;
             this.rowGroupBytes = rowGroupBytes;
             this.budget = budget;
@@ -137,7 +143,7 @@ public final class IcebergLoader {
             List<Table> loaded = write(t0);
             if (keepDays > 0) {
                 for (Table t : loaded) {
-                    IcebergMaintenance.keepDays(t, keepDays);
+                    IcebergMaintenance.keepDays(t, keepDays, guard);
                     IcebergMaintenance.expireSnapshots(t, 168);   // time travel keeps a week; older files go
                 }
             }
@@ -145,6 +151,7 @@ public final class IcebergLoader {
                 l.close();
             }
             System.out.printf("iceberg: loaded %,d rows into %d tables in %,.0f s%n", n, loaded.size(), (System.nanoTime() - t0) / 1e9);
+            guard.finish();
         }
 
         /** Reads every line into its day's sorter, spilling the largest buffers beyond the budget. */
@@ -163,6 +170,9 @@ public final class IcebergLoader {
                         continue;
                     }
                     Line line = parse(json, text);
+                    if (!guard.accept(line.date(), line.domain() + " " + line.kind() + " " + line.row().id())) {
+                        continue;
+                    }
                     Bucket b = new Bucket(line.domain(), line.kind(), line.date());
                     buffered += buckets.computeIfAbsent(b, k -> new SortedRuns(spillDir, k.kind() + "-" + k.date())).add(line.row());
                     Map<String, Integer> types = seen.computeIfAbsent(line.domain() + "/" + line.kind(), k -> new LinkedHashMap<>());

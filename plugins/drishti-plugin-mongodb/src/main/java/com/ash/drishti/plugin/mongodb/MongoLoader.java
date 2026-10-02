@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.mongodb;
 
+import com.ash.drishti.api.LoadGuard;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -53,15 +54,25 @@ import org.bson.conversions.Bson;
 /**
  * Loads rows into MongoDB in {@link MongoLayout}: {@code java -cp <plugin classpath>
  * com.ash.drishti.plugin.mongodb.MongoLoader FILE|- [uri] [database] [--keep-days N] [--ttl-days N]
- * [--doc-format string|bson] [--batch N] [--in-flight N]}. Each line is {@code {"domain", "kind", "id", "date", "doc",
+ * [--doc-format string|bson] [--batch N] [--in-flight N] [--as-of yyyy-MM-dd] [--future-days N] [--zone Z]
+ * [--max-drop-share F] [--force-drop]}. Each line is {@code {"domain", "kind", "id", "date", "doc",
  * "columns": {path: value}}} ({@code columns}, the fields the pack promotes, is optional), as
  * {@code make_data.py --jsonl} and {@code bulk_trades.py --jsonl} write it; {@code -} reads a stream, so a book of
  * millions loads without a file. Rows go to the domain's collection and their promoted fields to its {@code _columns}
  * collection (both created with zstd compression and the connector's index) in unordered bulk writes of {@code --batch} (1,000) replace-or-insert operations by {@code _id}, at most
  * {@code --in-flight} (16) batches at once on virtual threads: loading the same rows again changes nothing.
- * {@code --keep-days N} then deletes, in every domain collection of the database, each kind's business days older than its N newest; {@code --ttl-days N}
- * stamps each document with {@code expireAt} (its business date plus N days) and adds the TTL index, so MongoDB deletes
- * old days by itself. {@code tools/load-mongodb.sh} runs it.
+ *
+ * <p>A load merges into the days it reaches: a document of the stream replaces the one of the same (kind, id, date),
+ * and an entity the stream does not carry stays. Nothing is deleted, so a load that is killed half way leaves each
+ * day it reached with some documents of the new load and the rest of the old (run it again to finish it); to take an
+ * entity out of a day, delete its document. A row dated after tomorrow in the business zone is not loaded and the
+ * load ends with an error naming it ({@link LoadGuard}).
+ *
+ * <p>{@code --keep-days N} then deletes, in every domain collection of the database, each kind's business days older
+ * than its N newest on or before {@code --as-of} (today; a day after it is neither counted nor deleted), and refuses
+ * to delete more than {@code --max-drop-share} (0.5) of a kind's days without {@code --force-drop}. {@code --ttl-days
+ * N} stamps each document with {@code expireAt} (its business date plus N days) and adds the TTL index, so MongoDB
+ * deletes old days by itself. {@code tools/load-mongodb.sh} runs it.
  */
 public final class MongoLoader {
 
@@ -73,6 +84,7 @@ public final class MongoLoader {
     private final int batchSize;
     private final Semaphore inFlight;
     private final int maxInFlight;
+    private final LoadGuard guard;
     private final Map<String, MongoCollection<BsonDocument>> collections = new ConcurrentHashMap<>();
     private final Map<String, MongoCollection<BsonDocument>> columnCollections = new ConcurrentHashMap<>();
     private final AtomicLong written = new AtomicLong();
@@ -80,6 +92,11 @@ public final class MongoLoader {
     private final long t0 = System.nanoTime();
 
     MongoLoader(MongoDatabase db, MongoLayout.DocFormat format, int ttlDays, int batchSize, int maxInFlight) {
+        this(db, format, ttlDays, batchSize, maxInFlight, LoadGuard.fromArgs(new String[0]));
+    }
+
+    MongoLoader(MongoDatabase db, MongoLayout.DocFormat format, int ttlDays, int batchSize, int maxInFlight, LoadGuard guard) {
+        this.guard = guard;
         this.db = db;
         this.format = format;
         this.ttlDays = ttlDays;
@@ -106,7 +123,8 @@ public final class MongoLoader {
                      : Files.newBufferedReader(Path.of(file), StandardCharsets.UTF_8)) {
             MongoLoader loader = new MongoLoader(client.getDatabase(database),
                     MongoLayout.DocFormat.valueOf(options.getOrDefault("doc-format", "string").toUpperCase(java.util.Locale.ROOT)),
-                    Integer.parseInt(options.getOrDefault("ttl-days", "0")), Integer.parseInt(options.getOrDefault("batch", "1000")), inFlight);
+                    Integer.parseInt(options.getOrDefault("ttl-days", "0")), Integer.parseInt(options.getOrDefault("batch", "1000")), inFlight,
+                    LoadGuard.fromArgs(args));
             long n = loader.load(in);
             System.out.printf("mongodb: loaded %,d rows into database %s in %,.0f s%n", n, database, loader.seconds());
             if (options.containsKey("keep-days")) {
@@ -117,6 +135,7 @@ public final class MongoLoader {
                 System.out.printf("mongodb: deleted %,d documents older than each kind's %s newest business days in %,d ms%n", gone,
                         options.get("keep-days"), (System.nanoTime() - t1) / 1_000_000);
             }
+            loader.guard.finish();
         }
     }
 
@@ -135,6 +154,9 @@ public final class MongoLoader {
                     continue;
                 }
                 Row row = parse(json, line);
+                if (!guard.accept(row.date(), row.domain() + " " + row.kind() + " " + row.id())) {
+                    continue;
+                }
                 List<Row> batch = batches.computeIfAbsent(row.domain(), d -> new ArrayList<>(batchSize));
                 batch.add(row);
                 if (batch.size() >= batchSize) {
@@ -198,21 +220,31 @@ public final class MongoLoader {
 
     /**
      * Retention by deletion: for each kind of each domain's collection, every business day older than its {@code keep}
-     * newest is deleted (a range of the {@code day_ids} index), in both collections. Returns the documents deleted.
+     * newest on or before {@code --as-of} is deleted (a range of the {@code day_ids} index), in both collections.
+     * Every kind is checked first: when one would lose more than {@code --max-drop-share} of its days, nothing is
+     * deleted (unless {@code --force-drop}). Returns the documents deleted.
      */
     long keepDays(int keep, java.util.Collection<String> domains) {
-        long deleted = 0;
+        record Cut(String domain, String kind, int before) {}
+        List<Cut> cuts = new ArrayList<>();
         for (String domain : domains) {
             MongoCollection<Document> c = db.getCollection(domain);
             for (String kind : c.distinct(MongoLayout.KIND, String.class)) {
-                List<Integer> dates = c.distinct(MongoLayout.DATE, Filters.eq(MongoLayout.KIND, kind), Integer.class).into(new ArrayList<>());
-                dates.sort(null);
-                if (dates.size() > keep) {
-                    Bson older = Filters.and(Filters.eq(MongoLayout.KIND, kind), Filters.lt(MongoLayout.DATE, dates.get(dates.size() - keep)));
-                    deleted += c.deleteMany(older).getDeletedCount();
-                    var unused = db.getCollection(MongoLayout.columnsCollection(domain)).deleteMany(older);
+                List<LocalDate> dates = c.distinct(MongoLayout.DATE, Filters.eq(MongoLayout.KIND, kind), Integer.class).map(MongoLayout::date)
+                        .into(new ArrayList<>());
+                var from = guard.keepFromNewest(dates, keep);
+                if (from.isPresent()) {
+                    long dropping = dates.stream().filter(d -> d.isBefore(from.get())).count();
+                    guard.checkDrop(domain + " " + kind, dropping, dates.size(), "business days");
+                    cuts.add(new Cut(domain, kind, MongoLayout.day(from.get())));
                 }
             }
+        }
+        long deleted = 0;
+        for (Cut cut : cuts) {
+            Bson older = Filters.and(Filters.eq(MongoLayout.KIND, cut.kind()), Filters.lt(MongoLayout.DATE, cut.before()));
+            deleted += db.getCollection(cut.domain()).deleteMany(older).getDeletedCount();
+            var unused = db.getCollection(MongoLayout.columnsCollection(cut.domain())).deleteMany(older);
         }
         return deleted;
     }

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.file;
 
+import com.ash.drishti.api.LoadGuard;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -34,11 +35,12 @@ import java.util.Set;
 
 /**
  * Writes rows as the file connector's JSON-lines files: {@code java -cp <plugin classpath>
- * com.ash.drishti.plugin.file.JsonlLoader FILE|- [root]}. Each input line is {@code {"domain", "kind", "id", "date",
+ * com.ash.drishti.plugin.file.JsonlLoader FILE|- [root] [--future-days N] [--zone Z]}. Each input line is {@code {"domain", "kind", "id", "date",
  * "doc", "columns"}}, as {@code make_data.py --jsonl} and {@code bulk_trades.py --jsonl} write it; it is copied as it is
  * to {@code <root>/<domain>/<date>/<kind>.jsonl}. A file the stream reaches is replaced whole: lines go to a
  * {@code .tmp} file beside it, moved into place at the end, so a running server never reads half a day. At most 256
- * files are open at once. {@code tools/load-files.sh} runs it.
+ * files are open at once. A row dated after tomorrow in the business zone is not written, and the load ends with an
+ * error naming it ({@link LoadGuard}). {@code tools/load-files.sh} runs it.
  */
 public final class JsonlLoader {
 
@@ -49,7 +51,8 @@ public final class JsonlLoader {
 
     public static void main(String[] args) throws IOException {
         String file = args[0];
-        Path root = Path.of(args.length > 1 ? args[1] : "data/files");
+        Path root = Path.of(args.length > 1 && !args[1].startsWith("--") ? args[1] : "data/files");
+        LoadGuard guard = LoadGuard.fromArgs(args);
         JsonFactory json = new JsonFactory();
         Set<Path> written = new LinkedHashSet<>();
         Map<Path, BufferedWriter> open = new LinkedHashMap<>(OPEN, 0.75f, true);   // least recently written first
@@ -63,6 +66,9 @@ public final class JsonlLoader {
                     continue;
                 }
                 String[] where = envelope(json, line);
+                if (!guard.accept(java.time.LocalDate.parse(where[2]), where[0] + "/" + where[2] + "/" + where[1])) {
+                    continue;
+                }
                 Path target = root.resolve(where[0]).resolve(where[2]).resolve(where[1] + ".jsonl").normalize();
                 if (!target.startsWith(root.normalize())) {
                     throw new IOException("a row would be written outside " + root + ": " + where[0] + "/" + where[2] + "/" + where[1]);
@@ -96,6 +102,7 @@ public final class JsonlLoader {
             Files.move(tmp, tmp.resolveSibling(name.substring(0, name.length() - 4)), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
         }
         System.out.printf("files: wrote %,d rows into %,d files under %s in %,.0f s%n", n, written.size(), root, (System.nanoTime() - t0) / 1e9);
+        guard.finish();
     }
 
     /** {domain, kind, date} of a row, read without the document. */

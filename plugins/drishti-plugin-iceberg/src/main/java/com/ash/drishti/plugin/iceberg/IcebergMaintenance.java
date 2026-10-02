@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+import com.ash.drishti.api.LoadGuard;
 import com.ash.drishti.plugin.iceberg.IcebergLayout.Row;
 import com.ash.drishti.plugin.iceberg.IcebergTable.Day;
 import com.ash.drishti.plugin.iceberg.IcebergTable.Layout;
@@ -51,8 +52,10 @@ import org.apache.iceberg.types.Types;
  * scheduler). Each step is an ordinary Iceberg commit, so readers never see a half-done change:
  *
  * <ul>
- *   <li>{@code --keep-days N}: deletes the business days older than the table's newest N (a metadata-only delete of
- *       whole partitions);</li>
+ *   <li>{@code --keep-days N}: deletes the business days older than the table's newest N on or before
+ *       {@code --as-of} (today; a day after it is neither counted nor deleted), a metadata-only delete of whole
+ *       partitions; it refuses to delete more than {@code --max-drop-share} (0.5) of a table's rows without
+ *       {@code --force-drop} ({@link LoadGuard});</li>
  *   <li>{@code --relayout}: rewrites, sorted by id into files of the table's {@code file-rows}, each business day that
  *       drifted from the layout (an append whose ids overlap the day's files, a file over {@code file-rows}, more files
  *       than needed, delete files, a promoted column missing from a file); {@code --force} rewrites every day;
@@ -116,6 +119,7 @@ public final class IcebergMaintenance {
             }
             i++;
         }
+        LoadGuard guard = LoadGuard.fromArgs(args);
         for (String domain : domains) {
             Map<String, String> s = new HashMap<>(settings);
             s.put("domain", domain.trim());
@@ -127,7 +131,7 @@ public final class IcebergMaintenance {
                     }
                     String name = (domain.isBlank() ? "" : domain + "/") + kind;
                     if (keepDays > 0) {
-                        System.out.printf("%s: %d business days removed%n", name, keepDays(t, keepDays));
+                        System.out.printf("%s: %d business days removed%n", name, keepDays(t, keepDays, guard));
                     }
                     if (addColumns.containsKey(kind)) {
                         Map<String, Boolean> cols = new LinkedHashMap<>();
@@ -151,22 +155,33 @@ public final class IcebergMaintenance {
         }
     }
 
-    /** Deletes the business days older than the table's newest {@code keep}; returns how many days went. */
+    /** {@link #keepDays(Table, int, LoadGuard)} counting back from today. */
     static int keepDays(Table t, int keep) {
+        return keepDays(t, keep, LoadGuard.fromArgs(new String[0]));
+    }
+
+    /**
+     * Deletes the business days older than the table's newest {@code keep} on or before the guard's as-of date (a day
+     * after it is neither counted nor deleted); refused when that is more than the guard's share of the table's rows.
+     * Returns how many days went.
+     */
+    static int keepDays(Table t, int keep, LoadGuard guard) {
         t.refresh();
         if (t.currentSnapshot() == null) {
             return 0;
         }
-        List<LocalDate> dates;
+        java.util.NavigableMap<LocalDate, Day> days;
         try (ExecutorService pool = IcebergTable.virtualPool()) {
-            dates = new ArrayList<>(layout(t, pool, false).days().keySet());
+            days = layout(t, pool, false).days();
         }
-        if (dates.size() <= keep) {
+        var from = guard.keepFromNewest(days.keySet(), keep);
+        if (from.isEmpty()) {
             return 0;
         }
-        LocalDate cutoff = dates.get(dates.size() - keep);
-        t.newDelete().deleteFromRowFilter(Expressions.lessThan(IcebergLayout.DATE, cutoff.toString())).commit();
-        return dates.size() - keep;
+        var old = days.headMap(from.get(), false);
+        guard.checkDrop(t.name(), old.values().stream().mapToLong(Day::rows).sum(), days.values().stream().mapToLong(Day::rows).sum(), "rows");
+        t.newDelete().deleteFromRowFilter(Expressions.lessThan(IcebergLayout.DATE, from.get().toString())).commit();
+        return old.size();
     }
 
     private static Layout layout(Table t, ExecutorService pool, boolean stats) {

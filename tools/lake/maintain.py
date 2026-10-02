@@ -16,7 +16,9 @@
 """Delta Lake maintenance, so a lake does not grow without bound. Drishti's server only reads the lake; this job
 does what readers cannot, on a schedule, for local lakes and lakes in object storage (S3 and S3-compatible):
 
-    retention   delete business dates older than the history window (keep-business-days)
+    retention   delete business dates older than the history window (keep-business-days), counted back from today in
+                schedule.zone (or --as-of), never from the newest date in the table; a run that would delete more than
+                max-drop-share (0.5) of a table's rows deletes nothing and reports the table failed, unless --force-drop
     compact     merge the small files each day's writes leave into files of target-file-mb; a table whose pack declares
                 a layout is instead rewritten, sorted, for the dates that drifted from it (relayout), and keeps
                 statistics only on id, the date and its promoted columns
@@ -26,6 +28,8 @@ does what readers cannot, on a schedule, for local lakes and lakes in object sto
     uv run --with deltalake --with pyarrow --with pyyaml python tools/lake/maintain.py --config deploy/lake-maintenance.yaml --once
     ... --daemon            run every day at schedule.at in schedule.zone (a container or service)
     ... --dry-run           report what would happen, change nothing
+    ... --as-of 2026-09-30  count the retention back from this date instead of today
+    ... --force-drop        delete even when that is more than max-drop-share of a table
 
     uv run --with deltalake --with pyarrow --with pyyaml python tools/lake/maintain.py relayout --root data/delta --domain trading \\
         [--kind trade] [--dates 2026-09-28,2026-09-30 | --dates 2026-09-01..2026-09-30] [--force] [--dry-run]
@@ -50,7 +54,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from samplegen.layout import Layout, column_name, keep_stats_small, layouts_for_domain, promote, write_partition  # noqa: E402
 from samplegen.layout import stats_columns as stats_columns_of  # noqa: E402
 
-DEFAULTS = {"domains": ["*"], "keep-business-days": None, "compact": True, "target-file-mb": 128, "checkpoint": True,
+DEFAULTS = {"domains": ["*"], "keep-business-days": None, "max-drop-share": 0.5, "compact": True, "target-file-mb": 128, "checkpoint": True,
             "vacuum-hours": 168, "storage-options": {}}
 
 
@@ -101,7 +105,16 @@ def stats(dt) -> dict:
     return {"files": len(actions), "mb": round(sum(a["size_bytes"] for a in actions) / 1_048_576, 2)}
 
 
-def maintain(uri: str, conf: dict, today: date, dry_run: bool) -> dict:
+def retention_share(actions: list[dict], cutoff: date) -> tuple[int, int, str]:
+    """What deleting the dates before `cutoff` would take: (rows before it, rows in all, "rows"), or files when the
+    log does not count the rows."""
+    old = [a for a in actions if str(a.get("partition.business_date", "9999")) < cutoff.isoformat()]
+    if all(a.get("num_records") is not None for a in actions):
+        return sum(a["num_records"] for a in old), sum(a["num_records"] for a in actions), "rows"
+    return len(old), len(actions), "files"
+
+
+def maintain(uri: str, conf: dict, today: date, dry_run: bool, force_drop: bool = False) -> dict:
     from deltalake import DeltaTable
 
     opts = conf.get("storage-options") or {}
@@ -111,6 +124,11 @@ def maintain(uri: str, conf: dict, today: date, dry_run: bool) -> dict:
     keep = conf.get("keep-business-days")
     if keep:
         cutoff = business_cutoff(today, int(keep))
+        dropping, total, unit = retention_share(add_actions(dt), cutoff)
+        share = float(conf.get("max-drop-share", 0.5))
+        if total and dropping > share * total and not force_drop:
+            raise RuntimeError(f"retention would delete {dropping:,} of {total:,} {unit} (more than max-drop-share {share}), the business dates "
+                               f"before {cutoff}, counted back from {today}; nothing was deleted: check the dates, or run with --force-drop")
         if dry_run:
             old = [a for a in add_actions(dt) if str(a.get("partition.business_date", "9999")) < cutoff.isoformat()]
             done["retention"] = {"cutoff": cutoff, "would_remove_files": len(old)}
@@ -151,7 +169,7 @@ def layout_of(uri: str) -> Layout | None:
         return None
 
 
-def run(config: dict, dry_run: bool, today: date | None = None) -> int:
+def run(config: dict, dry_run: bool, today: date | None = None, force_drop: bool = False) -> int:
     """One pass over every configured lake; returns the number of tables that failed."""
     failures = 0
     for lake in config.get("lakes", []):
@@ -160,7 +178,7 @@ def run(config: dict, dry_run: bool, today: date | None = None) -> int:
         day = today or datetime.now(zone).date()
         for uri in tables(str(lake["root"]), list(conf["domains"]), conf.get("storage-options") or {}):
             try:
-                log(event="maintained", dry_run=dry_run, **maintain(uri, conf, day, dry_run))
+                log(event="maintained", dry_run=dry_run, **maintain(uri, conf, day, dry_run, force_drop))
             except Exception as e:  # noqa: BLE001 - one table must not stop the others
                 failures += 1
                 log(event="failed", table=uri, error=f"{type(e).__name__}: {e}")
@@ -274,17 +292,20 @@ def main(argv=None) -> int:
     mode.add_argument("--once", action="store_true")
     mode.add_argument("--daemon", action="store_true")
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--as-of", default=None, help="count the retention back from this date (default: today in schedule.zone)")
+    ap.add_argument("--force-drop", action="store_true", help="delete even when that is more than max-drop-share of a table")
     a = ap.parse_args(argv)
     config = yaml.safe_load(Path(a.config).read_text(encoding="utf-8")) or {}
+    as_of = date.fromisoformat(a.as_of) if a.as_of else None
     if a.once:
-        return 1 if run(config, a.dry_run) else 0
+        return 1 if run(config, a.dry_run, as_of, a.force_drop) else 0
     schedule = config.get("schedule", {})
     zone = ZoneInfo(schedule.get("zone", "America/New_York"))
     while True:
         wake = next_run(datetime.now(zone), str(schedule.get("at", "02:30")))
         log(event="sleeping", until=wake)
         time.sleep(max(1.0, (wake - datetime.now(zone)).total_seconds()))
-        run(config, a.dry_run)
+        run(config, a.dry_run, as_of, a.force_drop)
 
 
 if __name__ == "__main__":

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.duckdb;
 
+import com.ash.drishti.api.LoadGuard;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -30,6 +31,7 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
@@ -53,8 +55,8 @@ import org.duckdb.DuckDBConnection;
 
 /**
  * Writes a DuckDB file in {@link DuckDbLayout}: {@code java -cp <plugin classpath>
- * com.ash.drishti.plugin.duckdb.DuckDbLoader FILE|- DATABASE [--recreate] [--keep-days N] [--parsers N]
- * [--memory-limit 2GB] [--threads N]}. Each line is {@code {"domain", "kind", "id", "date", "doc", "columns": {path:
+ * com.ash.drishti.plugin.duckdb.DuckDbLoader FILE|- DATABASE [--recreate] [--keep-days N] [--as-of yyyy-MM-dd]
+ * [--future-days N] [--zone Z] [--max-drop-share F] [--force-drop] [--parsers N] [--memory-limit 2GB] [--threads N]}. Each line is {@code {"domain", "kind", "id", "date", "doc", "columns": {path:
  * value}}}, as {@code make_data.py --jsonl} and {@code bulk_trades.py --jsonl} write it; {@code -} reads a stream.
  *
  * <p>DuckDB lets one process write a file or several read it, never both, and the Drishti server holds the file open
@@ -62,12 +64,15 @@ import org.duckdb.DuckDBConnection;
  *
  * <ol>
  *   <li>The stream is parsed on {@code --parsers} threads (batches in order, a bounded number in flight) and appended
- *       with DuckDB's appender, as it comes, to {@code DATABASE.stage}, a scratch file with a table per data domain.</li>
+ *       with DuckDB's appender, as it comes, to {@code DATABASE.stage}, a scratch file with a table per data domain.
+ *       A row dated after tomorrow in the business zone is not loaded; the load then ends with an error naming it.</li>
  *   <li>A new file, {@code DATABASE.loading}, is built: for each domain, the rows of the current file that stay (the
  *       file is attached read-only, which a running server allows) and then each staged (kind, business date), sorted
  *       by id. A day in the stream replaces that day whole; a row given twice keeps the last. {@code --recreate} drops
  *       the old rows of each domain the stream reaches; {@code --keep-days N} drops the days more than N calendar days
- *       older than the domain's newest day. The dates table records each day, its rows and when it was loaded.</li>
+ *       before {@code --as-of} (today), never counted from the newest date loaded, and refuses to drop more than
+ *       {@code --max-drop-share} (0.5) of a domain's rows without {@code --force-drop} ({@link LoadGuard}). The dates
+ *       table records each day, its rows and when it was loaded.</li>
  *   <li>{@code DATABASE.loading} is checkpointed, closed and renamed over {@code DATABASE} in one atomic step; a running
  *       connector sees the new file at its next refresh and reopens it. The stage file is deleted.</li>
  * </ol>
@@ -100,15 +105,17 @@ public final class DuckDbLoader {
     private final Path database;
     private final boolean recreate;
     private final int keepDays;
+    private final LoadGuard guard;
     private final int parsers;
     private final Properties properties = new Properties();
     private final Map<String, Stage> stages = new TreeMap<>();
     private long seq;
 
-    private DuckDbLoader(Path database, boolean recreate, int keepDays, int parsers, String memoryLimit, int threads) {
+    private DuckDbLoader(Path database, boolean recreate, int keepDays, LoadGuard guard, int parsers, String memoryLimit, int threads) {
         this.database = database.toAbsolutePath();
         this.recreate = recreate;
         this.keepDays = keepDays;
+        this.guard = guard;
         this.parsers = Math.max(1, parsers);
         properties.setProperty("memory_limit", memoryLimit);
         properties.setProperty("jdbc_instance_cache", "false");
@@ -119,11 +126,12 @@ public final class DuckDbLoader {
 
     public static void main(String[] args) throws Exception {
         if (args.length < 2) {
-            System.err.println("usage: DuckDbLoader FILE|- DATABASE [--recreate] [--keep-days N] [--parsers N] [--memory-limit 2GB] [--threads N]");
+            System.err.println("usage: DuckDbLoader FILE|- DATABASE [--recreate] [--keep-days N] [--as-of D] [--future-days N] [--zone Z] "
+                    + "[--max-drop-share F] [--force-drop] [--parsers N] [--memory-limit 2GB] [--threads N]");
             System.exit(2);
         }
         List<String> a = List.of(args);
-        new DuckDbLoader(Path.of(args[1]), a.contains("--recreate"), Integer.parseInt(option(args, "--keep-days", "0")),
+        new DuckDbLoader(Path.of(args[1]), a.contains("--recreate"), Integer.parseInt(option(args, "--keep-days", "0")), LoadGuard.fromArgs(args),
                 Integer.parseInt(option(args, "--parsers", String.valueOf(Math.min(8, Runtime.getRuntime().availableProcessors())))),
                 option(args, "--memory-limit", "2GB"), Integer.parseInt(option(args, "--threads", "0"))).load(args[0]);
     }
@@ -172,6 +180,9 @@ public final class DuckDbLoader {
                 rows = stageAll(c, input);
                 System.err.printf("duckdb: %,d rows staged in %,.0f s%n", rows, (System.nanoTime() - t0) / 1e9);
                 build(c, loading);
+            } catch (Exception e) {
+                deleteWithWal(loading);                                    // a load that failed: the current file stays as it was
+                throw e;
             } finally {
                 deleteWithWal(stage);
                 if (Files.isDirectory(sibling(".tmp"))) {
@@ -184,6 +195,7 @@ public final class DuckDbLoader {
             System.out.printf("duckdb: loaded %,d rows into %s (%,d MB) in %,.0f s%n", rows, database, Files.size(database) >> 20,
                     (System.nanoTime() - t0) / 1e9);
         }
+        guard.finish();
     }
 
     /** Parses the stream on {@code parsers} threads, in order, and appends every row to its domain's stage table. */
@@ -229,6 +241,9 @@ public final class DuckDbLoader {
                     break;
                 }
                 for (Row r : batch) {
+                    if (!guard.accept(r.date(), r.schema() + " " + r.kind() + " " + r.id())) {
+                        continue;
+                    }
                     append(c, r);
                     if (++rows % 500_000 == 0) {
                         System.err.printf("duckdb: %,d rows%n", rows);
@@ -329,13 +344,16 @@ public final class DuckDbLoader {
             // each kind's days and where they come from: the stream replaces a day the old file has
             Map<String, NavigableSet<LocalDate>> oldDays = oldTable ? DuckDbLayout.dates(c, "drishti_old", schema) : new TreeMap<>();
             Map<String, NavigableSet<LocalDate>> newDays = s == null ? Map.of() : s.days;
-            LocalDate newest = null;
-            for (var m : List.of(oldDays, newDays)) {
-                for (NavigableSet<LocalDate> ds : m.values()) {
-                    newest = newest == null || ds.last().isAfter(newest) ? ds.last() : newest;
+            // retention counts back from --as-of (today), never from the newest date of the file or the load
+            LocalDate keepFrom = keepDays > 0 ? guard.keepFromDays(keepDays) : LocalDate.MIN;
+            if (oldTable && keepDays > 0) {
+                try (Statement st = c.createStatement();
+                     ResultSet rs = st.executeQuery("SELECT COALESCE(SUM(rows) FILTER (WHERE business_date < CAST('" + keepFrom + "' AS DATE)), 0), "
+                             + "COALESCE(SUM(rows), 0) FROM " + DuckDbLayout.datesSource(c, "drishti_old", schema))) {
+                    rs.next();
+                    guard.checkDrop(schema, rs.getLong(1), rs.getLong(2), "rows");     // nothing written yet: the file stays
                 }
             }
-            LocalDate keepFrom = keepDays > 0 && newest != null ? newest.minusDays(keepDays - 1L) : LocalDate.MIN;
             try (Statement st = c.createStatement()) {
                 st.execute("CREATE SCHEMA drishti_new." + schema);
                 st.execute(DuckDbLayout.createTable("drishti_new." + schema, columns));
