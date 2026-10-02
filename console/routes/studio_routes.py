@@ -21,7 +21,7 @@ from urllib.parse import parse_qs
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse
 
-from core.csrf import json_body
+from core.csrf import BodyError, json_body
 from core.backend import BackendError
 from core import sutra_diff, sutra_summary
 from routes.common import ident, render
@@ -39,6 +39,21 @@ strip:
 panels:
   - { id: refs, kind: links, title: Linked entities, area: right }
 """
+
+
+async def _preview_body(request: Request) -> dict:
+    """A preview request as the server takes it: a JSON object with the Sutra text, the kind, and an id (or a pasted
+    document). Anything else is a 400 DRS-5001 problem here, not a 500 further on (QA 2026-10-01 GRAM-08)."""
+    body = await json_body(request)
+    if not isinstance(body, dict):
+        raise BodyError(400, "send a JSON object: {yaml, kind, id} (or a pasted document instead of the id)")
+    if not isinstance(body.get("yaml"), str):
+        raise BodyError(400, "'yaml' is required: the Sutra text to preview")
+    if not isinstance(body.get("kind"), str) or not body["kind"].strip():
+        raise BodyError(400, "'kind' is required: the kind of entity to preview against")
+    if body.get("document") is None and not isinstance(body.get("id"), str):
+        raise BodyError(400, "'id' is required: the entity to preview against (or a pasted document)")
+    return body
 
 
 def _problem(e: BackendError) -> JSONResponse:
@@ -116,9 +131,9 @@ async def source(request: Request, name: str, version: int):
 
 @router.post("/preview")
 async def preview(request: Request):
-    body = await json_body(request)
+    body = await _preview_body(request)
     try:
-        vm = await request.app.state.backend.preview(body.get("yaml", ""), body.get("kind", ""), body.get("id", ""), ident(request),
+        vm = await request.app.state.backend.preview(body["yaml"], body["kind"], body.get("id") or "", ident(request),
                                                      body.get("document"))
     except BackendError as e:
         return _problem(e)
@@ -148,10 +163,10 @@ async def run_test(request: Request):
     """Previews the Sutra on one entity and says how it went: problems in the Sutra, or panels that could not bind."""
     import time
 
-    body = await json_body(request)
+    body = await _preview_body(request)
     t0 = time.perf_counter()
     try:
-        vm = await request.app.state.backend.preview(body.get("yaml", ""), body.get("kind", ""), body.get("id", ""), ident(request))
+        vm = await request.app.state.backend.preview(body["yaml"], body["kind"], body.get("id") or "", ident(request))
     except BackendError as e:
         return {"ok": False, "code": e.code, "detail": e.detail, "problems": getattr(e, "problems", []),
                 "ms": round((time.perf_counter() - t0) * 1000, 1)}

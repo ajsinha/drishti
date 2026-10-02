@@ -92,6 +92,7 @@
     </span>
     {% endif %}
     <noscript><button type="submit" class="asof-go">Go</button></noscript>
+    {% if request.query_params.get('asofRefused') or request.state.asof_cleared %}<span class="asof-note asof-refused" role="alert">{% if request.state.asof_cleared %}The business date you had picked cannot be used, so this is live. {% endif %}Pick a business date from {{ bd.earliest or 'the oldest kept' }} to today.</span>{% endif %}
     {% if asof != 'live' and bd.selected and bd.selected != asof %}<span class="asof-note mono" title="Not a business day on the {{ bd.calendar }} calendar">↩ {{ asof }}</span>{% endif %}
   </form>
   </div>

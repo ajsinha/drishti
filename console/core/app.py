@@ -83,12 +83,21 @@ class AuthGate(BaseHTTPMiddleware):
         request.state.pack_switcher = []
         from core import asof
 
-        request.state.asof = asof.set_current(request.query_params.get("asOf") or request.cookies.get(asof.COOKIE))
+        stored = request.cookies.get(asof.COOKIE)
+        request.state.asof = asof.set_current(request.query_params.get("asOf") or stored)
         request.state.known_at = asof.set_known(request.cookies.get(asof.KNOWN_COOKIE)) if request.state.asof != "live" else None
+        # a stored date that is no date at all, or one the server refuses, is dropped: live, and the cookie is cleared
+        # (QA 2026-10-01 GRAM-09: it used to break every page until it expired)
+        request.state.asof_cleared = bool(stored) and not request.query_params.get("asOf") and asof.clean(stored) != stored.strip()
         request.state.business_date = None
         if not path.startswith(("/static/", PYODIDE, "/api/", "/healthz", "/readyz", "/asof")):
-            request.state.business_date = await request.app.state.business_dates.info(
-                request.app.state.backend, request.state.identity, request.state.asof)
+            info = await request.app.state.business_dates.info(request.app.state.backend, request.state.identity, request.state.asof)
+            if info.get("refused") and not request.query_params.get("asOf"):
+                request.state.asof_cleared = True
+                request.state.asof = asof.set_current("live")
+                request.state.known_at = asof.set_known(None)
+                info = await request.app.state.business_dates.info(request.app.state.backend, request.state.identity, "live")
+            request.state.business_date = info
         request.state.settings = None
         if request.state.identity is not None and not path.startswith(("/static/", PYODIDE, "/api/", "/healthz", "/readyz")):
             request.state.settings = await request.app.state.user_settings.get(request.app.state.backend, request.state.identity)
@@ -111,6 +120,9 @@ class AuthGate(BaseHTTPMiddleware):
             from routes.server_routes import choose
 
             choose(response, request, picked)
+        if request.state.asof_cleared:
+            response.delete_cookie(asof.COOKIE, path="/")
+            response.delete_cookie(asof.KNOWN_COOKIE, path="/")
         return response
 
 

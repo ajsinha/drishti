@@ -16,6 +16,9 @@
 Works without JavaScript (the top-bar form submits here); the date is only stored and forwarded, never read."""
 from __future__ import annotations
 
+from datetime import date, datetime, timezone
+from zoneinfo import ZoneInfo
+
 from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse
 
@@ -24,12 +27,34 @@ from core import asof
 router = APIRouter(include_in_schema=False)
 
 
+async def _refused(request: Request, day: str) -> bool:
+    """True when the server would refuse ``day``: after today in its business zone, or before its history window. Asked
+    under live (the request's own date may be the bad one); when the server cannot say, the console's own check stands."""
+    saved = asof.current()
+    asof.set_current("live")
+    try:
+        info = await request.app.state.business_dates.info(request.app.state.backend, request.state.identity, "live")
+    finally:
+        asof.set_current(saved)
+    try:
+        today = datetime.now(ZoneInfo(info.get("zone") or "America/New_York")).date()
+    except (KeyError, ValueError):
+        today = datetime.now(timezone.utc).date()
+    earliest = info.get("earliest")
+    return date.fromisoformat(day) > today or bool(earliest and day < earliest)
+
+
 @router.get("/asof")
 async def choose(request: Request, d: str = "live", next: str = "/t", k: str | None = None, ki: str | None = None):
     """Sets the business date (d) and, with a picked date, what was known at a time (k, local time in the business
-    zone; blank clears it). Live clears both."""
-    value = asof.clean(d)
+    zone; blank clears it). Live clears both. A date that is not a real date, is in the future or is older than the
+    server keeps is not stored (it would break every page until it expired): the page comes back saying so."""
     target = next if next.startswith("/") and not next.startswith("//") else "/t"
+    asked = (d or "").strip()
+    live = asked.lower() in ("", "live")
+    value = "live" if live else asof.clean(asked)
+    if not live and (value == "live" or await _refused(request, value)):
+        return RedirectResponse(target + ("&" if "?" in target else "?") + "asofRefused=1", status_code=303)
     r = RedirectResponse(target, status_code=303)
     if value == "live":
         r.delete_cookie(asof.COOKIE, path="/")
