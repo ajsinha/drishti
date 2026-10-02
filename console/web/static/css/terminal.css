@@ -297,6 +297,9 @@ body.embed .vhead { padding: .6rem .8rem; }
 .ws-h { font-size: 1rem; font-weight: 700; margin: 1.2rem 0 .5rem; color: var(--d-muted); text-transform: uppercase; letter-spacing: .06em; }
 .ws-list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: .5rem; }
 .ws-list a { display: inline-flex; gap: .4rem; border: 1px solid var(--d-border); border-radius: 6px; padding: .45rem .8rem; color: var(--d-ink); background: var(--d-surface); }
+.ws-new { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin: .8rem 0; }
+.ws-new label { font-weight: 600; }
+.ws-new .studio-in { min-width: 14rem; max-width: 100%; }
 .ws { display: flex; flex-direction: column; height: calc(100vh - 58px); }
 .ws-bar { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; padding: .45rem .8rem; border-bottom: 1px solid var(--d-border); }
 .ws-bar .btn-pill { padding: .25rem .75rem; font-size: .82rem; }

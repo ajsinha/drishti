@@ -14,3 +14,10 @@
 
 # Core starter workspaces (packs add their own in packs/<name>/config/workspaces.yaml).
 templates: {}
+# What a new, blank workspace starts as (New workspace on /w, or Create it for a name that does not exist yet): a layout
+# (2col, 3col, 2x2 or 1+2) and 1 to 4 empty panes; type a command in a pane to fill it, then Save.
+blank:
+  layout: 2col
+  panes:
+    - { ref: null, follows: null, title: "" }
+    - { ref: null, follows: null, title: "" }

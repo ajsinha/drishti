@@ -19,7 +19,9 @@ from pathlib import Path
 
 import yaml
 from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse
+from urllib.parse import quote
+
+from fastapi.responses import JSONResponse, RedirectResponse
 
 from core.csrf import json_body
 from core.backend import BackendError
@@ -29,12 +31,23 @@ router = APIRouter(prefix="/w", include_in_schema=False)
 TEMPLATES = Path(__file__).resolve().parent.parent / "config" / "workspaces.yaml"
 
 
+def _config() -> dict:
+    return yaml.safe_load(TEMPLATES.read_text(encoding="utf-8")) or {}
+
+
 async def _templates(request: Request) -> dict:
-    core = yaml.safe_load(TEMPLATES.read_text(encoding="utf-8")).get("templates", {}) or {}
+    core = _config().get("templates", {}) or {}
     for p in await packs(request):
         for name, t in p["workspaces"].items():
             core.setdefault(name, {**t, "pack": p["title"]})
     return core
+
+
+def _blank() -> dict:
+    """A new workspace (UX-06): the configured blank layout and empty panes, whatever packs are switched on."""
+    b = _config().get("blank") or {}
+    panes = [{"ref": None, "follows": None, "title": str((p or {}).get("title") or "")} for p in (b.get("panes") or [{}, {}])][:4]
+    return {"layout": b.get("layout") if b.get("layout") in ("2col", "3col", "2x2", "1+2") else "2col", "panes": panes or [{"ref": None, "follows": None, "title": ""}]}
 
 
 def _problem(e: BackendError) -> JSONResponse:
@@ -65,10 +78,24 @@ async def shared(request: Request, owner: str, name: str):
     return render(request, "workspace/workspace.html", name=name, ws=ws, saved=False, owner=owner, readonly=True, screen="workspace")
 
 
+@router.get("/new")
+async def new(request: Request, name: str | None = None):
+    """New workspace (the form on /w): opens a blank one under the name typed; saving it makes it yours."""
+    if name is None:                        # a workspace that is itself called "new"
+        return await workspace(request, "new")
+    name = " ".join(name.split())[:64]
+    return RedirectResponse(f"/w/{quote(name)}?new=1" if name else "/w", status_code=303)
+
+
 @router.get("/{name}")
-async def workspace(request: Request, name: str, template: str = ""):
+async def workspace(request: Request, name: str, template: str = "", new: int = 0):
     ws, saved = None, False
-    if template:
+    if new:
+        try:                                # the name is taken: open that one rather than a blank over it
+            ws, saved = await request.app.state.backend.workspace(name, ident(request)), True
+        except BackendError:
+            ws = _blank()
+    elif template:
         ws = (await _templates(request)).get(template)
     else:
         try:
@@ -77,7 +104,7 @@ async def workspace(request: Request, name: str, template: str = ""):
             ws = (await _templates(request)).get(name)
     if ws is None:
         return render(request, "workspace/index.html", status_code=404, mine=[], templates=await _templates(request), missing=name,
-                      screen="workspace")
+                      create=name, screen="workspace")
     share = None
     if saved:
         try:

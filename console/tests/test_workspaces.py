@@ -35,6 +35,32 @@ def test_starter_renders_panes_and_saving_round_trips(client, backend):
     assert client.get("/w/Nope").status_code == 404
 
 
+def _ws(page: str) -> dict:
+    return json.loads(re.search(r'data-json="([^"]*)"', page).group(1).replace("&#34;", '"').replace("&quot;", '"'))
+
+
+def test_without_starters_the_index_says_so_and_offers_a_blank_workspace(client, with_packs):
+    """UX-06: with packs that bring no starters, /w listed nothing, said nothing and had no way to make a workspace."""
+    with_packs("banking-core", "trading")
+    page = client.get("/w").text
+    assert "No starter workspaces" in page and "Open a starter below" not in page
+    assert 'action="/w/new"' in page and 'name="name"' in page                  # a blank one, by name
+    r = client.get("/w/new", params={"name": "QA desk"}, follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == "/w/QA%20desk?new=1"
+    blank = client.get("/w/QA desk", params={"new": 1})
+    assert blank.status_code == 200 and 'data-saved="false"' in blank.text
+    ws = _ws(blank.text)
+    assert ws["layout"] == "2col" and len(ws["panes"]) == 2 and all(p["ref"] is None for p in ws["panes"])
+
+
+def test_an_unknown_name_offers_to_create_it(client, with_packs):
+    with_packs("trading")
+    r = client.get("/w/QA")
+    assert r.status_code == 404 and "There is no workspace called “QA”" in r.text
+    assert 'href="/w/QA?new=1"' in r.text and "Create it" in r.text
+    assert client.get("/w/new", params={"name": "  "}, follow_redirects=False).headers["location"] == "/w"
+
+
 def test_embedded_views_have_no_chrome_and_frames_are_same_origin_only(client):
     r = client.get("/v/trade/IRS-48213", params={"embed": 1})
     assert "data-embed" in r.text and 'class="tbar"' not in r.text and 'class="fkeys"' not in r.text
