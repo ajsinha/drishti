@@ -79,9 +79,9 @@ permissions, and masks are not applied on every path.
 | GRAM-03 | Very deep or long expressions: the view returns HTTP 500 without a problem code. **Fixed** in c1ace31 (ElLimitsTest.longChainsThatWouldOverflowEvaluationAreRefusedAtCompileTime, PathologicalExpressionsTest.LiftedLimits.anOverflowIsAPanelProblemOrAFileProblemNeverA500) |
 | GRAM-04 | "Case never matters" is false for field names; unknown fields silently match nothing. |
 | GRAM-05 | Many invalid Sutra inputs are silently accepted (duplicate keys, wrong types, extra YAML documents, unknown tags). |
-| UX-02 | At phone width 77 of 85 pages scroll sideways; header items clipped. |
-| UX-03 | Help-centre screenshots overflow the page. |
-| UX-04 | Faint text fails WCAG contrast in six of seven themes; the contrast test misses it. |
+| UX-02 | At phone width 77 of 85 pages scroll sideways; header items clipped. **Fixed** in 61ba1d9 (test_page_widths_browser.py: test_no_page_scrolls_sideways_and_images_fit[390], [1600], [2560]) |
+| UX-03 | Help-centre screenshots overflow the page. **Fixed** in 8ad4307 (test_help.py: test_guide_screenshots_fit_their_column_and_open_full_size; test_page_widths_browser.py) |
+| UX-04 | Faint text fails WCAG contrast in six of seven themes; the contrast test misses it. **Fixed** in 0cea59a (test_contrast.py: test_every_text_colour_reads_on_every_ground_in_every_theme, test_labels_on_accent_fills_read_in_every_theme, test_the_light_fallback_is_the_light_theme) |
 | UX-05 | With the packs QUICKSTART recommends, Studio opens on an error; landing examples use ids that do not exist. |
 | UX-06 | Workspaces cannot be created without the finance or logistics packs. |
 | UX-07 | Alt+1..4 stops working once a workspace pane has focus. |
