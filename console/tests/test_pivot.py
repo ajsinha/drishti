@@ -259,3 +259,17 @@ def test_heat_shading_keeps_text_readable_in_every_theme():
         for tone in ("accent", "pos", "neg"):
             bg = mix(t[tone], t["surface"], strongest * scale.get(name, 1.0) / 100)
             assert _ratio(t["ink"], bg) >= 4.5, (name, tone, round(_ratio(t["ink"], bg), 2))
+
+
+def test_client_engine_writes_numeric_keys_as_the_server_does():
+    """UX-09: numbers as group keys are plain (no exponent, no binary noise), the same text PivotCube.key gives."""
+    import shutil
+    import subprocess
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("needs node")
+    engine = Path(__file__).resolve().parent.parent / "web/static/js/pivot-engine.js"
+    script = ("var E = require(%s); console.log(JSON.stringify([4.240872601E7, -2838229.57, 0.1 + 0.2, 1e-7, 1.5e16, -0, 5, NaN]"
+              ".map(E.keyText)))" % json.dumps(str(engine)))
+    out = json.loads(subprocess.run([node, "-e", script], capture_output=True, text=True, timeout=30, check=True).stdout)
+    assert out == ["42408726.01", "-2838229.57", "0.3", "0.0000001", "15000000000000000", "0", "5", "(blank)"]

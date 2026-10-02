@@ -16,6 +16,9 @@
 package com.ash.drishti.engine.pivot;
 
 import com.ash.drishti.rachana.model.PivotSpec;
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -42,6 +45,8 @@ public final class PivotCube {
     public static final String BLANK = "(blank)";
     static final String US = "\u001f";
     static final String RS = "\u001e";
+    /** Significant digits of a number written as a key: a double's 15 reliable ones. */
+    static final int KEY_DIGITS = 15;
 
     /** A row: its value of a field (null when it has none). */
     @FunctionalInterface
@@ -83,18 +88,31 @@ public final class PivotCube {
         return List.copyOf(out);
     }
 
-    /** A value as a group key: text, whole numbers without a decimal point, missing as {@link #BLANK}. */
+    /**
+     * A value as a group key: text; numbers written plainly (no exponent, whole numbers without a decimal point, at most
+     * {@value #KEY_DIGITS} significant digits so binary noise such as 0.30000000000000004 reads 0.3), the same text the
+     * client engine (pivot-engine.js) makes of a number; missing or not-a-number as {@link #BLANK}.
+     */
     public static String key(Object v) {
         if (v == null || (v instanceof String s && s.isEmpty())) {
             return BLANK;
         }
-        if (v instanceof Double d && d == Math.rint(d) && Math.abs(d) < 1e15) {
-            return Long.toString(d.longValue());
+        if (v instanceof Double || v instanceof Float) {
+            double d = ((Number) v).doubleValue();
+            if (!Double.isFinite(d)) {
+                return BLANK;
+            }
+            return plain(v instanceof Float f ? new BigDecimal(Float.toString(f)) : BigDecimal.valueOf(d));
         }
-        if (v instanceof Float f && f == Math.rint(f)) {
-            return Long.toString(f.longValue());
+        if (v instanceof BigDecimal b) {
+            return plain(b);
         }
         return String.valueOf(v);
+    }
+
+    private static String plain(BigDecimal b) {
+        BigDecimal r = b.round(new MathContext(KEY_DIGITS, RoundingMode.HALF_EVEN)).stripTrailingZeros();
+        return r.signum() == 0 ? "0" : r.toPlainString();
     }
 
     /** Whether a row passes the arrangement's filters (values kept, or within a range). */

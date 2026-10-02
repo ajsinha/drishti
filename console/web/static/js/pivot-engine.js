@@ -30,10 +30,13 @@
   var LIMITS = { rows: 4, columns: 4, values: 6, rowKeys: 2000, columnKeys: 200 };
 
   function num(v) { return typeof v === 'number' && isFinite(v); }
+  /* Numbers as keys: written plainly (never 4.2e+21), at most 15 significant digits (0.1 + 0.2 reads 0.3), as the
+     server's PivotCube.key writes them. */
+  var PLAIN = (typeof Intl !== 'undefined' && Intl.NumberFormat) ? new Intl.NumberFormat('en-US', { useGrouping: false, maximumSignificantDigits: 15 }) : null;
   /** A value as a key: text; null, missing and empty text are "(blank)"; whole numbers without ".0". */
   function keyText(v) {
     if (v === null || v === undefined || v === '') { return BLANK; }
-    if (typeof v === 'number') { return isFinite(v) ? String(v) : BLANK; }
+    if (typeof v === 'number') { return !isFinite(v) ? BLANK : v === 0 ? '0' : PLAIN ? PLAIN.format(v) : String(Number(v.toPrecision(15))); }
     if (typeof v === 'boolean') { return v ? 'true' : 'false'; }
     if (typeof v === 'object') { return JSON.stringify(v); }
     return String(v);

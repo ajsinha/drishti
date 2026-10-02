@@ -104,4 +104,25 @@ class PivotCubeTest {
         assertThat(PivotCube.key(null)).isEqualTo("(blank)");
         assertThat(PivotCube.key("")).isEqualTo("(blank)");
     }
+
+    /** UX-09: a notional as a row key read "4.240872601E7"; keys are plain numbers, as the client engine shows them. */
+    @Test
+    void numericKeysArePlainWithoutExponentOrFloatNoise() {
+        assertThat(PivotCube.key(4.240872601E7)).isEqualTo("42408726.01");
+        assertThat(PivotCube.key(-2838229.57)).isEqualTo("-2838229.57");
+        assertThat(PivotCube.key(6.0585997E7)).isEqualTo("60585997");
+        assertThat(PivotCube.key(1.5E16)).isEqualTo("15000000000000000");
+        assertThat(PivotCube.key(1.0E-7)).isEqualTo("0.0000001");
+        assertThat(PivotCube.key(0.1 + 0.2)).isEqualTo("0.3");
+        assertThat(PivotCube.key(1.1f)).isEqualTo("1.1");
+        assertThat(PivotCube.key(-0.0)).isEqualTo("0");
+        assertThat(PivotCube.key(new java.math.BigDecimal("1E+3"))).isEqualTo("1000");
+        assertThat(PivotCube.key(Double.NaN)).isEqualTo("(blank)");
+        assertThat(PivotCube.key(42L)).isEqualTo("42");
+        PivotSpec a = arrange(Map.of("rows", List.of("mtm"), "values", List.of(Map.of("field", "id", "agg", "count"))));
+        PivotCube c = new PivotCube(a, Map.of(), 100, 100);
+        PivotCube.Row big = Map.<String, Object>of("mtm", 4.240872601E7, "id", "t9")::get;
+        c.add(big);
+        assertThat(c.result("records", 1, false, List.of(), 0).toString()).contains("42408726.01").doesNotContain("E7");
+    }
 }
