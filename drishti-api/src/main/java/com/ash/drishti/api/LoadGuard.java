@@ -109,11 +109,6 @@ public final class LoadGuard {
         return fallback;
     }
 
-    /** The guard's own options, for a loader that reads its other options by position or as pairs. */
-    public static boolean isOption(String arg) {
-        return List.of("--zone", "--as-of", "--future-days", "--max-drop-share").contains(arg);
-    }
-
     /** Today in the business zone. */
     public LocalDate today() {
         return today;
