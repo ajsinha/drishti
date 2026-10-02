@@ -204,10 +204,17 @@ The console never forwards the user's password or a long-lived credential. In `c
 1. The user signs in on the console. The console verifies the password by calling `POST /api/v1/auth/login`
    with its own **service** identity (user `console`, role `service`) — the only identity allowed to call
    that endpoint (or `POST /auth/oidc` for single sign-on).
-2. The console keeps the user's name, display name, desk and roles in a signed cookie (`drishti_session`,
-   HMAC-SHA256 with `auth.session_secret`). Nothing is stored server-side.
+2. The console opens a **session** on the server (`POST /api/v1/auth/sessions`, service identity) and keeps its id,
+   with the user's name, in a signed cookie (`drishti_session`, HMAC-SHA256 with `auth.session_secret`). On each
+   request it asks the server whether the session still stands and who the user is now
+   (`GET /api/v1/auth/sessions/{id}`: enabled, roles, whether a password change is due), and reuses the answer for
+   `auth.recheck_seconds` (default 10). So disabling or demoting a user takes effect within that time, and at once on
+   the console the administrator used. Signing out (`POST /logout`) ends the session on the server
+   (`DELETE /api/v1/auth/sessions/{id}`), so a copy of the cookie stops working. Disabling, deleting or resetting the
+   password of a user ends all their sessions; enabling them again does not bring an old one back.
 3. For **every** backend call it mints a fresh token with `auth.token_secret` (the same value as the server's
-   `drishti.security.secret`), lifetime `auth.token_ttl_seconds` (default 300), and sends two headers:
+   `drishti.security.secret`), lifetime `auth.token_ttl_seconds` (default 300), carrying the user's **current** roles,
+   and sends two headers:
 
 ```
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqZG9lIiwicm9sZXMiOlsidHJhZGVyIl0sImV4cCI6MTc5MDAwMDAwMH0.…
@@ -248,7 +255,7 @@ script may open (roles are defined under `drishti.security.roles`; see
 | save Sutras from Studio | a role with `author: true` (and `drishti.rachana.studio-save: true`) |
 | approve or reject Sutra proposals | a role with `approve: true`, or an admin |
 | user administration, audit log, health, caches | a role with `admin: true` |
-| `POST /auth/login`, `POST /auth/oidc` | the `service` role (the console) |
+| `POST /auth/login`, `POST /auth/oidc`, `/auth/sessions` | the `service` role (the console) |
 | everything | the role `*` (what every caller gets with security off) |
 
 ## Which day: the business date
@@ -903,6 +910,9 @@ sees password hashes.
 |---|---|---|---|
 | `POST` | `/auth/login` | console service only | body `{username, password}` → the user; `401 DRS-6004` wrong credentials, `423 DRS-6005` locked |
 | `POST` | `/auth/oidc` | console service only | body `{idToken, nonce}`: single sign-on; the server verifies the provider's token and maps groups to roles; `401 DRS-6004` when refused; `403` if SSO is off |
+| `POST` | `/auth/sessions` | console service only | body `{username, seconds}` (60 s to 7 days): opens a sign-in session for a user just verified → `201 {id, expiresAt, user}`; `403 DRS-5002` if the user is disabled. Only a hash of the id is stored |
+| `GET` | `/auth/sessions/{id}` | console service only | the session and its user as they are now → `{expiresAt, user}` (roles, `enabled`, `mustChangePassword`); `401 DRS-5010` when it ended (signed out, expired, user disabled or deleted) |
+| `DELETE` | `/auth/sessions/{id}` | console service only | ends it (sign-out) → `204`. Disabling, deleting or resetting the password of a user ends all their sessions |
 | `GET` | `/auth/me` | any signed-in user | the caller's own record; `404 DRS-6001` if the caller has no user record (e.g. `anonymous` with security off) |
 | `POST` | `/auth/password` | any signed-in user | body `{current, next}`; `422 DRS-6003` if `next` is too weak |
 | `GET` | `/admin/users?q=` | admin | users, optionally filtered |
@@ -1116,6 +1126,7 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-6005 | 423 | account locked | too many failed sign-ins; locked for a while |
 | DRS-6006 | 409 | last admin | the change would leave no enabled administrator |
 | DRS-6007 | 422 | invalid user | a user record is invalid (for example an unknown pack) |
+| DRS-6010 | 403 | password change due | (console) the user must choose a new password on My account before anything else |
 
 Sutra load problems listed by `/sutras/problems` and in `problems` use their own finer `DRS-2xxx` codes
 (for example `DRS-2004` for a `.sutra.md` or plain `.yaml` file in a Sutra folder, `DRS-2009` for a missing or
@@ -1187,7 +1198,7 @@ and packs at the time of each call), only while the owner is enabled, and only f
 | Method | Path | Does |
 |---|---|---|
 | `GET` | `/me/tokens` | your tokens: id, name, created, expires, last used, revoked, active (never the secret) |
-| `POST` | `/me/tokens` `{name, days}` | makes one; `201` with `{token, secret}`: the secret appears only here. `days` 1–366 or null; at most 20 active per person |
+| `POST` | `/me/tokens` `{name, days}` | makes one; `201` with `{token, secret}`: the secret appears only here. `days` 1–366 or null; at most 20 active per person; `403 DRS-5002` for a disabled account |
 | `DELETE` | `/me/tokens/{id}` | revokes yours |
 | `GET` | `/admin/tokens` | (admin) everyone's |
 | `DELETE` | `/admin/tokens/{id}` | (admin) revokes anyone's |

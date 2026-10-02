@@ -29,6 +29,7 @@
     <div><dt>Roles</dt><dd>{% for r in profile.roles | sort %}<span class="role">{{ r }}</span>{% endfor %}</dd></div>
     {% if profile.lastLoginAt %}<div><dt>Last sign-in</dt><dd class="mono">{{ profile.lastLoginAt[:16] | replace('T', ' ') }} UTC</dd></div>{% endif %}
   </dl>
+  {% if not must %}{# until the password is changed only the change is offered (and enforced) #}
   <form class="login-box adm-pw" method="post" action="/account/settings" id="settings">
     <h2>Settings</h2>
     <p class="text-muted-d adm-hint">Kept with your account, so they follow you to any browser.</p>
@@ -92,7 +93,8 @@
     </div>
     <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
   </section>
-  <form class="login-box adm-pw" data-password>
+  {% endif %}
+  <form class="login-box adm-pw" data-password{% if must %} data-must{% endif %}>
     <h2>Change password</h2>
     <label for="pc">Current password</label><input id="pc" name="current" type="password" class="cmd-input" autocomplete="current-password" required>
     <label for="pn">New password</label><input id="pn" name="next" type="password" class="cmd-input" autocomplete="new-password" required minlength="10">

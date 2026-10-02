@@ -16,12 +16,12 @@
 schema, preview against any entity or pasted JSON, read the Summary, start from inference, save (authors)."""
 from __future__ import annotations
 
-import json
 from urllib.parse import parse_qs
 
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse
 
+from core.csrf import json_body
 from core.backend import BackendError
 from core import sutra_diff, sutra_summary
 from routes.common import ident, render
@@ -116,7 +116,7 @@ async def source(request: Request, name: str, version: int):
 
 @router.post("/preview")
 async def preview(request: Request):
-    body = json.loads(await request.body() or b"{}")
+    body = await json_body(request)
     try:
         vm = await request.app.state.backend.preview(body.get("yaml", ""), body.get("kind", ""), body.get("id", ""), ident(request),
                                                      body.get("document"))
@@ -138,7 +138,7 @@ async def tests(request: Request, sutra: str):
 @router.put("/tests/{sutra}")
 async def save_tests(request: Request, sutra: str):
     try:
-        return await request.app.state.backend.set_studio_tests(sutra, json.loads(await request.body() or b"[]"), ident(request))
+        return await request.app.state.backend.set_studio_tests(sutra, await json_body(request, []), ident(request))
     except BackendError as e:
         return _problem(e)
 
@@ -148,7 +148,7 @@ async def run_test(request: Request):
     """Previews the Sutra on one entity and says how it went: problems in the Sutra, or panels that could not bind."""
     import time
 
-    body = json.loads(await request.body() or b"{}")
+    body = await json_body(request)
     t0 = time.perf_counter()
     try:
         vm = await request.app.state.backend.preview(body.get("yaml", ""), body.get("kind", ""), body.get("id", ""), ident(request))
@@ -164,7 +164,7 @@ async def run_test(request: Request):
 @router.post("/summary")
 async def summary(request: Request):
     """The Summary tab: the YAML Sutra read back as a page (derived, read-only)."""
-    body = json.loads(await request.body() or b"{}")
+    body = await json_body(request)
     tpl = request.app.state.templates.get_template("studio/_summary.html")
     try:
         return JSONResponse({"html": tpl.render(s=sutra_summary.summarize(str(body.get("yaml", ""))), error=None)})
@@ -191,7 +191,7 @@ async def inferred(request: Request, kind: str, id_: str, name: str = ""):
 
 @router.post("/inferred")
 async def inferred_from_sample(request: Request):
-    body = json.loads(await request.body() or b"{}")
+    body = await json_body(request)
     try:
         return PlainTextResponse(await request.app.state.backend.inferred_from(
             body.get("kind", ""), body.get("id", ""), body.get("name", ""), body.get("document"), ident(request)))
@@ -201,7 +201,7 @@ async def inferred_from_sample(request: Request):
 
 @router.post("/save")
 async def save(request: Request):
-    body = json.loads(await request.body() or b"{}")
+    body = await json_body(request)
     try:
         return await request.app.state.backend.save_sutra(body.get("yaml", ""), ident(request), note=str(body.get("note", ""))[:300])
     except BackendError as e:

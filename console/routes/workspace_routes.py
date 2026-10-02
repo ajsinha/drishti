@@ -15,13 +15,13 @@
 """Workspaces: several live views on one screen, with panes that follow each other's selection."""
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import yaml
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
+from core.csrf import json_body
 from core.backend import BackendError
 from routes.common import ident, packs, render
 
@@ -89,7 +89,7 @@ async def workspace(request: Request, name: str, template: str = ""):
 
 @router.post("/api/{name}")
 async def save(request: Request, name: str):
-    body = json.loads(await request.body() or b"{}")
+    body = await json_body(request)
     try:
         return await request.app.state.backend.save_workspace(name, body, ident(request))
     except BackendError as e:
@@ -98,7 +98,7 @@ async def save(request: Request, name: str):
 
 @router.post("/api/{name}/share")
 async def share(request: Request, name: str):
-    body = json.loads(await request.body() or b"{}")
+    body = await json_body(request)
     try:
         if body.get("stop"):
             await request.app.state.backend.unshare_workspace(name, ident(request))

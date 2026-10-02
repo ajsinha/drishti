@@ -55,6 +55,12 @@ PYODIDE = "/pyodide/"
 
 PROTECTED = ("/t", "/v/", "/go", "/studio", "/api/", "/admin", "/account", "/w", "/m", "/alerts", "/impact", "/s/", "/compare/", "/export/", "/pin/", "/p/", "/reports")
 EXACT = ("/t", "/s")                        # pages whose path is a prefix of public ones (/s of /static)
+# all a user whose password change is due may reach until it is done (besides public pages): QA 2026-10-01 SEC-06
+WHILE_MUST_CHANGE = ("/account", "/account/password", "/logout")
+
+
+def protected(path: str) -> bool:
+    return path in EXACT or path.startswith(PROTECTED[1:])
 
 
 class AuthGate(BaseHTTPMiddleware):
@@ -70,9 +76,11 @@ class AuthGate(BaseHTTPMiddleware):
         request.state.server = catalogue.get(servers.current())
         request.state.servers = catalogue
         auth = request.app.state.auth
-        request.state.identity = auth.identity(request.cookies.get(auth.cookie))
-        request.state.pack_switcher = []
+        # the session as the server knows it now (enabled, roles, password change due), not as the cookie remembers it
         path = request.url.path
+        request.state.identity = (None if path.startswith(("/static/", PYODIDE))
+                                  else await auth.current(request.cookies.get(auth.cookie), request.app.state.backend))
+        request.state.pack_switcher = []
         from core import asof
 
         request.state.asof = asof.set_current(request.query_params.get("asOf") or request.cookies.get(asof.COOKIE))
@@ -88,10 +96,15 @@ class AuthGate(BaseHTTPMiddleware):
                 request.state.pack_switcher = await request.app.state.packs.assigned(request.app.state.backend, request.state.identity)
             except Exception:  # noqa: BLE001 - the switcher is a convenience; never fail a page for it
                 request.state.pack_switcher = []
-        if request.state.identity is None and (path in EXACT or path.startswith(PROTECTED[1:])):
+        if request.state.identity is None and protected(path):
             if path.startswith("/api/"):
                 return JSONResponse({"code": "DRS-5010", "detail": "sign in first"}, status_code=401)
             response = RedirectResponse(f"/login?next={quote(str(request.url.path))}", status_code=303)
+        elif request.state.identity is not None and request.state.identity.must_change and protected(path) \
+                and path not in WHILE_MUST_CHANGE:
+            if path.startswith("/api/") or request.method != "GET":
+                return JSONResponse({"code": "DRS-6010", "detail": "choose a new password first (My account)"}, status_code=403)
+            response = RedirectResponse("/account?must=1", status_code=303)
         else:
             response = await call_next(request)
         if picked and picked != request.cookies.get(servers.COOKIE):
@@ -177,8 +190,12 @@ def create_app(settings: Settings) -> FastAPI:
 
     app.state.business_dates = BusinessDates()
     app.state.templates = templates
+    from core.csrf import BodyError, SameOrigin, problem
+
     app.add_middleware(AuthGate)
+    app.add_middleware(SameOrigin, allowed=settings.get("auth.allowed_origins") or ())    # before any session work
     app.add_middleware(SecurityHeaders)
+    app.add_exception_handler(BodyError, problem)
     app.mount("/static", StaticFiles(directory=str(WEB / "static")), name="static")
     from core.calc import Calc
 

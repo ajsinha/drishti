@@ -18,12 +18,12 @@ user's own identity, so roles and redaction apply exactly as on the screen. Ever
 says whether the user's roles allow it."""
 from __future__ import annotations
 
-import json
 import re
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
+from core.csrf import json_body
 from core.backend import BackendError
 from routes.common import ident, packs
 
@@ -66,7 +66,7 @@ async def save_snippet(request: Request, name: str):
     if not NAME.match(name.strip()):
         return JSONResponse({"code": "DRS-5001", "detail": "a snippet's name is 1-80 letters, digits, spaces and . _ ( ) -"},
                             status_code=400)
-    body = json.loads(await request.body() or b"{}")
+    body = await json_body(request)
     keep = {k: str(body.get(k) or "") for k in ("code", "description", "kind")}
     try:
         return await request.app.state.backend.save_calc_snippet(name.strip(), keep, ident(request))

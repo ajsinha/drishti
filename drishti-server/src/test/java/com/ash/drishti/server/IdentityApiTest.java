@@ -148,6 +148,43 @@ class IdentityApiTest {
     }
 
     @Test
+    void consoleSessionsFollowTheUser() throws Exception {
+        // QA 2026-10-01 SEC-01/SEC-05: the console asks per request; a disabled, demoted or signed-out user is told at once
+        String admin = as("drishti-dev-admin", "admin");
+        String console = as("console", "service");
+        mvc.perform(post("/api/v1/admin/users").header("Authorization", admin).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"username\":\"sid\",\"roles\":[\"admin\"],\"password\":\"admin-pass-123\"}")).andExpect(status().isCreated());
+        String body = mvc.perform(post("/api/v1/auth/sessions").header("Authorization", console).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\":\"sid\",\"seconds\":3600}"))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.user.roles").value(hasItem("admin")))
+                .andReturn().getResponse().getContentAsString();
+        String id = new com.fasterxml.jackson.databind.ObjectMapper().readTree(body).path("id").asText();
+        mvc.perform(get("/api/v1/auth/sessions/" + id).header("Authorization", as("sid", "admin"))).andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/auth/sessions/" + id).header("Authorization", console))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.user.username").value("sid")).andExpect(jsonPath("$.id").doesNotExist());
+        mvc.perform(put("/api/v1/admin/users/sid").header("Authorization", admin).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"roles\":[\"trader\"]}")).andExpect(status().isOk());
+        mvc.perform(get("/api/v1/auth/sessions/" + id).header("Authorization", console))
+                .andExpect(jsonPath("$.user.roles[0]").value("trader"));                                       // demoted: current roles
+        mvc.perform(post("/api/v1/admin/users/sid/enabled").header("Authorization", admin).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"enabled\":false}")).andExpect(status().isOk());
+        mvc.perform(get("/api/v1/auth/sessions/" + id).header("Authorization", console)).andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/v1/me/tokens").header("Authorization", as("sid", "trader")).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"after disable\"}")).andExpect(status().isForbidden());                  // no API token either
+        mvc.perform(post("/api/v1/auth/sessions").header("Authorization", console).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"username\":\"sid\",\"seconds\":3600}")).andExpect(status().isForbidden());
+        mvc.perform(post("/api/v1/admin/users/sid/enabled").header("Authorization", admin).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"enabled\":true}")).andExpect(status().isOk());
+        mvc.perform(get("/api/v1/auth/sessions/" + id).header("Authorization", console)).andExpect(status().isUnauthorized()); // not revived
+
+        String again = mvc.perform(post("/api/v1/auth/sessions").header("Authorization", console).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"username\":\"sid\",\"seconds\":3600}")).andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        String id2 = new com.fasterxml.jackson.databind.ObjectMapper().readTree(again).path("id").asText();
+        mvc.perform(delete("/api/v1/auth/sessions/" + id2).header("Authorization", console)).andExpect(status().isNoContent());   // sign-out
+        mvc.perform(get("/api/v1/auth/sessions/" + id2).header("Authorization", console)).andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void personalApiTokensReadAsTheirUserAndNeverWrite() throws Exception {
         String admin = as("drishti-dev-admin", "admin");
         mvc.perform(post("/api/v1/admin/users").header("Authorization", admin).contentType(MediaType.APPLICATION_JSON)

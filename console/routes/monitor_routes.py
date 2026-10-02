@@ -21,6 +21,7 @@ from urllib.parse import quote
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 
+from core.csrf import json_body
 from core.backend import BackendError
 from routes.common import ident, packs, render
 
@@ -70,7 +71,7 @@ async def monitor(request: Request, name: str, template: str = ""):
 
 @router.post("/m/api/{name}")
 async def save_monitor(request: Request, name: str):
-    body = json.loads(await request.body() or b"{}")
+    body = await json_body(request)
     try:
         return await request.app.state.backend.mine("PUT", f"/monitors/{quote(name)}", ident(request), body)
     except BackendError as e:
@@ -125,7 +126,7 @@ async def alerts(request: Request, kind: str = "", id: str = ""):
 
 @router.post("/alerts/api/{name}")
 async def save_rule(request: Request, name: str):
-    body = json.loads(await request.body() or b"{}")
+    body = await json_body(request)
     try:
         return await request.app.state.backend.mine("PUT", f"/alerts/rules/{quote(name)}", ident(request), body)
     except BackendError as e:

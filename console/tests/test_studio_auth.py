@@ -130,7 +130,10 @@ def test_account_page_and_password_change(client):
 def test_non_admins_do_not_see_admin_pages(backend):
     app = _secure_app(backend)
     c = TestClient(app)
-    c.cookies.set(COOKIE, app.state.auth.session_for({"username": "tina", "displayName": "Tina", "desk": "FX", "roles": ["trader"]}))
+    tina = {"username": "tina", "displayName": "Tina", "desk": "FX", "roles": ["trader"]}
+    backend.users = {**backend.users, "tina": tina}
+    backend.sessions = {"tina-session": "tina"}                 # a session the server keeps for her
+    c.cookies.set(COOKIE, app.state.auth.session_for(tina, "tina-session"))
     assert c.get("/admin/users").status_code == 403
     assert 'href="/admin/users"' not in c.get("/t").text
 

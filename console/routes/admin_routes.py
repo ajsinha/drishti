@@ -16,12 +16,12 @@
 the admin role on every call; the console also hides these pages from non-admins."""
 from __future__ import annotations
 
-import json
 from urllib.parse import quote
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
+from core.csrf import json_body
 from core.backend import BackendError
 from routes.common import ident, render
 
@@ -75,7 +75,7 @@ async def roles(request: Request):
 
 @router.post("/api/roles/{name}")
 async def save_role(request: Request, name: str):
-    body = json.loads(await request.body() or b"{}")
+    body = await json_body(request)
     try:
         return await request.app.state.backend.admin("PUT", f"/role-definitions/{quote(name)}", ident(request), body)
     except BackendError as e:
@@ -110,7 +110,7 @@ async def packs(request: Request):
 
 @router.post("/api/packs/{name}")
 async def switch_pack(request: Request, name: str):
-    body = json.loads(await request.body() or b"{}")
+    body = await json_body(request)
     try:
         out = await request.app.state.backend.admin("PUT", f"/packs/{quote(name)}", ident(request), {"enabled": bool(body.get("enabled"))})
     except BackendError as e:
@@ -241,7 +241,7 @@ async def purge(request: Request, name: str):
 
 @router.post("/api/users")
 async def create(request: Request):
-    body = json.loads(await request.body() or b"{}")
+    body = await json_body(request)
     try:
         return JSONResponse(await request.app.state.backend.admin("POST", "/users", ident(request), body), status_code=201)
     except BackendError as e:
@@ -250,8 +250,9 @@ async def create(request: Request):
 
 @router.post("/api/users/{username}/{action}")
 async def act(request: Request, username: str, action: str):
-    """``update`` (profile), ``enabled``, ``password`` (reset) or ``delete``."""
-    body = json.loads(await request.body() or b"{}")
+    """``update`` (profile), ``enabled``, ``password`` (reset) or ``delete``. The user's sessions on this console are
+    re-checked at their next request (other consoles within ``auth.recheck_seconds``)."""
+    body = await json_body(request)
     me, backend, u = ident(request), request.app.state.backend, quote(username)
     try:
         if action == "update":
@@ -265,4 +266,6 @@ async def act(request: Request, username: str, action: str):
             return {"ok": True}
     except BackendError as e:
         return _problem(e)
+    finally:
+        request.app.state.auth.forget(user=username)
     return JSONResponse({"code": "DRS-5001", "detail": "unknown action"}, status_code=400)

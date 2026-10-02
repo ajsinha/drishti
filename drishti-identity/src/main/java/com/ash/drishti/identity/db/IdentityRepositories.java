@@ -38,6 +38,12 @@ public final class IdentityRepositories {
         void deleteByUsername(String username);
     }
 
+    public interface Sessions extends JpaRepository<SessionEntity, String> {
+        long deleteByUsername(String username);
+
+        long deleteByExpiresAtBefore(java.time.Instant cutoff);
+    }
+
     public interface Access extends JpaRepository<AccessEntity, Long>,
             org.springframework.data.jpa.repository.JpaSpecificationExecutor<AccessEntity> {
         @org.springframework.data.jpa.repository.Modifying

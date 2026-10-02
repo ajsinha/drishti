@@ -196,10 +196,11 @@ People read Drishti from scripts, notebooks and Excel with personal API tokens t
 tokens** ([CLIENTS.md](../guides/CLIENTS.md)). What an administrator needs to know:
 
 - A token acts as its owner, with the owner's roles and packs at the time of each call, and **only reads**.
-- Disabling a user stops their tokens at once; deleting a user deletes them.
+- Disabling a user stops their tokens at once (and they cannot make new ones); deleting a user deletes them.
 - **Admin → Tokens** lists every token (owner, name, created, expires, last used) and revokes any of them.
 - Secrets are never stored, only their SHA-256; nobody, administrators included, can see a secret after it is made.
-- `token-created` and `token-revoked` are in the audit log.
+- `token-created` and `token-revoked` are in the audit log; so are `signed-out` (a console sign-out) and
+  `sessions-ended` (an administrator's disable, delete or password reset ended the user's console sessions).
 
 ## Who looked at what: the access log
 
@@ -313,6 +314,7 @@ column, if they do not.
 | `drishti_alert` | every alert a user's rules fired: when, rule, entity, severity, message (the newest `drishti.alerts.keep`, 1,000, per user) |
 | `drishti_pack_state` | packs an admin switched off or on (Admin → Packs) |
 | `drishti_api_token` | personal API tokens: owner, name, a SHA-256 of the secret (never the secret), created, expires, last used, revoked |
+| `drishti_session` | console sign-in sessions: a SHA-256 of the session id (never the id), user, created, expires. A row is removed at sign-out, when the user is disabled, deleted or has their password reset, and (hourly) once expired |
 | `drishti_access` | the access log: when, who, action (view, raw, history, search, export), kind, id, search text or field, business date |
 | `drishti_note` | notes on entities and their fields: entity, field path, author, text, created, edited. Kept when their author is deleted |
 
@@ -453,7 +455,8 @@ drishti:
 | Password policy | at least 10 characters, letters and digits, not the user name | `min-password-length` |
 | Lockout | 5 failed sign-ins lock the account for 15 minutes; an admin's password reset unlocks it | `max-failed-attempts`, `lockout` |
 | Unknown users | answered like a wrong password, in the same time | — |
-| Forced password change | off; an admin can tick it per user | `force-password-change-on-create`, `force-password-change-on-reset` |
+| Forced password change | off; an admin can tick it per user. Until it is done the console answers only the account page, the change and sign-out (other pages lead back to *My account*; console API calls `403 DRS-6010`) | `force-password-change-on-create`, `force-password-change-on-reset` |
+| Sessions follow the user | each console sign-in is a session the server keeps; the console checks it, the user's roles and enabled flag per request (reusing an answer for the console's `auth.recheck_seconds`, 10). Disabling, deleting or resetting the password of a user signs them out everywhere (enabling them again does not bring a session back); a role change applies within those seconds, at once on the console you used. Sign-out ends the session on the server | console `auth.recheck_seconds` |
 | Development admin | created when the database has no users | `seed-admin` (`DRISHTI_SEED_ADMIN=false` in production), `seed-username`, `seed-password`, `seed-roles` |
 | Last admin | there is always one enabled admin: it cannot be disabled, demoted or deleted | — |
 | Self-protection | nobody can disable or delete their own account | — |
@@ -498,6 +501,7 @@ curl -s 'localhost:18480/api/v1/admin/audit?subject=priya&limit=20'
 | Method | Path | Does |
 |---|---|---|
 | `POST` | `/auth/login` | verify a sign-in (the console's service token only) |
+| `POST` · `GET` · `DELETE` | `/auth/sessions[/{id}]` | open, check and end console sign-in sessions (the console's service token only) |
 | `GET` | `/auth/me` | the caller's profile |
 | `POST` | `/auth/password` `{current, next}` | change your own password |
 | `GET` / `POST` | `/admin/users[?q=]` | list or search / create |
@@ -524,6 +528,7 @@ curl -s 'localhost:18480/api/v1/admin/audit?subject=priya&limit=20'
 | `DRS-6007` | 422 | invalid user data (name, email, or a role that does not exist) |
 | `DRS-6008` | 404 | no such role |
 | `DRS-6009` | 409 | the role is held by someone; take it away from them first |
+| `DRS-6010` | 403 | (console) the user must choose a new password on *My account* first |
 
 ---
 
@@ -538,4 +543,5 @@ curl -s 'localhost:18480/api/v1/admin/audit?subject=priya&limit=20'
 | the server does not start: *Schema-validation: missing column …* (PostgreSQL) | the database was changed by hand, or is another application's | point it at Drishti's own database |
 | *identity database not reachable yet* in the log | PostgreSQL is down, or the URL, user or password is wrong | check with `psql "postgresql://drishti@host:5432/drishti"` |
 | every admin is locked after failed sign-ins | the lockout (15 minutes) | wait, or clear it in the database: `sqlite3 data/identity/drishti.db "UPDATE drishti_user SET failed_attempts=0, locked_until=NULL WHERE username='drishti-dev-admin'"` |
+| a user is sent to the sign-in page every few seconds | their account was disabled, deleted or had its password reset (audit: `sessions-ended`), or the console cannot keep a session the server opened (`auth.recheck_seconds`) | check the audit log for the user; see the sign-in runbook |
 | every admin's password is forgotten | — | restore the identity database from a backup; Drishti has no back door by design |

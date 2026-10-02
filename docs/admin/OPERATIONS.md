@@ -494,6 +494,8 @@ Defined in `console/config/application.yaml`.
 | `DRISHTI_SESSION_SECRET` | empty | `auth.session_secret` | signs session cookies; at least 32 characters (the console refuses to start otherwise when auth is on) |
 | `DRISHTI_TOKEN_SECRET` | empty | `auth.token_secret` | the same value as the server's |
 | `DRISHTI_SECURE_COOKIE` | `true` | `auth.secure_cookie` | mark cookies `Secure`; set `false` only for plain HTTP tests |
+| `DRISHTI_SESSION_RECHECK_SECONDS` | `10` | `auth.recheck_seconds` | how long the console reuses the server's answer to "does this session still stand, and who is the user now?": disabling, demoting or signing out takes effect within this time (at once on the console an administrator used); `0` asks on every request |
+| (none) | `[]` | `auth.allowed_origins` | extra origins allowed to send state-changing requests, for a proxy that changes the `Host` header (section 8.4) |
 | `DRISHTI_OIDC_ENABLED`, `DRISHTI_OIDC_ISSUER`, `DRISHTI_OIDC_CLIENT_ID` | `false`, empty, empty | `auth.oidc.*` | single sign-on; the same values as the server's |
 | `DRISHTI_OIDC_CLIENT_SECRET` | empty | `auth.oidc.client_secret` | the client secret (empty for a public client using PKCE alone) |
 | `DRISHTI_OIDC_REDIRECT_URI` | empty (`<console>/auth/oidc/callback`) | `auth.oidc.redirect_uri` | set it to the public HTTPS URL when the console is behind a proxy |
@@ -681,7 +683,15 @@ You should see `HTTP/2 200`.
 
 ### 8.4 Cookies, CSP and single sign-on behind a proxy
 
-- **Cookies** are `Secure` by default. Keep `DRISHTI_SECURE_COOKIE` unset (true) once TLS is in place.
+- **Cookies** are `Secure` by default. Keep `DRISHTI_SECURE_COOKIE` unset (true) once TLS is in place. The session
+  cookie is `HttpOnly` and `SameSite=Lax`, and holds only a signed reference to a session the server keeps: signing
+  out (a `POST`), or disabling, deleting or resetting the password of the user, ends it on the server.
+- **Cross-site requests.** Besides `SameSite=Lax` (which does not separate sibling subdomains), the console refuses a
+  state-changing request (`POST`, `PUT`, `PATCH`, `DELETE`) whose `Origin` header (or, without one, `Referer`) is not
+  the console itself (`403 DRS-5002`), and refuses JSON not sent as `application/json` (`415`). It compares the origin
+  with the request's `Host` header, so keep `proxy_set_header Host $host;` (as in 8.3); if your proxy changes the host,
+  list the public origin in `auth.allowed_origins` (for example `[https://drishti.bank.example]`) in
+  `console/config/application.local.yaml`.
 - **Content security policy** is strict and set by the console (`script-src 'self'`, no inline scripts or styles).
   Do not add or loosen a CSP at the proxy. Every asset is vendored, so the console works with no internet access.
 - **Single sign-on**: set `DRISHTI_OIDC_REDIRECT_URI=https://drishti.bank.example/auth/oidc/callback` and register
@@ -697,7 +707,8 @@ Work through this list for every shared installation. Each item says how to chec
    `{"title":"unauthenticated","status":401,"code":"DRS-5010","detail":"missing bearer token"}`.
 2. **Console sign-in on.** `DRISHTI_AUTH_ENABLED=true`, `DRISHTI_SESSION_SECRET` at least 32 characters, and the
    same `DRISHTI_TOKEN_SECRET` as the server. Check: a private browser window opening the console is sent to the
-   sign-in page.
+   sign-in page. Sessions follow the user: disabling or demoting someone takes effect within `auth.recheck_seconds`
+   (10 s by default), and signing out ends the session on the server.
 3. **The development admin is gone.** Sign in as `drishti-dev-admin`, create your own admin, then either change the
    development admin's password or disable it, and set `DRISHTI_SEED_ADMIN=false`. Check: the console no longer
    shows the default-password warning (the server reports `"defaultAdminPasswordInUse": false` at
@@ -1152,6 +1163,10 @@ With Docker: build the new images with the new tag, change the `image:` tags in 
 
 **Rollback**: stop, put the old jar (or image tag) back, restore the backup if the new version changed stored
 data, start.
+
+**Upgrading past 1.13 (server-side console sessions).** Sessions now live on the server (table `drishti_session`,
+created at start). Cookies from before the upgrade carry no server session, so everyone signs in once more. Upgrade
+the server and the console together: a new console cannot sign anyone in to an older server.
 
 **Upgrading to 1.10 (users move into a database).** On its first start, 1.10 copies `users.json`, `audit.jsonl` and
 the saved per-user documents into the identity database, once, and renames the old files `*.imported` (never

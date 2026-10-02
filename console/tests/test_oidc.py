@@ -112,6 +112,7 @@ def test_the_callback_signs_the_user_in_through_the_server(client, backend, monk
     back = client.get("/auth/oidc/callback", params={"code": "c1", "state": state}, follow_redirects=False)
     assert back.status_code == 303 and back.headers["location"] == "/v/trade/IRS-48213"
     assert handed["token"] == "header.payload.sig" and any("drishti_session=" in c for c in back.headers.get_list("set-cookie"))
+    assert "ana" in backend.sessions.values()                                   # the server keeps her session
     denied = client.get("/auth/oidc/callback", params={"error": "access_denied", "error_description": "user cancelled"})
     assert denied.status_code == 401 and "user cancelled" in denied.text
     client.cookies.clear()

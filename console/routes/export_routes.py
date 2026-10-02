@@ -22,6 +22,7 @@ import json
 from fastapi import APIRouter, Request
 from fastapi.responses import Response
 
+from core.csrf import BodyError, json_body
 from core import asof
 from core.backend import BackendError
 from core.export import filename, grid, panel_rows, plain, to_csv, to_xlsx
@@ -58,9 +59,9 @@ async def search_csv(request: Request, q: str = ""):
 
 async def _grid(request: Request):
     try:
-        body = json.loads(await request.body() or b"{}")
-    except ValueError:
-        body = {}
+        body = await json_body(request)
+    except BodyError:
+        body = {}                                        # a download for the caller only: an empty grid, not an error
     return grid(body if isinstance(body, dict) else {})
 
 

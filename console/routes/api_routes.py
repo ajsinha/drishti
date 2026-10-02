@@ -26,6 +26,7 @@ from fastapi import APIRouter, Query, Request
 
 from fastapi.responses import JSONResponse, StreamingResponse
 
+from core.csrf import json_body
 from core import asof
 from core.backend import BackendError
 from routes.common import ident
@@ -49,7 +50,7 @@ async def suggest(request: Request, q: str = "", limit: int | None = None):
 @router.post("/tokens")
 async def create_token(request: Request):
     """A personal API token for a script or spreadsheet; the answer holds the secret, shown once."""
-    body = json.loads(await request.body() or b"{}")
+    body = await json_body(request)
     days = body.get("days")
     try:
         return await request.app.state.backend.create_token(body.get("name", ""), int(days) if days else None, ident(request))
@@ -78,7 +79,7 @@ async def notes(request: Request, kind: str, id_: str):
 
 @router.post("/notes/{kind}/{id_}")
 async def add_note(request: Request, kind: str, id_: str):
-    body = await request.json()
+    body = await json_body(request)
     try:
         return await request.app.state.backend.add_note(kind, id_, str(body.get("body") or ""), body.get("path") or None, ident(request))
     except BackendError as e:
@@ -87,7 +88,7 @@ async def add_note(request: Request, kind: str, id_: str):
 
 @router.put("/notes/{note_id}")
 async def edit_note(request: Request, note_id: int):
-    body = await request.json()
+    body = await json_body(request)
     try:
         return await request.app.state.backend.edit_note(note_id, str(body.get("body") or ""), ident(request))
     except BackendError as e:
@@ -124,7 +125,7 @@ async def history(request: Request):
 @router.put("/aliases")
 async def put_aliases(request: Request):
     """Replaces the user's aliases; the server checks names and commands."""
-    body = json.loads(await request.body() or b"{}")
+    body = await json_body(request)
     try:
         return await request.app.state.backend.set_aliases(body, ident(request))
     except BackendError as e:
@@ -134,7 +135,7 @@ async def put_aliases(request: Request):
 @router.patch("/settings")
 async def patch_settings(request: Request):
     """Personal settings from the page (the theme menu); the server validates."""
-    body = json.loads(await request.body() or b"{}")
+    body = await json_body(request)
     me = ident(request)
     if me is None:
         return JSONResponse({"code": "DRS-5010", "detail": "sign in first"}, status_code=401)
@@ -149,9 +150,7 @@ async def patch_settings(request: Request):
 @router.post("/packs")
 async def choose_packs(request: Request):
     """The user chooses which of their packs to see."""
-    import json as _json
-
-    body = _json.loads(await request.body() or b"{}")
+    body = await json_body(request)
     try:
         out = await request.app.state.backend.choose_packs(body.get("active", []), ident(request))
     except BackendError as e:
@@ -163,9 +162,7 @@ async def choose_packs(request: Request):
 @router.post("/resolve")
 async def resolve(request: Request):
     """A command's entity, for pickers that accept typed commands (workspaces)."""
-    import json as _json
-
-    body = _json.loads(await request.body() or b"{}")
+    body = await json_body(request)
     try:
         return await request.app.state.backend.command(body.get("text", ""), ident(request))
     except BackendError as e:
@@ -378,7 +375,7 @@ async def channel_change(request: Request, cid: str):
     me = ident(request)
     if ch is None or ch["user"] != (me.user if me is not None else ""):
         return JSONResponse({"code": "DRS-5001", "detail": "no such channel: open a new one"}, status_code=404)
-    body = json.loads(await request.body() or b"{}")
+    body = await json_body(request)
     for sub in (body.get("remove") or [])[:MAX_CHANNEL_SUBSCRIPTIONS]:
         ch["remove"](str(sub))
     for sub in (body.get("add") or [])[:MAX_CHANNEL_SUBSCRIPTIONS]:

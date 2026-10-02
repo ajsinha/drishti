@@ -413,7 +413,9 @@ Check heap use under load in Admin → Health (`server.heapUsedMb`, `heapMaxMb`)
 ## Scaling out
 
 A server holds its own topics, streams and caches; servers share nothing at run time. To serve more users,
-run more servers behind a load balancer. Tokens are stateless, so any server can serve any request. Live
+run more servers behind a load balancer. Tokens are stateless, so any server can serve any request; console sign-in
+sessions and users live in the identity database, so servers behind one load balancer share one (PostgreSQL,
+`DRISHTI_IDENTITY_DB_URL`), or a session opened on one is unknown to the next. Live
 streams stay on the server that opened them, and the browser's reconnect may land on another server, which
 simply starts with a fresh `view` event. The console keeps each tab's live channel in its own memory, so
 when you run several console processes, make sessions sticky (see [LIVE.md](../architecture/LIVE.md#one-connection-per-tab)).
