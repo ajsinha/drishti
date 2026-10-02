@@ -126,7 +126,7 @@ async def search(request: Request, q: str = "", vs: str = "", words: str = ""):
     data, error = None, None
     if q.strip():
         limit = (getattr(request.state, "settings", None) or {}).get("searchLimit") or 100
-        asked = q if re.search(r"(?i)\slimit\s+\d+\s*$", q) else f"{q.rstrip()} limit {limit}"   # the user's default size
+        asked = q if re.search(r"(?i)\slimit\s+\S+\s*$", q) else f"{q.rstrip()} limit {limit}"   # the user's default size
         try:
             if vs:     # the same search on another business date, side by side: each number with its change
                 data = await request.app.state.backend.search_compare(asked, vs, "", ident(request))

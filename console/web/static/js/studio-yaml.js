@@ -101,10 +101,11 @@
 
   // ---- the block structure, by indentation ---------------------------------------------------------------
   function parse(text) {
-    var src = text.split('\n'), lines = [];
+    var src = text.split('\n'), lines = [], tabs = [];
     for (var n = 0; n < src.length; n++) {
       var body = stripComment(src[n]).replace(/\s+$/, '');
       if (!body.trim() || /^(---|\.\.\.)\s*$/.test(body)) { continue; }
+      if (/^[ ]*\t/.test(body)) { tabs.push(n); }              // YAML indents with spaces only: said as such, not as a missing colon
       lines.push({ n: n, ind: body.length - body.replace(/^ +/, '').length, text: body });
     }
     var p = 0;
@@ -174,7 +175,9 @@
       if (!root && r && r.t === 'map') { root = r; } else if (root && r && r.t === 'map') { root.entries = root.entries.concat(r.entries); }
       if (p === before) { p++; }
     }
-    return root || { t: 'map', line: 0, ch: 0, entries: [] };
+    root = root || { t: 'map', line: 0, ch: 0, entries: [] };
+    root.tabs = tabs;
+    return root;
   }
 
   function get(m, key) {

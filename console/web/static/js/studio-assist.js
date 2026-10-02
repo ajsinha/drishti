@@ -137,7 +137,8 @@
 
   /** The light check: problems of a parsed Sutra against the schema (code CHECK, 1-based line and column). */
   function problemsOf(schema, tree) {
-    var out = [];
+    var out = [], tabbed = {};
+    (tree.tabs || []).forEach(function (n) { tabbed[n] = true; });
     function add(node, len, msg) { out.push({ code: 'CHECK', location: { line: node.line + 1, column: (node.ch || 0) + 1 }, len: len, message: msg }); }
     function visit(node, s, label, key) {
       s = schema.resolve(s);
@@ -161,6 +162,7 @@
       node.entries.forEach(function (e) {
         if (present[e.key] && !e.partial) { add(e, e.key.length, 'duplicate key "' + e.key + '"' + (label ? ' in ' + label : '')); }
         present[e.key] = true;
+        if (e.partial && tabbed[e.line]) { return; }             // said once for the line: indented with a tab
         if (e.partial) { add(e, e.key.length, '"' + e.key + '" needs a colon: key: value'); return; }
         if ((s.additionalProperties === false || schema.isPanel(s)) && allowed.indexOf(e.key) < 0) {
           add(e, e.key.length, s.properties[e.key] && kind ? '"' + e.key + '" is not an option of ' + kind + ' panels (it is of ' + (schema.optionKinds[e.key] || []).join(', ') + ')'
@@ -174,6 +176,9 @@
       if (key === 'body') { req = req.filter(function (r) { return r !== 'id'; }); }
       req.forEach(function (r) { if (!present[r]) { add(node, 1, (label || 'the Sutra') + ' needs "' + r + '"' + (kind && schema.byKind[kind].required.indexOf(r) >= 0 ? ' (' + kind + ' panels)' : '')); } });
     }
+    (tree.tabs || []).forEach(function (n) {
+      out.push({ code: 'CHECK', location: { line: n + 1, column: 1 }, len: 1, message: 'line ' + (n + 1) + ' is indented with a tab: YAML allows only spaces' });
+    });
     visit(tree, schema.raw, '', '');
     return out;
   }
