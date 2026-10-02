@@ -35,6 +35,7 @@ class FakeBackend:
 
     def __init__(self):
         self.calls = []
+        self.sessions = {}                       # console sign-in sessions the server keeps: id -> user name
 
     async def view(self, kind, id_, user):
         self.calls.append(("view", kind, id_, user))
@@ -137,11 +138,32 @@ class FakeBackend:
                                    "roles": ["admin"], "enabled": True, "mustChangePassword": False, "locked": False, "email": "",
                                    "lastLoginAt": None}}
 
+    passwords = {"drishti-dev-admin": "drishti-dev-admin123"}
+
     async def login(self, username, password, service):
         assert service.roles == ("service",)
-        if username == "drishti-dev-admin" and password == "drishti-dev-admin123":
+        if username in self.users and password == self.passwords.get(username):
             return self.users[username]
         raise BackendError(401, "DRS-6004", "unknown user or wrong password")
+
+    async def open_session(self, username, seconds, service):
+        assert service.roles == ("service",)
+        sid = f"sess{len(self.sessions) + 1:04d}" + "x" * 24
+        self.sessions[sid] = username
+        return {"id": sid, "expiresAt": "2026-10-02T20:00:00Z", "user": self.users.get(username, {"username": username})}
+
+    async def session(self, sid, service):
+        assert service.roles == ("service",)
+        self.calls.append(("session", sid))
+        user = self.users.get(self.sessions.get(sid, ""))
+        if user is None or not user.get("enabled", True):
+            raise BackendError(401, "DRS-5010", "session ended")
+        return {"id": sid, "expiresAt": "2026-10-02T20:00:00Z", "user": user}
+
+    async def end_session(self, sid, service):
+        assert service.roles == ("service",)
+        self.calls.append(("end_session", sid))
+        self.sessions.pop(sid, None)
 
     async def me(self, ident):
         return self.users.get(ident.user, {"username": ident.user, "displayName": ident.display, "desk": ident.desk, "roles": list(ident.roles)})

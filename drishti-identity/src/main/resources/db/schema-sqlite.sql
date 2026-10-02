@@ -122,6 +122,17 @@ CREATE TABLE IF NOT EXISTS drishti_api_token (
 );
 CREATE INDEX IF NOT EXISTS drishti_api_token_user ON drishti_api_token (username);
 
+-- Console sign-in sessions: a row per session, by a hash of its id; signing out, or disabling, deleting or resetting
+-- the password of the user, removes the rows, and the console then refuses the cookie.
+CREATE TABLE IF NOT EXISTS drishti_session (
+    id_hash    TEXT PRIMARY KEY,
+    username   TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    expires_at TIMESTAMP NOT NULL
+);
+CREATE INDEX IF NOT EXISTS drishti_session_user ON drishti_session (username);
+CREATE INDEX IF NOT EXISTS drishti_session_expires ON drishti_session (expires_at);
+
 CREATE TABLE IF NOT EXISTS drishti_note (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     kind       TEXT NOT NULL,

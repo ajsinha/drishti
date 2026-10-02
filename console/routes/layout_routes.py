@@ -18,11 +18,11 @@ save is). The server checks the user's roles and the Sutra's panels; the console
 layouts after each change, so the next view is drawn with the new one."""
 from __future__ import annotations
 
-import json
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
+from core.csrf import json_body
 from core.backend import BackendError
 from routes.common import ident
 from core import sutra_diff
@@ -42,7 +42,7 @@ def _forget(request: Request) -> None:
 
 async def _body(request: Request) -> dict:
     try:
-        body = json.loads(await request.body() or b"{}")
+        body = await json_body(request)
     except ValueError:
         body = {}
     return body if isinstance(body, dict) else {}

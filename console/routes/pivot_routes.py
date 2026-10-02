@@ -19,12 +19,12 @@ author's promotion of a panel's pivot to the Sutra's next version (with the diff
 come back as ``{"code", "detail"}`` with the server's status."""
 from __future__ import annotations
 
-import json
 from urllib.parse import quote
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
+from core.csrf import json_body
 from core.backend import BackendError
 from core.pivots import ARRANGEMENT
 from routes.common import ident
@@ -40,7 +40,7 @@ def _problem(e: BackendError) -> JSONResponse:
 
 async def _body(request: Request) -> dict:
     try:
-        body = json.loads(await request.body() or b"{}")
+        body = await json_body(request)
     except ValueError:
         body = {}
     return body if isinstance(body, dict) else {}

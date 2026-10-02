@@ -341,6 +341,18 @@ class BackendClient:
     async def login(self, username: str, password: str, service) -> dict:
         return await self._send("POST", "/auth/login", service, json={"username": username, "password": password})
 
+    async def open_session(self, username: str, seconds: int, service) -> dict:
+        """Opens a sign-in session on the server for a user it has just verified: ``{id, expiresAt, user}``."""
+        return await self._send("POST", "/auth/sessions", service, json={"username": username, "seconds": seconds})
+
+    async def session(self, session_id: str, service) -> dict:
+        """Whether a session still stands, with its user as they are now (roles, password change due); 401 when it ended."""
+        return await self._get(f"/auth/sessions/{quote(session_id, safe='')}", service)
+
+    async def end_session(self, session_id: str, service) -> None:
+        """Ends a session on the server (sign-out): its cookie no longer signs anyone in, on any console."""
+        await self._send("DELETE", f"/auth/sessions/{quote(session_id, safe='')}", service)
+
     async def settings(self, ident) -> dict:
         return await self._get("/me/settings", ident)
 

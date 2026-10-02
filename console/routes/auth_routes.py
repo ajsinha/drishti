@@ -12,10 +12,12 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Sign-in, sign-out and the account page (profile and password change)."""
+"""Sign-in, sign-out and the account page (profile and password change).
+
+Each sign-in opens a session on the server; sign-out (a POST) ends it there, so a copy of the cookie is useless after.
+"""
 from __future__ import annotations
 
-import json
 from urllib.parse import parse_qs, quote
 
 import httpx
@@ -26,6 +28,7 @@ from core.backend import BackendError
 from core.oidc import COOKIE as OIDC_COOKIE
 from core.oidc import TTL as OIDC_TTL
 from core.oidc import OidcError
+from core.csrf import json_body
 from routes.common import ident, render
 
 router = APIRouter(include_in_schema=False)
@@ -53,9 +56,25 @@ async def login(request: Request):
         msg = {"DRS-6005": "This account is locked after repeated failures. Try again later or ask an administrator."}.get(
             e.code, "Unknown user or wrong password." if e.status in (401, 404) else f"Sign-in unavailable: {e.detail}")
         return render(request, "auth/login.html", status_code=401 if e.status < 500 else 503, next=target, error=msg)
+    try:
+        session = await _open(request, profile)
+    except BackendError as e:
+        return render(request, "auth/login.html", status_code=503, next=target, error=f"Sign-in unavailable: {e.detail}")
     r = RedirectResponse("/account?must=1" if profile.get("mustChangePassword") else await _landing(request, profile, target), status_code=303)
-    r.set_cookie(auth.cookie, auth.session_for(profile), httponly=True, samesite="lax", secure=auth.secure_cookie, max_age=auth.session_ttl)
+    _keep(r, auth, profile, session)
     return r
+
+
+async def _open(request: Request, profile: dict) -> str:
+    """Opens the server's session for a user it has just verified; its id goes into the cookie."""
+    auth = request.app.state.auth
+    opened = await request.app.state.backend.open_session(profile["username"], auth.session_ttl, auth.service())
+    return opened["id"]
+
+
+def _keep(response, auth, profile: dict, session: str | None) -> None:
+    response.set_cookie(auth.cookie, auth.session_for(profile, session), httponly=True, samesite="lax", secure=auth.secure_cookie,
+                        max_age=auth.session_ttl)
 
 
 @router.get("/auth/oidc/login")
@@ -81,6 +100,7 @@ async def oidc_callback(request: Request, code: str = "", state: str = "", error
     try:
         id_token, nonce, target = await oidc.finish(str(request.base_url), request.cookies.get(OIDC_COOKIE), code, state)
         profile = await request.app.state.backend.oidc_login(id_token, nonce, auth.service())
+        session = await _open(request, profile)
     except OidcError as e:
         return render(request, "auth/login.html", status_code=401, next="/t", error=str(e))
     except httpx.HTTPError:
@@ -90,20 +110,37 @@ async def oidc_callback(request: Request, code: str = "", state: str = "", error
                       error=e.detail if e.status < 500 else f"Sign-in unavailable: {e.detail}")
     r = RedirectResponse(await _landing(request, profile, _safe_next(target)), status_code=303)
     r.delete_cookie(OIDC_COOKIE, path="/auth/oidc")
-    r.set_cookie(auth.cookie, auth.session_for(profile), httponly=True, samesite="lax", secure=auth.secure_cookie, max_age=auth.session_ttl)
+    _keep(r, auth, profile, session)
     return r
 
 
 @router.get("/logout")
+async def logout_form(request: Request):
+    """Signing out changes state, so it is a POST (the user menu posts it); a link here only asks."""
+    if request.state.identity is None or not request.app.state.auth.enabled:
+        return RedirectResponse("/", status_code=303)
+    return render(request, "auth/logout.html")
+
+
+@router.post("/logout")
 async def logout(request: Request):
-    """Signs out of the current server only; sessions on other servers stay."""
+    """Signs out of the current server only (sessions on other servers stay): the server ends the session, so a copy of
+    the cookie no longer signs anyone in, on any console."""
+    auth = request.app.state.auth
+    claimed = auth.identity(request.cookies.get(auth.cookie)) if auth.enabled else None
+    if claimed is not None and claimed.session:
+        try:
+            await request.app.state.backend.end_session(claimed.session, auth.service())
+        except BackendError:
+            pass                                         # already ended, or the server is down: the cookie goes anyway
+        auth.forget(session=claimed.session)
     r = RedirectResponse("/", status_code=303)
-    r.delete_cookie(request.app.state.auth.cookie)
+    r.delete_cookie(auth.cookie)
     return r
 
 
 @router.get("/account")
-async def account(request: Request, must: int = 0, saved: int = 0, error: str = ""):
+async def account(request: Request, saved: int = 0, error: str = ""):
     me = ident(request)
     try:
         profile = await request.app.state.backend.me(me)
@@ -117,7 +154,7 @@ async def account(request: Request, must: int = 0, saved: int = 0, error: str = 
         tokens = await request.app.state.backend.my_tokens(me)
     except BackendError:
         tokens = []
-    return render(request, "account.html", profile=profile, must=bool(must) or me.must_change, saved=bool(saved), error=error,
+    return render(request, "account.html", profile=profile, must=me.must_change, saved=bool(saved), error=error,
                   zones=ZONES, aliases=aliases, tokens=tokens, api_base=request.app.state.settings.get("backend.url"))
 
 
@@ -146,8 +183,7 @@ async def _landing(request: Request, profile: dict, target: str) -> str:
     """Where to go after signing in: the page asked for, or the user's chosen landing page when none was."""
     if target != "/t":
         return target
-    auth = request.app.state.auth
-    who = auth.identity(auth.session_for(profile))
+    who = request.app.state.auth.identity_for(profile)
     try:
         return _safe_next((await request.app.state.backend.settings(who)).get("landing") or "/t")
     except Exception:  # noqa: BLE001 - a missing landing page never blocks a sign-in
@@ -156,14 +192,15 @@ async def _landing(request: Request, profile: dict, target: str) -> str:
 
 @router.post("/account/password")
 async def change_password(request: Request):
-    body = json.loads(await request.body() or b"{}")
+    body = await json_body(request)
     me = ident(request)
     try:
         profile = await request.app.state.backend.change_password(body.get("current", ""), body.get("next", ""), me)
     except BackendError as e:
         return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.status)
     r = JSONResponse({"ok": True})
-    if request.app.state.auth.enabled:
-        r.set_cookie(request.app.state.auth.cookie, request.app.state.auth.session_for(profile), httponly=True, samesite="lax",
-                     secure=request.app.state.auth.secure_cookie, max_age=request.app.state.auth.session_ttl)
+    auth = request.app.state.auth
+    if auth.enabled:
+        auth.forget(session=me.session)                  # the next request reads the cleared "change your password" flag
+        _keep(r, auth, profile, me.session)
     return r

@@ -56,6 +56,12 @@ public class IdentityConfiguration {
         return new ApiTokenStore(tokens, identityTransactions, auditLog);
     }
 
+    /** Console sign-in sessions: opened at sign-in, checked per request by the console, ended at sign-out. */
+    @Bean
+    public SessionStore sessionStore(IdentityRepositories.Sessions sessions, TransactionTemplate identityTransactions, JpaAuditLog auditLog) {
+        return new SessionStore(sessions, identityTransactions, auditLog);
+    }
+
     /** Who read what ({@code drishti.access-log.keep-days}, 90; {@code queue}, 100000 events waiting at most). */
     @Bean(destroyMethod = "close")
     public AccessLog accessLog(IdentityRepositories.Access access, TransactionTemplate identityTransactions,

@@ -69,7 +69,7 @@ def test_each_server_has_its_own_sign_in(two):
     c.post("/login", content=LOGIN, headers=FORM, follow_redirects=False)
     assert c.get("/v/trade/IRS-48213").status_code == 200
     assert any(x[0] == "view" for x in fakes["desk"].calls)                              # desk's backend answered
-    c.get("/logout")
+    c.post("/logout")
     assert c.cookies.get("drishti_session_open")                                          # signing out of desk keeps open
 
 

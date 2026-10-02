@@ -77,10 +77,13 @@ public class IdentityController {
     private final com.ash.drishti.server.security.PackAccess packAccess;
     private final com.ash.drishti.identity.AlertHistory alerts;
     private final com.ash.drishti.identity.ApiTokenStore apiTokens;
+    private final com.ash.drishti.identity.SessionStore sessions;
 
     public IdentityController(UserService users, Entitlements entitlements, com.ash.drishti.identity.PreferenceStore preferences,
-            com.ash.drishti.server.security.PackAccess packAccess, com.ash.drishti.identity.AlertHistory alerts, com.ash.drishti.identity.ApiTokenStore apiTokens) {
+            com.ash.drishti.server.security.PackAccess packAccess, com.ash.drishti.identity.AlertHistory alerts, com.ash.drishti.identity.ApiTokenStore apiTokens,
+            com.ash.drishti.identity.SessionStore sessions) {
         this.apiTokens = apiTokens;
+        this.sessions = sessions;
         this.alerts = alerts;
         this.packAccess = packAccess;
         this.users = users;
@@ -138,19 +141,29 @@ public class IdentityController {
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
         packAccess.validate(profile.packs());
-        return view(users.update(p.user(), username, profile));
+        User u = users.update(p.user(), username, profile);
+        if (!u.enabled()) {
+            sessions.endAll(u.username(), p.user(), "disabled");
+        }
+        return view(u);
     }
 
     @PostMapping("/admin/users/{username}/enabled")
     public UserView enable(@PathVariable String username, @RequestBody EnabledChange req, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
-        return view(users.setEnabled(p.user(), username, req.enabled()));
+        User u = users.setEnabled(p.user(), username, req.enabled());
+        if (!u.enabled()) {
+            sessions.endAll(u.username(), p.user(), "disabled");   // signed out everywhere; enabling again needs a new sign-in
+        }
+        return view(u);
     }
 
     @PostMapping("/admin/users/{username}/password")
     public UserView reset(@PathVariable String username, @RequestBody PasswordReset req, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
-        return view(users.resetPassword(p.user(), username, req.password()));
+        User u = users.resetPassword(p.user(), username, req.password());
+        sessions.endAll(u.username(), p.user(), "password reset");
+        return view(u);
     }
 
     @DeleteMapping("/admin/users/{username}")
@@ -161,6 +174,7 @@ public class IdentityController {
         preferences.forget(username);
         alerts.forget(username);
         apiTokens.forget(username);
+        sessions.endAll(username.trim().toLowerCase(java.util.Locale.ROOT), p.user(), "deleted");
     }
 
     @GetMapping("/admin/audit")

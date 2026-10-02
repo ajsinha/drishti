@@ -259,6 +259,25 @@ abstract class IdentityStoreContract {
     }
 
     @Test
+    void consoleSessionsEndAtSignOutAndForTheirUser() {
+        SessionStore s = bean(SessionStore.class);
+        SessionStore.Session a = s.open("sam", java.time.Duration.ofHours(1));
+        SessionStore.Session b = s.open("sam", java.time.Duration.ofHours(1));
+        SessionStore.Session c = s.open("kim", java.time.Duration.ofHours(1));
+        assertThat(a.id()).isNotEqualTo(b.id()).hasSizeGreaterThanOrEqualTo(32);
+        assertThat(s.find(a.id())).get().extracting(SessionStore.Session::user).isEqualTo("sam");
+        assertThat(s.find(a.id() + "x")).isEmpty();
+        assertThat(s.end(a.id())).isTrue();                              // sign-out
+        assertThat(s.find(a.id())).isEmpty();
+        assertThat(s.end(a.id())).isFalse();
+        assertThat(s.endAll("sam", "admin", "disabled")).isEqualTo(1);    // every other session of the user
+        assertThat(s.find(b.id())).isEmpty();
+        assertThat(s.find(c.id())).isPresent();
+        assertThatThrownBy(() -> s.open("kim", java.time.Duration.ofDays(30))).isInstanceOf(DrishtiException.class);
+        assertThat(bean(AuditLog.class).recent(10, "sam")).extracting(AuditLog.Event::action).contains("signed-out", "sessions-ended");
+    }
+
+    @Test
     void notesBelongToTheirEntityAndOnlyTheirAuthorEditsThem() {
         NoteStore n = bean(NoteStore.class);
         NoteStore.Note a = n.add("trade", "T-NOTE-1", null, "tess", "  Restated on 28 Sep after the fixing correction. ");

@@ -51,7 +51,9 @@ public enum ErrorCode {
     LAST_ADMIN("DRS-6006", 409),
     INVALID_USER("DRS-6007", 422),
     ROLE_NOT_FOUND("DRS-6008", 404),
-    ROLE_IN_USE("DRS-6009", 409);
+    ROLE_IN_USE("DRS-6009", 409),
+    /** The console refuses everything but the account page until a password change asked for is done. */
+    PASSWORD_CHANGE_DUE("DRS-6010", 403);
 
     private final String code;
     private final int httpStatus;

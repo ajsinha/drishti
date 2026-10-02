@@ -31,6 +31,7 @@
       var msg = pw.querySelector('[data-msg]'), f = pw.elements;
       if (f.next.value !== f.repeat.value) { say(msg, 'The new passwords differ.', true); return; }
       post('/account/password', { current: f.current.value, next: f.next.value }).then(function (res) {
+        if (res.ok && pw.hasAttribute('data-must')) { location.href = '/t'; return; }
         if (res.ok) { pw.reset(); say(msg, 'Password changed.'); } else { say(msg, (res.body.code || 'Error') + ': ' + res.body.detail, true); }
       });
     });

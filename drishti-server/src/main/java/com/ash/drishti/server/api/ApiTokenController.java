@@ -18,6 +18,7 @@ package com.ash.drishti.server.api;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.ApiTokenStore;
+import com.ash.drishti.identity.UserService;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.Principal;
 import java.util.List;
@@ -43,10 +44,12 @@ public class ApiTokenController {
 
     private final ApiTokenStore tokens;
     private final Entitlements entitlements;
+    private final UserService users;
 
-    public ApiTokenController(ApiTokenStore tokens, Entitlements entitlements) {
+    public ApiTokenController(ApiTokenStore tokens, Entitlements entitlements, UserService users) {
         this.tokens = tokens;
         this.entitlements = entitlements;
+        this.users = users;
     }
 
     @GetMapping("/api/v1/me/tokens")
@@ -57,6 +60,10 @@ public class ApiTokenController {
     @PostMapping("/api/v1/me/tokens")
     @ResponseStatus(HttpStatus.CREATED)
     public ApiTokenStore.Created create(@RequestBody NewToken req, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        // a disabled user makes no tokens, whatever a token still in flight says (QA 2026-10-01 SEC-01)
+        if (users.find(p.user()).filter(u -> !u.enabled()).isPresent()) {
+            throw new DrishtiException(ErrorCode.FORBIDDEN, "the account '" + p.user() + "' is disabled");
+        }
         return tokens.create(p.user(), req.name(), req.days());
     }
 

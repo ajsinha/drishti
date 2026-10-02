@@ -48,6 +48,13 @@ auth:
   token_secret: ${DRISHTI_TOKEN_SECRET:}      # shared with the server (drishti.security.secret)
   token_ttl_seconds: 300
   session_hours: 10
+  # How long the console reuses the server's answer to "does this session still stand, and who is the user now?"
+  # (enabled, roles, password change due). Disabling, demoting or signing out takes effect within this time (at once on
+  # the console an administrator used). 0 asks the server on every request.
+  recheck_seconds: ${DRISHTI_SESSION_RECHECK_SECONDS:10}
+  # State-changing requests must come from the console's own pages (Origin or Referer = the request's host). Behind a
+  # proxy that changes the Host header, list the public origin(s) here, e.g. [https://drishti.bank.example].
+  allowed_origins: []
   secure_cookie: ${DRISHTI_SECURE_COOKIE:true}
   oidc:                                       # single sign-on (W20); the server verifies the ID token (drishti.security.oidc)
     enabled: ${DRISHTI_OIDC_ENABLED:false}

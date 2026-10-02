@@ -16,15 +16,19 @@
 
 * Users are managed by the server (``drishti-identity``). The console verifies a sign-in by calling
   ``POST /api/v1/auth/login`` with its own short-lived *service* token; it never sees password hashes.
-* A session is a signed, expiring cookie (HMAC-SHA256 with ``auth.session_secret``) carrying the user's
-  name, display name, desk and roles; nothing is stored in the console, so any instance serves any user.
+* Every sign-in opens a *session* on the server (``POST /api/v1/auth/sessions``). The cookie is signed and expiring
+  (HMAC-SHA256 with ``auth.session_secret``) and carries the session id with the user's name; any console instance
+  serves any user. Per request the console asks the server whether the session still stands and who the user is now
+  (enabled, roles, whether a password change is due), cached for ``auth.recheck_seconds``: disabling, demoting or
+  signing out takes effect within that time (at once on the console where an administrator made the change).
 * For every backend call the console mints a short-lived HS256 token (``auth.token_secret``, shared with
-  the server) carrying the user and roles.
+  the server) carrying the user and their current roles.
 
 With ``auth.enabled`` false (local development) everyone is the configured desk user with every role.
 """
 from __future__ import annotations
 
+import asyncio
 import base64
 import hashlib
 import hmac
@@ -33,6 +37,8 @@ import time
 from dataclasses import dataclass, field
 
 COOKIE = "drishti_session"
+_UNREACHABLE = object()                # the server could not answer the session check
+_CACHE_MAX = 20_000                    # session checks kept at most; expired ones are dropped first
 
 
 @dataclass(frozen=True)
@@ -43,6 +49,7 @@ class Identity:
     roles: tuple = field(default=("*",))
     token: str | None = None
     must_change: bool = False
+    session: str | None = None
 
     def headers(self) -> dict:
         h = {"X-Drishti-User": self.user}
@@ -85,6 +92,10 @@ class Auth:
         self.token_ttl = int(settings.get("auth.token_ttl_seconds", 300))
         self.session_ttl = int(settings.get("auth.session_hours", 10)) * 3600
         self.secure_cookie = bool(settings.get("auth.secure_cookie", True))
+        # how long a session check (still signed in? enabled? which roles?) is reused before the server is asked again
+        self.recheck = max(0.0, float(settings.get("auth.recheck_seconds", 10)))
+        self._checked: dict[str, tuple[float, dict | None]] = {}
+        self._inflight: dict[str, asyncio.Future] = {}
         self.default = Identity(settings.get("ui.user", "ash"), settings.get("ui.user_display", "Ash"),
                                 settings.get("ui.desk", "Rates desk"))
         if self.enabled and len(self.session_secret) < 32:
@@ -98,15 +109,16 @@ class Auth:
     def _sign(self, payload: str) -> str:
         return _b64(hmac.new(self.session_secret.encode(), payload.encode(), hashlib.sha256).digest())
 
-    def session_for(self, user: dict) -> str:
-        """A signed cookie value for a user the server has just verified."""
+    def session_for(self, user: dict, session: str | None = None) -> str:
+        """A signed cookie value for a user the server has just verified, naming the server's session for them."""
         body = {"u": user["username"], "d": user.get("displayName") or user["username"], "k": user.get("desk") or "",
                 "r": sorted(user.get("roles") or []), "m": bool(user.get("mustChangePassword")),
-                "x": int(time.time()) + self.session_ttl, "s": self.server}
+                "x": int(time.time()) + self.session_ttl, "s": self.server, "j": session}
         payload = _b64(json.dumps(body, separators=(",", ":")).encode())
         return f"{payload}.{self._sign(payload)}"
 
     def identity(self, cookie: str | None) -> Identity | None:
+        """What a cookie claims, if it is genuine and current; :meth:`current` also asks the server."""
         if not self.enabled:
             return self._with_token(self.default)
         if not cookie or cookie.count(".") != 1:
@@ -120,10 +132,77 @@ class Auth:
             return None
         if int(body.get("x", 0)) < time.time() or body.get("s", "default") != self.server:
             return None                                  # expired, or a session for another server
-        return self._with_token(Identity(body["u"], body["d"], body["k"], tuple(body["r"]), must_change=bool(body.get("m"))))
+        return self._with_token(Identity(body["u"], body["d"], body["k"], tuple(body["r"]), must_change=bool(body.get("m")),
+                                         session=body.get("j") or None))
+
+    def identity_for(self, profile: dict, session: str | None = None) -> Identity:
+        """The identity of a user as the server describes them now."""
+        return self._with_token(Identity(profile["username"], profile.get("displayName") or profile["username"], profile.get("desk") or "",
+                                         tuple(sorted(profile.get("roles") or [])), must_change=bool(profile.get("mustChangePassword")),
+                                         session=session))
+
+    async def current(self, cookie: str | None, backend) -> Identity | None:
+        """The signed-in user as the server knows them now: None when the cookie is not genuine, carries no session,
+        or the server says the session has ended (signed out, user disabled or deleted). Roles and the password-change
+        flag come from the server, not the cookie. When the server cannot be reached the cookie's claims stand: no
+        backend call can succeed then anyway."""
+        claimed = self.identity(cookie)
+        if not self.enabled or claimed is None:
+            return claimed
+        if not claimed.session:
+            return None                                  # a cookie from before server sessions: sign in again
+        profile = await self._check(claimed.session, backend)
+        if profile is _UNREACHABLE:
+            return claimed
+        if profile is None or profile.get("username") != claimed.user:
+            return None
+        return self.identity_for(profile, claimed.session)
+
+    async def _check(self, session: str, backend):
+        hit = self._checked.get(session)
+        now = time.monotonic()
+        if hit is not None and now < hit[0]:
+            return hit[1]
+        pending = self._inflight.get(session)
+        if pending is None:                              # one server call per session, however many requests wait
+            pending = asyncio.ensure_future(self._ask(session, backend))
+            self._inflight[session] = pending
+            pending.add_done_callback(lambda _f: self._inflight.pop(session, None))
+        return await asyncio.shield(pending)
+
+    async def _ask(self, session: str, backend):
+        from core.backend import BackendError
+
+        try:
+            answer = await backend.session(session, self.service())
+            profile = (answer or {}).get("user")
+        except BackendError as e:
+            if e.status >= 500:
+                return _UNREACHABLE
+            profile = None                               # 401/403/404: ended, unknown or the user may not sign in
+        if len(self._checked) >= _CACHE_MAX:
+            self._prune()
+        self._checked[session] = (time.monotonic() + self.recheck, profile)
+        return profile
+
+    def _prune(self) -> None:
+        now = time.monotonic()
+        for k in [k for k, (until, _) in self._checked.items() if until <= now]:
+            self._checked.pop(k, None)
+        while len(self._checked) >= _CACHE_MAX:
+            self._checked.pop(next(iter(self._checked)), None)
+
+    def forget(self, user: str | None = None, session: str | None = None) -> None:
+        """Drops cached session checks (of one session, or of every session of a user), so the next request asks the
+        server: after an administrator changes a user, a password change or a sign-out on this console."""
+        if session:
+            self._checked.pop(session, None)
+        if user:
+            for k in [k for k, (_, p) in list(self._checked.items()) if p and p.get("username") == user]:
+                self._checked.pop(k, None)
 
     def _with_token(self, ident: Identity) -> Identity:
         if not self.token_secret:
             return ident
         return Identity(ident.user, ident.display, ident.desk, ident.roles,
-                        mint_token(ident.user, ident.roles, self.token_secret, self.token_ttl), ident.must_change)
+                        mint_token(ident.user, ident.roles, self.token_secret, self.token_ttl), ident.must_change, ident.session)
