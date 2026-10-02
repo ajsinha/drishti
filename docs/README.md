@@ -116,6 +116,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 |---|---|
 | Build, test and change the code; recipes for common changes | [DEVELOPER_GUIDE.md](guides/DEVELOPER_GUIDE.md) |
 | Understand the design: pipeline, grammar, inference, modules | [ARCHITECTURE.md](architecture/ARCHITECTURE.md) |
+| See how server-side pricing (QuantLib) will work, and what is next on the roadmap | [QUANT_SERVICE.md](architecture/QUANT_SERVICE.md), [IMPLEMENTATION_PLAN.md › Roadmap](architecture/IMPLEMENTATION_PLAN.md#roadmap) |
 | Call the REST API, or read the ViewModel contract | [API_GUIDE.md](guides/API_GUIDE.md) (OpenAPI at `http://localhost:18480/api/docs/ui`) |
 | Know why something is the way it is | [adr/](architecture/adr/README.md): the architecture decision records |
 | See how it was built, wave by wave, and what is still open | [IMPLEMENTATION_PLAN.md](architecture/IMPLEMENTATION_PLAN.md) |
@@ -165,6 +166,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | [DEMO_CONNECTOR.md](connectors/DEMO_CONNECTOR.md) | you want to know what the sample connector serves, how it ticks, how packs supply samples, and how to switch it off |
 | [TROUBLESHOOTING.md](guides/TROUBLESHOOTING.md) | something is not working: each problem has what you see, how to check and the fix |
 | [DEVELOPER_GUIDE.md](guides/DEVELOPER_GUIDE.md) | you change Drishti's code: layout, build, tests, gates, and recipes |
+| [QUANT_SERVICE.md](architecture/QUANT_SERVICE.md) | you want to know how server-side pricing (QuantLib) will work with Drishti and reach the screen: the design and phases (proposed, on the roadmap) |
 | [ARCHITECTURE.md](architecture/ARCHITECTURE.md) | you want to understand how the pieces fit: pipeline, grammar, inference, graph, modules |
 | [API_GUIDE.md](guides/API_GUIDE.md) | you call the REST API from a program, or need the ViewModel contract |
 | [IMPLEMENTATION_PLAN.md](architecture/IMPLEMENTATION_PLAN.md) | you want to know which waves shipped in which release, and what is still open |

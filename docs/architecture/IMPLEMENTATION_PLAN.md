@@ -226,10 +226,19 @@ What is open today. None blocks normal use; each is a candidate for a future wav
 
 ## Roadmap
 
-Every item planned after 1.11 is built (see *Unreleased* in the changelog): field history, freshness, many servers,
-derived kinds, notes and shared workspaces, scheduled reports, the access log, plain-word search and the signed pack
-registry. Candidates next: email delivery for reports (SMTP), several console processes behind one load balancer
-without sticky sessions, and per-field history charts on derived kinds over long ranges (a summary table).
+Everything planned up to 1.13.0 is built (see the changelog). Next, in order:
+
+| # | Item | What it delivers | Design |
+|---|---|---|---|
+| 1 | **Server-side pricing: the quant service** | A QuantLib pricing service (`drishti-quant`) behind the Drishti server: model NPV beside booked MTM, Greeks, scenarios and implied vols for the packs' products, through a `quant` role power, with market data for the business date; in Calc (`drishti.pricer`), a Valuation panel and a what-if drawer; later, overnight batches into the lake. Five phases: the service; the gateway; the UX; what-if; more products and batches | [QUANT_SERVICE.md](QUANT_SERVICE.md), [ADR-019](adr/019-pricing-is-a-quantlib-service-behind-the-server.md) |
+| 2 | **Windows, proven** | The Windows CI job green; the PowerShell scripts run on a real Windows machine; a `maintain-lake.ps1` with a Task Scheduler example | [WINDOWS.md](../guides/WINDOWS.md) |
+| 3 | **A real deployment** | Security on, single sign-on, HTTPS, the images built and run together (`deploy/compose.yaml`), with the quant service | [OPERATIONS.md](../admin/OPERATIONS.md) |
+| 4 | **Scale on a real server** | `tools/bench/scale.sh` at a million trades a day for each store, replacing the extrapolations | [SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md) |
+| 5 | **Load with many users** | Concurrent viewers, live streams and searches measured together; limits documented | [PERFORMANCE.md](../admin/PERFORMANCE.md) |
+
+Also candidates: email delivery for reports (SMTP), several console processes behind one load balancer without sticky
+sessions, Iceberg without Hadoop, delete handling in the Redis connector, and per-field history charts on derived
+kinds over long ranges (a summary table).
 
 ## Risks
 

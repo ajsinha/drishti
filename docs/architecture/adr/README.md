@@ -35,5 +35,6 @@
 | [016](016-one-console-many-servers.md) | One console, many servers |
 | [017](017-sutras-are-yaml.md) | Sutras are YAML, through and through (supersedes 011) |
 | [018](018-signed-pack-registry.md) | Packs come from a signed, versioned registry |
+| [019](019-pricing-is-a-quantlib-service-behind-the-server.md) | Pricing is a QuantLib service behind the Drishti server (proposed) |
 
 ADRs are amended, never rewritten.
