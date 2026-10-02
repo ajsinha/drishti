@@ -78,4 +78,24 @@ class FileSourcePluginTest {
         assertThat(p.resolve(EntityRef.of("trade", "../../etc/passwd"), ".json")).isNull();
         assertThat(p.fetch(EntityRef.of("..", "x"))).isEmpty();
     }
+
+    /** SEC-09: an id stays in its own kind's folder; {@code ../<other kind>/<id>} must not reach another kind. */
+    @Test
+    void anIdCannotReachAnotherKindsFolder() throws Exception {
+        Files.createDirectories(root.resolve("trade"));
+        Files.createDirectories(root.resolve("secret"));
+        Files.createDirectories(root.resolve("2026-09-30/secret"));
+        Files.writeString(root.resolve("secret/S-1.json"), "{\"pin\":1234}");
+        Files.writeString(root.resolve("2026-09-30/secret/S-2.json"), "{\"pin\":5678}");
+        Files.writeString(root.resolve("2026-09-30/secret.jsonl"), "{\"id\":\"S-3\",\"pin\":9}\n");
+        FileSourcePlugin p = started();
+        assertThat(p.resolve(EntityRef.of("trade", "../secret/S-1"), ".json")).isNull();
+        assertThat(p.fetch(EntityRef.of("trade", "../secret/S-1"))).isEmpty();
+        assertThat(p.fetch(EntityRef.of("trade", "../secret/S-2"))).isEmpty();
+        assertThat(p.fetch(EntityRef.of("trade", "../2026-09-30/secret/S-2"))).isEmpty();
+        assertThat(p.fetch(EntityRef.of("trade/../secret", "S-1"))).isEmpty();
+        assertThat(p.fetch(EntityRef.of("x/../secret", "S-1"))).isEmpty();
+        assertThat(p.resolve(EntityRef.of("secret", "S-1"), ".json")).isNotNull();
+        assertThat(p.fetch(EntityRef.of("secret", "S-1"))).isPresent();
+    }
 }

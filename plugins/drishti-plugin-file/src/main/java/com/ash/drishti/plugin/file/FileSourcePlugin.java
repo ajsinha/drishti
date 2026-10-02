@@ -159,14 +159,29 @@ public final class FileSourcePlugin implements SourcePlugin {
         return Optional.empty();
     }
 
-    /** Resolves the file for {@code ref}, refusing identifiers that would escape the root directory. */
+    /**
+     * Resolves the file for {@code ref}, refusing a kind or id that would leave the kind's own folder: the kind is one
+     * folder directly under the root or a day folder, and the id's file lies inside it (SEC-09: {@code ../<other
+     * kind>/<id>} stays refused even though it would stay under the root).
+     */
     Path resolve(EntityRef ref, String ext) {
         return resolve(root, ref, ext);
     }
 
     private Path resolve(Path base, EntityRef ref, String ext) {
-        Path p = base.resolve(ref.kind()).resolve(ref.id() + ext).normalize();
-        return p.startsWith(base) && p.startsWith(root) ? p : null;
+        Path dir = kindFolder(base, ref.kind());
+        if (dir == null) {
+            return null;
+        }
+        Path p = dir.resolve(ref.id() + ext).normalize();
+        return p.startsWith(dir) && !p.equals(dir) ? p : null;
+    }
+
+    /** The folder of {@code kind} directly under {@code base} (inside the root), or null for a kind that is not one plain name. */
+    private Path kindFolder(Path base, String kind) {
+        Path b = base.normalize();
+        Path dir = b.resolve(kind).normalize();
+        return b.startsWith(root) && b.equals(dir.getParent()) && dir.getFileName().toString().equals(kind) ? dir : null;
     }
 
     private DataNode parse(Path p) throws IOException {
@@ -185,8 +200,11 @@ public final class FileSourcePlugin implements SourcePlugin {
     }
 
     private Path jsonlFile(String kind, LocalDate day) {
-        Path p = (day.equals(UNDATED) ? root : root.resolve(day.toString())).resolve(kind + ".jsonl").normalize();
-        return p.startsWith(root) ? p : null;
+        Path base = day.equals(UNDATED) ? root : root.resolve(day.toString()).normalize();
+        Path p = base.resolve(kind + ".jsonl").normalize();
+        return p.startsWith(root) && base.equals(p.getParent()) && p.getFileName().toString().equals(kind + ".jsonl")
+                ? p
+                : null;
     }
 
     /**
@@ -341,16 +359,16 @@ public final class FileSourcePlugin implements SourcePlugin {
 
     /** True when a feed folder ({@code <root>/<date>/<kind>/} within the lookback, or {@code <root>/<kind>/}) may hold the kind. */
     private boolean feedFolders(String kind, LocalDate want) {
-        Path undated = root.resolve(kind).normalize();
-        if (undated.startsWith(root) && Files.isDirectory(undated)) {
+        Path undated = kindFolder(root, kind);
+        if (undated != null && Files.isDirectory(undated)) {
             return true;
         }
         for (LocalDate d : dates) {
             if (want != null && (d.isAfter(want) || d.isBefore(want.minusDays(lookbackDays)))) {
                 continue;
             }
-            Path dir = root.resolve(d.toString()).resolve(kind).normalize();
-            if (dir.startsWith(root) && Files.isDirectory(dir)) {
+            Path dir = kindFolder(root.resolve(d.toString()), kind);
+            if (dir != null && Files.isDirectory(dir)) {
                 return true;
             }
         }
