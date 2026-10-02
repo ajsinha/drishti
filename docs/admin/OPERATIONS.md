@@ -628,7 +628,7 @@ Terminate TLS at a reverse proxy in front of the **console**. Users never need t
 | console `:17480`, everything | yes, through the proxy | the whole user interface, including its live channel |
 | server `:18480/api/v1/...` | no | the console calls it; with security off it trusts anyone |
 | server `:18480/actuator/...` | no; only to your monitoring network | with security on, only `/actuator/health` is open; the rest needs an admin token or `DRISHTI_METRICS_TOKEN` |
-| server `:18480/api/docs`, `/api/docs/ui` | no (developers only) | the OpenAPI description and Swagger UI, not authenticated |
+| server `:18480/api/docs`, `/api/docs/ui` | no (developers only) | the OpenAPI description and Swagger UI; with security on they need a token (any user), with security off they are open |
 
 To serve the actuator on a separate port that only monitoring can reach, set Spring's standard
 `MANAGEMENT_SERVER_PORT=18481`.
