@@ -80,6 +80,11 @@ public final class FileSourcePlugin implements SourcePlugin {
     private String idField;
     private volatile Set<String> kinds = Set.of();
     private int maxLoadRows;
+    private JsonlFormat format = JsonlFormat.DEFAULT;
+    /** Days whose file had unreadable lines, duplicate ids, or could not be read: for health and stats. */
+    private final java.util.Map<DayKey, JsonlDay.Report> problems = new java.util.concurrent.ConcurrentHashMap<>();
+    private final java.util.concurrent.atomic.LongAdder indexBuilds = new java.util.concurrent.atomic.LongAdder();
+    private static final System.Logger LOG = System.getLogger(FileSourcePlugin.class.getName());
 
     @Override
     public PluginManifest manifest() {
@@ -95,6 +100,7 @@ public final class FileSourcePlugin implements SourcePlugin {
         this.root = (domain.isBlank() ? base : base.resolve(domain)).toAbsolutePath().normalize();
         this.idField = ctx.setting("id-field", "id");
         this.maxLoadRows = Integer.parseInt(ctx.setting("max-load-rows", "200000"));
+        this.format = JsonlFormat.of(ctx.settings());
         ctx.settings().forEach((k, v) -> {
             if (k.startsWith("mode.")) {
                 modes.put(k.substring(5), v);
@@ -104,7 +110,12 @@ public final class FileSourcePlugin implements SourcePlugin {
         });
         this.days = com.github.benmanes.caffeine.cache.Caffeine.newBuilder()
                 .maximumWeight(Long.parseLong(ctx.setting("index-cache-mb", "1024")) * 1024 * 1024)
-                .weigher((DayKey k, JsonlDay v) -> (int) Math.min(Integer.MAX_VALUE, v.weight())).build();
+                .weigher((DayKey k, JsonlDay v) -> (int) Math.min(Integer.MAX_VALUE, v.weight()))
+                .removalListener((DayKey k, JsonlDay v, com.github.benmanes.caffeine.cache.RemovalCause cause) -> {
+                    if (v != null) {
+                        v.close();                                 // its file: a read still holding it builds a new index
+                    }
+                }).build();
         this.sourceName = ctx.setting("source-name", "file");
         long rescan = Long.parseLong(ctx.setting("rescan-seconds", "30"));
         this.lookbackDays = Integer.parseInt(ctx.setting("lookback-days", "10"));
@@ -177,20 +188,52 @@ public final class FileSourcePlugin implements SourcePlugin {
         return p.startsWith(root) ? p : null;
     }
 
-    /** A day's index, built on first use and again whenever the file changes. */
+    /**
+     * A day's index, built on first use and again whenever the file changes. A file with unreadable lines, duplicate
+     * ids, or that cannot be read at all is indexed once (and logged once) and kept until it changes.
+     *
+     * @throws java.io.UncheckedIOException when the file is gone
+     */
     private JsonlDay day(String kind, LocalDate day) {
         DayKey key = new DayKey(kind, day);
         JsonlDay d = days.getIfPresent(key);
         if (d != null && !d.current()) {
-            days.invalidate(key);
+            days.asMap().remove(key, d);
         }
         return days.get(key, k -> {
             try {
-                return JsonlDay.index(jsonlFile(kind, day), day.equals(UNDATED) ? null : day, promoted.getOrDefault(kind, List.of()), idField);
+                Path file = jsonlFile(kind, day);
+                JsonlDay built = JsonlDay.index(file, day.equals(UNDATED) ? null : day, promoted.getOrDefault(kind, List.of()), idField, format);
+                indexBuilds.increment();
+                report(k, built);
+                return built;
             } catch (IOException e) {
+                problems.remove(k);
                 throw new java.io.UncheckedIOException(e);
             }
         });
+    }
+
+    /** Where a day's file is, relative to the root, as health and answers name it. */
+    private String where(DayKey k) {
+        Path f = jsonlFile(k.kind(), k.day());
+        return f == null ? k.kind() + ".jsonl" : root.relativize(f).toString().replace('\\', '/');
+    }
+
+    /** Records what was wrong with a day's file (logged once per version of the file), or that nothing was. */
+    private void report(DayKey k, JsonlDay d) {
+        JsonlDay.Report r = d.report();
+        if (r.clean()) {
+            problems.remove(k);
+            return;
+        }
+        problems.put(k, r);
+        LOG.log(System.Logger.Level.WARNING, "{0}: {1}", sourceName, r.describe(where(k)));
+    }
+
+    /** Why the day's columns may be missing entities, or null. */
+    private String incomplete(DayKey k, JsonlDay d) {
+        return d.report().incomplete() ? d.report().describe(where(k)) : null;
     }
 
     /** The snapshot day of a kind on {@code asked}: its newest dated file on or before it, within the lookback. */
@@ -222,20 +265,43 @@ public final class FileSourcePlugin implements SourcePlugin {
             snapshotDay(ref.kind(), asked).ifPresent(tries::add);
         }
         for (LocalDate d : tries) {
+            Optional<EntityDocument> found = fromJsonlDay(ref, d);
+            if (found.isPresent()) {
+                return found;
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * The entity's line in one day's file. A read that finds the file changed under its index (replaced, rewritten)
+     * builds a new index and reads again, so it never uses one file's offsets on another.
+     */
+    private Optional<EntityDocument> fromJsonlDay(EntityRef ref, LocalDate d) throws IOException {
+        DayKey key = new DayKey(ref.kind(), d);
+        for (int attempt = 0; ; attempt++) {
             JsonlDay index;
             try {
                 index = day(ref.kind(), d);
             } catch (java.io.UncheckedIOException e) {
-                continue;                                          // the file went away: the next rescan forgets it
+                return Optional.empty();                           // the file went away: the next rescan forgets it
             }
-            Optional<byte[]> doc = index.document(ref.id());
-            if (doc.isPresent()) {
-                Path f = jsonlFile(ref.kind(), d);
-                return Optional.of(new EntityDocument(ref, context.parseJson(new java.io.ByteArrayInputStream(doc.get())),
-                        new Provenance(sourceName, Files.getLastModifiedTime(f).toMillis(), Instant.now(), false, d.equals(UNDATED) ? null : d)));
+            Optional<byte[]> doc;
+            try {
+                doc = index.document(ref.id());
+            } catch (JsonlDay.StaleIndexException e) {
+                days.asMap().remove(key, index);
+                if (attempt < 4) {
+                    continue;
+                }
+                throw e;
             }
+            if (doc.isEmpty()) {
+                return Optional.empty();
+            }
+            return Optional.of(new EntityDocument(ref, format.read(doc.get()),
+                    new Provenance(sourceName, index.modified(), Instant.now(), false, d.equals(UNDATED) ? null : d)));
         }
-        return Optional.empty();
     }
 
     @Override
@@ -252,7 +318,11 @@ public final class FileSourcePlugin implements SourcePlugin {
         if (d.isEmpty()) {
             return Optional.empty();                               // a day these files do not hold: another store may
         }
-        com.ash.drishti.api.ColumnSet all = day(kind, d.get()).columns();
+        JsonlDay index = day(kind, d.get());
+        if (!index.readable()) {
+            return Optional.empty();                               // the file cannot be read (health says why): documents are tried
+        }
+        com.ash.drishti.api.ColumnSet all = index.columns();
         java.util.Map<String, double[]> nums = new java.util.LinkedHashMap<>();
         java.util.Map<String, String[]> texts = new java.util.LinkedHashMap<>();
         for (String p : paths) {
@@ -262,7 +332,8 @@ public final class FileSourcePlugin implements SourcePlugin {
                 texts.put(p, all.texts().get(p));
             }
         }
-        return Optional.of(new com.ash.drishti.api.ColumnSet(all.ids(), nums, texts, all.businessDate()));
+        // a day with unreadable lines answers what it holds and says why it may be missing some, for a partial answer
+        return Optional.of(new com.ash.drishti.api.ColumnSet(all.ids(), nums, texts, all.businessDate(), incomplete(new DayKey(kind, d.get()), index)));
     }
 
     @Override
@@ -304,8 +375,16 @@ public final class FileSourcePlugin implements SourcePlugin {
 
     @Override
     public java.util.Map<String, Object> cacheStats() {
-        return java.util.Map.of("jsonlKinds", jsonl.size(), "jsonlDays", jsonl.values().stream().mapToInt(Set::size).sum(), "indexedDays",
-                days == null ? 0 : days.estimatedSize(), "ids", index.size());
+        java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
+        m.put("jsonlKinds", jsonl.size());
+        m.put("jsonlDays", jsonl.values().stream().mapToInt(Set::size).sum());
+        m.put("indexedDays", days == null ? 0 : days.estimatedSize());
+        m.put("ids", index.size());
+        m.put("indexBuilds", indexBuilds.sum());
+        m.put("unreadableLines", problems.values().stream().mapToLong(JsonlDay.Report::unreadable).sum());
+        m.put("duplicateIds", problems.values().stream().mapToLong(JsonlDay.Report::duplicates).sum());
+        m.put("unreadableFiles", problems.values().stream().filter(r -> r.failure() != null).count());
+        return m;
     }
 
     @Override
@@ -313,6 +392,12 @@ public final class FileSourcePlugin implements SourcePlugin {
         if (days != null) {
             days.invalidateAll();
         }
+        problems.clear();
+    }
+
+    @Override
+    public void close() {
+        purgeCaches();
     }
 
     /** The newest file's modification time: when the folder last received new data. */
@@ -361,6 +446,7 @@ public final class FileSourcePlugin implements SourcePlugin {
             return;
         }
         jsonl = java.util.Collections.unmodifiableMap(lines);
+        problems.keySet().removeIf(k -> !lines.getOrDefault(k.kind(), java.util.Collections.emptyNavigableSet()).contains(k.day()));   // files gone
         Set<String> held = new java.util.TreeSet<>(lines.keySet());
         try (Stream<Path> kinds = Files.list(root)) {
             for (Path kindDir : kinds.filter(Files::isDirectory).toList()) {
@@ -429,8 +515,21 @@ public final class FileSourcePlugin implements SourcePlugin {
         return index.search(kind, text, limit);
     }
 
+    /**
+     * UP, and what is wrong with the files indexed so far: "UP (3 unreadable lines in trading/2026-09-30/trade.jsonl
+     * (line 201: ...))". The rest of each such file is served.
+     */
     @Override
     public String health() {
-        return Files.isDirectory(root) ? "UP" : "DOWN: no directory " + root;
+        if (!Files.isDirectory(root)) {
+            return "DOWN: no directory " + root;
+        }
+        List<String> said = problems.entrySet().stream()
+                .sorted(java.util.Map.Entry.comparingByKey(java.util.Comparator.comparing(DayKey::day).reversed().thenComparing(DayKey::kind)))
+                .map(e -> e.getValue().describe(where(e.getKey()))).toList();
+        if (said.isEmpty()) {
+            return "UP";
+        }
+        return "UP (" + String.join("; ", said.subList(0, Math.min(3, said.size()))) + (said.size() > 3 ? "; and " + (said.size() - 3) + " more files" : "") + ")";
     }
 }
