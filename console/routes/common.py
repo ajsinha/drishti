@@ -15,13 +15,27 @@
 """Shared helpers for page routes."""
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 from typing import Any
 
 from fastapi import Request
 
 
+def live_who(request: Request) -> str:
+    """Whose live data a page shows: a fingerprint of the server, user and sign-in session (never the session id itself).
+    The browser's one live connection (live-hub.js) is shared only by pages with the same fingerprint as the
+    connection's own (the ``channel`` event's ``who``), so frames built for one session never reach another's page."""
+    from core import servers
+
+    me = getattr(request.state, "identity", None)
+    server = getattr(request.state, "server", None)
+    parts = (server.id if server is not None else servers.current(), me.user if me else "", (me.session or "") if me else "")
+    return hashlib.sha256("\x1f".join(parts).encode()).hexdigest()[:24]
+
+
 def render(request: Request, template: str, status_code: int = 200, **context: Any):
+    context.setdefault("LIVE_WHO", live_who(request))
     templates = request.app.state.templates
     context.setdefault("me", getattr(request.state, "identity", None))
     context.setdefault("pack_switcher", getattr(request.state, "pack_switcher", []))

@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import contextvars
 import json
 import secrets
@@ -29,7 +30,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from core.csrf import json_body
 from core import asof
 from core.backend import BackendError
-from routes.common import ident
+from routes.common import ident, live_who
 
 router = APIRouter(prefix="/api", include_in_schema=False)
 
@@ -233,19 +234,39 @@ async def stream(request: Request, kind: str, id_: str):
 
 
 
-MAX_CHANNEL_SUBSCRIPTIONS = 32
-CHANNELS: dict[str, dict] = {}     # open channels by id: a page adds and removes subscriptions without reconnecting
+MAX_CHANNEL_SUBSCRIPTIONS = 32    # default of live.max_subscriptions: what one browser's channel carries at most
+CHANNELS: dict[str, dict] = {}     # open channels by id: the browser adds and removes subscriptions without reconnecting
+
+
+def max_subscriptions(request: Request) -> int:
+    """How many subscriptions one channel (one browser) carries at most (``live.max_subscriptions``)."""
+    settings = getattr(request.app.state, "settings", None)
+    value = settings.get("live.max_subscriptions", MAX_CHANNEL_SUBSCRIPTIONS) if settings is not None else MAX_CHANNEL_SUBSCRIPTIONS
+    try:
+        return max(1, int(value))
+    except (TypeError, ValueError):
+        return MAX_CHANNEL_SUBSCRIPTIONS
+
+
+@router.get("/channel/who")
+async def channel_who(request: Request):
+    """Whose session this browser has now (the fingerprint pages carry in meta drishti-live): the browser's live hub asks
+    when a page of another session joins, to tell a newer sign-in from an old page."""
+    return JSONResponse({"who": live_who(request)}, headers={"Cache-Control": "no-store"})
 
 
 @router.get("/channel")
 async def channel(request: Request, s: list[str] = Query(default=[])):
-    """Everything live a browser tab needs, on ONE connection: its views (a workspace's panes included), the alerts bell
-    and monitors (s=view:trade/T-1, s=alerts, s=monitor:<name>). Browsers allow only six connections to a site over
-    HTTP/1.1; one stream per view and per bell used them up with a few tabs open, and every other request (the command
-    line's suggestions) then waited forever. Each event carries its subscription: {"ch": "view:trade/T-1", "d": …}.
-    Upstream streams are closed within seconds of the tab going away, even when they are quiet."""
+    """Everything live a BROWSER needs, on ONE connection: the views of all its tabs (a workspace's panes included), the
+    alerts bell and monitors (s=view:trade/T-1, s=alerts, s=monitor:<name>). Browsers allow only six connections to a
+    site over HTTP/1.1; a stream per view, and later a channel per tab, used them up, and every other page of the site
+    then waited forever (UX-01). The browser's tabs share this channel through live-hub.js. Each event carries its
+    subscription: {"ch": "view:trade/T-1", "d": …}; the first, ``channel``, says whose session it runs as (``who``).
+    Every frame is built for the signed-in user of the request that opened it. Upstream streams are closed within
+    seconds of the browser going away, even when they are quiet."""
     backend, me = request.app.state.backend, ident(request)
-    subs = list(dict.fromkeys(x for x in s if x))[:MAX_CHANNEL_SUBSCRIPTIONS]
+    limit = max_subscriptions(request)
+    asked = list(dict.fromkeys(x for x in s if x))[:limit * 2]
     queue: asyncio.Queue = asyncio.Queue(maxsize=2000)
 
     opened: dict[str, list] = {}                      # subscription -> its upstream HTTP responses, closed to end it
@@ -288,8 +309,14 @@ async def channel(request: Request, s: list[str] = Query(default=[])):
         await asyncio.gather(*(close_sub(s_, t) for s_, t in list(tasks.items())), return_exceptions=True)
 
     def add(sub: str):
-        if sub and sub not in tasks and len(tasks) < MAX_CHANNEL_SUBSCRIPTIONS and not ended[0]:
-            tasks[sub] = detached(pump(sub))
+        if not sub or sub in tasks or ended[0]:
+            return
+        if len(tasks) >= limit:                       # say so: a view that silently never ticks looks broken
+            with contextlib.suppress(asyncio.QueueFull):
+                queue.put_nowait((sub, "gone", json.dumps({"code": "DRS-5003", "detail": f"this browser already follows {limit} "
+                                                           "live subscriptions (live.max_subscriptions): close some tabs or panes"})))
+            return
+        tasks[sub] = detached(pump(sub))
 
     def remove(sub: str):
         task = tasks.pop(sub, None)
@@ -325,14 +352,15 @@ async def channel(request: Request, s: list[str] = Query(default=[])):
                 end()
 
     cid = secrets.token_urlsafe(12)
+    who = live_who(request)
 
     async def events():
-        for x in subs:
+        for x in asked:
             add(x)
         CHANNELS[cid] = {"user": me.user if me is not None else "", "add": add, "remove": remove}
         detached(watchdog())
         try:
-            yield f"event: channel\ndata: {json.dumps({'ch': '', 'd': {'id': cid, 'subs': subs}})}\n\n"
+            yield f"event: channel\ndata: {json.dumps({'ch': '', 'd': {'id': cid, 'subs': asked, 'who': who}})}\n\n"
             idle = 0
             checked = time.monotonic()
             while True:
@@ -376,8 +404,9 @@ async def channel_change(request: Request, cid: str):
     if ch is None or ch["user"] != (me.user if me is not None else ""):
         return JSONResponse({"code": "DRS-5001", "detail": "no such channel: open a new one"}, status_code=404)
     body = await json_body(request)
-    for sub in (body.get("remove") or [])[:MAX_CHANNEL_SUBSCRIPTIONS]:
+    limit = max_subscriptions(request)
+    for sub in (body.get("remove") or [])[:limit]:
         ch["remove"](str(sub))
-    for sub in (body.get("add") or [])[:MAX_CHANNEL_SUBSCRIPTIONS]:
+    for sub in (body.get("add") or [])[:limit * 2]:
         ch["add"](str(sub))
     return JSONResponse({"ok": True})

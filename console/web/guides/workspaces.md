@@ -118,8 +118,9 @@ With the finance pack enabled:
 
 ## Things to know
 
-- **Live updates.** All panes tick. The panes share the page's one live connection to the server, so a
-  four-pane workspace is no heavier on the connection than a single view.
+- **Live updates.** All panes tick. The panes, and every other tab of your browser, share the browser's one live
+  connection to the console, so a four-pane workspace (or one on each of your screens) is no heavier on the
+  connection than a single view, and other pages keep loading at once.
 - **Business date.** Every pane follows the date in the top bar. Pick a date to see the whole workspace as of
   that business day; press **Live** to go back.
 - **On a phone** the panes stack in one column, each a scrollable live view (dividers and their sizes apply to wider

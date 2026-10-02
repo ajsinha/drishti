@@ -27,6 +27,7 @@
   <link rel="apple-touch-icon" href="/static/img/drishti-icon.png">
   <meta name="copyright" content="{{ COPYRIGHT }}">
   <meta name="description" content="{{ PRODUCT }} — {{ TAGLINE }}">
+  <meta name="drishti-live" content="{{ LIVE_WHO }}">
   <title>{% block title %}{{ PRODUCT }}{% endblock %}</title>
   <link rel="icon" type="image/png" href="/static/img/drishti-icon.png">
   <script src="/static/js/theme-init.js?v={{ ASSET_V }}"></script>
@@ -47,6 +48,7 @@
   <main id="main">{% block content %}{% endblock %}</main>
   {% block footer %}{% include "_footer.html" %}{% endblock %}
   <script src="/static/vendor/bootstrap/js/bootstrap.bundle.min.js?v={{ ASSET_V }}"></script>
+  <script src="/static/js/live-hub.js?v={{ ASSET_V }}"></script>
   <script src="/static/js/channel.js?v={{ ASSET_V }}"></script>
   <script src="/static/js/app.js?v={{ ASSET_V }}"></script>
   <script src="/static/js/tables.js?v={{ ASSET_V }}"></script>

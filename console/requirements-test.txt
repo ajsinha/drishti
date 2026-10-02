@@ -11,3 +11,6 @@ pytest>=8.0
 -r requirements.txt
 numpy>=2.0
 scipy>=1.13
+# Test-only: tests/test_live_tabs_browser.py drives Chromium (many live tabs, UX-01). Skipped unless the browser is there
+# too: `python -m playwright install chromium`.
+playwright>=1.45

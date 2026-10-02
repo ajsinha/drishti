@@ -65,6 +65,11 @@ auth:
     scopes: openid profile email
     label: Sign in with single sign-on
     redirect_uri: ${DRISHTI_OIDC_REDIRECT_URI:}     # default: <console>/auth/oidc/callback
+live:                        # live updates (docs/architecture/LIVE.md): each browser holds ONE channel, shared by its tabs
+  # Subscriptions one browser's channel carries at most (views across all its tabs and workspace panes, the alerts bell,
+  # monitors; a view open in several tabs counts once). Each holds one stream to the server from the backend pool
+  # (backend.pool_size). Beyond it a view says it is not live, and why, instead of silently not ticking.
+  max_subscriptions: ${DRISHTI_LIVE_MAX_SUBSCRIPTIONS:32}
 studio:
   enabled: true
 calc:                        # Calc: Python in the browser (docs/guides/PYTHON_CALC.md); also needs a role with calc

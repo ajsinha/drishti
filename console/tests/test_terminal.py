@@ -329,13 +329,14 @@ def test_one_channel_carries_every_live_subscription_of_a_tab(client, backend, m
 
 
 def test_pages_never_open_their_own_event_streams():
-    """Browsers allow six connections per site: every live feature must share the tab's channel (channel.js)."""
+    """Browsers allow six connections per site: every live feature shares the browser's one channel (channel.js, which
+    hands every tab's subscriptions to the hub in live-hub.js, the only code that opens it)."""
     from pathlib import Path
     js = Path(__file__).resolve().parent.parent / "web" / "static" / "js"
-    offenders = [f.name for f in js.glob("*.js") if "new EventSource" in f.read_text() and f.name != "channel.js"]
+    offenders = [f.name for f in js.glob("*.js") if "EventSource(" in f.read_text() and f.name != "live-hub.js"]
     assert offenders == []
-    page = Path(__file__).resolve().parent.parent / "web" / "templates" / "base.html"
-    assert page.read_text().index("channel.js") < page.read_text().index("alerts.js")
+    page = (Path(__file__).resolve().parent.parent / "web" / "templates" / "base.html").read_text()
+    assert page.index("live-hub.js") < page.index("channel.js") < page.index("alerts.js")
 
 
 def test_a_channel_takes_new_subscriptions_without_reconnecting(client):
