@@ -68,6 +68,11 @@ The small diagram icon beside each identifier runs impact on **that** entity. Fo
     If your role may not open some of the dependents, they are **counted but not shown**. The group says, for
     example, *2 netting sets you do not have access to*.
 
+!!! note "Masked fields"
+    If your role sees some fields masked (`•••`), Impact shows only what you could find yourself: an entity tied to
+    this one only through a masked field (a masked `counterparty`, say) is not listed or counted, and a masked
+    measure, with its group's total, reads `•••`, never added up.
+
 ## Business dates
 
 Impact follows the date in the top bar. With a date picked, it lists what referred to the entity **on that

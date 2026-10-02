@@ -573,7 +573,9 @@ Points to copy from the existing controllers:
 
 - `@RequestAttribute(Principal.ATTRIBUTE) Principal p` is how every controller learns the caller.
 - `entitlements.requireOpen(p, kind)` (roles and active packs), `requireAdmin(p)` for `/api/v1/admin/**`, and
-  `mayOpen`/`filter`/`redact`/`restrict` to trim answers. They throw `DrishtiException(FORBIDDEN, …)`, which
+  `mayOpen`/`filter`/`redact`/`restrict` to trim answers. Field masks have one source, `entitlements.redactor(p)`: pass it
+  to every engine call that reads documents for the caller (`pipeline.view(ref, asOf, redactor)`, `records`,
+  `ViewStream`, `impact.analyse`, `search.run`), never mask an answer after the fact. They throw `DrishtiException(FORBIDDEN, …)`, which
   becomes `403 DRS-5002`.
 - Add a parameter of type `AsOf` when the answer depends on the business date; `AsOfResolver` fills it.
 - Throw `DrishtiException`; never build error responses by hand. `ApiExceptionHandler` writes the
@@ -1678,7 +1680,7 @@ Habits that keep the suite fast and reliable:
 | Is the console up, and can it reach the server? | `curl -s localhost:17480/healthz` (the process) and `curl -s localhost:17480/readyz` (`503` while the server is unreachable) |
 | Which packs, sources and problems? | `curl -s localhost:18480/api/v1/admin/health \| python3 -m json.tool`: version, uptime, heap, every source with status, health, kinds, live/dated/search and read counts, and pack problems. *Admin → Health* shows the same. |
 | What does the server return for a view? | `curl -s localhost:18480/api/v1/views/trade/MX-20000001 \| python3 -m json.tool`. Add `-H 'X-Drishti-As-Of: 2026-09-29'` for a past date and `-H 'X-Drishti-User: ash'` to act as a user (security off). With security on, add `-H "Authorization: Bearer <token>"`. |
-| What did the source send? | `F9` in the view, or `curl -s localhost:18480/api/v1/entities/trade/MX-20000001/raw` (redacted for roles without `raw`) |
+| What did the source send? | `F9` in the view, or `curl -s localhost:18480/api/v1/entities/trade/MX-20000001/raw` (masked fields read `•••` for roles without `raw`) |
 | Which Sutra, how long? | The view JSON's `provenance.layout` (`Sutra irs-fixfloat v1 + inference`, or `inference only`) and `timings` (`fetch`, `layout`, `links`, `bind`, `total` in ms) |
 | What would inference do on its own? | `curl -s localhost:18480/api/v1/studio/inferred/trade/MX-20000001` returns the inferred Sutra as YAML (`text/yaml`, starting `rachana: 1`) |
 | Is a Sutra broken? | `curl -s localhost:18480/api/v1/sutras/problems` (`{}` when none); see [runbooks/sutra-broken.md](../admin/runbooks/sutra-broken.md) |

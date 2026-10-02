@@ -165,8 +165,9 @@ rows:
       Hiding what someone may not see also hides that it exists.
     how:
       - >-
-        Roles set which entity kinds a user may open. Links to others stay visible and say "no access". Raw JSON
-        is redacted for roles without raw access. Users, lockout and an audit log are built in.
+        Roles set which entity kinds a user may open. Links to others stay visible and say "no access". Masked
+        fields read ••• for roles without raw access, everywhere: views, search, Impact, type-ahead. Users, lockout
+        and an audit log are built in.
   - id: selfhosted
     cap: Self-hosted and air-gapped
     terminal: "No"

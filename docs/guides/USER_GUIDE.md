@@ -183,6 +183,10 @@ example:
 TRD   MX-20000001   Trade · Interest rate swap (fixed/float) · Meridian Reinsurance Ltd · AUD 242m
 ```
 
+If your role sees some fields masked ([Masked fields](#masked-fields)), the subtitle is the entity's view title as you
+see it (`Rates · Interest rate swap (fixed/float) · •••` when the counterparty is masked), and typing a masked value
+(`Meridian`) finds nothing through it.
+
 | Key in the command line | Does |
 |---|---|
 | `↓` / `↑` | Highlight the next / previous suggestion (the list scrolls with you) |
@@ -678,7 +682,8 @@ keeps `book`, `desk`, `currency`, `mtm` and a dozen more), so a whole book pivot
   for a document read …*. **Read documents instead** computes from the documents themselves, at most 20,000 of them;
   when there were more, the status line says *partial: the first 20000 documents*.
 - **Masked fields stay masked.** A field your role may not see (as in a search) groups under `•••` and is never added
-  up; the status line says *hidden from your role: Book*.
+  up, and so does a field under a masked one (`counterparty.name` when `counterparty` is masked); the status line says
+  *hidden from your role: Book*.
 - The rows under a cell come from the server a page at a time (**Previous**, **Next**).
 
 ![The Pivot tab on TRD where mtm > 0: MTM by book and currency over the 379 matching trades, read from documents](/static/img/guide/pivot-search.png)
@@ -737,7 +742,22 @@ The keys a view offers are also buttons along the bottom of the screen, so you c
 
 Press `F9` in `TRD MX-20000001`. A drawer opens on the right with the full document, starting
 `{"tradeId": "MX-20000001", "productType": "IRS_FIXFLOAT", …}`, and its source and generation. Press `Esc`
-to close it. If your role does not have raw access, fields such as `trader` are masked.
+to close it. If your role does not have raw access, fields such as `trader` read `•••`, here and everywhere else
+(see [Masked fields](#masked-fields)).
+
+### Masked fields
+
+Your administrator can mask fields (`drishti.security.redact`, for example `trader` or `counterparty`) for roles
+without raw access. A masked field reads `•••` everywhere you could see or work out its value: the raw JSON, search
+results and their CSV, compare and history, Calc, pivots (grouped under `•••`, never added up), and views: the header
+strip, the title, tables and their totals, the Pivot tab's rows, charts (masked points are left out), anything a
+layout computes from the field, the live updates, monitors and the panel CSV export. Impact (`F8`) does not list what
+is tied to the entity only through a masked field, and shows a masked measure and its total as `•••`. The
+type-ahead neither shows nor matches a masked value, and an alert on a masked field never fires.
+
+You cannot find a masked value by trying: a condition on a masked field is never true, sorting by it does not sort,
+and typing it finds nothing. Fields under a masked one are masked too (with `counterparty` masked,
+`counterparty.name` reads `•••`).
 
 ### Alt+C · Calc: Python on a view
 
@@ -761,7 +781,9 @@ You should see *Impact of MX-20000001*:
 - **Depends on it directly:** *Netting set · 1*: `NS-MERIDIAN-RE-NY` with its net MTM.
 - **Rolls up into:** *Credit limit · 1*: `LIM-MERIDIAN-RE` via `creditLimit`, with the limit amount.
 
-Each group has a total. Click any id to open it. See the [Impact guide](../../console/web/guides/impact.md).
+Each group has a total. Click any id to open it. With [masked fields](#masked-fields), Impact lists only what you
+could find yourself, and a masked measure and its total read `•••`. See the
+[Impact guide](../../console/web/guides/impact.md).
 
 ## Live updates
 
@@ -966,7 +988,8 @@ without `where` opens a single match directly.
 ### Good to know
 
 - A search follows the business date in the top bar.
-- It sees only what your role may see; a masked field never matches.
+- It sees only what your role may see; a condition on a masked field never matches and sorting by one does not
+  sort ([Masked fields](#masked-fields)).
 - If the scan limit was reached, the page says *results may be incomplete*. If a source failed, did not answer
   in time, or could not list the kind, a banner says *Incomplete: 1 source could not be read* and names each source
   and why (for example a lake date in a format the server does not read): entities it holds are missing, so
@@ -1050,7 +1073,7 @@ one before (for a morning report on yesterday's close). **Deliver to** is the se
 webhook (a URL your administrator allows; the CSV is posted with `X-Drishti-Report` and `X-Drishti-Business-Date`
 headers). Email needs SMTP settings on the server and is not offered until then.
 
-A report runs **as you**: it sees what your roles let you see when it runs, with the same redaction. If your
+A report runs **as you**: it sees what your roles let you see when it runs, with the same masked fields. If your
 account is disabled or deleted, it stops. The list shows each report's next run and its last run (rows, where the
 file went, or the error); **Run now** runs one at once. Worked example: name `Big losers`, search
 `TRD where mtm < -10000000`, when `business-days 18:30`, deliver to the folder. At 18:30 on each business day a file
@@ -1064,6 +1087,8 @@ An alert rule watches **one entity** and tells you when a condition becomes true
 - The **server** checks every rule on every change of its entity, even when nobody has Drishti open.
 - A rule alerts **once** when its condition becomes true, and re-arms when it turns false again.
 - A rule that is already true when you save it alerts straight away.
+- A rule sees the entity as you may see it: a condition on a [masked field](#masked-fields) never becomes true, and a
+  message shows a masked value as `•••`.
 - New alerts show as a **toast** and a count on the **bell** among the round tools of the top bar, on every
   page. Click the bell to see them all, and to allow browser notifications. *Views → Alerts* opens the same page.
 
@@ -1340,7 +1365,7 @@ every role with its kinds (or *every kind*), its powers, how many users hold it,
 
 | Power | Lets its holders |
 |---|---|
-| raw JSON | see the raw document (`F9`, **JSON**) without masked fields |
+| raw JSON | see every field: nothing is masked for them, in the raw JSON (`F9`, **JSON**) or anywhere else ([Masked fields](#masked-fields)) |
 | author Sutras | use Sutra Studio |
 | approve Sutras | approve proposed Sutras in Reviews |
 | administer | use every admin page |

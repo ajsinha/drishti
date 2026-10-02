@@ -707,7 +707,9 @@ Work through this list for every shared installation. Each item says how to chec
    console, and the group-to-role map (`drishti.security.oidc.role-map`) on the server. See
    [USER_MANAGEMENT.md](USER_MANAGEMENT.md).
 5. **Roles.** Review `drishti.security.roles` and what the packs add. Keep `drishti.security.redact` listing the
-   fields that roles without raw access must not see in the raw JSON (F9).
+   fields that roles without raw access must not see: they read `•••` everywhere (raw JSON, search, views, Impact,
+   type-ahead, alerts; [CONFIGURATION.md](CONFIGURATION.md#field-masks)). List every field that holds the value,
+   since a mask hides only the field it names.
 6. **Authoring.** `DRISHTI_STUDIO_SAVE=false` except in an authoring environment. Keep `DRISHTI_SUTRA_REVIEW=true`
    and `DRISHTI_SUTRA_FOUR_EYES=true` so every change is approved by a second person.
 7. **Demo source off.** `DRISHTI_DEMO_ENABLED=false`.

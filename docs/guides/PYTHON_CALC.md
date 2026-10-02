@@ -22,7 +22,8 @@ read the screen you are on, search Drishti, and draw tables and charts in the te
 The code runs **in your browser**, in [Pyodide](https://pyodide.org) (CPython 3.14 compiled to WebAssembly), inside a
 Web Worker, so a long calculation never freezes the page. numpy, pandas, scipy, statsmodels and matplotlib are
 there. Nothing runs on the console or the server: every read your code makes is an ordinary read with your session,
-so your roles and the field masking apply exactly as on the screen.
+so your roles and the field masking apply exactly as on the screen: a masked field reads `•••` in the document, the
+strip, the tables, searches and columns alike.
 
 **Contents**
 
@@ -164,8 +165,8 @@ VaR, CVA, FRTB aggregation, …) is a submodule: `from drishti import quant as q
 | `view.business_date` | str or None | The business date of the data (`'2026-09-30'`), or None for undated data |
 | `view.provenance` | dict | Source, generation, business date, last update (as in the footer of the view) |
 | `view.doc` | dict | The entity's document as your role may see it (the raw JSON of `F9`, masked fields read `•••`) |
-| `view.strip` | dict | The strip at the top of the view: label → shown text |
-| `view.tables` | dict | Every panel that holds rows, as a pandas DataFrame, by the panel's title |
+| `view.strip` | dict | The strip at the top of the view: label → shown text (a masked field's text is `•••`) |
+| `view.tables` | dict | Every panel that holds rows, as a pandas DataFrame, by the panel's title (masked cells and totals read `•••`) |
 | `view.table(name)` | DataFrame | One panel's rows, by title or by panel id |
 | `view.panels` | list | The view model's panels as the server sent them (`id`, `kind`, `title`, `data`) |
 

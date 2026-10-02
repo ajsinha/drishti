@@ -109,7 +109,7 @@ A role says two things:
 
    | Power | Lets the holder |
    |---|---|
-   | `raw` | see raw JSON (F9) with nothing masked; others see the fields in `drishti.security.redact` as `•••` |
+   | `raw` | see every field, in raw JSON (F9) and everywhere else; others see the fields in `drishti.security.redact` as `•••` wherever their value could be seen or inferred: views, search, Impact, type-ahead, alerts ([CONFIGURATION.md](CONFIGURATION.md#field-masks)) |
    | `author` | write and preview Sutras in Studio, and propose them (where Studio saving is on) |
    | `approve` | approve or reject proposed Sutras, but never their own (four eyes) |
    | `admin` | everything in this guide: users, roles, caches, health, audit |
