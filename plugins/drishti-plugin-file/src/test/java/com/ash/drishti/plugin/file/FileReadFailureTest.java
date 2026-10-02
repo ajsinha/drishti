@@ -53,6 +53,8 @@ class FileReadFailureTest {
         } finally {
             Files.setPosixFilePermissions(file, PosixFilePermissions.fromString("rw-r--r--"));
         }
+        // an unreadable file is indexed once, until it changes: repaired, it is read again
+        Files.setLastModifiedTime(file, java.nio.file.attribute.FileTime.fromMillis(System.currentTimeMillis() + 5_000));
         assertThat(p.fetch(EntityRef.of("trade", "MX-1"), d30)).isPresent();
         assertThat(p.fetch(EntityRef.of("trade", "MX-1"), AsOf.of(LocalDate.of(2019, 12, 5)))).as("a day it does not hold").isEmpty();
     }

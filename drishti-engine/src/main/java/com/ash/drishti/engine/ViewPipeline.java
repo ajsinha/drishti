@@ -232,7 +232,7 @@ public final class ViewPipeline {
             Object v;
             try {
                 v = el.compile(i.bind()).eval(eval);
-            } catch (RuntimeException e) {
+            } catch (RuntimeException | StackOverflowError e) {
                 v = null;   // a field the document lacks, or of the wrong type, shows as a dash
             }
             strip.add(binder.cell(i.label(), v, i.fmt(), i.tone(), i.emphasis(), binder.pathOf(i.bind())));
@@ -284,7 +284,7 @@ public final class ViewPipeline {
     private static <T> T soft(java.util.function.Supplier<T> f) {
         try {
             return f.get();
-        } catch (RuntimeException e) {
+        } catch (RuntimeException | StackOverflowError e) {
             return null;
         }
     }

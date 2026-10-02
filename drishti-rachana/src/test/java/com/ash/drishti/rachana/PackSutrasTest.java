@@ -42,7 +42,7 @@ class PackSutrasTest {
             files = s.filter(p -> p.toString().endsWith(".sutra.yaml")).count();
         }
         try (SutraRegistry r = new SutraRegistry(new RachanaProperties(List.of(pack.resolve("sutras").toString()), false,
-                null, null, null, null, null, null), new ElCompiler())) {
+                null, null, null, null, null, null, null, null), new ElCompiler())) {
             assertThat(r.problems()).as(pack.getFileName() + " problems").isEmpty();
             assertThat(r.all()).hasSize((int) files);
         }

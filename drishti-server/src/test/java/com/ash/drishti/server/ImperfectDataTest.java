@@ -61,7 +61,7 @@ class ImperfectDataTest {
         try (Stream<Path> packs = Files.list(Path.of("..", "packs"))) {
             for (Path pack : packs.filter(p -> Files.isDirectory(p.resolve("sutras"))).sorted().toList()) {
                 try (SutraRegistry r = new SutraRegistry(new RachanaProperties(List.of(pack.resolve("sutras").toString()), false,
-                        null, null, null, null, null, null), new ElCompiler())) {
+                        null, null, null, null, null, null, null, null), new ElCompiler())) {
                     out.addAll(r.all());
                 }
             }

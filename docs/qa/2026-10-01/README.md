@@ -49,13 +49,13 @@ permissions, and masks are not applied on every path.
 |---|---|
 | [SEC-01](security/FINDINGS.md) | Disabling or demoting a user does not end their console session (roles carried in the cookie for 10 h; the server trusts token roles without a lookup). API tokens are cut off at once. |
 | [DATA-01](data/FINDINGS.md) | A source that fails or times out while listing makes a search look exact and empty (`partial: false`, 0 matches); a failed reindex drops the kind from type-ahead. **Fixed** in c00488a, 724328b (SearchFailuresTest, DeltaUnreadableTest.aFailedReindexKeepsThePreviousIdsAndHealthRecoversWhenTheTableReadsAgain) |
-| [DATA-02](data/FINDINGS.md) | One unreadable line (truncated, NaN, a 25 MB document) silently erases a whole JSON-lines day; nothing is logged. |
+| [DATA-02](data/FINDINGS.md) | One unreadable line (truncated, NaN, a 25 MB document) silently erases a whole JSON-lines day; nothing is logged. **Fixed** in 5ecce29 (JsonlHostileLinesTest: oneTruncatedLineIsSkippedAndCountedNotTheWholeDay, nanAndInfinityAsPythonWritesThemAreReadAsNoValue, aDocumentBeyondJacksonsDefaultStringLimitIsReadAndOneBeyondMaxDocumentMbIsSkipped, anUnreadableFileIsIndexedOnceUntilItChanges) |
 | [DATA-03](data/FINDINGS.md) | A failing store counts as "not held", so the next store silently answers with different data; view and search then disagree. **Fixed** in 8514970, c00488a (FileReadFailureTest, JdbcNotReachedTest, MongoNotReachedTest, DuckDbSourcePluginTest.aMissingFileIsDownUntilALoadWritesIt, SourceRouterTest.aFailingStoreStopsTheReadNamingItAndTheNextStoreIsNotAsked) |
 | [DATA-04](data/FINDINGS.md) | PostgresLoader is not atomic: a killed or concurrent reload leaves days empty or half-loaded, and searches report them as exact. |
 | [DATA-05](data/FINDINGS.md) | One future-dated row with retention (`--keep-months`, `--keep-days`) irreversibly drops all history. |
-| [DATA-06](data/FINDINGS.md) | JSON-lines rows with `doc` as an object and no `columns` get every promoted column null: searches, pick lists and desk P&L silently empty. |
-| [GRAM-01](ux/FINDINGS.md) | A Sutra with a deeply nested expression (~800 parentheses) stops the server from starting (`StackOverflowError`). |
-| [GRAM-02](ux/FINDINGS.md) | The same file silently kills Sutra hot reload; later valid Sutras never load. |
+| [DATA-06](data/FINDINGS.md) | JSON-lines rows with `doc` as an object and no `columns` get every promoted column null: searches, pick lists and desk P&L silently empty. **Fixed** in 5ecce29 (JsonlHostileLinesTest.docAsAnObjectWithoutColumnsIsPromotedLikeDocAsAString) |
+| [GRAM-01](ux/FINDINGS.md) | A Sutra with a deeply nested expression (~800 parentheses) stops the server from starting (`StackOverflowError`). **Fixed** in c1ace31 (SutraRegistryTest.aDeeplyNestedSutraIsAProblemNotAFailedStart, PathologicalExpressionsTest.DefaultLimits.theServerStartsAndListsBothFilesAsProblems) |
+| [GRAM-02](ux/FINDINGS.md) | The same file silently kills Sutra hot reload; later valid Sutras never load. **Fixed** in c1ace31 (SutraRegistryTest.hotReloadSurvivesADeeplyNestedSutraAndKeepsLoadingLaterOnes, SutraRegistryTest.anyFailureLoadingOneFileIsThatFilesProblem) |
 | [UX-01](ux/FINDINGS.md) | Six visible tabs on live views freeze a seventh page (one live connection per tab; browsers allow six per host). |
 
 ## Medium
@@ -69,14 +69,14 @@ permissions, and masks are not applied on every path.
 | SEC-06 | "Change password at first sign-in" is not enforced. |
 | DATA-07 | A promoted field with mixed types: the columns path orders text lexicographically and clamps huge numbers, disagreeing with documents. |
 | DATA-08 | File connector reverse lookups skip effective-mode kinds (Impact misses groups other stores show). |
-| DATA-09 | Duplicate ids in a JSON-lines day are counted twice (desk P&L wrong). |
-| DATA-10 | A read racing an atomic JSON-lines replace can fail (502), using old offsets on the new file. |
+| DATA-09 | Duplicate ids in a JSON-lines day are counted twice (desk P&L wrong). **Fixed** in 5ecce29 (JsonlHostileLinesTest.aDuplicateIdKeepsItsLastLineEverywhere) |
+| DATA-10 | A read racing an atomic JSON-lines replace can fail (502), using old offsets on the new file. **Fixed** in 5ecce29 (JsonlHostileLinesTest: readsRacingAnAtomicReplaceNeverFailOrReturnAnotherEntity, anIndexOverAFileRewrittenInPlaceNeverReturnsAnotherEntitysLine) |
 | DATA-11 | RedisLoader merges into a day instead of replacing it; an interrupted load leaves views and searches disagreeing. |
 | DATA-12 | Multi-store fall-through brings back an entity the recent store dropped. |
 | DATA-13 | LZ4 Parquet: unclear 502, health UP, and the documented advice ("use hadoop") does not work. **Fixed** in 724328b (DeltaUnreadableTest.lz4PagesFailTheReadWithTheCodecAndWhatToDoAndHealthNamesTheDate, DeltaUnreadableTest.lz4FromArrowUnderTheHadoopEngineSaysWhatToDo) |
 | DATA-14 | `quant.year_fraction`: 30E/360 computed as US 30/360; ACT/ACT ISDA as days/365.25. |
 | DATA-15 | `knownAt` silently ignored by stores without time travel. |
-| GRAM-03 | Very deep or long expressions: the view returns HTTP 500 without a problem code. |
+| GRAM-03 | Very deep or long expressions: the view returns HTTP 500 without a problem code. **Fixed** in c1ace31 (ElLimitsTest.longChainsThatWouldOverflowEvaluationAreRefusedAtCompileTime, PathologicalExpressionsTest.LiftedLimits.anOverflowIsAPanelProblemOrAFileProblemNeverA500) |
 | GRAM-04 | "Case never matters" is false for field names; unknown fields silently match nothing. |
 | GRAM-05 | Many invalid Sutra inputs are silently accepted (duplicate keys, wrong types, extra YAML documents, unknown tags). |
 | UX-02 | At phone width 77 of 85 pages scroll sideways; header items clipped. |

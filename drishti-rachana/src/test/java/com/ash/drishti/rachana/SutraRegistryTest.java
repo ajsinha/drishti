@@ -17,6 +17,7 @@ package com.ash.drishti.rachana;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.ash.drishti.rachana.model.Sutra;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -36,7 +37,7 @@ class SutraRegistryTest {
     }
 
     private SutraRegistry registry(boolean hot) {
-        return new SutraRegistry(new RachanaProperties(List.of(dir.toString()), hot, Duration.ofMillis(50), null, null, null, null, null), new com.ash.drishti.rachana.el.ElCompiler());
+        return new SutraRegistry(new RachanaProperties(List.of(dir.toString()), hot, Duration.ofMillis(50), null, null, null, null, null, null, null), new com.ash.drishti.rachana.el.ElCompiler());
     }
 
     @Test
@@ -86,13 +87,75 @@ class SutraRegistryTest {
         Files.writeString(dir.resolve("old.v1.sutra.md"), "# old\n```sutra\nsutra: old\nversion: 1\nmatch: { kind: trade }\n```\n");
         Files.writeString(dir.resolve("plain.yaml"), "rachana: 1\nsutra: plain\nversion: 1\nmatch: { kind: trade }\n");
         Files.writeString(dir.resolve("good.v1.sutra.yaml"), "rachana: 1\nsutra: good\nversion: 1\nmatch: { kind: trade }\n");
-        try (SutraRegistry r = new SutraRegistry(new RachanaProperties(List.of(dir.toString()), false, Duration.ofMillis(50), null, null, null, null, null),
+        try (SutraRegistry r = new SutraRegistry(new RachanaProperties(List.of(dir.toString()), false, Duration.ofMillis(50), null, null, null, null, null, null, null),
                 new com.ash.drishti.rachana.el.ElCompiler())) {
             assertThat(r.all()).extracting(x -> x.name()).containsExactly("good");
             assertThat(r.problems().get(dir.resolve("old.v1.sutra.md").toString())).singleElement()
                     .satisfies(p -> assertThat(p.message()).contains("tools/rachana/md_to_yaml.py"));
             assertThat(r.problems().get(dir.resolve("plain.yaml").toString())).singleElement()
                     .satisfies(p -> assertThat(p.message()).contains("rename plain.yaml"));
+        }
+    }
+
+    /** The QA reproduction (GRAM-01): a bind with thousands of nested parentheses. */
+    static String deep(String name, int depth) {
+        return "rachana: 1\nsutra: " + name + "\nversion: 1\nmatch: { kind: trade }\npanels:\n  - { id: a, kind: kv, columns: [{label: x, bind: '"
+                + "(".repeat(depth) + "$.mtm" + ")".repeat(depth) + "'}] }\n";
+    }
+
+    private static void await(java.util.function.BooleanSupplier done) throws InterruptedException {
+        long deadline = System.currentTimeMillis() + 10_000;
+        while (!done.getAsBoolean() && System.currentTimeMillis() < deadline) {
+            Thread.sleep(50);
+        }
+    }
+
+    @Test
+    void aDeeplyNestedSutraIsAProblemNotAFailedStart() throws Exception {
+        Files.writeString(dir.resolve("qa-deep.v1.sutra.yaml"), deep("qa-deep", 3000));
+        Files.writeString(dir.resolve("good.v1.sutra.yaml"), sutra("good", 1, "trade"));
+        try (SutraRegistry r = registry(false)) {
+            assertThat(r.all()).extracting(Sutra::name).containsExactly("good");
+            assertThat(r.problems().get(dir.resolve("qa-deep.v1.sutra.yaml").toString())).singleElement().satisfies(p -> {
+                assertThat(p.code()).isEqualTo("DRS-2101");
+                assertThat(p.message()).contains("nested deeper than 200");
+                assertThat(p.location().line()).isPositive();
+            });
+        }
+    }
+
+    @Test
+    void hotReloadSurvivesADeeplyNestedSutraAndKeepsLoadingLaterOnes() throws Exception {
+        try (SutraRegistry r = registry(true)) {
+            Files.writeString(dir.resolve("qa-deep.v1.sutra.yaml"), deep("qa-deep", 3000));
+            await(() -> !r.problems().isEmpty());
+            assertThat(r.problems()).containsKey(dir.resolve("qa-deep.v1.sutra.yaml").toString());
+            Files.writeString(dir.resolve("probe.v1.sutra.yaml"), sutra("qa-probe", 1, "trade"));
+            await(() -> r.latest("qa-probe").isPresent());
+            assertThat(r.latest("qa-probe")).isPresent();
+            assertThat(r.hotReload()).isEqualTo("WATCHING");
+        }
+    }
+
+    /** The per-file guard: even a failure the checks do not foresee (an overflow, with the limits lifted) is one file's problem. */
+    @Test
+    void anyFailureLoadingOneFileIsThatFilesProblem() throws Exception {
+        Files.writeString(dir.resolve("qa-deep.v1.sutra.yaml"), deep("qa-deep", 100_000));
+        Files.writeString(dir.resolve("good.v1.sutra.yaml"), sutra("good", 1, "trade"));
+        var unbounded = new com.ash.drishti.rachana.el.ElCompiler(100,
+                new com.ash.drishti.rachana.el.ElLimits(Integer.MAX_VALUE, Integer.MAX_VALUE));
+        try (SutraRegistry r = new SutraRegistry(new RachanaProperties(List.of(dir.toString()), true, Duration.ofMillis(50), null, null, null,
+                null, null, null, null), unbounded)) {
+            assertThat(r.all()).extracting(Sutra::name).containsExactly("good");
+            assertThat(r.problems().get(dir.resolve("qa-deep.v1.sutra.yaml").toString())).singleElement()
+                    .satisfies(p -> assertThat(p.code()).isEqualTo("DRS-2032"));
+            Files.writeString(dir.resolve("deeper.v1.sutra.yaml"), deep("qa-deeper", 100_000));   // the watcher meets one too
+            await(() -> r.problems().size() == 2);
+            Files.writeString(dir.resolve("probe.v1.sutra.yaml"), sutra("qa-probe", 1, "trade"));
+            await(() -> r.latest("qa-probe").isPresent());
+            assertThat(r.problems()).hasSize(2);
+            assertThat(r.latest("qa-probe")).isPresent();
+            assertThat(r.hotReload()).isEqualTo("WATCHING");
         }
     }
 }

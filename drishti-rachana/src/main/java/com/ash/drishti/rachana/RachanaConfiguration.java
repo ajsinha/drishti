@@ -28,7 +28,7 @@ public class RachanaConfiguration {
 
     @Bean
     public ElCompiler elCompiler(RachanaProperties props) {
-        return new ElCompiler(props.expressionCacheSize());
+        return new ElCompiler(props.expressionCacheSize(), props.expressionLimits());
     }
 
     @Bean

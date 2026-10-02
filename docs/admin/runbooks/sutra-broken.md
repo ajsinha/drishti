@@ -93,7 +93,8 @@ Common codes:
 | `DRS-2026` | Too many figures in the strip. | Remove some; the message says the maximum (8). |
 | `DRS-2027` | `area` is not `main` or `right`. | Correct it. |
 | `DRS-2028` | The same name and version is defined in two files. | Give one file a new version, or delete the duplicate. |
-| `DRS-2101` | An expression does not compile. | Fix the Rachana-EL at the reported place. |
+| `DRS-2032` | The file could not be read at all (an unforeseen failure, such as one too deeply nested to read); the log has the stack trace. The other Sutras load and hot reload continues. | Simplify the file; if it looks valid, report the log entry. |
+| `DRS-2101` | An expression does not compile, or is past the size limits (nested deeper than `drishti.rachana.max-expression-depth`, 200, or longer than `max-expression-length`, 10,000 characters). | Fix the Rachana-EL at the reported place; write long sums with `sum(...)`. |
 
 ### Step 1a. A `.sutra.md` or plain `.yaml` file (`DRS-2004`, `DRS-2009`)
 

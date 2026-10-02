@@ -41,7 +41,7 @@ class ReferenceSutrasTest {
 
     @BeforeAll
     static void load() {
-        registry = new SutraRegistry(new RachanaProperties(List.of("../packs/finance/sutras"), false, null, null, null, null, null, null), EL);
+        registry = new SutraRegistry(new RachanaProperties(List.of("../packs/finance/sutras"), false, null, null, null, null, null, null, null, null), EL);
         matcher = new SutraMatcher(registry, EL, F);
     }
 

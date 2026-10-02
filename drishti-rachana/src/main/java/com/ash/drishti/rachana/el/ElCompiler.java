@@ -26,19 +26,33 @@ public final class ElCompiler {
 
     private final Cache<String, Expr> exprs;
     private final Cache<String, Template> templates;
+    private final ElLimits limits;
 
-    public ElCompiler(long maxEntries) {
+    public ElCompiler(long maxEntries, ElLimits limits) {
         this.exprs = Caffeine.newBuilder().maximumSize(maxEntries).build();
         this.templates = Caffeine.newBuilder().maximumSize(maxEntries).build();
+        this.limits = limits;
+    }
+
+    public ElCompiler(long maxEntries) {
+        this(maxEntries, ElLimits.DEFAULTS);
     }
 
     public ElCompiler() {
         this(10_000);
     }
 
-    /** @throws ElException ({@code DRS-2101}) with the offset of the problem */
+    /**
+     * @throws ElException ({@code DRS-2101}) with the offset of the problem, including an expression beyond the
+     *     {@linkplain ElLimits limits} (too deeply nested or too long)
+     */
     public Expr compile(String source) {
-        return exprs.get(source, Parser::parse);
+        return exprs.get(source, s -> Parser.parse(s, limits));
+    }
+
+    /** The bounds every compiled expression is held to. */
+    public ElLimits limits() {
+        return limits;
     }
 
     /** Compiles text with embedded {@code ${expr}} parts. Text without {@code ${} is returned as is. */

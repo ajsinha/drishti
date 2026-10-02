@@ -23,14 +23,14 @@ docaudit/). Totals: 3 high, 19 medium, 23 low, 5 info.
 ## High
 | Id | Finding | Where | Repro |
 |---|---|---|---|
-| GRAM-01 | One Sutra with ~800+ nested parentheses in a bind stops the server starting (`Application run failed … sutraRegistry … StackOverflowError`). The recursive EL parser has no depth limit and the registry catches only SutraException/IOException. Docs say a bad file "is not loaded". Fix: depth limit → DRS-2101; per-file guard for StackOverflowError. | el/Parser.java; SutraRegistry.java:217-220 | hold/qa-deep.v1.sutra.yaml in a Sutra directory, start the server |
-| GRAM-02 | The same file kills the hot-reload watcher silently (`Exception in thread "drishti-rachana-watch" StackOverflowError`): later valid Sutras are never loaded, /api/v1/sutras/problems stays `{}`, the next restart fails (GRAM-01). | SutraRegistry.java:343 (watchLoop catches only RuntimeException) | drop the file while the server runs |
+| GRAM-01 | One Sutra with ~800+ nested parentheses in a bind stops the server starting (`Application run failed … sutraRegistry … StackOverflowError`). The recursive EL parser has no depth limit and the registry catches only SutraException/IOException. Docs say a bad file "is not loaded". Fix: depth limit → DRS-2101; per-file guard for StackOverflowError. | el/Parser.java; SutraRegistry.java:217-220 | hold/qa-deep.v1.sutra.yaml in a Sutra directory, start the server **Fixed** in c1ace31 (SutraRegistryTest.aDeeplyNestedSutraIsAProblemNotAFailedStart, PathologicalExpressionsTest.DefaultLimits.theServerStartsAndListsBothFilesAsProblems) |
+| GRAM-02 | The same file kills the hot-reload watcher silently (`Exception in thread "drishti-rachana-watch" StackOverflowError`): later valid Sutras are never loaded, /api/v1/sutras/problems stays `{}`, the next restart fails (GRAM-01). | SutraRegistry.java:343 (watchLoop catches only RuntimeException) | drop the file while the server runs **Fixed** in c1ace31 (SutraRegistryTest.hotReloadSurvivesADeeplyNestedSutraAndKeepsLoadingLaterOnes, SutraRegistryTest.anyFailureLoadingOneFileIsThatFilesProblem) |
 | UX-01 | Six visible tabs on live views freeze a 7th page completely (`/t` never loads in 60 s, no message; closing one live tab → loads in 0.4 s): one SSE connection per visible tab over HTTP/1.1, browser limit 6 per host. LIVE.md presents this as solved; only hidden tabs release their connection. | live channel; LIVE.md | streams2.py |
 
 ## Medium
 | Id | Finding |
 |---|---|
-| GRAM-03 | Very deep or very long expressions: a 5000-term `+` chain loads without a problem, then the view returns HTTP 500 with no DRS code (console shows raw Spring JSON, Studio "HTTP-500 {…}"); contradicts "evaluation is total". |
+| GRAM-03 | Very deep or very long expressions: a 5000-term `+` chain loads without a problem, then the view returns HTTP 500 with no DRS code (console shows raw Spring JSON, Studio "HTTP-500 {…}"); contradicts "evaluation is total". **Fixed** in c1ace31 (ElLimitsTest.longChainsThatWouldOverflowEvaluationAreRefusedAtCompileTime, PathologicalExpressionsTest.LiftedLimits.anOverflowIsAPanelProblemOrAFileProblemNeverA500) |
 | GRAM-04 | "Case never matters" (QUICKSTART:127, search.html:50) is false for field names: `trd producttype=revolver` → 0, `TRD productType=Revolver` → 84. Unknown fields (`TRD where nosuchfield > 1`) silently match nothing. |
 | GRAM-05 | Invalid Sutra inputs silently accepted: duplicate YAML keys (last wins), a second YAML document (ignored), unknown custom tags (ignored), `match.kind: 42`, `priority: high`, a title without `id`, `rows: 5`, `limit: many`, `search: maybe`, `fields: 5`, `series: 5`. |
 | UX-02 | At 390 px, 77 of 85 pages scroll sideways (419 px); the Live pill and avatar are clipped; admin pages 603 px (nav.css:21,113). |
@@ -67,7 +67,7 @@ docaudit/). Totals: 3 high, 19 medium, 23 low, 5 info.
 | UX-17 | The function-key bar truncates panel titles. |
 | UX-18 | The release-notes guide has 16 `<h1>` elements. |
 | DOC-04 | QUICKSTART's "every key" list misses F5, F6, Alt+C and Alt+L. |
-| DOC-05 | Docs say expression evaluation is total (GRAM-03 shows it is not). |
+| DOC-05 | Docs say expression evaluation is total (GRAM-03 shows it is not). **Fixed** in c1ace31 (RACHANA_REFERENCE: size limits; evaluation is total and explained). |
 | DOC-10 | DRS-3001 documented but never thrown. |
 | DOC-11 | TROUBLESHOOTING's code table has gaps. |
 | DOC-12 | RACHANA_REFERENCE gives the problem-code range as 2010–2027 instead of –2031. |

@@ -14,7 +14,7 @@ application.local.yaml
 hs_err_pid*
 # everything under data/ is generated or written at run time (lake, JSON lines, feeds, identity database, reports):
 # make it with tools/packgen/banking/make_data.py, never commit it
-data/
+/data/
 .claude/
 # the Python runtime of Calc: installed by tools/fetch-pyodide.sh (pinned and verified), never committed
 console/web/static/vendor/pyodide/
