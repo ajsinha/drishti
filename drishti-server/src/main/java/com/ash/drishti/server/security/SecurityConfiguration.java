@@ -48,6 +48,18 @@ public class SecurityConfiguration {
         return r;
     }
 
+    /**
+     * Refuses non-canonical request lines under /api and /actuator (path parameters, needless encodings, dot or empty
+     * segments) with 400 before any other filter, so every decision is taken on the path that is served (SEC-02).
+     */
+    @Bean
+    public FilterRegistrationBean<PathGuard> pathGuard() {
+        FilterRegistrationBean<PathGuard> r = new FilterRegistrationBean<>(new PathGuard());
+        r.addUrlPatterns("/api", "/api/*", "/actuator", "/actuator/*");
+        r.setOrder(-10);
+        return r;
+    }
+
     /** Guards /actuator (except health) and /api/docs when security is on. */
     @Bean
     public FilterRegistrationBean<ManagementGuard> managementGuard(SecurityProperties props, TokenVerifier verifier,

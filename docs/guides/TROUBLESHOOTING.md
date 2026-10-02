@@ -616,6 +616,14 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 
 ## Monitoring endpoints
 
+### A request under `/api` or `/actuator` answers `400 DRS-5001` "path parameters (;) are not accepted"
+
+- **Cause:** the path in the request line is not written plainly: a `;` path parameter, a percent-encoded letter,
+  digit, `- . _ ~`, `/` or `\`, a malformed escape, or a `.`, `..` or empty (`//`) segment. The server refuses these
+  before any other check so that the path it checks is the path it serves.
+- **Fix:** send the plain path. Percent-encode only characters that are data in a name or an id (a space, `;`, `%`,
+  parentheses, non-ASCII letters), as `urllib.parse.quote(name, safe='')` or `encodeURIComponent` do.
+
 ### `/actuator/prometheus` (or `/actuator/metrics`) answers 401 or 403
 
 - **Cause:** security is on (`DRISHTI_SECURITY_ENABLED=true`). Then only `/actuator/health` (and

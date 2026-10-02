@@ -659,7 +659,10 @@ one panel, updates strip cells in place, and hands chart panels new data — so 
 - **Token boundary.** For every server call the console mints a short-lived HS256 token (`auth.token_secret` =
   server `drishti.security.secret`, `DRISHTI_TOKEN_SECRET`; 300 s). With `drishti.security.enabled`, `TokenFilter`
   requires it on every `/api/**` request (algorithm pinned, constant-time check) and answers 401 problem+json
-  otherwise. With security off (local development), the caller is taken from `X-Drishti-User` with every role.
+  otherwise. Filters decide on the decoded path the dispatcher serves (`RequestPaths.routed`), and `PathGuard` first
+  refuses, with `400 DRS-5001`, any request line under `/api` or `/actuator` that does not spell that path plainly
+  (path parameters, needless `%`-escapes, dot or empty segments), so `/api/v1;x/…` or `/api/%761/…` cannot skip the
+  token check (QA SEC-02). With security off (local development), the caller is taken from `X-Drishti-User` with every role.
 - **Single sign-on** (OIDC, ADR-014): the console runs the authorization code flow with PKCE; the server verifies the
   ID token itself against the provider's keys (`RS256`/`ES256`, no `none` or HMAC), maps groups to roles and
   provisions the user. The token boundary is unchanged.

@@ -47,8 +47,8 @@ public final class TokenFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        String uri = request.getRequestURI();
-        return !uri.startsWith("/api/v1/") || uri.startsWith("/api/docs");
+        // the path that is served, not the raw request line (SEC-02): /api/v1;x/… and /api/%761/… are /api/v1/…
+        return !RequestPaths.routed(request).startsWith("/api/v1/");
     }
 
     @Override

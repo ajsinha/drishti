@@ -148,6 +148,19 @@ Every request under `/api/v1/` passes through the server's token filter (`TokenF
 depends on one setting, `drishti.security.enabled` (environment variable `DRISHTI_SECURITY_ENABLED`,
 default `false`).
 
+**Paths must be written plainly.** The token filter (and the guard on `/actuator` and `/api/docs`) decides on the
+path the server serves, after decoding. Under `/api` and `/actuator` a request line that spells a path in any other
+form is refused, security on or off, with `400 DRS-5001` problem+json before any other check: a path parameter
+(`/api/v1;x/packs`), a percent-encoded letter, digit, `- . _ ~`, `/` or `\` (`/api/%761/packs`), a malformed escape,
+or a dot or empty segment (`/api/./v1/packs`, `/api/v1/../v1/packs`, `/api//v1/packs`). Encode only what is data in
+a name or an id (a space as `%20`, `;` as `%3B`, `%` as `%25`, `(` `)`, non-ASCII letters): those are accepted, as
+`urllib.parse.quote(name, safe='')` and `encodeURIComponent` write them. The query string is not affected.
+
+```bash
+curl -s $B';x/packs'
+# {"title":"bad request","status":400,"code":"DRS-5001","detail":"path parameters (;) are not accepted"}
+```
+
 ### Security off (local development)
 
 No token is needed. The caller's name is taken from the optional `X-Drishti-User` header (default
@@ -980,8 +993,11 @@ You should see `{"purged":["market-store"],"elapsedMs":…}`.
 
 ### Outside /api/v1: OpenAPI and actuator
 
-These paths are not under `/api/v1/`, so the token filter does not apply to them. Protect them at the
-network or reverse-proxy level in production.
+These paths are not under `/api/v1/`, so the token filter does not apply to them. With security on, a
+separate guard does: only `/actuator/health` (and its probes) is open, `/api/docs` needs any valid token, and the
+rest of `/actuator` needs an admin token or the scrape token `DRISHTI_METRICS_TOKEN` ([OPERATIONS §8.1](../admin/OPERATIONS.md#81-what-to-expose)). Like `/api`,
+they must be written plainly (`/actuator;x/prometheus` or `/actuator/%70rometheus` → `400 DRS-5001`). Still keep
+them on your monitoring network in production.
 
 | Path | What |
 |---|---|
@@ -1089,7 +1105,7 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-4002 | 500 | view failed | building the view failed unexpectedly |
 | DRS-4003 | 400 | bad business date | unreadable, in the future, or before the history window |
 | DRS-4004 | 400 | bad search | a structured search cannot be read (`detail` says where) |
-| DRS-5001 | 400 | bad request | an invalid argument or body; also "too many live streams on this server" |
+| DRS-5001 | 400 | bad request | an invalid argument or body; a path not written plainly (`;`, a needless `%`-escape, a dot or empty segment); also "too many live streams on this server" |
 | DRS-5002 | 403 | forbidden | the caller lacks the role, the pack is not active for them, or the feature is off |
 | DRS-5004 | 404 | cache not found | no cache by that name (cache purge) |
 | DRS-5010 | 401 | unauthenticated | missing, bad or expired bearer token |

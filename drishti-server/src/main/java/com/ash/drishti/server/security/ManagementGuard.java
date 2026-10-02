@@ -51,7 +51,7 @@ public final class ManagementGuard extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        String uri = request.getRequestURI();
+        String uri = RequestPaths.routed(request);
         return !props.enabled() || uri.equals("/actuator/health") || uri.startsWith("/actuator/health/")
                 || !(uri.startsWith("/actuator") || uri.startsWith("/api/docs"));
     }
@@ -60,7 +60,7 @@ public final class ManagementGuard extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws ServletException, IOException {
         String auth = req.getHeader("Authorization");
         String token = auth != null && auth.startsWith("Bearer ") ? auth.substring(7).trim() : null;
-        boolean docs = req.getRequestURI().startsWith("/api/docs");
+        boolean docs = RequestPaths.routed(req).startsWith("/api/docs");
         if (token != null) {
             if (!docs && metricsToken != null && MessageDigest.isEqual(metricsToken, token.getBytes(StandardCharsets.UTF_8))) {
                 chain.doFilter(req, res);
