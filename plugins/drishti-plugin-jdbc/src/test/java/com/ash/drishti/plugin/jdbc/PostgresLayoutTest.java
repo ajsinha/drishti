@@ -121,7 +121,8 @@ class PostgresLayoutTest extends DatedSourceContract {
     @Test
     void monthsOlderThanTheRetentionAreDropped() throws Exception {
         String old = "{\"domain\":\"hist\",\"kind\":\"trade\",\"id\":\"T-9\",\"date\":\"%s\",\"doc\":\"{}\"}";
-        load(List.of(old.formatted("2026-06-15"), old.formatted("2026-08-03"), old.formatted("2026-09-30")), "--recreate", "--keep-months", "2");
+        load(List.of(old.formatted("2026-06-15"), old.formatted("2026-08-03"), old.formatted("2026-09-30")), "--recreate", "--keep-months", "2",
+                "--as-of", "2026-09-30");
         try (Connection c = DriverManager.getConnection(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword());
              Statement st = c.createStatement();
              ResultSet rs = st.executeQuery("SELECT string_agg(business_date::text, ',' ORDER BY business_date) FROM hist.entities")) {

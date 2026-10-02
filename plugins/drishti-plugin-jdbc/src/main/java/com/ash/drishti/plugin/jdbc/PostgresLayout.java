@@ -157,6 +157,18 @@ final class PostgresLayout {
         }
     }
 
+    /** The rows the dates table records before {@code before}, and in all: {before, total}. */
+    static long[] rowsBefore(Connection c, String schema, LocalDate before) throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement("SELECT COALESCE(SUM(rows) FILTER (WHERE business_date < ?), 0), COALESCE(SUM(rows), 0) FROM "
+                + schema + "." + DATES)) {
+            ps.setDate(1, java.sql.Date.valueOf(before));
+            try (ResultSet rs = ps.executeQuery()) {
+                rs.next();
+                return new long[] {rs.getLong(1), rs.getLong(2)};
+            }
+        }
+    }
+
     /** The monthly partitions whose whole month ends before {@code before}, oldest first. */
     static List<String> partitionsBefore(Connection c, String schema, LocalDate before) throws SQLException {
         List<String> out = new ArrayList<>();
