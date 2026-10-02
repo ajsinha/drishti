@@ -65,8 +65,11 @@ import org.bson.conversions.Bson;
  * <p>A load merges into the days it reaches: a document of the stream replaces the one of the same (kind, id, date),
  * and an entity the stream does not carry stays. Nothing is deleted, so a load that is killed half way leaves each
  * day it reached with some documents of the new load and the rest of the old (run it again to finish it); to take an
- * entity out of a day, delete its document. A row dated after tomorrow in the business zone is not loaded and the
- * load ends with an error naming it ({@link LoadGuard}).
+ * entity out of a day, delete its document. A day the database does not hold yet is recorded in
+ * {@code <domain>_loading} before its first document is written, and the record goes once the load has written every
+ * document: the connector does not show the day meanwhile, so a new day is never seen half loaded (and a day a killed
+ * load began stays hidden until a load of it finishes). A row dated after tomorrow in the business zone is not loaded
+ * and the load ends with an error naming it ({@link LoadGuard}).
  *
  * <p>{@code --keep-days N} then deletes, in every domain collection of the database, each kind's business days older
  * than its N newest on or before {@code --as-of} (today; a day after it is neither counted nor deleted), and refuses
@@ -87,6 +90,8 @@ public final class MongoLoader {
     private final LoadGuard guard;
     private final Map<String, MongoCollection<BsonDocument>> collections = new ConcurrentHashMap<>();
     private final Map<String, MongoCollection<BsonDocument>> columnCollections = new ConcurrentHashMap<>();
+    private final Map<String, List<String>> newDays = new HashMap<>();     // domain -> the days this load writes, cleared of loading at the end
+    private final java.util.Set<String> seenDays = new java.util.HashSet<>();
     private final AtomicLong written = new AtomicLong();
     private final AtomicReference<Exception> failed = new AtomicReference<>();
     private final long t0 = System.nanoTime();
@@ -130,7 +135,7 @@ public final class MongoLoader {
             if (options.containsKey("keep-days")) {
                 long t1 = System.nanoTime();
                 List<String> domains = client.getDatabase(database).listCollectionNames().into(new ArrayList<>()).stream()
-                        .filter(c -> !c.endsWith(MongoLayout.COLUMNS_SUFFIX) && !c.startsWith("system.")).toList();
+                        .filter(c -> !c.endsWith(MongoLayout.COLUMNS_SUFFIX) && !c.endsWith(MongoLayout.LOADING_SUFFIX) && !c.startsWith("system.")).toList();
                 long gone = loader.keepDays(Integer.parseInt(options.get("keep-days")), domains);
                 System.out.printf("mongodb: deleted %,d documents older than each kind's %s newest business days in %,d ms%n", gone,
                         options.get("keep-days"), (System.nanoTime() - t1) / 1_000_000);
@@ -157,6 +162,9 @@ public final class MongoLoader {
                 if (!guard.accept(row.date(), row.domain() + " " + row.kind() + " " + row.id())) {
                     continue;
                 }
+                if (seenDays.add(row.domain() + "\t" + MongoLayout.loadingKey(row.kind(), row.date()))) {
+                    hideIfNew(row);
+                }
                 List<Row> batch = batches.computeIfAbsent(row.domain(), d -> new ArrayList<>(batchSize));
                 batch.add(row);
                 if (batch.size() >= batchSize) {
@@ -171,9 +179,28 @@ public final class MongoLoader {
             inFlight.release(maxInFlight);
         }
         if (failed.get() != null) {
-            throw failed.get();
+            throw failed.get();                                        // the new days stay hidden: a load of them shows them
         }
+        newDays.forEach((domain, keys) -> {
+            var unused = db.getCollection(MongoLayout.loadingCollection(domain)).deleteMany(Filters.in(MongoLayout.KEY, keys));
+        });
         return written.get();
+    }
+
+    /**
+     * A day the domain does not hold yet is recorded as loading before its first document, so readers do not see it
+     * half written; every day the load reaches is cleared of that record once the load has finished (a day a dead load
+     * began is shown once a load of it finishes).
+     */
+    private void hideIfNew(Row row) {
+        MongoCollection<BsonDocument> c = collection(row.domain());
+        Bson day = Filters.and(Filters.eq(MongoLayout.KIND, row.kind()), Filters.eq(MongoLayout.DATE, MongoLayout.day(row.date())));
+        String key = MongoLayout.loadingKey(row.kind(), row.date());
+        if (c.find(day).projection(new Document(MongoLayout.KEY, 1)).limit(1).first() == null) {
+            var unused = db.getCollection(MongoLayout.loadingCollection(row.domain()), BsonDocument.class).replaceOne(Filters.eq(MongoLayout.KEY, key),
+                    new BsonDocument(MongoLayout.KEY, new org.bson.BsonString(key)), new ReplaceOptions().upsert(true));
+        }
+        newDays.computeIfAbsent(row.domain(), d -> new ArrayList<>()).add(key);
     }
 
     private void submit(ExecutorService writers, String domain, List<Row> rows) throws InterruptedException {
