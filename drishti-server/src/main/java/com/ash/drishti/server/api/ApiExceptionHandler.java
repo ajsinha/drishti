@@ -16,6 +16,7 @@
 package com.ash.drishti.server.api;
 
 import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.rachana.SutraException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,6 +54,27 @@ public class ApiExceptionHandler {
     ProblemDetail binding(org.springframework.web.bind.ServletRequestBindingException e) {
         ProblemDetail p = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "no principal on request");
         p.setProperty("code", "DRS-5010");
+        return p;
+    }
+
+    /**
+     * A body that is not JSON, or JSON of the wrong shape for the endpoint (a list for an object): {@code 400 DRS-5001}
+     * saying so, never the framework's bare 400. The parser's own message is left out (it names internal classes).
+     */
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    ProblemDetail unreadable(org.springframework.http.converter.HttpMessageNotReadableException e) {
+        Throwable cause = e.getMostSpecificCause();
+        String detail = cause instanceof com.fasterxml.jackson.core.JsonParseException
+                ? "the request body is not valid JSON"
+                : cause instanceof com.fasterxml.jackson.databind.exc.MismatchedInputException m && m.getPath().isEmpty()
+                        && m.getMessage() != null && m.getMessage().contains("No content")
+                        ? "the request body is empty: send a JSON object"
+                        : cause instanceof com.fasterxml.jackson.databind.JsonMappingException
+                                ? "the request body is JSON of the wrong shape for this endpoint (an object with the documented fields)"
+                                : "the request body is missing or cannot be read: send a JSON object";
+        ProblemDetail p = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, detail);
+        p.setTitle("bad request");
+        p.setProperty("code", ErrorCode.BAD_REQUEST.code());
         return p;
     }
 

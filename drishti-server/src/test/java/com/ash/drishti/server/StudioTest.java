@@ -58,6 +58,22 @@ class StudioTest {
                 .andExpect(jsonPath("$.problems[*].code").value(hasItem("DRS-2101")));
     }
 
+    /** QA 2026-10-01 GRAM-08: a preview request that cannot be read is a 400 problem with a code, never a 500 or a bare 400. */
+    @Test
+    void aPreviewRequestThatCannotBeReadIsACleanProblem() throws Exception {
+        for (String body : new String[] {"{\"yaml\": null, \"kind\": \"trade\", \"id\": \"IRS-48213\"}",
+                "{\"kind\": \"trade\", \"id\": \"IRS-48213\"}", "{\"yaml\": \"rachana: 1\", \"id\": \"IRS-48213\"}", "{not json", "", "[1, 2]"}) {
+            mvc.perform(post("/api/v1/studio/preview").contentType(MediaType.APPLICATION_JSON).content(body))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("DRS-5001"))
+                    .andExpect(jsonPath("$.detail").isNotEmpty());
+        }
+        mvc.perform(post("/api/v1/studio/preview").contentType(MediaType.APPLICATION_JSON).content("{\"yaml\": null, \"kind\": \"trade\"}"))
+                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("'yaml'")));
+        mvc.perform(post("/api/v1/studio/preview").contentType(MediaType.APPLICATION_JSON).content("{not json"))
+                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("not valid JSON")));
+    }
+
     @Test
     void startFromInferenceGivesAValidSutra() throws Exception {
         String yaml = mvc.perform(get("/api/v1/studio/inferred/trade/IRS-47102").param("name", "irs-plain"))
