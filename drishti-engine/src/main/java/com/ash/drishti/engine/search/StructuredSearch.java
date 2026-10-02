@@ -150,14 +150,7 @@ public final class StructuredSearch {
             }
             matches.add(new Match(new Row(e.getKey(), titles.get(e.getKey()), values), order == null ? null : leaf(safe(order, ctx))));
         }
-        if (order != null) {
-            int sign = q.descending() ? -1 : 1;
-            matches.sort((a, b) -> a.key() == null || b.key() == null
-                    ? (a.key() == null ? 1 : 0) - (b.key() == null ? 1 : 0)   // no sort value: last, either direction
-                    : sign * compare(a.key(), b.key()));
-        } else {
-            matches.sort(Comparator.comparing(m -> m.row().ref().id()));
-        }
+        matches.sort(ordering(order != null, q.descending()));
         List<Row> rows = matches.stream().limit(q.limit()).map(Match::row).toList();
         return new Result(kind, q.condition(), q.orderBy(), paths, rows, docs.size(), matches.size(), partial,
                 Math.round((System.nanoTime() - t0) / 1e4) / 100.0, failures.asMap());
@@ -224,14 +217,7 @@ public final class StructuredSearch {
             }
             matches.add(new Match(new Row(EntityRef.of(kind, c.ids()[i]), c.ids()[i], Map.of("__row", i)), key));
         }
-        if (order != null) {
-            int sign = q.descending() ? -1 : 1;
-            matches.sort((a, b) -> a.key() == null || b.key() == null
-                    ? (a.key() == null ? 1 : 0) - (b.key() == null ? 1 : 0)
-                    : sign * compare(a.key(), b.key()));
-        } else {
-            matches.sort(Comparator.comparing(m -> m.row().ref().id()));
-        }
+        matches.sort(ordering(order != null, q.descending()));
         List<Row> rows = new ArrayList<>();
         for (Match m : matches.subList(0, Math.min(q.limit(), matches.size()))) {
             int i = (Integer) m.row().values().get("__row");
@@ -353,9 +339,32 @@ public final class StructuredSearch {
         return s;
     }
 
+    /**
+     * The order of a search's rows, the same on every path: by the sort value when there is an {@code order by} (rows
+     * with none last, either direction), then by id, so equal sort values never leave the order, or what a limit keeps,
+     * to the order a store returned its rows in (QA 2026-10-01, DATA-17).
+     */
+    private static Comparator<Match> ordering(boolean ordered, boolean descending) {
+        Comparator<Match> byId = Comparator.comparing(m -> m.row().ref().id());
+        if (!ordered) {
+            return byId;
+        }
+        int sign = descending ? -1 : 1;
+        Comparator<Match> byKey = (a, b) -> a.key() == null || b.key() == null
+                ? (a.key() == null ? 1 : 0) - (b.key() == null ? 1 : 0)       // no sort value: last, either direction
+                : sign * compare(a.key(), b.key());
+        return byKey.thenComparing(byId);
+    }
+
+    /** Numbers by value, text by text ignoring case, and every number before any text: one total order. */
     private static int compare(Object a, Object b) {
-        if (Values.isNumber(a) && Values.isNumber(b)) {
+        boolean na = Values.isNumber(a);
+        boolean nb = Values.isNumber(b);
+        if (na && nb) {
             return Double.compare(Values.number(a), Values.number(b));
+        }
+        if (na != nb) {
+            return na ? -1 : 1;
         }
         return Values.text(a).compareToIgnoreCase(Values.text(b));
     }

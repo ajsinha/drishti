@@ -253,7 +253,7 @@ public final class ImpactService {
         for (int i = 0; i < c.size(); i++) {
             row.put(c.ids()[i], i);
         }
-        double[] values = c.numbers().get(path);
+        double[] values = c.numeric(path);
         String fmt = config.formats().get(kind);
         double sum = 0;
         boolean any = false;

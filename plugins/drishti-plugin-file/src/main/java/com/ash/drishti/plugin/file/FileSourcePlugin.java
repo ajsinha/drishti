@@ -335,18 +335,10 @@ public final class FileSourcePlugin implements SourcePlugin {
             // its place; the search says partial and names this connector (DATA-03)
             throw new IOException(sourceName + " cannot read " + where(new DayKey(kind, d.get())) + ": " + index.report().failure());
         }
-        com.ash.drishti.api.ColumnSet all = index.columns();
-        java.util.Map<String, double[]> nums = new java.util.LinkedHashMap<>();
-        java.util.Map<String, String[]> texts = new java.util.LinkedHashMap<>();
-        for (String p : paths) {
-            if (all.numbers().containsKey(p)) {
-                nums.put(p, all.numbers().get(p));
-            } else if (all.texts().containsKey(p)) {
-                texts.put(p, all.texts().get(p));
-            }
-        }
+        com.ash.drishti.api.ColumnSet all = index.columns().select(paths);
         // a day with unreadable lines answers what it holds and says why it may be missing some, for a partial answer
-        return Optional.of(new com.ash.drishti.api.ColumnSet(all.ids(), nums, texts, all.businessDate(), incomplete(new DayKey(kind, d.get()), index)));
+        return Optional.of(new com.ash.drishti.api.ColumnSet(all.ids(), all.numbers(), all.texts(), all.businessDate(),
+                incomplete(new DayKey(kind, d.get()), index), all.mixed()));
     }
 
     @Override
@@ -358,7 +350,11 @@ public final class FileSourcePlugin implements SourcePlugin {
     public List<EntityRef> reverse(EntityRef target, String kind, AsOf asOf) {
         List<EntityRef> out = new ArrayList<>();
         for (String k : kind == null ? jsonl.keySet() : Set.of(kind)) {
-            Optional<LocalDate> d = effective(k) ? Optional.empty() : snapshotDay(k, asOf.businessDate());
+            if (effective(k)) {
+                effectiveReverse(target, k, asOf.businessDate()).forEach(i -> out.add(EntityRef.of(k, i)));
+                continue;
+            }
+            Optional<LocalDate> d = snapshotDay(k, asOf.businessDate());
             if (d.isEmpty()) {
                 continue;
             }
@@ -368,7 +364,9 @@ public final class FileSourcePlugin implements SourcePlugin {
                 if (!columnar(k).isEmpty()) {                       // promoted link columns: no line is read
                     found = new java.util.TreeSet<>();
                     com.ash.drishti.api.ColumnSet c = index.columns();
-                    for (String[] values : c.texts().values()) {
+                    List<Object[]> columns = new ArrayList<>(c.texts().values());
+                    columns.addAll(c.mixed().values());
+                    for (Object[] values : columns) {
                         for (int i = 0; i < values.length; i++) {
                             if (target.id().equals(values[i])) {
                                 found.add(c.ids()[i]);
@@ -384,6 +382,33 @@ public final class FileSourcePlugin implements SourcePlugin {
             }
         }
         return out;
+    }
+
+    /**
+     * Entities of a kind kept in {@code effective} mode whose version on {@code asked} (their newest line on or before
+     * it, as {@link #fetch} reads them) mentions the target (DATA-08): the days are read newest first and each entity
+     * only in its newest line, at most {@code max-load-rows} lines in all. A day that cannot be read ends the lookup
+     * there, so an older version never stands in for a newer one.
+     */
+    private List<String> effectiveReverse(EntityRef target, String kind, LocalDate asked) {
+        java.util.NavigableSet<LocalDate> ds = jsonl.get(kind);
+        List<String> found = new ArrayList<>();
+        if (ds == null) {
+            return found;
+        }
+        Set<String> seen = new java.util.HashSet<>();
+        for (LocalDate d : (asked == null ? ds : ds.headSet(asked, true)).descendingSet()) {
+            int left = maxLoadRows - seen.size();
+            if (left <= 0) {
+                break;
+            }
+            try {
+                found.addAll(day(kind, d).mentioning(target.id(), left, seen));
+            } catch (IOException | RuntimeException e) {
+                break;                                             // no referrers from here, not an error page
+            }
+        }
+        return found;
     }
 
     @Override

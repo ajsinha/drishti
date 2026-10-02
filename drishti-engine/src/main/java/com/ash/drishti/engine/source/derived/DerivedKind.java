@@ -271,7 +271,7 @@ public final class DerivedKind {
             });
             return List.copyOf(d);
         }
-        double[] nums = c.numbers().get(path);
+        double[] nums = c.numeric(path);
         if (nums == null) {
             return op == Op.AVG || op == Op.MIN || op == Op.MAX ? null : Values.normalise(0);    // text column: no numbers
         }

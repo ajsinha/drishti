@@ -180,7 +180,7 @@ final class JsonlDay implements AutoCloseable {
         for (String id : ids) {
             w += 2L * id.length();
         }
-        w += 8L * ids.length * (columns.numbers().size() + columns.texts().size());   // texts share their values
+        w += 8L * ids.length * (columns.numbers().size() + columns.texts().size() + columns.mixed().size());   // texts share their values
         return Math.max(1L << 20, w);
     }
 
@@ -235,13 +235,27 @@ final class JsonlDay implements AutoCloseable {
 
     /** Ids whose line mentions {@code target} as a JSON string, reading at most {@code maxLines} lines. */
     List<String> mentioning(String target, int maxLines) throws IOException {
+        return mentioning(target, maxLines, null);
+    }
+
+    /**
+     * Ids whose line mentions {@code target} as a JSON string, among those not in {@code skip}, reading at most
+     * {@code maxLines} lines. Every id whose line is read is added to {@code skip} (when not null): an entity kept in
+     * {@code effective} mode is looked up in its newest line only, the caller reading its days newest first.
+     */
+    List<String> mentioning(String target, int maxLines, java.util.Set<String> skip) throws IOException {
         byte[] needle = ("\"" + target + "\"").getBytes(StandardCharsets.UTF_8);
         byte[] escaped = ("\\\"" + target + "\\\"").getBytes(StandardCharsets.UTF_8);   // inside a doc kept as a string
         List<String> out = new ArrayList<>();
         if (channel == null) {
             return out;
         }
-        for (int i = 0; i < Math.min(ids.length, maxLines); i++) {
+        int read = 0;
+        for (int i = 0; i < ids.length && read < maxLines; i++) {
+            if (skip != null && !skip.add(ids[i])) {
+                continue;                                     // a newer line of this entity was read already
+            }
+            read++;
             byte[] line = read(i);
             if ((contains(line, needle) || contains(line, escaped)) && !ids[i].equals(target)) {
                 out.add(ids[i]);
@@ -705,6 +719,7 @@ final class JsonlDay implements AutoCloseable {
         }
         Map<String, double[]> nums = new LinkedHashMap<>();
         Map<String, String[]> texts = new LinkedHashMap<>();
+        Map<String, Object[]> mixed = new LinkedHashMap<>();
         for (int c = 0; c < paths.size(); c++) {
             Object[] col = values[c];
             boolean numeric = false;
@@ -724,12 +739,21 @@ final class JsonlDay implements AutoCloseable {
                     v[i] = x == null ? Double.NaN : (Double) x;
                 }
                 nums.put(paths.get(c), v);
+            } else if (numeric) {
+                // numbers on some lines and text on others ("N/A"): each value as the document holds it, so a search from
+                // columns orders and compares it as one from documents does, and a number beyond a long keeps its value
+                Object[] v = new Object[m];
+                Map<String, String> shared = new HashMap<>();
+                for (int i = 0; i < m; i++) {
+                    Object x = col[keep[i]];
+                    v[i] = x instanceof String s && shared.size() <= 200_000 ? shared.computeIfAbsent(s, k -> k) : x;
+                }
+                mixed.put(paths.get(c), v);
             } else {
                 String[] v = new String[m];
                 Map<String, String> shared = new HashMap<>();
                 for (int i = 0; i < m; i++) {
-                    Object x = col[keep[i]];
-                    String s = x == null ? null : x instanceof Double d && d == Math.rint(d) ? String.valueOf(d.longValue()) : String.valueOf(x);
+                    String s = (String) col[keep[i]];
                     v[i] = s == null || shared.size() > 200_000 ? s : shared.computeIfAbsent(s, k -> k);   // books, desks: one copy each
                 }
                 texts.put(paths.get(c), v);
@@ -737,6 +761,7 @@ final class JsonlDay implements AutoCloseable {
         }
         Report report = unreadable == 0 && duplicates == 0 ? Report.CLEAN
                 : new Report(unreadable, unreadableLines, duplicates, List.copyOf(duplicateIds), null);
-        return new JsonlDay(file, at, ch, idField, format, sortedIds, sortedOffsets, sortedLengths, new ColumnSet(sortedIds, nums, texts, day), report);
+        return new JsonlDay(file, at, ch, idField, format, sortedIds, sortedOffsets, sortedLengths, new ColumnSet(sortedIds, nums, texts, day, null, mixed),
+                report);
     }
 }
