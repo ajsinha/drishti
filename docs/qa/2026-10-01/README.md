@@ -62,7 +62,7 @@ permissions, and masks are not applied on every path.
 
 | Id | Finding |
 |---|---|
-| SEC-02 | The server's token filter checks the raw URI: `/api/v1;x/…` and encoded paths skip it (non-sensitive metadata only; identity-bound endpoints fail closed). |
+| SEC-02 | The server's token filter checks the raw URI: `/api/v1;x/…` and encoded paths skip it (non-sensitive metadata only; identity-bound endpoints fail closed). **Fixed** in fc82831 (PathBypassTest) |
 | SEC-03 | Field masks apply to raw JSON, search, export, compare, history, Calc and pivots, but not to views, tables, panel records, live updates or panel CSV export. |
 | SEC-04 | Impact (F8) applies no masks (masked values and relationships shown). |
 | SEC-05 | Sign-out only deletes the browser cookie; a copied cookie keeps working. |
