@@ -56,7 +56,7 @@ permissions, and masks are not applied on every path.
 | [DATA-06](data/FINDINGS.md) | JSON-lines rows with `doc` as an object and no `columns` get every promoted column null: searches, pick lists and desk P&L silently empty. **Fixed** in 5ecce29 (JsonlHostileLinesTest.docAsAnObjectWithoutColumnsIsPromotedLikeDocAsAString) |
 | [GRAM-01](ux/FINDINGS.md) | A Sutra with a deeply nested expression (~800 parentheses) stops the server from starting (`StackOverflowError`). **Fixed** in c1ace31 (SutraRegistryTest.aDeeplyNestedSutraIsAProblemNotAFailedStart, PathologicalExpressionsTest.DefaultLimits.theServerStartsAndListsBothFilesAsProblems) |
 | [GRAM-02](ux/FINDINGS.md) | The same file silently kills Sutra hot reload; later valid Sutras never load. **Fixed** in c1ace31 (SutraRegistryTest.hotReloadSurvivesADeeplyNestedSutraAndKeepsLoadingLaterOnes, SutraRegistryTest.anyFailureLoadingOneFileIsThatFilesProblem) |
-| [UX-01](ux/FINDINGS.md) | Six visible tabs on live views freeze a seventh page (one live connection per tab; browsers allow six per host). |
+| [UX-01](ux/FINDINGS.md) | Six visible tabs on live views freeze a seventh page (one live connection per tab; browsers allow six per host). **Fixed** in 1400225 (test_live_tabs_browser.py: test_many_live_tabs_and_a_live_workspace_leave_the_browser_free_and_all_keep_ticking[shared-worker], [leader]; test_live_hub.py) |
 
 ## Medium
 
