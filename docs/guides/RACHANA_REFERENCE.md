@@ -110,10 +110,13 @@ What the server does with a file, in order (`SutraRegistry`, `SutraParser`, `Sut
 
 1. Only files named `*.sutra.yaml` are Sutras. Any other `.yaml`, `.yml` or `.sutra.md` file in a Sutra
    directory is reported as `DRS-2004` with the fix (see [Problem codes](#problem-codes)) and is not loaded.
-2. The file is read as YAML, keeping the line and column of every node. Bad YAML: `DRS-2001`.
+2. The file is read as YAML, keeping the line and column of every node. Bad YAML: `DRS-2001`. YAML that would be
+   read in a way you may not mean is `DRS-2033`: a key written twice in one mapping (YAML keeps only the last), a
+   second document after `---` (it would be ignored), or a tag (`!panel`, `!!binary`; the core tags such as `!!str`
+   are allowed). A leading `---` is fine.
 3. `rachana:` must be present and be a language version this server reads (today: `1`). Otherwise `DRS-2009`.
 4. The rest is checked against the grammar below. Every problem is collected (not just the first) with its
-   location: `DRS-2010` to `DRS-2027`. Parsing is strict: an unknown key is an error (`DRS-2011`), never
+   location: `DRS-2010` to `DRS-2031`. Parsing is strict: an unknown key is an error (`DRS-2011`), never
    silently ignored, so a typo such as `pannels:` cannot pass unnoticed.
 5. Every Rachana-EL expression and template is compiled. A typo is `DRS-2101`, reported against the file at
    load time, not when someone opens a view. So is an expression beyond the [size limits](#size-limits) (nested
@@ -457,8 +460,8 @@ You should see, previewing this block against `MX-20000001` in Studio:
 | `description` | | text | | One paragraph for people: what the layout shows and for which entities. Not used to build the view. |
 | `notes` | | text | | Longer plain-text notes for authors and reviewers (`notes: \|` for several lines). Not used to build the view. |
 | `domain` | | text | the parent folder's name | Grouping in Studio and the catalogue, and the folder Studio saves into. |
-| `match` | yes | mapping | | `{kind, where?, priority?}`; see [Matching](#matching-choosing-a-sutra-for-a-document). |
-| `title` | | mapping | `{id: $.id}` | `{pill?, id?, with?}`; see [Title](#title). |
+| `match` | yes | mapping | | `{kind, where?, priority?}`: `kind` and `where` are text, `priority` a whole number (`DRS-2012` otherwise, as for `kind: 42` or `priority: high`); see [Matching](#matching-choosing-a-sutra-for-a-document). |
+| `title` | | mapping | `{id: $.id}` | `{pill?, id, with?}`: a title written out names its `id` (`DRS-2010` otherwise); see [Title](#title). |
 | `strip` | | list | empty | Up to **8** header figures; see [Strip](#strip). |
 | `panels` | | list | empty | The panels, in order; see [Panels](#panels). |
 | `keys` | | mapping | empty | Function key → action; see [Function keys](#function-keys). |
@@ -571,7 +574,7 @@ title:
 | Key | Kind of value | Default | Shown as |
 |---|---|---|---|
 | `pill` | template: plain text with `${expression}` parts | none | the small box before the identifier |
-| `id` | expression | `$.id` | the large identifier; when it evaluates to empty, the entity's own id is shown |
+| `id` | expression, required in a written `title` (`DRS-2010 missing 'id' in title` otherwise) | `$.id` when there is no `title` at all | the large identifier; when it evaluates to empty, the entity's own id is shown |
 | `with` | expression | none | `with <value>` after the identifier; a `link(...)` value is clickable |
 
 Every part is best effort: if one fails to evaluate on a document, that part is left out and the view still
@@ -718,6 +721,9 @@ expressions and templates are compiled at load time.
 For the seven kinds from `waterfall` on, a field name may also be a dotted path (`counterparty.name`) or an
 expression over the row when it starts with `@` or `$` (`y: "@.pnl / 1000"`). Values outside the allowed set
 (`agg: median`, `layout: circle`, `colors: rainbow`, `bins: 0`, `heat: "yes"` (an unquoted `yes` is YAML for `true`), a marker without `value`) are `DRS-2029`.
+So are values of the wrong type: `rows`, `each`, `nodes`, `edges` and `source` must be expressions written as text
+(`rows: 5` is not), `markdown` `text` text, table `limit` a whole number from 1, table and ladder `search` true or
+false, `kv` and `status` `fields` and `area` `series` lists.
 
 Accepted but currently without effect (they parse, and do nothing yet): `fields` on `kv` (use `columns`),
 `link` on `table` (use `link: true` on a column), `footer` on `line`, and `label` on `gauge` (carried in the
@@ -734,7 +740,7 @@ A grid of label/value pairs, four across in the main column and two across on th
 |---|---|---|---|
 | `columns` | | | The fields: each `bind` is evaluated against the document, or against `rows` when given. |
 | `rows` | | | Expression for one object; inside the columns `@` is that object. |
-| `fields` | | | Accepted, no effect (see above). |
+| `fields` | | | Accepted, no effect (see above); a list when written (`DRS-2029` otherwise). |
 
 Without `columns` but with `rows`, inference lists every scalar field of the object (up to 16), and a nested
 object that has a `name` shows that name. Without either, the panel is empty.
@@ -766,11 +772,11 @@ One row per element of `rows`.
 |---|---|---|---|
 | `rows` | yes | | Expression giving a list. Anything else shows *No data available*. |
 | `columns` | | inferred | One per column. Without columns, inference picks the scalar fields present in at least 60% of rows (up to 9). |
-| `limit` | | all rows | Integer: rows shown. The rest are counted in the "more" line. |
+| `limit` | | all rows | A whole number, 1 or more: rows shown. The rest are counted in the "more" line. `limit: many`, `limit: -5` or `limit: "6"` (quoted) is `DRS-2029`. |
 | `moreLabel` | | `"<N> more"` | Expression for the text of the "more" line, evaluated against the document (not a row). |
 | `totalLabel` | | `Total` | Text of the total row's label cell. |
 | `link` | | | Accepted, no effect (see above). |
-| `search` | | `true` | `false` hides the filter box (and the per-column filters) in the panel's heading, for a table too small or too fixed to need one. Table and ladder panels take it; on any other kind it is a problem (`DRS-2023`, *option 'search' applies only to panels that show a table*). |
+| `search` | | `true` | `false` hides the filter box (and the per-column filters) in the panel's heading, for a table too small or too fixed to need one. Table and ladder panels take it; on any other kind it is a problem (`DRS-2023`, *option 'search' applies only to panels that show a table*). `true` or `false` only (`search: maybe` is `DRS-2029`). |
 | `pivot` | | none | Offers a **Pivot** tab beside the table: `true`, or the fields a user may pivot by and the arrangement it opens with ([below](#pivot-a-pivot-tab-on-a-table-or-ladder)). Without it there is no Pivot tab. |
 
 Totals: when at least one column says `total: true`, a total row is added. It sums that column's numbers over
@@ -966,7 +972,7 @@ profiles).
 |---|---|---|---|
 | `rows` | yes | | Expression giving the list of points. |
 | `x` | | `tenor` | Field of each row for the x axis. |
-| `series` | | none | A list of `{label, value, tone}`: `value` names a field of each row; `tone` colours the series (`link`, `accent`, `pos`, `neg`). Without `series` the chart is empty. |
+| `series` | | none | A list of `{label, value, tone}`: `value` names a field of each row; `tone` colours the series (`link`, `accent`, `pos`, `neg`). Without `series` the chart is empty. Anything but a list (`series: 5`) is `DRS-2029`. |
 | `limit` | | | Expression for a number drawn as a dashed horizontal line. |
 | `limitLabel` | | `Limit` | Legend text for the limit line. |
 | `unit` | | | Unit for the axis. |
@@ -1473,7 +1479,7 @@ without `tone` colours by sign.
 |---|---|---|
 | column `total: true` | `table`, `ladder` | adds a total row summing that column over all rows (hidden ones included) |
 | `totalLabel` | `table`, `ladder` | label of the total row (default `Total`), placed before the first totalled column |
-| `limit` | `table` | rows shown; must be a YAML integer (`limit: "6"` is ignored) |
+| `limit` | `table` | rows shown; a whole number from 1 (`limit: "6"`, quoted, is `DRS-2029`) |
 | `moreLabel` | `table` | expression for the line under the table when rows are hidden; default `<N> more` |
 
 ## Rachana-EL expressions
@@ -1608,7 +1614,7 @@ Against `MX-20000001`:
 ### Functions
 
 The set is closed (`Functions.java`); a name outside it is a compile error
-(`unknown function 'round'; known: [size, upper, sum, …]`), and so is a wrong number of arguments
+(`unknown function 'round'; known: abs, coalesce, contains, …`, in alphabetical order), and so is a wrong number of arguments
 (`size takes 1 argument(s), got 2`, `link takes 1-3 argument(s), got 4`).
 
 | Function | Arguments | Returns |
@@ -1702,7 +1708,7 @@ better written with `sum(list, 'field')`. A template's `${…}` parts are bounde
 
 | Code | When | Example message |
 |---|---|---|
-| `DRS-2101` | an expression or template does not compile (at load, in Studio preview, or when saving an alert rule), including one beyond the [size limits](#size-limits) | `expression '$.legs[0': DRS-2101 expected ']' but found '' at 8` |
+| `DRS-2101` | an expression or template does not compile (at load, in Studio preview, or when saving an alert rule), including one beyond the [size limits](#size-limits) | `expression '$.legs[0': DRS-2101 expected ']' but the expression ends at 8` |
 | `DRS-2102` | evaluation error | evaluation is total, so a well-formed expression within the size limits never raises it; if one does (the limits raised far beyond the default), the panel shows `DRS-2102 an expression of this panel is nested too deeply to evaluate …` and the rest of the view renders |
 
 The problem's message is `expression '<source>': DRS-2101 <reason> at <offset>` (or `template '<source>': …`),
@@ -1712,9 +1718,10 @@ where the offset is the 0-based character position inside the expression. Common
 |---|---|---|
 | `unexpected character '&' at 9` | `&` or `\|` alone, `and`/`or` written as symbols of another language | use `&&`, `\|\|` |
 | `unterminated string at 14` | a quote not closed | close it; inside YAML double quotes, use single quotes for EL text |
-| `expected ')' but found '' at 20` | a bracket or parenthesis not closed | close it |
-| `expected a field name but found '' at 7` | a path ending in a dot (`$.legs.`) | finish the path |
-| `unknown function 'round'; known: [...]` | a function that does not exist | use `fmt(x, 'amount0')` and the other functions above |
+| `expected ')' but the expression ends at 20` | a bracket or parenthesis not closed | close it |
+| `expected a field name but the expression ends at 7` | a path ending in a dot (`$.legs.`) | finish the path |
+| `the expression ends early: a value is missing at 7` | an operator with nothing after it (`$.mtm >`) | finish the expression |
+| `unknown function 'round'; known: abs, coalesce, …` | a function that does not exist (the known ones are listed alphabetically) | use `fmt(x, 'amount0')` and the other functions above |
 | `fmt takes 2 argument(s), got 1 at 0` | `fmt($.x)` | `fmt($.x, 'amount0')` |
 | `unexpected 'b' at 4` | two values with no operator between them (`'a' 'b'`) | join with `+` |
 | `unclosed '${' at 4` | a template part not closed | add `}` |
@@ -1732,10 +1739,10 @@ A Sutra file that fails any check is not loaded (or keeps its last good version,
 | `DRS-2001` | `YAML syntax: <parser message>` | the file is not valid YAML (bad indentation, a `:` or `#` in an unquoted value, a tab) | fix the YAML; quote values with `: `, ` #`, or a leading `#`, `@`, `*`, `&` |
 | `DRS-2004` | `Markdown Sutras are no longer read (Sutras are YAML since 1.11): convert it with python3 tools/rachana/md_to_yaml.py <file> --delete`, or `a Sutra file is named <name>.v<N>.sutra.yaml; rename <file>` | a `.sutra.md` file, or a plain `.yaml`/`.yml` file, in a Sutra directory | convert it with `python3 tools/rachana/md_to_yaml.py <file-or-folder> --delete`, or rename it to `<name>.v<N>.sutra.yaml` (or move a YAML file that is not a Sutra out of the directory) |
 | `DRS-2009` | `missing 'rachana: 1' (the Rachana language version) at the top`, `'rachana: 2' is not a language version this server reads (it reads 1)` | no `rachana:` key, or a version this server does not know | put `rachana: 1` first in the file |
-| `DRS-2010` | `missing 'sutra'`, `missing 'version'`, `missing 'kind'`, `missing 'id'`, `missing 'bind'`, `missing 'match' mapping with at least 'kind'` | a required key is absent | add it |
+| `DRS-2010` | `missing 'sutra'`, `missing 'version'`, `missing 'kind'`, `missing 'id'`, `missing 'bind'`, `missing 'match' mapping with at least 'kind'`, `missing 'id' in title: the expression for the large identifier, such as $.tradeId` | a required key is absent | add it |
 | `DRS-2011` | `unknown key 'pannels' in top level` (also `in match`, `in title`, `in strip item`, `in column`) | a misspelt or unsupported key | fix the spelling; panel options are reported as `DRS-2023` instead |
-| `DRS-2012` | `'panels' must be a list`, `'keys' must be a mapping of F-key to action`, `a column must be a mapping (label, bind, fmt, tone, total, link)`, `'kind' must be text`, `action for F7 must be text`, `'notes' is plain text` | a value of the wrong shape | write the shape shown in the message |
-| `DRS-2020` | `name 'IRS_Vanilla' must be lower-case kebab, 2-64 characters`, `version must be a positive integer` | bad name or version | `irs-vanilla`; `version: 3` unquoted |
+| `DRS-2012` | `'panels' must be a list`, `'keys' must be a mapping of F-key to action`, `a column must be a mapping (label, bind, fmt, tone, total, link)`, `'kind' must be text`, `action for F7 must be text`, `'notes' is plain text`, `'kind' in match is an entity kind written as text (such as trade), not '42'`, `'priority' in match must be a whole number (higher is tried first), not 'high'` | a value of the wrong shape | write the shape shown in the message |
+| `DRS-2020` | `name 'IRS_Vanilla' must be lower-case kebab, 2-64 characters`, `version must be a positive integer up to 2147483647, not '0'` | bad name or version (also a version too large for any number, which is not reported as YAML syntax) | `irs-vanilla`; `version: 3` unquoted |
 | `DRS-2021` | `unknown panel kind 'chart'; expected one of kv, table, tabs, line, area, hbar, ladder, links, status, provenance, markdown, gauge, surface, waterfall, histogram, scatter, candlestick, graph, timeline, pivot` | a kind that does not exist | use one of the 20 kinds |
 | `DRS-2022` | `'table' panel 'flows' needs option 'rows'` | a required option is missing | add it (see each kind's table) |
 | `DRS-2023` | `option 'limit' is not valid for 'ladder' panels`, `only 'tabs' panels take a 'body'`, `option 'pivot' applies only to panels that show a table (table, ladder), not 'kv'` | an option the kind does not accept | remove it, or change the kind |
@@ -1744,10 +1751,11 @@ A Sutra file that fails any check is not loaded (or keeps its last good version,
 | `DRS-2026` | `the strip holds at most 8 figures, found 9` | more than 8 strip items | move figures into a `kv` panel |
 | `DRS-2027` | `area must be 'main' or 'right'` | `area: left`, `area: side` | `main` or `right` |
 | `DRS-2028` | `trade-x@2 is already defined in /…/trade-x.v2.sutra.yaml` | two files define one `name@version` | raise the version, or remove the duplicate |
-| `DRS-2029` | `option 'agg' of 'pivot' panels must be one of sum, count, avg, min, max, not 'median'`, `option 'heat' of 'pivot' panels must be true or false, not 'yes'`, `option 'bins' of 'histogram' panels must be a whole number from 1 to 200, not '0'`, `each histogram marker must be a mapping with a 'value' expression …`, `option 'layout' of 'graph' panels must be one of tree, force, not 'circle'`, `option 'colors' of 'waterfall' panels must be one of gain-loss, theme, not 'rainbow'` | an option value the kind does not allow | use one of the values listed |
+| `DRS-2029` | `option 'agg' of 'pivot' panels must be one of sum, count, avg, min, max, not 'median'`, `option 'heat' of 'pivot' panels must be true or false, not 'yes'`, `option 'bins' of 'histogram' panels must be a whole number from 1 to 200, not '0'`, `each histogram marker must be a mapping with a 'value' expression …`, `option 'layout' of 'graph' panels must be one of tree, force, not 'circle'`, `option 'colors' of 'waterfall' panels must be one of gain-loss, theme, not 'rainbow'`, `option 'rows' of 'table' panels is an expression written as text (such as $.cashflows), not '5'`, `option 'limit' of 'table' panels must be a whole number of rows, 1 or more, not 'many'`, `option 'search' of 'table' panels must be true or false, not 'maybe'`, `option 'fields' of 'status' panels must be a list of { label, bind, fmt, tone }, not '5'`, `option 'series' of 'area' panels must be a list of { label, value, tone }, not '5'`, `option 'text' of 'markdown' panels is text (a template with ${expression} parts), not '[1, 2]'` | an option value the kind does not allow, or of the wrong type | use one of the values listed, or the type named |
 | `DRS-2030` | `span must be a whole number from 1 to 12 (columns of the 12-column grid), not '13'`, `height must be a whole number from 1 to 24 (grid rows), not '30'`, `'span' sizes a whole panel: a tabs body takes the size of its panel` | a size outside the grid, not a whole number, or on a `tabs` body | a whole number in range, on the panel itself |
 | `DRS-2031` | `'pivot' is true, false, or a mapping of fields, rows, columns, values, filters, heat, chart, totals; not 'yes please'`, `pivot rows name 'desk', which is not one of its fields (currency, mtm, product)`, `pivot value 'agg' must be one of sum, count, avg, min, max, distinct, not 'median'`, `pivot value 'show' must be one of value, pctRow, pctColumn, pctTotal, not 'pctBook'`, `pivot field 'a' is in both rows and columns`, `a pivot has at most 4 row fields and 4 column fields`, `a pivot shows at most 6 values, found 7`, `pivot field '$.book' is not a field path (letters, digits, _ and dots); for an expression write { field: name, bind: <expression> }`, `pivot field 'a' is listed twice`, `unknown key 'colour' in pivot`, `pivot 'chart' must be one of bar, line, heatmap, not 'pie'`, `pivot 'heat' is true or false, not 'maybe'`, `a pivot filter keeps either 'values' or a range ('min', 'max'), not both`, `pivot 'fields' is a non-empty list of field paths (or { field, bind, label, fmt })` | a `pivot:` the Pivot tab cannot use | use the names its fields have, the values listed, or `pivot: true` ([the option](#pivot-a-pivot-tab-on-a-table-or-ladder)) |
 | `DRS-2032` | `the file could not be loaded: <reason>` (for example `it is nested too deeply to read (StackOverflowError)`) | a failure while reading the file that none of the other checks foresee; the server log has the stack trace | simplify the file; if it looks valid, report the log entry. The other Sutras load and hot reload carries on |
+| `DRS-2033` | `duplicate key 'version' (first written at line 3): YAML would keep only the last, so write each key once`, `a second YAML document (after '---'): a Sutra file holds exactly one, and the rest would be ignored`, `YAML tag '!panel' is not allowed in a Sutra: write the value plainly` | YAML that is valid but would not be read as written: a key twice in one mapping, a second document, a tag other than the core ones (`!!str`, `!!int`, …) | write each key once, one document per file, no tags |
 | `DRS-2101` | `expression '…': DRS-2101 …`, `template '…': DRS-2101 …` | an expression or template does not compile, or is beyond the [size limits](#size-limits) | see [Expression errors](#expression-errors) |
 
 Other codes you may meet around Sutras:
@@ -1762,8 +1770,8 @@ Other codes you may meet around Sutras:
 
 Not validated by the parser (so check them in a preview; the [schema](#completion-and-checking-in-your-editor)
 offers the valid format and tone names as you type): format and tone names, field names used as `x`, `y`, `label`,
-`value`, series `value`s, panel ids used as `keys` actions, `layout` and `view` values, the keys inside status
-`fields`, and the type of `limit`.
+`value`, series `value`s, panel ids used as `keys` actions, `layout` and `view` values, and the keys inside status
+`fields`.
 
 Where to see problems:
 

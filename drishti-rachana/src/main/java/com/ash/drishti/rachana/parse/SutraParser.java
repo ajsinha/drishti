@@ -21,6 +21,7 @@ import com.ash.drishti.rachana.model.SourceLocation;
 import com.ash.drishti.rachana.model.Sutra;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -35,6 +36,12 @@ public final class SutraParser {
     /** The file name used for text that comes from Studio rather than from a file. */
     public static final String STUDIO = "studio.sutra.yaml";
 
+    /**
+     * YAML a Sutra must not depend on: a key written twice in one mapping, a second document, a tag other than the core
+     * ones (see {@link PositionalYamlReader}).
+     */
+    public static final String AMBIGUOUS_YAML = "DRS-2033";
+
     private final PositionalYamlReader reader = new PositionalYamlReader();
 
     /**
@@ -45,8 +52,9 @@ public final class SutraParser {
      */
     public Sutra parse(String yaml, String file, String domain) {
         PNode root;
+        List<PositionalYamlReader.Issue> issues = new ArrayList<>();
         try {
-            root = reader.read(yaml);
+            root = reader.read(yaml, issues);
         } catch (JsonProcessingException e) {
             var l = e.getLocation();
             throw new SutraException(List.of(new SutraProblem("DRS-2001", "YAML syntax: " + e.getOriginalMessage(),
@@ -57,8 +65,11 @@ public final class SutraParser {
         }
         SutraBuilder b = new SutraBuilder(file);
         Sutra s = b.build(root, domain);
-        if (!b.problems().isEmpty()) {
-            throw new SutraException(b.problems());
+        if (!issues.isEmpty() || !b.problems().isEmpty()) {
+            List<SutraProblem> all = new ArrayList<>();
+            issues.forEach(i -> all.add(new SutraProblem(AMBIGUOUS_YAML, i.message(), new SourceLocation(file, i.line(), i.column()))));
+            all.addAll(b.problems());
+            throw new SutraException(all);
         }
         return s;
     }

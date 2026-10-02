@@ -383,7 +383,7 @@ public final class SearchPivot {
         if (!named.equals(kind)) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "the search names " + named + ", not " + kind);
         }
-        return query;
+        return search.named(query, kind);                     // field names in any case, as the search reads them
     }
 
     private Expr compile(String source) {

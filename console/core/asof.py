@@ -34,9 +34,23 @@ _known: contextvars.ContextVar[str | None] = contextvars.ContextVar("drishti_kno
 
 
 def clean(value: str | None) -> str:
-    """'live' or a yyyy-mm-dd date; anything else is live."""
+    """'live' or a real yyyy-mm-dd date that is not yet in the future anywhere; anything else is live. The server has the
+    last word (its history window, its business zone): see :func:`is_refusal` and the /asof route."""
     v = (value or "").strip()
-    return v if _DATE.match(v) else "live"
+    if not _DATE.match(v):
+        return "live"
+    from datetime import date, datetime, timedelta, timezone
+
+    try:
+        day = date.fromisoformat(v)
+    except ValueError:                                      # 2026-02-30, 9999-99-99
+        return "live"
+    return v if day <= datetime.now(timezone.utc).date() + timedelta(days=1) else "live"
+
+
+def is_refusal(error) -> bool:
+    """True when the server refused the business date itself (DRS-4003), rather than failing for another reason."""
+    return getattr(error, "code", None) == "DRS-4003"
 
 
 def current() -> str:
@@ -114,8 +128,9 @@ class BusinessDates:
             return hit[1]
         try:
             data = await backend.business_date(ident)
-        except Exception:  # noqa: BLE001 - the picker degrades to a plain date box; pages still render
+        except Exception as e:  # noqa: BLE001 - the picker degrades to a plain date box; pages still render
             data = {"current": None, "selected": None if selected == "live" else selected, "live": selected == "live",
-                    "holidays": [], "earliest": None, "calendar": "", "error": True}
+                    "holidays": [], "earliest": None, "calendar": "", "error": True,
+                    "refused": selected != "live" and is_refusal(e)}   # the date itself: the page falls back to live
         self._cache[scoped(selected)] = (time.monotonic(), data)
         return data

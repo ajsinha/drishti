@@ -22,6 +22,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -53,12 +54,80 @@ public record SearchQuery(String head, String condition, String orderBy, boolean
     public static final int DEFAULT_LIMIT = 100;
     public static final int MAX_LIMIT = 1000;
 
-    private static final Pattern LIMIT = Pattern.compile("(?i)\\s+limit\\s+(\\d+)\\s*$");
+    private static final Pattern LIMIT = Pattern.compile("(?i)\\s+limit\\s+(\\S+)\\s*$");
     private static final Pattern ORDER = Pattern.compile("(?i)\\s+order\\s+by\\s+(.+?)(?:\\s+(asc|desc))?\\s*$");
     private static final Pattern WHERE = Pattern.compile("(?i)^\\s*(\\S+)(?:\\s+where\\s+(.+))?$", Pattern.DOTALL);
     private static final Set<String> KEYWORDS = Set.of("true", "false", "null");
     private static final Set<String> FUNCTIONS = Set.of("link", "size", "sum", "fmt", "coalesce", "first", "last", "abs", "min", "max",
             "upper", "lower", "contains", "startsWith");
+
+    /** The document paths ({@code $.a.b}) the condition, the order and the columns read, as written. */
+    public Set<String> documentPaths() {
+        Set<String> out = new LinkedHashSet<>(fields);
+        mapPaths(condition, p -> {
+            out.add(p);
+            return p;
+        });
+        mapPaths(orderBy, p -> {
+            out.add(p);
+            return p;
+        });
+        return out;
+    }
+
+    /** This query with every document path the condition, the order and the columns read put through {@code f}. */
+    public SearchQuery withPaths(UnaryOperator<String> f) {
+        return new SearchQuery(head, mapPaths(condition, f), mapPaths(orderBy, f), descending, limit,
+                fields.stream().map(f).distinct().toList(), idPattern);
+    }
+
+    /**
+     * Rewrites the {@code $.} paths of a Rachana-EL text as written by {@link #translate} (strings single-quoted with
+     * backslash escapes); a path runs over letters, digits, {@code _}, dots and bracketed parts.
+     */
+    static String mapPaths(String el, UnaryOperator<String> f) {
+        if (el == null) {
+            return null;
+        }
+        StringBuilder out = new StringBuilder(el.length());
+        int i = 0;
+        while (i < el.length()) {
+            char c = el.charAt(i);
+            if (c == '\'' || c == '"') {
+                int j = i + 1;
+                while (j < el.length() && el.charAt(j) != c) {
+                    j += el.charAt(j) == '\\' ? 2 : 1;
+                }
+                j = Math.min(el.length(), j + 1);
+                out.append(el, i, j);
+                i = j;
+                continue;
+            }
+            boolean starts = c == '$' && i + 1 < el.length() && el.charAt(i + 1) == '.'
+                    && (i == 0 || !(Character.isLetterOrDigit(el.charAt(i - 1)) || el.charAt(i - 1) == '_'));
+            if (!starts) {
+                out.append(c);
+                i++;
+                continue;
+            }
+            int j = i + 2;
+            int depth = 0;
+            while (j < el.length()) {
+                char x = el.charAt(j);
+                if (x == '[') {
+                    depth++;
+                } else if (x == ']') {
+                    depth--;
+                } else if (depth == 0 && !(Character.isLetterOrDigit(x) || x == '_' || x == '.')) {
+                    break;
+                }
+                j++;
+            }
+            out.append(f.apply(el.substring(i, j)));
+            i = j;
+        }
+        return out.toString();
+    }
 
     /** True when the text is a structured search rather than an entity to open. */
     public static boolean looksLikeSearch(String text) {
@@ -157,7 +226,7 @@ public record SearchQuery(String head, String condition, String orderBy, boolean
         int limit = DEFAULT_LIMIT;
         Matcher m = LIMIT.matcher(rest);
         if (m.find() && outsideQuotes(rest, m.start())) {
-            limit = Math.max(1, Math.min(MAX_LIMIT, Integer.parseInt(m.group(1))));
+            limit = limit(m.group(1));
             rest = rest.substring(0, m.start());
         }
         String order = null;
@@ -176,6 +245,17 @@ public record SearchQuery(String head, String condition, String orderBy, boolean
         String condition = m.group(2) == null ? null : translate(m.group(2).trim(), fields);
         String orderBy = order == null ? null : translate(order, fields);
         return new SearchQuery(m.group(1), condition, orderBy, desc, limit, List.copyOf(fields));
+    }
+
+    /** The number after {@code limit}: a whole number from 1 to {@link #MAX_LIMIT}, else a search problem saying so. */
+    static int limit(String written) {
+        if (written.matches("\\d{1,4}")) {
+            int n = Integer.parseInt(written);
+            if (n >= 1 && n <= MAX_LIMIT) {
+                return n;
+            }
+        }
+        throw bad("limit must be a whole number from 1 to " + MAX_LIMIT + ", not '" + written + "'");
     }
 
     /** Friendly syntax to Rachana-EL; collects the document paths read. */

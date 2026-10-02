@@ -103,24 +103,55 @@ public final class StructuredSearch {
         return kind;
     }
 
-    public Result run(SearchQuery q, AsOf asOf, UnaryOperator<DataNode> redact) {
+    /**
+     * The field names the kind is known to have without reading a document: its promoted columns and its pack's key
+     * fields. Searches read names through these first ({@link #named}), then through the documents they read.
+     */
+    public FieldNames knownFields(String kind) {
+        List<String> known = new ArrayList<>(router.columnar(kind));
+        known.addAll(props.columnsOf(kind));
+        return FieldNames.of(known);
+    }
+
+    /** The query with the field names the kind's columns and key fields know spelt as the kind spells them. */
+    public SearchQuery named(SearchQuery q, String kind) {
+        return resolve(q, knownFields(kind));
+    }
+
+    private static SearchQuery resolve(SearchQuery q, FieldNames names) {
+        return q.withPaths(p -> names.canonical(p).orElse(p));
+    }
+
+    private static List<String> unknown(SearchQuery q, FieldNames names) {
+        return q.documentPaths().stream().filter(p -> p.startsWith("$.") && names.canonical(p).isEmpty()).toList();
+    }
+
+    public Result run(SearchQuery asked, AsOf asOf, UnaryOperator<DataNode> redact) {
         long t0 = System.nanoTime();
-        String kind = kindOf(q);
+        String kind = kindOf(asked);
+        compile(asked.condition(), "condition");                // a condition that cannot be read says so before anything is read
+        compile(asked.orderBy(), "order by");
+        // field names are read whatever their case (producttype is productType): first by the columns and key fields
+        FieldNames known = knownFields(kind);
+        SearchQuery q = resolve(asked, known);
+        List<String> unknown = unknown(q, known);
         Expr condition = compile(q.condition(), "condition");
         Expr order = compile(q.orderBy(), "order by");
         // a source that fails or times out anywhere below is named in the result, which is then partial: a failure
         // never looks like "nothing matched"
         SourceFailures failures = new SourceFailures();
-        Optional<Result> fast = columnar(q, kind, condition, order, asOf, redact, t0, failures);
-        if (fast.isPresent()) {
-            return fast.get();
+        if (unknown.isEmpty()) {
+            Optional<Result> fast = columnar(q, kind, condition, order, asOf, redact, t0, failures);
+            if (fast.isPresent()) {
+                return fast.get();
+            }
         }
         // a pick list names what it wants (TRD MX-200000): the sources' own indexes narrow by it, so a large book is not
         // cut at maxScan before the match is found; a wildcard (MX-2*0) is filtered here
         String narrow = q.idPattern() != null && !q.idPattern().contains("*") ? q.idPattern() : "";
         List<EntityHit> hits = router.list(kind, narrow, props.maxScan() + 1, props.budget(), asOf, failures).hits();
         if (q.idPattern() != null) {                            // only what the word names, before any read
-            hits = hits.stream().filter(h -> SearchQuery.matches(q.idPattern(), h.ref().id(), h.title())).toList();
+            hits = hits.stream().filter(h -> SearchQuery.matches(asked.idPattern(), h.ref().id(), h.title())).toList();
         }
         boolean partial = hits.size() > props.maxScan();
         if (partial) {
@@ -130,11 +161,24 @@ public final class StructuredSearch {
         hits.forEach(h -> titles.put(h.ref(), h.title()));
         Map<EntityRef, EntityDocument> docs = router.fetchAll(titles.keySet(), props.budget(), asOf, failures);
         partial |= docs.size() < titles.size() || !failures.isEmpty();
+        Map<EntityRef, DataNode> seen = new LinkedHashMap<>();
+        docs.forEach((ref, d) -> seen.put(ref, redact.apply(d.data())));
+        if (!unknown.isEmpty() && !seen.isEmpty()) {
+            // then by the documents read: a name none of them has is a mistake, not a field that is never set
+            FieldNames all = known.with(seen.values());
+            q = resolve(q, all);
+            unknown = unknown(q, all);
+            if (!unknown.isEmpty() && !partial) {
+                throw unknownField(kind, unknown.get(0), all);
+            }
+            condition = compile(q.condition(), "condition");
+            order = compile(q.orderBy(), "order by");
+        }
         List<String> paths = columnsFor(q, kind, docs.values(), redact);
         List<Expr> columns = paths.stream().map(el::compile).toList();
         List<Match> matches = new ArrayList<>();
         for (Map.Entry<EntityRef, EntityDocument> e : docs.entrySet()) {
-            EvalContext ctx = EvalContext.of(redact.apply(e.getValue().data()), formats);
+            EvalContext ctx = EvalContext.of(seen.get(e.getKey()), formats);
             boolean keep;
             try {
                 keep = condition == null || Values.truthy(condition.eval(ctx));
@@ -319,6 +363,15 @@ public final class StructuredSearch {
         return List.copyOf(out);
     }
 
+    /** A field name no entity of the kind has: the closest known names, or what the kind's fields are. */
+    private static DrishtiException unknownField(String kind, String path, FieldNames names) {
+        String name = path.substring(2);
+        List<String> close = names.suggestions(path, 3);
+        String hint = !close.isEmpty() ? "; did you mean " + String.join(", ", close) + "?"
+                : "; its fields include " + String.join(", ", names.names().stream().filter(n -> !n.contains(".")).limit(8).toList());
+        return new DrishtiException(ErrorCode.BAD_SEARCH, "no " + kind + " has a field '" + name + "'" + hint);
+    }
+
     private static final int AUTO_COLUMNS = 6;
     private static final java.time.Duration COLUMNS_BUDGET = java.time.Duration.ofSeconds(20);
 
@@ -329,6 +382,11 @@ public final class StructuredSearch {
         try {
             return el.compile(source);
         } catch (ElException e) {
+            if (e.position() >= source.stripTrailing().length()) {             // TRD where mtm >: say so, not "unexpected ''"
+                String[] words = source.strip().split("\\s+");
+                throw new DrishtiException(ErrorCode.BAD_SEARCH, "the " + what + " ends early: something is missing after '"
+                        + words[words.length - 1] + "' (for example mtm > 1m)");
+            }
             throw new DrishtiException(ErrorCode.BAD_SEARCH, "cannot read the " + what + ": " + e.getMessage());
         }
     }

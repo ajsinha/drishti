@@ -78,6 +78,8 @@ class PhraseParserTest {
         PhraseParser.Parsed none = P.parse("what is the weather");
         assertThat(none.query()).isNull();
         assertThat(none.problem()).contains("say what to look for");
+        // QA 2026-10-01 GRAM-07: the kinds as words with their mnemonics, not a list printed with brackets and guessed plurals
+        assertThat(none.problem()).contains("trade (TRD)").doesNotContain("[", "]", "trades");
     }
 
     @Test

@@ -31,8 +31,8 @@ docaudit/). Totals: 3 high, 19 medium, 23 low, 5 info.
 | Id | Finding |
 |---|---|
 | GRAM-03 | Very deep or very long expressions: a 5000-term `+` chain loads without a problem, then the view returns HTTP 500 with no DRS code (console shows raw Spring JSON, Studio "HTTP-500 {…}"); contradicts "evaluation is total". **Fixed** in c1ace31 (ElLimitsTest.longChainsThatWouldOverflowEvaluationAreRefusedAtCompileTime, PathologicalExpressionsTest.LiftedLimits.anOverflowIsAPanelProblemOrAFileProblemNeverA500) |
-| GRAM-04 | "Case never matters" (QUICKSTART:127, search.html:50) is false for field names: `trd producttype=revolver` → 0, `TRD productType=Revolver` → 84. Unknown fields (`TRD where nosuchfield > 1`) silently match nothing. |
-| GRAM-05 | Invalid Sutra inputs silently accepted: duplicate YAML keys (last wins), a second YAML document (ignored), unknown custom tags (ignored), `match.kind: 42`, `priority: high`, a title without `id`, `rows: 5`, `limit: many`, `search: maybe`, `fields: 5`, `series: 5`. |
+| GRAM-04 | "Case never matters" (QUICKSTART:127, search.html:50) is false for field names: `trd producttype=revolver` → 0, `TRD productType=Revolver` → 84. Unknown fields (`TRD where nosuchfield > 1`) silently match nothing. **Fixed** in 4ffeef1 (SearchFieldNamesTest.fieldNamesIgnoreCaseAsTheGuidesPromise, SearchFieldNamesTest.anUnknownFieldIsAProblemWithTheClosestNames) |
+| GRAM-05 | Invalid Sutra inputs silently accepted: duplicate YAML keys (last wins), a second YAML document (ignored), unknown custom tags (ignored), `match.kind: 42`, `priority: high`, a title without `id`, `rows: 5`, `limit: many`, `search: maybe`, `fields: 5`, `series: 5`. **Fixed** in 9db82fa (StrictSutraTest: ambiguousYamlIsAProblemWithItsLine, headerValuesOfTheWrongShape, panelOptionsOfTheWrongType) |
 | UX-02 | At 390 px, 77 of 85 pages scroll sideways (419 px); the Live pill and avatar are clipped; admin pages 603 px (nav.css:21,113). |
 | UX-03 | Help-centre screenshots have no max-width: guides up to 1922 px wide at 1600 px, 1460 px at 390 px. |
 | UX-04 | WCAG contrast fails for `--d-faint` in six of seven themes (light 2.83:1, crimson 2.82, terminal 3.32/2.94), used for "No data available", the footer, placeholders, key notes; the light theme's accent as text 3.35–3.98:1. test_contrast.py does not check these. |
@@ -53,10 +53,10 @@ docaudit/). Totals: 3 high, 19 medium, 23 low, 5 info.
 ## Low
 | Id | Finding |
 |---|---|
-| GRAM-06 | `limit 999999999999` leaks a raw Java error "For input string … (DRS-5001)" (SearchQuery.java:160); `limit 0` silently becomes "the first 1 are shown". |
-| GRAM-07 | Unhelpful or misclassified messages: `unexpected '' at 7` for a condition ending early; out-of-range `version` reported as YAML syntax (DRS-2001) instead of DRS-2020; unsorted unknown-function list; tab-indented line hint says "needs a colon"; phrase search shows a Python list with a bad plural. |
-| GRAM-08 | Preview API 500 on `{"yaml": null}`; malformed JSON → bare 400 with no DRS code. |
-| GRAM-09 | Invalid or future dates are stored in the as-of cookie and break every view for 12 hours. |
+| GRAM-06 | `limit 999999999999` leaks a raw Java error "For input string … (DRS-5001)" (SearchQuery.java:160); `limit 0` silently becomes "the first 1 are shown". **Fixed** in 4ffeef1, ee8b39e (SearchFieldNamesTest.aLimitOutsideItsRangeSaysTheRange) |
+| GRAM-07 | Unhelpful or misclassified messages: `unexpected '' at 7` for a condition ending early; out-of-range `version` reported as YAML syntax (DRS-2001) instead of DRS-2020; unsorted unknown-function list; tab-indented line hint says "needs a colon"; phrase search shows a Python list with a bad plural. **Fixed** in 9db82fa, 4ffeef1, ee8b39e (StrictSutraTest.expressionMessagesSayWhatIsWrong, StrictSutraTest.anOutOfRangeVersionIsAVersionProblemNotYamlSyntax, SearchFieldNamesTest.aConditionThatStopsShortSaysSo, PhraseParserTest.explainsWhatItReadAndSaysWhatItDidNot, test_studio_check_js.py::test_a_tab_indented_line_is_said_to_be_indented_with_a_tab) |
+| GRAM-08 | Preview API 500 on `{"yaml": null}`; malformed JSON → bare 400 with no DRS code. **Fixed** in c007e5b, cc386d6 (StudioTest.aPreviewRequestThatCannotBeReadIsACleanProblem; test_gram_inputs.py::test_a_preview_body_of_the_wrong_shape_is_a_400_problem, test_a_preview_body_that_is_not_json_is_a_400_problem) |
+| GRAM-09 | Invalid or future dates are stored in the as-of cookie and break every view for 12 hours. **Fixed** in cc386d6 (test_gram_inputs.py: test_a_date_that_cannot_be_picked_is_refused_and_not_stored, test_a_stored_date_the_server_refuses_is_ignored_and_cleared) |
 | UX-10 | DRS codes repeated two or three times in messages ("DRS-2101: DRS-2101 alert expression: DRS-2101 …"; missing.html:23, alerts-page.js:31 and others). |
 | UX-11 | Error pages always say "Check the identifier" (also for timeouts and bad dates); unknown kind reported as a missing id; unknown URLs return raw `{"detail":"Not Found"}`. |
 | UX-12 | First past-date read after start timed out (DRS-1004) → console 502; not reproduced again (2 s timeout). |

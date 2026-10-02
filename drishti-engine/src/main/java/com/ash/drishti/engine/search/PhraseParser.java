@@ -114,8 +114,10 @@ public final class PhraseParser {
             }
         }
         if (kind == null) {
+            // named as the vocabulary names them, with their mnemonics: no guessed plurals, no list brackets
             return new Parsed(null, null, steps, List.of(), "say what to look for: a kind such as "
-                    + vocab.kinds().values().stream().map(KindWord::label).distinct().limit(4).map(s -> s.toLowerCase(Locale.ROOT) + "s").toList());
+                    + String.join(", ", vocab.kinds().values().stream().map(k -> k.label().toLowerCase(Locale.ROOT) + " (" + k.mnemonic() + ")")
+                            .distinct().sorted().limit(4).toList()));
         }
         List<Field> fields = vocab.fields(kind.kind());
         List<String> conditions = new ArrayList<>();

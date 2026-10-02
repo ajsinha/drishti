@@ -227,6 +227,8 @@ The number of suggestions is a server setting (`drishti.commands.suggest-limit`,
 | A page headed *Pick a trade* that says `0 of 0 trades match` and *Nothing matches.* | The mnemonic is fine, but no trade's id starts with what you typed (`TRD MX-29999999`) and no title contains it | Type less of the id (`TRD MX-2`) and pick from the list |
 | `DRS-1001 no source holds trade/MX-29999999` | You opened an address such as `/v/trade/MX-29999999` directly, and no source has that id | Check the id; use the command line to find it |
 | `DRS-4004 'XYZ' is neither a mnemonic nor a kind; type it alone to see suggestions` | A pick list or search started with an unknown word | Type the first letter and pick a mnemonic |
+| `DRS-4004 no trade has a field 'producttyp'; did you mean productType?` | A pick list or search names a field the kind does not have (case does not matter, spelling does) | Use the name it suggests |
+| `DRS-4004 limit must be a whole number from 1 to 1000, not '0'` | `limit` outside its range | A number from 1 to 1000 |
 | `DRS-5002 <you> may not open lcr entities` | Your roles, or the packs you have switched on, do not include that kind | Switch the pack on in the box menu; otherwise ask an administrator |
 
 ### A pack at a glance
@@ -260,8 +262,11 @@ the same. After you press Enter:
 
 Rules:
 
-- **Case never matters**, for ids, names and values: `trd t-100`, `CPTY NORTH` and `productType=revolver`
-  all work. Text compared with `=` or `!=` ignores case in every search.
+- **Case never matters**, for ids, names, field names and values: `trd t-100`, `CPTY NORTH`, `productType=revolver`
+  and `trd producttype=revolver` all work. Text compared with `=` or `!=` ignores case in every search.
+- **A field the kind does not have is an error, not an empty list:** `TRD where nosuchfield > 1` says
+  `DRS-4004 no trade has a field 'nosuchfield'; …`, and a near miss names the field you meant
+  (`TRD prodcttype=revolver`: `…; did you mean productType?`).
 - **A word without `*`** matches ids that **start** with it and titles that **contain** it. **A word with
   `*`** is a pattern on the id only (`*SUMMIT*` matches `NS-SUMMIT-NY`).
 - **A bare word after a comparison is a value:** `productType = Revolver` needs no quotes. Quote values that
@@ -837,6 +842,8 @@ What the banners mean:
 |---|---|
 | *No data held for 2026-09-29: no dated store has … for that date. Shown instead: the current data of …* | No dated store holds the entity for the day you picked (for example, the history lake was not built, or does not reach back that far), so a source that keeps no dates answered. Its current data is shown as a still snapshot: it does not update and the top bar does not say *Live* |
 | *Latest data on or before 2026-09-29 is from 2026-09-25* | Nothing was written for the day you picked; you see the last earlier day |
+| *Pick a business date from 2021-09-30 to today.* | The date you typed is not a real date, is in the future, or is older than the server keeps. It was not taken: you stay on the date you had |
+| *The business date you had picked cannot be used, so this is live. …* | A date remembered from earlier is no longer one the server accepts (for example after its history window moved on). The console has forgotten it and shows live |
 
 ### Known at: time travel
 
@@ -964,14 +971,14 @@ open it, or walk the table with the keyboard ([Tables](#tables-sorting-filtering
 | Part | Rules | Example |
 |---|---|---|
 | Mnemonic | Any mnemonic, or a kind name | `TRD`, `NSET`, `customer` |
-| Field | As named in the document; dots for nested fields, brackets for list items | `mtm`, `counterparty.name`, `legs[0].rate` |
+| Field | As named in the document, in any case; dots for nested fields, brackets for list items. A name no entity of the kind has is an error with the closest names | `mtm`, `counterparty.name`, `legs[0].rate`, `COUNTERPARTY.NAME` |
 | Compare | `=`  `!=`  `<`  `<=`  `>`  `>=`; text compared with `=` and `!=` ignores case | `assetClass = 'Rates'` (also matches `rates`) |
 | Text | `contains` and `startswith`, case-insensitive; `contains` also looks inside lists | `counterparty.name contains 'Meridian'` |
 | Combine | `and`, `or`, `not`, brackets. `not` applies to the comparison after it | `mtm > 1m and not status = 'Matured'` |
 | Amounts | `k` thousand, `m` million, `bn` billion | `250k`, `1.5m`, `2bn` |
 | Text values | in single quotes; a single word may go without | `'Early warning'`, `Rates` |
 | Sort | `order by <field>`, add `desc` for largest first | `order by mtm desc` |
-| Size | `limit N`, from 1 to 1000 | `limit 20` |
+| Size | `limit N`, a whole number from 1 to 1000; anything else (`limit 0`, `limit 5000`) is an error that gives the range | `limit 20` |
 
 Without `limit`, a search shows the number of results set in *My account → Settings* (100 unless you
 change it).
@@ -1001,7 +1008,8 @@ without `where` opens a single match directly.
   in time, or could not list the kind, a banner says *Incomplete: 1 source could not be read* and names each source
   and why (for example a lake date in a format the server does not read): entities it holds are missing, so
   "0 matches" does not mean none exist.
-- A mistake gives an error such as `DRS-4004 cannot read the condition: …` with the position.
+- A mistake gives an error such as `DRS-4004 cannot read the condition: …` with the position. A condition that stops
+  short (`TRD where mtm >`) says `the condition ends early: something is missing after '>'`.
 - **CSV** downloads the results. **Watch as a monitor** saves the first 50 results as a live monitor
   (see [Monitors](#monitors)).
 - Where the kind's pack offers it, a **Table | Pivot** switch turns the results into a pivot over **every** match of

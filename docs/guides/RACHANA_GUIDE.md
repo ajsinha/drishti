@@ -900,7 +900,7 @@ and `GET /api/v1/sutras/problems` give `<file>:<line>:<column> <code> <message>`
 | `gene-mine.v1.sutra.md` (an old Markdown Sutra) | `DRS-2004 Markdown Sutras are no longer read (Sutras are YAML since 1.11): convert it with python3 tools/rachana/md_to_yaml.py … --delete` | run the converter |
 | `gene-mine.yaml` in a Sutra folder | `DRS-2004 a Sutra file is named <name>.v<N>.sutra.yaml; rename gene-mine.yaml` | `gene-mine.v1.sutra.yaml` |
 | `bind: "size($.legs, 'pv')"` | `DRS-2101 expression 'size($.legs, 'pv')': DRS-2101 size takes 1 argument(s), got 2 at 0` | `sum($.legs, 'pv')` |
-| `bind: "round($.mtm)"` | `DRS-2101 expression 'round($.mtm)': DRS-2101 unknown function 'round'; known: [size, upper, sum, …] at 0` | `fmt: amount0` does the rounding |
+| `bind: "round($.mtm)"` | `DRS-2101 expression 'round($.mtm)': DRS-2101 unknown function 'round'; known: abs, coalesce, contains, … at 0` | `fmt: amount0` does the rounding |
 | `title: "Legs ${size($.legs)"` | `DRS-2101 template 'Legs ${size($.legs)': DRS-2101 unclosed '${' at 5` | close the brace |
 | `bind: $.notionl` | no error; the cell is empty | fix the field name; preview catches these |
 | `where: "$.status == 'live'"` | no error; the Sutra never matches (`Live` ≠ `live`) | `lower($.status) == 'live'` |

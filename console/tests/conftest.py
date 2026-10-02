@@ -319,6 +319,8 @@ class FakeBackend:
     async def business_date(self, ident=None):
         from core import asof
         sel = asof.current()
+        if sel != "live" and not ("2021-09-30" <= sel <= "2026-12-31"):     # as the server refuses: future, or before its history
+            raise BackendError(400, "DRS-4003", f"business date {sel} is in the future")
         return {"current": "2026-09-30", "selected": "2026-09-30" if sel == "live" else ("2026-09-25" if sel == "2026-09-26" else sel),
                 "live": sel == "live", "previous": "2026-09-29", "earliest": "2021-09-30", "calendar": "USNY", "zone": "America/New_York",
                 "holidays": ["2026-10-12", "2026-11-11", "2026-11-26"]}

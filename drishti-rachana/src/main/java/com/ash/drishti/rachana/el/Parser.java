@@ -59,6 +59,9 @@ final class Parser {
         this.limits = limits;
     }
 
+    /** The message when the expression stops where a value is still needed ({@code $.mtm >}). */
+    static final String ENDS_EARLY = "the expression ends early: a value is missing";
+
     static Expr parse(String src) {
         return parse(src, ElLimits.DEFAULTS);
     }
@@ -94,7 +97,8 @@ final class Parser {
 
     private Token expect(Type t, String what) {
         if (peek().type() != t) {
-            throw new ElException("expected " + what + " but found '" + peek().text() + "'", peek().pos());
+            throw new ElException("expected " + what + (peek().type() == Type.EOF ? " but the expression ends" : " but found '" + peek().text() + "'"),
+                    peek().pos());
         }
         return next();
     }
@@ -266,6 +270,8 @@ final class Parser {
             }
             case IDENT:
                 return identifier(t);
+            case EOF:
+                throw new ElException(ENDS_EARLY, t.pos());
             default:
                 throw new ElException("unexpected '" + t.text() + "'", t.pos());
         }
@@ -288,7 +294,8 @@ final class Parser {
         next();
         ElFunction fn = Functions.get(t.text());
         if (fn == null) {
-            throw new ElException("unknown function '" + t.text() + "'; known: " + Functions.ARITY.keySet(), t.pos());
+            throw new ElException("unknown function '" + t.text() + "'; known: " + String.join(", ", new java.util.TreeSet<>(Functions.ARITY.keySet())),
+                    t.pos());
         }
         List<Expr> args = new ArrayList<>();
         if (peek().type() != Type.RPAREN) {

@@ -124,7 +124,7 @@ Click the command line at the top (or press `/`), type each command and press En
 | 2 | `F9`, then `F7`, then `Alt+←` | `F9` opens the raw JSON (source `murex-rates`). `F7` jumps to the netting set `NS-MERIDIAN-RE-NY`. `Alt+←` comes back. The bottom bar lists every key the view has: `F2 Terms`, `F3 Cashflows`, `F4 Interest rate`, `F7 Netting set`, `F8 Impact`, `F9 Raw JSON`. |
 | 3 | `F8` (on the trade) | *Impact of MX-20000001*: level 1 the netting set `NS-MERIDIAN-RE-NY`, level 2 the credit limit `LIM-MERIDIAN-RE`, each with the amount at stake. |
 | 4 | `TRD MX-200000` | No trade has that exact id, so you get a **pick list**: `99 of 99 trades match`, with each trade's product type, direction, currency, notional, MTM, maturity and book. Use `↑` `↓` and Enter, or click an id. |
-| 5 | `TRD productType=Revolver` | A pick list by field value: `6 of 750 trades match`. Case never matters (`trd producttype=revolver` works too). |
+| 5 | `TRD productType=Revolver` | A pick list by field value: `6 of 750 trades match`. Case never matters, in field names too (`trd producttype=revolver` works too); a field trades do not have (`TRD nosuchfield=1`) says so and suggests the nearest names. |
 | 6 | `CPTY north` | Exactly one counterparty's name contains "north", so it opens at once: `CP-NORTHBRIDGE`, Northbridge Capital LLP, with Rating `BB+` and its PFE peak. |
 | 7 | `TRD where mtm > 1m order by mtm desc limit 20` | A search: `163 of 750 trades match; the first 20 are shown`, largest MTM first. |
 | 8 | `NSET NS-SUMMIT-NY` | A netting set: Trades `108`, Utilisation `58%`, an exposure profile (`F2`) and the member trades (`F3`). |

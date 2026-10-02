@@ -97,9 +97,19 @@ public class StudioController {
 
     @PostMapping("/studio/preview")
     public ViewModel preview(@RequestBody PreviewRequest req, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
+        boolean pasted = req.document() != null && !req.document().isNull();
+        if (req.yaml() == null) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "'yaml' is required: the Sutra text to preview");
+        }
+        if (req.kind() == null || req.kind().isBlank()) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "'kind' is required: the kind of entity to preview against");
+        }
+        if (!pasted && (req.id() == null || req.id().isBlank())) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "'id' is required: the entity to preview against (or a pasted 'document')");
+        }
         entitlements.requireOpen(principal, req.kind());
         Sutra s = sutras.check(req.yaml());
-        if (req.document() != null && !req.document().isNull()) {
+        if (pasted) {
             return entitlements.restrict(principal, pipeline.preview(java.util.Optional.of(s), pasted(req.kind(), req.id(), req.document()),
                     entitlements.redactor(principal)));
         }
