@@ -27,8 +27,9 @@ for gen in $(grep -l -- "--check" packs/*/tools/make_*.py tools/packgen/*/make*.
 python3 -m unittest -q tools/samplegen/test_samplegen.py
 python3 -m unittest -q tools/packreg/test_packreg.py
 if command -v uv >/dev/null; then                  # the lake writers and maintenance need deltalake; uv provides it without installing
-  uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/samplegen/test_layout.py
-  uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/lake/test_maintain.py 2>&1 | grep -v '^{"at"'
+  # a hung test fails the drill (timeout exits 124) instead of blocking it: these take seconds, 10 minutes is a hang
+  timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/samplegen/test_layout.py
+  timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/lake/test_maintain.py 2>&1 | grep -v '^{"at"'
 fi
 ./mvnw -q -o verify
 console/.venv/bin/python -m pytest -q console/tests

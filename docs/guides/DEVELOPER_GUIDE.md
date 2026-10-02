@@ -279,8 +279,11 @@ What it does, in order (it stops at the first failure, `set -euo pipefail`):
 3. Every generator that supports `--check` (`packs/*/tools/make_*.py` and `tools/packgen/*/make*.py` containing
    the string `--check`) runs with `--check`: generated pack content must match what the generator would write now.
 4. `python3 -m unittest -q tools/samplegen/test_samplegen.py`.
-5. If `uv` is installed: the lake-maintenance tests (`tools/lake/test_maintain.py`) with `deltalake`, `pyarrow` and
-   `pyyaml` supplied by `uv run --with`.
+5. If `uv` is installed: the lake writer and lake-maintenance tests (`tools/samplegen/test_layout.py`,
+   `tools/lake/test_maintain.py`) with `deltalake`, `pyarrow` and `pyyaml` supplied by `uv run --with`, each under a
+   10-minute `timeout`: a hung test fails the drill (exit 124) instead of blocking it. (Tools that start worker
+   processes after pyarrow or deltalake have started threads must spawn them, never fork: `bulk_trades.py` uses a
+   `spawn` pool.)
 6. `./mvnw -q -o verify`: the whole Java build, every test and every rule, offline.
 7. `console/.venv/bin/python -m pytest -q console/tests`.
 8. Pushes `develop`, fast-forwards `main` to `develop` (`git merge --ff-only`), pushes `main`, and returns to
