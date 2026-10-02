@@ -33,6 +33,8 @@ import yaml
 _CODE = re.compile(r'<pre><code(?: class="language-([\w+-]+)")?>(.*?)</code></pre>', re.S)
 _BOX = {"tip": "tip", "warning": "warn", "danger": "warn", "note": "concept", "info": "concept", "example": "concept"}
 _TAG = re.compile(r"<[^>]+>")
+# A screenshot in a guide: fitted to its column by help.css and wrapped in a link that opens it full size (UX-03).
+_IMG = re.compile(r'(<a\b[^>]*>\s*)?(<img\b[^>]*?\bsrc="([^"]+)"[^>]*>)')
 
 
 @dataclass(frozen=True)
@@ -98,6 +100,7 @@ class Library:
                       lambda m: f'<div class="help-box {_BOX.get(m.group(1), "concept")}">\n<p class="hb-title">', body)
         body = body.replace("<table>", '<div class="tbl-wrap"><table class="tbl help-tbl">').replace("</table>", "</table></div>")
         body = re.sub(r"<h1[^>]*>.*?</h1>", "", body, count=1, flags=re.S)
+        body = _IMG.sub(_full_size, body)
         body = re.sub(r'href="([^"#:]+\.md)(#[^"]*)?"', lambda m: self._link(g, m.group(1), m.group(2)), body)
         toc = [{"id": t["id"], "name": t["name"], "children": [{"id": c["id"], "name": c["name"]} for c in t.get("children", [])]}
                for t in md.toc_tokens]
@@ -129,6 +132,13 @@ class Library:
                 hits.append({"guide": g, "score": score, "snippet": snippet})
         hits.sort(key=lambda h: -h["score"])
         return hits[:limit]
+
+
+def _full_size(m: re.Match) -> str:
+    """An image not already inside a link opens full size in a new tab; the guide shows it fitted to the column."""
+    if m.group(1):
+        return m.group(0)
+    return f'<a class="help-shot" href="{m.group(3)}" target="_blank" rel="noopener" title="Open full size">{m.group(2)}</a>'
 
 
 def _figure(m: re.Match) -> str:
