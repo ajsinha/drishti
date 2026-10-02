@@ -688,4 +688,4 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 | `DRS-5002` | forbidden (role or pack) |
 | `DRS-5003` | console cannot reach the server |
 | `DRS-5010` | not signed in |
-| `DRS-6001`–`DRS-6009` | user management (see [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)); `DRS-6005` is a locked account |
+| `DRS-6001`–`DRS-6010` | user management (see [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)); `DRS-6005` is a locked account |

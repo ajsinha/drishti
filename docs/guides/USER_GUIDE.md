@@ -1181,7 +1181,9 @@ a name. Click it to switch, or choose **All servers…** to see each one's state
 whether you are signed in there.
 
 Each server has its own users and data, so you sign in to each separately. You can be signed in to several at once and
-switch without signing in again. **Sign out** signs you out of the current server only. A link someone shares opens on
+switch without signing in again. **Sign out** signs you out of the current server only, and ends that session on the
+server: the browser's cookie, or a copy of it, no longer signs anyone in. (Opening `/logout` by a link only asks; the
+**Sign out** button does it.) A link someone shares opens on
 the server it was made on (it carries `?srv=…`). A server not shown in the list can still be reached with the link
 `/connect/<its id>` if you were given one.
 
@@ -1207,7 +1209,14 @@ Click **Save settings**.
 to 20. The button then reads **Pinned**; press it again to unpin.
 
 **Changing your password.** Type the current password and the new one twice (at least 10 characters,
-with letters and digits), then click **Change password**. Users, roles and password rules are covered
+with letters and digits), then click **Change password**. When an administrator asked you to choose your own password
+(at your first sign-in, or after they reset it), *My account* shows only this form, and every other page takes you
+back to it until the password is changed; then the console opens the terminal home.
+
+**When your access changes.** Your roles and whether your account is enabled are read from the server as you work,
+not only when you sign in. If an administrator disables your account, every page sends you to the sign-in page within
+a few seconds (`auth.recheck_seconds`, 10 by default); if they change your roles, what you may open changes as quickly.
+An administrator resetting your password signs you out everywhere. Users, roles and password rules are covered
 in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
 
 ## Themes

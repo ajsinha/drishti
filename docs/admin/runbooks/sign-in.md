@@ -18,8 +18,10 @@
 How sign-in works, in one paragraph: the user types a name and password on the console's `/login` page. The
 console asks the server to check them (`POST /api/v1/auth/login`), presenting its own short-lived service token
 signed with `DRISHTI_TOKEN_SECRET`. The server checks the password, counts failures and locks the account after
-5 of them (for 15 minutes). On success the console sets a signed session cookie (`drishti_session`, signed with
-`DRISHTI_SESSION_SECRET`) and, for every later call, sends the server a fresh token for that user. With single
+5 of them (for 15 minutes). On success the console opens a session on the server (`POST /api/v1/auth/sessions`) and
+sets a signed session cookie naming it (`drishti_session`, signed with `DRISHTI_SESSION_SECRET`). On every later
+request it asks the server whether the session still stands and who the user is now (cached for `auth.recheck_seconds`,
+10), and sends the server a fresh token for that user with their current roles. With single
 sign-on (OIDC), the provider replaces the password step. Users, roles and the audit log are described in
 [USER_MANAGEMENT.md](../USER_MANAGEMENT.md).
 
@@ -36,6 +38,10 @@ console's admin pages do the same for you.
 | "Unknown user or wrong password." for **everyone**, correct passwords included | Console and server disagree on `DRISHTI_TOKEN_SECRET`, or the console has none. | Step 3 |
 | "Sign-in unavailable: backend unreachable: …" | The console cannot reach the server. | Step 4 |
 | Signed in, but pages fail with `DRS-5010` | Tokens refused: secrets differ, or the clocks differ by more than 30 s. | Step 3 |
+| Signed in, then sent back to the sign-in page within seconds | The session ended on the server: the user signed out elsewhere with this cookie, was disabled, deleted or had the password reset (audit: `signed-out`, `sessions-ended`). After an upgrade from 1.13.0 everyone signs in once more. | Step 2 |
+| Every page leads back to *My account* (console API calls answer `403 DRS-6010`) | A password change is due (first sign-in or after a reset, with forced change on). | Change the password there |
+| "Sign-in unavailable: …" right after a correct password | The server could not open a session (`POST /api/v1/auth/sessions`): an older server than the console, or the identity database is down. | Step 4 |
+| A button does nothing and the console answers `403 DRS-5002 refused: this request came from another site` | The proxy changes the `Host` header, so the console takes its own pages for another site. | Set `auth.allowed_origins` ([OPERATIONS.md › 8.4](../OPERATIONS.md#84-cookies-csp-and-single-sign-on-behind-a-proxy)) |
 | Signed in, but an entity or a link says "no access" / `DRS-5002` | The user's roles do not include that kind, or its pack is not among theirs, or is switched off for everyone. | Fix D |
 | "Single sign-on is unavailable" or "The sign-in provider said: …" | OIDC configuration or provider. | Step 5 |
 | Nobody with the admin role can sign in | All admins locked out or passwords lost. | Fix E |
@@ -79,6 +85,8 @@ curl -s "http://localhost:18480/api/v1/admin/audit?subject=jdoe&limit=10"
 | `login-refused` | `disabled` | Right password, but the account is disabled. |
 | `login` | | A successful sign-in. |
 | `password-reset` | | An admin reset the password. |
+| `sessions-ended` | `1 session(s): disabled` | An admin's disable, delete or password reset ended the user's console sessions. |
+| `signed-out` | | The user signed out (the session ended on the server). |
 
 No audit entries at all for a user who says they tried: their attempts never reached the server. Go to step 3.
 
