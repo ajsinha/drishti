@@ -63,8 +63,8 @@ permissions, and masks are not applied on every path.
 | Id | Finding |
 |---|---|
 | SEC-02 | The server's token filter checks the raw URI: `/api/v1;x/…` and encoded paths skip it (non-sensitive metadata only; identity-bound endpoints fail closed). |
-| SEC-03 | Field masks apply to raw JSON, search, export, compare, history, Calc and pivots, but not to views, tables, panel records, live updates or panel CSV export. |
-| SEC-04 | Impact (F8) applies no masks (masked values and relationships shown). |
+| SEC-03 | Field masks apply to raw JSON, search, export, compare, history, Calc and pivots, but not to views, tables, panel records, live updates or panel CSV export. **Fixed** in 43075d9, d802261 (FieldMaskingTest.viewsMaskTheStripTitleTablesRecordsAndDerivedValues, theLiveStreamAndMonitorsCarryMaskedValues, alertsAndPhrasesCannotProbeAMaskedField; MaskTest) |
+| SEC-04 | Impact (F8) applies no masks (masked values and relationships shown). **Fixed** in 43075d9 (FieldMaskingTest.impactNeitherListsWhatOnlyAMaskedFieldTiesInNorShowsAMaskedMeasure) |
 | SEC-05 | Sign-out only deletes the browser cookie; a copied cookie keeps working. |
 | SEC-06 | "Change password at first sign-in" is not enforced. |
 | DATA-07 | A promoted field with mixed types: the columns path orders text lexicographically and clamps huge numbers, disagreeing with documents. |
@@ -97,7 +97,7 @@ permissions, and masks are not applied on every path.
 | DOC-18 | About 88 in-app help links go nowhere. |
 
 Lows and infos are in each area's findings: inconsistent error responses (SEC-10, GRAM-06..08, UX-10..13), CSRF
-protection relies on SameSite only (SEC-08), type-ahead reveals masked names (SEC-07), readiness probe always DOWN with
+protection relies on SameSite only (SEC-08), type-ahead reveals masked names (SEC-07) **Fixed** in 43075d9 (FieldMaskingTest.typeAheadNeitherShowsNorMatchesMaskedValues), readiness probe always DOWN with
 security on (SEC-12), absolute paths in Sutra problems (SEC-11), tie order under limits (DATA-17), health UP for
 unreadable tables (DATA-18, **Fixed** in 724328b, 7de60f8: DeltaUnreadableTest, RedisOutageHealthTest), quant edge cases (DATA-20), layout and Studio polish (UX-14..18), documentation mismatches
 (DOC-04..22), and risky development defaults that are already documented (SEC-16).
