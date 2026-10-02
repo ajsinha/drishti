@@ -472,18 +472,30 @@ Numbers accept `k`, `m` and `bn` (or `b`) suffixes (`1m` = 1,000,000). URL-encod
 
 ```bash
 curl -s -G $B/search --data-urlencode "q=TRD where mtm > 1m order by mtm desc limit 3" \
-  | jq -c '{kind, condition, orderBy, descending, limit, columns, labels, rows: .rows[0:1], scanned, matched, partial, elapsedMs}'
+  | jq -c '{kind, condition, orderBy, descending, limit, columns, labels, rows: .rows[0:1], scanned, matched, partial, failed, elapsedMs}'
 ```
 
 ```json
 {"kind":"trade","condition":"$.mtm > 1000000","orderBy":"$.mtm","descending":true,"limit":3,
  "columns":["$.mtm"],"labels":{"$.mtm":"MTM (USD)"},
  "rows":[{"ref":{"kind":"trade","id":"MX-20000043"},"title":"MX-20000043","values":{"$.mtm":71490903}}],
- "scanned":750,"matched":163,"partial":false,"elapsedMs":6.85}
+ "scanned":750,"matched":163,"partial":false,"failed":[],"elapsedMs":6.85}
 ```
 
-`scanned` is how many documents were read, `matched` how many passed, and `partial: true` means a source
-could not be read completely, so the answer may be missing rows. A condition that does not parse:
+`scanned` is how many documents were read, `matched` how many passed, and `partial: true` means the answer may
+be missing rows: the scan limit was reached, or a source could not be read completely. `failed` names each source
+that failed or did not answer in time, and why (any entry makes the search partial). A failing source never
+looks like "nothing matched":
+
+```json
+"scanned":0,"matched":0,"partial":true,
+"failed":[{"source":"trading-store","reason":"trade 2026-09-30 cannot be read: the native Delta engine does not decompress LZ4 Parquet pages (it reads Snappy, ZSTD, GZIP and uncompressed); rewrite the date with Snappy or ZSTD (tools/lake/maintain.py relayout --force --dates <date>)"}]
+```
+
+The reason is the connector's own when it says what to do (an unsupported codec, a day with unreadable lines);
+otherwise only the kind of failure (`failed (SQLException; the server log and Admin → Health say more)`), since
+driver and I/O messages can carry host names and paths; `did not answer within 3000 ms` for a timeout.
+`/search/compare` is partial when either date is, with both dates' `failed`. A condition that does not parse:
 
 ```bash
 curl -s -G $B/search --data-urlencode "q=TRD where mtm >"
@@ -915,8 +927,10 @@ curl -s $B/admin/status | jq -c .
 | `GET` | `/admin/caches` | admin. Each cache: `{name, type, stats}` — `engine` (layouts and shape fingerprints) and every connector that caches |
 | `POST` | `/admin/caches/{name}/purge` | admin. Purge one cache by name, or every cache with `all`; `{purged, elapsedMs}`; `404 DRS-5004` for an unknown name. Recorded in the audit log |
 
-`status` is `OK`, `DEGRADED` (a source is down, a plugin failed to start, or a pack has broken Sutras or a down
-connector) or `DOWN` (no source is up). Sources that are down are listed first.
+`status` is `OK`, `DEGRADED` (a source is down or degraded, a plugin failed to start, or a pack has broken Sutras or
+a down connector) or `DOWN` (no source is up). A source's `status` is `UP`, `DEGRADED` (it serves, but some of its
+data cannot be read: `health` names the table and date and why, e.g. `DEGRADED: cannot read trade 2026-09-30: …
+LZ4 …`) or `DOWN`; down sources are listed first, then degraded ones. `summary.sourcesDegraded` counts them.
 
 ```bash
 curl -s $B/admin/health | jq -c '{status, summary, server, live}'
@@ -924,7 +938,7 @@ curl -s $B/admin/health | jq -c '{status, summary, server, live}'
 
 ```json
 {"status":"OK",
- "summary":{"packsWithProblems":0,"failedToStart":0,"sourcesDown":0,"sources":18,"packs":12},
+ "summary":{"packsWithProblems":0,"failedToStart":0,"sourcesDown":0,"sourcesDegraded":0,"sources":18,"packs":12},
  "server":{"version":"1.13.0","uptimeSeconds":6953,"java":"25.0.4.1","heapUsedMb":146,"heapMaxMb":15640,"threads":75,"cpus":24},
  "live":{"frames":11680,"p50Ms":0.886,"streams":0,"p99Ms":1.917,"topics":0,"droppedFrames":0}}
 ```
@@ -1056,7 +1070,7 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 |---|---|---|---|
 | DRS-1001 | 404 | entity not found | no source holds the entity; also a missing workspace, monitor or alert rule |
 | DRS-1002 | 404 | no source for kind | no source serves the kind |
-| DRS-1003 | 502 | source failed | the source answered with an error or could not be reached |
+| DRS-1003 | 502 | source failed | the source answered with an error, could not be reached, or holds the data but cannot read it; `detail` names the connector (`DRS-1003 trading-store failed reading trade/MX-1`) and, when the connector says what to do, why (`…: trade 2026-09-30 cannot be read: the native Delta engine does not decompress LZ4 Parquet pages …`). The next connector is not asked: another store's data is never shown in place of a failing store's |
 | DRS-1004 | 504 | source timeout | the source took longer than `drishti.sources.fetch-timeout` (default 2 s) |
 | DRS-1005 | 422 | invalid json | a document (e.g. sample JSON pasted into Studio) is not valid JSON or not an object |
 | DRS-1006 | 500 | plugin load failed | a connector plugin could not be loaded (see `/sources` → `failures`) |

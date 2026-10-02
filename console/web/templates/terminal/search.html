@@ -64,8 +64,11 @@
         <input id="srchName" name="name" class="mono" value="{{ (data.mnemonic or data.kind) ~ ' search' }}" maxlength="64">
         <button type="submit" class="btn btn-sm btn-outline-secondary" title="Save the first 50 results as a monitor and watch them live"><i class="bi bi-list-columns" aria-hidden="true"></i> Watch as a monitor</button>
       </form>{% endif %}
-      {% if data.partial %}<span class="text-muted-d"><i class="bi bi-exclamation-circle" aria-hidden="true"></i> not every source answered in time, or the scan limit was reached: results may be incomplete</span>{% endif %}
+      {% if data.partial and not data.failed %}<span class="text-muted-d"><i class="bi bi-exclamation-circle" aria-hidden="true"></i> not every source answered in time, or the scan limit was reached: results may be incomplete</span>{% endif %}
     </div>
+    {% if data.failed %}<div class="asof-banner srch-failed" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+      Incomplete: {{ data.failed | length }} source{{ 's' if data.failed | length > 1 }} could not be read, so entities they hold are missing from these results.
+      <ul class="mono">{% for f in data.failed %}<li><b>{{ f.source }}</b>: {{ f.reason }}</li>{% endfor %}</ul></div>{% endif %}
     {% if rows %}
     {% set pv = data.pivot if (data.pivot and not vs) else none %}
     <section class="pnl"><div class="pnl-b">{% if pv %}<div class="pv-box pv-search-box">{{ pivot_switch('search', 'the results') }}

@@ -112,6 +112,16 @@ public interface SourcePlugin extends AutoCloseable {
     }
 
     /**
+     * Why this source's {@link #search} of the kind is incomplete right now, or empty when it is complete: its index of
+     * the kind could not be rebuilt (a table it cannot read), so it lists an older set of entities or none. A search that
+     * lists the kind is then reported partial, with this reason, instead of looking exact. Shown to whoever searched,
+     * so it names what cannot be read without secrets. The default is complete.
+     */
+    default Optional<String> listingProblem(String kind) {
+        return Optional.empty();
+    }
+
+    /**
      * What this source caches, for the admin's cache page: entry counts, sizes, hits. Empty when it caches nothing.
      */
     default java.util.Map<String, Object> cacheStats() {

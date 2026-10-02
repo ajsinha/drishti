@@ -484,6 +484,15 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
   source slower than 3 seconds (`drishti.search.budget`). The API answer has `"partial": true`.
 - **Fix:** narrow the search, or raise the limits ([CONFIGURATION.md](../admin/CONFIGURATION.md)).
 
+### "Incomplete: 1 source could not be read …"
+
+- **Cause:** a source failed, did not answer in time, or could not list the kind (its type-ahead index could not be
+  rebuilt), while the search ran. The banner names each source and why; the API answer has `"partial": true` and
+  `"failed": [{"source", "reason"}]`. Entities that source holds are missing from the results, so "0 of 0" is not
+  "nothing matched".
+- **Fix:** follow the reason (an LZ4 table: [DELTA_CONNECTOR.md §16](../connectors/DELTA_CONNECTOR.md)); otherwise
+  **Admin → Health** shows the source's `lastError` ([source-down runbook](../admin/runbooks/source-down.md)).
+
 ## Studio and Sutras
 
 ### Studio's Save (or Submit for review) is disabled

@@ -967,8 +967,10 @@ without `where` opens a single match directly.
 
 - A search follows the business date in the top bar.
 - It sees only what your role may see; a masked field never matches.
-- If a slow source did not answer in time, or the scan limit was reached, the page says *results may be
-  incomplete*.
+- If the scan limit was reached, the page says *results may be incomplete*. If a source failed, did not answer
+  in time, or could not list the kind, a banner says *Incomplete: 1 source could not be read* and names each source
+  and why (for example a lake date in a format the server does not read): entities it holds are missing, so
+  "0 matches" does not mean none exist.
 - A mistake gives an error such as `DRS-4004 cannot read the condition: …` with the position.
 - **CSV** downloads the results. **Watch as a monitor** saves the first 50 results as a live monitor
   (see [Monitors](#monitors)).
@@ -1416,7 +1418,8 @@ Worked example: check that every data source is up.
 1. Open *Admin → Health* (`/admin/health`). At the top is the overall state, **OK**, **DEGRADED** or
    **DOWN**, and a summary. Below it, each connector (for example `trading-store`, `market-store`, `demo`)
    shows its state, reads, errors and p50/p99 read times. A Delta Lake connector whose folder is missing
-   shows `DOWN: no Delta tables under …`.
+   shows `DOWN: no Delta tables under …`; one with a table or date it cannot read shows **DEGRADED** and names it
+   (`DEGRADED: cannot read trade 2026-09-30: …`).
 2. The page refreshes itself every 5 seconds. The same figures are at `GET /api/v1/admin/health` for
    external monitoring:
 

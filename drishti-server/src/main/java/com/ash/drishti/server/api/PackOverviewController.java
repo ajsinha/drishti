@@ -72,7 +72,8 @@ public class PackOverviewController {
             if (!entitlements.mayOpen(principal, kind)) {
                 continue;
             }
-            List<EntityHit> hits = router.search(kind, "", search.maxScan() + 1, search.budget(), asOf);
+            var listing = router.list(kind, "", search.maxScan() + 1, search.budget(), asOf, new com.ash.drishti.engine.source.SourceFailures());
+            List<EntityHit> hits = listing.hits();
             Map<String, Object> k = new LinkedHashMap<>();
             k.put("kind", kind);
             String code = mnemonics.codeFor(kind);
@@ -80,6 +81,7 @@ public class PackOverviewController {
             k.put("label", code == null ? kind : mnemonics.of(code).map(m -> m.label()).orElse(kind));
             k.put("count", Math.min(hits.size(), search.maxScan()));
             k.put("more", hits.size() > search.maxScan());
+            k.put("failed", listing.failed());                 // sources that could not list the kind: the count may be short
             k.put("example", hits.isEmpty() ? null : hits.get(0).ref().id());
             k.put("columns", search.columnsOf(kind).stream().map(c -> c.substring(2)).toList());
             kinds.add(k);

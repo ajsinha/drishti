@@ -50,9 +50,10 @@ public final class ColumnRead {
      * @param total entities the source holds for the date
      * @param truncated true when only the first {@code limit} rows are returned
      * @param masked the fields the caller's role sees masked
+     * @param incomplete null when the source read the whole day; else why some entities are missing
      */
     public record Columns(String kind, LocalDate businessDate, List<String> paths, List<String> ids, Map<String, List<Object>> values,
-            int total, boolean truncated, List<String> masked) {}
+            int total, boolean truncated, List<String> masked, String incomplete) {}
 
     private static final Pattern PATH = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*");
     private static final int MAX_PATHS = 32;
@@ -96,10 +97,12 @@ public final class ColumnRead {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "not kept as columns for " + kind + ": " + missing + "; these are: "
                     + kept.stream().sorted().toList());
         }
-        Optional<ColumnSet> got = router.columns(kind, plain, asOf, budget);
+        com.ash.drishti.engine.source.SourceFailures failures = new com.ash.drishti.engine.source.SourceFailures();
+        Optional<ColumnSet> got = router.columns(kind, plain, asOf, budget, failures);
         if (got.isEmpty()) {
-            throw new DrishtiException(ErrorCode.SOURCE_FAILED, "the source of " + kind + " did not answer with columns within "
-                    + budget.toSeconds() + " s (or does not hold that date)");
+            String why = failures.asMap().entrySet().stream().map(e -> e.getKey() + " " + e.getValue()).reduce((a, b) -> a + "; " + b).orElse(null);
+            throw new DrishtiException(ErrorCode.SOURCE_FAILED, why != null ? "the source of " + kind + " could not answer with columns: " + why
+                    : "the source of " + kind + " did not answer with columns within " + budget.toSeconds() + " s (or does not hold that date)");
         }
         ColumnSet c = got.get();
         Map<String, Object> masked = StructuredSearch.masks(plain, redact);
@@ -119,7 +122,7 @@ public final class ColumnRead {
             values.put(path, col);
         }
         return new Columns(kind, c.businessDate(), plain, ids, values, c.size(), rows < c.size(),
-                plain.stream().filter(masked::containsKey).toList());
+                plain.stream().filter(masked::containsKey).toList(), c.incomplete());
     }
 
     /** Row numbers in id order; a table laid out sorted by id (the packs' large tables) is so already, and is not sorted again. */

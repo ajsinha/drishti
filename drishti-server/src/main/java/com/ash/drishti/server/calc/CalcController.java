@@ -149,6 +149,7 @@ public class CalcController {
         out.put("total", c.total());
         out.put("truncated", c.truncated());
         out.put("masked", c.masked());
+        out.put("incomplete", c.incomplete());              // null, or why some entities of the day are missing
         return out;
     }
 

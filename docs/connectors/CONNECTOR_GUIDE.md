@@ -122,8 +122,11 @@ Then it re-orders the list, keeping the order inside each group:
   rest.
 
 Drishti asks the candidates one by one. A connector that does not hold the entity says so and the next is asked. The
-first that holds it answers. A connector that **fails** (the database is down, the service answers 500) stops the
-read with `DRS-1003`: Drishti does not silently show you another store's data instead. The whole read must finish
+first that holds it answers. A connector that **fails** (the database is down, the service answers 500, a file or
+table it holds cannot be read, a store it has not reached yet so it cannot tell what it holds) stops the read with
+`DRS-1003 <connector> failed reading <kind>/<id>`: Drishti does not silently show you another store's data instead.
+When the connector says what to do (a Delta date in a codec its engine does not read), the error says so too
+(`…: trade 2026-09-30 cannot be read: …; rewrite the date with Snappy or ZSTD …`). The whole read must finish
 within `drishti.sources.fetch-timeout` (2 s) or it ends with `DRS-1004`. If nobody holds the entity the answer is
 `DRS-1001`; if no connector serves the kind at all, `DRS-1002` (rare, because `demo` and `file` serve every kind).
 
@@ -131,6 +134,9 @@ Live updates follow the read: the ticks come from the first live connector that 
 (a real stream before the samples). So if a trade comes from Kafka, it ticks from Kafka.
 
 Search (the type-ahead under the command line) asks every connector that supports search and merges the hits.
+A structured search (`TRD where …`) lists the kind the same way and reads what it lists; a connector that fails, does
+not answer within the search budget, or says its list of the kind is incomplete (a table it could not index) makes
+the answer `partial: true` and is named in it with why (`failed`), so a failure never reads as "nothing matched".
 Reverse lookups (what refers to this entity) ask every connector that supports them.
 
 **A real example.** On a server running the trading pack with its Delta Lake and the demo samples on (and the Kafka

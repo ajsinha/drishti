@@ -24,6 +24,7 @@ import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.engine.command.Mnemonics;
+import com.ash.drishti.engine.source.SourceFailures;
 import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.rachana.el.ElCompiler;
 import com.ash.drishti.rachana.el.ElException;
@@ -62,9 +63,15 @@ public final class StructuredSearch {
      * @param scanned entities read
      * @param matched entities for which the condition held (before the limit)
      * @param partial true when the scan limit, the budget or a failing source may have left entities out
+     * @param failed the sources that failed or did not answer in time, with why (source name to reason); never null
      */
     public record Result(String kind, String condition, String orderBy, List<String> columns, List<Row> rows, int scanned, int matched,
-            boolean partial, double elapsedMs) {}
+            boolean partial, double elapsedMs, Map<String, String> failed) {
+
+        public Result {
+            failed = failed == null ? Map.of() : Map.copyOf(failed);
+        }
+    }
 
     /** A matching entity and its sort value. */
     private record Match(Row row, Object key) {}
@@ -101,14 +108,17 @@ public final class StructuredSearch {
         String kind = kindOf(q);
         Expr condition = compile(q.condition(), "condition");
         Expr order = compile(q.orderBy(), "order by");
-        Optional<Result> fast = columnar(q, kind, condition, order, asOf, redact, t0);
+        // a source that fails or times out anywhere below is named in the result, which is then partial: a failure
+        // never looks like "nothing matched"
+        SourceFailures failures = new SourceFailures();
+        Optional<Result> fast = columnar(q, kind, condition, order, asOf, redact, t0, failures);
         if (fast.isPresent()) {
             return fast.get();
         }
         // a pick list names what it wants (TRD MX-200000): the sources' own indexes narrow by it, so a large book is not
         // cut at maxScan before the match is found; a wildcard (MX-2*0) is filtered here
         String narrow = q.idPattern() != null && !q.idPattern().contains("*") ? q.idPattern() : "";
-        List<EntityHit> hits = router.search(kind, narrow, props.maxScan() + 1, props.budget(), asOf);
+        List<EntityHit> hits = router.list(kind, narrow, props.maxScan() + 1, props.budget(), asOf, failures).hits();
         if (q.idPattern() != null) {                            // only what the word names, before any read
             hits = hits.stream().filter(h -> SearchQuery.matches(q.idPattern(), h.ref().id(), h.title())).toList();
         }
@@ -118,8 +128,8 @@ public final class StructuredSearch {
         }
         Map<EntityRef, String> titles = new LinkedHashMap<>();
         hits.forEach(h -> titles.put(h.ref(), h.title()));
-        Map<EntityRef, EntityDocument> docs = router.fetchAll(titles.keySet(), props.budget(), asOf);
-        partial |= docs.size() < titles.size();
+        Map<EntityRef, EntityDocument> docs = router.fetchAll(titles.keySet(), props.budget(), asOf, failures);
+        partial |= docs.size() < titles.size() || !failures.isEmpty();
         List<String> paths = columnsFor(q, kind, docs.values(), redact);
         List<Expr> columns = paths.stream().map(el::compile).toList();
         List<Match> matches = new ArrayList<>();
@@ -150,7 +160,7 @@ public final class StructuredSearch {
         }
         List<Row> rows = matches.stream().limit(q.limit()).map(Match::row).toList();
         return new Result(kind, q.condition(), q.orderBy(), paths, rows, docs.size(), matches.size(), partial,
-                Math.round((System.nanoTime() - t0) / 1e4) / 100.0);
+                Math.round((System.nanoTime() - t0) / 1e4) / 100.0, failures.asMap());
     }
 
     /**
@@ -158,7 +168,8 @@ public final class StructuredSearch {
      * columns read as columns (a Delta table laid out by its pack): every entity of the date is considered, exactly,
      * without reading a document. Empty when it cannot be answered so (the documents are read instead).
      */
-    private Optional<Result> columnar(SearchQuery q, String kind, Expr condition, Expr order, AsOf asOf, UnaryOperator<DataNode> redact, long t0) {
+    private Optional<Result> columnar(SearchQuery q, String kind, Expr condition, Expr order, AsOf asOf, UnaryOperator<DataNode> redact, long t0,
+            SourceFailures failures) {
         List<String> shown = new ArrayList<>(new java.util.LinkedHashSet<>(columnsFor(q, kind, List.of(), redact)));
         java.util.LinkedHashSet<String> needed = new java.util.LinkedHashSet<>(shown);
         if (condition != null) {
@@ -175,7 +186,8 @@ public final class StructuredSearch {
             return Optional.empty();
         }
         // a business day's columns load once and are kept: the first search of a day may wait for them
-        Optional<ColumnSet> got = router.columns(kind, plain, asOf, props.budget().compareTo(COLUMNS_BUDGET) > 0 ? props.budget() : COLUMNS_BUDGET);
+        Optional<ColumnSet> got = router.columns(kind, plain, asOf, props.budget().compareTo(COLUMNS_BUDGET) > 0 ? props.budget() : COLUMNS_BUDGET,
+                failures);
         if (got.isEmpty()) {
             return Optional.empty();
         }
@@ -230,8 +242,8 @@ public final class StructuredSearch {
             }
             rows.add(new Row(m.row().ref(), m.row().title(), values));
         }
-        return Optional.of(new Result(kind, q.condition(), q.orderBy(), shown, rows, c.size(), matches.size(), false,
-                Math.round((System.nanoTime() - t0) / 1e4) / 100.0));
+        return Optional.of(new Result(kind, q.condition(), q.orderBy(), shown, rows, c.size(), matches.size(), !failures.isEmpty(),
+                Math.round((System.nanoTime() - t0) / 1e4) / 100.0, failures.asMap()));
     }
 
     /** A whole number read from a float64 column shows as one (1875863, not 1875863.0). */

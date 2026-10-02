@@ -72,6 +72,8 @@ public class SearchController {
         out.put("scanned", r.scanned());
         out.put("matched", r.matched());
         out.put("partial", r.partial());
+        // the sources that failed or did not answer in time, and why: a partial answer says what it is missing
+        out.put("failed", r.failed().entrySet().stream().map(e -> Map.of("source", e.getKey(), "reason", e.getValue())).toList());
         out.put("elapsedMs", r.elapsedMs());
         out.put("pivot", offered(r.kind()));               // the Pivot tab, when the kind's pack opts in (null otherwise)
         return out;
@@ -155,6 +157,11 @@ public class SearchController {
         out.put("from", earlier.businessDate());
         out.put("to", later.businessDate());
         out.put("rows", rows);
+        // either date incomplete makes the comparison incomplete (an entity a failing source holds would look added or removed)
+        out.put("partial", Boolean.TRUE.equals(a.get("partial")) || Boolean.TRUE.equals(b.get("partial")));
+        java.util.List<Object> failed = new java.util.ArrayList<>((java.util.List<?>) b.get("failed"));
+        ((java.util.List<?>) a.get("failed")).stream().filter(f -> !failed.contains(f)).forEach(failed::add);
+        out.put("failed", failed);
         return out;
     }
 

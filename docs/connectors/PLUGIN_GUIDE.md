@@ -165,6 +165,20 @@ The first source that holds the entity answers; a source that does not hold it p
 *fails* (an exception) ends the read with `DRS-1003`; a read that takes longer than `fetch-timeout` ends with
 `DRS-1004`; no source holding it is `DRS-1001`; no source serving the kind at all is `DRS-1002`.
 
+So a plugin returns `Optional.empty()` **only** when it knows it does not hold the entity (no row, no key, a date
+outside what it keeps). Anything else throws: the store is down, a file is there but cannot be read, a line does not
+parse, and also *not connected yet*: a plugin that learns its kinds from its store and has not reached it cannot tell
+what it holds, so it throws until its first catalogue read succeeds (the jdbc, duckdb and mongodb plugins do). An
+empty answer for a failure would let the next store answer with its own, different data, and views and searches
+would disagree. Throw `com.ash.drishti.api.UnreadableData` when the data is there but cannot be read for a reason the
+reader can act on (an unsupported codec): its message, which must carry no secrets, is shown in the `DRS-1003` error
+and with the searches it makes partial; any other exception's message only reaches the log and Admin → Health.
+
+A plugin whose search index of a kind could not be rebuilt keeps the previous one and says so through
+`listingProblem(kind)` (`Optional<String>`, empty when complete): structured searches of the kind are then partial,
+with that reason. `health()` may start with `DEGRADED: …` when it serves but some of its data cannot be read (Admin →
+Health shows the source amber and the overall status `DEGRADED`); `UP …` and anything else (down) as before.
+
 Live updates are subscribed separately (`SourceRouter.subscribe`), in the same live order as reads (a real stream
 before the `default-route`'s samples): to the first live source that holds the entity, so ticks come from the source
 that answered the read; only when none holds it yet, to the first that accepts the subscription. Search asks every search-capable source and

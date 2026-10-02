@@ -271,4 +271,41 @@ class SourceRouterTest {
         assertThat(router.columns("trade", List.of("mtm"), AsOf.of(old), Duration.ofSeconds(2)).orElseThrow().ids()).containsExactly("history");
         assertThat(router.columns("trade", List.of("mtm"), AsOf.of(LocalDate.of(2001, 1, 2)), Duration.ofSeconds(2))).isEmpty();
     }
+
+    /** A store in front of another that fails (throws) on every read, with {@code failure}. */
+    record Failing(String name, RuntimeException failure) implements SourcePlugin {
+        public PluginManifest manifest() {
+            return new PluginManifest(name, "t", Set.of("trade"), new SourceCapabilities(false, false, true));
+        }
+
+        public void start(SourceContext c) {}
+
+        public Optional<EntityDocument> fetch(EntityRef ref) {
+            throw failure;
+        }
+    }
+
+    /**
+     * DATA-03 / DATA-13: a store that fails is not one that does not hold the entity: the read stops with DRS-1003 naming
+     * it, and the next store (with other data) is not asked; what the store says the reader can act on is in the error.
+     */
+    @Test
+    void aFailingStoreStopsTheReadNamingItAndTheNextStoreIsNotAsked() {
+        var behind = new Fake("lake", Set.of("trade"), Set.of("T1"), 0);
+        var r = router(Map.of("trade", "recent"), new Failing("recent", new IllegalStateException("/data/recent/trade.jsonl: bad line")), behind);
+        assertThatThrownBy(() -> r.fetch(EntityRef.of("trade", "T1")).join()).hasCauseInstanceOf(SourceFailure.class)
+                .satisfies(e -> {
+                    SourceFailure f = (SourceFailure) e.getCause();
+                    assertThat(f.errorCode()).isEqualTo(ErrorCode.SOURCE_FAILED);
+                    assertThat(f.source()).isEqualTo("recent");
+                    assertThat(f.getMessage()).isEqualTo("DRS-1003 recent failed reading trade/T1").doesNotContain("/data/recent");
+                });
+        var lz4 = router(Map.of("trade", "lake"), new Failing("lake", new com.ash.drishti.api.UnreadableData(
+                "trade 2026-09-30 cannot be read: the native Delta engine does not decompress LZ4 Parquet pages", new IllegalStateException())));
+        assertThatThrownBy(() -> lz4.fetch(EntityRef.of("trade", "T1")).join()).cause().hasMessage(
+                "DRS-1003 lake failed reading trade/T1: trade 2026-09-30 cannot be read: the native Delta engine does not decompress LZ4 Parquet pages");
+        var failures = new SourceFailures();
+        assertThat(lz4.fetchAll(List.of(EntityRef.of("trade", "T1")), Duration.ofMillis(200), AsOf.LATEST, failures)).isEmpty();
+        assertThat(failures.asMap()).containsOnlyKeys("lake");
+    }
 }

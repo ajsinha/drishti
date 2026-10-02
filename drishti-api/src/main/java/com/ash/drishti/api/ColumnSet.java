@@ -27,8 +27,15 @@ import java.util.Map;
  * @param numbers document path to its values; {@code NaN} where the entity has none
  * @param texts document path to its values; {@code null} where the entity has none
  * @param businessDate the business date the values are for, or null for undated data
+ * @param incomplete null when the day is complete; else why some entities are missing (e.g. "1 unreadable line in
+ *     2026-09-01/trade.jsonl"), so a search or aggregate over it is reported partial, with that reason
  */
-public record ColumnSet(String[] ids, Map<String, double[]> numbers, Map<String, String[]> texts, LocalDate businessDate) {
+public record ColumnSet(String[] ids, Map<String, double[]> numbers, Map<String, String[]> texts, LocalDate businessDate, String incomplete) {
+
+    /** A complete day's columns. */
+    public ColumnSet(String[] ids, Map<String, double[]> numbers, Map<String, String[]> texts, LocalDate businessDate) {
+        this(ids, numbers, texts, businessDate, null);
+    }
 
     public int size() {
         return ids.length;

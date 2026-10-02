@@ -117,6 +117,11 @@ final class ConnectorInstance implements SourcePlugin {
     }
 
     @Override
+    public java.util.Optional<String> listingProblem(String kind) {
+        return serves(kind) ? delegate.listingProblem(kind) : java.util.Optional.empty();
+    }
+
+    @Override
     public java.util.Map<String, Object> cacheStats() {
         return delegate.cacheStats();
     }

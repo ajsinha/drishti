@@ -66,8 +66,14 @@ public final class ImpactService {
      * @param hidden entities the caller may not open
      * @param total formatted sum of the measure over visible entities (all of them, listed or not), or null
      * @param more visible entities not listed (a group lists at most {@link #LISTED})
+     * @param incomplete null; else why the source could not read every entity of the day (the total may be short)
      */
-    public record Group(int level, String kind, String mnemonic, List<Item> items, int hidden, String total, int more) {}
+    public record Group(int level, String kind, String mnemonic, List<Item> items, int hidden, String total, int more, String incomplete) {
+
+        public Group(int level, String kind, String mnemonic, List<Item> items, int hidden, String total, int more) {
+            this(level, kind, mnemonic, items, hidden, total, more, null);
+        }
+    }
 
     static final int LISTED = 200;
     static final int MAX_DOCS = 2000;
@@ -203,7 +209,7 @@ public final class ImpactService {
             }
         }
         return Optional.of(new Group(level, kind, mnemonics.codeFor(kind), items, 0, any ? formats.format(fmt, Values.normalise(sum)) : null,
-                refs.size() - items.size()));
+                refs.size() - items.size(), c.incomplete()));
     }
 
     private Group group(int level, String kind, List<EntityRef> refs, Map<EntityRef, EntityDocument> docs, Map<EntityRef, String> via,

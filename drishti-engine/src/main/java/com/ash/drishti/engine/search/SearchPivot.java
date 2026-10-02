@@ -273,10 +273,12 @@ public final class SearchPivot {
 
     private Scan columns(String kind, Expr condition, String idPattern, List<String> paths, List<String> needed, List<String> conditionPaths,
             Map<String, Object> masked, List<String> maskedShown, AsOf asOf, Sink sink) {
-        Optional<ColumnSet> got = router.columns(kind, needed, asOf, pivots.budget());
+        com.ash.drishti.engine.source.SourceFailures failures = new com.ash.drishti.engine.source.SourceFailures();
+        Optional<ColumnSet> got = router.columns(kind, needed, asOf, pivots.budget(), failures);
         if (got.isEmpty()) {
-            throw new DrishtiException(ErrorCode.SOURCE_FAILED, "the source of " + kind + " did not answer with columns within "
-                    + pivots.budget().toSeconds() + " s (or does not hold that date)");
+            String why = failures.asMap().entrySet().stream().map(e -> e.getKey() + " " + e.getValue()).reduce((a, b) -> a + "; " + b).orElse(null);
+            throw new DrishtiException(ErrorCode.SOURCE_FAILED, why != null ? "the source of " + kind + " could not answer with columns: " + why
+                    : "the source of " + kind + " did not answer with columns within " + pivots.budget().toSeconds() + " s (or does not hold that date)");
         }
         ColumnSet c = got.get();
         Object[] values = new Object[paths.size()];
@@ -293,14 +295,15 @@ public final class SearchPivot {
             }
             sink.accept(c.ids()[i], values);
         }
-        return new Scan("columns", c.size(), false, maskedShown);
+        return new Scan("columns", c.size(), !failures.isEmpty(), maskedShown);   // a day the source could not read whole: partial
     }
 
     private Scan documents(String kind, Expr condition, String idPattern, List<String> paths, UnaryOperator<DataNode> redact,
             List<String> maskedShown, AsOf asOf, Sink sink) {
         int cap = pivots.documentScan();
         String narrow = idPattern != null && !idPattern.contains("*") ? idPattern : "";
-        List<EntityHit> hits = router.search(kind, narrow, cap + 1, pivots.budget(), asOf);
+        com.ash.drishti.engine.source.SourceFailures failures = new com.ash.drishti.engine.source.SourceFailures();
+        List<EntityHit> hits = router.list(kind, narrow, cap + 1, pivots.budget(), asOf, failures).hits();
         if (idPattern != null) {
             hits = hits.stream().filter(h -> SearchQuery.matches(idPattern, h.ref().id(), h.title())).toList();
         }
@@ -309,8 +312,8 @@ public final class SearchPivot {
             hits = hits.subList(0, cap);
         }
         List<EntityRef> refs = hits.stream().map(EntityHit::ref).toList();
-        Map<EntityRef, EntityDocument> docs = router.fetchAll(refs, pivots.budget(), asOf);
-        partial |= docs.size() < refs.size();
+        Map<EntityRef, EntityDocument> docs = router.fetchAll(refs, pivots.budget(), asOf, failures);
+        partial |= docs.size() < refs.size() || !failures.isEmpty();     // a failing source: not every entity was seen
         List<Expr> exprs = paths.stream().map(p -> el.compile("$." + p)).toList();
         Object[] values = new Object[paths.size()];
         for (EntityRef ref : refs) {

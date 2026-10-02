@@ -21,6 +21,7 @@ import com.ash.drishti.api.EntityHit;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.api.SourcePlugin;
 import com.ash.drishti.api.Subscription;
+import com.ash.drishti.api.UnreadableData;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import java.time.Duration;
@@ -35,6 +36,7 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Routes entity reads to plugins. The configured route for a kind is tried first, then the default route,
@@ -104,22 +106,32 @@ public final class SourceRouter {
         } else {
             liveFirst(candidates);
         }
-        return CompletableFuture.supplyAsync(() -> readFirst(ref, candidates, asOf), executor)
+        AtomicReference<String> asking = new AtomicReference<>();
+        return CompletableFuture.supplyAsync(() -> readFirst(ref, candidates, asOf, asking), executor)
                 .orTimeout(timeout.toMillis(), TimeUnit.MILLISECONDS)
-                .exceptionallyCompose(e -> CompletableFuture.failedFuture(translate(ref, e)));
+                .exceptionallyCompose(e -> CompletableFuture.failedFuture(translate(ref, e, asking.get(), timeout)));
     }
 
-    private EntityDocument readFirst(EntityRef ref, List<SourcePlugin> candidates, AsOf asOf) {
+    /**
+     * The first candidate that holds {@code ref} answers. One that does not hold it (an empty answer) passes to the next;
+     * one that fails (throws) stops the read with {@code DRS-1003} naming it: another store's data is never shown in
+     * place of the data a failing store holds. The error says why only when the source says so with an
+     * {@link UnreadableData} (an unsupported codec, and what to do); other causes go to the log and Admin → Health.
+     */
+    private EntityDocument readFirst(EntityRef ref, List<SourcePlugin> candidates, AsOf asOf, AtomicReference<String> asking) {
         for (SourcePlugin p : candidates) {
             Optional<EntityDocument> d;
             boolean dated = p.manifest().capabilities().dated();
             String name = p.manifest().name();
+            asking.set(name);
             long t0 = System.nanoTime();
             try {
                 d = dated ? p.fetch(ref, asOf) : p.fetch(ref);
             } catch (Exception e) {
                 stats.failed(name, System.nanoTime() - t0, e);
-                throw new DrishtiException(ErrorCode.SOURCE_FAILED, name + " failed reading " + ref, e);
+                String detail = UnreadableData.in(e).map(u -> ": " + u.getMessage()).orElse("");
+                throw new SourceFailure(ErrorCode.SOURCE_FAILED, name, SourceFailure.reason(e, props.fetchTimeout()),
+                        name + " failed reading " + ref + detail, e);
             }
             if (d.isPresent()) {
                 stats.found(name, System.nanoTime() - t0);
@@ -130,10 +142,10 @@ public final class SourceRouter {
         throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no source holds " + ref);
     }
 
-    private static Throwable translate(EntityRef ref, Throwable e) {
+    private static Throwable translate(EntityRef ref, Throwable e, String source, Duration timeout) {
         Throwable t = e instanceof CompletionException && e.getCause() != null ? e.getCause() : e;
         if (t instanceof TimeoutException) {
-            return new DrishtiException(ErrorCode.SOURCE_TIMEOUT, "timed out reading " + ref, t);
+            return new SourceFailure(ErrorCode.SOURCE_TIMEOUT, source, SourceFailure.reason(t, timeout), "timed out reading " + ref, t);
         }
         return t;
     }
@@ -144,18 +156,33 @@ public final class SourceRouter {
     }
 
     public Map<EntityRef, EntityDocument> fetchAll(Collection<EntityRef> refs, Duration budget, AsOf asOf) {
+        return fetchAll(refs, budget, asOf, new SourceFailures());
+    }
+
+    /**
+     * Reads several entities concurrently; entries that are not held or fail are absent from the result, and the sources
+     * that failed or timed out are added to {@code failures} with why.
+     */
+    public Map<EntityRef, EntityDocument> fetchAll(Collection<EntityRef> refs, Duration budget, AsOf asOf, SourceFailures failures) {
         Map<EntityRef, CompletableFuture<EntityDocument>> futures = new LinkedHashMap<>();
         refs.forEach(r -> futures.put(r, fetch(r, budget, asOf)));
         Map<EntityRef, EntityDocument> out = new LinkedHashMap<>();
         futures.forEach((r, f) -> {
             try {
                 out.put(r, f.join());
-            } catch (CompletionException | DrishtiException ignored) {
-                // a missing link must not fail the caller
+            } catch (CompletionException | DrishtiException e) {
+                // a missing link must not fail the caller; a failing source is reported to it
+                Throwable t = e instanceof CompletionException && e.getCause() != null ? e.getCause() : e;
+                if (t instanceof SourceFailure sf) {
+                    failures.add(sf.source(), sf.reason());
+                }
             }
         });
         return out;
     }
+
+    /** What a search across sources found, and the sources that could not answer (source name to why). */
+    public record Listing(List<EntityHit> hits, Map<String, String> failed) {}
 
     /** Searches every search-capable plugin in parallel; slow plugins are dropped after {@code budget}. */
     public List<EntityHit> search(String kind, String text, int limit, Duration budget) {
@@ -163,18 +190,36 @@ public final class SourceRouter {
     }
 
     public List<EntityHit> search(String kind, String text, int limit, Duration budget, AsOf asOf) {
+        return list(kind, text, limit, budget, asOf, new SourceFailures()).hits();
+    }
+
+    /**
+     * Searches as {@link #search} does and says which sources could not answer: one that failed, one still searching
+     * after {@code budget}, and one whose listing of the kind is incomplete ({@link SourcePlugin#listingProblem}) are
+     * added to {@code failures} with why, so a caller that lists a kind (a structured search) reports its answer as
+     * partial, and why, instead of exact and empty.
+     */
+    public Listing list(String kind, String text, int limit, Duration budget, AsOf asOf, SourceFailures failures) {
         List<CompletableFuture<List<EntityHit>>> parts = new ArrayList<>();
         for (SourcePlugin p : registry.plugins()) {
             if (p.manifest().capabilities().search() && (kind == null || p.manifest().serves(kind))) {
                 boolean dated = p.manifest().capabilities().dated();
-                parts.add(CompletableFuture.supplyAsync(() -> dated ? p.search(kind, text, limit, asOf) : p.search(kind, text, limit), executor)
-                        .completeOnTimeout(List.of(), budget.toMillis(), TimeUnit.MILLISECONDS)
-                        .exceptionally(e -> List.of()));
+                String name = p.manifest().name();
+                parts.add(CompletableFuture.supplyAsync(() -> {
+                    List<EntityHit> hits = dated ? p.search(kind, text, limit, asOf) : p.search(kind, text, limit);
+                    if (kind != null) {
+                        p.listingProblem(kind).ifPresent(why -> failures.add(name, why));
+                    }
+                    return hits;
+                }, executor).orTimeout(budget.toMillis(), TimeUnit.MILLISECONDS).exceptionally(e -> {
+                    failures.add(name, SourceFailure.reason(e, budget));
+                    return List.of();
+                }));
             }
         }
         Map<EntityRef, EntityHit> merged = new LinkedHashMap<>();
         parts.forEach(f -> f.join().forEach(h -> merged.putIfAbsent(h.ref(), h)));
-        return merged.values().stream().limit(limit).toList();
+        return new Listing(merged.values().stream().limit(limit).toList(), failures.asMap());
     }
 
     /**
@@ -216,6 +261,15 @@ public final class SourceRouter {
      * them as columns; empty otherwise (the caller then reads documents). Within {@code budget}.
      */
     public Optional<com.ash.drishti.api.ColumnSet> columns(String kind, java.util.Collection<String> paths, AsOf asOf, Duration budget) {
+        return columns(kind, paths, asOf, budget, new SourceFailures());
+    }
+
+    /**
+     * {@link #columns(String, java.util.Collection, AsOf, Duration)}, adding a source that failed to {@code failures} (one
+     * that is only slow is not: documents are read instead, which may still answer exactly).
+     */
+    public Optional<com.ash.drishti.api.ColumnSet> columns(String kind, java.util.Collection<String> paths, AsOf asOf, Duration budget,
+            SourceFailures failures) {
         List<SourcePlugin> candidates = candidates(kind);
         if (candidates.isEmpty()) {
             return Optional.empty();
@@ -243,9 +297,15 @@ public final class SourceRouter {
                     }
                 }, executor).orTimeout(left, TimeUnit.NANOSECONDS).join();
                 if (got.isPresent()) {
+                    if (got.get().incomplete() != null) {
+                        failures.add(p.manifest().name(), got.get().incomplete());   // some entities are missing: partial, and why
+                    }
                     return got;
                 }
             } catch (CompletionException e) {
+                if (!(e.getCause() instanceof TimeoutException)) {
+                    failures.add(p.manifest().name(), SourceFailure.reason(e, budget));
+                }
                 return Optional.empty();                       // too slow or failed: documents are read instead
             }
         }

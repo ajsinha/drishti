@@ -279,6 +279,19 @@ def test_a_search_on_the_command_line_opens_the_results(client, backend):
     assert saved == {"method": "PUT", "path": "/monitors/Big%20MTM", "body": {"entities": [{"kind": "trade", "id": "IRS-48213"}]}}
 
 
+def test_a_search_a_source_failed_names_the_source_and_why(client, backend):
+    """DATA-01: a failing source is not "no matches": the page names it and why."""
+    async def search(q, ident=None):
+        return {"kind": "trade", "mnemonic": "TRD", "columns": ["$.mtm"], "labels": {"$.mtm": "MTM"}, "rows": [],
+                "scanned": 0, "matched": 0, "partial": True, "elapsedMs": 4.2,
+                "failed": [{"source": "trading-store", "reason": "trade 2026-09-30 cannot be read: the native Delta engine does not decompress LZ4"}]}
+    backend.search = search
+    page = client.get("/s", params={"q": "TRD where mtm < -100m"}).text
+    assert "Incomplete: 1 source could not be read" in page
+    assert "trading-store" in page and "does not decompress LZ4" in page
+    assert "results may be incomplete" not in page                           # the banner says it, with the reason
+
+
 def test_a_bad_search_says_why(client, backend):
     from core.backend import BackendError
 
