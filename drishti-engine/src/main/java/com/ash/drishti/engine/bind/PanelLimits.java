@@ -27,12 +27,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param maxNodes nodes a {@code graph} draws (default 300); edges are capped at twice that
  * @param maxEvents events a {@code timeline} lists (default 500, the latest)
  * @param pivotRows row keys a {@code pivot} shows (default 200); the rest are counted in {@code more}
+ * @param treeDepth levels a table or ladder with {@code children} descends (default 12); deeper rows are left out
+ * @param treeRows rows in all (every level) one such table builds (default 10,000); further ones are left out
  * @param pivotColumns column keys a {@code pivot} shows (default 40); values under further keys are left out of the grid
  *     but still counted in the row totals
  */
 @ConfigurationProperties("drishti.panels")
 public record PanelLimits(Integer maxValues, Integer maxPoints, Integer maxNodes, Integer maxEvents, Integer pivotRows,
-        Integer pivotColumns) {
+        Integer pivotColumns, Integer treeDepth, Integer treeRows) {
 
     @org.springframework.boot.context.properties.bind.ConstructorBinding
     public PanelLimits {
@@ -42,11 +44,13 @@ public record PanelLimits(Integer maxValues, Integer maxPoints, Integer maxNodes
         maxEvents = positive(maxEvents, 500);
         pivotRows = positive(pivotRows, 200);
         pivotColumns = positive(pivotColumns, 40);
+        treeDepth = positive(treeDepth, 12);
+        treeRows = positive(treeRows, 10_000);
     }
 
     /** The defaults. */
     public static PanelLimits defaults() {
-        return new PanelLimits(null, null, null, null, null, null);
+        return new PanelLimits(null, null, null, null, null, null, null, null);
     }
 
     private static int positive(Integer v, int fallback) {

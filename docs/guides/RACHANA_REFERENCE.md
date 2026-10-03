@@ -674,12 +674,12 @@ server computes it and how the console draws it: [PANELS.md](PANELS.md)):
 | Kind | Required options | Optional options | Renders | Uses `columns` |
 |---|---|---|---|---|
 | [`kv`](#kv) | | `rows`, `columns`, `fields` | label/value grid | yes |
-| [`table`](#table) | `rows` | `totalLabel`, `limit`, `moreLabel`, `link`, `search`, [`pivot`](#pivot-a-pivot-tab-on-a-table-or-ladder) | table with optional total row and "N more" | yes |
+| [`table`](#table) | `rows` | `totalLabel`, `limit`, `moreLabel`, `link`, `search`, [`pivot`](#pivot-a-pivot-tab-on-a-table-or-ladder), `children`, `expand` | table with optional total row and "N more" | yes |
 | [`tabs`](#tabs) | `each` | `tabTitle`, `layout` | one sub-panel per element, as tabs or side by side | in `body` |
 | [`line`](#line) | | `rows`, `source`, `x`, `y`, `mark`, `footer`, `unit`, `fmt` | line chart | no |
 | [`area`](#area) | `rows` | `x`, `series`, `limit`, `limitLabel`, `unit` | area chart, several series, dashed limit | no |
 | [`hbar`](#hbar) | `rows` | `label`, `value`, `fmt`, `tone` | horizontal bars | no |
-| [`ladder`](#ladder) | `rows` | `totalLabel`, `highlight`, `search`, [`pivot`](#pivot-a-pivot-tab-on-a-table-or-ladder) | table with highlighted rows | yes |
+| [`ladder`](#ladder) | `rows` | `totalLabel`, `highlight`, `search`, [`pivot`](#pivot-a-pivot-tab-on-a-table-or-ladder), `children`, `expand` | table with highlighted rows | yes |
 | [`links`](#links-panel) | | | linked entities with badges | no |
 | [`status`](#status) | | `fields` | label/value grid, coloured by meaning | no (uses `fields`) |
 | [`provenance`](#provenance) | | | how the view was built | no |
@@ -692,7 +692,7 @@ server computes it and how the console draws it: [PANELS.md](PANELS.md)):
 | [`candlestick`](#candlestick) | `rows` | `x`, `open`, `high`, `low`, `close`, `volume`, `fmt`, `unit` | daily bars with volume | no |
 | [`graph`](#graph) | `nodes` | `edges`, `label`, `group`, `layout` | nodes and edges, nodes open their entity | no |
 | [`timeline`](#timeline) | `rows` | `date`, `label`, `detail`, `status`, `tone` | dated events with toned status | no |
-| [`pivot`](#pivot) | `rows`, `by`, `across` | `value`, `agg`, `fmt`, `tone`, `heat`, `totals` | aggregate table with totals and heat | no |
+| [`pivot`](#pivot) | `rows`, `by`, `across` | `value`, `agg`, `fmt`, `tone`, `heat`, `totals`, `expand` | aggregate table with totals and heat | no |
 
 Which option values are expressions, which are field names, and which are plain text matters: only
 expressions and templates are compiled at load time.
@@ -700,12 +700,12 @@ expressions and templates are compiled at load time.
 | Kind | Expressions (Rachana-EL) | Field names (of each row) | Plain values |
 |---|---|---|---|
 | `kv` | `rows` | | |
-| `table` | `rows`, `moreLabel`, each `pivot` field's `bind` | each `pivot` field written as a path | `limit` (integer), `totalLabel`, `search` (`false` hides the filter), the rest of `pivot` |
+| `table` | `rows`, `moreLabel`, `children`, each `pivot` field's `bind` | each `pivot` field written as a path | `limit` (integer), `totalLabel`, `search` (`false` hides the filter), `expand`, the rest of `pivot` |
 | `tabs` | `each`, `tabTitle` | | `layout` |
 | `line` | `rows`, `source`, `mark` | `x`, `y` | `unit`, `fmt` |
 | `area` | `rows`, `limit` | `x`, each series' `value` | `series[].label`, `series[].tone`, `limitLabel`, `unit` |
 | `hbar` | `rows` | `label`, `value` | `fmt`, `tone` |
-| `ladder` | `rows`, `highlight`, each `pivot` field's `bind` | each `pivot` field written as a path | `totalLabel`, `search` (`false` hides the filter), the rest of `pivot` |
+| `ladder` | `rows`, `highlight`, `children`, each `pivot` field's `bind` | each `pivot` field written as a path | `totalLabel`, `search` (`false` hides the filter), `expand`, the rest of `pivot` |
 | `status` | each field's `bind` | | each field's `label`, `fmt`, `tone` |
 | `gauge` | `value`, `max` | | `label`, `fmt` |
 | `surface` | `rows`; `y` when it starts with `$` or `@` | `y` otherwise | `fmt`, `unit`, `view` |
@@ -716,7 +716,7 @@ expressions and templates are compiled at load time.
 | `candlestick` | `rows` | `x`, `open`, `high`, `low`, `close`, `volume` | `fmt`, `unit` |
 | `graph` | `nodes`, `edges` | `label`, `group` (of each node) | `layout` (`tree` or `force`) |
 | `timeline` | `rows` | `date`, `label`, `detail`, `status` | `tone` |
-| `pivot` | `rows` | `by`, `across`, `value` | `agg` (`sum`, `count`, `avg`, `min`, `max`), `heat`, `totals` (`true`/`false`), `fmt`, `tone` |
+| `pivot` | `rows` | `by` (one field or a list), `across`, `value` | `agg` (`sum`, `count`, `avg`, `min`, `max`), `heat`, `totals` (`true`/`false`), `expand` (whole number or `all`), `fmt`, `tone` |
 
 For the seven kinds from `waterfall` on, a field name may also be a dotted path (`counterparty.name`) or an
 expression over the row when it starts with `@` or `$` (`y: "@.pnl / 1000"`). Values outside the allowed set
@@ -776,6 +776,8 @@ One row per element of `rows`.
 | `moreLabel` | | `"<N> more"` | Expression for the text of the "more" line, evaluated against the document (not a row). |
 | `totalLabel` | | `Total` | Text of the total row's label cell. |
 | `link` | | | Accepted, no effect (see above). |
+| `children` | | none | Expression evaluated per row (`@` is the row) giving the rows nested under it, for example `children: "@.children"`. A row that has children shows a ▸/▾ toggle and expands in place, indented, to any depth (up to `drishti.panels.tree-depth`, 12). Columns evaluate against each child with `@`. `total: true` columns sum the rows that have no children only, so nothing counts twice. A number, a list or a boolean is `DRS-2029`. A table with `children` is not sorted, paged or given per-column filters; its filter keeps the ancestors of the rows that match. |
+| `expand` | | `1` | Levels shown open at first: `1` shows only the top level, `2` opens those to show their children, `all` opens every level. A whole number from 1 or `all` (`DRS-2029` otherwise). |
 | `search` | | `true` | `false` hides the filter box (and the per-column filters) in the panel's heading, for a table too small or too fixed to need one. Table and ladder panels take it; on any other kind it is a problem (`DRS-2023`, *option 'search' applies only to panels that show a table*). `true` or `false` only (`search: maybe` is `DRS-2029`). |
 | `pivot` | | none | Offers a **Pivot** tab beside the table: `true`, or the fields a user may pivot by and the arrangement it opens with ([below](#pivot-a-pivot-tab-on-a-table-or-ladder)). Without it there is no Pivot tab. |
 
@@ -1035,6 +1037,8 @@ A table whose rows can be highlighted: settlement ladders, lifecycle events, the
 | `highlight` | | none | Expression evaluated per row (`@`, `#index` available); rows where it is truthy are highlighted. |
 | `totalLabel` | | `Total` | As for `table`; columns with `total: true` are summed. |
 | `search` | | `true` | As for `table`. |
+| `children` | | none | Expression evaluated per row (`@` is the row) giving the rows nested under it, for example `children: "@.children"`. A row that has children shows a ▸/▾ toggle and expands in place, indented, to any depth (up to `drishti.panels.tree-depth`, 12). Columns evaluate against each child with `@`. `total: true` columns sum the rows that have no children only, so nothing counts twice. A number, a list or a boolean is `DRS-2029`. A table with `children` is not sorted, paged or given per-column filters; its filter keeps the ancestors of the rows that match. |
+| `expand` | | `1` | Levels shown open at first: `1` shows only the top level, `2` opens those to show their children, `all` opens every level. A whole number from 1 or `all` (`DRS-2029` otherwise). |
 | `pivot` | | none | As for `table`: a [Pivot tab](#pivot-a-pivot-tab-on-a-table-or-ladder) over the ladder's rows. |
 
 A ladder does not accept `limit` or `moreLabel` (`DRS-2023`): it always shows every row.
@@ -1328,13 +1332,14 @@ Totals are aggregates of the underlying rows (an `avg` total is the average of a
 | Option | Required | Default | Meaning |
 |---|---|---|---|
 | `rows` | yes | | Expression giving the rows. |
-| `by` | yes | | Field whose values are the row keys (first-seen order). |
+| `by` | yes | | Field whose values are the row keys (first-seen order), or a **list of fields** (`by: [desk, book, productType]`, at most 6) for nested groups: each group row shows the subtotal of the rows in it and a ▸/▾ toggle opens it. A string keeps working. A number, an empty list or a list of non-names is `DRS-2029`. |
 | `across` | yes | | Field whose values are the column keys (first-seen order). |
 | `value` | | | Field aggregated; without it the pivot counts rows. Rows whose value is not a number are left out. |
 | `agg` | | `sum` | `sum`, `count`, `avg`, `min` or `max`. |
 | `fmt`, `tone` | | | Format and tone of every cell (counts are shown as whole numbers). |
 | `heat` | | `false` | Shade each cell by its value, from the smallest to the largest. |
-| `totals` | | `true` | `false` hides the total column and row. |
+| `totals` | | `true` | `false` hides the total column and row (and the subtotal rows of nested groups). |
+| `expand` | | `1` | With a list `by`: levels shown open at first (`1`: only the outermost groups, closed; `2`: those opened one level; `all`: every level). A whole number from 1 or `all`. |
 
 ```yaml
   - { id: mtmGrid, kind: pivot, title: MTM by book and currency, rows: $.positions, by: book, across: currency, value: mtm, agg: sum, heat: true, fmt: compact, tone: sign }
@@ -1342,6 +1347,9 @@ Totals are aggregates of the underlying rows (an `avg` total is the average of a
 
 You should see (banking-core pack, `DESK DESK-RATES`) three books across seven currencies, *BOOK-RATES-1* totalling
 *177.4m* and the desk *132.8m*.
+
+A list `by` nests the rows: `by: [desk, book]` gives a row for each desk, with its subtotal, and under it a row for each of its
+books. Heat shading is not drawn on nested pivots.
 
 ## Function keys
 

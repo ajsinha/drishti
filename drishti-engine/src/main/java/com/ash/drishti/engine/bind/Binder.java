@@ -56,6 +56,7 @@ public final class Binder {
     private final Mnemonics mnemonics;
     private final ChartBinder charts;
     private final PivotBinder pivots;
+    private final PanelLimits limits;
 
     public Binder(ElCompiler el, Formats formats, ReferenceCatalog catalog, BadgeRenderer badges, Mnemonics mnemonics) {
         this(el, formats, catalog, badges, mnemonics, PanelLimits.defaults());
@@ -72,6 +73,7 @@ public final class Binder {
         this.catalog = catalog;
         this.badges = badges;
         this.mnemonics = mnemonics;
+        this.limits = limits;
         this.charts = new ChartBinder(this, formats, catalog, limits);
         this.pivots = new PivotBinder(el, catalog, this, pivot);
     }
@@ -234,9 +236,11 @@ public final class Binder {
         List<PanelData.Row> out = new ArrayList<>();
         double[] totals = new double[cols.size()];
         boolean[] masked = new boolean[cols.size()];          // a column with a masked value is never added up
+        String childrenExpr = p.option("children").orElse(null);
+        int[] budget = {limits.treeRows()};
         for (int i = 0; i < rows.size(); i++) {
             EvalContext rc = c.eval().withRow(rows.get(i), i);
-            for (int k = 0; k < cols.size(); k++) {
+            for (int k = 0; k < cols.size() && childrenExpr == null; k++) {
                 if (cols.get(k).total() && !masked[k]) {
                     Object x = el.compile(cols.get(k).bind()).eval(rc);
                     masked[k] = Values.masked(x);
@@ -248,6 +252,13 @@ public final class Binder {
                 continue;
             }
             String rowPath = rowsPath == null ? null : rowsPath + "[" + i + "]";
+            if (childrenExpr != null) {
+                PanelData.Row tree = treeRow(cols, rc, rowPath, childrenExpr, highlight, totals, masked, i < limit, 0, budget);
+                if (tree != null) {
+                    out.add(tree);
+                }
+                continue;
+            }
             List<Cell> cells = new ArrayList<>(cols.size());
             for (Column col : cols) {
                 cells.add(cell(col, rc, null));
@@ -273,7 +284,50 @@ public final class Binder {
             more = p.option("moreLabel").map(m -> Values.text(eval(m, c.eval()))).orElse((rows.size() - limit) + " more");
         }
         boolean search = !p.option("search").map(String::trim).filter(v -> v.equalsIgnoreCase("false") || v.equalsIgnoreCase("no")).isPresent();
-        return new PanelData.Table(headers, numeric, out, total, more, search, pivots.view(p).orElse(null));
+        return new PanelData.Table(headers, numeric, out, total, more, search, pivots.view(p).orElse(null),
+                childrenExpr == null ? null : ChartBinder.expandLevels(p));
+    }
+
+    /**
+     * One row of a table or ladder with {@code children}, and the rows nested under it (the expression is evaluated for each,
+     * with {@code @} the row). A {@code total: true} column adds up the rows that have no children; a masked value is never
+     * added up. {@code emit} false walks the row for the totals only (a row beyond the table's {@code limit}).
+     *
+     * @param budget rows left to build in all (at the front), so a deep or cyclic document stays bounded
+     * @return the row, or null when {@code emit} is false
+     */
+    private PanelData.Row treeRow(List<Column> cols, EvalContext rc, String path, String childrenExpr, String highlight, double[] totals,
+            boolean[] masked, boolean emit, int depth, int[] budget) {
+        List<PanelData.Row> sub = new ArrayList<>();
+        DataNode kids = depth < limits.treeDepth() ? node(eval(childrenExpr, rc)) : DataNode.missing();
+        int walked = 0;
+        for (int j = 0; j < kids.size() && budget[0] > 0; j++) {
+            budget[0]--;
+            walked++;
+            PanelData.Row child = treeRow(cols, rc.withRow(kids.get(j), j), null, childrenExpr, highlight, totals, masked, emit, depth + 1, budget);
+            if (child != null) {
+                sub.add(child);
+            }
+        }
+        if (walked == 0) {                                    // a leaf: the only rows a total adds up
+            for (int k = 0; k < cols.size(); k++) {
+                if (cols.get(k).total() && !masked[k]) {
+                    Object x = el.compile(cols.get(k).bind()).eval(rc);
+                    masked[k] = Values.masked(x);
+                    double v = Values.number(x);
+                    totals[k] += Double.isNaN(v) ? 0 : v;
+                }
+            }
+        }
+        if (!emit) {
+            return null;
+        }
+        List<Cell> cells = new ArrayList<>(cols.size());
+        for (Column col : cols) {
+            cells.add(cell(col, rc, null));
+        }
+        boolean hl = highlight != null && Values.truthy(eval(highlight, rc));
+        return new PanelData.Row(cells, hl, path, sub);
     }
 
     /** Where the total label goes: the column just before the first totalled column, else the first. */

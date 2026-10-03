@@ -29,7 +29,32 @@
 </dl>
 {%- endmacro %}
 
+{# The rows of a tree table (Sutra children:), a row then the rows under it. A row at depth k is shown while k < expand;
+   static/js/tree-rows.js opens and closes them, filters them (keeping the ancestors of a match) and keeps the toggles in step. #}
+{% macro tree_rows(d, rows, depth) -%}
+{% for r in rows %}{% set kids = r.children or [] %}{% set open = (depth + 1) < d.expand %}
+    <tr class="tr-node{% if r.highlight %} hl{% endif %}" data-depth="{{ depth }}"{% if kids %} data-kids{% endif %}{% if depth >= d.expand %} hidden{% endif %}{% if r.path %} data-path="{{ r.path }}"{% endif %}>
+      {% for c in (r.cells or []) %}<td class="mono{% if (d.numeric or [])[loop.index0] %} num{% endif %}{{ tone(c) }}"{% if c.path %} data-path="{{ c.path }}"{% endif %}>
+        {%- if loop.first %}<span class="tr-ind tr-d{{ [depth, 24] | min }}">{% if kids %}<button type="button" class="tr-tog" aria-expanded="{{ 'true' if open else 'false' }}" aria-label="{{ 'Collapse' if open else 'Expand' }} {{ c.text }}">{{ '▾' if open else '▸' }}</button>{% else %}<span class="tr-sp" aria-hidden="true"></span>{% endif %}</span>{% endif %}{{ cell_text(c) }}</td>{% endfor %}
+    </tr>
+{{ tree_rows(d, kids, depth + 1) }}{% endfor %}
+{%- endmacro %}
+
 {% macro table(d) -%}
+{% if d.expand %}
+<div class="tbl-wrap"><table class="tbl tbl-tree" data-plain data-tree{% if d.search == false %} data-no-search{% endif %}>
+  <thead><tr>{% for h in (d.columns or []) %}<th{% if (d.numeric or [])[loop.index0] %} class="num"{% endif %}>{{ h }}</th>{% endfor %}</tr></thead>
+  <tbody>
+  {{ tree_rows(d, d.rows or [], 0) }}
+  </tbody>
+  {% if d.total or d.more %}
+  <tfoot>
+    {% if d.total %}<tr class="total">{% for c in d.total.cells %}<td class="mono{% if (d.numeric or [])[loop.index0] %} num{% endif %}{{ tone(c) }}">{{ c.text }}</td>{% endfor %}</tr>{% endif %}
+    {% if d.more %}<tr class="more"><td colspan="{{ (d.columns or []) | length }}">{{ d.more }}</td></tr>{% endif %}
+  </tfoot>
+  {% endif %}
+</table></div>
+{% else %}
 <div class="tbl-wrap"><table class="tbl"{% if d.search == false %} data-no-search{% endif %}>
   <thead><tr>{% for h in (d.columns or []) %}<th{% if (d.numeric or [])[loop.index0] %} class="num"{% endif %}>{{ h }}</th>{% endfor %}</tr></thead>
   <tbody>
@@ -46,6 +71,7 @@
   </tfoot>
   {% endif %}
 </table></div>
+{% endif %}
 {%- endmacro %}
 
 {# A table or ladder whose Sutra says pivot: a Table | Pivot switch; static/js/pivot.js builds the pivot in .pv-host when it
@@ -201,12 +227,18 @@
 {% if d.more %}<p class="pnl-note">{{ d.more }} earlier events not shown</p>{% endif %}
 {%- endmacro %}
 
+{# A pivot by several fields (Sutra by: [a, b]): the rows nest; static/js/tree-rows.js draws them with the Pivot tab's grid
+   (pivot-grid.js: ▸/▾ groups, subtotals) from data-pv-tree, and this plain table stays for pages without it. #}
 {% macro pivot(d) -%}
+{% if d.levels %}<div class="pv-tree-host" data-pv-tree="{{ d | tojson | forceescape }}">{{ pivot_table(d) }}</div>{% else %}{{ pivot_table(d) }}{% endif %}
+{%- endmacro %}
+
+{% macro pivot_table(d) -%}
 {% set lo, hi = d.min, d.max %}{% set span = (hi - lo) if (lo is number and hi is number and hi > lo) else 0 %}
 <div class="tbl-wrap"><table class="tbl pivot{% if d.heat %} heat{% endif %}">
   <thead><tr><th scope="col">{{ ((d.by or '')[:1] | upper) ~ (d.by or '')[1:] }}</th>{% for c in (d.columns or []) %}<th scope="col" class="num">{{ c }}</th>{% endfor %}{% if d.totals %}<th scope="col" class="num">Total</th>{% endif %}</tr></thead>
   <tbody>
-  {% for r in (d.rows or []) %}<tr><th scope="row">{{ r.label }}</th>{% for c in (r.cells or []) %}{% set v = (r['values'] or [])[loop.index0] %}<td class="mono num{{ tone(c) }}{% if d.heat and v is number %} heat-{{ (((v - lo) / span * 9) | round | int) if span else 5 }}{% endif %}">{{ c.text }}</td>{% endfor %}
+  {% for r in (d.rows or []) %}<tr><th scope="row"{% if r.path %} class="pv-i{{ r.path | length }}"{% endif %}>{% if r.group %}<b>{{ r.label }}</b>{% else %}{{ r.label }}{% endif %}</th>{% for c in (r.cells or []) %}{% set v = (r['values'] or [])[loop.index0] %}<td class="mono num{{ tone(c) }}{% if d.heat and v is number %} heat-{{ (((v - lo) / span * 9) | round | int) if span else 5 }}{% endif %}">{{ c.text }}</td>{% endfor %}
     {% if r.total %}<td class="mono num pv-total{{ tone(r.total) }}">{{ r.total.text }}</td>{% endif %}</tr>{% endfor %}
   </tbody>
   {% if d.totals or d.more %}<tfoot>

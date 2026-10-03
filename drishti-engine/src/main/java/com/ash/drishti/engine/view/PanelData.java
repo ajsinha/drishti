@@ -36,17 +36,23 @@ public sealed interface PanelData {
      * @param more "N more trades", or null
      * @param search the panel offers a filter box in its heading (Sutra option {@code search: false} turns it off)
      * @param pivot the Pivot tab the Sutra opts into ({@code pivot:}): its fields and the arrangement it opens with; null without one
+     * @param expand levels shown open at first (Sutra {@code expand}); present only on a tree, a table whose Sutra says {@code children}
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
     record Table(List<String> columns, List<Boolean> numeric, List<Row> rows, Row total, String more, boolean search,
-            java.util.Map<String, Object> pivot) implements PanelData {
+            java.util.Map<String, Object> pivot, Integer expand) implements PanelData {
 
         public Table(List<String> columns, List<Boolean> numeric, List<Row> rows, Row total, String more) {
-            this(columns, numeric, rows, total, more, true, null);
+            this(columns, numeric, rows, total, more, true, null, null);
         }
 
         public Table(List<String> columns, List<Boolean> numeric, List<Row> rows, Row total, String more, boolean search) {
-            this(columns, numeric, rows, total, more, search, null);
+            this(columns, numeric, rows, total, more, search, null, null);
+        }
+
+        public Table(List<String> columns, List<Boolean> numeric, List<Row> rows, Row total, String more, boolean search,
+                java.util.Map<String, Object> pivot) {
+            this(columns, numeric, rows, total, more, search, pivot, null);
         }
     }
 
@@ -54,8 +60,14 @@ public sealed interface PanelData {
      * @param cells one per column
      * @param highlight draw this row highlighted
      * @param path document path of the row, for live patches
+     * @param children the rows nested under this one (Sutra {@code children}), each with its own children; absent for a leaf
      */
-    record Row(List<Cell> cells, boolean highlight, String path) {}
+    record Row(List<Cell> cells, boolean highlight, String path, @JsonInclude(JsonInclude.Include.NON_EMPTY) List<Row> children) {
+
+        public Row(List<Cell> cells, boolean highlight, String path) {
+            this(cells, highlight, path, null);
+        }
+    }
 
     /**
      * {@code tabs}.
@@ -235,17 +247,33 @@ public sealed interface PanelData {
      * @param min the smallest cell value (heat scale)
      * @param max the largest cell value
      * @param more row keys left out beyond the configured maximum
+     * @param levels the fields the rows group by, outermost first; present only when there is more than one (nested groups)
+     * @param expand levels shown open at first (Sutra {@code expand}); present only with {@code levels}
+     * @param across the column field's name; present only with {@code levels}
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
     record Pivot(String by, List<String> columns, List<PivotRow> rows, List<Cell> totals, String agg, boolean heat, Double min, Double max,
-            int more) implements PanelData {}
+            int more, List<String> levels, Integer expand, String across) implements PanelData {
+
+        public Pivot(String by, List<String> columns, List<PivotRow> rows, List<Cell> totals, String agg, boolean heat, Double min,
+                Double max, int more) {
+            this(by, columns, rows, totals, agg, heat, min, max, more, null, null, null);
+        }
+    }
 
     /**
      * @param label the row key
      * @param cells one per column: the aggregate formatted and toned (text empty where no row falls)
      * @param values the aggregates (null where no row falls), for the heat scale and export
      * @param total the row total, or null when totals are off
+     * @param path in a nested pivot, the keys from the outermost level down to this row; null in a single-level pivot
+     * @param group in a nested pivot, true for a group row (its cells are the subtotals of the rows after it that extend its path)
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    record PivotRow(String label, List<Cell> cells, List<Double> values, Cell total) {}
+    record PivotRow(String label, List<Cell> cells, List<Double> values, Cell total, List<String> path, Boolean group) {
+
+        public PivotRow(String label, List<Cell> cells, List<Double> values, Cell total) {
+            this(label, cells, values, total, null, null);
+        }
+    }
 }

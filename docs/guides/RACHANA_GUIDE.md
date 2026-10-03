@@ -1028,6 +1028,24 @@ net MTM, all five trades) and `2 more trades` under the table.
 
 **Common mistake:** leaving out `rows`: `DRS-2022 'table' panel 'trades' needs option 'rows'`.
 
+**A tree of rows.** When each row holds its own children (an organisation, a book of positions), say where with `children`:
+
+```yaml
+  - id: org
+    kind: table
+    title: Exposure by unit
+    rows: $.units
+    children: "@.children"      # each unit's own list of units
+    expand: 2                       # open to show the second level at first (default 1; all opens everything)
+    columns:
+      - { label: Unit, bind: "@.name" }
+      - { label: Exposure, bind: "@.exposure", fmt: compact, total: true }
+```
+
+**You should see** a ▸/▾ beside each unit that has children; it opens in place, indented, to any depth, and the filter keeps the parents of the
+rows it finds. The `Total` adds up only the rows that have no children, so nothing counts twice. `children: 5` is
+`DRS-2029 option 'children' of 'table' panels is an expression written as text`.
+
 ### 10.3 `tabs`: one layout per element
 
 **For** a short list of similar objects, one tab (or box) each: the legs of a swap, a client's netting sets.
@@ -1615,6 +1633,21 @@ panels:
 **You should see** three books across `future`, `linear`, `swap`, `option` and `exotic`, with `BOOK-COMM-1 11.8m`,
 `BOOK-COMM-2 20.5m`, `BOOK-COMM-3 −19.1m` in the total column and the desk's `13.3m` at the bottom right (the
 desk's MTM, 13,315,593).
+
+**Nested rows.** Give `by` a list and the rows nest, like the outline of an Excel pivot table:
+
+```yaml
+  - id: grid
+    kind: pivot
+    rows: $.positions
+    by: [book, family]        # a book, then its product families
+    across: currency
+    value: mtm
+    expand: 1                 # levels open at first (default 1; all)
+```
+
+**You should see** one row per book with its subtotal and a ▸; opening it lists its families. `totals: false` hides the
+subtotals too; a masked `value` stays masked in every group.
 
 **Common mistake:** an aggregation the kind does not have (`agg: median`): `DRS-2029 option 'agg' of 'pivot' panels
 must be one of sum, count, avg, min, max, not 'median'`. `heat` and `totals` must be `true` or `false`; note that YAML

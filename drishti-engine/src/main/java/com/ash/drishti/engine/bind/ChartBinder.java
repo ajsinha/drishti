@@ -25,6 +25,7 @@ import com.ash.drishti.rachana.el.Values;
 import com.ash.drishti.rachana.format.Formats;
 import com.ash.drishti.rachana.format.Tones;
 import com.ash.drishti.rachana.model.Panel;
+import com.ash.drishti.rachana.model.PanelOptions;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.ArrayList;
@@ -391,9 +392,39 @@ final class ChartBinder {
         }
     }
 
+    /** A group of a pivot's rows: its keys from the outermost level down, and the groups nested in it (none for a leaf). */
+    private static final class Group {
+        final String key;
+        final List<String> path;
+        final Map<String, Group> kids = new LinkedHashMap<>();
+
+        Group(String key, List<String> path) {
+            this.key = key;
+            this.path = path;
+        }
+    }
+
+    /** The fields a pivot groups its rows by, outermost first: {@code by} as one field name or a list of them. */
+    static List<String> pivotBy(Panel p) {
+        Object by = p.options().get("by");
+        if (by instanceof List<?> list) {
+            return list.stream().map(String::valueOf).toList();
+        }
+        return List.of(String.valueOf(by));
+    }
+
+    /** Levels a tree shows open at first: {@code expand} (default 1), where {@code all} opens every level. */
+    static int expandLevels(Panel p) {
+        Object v = p.options().get("expand");
+        if (v instanceof Number n) {
+            return (int) Math.max(1, Math.min(n.longValue(), PanelOptions.EXPAND_ALL));
+        }
+        return "all".equals(v) ? PanelOptions.EXPAND_ALL : 1;
+    }
+
     PanelData pivot(Panel p, BindContext c) {
         DataNode rows = list(p, "rows", c);
-        String by = p.option("by").orElseThrow();
+        List<String> bys = pivotBy(p);
         String across = p.option("across").orElseThrow();
         String value = p.option("value").orElse(null);
         String agg = value == null ? "count" : p.option("agg").orElse("sum");
@@ -401,9 +432,11 @@ final class ChartBinder {
         String tone = p.option("tone").orElse(null);
         boolean heat = Boolean.TRUE.equals(p.options().get("heat"));
         boolean totals = !Boolean.FALSE.equals(p.options().get("totals"));
-        Map<String, Map<String, Acc>> grid = new LinkedHashMap<>();
+        boolean nested = bys.size() > 1;
+        Map<String, Map<String, Acc>> grid = new LinkedHashMap<>();    // by group (its keys joined), then column
         Map<String, Acc> rowAcc = new LinkedHashMap<>();
         Map<String, Acc> colAcc = new LinkedHashMap<>();
+        Group root = new Group("", List.of());
         Acc all = new Acc();
         int n = Math.min(rows.size(), limits.maxValues());
         boolean masked = false;
@@ -416,42 +449,30 @@ final class ChartBinder {
             if (!Double.isFinite(v)) {
                 continue;
             }
-            String r = key(field(by, row, i, c));
             String col = key(field(across, row, i, c));
             boolean shown = colAcc.containsKey(col) || colAcc.size() < limits.pivotColumns();
-            rowAcc.computeIfAbsent(r, k -> new Acc()).add(v);
+            Group at = root;
+            List<String> path = new ArrayList<>(bys.size());
+            for (String by : bys) {
+                String k = key(field(by, row, i, c));
+                path.add(k);
+                List<String> here = List.copyOf(path);
+                at = at.kids.computeIfAbsent(k, kk -> new Group(String.join("\u001f", here), here));
+                rowAcc.computeIfAbsent(at.key, kk -> new Acc()).add(v);
+                if (shown) {
+                    grid.computeIfAbsent(at.key, kk -> new LinkedHashMap<>()).computeIfAbsent(col, kk -> new Acc()).add(v);
+                }
+            }
             all.add(v);
             if (shown) {
                 colAcc.computeIfAbsent(col, k -> new Acc()).add(v);
-                grid.computeIfAbsent(r, k -> new LinkedHashMap<>()).computeIfAbsent(col, k -> new Acc()).add(v);
             }
         }
         List<String> columns = List.copyOf(colAcc.keySet());
         List<PanelData.PivotRow> out = new ArrayList<>();
-        double lo = Double.POSITIVE_INFINITY;
-        double hi = Double.NEGATIVE_INFINITY;
-        for (Map.Entry<String, Acc> e : rowAcc.entrySet()) {
-            if (out.size() >= limits.pivotRows()) {
-                break;
-            }
-            Map<String, Acc> cells = grid.getOrDefault(e.getKey(), Map.of());
-            List<Cell> texts = new ArrayList<>(columns.size());
-            List<Double> values = new ArrayList<>(columns.size());
-            for (String col : columns) {
-                Acc a = cells.get(col);
-                double v = a == null ? Double.NaN : a.get(agg);
-                if (Double.isFinite(v)) {
-                    lo = Math.min(lo, v);
-                    hi = Math.max(hi, v);
-                    texts.add(cell(v, fmt, tone));
-                    values.add(v);
-                } else {
-                    texts.add(Cell.of(null, ""));
-                    values.add(null);
-                }
-            }
-            out.add(new PanelData.PivotRow(e.getKey(), texts, values, totals ? cell(e.getValue().get(agg), fmt, tone) : null));
-        }
+        double[] range = {Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY};
+        int[] leaves = {0, 0};                                         // leaf groups shown, leaf groups in all
+        emitGroups(root, nested, columns, grid, rowAcc, new String[] {agg, fmt, tone}, totals, out, range, leaves);
         List<Cell> foot = null;
         if (totals) {
             foot = new ArrayList<>();
@@ -460,23 +481,73 @@ final class ChartBinder {
             }
             foot.add(cell(all.get(agg), fmt, tone));
         }
+        int more = leaves[1] - leaves[0];
+        List<String> levels = nested ? List.copyOf(bys) : null;
+        Integer expand = nested ? expandLevels(p) : null;
+        String by = String.join(" › ", bys);
         if (masked) {
-            return maskedPivot(by, columns, out, foot, agg, rowAcc.size());
+            return maskedPivot(by, columns, out, foot, agg, more, levels, expand, nested ? across : null);
         }
-        return new PanelData.Pivot(by, columns, out, foot, agg, heat, Double.isFinite(lo) ? lo : null, Double.isFinite(hi) ? hi : null,
-                rowAcc.size() - out.size());
+        return new PanelData.Pivot(by, columns, out, foot, agg, heat, Double.isFinite(range[0]) ? range[0] : null,
+                Double.isFinite(range[1]) ? range[1] : null, more, levels, expand, nested ? across : null);
+    }
+
+    /**
+     * The rows of a pivot in tree order: a group row (its subtotals) before the groups and rows in it, at most
+     * {@code pivotRows} leaf rows in all (a group with none of them shown is left out too). {@code leaves} counts the
+     * leaf rows shown and those that exist; {@code how} is the aggregation, format and tone.
+     */
+    private void emitGroups(Group parent, boolean nested, List<String> columns, Map<String, Map<String, Acc>> grid, Map<String, Acc> rowAcc,
+            String[] how, boolean totals, List<PanelData.PivotRow> out, double[] range, int[] leaves) {
+        for (Group g : parent.kids.values()) {
+            boolean leaf = g.kids.isEmpty();
+            if (leaf) {
+                leaves[1]++;
+                if (leaves[0] >= limits.pivotRows()) {
+                    continue;
+                }
+                leaves[0]++;
+            }
+            Map<String, Acc> cells = grid.getOrDefault(g.key, Map.of());
+            List<Cell> texts = new ArrayList<>(columns.size());
+            List<Double> values = new ArrayList<>(columns.size());
+            for (String col : columns) {
+                Acc a = cells.get(col);
+                double v = a == null ? Double.NaN : a.get(how[0]);
+                if (Double.isFinite(v)) {
+                    if (leaf) {
+                        range[0] = Math.min(range[0], v);
+                        range[1] = Math.max(range[1], v);
+                    }
+                    texts.add(cell(v, how[1], how[2]));
+                    values.add(v);
+                } else {
+                    texts.add(Cell.of(null, ""));
+                    values.add(null);
+                }
+            }
+            Cell total = totals ? cell(rowAcc.get(g.key).get(how[0]), how[1], how[2]) : null;
+            int at = out.size();
+            out.add(new PanelData.PivotRow(g.path.get(g.path.size() - 1), texts, values, total, nested ? g.path : null, nested ? !leaf : null));
+            if (!leaf) {
+                emitGroups(g, nested, columns, grid, rowAcc, how, totals, out, range, leaves);
+                if (out.size() == at + 1) {
+                    out.remove(at);                                  // none of its rows fit under the limit
+                }
+            }
+        }
     }
 
     /** A pivot whose value field is masked: the groups stay, every value and total reads the mask (never added up). */
     private static PanelData maskedPivot(String by, List<String> columns, List<PanelData.PivotRow> rows, List<Cell> foot, String agg,
-            int groups) {
+            int more, List<String> levels, Integer expand, String across) {
         Cell mask = Cell.of(null, DataNode.MASK);
         List<PanelData.PivotRow> out = new ArrayList<>(rows.size());
         List<Cell> cells = java.util.Collections.nCopies(columns.size(), mask);
         List<Double> values = java.util.Collections.nCopies(columns.size(), (Double) null);
-        rows.forEach(r -> out.add(new PanelData.PivotRow(r.label(), cells, values, r.total() == null ? null : mask)));
+        rows.forEach(r -> out.add(new PanelData.PivotRow(r.label(), cells, values, r.total() == null ? null : mask, r.path(), r.group())));
         List<Cell> footer = foot == null ? null : java.util.Collections.nCopies(foot.size(), mask);
-        return new PanelData.Pivot(by, columns, out, footer, agg, false, null, null, groups - out.size());
+        return new PanelData.Pivot(by, columns, out, footer, agg, false, null, null, more, levels, expand, across);
     }
 
     private static String key(Object v) {

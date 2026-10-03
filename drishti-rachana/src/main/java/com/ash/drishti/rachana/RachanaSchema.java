@@ -141,6 +141,15 @@ public final class RachanaSchema {
                     "description", "gain-loss (default): rises green, falls red; theme: the theme's positive and negative colours "
                             + "(blue and orange, colour-blind friendly). Totals are neutral");
         }
+        if (o.equals("expand") && (k == PanelKind.PIVOT || k == PanelKind.TABLE || k == PanelKind.LADDER)) {
+            return Map.of("oneOf", List.of(Map.of("type", "integer", "minimum", 1), Map.of("const", "all")),
+                    "description", "Levels of the tree shown open at first (default 1: only the top level); all opens every level");
+        }
+        if (k == PanelKind.PIVOT && o.equals("by")) {
+            return Map.of("oneOf", List.of(Map.of("type", "string"), Map.of("type", "array", "minItems", 1,
+                    "maxItems", com.ash.drishti.rachana.model.PanelOptions.MAX_BY, "items", Map.of("type", "string"))),
+                    "description", "The field the rows group by, or a list of fields for nested groups with subtotals (▸/▾)");
+        }
         if (o.equals(com.ash.drishti.rachana.model.Panel.PIVOT)) {
             return pivot();
         }

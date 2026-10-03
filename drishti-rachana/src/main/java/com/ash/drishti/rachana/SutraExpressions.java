@@ -35,10 +35,10 @@ public final class SutraExpressions {
 
     /** Per panel kind, the options that hold expressions (the rest are field names or literals). */
     static final Map<PanelKind, Set<String>> EL_OPTIONS = Map.ofEntries(
-            Map.entry(PanelKind.KV, Set.of("rows")), Map.entry(PanelKind.TABLE, Set.of("rows", "moreLabel")),
+            Map.entry(PanelKind.KV, Set.of("rows")), Map.entry(PanelKind.TABLE, Set.of("rows", "moreLabel", "children")),
             Map.entry(PanelKind.TABS, Set.of("each", "tabTitle")), Map.entry(PanelKind.LINE, Set.of("rows", "source", "mark")),
             Map.entry(PanelKind.AREA, Set.of("rows", "limit")), Map.entry(PanelKind.HBAR, Set.of("rows")),
-            Map.entry(PanelKind.LADDER, Set.of("rows", "highlight")), Map.entry(PanelKind.GAUGE, Set.of("value", "max")),
+            Map.entry(PanelKind.LADDER, Set.of("rows", "highlight", "children")), Map.entry(PanelKind.GAUGE, Set.of("value", "max")),
             Map.entry(PanelKind.LINKS, Set.of()), Map.entry(PanelKind.STATUS, Set.of()),
             Map.entry(PanelKind.PROVENANCE, Set.of()), Map.entry(PanelKind.MARKDOWN, Set.of()), Map.entry(PanelKind.SURFACE, Set.of("rows")),
             Map.entry(PanelKind.WATERFALL, Set.of("rows")), Map.entry(PanelKind.HISTOGRAM, Set.of("rows")),
