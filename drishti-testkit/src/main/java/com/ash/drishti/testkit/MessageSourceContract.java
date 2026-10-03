@@ -85,6 +85,8 @@ public abstract class MessageSourceContract {
             sub.close();
             send(TRADES, "Q-9", "", true);                                                     // a delete
             eventually(() -> Double.isNaN(mtm(p, "Q-9")), 30);
+            // type-ahead drops a deleted id just after the store does: wait for it rather than racing it
+            eventually(() -> p.search("trade", "q-", 10).stream().map(h -> h.ref().id()).toList().equals(java.util.List.of("Q-1")), 30);
             assertThat(p.search("trade", "q-", 10)).extracting(h -> h.ref().id()).containsExactly("Q-1");
             assertThat(p.manifest().kinds()).contains("trade", "netting-set");
         } finally {
