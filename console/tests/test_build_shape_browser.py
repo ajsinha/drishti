@@ -112,6 +112,9 @@ def test_a_drop_with_too_many_files_is_refused_in_the_page(console_url, browser,
         files.append(str(f))
     page = browser.new_page()
     page.goto(console_url + "/build/shape")
+    # start without a kept set: an earlier test's upload is restored on load, as it should be for a user
+    page.evaluate("() => fetch('/build/shape/last', {method: 'DELETE'})")
+    page.goto(console_url + "/build/shape")
     page.set_input_files("[data-files]", files)
     page.locator("[data-status]").get_by_text("at most 50").wait_for()
     assert page.locator("[data-result]").is_hidden()

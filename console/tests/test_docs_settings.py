@@ -72,6 +72,9 @@ def test_every_property_a_configuration_properties_class_binds_is_documented():
     missing = []
     for path in ROOT.rglob("*Properties.java"):
         text = path.read_text(encoding="utf-8")
+        rel = path.relative_to(ROOT).parts
+        if rel[0].startswith(".") or "target" in rel:   # .claude/worktrees (other branches' copies), build output
+            continue
         if "/src/main/" not in str(path) or "@ConfigurationProperties" not in text:
             continue
         names = set(re.findall(r"^\s+private\s+(?:final\s+)?[\w.]+(?:<[^>]*>)?\s+(\w+)\s*(?:=|;)", text, re.M))

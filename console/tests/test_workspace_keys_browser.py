@@ -19,6 +19,7 @@ moves to pane N from anywhere, Alt+0 back to the workspace's toolbar.
 
 Runs Chromium through Playwright; skipped when Playwright or its Chromium is not installed (`pip install playwright` and
 `playwright install chromium`). The console runs in-process on a free port against the stand-in server."""
+# Panes start as about:blank, which is already "complete": wait for the embedded page itself (its body has .embed).
 import asyncio
 import socket
 import threading
@@ -112,7 +113,7 @@ def test_alt_keys_move_between_panes_even_from_inside_a_pane(console_url, browse
     try:
         page.goto(console_url + "/w/Rates?template=Rates", wait_until="domcontentloaded")
         page.wait_for_selector(".ws-frame")
-        page.wait_for_function("() => [...document.querySelectorAll('.ws-frame')].every(f => f.contentDocument && f.contentDocument.readyState === 'complete')")
+        page.wait_for_function("() => [...document.querySelectorAll('.ws-frame')].every(f => f.contentDocument && f.contentDocument.readyState === 'complete' && f.contentDocument.body && f.contentDocument.body.classList.contains('embed'))")
         children = [f for f in page.frames if f != page.main_frame]
         assert len(children) == 2, "two panes: a view and a view the stand-in server does not hold (an error page)"
 
