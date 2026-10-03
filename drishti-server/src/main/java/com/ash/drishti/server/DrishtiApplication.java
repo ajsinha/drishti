@@ -36,6 +36,9 @@ public class DrishtiApplication {
      * the same process, so the new configuration (the pack overlay) is read as at start-up.
      */
     public static void main(String[] args) throws InterruptedException {
+        if (com.ash.drishti.server.cli.CliLauncher.isCli(args)) {            // `sutra lint|test|shape|design|preview <path>`: no web server
+            System.exit(com.ash.drishti.server.cli.CliLauncher.launch(args, System.out, System.err));
+        }
         Restarter.enable();
         while (true) {
             org.springframework.context.ConfigurableApplicationContext ctx;
