@@ -87,6 +87,8 @@ final class Facts {
     int mapKeys;
     /** Set on an array whose elements are the object that holds it (a tree): the elements, whose fields were merged across levels. */
     boolean tree;
+    /** On a tree: how many of its list elements (at any level) were null; they belong to the list, not to the record. */
+    int treeNulls;
 
     Facts(String name) {
         this.name = name;

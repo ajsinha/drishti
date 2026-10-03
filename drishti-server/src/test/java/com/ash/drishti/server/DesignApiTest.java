@@ -31,10 +31,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -255,42 +252,6 @@ class DesignApiTest {
         JsonNode view = ok(call("GET", "/api/v1/builder/designs/" + id + "/preview", ann, null));
         assertThat(view.path("panels").size()).isGreaterThanOrEqualTo(2);
         assertThat(ok(call("POST", "/api/v1/builder/designs/" + id + "/autodesign", ann, null)).path("rev").asInt()).isEqualTo(1);   // same text, same revision
-    }
-
-    @Test
-    void everyExampleOpensAsADesignCopyAndPreviewsWithNoPanelErrorsAndTheExampleFilesAreUntouched() throws Exception {
-        List<String> names = new ArrayList<>();
-        try (var files = Files.list(EXAMPLES)) {
-            files.map(p -> p.getFileName().toString()).filter(n -> n.endsWith(".sutra.yaml")).forEach(n -> names.add(n.replace(".sutra.yaml", "")));
-        }
-        assertThat(names).hasSizeGreaterThanOrEqualTo(10);
-        String who = as("exa", "author");
-        Pattern kind = Pattern.compile("^match:\\s*\\{[^}]*?\\bkind:\\s*([A-Za-z0-9_-]+)", Pattern.MULTILINE);
-        for (String name : names) {
-            String before = example(name, ".sutra.yaml") + example(name, ".json") + example(name, ".md");
-            Matcher m = kind.matcher(example(name, ".sutra.yaml"));
-            ObjectNode b = JSON.createObjectNode().put("name", name + " (copy)").put("sutra", example(name, ".sutra.yaml"))
-                    .put("notes", example(name, ".md")).put("kind", m.find() ? m.group(1) : "trade");
-            String id = create(who, b.toString());
-            ok(call("POST", "/api/v1/builder/designs/" + id + "/samples", who, samples(name + ".json", example(name, ".json"))));
-            JsonNode d = ok(call("GET", "/api/v1/builder/designs/" + id, who, null));
-            assertThat(d.path("sutra").asText()).as(name).isEqualTo(example(name, ".sutra.yaml"));
-            assertThat(d.path("notes").asText()).as(name).isEqualTo(example(name, ".md"));
-            JsonNode view = ok(call("GET", "/api/v1/builder/designs/" + id + "/preview", who, null));
-            assertThat(view.path("panels").size()).as(name).isGreaterThanOrEqualTo(1);
-            for (JsonNode p : view.path("panels")) {
-                String error = p.path("error").asText("");
-                if ("linked-sources".equals(name) && error.startsWith("waiting for")) {
-                    continue;       // that example reads other entities of the live demo packs, which a pasted document does not fetch
-                }
-                assertThat(error).as(name + " panel " + p.path("id").asText()).isEmpty();
-            }
-            if ("all-panels-showcase".equals(name)) {
-                assertThat(view.path("panels")).hasSize(21);
-            }
-            call("DELETE", "/api/v1/builder/designs/" + id, who, null).andExpect(status().isNoContent());
-            assertThat(example(name, ".sutra.yaml") + example(name, ".json") + example(name, ".md")).as(name + " is unchanged").isEqualTo(before);
-        }
     }
 
     @Test

@@ -124,8 +124,10 @@ final class ShapeMerger {
             }
             Facts level = child;
             int occ = record.occ;
+            int nulls = record.nulls;
             while (level != null) {
                 record.absorbCounts(level);
+                p.treeNulls += level.nulls;
                 for (var e : level.props.entrySet()) {
                     if (!e.getKey().equals(p.name)) {
                         record.props.computeIfAbsent(e.getKey(), Facts::new).absorb(e.getValue());
@@ -141,6 +143,7 @@ final class ShapeMerger {
                 level = next == null ? null : next.items;
             }
             record.occ = occ;
+            record.nulls = nulls;
             p.items = null;
             p.tree = true;
         }

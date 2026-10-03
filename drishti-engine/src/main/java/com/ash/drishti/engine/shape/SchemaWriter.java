@@ -208,7 +208,8 @@ final class SchemaWriter {
     private void array(Facts f, String path, String selfRef, ObjectNode out) {
         out.put("type", "array");
         if (f.tree) {
-            out.set("items", F.objectNode().put("$ref", selfRef));
+            ObjectNode ref = F.objectNode().put("$ref", selfRef);
+            out.set("items", f.treeNulls == 0 ? ref : F.objectNode().set("anyOf", F.arrayNode().add(ref).add(F.objectNode().put("type", "null"))));
         } else if (f.items != null) {
             out.set("items", node(f.items, path + "[]", 1.0, true, selfRef));
         }
