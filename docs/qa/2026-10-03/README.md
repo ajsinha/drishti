@@ -33,11 +33,11 @@ was changed during QA.
 
 | Id | Finding |
 |---|---|
-| [S2-01](security/FINDINGS.md) | With development file binding on, *Save to file* makes a Sutra live without review (overwrites an approved version, or creates one). |
-| [S2-02](security/FINDINGS.md) | A JSON Schema with huge `minItems`/`minLength` makes synthetic sampling run the server out of memory; any signed-in user can send it. |
-| [S2-03](security/FINDINGS.md) | A design's Sutra, notes and tests are unbounded and not counted against the design and user size limits. |
-| [M-1](data/FINDINGS.md) | Approving a design edited from `name@v` rewrites version v instead of creating v+1; a pack-owned version is refused only at approval, leaving the proposal stuck. |
-| [M-2](data/FINDINGS.md) | No rebase when the base Sutra moves: no flag, no replay, no problem (the design document promises them). |
+| [S2-01](security/FINDINGS.md) | With development file binding on, *Save to file* makes a Sutra live without review (overwrites an approved version, or creates one). **Fixed** in 89121ae7. |
+| [S2-02](security/FINDINGS.md) | A JSON Schema with huge `minItems`/`minLength` makes synthetic sampling run the server out of memory; any signed-in user can send it. **Fixed** in 89121ae7. |
+| [S2-03](security/FINDINGS.md) | A design's Sutra, notes and tests are unbounded and not counted against the design and user size limits. **Fixed** in 89121ae7. |
+| [M-1](data/FINDINGS.md) | Approving a design edited from `name@v` rewrites version v instead of creating v+1; a pack-owned version is refused only at approval, leaving the proposal stuck. **Fixed** in 89121ae7. |
+| [M-2](data/FINDINGS.md) | No rebase when the base Sutra moves: no flag, no replay, no problem (the design document promises them). **Fixed** in 89121ae7. |
 | [M-3](data/FINDINGS.md) | Integers beyond 2^53 and infinities break the shape schema (`minimum` written as a double or as the string "Infinity"). |
 | [M-4](data/FINDINGS.md) | Sparse optional object sections turn a record into a map and merge their fields. |
 | [M-5](data/FINDINGS.md) | Export then import grows the notes on every cycle (README re-imported) and rewrites non-ASCII sample names. |
@@ -47,7 +47,7 @@ was changed during QA.
 | [UX-02](ux/FINDINGS.md) | A mistyped expression shows no problem; the canvas says "Nothing to draw yet" and the error is only on the Tests tab (with the code twice). |
 | [UX-03](ux/FINDINGS.md) | The inspector cannot set some options: numeric `limit`/`expand` refuse numbers; `graph.layout` should be a choice; `histogram.markers`, the table `pivot` object and the pivot `by` list are YAML-only. |
 | [UX-04](ux/FINDINGS.md) | DRS codes written twice on Build pages ("DRS-5006 … (DRS-5006)"). |
-| [UX-05](ux/FINDINGS.md) | Every `/studio` visit, example open or Help link makes a scratch design that counts toward the 50-design quota; at the limit everything answers 413 and there is no bulk delete. |
+| [UX-05](ux/FINDINGS.md) | Every `/studio` visit, example open or Help link makes a scratch design that counts toward the 50-design quota; at the limit everything answers 413 and there is no bulk delete. **Fixed** in 89121ae7. |
 | [UX-06](ux/FINDINGS.md) | A design's notes are invisible in the workbench yet go to the reviewer. |
 | [UX-08](ux/FINDINGS.md) | At 390 px the YAML tab and My designs scroll sideways. |
 | [UX-10](ux/FINDINGS.md) | Keyboard: 71 Tab presses to reach the canvas; Esc in the inspector does not return focus. |
@@ -71,6 +71,10 @@ masks collapse to one `•••` group); `source:` on 13 kinds; file and databa
 expiry, the 100-step undo cap; 16 concurrent writers produce exactly one winner; the guide followed end to end (propose,
 approve as another user, live); first canvas in 0.1–0.35 s and a 50-sample check in about 20 ms; ARIA roles and contrast
 in all seven themes.
+
+## Fix status
+
+Wave 1 (governance and safety) is fixed in 89121ae7: S2-01 to S2-14, M-1, M-2, L-7 (with the CLI `--kind` escape) and UX-05. Each row in the area FINDINGS.md names its test.
 
 ## Proposed fix order
 
