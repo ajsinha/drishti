@@ -47,7 +47,7 @@ def _studio_kind(request: Request) -> str:
 
 
 async def _body(request: Request) -> dict:
-    body = await json_body(request)
+    body = await json_body(request, limit=request.app.state.builder_limits.max_total_bytes * 2 + 65536)
     if not isinstance(body, dict):
         raise BodyError(400, "send a JSON object")
     return body
@@ -111,7 +111,7 @@ async def design_page(request: Request, id_: str, tab: str = "", sample: str = "
     except BackendError:
         binding = {}
     init = {"fileBinding": bool(binding.get("enabled")), "boundFile": design.get("boundFile") or "", "shared": bool(design.get("shared")),
-            "dirs": binding.get("dirs") or [], "id": design["id"], "samples": design.get("samples") or [], "opsAt": design.get("opsAt", 0), "opsCount": len(design.get("ops") or []) if "opsCount" not in design else design["opsCount"],
+            "bindDir": binding.get("dir") or "", "baseMoved": design.get("baseMoved") or None, "id": design["id"], "samples": design.get("samples") or [], "opsAt": design.get("opsAt", 0), "opsCount": len(design.get("ops") or []) if "opsCount" not in design else design["opsCount"],
             "status": design.get("status", "draft"),
             "tab": tab if tab in ("design", "yaml", "summary") else "", "sample": sample, "canSave": bool(settings.get("save")), "review": review,
             "base": design.get("base") or ""}
@@ -158,6 +158,15 @@ async def update_design(request: Request, id_: str):
         return _error(e)
 
 
+@router.delete("/designs")
+async def delete_scratch(request: Request):
+    """My designs, "Delete scratch designs": every unnamed design of the signed-in user (the server counts how many)."""
+    try:
+        return await request.app.state.backend.designs("DELETE", "", ident(request), scratch="true")
+    except BackendError as e:
+        return _error(e)
+
+
 @router.delete("/designs/{id_}")
 async def delete_design(request: Request, id_: str):
     try:
@@ -200,9 +209,7 @@ async def add_files(request: Request, id_: str):
     """Body ``{files: [{name, text}]}`` (.json: one document; .jsonl: one per line). 413 DRS-5005 over a whole-request limit; a
     file that cannot be used is listed with its problems and the rest are kept."""
     limits = request.app.state.builder_limits
-    if int(request.headers.get("content-length") or 0) > limits.max_total_bytes * 2 + 65536:     # JSON escaping can double text
-        return _refuse(413, f"the request is over the limit of {limits.max_total_bytes // 1048576} MB (builder.max_total_mb)")
-    body = await json_body(request)
+    body = await json_body(request, limit=limits.max_total_bytes * 2 + 65536)      # JSON escaping can double text; chunked bodies too
     try:
         samples, report = builder.read_files(body.get("files") if isinstance(body, dict) else None, limits)
     except builder.TooBig as e:

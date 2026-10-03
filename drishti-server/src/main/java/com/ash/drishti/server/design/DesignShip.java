@@ -22,6 +22,8 @@ import com.ash.drishti.identity.design.StoredDesign;
 import com.ash.drishti.identity.design.StoredDesign.SampleInfo;
 import com.ash.drishti.rachana.RachanaProperties;
 import com.ash.drishti.rachana.SutraRegistry;
+import com.ash.drishti.rachana.SutraException;
+import com.ash.drishti.rachana.SutraProblem;
 import com.ash.drishti.rachana.model.Sutra;
 import com.ash.drishti.server.api.DesignController;
 import com.ash.drishti.server.governance.Proposal;
@@ -35,16 +37,16 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Value;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.springframework.stereotype.Service;
 
 /**
@@ -69,17 +71,17 @@ public class DesignShip {
     private final SutraRegistry sutras;
     private final RachanaProperties props;
     private final Entitlements entitlements;
-    private final boolean fileBinding;
+    private final DesignRebase rebase;
 
     public DesignShip(DesignService designs, DesignController designApi, SutraGovernance governance, SutraRegistry sutras, RachanaProperties props,
-            Entitlements entitlements, @Value("${drishti.builder.file-binding:false}") boolean fileBinding) {
+            Entitlements entitlements, DesignRebase rebase) {
+        this.rebase = rebase;
         this.designs = designs;
         this.designApi = designApi;
         this.governance = governance;
         this.sutras = sutras;
         this.props = props;
         this.entitlements = entitlements;
-        this.fileBinding = fileBinding;
     }
 
     @PostConstruct
@@ -99,7 +101,7 @@ public class DesignShip {
         if (!entitlements.mayAuthor(who)) {
             throw new DrishtiException(ErrorCode.FORBIDDEN, who.user() + " is not a Sutra author");
         }
-        StoredDesign d = designs.get(who.user(), id);
+        StoredDesign d = numbered(who, designs.get(who.user(), id));
         JsonNode matrix = null;
         if (!d.samples.isEmpty() && d.sutra != null && !d.sutra.isBlank()) {
             matrix = designApi.check(id, who);
@@ -115,6 +117,43 @@ public class DesignShip {
         return new Proposed(null, s);
     }
 
+    private static final Pattern VERSION_LINE = Pattern.compile("(?m)^version:[ \\t]*\\d+");
+
+    /**
+     * A Design never rewrites a version that exists: when its Sutra's {@code name@version} is already defined, a Design made from
+     * {@code name@v} is published as {@code name@(latest+1)} (the {@code version:} line is renumbered, as a step the Design can undo),
+     * and a Design that is not based on that Sutra is refused here, at propose time, with DRS-2028 (saying when a pack owns it).
+     */
+    StoredDesign numbered(Principal who, StoredDesign d) {
+        if (d.sutra == null || d.sutra.isBlank()) {
+            return d;
+        }
+        Sutra s = sutras.check(d.sutra);
+        Optional<Sutra> latest = sutras.latest(s.name());
+        Optional<String> live = sutras.source(s.name(), s.version());
+        if (latest.isEmpty() || live.isEmpty() || live.get().equals(d.sutra)) {
+            return d;
+        }
+        if (d.base == null || !d.base.startsWith(s.name() + "@")) {
+            String owner = packOwned(s) ? "a pack owns it" : "it is already live";
+            throw new SutraException(List.of(new SutraProblem("DRS-2028", s.id() + " exists already (" + owner + "): this design is not based on it, so it"
+                    + " cannot publish over it. Start the design from " + s.name() + "@" + latest.get().version()
+                    + " (Open a Sutra), or give it a new name or a higher version", s.location())));
+        }
+        int next = latest.get().version() + 1;
+        Matcher m = VERSION_LINE.matcher(d.sutra);
+        if (!m.find()) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "cannot renumber the Sutra to version " + next + ": no 'version:' line at the top level");
+        }
+        String renumbered = d.sutra.substring(0, m.start()) + "version: " + next + d.sutra.substring(m.end());
+        return designs.update(who.user(), d.id, new DesignService.Patch(null, null, null, renumbered, null));
+    }
+
+    private boolean packOwned(Sutra s) {
+        return sutras.fileOf(s.id()).map(f -> props.dirs().isEmpty()
+                || !f.toAbsolutePath().normalize().startsWith(Path.of(props.dirs().get(0)).toAbsolutePath().normalize())).orElse(false);
+    }
+
     /** The evidence that goes to the reviewers; sample contents are never part of it. */
     ObjectNode evidence(StoredDesign d, JsonNode matrix) {
         ObjectNode e = JSON.createObjectNode();
@@ -123,10 +162,18 @@ public class DesignShip {
             e.put("base", d.base);
         }
         e.put("notes", d.notes == null ? "" : d.notes);
+        ObjectNode moved = rebase.moved(d);
+        if (moved != null) {
+            e.set("baseMoved", moved);
+        }
         ArrayNode names = e.putArray("sampleNames");
+        ArrayNode refs = e.putArray("refSamples");
         ArrayNode synthetic = e.putArray("syntheticSamples");
         for (SampleInfo s : d.samples) {
             names.add(s.name());
+            if (StoredDesign.REF.equals(s.type())) {
+                refs.addObject().put("name", s.name()).put("kind", s.refKind()).put("id", s.refId());
+            }
             if (StoredDesign.SYNTHETIC.equals(s.type())) {
                 synthetic.add(s.name());
             }
@@ -166,7 +213,7 @@ public class DesignShip {
     }
 
     /** What a token holder sees: the Sutra, the operations and the sample names; never sample contents, notes or tests. */
-    public ObjectNode shared(String id, String token) {
+    public ObjectNode shared(String id, String token, Principal viewer) {
         StoredDesign d = byToken(id, token);
         ObjectNode o = JSON.createObjectNode();
         o.put("id", d.id).put("name", d.name).put("kind", d.kind).put("status", d.status).put("sutra", d.sutra).put("rev", d.rev).put("owner", d.owner);
@@ -174,10 +221,15 @@ public class DesignShip {
             o.put("base", d.base);
         }
         ArrayNode samples = o.putArray("sampleNames");
-        d.samples.forEach(s -> samples.add(s.name()));
+        d.samples.forEach(s -> samples.add(sampleLabel(s, viewer)));
         ArrayNode log = o.putArray("ops");
         d.ops.forEach(e -> log.addObject().put("at", e.path("at").asLong()).set("ops", e.path("ops")));
         return o;
+    }
+
+    /** A sample's name for {@code viewer}: a reference carries an entity id, so its name shows only to someone who may open that kind. */
+    String sampleLabel(SampleInfo s, Principal viewer) {
+        return StoredDesign.REF.equals(s.type()) && !entitlements.mayOpen(viewer, s.refKind()) ? s.refKind() + " (reference)" : s.name();
     }
 
     private StoredDesign byToken(String id, String token) {
@@ -198,7 +250,7 @@ public class DesignShip {
         }
     }
 
-    private static String hash(String text) {
+    static String hash(String text) {
         try {
             return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(text.getBytes(StandardCharsets.UTF_8)));
         } catch (NoSuchAlgorithmException e) {
@@ -206,133 +258,4 @@ public class DesignShip {
         }
     }
 
-    // ---- development file binding ------------------------------------------------------------------------------------
-
-    public boolean fileBinding() {
-        return fileBinding;
-    }
-
-    private void requireBinding(Principal who) {
-        if (!fileBinding) {
-            throw new DrishtiException(ErrorCode.FORBIDDEN, "binding a design to a file is off on this server (drishti.builder.file-binding)");
-        }
-        if (!props.studioSave() || !entitlements.mayAuthor(who)) {
-            throw new DrishtiException(ErrorCode.FORBIDDEN, "binding to a file needs the author right and drishti.rachana.studio-save");
-        }
-    }
-
-    /** The file {@code rel} names under a Sutra directory (an existing one wins; else the first directory), never outside it. */
-    Path resolve(String rel) {
-        if (rel == null || rel.isBlank() || rel.startsWith("/") || rel.contains("\\") || rel.contains("\u0000")
-                || !(rel.endsWith(".yaml") || rel.endsWith(".yml"))) {
-            throw new DrishtiException(ErrorCode.BAD_REQUEST, "'file' is a path under a Sutra directory, ending in .yaml");
-        }
-        Path first = null;
-        Path firstRoot = null;
-        for (String dir : props.dirs()) {
-            Path root = Path.of(dir).toAbsolutePath().normalize();
-            Path target = root.resolve(rel).normalize();
-            if (!target.startsWith(root)) {
-                throw new DrishtiException(ErrorCode.BAD_REQUEST, "'file' must stay inside the Sutra directory");
-            }
-            if (Files.isRegularFile(target)) {
-                return inside(root, target);
-            }
-            if (first == null) {
-                first = target;
-                firstRoot = root;
-            }
-        }
-        if (first == null) {
-            throw new DrishtiException(ErrorCode.BAD_REQUEST, "no Sutra directory is configured (drishti.rachana.dirs)");
-        }
-        return inside(firstRoot, first);
-    }
-
-    private static Path inside(Path root, Path target) {
-        try {
-            Path parent = target.getParent();
-            Files.createDirectories(root);
-            Path realRoot = root.toRealPath();
-            while (parent != null && !Files.exists(parent)) {
-                parent = parent.getParent();
-            }
-            if (parent == null || !parent.toRealPath().startsWith(realRoot)) {
-                throw new DrishtiException(ErrorCode.BAD_REQUEST, "'file' must stay inside the Sutra directory");
-            }
-            return target;
-        } catch (IOException e) {
-            throw new DrishtiException(ErrorCode.BAD_REQUEST, "'file' is not readable: " + e.getMessage());
-        }
-    }
-
-    /** Binds the Design to {@code rel}; an existing file's text becomes the Sutra (undo brings the old one back). */
-    public StoredDesign bind(Principal who, String id, String rel) throws IOException {
-        requireBinding(who);
-        designs.get(who.user(), id);
-        Path file = resolve(rel);
-        if (Files.isRegularFile(file)) {
-            String text = Files.readString(file, StandardCharsets.UTF_8);
-            designs.setBinding(who.user(), id, rel, hash(text));
-            return designs.adoptFileText(who.user(), id, text, hash(text));
-        }
-        return designs.setBinding(who.user(), id, rel, null);
-    }
-
-    public StoredDesign unbind(Principal who, String id) {
-        return designs.setBinding(who.user(), id, null, null);
-    }
-
-    /** Writes the Sutra to the bound file; refused when the file was edited elsewhere since the Design last read it (409). */
-    public StoredDesign saveFile(Principal who, String id) throws IOException {
-        requireBinding(who);
-        StoredDesign d = designs.get(who.user(), id);
-        if (d.boundFile == null) {
-            throw new DrishtiException(ErrorCode.BAD_REQUEST, "this design is not bound to a file");
-        }
-        Path file = resolve(d.boundFile);
-        if (Files.isRegularFile(file)) {
-            String onDisk = Files.readString(file, StandardCharsets.UTF_8);
-            if (!onDisk.equals(d.sutra) && !hash(onDisk).equals(d.boundSync)) {
-                throw new DrishtiException(ErrorCode.STALE_REVISION, d.boundFile + " changed on disk after the design last read it: load it first (or unbind)");
-            }
-        }
-        sutras.check(d.sutra);
-        Files.createDirectories(file.getParent());
-        Path tmp = file.resolveSibling(file.getFileName() + ".tmp");
-        Files.writeString(tmp, d.sutra, StandardCharsets.UTF_8);
-        Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING);
-        if ("OFF".equals(sutras.hotReload())) {
-            sutras.reload();
-        }
-        return designs.setBinding(who.user(), id, d.boundFile, hash(d.sutra));
-    }
-
-    /** Brings an edit made to the bound file (in an IDE) back into the Design; the result says whether it changed. */
-    public record Synced(StoredDesign design, boolean changed, boolean missing) {}
-
-    public Synced sync(Principal who, String id) throws IOException {
-        StoredDesign d = designs.get(who.user(), id);
-        if (d.boundFile == null || !fileBinding) {
-            return new Synced(d, false, false);
-        }
-        Path file = resolve(d.boundFile);
-        if (!Files.isRegularFile(file)) {
-            return new Synced(d, false, true);
-        }
-        String onDisk = Files.readString(file, StandardCharsets.UTF_8);
-        String h = hash(onDisk);
-        if (h.equals(d.boundSync) || onDisk.equals(d.sutra)) {
-            if (!h.equals(d.boundSync)) {
-                d = designs.setBinding(who.user(), id, d.boundFile, h);
-            }
-            return new Synced(d, false, false);
-        }
-        return new Synced(designs.adoptFileText(who.user(), id, onDisk, h), true, false);
-    }
-
-    /** The directories a design may be bound under, as configured (for the workbench's hint). */
-    public List<String> bindableDirs() {
-        return props.dirs();
-    }
 }

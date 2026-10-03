@@ -46,13 +46,18 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param limitNames property names that hold a limit for a sibling measure (a gauge's maximum)
  * @param fractionNames words in a number field's name that mark a share of a whole between 0 and 1 (utilisation, ratio...): drafted as a gauge
  * @param codeNames words of a number field's name that make it a code, not an amount (year, version, seq, no...): it is a label and is not summed
+ * @param sampleMaxItems longest array the synthetic sampler generates (a schema asking for more is clamped, with a problem)
+ * @param sampleMaxString longest string it generates
+ * @param sampleMaxDepth deepest nesting it generates
+ * @param sampleMaxKb most kilobytes one synthetic document may take
  */
 @ConfigurationProperties("drishti.builder")
 public record BuilderProperties(Integer maxSamples, Integer maxFileMb, Integer maxTotalMb, Integer maxDepth, Integer enumMaxDistinct,
         Integer enumMinSeen, Integer examples, List<String> statusWords, String statusNames, String idNames, List<String> labelNames,
         List<String> ohlcNames, List<String> graphNodeNames, List<String> graphEdgeNames, Integer longTextChars, Double rareBelow, Double pruneShare, Integer stripMax,
         Integer maxPanels, Integer maxSidePanels, Integer lineMinPoints, Integer maxAlternatives, List<String> limitNames,
-        List<String> codeNames, List<String> fractionNames) {
+        List<String> codeNames, List<String> fractionNames, Integer sampleMaxItems, Integer sampleMaxString, Integer sampleMaxDepth,
+        Integer sampleMaxKb) {
 
     public BuilderProperties {
         maxSamples = positive(maxSamples, 50);
@@ -70,6 +75,10 @@ public record BuilderProperties(Integer maxSamples, Integer maxFileMb, Integer m
         maxSidePanels = positive(maxSidePanels, 4);
         lineMinPoints = positive(lineMinPoints, 5);
         maxAlternatives = positive(maxAlternatives, 2);
+        sampleMaxItems = positive(sampleMaxItems, 50);
+        sampleMaxString = positive(sampleMaxString, 1000);
+        sampleMaxDepth = positive(sampleMaxDepth, 8);
+        sampleMaxKb = positive(sampleMaxKb, 256);
         limitNames = list(limitNames, "limit", "max", "cap", "threshold", "budget", "capacity");
         fractionNames = list(fractionNames, "utilisation", "utilization", "usage", "used", "ratio", "share", "coverage", "fill", "pct", "percent");
         codeNames = list(codeNames, "year", "version", "seq", "sequence", "no", "num", "number", "code", "zip", "postcode");
@@ -85,7 +94,7 @@ public record BuilderProperties(Integer maxSamples, Integer maxFileMb, Integer m
 
     /** The defaults, for code and tests that run without Spring. */
     public static BuilderProperties defaults() {
-        return new BuilderProperties(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        return new BuilderProperties(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
     }
 
     public long maxFileBytes() {

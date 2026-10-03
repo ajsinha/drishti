@@ -112,4 +112,22 @@ class SchemaSamplerTest {
         assertThat(docs.stream().map(d -> d.path("notional").asInt()).distinct().count()).isGreaterThan(3);   // within min/max
         assertThat(new SchemaSampler(schema).documents(8)).isEqualTo(docs);                                    // deterministic
     }
+
+    @Test
+    void schemaValuesBeyondTheLimitsAreClampedWithAProblemAndNeverAllocated() throws Exception {
+        JsonNode schema = JSON.readTree("""
+                {"type":"object","properties":{
+                  "rows":{"type":"array","minItems":2000000000,"items":{"type":"string"}},
+                  "name":{"type":"string","minLength":2000000000},
+                  "nest":{"type":"array","minItems":50,"items":{"type":"array","minItems":50,"items":{"type":"array","minItems":50,"items":{"type":"string","minLength":900}}}}}}
+                """);
+        SchemaSampler.Limits limits = new SchemaSampler.Limits(20, 100, 8, 64 * 1024);
+        SchemaSampler sampler = new SchemaSampler(schema, limits);
+        List<JsonNode> docs = sampler.documents(2);
+        assertThat(docs.get(0).path("rows")).hasSize(20);
+        assertThat(docs.get(0).path("name").asText()).hasSize(100);
+        assertThat(docs.get(0).toString().length()).isLessThan(64 * 1024 + 4096);
+        assertThat(sampler.problems()).anyMatch(p -> p.contains("2000000000 items")).anyMatch(p -> p.contains("2000000000 characters"))
+                .anyMatch(p -> p.contains("sample-max-kb"));
+    }
 }

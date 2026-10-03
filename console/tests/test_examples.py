@@ -15,6 +15,7 @@
 """The Rachana examples (docs/guides/examples): the set covers every panel kind, a nested pivot and a tree table, each
 parses, each has its JSON and note; Studio opens them (by default, by name, from a file) and the help centre lists them."""
 import json
+from conftest import open_studio  # noqa: E402
 from pathlib import Path
 
 import yaml
@@ -85,8 +86,8 @@ def test_example_route_serves_names_and_nothing_else(client):
 
 
 def _land(client, url):
-    r = client.get(url, follow_redirects=False)
-    assert r.status_code == 302 and r.headers["location"].startswith("/build/d/"), (url, r.status_code)
+    r = open_studio(client, url)
+    assert r.status_code in (302, 303) and r.headers["location"].startswith("/build/d/"), (url, r.status_code)
     return r.headers["location"], client.get(r.headers["location"]).text
 
 
@@ -119,7 +120,7 @@ def test_the_help_centre_lists_every_example_with_note_yaml_json_and_a_studio_li
     page = client.get("/help/examples")
     assert page.status_code == 200 and 'class="help-article"' in page.text
     for name in Examples(EXAMPLES).names():
-        assert f'id="{name}"' in page.text and f'href="/studio?example={name}"' in page.text, name
+        assert f'id="{name}"' in page.text and f'data-example-copy="{name}"' in page.text, name
         assert f"{name}.sutra.yaml" in page.text and f"{name}.json" in page.text, name
     assert "<details>" in page.text and "children:" in page.text and "&#34;exposure&#34;" in page.text
     assert "data-unavailable" not in page.text, "dead link in the examples page"

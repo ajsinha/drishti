@@ -265,9 +265,11 @@ public class PackFragment {
     public Imported importZip(String user, byte[] zip, long maxBytes) throws IOException {
         List<Item> items = new ArrayList<>();
         long total = 0;
+        int seen = 0;
         try (ZipInputStream in = new ZipInputStream(new ByteArrayInputStream(zip), StandardCharsets.UTF_8)) {
             ZipEntry e;
             while ((e = in.getNextEntry()) != null) {
+                seen++;
                 if (e.isDirectory()) {
                     continue;
                 }
@@ -287,8 +289,11 @@ public class PackFragment {
                     items.add(new Item(path, new String(data, StandardCharsets.UTF_8)));
                 }
             }
-        } catch (java.util.zip.ZipException ex) {
-            throw new DrishtiException(ErrorCode.BAD_REQUEST, "that is not a readable zip: " + ex.getMessage());
+        } catch (IOException ex) {      // a ZipException, or an EOFException for a zip cut short
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "that is not a readable zip (damaged or truncated): " + ex.getMessage());
+        }
+        if (items.isEmpty() && total == 0 && zip.length > 0 && seen == 0) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "that is not a readable zip: it holds no files");
         }
         List<String> skipped = new ArrayList<>();
         String readme = items.stream().filter(i -> (i.path().endsWith("/" + NOTES_FILE) || i.path().equals(NOTES_FILE)) && depth(i.path()) <= 2)

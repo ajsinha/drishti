@@ -41,6 +41,7 @@ import com.ash.drishti.rachana.design.ops.OpApplier;
 import com.ash.drishti.rachana.design.ops.OpResult;
 import com.ash.drishti.rachana.design.ops.Ops;
 import com.ash.drishti.rachana.model.Sutra;
+import com.ash.drishti.server.design.DesignRebase;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.Principal;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -86,7 +87,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class DesignController {
 
     private static final Logger LOG = LoggerFactory.getLogger(DesignController.class);
-    private static final Pattern KIND = Pattern.compile("[A-Za-z0-9][A-Za-z0-9._-]{0,63}");
+    private static final int STRING_MAX_MB = 20;
+    private static final Pattern KIND = AutoDesigner.KIND;
     private static final Duration FETCH = Duration.ofSeconds(10);
 
     private final DesignService designs;
@@ -102,10 +104,12 @@ public class DesignController {
     private final ObjectMapper mapper;
     private final SampleCheckService checks;
     private final OpApplier applier = new OpApplier();
+    private final DesignRebase rebase;
 
     public DesignController(DesignService designs, ShapeService shapes, AutoDesigner designer, BuilderController builder, ViewPipeline pipeline,
-            SutraRegistry sutras, SourceRouter router, Entitlements entitlements, JsonCodec codec, SampleCheckService checks) {
+            SutraRegistry sutras, SourceRouter router, Entitlements entitlements, JsonCodec codec, SampleCheckService checks, DesignRebase rebase) {
         this.checks = checks;
+        this.rebase = rebase;
         this.designs = designs;
         this.shapes = shapes;
         this.designer = designer;
@@ -116,8 +120,8 @@ public class DesignController {
         this.entitlements = entitlements;
         this.codec = codec;
         this.limits = shapes.limits();
-        this.mapper = new ObjectMapper(JsonFactory.builder()
-                .streamReadConstraints(StreamReadConstraints.builder().maxNestingDepth(limits.maxDepth() + 3).build()).build());
+        this.mapper = new ObjectMapper(JsonFactory.builder().streamReadConstraints(
+                StreamReadConstraints.builder().maxNestingDepth(limits.maxDepth() + 3).maxStringLength(STRING_MAX_MB * 1024 * 1024).build()).build());
     }
 
     // ---- designs -------------------------------------------------------------------------------------------------
@@ -130,7 +134,8 @@ public class DesignController {
         var p = designs.limits();
         out.putObject("limits").put("maxPerUser", p.maxPerUser()).put("maxSamples", p.maxSamples()).put("maxMb", p.maxMb())
                 .put("maxUserMb", p.maxUserMb()).put("scratchHours", p.scratchTtl().toHours()).put("namedDays", p.namedTtl().toDays())
-                .put("warnDays", p.warnAfter().toDays());
+                .put("warnDays", p.warnAfter().toDays()).put("maxScratch", p.maxScratch()).put("maxSutraKb", p.maxSutraKb())
+                .put("maxNotesKb", p.maxNotesKb()).put("maxTestsKb", p.maxTestsKb());
         return out;
     }
 
@@ -173,6 +178,15 @@ public class DesignController {
         return view(designs.summary(d), true);
     }
 
+    /** {@code DELETE /builder/designs?scratch=true}: deletes all of your scratch (unnamed) designs; answers how many. Without the flag: 400. */
+    @DeleteMapping
+    public ObjectNode deleteScratch(@RequestParam(required = false) boolean scratch, @RequestAttribute(Principal.ATTRIBUTE) Principal who) {
+        if (!scratch) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "send ?scratch=true to delete all your scratch designs; named designs are deleted one by one");
+        }
+        return mapper.createObjectNode().put("deleted", designs.deleteScratch(who.user()));
+    }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal who) {
@@ -201,6 +215,7 @@ public class DesignController {
         designs.get(who.user(), id);                          // not yours: 404 before anything else is said
         JsonNode b = body(request);
         List<DesignService.NewSample> add = new ArrayList<>();
+        List<String> sampled = new ArrayList<>();
         if (b.has("samples")) {
             if (!b.get("samples").isArray()) {
                 throw new DrishtiException(ErrorCode.BAD_REQUEST, "'samples' must be a list of {name, document}");
@@ -225,7 +240,9 @@ public class DesignController {
         }
         if (b.path("schema").isObject()) {
             int count = Math.max(1, Math.min(b.path("count").asInt(5), Math.min(designs.limits().maxSamples(), limits.maxSamples())));
-            List<JsonNode> docs = new SchemaSampler(b.get("schema")).documents(count);
+            SchemaSampler sampler = new SchemaSampler(b.get("schema"), SchemaSampler.Limits.of(limits));
+            List<JsonNode> docs = sampler.documents(count);
+            sampled.addAll(sampler.problems());
             for (int i = 0; i < docs.size(); i++) {
                 add.add(new DesignService.NewSample("synthetic-" + (i + 1), StoredDesign.SYNTHETIC, null, null, mapper.writeValueAsString(docs.get(i))));
             }
@@ -233,7 +250,11 @@ public class DesignController {
         if (add.isEmpty()) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "send 'samples' ([{name, document}]), 'refs' ({kind, ids|count}) or 'schema'");
         }
-        return view(designs.summary(designs.addSamples(who.user(), id, add)), true);
+        ObjectNode out = view(designs.summary(designs.addSamples(who.user(), id, add)), true);
+        if (!sampled.isEmpty()) {
+            sampled.forEach(out.putArray("problems")::add);      // what the synthetic sampler clamped (drishti.builder.sample-max-*)
+        }
+        return out;
     }
 
     private void addRefs(JsonNode refs, Principal who, List<DesignService.NewSample> add) {
@@ -443,6 +464,10 @@ public class DesignController {
         designs.markChecked(who.user(), id, d.rev, m.ok());
         ObjectNode out = mapper.valueToTree(m);
         out.put("rev", d.rev);
+        ObjectNode moved = rebase.moved(d);
+        if (moved != null) {
+            out.set("baseMoved", moved);
+        }
         return out;
     }
 
@@ -556,6 +581,10 @@ public class DesignController {
             }
         }
         if (full) {
+            ObjectNode moved = rebase.moved(d);
+            if (moved != null) {
+                o.set("baseMoved", moved);
+            }
             o.put("sutra", d.sutra).put("notes", d.notes);
             o.set("tests", mapper.valueToTree(d.tests));
             o.put("opsAt", d.opsAt);
@@ -598,7 +627,12 @@ public class DesignController {
             }
             return n;
         } catch (StreamConstraintsException e) {
-            throw new ShapeException("a document is nested deeper than " + limits.maxDepth() + " levels (drishti.builder.max-depth)");
+            String why = e.getMessage() == null ? "" : e.getMessage();
+            if (why.contains("nesting depth")) {
+                throw new ShapeException("a document is nested deeper than " + limits.maxDepth() + " levels (drishti.builder.max-depth)");
+            }
+            throw new DrishtiException(ErrorCode.PAYLOAD_TOO_LARGE, "a single text value in the request is too long (the limit is " + STRING_MAX_MB
+                    + " MB per value): a Sutra is limited by drishti.builder.designs.max-sutra-kb");
         } catch (JsonParseException e) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "the body is not valid JSON: " + e.getOriginalMessage());
         }

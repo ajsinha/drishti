@@ -32,6 +32,18 @@
     if (ms) { var d = new Date(ms); t.dateTime = d.toISOString(); t.textContent = d.toLocaleString(); }
   });
 
+  var bulk = root.querySelector('[data-delete-scratch]');
+  if (bulk) {
+    bulk.addEventListener('click', function () {
+      var n = root.querySelectorAll('tr[data-scratch="1"]').length;
+      if (!window.confirm('Delete all ' + n + ' scratch (unnamed) designs and their samples? Named designs are kept. This cannot be undone.')) { return; }
+      json('DELETE', '/build/designs').then(function (r) {
+        if (!r.ok) { say(why(r), true); return; }
+        window.location.reload();
+      }, function () { say('The console could not be reached. Try again.', true); });
+    });
+  }
+
   root.querySelectorAll('tr[data-design]').forEach(function (row) {
     var id = row.dataset.design;
     row.querySelector('[data-delete]').addEventListener('click', function () {

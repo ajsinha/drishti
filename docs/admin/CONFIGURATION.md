@@ -638,6 +638,10 @@ with `413 DRS-5005` before it is all parsed.
 | `max-panels`, `max-side-panels` | `16`, `4` | Most panels auto-design puts in the main and the right column (the links panel is extra); the rest are dropped and listed. |
 | `line-min-points` | `5` | Dated rows shorter than this are drafted as a ladder, not a line. |
 | `max-alternatives` | `2` | Runner-up kinds kept with each drafted panel. |
+| `sample-max-items` | `50` | The synthetic sampler (a Design started from a JSON Schema) generates arrays up to this long; a schema asking for more (`minItems: 2000000000`) is clamped and the answer lists a problem. Nothing beyond the limits is allocated. |
+| `sample-max-string` | `1000` | ... strings up to this many characters. |
+| `sample-max-depth` | `8` | ... nesting up to this deep. |
+| `sample-max-kb` | `256` | ... and at most this many kilobytes in one generated document. |
 | `code-names` | `year, version, seq, sequence, no, num, number, code, zip, postcode` | Last word of a whole-number field's name that makes it a code (a label, not an amount: not summed, no thousands separator). |
 | `fraction-names` | `utilisation, utilization, usage, used, ratio, share, coverage, fill, pct, percent` | Words in the name of a number between 0 and 1 that make auto-design draft a gauge of 1. |
 | `limit-names` | `limit, max, cap, threshold, budget, capacity` | Field names that hold a limit for a measure beside them (a gauge's maximum). |
@@ -653,21 +657,28 @@ Sample documents are never logged; deleting a Design deletes its samples at once
 |---|---|---|
 | `store` | `file` | `file`: `data/designs/<user>/<id>/design.json` and `samples/`, created readable by the server's account only (`rwx------`). `jpa`: the identity database (`drishti_design`, `drishti_design_sample`), for several server replicas. |
 | `dir` | `./data/designs` | The file store's directory. |
-| `max-per-user` | `50` | Designs one user keeps. |
+| `max-per-user` | `50` | Named Designs one user keeps. Scratch (unnamed) Designs do not count toward it. |
 | `max-samples` | `50` | Samples in one Design. |
-| `max-mb` | `25` | Megabytes of sample documents in one Design (a reference to a stored entity counts nothing). |
-| `max-user-mb` | `250` | Megabytes of sample documents across one user's Designs. |
+| `max-mb` | `25` | Megabytes in one Design: its sample documents, Sutra, notes and tests (a reference to a stored entity counts nothing). |
+| `max-user-mb` | `250` | Megabytes of samples, Sutra, notes and tests across one user's Designs. |
+| `max-sutra-kb` | `1024` | Largest Sutra text of one Design (`413 DRS-5005` beyond it). |
+| `max-notes-kb` | `256` | Largest notes text. |
+| `max-tests-kb` | `1024` | Largest tests (the JSON of the list). |
+| `max-scratch` | `10` | Scratch (unnamed) Designs one user keeps. Opening an example, a Help link or a `/studio` address makes one; when the cap is reached the oldest scratch Design is deleted to make room. **My designs** has *Delete scratch designs* (`DELETE /api/v1/builder/designs?scratch=true`). |
 | `scratch-ttl` | `1d` | An unnamed (scratch) Design is deleted this long after it was last touched. |
 | `named-ttl` | `90d` | A named Design is deleted this long after it was last touched (an edit, or opening it, touches it). |
 | `warn-after` | `75d` | A named Design untouched this long is listed with a warning that it will expire. |
 | `sweep-interval` | `1h` | How often expired Designs are deleted. |
 | `max-ops` | `100` | Steps of the operation log a Design keeps for undo and redo (the oldest are dropped). |
 
-### `drishti.builder.file-binding` — development file binding
+### `drishti.builder.file-binding` and `dev-dir` — development file binding
 
 | Key | Default | Meaning |
 |---|---|---|
-| `drishti.builder.file-binding` (`DRISHTI_BUILDER_FILE_BINDING`) | `false` | Let a Design be bound to a file under `drishti.rachana.dirs` (**Ship → Bind to a file** in the workbench; `POST /api/v1/builder/designs/{id}/bind`). Saving then writes the file (the hot reload makes views use it) and an edit made in an IDE is read back into the Design. Needs the author right and `drishti.rachana.studio-save`; paths outside the Sutra directories are refused. For development servers: leave it off on authoring and production servers, where saving goes through review. With it off every bind answers `403 DRS-5002`. |
+| `drishti.builder.file-binding` (`DRISHTI_BUILDER_FILE_BINDING`) | `false` | Let a Design be bound to a file in the author's **own development folder** (**Ship -> Bind to a file** in the workbench; `POST /api/v1/builder/designs/{id}/bind`). Saving writes that file and an edit made in an IDE is read back (`POST .../sync`). Needs the author right and `drishti.rachana.studio-save`. The folder is never one the registry loads, so **Save to file never makes anything live**: going live is always Ship -> Propose, then an approver. With it off every bind answers `403 DRS-5002`. |
+| `drishti.builder.dev-dir` (`DRISHTI_BUILDER_DEV_DIR`) | `./dev-sutras` | Where bound files live, one folder per user (`<dev-dir>/<user>/`). It must lie **outside** `drishti.rachana.dirs` (otherwise a saved file would be hot-reloaded and go live without review; binding then answers `403`). Names that are symbolic links, or go through one, are refused; a file is written through a new temporary file renamed into place. Only administrators are shown the absolute path (`GET /builder/designs/binding`). |
+
+For development servers: leave binding off on authoring and production servers.
 
 Read-only share links (`POST /api/v1/builder/designs/{id}/share`) need no setting: the link shows a Design's Sutra, operations and
 sample names, never sample contents, and its owner can revoke it. Proposals made from the workbench carry the check matrix, the

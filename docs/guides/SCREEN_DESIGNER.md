@@ -516,17 +516,19 @@ java -jar drishti-server-<version>-exec.jar sutra design samples/*.json --kind d
 
 ## 27. Binding a design to a file (development servers)
 
-If you edit Sutras in an IDE and keep them in git, bind the design to the file so the workbench and the IDE work on the same text. This is **off by default**: set `drishti.builder.file-binding: true` on a development server (and `drishti.rachana.studio-save`; you need the author right).
+If you edit Sutras in an IDE and keep them in git, bind the design to a file so the workbench and the IDE work on the same text. This is **off by default**: set `drishti.builder.file-binding: true` on a development server (and `drishti.rachana.studio-save`; you need the author right).
 
-*Ship → Bind to a file…* asks for a path **under a Sutra directory** (`drishti.rachana.dirs`), for example `market/my-view.v1.sutra.yaml`.
+**The dev workflow, and why it cannot bypass review.** Binding works in your own **development folder** (`drishti.builder.dev-dir`, one subfolder per user, outside the Sutra directories the server loads). *Save to file* writes there and **never makes anything live**: the server does not read that folder as Sutras. Going live is always the normal road: *Ship → Propose*, an approver, a new version. So the loop is: edit in the workbench or the IDE, *Save to file* / sync to keep the two in step, check against your samples, and when it is right *Propose* it with its evidence. Copy the approved file into your pack folder in git as you do today; the design is `live(vN)` after approval.
+
+*Ship → Bind to a file…* asks for a path **in your development folder** (the dialog shows its name, never a server path), for example `market/my-view.v1.sutra.yaml`.
 
 ![A design bound to a file: the chip next to the title, Save to file on the button](img/designer/47-file-binding.jpg)
 
 - If the file exists its text becomes the design's Sutra (a step you can undo); if not, the first save creates it.
-- **Save** (Ctrl+S) now says *Save to file*: it checks the Sutra, writes the file, and the registry's hot reload makes views use it. Nothing is proposed.
-- **An edit made in the IDE comes back**: the workbench looks at the file every few seconds and when the window gains focus, and loads a change as a new step (the message says so; Ctrl+Z brings your version back).
+- **Save** (Ctrl+S) now says *Save to file*: it checks the Sutra and writes the file in your folder. Nothing is proposed and nothing is live.
+- **An edit made in the IDE comes back**: the workbench asks the server to read the file every few seconds and when the window gains focus (`POST .../sync`: it changes the design, so it is never a GET), and loads a change as a new step (the message says so; Ctrl+Z brings your version back).
 - If **both** sides changed, saving is refused with `409 DRS-5007` rather than overwrite the IDE's file: load the file's version first (or unbind), then redo your change.
-- Paths outside the directory (`..`, absolute paths, other extensions) are refused. *Ship → Unbind* returns to saving through the registry. On a server without the setting the item is not offered and the API answers `403`.
+- Paths outside your folder (`..`, absolute paths, other extensions, very long names), and any name that is, or goes through, a symbolic link, are refused with a plain message. *Ship → Unbind* ends the binding. On a server without the setting the item is not offered and the API answers `403`.
 
 ## 28. Troubleshooting shipping
 

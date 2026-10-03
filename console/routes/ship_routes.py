@@ -27,7 +27,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, Response
 
 from core.backend import BackendError
-from core.csrf import BodyError, json_body
+from core.csrf import BodyError, json_body, limited_body
 from routes.common import ident, render
 
 router = APIRouter(prefix="/build", include_in_schema=False)
@@ -42,7 +42,7 @@ def _error(e: BackendError, **more) -> JSONResponse:
 
 
 async def _body(request: Request) -> dict:
-    body = await json_body(request)
+    body = await json_body(request, limit=request.app.state.builder_limits.max_total_bytes * 2 + 65536)
     if not isinstance(body, dict):
         raise BodyError(400, "send a JSON object")
     return body
@@ -94,11 +94,12 @@ async def import_fragment(request: Request):
     """Import a pack folder or zip as Designs, one per Sutra, with the samples found beside it. Send a zip (``application/zip``)
     or a folder as JSON ``{files: [{path, text}]}``. Answers the designs made and what was skipped."""
     kind = (request.headers.get("content-type") or "").split(";")[0].strip().lower()
+    limit = request.app.state.builder_limits.max_total_bytes
     if kind == "application/zip":
-        data = await request.body()
+        data = await limited_body(request, limit, "the zip")
     elif kind == "application/json":
-        body = await _body(request)
-        files = body.get("files")
+        body = await json_body(request, limit=limit * 2 + 65536)
+        files = body.get("files") if isinstance(body, dict) else None
         if not isinstance(files, list):
             raise BodyError(400, "send {files: [{path, text}]} or a zip")
         data = folder_zip(files)
@@ -147,17 +148,27 @@ async def save_file(request: Request, id_: str):
         return _error(e, problems=getattr(e, "problems", []))
 
 
-@router.get("/designs/{id_}/sync")
+@router.post("/designs/{id_}/sync")
 async def sync(request: Request, id_: str):
     """Reads the bound file: an edit made in an IDE becomes a step of the design. ``changed`` says so (the workbench then reloads)."""
     try:
-        got = await request.app.state.backend.designs("GET", f"/{id_}/sync", ident(request))
+        got = await request.app.state.backend.designs("POST", f"/{id_}/sync", ident(request))
     except BackendError as e:
         return _error(e)
     return {k: got.get(k) for k in ("changed", "missing", "rev", "status", "boundFile")}
 
 
 # ---- read-only sharing ------------------------------------------------------------------------------------------------------------------
+
+@router.post("/designs/{id_}/rebase")
+async def rebase(request: Request, id_: str):
+    """Body ``{baseRev}``: replays the design's steps on the newer live version of its base; answers the design, the steps that could not be replayed and how many were."""
+    body = await _body(request)
+    try:
+        return await request.app.state.backend.designs("POST", f"/{id_}/rebase", ident(request), {"baseRev": body.get("baseRev")})
+    except BackendError as e:
+        return _error(e)
+
 
 @router.post("/designs/{id_}/share")
 async def share(request: Request, id_: str):

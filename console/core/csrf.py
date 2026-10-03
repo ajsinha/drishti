@@ -70,19 +70,36 @@ class SameOrigin(BaseHTTPMiddleware):
 class BodyError(Exception):
     """A request body a JSON route cannot take: answered as a problem by the app."""
 
-    def __init__(self, status: int, detail: str):
+    def __init__(self, status: int, detail: str, code: str = "DRS-5001"):
         super().__init__(detail)
         self.status = status
         self.detail = detail
+        self.code = code
 
 
 def problem(_request, e: BodyError) -> JSONResponse:
-    return JSONResponse({"code": "DRS-5001", "detail": e.detail}, status_code=e.status)
+    return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.status)
 
 
-async def json_body(request, default=None):
-    """The request's JSON body (``default``, else ``{}``, when there is none); 415 unless sent as application/json."""
-    raw = await request.body()
+async def limited_body(request, limit: int, what: str = "the request") -> bytes:
+    """The request body, read in chunks and refused with 413 DRS-5005 the moment it passes ``limit`` bytes: a body sent chunked has no
+    Content-Length to check first, and reading it whole before looking at its size is what QA 2026-10-03 S2-09 measured."""
+    declared = request.headers.get("content-length")
+    if declared and declared.isdigit() and int(declared) > limit:
+        raise BodyError(413, f"{what} is over the limit of {max(1, limit // 1048576)} MB", "DRS-5005")
+    chunks, size = [], 0
+    async for chunk in request.stream():
+        size += len(chunk)
+        if size > limit:
+            raise BodyError(413, f"{what} is over the limit of {max(1, limit // 1048576)} MB", "DRS-5005")
+        chunks.append(chunk)
+    return b"".join(chunks)
+
+
+async def json_body(request, default=None, limit: int | None = None):
+    """The request's JSON body (``default``, else ``{}``, when there is none); 415 unless sent as application/json. With ``limit``
+    the body is read in chunks and refused with 413 past that many bytes, chunked or not."""
+    raw = await limited_body(request, limit) if limit else await request.body()
     if not raw.strip():
         return {} if default is None else default
     kind = (request.headers.get("content-type") or "").split(";")[0].strip().lower()

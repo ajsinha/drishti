@@ -62,7 +62,7 @@ public class GovernanceController {
         out.put("baseText", pr.baseText());
         out.put("liveText", governance.liveText(pr));
         out.put("previousText", governance.previousText(pr));
-        out.put("evidence", pr.evidence());
+        out.put("evidence", governance.evidenceFor(pr, p));
         return out;
     }
 
@@ -102,7 +102,7 @@ public class GovernanceController {
         m.put("newVersion", x.baseText() == null || x.baseText().isEmpty());
         m.put("stale", governance.stale(x));
         m.put("mayApprove", governance.mayApprove(x, p));
-        m.put("mayWithdraw", x.pending() && x.author().equals(p.user()));
+        m.put("mayWithdraw", x.pending() && SutraGovernance.same(x.author(), p.user()));
         return m;
     }
 }

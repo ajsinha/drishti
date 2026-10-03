@@ -227,7 +227,7 @@ class ShapeMergeRulesTest {
 
     @Test
     void refusesMoreThanMaxSamplesAndTooDeepDocuments() {
-        BuilderProperties p = new BuilderProperties(2, null, null, 3, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        BuilderProperties p = new BuilderProperties(2, null, null, 3, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
         var svc = ShapeTestSupport.service(p);
         assertThatThrownBy(() -> svc.infer(List.of(new Sample("a", json("{}")), new Sample("b", json("{}")), new Sample("c", json("{}")))))
                 .isInstanceOf(ShapeException.class).hasMessageContaining("max-samples");

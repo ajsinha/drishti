@@ -201,6 +201,39 @@ class SutraCliTest {
         assertThat(yaml).contains("sutra:").contains("panels:");
         assertThat(run("lint", out.toString()).code()).isZero();            // a drafted Sutra passes the linter
         assertThat(run("shape", tmp.resolve("empty-none").toString()).code()).isEqualTo(2);
+        // a kind is a name, never a path: nothing is written outside --out
+        for (String bad : new String[] {"../../evil", "bad kind!", "a/b", "x, priority: 9999 }\nzzz: { a"}) {
+            Run r = run("design", dir.toString(), "--kind", bad, "--out", out.toString());
+            assertThat(r.code()).as(bad).isNotZero();
+            assertThat(r.err()).contains("'kind' is letters, digits");
+        }
+        assertThat(Files.exists(tmp.resolve("evil.sutra.yaml"))).isFalse();
+        assertThat(Files.exists(out.resolve("../../evil.sutra.yaml"))).isFalse();
+    }
+
+    /** S2-12: the CLI keeps the server's input limit, says what failed in one line, and looks for samples only inside what it was given. */
+    @Test
+    void theCliRefusesOversizeInputInOneLineAndStaysInsideItsInput() throws IOException {
+        Path dir = Files.createDirectories(tmp.resolve("big"));
+        Files.writeString(dir.resolve("1.json"), "{\"blob\":\"" + "x".repeat(6 * 1024 * 1024) + "\"}");
+        Run big = run("shape", dir.toString());
+        assertThat(big.code()).isEqualTo(1);
+        assertThat(big.err()).contains("max-file-mb").doesNotContain("\tat ").doesNotContain("Exception");
+        Path bad = Files.createDirectories(tmp.resolve("bytes"));
+        Files.write(bad.resolve("1.json"), new byte[] {(byte) 0xff, (byte) 0xfe, (byte) 0xfd, '{', '}'});
+        Run utf = run("shape", bad.toString());
+        assertThat(utf.code()).isEqualTo(1);
+        assertThat(utf.err()).contains("not valid UTF-8").doesNotContain("Input length");
+        Run gone = run("lint", tmp.resolve("nothing-here.sutra.yaml").toString());
+        assertThat(gone.err().lines().filter(l -> l.startsWith("sutra:")).findFirst().orElse("")).isNotBlank();
+        // a tests folder above the input is not read: only folders inside the paths named on the command line count
+        Path outer = Files.createDirectories(tmp.resolve("outer"));
+        Files.createDirectories(outer.resolve("tests/widget"));
+        Files.writeString(outer.resolve("tests/widget/leak.json"), "{\"id\":\"LEAK\",\"size\":1}");
+        Path inner = Files.createDirectories(outer.resolve("pack/sutras/d"));
+        Files.writeString(inner.resolve("widget.v1.sutra.yaml"), SUTRA);
+        Run r = run("test", inner.toString());
+        assertThat(r.out() + r.err()).doesNotContain("leak.json");
     }
 
     @Test

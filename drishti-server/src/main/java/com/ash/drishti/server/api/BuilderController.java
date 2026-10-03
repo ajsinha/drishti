@@ -234,6 +234,9 @@ public class BuilderController {
         }
         Sutra sutra = sutras.check(b.get("yaml").asText());
         String kind = b.path("kind").isTextual() && !b.get("kind").asText().isBlank() ? b.get("kind").asText() : "sample";
+        if (!AutoDesigner.KIND.matcher(kind.trim()).matches()) {
+            throw bad("'kind' is letters, digits, . _ - (up to 64), starting with a letter or digit");
+        }
         LOG.info("builder check: {} sample(s)", inputs.size());
         return mapper.valueToTree(checks.check(sutra, kind, inputs, principal));
     }

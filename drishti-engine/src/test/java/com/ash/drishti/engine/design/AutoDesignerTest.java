@@ -231,7 +231,7 @@ class AutoDesignerTest {
     @Test
     void thePruneShareIsConfigurable() {
         BuilderProperties strict = new BuilderProperties(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0.1, null,
-                null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null, null, null, null);
         List<Sample> samples = new ArrayList<>(varied(5, true));
         samples.set(1, new Sample("s1.json", withRare(samples.get(1))));
         samples.set(2, new Sample("s2.json", withRare(samples.get(2))));

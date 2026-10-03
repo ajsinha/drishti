@@ -65,6 +65,9 @@
       (store.state.problems || []).forEach(function (p) {
         out.push({ kind: 'operation', code: p.code, text: (p.name ? p.name + ': ' : '') + p.message, line: p.line || 0 });
       });
+      if (store.state.baseMoved) {
+        out.push({ kind: 'base', code: 'rebase', text: 'The base ' + store.state.baseMoved.base + ' has a newer live version, ' + store.state.baseMoved.latest + '. Ship, Rebase replays your steps on it.' });
+      }
       yamlLive.forEach(function (p) { out.push({ kind: 'yaml', code: 'check', text: p.message, line: p.location.line, col: p.location.column }); });
       bindings().forEach(function (b) { out.push(b); });
       if (matrix) {
@@ -96,6 +99,7 @@
       countEl.setAttribute('aria-label', items.length + ' problems');
     }
     store.on('doc', update);
+    store.on('basemoved', update);
     store.on('yamlcheck', function (ps) { yamlLive = ps; update(); });
     store.on('shape', function (r) { shape = r; update(); });
     store.on('checked', function (c) { matrix = c ? c.matrix : null; update(); });
