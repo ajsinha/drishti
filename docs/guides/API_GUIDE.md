@@ -1015,6 +1015,15 @@ user; a design is reachable only by its owner (anyone else gets `404 DRS-5006`);
 | `POST` | `/builder/designs` | body `{name, kind, base, sutra, notes}`, all optional (no name: a scratch design, forgotten after a day); `base` as `name@version` without `sutra` copies that Sutra; `201` with the design |
 | `GET` / `PATCH` / `DELETE` | `/builder/designs/{id}` | read (touches it), change `name`, `kind`, `notes`, `sutra` (a new text is a new `rev`), `tests`; delete (and its samples) |
 | `POST` | `/builder/designs/{id}/duplicate` | body `{name}` optional; a named copy with its samples |
+| `POST` | `/builder/designs/{id}/propose` | body `{note}` optional; author right and `studio-save`. Runs the check and proposes the design's Sutra **with evidence** (matrix, sample names, notes; `GET /sutras/proposals/{id}` returns it as `evidence`). `202 {proposal, status}`; with review off `200 {name, version, status}`. The design's `status` becomes `proposed(P-n)`, then `live(vN)` on approval |
+| `GET` | `/builder/designs/{id}/export` | a zip pack fragment: `pack.yaml` stub, the Sutra, `tests/<sutra>/*.json` + `expect.yaml`, three samples, README |
+| `POST` | `/builder/designs/import` | body a zip (`application/zip`); one design per `*.sutra.yaml`, with the samples of `tests/<sutra>/` and `samples/<kind>/`; `201 {designs, skipped}` |
+| `POST` / `DELETE` | `/builder/designs/{id}/share` | makes (renews) or revokes the read-only link; `{token, path}` is shown once |
+| `GET` | `/builder/designs/shared/{id}?token=` | what a link holder sees: Sutra, operations, sample names (never contents or notes); a bad or revoked token is `404 DRS-5006` |
+| `GET` | `/builder/designs/binding` | `{enabled, dirs}`: whether `drishti.builder.file-binding` is on |
+| `POST` / `DELETE` | `/builder/designs/{id}/bind` | body `{file}` (path under a Sutra directory); binds or unbinds (development servers; `403` when off) |
+| `POST` | `/builder/designs/{id}/save-file` | writes the Sutra to the bound file (`409 DRS-5007` if the file changed on disk first) |
+| `GET` | `/builder/designs/{id}/sync` | reads the bound file: an outside edit becomes a step of the design (`changed: true`) |
 | `POST` | `/builder/designs/{id}/samples` | `{samples: [{name, document}]}` and/or `{refs: {kind, ids \| count}}` (stored entities, kept as references) and/or `{schema, count}` (synthetic documents generated from a JSON Schema or shape.json, labelled `synthetic`); a sample of an existing name replaces it |
 | `DELETE` | `/builder/designs/{id}/samples?name=` | remove a sample by name |
 | `GET` | `/builder/designs/{id}/samples/document?name=` | a kept sample document (a reference keeps none) |

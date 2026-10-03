@@ -36,6 +36,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import urllib.error
 import urllib.request
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -105,6 +106,14 @@ class Ctx:
         else:
             self.page.screenshot(path=str(path), clip=clip, type="jpeg", quality=84)
         print("  wrote", path.relative_to(ROOT))
+
+    def until(self, js, seconds=60):
+        """Polls a JavaScript expression until it is truthy (wait_for_function evaluates a string, which the console's CSP forbids)."""
+        for _ in range(seconds * 10):
+            if self.page.evaluate(js):
+                return
+            self.page.wait_for_timeout(100)
+        raise TimeoutError("still false: " + js)
 
     def rev(self):
         return self.page.evaluate("window.drishtiWorkbench.store.state.rev")
@@ -439,16 +448,118 @@ for _f, _e, _s, _t in FAMILIES:
     SHOTS.append((_f, family(_f, _e, _s)))
 
 
+# ---- step 8: ship and scale ------------------------------------------------------------------------------------------------------------------
+
+def ship_design(c: Ctx, label: str) -> str:
+    """A design of the showcase under a Sutra name of its own (so a proposal is never 'already live'), opened in the workbench."""
+    data, sutra = showcase()
+    unique = f"shots-{label}-{int(time.time())}"
+    id_ = c.design("Quarterly credit review", files={"showcase.json": data, "second-bond.json": data.replace("GOVT_BOND", "GOVT_BOND")},
+                   sutra=sutra.replace("sutra: all-panels-showcase", f"sutra: {unique}", 1))
+    c.open(id_)
+    return id_
+
+
+def submit(c: Ctx) -> str:
+    c.page.fill("[data-note]", "Adds the credit panels; checked on both samples")
+    c.page.locator("[data-save]").click()
+    c.until("document.querySelector('[data-say]').textContent.indexOf('Submitted for review as P-') >= 0")
+    return c.page.locator("[data-say]").inner_text().split("as ")[1].split(":")[0]
+
+
+@shot("40-ship-menu.jpg")
+def ship_menu(c: Ctx):
+    ship_design(c, "menu")
+    c.page.locator("[data-ship-menu]").click()
+    c.page.locator(".wb-menu").wait_for()
+    c.save("40-ship-menu.jpg", clip={"x": 0, "y": 60, "width": 1440, "height": 470})
+    c.page.keyboard.press("Escape")
+
+
+@shot("41-submit-for-review.jpg")
+def submit_for_review(c: Ctx):
+    ship_design(c, "submit")
+    submit(c)
+    c.page.wait_for_timeout(600)
+    c.save("41-submit-for-review.jpg", clip={"x": 0, "y": 60, "width": 1440, "height": 190})
+
+
+@shot("42-review-evidence.jpg")
+def review_evidence(c: Ctx):
+    ship_design(c, "review")
+    pid = submit(c)
+    c.page.goto(f"{c.base}/build/reviews/{pid}")
+    c.page.locator("[data-evidence]").wait_for()
+    c.page.locator("[data-evidence]").scroll_into_view_if_needed()
+    c.save("42-review-evidence.jpg", "[data-evidence]")
+
+
+@shot("43-live-status.jpg")
+def live_status(c: Ctx):
+    id_ = ship_design(c, "live")
+    pid = submit(c)
+    c.page.goto(f"{c.base}/build/reviews/{pid}")
+    c.page.get_by_role("button", name="Approve and publish").click()
+    c.page.wait_for_timeout(800)
+    c.page.goto(f"{c.base}/build")
+    c.page.locator(f"[data-design='{id_}']").wait_for()
+    c.save("43-live-status.jpg", f"[data-design='{id_}']")
+
+
+@shot("44-export-import.jpg")
+def export_import(c: Ctx):
+    c.page.goto(c.base + "/build/new#import")
+    c.page.locator("#import").wait_for()
+    c.page.locator("#import").scroll_into_view_if_needed()
+    c.page.wait_for_timeout(400)
+    c.save("44-export-import.jpg", "#import")
+
+
+@shot("45-share-link.jpg")
+def share_link(c: Ctx):
+    ship_design(c, "share")
+    c.page.locator("[data-ship-menu]").click()
+    c.page.get_by_role("option", name="Create a read-only link").click()
+    c.page.locator("[data-share-box]:not([hidden])").wait_for()
+    c.page.wait_for_timeout(500)
+    c.save("45-share-link.jpg", clip={"x": 0, "y": 60, "width": 1440, "height": 200})
+
+
+@shot("46-shared-view.jpg")
+def shared_view(c: Ctx):
+    ship_design(c, "shared")
+    c.page.locator("[data-ship-menu]").click()
+    c.page.get_by_role("option", name="Create a read-only link").click()
+    c.page.locator("[data-share-box]:not([hidden])").wait_for()
+    c.until("document.querySelector('[data-share-url]').value.indexOf('?share=') > 0")
+    link = c.page.locator("[data-share-url]").input_value()
+    c.page.goto(link)
+    c.page.locator("[data-shared]").wait_for()
+    c.page.wait_for_timeout(500)
+    c.save("46-shared-view.jpg", clip={"x": 0, "y": 0, "width": 1440, "height": 760})
+
+
+@shot("47-file-binding.jpg")
+def file_binding(c: Ctx):
+    ship_design(c, "bound")
+    c.page.once("dialog", lambda d: d.accept("shots/credit-review.v1.sutra.yaml"))
+    c.page.locator("[data-ship-menu]").click()
+    c.page.get_by_role("option", name="Bind to a file").click()
+    c.until("!document.querySelector('[data-bound-chip]').hidden")
+    c.page.wait_for_timeout(600)
+    c.save("47-file-binding.jpg", clip={"x": 0, "y": 60, "width": 1440, "height": 190})
+
+
 # ---- running ---------------------------------------------------------------------------------------------------------------------------------
 
 def listening(port: int) -> bool:
     try:
         urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=2)
         return True
+    except urllib.error.HTTPError:
+        return True                  # an HTTP error still means something answers (and it is an OSError, so it must be caught first)
     except OSError:
         return False
-    except Exception:  # noqa: BLE001 - an HTTP error still means something answers
-        return True
 
 
 def start_servers(work: Path) -> list:
@@ -459,7 +570,9 @@ def start_servers(work: Path) -> list:
     for name in ("packs", "config"):
         if not (work / name).exists() and (ROOT / name).exists():
             (work / name).symlink_to(ROOT / name)
-    env = dict(os.environ, DRISHTI_PORT=str(SERVER_PORT), DRISHTI_PACKS=PACKS)
+    (work / "sutras").mkdir(exist_ok=True)
+    env = dict(os.environ, DRISHTI_PORT=str(SERVER_PORT), DRISHTI_PACKS=PACKS, DRISHTI_STUDIO_SAVE="true", DRISHTI_BUILDER_FILE_BINDING="true",
+               DRISHTI_SUTRAS=str(work / "sutras"))
     server = subprocess.Popen([java, "-jar", str(jars[-1])], cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
     py = ROOT / "console" / ".venv" / "bin" / "python"
     py = py if py.exists() else Path(sys.executable)
@@ -499,7 +612,7 @@ def main() -> int:
             c = Ctx(page, a.base)
             # one design stays open across the first shots (they build on each other); later ones open their own
             for name, fn in SHOTS:
-                if a.only and a.only not in name:
+                if a.only and not any(o and o in name for o in a.only.split(",")):
                     continue
                 print(name)
                 for attempt in (1, 2):                      # a slow machine can time a step out once; the second try starts from a clean page

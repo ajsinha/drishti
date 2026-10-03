@@ -661,6 +661,16 @@ Sample documents are never logged; deleting a Design deletes its samples at once
 | `sweep-interval` | `1h` | How often expired Designs are deleted. |
 | `max-ops` | `100` | Steps of the operation log a Design keeps for undo and redo (the oldest are dropped). |
 
+### `drishti.builder.file-binding` — development file binding
+
+| Key | Default | Meaning |
+|---|---|---|
+| `drishti.builder.file-binding` (`DRISHTI_BUILDER_FILE_BINDING`) | `false` | Let a Design be bound to a file under `drishti.rachana.dirs` (**Ship → Bind to a file** in the workbench; `POST /api/v1/builder/designs/{id}/bind`). Saving then writes the file (the hot reload makes views use it) and an edit made in an IDE is read back into the Design. Needs the author right and `drishti.rachana.studio-save`; paths outside the Sutra directories are refused. For development servers: leave it off on authoring and production servers, where saving goes through review. With it off every bind answers `403 DRS-5002`. |
+
+Read-only share links (`POST /api/v1/builder/designs/{id}/share`) need no setting: the link shows a Design's Sutra, operations and
+sample names, never sample contents, and its owner can revoke it. Proposals made from the workbench carry the check matrix, the
+sample names and the notes to the reviewer (`GET /api/v1/sutras/proposals/{id}` returns them as `evidence`).
+
 ### `drishti.commands` — the command line
 
 | Key | Default | Meaning |

@@ -220,3 +220,10 @@ def test_the_ship_script_saves_to_the_file_when_bound_and_polls_for_disk_edits()
     saving = (JS / "build" / "saving.js").read_text()
     assert "hooks.ship.bound()" in saving and "/save-file" in ship and "/sync" in ship and "setInterval(sync" in ship
     assert len(ship.splitlines()) < 400
+
+
+def test_the_workbench_reloads_a_design_from_its_sutra_field():
+    """GET /build/designs/{id} answers the Sutra as ``sutra`` (the server's field); the reloads after a 409, an auto-design and a disk sync read that."""
+    for name in ("ops.js", "workbench.js", "ship.js"):
+        text = (JS / "build" / name).read_text()
+        assert "g.body.yaml" not in text and "r.body.yaml || ''" not in text, name

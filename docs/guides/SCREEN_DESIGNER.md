@@ -41,6 +41,14 @@ This guide goes step by step, with a picture of each step. The pictures are made
 - [20. The command palette](#20-the-command-palette)
 - [21. Diff and versions](#21-diff-and-versions)
 - [22. Saving and proposing](#22-saving-and-proposing)
+- [23. End to end: from a folder of JSON to a live screen](#23-end-to-end-from-a-folder-of-json-to-a-live-screen)
+- [24. Pack fragments: export and import](#24-pack-fragments-export-and-import)
+- [25. Sharing a design read-only](#25-sharing-a-design-read-only)
+- [26. The command line and CI](#26-the-command-line-and-ci)
+- [27. Binding a design to a file (development servers)](#27-binding-a-design-to-a-file-development-servers)
+- [28. Troubleshooting shipping](#28-troubleshooting-shipping)
+- [29. Limits of shipping](#29-limits-of-shipping)
+- [30. Keyboard reference for shipping](#30-keyboard-reference-for-shipping)
 
 ## 1. Start: bring data
 
@@ -433,4 +441,128 @@ Designing is open to everyone: the design is yours, kept by the server, and you 
 
 Typed YAML is sent first, so what is saved is what you see. A Sutra the server refuses (a located problem) is answered with the line, and nothing is saved. **Build → Govern → Reviews** lists what is waiting (the menu shows how many) and shows each proposal with the diff; approvers approve or reject there, and authors withdraw their own.
 
-See also: [Screen Builder design](../architecture/SCREEN_BUILDER.md), [the examples](examples/README.md), [the Rachana reference](RACHANA_REFERENCE.md), [panels in depth](PANELS.md).
+## 23. End to end: from a folder of JSON to a live screen
+
+This is the whole road in one go. It assumes you have the author right and Studio saving is on (`DRISHTI_STUDIO_SAVE=true`); a colleague with the approve right does the last step. Without those, steps 1 to 4 still work and the design waits in *My designs*.
+
+1. **Folder.** *Build → New screen → Choose a folder* (section 1). Drishti reads every `.json` and `.jsonl` in it as samples. Start from **Auto-design** and give the design a name, so it is kept for 90 days.
+2. **Design.** The workbench opens on a first screen drawn from your data (sections 2 to 8). Drag a panel from the palette, drop a field onto it, size it on the grid, fill its options in the inspector. Everything is an undoable step.
+3. **Check.** The *Tests* tab and the status bar (`✓ 38/40`) run every sample against the design as you type (section 11). Fix the red cells: an *empty* panel is a field some sample does not have; an *error* names the reason. Switch samples with the arrows in the status bar to see why.
+4. **Propose.** Type what changed in the box beside the button and press **Submit for review** (Ctrl+S). The server runs the check again, then sends the proposal **with its evidence**: the panel-by-sample matrix, the names of the samples (not their contents), your notes and the design's identity. The status next to the title becomes *proposed P-000042*.
+
+   ![After Submit for review: the message names the proposal, the status says proposed](img/designer/41-submit-for-review.jpg)
+
+5. **Review.** The approver opens **Build → Govern → Reviews**, then the proposal. Under the diff of the Sutra they see the same matrix you saw, which samples were used (and which were generated from a schema, so are not real data) and your notes. With four eyes on, you cannot approve your own proposal.
+
+   ![The reviewer's evidence: every panel on every sample, the sample names, the author's notes](img/designer/42-review-evidence.jpg)
+
+6. **Approve.** *Approve and publish* writes the Sutra to the registry as the next version. Your design's status becomes **live v1** (the version number), on the workbench and on *My designs*. Views of that kind use it from the next request. *Reject* needs a reason, the design returns to *draft*, and the reviewer's comment is on the proposal.
+
+   ![My designs: the design is live v1](img/designer/43-live-status.jpg)
+
+7. **Change it later.** Open the live Sutra in the workbench (*Build → New screen → An existing Sutra*): the new design remembers its **base**, the *Versions* tab (section 21) shows your changes against it, and the next proposal is a new version. If someone else changed the live Sutra meanwhile, the proposal says *stale* and must be made again from the live version.
+
+A design that is edited after it was proposed or approved goes back to *draft*: the status always describes the revision you are looking at.
+
+## 24. Pack fragments: export and import
+
+A design can leave the workbench as a **pack fragment**, a zip you can put in a pack, and a pack (or a folder of Sutras) can come back as designs.
+
+![The Ship menu: pack fragment, import, read-only link, file binding](img/designer/40-ship-menu.jpg)
+
+**Export** (*Ship → Export as a pack fragment*) downloads `<name>-fragment.zip`:
+
+```
+my-view/
+  pack.yaml                         a stub: the kind, a mnemonic suggestion, an id pattern, the id field of your samples
+  sutras/<domain>/my-view.v1.sutra.yaml
+  tests/my-view/<sample>.json       every kept sample (up to 20) ...
+  tests/my-view/expect.yaml         ... and what `sutra test` checks: noErrors, and the panels that were fine on every sample
+  samples/<kind>/<sample>.json      three samples to try the view on
+  README.md                         what is in it and how to load it
+```
+
+Stored-entity samples are references, not data, so they are not exported; synthetic ones are, and are labelled as such by their names. Put the folder under the server's `packs/`, list it in `DRISHTI_PACKS` (or load it from **Admin → Packs**), and change the stub's title, version and mnemonic first. The exported tests pass `sutra test` unchanged (section 26).
+
+**Import** (*New screen → Or import a pack*) takes a **zip** or a **folder**. Each `*.sutra.yaml` becomes a design of its own, named after the Sutra, with the documents of `tests/<sutra>/` and `samples/<kind>/` as its samples and the README as its notes. A Sutra that does not check yet is imported anyway, with a note, so you can fix it in the workbench. Nothing is loaded into the server; this only makes designs, so it is open to everyone.
+
+![The import section of the New page](img/designer/44-export-import.jpg)
+
+## 25. Sharing a design read-only
+
+For pairing and review without sending files around: *Ship → Create a read-only link*. The link is `/build/d/{id}?share=...`.
+
+![The link, with Copy and Revoke](img/designer/45-share-link.jpg)
+
+What the person who opens it sees (they must be signed in): the **Sutra**, the **operations** you made (what changed, in order) and the **names** of the samples. They do **not** see your sample contents, your notes, your tests or the other designs. They can **copy the Sutra**, and **preview it against data of their own**: a JSON file from their computer, or a stored entity they are allowed to open (the usual kind rights and field masks apply to them, not to you).
+
+![The shared page: read-only, try it on your own data](img/designer/46-shared-view.jpg)
+
+The link is a secret: anyone who has it can read the Sutra and the operations. **Revoke** stops it at once (so does *Renew*, which makes a new one and kills the old). Only a hash of the secret is kept; it cannot be shown again, which is why the box is empty after a reload until you renew it.
+
+## 26. The command line and CI
+
+Pack authors run the same checks without a browser. The server jar has a `sutra` command that starts no web server and opens no port:
+
+```sh
+java -jar drishti-server-<version>-exec.jar sutra lint  packs/my-pack
+java -jar drishti-server-<version>-exec.jar sutra test  packs/my-pack --junit target/sutra-tests.xml
+java -jar drishti-server-<version>-exec.jar sutra preview packs/my-pack --out target/snapshots
+java -jar drishti-server-<version>-exec.jar sutra shape  samples/*.json --out target/shape
+java -jar drishti-server-<version>-exec.jar sutra design samples/*.json --kind deal --out target/draft
+```
+
+`test` uses the **same checker as the Tests tab**, with the `packs/<pack>/tests/<sutra>/*.json` + `expect.yaml` convention that the pack fragment export writes. Exit codes: `0` ok, `1` problems, `2` usage. `--junit` writes JUnit XML for your CI's report step; `--out` writes HTML snapshots. The Maven build of this repository runs `sutra test` over every shipped pack that has tests and over the ten documented examples. All the details and a CI example are in [the Sutra command guide](SUTRA_CLI.md).
+
+## 27. Binding a design to a file (development servers)
+
+If you edit Sutras in an IDE and keep them in git, bind the design to the file so the workbench and the IDE work on the same text. This is **off by default**: set `drishti.builder.file-binding: true` on a development server (and `drishti.rachana.studio-save`; you need the author right).
+
+*Ship → Bind to a file…* asks for a path **under a Sutra directory** (`drishti.rachana.dirs`), for example `market/my-view.v1.sutra.yaml`.
+
+![A design bound to a file: the chip next to the title, Save to file on the button](img/designer/47-file-binding.jpg)
+
+- If the file exists its text becomes the design's Sutra (a step you can undo); if not, the first save creates it.
+- **Save** (Ctrl+S) now says *Save to file*: it checks the Sutra, writes the file, and the registry's hot reload makes views use it. Nothing is proposed.
+- **An edit made in the IDE comes back**: the workbench looks at the file every few seconds and when the window gains focus, and loads a change as a new step (the message says so; Ctrl+Z brings your version back).
+- If **both** sides changed, saving is refused with `409 DRS-5007` rather than overwrite the IDE's file: load the file's version first (or unbind), then redo your change.
+- Paths outside the directory (`..`, absolute paths, other extensions) are refused. *Ship → Unbind* returns to saving through the registry. On a server without the setting the item is not offered and the API answers `403`.
+
+## 28. Troubleshooting shipping
+
+| You see | Why | What to do |
+|---|---|---|
+| *Designing is open to everyone; saving needs the author right* | No author right, or `drishti.rachana.studio-save` is off | Ask for the author role; your design is safe in *My designs* |
+| *X is already live exactly as proposed* | The live Sutra already has this exact text | Change something, or you are done |
+| Proposal says *stale* and cannot be approved | The live Sutra changed after you proposed | Reject it (or withdraw), open the live Sutra as a new design, redo, propose again |
+| The review shows *no check was attached* | The design had no samples when it was proposed | Add samples, check, and propose again |
+| The evidence says *some samples fail* | A panel is in error on a sample | The reviewer can still decide; better fix it first (section 11) |
+| Status stays *proposed* after approval | The design was edited after proposing, so its status is *draft* | Nothing is wrong; the approval is on the proposal |
+| *This link is not valid* | Revoked, renewed, mistyped, or the design was deleted or expired | Ask the owner for a new link |
+| *binding a design to a file is off on this server* | `drishti.builder.file-binding` is false | Only for development servers; set it there |
+| *changed on disk after the design last read it* (409) | Both the design and the file changed | Unbind, or load the file's version (open the design again) and redo your change |
+| Import says *no Sutra (*.sutra.yaml) was found* | The zip holds no file named `*.sutra.yaml` | Rename the Sutra files, or zip the pack folder (not a parent of many) |
+| `sutra test` exit `2` | An unknown key in `expect.yaml` or a path that does not exist | Fix the key; the message names it |
+
+## 29. Limits of shipping
+
+- One proposal carries the check of the revision you submit; it holds names and counts, never sample contents. The design's notes travel in full; the reviewer note beside the button is 300 characters.
+- A fragment exports up to 20 samples as tests and 3 as samples; stored-entity samples are not exported.
+- An import takes at most 1000 files and the unpacked size is bounded by `drishti.builder.max-total-mb` (25 MB by default); the quotas of *My designs* (50 designs, 50 samples each) apply to what it creates.
+- A share link shows one revision at a time (the current one); it does not show versions, notes or tests, and it cannot be limited to certain people: anyone signed in who has it can read it. Treat it as a secret and revoke it when the review is over.
+- File binding is for development servers: one file per design, text only, no merge (a clash is refused, never merged), and only under the configured Sutra directories.
+- The command line runs one process per command, without hot reload; Sutras that read other entities need the packs that hold them enabled for the run.
+
+## 30. Keyboard reference for shipping
+
+| Keys | What |
+|---|---|
+| Ctrl+S | Submit for review / Save / Save to file, whichever the button says |
+| Ctrl+K | Command palette: *Ship: export, share or bind…* opens the Ship menu |
+| Tab to *Ship*, Enter | Open the Ship menu; type to filter, Up/Down, Enter to choose, Esc to close |
+| Tab to *Copy* or *Revoke* | In the link box under the title (it appears once a link exists) |
+| Tab through the review table | The reviewer's matrix is an ordinary table with row and column headers |
+
+The shared page has no editing keys: the *Preview with a file…*, *Preview a stored entity* and *Copy the Sutra* controls are real buttons and fields in reading order.
+
+See also: [the Sutra command](SUTRA_CLI.md), [Screen Builder design](../architecture/SCREEN_BUILDER.md), [the examples](examples/README.md), [the Rachana reference](RACHANA_REFERENCE.md), [panels in depth](PANELS.md).

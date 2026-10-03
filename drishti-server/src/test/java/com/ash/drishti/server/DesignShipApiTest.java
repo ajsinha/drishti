@@ -56,6 +56,12 @@ class DesignShipApiTest {
 
     @Autowired MockMvc mvc;
     @Autowired TokenVerifier tokens;
+    @Autowired com.ash.drishti.rachana.SutraRegistry sutras;
+    @Autowired com.ash.drishti.engine.ViewPipeline pipeline;
+    @Autowired com.ash.drishti.engine.shape.ShapeService shapes;
+    @Autowired com.ash.drishti.engine.design.AutoDesigner designer;
+    @Autowired com.ash.drishti.common.JsonCodec codec;
+    @org.junit.jupiter.api.io.TempDir java.nio.file.Path tmp;
 
     private static String sutra(String name) {
         return "rachana: 1\nsutra: " + name + "\nversion: 1\nmatch: { kind: ship-thing, priority: 100 }\ntitle: { id: $.thingId }\n"
@@ -154,6 +160,29 @@ class DesignShipApiTest {
         assertThat(d.path("samples")).extracting(s -> s.path("name").asText()).containsExactlyInAnyOrder("first.json", "second.json");
         mvc.perform(post("/api/v1/builder/designs/import").header("Authorization", as("bea", "designer")).contentType("application/zip")
                 .content(new byte[] {1, 2, 3})).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void anExportedFragmentLoadsAsAPackAndPassesSutraTest() throws Exception {
+        String id = design("ana", "author", "ship-g");
+        byte[] zip = mvc.perform(get("/api/v1/builder/designs/" + id + "/export").header("Authorization", as("ana", "author")))
+                .andReturn().getResponse().getContentAsByteArray();
+        java.nio.file.Path packs = java.nio.file.Files.createDirectories(tmp.resolve("packs"));
+        try (ZipInputStream in = new ZipInputStream(new ByteArrayInputStream(zip))) {
+            for (ZipEntry e = in.getNextEntry(); e != null; e = in.getNextEntry()) {
+                java.nio.file.Path to = packs.resolve(e.getName());
+                java.nio.file.Files.createDirectories(to.getParent());
+                java.nio.file.Files.write(to, in.readAllBytes());
+            }
+        }
+        // the pack loader reads it as a pack ...
+        var loaded = new com.ash.drishti.packs.PackLoader().load(packs, List.of("ship-g"));
+        assertThat(loaded).hasSize(1);
+        // ... and `sutra test` over its tests passes
+        var out = new java.io.ByteArrayOutputStream();
+        int code = new com.ash.drishti.server.cli.SutraCli(new com.ash.drishti.server.cli.SutraCli.Services(sutras, pipeline, shapes, designer, codec),
+                new java.io.PrintStream(out, true), new java.io.PrintStream(out, true)).run(List.of("test", packs.resolve("ship-g").toString()));
+        assertThat(code).as(out.toString()).isZero();
     }
 
     private static String domainOf(List<String> names) {

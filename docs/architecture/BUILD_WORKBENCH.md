@@ -15,7 +15,7 @@
 -->
 # Build workbench: one place to design, test and ship screens
 
-Status: agreed architecture; step 4 (Designs) is built; replaces steps 4–7 of [SCREEN_BUILDER.md](SCREEN_BUILDER.md) (steps 1–3 are built and stay:
+Status: agreed architecture; steps 4 to 8 are built; replaces steps 4–7 of [SCREEN_BUILDER.md](SCREEN_BUILDER.md) (steps 1–3 are built and stay:
 the shape API, the shape extractor, auto-design and suggest). Owner: the Build menu, the builder APIs, the Rachana editor.
 
 ## Why
@@ -205,6 +205,25 @@ lands inside a panel and asks for suggestions when it lands on a panel's rim, be
 Design's shape then `/builder/suggest` (a design-level `/{id}/suggest` on the server was not needed). Browser tests run against the real
 server jar (`console/tests/wb_live.py`; skipped when the jar or JDK 25 is missing).
 
+**As built (step 8).** *Propose with evidence:* `POST /builder/designs/{id}/propose {note}` (the workbench's *Submit for review*; the console's
+`/save` route is gone) re-runs the check and calls `SutraGovernance.propose(text, note, who, evidence)`; `Proposal` has an `evidence` field
+(design id, name, owner, revision, base, notes, `sampleNames`, `syntheticSamples`, the matrix; never sample contents), shown on
+`/build/reviews/{id}` as the panel by sample table. `SutraGovernance` tells `ProposalListener`s after every decision, and `DesignShip`
+keeps the Design's status in step: `proposed(P-n)` when proposed, `live(vN)` on approval, `draft` on rejection or withdrawal, each only
+if the Design is still at the proposed revision (any later edit already made it `draft`). With governance off the Sutra is saved and the
+Design is `live(vN)` at once. *Pack fragments:* `PackFragment` builds and reads the zip (`GET /{id}/export`, `POST /import` with a zip or
+the console's folder as JSON; zip entries are read in memory with count and size limits, nothing touches the disk); the layout is
+`pack.yaml` stub, `sutras/<domain>/`, `tests/<sutra>/*.json` + `expect.yaml` (`noErrors`, `nonEmpty` from the matrix), `samples/<kind>/`,
+README. *CLI:* `com.ash.drishti.server.cli` (`DrishtiApplication.main` hands `sutra ...` to `CliLauncher`, a non-web Spring context with
+temporary identity, governance and design folders); `SutraCliTest` runs `sutra test` over every shipped pack's `tests/` folder and the ten
+examples; the format is in `docs/guides/SUTRA_CLI.md`. *File binding:* `drishti.builder.file-binding` (default false); the Design keeps
+`boundFile` and `boundSync` (the SHA-256 of the text last written or read); save writes atomically after `SutraRegistry.check`; a changed
+file with an unsynced Design is `409 DRS-5007`; `GET /{id}/sync` (polled by the workbench every 3 s and on focus) turns an outside edit into
+a `text` step. *Sharing:* `POST|DELETE /{id}/share`; the token is `base64url(owner).secret`, only its SHA-256 is stored, and
+`GET /shared/{id}?token=` answers Sutra, operations and sample names (a bad or revoked token is the same `404 DRS-5006`); the console page
+`/build/d/{id}?share=token` previews against the viewer's own JSON or a stored entity under the viewer's rights. Decisions: file binding on
+development servers first and read-only links without sample contents, as the product owner chose.
+
 **Permissions** (product owner's rule). Creating, editing, checking, previewing pasted or referenced samples, and
 exporting your own Design are open to every signed-in user. Saving to the registry or to a bound file needs the author
 right and Studio saving switched on; proposing needs the author right; approving needs the approve right; loading a
@@ -225,7 +244,7 @@ Studio is folded in, because it is what users are waiting for.
 | **5. Operations and one checker** (done) | the `design.ops` package; stateless `/builder/edit` and `/builder/check`; `SampleChecker` behind Studio's test and auto-design's pruning | every operation on all 20 kinds keeps comments and order; a bad operation is a located problem; a sample set with a missing field shows the right empty and error cells |
 | **6. Workbench with the visual canvas** (done) | `/build/d/{id}`: Data, Design (canvas, palette, field drops with suggestions, inspector, undo/redo, keyboard path, `grid-keys.js` shared with layout mode), YAML, Problems, Tests as you type, sample switcher, *Preview with a file…*, phone and theme toggles; the guide `docs/guides/SCREEN_DESIGNER.md` and its help entry | the all-panels showcase is built from its samples without typing YAML, by mouse and by keyboard only; a folder → auto-design → switch samples → fix → green matrix test; layout mode's tests pass with the shared module |
 | **7. Studio folded in** (done) | all `/studio*` page addresses redirect (302) into the workbench, the review pages moved to `/build/reviews`, Studio's page, template and script are gone (its JSON routes under `/studio/` remain for the workbench and for scripts); Studio's keys (Ctrl+S, Ctrl+Enter), File menu, Summary, Save and Submit for review live in the workbench; Studio's test entities become stored-entity samples of a Design made from that Sutra; command palette (Ctrl+K); the Versions tab (`GET /builder/designs/{id}/versions[/n]`, diff against the base or any version with `sutra_diff`, restore as a `text` operation); Build menu: Create, Govern, Learn; Studio's test entities become tests on a Design; the guide grows four chapters | every old Studio address in the console tests lands on an equivalent screen; keyboard-only use across panes |
-| **8. Ship and scale** | propose with evidence, reviewers see the matrix, approval makes it live; pack fragment export and folder/zip import; the headless CLI with the `packs/<p>/tests/` convention run over every shipped pack in the build; development file binding; read-only share links; the guide's end-to-end walkthrough | folder → design → check → propose → approve → the view serves the new version; an exported fragment loads through Admin → Packs and passes `sutra test` |
+| **8. Ship and scale** (done) | propose with evidence, reviewers see the matrix, approval makes it live; pack fragment export and folder/zip import; the headless CLI with the `packs/<p>/tests/` convention run over every shipped pack in the build; development file binding; read-only share links; the guide's end-to-end walkthrough | folder → design → check → propose → approve → the view serves the new version; an exported fragment loads through Admin → Packs and passes `sutra test` |
 
 ## Risks
 

@@ -46,7 +46,7 @@ def _open(page, base, name, sutra=SUTRA):
     return id_
 
 
-def test_design_to_live_with_the_evidence_and_a_share_link(live_ship_console, page):
+def test_design_to_live_with_the_evidence_and_a_share_link(live_ship_console, page, browser):
     base = live_ship_console
     id_ = _open(page, base, "Ship E2E")
 
@@ -79,7 +79,7 @@ def test_design_to_live_with_the_evidence_and_a_share_link(live_ship_console, pa
     page.locator("[data-share-box]:not([hidden])").wait_for()
     wait(page, "document.querySelector('[data-share-url]').value.indexOf('?share=') > 0")
     link = page.locator("[data-share-url]").input_value()
-    share = page.context.new_page()
+    share = browser.new_page()
     share.goto(link)
     share.locator("[data-shared]").wait_for()
     body = share.content()

@@ -156,7 +156,7 @@
       WB.call('POST', '/build/designs/' + encodeURIComponent(store.state.id) + '/autodesign', {}).then(function (r) {
         if (!r.ok) { store.emit('say', WB.why(r), true); return; }
         WB.call('GET', store.base).then(function (g) {
-          if (g.ok) { store.adopt({ rev: g.body.rev, yaml: g.body.yaml, status: g.body.status, opsAt: g.body.opsAt, opsCount: (g.body.ops || []).length, problems: [], previewHtml: r.body.previewHtml }, 'autodesign'); }
+          if (g.ok) { store.adopt({ rev: g.body.rev, yaml: g.body.sutra, status: g.body.status, opsAt: g.body.opsAt, opsCount: (g.body.ops || []).length, problems: [], previewHtml: r.body.previewHtml }, 'autodesign'); }
           WB.draft($('[data-draft]'), r.body);
           store.emit('say', 'Drafted a screen: revision ' + store.state.rev + '; ' + (r.body.pruned || []).length + ' left out. Undo brings the old one back.');
         });

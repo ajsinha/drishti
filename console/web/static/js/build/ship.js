@@ -116,7 +116,7 @@
     function reload(message) {
       return WB.call('GET', store.base).then(function (g) {
         if (g.ok) {
-          store.adopt({ rev: g.body.rev, yaml: g.body.yaml, status: g.body.status, opsAt: g.body.opsAt, opsCount: (g.body.ops || []).length, problems: [] }, 'reload');
+          store.adopt({ rev: g.body.rev, yaml: g.body.sutra, status: g.body.status, opsAt: g.body.opsAt, opsCount: (g.body.ops || []).length, problems: [] }, 'reload');
           store.refresh();
         }
         if (message) { say(message); }
@@ -139,7 +139,7 @@
         if (r.body.changed) { return reload(bound + ' changed on disk: loaded it into the design. Undo (Ctrl+Z) brings your version back.'); }
       }, function () { polling = false; });
     }
-    if (bound) { setInterval(sync, POLL_MS); window.addEventListener('focus', sync); }
+    if (enabled) { setInterval(sync, POLL_MS); window.addEventListener('focus', sync); }       // a no-op until the design is bound
 
     // ---- the menu -------------------------------------------------------------------------------------------------------
     function menu() {

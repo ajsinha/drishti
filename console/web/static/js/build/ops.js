@@ -66,7 +66,7 @@
     }
     function conflict() {
       return WB.call('GET', base).then(function (r) {
-        if (r.ok) { adopt({ rev: r.body.rev, yaml: r.body.yaml || '', status: r.body.status, opsAt: r.body.opsAt, opsCount: r.body.opsCount !== undefined ? r.body.opsCount : (r.body.ops || []).length, problems: [] }, 'reload'); refresh(); }
+        if (r.ok) { adopt({ rev: r.body.rev, yaml: r.body.sutra || '', status: r.body.status, opsAt: r.body.opsAt, opsCount: r.body.opsCount !== undefined ? r.body.opsCount : (r.body.ops || []).length, problems: [] }, 'reload'); refresh(); }
         bus.emit('conflict');
         bus.emit('say', 'The design changed somewhere else (another tab?), so your last change was not applied. It has been reloaded at revision ' + st.rev + '; make the change again.', true);
       });
