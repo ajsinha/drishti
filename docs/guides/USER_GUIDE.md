@@ -493,9 +493,9 @@ Each column of the view, the main one and the side one, is a **grid of 12 column
 | Do | To |
 |---|---|
 | Drag a panel by its heading | Move it: a dashed box shows where it will land, in this column or the other one. Near the top or bottom of the window the page scrolls |
-| Drag its right edge | Make it wider or narrower, a column at a time; panels narrower than the column sit side by side |
+| Drag its right edge | Make it wider or narrower, a column at a time (not under 3 of 12: `layouts.min_span`); panels narrower than the column sit side by side |
 | Drag its bottom edge | Give it a height in rows; double-click the edge for its natural height again |
-| **Hide** / **Show** in its heading | Hide it from your view (in layout mode it stays, greyed, so you can show it again) |
+| **Hide** / **Show** in its heading | Hide it from your view (in layout mode it stays, greyed, so you can show it again). The last visible panel cannot be hidden |
 
 ### With the keyboard
 

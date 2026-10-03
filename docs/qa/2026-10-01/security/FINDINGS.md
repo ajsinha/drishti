@@ -39,7 +39,7 @@ counterparty. Access-control matrices: matrix_server.md (101 endpoint/method row
 | SEC-14 | Info | A pivot on a field whose parent is masked groups under `(blank)` rather than the documented `•••`; count/distinct count masked values. Nothing revealed. | pivot engine | yes **Fixed** in d802261, 43075d9 (FieldMaskingTest.aPivotOnAFieldUnderAMaskedParentGroupsUnderTheMask) |
 | SEC-15 | Info | Personal API tokens are refused on read-only POST endpoints (pivot, command). | token filter | yes |
 | SEC-16 | Info | Risky production defaults (all warned in docs): security off by default; dev admin with default password (compose.yaml does not switch it off); demo source on; compose publishes 18480; PostgreSQL password `drishti`; empty metrics token. | config, deploy | yes |
-| SEC-17 | Info | The Calc worker's requests carry the user's session cookie, so Calc code can call any console route as the user; the Calc guide's "holds no credential" may overstate the sandbox. | calc-worker.js:64,82 | code reading |
+| SEC-17 | Info | The Calc worker's requests carry the user's session cookie, so Calc code can call any console route as the user; the Calc guide's "holds no credential" may overstate the sandbox. | calc-worker.js:64,82 | code reading **Addressed** in a1a594e: the worker's CSP `connect-src` is limited to `/static/` and `/pyodide/` (test_calc.py: test_the_calc_worker_cannot_fetch_a_console_route); PYTHON_CALC.md says so. |
 
 ## Checks that passed
 Tokens (altered, alg none, HS512, wrong secret, expired beyond 30 s skew, no subject, malformed → 401 with documented
