@@ -254,6 +254,10 @@ def test_a_non_author_designs_freely_but_cannot_save_or_propose(client, backend,
     async def settings(ident=None):
         return {"save": False, "review": True, "approve": False}
     monkeypatch.setattr(backend, "studio_settings", settings)
+
+    async def proposals(ident=None, status="", name=""):            # with review on, Studio counts pending proposals
+        return {"proposals": []}
+    monkeypatch.setattr(backend, "proposals", proposals, raising=False)
     page = client.get("/studio")
     assert page.status_code == 200 and "data-studio" in page.text and 'data-can-save="false"' in page.text
     assert "data-design-note" in page.text and "Designing is open to everyone; saving needs the author right." in page.text
