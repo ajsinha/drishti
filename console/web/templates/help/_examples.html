@@ -1,0 +1,28 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+<p>Each example is a Sutra, a self-contained JSON document it runs against, and a note. Open one in Studio to edit it with a live preview, or copy the parts you need.</p>
+{% for e in examples %}
+<section class="help-example-item" id="{{ e.name }}">
+  <h2>{{ e.title }}</h2>
+  <p class="help-example-actions"><a class="btn-pill btn-accent" href="/studio?example={{ e.name }}"><i class="bi bi-pencil-square" aria-hidden="true"></i> Open in Studio</a>
+    <span class="mono text-muted-d">{{ e.name }}.sutra.yaml · {{ e.name }}.json</span></p>
+  {{ e.note | safe }}
+  <details><summary>{{ e.name }}.sutra.yaml</summary>
+    <figure class="help-example"><figcaption><span><i class="bi bi-terminal" aria-hidden="true"></i> {{ e.name }}.sutra.yaml</span><span class="lang">yaml</span><button type="button" class="copy" data-copy aria-label="Copy this example"><i class="bi bi-clipboard" aria-hidden="true"></i> Copy</button></figcaption><pre><code>{{ e.yaml }}</code></pre></figure></details>
+  <details><summary>{{ e.name }}.json</summary>
+    <figure class="help-example"><figcaption><span><i class="bi bi-terminal" aria-hidden="true"></i> {{ e.name }}.json</span><span class="lang">json</span><button type="button" class="copy" data-copy aria-label="Copy this example"><i class="bi bi-clipboard" aria-hidden="true"></i> Copy</button></figcaption><pre><code>{{ e.json }}</code></pre></figure></details>
+</section>
+{% endfor %}

@@ -1,0 +1,35 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+rachana: 1
+sutra: relationships
+version: 1
+description: "How entities relate: a graph of the group and its agreements, one tab per netting set, and a links panel."
+match: { kind: counterparty-summary }
+title: { pill: "Relationships · ${$.counterparty.name}", id: $.counterparty.id }
+panels:
+  - { id: group, kind: graph, title: "Group, agreements and netting sets", height: 12, nodes: $.hierarchy.nodes, edges: $.hierarchy.edges, label: label, group: type, layout: tree }
+  - id: sets
+    kind: tabs
+    title: Netting sets
+    span: 7
+    each: $.nettingSets
+    tabTitle: "@.id"
+    body:
+      kind: kv
+      columns:
+        - { label: Agreement, bind: "@.agreement" }
+        - { label: Trades, bind: "@.trades" }
+        - { label: Net MTM, bind: "@.netMtm", fmt: signed0, tone: sign }
+  - { id: refs, kind: links, title: Linked entities, code: REFS, span: 5, height: 10 }

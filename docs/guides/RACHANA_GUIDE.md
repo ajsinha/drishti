@@ -20,6 +20,11 @@ write a Sutra one step at a time, preview each step, and finish with a complete 
 mistakes everyone makes once, and a complete example of every panel kind. Every example on this page parses and
 validates as written, and every figure was read from the running sample server.
 
+Ten small working Sutras, each with a self-contained JSON document and a note, are in [examples](examples/README.md):
+together they use all twenty panel kinds, nested pivot groups and tree rows. Studio opens the first one
+(`all-panels-showcase`) when you start it; **File → Open** loads any `.yaml` or `.json` of your own, and
+`/studio?example=<name>` opens a named example.
+
 The [Rachana reference](RACHANA_REFERENCE.md) is the companion to this guide: when you want every option of a
 panel kind, every function or every error code, look there.
 

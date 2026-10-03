@@ -41,6 +41,7 @@ categories:
       - { slug: rachana-guide, doc: guides/RACHANA_GUIDE.md, title: Rachana, step by step, icon: mortarboard, summary: "A tutorial from your first Sutra to a full trade view: strips, panels, tables, charts, keys, conditions, matching and review." }
       - { slug: sutra-guide, title: The Sutra guide, icon: journal-richtext, summary: "Everything about writing Sutras: anatomy, labels and taxonomies, paths, formats, all twenty panel kinds, matching, inference, Studio." }
       - { slug: panel-kinds, title: The twenty panel kinds, icon: grid-1x2, summary: "What each panel kind shows, when to use it, and the Sutra that produces it." }
+      - { slug: examples, doc: guides/examples/README.md, title: Examples, icon: collection, summary: "Ten working Sutras with their data, covering all twenty panel kinds, nested pivots and tree rows: read them here, open them in Studio." }
       - { slug: panels, doc: guides/PANELS.md, title: Panels in depth, icon: bar-chart, summary: "Every panel kind in detail: the data it needs, every option, what the server computes, how it is drawn, limits and common mistakes." }
       - { slug: sutra-studio, title: "Tutorial 3 · Sutra Studio", kind: tutorial, icon: stars, summary: "Start from inference, edit with live preview, fix problems by line, and save." }
       - { slug: nested-data, title: "Tutorial 4 · Nested documents", kind: tutorial, icon: diagram-2, summary: "Paths of any depth, tables over nested arrays, tabs per element, and a whole Sutra over a real trade." }

@@ -1,0 +1,47 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+rachana: 1
+sutra: operations-status
+version: 1
+description: "The back office on one screen: status lights, a lifecycle timeline, a coupon ladder, a note and how the view was built."
+match: { kind: trade-ops }
+title: { pill: "Operations · ${$.tradeId}", id: $.tradeId }
+panels:
+  - id: ops
+    kind: status
+    title: Operations
+    span: 5
+    fields:
+      - { label: Confirmation, bind: $.confirmation.status, tone: status }
+      - { label: Clearing, bind: $.clearing.status, tone: status }
+      - { label: Reporting, bind: $.regulatory.reportingStatus, tone: status }
+      - { label: Settlement, bind: $.settlement.status, tone: status }
+  - { id: life, kind: timeline, title: Lifecycle, span: 7, rows: $.lifecycle.timeline, label: event, detail: description }
+  - id: coupons
+    kind: ladder
+    title: Coupon schedule
+    rows: $.schedule
+    highlight: "#index == $.nextIndex"
+    columns:
+      - { label: Pay date, bind: "@.date", fmt: date }
+      - { label: Rate, bind: "@.rate", fmt: pct4 }
+      - { label: Amount, bind: "@.amount", fmt: amount0, total: true }
+      - { label: Status, bind: "@.status", tone: status }
+  - id: note
+    kind: markdown
+    title: Reading this view
+    area: right
+    text: "The highlighted coupon is the next to pay. Amber means *Pending*, green *Done*."
+  - { id: built, kind: provenance, title: How this view was built, area: right }

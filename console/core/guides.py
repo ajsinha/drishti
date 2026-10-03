@@ -155,16 +155,7 @@ class Library:
         hit = self._cache.get(slug)
         if hit and hit[0] == mtime:
             return hit[1]
-        md = markdown.Markdown(extensions=["tables", "fenced_code", "sane_lists", "admonition", "attr_list", "toc"],
-                               extension_configs={"toc": {"toc_depth": "2-3", "slugify": GithubSlugger()}})
-        body = md.convert(g.path.read_text(encoding="utf-8"))
-        body = _CODE.sub(_figure, body)
-        body = re.sub(r'<div class="admonition (\w+)">\s*<p class="admonition-title">',
-                      lambda m: f'<div class="help-box {_BOX.get(m.group(1), "concept")}">\n<p class="hb-title">', body)
-        body = body.replace("<table>", '<div class="tbl-wrap"><table class="tbl help-tbl">').replace("</table>", "</table></div>")
-        body = re.sub(r"<h1[^>]*>.*?</h1>", "", body, count=1, flags=re.S)
-        body = _IMG.sub(_full_size, body)
-        body = _LINK.sub(lambda m: self._link(g, m), body)
+        body, md = self._html(g.path)
         toc = [{"id": t["id"], "name": t["name"], "children": [{"id": c["id"], "name": c["name"]} for c in t.get("children", [])]}
                for t in md.toc_tokens]
         text = html.unescape(_TAG.sub(" ", body))
@@ -172,8 +163,27 @@ class Library:
         self._cache[slug] = (mtime, out)
         return out
 
-    def _link(self, guide: Guide, m: re.Match) -> str:
-        """A link between documents opens inside the help centre; a repository file it cannot show is named, not linked.
+    def _html(self, path: Path) -> tuple[str, markdown.Markdown]:
+        """A markdown file as help HTML: examples, boxes, tables, screenshots and links to other documents."""
+        md = markdown.Markdown(extensions=["tables", "fenced_code", "sane_lists", "admonition", "attr_list", "toc"],
+                               extension_configs={"toc": {"toc_depth": "2-3", "slugify": GithubSlugger()}})
+        body = md.convert(path.read_text(encoding="utf-8"))
+        body = _CODE.sub(_figure, body)
+        body = re.sub(r'<div class="admonition (\w+)">\s*<p class="admonition-title">',
+                      lambda m: f'<div class="help-box {_BOX.get(m.group(1), "concept")}">\n<p class="hb-title">', body)
+        body = body.replace("<table>", '<div class="tbl-wrap"><table class="tbl help-tbl">').replace("</table>", "</table></div>")
+        body = re.sub(r"<h1[^>]*>.*?</h1>", "", body, count=1, flags=re.S)
+        body = _IMG.sub(_full_size, body)
+        body = _LINK.sub(lambda m: self._link(path, m), body)
+        return body, md
+
+    def fragment(self, path: Path) -> str:
+        """One markdown note (an example's) as help HTML, its links resolved like any guide's."""
+        return self._html(path)[0]
+
+    def _link(self, source: Path, m: re.Match) -> str:
+        """A link between documents opens inside the help centre (an example's note opens on the Examples page); a
+        repository file it cannot show is named, not linked.
 
         A link that resolves to nothing at all keeps ``data-unavailable`` so the help-centre crawl test fails on it.
         """
@@ -182,12 +192,15 @@ class Library:
             return m.group(0)
         target, _, anchor = href.partition("#")
         anchor = f"#{anchor}" if anchor else ""
-        path = (guide.path.parent / target).resolve()
+        path = (source.parent / target).resolve()
         if path.is_dir() and (path / "README.md").exists():
             path = path / "README.md"
         slug = self.by_file.get(path)
         if slug:
             return f'<a href="/help/{slug}{html.escape(anchor)}"{m.group(2)}>{m.group(3)}</a>'
+        ex = self.guides.get("examples")
+        if ex and path.parent == ex.path.parent.resolve() and path.suffix == ".md" and path.exists():
+            return f'<a href="/help/examples#{html.escape(path.stem)}"{m.group(2)}>{m.group(3)}</a>'
         if not path.exists():
             if "/" not in target and "." not in target:
                 return m.group(0)                    # a console guide's link to another guide by slug: /help/<slug>

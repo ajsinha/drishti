@@ -1,0 +1,39 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+rachana: 1
+sutra: tree-table
+version: 1
+description: Tables and ladders whose rows hold their own children, opened in place with expand.
+match: { kind: organisation }
+title: { pill: "Tree rows · ${$.organisation}", id: $.organisation }
+panels:
+  - id: org
+    kind: table
+    title: Exposure by unit (opens to the second level)
+    rows: $.units
+    children: "@.children"
+    expand: 2
+    columns:
+      - { label: Unit, bind: "@.name" }
+      - { label: Exposure, bind: "@.exposure", fmt: compact, total: true }
+  - id: all
+    kind: ladder
+    title: The same tree as a ladder, every level open
+    rows: $.units
+    children: "@.children"
+    expand: all
+    columns:
+      - { label: Unit, bind: "@.name" }
+      - { label: Exposure, bind: "@.exposure", fmt: compact, total: true }

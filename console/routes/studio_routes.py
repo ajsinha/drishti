@@ -66,13 +66,18 @@ def _problem(e: BackendError) -> JSONResponse:
 
 
 @router.get("")
-async def studio(request: Request, sutra: str | None = None, kind: str = "", id: str = ""):
+async def studio(request: Request, sutra: str | None = None, kind: str = "", id: str = "", example: str = ""):
     """Opens on the entity asked for, else on the first example entity of the user's packs (with a Sutra of its kind,
     unless a Sutra, or ``sutra=`` for a new one, is asked for), else empty with a hint: never on a sample of a pack that
-    may not be installed (UX-05)."""
+    may not be installed (UX-05). ``example=`` opens a named example (its Sutra and its JSON, previewed against that JSON);
+    with nothing else asked for, the example named by ``ui.studio_example`` opens, if it exists."""
     backend, me = request.app.state.backend, ident(request)
     sutras = await backend.sutras(me)
-    if not id.strip():
+    examples = request.app.state.examples
+    ex = examples.get(example or (examples.default if not id.strip() and sutra is None and not kind else ""))
+    if ex:
+        kind, id = ex.kind, ex.name
+    elif not id.strip():
         current = await packs(request)
         sample = next(iter(samples(current)), None)
         if sample:
@@ -80,8 +85,8 @@ async def studio(request: Request, sutra: str | None = None, kind: str = "", id:
             sutra = sutra if sutra is not None else next((f"{s['name']}@{s['latest']}" for s in sutras if s.get("kind") == kind), "")
         else:
             kind, id = kind or next((k for p in current for k in p.get("kinds") or []), ""), ""
-    source, picked = _new_sutra(kind or "trade"), ""
-    if sutra and "@" in sutra:
+    source, picked = (ex.yaml if ex else _new_sutra(kind or "trade")), ""
+    if sutra and "@" in sutra and not ex:
         name, _, version = sutra.partition("@")
         try:
             source, picked = await backend.sutra_source(name, int(version), me), sutra
@@ -95,7 +100,17 @@ async def studio(request: Request, sutra: str | None = None, kind: str = "", id:
         except BackendError:
             pending = 0
     return render(request, "studio/studio.html", sutras=sutras, source=source, picked=picked, ref_kind=kind, ref_id=id,
+                  sample_json=ex.json if ex else "", use_json=bool(ex), example_names=examples.names(),
                   can_save=bool(settings.get("save")), review=bool(settings.get("review")), pending=pending)
+
+
+@router.get("/example/{name}")
+async def example(request: Request, name: str):
+    """One example as JSON: {name, title, kind, yaml, json}. A name that is not an example's is a 404, whatever it contains."""
+    ex = request.app.state.examples.get(name)
+    if ex is None:
+        return JSONResponse({"code": "NOT_FOUND", "detail": "no such example"}, status_code=404)
+    return {"name": ex.name, "title": ex.title, "kind": ex.kind, "yaml": ex.yaml, "json": ex.json}
 
 
 @router.get("/reviews")

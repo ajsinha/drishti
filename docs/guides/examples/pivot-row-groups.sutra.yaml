@@ -1,0 +1,50 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+rachana: 1
+sutra: pivot-row-groups
+version: 1
+description: Pivot tables with nested row groups, subtotals and expand, beside a flat pivot with heat.
+match: { kind: portfolio }
+title: { pill: "Pivot · ${$.deskName}", id: $.deskName }
+panels:
+  - id: nested
+    kind: pivot
+    title: MTM by desk, book and product family (USD), across currency
+    rows: $.positions
+    by: [desk, book, family]
+    across: currency
+    value: mtm
+    fmt: compact
+    tone: sign
+    expand: 1
+  - id: open
+    kind: pivot
+    title: Trades by desk and book, every level open
+    rows: $.positions
+    by: [desk, book]
+    across: family
+    value: trades
+    agg: sum
+    expand: all
+  - id: flat
+    kind: pivot
+    title: Flat pivot with heat, one field down the side
+    rows: $.positions
+    by: book
+    across: family
+    value: mtm
+    heat: true
+    fmt: compact
+    tone: sign

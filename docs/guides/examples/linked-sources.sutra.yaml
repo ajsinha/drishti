@@ -1,0 +1,40 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+rachana: 1
+sutra: linked-sources
+version: 1
+description: >
+  Panels that read other entities with `source`. These need the live demo packs (counterparty, netting set, desk),
+  so unlike the other examples this one is not self-contained.
+match: { kind: trade }
+title: { pill: "Linked sources · ${$.productName}", id: $.tradeId }
+panels:
+  - id: sets
+    kind: tabs
+    title: The counterparty's netting sets
+    span: 6
+    source: "link($.counterparty.id, 'counterparty')"
+    each: $.nettingSets
+    tabTitle: "@.id"
+    body:
+      kind: kv
+      columns:
+        - { label: Agreement, bind: "@.agreement", link: true }
+        - { label: Trades, bind: "@.trades" }
+        - { label: Net MTM, bind: "@.netMtm", fmt: signed0, tone: sign }
+  - { id: exposure, kind: area, title: "Netting-set exposure (USD)", span: 6, source: "link($.nettingSet, 'netting-set')",
+      rows: $.profile, x: tenor, limit: $.limit, series: [ { label: EE, value: ee, tone: link }, { label: PFE 95, value: pfe, tone: accent } ] }
+  - { id: grid, kind: pivot, title: "The desk's MTM by book and family (USD)", source: "link($.desk, 'desk')",
+      rows: $.positions, by: book, across: family, value: mtm, heat: true, fmt: compact, tone: sign }

@@ -328,5 +328,38 @@
   var wrapBox = root.querySelector('[data-wrap]');
   if (wrapBox && editor) { editor.setOption('lineWrapping', wrapBox.checked); wrapBox.addEventListener('change', function () { editor.setOption('lineWrapping', wrapBox.checked); }); }
 
+  // ---- File → Open: a Sutra (.yaml/.yml) and/or a sample document (.json), read in the browser ------------------
+  var fileMenu = root.querySelector('[data-file-menu]'), fileIn = root.querySelector('[data-file-input]');
+  root.querySelector('[data-file-open]').addEventListener('click', function () { fileIn.click(); });
+  fileIn.addEventListener('change', function () {
+    var files = Array.prototype.slice.call(fileIn.files || []), loaded = [], pending = files.length;
+    if (!pending) { return; }
+    files.forEach(function (f) {
+      var r = new FileReader();
+      r.onload = function () { loaded.push({ name: f.name, text: String(r.result) }); if (--pending === 0) { openFiles(loaded); } };
+      r.onerror = function () { say('Could not read ' + f.name, true); if (--pending === 0) { openFiles(loaded); } };
+      r.readAsText(f);
+    });
+    fileIn.value = '';
+    fileMenu.open = false;
+  });
+  function openFiles(list) {
+    var names = [], doc = null, yamlText = null;
+    list.forEach(function (f) {
+      if (/\.json$/i.test(f.name)) { doc = f; } else if (/\.ya?ml$/i.test(f.name)) { yamlText = f; } else { say(f.name + ' is neither .yaml, .yml nor .json', true); }
+    });
+    if (doc) {
+      try { jsonTa.value = JSON.stringify(JSON.parse(doc.text), null, 2); } catch (e) { say(doc.name + ' is not valid JSON: ' + e.message, true); return; }
+      useJson.checked = true; names.push(doc.name);
+    }
+    if (yamlText) {
+      setText(yamlText.text); names.push(yamlText.name);
+      var m = /^match:\s*\{[^}]*?\bkind:\s*([A-Za-z0-9_-]+)/m.exec(yamlText.text);
+      if (m) { kindIn.value = m[1]; }
+    }
+    if (!names.length) { return; }
+    if (!idIn.value.trim()) { idIn.value = (yamlText || doc).name.replace(/\..*$/, ''); }
+    preview();
+  }
   if (idIn.value.trim()) { preview(); }      // nothing to preview yet: the status line says how to start
 })();

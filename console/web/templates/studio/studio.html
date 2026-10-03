@@ -23,6 +23,15 @@
 <div class="studio" data-studio data-can-save="{{ 'true' if can_save else 'false' }}">
   <section class="studio-left">
     <header class="studio-bar">
+      <details class="studio-file" data-file-menu>
+        <summary class="btn-pill btn-ghost" title="Open a Sutra (.yaml) or a sample document (.json) from your computer, or an example"><i class="bi bi-folder2-open" aria-hidden="true"></i> File</summary>
+        <div class="studio-file-menu" role="menu">
+          <button type="button" role="menuitem" data-file-open><i class="bi bi-folder2-open" aria-hidden="true"></i> Open…</button>
+          <input type="file" class="visually-hidden" data-file-input multiple accept=".yaml,.yml,.json,application/json" aria-label="Open a Sutra or a sample document">
+          {% if example_names %}<span class="studio-file-head">Examples</span>
+          {% for n in example_names %}<a role="menuitem" href="/studio?example={{ n }}">{{ n }}</a>{% endfor %}{% endif %}
+        </div>
+      </details>
       <label for="sutraPick" class="visually-hidden">Sutra</label>
       <select id="sutraPick" class="studio-select" data-pick>
         <option value="">New Sutra…</option>
@@ -76,10 +85,10 @@
     <div class="studio-json" data-pane="json" hidden>
       <div class="studio-bar">
         <button type="button" class="btn-pill btn-ghost" data-load-json title="Show the chosen entity's document"><i class="bi bi-download" aria-hidden="true"></i> Load entity JSON</button>
-        <label class="chk"><input type="checkbox" data-use-json> Preview against this JSON</label>
+        <label class="chk"><input type="checkbox" data-use-json{% if use_json %} checked{% endif %}> Preview against this JSON</label>
         <button type="button" class="btn-pill btn-ghost" data-format-json>Format</button>
       </div>
-      <textarea class="studio-src mono" spellcheck="false" data-json aria-label="Sample JSON" placeholder='Paste a JSON document here, e.g. {"tradeId": "MX-20000001", "notional": 5000000, ...}'></textarea>
+      <textarea class="studio-src mono" spellcheck="false" data-json aria-label="Sample JSON" placeholder='Paste a JSON document here, e.g. {"tradeId": "MX-20000001", "notional": 5000000, ...}'>{{ sample_json }}</textarea>
       <p class="text-muted-d studio-hint">The Sutra's <code>$.…</code> paths address this document. Tick <b>Preview against this JSON</b> to render your pasted document instead of the entity; <b>Start from inference</b> then uses it too.</p>
     </div>
   </section>

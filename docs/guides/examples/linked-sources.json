@@ -1,0 +1,12 @@
+{
+  "tradeId": "BBG-60000001",
+  "productName": "Linked-sources demo",
+  "counterparty": {
+    "id": "CP-SUMMIT",
+    "name": "Summit Clearing LLC"
+  },
+  "desk": "DESK-FI",
+  "nettingSet": "NS-SUMMIT-NY",
+  "notional": 25000000,
+  "currency": "USD"
+}
