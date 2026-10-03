@@ -180,3 +180,12 @@ body.wb-dragging, body.wb-dragging * { cursor: grabbing !important; user-select:
 .wb-item { display: grid; grid-template-columns: 1fr 1fr; column-gap: .5rem; }
 .wb-item .wb-item-tools { grid-column: 1 / -1; }
 .wb-drop:not(.wb-drop-box) { box-shadow: 0 0 0 3px var(--d-accent-tint), 0 0 10px var(--d-accent); }
+
+/* ---- step 8: shipping ------------------------------------------------------------------------------------------------------ */
+.wb-share { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; margin: .3rem 0; font-size: .82rem; }
+.wb-share input { flex: 1 1 22rem; min-width: 12rem; }
+.wb-state-live { color: var(--d-pos); }
+.wb-state-proposed { color: var(--d-accent); }
+.wb-notes { white-space: pre-wrap; background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 6px; padding: .5rem .7rem; max-height: 24rem; overflow: auto; }
+.wb-oplog { margin: 0; padding-left: 1.3rem; font-size: .82rem; }
+.wb-shared .wb-frame { min-height: 4rem; }

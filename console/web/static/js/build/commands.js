@@ -52,6 +52,7 @@
       cmd('Redo', s.opsAt < s.opsCount ? 'Bring back the change undo took' : 'Nothing to redo', function () { store.redo(); });
       cmd('Preview', 'Send what you typed and draw the preview again (Ctrl+Enter)', function () { ctx.saving.preview(); });
       cmd(ctx.saving.review() ? 'Propose: submit for review' : 'Save to the registry', ctx.saving.canSave() ? 'Needs the author right (Ctrl+S)' : 'Not allowed here: saving needs the author right', function () { ctx.saving.save(); }, 'save');
+      cmd('Ship: export, share or bind…', 'Pack fragment, read-only link, file binding', function () { if (ctx.ship) { ctx.ship.menu(); } }, 'ship');
       cmd('Compare with the base or an earlier version', 'Open the Versions tab', function () { ctx.right.show('versions', true); ctx.versions.refresh(); }, 'diff');
       cmd('Open a file…', 'A Sutra (.yaml) or sample documents (.json) from your computer', function () { ctx.saving.open(); });
       cmd('Open the screen designer guide', 'The guide, step by step (F1)', function () { window.location.href = ctx.guide; }, 'help');

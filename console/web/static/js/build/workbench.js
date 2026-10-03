@@ -86,8 +86,9 @@
   WB.Problems($('[data-problems]'), $('[data-problem-count]'), store, { gotoLine: gotoLine, gotoPanel: gotoPanel });
   var tests = WB.Tests($('[data-tests]'), store, { gotoPanel: gotoPanel });
   versions = WB.Versions($('[data-versions]'), store, init.base || '');
-  var saving = WB.Saving(root, store, { yaml: yaml, data: data, examples: JSON.parse(d.examples || '[]') });
-  var commands = WB.Commands(store, { actions: actions, centre: centre, right: right, canvas: function () { return canvas; }, tests: tests, saving: saving, versions: versions,
+  var ship = WB.Ship(root, store, { yaml: yaml });
+  var saving = WB.Saving(root, store, { yaml: yaml, data: data, ship: ship, examples: JSON.parse(d.examples || '[]') });
+  var commands = WB.Commands(store, { actions: actions, centre: centre, right: right, canvas: function () { return canvas; }, tests: tests, saving: saving, ship: ship, versions: versions,
     yaml: yaml, guide: '/help/screen-designer' });
 
   // ---- the status bar --------------------------------------------------------------------------------------------------------
@@ -177,5 +178,5 @@
   if (init.tab) { centre.show(init.tab); }
   data.paint(); paintBar();
   store.refresh().then(function () { tests.later(); });
-  window.drishtiWorkbench = { store: store, canvas: canvas, actions: actions, tabs: { centre: centre, right: right }, tests: tests, versions: versions, saving: saving, commands: commands };
+  window.drishtiWorkbench = { store: store, canvas: canvas, actions: actions, tabs: { centre: centre, right: right }, tests: tests, versions: versions, saving: saving, ship: ship, commands: commands };
 })();

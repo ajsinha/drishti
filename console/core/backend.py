@@ -85,6 +85,7 @@ class BackendClient:
         headers = dict(ident.headers()) if ident is not None else {}
         headers.update(asof.headers())
         headers.update(kw.pop("headers", {}))
+        raw = kw.pop("raw", False)
         try:
             r = await self._client.request(method, "/api/v1" + path, headers=headers, **kw)
         except httpx.TimeoutException as e:
@@ -102,6 +103,8 @@ class BackendClient:
             raise err
         if r.status_code == 204:
             return None
+        if raw:
+            return r.content
         return r.json() if "json" in r.headers.get("content-type", "") else r.text
 
     async def view(self, kind: str, id_: str, ident) -> dict:
@@ -197,6 +200,14 @@ class BackendClient:
         kw = {"params": {k: v for k, v in params.items() if v is not None}} if params else {}
         if body is not None:
             kw["json"] = body
+        return await self._send(method, "/builder/designs" + path, ident, **kw)
+
+    async def designs_raw(self, method: str, path: str, ident, content: bytes | None = None, content_type: str | None = None) -> bytes:
+        """Like :meth:`designs` for a body or an answer that is bytes (a pack fragment zip)."""
+        kw: dict = {"raw": True}
+        if content is not None:
+            kw["content"] = content
+            kw["headers"] = {"Content-Type": content_type or "application/octet-stream"}
         return await self._send(method, "/builder/designs" + path, ident, **kw)
 
     async def builder_suggest(self, body: dict, ident=None) -> dict:

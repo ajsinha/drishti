@@ -34,20 +34,22 @@
     var why = function () { return 'Designing is open to everyone; saving needs the author right (or saving is off on this server). Your design is kept in My designs.'; };
 
     function save() {
+      if (hooks.ship && hooks.ship.bound()) { return hooks.ship.saveFile(); }
       if (!can) { say(why(), true); return Promise.resolve(false); }
       return hooks.yaml.flush().then(function () {
         say(review ? 'Submitting for review...' : 'Saving...');
-        return WB.call('POST', '/build/designs/' + encodeURIComponent(store.state.id) + '/save', { note: note ? note.value : '' });
+        return WB.call('POST', '/build/designs/' + encodeURIComponent(store.state.id) + '/propose', { note: note ? note.value : '' });
       }).then(function (r) {
         if (r === false) { return false; }
+        if (r.ok && r.body.status && hooks.ship) { store.state.status = r.body.status; hooks.ship.paint(r.body.status); }
         if (r.ok && r.body.proposal) {
           var p = r.body.proposal;
-          say('Submitted for review as ' + p.id + ': ' + p.name + ' v' + p.version + '. An approver makes it live.');
+          say('Submitted for review as ' + p.id + ': ' + p.name + ' v' + p.version + ', with the check matrix, sample names and notes. An approver makes it live.');
           var a = WB.el('a', 'lnk', ' Open the review', { href: '/build/reviews/' + encodeURIComponent(p.id) });
           document.querySelector('[data-say]').appendChild(a);
           return true;
         }
-        if (r.ok) { say('Saved ' + r.body.name + ' v' + r.body.latest + '. Views use it now.'); return true; }
+        if (r.ok) { say('Saved ' + r.body.name + ' v' + r.body.version + '. Views use it now.'); return true; }
         var more = (r.body.problems || []).slice(0, 3).map(function (p) { return p.message + (p.location ? ' (line ' + p.location.line + ')' : ''); }).join(' ');
         say(WB.why(r) + (more ? ' ' + more : ''), true);
         return false;

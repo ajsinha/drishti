@@ -47,6 +47,15 @@ def _java() -> Path:
 JAVA = _java()
 
 
+class Stack(str):
+    """The console's URL (a string) that also knows the server's scratch directory, ``.work``."""
+
+    def __new__(cls, url, work):
+        s = super().__new__(cls, url)
+        s.work = Path(work)
+        return s
+
+
 def free_port() -> int:
     with socket.socket() as s:
         s.bind(("127.0.0.1", 0))
@@ -61,6 +70,17 @@ def jar() -> Path | None:
 @pytest.fixture(scope="module")
 def live_console(tmp_path_factory):
     """The console's URL, with a real server behind it."""
+    yield from _stack(tmp_path_factory, {})
+
+
+@pytest.fixture(scope="module")
+def live_ship_console(tmp_path_factory):
+    """As :func:`live_console`, with Studio saving and development file binding on, Sutras written under the scratch directory (step 8)."""
+    work = tmp_path_factory.mktemp("wb-ship-server")
+    yield from _stack(tmp_path_factory, {"DRISHTI_STUDIO_SAVE": "true", "DRISHTI_BUILDER_FILE_BINDING": "true", "DRISHTI_SUTRAS": str(work / "sutras")}, work)
+
+
+def _stack(tmp_path_factory, extra_env, work=None):
     if jar() is None or not JAVA.exists():
         pytest.skip("needs the built server jar (./mvnw -o package -DskipTests -pl drishti-server -am) and JDK 25")
     import uvicorn
@@ -69,11 +89,11 @@ def live_console(tmp_path_factory):
     from core.config import Settings, load_settings
 
     port = free_port()
-    work = tmp_path_factory.mktemp("wb-server")
+    work = work or tmp_path_factory.mktemp("wb-server")
     for name in ("packs", "config"):                       # the server reads these beside where it runs; its data stays in the scratch directory
         if (ROOT / name).exists():
             (work / name).symlink_to(ROOT / name)
-    env = {"PATH": os.environ.get("PATH", ""), "HOME": str(work), "DRISHTI_PORT": str(port)}
+    env = {"PATH": os.environ.get("PATH", ""), "HOME": str(work), "DRISHTI_PORT": str(port), **extra_env}
     proc = subprocess.Popen([str(JAVA), "-Xmx768m", "-jar", str(jar())], cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
     try:
         deadline = time.monotonic() + 120
@@ -98,7 +118,7 @@ def live_console(tmp_path_factory):
         while not server.started and time.monotonic() < deadline:
             time.sleep(0.05)
         assert server.started, "the console did not start"
-        yield f"http://127.0.0.1:{cport}"
+        yield Stack(f"http://127.0.0.1:{cport}", work)
         server.should_exit = True
         thread.join(10)
     finally:

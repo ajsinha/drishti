@@ -43,7 +43,7 @@ def test_studio_submits_for_review_when_review_is_on(client, backend):
     r = client.post("/studio/save", json={"yaml": "x", "note": "why"})
     assert r.json()["proposal"]["id"] == "P-000008" and saved == {"text": "x", "note": "why"}
     saved.clear()
-    r = client.post(f"/build/designs/{d['id']}/save", json={"note": "from the workbench"})        # the design's own Sutra, not text sent along
+    r = client.post(f"/build/designs/{d['id']}/propose", json={"note": "from the workbench"})        # the design's own Sutra, not text sent along
     assert r.status_code == 200 and r.json()["proposal"]["id"] == "P-000008" and saved == {"text": "x", "note": "from the workbench"}
     assert "r.body.proposal" in client.get("/static/js/build/saving.js").text
 

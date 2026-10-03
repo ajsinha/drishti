@@ -1,0 +1,76 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# A design shared by a read-only link (step 8): the Sutra, the operations and the sample NAMES. The owner's sample contents never
+   reach this page; the viewer previews the Sutra against their own JSON file or a stored entity they may open. #}
+{% extends "base.html" %}
+{% block title %}{{ (shared.name or 'Shared design') if shared else 'Link not valid' }} · {{ PRODUCT }}{% endblock %}
+{% block screen %}build{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/build.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/build-workbench.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/pivot.css?v={{ ASSET_V }}">{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+{% if not shared %}
+<div class="adm bs">
+  <h1>This link is not valid</h1>
+  <p class="asof-banner" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ error.detail }} <span class="mono">({{ error.code }})</span></p>
+  <p class="text-muted-d">A share link works until its owner revokes it. Ask for a new one.</p>
+</div>
+{% else %}
+<div class="adm bs wb-shared" data-shared data-id="{{ shared.id }}" data-token="{{ token }}" data-kind="{{ shared.kind }}">
+  <h1>{{ shared.name or 'Untitled design' }} <span class="bs-role">read-only</span></h1>
+  <p class="text-muted-d">Shared by <b>{{ shared.owner }}</b> · kind <span class="mono">{{ shared.kind }}</span>{% if shared.base %} · edits <span class="mono">{{ shared.base }}</span>{% endif %}
+    · {{ shared.status }}. You see the Sutra and the operations, and the <i>names</i> of the samples; the sample contents stay with the owner.</p>
+
+  <section aria-labelledby="shTry"><h2 id="shTry" class="bs-h">Try it on your data</h2>
+    <p class="text-muted-d">Preview this Sutra against a JSON file of your own, or a stored entity you may open. Nothing is saved.</p>
+    <div class="bs-bar">
+      <label class="btn-pill btn-ghost" for="shFile"><i class="bi bi-upload" aria-hidden="true"></i> Preview with a file…
+        <input id="shFile" class="bs-file" type="file" accept=".json,application/json" data-try-file></label>
+      <label for="shKind" class="visually-hidden">Kind</label><input id="shKind" class="studio-in mono" placeholder="kind" value="{{ shared.kind }}" data-try-kind>
+      <label for="shId" class="visually-hidden">Entity id</label><input id="shId" class="studio-in mono" placeholder="entity id" data-try-id>
+      <button type="button" class="btn-pill btn-ghost" data-try-entity>Preview a stored entity</button>
+    </div>
+    <div class="bs-status" role="status" aria-live="polite" data-say></div>
+    <div class="studio-preview wb-frame" data-preview role="group" aria-label="The shared screen, drawn with your data"></div>
+  </section>
+
+  <section aria-labelledby="shSutra"><h2 id="shSutra" class="bs-h">Sutra (revision {{ shared.rev }})</h2>
+    <pre class="wb-notes mono" data-shared-sutra tabindex="0">{{ shared.sutra }}</pre>
+    <p><button type="button" class="btn-pill btn-ghost" data-copy-sutra><i class="bi bi-clipboard" aria-hidden="true"></i> Copy the Sutra</button></p>
+  </section>
+
+  <section aria-labelledby="shOps"><h2 id="shOps" class="bs-h">Operations ({{ shared.ops | length }})</h2>
+    {% if shared.ops %}<ol class="wb-oplog" data-shared-ops>{% for step in shared.ops %}
+      <li><time data-ms="{{ step.at }}"></time>: {% for o in step.ops %}<span class="mono">{{ o.op }}{% if o.panel %} {{ o.panel }}{% elif o.kind %} {{ o.kind }}{% endif %}</span>{{ ', ' if not loop.last }}{% endfor %}</li>{% endfor %}
+    </ol>{% else %}<p class="text-muted-d">No operations were recorded.</p>{% endif %}
+  </section>
+
+  <section aria-labelledby="shSamples"><h2 id="shSamples" class="bs-h">Samples ({{ shared.sampleNames | length }}), names only</h2>
+    <ul class="wb-samples" data-shared-samples>{% for n in shared.sampleNames %}<li class="wb-sample"><span class="mono">{{ n }}</span></li>{% endfor %}</ul>
+  </section>
+</div>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/charts.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/command.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/view.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/pivot-engine.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/pivot-grid.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/tree-rows.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/build/shared.js?v={{ ASSET_V }}"></script>
+{% endblock %}

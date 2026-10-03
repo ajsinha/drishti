@@ -93,8 +93,12 @@ async def shape_moved(request: Request):
 
 
 @router.get("/d/{id_}")
-async def design_page(request: Request, id_: str, tab: str = "", sample: str = ""):
-    """The workbench: a Design's data, its canvas over the real preview, the YAML, the inspector, problems and tests."""
+async def design_page(request: Request, id_: str, tab: str = "", sample: str = "", share: str = ""):
+    """The workbench: a Design's data, its canvas over the real preview, the YAML, the inspector, problems and tests.
+    With ``?share=token`` it is the read-only view a share link opens (Sutra, operations, sample names)."""
+    if share:
+        from routes import ship_routes
+        return await ship_routes.shared_page(request, id_, share)
     try:
         design = await request.app.state.backend.designs("GET", f"/{id_}", ident(request))
     except BackendError as e:
@@ -102,7 +106,12 @@ async def design_page(request: Request, id_: str, tab: str = "", sample: str = "
                       limits=request.app.state.builder_limits.as_dict())
     review, pending = await pending_count(request)
     settings = await request.app.state.backend.studio_settings(ident(request))
-    init = {"samples": design.get("samples") or [], "opsAt": design.get("opsAt", 0), "opsCount": len(design.get("ops") or []) if "opsCount" not in design else design["opsCount"],
+    try:
+        binding = await request.app.state.backend.designs("GET", "/binding", ident(request))
+    except BackendError:
+        binding = {}
+    init = {"fileBinding": bool(binding.get("enabled")), "boundFile": design.get("boundFile") or "", "shared": bool(design.get("shared")),
+            "dirs": binding.get("dirs") or [], "id": design["id"], "samples": design.get("samples") or [], "opsAt": design.get("opsAt", 0), "opsCount": len(design.get("ops") or []) if "opsCount" not in design else design["opsCount"],
             "status": design.get("status", "draft"),
             "tab": tab if tab in ("design", "yaml", "summary") else "", "sample": sample, "canSave": bool(settings.get("save")), "review": review,
             "base": design.get("base") or ""}
@@ -423,16 +432,3 @@ async def diff(request: Request, id_: str, against: str = "base"):
     d = sutra_diff.review(old, design.get("sutra") or "")
     html = request.app.state.templates.get_template("build/_diff.html").render(diff=d)
     return {"html": html, "label": label, "same": not any(k != "ctx" for k, _ in d["full"]), "moves": len(d["moves"])}
-
-
-@router.post("/designs/{id_}/save")
-async def save(request: Request, id_: str):
-    """Saves the Design's Sutra to the registry (author right, Studio saving on) or, where governance is on, submits it for review.
-    Body ``{note?}``. The server decides and says why not; the open-design policy is unchanged: designing needs no right."""
-    body = await _body(request) if int(request.headers.get("content-length") or 0) else {}
-    backend, me = request.app.state.backend, ident(request)
-    try:
-        design = await backend.designs("GET", f"/{id_}", me)
-        return await backend.save_sutra(design.get("sutra") or "", me, note=str(body.get("note", ""))[:300])
-    except BackendError as e:
-        return _error(e, problems=getattr(e, "problems", []))

@@ -177,7 +177,7 @@ def test_saving_rights_open_design_gated_save_and_review(app_client, backend, mo
     async def refuse(text, ident=None, note=""):
         raise BackendError(403, "DRS-5002", "ann may not save Sutras: ask for a role with author")
     monkeypatch.setattr(backend, "save_sutra", refuse, raising=False)
-    r = app_client.post(f"/build/designs/{d['id']}/save", json={"note": "x"})
+    r = app_client.post(f"/build/designs/{d['id']}/propose", json={"note": "x"})
     assert r.status_code == 403 and r.json()["code"] == "DRS-5002"
 
     # saving on, no review: "Save", no note field; the design's own text is what is saved
@@ -193,8 +193,8 @@ def test_saving_rights_open_design_gated_save_and_review(app_client, backend, mo
     monkeypatch.setattr(backend, "studio_settings", on)
     page = page_for()
     assert '"canSave": true' in page and "Submit for review" not in page and 'id="wbNote"' not in page and "bi-save" in page
-    ok = app_client.post(f"/build/designs/{d['id']}/save", json={}).json()
-    assert ok == {"name": "mine", "latest": 2} and saved["text"] == "sutra: y\n"
+    ok = app_client.post(f"/build/designs/{d['id']}/propose", json={}).json()
+    assert ok == {"name": "mine", "version": 2, "status": "live(v2)"} and saved["text"] == "sutra: y\n"
 
     # review on: "Submit for review", a note for the reviewer, the Reviews button with its count
     async def review(ident=None):
@@ -211,7 +211,7 @@ def test_saving_rights_open_design_gated_save_and_review(app_client, backend, mo
     monkeypatch.setattr(backend, "save_sutra", propose, raising=False)
     page = page_for()
     assert "Submit for review" in page and 'id="wbNote"' in page and '<span class="bell-count">1</span>' in page
-    assert app_client.post(f"/build/designs/{d['id']}/save", json={"note": "please"}).json()["proposal"]["id"] == "P-9" and saved["note"] == "please"
+    assert app_client.post(f"/build/designs/{d['id']}/propose", json={"note": "please"}).json()["proposal"]["id"] == "P-9" and saved["note"] == "please"
 
 
 # ---- diff and versions ----------------------------------------------------------------------------------------------------------

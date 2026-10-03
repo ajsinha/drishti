@@ -249,6 +249,7 @@ drishti:
     line-min-points: 5              # dated rows shorter than this are drafted as a ladder, not a line
     max-alternatives: 2             # runner-up kinds kept with each drafted panel
     limit-names: [limit, max, cap, threshold, budget, capacity]   # names that hold a limit beside a measure (a gauge's maximum)
+    file-binding: false             # development servers only: a design may be bound to a file under drishti.rachana.dirs (save writes it, IDE edits come back)
     designs:
       # The Build workbench's Designs (/api/v1/builder/designs): samples, a Sutra and notes kept per user. Limits answer DRS-5005.
       store: file   # file (dir below, readable by the server only) or jpa (the identity database)

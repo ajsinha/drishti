@@ -14,6 +14,7 @@
   See the LICENSE file in the root of this repository for the full terms.
 #}
 {% extends "base.html" %}
+{% block head %}<link rel="stylesheet" href="/static/css/build-workbench.css?v={{ ASSET_V }}">{% endblock %}
 {% block title %}{{ p.id }} · Sutra review · {{ PRODUCT }}{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
@@ -31,6 +32,7 @@
   <section class="pnl"><div class="pnl-b">
     {% include "build/_diff.html" %}
   </div></section>
+  {% include "build/_evidence.html" %}
   <p><a class="lnk" href="/studio?sutra={{ p.name }}@{{ p.version }}">Open the live version in the workbench</a></p>
   {% if p.status == 'pending' %}
   <div class="review-actions">

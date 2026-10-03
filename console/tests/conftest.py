@@ -169,6 +169,30 @@ class FakeBackend:
     def _slim(d):
         return {k: v for k, v in d.items() if k not in ("sutra", "notes", "tests", "ops")}
 
+    designs_binding = False
+    shares: dict = {}
+    proposed: list = []
+    file_writes: list = []
+    file_edit = None
+    imported: list = []
+
+    async def designs_raw(self, method, path, ident, content=None, content_type=None):
+        """Bytes in and out: the fragment export is a tiny zip, an import is recorded and answered with one design."""
+        import io, zipfile
+        if path.endswith("/export"):
+            row = self._own(ident, path.strip("/").split("/")[0])
+            buf = io.BytesIO()
+            with zipfile.ZipFile(buf, "w") as z:
+                z.writestr("frag/pack.yaml", "pack: frag\n")
+                z.writestr("frag/sutras/x/x.v1.sutra.yaml", row["design"]["sutra"])
+            return buf.getvalue()
+        if path == "/import":
+            self.imported.append((content_type, content))
+            with zipfile.ZipFile(io.BytesIO(content)) as z:
+                names = z.namelist()
+            return json.dumps({"designs": [{"id": "imp1", "name": "imported", "samples": [], "names": names}], "skipped": ["note"]}).encode()
+        raise BackendError(404, "DRS-1001", "no such design endpoint")
+
     async def designs(self, method, path, ident, body=None, **params):
         """The server's /builder/designs, for the console tests (same shapes, same codes)."""
         self.calls.append(("designs", method, path))
@@ -192,9 +216,49 @@ class FakeBackend:
                 d["base"] = body["base"]
             rows[(user, id_)] = {"design": d, "docs": {}}
             return d
+        if parts == ["binding"]:
+            return {"enabled": self.designs_binding, "dirs": ["sutras"]}
+        if parts[0] == "shared":                                    # a read-only link: Sutra, ops and sample names, never contents or notes
+            found = next((r["design"] for (u, i), r in rows.items() if i == parts[1] and self.shares.get(i) == params.get("token")), None)
+            if found is None:
+                raise BackendError(404, "DRS-5006", "this link is not valid (it may have been revoked)")
+            return {"id": found["id"], "name": found["name"], "kind": found["kind"], "status": found["status"], "sutra": found["sutra"], "rev": found["rev"],
+                    "owner": "ann", "sampleNames": [x["name"] for x in found["samples"]], "ops": []}
         row = self._own(ident, parts[0])
         d = row["design"]
         rest = parts[1:]
+        if rest == ["propose"] and method == "POST":
+            out = await self.save_sutra(d["sutra"], ident, note=(body or {}).get("note", ""))
+            self.proposed.append({"id": d["id"], "note": (body or {}).get("note", "")})
+            if "proposal" in out:
+                d["status"] = f"proposed({out['proposal']['id']})"
+                return {**out, "status": d["status"]}
+            d["status"] = f"live(v{out.get('latest', 1)})"
+            return {"name": out["name"], "version": out.get("latest", 1), "status": d["status"]}
+        if rest == ["share"]:
+            if method == "DELETE":
+                self.shares.pop(d["id"], None)
+                d["shared"] = False
+                return {"shared": False}
+            self.shares[d["id"]] = f"ann.secret{len(self.shares)}"
+            d["shared"] = True
+            return {"token": self.shares[d["id"]], "path": f"/build/d/{d['id']}?share={self.shares[d['id']]}"}
+        if rest == ["bind"]:
+            if not self.designs_binding:
+                raise BackendError(403, "DRS-5002", "binding a design to a file is off on this server (drishti.builder.file-binding)")
+            if method == "DELETE":
+                d.pop("boundFile", None)
+            else:
+                d["boundFile"] = body["file"]
+            return d
+        if rest == ["save-file"]:
+            self.file_writes.append((d["boundFile"], d["sutra"]))
+            return d
+        if rest == ["sync"]:
+            changed = self.file_edit is not None
+            if changed:
+                d["sutra"], d["rev"], self.file_edit = self.file_edit, d["rev"] + 1, None
+            return {**d, "changed": changed, "missing": False}
         if not rest:
             if method == "GET":
                 return d

@@ -117,9 +117,24 @@
     <p class="bs-actions"><button type="button" class="btn-pill btn-accent" data-create><i class="bi bi-plus-lg" aria-hidden="true"></i> Create design</button></p>
     <div class="bs-status" role="status" aria-live="polite" data-create-status></div>
   </div></section>
+
+  <h2 class="bs-h">Or import a pack</h2>
+  <section class="pnl" id="import" aria-labelledby="bsImportH" data-import><div class="pnl-b">
+    <h3 id="bsImportH" class="bs-h2">A pack folder or a zip</h3>
+    <p class="text-muted-d">Each Sutra (<span class="mono">*.sutra.yaml</span>) becomes a design of its own, with the documents of
+      <span class="mono">tests/&lt;sutra&gt;/</span> and <span class="mono">samples/&lt;kind&gt;/</span> as its samples and the README as notes. A zip made by
+      <b>Ship → Export as a pack fragment</b> comes back the same. Nothing is loaded into the server: this only makes designs.</p>
+    <p class="bs-actions"><label class="btn-pill btn-ghost" for="bsZip"><i class="bi bi-file-earmark-zip" aria-hidden="true"></i> Choose a zip
+      <input id="bsZip" class="bs-file" type="file" accept=".zip,application/zip" data-import-zip></label>
+      <label class="btn-pill btn-ghost" for="bsPackFolder"><i class="bi bi-folder2-open" aria-hidden="true"></i> Choose a pack folder
+      <input id="bsPackFolder" class="bs-file" type="file" webkitdirectory directory multiple data-import-folder></label></p>
+    <div class="bs-status" role="status" aria-live="polite" data-import-status></div>
+    <ul class="bs-files" aria-label="Designs made" data-import-list hidden></ul>
+  </div></section>
 </div>
 {% endblock %}
 {% block scripts %}
 <script src="/static/js/build-files.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/build-new.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/build-import.js?v={{ ASSET_V }}"></script>
 {% endblock %}

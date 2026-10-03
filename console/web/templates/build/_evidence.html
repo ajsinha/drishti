@@ -1,0 +1,35 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# The evidence a workbench proposal carries (step 8): the check matrix (panel x sample), sample names, notes. Never sample contents. #}
+{% set ev = p.evidence %}
+{% if ev %}
+<h2 class="ws-h">Evidence from the workbench</h2>
+<section class="pnl" data-evidence><div class="pnl-b">
+  <p>Design <span class="mono">{{ ev.designName or ev.designId }}</span> (revision {{ ev.rev }}){% if ev.base %}, edits <span class="mono">{{ ev.base }}</span>{% endif %}.
+    {% if ev.matrix %}<b class="cmp-k {{ 'added' if ev.matrix.ok else 'removed' }}" data-evidence-result>{{ 'every sample renders without errors' if ev.matrix.ok else 'some samples fail' }}</b>
+    ({{ ev.matrix.counts.ok }} ok, {{ ev.matrix.counts.empty }} empty, {{ ev.matrix.counts.error }} errors){% else %}<b>no check was attached</b> (the design had no samples){% endif %}</p>
+  {% if ev.matrix %}
+  <div class="wb-matrix-wrap"><table class="wb-matrix" aria-label="Panels by samples">
+    <thead><tr><th scope="col">Panel</th>{% for s in ev.matrix.samples %}<th scope="col" title="{{ s.message or '' }}">{{ s.name }}</th>{% endfor %}</tr></thead>
+    <tbody>{% for row in ev.matrix.panels %}<tr><th scope="row" class="mono">{{ row.id }}</th>
+      {% for c in row.cells %}<td class="wb-cell-{{ c.status }}" title="{{ c.message or '' }}"><span class="wb-cell-b">{{ 'no access' if c.status == 'noAccess' else c.status }}</span></td>{% endfor %}</tr>{% endfor %}</tbody>
+  </table></div>
+  {% endif %}
+  <p class="text-muted-d">Samples ({{ ev.sampleNames | length }}), names only: <span class="mono">{{ ev.sampleNames | join(', ') }}</span>{% if ev.syntheticSamples %}
+    · generated from a schema, not real data: <span class="mono">{{ ev.syntheticSamples | join(', ') }}</span>{% endif %}</p>
+  {% if ev.notes %}<h3 class="ws-h">Author's notes</h3><pre class="wb-notes" data-evidence-notes>{{ ev.notes }}</pre>{% endif %}
+</div></section>
+{% endif %}
