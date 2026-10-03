@@ -140,11 +140,19 @@ final class SutraDoc {
         int at = find(key);
         if (at >= 0) {
             int end = extent(at);
+            List<String> comments = new ArrayList<>();       // comment lines inside the block belong to the person who wrote them: they stay under the key
+            for (int k = at + 1; k < end; k++) {
+                if (lines.get(k).stripLeading().startsWith("#")) {
+                    comments.add(lines.get(k));
+                }
+            }
             for (int k = at; k < end; k++) {
                 lines.remove(at);
             }
             if (next != null) {
-                lines.addAll(at, next);
+                List<String> block = new ArrayList<>(next);
+                block.addAll(Math.min(1, block.size()), comments);
+                lines.addAll(at, block);
             }
             return;
         }

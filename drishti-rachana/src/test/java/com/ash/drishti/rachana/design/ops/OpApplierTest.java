@@ -196,6 +196,28 @@ class OpApplierTest {
     }
 
     @Test
+    void setStripKeepsTheCommentsInsideTheStripBlock() {
+        String text = "rachana: 1\nsutra: strip-keep\nversion: 1\nmatch: { kind: k }\ntitle: { id: $.id }\nstrip:\n  # figures the desk reads first\n"
+                + "  - { label: A, bind: $.a }\n  # b is shown for the audit\n  - { label: B, bind: $.b }\npanels:\n  - id: t\n    kind: kv\n    columns:\n      - { label: A, bind: $.a }\n";
+        OpResult r = applier.apply(text, List.of(new SetStrip(List.of(Map.of("label", "C", "bind", "$.c")))));
+        assertThat(r.problems()).isEmpty();
+        assertThat(r.yaml()).contains("# figures the desk reads first").contains("# b is shown for the audit").contains("label: C");
+        assertThat(parse(r.yaml()).strip()).hasSize(1);
+    }
+
+    @Test
+    void aListOrMappingForAOptionThatTakesOneValueIsRefused() throws Exception {
+        String text = Files.readString(EXAMPLES.resolve("all-panels-showcase.sutra.yaml"));
+        OpResult r = applier.apply(text, List.of(
+                new SetOption("terms", "area", Map.of("a", 1)),
+                new SetOption("terms", "title", Map.of("a", 1)),
+                new SetOption("pnl", "x", List.of(1L)),
+                new SetOption("terms", "code", "TRM")));
+        assertThat(r.problems()).extracting(OpProblem::code).containsExactly(OpException.BAD_VALUE, OpException.BAD_VALUE, OpException.BAD_VALUE);
+        assertThat(r.applied()).isEqualTo(1);
+    }
+
+    @Test
     void aBadOperationIsALocatedProblemAndNeverCorruptsTheText() throws Exception {
         String text = Files.readString(EXAMPLES.resolve("all-panels-showcase.sutra.yaml"));
         List<Op> ops = List.of(
