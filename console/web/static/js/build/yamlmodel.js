@@ -36,8 +36,45 @@
     return null;
   }
 
+  /** Studio's reader takes a flow collection ({ a: 1, b: [x, y] }) only on one line; YAML lets it run over several. Each such run is joined
+   *  onto its first line and the lines it used are left empty, so every other line keeps its number. */
+  function unwrap(text) {
+    var lines = text.split('\n'), out = [], skipBlockAt = -1;
+    for (var i = 0; i < lines.length; i++) {
+      var ln = lines[i], indent = ln.search(/\S/);
+      if (skipBlockAt >= 0) {                                    // inside a | or > block: braces there are text
+        if (ln.trim() === '' || indent > skipBlockAt) { out.push(ln); continue; }
+        skipBlockAt = -1;
+      }
+      var d = depth(ln, 0);
+      if (d > 0) {
+        var joined = ln, j = i;
+        while (d > 0 && j + 1 < lines.length) { j++; joined += ' ' + lines[j].trim(); d = depth(lines[j], d); }
+        out.push(joined);
+        for (var k = i + 1; k <= j; k++) { out.push(''); }
+        i = j;
+        continue;
+      }
+      if (/:\s*[|>][+-]?\d*\s*(#.*)?$/.test(ln)) { skipBlockAt = indent; }
+      out.push(ln);
+    }
+    return out.join('\n');
+  }
+  /** The flow depth after a line, starting from `d` (quotes and comments are skipped). */
+  function depth(ln, d) {
+    var q = null;
+    for (var i = 0; i < ln.length; i++) {
+      var c = ln[i];
+      if (q) { if (c === '\\' && q === '"') { i++; } else if (c === q) { q = null; } continue; }
+      if (c === '"' || c === "'") { if (i === 0 || /[\s,[{:]/.test(ln[i - 1])) { q = c; } continue; }
+      if (c === '#' && (i === 0 || /\s/.test(ln[i - 1]))) { break; }
+      if ((c === '{' || c === '[') && (d > 0 || /(^|[\s:,-])$/.test(ln.slice(0, i)))) { d++; } else if ((c === '}' || c === ']') && d > 0) { d--; }
+    }
+    return d;
+  }
+
   WB.model = function (text) {
-    var root = window.drishtiYaml.parse(text || '');
+    var root = window.drishtiYaml.parse(unwrap(text || ''));
     var out = { panels: [], title: {}, strip: [], keys: {}, match: {}, ids: [] };
     if (!root || root.t !== 'map') { return out; }
     var pick = function (k) { var e = entry(root, k); return e ? js(e.value) : null; };

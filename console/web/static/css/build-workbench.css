@@ -159,3 +159,17 @@ body.wb-dragging, body.wb-dragging * { cursor: grabbing !important; user-select:
 .wb-palette { max-height: 15rem; overflow: auto; padding-right: .2rem; }
 .wb-left .bs-tree { max-height: 22rem; overflow: auto; }
 .wb-kind, .wb-field-row, .wb-frame .pnl-h, .wb-frame .lh-e, .wb-frame .lh-s { user-select: none; -webkit-user-select: none; }
+
+/* the YAML editor wears the console's colours, as Studio's does (terminal.css scopes those rules to Studio's own pane) */
+#wbPaneYaml .CodeMirror { background: var(--d-bg-2); color: var(--d-ink); font: .82rem/1.5 var(--d-font-mono); }
+#wbPaneYaml .CodeMirror-gutters { background: var(--d-bg); border-right: 1px solid var(--d-border); }
+#wbPaneYaml .CodeMirror-linenumber { color: var(--d-faint); }
+#wbPaneYaml .CodeMirror-cursor { border-left-color: var(--d-accent); }
+#wbPaneYaml .CodeMirror-selected, #wbPaneYaml .CodeMirror-focused .CodeMirror-selected { background: var(--d-accent-tint); }
+#wbPaneYaml .cm-s-default .cm-keyword { color: var(--d-accent); } #wbPaneYaml .cm-s-default .cm-string { color: var(--d-link); }
+#wbPaneYaml .cm-s-default .cm-comment { color: var(--d-faint); font-style: italic; }
+#wbPaneYaml .cm-s-default .cm-number, #wbPaneYaml .cm-s-default .cm-atom { color: var(--d-pos); }
+#wbPaneYaml .cm-s-default .cm-variable-2 { color: var(--d-ok); } #wbPaneYaml .cm-s-default .cm-def { color: var(--d-warn); }
+#wbPaneYaml .cm-s-default .cm-bracket, #wbPaneYaml .cm-s-default .cm-operator { color: var(--d-muted); }
+#wbPaneYaml .studio-gutter { width: 14px; }
+#wbPaneYaml .studio-chk { text-decoration: underline wavy var(--d-warn); text-underline-offset: 3px; }
