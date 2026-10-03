@@ -103,9 +103,12 @@ public final class RachanaSchema {
         Map<String, Object> allOptions = new LinkedHashMap<>(common);
         for (PanelKind k : PanelKind.values()) {
             Map<String, Object> props = new LinkedHashMap<>();
-            java.util.Set<String> expr = SutraExpressions.EL_OPTIONS.getOrDefault(k, java.util.Set.of());
+            java.util.Set<String> expr = SutraExpressions.expressionOptions(k);
             TreeSet<String> opts = new TreeSet<>(k.required());
             opts.addAll(k.optional());
+            if (k.readsData()) {
+                opts.add("source");
+            }
             for (String o : opts) {
                 Object schema = o.equals("fmt") ? fmt(formats) : o.equals("tone") ? tone()
                         : o.equals("search") ? Map.of("type", "boolean", "description", "false hides the table's filter")

@@ -45,7 +45,6 @@ import com.ash.drishti.rachana.el.Link;
 import com.ash.drishti.rachana.el.Values;
 import com.ash.drishti.rachana.format.Formats;
 import com.ash.drishti.rachana.model.Panel;
-import com.ash.drishti.rachana.model.PanelKind;
 import com.ash.drishti.rachana.model.StripItem;
 import com.ash.drishti.rachana.model.Sutra;
 import com.github.benmanes.caffeine.cache.Cache;
@@ -216,7 +215,11 @@ public final class ViewPipeline {
                 .orElseThrow(() -> new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "the view of " + ref.id() + " has no panel '" + panelId
                         + "' that offers a pivot"));
         EntityDocument seen = seen(doc, redact);
-        BindContext ctx = new BindContext(seen, layout, fp, EvalContext.of(seen.data(), formats), List.of(), Map.of(), Set.of());
+        EvalContext eval = EvalContext.of(seen.data(), formats);
+        Map<EntityRef, EntityDocument> linked = new LinkedHashMap<>();
+        binder.chartSource(panel, eval).ifPresent(src -> router.fetchAll(Set.of(src), graph.linkBudget(),
+                asOf.businessDate() == null ? dates.resolve(asOf) : asOf).forEach((r, d) -> linked.put(r, seen(d, redact))));
+        BindContext ctx = new BindContext(seen, layout, fp, eval, List.of(), linked, Set.of());
         return binder.records(panel, ctx);
     }
 
@@ -267,7 +270,7 @@ public final class ViewPipeline {
         Set<EntityRef> wanted = new LinkedHashSet<>();
         links.forEach(l -> wanted.add(l.target()));
         for (Panel p : layout.sutra().panels()) {
-            if (p.kind() == PanelKind.LINE) {
+            if (p.kind().readsData()) {
                 binder.chartSource(p, eval).ifPresent(wanted::add);
             }
         }

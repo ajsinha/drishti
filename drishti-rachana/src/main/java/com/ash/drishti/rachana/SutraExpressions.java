@@ -46,6 +46,17 @@ public final class SutraExpressions {
             Map.entry(PanelKind.GRAPH, Set.of("nodes", "edges")), Map.entry(PanelKind.TIMELINE, Set.of("rows")),
             Map.entry(PanelKind.PIVOT, Set.of("rows")));
 
+    /** The expression options of a panel kind: its own, and {@code source} for every kind that reads data. */
+    static Set<String> expressionOptions(PanelKind kind) {
+        Set<String> own = EL_OPTIONS.getOrDefault(kind, Set.of());
+        if (!kind.readsData() || own.contains("source")) {
+            return own;
+        }
+        Set<String> all = new java.util.HashSet<>(own);
+        all.add("source");
+        return all;
+    }
+
     private final ElCompiler compiler;
 
     public SutraExpressions(ElCompiler compiler) {
@@ -75,7 +86,7 @@ public final class SutraExpressions {
         for (Column c : p.columns()) {
             expr(c.bind(), p.location(), out);
         }
-        for (String opt : EL_OPTIONS.getOrDefault(p.kind(), Set.of())) {
+        for (String opt : expressionOptions(p.kind())) {
             Object v = p.options().get(opt);
             if (v instanceof String str) {
                 expr(str, p.location(), out);

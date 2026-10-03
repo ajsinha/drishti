@@ -75,7 +75,16 @@ public enum PanelKind {
     }
 
     public boolean accepts(String option) {
-        return required.contains(option) || optional.contains(option);
+        return required.contains(option) || optional.contains(option) || ("source".equals(option) && readsData());
+    }
+
+    /**
+     * Whether panels of this kind read the entity's data, and so may read a linked entity's instead ({@code source}):
+     * every kind but {@code links} and {@code provenance} (which describe the view) and {@code markdown} (whose text
+     * reads the view's own entity).
+     */
+    public boolean readsData() {
+        return this != LINKS && this != PROVENANCE && this != MARKDOWN;
     }
 
     public String id() {

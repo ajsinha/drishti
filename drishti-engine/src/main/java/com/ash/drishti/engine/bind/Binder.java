@@ -83,7 +83,7 @@ public final class Binder {
      * @throws IllegalArgumentException when the panel offers no pivot
      */
     public PivotBinder.Records records(Panel p, BindContext c) {
-        return pivots.records(p, c);
+        return pivots.records(p, sourced(p, c));
     }
 
     public PanelView bind(Panel p, BindContext c) {
@@ -95,6 +95,7 @@ public final class Binder {
         }
         String explanation = c.layout().explanations().get(p.id());
         try {
+            c = p.kind() == PanelKind.LINE ? c : sourced(p, c);   // a line names its source in its data itself
             PanelData data = switch (p.kind()) {
                 case KV -> kv(p, c);
                 case TABLE, LADDER -> table(p, c);
@@ -303,7 +304,23 @@ public final class Binder {
         return new PanelData.Tabs(p.option("layout").orElse("tabs"), tabs);
     }
 
-    /** The linked entity a chart reads its points from, when it names one with {@code source}. */
+    /**
+     * The context a panel binds against: the view's own, or, when the panel names a linked entity with {@code source},
+     * that entity's document (fetched with the view's sources, business date and field masks).
+     */
+    private BindContext sourced(Panel p, BindContext c) {
+        Optional<EntityRef> src = chartSource(p, c.eval());
+        if (src.isEmpty()) {
+            return c;
+        }
+        EntityDocument d = c.linked().get(src.get());
+        if (d == null) {
+            throw new IllegalStateException(c.pending().contains(src.get()) ? "waiting for " + src.get().id() : src.get().id() + " unavailable");
+        }
+        return new BindContext(c.doc(), c.layout(), c.fingerprint(), EvalContext.of(d.data(), formats), c.links(), c.linked(), c.pending());
+    }
+
+    /** The linked entity a panel reads its data from, when it names one with {@code source}. */
     public Optional<EntityRef> chartSource(Panel p, EvalContext ctx) {
         return p.option("source").map(s -> Values.simplify(eval(s, ctx))).filter(Link.class::isInstance).map(Link.class::cast)
                 .map(this::linkView).map(lv -> lv == null ? null : EntityRef.of(lv.kind(), lv.id()));
