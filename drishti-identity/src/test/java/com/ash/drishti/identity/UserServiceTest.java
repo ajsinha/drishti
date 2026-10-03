@@ -61,6 +61,20 @@ class UserServiceTest {
     }
 
     @Test
+    void aFirstAdministratorChosenInTheConfigurationIsNotTheDevelopmentAdmin() {
+        IdentityProperties p = new IdentityProperties(dir.resolve("users.json").toString(), dir.resolve("audit.jsonl").toString(),
+                1000, 10, 3, Duration.ofMinutes(15), true, "ops-admin", "chosen-by-the-operator-9", null, false, false,
+                dir.resolve("prefs").toString(), null, null, null, null, null);
+        UserService s = new UserService(new FileUserStore(Path.of(p.usersFile())), new PasswordHasher(1000), new FileAuditLog(Path.of(p.auditFile())), p,
+                Set.of("admin"));
+        assertThat(p.seedPasswordIsDefault()).isFalse();
+        assertThat(s.seedIfEmpty()).isTrue();
+        assertThat(s.authenticate("ops-admin", "chosen-by-the-operator-9").roles()).containsExactly("admin");
+        assertThat(s.defaultAdminPasswordInUse()).isFalse();                                   // no "still has its default password" banner
+        assertThatThrownBy(() -> s.authenticate("drishti-dev-admin", "drishti-dev-admin123")).isInstanceOf(DrishtiException.class);
+    }
+
+    @Test
     void signInFailuresLockTheAccountAndResetUnlocksIt() {
         UserService s = service();
         s.seedIfEmpty();

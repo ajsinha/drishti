@@ -59,11 +59,11 @@ docaudit/). Totals: 3 high, 19 medium, 23 low, 5 info.
 | GRAM-09 | Invalid or future dates are stored in the as-of cookie and break every view for 12 hours. **Fixed** in cc386d6 (test_gram_inputs.py: test_a_date_that_cannot_be_picked_is_refused_and_not_stored, test_a_stored_date_the_server_refuses_is_ignored_and_cleared) |
 | UX-10 | DRS codes repeated two or three times in messages ("DRS-2101: DRS-2101 alert expression: DRS-2101 …"; missing.html:23, alerts-page.js:31 and others). **Fixed** (test_drs_message.py). |
 | UX-11 | Error pages always say "Check the identifier" (also for timeouts and bad dates); unknown kind reported as a missing id; unknown URLs return raw `{"detail":"Not Found"}`. **Fixed** in e3af5e9 (test_error_pages.py). |
-| UX-12 | First past-date read after start timed out (DRS-1004) → console 502; not reproduced again (2 s timeout). |
+| UX-12 | First past-date read after start timed out (DRS-1004) → console 502; not reproduced again (2 s timeout). **Fixed** in 524d182 (DeltaWarmUpTest; console test_timeouts.py): cold read 37-68 ms against 5-13 ms warm on the samples, so the timeout came from load at start; Delta now warms the newest `warm-dates` (3) in the background, and a timeout is a 504 page, not a 502. |
 | UX-13 | Six console endpoints return a plain 500 on a non-JSON body. **Fixed** (test_json_bodies.py). |
 | UX-14 | Layout mode lets every panel be hidden, then Save is refused; panels shrink to an unreadable 1 column; the height announcement is off by one. **Fixed** in 624e93a (test_layout_rules.py). |
 | UX-15 | Studio keeps a stale preview after a failed preview; after approval the review page says "No differences"; Studio has no `<h1>`; its editor has no accessible name. **Fixed** in 0c49cdd (test_studio_a11y.py). |
-| UX-16 | A fresh start logs 124 WARN lines. |
+| UX-16 | A fresh start logs 124 WARN lines. **Fixed** in e4b5694 (QuietStartTest): 126 before, 1 after on a scratch start (2 on a fresh data directory, the development-admin warning that needs an action). |
 | UX-17 | The function-key bar truncates panel titles. **Fixed** in f310fc5 (test_fkeys.py). |
 | UX-18 | The release-notes guide has 16 `<h1>` elements. **Fixed** in ec7cd2a (test_help.py: test_a_help_page_has_one_h1_whatever_the_guide_headings_are). |
 | DOC-04 | QUICKSTART's "every key" list misses F5, F6, Alt+C and Alt+L. |

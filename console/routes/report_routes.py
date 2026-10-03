@@ -50,7 +50,7 @@ async def save(request: Request):
     try:
         await request.app.state.backend.save_report(name, body, ident(request))
     except BackendError as e:
-        return await _page(request, error=e.detail, status_code=e.status if e.status < 500 else 502, form={"name": name, **body})
+        return await _page(request, error=e.detail, status_code=e.page_status, form={"name": name, **body})
     return RedirectResponse(f"/reports?msg={quote('Saved ' + name)}", status_code=303)
 
 
@@ -59,7 +59,7 @@ async def run(request: Request, name: str):
     try:
         r = await request.app.state.backend.run_report(name, ident(request))
     except BackendError as e:
-        return await _page(request, error=e.detail, status_code=e.status if e.status < 500 else 502)
+        return await _page(request, error=e.detail, status_code=e.page_status)
     text = (f"{name}: {r.get('rows', 0)} rows to {r.get('target')}" if r.get("status") == "ok" else f"{name} failed: {r.get('error')}")
     return RedirectResponse(f"/reports?msg={quote(text)}", status_code=303)
 
@@ -69,5 +69,5 @@ async def delete(request: Request, name: str):
     try:
         await request.app.state.backend.delete_report(name, ident(request))
     except BackendError as e:
-        return await _page(request, error=e.detail, status_code=e.status if e.status < 500 else 502)
+        return await _page(request, error=e.detail, status_code=e.page_status)
     return RedirectResponse(f"/reports?msg={quote('Deleted ' + name)}", status_code=303)

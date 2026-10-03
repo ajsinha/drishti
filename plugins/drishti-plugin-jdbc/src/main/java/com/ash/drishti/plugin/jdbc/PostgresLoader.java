@@ -68,7 +68,7 @@ import org.postgresql.PGConnection;
  */
 public final class PostgresLoader {
 
-    private record Row(String schema, String kind, String id, LocalDate date, String doc, Map<String, Object> columns) {}
+    private record Row(String schema, String kind, String id, LocalDate date, String doc, Map<String, Object> columns, long line) {}
 
     private final String url;
     private final String user;
@@ -156,11 +156,13 @@ public final class PostgresLoader {
              ExecutorService copy = Executors.newVirtualThreadPerTaskExecutor()) {
             List<Row> batch = new ArrayList<>(batchSize);
             String line;
+            long lineNo = 0;
             while ((line = in.readLine()) != null && failed.get() == null) {
+                lineNo++;
                 if (line.isBlank()) {
                     continue;
                 }
-                Row row = parse(json, line);
+                Row row = parse(json, line, lineNo);
                 if (!guard.accept(row.date(), row.schema() + " " + row.kind() + " " + row.id())) {
                     continue;
                 }
@@ -235,7 +237,7 @@ public final class PostgresLoader {
 
     /** One batch with COPY (text format). */
     private static void write(Connection c, String into, List<Row> batch, Map<String, Boolean> columns) throws Exception {
-        StringBuilder sql = new StringBuilder("COPY ").append(into).append(" (kind, id, business_date, doc");
+        StringBuilder sql = new StringBuilder("COPY ").append(into).append(" (kind, id, business_date, doc, ").append(PostgresStage.LINE);
         columns.keySet().forEach(n -> sql.append(", \"").append(n).append('"'));
         sql.append(") FROM STDIN");
         StringBuilder data = new StringBuilder(batch.size() * 8_192);
@@ -247,6 +249,7 @@ public final class PostgresLoader {
             escape(data, r.kind()).append('\t');
             escape(data, r.id()).append('\t').append(r.date()).append('\t');
             escape(data, r.doc());
+            data.append('\t').append(r.line());
             for (Map.Entry<String, Boolean> col : columns.entrySet()) {
                 Object v = r.columns().get(paths.get(col.getKey()));
                 data.append('\t');
@@ -286,6 +289,9 @@ public final class PostgresLoader {
         int published = 0;
         List<Future<Long>> done = new ArrayList<>();
         try (ExecutorService swaps = Executors.newVirtualThreadPerTaskExecutor()) {
+            for (PostgresStage s : stages.values()) {
+                s.reportDuplicates(admin, 10);                       // named before anything is published
+            }
             for (PostgresStage s : stages.values()) {
                 if (s.recreate()) {
                     s.publishRecreated(admin);
@@ -368,7 +374,36 @@ public final class PostgresLoader {
         }
     }
 
-    private static Row parse(JsonFactory json, String line) throws java.io.IOException {
+    /** One input line as a row; a line that cannot be loaded fails the load, naming the line and the id. */
+    private static Row parse(JsonFactory json, String text, long lineNo) throws java.io.IOException {
+        String id = null;
+        try {
+            Row r = parseRow(json, text, lineNo);
+            id = r.id();
+            nulFree(lineNo, id, "id", r.id());
+            nulFree(lineNo, id, "kind", r.kind());
+            nulFree(lineNo, id, "doc", r.doc());
+            for (Map.Entry<String, Object> c : r.columns().entrySet()) {
+                nulFree(lineNo, id, "column " + c.getKey(), c.getKey());
+                nulFree(lineNo, id, "column " + c.getKey(), c.getValue() instanceof String v ? v : null);
+            }
+            return r;
+        } catch (java.io.IOException | RuntimeException e) {
+            if (e.getMessage() != null && e.getMessage().startsWith("line ")) {
+                throw e;
+            }
+            throw new java.io.IOException("line " + lineNo + (id == null ? "" : " (id " + id + ")") + ": " + e.getMessage(), e);
+        }
+    }
+
+    private static void nulFree(long lineNo, String id, String what, String value) throws java.io.IOException {
+        if (value != null && value.indexOf('\0') >= 0) {
+            throw new java.io.IOException("line " + lineNo + " (id " + id + "): the " + what + " contains \\u0000, which PostgreSQL text cannot hold; "
+                    + "remove it from the source data. Nothing was published");
+        }
+    }
+
+    private static Row parseRow(JsonFactory json, String line, long lineNo) throws java.io.IOException {
         String domain = null;
         String kind = null;
         String id = null;
@@ -403,7 +438,7 @@ public final class PostgresLoader {
         if (domain == null || kind == null || id == null || date == null || doc == null) {
             throw new java.io.IOException("a row needs domain, kind, id, date and doc: " + (line.length() > 200 ? line.substring(0, 200) + "…" : line));
         }
-        return new Row(PostgresLayout.schema(domain), kind, id, LocalDate.parse(date), doc, columns);
+        return new Row(PostgresLayout.schema(domain), kind, id, LocalDate.parse(date), doc, columns, lineNo);
     }
 
     private static Object skip(JsonParser p) throws java.io.IOException {

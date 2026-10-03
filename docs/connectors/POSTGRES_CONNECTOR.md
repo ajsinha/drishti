@@ -199,6 +199,14 @@ How the loader works:
 - **Dates are guarded.** A row dated after tomorrow in the business zone (`--future-days`, 1; `--zone`, else
   `DRISHTI_BUSINESS_ZONE`, else `America/New_York`) is not loaded; the first few are named on standard error and the
   load ends with an error once the other rows are in.
+- **A row that cannot be loaded names itself.** A line that is not valid (bad JSON, a missing field, a date that is not
+  one) or whose id, kind, document or promoted value holds `\u0000` (PostgreSQL text cannot store it) fails the load at
+  once with `line 3 (id T-BAD): the doc contains \u0000 ...`; nothing has been published, so every day stays as it was.
+  Remove the character at the source.
+- **A duplicate id is not an error: the last line wins**, as in the JSON-lines connector. An id on several lines of
+  one (kind, date) is loaded once, from its last line; before anything is published, the first ten such ids are named
+  on standard error with their lines (`trade 2026-09-29 T-1 is on 3 lines (1,3,5): the last one is kept`), and the day's
+  row count in `entity_dates` is the rows kept.
 - **At the end** every partition written is vacuumed and analysed: the visibility map lets type-ahead read a day's ids
   from the index alone, and the planner has fresh statistics.
 - **A table of the earlier form** (not partitioned) is refused with `… is a plain table of the old layout: load with

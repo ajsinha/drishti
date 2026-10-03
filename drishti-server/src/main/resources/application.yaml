@@ -28,6 +28,16 @@ spring:
       # packs an administrator loaded from Admin → Packs (drishti.packs.added); written by the server, not by hand
       - optional:file:${DRISHTI_PACKS_OVERLAY:./data/packs/added.yaml}
 
+  jpa:
+    open-in-view: false      # no lazy loading while a view renders: the identity services load what they return
+
+logging:
+  level:
+    # expected, not a fault: a Delta table without checkpoints is read from its log (said once per table and read)
+    io.delta.kernel.internal.snapshot.SnapshotManager: ERROR
+    # Hibernate flags a setting Spring Boot itself sets as incubating
+    org.hibernate.orm.incubating: ERROR
+
 server:
   port: ${DRISHTI_PORT:18480}
   shutdown: graceful
@@ -121,6 +131,11 @@ drishti:
     # With security on, /actuator (except /actuator/health) needs an admin token or this one, for Prometheus:
     #   scrape_configs: [{ job_name: drishti, metrics_path: /actuator/prometheus, bearer_token: <this> }]
     metrics-token: ${DRISHTI_METRICS_TOKEN:}
+    # A personal API token only reads: GET and HEAD, plus these POSTs, which carry a query in the body and change nothing
+    # (a pivot of a search, a command line). Add a path only if it writes nothing.
+    token-read-posts:
+      - /api/v1/search/pivot/**
+      - /api/v1/command
     roles:
       viewer:  { kinds: ["*"], layout: false }   # packs add domain roles (finance: trader, risk); layout: may arrange views (default true)
       author:  { kinds: ["*"], raw: true, author: true, calc: true }   # calc: may use Calc, Python in the browser (PYTHON_CALC.md)
@@ -190,8 +205,10 @@ drishti:
     # On first start with no users, create a development admin. Change its password at once;
     # the console warns until you do. Turn off (DRISHTI_SEED_ADMIN=false) for production.
     seed-admin: ${DRISHTI_SEED_ADMIN:true}
-    seed-username: drishti-dev-admin
-    seed-password: drishti-dev-admin123
+    # With DRISHTI_SEED_USERNAME / DRISHTI_SEED_PASSWORD set (deploy/compose.yaml requires both) it is the first
+    # administrator you chose, not the development admin.
+    seed-username: ${DRISHTI_SEED_USERNAME:drishti-dev-admin}
+    seed-password: ${DRISHTI_SEED_PASSWORD:drishti-dev-admin123}
     seed-roles: [admin]
     seed-display-name: Drishti dev admin
   rachana:
@@ -247,5 +264,7 @@ drishti:
 springdoc:
   api-docs:
     path: /api/docs
+    enabled: ${DRISHTI_API_DOCS:true}      # set explicitly, so a start does not warn that they are on by default
   swagger-ui:
     path: /api/docs/ui
+    enabled: ${DRISHTI_API_DOCS:true}

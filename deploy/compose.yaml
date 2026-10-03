@@ -13,7 +13,9 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Drishti: server + console. Secrets come from the environment or an .env file that is never committed:
-#   DRISHTI_TOKEN_SECRET, DRISHTI_SESSION_SECRET (>= 32 characters each)
+#   DRISHTI_TOKEN_SECRET, DRISHTI_SESSION_SECRET (>= 32 characters each; the token secret is a master key: OPERATIONS.md 9)
+#   DRISHTI_ADMIN_USER, DRISHTI_ADMIN_PASSWORD (the first administrator, created on first start; at least 10 characters).
+#   The development admin with its well-known password is off, and nothing here has a default password.
 #   docker compose -f deploy/compose.yaml up
 services:
   server:
@@ -23,11 +25,15 @@ services:
       DRISHTI_SECURITY_ENABLED: "true"
       DRISHTI_TOKEN_SECRET: ${DRISHTI_TOKEN_SECRET:?set DRISHTI_TOKEN_SECRET}
       DRISHTI_PACKS: ${DRISHTI_PACKS:-finance}
+      DRISHTI_SEED_ADMIN: "true"              # creates the one administrator below on first start, never the development admin
+      DRISHTI_SEED_USERNAME: ${DRISHTI_ADMIN_USER:?set DRISHTI_ADMIN_USER}
+      DRISHTI_SEED_PASSWORD: ${DRISHTI_ADMIN_PASSWORD:?set DRISHTI_ADMIN_PASSWORD}
+      DRISHTI_METRICS_TOKEN: ${DRISHTI_METRICS_TOKEN:-}      # for a Prometheus scrape; empty: only an admin token reads /actuator
     volumes:
       - ../sutras:/opt/drishti/sutras:ro      # optional site Sutras; packs ship inside the image
       - ../data/feeds:/opt/drishti/data/feeds:ro
       - drishti-identity:/opt/drishti/data/identity
-    ports: ["18480:18480"]
+    ports: ["127.0.0.1:18480:18480"]      # the console reaches the server over the compose network; publish wider only behind TLS
   console:
     image: drishti-console:1.13.0
     build: { context: .., dockerfile: deploy/console.Dockerfile }

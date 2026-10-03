@@ -69,7 +69,9 @@ public final class TokenFilter extends OncePerRequestFilter {
                 // a personal API token: it reads as its user, and never changes anything
                 Principal p = apiTokens.apply(bearer).orElseThrow(() -> new DrishtiException(
                         com.ash.drishti.common.ErrorCode.UNAUTHENTICATED, "API token unknown, revoked or expired"));
-                if (!"GET".equals(req.getMethod()) && !"HEAD".equals(req.getMethod())) {
+                boolean reads = "GET".equals(req.getMethod()) || "HEAD".equals(req.getMethod())
+                        || "POST".equals(req.getMethod()) && props.tokenMayPost(RequestPaths.routed(req));   // an allow-listed POST only reads (SEC-15)
+                if (!reads) {
                     res.setStatus(403);
                     res.setContentType("application/problem+json");
                     res.getWriter().write("{\"title\":\"forbidden\",\"status\":403,\"code\":\"DRS-5002\",\"detail\":\"API tokens only read\"}");

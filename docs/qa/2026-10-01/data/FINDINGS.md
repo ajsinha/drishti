@@ -61,7 +61,7 @@ logs-quant.txt. Totals: 6 high, 9 medium, 7 low, plus notes.
 - `state.durability: none` lost all 600 acknowledged entities on kill -9 (documented); `sync` lost nothing.
 - Document-path searches on Delta and DuckDB hit the 3 s budget at 8,000 documents, but say partial.
 - Health shows a 0.02 GB budget as "0.1 of 0.0 GB" (rounding).
-- PostgresLoader aborts the whole load on one `\u0000` or one duplicate id (loud, but leaves DATA-04's partial state).
+- PostgresLoader aborts the whole load on one `\u0000` or one duplicate id (loud, but leaves DATA-04's partial state). **Fixed** in 0bef73b (PostgresLoaderRowsTest): the line and id are named before anything is published; a duplicate keeps the last line, as the JSON-lines connector.
 - Test tooling: DeletionVectorFixture writes `remove` without the old DV, so two sequential deletes produce an invalid log.
 
 ## What held up
