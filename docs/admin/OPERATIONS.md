@@ -32,7 +32,7 @@ when other people will use the installation.
 6. [Environment variables](#6-environment-variables)
 7. [Running as services (systemd)](#7-running-as-services-systemd)
 8. [TLS and the reverse proxy](#8-tls-and-the-reverse-proxy)
-9. [Production checklist](#9-production-checklist) · [Scheduled reports](#9a-scheduled-reports) · [The access log](#9b-the-access-log) · [Pack registry keys](#9c-pack-registry-keys)
+9. [Production checklist](#9-production-checklist) · [The token secret is a master key](#9a-1-the-token-secret-is-a-master-key) · [Scheduled reports](#9a-scheduled-reports) · [The access log](#9b-the-access-log) · [Pack registry keys](#9c-pack-registry-keys)
 10. [Backups and restore](#10-backups-and-restore)
 11. [The lake: where it lives and keeping it bounded](#11-the-lake-where-it-lives-and-keeping-it-bounded)
 12. [Memory and caches](#12-memory-and-caches)
@@ -242,16 +242,23 @@ licence and release files, so the help centre works without network access.
 
 ### 4.2 Provide the secrets
 
-The compose file refuses to start without two secrets. Put them in `deploy/.env` (never commit it):
+The compose file refuses to start without four values: two secrets and the first administrator. It has no default
+password anywhere and does not create the development admin. Put them in `deploy/.env` (never commit it):
 
 ```bash
 cat > deploy/.env <<EOF
 DRISHTI_TOKEN_SECRET=$(openssl rand -hex 32)
 DRISHTI_SESSION_SECRET=$(openssl rand -hex 32)
+DRISHTI_ADMIN_USER=your-name
+DRISHTI_ADMIN_PASSWORD=$(openssl rand -base64 18)
 DRISHTI_PACKS=finance
 EOF
 chmod 600 deploy/.env
 ```
+
+`DRISHTI_ADMIN_USER` and `DRISHTI_ADMIN_PASSWORD` become the one administrator created on the first start with an empty
+user store (at least 10 characters, with a letter and a digit); create the others in **Admin → Users**. The
+token secret is a master key, see [section 9a-1](#9a-1-the-token-secret-is-a-master-key).
 
 `openssl rand -hex 32` prints 64 characters, which satisfies both minimums (32 bytes for the token secret, 32
 characters for the session secret).
@@ -264,7 +271,7 @@ docker compose -f deploy/compose.yaml ps
 ```
 
 You should see both services `running`, and after about 30 seconds `(healthy)`. If you forgot a secret you get
-`required variable DRISHTI_TOKEN_SECRET is missing a value: set DRISHTI_TOKEN_SECRET`.
+`required variable DRISHTI_TOKEN_SECRET is missing a value: set DRISHTI_TOKEN_SECRET` (likewise for the other three).
 
 ### 4.4 What the compose file sets, and what you should add
 
@@ -272,6 +279,9 @@ You should see both services `running`, and after about 30 seconds `(healthy)`. 
 |---|---|---|---|
 | server | `DRISHTI_SECURITY_ENABLED` | `true` | every `/api/v1` call needs a token from the console |
 | server | `DRISHTI_TOKEN_SECRET` | from `.env` | shared with the console |
+| server | `DRISHTI_SEED_ADMIN`, `DRISHTI_SEED_USERNAME`, `DRISHTI_SEED_PASSWORD` | `true`, `DRISHTI_ADMIN_USER`, `DRISHTI_ADMIN_PASSWORD` from `.env` | the first administrator you chose; the well-known development admin is not created |
+| server | `DRISHTI_METRICS_TOKEN` | from `.env`, empty if unset | the bearer token a Prometheus scrape uses; empty means only an admin token reads `/actuator` |
+| server | `ports` | `127.0.0.1:18480:18480` | the server is reachable from this host only; the console reaches it over the compose network |
 | server | `DRISHTI_PACKS` | `${DRISHTI_PACKS:-finance}` | packs to enable |
 | server | volume `../sutras` → `/opt/drishti/sutras` (read-only) | | your own Sutras |
 | server | volume `../data/feeds` → `/opt/drishti/data/feeds` (read-only) | | the file connector's folder |
@@ -300,13 +310,16 @@ The compose file is a starting point. Before you rely on it, add:
 4. **TLS.** The console sets `Secure` cookies by default, which browsers send only over HTTPS (and to
    `http://localhost`). Put a TLS proxy in front (section 8). For a quick test from another machine over plain
    HTTP, add `DRISHTI_SECURE_COOKIE: "false"` to the console, and remove it afterwards.
-5. **Port 18480** is published (`ports: ["18480:18480"]`) for convenience. In production remove that line: only the
-   console needs to reach the server, over the compose network.
+5. **Port 18480** is published on the loopback address only (`127.0.0.1:18480:18480`), for checks from the host. In
+   production remove that line: only the console needs to reach the server, over the compose network.
+6. **The demo source** is on in the image (`DRISHTI_DEMO_ENABLED`): add `DRISHTI_DEMO_ENABLED: "false"` under the
+   server's `environment` once your packs read your own stores.
 
 ### 4.5 Sign in
 
-Open `http://localhost:17480`. Sign in as `drishti-dev-admin` with password `drishti-dev-admin123`, then change the
-password at once (*My account*). The console shows a warning until you do. Then create real users under
+Open `http://localhost:17480`. Sign in as the `DRISHTI_ADMIN_USER` and `DRISHTI_ADMIN_PASSWORD` of your `.env`
+(a manual start without them has the development admin `drishti-dev-admin` / `drishti-dev-admin123`; the console shows
+a warning until you change that password). Then create real users under
 **Admin → Users**; see [USER_MANAGEMENT.md](USER_MANAGEMENT.md).
 
 ## 5. Data stores, sample data and feeds
@@ -429,6 +442,7 @@ Defined in `drishti-server/src/main/resources/application.yaml`.
 | Variable | Default | What it does |
 |---|---|---|
 | `DRISHTI_SEED_ADMIN` | `true` | on first start with no users, create `drishti-dev-admin` / `drishti-dev-admin123`. Set `false` in production once you have a real admin |
+| `DRISHTI_SEED_USERNAME`, `DRISHTI_SEED_PASSWORD` | `drishti-dev-admin`, `drishti-dev-admin123` | the administrator that first start creates: set both to choose your own instead of the development admin |
 | `DRISHTI_FORCE_PW_CHANGE_ON_CREATE` | `false` | new users must change their password at first sign-in |
 | `DRISHTI_FORCE_PW_CHANGE_ON_RESET` | `false` | users must change a password an admin reset |
 | `DRISHTI_USERS_FILE`, `DRISHTI_AUDIT_FILE` | `./data/identity/users.json`, `./data/identity/audit.jsonl` | release 1.9 keeps users and the audit log in these files. From 1.10 they are only read once, to import them into the identity database |
@@ -710,8 +724,10 @@ Work through this list for every shared installation. Each item says how to chec
    same `DRISHTI_TOKEN_SECRET` as the server. Check: a private browser window opening the console is sent to the
    sign-in page. Sessions follow the user: disabling or demoting someone takes effect within `auth.recheck_seconds`
    (10 s by default), and signing out ends the session on the server.
-3. **The development admin is gone.** Sign in as `drishti-dev-admin`, create your own admin, then either change the
-   development admin's password or disable it, and set `DRISHTI_SEED_ADMIN=false`. Check: the console no longer
+3. **The development admin is gone.** The compose file never creates it (it seeds the administrator of
+   `DRISHTI_ADMIN_USER` / `DRISHTI_ADMIN_PASSWORD`). On any other install sign in as `drishti-dev-admin`, create your
+   own admin, then either change the development admin's password or disable it, and set `DRISHTI_SEED_ADMIN=false`
+   (or give `DRISHTI_SEED_USERNAME` and `DRISHTI_SEED_PASSWORD` for the first start). Check: the console no longer
    shows the default-password warning (the server reports `"defaultAdminPasswordInUse": false` at
    `/api/v1/admin/status`).
 4. **Single sign-on (optional).** `DRISHTI_OIDC_ENABLED=true`, `DRISHTI_OIDC_ISSUER` (https) and
@@ -736,6 +752,39 @@ Work through this list for every shared installation. Each item says how to chec
     `/actuator` endpoint but health needs it, or an admin token; `/api/docs` needs any token), the Grafana dashboard imported, alerts set
     (section 13).
 13. **Secrets** only in a `0600` environment file or your secret store; never in `application.yaml` or a repository.
+    No password in a sample is a password to keep: `DRISHTI_PG_PASSWORD` (the development stack
+    `deploy/compose.data.yaml` uses `drishti` and binds `127.0.0.1` only; a shared database needs its own),
+    `DRISHTI_SEED_PASSWORD`, `DRISHTI_METRICS_TOKEN` (empty means only an admin token reads `/actuator`).
+14. **The token secret** is protected and rotated as a master key (next section).
+15. **Published ports.** `docker compose ps` shows no `0.0.0.0:18480`; the server's port is not reachable from outside.
+
+## 9a-1. The token secret is a master key
+
+`DRISHTI_TOKEN_SECRET` signs every token the console hands the server (HS256), and the server accepts **any token
+signed with it**. That is by design, and it means the secret is not a password for one service: whoever holds it can
+mint a token for any user name (even one that does not exist) with any role, `admin` included, and the server will
+believe it. It does not need the console, a user account or a sign-in. Treat it like a database root password.
+
+- **Protect it.** Generate it with `openssl rand -hex 32`; keep it in a `0600` environment file or a secret store, on
+  the two hosts that need it (the server and the console), never in `application.yaml`, an image, a repository, a
+  chat or a ticket. Do not reuse it across environments (a test secret must not open production). Keep the server's
+  `/api` unreachable except from the console (section 8), so a leaked token cannot be used from elsewhere.
+- **Rotate it** on a schedule you choose (every 90 days is common), whenever someone who knew it leaves, and at once
+  after any suspicion of a leak: 1) generate a new value; 2) put it in the server's and the console's environment;
+  3) restart both together (the server first or at the same time). Every token signed with the old secret stops
+  working at the restart: users sign in again (their sessions end), and a client that minted its own tokens needs the
+  new secret. Personal API tokens (`drk_...`) are not signed with it and keep working; revoke them separately in
+  **Admin → Tokens** if the leak could have reached them. There is no overlap window for two secrets: plan the
+  restart for a quiet moment.
+- **Limit the damage.** Tokens carry an expiry (the console mints short ones), so a captured token ages out; a leaked
+  secret does not. Review **Admin → Audit log** after a suspected leak: actions are recorded under the user name in the
+  token, including one that was made up.
+- **Alternatives that avoid sharing one secret.** Single sign-on (OIDC, section 9 item 4) moves who may sign in to
+  your identity provider, though the console and server still share the signing secret between them. For a client that
+  needs to read, use a personal API token (`drk_...`), which acts as one real user, only reads, and is revoked on its
+  own; for machine access put a gateway in front that authenticates the caller and mints nothing. Splitting the
+  secret per environment, and a vault that hands it to both processes at start, are the practical hardening steps
+  today.
 
 ## 9a. Scheduled reports
 

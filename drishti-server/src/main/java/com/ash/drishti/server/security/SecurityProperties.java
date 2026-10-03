@@ -28,16 +28,26 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param secret HS256 key shared with the console (at least 32 bytes)
  * @param clockSkew tolerated clock difference when checking expiry
  * @param roles role name to what it may see and do
+ * @param tokenReadPosts POST paths (ant patterns) that only read, so a personal API token may call them; every other non-GET
+ *     request stays refused for a token (SEC-15)
  * @param redact field names masked for roles without {@code raw}, on every path that shows or reads a value (Entitlements)
  */
 @ConfigurationProperties("drishti.security")
-public record SecurityProperties(Boolean enabled, String secret, Duration clockSkew, Map<String, Role> roles, List<String> redact) {
+public record SecurityProperties(Boolean enabled, String secret, Duration clockSkew, Map<String, Role> roles, List<String> redact,
+        List<String> tokenReadPosts) {
 
     public SecurityProperties {
         enabled = enabled != null && enabled;
         clockSkew = clockSkew == null ? Duration.ofSeconds(30) : clockSkew;
         roles = roles == null ? Map.of() : Map.copyOf(roles);
         redact = redact == null ? List.of() : List.copyOf(redact);
+        tokenReadPosts = tokenReadPosts == null ? List.of() : List.copyOf(tokenReadPosts);
+    }
+
+    /** Whether a personal API token may POST to the path: it is on the {@code token-read-posts} allow-list. */
+    public boolean tokenMayPost(String path) {
+        var matcher = new org.springframework.util.AntPathMatcher();
+        return tokenReadPosts.stream().anyMatch(pattern -> matcher.match(pattern, path));
     }
 
     /**
