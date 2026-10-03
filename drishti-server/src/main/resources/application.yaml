@@ -231,6 +231,16 @@ drishti:
     layout-cache-size: 10000        # effective layouts, one per (Sutra version, kind, data shape)
     fingerprint-cache-size: 100000  # one per (entity, generation)
     bind-parallelism: 0             # 0 = one binding thread per core
+  builder:
+    # Screen Builder: the shape extractor (POST /api/v1/builder/shape). Over-limit input is refused with DRS-5003.
+    max-samples: 50                 # documents per request
+    max-file-mb: 5                  # largest single document
+    max-total-mb: 25                # largest request
+    max-depth: 64                   # deepest nesting of one document
+    enum-max-distinct: 12           # text with at most this many distinct values (seen at least enum-min-seen times) is an enum
+    enum-min-seen: 3
+    examples: 3                     # example values per path in the report
+    rare-below: 0.5                 # fields present in fewer than this share of their records are listed as rare
   packs:
     # Domain packs (packs/<name>/pack.yaml): Sutras, mnemonics, links, badges, roles, vocabulary, samples.
     # Site settings below always override what a pack contributes.

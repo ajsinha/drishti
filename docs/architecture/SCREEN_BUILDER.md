@@ -271,7 +271,7 @@ Each step ships on its own, ends with tests that fail before it, its docs, and a
 
 | Step | Delivers | Proven by |
 |---|---|---|
-| **1. Shape engine** | `drishti-engine` `shape` package: merge, types, formats, enums, maps, trees, roles with reasons; `POST /builder/shape` | unit tests per rule; a property test that **every sample validates against its inferred schema**; the 10 examples' JSON infer the roles their panels need |
+| **1. Shape engine** | `drishti-engine` `shape` package: merge, types, formats, enums, maps, trees, roles with reasons; `POST /builder/shape` | unit tests per rule; a property test that **every sample validates against its inferred schema**; the 10 examples' JSON infer the roles their panels need. **Done in 2d525b4.** |
 | **2. Shape extractor page** | `/build/shape`: upload (≤ 50), schema tree with roles and presence, conflicts report, downloads; Build menu entry; sample sets per user | console tests; Playwright upload-and-download; limits refused cleanly |
 | **3. Auto-design and suggest** | inference rules generalised from one document to a shape; `POST /builder/design` and `/suggest` | auto-design of each example's samples renders with no panel errors and uses the expected kinds; runtime inference unchanged on the existing tests |
 | **4. Edit operations** | operations on `SutraLayoutEditor`; `POST /builder/edit` with undo-safe results | round-trip tests: operations keep comments and order; every op on every kind; bad ops are located problems |
