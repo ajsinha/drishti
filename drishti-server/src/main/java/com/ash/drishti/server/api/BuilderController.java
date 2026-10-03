@@ -225,7 +225,7 @@ public class BuilderController {
                 inputs.add(new SampleChecker.Input(name, null, EntityRef.of(k, id)));
             } else if (s.has("document")) {
                 if (s.get("document").toString().length() > limits.maxFileBytes()) {
-                    throw tooBig("'" + name + "' is over the limit of " + limits.maxFileMb() + " MB per document (drishti.builder.max-file-mb)");
+                    throw tooBig("'" + name + "' is over the limit of " + limits.maxFileMb() + " MiB per document (drishti.builder.max-file-mb)");
                 }
                 inputs.add(new SampleChecker.Input(name, s.get("document"), null));
             } else {
@@ -272,12 +272,12 @@ public class BuilderController {
         long max = limits.maxTotalBytes();
         if (request.getContentLengthLong() > max) {
             throw tooBig("the request is " + request.getContentLengthLong() + " bytes, over the limit of " + limits.maxTotalMb()
-                    + " MB (drishti.builder.max-total-mb)");
+                    + " MiB (drishti.builder.max-total-mb)");
         }
         try (InputStream in = request.getInputStream()) {
             byte[] body = in.readNBytes((int) Math.min(max + 1, Integer.MAX_VALUE - 8));
             if (body.length > max) {
-                throw tooBig("the request is over the limit of " + limits.maxTotalMb() + " MB (drishti.builder.max-total-mb)");
+                throw tooBig("the request is over the limit of " + limits.maxTotalMb() + " MiB (drishti.builder.max-total-mb)");
             }
             return body;
         }
@@ -372,7 +372,7 @@ public class BuilderController {
             long size = p.currentLocation().getByteOffset() - start;
             String label = name == null || name.isBlank() ? "sample " + (out.size() + 1) : "'" + name + "'";
             if (size > limits.maxFileBytes()) {
-                throw tooBig(label + " is " + size + " bytes, over the limit of " + limits.maxFileMb() + " MB per document (drishti.builder.max-file-mb)");
+                throw tooBig(label + " is " + size + " bytes, over the limit of " + limits.maxFileMb() + " MiB per document (drishti.builder.max-file-mb)");
             }
             if (document == null) {
                 throw bad(label + " has no 'document'");

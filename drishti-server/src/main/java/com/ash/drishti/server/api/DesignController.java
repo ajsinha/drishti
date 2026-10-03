@@ -215,7 +215,7 @@ public class DesignController {
                 }
                 String json = mapper.writeValueAsString(s.get("document"));
                 if (json.length() > limits.maxFileBytes()) {
-                    throw new ShapeException(label + " is over the limit of " + limits.maxFileMb() + " MB per document (drishti.builder.max-file-mb)");
+                    throw new ShapeException(label + " is over the limit of " + limits.maxFileMb() + " MiB per document (drishti.builder.max-file-mb)");
                 }
                 add.add(new DesignService.NewSample(name, StoredDesign.DOCUMENT, null, null, json));
             }
@@ -465,6 +465,9 @@ public class DesignController {
         if (b.path("baseRev").canConvertToInt() && b.get("baseRev").isIntegralNumber()) {
             return b.get("baseRev").asInt();
         }
+        if (b.has("baseRev") && !b.get("baseRev").isNull()) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "'baseRev' must be a whole number: the revision you built on (the 'rev' of the design)");
+        }
         if (required || current == null) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "'baseRev' is required: the revision you built on (the 'rev' of the design)");
         }
@@ -581,13 +584,13 @@ public class DesignController {
         long max = limits.maxTotalBytes();
         if (request.getContentLengthLong() > max) {
             drain(request, max);
-            throw new ShapeException("the request is over the limit of " + limits.maxTotalMb() + " MB (drishti.builder.max-total-mb)");
+            throw new ShapeException("the request is over the limit of " + limits.maxTotalMb() + " MiB (drishti.builder.max-total-mb)");
         }
         try (InputStream in = request.getInputStream()) {
             byte[] bytes = in.readNBytes((int) Math.min(max + 1, Integer.MAX_VALUE - 8));
             if (bytes.length > max) {
                 drain(request, max);
-                throw new ShapeException("the request is over the limit of " + limits.maxTotalMb() + " MB (drishti.builder.max-total-mb)");
+                throw new ShapeException("the request is over the limit of " + limits.maxTotalMb() + " MiB (drishti.builder.max-total-mb)");
             }
             JsonNode n = mapper.readTree(bytes);
             if (n == null || !n.isObject()) {

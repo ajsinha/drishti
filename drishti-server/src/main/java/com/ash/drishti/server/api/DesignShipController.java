@@ -114,14 +114,14 @@ public class DesignShipController {
     public ObjectNode importZip(HttpServletRequest request, @RequestAttribute(Principal.ATTRIBUTE) Principal who) throws IOException {
         long max = shapes.limits().maxTotalBytes();
         if (request.getContentLengthLong() > max) {
-            throw new DrishtiException(ErrorCode.PAYLOAD_TOO_LARGE, "the zip is over " + shapes.limits().maxTotalMb() + " MB (drishti.builder.max-total-mb)");
+            throw new DrishtiException(ErrorCode.PAYLOAD_TOO_LARGE, "the zip is over " + shapes.limits().maxTotalMb() + " MiB (drishti.builder.max-total-mb)");
         }
         byte[] zip;
         try (InputStream in = request.getInputStream()) {
             zip = in.readNBytes((int) Math.min(max + 1, Integer.MAX_VALUE - 8));
         }
         if (zip.length > max) {
-            throw new DrishtiException(ErrorCode.PAYLOAD_TOO_LARGE, "the zip is over " + shapes.limits().maxTotalMb() + " MB (drishti.builder.max-total-mb)");
+            throw new DrishtiException(ErrorCode.PAYLOAD_TOO_LARGE, "the zip is over " + shapes.limits().maxTotalMb() + " MiB (drishti.builder.max-total-mb)");
         }
         PackFragment.Imported r = fragment.importZip(who.user(), zip, max);
         return PackFragment.toJson(r, d -> api.view(designs.summary(d), false));

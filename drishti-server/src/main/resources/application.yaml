@@ -258,8 +258,8 @@ drishti:
       dir: ./data/designs
       max-per-user: 50              # designs one user keeps
       max-samples: 50               # samples in one design
-      max-mb: 25                    # megabytes of sample documents in one design
-      max-user-mb: 250              # megabytes of sample documents across one user's designs
+      max-mb: 25                    # MiB (1,048,576 bytes) of sample documents in one design
+      max-user-mb: 250              # MiB of sample documents across one user's designs
       scratch-ttl: 1d               # an unnamed design is deleted this long after it was last touched
       named-ttl: 90d                # a named design, likewise
       warn-after: 75d               # a named design untouched this long is listed with an expiry warning

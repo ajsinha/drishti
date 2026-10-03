@@ -123,6 +123,14 @@ class StrictSutraTest {
     }
 
     @Test
+    void anExpressionProblemSaysItsCodeOnce() {
+        com.ash.drishti.rachana.model.Sutra sutra = parser.parse(panel("{ id: a, kind: kv, rows: \"$.mtm +\", columns: [ { label: A, bind: \"@.a\" } ] }"), "qa.sutra.yaml", "qa");
+        SutraProblem p = new SutraExpressions(new ElCompiler()).check(sutra).get(0);
+        assertThat(p.code()).isEqualTo("DRS-2101");
+        assertThat(p.message()).doesNotContain("DRS-2101");
+    }
+
+    @Test
     void anOutOfRangeVersionIsAVersionProblemNotYamlSyntax() {
         for (String v : List.of("99999999999999999999", "3000000000")) {
             assertThat(problems(HEAD.replace("version: 1", "version: " + v) + "panels: []\n")).singleElement().satisfies(p -> {

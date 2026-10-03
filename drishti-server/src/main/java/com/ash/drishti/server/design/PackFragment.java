@@ -281,7 +281,7 @@ public class PackFragment {
                 byte[] data = in.readNBytes((int) Math.min(maxBytes - total + 1, Integer.MAX_VALUE - 8));
                 total += data.length;
                 if (total > maxBytes) {
-                    throw new DrishtiException(ErrorCode.PAYLOAD_TOO_LARGE, "the zip unpacks to more than " + (maxBytes / 1048576) + " MB");
+                    throw new DrishtiException(ErrorCode.PAYLOAD_TOO_LARGE, "the zip unpacks to more than " + (maxBytes / 1048576) + " MiB");
                 }
                 if (path.endsWith(".yaml") || path.endsWith(".yml") || path.endsWith(".json") || path.endsWith(".md")) {
                     items.add(new Item(path, new String(data, StandardCharsets.UTF_8)));

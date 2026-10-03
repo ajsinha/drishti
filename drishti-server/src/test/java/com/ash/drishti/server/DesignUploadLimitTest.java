@@ -41,5 +41,21 @@ class DesignUploadLimitTest {
         HttpResponse<String> r = http.send(HttpRequest.newBuilder(URI.create(base + "/" + id + "/samples")).header("Authorization", auth)
                 .header("Content-Type", "application/json").POST(HttpRequest.BodyPublishers.ofString(body.toString())).build(), HttpResponse.BodyHandlers.ofString());
         assertThat(r.statusCode()).isEqualTo(413);
+        assertThat(r.body()).contains("MiB").doesNotContain(" MB");
+    }
+
+    @Test
+    void aTextBaseRevSaysItMustBeAWholeNumber() throws Exception {
+        String auth = "Bearer " + tokens.mint("bea", List.of("author"), 300);
+        HttpClient http = HttpClient.newHttpClient();
+        String base = "http://localhost:" + port + "/api/v1/builder/designs";
+        HttpResponse<String> made = http.send(HttpRequest.newBuilder(URI.create(base)).header("Authorization", auth).header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString("{\"name\":\"rev\",\"kind\":\"rev-thing\"}")).build(), HttpResponse.BodyHandlers.ofString());
+        String id = made.body().replaceAll(".*\"id\":\"([^\"]+)\".*", "$1");
+        HttpResponse<String> r = http.send(HttpRequest.newBuilder(URI.create(base + "/" + id + "/ops")).header("Authorization", auth)
+                .header("Content-Type", "application/json").POST(HttpRequest.BodyPublishers.ofString("{\"baseRev\":\"x\",\"ops\":[]}")).build(),
+                HttpResponse.BodyHandlers.ofString());
+        assertThat(r.statusCode()).isEqualTo(400);
+        assertThat(r.body()).contains("must be a whole number");
     }
 }

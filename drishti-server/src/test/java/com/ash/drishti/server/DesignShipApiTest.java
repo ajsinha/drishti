@@ -137,7 +137,8 @@ class DesignShipApiTest {
         String who = as("ana", "author");
         ok(mvc.perform(post("/api/v1/builder/designs/" + id + "/samples").header("Authorization", who).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"samples\":[{\"name\":\"\u00e9.json\",\"document\":{\"thingId\":\"T-3\",\"label\":\"x\"}},"
-                        + "{\"name\":\"\u540d.json\",\"document\":{\"thingId\":\"T-4\",\"label\":\"y\"}}]}")));
+                        + "{\"name\":\"\u540d.json\",\"document\":{\"thingId\":\"T-4\",\"label\":\"y\"}},"
+                        + "{\"name\":\"..\",\"document\":{\"thingId\":\"T-5\",\"label\":\"z\"}}]}")));
         String cur = id;
         for (int cycle = 0; cycle < 3; cycle++) {
             byte[] zip = mvc.perform(get("/api/v1/builder/designs/" + cur + "/export").header("Authorization", who))
@@ -148,7 +149,7 @@ class DesignShipApiTest {
             JsonNode d = ok(mvc.perform(get("/api/v1/builder/designs/" + cur).header("Authorization", who)));
             assertThat(d.path("notes").asText()).isEqualTo("reviewer: see the secret note");
             assertThat(d.path("samples")).extracting(x -> x.path("name").asText())
-                    .containsExactlyInAnyOrder("first.json", "second.json", "\u00e9.json", "\u540d.json");
+                    .containsExactlyInAnyOrder("first.json", "second.json", "\u00e9.json", "\u540d.json", "_.json");
         }
     }
 
