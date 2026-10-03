@@ -27,7 +27,7 @@
     {% for s, label in [('pending', 'Waiting'), ('approved', 'Approved'), ('rejected', 'Rejected'), ('all', 'All')] %}
     <a class="lnk{% if status == s %} on{% endif %}" href="/build/reviews?status={{ s }}"{% if status == s %} aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}
   </nav>
-  {% if error %}<p class="asof-banner" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ error.detail }} <span class="mono">({{ error.code }})</span></p>
+  {% if error %}<p class="asof-banner" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> <span class="mono">{{ drs_message(error.code, error.detail) }}</span></p>
   {% elif not proposals %}<p class="text-muted-d">Nothing here.</p>
   {% else %}
   <section class="pnl"><div class="pnl-b"><div class="tbl-wrap"><table class="tbl">

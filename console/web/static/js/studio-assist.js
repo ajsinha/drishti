@@ -136,7 +136,7 @@
   }
 
   /** The light check: problems of a parsed Sutra against the schema (code CHECK, 1-based line and column). */
-  function problemsOf(schema, tree) {
+  function problemsOf(schema, tree, validKinds) {
     var out = [], tabbed = {};
     (tree.tabs || []).forEach(function (n) { tabbed[n] = true; });
     function add(node, len, msg) { out.push({ code: 'CHECK', location: { line: node.line + 1, column: (node.ch || 0) + 1 }, len: len, message: msg }); }
@@ -144,7 +144,7 @@
       s = schema.resolve(s);
       if (!s || !node) { return; }
       if (s['const'] !== undefined && node.t === 'scalar' && node.v !== s['const']) { add(node, String(node.raw).length, label + ' must be ' + s['const']); }
-      if (s['enum'] && node.t === 'scalar' && node.v !== '' && node.v !== null && s['enum'].indexOf(node.v) < 0 && !/\$\{/.test(String(node.v))) {
+      if (s['enum'] && node.t === 'scalar' && node.v !== '' && node.v !== null && s['enum'].indexOf(node.v) < 0 && !(label === 'match.kind' && (validKinds || []).indexOf(node.v) >= 0) && !/\$\{/.test(String(node.v))) {
         add(node, String(node.raw).length, '"' + node.v + '" is not a ' + (key === 'kind' && label.indexOf('match') < 0 ? 'panel kind' : 'valid ' + key) + (s['enum'].length <= 16 ? ' (' + s['enum'].join(', ') + ')' : ''));
       }
       if (s.type === 'boolean' && node.t === 'scalar' && typeof node.v !== 'boolean') { add(node, String(node.raw).length, label + ' is true or false'); }
@@ -358,7 +358,7 @@
     function check() {
       if (!schema) { return; }
       var ps;
-      try { ps = problemsOf(schema, Y.parse(cm.getValue())); } catch (e) { ps = []; }
+      try { ps = problemsOf(schema, Y.parse(cm.getValue()), opts.validKinds ? opts.validKinds() : []); } catch (e) { ps = []; }
       cm.operation(function () {
         marks.forEach(function (m) { m.clear(); });
         marks = [];

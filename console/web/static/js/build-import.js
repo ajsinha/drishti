@@ -26,7 +26,7 @@
   function say(text, bad) { status.textContent = text; status.classList.toggle('bad', !!bad); }
   function done(r) {
     return r.json().catch(function () { return {}; }).then(function (j) {
-      if (!r.ok) { say((j.detail || 'The import failed') + ' (' + (j.code || r.status) + ')', true); return; }
+      if (!r.ok) { say(window.drsMessage({ code: j.code || ('HTTP ' + r.status), detail: j.detail }, 'The import failed'), true); return; }
       var ds = j.designs || [];
       say('Made ' + ds.length + ' design' + (ds.length === 1 ? '' : 's') + (j.skipped && j.skipped.length ? '; ' + j.skipped.length + ' note' + (j.skipped.length === 1 ? '' : 's') + ' below.' : '.'));
       list.textContent = '';

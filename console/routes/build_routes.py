@@ -24,7 +24,7 @@ import logging
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 
-from core import builder, designs, sutra_diff
+from core import builder, designs, partial, sutra_diff
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
 from routes.common import ident, render
@@ -269,12 +269,46 @@ def _html(request: Request, vm) -> str:
     return request.app.state.templates.get_template("studio/_preview.html").render(vm=vm) if vm else ""
 
 
+async def _salvage(request: Request, id_: str, yaml_text: str, error: str, sample: str = "", document=None, kind: str = "") -> dict:
+    """The located problems of a refused Sutra and, when each sits inside a panel, the preview of the Sutra without those panels
+    (``previewHtml``, ``dropped``): a wrong expression costs its panel, not the canvas (UX-02). Nothing is saved."""
+    problems = partial.locate(yaml_text, partial.parse_problems(error))
+    out: dict = {"checkProblems": problems}
+    panels = {p["panel"] for p in problems if p.get("panel")}
+    if not problems or len(panels) == 0 or any("panel" not in p for p in problems):
+        return out
+    me, backend = ident(request), request.app.state.backend
+    try:
+        if document is None:
+            design = await backend.designs("GET", f"/{id_}", me)
+            kind = kind or design.get("kind") or ""
+            names = [s.get("name") for s in design.get("samples") or [] if s.get("type") != "ref"]
+            name = sample if sample in names else (names[0] if names else "")
+            if not name:
+                return out
+            document = await backend.designs("GET", f"/{id_}/samples/document", me, name=name)
+        vm = await backend.preview(partial.without_panels(yaml_text, panels), kind or _studio_kind(request), "SAMPLE", me, document=document)
+    except BackendError:
+        return out
+    out["previewHtml"] = _html(request, vm)
+    out["dropped"] = [p for p in problems if p.get("panel")]
+    return out
+
+
 @router.get("/designs/{id_}/preview")
 async def preview(request: Request, id_: str, sample: str = ""):
     """The Design's Sutra against one of its samples, as Studio draws it. A stored entity the user may not open is a 403 'no access'."""
     try:
         vm = await request.app.state.backend.designs("GET", f"/{id_}/preview", ident(request), sample=sample or None)
     except BackendError as e:
+        if e.code == "DRS-2002":
+            try:
+                design = await request.app.state.backend.designs("GET", f"/{id_}", ident(request))
+            except BackendError:
+                return _error(e)
+            got = await _salvage(request, id_, design.get("sutra") or "", e.detail, sample)
+            if got["checkProblems"]:
+                return {"sample": sample, **got}
         return _error(e)
     return {"previewHtml": _html(request, vm), "sample": sample}
 
@@ -294,9 +328,15 @@ async def autodesign(request: Request, id_: str):
 
 # ---- the workbench: operations, undo, check, suggestions, a file ---------------------------------------------------------------
 
-def _drawn(request: Request, result: dict) -> dict:
-    """An ops/undo/redo answer with its preview view model replaced by the HTML Studio draws (the server sends the model)."""
+async def _drawn(request: Request, id_: str, result: dict, sample: str = "") -> dict:
+    """An ops/undo/redo answer with its preview view model replaced by the HTML Studio draws (the server sends the model). A Sutra the
+    server refused comes back as ``checkProblems`` (located) with the preview of its other panels, not as an error string."""
     result["previewHtml"] = _html(request, result.pop("preview", None))
+    if result.get("previewError") and result.get("yaml"):
+        got = await _salvage(request, id_, result["yaml"], result["previewError"], sample)
+        if got["checkProblems"]:
+            result.pop("previewError")
+            result.update(got)
     return result
 
 
@@ -306,7 +346,7 @@ async def apply_ops(request: Request, id_: str):
     body = await _body(request)
     send = {k: body[k] for k in ("baseRev", "ops", "sample") if k in body}
     try:
-        return _drawn(request, await request.app.state.backend.designs("POST", f"/{id_}/ops", ident(request), send))
+        return await _drawn(request, id_, await request.app.state.backend.designs("POST", f"/{id_}/ops", ident(request), send), send.get("sample") or "")
     except BackendError as e:
         return _error(e)
 
@@ -314,7 +354,7 @@ async def apply_ops(request: Request, id_: str):
 async def _step(request: Request, id_: str, move: str):
     body = await _body(request)
     try:
-        return _drawn(request, await request.app.state.backend.designs("POST", f"/{id_}/{move}", ident(request), {k: body[k] for k in ("baseRev",) if k in body}))
+        return await _drawn(request, id_, await request.app.state.backend.designs("POST", f"/{id_}/{move}", ident(request), {k: body[k] for k in ("baseRev",) if k in body}))
     except BackendError as e:
         return _error(e)
 
@@ -337,6 +377,12 @@ async def check(request: Request, id_: str):
     try:
         return await request.app.state.backend.designs("POST", f"/{id_}/check", ident(request), {})
     except BackendError as e:
+        if e.code == "DRS-2002":     # the Sutra does not compile: say where, as Problems (UX-02)
+            try:
+                design = await request.app.state.backend.designs("GET", f"/{id_}", ident(request))
+            except BackendError:
+                return _error(e)
+            return _error(e, checkProblems=partial.locate(design.get("sutra") or "", partial.parse_problems(e.detail)))
         return _error(e)
 
 
@@ -370,6 +416,10 @@ async def preview_file(request: Request, id_: str):
             return _refuse(400, "this design has no Sutra yet")
         vm = await backend.preview(design["sutra"], design.get("kind") or _studio_kind(request), "SAMPLE", me, document=body["document"])
     except BackendError as e:
+        if e.code == "DRS-2002":
+            got = await _salvage(request, id_, design.get("sutra") or "", e.detail, document=body["document"], kind=design.get("kind") or "")
+            if got["checkProblems"]:
+                return got
         return _error(e)
     return {"previewHtml": _html(request, vm)}
 

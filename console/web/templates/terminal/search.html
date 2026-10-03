@@ -53,7 +53,7 @@
     · <span class="mono">and or not</span> · <span class="mono">contains</span> · <span class="mono">startswith</span> · amounts <span class="mono">250k 1.5m 2bn</span>.
     It follows the date in the top bar.</p>
   {% if error %}
-    <p class="asof-banner" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ error.detail }} <span class="mono">({{ error.code }})</span></p>
+    <p class="asof-banner" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> <span class="mono">{{ drs_message(error.code, error.detail) }}</span></p>
   {% elif data %}
     <div class="cmp-sum">
       <span><b>{{ data.matched }}</b> of {{ data.scanned }} {{ data.kind | replace('-', ' ') }}{{ '' if data.scanned == 1 else 's' }} match{% if data.matched > rows | length %}; the first {{ rows | length }} are shown{% endif %}</span>

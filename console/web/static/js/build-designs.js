@@ -25,7 +25,7 @@
     return fetch(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) })
       .then(function (r) { return (r.status === 204 ? Promise.resolve({}) : r.json()).then(function (j) { return { ok: r.ok, body: j, status: r.status }; }); });
   }
-  function why(r) { return (r.body.detail || 'The request failed') + ' (' + (r.body.code || r.status) + ')'; }
+  function why(r) { return window.drsMessage({ code: r.body.code || ('HTTP ' + r.status), detail: r.body.detail }, 'The request failed'); }
 
   root.querySelectorAll('time[data-ms]').forEach(function (t) {
     var ms = parseInt(t.dataset.ms, 10);

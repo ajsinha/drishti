@@ -25,7 +25,7 @@
   <p>Proposed by <b>{{ p.author }}</b> on <span class="mono">{{ (p.createdAt or '')[:16] | replace('T', ' ') }}</span>{% if p.note %}: “{{ p.note }}”{% endif %}.
     <span class="cmp-k {{ 'added' if p.status == 'approved' else 'removed' if p.status in ('rejected', 'withdrawn') else 'changed' }}">{{ p.status }}</span>
     {% if p.reviewer %} by <b>{{ p.reviewer }}</b>{% if p.comment %}: “{{ p.comment }}”{% endif %}{% endif %}</p>
-  {% if error %}<p class="asof-banner" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ error.detail }} <span class="mono">({{ error.code }})</span></p>{% endif %}
+  {% if error %}<p class="asof-banner" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> <span class="mono">{{ drs_message(error.code, error.detail) }}</span></p>{% endif %}
   {% if p.stale %}<p class="asof-banner" role="status"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> The live Sutra changed after this was proposed.
     It cannot be approved: reject it and propose again from the live version.</p>{% endif %}
   <h2 class="ws-h">{{ ('New version: changes against the latest earlier version' if p.previousText else 'New version: the whole Sutra') if p.newVersion else 'Changes against the live Sutra' }}</h2>

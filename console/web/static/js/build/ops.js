@@ -34,7 +34,14 @@
     if (attrs) { Object.keys(attrs).forEach(function (k) { e.setAttribute(k, attrs[k]); }); }
     return e;
   };
-  WB.why = function (r) { return (r.body && r.body.detail ? r.body.detail : 'The request failed') + ' (' + ((r.body && r.body.code) || r.status) + ')'; };
+  /** The sentence for problems the server found in a Sutra it would not compile (each has panel, option, line, message; the code is shown once). */
+  WB.problemText = function (p) {
+    return (p.panel ? 'Panel ' + p.panel + (p.option ? ', ' + p.option : '') + ': ' : '') + p.message;
+  };
+  WB.sutraFailure = function (ps) {
+    return ps.length + ' problem' + (ps.length === 1 ? '' : 's') + ' in the Sutra, so the panels that read are drawn without ' + (ps.length === 1 ? 'it' : 'them') + '. Problems lists ' + (ps.length === 1 ? 'it' : 'them') + ' with the line.';
+  };
+  WB.why = function (r) { var b = r.body || {}; return window.drsMessage({ code: b.code || ('HTTP ' + r.status), detail: b.detail }, 'The request failed'); };
   WB.call = function (method, url, body) {
     return fetch(url, { method: method, headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { ok: r.ok, status: r.status, body: j }; }); },
@@ -51,18 +58,19 @@
 
   WB.Store = function (init) {
     var bus = new Bus(), base = '/build/designs/' + encodeURIComponent(init.id);
-    var st = { id: init.id, kind: init.kind, rev: init.rev, yaml: init.yaml || '', problems: [], opsAt: init.opsAt || 0, opsCount: init.opsCount || 0,
+    var st = { id: init.id, kind: init.kind, rev: init.rev, yaml: init.yaml || '', problems: [], checkProblems: [], opsAt: init.opsAt || 0, opsCount: init.opsCount || 0,
                samples: init.samples || [], sample: (init.samples && init.samples[0]) || '', file: null, status: init.status || 'draft' };
     var queue = Promise.resolve();
 
     function adopt(b, source) {
       var changed = b.yaml !== st.yaml;
       st.rev = b.rev; st.yaml = b.yaml; st.status = b.status || st.status;
-      st.opsAt = b.opsAt || 0; st.opsCount = b.opsCount || 0; st.problems = b.problems || [];
-      bus.emit('doc', { yaml: st.yaml, rev: st.rev, problems: st.problems, applied: b.applied, changed: changed, source: source });
-      if (b.previewHtml !== undefined && !st.file) { bus.emit('preview', { html: b.previewHtml, name: st.sample }); }
+      st.opsAt = b.opsAt || 0; st.opsCount = b.opsCount || 0; st.problems = b.problems || []; st.checkProblems = b.checkProblems || [];
+      bus.emit('doc', { yaml: st.yaml, rev: st.rev, problems: st.problems, checkProblems: st.checkProblems, applied: b.applied, changed: changed, source: source });
+      if (b.previewHtml !== undefined && !st.file) { bus.emit('preview', { html: b.previewHtml, name: st.sample, dropped: b.dropped, failed: st.checkProblems.length > 0 }); }
       else if (st.file) { previewFile(st.file); }
-      if (b.previewError) { bus.emit('say', 'The preview could not be drawn: ' + b.previewError, true); }
+      if (st.checkProblems.length) { bus.emit('say', WB.sutraFailure(st.checkProblems), true); }
+      else if (b.previewError) { bus.emit('say', 'The preview could not be drawn: ' + b.previewError, true); }
     }
     function conflict() {
       return WB.call('GET', base).then(function (r) {
@@ -71,7 +79,6 @@
         bus.emit('say', 'The design changed somewhere else (another tab?), so your last change was not applied. It has been reloaded at revision ' + st.rev + '; make the change again.', true);
       });
     }
-    function describe(p) { return (p.name ? p.name + ': ' : '') + p.message + (p.code ? ' (' + p.code + ')' : ''); }
 
     /** Sends operations after the ones already waiting; resolves with {ok, applied, problems} (never rejects). */
     function send(ops, label) {
@@ -81,7 +88,7 @@
           if (!r.ok) { bus.emit('say', WB.why(r), true); return { ok: false, applied: 0, problems: [] }; }
           adopt(r.body, 'ops');
           var ps = r.body.problems || [];
-          if (ps.length) { bus.emit('say', ps.map(describe).join(' '), true); } else if (label) { bus.emit('say', label + '. Ctrl+Z undoes it.'); }
+          if (ps.length) { bus.emit('say', ps.map(function (p) { return WB.problemText(p); }).join(' '), true); } else if (label && !st.checkProblems.length) { bus.emit('say', label + '. Ctrl+Z undoes it.'); }
           return { ok: !ps.length, applied: r.body.applied, problems: ps, body: r.body };
         });
       };
@@ -110,7 +117,7 @@
       return WB.call('POST', base + '/preview-file', { document: f.document }).then(function (r) {
         if (st.file !== f) { return; }
         if (!r.ok) { bus.emit('say', 'The file could not be previewed: ' + WB.why(r), true); return; }
-        bus.emit('preview', { html: r.body.previewHtml, name: f.name, file: true });
+        bus.emit('preview', { html: r.body.previewHtml, name: f.name, file: true, dropped: r.body.dropped, failed: !!(r.body.checkProblems || []).length });
       });
     }
     /** Draws the preview of the chosen sample (or of the file being tried). */
@@ -122,7 +129,8 @@
         if (st.sample !== name || st.file) { return; }
         if (r.status === 403) { bus.emit('preview', { html: '', name: name, error: 'No access: ' + String(r.body.detail || '').replace(/^no access:\s*/i, '') }); return; }
         if (!r.ok) { bus.emit('preview', { html: '', name: name, error: WB.why(r) }); return; }
-        bus.emit('preview', { html: r.body.previewHtml, name: name });
+        if (r.body.checkProblems) { st.checkProblems = r.body.checkProblems; bus.emit('checkprobs', st.checkProblems); }
+        bus.emit('preview', { html: r.body.previewHtml, name: name, dropped: r.body.dropped, failed: !!(r.body.checkProblems || []).length });
       });
     }
     function setSample(name) { st.sample = name; st.file = null; bus.emit('sample', name); return refresh(); }

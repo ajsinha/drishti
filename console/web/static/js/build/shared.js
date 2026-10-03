@@ -27,7 +27,7 @@
   function tell(text, bad) { say.textContent = text; say.classList.toggle('bad', !!bad); }
   function show(r) {
     return r.json().catch(function () { return {}; }).then(function (j) {
-      if (!r.ok) { tell((j.detail || 'The preview failed') + ' (' + (j.code || r.status) + ')', true); return; }
+      if (!r.ok) { tell(window.drsMessage({ code: j.code || ('HTTP ' + r.status), detail: j.detail }, 'The preview failed'), true); return; }
       frame.innerHTML = j.previewHtml || '';
       if (window.drishti) { window.drishti.enhance(frame); window.drishti.redraw(); }
       tell('Previewed with your data. Nothing was saved.');

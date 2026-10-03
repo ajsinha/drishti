@@ -97,8 +97,17 @@
       var had = frame.contains(document.activeElement);
       frame.textContent = '';
       if (p.error) { frame.appendChild(WB.el('p', 'bs-status bad', p.error)); return; }
-      if (!p.html) { frame.appendChild(WB.el('p', 'text-muted-d wb-empty', 'Nothing to draw yet: the design needs a Sutra with panels and a sample.')); return; }
+      if (!p.html) {
+        frame.appendChild(p.failed ? WB.el('p', 'bs-status bad wb-empty', 'The Sutra has problems that stop it from drawing: see the Problems tab.')
+          : WB.el('p', 'text-muted-d wb-empty', 'Nothing to draw yet: the design needs a Sutra with panels and a sample.'));
+        return;
+      }
       frame.innerHTML = p.html;
+      if (p.dropped && p.dropped.length) {
+        var note = WB.el('p', 'bs-status bad wb-dropped', null, { role: 'note' });
+        note.textContent = 'Not drawn: ' + p.dropped.map(function (d) { return d.panel + (d.option ? ' (' + d.option + ')' : ''); }).join(', ') + '. See the Problems tab.';
+        frame.insertBefore(note, frame.firstChild);
+      }
       if (window.drishti) { window.drishti.enhance(frame); window.drishti.redraw(); }
       decorate();
       if (sel && !regionEl(sel)) { sel = null; if (hooks.onSelect) { hooks.onSelect(null); } }

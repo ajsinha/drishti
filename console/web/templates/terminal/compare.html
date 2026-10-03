@@ -30,7 +30,7 @@
     <button type="submit" class="btn btn-sm btn-outline-secondary">Compare</button>
   </form>
   {% if error %}
-    <p class="asof-banner" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ error.detail }} <span class="mono">({{ error.code }})</span></p>
+    <p class="asof-banner" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> <span class="mono">{{ drs_message(error.code, error.detail) }}</span></p>
   {% elif data %}
     <div class="cmp-sum">
       <span><b class="mono">{{ data.from.businessDate }}</b>{% if data.from.knownAt %} known at <span class="mono">{{ known_local(data.from.knownAt, (business_date or {}).zone) | replace('T', ' ') }}</span>{% endif %}

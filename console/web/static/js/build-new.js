@@ -39,7 +39,7 @@
     return fetch(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) })
       .then(function (r) { return (r.status === 204 ? Promise.resolve({}) : r.json()).then(function (j) { return { ok: r.ok, status: r.status, body: j }; }); });
   }
-  function why(r) { return (r.body.detail || 'The request failed') + ' (' + (r.body.code || r.status) + ')'; }
+  function why(r) { return window.drsMessage({ code: r.body.code || ('HTTP ' + r.status), detail: r.body.detail }, 'The request failed'); }
 
   // ---- files and folders -----------------------------------------------------------------------------------------
   function add(fileList) {

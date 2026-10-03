@@ -26,7 +26,7 @@
 <div class="adm bs">
   <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">My designs</a></nav>
   <h1>Design not found</h1>
-  <p class="asof-banner" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ error.detail }} <span class="mono">({{ error.code }})</span></p>
+  <p class="asof-banner" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> <span class="mono">{{ drs_message(error.code, error.detail) }}</span></p>
   <p class="text-muted-d">A design is only ever opened by the person who made it, and unnamed ones are forgotten after a day.
     <a class="lnk" href="/build">My designs</a> · <a class="lnk" href="/build/new">New screen</a></p>
 </div>

@@ -57,6 +57,7 @@
     }
     var assist = editor && window.drishtiAssist ? window.drishtiAssist.attach(editor, {
       say: function (m, bad) { store.emit('say', m, bad); }, helpEl: helpEl, getDoc: sampleDoc,
+      validKinds: function () { return [store.state.kind]; },       // the design's own kind is valid even when no pack defines it (UX-01)
       onCheck: function (ps) { live = ps; store.emit('yamlcheck', ps); }
     }) : null;
 

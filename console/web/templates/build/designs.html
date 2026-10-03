@@ -29,7 +29,7 @@
   <p class="bs-actions"><a class="btn-pill btn-accent" href="/build/new"><i class="bi bi-plus-lg" aria-hidden="true"></i> New screen</a>
     <a class="btn-pill btn-ghost" href="/build/new#examples">Examples</a></p>
   <div class="bs-status" role="status" aria-live="polite" data-status></div>
-  {% if error %}<p class="asof-banner" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ error.detail }} <span class="mono">({{ error.code }})</span></p>
+  {% if error %}<p class="asof-banner" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> <span class="mono">{{ drs_message(error.code, error.detail) }}</span></p>
   {% elif not designs %}<p class="text-muted-d" data-empty>Nothing here yet. <a class="lnk" href="/build/new">Start a new screen</a>.</p>
   {% else %}
   <section class="pnl"><div class="pnl-b"><div class="tbl-wrap"><table class="tbl" aria-label="My designs">

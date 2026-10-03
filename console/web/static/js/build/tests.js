@@ -83,7 +83,13 @@
         .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b, status: r.status }; }); })
         .then(function (r) {
           if (mine !== token) { return; }                        // a newer change has started a newer run
-          if (!r.ok) { summary.textContent = 'The check could not run: ' + WB.why(r); summary.className = 'wb-sum bad'; store.emit('checkfailed', WB.why(r)); return; }
+          if (!r.ok) {
+            var cp = r.body.checkProblems || [];
+            if (cp.length) { store.state.checkProblems = cp; store.emit('checkprobs', cp); }
+            summary.textContent = cp.length ? 'The check cannot run while the Sutra has problems: ' + cp.length + ' listed under Problems.' : 'The check could not run: ' + WB.why(r);
+            summary.className = 'wb-sum bad'; holder.textContent = ''; store.emit('checkfailed', WB.why(r)); return;
+          }
+          if ((store.state.checkProblems || []).length) { store.state.checkProblems = []; store.emit('checkprobs', []); }
           last = r.body; paint(r.body);
           var p = passing(r.body);
           store.emit('checked', { matrix: r.body, passing: p.passing, total: p.total });
