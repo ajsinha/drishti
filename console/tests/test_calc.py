@@ -161,8 +161,18 @@ def test_only_the_calc_worker_may_compile_webassembly(client):
     page = client.get("/t").headers["content-security-policy"]
     assert "worker-src 'self'" in page and "wasm" not in page and "unsafe-eval" not in page
     worker = client.get("/static/js/calc-worker.js").headers["content-security-policy"]
-    assert worker == "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self'"
+    assert worker == "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src testserver/static/ testserver/pyodide/"
     assert "'unsafe-eval'" not in worker
+
+
+def test_the_calc_worker_cannot_fetch_a_console_route(client):
+    """SEC-17: its requests carry the session cookie, so it may reach only static files and the runtime, never /api."""
+    worker = client.get("/static/js/calc-worker.js").headers["content-security-policy"]
+    connect = worker.split("connect-src ", 1)[1]
+    assert "'self'" not in connect and "/api" not in connect
+    assert connect.split() == ["testserver/static/", "testserver/pyodide/"]
+    odd = client.get("/static/js/calc-worker.js", headers={"host": "evil.example; script-src *"}).headers["content-security-policy"]
+    assert "connect-src 'none'" in odd and "script-src *" not in odd
 
 
 def test_the_runtime_is_served_from_this_origin_versioned_and_cached(client):

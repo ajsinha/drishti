@@ -212,6 +212,12 @@
       var box = el('div', 'calc-err');
       box.appendChild(el('strong', null, m.error || 'Error'));
       if (m.traceback) { box.appendChild(el('pre', 'mono', m.traceback)); }
+      if (m.details) {                                  // every frame, the runtime's too, behind a toggle (UX-19)
+        var more = el('details', 'calc-details');
+        more.appendChild(el('summary', null, 'Details'));
+        more.appendChild(el('pre', 'mono', m.details));
+        box.appendChild(more);
+      }
       out.appendChild(box);
       if (m.line && editor) { errLine = m.line - 1; editor.addLineClass(errLine, 'background', 'calc-err-line'); }
     }

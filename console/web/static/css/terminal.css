@@ -146,6 +146,7 @@ body.terminal { font-size: 14px; }
 .fkeys nav { display: flex; flex-wrap: wrap; gap: .3rem 1.3rem; }
 .fk { background: none; border: 0; padding: 0; color: var(--d-muted); }
 .fk b { color: var(--d-accent); font-weight: 500; }
+.fk-t { display: inline-block; max-width: 22ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }   /* the whole title shows on hover and focus (title, aria-label) */
 .fk:hover { color: var(--d-ink); }
 .fk-note { color: var(--d-faint); font-size: .75rem; }
 .raw { position: fixed; top: 0; right: 0; bottom: 0; width: min(640px, 92vw); z-index: 1200; background: var(--d-surface);
@@ -210,6 +211,8 @@ kbd { background: var(--d-surface-2); color: var(--d-ink); border: 1px solid var
 .studio-problems li:hover { background: var(--d-highlight); }
 .studio-status { padding: .5rem .8rem; border-bottom: 1px solid var(--d-border); color: var(--d-muted); font-size: .8rem; }
 .studio-preview { flex: 1; overflow: auto; }
+.studio-stale > :not(.studio-stale-note) { opacity: .45; }
+.studio-stale-note { margin: 0 0 .5rem; padding: .35rem .6rem; border: 1px solid var(--d-border); border-radius: 4px; font-size: .85rem; }
 .studio-view .vtitle { padding: .7rem .9rem 0; margin-bottom: .5rem; }
 .studio-view .strip { padding: 0 .9rem .6rem; grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .studio-view .vgrid { padding: .4rem .9rem .9rem; }

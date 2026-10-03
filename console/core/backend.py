@@ -34,6 +34,14 @@ def drs_message(code: str, detail: str, sep: str = ": ") -> str:
     return f"{code}{sep}{detail}" if code and detail else (code or detail)
 
 
+def drs_advice(table: dict | None, code: str, kind: str = "", id_: str = "") -> str:
+    """What to do about an error, for its DRS code, from the configured ``ui.error_advice`` (UX-11): the advice must
+    fit the code, so a timeout is not told to check the identifier. {kind} and {id} fill in."""
+    table = table or {}
+    text = str(table.get(str(code or "").strip()) or table.get("default") or "")
+    return text.replace("{kind}", str(kind)).replace("{id}", str(id_))
+
+
 class BackendError(Exception):
     """The server answered with a problem (RFC 7807) or could not be reached."""
 
