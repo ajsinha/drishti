@@ -14,14 +14,14 @@
   See the LICENSE file in the root of this repository for the full terms.
 #}
 {% extends "base.html" %}
-{% block title %}{{ id }} · {{ PRODUCT }}{% endblock %}
+{% block title %}Not found · {{ PRODUCT }}{% endblock %}
 {% block body_class %}terminal{% if embed %} embed{% endif %}{% endblock %}
-{% block nav %}{% if not embed %}{% with command_text=id %}{% include "terminal/_topbar.html" %}{% endwith %}{% endif %}{% endblock %}
+{% block nav %}{% if not embed %}{% with command_text="" %}{% include "terminal/_topbar.html" %}{% endwith %}{% endif %}{% endblock %}
 {% block content %}
 <div class="thome">
-  <h1 class="mono">{{ id }}</h1>
-  <p class="pnl-err" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ drs_message(error.code, error.detail, " · ") }}</p>
-  <p class="text-muted-d">{{ drs_advice(error.code, kind, id) }}</p>
+  <h1>Page not found</h1>
+  <p class="pnl-err" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> The console has no page at <span class="mono">{{ path }}</span>.{% if detail %} {{ detail }}{% endif %}</p>
+  <p class="text-muted-d">Check the address, or type part of an identifier in the command line to see what exists.</p>
   <p><a href="/t">Back to the terminal</a></p>
 </div>
 {% endblock %}

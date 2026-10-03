@@ -28,6 +28,16 @@ backend:
 #   - { id: open, name: Drishti, url: "http://127.0.0.1:18480", color: "#2a9d8f" }
 #   - { id: rates-desk, name: Rates desk, url: "http://127.0.0.1:18481", token_secret: "${DRISHTI_TOKEN_SECRET_RATES:}" }
 ui:
+  # What an error page advises, by the DRS code the server answered with ({kind} and {id} fill in); "default" for any other
+  error_advice:
+    DRS-1001: Check the identifier, or type part of it in the command line to see what exists.
+    DRS-1002: "No source serves the kind '{kind}'. Check the kind (the command line completes the kinds that exist), or ask an administrator to connect a source for it."
+    DRS-1003: The source behind it failed. Try again in a moment; if it keeps failing an administrator can read the server log.
+    DRS-1004: The source took too long to answer. Try again in a moment; a first read of an earlier date can be slow.
+    DRS-1007: That source keeps no earlier versions. Clear the 'as known at' time to read what it holds now.
+    DRS-4003: Pick another business date (Reset in the date menu returns to live).
+    DRS-4004: The search could not be read. Check its fields and syntax.
+    default: Go back to the terminal and try again, or type part of an identifier in the command line.
   studio_example: all-panels-showcase   # the example Studio opens on (a name under studio.examples_dir); blank or missing: the first pack example
   default_theme: terminal        # terminal | light | wallstreet | blue | green | crimson | crimson-dark
   # The product's name and legal notices on every page; nothing user-visible names them in code. The server has the

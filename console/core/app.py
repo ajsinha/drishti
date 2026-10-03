@@ -27,7 +27,7 @@ from urllib.parse import quote
 from fastapi.responses import JSONResponse, RedirectResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from core.backend import drs_message
+from core.backend import drs_advice, drs_message
 from core.config import Settings
 
 WEB = Path(__file__).resolve().parent.parent / "web"
@@ -167,6 +167,7 @@ def create_app(settings: Settings) -> FastAPI:
     templates = Jinja2Templates(directory=str(WEB / "templates"))
     templates.env.globals.update(
         drs_message=drs_message,
+        drs_advice=lambda code, kind="", id_="": drs_advice(settings.get("ui.error_advice"), code, kind, id_),
         ASSET_V=f"{ASSET_VERSION}-{asset_fingerprint()}",
         PRODUCT=settings.get("ui.product", ""),
         PRODUCT_MEANING=settings.get("ui.product_meaning", ""),
@@ -215,6 +216,9 @@ def create_app(settings: Settings) -> FastAPI:
     app.add_middleware(SameOrigin, allowed=settings.get("auth.allowed_origins") or ())    # before any session work
     app.add_middleware(SecurityHeaders)
     app.add_exception_handler(BodyError, problem)
+    from core.notfound import not_found
+
+    app.add_exception_handler(404, not_found)
     app.mount("/static", StaticFiles(directory=str(WEB / "static")), name="static")
     from core.calc import Calc
 
