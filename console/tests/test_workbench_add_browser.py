@@ -1,3 +1,17 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
 """Adding a panel must be obvious (product owner): a header button on every tab, a chooser of all 20 kinds, the palette's Add from any tab,
 Studio addresses opening with the canvas in sight, a grip to drag by, and a way in for an empty design. Fixtures: test_workbench_browser.py's."""
 import json

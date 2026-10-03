@@ -92,7 +92,7 @@ def _land(client, url):
 
 def test_studio_opens_the_showcase_by_default_and_a_named_example_on_request(client):
     loc, page = _land(client, "/studio")
-    assert "sutra: all-panels-showcase" in page and "all-panels-showcase.json" in page and loc.endswith("?tab=yaml")
+    assert "sutra: all-panels-showcase" in page and "all-panels-showcase.json" in page and loc.endswith("?tab=split")
     loc, page = _land(client, "/studio?example=tree-table")
     assert "sutra: tree-table" in page and "sutra: all-panels-showcase" not in page and 'data-kind="organisation"' in page
     assert "exposure-profile" in page, "the File menu lists the examples"

@@ -17,8 +17,7 @@
 {% for e in examples %}
 <section class="help-example-item" id="{{ e.name }}">
   <h2>{{ e.title }}</h2>
-  <p class="help-example-actions"><a class="btn-pill btn-accent" href="/build/new?example={{ e.name }}"><i class="bi bi-bounding-box" aria-hidden="true"></i> Open in the workbench</a>
-    <a class="btn-pill btn-ghost" href="/studio?example={{ e.name }}"><i class="bi bi-pencil-square" aria-hidden="true"></i> Open as a copy in the workbench</a>
+  <p class="help-example-actions"><a class="btn-pill btn-accent" href="/studio?example={{ e.name }}"><i class="bi bi-pencil-square" aria-hidden="true"></i> Open as a copy in the workbench</a>
     <span class="mono text-muted-d">{{ e.name }}.sutra.yaml · {{ e.name }}.json</span></p>
   {{ e.note | safe }}
   <details><summary>{{ e.name }}.sutra.yaml</summary>

@@ -108,4 +108,4 @@ def test_the_build_menu_help_centre_quickstart_and_the_architecture_note_link_to
 def test_the_examples_page_offers_each_example_in_the_workbench(client):
     page = client.get("/help/examples").text
     for name in FAMILIES:
-        assert f'href="/build/new?example={name}"' in page, name
+        assert f'href="/studio?example={name}"' in page, name

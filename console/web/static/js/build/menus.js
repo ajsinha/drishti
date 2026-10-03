@@ -95,5 +95,37 @@
     return { close: close };
   }
 
+  /** A question in the page instead of the browser's confirm()/prompt() (UX-29): themable, readable by screen readers, testable.
+   *  WB.ask({title, message, ok, input: {label, value}}) -> Promise of true (confirmed), the typed text (with input), or null (cancelled). */
+  WB.ask = function (spec) {
+    return new Promise(function (resolve) {
+      var back = document.activeElement, id = 'wbAsk' + (++seq);
+      var wrap = WB.el('div', 'wb-ask'), box = WB.el('div', 'wb-ask-box', null, { role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': id + 't', 'aria-describedby': id + 'm' });
+      box.appendChild(WB.el('h2', 'bs-h', spec.title, { id: id + 't' }));
+      box.appendChild(WB.el('p', null, spec.message, { id: id + 'm' }));
+      var input = null;
+      if (spec.input) {
+        var l = WB.el('label', null, spec.input.label, { 'for': id + 'i' });
+        input = WB.el('input', 'studio-in mono', null, { type: 'text', id: id + 'i', autocomplete: 'off', spellcheck: 'false' });
+        input.value = spec.input.value || '';
+        box.appendChild(l); box.appendChild(input);
+      }
+      var bar = WB.el('div', 'bs-actions'), ok = WB.el('button', 'btn-pill btn-accent', spec.ok || 'OK', { type: 'button' }), no = WB.el('button', 'btn-pill btn-ghost', 'Cancel', { type: 'button' });
+      bar.appendChild(ok); bar.appendChild(no); box.appendChild(bar); wrap.appendChild(box);
+      function done(v) { wrap.remove(); if (back && back.focus && document.contains(back)) { back.focus({ preventScroll: true }); } resolve(v); }
+      ok.addEventListener('click', function () { done(input ? input.value : true); });
+      no.addEventListener('click', function () { done(null); });
+      wrap.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); done(null); }
+        else if (e.key === 'Enter' && input && e.target === input) { e.preventDefault(); done(input.value); }
+        else if (e.key === 'Tab') {
+          var f = Array.prototype.slice.call(box.querySelectorAll('input, button')), i = f.indexOf(document.activeElement);
+          if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+        }
+      });
+      document.body.appendChild(wrap);
+      (input || ok).focus();
+    });
+  };
   WB.menu = { open: open, close: close, isOpen: function () { return !!current; } };
 })();

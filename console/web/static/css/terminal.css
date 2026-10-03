@@ -85,7 +85,7 @@ body.terminal { font-size: 14px; }
 .kv dd { margin: 0; color: var(--d-ink); overflow-wrap: anywhere; }
 .kv-item { min-width: 0; }
 
-.tbl-wrap { overflow-x: auto; }
+.tbl-wrap { overflow-x: auto; position: relative; }   /* so a visually-hidden span in a header cannot escape the scroll box and widen the page (UX-08) */
 .tbl { width: 100%; border-collapse: collapse; font-size: .86rem; }
 .tbl th { color: var(--d-muted); font-weight: 400; font-size: .8rem; text-align: left; padding: .35rem .5rem; border-bottom: 1px solid var(--d-border); white-space: nowrap; }
 .tbl td { padding: .38rem .5rem; border-bottom: 1px solid var(--d-border); color: var(--d-ink); white-space: nowrap; }
@@ -732,3 +732,8 @@ table.tbl tr.tbl-filter th::after { content: none; }
 .calc-run-code { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .calc-run-where { font-size: .74rem; white-space: nowrap; }
 @media (max-width: 640px) { .calc-keys { display: none; } .calc-editor .CodeMirror { height: 28vh; } }
+
+/* Small targets (QA UX-23): at least 24 x 24 px for the panel help mark, the pager, the filter row buttons, the skip link and the top-bar links */
+.pnl-help, .tbl-pg-b, tr.tbl-filter button, .skip-link, .tbar-row1 a, .tbar-tools a { min-width: 24px; min-height: 24px; box-sizing: border-box; }
+.pnl-help, .tbl-pg-b { display: inline-flex; align-items: center; justify-content: center; }
+.skip-link { padding: 3px 8px; }

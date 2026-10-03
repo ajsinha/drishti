@@ -30,6 +30,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -188,6 +189,35 @@ def drop_panel(c: Ctx):
     c.page.mouse.up()
     c.settle(rev)
     c.save("06b-panel-added.jpg")
+
+
+@shot("06c-add-panel-chooser.jpg")
+def add_chooser(c: Ctx):
+    c.example("pnl-explain")
+    c.page.get_by_role("button", name="Add panel", exact=True).click()
+    c.page.keyboard.type("li")
+    c.page.wait_for_timeout(300)
+    c.save("06c-add-panel-chooser.jpg")
+    c.page.keyboard.press("Escape")
+
+
+@shot("06d-remove-panel.jpg")
+def remove_panel(c: Ctx):
+    c.example("pnl-explain")
+    ids = c.page.evaluate("window.drishtiWorkbench.canvas.ids()")
+    c.page.locator(f'[data-preview] [data-panel="{ids[-1]}"]').hover()
+    c.page.get_by_role("button", name=re.compile("^Remove panel")).first.click()
+    c.page.locator("[data-toast]").wait_for()
+    c.page.wait_for_timeout(400)
+    c.save("06d-remove-panel.jpg")
+
+
+@shot("26-notes.jpg")
+def notes_tab(c: Ctx):
+    c.example("all-panels-showcase")
+    c.page.get_by_role("tab", name="Notes").click()
+    c.page.wait_for_timeout(300)
+    c.save("26-notes.jpg")
 
 
 @shot("07-drop-field.jpg")
@@ -542,9 +572,10 @@ def shared_view(c: Ctx):
 @shot("47-file-binding.jpg")
 def file_binding(c: Ctx):
     ship_design(c, "bound")
-    c.page.once("dialog", lambda d: d.accept("shots/credit-review.v1.sutra.yaml"))
     c.page.locator("[data-ship-menu]").click()
     c.page.get_by_role("option", name="Bind to a file").click()
+    c.page.get_by_role("dialog", name="Bind to a file").get_by_label("File").fill("shots/credit-review.v1.sutra.yaml")
+    c.page.get_by_role("button", name="Bind", exact=True).click()
     c.until("!document.querySelector('[data-bound-chip]').hidden")
     c.page.wait_for_timeout(600)
     c.save("47-file-binding.jpg", clip={"x": 0, "y": 60, "width": 1440, "height": 190})

@@ -113,7 +113,7 @@ def test_upload_tree_filter_download_and_reload(console_url, browser, tmp_path):
     page = browser.new_page()
     page.goto(console_url + "/build/new")
     page.set_input_files("[data-files]", [str(good), str(bad)])
-    page.locator("[data-status]").get_by_text("2 files ready").wait_for()
+    page.locator("[data-status]").get_by_text("broken.json is not valid JSON").wait_for()          # named at once; the rest is still sent
     page.locator("[name=start][value=empty]").check()
     page.get_by_role("button", name="Create design").click()
     page.wait_for_url("**/build/d/*")

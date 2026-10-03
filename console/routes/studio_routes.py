@@ -60,13 +60,22 @@ async def studio(request: Request, sutra: str | None = None, kind: str = "", id:
     at all, a scratch Design on the default example (``ui.studio_example``). canvas and YAML side by side (the canvas is always in sight), or the canvas alone for ``build=1``."""
     backend, me = request.app.state.backend, ident(request)
     tab = "design" if build and build != "0" else "split"
+    notice = ""
     try:
         target = await _existing(backend, me, design)
+        if design and target is None:
+            notice = "The design you asked for is not one of yours (or it is gone), so a new design was opened."
         if target is None:
+            if example and not request.app.state.examples.get(example):
+                notice = f"There is no example '{example}', so a blank design was opened."
             target = (await _start(request, me, sutra, kind.strip(), id.strip(), example))["id"]
     except BackendError as e:
+        if e.code == "DRS-2003" and sutra:
+            e = BackendError(e.status, e.code, f"no Sutra '{sutra}' is loaded: check the name and version, or search for it under Build, New, An existing Sutra")
         return render(request, "build/designs.html", status_code=e.status, designs=[], limits={}, error=e, screen="build")
     query = {"tab": tab}
+    if notice:
+        query["notice"] = notice
     if design and sample and target == design:
         query["sample"] = sample
     return RedirectResponse(f"/build/d/{target}?{urlencode(query)}", status_code=302)

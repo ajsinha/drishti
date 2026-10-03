@@ -94,9 +94,10 @@ def test_design_to_live_with_the_evidence_and_a_share_link(live_ship_console, pa
 def test_a_bound_design_saves_to_the_file_and_an_edit_on_disk_comes_back(live_ship_console, page):
     base = live_ship_console
     _open(page, base, "Bound E2E", sutra=SUTRA.replace("ship-e2e", "bound-e2e"))
-    page.once("dialog", lambda d: d.accept("e2e/bound-e2e.v1.sutra.yaml"))
     page.locator("[data-ship-menu]").click()
     page.get_by_role("option", name=re.compile("Bind to a file")).click()
+    page.get_by_role("dialog", name="Bind to a file").get_by_label("File").fill("e2e/bound-e2e.v1.sutra.yaml")      # an in-page question, not prompt()
+    page.get_by_role("button", name="Bind", exact=True).click()
     wait(page, "document.querySelector('[data-bound-chip]') && !document.querySelector('[data-bound-chip]').hidden")
     page.locator("[data-save]").click()
     wait(page, "document.querySelector('[data-say]').textContent.indexOf('Wrote e2e/bound-e2e.v1.sutra.yaml') >= 0")

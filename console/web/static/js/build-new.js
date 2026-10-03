@@ -39,7 +39,11 @@
     return fetch(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) })
       .then(function (r) { return (r.status === 204 ? Promise.resolve({}) : r.json()).then(function (j) { return { ok: r.ok, status: r.status, body: j }; }); });
   }
-  function why(r) { return window.drsMessage({ code: r.body.code || ('HTTP ' + r.status), detail: r.body.detail }, 'The request failed'); }
+  /** The server's words with its field names turned into the page's (UX-11): 'refs.kind' is the kind of the stored entity. */
+  function why(r) {
+    var m = window.drsMessage({ code: r.body.code || ('HTTP ' + r.status), detail: r.body.detail }, 'The request failed');
+    return m.replace(/'refs\.kind' is required/, 'the kind of the stored entity is required').replace(/'refs\.ids' is required/, 'the id of the stored entity is required');
+  }
 
   // ---- files and folders -----------------------------------------------------------------------------------------
   function add(fileList) {
@@ -53,6 +57,20 @@
       say(status, picked.length + ' file' + (picked.length === 1 ? '' : 's') + ' ready' + (p.ignored ? '; ' + p.ignored + ' not .json or .jsonl left out' : '') + '.', false);
     }
     showList();
+    checkFiles(p.entries);
+  }
+  /** A file that is not JSON is said at once, by name (the check reads only files under 2 MB; the server reads the rest). */
+  function checkFiles(entries) {
+    entries.forEach(function (e) {
+      if (e.file.size > 2 * 1048576 || !e.file.text) { return; }
+      e.file.text().then(function (t) {
+        try { JSON.parse(/\.jsonl$/i.test(e.name) ? (t.split('\n').filter(function (x) { return x.trim(); })[0] || 'null') : t); e.bad = ''; }
+        catch (x) { e.bad = 'is not valid JSON'; }
+        showList();
+        var bad = picked.filter(function (y) { return y.bad; });
+        if (bad.length) { say(status, bad.map(function (y) { return y.name + ' ' + y.bad; }).join('; ') + '. Remove ' + (bad.length === 1 ? 'it' : 'them') + ' or fix ' + (bad.length === 1 ? 'it' : 'them') + '; the design needs at least one readable sample.', true); }
+      });
+    });
   }
   function showList() {
     list.textContent = '';
@@ -60,6 +78,7 @@
       var li = el('li');
       li.appendChild(el('span', 'mono', e.name));
       li.appendChild(document.createTextNode(' · ' + F.mb(e.file.size)));
+      if (e.bad) { li.appendChild(el('b', 'bad', ' · ' + e.bad)); li.classList.add('bad'); }
       list.appendChild(li);
     });
     list.hidden = clear.hidden = !picked.length;

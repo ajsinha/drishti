@@ -98,10 +98,13 @@
       if (chipB) { chipB.hidden = !bound; chipB.textContent = bound ? 'file ' + bound : ''; }
     }
     function bind() {
-      var file = window.prompt('Bind this design to a file under the Sutra directory' + (init.dirs && init.dirs.length ? ' (' + init.dirs[0] + ')' : '') +
-        '. For example market/my-view.v1.sutra.yaml. An existing file is read into the design; saving writes it.', bound);
-      if (!file) { return Promise.resolve(); }
-      return hooks.yaml.flush().then(function () { return WB.call('POST', base + '/bind', { file: file.trim() }); }).then(function (r) {
+      return WB.ask({ title: 'Bind to a file', ok: 'Bind', input: { label: 'File', value: bound },
+        message: 'Bind this design to a file under the Sutra directory' + (init.dirs && init.dirs.length ? ' (' + init.dirs[0] + ')' : '') +
+        '. For example market/my-view.v1.sutra.yaml. An existing file is read into the design; saving writes it.' }).then(function (file) {
+        if (!file || !String(file).trim()) { return null; }
+        return hooks.yaml.flush().then(function () { return WB.call('POST', base + '/bind', { file: String(file).trim() }); });
+      }).then(function (r) {
+        if (!r) { return; }
         if (!r.ok) { say(WB.why(r), true); return; }
         bound = r.body.boundFile || ''; paintBound();
         return reload('Bound to ' + bound + '.');

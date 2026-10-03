@@ -36,7 +36,13 @@
   };
   /** The sentence for problems the server found in a Sutra it would not compile (each has panel, option, line, message; the code is shown once). */
   WB.problemText = function (p) {
+    if (/^while (parsing|scanning)/.test(p.message || '')) { return WB.yamlSyntax(p.message); }
     return (p.panel ? 'Panel ' + p.panel + (p.option ? ', ' + p.option : '') + ': ' : '') + p.message;
+  };
+  /** SnakeYAML's own words ("while parsing a flow sequence in 'reader', line 1, column 8: ... ^ expected ',' or ']'") said once and short (UX-16). */
+  WB.yamlSyntax = function (raw) {
+    var t = String(raw).replace(/\s+/g, ' '), at = /line (\d+), column (\d+)/.exec(t), why = /\^ (.*?)(?: in 'reader'|$)/.exec(t);
+    return 'The YAML does not read' + (at ? ' at line ' + at[1] + ', column ' + at[2] : '') + (why ? ': ' + why[1].trim() : '') + '.';
   };
   WB.sutraFailure = function (ps) {
     return ps.length + ' problem' + (ps.length === 1 ? '' : 's') + ' in the Sutra, so the panels that read are drawn without ' + (ps.length === 1 ? 'it' : 'them') + '. Problems lists ' + (ps.length === 1 ? 'it' : 'them') + ' with the line.';

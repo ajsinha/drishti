@@ -29,7 +29,7 @@
 
   root.querySelectorAll('time[data-ms]').forEach(function (t) {
     var ms = parseInt(t.dataset.ms, 10);
-    if (ms) { var d = new Date(ms); t.dateTime = d.toISOString(); t.textContent = d.toLocaleString(); }
+    if (ms) { var d = new Date(ms); t.dateTime = d.toISOString(); var p = function (n) { return String(n).padStart(2, '0'); }; t.textContent = d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()); }
   });
 
   root.querySelectorAll('tr[data-design]').forEach(function (row) {

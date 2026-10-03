@@ -48,6 +48,7 @@
   ];
   var list = KINDS.map(function (k) { return { kind: k[0], icon: k[1], text: k[2], family: k[3] }; });
 
+  function article(w) { return /^[aeiou]/.test(w) ? 'an' : 'a'; }
   function render(box, onAdd, filterEl) {
     box.textContent = '';
     if (filterEl) {
@@ -62,7 +63,7 @@
       var t = WB.el('span', 'wb-kind-t');
       t.appendChild(WB.el('b', 'mono', k.kind));
       t.setAttribute('title', k.text);
-      var b = WB.el('button', 'btn-pill btn-ghost wb-kind-add', 'Add', { type: 'button', 'aria-label': 'Add a ' + k.kind + ' panel', title: 'Add a ' + k.kind + ' panel after the selected one' });
+      var b = WB.el('button', 'btn-pill btn-ghost wb-kind-add', 'Add', { type: 'button', 'aria-label': 'Add ' + article(k.kind) + ' ' + k.kind + ' panel', title: 'Add ' + article(k.kind) + ' ' + k.kind + ' panel after the selected one' });
       b.addEventListener('click', function () { onAdd(k.kind); });
       li.appendChild(i); li.appendChild(t); li.appendChild(b);
       li.title = k.text + ' · drag onto the canvas to add it there';

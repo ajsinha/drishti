@@ -66,8 +66,9 @@
       var chain = Promise.resolve();
       if (yamls.length) {
         chain = chain.then(function () {
-          if (store.state.yaml && !window.confirm('Replace the Sutra with ' + yamls[0].name + '? Undo (Ctrl+Z) brings the old one back.')) { return null; }
-          return yamls[0].text().then(function (t) { return store.send([{ op: 'text', yaml: t }], 'Opened ' + yamls[0].name); });
+          var go = function () { return yamls[0].text().then(function (t) { return store.send([{ op: 'text', yaml: t }], 'Opened ' + yamls[0].name); }); };
+          if (!store.state.yaml) { return go(); }
+          return WB.ask({ title: 'Replace the Sutra?', message: 'Replace the Sutra with ' + yamls[0].name + '? Undo (Ctrl+Z) brings the old one back.', ok: 'Replace' }).then(function (yes) { return yes ? go() : null; });
         });
       }
       if (jsons.length) {

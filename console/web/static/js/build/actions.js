@@ -39,10 +39,17 @@
 
     /** Values for the options a kind cannot go without, taken from the shape so the new panel draws something at once: the first list for
      *  rows, its first number for a value or an axis, its first text for a grouping; a note for markdown. The inspector marks them to check. */
+    var note = '', NUMERIC_ROWS = ['hbar', 'waterfall', 'line', 'area', 'scatter', 'candlestick', 'histogram', 'surface'];
     function defaults(kind) {
       var out = {}, req = (ui.required ? ui.required(kind) : []).filter(function (n) { return n !== 'id' && n !== 'kind'; });
       var direct = function (list, f) { return list.filter(function (x) { return x.path.indexOf(f.path + '[].') === 0 && x.path.slice(f.path.length + 3).search(/[.\[{]/) < 0; }); };
+      var numeric = function (f) { return direct(fieldList, f).some(function (x) { return /integer|number/.test(x.type); }); };
       var arrays = fieldList.filter(function (f) { return f.type === 'array' && f.presence >= 0.5 && f.path.indexOf('[]') < 0 && direct(fieldList, f).length; });
+      // a chart reads numbers: a list without one would draw "no data" while the check stays green, so lists with a number come first
+      if (NUMERIC_ROWS.indexOf(kind) >= 0) { arrays = arrays.filter(numeric).concat(arrays.filter(function (f) { return !numeric(f); })); }
+      note = '';
+      if (NUMERIC_ROWS.indexOf(kind) >= 0 && (!arrays.length || !numeric(arrays[0]))) { note = 'No list with numbers in your samples, so rows is a placeholder: point it at the data this panel should draw.'; }
+      if (kind === 'gauge') { note = 'The gauge compares one value with its maximum (100 unless you set max): set max to your limit.'; }
       var list = arrays[0] || null, rows = list ? list.path : '$.rows', under = list ? direct(fieldList, list) : [];
       var num = under.filter(function (f) { return /integer|number/.test(f.type); })[0], txt = under.filter(function (f) { return f.type === 'string'; })[0];
       var rel = function (f, d) { return f ? '@.' + f.path.slice(list.path.length + 3) : d; };
@@ -64,11 +71,12 @@
       var starter = 'rachana: 1\nsutra: my-layout\nversion: 1\nmatch: { kind: ' + store.state.kind + ' }\ntitle: { pill: "' + store.state.kind + '", id: $.id }\npanels:\n  - { id: refs, kind: links, title: Linked entities, area: right }\n';
       var before = blank ? starter : store.state.yaml, op = { op: 'addPanel', kind: kind, at: toAt(at) };
       options = Object.assign({ title: kind.charAt(0).toUpperCase() + kind.slice(1) }, defaults(kind), options || {});
+      why = why || note;
       if (options && Object.keys(options).length) { op.options = options; }
       return store.send(blank ? [{ op: 'text', yaml: starter }, op, { op: 'remove', panel: 'refs' }] : [op]).then(function (r) {
         var id = r.body ? newId(before, r.body.yaml) : null;
         if (!r.applied || !id) { return null; }
-        say('Added a ' + kind + ' panel (' + id + ')' + (why ? ': ' + why : '') + '. Its options are in the inspector; required ones are marked.');
+        say('Added ' + (/^[aeiou]/.test(kind) ? 'an ' : 'a ') + kind + ' panel (' + id + ')' + (why ? ': ' + why : '') + '. Its options are in the inspector; required ones are marked.');
         if (ui.design) { ui.design(); }                                   // from the YAML or Summary tab too: the new panel is shown
         ui.canvas().select({ type: 'panel', id: id }, true);
         ui.inspect({ type: 'panel', id: id }, { required: true });
@@ -146,7 +154,7 @@
         var list = r.ok ? (r.body.suggestions || []) : [];
         if (!r.ok) { say(WB.why(r), true); return; }
         if (!list.length) { say(path + ' has no panel that suits it. Drag it onto a panel to bind it instead.', true); return; }
-        say(list.length + ' panel kinds suit ' + path + ', best first. Up and Down choose, Enter adds.');
+        say(list.length + (list.length === 1 ? ' panel kind suits ' : ' panel kinds suit ') + path + (list.length === 1 ? '. Enter adds it.' : ', best first. Up and Down choose, Enter adds.'));
         WB.menu.open({
           title: 'Panels for ' + path, at: point || { x: 200, y: 200 }, anchor: point ? null : document.querySelector('[data-canvas]'),
           items: list.map(function (c) { return { label: c.kind, badge: Math.round(c.score * 100) + '%', detail: c.reason, value: c }; }),

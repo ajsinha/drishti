@@ -131,7 +131,16 @@
     if (kind === 'integer') {
       var n = el('input', 'studio-in', null, { type: 'number', min: s.minimum != null ? s.minimum : '', max: s.maximum != null ? s.maximum : '', 'aria-label': name });
       n.value = value == null ? '' : value;
-      n.addEventListener('change', function () { onChange(n.value === '' ? null : parseInt(n.value, 10)); });
+      n.addEventListener('change', function () {
+        if (n.value === '') { value = null; n.setCustomValidity(''); onChange(null); return; }
+        var v = Number(n.value), min = s.minimum, max = s.maximum;
+        if (!Number.isInteger(v) || (min != null && v < min) || (max != null && v > max)) {      // not a whole number or out of range: say so, keep what the design has
+          n.setCustomValidity('A whole number' + (min != null && max != null ? ' from ' + min + ' to ' + max : min != null ? ' of ' + min + ' or more' : '') + '.');
+          n.reportValidity(); n.value = value == null ? '' : value; n.setCustomValidity('');
+          return;
+        }
+        value = v; onChange(v);
+      });
       return n;
     }
     if (kind === 'count-or-const') {

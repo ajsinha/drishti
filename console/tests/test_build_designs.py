@@ -24,6 +24,7 @@ from fastapi.testclient import TestClient
 
 from conftest import CONSOLE
 from core.app import create_app
+from core import designs
 from core.builder import plain_schema
 from core.config import Settings, load_settings
 
@@ -373,7 +374,7 @@ def test_every_example_opens_as_a_design_copy_and_previews_and_the_example_files
         row = _row(backend, opened.json()["id"])
         d = row["design"]
         assert d["sutra"] == (EXAMPLES / f"{name}.sutra.yaml").read_text(encoding="utf-8"), name
-        assert d["notes"] == (EXAMPLES / f"{name}.md").read_text(encoding="utf-8") and d["name"].endswith("(copy)") and not d["scratch"]
+        assert d["notes"] == designs.strip_licence((EXAMPLES / f"{name}.md").read_text(encoding="utf-8")) and d["name"].endswith("(copy)") and not d["scratch"]
         assert row["docs"][f"{name}.json"] == json.loads((EXAMPLES / f"{name}.json").read_text(encoding="utf-8"))
         page = app_client.get(opened.json()["url"])
         assert page.status_code == 200 and f'data-sample="{name}.json"' in page.text

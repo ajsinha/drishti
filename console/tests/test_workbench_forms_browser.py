@@ -150,8 +150,8 @@ def test_auto_design_is_a_revision_and_undo_brings_the_old_sutra_back(live_conso
     docs = {"a.json": json.dumps({"tradeId": "A", "book": "rates", "notional": 5}), "b.json": json.dumps({"tradeId": "B", "book": "fx", "notional": 7})}
     open_design(page, live_console, "auto", files=docs)
     start, rev = state(page, "yaml"), state(page, "rev")
-    page.on("dialog", lambda d: d.accept())
     page.locator("[data-autodesign]").click()
+    page.get_by_role("dialog", name="Replace the Sutra?").get_by_role("button", name="Auto-design").click()          # an in-page question, not confirm()
     settle(page, rev)
     assert state(page, "yaml") != start and page.locator("[data-draft]").is_visible()
     rev = state(page, "rev")

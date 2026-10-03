@@ -81,6 +81,10 @@ Open the workbench with nothing at all and you get an unnamed **scratch design**
 | **Right** | Tabs **Inspector** (a form for what is selected), **Problems**, **Tests** and **Versions**. |
 | **Status bar** | `◀ sample 2/12 ▶`, Desktop or Phone width, Theme, **Preview with a file…**, the check result `✓ 12/12`, the revision, Undo and Redo. |
 
+The **Notes** tab holds what the screen is for, in markdown, with a live preview beside the text. It saves when you leave the box, and the reviewer reads it with your proposal. An example's own README arrives there with its licence comment removed.
+
+![The Notes tab: markdown on the left, the preview on the right](img/designer/26-notes.jpg)
+
 Everything you do is an **operation** on the design (add a panel, move it, set an option…). The server applies it to the Sutra text, keeps your comments and the order of your keys, and sends back the screen. That is why the Design tab shows what users will see, not a mock-up, and why Undo can take back any step.
 
 ## 3. The Data pane: samples, shape, palette
@@ -130,6 +134,8 @@ Four ways, all producing the same operation, and the first is always in sight:
 3. Press a kind's **Add** button in the palette: it goes after the selected panel (or at the end of the main column).
 4. The key `N` on the canvas, or the command palette's **Add panel…**.
 
+![The Add panel chooser: all kinds with an icon and a line each, filtered as you type](img/designer/06c-add-panel-chooser.jpg)
+
 A design with no Sutra yet shows a large **Add your first panel** on the canvas. Every panel has a grip (⋮) in its heading and a tooltip *Drag to move · drag the edges to resize*; the selected panel shows resize handles on its right and bottom edges, and a newly added panel is draggable and resizable at once. Studio addresses and Help links open with the screen and the YAML side by side, so the canvas is always in sight.
 
 ![Dragging a gauge from the palette: the bar shows where it will land](img/designer/06-drop-panel.jpg)
@@ -146,6 +152,8 @@ Removing is one operation and **Undo brings the panel back in its place**, so no
 - **Remove panel** at the top of the inspector, next to the panel's kind;
 - a **right click** on the panel: Move up, Move down, Duplicate, Remove panel;
 - the command palette's **Remove panel** (the selected panel), or `Delete` / `Backspace` on a selected panel.
+
+![After removing a panel: the toast with Undo, and the trash button in the heading](img/designer/06d-remove-panel.jpg)
 
 A toast *Removed 'Title' · Undo* stays for eight seconds and is announced to screen readers; its Undo button (or Ctrl+Z) restores the panel. The YAML loses exactly that panel; every other comment stays.
 
@@ -207,6 +215,8 @@ The YAML tab is Studio's editor on the design's Sutra: completion of keys and va
 
 ![The Problems tab: a refused edit with its line, and what the light check found](img/designer/14-problems.jpg)
 
+A wrong expression (for example `rows: '$.legs[?'`) is listed here with the panel, the option, its line and its DRS code once; the Sutra is not accepted as a whole by the server, so the canvas draws the other panels and says which one it left out, and the Tests tab says the check cannot run until the problem is fixed.
+
 One list, each item a button that takes you there:
 
 | Kind | Source | Click goes to |
@@ -249,6 +259,8 @@ If you edit the same design in two tabs, the older tab's next change is answered
 ## 15. Keyboard reference
 
 Everything the mouse does has a key. Changes are announced in a live region for screen readers.
+
+**Getting to the canvas.** The first Tab stop is *Skip to the screen* (it focuses the canvas, so you do not tab through the palette and the shape first). From anywhere that is not a text field, press `G` then `C`, or choose **Go to canvas** in the command palette. `Esc` in the inspector puts the focus back on the selected panel. `Delete` or `Backspace` on a selected panel removes it (Undo brings it back).
 
 **On the canvas** (focus a panel: Tab into the canvas, or click one)
 
@@ -445,7 +457,7 @@ The diff is the one the reviewers see: panels that only **moved** are named in w
 
 Designing is open to everyone: the design is yours, kept by the server, and you need no right to make or edit one. **Saving to the registry** is the author right with Studio saving switched on (`DRISHTI_STUDIO_SAVE`), and where governance is on, saving is a **proposal** an approver must approve.
 
-![The bar above the screen: Auto-design, File, Submit for review, Reviews with its count, Commands, Guide](img/designer/24-save-bar.jpg)
+![The bar above the screen: Add panel, Auto-design, File, Submit for review, Reviews with its count, Ship, Commands, Guide](img/designer/24-save-bar.jpg)
 
 | Your situation | The button says | What it does |
 |---|---|---|

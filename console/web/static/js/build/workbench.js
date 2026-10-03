@@ -25,11 +25,13 @@
   var d = root.dataset, init = JSON.parse(d.init || '{}');
   var store = WB.Store({ id: d.id, kind: d.kind, rev: parseInt(d.rev, 10), yaml: $('[data-yaml-src]').value, samples: init.samples.map(function (s) { return s.name; }), opsAt: init.opsAt, opsCount: init.opsCount, status: init.status });
   store.state.sampleInfo = init.samples;
-  var live = $('[data-live]'), status = $('[data-say]');
+  var live = $('[data-live]'), status = $('[data-say]'), stale = 0;
 
   // ---- what is said ---------------------------------------------------------------------------------------------------------
   store.on('say', function (text, bad) {
     status.textContent = text; status.classList.toggle('bad', !!bad);
+    clearTimeout(stale);
+    if (bad) { stale = setTimeout(function () { if (status.textContent === text) { status.textContent = ''; status.classList.remove('bad'); } }, (window.drishtiWorkbench && window.drishtiWorkbench.staleMs) || 20000); }      // an old complaint is not left standing
     live.textContent = ''; setTimeout(function () { live.textContent = text; }, 30);
   });
 
@@ -83,8 +85,8 @@
   actions = WB.Actions(store, ui);
   canvas = WB.Canvas($('[data-preview]'), store, actions, {
     onSelect: function (s) { inspector.show(s); },
-    picked: function () { right.show('inspector'); },                 // a click on the canvas is a wish to inspect; a cell of the Tests matrix is not
-    openInspector: function () { right.show('inspector'); inspector.focusFirst(); },
+    picked: function () { right.show('inspector'); if (window.innerWidth <= 1100) { store.emit('say', 'Selected. On a narrow screen the inspector is below the screen: press Enter to jump to it.'); } },                 // a click on the canvas is a wish to inspect; a cell of the Tests matrix is not
+    openInspector: function () { right.show('inspector'); if (window.innerWidth <= 1100) { var r = $('.wb-right'); if (r && r.scrollIntoView) { r.scrollIntoView({ block: 'start' }); } } inspector.focusFirst(); },
     menuAdd: function () { actions.menuAdd(); }, menuBind: function () { actions.menuBind(); }
   });
   inspector = WB.Inspector($('[data-inspector]'), store, function () { return schemaP; }, { remove: function (id) { return canvas.remove(id); }, paths: function () { return data ? data.fields() : []; }, actions: actions });
@@ -163,9 +165,9 @@
   var auto = $('[data-autodesign]');
   if (auto) {
     auto.addEventListener('click', function () {
-      if (store.state.yaml && !window.confirm('Auto-design replaces the Sutra (revision ' + store.state.rev + ') with a new draft. Undo brings the old one back. Continue?')) { return; }
+      var draft = function () {
       store.emit('say', 'Drafting a screen...');
-      WB.call('POST', '/build/designs/' + encodeURIComponent(store.state.id) + '/autodesign', {}).then(function (r) {
+      return WB.call('POST', '/build/designs/' + encodeURIComponent(store.state.id) + '/autodesign', {}).then(function (r) {
         if (!r.ok) { store.emit('say', WB.why(r), true); return; }
         WB.call('GET', store.base).then(function (g) {
           if (g.ok) { store.adopt({ rev: g.body.rev, yaml: g.body.sutra, status: g.body.status, opsAt: g.body.opsAt, opsCount: (g.body.ops || []).length, problems: [], previewHtml: r.body.previewHtml }, 'autodesign'); }
@@ -173,6 +175,9 @@
           store.emit('say', 'Drafted a screen: revision ' + store.state.rev + '; ' + (r.body.pruned || []).length + ' left out. Undo brings the old one back.');
         });
       });
+      };
+      if (!store.state.yaml) { draft(); return; }
+      WB.ask({ title: 'Replace the Sutra?', message: 'Auto-design replaces the Sutra (revision ' + store.state.rev + ') with a new draft. Undo brings the old one back.', ok: 'Auto-design' }).then(function (yes) { if (yes) { draft(); } });
     });
   }
   function typing(t) { var tag = (t.tagName || '').toLowerCase(); return tag === 'input' || tag === 'textarea' || tag === 'select' || t.isContentEditable || !!(t.closest && t.closest('.CodeMirror')); }
@@ -204,6 +209,6 @@
   if (init.sample && store.state.samples.indexOf(init.sample) >= 0) { store.state.sample = init.sample; }
   if (init.tab === 'split') { $('[data-split]').click(); centre.show('design'); } else if (init.tab) { centre.show(init.tab); }
   data.paint(); paintBar();
-  store.refresh().then(function () { tests.later(); });
+  store.refresh().then(function () { tests.later(); if (init.notice) { store.emit('say', init.notice, true); } });
   window.drishtiWorkbench = { store: store, canvas: canvas, actions: actions, tabs: { centre: centre, right: right }, tests: tests, versions: versions, saving: saving, ship: ship, commands: commands };
 })();

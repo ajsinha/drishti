@@ -77,6 +77,11 @@ those entities' packs enabled for the run: set `DRISHTI_PACKS=market-risk,counte
 server) in the job. The command keeps nothing: its identity, governance and design data live in a temporary folder that is
 removed when it ends, and no port is opened.
 
+The examples under `docs/guides/examples` link to entities of the banking packs, so `sutra test docs/guides/examples` needs
+them enabled: `DRISHTI_PACKS=market-risk,counterparty-risk,liquidity-risk,climate-risk,operational-risk,retail-banking,genomics,politics-society,economics`
+(the QUICKSTART list). Without it the failure line says `NS-SUMMIT-NY not found`: that means the pack holding that entity is not enabled.
+`sutra test packs/<pack>` reports `skip (no samples)` for a Sutra that has no `tests/<sutra>/` folder; that is not a failure.
+
 ## In this repository
 
 `SutraCliTest` runs `sutra test` over every shipped pack that has a `tests/` folder and over the documented examples, so the

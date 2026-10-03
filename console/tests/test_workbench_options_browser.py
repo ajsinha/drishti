@@ -1,3 +1,17 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
 """UX-03: every option of every panel kind in the Rachana schema has an editor in the inspector that works: numbers take numbers,
 fixed sets are selects, and markers, the table's pivot object and the pivot's `by` list are structured. Fixtures: test_workbench_browser.py's."""
 import yaml

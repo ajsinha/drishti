@@ -38,13 +38,13 @@ def say(page):
     return page.locator("[data-say]").inner_text()
 
 
-def test_an_old_studio_address_lands_on_the_yaml_tab_of_a_new_design(live_console, page):
+def test_an_old_studio_address_lands_on_the_split_view_of_a_new_design(live_console, page):
     page.goto(f"{live_console}/studio")
     page.locator("[data-workbench]").wait_for()
-    assert re.search(r"/build/d/\w+\?tab=yaml", page.url)
-    wait(page, "window.drishtiWorkbench && window.drishtiWorkbench.tabs.centre.current() === 'yaml'")
+    assert re.search(r"/build/d/\w+\?tab=split", page.url)
+    wait(page, "window.drishtiWorkbench && window.drishtiWorkbench.tabs.centre.current() === 'design' && document.querySelector('.CodeMirror').offsetParent !== null")
     assert "sutra: all-panels-showcase" in state(page, "yaml")
-    assert page.locator("#wbPaneYaml").is_visible() and not page.locator("#wbPaneDesign").is_visible()
+    assert page.locator("#wbPaneYaml").is_visible() and page.locator("#wbPaneDesign").is_visible()          # side by side: the canvas is in sight
     assert page.locator(".CodeMirror").is_visible()
 
 
