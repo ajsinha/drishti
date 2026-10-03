@@ -408,8 +408,9 @@ DRISHTI_PACKS=market-risk PG_PASSWORD=… LAKE_ACCESS_KEY=… LAKE_SECRET_KEY=�
   `kafka` instance with no `kinds:` serves **every** kind, so give them `kinds:`; a `jdbc` query-mode instance serves
   the kinds that have a `query.<kind>`).
 * For a read of `trade/MX-1` Drishti makes a list: the kind's `routes:` entry first (`trade: recent-files`), then
-  `default-route`, then every other running instance that serves `trade` (**in no particular order**: do not rely on
-  the order you wrote them in). For a picked date, dated stores (file, Delta, JDBC) go before undated ones; for Live,
+  `default-route`, then every other running instance that serves `trade` **in the order they are written in the
+  config** (the written order is kept from the YAML to the router, also after a reload, so put the store to ask first
+  first). For a picked date, dated stores (file, Delta, JDBC) go before undated ones; for Live,
   live ones (Kafka) go first.
 * The list is asked one by one and the first store that holds the entity answers. **A store that holds the date is
   authoritative for it**: an entity its file for that date does not list is *not held*, and the stores behind it are
