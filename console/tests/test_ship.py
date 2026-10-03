@@ -161,6 +161,7 @@ def test_a_share_link_shows_sutra_ops_and_sample_names_never_contents_and_can_be
     assert "a.json" in page.text and "b.json" in page.text and "sutra: ship" in page.text
     assert "T-1" not in page.text and "rates" not in page.text                    # the sample contents never reach the page
     assert "data-save" not in page.text and "data-yaml-src" not in page.text       # no editing controls
+    assert "/static/js/build/shared.js" in page.text and app_client.get("/static/js/build/shared.js").status_code == 200
     assert app_client.get(f"/build/d/{id_}?share=wrong").status_code == 404
     assert app_client.get(f"/build/designs/{id_}").json()["shared"] is True
     assert app_client.delete(f"/build/designs/{id_}/share").json() == {"shared": False}
