@@ -335,6 +335,7 @@ More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 
 | If you want to… | Read |
 |---|---|
+| How connectors, packs and Sutras fit together, and how the screen is bound to the backend | [HOW_IT_FITS.md](../architecture/HOW_IT_FITS.md) |
 | The same setup, step by step, with sign-in, alerts and monitors | [GETTING_STARTED.md](GETTING_STARTED.md) |
 | Every console feature, with examples | [USER_GUIDE.md](USER_GUIDE.md) |
 | The packs and the commands each one adds | [PACKS.md](PACKS.md) |

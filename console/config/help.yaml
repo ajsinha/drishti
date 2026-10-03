@@ -108,6 +108,7 @@ categories:
       - { slug: clients, doc: guides/CLIENTS.md, title: Scripts, notebooks and Excel, icon: filetype-py, summary: "Personal API tokens, the Python client, and Excel through Power Query: read anything you may open, from code." }
       - { slug: developer-guide, doc: guides/DEVELOPER_GUIDE.md, title: Developer guide, icon: tools, summary: "Repository map, building and testing, project rules, the request path, and recipes for endpoints, plugins, panel kinds, packs and pages." }
       - { slug: api, doc: guides/API_GUIDE.md, title: API guide, icon: braces-asterisk, summary: "REST endpoints, the ViewModel contract and error codes." }
+      - { slug: how-it-fits, doc: architecture/HOW_IT_FITS.md, title: How Drishti fits together, icon: diagram-3, summary: "Connectors, packs and Sutras, and how a command becomes a live screen, with real files and outputs." }
       - { slug: architecture, doc: architecture/ARCHITECTURE.md, title: Architecture, icon: diagram-2, summary: "The pipeline, grammar, inference, live updates, modules and UX." }
       - { slug: quant-service, doc: architecture/QUANT_SERVICE.md, title: The quant service, icon: calculator, summary: "Server-side pricing: a QuantLib service behind the server (planned)." }
       - { slug: decisions, doc: architecture/adr/README.md, title: Decision records, icon: signpost-split, summary: "The architecture decisions, each with its context and consequences." }
