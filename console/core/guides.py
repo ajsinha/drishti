@@ -41,6 +41,7 @@ _BOX = {"tip": "tip", "warning": "warn", "danger": "warn", "note": "concept", "i
 _TAG = re.compile(r"<[^>]+>")
 _MARKUP = re.compile(r"</?(?:code|em|strong|b|i|a|span|kbd|del|sub|sup)\b[^>]*>")   # inline markup only: "<kind>" in a heading is text
 # A screenshot in a guide: fitted to its column by help.css and wrapped in a link that opens it full size (UX-03).
+_RELATIVE_SRC = re.compile(r'(<img\b[^>]*?\b)src="((?![a-z][a-z0-9+.-]*:|/|#|data:)[^"]+)"', re.I)
 _IMG = re.compile(r'(<a\b[^>]*>\s*)?(<img\b[^>]*?\bsrc="([^"]+)"[^>]*>)')
 # A link written in a guide: relative links are resolved against the guide's file (DOC-18).
 _LINK = re.compile(r'<a href="([^"]*)"([^>]*)>(.*?)</a>', re.S)
@@ -174,9 +175,22 @@ class Library:
         body = body.replace("<table>", '<div class="tbl-wrap"><table class="tbl help-tbl">').replace("</table>", "</table></div>")
         body = re.sub(r"<h1[^>]*>.*?</h1>", "", body, count=1, flags=re.S)       # the page template writes the one <h1>
         body = re.sub(r"<(/?)h1\b", r"<\1h2", body)                                  # any other becomes a section heading (UX-18)
+        body = _RELATIVE_SRC.sub(lambda m: self._picture(path, m), body)         # a picture beside a guide in docs/ is served at /help/files/
         body = _IMG.sub(_full_size, body)
         body = _LINK.sub(lambda m: self._link(path, m), body)
         return body, md
+
+    def _picture(self, source: Path, m: re.Match) -> str:
+        """``<img src="img/x.png">`` in a guide under docs/: the file beside the guide, shown through ``/help/files/``. One that is not there is left
+        alone with ``data-unavailable``, so the help-centre crawl and the screenshots test see it."""
+        target = (source.parent / html.unescape(m.group(2))).resolve()
+        try:
+            rel = target.relative_to(self.docs_dir.resolve())
+        except ValueError:
+            return m.group(0)
+        if not target.is_file():
+            return f'{m.group(1)}data-unavailable="{m.group(2)}" src="{m.group(2)}"'
+        return f'{m.group(1)}src="/help/files/{html.escape(rel.as_posix())}"'
 
     def fragment(self, path: Path) -> str:
         """One markdown note (an example's) as help HTML, its links resolved like any guide's."""

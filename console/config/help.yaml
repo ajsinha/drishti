@@ -40,6 +40,7 @@ categories:
     guides:
       - { slug: rachana-guide, doc: guides/RACHANA_GUIDE.md, title: Rachana, step by step, icon: mortarboard, summary: "A tutorial from your first Sutra to a full trade view: strips, panels, tables, charts, keys, conditions, matching and review." }
       - { slug: sutra-guide, title: The Sutra guide, icon: journal-richtext, summary: "Everything about writing Sutras: anatomy, labels and taxonomies, paths, formats, all twenty panel kinds, matching, inference, Studio." }
+      - { slug: screen-designer, doc: guides/SCREEN_DESIGNER.md, title: "Screen designer · build a screen from JSON files", icon: bounding-box, summary: "The workbench step by step with screenshots: bring data, drop panels and fields on the canvas, size them on the grid, fill options in the inspector, edit the YAML, read the problems and the tests, undo, work by keyboard; a worked example per panel family." }
       - { slug: screen-builder, title: "Screen Builder · JSON files to a shape", icon: signpost-split, summary: "Upload sample JSON files and get one JSON Schema with what each field is; then open the first in Studio. Steps 1 and 2 of the builder." }
       - { slug: panel-kinds, title: The twenty panel kinds, icon: grid-1x2, summary: "What each panel kind shows, when to use it, and the Sutra that produces it." }
       - { slug: examples, doc: guides/examples/README.md, title: Examples, icon: collection, summary: "Ten working Sutras with their data, covering all twenty panel kinds, nested pivots and tree rows: read them here, open them in Studio." }
@@ -126,7 +127,7 @@ contextual:
   terminal: using-the-terminal
   view: using-the-terminal
   studio: sutra-studio
-  build: screen-builder
+  build: screen-designer
   admin: user-management
   account: user-management
   help: using-the-terminal

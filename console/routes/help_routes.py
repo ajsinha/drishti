@@ -18,7 +18,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from fastapi import APIRouter, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, Response
 
 from core.backend import BackendError, drs_message
 from routes.common import ident, library, packs, render
@@ -58,6 +58,20 @@ async def help_examples(request: Request):
     page = {"html": body, "toc": [{"id": e["name"], "name": e["title"], "children": []} for e in items]}
     category = next(c for c in lib.categories if c["id"] == g.category)
     return render(request, "help/guide.html", guide=g, page=page, category=category, screen="help")
+
+
+_PICTURES = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".svg": "image/svg+xml", ".gif": "image/gif", ".webp": "image/webp"}
+
+
+@router.get("/help/files/{path:path}")
+async def help_file(request: Request, path: str):
+    """A picture a guide in ``docs/`` shows (``docs/guides/img/designer/...``), served from the docs folder and nothing else: only picture
+    types, only inside the folder, so a guide can carry screenshots without the console serving the repository."""
+    docs = request.app.state.docs_dir.resolve()
+    target = (docs / path).resolve()
+    if target.suffix.lower() not in _PICTURES or docs not in target.parents or not target.is_file():
+        return Response(status_code=404)
+    return Response(target.read_bytes(), media_type=_PICTURES[target.suffix.lower()], headers={"Cache-Control": "public, max-age=300"})
 
 
 @router.get("/help/{slug}")

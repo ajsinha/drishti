@@ -31,6 +31,8 @@ three guided steps, each also usable on its own:
 
 The result is always an ordinary Sutra: nothing here adds a second layout language or a second renderer.
 
+**Using the designer?** The step-by-step guide with screenshots is [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md) (in the console: *Help → Screen designer*, or F1 on any Build page). The workbench that replaced the separate pages is described in [BUILD_WORKBENCH.md](BUILD_WORKBENCH.md).
+
 ## Contents
 
 1. [Design principles](#design-principles)

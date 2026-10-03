@@ -22,7 +22,7 @@
 .wb-meta { font-size: .8rem; }
 .wb-head-actions { margin-left: auto; display: inline-flex; gap: .4rem; }
 .wb-status { margin: .15rem 0; min-height: 1.3rem; font-size: .85rem; }
-.wb-draft { border: 1px solid var(--d-border); border-radius: 6px; padding: .3rem .6rem; margin-bottom: .3rem; max-height: 14rem; overflow: auto; font-size: .85rem; }
+.wb-draft { border: 1px solid var(--d-border); border-radius: 6px; padding: .3rem .6rem; margin-bottom: .3rem; max-height: 9rem; overflow: auto; font-size: .85rem; }
 .wb-main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(15rem, 20rem) minmax(0, 1fr) minmax(17rem, 24rem); gap: .6rem; }
 .wb-left, .wb-right, .wb-centre { min-height: 0; border: 1px solid var(--d-border); border-radius: 8px; background: var(--d-bg); display: flex; flex-direction: column; }
 .wb-left { overflow: auto; padding: .5rem .6rem; }
@@ -173,3 +173,6 @@ body.wb-dragging, body.wb-dragging * { cursor: grabbing !important; user-select:
 #wbPaneYaml .cm-s-default .cm-bracket, #wbPaneYaml .cm-s-default .cm-operator { color: var(--d-muted); }
 #wbPaneYaml .studio-gutter { width: 14px; }
 #wbPaneYaml .studio-chk { text-decoration: underline wavy var(--d-warn); text-underline-offset: 3px; }
+.wb-item { display: grid; grid-template-columns: 1fr 1fr; column-gap: .5rem; }
+.wb-item .wb-item-tools { grid-column: 1 / -1; }
+.wb-drop:not(.wb-drop-box) { box-shadow: 0 0 0 3px var(--d-accent-tint), 0 0 10px var(--d-accent); }

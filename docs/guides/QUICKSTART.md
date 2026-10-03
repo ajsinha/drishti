@@ -338,6 +338,7 @@ More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 | The same setup, step by step, with sign-in, alerts and monitors | [GETTING_STARTED.md](GETTING_STARTED.md) |
 | Every console feature, with examples | [USER_GUIDE.md](USER_GUIDE.md) |
 | The packs and the commands each one adds | [PACKS.md](PACKS.md) |
+| Build a screen from your own JSON files, by dragging panels and fields, no YAML needed | [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md), or **Build → Screen designer guide** (F1 on any Build page) |
 | Change how a screen looks (Sutras) | [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md) and the in-app *Sutra guide* |
 | See every panel kind working, and copy from ten small Sutras with their data | [examples/](examples/README.md), or **File** in Studio, or **Help → Examples** |
 | Build Drishti from source, run the tests, add an endpoint, plugin, pack or page | [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) |

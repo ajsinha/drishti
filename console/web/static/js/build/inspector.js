@@ -61,6 +61,7 @@
     }
     function select(options, value, onChange) {
       var s = el('select', 'studio-in');
+      if (value && options.indexOf(String(value)) < 0) { options = options.concat([String(value)]); }          // a value the list does not know (a kind from outside the packs) is still shown
       [''].concat(options).forEach(function (o) { var op = el('option', null, o || '(none)', { value: o }); if (String(value == null ? '' : value) === o) { op.selected = true; } s.appendChild(op); });
       s.addEventListener('change', function () { onChange(s.value, true); });
       return s;

@@ -13,11 +13,12 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-<p>Each example is a Sutra, a self-contained JSON document it runs against, and a note. Open one in Studio to edit it with a live preview, or copy the parts you need.</p>
+<p>Each example is a Sutra, a self-contained JSON document it runs against, and a note. Open one in the workbench to get your own copy to change, check and design on, or in Studio to edit it with a live preview, or copy the parts you need.</p>
 {% for e in examples %}
 <section class="help-example-item" id="{{ e.name }}">
   <h2>{{ e.title }}</h2>
-  <p class="help-example-actions"><a class="btn-pill btn-accent" href="/studio?example={{ e.name }}"><i class="bi bi-pencil-square" aria-hidden="true"></i> Open in Studio</a>
+  <p class="help-example-actions"><a class="btn-pill btn-accent" href="/build/new?example={{ e.name }}"><i class="bi bi-bounding-box" aria-hidden="true"></i> Open in the workbench</a>
+    <a class="btn-pill btn-ghost" href="/studio?example={{ e.name }}"><i class="bi bi-pencil-square" aria-hidden="true"></i> Open in Studio</a>
     <span class="mono text-muted-d">{{ e.name }}.sutra.yaml · {{ e.name }}.json</span></p>
   {{ e.note | safe }}
   <details><summary>{{ e.name }}.sutra.yaml</summary>

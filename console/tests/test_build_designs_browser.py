@@ -180,3 +180,12 @@ def test_the_old_shape_page_lands_on_new(console_url, browser):
     page.wait_for_url("**/build/new#files")
     assert page.locator("[data-new]").count() == 1
     page.close()
+
+
+def test_the_help_centres_open_in_the_workbench_link_opens_the_example_as_a_copy(console_url, browser):
+    page = browser.new_page()
+    page.goto(console_url + "/build/new?example=pnl-explain")
+    page.wait_for_url("**/build/d/*")
+    page.locator("[data-preview] [data-panel]").first.wait_for()
+    assert "(copy)" in page.locator("h1").inner_text() and "sutra: pnl-explain" in page.evaluate("window.drishtiWorkbench.store.state.yaml")
+    page.close()

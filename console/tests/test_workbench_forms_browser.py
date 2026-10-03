@@ -101,6 +101,51 @@ def test_the_problems_tab_warns_about_a_field_the_samples_rarely_have(live_conso
     assert page.evaluate("window.drishtiWorkbench.canvas.selected().id") == "facts"
 
 
+def test_a_field_dropped_on_a_panel_that_cannot_take_it_says_why(live_console, page):
+    open_design(page, live_console, "why not", sutra=showcase_sutra(), files={"showcase.json": showcase_json()})
+    note = page.locator('[data-preview] [data-panel="note"]')
+    note.scroll_into_view_if_needed()
+    b = note.bounding_box()
+    rev = state(page, "rev")
+    drag(page, page.locator(".wb-field-row", has_text="currency").first, b["x"] + b["width"] / 2, b["y"] + b["height"] / 2)
+    wait(page, "document.querySelector('[data-say]').textContent.includes('bind no data')")
+    assert "DRS-5022" in page.locator("[data-say]").inner_text() and state(page, "rev") == rev
+    assert "Problems" in page.get_by_role("tab", name="Problems").inner_text()
+
+
+def test_phone_width_theme_and_the_sample_switcher_in_the_status_bar(live_console, page):
+    docs = {"a.json": json.dumps({"tradeId": "A"}), "b.json": json.dumps({"tradeId": "B"})}
+    open_design(page, live_console, "bar", sutra=RARE_SUTRA.replace("$.rare", "$.tradeId"), files=docs)
+    assert "sample 1/2" in page.locator("[data-sample-pos]").inner_text()
+    page.locator("[data-next]").click()
+    wait(page, "document.querySelector('[data-sample-pos]').textContent.includes('sample 2/2')")
+    wait(page, "document.querySelector('[data-preview]').textContent.includes('B')")
+    page.locator("[data-prev]").click()
+    wait(page, "document.querySelector('[data-sample-pos]').textContent.includes('sample 1/2')")
+    page.locator('[data-width="phone"]').click()
+    assert page.evaluate("!!document.querySelector('.wb-phone')") and page.locator('[data-width="phone"]').get_attribute("aria-pressed") == "true"
+    assert page.evaluate("document.querySelector('.wb-frame').getBoundingClientRect().width") < 420
+    page.locator('[data-width="desktop"]').click()
+    assert page.evaluate("!document.querySelector('.wb-phone')")
+    options = page.locator("[data-theme-pick] option").all_inner_texts()
+    assert len(options) >= 4
+    choice = page.locator("[data-theme-pick] option").nth(2).get_attribute("value")
+    page.select_option("[data-theme-pick]", choice)
+    assert page.evaluate("document.documentElement.getAttribute('data-theme')") == choice
+
+
+def test_clicking_the_canvas_shows_the_inspector_but_a_matrix_cell_does_not_leave_the_tests_tab(live_console, page):
+    open_design(page, live_console, "tabs", sutra=showcase_sutra(), files={"showcase.json": showcase_json()})
+    page.get_by_role("tab", name="Problems").click()
+    page.locator('[data-preview] [data-panel="terms"] .pnl-h').click()
+    assert page.get_by_role("tab", name="Inspector").get_attribute("aria-selected") == "true"
+    page.get_by_role("tab", name="Tests").click()
+    page.locator(".wb-matrix").wait_for(timeout=20000)
+    page.locator('.wb-matrix tbody tr:nth-child(2) button').first.click()
+    assert page.get_by_role("tab", name="Tests").get_attribute("aria-selected") == "true"
+    assert page.evaluate("window.drishtiWorkbench.canvas.selected().id") == "ops"
+
+
 def test_auto_design_is_a_revision_and_undo_brings_the_old_sutra_back(live_console, page):
     docs = {"a.json": json.dumps({"tradeId": "A", "book": "rates", "notional": 5}), "b.json": json.dumps({"tradeId": "B", "book": "fx", "notional": 7})}
     open_design(page, live_console, "auto", files=docs)

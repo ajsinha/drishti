@@ -109,9 +109,9 @@
     // ---- pointing: hover, select ---------------------------------------------------------------------------------------
     frame.addEventListener('click', function (e) {
       var p = e.target.closest('.pnl[data-panel]');
-      if (p && panels().indexOf(p) >= 0) { select({ type: 'panel', id: p.getAttribute('data-panel') }); p.focus({ preventScroll: true }); return; }
+      if (p && panels().indexOf(p) >= 0) { select({ type: 'panel', id: p.getAttribute('data-panel') }); p.focus({ preventScroll: true }); if (hooks.picked) { hooks.picked(); } return; }
       var r = e.target.closest('[data-wb-region]');
-      if (r) { select({ type: r.getAttribute('data-wb-region') }); r.focus({ preventScroll: true }); return; }
+      if (r) { select({ type: r.getAttribute('data-wb-region') }); r.focus({ preventScroll: true }); if (hooks.picked) { hooks.picked(); } return; }
       if (e.target.closest('.studio-view')) { select(null); }
     });
     frame.addEventListener('dblclick', function (e) {
@@ -153,8 +153,8 @@
       if (h && (h.type === 'panel' || h.type === 'column')) {
         var r = h.rect;
         if (h.type === 'column') { box.classList.add('wb-drop-box'); box.style.cssText = ''; place(box, r.left, r.top, r.width, Math.max(r.height, 60)); }
-        else if (h.side) { place(box, h.rel === 'before' ? r.left - 3 : r.right - 1, r.top, 4, r.height); }
-        else { place(box, r.left, h.rel === 'before' ? r.top - 3 : r.bottom - 1, r.width, 4); }
+        else if (h.side) { place(box, h.rel === 'before' ? r.left - 4 : r.right - 2, r.top, 6, r.height); }
+        else { place(box, r.left, h.rel === 'before' ? r.top - 4 : r.bottom - 2, r.width, 6); }
       } else if (h && h.type === 'strip' && payload.type === 'field') { h.el.classList.add('wb-drop-on'); indicator = h.el; return; }
       else { return; }
       document.body.appendChild(box);

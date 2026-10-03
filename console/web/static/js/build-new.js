@@ -84,6 +84,13 @@
     });
   });
 
+  // /build/new?example=<name> (the help centre's "Open as a design"): the same as clicking that example's card
+  try {
+    var asked = new URLSearchParams(window.location.search).get('example');
+    var card = asked && root.querySelector('[data-example="' + (window.CSS && CSS.escape ? CSS.escape(asked) : asked) + '"]');
+    if (card) { card.click(); }
+  } catch (e) { /* no query string support: the card stays there to click */ }
+
   // ---- create ----------------------------------------------------------------------------------------------------
   function readText(file) { return file.text(); }
   function chosenStart() { return root.querySelector('[name=start]:checked').value; }

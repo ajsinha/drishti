@@ -272,7 +272,7 @@ class FakeBackend:
             infos = [{"name": s["name"], **({"ref": s["ref"]} if s.get("ref") else {"document": row["docs"].get(s["name"], {})})} for s in d["samples"]]
             if not d["sutra"] or not infos:
                 raise BackendError(400, "DRS-5001", "this design has no Sutra or no samples to check")
-            m = await self.check(d["sutra"], d["kind"], infos, ident)
+            m = await FakeBackend.check(self, d["sutra"], d["kind"], infos, ident)       # not self.check: other tests replace that on the shared backend
             d["status"] = "checked" if m["ok"] else "draft"
             return {**m, "rev": d["rev"]}
         raise BackendError(404, "DRS-1001", "no such design endpoint")

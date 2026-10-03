@@ -68,18 +68,17 @@ kind. Name the design if you want to keep it, then **Create design**. You land o
 **Build → My designs** lists your designs, newest first, with their kind, samples, Sutra revision and when each expires.
 **Open**, **Rename**, **Duplicate** (a named copy with its samples) and **Delete** are on each row.
 
-## A design's page
+## A design's page: the workbench
 
-Until the full workbench arrives, a design opens in a simple page with:
+A design opens in the **workbench**: Data on the left (the samples, the shape tree and the palette of panel kinds), the screen in the
+middle (**Design**, **YAML**, **Summary**), and **Inspector**, **Problems** and **Tests** on the right, with a status bar below.
+The Design tab is the real screen with an editing layer: select, move and size panels, drop panels from the palette and fields from
+the shape, edit options in the inspector. **Auto-design** drafts a Sutra from the samples as the design's next revision (after
+asking, if it would replace one; Undo brings the old one back), and lists what it left out and why.
+**Open in Studio** carries this design's Sutra and the sample chosen to Studio.
 
-- **Data**: the samples (add more files, remove one; stored entities and synthetic samples are marked) and **the shape**:
-  a tree of every field with what it *is*, how often it appears and where the files disagree. Use the arrow keys, Right and
-  Left to open and close, Enter for a field's reason, and the filter. **shape.json** (the schema with `x-drishti`) and
-  **JSON Schema** (annotations removed, for any other tool) download from here.
-- **Sutra**: the YAML, read-only. **Auto-design** drafts a Sutra from the samples and keeps it as the design's next revision
-  (after asking, if it would replace one). It lists what it left out and why, and the runner-up kinds for each panel.
-  **Open in Studio** opens Studio with this design's Sutra and the sample selected below, to edit it there.
-- **Preview**: the real view, as Studio draws it, with a **Sample** switcher to see the Sutra on each sample in turn.
+The whole workbench is explained step by step, with screenshots, in [the Screen designer guide](/help/screen-designer). In the Data
+pane, **shape.json** (the schema with `x-drishti`) and **JSON Schema** (annotations removed, for any other tool) download.
 
 ## What a shape is
 

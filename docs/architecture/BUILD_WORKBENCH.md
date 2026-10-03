@@ -188,6 +188,23 @@ modules, each under about 400 lines: `editor.js` (from Studio's), `preview.js`, 
 of `layout.js` and shared with layout mode), `inspector.js`, `samples.js`, `problems.js`, `tests.js`, `ops.js`,
 `palette.js`, `workbench.js`. Vendored only.
 
+**As built (step 6).** The page is `templates/build/design.html` plus `static/css/build-workbench.css`; the scripts in `static/js/build/`
+are `ops.js` (the store: state, the event bus and the one way to change a design, `send(ops)`: serialised, with `baseRev`, a 409
+reloads the design and says so), `yamlmodel.js` (reads the Sutra with Studio's forgiving reader, joining multi-line flow maps, for
+the inspector), `drag.js` (one pointer-driven drag for palette kinds, shape fields and panel headings; no HTML5 drag-and-drop),
+`menus.js` (the keyboard-first menu behind *Add panel…*, *Bind field…* and the ranked suggestions), `palette.js`, `expr.js`
+(`$.`/`@.`/function completion), `actions.js` (add, move, size, remove, bind and suggest as operations; the drag and its key share
+it), `canvas.js` (decorates the real preview: selection, hover, move, resize, drop bars, keys), `inspector.js` (the form from the
+Rachana schema), `data.js` (samples and the shape tree), `yamltab.js` (Studio's CodeMirror; typing is a `text` operation),
+`problems.js`, `tests.js` (check on idle, stale runs dropped), `draft.js`, `workbench.js` (wiring, tabs, status bar) and `grid-keys.js`.
+The console adds `POST /build/designs/{id}/ops|undo|redo|check|suggest|preview-file`, `GET /build/designs/{id}` and
+`GET /build/designs/{id}/sample`; they proxy the server and render the preview model with Studio's own partial. Decisions: resizing is
+`setOption span|height` (a `move` with only a size sends the panel to the end of its column); a palette drop supplies the kind's required
+options from the shape (the server refuses a panel without them) and the inspector marks them to check; a dropped field binds when it
+lands inside a panel and asks for suggestions when it lands on a panel's rim, between panels or on empty space; the suggestions call the
+Design's shape then `/builder/suggest` (a design-level `/{id}/suggest` on the server was not needed). Browser tests run against the real
+server jar (`console/tests/wb_live.py`; skipped when the jar or JDK 25 is missing).
+
 **Permissions** (product owner's rule). Creating, editing, checking, previewing pasted or referenced samples, and
 exporting your own Design are open to every signed-in user. Saving to the registry or to a bound file needs the author
 right and Studio saving switched on; proposing needs the author right; approving needs the approve right; loading a
@@ -206,7 +223,7 @@ Studio is folded in, because it is what users are waiting for.
 |---|---|---|
 | **4. Designs** (done) | `DesignStore` (file, JPA), `/builder/designs` with samples, quotas and expiry; `/build` (My designs) and `/build/new` (files, folder, schema with synthetic samples, store references, examples, existing Sutra); the extractor becomes the Data view; `/build/shape` redirects | a sample set survives a console restart; two consoles see the same Design; limits answer with DRS codes; a reference to a kind the user may no longer open previews as "no access" |
 | **5. Operations and one checker** (done) | the `design.ops` package; stateless `/builder/edit` and `/builder/check`; `SampleChecker` behind Studio's test and auto-design's pruning | every operation on all 20 kinds keeps comments and order; a bad operation is a located problem; a sample set with a missing field shows the right empty and error cells |
-| **6. Workbench with the visual canvas** | `/build/d/{id}`: Data, Design (canvas, palette, field drops with suggestions, inspector, undo/redo, keyboard path, `grid-keys.js` shared with layout mode), YAML, Problems, Tests as you type, sample switcher, *Preview with a file…*, phone and theme toggles; the guide `docs/guides/SCREEN_DESIGNER.md` and its help entry | the all-panels showcase is built from its samples without typing YAML, by mouse and by keyboard only; a folder → auto-design → switch samples → fix → green matrix test; layout mode's tests pass with the shared module |
+| **6. Workbench with the visual canvas** (done) | `/build/d/{id}`: Data, Design (canvas, palette, field drops with suggestions, inspector, undo/redo, keyboard path, `grid-keys.js` shared with layout mode), YAML, Problems, Tests as you type, sample switcher, *Preview with a file…*, phone and theme toggles; the guide `docs/guides/SCREEN_DESIGNER.md` and its help entry | the all-panels showcase is built from its samples without typing YAML, by mouse and by keyboard only; a folder → auto-design → switch samples → fix → green matrix test; layout mode's tests pass with the shared module |
 | **7. Studio folded in** | all `/studio*` addresses redirect into the workbench; Studio's test entities become tests on a Design; command palette; diff and versions; the guide grows these chapters | every old Studio address in the console tests lands on an equivalent screen; keyboard-only use across panes |
 | **8. Ship and scale** | propose with evidence, reviewers see the matrix, approval makes it live; pack fragment export and folder/zip import; the headless CLI with the `packs/<p>/tests/` convention run over every shipped pack in the build; development file binding; read-only share links; the guide's end-to-end walkthrough | folder → design → check → propose → approve → the view serves the new version; an exported fragment loads through Admin → Packs and passes `sutra test` |
 

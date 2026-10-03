@@ -73,6 +73,7 @@
   actions = WB.Actions(store, ui);
   canvas = WB.Canvas($('[data-preview]'), store, actions, {
     onSelect: function (s) { inspector.show(s); },
+    picked: function () { right.show('inspector'); },                 // a click on the canvas is a wish to inspect; a cell of the Tests matrix is not
     openInspector: function () { right.show('inspector'); inspector.focusFirst(); },
     menuAdd: function () { actions.menuAdd(); }, menuBind: function () { actions.menuBind(); }
   });
