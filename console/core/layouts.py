@@ -34,6 +34,7 @@ class Layouts:
 
     def __init__(self, settings):
         self.enabled = bool(settings.get("layouts.enabled", True))
+        self.min_span = max(1, min(12, int(settings.get("layouts.min_span", 3))))      # narrowest width layout mode allows
         self._kept: dict[str, tuple[float, dict]] = {}
 
     async def state(self, backend, ident) -> dict:
@@ -110,4 +111,4 @@ class Layouts:
         return {"panels": panels, "offered": self.enabled and not embed and state.get("enabled", True) is not False,
                 "allowed": bool(state.get("allowed")) and bool(sutra), "why": why, "sutra": sutra or "", "kind": kind,
                 "mine": mine is not None, "promote": bool(state.get("promote")) and bool(sutra), "review": bool(state.get("review")),
-                "base": self.sutra_layout(vm.get("panels") or [])}
+                "base": self.sutra_layout(vm.get("panels") or []), "min_span": self.min_span}
