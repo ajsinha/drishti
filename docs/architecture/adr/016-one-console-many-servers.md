@@ -40,7 +40,7 @@ each server decides who gets in.
    server ends the current session for that tab after asking, and starts sign-in on the other.
 4. **Links name their server.** Shared links and bookmarks carry the server id (`/s/<server>/v/trade/MX-20000001`, or a
    `srv=` parameter), so a link opens on the right server, asking to sign in there if needed.
-5. **The picker shows each server's state** from its public `/api/v1/about` and `/readyz`-style health: name,
+5. **The picker shows each server's state** from its public `/public/about` and `/readyz`-style health: name,
    version, packs, up or down, and whether this user already holds a session there.
 6. **Exclusive servers stay exclusive** by their own rules: their users and roles, single sign-on group mapping,
    optional network restrictions (they may sit on a network only some consoles reach). The console never lists a
@@ -51,7 +51,7 @@ each server decides who gets in.
   take a server id; every `request.app.state` cache becomes per (server, user); `/api/channel` subscriptions are per
   server; the top bar shows the current server (name and a colour) and a *Switch server* menu.
 - **Server**: unchanged in principle. It already authenticates on its own and trusts only tokens signed with its own
-  secret. Small additions: a public, unauthenticated `/api/v1/about/public` (name, version, banner text, sign-in
+  secret. Small additions: a public, unauthenticated `/public/about` (outside `/api/v1`) (name, version, banner text, sign-in
   methods) for the picker.
 - **Security**: one secret per server (a leaked secret opens one server, not all); cookies never carry a token for
   another server; the console refuses a server id not in its catalogue (no open redirect or server-side request

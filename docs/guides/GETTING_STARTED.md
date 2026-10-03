@@ -189,7 +189,7 @@ What the settings do:
 | Setting | Meaning |
 |---|---|
 | `DRISHTI_PACKS` | The packs to load, separated by commas. A pack's parents load with it: `market-risk` brings `banking-core`, `market-data` and `trading`. Without this setting only the small `finance` pack loads. |
-| `DRISHTI_STUDIO_SAVE=true` | Lets Sutra Studio save layouts. Leave it out if you will not edit layouts. |
+| `DRISHTI_STUDIO_SAVE=true` | Lets Sutra Studio save Sutras (the view definitions it edits). Leave it out if you will not edit Sutras. |
 
 Leave this terminal open: the server runs in it and writes its log there. After a few seconds you
 should see a line like:

@@ -473,6 +473,37 @@ See [PACKS.md](../guides/PACKS.md#a-signed-pack-registry-publishing-and-installi
 
 Check: `curl -s localhost:18480/api/v1/studio/settings` returns `{"approve":…,"review":…,"save":…}`.
 
+### `drishti.branding` — the product's name and notices
+
+| Key | Default | Meaning |
+|---|---|---|
+| `product` | `Drishti` (`DRISHTI_PRODUCT`) | The product name in the About answer and messages. |
+| `tagline` | `Any data. Any domain. One grammar.` | The line under the name. |
+| `owner` | `Ashutosh Sinha` | The owner named in the About answer. |
+| `copyright` | the Drishti copyright line | Returned by `GET /api/v1/about`. |
+| `notice` | `Unauthorised copying, use or distribution is prohibited.` | The legal notice beside it (also in the public `/public/about`). |
+
+The console has its own copy under `ui:` (`product`, `tagline`, `copyright`, `notice`; see [`ui`](#ui)): set both when you rebrand.
+
+### `drishti.identity` — users, passwords and the identity database
+
+Users, roles, saved workspaces and the audit trail live in one database (SQLite by default, PostgreSQL for several
+servers). The environment variables of this section are in the [placeholder table](#every-placeholder-in-the-servers-applicationyaml).
+
+| Key | Default | Meaning |
+|---|---|---|
+| `database-url` / `database-user` / `database-password` | `jdbc:sqlite:./data/identity/drishti.db` / empty / empty (`DRISHTI_IDENTITY_DB_URL`, `_USER`, `_PASSWORD`) | The database; `jdbc:postgresql://host:5432/drishti` for PostgreSQL. |
+| `database-pool-size` | `8` | Connections in the pool (SQLite allows one writer at a time whatever the size). |
+| `refresh-seconds` | `15` | How soon servers sharing one database see each other's role and pack changes. |
+| `iterations` | `240000` | PBKDF2-HMAC-SHA256 iterations for new password hashes. |
+| `min-password-length` | `10` | The shortest password accepted. |
+| `max-failed-attempts` / `lockout` | `5` / `15m` | Failed sign-ins before an account locks, and for how long. |
+| `force-password-change-on-create` / `-on-reset` | `false` / `false` (`DRISHTI_FORCE_PW_CHANGE_ON_CREATE`, `_ON_RESET`) | Require a new password at the first sign-in of a new user, or after an administrator's reset. |
+| `seed-admin` | `true` (`DRISHTI_SEED_ADMIN`) | On first start with no users, create the development administrator. `false` in production. |
+| `seed-username` / `seed-password` | `drishti-dev-admin` / the built-in development password (`DRISHTI_SEED_USERNAME`, `DRISHTI_SEED_PASSWORD`) | Its sign-in. Change the password at once; the console warns until you do. |
+| `seed-roles` / `seed-display-name` | `[admin]` / `Drishti dev admin` | Its roles and the name shown for it. |
+| `users-file` / `audit-file` / `preferences-dir` | `./data/identity/users.json` / `./data/identity/audit.jsonl` / `./data/identity/preferences` | The files of releases before 1.10, imported once into an empty database and renamed `*.imported`. |
+
 ### `drishti.security` — tokens, roles, field masks
 
 | Key | Default | Meaning |
@@ -592,7 +623,7 @@ low. See [PERFORMANCE.md](PERFORMANCE.md).
 | Key | Default | Meaning |
 |---|---|---|
 | `mnemonics.<CODE>.kind` / `.label` | from packs | A mnemonic (`TRD`) opens this kind; the label shows in suggestions. A site entry overrides a pack's. |
-| `suggest-limit` | `25` (`DRISHTI_SUGGEST_LIMIT`) | Entries in the command line's dropdown; the list scrolls. At most 50. |
+| `suggest-limit` | `25` (`DRISHTI_SUGGEST_LIMIT`) | Entries in the command line's dropdown; the list scrolls. This default is not capped; a request's own `limit` is, at 50. |
 | `suggest-budget` | `30ms` | Type-ahead answers with what the sources returned by then. |
 | `recent-size` | `20` | Recently opened entities remembered per user. |
 
@@ -791,6 +822,7 @@ Layout: `<root>/<domain>/<kind>/business_date=yyyy-MM-dd/` holding `(id, doc)` r
 | `columns-cache-mb` | `1024` | A day's promoted columns, read once and kept by size (the newest day is loaded in the background). |
 | `max-concurrent-reads` | `16` | Single-document reads at once (each decodes one row group). |
 | `max-load-rows` | `200000` | A table without columns has a whole day loaded for reverse lookups only up to this many rows. |
+| `warm-dates` | `3` | After start, in the background, each table's newest N dates get their id map and one document read, so the first read of a recent past date is not the slow one. `0` turns it off. |
 | `s3.endpoint`, `s3.access-key`, `s3.secret-key`, `s3.region`, `s3.path-style` | empty, empty, empty, empty, `true` with an endpoint | Shorthands for an `s3a://` (or, native engine, `s3://`) root; both engines read them. Without keys the AWS chain is used (environment, profile, instance role). |
 | `s3.read-block-kb` | `1024` | Native engine: the smallest ranged GET (a Parquet footer, a deletion vector); larger reads are one GET of their range. |
 | `hadoop.<key>` | none | Passed to Hadoop as `<key>` (any `fs.s3a.*` option); with the native engine, Kernel's options (`delta.kernel.default.parquet.reader.batch-size`, …) are read from here or from `kernel.<key>`. |
@@ -1222,6 +1254,7 @@ You should see uvicorn report `Uvicorn running on http://127.0.0.1:17481`.
 | `server.port` | `17480` (`DRISHTI_CONSOLE_PORT`) | Listening port. |
 | `backend.url` | `http://127.0.0.1:18480` (`DRISHTI_BACKEND_URL`) | The Drishti server. |
 | `backend.timeout_seconds` | `5` | Per call to the server. |
+| `backend.name` | the product name (`ui.product`) | The name of the single server when `servers` is not set; the picker and the top bar show it. |
 | `backend.pool_size` | `64` | Pooled HTTP connections to the server (per server, when there are several). |
 
 ### `servers` — one console, many servers
@@ -1271,6 +1304,9 @@ sign-on settings (`auth.oidc`) apply to every server; each server verifies the I
 | `user`, `user_display`, `desk` | `ash` (`DRISHTI_USER`), `Ash`, `Rates desk` | The acting user when `auth.enabled` is false (local development only). |
 | `clock_tz` / `clock_label` | `America/New_York` / `NY` | The top-bar clock. |
 | `landing_examples` | `4` | How many example commands the landing page plays. They are the example commands (`console.examples`) of the packs switched on, so the landing page never names an entity of a pack that is not installed; with none, it shows the form `<MNEMONIC> <ID> <GO>`. Studio's first preview is the first of these examples too. |
+| `product_native` / `product_meaning` | `दृष्टि` / `Drishti (दृष्टि) means <em>sight</em>.` | The product name in its own script (blank for none) and one line on its meaning, on the About page. |
+| `copyright` / `notice` | the Drishti copyright and a ban on unauthorised copying | The legal lines in the footer and on the About page. Change them here, never in code; the server has the same under `drishti.branding`. |
+| `error_advice` | a short text for each of `DRS-1001`, `DRS-1002`, `DRS-1003`, `DRS-1004`, `DRS-1007`, `DRS-4003`, `DRS-4004`, and `default` | What an error page tells the user to do, by the code the server answered with. `{kind}` and `{id}` in a text become the entity asked for; a code with no entry gets `default`. Edit it so the advice fits your site (who to ask, which channel). |
 | `showcase` | four finance-pack screenshots | The landing page's pictures: `{slug, title, cmd, sutra}` each, the image being `web/static/img/shot-<slug>.png`. A caption names its `cmd` only when that command is one of the packs' examples. |
 
 ### `auth`
@@ -1325,6 +1361,7 @@ is decided by the server (`drishti.rachana.studio-save`).
 | Key | Default | Meaning |
 |---|---|---|
 | `layouts.enabled` | `true` (`DRISHTI_LAYOUTS_ENABLED`) | Off: no view offers layout mode and saved personal layouts are not applied, whatever roles say ([USER_GUIDE.md](../guides/USER_GUIDE.md#layout-mode-arrange-a-view-your-way)). |
+| `layouts.min_span` | `3` | The narrowest width, in columns of the 12-column grid (1 to 12), that layout mode lets a user give a panel. |
 
 ### `live`
 

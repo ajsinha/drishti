@@ -97,7 +97,7 @@ java -jar drishti-server/target/drishti-server-1.13.0-exec.jar
 |---|---|---|
 | `DRISHTI_PACKS` | The domain packs to load. A pack's parents load with it: `market-risk` brings `banking-core`, `market-data` and `trading`. | `finance` |
 | `DRISHTI_PORT` | The server's port | `18480` |
-| `DRISHTI_STUDIO_SAVE` | `true` lets Sutra Studio save layouts | `false` |
+| `DRISHTI_STUDIO_SAVE` | `true` lets Sutra Studio save Sutras (the view definitions it edits) | `false` |
 
 When the log says `Started DrishtiApplication`, check it from another terminal:
 

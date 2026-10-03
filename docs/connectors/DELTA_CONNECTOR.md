@@ -201,8 +201,8 @@ connectors:
 |---|---|
 | `layout.<kind>.columns` | Document paths to promote, as written in the document (`mtm`, `counterparty.id`). The column name is the path with `.` replaced by `__`. |
 | `layout.<kind>.sort-by` | `id` (the default and the right choice for entity tables): rows sorted by id within each business day. |
-| `layout.<kind>.file-rows` | Rows per file (250,000). Each file holds a contiguous id range. |
-| `layout.<kind>.row-group-rows` | Rows per Parquet row group (1,000). |
+| `layout.<kind>.file-rows` | Rows per file (default 250,000). Each file holds a contiguous id range. |
+| `layout.<kind>.row-group-rows` | Rows per Parquet row group (default 10,000; the trading pack sets 1,000, which keeps the first open of a trade fast). |
 
 The pack loader flattens the nested settings into the connector's flat settings (`layout.trade.columns =
 tradeId,productType,…`), which is what the connector reads; you can also set them that way in site configuration.
