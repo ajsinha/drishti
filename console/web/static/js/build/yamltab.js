@@ -89,7 +89,7 @@
     return {
       goto: function (line, col) { if (editor) { editor.focus(); editor.setCursor({ line: Math.max(0, line - 1), ch: Math.max(0, (col || 1) - 1) }); editor.scrollIntoView(null, 80); } else { ta.focus(); } },
       focus: function () { if (editor) { editor.focus(); } else { ta.focus(); } },
-      refresh: function () { if (editor) { editor.refresh(); } }, flush: flush, value: value, checks: function () { return live; }, editor: editor
+      pending: function () { return !!timer; }, refresh: function () { if (editor) { editor.refresh(); } }, flush: flush, value: value, checks: function () { return live; }, editor: editor
     };
   };
 })();

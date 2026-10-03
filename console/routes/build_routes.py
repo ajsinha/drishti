@@ -113,8 +113,8 @@ async def design_page(request: Request, id_: str, tab: str = "", sample: str = "
     init = {"fileBinding": bool(binding.get("enabled")), "boundFile": design.get("boundFile") or "", "shared": bool(design.get("shared")),
             "dirs": binding.get("dirs") or [], "id": design["id"], "samples": design.get("samples") or [], "opsAt": design.get("opsAt", 0), "opsCount": len(design.get("ops") or []) if "opsCount" not in design else design["opsCount"],
             "status": design.get("status", "draft"),
-            "tab": tab if tab in ("design", "yaml", "summary") else "", "sample": sample, "canSave": bool(settings.get("save")), "review": review,
-            "base": design.get("base") or ""}
+            "tab": tab if tab in ("design", "yaml", "summary", "notes") else "", "sample": sample, "canSave": bool(settings.get("save")), "review": review,
+            "base": design.get("base") or "", "notes": design.get("notes") or ""}
     return render(request, "build/design.html", design=design, init=init, error=None, screen="build", limits=request.app.state.builder_limits.as_dict(),
                   examples=request.app.state.examples.names(), pending=pending)
 

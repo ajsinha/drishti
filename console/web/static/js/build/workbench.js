@@ -80,6 +80,7 @@
   inspector = WB.Inspector($('[data-inspector]'), store, function () { return schemaP; }, { paths: function () { return data ? data.fields() : []; }, actions: actions });
   data = WB.Data($('[data-left]'), store, actions, { maxFile: parseFloat(d.maxFileMb) * 1048576, selection: function () { return canvas.selected(); } });
   WB.palette.render($('[data-palette]'), function (kind) { actions.add(kind, actions.afterSelected()); });
+  var notes = WB.Notes($('[data-notes]'), store, init.notes || '');
   var yaml = WB.YamlTab($('[data-yaml-src]'), $('[data-field-help]'), store);
   function gotoLine(line, col) { centre.show('yaml'); yaml.goto(line, col); }
   function gotoPanel(id) { centre.show('design'); canvas.select({ type: 'panel', id: id }); canvas.focus(); }
@@ -172,6 +173,21 @@
     } else if (!e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey && (k === 'n') && e.target.closest && e.target.closest('[data-preview]') && e.target.matches('.pnl[data-panel], [data-wb-region]')) {
       e.preventDefault(); actions.menuAdd();
     }
+  });
+  // an edit still waiting for its pause is sent before F1 or a link takes the page away (UX-22); Escape in the inspector goes back to the panel (UX-10)
+  function held() {
+    var p = [yaml.flush(), inspector.flush(), notes.flush()];
+    return Promise.all(p);
+  }
+  window.drishtiBeforeLeave = held;
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('a[href]');
+    if (!a || a.target === '_blank' || e.defaultPrevented || e.ctrlKey || e.metaKey || e.shiftKey || /^#|^javascript:/.test(a.getAttribute('href'))) { return; }
+    if (!inspector.pending() && !yaml.pending() && !notes.pending()) { return; }
+    e.preventDefault(); var href = a.href; held().then(function () { window.location.href = href; }, function () { window.location.href = href; });
+  }, true);
+  $('[data-inspector]').addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !e.defaultPrevented && !e.target.closest('.wb-menu, [role=listbox]')) { e.preventDefault(); canvas.focus(); }
   });
   window.addEventListener('beforeunload', function (e) { if (store.state.sending) { e.preventDefault(); } });
   if (init.sample && store.state.samples.indexOf(init.sample) >= 0) { store.state.sample = init.sample; }

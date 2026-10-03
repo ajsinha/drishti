@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 
 from core.backend import BackendError
 
@@ -41,11 +42,18 @@ def new_sutra(kind: str) -> str:
     return NEW_SUTRA.format(kind=kind, label=kind.replace("-", " ").capitalize())
 
 
+def strip_licence(text: str) -> str:
+    """The text without a leading ``<!-- ... -->`` comment that carries the licence header (an example's README has one): a reviewer
+    reads the notes, not the legal text."""
+    m = re.match(r"\s*<!--.*?-->\s*", text or "", re.S)
+    return text[m.end():] if m and re.search(r"Copyright|PROPRIETARY|Project Drishti", m.group(0)) else (text or "")
+
+
 async def copy_example(backend, ex, me, fallback_kind: str, scratch: bool = False) -> dict:
     """A new Design that is a COPY of an example: its Sutra, its JSON as a sample, its README as notes. ``scratch``: unnamed, so it
     is forgotten after a day. The files under docs/guides/examples are only read."""
     design = await backend.designs("POST", "", me, {"name": "" if scratch else f"{ex.title} (copy)"[:100], "kind": ex.kind or fallback_kind,
-                                                    "sutra": ex.yaml, "notes": ex.readme})
+                                                    "sutra": ex.yaml, "notes": strip_licence(ex.readme)})
     await backend.designs("POST", f"/{design['id']}/samples", me, {"samples": [{"name": f"{ex.name}.json", "document": json.loads(ex.json)}]})
     return design
 

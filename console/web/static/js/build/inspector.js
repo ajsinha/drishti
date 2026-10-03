@@ -35,7 +35,7 @@
   var uid = 0;
 
   WB.Inspector = function (box, store, getSchema, ctx) {
-    var cur = null, schema = null, mine = false, timers = {}, enums = {};
+    var cur = null, schema = null, mine = false, timers = {}, waiting = {}, enums = {};
     function el(t, c, x, a) { return WB.el(t, c, x, a); }
     function label(text, input, extra) {
       var id = 'wbi' + (++uid), w = el('div', 'wb-field' + (extra ? ' ' + extra : ''));
@@ -46,8 +46,8 @@
     function commit(op, now) {
       var fire = function () { mine = true; return store.send([op], 'Changed').then(function (r) { mine = false; return r; }); };
       var key = op.op + ':' + (op.panel || '') + ':' + (op.option || '');
-      clearTimeout(timers[key]);
-      if (now) { fire(); } else { timers[key] = setTimeout(fire, 450); }
+      clearTimeout(timers[key]); delete waiting[key];
+      if (now) { fire(); } else { waiting[key] = fire; timers[key] = setTimeout(function () { delete waiting[key]; fire(); }, 450); }
     }
     var prop = function (n) { return ((schema.raw.$defs.panel.properties || {})[n]) || {}; };
     /** The option as THIS kind takes it (the schema's per-kind properties), else the shared definition. */
@@ -274,6 +274,11 @@
     });
     // the Sutra changed somewhere else (the YAML tab, undo, another panel): redraw unless the form is what changed it
     store.on('doc', function (d) { if (!mine && d.changed && cur !== undefined) { if (!box.contains(document.activeElement) || d.source !== 'ops') { show(cur); } } });
-    return { required: function (kind) { return schema && schema.byKind[kind] ? schema.byKind[kind].required : []; }, show: show, current: function () { return cur; }, focusFirst: function () { var f = box.querySelector('input, select, button'); if (f) { f.focus(); } } };
+    /** Sends the edits still waiting for their pause (before the page is left: F1, a link). */
+    function flush() {
+      var all = Object.keys(waiting).map(function (k) { clearTimeout(timers[k]); var f = waiting[k]; delete waiting[k]; return f(); });
+      return Promise.all(all);
+    }
+    return { flush: flush, pending: function () { return Object.keys(waiting).length > 0; }, required: function (kind) { return schema && schema.byKind[kind] ? schema.byKind[kind].required : []; }, show: show, current: function () { return cur; }, focusFirst: function () { var f = box.querySelector('input, select, button'); if (f) { f.focus(); } } };
   };
 })();

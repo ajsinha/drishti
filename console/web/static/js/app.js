@@ -90,7 +90,9 @@ window.drsMessage = function (p, fallback) {
   document.addEventListener('keydown', function (e) {
     if (e.key === 'F1') {
       e.preventDefault();
-      window.location.href = '/help/context/' + encodeURIComponent(document.body.getAttribute('data-screen') || 'landing');
+      var go = function () { window.location.href = '/help/context/' + encodeURIComponent(document.body.getAttribute('data-screen') || 'landing'); };
+      var held = window.drishtiBeforeLeave ? window.drishtiBeforeLeave() : null;      // a page with an edit waiting sends it first (UX-22)
+      if (held && held.then) { held.then(go, go); } else { go(); }
     }
   });
 

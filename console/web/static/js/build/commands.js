@@ -42,9 +42,17 @@
         cmd('Next sample', 'Preview the design with the next sample', function () { step(1); });
         cmd('Previous sample', 'Preview the design with the previous sample', function () { step(-1); });
       }
-      s.samples.forEach(function (n) { cmd('Go to sample: ' + n, 'Preview the design with it', function () { store.setSample(n); }, 'sample'); });
+      s.samples.forEach(function (n) { var base = n.split('/').pop(); cmd('Go to sample: ' + base, n === base ? 'Preview the design with it' : 'Preview ' + n, function () { store.setSample(n); }, 'sample'); });
+      cmd('Go to canvas', 'Put the focus on the screen (G then C)', goCanvas, 'go to');
+      var press = function (sel) { return function () { var b = document.querySelector(sel); if (b && !b.disabled) { b.click(); } else { say('That is not available now.', true); } }; };
+      cmd('Auto-design', 'Draft a Sutra from the samples', press('[data-autodesign]'));
+      cmd('Split view', 'Design and YAML side by side', press('[data-split]'));
+      cmd('Phone width', 'Draw the screen at phone width', press('[data-width="phone"]'));
+      cmd('Desktop width', 'Draw the screen at desktop width', press('[data-width="desktop"]'));
+      cmd('Bind field…', 'Bind a field of the shape to the selected panel', press('[data-bind-menu]'));
+      document.querySelectorAll('[data-theme-choice]').forEach(function (b) { cmd('Theme: ' + b.textContent.trim(), 'Change the colours', function () { b.click(); }, 'theme'); });
       cmd('Run check', 'Check every sample against the design now', function () { ctx.right.show('tests'); ctx.tests.run(); });
-      [['design', 'Design', 'centre'], ['yaml', 'YAML', 'centre'], ['summary', 'Summary', 'centre'], ['inspector', 'Inspector', 'right'],
+      [['design', 'Design', 'centre'], ['yaml', 'YAML', 'centre'], ['summary', 'Summary', 'centre'], ['notes', 'Notes', 'centre'], ['inspector', 'Inspector', 'right'],
        ['problems', 'Problems', 'right'], ['tests', 'Tests', 'right'], ['versions', 'Versions', 'right']].forEach(function (t) {
         cmd('Switch to ' + t[1], 'Show the ' + t[1] + ' tab', function () { ctx[t[2]].show(t[0], true); }, 'tab');
       });
@@ -59,6 +67,7 @@
       return out;
     }
 
+    function goCanvas() { ctx.centre.show('design'); var c = ctx.canvas(); if (c.selected() && c.focus) { c.focus(); } else { var p = document.querySelector('[data-preview] .pnl[data-panel]'); if (p) { c.select({ type: 'panel', id: p.getAttribute('data-panel') }); c.focus(); } } }
     function open() {
       var list = items();
       WB.menu.open({ title: 'Command palette', filter: true, at: { x: Math.max(8, (window.innerWidth - 380) / 2), y: 60 }, items: list, empty: 'No command matches. Try "add", "go to", "sample", "check", "undo" or "save".',
@@ -71,6 +80,19 @@
         if (WB.menu.isOpen()) { WB.menu.close(); } else { open(); }
       }
     }, true);
+    // G then C: to the canvas, unless you are typing
+    var chord = 0;
+    document.addEventListener('keydown', function (e) {
+      if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) { return; }
+      var t = e.target, tag = (t.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || tag === 'select' || t.isContentEditable || (t.closest && t.closest('.CodeMirror'))) { return; }
+      var k = e.key.toLowerCase();
+      if (chord && k === 'c') { e.preventDefault(); chord = 0; goCanvas(); return; }
+      chord = k === 'g' ? Date.now() : 0;
+      if (chord) { setTimeout(function () { chord = 0; }, 1200); }
+    });
+    var skip = document.querySelector('[data-skip-canvas]');
+    if (skip) { skip.addEventListener('click', function (e) { e.preventDefault(); goCanvas(); }); }
     var button = document.querySelector('[data-palette-open]');
     if (button) { button.addEventListener('click', open); }
     return { open: open, items: items };
