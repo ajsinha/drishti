@@ -939,6 +939,38 @@ curl -s -X POST "$B/sutras?note=first%20draft" -H 'Content-Type: text/yaml' --da
 
 You should see `{"proposal":{"id":"…","name":"my-swap","version":1,"status":"…"}}` with HTTP `202`.
 
+### Using the shape API
+
+The Screen Builder's first step turns sample JSON documents into one JSON Schema (draft 2020-12) and tells you what each
+field is for. It needs the `author` role (as Studio), reads and writes nothing in Drishti, and keeps no copy of what you send.
+
+| Method | Path | Notes |
+|---|---|---|
+| `POST` | `/builder/shape` | body `{"samples": [{"name": "a.json", "document": {...}}, ...]}`; answers `{schema, roles, report}` |
+
+- `schema`: the merged JSON Schema. A field in every document is `required`; in some, optional with
+  `x-drishti.presence` (the share of its records that hold it); `null` in some makes the type nullable; different
+  types become `oneOf` and are flagged as a conflict; ids as keys become `additionalProperties` (a map); a list of
+  records holding a list of the same records is a recursive `$ref` (a tree). Text with few repeating values gets an
+  `enum`; text that is always a date, date-time, uuid, e-mail or ISO currency gets a `format`; numbers get
+  `minimum`/`maximum`, and `integer` when none was fractional. Every path may carry `x-drishti.role` and
+  `x-drishti.reason`.
+- `roles`: `{path: {role, reason, kind}}`. Roles: `id`, `link`, `measure`, `dimension`, `status`, `date`, `series`,
+  `ohlc`, `distribution`, `grid`, `steps`, `graph`, `tree`, `events`, `text`, `table` (other lists of records), `plain`.
+  The reason says why, for example "named like an id, and no value repeats".
+- `report`: `{samples, files, conflicts, rare, paths}`; per path the type, role, reason, presence, up to three example
+  values (a masked value stays masked) and, for fields not in every file, which files had them. Conflicts come first,
+  then rare fields.
+- Limits (`drishti.builder.*`): 50 samples, 5 MB per document, 25 MB per request, 64 levels deep. Over a limit is
+  `413 DRS-5003` naming the limit (and the file); a body that is not the right shape is `400 DRS-5001`; a caller who is
+  not an author gets `403 DRS-5002`.
+
+```bash
+curl -s -X POST $B/builder/shape -H 'Content-Type: application/json' \
+  -d "{\"samples\":[{\"name\":\"pnl-explain.json\",\"document\":$(cat docs/guides/examples/pnl-explain.json)}]}" \
+  | jq -c '.roles'
+```
+
 ### Sign-in and user administration
 
 These are summarised here; [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) explains users, roles, password rules,
@@ -1157,6 +1189,7 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-4004 | 400 | bad search | a structured search cannot be read (`detail` says where), names a field the kind does not have, or has a `limit` outside 1 to 1000 |
 | DRS-5001 | 400 | bad request | an invalid argument or body; a path not written plainly (`;`, a needless `%`-escape, a dot or empty segment); also "too many live streams on this server" |
 | DRS-5002 | 403 | forbidden | the caller lacks the role, the pack is not active for them, or the feature is off |
+| DRS-5003 | 413 | too large | builder samples over `drishti.builder.max-samples`, `max-file-mb`, `max-total-mb` or `max-depth` (`detail` names the limit and the file) |
 | DRS-5004 | 404 | cache not found | no cache by that name (cache purge) |
 | DRS-5010 | 401 | unauthenticated | missing, bad or expired bearer token |
 | DRS-6001 | 404 | user not found | no such user |

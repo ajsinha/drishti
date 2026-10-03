@@ -56,7 +56,8 @@ import org.springframework.context.annotation.Import;
 @Import({CommonConfiguration.class, RachanaConfiguration.class, InferenceConfiguration.class, GraphConfiguration.class})
 @EnableConfigurationProperties({SourcesProperties.class, EngineProperties.class, CommandsProperties.class, LiveProperties.class,
         com.ash.drishti.engine.time.BusinessDateProperties.class, com.ash.drishti.engine.search.SearchProperties.class,
-        com.ash.drishti.engine.bind.PanelLimits.class, com.ash.drishti.engine.pivot.PivotProperties.class})
+        com.ash.drishti.engine.bind.PanelLimits.class, com.ash.drishti.engine.pivot.PivotProperties.class,
+        com.ash.drishti.engine.shape.BuilderProperties.class})
 public class EngineConfiguration {
 
     /**
@@ -159,5 +160,11 @@ public class EngineConfiguration {
     @Bean
     public LiveMetrics liveMetrics(LiveProperties props) {
         return new LiveMetrics(props.window());
+    }
+
+    @Bean
+    public com.ash.drishti.engine.shape.ShapeService shapeService(com.ash.drishti.engine.shape.BuilderProperties props,
+            com.ash.drishti.inference.InferenceEngine inference, com.ash.drishti.graph.ReferenceCatalog references) {
+        return new com.ash.drishti.engine.shape.ShapeService(props, inference.semantics(), references);
     }
 }
