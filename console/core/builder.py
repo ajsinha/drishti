@@ -150,6 +150,7 @@ class SampleSet:
     files: list[dict]
     shape: dict
     at: float = field(default=0.0)
+    draft: str = ""                      # the Sutra auto-design drafted for this set, for "Open in Studio"
 
 
 class SampleSets:
@@ -166,6 +167,12 @@ class SampleSets:
             self._sweep()
             s = self._sets[scoped(user)] = SampleSet(samples, files, shape, self._clock())
             return s
+
+    def set_draft(self, user: str, yaml_text: str) -> None:
+        with self._lock:
+            s = self._sets.get(scoped(user))
+            if s is not None:
+                s.draft = yaml_text
 
     def get(self, user: str) -> SampleSet | None:
         with self._lock:

@@ -67,7 +67,7 @@ def _problem(e: BackendError) -> JSONResponse:
 
 
 @router.get("")
-async def studio(request: Request, sutra: str | None = None, kind: str = "", id: str = "", example: str = "", build: str = ""):
+async def studio(request: Request, sutra: str | None = None, kind: str = "", id: str = "", example: str = "", build: str = "", draft: str = ""):
     """Opens on the entity asked for, else on the first example entity of the user's packs (with a Sutra of its kind,
     unless a Sutra, or ``sutra=`` for a new one, is asked for), else empty with a hint: never on a sample of a pack that
     may not be installed (UX-05). ``example=`` opens a named example (its Sutra and its JSON, previewed against that JSON);
@@ -93,7 +93,9 @@ async def studio(request: Request, sutra: str | None = None, kind: str = "", id:
         else:
             kind, id = kind or next((k for p in current for k in p.get("kinds") or []), ""), ""
     source, picked = (ex.yaml if ex else _new_sutra(kind or "trade")), ""
-    if sutra and "@" in sutra and not ex:
+    if build and draft and kept and kept.draft and not ex:        # Screen Builder step 3: the drafted Sutra
+        source, picked = kept.draft, ""
+    elif sutra and "@" in sutra and not ex:
         name, _, version = sutra.partition("@")
         try:
             source, picked = await backend.sutra_source(name, int(version), me), sutra

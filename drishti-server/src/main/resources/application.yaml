@@ -241,6 +241,14 @@ drishti:
     enum-min-seen: 3
     examples: 3                     # example values per path in the report
     rare-below: 0.5                 # fields present in fewer than this share of their records are listed as rare
+    # Auto-design and suggest (POST /api/v1/builder/design, /suggest):
+    prune-share: 0.5                # a panel or strip figure empty or failing for more than this share of the samples is dropped or demoted
+    strip-max: 6                    # figures in a drafted strip
+    max-panels: 16                  # panels in the drafted main column
+    max-side-panels: 4              # panels in the drafted right column (besides the links panel)
+    line-min-points: 5              # dated rows shorter than this are drafted as a ladder, not a line
+    max-alternatives: 2             # runner-up kinds kept with each drafted panel
+    limit-names: [limit, max, cap, threshold, budget, capacity]   # names that hold a limit beside a measure (a gauge's maximum)
   packs:
     # Domain packs (packs/<name>/pack.yaml): Sutras, mnemonics, links, badges, roles, vocabulary, samples.
     # Site settings below always override what a pack contributes.

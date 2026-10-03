@@ -284,9 +284,57 @@
   });
   $('[data-forget]').addEventListener('click', function () {
     fetch('/build/shape/last', { method: 'DELETE' }).then(function () {
-      result.hidden = true; list.hidden = true; list.textContent = ''; current = null;
+      result.hidden = true; draft.hidden = true; list.hidden = true; list.textContent = ''; current = null;
       say('The uploaded files are forgotten.');
     });
+  });
+
+  // ---- step 3: draft a screen -------------------------------------------------------------------------------------
+  var draft = $('[data-draft]');
+  function showDraft(d) {
+    $('[data-draft-yaml]').textContent = d.yaml || '';
+    var n = d.samples || 0;
+    $('[data-draft-note]').textContent = 'Drafted from ' + n + ' sample' + (n === 1 ? '' : 's') + ' and previewed against each. Nothing is saved: open it in Studio to refine it.';
+    var prev = $('[data-draft-preview]');
+    prev.innerHTML = d.previewHtml || '';      // the console's own Studio preview partial: server-rendered, values escaped there
+    if (window.drishti) { window.drishti.enhance(prev); window.drishti.redraw(); }
+    var pr = $('[data-draft-pruned]');
+    pr.textContent = '';
+    (d.pruned || []).forEach(function (p) {
+      var li = el('li');
+      li.appendChild(el('b', null, p.panel));
+      li.appendChild(document.createTextNode(' (' + p.kind + ') ' + p.action + (p.to ? ' to ' + p.to : '') + ': ' + p.reason));
+      pr.appendChild(li);
+    });
+    if (!pr.children.length) { pr.appendChild(el('li', null, 'Nothing: every panel and figure had data in enough samples.')); }
+    var box = $('[data-draft-reasons]');
+    box.textContent = '';
+    var why = d.reasons || {};
+    Object.keys(why).forEach(function (k) {
+      var row = el('div', 'bs-why');
+      row.appendChild(el('b', null, k));
+      row.appendChild(document.createTextNode(': ' + why[k]));
+      var alts = (d.alternatives || {})[k] || [];
+      if (alts.length) {
+        var ul = el('ul', 'bs-alts');
+        alts.forEach(function (a) { var li = el('li'); li.appendChild(el('span', 'bs-role', a.kind)); li.appendChild(document.createTextNode(' ' + a.reason)); ul.appendChild(li); });
+        row.appendChild(ul);
+      }
+      box.appendChild(row);
+    });
+    draft.hidden = false;
+    draft.scrollIntoView({ block: 'start' });
+  }
+  $('[data-design]').addEventListener('click', function () {
+    say('Drafting a screen...');
+    fetch('/build/design', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
+      .then(function (r) {
+        if (!r.ok) { say((r.body.detail || 'The screen could not be drafted') + ' (' + (r.body.code || '') + ')', true); return; }
+        showDraft(r.body);
+        say('Drafted a screen: ' + (r.body.pruned || []).length + ' left out.', false);
+      })
+      .catch(function () { say('The console could not be reached. Try again.', true); });
   });
 
   // ---- choosing and dropping files -------------------------------------------------------------------------------

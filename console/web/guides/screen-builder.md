@@ -16,14 +16,14 @@
 # Screen Builder · JSON files to a shape
 
 You have a folder of JSON documents (trades, shipments, patients, sensor readings) and want a screen for them. The
-**Screen Builder** gets you there in steps. This guide covers what works today, steps 1 and 2; the whole plan is in
+**Screen Builder** gets you there in steps. This guide covers what works today, steps 1 to 3; the whole plan is in
 [the Screen Builder design](../../../docs/architecture/SCREEN_BUILDER.md).
 
 | Step | What it does | State |
 |---|---|---|
 | 1. Samples to shape | Merges up to 50 documents into one JSON Schema that says what every field *is*. | Works: `POST /api/v1/builder/shape` |
 | 2. Shape extractor page | The page for it: **Build → Screen Builder → Shape extractor** (`/build/shape`). | Works |
-| 3. Auto-design | A drafted Sutra from the shape. | Not yet: **Open in Studio** opens your first sample, and you write the Sutra |
+| 3. Auto-design | **Draft a screen**: a complete Sutra from the shape and the samples, with a reason for every choice. | Works: `POST /api/v1/builder/design` and `/suggest` |
 | 4 to 7 | Visual designer, check against every sample, save and export. | Planned |
 
 You need the **author** power, as for Sutra Studio. Nothing you upload is written to any store.
@@ -56,6 +56,30 @@ The examples under `docs/guides/examples/` are ready-made documents.
    other tool), or **Copy schema**.
 7. **Open in Studio** opens Studio with your first file pasted as the sample document and *Preview against this JSON*
    on. Press **Start from inference** for a first Sutra.
+
+## Draft a screen
+
+With files loaded, press **Draft a screen**. Drishti drafts a complete Sutra and shows:
+
+- **Sutra**: the YAML. Title (the id, a category, a link as "with"), a strip of at most six figures, panels chosen from
+  what each field is (a `series` becomes a line, `ohlc` candles, a list of records with several dimensions and a measure
+  a pivot with row groups, a tree a tree table...), function keys for the links, and the layout: charts side by side,
+  tables full width, small panels and links on the right. It is the same rule set that lays out a view with no Sutra.
+- **Preview of the first sample**: the real view, as Studio draws it.
+- **Left out because the samples could not fill it**: the draft is rendered against *every* sample. A panel that comes
+  out empty or in error for more than half of them (`drishti.builder.prune-share`) is replaced by its next-best kind or
+  dropped, and listed with the count ("empty in 4 of 5 samples"). A figure missing from most files is left out of the
+  strip the same way. A panel that fails for just a few files stays, and its reason says how many.
+- **Why each choice, and what else was considered**: a sentence per decision, and under each panel the runner-up kinds
+  (for example `area` under a line) with their reasons. Many samples sharpen the draft: a history of 20 points is a line,
+  one of 3 a table; a figure that never changes is ranked low in the strip and the one that varies most is emphasised.
+
+**Open in Studio** opens Studio with the drafted Sutra and your first sample as the document. Nothing is saved; edit
+the Sutra there as usual. (The visual designer, to drag panels and drop fields on a canvas, is a later step.) Uploading
+new files forgets the draft.
+
+Try it with `all-panels-showcase.json`, then with several copies where you delete `pnlHistory` from all but one: that
+panel is dropped, with the reason.
 
 ## Limits and what is kept
 

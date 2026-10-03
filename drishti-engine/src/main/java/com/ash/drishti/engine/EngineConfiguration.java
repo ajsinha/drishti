@@ -167,4 +167,10 @@ public class EngineConfiguration {
             com.ash.drishti.inference.InferenceEngine inference, com.ash.drishti.graph.ReferenceCatalog references) {
         return new com.ash.drishti.engine.shape.ShapeService(props, inference.semantics(), references);
     }
+
+    @Bean
+    public com.ash.drishti.engine.design.AutoDesigner autoDesigner(com.ash.drishti.engine.shape.BuilderProperties props,
+            com.ash.drishti.inference.InferenceEngine inference) {
+        return new com.ash.drishti.engine.design.AutoDesigner(props, inference.semantics());
+    }
 }

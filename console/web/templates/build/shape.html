@@ -17,7 +17,7 @@
 {% block title %}Shape extractor · {{ PRODUCT }}{% endblock %}
 {% block screen %}build{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/build.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/build.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/pivot.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 <div class="adm bs" data-shape data-max-samples="{{ limits.maxSamples }}" data-max-file-mb="{{ limits.maxFileMb }}" data-max-total-mb="{{ limits.maxTotalMb }}">
@@ -43,10 +43,27 @@
     <section class="pnl" aria-labelledby="bsActions"><div class="pnl-b bs-actions">
       <h2 id="bsActions" class="visually-hidden">Actions</h2>
       <a class="btn-pill btn-accent" href="/studio?build=1" data-studio-link title="Open the first sample as the document in Studio"><i class="bi bi-braces" aria-hidden="true"></i> Open in Studio</a>
+      <button type="button" class="btn-pill btn-accent" data-design title="Draft a complete Sutra from these samples: title, strip, panels, layout, with the reasons"><i class="bi bi-magic" aria-hidden="true"></i> Draft a screen</button>
       <a class="btn-pill btn-ghost" href="/build/shape/download?kind=shape" download="shape.json" title="The schema with Drishti's x-drishti roles"><i class="bi bi-download" aria-hidden="true"></i> shape.json</a>
       <a class="btn-pill btn-ghost" href="/build/shape/download?kind=schema" download="schema.json" title="Plain JSON Schema, annotations removed"><i class="bi bi-download" aria-hidden="true"></i> JSON Schema</a>
       <button type="button" class="btn-pill btn-ghost" data-copy title="Copy the plain JSON Schema"><i class="bi bi-clipboard" aria-hidden="true"></i> Copy schema</button>
       <button type="button" class="btn-pill btn-ghost" data-forget title="Forget the uploaded files now"><i class="bi bi-trash" aria-hidden="true"></i> Forget files</button>
+    </div></section>
+
+    <section class="pnl" aria-labelledby="bsDraft" data-draft hidden><div class="pnl-b">
+      <h2 id="bsDraft" class="bs-h">Drafted screen</h2>
+      <p class="text-muted-d" data-draft-note></p>
+      <div class="bs-actions">
+        <a class="btn-pill btn-accent" href="/studio?build=1&amp;draft=1" data-draft-studio title="Studio with the drafted Sutra and the first sample as the document"><i class="bi bi-braces" aria-hidden="true"></i> Open in Studio</a>
+      </div>
+      <h3 class="bs-h2">Sutra</h3>
+      <pre class="bs-yaml mono" tabindex="0" aria-label="Drafted Sutra" data-draft-yaml></pre>
+      <h3 class="bs-h2">Preview of the first sample</h3>
+      <div class="studio-preview bs-preview" data-draft-preview></div>
+      <h3 class="bs-h2">Left out because the samples could not fill it</h3>
+      <ul class="bs-list" data-draft-pruned></ul>
+      <h3 class="bs-h2">Why each choice, and what else was considered</h3>
+      <div data-draft-reasons></div>
     </div></section>
 
     <section class="pnl" aria-labelledby="bsAttention" data-attention hidden><div class="pnl-b">
@@ -70,4 +87,13 @@
   </div>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/build-shape.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}
+<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/charts.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/command.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/view.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/pivot-engine.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/pivot-grid.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/tree-rows.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/build-shape.js?v={{ ASSET_V }}"></script>
+{% endblock %}

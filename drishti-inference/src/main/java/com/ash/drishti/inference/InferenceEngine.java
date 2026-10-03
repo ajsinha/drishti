@@ -16,15 +16,11 @@
 package com.ash.drishti.inference;
 
 import com.ash.drishti.api.DataNode;
-import com.ash.drishti.rachana.model.Area;
-import com.ash.drishti.rachana.model.Panel;
-import com.ash.drishti.rachana.model.PanelKind;
 import com.ash.drishti.rachana.model.StripItem;
 import com.ash.drishti.rachana.model.Title;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -61,58 +57,9 @@ public final class InferenceEngine {
         for (InferenceRule r : rules) {
             r.propose(ctx, all);
         }
-        Map<String, Candidate> best = new LinkedHashMap<>();
-        for (Candidate c : all) {
-            best.merge(c.sourcePath(), c, (a, b) -> b.score() > a.score() ? b : a);
-        }
-        List<Candidate> main = pick(best.values(), Area.MAIN, semantics.limit("main", 6));
-        List<Candidate> right = pick(best.values(), Area.RIGHT, semantics.limit("right", 4) - 1);
-
-        Map<String, String> why = new LinkedHashMap<>();
-        List<Panel> panels = new ArrayList<>();
-        int fkey = 2;
-        for (Candidate c : main) {
-            Panel p = c.panel();
-            panels.add(fkey <= 6 ? withKey(p, "F" + fkey++) : p);
-            why.put(p.id(), String.format(Locale.ROOT, "%s %.2f: %s", c.rule(), c.score(), c.reason()));
-        }
-        panels.add(Rules.panel("built", PanelKind.PROVENANCE, "How this view was built", Area.MAIN, List.of(), Map.of()));
-        boolean linksPlaced = false;
-        for (Candidate c : right) {
-            panels.add(c.panel());
-            why.put(c.panel().id(), String.format(Locale.ROOT, "%s %.2f: %s", c.rule(), c.score(), c.reason()));
-            if (!linksPlaced) {
-                panels.add(links());
-                linksPlaced = true;
-            }
-        }
-        if (!linksPlaced) {
-            panels.add(links());
-        }
+        LayoutPacker.Packed packed = LayoutPacker.pack(all, semantics.limit("main", 6), semantics.limit("right", 4) - 1);
         Title title = title(doc, kind);
-        return new InferredLayout(title, strip(doc, kind, title), panels, why);
-    }
-
-    private static Panel links() {
-        return new Panel("refs", PanelKind.LINKS, "Linked entities", null, "REFS", Area.RIGHT, true, List.of(), null, Map.of(),
-                Rules.INFERRED);
-    }
-
-    private static Panel withKey(Panel p, String key) {
-        return new Panel(p.id(), p.kind(), p.title(), key, p.code(), p.area(), p.infer(), p.columns(), p.body(), p.options(), p.location());
-    }
-
-    private static List<Candidate> pick(Iterable<Candidate> all, Area area, int max) {
-        List<Candidate> in = new ArrayList<>();
-        all.forEach(c -> {
-            if (c.panel().area() == area) {
-                in.add(c);
-            }
-        });
-        in.sort(Comparator.comparingDouble(Candidate::score).reversed());
-        List<Candidate> top = new ArrayList<>(in.subList(0, Math.min(Math.max(max, 0), in.size())));
-        top.sort(Comparator.comparingInt(Candidate::order));
-        return top;
+        return new InferredLayout(title, strip(doc, kind, title), packed.panels(), packed.why());
     }
 
     /** {@code [Humanized kind · product] ID with counterparty}. */

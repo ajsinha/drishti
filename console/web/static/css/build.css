@@ -46,3 +46,9 @@
 .bs-role.conflict { color: var(--d-neg); border-color: var(--d-neg); }
 .bs-detail { margin: 0 0 .3rem 1.6rem; padding: .3rem .6rem; font-size: .82rem; border-left: 3px solid var(--d-accent); background: var(--d-surface); color: var(--d-ink); }
 .bs-detail div { margin: .1rem 0; }
+.bs-h2 { font-size: .9rem; font-weight: 700; margin: .9rem 0 .35rem; }
+.bs-yaml { max-height: 22rem; overflow: auto; margin: 0; padding: .6rem .8rem; font-size: .78rem; border: 1px solid var(--d-border); border-radius: 6px; background: var(--d-surface); color: var(--d-ink); white-space: pre; }
+.bs-preview { border: 1px solid var(--d-border); border-radius: 6px; padding: .5rem; overflow: auto; }
+.bs-why { margin: 0 0 .5rem; font-size: .84rem; }
+.bs-alts { margin: .2rem 0 0; padding-left: 1.2rem; list-style: none; color: var(--d-muted); }
+.bs-alts li { margin: .1rem 0; }
