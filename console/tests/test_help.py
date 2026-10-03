@@ -105,3 +105,9 @@ def test_guide_screenshots_fit_their_column_and_open_full_size(client):
         assert f'href="{src}"' in link and 'target="_blank"' in link and 'class="help-shot"' in link, (src, link)
     css = client.get("/static/css/help.css").text
     assert re.search(r"\.help-article img \{[^}]*max-width: 100%;[^}]*height: auto;", css)
+
+
+def test_a_help_page_has_one_h1_whatever_the_guide_headings_are(client):
+    for slug in ("release-notes", "plugins"):
+        html = client.get(f"/help/{slug}").text
+        assert html.count("<h1") == 1, slug

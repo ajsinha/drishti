@@ -172,7 +172,8 @@ class Library:
         body = re.sub(r'<div class="admonition (\w+)">\s*<p class="admonition-title">',
                       lambda m: f'<div class="help-box {_BOX.get(m.group(1), "concept")}">\n<p class="hb-title">', body)
         body = body.replace("<table>", '<div class="tbl-wrap"><table class="tbl help-tbl">').replace("</table>", "</table></div>")
-        body = re.sub(r"<h1[^>]*>.*?</h1>", "", body, count=1, flags=re.S)
+        body = re.sub(r"<h1[^>]*>.*?</h1>", "", body, count=1, flags=re.S)       # the page template writes the one <h1>
+        body = re.sub(r"<(/?)h1\b", r"<\1h2", body)                                  # any other becomes a section heading (UX-18)
         body = _IMG.sub(_full_size, body)
         body = _LINK.sub(lambda m: self._link(path, m), body)
         return body, md
