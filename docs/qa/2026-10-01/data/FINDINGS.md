@@ -49,7 +49,7 @@ logs-quant.txt. Totals: 6 high, 9 medium, 7 low, plus notes.
 ## Low
 | Id | Finding |
 |---|---|
-| DATA-16 | After a deletion-vector delete the id stays in type-ahead (DeltaTable.java:149 reads ids raw); opening it gives 404. |
+| DATA-16 | After a deletion-vector delete the id stays in type-ahead (DeltaTable.java:149 reads ids raw); opening it gives 404. **Fixed** in efe0fdd (DeltaDeletionVectorTest) |
 | DATA-17 | Ties in ordered searches have no id tie-break (StructuredSearch.java:145,217): PostgreSQL returned different tie order under limit in 115 of 300 searches, JDBC query mode 117 of 300, other stores 0. **Fixed** in 494741c (SearchOrderTest.tiesAreBrokenByIdOnTheColumnsAndTheDocumentsPath, SearchOrderTest.entitiesWithNoSortValueComeLastInIdOrder) |
 | DATA-18 | Health UP for unreadable Delta tables (broken log, truncated Parquet, LZ4); Redis stays UP ~20 s after the store is down. **Fixed** in 724328b, 7de60f8 (DeltaUnreadableTest, RedisOutageHealthTest.healthIsDownPromptlyWhenRedisStops). |
 | DATA-19 | JDBC query mode: one failing part query makes every view of the kind fail with a generic DRS-1003 (the SQL error only in the log); a `columns.*` query that duplicates rows is accepted without warning. **Fixed** in 5807788 (QueryModeProblemsTest) |
