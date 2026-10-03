@@ -15,11 +15,12 @@
 """Example entities come from the installed packs (UX-05): Studio's first preview and the landing page's commands name
 only entities of packs that are switched on, never a sample id of a pack that may be absent."""
 import re
+from conftest import open_studio  # noqa: E402
 
 
 def _land(client, url, **params):
-    r = client.get(url, params=params, follow_redirects=False)
-    assert r.status_code == 302 and r.headers["location"].startswith("/build/d/")
+    r = open_studio(client, url, **params)
+    assert r.status_code in (302, 303) and r.headers["location"].startswith("/build/d/")
     return client.get(r.headers["location"]).text
 
 

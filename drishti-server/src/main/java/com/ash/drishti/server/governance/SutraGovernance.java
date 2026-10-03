@@ -98,7 +98,7 @@ public class SutraGovernance {
     public Proposal approve(String id, String comment, Principal p) {
         requireApprover(p);
         Proposal done = store.decide(id, current -> {
-            if (fourEyes() && current.author().equals(p.user())) {
+            if (fourEyes() && same(current.author(), p.user())) {
                 throw new DrishtiException(ErrorCode.FOUR_EYES, "four eyes: " + p.user() + " proposed " + id + " and cannot approve it");
             }
             if (!sutras.source(current.name(), current.version()).orElse("").equals(current.baseText())) {
@@ -122,7 +122,7 @@ public class SutraGovernance {
 
     public Proposal withdraw(String id, Principal p) {
         Proposal done = store.decide(id, c -> {
-            if (!c.author().equals(p.user()) && !entitlements.isAdmin(p)) {
+            if (!same(c.author(), p.user()) && !entitlements.isAdmin(p)) {
                 throw new DrishtiException(ErrorCode.FORBIDDEN, "only " + c.author() + " can withdraw " + id);
             }
         }, () -> { }, Proposal.WITHDRAWN, p.user(), "withdrawn");
@@ -159,7 +159,53 @@ public class SutraGovernance {
 
     /** Whether {@code p} may approve {@code pr} now (for the console's buttons; the server checks again). */
     public boolean mayApprove(Proposal pr, Principal p) {
-        return pr.pending() && entitlements.mayApprove(p) && !(fourEyes() && pr.author().equals(p.user()));
+        return pr.pending() && entitlements.mayApprove(p) && !(fourEyes() && same(pr.author(), p.user()));
+    }
+
+    /** User names compared the way sign-in canonicalises them (trimmed, lower case), so a differently spelled name is the same person. */
+    public static boolean same(String a, String b) {
+        return a != null && b != null && a.trim().toLowerCase(java.util.Locale.ROOT).equals(b.trim().toLowerCase(java.util.Locale.ROOT));
+    }
+
+    /**
+     * The evidence as {@code p} may see it: the author's notes only for the author and for someone who may approve, and the names of
+     * reference samples (they carry entity ids) only for someone who may open that kind; others see {@code kind (reference)}.
+     */
+    public com.fasterxml.jackson.databind.JsonNode evidenceFor(Proposal pr, Principal p) {
+        com.fasterxml.jackson.databind.JsonNode ev = pr.evidence();
+        if (ev == null || !ev.isObject()) {
+            return ev;
+        }
+        com.fasterxml.jackson.databind.node.ObjectNode out = ev.deepCopy();
+        if (!(same(pr.author(), p.user()) || entitlements.mayApprove(p))) {
+            out.remove("notes");
+        }
+        java.util.List<String[]> hidden = new java.util.ArrayList<>();      // {name, id, label} of references this viewer may not open
+        ev.path("refSamples").forEach(r -> {
+            if (!entitlements.mayOpen(p, r.path("kind").asText())) {
+                hidden.add(new String[] {r.path("name").asText(), r.path("id").asText(), r.path("kind").asText() + " (reference)"});
+            }
+        });
+        out.remove("refSamples");
+        if (hidden.isEmpty()) {
+            return out;
+        }
+        String text = out.toString();      // names, and the ids that error messages of the check matrix quote
+        for (String[] h : hidden) {
+            text = text.replace(quote(h[0]), quote(h[2]));
+            if (!h[1].isEmpty()) {
+                text = text.replace(h[1], "***");
+            }
+        }
+        try {
+            return new com.fasterxml.jackson.databind.ObjectMapper().readTree(text);
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private static String quote(String text) {
+        return com.fasterxml.jackson.databind.node.TextNode.valueOf(text).toString();
     }
 
     public boolean stale(Proposal pr) {

@@ -60,3 +60,7 @@
 .bs-start { border: 0; margin: 0 0 .6rem; padding: 0; display: flex; flex-direction: column; gap: .3rem; }
 .bs-bar label { font-size: .85rem; }
 .bs .prob { color: var(--d-warn); }
+
+/* forms that are only a button (a POST in place of a GET that would create something) */
+.inline-form { display: inline; }
+.lnk-btn { background: none; border: 0; padding: 0; cursor: pointer; font: inherit; }

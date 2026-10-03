@@ -27,7 +27,7 @@ from core.config import Settings, load_settings  # noqa: E402
 
 
 def test_studio_page_and_preview(client):
-    r = client.get("/studio?sutra=irs-vanilla@3")
+    r = client.post("/studio", data={"sutra": "irs-vanilla@3", "sutra_given": "1"})
     assert r.status_code == 200 and "data-workbench" in r.text and "sutra: irs-vanilla" in r.text            # followed into the workbench
     assert "codemirror.js" in r.text and "cm-yaml.js" in r.text
     ok = client.post("/studio/preview", json={"yaml": "sutra: x", "kind": "trade", "id": "IRS-48213"})
@@ -137,7 +137,7 @@ def test_non_admins_do_not_see_admin_pages(backend):
 
 
 def test_the_workbench_yaml_tab_is_a_yaml_editor(client):
-    page = client.get("/studio", params={"sutra": ""}).text            # followed: a blank new Sutra in the workbench
+    page = client.post("/studio", data={"sutra": "", "sutra_given": "1"}).text            # followed: a blank new Sutra in the workbench
     for marker in ("data-field-help", 'data-tab="summary"', 'data-tab="yaml"', "studio-yaml.js", "studio-assist.js", "data-yaml-src"):
         assert marker in page
     for gone in ("data-md=", 'data-tab="doc"', "cm-sutra-md.js", "md-editor.js", "data-studio "):

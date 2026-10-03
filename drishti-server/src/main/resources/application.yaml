@@ -249,15 +249,24 @@ drishti:
     line-min-points: 5              # dated rows shorter than this are drafted as a ladder, not a line
     max-alternatives: 2             # runner-up kinds kept with each drafted panel
     limit-names: [limit, max, cap, threshold, budget, capacity]   # names that hold a limit beside a measure (a gauge's maximum)
-    file-binding: false             # development servers only: a design may be bound to a file under drishti.rachana.dirs (save writes it, IDE edits come back)
+    file-binding: false             # development servers only: a design may be bound to a file in your own folder of dev-dir (save writes it, IDE edits come back); never makes anything live
+    dev-dir: ./dev-sutras           # where bound files live, one folder per user; must be OUTSIDE drishti.rachana.dirs (going live is always propose + approve)
+    sample-max-items: 50            # synthetic sampler: longest array it generates (a schema asking for more is clamped, with a problem)
+    sample-max-string: 1000         # ... longest string
+    sample-max-depth: 8             # ... deepest nesting
+    sample-max-kb: 256              # ... most kilobytes in one generated document
     designs:
       # The Build workbench's Designs (/api/v1/builder/designs): samples, a Sutra and notes kept per user. Limits answer DRS-5005.
       store: file   # file (dir below, readable by the server only) or jpa (the identity database)
       dir: ./data/designs
-      max-per-user: 50              # designs one user keeps
+      max-per-user: 50              # named designs one user keeps (scratch ones: max-scratch)
       max-samples: 50               # samples in one design
-      max-mb: 25                    # megabytes of sample documents in one design
-      max-user-mb: 250              # megabytes of sample documents across one user's designs
+      max-mb: 25                    # megabytes of samples, Sutra, notes and tests in one design
+      max-user-mb: 250              # megabytes of samples, Sutra, notes and tests across one user's designs
+      max-sutra-kb: 1024            # largest Sutra text of one design (DRS-5005 beyond it; counted in max-mb and max-user-mb)
+      max-notes-kb: 256             # largest notes text
+      max-tests-kb: 1024            # largest tests
+      max-scratch: 10               # scratch (unnamed) designs one user keeps; the oldest is deleted to make room; they do not count toward max-per-user
       scratch-ttl: 1d               # an unnamed design is deleted this long after it was last touched
       named-ttl: 90d                # a named design, likewise
       warn-after: 75d               # a named design untouched this long is listed with an expiry warning

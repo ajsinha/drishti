@@ -25,6 +25,7 @@ import com.ash.drishti.identity.design.DesignService.Patch;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
@@ -44,7 +45,7 @@ class DesignServiceTest {
 
     private static DesignProperties props(int perUser, int samples, int mb, int userMb) {
         return new DesignProperties("file", null, perUser, samples, mb, userMb, Duration.ofDays(1), Duration.ofDays(90), Duration.ofDays(75),
-                Duration.ofHours(1), null);
+                Duration.ofHours(1), null, null, null, null, null);
     }
 
     private static NewSample doc(String name, String json) {
@@ -162,5 +163,45 @@ class DesignServiceTest {
         assertThat(s.sample("ann", c.id, "a.json")).isEqualTo("{\"a\":1}");
         s.delete("ann", d.id);
         assertThat(s.sample("ann", c.id, "a.json")).isEqualTo("{\"a\":1}");     // the copy owns its samples
+    }
+
+    @Test
+    void sutraNotesAndTestsCountInTheDesignBytesAndAreCappedWithDrs5005() {
+        DesignProperties p = new DesignProperties("file", null, 5, 5, 1, 1, Duration.ofDays(1), Duration.ofDays(90), Duration.ofDays(75),
+                Duration.ofHours(1), null, 100, 10, 1, null);
+        DesignService s = service(dir, p);
+        StoredDesign d = s.create("ann", "A", "trade", null, "", "");
+        s.update("ann", d.id, new Patch(null, null, "n".repeat(5_000), "y".repeat(50_000), null));
+        assertThat(s.summary(s.get("ann", d.id)).bytes()).isEqualTo(55_000L);
+        assertThatThrownBy(() -> s.update("ann", d.id, new Patch(null, null, null, "y".repeat(120_000), null))).hasMessageContaining("max-sutra-kb")
+                .extracting(e -> ((DrishtiException) e).errorCode()).isEqualTo(ErrorCode.PAYLOAD_TOO_LARGE);
+        assertThatThrownBy(() -> s.update("ann", d.id, new Patch(null, null, "n".repeat(20_000), null, null))).hasMessageContaining("max-notes-kb");
+        var big = new ObjectMapper().createObjectNode().put("t", "x".repeat(2_000));
+        assertThatThrownBy(() -> s.update("ann", d.id, new Patch(null, null, null, null, List.of(big)))).hasMessageContaining("max-tests-kb");
+        // the 1 MB design limit includes the text: 900 KB of sample leaves no room for a 99 KB Sutra
+        StoredDesign b = s.create("ann", "B", "trade", null, "", "");
+        s.addSamples("ann", b.id, List.of(doc("big.json", "\"" + "x".repeat(950_000) + "\"")));
+        assertThatThrownBy(() -> s.update("ann", b.id, new Patch(null, null, null, "y".repeat(99_000), null))).hasMessageContaining("max-mb");
+        s.update("ann", b.id, new Patch(null, null, null, "y".repeat(1_000), null));      // fits
+        assertThat(s.get("ann", b.id).sutra).hasSize(1_000);
+    }
+
+    @Test
+    void scratchDesignsHaveACapOfTheirOwnTheOldestGoesFirstAndTheyDoNotCountAsNamed() {
+        DesignProperties p = new DesignProperties("file", null, 2, 5, 1, 5, Duration.ofDays(1), Duration.ofDays(90), Duration.ofDays(75),
+                Duration.ofHours(1), null, null, null, null, 3);
+        DesignService s = service(dir, p);
+        List<String> ids = new java.util.ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            now.addAndGet(1000);
+            ids.add(s.create("ann", "", "trade", null, "", "").id);
+        }
+        assertThat(s.list("ann")).extracting(x -> x.design().id).containsExactlyInAnyOrder(ids.get(2), ids.get(3), ids.get(4));
+        s.create("ann", "One", "trade", null, "", "");
+        s.create("ann", "Two", "trade", null, "", "");      // two named plus three scratch: scratch never fills the named quota
+        assertThatThrownBy(() -> s.create("ann", "Three", "trade", null, "", "")).hasMessageContaining("max-per-user");
+        assertThat(s.deleteScratch("ann")).isEqualTo(3);
+        assertThat(s.list("ann")).hasSize(2).allMatch(x -> !x.design().scratch);
+        assertThat(s.deleteScratch("bob")).isZero();
     }
 }

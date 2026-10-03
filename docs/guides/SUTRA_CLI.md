@@ -82,3 +82,8 @@ removed when it ends, and no port is opened.
 `SutraCliTest` runs `sutra test` over every shipped pack that has a `tests/` folder and over the documented examples, so the
 Maven build fails when a Sutra change breaks a pack's own tests. Add a `tests/<sutra>/` folder with one or two sample
 documents and an `expect.yaml` to any pack to put its Sutra under the same guard.
+
+
+## Limits and errors
+
+The CLI keeps the server's input limits: a file over `drishti.builder.max-file-mb` (5 MB by default) is refused with one line that names it, text that is not UTF-8 says so, a missing or unreadable file is named, and an engine that cannot start (for example a pack that is not found: set `DRISHTI_PACKS_DIR`) or an input too large to process ends with `sutra: ...` and exit `1`, never a stack trace. `--kind` is a name (letters, digits, `.`, `_`, `-`, up to 64), not a path. `test` looks for a `tests/<sutra>/` folder only inside the paths you gave it.

@@ -20,6 +20,8 @@ import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.engine.shape.ShapeService;
 import com.ash.drishti.identity.design.DesignService;
 import com.ash.drishti.identity.design.StoredDesign;
+import com.ash.drishti.server.design.DesignBinding;
+import com.ash.drishti.server.design.DesignRebase;
 import com.ash.drishti.server.design.DesignShip;
 import com.ash.drishti.server.design.PackFragment;
 import com.ash.drishti.server.security.Principal;
@@ -57,11 +59,18 @@ public class DesignShipController {
     private final DesignService designs;
     private final DesignController api;
     private final DesignShip ship;
+    private final DesignBinding binding;
+    private final DesignRebase rebase;
     private final PackFragment fragment;
     private final ShapeService shapes;
+    private static final int OPTIONAL_MAX = 1 << 20;
+
     private final ObjectMapper mapper = new ObjectMapper();
 
-    public DesignShipController(DesignService designs, DesignController api, DesignShip ship, PackFragment fragment, ShapeService shapes) {
+    public DesignShipController(DesignService designs, DesignController api, DesignShip ship, DesignBinding binding, DesignRebase rebase, PackFragment fragment,
+            ShapeService shapes) {
+        this.binding = binding;
+        this.rebase = rebase;
         this.designs = designs;
         this.api = api;
         this.ship = ship;
@@ -79,11 +88,39 @@ public class DesignShipController {
         if (p.proposal() != null) {
             out.putObject("proposal").put("id", p.proposal().id()).put("name", p.proposal().name()).put("version", p.proposal().version())
                     .put("status", p.proposal().status());
-            out.put("status", designs.get(who.user(), id).status);
+            StoredDesign now = designs.get(who.user(), id);
+            out.put("status", now.status);
+            moved(out, now);
             return ResponseEntity.accepted().body(out);
         }
-        out.put("name", p.saved().name()).put("version", p.saved().version()).put("status", designs.get(who.user(), id).status);
+        StoredDesign now = designs.get(who.user(), id);
+        out.put("name", p.saved().name()).put("version", p.saved().version()).put("status", now.status);
+        moved(out, now);
         return ResponseEntity.ok(out);
+    }
+
+    private void moved(ObjectNode out, StoredDesign d) {
+        ObjectNode m = rebase.moved(d);
+        if (m != null) {
+            out.set("baseMoved", m);
+        }
+    }
+
+    /**
+     * Body {@code {baseRev}}: the Design's base Sutra has a newer version; its operations are replayed on that version. Answers the
+     * design plus {@code problems} (steps that could not be replayed, each saying which and why) and {@code replayed}.
+     */
+    @PostMapping("/{id}/rebase")
+    public ObjectNode rebase(@PathVariable String id, HttpServletRequest request, @RequestAttribute(Principal.ATTRIBUTE) Principal who) throws IOException {
+        JsonNode body = optional(request);
+        if (!body.path("baseRev").isIntegralNumber()) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "'baseRev' is required: the revision you built on (the 'rev' of the design)");
+        }
+        DesignRebase.Rebased r = rebase.rebase(who.user(), id, body.get("baseRev").asInt());
+        ObjectNode out = api.view(designs.summary(r.design()), true);
+        out.set("problems", mapper.valueToTree(r.problems()));
+        out.put("replayed", r.replayed());
+        return out;
     }
 
     // ---- pack fragments --------------------------------------------------------------------------------------------
@@ -146,42 +183,46 @@ public class DesignShipController {
 
     /** What a link holder may see: Sutra, operations, sample names. Any signed-in user with the token; a bad or revoked one is 404. */
     @GetMapping("/shared/{id}")
-    public ObjectNode shared(@PathVariable String id, @RequestParam String token) {
-        return ship.shared(id, token);
+    public ObjectNode shared(@PathVariable String id, @RequestParam String token, @RequestAttribute(Principal.ATTRIBUTE) Principal who) {
+        return ship.shared(id, token, who);
     }
 
     // ---- file binding ----------------------------------------------------------------------------------------------
 
+    /** Whether binding is on and where (a name under the server, never an absolute path; administrators also get the absolute directory). */
     @GetMapping("/binding")
-    public ObjectNode binding() {
-        ObjectNode out = mapper.createObjectNode().put("enabled", ship.fileBinding());
-        ship.bindableDirs().forEach(d -> out.withArray("dirs").add(d));
+    public ObjectNode binding(@RequestAttribute(Principal.ATTRIBUTE) Principal who) {
+        ObjectNode out = mapper.createObjectNode().put("enabled", binding.enabled());
+        out.put("dir", binding.label(who));
+        if (binding.enabled() && binding.isAdmin(who)) {
+            out.put("absoluteDir", binding.absolute(who));
+        }
         return out;
     }
 
-    /** Body {@code {file}}: a path under a Sutra directory. An existing file's text becomes the Sutra. */
+    /** Body {@code {file}}: a path in your development directory. An existing file's text becomes the Sutra. */
     @PostMapping("/{id}/bind")
     public ObjectNode bind(@PathVariable String id, HttpServletRequest request, @RequestAttribute(Principal.ATTRIBUTE) Principal who) throws IOException {
         JsonNode body = optional(request);
-        StoredDesign d = ship.bind(who, id, body.path("file").asText(null));
+        StoredDesign d = binding.bind(who, id, body.path("file").asText(null));
         return api.view(designs.summary(d), true);
     }
 
     @DeleteMapping("/{id}/bind")
     public ObjectNode unbind(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal who) {
-        return api.view(designs.summary(ship.unbind(who, id)), true);
+        return api.view(designs.summary(binding.unbind(who, id)), true);
     }
 
-    /** Writes the Sutra to the bound file (the hot reload makes the views use it). 409 when the file was edited elsewhere first. */
+    /** Writes the Sutra to the bound file (in your development directory; this never makes it live). 409 when the file was edited elsewhere first. */
     @PostMapping("/{id}/save-file")
-    public ObjectNode saveFile(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal who) throws IOException {
-        return api.view(designs.summary(ship.saveFile(who, id)), false);
+    public ObjectNode saveFile(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal who) {
+        return api.view(designs.summary(binding.saveFile(who, id)), false);
     }
 
-    /** Reads the bound file: an edit made in an IDE becomes a step of the Design. {@code changed} says so. */
-    @GetMapping("/{id}/sync")
-    public ObjectNode sync(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal who) throws IOException {
-        DesignShip.Synced s = ship.sync(who, id);
+    /** Reads the bound file: an edit made in an IDE becomes a step of the Design. {@code changed} says so. A POST: it changes the Design. */
+    @PostMapping("/{id}/sync")
+    public ObjectNode sync(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal who) {
+        DesignBinding.Synced s = binding.sync(who, id);
         ObjectNode out = api.view(designs.summary(s.design()), s.changed());
         out.put("changed", s.changed()).put("missing", s.missing());
         return out;
@@ -192,12 +233,17 @@ public class DesignShipController {
             return mapper.createObjectNode();
         }
         try (InputStream in = request.getInputStream()) {
-            byte[] bytes = in.readNBytes(1 << 20);
+            byte[] bytes = in.readNBytes(OPTIONAL_MAX + 1);
+            if (bytes.length > OPTIONAL_MAX) {
+                throw new DrishtiException(ErrorCode.PAYLOAD_TOO_LARGE, "the request body is over " + OPTIONAL_MAX / 1024 + " KB");
+            }
             if (bytes.length == 0) {
                 return mapper.createObjectNode();
             }
             JsonNode n = mapper.readTree(bytes);
             return n != null && n.isObject() ? n : mapper.createObjectNode();
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the body is not valid JSON: " + e.getOriginalMessage());
         }
     }
 }

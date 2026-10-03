@@ -95,6 +95,9 @@ public final class AutoDesigner {
         return f;
     }
 
+    /** What a kind may look like (the same pattern the designs API uses): it becomes a Sutra name and a file name. */
+    public static final java.util.regex.Pattern KIND = java.util.regex.Pattern.compile("[A-Za-z0-9][A-Za-z0-9._-]{0,63}");
+
     // ---------------------------------------------------------------------------------------------------- design
 
     /**
@@ -105,6 +108,9 @@ public final class AutoDesigner {
      */
     public Design design(Shape shape, List<Sample> samples, String kind, DesignPreviewer previewer) {
         String k = kind == null || kind.isBlank() ? "sample" : kind.trim();
+        if (!KIND.matcher(k).matches()) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "'kind' is letters, digits, . _ - (up to 64), starting with a letter or digit");
+        }
         ShapeModel model = new ShapeModel(shape);
         SampleStats stats = new SampleStats(samples);
         PanelChooser chooser = new PanelChooser(semantics, props, stats, model);

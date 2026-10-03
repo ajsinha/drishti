@@ -33,7 +33,8 @@
     {% include "build/_diff.html" %}
   </div></section>
   {% include "build/_evidence.html" %}
-  <p><a class="lnk" href="/studio?sutra={{ p.name }}@{{ p.version }}">Open the live version in the workbench</a></p>
+  <form method="post" action="/studio"><input type="hidden" name="sutra" value="{{ p.name }}@{{ p.version }}">
+    <button type="submit" class="lnk lnk-btn">Open the live version in the workbench</button></form>
   {% if p.status == 'pending' %}
   <div class="review-actions">
     {% if p.mayApprove %}

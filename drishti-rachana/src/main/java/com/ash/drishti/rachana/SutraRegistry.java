@@ -165,6 +165,11 @@ public final class SutraRegistry implements AutoCloseable {
         return s;
     }
 
+    /** The file a Sutra id ({@code name@version}) is defined in, if it is loaded. */
+    public Optional<Path> fileOf(String id) {
+        return Optional.ofNullable(snapshot.fileOf().get(id));
+    }
+
     /** Parses and checks {@code yaml} without saving it, for Studio previews. */
     public Sutra check(String yaml) {
         Sutra s = parser.parse(yaml, SutraParser.STUDIO, "studio");

@@ -29,21 +29,60 @@ import java.util.Random;
  * {@code const}, {@code format}, {@code examples}, {@code default} and the numeric, length and item bounds it states.
  * Deterministic: document {@code i} of a schema is always the same. Used when a Design starts from a schema alone; the
  * documents are labelled synthetic wherever they are kept and never count as evidence that a screen works on real data.
+ * Bounded: array lengths, string lengths, nesting and the size of one document come from {@link Limits}
+ * ({@code drishti.builder.sample-max-*}); a schema that asks for more is clamped and {@link #problems()} says so, nothing
+ * beyond the limits is ever allocated. One instance is used by one thread.
  */
 public final class SchemaSampler {
 
     private static final JsonNodeFactory F = JsonNodeFactory.instance;
     private static final int MAX_DEPTH = 8;
+    private static final int NODE_COST = 16;
+
+    /** The bounds of one synthetic document. */
+    public record Limits(int maxItems, int maxString, int maxDepth, long maxBytes) {
+        public static Limits of(BuilderProperties p) {
+            return new Limits(p.sampleMaxItems(), p.sampleMaxString(), p.sampleMaxDepth(), p.sampleMaxKb() * 1024L);
+        }
+
+        public static Limits defaults() {
+            return of(BuilderProperties.defaults());
+        }
+    }
+
     private final JsonNode root;
+    private final Limits limits;
+    private final java.util.Set<String> problems = new java.util.LinkedHashSet<>();
+    private long used;
 
     public SchemaSampler(JsonNode schema) {
+        this(schema, Limits.defaults());
+    }
+
+    public SchemaSampler(JsonNode schema, Limits limits) {
         this.root = schema;
+        this.limits = limits;
+    }
+
+    /** What was clamped, in words (each once), after {@link #documents}. */
+    public List<String> problems() {
+        return List.copyOf(problems);
+    }
+
+    private boolean spend(long bytes, String path) {
+        used += bytes + NODE_COST;
+        if (used > limits.maxBytes()) {
+            problems.add("a generated document would be over " + limits.maxBytes() / 1024 + " KB (drishti.builder.sample-max-kb): the rest of it at " + path + " is left out");
+            return false;
+        }
+        return true;
     }
 
     /** {@code count} documents, each different where the schema allows. */
     public List<JsonNode> documents(int count) {
         List<JsonNode> out = new ArrayList<>();
         for (int i = 0; i < count; i++) {
+            used = 0;
             out.add(value(root, new Random(31L * i + 7), i, 0, "$"));
         }
         return out;
@@ -51,6 +90,12 @@ public final class SchemaSampler {
 
     private JsonNode value(JsonNode schema, Random rnd, int n, int depth, String path) {
         JsonNode s = resolve(schema);
+        if (depth > Math.min(limits.maxDepth(), 64) || !spend(0, path)) {
+            if (depth > limits.maxDepth()) {
+                problems.add("the schema nests deeper than " + limits.maxDepth() + " levels (drishti.builder.sample-max-depth): cut at " + path);
+            }
+            return F.nullNode();
+        }
         if (s.has("const")) {
             return s.get("const");
         }
@@ -107,10 +152,13 @@ public final class SchemaSampler {
 
     private JsonNode object(JsonNode s, Random rnd, int n, int depth, String path) {
         ObjectNode o = F.objectNode();
-        if (depth >= MAX_DEPTH) {
+        if (depth >= Math.min(MAX_DEPTH, limits.maxDepth())) {
             return o;
         }
         for (Map.Entry<String, JsonNode> e : (Iterable<Map.Entry<String, JsonNode>>) s.path("properties")::fields) {
+            if (!spend(e.getKey().length(), path)) {
+                break;
+            }
             o.set(e.getKey(), value(e.getValue(), rnd, n, depth + 1, path + "." + e.getKey()));
         }
         return o;
@@ -118,13 +166,20 @@ public final class SchemaSampler {
 
     private JsonNode array(JsonNode s, Random rnd, int n, int depth, String path) {
         ArrayNode a = F.arrayNode();
-        if (depth >= MAX_DEPTH) {
+        if (depth >= Math.min(MAX_DEPTH, limits.maxDepth())) {
             return a;
         }
         int min = s.path("minItems").asInt(1);
         int max = Math.max(min, s.path("maxItems").asInt(Math.max(min, 5)));
         int size = Math.min(max, Math.max(min, 3 + n % 3));
+        if (size > limits.maxItems()) {
+            problems.add("an array at " + path + " asks for " + size + " items; " + limits.maxItems() + " are generated (drishti.builder.sample-max-items)");
+            size = limits.maxItems();
+        }
         for (int i = 0; i < size; i++) {
+            if (!spend(0, path)) {
+                break;
+            }
             a.add(value(s.path("items"), rnd, n + i, depth + 1, path + "[]"));
         }
         return a;
@@ -144,7 +199,7 @@ public final class SchemaSampler {
         return Math.min(Math.max(v, min), max);
     }
 
-    private static String string(JsonNode s, Random rnd, int n, String path) {
+    private String string(JsonNode s, Random rnd, int n, String path) {
         String format = s.path("format").asText("");
         String field = path.substring(path.lastIndexOf('.') + 1).replace("[]", "");
         String out = switch (format) {
@@ -161,10 +216,20 @@ public final class SchemaSampler {
         if (out.length() > max) {
             out = out.substring(0, max);
         }
+        int cap = (int) Math.max(0, Math.min(limits.maxString(), limits.maxBytes() - used));
+        int want = s.path("minLength").asInt(0);
+        if (want > cap) {
+            problems.add("a string at " + path + " asks for " + want + " characters; " + cap + " are generated (drishti.builder.sample-max-string)");
+            want = cap;
+        }
+        if (out.length() > cap) {
+            out = out.substring(0, cap);
+        }
         StringBuilder b = new StringBuilder(out);
-        while (b.length() < s.path("minLength").asInt(0)) {
+        while (b.length() < want) {
             b.append('x');
         }
+        spend(b.length(), path);
         return b.toString();
     }
 

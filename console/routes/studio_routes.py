@@ -18,7 +18,7 @@ the JSON the workbench still asks of this prefix: preview, test, summary, schema
 test entities Studio kept (read once, when a Design starts from a Sutra)."""
 from __future__ import annotations
 
-from urllib.parse import quote, urlencode
+from urllib.parse import parse_qs, quote, urlencode
 
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse
@@ -54,22 +54,45 @@ def _problem(e: BackendError) -> JSONResponse:
 @router.get("")
 async def studio(request: Request, sutra: str | None = None, kind: str = "", id: str = "", example: str = "", design: str = "",
                  sample: str = "", build: str = ""):
-    """Studio's page is retired (BUILD_WORKBENCH.md, step 7): every address lands on the equivalent Design in the workbench, 302.
-    ``design=`` (with ``sample=``) opens that Design; ``example=`` an example as a copy; ``sutra=name@v`` a Design that edits that Sutra
-    (its Studio test entities become stored-entity samples); ``kind=&id=`` a Design with that stored entity as its sample; nothing
-    at all, a scratch Design on the default example (``ui.studio_example``). YAML tab, or the canvas for ``build=1``."""
+    """Studio's page is retired (BUILD_WORKBENCH.md, step 7). ``design=`` (with ``sample=``) opens that Design of yours, a 302 into the
+    workbench. Every other address would *start* something (an example as a copy, a Design that edits a Sutra, a stored entity, a
+    scratch Design): a GET must not do that, or any page on the web could fill your quota with a link (QA 2026-10-03 S2-04), so it
+    answers a small confirmation page whose button POSTs the same address (``POST /studio``, protected by the same-origin check)."""
     backend, me = request.app.state.backend, ident(request)
     tab = "design" if build and build != "0" else "yaml"
-    try:
-        target = await _existing(backend, me, design)
-        if target is None:
-            target = (await _start(request, me, sutra, kind.strip(), id.strip(), example))["id"]
-    except BackendError as e:
-        return render(request, "build/designs.html", status_code=e.status, designs=[], limits={}, error=e, screen="build")
+    target = await _existing(backend, me, design)
+    if target is None:
+        fields = {k: v for k, v in (("sutra", sutra or ""), ("kind", kind.strip()), ("id", id.strip()), ("example", example), ("build", build),
+                                    ("sutra_given", "1" if sutra is not None else "")) if v}
+        return render(request, "build/start.html", fields=fields, what=_describe(sutra, kind.strip(), id.strip(), example), screen="build")
     query = {"tab": tab}
     if design and sample and target == design:
         query["sample"] = sample
     return RedirectResponse(f"/build/d/{target}?{urlencode(query)}", status_code=302)
+
+
+def _describe(sutra: str | None, kind: str, id_: str, example: str) -> str:
+    if example:
+        return f"the example \u201c{example}\u201d as your own copy"
+    if sutra and "@" in sutra:
+        return f"a design that edits the Sutra {sutra}"
+    if id_:
+        return f"a design with {kind or 'the'} entity {id_} as its sample"
+    return "a new scratch design"
+
+
+@router.post("")
+async def studio_open(request: Request):
+    """The button of the confirmation page: starts the Design the address describes and 303s into the workbench."""
+    form = {k: v[0] for k, v in parse_qs((await request.body()).decode("utf-8", "replace"), keep_blank_values=True).items()}
+    backend, me = request.app.state.backend, ident(request)
+    sutra = form.get("sutra", "") if form.get("sutra_given") or form.get("sutra") else None
+    tab = "design" if form.get("build") and form["build"] != "0" else "yaml"
+    try:
+        target = (await _start(request, me, sutra, form.get("kind", "").strip(), form.get("id", "").strip(), form.get("example", "")))["id"]
+    except BackendError as e:
+        return render(request, "build/designs.html", status_code=e.status, designs=[], limits={}, error=e, screen="build")
+    return RedirectResponse(f"/build/d/{target}?{urlencode({'tab': tab})}", status_code=303)
 
 
 async def _existing(backend, me, design: str) -> str | None:

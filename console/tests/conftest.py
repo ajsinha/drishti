@@ -201,7 +201,12 @@ class FakeBackend:
         if not parts:
             if method == "GET":
                 return {"designs": [self._slim(r["design"]) for (u, _), r in rows.items() if u == user], "limits": self.designs_limits}
-            if sum(1 for (u, _) in rows if u == user) >= self.designs_limits["maxPerUser"]:
+            if method == "DELETE":
+                gone = [k for k, r in rows.items() if k[0] == user and r["design"].get("scratch")] if params.get("scratch") == "true" else []
+                for k in gone:
+                    del rows[k]
+                return {"deleted": len(gone)}
+            if sum(1 for (u, k) in rows if u == user and not rows[(u, k)]["design"].get("scratch")) >= self.designs_limits["maxPerUser"]:
                 raise BackendError(413, "DRS-5005", "you keep 50 designs, the most allowed (drishti.builder.designs.max-per-user)")
             id_ = f"d{len(rows) + 1:011d}"
             name = (body.get("name") or "").strip()
@@ -217,7 +222,7 @@ class FakeBackend:
             rows[(user, id_)] = {"design": d, "docs": {}}
             return d
         if parts == ["binding"]:
-            return {"enabled": self.designs_binding, "dirs": ["sutras"]}
+            return {"enabled": self.designs_binding, "dir": "dev-sutras/ana"}
         if parts[0] == "shared":                                    # a read-only link: Sutra, ops and sample names, never contents or notes
             found = next((r["design"] for (u, i), r in rows.items() if i == parts[1] and self.shares.get(i) == params.get("token")), None)
             if found is None:
@@ -773,3 +778,20 @@ def with_packs(client, backend, monkeypatch):
         client.app.state.packs.forget_all()
     yield use
     client.app.state.packs.forget_all()
+
+
+def open_studio(client, url, **params):
+    """What the confirmation page's button does: GET the address (it must only ask), then POST the same fields to /studio. A
+    ``design=`` address opens a Design that exists and is a plain 302. Returns the redirect response."""
+    from urllib.parse import parse_qsl, urlsplit
+    parts = urlsplit(url)
+    q = dict(parse_qsl(parts.query, keep_blank_values=True))
+    q.update(params)
+    asked = client.get(parts.path, params=q, follow_redirects=False)
+    if asked.status_code == 302:                       # a Design of yours, or another page: nothing is created by asking
+        return asked
+    assert asked.status_code == 200 and "data-start-form" in asked.text, (url, asked.status_code)
+    form = {k: v for k, v in q.items() if k not in ("design", "sample")}
+    if "sutra" in q:
+        form["sutra_given"] = "1"
+    return client.post("/studio", data=form, follow_redirects=False)

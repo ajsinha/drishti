@@ -87,7 +87,7 @@ public final class DesignService {
     public Summary summary(StoredDesign d) {
         long ttl = (d.scratch ? props.scratchTtl() : props.namedTtl()).toMillis();
         boolean warn = !d.scratch && clock.getAsLong() - d.updated >= props.warnAfter().toMillis();
-        return new Summary(d, d.sampleBytes(), d.updated + ttl, warn);
+        return new Summary(d, d.totalBytes(), d.updated + ttl, warn);
     }
 
     /** The owner's Design, else 404 DRS-5006. Opening one counts as touching it, at most once an hour. */
@@ -114,11 +114,72 @@ public final class DesignService {
 
     public StoredDesign create(String user, String name, String kind, String base, String sutra, String notes) {
         return locked(user, () -> {
-            if (store.list(user).size() >= props.maxPerUser()) {
-                throw tooMany("you keep " + props.maxPerUser() + " designs, the most allowed (drishti.builder.designs.max-per-user): delete one first");
+            if (clean(name).isEmpty()) {
+                evictScratch(user, null, props.maxScratch() - 1);
+            } else {
+                requireRoomForNamed(user);
             }
+            requireText(user, null, sutra, notes, List.of());
             return create0(user, name, kind, base, sutra, notes);
         });
+    }
+
+    /** Scratch Designs do not count toward {@code max-per-user}: only named ones do. */
+    private void requireRoomForNamed(String user) {
+        if (store.list(user).stream().filter(d -> !d.scratch).count() >= props.maxPerUser()) {
+            throw tooMany("you keep " + props.maxPerUser() + " named designs, the most allowed (drishti.builder.designs.max-per-user): delete one first");
+        }
+    }
+
+    /** Deletes the oldest scratch Designs (never {@code keep}) until at most {@code room} remain; returns how many went. */
+    private int evictScratch(String user, String keep, int room) {
+        List<StoredDesign> scratch = new ArrayList<>(store.list(user).stream().filter(d -> d.scratch && !d.id.equals(keep)).toList());
+        scratch.sort(Comparator.comparingLong((StoredDesign d) -> d.updated));
+        int gone = 0;
+        while (scratch.size() - gone > Math.max(0, room)) {
+            store.delete(user, scratch.get(gone).id);
+            gone++;
+        }
+        return gone;
+    }
+
+    /** Deletes all of the user's scratch Designs (My designs, "delete scratch designs"); returns how many. */
+    public int deleteScratch(String user) {
+        return locked(user, () -> evictScratch(user, null, 0));
+    }
+
+    /**
+     * The Sutra, notes and tests count against the Design and user limits like samples do, each with a cap of its own; a text that
+     * only shrinks is always accepted. {@code current} is the stored Design (null for a new one).
+     */
+    private void requireText(String user, StoredDesign current, String sutra, String notes, List<JsonNode> tests) {
+        long sutraBytes = sutra == null ? 0 : sutra.getBytes(StandardCharsets.UTF_8).length;
+        long notesBytes = notes == null ? 0 : notes.getBytes(StandardCharsets.UTF_8).length;
+        long testsBytes = StoredDesign.testsBytes(tests);
+        long sutraMax = props.maxSutraKb() * 1024L;
+        long notesMax = props.maxNotesKb() * 1024L;
+        long testsMax = props.maxTestsKb() * 1024L;
+        if (sutraBytes > sutraMax && (current == null || sutraBytes > current.sutra.getBytes(StandardCharsets.UTF_8).length)) {
+            throw tooMany("the Sutra is over " + props.maxSutraKb() + " KB (drishti.builder.designs.max-sutra-kb)");
+        }
+        if (notesBytes > notesMax && (current == null || notesBytes > current.notes.getBytes(StandardCharsets.UTF_8).length)) {
+            throw tooMany("the notes are over " + props.maxNotesKb() + " KB (drishti.builder.designs.max-notes-kb)");
+        }
+        if (testsBytes > testsMax && (current == null || testsBytes > StoredDesign.testsBytes(current.tests))) {
+            throw tooMany("the tests are over " + props.maxTestsKb() + " KB (drishti.builder.designs.max-tests-kb)");
+        }
+        long before = current == null ? 0 : current.textBytes();
+        long after = sutraBytes + notesBytes + testsBytes;
+        if (after <= before) {
+            return;
+        }
+        long design = (current == null ? 0 : current.sampleBytes()) + after;
+        if (design > props.maxBytes()) {
+            throw tooMany("the design would hold over " + props.maxMb() + " MB with its Sutra, notes and tests (drishti.builder.designs.max-mb)");
+        }
+        if (userBytes(user) - before + after > props.maxUserBytes()) {
+            throw tooMany("your designs would hold over " + props.maxUserMb() + " MB with Sutra, notes and tests (drishti.builder.designs.max-user-mb)");
+        }
     }
 
     private StoredDesign create0(String user, String name, String kind, String base, String sutra, String notes) {
@@ -140,9 +201,17 @@ public final class DesignService {
     public StoredDesign update(String user, String id, Patch p) {
         return locked(user, () -> {
             StoredDesign d = get(user, id);
+            requireText(user, d, p.sutra() != null ? p.sutra() : d.sutra, p.notes() != null ? p.notes() : d.notes, p.tests() != null ? p.tests() : d.tests);
             if (p.name() != null) {
+                boolean named = !clean(p.name()).isEmpty();
+                if (named && d.scratch) {
+                    requireRoomForNamed(user);
+                }
                 d.name = clean(p.name());
-                d.scratch = d.name.isEmpty();
+                d.scratch = !named;
+                if (d.scratch) {
+                    evictScratch(user, d.id, props.maxScratch() - 1);
+                }
             }
             if (p.kind() != null && !p.kind().isBlank()) {
                 d.kind = p.kind().trim();
@@ -177,10 +246,38 @@ public final class DesignService {
             stale(d, baseRev);
             Applied a = apply.apply(d.sutra);
             if (a.yaml() != null && !a.yaml().equals(d.sutra)) {
+                requireText(user, d, a.yaml(), d.notes, d.tests);
                 record(d, a.ops(), d.sutra, a.yaml());
                 d.updated = clock.getAsLong();
                 store.save(d);
             }
+            return d;
+        });
+    }
+
+    /**
+     * The Design moves to a newer base: its Sutra becomes {@code yaml} (the base text with the replayed operations {@code ops} on it).
+     * The log starts again from the new base, so a later rebase replays only what was replayed now; the old steps are not undoable.
+     */
+    public StoredDesign rebase(String user, String id, int baseRev, String newBase, String baseText, String yaml, JsonNode ops) {
+        return locked(user, () -> {
+            StoredDesign d = get(user, id);
+            stale(d, baseRev);
+            requireText(user, d, yaml, d.notes, d.tests);
+            d.ops = new ArrayList<>();
+            if (!yaml.equals(baseText) && ops.size() > 0) {
+                ObjectNode e = JSON.createObjectNode();
+                e.set("ops", ops);
+                e.put("before", baseText).put("after", yaml).put("at", clock.getAsLong());
+                d.ops.add(e);
+            }
+            d.opsAt = d.ops.size();
+            d.base = newBase;
+            d.sutra = yaml;
+            d.rev++;
+            d.status = "draft";
+            d.updated = clock.getAsLong();
+            store.save(d);
             return d;
         });
     }
@@ -256,6 +353,7 @@ public final class DesignService {
         return locked(user, () -> {
             StoredDesign d = get(user, id);
             if (!text.equals(d.sutra)) {
+                requireText(user, d, text, d.notes, d.tests);
                 record(d, TEXT_OP, d.sutra, text);
                 d.updated = clock.getAsLong();
             }
@@ -319,10 +417,8 @@ public final class DesignService {
     public StoredDesign duplicate(String user, String id, String name) {
         return locked(user, () -> {
             StoredDesign from = get(user, id);
-            if (store.list(user).size() >= props.maxPerUser()) {
-                throw tooMany("you keep " + props.maxPerUser() + " designs, the most allowed (drishti.builder.designs.max-per-user): delete one first");
-            }
-            if (userBytes(user) + from.sampleBytes() > props.maxUserBytes()) {
+            requireRoomForNamed(user);
+            if (userBytes(user) + from.totalBytes() > props.maxUserBytes()) {
                 throw tooMany("a copy would take your designs over " + props.maxUserMb() + " MB (drishti.builder.designs.max-user-mb)");
             }
             String copyName = name == null || name.isBlank() ? (from.name.isEmpty() ? "Untitled" : from.name) + " copy" : name;
@@ -343,7 +439,7 @@ public final class DesignService {
     public StoredDesign addSamples(String user, String id, List<NewSample> add) {
         return locked(user, () -> {
             StoredDesign d = get(user, id);
-            long design = d.sampleBytes();
+            long design = d.totalBytes();
             long mine = userBytes(user);
             List<SampleInfo> kept = new ArrayList<>(d.samples);
             for (NewSample n : add) {
@@ -433,7 +529,7 @@ public final class DesignService {
     private long userBytes(String user) {
         long n = 0;
         for (StoredDesign d : store.list(user)) {
-            n += d.sampleBytes();
+            n += d.totalBytes();
         }
         return n;
     }

@@ -160,6 +160,9 @@ class DesignShipApiTest {
         assertThat(d.path("samples")).extracting(s -> s.path("name").asText()).containsExactlyInAnyOrder("first.json", "second.json");
         mvc.perform(post("/api/v1/builder/designs/import").header("Authorization", as("bea", "designer")).contentType("application/zip")
                 .content(new byte[] {1, 2, 3})).andExpect(status().isBadRequest());
+        // S2-07: a zip cut short is a clean 400, not an empty 200
+        mvc.perform(post("/api/v1/builder/designs/import").header("Authorization", as("bea", "designer")).contentType("application/zip")
+                .content(java.util.Arrays.copyOf(zip, 30))).andExpect(status().isBadRequest());
     }
 
     @Test

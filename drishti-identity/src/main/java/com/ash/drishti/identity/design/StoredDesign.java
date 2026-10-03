@@ -110,6 +110,32 @@ public final class StoredDesign {
         return n;
     }
 
+    /** The bytes of the Sutra, the notes and the tests (what a Design holds besides its samples). */
+    public long textBytes() {
+        return textBytes(sutra, notes, tests);
+    }
+
+    public static long textBytes(String sutra, String notes, List<JsonNode> tests) {
+        long n = sutra == null ? 0 : sutra.getBytes(java.nio.charset.StandardCharsets.UTF_8).length;
+        n += notes == null ? 0 : notes.getBytes(java.nio.charset.StandardCharsets.UTF_8).length;
+        return n + testsBytes(tests);
+    }
+
+    public static long testsBytes(List<JsonNode> tests) {
+        long n = 0;
+        if (tests != null) {
+            for (JsonNode t : tests) {
+                n += t.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8).length;
+            }
+        }
+        return n;
+    }
+
+    /** Everything counted against the Design and user limits: samples, Sutra, notes and tests. */
+    public long totalBytes() {
+        return sampleBytes() + textBytes();
+    }
+
     public SampleInfo sample(String sampleName) {
         for (SampleInfo s : samples) {
             if (s.name().equals(sampleName)) {

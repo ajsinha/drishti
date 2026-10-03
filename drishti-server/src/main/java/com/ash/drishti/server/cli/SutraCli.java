@@ -88,10 +88,14 @@ public final class SutraCli {
         this.err = err;
     }
 
+    /** The paths the command line named, absolute: sample folders are looked for inside them only. */
+    private List<Path> roots = List.of();
+
     /** Runs one command line (without the leading {@code sutra}) and returns the exit code. */
     public int run(List<String> args) {
         try {
             CliArgs a = CliArgs.parse(args);
+            roots = a.paths().stream().map(p -> p.toAbsolutePath().normalize()).toList();
             List<Case> cases = new ArrayList<>();
             int code = switch (a.command()) {
                 case "lint" -> lint(a, cases);
@@ -109,9 +113,29 @@ public final class SutraCli {
             err.println(USAGE_TEXT);
             return USAGE;
         } catch (IOException | RuntimeException e) {
-            err.println("sutra: " + (e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()));
+            err.println("sutra: " + describe(e));
+            return PROBLEMS;
+        } catch (OutOfMemoryError | StackOverflowError e) {
+            err.println("sutra: the input is too large or too deeply nested to process (" + e.getClass().getSimpleName() + "); split it, or use smaller samples");
             return PROBLEMS;
         }
+    }
+
+    /** One line that says what failed, never a stack trace: a missing or unreadable file by name, text that is not UTF-8 as such. */
+    static String describe(Exception e) {
+        if (e instanceof java.nio.file.NoSuchFileException n) {
+            return "no such file: " + n.getFile();
+        }
+        if (e instanceof java.nio.file.AccessDeniedException n) {
+            return "not allowed to use " + n.getFile();
+        }
+        if (e instanceof java.nio.charset.CharacterCodingException) {
+            return "a file is not valid UTF-8 text";
+        }
+        if (e instanceof java.nio.file.FileSystemException f) {
+            return "cannot use " + f.getFile() + (f.getReason() == null ? "" : ": " + f.getReason());
+        }
+        return e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
     }
 
     // ------------------------------------------------------------------------------------------------- lint, test, preview
@@ -319,19 +343,33 @@ public final class SutraCli {
         return found;
     }
 
-    private static Unit unit(Path f) throws IOException {
+    private Unit unit(Path f) throws IOException {
         String n = f.getFileName().toString().replace(".sutra.yaml", "");
         int dot = n.indexOf('.');                                    // var.v1 -> var
-        return new Unit(f, Files.readString(f), dot > 0 ? n.substring(0, dot) : n);
+        return new Unit(f, text(f), dot > 0 ? n.substring(0, dot) : n);
     }
 
-    /** The folder {@code tests/<sutra>/} above the Sutra file, if there is one. */
-    private static Path sampleDir(Unit u, Sutra sutra) {
-        Path dir = u.file().toAbsolutePath().getParent();
+    /** A file's text, refused past the builder's single-document limit (drishti.builder.max-file-mb): the CLI is no way round the server's limits. */
+    private String text(Path f) throws IOException {
+        long max = s.shapes().limits().maxFileBytes();
+        if (Files.size(f) > max) {
+            throw new IOException(f.getFileName() + " is over " + s.shapes().limits().maxFileMb() + " MB (drishti.builder.max-file-mb)");
+        }
+        try {
+            return Files.readString(f);
+        } catch (java.nio.charset.CharacterCodingException e) {
+            throw new IOException(f.getFileName() + " is not valid UTF-8 text", e);
+        }
+    }
+
+    /** The folder {@code tests/<sutra>/} above the Sutra file, if there is one inside what the command line named (never above it). */
+    private Path sampleDir(Unit u, Sutra sutra) {
+        Path dir = u.file().toAbsolutePath().normalize().getParent();
         for (int i = 0; i < 6 && dir != null; i++, dir = dir.getParent()) {
             for (String n : List.of(sutra.name(), u.stem())) {
-                if (Files.isDirectory(dir.resolve("tests").resolve(n))) {
-                    return dir.resolve("tests").resolve(n);
+                Path found = dir.resolve("tests").resolve(n);
+                if (Files.isDirectory(found) && roots.stream().anyMatch(found::startsWith)) {
+                    return found;
                 }
             }
         }
@@ -386,7 +424,7 @@ public final class SutraCli {
 
     private JsonNode read(Path f) throws IOException {
         try {
-            return mapper.readTree(Files.readString(f));
+            return mapper.readTree(text(f));
         } catch (IOException e) {
             throw new IOException(f + " is not valid JSON: " + e.getMessage(), e);
         }

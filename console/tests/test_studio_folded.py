@@ -16,6 +16,7 @@
 where it means something), Studio's test entities become samples of a Design made from that Sutra, the Versions tab diffs against
 the base or an earlier version, saving and proposing follow the rights, and the help guide moved with the page."""
 import re
+from conftest import open_studio  # noqa: E402
 
 import pytest
 
@@ -24,8 +25,8 @@ from test_build_designs import _console, _doc, _files, _new, app_client  # noqa:
 
 
 def _target(client, url):
-    r = client.get(url, follow_redirects=False)
-    assert r.status_code == 302, (url, r.status_code)
+    r = open_studio(client, url)
+    assert r.status_code in (302, 303), (url, r.status_code)
     return r.headers["location"]
 
 
@@ -105,7 +106,7 @@ def test_studio_when_designs_cannot_be_made_says_why_instead_of_failing(app_clie
             raise BackendError(413, "DRS-5005", "you keep 50 designs, the most allowed")
         return await real(method, path, ident, body, **params)
     monkeypatch.setattr(backend, "designs", refuse)
-    r = app_client.get("/studio", follow_redirects=False)
+    r = app_client.post("/studio", data={}, follow_redirects=False)
     assert r.status_code == 413 and "DRS-5005" in r.text
 
 

@@ -16,6 +16,7 @@
 and the old shape extractor address. The server keeps the Designs; the stand-in server (FakeBackend) does here, shared by
 every console built on it, which is what lets a test restart a console or run two."""
 import hashlib
+from conftest import open_studio  # noqa: E402
 import json
 from pathlib import Path
 
@@ -57,8 +58,8 @@ def app_client(backend, request):
 
 def _land(client, url):
     """Follows an old Studio address one step: it must be a 302 into the workbench; returns (location, the page it lands on)."""
-    r = client.get(url, follow_redirects=False)
-    assert r.status_code == 302 and r.headers["location"].startswith("/build/d/"), (url, r.status_code, r.headers.get("location"))
+    r = open_studio(client, url)
+    assert r.status_code in (302, 303) and r.headers["location"].startswith("/build/d/"), (url, r.status_code, r.headers.get("location"))
     return r.headers["location"], client.get(r.headers["location"]).text
 
 
@@ -333,19 +334,19 @@ def test_the_old_studio_design_address_lands_on_the_design_with_its_sample(app_c
 
 
 def test_studio_with_a_stored_entity_makes_a_design_with_it_as_a_sample_and_ignores_a_foreign_design(app_client, backend):
-    r = app_client.get("/studio?kind=curve&id=USD-SOFR", follow_redirects=False)
-    assert r.status_code == 302
+    r = open_studio(app_client, "/studio?kind=curve&id=USD-SOFR")
+    assert r.status_code == 303
     d = app_client.get(r.headers["location"].split("?")[0].replace("/build/d/", "/build/designs/")).json()
     assert d["samples"][0]["ref"] == {"kind": "curve", "id": "USD-SOFR"} and d["kind"] == "curve" and "match: { kind: curve }" in d["sutra"]
     backend.design_rows[("somebody-else", "dforeign0002")] = {"design": {"id": "dforeign0002", "sutra": "rachana: 1\nsutra: theirs\n", "samples": []}, "docs": {}}
-    loc = app_client.get("/studio?design=dforeign0002", follow_redirects=False).headers["location"]
+    loc = open_studio(app_client, "/studio?design=dforeign0002").headers["location"]
     assert "dforeign0002" not in loc and "sutra: theirs" not in app_client.get(loc).text      # not theirs to open: a new Design, as Studio opened as usual
 
 
 def test_studio_and_its_examples_keep_working(app_client):
     loc, page = _land(app_client, "/studio?example=all-panels-showcase")
     assert "sutra: all-panels-showcase" in page and "all-panels-showcase.json" in page and loc.endswith("?tab=yaml")
-    assert "all-panels-showcase" in app_client.get("/help/examples").text and "/studio?example=all-panels-showcase" in app_client.get("/help/examples").text
+    assert "all-panels-showcase" in app_client.get("/help/examples").text and 'data-example-copy="all-panels-showcase"' in app_client.get("/help/examples").text
     assert "sutra: all-panels-showcase" in _land(app_client, "/studio")[1]            # ui.studio_example: the showcase is the default
 
 
@@ -389,3 +390,40 @@ def test_the_showcase_copy_previews_all_twenty_one_panels(app_client):
     assert "(copy)" in app_client.get("/build").text
     html = app_client.get(f"/build/designs/{opened['id']}/preview").json()["previewHtml"]
     assert html.count('data-panel="') == 21 and "did not have the shape" not in html
+
+
+def test_a_get_to_studio_creates_nothing_and_only_the_confirmed_post_does(app_client, backend):
+    """S2-04: opening an address (a cross-site link, a bookmark) asks first; only the button's POST starts the design."""
+    before = len(backend.design_rows)
+    for url in ("/studio", "/studio?example=tree-table", "/studio?sutra=irs-vanilla@3", "/studio?kind=curve&id=USD-SOFR"):
+        r = app_client.get(url, follow_redirects=False)
+        assert r.status_code == 200 and "data-start-form" in r.text and 'method="post"' in r.text, url
+    assert len(backend.design_rows) == before
+    cross = app_client.post("/studio", data={"example": "tree-table"}, headers={"Origin": "https://evil.example"}, follow_redirects=False)
+    assert cross.status_code == 403 and len(backend.design_rows) == before
+    ok = app_client.post("/studio", data={"example": "tree-table"}, follow_redirects=False)
+    assert ok.status_code == 303 and ok.headers["location"].startswith("/build/d/") and len(backend.design_rows) == before + 1
+
+
+def test_my_designs_can_delete_all_scratch_designs_at_once(app_client):
+    named = _new(app_client, "Keep me")
+    app_client.post("/studio", data={})
+    app_client.post("/studio", data={})
+    page = app_client.get("/build").text
+    assert "data-delete-scratch" in page and "scratch ones" in page
+    r = app_client.delete("/build/designs")
+    assert r.status_code == 200 and r.json()["deleted"] >= 2
+    assert app_client.get(f"/build/designs/{named['id']}").status_code == 200
+    assert "data-delete-scratch" not in app_client.get("/build").text
+
+
+def test_a_chunked_body_is_refused_while_it_streams(app_client):
+    """S2-09: no Content-Length, so the limit is enforced on the stream, not after reading it all."""
+    def gen():
+        for _ in range(80):
+            yield b"x" * (1024 * 1024)
+    d = _new(app_client, "Chunky")
+    r = app_client.post(f"/build/designs/{d['id']}/files", content=gen(), headers={"Content-Type": "application/json"})
+    assert r.status_code == 413 and r.json()["code"] == "DRS-5005"
+    z = app_client.post("/build/import", content=gen(), headers={"Content-Type": "application/zip"})
+    assert z.status_code == 413 and z.json()["code"] == "DRS-5005"
