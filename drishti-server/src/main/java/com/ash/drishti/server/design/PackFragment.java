@@ -158,13 +158,17 @@ public class PackFragment {
                 put(zip, pack + "/samples/" + kind + "/" + unique(usedSamples, docs.get(i).getKey()),
                         JSON.writerWithDefaultPrettyPrinter().writeValueAsString(docs.get(i).getValue()));
             }
+            if (d.notes != null && !d.notes.isBlank()) {
+                put(zip, pack + "/" + NOTES_FILE, d.notes);
+            }
             put(zip, pack + "/README.md", readme(pack, sutraName, kind, mnemonic, idField, docs.size(), d));
         }
         return bytes.toByteArray();
     }
 
     private static String unique(Set<String> used, String name) {
-        String base = name.replaceAll("[^A-Za-z0-9._-]+", "_");
+        // only characters that are unsafe in a path become "_"; letters of any script are kept
+        String base = name.replaceAll("[\\\\/:*?\"<>|\\p{Cntrl}]+", "_").replaceAll("^\\.+", "_");
         if (base.endsWith(".json")) {
             base = base.substring(0, base.length() - 5);
         }
@@ -224,6 +228,11 @@ public class PackFragment {
         return b.toString();
     }
 
+    /** The design's notes, kept apart from the generated README so that export then import does not grow them. */
+    static final String NOTES_FILE = "NOTES.md";
+    /** A line only the generated README holds: a README with it is ours and is not imported as notes. */
+    private static final String README_MARK = "A pack fragment made in the Build workbench";
+
     private static String readme(String pack, String sutra, String kind, String mnemonic, String idField, int tests, StoredDesign d) {
         return "# " + (d.name == null || d.name.isBlank() ? pack : d.name) + "\n\n"
                 + "A pack fragment made in the Build workbench (design `" + d.id + "`).\n\n"
@@ -233,7 +242,7 @@ public class PackFragment {
                 + "  `java -jar drishti-server-*-exec.jar sutra test " + pack + "`.\n"
                 + "- `samples/" + kind + "/`: up to three documents to try the view on.\n\n"
                 + "To use it: put this folder under the server's `packs/` directory and load it from Admin -> Packs (or list it in `DRISHTI_PACKS`).\n"
-                + (d.notes == null || d.notes.isBlank() ? "" : "\n## Notes\n\n" + d.notes + "\n");
+                + (d.notes == null || d.notes.isBlank() ? "" : "\nThe design's notes are in `" + NOTES_FILE + "`.\n");
     }
 
     private static void put(ZipOutputStream zip, String path, String text) throws IOException {
@@ -274,7 +283,7 @@ public class PackFragment {
                 byte[] data = in.readNBytes((int) Math.min(maxBytes - total + 1, Integer.MAX_VALUE - 8));
                 total += data.length;
                 if (total > maxBytes) {
-                    throw new DrishtiException(ErrorCode.PAYLOAD_TOO_LARGE, "the zip unpacks to more than " + (maxBytes / 1048576) + " MB");
+                    throw new DrishtiException(ErrorCode.PAYLOAD_TOO_LARGE, "the zip unpacks to more than " + (maxBytes / 1048576) + " MiB");
                 }
                 if (path.endsWith(".yaml") || path.endsWith(".yml") || path.endsWith(".json") || path.endsWith(".md")) {
                     items.add(new Item(path, new String(data, StandardCharsets.UTF_8)));
@@ -287,8 +296,10 @@ public class PackFragment {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "that is not a readable zip: it holds no files");
         }
         List<String> skipped = new ArrayList<>();
-        String readme = items.stream().filter(i -> i.path().toLowerCase(Locale.ROOT).endsWith("readme.md") && depth(i.path()) <= 2)
-                .map(Item::text).findFirst().orElse("");
+        String readme = items.stream().filter(i -> (i.path().endsWith("/" + NOTES_FILE) || i.path().equals(NOTES_FILE)) && depth(i.path()) <= 2)
+                .map(Item::text).findFirst().orElseGet(() -> items.stream()
+                        .filter(i -> i.path().toLowerCase(Locale.ROOT).endsWith("readme.md") && depth(i.path()) <= 2)
+                        .map(Item::text).filter(t -> !t.contains(README_MARK)).findFirst().orElse(""));
         List<StoredDesign> made = new ArrayList<>();
         for (Item sutraFile : items) {
             if (!isSutra(sutraFile.path())) {

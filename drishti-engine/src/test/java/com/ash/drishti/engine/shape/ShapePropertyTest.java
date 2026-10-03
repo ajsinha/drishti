@@ -169,9 +169,21 @@ class ShapePropertyTest {
         return o;
     }
 
+    /** Integers beyond 2^53, wide decimals and non-finite numbers. */
+    private static JsonNode hostileNumber(Random r) {
+        return switch (r.nextInt(6)) {
+            case 0 -> F.numberNode(Long.MAX_VALUE);
+            case 1 -> F.numberNode(new java.math.BigInteger("12345678901234567890123").add(java.math.BigInteger.valueOf(r.nextInt(50))));
+            case 2 -> F.numberNode(new java.math.BigInteger("-9007199254740993").subtract(java.math.BigInteger.valueOf(r.nextInt(50))));
+            case 3 -> F.numberNode(Double.POSITIVE_INFINITY);
+            case 4 -> F.numberNode(Double.NaN);
+            default -> F.numberNode(new java.math.BigDecimal("1.0000000000000000000001").add(java.math.BigDecimal.valueOf(r.nextInt(9), 25)));
+        };
+    }
+
     private static JsonNode scalar(Random r) {
         return switch (r.nextInt(6)) {
-            case 0 -> F.nullNode();
+            case 0 -> r.nextInt(3) == 0 ? hostileNumber(r) : F.nullNode();
             case 1 -> F.booleanNode(r.nextBoolean());
             case 2 -> F.numberNode(r.nextInt(1000) - 500);
             case 3 -> F.numberNode(r.nextDouble() * 100 - 50);

@@ -55,6 +55,10 @@ final class OpChecks {
             throw new OpException(OpException.NOT_ACCEPTED, "option '" + option + "' is not valid for '" + kind.id() + "' panels; expected one of "
                     + String.join(", ", ok) + " or " + String.join(", ", COMMON.stream().sorted().toList()));
         }
+        if ((value instanceof Map<?, ?> || value instanceof List<?>) && !PanelOptions.takesContainer(kind, option)) {
+            throw new OpException(OpException.BAD_VALUE, "option '" + option + "' of '" + kind.id() + "' panels takes one value (text, number or true/false), not a "
+                    + (value instanceof Map<?, ?> ? "mapping" : "list"));
+        }
         if (value != null && !COMMON.contains(option)) {
             PanelOptions.problem(kind, option, value).ifPresent(why -> {
                 throw new OpException(OpException.BAD_VALUE, why);

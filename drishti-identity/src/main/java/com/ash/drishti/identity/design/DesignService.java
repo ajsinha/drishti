@@ -419,7 +419,7 @@ public final class DesignService {
             StoredDesign from = get(user, id);
             requireRoomForNamed(user);
             if (userBytes(user) + from.totalBytes() > props.maxUserBytes()) {
-                throw tooMany("a copy would take your designs over " + props.maxUserMb() + " MB (drishti.builder.designs.max-user-mb)");
+                throw tooMany("a copy would take your designs over " + props.maxUserMb() + " MiB (drishti.builder.designs.max-user-mb)");
             }
             String copyName = name == null || name.isBlank() ? (from.name.isEmpty() ? "Untitled" : from.name) + " copy" : name;
             StoredDesign c = create0(user, copyName, from.kind, from.base, from.sutra, from.notes);
@@ -458,10 +458,10 @@ public final class DesignService {
                     throw tooMany("a design holds " + props.maxSamples() + " samples, the most allowed (drishti.builder.designs.max-samples)");
                 }
                 if (design + bytes > props.maxBytes()) {
-                    throw tooMany("the samples would take this design over " + props.maxMb() + " MB (drishti.builder.designs.max-mb)");
+                    throw tooMany("the samples would take this design over " + props.maxMb() + " MiB (drishti.builder.designs.max-mb)");
                 }
                 if (mine + bytes > props.maxUserBytes()) {
-                    throw tooMany("your designs would hold over " + props.maxUserMb() + " MB of samples (drishti.builder.designs.max-user-mb)");
+                    throw tooMany("your designs would hold over " + props.maxUserMb() + " MiB of samples (drishti.builder.designs.max-user-mb)");
                 }
                 design += bytes;
                 mine += bytes;

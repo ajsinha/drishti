@@ -111,6 +111,12 @@ public final class PanelOptions {
         return Optional.empty();
     }
 
+    /** Whether {@code option} of {@code kind} panels is written as a list or a mapping (every other option is one value). */
+    public static boolean takesContainer(PanelKind kind, String option) {
+        return "columns".equals(option) || "body".equals(option) || "by".equals(option) && kind == PanelKind.PIVOT
+                || "markers".equals(option) && kind == PanelKind.HISTOGRAM || LISTS.getOrDefault(kind, Map.of()).containsKey(option);
+    }
+
     private static boolean byFields(Object value) {
         if (value instanceof List<?> list) {
             return !list.isEmpty() && list.size() <= MAX_BY && list.stream().allMatch(PanelOptions::fieldName);

@@ -238,6 +238,16 @@ class ChartPanelsTest {
     }
 
     @Test
+    void childrenThatAreNotRecordsAreNotRows() {
+        String doc = DOC.replace("{\"name\": \"Loose\", \"size\": 5}", "{\"name\": \"Mixed\", \"size\": 1, \"children\": [1, null, \"x\", {\"name\": \"Real\", \"size\": 2}]},"
+                + " {\"name\": \"One\", \"size\": 1, \"children\": {\"name\": \"Only\", \"size\": 3}}, {\"name\": \"Text\", \"size\": 1, \"children\": \"abc\"}");
+        var t = (PanelData.Table) panel(view(doc), "org").data();
+        assertThat(t.rows().get(1).children()).extracting(r -> r.cells().get(0).text()).containsExactly("Real");
+        assertThat(t.rows().get(2).children()).extracting(r -> r.cells().get(0).text()).containsExactly("Only");
+        assertThat(t.rows().get(3).children()).isNullOrEmpty();
+    }
+
+    @Test
     void aTableWithChildrenNestsRowsToAnyDepthAndTotalsOnlyTheLeaves() {
         var t = (PanelData.Table) panel(view(DOC), "org").data();
         assertThat(t.expand()).isEqualTo(2);

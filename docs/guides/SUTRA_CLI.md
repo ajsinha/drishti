@@ -38,6 +38,8 @@ JSON files or folders instead of the Sutra's own samples; `--kind name` is the e
 not parse, a panel in error, an expectation not met, an unreadable file. `2` usage: an unknown command or option, a path
 that does not exist, an unknown key in `expect.yaml`.
 
+`--junit` is written on every path, including an exit-2 usage error and an unreadable sample, so a CI report step always finds the file. A sample that is not valid JSON, a file with no content, or a name under `samples:` in `expect.yaml` that is not a file of the Sutra, is a **failed test case** (not a crash and never a pass); a UTF-8 byte-order mark is ignored. `tests/<sutra>/` may hold `.json` files (one document) and `.jsonl` files (one document per line, reported as `file.jsonl:1`, `file.jsonl:2`...). `design` prints the draft with one trailing newline.
+
 ## The tests convention
 
 ```

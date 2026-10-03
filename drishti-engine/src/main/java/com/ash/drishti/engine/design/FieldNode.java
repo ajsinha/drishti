@@ -66,7 +66,7 @@ record FieldNode(String path, String name, String type, RoleInfo role, double pr
     }
 
     boolean date() {
-        return "date".equals(format) || "date-time".equals(format);
+        return "date".equals(format) || "date-time".equals(format) || "year-month".equals(format);
     }
 
     /** The fields of an array's records (for an array of records); empty otherwise. */

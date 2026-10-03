@@ -57,6 +57,11 @@ public final class SutraExpressions {
         return all;
     }
 
+    /** The message without its leading DRS-nnnn: the problem carries the code itself. */
+    private static String withoutCode(String message) {
+        return message == null ? "" : message.replaceFirst("^DRS-\\d+\\s*:?\\s*", "");
+    }
+
     private final ElCompiler compiler;
 
     public SutraExpressions(ElCompiler compiler) {
@@ -123,7 +128,7 @@ public final class SutraExpressions {
         try {
             compiler.compile(src);
         } catch (ElException e) {
-            out.add(new SutraProblem("DRS-2101", "expression '" + src + "': " + e.getMessage(), at));
+            out.add(new SutraProblem("DRS-2101", "expression '" + src + "': " + withoutCode(e.getMessage()), at));
         }
     }
 
@@ -134,7 +139,7 @@ public final class SutraExpressions {
         try {
             compiler.template(src);
         } catch (ElException e) {
-            out.add(new SutraProblem("DRS-2101", "template '" + src + "': " + e.getMessage(), at));
+            out.add(new SutraProblem("DRS-2101", "template '" + src + "': " + withoutCode(e.getMessage()), at));
         }
     }
 }

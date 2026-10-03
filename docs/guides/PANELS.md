@@ -186,7 +186,7 @@ number of levels shown open at first (default 1, only the top level; `all` opens
 `"children": [ …rows… ]` (absent on a leaf) and the data carries `"expand": n`. Columns, `highlight` and `total` evaluate against each child with `@`; a `total: true`
 column adds up the **leaf** rows only (rows without children), a masked value is never added up, and `limit` counts top-level rows. The console draws a
 ▸/▾ button in the first cell (a native button, so Tab, Enter and Space work, with `aria-expanded`), indents each level, and its filter box keeps the
-ancestors of the rows that match; a tree is not sorted or paged. `drishti.panels.tree-depth` (12) and `tree-rows` (10,000) bound it. The CSV export lists
+ancestors of the rows that match; a tree is not sorted or paged. `drishti.panels.tree-depth` (12) and `tree-rows` (10,000) bound it; levels beyond the depth are not drawn (there is no marker, raise the setting if you need them). `children` should give a list of records: one object counts as one child, and scalars, nulls and text in the list are not rows. The CSV export lists
 every row, each followed by its children. The Pivot tab of a tree reads its top-level rows.
 
 **The Pivot tab (`pivot:`).** A table or ladder whose Sutra says `pivot: true`, or `pivot: { fields, rows, columns,
@@ -615,7 +615,7 @@ the user arranges.
 | `by` | yes | | Field whose values are the row keys, in first-seen order, or a **list of fields** (`by: [desk, book, productType]`, up to 6) for nested groups. A missing value is `(none)`. |
 | `across` | yes | | Field whose values are the column keys, in first-seen order. |
 | `value` | | | Field aggregated. Without it the pivot counts rows (whatever `agg` says). A row whose value is not a number is left out. |
-| `agg` | | `sum` | `sum`, `count`, `avg`, `min` or `max` (`DRS-2029` otherwise). |
+| `agg` | | `sum` | `sum`, `count`, `avg`, `min` or `max` (`DRS-2029` otherwise). Every aggregation reads the rows whose `value` is numeric: a group with no numeric value is not shown, and `count` counts those numeric rows (point `value` at a numeric field to count trades by desk). |
 | `fmt` | | six significant digits | Format of the cells (counts are always whole numbers). |
 | `tone` | | | Tone of the cells, for example `sign`. |
 | `heat` | | `false` | `true` shades each cell from the smallest to the largest value. Must be a boolean (`DRS-2029`). |

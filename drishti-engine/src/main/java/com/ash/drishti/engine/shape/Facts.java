@@ -40,6 +40,7 @@ final class Facts {
 
     static final int DISTINCT_CAP = 64;
     private static final Pattern DATETIME = Pattern.compile("^\\d{4}-\\d{2}-\\d{2}[T ]\\d{2}:\\d{2}(:\\d{2}(\\.\\d+)?)?(Z|[+-]\\d{2}:?\\d{2})?$");
+    private static final Pattern MONTH = Pattern.compile("^\\d{4}-(0[1-9]|1[0-2])$");
     private static final Pattern DATE = Pattern.compile("^\\d{4}-\\d{2}-\\d{2}$");
     private static final Pattern EMAIL = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[A-Za-z]{2,}$");
     private static final Pattern CURRENCY = Pattern.compile("^[A-Z]{3}$");
@@ -64,12 +65,19 @@ final class Facts {
     int arrays;
     double min = Double.POSITIVE_INFINITY;
     double max = Double.NEGATIVE_INFINITY;
+    /** Exact bounds (integers beyond 2^53 and wide decimals lose digits in a double). */
+    java.math.BigDecimal minExact;
+    java.math.BigDecimal maxExact;
+    /** A sample held a NaN or an infinite number: no bound is written for it. */
+    boolean nonFinite;
     final Set<Double> numbers = new LinkedHashSet<>();
     final Map<String, Integer> distinct = new LinkedHashMap<>();
     boolean overflow;
     boolean repeats;
     int masked;
     int dates;
+    /** Values like 2024-09 (a calendar month). */
+    int months;
     int datetimes;
     int uuids;
     int emails;
@@ -133,8 +141,15 @@ final class Facts {
             } else {
                 floats++;
             }
-            min = Math.min(min, d);
-            max = Math.max(max, d);
+            if (Double.isNaN(d) || Double.isInfinite(d)) {
+                nonFinite = true;
+            } else {
+                java.math.BigDecimal exact = v.decimalValue();
+                minExact = minExact == null || exact.compareTo(minExact) < 0 ? exact : minExact;
+                maxExact = maxExact == null || exact.compareTo(maxExact) > 0 ? exact : maxExact;
+                min = Math.min(min, d);
+                max = Math.max(max, d);
+            }
             if (numbers.size() < DISTINCT_CAP) {
                 numbers.add(d);
             }
@@ -165,6 +180,8 @@ final class Facts {
             dates++;
         } else if (DATETIME.matcher(s).matches() && validDateTime(s)) {
             datetimes++;
+        } else if (MONTH.matcher(s).matches()) {
+            months++;
         } else if (isUuid(s)) {
             uuids++;
         } else if (EMAIL.matcher(s).matches()) {
@@ -251,6 +268,11 @@ final class Facts {
         arrays += o.arrays;
         min = Math.min(min, o.min);
         max = Math.max(max, o.max);
+        nonFinite |= o.nonFinite;
+        if (o.minExact != null) {
+            minExact = minExact == null || o.minExact.compareTo(minExact) < 0 ? o.minExact : minExact;
+            maxExact = maxExact == null || o.maxExact.compareTo(maxExact) > 0 ? o.maxExact : maxExact;
+        }
         for (Double n : o.numbers) {
             if (numbers.size() < DISTINCT_CAP) {
                 numbers.add(n);
@@ -270,6 +292,7 @@ final class Facts {
         repeats |= o.repeats;
         masked += o.masked;
         dates += o.dates;
+        months += o.months;
         datetimes += o.datetimes;
         uuids += o.uuids;
         emails += o.emails;

@@ -189,8 +189,8 @@ them, with no logic of its own: `/api/v1/builder/designs` (list, create, read, u
   matrix; the console's `POST /studio/test` asks `/builder/check` for one sample and reshapes the answer as before.
 - **Persistence.** A `DesignStore` interface with a file store (`data/designs/<user>/<id>/`, files readable by the
   server only) and a JPA store, like the preference store. The console keeps no sample sets in memory any more.
-  Settings: 50 designs per user, 50 samples and 25 MB per design, 250 MB per user; scratch designs expire after a day,
-  named ones after 90 days untouched (with a warning at 75). Sample contents are never logged; deleting a Design
+  Settings: 50 designs per user, 50 samples and 25 MiB per design, 250 MiB per user (binary megabytes, 1,048,576 bytes; the messages say MiB); an upload over the limit is answered `413` after the body is read, never a closed connection; scratch designs expire after a day,
+  named ones after 90 days untouched (with a warning at 75). Only writes extend a Design's life; reads (opening, previewing, exporting) do not. Sample contents are never logged; deleting a Design
   deletes its samples at once.
 - **Checking cost.** Checks run with a per-user concurrency cap and a time budget, cancel when superseded, and skip
   panels whose inputs did not change.

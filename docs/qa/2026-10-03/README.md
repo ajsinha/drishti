@@ -38,11 +38,11 @@ was changed during QA.
 | [S2-03](security/FINDINGS.md) | A design's Sutra, notes and tests are unbounded and not counted against the design and user size limits. **Fixed** in 89121ae7. |
 | [M-1](data/FINDINGS.md) | Approving a design edited from `name@v` rewrites version v instead of creating v+1; a pack-owned version is refused only at approval, leaving the proposal stuck. **Fixed** in 89121ae7. |
 | [M-2](data/FINDINGS.md) | No rebase when the base Sutra moves: no flag, no replay, no problem (the design document promises them). **Fixed** in 89121ae7. |
-| [M-3](data/FINDINGS.md) | Integers beyond 2^53 and infinities break the shape schema (`minimum` written as a double or as the string "Infinity"). |
-| [M-4](data/FINDINGS.md) | Sparse optional object sections turn a record into a map and merge their fields. |
-| [M-5](data/FINDINGS.md) | Export then import grows the notes on every cycle (README re-imported) and rewrites non-ASCII sample names. |
-| [M-6](data/FINDINGS.md) | `sutra test` writes no JUnit file when a sample is invalid JSON or starts with a BOM. |
-| [M-7](data/FINDINGS.md) | `sutra test` passes an empty (0-byte) sample. |
+| [M-3](data/FINDINGS.md) | Integers beyond 2^53 and infinities break the shape schema (`minimum` written as a double or as the string "Infinity"). **Fixed** in 69343448 |
+| [M-4](data/FINDINGS.md) | Sparse optional object sections turn a record into a map and merge their fields. **Fixed** in 69343448 |
+| [M-5](data/FINDINGS.md) | Export then import grows the notes on every cycle (README re-imported) and rewrites non-ASCII sample names. **Fixed** in 1615c22f |
+| [M-6](data/FINDINGS.md) | `sutra test` writes no JUnit file when a sample is invalid JSON or starts with a BOM. **Fixed** in 2a9e9ea2 |
+| [M-7](data/FINDINGS.md) | `sutra test` passes an empty (0-byte) sample. **Fixed** in 2a9e9ea2 |
 | [UX-01](ux/FINDINGS.md) | A design whose kind no pack defines opens with a false problem ("'shipment' is not a valid kind"); 7 of 10 examples do. |
 | [UX-02](ux/FINDINGS.md) | A mistyped expression shows no problem; the canvas says "Nothing to draw yet" and the error is only on the Tests tab (with the code twice). |
 | [UX-03](ux/FINDINGS.md) | The inspector cannot set some options: numeric `limit`/`expand` refuse numbers; `graph.layout` should be a choice; `histogram.markers`, the table `pivot` object and the pivot `by` list are YAML-only. |

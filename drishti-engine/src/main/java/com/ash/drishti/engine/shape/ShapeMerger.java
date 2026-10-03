@@ -32,6 +32,10 @@ final class ShapeMerger {
     private static final Pattern DIGITS = Pattern.compile("\\d+");
     private static final int MAP_MIN_KEYS = 4;
     private static final int MAP_PATTERN_KEYS = 5;
+    /** Distinct keys across the documents before "the keys vary" counts as evidence of a map of ids. */
+    private static final int MAP_VARIETY_KEYS = 8;
+    private static final Pattern DATE_KEY = Pattern.compile("\\d{4}-\\d{2}(-\\d{2})?");
+    private static final double MAP_VALUE_OVERLAP = 0.5;
     private static final double TREE_OVERLAP = 0.6;
 
     private final BuilderProperties props;
@@ -78,9 +82,12 @@ final class ShapeMerger {
         if (keys < MAP_MIN_KEYS || !f.onlyObjects()) {
             return;
         }
-        boolean keysVary = f.objects >= 2 && f.props.values().stream().mapToInt(p -> p.occ).max().orElse(0) <= f.objects / 2.0;
+        boolean sparse = f.objects >= 2 && f.props.values().stream().mapToInt(p -> p.occ).max().orElse(0) <= f.objects / 2.0;
+        // Evidence that the keys are data and not field names: many distinct keys, ids with a number in them, or dates.
+        boolean keysVary = sparse && keys >= MAP_VARIETY_KEYS;
         boolean keysShaped = keys >= MAP_PATTERN_KEYS && sameKeyPattern(f.props.keySet());
-        if (!(keysVary || keysShaped) || !sameKind(f)) {
+        boolean keysDated = f.props.keySet().stream().allMatch(k -> DATE_KEY.matcher(k).matches());
+        if (!(keysVary || keysShaped || keysDated) || !sameKind(f) || !valuesAlike(f)) {
             return;
         }
         Facts value = new Facts("{}");
@@ -90,6 +97,16 @@ final class ShapeMerger {
         f.mapKeys = keys;
         f.mapValue = value;
         f.props.clear();
+    }
+
+    /** Object values must be one shape: each holds at least half of the fields any of them holds. */
+    private static boolean valuesAlike(Facts f) {
+        Set<String> union = new HashSet<>();
+        f.props.values().forEach(p -> union.addAll(p.props.keySet()));
+        if (union.isEmpty()) {
+            return true;
+        }
+        return f.props.values().stream().allMatch(p -> p.props.size() >= union.size() * MAP_VALUE_OVERLAP);
     }
 
     private static boolean sameKind(Facts f) {

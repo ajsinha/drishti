@@ -166,6 +166,10 @@ final class RoleDetector {
                 return new RoleInfo("steps", "'" + texts.get(0).name + "' with signed '" + value.name + "' (gains and losses)", null);
             }
         }
+        boolean tenorAxis = dates.size() == 1 && "tenor".equals(axisKind(dates.get(0)));
+        if (tenorAxis && numbers.size() >= 3 && item.props.size() == numbers.size() + 1) {
+            return new RoleInfo("grid", numbers.size() + " number columns along the tenors of '" + dates.get(0).name + "'", null);
+        }
         if (dates.size() >= 1 && !numbers.isEmpty()) {
             Facts axis = dates.get(0);
             return new RoleInfo("series", "'" + axis.name + "' (" + axisKind(axis) + ") with " + numbers.size() + " number column"
@@ -189,6 +193,9 @@ final class RoleDetector {
         int plain = p.plainStrings();
         if (plain > 0 && p.dates + p.datetimes == plain) {
             return "date";
+        }
+        if (plain > 0 && p.months == plain) {
+            return "month";
         }
         if (plain > 0 && !p.overflow && !p.distinct.isEmpty() && p.distinct.keySet().stream().allMatch(semantics::isTenor)) {
             return "tenor";
@@ -280,6 +287,9 @@ final class RoleDetector {
         if (f.ints == f.occ - f.nulls && !f.repeats && f.numbers.size() == f.ints && f.ints >= 2 && idNames.matcher(name).find()) {
             return Optional.of(new RoleInfo("id", "named like an id, and no value repeats", null));
         }
+        if (f.floats == 0 && f.ints > 0 && codeLike(name)) {
+            return Optional.of(new RoleInfo("dimension", "named like a year, version or number ('" + name + "'): a label, not an amount", null));
+        }
         Role hint = semantics.role(name, DataNode.of(Math.abs(f.max) < 1 && Math.abs(f.min) < 1 ? 0.5 : 1000));
         if (!"number".equals(hint.name()) && !"plain".equals(hint.name())) {
             return Optional.of(new RoleInfo("measure", "name reads as " + hint.name() + " (" + name + ")", null));
@@ -288,6 +298,12 @@ final class RoleDetector {
             return Optional.of(new RoleInfo("measure", "numbers that vary (" + f.numbers.size() + "+ distinct values)", null));
         }
         return Optional.of(new RoleInfo("measure", "a number", null));
+    }
+
+    /** Whether the last word of the camelCase / snake_case {@code name} is a configured code word (year, version, seq, no...). */
+    private boolean codeLike(String name) {
+        String[] words = name.split("(?<=[a-z0-9])(?=[A-Z])|[^A-Za-z0-9]+");
+        return words.length > 0 && props.codeNames().contains(words[words.length - 1].toLowerCase(Locale.ROOT));
     }
 
     /** The one kind every plain text value is an id of, per the packs' id patterns. */

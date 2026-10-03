@@ -55,7 +55,11 @@ public final class PanelRecipes {
         opts.put("x", x);
         List<Object> series = new ArrayList<>();
         for (int i = 0; i < Math.min(measures.size(), TONES.length); i++) {
-            series.add(Map.of("label", Semantics.humanize(measures.get(i)), "value", measures.get(i), "tone", TONES[i]));
+            Map<String, Object> one = new LinkedHashMap<>();   // not Map.of: its iteration order differs between JVM runs
+            one.put("label", Semantics.humanize(measures.get(i)));
+            one.put("value", measures.get(i));
+            one.put("tone", TONES[i]);
+            series.add(one);
         }
         opts.put("series", series);
         return opts;

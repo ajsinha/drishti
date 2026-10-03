@@ -198,7 +198,9 @@ public final class AutoDesigner {
 
         private void visit(FieldNode node, int depth, List<FieldNode> statuses, boolean collect) {
             for (FieldNode p : node.props().values()) {
-                if (p.array()) {
+                if (p.array() && p.tree() && p.props().isEmpty() && node.object()) {
+                    add(p.path(), chooser.treeUnder(node, p), null);
+                } else if (p.array()) {
                     if (!p.roleName().isEmpty() && !p.is("link")) {
                         add(p.path(), chooser.choose(p), null);
                     }
@@ -230,7 +232,7 @@ public final class AutoDesigner {
                 }
             } else if (p.is("text")) {
                 add(p.path(), chooser.choose(p), null);
-            } else if (p.is("measure") && chooser.limitOf(p) != null && !isLimit(p)) {
+            } else if (p.is("measure") && (chooser.limitOf(p) != null && !isLimit(p) || chooser.isFraction(p))) {
                 add(p.path(), chooser.choose(p), null);
             }
         }
@@ -411,7 +413,12 @@ public final class AutoDesigner {
                 PanelChoice c = d.chosen();
                 cands.add(new Candidate(c.toPanel(d.id), c.score(), "auto-design", c.reason(), d.source, d.order));
             }
-            return LayoutPacker.pack(cands, props.maxPanels(), props.maxSidePanels());
+            LayoutPacker.Packed packed = LayoutPacker.pack(cands, props.maxPanels(), props.maxSidePanels());
+            if (model.all().stream().anyMatch(n -> n.is("link"))) {
+                return packed;
+            }
+            // nothing in the data refers to another entity: the links panel would stay empty on every sample
+            return new LayoutPacker.Packed(packed.panels().stream().filter(p -> !"refs".equals(p.id())).toList(), packed.why());
         }
 
         Sutra assemble() {

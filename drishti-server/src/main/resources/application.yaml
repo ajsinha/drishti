@@ -255,6 +255,8 @@ drishti:
     sample-max-string: 1000         # ... longest string
     sample-max-depth: 8             # ... deepest nesting
     sample-max-kb: 256              # ... most kilobytes in one generated document
+    fraction-names: [utilisation, utilization, usage, used, ratio, share, coverage, fill, pct, percent]   # words in a 0..1 number's name that make it a gauge (of 1)
+    code-names: [year, version, seq, sequence, no, num, number, code, zip, postcode]   # words in a whole-number field's name that make it a code (shown as a label, never summed or formatted as an amount)
     designs:
       # The Build workbench's Designs (/api/v1/builder/designs): samples, a Sutra and notes kept per user. Limits answer DRS-5005.
       store: file   # file (dir below, readable by the server only) or jpa (the identity database)
