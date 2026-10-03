@@ -15,6 +15,7 @@
 """Application factory: one FastAPI app serving pages, static assets and security headers."""
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from contextlib import asynccontextmanager
@@ -49,7 +50,11 @@ CSP = ("default-src 'self'; img-src 'self' data:; style-src 'self'; script-src '
        "font-src 'self'; connect-src 'self'; frame-src 'self'; worker-src 'self'; frame-ancestors 'self'")
 # Calc's Web Worker, and only it, may compile WebAssembly (Pyodide is CPython compiled to it): 'wasm-unsafe-eval', never
 # 'unsafe-eval'. It loads scripts and data from this origin only, has no DOM, and reaches the page only by messages.
-WORKER_CSP = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self'"
+# It may also fetch only the console's static files and the runtime (connect-src names those two paths on this host),
+# never an /api route: Calc code in the worker carries the user's session cookie, so any other route it could reach it
+# would reach as the user (QA 2026-10-01 SEC-17). Its reads go by message to the page, which fetches an allow-listed few.
+WORKER_CSP = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src {connect}"
+_HOST = re.compile(r"^[A-Za-z0-9.\-]+(:\d{1,5})?$|^\[[0-9A-Fa-f:.]+\](:\d{1,5})?$")
 WORKER = "/static/js/calc-worker.js"
 PYODIDE = "/pyodide/"
 
@@ -127,11 +132,20 @@ class AuthGate(BaseHTTPMiddleware):
         return response
 
 
+def worker_csp(host: str) -> str:
+    """The worker's policy for the host the browser used. A host that is not plainly a host (nothing to trust in a
+    header) gets 'none': Calc then cannot start, which is the safe failure."""
+    host = (host or "").strip()
+    if not _HOST.match(host):
+        return WORKER_CSP.format(connect="'none'")
+    return WORKER_CSP.format(connect=f"{host}/static/ {host}{PYODIDE}")
+
+
 class SecurityHeaders(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         response = await call_next(request)
         path = request.url.path
-        response.headers.setdefault("Content-Security-Policy", WORKER_CSP if path == WORKER else CSP)
+        response.headers.setdefault("Content-Security-Policy", worker_csp(request.headers.get("host", "")) if path == WORKER else CSP)
         if path.startswith(PYODIDE) and response.status_code == 200:
             response.headers["Cache-Control"] = "public, max-age=31536000, immutable"   # the URL names the version
         response.headers.setdefault("X-Content-Type-Options", "nosniff")

@@ -586,8 +586,8 @@ connect-src 'self'; frame-src 'self'; worker-src 'self'; frame-ancestors 'self'
 ```
 
 One file has its own policy: Calc's worker, `/static/js/calc-worker.js`, is served with
-`default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self'`, so it alone may compile WebAssembly
-(Pyodide). Pyodide itself is the one vendored component **not in git** (53 MB): `tools/fetch-pyodide.sh` downloads a
+`default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src <host>/static/ <host>/pyodide/`, so it alone may compile WebAssembly
+(Pyodide) and it can fetch nothing but static files and the runtime (never an `/api` route, which would carry the user's session). Pyodide itself is the one vendored component **not in git** (53 MB): `tools/fetch-pyodide.sh` downloads a
 pinned release, checks its SHA-256 and unpacks what Calc needs into `console/web/static/vendor/pyodide/`
 (git-ignored); the console serves it at `/pyodide/<version>/` ([PYTHON_CALC.md](PYTHON_CALC.md#12-installing-the-python-runtime)).
 
