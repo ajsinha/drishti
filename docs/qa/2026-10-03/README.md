@@ -43,14 +43,14 @@ was changed during QA.
 | [M-5](data/FINDINGS.md) | Export then import grows the notes on every cycle (README re-imported) and rewrites non-ASCII sample names. |
 | [M-6](data/FINDINGS.md) | `sutra test` writes no JUnit file when a sample is invalid JSON or starts with a BOM. |
 | [M-7](data/FINDINGS.md) | `sutra test` passes an empty (0-byte) sample. |
-| [UX-01](ux/FINDINGS.md) | A design whose kind no pack defines opens with a false problem ("'shipment' is not a valid kind"); 7 of 10 examples do. |
-| [UX-02](ux/FINDINGS.md) | A mistyped expression shows no problem; the canvas says "Nothing to draw yet" and the error is only on the Tests tab (with the code twice). |
-| [UX-03](ux/FINDINGS.md) | The inspector cannot set some options: numeric `limit`/`expand` refuse numbers; `graph.layout` should be a choice; `histogram.markers`, the table `pivot` object and the pivot `by` list are YAML-only. |
-| [UX-04](ux/FINDINGS.md) | DRS codes written twice on Build pages ("DRS-5006 … (DRS-5006)"). |
+| [UX-01](ux/FINDINGS.md) | A design whose kind no pack defines opens with a false problem ("'shipment' is not a valid kind"); 7 of 10 examples do. **Fixed** in b05bca8e (test_workbench_ux2_browser.py::test_a_design_of_your_own_kind_has_no_false_kind_problem) |
+| [UX-02](ux/FINDINGS.md) | A mistyped expression shows no problem; the canvas says "Nothing to draw yet" and the error is only on the Tests tab (with the code twice). **Fixed** in b05bca8e (test_workbench_ux2_browser.py::test_a_mistyped_expression_is_a_located_problem_and_the_other_panels_are_drawn) |
+| [UX-03](ux/FINDINGS.md) | The inspector cannot set some options: numeric `limit`/`expand` refuse numbers; `graph.layout` should be a choice; `histogram.markers`, the table `pivot` object and the pivot `by` list are YAML-only. **Fixed** in 272d0572 (test_workbench_options_browser.py) |
+| [UX-04](ux/FINDINGS.md) | DRS codes written twice on Build pages ("DRS-5006 … (DRS-5006)"). **Fixed** in b05bca8e (test_workbench_ux2_browser.py::test_a_failed_request_says_its_code_once_on_every_build_page) |
 | [UX-05](ux/FINDINGS.md) | Every `/studio` visit, example open or Help link makes a scratch design that counts toward the 50-design quota; at the limit everything answers 413 and there is no bulk delete. |
-| [UX-06](ux/FINDINGS.md) | A design's notes are invisible in the workbench yet go to the reviewer. |
-| [UX-08](ux/FINDINGS.md) | At 390 px the YAML tab and My designs scroll sideways. |
-| [UX-10](ux/FINDINGS.md) | Keyboard: 71 Tab presses to reach the canvas; Esc in the inspector does not return focus. |
+| [UX-06](ux/FINDINGS.md) | A design's notes are invisible in the workbench yet go to the reviewer. **Fixed** in 1ee0729f (test_workbench_ux2b_browser.py::test_the_notes_are_visible_editable_and_the_licence_comment_is_not_shown) |
+| [UX-08](ux/FINDINGS.md) | At 390 px the YAML tab and My designs scroll sideways. **Fixed** in 4ff7a824 (test_workbench_ux2b_browser.py::test_the_workbench_and_my_designs_do_not_scroll_sideways_on_a_phone) |
+| [UX-10](ux/FINDINGS.md) | Keyboard: 71 Tab presses to reach the canvas; Esc in the inspector does not return focus. **Fixed** in 1ee0729f (test_workbench_ux2b_browser.py::test_a_skip_link_and_a_chord_reach_the_canvas_and_escape_leaves_the_inspector) |
 
 Low and info findings are in each area's FINDINGS.md. Notable lows: cross-site GETs create designs (S2-04, overlaps
 UX-05); symlinks followed in file binding (S2-05); absolute paths shown by `/binding` (S2-06); bare 500s on odd input
