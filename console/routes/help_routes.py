@@ -45,6 +45,21 @@ async def help_context(request: Request, screen: str):
     return RedirectResponse(f"/help/{slug}", status_code=303)
 
 
+@router.get("/help/examples")
+async def help_examples(request: Request):
+    """The Rachana examples: each one's note, YAML and JSON (collapsible) and a link that opens it in Studio."""
+    lib = await library(request)
+    g = lib.guides.get("examples")
+    if g is None:
+        return await help_guide(request, "examples")
+    items = [{"name": e.name, "title": e.title, "yaml": e.yaml, "json": e.json,
+              "note": lib.fragment(request.app.state.examples.directory / f"{e.name}.md")} for e in request.app.state.examples.all()]
+    body = request.app.state.templates.get_template("help/_examples.html").render(examples=items)
+    page = {"html": body, "toc": [{"id": e["name"], "name": e["title"], "children": []} for e in items]}
+    category = next(c for c in lib.categories if c["id"] == g.category)
+    return render(request, "help/guide.html", guide=g, page=page, category=category, screen="help")
+
+
 @router.get("/help/{slug}")
 async def help_guide(request: Request, slug: str):
     lib = await library(request)

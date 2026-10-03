@@ -1,0 +1,36 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+rachana: 1
+sutra: risk-distribution
+version: 1
+description: "How risk is spread: a histogram of scenario P&L with VaR markers, a scatter of books and a gauge of a limit."
+match: { kind: risk-run }
+title: { pill: "Risk · ${$.portfolio}", id: $.portfolio }
+strip:
+  - { label: VaR 99%, bind: $.var99, fmt: compact }
+  - { label: ES 97.5%, bind: $.es975, fmt: compact }
+panels:
+  - id: scenarios
+    kind: histogram
+    title: Scenario P&L (USD)
+    rows: $.scenarioPnl
+    bins: 25
+    fmt: compact
+    markers:
+      - { label: VaR 99%, value: "-$.var99", tone: neg }
+      - { label: ES 97.5%, value: "-$.es975", tone: bad }
+      - { label: Mean, value: $.meanPnl, tone: link }
+  - { id: books, kind: scatter, title: "Books: MTM against trades", span: 8, rows: $.books, x: mtm, y: trades, label: id, xFmt: compact, xLabel: MTM (USD), yLabel: Trades }
+  - { id: limit, kind: gauge, title: Usage of the VaR limit, span: 4, value: $.usage, max: $.limit }

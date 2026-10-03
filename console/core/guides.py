@@ -92,16 +92,7 @@ class Library:
         hit = self._cache.get(slug)
         if hit and hit[0] == mtime:
             return hit[1]
-        md = markdown.Markdown(extensions=["tables", "fenced_code", "sane_lists", "admonition", "attr_list", "toc"],
-                               extension_configs={"toc": {"toc_depth": "2-3"}})
-        body = md.convert(g.path.read_text(encoding="utf-8"))
-        body = _CODE.sub(_figure, body)
-        body = re.sub(r'<div class="admonition (\w+)">\s*<p class="admonition-title">',
-                      lambda m: f'<div class="help-box {_BOX.get(m.group(1), "concept")}">\n<p class="hb-title">', body)
-        body = body.replace("<table>", '<div class="tbl-wrap"><table class="tbl help-tbl">').replace("</table>", "</table></div>")
-        body = re.sub(r"<h1[^>]*>.*?</h1>", "", body, count=1, flags=re.S)
-        body = _IMG.sub(_full_size, body)
-        body = re.sub(r'href="([^"#:]+\.md)(#[^"]*)?"', lambda m: self._link(g, m.group(1), m.group(2)), body)
+        body, md = self._html(g.path)
         toc = [{"id": t["id"], "name": t["name"], "children": [{"id": c["id"], "name": c["name"]} for c in t.get("children", [])]}
                for t in md.toc_tokens]
         text = html.unescape(_TAG.sub(" ", body))
@@ -109,12 +100,33 @@ class Library:
         self._cache[slug] = (mtime, out)
         return out
 
-    def _link(self, guide: Guide, target: str, anchor: str | None) -> str:
+    def _html(self, path: Path) -> tuple[str, markdown.Markdown]:
+        """A markdown file as help HTML: examples, boxes, tables, screenshots and links to other documents."""
+        md = markdown.Markdown(extensions=["tables", "fenced_code", "sane_lists", "admonition", "attr_list", "toc"],
+                               extension_configs={"toc": {"toc_depth": "2-3"}})
+        body = md.convert(path.read_text(encoding="utf-8"))
+        body = _CODE.sub(_figure, body)
+        body = re.sub(r'<div class="admonition (\w+)">\s*<p class="admonition-title">',
+                      lambda m: f'<div class="help-box {_BOX.get(m.group(1), "concept")}">\n<p class="hb-title">', body)
+        body = body.replace("<table>", '<div class="tbl-wrap"><table class="tbl help-tbl">').replace("</table>", "</table></div>")
+        body = re.sub(r"<h1[^>]*>.*?</h1>", "", body, count=1, flags=re.S)
+        body = _IMG.sub(_full_size, body)
+        body = re.sub(r'href="([^"#:]+\.md)(#[^"]*)?"', lambda m: self._link(path.parent, m.group(1), m.group(2)), body)
+        return body, md
+
+    def fragment(self, path: Path) -> str:
+        """One markdown note (an example's) as help HTML, its links resolved like any guide's."""
+        return self._html(path)[0]
+
+    def _link(self, base: Path, target: str, anchor: str | None) -> str:
         """Links between documents open inside the help centre; others point at the repository file."""
-        path = (guide.path.parent / target).resolve()
+        path = (base / target).resolve()
         slug = self.by_file.get(path)
         if slug:
             return f'href="/help/{slug}{anchor or ""}"'
+        ex = self.guides.get("examples")
+        if ex and path.parent == ex.path.parent.resolve() and path.suffix == ".md" and path.exists():
+            return f'href="/help/examples#{path.stem}"'
         return f'href="#" data-unavailable="{html.escape(target)}"'
 
     def search(self, q: str, limit: int = 20) -> list[dict]:

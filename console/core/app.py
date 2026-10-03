@@ -198,6 +198,11 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.packs = Packs(settings, console_dir)
     app.state.docs_dir = docs_dir if docs_dir.is_absolute() else (console_dir / docs_dir).resolve()
     app.state.libraries = {}
+    from core.examples import Examples
+
+    examples_dir = Path(settings.get("studio.examples_dir", "../docs/guides/examples"))
+    app.state.examples = Examples(examples_dir if examples_dir.is_absolute() else (console_dir / examples_dir).resolve(),
+                                  str(settings.get("ui.studio_example", "") or ""))
     from core.asof import BusinessDates
 
     app.state.business_dates = BusinessDates()

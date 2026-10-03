@@ -1,0 +1,35 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+# Examples
+
+Ten small, working Sutras, each with a JSON document to run it against and a note on what it shows. Together they use all twenty panel kinds, nested pivot groups and tree rows. They are in Studio too: **File → Open**, or `/studio?example=<name>`, and under **Help → Examples**.
+
+Each example is `<name>.sutra.yaml` (the layout), `<name>.json` (a self-contained document, a few dozen rows at most) and `<name>.md` (what it shows, what to look for, which lines to copy).
+
+| Example | Shows | Panel kinds |
+|---|---|---|
+| [all-panels-showcase](all-panels-showcase.md) | Every panel kind on one screen | all twenty |
+| [pivot-row-groups](pivot-row-groups.md) | Nested row groups with subtotals and expand | `pivot` |
+| [tree-table](tree-table.md) | Rows that hold child rows | `table`, `ladder` |
+| [market-charts](market-charts.md) | Prices, closes and a volatility surface | `candlestick`, `line`, `surface` |
+| [risk-distribution](risk-distribution.md) | VaR histogram, books scatter, limit gauge | `histogram`, `scatter`, `gauge` |
+| [pnl-explain](pnl-explain.md) | Where P&L came from, and sensitivities | `waterfall`, `hbar`, `kv` |
+| [relationships](relationships.md) | Group graph, netting-set tabs, linked entities | `graph`, `tabs`, `links` |
+| [operations-status](operations-status.md) | Status, lifecycle, coupon ladder, notes | `status`, `timeline`, `ladder`, `markdown`, `provenance` |
+| [exposure-profile](exposure-profile.md) | Exposure over tenor against a limit | `area` |
+| [linked-sources](linked-sources.md) | Panels that read other entities with `source` (needs the live demo packs) | `tabs`, `area`, `pivot` |
+
+A test (`RachanaExamplesTest` in the console tests) checks every example parses, that together they cover all twenty kinds, and that they include a nested pivot and a tree table, so the set cannot rot.

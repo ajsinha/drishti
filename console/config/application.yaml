@@ -28,6 +28,7 @@ backend:
 #   - { id: open, name: Drishti, url: "http://127.0.0.1:18480", color: "#2a9d8f" }
 #   - { id: rates-desk, name: Rates desk, url: "http://127.0.0.1:18481", token_secret: "${DRISHTI_TOKEN_SECRET_RATES:}" }
 ui:
+  studio_example: all-panels-showcase   # the example Studio opens on (a name under studio.examples_dir); blank or missing: the first pack example
   default_theme: terminal        # terminal | light | wallstreet | blue | green | crimson | crimson-dark
   # The product's name and legal notices on every page; nothing user-visible names them in code. The server has the
   # same under drishti.branding.
@@ -82,6 +83,7 @@ live:                        # live updates (docs/architecture/LIVE.md): each br
   max_subscriptions: ${DRISHTI_LIVE_MAX_SUBSCRIPTIONS:32}
 studio:
   enabled: true
+  examples_dir: ../docs/guides/examples   # the Rachana examples Studio and the help centre offer (docs/guides/examples/README.md)
 calc:                        # Calc: Python in the browser (docs/guides/PYTHON_CALC.md); also needs a role with calc
   enabled: ${DRISHTI_CALC_ENABLED:true}   # false: no view offers it, whatever packs and roles say
 layouts:                     # layout mode (Alt+L): each user's own arrangement of a view's panels; also needs a role with layout

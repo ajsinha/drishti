@@ -25,14 +25,16 @@ def _source(page: str) -> str:
     return page.split('id="sutraSrc"')[1].split("</textarea>")[0]
 
 
-def test_studio_opens_on_an_entity_of_an_installed_pack(client, with_packs):
+def test_studio_opens_on_an_entity_of_an_installed_pack(client, with_packs, monkeypatch):
+    monkeypatch.setattr(client.app.state.examples, "default", "")   # no default example: today's behaviour
     with_packs("banking-core", "market-data", "trading")
     page = client.get("/studio").text
     assert "IRS-48213" not in page and "irs-vanilla" not in _source(page)
     assert (_value(page, "data-kind"), _value(page, "data-id")) == ("counterparty", "CP-NORTHBRIDGE")   # banking-core's first example
 
 
-def test_studio_without_any_example_opens_empty_with_a_hint(client, with_packs):
+def test_studio_without_any_example_opens_empty_with_a_hint(client, with_packs, monkeypatch):
+    monkeypatch.setattr(client.app.state.examples, "default", "")   # no default example: today's behaviour
     with_packs("no-such-pack")
     page = client.get("/studio").text
     assert "IRS-48213" not in page and _value(page, "data-id") == ""

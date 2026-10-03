@@ -1,0 +1,32 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+rachana: 1
+sutra: pnl-explain
+version: 1
+description: "Where a trade's P&L came from: a waterfall of the explain, bars of sensitivity and the figures in a key-value panel."
+match: { kind: trade }
+title: { pill: "P&L explain · ${$.tradeId}", id: $.tradeId }
+panels:
+  - { id: explain, kind: waterfall, title: "P&L explain (USD)", span: 7, height: 10, rows: $.pnlExplain, label: step, value: pnl, sum: Closing MTM, fmt: signed0 }
+  - id: figures
+    kind: kv
+    title: Figures
+    span: 5
+    columns:
+      - { label: MTM, bind: $.mtm, fmt: signed0, tone: sign }
+      - { label: 1-day P&L, bind: $.pnl1d, fmt: signed0, tone: sign }
+      - { label: DV01, bind: $.risk.dv01, fmt: signed0, tone: sign }
+      - { label: Yield, bind: $.terms.yield, fmt: pct4 }
+  - { id: dv01, kind: hbar, title: "DV01 by bucket (USD)", rows: $.sensitivities, label: bucket, value: dv01, fmt: signed0, tone: sign }

@@ -176,6 +176,7 @@ More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 | Every console feature, with examples | [USER_GUIDE.md](USER_GUIDE.md) |
 | The packs and the commands each one adds | [PACKS.md](PACKS.md) |
 | Change how a screen looks (Sutras) | [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md) and the in-app *Sutra guide* |
+| See every panel kind working, and copy from ten small Sutras with their data | [examples/](examples/README.md), or **File** in Studio, or **Help → Examples** |
 | Build Drishti from source, run the tests, add an endpoint, plugin, pack or page | [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) |
 | Connect your own data | [PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md) and [CONFIGURATION.md](../admin/CONFIGURATION.md) |
 | Turn on sign-in and run it for others | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) and [OPERATIONS.md](../admin/OPERATIONS.md) |

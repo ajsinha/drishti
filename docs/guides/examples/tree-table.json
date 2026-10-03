@@ -1,0 +1,57 @@
+{
+  "organisation": "Northbridge",
+  "units": [
+    {
+      "name": "Group",
+      "exposure": 18850000,
+      "children": [
+        {
+          "name": "Rates",
+          "exposure": 8050000,
+          "children": [
+            {
+              "name": "Rates A",
+              "exposure": 4200000
+            },
+            {
+              "name": "Rates B",
+              "exposure": 2750000
+            },
+            {
+              "name": "Rates C",
+              "exposure": 1100000,
+              "children": [
+                {
+                  "name": "Swaps",
+                  "exposure": 800000
+                },
+                {
+                  "name": "Futures",
+                  "exposure": 300000
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Credit",
+          "exposure": 5200000,
+          "children": [
+            {
+              "name": "Credit 1",
+              "exposure": 3300000
+            },
+            {
+              "name": "Credit 2",
+              "exposure": 1900000
+            }
+          ]
+        },
+        {
+          "name": "Treasury",
+          "exposure": 5600000
+        }
+      ]
+    }
+  ]
+}
