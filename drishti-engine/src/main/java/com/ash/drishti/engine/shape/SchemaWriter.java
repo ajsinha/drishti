@@ -199,12 +199,12 @@ final class SchemaWriter {
         if (plain == 0) {
             return;
         }
-        String format = f.dates == plain ? "date" : f.datetimes == plain ? "date-time" : f.uuids == plain ? "uuid"
+        String format = f.dates == plain ? "date" : f.datetimes == plain ? "date-time" : f.months == plain ? "year-month" : f.uuids == plain ? "uuid"
                 : f.emails == plain ? "email" : f.currencies == plain ? "currency" : null;
         if (format != null) {
             out.put("format", format);
         }
-        boolean formatted = f.dates + f.datetimes + f.uuids + f.emails > 0;
+        boolean formatted = f.dates + f.datetimes + f.months + f.uuids + f.emails > 0;
         if (f.masked == 0 && !formatted && !f.overflow && f.repeats && f.strings >= props.enumMinSeen()
                 && f.distinct.size() <= props.enumMaxDistinct()) {
             ArrayNode en = out.putArray("enum");

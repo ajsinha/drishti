@@ -40,6 +40,7 @@ final class Facts {
 
     static final int DISTINCT_CAP = 64;
     private static final Pattern DATETIME = Pattern.compile("^\\d{4}-\\d{2}-\\d{2}[T ]\\d{2}:\\d{2}(:\\d{2}(\\.\\d+)?)?(Z|[+-]\\d{2}:?\\d{2})?$");
+    private static final Pattern MONTH = Pattern.compile("^\\d{4}-(0[1-9]|1[0-2])$");
     private static final Pattern DATE = Pattern.compile("^\\d{4}-\\d{2}-\\d{2}$");
     private static final Pattern EMAIL = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[A-Za-z]{2,}$");
     private static final Pattern CURRENCY = Pattern.compile("^[A-Z]{3}$");
@@ -75,6 +76,8 @@ final class Facts {
     boolean repeats;
     int masked;
     int dates;
+    /** Values like 2024-09 (a calendar month). */
+    int months;
     int datetimes;
     int uuids;
     int emails;
@@ -177,6 +180,8 @@ final class Facts {
             dates++;
         } else if (DATETIME.matcher(s).matches() && validDateTime(s)) {
             datetimes++;
+        } else if (MONTH.matcher(s).matches()) {
+            months++;
         } else if (isUuid(s)) {
             uuids++;
         } else if (EMAIL.matcher(s).matches()) {
@@ -287,6 +292,7 @@ final class Facts {
         repeats |= o.repeats;
         masked += o.masked;
         dates += o.dates;
+        months += o.months;
         datetimes += o.datetimes;
         uuids += o.uuids;
         emails += o.emails;

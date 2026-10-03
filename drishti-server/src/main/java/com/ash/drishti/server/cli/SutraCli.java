@@ -294,11 +294,12 @@ public final class SutraCli {
     }
 
     private int emit(CliArgs a, String fileName, String text) throws IOException {
+        String body = text.endsWith("\n") ? text : text + "\n";
         if (a.out() == null) {
-            out.println(text);
+            out.print(body);
         } else {
             Files.createDirectories(a.out());
-            Files.writeString(a.out().resolve(fileName), text + "\n");
+            Files.writeString(a.out().resolve(fileName), body);
             out.println("wrote " + a.out().resolve(fileName));
         }
         return OK;
