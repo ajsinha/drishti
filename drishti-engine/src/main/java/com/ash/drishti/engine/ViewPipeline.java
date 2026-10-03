@@ -27,6 +27,7 @@ import com.ash.drishti.common.ShapeFingerprinter;
 import com.ash.drishti.engine.bind.BindContext;
 import com.ash.drishti.engine.bind.Binder;
 import com.ash.drishti.engine.command.Mnemonics;
+import com.ash.drishti.engine.source.SourceFailures;
 import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.engine.view.ViewModel;
 import com.ash.drishti.engine.view.ViewModel.Cell;
@@ -326,7 +327,9 @@ public final class ViewPipeline {
             }
         }
         denied.removeAll(wanted);
-        Map<EntityRef, EntityDocument> linked = wanted.isEmpty() ? Map.of() : router.fetchAll(wanted, graph.linkBudget(), asOf.businessDate() == null ? dates.resolve(asOf) : asOf);
+        Set<EntityRef> missing = java.util.concurrent.ConcurrentHashMap.newKeySet();
+        Map<EntityRef, EntityDocument> linked = wanted.isEmpty() ? Map.of()
+                : router.fetchAll(wanted, graph.linkBudget(), asOf.businessDate() == null ? dates.resolve(asOf) : asOf, new SourceFailures(), missing);
         if (!linked.isEmpty()) {
             Map<EntityRef, EntityDocument> masked = new LinkedHashMap<>();
             linked.forEach((r, d) -> masked.put(r, seen(d, redact)));
@@ -334,6 +337,7 @@ public final class ViewPipeline {
         }
         Set<EntityRef> pending = new HashSet<>(wanted);
         pending.removeAll(linked.keySet());
+        pending.removeAll(missing);                      // held by no source: not waiting, simply not found
         long tLinks = System.nanoTime();
 
         BindContext ctx = new BindContext(seen, layout, fp, eval, links, linked, pending, denied);
