@@ -49,6 +49,6 @@ def test_a_problem_is_placed_in_its_panel_and_on_the_line_of_the_expression():
 
 def test_cutting_a_panel_out_keeps_every_other_line():
     cut = partial.without_panels(SUTRA, {"legs"})
-    assert "legs" not in cut and "id: facts" in cut and "id: tail" in cut and "match:" in cut
+    assert "id: legs" not in cut and "rows:" not in cut and "id: facts" in cut and "id: tail" in cut and "match:" in cut
     assert partial.without_panels(SUTRA, {"tail"}).count("\n") == SUTRA.count("\n") - 1
     assert partial.without_panels("not: [valid", {"x"}) == "not: [valid\n"

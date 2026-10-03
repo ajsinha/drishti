@@ -57,7 +57,7 @@ def test_the_inspector_edits_options_the_title_and_lists_and_completes_expressio
     pill.blur()
     settle(page, rev)
     assert "Pill edited" in page.locator("[data-preview] .vtitle").inner_text()
-    assert not page.errors
+    assert not page.errors, page.errors
 
 
 def test_typing_in_the_yaml_tab_is_an_operation_and_a_refused_edit_is_a_problem_with_a_line(live_console, page):

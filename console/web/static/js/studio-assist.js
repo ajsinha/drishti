@@ -48,7 +48,7 @@
     var panel = this.defs.panel || {}, byKind = {}, optionKeys = {};
     (panel.allOf || []).forEach(function (a) {
       var k = a['if'] && a['if'].properties && a['if'].properties.kind && a['if'].properties.kind['const'];
-      if (k && a.then) { byKind[k] = { required: a.then.required || [], options: a.then['x-rachana-options'] || [] }; }
+      if (k && a.then) { byKind[k] = { required: a.then.required || [], options: a.then['x-rachana-options'] || [], props: a.then.properties || {} }; }
       if (a.then) { (a.then['x-rachana-options'] || []).forEach(function (o) { optionKeys[o] = (optionKeys[o] || []).concat([k]); }); }
     });
     this.byKind = byKind;

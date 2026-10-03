@@ -88,7 +88,7 @@
           if (!r.ok) { bus.emit('say', WB.why(r), true); return { ok: false, applied: 0, problems: [] }; }
           adopt(r.body, 'ops');
           var ps = r.body.problems || [];
-          if (ps.length) { bus.emit('say', ps.map(function (p) { return WB.problemText(p); }).join(' '), true); } else if (label && !st.checkProblems.length) { bus.emit('say', label + '. Ctrl+Z undoes it.'); }
+          if (ps.length) { bus.emit('say', ps.map(function (p) { return window.drsMessage({ code: p.code, detail: WB.problemText(p) }); }).join(' '), true); } else if (label && !st.checkProblems.length) { bus.emit('say', label + '. Ctrl+Z undoes it.'); }
           return { ok: !ps.length, applied: r.body.applied, problems: ps, body: r.body };
         });
       };

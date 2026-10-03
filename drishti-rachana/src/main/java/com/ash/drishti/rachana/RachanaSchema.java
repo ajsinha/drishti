@@ -113,11 +113,12 @@ public final class RachanaSchema {
                 Object schema = o.equals("fmt") ? fmt(formats) : o.equals("tone") ? tone()
                         : o.equals("search") ? Map.of("type", "boolean", "description", "false hides the table's filter")
                         : expr.contains(o) ? text(EL) : kindOption(k, o);
-                props.put(o, schema);
+                props.put(o, forKind(k, o, schema));
                 allOptions.putIfAbsent(o, schema);
             }
+            // the options as THIS kind takes them (one name can mean different things on two kinds, so the shared definition above stays loose)
             perKind.add(Map.of("if", Map.of("properties", Map.of("kind", Map.of("const", k.id()))),
-                    "then", Map.of("required", List.copyOf(k.required()), "x-rachana-options", List.copyOf(opts))));
+                    "then", Map.of("required", List.copyOf(k.required()), "x-rachana-options", List.copyOf(opts), "properties", props)));
         }
         Map<String, Object> panel = new LinkedHashMap<>();
         panel.put("type", "object");
@@ -163,8 +164,7 @@ public final class RachanaSchema {
         if (k == PanelKind.TABLE && o.equals("limit")) {
             // one schema serves every kind that has a "limit": a table's is a count, an area's an expression, so no type here
             // (the table's rule, a whole number from 1, is kept by PanelOptions)
-            return Map.of("description", "Table: rows shown (a whole number from 1; the rest are counted in the more line). Area: a path or expression"
-                    + " for the limit line");
+            return Map.of("description", TABLE_LIMIT + " Area: a path or expression for the limit line");
         }
         if ((k == PanelKind.KV || k == PanelKind.STATUS) && o.equals("fields") || k == PanelKind.AREA && o.equals("series")) {
             return Map.of("type", "array", "description", o.equals("series") ? "The series: { label, value, tone }" : "The fields: { label, bind, fmt, tone }");
@@ -174,6 +174,27 @@ public final class RachanaSchema {
         }
         return Map.of("description", "option of " + k.id() + " panels");
     }
+
+    /** The option as {@code k} takes it: its fixed set when it has one, a whole {@code limit} on a table, else the shared definition. */
+    private static Object forKind(PanelKind k, String o, Object shared) {
+        if (k == PanelKind.TABLE && o.equals("limit")) {
+            return Map.of("type", "integer", "minimum", 1, "description", TABLE_LIMIT);
+        }
+        List<String> choices = com.ash.drishti.rachana.model.PanelOptions.choices(k, o);
+        if (choices.isEmpty()) {
+            choices = SCHEMA_CHOICES.getOrDefault(k, Map.of()).getOrDefault(o, List.of());
+        }
+        if (!choices.isEmpty() && !(shared instanceof Map<?, ?> m && m.containsKey("enum"))) {
+            return Map.of("type", "string", "enum", choices, "description", "One of " + String.join(", ", choices) + " (option of " + k.id() + " panels)");
+        }
+        return shared;
+    }
+
+    private static final String TABLE_LIMIT = "Table: rows shown (a whole number from 1; the rest are counted in the more line).";
+    /** Options with a fixed set the parser does not police (a different value draws the default): the designer still offers the set. */
+    private static final Map<PanelKind, Map<String, List<String>>> SCHEMA_CHOICES = Map.of(
+            PanelKind.TABS, Map.of("layout", List.of("tabs", "columns")),
+            PanelKind.SURFACE, Map.of("view", List.of("heatmap", "3d")));
 
     /** {@code pivot}: true, or the fields a user may pivot by and the arrangement the Pivot tab opens with. */
     private static Map<String, Object> pivot() {

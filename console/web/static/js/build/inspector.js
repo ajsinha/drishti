@@ -28,6 +28,7 @@
     columns: [['label', 'Label'], ['bind', 'Value', 'x'], ['fmt', 'Format', 'fmt'], ['tone', 'Tone', 'tone'], ['total', 'Total', 'b'], ['link', 'Link', 'b']],
     fields: [['label', 'Label'], ['bind', 'Value', 'x'], ['fmt', 'Format', 'fmt'], ['tone', 'Tone', 'tone']],
     series: [['label', 'Label'], ['value', 'Value', 'x'], ['tone', 'Tone', 'tone']],
+    markers: [['label', 'Label'], ['value', 'Value', 'x'], ['tone', 'Tone', 'tone']],
     strip: [['label', 'Label'], ['bind', 'Value', 'x'], ['fmt', 'Format', 'fmt'], ['tone', 'Tone', 'tone'], ['emphasis', 'Emphasis', 'b']]
   };
   var BASE = ['title', 'description', 'area', 'span', 'height', 'key', 'code'];
@@ -49,6 +50,12 @@
       if (now) { fire(); } else { timers[key] = setTimeout(fire, 450); }
     }
     var prop = function (n) { return ((schema.raw.$defs.panel.properties || {})[n]) || {}; };
+    /** The option as THIS kind takes it (the schema's per-kind properties), else the shared definition. */
+    function kindProp(kind, n) {
+      var k = schema.byKind[kind], own = k && k.props && k.props[n];
+      own = own ? (schema.resolve(own) || own) : null;
+      return own && (own.type || own['enum'] || own.oneOf) ? own : Object.assign({}, prop(n), own || {});
+    }
     function enumOf(p) { return p.enum || (p.oneOf && []) || null; }
 
     // ---- one value --------------------------------------------------------------------------------------------------------
@@ -71,34 +78,49 @@
                functions: schema.fns };
     }
     /** The control for one option of a panel. */
-    function control(panelId, name, value, p, req) {
+    function control(panelId, name, value, p, req, kind) {
       var set = function (v, now) { commit({ op: 'setOption', panel: panelId, option: name, value: v }, now); };
       var desc = p.description || '';
       var isExpr = /Rachana-EL/.test(desc), node;
       if (p.enum) { node = select(p.enum, value, function (v, n) { set(v === '' ? null : v, n); }); return label(name, node); }
-      if (p.type === 'boolean' || (Array.isArray(p.type) && p.type.indexOf('boolean') >= 0 && typeof value !== 'object')) {
+      if (p.type === 'boolean') {
         var cb = el('input', null, null, { type: 'checkbox', role: 'switch' });
         cb.checked = value === true;
         cb.addEventListener('change', function () { set(cb.checked ? true : null, true); });
         var w = label(name, cb, 'wb-toggle'); return w;
       }
-      if (value && typeof value === 'object' && !LISTS[name]) {
-        var ro = el('div', 'wb-field'); ro.appendChild(el('label', null, name));
-        ro.appendChild(el('p', 'text-muted-d', 'Set in the YAML tab (' + (Array.isArray(value) ? 'a list' : 'several settings') + ').'));
-        return ro;
+      if (LISTS[name] && (p.type === 'array' || name === 'series' || name === 'fields')) { return listEditor(name, value, function (v) { set(v.length ? v : null); }, panelId); }
+      if (name === 'body' && kind === 'tabs') { return bodyEditor(panelId, value, set); }
+      var structured = p.type === 'integer' || p.type === 'number' || p.oneOf || p.type === 'array' || (Array.isArray(p.type) && p.type.indexOf('object') >= 0) || (value && typeof value === 'object');
+      if (structured) {
+        var made = WB.Forms.edit(p.type || p.oneOf ? p : {}, value, function (v) { set(v === undefined ? null : v, true); }, name, enums);
+        return made.tagName === 'FIELDSET' ? made : (made.tagName === 'INPUT' || made.tagName === 'SELECT' ? label(name, made) : WB.Forms.captioned(name, made));
       }
-      if (p.type === 'integer') {
-        var n = el('input', 'studio-in', null, { type: 'number', min: p.minimum != null ? p.minimum : 1, max: p.maximum != null ? p.maximum : '' });
-        n.value = value == null ? '' : value;
-        n.addEventListener('change', function () { set(n.value === '' ? null : parseInt(n.value, 10), true); });
-        return label(name, n);
-      }
-      if (LISTS[name] && (p.type === 'array' || name === 'series' || name === 'fields')) { return listEditor(name, value, function (v) { set(v.length ? v : null, true); }, panelId); }
       var t = textInput(value, set, isExpr || /^(rows|source|children|each|x|y|label|value|mark|max|text)$/.test(name), exprSource(panelId));
       var wrap = label(name + (req ? ' *' : ''), t.input);
       t.mount(wrap);
       if (desc) { t.input.setAttribute('aria-description', desc); t.input.title = desc; }
       if (req) { wrap.classList.add('wb-req'); wrap.setAttribute('data-required', name); }
+      return wrap;
+    }
+
+    /** A tabs panel's `body`: the panel each tab shows, by its kind and its columns (the rest is kept as it is). */
+    function bodyEditor(panelId, value, set) {
+      var body = Object.assign({}, value && typeof value === 'object' ? value : {}), wrap = el('fieldset', 'wb-list');
+      wrap.appendChild(el('legend', null, 'body'));
+      var inner = el('div');
+      function send() { set(body.kind ? Object.assign({}, body) : null, true); }
+      function paint() {
+        inner.textContent = '';
+        var k = schema.byKind[body.kind], listName = k && k.options.indexOf('columns') >= 0 ? 'columns' : (k && k.options.indexOf('fields') >= 0 ? 'fields' : '');
+        if (listName) {
+          inner.appendChild(listEditor(listName, body[listName], function (v) { if (v.length) { body[listName] = v; } else { delete body[listName]; } send(); }, panelId));
+        }
+        var rest = Object.keys(body).filter(function (x) { return x !== 'kind' && x !== listName; });
+        if (rest.length) { inner.appendChild(el('p', 'text-muted-d', 'Also set in the YAML tab: ' + rest.join(', ') + '.')); }
+      }
+      wrap.appendChild(label('kind of the tab body', select(Object.keys(schema.byKind), body.kind, function (v) { if (v) { body.kind = v; } else { delete body.kind; } send(); paint(); })));
+      wrap.appendChild(inner); paint();
       return wrap;
     }
 
@@ -177,7 +199,7 @@
         var s = el('fieldset', 'wb-sect'); s.appendChild(el('legend', null, title));
         list.forEach(function (n) {
           var has = m.values[n] !== undefined && m.values[n] !== null && m.values[n] !== '' && !(Array.isArray(m.values[n]) && !m.values[n].length);
-          var c = control(m.id, n, m.values[n], prop(n), req);
+          var c = control(m.id, n, m.values[n], kindProp(kind, n), req, kind);
           if (req && (!has || (opts && opts.required))) { c.classList.add('wb-missing'); missing.push(c); }
           s.appendChild(c);
         });
@@ -185,6 +207,7 @@
       };
       sect('Required', k.required.filter(function (n) { return n !== 'id' && n !== 'kind'; }), true);
       var optional = k.options.filter(function (n) { return k.required.indexOf(n) < 0; });
+      if (kind === 'tabs' && optional.indexOf('body') < 0) { optional.push('body'); }          // what each tab shows: a panel of its own, not listed among the options
       sect('Options of a ' + kind + ' panel', optional.filter(function (n) { return n !== 'columns' || true; }), false);
       sect('Placement and heading', BASE, false);
       if (opts && opts.required && missing.length) {
