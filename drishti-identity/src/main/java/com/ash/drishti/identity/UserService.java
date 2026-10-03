@@ -95,13 +95,18 @@ public final class UserService {
         store.put(new User(props.seedUsername(), props.seedDisplayName(), "", "Administration", new LinkedHashSet<>(props.seedRoles()),
                 true, false, hasher.hash(props.seedPassword()), 0, null, now, now, null, now, null));
         audit.record("system", "user-seeded", props.seedUsername(), "development admin created because the user store was empty");
-        LOG.warn("Created development admin '{}' with the default password. Change it before any shared use.", props.seedUsername());
+        if (props.seedPasswordIsDefault()) {
+            LOG.warn("Created development admin '{}' with the default password. Change it before any shared use.", props.seedUsername());
+        } else {
+            LOG.info("Created the first administrator '{}' with the password from the configuration (drishti.identity.seed-password)", props.seedUsername());
+        }
         return true;
     }
 
     /** Whether the seeded admin still has the default password (the console shows a warning). */
     public boolean defaultAdminPasswordInUse() {
-        return store.find(props.seedUsername()).map(u -> hasher.verify(props.seedPassword(), u.passwordHash())).orElse(false);
+        return props.seedPasswordIsDefault()
+                && store.find(props.seedUsername()).map(u -> hasher.verify(props.seedPassword(), u.passwordHash())).orElse(false);
     }
 
     // ---- sign-in and self service --------------------------------------------------------------

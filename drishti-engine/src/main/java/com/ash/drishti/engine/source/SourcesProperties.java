@@ -35,8 +35,8 @@ public record SourcesProperties(
 
     public SourcesProperties {
         routes = routes == null ? Map.of() : Map.copyOf(routes);
-        plugins = plugins == null ? Map.of() : Map.copyOf(plugins);
-        connectors = connectors == null ? Map.of() : Map.copyOf(connectors);
+        plugins = plugins == null ? Map.of() : java.util.Collections.unmodifiableMap(new java.util.LinkedHashMap<>(plugins));
+        connectors = connectors == null ? Map.of() : java.util.Collections.unmodifiableMap(new java.util.LinkedHashMap<>(connectors));   // config order is the read order
         fetchTimeout = fetchTimeout == null ? Duration.ofSeconds(2) : fetchTimeout;
     }
 

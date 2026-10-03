@@ -36,7 +36,7 @@ def _csv(body: bytes, name: str) -> Response:
 
 
 def _problem(e: BackendError) -> Response:
-    return Response(drs_message(e.code, e.detail, " ") + "\n", status_code=e.status if e.status < 500 else 502, media_type="text/plain; charset=utf-8")
+    return Response(drs_message(e.code, e.detail, " ") + "\n", status_code=e.page_status, media_type="text/plain; charset=utf-8")
 
 
 def _date() -> str:

@@ -25,7 +25,8 @@
   var view = document.querySelector('[data-view][data-sutra]');
   var bar = view && view.querySelector('[data-layout-bar]');
   if (!view || !bar) { return; }
-  var GRID = 12, MAX_H = 24;
+  var R = window.DrishtiLayoutRules, GRID = R.GRID, MAX_H = R.MAX_H;
+  var MIN_SPAN = +view.getAttribute('data-min-span') || R.DEFAULT_MIN_SPAN;     // layouts.min_span
   var cols = { main: view.querySelector('.vmain'), right: view.querySelector('.vright') };
   var live = bar.querySelector('[data-layout-live]'), msg = bar.querySelector('[data-layout-msg]');
   var openKey = document.querySelector('[data-layout-open]');
@@ -52,7 +53,7 @@
     p.className = p.className.split(/\s+/).filter(function (c) { return c.indexOf(prefix) !== 0; }).join(' ');
     if (keep) { p.classList.add(prefix + n); }
   }
-  function setSpan(p, n) { n = clamp(n, 1, GRID); swapClass(p, 'c-span-', n, n < GRID); p.setAttribute('data-span', String(n)); badge(p); }
+  function setSpan(p, n) { n = R.clampSpan(n, MIN_SPAN); swapClass(p, 'c-span-', n, n < GRID); p.setAttribute('data-span', String(n)); badge(p); }
   function setHeight(p, n) { n = n ? clamp(n, 1, MAX_H) : 0; swapClass(p, 'c-h-', n, n > 0); p.setAttribute('data-height', String(n)); badge(p); }
   function setHidden(p, yes) {
     p.classList.toggle('pnl-off', !!yes);
@@ -133,8 +134,17 @@
     var list = panels(p.parentNode);
     return title(p) + ': ' + (list.indexOf(p) + 1) + ' of ' + list.length + ' in the ' + (areaOf(p) === 'right' ? 'side' : 'main') + ' column';
   }
-  function size(p) {
-    return title(p) + ': ' + spanOf(p) + ' of 12 columns wide, ' + (heightOf(p) ? heightOf(p) + ' rows tall' : 'as tall as its content');
+  function size(p) { return R.sizeText(title(p), spanOf(p), heightOf(p)); }
+  /** Hides or shows a panel; hiding the last visible one is refused, with a message, as Save would refuse it. */
+  function toggleHidden(p) {
+    var all = panels(), flags = all.map(hidden);
+    if (R.hideRefused(flags, all.indexOf(p))) {
+      var why = 'Keep at least one panel visible: ' + title(p) + ' is the last one shown.';
+      msg.textContent = why; msg.classList.add('t-bad'); say(why);
+      return;
+    }
+    msg.classList.remove('t-bad');
+    setHidden(p, !hidden(p)); changed(); say(title(p) + (hidden(p) ? ' hidden' : ' shown'));
   }
   function changed() { dirty = true; msg.textContent = 'Not saved yet'; msg.classList.remove('t-bad'); }
 
@@ -224,7 +234,7 @@
     changed(); relayout(); say(where(p));
   }
   function taller(p, step) {
-    var now = heightOf(p) || Math.round(p.getBoundingClientRect().height / rowPx());
+    var now = heightOf(p) || R.rowsFromPixels(p.getBoundingClientRect().height, rowPx());
     setHeight(p, clamp(now + step, 1, MAX_H));
     changed(); relayout(); say(size(p));
   }
@@ -256,7 +266,7 @@
     else if (k === 'ArrowDown') { move(p, 1); }
     else if (k === 'ArrowLeft') { toColumn(p, 'main'); }
     else if (k === 'ArrowRight') { toColumn(p, 'right'); }
-    else if (k === 'h' || k === 'H' || k === 'Delete') { setHidden(p, !hidden(p)); changed(); say(title(p) + (hidden(p) ? ' hidden' : ' shown')); }
+    else if (k === 'h' || k === 'H' || k === 'Delete') { toggleHidden(p); }
     else if (k === 'a' || k === 'A') { setHeight(p, 0); changed(); relayout(); say(size(p)); }
     else { done = false; }
     if (done) { e.preventDefault(); e.stopPropagation(); }
@@ -327,7 +337,7 @@
   });
   function up(e) {
     if (drag && e.pointerId === drag.id) { endDrag(e.type === 'pointerup'); }
-    if (resize && e.pointerId === resize.id) { endResize(); }
+    if (resize && e.pointerId === resize.id) { endResize(e); }
   }
   view.addEventListener('pointerup', up);
   view.addEventListener('pointercancel', up);
@@ -345,14 +355,15 @@
   function resizeTo(e) {
     var r = resize.p.getBoundingClientRect();
     if (resize.wide) {
-      var n = clamp(Math.round((e.clientX - r.left + resize.gap) / (resize.unit + resize.gap)), 1, GRID);
+      var n = R.clampSpan((e.clientX - r.left + resize.gap) / (resize.unit + resize.gap), MIN_SPAN);
       if (n !== spanOf(resize.p)) { setSpan(resize.p, n); relayout(); }
     } else {
-      var h = clamp(Math.round((e.clientY - r.top) / resize.row), 1, MAX_H);
+      var h = R.clampHeight(Math.max(1, Math.round((e.clientY - r.top) / resize.row)));
       if (h !== heightOf(resize.p)) { setHeight(resize.p, h); }
     }
   }
-  function endResize() {
+  function endResize(e) {
+    if (e && e.type === 'pointerup') { resizeTo(e); }          // the last position counts: what is announced is what is kept
     var p = resize.p;
     resize = null;
     p.classList.remove('resizing');
@@ -364,7 +375,7 @@
   });
   view.addEventListener('click', function (e) {
     var b = on && e.target.closest('[data-lay-hide]');
-    if (b) { var p = b.closest('.pnl'); setHidden(p, !hidden(p)); changed(); say(title(p) + (hidden(p) ? ' hidden' : ' shown')); }
+    if (b) { toggleHidden(b.closest('.pnl')); }
   });
 
   // ---- the bar ----------------------------------------------------------------------------------------

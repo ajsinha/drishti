@@ -58,7 +58,7 @@ public record IdentityProperties(
         lockout = lockout == null ? Duration.ofMinutes(15) : lockout;
         seedAdmin = seedAdmin == null || seedAdmin;
         seedUsername = seedUsername == null ? "drishti-dev-admin" : seedUsername;
-        seedPassword = seedPassword == null ? "drishti-dev-admin123" : seedPassword;
+        seedPassword = seedPassword == null || seedPassword.isBlank() ? DEFAULT_SEED_PASSWORD : seedPassword;
         seedRoles = seedRoles == null ? List.of("admin") : List.copyOf(seedRoles);
         forcePasswordChangeOnCreate = forcePasswordChangeOnCreate != null && forcePasswordChangeOnCreate;
         forcePasswordChangeOnReset = forcePasswordChangeOnReset != null && forcePasswordChangeOnReset;
@@ -68,6 +68,14 @@ public record IdentityProperties(
         databasePassword = databasePassword == null ? "" : databasePassword;
         databasePoolSize = databasePoolSize == null ? 8 : databasePoolSize;
         seedDisplayName = seedDisplayName == null || seedDisplayName.isBlank() ? "Development admin" : seedDisplayName;
+    }
+
+    /** The development admin's password when none is configured: known to everyone who has read the documentation. */
+    public static final String DEFAULT_SEED_PASSWORD = "drishti-dev-admin123";
+
+    /** Whether the seeded admin would have the well-known default password. */
+    public boolean seedPasswordIsDefault() {
+        return DEFAULT_SEED_PASSWORD.equals(seedPassword);
     }
 
     /** True for SQLite, false for PostgreSQL. */

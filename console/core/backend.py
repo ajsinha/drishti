@@ -34,6 +34,14 @@ def drs_message(code: str, detail: str, sep: str = ": ") -> str:
     return f"{code}{sep}{detail}" if code and detail else (code or detail)
 
 
+def drs_advice(table: dict | None, code: str, kind: str = "", id_: str = "") -> str:
+    """What to do about an error, for its DRS code, from the configured ``ui.error_advice`` (UX-11): the advice must
+    fit the code, so a timeout is not told to check the identifier. {kind} and {id} fill in."""
+    table = table or {}
+    text = str(table.get(str(code or "").strip()) or table.get("default") or "")
+    return text.replace("{kind}", str(kind)).replace("{id}", str(id_))
+
+
 class BackendError(Exception):
     """The server answered with a problem (RFC 7807) or could not be reached."""
 
@@ -42,6 +50,14 @@ class BackendError(Exception):
         self.status = status
         self.code = code
         self.detail = detail
+
+    @property
+    def page_status(self) -> int:
+        """The status a console page answers with: the server's own below 500; a timeout (the server's 504 DRS-1004, or the
+        console giving up waiting) is a 504 gateway timeout, any other server fault a 502."""
+        if self.status < 500:
+            return self.status
+        return 504 if self.status == 504 else 502
 
 
 def entity_path(kind: str, id_: str) -> tuple[str, dict]:
@@ -71,6 +87,9 @@ class BackendClient:
         headers.update(kw.pop("headers", {}))
         try:
             r = await self._client.request(method, "/api/v1" + path, headers=headers, **kw)
+        except httpx.TimeoutException as e:
+            raise BackendError(504, "DRS-1004", f"the server did not answer in time ({type(e).__name__}); try again, "
+                                                 "or raise the server's drishti.sources.fetch-timeout") from e
         except httpx.HTTPError as e:
             raise BackendError(503, "DRS-5003", f"backend unreachable: {e}") from e
         if r.status_code >= 400:

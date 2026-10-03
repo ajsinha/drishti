@@ -55,6 +55,9 @@ final class PostgresStage {
 
     private static final String STAGE_PREFIX = PostgresLayout.TABLE + "_load_";
     private static final String SHADOW_INFIX = "__load_";
+    private static final String RECREATE_STAGE = PostgresLayout.TABLE + "_stage";
+    /** The stage's extra column: the line of the input a row came from, so the last of a duplicated id wins. */
+    static final String LINE = "_line";
 
     private final String schema;
     private final boolean recreate;
@@ -87,6 +90,10 @@ final class PostgresStage {
         }
         if (recreate) {
             PostgresLayout.create(admin, name);                         // the new domain, invisible until swapped in
+            try (Statement st = admin.createStatement()) {
+                st.execute("CREATE UNLOGGED TABLE " + name + "." + RECREATE_STAGE + " (LIKE " + name + "." + PostgresLayout.TABLE + " INCLUDING COMPRESSION)");
+                st.execute("ALTER TABLE " + name + "." + RECREATE_STAGE + " ADD COLUMN " + LINE + " bigint");
+            }
         } else {
             Boolean partitioned = PostgresLayout.partitioned(admin, schema);
             if (Boolean.FALSE.equals(partitioned)) {
@@ -95,6 +102,7 @@ final class PostgresStage {
             PostgresLayout.create(admin, schema);
             try (Statement st = admin.createStatement()) {
                 st.execute("CREATE UNLOGGED TABLE " + schema + "." + name + " (LIKE " + schema + "." + PostgresLayout.TABLE + " INCLUDING COMPRESSION)");
+                st.execute("ALTER TABLE " + schema + "." + name + " ADD COLUMN " + LINE + " bigint");
             }
         }
         s.columns.putAll(PostgresLayout.columns(admin, recreate ? name : schema, PostgresLayout.TABLE));
@@ -147,7 +155,7 @@ final class PostgresStage {
 
     /** The table COPY writes this domain's rows into. */
     String into() {
-        return recreate ? name + "." + PostgresLayout.TABLE : schema + "." + name;
+        return recreate ? name + "." + RECREATE_STAGE : schema + "." + name;
     }
 
     /** The domain's promoted columns: {column: number}. */
@@ -167,6 +175,9 @@ final class PostgresStage {
     void addColumn(Connection admin, String path, boolean number) throws SQLException {
         if (recreate) {
             PostgresLayout.addColumn(admin, name, path, number);
+            try (Statement st = admin.createStatement()) {
+                st.execute("ALTER TABLE " + into() + " ADD COLUMN IF NOT EXISTS " + PostgresLayout.quoted(path) + (number ? " double precision" : " text"));
+            }
         } else {
             PostgresLayout.addColumn(admin, schema, path, number);    // nullable, no default: no row is rewritten
             try (Statement st = admin.createStatement()) {
@@ -208,6 +219,29 @@ final class PostgresStage {
     }
 
     /**
+     * Before anything is published: the ids staged more than once in a day, with the input lines they came from. The
+     * last line of each wins (as in the JSON-lines connector). Returns the number of such ids; the first
+     * {@code show} are named on stderr.
+     */
+    long reportDuplicates(Connection admin, int show) throws SQLException {
+        long total = 0;
+        try (Statement st = admin.createStatement();
+             ResultSet rs = st.executeQuery("SELECT kind, business_date, id, count(*), array_to_string((array_agg(" + LINE + " ORDER BY " + LINE
+                     + "))[1:5], ',') FROM " + into() + " GROUP BY kind, business_date, id HAVING count(*) > 1 ORDER BY min(" + LINE + ")")) {
+            while (rs.next()) {
+                if (total++ < show) {
+                    System.err.printf("postgres: %s %s %s is on %d lines (%s): the last one is kept%n", rs.getString(1), rs.getString(2),
+                            rs.getString(3), rs.getLong(4), rs.getString(5));
+                }
+            }
+        }
+        if (total > show) {
+            System.err.printf("postgres: ... and %,d more ids loaded more than once%n", total - show);
+        }
+        return total;
+    }
+
+    /**
      * Publishes one staged (kind, business date) in one transaction: the day's rows replaced by the staged ones and
      * the day recorded. Returns the rows published.
      */
@@ -228,8 +262,8 @@ final class PostgresStage {
                 del.executeUpdate();
             }
             long n;
-            try (PreparedStatement ins = c.prepareStatement("INSERT INTO " + table + " (" + cols + ") SELECT " + cols + " FROM " + into()
-                    + " WHERE kind = ? AND business_date = ?")) {
+            try (PreparedStatement ins = c.prepareStatement("INSERT INTO " + table + " (" + cols + ") SELECT DISTINCT ON (id) " + cols + " FROM " + into()
+                    + " WHERE kind = ? AND business_date = ? ORDER BY id, " + LINE + " DESC")) {
                 ins.setString(1, kind);
                 ins.setDate(2, java.sql.Date.valueOf(day));
                 n = ins.executeUpdate();
@@ -250,10 +284,22 @@ final class PostgresStage {
      * dropped and the shadow's tables moved into the schema.
      */
     void publishRecreated(Connection admin) throws SQLException {
+        StringBuilder cols = new StringBuilder("kind, id, business_date, doc");
+        columns.keySet().forEach(n -> cols.append(", \"").append(n).append('"'));
         for (var k : days.entrySet()) {
             for (var d : k.getValue().entrySet()) {
-                PostgresLayout.recordDate(admin, name, k.getKey(), d.getKey(), d.getValue().get());
+                long n;
+                try (PreparedStatement ins = admin.prepareStatement("INSERT INTO " + name + "." + PostgresLayout.TABLE + " (" + cols
+                        + ") SELECT DISTINCT ON (id) " + cols + " FROM " + into() + " WHERE kind = ? AND business_date = ? ORDER BY id, " + LINE + " DESC")) {
+                    ins.setString(1, k.getKey());
+                    ins.setDate(2, java.sql.Date.valueOf(d.getKey()));
+                    n = ins.executeUpdate();
+                }
+                PostgresLayout.recordDate(admin, name, k.getKey(), d.getKey(), n);
             }
+        }
+        try (Statement st = admin.createStatement()) {
+            st.execute("DROP TABLE " + into());
         }
         List<String> tables = new ArrayList<>();
         try (PreparedStatement ps = admin.prepareStatement("SELECT c.relname FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace "

@@ -1205,5 +1205,77 @@
       "m100": 25.17,
       "m110": 26.15
     }
+  ],
+  "bookTree": [
+    {
+      "name": "DESK-FI \u00b7 Fixed income",
+      "trades": 5,
+      "mtm": null,
+      "children": [
+        {
+          "name": "BOOK-FI-1 \u00b7 Govies",
+          "trades": 3,
+          "mtm": null,
+          "children": [
+            {
+              "name": "BBG-60000001",
+              "trades": 1,
+              "mtm": -978378
+            },
+            {
+              "name": "BBG-60000002",
+              "trades": 1,
+              "mtm": 412050
+            },
+            {
+              "name": "BBG-60000003",
+              "trades": 1,
+              "mtm": 88210
+            }
+          ]
+        },
+        {
+          "name": "BOOK-FI-3 \u00b7 Corporates",
+          "trades": 2,
+          "mtm": null,
+          "children": [
+            {
+              "name": "BBG-60000011",
+              "trades": 1,
+              "mtm": -152300
+            },
+            {
+              "name": "BBG-60000012",
+              "trades": 1,
+              "mtm": 230400
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "DESK-RATES \u00b7 Rates",
+      "trades": 2,
+      "mtm": null,
+      "children": [
+        {
+          "name": "BOOK-IRS-1 \u00b7 Swaps",
+          "trades": 2,
+          "mtm": null,
+          "children": [
+            {
+              "name": "MX-20000001",
+              "trades": 1,
+              "mtm": 1250000
+            },
+            {
+              "name": "MX-20000002",
+              "trades": 1,
+              "mtm": -640200
+            }
+          ]
+        }
+      ]
+    }
   ]
 }

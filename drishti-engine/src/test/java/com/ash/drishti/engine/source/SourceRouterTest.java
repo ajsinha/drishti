@@ -106,6 +106,34 @@ class SourceRouterTest {
         assertThat(router.fetch(EntityRef.of("trade", "T-1")).join().data().get("from").asText()).isEqualTo("live");
     }
 
+    @Test
+    void connectorsServingOneKindAreAskedInConfigOrderAfterTheRoute() {
+        for (int round = 0; round < 2; round++) {          // a second build is a reload: same order again
+            var cfg = new java.util.LinkedHashMap<String, SourcesProperties.ConnectorSettings>();
+            for (String n : List.of("zulu", "alpha", "mike", "bravo", "kilo", "charlie", "yankee")) {
+                cfg.put(n, new SourcesProperties.ConnectorSettings("dated", true, List.of("trade"), Map.of()));
+            }
+            var props = new SourcesProperties(Map.of("trade", "mike"), null, Map.of(), Duration.ofMillis(500), null, cfg);
+            var router = new SourceRouter(new SourceRegistry(List.of(new Dated()), props, new JsonCodec()), props,
+                    Executors.newVirtualThreadPerTaskExecutor());
+            assertThat(router.candidates("trade")).extracting(p -> p.manifest().name())
+                    .containsExactly("mike", "zulu", "alpha", "bravo", "kilo", "charlie", "yankee");
+        }
+    }
+
+    @Test
+    void boundConfigKeepsTheWrittenConnectorOrder() {
+        var src = new java.util.LinkedHashMap<String, Object>();
+        for (String n : List.of("s9", "s1", "s5", "s3", "s7", "s2")) {
+            src.put("drishti.sources.connectors." + n + ".plugin", "dated");
+            src.put("drishti.sources.connectors." + n + ".kinds[0]", "trade");
+        }
+        var props = new org.springframework.boot.context.properties.bind.Binder(
+                new org.springframework.boot.context.properties.source.MapConfigurationPropertySource(src))
+                .bind("drishti.sources", SourcesProperties.class).get();
+        assertThat(props.connectors().keySet()).containsExactly("s9", "s1", "s5", "s3", "s7", "s2");
+    }
+
     private SourceRouter router(Map<String, String> routes, SourcePlugin... plugins) {
         var props = new SourcesProperties(routes, null, Map.of(), Duration.ofMillis(300), null, null);
         return new SourceRouter(new SourceRegistry(List.of(plugins), props, new JsonCodec()), props,

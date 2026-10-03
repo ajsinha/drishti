@@ -68,6 +68,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | Get completion for Sutras in your own editor (the JSON Schema of the language) | [API_GUIDE.md](guides/API_GUIDE.md#catalogue-about-packs-sources-sutras) (`GET /api/v1/rachana/schema`) |
 | Convert Markdown Sutras (`*.sutra.md`) from before 1.11 | [runbooks/sutra-broken.md](admin/runbooks/sutra-broken.md#step-1a-a-sutramd-or-plain-yaml-file-drs-2004-drs-2009) |
 | Understand the screens Drishti draws with no Sutra | [INFERENCE.md](architecture/INFERENCE.md) |
+| Design of the Screen Builder (JSON files → shape → visual designer → Sutra) | [SCREEN_BUILDER.md](architecture/SCREEN_BUILDER.md) |
 
 ### Add an industry or data
 

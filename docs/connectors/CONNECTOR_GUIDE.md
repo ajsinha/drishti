@@ -111,7 +111,7 @@ This is the single most useful thing to understand. For a read of `<kind>/<id>`,
 
 1. the kind's **route**, if it names a running connector that serves the kind;
 2. the **default route** (`demo`), if it serves the kind;
-3. **every other** running connector that serves the kind. A connector with no `kinds` list serves *every* kind
+3. **every other** running connector that serves the kind, **in the order they are written in the config** (the order of the keys under `drishti.sources.connectors`, kept after a reload; with packs, pack order then the order inside each pack). A connector with no `kinds` list serves *every* kind
    (the shipped `demo` and `file` do; so does a Kafka or message-queue connector before its first message, unless you
    give it `kinds`).
 

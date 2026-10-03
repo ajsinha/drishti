@@ -17,7 +17,8 @@
 
 Everything you can open in the terminal you can also read from code, as yourself, with a **personal API token**.
 A token reads only what you may read (your roles and packs, at the time of each call) and **never changes anything**:
-any request other than `GET` with a token is refused (`403 DRS-5002 API tokens only read`).
+any request other than `GET` with a token is refused (`403 DRS-5002 API tokens only read`), except the `POST`s that only read
+(`/search/pivot/**`, `/command`, the allow-list `drishti.security.token-read-posts`).
 
 ## 1. Make a token
 

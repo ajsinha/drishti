@@ -1235,7 +1235,8 @@ You should see a line such as `MTM (USD) +1,595,251` each time the value ticks.
 A person makes tokens on **My account → API tokens** for scripts, notebooks and spreadsheets
 ([CLIENTS.md](CLIENTS.md)). Send one as `Authorization: Bearer drk_<id>_<secret>`. It acts as its owner (their roles
 and packs at the time of each call), only while the owner is enabled, and only for `GET`: any other method answers
-`403 DRS-5002 API tokens only read`. An unknown, wrong, revoked or expired token answers `401`.
+`403 DRS-5002 API tokens only read`, except the `POST`s that only read (pivot of a search, `/command`: the allow-list
+`drishti.security.token-read-posts`). An unknown, wrong, revoked or expired token answers `401`.
 
 | Method | Path | Does |
 |---|---|---|

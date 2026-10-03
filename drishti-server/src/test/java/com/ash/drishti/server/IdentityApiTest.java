@@ -200,6 +200,14 @@ class IdentityApiTest {
         mvc.perform(get("/api/v1/auth/me").header("Authorization", bearer)).andExpect(jsonPath("$.username").value("nora"));
         mvc.perform(post("/api/v1/me/tokens").header("Authorization", bearer).contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"x\"}"))
                 .andExpect(status().isForbidden());                                                           // tokens only read
+        // SEC-15: the POSTs that only read are allow-listed (token-read-posts); every other write stays refused
+        for (String readOnly : new String[] {"/api/v1/command", "/api/v1/search/pivot/trade", "/api/v1/search/pivot/trade/drill"}) {
+            int answered = mvc.perform(post(readOnly).header("Authorization", bearer).contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"text\":\"TRD IRS-48213\"}")).andReturn().getResponse().getStatus();
+            org.assertj.core.api.Assertions.assertThat(answered).as(readOnly).isNotIn(401, 403);
+        }
+        mvc.perform(post("/api/v1/admin/users").header("Authorization", bearer).contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isForbidden());
         mvc.perform(get("/api/v1/me/tokens").header("Authorization", as("nora", "trader")))
                 .andExpect(jsonPath("$[0].name").value("Risk notebook")).andExpect(jsonPath("$[0].secretHash").doesNotExist());
         mvc.perform(get("/api/v1/auth/me").header("Authorization", "Bearer " + secret.substring(0, secret.length() - 2) + "xx"))

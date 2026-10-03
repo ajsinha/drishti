@@ -195,7 +195,10 @@ A pack's role is still needed to open its kinds. Giving Priya the *trading* pack
 People read Drishti from scripts, notebooks and Excel with personal API tokens they make on **My account → API
 tokens** ([CLIENTS.md](../guides/CLIENTS.md)). What an administrator needs to know:
 
-- A token acts as its owner, with the owner's roles and packs at the time of each call, and **only reads**.
+- A token acts as its owner, with the owner's roles and packs at the time of each call, and **only reads**: every
+  `GET`, and the `POST`s that carry a query and change nothing, listed in `drishti.security.token-read-posts`
+  (`/api/v1/search/pivot/**` and `/api/v1/command`). Any other `POST`, `PUT`, `PATCH` or `DELETE` is refused with
+  `403 DRS-5002 API tokens only read`; add a path to the list only if it writes nothing.
 - Disabling a user stops their tokens at once (and they cannot make new ones); deleting a user deletes them.
 - **Admin → Tokens** lists every token (owner, name, created, expires, last used) and revokes any of them.
 - Secrets are never stored, only their SHA-256; nobody, administrators included, can see a secret after it is made.

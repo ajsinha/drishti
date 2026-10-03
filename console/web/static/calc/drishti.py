@@ -504,12 +504,15 @@ def _where(e: BaseException) -> int | None:
     return line
 
 
-def _traceback(e: BaseException) -> str:
-    """The traceback from the user's code on: frames of the runtime that ran it are left out."""
+def _traceback(e: BaseException, full: bool = False) -> str:
+    """The traceback from the user's code on: frames of the runtime that ran it are left out (UX-19), and so are all
+    frames when the code never ran (a SyntaxError is raised by the compiler, under the runtime's frames). ``full``
+    keeps every frame, for the "details" the page offers behind a toggle."""
     te = traceback.TracebackException.from_exception(e)
-    first = next((i for i, f in enumerate(te.stack) if f.filename == "<calc>"), None)
-    if first is not None:        # from the user's first line on: the frames that ran it are not theirs
-        stack = list(te.stack)[first:]
+    if not full:
+        stack = list(te.stack)
+        first = next((i for i, f in enumerate(stack) if f.filename == "<calc>"), None)
+        stack = stack[first:] if first is not None else []     # from the user's first line on; none: the code never ran
         while len(stack) > 1 and stack[-1].filename.endswith("/drishti.py"):
             stack.pop()          # nor are the module's own, under a drishti.get() that was refused
         te.stack = traceback.StackSummary.from_list(stack)
@@ -542,4 +545,6 @@ async def _run(code: str, context: str) -> str:
             message += " (Calc has numpy, pandas, scipy, statsmodels, matplotlib and the standard library)"
         elif "'coroutine' object" in str(e):
             message += " (an _async read returns something to await: write `x = await drishti.get_async(...)`)"
-        return json.dumps({"ok": False, "error": message, "traceback": _traceback(e), "line": _where(e)})
+        shown, whole = _traceback(e), _traceback(e, full=True)
+        return json.dumps({"ok": False, "error": message, "traceback": shown, "line": _where(e),
+                           "details": whole if whole != shown else ""})

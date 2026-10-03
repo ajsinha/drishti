@@ -28,6 +28,17 @@
   var editor = window.CodeMirror ? window.CodeMirror.fromTextArea(ta, { mode: 'rachana-yaml', lineNumbers: true, indentUnit: 2, tabSize: 2,
     gutters: ['studio-gutter', 'CodeMirror-linenumbers'],
     extraKeys: { 'Ctrl-Enter': preview, 'Cmd-Enter': preview, Tab: function (cm) { cm.replaceSelection('  '); }, Enter: newline } }) : null;
+  if (editor) { editor.getInputField().setAttribute('aria-label', 'Sutra (YAML)'); }   // CodeMirror's own input has no label
+  /** A preview that failed leaves the last good one on screen: say it is out of date (UX-15) and dim it. */
+  function markStale() {
+    if (!out.firstChild || out.querySelector('[data-stale-note]')) { return; }
+    var note = document.createElement('p');
+    note.className = 'studio-stale-note'; note.setAttribute('data-stale-note', ''); note.setAttribute('role', 'status');
+    note.textContent = 'Out of date: the last preview failed, so this is the one before. Fix the problems and preview again.';
+    out.classList.add('studio-stale');
+    out.insertBefore(note, out.firstChild);
+  }
+  function markFresh() { out.classList.remove('studio-stale'); var n = out.querySelector('[data-stale-note]'); if (n) { n.remove(); } }
   /** Enter keeps YAML's indentation: under "- key: v" at the key, after "key:" one level deeper. */
   function newline(cm) {
     var c = cm.getCursor(), before = cm.getLine(c.line).slice(0, c.ch).replace(/\s+#.*$/, '');
@@ -123,16 +134,16 @@
       })
       .then(function (res) {
         if (res.ok && res.html) {
-          out.innerHTML = res.body;
+          out.innerHTML = res.body; markFresh();
           problems([]);
           if (window.drishti) { window.drishti.enhance(out); window.drishti.redraw(); }
           say('Preview in ' + Math.round(performance.now() - t0) + ' ms. Not saved.');
         } else {
-          problems(res.body.problems);
+          problems(res.body.problems); markStale();
           say(drsMessage({ code: res.body.code, detail: res.body.problems && res.body.problems.length ? res.body.problems.length + ' problem(s) below' : res.body.detail }), true);
         }
       })
-      .catch(function (e) { say('Preview failed: ' + e, true); });
+      .catch(function (e) { markStale(); say('Preview failed: ' + e, true); });
   }
 
   root.querySelector('[data-preview]').addEventListener('click', preview);

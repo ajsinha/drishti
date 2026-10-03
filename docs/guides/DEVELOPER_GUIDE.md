@@ -412,8 +412,9 @@ DRISHTI_PACKS=market-risk PG_PASSWORD=… LAKE_ACCESS_KEY=… LAKE_SECRET_KEY=�
   `kafka` instance with no `kinds:` serves **every** kind, so give them `kinds:`; a `jdbc` query-mode instance serves
   the kinds that have a `query.<kind>`).
 * For a read of `trade/MX-1` Drishti makes a list: the kind's `routes:` entry first (`trade: recent-files`), then
-  `default-route`, then every other running instance that serves `trade` (**in no particular order**: do not rely on
-  the order you wrote them in). For a picked date, dated stores (file, Delta, JDBC) go before undated ones; for Live,
+  `default-route`, then every other running instance that serves `trade` **in the order they are written in the
+  config** (the written order is kept from the YAML to the router, also after a reload, so put the store to ask first
+  first). For a picked date, dated stores (file, Delta, JDBC) go before undated ones; for Live,
   live ones (Kafka) go first.
 * The list is asked one by one and the first store that holds the entity answers. **A store that holds the date is
   authoritative for it**: an entity its file for that date does not list is *not held*, and the stores behind it are
@@ -590,8 +591,8 @@ connect-src 'self'; frame-src 'self'; worker-src 'self'; frame-ancestors 'self'
 ```
 
 One file has its own policy: Calc's worker, `/static/js/calc-worker.js`, is served with
-`default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self'`, so it alone may compile WebAssembly
-(Pyodide). Pyodide itself is the one vendored component **not in git** (53 MB): `tools/fetch-pyodide.sh` downloads a
+`default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src <host>/static/ <host>/pyodide/`, so it alone may compile WebAssembly
+(Pyodide) and it can fetch nothing but static files and the runtime (never an `/api` route, which would carry the user's session). Pyodide itself is the one vendored component **not in git** (53 MB): `tools/fetch-pyodide.sh` downloads a
 pinned release, checks its SHA-256 and unpacks what Calc needs into `console/web/static/vendor/pyodide/`
 (git-ignored); the console serves it at `/pyodide/<version>/` ([PYTHON_CALC.md](PYTHON_CALC.md#12-installing-the-python-runtime)).
 
