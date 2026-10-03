@@ -1,0 +1,44 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# QA base sutra: header comment (keep me)
+rachana: 1
+sutra: qa-edit
+version: 1
+description: base for edit ops   # trailing on description
+match: { kind: trade, priority: 1 }  # trailing on match
+title: { pill: "QA", id: "$.id" }
+strip:
+  # strip comment (keep me)
+  - { label: MTM, bind: $.mtm, fmt: signed0 }
+panels:
+  # before first panel (keep me)
+  - id: terms      # trailing on terms
+    kind: kv
+    title: "Terms"
+    span: 8
+    # inside terms (keep me)
+    columns:
+      - { label: Coupon, bind: $.coupon, fmt: pct4 }   # trailing col
+      - { label: Qty, bind: $.qty }
+  # between panels (keep me)
+  - { id: hist, kind: line, title: "History", rows: $.history, x: date, y: v, span: 6 }  # flow trailing
+  - id: legs
+    kind: table
+    title: "Legs"
+    rows: $.legs
+    columns:
+      - { label: Leg, bind: "@.name" }
+      - { label: Amount, bind: "@.amount", fmt: amount0 }
+  # trailing comment at end (keep me)

@@ -1,0 +1,38 @@
+### baseline preview --out | exit=0 | stdout: 2026-10-03T12:49:09.971-04:00  WARN 994224 --- [drishti] [           main] com.ash.drishti.rachana.SutraRegistry    : sutra directory /tmp/claude-1000/ | stderr:  | new files: /tmp/claude-1000/-home-ashutosh-IdeaProjects-drishti/efa68c11-fb98-4f9a-8faa-96a952090c0e/scratchpad/sec/cli/out/aa--s.html 
+    stacktrace lines: 0
+aa--s.html
+html escapes: script tags raw in snapshot? 0 ; onerror raw? 0
+### out = path with ..  | exit=0 | stdout: 2026-10-03T12:49:16.115-04:00  WARN 994570 --- [drishti] [           main] com.ash.drishti.rachana.SutraRegistry    : sutra directory /tmp/claude-1000/ | stderr:  | new files: /tmp/claude-1000/-home-ashutosh-IdeaProjects-drishti/efa68c11-fb98-4f9a-8faa-96a952090c0e/scratchpad/sec/cli/out2/aa--s.html 
+    stacktrace lines: 0
+### out is existing file | exit=1 | stdout: 2026-10-03T12:49:22.376-04:00  WARN 994906 --- [drishti] [           main] com.ash.drishti.rachana.SutraRegistry    : sutra directory /tmp/claude-1000/ | stderr: sutra: /tmp/claude-1000/-home-ashutosh-IdeaProjects-drishti/efa68c11-fb98-4f9a-8faa-96a952090c0e/scratchpad/sec/cli/in/sutras/aa.v1.sutra.yaml~ | new files: 
+    stacktrace lines: 0
+### out is symlink dir to outside (user supplied) | exit=0 | stdout: 2026-10-03T12:49:28.572-04:00  WARN 995179 --- [drishti] [           main] com.ash.drishti.rachana.SutraRegistry    : sutra directory /tmp/claude-1000/ | stderr:  | new files: /tmp/claude-1000/-home-ashutosh-IdeaProjects-drishti/efa68c11-fb98-4f9a-8faa-96a952090c0e/scratchpad/sec/cli/outside/aa--s.html 
+    stacktrace lines: 0
+aa--s.html
+### weird stems | exit=0 | stdout: 2026-10-03T12:49:33.903-04:00  WARN 995403 --- [drishti] [           main] com.ash.drishti.rachana.SutraRegistry    : sutra directory /tmp/claude-1000/ | stderr:  | new files: /tmp/claude-1000/-home-ashutosh-IdeaProjects-drishti/efa68c11-fb98-4f9a-8faa-96a952090c0e/scratchpad/sec/cli/out/a b;c$d--s.html /tmp/claude-1000/-home-ashutosh-IdeaProjects-drishti/efa68c11-fb98-4f9a-8faa-96a952090c0e/scratchpad/sec/cli/out/..x--s.html /tmp/claude-1000/-home-ashutosh-IdeaProjects-drishti/ef
+    stacktrace lines: 0
+### missing path | exit=2 | stdout: 2026-10-03T12:49:39.284-04:00  WARN 995622 --- [drishti] [           main] com.ash.drishti.rachana.SutraRegistry    : sutra directory /tmp/claude-1000/ | stderr: sutra: /tmp/claude-1000/-home-ashutosh-IdeaProjects-drishti/efa68c11-fb98-4f9a-8faa-96a952090c0e/scratchpad/sec/cli/nonexistent does not exist~usage: sutra <command> <path>... [options]~  lint    <pack-dir | sutra-file>      parse and check every Sutra~ | new files: 
+    stacktrace lines: 0
+### no args | exit=2 | stdout:  | stderr: sutra: lint needs a path~usage: sutra <command> <path>... [options]~  lint    <pack-dir | sutra-file>      parse and check every Sutra~ | new files: 
+    stacktrace lines: 0
+### unknown flag | exit=2 | stdout:  | stderr: sutra: unknown option '--bogus'~usage: sutra <command> <path>... [options]~  lint    <pack-dir | sutra-file>      parse and check every Sutra~ | new files: 
+    stacktrace lines: 0
+### --out missing value | exit=2 | stdout:  | stderr: sutra: --out needs a value~usage: sutra <command> <path>... [options]~  lint    <pack-dir | sutra-file>      parse and check every Sutra~ | new files: 
+    stacktrace lines: 0
+### --junit /proc (unwritable) | exit=1 | stdout: 2026-10-03T12:49:49.617-04:00  WARN 996023 --- [drishti] [           main] com.ash.drishti.rachana.SutraRegistry    : sutra directory /tmp/claude-1000/ | stderr: sutra: /proc/x.xml~ | new files: 
+    stacktrace lines: 0
+### junit xml special chars in file names | exit=0 | stdout: 2026-10-03T12:49:55.715-04:00  WARN 996255 --- [drishti] [           main] com.ash.drishti.rachana.SutraRegistry    : sutra directory /tmp/claude-1000/ | stderr:  | new files: /tmp/claude-1000/-home-ashutosh-IdeaProjects-drishti/efa68c11-fb98-4f9a-8faa-96a952090c0e/scratchpad/sec/cli/junit.xml 
+    stacktrace lines: 0
+    junit well-formed
+### huge 120MB sample (preview) | exit=1 | stdout: 2026-10-03T12:50:02.382-04:00  WARN 996650 --- [drishti] [           main] com.ash.drishti.rachana.SutraRegistry    : sutra directory /tmp/claude-1000/ | stderr: sutra: /tmp/claude-1000/-home-ashutosh-IdeaProjects-drishti/efa68c11-fb98-4f9a-8faa-96a952090c0e/scratchpad/sec/cli/in/tests/aa/huge.json is not valid JSON: String value length (20051040) exceeds the ~ | new files: 
+    stacktrace lines: 0
+### deep JSON 100000 (shape) | exit=1 | stdout: 2026-10-03T12:50:08.887-04:00  WARN 996923 --- [drishti] [           main] com.ash.drishti.rachana.SutraRegistry    : sutra directory /tmp/claude-1000/ | stderr: sutra: /tmp/claude-1000/-home-ashutosh-IdeaProjects-drishti/efa68c11-fb98-4f9a-8faa-96a952090c0e/scratchpad/sec/cli/deep.json is not valid JSON: Document nesting depth (1001) exceeds the maximum allow~ | new files: 
+    stacktrace lines: 0
+### 3M-element array (shape) | exit=1 | stdout: 2026-10-03T12:50:15.145-04:00  WARN 997203 --- [drishti] [           main] com.ash.drishti.rachana.SutraRegistry    : sutra directory /tmp/claude-1000/ | stderr: Exception in thread "main" java.lang.reflect.InvocationTargetException~Caused by: java.lang.OutOfMemoryError: Java heap space~	... 4 more~ | new files: 
+    stacktrace lines: 27
+### binary sutra file | exit=1 | stdout: 2026-10-03T12:50:22.707-04:00  WARN 997485 --- [drishti] [           main] com.ash.drishti.rachana.SutraRegistry    : sutra directory /tmp/claude-1000/ | stderr: sutra: Input length = 1~ | new files: 
+    stacktrace lines: 0
+### symlinked sutra -> /etc/passwd | exit=1 | stdout: 2026-10-03T12:50:29.141-04:00  WARN 997810 --- [drishti] [           main] com.ash.drishti.rachana.SutraRegistry    : sutra directory /tmp/claude-1000/ | stderr: /tmp/claude-1000/-home-ashutosh-IdeaProjects-drishti/efa68c11-fb98-4f9a-8faa-96a952090c0e/scratchpad/sec/cli/in/sutras/pw.v1.sutra.yaml:1 DRS-2012 a Sutra must be a mapping~ | new files: 
+    stacktrace lines: 0
+### shape of /etc/passwd | exit=1 | stdout: 2026-10-03T12:50:35.465-04:00  WARN 998039 --- [drishti] [           main] com.ash.drishti.rachana.SutraRegistry    : sutra directory /tmp/claude-1000/ | stderr: sutra: /etc/passwd is not valid JSON: Unrecognized token 'root': was expecting (JSON String, Number, Array, Object or token 'null', 'true' or 'false')~ | new files: 
+    stacktrace lines: 1

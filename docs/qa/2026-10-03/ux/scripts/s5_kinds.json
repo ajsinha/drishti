@@ -1,0 +1,217 @@
+{
+ "kv": {
+  "unlabeled": [],
+  "missing": [],
+  "required": [],
+  "say": "Added a kv panel (kv). Its options are in the inspector; required ones are marked.",
+  "problems": "Problems 1",
+  "check": "\u2713 6/6",
+  "n": 13
+ },
+ "table": {
+  "unlabeled": [],
+  "missing": [],
+  "required": [
+   "rows"
+  ],
+  "say": "Added a table panel (table). Its options are in the inspector; required ones are marked.",
+  "problems": "Problems 1",
+  "check": "\u2713 6/6",
+  "n": 19
+ },
+ "tabs": {
+  "unlabeled": [],
+  "missing": [],
+  "required": [
+   "each"
+  ],
+  "say": "Added a tabs panel (tabs). Its options are in the inspector; required ones are marked.",
+  "problems": "Problems 1",
+  "check": "\u2713 6/6",
+  "n": 13
+ },
+ "line": {
+  "unlabeled": [],
+  "missing": [],
+  "required": [],
+  "say": "Added a line panel (line). Its options are in the inspector; required ones are marked.",
+  "problems": "Problems 1",
+  "check": "\u2713 6/6",
+  "n": 17
+ },
+ "area": {
+  "unlabeled": [],
+  "missing": [],
+  "required": [
+   "rows"
+  ],
+  "say": "Added a area panel (area). Its options are in the inspector; required ones are marked.",
+  "problems": "Problems 1",
+  "check": "\u2713 6/6",
+  "n": 16
+ },
+ "hbar": {
+  "unlabeled": [],
+  "missing": [],
+  "required": [
+   "rows"
+  ],
+  "say": "Added a hbar panel (hbar). Its options are in the inspector; required ones are marked.",
+  "problems": "Problems 1",
+  "check": "\u2713 6/6",
+  "n": 15
+ },
+ "ladder": {
+  "unlabeled": [],
+  "missing": [],
+  "required": [
+   "rows"
+  ],
+  "say": "Added a ladder panel (ladder). Its options are in the inspector; required ones are marked.",
+  "problems": "Problems 1",
+  "check": "\u2713 6/6",
+  "n": 17
+ },
+ "links": {
+  "unlabeled": [],
+  "missing": [],
+  "required": [],
+  "say": "Added a links panel (links). Its options are in the inspector; required ones are marked.",
+  "problems": "Problems 1",
+  "check": "\u2713 6/6",
+  "n": 9
+ },
+ "status": {
+  "unlabeled": [],
+  "missing": [],
+  "required": [],
+  "say": "Added a status panel (status). Its options are in the inspector; required ones are marked.",
+  "problems": "Problems 1",
+  "check": "\u2713 6/6",
+  "n": 11
+ },
+ "provenance": {
+  "unlabeled": [],
+  "missing": [],
+  "required": [],
+  "say": "Added a provenance panel (provenance). Its options are in the inspector; required ones are marked.",
+  "problems": "Problems 1",
+  "check": "\u2713 6/6",
+  "n": 9
+ },
+ "markdown": {
+  "unlabeled": [],
+  "missing": [],
+  "required": [
+   "text"
+  ],
+  "say": "Added a markdown panel (markdown). Its options are in the inspector; required ones are marked.",
+  "problems": "Problems 1",
+  "check": "\u2713 6/6",
+  "n": 10
+ },
+ "gauge": {
+  "unlabeled": [],
+  "missing": [],
+  "required": [
+   "value"
+  ],
+  "say": "Added a gauge panel (gauge). Its options are in the inspector; required ones are marked.",
+  "problems": "Problems 1",
+  "check": "\u2713 6/6",
+  "n": 14
+ },
+ "surface": {
+  "unlabeled": [],
+  "missing": [],
+  "required": [
+   "y",
+   "rows"
+  ],
+  "say": "Added a surface panel (surface). Its options are in the inspector; required ones are marked.",
+  "problems": "Problems 1",
+  "check": "\u2713 6/6",
+  "n": 15
+ },
+ "waterfall": {
+  "unlabeled": [],
+  "missing": [],
+  "required": [
+   "rows"
+  ],
+  "say": "Added a waterfall panel (waterfall). Its options are in the inspector; required ones are marked.",
+  "problems": "Problems 1",
+  "check": "\u2713 6/6",
+  "n": 18
+ },
+ "histogram": {
+  "unlabeled": [],
+  "missing": [],
+  "required": [
+   "rows"
+  ],
+  "say": "Added a histogram panel (histogram). Its options are in the inspector; required ones are marked.",
+  "problems": "Problems 1",
+  "check": "\u2713 6/6",
+  "n": 16
+ },
+ "scatter": {
+  "unlabeled": [],
+  "missing": [],
+  "required": [
+   "x",
+   "y",
+   "rows"
+  ],
+  "say": "Added a scatter panel (scatter). Its options are in the inspector; required ones are marked.",
+  "problems": "Problems 1",
+  "check": "\u2713 6/6",
+  "n": 20
+ },
+ "candlestick": {
+  "unlabeled": [],
+  "missing": [],
+  "required": [
+   "rows"
+  ],
+  "say": "Added a candlestick panel (candlestick). Its options are in the inspector; required ones are marked.",
+  "problems": "Problems 1",
+  "check": "\u2713 6/6",
+  "n": 19
+ },
+ "graph": {
+  "unlabeled": [],
+  "missing": [],
+  "required": [
+   "nodes"
+  ],
+  "say": "Added a graph panel (graph). Its options are in the inspector; required ones are marked.",
+  "problems": "Problems 1",
+  "check": "\u2713 6/6",
+  "n": 15
+ },
+ "timeline": {
+  "unlabeled": [],
+  "missing": [],
+  "required": [
+   "rows"
+  ],
+  "say": "Added a timeline panel (timeline). Its options are in the inspector; required ones are marked.",
+  "problems": "Problems 1",
+  "check": "\u2713 6/6",
+  "n": 16
+ },
+ "pivot": {
+  "unlabeled": [],
+  "missing": [],
+  "required": [
+   "by",
+   "across",
+   "rows"
+  ],
+  "say": "Added a pivot panel (pivot). Its options are in the inspector; required ones are marked.",
+  "problems": "Problems 1",
+  "check": "\u2713 6/6",
+  "n": 20
+ }
+}
