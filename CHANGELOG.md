@@ -16,6 +16,7 @@
 # Changelog
 
 ## Unreleased
+- **Added:** Screen Builder step 1, the shape extractor: `POST /api/v1/builder/shape` (authors) merges up to 50 sample JSON documents into one JSON Schema (required/optional with presence, nullable, conflicts as `oneOf`, maps, merged array items, recursive trees as `$ref`, enums, formats, number ranges) with a role and reason per path (id, link, measure, dimension, status, date, series, ohlc, distribution, grid, steps, graph, tree, events, text) and a report of conflicts and rare fields; limits under `drishti.builder.*`, refused with the new `413 DRS-5003`.
 - **Fixed:** Studio's preview draws expandable row groups (▸/▾ in tree tables and nested pivots): it now loads the same tree and pivot scripts as a view; the all-panels showcase has a desk → book → trade tree table.
 - **Added:** `source` on every panel kind that reads data, not only `line`: a pivot, candlestick, tabs, graph or any other panel can read a linked entity's document (`source: "link($.desk, 'desk')"`), fetched with the view's sources, business date and field masks; a table's Pivot tab reads it too.
 - **Fixed (SEC-12):** the console's `/readyz` calls the server with the console's service identity, so it reports UP with security on (it was always DOWN: the call carried no token).

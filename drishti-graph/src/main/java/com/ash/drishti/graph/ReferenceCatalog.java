@@ -51,6 +51,12 @@ public final class ReferenceCatalog {
         return Optional.empty();
     }
 
+    /** The kind of entity a field of this name refers to, per the configured fields ({@code nettingSet} is a netting set). */
+    public Optional<String> kindOfField(String field) {
+        GraphProperties.FieldRef ref = field == null ? null : fields.get(field);
+        return ref == null ? Optional.empty() : Optional.of(ref.kind());
+    }
+
     /** The configured fields that name entities of {@code kind} ({@code counterparty} for counterparties), sorted. */
     public List<String> fieldsNaming(String kind) {
         return fields.entrySet().stream().filter(e -> kind.equals(e.getValue().kind())).map(Map.Entry::getKey).sorted().toList();

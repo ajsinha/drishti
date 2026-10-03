@@ -584,6 +584,23 @@ Users, passwords, lockout, the audit log and the identity database are configure
 Raise the cache sizes when many distinct entities are viewed and the cache hit rates in **Admin → Health** are
 low. See [PERFORMANCE.md](PERFORMANCE.md).
 
+### `drishti.builder` — the Screen Builder's shape extractor
+
+`POST /api/v1/builder/shape` merges sample JSON documents into one JSON Schema with roles. Input over a limit is refused
+with `413 DRS-5003` before it is all parsed.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `max-samples` | `50` | Documents in one request. |
+| `max-file-mb` | `5` | Largest single document, in megabytes. |
+| `max-total-mb` | `25` | Largest request body, in megabytes; checked from the length before the body is read. |
+| `max-depth` | `64` | Deepest nesting of one document. |
+| `enum-max-distinct` | `12` | Text with at most this many distinct values is an `enum` ... |
+| `enum-min-seen` | `3` | ... when it was seen at least this many times and some value repeats. |
+| `examples` | `3` | Example values per path in the report (masked values stay masked). |
+| `rare-below` | `0.5` | A field present in fewer than this share of its records is listed as rare. |
+| `status-words`, `status-names`, `id-names`, `label-names`, `ohlc-names`, `graph-node-names`, `graph-edge-names`, `long-text-chars` | built in | The vocabulary the role rules read: values that are states, field names that hold a state or an id, names of a row's label, the four candle fields, the lists of a graph, the length of prose. Set one to replace its list. |
+
 ### `drishti.commands` — the command line
 
 | Key | Default | Meaning |
