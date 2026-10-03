@@ -28,11 +28,11 @@ from core.backend import BackendClient, BackendError  # noqa: E402
 
 
 @pytest.mark.parametrize("status,expected", [(404, 404), (400, 400), (504, 504), (500, 502), (502, 502), (503, 502)])
-def test_a_view_page_answers_with_a_status_that_says_what_happened(client, backend, status, expected):
+def test_a_view_page_answers_with_a_status_that_says_what_happened(client, backend, monkeypatch, status, expected):
     async def failing(kind, id_, user):
         raise BackendError(status, "DRS-1004" if status == 504 else "DRS-1003", "timed out reading trade/X")
 
-    backend.view = failing
+    monkeypatch.setattr(backend, "view", failing)
     r = client.get("/v/trade/X")
     assert r.status_code == expected
 

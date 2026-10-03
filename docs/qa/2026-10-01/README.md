@@ -100,7 +100,7 @@ Lows and infos are in each area's findings: inconsistent error responses (SEC-10
 protection relies on SameSite only (SEC-08, **Fixed** in 6f886ab: test_sessions.py: test_cross_site_writes_and_json_as_text_are_refused, test_configured_origins_are_allowed, test_sign_out_is_a_post_and_get_only_asks), type-ahead reveals masked names (SEC-07, **Fixed** in 43075d9: FieldMaskingTest.typeAheadNeitherShowsNorMatchesMaskedValues), readiness probe always DOWN with
 security on (SEC-12), absolute paths in Sutra problems (SEC-11), tie order under limits (DATA-17, **Fixed** in 494741c: SearchOrderTest.tiesAreBrokenByIdOnTheColumnsAndTheDocumentsPath, SearchOrderTest.entitiesWithNoSortValueComeLastInIdOrder), health UP for
 unreadable tables (DATA-18, **Fixed** in 724328b, 7de60f8: DeltaUnreadableTest, RedisOutageHealthTest), quant edge cases (DATA-20, **Fixed** in 891bc73 (test_quant.py: test_options_at_expiry_or_zero_vol_are_worth_their_intrinsic_value, test_norm_ppf_is_accurate_in_the_far_tails, test_a_month_code_for_the_current_month_is_never_negative)), layout and Studio polish (UX-14..18), documentation mismatches
-(DOC-04..22), and risky development defaults that are already documented (SEC-16).
+(DOC-04..22), and risky development defaults that are already documented (SEC-16, addressed in fcf6b97).
 
 ## What held up
 
