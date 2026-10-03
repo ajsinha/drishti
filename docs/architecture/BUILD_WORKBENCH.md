@@ -106,6 +106,16 @@ page. Studio's keys (Ctrl+S, Ctrl+Enter), its File menu and its tabs stay inside
 "Start from inference" stops being a separate button: with one sample, auto-design *is* inference, which makes the
 "one inference" rule visible.
 
+### Examples stay, and open as your own copy
+
+The ten examples in `docs/guides/examples/` (including the big all-panels showcase: all 20 panel kinds with its data)
+are kept and remain the reference set. In the workbench every example opens as a **new Design that is a copy**: its
+Sutra, its JSON as samples and its README as notes, ready to view, tweak, check and even propose; the files in
+`docs/guides/examples/` are never changed by the workbench. The all-panels showcase is what a scratch Design opens on
+when nothing else is asked for (the setting that makes Studio open on it today, `ui.studio_example`, moves with it).
+The examples test (every kind covered, nested pivot and tree table present) stays and also checks that each example
+opens as a Design and previews with no panel errors.
+
 ## Menu and addresses
 
 ```
