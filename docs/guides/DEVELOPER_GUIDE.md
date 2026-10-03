@@ -291,6 +291,173 @@ What it does, in order (it stops at the first failure, `set -euo pipefail`):
 
 `JAVA_HOME` defaults to `/usr/lib/jvm/java-25-openjdk-amd64` inside the script when it is not set.
 
+### 2.7 One config, several instances of the same connector
+
+A connector is a *named instance* of a plugin. The name is the key under `drishti.sources.connectors`; each instance
+has its own settings, its own `source-name` (shown in provenance), its own entry in Admin → Health and in
+`GET /api/v1/sources`, and its own cache. You may run as many as you like of each plugin. This is a complete site file
+that registers two `file`, two `delta`, two `jdbc` (one in PostgreSQL table mode, one in query mode) and one `kafka` instance. Every key is the real
+one from [FILE_CONNECTOR.md](../connectors/FILE_CONNECTOR.md#12-settings), [DELTA_CONNECTOR.md](../connectors/DELTA_CONNECTOR.md),
+[POSTGRES_CONNECTOR.md](../connectors/POSTGRES_CONNECTOR.md), [JDBC_QUERIES.md](../connectors/JDBC_QUERIES.md) and
+[KAFKA_CONNECTOR.md](../connectors/KAFKA_CONNECTOR.md), and the file was started on a scratch server (below).
+
+```yaml
+# /etc/drishti/connectors.yaml: several named instances of the same connector types.
+# Load it with:  --spring.config.additional-location=file:/etc/drishti/connectors.yaml
+drishti:
+  sources:
+    routes:
+      trade: recent-files            # asked first for trade; the other stores that serve trade follow
+      order: orders-pg
+    connectors:
+      # --- two file connectors: JSON lines, one file per kind per business day ------------------------------
+      recent-files:                  # the last weeks, written nightly by an export job
+        plugin: file
+        kinds: [trade]
+        settings:
+          root: ${FEEDS_RECENT:./data/feeds/recent}
+          domain: trading
+          lookback-days: 10
+          rescan-seconds: 30
+          source-name: recent-feed
+          stale-after: 2d
+      archive-files:                 # older months, a different folder
+        plugin: file
+        kinds: [trade]
+        settings:
+          root: ${FEEDS_ARCHIVE:./data/feeds/archive}
+          domain: trading
+          lookback-days: 400
+          rescan-seconds: 300
+          source-name: archive-feed
+
+      # --- two Delta Lake connectors: one local disk, one S3 / MinIO ---------------------------------------
+      reference-lake:
+        plugin: delta
+        kinds: [counterparty, book]
+        settings:
+          root: ${LAKE_LOCAL_ROOT:./data/delta}
+          domain: reference
+          mode.counterparty: effective          # a row only when the entity changes
+          mode.book: effective
+          refresh-seconds: 30
+          stale-after: 4d
+      risk-lake:
+        plugin: delta
+        kinds: [sensitivity]
+        settings:
+          root: s3a://${LAKE_BUCKET:bank-lake}/drishti
+          domain: risk
+          s3.endpoint: ${LAKE_S3_ENDPOINT:http://localhost:9000}
+          s3.region: us-east-1
+          s3.access-key: ${LAKE_ACCESS_KEY:}
+          s3.secret-key: ${LAKE_SECRET_KEY:}
+          s3.path-style: true
+
+      # --- two JDBC connectors: PostgreSQL table mode, and query mode --------------------------------------
+      orders-pg:                     # table mode: every kind of a domain in one table
+        plugin: jdbc
+        kinds: [order]
+        settings:
+          url: ${PG_URL:jdbc:postgresql://localhost:5432/drishti}
+          user: ${PG_USER:drishti}
+          password: ${PG_PASSWORD:}
+          table: orders.entities
+          pool-size: 8
+          refresh-seconds: 60
+      ledger-sql:                    # query mode: one SELECT per kind
+        plugin: jdbc
+        settings:
+          url: ${LEDGER_URL:jdbc:postgresql://localhost:5432/ledger}
+          user: ${LEDGER_USER:drishti}
+          password: ${LEDGER_PASSWORD:}
+          pool-size: 4
+          source-name: ledger
+          query.position: >-
+            SELECT position_id AS id, book, instrument, quantity, market_value FROM positions
+            WHERE position_id = :id AND business_date = (SELECT MAX(business_date) FROM positions
+            WHERE position_id = :id AND business_date <= :asOf)
+          ids.position: SELECT position_id AS id FROM positions WHERE business_date = :asOf
+
+      # --- a Kafka connector: live updates ----------------------------------------------------------------
+      trade-stream:
+        plugin: kafka
+        kinds: [trade]
+        settings:
+          bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+          topics: trades.live
+          kind: trade
+          id-field: tradeId
+          mode: ticks                  # another store holds the documents; the stream only ticks open views
+          client.group.id: drishti-site
+          stale-after: 15m
+```
+
+Start it from the repository root, beside the packs you want (the connectors add to what the packs declare; a pack's own
+connector of the same name is overridden by this file):
+
+```bash
+DRISHTI_PACKS=market-risk PG_PASSWORD=… LAKE_ACCESS_KEY=… LAKE_SECRET_KEY=… \
+  java -XX:+UseCompactObjectHeaders -jar drishti-server/target/drishti-server-1.13.0-exec.jar \
+  --spring.config.additional-location=file:/etc/drishti/connectors.yaml
+```
+
+**How a kind is routed across them.**
+
+* `kinds:` says which kinds an instance serves. Without it, an instance serves what its plugin reports (a `file` or
+  `kafka` instance with no `kinds:` serves **every** kind, so give them `kinds:`; a `jdbc` query-mode instance serves
+  the kinds that have a `query.<kind>`).
+* For a read of `trade/MX-1` Drishti makes a list: the kind's `routes:` entry first (`trade: recent-files`), then
+  `default-route`, then every other running instance that serves `trade` (**in no particular order**: do not rely on
+  the order you wrote them in). For a picked date, dated stores (file, Delta, JDBC) go before undated ones; for Live,
+  live ones (Kafka) go first.
+* The list is asked one by one and the first store that holds the entity answers. **A store that holds the date is
+  authoritative for it**: an entity its file for that date does not list is *not held*, and the stores behind it are
+  not asked (`DRS-1001 recent-files holds trade for 2026-10-01 and does not list trade/MX-0`). Only a date it does not
+  hold passes on to the next store. So keep the dated stores of one kind **disjoint by date**: here `recent-files`
+  holds the last 10 days (`lookback-days: 10`), `archive-files` anything older (`lookback-days: 400`).
+* A store that **fails** (database down, service error) stops the read with `DRS-1003 <name> failed reading …`;
+  it does not fall through to another store's data.
+* Live ticks come from the first live store that holds the entity: a `kafka` instance in `mode: ticks` only pushes
+  changes to open views (the documents come from the dated stores), in `mode: state` it is also the store.
+
+The scratch server was started with the files `feeds/recent/trading/2026-10-01/trade.jsonl` (`MX-1`) and
+`feeds/archive/trading/2026-06-30/trade.jsonl` (`MX-0`), nothing else running, and answered:
+
+```
+GET /api/v1/entities/trade/MX-1/raw?asOf=2026-10-01  -> 200, "source":"recent-feed"
+GET /api/v1/entities/trade/MX-0/raw?asOf=2026-06-30  -> 200, "source":"archive-feed"   (recent-files does not hold that date)
+GET /api/v1/entities/trade/MX-0/raw?asOf=2026-10-01  -> 404 DRS-1001 recent-files holds trade for 2026-10-01 and does not list trade/MX-0
+GET /api/v1/entities/order/O-1/raw                   -> 502 DRS-1003 orders-pg failed reading order/O-1   (the database is not reachable)
+```
+
+**What happens when an external system is not there.** Started on port 18989 with none of PostgreSQL, S3 or Kafka
+reachable, the server **starts** (`/actuator/health` is `UP`); `GET /api/v1/admin/health` says `DEGRADED`:
+
+| Connector | Without its system | Where it shows |
+|---|---|---|
+| `recent-files`, `archive-files` | `UP` (they read local folders) | sources |
+| `reference-lake` (local Delta) | `DOWN: cannot reach <root>/reference (engine: native)` when the folder is missing | sources |
+| `risk-lake` (Delta on S3) | **not started**: it fails while starting when the endpoint is unreachable (`Connect to http://localhost:9000 failed`), so it is listed under `failedToStart` and serves nothing until the server is restarted with the endpoint up | `failedToStart` |
+| `orders-pg`, `ledger-sql` (JDBC) | `DOWN: <driver message> (reconnecting)`; they reconnect by themselves when the database returns | sources |
+| `trade-stream` (Kafka) | `UP` with no data (the consumer retries in the background) | sources |
+
+```
+status DEGRADED  {"sources": 8, "sourcesDown": 4, "sourcesDegraded": 0, "failedToStart": 1, "packs": 0, "packsWithProblems": 0}
+failedToStart    {"risk-lake": "Unable to execute HTTP request: Connect to http://localhost:9000 failed: Connect…"}
+archive-files    UP    kinds=['trade']
+recent-files     UP    kinds=['trade']
+trade-stream     UP    kinds=['trade']
+orders-pg        DOWN  kinds=['order']     DOWN: FATAL: password authentication failed for user "drishti" (reconnecting)
+ledger-sql       DOWN  kinds=['position']  DOWN: FATAL: password authentication failed for user "drishti" (reconnecting)
+reference-lake   DOWN  kinds=['book', 'counterparty']  DOWN: cannot reach …/data/delta/reference (engine: native)
+demo, file       UP / DOWN: no directory …/data/feeds   (the bundled sources; `file` is DOWN only because the scratch folder had no data/feeds)
+```
+
+(That machine had a PostgreSQL running whose password did not match; with none listening the message is a connection
+refused.) The health of each instance is its own: one `DOWN` connector does not take the others with it, and a kind served by two stores
+that are both up is read from the one that holds the date. The connectors here only read; the loaders (`tools/load-*.sh`) write to the folder you give them, so never aim one at a data folder you care about.
+
 ---
 
 ## 3. Project rules

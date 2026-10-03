@@ -156,6 +156,160 @@ the second, and press **Save**. `Alt+1` and `Alt+2` move between the panes, `Alt
 come from the `finance` and `logistics` packs (restart the server with `DRISHTI_PACKS=finance` to try **Credit desk**).
 The [workspaces guide](../../console/web/guides/workspaces.md) walks through both.
 
+## Build and run without the wrapper, or from an IDE
+
+Everything above uses `./mvnw`. This section is for a machine that has its own Maven, and for working from
+IntelliJ IDEA and PyCharm. Commands were run on Ubuntu with Maven 3.9.12 and OpenJDK 25.
+
+### With Maven installed on the system
+
+The poms enforce only the Java version (`[25,26)`, the rule that prints `Drishti builds and runs on OpenJDK 25.`); they
+set no minimum Maven version. The wrapper pins **Maven 3.9.12** (`.mvn/wrapper/maven-wrapper.properties`), which is what
+the project is built and tested with; use 3.9.x. The enforcer rule checks the JVM Maven itself runs on, so set
+`JAVA_HOME` to Java 25 (as in step 1) before `mvn`.
+
+```bash
+export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
+export PATH="$JAVA_HOME/bin:$PATH"
+mvn -v                                  # "Apache Maven 3.9.…" and "Java version: 25.…"
+
+mvn -q package -DskipTests              # build (add -o to work offline once ~/.m2 is filled)
+mvn -q verify                           # build, every test and every rule
+mvn -q -pl drishti-server -am package -DskipTests    # one module and what it needs
+ls drishti-server/target/*-exec.jar     # the application: drishti-server/target/drishti-server-1.13.0-exec.jar
+```
+
+Run the server from the repository root (it finds `./packs` and `./data` relative to where you start it). It runs on
+JDK 25 only; `-XX:+UseCompactObjectHeaders` saves about 10% of the heap:
+
+```bash
+DRISHTI_PACKS=market-risk,counterparty-risk \
+  java -XX:+UseCompactObjectHeaders -jar drishti-server/target/drishti-server-1.13.0-exec.jar
+```
+
+Run the console in a Python virtual environment (Python 3.11 or newer). With uv, as in step 3; without it:
+
+```bash
+python3 -m venv console/.venv           # Debian and Ubuntu: sudo apt install python3-venv first
+console/.venv/bin/pip install -r console/requirements.txt          # add -r console/requirements-test.txt for pytest's extras
+console/.venv/bin/python console/run_drishti_web.py                # http://127.0.0.1:17480
+console/.venv/bin/python -m pytest console/tests -q                # the console's tests
+```
+
+### IntelliJ IDEA
+
+Use a release that supports JDK 25.
+
+1. **File → Open**, choose the root `pom.xml`, **Open as Project**. IDEA imports every module.
+2. **File → Project Structure → Project → SDK**: a JDK 25 (add it with *Add SDK → Add JDK*); language level 25.
+   Maven's own JDK, in **Settings → Build, Execution, Deployment → Build Tools → Maven → Runner → JRE**, must be 25 too.
+3. **Run → Edit Configurations → + → Spring Boot** (or *Application* in the Community edition):
+
+   | Field | Value |
+   |---|---|
+   | Main class | `com.ash.drishti.server.DrishtiApplication` |
+   | Module / classpath of | `drishti-server` |
+   | JRE | 25 |
+   | Working directory | the repository root (the default is the `drishti-server` folder, so change it: `packs/` and `data/` are relative) |
+   | VM options | `-XX:+UseCompactObjectHeaders` |
+   | Environment variables | `DRISHTI_PACKS=market-risk,counterparty-risk;DRISHTI_STUDIO_SAVE=true` (separate with `;`; the other `DRISHTI_*` variables are listed in [CONFIGURATION.md](../admin/CONFIGURATION.md#placeholders-namedefault)) |
+   | Program arguments | `--spring.config.additional-location=file:/home/you/drishti-site.yaml` (optional; see [below](#supplying-a-different-application-config)) |
+
+4. Run it. The log ends with `Started DrishtiApplication`; `curl -s localhost:18480/actuator/health` answers `UP`.
+
+Tests run from the gutter icons. Clear the `DRISHTI_*` variables in the test run configuration: tests expect the
+defaults (the `finance` pack) and fail when `DRISHTI_PACKS` and its siblings are set (see [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md#22-maven-commands)).
+
+### PyCharm
+
+1. **File → Open** the repository root (or only `console/`).
+2. **Settings → Project → Python Interpreter → Add Interpreter → Add Local Interpreter → Existing**, and pick
+   `console/.venv/bin/python` (Windows: `console\.venv\Scripts\python.exe`). Create the venv first with the commands above.
+3. **Run → Edit Configurations → + → Python**:
+
+   | Field | Value |
+   |---|---|
+   | Script | `console/run_drishti_web.py` |
+   | Parameters | optional `--server.port=17481` (any `--key=value`, e.g. `--backend.url=http://127.0.0.1:18481`) |
+   | Python interpreter | the `console/.venv` one |
+   | Working directory | the repository root (the script finds `console/config` from its own location, so any folder works; the root keeps relative paths in your own settings predictable) |
+   | Environment variables | `DRISHTI_BACKEND_URL=http://127.0.0.1:18480;DRISHTI_CONSOLE_PORT=17480` |
+
+The console reads `console/config/application.yaml`, then `console/config/application.local.yaml` if it exists, then
+`DRISHTI_CONSOLE__…` environment variables, then `--key=value` parameters. For pytest, make **Default test runner** pytest
+(*Settings → Tools → Python Integrated Tools*) and run `console/tests`.
+
+## Supplying a different application config
+
+### The server
+
+Spring Boot reads `application.yaml` from inside the jar, then `./application.local.yaml` (the bundled file imports it
+with `optional:`), and you can add more. Drishti's own `spring.config.import` entries are exactly two: that local file
+and the packs overlay `./data/packs/added.yaml` (`DRISHTI_PACKS_OVERLAY` moves it; the server writes it, do not edit it).
+
+| You want | Do | Command |
+|---|---|---|
+| a site file read **in addition**, on top of the bundled defaults | `--spring.config.additional-location` | `java -jar drishti-server/target/drishti-server-1.13.0-exec.jar --spring.config.additional-location=file:/etc/drishti/site.yaml` |
+| the same, from the environment | `SPRING_CONFIG_ADDITIONAL_LOCATION` | `SPRING_CONFIG_ADDITIONAL_LOCATION=file:/etc/drishti/site.yaml java -jar …` |
+| several files, later ones win | a comma list | `--spring.config.additional-location=file:/etc/drishti/site.yaml,file:/etc/drishti/secrets.yaml` |
+| a folder of files | end it with `/` | `--spring.config.additional-location=file:/etc/drishti/conf.d/` |
+| a profile's file | `--spring.profiles.active` (or `SPRING_PROFILES_ACTIVE`) | `java -jar … --spring.profiles.active=files` reads the jar's `application-files.yaml` |
+| a profile's file of your own | name it `application-<profile>.yaml` beside your site file and add the location | `--spring.profiles.active=prod --spring.config.additional-location=file:/etc/drishti/` reads `/etc/drishti/application-prod.yaml` too |
+| **replace** the defaults (rare) | `--spring.config.location`, and keep the bundled file in the list | `--spring.config.location=classpath:/application.yaml,file:/etc/drishti/site.yaml` |
+
+**Do not** write `--spring.config.location=file:/etc/drishti/site.yaml` alone: it replaces the bundled
+`application.yaml`, so the server starts with none of Drishti's defaults (tried: it came up on Spring's port 8080, not
+18480). Prefer `additional-location`. A key set in a file you add overrides the bundled one; environment variables and
+`--key=value` arguments override both ([CONFIGURATION.md](../admin/CONFIGURATION.md#placeholders-namedefault)).
+Do not set the same key in both `application.local.yaml` and an additional file. The profiles the jar ships are `files`, `postgres`,
+`duckdb`, `mongodb`, `redis`, `aerospike` and `iceberg`.
+
+A site file is ordinary YAML with the same keys as `application.yaml`; it needs only what you change:
+
+```yaml
+# /etc/drishti/site.yaml
+server:
+  port: 18481
+drishti:
+  packs:
+    enabled: market-risk,counterparty-risk
+  rachana:
+    studio-save: true
+```
+
+### The console
+
+The console has **no flag or variable that points at another config file**: it reads `config/application.yaml`
+beside `run_drishti_web.py` (`console/config/`) and `console/config/application.local.yaml` if present
+(`console/core/config.py`). Override it in one of three ways:
+
+```bash
+# 1. a local file (git-ignored): the same keys as application.yaml, only what you change
+cat > console/config/application.local.yaml <<'YAML'
+server:
+  port: 17481
+backend:
+  url: http://127.0.0.1:18481
+YAML
+console/.venv/bin/python console/run_drishti_web.py
+
+# 2. environment variables: DRISHTI_CONSOLE__<KEY>__<SUBKEY>, or the named variables the YAML uses
+DRISHTI_CONSOLE__BACKEND__URL=http://127.0.0.1:18481 DRISHTI_CONSOLE_PORT=17481 \
+  console/.venv/bin/python console/run_drishti_web.py
+
+# 3. arguments: --key.subkey=value
+console/.venv/bin/python console/run_drishti_web.py --server.port=17481 --backend.url=http://127.0.0.1:18481
+```
+
+Later wins: the YAML, the local file, the environment, the arguments. To keep several configurations, keep several local
+files and copy the one you want to `console/config/application.local.yaml`, or set the environment per shell.
+
+### What the `${DRISHTI_PACKS:finance}` in the files means
+
+A value written `${NAME:default}` is "the variable `NAME` if it is set, else `default`". The meaning, the order that
+wins, and a table of every such placeholder in both `application.yaml` files are in
+[CONFIGURATION.md](../admin/CONFIGURATION.md#placeholders-namedefault).
+
 ## If something goes wrong
 
 | You see | Do this |

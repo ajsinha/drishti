@@ -25,14 +25,15 @@ If you only want to get something running, read [How configuration works](#how-c
 Contents
 
 1. [How configuration works](#how-configuration-works)
-2. [Value formats](#value-formats)
-3. [Common recipes](#common-recipes)
-4. [Server reference](#server-reference) (`drishti.*`)
-5. [Connector settings, plugin by plugin](#connector-settings-plugin-by-plugin)
-6. [Environment variables used by the packs and profiles](#environment-variables-used-by-the-packs-and-profiles)
-7. [Spring settings you may need](#spring-settings-you-may-need)
-8. [Console reference](#console-reference)
-9. [Environment variable index](#environment-variable-index)
+2. [Placeholders: `${NAME:default}`](#placeholders-namedefault) and [every placeholder of `application.yaml`](#every-placeholder-in-the-servers-applicationyaml)
+3. [Value formats](#value-formats)
+4. [Common recipes](#common-recipes)
+5. [Server reference](#server-reference) (`drishti.*`)
+6. [Connector settings, plugin by plugin](#connector-settings-plugin-by-plugin)
+7. [Environment variables used by the packs and profiles](#environment-variables-used-by-the-packs-and-profiles)
+8. [Spring settings you may need](#spring-settings-you-may-need)
+9. [Console reference](#console-reference)
+10. [Environment variable index](#environment-variable-index)
 
 ---
 
@@ -133,6 +134,133 @@ There is no endpoint that dumps the configuration, but most settings show up som
 
 A connector that failed to start appears in the `failedToStart` map, name to reason (for example
 `"ops-lake": "no plugin named 'delta2'"`), which is usually a mistyped plugin name or setting.
+
+---
+
+## Placeholders: `${NAME:default}`
+
+Many values in `application.yaml` are written `${NAME:default}`, for example `port: ${DRISHTI_PORT:18480}`.
+
+**The server (Spring).** These are Spring property placeholders. At start Spring looks for a property called `NAME`
+in every property source, and uses the first it finds, else the text after the colon:
+
+| Where `NAME` is set | Example | Consulted |
+|---|---|---|
+| a command-line argument | `--DRISHTI_PORT=18481` | yes (highest) |
+| a Java system property | `java -DDRISHTI_PORT=18481 -jar …` | yes |
+| an environment variable | `DRISHTI_PORT=18481 java -jar …` | yes |
+| none of them | | the default, `18480` |
+
+Each row was tried against a scratch server. Points to know:
+
+* **An empty default.** `${DRISHTI_PLUGIN_DIR:}` has an empty default: nothing is set when the variable is absent. A variable that is
+  *set to empty* (`DRISHTI_PACKS=`) gives the empty string, not the default.
+* **Which applies, the placeholder or the relaxed name?** Both exist for a key such as `drishti.packs.enabled`
+  (written `${DRISHTI_PACKS:finance}` in the file). The placeholder is how the *file's own value* is computed.
+  The relaxed name (`DRISHTI_PACKS_ENABLED`, [above](#two-kinds-of-environment-variable)) overrides the key itself, so
+  with both set the relaxed one wins: `DRISHTI_PACKS=genomics DRISHTI_PACKS_ENABLED=economics` loads only `economics`.
+  A key with no placeholder in the file has only the relaxed name.
+* **Precedence** of the sources, highest first: command-line arguments, Java system properties, environment
+  variables, config files (a profile's file such as `application-files.yaml` over `application.yaml`). So
+  `--server.port=18989` beats `DRISHTI_PORT=18988` (tried: the server listened on 18989). The placeholder
+  is resolved against all of them at once, so `DRISHTI_PORT` as an argument, property or environment variable is
+  the same placeholder.
+* **Nested.** The default may itself be a placeholder: `${A:${B:18480}}` uses `A`, else `B`, else `18480` (tried
+  with `--server.port='${NOPE_A:${NOPE_B:18989}}'`). A placeholder may also sit inside a longer value
+  (`optional:file:${DRISHTI_PACKS_OVERLAY:./data/packs/added.yaml}`, `s3a://${LAKE_BUCKET:bank-lake}/drishti`).
+  The bundled file nests none.
+* **Your own files** can use the syntax anywhere (`password: ${TRADES_DB_PASSWORD}`).
+
+**The console (Python).** `console/core/config.py` reads the same syntax, with differences: `NAME` is an
+**environment variable only** (no system properties, no other config keys); the default after the colon is text up to
+the first `}` (no nesting); a missing variable with no default is empty; and the result is typed (`true`/`false`
+become booleans, digits numbers). Precedence, lowest first: `console/config/application.yaml`, `console/config/application.local.yaml`,
+then `DRISHTI_CONSOLE__A__B` environment variables, then `--a.b=value` arguments. The console has no flag
+for choosing another config *directory*; see [QUICKSTART](../guides/QUICKSTART.md#build-and-run-without-the-wrapper-or-from-an-ide).
+
+### Every placeholder in the server's `application.yaml`
+
+Generated from `drishti-server/src/main/resources/application.yaml` (and checked against it by
+`console/tests/test_docs_placeholders.py`, so the table cannot drift). "Sets" is the key the placeholder fills. Profile
+files (`application-files.yaml`, `application-postgres.yaml`, …) and packs have placeholders of their own, listed in
+[Environment variables used by the packs and profiles](#environment-variables-used-by-the-packs-and-profiles).
+
+| Variable | Sets | Default | What it does |
+|---|---|---|---|
+| `DRISHTI_PACKS_OVERLAY` | `spring.config.import` | `./data/packs/added.yaml` | The file of packs an administrator loaded from Admin → Packs; imported at start (`spring.config.import`) and named again by `drishti.packs.overlay`. Written by the server, not by hand. |
+| `DRISHTI_PORT` | `server.port` | `18480` | The server's HTTP port. |
+| `DRISHTI_PRODUCT` | `drishti.branding.product` | `Drishti` | The product name shown in pages and messages. |
+| `DRISHTI_PLUGIN_DIR` | `drishti.sources.plugin-dir` | empty | A directory of extra plugin jars; empty: none. |
+| `DRISHTI_DEMO_ENABLED` | `drishti.sources.plugins.demo.enabled` | `true` | Run the demo source (the packs' sample data). |
+| `DRISHTI_FEEDS` | `drishti.sources.plugins.file.settings.root` | `./data/feeds` | The folder the bundled `file` source reads. |
+| `DRISHTI_REST_ENABLED` | `drishti.sources.plugins.rest.enabled` | `false` | Run the `rest` source. |
+| `DRISHTI_REST_URL` | `drishti.sources.plugins.rest.settings.base-url` | `http://localhost:9000/api` | The REST source's base URL. |
+| `DRISHTI_JDBC_ENABLED` | `drishti.sources.plugins.jdbc.enabled` | `false` | Run the `jdbc` source as itself (one instance). |
+| `DRISHTI_JDBC_URL` | `drishti.sources.plugins.jdbc.settings.url` | empty | The JDBC URL of that instance. |
+| `DRISHTI_JDBC_USER` | `drishti.sources.plugins.jdbc.settings.user` | empty | Its database user. |
+| `DRISHTI_JDBC_PASSWORD` | `drishti.sources.plugins.jdbc.settings.password` | empty | Its database password. |
+| `DRISHTI_ACTIVEMQ_ENABLED` | `drishti.sources.plugins.activemq.enabled` | `false` | Run the `activemq` source as itself. |
+| `DRISHTI_RABBITMQ_ENABLED` | `drishti.sources.plugins.rabbitmq.enabled` | `false` | Run the `rabbitmq` source as itself. |
+| `DRISHTI_S3_ENABLED` | `drishti.sources.plugins.s3.enabled` | `false` | Run the `s3` source as itself. |
+| `DRISHTI_CALENDAR` | `drishti.business-date.calendar` | `USNY` | The holiday calendar that rolls the business date back (`USNY`, `GBLO`, `EUTA`, `JPTO`, or joined with `+`). |
+| `DRISHTI_SECURITY_ENABLED` | `drishti.security.enabled` | `false` | Turn sign-in and role checks on. |
+| `DRISHTI_TOKEN_SECRET` | `drishti.security.secret` | empty | The token signing secret (at least 32 bytes), shared with the console. |
+| `DRISHTI_METRICS_TOKEN` | `drishti.security.metrics-token` | empty | A bearer token for Prometheus to scrape `/actuator/prometheus` with security on. |
+| `DRISHTI_OIDC_ENABLED` | `drishti.security.oidc.enabled` | `false` | Verify single-sign-on ID tokens. |
+| `DRISHTI_OIDC_ISSUER` | `drishti.security.oidc.issuer` | empty | The OIDC issuer URL. |
+| `DRISHTI_OIDC_CLIENT_ID` | `drishti.security.oidc.client-id` | empty | The OIDC client id. |
+| `DRISHTI_ACCESS_LOG` | `drishti.access-log.enabled` | `true` | Record who looked at what (Admin → Access). |
+| `DRISHTI_REPORTS_ENABLED` | `drishti.reports.enabled` | `true` | Run the scheduled-reports scheduler on this server. |
+| `DRISHTI_REPORTS_DIR` | `drishti.reports.folder` | `./data/reports` | Where report files are written. |
+| `DRISHTI_CALC_ENABLED` | `drishti.calc.enabled` | `true` | Allow Calc (Python in the browser). |
+| `DRISHTI_LAYOUTS_ENABLED` | `drishti.layouts.enabled` | `true` | Allow personal layouts. |
+| `DRISHTI_PIVOT_ENABLED` | `drishti.pivot.enabled` | `true` | Allow the Pivot tab. |
+| `DRISHTI_IDENTITY_DB_URL` | `drishti.identity.database-url` | `jdbc:sqlite:./data/identity/drishti.db` | The identity database (users, roles, workspaces, audit); SQLite by default, or `jdbc:postgresql://…`. |
+| `DRISHTI_IDENTITY_DB_USER` | `drishti.identity.database-user` | empty | Its user. |
+| `DRISHTI_IDENTITY_DB_PASSWORD` | `drishti.identity.database-password` | empty | Its password. |
+| `DRISHTI_USERS_FILE` | `drishti.identity.users-file` | `./data/identity/users.json` | The pre-1.10 users file, imported once into an empty database. |
+| `DRISHTI_AUDIT_FILE` | `drishti.identity.audit-file` | `./data/identity/audit.jsonl` | The pre-1.10 audit file, imported once. |
+| `DRISHTI_FORCE_PW_CHANGE_ON_CREATE` | `drishti.identity.force-password-change-on-create` | `false` | Force a password change for newly created users. |
+| `DRISHTI_FORCE_PW_CHANGE_ON_RESET` | `drishti.identity.force-password-change-on-reset` | `false` | Force a password change after an administrator reset. |
+| `DRISHTI_SEED_ADMIN` | `drishti.identity.seed-admin` | `true` | Create the development admin on first start with no users; `false` for production. |
+| `DRISHTI_SUTRAS` | `drishti.rachana.dirs` | `./sutras` | Site Sutra directories, scanned recursively, beside the packs' Sutras. |
+| `DRISHTI_STUDIO_SAVE` | `drishti.rachana.studio-save` | `false` | Let Sutra Studio save files (authors only). |
+| `DRISHTI_SUTRA_REVIEW` | `drishti.governance.enabled` | `true` | A Studio save is a proposal an approver makes live. |
+| `DRISHTI_SUTRA_FOUR_EYES` | `drishti.governance.four-eyes` | `true` | Nobody approves their own proposal (with security on). |
+| `DRISHTI_GOVERNANCE_DIR` | `drishti.governance.dir` | `./data/governance` | Where proposals are kept. |
+| `DRISHTI_PACKS_DIR` | `drishti.packs.dir` | `./packs` | The packs directory. |
+| `DRISHTI_PACKS_OVERLAY` | `drishti.packs.overlay` | `./data/packs/added.yaml` | The file of packs an administrator loaded from Admin → Packs; imported at start (`spring.config.import`) and named again by `drishti.packs.overlay`. Written by the server, not by hand. |
+| `DRISHTI_PACKS_INSTALLED` | `drishti.packs.installed-dir` | `./data/packs/installed` | Where packs installed from a registry are kept. |
+| `DRISHTI_PACK_REGISTRY` | `drishti.packs.registry.url` | empty | A signed pack registry (a folder, `file:` or `https:` URL with `index.json`); empty: none. |
+| `DRISHTI_PACKS` | `drishti.packs.enabled` | `finance` | The packs to load (comma list); a pack's parents load with it. |
+| `DRISHTI_DEFAULT_PACKS` | `drishti.packs.default-for-users` | empty | Packs new users get; empty: every installed pack. |
+| `DRISHTI_SUGGEST_LIMIT` | `drishti.commands.suggest-limit` | `25` | Entries in the command line's dropdown. |
+
+### Every placeholder in the console's `application.yaml`
+
+From `console/config/application.yaml`, resolved from environment variables only.
+
+| Variable | Sets | Default | What it does |
+|---|---|---|---|
+| `DRISHTI_CONSOLE_HOST` | `server.host` | `127.0.0.1` | The address the console listens on. |
+| `DRISHTI_CONSOLE_PORT` | `server.port` | `17480` | The console's port. |
+| `DRISHTI_BACKEND_URL` | `backend.url` | `http://127.0.0.1:18480` | Where the server is. |
+| `DRISHTI_PRODUCT` | `ui.product` | `Drishti` | The product name shown in pages. |
+| `DRISHTI_USER` | `ui.user` | `ash` | The acting user while sign-in is off. |
+| `DRISHTI_AUTH_ENABLED` | `auth.enabled` | `false` | Turn console sign-in on. |
+| `DRISHTI_SESSION_SECRET` | `auth.session_secret` | empty | The session cookie secret (at least 32 characters); environment only. |
+| `DRISHTI_TOKEN_SECRET` | `auth.token_secret` | empty | The token secret shared with the server's `drishti.security.secret`. |
+| `DRISHTI_SESSION_RECHECK_SECONDS` | `auth.recheck_seconds` | `10` | How often a session is re-checked against the server. |
+| `DRISHTI_SECURE_COOKIE` | `auth.secure_cookie` | `true` | Mark cookies `Secure` (`false` only for plain-HTTP development with sign-in on). |
+| `DRISHTI_OIDC_ENABLED` | `auth.oidc.enabled` | `false` | Run the single-sign-on flow. |
+| `DRISHTI_OIDC_ISSUER` | `auth.oidc.issuer` | empty | The OIDC issuer URL. |
+| `DRISHTI_OIDC_CLIENT_ID` | `auth.oidc.client_id` | empty | The OIDC client id. |
+| `DRISHTI_OIDC_CLIENT_SECRET` | `auth.oidc.client_secret` | empty | The OIDC client secret; empty for a public client (PKCE alone). |
+| `DRISHTI_OIDC_REDIRECT_URI` | `auth.oidc.redirect_uri` | empty | The redirect URI; empty: `<console>/auth/oidc/callback`. |
+| `DRISHTI_LIVE_MAX_SUBSCRIPTIONS` | `live.max_subscriptions` | `32` | Live subscriptions one browser may hold. |
+| `DRISHTI_CALC_ENABLED` | `calc.enabled` | `true` | Offer Calc. |
+| `DRISHTI_LAYOUTS_ENABLED` | `layouts.enabled` | `true` | Offer layout mode. |
+| `DRISHTI_PACKS_DIR` | `packs.dir` | `../packs` | The packs directory (a relative path resolves from `console/`). |
 
 ---
 
@@ -1055,6 +1183,9 @@ SPRING_PROFILES_ACTIVE=postgres DRISHTI_PG_URL=jdbc:postgresql://db:5432/drishti
 | `server.compression` | on for JSON and `text/event-stream` | |
 | `spring.threads.virtual.enabled` | `true` | Every request runs on a virtual thread. Leave it on. |
 | `spring.profiles.active` | none (`SPRING_PROFILES_ACTIVE`) | `postgres`, `aerospike` or `duckdb`, above. |
+| `spring.config.additional-location` | none (`SPRING_CONFIG_ADDITIONAL_LOCATION`) | Another config file or folder read **in addition to** the bundled one, e.g. `file:/etc/drishti/site.yaml`. See [QUICKSTART](../guides/QUICKSTART.md#supplying-a-different-application-config). |
+| `spring.config.location` | none | Config files read **instead of** the defaults: the bundled `application.yaml` is then not read unless you list `classpath:/application.yaml` first. |
+| `spring.config.import` | the local file and the packs overlay (bundled) | `optional:file:./application.local.yaml` and `optional:file:${DRISHTI_PACKS_OVERLAY:./data/packs/added.yaml}`. |
 | `management.endpoints.web.exposure.include` | `health,info,prometheus,metrics` | Actuator endpoints: `/actuator/health` (with `/liveness` and `/readiness` probes), `/actuator/prometheus` (timer `drishti.view`, gauges `drishti.live.*`). |
 | `springdoc.api-docs.path` / `springdoc.swagger-ui.path` | `/api/docs` / `/api/docs/ui` | The OpenAPI description and its UI. |
 | `logging.level.<package>` | Spring default (`INFO`) | e.g. `--logging.level.com.ash.drishti=DEBUG` |
