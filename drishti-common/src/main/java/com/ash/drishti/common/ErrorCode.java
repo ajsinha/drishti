@@ -45,7 +45,7 @@ public enum ErrorCode {
     CACHE_NOT_FOUND("DRS-5004", 404),
     FORBIDDEN("DRS-5002", 403),
     /** Input over a configured size or count limit (builder samples). */
-    PAYLOAD_TOO_LARGE("DRS-5003", 413),
+    PAYLOAD_TOO_LARGE("DRS-5005", 413),
     UNAUTHENTICATED("DRS-5010", 401),
     USER_NOT_FOUND("DRS-6001", 404),
     USER_EXISTS("DRS-6002", 409),

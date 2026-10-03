@@ -79,7 +79,7 @@ class BuilderApiTest {
     void tooManySamplesAreRefusedWithAProblem() throws Exception {
         mvc.perform(post("/api/v1/builder/shape").header("Authorization", as("ann", "author")).contentType(MediaType.APPLICATION_JSON)
                         .content(samples(4)))
-                .andExpect(status().isPayloadTooLarge()).andExpect(jsonPath("$.code").value("DRS-5003"))
+                .andExpect(status().isPayloadTooLarge()).andExpect(jsonPath("$.code").value("DRS-5005"))
                 .andExpect(jsonPath("$.detail").value(containsString("max-samples")));
     }
 
@@ -89,7 +89,7 @@ class BuilderApiTest {
         String body = "{\"samples\":[{\"name\":\"huge.json\",\"document\":{\"blob\":\"" + big + "\"}}]}";
         mvc.perform(post("/api/v1/builder/shape").header("Authorization", as("ann", "author")).contentType(MediaType.APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().isPayloadTooLarge()).andExpect(jsonPath("$.code").value("DRS-5003"))
+                .andExpect(status().isPayloadTooLarge()).andExpect(jsonPath("$.code").value("DRS-5005"))
                 .andExpect(jsonPath("$.detail").value(containsString("'huge.json'"))).andExpect(jsonPath("$.detail").value(containsString("max-file-mb")));
     }
 

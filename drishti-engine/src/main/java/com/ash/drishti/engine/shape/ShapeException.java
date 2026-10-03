@@ -18,7 +18,7 @@ package com.ash.drishti.engine.shape;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 
-/** Input the shape extractor refuses: over a configured limit (DRS-5003). */
+/** Input the shape extractor refuses: over a configured limit (DRS-5005). */
 public final class ShapeException extends DrishtiException {
 
     public ShapeException(String message) {

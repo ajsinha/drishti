@@ -590,7 +590,7 @@ low. See [PERFORMANCE.md](PERFORMANCE.md).
 ### `drishti.builder` — the Screen Builder's shape extractor
 
 `POST /api/v1/builder/shape` merges sample JSON documents into one JSON Schema with roles. Input over a limit is refused
-with `413 DRS-5003` before it is all parsed.
+with `413 DRS-5005` before it is all parsed.
 
 | Key | Default | Meaning |
 |---|---|---|

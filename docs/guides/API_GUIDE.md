@@ -962,7 +962,7 @@ field is for. It needs the `author` role (as Studio), reads and writes nothing i
   values (a masked value stays masked) and, for fields not in every file, which files had them. Conflicts come first,
   then rare fields.
 - Limits (`drishti.builder.*`): 50 samples, 5 MB per document, 25 MB per request, 64 levels deep. Over a limit is
-  `413 DRS-5003` naming the limit (and the file); a body that is not the right shape is `400 DRS-5001`; a caller who is
+  `413 DRS-5005` naming the limit (and the file); a body that is not the right shape is `400 DRS-5001`; a caller who is
   not an author gets `403 DRS-5002`.
 
 ```bash
@@ -1189,7 +1189,7 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-4004 | 400 | bad search | a structured search cannot be read (`detail` says where), names a field the kind does not have, or has a `limit` outside 1 to 1000 |
 | DRS-5001 | 400 | bad request | an invalid argument or body; a path not written plainly (`;`, a needless `%`-escape, a dot or empty segment); also "too many live streams on this server" |
 | DRS-5002 | 403 | forbidden | the caller lacks the role, the pack is not active for them, or the feature is off |
-| DRS-5003 | 413 | too large | builder samples over `drishti.builder.max-samples`, `max-file-mb`, `max-total-mb` or `max-depth` (`detail` names the limit and the file) |
+| DRS-5005 | 413 | too large | builder samples over `drishti.builder.max-samples`, `max-file-mb`, `max-total-mb` or `max-depth` (`detail` names the limit and the file) |
 | DRS-5004 | 404 | cache not found | no cache by that name (cache purge) |
 | DRS-5010 | 401 | unauthenticated | missing, bad or expired bearer token |
 | DRS-6001 | 404 | user not found | no such user |
