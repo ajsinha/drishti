@@ -132,6 +132,35 @@ class SutraCliTest {
     }
 
     @Test
+    void anUnreadableSampleStillWritesTheJUnitFileAndFailsAsATestCase() throws IOException {
+        Path p = pack(SUTRA, null, "a.json", "{\"id\":\"A\",\"size\":3}", "bad.json", "{not json", "bom.json", "\uFEFF{\"id\":\"B\",\"size\":4}",
+                "empty.json", "");
+        Path xml = tmp.resolve("junit-bad.xml");
+        Run r = run("test", p.toString(), "--junit", xml.toString());
+        assertThat(r.code()).isEqualTo(1);
+        String x = Files.readString(xml);
+        assertThat(x).contains("name=\"bad.json\"").contains("not valid JSON").contains("name=\"empty.json\"").contains("is empty");
+        assertThat(x).contains("failures=\"2\"").contains("name=\"bom.json\"").contains("name=\"a.json\"");
+        Path xml2 = tmp.resolve("junit-usage.xml");
+        assertThat(run("test", "--junit", xml2.toString()).code()).isEqualTo(2);
+        assertThat(Files.readString(xml2)).contains("<failure");
+        Path xml3 = tmp.resolve("junit-missing.xml");
+        assertThat(run("test", tmp.resolve("nope").toString(), "--junit", xml3.toString()).code()).isEqualTo(2);
+        assertThat(xml3).exists();
+    }
+
+    @Test
+    void expectYamlNamingAMissingFileFailsAndJsonlSamplesAreRead() throws IOException {
+        Path p = pack(SUTRA, "samples:\n  typo.json: { nonEmpty: [facts] }\n", "a.json", "{\"id\":\"A\",\"size\":3}",
+                "many.jsonl", "{\"id\":\"B\",\"size\":1}\n\n{\"id\":\"C\",\"size\":2}\n");
+        Path xml = tmp.resolve("junit-expect.xml");
+        Run r = run("test", p.toString(), "--junit", xml.toString());
+        assertThat(r.code()).isEqualTo(1);
+        assertThat(r.err()).contains("typo.json");
+        assertThat(Files.readString(xml)).contains("tests=\"4\"").contains("name=\"many.jsonl:2\"");
+    }
+
+    @Test
     void testWithNoSamplesIsSkippedNotFailed() throws IOException {
         Path none = pack(SUTRA, null);
         Files.delete(none.resolve("tests/widget"));
