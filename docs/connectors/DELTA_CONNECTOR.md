@@ -598,6 +598,7 @@ On a Delta connector (`drishti.sources.connectors.<name>.settings`, or the conne
 | `layout.<kind>.columns` | none | promoted paths ([section 4](#4-declaring-the-layout-in-a-pack)) |
 | `layout.<kind>.sort-by`, `file-rows`, `row-group-rows` | `id`, `250000`, `10000` (the trading pack: `1000`) | how writers lay the table out |
 | `refresh-seconds` | `10` | how often the table's latest version is checked; the type-ahead index is rebuilt every six |
+| `warm-dates` | `3` | after start, in the background, each table's newest N dates get their id map and one document read, so the first read of a recent past date is not the slow one (cold about 5x a warm read: 40-70 ms against 10 ms on the samples, more on a large day); `0` turns it off |
 | `id-map-mb` | `1024` | memory for days' id maps |
 | `columns-cache-mb` | `1024` | memory for days' column sets |
 | `doc-cache-mb` | `256` | memory for recently read documents |

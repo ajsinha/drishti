@@ -43,6 +43,14 @@ class BackendError(Exception):
         self.code = code
         self.detail = detail
 
+    @property
+    def page_status(self) -> int:
+        """The status a console page answers with: the server's own below 500; a timeout (the server's 504 DRS-1004, or the
+        console giving up waiting) is a 504 gateway timeout, any other server fault a 502."""
+        if self.status < 500:
+            return self.status
+        return 504 if self.status == 504 else 502
+
 
 def entity_path(kind: str, id_: str) -> tuple[str, dict]:
     """``kind/id`` for a server path, and the query it needs. An id a path cannot carry (one with ``/`` or ``\\``, or
@@ -71,6 +79,9 @@ class BackendClient:
         headers.update(kw.pop("headers", {}))
         try:
             r = await self._client.request(method, "/api/v1" + path, headers=headers, **kw)
+        except httpx.TimeoutException as e:
+            raise BackendError(504, "DRS-1004", f"the server did not answer in time ({type(e).__name__}); try again, "
+                                                 "or raise the server's drishti.sources.fetch-timeout") from e
         except httpx.HTTPError as e:
             raise BackendError(503, "DRS-5003", f"backend unreachable: {e}") from e
         if r.status_code >= 400:

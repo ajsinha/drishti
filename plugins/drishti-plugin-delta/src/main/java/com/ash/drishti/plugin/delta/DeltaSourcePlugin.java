@@ -58,7 +58,9 @@ import java.util.concurrent.TimeUnit;
  * <p>Settings: {@code root} (default {@code ./data/delta}), {@code domain} (a sub-folder, e.g. {@code finance}),
  * {@code kinds} (comma list; default: every table found), {@code mode.<kind>} ({@code snapshot}|{@code effective}),
  * {@code lookback-days} (10), {@code id-column} ({@code id}), {@code doc-column} ({@code doc}), {@code date-column}
- * ({@code business_date}), {@code refresh-seconds} (10: how often a table's latest version is checked),
+ * ({@code business_date}), {@code refresh-seconds} (10: how often a table's latest version is checked), {@code warm-dates}
+ * (3: after start, in the background, each table's newest dates have their id maps and a first document read, so the
+ * first read of a recent past date is not the slow one; 0 turns it off),
  * {@code cache-mb} (512: whole partitions of small tables kept in memory, by size), {@code source-name} ({@code delta}),
  * {@code engine} ({@code native}: Delta Kernel without Hadoop, the one that works on Windows; {@code hadoop}; or
  * {@code auto}, native on Windows; default from {@code DRISHTI_DELTA_ENGINE}, else {@code native}).
@@ -160,6 +162,38 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         });
         reindex();
         ctx.scheduler().scheduleWithFixedDelay(this::reindex, refresh * 6, refresh * 6, TimeUnit.SECONDS);
+        int warm = Integer.parseInt(ctx.setting("warm-dates", "3"));
+        if (warm > 0) {
+            loaders.execute(() -> warmRecentDates(warm));          // in the background: start does not wait for it
+        }
+    }
+
+    /**
+     * Makes the first read of a recent past date as quick as a later one: for each table, the id map of its newest
+     * {@code dates} partitions and one document of each (which loads the Parquet reader and its classes). The newest
+     * partition is already warm from the reindex. A failure is ignored: the read does the same work and reports it.
+     */
+    void warmRecentDates(int dates) {
+        for (String kind : tables.keySet()) {
+            try {
+                Optional<DeltaTable.Layout> l = layout(kind, null);
+                if (l.isEmpty()) {
+                    continue;
+                }
+                int n = 0;
+                for (LocalDate d : l.get().files().descendingKeySet()) {
+                    if (n++ >= dates) {
+                        break;
+                    }
+                    String[] ids = idMap(kind, l.get(), d).ids();
+                    if (ids.length > 0) {
+                        doc(EntityRef.of(kind, ids[0]), l.get(), d);
+                    }
+                }
+            } catch (RuntimeException e) {
+                // the read of that date will say what is wrong
+            }
+        }
     }
 
     private void add(String kind) {

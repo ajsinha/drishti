@@ -79,7 +79,7 @@ async def impact(request: Request, kind: str, id_: str):
     try:
         data = await request.app.state.backend.impact(kind, id_, ident(request))
     except BackendError as e:
-        return render(request, "terminal/missing.html", status_code=e.status if e.status < 500 else 502, kind=kind, id=id_, error=e)
+        return render(request, "terminal/missing.html", status_code=e.page_status, kind=kind, id=id_, error=e)
     return render(request, "terminal/impact.html", kind=kind, id=id_, data=data, screen="impact")
 
 
@@ -110,7 +110,7 @@ async def pack_overview(request: Request, name: str):
     try:
         data = await request.app.state.backend.pack_overview(name, ident(request))
     except BackendError as e:
-        return render(request, "terminal/missing.html", status_code=e.status if e.status < 500 else 502, kind="pack", id=name, error=e)
+        return render(request, "terminal/missing.html", status_code=e.page_status, kind="pack", id=name, error=e)
     return render(request, "terminal/pack.html", p=data, screen="pack")
 
 
@@ -190,7 +190,7 @@ async def compare(request: Request, kind: str, id_: str, from_: str = Query("", 
         if e.status == 404 or e.code in ("DRS-4003", "DRS-1001"):
             return render(request, "terminal/compare.html", kind=kind, id=id_, data=None, error=e, form=params, screen="compare",
                           from_known=fromKnownAt)
-        return render(request, "terminal/missing.html", status_code=e.status if e.status < 500 else 502, kind=kind, id=id_, error=e)
+        return render(request, "terminal/missing.html", status_code=e.page_status, kind=kind, id=id_, error=e)
     rows = [dict(c, before_text=_shown(c.get("before")), after_text=_shown(c.get("after")), delta_text=_delta(c.get("delta")))
             for c in data.get("changes", []) if not only or c.get("kind") == only]
     return render(request, "terminal/compare.html", kind=kind, id=id_, data=data, rows=rows, error=None, only=only, screen="compare",
@@ -203,7 +203,7 @@ async def view(request: Request, kind: str, id_: str, embed: int = 0):
     try:
         vm = await request.app.state.backend.view(kind, id_, ident(request))
     except BackendError as e:
-        return render(request, "terminal/missing.html", status_code=e.status if e.status < 500 else 502,
+        return render(request, "terminal/missing.html", status_code=e.page_status,
                       kind=kind, id=id_, error=e, embed=bool(embed))
     layout = await request.app.state.layouts.context(request, vm, bool(embed))      # the user's own arrangement, if any
     panels, pivots = await request.app.state.pivots.view(request, vm, layout["panels"])   # each Pivot tab as the user saved it
