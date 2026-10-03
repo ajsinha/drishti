@@ -24,6 +24,7 @@ import com.ash.drishti.common.JsonCodec;
 import com.ash.drishti.engine.ViewPipeline;
 import com.ash.drishti.engine.design.AutoDesigner;
 import com.ash.drishti.engine.design.Design;
+import com.ash.drishti.engine.design.SampleChecker;
 import com.ash.drishti.engine.shape.BuilderProperties;
 import com.ash.drishti.engine.shape.Sample;
 import com.ash.drishti.engine.shape.SchemaSampler;
@@ -35,6 +36,10 @@ import com.ash.drishti.identity.design.DesignService;
 import com.ash.drishti.identity.design.StoredDesign;
 import com.ash.drishti.identity.design.StoredDesign.SampleInfo;
 import com.ash.drishti.rachana.SutraRegistry;
+import com.ash.drishti.rachana.design.ops.Op;
+import com.ash.drishti.rachana.design.ops.OpApplier;
+import com.ash.drishti.rachana.design.ops.OpResult;
+import com.ash.drishti.rachana.design.ops.Ops;
 import com.ash.drishti.rachana.model.Sutra;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.Principal;
@@ -95,9 +100,12 @@ public class DesignController {
     private final JsonCodec codec;
     private final BuilderProperties limits;
     private final ObjectMapper mapper;
+    private final SampleCheckService checks;
+    private final OpApplier applier = new OpApplier();
 
     public DesignController(DesignService designs, ShapeService shapes, AutoDesigner designer, BuilderController builder, ViewPipeline pipeline,
-            SutraRegistry sutras, SourceRouter router, Entitlements entitlements, JsonCodec codec) {
+            SutraRegistry sutras, SourceRouter router, Entitlements entitlements, JsonCodec codec, SampleCheckService checks) {
+        this.checks = checks;
         this.designs = designs;
         this.shapes = shapes;
         this.designer = designer;
@@ -336,6 +344,105 @@ public class DesignController {
         return out;
     }
 
+    // ---- operations ------------------------------------------------------------------------------------------------
+
+    /**
+     * Body {@code {baseRev, ops, sample?}}: applies the operations (see {@code POST /builder/edit}) to the Design's Sutra and
+     * appends the ones that applied to its log. {@code baseRev} is the {@code rev} you built on; if the design has moved on the answer
+     * is {@code 409 DRS-5007} and nothing changes. Answers {@code {rev, yaml, problems, applied, preview}}: the preview is of the
+     * named {@code sample} (default the first), or absent when the design has none.
+     */
+    @PostMapping(path = "/{id}/ops", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ObjectNode ops(@PathVariable String id, HttpServletRequest request, @RequestAttribute(Principal.ATTRIBUTE) Principal who) throws IOException {
+        JsonNode b = body(request);
+        int baseRev = baseRev(b, true, null);
+        List<Op> ops = BuilderController.ops(b);
+        OpResult[] result = new OpResult[1];
+        StoredDesign d = designs.applyOps(who.user(), id, baseRev, yaml -> {
+            OpResult r = applier.apply(yaml, ops);
+            result[0] = r;
+            java.util.Set<Integer> failed = new java.util.HashSet<>();
+            r.problems().forEach(p -> failed.add(p.op()));
+            List<Op> done = new ArrayList<>();
+            for (int i = 0; i < ops.size(); i++) {
+                if (!failed.contains(i)) {
+                    done.add(ops.get(i));
+                }
+            }
+            return new DesignService.Applied(r.yaml(), Ops.toJson(done));
+        });
+        return outcome(d, result[0], text(b, "sample"), who);
+    }
+
+    /** Body {@code {baseRev?}}: takes the last step of the log back; {@code 409 DRS-5007} when there is none. Answers as {@code /ops}. */
+    @PostMapping(path = "/{id}/undo")
+    public ObjectNode undo(@PathVariable String id, HttpServletRequest request, @RequestAttribute(Principal.ATTRIBUTE) Principal who) throws IOException {
+        JsonNode b = optionalBody(request);
+        return outcome(designs.undo(who.user(), id, baseRev(b, false, designs.get(who.user(), id))), null, null, who);
+    }
+
+    /** Body {@code {baseRev?}}: brings back the step undo took. */
+    @PostMapping(path = "/{id}/redo")
+    public ObjectNode redo(@PathVariable String id, HttpServletRequest request, @RequestAttribute(Principal.ATTRIBUTE) Principal who) throws IOException {
+        JsonNode b = optionalBody(request);
+        return outcome(designs.redo(who.user(), id, baseRev(b, false, designs.get(who.user(), id))), null, null, who);
+    }
+
+    /**
+     * The Design's Sutra against all its samples: the matrix of {@code POST /builder/check} (every cell ok, empty, error or noAccess,
+     * with counts), plus the {@code rev} it checked. A green matrix marks the design {@code checked} until the next edit. References are
+     * read again with your rights and masks.
+     */
+    @PostMapping("/{id}/check")
+    public JsonNode check(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal who) throws IOException {
+        StoredDesign d = designs.get(who.user(), id);
+        if (d.sutra == null || d.sutra.isBlank()) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "this design has no Sutra yet: start from auto-design, an existing Sutra or an empty one");
+        }
+        if (d.samples.isEmpty()) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "this design has no samples to check against");
+        }
+        List<SampleChecker.Input> inputs = new ArrayList<>();
+        for (SampleInfo s : d.samples) {
+            inputs.add(StoredDesign.REF.equals(s.type()) ? new SampleChecker.Input(s.name(), null, EntityRef.of(s.refKind(), s.refId()))
+                    : new SampleChecker.Input(s.name(), mapper.readTree(designs.sample(who.user(), id, s.name())), null));
+        }
+        SampleChecker.Matrix m = checks.check(sutras.check(d.sutra), d.kind, inputs, who);
+        designs.markChecked(who.user(), id, d.rev, m.ok());
+        ObjectNode out = mapper.valueToTree(m);
+        out.put("rev", d.rev);
+        return out;
+    }
+
+    private ObjectNode outcome(StoredDesign d, OpResult r, String sample, Principal who) {
+        ObjectNode out = mapper.createObjectNode();
+        out.put("rev", d.rev).put("yaml", d.sutra).put("status", d.status).put("opsAt", d.opsAt).put("opsCount", d.ops.size());
+        out.set("problems", mapper.valueToTree(r == null ? List.of() : r.problems()));
+        out.put("applied", r == null ? 0 : r.applied());
+        if (!d.samples.isEmpty() && !d.sutra.isBlank()) {
+            try {
+                out.set("preview", mapper.valueToTree(preview(d.id, sample, who)));
+            } catch (DrishtiException | IOException e) {
+                out.put("previewError", e.getMessage());
+            }
+        }
+        return out;
+    }
+
+    private static int baseRev(JsonNode b, boolean required, StoredDesign current) {
+        if (b.path("baseRev").canConvertToInt() && b.get("baseRev").isIntegralNumber()) {
+            return b.get("baseRev").asInt();
+        }
+        if (required || current == null) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "'baseRev' is required: the revision you built on (the 'rev' of the design)");
+        }
+        return current.rev;
+    }
+
+    private JsonNode optionalBody(HttpServletRequest request) throws IOException {
+        return request.getContentLengthLong() <= 0 && request.getContentType() == null ? mapper.createObjectNode() : body(request);
+    }
+
     // ---- helpers -------------------------------------------------------------------------------------------------
 
     private record Skipped(String name, String reason) {}
@@ -412,7 +519,9 @@ public class DesignController {
         if (full) {
             o.put("sutra", d.sutra).put("notes", d.notes);
             o.set("tests", mapper.valueToTree(d.tests));
-            o.set("ops", mapper.valueToTree(d.ops));
+            o.put("opsAt", d.opsAt);
+            ArrayNode log = o.putArray("ops");                // the steps, without the Sutra texts they hold
+            d.ops.forEach(e -> log.addObject().put("at", e.path("at").asLong()).set("ops", e.path("ops")));
         }
         return o;
     }

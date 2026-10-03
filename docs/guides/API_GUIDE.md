@@ -971,6 +971,38 @@ curl -s -X POST $B/builder/shape -H 'Content-Type: application/json' \
   | jq -c '.roles'
 ```
 
+#### Operations and the check matrix (stateless)
+
+Two endpoints for the Build workbench and the CLI, open to every signed-in user, writing nothing:
+
+- `POST /api/v1/builder/edit` with `{yaml, ops: [...]}` answers `{yaml, applied, problems}`. Operations are applied in order to the
+  Sutra's text, which keeps its comments, quoting and key order wherever an operation does not touch them. After each operation the
+  result is parsed as a Sutra; an operation that fails, or would make an invalid Sutra, is skipped with a located problem
+  `{op, name, code, message, line}` (`op` is its index in the list) and the text stays as it was: the answer is never a corrupted Sutra.
+- `POST /api/v1/builder/check` with `{yaml, kind?, samples: [{name, document} | {name, ref: {kind, id}}]}` answers the *check matrix*:
+  `{ok, samples: [{name, layout, status, message?}], panels: [{id, cells: [{status, message?}], counts}], strip: [{label, blank}], counts}`.
+  A cell is `ok`, `empty` (the document lacks what the panel asks for), `error` (with the panel's message) or `noAccess` (a reference to
+  a kind you may not open, or a panel whose `source` is one). References are read again with your rights and masks. An invalid
+  Sutra is the usual `422` with its problems. Studio's test and auto-design's pruning use the same checker, so they agree.
+
+The operations (`{"op": ..., ...}`, fields not listed are refused with the operation's index in the message):
+
+| `op` | Fields | Does |
+|---|---|---|
+| `addPanel` | `kind`, `id?`, `at?: {area, before \| after, span, height}`, `options?` | adds a panel of one of the 20 kinds; a kind's required options (such as `rows`) must be in `options`; without `at` it goes at the end of the main column; no `id` makes one from the kind |
+| `move` | `panel`, `area?`, `before? \| after?`, `span?`, `height?` | moves (and resizes) a panel through the layout editor; `span: 12` is the whole column, `height: 0` as tall as the content; omitted sizes stay |
+| `setOption` | `panel`, `option`, `value` | sets one option or panel key (`title`, `key`, `code`, `area`, `span`, `height`, `columns`, the kind's options); `null` removes it; checked against the kind's options and their allowed values |
+| `bind` | `panel`, `path`, `role?` | binds a path or field in a role the kind takes: its options (`rows`, `x`, `y`, `value`, `by`, `across`...) or `column` (table, ladder), `field` (kv, status), `series` (area), which append; no role: the kind's next unfilled one |
+| `remove` | `panel` | removes a panel with the comment just above it |
+| `setTitle` | `title: {pill, id, with?}` | the title line |
+| `setStrip` | `items: [{label, bind, fmt?, tone?, emphasis?}]` | the header key figures; `[]` removes the strip |
+| `setKeys` | `keys: {F2: ...}` | the function keys; `{}` removes them |
+| `setMatch` | `match: {kind, where?, priority?}` | which entities the Sutra applies to |
+| `text` | `yaml` | replaces the whole text (the YAML tab); comments and order are then the new text's |
+
+Operation codes: `DRS-5020` malformed, `DRS-5021` no such panel, `DRS-5022` kind or option not accepted, `DRS-5023` value not valid,
+`DRS-5024` text cannot be edited in place; a result that is not a valid Sutra keeps the parser's `DRS-2nnn`.
+
 #### Designs: your work, kept on the server
 
 `/api/v1/builder/designs` keeps a user's samples, Sutra and notes (the Build workbench's *My designs*). Open to every signed-in
@@ -987,6 +1019,9 @@ user; a design is reachable only by its owner (anyone else gets `404 DRS-5006`);
 | `DELETE` | `/builder/designs/{id}/samples?name=` | remove a sample by name |
 | `GET` | `/builder/designs/{id}/samples/document?name=` | a kept sample document (a reference keeps none) |
 | `POST` | `/builder/designs/{id}/shape` | the shape of the samples, as `/builder/shape`, plus `skipped` (references that could not be read, with the reason) |
+| `POST` | `/builder/designs/{id}/ops` | body `{baseRev, ops, sample?}`: applies operations (as `/builder/edit`) to the design's Sutra and appends the ones that applied to its log; answers `{rev, yaml, status, problems, applied, preview}` (`preview` of `sample`, default the first; `previewError` if it cannot be drawn). `baseRev` is the `rev` you built on: a stale one is `409 DRS-5007` and nothing changes. The log keeps `drishti.builder.designs.max-ops` steps |
+| `POST` | `/builder/designs/{id}/undo`, `/redo` | body `{baseRev?}`: moves back or forward one step along the log (a new `rev` with the earlier or later text); `409 DRS-5007` when there is no step to move to or `baseRev` is stale. A new operation after an undo drops what redo would have brought back; a text change made with `PATCH` is a step too |
+| `POST` | `/builder/designs/{id}/check` | the check matrix (as `/builder/check`) over all the design's samples, plus the `rev` checked; a green matrix marks the design `checked` until the next edit |
 | `GET` | `/builder/designs/{id}/preview?sample=` | the Sutra against one sample (default the first). A reference is read again through the sources with the caller's rights and masks; a kind the caller may not open is `403 DRS-5002` "no access" |
 | `POST` | `/builder/designs/{id}/autodesign` | drafts a Sutra from the samples as `/builder/design` does, keeps it as the design's Sutra and answers the draft with `rev` |
 
@@ -1240,6 +1275,8 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-5005 | 413 | too large | builder samples over `drishti.builder.max-samples`, `max-file-mb`, `max-total-mb` or `max-depth`; designs over `drishti.builder.designs.*` (`detail` names the limit and the file) |
 | DRS-5004 | 404 | cache not found | no cache by that name (cache purge) |
 | DRS-5006 | 404 | design not found | no Build design with that id, or it belongs to someone else |
+| DRS-5007 | 409 | stale revision | an edit built on an older `rev` of a design than the server holds, or an undo or redo with nothing to move to |
+| DRS-5020–5024 | 200 (in `problems`) | operation refused | one operation of an edit could not be applied (malformed, no such panel, option not accepted, bad value, text not editable in place) |
 | DRS-5010 | 401 | unauthenticated | missing, bad or expired bearer token |
 | DRS-6001 | 404 | user not found | no such user |
 | DRS-6002 | 409 | user exists | a user with that name already exists |

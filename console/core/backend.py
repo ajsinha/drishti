@@ -172,6 +172,10 @@ class BackendClient:
             body["document"] = document
         return await self._send("POST", "/studio/preview", ident, json=body)
 
+    async def check(self, yaml_text: str, kind: str, samples: list, ident=None) -> dict:
+        """The panel by sample matrix of the server's one checker (``POST /builder/check``); samples are ``{name, document}`` or ``{name, ref: {kind, id}}``."""
+        return await self._send("POST", "/builder/check", ident, json={"yaml": yaml_text, "kind": kind, "samples": samples})
+
     async def inferred_from(self, kind: str, id_: str, name: str, document, ident=None) -> str:
         return await self._send("POST", "/studio/inferred", ident, json={"kind": kind, "id": id_, "name": name, "document": document})
 

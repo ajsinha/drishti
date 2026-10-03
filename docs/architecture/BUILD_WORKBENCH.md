@@ -159,6 +159,22 @@ them, with no logic of its own: `/api/v1/builder/designs` (list, create, read, u
 - **Operations** live in a `design.ops` package in `drishti-rachana`: a sealed `Op` interface with one small class per
   operation (`AddPanel`, `Move`, `SetOption`, `Bind`, `Remove`, `SetTitle`, `SetStrip`, `SetKeys`, `SetMatch`, `Text`)
   and an `OpApplier`; `SutraLayoutEditor` keeps placement and comment preservation and is reused, not grown.
+  **As built (step 5):** `Op` (sealed) with `AddPanel` (`kind`, `id?`, `at {area, before|after, span, height}`, `options`), `Move` (through
+  `SutraLayoutEditor`, which now can leave the version line alone), `SetOption` (null removes), `Bind` (roles are the options the kind
+  accepts that hold a path, plus `column`, `field`, `series` which append; no role: the kind's next unfilled one), `Remove`, `SetTitle`,
+  `SetStrip`, `SetKeys`, `SetMatch`, `Text`; `Ops` reads and writes their JSON (`{"op":"addPanel",...}`) and names the operation and
+  field that is wrong. The line helpers the editors share moved to `SutraText`. `OpApplier` applies a list, re-parses after each
+  operation and skips one that fails or would make an invalid Sutra, with an `OpProblem {op, name, code, message, line}`. Values are written
+  as one-line flow YAML (plain when that reads back the same, else quoted), so a panel written as a flow mapping stays one. Panels
+  inside a `tabs` body and a `panels:` written as one flow list cannot be edited (`DRS-5024`).
+- **The log.** A design's `ops` is a list of steps `{ops, before, after, at}` with a cursor `opsAt`: `/ops` appends (dropping the redo
+  tail), `/undo` and `/redo` move the cursor and restore the text, every move is a new `rev`; a text change made by `PATCH` or
+  auto-design is a step too; at most `drishti.builder.designs.max-ops` (100) steps are kept. A stale `baseRev` is `409 DRS-5007`.
+- **The checker as built.** `SampleChecker.check(panelIds, inputs, renderer)` in `engine.design` returns `Matrix {ok, samples, panels
+  [{id, cells, counts}], strip [{label, blank}], counts}`; the renderer (the server's `SampleCheckService`, or the previewer auto-design
+  is given) carries the caller's masks and open rights, throws `NoAccess` for a reference to a kind the caller may not open (a panel whose
+  `source` is one is `noAccess` too), and a render failure is an `error` column. Auto-design's pruning reads its counts from the
+  matrix; the console's `POST /studio/test` asks `/builder/check` for one sample and reshapes the answer as before.
 - **Persistence.** A `DesignStore` interface with a file store (`data/designs/<user>/<id>/`, files readable by the
   server only) and a JPA store, like the preference store. The console keeps no sample sets in memory any more.
   Settings: 50 designs per user, 50 samples and 25 MB per design, 250 MB per user; scratch designs expire after a day,
@@ -189,7 +205,7 @@ Studio is folded in, because it is what users are waiting for.
 | Step | Delivers | Accepted when |
 |---|---|---|
 | **4. Designs** (done) | `DesignStore` (file, JPA), `/builder/designs` with samples, quotas and expiry; `/build` (My designs) and `/build/new` (files, folder, schema with synthetic samples, store references, examples, existing Sutra); the extractor becomes the Data view; `/build/shape` redirects | a sample set survives a console restart; two consoles see the same Design; limits answer with DRS codes; a reference to a kind the user may no longer open previews as "no access" |
-| **5. Operations and one checker** | the `design.ops` package; stateless `/builder/edit` and `/builder/check`; `SampleChecker` behind Studio's test and auto-design's pruning | every operation on all 20 kinds keeps comments and order; a bad operation is a located problem; a sample set with a missing field shows the right empty and error cells |
+| **5. Operations and one checker** (done) | the `design.ops` package; stateless `/builder/edit` and `/builder/check`; `SampleChecker` behind Studio's test and auto-design's pruning | every operation on all 20 kinds keeps comments and order; a bad operation is a located problem; a sample set with a missing field shows the right empty and error cells |
 | **6. Workbench with the visual canvas** | `/build/d/{id}`: Data, Design (canvas, palette, field drops with suggestions, inspector, undo/redo, keyboard path, `grid-keys.js` shared with layout mode), YAML, Problems, Tests as you type, sample switcher, *Preview with a file…*, phone and theme toggles; the guide `docs/guides/SCREEN_DESIGNER.md` and its help entry | the all-panels showcase is built from its samples without typing YAML, by mouse and by keyboard only; a folder → auto-design → switch samples → fix → green matrix test; layout mode's tests pass with the shared module |
 | **7. Studio folded in** | all `/studio*` addresses redirect into the workbench; Studio's test entities become tests on a Design; command palette; diff and versions; the guide grows these chapters | every old Studio address in the console tests lands on an equivalent screen; keyboard-only use across panes |
 | **8. Ship and scale** | propose with evidence, reviewers see the matrix, approval makes it live; pack fragment export and folder/zip import; the headless CLI with the `packs/<p>/tests/` convention run over every shipped pack in the build; development file binding; read-only share links; the guide's end-to-end walkthrough | folder → design → check → propose → approve → the view serves the new version; an exported fragment loads through Admin → Packs and passes `sutra test` |

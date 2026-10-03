@@ -261,6 +261,7 @@ drishti:
       named-ttl: 90d                # a named design, likewise
       warn-after: 75d               # a named design untouched this long is listed with an expiry warning
       sweep-interval: 1h            # how often expired designs are deleted
+      max-ops: 100                  # steps of the operation log a design keeps for undo and redo
   packs:
     # Domain packs (packs/<name>/pack.yaml): Sutras, mnemonics, links, badges, roles, vocabulary, samples.
     # Site settings below always override what a pack contributes.

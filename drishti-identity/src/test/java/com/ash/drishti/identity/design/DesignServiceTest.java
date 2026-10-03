@@ -44,7 +44,7 @@ class DesignServiceTest {
 
     private static DesignProperties props(int perUser, int samples, int mb, int userMb) {
         return new DesignProperties("file", null, perUser, samples, mb, userMb, Duration.ofDays(1), Duration.ofDays(90), Duration.ofDays(75),
-                Duration.ofHours(1));
+                Duration.ofHours(1), null);
     }
 
     private static NewSample doc(String name, String json) {

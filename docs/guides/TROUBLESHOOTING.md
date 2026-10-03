@@ -771,5 +771,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 | `DRS-5005` | a request body was larger than the sample limits of the builder endpoints (HTTP 413); send fewer or smaller documents |
 | `DRS-5004` | no cache by that name (cache purge) |
 | `DRS-5006` | no such Build design, or it is not yours (a design is only ever reachable by its owner) |
+| `DRS-5007` | an edit built on an older revision of a design (reload it, then edit again), or an undo/redo with nothing to move to (HTTP 409) |
+| `DRS-5020`–`DRS-5024` | one operation of a Build edit was refused (listed in `problems` with its index): malformed, no such panel, option not accepted, bad value, text not editable in place |
 | `DRS-5010` | not signed in |
 | `DRS-6001`–`DRS-6010` | user management (see [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)); `DRS-6005` is a locked account |

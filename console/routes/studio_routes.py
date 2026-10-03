@@ -230,20 +230,32 @@ async def save_tests(request: Request, sutra: str):
 
 @router.post("/test")
 async def run_test(request: Request):
-    """Previews the Sutra on one entity and says how it went: problems in the Sutra, or panels that could not bind."""
+    """Previews the Sutra on one entity and says how it went: problems in the Sutra, or panels that could not bind.
+    The server's one checker answers (``/builder/check``); this only reshapes its matrix for Studio's test list."""
     import time
 
     body = await _preview_body(request)
     t0 = time.perf_counter()
+    sample = {"name": body.get("id") or "sample"}
+    if body.get("document") is not None:
+        sample["document"] = body["document"]
+    else:
+        sample["ref"] = {"kind": body["kind"], "id": body["id"]}
     try:
-        vm = await request.app.state.backend.preview(body["yaml"], body["kind"], body.get("id") or "", ident(request))
+        m = await request.app.state.backend.check(body["yaml"], body["kind"], [sample], ident(request))
     except BackendError as e:
         return {"ok": False, "code": e.code, "detail": e.detail, "problems": getattr(e, "problems", []),
                 "ms": round((time.perf_counter() - t0) * 1000, 1)}
-    failed = [{"panel": p.get("id"), "error": p.get("error")} for p in vm.get("panels", []) if p.get("error")]
-    empty = [p.get("id") for p in vm.get("panels", []) if p.get("empty") and not p.get("error")]
-    return {"ok": not failed, "panels": len(vm.get("panels", [])), "failed": failed, "empty": empty,
-            "layout": (vm.get("provenance") or {}).get("layout"), "ms": round((time.perf_counter() - t0) * 1000, 1)}
+    ms = round((time.perf_counter() - t0) * 1000, 1)
+    one = (m.get("samples") or [{}])[0]
+    if one.get("status") == "noAccess":
+        return {"ok": False, "code": "DRS-5002", "detail": one.get("message") or "no access", "problems": [], "ms": ms}
+    if one.get("status") == "error":
+        return {"ok": False, "code": "DRS-4002", "detail": one.get("message") or "the view could not be built", "problems": [], "ms": ms}
+    panels = m.get("panels", [])
+    failed = [{"panel": p["id"], "error": p["cells"][0].get("message")} for p in panels if p["cells"][0]["status"] == "error"]
+    empty = [p["id"] for p in panels if p["cells"][0]["status"] == "empty"]
+    return {"ok": not failed, "panels": len(panels), "failed": failed, "empty": empty, "layout": one.get("layout"), "ms": ms}
 
 
 @router.post("/summary")

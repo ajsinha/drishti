@@ -433,6 +433,30 @@ def test_studio_keeps_test_entities_and_runs_them(client, backend):
     assert bad["ok"] is False and bad["code"] == "DRS-2002"
 
 
+def test_studio_test_is_the_servers_one_checker_reshaped(client, backend):
+    """Studio's test list is the check matrix of one sample: failed panels with their message, empty ones, no access."""
+    sent = {}
+
+    async def check(yaml_text, kind, samples, ident=None):
+        sent.update(kind=kind, samples=samples)
+        return {"ok": False, "samples": [{"name": "IRS-1", "layout": "irs v3", "status": "ok"}], "counts": {},
+                "panels": [{"id": "terms", "cells": [{"status": "ok"}]}, {"id": "legs", "cells": [{"status": "empty"}]},
+                           {"id": "cf", "cells": [{"status": "error", "message": "bad row"}]}]}
+
+    backend.check = check
+    r = client.post("/studio/test", json={"yaml": "sutra: x", "kind": "trade", "id": "IRS-1"}).json()
+    assert sent == {"kind": "trade", "samples": [{"name": "IRS-1", "ref": {"kind": "trade", "id": "IRS-1"}}]}
+    assert r["ok"] is False and r["panels"] == 3 and r["empty"] == ["legs"] and r["layout"] == "irs v3"
+    assert r["failed"] == [{"panel": "cf", "error": "bad row"}]
+
+    async def denied(yaml_text, kind, samples, ident=None):
+        return {"ok": False, "samples": [{"name": "IRS-1", "status": "noAccess", "message": "no access: you may not open trade entities"}], "panels": []}
+
+    backend.check = denied
+    d = client.post("/studio/test", json={"yaml": "sutra: x", "kind": "trade", "id": "IRS-1"}).json()
+    assert d["ok"] is False and d["code"] == "DRS-5002" and "may not open" in d["detail"]
+
+
 def test_a_table_panel_can_turn_its_search_off(client):
     module = client.app.state.templates.env.get_template("_macros/panels.html").module
     on = str(module.table({"columns": ["A"], "numeric": [False], "rows": [{"cells": [{"text": "x"}]}]}))

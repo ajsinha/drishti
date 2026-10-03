@@ -56,7 +56,13 @@ public final class StoredDesign {
     public String sutra = "";
     public int rev;
     public List<JsonNode> tests = new ArrayList<>();
+    /**
+     * The operation log, oldest first: each entry is {@code {ops, before, after, at}} (the operations as JSON, the Sutra text
+     * before and after, when). Undo and redo move {@link #opsAt} along it.
+     */
     public List<JsonNode> ops = new ArrayList<>();
+    /** How many log entries are applied: the entries from here on are what redo brings back. */
+    public int opsAt;
     public String notes = "";
     public String status = "draft";
     public long created;
@@ -78,6 +84,7 @@ public final class StoredDesign {
         c.rev = rev;
         c.tests = new ArrayList<>(tests);
         c.ops = new ArrayList<>(ops);
+        c.opsAt = opsAt;
         c.notes = notes;
         c.status = status;
         c.created = created;

@@ -282,6 +282,21 @@ class FakeBackend:
             raise e
         return await self.view(kind, id_, ident)
 
+    async def check(self, yaml_text, kind, samples, ident=None):
+        """The server's /builder/check, faked from the fake preview: a cell per panel and sample."""
+        if "BROKEN" in yaml_text:
+            e = BackendError(422, "DRS-2002", "1 problem(s)")
+            e.problems = [{"code": "DRS-2101", "message": "bad expression", "location": {"file": "studio.yaml", "line": 4, "column": 3}}]
+            raise e
+        rows, infos = {}, []
+        for s in samples:
+            v = await self.view(kind, (s.get("ref") or {}).get("id", "IRS-48213"), ident)
+            infos.append({"name": s["name"], "layout": (v.get("provenance") or {}).get("layout"), "status": "ok"})
+            for p in v.get("panels", []):
+                st = "error" if p.get("error") else "empty" if p.get("empty") else "ok"
+                rows.setdefault(p["id"], []).append({"status": st, **({"message": p["error"]} if p.get("error") else {})})
+        return {"ok": True, "samples": infos, "panels": [{"id": k, "cells": c} for k, c in rows.items()], "strip": [], "counts": {}}
+
     async def inferred(self, kind, id_, name, ident=None):
         return f"sutra: {name}\nversion: 1\n"
 
