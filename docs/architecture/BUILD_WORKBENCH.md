@@ -66,6 +66,18 @@ Design { id, name, owner, kind, base: "trade-blotter@7" | null,
   uses the existing four-eyes review, with the check matrix, sample names and notes attached as evidence. Approval
   makes it `live(vN)` through the registry's versioning. *Edit* on a live Sutra opens a new Design with `base` set; its
   operations replay when the base version moves, and conflicts show as problems, never as silently dropped edits.
+- **Versions are never rewritten.** A Design made from `name@v` proposes `name@(latest+1)` (the `version:` line is renumbered as an
+  undoable step); a Design not based on an existing `name@version` that says the same name and version is refused at *propose*
+  time with `DRS-2028` (saying when a pack owns it), not at approval.
+- **Rebase.** When the base has a newer live version the Design says so (`baseMoved` on open, check and propose; a status-bar
+  chip and a Problems entry) and *Ship -> Rebase* (`POST /{id}/rebase`) replays the operations on the new base. A step that no longer
+  applies, a hand-typed text edit, and a full step log become problems (`DRS-5025`-coded) naming the step; the log starts again from
+  the new base (undo does not go back past a rebase).
+- **Quotas count everything.** Sutra, notes and tests are counted with the samples in the Design and user limits and have caps of their
+  own (`max-sutra-kb`, `max-notes-kb`, `max-tests-kb`, `DRS-5005`). Scratch Designs have a separate small cap (`max-scratch`, oldest
+  evicted first) and never fill the named quota; `GET /studio?...` only asks (a confirmation page); `POST /studio` creates.
+- **Evidence and links show only what the viewer may see.** Reference samples carry entity ids in their names: other viewers see
+  `kind (reference)`; the notes go only to the author and to approvers.
 - **Scratch designs.** Opening the workbench without naming anything creates an unnamed Design that expires after a day.
   Trying never asks for a name or a permission.
 
@@ -177,8 +189,8 @@ them, with no logic of its own: `/api/v1/builder/designs` (list, create, read, u
   matrix; the console's `POST /studio/test` asks `/builder/check` for one sample and reshapes the answer as before.
 - **Persistence.** A `DesignStore` interface with a file store (`data/designs/<user>/<id>/`, files readable by the
   server only) and a JPA store, like the preference store. The console keeps no sample sets in memory any more.
-  Settings: 50 designs per user, 50 samples and 25 MB per design, 250 MB per user; scratch designs expire after a day,
-  named ones after 90 days untouched (with a warning at 75). Sample contents are never logged; deleting a Design
+  Settings: 50 designs per user, 50 samples and 25 MiB per design, 250 MiB per user (binary megabytes, 1,048,576 bytes; the messages say MiB); an upload over the limit is answered `413` after the body is read, never a closed connection; scratch designs expire after a day,
+  named ones after 90 days untouched (with a warning at 75). Only writes extend a Design's life; reads (opening, previewing, exporting) do not. Sample contents are never logged; deleting a Design
   deletes its samples at once.
 - **Checking cost.** Checks run with a per-user concurrency cap and a time budget, cancel when superseded, and skip
   panels whose inputs did not change.
@@ -216,9 +228,11 @@ the console's folder as JSON; zip entries are read in memory with count and size
 `pack.yaml` stub, `sutras/<domain>/`, `tests/<sutra>/*.json` + `expect.yaml` (`noErrors`, `nonEmpty` from the matrix), `samples/<kind>/`,
 README. *CLI:* `com.ash.drishti.server.cli` (`DrishtiApplication.main` hands `sutra ...` to `CliLauncher`, a non-web Spring context with
 temporary identity, governance and design folders); `SutraCliTest` runs `sutra test` over every shipped pack's `tests/` folder and the ten
-examples; the format is in `docs/guides/SUTRA_CLI.md`. *File binding:* `drishti.builder.file-binding` (default false); the Design keeps
-`boundFile` and `boundSync` (the SHA-256 of the text last written or read); save writes atomically after `SutraRegistry.check`; a changed
-file with an unsynced Design is `409 DRS-5007`; `GET /{id}/sync` (polled by the workbench every 3 s and on focus) turns an outside edit into
+examples; the format is in `docs/guides/SUTRA_CLI.md`. *File binding:* `drishti.builder.file-binding` (default false) in `drishti.builder.dev-dir/<user>/` (never a directory the registry loads,
+so saving cannot make anything live; `DesignBinding`); the Design keeps
+`boundFile` and `boundSync` (the SHA-256 of the text last written or read); save writes through an exclusively created temporary file
+(no symbolic link followed) after `SutraRegistry.check`; a changed
+file with an unsynced Design is `409 DRS-5007`; `POST /{id}/sync` (polled by the workbench every 3 s and on focus) turns an outside edit into
 a `text` step. *Sharing:* `POST|DELETE /{id}/share`; the token is `base64url(owner).secret`, only its SHA-256 is stored, and
 `GET /shared/{id}?token=` answers Sutra, operations and sample names (a bad or revoked token is the same `404 DRS-5006`); the console page
 `/build/d/{id}?share=token` previews against the viewer's own JSON or a stored entity under the viewer's rights. Decisions: file binding on

@@ -1818,7 +1818,7 @@ console/.venv/bin/python -m pytest -q console/tests/test_sources.py -k connector
 | Layer | Where | How | Examples |
 |---|---|---|---|
 | Unit | every module, `src/test/java` | JUnit 5 and AssertJ, plain constructors, no Spring | `DataNodeTest`, `ShapeFingerprinterTest`, `SearchQueryTest`, `DocumentDiffTest`, `FormatsTest`, `SutraParserTest`, `IdColumnTest` |
-| Property-based | `drishti-rachana` | jqwik `@Property` | `ElTest` (random arithmetic and paths) |
+| Property-based | `drishti-rachana`, `drishti-engine` | plain JUnit 5 `@ParameterizedTest` over seeded generators (`SplittableRandom`/`Random`, base seed overridable with `-Ddrishti.test.seed`); failures print the case index, seed and input, with a greedy shrink | `ElTest` (random arithmetic), `ShapePropertyTest` |
 | Concurrency | api, engine, identity, server | many threads on one object, then invariants | `HitIndexConcurrencyTest`, `TopicHubTest`, `UserServiceConcurrencyTest`, `LiveStreamSlotsTest` |
 | Contract | `drishti-testkit` and subclasses | one abstract test class, one subclass per implementation | `DatedSourceContract` (Delta, Delta on S3, PostgreSQL table mode, Aerospike), `MessageSourceContract` and `BrokerOutage` (ActiveMQ, RabbitMQ), `IdentityStoreContract` (SQLite, PostgreSQL) |
 | Spring and HTTP | `drishti-server` | `@SpringBootTest` + `@AutoConfigureMockMvc`, properties set per test class | `ApiTest`, `SecurityTest`, `CacheAdminTest`, `IdentityApiTest`, `WorkspaceApiTest`, `StructuredSearchTest`, `LiveTest` |

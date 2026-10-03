@@ -108,7 +108,7 @@ def test_a_field_dropped_on_a_panel_that_cannot_take_it_says_why(live_console, p
     b = note.bounding_box()
     rev = state(page, "rev")
     drag(page, page.locator(".wb-field-row", has_text="currency").first, b["x"] + b["width"] / 2, b["y"] + b["height"] / 2)
-    wait(page, "document.querySelector('[data-say]').textContent.includes('bind no data')")
+    wait(page, "document.querySelector('[data-say]').textContent.includes('take these roles')")
     assert "DRS-5022" in page.locator("[data-say]").inner_text() and state(page, "rev") == rev
     assert "Problems" in page.get_by_role("tab", name="Problems").inner_text()
 

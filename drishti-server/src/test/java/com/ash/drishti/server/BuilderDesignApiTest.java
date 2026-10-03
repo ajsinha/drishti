@@ -227,6 +227,15 @@ class BuilderDesignApiTest {
     }
 
     @Test
+    void aKindIsANameNotAFragmentOfYaml() throws Exception {
+        JsonNode doc = example("pnl-explain");
+        for (String bad : new String[] {"x, priority: 9999, where: \"true\" }\nzzz: { a", "../../evil", "bad kind!"}) {
+            mvc.perform(post("/api/v1/builder/design").header("Authorization", author()).contentType(MediaType.APPLICATION_JSON)
+                    .content(body(bad, doc).toString())).andExpect(status().isBadRequest()).andExpect(jsonPath("$.detail").value(containsString("'kind'")));
+        }
+    }
+
+    @Test
     void limitsAreEnforcedLikeTheShapeEndpoint() throws Exception {
         JsonNode doc = example("pnl-explain");
         mvc.perform(post("/api/v1/builder/design").header("Authorization", author()).contentType(MediaType.APPLICATION_JSON)

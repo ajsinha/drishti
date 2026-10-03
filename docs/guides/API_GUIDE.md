@@ -261,7 +261,7 @@ script may open (roles are defined under `drishti.security.roles`; see
 ### Field masks
 
 For a caller without `raw`, every field named in `drishti.security.redact` (at any depth, and everything under it)
-reads `•••` in every answer that shows or is computed from its value: `/entities/…/raw`, `/search` (rows, CSV,
+reads `•••` in every answer that shows or is computed from its value (*limit: masking is by field name and by value of that field. Free text in **another** field, for example a timeline description that spells the value out, or a note a person typed, is data of that other field and is not rewritten; keep identifying values out of free-text fields, or put those fields under `redact` too*): `/entities/…/raw`, `/search` (rows, CSV,
 compare), `/history`, `/search/columns`, the search pivot endpoints, `/views/{kind}/{id}` (strip, title, every panel,
 table totals, keys and links, values a Sutra computes from the field), `/views/…/panels/…/records`, the view and
 monitor streams, `/me/monitors/{name}`, `/studio/preview`, `/impact/{kind}/{id}`, `/command/suggest` and `/phrase`;
@@ -1020,10 +1020,12 @@ user; a design is reachable only by its owner (anyone else gets `404 DRS-5006`);
 | `POST` | `/builder/designs/import` | body a zip (`application/zip`); one design per `*.sutra.yaml`, with the samples of `tests/<sutra>/` and `samples/<kind>/`; `201 {designs, skipped}` |
 | `POST` / `DELETE` | `/builder/designs/{id}/share` | makes (renews) or revokes the read-only link; `{token, path}` is shown once |
 | `GET` | `/builder/designs/shared/{id}?token=` | what a link holder sees: Sutra, operations, sample names (never contents or notes); a bad or revoked token is `404 DRS-5006` |
-| `GET` | `/builder/designs/binding` | `{enabled, dirs}`: whether `drishti.builder.file-binding` is on |
-| `POST` / `DELETE` | `/builder/designs/{id}/bind` | body `{file}` (path under a Sutra directory); binds or unbinds (development servers; `403` when off) |
-| `POST` | `/builder/designs/{id}/save-file` | writes the Sutra to the bound file (`409 DRS-5007` if the file changed on disk first) |
-| `GET` | `/builder/designs/{id}/sync` | reads the bound file: an outside edit becomes a step of the design (`changed: true`) |
+| `GET` | `/builder/designs/binding` | `{enabled, dir}`: whether `drishti.builder.file-binding` is on and the name of your development folder (never an absolute path; administrators also get `absoluteDir`) |
+| `POST` / `DELETE` | `/builder/designs/{id}/bind` | body `{file}` (a path in your own development folder, `drishti.builder.dev-dir/<user>`); binds or unbinds (development servers; `403` when off; a symbolic link, `..` or a name the file system refuses is `400`) |
+| `POST` | `/builder/designs/{id}/save-file` | writes the Sutra to the bound file in your development folder (`409 DRS-5007` if the file changed on disk first); never makes it live, that is `propose` |
+| `POST` | `/builder/designs/{id}/sync` | reads the bound file: an outside edit becomes a step of the design (`changed: true`). A POST because it changes the design: personal API tokens (read-only) cannot call it |
+| `POST` | `/builder/designs/{id}/rebase` | body `{baseRev}`; the design's base `name@v` has a newer live version (`baseMoved` on the design, on `check` and on `propose`): replays the design's operations on it. Answers the design, `replayed` and `problems` (steps that no longer apply, text edits that cannot be replayed; each says which step and why). `400` when the base has not moved |
+| `DELETE` | `/builder/designs?scratch=true` | deletes all your scratch (unnamed) designs; `{deleted}` |
 | `POST` | `/builder/designs/{id}/samples` | `{samples: [{name, document}]}` and/or `{refs: {kind, ids \| count}}` (stored entities, kept as references) and/or `{schema, count}` (synthetic documents generated from a JSON Schema or shape.json, labelled `synthetic`); a sample of an existing name replaces it |
 | `DELETE` | `/builder/designs/{id}/samples?name=` | remove a sample by name |
 | `GET` | `/builder/designs/{id}/samples/document?name=` | a kept sample document (a reference keeps none) |

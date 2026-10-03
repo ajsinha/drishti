@@ -64,7 +64,8 @@ public final class SutraCli {
     private record Unit(Path file, String text, String stem) {}
 
     /** One sample document: {@code file} is its file name (what {@code expect.yaml} names), {@code expect} the folder's expectations. */
-    private record Doc(String file, JsonNode document) {}
+    /** One sample document; {@code error} is set (and {@code document} null) when the file could not be read as JSON. */
+    private record Doc(String file, JsonNode document, String error, String source) {}
 
     private static final String USAGE_TEXT = """
             usage: sutra <command> <path>... [options]
@@ -88,30 +89,77 @@ public final class SutraCli {
         this.err = err;
     }
 
+    /** The paths the command line named, absolute: sample folders are looked for inside them only. */
+    private List<Path> roots = List.of();
+
     /** Runs one command line (without the leading {@code sutra}) and returns the exit code. */
     public int run(List<String> args) {
+        List<Case> cases = new ArrayList<>();
+        int code;
         try {
             CliArgs a = CliArgs.parse(args);
-            List<Case> cases = new ArrayList<>();
-            int code = switch (a.command()) {
+            roots = a.paths().stream().map(p -> p.toAbsolutePath().normalize()).toList();
+            code = switch (a.command()) {
                 case "lint" -> lint(a, cases);
                 case "test" -> test(a, cases);
                 case "preview" -> preview(a, cases);
                 case "shape" -> shape(a);
                 default -> design(a);
             };
-            if (a.junit() != null) {
-                CliReports.junit(a.junit(), cases);
-            }
-            return code;
         } catch (CliArgs.UsageException e) {
             err.println("sutra: " + e.getMessage());
             err.println(USAGE_TEXT);
-            return USAGE;
+            cases.add(Case.fail("sutra", "usage", e.getMessage()));
+            code = USAGE;
         } catch (IOException | RuntimeException e) {
-            err.println("sutra: " + (e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()));
-            return PROBLEMS;
+            String why = describe(e);
+            err.println("sutra: " + why);
+            cases.add(Case.fail("sutra", "run", why));
+            code = PROBLEMS;
+        } catch (OutOfMemoryError | StackOverflowError e) {
+            String why = "the input is too large or too deeply nested to process (" + e.getClass().getSimpleName() + "); split it, or use smaller samples";
+            err.println("sutra: " + why);
+            cases.add(Case.fail("sutra", "run", why));
+            code = PROBLEMS;
         }
+        // The report is written on every path, so a CI "publish test report" step finds a file after a failure too.
+        Path junit = junitPath(args);
+        if (junit != null) {
+            try {
+                CliReports.junit(junit, cases);
+            } catch (IOException | RuntimeException e) {
+                err.println("sutra: cannot write " + junit + ": " + e.getMessage());
+                return code == OK ? PROBLEMS : code;
+            }
+        }
+        return code;
+    }
+
+    /** The value of {@code --junit}, read from the raw line so it is found even when the rest of the line is refused. */
+    private static Path junitPath(List<String> args) {
+        for (int i = 0; i + 1 < args.size(); i++) {
+            if ("--junit".equals(args.get(i))) {
+                return Path.of(args.get(i + 1));
+            }
+        }
+        return null;
+    }
+
+    /** One line that says what failed, never a stack trace: a missing or unreadable file by name, text that is not UTF-8 as such. */
+    static String describe(Exception e) {
+        if (e instanceof java.nio.file.NoSuchFileException n) {
+            return "no such file: " + n.getFile();
+        }
+        if (e instanceof java.nio.file.AccessDeniedException n) {
+            return "not allowed to use " + n.getFile();
+        }
+        if (e instanceof java.nio.charset.CharacterCodingException) {
+            return "a file is not valid UTF-8 text";
+        }
+        if (e instanceof java.nio.file.FileSystemException f) {
+            return "cannot use " + f.getFile() + (f.getReason() == null ? "" : ": " + f.getReason());
+        }
+        return e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
     }
 
     // ------------------------------------------------------------------------------------------------- lint, test, preview
@@ -151,11 +199,27 @@ public final class SutraCli {
             }
             ExpectFile expect = expectDir != null && Files.isRegularFile(expectDir.resolve("expect.yaml"))
                     ? ExpectFile.load(expectDir.resolve("expect.yaml")) : ExpectFile.DEFAULT;
-            Map<String, ViewModel> views = new LinkedHashMap<>();
-            SampleChecker.Matrix m = check(sutra, docs, views);
             int failed = 0;
-            for (int i = 0; i < docs.size(); i++) {
-                Doc d = docs.get(i);
+            for (String named : expect.perSample().keySet()) {
+                if (docs.stream().noneMatch(d -> named.equals(d.source()) || named.equals(d.file()))) {
+                    failed++;
+                    String missing = "expect.yaml names " + named + ", which is not a sample file of this Sutra";
+                    cases.add(Case.fail(u.stem(), "expect.yaml", missing));
+                    err.println(u.stem() + ": " + missing);
+                }
+            }
+            for (Doc d : docs) {
+                if (d.error() != null) {
+                    failed++;
+                    cases.add(Case.fail(u.stem(), d.file(), d.error()));
+                    err.println(u.stem() + " / " + d.file() + ": " + d.error());
+                }
+            }
+            List<Doc> readable = docs.stream().filter(d -> d.error() == null).toList();
+            Map<String, ViewModel> views = new LinkedHashMap<>();
+            SampleChecker.Matrix m = readable.isEmpty() ? null : check(sutra, readable, views);
+            for (int i = 0; i < readable.size(); i++) {
+                Doc d = readable.get(i);
                 List<String> failures = new ArrayList<>();
                 SampleChecker.SampleRow row = m.samples().get(i);
                 if (expect.noErrors() && !SampleChecker.OK.equals(row.status())) {
@@ -167,7 +231,7 @@ public final class SutraCli {
                         failures.add("panel " + p.id() + " is in error: " + cell.message());
                     }
                 }
-                for (String id : expect.nonEmptyFor(d.file())) {
+                for (String id : expect.nonEmptyFor(d.source())) {
                     SampleChecker.PanelRow p = m.panel(id);
                     if (p == null) {
                         failures.add("panel " + id + " is not in the Sutra");
@@ -202,6 +266,12 @@ public final class SutraCli {
             }
             Sutra sutra = s.sutras().check(u.text());
             for (Doc d : samplesOf(u, sutra, a.samples())) {
+                if (d.error() != null) {
+                    err.println(u.stem() + " / " + d.file() + ": " + d.error());
+                    cases.add(Case.fail(u.stem(), d.file(), d.error()));
+                    bad = true;
+                    continue;
+                }
                 ViewModel vm;
                 try {
                     vm = render(sutra, d.document());
@@ -250,11 +320,12 @@ public final class SutraCli {
     }
 
     private int emit(CliArgs a, String fileName, String text) throws IOException {
+        String body = text.endsWith("\n") ? text : text + "\n";
         if (a.out() == null) {
-            out.println(text);
+            out.print(body);
         } else {
             Files.createDirectories(a.out());
-            Files.writeString(a.out().resolve(fileName), text + "\n");
+            Files.writeString(a.out().resolve(fileName), body);
             out.println("wrote " + a.out().resolve(fileName));
         }
         return OK;
@@ -319,19 +390,33 @@ public final class SutraCli {
         return found;
     }
 
-    private static Unit unit(Path f) throws IOException {
+    private Unit unit(Path f) throws IOException {
         String n = f.getFileName().toString().replace(".sutra.yaml", "");
         int dot = n.indexOf('.');                                    // var.v1 -> var
-        return new Unit(f, Files.readString(f), dot > 0 ? n.substring(0, dot) : n);
+        return new Unit(f, text(f), dot > 0 ? n.substring(0, dot) : n);
     }
 
-    /** The folder {@code tests/<sutra>/} above the Sutra file, if there is one. */
-    private static Path sampleDir(Unit u, Sutra sutra) {
-        Path dir = u.file().toAbsolutePath().getParent();
+    /** A file's text, refused past the builder's single-document limit (drishti.builder.max-file-mb): the CLI is no way round the server's limits. */
+    private String text(Path f) throws IOException {
+        long max = s.shapes().limits().maxFileBytes();
+        if (Files.size(f) > max) {
+            throw new IOException(f.getFileName() + " is over " + s.shapes().limits().maxFileMb() + " MB (drishti.builder.max-file-mb)");
+        }
+        try {
+            return Files.readString(f);
+        } catch (java.nio.charset.CharacterCodingException e) {
+            throw new IOException(f.getFileName() + " is not valid UTF-8 text", e);
+        }
+    }
+
+    /** The folder {@code tests/<sutra>/} above the Sutra file, if there is one inside what the command line named (never above it). */
+    private Path sampleDir(Unit u, Sutra sutra) {
+        Path dir = u.file().toAbsolutePath().normalize().getParent();
         for (int i = 0; i < 6 && dir != null; i++, dir = dir.getParent()) {
             for (String n : List.of(sutra.name(), u.stem())) {
-                if (Files.isDirectory(dir.resolve("tests").resolve(n))) {
-                    return dir.resolve("tests").resolve(n);
+                Path found = dir.resolve("tests").resolve(n);
+                if (Files.isDirectory(found) && roots.stream().anyMatch(found::startsWith)) {
+                    return found;
                 }
             }
         }
@@ -341,9 +426,9 @@ public final class SutraCli {
     private List<Doc> samplesOf(Unit u, Sutra sutra, List<Path> given) throws IOException {
         List<Path> files = new ArrayList<>();
         if (!given.isEmpty()) {
-            files.addAll(jsonFiles(given));
+            files.addAll(jsonFiles(given, true));
         } else if (sampleDir(u, sutra) != null) {
-            files.addAll(jsonFiles(List.of(sampleDir(u, sutra))));
+            files.addAll(jsonFiles(List.of(sampleDir(u, sutra)), true));
         } else {
             Path sibling = u.file().resolveSibling(u.stem() + ".json");
             if (Files.isRegularFile(sibling)) {
@@ -352,14 +437,61 @@ public final class SutraCli {
         }
         List<Doc> docs = new ArrayList<>();
         for (Path f : files) {
-            docs.add(new Doc(f.getFileName().toString(), read(f)));
+            docs.addAll(readDocs(f));
         }
         return docs;
     }
 
+    /** The documents of one sample file: one for {@code .json}, one per non-blank line for {@code .jsonl}; unreadable ones carry the error. */
+    private List<Doc> readDocs(Path f) {
+        String name = f.getFileName().toString();
+        String text;
+        try {
+            text = Files.readString(f);
+        } catch (IOException e) {
+            return List.of(new Doc(name, null, name + " cannot be read as text: " + e.getMessage(), name));
+        }
+        text = stripBom(text);
+        boolean lines = name.toLowerCase(java.util.Locale.ROOT).endsWith(".jsonl");
+        List<Doc> out = new ArrayList<>();
+        if (!lines) {
+            out.add(parse(name, name, text));
+            return out;
+        }
+        int n = 0;
+        for (String line : text.split("\\R")) {
+            if (!line.isBlank()) {
+                out.add(parse(name + ":" + (++n), name, line));
+            }
+        }
+        if (out.isEmpty()) {
+            out.add(new Doc(name, null, name + " is empty: a sample must hold a JSON document", name));
+        }
+        return out;
+    }
+
+    private Doc parse(String name, String source, String text) {
+        if (text.isBlank()) {
+            return new Doc(name, null, name + " is empty: a sample must hold a JSON document", source);
+        }
+        try {
+            JsonNode n = mapper.readTree(text);
+            if (n == null || n.isMissingNode()) {
+                return new Doc(name, null, name + " is empty: a sample must hold a JSON document", source);
+            }
+            return new Doc(name, n, null, source);
+        } catch (IOException e) {
+            return new Doc(name, null, name + " is not valid JSON: " + e.getMessage(), source);
+        }
+    }
+
+    private static String stripBom(String text) {
+        return text.startsWith("\uFEFF") ? text.substring(1) : text;
+    }
+
     private List<Sample> jsonSamples(List<Path> paths) throws IOException {
         List<Sample> out = new ArrayList<>();
-        for (Path f : jsonFiles(paths)) {
+        for (Path f : jsonFiles(paths, false)) {
             out.add(new Sample(f.getFileName().toString(), read(f)));
         }
         if (out.isEmpty()) {
@@ -368,12 +500,12 @@ public final class SutraCli {
         return out;
     }
 
-    private static List<Path> jsonFiles(List<Path> paths) throws IOException {
+    private static List<Path> jsonFiles(List<Path> paths, boolean lines) throws IOException {
         List<Path> files = new ArrayList<>();
         for (Path p : paths) {
             if (Files.isDirectory(p)) {
                 try (Stream<Path> list = Files.list(p)) {
-                    list.filter(x -> x.getFileName().toString().endsWith(".json")).sorted().forEach(files::add);
+                    list.filter(x -> x.getFileName().toString().endsWith(".json") || lines && x.getFileName().toString().endsWith(".jsonl")).sorted().forEach(files::add);
                 }
             } else if (Files.isRegularFile(p)) {
                 files.add(p);
@@ -386,7 +518,7 @@ public final class SutraCli {
 
     private JsonNode read(Path f) throws IOException {
         try {
-            return mapper.readTree(Files.readString(f));
+            return mapper.readTree(stripBom(text(f)));
         } catch (IOException e) {
             throw new IOException(f + " is not valid JSON: " + e.getMessage(), e);
         }

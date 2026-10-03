@@ -101,7 +101,8 @@ def test_a_bound_design_saves_to_the_file_and_an_edit_on_disk_comes_back(live_sh
     wait(page, "document.querySelector('[data-bound-chip]') && !document.querySelector('[data-bound-chip]').hidden")
     page.locator("[data-save]").click()
     wait(page, "document.querySelector('[data-say]').textContent.indexOf('Wrote e2e/bound-e2e.v1.sutra.yaml') >= 0")
-    target = base.work / "sutras" / "e2e" / "bound-e2e.v1.sutra.yaml"
+    target = next(iter((base.work / "dev-sutras").glob("*/e2e/bound-e2e.v1.sutra.yaml")))      # your own folder, not a loaded Sutra directory
+    assert not (base.work / "sutras" / "e2e").exists()
     assert target.read_text() == SUTRA.replace("ship-e2e", "bound-e2e")
 
     # an edit made elsewhere (the IDE) is read back into the design by the sync

@@ -302,6 +302,26 @@ final class PanelChooser {
         return out;
     }
 
+    /**
+     * A single root: {@code parent} is an object (the document, or a section) holding a list {@code list} of its own kind.
+     * The table starts at the root's children and expands level by level; the root's own fields are drawn by their own panel.
+     */
+    List<PanelChoice> treeUnder(FieldNode parent, FieldNode list) {
+        List<Column> cols = columnsOf(parent);
+        if (cols.isEmpty()) {
+            return List.of();
+        }
+        Map<String, Object> o = PanelRecipes.table(list.path(), cols);
+        o.put("children", "@." + list.name());
+        o.put("expand", 1);
+        List<PanelChoice> out = new ArrayList<>();
+        out.add(choice("table", 0.9, "'" + parent.name() + "' holds a list '" + list.name() + "' of the same shape: a table of its descendants that expands level by level",
+                Area.MAIN, title(list), o, cols));
+        out.add(choice("table", 0.4, "only the first level under '" + parent.name() + "', flat", Area.MAIN, title(list),
+                PanelRecipes.table(list.path(), cols), cols));
+        return ranked(out);
+    }
+
     private List<PanelChoice> events(FieldNode f) {
         FieldNode date = f.props().values().stream().filter(p -> "string".equals(p.type()) && p.date()).findFirst().orElse(null);
         List<FieldNode> texts = f.props().values().stream().filter(p -> "string".equals(p.type()) && !p.date()).toList();
@@ -341,7 +361,7 @@ final class PanelChooser {
         List<Column> cols = columnsOf(f);
         String what = f.props().size() + "-field records" + (pts < 0 ? "" : ", " + pts + " rows") + over(f);
         out.add(choice("table", 0.65, what + ": a table", Area.MAIN, title(f), PanelRecipes.table(f.path(), cols), cols));
-        if (lo >= 2 && hi <= 4 && scal.size() >= 5) {
+        if (lo >= 2 && hi <= 4 && scal.size() >= 4) {
             Map<String, Object> o = new LinkedHashMap<>();
             o.put("each", f.path());
             o.put("tabTitle", "'" + Semantics.humanize(f.name()).replaceAll("s$", "") + " ' + (#index + 1)");
@@ -487,7 +507,13 @@ final class PanelChooser {
 
     PanelChoice statusOf(List<FieldNode> fields, String title, double score, String reason) {
         List<Object> list = new ArrayList<>();
-        fields.forEach(p -> list.add(Map.of("label", Semantics.humanize(p.name()), "bind", p.path(), "tone", "status")));
+        fields.forEach(p -> {
+            Map<String, Object> one = new LinkedHashMap<>();   // not Map.of: its iteration order differs between JVM runs
+            one.put("label", Semantics.humanize(p.name()));
+            one.put("bind", p.path());
+            one.put("tone", "status");
+            list.add(one);
+        });
         Map<String, Object> o = new LinkedHashMap<>();
         o.put("fields", list);
         return choice("status", score, reason + ": each as a coloured state", Area.RIGHT, title, o, List.of());
@@ -506,6 +532,11 @@ final class PanelChooser {
                 }
                 if (r.fmt() != null && !"date".equals(r.fmt())) {
                     o.put("fmt", r.fmt());
+                }
+                if (limit == null && isFraction(f)) {
+                    o.put("max", "1");
+                    out.add(choice("gauge", 0.8, "a share between 0 and 1 (named '" + f.name() + "'): how full the whole is", Area.RIGHT, title(f), o, List.of()));
+                    break;
                 }
                 out.add(choice("gauge", limit != null ? 0.85 : 0.6, limit != null ? "'" + limit.name() + "' sits beside it: how much of the limit is used"
                         : "one measure: a dial (set its maximum)", Area.RIGHT, title(f), o, List.of()));
@@ -610,9 +641,9 @@ final class PanelChooser {
     /** A stand-in value of the field's kind, so inference's name-and-value semantics give it a format and tone. */
     DataNode exemplar(FieldNode p) {
         return switch (p.type()) {
-            case "number" -> DataNode.of(!Double.isNaN(p.min()) && !Double.isNaN(p.max()) && Math.abs(p.max()) < 1 && Math.abs(p.min()) < 1 ? 0.5 : 1000);
+            case "number" -> p.is("dimension") ? DataNode.of("x") : DataNode.of(!Double.isNaN(p.min()) && !Double.isNaN(p.max()) && Math.abs(p.max()) < 1 && Math.abs(p.min()) < 1 ? 0.5 : 1000);
             case "boolean" -> DataNode.of(true);
-            default -> DataNode.of(p.date() ? "2026-01-01" : "x");
+            default -> DataNode.of("year-month".equals(p.format()) ? "2026-01" : p.date() ? "2026-01-01" : "x");
         };
     }
 
@@ -686,6 +717,13 @@ final class PanelChooser {
             }
         }
         return null;
+    }
+
+    /** A number named like a share of a whole whose observed values all lie between 0 and 1. */
+    boolean isFraction(FieldNode f) {
+        String name = f.name().toLowerCase(Locale.ROOT);
+        return "number".equals(f.type()) && !Double.isNaN(f.min()) && !Double.isNaN(f.max()) && f.min() >= 0 && f.max() <= 1
+                && props.fractionNames().stream().anyMatch(w -> name.contains(w.toLowerCase(Locale.ROOT)));
     }
 
     private boolean soleMeasure(FieldNode parent, FieldNode f, FieldNode limit) {

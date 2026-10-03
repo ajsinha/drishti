@@ -209,9 +209,9 @@ def test_with_binding_on_save_writes_the_file_and_a_disk_edit_is_synced(app_clie
     page = app_client.get(f"/build/d/{id_}").text
     assert '"fileBinding": true' in page and '"boundFile": "x/y.v1.sutra.yaml"' in page
     assert app_client.post(f"/build/designs/{id_}/save-file").status_code == 200 and backend.file_writes[-1][0] == "x/y.v1.sutra.yaml"
-    assert app_client.get(f"/build/designs/{id_}/sync").json()["changed"] is False
+    assert app_client.post(f"/build/designs/{id_}/sync").json()["changed"] is False
     backend.file_edit = "rachana: 1\nsutra: edited\nversion: 1\n"
-    synced = app_client.get(f"/build/designs/{id_}/sync").json()
+    synced = app_client.post(f"/build/designs/{id_}/sync").json()
     assert synced["changed"] is True and app_client.get(f"/build/designs/{id_}").json()["sutra"] == "rachana: 1\nsutra: edited\nversion: 1\n"
     assert "boundFile" not in app_client.delete(f"/build/designs/{id_}/bind").json()
 
@@ -228,3 +228,25 @@ def test_the_workbench_reloads_a_design_from_its_sutra_field():
     for name in ("ops.js", "workbench.js", "ship.js"):
         text = (JS / "build" / name).read_text()
         assert "g.body.yaml" not in text and "r.body.yaml || ''" not in text, name
+
+
+def test_a_design_whose_base_moved_is_flagged_and_the_rebase_is_forwarded(app_client, backend, monkeypatch):
+    """M-2: the page carries the flag (status chip + Problems entry + Ship menu item) and Rebase reaches the server with the revision."""
+    id_ = _design(app_client)
+    row = next(r for (u, i), r in backend.design_rows.items() if i == id_)["design"]
+    row["baseMoved"] = {"base": "book@1", "name": "book", "from": 1, "to": 2, "latest": "book@2"}
+    page = app_client.get(f"/build/d/{id_}").text
+    assert '"baseMoved": {' in page and "book@2" in page and "data-base-chip" in page
+    real, seen = backend.designs, []
+
+    async def spy(method, path, ident, body=None, **params):
+        if path.endswith("/rebase"):
+            seen.append((method, path, body))
+            return {"base": "book@2", "replayed": 1, "problems": [], "rev": 3}
+        return await real(method, path, ident, body, **params)
+    monkeypatch.setattr(backend, "designs", spy)
+    r = app_client.post(f"/build/designs/{id_}/rebase", json={"baseRev": 2})
+    assert r.status_code == 200 and r.json()["replayed"] == 1 and seen == [("POST", f"/{id_}/rebase", {"baseRev": 2})]
+    ship = (JS / "build" / "ship.js").read_text()
+    problems = (JS / "build" / "problems.js").read_text()
+    assert "/rebase" in ship and "baseMoved" in problems

@@ -12,6 +12,8 @@
 > Drishti (दृष्टि, "sight") turns any record from any system into a dense,
 > keyboard-driven, live terminal view — without a hand-built screen per product.
 
+**New to Drishti?** Read [How Drishti fits together](HOW_IT_FITS.md) first: how connectors, packs and Sutras relate, and what happens at runtime between typing a command and the live screen.
+
 ---
 
 ## 1. Problem and intent
@@ -160,6 +162,7 @@ Notes on each stage, checked against the code:
 
 This follows a single command from the keyboard to the screen and then through one live tick. The outputs are
 real, captured from a running server with the `trading` pack enabled (security off, so no token is needed).
+For the same journey with the pack, connector and Sutra files shown next to each step, see [HOW_IT_FITS.md](HOW_IT_FITS.md).
 
 **1. The user types `TRD MX-20000001` and presses Enter.** While typing, `command.js` asks the console for
 suggestions (debounced 60 ms, stale requests cancelled); the console forwards to the server:

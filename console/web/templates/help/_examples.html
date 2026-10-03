@@ -17,8 +17,10 @@
 {% for e in examples %}
 <section class="help-example-item" id="{{ e.name }}">
   <h2>{{ e.title }}</h2>
-  <p class="help-example-actions"><a class="btn-pill btn-accent" href="/studio?example={{ e.name }}"><i class="bi bi-pencil-square" aria-hidden="true"></i> Open as a copy in the workbench</a>
-    <span class="mono text-muted-d">{{ e.name }}.sutra.yaml · {{ e.name }}.json</span></p>
+  <div class="help-example-actions">
+    <form method="post" action="/studio" class="inline-form"><input type="hidden" name="example" value="{{ e.name }}">
+      <button type="submit" class="btn-pill btn-accent" data-example-copy="{{ e.name }}"><i class="bi bi-pencil-square" aria-hidden="true"></i> Open as a copy in the workbench</button></form>
+    <span class="mono text-muted-d">{{ e.name }}.sutra.yaml · {{ e.name }}.json</span></div>
   {{ e.note | safe }}
   <details><summary>{{ e.name }}.sutra.yaml</summary>
     <figure class="help-example"><figcaption><span><i class="bi bi-terminal" aria-hidden="true"></i> {{ e.name }}.sutra.yaml</span><span class="lang">yaml</span><button type="button" class="copy" data-copy aria-label="Copy this example"><i class="bi bi-clipboard" aria-hidden="true"></i> Copy</button></figcaption><pre><code>{{ e.yaml }}</code></pre></figure></details>

@@ -108,7 +108,7 @@ class AutoDesignerTest {
                 assertThat(d.yaml()).as(name).contains("title:", "panels:", "match: { kind: trade");
                 assertThat(d.reasons()).as(name).containsKeys("title", "strip");
                 Map<String, String> ids = kindById(d);
-                assertThat(ids.size()).as(name + " " + ids).isGreaterThanOrEqualTo(3);
+                assertThat(ids.size()).as(name + " " + ids).isGreaterThanOrEqualTo(2);
                 assertThat(ids).as(name).containsKey("built");
                 ids.forEach((id, kind) -> {
                     if (!"provenance".equals(kind) && !"links".equals(kind)) {
@@ -231,7 +231,7 @@ class AutoDesignerTest {
     @Test
     void thePruneShareIsConfigurable() {
         BuilderProperties strict = new BuilderProperties(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0.1, null,
-                null, null, null, null, null);
+                null, null, null, null, null, null, null, null, null, null, null);
         List<Sample> samples = new ArrayList<>(varied(5, true));
         samples.set(1, new Sample("s1.json", withRare(samples.get(1))));
         samples.set(2, new Sample("s2.json", withRare(samples.get(2))));

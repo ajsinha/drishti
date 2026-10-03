@@ -39,7 +39,7 @@
     <span class="text-muted-d wb-meta">kind <span class="mono">{{ design.kind }}</span>{% if design.base %} · edits <span class="mono">{{ design.base }}</span>{% endif %}
       {% if design.scratch %} · <b>unnamed: forgotten after a day</b>, <a class="lnk" href="/build">name it in My designs</a>{% endif %}
       {% if design.expiryWarning %} · <b>expires soon</b>{% endif %}
-      · <span class="bs-role wb-state" data-status-chip>{{ design.status }}</span> <span class="bs-role" data-bound-chip hidden></span></span>
+      · <span class="bs-role wb-state" data-status-chip>{{ design.status }}</span> <span class="bs-role" data-bound-chip hidden></span> <span class="bs-role conflict" data-base-chip hidden></span></span>
     <span class="wb-head-actions">
       <button type="button" class="btn-pill btn-accent wb-add-panel" data-add-panel aria-haspopup="dialog" title="Choose a panel kind and add it to the screen (works on every tab)"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add panel</button>
       <button type="button" class="btn-pill btn-accent" data-autodesign{% if not design.samples %} disabled{% endif %} title="Draft a complete Sutra from the samples: a new revision; undo brings the old one back"><i class="bi bi-magic" aria-hidden="true"></i> Auto-design</button>

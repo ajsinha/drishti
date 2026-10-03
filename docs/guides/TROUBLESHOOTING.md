@@ -768,10 +768,11 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 | `DRS-5001` | bad request |
 | `DRS-5002` | forbidden (role or pack) |
 | `DRS-5003` | raised by the console only: it cannot reach the server, a live stream was refused, or a browser is over its live-subscription limit |
-| `DRS-5005` | a request body was larger than the sample limits of the builder endpoints (HTTP 413); send fewer or smaller documents |
+| `DRS-5005` | a request body or a design was over a limit of the builder (HTTP 413): too many or too large samples, a Sutra, notes or tests over their caps (`max-sutra-kb`, `max-notes-kb`, `max-tests-kb`), or a request body over `max-total-mb`; send fewer or smaller documents, shorten the text, delete scratch designs |
 | `DRS-5004` | no cache by that name (cache purge) |
 | `DRS-5006` | no such Build design, or it is not yours (a design is only ever reachable by its owner) |
 | `DRS-5007` | an edit built on an older revision of a design (reload it, then edit again), or an undo/redo with nothing to move to (HTTP 409) |
+| `DRS-5025` | a step could not be replayed when a design was rebased onto a newer version of its base (listed in `problems` with the step and why) |
 | `DRS-5020`–`DRS-5024` | one operation of a Build edit was refused (listed in `problems` with its index): malformed, no such panel, option not accepted, bad value, text not editable in place |
 | `DRS-5010` | not signed in |
 | `DRS-6001`–`DRS-6010` | user management (see [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)); `DRS-6005` is a locked account |

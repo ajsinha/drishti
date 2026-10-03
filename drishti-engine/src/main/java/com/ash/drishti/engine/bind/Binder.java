@@ -305,10 +305,16 @@ public final class Binder {
         List<PanelData.Row> sub = new ArrayList<>();
         DataNode kids = depth < limits.treeDepth() ? node(eval(childrenExpr, rc)) : DataNode.missing();
         int walked = 0;
-        for (int j = 0; j < kids.size() && budget[0] > 0; j++) {
+        // children are records: one object is one child; scalars and nulls in a list are not rows
+        boolean single = kids.type() == com.ash.drishti.api.NodeType.OBJECT;
+        for (int j = 0; j < (single ? 1 : kids.size()) && budget[0] > 0; j++) {
+            DataNode kid = single ? kids : kids.get(j);
+            if (kid.type() != com.ash.drishti.api.NodeType.OBJECT) {
+                continue;
+            }
             budget[0]--;
             walked++;
-            PanelData.Row child = treeRow(cols, rc.withRow(kids.get(j), j), null, childrenExpr, highlight, totals, masked, emit, depth + 1, budget);
+            PanelData.Row child = treeRow(cols, rc.withRow(kid, j), null, childrenExpr, highlight, totals, masked, emit, depth + 1, budget);
             if (child != null) {
                 sub.add(child);
             }

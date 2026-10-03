@@ -84,10 +84,10 @@ final class MiniSchemaValidator {
             }
         }
         if (v.isNumber()) {
-            if (schema.has("minimum") && v.asDouble() < schema.get("minimum").asDouble()) {
+            if (schema.has("minimum") && compare(v, schema.get("minimum")) < 0) {
                 errors.add(path + ": below minimum");
             }
-            if (schema.has("maximum") && v.asDouble() > schema.get("maximum").asDouble()) {
+            if (schema.has("maximum") && compare(v, schema.get("maximum")) > 0) {
                 errors.add(path + ": above maximum");
             }
         }
@@ -157,5 +157,16 @@ final class MiniSchemaValidator {
             case "integer" -> v.isNumber() && (v.isIntegralNumber() || v.asDouble() == Math.rint(v.asDouble()));
             default -> false;
         };
+    }
+
+    /** Exact comparison (integers beyond 2^53); a non-finite instance compares as equal (no bound applies). */
+    private static int compare(JsonNode v, JsonNode bound) {
+        if (!bound.isNumber()) {
+            return 1;
+        }
+        if (Double.isNaN(v.asDouble()) || Double.isInfinite(v.asDouble())) {
+            return 0;
+        }
+        return v.decimalValue().compareTo(bound.decimalValue());
     }
 }

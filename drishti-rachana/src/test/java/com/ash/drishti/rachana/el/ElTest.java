@@ -21,11 +21,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.common.JsonCodec;
 import com.ash.drishti.rachana.format.Formats;
+import java.util.SplittableRandom;
 import java.util.TreeSet;
-import net.jqwik.api.ForAll;
-import net.jqwik.api.Property;
-import net.jqwik.api.constraints.IntRange;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class ElTest {
 
@@ -109,18 +110,50 @@ class ElTest {
         assertThatThrownBy(() -> EL.compile("'open")).hasMessageContaining("unterminated");
     }
 
-    @Property(tries = 300)
-    void integerArithmeticMatchesJava(@ForAll @IntRange(min = -10000, max = 10000) int a,
-            @ForAll @IntRange(min = -10000, max = 10000) int b, @ForAll @IntRange(min = 1, max = 99) int c) {
-        Object r = EL.compile(a + " + " + b + " * " + c + " - (" + a + " % " + c + ")").eval(EvalContext.of(DOC, F));
-        assertThat(Values.number(r)).isEqualTo((double) (a + b * c - (a % c)));
+    /** Fixed base seed, overridable with {@code -Ddrishti.test.seed=N}; a failure names the seed and case index. */
+    private static final long BASE_SEED = Long.getLong("drishti.test.seed", 20260903L);
+    private static final int[] EDGES = {0, 1, -1, 2, -2, Integer.MAX_VALUE, Integer.MIN_VALUE, Integer.MAX_VALUE - 1, Integer.MIN_VALUE + 1};
+
+    static IntStream arithmeticCases() {
+        return IntStream.range(0, 300);
     }
 
-    @Property(tries = 200)
-    void comparisonsAgreeWithJava(@ForAll int a, @ForAll int b) {
+    static IntStream comparisonCases() {
+        return IntStream.range(0, 200);
+    }
+
+    private static SplittableRandom rng(int index, long salt) {
+        return new SplittableRandom(BASE_SEED * 31 + salt + index);
+    }
+
+    /** An int: edge values a fifth of the time, otherwise uniform in the full range. */
+    private static int anyInt(SplittableRandom r) {
+        return r.nextInt(5) == 0 ? EDGES[r.nextInt(EDGES.length)] : r.nextInt();
+    }
+
+    @ParameterizedTest(name = "case {0}")
+    @MethodSource("arithmeticCases")
+    void integerArithmeticMatchesJava(int index) {
+        SplittableRandom r = rng(index, 1);
+        int a = r.nextInt(-10000, 10001);
+        int b = r.nextInt(-10000, 10001);
+        int c = r.nextInt(1, 100);
+        String expr = a + " + " + b + " * " + c + " - (" + a + " % " + c + ")";
+        Object res = EL.compile(expr).eval(EvalContext.of(DOC, F));
+        assertThat(Values.number(res)).as("case %d baseSeed %d a=%d b=%d c=%d expr=%s", index, BASE_SEED, a, b, c, expr)
+                .isEqualTo((double) (a + b * c - (a % c)));
+    }
+
+    @ParameterizedTest(name = "case {0}")
+    @MethodSource("comparisonCases")
+    void comparisonsAgreeWithJava(int index) {
+        SplittableRandom r = rng(index, 2);
+        int a = anyInt(r);
+        int b = r.nextInt(4) == 0 ? a : anyInt(r);
         EvalContext ctx = EvalContext.of(DOC, F);
-        assertThat(EL.compile(a + " < " + b).eval(ctx)).isEqualTo(a < b);
-        assertThat(EL.compile(a + " == " + b).eval(ctx)).isEqualTo(a == b);
+        String at = "case " + index + " baseSeed " + BASE_SEED + " a=" + a + " b=" + b;
+        assertThat(EL.compile(a + " < " + b).eval(ctx)).as(at).isEqualTo(a < b);
+        assertThat(EL.compile(a + " == " + b).eval(ctx)).as(at).isEqualTo(a == b);
     }
 
     @Test

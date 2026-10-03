@@ -77,7 +77,7 @@ def live_console(tmp_path_factory):
 def live_ship_console(tmp_path_factory):
     """As :func:`live_console`, with Studio saving and development file binding on, Sutras written under the scratch directory (step 8)."""
     work = tmp_path_factory.mktemp("wb-ship-server")
-    yield from _stack(tmp_path_factory, {"DRISHTI_STUDIO_SAVE": "true", "DRISHTI_BUILDER_FILE_BINDING": "true", "DRISHTI_SUTRAS": str(work / "sutras")}, work)
+    yield from _stack(tmp_path_factory, {"DRISHTI_STUDIO_SAVE": "true", "DRISHTI_BUILDER_FILE_BINDING": "true", "DRISHTI_SUTRAS": str(work / "sutras"), "DRISHTI_BUILDER_DEV_DIR": str(work / "dev-sutras")}, work)
 
 
 def _stack(tmp_path_factory, extra_env, work=None):

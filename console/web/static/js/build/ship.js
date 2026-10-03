@@ -54,6 +54,26 @@
     store.on('checked', function () { paint(store.state.status); });
     paint(store.state.status);
 
+    // ---- the base moved: flag it, and rebase ----------------------------------------------------------------------------------
+    var baseChip = $('[data-base-chip]');
+    function paintBase() {
+      var m = store.state.baseMoved;
+      if (!baseChip) { return; }
+      baseChip.hidden = !m;
+      baseChip.textContent = m ? 'base moved to ' + m.latest : '';
+      baseChip.title = m ? m.base + ' has a newer live version. Ship, Rebase onto ' + m.latest + ' replays your steps on it.' : '';
+    }
+    function rebase() {
+      var m = store.state.baseMoved;
+      if (!m) { return Promise.resolve(); }
+      return hooks.yaml.flush().then(function () { return WB.call('POST', base + '/rebase', { baseRev: store.state.rev }); }).then(function (r) {
+        if (!r.ok) { say(WB.why(r), true); return; }
+        var n = (r.body.problems || []).length;
+        return reload('Rebased onto ' + m.latest + ': ' + (r.body.replayed || 0) + ' step(s) replayed' + (n ? ', ' + n + ' could not be: ' + r.body.problems[0].message : '') + '. Undo does not go back past a rebase.');
+      });
+    }
+    paintBase();
+
     // ---- sharing --------------------------------------------------------------------------------------------------------
     function paintShare(url) {
       if (!box) { return; }
@@ -99,8 +119,8 @@
     }
     function bind() {
       return WB.ask({ title: 'Bind to a file', ok: 'Bind', input: { label: 'File', value: bound },
-        message: 'Bind this design to a file under the Sutra directory' + (init.dirs && init.dirs.length ? ' (' + init.dirs[0] + ')' : '') +
-        '. For example market/my-view.v1.sutra.yaml. An existing file is read into the design; saving writes it.' }).then(function (file) {
+        message: 'Bind this design to a file in your development folder' + (init.bindDir ? ' (' + init.bindDir + ')' : '') +
+        '. For example market/my-view.v1.sutra.yaml. An existing file is read into the design; saving writes it there and never makes it live: to go live, propose it.' }).then(function (file) {
         if (!file || !String(file).trim()) { return null; }
         return hooks.yaml.flush().then(function () { return WB.call('POST', base + '/bind', { file: String(file).trim() }); });
       }).then(function (r) {
@@ -128,14 +148,14 @@
     function saveFile() {
       return hooks.yaml.flush().then(function () { say('Writing ' + bound + '...'); return WB.call('POST', base + '/save-file'); }).then(function (r) {
         if (!r.ok) { say(WB.why(r) + ((r.body.problems || []).length ? ' ' + r.body.problems[0].message : ''), true); return false; }
-        say('Wrote ' + bound + '. The hot reload makes views use it.'); return true;
+        say('Wrote ' + bound + ' in your development folder. It is not live: use Ship, Propose to put it through review.'); return true;
       });
     }
     var polling = false;
     function sync() {
       if (!bound || polling || document.hidden) { return Promise.resolve(); }
       polling = true;
-      return WB.call('GET', base + '/sync').then(function (r) {
+      return WB.call('POST', base + '/sync').then(function (r) {
         polling = false;
         if (!r.ok) { return; }
         if (r.body.missing) { return; }
@@ -151,6 +171,7 @@
         { label: 'Import a pack folder or zip…', detail: 'Opens New screen: each Sutra becomes a design with its samples', value: 'import' },
         { label: shared ? 'Renew the read-only link' : 'Create a read-only link', detail: 'Sutra, operations and sample names only; the recipient uses their own data', value: 'share' }
       ];
+      if (store.state.baseMoved) { items.unshift({ label: 'Rebase onto ' + store.state.baseMoved.latest, detail: 'Replay your steps on the newer version of the base; steps that no longer apply are listed as problems', value: 'rebase' }); }
       if (shared) { items.push({ label: 'Revoke the read-only link', detail: 'It stops working at once', value: 'revoke' }); }
       if (enabled) {
         items.push({ label: bound ? 'Bind to another file…' : 'Bind to a file…', detail: 'Development servers only: save writes the file, edits in your IDE come back', value: 'bind' });
@@ -159,6 +180,7 @@
       WB.menu.open({ title: 'Ship', anchor: shipB, filter: true, items: items, onPick: function (it) {
         if (it.value === 'export') { window.location.href = base + '/export'; say('Exporting the pack fragment...'); }
         else if (it.value === 'import') { window.location.href = '/build/new#import'; }
+        else if (it.value === 'rebase') { rebase(); }
         else if (it.value === 'share') { share(); }
         else if (it.value === 'revoke') { revoke(); }
         else if (it.value === 'bind') { bind(); }
