@@ -129,7 +129,7 @@
           say('Preview in ' + Math.round(performance.now() - t0) + ' ms. Not saved.');
         } else {
           problems(res.body.problems);
-          say((res.body.code || 'Error') + ': ' + (res.body.problems && res.body.problems.length ? res.body.problems.length + ' problem(s) below' : res.body.detail), true);
+          say(drsMessage({ code: res.body.code, detail: res.body.problems && res.body.problems.length ? res.body.problems.length + ' problem(s) below' : res.body.detail }), true);
         }
       })
       .catch(function (e) { say('Preview failed: ' + e, true); });
@@ -168,7 +168,7 @@
           if (note) { note.value = ''; }
         }
         else if (res.ok) { say('Saved ' + res.body.name + ' v' + res.body.latest + '. Views use it now.'); problems([]); }
-        else { problems(res.body.problems); say((res.body.code || 'Error') + ': ' + res.body.detail, true); }
+        else { problems(res.body.problems); say(drsMessage(res.body), true); }
       });
   });
   // ---- test entities: the entities this author keeps for trying the Sutra ---------------------------------------
@@ -207,7 +207,7 @@
     tests.push({ kind: k, id: id });
     saveTests().then(function (res) {
       if (res.ok) { tests = res.body; showTests(); say('Kept ' + id + ' as a test entity of ' + testsFor + ' (' + tests.length + ').'); }
-      else { tests.pop(); say((res.body.code || 'Error') + ': ' + res.body.detail, true); }
+      else { tests.pop(); say(drsMessage(res.body), true); }
     });
   });
   root.querySelector('[data-test-run]').addEventListener('click', function () {
@@ -223,7 +223,7 @@
       var bad = results.filter(function (r) { return !r.ok; });
       problems(bad.map(function (r) {
         var why = r.failed && r.failed.length ? r.failed.map(function (f) { return f.panel + ': ' + f.error; }).join('; ')
-          : (r.problems && r.problems.length ? r.problems.length + ' problem(s) in the Sutra' : (r.code ? r.code + ' ' : '') + (r.detail || 'failed'));
+          : (r.problems && r.problems.length ? r.problems.length + ' problem(s) in the Sutra' : drsMessage(r, 'failed'));
         return { code: 'TEST', location: { line: 0 }, message: r.entity.kind + ' ' + r.entity.id + ' — ' + why };
       }));
       say(bad.length ? bad.length + ' of ' + results.length + ' test entities have problems (below).'

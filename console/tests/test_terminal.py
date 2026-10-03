@@ -386,6 +386,13 @@ def test_a_command_naming_several_entities_shows_a_pick_list(client, backend, mo
 
 def test_readiness_says_whether_the_server_answers(client, backend, monkeypatch):
     assert client.get("/readyz").json()["status"] == "UP"
+    seen = []
+    async def spy(ident=None):
+        seen.append(ident)
+        return {}
+    monkeypatch.setattr(backend, "business_date", spy, raising=False)
+    client.get("/readyz")
+    assert seen and seen[0] is not None and "service" in seen[0].roles      # SEC-12: readiness carries the service identity
     async def down(ident=None):
         raise BackendError(503, "DRS-5003", "backend unreachable")
     monkeypatch.setattr(backend, "business_date", down, raising=False)

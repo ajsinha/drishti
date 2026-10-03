@@ -189,7 +189,7 @@
     }) }) : send('DELETE');
     msg.textContent = 'Saving…';
     return req.then(function (res) {
-      if (!res.ok) { msg.textContent = (res.b.code || 'Error') + ': ' + (res.b.detail || 'not saved'); msg.classList.add('t-bad'); return false; }
+      if (!res.ok) { msg.textContent = drsMessage(res.b, 'not saved'); msg.classList.add('t-bad'); return false; }
       dirty = false;
       snapshot = capture();
       if (mine) { view.setAttribute('data-layout-mine', ''); } else { view.removeAttribute('data-layout-mine'); }
@@ -398,7 +398,7 @@
     fetch(url + '/promotion?dropHidden=' + drop, { headers: { Accept: 'application/json' } })
       .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, b: b }; }); })
       .then(function (res) {
-        if (!res.ok) { pre.textContent = (res.b.code || 'Error') + ': ' + (res.b.detail || ''); return; }
+        if (!res.ok) { pre.textContent = drsMessage(res.b); return; }
         drawer.querySelector('[data-promote-title]').textContent = res.b.sutra + ' v' + res.b.fromVersion + ' → v' + res.b.version;
         (res.b.changes.length ? res.b.changes : ['Only the version changes: the layout is the Sutra’s.']).forEach(function (c) {
           var li = document.createElement('li'); li.textContent = c; ul.appendChild(li);
@@ -435,7 +435,7 @@
         .then(function (res) {
           btn.disabled = false;
           out.textContent = '';
-          if (!res.ok) { out.textContent = (res.b.code || 'Error') + ': ' + (res.b.detail || ''); out.classList.add('t-bad'); return; }
+          if (!res.ok) { out.textContent = drsMessage(res.b); out.classList.add('t-bad'); return; }
           out.classList.remove('t-bad');
           if (res.b.proposal) {
             out.appendChild(document.createTextNode('Proposed as ' + res.b.proposal.name + ' v' + res.b.proposal.version + ' (' + res.b.proposal.id + '): '));

@@ -418,4 +418,4 @@ sessions and users live in the identity database, so servers behind one load bal
 `DRISHTI_IDENTITY_DB_URL`), or a session opened on one is unknown to the next. Live
 streams stay on the server that opened them, and the browser's reconnect may land on another server, which
 simply starts with a fresh `view` event. The console keeps each tab's live channel in its own memory, so
-when you run several console processes, make sessions sticky (see [LIVE.md](../architecture/LIVE.md#one-connection-per-tab)).
+when you run several console processes, make sessions sticky (see [LIVE.md](../architecture/LIVE.md#one-connection-per-browser)).

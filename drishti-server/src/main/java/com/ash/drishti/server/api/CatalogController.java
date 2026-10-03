@@ -158,6 +158,8 @@ public class CatalogController {
 
     @GetMapping("/sutras/problems")
     public Map<String, List<SutraProblem>> problems() {
-        return sutras.problems();
+        Map<String, List<SutraProblem>> out = new java.util.LinkedHashMap<>();
+        sutras.problems().forEach((file, ps) -> out.put(sutras.relative(file), sutras.relative(ps)));      // SEC-11: no server paths
+        return out;
     }
 }

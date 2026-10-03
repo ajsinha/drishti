@@ -14,6 +14,9 @@
 
 # The help centre catalogue. A guide is a console guide (web/guides/<slug>.md) or, with `doc:`, a repository
 # document rendered as-is (so the in-app reference is the repository's docs). Order here is display order.
+# Every other document under docs/ (and the top-level *.md) is reachable unlisted at a slug made from its path
+# (docs/architecture/adr/016-one-console-many-servers.md -> /help/docs-architecture-adr-016-one-console-many-servers),
+# so a link between documents always opens in the help centre (DOC-18; tests/test_help_links.py crawls them all).
 categories:
   - id: start
     name: Getting started
@@ -21,6 +24,7 @@ categories:
     blurb: Open your first view, learn the command line and the keys, and read what a view is telling you.
     guides:
       - { slug: quickstart, doc: guides/QUICKSTART.md, title: Quickstart, icon: lightning, summary: "Ten minutes from a fresh clone to a live view: build, start, and eight commands to try." }
+      - { slug: windows, doc: guides/WINDOWS.md, title: Drishti on Windows, icon: windows, summary: "Building, starting and running Drishti on Windows: the PowerShell scripts, paths and what differs." }
       - { slug: install-and-run, doc: guides/GETTING_STARTED.md, title: Install and run, icon: download, summary: "From nothing to your first view: build, start, sign in, and the first commands to type, step by step." }
       - { slug: impact, title: F8 · Impact, icon: diagram-3, summary: "What depends on an entity: its dependents, what they roll into, and the amount at stake." }
       - { slug: monitors-and-alerts, title: Monitors and alerts, icon: bell, summary: "Live watchlists, and rules the server checks on every change: alerted once, re-armed when clear." }
@@ -50,6 +54,30 @@ categories:
       - { slug: plugins, doc: connectors/PLUGIN_GUIDE.md, title: Sources and plugins, icon: plug, summary: "The source SPI, business dates, named connectors, routing, and the demo, file, REST, JDBC and Delta Lake plugins." }
       - { slug: live, doc: architecture/LIVE.md, title: Live updates, icon: broadcast, summary: "Topics, frames, patches, slow clients and reconnects." }
       - { slug: performance, doc: admin/PERFORMANCE.md, title: Performance, icon: speedometer2, summary: "Measured numbers and why the pipeline is fast." }
+      - { slug: scale-benchmark, doc: admin/SCALE_BENCHMARK.md, title: Scale benchmark, icon: speedometer, summary: "A million trades a day in each store: how it is run, and the numbers." }
+  - id: connectors
+    name: Connectors
+    icon: plug
+    blurb: One guide per store or stream Drishti reads from, each with a worked set-up, every setting and its troubleshooting.
+    guides:
+      - { slug: connectors, doc: connectors/CONNECTOR_GUIDE.md, title: Connector guide, icon: plug, summary: "Get your data in: which connector to use, a worked set-up for each, routing, reconnecting, health and troubleshooting." }
+      - { slug: connector-demo, doc: connectors/DEMO_CONNECTOR.md, title: Demo, icon: play-circle, summary: "Every pack's samples, in memory, ticking." }
+      - { slug: demo-data, doc: connectors/DEMO_DATA.md, title: Demo data, icon: hdd-stack, summary: "Building the demo book in each store, small to a million trades a day." }
+      - { slug: connector-file, doc: connectors/FILE_CONNECTOR.md, title: File, icon: file-earmark, summary: "JSON lines on disk, from a demo to a large book." }
+      - { slug: connector-delta, doc: connectors/DELTA_CONNECTOR.md, title: Delta Lake, icon: layers, summary: "Business dates in a Delta lake, at a million trades a day for seven years." }
+      - { slug: connector-iceberg, doc: connectors/ICEBERG_CONNECTOR.md, title: Apache Iceberg, icon: layers, summary: "Business dates in Iceberg tables, at scale." }
+      - { slug: connector-duckdb, doc: connectors/DUCKDB_CONNECTOR.md, title: DuckDB, icon: hdd, summary: "A book in one embedded file." }
+      - { slug: connector-postgres, doc: connectors/POSTGRES_CONNECTOR.md, title: PostgreSQL, icon: hdd, summary: "A database through JDBC, at scale." }
+      - { slug: jdbc-queries, doc: connectors/JDBC_QUERIES.md, title: Connector queries, icon: code, summary: "Reading your own database with your own SQL." }
+      - { slug: connector-mongodb, doc: connectors/MONGODB_CONNECTOR.md, title: MongoDB, icon: hdd, summary: "A document per entity per day, read as columns." }
+      - { slug: connector-redis, doc: connectors/REDIS_CONNECTOR.md, title: Redis, icon: memory, summary: "A million trades a day, in memory." }
+      - { slug: connector-aerospike, doc: connectors/AEROSPIKE_CONNECTOR.md, title: Aerospike, icon: hdd, summary: "A million trades a day, for years." }
+      - { slug: connector-s3, doc: connectors/S3_CONNECTOR.md, title: S3, icon: bucket, summary: "One JSON object per entity in a bucket." }
+      - { slug: connector-rest, doc: connectors/REST_CONNECTOR.md, title: REST, icon: globe, summary: "One HTTP GET per entity." }
+      - { slug: connector-feeds, doc: connectors/FEEDS_CONNECTOR.md, title: Public feeds, icon: rss, summary: "SOFR, €STR, ECB FX, the Treasury curve and FRED." }
+      - { slug: connector-kafka, doc: connectors/KAFKA_CONNECTOR.md, title: Kafka, icon: broadcast, summary: "Live entities from a topic." }
+      - { slug: connector-activemq, doc: connectors/ACTIVEMQ_CONNECTOR.md, title: ActiveMQ, icon: broadcast, summary: "Live entities from queues and topics, kept on local disk." }
+      - { slug: connector-rabbitmq, doc: connectors/RABBITMQ_CONNECTOR.md, title: RabbitMQ, icon: broadcast, summary: "Live entities from AMQP queues." }
   - id: packs
     name: Domain packs
     icon: box-seam
@@ -75,11 +103,11 @@ categories:
     icon: code-square
     blurb: The API, the design, and why it is the way it is.
     guides:
-      - { slug: connectors, doc: connectors/CONNECTOR_GUIDE.md, title: Connector guide, icon: plug, summary: "Get your data in: which connector to use, a worked set-up for each, routing, reconnecting, health and troubleshooting." }
       - { slug: clients, doc: guides/CLIENTS.md, title: Scripts, notebooks and Excel, icon: filetype-py, summary: "Personal API tokens, the Python client, and Excel through Power Query: read anything you may open, from code." }
       - { slug: developer-guide, doc: guides/DEVELOPER_GUIDE.md, title: Developer guide, icon: tools, summary: "Repository map, building and testing, project rules, the request path, and recipes for endpoints, plugins, panel kinds, packs and pages." }
       - { slug: api, doc: guides/API_GUIDE.md, title: API guide, icon: braces-asterisk, summary: "REST endpoints, the ViewModel contract and error codes." }
       - { slug: architecture, doc: architecture/ARCHITECTURE.md, title: Architecture, icon: diagram-2, summary: "The pipeline, grammar, inference, live updates, modules and UX." }
+      - { slug: quant-service, doc: architecture/QUANT_SERVICE.md, title: The quant service, icon: calculator, summary: "Server-side pricing: a QuantLib service behind the server (planned)." }
       - { slug: decisions, doc: architecture/adr/README.md, title: Decision records, icon: signpost-split, summary: "The architecture decisions, each with its context and consequences." }
       - { slug: plan, doc: architecture/IMPLEMENTATION_PLAN.md, title: Implementation plan, icon: map, summary: "The waves, their exit gates, and the roadmap." }
   - id: releases

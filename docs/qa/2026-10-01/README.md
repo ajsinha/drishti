@@ -94,7 +94,7 @@ permissions, and masks are not applied on every path.
 | DOC-09 | API_GUIDE's "complete" code list misses two codes. |
 | DOC-13 | DEVELOPER_GUIDE and README list 11 plugins; there are 15. |
 | DOC-16 | Several settings read by the code are documented nowhere. |
-| DOC-18 | About 88 in-app help links go nowhere. |
+| DOC-18 | About 88 in-app help links go nowhere. **Fixed** (test_help_links.py). |
 
 Lows and infos are in each area's findings: inconsistent error responses (SEC-10, UX-10..13; GRAM-06..08 **Fixed** in 4ffeef1, 9db82fa, ee8b39e, c007e5b, cc386d6: see ux/FINDINGS.md), refused business dates stored in the as-of cookie (GRAM-09, **Fixed** in cc386d6: test_gram_inputs.py), CSRF
 protection relies on SameSite only (SEC-08, **Fixed** in 6f886ab: test_sessions.py: test_cross_site_writes_and_json_as_text_are_refused, test_configured_origins_are_allowed, test_sign_out_is_a_post_and_get_only_asks), type-ahead reveals masked names (SEC-07, **Fixed** in 43075d9: FieldMaskingTest.typeAheadNeitherShowsNorMatchesMaskedValues), readiness probe always DOWN with

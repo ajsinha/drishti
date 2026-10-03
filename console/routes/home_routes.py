@@ -50,7 +50,7 @@ def healthz(request: Request):
 async def readyz(request: Request):
     """Readiness: the console can reach the server (route traffic here only then). 503 while it cannot."""
     try:
-        await request.app.state.backend.business_date()
+        await request.app.state.backend.business_date(request.app.state.auth.service())
     except Exception as e:  # noqa: BLE001 - any failure means not ready
         return JSONResponse({"status": "DOWN", "server": "unreachable", "detail": str(getattr(e, "detail", e))[:200]}, status_code=503)
     return {"status": "UP", "server": "reachable"}

@@ -175,6 +175,31 @@ public final class SutraRegistry implements AutoCloseable {
         return s;
     }
 
+    /**
+     * {@code text} with every Sutra root directory taken off the front of the paths in it, so a problem shown to a
+     * client names {@code packs/banking/sutras/x.sutra.yaml}'s place under its root and not the server's disk layout
+     * (SEC-11). The log keeps the absolute paths.
+     */
+    public String relative(String text) {
+        if (text == null) {
+            return null;
+        }
+        String out = text;
+        for (String d : props.allDirs()) {
+            String root = Path.of(d).toAbsolutePath().normalize().toString();
+            if (!root.isEmpty() && !root.equals("/")) {
+                out = out.replace(root + java.io.File.separator, "").replace(root, ".");
+            }
+        }
+        return out;
+    }
+
+    /** The problems with their file names made relative (see {@link #relative(String)}). */
+    public List<SutraProblem> relative(List<SutraProblem> in) {
+        return in.stream().map(x -> new SutraProblem(x.code(), relative(x.message()),
+                new com.ash.drishti.rachana.model.SourceLocation(relative(x.location().file()), x.location().line(), x.location().column()))).toList();
+    }
+
     /** Problems per file from the last reload; empty when every file is valid. */
     public Map<String, List<SutraProblem>> problems() {
         return snapshot.problems();

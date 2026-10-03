@@ -20,7 +20,7 @@
 {% block content %}
 <div class="thome">
   <h1 class="mono">{{ id }}</h1>
-  <p class="pnl-err" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ error.code }} · {{ error.detail }}</p>
+  <p class="pnl-err" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ drs_message(error.code, error.detail, " · ") }}</p>
   <p class="text-muted-d">Check the identifier, or type part of it in the command line to see what exists.</p>
   <p><a href="/t">Back to the terminal</a></p>
 </div>

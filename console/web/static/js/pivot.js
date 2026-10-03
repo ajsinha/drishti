@@ -917,7 +917,7 @@
         sub.disabled = true; self.prMsg.textContent = 'Submitting…'; self.prMsg.classList.remove('t-bad');
         json('POST', self.url('/promotion'), { note: note.value }).then(function (res) {
           sub.disabled = false; self.prMsg.textContent = '';
-          if (!res.ok) { self.prMsg.textContent = (res.b.code || 'Error') + ': ' + problem(res); self.prMsg.classList.add('t-bad'); return; }
+          if (!res.ok) { self.prMsg.textContent = drsMessage({ code: res.b.code, detail: problem(res) }); self.prMsg.classList.add('t-bad'); return; }
           if (res.b.proposal) {
             self.prMsg.appendChild(document.createTextNode('Proposed as ' + res.b.proposal.name + ' v' + res.b.proposal.version + ' (' + res.b.proposal.id + '): '));
             var a = el('a', 'lnk', 'open the review'); a.href = res.b.href || '/studio/reviews'; self.prMsg.appendChild(a);
@@ -935,7 +935,7 @@
       if (!ok) { self.prDiff.textContent = 'Your arrangement could not be saved, so it cannot be promoted.'; return; }
       self.prDiff.textContent = 'Loading…';
       json('GET', self.url('/promotion')).then(function (res) {
-        if (!res.ok) { self.prDiff.textContent = (res.b.code || 'Error') + ': ' + problem(res); return; }
+        if (!res.ok) { self.prDiff.textContent = drsMessage({ code: res.b.code, detail: problem(res) }); return; }
         var p = res.b;
         self.prTitle.textContent = p.sutra + ' v' + p.fromVersion + ' → v' + p.version + ' · ' + (p.panel || self.panelId);
         ((p.changes || []).length ? p.changes : ['Only the version changes: the arrangement is the Sutra’s.']).forEach(function (c) {

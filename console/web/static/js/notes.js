@@ -109,7 +109,7 @@
     fetch(base, { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ body: form.body.value, path: pathSel.value || null }) })
       .then(json).then(function (res) {
-        if (!res.ok) { say((res.b.code || 'Error') + ': ' + res.b.detail, true); return; }
+        if (!res.ok) { say(drsMessage(res.b), true); return; }
         form.body.value = '';
         say('Added.');
         load();

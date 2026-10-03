@@ -15,6 +15,7 @@
 """Async client for the Drishti server REST API: one pooled HTTP client per console process."""
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from urllib.parse import quote
@@ -24,11 +25,20 @@ import httpx
 from core import asof
 
 
+def drs_message(code: str, detail: str, sep: str = ": ") -> str:
+    """``code`` once in front of ``detail``: no prefix when the detail already starts with it, and no repeat of it
+    inside (the server writes "DRS-2101 alert expression: DRS-2101 ..."). A shared helper, not string glue (UX-10)."""
+    code, detail = str(code or "").strip(), str(detail or "").strip()
+    if code:
+        detail = re.sub(rf"{re.escape(code)}[:\s]*", "", detail).strip()
+    return f"{code}{sep}{detail}" if code and detail else (code or detail)
+
+
 class BackendError(Exception):
     """The server answered with a problem (RFC 7807) or could not be reached."""
 
     def __init__(self, status: int, code: str, detail: str):
-        super().__init__(f"{code} {detail}")
+        super().__init__(drs_message(code, detail, " "))
         self.status = status
         self.code = code
         self.detail = detail

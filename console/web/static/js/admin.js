@@ -32,7 +32,7 @@
       if (f.next.value !== f.repeat.value) { say(msg, 'The new passwords differ.', true); return; }
       post('/account/password', { current: f.current.value, next: f.next.value }).then(function (res) {
         if (res.ok && pw.hasAttribute('data-must')) { location.href = '/t'; return; }
-        if (res.ok) { pw.reset(); say(msg, 'Password changed.'); } else { say(msg, (res.body.code || 'Error') + ': ' + res.body.detail, true); }
+        if (res.ok) { pw.reset(); say(msg, 'Password changed.'); } else { say(msg, drsMessage(res.body), true); }
       });
     });
   }
@@ -47,7 +47,7 @@
       fetch('/api/tokens', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: f.name.value, days: f.days.value || null }) })
         .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); })
         .then(function (res) {
-          if (!res.ok) { say(tmsg, (res.body.code || 'Error') + ': ' + res.body.detail, true); return; }
+          if (!res.ok) { say(tmsg, drsMessage(res.body), true); return; }
           tk.querySelector('[data-secret-text]').textContent = res.body.secret;
           tk.querySelector('[data-secret]').hidden = false;
           say(tmsg, 'Created ' + res.body.token.name + '. Reload the page to see it in the list, after copying the secret.');
@@ -63,7 +63,7 @@
         var id = b.closest('tr').getAttribute('data-token');
         if (!window.confirm('Revoke this token? Anything using it stops working at once.')) { return; }
         fetch('/api/tokens/' + encodeURIComponent(id), { method: 'DELETE' }).then(function (r) {
-          if (r.ok) { location.reload(); } else { r.json().then(function (b) { say(tmsg, (b.code || 'Error') + ': ' + b.detail, true); }); }
+          if (r.ok) { location.reload(); } else { r.json().then(function (b) { say(tmsg, drsMessage(b), true); }); }
         });
       });
     });
@@ -86,7 +86,7 @@
         .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); })
         .then(function (res) {
           if (res.ok) { say(msg, 'Saved ' + Object.keys(res.body).length + ' aliases.'); setTimeout(function () { location.reload(); }, 500); }
-          else { say(msg, (res.body.code || 'Error') + ': ' + res.body.detail, true); }
+          else { say(msg, drsMessage(res.body), true); }
         });
     });
   }
@@ -97,7 +97,7 @@
   var msg = root.querySelector('[data-msg]'), dlg = root.querySelector('[data-dialog]'), form = root.querySelector('[data-form]');
   var dmsg = root.querySelector('[data-dlg-msg]'), editing = null;
   function api(user, action, body) { return post('/admin/api/users/' + encodeURIComponent(user) + '/' + action, body); }
-  function done(res, text) { if (res.ok) { say(msg, text); setTimeout(function () { location.reload(); }, 500); } else { say(msg, (res.body.code || 'Error') + ': ' + res.body.detail, true); } }
+  function done(res, text) { if (res.ok) { say(msg, text); setTimeout(function () { location.reload(); }, 500); } else { say(msg, drsMessage(res.body), true); } }
 
   function open(user) {
     editing = user;
@@ -133,7 +133,7 @@
       : post('/admin/api/users', Object.assign(body, { username: f.username.value.trim(), password: f.password.value, mustChangePassword: f.mustChangePassword.checked }));
     call.then(function (res) {
       if (res.ok) { dlg.close(); done(res, editing ? 'Saved ' + editing.username + '.' : 'Created ' + f.username.value + '.'); }
-      else { say(dmsg, (res.body.code || 'Error') + ': ' + res.body.detail, true); }
+      else { say(dmsg, drsMessage(res.body), true); }
     });
   });
 
@@ -170,7 +170,7 @@
     fetch('/admin/api/caches/' + encodeURIComponent(name) + '/purge', { method: 'POST' })
       .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
       .then(function (res) {
-        status.textContent = res.ok ? 'Purged ' + res.d.purged.join(', ') + ' in ' + res.d.elapsedMs + ' ms.' : (res.d.code + ': ' + res.d.detail);
+        status.textContent = res.ok ? 'Purged ' + res.d.purged.join(', ') + ' in ' + res.d.elapsedMs + ' ms.' : drsMessage(res.d);
         if (res.ok) { window.setTimeout(function () { window.location.reload(); }, 900); }
       })
       .catch(function (err) { status.textContent = 'Purge failed: ' + err; })

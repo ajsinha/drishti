@@ -386,7 +386,7 @@
     var body = { code: code(), kind: kind, description: '' };
     fetch('/api/calc/snippets/' + encodeURIComponent(name.trim()), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       .then(json).then(function (res) {
-        if (!res.ok) { say((res.b.code ? res.b.code + ': ' : '') + (res.b.detail || 'not saved'), true); return; }
+        if (!res.ok) { say(drsMessage(res.b, 'not saved'), true); return; }
         mine = res.b.name;
         say('Saved as ' + mine + '.');
         loadSnippets();

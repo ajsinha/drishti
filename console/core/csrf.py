@@ -89,6 +89,10 @@ async def json_body(request, default=None):
     if kind != "application/json" and not kind.endswith("+json"):
         raise BodyError(415, "send JSON with Content-Type: application/json")
     try:
-        return json.loads(raw)
+        value = json.loads(raw)
     except ValueError as e:
         raise BodyError(400, f"the body is not JSON: {e}") from e
+    want = type({} if default is None else default)          # an object unless the caller expects a list: never a bare string or number
+    if not isinstance(value, want):
+        raise BodyError(400, f"the body must be a JSON {'array' if want is list else 'object'}")
+    return value

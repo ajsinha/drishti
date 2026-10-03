@@ -28,7 +28,7 @@
     var f = form.elements;
     post('/alerts/api/' + encodeURIComponent(f.name.value.trim()), { kind: f.kind.value.trim(), id: f.id.value.trim(), when: f.when.value,
       severity: f.severity.value, message: f.message.value })
-      .then(function (res) { if (res.ok) { location.reload(); } else { msg.textContent = (res.b.code || 'Error') + ': ' + res.b.detail; msg.classList.add('t-bad'); } });
+      .then(function (res) { if (res.ok) { location.reload(); } else { msg.textContent = drsMessage(res.b); msg.classList.add('t-bad'); } });
   });
   root.querySelectorAll('[data-suggest]').forEach(function (b) {
     b.addEventListener('click', function () {

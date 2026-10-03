@@ -96,9 +96,10 @@ class PathologicalExpressionsTest {
         @Test
         void theServerStartsAndListsBothFilesAsProblems() throws Exception {
             mvc.perform(get("/api/v1/sutras/problems")).andExpect(status().isOk())
-                    .andExpect(jsonPath("$['" + DIR.resolve("qa-deep.v1.sutra.yaml") + "'][0].code").value("DRS-2101"))
-                    .andExpect(jsonPath("$['" + DIR.resolve("qa-deep.v1.sutra.yaml") + "'][0].message").value(containsString("nested deeper than 200")))
-                    .andExpect(jsonPath("$['" + DIR.resolve("qa-chain.v1.sutra.yaml") + "'][0].code").value("DRS-2101"));
+                    // SEC-11: the keys are relative to the Sutra root
+                    .andExpect(jsonPath("$['" + "qa-deep.v1.sutra.yaml" + "'][0].code").value("DRS-2101"))
+                    .andExpect(jsonPath("$['" + "qa-deep.v1.sutra.yaml" + "'][0].message").value(containsString("nested deeper than 200")))
+                    .andExpect(jsonPath("$['" + "qa-chain.v1.sutra.yaml" + "'][0].code").value("DRS-2101"));
             assertThat(sutras.latest("qa-deep")).isEmpty();
             assertThat(sutras.hotReload()).isEqualTo("WATCHING");
         }

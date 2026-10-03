@@ -18,6 +18,9 @@ package com.ash.drishti.server.api;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.rachana.SutraException;
+import com.ash.drishti.rachana.SutraProblem;
+import com.ash.drishti.rachana.SutraRegistry;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -31,10 +34,22 @@ public class ApiExceptionHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(ApiExceptionHandler.class);
 
+    private final SutraRegistry sutras;
+
+    ApiExceptionHandler(SutraRegistry sutras) {
+        this.sutras = sutras;
+    }
+
+    /** A Sutra problem names its file relative to the Sutra root; the absolute paths stay in the log only (SEC-11). */
     @ExceptionHandler(SutraException.class)
     ProblemDetail sutra(SutraException e) {
-        ProblemDetail p = drishti(e);
-        p.setProperty("problems", e.problems());
+        LOG.info("Sutra rejected: {}", e.getMessage());
+        List<SutraProblem> shown = sutras.relative(e.problems());
+        ProblemDetail p = ProblemDetail.forStatusAndDetail(HttpStatus.valueOf(e.errorCode().httpStatus()),
+                shown.size() + " problem(s): " + shown);
+        p.setTitle(e.errorCode().name().toLowerCase().replace('_', ' '));
+        p.setProperty("code", e.errorCode().code());
+        p.setProperty("problems", shown);
         return p;
     }
 
@@ -47,6 +62,29 @@ public class ApiExceptionHandler {
         ProblemDetail p = ProblemDetail.forStatusAndDetail(status, e.getMessage());
         p.setTitle(e.errorCode().name().toLowerCase().replace('_', ' '));
         p.setProperty("code", e.errorCode().code());
+        return p;
+    }
+
+    /** A required query parameter that is missing: {@code 400 DRS-5001} naming it (SEC-10), not the 401 of a missing principal. */
+    @ExceptionHandler(org.springframework.web.bind.MissingServletRequestParameterException.class)
+    ProblemDetail missingParameter(org.springframework.web.bind.MissingServletRequestParameterException e) {
+        return badRequest("the query parameter '" + e.getParameterName() + "' is required");
+    }
+
+    /** A parameter of the wrong type, or a date that is not one ({@code from=xx}): {@code 400 DRS-5001}, no stack trace (SEC-10). */
+    @ExceptionHandler({org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class,
+            java.time.format.DateTimeParseException.class})
+    ProblemDetail badValue(Exception e) {
+        if (e instanceof org.springframework.web.method.annotation.MethodArgumentTypeMismatchException m) {
+            return badRequest("the parameter '" + m.getName() + "' has a value of the wrong type");
+        }
+        return badRequest("not a date (use yyyy-MM-dd): '" + ((java.time.format.DateTimeParseException) e).getParsedString() + "'");
+    }
+
+    private static ProblemDetail badRequest(String detail) {
+        ProblemDetail p = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, detail);
+        p.setTitle("bad request");
+        p.setProperty("code", ErrorCode.BAD_REQUEST.code());
         return p;
     }
 

@@ -24,7 +24,7 @@ from fastapi.responses import Response
 
 from core.csrf import BodyError, json_body
 from core import asof
-from core.backend import BackendError
+from core.backend import BackendError, drs_message
 from core.export import filename, grid, panel_rows, plain, to_csv, to_xlsx
 from routes.common import ident
 
@@ -36,7 +36,7 @@ def _csv(body: bytes, name: str) -> Response:
 
 
 def _problem(e: BackendError) -> Response:
-    return Response(f"{e.code} {e.detail}\n", status_code=e.status if e.status < 500 else 502, media_type="text/plain; charset=utf-8")
+    return Response(drs_message(e.code, e.detail, " ") + "\n", status_code=e.status if e.status < 500 else 502, media_type="text/plain; charset=utf-8")
 
 
 def _date() -> str:

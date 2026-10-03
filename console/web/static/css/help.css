@@ -64,6 +64,7 @@
 .help-article code { background: var(--d-surface-2); padding: .05rem .3rem; border-radius: 3px; font-size: .88em; color: var(--d-accent); }
 .help-article pre code { background: none; padding: 0; color: var(--d-ink); }
 .help-article a { color: var(--d-link); }
+.help-article .help-repo { border-bottom: 1px dotted currentColor; cursor: help; }
 /* Screenshots fit their column at any width and keep their shape; a click opens one full size (UX-03). */
 .help-article img { max-width: 100%; height: auto; }
 .help-shot { display: inline-block; max-width: 100%; cursor: zoom-in; border-radius: 6px; }

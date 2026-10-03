@@ -20,7 +20,7 @@ from pathlib import Path
 from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse
 
-from core.backend import BackendError
+from core.backend import BackendError, drs_message
 from routes.common import ident, library, packs, render
 
 router = APIRouter(include_in_schema=False)
@@ -30,7 +30,7 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 @router.get("/help")
 async def help_index(request: Request):
     lib = await library(request)
-    return render(request, "help/index.html", categories=lib.categories, count=len(lib.guides), screen="help")
+    return render(request, "help/index.html", categories=lib.categories, count=lib.listed, screen="help")
 
 
 @router.get("/help/search")
@@ -75,7 +75,7 @@ async def about(request: Request):
     try:
         info = await request.app.state.backend.about(getattr(request.state, "identity", None) or request.app.state.auth.service())
     except BackendError as e:
-        info = {"error": f"{e.code} {e.detail}"}
+        info = {"error": drs_message(e.code, e.detail, " ")}
     licence = _read(ROOT / "LICENSE")
     return render(request, "help/about.html", info=info, licence_intro="\n".join(licence.splitlines()[:5]),
                   notices=(await library(request)).guides.get("notices"), packs=await packs(request), screen="about",

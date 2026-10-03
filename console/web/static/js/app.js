@@ -14,6 +14,13 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* Console-wide behaviour: theme menu. */
+/* One message from a problem: its DRS code once, whether or not the detail already starts with it or repeats it (UX-10). */
+window.drsMessage = function (p, fallback) {
+  p = p || {};
+  var code = p.code || 'Error', detail = String(p.detail || fallback || '');
+  if (/^DRS-\d+$/.test(code)) { detail = detail.split(code + ': ').join('').split(code + ' ').join('').split(code).join('').trim(); }
+  return detail ? code + ': ' + detail : code;
+};
 (function () {
   'use strict';
   var root = document.documentElement;

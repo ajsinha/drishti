@@ -28,7 +28,7 @@
         fetch('/admin/api/packs/' + encodeURIComponent(name), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled: on }) })
           .then(function (r) { return r.json().then(function (body) { return { ok: r.ok, body: body }; }); })
           .then(function (res) {
-            pmsg.textContent = res.ok ? name + ' is ' + (on ? 'on' : 'off') + '.' : (res.body.code || 'Error') + ': ' + res.body.detail;
+            pmsg.textContent = res.ok ? name + ' is ' + (on ? 'on' : 'off') + '.' : drsMessage(res.body);
             pmsg.classList.toggle('t-bad', !res.ok);
             if (res.ok) { setTimeout(function () { location.reload(); }, 400); }
           });
@@ -51,7 +51,7 @@
         fetch(url, { method: 'POST' })
           .then(function (r) { return r.json().then(function (body) { return { ok: r.ok, body: body }; }); })
           .then(function (res) {
-            if (!res.ok) { lmsg.textContent = (res.body.code || 'Error') + ': ' + res.body.detail; lmsg.classList.add('t-bad'); return; }
+            if (!res.ok) { lmsg.textContent = drsMessage(res.body); lmsg.classList.add('t-bad'); return; }
             lmsg.textContent = res.body.note;
             if (!res.body.restarting) { return; }
             // wait for the server to go and come back, then show the new state
@@ -75,7 +75,7 @@
         var id = b.closest('tr').getAttribute('data-token');
         if (!window.confirm('Revoke token ' + id + '? Anything using it stops working at once.')) { return; }
         fetch('/admin/api/tokens/' + encodeURIComponent(id) + '/revoke', { method: 'POST' }).then(function (r) {
-          if (r.ok) { location.reload(); } else { r.json().then(function (body) { tadm.querySelector('[data-msg]').textContent = (body.code || 'Error') + ': ' + body.detail; }); }
+          if (r.ok) { location.reload(); } else { r.json().then(function (body) { tadm.querySelector('[data-msg]').textContent = drsMessage(body); }); }
         });
       });
     });
@@ -131,7 +131,7 @@
     };
     post('/admin/api/roles/' + encodeURIComponent(f.name.value.trim()), body).then(function (res) {
       if (res.ok) { dlg.close(); say(msg, (editing ? 'Saved ' : 'Created ') + res.body.name + '.'); setTimeout(function () { location.reload(); }, 400); }
-      else { say(dmsg, (res.body.code || 'Error') + ': ' + res.body.detail, true); }
+      else { say(dmsg, drsMessage(res.body), true); }
     });
   });
   root.querySelectorAll('tr[data-role]').forEach(function (tr) {
@@ -143,7 +143,7 @@
         if (!window.confirm('Delete the role ' + role.name + '?')) { return; }
         post('/admin/api/roles/' + encodeURIComponent(role.name) + '/delete').then(function (res) {
           if (res.ok) { say(msg, 'Deleted ' + role.name + '.'); setTimeout(function () { location.reload(); }, 400); }
-          else { say(msg, (res.body.code || 'Error') + ': ' + res.body.detail, true); }
+          else { say(msg, drsMessage(res.body), true); }
         });
       });
     }

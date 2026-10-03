@@ -48,7 +48,7 @@ docaudit/). Totals: 3 high, 19 medium, 23 low, 5 info.
 | DOC-09 | API_GUIDE's "complete list" of error codes misses DRS-6008 and DRS-6009. |
 | DOC-13 | DEVELOPER_GUIDE and README list 11 plugins; pom.xml has 15 (redis, mongodb, iceberg, duckdb missing). |
 | DOC-16 | Settings read by the code but documented nowhere: drishti.branding.*, DRISHTI_PRODUCT, console ui.*, backend.name, identity seed-display-name / preferences-dir. |
-| DOC-18 | About 88 in-app help links go nowhere (/help/connectors 17 dead, /help/plugins 11, /help/configuration 17). |
+| DOC-18 | About 88 in-app help links go nowhere (/help/connectors 17 dead, /help/plugins 11, /help/configuration 17). **Fixed** (test_help_links.py). |
 
 ## Low
 | Id | Finding |
@@ -57,10 +57,10 @@ docaudit/). Totals: 3 high, 19 medium, 23 low, 5 info.
 | GRAM-07 | Unhelpful or misclassified messages: `unexpected '' at 7` for a condition ending early; out-of-range `version` reported as YAML syntax (DRS-2001) instead of DRS-2020; unsorted unknown-function list; tab-indented line hint says "needs a colon"; phrase search shows a Python list with a bad plural. **Fixed** in 9db82fa, 4ffeef1, ee8b39e (StrictSutraTest.expressionMessagesSayWhatIsWrong, StrictSutraTest.anOutOfRangeVersionIsAVersionProblemNotYamlSyntax, SearchFieldNamesTest.aConditionThatStopsShortSaysSo, PhraseParserTest.explainsWhatItReadAndSaysWhatItDidNot, test_studio_check_js.py::test_a_tab_indented_line_is_said_to_be_indented_with_a_tab) |
 | GRAM-08 | Preview API 500 on `{"yaml": null}`; malformed JSON → bare 400 with no DRS code. **Fixed** in c007e5b, cc386d6 (StudioTest.aPreviewRequestThatCannotBeReadIsACleanProblem; test_gram_inputs.py::test_a_preview_body_of_the_wrong_shape_is_a_400_problem, test_a_preview_body_that_is_not_json_is_a_400_problem) |
 | GRAM-09 | Invalid or future dates are stored in the as-of cookie and break every view for 12 hours. **Fixed** in cc386d6 (test_gram_inputs.py: test_a_date_that_cannot_be_picked_is_refused_and_not_stored, test_a_stored_date_the_server_refuses_is_ignored_and_cleared) |
-| UX-10 | DRS codes repeated two or three times in messages ("DRS-2101: DRS-2101 alert expression: DRS-2101 …"; missing.html:23, alerts-page.js:31 and others). |
+| UX-10 | DRS codes repeated two or three times in messages ("DRS-2101: DRS-2101 alert expression: DRS-2101 …"; missing.html:23, alerts-page.js:31 and others). **Fixed** (test_drs_message.py). |
 | UX-11 | Error pages always say "Check the identifier" (also for timeouts and bad dates); unknown kind reported as a missing id; unknown URLs return raw `{"detail":"Not Found"}`. |
 | UX-12 | First past-date read after start timed out (DRS-1004) → console 502; not reproduced again (2 s timeout). |
-| UX-13 | Six console endpoints return a plain 500 on a non-JSON body. |
+| UX-13 | Six console endpoints return a plain 500 on a non-JSON body. **Fixed** (test_json_bodies.py). |
 | UX-14 | Layout mode lets every panel be hidden, then Save is refused; panels shrink to an unreadable 1 column; the height announcement is off by one. |
 | UX-15 | Studio keeps a stale preview after a failed preview; after approval the review page says "No differences"; Studio has no `<h1>`; its editor has no accessible name. |
 | UX-16 | A fresh start logs 124 WARN lines. |

@@ -65,7 +65,7 @@
     fetch('/api/series/' + encodeURIComponent(kind) + '/' + encodeURIComponent(id) + '?days=' + days + '&path=' + encodeURIComponent(current.path))
       .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); })
       .then(function (res) {
-        if (!res.ok) { msg.textContent = (res.body.code || 'Error') + ': ' + res.body.detail; return; }
+        if (!res.ok) { msg.textContent = drsMessage(res.body); return; }
         var pts = res.body.points || [], numeric = pts.filter(function (p) { return typeof p.value === 'number'; });
         var latest = pts[pts.length - 1] || {};
         dlg.querySelector('[data-origin]').innerHTML = latest.source

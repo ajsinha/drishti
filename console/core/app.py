@@ -27,6 +27,7 @@ from urllib.parse import quote
 from fastapi.responses import JSONResponse, RedirectResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from core.backend import drs_message
 from core.config import Settings
 
 WEB = Path(__file__).resolve().parent.parent / "web"
@@ -165,6 +166,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.backend = None
     templates = Jinja2Templates(directory=str(WEB / "templates"))
     templates.env.globals.update(
+        drs_message=drs_message,
         ASSET_V=f"{ASSET_VERSION}-{asset_fingerprint()}",
         PRODUCT=settings.get("ui.product", ""),
         PRODUCT_MEANING=settings.get("ui.product_meaning", ""),

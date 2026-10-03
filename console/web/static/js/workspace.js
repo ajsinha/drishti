@@ -113,7 +113,7 @@
       .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, b: b }; }); })
       .then(function (res) {
         if (res.ok) { say('Saved “' + name + '”.'); if (name !== root.dataset.name) { location.href = '/w/' + encodeURIComponent(name); } }
-        else { say((res.b.code || 'Error') + ': ' + res.b.detail, true); }
+        else { say(drsMessage(res.b), true); }
       });
   }
   on('[data-save]', 'click', function () { save(root.dataset.name); });
@@ -133,7 +133,7 @@
     shareForm.addEventListener('submit', function (e) {
       e.preventDefault();
       share({ everyone: shareForm.everyone.checked, roles: list(shareForm.roles.value), users: list(shareForm.users.value) }).then(function (res) {
-        if (!res.ok) { say((res.b.code || 'Error') + ': ' + res.b.detail, true); return; }
+        if (!res.ok) { say(drsMessage(res.b), true); return; }
         say('Shared “' + root.dataset.name + '”' + (res.b.everyone ? ' with everyone.' : '.'));
         root.querySelector('[data-share-stop]').hidden = false;
         root.querySelector('[data-share-open]').textContent = 'Shared';
@@ -141,7 +141,7 @@
     });
     on('[data-share-stop]', 'click', function () {
       share({ stop: true }).then(function (res) {
-        if (!res.ok) { say((res.b.code || 'Error') + ': ' + res.b.detail, true); return; }
+        if (!res.ok) { say(drsMessage(res.b), true); return; }
         say('No longer shared.');
         root.querySelector('[data-share-stop]').hidden = true;
         root.querySelector('[data-share-open]').textContent = 'Share…';
