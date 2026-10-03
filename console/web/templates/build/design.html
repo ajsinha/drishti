@@ -41,6 +41,7 @@
       {% if design.expiryWarning %} · <b>expires soon</b>{% endif %}
       · <span class="bs-role wb-state" data-status-chip>{{ design.status }}</span> <span class="bs-role" data-bound-chip hidden></span></span>
     <span class="wb-head-actions">
+      <button type="button" class="btn-pill btn-accent wb-add-panel" data-add-panel aria-haspopup="dialog" title="Choose a panel kind and add it to the screen (works on every tab)"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add panel</button>
       <button type="button" class="btn-pill btn-accent" data-autodesign{% if not design.samples %} disabled{% endif %} title="Draft a complete Sutra from the samples: a new revision; undo brings the old one back"><i class="bi bi-magic" aria-hidden="true"></i> Auto-design</button>
       <button type="button" class="btn-pill btn-ghost" data-file-menu aria-haspopup="dialog" title="Open a Sutra (.yaml) or sample documents (.json) from your computer, or an example as a new design"><i class="bi bi-folder2-open" aria-hidden="true"></i> File</button>
       <input type="file" class="visually-hidden" data-file-input multiple accept=".yaml,.yml,.json,.jsonl,application/json" aria-label="Open a Sutra or sample documents" tabindex="-1">
@@ -76,8 +77,10 @@
           <a class="btn-pill btn-ghost" href="/build/designs/{{ design.id }}/shape/download?kind=schema" download="schema.json" title="Plain JSON Schema, annotations removed">JSON Schema</a></p>
         <p class="text-muted-d" data-data-note></p>
       </section>
-      <details class="wb-sec" open data-palette-box><summary id="wbPalette" class="bs-h">Panels</summary>
-        <p class="text-muted-d bs-keys">Drag a kind onto the canvas, or press Add.</p>
+      <details class="wb-sec" open data-palette-box><summary id="wbPalette" class="bs-h">Add a panel</summary>
+        <p class="text-muted-d bs-keys">Click Add, or drag a kind onto the canvas.</p>
+        <label for="wbKindFilter" class="visually-hidden">Filter the panel kinds</label>
+        <input id="wbKindFilter" class="studio-in" type="search" placeholder="Filter the 20 kinds" autocomplete="off" data-kind-filter>
         <ul class="wb-palette" aria-label="Panel kinds" data-palette></ul>
       </details>
       <details class="wb-sec" open><summary id="wbShape" class="bs-h">Shape</summary>

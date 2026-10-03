@@ -59,15 +59,24 @@
 
     /** AddPanel; the new panel is selected and the inspector opens on it, its required options marked. */
     function add(kind, at, options, why) {
-      var before = store.state.yaml, op = { op: 'addPanel', kind: kind, at: toAt(at) };
+      var blank = !store.state.yaml.trim();
+      // a design with no Sutra yet starts from the smallest valid one (the server edits a Sutra, it does not invent one), and the placeholder goes again
+      var starter = 'rachana: 1\nsutra: my-layout\nversion: 1\nmatch: { kind: ' + store.state.kind + ' }\ntitle: { pill: "' + store.state.kind + '", id: $.id }\npanels:\n  - { id: refs, kind: links, title: Linked entities, area: right }\n';
+      var before = blank ? starter : store.state.yaml, op = { op: 'addPanel', kind: kind, at: toAt(at) };
       options = Object.assign({ title: kind.charAt(0).toUpperCase() + kind.slice(1) }, defaults(kind), options || {});
       if (options && Object.keys(options).length) { op.options = options; }
-      return store.send([op]).then(function (r) {
+      return store.send(blank ? [{ op: 'text', yaml: starter }, op, { op: 'remove', panel: 'refs' }] : [op]).then(function (r) {
         var id = r.body ? newId(before, r.body.yaml) : null;
         if (!r.applied || !id) { return null; }
         say('Added a ' + kind + ' panel (' + id + ')' + (why ? ': ' + why : '') + '. Its options are in the inspector; required ones are marked.');
+        if (ui.design) { ui.design(); }                                   // from the YAML or Summary tab too: the new panel is shown
         ui.canvas().select({ type: 'panel', id: id }, true);
         ui.inspect({ type: 'panel', id: id }, { required: true });
+        var e = ui.canvas().el(id);
+        if (e) {
+          if (e.scrollIntoView) { e.scrollIntoView({ block: 'center', behavior: 'auto' }); }
+          e.classList.add('wb-new'); setTimeout(function () { e.classList.remove('wb-new'); }, 1800);
+        }
         return id;
       });
     }
@@ -82,15 +91,25 @@
       var said = o.span !== undefined ? (o.span + ' of 12 columns wide') : (o.height ? o.height + ' rows tall' : 'as tall as its content');
       return store.send([op], id + ' is ' + said);
     }
-    function remove(id, next) {
+    function remove(id, next, name) {
       return store.send([{ op: 'remove', panel: id }], 'Removed ' + id).then(function (r) {
         if (r.ok) {
+          if (ui.toast) { ui.toast("Removed '" + (name || id) + "'", 'Undo', function () { store.undo(); }); }
           ui.canvas().select(next, true);
           if (next) { ui.canvas().focus(); } else { ui.inspect(null); }
           say('Removed ' + id + '. Ctrl+Z undoes it.' + (next ? ' ' + next.id + ' is selected.' : ''));
         }
         return r;
       });
+    }
+    /** A copy of a panel right after it (its options, a new id, the title marked as a copy). */
+    function duplicate(id) {
+      var m = WB.model(store.state.yaml).panels.filter(function (p) { return p.id === id; })[0];
+      if (!m) { say('This panel is gone.', true); return Promise.resolve(); }
+      var o = {};
+      Object.keys(m.values).forEach(function (k) { if (k !== 'id' && k !== 'kind') { o[k] = m.values[k]; } });
+      o.title = (o.title || m.kind) + ' (copy)';
+      return add(m.kind, { area: ui.canvas().areaOf(id) || 'main', rel: 'after', id: id }, o);
     }
     function bind(id, path, role) {
       var op = { op: 'bind', panel: id, path: path };
@@ -166,7 +185,7 @@
         items: fieldList.map(function (f) { return { label: f.path, badge: f.role || '', detail: f.type + (f.presence < 0.5 ? ' · rare' : ''), value: f.path }; }),
         onPick: function (it) { bind(s.id, it.value); } });
     }
-    return { add: add, dropped: dropped, bind: bind, resize: resize, remove: remove, suggest: suggest, menuAdd: menuAdd, menuBind: menuBind, move: move,
+    return { duplicate: duplicate, add: add, dropped: dropped, bind: bind, resize: resize, remove: remove, suggest: suggest, menuAdd: menuAdd, menuBind: menuBind, move: move,
              fields: function (list) { fieldList = list || []; }, afterSelected: afterSelected };
   };
 })();

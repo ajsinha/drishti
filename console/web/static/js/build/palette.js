@@ -48,23 +48,29 @@
   ];
   var list = KINDS.map(function (k) { return { kind: k[0], icon: k[1], text: k[2], family: k[3] }; });
 
-  function render(box, onAdd) {
+  function render(box, onAdd, filterEl) {
     box.textContent = '';
+    if (filterEl) {
+      filterEl.addEventListener('input', function () {
+        var q = filterEl.value.trim().toLowerCase();
+        Array.prototype.forEach.call(box.children, function (li) { li.hidden = !!q && (li.getAttribute('data-kind') + ' ' + li.getAttribute('data-text')).toLowerCase().indexOf(q) < 0; });
+      });
+    }
     list.forEach(function (k) {
-      var li = WB.el('li', 'wb-kind', null, { 'data-kind': k.kind });
+      var li = WB.el('li', 'wb-kind', null, { 'data-kind': k.kind, 'data-text': k.text + ' ' + k.family });
       var i = WB.el('i', 'bi bi-' + k.icon, null, { 'aria-hidden': 'true' });
       var t = WB.el('span', 'wb-kind-t');
       t.appendChild(WB.el('b', 'mono', k.kind));
-      t.appendChild(WB.el('small', null, k.text));
+      t.setAttribute('title', k.text);
       var b = WB.el('button', 'btn-pill btn-ghost wb-kind-add', 'Add', { type: 'button', 'aria-label': 'Add a ' + k.kind + ' panel', title: 'Add a ' + k.kind + ' panel after the selected one' });
       b.addEventListener('click', function () { onAdd(k.kind); });
       li.appendChild(i); li.appendChild(t); li.appendChild(b);
-      li.title = 'Drag onto the canvas to add a ' + k.kind + ' panel there';
+      li.title = k.text + ' · drag onto the canvas to add it there';
       WB.drag.attach(li, { payload: function () { return { type: 'kind', kind: k.kind }; }, label: function () { return '+ ' + k.kind; } });
       box.appendChild(li);
     });
   }
-  function items() { return list.map(function (k) { return { label: k.kind, detail: k.text, badge: k.family, value: k.kind }; }); }
+  function items() { return list.map(function (k) { return { label: k.kind, detail: k.text, badge: k.family, value: k.kind, icon: k.icon }; }); }
 
   WB.palette = { kinds: list, render: render, items: items };
 })();

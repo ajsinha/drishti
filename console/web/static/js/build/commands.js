@@ -43,6 +43,10 @@
         cmd('Previous sample', 'Preview the design with the previous sample', function () { step(-1); });
       }
       s.samples.forEach(function (n) { var base = n.split('/').pop(); cmd('Go to sample: ' + base, n === base ? 'Preview the design with it' : 'Preview ' + n, function () { store.setSample(n); }, 'sample'); });
+      cmd('Remove panel', 'Remove the selected panel (Delete); Undo brings it back', function () {
+        var sel = ctx.canvas().selected();
+        if (sel && sel.type === 'panel') { ctx.canvas().remove(sel.id); } else { say('Select a panel first, then remove it.', true); }
+      }, 'panel');
       cmd('Go to canvas', 'Put the focus on the screen (G then C)', goCanvas, 'go to');
       var press = function (sel) { return function () { var b = document.querySelector(sel); if (b && !b.disabled) { b.click(); } else { say('That is not available now.', true); } }; };
       cmd('Auto-design', 'Draft a Sutra from the samples', press('[data-autodesign]'));

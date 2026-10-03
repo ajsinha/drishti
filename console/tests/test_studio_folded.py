@@ -40,7 +40,7 @@ def _design(client, location):
 def test_bare_studio_is_a_scratch_design_on_the_default_example_at_the_yaml_tab(app_client):
     loc = _target(app_client, "/studio")
     d = _design(app_client, loc)
-    assert loc.endswith("?tab=yaml") and d["scratch"] is True and d["name"] == ""
+    assert loc.endswith("?tab=split") and d["scratch"] is True and d["name"] == ""
     assert "sutra: all-panels-showcase" in d["sutra"] and [s["name"] for s in d["samples"]] == ["all-panels-showcase.json"]
     assert "all-panels-showcase" in d["notes"] or d["notes"]                               # the README came along as notes
 
@@ -59,7 +59,7 @@ def test_studio_sutra_edits_that_sutra_and_carries_the_old_test_entities_over(ap
     try:
         loc = _target(app_client, "/studio?sutra=irs-vanilla@3")
         d = _design(app_client, loc)
-        assert d["base"] == "irs-vanilla@3" and "sutra: irs-vanilla" in d["sutra"] and loc.endswith("?tab=yaml")
+        assert d["base"] == "irs-vanilla@3" and "sutra: irs-vanilla" in d["sutra"] and loc.endswith("?tab=split")
         refs = [(s["ref"]["kind"], s["ref"]["id"]) for s in d["samples"] if s["type"] == "ref"]
         assert refs == [("curve", "USD-SOFR"), ("curve", "EUR-ESTR")], "the entities the user may open became samples; the rest were left out quietly"
         # the same through New → "an existing Sutra"
@@ -83,9 +83,9 @@ def test_studio_design_and_sample_open_that_design_and_the_page_selects_the_samp
     d = _new(app_client, "Mine", kind="trade", sutra="rachana: 1\nsutra: my-own\nversion: 1\n")
     app_client.post(f"/build/designs/{d['id']}/files", json=_files(("a.json", _doc(1)), ("b.json", _doc(2))))
     loc = _target(app_client, f"/studio?design={d['id']}&sample=b.json")
-    assert loc == f"/build/d/{d['id']}?tab=yaml&sample=b.json"
+    assert loc == f"/build/d/{d['id']}?tab=split&sample=b.json"
     page = app_client.get(loc).text
-    assert '"sample": "b.json"' in page and '"tab": "yaml"' in page
+    assert '"sample": "b.json"' in page and '"tab": "split"' in page
 
 
 def test_old_review_addresses_move_to_the_workbench_and_keep_the_query(app_client):

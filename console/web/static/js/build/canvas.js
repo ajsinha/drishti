@@ -67,7 +67,17 @@
         p.appendChild(WB.el('span', 'lay-size', null, { 'aria-hidden': 'true' }));
         badge(p);
         var head = p.querySelector('.pnl-h');
-        if (head) { head.title = 'Drag to move this panel'; head.classList.add('wb-grab'); }
+        if (head) {
+          head.title = 'Drag to move · drag the edges to resize'; head.classList.add('wb-grab');
+          if (!head.querySelector('.wb-trash')) {
+            var trash = WB.el('button', 'wb-trash', null, { type: 'button', 'aria-label': 'Remove panel ' + title(p), title: 'Remove this panel (Undo brings it back)' });
+            trash.appendChild(WB.el('i', 'bi bi-trash', null, { 'aria-hidden': 'true' }));
+            ['pointerdown', 'mousedown', 'dblclick'].forEach(function (ev) { trash.addEventListener(ev, function (x) { x.stopPropagation(); }); });
+            trash.addEventListener('click', function (x) { x.stopPropagation(); removePanel(p.getAttribute('data-panel')); });
+            head.appendChild(trash);
+          }
+          if (!head.querySelector('.wb-grip')) { head.insertBefore(WB.el('i', 'bi bi-grip-vertical wb-grip', null, { 'aria-hidden': 'true' }), head.firstChild); }
+        }
       });
       [['.vtitle', 'title', 'Title'], ['dl.strip', 'strip', 'Key figures strip']].forEach(function (r) {
         var e = frame.querySelector(r[0]);
@@ -93,11 +103,22 @@
     }
     function focusSel() { var e = regionEl(sel); if (e) { e.focus({ preventScroll: true }); } }
 
+    /** An empty design: one large way in (the chooser of the 20 kinds). */
+    function callToAction() {
+      var wrap = WB.el('div', 'wb-first'), none = !WB.model(store.state.yaml).panels.length;
+      if (!none) { wrap.hidden = true; return wrap; }
+      var b = WB.el('button', 'btn-pill btn-accent wb-first-b', 'Add your first panel', { type: 'button', 'data-first-panel': '' });
+      b.insertBefore(WB.el('i', 'bi bi-plus-lg', null, { 'aria-hidden': 'true' }), b.firstChild);
+      b.addEventListener('click', function () { if (hooks.menuAdd) { hooks.menuAdd(b); } });
+      wrap.appendChild(b);
+      return wrap;
+    }
     store.on('preview', function (p) {
       var had = frame.contains(document.activeElement);
       frame.textContent = '';
-      if (p.error) { frame.appendChild(WB.el('p', 'bs-status bad', p.error)); return; }
+      if (p.error) { frame.appendChild(callToAction()); frame.appendChild(WB.el('p', 'bs-status bad', p.error)); return; }
       if (!p.html) {
+        frame.appendChild(callToAction());
         frame.appendChild(p.failed ? WB.el('p', 'bs-status bad wb-empty', 'The Sutra has problems that stop it from drawing: see the Problems tab.')
           : WB.el('p', 'text-muted-d wb-empty', 'Nothing to draw yet: the design needs a Sutra with panels and a sample.'));
         return;
@@ -110,6 +131,7 @@
       }
       if (window.drishti) { window.drishti.enhance(frame); window.drishti.redraw(); }
       decorate();
+      if (!panels().length) { frame.insertBefore(callToAction(), frame.firstChild); }
       if (sel && !regionEl(sel)) { sel = null; if (hooks.onSelect) { hooks.onSelect(null); } }
       mark();
       if (had) { focusSel(); }
@@ -276,15 +298,42 @@
           if (areaOf(p) === act.area) { say(title(p) + ' is already in the ' + (act.area === 'right' ? 'side' : 'main') + ' column.'); break; }
           var to = panels(act.area === 'right' ? columns().right : columns().main);
           actions.dropped({ type: 'panel', id: sel.id }, null, to.length ? { area: act.area, rel: 'before', id: to[Math.min(i, to.length - 1)].getAttribute('data-panel') } : { area: act.area }, null); break;
-        case 'remove': actions.remove(sel.id, neighbour(list, i)); break;
+        case 'remove': removePanel(sel.id); break;
         default: break;
       }
+    });
+    /** Removes a panel (one operation, undoable) and selects the one next to it. */
+    function removePanel(id) {
+      var p = byId(id);
+      if (!p) { return Promise.resolve(); }
+      var list = panels(p.parentNode);
+      return actions.remove(id, neighbour(list, list.indexOf(p)), title(p));
+    }
+    function movePanel(id, step) {
+      var p = byId(id), list = p ? panels(p.parentNode) : [], i = list.indexOf(p);
+      if (!p || i + step < 0 || i + step >= list.length) { say(p ? title(p) + ' is already ' + (step < 0 ? 'first' : 'last') + ' in its column.' : 'This panel is gone.', true); return Promise.resolve(); }
+      return actions.dropped({ type: 'panel', id: id }, null, { area: areaOf(p), rel: step < 0 ? 'before' : 'after', id: list[i + step].getAttribute('data-panel') }, null);
+    }
+    // a right click on a panel: the things you do to a panel, without remembering keys
+    frame.addEventListener('contextmenu', function (e) {
+      var p = e.target.closest && e.target.closest('.pnl[data-panel]');
+      if (!p || panels().indexOf(p) < 0) { return; }
+      e.preventDefault();
+      var id = p.getAttribute('data-panel');
+      select({ type: 'panel', id: id }, true);
+      WB.menu.open({ title: title(p), at: { x: e.clientX, y: e.clientY }, items: [
+        { label: 'Move up', detail: 'One place earlier in its column', value: 'up' }, { label: 'Move down', detail: 'One place later in its column', value: 'down' },
+        { label: 'Duplicate', detail: 'A copy right after it', value: 'copy' }, { label: 'Remove panel', detail: 'Undo brings it back', value: 'remove' }],
+        onPick: function (it) {
+          if (it.value === 'up') { movePanel(id, -1); } else if (it.value === 'down') { movePanel(id, 1); }
+          else if (it.value === 'copy') { actions.duplicate(id); } else { removePanel(id); }
+        } });
     });
     function neighbour(list, i) { var n = list[i + 1] || list[i - 1]; return n ? { type: 'panel', id: n.getAttribute('data-panel') } : null; }
     // arrows scroll the page when a panel has focus, which is not wanted here
     frame.addEventListener('keydown', function (e) { if (/^Arrow|^Home$|^End$/.test(e.key) && e.target.matches && e.target.matches('.pnl[data-panel], [data-wb-region]')) { e.preventDefault(); } }, true);
 
     return { select: select, selected: function () { return sel; }, ids: function () { return panels().map(function (p) { return p.getAttribute('data-panel'); }); },
-             el: byId, focus: focusSel, areaOf: function (id) { var p = byId(id); return p ? areaOf(p) : null; }, columns: columns, panels: panels };
+             el: byId, remove: removePanel, move: movePanel, focus: focusSel, areaOf: function (id) { var p = byId(id); return p ? areaOf(p) : null; }, columns: columns, panels: panels };
   };
 })();

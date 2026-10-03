@@ -93,7 +93,7 @@
         if (it.value === 'open') { open(); return; }
         say('Opening a copy of ' + it.value + '...');
         WB.call('POST', '/build/examples/' + encodeURIComponent(it.value) + '/open').then(function (r) {
-          if (r.ok) { window.location.href = r.body.url + '?tab=yaml'; } else { say(WB.why(r), true); }
+          if (r.ok) { window.location.href = r.body.url + '?tab=split'; } else { say(WB.why(r), true); }
         });
       } });
     }

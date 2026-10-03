@@ -189,9 +189,10 @@
       var bar = el('div', 'bs-actions');
       var bind = el('button', 'btn-pill btn-ghost', 'Bind field…', { type: 'button' });
       bind.addEventListener('click', function () { ctx.actions.menuBind(bind); });
-      var rm = el('button', 'btn-pill btn-ghost', 'Remove panel', { type: 'button' });
-      rm.addEventListener('click', function () { ctx.actions.remove(m.id, null); });
-      bar.appendChild(bind); bar.appendChild(rm); box.appendChild(bar);
+      var rm = el('button', 'btn-pill btn-ghost wb-remove', 'Remove panel', { type: 'button', 'aria-label': 'Remove panel ' + (m.values.title || m.id) });
+      rm.addEventListener('click', function () { if (ctx.remove) { ctx.remove(m.id); } else { ctx.actions.remove(m.id, null); } });
+      head.appendChild(rm);
+      bar.appendChild(bind); box.appendChild(bar);
       var missing = [];
       var sect = function (title, names, req) {
         var list = names.filter(function (n) { return n !== 'id' && n !== 'kind'; });

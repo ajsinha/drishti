@@ -77,8 +77,8 @@ Open the workbench with nothing at all and you get an unnamed **scratch design**
 | Where | What it holds |
 |---|---|
 | **Left: Data** | The samples (add, remove, choose the previewed one), the **palette** of the 20 panel kinds, and the **shape**: every field of your data with its role. |
-| **Centre** | Tabs **Design** (the real screen with an editing layer), **YAML** (the Sutra text) and **Summary** (the Sutra read back as a page). **Split** shows Design and YAML side by side. |
-| **Right** | Tabs **Inspector** (a form for what is selected), **Problems** and **Tests**. |
+| **Centre** | Tabs **Design** (the real screen with an editing layer), **YAML** (the Sutra text), **Summary** (the Sutra read back as a page) and **Notes** (the design's notes in markdown, with a preview; they travel to the reviewer). **Split** shows Design and YAML side by side. |
+| **Right** | Tabs **Inspector** (a form for what is selected), **Problems**, **Tests** and **Versions**. |
 | **Status bar** | `◀ sample 2/12 ▶`, Desktop or Phone width, Theme, **Preview with a file…**, the check result `✓ 12/12`, the revision, Undo and Redo. |
 
 Everything you do is an **operation** on the design (add a panel, move it, set an option…). The server applies it to the Sutra text, keeps your comments and the order of your keys, and sends back the screen. That is why the Design tab shows what users will see, not a mock-up, and why Undo can take back any step.
@@ -123,17 +123,31 @@ Every one of these is a single operation, sent with the revision you built on. I
 
 ## 5. Add a panel
 
-Three ways, all producing the same operation:
+Four ways, all producing the same operation, and the first is always in sight:
 
-1. **Drag a kind** from the palette onto the canvas. The bar shows where it will go; drop it.
-2. Press a kind's **Add** button: it goes after the selected panel (or at the end of the main column).
-3. **Add panel…** (or the key `N` on the canvas): type a few letters of the kind, Enter.
+1. **+ Add panel** in the bar above the screen, on every tab and at phone width. A chooser lists all 20 kinds with an icon and a line each; type to filter, Up/Down, Enter. Whatever tab you were on, the workbench switches to **Design**, selects the new panel, scrolls it into view, flashes it and opens the inspector.
+2. **Drag a kind** from the palette (**Add a panel**, a filterable grid of the 20 kinds) onto the canvas. The bar shows where it will go; drop it.
+3. Press a kind's **Add** button in the palette: it goes after the selected panel (or at the end of the main column).
+4. The key `N` on the canvas, or the command palette's **Add panel…**.
+
+A design with no Sutra yet shows a large **Add your first panel** on the canvas. Every panel has a grip (⋮) in its heading and a tooltip *Drag to move · drag the edges to resize*; the selected panel shows resize handles on its right and bottom edges, and a newly added panel is draggable and resizable at once. Studio addresses and Help links open with the screen and the YAML side by side, so the canvas is always in sight.
 
 ![Dragging a gauge from the palette: the bar shows where it will land](img/designer/06-drop-panel.jpg)
 
 The new panel is selected and the inspector opens on it. The options a kind cannot go without (`rows` for a table, `value` for a gauge…) are filled from your data where possible (the first list in your samples, its first number…) and **marked as required** so you check them; the panel draws something at once.
 
 ![The gauge after the drop: selected, with its required option marked in the inspector](img/designer/06b-panel-added.jpg)
+
+### Removing a panel
+
+Removing is one operation and **Undo brings the panel back in its place**, so nothing asks "are you sure". Any of these:
+
+- the **trash button** in the panel's heading (shown when you point at the panel, and always on the selected one; its name is *Remove panel <title>*);
+- **Remove panel** at the top of the inspector, next to the panel's kind;
+- a **right click** on the panel: Move up, Move down, Duplicate, Remove panel;
+- the command palette's **Remove panel** (the selected panel), or `Delete` / `Backspace` on a selected panel.
+
+A toast *Removed 'Title' · Undo* stays for eight seconds and is announced to screen readers; its Undo button (or Ctrl+Z) restores the panel. The YAML loses exactly that panel; every other comment stays.
 
 ## 6. Drop a field: suggestions and binding
 
@@ -167,7 +181,7 @@ Above the canvas it shows **what it left out and why**, and for every panel **th
 The form is generated from the same schema the YAML editor completes from, so it always offers exactly what the panel's kind accepts.
 
 - **Required** options come first, marked with `*`. Then the **options of the kind**, then **placement and heading** (title, description, area, span, height, function key, code).
-- A choice from a fixed list (a format, a tone, an area) is a **select**; true/false is a **switch**; a count is a **number field**; everything else is text.
+- A choice from a fixed list (a format, a tone, an area, a graph's layout) is a **select**; true/false is a **switch**; a count (`limit`, `span`, `bins`) is a **number field**, and `expand` takes a number or **all**; lists such as `columns`, `fields`, `series`, histogram `markers` and a pivot's `by` have add, remove and reorder buttons; the table's `pivot` is a switch with its fields below it, and a tabs panel's `body` has its kind and columns; everything else is text.
 - **Expression fields** (rows, value, bind, source, highlight…) complete as you type: after `$` the paths of your shape, after `@` the fields of the panel's rows, and function names. Up/Down choose, Enter or Tab take, Esc closes, Ctrl+Space asks.
 
   ![Completing a path in an expression field](img/designer/11-expression.jpg)
@@ -470,7 +484,7 @@ A design can leave the workbench as a **pack fragment**, a zip you can put in a 
 
 ![The Ship menu: pack fragment, import, read-only link, file binding](img/designer/40-ship-menu.jpg)
 
-**Export** (*Ship → Export as a pack fragment*) downloads `<name>-fragment.zip`:
+**Export** (*Ship → Export as a pack fragment*) downloads `fragment-<design id>.zip` (the design id is in the address bar, `/build/d/<id>`):
 
 ```
 my-view/

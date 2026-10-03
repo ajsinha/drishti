@@ -56,6 +56,7 @@
       sel = Math.min(sel, Math.max(0, shown.length - 1));
       shown.forEach(function (it, i) {
         var li = WB.el('li', 'wb-menu-i', null, { role: 'option', id: id + '-' + i, 'aria-selected': i === sel ? 'true' : 'false' });
+        if (it.icon) { li.appendChild(WB.el('i', 'bi bi-' + it.icon + ' wb-menu-ic', null, { 'aria-hidden': 'true' })); }
         li.appendChild(WB.el('span', 'wb-menu-n', it.label));
         if (it.badge) { li.appendChild(WB.el('span', 'bs-role', it.badge)); }
         if (it.detail) { li.appendChild(WB.el('span', 'wb-menu-d', it.detail)); }

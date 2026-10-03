@@ -326,10 +326,10 @@ def test_the_old_studio_design_address_lands_on_the_design_with_its_sample(app_c
     d = _new(app_client, "For Studio", kind="trade", sutra="rachana: 1\nsutra: my-own\nversion: 1\n")
     app_client.post(f"/build/designs/{d['id']}/files", json=_files(("first.json", _doc(7)), ("second.json", _doc(8))))
     r = app_client.get(f"/studio?design={d['id']}&sample=second.json", follow_redirects=False)
-    assert r.status_code == 302 and r.headers["location"] == f"/build/d/{d['id']}?tab=yaml&sample=second.json"
+    assert r.status_code == 302 and r.headers["location"] == f"/build/d/{d['id']}?tab=split&sample=second.json"
     page = app_client.get(r.headers["location"]).text
     assert "sutra: my-own" in page and '"sample": "second.json"' in page
-    assert app_client.get(f"/studio?design={d['id']}", follow_redirects=False).headers["location"] == f"/build/d/{d['id']}?tab=yaml"
+    assert app_client.get(f"/studio?design={d['id']}", follow_redirects=False).headers["location"] == f"/build/d/{d['id']}?tab=split"
 
 
 def test_studio_with_a_stored_entity_makes_a_design_with_it_as_a_sample_and_ignores_a_foreign_design(app_client, backend):
@@ -344,7 +344,7 @@ def test_studio_with_a_stored_entity_makes_a_design_with_it_as_a_sample_and_igno
 
 def test_studio_and_its_examples_keep_working(app_client):
     loc, page = _land(app_client, "/studio?example=all-panels-showcase")
-    assert "sutra: all-panels-showcase" in page and "all-panels-showcase.json" in page and loc.endswith("?tab=yaml")
+    assert "sutra: all-panels-showcase" in page and "all-panels-showcase.json" in page and loc.endswith("?tab=split")
     assert "all-panels-showcase" in app_client.get("/help/examples").text and "/studio?example=all-panels-showcase" in app_client.get("/help/examples").text
     assert "sutra: all-panels-showcase" in _land(app_client, "/studio")[1]            # ui.studio_example: the showcase is the default
 

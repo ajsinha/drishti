@@ -57,9 +57,9 @@ async def studio(request: Request, sutra: str | None = None, kind: str = "", id:
     """Studio's page is retired (BUILD_WORKBENCH.md, step 7): every address lands on the equivalent Design in the workbench, 302.
     ``design=`` (with ``sample=``) opens that Design; ``example=`` an example as a copy; ``sutra=name@v`` a Design that edits that Sutra
     (its Studio test entities become stored-entity samples); ``kind=&id=`` a Design with that stored entity as its sample; nothing
-    at all, a scratch Design on the default example (``ui.studio_example``). YAML tab, or the canvas for ``build=1``."""
+    at all, a scratch Design on the default example (``ui.studio_example``). canvas and YAML side by side (the canvas is always in sight), or the canvas alone for ``build=1``."""
     backend, me = request.app.state.backend, ident(request)
-    tab = "design" if build and build != "0" else "yaml"
+    tab = "design" if build and build != "0" else "split"
     try:
         target = await _existing(backend, me, design)
         if target is None:

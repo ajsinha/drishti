@@ -69,7 +69,17 @@
   // ---- the parts ---------------------------------------------------------------------------------------------------------------
   var canvas, inspector, actions, data, versions;
   var schemaP = fetch('/studio/schema').then(function (r) { return r.json(); });
-  var ui = { required: function (k) { return inspector ? inspector.required(k) : []; }, canvas: function () { return canvas; }, inspect: function (s, o) { if (s) { right.show('inspector'); } inspector.show(s, o); }, selection: function () { return canvas.selected(); } };
+  var toastTimer = 0;
+  function toast(text, label, run) {
+    var old = $('[data-toast]'); if (old) { old.remove(); }
+    clearTimeout(toastTimer);
+    var t = WB.el('div', 'wb-toast', null, { 'data-toast': '' }), b = WB.el('button', 'btn-pill btn-accent', label, { type: 'button' });
+    t.appendChild(WB.el('span', null, text + ' · ')); t.appendChild(b);
+    b.addEventListener('click', function () { clearTimeout(toastTimer); t.remove(); run(); });
+    document.body.appendChild(t);
+    toastTimer = setTimeout(function () { t.remove(); }, 8000);
+  }
+  var ui = { toast: toast, design: function () { centre.show('design'); }, required: function (k) { return inspector ? inspector.required(k) : []; }, canvas: function () { return canvas; }, inspect: function (s, o) { if (s) { right.show('inspector'); } inspector.show(s, o); }, selection: function () { return canvas.selected(); } };
   actions = WB.Actions(store, ui);
   canvas = WB.Canvas($('[data-preview]'), store, actions, {
     onSelect: function (s) { inspector.show(s); },
@@ -77,9 +87,10 @@
     openInspector: function () { right.show('inspector'); inspector.focusFirst(); },
     menuAdd: function () { actions.menuAdd(); }, menuBind: function () { actions.menuBind(); }
   });
-  inspector = WB.Inspector($('[data-inspector]'), store, function () { return schemaP; }, { paths: function () { return data ? data.fields() : []; }, actions: actions });
+  inspector = WB.Inspector($('[data-inspector]'), store, function () { return schemaP; }, { remove: function (id) { return canvas.remove(id); }, paths: function () { return data ? data.fields() : []; }, actions: actions });
   data = WB.Data($('[data-left]'), store, actions, { maxFile: parseFloat(d.maxFileMb) * 1048576, selection: function () { return canvas.selected(); } });
-  WB.palette.render($('[data-palette]'), function (kind) { actions.add(kind, actions.afterSelected()); });
+  WB.palette.render($('[data-palette]'), function (kind) { actions.add(kind, actions.afterSelected()); }, $('[data-kind-filter]'));
+  $('[data-add-panel]').addEventListener('click', function () { actions.menuAdd(this); });
   var notes = WB.Notes($('[data-notes]'), store, init.notes || '');
   var yaml = WB.YamlTab($('[data-yaml-src]'), $('[data-field-help]'), store);
   function gotoLine(line, col) { centre.show('yaml'); yaml.goto(line, col); }
@@ -191,7 +202,7 @@
   });
   window.addEventListener('beforeunload', function (e) { if (store.state.sending) { e.preventDefault(); } });
   if (init.sample && store.state.samples.indexOf(init.sample) >= 0) { store.state.sample = init.sample; }
-  if (init.tab) { centre.show(init.tab); }
+  if (init.tab === 'split') { $('[data-split]').click(); centre.show('design'); } else if (init.tab) { centre.show(init.tab); }
   data.paint(); paintBar();
   store.refresh().then(function () { tests.later(); });
   window.drishtiWorkbench = { store: store, canvas: canvas, actions: actions, tabs: { centre: centre, right: right }, tests: tests, versions: versions, saving: saving, ship: ship, commands: commands };
