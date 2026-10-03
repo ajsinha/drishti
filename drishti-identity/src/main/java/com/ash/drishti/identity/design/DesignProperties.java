@@ -31,10 +31,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param namedTtl a named Design is deleted this long after it was last touched
  * @param warnAfter a named Design untouched this long is listed with a warning that it will expire
  * @param sweepInterval how often expired Designs are deleted
+ * @param maxOps most steps of the operation log a Design keeps for undo and redo (the oldest are dropped)
  */
 @ConfigurationProperties("drishti.builder.designs")
 public record DesignProperties(String store, String dir, Integer maxPerUser, Integer maxSamples, Integer maxMb, Integer maxUserMb,
-        Duration scratchTtl, Duration namedTtl, Duration warnAfter, Duration sweepInterval) {
+        Duration scratchTtl, Duration namedTtl, Duration warnAfter, Duration sweepInterval, Integer maxOps) {
+
 
     public DesignProperties {
         store = store == null || store.isBlank() ? "file" : store.trim().toLowerCase();
@@ -47,10 +49,11 @@ public record DesignProperties(String store, String dir, Integer maxPerUser, Int
         namedTtl = namedTtl == null ? Duration.ofDays(90) : namedTtl;
         warnAfter = warnAfter == null ? Duration.ofDays(75) : warnAfter;
         sweepInterval = sweepInterval == null ? Duration.ofHours(1) : sweepInterval;
+        maxOps = positive(maxOps, 100);
     }
 
     public static DesignProperties defaults() {
-        return new DesignProperties(null, null, null, null, null, null, null, null, null, null);
+        return new DesignProperties(null, null, null, null, null, null, null, null, null, null, null);
     }
 
     public boolean jpa() {

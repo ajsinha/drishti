@@ -48,6 +48,8 @@ public enum ErrorCode {
     PAYLOAD_TOO_LARGE("DRS-5005", 413),
     /** A Build workbench Design that does not exist, or is not the caller's (the two look the same). */
     DESIGN_NOT_FOUND("DRS-5006", 404),
+    /** An edit made on an older revision of a Design than the server holds (reload, then edit again). */
+    STALE_REVISION("DRS-5007", 409),
     UNAUTHENTICATED("DRS-5010", 401),
     USER_NOT_FOUND("DRS-6001", 404),
     USER_EXISTS("DRS-6002", 409),

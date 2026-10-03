@@ -24,6 +24,7 @@ import com.ash.drishti.engine.design.AutoDesigner;
 import com.ash.drishti.engine.design.Design;
 import com.ash.drishti.engine.design.DesignPreviewer;
 import com.ash.drishti.engine.design.PanelChoice;
+import com.ash.drishti.engine.design.SampleChecker;
 import com.ash.drishti.engine.shape.BuilderProperties;
 import com.ash.drishti.engine.shape.RoleInfo;
 import com.ash.drishti.engine.shape.Sample;
@@ -31,6 +32,10 @@ import com.ash.drishti.engine.shape.Shape;
 import com.ash.drishti.engine.shape.ShapeException;
 import com.ash.drishti.engine.shape.ShapeService;
 import com.ash.drishti.rachana.SutraRegistry;
+import com.ash.drishti.rachana.design.ops.Op;
+import com.ash.drishti.rachana.design.ops.OpApplier;
+import com.ash.drishti.rachana.design.ops.OpResult;
+import com.ash.drishti.rachana.design.ops.Ops;
 import com.ash.drishti.rachana.model.Sutra;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.Principal;
@@ -79,9 +84,12 @@ public class BuilderController {
     private final BuilderProperties limits;
     private final Entitlements entitlements;
     private final ObjectMapper mapper;
+    private final SampleCheckService checks;
+    private final OpApplier applier = new OpApplier();
 
     public BuilderController(ShapeService shapes, Entitlements entitlements, AutoDesigner designer, ViewPipeline pipeline,
-            SutraRegistry sutras, com.ash.drishti.common.JsonCodec codec) {
+            SutraRegistry sutras, com.ash.drishti.common.JsonCodec codec, SampleCheckService checks) {
+        this.checks = checks;
         this.shapes = shapes;
         this.designer = designer;
         this.pipeline = pipeline;
@@ -153,6 +161,95 @@ public class BuilderController {
         }
         out.put("suggestions", choices);
         return out;
+    }
+
+    /**
+     * Body {@code {"yaml": "...", "ops": [{"op": "addPanel", ...}, ...]}}: the Sutra text after the operations
+     * ({@code yaml}), a located entry in {@code problems} for every operation that could not be applied ({@code op} is its index;
+     * the text is as before it), and how many were {@code applied}. Comments and key order in the text survive. Stateless; open to
+     * every signed-in user.
+     */
+    @PostMapping(path = "/edit", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public Map<String, Object> edit(HttpServletRequest request) throws IOException {
+        JsonNode b = tree(read(request));
+        if (!b.path("yaml").isTextual()) {
+            throw bad("'yaml' is required: the Sutra text to edit");
+        }
+        OpResult r = applier.apply(b.get("yaml").asText(), ops(b));
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("yaml", r.yaml());
+        out.put("problems", r.problems());
+        out.put("applied", r.applied());
+        return out;
+    }
+
+    /** The {@code ops} of a body, or a 400 that says which operation is wrong. */
+    static List<Op> ops(JsonNode body) {
+        try {
+            return Ops.parse(body.get("ops"));
+        } catch (Ops.FormatException e) {
+            throw bad(e.getMessage());
+        }
+    }
+
+    /**
+     * Body {@code {"yaml": "...", "kind": "trade", "samples": [{"name": "a", "document": {...}} | {"name": "b", "ref": {"kind": "trade",
+     * "id": "T-1"}}]}}: the panel by sample matrix of {@link SampleChecker}: every cell {@code ok}, {@code empty},
+     * {@code error} (with the message) or {@code noAccess}, with counts per panel and overall. A reference is read again with your
+     * rights and masks; a kind you may not open is {@code noAccess}. An invalid Sutra is the usual {@code 422} with its problems.
+     * Open to every signed-in user; writes nothing.
+     */
+    @PostMapping(path = "/check", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public JsonNode check(HttpServletRequest request, @RequestAttribute(Principal.ATTRIBUTE) Principal principal) throws IOException {
+        JsonNode b = tree(read(request));
+        if (!b.path("yaml").isTextual()) {
+            throw bad("'yaml' is required: the Sutra text to check");
+        }
+        if (!b.path("samples").isArray() || b.get("samples").isEmpty()) {
+            throw bad("'samples' is required: a list of {name, document} or {name, ref: {kind, id}}");
+        }
+        if (b.get("samples").size() > limits.maxSamples()) {
+            throw tooBig("more than " + limits.maxSamples() + " samples (drishti.builder.max-samples)");
+        }
+        List<SampleChecker.Input> inputs = new ArrayList<>();
+        int n = 0;
+        for (JsonNode s : b.get("samples")) {
+            n++;
+            String name = s.path("name").isTextual() ? s.get("name").asText() : "sample " + n;
+            if (s.path("ref").isObject()) {
+                String k = s.path("ref").path("kind").asText("");
+                String id = s.path("ref").path("id").asText("");
+                if (k.isBlank() || id.isBlank()) {
+                    throw bad("'" + name + "': a ref is {kind, id}");
+                }
+                inputs.add(new SampleChecker.Input(name, null, EntityRef.of(k, id)));
+            } else if (s.has("document")) {
+                if (s.get("document").toString().length() > limits.maxFileBytes()) {
+                    throw tooBig("'" + name + "' is over the limit of " + limits.maxFileMb() + " MB per document (drishti.builder.max-file-mb)");
+                }
+                inputs.add(new SampleChecker.Input(name, s.get("document"), null));
+            } else {
+                throw bad("'" + name + "' has neither a 'document' nor a 'ref'");
+            }
+        }
+        Sutra sutra = sutras.check(b.get("yaml").asText());
+        String kind = b.path("kind").isTextual() && !b.get("kind").asText().isBlank() ? b.get("kind").asText() : "sample";
+        LOG.info("builder check: {} sample(s)", inputs.size());
+        return mapper.valueToTree(checks.check(sutra, kind, inputs, principal));
+    }
+
+    private JsonNode tree(byte[] body) throws IOException {
+        try {
+            JsonNode n = mapper.readTree(body);
+            if (n == null || !n.isObject()) {
+                throw bad("the body must be a JSON object");
+            }
+            return n;
+        } catch (StreamConstraintsException e) {
+            throw tooBig("a document is nested deeper than " + limits.maxDepth() + " levels (drishti.builder.max-depth)");
+        } catch (JsonParseException e) {
+            throw bad("the body is not valid JSON: " + e.getOriginalMessage());
+        }
     }
 
     /** Studio's preview path: the Sutra text against a pasted document, links masked and restricted for the caller. */

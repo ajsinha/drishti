@@ -533,33 +533,37 @@ public final class AutoDesigner {
             return String.join(", ", parts);
         }
 
-        /** Renders the current draft against every sample and tallies, per panel and strip figure, where it came out empty or broken. */
+        /** Renders the current draft against every sample (through {@link SampleChecker}, the one checker) and tallies, per panel and strip figure, where it came out empty or broken. */
         private Counts count(List<Sample> samples, DesignPreviewer previewer) {
             Counts c = new Counts();
             String yaml = writer.write(assemble(), name(), 1, "draft");
-            for (Sample sample : samples) {
-                ViewModel vm = previewer.preview(yaml, kind, sample.document());
-                if (vm.panels() != null) {
-                    vm.panels().forEach(p -> {
-                        if (p.error() != null) {
-                            c.error.merge(p.id(), 1, Integer::sum);
-                            c.firstError.putIfAbsent(p.id(), p.error());
-                        } else if (p.empty()) {
-                            c.empty.merge(p.id(), 1, Integer::sum);
-                        }
-                    });
+            RuntimeException[] failure = new RuntimeException[1];
+            SampleChecker.Matrix m = CHECKER.check(List.of(), samples.stream().map(x -> new SampleChecker.Input(x.name(), x.document(), null)).toList(), in -> {
+                try {
+                    return previewer.preview(yaml, kind, in.document());
+                } catch (RuntimeException e) {
+                    failure[0] = e;                          // a draft that does not render is a fault, not a pruning signal
+                    throw e;
                 }
-                if (vm.strip() != null) {
-                    vm.strip().forEach(cell -> {
-                        if (cell.text() == null || cell.text().isBlank() || "—".equals(cell.text())) {
-                            c.stripBlank.merge(cell.label(), 1, Integer::sum);
-                        }
-                    });
-                }
+            });
+            if (failure[0] != null) {
+                throw failure[0];
             }
+            m.panels().forEach(p -> {
+                if (p.counts().error() > 0) {
+                    c.error.put(p.id(), p.counts().error());
+                    c.firstError.put(p.id(), p.firstError());
+                }
+                if (p.counts().empty() > 0) {
+                    c.empty.put(p.id(), p.counts().empty());
+                }
+            });
+            m.strip().stream().filter(r -> r.blank() > 0).forEach(r -> c.stripBlank.put(r.label(), r.blank()));
             return c;
         }
     }
+
+    private static final SampleChecker CHECKER = new SampleChecker();
 
     private static final class Counts {
         final Map<String, Integer> empty = new LinkedHashMap<>();

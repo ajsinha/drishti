@@ -69,7 +69,7 @@ public final class SutraPivotEditor {
             throw new IllegalArgumentException("cannot read the Sutra: " + e.getMessage(), e);
         }
         List<String> lines = new ArrayList<>(List.of(source.split("\n", -1)));
-        SutraLayoutEditor.Blocks blocks = SutraLayoutEditor.blocks(lines, root);
+        SutraText.Blocks blocks = SutraText.blocks(lines, root);
         List<String> block = new ArrayList<>(blocks.items().get(index));
         Object raw = panel.options().get(Panel.PIVOT);
         Map<String, Object> value = value(raw, before.with(arrangement));
@@ -80,7 +80,7 @@ public final class SutraPivotEditor {
             out.addAll(i == index ? block : blocks.items().get(i));
         }
         out.addAll(lines.subList(blocks.end(), lines.size()));
-        int version = SutraLayoutEditor.bumpVersion(out, root);
+        int version = SutraText.bumpVersion(out, root);
         String text = String.join("\n", out);
         verify(text, panelId, arrangement);
         return new SutraLayoutEditor.Edit(text, sutra.version(), version, changes(panelId, before, arrangement));
@@ -115,7 +115,7 @@ public final class SutraPivotEditor {
     /** Replaces (or adds) the block's {@code pivot:} key and every line nested under it. */
     private static void replace(List<String> block, int dash, Map<String, Object> value) {
         int d = 0;
-        while (d < block.size() && !(SutraLayoutEditor.indent(block.get(d)) == dash && block.get(d).length() > dash && block.get(d).charAt(dash) == '-')) {
+        while (d < block.size() && !(SutraText.indent(block.get(d)) == dash && block.get(d).length() > dash && block.get(d).charAt(dash) == '-')) {
             d++;
         }
         String first = block.get(d);
@@ -130,19 +130,19 @@ public final class SutraPivotEditor {
             for (int l = d; l <= Math.min(close, block.size() - 1); l++) {
                 sb.append(l > d ? "\n" : "").append(block.get(l));
             }
-            String edited = SutraLayoutEditor.flowSet(sb.toString(), Panel.PIVOT, rendered != null ? rendered : flow(value));
+            String edited = SutraText.flowSet(sb.toString(), Panel.PIVOT, rendered != null ? rendered : flow(value));
             for (int l = Math.min(close, block.size() - 1); l >= d; l--) {
                 block.remove(l);
             }
             block.addAll(d, List.of(edited.split("\n", -1)));
             return;
         }
-        int keyIndent = first.substring(dash + 1).isBlank() ? SutraLayoutEditor.indent(block.get(d + 1))
-                : dash + 1 + SutraLayoutEditor.indent(first.substring(dash + 1));
+        int keyIndent = first.substring(dash + 1).isBlank() ? SutraText.indent(block.get(d + 1))
+                : dash + 1 + SutraText.indent(first.substring(dash + 1));
         String pad = " ".repeat(keyIndent);
         int at = -1;
         for (int l = d + 1; l < block.size(); l++) {
-            if (block.get(l).startsWith(pad + Panel.PIVOT + ":") && SutraLayoutEditor.indent(block.get(l)) == keyIndent) {
+            if (block.get(l).startsWith(pad + Panel.PIVOT + ":") && SutraText.indent(block.get(l)) == keyIndent) {
                 at = l;
             }
         }
@@ -158,7 +158,7 @@ public final class SutraPivotEditor {
         }
         if (at >= 0) {
             int end = at + 1;
-            while (end < block.size() && (block.get(end).isBlank() ? nestedAfter(block, end, keyIndent) : SutraLayoutEditor.indent(block.get(end)) > keyIndent)) {
+            while (end < block.size() && (block.get(end).isBlank() ? nestedAfter(block, end, keyIndent) : SutraText.indent(block.get(end)) > keyIndent)) {
                 end++;
             }
             for (int l = end - 1; l >= at; l--) {
@@ -178,7 +178,7 @@ public final class SutraPivotEditor {
     private static boolean nestedAfter(List<String> block, int from, int keyIndent) {
         for (int l = from; l < block.size(); l++) {
             if (!block.get(l).isBlank()) {
-                return SutraLayoutEditor.indent(block.get(l)) > keyIndent;
+                return SutraText.indent(block.get(l)) > keyIndent;
             }
         }
         return false;

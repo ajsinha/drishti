@@ -19,6 +19,8 @@ import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.design.StoredDesign.SampleInfo;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -149,9 +151,7 @@ public final class DesignService {
                 d.notes = p.notes();
             }
             if (p.sutra() != null && !p.sutra().equals(d.sutra)) {
-                d.sutra = p.sutra();
-                d.rev++;
-                d.status = "draft";
+                record(d, TEXT_OP, d.sutra, p.sutra());
             }
             if (p.tests() != null) {
                 d.tests = new ArrayList<>(p.tests());
@@ -160,6 +160,99 @@ public final class DesignService {
             store.save(d);
             return d;
         });
+    }
+
+    // ---- operations: the log, undo and redo ------------------------------------------------------------------------
+
+    /** What applying operations to a Sutra made: its new text, and the operations as they are kept in the log. */
+    public record Applied(String yaml, JsonNode ops) {}
+
+    /**
+     * Applies operations to the Design's Sutra and appends them to its log (the redo tail is dropped). {@code baseRev} must be
+     * the revision the caller built on, else {@code 409 DRS-5007}. A step that changes nothing is not logged.
+     */
+    public StoredDesign applyOps(String user, String id, int baseRev, java.util.function.Function<String, Applied> apply) {
+        return locked(user, () -> {
+            StoredDesign d = get(user, id);
+            stale(d, baseRev);
+            Applied a = apply.apply(d.sutra);
+            if (a.yaml() != null && !a.yaml().equals(d.sutra)) {
+                record(d, a.ops(), d.sutra, a.yaml());
+                d.updated = clock.getAsLong();
+                store.save(d);
+            }
+            return d;
+        });
+    }
+
+    /** Takes the last applied step back: the Sutra is as it was before it. {@code 409 DRS-5007} when nothing can be undone or the revision is stale. */
+    public StoredDesign undo(String user, String id, int baseRev) {
+        return step(user, id, baseRev, -1);
+    }
+
+    /** Brings back the step undo took: {@code 409 DRS-5007} when there is none or the revision is stale. */
+    public StoredDesign redo(String user, String id, int baseRev) {
+        return step(user, id, baseRev, 1);
+    }
+
+    private StoredDesign step(String user, String id, int baseRev, int direction) {
+        return locked(user, () -> {
+            StoredDesign d = get(user, id);
+            stale(d, baseRev);
+            if (direction < 0 ? d.opsAt <= 0 : d.opsAt >= d.ops.size()) {
+                throw new DrishtiException(ErrorCode.STALE_REVISION, "nothing to " + (direction < 0 ? "undo" : "redo"));
+            }
+            JsonNode entry = d.ops.get(direction < 0 ? d.opsAt - 1 : d.opsAt);
+            d.sutra = entry.path(direction < 0 ? "before" : "after").asText("");
+            d.opsAt += direction;
+            d.rev++;
+            d.status = "draft";
+            d.updated = clock.getAsLong();
+            store.save(d);
+            return d;
+        });
+    }
+
+    /** Records the outcome of a check of revision {@code rev}: {@code checked} when it was green and the Sutra has not moved on, else {@code draft}. */
+    public StoredDesign markChecked(String user, String id, int rev, boolean green) {
+        return locked(user, () -> {
+            StoredDesign d = get(user, id);
+            if (d.rev == rev && ("draft".equals(d.status) || "checked".equals(d.status))) {
+                String next = green ? "checked" : "draft";
+                if (!next.equals(d.status)) {
+                    d.status = next;
+                    store.save(d);
+                }
+            }
+            return d;
+        });
+    }
+
+    private static void stale(StoredDesign d, int baseRev) {
+        if (baseRev != d.rev) {
+            throw new DrishtiException(ErrorCode.STALE_REVISION,
+                    "this design is at revision " + d.rev + ", not " + baseRev + ": reload it, then edit again");
+        }
+    }
+
+    private static final ObjectMapper JSON = new ObjectMapper();
+    /** The log entry for a change made outside the operations (a text edit, an auto-design). */
+    private static final JsonNode TEXT_OP = JSON.createArrayNode().add(JSON.createObjectNode().put("op", "text"));
+
+    /** A new Sutra text as the next log step; the log keeps at most {@code max-ops} steps. */
+    private void record(StoredDesign d, JsonNode ops, String before, String after) {
+        ObjectNode e = JSON.createObjectNode();
+        e.set("ops", ops);
+        e.put("before", before).put("after", after).put("at", clock.getAsLong());
+        d.ops = new ArrayList<>(d.ops.subList(0, Math.min(d.opsAt, d.ops.size())));
+        d.ops.add(e);
+        while (d.ops.size() > props.maxOps()) {
+            d.ops.remove(0);
+        }
+        d.opsAt = d.ops.size();
+        d.sutra = after;
+        d.rev++;
+        d.status = "draft";
     }
 
     public void delete(String user, String id) {

@@ -133,9 +133,9 @@ class SutraLayoutEditorTest {
     @Test
     void flowEntriesAreFoundAtTheirOwnDepthOnly() {
         String t = "  - { id: x, kind: table, rows: $.r, columns: [{ label: span, bind: \"@.span\" }], area: right }";
-        assertThat(SutraLayoutEditor.flowSet(t, "area", null)).isEqualTo("  - { id: x, kind: table, rows: $.r, columns: [{ label: span, bind: \"@.span\" }] }");
-        assertThat(SutraLayoutEditor.flowSet(t, "span", "4")).endsWith("area: right, span: 4 }");
-        assertThat(SutraLayoutEditor.flowSet(t, "area", "main")).endsWith("area: main }");
+        assertThat(SutraText.flowSet(t, "area", null)).isEqualTo("  - { id: x, kind: table, rows: $.r, columns: [{ label: span, bind: \"@.span\" }] }");
+        assertThat(SutraText.flowSet(t, "span", "4")).endsWith("area: right, span: 4 }");
+        assertThat(SutraText.flowSet(t, "area", "main")).endsWith("area: main }");
     }
 
     @Test

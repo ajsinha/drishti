@@ -659,6 +659,7 @@ Sample documents are never logged; deleting a Design deletes its samples at once
 | `named-ttl` | `90d` | A named Design is deleted this long after it was last touched (an edit, or opening it, touches it). |
 | `warn-after` | `75d` | A named Design untouched this long is listed with a warning that it will expire. |
 | `sweep-interval` | `1h` | How often expired Designs are deleted. |
+| `max-ops` | `100` | Steps of the operation log a Design keeps for undo and redo (the oldest are dropped). |
 
 ### `drishti.commands` — the command line
 

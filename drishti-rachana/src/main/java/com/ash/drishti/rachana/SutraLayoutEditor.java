@@ -30,8 +30,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Turns a personal layout (the order, column, width and height of each panel) into the text of the next version of a
@@ -54,7 +52,6 @@ public final class SutraLayoutEditor {
      */
     public record Edit(String text, int fromVersion, int version, List<String> changes) {}
 
-    private static final Pattern VERSION = Pattern.compile("^(version:\\s*)(\\d+)(.*)$");
     private static final List<String> SIZE_KEYS = List.of("area", Panel.SPAN, Panel.HEIGHT);
 
     private final SutraParser parser = new SutraParser();
@@ -68,6 +65,11 @@ public final class SutraLayoutEditor {
      * @throws IllegalArgumentException when the text cannot be edited this way (a flow list of panels)
      */
     public Edit apply(String source, List<Placement> placements, boolean dropHidden) {
+        return apply(source, placements, dropHidden, true);
+    }
+
+    /** As {@link #apply(String, List, boolean)}; {@code bump} false leaves the version line as it is (design operations). */
+    public Edit apply(String source, List<Placement> placements, boolean dropHidden, boolean bump) {
         Sutra sutra = parser.parse(source, SutraParser.STUDIO, "studio");
         PNode root;
         try {
@@ -82,7 +84,7 @@ public final class SutraLayoutEditor {
             }
         }
         List<String> lines = new ArrayList<>(List.of(source.split("\n", -1)));
-        Blocks blocks = blocks(lines, root);
+        SutraText.Blocks blocks = SutraText.blocks(lines, root);
         List<String> changes = new ArrayList<>();
 
         // the new value of each panel: placement, or as written
@@ -97,7 +99,7 @@ public final class SutraLayoutEditor {
         for (int i = 0; i < sutra.panels().size(); i++) {
             Panel p = sutra.panels().get(i);
             Placement t = target.get(p.id());
-            List<String> block = new ArrayList<>(blocks.items.get(i));
+            List<String> block = new ArrayList<>(blocks.items().get(i));
             Map<String, String> set = new LinkedHashMap<>();
             if (t.area() != p.area()) {
                 set.put("area", t.area() == Area.RIGHT ? "right" : null);
@@ -112,7 +114,7 @@ public final class SutraLayoutEditor {
                 changes.add("'" + p.id() + "' is " + (t.height() == null ? "as tall as its content" : t.height() + " rows tall"));
             }
             if (!set.isEmpty()) {
-                edit(block, blocks.dash, set);
+                edit(block, blocks.dash(), set);
             }
             edited.put(p.id(), block);
         }
@@ -127,7 +129,7 @@ public final class SutraLayoutEditor {
         }
         noteOrder(sutra, target, mainOrder, Area.MAIN, changes);
         noteOrder(sutra, target, rightOrder, Area.RIGHT, changes);
-        List<String> out = new ArrayList<>(lines.subList(0, blocks.start));
+        List<String> out = new ArrayList<>(lines.subList(0, blocks.start()));
         for (String id : ids) {
             if (dropHidden && target.get(id).hidden()) {
                 changes.add("'" + id + "' is removed (hidden in the layout)");
@@ -135,9 +137,9 @@ public final class SutraLayoutEditor {
             }
             out.addAll(edited.get(id));
         }
-        out.addAll(lines.subList(blocks.end, lines.size()));
+        out.addAll(lines.subList(blocks.end(), lines.size()));
         int fromVersion = sutra.version();
-        int version = bumpVersion(out, root);
+        int version = bump ? SutraText.bumpVersion(out, root) : fromVersion;
         String text = String.join("\n", out);
         verify(text, ids, target, dropHidden);
         return new Edit(text, fromVersion, version, changes);
@@ -172,94 +174,15 @@ public final class SutraLayoutEditor {
 
     // ---- the panels' text -------------------------------------------------------------------------------------
 
-    /** The lines of the panel list: where it starts and ends, each item's lines, and the column of its dashes. */
-    record Blocks(int start, int end, int dash, List<List<String>> items) {}
-
-    static Blocks blocks(List<String> lines, PNode root) {
-        PNode panels = root.map().get("panels");
-        if (panels == null || panels.list().isEmpty()) {
-            throw new IllegalArgumentException("the Sutra has no panels");
-        }
-        int keyLine = keyLine(lines, "panels");
-        if (keyLine < 0 || lines.get(keyLine).substring("panels:".length()).strip().startsWith("[")) {
-            throw new IllegalArgumentException("the panels are written as one flow list ([...]): write them one per line to promote a layout");
-        }
-        List<Integer> starts = new ArrayList<>();
-        int dash = -1;
-        for (PNode item : panels.list()) {
-            int at = item.line() - 1;
-            int found = -1;
-            for (int l = at; l > keyLine && found < 0; l--) {
-                String t = lines.get(l);
-                int c = indent(t);
-                if (c < t.length() && t.charAt(c) == '-' && (dash < 0 || c == dash)) {
-                    found = l;
-                    dash = c;
-                }
-            }
-            if (found < 0) {
-                throw new IllegalArgumentException("cannot find the start of a panel near line " + item.line());
-            }
-            starts.add(found);
-        }
-        int end = starts.get(starts.size() - 1) + 1;
-        while (end < lines.size() && !topLevel(lines.get(end))) {
-            end++;
-        }
-        while (end > starts.get(starts.size() - 1) + 1 && (lines.get(end - 1).isBlank() || lines.get(end - 1).startsWith("#"))) {
-            end--;                                    // blank lines and comments before the next key stay where they are
-        }
-        // a comment just above a panel belongs to it
-        for (int i = 0; i < starts.size(); i++) {
-            int s = starts.get(i);
-            int floor = i == 0 ? keyLine : starts.get(i - 1);
-            while (s - 1 > floor && isComment(lines.get(s - 1)) && indent(lines.get(s - 1)) >= dash) {
-                s--;
-            }
-            starts.set(i, s);
-        }
-        List<List<String>> items = new ArrayList<>();
-        for (int i = 0; i < starts.size(); i++) {
-            int to = i + 1 < starts.size() ? starts.get(i + 1) : end;
-            items.add(new ArrayList<>(lines.subList(starts.get(i), to)));
-        }
-        return new Blocks(starts.get(0), end, dash, items);
-    }
-
-    private static int keyLine(List<String> lines, String key) {
-        for (int i = 0; i < lines.size(); i++) {
-            if (lines.get(i).startsWith(key + ":")) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    private static boolean topLevel(String line) {
-        return !line.isEmpty() && !Character.isWhitespace(line.charAt(0)) && line.charAt(0) != '#' && line.charAt(0) != '-';
-    }
-
-    private static boolean isComment(String line) {
-        return line.strip().startsWith("#");
-    }
-
-    static int indent(String line) {
-        int i = 0;
-        while (i < line.length() && line.charAt(i) == ' ') {
-            i++;
-        }
-        return i;
-    }
-
     /** Sets ({@code value}) or removes ({@code null}) top-level keys of one panel item. */
     private static void edit(List<String> block, int dash, Map<String, String> set) {
         int d = 0;
-        while (d < block.size() && !(indent(block.get(d)) == dash && block.get(d).length() > dash && block.get(d).charAt(dash) == '-')) {
+        while (d < block.size() && !(SutraText.indent(block.get(d)) == dash && block.get(d).length() > dash && block.get(d).charAt(dash) == '-')) {
             d++;
         }
         String after = block.get(d).substring(dash + 1).strip();
         if (after.startsWith("{")) {
-            flow(block, d, set);
+            SutraText.flow(block, d, set);
         } else {
             mapping(block, d, dash, set);
         }
@@ -267,17 +190,17 @@ public final class SutraLayoutEditor {
 
     private static void mapping(List<String> block, int d, int dash, Map<String, String> set) {
         String first = block.get(d);
-        int keyIndent = first.substring(dash + 1).isBlank() ? indent(block.get(d + 1)) : dash + 1 + indent(first.substring(dash + 1));
+        int keyIndent = first.substring(dash + 1).isBlank() ? SutraText.indent(block.get(d + 1)) : dash + 1 + SutraText.indent(first.substring(dash + 1));
         int kindLine = -1;
         for (Map.Entry<String, String> e : set.entrySet()) {
             int at = -1;
             for (int l = d; l < block.size(); l++) {
                 String t = block.get(l);
                 String body = l == d ? " ".repeat(keyIndent) + t.substring(keyIndent) : t;
-                if (indent(body) == keyIndent && body.startsWith(e.getKey() + ":", keyIndent)) {
+                if (SutraText.indent(body) == keyIndent && body.startsWith(e.getKey() + ":", keyIndent)) {
                     at = l;
                 }
-                if (indent(body) == keyIndent && body.startsWith("kind:", keyIndent)) {
+                if (SutraText.indent(body) == keyIndent && body.startsWith("kind:", keyIndent)) {
                     kindLine = l;
                 }
             }
@@ -296,7 +219,7 @@ public final class SutraLayoutEditor {
                 int after = kindLine >= 0 ? kindLine : d;
                 for (int l = d + 1; l < block.size(); l++) {         // next to the size keys it already has, if any
                     String t = block.get(l);
-                    if (indent(t) == keyIndent && SIZE_KEYS.stream().anyMatch(k -> t.startsWith(k + ":", keyIndent))) {
+                    if (SutraText.indent(t) == keyIndent && SIZE_KEYS.stream().anyMatch(k -> t.startsWith(k + ":", keyIndent))) {
                         after = l;
                     }
                 }
@@ -317,119 +240,6 @@ public final class SutraLayoutEditor {
             l++;
         }
         return l;
-    }
-
-    /** A flow mapping item ({@code - { id: x, kind: kv, ... }}), possibly over several lines. */
-    private static void flow(List<String> block, int d, Map<String, String> set) {
-        StringBuilder sb = new StringBuilder();
-        int closeLine = -1;
-        int depth = 0;
-        char quote = 0;
-        for (int l = d; l < block.size() && closeLine < 0; l++) {
-            String t = block.get(l);
-            for (int c = 0; c < t.length(); c++) {
-                char ch = t.charAt(c);
-                if (quote != 0) {
-                    if (ch == quote) {
-                        quote = 0;
-                    }
-                } else if (ch == '"' || ch == '\'') {
-                    quote = ch;
-                } else if (ch == '{' || ch == '[') {
-                    depth++;
-                } else if (ch == '}' || ch == ']') {
-                    depth--;
-                    if (depth == 0) {
-                        closeLine = l;
-                        break;
-                    }
-                }
-            }
-        }
-        if (closeLine < 0) {
-            throw new IllegalArgumentException("a panel's flow mapping is not closed");
-        }
-        for (int l = d; l <= closeLine; l++) {
-            sb.append(l > d ? "\n" : "").append(block.get(l));
-        }
-        String text = sb.toString();
-        for (Map.Entry<String, String> e : set.entrySet()) {
-            text = flowSet(text, e.getKey(), e.getValue());
-        }
-        List<String> replaced = List.of(text.split("\n", -1));
-        for (int l = closeLine; l >= d; l--) {
-            block.remove(l);
-        }
-        block.addAll(d, replaced);
-    }
-
-    /** Sets or removes one depth-1 key of the flow mapping in {@code text}. */
-    static String flowSet(String text, String key, String value) {
-        int open = text.indexOf('{');
-        List<int[]> entries = new ArrayList<>();                 // [start, end) of each depth-1 entry
-        int depth = 0;
-        int start = open + 1;
-        int close = -1;
-        char quote = 0;
-        for (int c = open; c < text.length() && close < 0; c++) {
-            char ch = text.charAt(c);
-            if (quote != 0) {
-                if (ch == quote) {
-                    quote = 0;
-                }
-            } else if (ch == '"' || ch == '\'') {
-                quote = ch;
-            } else if (ch == '{' || ch == '[') {
-                depth++;
-            } else if (ch == '}' || ch == ']') {
-                depth--;
-                if (depth == 0) {
-                    entries.add(new int[] {start, c});
-                    close = c;
-                }
-            } else if (ch == ',' && depth == 1) {
-                entries.add(new int[] {start, c});
-                start = c + 1;
-            }
-        }
-        for (int i = 0; i < entries.size(); i++) {
-            int[] en = entries.get(i);
-            String entry = text.substring(en[0], en[1]);
-            int colon = entry.indexOf(':');
-            if (colon < 0 || !entry.substring(0, colon).strip().equals(key)) {
-                continue;
-            }
-            if (value == null) {
-                int from = i == 0 ? en[0] : entries.get(i - 1)[1];      // from the comma before it
-                int to = i == 0 && entries.size() > 1 ? entries.get(1)[0] : en[0] + entry.stripTrailing().length();
-                return text.substring(0, from) + text.substring(to);
-            }
-            int v = en[0] + colon + 1;
-            String rest = text.substring(v, en[1]);
-            int lead = rest.length() - rest.stripLeading().length();
-            int trail = rest.length() - rest.stripTrailing().length();
-            return text.substring(0, v + lead) + value + text.substring(en[1] - trail);
-        }
-        if (value == null) {
-            return text;
-        }
-        int[] last = entries.get(entries.size() - 1);
-        String lastText = text.substring(last[0], last[1]);
-        int endOfLast = last[0] + lastText.stripTrailing().length();
-        return text.substring(0, endOfLast) + ", " + key + ": " + value + text.substring(endOfLast);
-    }
-
-    static int bumpVersion(List<String> out, PNode root) {
-        PNode v = root.map().get("version");
-        int now = v != null && v.value() instanceof Long l ? l.intValue() : 0;
-        for (int i = 0; i < out.size(); i++) {
-            Matcher m = VERSION.matcher(out.get(i));
-            if (m.matches()) {
-                out.set(i, m.group(1) + (now + 1) + m.group(3));
-                return now + 1;
-            }
-        }
-        throw new IllegalArgumentException("cannot find the Sutra's version line");
     }
 
     private void verify(String text, List<String> ids, Map<String, Placement> target, boolean dropHidden) {
