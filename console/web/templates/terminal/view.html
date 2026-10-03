@@ -89,9 +89,9 @@
 {% endblock %}
 {% block footer %}{% if not embed %}
 <footer class="fkeys" aria-label="Function keys">
-  <nav>{% for k in vm['keys'] %}<button type="button" class="fk" data-fkey="{{ k.key }}" data-action="{{ k.action }}"{% if k.action == 'denied' %} disabled title="You do not have access"{% elif k.panel and k.panel in (hidden_ids or []) %} disabled title="Hidden in your layout: show it again in layout mode (Alt+L)"{% endif %}
+  <nav>{% for k in vm['keys'] %}{% set full = ((vm.panels | selectattr('id', 'equalto', k.panel) | map(attribute='title') | first) if k.panel else '') or k.label %}<button type="button" class="fk" data-fkey="{{ k.key }}" data-action="{{ k.action }}" aria-label="{{ k.key }} {{ full }}"{% if not (k.action == 'denied' or (k.panel and k.panel in (hidden_ids or []))) %} title="{{ full }}"{% endif %}{% if k.action == 'denied' %} disabled title="{{ full }}: you do not have access"{% elif k.panel and k.panel in (hidden_ids or []) %} disabled title="{{ full }}: hidden in your layout; show it again in layout mode (Alt+L)"{% endif %}
       {% if k.panel %}data-target="{{ k.panel }}"{% endif %}{% if k.link %}data-href="/v/{{ k.link.kind }}/{{ k.link.id }}"{% endif %}>
-      <b>{{ k.key }}</b> {{ k.label }}</button>{% endfor %}
+      <b>{{ k.key }}</b> <span class="fk-t">{{ full }}</span></button>{% endfor %}
     <button type="button" class="fk" data-fkey="Alt+ArrowLeft" data-action="back"><b>Alt+←</b> Back</button>
     {% if calc and calc.offered %}<button type="button" class="fk" data-calc-open{% if not calc.allowed %} disabled title="You do not have access: Calc needs a role with calc (ask an administrator)"{% else %} title="Calc: Python on this view (Alt+C)"{% endif %}><b>Alt+C</b> Calc</button>{% endif %}
     {% if layout and layout.offered %}<button type="button" class="fk" data-layout-open{% if not layout.allowed %} disabled title="{{ layout.why }}"{% else %} title="Layout mode: arrange this view's panels for yourself (Alt+L){% if layout.mine %}. You are seeing your own layout{% endif %}"{% endif %}><b>Alt+L</b> Layout{% if layout.mine %} <span class="fk-mine" aria-label="(yours)">•</span>{% endif %}</button>{% endif %}</nav>

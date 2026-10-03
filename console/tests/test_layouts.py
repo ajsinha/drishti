@@ -87,7 +87,7 @@ def test_a_view_is_drawn_with_the_users_layout(client, backend, layouts_on):
     assert _order(html)[:4] == ["cashflows", "refs", "legs", "leg2"]
     assert re.search(r'class="pnl c-span-8 c-h-10" id="p-cashflows"', html)
     assert re.search(r'class="pnl pnl-off" id="p-curve"', html)
-    assert 'data-fkey="F4" data-action="panel" disabled title="Hidden in your layout' in html      # its key is greyed
+    assert 'data-fkey="F4" data-action="panel" aria-label="F4 USD-SOFR curve" disabled title="USD-SOFR curve: hidden in your layout' in html      # its key is greyed
     assert "data-layout-open" in html and "<b>Alt+L</b> Layout" in html and "/static/js/layout.js" in html
     assert 'data-sutra="irs-vanilla"' in html and "data-layout-mine" in html and 'id="layoutPromote"' in html
     main, right = html.split('<div class="vmain">')[1].split('<aside class="vright"')
