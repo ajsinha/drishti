@@ -87,13 +87,13 @@ permissions, and masks are not applied on every path.
 | UX-07 | Alt+1..4 stops working once a workspace pane has focus. **Fixed** in 1598327 (test_workspace_keys_browser.py: test_alt_keys_move_between_panes_even_from_inside_a_pane, test_a_blank_pane_takes_the_focus_on_its_command_input, test_a_message_from_elsewhere_moves_nothing) |
 | UX-08 | A past date missing from the dated store silently shows live data, with a wrong reason. **Fixed** in 9a33cce (test_terminal.py: test_a_past_date_no_store_holds_says_so_and_does_not_pass_current_data_off_as_live) |
 | UX-09 | Pivot row keys shown in scientific notation. **Fixed** in ef0b0be (PivotCubeTest.numericKeysArePlainWithoutExponentOrFloatNoise; test_pivot.py: test_client_engine_writes_numeric_keys_as_the_server_does) |
-| DOC-01 | GETTING_STARTED expects Java 21's version string. |
-| DOC-02 | Calc is dead after the quickstart: installing the Python runtime (`tools/fetch-pyodide.sh`) is not mentioned. |
-| DOC-03 | DEMO_DATA's `--trades N` replaces the whole trade table, not "the days it covers". |
-| DOC-08 | API_GUIDE gives the wrong code for Notes' forbidden error. |
-| DOC-09 | API_GUIDE's "complete" code list misses two codes. |
-| DOC-13 | DEVELOPER_GUIDE and README list 11 plugins; there are 15. |
-| DOC-16 | Several settings read by the code are documented nowhere. |
+| DOC-01 | GETTING_STARTED expects Java 21's version string. **Fixed** (GETTING_STARTED and OPERATIONS expect openjdk 25) |
+| DOC-02 | Calc is dead after the quickstart: installing the Python runtime (`tools/fetch-pyodide.sh`) is not mentioned. **Fixed** (QUICKSTART and GETTING_STARTED step: tools/fetch-pyodide.sh, Git Bash or WSL on Windows) |
+| DOC-03 | DEMO_DATA's `--trades N` replaces the whole trade table, not "the days it covers". **Fixed** (DEMO_DATA and GETTING_STARTED step 11 say --trades replaces the whole trade table for --days days) |
+| DOC-08 | API_GUIDE gives the wrong code for Notes' forbidden error. **Fixed** (API_GUIDE Notes says DRS-5002) |
+| DOC-09 | API_GUIDE's "complete" code list misses two codes. **Fixed** (API_GUIDE table has every ErrorCode; console/tests/test_docs_error_codes.py) |
+| DOC-13 | DEVELOPER_GUIDE and README list 11 plugins; there are 15. **Fixed** (DEVELOPER_GUIDE and README list all 15; test_docs_plugins.py) |
+| DOC-16 | Several settings read by the code are documented nowhere. **Fixed** (CONFIGURATION: branding, identity, ui, backend.name, layouts.min_span, warm-dates; test_docs_settings.py) |
 | DOC-18 | About 88 in-app help links go nowhere. **Fixed** (test_help_links.py). |
 
 Lows and infos are in each area's findings: inconsistent error responses (SEC-10, UX-10..13; GRAM-06..08 **Fixed** in 4ffeef1, 9db82fa, ee8b39e, c007e5b, cc386d6: see ux/FINDINGS.md), refused business dates stored in the as-of cookie (GRAM-09, **Fixed** in cc386d6: test_gram_inputs.py), CSRF

@@ -41,13 +41,13 @@ docaudit/). Totals: 3 high, 19 medium, 23 low, 5 info.
 | UX-07 | In a workspace, Alt+1..4 stops working once a pane has focus (workspace.js:151 listens on the parent page only); keyboard users are stuck in the pane. **Fixed** in 1598327 (test_workspace_keys_browser.py: test_alt_keys_move_between_panes_even_from_inside_a_pane, test_a_blank_pane_takes_the_focus_on_its_command_input, test_a_message_from_elsewhere_moves_nothing) |
 | UX-08 | A past date missing from the dated store silently shows live, ticking data with a wrong reason ("murex-rates is not a dated source"). **Fixed** in 9a33cce (test_terminal.py: test_a_past_date_no_store_holds_says_so_and_does_not_pass_current_data_off_as_live) |
 | UX-09 | Pivot row keys in Java scientific notation, e.g. `4.240872601E7` (PivotCube.java:97). **Fixed** in ef0b0be (PivotCubeTest.numericKeysArePlainWithoutExponentOrFloatNoise; test_pivot.py: test_client_engine_writes_numeric_keys_as_the_server_does) |
-| DOC-01 | GETTING_STARTED:87 expects `openjdk version "21.`; should be 25. |
-| DOC-02 | Calc is dead after the QUICKSTART/GETTING_STARTED walkthrough: neither mentions tools/fetch-pyodide.sh; no Windows way to install the Python runtime. |
-| DOC-03 | DEMO_DATA:29 says `--trades N` "replaces the trade days it covers"; it replaces the whole trade table, losing seven sample days and breaking GETTING_STARTED step 11 on earlier dates. |
-| DOC-08 | API_GUIDE:1187 gives Notes' forbidden code as DRS-5003; the code throws DRS-5002. |
-| DOC-09 | API_GUIDE's "complete list" of error codes misses DRS-6008 and DRS-6009. |
-| DOC-13 | DEVELOPER_GUIDE and README list 11 plugins; pom.xml has 15 (redis, mongodb, iceberg, duckdb missing). |
-| DOC-16 | Settings read by the code but documented nowhere: drishti.branding.*, DRISHTI_PRODUCT, console ui.*, backend.name, identity seed-display-name / preferences-dir. |
+| DOC-01 | GETTING_STARTED:87 expects `openjdk version "21.`; should be 25. **Fixed** (GETTING_STARTED and OPERATIONS expect openjdk 25) |
+| DOC-02 | Calc is dead after the QUICKSTART/GETTING_STARTED walkthrough: neither mentions tools/fetch-pyodide.sh; no Windows way to install the Python runtime. **Fixed** (QUICKSTART and GETTING_STARTED step: tools/fetch-pyodide.sh, Git Bash or WSL on Windows) |
+| DOC-03 | DEMO_DATA:29 says `--trades N` "replaces the trade days it covers"; it replaces the whole trade table, losing seven sample days and breaking GETTING_STARTED step 11 on earlier dates. **Fixed** (DEMO_DATA and GETTING_STARTED step 11 say --trades replaces the whole trade table for --days days) |
+| DOC-08 | API_GUIDE:1187 gives Notes' forbidden code as DRS-5003; the code throws DRS-5002. **Fixed** (API_GUIDE Notes says DRS-5002) |
+| DOC-09 | API_GUIDE's "complete list" of error codes misses DRS-6008 and DRS-6009. **Fixed** (API_GUIDE table has every ErrorCode; console/tests/test_docs_error_codes.py) |
+| DOC-13 | DEVELOPER_GUIDE and README list 11 plugins; pom.xml has 15 (redis, mongodb, iceberg, duckdb missing). **Fixed** (DEVELOPER_GUIDE and README list all 15; test_docs_plugins.py) |
+| DOC-16 | Settings read by the code but documented nowhere: drishti.branding.*, DRISHTI_PRODUCT, console ui.*, backend.name, identity seed-display-name / preferences-dir. **Fixed** (CONFIGURATION: branding, identity, ui, backend.name, layouts.min_span, warm-dates; test_docs_settings.py) |
 | DOC-18 | About 88 in-app help links go nowhere (/help/connectors 17 dead, /help/plugins 11, /help/configuration 17). **Fixed** (test_help_links.py). |
 
 ## Low
@@ -66,25 +66,25 @@ docaudit/). Totals: 3 high, 19 medium, 23 low, 5 info.
 | UX-16 | A fresh start logs 124 WARN lines. **Fixed** in e4b5694 (QuietStartTest): 126 before, 1 after on a scratch start (2 on a fresh data directory, the development-admin warning that needs an action). |
 | UX-17 | The function-key bar truncates panel titles. **Fixed** in f310fc5 (test_fkeys.py). |
 | UX-18 | The release-notes guide has 16 `<h1>` elements. **Fixed** in ec7cd2a (test_help.py: test_a_help_page_has_one_h1_whatever_the_guide_headings_are). |
-| DOC-04 | QUICKSTART's "every key" list misses F5, F6, Alt+C and Alt+L. |
+| DOC-04 | QUICKSTART's "every key" list misses F5, F6, Alt+C and Alt+L. **Fixed** (QUICKSTART step 7 lists F5/F6 panel keys, Alt+C, Alt+L, F1; the full table is USER_GUIDE's, checked against the key handlers by hand) |
 | DOC-05 | Docs say expression evaluation is total (GRAM-03 shows it is not). **Fixed** in c1ace31 (RACHANA_REFERENCE: size limits; evaluation is total and explained). |
-| DOC-10 | DRS-3001 documented but never thrown. |
-| DOC-11 | TROUBLESHOOTING's code table has gaps. |
-| DOC-12 | RACHANA_REFERENCE gives the problem-code range as 2010–2027 instead of –2031. |
-| DOC-14 | CONFIGURATION's plugin-name list misses four. |
-| DOC-15 | CONFIGURATION says `require:`; the code reads `extends:`/`requires:`. |
-| DOC-17 | DELTA_CONNECTOR gives `row-group-rows` as both 1,000 and 10,000. |
-| DOC-19 | GitHub-style double-hyphen anchors break in the app. |
-| DOC-20 | ADR-016 gives two different About endpoint paths. |
+| DOC-10 | DRS-3001 documented but never thrown. **Fixed** (DRS-3001 documented as reserved, raised by nothing; test_docs_error_codes.py) |
+| DOC-11 | TROUBLESHOOTING's code table has gaps. **Fixed** (TROUBLESHOOTING covers every code; test_docs_error_codes.py) |
+| DOC-12 | RACHANA_REFERENCE gives the problem-code range as 2010–2027 instead of –2031. **Fixed** (range is DRS-2010 to DRS-2031 and the test pins it; test_docs_error_codes.py) |
+| DOC-14 | CONFIGURATION's plugin-name list misses four. **Fixed** (CONFIGURATION plugin list; test_docs_plugins.py) |
+| DOC-15 | CONFIGURATION says `require:`; the code reads `extends:`/`requires:`. **Fixed** (CONFIGURATION says extends (or requires)) |
+| DOC-17 | DELTA_CONNECTOR gives `row-group-rows` as both 1,000 and 10,000. **Fixed** (default 10,000, trading pack 1,000, in DELTA_CONNECTOR) |
+| DOC-19 | GitHub-style double-hyphen anchors break in the app. **Fixed** (covered by test_help_links.py) |
+| DOC-20 | ADR-016 gives two different About endpoint paths. **Fixed** (ADR-016 uses /public/about) |
 
 ## Info
 | Id | Finding |
 |---|---|
 | UX-19 | Calc's SyntaxError traceback shows Pyodide internals. **Addressed** in 057b186 (test_calc_traceback.py). |
-| DOC-06 | Charts round to six significant digits by default; documented only in PANELS.md. |
-| DOC-07 | The `markdown` panel does not render Markdown (documented). |
-| DOC-21 | `suggest-limit` "at most 50" applies only to per-request limits. |
-| DOC-22 | DRISHTI_STUDIO_SAVE described as "save layouts"; it saves Sutras. |
+| DOC-06 | Charts round to six significant digits by default; documented only in PANELS.md. **Fixed** (RACHANA_REFERENCE chart options state the six-digit default (checked by hand against ChartBinder)) |
+| DOC-07 | The `markdown` panel does not render Markdown (documented). **Fixed** (stated in PANELS, panel-kinds, RACHANA_REFERENCE and the guide; verified by hand) |
+| DOC-21 | `suggest-limit` "at most 50" applies only to per-request limits. **Fixed** (CONFIGURATION: the default is not capped, a request's limit is at 50) |
+| DOC-22 | DRISHTI_STUDIO_SAVE described as "save layouts"; it saves Sutras. **Fixed** (QUICKSTART and GETTING_STARTED say it saves Sutras) |
 
 ## What held up
 Walkthrough commands and outputs match (build 49 s, generators, 12 packs, health JSON; the eight QUICKSTART commands,
