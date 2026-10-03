@@ -135,11 +135,7 @@ public final class Rules {
                 if (cols.isEmpty()) {
                     return;
                 }
-                Map<String, Object> opts = new LinkedHashMap<>();
-                opts.put("rows", path);
-                if (cols.stream().anyMatch(Column::total)) {
-                    opts.put("totalLabel", "Total");
-                }
+                Map<String, Object> opts = PanelRecipes.table(path, cols);
                 double score = 0.55 + 0.1 * Math.min(a.size(), 10) / 10.0;
                 out.add(new Candidate(panel(slug(path), PanelKind.TABLE, title(path), Area.MAIN, cols, opts), score, name(),
                         a.size() + " rows × " + cols.size() + " columns", path, order[0] * 10 + 1));
@@ -173,23 +169,15 @@ public final class Rules {
                 if (x == null || ys.isEmpty()) {
                     return;
                 }
-                Map<String, Object> opts = new LinkedHashMap<>();
-                opts.put("rows", path);
-                opts.put("x", x);
                 if (ys.size() >= 2) {
-                    List<Object> series = new ArrayList<>();
-                    String[] tones = {"link", "accent", "pos", "neg"};
-                    for (int i = 0; i < Math.min(ys.size(), 4); i++) {
-                        series.add(Map.of("label", Semantics.humanize(ys.get(i)), "value", ys.get(i), "tone", tones[i]));
-                    }
-                    opts.put("series", series);
+                    Map<String, Object> opts = PanelRecipes.area(path, x, ys);
                     out.add(new Candidate(panel(slug(path), PanelKind.AREA, title(path), Area.MAIN, List.of(), opts), 0.85,
                             name(), ys.size() + " series over " + a.size() + " tenors", path, order[0] * 10 + 2));
                     return;
                 }
                 Role r = c.semantics().role(ys.get(0), a.get(0).get(ys.get(0)));
                 boolean sensitivity = r.name().contains("money");
-                opts.put("y", ys.get(0));
+                Map<String, Object> opts = PanelRecipes.line(path, x, ys.get(0));
                 out.add(new Candidate(panel(slug(path), PanelKind.LINE, title(path), Area.RIGHT, List.of(), opts),
                         sensitivity ? 0.5 : 0.82, name(), a.size() + " points keyed by " + x, path, order[0] * 10 + 2));
             });
@@ -217,14 +205,7 @@ public final class Rules {
                     return;
                 }
                 Role r = c.semantics().role(value, first.get(value));
-                Map<String, Object> opts = new LinkedHashMap<>();
-                opts.put("rows", path);
-                opts.put("label", label);
-                opts.put("value", value);
-                opts.put("fmt", r.fmt() == null ? "amount0" : r.fmt());
-                if (r.tone() != null) {
-                    opts.put("tone", r.tone());
-                }
+                Map<String, Object> opts = PanelRecipes.hbar(path, label, value, r);
                 double score = r.name().contains("money") ? 0.8 : 0.45;
                 out.add(new Candidate(panel(slug(path), PanelKind.HBAR, title(path), Area.RIGHT, List.of(), opts), score,
                         name(), a.size() + " " + Semantics.humanize(label).toLowerCase() + " values", path, order[0] * 10 + 3));
@@ -255,9 +236,7 @@ public final class Rules {
                         return;
                     }
                 }
-                Map<String, Object> opts = new LinkedHashMap<>();
-                opts.put("rows", path);
-                opts.put("highlight", "#index == " + (a.size() - 1));
+                Map<String, Object> opts = PanelRecipes.ladder(path, a.size());
                 out.add(new Candidate(panel(slug(path), PanelKind.LADDER, title(path), Area.MAIN, c.columns().forRows(a), opts),
                         0.72, name(), a.size() + " dated rows in order", path, order[0] * 10 + 4));
             });
@@ -284,8 +263,7 @@ public final class Rules {
                 if (scalars < 2 || (inner.fields().containsKey("name") && inner.size() <= 2)) {
                     return;
                 }
-                Map<String, Object> opts = new LinkedHashMap<>();
-                opts.put("rows", "$." + k);
+                Map<String, Object> opts = PanelRecipes.kv("$." + k);
                 Area area = scalars <= 6 ? Area.RIGHT : Area.MAIN;
                 out.add(new Candidate(panel(slug(k), PanelKind.KV, Semantics.humanize(k), area,
                         c.columns().forObject(inner, "@."), opts), 0.55, name(), scalars + " fields", "$." + k, order[0] * 10 + 5));

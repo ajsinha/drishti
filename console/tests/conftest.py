@@ -120,6 +120,19 @@ class FakeBackend:
     builder_allowed = True
     shaped = []                                   # the samples each builder_shape call was sent
 
+    designed = []                                 # (samples, kind) of each builder_design call
+
+    async def builder_design(self, samples, kind, ident=None):
+        """Step 3: a canned draft, with the preview of the first sample the way the server sends it."""
+        if not self.builder_allowed:
+            raise BackendError(403, "DRS-5002", f"{ident.user} is not a Sutra author")
+        self.designed.append((samples, kind))
+        return {"yaml": f"rachana: 1\nsutra: {kind}-auto\nversion: 1\nmatch: {{ kind: {kind}, priority: 1 }}\npanels: []\n",
+                "reasons": {"title": "tradeId is the id", "pnl": "a series of 20 points"},
+                "alternatives": {"pnl": [{"kind": "area", "score": 0.6, "reason": "the same series as an area", "area": "main", "options": {}, "columns": []}]},
+                "pruned": [{"panel": "rare", "kind": "line", "action": "dropped", "to": None, "bad": 4, "of": 5, "reason": "empty in 4 of 5 samples"}],
+                "preview": await self.view("trade", "IRS-48213", ident), "samples": len(samples)}
+
     async def builder_shape(self, samples, ident=None):
         """The Screen Builder's shape of the samples: every top-level key of the first document, annotated."""
         if not self.builder_allowed:

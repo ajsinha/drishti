@@ -971,6 +971,35 @@ curl -s -X POST $B/builder/shape -H 'Content-Type: application/json' \
   | jq -c '.roles'
 ```
 
+#### Drafting a screen: design and suggest
+
+| Method | Path | Notes |
+|---|---|---|
+| `POST` | `/builder/design` | body `{"samples": [...], "kind": "trade"}` (or `{"shape": {schema, roles}, "samples": [...]}`); answers `{yaml, reasons, alternatives, pruned, preview, samples}` |
+| `POST` | `/builder/suggest` | body `{"shape": {schema, roles}, "path": "$.profile", "at": "$.rows[].mtm"}` (or `samples` instead of `shape`); answers `{path, at, suggestions}` |
+
+Both need the `author` role, write nothing, keep no copy and take the same limits as `/builder/shape`
+(`413 DRS-5005`, `400 DRS-5001`, `403 DRS-5002`).
+
+- `design`: `yaml` is a complete Sutra (title, strip of at most six figures, panels chosen from the fields' roles, keys
+  for links, layout by the inference packing rules). `reasons` says why for `title`, `strip`, each `strip.<label>` and
+  each panel id. `alternatives` maps a panel id to its runner-up kinds, each `{kind, score, reason, area, title, options,
+  columns}` with the options already filled. With `samples`, the draft is rendered against each of them (Studio's preview
+  path, with your masks) and `pruned` lists the panels and strip figures dropped or demoted because they were empty or
+  failed for more than `drishti.builder.prune-share` of the samples, each `{panel, kind, action, to, bad, of, reason}`.
+  `preview` is the view of the first sample (the view model Studio shows), `null` without samples. `kind` (default
+  `sample`) is the entity kind the Sutra matches; you need to be allowed to open it.
+- `suggest`: the panel kinds that suit the field at `path`, best first, each `{kind, score, reason, area, title,
+  options, columns}`. With `at`, the second field of the same rows (a dimension and a measure, in either order, or two
+  measures), the suggestions are for the pair: a pivot with row groups, bars, a scatter. An unknown path is `400
+  DRS-5001` ("no such path in the shape").
+
+```bash
+curl -s -X POST $B/builder/design -H 'Content-Type: application/json' \
+  -d "{\"kind\":\"trade\",\"samples\":[{\"name\":\"showcase.json\",\"document\":$(cat docs/guides/examples/all-panels-showcase.json)}]}" \
+  | jq -r '.yaml'
+```
+
 ### Sign-in and user administration
 
 These are summarised here; [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) explains users, roles, password rules,

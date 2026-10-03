@@ -161,6 +161,56 @@ out by the same packing rules as inference (charts side by side, tables full wid
 refine rather than face an empty page. Auto-design can be re-run at any time; it never overwrites panels the author
 has touched.
 
+**As built (step 3).** `AutoDesigner` in `drishti-engine` (`com.ash.drishti.engine.design`) drafts the Sutra; nothing in
+it is a second rule set. Inference's pieces were made reusable and both paths call them: `LayoutPacker` (best candidate
+per path, density limits, function keys, provenance, links on the right), `PanelRecipes` (the options each kind gets) and
+`ColumnInference.fromFields` / `fieldColumn` (columns and formats from a field's name and kind). Runtime inference calls
+the same code on one document, and its output is unchanged (its tests were not touched).
+
+| Role (shape) | First choice, with its options filled | Runner-up kinds kept as alternatives |
+|---|---|---|
+| `series`, date axis, one measure, at least `line-min-points` points (5) | `line` | `area`, `ladder` |
+| `series`, date axis, several measures | `area` (series list) | `line` on the first, `ladder` |
+| `series`, date axis, few points or other columns | `ladder` (latest row highlighted) | `line`, `table` |
+| `series`, tenor axis, several measures | `area` | `line`, `table` |
+| `series`, tenor axis, one signed or money measure, up to 12 points | `hbar` | `line`, `table` |
+| `ohlc` | `candlestick` (volume if present) | `line` on the close, `table` |
+| `grid` | `surface` | `table` |
+| `steps` | `waterfall` | `hbar`, `table` |
+| `distribution` | `histogram` | `table` (for records) |
+| `graph` | `graph` (nodes and edges) | `table` of the nodes |
+| `tree` | `table` with `children:` and `expand: 1` | nested `pivot` (when there is a dimension and a measure), the flat top level |
+| `events` | `timeline` | `table` |
+| `table` with two or more dimensions and a measure | `pivot` with row groups: the dimension with fewest values goes `across`, the next up to three form `by: [..]`, coarse to fine | `table`, `scatter` when two measures |
+| `table` of 2 to 4 similar records with 5+ fields | `tabs` (one kv per record) | `table` |
+| `table` of label and amount, up to 12 rows | `hbar` when the amount is money, else `table` | the other |
+| other `table` | `table` (totals on money columns) | `pivot`, `scatter` |
+| object of scalars | `kv` (right column up to 6 fields); `status` when all are states | the other |
+| states spread over the document | one `status` panel | `kv` |
+| long `text` | `markdown` | `kv` |
+| top-level fields | `Details`, a `kv` of the document's own fields | none |
+| measure beside its limit (`limit`, `max`, `cap`... named for it, or a bare one when it is the only measure) | `gauge` with `max` | `kv` |
+| `link` | the `links` panel, a `with` in the title, and a function key from F7 | none |
+
+*Sample-aware.* The samples add what one merged shape cannot say. Series length is the median over the samples (a
+20-point history is a line, a 3-point one a ladder). The strip takes at most six figures ranked by role, presence and
+variety: a figure present in fewer than `rare-below` of the samples is left out, one that is the same in every sample is
+ranked lower, one that varies is ranked higher, and **emphasis** goes to the measure that varies most (with one sample,
+to the heaviest signed amount). Every figure and panel gets a reason ("`pnlHistory`: 'date' with 1 number column, 20
+points: a line over time (present in 3 of 3 samples)").
+
+*Alternatives.* Every panel keeps up to `drishti.builder.max-alternatives` (2) runner-up kinds with their options already
+filled and a reason each, returned beside the draft: the designer swaps one in with a click and no new rule runs.
+
+*Pruning.* The draft is previewed against every sample through the same preview path Studio uses. A panel that comes out
+empty or in error for more than `drishti.builder.prune-share` (0.5) of the samples is **demoted** to its first
+alternative if it has one, and **dropped** if that fares no better; a strip figure blank for more than the share is dropped.
+Each is listed with the count and the reason ("empty in 4 of 5 samples"). A panel that fails for a few samples stays and
+its reason says how many. Panels beyond `max-panels` (16 main, 4 side) are dropped and listed.
+
+*Suggest.* `AutoDesigner.suggest(shape, path[, at])` is the same chooser for one field, or for a dimension and a measure
+of the same rows (`at`): the designer calls it on a field drop and shows the ranked kinds.
+
 ### Adding and binding
 
 - **Drag a panel kind from the palette** onto the canvas: it is placed where dropped (a gap in a row or a new row) and
@@ -238,8 +288,8 @@ All under `/api/v1/builder`, all requiring the `author` power (as Studio), none 
 | `POST /builder/samples` | upload JSON/JSONL documents (multipart); returns a sample-set id, counts and per-file problems |
 | `POST /builder/samples/from-store` | `{kind, count}`: sample entities through the normal sources, masks applied |
 | `POST /builder/shape` | `{samples}` or `{sampleSet}`: returns the shape (schema + roles + report) |
-| `POST /builder/design` | `{shape}`: auto-design, returns a Sutra (YAML) and its preview |
-| `POST /builder/suggest` | `{shape, path, at?}`: ranked panel kinds for a field, each with filled options |
+| `POST /builder/design` | `{samples}` or `{shape, samples}` (+ `kind`): auto-design; returns `{yaml, reasons, alternatives, pruned, preview, samples}`. **Built.** |
+| `POST /builder/suggest` | `{shape, path, at?}` (or `samples`): ranked panel kinds for a field, or for the pair `path` + `at`, each with filled options and a reason. **Built.** |
 | `POST /builder/edit` | `{yaml, ops[]}`: applies operations with the Sutra editor, returns new YAML, problems, preview |
 | `POST /builder/check` | `{yaml, sampleSet}`: the panel × sample matrix |
 | `POST /builder/pack` | `{yaml, sampleSet, kind, mnemonic}`: the pack scaffold zip |
@@ -273,7 +323,7 @@ Each step ships on its own, ends with tests that fail before it, its docs, and a
 |---|---|---|
 | **1. Shape engine** | `drishti-engine` `shape` package: merge, types, formats, enums, maps, trees, roles with reasons; `POST /builder/shape` | unit tests per rule; a property test that **every sample validates against its inferred schema**; the 10 examples' JSON infer the roles their panels need. **Done in 2d525b4.** |
 | **2. Shape extractor page** | `/build/shape`: upload (≤ 50), schema tree with roles and presence, conflicts report, downloads; Build menu entry; sample sets per user | console tests; Playwright upload-and-download; limits refused cleanly. **Done**: [user guide](../../console/web/guides/screen-builder.md); sample sets are kept in the console's memory per user for `builder.ttl_hours`; "Open in Studio" pastes the first sample (no Sutra drafted until step 3). |
-| **3. Auto-design and suggest** | inference rules generalised from one document to a shape; `POST /builder/design` and `/suggest` | auto-design of each example's samples renders with no panel errors and uses the expected kinds; runtime inference unchanged on the existing tests |
+| **3. Auto-design and suggest** | inference rules generalised from one document to a shape (`LayoutPacker`, `PanelRecipes`, shared column rules); `AutoDesigner` with reasons, ranked alternatives, sample-aware strip and charts, pruning against every sample; `POST /builder/design` and `/suggest`; "Draft a screen" on `/build/shape` with **Open in Studio** | auto-design of each example's samples renders with no panel errors and uses the expected kinds; a field missing in most samples gets its panel pruned with a reason; suggest's first choice per role; runtime inference unchanged on the existing tests. **Done**: see "As built (step 3)" under *Start: auto-design*; the visual designer (step 5) is still to build on top. |
 | **4. Edit operations** | operations on `SutraLayoutEditor`; `POST /builder/edit` with undo-safe results | round-trip tests: operations keep comments and order; every op on every kind; bad ops are located problems |
 | **5. Designer** | `/build/design`: canvas over the real preview with handles, palette, field drops with suggestions, inspector from the Rachana schema, YAML tab, undo, keyboard alternatives | Playwright: build the all-panels showcase from its shape without typing YAML; keyboard-only path; phone width |
 | **6. Check every sample** | `POST /builder/check`, the matrix, design-time presence and conflict warnings | a sample set with a missing field shows the right empty/error cells |

@@ -183,6 +183,10 @@ class BackendClient:
         """Screen Builder: the shape (schema, roles, report) of sample documents, ``[{name, document}]``."""
         return await self._send("POST", "/builder/shape", ident, json={"samples": samples})
 
+    async def builder_design(self, samples: list, kind: str, ident=None) -> dict:
+        """Screen Builder, step 3: a drafted Sutra for the samples (yaml, reasons, alternatives, pruned, preview of the first)."""
+        return await self._send("POST", "/builder/design", ident, json={"samples": samples, "kind": kind})
+
     async def rachana_schema(self, ident=None) -> dict:
         """The Rachana JSON Schema, generated from the grammar with this server's kinds, formats and functions."""
         return await self._get("/rachana/schema", ident)

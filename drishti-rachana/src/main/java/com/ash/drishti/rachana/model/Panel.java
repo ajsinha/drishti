@@ -50,7 +50,7 @@ public record Panel(
 
     public Panel {
         columns = List.copyOf(columns);
-        options = Map.copyOf(options);
+        options = java.util.Collections.unmodifiableMap(new java.util.LinkedHashMap<>(options));
     }
 
     /** The panel's width in columns of a 12-column grid ({@code span: 6}); absent: the whole column. */

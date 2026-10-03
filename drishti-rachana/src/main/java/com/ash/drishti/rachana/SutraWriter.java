@@ -31,11 +31,16 @@ import java.util.Map;
 public final class SutraWriter {
 
     public String write(Sutra s, String name, int version) {
+        return write(s, name, version, "Started from inference for " + s.match().kind() + ". Edit freely.");
+    }
+
+    /** As {@link #write(Sutra, String, int)} with the given description (a one-line, plain sentence). */
+    public String write(Sutra s, String name, int version, String description) {
         StringBuilder y = new StringBuilder();
         y.append("rachana: ").append(com.ash.drishti.rachana.parse.SutraParser.LANGUAGE).append('\n');
         y.append("sutra: ").append(name).append('\n');
         y.append("version: ").append(version).append('\n');
-        y.append("description: Started from inference for ").append(s.match().kind()).append(". Edit freely.\n");
+        y.append("description: ").append(description.matches("[A-Za-z0-9 .,()/-]*") ? description : q(description)).append('\n');
         y.append("match: { kind: ").append(s.match().kind());
         if (s.match().where() != null) {
             y.append(", where: ").append(q(s.match().where()));
@@ -71,7 +76,7 @@ public final class SutraWriter {
         if (!s.keys().isEmpty()) {
             y.append("keys: {");
             boolean first = true;
-            for (Map.Entry<String, String> e : s.keys().entrySet()) {
+            for (Map.Entry<String, String> e : new java.util.TreeMap<>(s.keys()).entrySet()) {
                 y.append(first ? " " : ", ").append(e.getKey()).append(": ").append(q(e.getValue()));
                 first = false;
             }

@@ -111,8 +111,29 @@ def test_a_drop_with_too_many_files_is_refused_in_the_page(console_url, browser,
         f.write_text("{}")
         files.append(str(f))
     page = browser.new_page()
+    page.request.delete(console_url + "/build/shape/last")               # the module's console keeps the previous test's set
     page.goto(console_url + "/build/shape")
     page.set_input_files("[data-files]", files)
     page.locator("[data-status]").get_by_text("at most 50").wait_for()
     assert page.locator("[data-result]").is_hidden()
+    page.close()
+
+
+def test_draft_a_screen_shows_sutra_preview_reasons_and_opens_in_studio(console_url, browser, tmp_path):
+    f = tmp_path / "trade.json"
+    f.write_text(json.dumps({"tradeId": "T-1", "book": "rates"}))
+    page = browser.new_page()
+    page.goto(console_url + "/build/shape")
+    page.set_input_files("[data-files]", [str(f)])
+    page.locator("[data-status]").get_by_text("Shaped 1 sample").wait_for()
+    page.get_by_role("button", name="Draft a screen").click()
+    page.locator("[data-draft]").wait_for(state="visible")
+    assert "sutra: sample-auto" in page.locator("[data-draft-yaml]").inner_text()
+    assert page.locator("[data-draft-preview] .studio-view").count() == 1
+    assert "empty in 4 of 5 samples" in page.locator("[data-draft-pruned]").inner_text()
+    assert "tradeId is the id" in page.locator("[data-draft-reasons]").inner_text()
+    assert "area" in page.locator("[data-draft-reasons] .bs-alts").inner_text()
+    page.locator("[data-draft-studio]").click()
+    page.wait_for_url("**/studio?build=1&draft=1")
+    assert "sutra: sample-auto" in page.content()
     page.close()

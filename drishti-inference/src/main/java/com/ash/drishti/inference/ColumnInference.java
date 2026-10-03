@@ -50,6 +50,15 @@ public final class ColumnInference {
                 });
             }
         }
+        return fromFields(samples, counts, n);
+    }
+
+    /**
+     * Columns from per-field facts, in field order: {@code samples} one scalar value per field (its role comes from it),
+     * {@code counts} in how many of {@code n} rows each field occurs. The one rule set for a document's rows and for a
+     * shape's records (the Screen Builder).
+     */
+    public List<Column> fromFields(Map<String, DataNode> samples, Map<String, Integer> counts, int n) {
         int max = semantics.limit("tableMaxColumns", 9);
         List<Column> out = new ArrayList<>();
         List<Integer> weights = new ArrayList<>();
@@ -95,12 +104,17 @@ public final class ColumnInference {
                 break;
             }
             if (v.type().isScalar()) {
-                Role r = semantics.role(e.getKey(), v);
-                out.add(new Column(Semantics.humanize(e.getKey()), bindPrefix + e.getKey(), r.fmt(), r.tone(), false, false));
+                out.add(fieldColumn(e.getKey(), v, bindPrefix));
             } else if (v instanceof DataNode.Obj inner && inner.fields().containsKey("name")) {
                 out.add(new Column(Semantics.humanize(e.getKey()), bindPrefix + e.getKey() + ".name", null, null, false, false));
             }
         }
         return out;
+    }
+
+    /** One kv field: humanised label, format and tone from the field's name and a sample value. */
+    public Column fieldColumn(String name, DataNode sample, String bindPrefix) {
+        Role r = semantics.role(name, sample);
+        return new Column(Semantics.humanize(name), bindPrefix + name, r.fmt(), r.tone(), false, false);
     }
 }

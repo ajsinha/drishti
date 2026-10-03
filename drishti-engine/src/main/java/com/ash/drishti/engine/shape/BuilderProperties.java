@@ -37,11 +37,19 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param graphEdgeNames property names that hold the edges of a graph
  * @param rareBelow a field present in fewer than this share of its records is listed as rare
  * @param longTextChars text this long, or with a line break, is prose
+ * @param pruneShare auto-design drops or demotes a panel that is empty or errors for more than this share of the samples
+ * @param stripMax most figures in a drafted strip
+ * @param maxPanels most panels auto-design puts in the main column
+ * @param maxSidePanels most panels it puts in the right column (besides the links panel)
+ * @param lineMinPoints dated rows shorter than this are shown as a ladder, not a line
+ * @param maxAlternatives runner-up kinds kept per drafted panel
+ * @param limitNames property names that hold a limit for a sibling measure (a gauge's maximum)
  */
 @ConfigurationProperties("drishti.builder")
 public record BuilderProperties(Integer maxSamples, Integer maxFileMb, Integer maxTotalMb, Integer maxDepth, Integer enumMaxDistinct,
         Integer enumMinSeen, Integer examples, List<String> statusWords, String statusNames, String idNames, List<String> labelNames,
-        List<String> ohlcNames, List<String> graphNodeNames, List<String> graphEdgeNames, Integer longTextChars, Double rareBelow) {
+        List<String> ohlcNames, List<String> graphNodeNames, List<String> graphEdgeNames, Integer longTextChars, Double rareBelow, Double pruneShare, Integer stripMax,
+        Integer maxPanels, Integer maxSidePanels, Integer lineMinPoints, Integer maxAlternatives, List<String> limitNames) {
 
     public BuilderProperties {
         maxSamples = positive(maxSamples, 50);
@@ -53,6 +61,13 @@ public record BuilderProperties(Integer maxSamples, Integer maxFileMb, Integer m
         examples = positive(examples, 3);
         longTextChars = positive(longTextChars, 80);
         rareBelow = rareBelow == null || rareBelow <= 0 || rareBelow > 1 ? 0.5 : rareBelow;
+        pruneShare = pruneShare == null || pruneShare < 0 || pruneShare > 1 ? 0.5 : pruneShare;
+        stripMax = positive(stripMax, 6);
+        maxPanels = positive(maxPanels, 16);
+        maxSidePanels = positive(maxSidePanels, 4);
+        lineMinPoints = positive(lineMinPoints, 5);
+        maxAlternatives = positive(maxAlternatives, 2);
+        limitNames = list(limitNames, "limit", "max", "cap", "threshold", "budget", "capacity");
         statusWords = list(statusWords, "live", "settled", "failed", "pending", "confirmed", "cleared", "scheduled", "paid", "done",
                 "booked", "active", "inactive", "open", "closed", "cancelled", "matured", "approved", "rejected", "ok", "error");
         statusNames = statusNames == null || statusNames.isBlank() ? "(status|state|stage)$" : statusNames;
@@ -65,7 +80,7 @@ public record BuilderProperties(Integer maxSamples, Integer maxFileMb, Integer m
 
     /** The defaults, for code and tests that run without Spring. */
     public static BuilderProperties defaults() {
-        return new BuilderProperties(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        return new BuilderProperties(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
     }
 
     public long maxFileBytes() {

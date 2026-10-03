@@ -632,7 +632,13 @@ with `413 DRS-5005` before it is all parsed.
 | `enum-max-distinct` | `12` | Text with at most this many distinct values is an `enum` ... |
 | `enum-min-seen` | `3` | ... when it was seen at least this many times and some value repeats. |
 | `examples` | `3` | Example values per path in the report (masked values stay masked). |
-| `rare-below` | `0.5` | A field present in fewer than this share of its records is listed as rare. |
+| `rare-below` | `0.5` | A field present in fewer than this share of its records is listed as rare; auto-design also leaves such a field out of the strip and the Details panel. |
+| `prune-share` | `0.5` | Auto-design (`POST /builder/design`): a panel or strip figure empty or in error for more than this share of the samples is dropped, or demoted to its first alternative. |
+| `strip-max` | `6` | Most figures in a drafted strip. |
+| `max-panels`, `max-side-panels` | `16`, `4` | Most panels auto-design puts in the main and the right column (the links panel is extra); the rest are dropped and listed. |
+| `line-min-points` | `5` | Dated rows shorter than this are drafted as a ladder, not a line. |
+| `max-alternatives` | `2` | Runner-up kinds kept with each drafted panel. |
+| `limit-names` | `limit, max, cap, threshold, budget, capacity` | Field names that hold a limit for a measure beside them (a gauge's maximum). |
 | `status-words`, `status-names`, `id-names`, `label-names`, `ohlc-names`, `graph-node-names`, `graph-edge-names`, `long-text-chars` | built in | The vocabulary the role rules read: values that are states, field names that hold a state or an id, names of a row's label, the four candle fields, the lists of a graph, the length of prose. Set one to replace its list. |
 
 ### `drishti.commands` — the command line

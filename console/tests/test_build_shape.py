@@ -188,3 +188,51 @@ def test_the_help_guide_and_context_exist(client):
     assert r.status_code == 200 and "Shape extractor" in r.text and "the Screen Builder design" in r.text
     assert "SCREEN_BUILDER" in r.text or "screen-builder" in r.text
     assert client.get("/help/context/build", follow_redirects=False).headers["location"] == "/help/screen-builder"
+
+
+# ---- step 3: draft a screen ---------------------------------------------------------------------------------------
+
+def test_draft_needs_a_sample_set(app_client):
+    r = app_client.post("/build/design", json={})
+    assert r.status_code == 404 and r.json()["code"] == "DRS-1001"
+
+
+def test_draft_sends_the_set_with_the_studio_kind_and_returns_the_preview_html(app_client, backend):
+    app_client.post("/build/shape", json=_files(("a.json", _doc(1)), ("b.json", _doc(2))))
+    backend.designed.clear()
+    r = app_client.post("/build/design", json={})
+    assert r.status_code == 200
+    body = r.json()
+    assert "sutra: sample-auto" in body["yaml"] and body["samples"] == 2 and "preview" not in body
+    assert body["pruned"][0]["reason"] == "empty in 4 of 5 samples" and body["alternatives"]["pnl"][0]["kind"] == "area"
+    assert "studio-view" in body["previewHtml"]
+    assert [s["name"] for s in backend.designed[0][0]] == ["a.json", "b.json"] and backend.designed[0][1] == "sample"
+
+
+def test_draft_is_refused_for_non_authors(app_client, backend):
+    app_client.post("/build/shape", json=_files(("a.json", _doc(1))))
+    backend.builder_allowed = False
+    r = app_client.post("/build/design", json={})
+    assert r.status_code == 403 and r.json()["code"] == "DRS-5002"
+
+
+def test_open_in_studio_with_the_draft_loads_the_drafted_sutra_and_the_first_sample(app_client):
+    app_client.post("/build/shape", json=_files(("first.json", _doc(7)), ("second.json", _doc(8))))
+    assert "sutra: sample-auto" not in app_client.get("/studio?build=1&draft=1").text           # nothing drafted yet
+    app_client.post("/build/design", json={})
+    page = app_client.get("/studio?build=1&draft=1").text
+    assert "sutra: sample-auto" in page and "T-7" in page and 'value="first.json"' in page
+    assert "sutra: sample-auto" not in app_client.get("/studio?build=1").text                    # without draft=1 as before
+
+
+def test_a_new_upload_forgets_the_old_draft(app_client):
+    app_client.post("/build/shape", json=_files(("first.json", _doc(7))))
+    app_client.post("/build/design", json={})
+    app_client.post("/build/shape", json=_files(("other.json", _doc(9))))
+    assert "sutra: sample-auto" not in app_client.get("/studio?build=1&draft=1").text
+
+
+def test_the_page_has_the_draft_button_and_its_result_area(client):
+    page = client.get("/build/shape").text
+    assert "data-design" in page and "Draft a screen" in page and "data-draft-yaml" in page and "data-draft-preview" in page
+    assert 'href="/studio?build=1&amp;draft=1"' in page and "echarts.min.js" in page
