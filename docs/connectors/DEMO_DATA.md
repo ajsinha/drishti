@@ -26,7 +26,8 @@ store has one script with the same options, so the same demo can be built small 
 | **medium** | `--trades 50000` | the samples, and a trade book of 50,000 trades a day for 3 days | a demo that shows searches over a real-looking book |
 | **large** | `--trades 1000000 --days 3` | a million trades a day for 3 days | scale tests, performance measurements |
 
-`--trades N` replaces the trade days it covers with a book of N trades (its first 750 are the samples), booked in six
+`--trades N` replaces the **whole trade table** with a book of N trades for only `--days D` business days (the sample
+trade days outside those D days are gone; for a 10-day history use the small size). The book's first 750 trades are the samples, booked in six
 trading systems with their own ids (Murex `MX-`, Calypso `CLY-`, Endur `END-`, Imagine `IMG-`, Bloomberg TOMS `BBG-`,
 Wall Street Systems `WSS-`). `--days D` sets how many business days the book covers (default 3). Every size is
 reproducible: the same command writes the same data.

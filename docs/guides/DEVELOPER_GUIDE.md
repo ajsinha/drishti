@@ -82,6 +82,10 @@ named connector (see [PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md)).
 | `drishti-plugin-jdbc` | `jdbc` | A database by query, or the PostgreSQL entity-table mode | — |
 | `drishti-plugin-delta` | `delta` | Delta Lake tables through Delta Kernel (no Spark), with time travel; engine `native` (no Hadoop) or `hadoop` | `drishti-deltalake` |
 | `drishti-plugin-aerospike` | `aerospike` | A set per data domain: a record per entity per business date with promoted bins, an index record per entity, a record per kind (`AerospikeLayout`); `AerospikeLoader` writes it | — |
+| `drishti-plugin-redis` | `redis` | Redis (standalone or Cluster): today and recent days in memory, with live updates | — |
+| `drishti-plugin-mongodb` | `mongodb` | A document per entity per business day, in a collection per data domain | — |
+| `drishti-plugin-iceberg` | `iceberg` | Apache Iceberg tables (path-based or a REST catalog), with time travel | — |
+| `drishti-plugin-duckdb` | `duckdb` | Every data domain in one embedded DuckDB file | — |
 | `drishti-plugin-feeds` | (one per feed) | Public feeds: NY Fed SOFR, ECB €STR and FX, US Treasury, FRED | — |
 | `drishti-plugin-kafka` | `kafka` | Compacted topics of entity documents | `drishti-diskcache` |
 | `drishti-plugin-activemq` | `activemq` | ActiveMQ queues and topics | `drishti-messaging` |
@@ -105,7 +109,7 @@ drishti-diskcache                 (nothing internal)
 drishti-messaging                 (api, diskcache)
 drishti-deltalake                 (nothing internal)
 plugins/*                         (api; kafka adds diskcache; activemq and rabbitmq add messaging; delta adds deltalake)
-drishti-server                    (engine, identity, packs, and all eleven plugins)
+drishti-server                    (engine, identity, packs, and all fifteen plugins)
 drishti-it                        (server, testkit)
 drishti-benchmarks                (inference)
 ```

@@ -294,7 +294,7 @@ You should see `Tomcat started on port 18490` in the log. Point the console at i
 DRISHTI_PACKS=finance,trading,market-data java -jar drishti-server/target/drishti-server-1.13.0-exec.jar
 ```
 
-Packs a listed pack `requires:` are loaded too, dependencies first. Then
+Packs a listed pack `extends:` (or the older `requires:`) are loaded too, dependencies first. Then
 `curl -s localhost:18480/api/v1/packs` lists each loaded pack. If the console runs from another directory,
 set `DRISHTI_PACKS_DIR` to an absolute path so both programs find the same folder.
 
@@ -382,7 +382,7 @@ drishti:
 | `routes.<kind>` | `{}` plus from packs | Which plugin or connector serves a kind. Packs route their kinds to their connectors (`trade: trading-store`). |
 | `plugins.<name>.enabled` | `true` for any plugin not listed | Whether the plugin runs as itself (one instance). A plugin used only through `connectors` does not also run as itself unless it is listed here. |
 | `plugins.<name>.settings.*` | per plugin | Settings for that single instance; see [connector settings](#connector-settings-plugin-by-plugin). |
-| `connectors.<name>.plugin` | required | A named instance of a plugin (`delta`, `jdbc`, `file`, `rest`, `kafka`, `aerospike`, `activemq`, `rabbitmq`, `s3`, `feed`). Run a plugin as often as you like. |
+| `connectors.<name>.plugin` | required | A named instance of a plugin (`delta`, `jdbc`, `file`, `rest`, `kafka`, `aerospike`, `redis`, `mongodb`, `iceberg`, `duckdb`, `activemq`, `rabbitmq`, `s3`, `feed`). Run a plugin as often as you like. |
 | `connectors.<name>.enabled` | `true` | Switch one connector off without deleting it. |
 | `connectors.<name>.kinds` | what the plugin reports | Restrict or declare the kinds it serves. |
 | `connectors.<name>.settings.*` | per plugin | Settings for this instance. `source-name` defaults to the connector's name. |
@@ -427,7 +427,7 @@ drishti:
 | Key | Default | Meaning |
 |---|---|---|
 | `dir` | `./packs` (`DRISHTI_PACKS_DIR`) | The folder holding one sub-folder per pack. Relative to the server's working directory. The console reads the same variable (its default `../packs` is relative to `console/`), so use an absolute path when you set it. |
-| `enabled` | `finance` (`DRISHTI_PACKS`) | Comma-separated packs to load, in order. Packs they `require:` are loaded as well. A missing pack stops start-up with a clear message. |
+| `enabled` | `finance` (`DRISHTI_PACKS`) | Comma-separated packs to load, in order. Packs they `extends:` (or the older `requires:`) are loaded as well. A missing pack stops start-up with a clear message. |
 | `default-for-users` | empty = every installed pack (`DRISHTI_DEFAULT_PACKS`) | The packs a user sees until an admin assigns packs to them. |
 
 The pack loader also writes some keys for the rest of the server (`drishti.packs.loaded`,

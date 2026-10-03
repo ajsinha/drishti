@@ -84,7 +84,7 @@ export PATH="$JAVA_HOME/bin:$PATH"
 java -version
 ```
 
-You should see a line that starts with `openjdk version "21.`.
+You should see a line that starts with `openjdk version "25.`.
 
 > **Tip:** add the two `export` lines to your `~/.bashrc` so new terminals get them too.
 
@@ -132,6 +132,10 @@ uv pip install --python console/.venv/bin/python -r console/requirements.txt
 ```
 
 You should see uv report the packages it installed (FastAPI, Uvicorn, Jinja2 and a few more).
+
+If you will use **Calc** (Python in the browser), install its runtime once with `tools/fetch-pyodide.sh` (about a
+340 MB download, cached; on Windows run it in Git Bash or WSL). Without it a Calc panel stays dead; see
+[PYTHON_CALC.md](PYTHON_CALC.md) section 12 for the offline way.
 
 Without uv, plain Python works too:
 
@@ -317,7 +321,8 @@ today, streaming.
 
 1. Open `TRD MX-20000001`.
 2. Click the date box and pick **29 September 2026** (any weekday in the last two weeks of September 2026
-   works with the sample history from Step 5).
+   works with the plain sample history from Step 5; if you built it with `--trades N`, only the last `--days`
+   days, 3 by default, have trades).
 3. The box turns amber, the **Live** dot goes out, and the footer says `as of 2026-09-29`. The MTM is that
    day's value and no longer ticks.
 4. Click **Compare** in the title line. You should see *What changed in MX-20000001*: every field that differs

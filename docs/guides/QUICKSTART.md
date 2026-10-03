@@ -64,6 +64,15 @@ uv pip install --python console/.venv/bin/python -r console/requirements.txt
 
 You should see uv list what it installed (FastAPI, Uvicorn, Jinja2, httpx, PyYAML, Markdown, pytest).
 
+**Calc (Python in the browser) needs its runtime once.** It is a download of about 340 MB (cached), 51 MB on disk:
+
+```bash
+tools/fetch-pyodide.sh
+```
+
+Without it a Calc panel stays dead. On Windows run the same command in Git Bash or WSL (the script needs bash and
+python3); [PYTHON_CALC.md](PYTHON_CALC.md) section 12 has the offline way (`--tarball`). Skip this if you do not use Calc.
+
 ## 4. (Optional) Build the sample history
 
 Live views work without this. Past business dates and **Compare** need a small Delta Lake under
@@ -121,7 +130,7 @@ Click the command line at the top (or press `/`), type each command and press En
 | # | Type | You should see |
 |---|---|---|
 | 1 | `TRD MX-20000001` | An interest rate swap: the title `Rates · Interest rate swap (fixed/float)`, `MX-20000001`, `with Meridian Reinsurance Ltd`; a strip with Notional `AUD 242,000,000` and a highlighted **MTM (USD)** that ticks and flashes; panels *Terms*, *Legs*, *Cashflows*, a curve chart, *DV01 by bucket*, *Daily P&L*, *Linked entities*. |
-| 2 | `F9`, then `F7`, then `Alt+←` | `F9` opens the raw JSON (source `murex-rates`). `F7` jumps to the netting set `NS-MERIDIAN-RE-NY`. `Alt+←` comes back. The bottom bar lists every key the view has: `F2 Terms`, `F3 Cashflows`, `F4 Interest rate`, `F7 Netting set`, `F8 Impact`, `F9 Raw JSON`. |
+| 2 | `F9`, then `F7`, then `Alt+←` | `F9` opens the raw JSON (source `murex-rates`). `F7` jumps to the netting set `NS-MERIDIAN-RE-NY`. `Alt+←` comes back. The bottom bar lists every key the view has: `F2 Terms`, `F3 Cashflows`, `F4 Interest rate`, `F7 Netting set`, `F8 Impact`, `F9 Raw JSON`; a view's own panel keys, such as `F5` and `F6`, jump to their panels (they appear when the view defines them). `Alt+C` opens Calc (Python, where a pack offers it) and `Alt+L` layout mode, `F1` is help. |
 | 3 | `F8` (on the trade) | *Impact of MX-20000001*: level 1 the netting set `NS-MERIDIAN-RE-NY`, level 2 the credit limit `LIM-MERIDIAN-RE`, each with the amount at stake. |
 | 4 | `TRD MX-200000` | No trade has that exact id, so you get a **pick list**: `99 of 99 trades match`, with each trade's product type, direction, currency, notional, MTM, maturity and book. Use `↑` `↓` and Enter, or click an id. |
 | 5 | `TRD productType=Revolver` | A pick list by field value: `6 of 750 trades match`. Case never matters, in field names too (`trd producttype=revolver` works too); a field trades do not have (`TRD nosuchfield=1`) says so and suggests the nearest names. |

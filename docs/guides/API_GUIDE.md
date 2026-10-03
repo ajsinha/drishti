@@ -1150,7 +1150,7 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-2007 | 403 | four eyes | the author may not approve their own proposal |
 | DRS-2101 | 422 | el syntax | a Rachana-EL expression does not parse (alert rules, Sutra expressions, search conditions) |
 | DRS-2102 | 422 | el eval | a Rachana-EL expression failed while evaluating |
-| DRS-3001 | 500 | inference failed | inference could not lay out the document |
+| DRS-3001 | 500 | inference failed | reserved: the code exists, but nothing in this release raises it (a document with no Sutra is laid out by inference, which does not fail) |
 | DRS-4001 | 400 | command unknown | the command line text cannot be read |
 | DRS-4002 | 500 | view failed | building the view failed unexpectedly |
 | DRS-4003 | 400 | bad business date | unreadable, in the future, or before the history window |
@@ -1166,9 +1166,11 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-6005 | 423 | account locked | too many failed sign-ins; locked for a while |
 | DRS-6006 | 409 | last admin | the change would leave no enabled administrator |
 | DRS-6007 | 422 | invalid user | a user record is invalid (for example an unknown pack) |
+| DRS-6008 | 404 | role not found | no such role |
+| DRS-6009 | 409 | role in use | the role is held by a user; take it away from them first |
 | DRS-6010 | 403 | password change due | (console) the user must choose a new password on My account before anything else |
 
-Sutra load problems listed by `/sutras/problems` and in `problems` use their own finer `DRS-2xxx` codes
+`DRS-5003` (503, "backend unreachable") is raised by the console, never by the server, so it is not in this table. Sutra load problems listed by `/sutras/problems` and in `problems` use their own finer `DRS-2xxx` codes
 (for example `DRS-2004` for a `.sutra.md` or plain `.yaml` file in a Sutra folder, `DRS-2009` for a missing or
 unknown `rachana:` version); see [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#problem-codes).
 
@@ -1267,7 +1269,7 @@ arrived within `staleAfter`; always false on a picked business date). Admin heal
 | `PUT` | `/notes/{noteId}` | edits the text: the author only (`403` otherwise) |
 | `DELETE` | `/notes/{noteId}` | the author or an administrator; `204` |
 
-Reading and adding need the right to open the kind (`403 DRS-5003` otherwise). Personal API tokens only read.
+Reading and adding need the right to open the kind (`403 DRS-5002` otherwise). Personal API tokens only read.
 
 ## Shared workspaces
 

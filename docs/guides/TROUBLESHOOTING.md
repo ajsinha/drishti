@@ -753,16 +753,21 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 | `DRS-1001` | no source holds that entity |
 | `DRS-1002` | no source serves that kind |
 | `DRS-1003` / `DRS-1004` | a source failed / timed out |
+| `DRS-1005` / `DRS-1006` / `DRS-1007` | pasted document is not a JSON object / a connector plugin could not be loaded (`/sources` lists why) / `knownAt` asked of a store with no earlier versions |
 | `DRS-2001` / `DRS-2002` / `DRS-2003` | Sutra parse error / invalid / not found |
 | `DRS-2005` / `DRS-2006` / `DRS-2007` | proposal not found / stale / four eyes |
+| `DRS-2004`, `DRS-2009`–`DRS-2031` | a Sutra file failed a check: each code is explained in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#problem-codes) |
 | `DRS-2032` | a Sutra file could not be read at all (the log has the stack trace); the rest load |
 | `DRS-2033` | a Sutra's YAML has a key written twice, a second document or a tag |
 | `DRS-2101` / `DRS-2102` | expression syntax (or past the size limits) / evaluation error |
+| `DRS-3001` | reserved; nothing raises it in this release |
 | `DRS-4001` | command not understood |
+| `DRS-4002` | building a view failed unexpectedly (the server log has the stack trace) |
 | `DRS-4003` | bad business date |
 | `DRS-4004` | bad search |
 | `DRS-5001` | bad request |
 | `DRS-5002` | forbidden (role or pack) |
 | `DRS-5003` | console cannot reach the server |
+| `DRS-5004` | no cache by that name (cache purge) |
 | `DRS-5010` | not signed in |
 | `DRS-6001`–`DRS-6010` | user management (see [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)); `DRS-6005` is a locked account |

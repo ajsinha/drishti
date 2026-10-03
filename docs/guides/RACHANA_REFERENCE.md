@@ -1210,7 +1210,7 @@ Ordered steps as floating bars: each step runs from the running total before it 
 | `value` | | `value` | Field with the signed amount (for a total, the level). Rows without a number are left out. |
 | `total` | | `total` | Field that marks a total step; the running sum restarts at its value. |
 | `sum` | | | Label of a closing total bar at the running sum. |
-| `fmt`, `unit` | | | Format of the amounts; unit of the axis. |
+| `fmt`, `unit` | | | Format of the amounts (default: rounded to six significant digits); unit of the axis. |
 | `colors` | | `gain-loss` | `gain-loss` (rises green, falls red) or `theme` (the theme's positive and negative colours); anything else is `DRS-2029`. |
 
 ```yaml
@@ -1231,7 +1231,7 @@ The distribution of a list of numbers in equal-width bins from the smallest to t
 | `value` | | | With rows, the field (or `@` expression) holding the number. Non-numbers are counted as dropped. |
 | `bins` | | √count, 5 to 40 | Number of bins, 1 to 200. |
 | `markers` | | | List of `{ label, value, tone }`; `value` is an expression over the document, `tone` defaults to `accent`. A marker whose value is missing is left out. |
-| `fmt`, `unit` | | | Format of bin edges and markers; unit of the axis. |
+| `fmt`, `unit` | | | Format of bin edges and markers (default: six significant digits); unit of the axis. |
 
 ```yaml
   - id: scenarios
@@ -1258,7 +1258,7 @@ One point per row with two numbers; rows without both are left out.
 | `size` | | | Field that sizes the point (by its absolute value, area-proportional). |
 | `label` | | | Field that labels the point; an id a pack recognises (or a `link(…)`) makes the point open that entity. |
 | `group` | | | Field whose value colours the point; one legend entry per group, in first-seen order. |
-| `fmt`, `xFmt` | | `xFmt` = `fmt` | Formats of y and x in tooltips and the data table. |
+| `fmt`, `xFmt` | | `xFmt` = `fmt` | Formats of y and x in tooltips and the data table (default: six significant digits). |
 | `xLabel`, `yLabel` | | the field names | Axis titles. |
 
 ```yaml
@@ -1277,7 +1277,7 @@ Open, high, low and close by date, oldest first, with volume bars under the pric
 | `x` | | `date` | Field with the bar's date. |
 | `open`, `high`, `low`, `close` | | those names | Price fields; a bar without all four is left out. |
 | `volume` | | | Volume field; no volume bars without it. |
-| `fmt`, `unit` | | | Price format and unit. |
+| `fmt`, `unit` | | | Price format (default: six significant digits) and unit. |
 
 ```yaml
   - { id: ohlc, kind: candlestick, title: "Daily bars (last 60 days)", rows: $.ohlc, volume: volume, fmt: price2 }
@@ -1337,7 +1337,7 @@ Totals are aggregates of the underlying rows (an `avg` total is the average of a
 | `across` | yes | | Field whose values are the column keys (first-seen order). |
 | `value` | | | Field aggregated; without it the pivot counts rows. Rows whose value is not a number are left out. |
 | `agg` | | `sum` | `sum`, `count`, `avg`, `min` or `max`. |
-| `fmt`, `tone` | | | Format and tone of every cell (counts are shown as whole numbers). |
+| `fmt`, `tone` | | | Format (default: six significant digits) and tone of every cell (counts are shown as whole numbers). |
 | `heat` | | `false` | Shade each cell by its value, from the smallest to the largest. |
 | `totals` | | `true` | `false` hides the total column and row (and the subtotal rows of nested groups). |
 | `expand` | | `1` | With a list `by`: levels shown open at first (`1`: only the outermost groups, closed; `2`: those opened one level; `all`: every level). A whole number from 1 or `all`. |

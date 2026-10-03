@@ -164,7 +164,7 @@ drishti/
 ├── drishti-server/              the Spring Boot application: API, security, alerts, reports, pack registry
 ├── drishti-testkit/ drishti-it/ test fixtures; architecture, licence-header and file-size gates
 ├── drishti-benchmarks/          JMH hot-path benchmarks
-├── plugins/drishti-plugin-*/     demo, file, rest, jdbc, delta, aerospike, feeds, kafka, activemq, rabbitmq, s3
+├── plugins/drishti-plugin-*/     demo, file, rest, jdbc, delta, aerospike, redis, mongodb, iceberg, duckdb, feeds, kafka, activemq, rabbitmq, s3
 ├── console/                     the web console (routes/, core/, web/templates, web/static, tests/)
 ├── clients/python/              drishti_client.py: the standard-library Python client
 ├── packs/<name>/                the 14 domain packs: pack.yaml, Sutras, vocabulary, samples, guides

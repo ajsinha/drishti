@@ -93,7 +93,7 @@ export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
 $JAVA_HOME/bin/java -version
 ```
 
-You should see a line starting `openjdk version "21.`.
+You should see a line starting `openjdk version "25.`.
 
 ## 3. Install from a build (one machine)
 
